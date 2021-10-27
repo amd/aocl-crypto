@@ -1,0 +1,14 @@
+---
+title: Software Design Document
+author: Prem Mallappa for AMD 
+rights: AMD Proprietery
+lang: en-US
+tags: [pandoc, book, my-book, etc]
+abstract: |
+  Software Design document for AOCL Crypto Library
+mainfont: Klavika
+
+# Filter preferences:
+# - pandoc-crossref
+linkReferences: true
+---
