@@ -36,7 +36,7 @@ encrypt_demo(const uint8_t *plaintxt,
     *
     * This query call is provided to support fallback mode for applications
     */
-    err = alcp_cipher_supported(&cinfo);
+    err = alcp_cipher_available(&cinfo);
     if (alc_is_error(err)) {
         alc_error_str(err);
         return;
