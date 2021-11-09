@@ -52,10 +52,10 @@ AOCL Crypto is designed to be future compatible and extendable. AOCL-Crypto
 library has following components.
 
   1. Algorithm - Describes any algorithm that deals with one cryptographic function.
-     For example : AES Encode is an algorithm, supporting multiple modes.
+     For example, AES CBC Encode is an algorithm, supporting one mode.
      
   2. Module - Module is a collection of algorithms grouped together (logically).
-     For example: AES and DES will be under module "Symmetric Key"
+     For example, AES and DES will be under module "Symmetric Key"
   
   3. Plugin - Is a loadable module, contains one or more algorithms, which
      registers itself with the library to extend its functionality.
@@ -68,11 +68,20 @@ library has following components.
 Dynamic dispatcher in the library optimally dispatches to best possible function
 for a given architecture, this decision is made once in the lifetime of the
 process and would not add any overhead due to decision making process.
-Each algorithm would exist in at least 2 forms,
+Each algorithm would exist in at least 2 forms
+
   1. A Reference Implementation
   2. An Optimized Implementation.
-    - An Architectural optimization
-    - Instruction Set optimized (Supporting AES-NI)
+        - AVX  SIMD 
+        - AVX2 SIMD 
+        - AESNI accelerated instructions
+        - Hardware off-load processing
+
+Any x86_64 machine that doesn't support AVX, the reference implementation (very
+very slow) will be available, but we dont commit to support any machine before
+full implementation of AVX.
+
+Each of them are dynamically dispatched to at runtime based on CPUID features.
 
 Offloading Support: Accelerators are the new trend in high-end computing to take
 the load of computing and are becoming de-facto standard in the industry. The
@@ -83,9 +92,9 @@ per second using offloading.
 
 ## Design Consideration
 
-AOCL Crypto is expected to cater new customers as well as current ones. Current
-customers may already be using other solutions like IPP-CP or OpenSSL-crypto or
-BoringSSL-crypto or MbedTLS etc, and may not want to recompile their entire
+AOCL Crypto is expected to cater new customers as well as existing. Current
+customers may already be using other solutions like IPP-CP, OpenSSL-crypto,
+BoringSSL-crypto, MbedTLS etc, and may not want to recompile their entire
 software stack with AOCL Crypto. A solution must be provided to experiment with
 AOCL Crypto and to enable existing software stacks to easily migrate.
 
@@ -258,10 +267,10 @@ __alc_extract64(uint64_t value, int start, int length)
 #define ALC_ERR_GENERAL_LEN    16
 #define ALC_ERR_MODULE_SHIFT   (ALC_ERR_GENERAL_SHIFT + ALC_ERR_GENERAL_LEN)
 #define ALC_ERR_MODULE_LEN     16
-#define ALC_ERR_RESERVED_LEN   (64 - (ALC_ERROR_MODULE_LEN +          \
-                                        ALC_ERROR_GENERAL_LEN +       \
-                                        ALC_ERROR_DETAIL_LEN          \
-                                        ))
+#define ALC_ERR_RESERVED_LEN   (64 - (ALC_ERR_MODULE_LEN +          \
+                                      ALC_ERR_GENERAL_LEN +         \
+                                      ALC_ERR_DETAIL_LEN            \
+                                      ))
 
 #define ALC_ERROR_DETAIL(x)     __alc_extract64(x.e_val,                \
                                                 ALC_ERR_DETAIL_SHIFT,   \
@@ -284,6 +293,7 @@ typedef union {
     } e_fields;
 
 } alc_error_t;
+
 ```
 
 ## Error types
@@ -335,8 +345,8 @@ alc_error_str_internal(alc_error_t err,
 */
 void
 alcp_error_str(alc_error_t err,
-              al_u8* buf,
-              size_t size)
+               al_u8* buf,
+               size_t size)
 {
     assert(buf != NULL);
     assert(size != 0);
@@ -371,7 +381,6 @@ alcp_error_new(alc_error_high_t high,  /* High level error code */
 }
 ```
 
-
 # Detailed Subsystem Design
 
 ## Key Management
@@ -394,9 +403,23 @@ typedef enum {
 
 Key management module returns following errors,
 
-`ALC_KEY_ERROR_INVALID` : When an Invalid key type or pattern is sent to the API
-`ALC_KEY_ERROR_BAD_LEN` : When key length is not matching with keytype
-`ALC_KEY_ERROR_NOSUPPORT` : When key type is not supported.
+  - `ALC_KEY_ERROR_INVALID` : When an Invalid key type or pattern is sent to the API
+  - `ALC_KEY_ERROR_BAD_LEN` : When key length is not matching with keytype
+  - `ALC_KEY_ERROR_NOSUPPORT` : When key type is not supported.
+
+### Key Algorithm
+```c
+typedef enum {
+    ALC_KEY_ALG_WILDCARD,
+    ALC_KEY_ALG_DERIVATION,
+    ALC_KEY_ALG_AGREEMENT,
+    ALC_KEY_ALG_SYMMETRIC,
+    ALC_KEY_ALG_SIGN,
+    ALC_KEY_ALG_AEAD,
+    ALC_KEY_ALG_MAC,
+    ALC_KEY_ALG_HASH,
+} alc_key_alg_t;
+```
 
 ## Digests
 
@@ -405,41 +428,19 @@ Symmetric ciphers have single key for both encryption and decryption, The key
 types are described in [Key Types](#key-types).
 
 The library supports Symmetric ciphers with GCM, CFB, CTR and XTS modes.
-Supported ciphers can be checked programatically using `alcp_cipher_supported()`
+Supported ciphers can be checked programatically using `alcp_cipher_available()`
 function.
 
 Each Algorithm registers itself with algorithm-manager, which keeps a list of
-currently supported algorithm. The `alcp_cipher_supported()` in turn calls the
-internal function `alc_algo_mode_supported()` function to check if the provided
+currently supported algorithm. The `alcp_cipher_available()` in turn calls the
+internal function `alc_algo_available()` function to check if the provided
 mode / keylength is supported by the algorithm.
 
 ### AES (Advanced Encryption Standard)
 The library supports AES(Advanced Encryption Standard), 
 
 #### CFB (Cipher FeedBack)
-
-
-## Message Authentication Codes (MAC)
-
-## Key Derivation Functions (KDF)
-
-## Random Number Generator (RNG)
-
-## Digest Signing and Verification
-
-## Padding
-
-
-# Plugin System design
-
-## Plugin APIs
-
-This section describes the API design for 'C', the same can be used by many
-other languages using their respective FFI(Foreign Function Interface).
-
-## Digests
-
-## Symmetric Ciphers
+CFB Mode is cipher feedback, 
 
 ## Message Authentication Codes (MAC)
 
@@ -450,24 +451,70 @@ other languages using their respective FFI(Foreign Function Interface).
 ## Digest Signing and Verification
 
 ## Padding
-   
-   ```c
-   /* \fn alcrypt_padding_pad Pads the given input to the size specified
-    * @param ctx AlCrypto Context
-    */
-   alc_status_t
-   alcrypt_padding_pad(alc_context_t *ctx, alc_u8 *in, size_t size);
-   ```
+Padding will take care of aligning the data to given length and filling the
+newly aligned area with provided pattern.
 
-  ```c
-  size_t alcrypt_padding_size(alc_context_t *ctx);
-  ```
+```c
+/* \fn alcrypt_padding_pad Pads the given input to the size specified
+ * @param ctx AlCrypto Context
+ */
+alc_status_t
+alcp_padding_pad(alc_context_t *ctx, alc_u8 *in, size_t size);
+```
 
-  ```c
-  alc_status_t alcrypt_padding_unpad(alc_context_t *ctx);
-  ```
+```c
+size_t alcp_padding_size(alc_context_t *ctx);
+```
+
+```c
+alc_status_t alcrypt_padding_unpad(alc_context_t *ctx);
+```
+
+
+<!--
+Plugin system design
+        #include design/plugins.md
+-->
+
+
+<!--
+Device offloading 
+        #include design/devices.md
+-->
+
+## Utilities 
+### Base-64 encoding and decoding
+Encoding to Base-64 helps to print the long data into textual format. It uses
+6-bits of input to encode into one of the following characters.
+First 26 letters of uppercase alphabets, and next 26 letters are using lowercase
+alphabets, rest of them use the digits 0-9 and '+' '/'.
+
+```c
+static char base64_table = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                           "abcdefghijklmnopqrstuvwxyz"
+                           "0123456789+/";
+```
+
+APIs include `alcp_base64_encode()` and `alcp_base64_decode()` 
+
+```c
+alc_error_t
+alcp_base64_encode(unsigned char *in,
+                   unsigned char *out,
+                   size_t len
+                   );
+```
+
+
+```c
+alc_error_t
+alcp_base64_decode(unsigned char *in,
+                   unsigned char *out,
+                   size_t len
+                   );
+
+```
 
 
 
-# Device Offloading
-## Device APIs
+
