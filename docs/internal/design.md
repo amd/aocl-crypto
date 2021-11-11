@@ -92,7 +92,7 @@ per second using offloading.
 
 ## Design Consideration
 
-AOCL Crypto is expected to cater new customers as well as existing. Current
+AOCL Crypto is expected to cater new as well as existing customers. Current
 customers may already be using other solutions like IPP-CP, OpenSSL-crypto,
 BoringSSL-crypto, MbedTLS etc, and may not want to recompile their entire
 software stack with AOCL Crypto. A solution must be provided to experiment with
@@ -109,8 +109,23 @@ All are version checked, and time to time libraries are updated and upgraded so
 that all versions need not be maintained.
 
 ## Assumptions and Dependencies (TODO: TBD)
+AOCL Crypto assumes following libraries/tools available on system where it is
+built or running.
+
+  - CMake (3.18.4 or later)
+  - GCC (11.0 or later)
+  - Git (2.30.2 or later)
+  - OpenSSL ( 1.1.1k or later)
+  - Pandoc ( + LaTeX for generating pdf docs)
 
 ## General Constraints (TODO: TBD)
+The library will contain all the listed algorithms eventually. At the library
+completeness level the priority is only for implementing one over other for a
+given release than choosing one over the other algorithm to include in library.
+
+OpenSSL compatibility library needs to be co-developed along with AOCL Crypto,
+as the requirement for drop-in replacement is crucial for AOCL Crypto to
+succeed.
 
 ## Goals and Guidelines
 AOCL Crypto aims at achieving FIPS certification. Source code is expected to be
@@ -135,14 +150,14 @@ dispatcher. The RNG library also provides needed seeds for the algorithms
 in need.
 
 Plugins feature enables useful and necessary functionality to extend the
-library's capability itself. By providing new algorithms and new modes to
+library\'s capability itself. By providing new algorithms and new modes to
 existing algorithm it allows to extend current library without need for upgrade.
 
 Later versions of the library also supports offloading of some of the
 computation using various device plugins. These computations may be partial or
 fully supported by additional accelerators in the system/platform.
 
-Crypto library's errors are cleverly designed to report all possible error from
+Crypto library\'s errors are cleverly designed to report all possible error from
 modules and algorithms. With support to extend the current error reporting
 mechanism to add new errors.
 
@@ -152,7 +167,7 @@ modules/plugins to/from the library.
 
 ## Apps for testing
 
-  - Nginx(Engine X)
+  - Nginx(pronounced Engine-X)
   - gRPC
   - QATv2
 
@@ -231,8 +246,10 @@ subjected to change, overall structure would be comparable to following
   - _include/_ : Contains all the headers
       - _include/external_ : API header, C99 based
       - _include/alcp_     : Internal headers for library
-  - 
-
+  - _lib/_ : The library itself
+      - _lib/compat_ : Compatibility layers
+          - _lib/compat/openssl_ : OpenSSL Compatibility layer
+          - _lib/compat/ippcp_   : Intel IPP CP compatibility layer
 
 # Detailed System Design
 ## AOCL Crypto Error codes
@@ -244,7 +261,6 @@ If any subsystem requires a specific error code, such system should fill in the
 error code in specified `alc_error_t` with their name as one of the prefixes.
 For example, Key management subsystem would add `ALC_E_KEY_INVALID` instead of
 using existing `ALC_E_INVALID`.
-
 
 TODO: This structure needs to go to proper section
 
@@ -317,6 +333,7 @@ the buffer and length of the buffer needs to be passed by the user to know the
 error.
 
 ```c
+
 /**
 * \brief        Converts AOCL Crypto errors to human readable form
 * \notes        This is internal usage only, prints Filename and line number
@@ -393,11 +410,16 @@ Key types supported are
 ### Key Types
 ```c
 typedef enum {
-    ALC_KEY_TYPE_NONE      = 0,
+    ALC_KEY_TYPE_UNKNOWN   = 0,
     ALC_KEY_TYPE_SYMMETRIC = 0x10,
     ALC_KEY_TYPE_PRIVATE   = 0x20,
     ALC_KEY_TYPE_PUBLIC    = 0x40,
-    ALC_KEY_TYPE_CUSTOM    = 0x100,
+    ALC_KEY_TYPE_DER       = 0x80,
+    ALC_KEY_TYPE_PEM       = 0x100,
+    ALC_KEY_TYPE_CUSTOM    = 0x200,
+    
+    
+    ALC_KEY_TYPE_MAX,
 } alc_key_type_t;
 ```
 
@@ -418,13 +440,95 @@ typedef enum {
     ALC_KEY_ALG_AEAD,
     ALC_KEY_ALG_MAC,
     ALC_KEY_ALG_HASH,
+    
+    ALC_KEY_ALG_MAX,
 } alc_key_alg_t;
 ```
 
-## Digests
+### The Key format
+Key format specifies if the key represented by the buffer is encoded in some
+form or its just a series of bytes
+
+```c
+typedef enum {
+    ALC_KEY_FMT_RAW,    /* Default should be fine */
+    ALC_KEY_FMT_BASE64, /* Base64 encoding*/
+} alc_key_fmt_t ;
+```
+
+### The `alc_key_info_t` structure
+The structure `alc_key_info_t` holds the metadata for the key, it is used by
+other parts of the library. APIs needed to manage the key is may not directly be
+part of this module.
+
+```c
+alc_key_algo_t
+alcp_key_get_algo(alc_key_info_t *kinfo);
+```
+
+```c
+alc_key_type_t
+alcp_key_get_type(alc_key_info_t *kinfo);
+```
+
+```c
+#define ALC_KEY_LEN_DEFAULT  128
+#define BITS_TO_BYTES(x) (x >> 8)
+
+typedef struct {
+    alc_key_type_t    k_type;
+    alc_key_algo_t    k_algo;
+    uint32_t          k_len;    /* Key length in bits */
+    uint8_t           k_key[0]; /* Key follows the rest of the structure */
+} alc_key_info_t;
+```
+
+
+## Digests (TODO: TBD)
+The preliminary APIs are similar to ciphers, the function
+`alcp_digest_supported()` returns if a given digest is available(and usable) in
+the module manager. Digests are also referred to as 'Hash' in various
+texts/Internet. Rest of the document we refer to as Digest to stay in line with
+industry standard acronym.
+
+```c
+alc_error_t 
+alcp_digest_supported(alc_digest_type_t dt,  /* The digest type */
+                      );
+```
+
+The actual call to `aclp_digest_request()` provides a context (a session handle)
+to work with.
+
+```c
+alc_error_t
+alcp_digest_request(alc_digest_type_t dt,    /* Requesting Digest type */
+                    uint64_t          flags, /* reserved for future */
+                    alc_context_t     *t,    /* a context to call future calls */
+                    );
+```
+
+Once a `alc_context_t` handle is available, digest can be generated calling
+`alcp_digest_update()`
+
+```c
+alc_error_t
+alcp_digest_update(alc_context_t  *ctx,    /* Previously got context */
+                   const uint8_t  *data,   /* pointer to actual data */
+                   uint64_t        size,   /* size of data */
+                   uint8_t        *digest, /* pointer to put the hash/digest */
+                   uint64_t        dsize,  /* size of the hash/digest buffer */
+                   );
+```
+An application can query the library to understand the final digest length to
+allocate memory for the digest.
+```c
+uint64_t
+alcp_digest_length(alc_context_t *ctx);
+```
 
 ## Symmetric Ciphers
-Symmetric ciphers have single key for both encryption and decryption, The key
+Symmetric ciphers uses the same key for both encryption and decryption, The key
 types are described in [Key Types](#key-types).
 
 The library supports Symmetric ciphers with GCM, CFB, CTR and XTS modes.
@@ -433,14 +537,116 @@ function.
 
 Each Algorithm registers itself with algorithm-manager, which keeps a list of
 currently supported algorithm. The `alcp_cipher_available()` in turn calls the
-internal function `alc_algo_available()` function to check if the provided
+internal function `alcp_algo_available()` function to check if the provided
 mode / keylength is supported by the algorithm.
 
+Crypto library uses "Factory" design pattern to create and manage the Cipher
+module. All ciphers are requested using `alcp_cipher_request()` API, which
+accepts various parameters to determine cipher and exact mode to operate.
+
+```c
+alc_error_t
+alcp_cipher_request(alc_cipher_info_t *cinfo,
+                    alc_key_info_t    *kinfo,
+                    alc_context_t     *ctx
+                    );
+```
+
+In the above api, `alc_cipher_info_t` is described as in
+[`alc_cipher_info_t`](#the-alc-cipher-info-t-structure), which describes the
+cipher action with specific key information indicated by
+[`alc_key_info_t`](#the-alc-key-info-t-structure) and A context for the session
+is described by [`alc_context_t`](#the-alc-context-t-structure). The Context
+describes everything needed for the algorithm to start and finish the operation.
+The key type is as described in the
+[`alc_key_info_t`](#the-alc-key-info-t-structure).
+
+### The `alc_cipher_ctx_t` structure
+The Cipher's context is very specific to a given cipher algorithm. However, some
+fields can be exposed.
+
+
+
+### The `alc_cipher_ops_t` structure
+This is a structure intended to be handled by the "Module Manager". 
+
+
+### The `alc_cipher_info_t` structure
+Cipher metadata is contained in the `alc_cipher_info_t`, describes the Cipher
+algorithm and Cipher mode along with additional padding needed.
+
+```c
+typedef struct {
+    alc_cipher_algo_t    c_algo;
+    alc_cipher_mode_t    c_mode;
+    alc_cipher_padding_t c_pad;
+    alc_key_info_t       c_keyinfo;
+} alc_cipher_info_t;
+```
+
+### The `alc_cipher_algo_t` type
+Any new algo needs to be added towards the end of the enumeration but before the
+`ALC_CIPHER_ALGO_MAX`. 
+
+```c
+typedef enum {
+    ALC_CIPHER_ALGO_NONE = 0, /* INVALID: Catch the default case */
+    ALC_CIPHER_ALGO_DES,
+    ALC_CIPHER_ALGO_3DES,
+    ALC_CIPHER_ALGO_BLOWFISH,
+    ALC_CIPHER_ALGO_CAST_128,
+    ALC_CIPHER_ALGO_IDEA,
+    ALC_CIPHER_ALGO_RC2,
+    ALC_CIPHER_ALGO_RC4,
+    ALC_CIPHER_ALGO_RC5,
+    ALC_CIPHER_ALGO_AES,
+
+    ALC_CIPHER_ALGO_MAX
+} alc_cipher_algo_t ;
+```
+
+### The `alc_cipher_mode_t` type
+
+Cipher modes are expressed in one of the following enumerations
+```c
+typedef enum {
+    ALC_CIPHER_MODE_NONE = 0, /* INVALID: Catch the default case */
+    ALC_CIPHER_MODE_ECB,
+    ALC_CIPHER_MODE_CBC,
+    ALC_CIPHER_MODE_CFB,
+    ALC_CIPHER_MODE_OFB,
+    ALC_CIPHER_MODE_CTR,
+
+
+    ALC_CIPHER_MODE_CCM,
+    ALC_CIPHER_MODE_GCM,
+} alc_cipher_mode_t;
+```
+
+
+### The `alc_cipher_padding_t` type
+```c
+typedef enum {
+    ALC_CIPHER_PADDING_NONE = 0,
+    ALC_CIPHER_PADDING_ISO7816,
+    ALC_CIPHER_PADDING_PKCS7,
+} alc_cipher_padding_t;
+
+```
+
+### The `alc_key_info_t` structure
+
+
 ### AES (Advanced Encryption Standard)
-The library supports AES(Advanced Encryption Standard), 
+The library supports AES(Advanced Encryption Standard), as part of the Symmetric
+Cipher module.
 
 #### CFB (Cipher FeedBack)
-CFB Mode is cipher feedback, 
+CFB Mode is cipher feedback, a stream-based mode. Encryption occurs by XOR'ing
+the key-stream bytes with plaintext bytes. 
+The key-stream is generated one block at a time, and it is dependent on the
+previous key-stream block. CFB does this by using a buffered block, which
+initially was supplied as IV (Initialization Vector).
 
 ## Message Authentication Codes (MAC)
 
@@ -470,17 +676,208 @@ size_t alcp_padding_size(alc_context_t *ctx);
 alc_status_t alcrypt_padding_unpad(alc_context_t *ctx);
 ```
 
+## Random Number Generator
+The AOCL Crypto library supports both PRNG and TRNG algorithms. AMD Zen series
+of processors provide 'RDRAND' instruction as well as 'RDSEED', however there
+are speculations on its security. Also it is prone to side-channel attacks.
 
-<!--
-Plugin system design
-        #include design/plugins.md
--->
+PRNG's usually requires a seed, and not considered cryptographically secure.
+The OS-level PRNG(/dev/random) are not desired as well for high-security
+randomness, as they are known to never produce data more than 160-bits (many
+have 128-bit ceiling).
+
+However there are cryptographically secure PRNGs (or in other words CRNG) which
+output high-entropy data. 
+
+On Unix like modern operating systems provide blocking `/dev/random` and a
+non-blocking `/dev/urandom` which returns immediately, providing
+cryptographical randomness. In theory `/dev/random` should produce
+data that is statistically close to pure entropy, 
+
+Also the traditional `rand()` and `random()` standard library calls does not
+output high-entropy data.
+
+RNG module will support two modes 'accurate' and 'fast', along with multiple
+distribution formats. The library also supports 'Descrete' and 'Continuous'
+distribution formats. 
+RNG type specified
+  - i : Integer based
+  - s : Single Precision
+  - d : Double Precision
+
+Continuous Distribution formats: 
+
+| Distribution | Datatype             | RNG  | Description                                           |
+| :--          | :--:                 | :--: | :--                                                   |
+| Beta         | s,d                  |      | Beta distribution                                     |
+| Cauchy       | s,d                  |      | Cauchy distribution                                   |
+| ChiSquare    | s,d                  |      | Chi-Square distribution                               |
+| Dirichlet    | alpha[, size])       |      | Dirichlet distribution.                               |
+| Exponential  | s,d                  |      | Exponential Distribution                              |
+| Gamma        | s,d                  |      | Gamma distribution                                    |
+| Gaussian     | s,d                  |      | Normal (Gaussian) distribution                        |
+| Gumbel       | s,d                  |      | Gumbel (extreme value) distribution                   |
+| Laplace      | s,d                  |      | Laplace distribution (double exponent)                |
+| Logistic     | [loc, scale, size])  |      | logistic distribution.                                |
+| Lognormal    | s,d                  |      | Lognormal distribution                                |
+| Pareto       | a[, size])           |      | Pareto II or Lomax distribution with specified shape. |
+| Rayleigh     | s,d                  |      | Rayleigh distribution                                 |
+| Uniform      | s,d                  |      | Uniform continuous distribution on [a,b)              |
+| Vonmises     | mu, kappa[, size])   |      | von Mises distribution.                               |
+| Weibull      | s,d                  |      | Weibull distribution                                  |
+| Wald         | mean, scale[, size]) |      | Wald, or inverse Gaussian, distribution.              |
+| Zipf         | a[, size])           |      | Zipf distribution.                                    |
+
+Descrete Distribution formats:
+
+| Type of Distribution | Data Types | RNG  | Description                                             |
+| :--                  | :--:       | :--: | :--                                                     |
+| Bernoulli            | i          | s    | Bernoulli distribution                                  |
+| Binomial             | i          | d    | Binomial distribution                                   |
+| Geometric            | i          | s    | Geometric distribution                                  |
+| Hypergeometric       | i          | d    | Hypergeometric distribution                             |
+| Multinomial          | i          | d    | Multinomial distribution                                |
+| Negbinomial          | i          | d    | Negative binomial distribution, or Pascal distribution  |
+| Poisson_V            | i          | s    | Poisson distribution with varying mean                  |
+| Uniform_Bits         | i          | i    | Uniformly distributed bits in 32-bit chunks             |
+| Uniform              | i          | d    | Uniform discrete distribution on the interval [a,b)     |
+|                      | i          | i    | Uniformly distributed bits in 64-bit chunks             |
 
 
-<!--
-Device offloading 
-        #include design/devices.md
--->
+### Design
+Each RNG is represented by the `alc_rng_info_t` structure. The library provides
+interface to query if a RNG configuration is available using
+`alcp_rng_supported()`, this provides the option for the application to fall
+back to different algorithm/configuration when not supported.
+
+As usual with other modules, all the RNG api's return `alc_error_t` and use of
+`alcp_is_error(ret)` will provide sufficient information to fallback or to abort
+for the application.
+
+All available RNG algorithms will register with Module Manager with type
+`ALC_MODULE_TYPE_RNG`, Types of Generator are described by 
+
+An RNG generator can be requested using `alcp_rng_request()`, which accepts an
+`alc_rng_info_t` structure, which has following layout.
+
+```c
+typedef struct {
+    alc_rng_type_t        r_type;
+    alc_rng_source_t      r_source;
+    alc_rng_distrib_t     r_distrib;
+    alc_rng_algo_flags_t  r_flags;
+} alc_rng_info_t;
+```
+
+```c
+typedef enum {
+    ALC_RNG_TYPE_INVALID = 0,
+    ALC_RNG_TYPE_SIMPLE,
+    ALC_RNG_TYPE_CONTINUOUS,
+    ALC_RNG_TYPE_DESCRETE,
+
+    ALC_RNG_TYPE_MAX,
+} alc_rng_type_t ;
+
+```
+
+Random Number source can be selected using following enumeration. The request
+function 
+```c
+typedef enum {
+    ALC_RNG_SOURCE_ALGO = 0,  /* Default: select software CRNG/PRNG */
+    ALC_RNG_SOURCE_OS,        /* Use the operating system based support */
+    ALC_RNG_SOURCE_DEV,       /* Device based off-loading support */
+
+    ALC_RNG_SOURCE_MAX,
+} alc_rng_source_t;
+```
+
+Random Generation algorithms and their distribution are described by enumeration
+`alc_rng_distribution_t`.
+
+```c
+typedef enum {
+    ALC_RNG_DISTRIB_UNKNOWN = 0,
+
+    ALC_RNG_DISTRIB_BETA,
+    ALC_RNG_DISTRIB_CAUCHY,
+    ALC_RNG_DISTRIB_CHISQUARE,
+    ALC_RNG_DISTRIB_DIRICHLET,
+    ALC_RNG_DISTRIB_EXPONENTIAL,
+    ALC_RNG_DISTRIB_GAMMA,
+    ALC_RNG_DISTRIB_GAUSSIAN,
+    ALC_RNG_DISTRIB_GUMBEL,
+    ALC_RNG_DISTRIB_LAPLACE,
+    ALC_RNG_DISTRIB_LOGISTIC,
+    ALC_RNG_DISTRIB_LOGNORMAL,
+    ALC_RNG_DISTRIB_PARETO,
+    ALC_RNG_DISTRIB_RAYLEIGH,
+    ALC_RNG_DISTRIB_UNIFORM,
+    ALC_RNG_DISTRIB_VONMISES,
+    ALC_RNG_DISTRIB_WEIBULL,
+    ALC_RNG_DISTRIB_WALD,
+    ALC_RNG_DISTRIB_ZIPF,
+
+    ALC_RNG_DISTRIB_BERNOULLI,
+    ALC_RNG_DISTRIB_BINOMIAL,
+    ALC_RNG_DISTRIB_GEOMETRIC,
+    ALC_RNG_DISTRIB_HYPERGEOMETRIC,
+    ALC_RNG_DISTRIB_MULTINOMIAL,
+    ALC_RNG_DISTRIB_NEGBINOMIAL,
+    ALC_RNG_DISTRIB_POISSON,
+    ALC_RNG_DISTRIB_UNIFORM_BITS,
+    ALC_RNG_DISTRIB_UNIFORM,
+
+    ALC_RNG_DISTRIB_MAX,
+} alc_rng_distrib_t;
+
+```
+
+Each algorithm have some flags to further extend/restrict. This may or may not
+have valid information. For example `ALC_RNG_DISTRIB_POISON` could be selected
+in multiple format
+  1. Normal Poison distribution
+  2. With Varying mean
+
+```c
+typedef enum {
+
+} alc_rng_algo_flags_t;
+```
+
+### APIs
+To support the fallback for applications in cases where the expected RNG support
+is not available, `alcp_rng_supported()`, returns error not supported. No errors
+if the given RNG and its Distribution support is available.
+
+```c
+alc_error_t
+alcp_rng_supported(const alc_rng_info_t *tt);
+
+```
+
+An RNG handle can be requested using `alc_rng_request()`, the context(handle) can
+only be used if the check `if (!alc_is_error(ret))` passes for the call.
+
+```c
+alc_error_t
+alcp_rng_request(const alc_rng_info_t *tt, alc_context_t *);
+```
+
+The `alcp_rng_gen_random()` generates random numbers and fills the buffer
+pointed by `buf` for length specified by `size` in bytes.
+
+```c
+alc_error_t
+alcp_rng_gen_random(alc_context_t *tt,
+                    uint8_t       *buf,  /* RNG output buffer */
+                    uint64_t       size  /* output buffer size */
+                    );
+```
+
+
+
 
 ## Utilities 
 ### Base-64 encoding and decoding
@@ -500,8 +897,9 @@ APIs include `alcp_base64_encode()` and `alcp_base64_decode()`
 ```c
 alc_error_t
 alcp_base64_encode(unsigned char *in,
+                   uint64_t       in_size,
                    unsigned char *out,
-                   size_t len
+                   uint64_t       out_len
                    );
 ```
 
@@ -509,12 +907,22 @@ alcp_base64_encode(unsigned char *in,
 ```c
 alc_error_t
 alcp_base64_decode(unsigned char *in,
+                   uint64_t       in_len,
                    unsigned char *out,
-                   size_t len
+                   uint64_t       out_len
                    );
 
 ```
 
 
+<!--
+Plugin system design
+        #include design/plugins.md
+-->
 
+
+<!--
+Device offloading 
+        #include design/devices.md
+-->
 

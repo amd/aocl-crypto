@@ -1,9 +1,9 @@
 # Module Manager
 ## Introduction
 The AOCL Crypto library has internal module management for easy house keeping. A
-module has a collection of algorithms, and each algorithm will register itself
-with the module. The Module Manager; each algorithm attaches itself to a module
-and the module itself has following operations.
+module is a collection of algorithms, and each algorithm will register itself
+with the Module Manager; each algorithm registers itself using the following
+APIs.
 
   - `alcp_module_register()`
   - `alcp_module_deregister()`
@@ -32,14 +32,21 @@ specific to each type of module.
 Each module is identified by the `alc_module_info_t` structure. It describes the
 module type and supported operations.
 
+The Module Manager is constructed as 'Singleton' pattern, a single instance
+exists per process.
+
 ```c
 typedef enum {
+    ALC_MODULE_TYPE_INVALID = 0,
+
     ALC_MODULE_TYPE_DIGEST,
     ALC_MODULE_TYPE_MAC,
     ALC_MODULE_TYPE_CIPHER,
     ALC_MODULE_TYPE_KDF,
     ALC_MODULE_TYPE_RNG,
     ALC_MODULE_TYPE_PADDING,
+
+    ACL_MODULE_TYPE_MAX,
 } alc_module_type_t;
 
 ```
@@ -49,21 +56,23 @@ the module belongs to aocl stack.
 
 ```c
 typedef struct {
-    /* Simple signature to make sure this
-     * belongs to ALC
-     */
     alc_signature_t     m_signature;
     alc_module_type_t   m_type;
+    void               *ops;
 } alc_module_info_t;
 ```
 
+Each module will have its own operations structure, for example: A Symmetric
+Cipher algorithm will provide its own 'ops' structure as described in [Symmetric
+Cipher Ops](#the-alc-cipher-ops-t-structure)
+
 ## APIs
 
-API `alcp_module_register()` tries to register the module with the module
+The API `alcp_module_register()` tries to register the module with the module
 manager, the registration process returns appropriate error codes to identify
 the registration process's outcome.
 Like other parts of AOCL Crypto, use the `alcp_is_error()` API to detect success
-or error.
+or error. For more description see [ALC Error Types](#error-types)
 
 ```c
 if (alcp_is_error(err)) {
