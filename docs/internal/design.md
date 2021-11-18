@@ -252,7 +252,8 @@ subjected to change, overall structure would be comparable to following
           - _lib/compat/ippcp_   : Intel IPP CP compatibility layer
 
 # Detailed System Design
-## AOCL Crypto Error codes
+## Error Reporting
+### AOCL Crypto Error codes
 This section needs to be populated from Detailed Subsystem design, and each
 subsystem needs to either make use of existing error codes or define new ones
 that may be relevant only to that subsystem.
@@ -269,66 +270,7 @@ value. All modules in AOCL Crypto library has an assigned ID which is internal
 to the library. However detailed error message can be printed using the function
 `alc_error_str()`. 
 
-```c
-static inline uint64_t
-__alc_extract64(uint64_t value, int start, int length)
-{
-    assert(start >= 0 && length > 0 && length <= 64 - start);
-    return (value >> start) & (~0U >> (64 - length));
-}
-
-#define ALC_ERR_DETAIL_SHIFT   0
-#define ALC_ERR_DETAIL_LEN     16
-#define ALC_ERR_GENERAL_SHIFT  (ALC_ERR_DETAIL_SHIFT + ALC_ERR_DETAIL_LEN)
-#define ALC_ERR_GENERAL_LEN    16
-#define ALC_ERR_MODULE_SHIFT   (ALC_ERR_GENERAL_SHIFT + ALC_ERR_GENERAL_LEN)
-#define ALC_ERR_MODULE_LEN     16
-#define ALC_ERR_RESERVED_LEN   (64 - (ALC_ERR_MODULE_LEN +          \
-                                      ALC_ERR_GENERAL_LEN +         \
-                                      ALC_ERR_DETAIL_LEN            \
-                                      ))
-
-#define ALC_ERROR_DETAIL(x)     __alc_extract64(x.e_val,                \
-                                                ALC_ERR_DETAIL_SHIFT,   \
-                                                ALC_ERR_DETAIL_LEN)
-#define ALC_ERROR_GENERAL(x)    __alc_extract64(x.e_val,               \
-                                                ALC_ERR_GENERAL_SHIFT, \
-                                                ALC_ERR_GENERAL_LEN)
-#define ALC_ERROR_MODULE(x)     __alc_extract64(x.e_val,              \
-                                                ALC_ERR_MODULE_SHIFT, \
-                                                ALC_ERR_MODULE_LEN)
-
-typedef union {
-    uint64_t e_value;
-
-    struct {
-        uint64_t ef_detail  :ALC_ERR_DETAIL_LEN;   /* Low level error code */
-        uint64_t ef_general :ALC_ERR_GENERAL_LEN;  /* High level error code */
-        uint64_t ef_module  :ALC_ERR_MODULE_LEN;   /* Module ID */
-        uint64_t ef_reserved:ALC_ERR_RESERVED_LEN; /* Unused, for now */
-    } e_fields;
-
-} alc_error_t;
-
-```
-
-## Error types
-
-Following enumeration defines the error types.
-
-```c
-typedef enum {
-    ALC_ERR_NONE,      /* All is Well */ 
-    ALC_ERR_INVALID,   /* Invalid Parameters */
-    ALC_ERR_NOENTRY,   /* Entry not found - used for plugins */
-    ALC_ERR_NOSUPPORT, /* Not supported */
-    ALC_ERR_NOMEM,
-
-} alc_error_type_t;
-
-```
-
-The function `alc_error_str()` will decode a given error message to string, both
+The function `alc_error_str()` will decode a given error to message string, both
 the buffer and length of the buffer needs to be passed by the user to know the
 error.
 
@@ -347,10 +289,10 @@ error.
 
 void
 alc_error_str_internal(alc_error_t err,
-                       al_u8* buf,
-                       size_t size,
+                       uint8_t    *buf,
+                       uint64_t    size,
                        const char *file,
-                       size_t line
+                       uint64_t      line
                        )
 {
     assert(buf != NULL);
@@ -398,27 +340,60 @@ alcp_error_new(alc_error_high_t high,  /* High level error code */
 }
 ```
 
+
+## Module Manager
+Refer to section [The Module Manager](#the-module-manager)
+
+## Dispatcher
+The dynamic dispatcher will populate each kind of algorithm with best suitable
+implementation for the architecture(on which it is currently running). During
+the initialization phase of the library, it scans through available
+implementation and selects the best possible option.
+
+Once the best algorithm is selected, its initialization is called, which then
+registers itself with the module manager. Once the registration is done, any
+request for a given algorithm will be returned with the already selected algorithm.
+
+The dynamic dispatcher will allow debug mode to override the selection of the
+function. 
+
+If a plugin is loaded, its implementation will overwrite all the algorithms that
+are currently selected by the dynamic dispatcher. Hence plugins to be loaded
+with caution.
+
+Since plugins are dynamic, there is no way to know/distinguish loaded plugin
+with existing algorithm. Also it will become difficult if plugins are
+distinguishable by the Application developer.
+
+In cases when the plugin registers an algorithm that is not currently part of
+the library, it will be treated as an extension and applications can request for
+the algorithms supported by the newly loaded plugin.
+
 # Detailed Subsystem Design
 
-## Key Management
+## Key Management (TODO: WIP)
 Key management is decoupled from algorithms, allowing any algorithm to use any
 key. However each algorithm checker will ensure that only supported keys are
 passed down to the actual implementation. 
 
-Key types supported are
+The Key types enumeration `alc_key_type_t` suggest what keys are in possession,
+and `alc_key_alg_t` determines the algorithm to be used for key derivation (if
+any). The `alc_key_fmt_t` suggests if the keys are encoded in some format, and
+needed to be converted in order to use. The `alc_key_attr_t` suggest type of key
+in each of `alc_key_type_t`. For ex: 
 
 ### Key Types
 ```c
 typedef enum {
     ALC_KEY_TYPE_UNKNOWN   = 0,
-    ALC_KEY_TYPE_SYMMETRIC = 0x10,
+
+    ALC_KEY_TYPE_SYMMETRIC = 0x10,  /* Will cover all AES,DES,CHACHA20 etc */
     ALC_KEY_TYPE_PRIVATE   = 0x20,
     ALC_KEY_TYPE_PUBLIC    = 0x40,
     ALC_KEY_TYPE_DER       = 0x80,
     ALC_KEY_TYPE_PEM       = 0x100,
     ALC_KEY_TYPE_CUSTOM    = 0x200,
-    
-    
+
     ALC_KEY_TYPE_MAX,
 } alc_key_type_t;
 ```
@@ -484,7 +459,7 @@ typedef struct {
 ```
 
 
-## Digests (TODO: TBD)
+## Digests (TODO: WIP)
 The preliminary APIs are similar to ciphers, the function
 `alcp_digest_supported()` returns if a given digest is available(and usable) in
 the module manager. Digests are also referred to as 'Hash' in various
@@ -527,7 +502,10 @@ uint64_t
 alcp_digest_length(alc_context_t *ctx);
 ```
 
-## Symmetric Ciphers
+## Ciphers
+
+### Symmetric Ciphers ###
+
 Symmetric ciphers uses the same key for both encryption and decryption, The key
 types are described in [Key Types](#key-types).
 
@@ -561,17 +539,29 @@ describes everything needed for the algorithm to start and finish the operation.
 The key type is as described in the
 [`alc_key_info_t`](#the-alc-key-info-t-structure).
 
-### The `alc_cipher_ctx_t` structure
-The Cipher's context is very specific to a given cipher algorithm. However, some
-fields can be exposed.
+#### The `alc_cipher_ctx_t` structure ####
 
+The Cipher's context is very specific to a given cipher algorithm. This
+structure or its contents are purely internal to the library, hence it will be
+sent as a handle with opaque type.
 
+```c
+typedef struct {
+    void *private;
+} alc_cipher_ctx_t;
+```
 
-### The `alc_cipher_ops_t` structure
-This is a structure intended to be handled by the "Module Manager". 
+#### The `alc_cipher_ops_t` structure ####
 
+This is a structure intended to be handled by the "Module Manager". Each cipher
+algorithm will present following functions to the module manager. 
 
-### The `alc_cipher_info_t` structure
+```c
+
+```
+
+#### The `alc_cipher_info_t` structure ####
+
 Cipher metadata is contained in the `alc_cipher_info_t`, describes the Cipher
 algorithm and Cipher mode along with additional padding needed.
 
@@ -584,13 +574,15 @@ typedef struct {
 } alc_cipher_info_t;
 ```
 
-### The `alc_cipher_algo_t` type
+#### The `alc_cipher_algo_t` type ####
+
 Any new algo needs to be added towards the end of the enumeration but before the
 `ALC_CIPHER_ALGO_MAX`. 
 
 ```c
 typedef enum {
     ALC_CIPHER_ALGO_NONE = 0, /* INVALID: Catch the default case */
+    
     ALC_CIPHER_ALGO_DES,
     ALC_CIPHER_ALGO_3DES,
     ALC_CIPHER_ALGO_BLOWFISH,
@@ -605,18 +597,18 @@ typedef enum {
 } alc_cipher_algo_t ;
 ```
 
-### The `alc_cipher_mode_t` type
+#### The `alc_cipher_mode_t` type ####
 
 Cipher modes are expressed in one of the following enumerations
 ```c
 typedef enum {
     ALC_CIPHER_MODE_NONE = 0, /* INVALID: Catch the default case */
+    
     ALC_CIPHER_MODE_ECB,
     ALC_CIPHER_MODE_CBC,
     ALC_CIPHER_MODE_CFB,
     ALC_CIPHER_MODE_OFB,
     ALC_CIPHER_MODE_CTR,
-
 
     ALC_CIPHER_MODE_CCM,
     ALC_CIPHER_MODE_GCM,
@@ -624,7 +616,8 @@ typedef enum {
 ```
 
 
-### The `alc_cipher_padding_t` type
+#### The `alc_cipher_padding_t` type ####
+
 ```c
 typedef enum {
     ALC_CIPHER_PADDING_NONE = 0,
@@ -634,29 +627,34 @@ typedef enum {
 
 ```
 
-### The `alc_key_info_t` structure
+#### The `alc_key_info_t` structure ####
 
 
-### AES (Advanced Encryption Standard)
+
+### AES (Advanced Encryption Standard) ###
+
 The library supports AES(Advanced Encryption Standard), as part of the Symmetric
 Cipher module.
 
-#### CFB (Cipher FeedBack)
+##### CFB (Cipher FeedBack) #####
+
 CFB Mode is cipher feedback, a stream-based mode. Encryption occurs by XOR'ing
 the key-stream bytes with plaintext bytes. 
 The key-stream is generated one block at a time, and it is dependent on the
 previous key-stream block. CFB does this by using a buffered block, which
 initially was supplied as IV (Initialization Vector).
 
-## Message Authentication Codes (MAC)
 
-## Key Derivation Functions (KDF)
 
-## Random Number Generator (RNG)
+### Message Authentication Codes (MAC) (TODO: WIP) ###
 
-## Digest Signing and Verification
+### AEAD Ciphers (TODO: WIP) ###
 
-## Padding
+### Key Derivation Functions (KDF) (TODO: WIP) ###
+
+
+#### Padding ####
+
 Padding will take care of aligning the data to given length and filling the
 newly aligned area with provided pattern.
 
@@ -676,7 +674,10 @@ size_t alcp_padding_size(alc_context_t *ctx);
 alc_status_t alcrypt_padding_unpad(alc_context_t *ctx);
 ```
 
-## Random Number Generator
+
+
+### Random Number Generator ###
+
 The AOCL Crypto library supports both PRNG and TRNG algorithms. AMD Zen series
 of processors provide 'RDRAND' instruction as well as 'RDSEED', however there
 are speculations on its security. Also it is prone to side-channel attacks.
@@ -744,7 +745,8 @@ Descrete Distribution formats:
 |                      | i          | i    | Uniformly distributed bits in 64-bit chunks             |
 
 
-### Design
+##### Design #####
+
 Each RNG is represented by the `alc_rng_info_t` structure. The library provides
 interface to query if a RNG configuration is available using
 `alcp_rng_supported()`, this provides the option for the application to fall
@@ -846,7 +848,8 @@ typedef enum {
 } alc_rng_algo_flags_t;
 ```
 
-### APIs
+##### APIs #####
+
 To support the fallback for applications in cases where the expected RNG support
 is not available, `alcp_rng_supported()`, returns error not supported. No errors
 if the given RNG and its Distribution support is available.
@@ -879,12 +882,17 @@ alcp_rng_gen_random(alc_context_t *tt,
 
 
 
-## Utilities 
-### Base-64 encoding and decoding
+
+
+### Utilities ###
+
+
+#### Base-64 encoding and decoding ####
+
 Encoding to Base-64 helps to print the long data into textual format. It uses
 6-bits of input to encode into one of the following characters.
 First 26 letters of uppercase alphabets, and next 26 letters are using lowercase
-alphabets, rest of them use the digits 0-9 and '+' '/'.
+alphabets, rest of them use the digits 0-9 and ' + ', ' / '.
 
 ```c
 static char base64_table = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -913,6 +921,13 @@ alcp_base64_decode(unsigned char *in,
                    );
 
 ```
+
+
+
+
+
+
+# Extensions to the Library
 
 
 <!--

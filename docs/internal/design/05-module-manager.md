@@ -1,5 +1,6 @@
 # Module Manager
-## Introduction
+## The Module Manager
+### Introduction
 The AOCL Crypto library has internal module management for easy house keeping. A
 module is a collection of algorithms, and each algorithm will register itself
 with the Module Manager; each algorithm registers itself using the following
@@ -28,7 +29,7 @@ The module also supports downward API's to register and manage algorithms. An
 algorithm is a unit, an indivisible entity, that allows operations that are
 specific to each type of module.
 
-## Design
+### Design
 Each module is identified by the `alc_module_info_t` structure. It describes the
 module type and supported operations.
 
@@ -56,8 +57,9 @@ the module belongs to aocl stack.
 
 ```c
 typedef struct {
-    alc_signature_t     m_signature;
-    alc_module_type_t   m_type;
+    const char         *name;
+    alc_signature_t     signature;
+    alc_module_type_t   type;
     void               *ops;
 } alc_module_info_t;
 ```
@@ -66,7 +68,7 @@ Each module will have its own operations structure, for example: A Symmetric
 Cipher algorithm will provide its own 'ops' structure as described in [Symmetric
 Cipher Ops](#the-alc-cipher-ops-t-structure)
 
-## APIs
+### APIs
 
 The API `alcp_module_register()` tries to register the module with the module
 manager, the registration process returns appropriate error codes to identify

@@ -1,4 +1,6 @@
-# Plugin System design
+# Plugin System design (WIP)
+
+## Plugins
 
 Plugins are modules (refer to [Modules](#module-manager) for more information)
 but externally loaded to support additional functionality.
@@ -16,7 +18,7 @@ There are two ways to configure a plugin
      the plugin. OR by making the library as a link time option for application.
 
 
-We take the (2) as the approach as it is more portable over (1).
+We take the (1) as the approach as it is more portable over (2).
 
 Each plugin will have its own `alcp_plugin_info_t` structure
 
@@ -35,7 +37,7 @@ struct alc_plugin_ops {
 
 ```
 
-## Plugin APIs
+### APIs
 
 This section describes the API design for 'C', the same can be used by many
 other languages using their respective FFI(Foreign Function Interface).
@@ -86,7 +88,7 @@ alcp_plugin_unload(const char *name);
 ```
 
 
-# Plugin for Device off-loading
+### Plugin for Device off-loading
 
 Offloading support is an additional feature that needs to be supported in order
 to extend the APIs. All the loaded device-plugins are searched for successful
