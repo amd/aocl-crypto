@@ -1,0 +1,86 @@
+/*
+ * Copyright (C) 2019-2021, Advanced Micro Devices. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 3. Neither the name of the copyright holder nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+#ifndef _ALCP_KEY_H_
+#define _ALCP_KEY_H_ 2
+
+#include <stdint.h>
+
+#define ALC_KEY_LEN_DEFAULT 128
+#define BITS_TO_BYTES(x)    (x >> 8)
+
+typedef enum
+{
+    ALC_KEY_TYPE_UNKNOWN = 0,
+
+    ALC_KEY_TYPE_SYMMETRIC = 0x10, /* Will cover all AES,DES,CHACHA20 etc */
+    ALC_KEY_TYPE_PRIVATE   = 0x20,
+    ALC_KEY_TYPE_PUBLIC    = 0x40,
+    ALC_KEY_TYPE_DER       = 0x80,
+    ALC_KEY_TYPE_PEM       = 0x100,
+    ALC_KEY_TYPE_CUSTOM    = 0x200,
+
+    ALC_KEY_TYPE_MAX,
+} alc_key_type_t;
+
+typedef enum
+{
+    ALC_KEY_ALG_WILDCARD,
+    ALC_KEY_ALG_DERIVATION,
+    ALC_KEY_ALG_AGREEMENT,
+    ALC_KEY_ALG_SYMMETRIC,
+    ALC_KEY_ALG_SIGN,
+    ALC_KEY_ALG_AEAD,
+    ALC_KEY_ALG_MAC,
+    ALC_KEY_ALG_HASH,
+
+    ALC_KEY_ALG_MAX,
+} alc_key_alg_t;
+
+typedef enum
+{
+    ALC_KEY_FMT_RAW,    /* Default should be fine */
+    ALC_KEY_FMT_BASE64, /* Base64 encoding */
+} alc_key_fmt_t;
+
+typedef struct
+{
+    alc_key_type_t type;
+    alc_key_fmt_t  fmt;
+    alc_key_alg_t  algo;
+    uint32_t       len; /* Key length in bits */
+    uint8_t*       key; /* Key follows the rest of the structure */
+} alc_key_info_t;
+
+alc_key_alg_t
+alcp_key_get_algo(alc_key_info_t* kinfo);
+
+alc_key_type_t
+alcp_key_get_type(alc_key_info_t* kinfo);
+
+#endif /* _ALCP_KEY_H_ */
