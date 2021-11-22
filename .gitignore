@@ -1,5 +1,34 @@
-.clang-format
-.projectile
-.ccls
-.vscode
+#------------------------------------#
+# Ignore anywhere in the tree
+#------------------------------------#
+*~
+*.orig
 
+# Nested build directory
+/build
+
+
+#------------------------------------#
+# Explicit files to ignore
+#------------------------------------#
+/tags
+/TAGS
+/GTAGS
+cscope.files
+cscope.out
+/compile_commands.json
+/.ccls-cache
+/.clang-format
+/.projectile
+/.ccls
+
+
+
+
+#------------------------------------#
+# Explicit directories to ignore
+#------------------------------------#
+.vscode
+.vs
+# Clangd index
+.clangd
