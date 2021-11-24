@@ -28,19 +28,20 @@
 #include "alcp/error.h"
 #include "alcp/macros.h"
 
+#include <cstdio>
+
 #include "error.hh"
-#include "patterns/singleton.hh"
 
-EXTERN_C_BEGIN
+namespace alcp {
 
-#define ALC_ERR_DETAIL_SHIFT  0
-#define ALC_ERR_DETAIL_LEN    16
-#define ALC_ERR_GENERAL_SHIFT (ALC_ERR_DETAIL_SHIFT + ALC_ERR_DETAIL_LEN)
-#define ALC_ERR_GENERAL_LEN   16
-#define ALC_ERR_MODULE_SHIFT  (ALC_ERR_GENERAL_SHIFT + ALC_ERR_GENERAL_LEN)
-#define ALC_ERR_MODULE_LEN    16
-#define ALC_ERR_RESERVED_LEN                                                   \
-    (64 - (ALC_ERR_MODULE_LEN + ALC_ERR_GENERAL_LEN + ALC_ERR_DETAIL_LEN))
+#define ERROR_DETAIL_SHIFT  0
+#define ERROR_DETAIL_LEN    16
+#define ERROR_GENERAL_SHIFT (ERROR_DETAIL_SHIFT + ERROR_DETAIL_LEN)
+#define ERROR_GENERAL_LEN   16
+#define ERROR_MODULE_SHIFT  (ERROR_GENERAL_SHIFT + ERROR_GENERAL_LEN)
+#define ERROR_MODULE_LEN    16
+#define ERROR_RESERVED_LEN                                                     \
+    (64 - (ERROR_MODULE_LEN + ERROR_GENERAL_LEN + ERROR_DETAIL_LEN))
 
 static inline uint64_t
 __alc_extract64(uint64_t value, int start, int length)
@@ -50,28 +51,61 @@ __alc_extract64(uint64_t value, int start, int length)
 }
 
 #define ALC_ERROR_DETAIL(x)                                                    \
-    __alc_extract64(x.e_val, ALC_ERR_DETAIL_SHIFT, ALC_ERR_DETAIL_LEN)
+    __alc_extract64(x.e_val, ERROR_DETAIL_SHIFT, ERROR_DETAIL_LEN)
 #define ALC_ERROR_GENERAL(x)                                                   \
-    __alc_extract64(x.e_val, ALC_ERR_GENERAL_SHIFT, ALC_ERR_GENERAL_LEN)
+    __alc_extract64(x.e_val, ERROR_GENERAL_SHIFT, ERROR_GENERAL_LEN)
 #define ALC_ERROR_MODULE(x)                                                    \
-    __alc_extract64(x.e_val, ALC_ERR_MODULE_SHIFT, ALC_ERR_MODULE_LEN)
+    __alc_extract64(x.e_val, ERROR_MODULE_SHIFT, ERROR_MODULE_LEN)
 
-void
-alc_error_str_internal(alc_error_t err,
-                       uint8_t*    buf,
-                       uint64_t    size,
-                       const char* file,
-                       uint64_t    line);
-{}
-
-void
-alcp_error_str(alc_error_t err, uint8_t* buf, uint64_t size)
-{}
-
-bool
-alcp_is_error(alc_error_t* err)
+class Error::Impl
 {
-    return true;
+  public:
+    union
+    {
+        uint64_t value;
+
+        struct
+        {
+            uint64_t module : ERROR_MODULE_LEN;     /* Module ID */
+            uint64_t general : ERROR_GENERAL_LEN;   /* High level error code */
+            uint64_t detail : ERROR_DETAIL_LEN;     /* Low level error code */
+            uint64_t reserved : ERROR_RESERVED_LEN; /* Unused, for now */
+        } fields;
+    } m_data;
+};
+
+Error::Error()
+    : impl(new Impl)
+{}
+
+Error::Error(alc_error_generic_t gt)
+    : Error()
+{
+    impl.get()->m_data.fields.general = gt;
 }
 
-EXTERN_C_END
+Error::Error(alc_error_t err)
+    : Error()
+{
+    impl->m_data.value = err;
+}
+
+int
+Error::print(uint8_t* buf, uint64_t size)
+{
+    return std::snprintf((char*)buf, size, "An Error Occurred");
+}
+
+bool
+Error::isError() const
+{
+    return impl.get()->m_data.value != 0;
+}
+
+alc_error_t
+Error::getCValue()
+{
+    return impl->m_data.value;
+}
+
+} // namespace alcp

@@ -1,0 +1,22 @@
+
+ADD_SUBDIRECTORY(capi)
+ADD_SUBDIRECTORY(compat)
+ADD_SUBDIRECTORY(ref)
+
+FILE(GLOB COMMON_SRCS "*.cc" )
+
+ADD_LIBRARY(alcp SHARED 
+	${CAPI_SRCS} 
+	${REF_SRCS} 
+	${COMMON_SRCS})
+
+TARGET_INCLUDE_DIRECTORIES(alcp PUBLIC
+	${CMAKE_SOURCE_DIR}/include
+	)
+
+TARGET_INCLUDE_DIRECTORIES(alcp PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+
+# Need to build comapt libs after building the libalcp.so
+#${COMPAT_SRCS} 

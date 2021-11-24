@@ -31,21 +31,91 @@
 #include <assert.h>
 #include <stdint.h>
 
-#define ALC_ERROR_NONE             0UL
-#define ALC_ERROR_GENERIC          1UL
-#define ALC_ERROR_NOT_SUPPORTED    2UL
-#define ALC_ERROR_NOT_PERMITTED    3UL
-#define ALC_ERROR_EXISTS           4UL
-#define ALC_ERROR_NOT_EXISTS       5UL
-#define ALC_ERROR_NOT_PERMITTED    6UL
-#define ALC_ERROR_INVALID_ARG      7UL
-#define ALC_ERROR_BAD_STATE        8UL
-#define ALC_ERROR_NO_MEMORY        9UL
-#define ALC_ERROR_INVALID_DATA     10UL
-#define ALC_ERROR_INVALID_SIZE     12UL
-#define ALC_ERROR_HARDWARE_FAILURE 13UL
+#include "alcp/macros.h"
+#include "alcp/types.h"
 
-typedef void* alc_error_t;
+EXTERN_C_BEGIN
+
+typedef enum _alc_error_generic
+{ /* All is well */
+  ALC_ERROR_NONE = 0UL,
+
+  /* An Error but cant be categorized
+     correctly */
+  ALC_ERROR_GENERIC,
+
+  /* A Feature, configuration, Algorithm,
+   * Keysize not supported
+   */
+  ALC_ERROR_NOT_SUPPORTED,
+
+  /*
+   * Kind of permission Denied situation,
+   * could be from the OS
+   */
+  ALC_ERROR_NOT_PERMITTED,
+
+  /*
+   * Something that is already exists is
+   * requested to register or replace
+   */
+  ALC_ERROR_EXISTS,
+
+  /* Requested
+   * configuration/algorithm/module/feature
+   * does not exists
+   */
+  ALC_ERROR_NOT_EXISTS,
+
+  /*
+   * Invalid argument
+   */
+  ALC_ERROR_INVALID_ARG,
+
+  /*
+   * Algorithm/context is in bad state due
+   * to internal Error
+   */
+  ALC_ERROR_BAD_STATE,
+
+  /*
+   * Unable to allocate memory
+   */
+  ALC_ERROR_NO_MEMORY,
+
+  /* Sent data is invalid */
+  ALC_ERROR_INVALID_DATA,
+
+  /* Data/Key size is invalid */
+  ALC_ERROR_INVALID_SIZE,
+
+  /* Hardware not in sane state, or failed
+     during operation */
+  ALC_ERROR_HARDWARE_FAILURE,
+
+} alc_error_generic_t;
+
+typedef enum _alc_cipher_error_t
+{
+    ALC_CIPHER_ERROR_NONE = 0,
+
+} alc_cipher_error_t;
+
+typedef union _alc_error_detail
+{
+    // Cipher related details
+    alc_cipher_error_t cipher;
+
+    // Digest related details
+
+    // RNG Errors
+
+    // ECC Errors
+
+    // KDF related errors
+} alc_error_detail_t;
+
+typedef uint64_t alc_error_t;
 
 /**
  * \brief        Converts AOCL Crypto errors to human readable form
@@ -59,7 +129,29 @@ typedef void* alc_error_t;
 void
 alcp_error_str(alc_error_t err, uint8_t* buf, uint64_t size);
 
-bool
-alcp_is_error(alc_error_t* err);
+/**
+ * \brief        Returns true if an error has occurred
+ * \notes        This is the only way to check if an error has occurred in the
+ *               previous call.
+ *
+ * \param err    Actual Error
+ */
+static inline bool
+alcp_is_error(alc_error_t err)
+{
+    return err != 0;
+}
+
+/**
+ * \brief        Clears the error and releases any resources
+ * \notes        At the end of using the error variable, alcp_error_clear() must
+ *               be called, memory leak would occur otherwise.
+ *
+ * \param err    Actual Error
+ */
+void
+alcp_error_clear(alc_error_t err);
+
+EXTERN_C_END
 
 #endif /* _ALCP_ERROR_H_ */

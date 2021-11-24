@@ -30,28 +30,40 @@
 #define _INCLUDE_MODULEMANAGER_H_ 2
 
 #include <memory> /* for std::unique_ptr */
-#include <string>
+#include <vector>
 
-#include "alcp/cipher.h"
-#include "alcp/error.h"
+#include "alcp/alcp.h"
+
+#include "module.hh"
 
 namespace alcp {
-
-class Module
-{
-  public:
-    Module(alc_module_info_t* minfo);
-    std::string  getName();
-    alc_module_t getType();
-};
 
 class ModuleManager
 {
   public:
     static ModuleManager& getInstance();
-    alc_error_t isSupported(alc_module_t type, alc_cipher_info_t* cinfo);
-    alc_error_t addModule(alc_module_info_t* minfo);
-    alc_error_t deleteModule(alc_module_info_t* minfo);
+
+    bool isSupported(const alc_cipher_info_t* cinfo, Error& err);
+#if 0
+    // bool isSupported(const alc_digest_info_t* cinfo);
+    // bool isSupported(const alc_rng_info_t* cinfo);
+#endif
+
+    Error* addModule(alc_module_info_t* minfo);
+    Error* deleteModule(alc_module_info_t* minfo);
+
+    bool requestModule(const alc_cipher_info_t* cinfo,
+                       alc_cipher_ctx_t*        ctx,
+                       Error&                   err);
+
+#if 0
+    bool   requestModule(const alc_digest_info_t* cinfo,
+                         alc_digest_ctx_t*        ctx,
+                         Error&                   err);
+    bool   requestModule(const alc_rng_info_t* cinfo,
+                         alc_rng_ctx_t*        ctx,
+                         Error&                   err);
+#endif
 
   public:
     ModuleManager(ModuleManager const&) = delete;
@@ -59,10 +71,16 @@ class ModuleManager
 
   private:
     ModuleManager();
+    ~ModuleManager();
 
   private:
     class Impl;
     std::unique_ptr<Impl> impl;
+
+    std::vector<Module*> m_cipher;
+    std::vector<Module*> m_digest;
+    std::vector<Module*> m_rng;
+    std::vector<Module*> m_mac;
 };
 
 } // namespace alcp

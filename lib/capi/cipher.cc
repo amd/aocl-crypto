@@ -28,55 +28,90 @@
 #include "alcp/cipher.h"
 #include "alcp/macros.h"
 
+#include "error.hh"
+
+#include "module.hh"
 #include "modulemanager.hh"
+
+using namespace alcp;
 
 EXTERN_C_BEGIN
 
 alc_error_t
 alcp_cipher_supported(const alc_cipher_info_t* cinfo)
 {
+    auto err = new Error(ALC_ERROR_NONE);
+
     /* TODO: Check for pointer validity */
-    return ModuleManager::getInstance().isSupported(cinfo);
+    auto ret = ModuleManager::getInstance().isSupported(cinfo, *err);
+
+    if (!ret) {
+        // e->setDetail();
+    }
+
+    return err->getCValue();
 }
 
-alc_error_t
+uint64_t
 alcp_cipher_ctx_size(const alc_cipher_info_t* cinfo)
+{
+    auto err = new Error(ALC_ERROR_NONE);
+    /* TODO: Check for pointer validity */
+    return 100;
+}
+
+alc_error_t
+alcp_cipher_request(const alc_cipher_info_t* cinfo, alc_cipher_ctx_t* ctx)
+{
+    ModuleManager& mm = ModuleManager::getInstance();
+
+    auto err = new Error(ALC_ERROR_NONE);
+
+    /* TODO: Check for pointer validity */
+
+    /* TODO: Check if pointer is already allocated, instantiated object
+     * if so, we are called from normal path
+     * if not, we are most likely called from IPP-CP compatibility layer
+     */
+
+    auto ret = mm.requestModule(cinfo, ctx, *err);
+
+    if (!ret) {
+        // return e.setDetail();
+    }
+
+    return err->getCValue();
+}
+
+alc_error_t
+alcp_cipher_encrypt(const alc_cipher_ctx_t* ctx,
+                    const uint8_t*          plaintxt,
+                    uint8_t*                ciphertxt,
+                    uint64_t                len)
+{
+    auto err = new Error(ALC_ERROR_NONE);
+    /* TODO: Check for pointer validity */
+    return err->getCValue();
+}
+
+alc_error_t
+alcp_cipher_decrypt(const alc_cipher_ctx_t* ctx,
+                    const uint8_t*          ciphertxt,
+                    uint8_t*                plaintxt,
+                    uint64_t                len)
+{
+    auto err = new Error(ALC_ERROR_NONE);
+    /* TODO: Check for pointer validity */
+    return err->getCValue();
+}
+
+/**
+ * \brief
+ * \notes
+ * \params
+ */
+void
+alcp_cipher_finish(const alc_cipher_ctx_t* ctx)
 {}
-
-alc_error_t
-alcp_cipher_request(const alc_cipher_info_t* cinfo, alc_ctx_t** ctx)
-{
-    ModuleManager& mm  = ModuleManager::getInstance();
-    alc_error_t    err = ALC_ERROR_NONE;
-
-    /* TODO: Check for pointer validity */
-    err = mm.request(cinfo, ctx);
-
-    return err;
-}
-
-alc_error_t
-alcp_cipher_encrypt(const alc_ctx_t*        ctx,
-                    uint8_t*                plantxt,
-                    uint64_t                len,
-                    uint8_t*                ciphertxt,
-                    alc_cipher_mode_data_t* data)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    /* TODO: Check for pointer validity */
-    return err;
-}
-
-alc_error_t
-alcp_cipher_decrypt(const alc_ctx_t*        ctx,
-                    uint8_t*                plantxt,
-                    uint64_t                len,
-                    uint8_t*                ciphertxt,
-                    alc_cipher_mode_data_t* data)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    /* TODO: Check for pointer validity */
-    return err;
-}
 
 EXTERN_C_END

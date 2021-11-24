@@ -26,6 +26,12 @@
  *
  */
 
+#include <iostream> /* TODO: Remove this after testing */
+#include <list>
+
+#include "alcp/error.h"
+
+#include "error.hh"
 #include "modulemanager.hh"
 
 namespace alcp {
@@ -37,7 +43,12 @@ class ModuleManager::Impl
 
 ModuleManager::ModuleManager()
     : impl(new Impl)
-{}
+{
+    std::cout << "Size is : " << sizeof(ModuleManager)
+              << "and pimpl: " << sizeof(Impl) << std::endl;
+}
+
+ModuleManager::~ModuleManager() {}
 
 ModuleManager&
 ModuleManager::getInstance()
@@ -46,12 +57,21 @@ ModuleManager::getInstance()
     return mm;
 }
 
-alc_error_t
-ModuleManager::isSupported(alc_module_t type, alc_cipher_info_t* cinfo)
+bool
+ModuleManager::isSupported(const alc_cipher_info_t* minfo, Error& err)
 {
-    alc_error_t err = ALC_ERROR_NONE;
+    // err.setDetail();
+    return false;
+}
 
-    return err;
+bool
+ModuleManager::requestModule(const alc_cipher_info_t* cinfo,
+                             alc_cipher_ctx_t*        ctx,
+                             Error&                   err)
+{
+    Module* m = (Module*)ctx;
+
+    return false;
 }
 
 } // namespace alcp

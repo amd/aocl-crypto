@@ -26,75 +26,63 @@
  *
  */
 
-#ifndef _ALCP_ALCP_H_
-#define _ALCP_ALCP_H_ 2
+#ifndef _INCLUDE_MODULE_H_
+#define _INCLUDE_MODULE_H_ 2
 
-#include "macros.h"
+#include <string>
+#include <vector>
 
-#include "types.h"
+#include "alcp/cipher.h"
 
-#include "error.h"
+#include "algorithm.hh"
+#include "error.hh"
 
-#include "key.h"
+namespace alcp {
 
-#include "cipher.h"
-
-#include "digest.h"
-
-#include "mac.h"
-
-#include "rng.h"
-
-
-/**
- * Version to be printed as : AOCL Crypto   1.0 (0xabcdef) 
- *                           `-----------' `-'-'----------'
- *                              Name        M m  git ver
- */
-typedef struct _alc_version {
-    int          major;    /* M in above        */
-    int          minor;    /* m in above        */
-    unsigned int revision; /* git version above */
-    const char*  date;     /* e.g. "Jul 20 99"  */
-} alc_version_t;
-
-typedef struct _alc_ctx
+typedef enum _alc_module_type
 {
-    union _alcp_ctx_t
-    {
-        alc_cipher_ctx_t cipher_ctx;
-        // alc_digest_ctx_t digest_ctx;
-        // alc_rng_ctx_t rng_ctx;
+    ALC_MODULE_TYPE_NONE = 0,
 
-    } ctx;
+    ALC_MODULE_TYPE_CIPHER,
+    ALC_MODULE_TYPE_DIGEST,
+    ALC_MODULE_TYPE_RNG,
+    ALC_MODULE_TYPE_MAC,
 
-    void* custom_ctx;
+    ALC_MODULE_TYPE_MAX,
+} alc_module_type_t;
 
-} alc_ctx_t;
-
-typedef struct _alc_info
+typedef struct _alc_module_info
 {
+    alc_module_type_t type;
     union
     {
-        alc_cipher_info_t* cipher_info;
-        // alc_digest_info_t *digest_info;
-        // alc_rng_info_t  *rng_info;
-    } info;
-
-    void* custom_info;
-} alc_info_t;
-
-typedef struct _alc_mode_data
-{
-    union
-    {
-        alc_cipher_mode_data_t* cipher_data;
-        // alc_digest_mode_data_t *digest_data;
-        // alc_rng_mode_data_t *mode_data;
+        const alc_cipher_info_t* cipher;
+        // const alc_digest_info_t* digest;
+        // const alc_mac_info_t* mac;
+        // const alc_aead_info_t* aead;
+        // const alc_rng_info_t* rng;
     } data;
+} alc_module_info_t;
 
-    void* custom_data;
+typedef struct _alc_module_data
+{
 
-} alc_mode_data_t;
+} alc_module_data_t;
 
-#endif /* _ALCP_ALCP_H_ */
+class Module
+{
+  public:
+    Module(alc_module_info_t* minfo);
+    std::string       getName();
+    alc_module_type_t getType();
+    alc_error_t       isSupported(const alc_cipher_info_t* cinfo) const;
+
+  private:
+    alc_module_type_t      m_type;
+    alc_module_data_t*     m_data;
+    std::vector<Algorithm> m_algo;
+};
+
+} // namespace alcp
+
+#endif /* _INCLUDE_MODULE_H_ */

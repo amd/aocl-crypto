@@ -29,30 +29,31 @@
 #ifndef _INCLUDE_ERROR_H_
 #define _INCLUDE_ERROR_H_ 2
 
+#include <memory>
+
 #include "alcp/error.h"
 
-#include <cstdint>
+#include "module.hh"
 
 namespace alcp {
 
 class Error
 {
-  private:
-    union
-    {
-        uint64_t e_value;
-
-        struct
-        {
-            uint64_t detail : ALC_ERR_DETAIL_LEN;   /* Low level error code */
-            uint64_t general : ALC_ERR_GENERAL_LEN; /* High level error code */
-            uint64_t module : ALC_ERR_MODULE_LEN;   /* Module ID */
-            uint64_t reserved : ALC_ERR_RESERVED_LEN; /* Unused, for now */
-        } fields;
-    } m_val;
-
   public:
-    int toStr(char* buf, const int len);
+    Error(alc_error_generic_t gt);
+    Error(alc_error_t err);
+    void        setModule(alc_module_type_t m);
+    void        setDetail(alc_error_detail_t ed);
+    int         print(uint8_t* buf, uint64_t len);
+    bool        isError() const;
+    alc_error_t getCValue();
+    //~Error() {}
+
+  private:
+    Error();
+
+    class Impl;
+    std::unique_ptr<Impl> impl;
 };
 
 } // namespace alcp

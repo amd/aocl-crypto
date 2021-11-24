@@ -1,0 +1,4 @@
+FILE(GLOB REF_SRCS "*.cc")
+
+set(REF_SRCS ${REF_SRCS} PARENT_SCOPE)
+
