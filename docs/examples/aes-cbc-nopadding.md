@@ -12,21 +12,27 @@ encrypt_demo(const uint8_t *plaintxt,
              const uint8_t *key,
              const uint32_t key_len)
 {
-    alc_error_t     err;
-    alc_context_t   ctx = ALC_CIPHER_INIT_CONTEXT();
+    alcp_error_t             err;
+    alc_cipher_context_t   *ctx;
 
+    /*
     const alc_key_info_t kinfo = {
         .type    = ALC_KEY_TYPE_SYMMETRIC,
         .fmt     = ALC_KEY_FMT_RAW,
         .key     = key,
         .len     = (key_len == 128)? ALC_KEY_LEN_128 : ALC_KEY_LEN_256,
     };
-
+    */
     const alc_cipher_info_t cinfo = {
-        .algo    = ALC_CIPHER_AES,
+        .algo    = ALC_CIPHER_ALGO_AES,
         .mode    = ALC_CIPHER_MODE_CBC,
-        .pad     = ALC_PADDING_NONE,
-        .keyinfo = kinfo,
+        .pad     = ALC_CIPHER_PADDING_NONE,  /* No padding */
+        .keyinfo = {
+            .type    = ALC_KEY_TYPE_SYMMETRIC,
+            .fmt     = ALC_KEY_FMT_RAW,
+            .key     = key,
+            .len     = (key_len == 128)? ALC_KEY_LEN_128 : ALC_KEY_LEN_256,
+        },
     };
 
     /*
@@ -36,16 +42,23 @@ encrypt_demo(const uint8_t *plaintxt,
     *
     * This query call is provided to support fallback mode for applications
     */
-    err = alcp_cipher_available(&cinfo);
-    if (alc_is_error(err)) {
-        alc_error_str(err);
+    err = alcp_cipher_supported(&cinfo);
+    if (alcp_is_error(err)) {
+        alcp_error_str(err);
         return;
     }
 
+    /*
+    * Application is expected to allocate for context
+    */
+    ctx = malloc(alcp_cipher_ctx_size(&cinfo));
+    if (!ctx)
+        return;
+
     /* Request a context with cinfo */
-    err = alcp_cipher_request(&cinfo, &kinfo, &ctx);
-    if (alc_is_error(err)) {
-        alc_error_str(err);
+    err = alcp_cipher_request(&cinfo, &kinfo, ctx);
+    if (alcp_is_error(err)) {
+        alcp_error_str(err);
         return;
     }
 
@@ -56,8 +69,8 @@ encrypt_demo(const uint8_t *plaintxt,
     };
 
     err = alcp_cipher_encrypt(&ctx, plaintxt, len, ciphertxt, &data);
-    if (alc_is_error(err)) {
-        alc_error_str(err);
+    if (alcp_is_error(err)) {
+        alcp_error_str(err);
         return;
     }
 
@@ -67,4 +80,6 @@ encrypt_demo(const uint8_t *plaintxt,
     alcp_cipher_finish(&ctx);
 
 }
+
 ```
+
