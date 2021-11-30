@@ -45,56 +45,17 @@
 
 #include "rng.h"
 
-
 /**
- * Version to be printed as : AOCL Crypto   1.0 (0xabcdef) 
+ * Version to be printed as : AOCL Crypto   1.0 (0xabcdef)
  *                           `-----------' `-'-'----------'
  *                              Name        M m  git ver
  */
-typedef struct _alc_version {
+typedef struct _alc_version
+{
     int          major;    /* M in above        */
     int          minor;    /* m in above        */
     unsigned int revision; /* git version above */
     const char*  date;     /* e.g. "Jul 20 99"  */
 } alc_version_t;
-
-typedef struct _alc_ctx
-{
-    union _alcp_ctx_t
-    {
-        alc_cipher_ctx_t cipher_ctx;
-        // alc_digest_ctx_t digest_ctx;
-        // alc_rng_ctx_t rng_ctx;
-
-    } ctx;
-
-    void* custom_ctx;
-
-} alc_ctx_t;
-
-typedef struct _alc_info
-{
-    union
-    {
-        alc_cipher_info_t* cipher_info;
-        // alc_digest_info_t *digest_info;
-        // alc_rng_info_t  *rng_info;
-    } info;
-
-    void* custom_info;
-} alc_info_t;
-
-typedef struct _alc_mode_data
-{
-    union
-    {
-        alc_cipher_mode_data_t* cipher_data;
-        // alc_digest_mode_data_t *digest_data;
-        // alc_rng_mode_data_t *mode_data;
-    } data;
-
-    void* custom_data;
-
-} alc_mode_data_t;
 
 #endif /* _ALCP_ALCP_H_ */

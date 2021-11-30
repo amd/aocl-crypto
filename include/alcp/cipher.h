@@ -34,7 +34,7 @@
 
 EXTERN_C_BEGIN
 
-typedef enum
+typedef enum _alc_cipher_type
 {
     ALC_CIPHER_TYPE_NONE = 0,
 
@@ -61,76 +61,127 @@ typedef struct _alc_aes_mode_data_t
 {
     alc_aes_mode_t mode; /* Mode eg: ALC_AES_MODE_CFB */
     uint8_t*       iv;   /* Initialization Vector */
-} alc_aes_mode_data_t;
+} alc_aes_mode_data_t, *alc_aes_mode_data_p;
 
 typedef union _alc_cipher_mode_data
 {
     alc_aes_mode_data_t aes;
     // alc_des_mode_data_t des;
-} alc_cipher_mode_data_t;
+} alc_cipher_mode_data_t, *alc_cipher_mode_data_p;
 
 typedef struct _alc_cipher_info
 {
-    alc_cipher_type_t      type;
-    alc_key_info_t         keyinfo;
-    alc_cipher_mode_data_t data;
-} alc_cipher_info_t;
-
-typedef void* alc_cipher_ctx_t;
+    alc_cipher_type_t      cipher_type;
+    alc_key_info_t         key_info;
+    alc_cipher_mode_data_t mode_data;
+} alc_cipher_info_t, *alc_cipher_info_p;
 
 /**
  * \brief
  * \notes
- * \params
+ */
+typedef void alc_cipher_context_t;
+
+/**
+ * \brief
+ * \notes
+ */
+typedef alc_cipher_context_t* alc_cipher_context_p;
+
+/**
+ * \brief
+ * \notes
+ */
+typedef struct _alc_cipher_handle
+{
+    alc_cipher_context_t* context;
+} alc_cipher_handle_t, *alc_cipher_handle_p;
+
+/**
+ * \brief       Allows to check if a given algorithm is supported
+ * \notes       This API is provided to allow application to make decision on
+ *              fallback mechanism
+ * \params pCipherInfo The information about the cipher algorithm and modes
+ *                     as described by alc_cipher_info_t
  */
 alc_error_t
-alcp_cipher_supported(const alc_cipher_info_t* cinfo);
+alcp_cipher_supported(const alc_cipher_info_p pCipherInfo);
 
 /**
- * \brief
- * \notes
- * \params
+ * \brief       Gets the size of the context for a session described by
+ *              pCipherInfo
+ * \notes       alcp_cipher_supported() should be called first to
+ *              know if the given cipher/key length configuration is valid.
+ *
+ * \param pCipherInfo Description of the requested cipher session
+ * \return      size > 0 if valid session is found, size otherwise
  */
 uint64_t
-alcp_cipher_ctx_size(const alc_cipher_info_t* cinfo);
+alcp_cipher_context_size(const alc_cipher_info_p pCipherInfo);
 
 /**
- * \brief
- * \notes
- * \params
+ * \brief    Allows caller to request for a cipher as described by
+ *           pCipherInfo
+ * \notes    Error needs to be checked for each call,
+ *           only upon returned is ALC_ERROR_NONE, ctx to be considered
+ *           valid.
+ * \param    pCipherInfo    Description of the cipher session
+ * \param    pCipherHandle  Session handle for future encrypt decrypt
+ *                          operation
+ * \return   Error described by alc_error_t
  */
 alc_error_t
-alcp_cipher_request(const alc_cipher_info_t* cinfo, alc_cipher_ctx_t* ctx);
+alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
+                    alc_cipher_handle_p     pCipherHandle);
 
 /**
- * \brief
- * \notes
- * \params
+ * \brief    Allows caller to request for a cipher as described by
+ *           pCipherInfo
+ * \notes    Error needs to be checked for each call,
+ *           only upon returned is ALC_ERROR_NONE, ctx to be considered
+ *           valid.
+ * \param    pCipherHandle Session handle for future encrypt decrypt
+ *                         operation
+ * \param    pPlainText    Pointer to Plain Text
+ * \param    pCipherText   Pointer to Cipher Text
+ * \param    len           Length of cipher/plain text
+ * \return   Error described by alc_error_t
  */
 alc_error_t
-alcp_cipher_encrypt(const alc_cipher_ctx_t* ctx,
-                    const uint8_t*          plaintxt,
-                    uint8_t*                ciphertxt,
-                    uint64_t                len);
+alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
+                    const uint8_t*            pPlainText,
+                    uint8_t*                  pCipherText,
+                    uint64_t                  len);
 
 /**
- * \brief
- * \notes
- * \params
+ * \brief    Allows caller to request for a cipher as described by
+ *           pCipherInfo
+ * \notes    Error needs to be checked for each call,
+ *           only upon returned is ALC_ERROR_NONE, pCipherHandle
+ *           is valid.
+ * \param    pCipherHandle Session handle for future encrypt decrypt
+ *                         operation
+ * \param    pPlainText    Pointer to Plain Text
+ * \param    pCipherText   Pointer to Cipher Text
+ * \param    len           Length of cipher/plain text
+ * \return   Error described by alc_error_t
  */
 alc_error_t
-alcp_cipher_decrypt(const alc_cipher_ctx_t* ctx,
-                    const uint8_t*          ciphertxt,
-                    uint8_t*                plaintxt,
-                    uint64_t                len);
+alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
+                    const uint8_t*            pCipherText,
+                    uint8_t*                  pPlainText,
+                    uint64_t                  len);
 
 /**
- * \brief
- * \notes
- * \params
+ * \brief       Free resources that was allotted by alcp_cipher_request
+ * \notes       alcp_cipher_request() should be called first to know if the
+ *              given cipher/key length configuration is valid.
+ *
+ * \param pCipherInfo Description of the requested cipher session
+ * \return            None
  */
 void
-alcp_cipher_finish(const alc_cipher_ctx_t* ctx);
+alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle);
 
 EXTERN_C_END
 
