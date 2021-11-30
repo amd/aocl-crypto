@@ -1,4 +1,6 @@
+#include <assert.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h> /* for malloc */
 
 #include "alcp/alcp.h"
@@ -11,10 +13,10 @@ encrypt_demo(const uint8_t* plaintxt,
              uint8_t*       iv,
              const uint32_t key_len)
 {
-    alc_error_t       err;
-    alc_cipher_ctx_t* ctx;
-    const int         err_size = 256;
-    uint8_t           err_buf[err_size];
+    alc_error_t         err;
+    alc_cipher_handle_t handle;
+    const int           err_size = 256;
+    uint8_t             err_buf[err_size];
 
     alc_aes_mode_data_t aes_data = {
         .mode = ALC_AES_MODE_CFB,
@@ -29,13 +31,13 @@ encrypt_demo(const uint8_t* plaintxt,
         .len     = key_len,
     };
     */
-    const alc_cipher_info_t cinfo = {
-        .type        = ALC_CIPHER_TYPE_AES,
-        .data   = {
+    alc_cipher_info_t cinfo = {
+        .cipher_type = ALC_CIPHER_TYPE_AES,
+        .mode_data   = {
             .aes = aes_data,
         },
         //.pad     = ALC_CIPHER_PADDING_NONE,  /* No padding , Not Implemented yet*/
-        .keyinfo     = {
+        .key_info     = {
             .type    = ALC_KEY_TYPE_SYMMETRIC,
             .fmt     = ALC_KEY_FMT_RAW,
             .key     = key,
@@ -52,41 +54,113 @@ encrypt_demo(const uint8_t* plaintxt,
      */
     err = alcp_cipher_supported(&cinfo);
     if (alcp_is_error(err)) {
+        printf("Error: not supported \n");
         alcp_error_str(err, err_buf, err_size);
         return;
     }
-
+    printf("supported succeded\n");
     /*
      * Application is expected to allocate for context
      */
-    ctx = malloc(alcp_cipher_ctx_size(&cinfo));
-    if (!ctx)
-        return;
+    // ctx = malloc(alcp_cipher_context_size(&cinfo));
+    // if (!ctx)
+    //    return;
 
     /* Request a context with cinfo */
-    err = alcp_cipher_request(&cinfo, ctx);
+    err = alcp_cipher_request(&cinfo, &handle);
     if (alcp_is_error(err)) {
+        printf("Error: unable to request \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
+    printf("request succeded\n");
+    err = alcp_cipher_decrypt(&handle, plaintxt, ciphertxt, len);
+    if (alcp_is_error(err)) {
+        printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);
         return;
     }
 
-    err = alcp_cipher_encrypt(ctx, plaintxt, ciphertxt, len);
-    if (alcp_is_error(err)) {
-        alcp_error_str(err, err_buf, err_size);
-        return;
-    }
-
+    printf("decrypt succeded\n");
     /*
      * Complete the transaction
      */
-    alcp_cipher_finish(ctx);
+    alcp_cipher_finish(&handle);
 
-    free(ctx);
+    // free(ctx);
+}
+
+char*   sample_plaintxt = "Hello world from AOCL Crypto";
+uint8_t sample_key[]    = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
+                         0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
+
+uint8_t sample_iv[] = {
+    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
+    0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf,
+};
+
+uint8_t sample_ciphertxt[] = { 0x18, 0xbd, 0x68, 0x25, 0x31, 0x11, 0x07,
+                               0x1e, 0x90, 0x40, 0x32, 0xe6, 0x1f, 0x48,
+                               0x16, 0x12, 0xa3, 0x85, 0xcd, 0xe6, 0x0e,
+                               0x53, 0x63, 0x31, 0x7b, 0x68, 0x36, 0xee };
+
+#define BITS_PER_BYTE 8
+
+int
+alloc_and_test()
+{
+    void *    plaintxt, *ciphertxt, *output;
+    const int keylen = 256, keylen_bytes = keylen / 8,
+              keylen_words = keylen / sizeof(uint32_t) * BITS_PER_BYTE;
+
+    uint8_t  key[keylen_bytes];
+    uint32_t iv[] = {
+        0x1,
+        0x2,
+        0x3,
+        0x4,
+    };
+
+    assert(keylen_words == sizeof(iv));
+
+    /* TODO: get this through command line */
+    int buf_len = 1024 * 1024; /* Length of 1 buffer */
+    int num_buf = 1;           /* number of buffers of length 'buf_len' */
+
+    plaintxt = calloc(buf_len, num_buf);
+    if (!plaintxt)
+        goto out;
+
+    ciphertxt = calloc(buf_len, num_buf);
+    if (!ciphertxt)
+        goto free_plaintxt_out;
+
+    output = calloc(buf_len, num_buf);
+    if (!output)
+        goto free_ciphertxt_out;
+
+free_ciphertxt_out:
+    free(ciphertxt);
+
+free_plaintxt_out:
+    free(plaintxt);
+
+out:
+    return 0;
 }
 
 int
 main(void)
 {
+    uint8_t sample_output[512];
+
+    encrypt_demo(
+        sample_plaintxt,
+        sizeof(sample_plaintxt), /* Describes both 'plaintxt' and 'ciphertxt' */
+        sample_ciphertxt,
+        sample_key,
+        sample_iv,
+        sizeof(sample_key));
+
     return 0;
 }
-
