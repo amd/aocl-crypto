@@ -26,33 +26,123 @@
  *
  */
 
-#ifndef _ALCP_CIPHER_H_
-#define _ALCP_CIPHER_H_ 2
+#ifndef _INCLUDE_CIPHER_HH_
+#define _INCLUDE_CIPHER_HH_ 2
 
-#include <alcp/cipher/aes.hh>
+#include <array>
+#include <cstdint>
+#include <functional>
+
+#include "alcp/cipher.h"
+
+#include "error.hh"
 
 namespace alcp {
 
-class CipherInterface
+namespace cipher {
+
+    typedef alc_error_t(CipherFunction)(const uint8_t* pSrc,
+                                        uint8_t*       pDst,
+                                        uint8_t*       pKey,
+                                        uint64_t       len);
+
+    /*
+     * \brief
+     * \notes   TODO: This needs to be distributed to the class Cipher
+     *
+     */
+    struct Context
+    {
+        uint8_t* src;
+        uint8_t* dst;
+        uint8_t* iv;
+        uint8_t  key[0]; /* should be last */
+    };
+} // namespace cipher
+
+class Encrypter
 {
-  private:
-    CipherInterface() {}
-
   public:
-    virtual ~CipherInterface() = 0;
+    virtual cipher::CipherFunction encrypt = 0;
 
-  public:
-    virtual alc_error_t Encrypt(std::array plaintxt,
-                                std::array ciphertxt,
-                                std::array key) = 0;
-
-    virtual alc_error_t Decrypt(std::array plaintxt,
-                                std::array ciphertxt,
-                                std::array key) = 0;
-
-    virtual alc_error_t Size() = 0;
+  protected:
+    virtual ~Encrypter() {}
 };
+
+class Decrypter
+{
+  public:
+    virtual cipher::CipherFunction decrypt = 0;
+
+  protected:
+    virtual ~Decrypter() {}
+};
+
+class EncryptUpdater
+{
+  public:
+    virtual cipher::CipherFunction encryptUpdate = 0;
+    virtual cipher::CipherFunction encryptFinal  = 0;
+
+  protected:
+    virtual ~EncryptUpdater() {}
+};
+
+class DecryptUpdater
+{
+  public:
+    virtual cipher::CipherFunction decryptUpdate = 0;
+    virtual cipher::CipherFunction decryptFinal  = 0;
+
+  protected:
+    virtual ~DecryptUpdater() {}
+
+  private:
+    DecryptUpdater() {}
+};
+
+class Cipher
+{
+  protected:
+    Cipher() {}
+    virtual ~Cipher() {}
+
+    /*
+     * \brief
+     */
+    static bool isAesniAvailable()
+    {
+        /*
+         * TODO: call cpuid::isAesniAvailable() initialize
+         */
+        static bool s_aesni_available = true;
+        return s_aesni_available;
+    }
+
+  public:
+    /*
+     * TODO: This probably not needed, Look into removing this
+     *
+     * we should not allow the memory for the
+     * object to be allocated outside the library, this will complicate things.
+     *
+     */
+    virtual uint64_t getContextSize(const alc_cipher_info_p pCipherInfo,
+                                    alc_error_t&            err) = 0;
+};
+
+class BlockCipher
+    : public Cipher
+    //    , public Encrypter
+    , public Decrypter
+{};
+
+class StreamCipher
+    : public Cipher
+    , public EncryptUpdater
+    , public DecryptUpdater
+{};
 
 } // namespace alcp
 
-#endif /* _ALCP_CIPHER_H_ */
+#endif /* _INCLUDE_CIPHER_HH_ */

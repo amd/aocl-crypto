@@ -57,7 +57,7 @@ __alc_extract64(uint64_t value, int start, int length)
 #define ALC_ERROR_MODULE(x)                                                    \
     __alc_extract64(x.e_val, ERROR_MODULE_SHIFT, ERROR_MODULE_LEN)
 
-class Error::Impl
+class Impl
 {
   public:
     union
@@ -75,37 +75,19 @@ class Error::Impl
 };
 
 Error::Error()
-    : impl(new Impl)
+//    : impl(new Impl)
 {}
 
-Error::Error(alc_error_generic_t gt)
-    : Error()
-{
-    impl.get()->m_data.fields.general = gt;
-}
-
-Error::Error(alc_error_t err)
-    : Error()
-{
-    impl->m_data.value = err;
-}
-
 int
-Error::print(uint8_t* buf, uint64_t size)
+Error::print(alc_error_t& err, uint8_t* buf, uint64_t size)
 {
     return std::snprintf((char*)buf, size, "An Error Occurred");
 }
 
 bool
-Error::isError() const
+Error::isError(alc_error_t& err)
 {
-    return impl.get()->m_data.value != 0;
-}
-
-alc_error_t
-Error::getCValue()
-{
-    return impl->m_data.value;
+    return err != 0;
 }
 
 } // namespace alcp

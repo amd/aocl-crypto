@@ -30,7 +30,6 @@
 #define _INCLUDE_MODULE_H_ 2
 
 #include <string>
-#include <vector>
 
 #include "alcp/cipher.h"
 
@@ -56,11 +55,11 @@ typedef struct _alc_module_info
     alc_module_type_t type;
     union
     {
-        const alc_cipher_info_t* cipher;
-        // const alc_digest_info_t* digest;
-        // const alc_mac_info_t* mac;
-        // const alc_aead_info_t* aead;
-        // const alc_rng_info_t* rng;
+        const alc_cipher_info_p cipher;
+        // const alc_digest_info_p digest;
+        // const alc_mac_info_p mac;
+        // const alc_aead_info_p aead;
+        // const alc_rng_info_p rng;
     } data;
 } alc_module_info_t;
 
@@ -75,12 +74,13 @@ class Module
     Module(alc_module_info_t* minfo);
     std::string       getName();
     alc_module_type_t getType();
-    alc_error_t       isSupported(const alc_cipher_info_t* cinfo) const;
+    bool isSupported(const alc_cipher_info_p c, alc_error_t& e) const;
 
   private:
-    alc_module_type_t      m_type;
-    alc_module_data_t*     m_data;
-    std::vector<Algorithm> m_algo;
+    alc_module_info_t m_info;
+
+    class Impl;
+    std::unique_ptr<Impl> impl;
 };
 
 } // namespace alcp

@@ -26,8 +26,8 @@
  *
  */
 
-#ifndef _INCLUDE_MODULEMANAGER_H_
-#define _INCLUDE_MODULEMANAGER_H_ 2
+#ifndef _INCLUDE_MODULEMANAGER_HH_
+#define _INCLUDE_MODULEMANAGER_HH_ 2
 
 #include <memory> /* for std::unique_ptr */
 #include <vector>
@@ -43,27 +43,10 @@ class ModuleManager
   public:
     static ModuleManager& getInstance();
 
-    bool isSupported(const alc_cipher_info_t* cinfo, Error& err);
-#if 0
-    // bool isSupported(const alc_digest_info_t* cinfo);
-    // bool isSupported(const alc_rng_info_t* cinfo);
-#endif
+    Error& addModule(alc_module_info_t* minfo);
+    Error& deleteModule(alc_module_info_t* minfo);
 
-    Error* addModule(alc_module_info_t* minfo);
-    Error* deleteModule(alc_module_info_t* minfo);
-
-    bool requestModule(const alc_cipher_info_t* cinfo,
-                       alc_cipher_ctx_t*        ctx,
-                       Error&                   err);
-
-#if 0
-    bool   requestModule(const alc_digest_info_t* cinfo,
-                         alc_digest_ctx_t*        ctx,
-                         Error&                   err);
-    bool   requestModule(const alc_rng_info_t* cinfo,
-                         alc_rng_ctx_t*        ctx,
-                         Error&                   err);
-#endif
+    Module* findModule(const alc_module_info_t* ctx, alc_error_t& err);
 
   public:
     ModuleManager(ModuleManager const&) = delete;
@@ -76,13 +59,8 @@ class ModuleManager
   private:
     class Impl;
     std::unique_ptr<Impl> impl;
-
-    std::vector<Module*> m_cipher;
-    std::vector<Module*> m_digest;
-    std::vector<Module*> m_rng;
-    std::vector<Module*> m_mac;
 };
 
 } // namespace alcp
 
-#endif /* _INCLUDE_MODULEMANAGER_H_ */
+#endif /* _INCLUDE_MODULEMANAGER_HH_ */

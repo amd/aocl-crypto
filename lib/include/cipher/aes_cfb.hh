@@ -25,67 +25,22 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include <list>
-#include <string>
-#include <unordered_map>
-#include <vector>
 
-#include "alcp/cipher.h"
+#ifndef _CIPHER_AES_CFB_HH_
+#define _CIPHER_AES_CFB_HH_ 2
 
-#include "module.hh"
+#include <cstdint>
 
-namespace alcp {
+#include "alcp/error.h"
 
-class Module::Impl
-{
-  public:
-    using CipherModuleList = std::list<CipherAlgorithm*>;
-    using CipherMap = std::unordered_map<alc_cipher_type_t, CipherModuleList>;
-#if 0
-    typedef std::unordered_map<const alc_rng_type_t, module_list_t> RngMap;
-    typedef std::unordered_map<const alc_digest_type_t, module_list_t>
-    DigestMap;
-#endif
-    bool isCipherSupported(const alc_cipher_info_p pCipherInfo,
-                           alc_error_t&            err) const;
-    bool isType(alc_module_type_t t) const { return t == m_type; }
+#include "error.hh"
 
-  private:
-    std::string       m_name;
-    alc_module_type_t m_type;
-    CipherMap         m_cipher_map;
-    // DigestMap   m_digest_map
-    std::vector<Algorithm> m_algo;
-};
+namespace alcp::cipher { namespace aes {
+    alc_error_t Decrypt256(const uint8_t* ciphertxt,
+                           uint8_t*       plaintxt,
+                           int            len,
+                           uint8_t*       key,
+                           const uint8_t* iv);
+}} // namespace alcp::cipher::aes
 
-bool
-Module::Impl::isCipherSupported(const alc_cipher_info_p pCipherInfo,
-                                alc_error_t&            err) const
-{
-    CipherModuleList mlist = m_cipher_map.at(pCipherInfo->cipher_type);
-
-    /* TODO: investigate if we need to take a 'rwlock' before reading */
-    for (auto& m : mlist) {
-        if (m->isSupported(pCipherInfo, err))
-            return true;
-    }
-
-    return false;
-}
-
-bool
-Module::isSupported(const alc_cipher_info_p pCipherInfo, alc_error_t& err) const
-{
-    if (impl->isCipherSupported(pCipherInfo, err))
-        return true;
-
-    return false;
-}
-
-alc_module_type_t
-Module::getType()
-{
-    return ALC_MODULE_TYPE_CIPHER;
-}
-
-} // namespace alcp
+#endif /* _CIPHER_AES_CFB_HH_ */

@@ -44,9 +44,7 @@ alc_error_str_internal(alc_error_t err,
 void
 alcp_error_str(alc_error_t err, uint8_t* buf, uint64_t size)
 {
-    auto e = new alcp::Error(err);
-
-    e->print(buf, size);
+    alcp::Error::print(err, buf, size);
 }
 
 EXTERN_C_END

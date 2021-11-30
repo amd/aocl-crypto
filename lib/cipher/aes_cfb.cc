@@ -25,67 +25,45 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include <list>
-#include <string>
-#include <unordered_map>
-#include <vector>
 
-#include "alcp/cipher.h"
+#include "cipher/aes.hh"
 
-#include "module.hh"
+#include <iostream>
 
-namespace alcp {
+namespace alcp::cipher {
 
-class Module::Impl
+uint64_t
+Cfb::getContextSize(const alc_cipher_info_p pCipherInfo, alc_error_t& err)
 {
-  public:
-    using CipherModuleList = std::list<CipherAlgorithm*>;
-    using CipherMap = std::unordered_map<alc_cipher_type_t, CipherModuleList>;
-#if 0
-    typedef std::unordered_map<const alc_rng_type_t, module_list_t> RngMap;
-    typedef std::unordered_map<const alc_digest_type_t, module_list_t>
-    DigestMap;
-#endif
-    bool isCipherSupported(const alc_cipher_info_p pCipherInfo,
-                           alc_error_t&            err) const;
-    bool isType(alc_module_type_t t) const { return t == m_type; }
-
-  private:
-    std::string       m_name;
-    alc_module_type_t m_type;
-    CipherMap         m_cipher_map;
-    // DigestMap   m_digest_map
-    std::vector<Algorithm> m_algo;
-};
+    /* FIXME: returning 100 for now, fix  */
+    return 100;
+}
 
 bool
-Module::Impl::isCipherSupported(const alc_cipher_info_p pCipherInfo,
-                                alc_error_t&            err) const
+Cfb::isSupported(const alc_cipher_info_p pCipherInfo, alc_error_t& err)
 {
-    CipherModuleList mlist = m_cipher_map.at(pCipherInfo->cipher_type);
+    /* FIXME: sending supported for now */
+    return true;
+}
 
-    /* TODO: investigate if we need to take a 'rwlock' before reading */
-    for (auto& m : mlist) {
-        if (m->isSupported(pCipherInfo, err))
-            return true;
+alc_error_t
+Cfb::decrypt(const uint8_t* pCipherText,
+             uint8_t*       pPlainText,
+             uint8_t*       pKey,
+             uint64_t       len)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    // TODO: Check for CPUID before dispatching
+    if (Cipher::isAesniAvailable()) {
+        // dispatch to VAESNI
+        err = aesni::DecryptCfb(pCipherText, pPlainText, len, pKey, 10, pKey);
+        return err;
     }
 
-    return false;
+    // dispatch to REF
+
+    return err;
 }
 
-bool
-Module::isSupported(const alc_cipher_info_p pCipherInfo, alc_error_t& err) const
-{
-    if (impl->isCipherSupported(pCipherInfo, err))
-        return true;
-
-    return false;
-}
-
-alc_module_type_t
-Module::getType()
-{
-    return ALC_MODULE_TYPE_CIPHER;
-}
-
-} // namespace alcp
+} // namespace alcp::cipher

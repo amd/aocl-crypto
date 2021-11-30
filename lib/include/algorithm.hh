@@ -26,14 +26,55 @@
  *
  */
 
-#ifndef _INCLUDE_ALGORITHM_H_
-#define _INCLUDE_ALGORITHM_H_ 2
+#ifndef _INCLUDE_ALGORITHM_HH_
+#define _INCLUDE_ALGORITHM_HH_ 2
+
+#include <cstdint>
+#include <memory>
+#include <string>
+
+#include "alcp/cipher.h"
+#include "alcp/error.h"
 
 namespace alcp {
 
+enum class AlgorithmType : uint32_t
+{
+    Unknown,
+    Digest,
+    Cipher,
+    Aead,
+    Mac,
+};
+
 class Algorithm
-{};
+{
+  public:
+    Algorithm();
+
+  protected:
+    ~Algorithm();
+
+  private:
+    class Impl;
+    std::unique_ptr<Impl> impl;
+    std::string           name;
+    AlgorithmType         type;
+};
+
+class CipherAlgorithm
+{
+  public:
+    /**
+     * \brief
+     * \notes
+     * \param
+     * \return
+     */
+    virtual bool isSupported(const alc_cipher_info_p pCipherInfo,
+                             alc_error_t&            err) = 0;
+};
 
 } // namespace alcp
 
-#endif /* _INCLUDE_ALGORITHM_H_ */
+#endif /* _INCLUDE_ALGORITHM_HH_ */

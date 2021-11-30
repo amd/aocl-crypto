@@ -28,6 +28,8 @@
 
 #include <iostream> /* TODO: Remove this after testing */
 #include <list>
+#include <unordered_map>
+#include <vector>
 
 #include "alcp/error.h"
 
@@ -38,17 +40,16 @@ namespace alcp {
 
 class ModuleManager::Impl
 {
-  private:
+  public:
+    std::unordered_map<alc_module_type_t, std::vector<Module*>> m_modules;
 };
 
 ModuleManager::ModuleManager()
-    : impl(new Impl)
+    : impl{ new Impl }
 {
     std::cout << "Size is : " << sizeof(ModuleManager)
-              << "and pimpl: " << sizeof(Impl) << std::endl;
+              << "  and pimpl: " << sizeof(Impl) << std::endl;
 }
-
-ModuleManager::~ModuleManager() {}
 
 ModuleManager&
 ModuleManager::getInstance()
@@ -57,21 +58,26 @@ ModuleManager::getInstance()
     return mm;
 }
 
-bool
-ModuleManager::isSupported(const alc_cipher_info_t* minfo, Error& err)
-{
-    // err.setDetail();
-    return false;
-}
+ModuleManager::~ModuleManager() {}
 
-bool
-ModuleManager::requestModule(const alc_cipher_info_t* cinfo,
-                             alc_cipher_ctx_t*        ctx,
-                             Error&                   err)
+Module*
+ModuleManager::findModule(const alc_module_info_t* ainfo, alc_error_t& err)
 {
-    Module* m = (Module*)ctx;
 
-    return false;
+    std::vector<Module*> loc = impl->m_modules.at(ainfo->type);
+
+    for (auto& m : loc) {
+        switch (m->getType())
+
+        case ALC_MODULE_TYPE_CIPHER: {
+            alc_error_t e;
+            if (m->isSupported(ainfo->data.cipher, e))
+                if (Error::isError(e))
+                    return m;
+        } break;
+    }
+
+    return nullptr;
 }
 
 } // namespace alcp

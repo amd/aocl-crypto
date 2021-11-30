@@ -33,27 +33,19 @@
 
 #include "alcp/error.h"
 
-#include "module.hh"
-
 namespace alcp {
-
 class Error
 {
   public:
-    Error(alc_error_generic_t gt);
-    Error(alc_error_t err);
-    void        setModule(alc_module_type_t m);
-    void        setDetail(alc_error_detail_t ed);
-    int         print(uint8_t* buf, uint64_t len);
-    bool        isError() const;
-    alc_error_t getCValue();
-    //~Error() {}
+    static void setGeneric(alc_error_t& err, alc_error_generic_t gen);
+    static void setDetail(alc_error_t& err, alc_error_detail_t det);
+    static void setModule(alc_error_t& err, uint16_t mod);
+    static int  print(alc_error_t& err, uint8_t* buf, uint64_t len);
+    static bool isError(alc_error_t& err);
 
   private:
     Error();
-
-    class Impl;
-    std::unique_ptr<Impl> impl;
+    ~Error();
 };
 
 } // namespace alcp

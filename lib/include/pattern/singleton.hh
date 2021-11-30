@@ -5,7 +5,7 @@ template<class T>
 class Singleton : public DisableCopyMove
 {
 public:
-    static T& instance(void)
+    static T& getInstance(void)
     {
         static T _impl;
         return _impl;
