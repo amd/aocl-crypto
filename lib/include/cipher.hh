@@ -43,21 +43,9 @@ namespace cipher {
 
     typedef alc_error_t(CipherFunction)(const uint8_t* pSrc,
                                         uint8_t*       pDst,
-                                        uint8_t*       pKey,
-                                        uint64_t       len);
-
-    /*
-     * \brief
-     * \notes   TODO: This needs to be distributed to the class Cipher
-     *
-     */
-    struct Context
-    {
-        uint8_t* src;
-        uint8_t* dst;
-        uint8_t* iv;
-        uint8_t  key[0]; /* should be last */
-    };
+                                        uint64_t       len,
+                                        const uint8_t* pKey,
+                                        const uint8_t* pIv);
 } // namespace cipher
 
 class Encrypter
@@ -72,7 +60,14 @@ class Encrypter
 class Decrypter
 {
   public:
+#if 0
+    virtual alc_error_t decrypt(const uint8_t* pSrc,
+                                uint8_t*       pDst,
+                                const uint8_t* pKey,
+                                uint64_t       len) = 0;
+#else
     virtual cipher::CipherFunction decrypt = 0;
+#endif
 
   protected:
     virtual ~Decrypter() {}
@@ -108,12 +103,12 @@ class Cipher
     virtual ~Cipher() {}
 
     /*
-     * \brief
+     * \brief  Checks if VAESNI feature is enabled
      */
     static bool isAesniAvailable()
     {
         /*
-         * TODO: call cpuid::isAesniAvailable() initialize
+         * FIXME: call cpuid::isAesniAvailable() initialize
          */
         static bool s_aesni_available = true;
         return s_aesni_available;
@@ -127,8 +122,8 @@ class Cipher
      * object to be allocated outside the library, this will complicate things.
      *
      */
-    virtual uint64_t getContextSize(const alc_cipher_info_p pCipherInfo,
-                                    alc_error_t&            err) = 0;
+    // virtual uint64_t getContextSize(const alc_cipher_info_p pCipherInfo,
+    //                              alc_error_t&            err) = 0;
 };
 
 class BlockCipher

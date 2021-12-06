@@ -43,20 +43,35 @@
 
 namespace alcp::cipher {
 
+namespace aesni {
+    alc_error_t DecryptCfb(const uint8_t* pCipherText,
+                           uint8_t*       pPlainText,
+                           uint64_t       len,
+                           const uint8_t* pKey,
+                           int            nRounds,
+                           const uint8_t* pIv);
+
+} // namespace aesni
+
 typedef std::function<bool(const uint8_t*, uint8_t*, uint8_t*) const> Funcs;
 
-class Rijndael
-    : public BlockCipher
-    , public Algorithm
+class Rijndael : public BlockCipher
+//, public Algorithm
 {
-  protected:
-    cipher::Context m_ctx;
-    uint64_t        m_nrounds;
-    uint64_t        m_key_size;
+  public:
+    uint64_t       getRounds() { return m_nrounds; }
+    uint64_t       getKeySize() { return m_key_size; }
+    const uint8_t* getKey() { return m_key; }
 
   protected:
     Rijndael() {}
     virtual ~Rijndael() {}
+
+#define RIJ_SIZE_ALIGNED (2 * 256)
+  protected:
+    uint8_t  m_key[RIJ_SIZE_ALIGNED];
+    uint64_t m_nrounds;
+    uint64_t m_key_size;
 };
 
 /*
@@ -70,8 +85,10 @@ class Aes : public Rijndael
 {
   public:
     Aes() {}
-
     virtual ~Aes() {}
+
+    // virtual bool isSupported(const alc_aes_mode_data_p pAesMode,
+    //                       alc_error_t&              err) = 0;
 
   protected:
     alc_aes_mode_t m_mode;
@@ -87,7 +104,14 @@ class Cfb final
     , public CipherAlgorithm
 {
   public:
-    Cfb() {}
+    Cfb(alc_cipher_info_p pCipherInfo)
+    {
+        auto& aes_mode_data = pCipherInfo->mode_data;
+
+        m_cipher_info.cipher_type        = pCipherInfo->cipher_type;
+        m_cipher_info.mode_data.aes.mode = aes_mode_data.aes.mode;
+    }
+
     ~Cfb() {}
 
   public:
@@ -97,16 +121,21 @@ class Cfb final
      * \param
      * \return
      */
-    virtual uint64_t getContextSize(const alc_cipher_info_p pCipherInfo,
-                                    alc_error_t&            err) final;
-    /**
-     * \brief
-     * \notes
-     * \param
-     * \return
-     */
     virtual bool isSupported(const alc_cipher_info_p pCipherInfo,
-                             alc_error_t&            err) final;
+                             alc_error_t&            err)
+    {
+        /* FIXME: sending supported for now */
+        return true;
+    }
+
+    virtual bool isSupported(const alc_aes_mode_data_p pAesMode,
+                             alc_error_t&              err) final
+    {
+        if (pAesMode->mode == ALC_AES_MODE_CFB)
+            return true;
+
+        return false;
+    }
 
     /**
      * \brief
@@ -116,40 +145,49 @@ class Cfb final
      */
     virtual alc_error_t decrypt(const uint8_t* pCipherText,
                                 uint8_t*       pPlainText,
-                                uint8_t*       pKey,
-                                uint64_t       len) final;
+                                uint64_t       len,
+                                const uint8_t* pKey,
+                                const uint8_t* pIv) final
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+
+        // TODO: Check for CPUID before dispatching
+        if (Cipher::isAesniAvailable()) {
+            // dispatch to VAESNI
+            err = aesni::DecryptCfb(
+                pCipherText, pPlainText, len, pKey, m_nrounds, pIv);
+            return err;
+        }
+
+        // dispatch to REF
+
+        return err;
+    }
+
+  private:
+    Cfb() = default;
 };
 
-class AesBuilder
+class CipherBuilder
 {
   public:
-    static Aes* Build(alc_cipher_info_p pCipherInfo, alc_error_t& err)
+    static CipherAlgorithm* Build(alc_cipher_info_p pCipherInfo,
+                                  alc_error_t&      err)
     {
-        Aes* aes = nullptr;
+        CipherAlgorithm* cp = nullptr;
 
         switch (pCipherInfo->mode_data.aes.mode) {
             case ALC_AES_MODE_CFB:
-                auto cfb_algo = new Cfb();
-                cfb_algo->isSupported(pCipherInfo, err);
-                if (Error::isError(err)) {
-                    delete cfb_algo;
+                auto algo = new Cfb(pCipherInfo);
+                algo->isSupported(pCipherInfo, err);
+                if (!Error::isError(err)) {
+                    cp = algo;
                 }
-                aes = cfb_algo;
                 break;
         }
-        return aes;
+        return cp;
     }
 };
-
-namespace aesni {
-    alc_error_t DecryptCfb(const uint8_t* pCipherText,
-                           uint8_t*       pPlainText,
-                           uint64_t       len,
-                           uint8_t*       pKey,
-                           int            nRounds,
-                           const uint8_t* pIv);
-
-} // namespace aesni
 
 namespace aesni {
 

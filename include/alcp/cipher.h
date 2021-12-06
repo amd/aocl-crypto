@@ -78,6 +78,7 @@ typedef struct _alc_cipher_info
 
 /**
  * \brief
+ *
  * \notes
  */
 typedef void alc_cipher_context_t;
@@ -159,18 +160,22 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
  * \notes    Error needs to be checked for each call,
  *           only upon returned is ALC_ERROR_NONE, pCipherHandle
  *           is valid.
- * \param    pCipherHandle Session handle for future encrypt decrypt
+ * \param[in]    pCipherHandle    Session handle for future encrypt decrypt
  *                         operation
- * \param    pPlainText    Pointer to Plain Text
- * \param    pCipherText   Pointer to Cipher Text
- * \param    len           Length of cipher/plain text
+ * \param[in]    pPlainText    Pointer to Plain Text
+ * \param[out]   pCipherText   Pointer to Cipher Text
+ * \param[in]    pKey          Pointer to Key
+ * \param[in]    pIv           Pointer to Initialization Vector
+ * \param[in]    len           Length of cipher/plain text
  * \return   Error described by alc_error_t
  */
 alc_error_t
 alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
                     const uint8_t*            pCipherText,
                     uint8_t*                  pPlainText,
-                    uint64_t                  len);
+                    uint64_t                  len,
+                    const uint8_t*            pKey,
+                    const uint8_t*            pIv);
 
 /**
  * \brief       Free resources that was allotted by alcp_cipher_request

@@ -32,38 +32,4 @@
 
 namespace alcp::cipher {
 
-uint64_t
-Cfb::getContextSize(const alc_cipher_info_p pCipherInfo, alc_error_t& err)
-{
-    /* FIXME: returning 100 for now, fix  */
-    return 100;
-}
-
-bool
-Cfb::isSupported(const alc_cipher_info_p pCipherInfo, alc_error_t& err)
-{
-    /* FIXME: sending supported for now */
-    return true;
-}
-
-alc_error_t
-Cfb::decrypt(const uint8_t* pCipherText,
-             uint8_t*       pPlainText,
-             uint8_t*       pKey,
-             uint64_t       len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // TODO: Check for CPUID before dispatching
-    if (Cipher::isAesniAvailable()) {
-        // dispatch to VAESNI
-        err = aesni::DecryptCfb(pCipherText, pPlainText, len, pKey, 10, pKey);
-        return err;
-    }
-
-    // dispatch to REF
-
-    return err;
-}
-
 } // namespace alcp::cipher

@@ -6,9 +6,9 @@
 #include "alcp/alcp.h"
 
 void
-encrypt_demo(const uint8_t* plaintxt,
+decrypt_demo(const uint8_t* ciphertxt,
              const uint32_t len, /* Describes both 'plaintxt' and 'ciphertxt' */
-             uint8_t*       ciphertxt,
+             uint8_t*       plaintxt,
              uint8_t*       key,
              uint8_t*       iv,
              const uint32_t key_len)
@@ -36,7 +36,8 @@ encrypt_demo(const uint8_t* plaintxt,
         .mode_data   = {
             .aes = aes_data,
         },
-        //.pad     = ALC_CIPHER_PADDING_NONE,  /* No padding , Not Implemented yet*/
+        /* No padding, Not Implemented yet*/
+        //.pad     = ALC_CIPHER_PADDING_NONE, 
         .key_info     = {
             .type    = ALC_KEY_TYPE_SYMMETRIC,
             .fmt     = ALC_KEY_FMT_RAW,
@@ -58,7 +59,7 @@ encrypt_demo(const uint8_t* plaintxt,
         alcp_error_str(err, err_buf, err_size);
         return;
     }
-    printf("supported succeded\n");
+    printf("supported succeeded\n");
     /*
      * Application is expected to allocate for context
      */
@@ -73,15 +74,15 @@ encrypt_demo(const uint8_t* plaintxt,
         alcp_error_str(err, err_buf, err_size);
         return;
     }
-    printf("request succeded\n");
-    err = alcp_cipher_decrypt(&handle, plaintxt, ciphertxt, len);
+    printf("request succeeded\n");
+    err = alcp_cipher_decrypt(&handle, ciphertxt, plaintxt, len, key, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);
         return;
     }
 
-    printf("decrypt succeded\n");
+    printf("decrypt succeeded\n");
     /*
      * Complete the transaction
      */
@@ -154,13 +155,16 @@ main(void)
 {
     uint8_t sample_output[512];
 
-    encrypt_demo(
-        sample_plaintxt,
-        sizeof(sample_plaintxt), /* Describes both 'plaintxt' and 'ciphertxt' */
+    decrypt_demo(
         sample_ciphertxt,
+        sizeof(sample_ciphertxt), /* len of both 'plaintxt' and 'ciphertxt' */
+        sample_output,
         sample_key,
         sample_iv,
         sizeof(sample_key));
 
     return 0;
 }
+
+/*  LocalWords:  decrypt Crypto AOCL
+ */

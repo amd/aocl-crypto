@@ -2,5 +2,6 @@ clang
 %c -std=c11
 %cpp -std=c++17
 %h %hpp --include=include/macros.h
+-D__cplusplus
 -Iinclude
 -Ilib/include

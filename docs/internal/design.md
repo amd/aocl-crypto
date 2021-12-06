@@ -140,7 +140,7 @@ provided. Recommended Readings:
 The AOCL Crypto library provides C99 like API described in detail in
 [API](#api-design). Though the internal structures are implemented using C++
 with no advanced features. This decision is taken to avoid writing primitive
-library functions like stacks/queues or heaps to manage the module/algorithms.
+library functions like stacks/queues or heaps to [<0;199;17M]manage the module/algorithms.
 Also the C++ STL provides enough gears to achieve the needed functionality with
 least efforts.
 
@@ -176,7 +176,10 @@ modules/plugins to/from the library.
 
 To simplify the object access types, we introduce following notion
 
-  1. Attributes - All the above mentioned components have attributes, an
+  1. Types - Each category (module) will have many types of schemes, this needs
+     to be highlighted using one of the `type` mechanisms.
+  
+  2. Attributes - All the above mentioned components have attributes, an
      attribute defines properties for a given object or a context, may it be an
      algorithm or a module.
      
@@ -257,10 +260,13 @@ subjected to change, overall structure would be comparable to following
           - _lib/compat/openssl_ : OpenSSL Compatibility layer
           - _lib/compat/ippcp_   : Intel IPP CP compatibility layer
 
-# Detailed System Design
-## Error Reporting
 
-### AOCL Crypto Error codes
+# Detailed System Design
+
+## Error Reporting
+### Design
+
+### API
 This section needs to be populated from Detailed Subsystem design, and each
 subsystem needs to either make use of existing error codes or define new ones
 that may be relevant only to that subsystem.
@@ -274,8 +280,9 @@ TODO: This structure needs to go to proper section
 
 The `alc_error_t` is designed to contain all the information in a single 64-bit
 value. For external API user, its just an opaque type defined to be a pointer.
+
 ```c
-typedef void*  alc_error_t;
+typedef uint64_t alc_error_t;
 
 ```
 
@@ -334,31 +341,10 @@ alcp_error_str(alc_error_t err,
 ```
 
 
-### Creating a new error 
-The `alc_error_new()` is provided to create a new error out of given parameters.
-It builds a returnable 64-bit value.
 
-```c
-alc_error_t
-alcp_error_new(alc_error_high_t high,  /* High level error code */
-               alc_error_low_t low,    /* Low level error code */
-               alc_module_t mod,       /* Module ID */
-               uint16_t reserved)
-{
-    alc_error_t err = {0,};
+### Implementation
+Internally errors are represented as `class Error`
 
-    if (high)
-        err.e_fields.ef_general = high;
-
-    if (low)
-        err.e_fields.ef_detail = low;
-
-    if (mod)
-        err.e_fields.ef_module = mod;
-
-    return err;
-}
-```
 
 
 

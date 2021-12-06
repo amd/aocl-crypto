@@ -45,6 +45,7 @@ ENDIF()
 
 IF (ALCP_ENABLE_EXAMPLES)
 	ADD_SUBDIRECTORY(examples)
+	MESSAGE(STATUS "Adding Examples to the build")
 ENDIF()
 
 IF (ALCP_ENABLE_TESTS)

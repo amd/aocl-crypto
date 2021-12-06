@@ -39,7 +39,7 @@ alc_error_t
 DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
            uint8_t*       pPlainText,  // ptr to plaintext
            uint64_t       len,         // message length in bytes
-           uint8_t*       pKey,        // ptr to Key
+           const uint8_t* pKey,        // ptr to Key
            int            nRounds,     // No. of rounds
            const uint8_t* pIv          // ptr to Initialization Vector
 )
@@ -140,7 +140,7 @@ DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
     }
 
     if (blocks) {
-        assert("Should not come here\n");
+        /* There is one block left */
     }
 
     return err;
