@@ -98,6 +98,7 @@ class DecryptUpdater
 
 class Cipher
 {
+  public:
   protected:
     Cipher() {}
     virtual ~Cipher() {}
@@ -114,16 +115,8 @@ class Cipher
         return s_aesni_available;
     }
 
-  public:
-    /*
-     * TODO: This probably not needed, Look into removing this
-     *
-     * we should not allow the memory for the
-     * object to be allocated outside the library, this will complicate things.
-     *
-     */
-    // virtual uint64_t getContextSize(const alc_cipher_info_p pCipherInfo,
-    //                              alc_error_t&            err) = 0;
+  private:
+    // None
 };
 
 class BlockCipher

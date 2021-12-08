@@ -92,7 +92,7 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
     pCipherHandle->context = cipher_context;
     // pCipherHandle->context = static_cast<Cipher&>(mod)
 
-    return ALC_ERROR_NONE;
+    return e;
 }
 
 alc_error_t

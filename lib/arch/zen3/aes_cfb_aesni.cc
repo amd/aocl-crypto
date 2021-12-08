@@ -53,9 +53,9 @@ DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
 
     __m256i IV = _mm256_set_epi64x(0, 0, pIv64[1], pIv64[0]);
 
-    int blocks = len / AES_BLOCK_SIZE(128);
+    uint64_t blocks = len / Rijndael::eBytes128;
 
-    if ((8 * 2) <= blocks) {
+    for (; blocks > (4 * 2); blocks -= (4 * 2)) {
         __m256i blk0 = _mm256_loadu_si256(ct256_p);
         __m256i blk1 = _mm256_loadu_si256(ct256_p + 1);
         __m256i blk2 = _mm256_loadu_si256(ct256_p + 2);
@@ -140,7 +140,22 @@ DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
     }
 
     if (blocks) {
-        /* There is one block left */
+        /* There is one block left - 128bit / 16bytes left */
+        /* TODO: This part is untested */
+        uint64_t* pIv64 = (uint64_t*)ct256_p;
+        __m256i   mask  = _mm256_set_epi64x(1UL << 63, 1UL << 63, 0, 0);
+
+        // load ciphertext
+        __m256i blk0 = _mm256_maskload_epi64((const long long*)pIv64, mask);
+        __m256i y0   = _mm256_set_epi64x(pIv64[1], pIv64[0], 0, 0);
+
+        y0 = (y0 | IV);
+
+        aesni::AESEncrypt(&y0, pKey128, nRounds);
+
+        blk0 = _mm256_xor_si256(blk0, y0);
+
+        _mm256_maskstore_epi64((long long*)pt256_p, mask, blk0);
     }
 
     return err;

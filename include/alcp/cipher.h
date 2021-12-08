@@ -57,23 +57,23 @@ typedef enum _alc_aes_mode
     ALC_AES_MODE_MAX,
 } alc_aes_mode_t;
 
-typedef struct _alc_aes_mode_data_t
+typedef struct _alc_aes_info_t
 {
     alc_aes_mode_t mode; /* Mode eg: ALC_AES_MODE_CFB */
     uint8_t*       iv;   /* Initialization Vector */
-} alc_aes_mode_data_t, *alc_aes_mode_data_p;
+} alc_aes_info_t, *alc_aes_info_p;
 
 typedef union _alc_cipher_mode_data
 {
-    alc_aes_mode_data_t aes;
-    // alc_des_mode_data_t des;
-} alc_cipher_mode_data_t, *alc_cipher_mode_data_p;
+    alc_aes_info_t aes;
+    // alc_des_info_t des;
+} alc_cipher_data_t, *alc_cipher_data_p;
 
 typedef struct _alc_cipher_info
 {
-    alc_cipher_type_t      cipher_type;
-    alc_key_info_t         key_info;
-    alc_cipher_mode_data_t mode_data;
+    alc_cipher_type_t cipher_type;
+    alc_key_info_t    key_info;
+    alc_cipher_data_t mode_data;
 } alc_cipher_info_t, *alc_cipher_info_p;
 
 /**

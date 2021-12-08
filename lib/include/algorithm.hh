@@ -81,11 +81,14 @@ class CipherAlgorithm : public Decrypter
      *                  'false' otherwise
      */
     virtual bool isSupported(const alc_cipher_info_p pCipherInfo,
-                             alc_error_t&            err) = 0;
+                             alc_error_t&            err)
+    {
+        Error::setGeneric(err, ALC_ERROR_NOT_SUPPORTED);
+        return false;
+    }
 
   protected:
-    alc_cipher_info_t      m_cipher_info;
-    alc_cipher_mode_data_t m_cipher_mode_data;
+    // None
 };
 
 } // namespace alcp

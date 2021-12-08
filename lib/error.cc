@@ -84,10 +84,21 @@ Error::print(alc_error_t& err, uint8_t* buf, uint64_t size)
     return std::snprintf((char*)buf, size, "An Error Occurred");
 }
 
-bool
-Error::isError(alc_error_t& err)
+void
+Error::setGeneric(alc_error_t& err, alc_error_generic_t gen)
 {
-    return err != 0;
+    Impl e;
+    e.m_data.value          = err;
+    e.m_data.fields.general = gen;
+
+    err = e.m_data.value;
 }
+
+void
+Error::setDetail(alc_error_t& err, alc_error_detail_t det)
+{}
+void
+Error::setModule(alc_error_t& err, uint16_t mod)
+{}
 
 } // namespace alcp

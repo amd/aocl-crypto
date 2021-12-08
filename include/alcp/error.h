@@ -136,16 +136,13 @@ alcp_error_str(alc_error_t err, uint8_t* buf, uint64_t size);
  *
  * \param err    Actual Error
  */
-static inline bool
-alcp_is_error(alc_error_t err)
-{
-    return err != 0;
-}
+bool
+alcp_is_error(alc_error_t err);
 
 /**
  * \brief        Clears the error and releases any resources
- * \notes        At the end of using the error variable, alcp_error_clear() must
- *               be called, memory leak would occur otherwise.
+ * \notes        At the end of using the error variable, alcp_error_clear()
+ * must be called, memory leak would occur otherwise.
  *
  * \param err    Actual Error
  */

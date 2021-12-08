@@ -68,14 +68,14 @@ typedef enum
     ALC_KEY_FMT_BASE64, /* Base64 encoding */
 } alc_key_fmt_t;
 
-typedef struct
+typedef struct _alc_key_info
 {
     alc_key_type_t type;
     alc_key_fmt_t  fmt;
     alc_key_alg_t  algo;
     uint32_t       len; /* Key length in bits */
     uint8_t*       key; /* Key follows the rest of the structure */
-} alc_key_info_t;
+} alc_key_info_t, *alc_key_info_p;
 
 alc_key_alg_t
 alcp_key_get_algo(alc_key_info_t* kinfo);

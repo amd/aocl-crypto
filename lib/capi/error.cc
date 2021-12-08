@@ -47,4 +47,10 @@ alcp_error_str(alc_error_t err, uint8_t* buf, uint64_t size)
     alcp::Error::print(err, buf, size);
 }
 
+bool
+alcp_is_error(alc_error_t err)
+{
+    return alcp::Error::isError(err);
+}
+
 EXTERN_C_END
