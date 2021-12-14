@@ -95,8 +95,15 @@ Error::setGeneric(alc_error_t& err, alc_error_generic_t gen)
 }
 
 void
-Error::setDetail(alc_error_t& err, alc_error_detail_t det)
-{}
+Error::setDetail(alc_error_t& err, alc_error_generic_t det)
+{
+    Impl e;
+    e.m_data.value         = err;
+    e.m_data.fields.detail = det;
+
+    err = e.m_data.value;
+}
+
 void
 Error::setModule(alc_error_t& err, uint16_t mod)
 {}

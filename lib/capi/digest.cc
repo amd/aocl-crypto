@@ -26,18 +26,6 @@
  *
  */
 
-#include <iostream>
+#include "alcp/digest.h"
 
-#include "algorithm.hh"
-
-namespace alcp {
-/* class Algorithm::Impl */
-/* {}; */
-
-Algorithm::Algorithm()
-//    : impl(new Impl)
-{}
-
-Algorithm::~Algorithm() {}
-
-} // namespace alcp
+#include "digest.hh"

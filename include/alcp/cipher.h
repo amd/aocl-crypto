@@ -40,6 +40,9 @@ typedef enum _alc_cipher_type
 
     ALC_CIPHER_TYPE_AES,
     ALC_CIPHER_TYPE_DES,
+    ALC_CIPHER_TYPE_3DES,
+    ALC_CIPHER_TYPE_TWOFISH,
+    ALC_CIPHER_TYPE_SERPENT,
 
     ALC_CIPHER_TYPE_MAX,
 } alc_cipher_type_t;
@@ -81,12 +84,7 @@ typedef struct _alc_cipher_info
  *
  * \notes
  */
-typedef void alc_cipher_context_t;
-
-/**
- * \brief
- * \notes
- */
+typedef void                  alc_cipher_context_t;
 typedef alc_cipher_context_t* alc_cipher_context_p;
 
 /**
@@ -95,7 +93,7 @@ typedef alc_cipher_context_t* alc_cipher_context_p;
  */
 typedef struct _alc_cipher_handle
 {
-    alc_cipher_context_t* context;
+    alc_cipher_context_p context;
 } alc_cipher_handle_t, *alc_cipher_handle_p;
 
 /**

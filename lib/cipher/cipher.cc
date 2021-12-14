@@ -26,18 +26,35 @@
  *
  */
 
-#include <iostream>
+#include "cipher.hh"
+#include "cipher/aes.hh"
 
-#include "algorithm.hh"
+namespace alcp::cipher {
+Cipher*
+CipherBuilder::Build(const alc_cipher_info_t& cipherInfo,
+                     alc_cipher_handle_p      pCipherHandle,
+                     alc_error_t&             err)
+{
+    Cipher* cp = nullptr;
 
-namespace alcp {
-/* class Algorithm::Impl */
-/* {}; */
+    switch (cipherInfo.cipher_type) {
+        case ALC_CIPHER_TYPE_AES: {
+            cp = AesBuilder::Build(cipherInfo.mode_data.aes,
+                                   cipherInfo.key_info,
+                                   pCipherHandle,
+                                   err);
 
-Algorithm::Algorithm()
-//    : impl(new Impl)
-{}
+            if (Error::isError(err))
+                break;
 
-Algorithm::~Algorithm() {}
+            cp->isSupported(cipherInfo, err);
 
-} // namespace alcp
+        } break;
+        default:
+            Error::setGeneric(err, ALC_ERROR_NOT_SUPPORTED);
+            break;
+    }
+
+    return cp;
+}
+} // namespace alcp::cipher

@@ -95,26 +95,6 @@ typedef enum _alc_error_generic
 
 } alc_error_generic_t;
 
-typedef enum _alc_cipher_error_t
-{
-    ALC_CIPHER_ERROR_NONE = 0,
-
-} alc_cipher_error_t;
-
-typedef union _alc_error_detail
-{
-    // Cipher related details
-    alc_cipher_error_t cipher;
-
-    // Digest related details
-
-    // RNG Errors
-
-    // ECC Errors
-
-    // KDF related errors
-} alc_error_detail_t;
-
 typedef uint64_t alc_error_t;
 
 /**

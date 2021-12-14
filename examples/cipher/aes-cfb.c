@@ -63,7 +63,7 @@ decrypt_demo(const uint8_t* ciphertxt,
     /*
      * Application is expected to allocate for context
      */
-    // ctx = malloc(alcp_cipher_context_size(&cinfo));
+    handle.context = malloc(alcp_cipher_context_size(&cinfo));
     // if (!ctx)
     //    return;
 

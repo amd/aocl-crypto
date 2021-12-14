@@ -33,20 +33,19 @@
 #include <memory>
 #include <string>
 
-#include "alcp/cipher.h"
-#include "alcp/error.h"
-
 #include "cipher.hh"
+#include "error.hh"
 
 namespace alcp {
 
 enum class AlgorithmType : uint32_t
 {
-    Unknown,
-    Digest,
-    Cipher,
-    Aead,
-    Mac,
+    eUnknown,
+    eDigest,
+    eCipher,
+    eAead,
+    eMac,
+    eRng
 };
 
 class Algorithm
@@ -58,38 +57,40 @@ class Algorithm
     ~Algorithm();
 
   private:
-    class Impl;
-    std::unique_ptr<Impl> impl;
-    std::string           name;
-    AlgorithmType         type;
+    std::string   m_name;
+    AlgorithmType m_type;
 };
 
-class Aes;
-
-class CipherAlgorithm : public Decrypter
-//,  public Encrypter
+#if 0
+class CipherAlgorithm : public DecryptInterface
 {
   public:
-    CipherAlgorithm() {}
+    CipherAlgorithm(alc_cipher_info_p pCipherInfo)
+        : m_cipher_type{ *pCipherInfo }
+    {}
 
-    /**
-     * \brief           Checks if a given algorithm is supported
-     * \notes           Function  checks for algorithm and its
-     *                  configuration for supported options
-     * \param   pCipherInfo  Pointer to Cipher information
-     * \return          'true' if the given configuration/cipher is supported
-     *                  'false' otherwise
-     */
-    virtual bool isSupported(const alc_cipher_info_p pCipherInfo,
-                             alc_error_t&            err)
+  protected:
+  private:
+    alc_cipher_info_t m_cipher_type;
+    // None
+};
+
+
+class BlockCipherAlgorithm : public CipherAlgorithm
+{
+  public:
+    BlockCipherAlgorithm(alc_cipher_info_p pCipherInfo)
+        : CipherAlgorithm(pCipherInfo)
+    {}
+
+    bool isSupported(const alc_cipher_info_p pCipherInfo,
+                     alc_error_t&            err) override
     {
         Error::setGeneric(err, ALC_ERROR_NOT_SUPPORTED);
         return false;
     }
-
-  protected:
-    // None
 };
+#endif
 
 } // namespace alcp
 

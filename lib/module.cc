@@ -39,7 +39,7 @@ namespace alcp {
 class Module::Impl
 {
   public:
-    using CipherModuleList = std::list<CipherAlgorithm*>;
+    using CipherModuleList = std::list<Cipher*>;
     using CipherMap = std::unordered_map<alc_cipher_type_t, CipherModuleList>;
 #if 0
     typedef std::unordered_map<const alc_rng_type_t, module_list_t> RngMap;
@@ -66,7 +66,7 @@ Module::Impl::isCipherSupported(const alc_cipher_info_p pCipherInfo,
 
     /* TODO: investigate if we need to take a 'rwlock' before reading */
     for (auto& m : mlist) {
-        if (m->isSupported(pCipherInfo, err))
+        if (m->isSupported(*pCipherInfo, err))
             return true;
     }
 

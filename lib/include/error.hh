@@ -38,7 +38,7 @@ class Error
 {
   public:
     static void setGeneric(alc_error_t& err, alc_error_generic_t gen);
-    static void setDetail(alc_error_t& err, alc_error_detail_t det);
+    static void setDetail(alc_error_t& err, alc_error_generic_t det);
     static void setModule(alc_error_t& err, uint16_t mod);
     static int  print(alc_error_t& err, uint8_t* buf, uint64_t len);
     static bool isError(alc_error_t& err) { return err != 0; }

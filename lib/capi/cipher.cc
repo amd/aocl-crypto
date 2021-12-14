@@ -48,8 +48,7 @@ alcp_cipher_supported(const alc_cipher_info_p pCipherInfo)
 
     /* TODO: Check for pointer validity */
 
-    ModuleManager& mm = ModuleManager::getInstance();
-    // Module& mod = mm.findCipher(&mod_c_info, err);
+    // err = cipher::FindCipher(*pCipherInfo).isSupported();
 
     if (Error::isError(err))
         goto outa;
@@ -61,16 +60,7 @@ outa:
 uint64_t
 alcp_cipher_context_size(const alc_cipher_info_p pCipherInfo)
 {
-    /* FIXME: 100 used for testing purpose */
-    uint64_t    size = sizeof(alc_cipher_handle_t);
-    alc_error_t e;
-
-    /* TODO: Check cinfo for pointer validity */
-
-    // Module& mod = mm.findModule(&mod_c_info, e);
-    if (Error::isError(e))
-        return 0;
-
+    uint64_t size = sizeof(cipher::Handle);
     return size;
 }
 
@@ -84,13 +74,13 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
 
     /* TODO: Check pCipherHandle  */
 
-    auto cipher_context = cipher::CipherBuilder::Build(pCipherInfo, e);
+    auto cipher_context =
+        cipher::CipherBuilder::Build(*pCipherInfo, pCipherHandle, e);
     if (Error::isError(e)) {
         return e;
     }
 
     pCipherHandle->context = cipher_context;
-    // pCipherHandle->context = static_cast<Cipher&>(mod)
 
     return e;
 }
@@ -102,7 +92,7 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
                     uint64_t                  len)
 {
     /* TODO: Check for pointer validity */
-    auto cp = reinterpret_cast<CipherAlgorithm*>(pCipherHandle->context);
+    auto cp = reinterpret_cast<Cipher*>(&pCipherHandle->context);
 
     // Error& e = cp->encrypt(plaintxt, ciphertxt, len);
 
@@ -117,20 +107,19 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
                     const uint8_t*            pKey,
                     const uint8_t*            pIv)
 {
-    alc_error_t e = ALC_ERROR_NONE;
+
     /* TODO: Check for pointer validity */
+    cipher::Handle* h =
+        reinterpret_cast<cipher::Handle*>(pCipherHandle->context);
 
-    auto cp = reinterpret_cast<CipherAlgorithm*>(pCipherHandle->context);
-
-    e = cp->decrypt(pCipherText, pPlainText, len, pKey, pIv);
-
-    return e;
+    return h->wrapper.decrypt(
+        h->m_cipher, pCipherText, pPlainText, len, pKey, pIv);
 }
 
 void
 alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle)
 {
-    auto cp = reinterpret_cast<CipherAlgorithm*>(pCipherHandle->context);
+    auto cp = reinterpret_cast<Cipher*>(pCipherHandle->context);
     delete cp;
 }
 

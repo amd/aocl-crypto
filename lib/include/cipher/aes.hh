@@ -122,13 +122,13 @@ class Rijndael : public BlockCipher
 class Aes : public Rijndael
 {
   public:
-    Aes() {}
-    virtual ~Aes() {}
+    Aes(const alc_aes_info_t& aesInfo)
+        : m_mode{ aesInfo.mode }
+    {}
 
   protected:
-    Aes(alc_aes_info_p pAesInfo)
-        : m_mode{ pAesInfo->mode }
-    {}
+    Aes() {}
+    virtual ~Aes() {}
 
   protected:
     alc_aes_mode_t m_mode;
@@ -136,16 +136,13 @@ class Aes : public Rijndael
 
 /*
  * \brief        AES Encryption in CFB(Cipher Feedback mode)
- * \notes        TODO: Move this to a aes_cbc.hh or other for now we are
- * good to go here
+ * \notes        TODO: Move this to a aes_cbc.hh or other
  */
-class Cfb final
-    : public Aes
-    , public CipherAlgorithm
+class Cfb final : public Aes
 {
   public:
-    Cfb(alc_aes_info_p pAesInfo, alc_key_info_p pKeyInfo)
-        : Aes(pAesInfo)
+    Cfb(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+        : Aes(aesInfo)
     {
         /* TODO: Populate IV */
         // memcpy(m_iv, pAesInfo, 256);
@@ -154,24 +151,55 @@ class Cfb final
     ~Cfb() {}
 
   public:
+    static bool isSupported(const alc_aes_info_t& cipherInfo,
+                            const alc_key_info_t& keyInfo)
+    {
+        return true;
+    }
+
     /**
      * \brief
      * \notes
      * \param
      * \return
      */
-    virtual bool isSupported(const alc_cipher_info_p pCipherInfo,
-                             alc_error_t&            err) final
+    virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
+                             alc_error_t&             err) override
     {
-        Error::setGeneric(err, ALC_ERROR_NONE);
-        return true;
+        Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
+
+        if (cipherInfo.cipher_type == ALC_CIPHER_TYPE_AES) {
+            if (cipherInfo.mode_data.aes.mode == ALC_AES_MODE_CFB) {
+                Error::setDetail(err, ALC_ERROR_NONE);
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    virtual bool isSupported(const alc_aes_info_p pCipherInfo,
-                             alc_error_t&         err) final
+    /**
+     * \brief
+     * \notes
+     * \param
+     * \return
+     */
+    virtual alc_error_t encrypt(const uint8_t* pPlainText,
+                                uint8_t*       pCipherText,
+                                uint64_t       len,
+                                const uint8_t* pKey,
+                                const uint8_t* pIv) const final
     {
-        Error::setGeneric(err, ALC_ERROR_NONE);
-        return true;
+        alc_error_t err = ALC_ERROR_NONE;
+
+        // TODO: Check for CPUID before dispatching
+        if (Cipher::isAesniAvailable()) {
+            // dispatch to VAESNI
+        }
+
+        // dispatch to REF
+
+        return err;
     }
 
     /**
@@ -184,7 +212,7 @@ class Cfb final
                                 uint8_t*       pPlainText,
                                 uint64_t       len,
                                 const uint8_t* pKey,
-                                const uint8_t* pIv) final
+                                const uint8_t* pIv) const final
     {
         alc_error_t err = ALC_ERROR_NONE;
 
@@ -193,6 +221,7 @@ class Cfb final
             // dispatch to VAESNI
             err = aesni::DecryptCfb(
                 pCipherText, pPlainText, len, pKey, m_nrounds, pIv);
+
             return err;
         }
 
@@ -211,48 +240,18 @@ class Cfb final
 class AesBuilder
 {
   public:
-    static CipherAlgorithm* Build(alc_aes_info_p pAesInfo,
-                                  alc_key_info_p pKeyInfo,
-                                  alc_error_t&   err)
-    {
-        CipherAlgorithm* cp = nullptr;
-        switch (pAesInfo->mode) {
-            case ALC_AES_MODE_CFB: {
-                auto algo = new Cfb(pAesInfo, pKeyInfo);
-                algo->isSupported(pAesInfo, err);
-                if (!Error::isError(err)) {
-                    cp = algo;
-                }
-            } break;
-
-            default:
-                Error::setGeneric(err, ALC_ERROR_NOT_SUPPORTED);
-                break;
-        }
-        return cp;
-    }
+    static Cipher* Build(const alc_aes_info_t& aesInfo,
+                         const alc_key_info_t& keyInfo,
+                         alc_cipher_handle_p   pCipherHandle,
+                         alc_error_t&          err);
 };
 
 class CipherBuilder
 {
   public:
-    static CipherAlgorithm* Build(alc_cipher_info_p pCipherInfo,
-                                  alc_error_t&      err)
-    {
-        CipherAlgorithm* cp = nullptr;
-
-        switch (pCipherInfo->cipher_type) {
-            case ALC_CIPHER_TYPE_AES:
-                cp = AesBuilder::Build(
-                    &pCipherInfo->mode_data.aes, &pCipherInfo->key_info, err);
-                cp->isSupported(pCipherInfo, err);
-                break;
-            default:
-                Error::setGeneric(err, ALC_ERROR_NOT_SUPPORTED);
-                break;
-        }
-        return cp;
-    }
+    static Cipher* Build(const alc_cipher_info_t& cipherInfo,
+                         alc_cipher_handle_p      pCipherHandle,
+                         alc_error_t&             err);
 };
 
 namespace aesni {

@@ -26,18 +26,55 @@
  *
  */
 
-#include <iostream>
+#include "alcp/error.h"
 
-#include "algorithm.hh"
+#include "cipher/aes.hh"
 
-namespace alcp {
-/* class Algorithm::Impl */
-/* {}; */
+namespace alcp::cipher {
 
-Algorithm::Algorithm()
-//    : impl(new Impl)
-{}
+static alc_error_t
+__aes_wrapper_decrypt(const Cipher*  rCipher,
+                      const uint8_t* pCipherText,
+                      uint8_t*       pPlainText,
+                      uint64_t       len,
+                      const uint8_t* pKey,
+                      const uint8_t* pIv)
+{
+    alc_error_t e  = ALC_ERROR_NONE;
+    auto        cp = reinterpret_cast<const Aes*>(rCipher);
 
-Algorithm::~Algorithm() {}
+    e = cp->decrypt(pCipherText, pPlainText, len, pKey, pIv);
 
-} // namespace alcp
+    return e;
+}
+
+Cipher*
+AesBuilder::Build(const alc_aes_info_t& aesInfo,
+                  const alc_key_info_t& keyInfo,
+                  alc_cipher_handle_p   pCipherHandle,
+                  alc_error_t&          err)
+{
+    Cipher* cp = nullptr;
+    switch (aesInfo.mode) {
+        case ALC_AES_MODE_CFB: {
+            Cfb::isSupported(aesInfo, keyInfo);
+            auto algo = new Cfb(aesInfo, keyInfo);
+            cp        = algo;
+        } break;
+
+        default:
+            Error::setGeneric(err, ALC_ERROR_NOT_SUPPORTED);
+            break;
+    }
+
+    if (!Error::isError(err)) {
+        cipher::Handle* h =
+            static_cast<cipher::Handle*>(pCipherHandle->context);
+        h->m_cipher        = cp;
+        h->wrapper.decrypt = __aes_wrapper_decrypt;
+    }
+
+    return cp;
+}
+
+} // namespace alcp::cipher

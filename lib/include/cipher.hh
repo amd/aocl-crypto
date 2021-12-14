@@ -35,73 +35,93 @@
 
 #include "alcp/cipher.h"
 
+#include "algorithm.hh"
 #include "error.hh"
 
 namespace alcp {
 
 namespace cipher {
+    typedef alc_error_t(Operation)(const uint8_t* pSrc,
+                                   uint8_t*       pDst,
+                                   uint64_t       len,
+                                   const uint8_t* pKey,
+                                   const uint8_t* pIv) const;
 
-    typedef alc_error_t(CipherFunction)(const uint8_t* pSrc,
-                                        uint8_t*       pDst,
-                                        uint64_t       len,
-                                        const uint8_t* pKey,
-                                        const uint8_t* pIv);
 } // namespace cipher
 
-class Encrypter
+class EncryptInterface
 {
   public:
-    virtual cipher::CipherFunction encrypt = 0;
+    virtual cipher::Operation encrypt = 0;
 
   protected:
-    virtual ~Encrypter() {}
-};
-
-class Decrypter
-{
-  public:
-#if 0
-    virtual alc_error_t decrypt(const uint8_t* pSrc,
-                                uint8_t*       pDst,
-                                const uint8_t* pKey,
-                                uint64_t       len) = 0;
-#else
-    virtual cipher::CipherFunction decrypt = 0;
-#endif
-
-  protected:
-    virtual ~Decrypter() {}
-};
-
-class EncryptUpdater
-{
-  public:
-    virtual cipher::CipherFunction encryptUpdate = 0;
-    virtual cipher::CipherFunction encryptFinal  = 0;
-
-  protected:
-    virtual ~EncryptUpdater() {}
-};
-
-class DecryptUpdater
-{
-  public:
-    virtual cipher::CipherFunction decryptUpdate = 0;
-    virtual cipher::CipherFunction decryptFinal  = 0;
-
-  protected:
-    virtual ~DecryptUpdater() {}
+    virtual ~EncryptInterface() {}
+    EncryptInterface() {}
 
   private:
-    DecryptUpdater() {}
+};
+
+class DecryptInterface
+{
+  public:
+    virtual cipher::Operation decrypt = 0;
+
+  protected:
+    virtual ~DecryptInterface() {}
+    DecryptInterface() {}
+
+  private:
+};
+
+class EncryptUpdateInterface
+{
+  public:
+    virtual cipher::Operation encryptUpdate = 0;
+    virtual cipher::Operation encryptFinal  = 0;
+
+  protected:
+    virtual ~EncryptUpdateInterface() {}
+};
+
+class DecryptUpdateInterface
+{
+  public:
+    virtual cipher::Operation decryptUpdate = 0;
+    virtual cipher::Operation decryptFinal  = 0;
+
+  protected:
+    virtual ~DecryptUpdateInterface() {}
+
+  private:
+    DecryptUpdateInterface() {}
 };
 
 class Cipher
 {
   public:
+    Cipher(alc_cipher_info_p pCipherInfo) {}
+    virtual ~Cipher() {}
+    /**
+     * \brief           Checks if a given algorithm is supported
+     * \notes           Function  checks for algorithm and its
+     *                  configuration for supported options
+     * \param   pCipherInfo  Pointer to Cipher information
+     * \return          'true' if the given configuration/cipher is supported
+     *                  'false' otherwise
+     */
+    virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
+                             alc_error_t&             err)
+#if 1
+        = 0;
+#else
+    {
+        Error::setGeneric(err, ALC_ERROR_NOT_SUPPORTED);
+        return false;
+    }
+#endif
+
   protected:
     Cipher() {}
-    virtual ~Cipher() {}
 
     /*
      * \brief  Checks if VAESNI feature is enabled
@@ -116,20 +136,62 @@ class Cipher
     }
 
   private:
-    // None
+    alc_cipher_type_t m_cipher_type;
+};
+
+namespace cipher {
+    struct Handle
+    {
+        Cipher* m_cipher;
+        struct
+        {
+            alc_error_t (*decrypt)(const Cipher*  rCipher,
+                                   const uint8_t* pSrc,
+                                   uint8_t*       pDst,
+                                   uint64_t       len,
+                                   const uint8_t* pKey,
+                                   const uint8_t* pIv);
+
+            alc_error_t (*encrypt)(const Cipher*  rCipher,
+                                   const uint8_t* pSrc,
+                                   uint8_t*       pDst,
+                                   uint64_t       len,
+                                   const uint8_t* pKey,
+                                   const uint8_t* pIv);
+
+            alc_error_t (*finish)(Cipher* rCipher);
+        } wrapper;
+    };
+} // namespace cipher
+
+class BlockCipherOperation
+    : public DecryptInterface
+    , public EncryptInterface
+{
+  public:
+    BlockCipherOperation() {}
 };
 
 class BlockCipher
     : public Cipher
-    //    , public Encrypter
-    , public Decrypter
-{};
+    , public BlockCipherOperation
+{
+  public:
+    BlockCipher() {}
 
-class StreamCipher
-    : public Cipher
-    , public EncryptUpdater
-    , public DecryptUpdater
-{};
+  protected:
+  private:
+};
+
+class StreamCipher : public Cipher
+//, public StreamCipherOperation
+{
+  public:
+};
+
+namespace cipher {
+    // Cipher& FindCipher(alc_cipher_info_t& cipherInfo) { return nullptr; }
+} // namespace cipher
 
 } // namespace alcp
 
