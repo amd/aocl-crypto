@@ -1,18 +1,61 @@
 
+#FILE(GLOB COMMON_SRCS "*.cc" )
+
+#
+# The Policy will throw error about TARGET_SOURCES makes the
+# relative paths as absolute
+#
+IF(POLICY CMP0076)
+    CMAKE_POLICY(SET CMP0076 NEW)
+ENdIF()
+
+SET(ALCP_VRS_SRC
+	version.cc)
+
+SET(ALCP_COMMON_SRCS
+	algorithm.cc
+	error.cc
+	module.cc
+	modulemanager.cc
+	)
+
+#[==[
+# add_compile_options_config(<CONFIG> <option> ...)
+#FUNCTION(ADD_COMPILE_OPTIONS_CONFIG CONFIG)
+#    FOREACH(opt ${ARGN})
+#        ADD_COMPILE_OPTIONS("$<$<CONFIG:${CONFIG}>:${opt}>")
+#    ENDFOREACH()
+#ENDFUNCTION()
+#]==]
+
+include(utils)
+
+IF (MSVC)
+	ADD_COMPILE_OPTIONS(/W3 /WX)
+ELSE ()
+	ADD_COMPILE_OPTIONS("-Wall")
+	ADD_COMPILE_OPTIONS_CONFIG(RELEASE "-O2" "-padantic" "-Werror")
+	ADD_COMPILE_OPTIONS_CONFIG(DEBUG "-Og" "-ggdb")
+ENDIF()
+
+
+ADD_LIBRARY(alcp SHARED 
+	${ALCP_VRS_SRC}
+	)
+
 ADD_SUBDIRECTORY(arch)
 ADD_SUBDIRECTORY(capi)
 ADD_SUBDIRECTORY(compat)
 ADD_SUBDIRECTORY(cipher)
 ADD_SUBDIRECTORY(ref)
 
-FILE(GLOB COMMON_SRCS "*.cc" )
-
-ADD_LIBRARY(alcp SHARED 
-	${ARCH_SRCS} 
-	${CIPHER_SRCS}
-	${CAPI_SRCS} 
-	${REF_SRCS} 
-	${COMMON_SRCS})
+TARGET_SOURCES(alcp
+	PRIVATE
+	#${ARCH_SRCS} 
+	#${CIPHER_SRCS}
+	#${CAPI_SRCS} 
+	#${REF_SRCS} 
+	${ALCP_COMMON_SRCS})
 
 TARGET_INCLUDE_DIRECTORIES(alcp PUBLIC
 	${CMAKE_SOURCE_DIR}/include

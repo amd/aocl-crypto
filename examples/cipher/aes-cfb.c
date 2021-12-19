@@ -75,7 +75,7 @@ decrypt_demo(const uint8_t* ciphertxt,
         return;
     }
     printf("request succeeded\n");
-    err = alcp_cipher_decrypt(&handle, ciphertxt, plaintxt, len, key, iv);
+    err = alcp_cipher_decrypt(&handle, ciphertxt, plaintxt, len, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);

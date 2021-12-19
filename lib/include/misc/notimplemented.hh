@@ -26,37 +26,30 @@
  *
  */
 
-#include "cipher.hh"
-#include "cipher/aes.hh"
+#ifndef _MISC_NOTIMPLEMENTED_HH
+#define _MISC_NOTIMPLEMENTED_HH 2
 
-namespace alcp::cipher {
+#include <stdexcept>
+#include <string>
 
-Cipher*
-CipherBuilder::Build(const alc_cipher_info_t& cipherInfo,
-                     Handle&                  rHandle,
-                     alc_error_t&             err)
+class NotImplemented : public std::logic_error
 {
-    Cipher* cp = nullptr;
-
-    switch (cipherInfo.cipher_type) {
-        case ALC_CIPHER_TYPE_AES: {
-            cp = AesBuilder::Build(
-                cipherInfo.mode_data.aes, cipherInfo.key_info, rHandle, err);
-            if (Error::isError(err))
-                break;
-
-            cp->isSupported(cipherInfo, err);
-            if (Error::isError(err))
-                break;
-
-        } break;
-
-        default:
-            Error::setGeneric(err, ALC_ERROR_NOT_SUPPORTED);
-            break;
+  private:
+    NotImplemented(const std::string& pMsg, const std::string& pFunc)
+        : std::logic_error(pMsg)
+    {
+        m_text = pFunc + pMsg;
     }
 
-    return cp;
-}
+  public:
+    NotImplemented()
+        : NotImplemented("Not Implemented", __FUNCTION__)
+    {}
 
-} // namespace alcp::cipher
+    virtual const char* what() const noexcept { return m_text.c_str(); }
+
+  private:
+    std::string m_text;
+};
+
+#endif /* _MISC_NOTIMPLEMENTED_HH */

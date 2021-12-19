@@ -26,37 +26,17 @@
  *
  */
 
-#include "cipher.hh"
-#include "cipher/aes.hh"
+#ifndef _ALCP_DEFS_H
+#define _ALCP_DEFS_H 2
 
-namespace alcp::cipher {
+#include "error.hh"
 
-Cipher*
-CipherBuilder::Build(const alc_cipher_info_t& cipherInfo,
-                     Handle&                  rHandle,
-                     alc_error_t&             err)
-{
-    Cipher* cp = nullptr;
+#define ALCP_BAD_PTR_ERR_RET(ptr, err)                                         \
+    do {                                                                       \
+        if (NULL == ptr) {                                                     \
+            alcp::Error::setGeneric(err, ALC_ERROR_INVALID_ARG);               \
+            return err;                                                        \
+        }                                                                      \
+    } while (0)
 
-    switch (cipherInfo.cipher_type) {
-        case ALC_CIPHER_TYPE_AES: {
-            cp = AesBuilder::Build(
-                cipherInfo.mode_data.aes, cipherInfo.key_info, rHandle, err);
-            if (Error::isError(err))
-                break;
-
-            cp->isSupported(cipherInfo, err);
-            if (Error::isError(err))
-                break;
-
-        } break;
-
-        default:
-            Error::setGeneric(err, ALC_ERROR_NOT_SUPPORTED);
-            break;
-    }
-
-    return cp;
-}
-
-} // namespace alcp::cipher
+#endif /* _ALCP_DEFS_H */

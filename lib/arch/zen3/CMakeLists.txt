@@ -1,6 +1,39 @@
 
 FILE(GLOB ZEN3_SRCS "*.cc")
 
+IF(CMAKE_COMPILER_IS_GNUCXX OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+ADD_COMPILE_OPTIONS( "-mznver3")
+ADD_COMPILE_OPTIONS(
+	"$<$<CONFIG:DEBUG>:-prems>"
+	)
+ENDIF()
+
+string(APPEND CMAKE_CXX_FLAGS_DEBUG " -prems -W -Wall -03 -pedantic")
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -prems -Wno-sign-compare")
+
+
+#SET(ZEN3_SRCS
+#	aesni.cc
+#	aes_cfb_vaes.cc
+#	aes_cfb_aesni.cc
+#	)
+
+IF (MSVC)
+	SET(ARCH_COMPILE_FLAG "/arch:znver3")
+ELSE()
+	SET(ARCH_COMPILE_FLAG "-znver3")
+ENDIF()
+	
+SET_SOURCE_FILES_PROPERTIES(${ZEN3_SRCS} 
+	PROPERTIES
+	COMPILE_FLAGS ${ARCH_COMPILE_FLAG}
+	)
+
+TARGET_SOURCES(alcp 
+	PRIVATE	
+		${ZEN3_SRCS}
+	)
+
 SET(ZEN3_SRCS ${ZEN3_SRCS} PARENT_SCOPE)
 
 MESSAGE(DEBUG "sources" ${ZEN3_SRCS})

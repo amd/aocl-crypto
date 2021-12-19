@@ -36,11 +36,11 @@
 #include "error.hh"
 
 namespace alcp::cipher { namespace aes {
-    alc_error_t Decrypt256(const uint8_t* ciphertxt,
-                           uint8_t*       plaintxt,
+    alc_error_t Decrypt256(const uint8_t* pCiphertxt,
+                           uint8_t*       pPlaintxt,
                            int            len,
-                           uint8_t*       key,
-                           const uint8_t* iv);
+                           uint8_t*       pKey,
+                           const uint8_t* pIv);
 }} // namespace alcp::cipher::aes
 
 #endif /* _CIPHER_AES_CFB_HH_ */

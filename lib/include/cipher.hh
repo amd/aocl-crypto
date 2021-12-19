@@ -44,7 +44,6 @@ namespace cipher {
     typedef alc_error_t(Operation)(const uint8_t* pSrc,
                                    uint8_t*       pDst,
                                    uint64_t       len,
-                                   const uint8_t* pKey,
                                    const uint8_t* pIv) const;
 
 } // namespace cipher
@@ -123,6 +122,13 @@ class Cipher
   protected:
     Cipher() {}
 
+    static bool isVaesAvailable()
+    {
+        // FIXME: call cpuid::isVaesAvailable()
+        static bool s_vaes_available = false;
+        return s_vaes_available;
+    }
+
     /*
      * \brief  Checks if VAESNI feature is enabled
      */
@@ -145,18 +151,16 @@ namespace cipher {
         Cipher* m_cipher;
         struct
         {
-            alc_error_t (*decrypt)(const Cipher*  rCipher,
+            alc_error_t (*decrypt)(const Cipher&  rCipher,
                                    const uint8_t* pSrc,
                                    uint8_t*       pDst,
                                    uint64_t       len,
-                                   const uint8_t* pKey,
                                    const uint8_t* pIv);
 
             alc_error_t (*encrypt)(const Cipher*  rCipher,
                                    const uint8_t* pSrc,
                                    uint8_t*       pDst,
                                    uint64_t       len,
-                                   const uint8_t* pKey,
                                    const uint8_t* pIv);
 
             alc_error_t (*finish)(Cipher* rCipher);

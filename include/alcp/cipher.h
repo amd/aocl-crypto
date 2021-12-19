@@ -150,7 +150,8 @@ alc_error_t
 alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
                     const uint8_t*            pPlainText,
                     uint8_t*                  pCipherText,
-                    uint64_t                  len);
+                    uint64_t                  len,
+                    const uint8_t*            pIv);
 
 /**
  * \brief    Allows caller to request for a cipher as described by
@@ -172,7 +173,6 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
                     const uint8_t*            pCipherText,
                     uint8_t*                  pPlainText,
                     uint64_t                  len,
-                    const uint8_t*            pKey,
                     const uint8_t*            pIv);
 
 /**

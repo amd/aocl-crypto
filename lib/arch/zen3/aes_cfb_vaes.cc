@@ -29,11 +29,17 @@
 #include <immintrin.h>
 
 #include "cipher/aes.hh"
+#include "cipher/vaes.hh"
 #include "error.hh"
 #include "key.hh"
 
-namespace alcp::cipher::aesni {
-#define AES_BLOCK_SIZE(x) ((x) / 8)
+namespace alcp::cipher::vaes {
+
+alc_error_t
+ExpandKeys(const uint8_t* pUserKey, uint8_t* pEncKey, uint8_t* pDecKey)
+{
+    return ALC_ERROR_NONE;
+}
 
 alc_error_t
 DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
@@ -74,7 +80,7 @@ DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
         // update IV
         IV = _mm256_set_epi64x(0, 0, blk1[3], blk1[2]);
 
-        aesni::AESEncrypt(&y0, &y1, &y2, &y3, pKey128, nRounds);
+        vaes::AESEncrypt(&y0, &y1, &y2, &y3, pKey128, nRounds);
 
         blk0 = _mm256_xor_si256(blk0, y0);
         blk1 = _mm256_xor_si256(blk1, y1);
@@ -104,7 +110,7 @@ DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
         // update IV
         IV = _mm256_set_epi64x(0, 0, blk1[3], blk1[2]);
 
-        aesni::AESEncrypt(&y0, &y1, pKey128, nRounds);
+        vaes::AESEncrypt(&y0, &y1, pKey128, nRounds);
 
         blk0 = _mm256_xor_si256(blk0, y0);
         blk1 = _mm256_xor_si256(blk1, y1);
@@ -129,7 +135,7 @@ DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
         // update IV
         IV = _mm256_set_epi64x(0, 0, blk0[3], blk0[2]);
 
-        aesni::AESEncrypt(&y0, pKey128, nRounds);
+        vaes::AESEncrypt(&y0, pKey128, nRounds);
 
         blk0 = _mm256_xor_si256(blk0, y0);
 
@@ -151,7 +157,7 @@ DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
 
         y0 = (y0 | IV);
 
-        aesni::AESEncrypt(&y0, pKey128, nRounds);
+        vaes::AESEncrypt(&y0, pKey128, nRounds);
 
         blk0 = _mm256_xor_si256(blk0, y0);
 
@@ -161,4 +167,4 @@ DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
     return err;
 }
 
-} // namespace alcp::cipher::aesni
+} // namespace alcp::cipher::vaes

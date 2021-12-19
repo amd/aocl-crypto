@@ -29,33 +29,22 @@
 #ifndef _CIPHER_AES_HH_
 #define _CIPHER_AES_HH_ 2
 
-#pragma GCC target("avx,avx2,vaes,fma")
-
-#include <array>
+//#include <array>
+#include <cstdalign>
 #include <cstdint>
-#include <functional>
+
+#include <immintrin.h>
 
 #include "alcp/cipher.h"
 
 #include "algorithm.hh"
 #include "cipher.hh"
 #include "error.hh"
+#include "misc/notimplemented.hh"
 
 namespace alcp::cipher {
 
-namespace aesni {
-    alc_error_t GenRoundKeys(uint8_t* key, uint8_t* userKey);
-
-    alc_error_t DecryptCfb(const uint8_t* pCipherText,
-                           uint8_t*       pPlainText,
-                           uint64_t       len,
-                           const uint8_t* pKey,
-                           int            nRounds,
-                           const uint8_t* pIv);
-
-} // namespace aesni
-
-class Rijndael : public BlockCipher
+class Rijndael : public alcp::BlockCipher
 //, public Algorithm
 {
   public:
@@ -92,24 +81,30 @@ class Rijndael : public BlockCipher
 
   protected:
     Rijndael() {}
-    Rijndael(uint8_t* userKey) { genRoundKeys(userKey); }
+    Rijndael(const alc_key_info_t& rKeyInfo)
+    {
+        m_encKey = &m_key[0];
+        /* TODO: Fix the decrypt key offset */
+        m_decKey = m_encKey + m_nrounds * m_key_size;
+    }
+
     virtual ~Rijndael() {}
 
+    void expandKeys(const uint8_t* pUserKey,
+                    uint8_t*       pEncKey,
+                    uint8_t*       pDecKey);
+
 #define RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
+#define RIJ_ALIGN           (16)
   protected:
-    uint8_t  m_key[RIJ_SIZE_ALIGNED(cMaxKeySizeBytes)];
+    alignas(cMaxKeySizeBytes) uint8_t m_key[RIJ_SIZE_ALIGNED(cMaxKeySizeBytes)];
+    uint8_t* m_encKey; /* encryption key: points to offset in 'm_key' */
+    uint8_t* m_decKey; /* decryption key: points to offset in 'm_key' */
+
     uint64_t m_nrounds;
     uint64_t m_key_size;
 
   private:
-    void genRoundKeys(uint8_t* userKey)
-    {
-        if (isAesniAvailable()) {
-            aesni::GenRoundKeys(m_key, userKey);
-            return;
-        }
-        /* Default Key expansion */
-    }
 };
 
 /*
@@ -122,9 +117,15 @@ class Rijndael : public BlockCipher
 class Aes : public Rijndael
 {
   public:
-    Aes(const alc_aes_info_t& aesInfo)
-        : m_mode{ aesInfo.mode }
-    {}
+    Aes(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+        : Rijndael{ keyInfo }
+        , m_mode{ aesInfo.mode }
+
+    {
+
+        /* TODO: adjust m_encKey and m_decKey accordingly */
+        expandKeys(keyInfo.key, m_encKey, m_decKey);
+    }
 
   protected:
     Aes() {}
@@ -142,11 +143,8 @@ class Cfb final : public Aes
 {
   public:
     Cfb(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
-        : Aes(aesInfo)
-    {
-        /* TODO: Populate IV */
-        // memcpy(m_iv, pAesInfo, 256);
-    }
+        : Aes(aesInfo, keyInfo)
+    {}
 
     ~Cfb() {}
 
@@ -187,20 +185,7 @@ class Cfb final : public Aes
     virtual alc_error_t encrypt(const uint8_t* pPlainText,
                                 uint8_t*       pCipherText,
                                 uint64_t       len,
-                                const uint8_t* pKey,
-                                const uint8_t* pIv) const final
-    {
-        alc_error_t err = ALC_ERROR_NONE;
-
-        // TODO: Check for CPUID before dispatching
-        if (Cipher::isAesniAvailable()) {
-            // dispatch to VAESNI
-        }
-
-        // dispatch to REF
-
-        return err;
-    }
+                                const uint8_t* pIv) const final;
 
     /**
      * \brief
@@ -211,30 +196,14 @@ class Cfb final : public Aes
     virtual alc_error_t decrypt(const uint8_t* pCipherText,
                                 uint8_t*       pPlainText,
                                 uint64_t       len,
-                                const uint8_t* pKey,
-                                const uint8_t* pIv) const final
-    {
-        alc_error_t err = ALC_ERROR_NONE;
-
-        // TODO: Check for CPUID before dispatching
-        if (Cipher::isAesniAvailable()) {
-            // dispatch to VAESNI
-            err = aesni::DecryptCfb(
-                pCipherText, pPlainText, len, pKey, m_nrounds, pIv);
-
-            return err;
-        }
-
-        // dispatch to REF
-
-        return err;
-    }
+                                const uint8_t* pIv) const final;
 
   private:
     Cfb() = default;
 
   private:
-    uint8_t m_iv[256]; /* Initialization Vector */
+    /* TODO: Do we really need to store Initialization Vector ? */
+    uint8_t m_iv[256];
 };
 
 class AesBuilder
@@ -242,7 +211,7 @@ class AesBuilder
   public:
     static Cipher* Build(const alc_aes_info_t& aesInfo,
                          const alc_key_info_t& keyInfo,
-                         alc_cipher_handle_p   pCipherHandle,
+                         Handle&               rHandle,
                          alc_error_t&          err);
 };
 
@@ -250,207 +219,9 @@ class CipherBuilder
 {
   public:
     static Cipher* Build(const alc_cipher_info_t& cipherInfo,
-                         alc_cipher_handle_p      pCipherHandle,
+                         Handle&                  rHandle,
                          alc_error_t&             err);
 };
-
-namespace aesni {
-
-#include <immintrin.h>
-
-    static inline __m256i amd_mm256_broadcast_i64x2(const __m128i* rKey)
-    {
-        const uint64_t* key64 = (const uint64_t*)rKey;
-        return _mm256_set_epi64x(key64[1], key64[0], key64[1], key64[0]);
-    }
-
-    /* One block at a time */
-    static inline void AESEncrypt(__m256i*       blk0,
-                                  const __m128i* rKey, /* Round key */
-                                  int            nRounds)
-    {
-        int nr;
-
-        __m256i rKey0 = amd_mm256_broadcast_i64x2(&rKey[0]);
-        __m256i rKey1 = amd_mm256_broadcast_i64x2(&rKey[1]);
-
-        __m256i b0 = _mm256_xor_si256(*blk0, rKey0);
-
-        rKey0 = amd_mm256_broadcast_i64x2(&rKey[2]);
-
-        for (nr = 1, rKey++; nr < nRounds; nr += 2, rKey += 2) {
-            b0    = _mm256_aesenc_epi128(b0, rKey1);
-            rKey1 = amd_mm256_broadcast_i64x2(&rKey[2]);
-            b0    = _mm256_aesenc_epi128(b0, rKey0);
-            rKey0 = amd_mm256_broadcast_i64x2(&rKey[3]);
-        }
-
-        b0    = _mm256_aesenc_epi128(b0, rKey1);
-        *blk0 = _mm256_aesenclast_epi128(b0, rKey0);
-
-        rKey0 = _mm256_setzero_si256();
-        rKey1 = _mm256_setzero_si256();
-    }
-
-    /* Two blocks at a time */
-    static void AESEncrypt(__m256i*       blk0,
-                           __m256i*       blk1,
-                           const __m128i* rKey, /* Round key */
-                           int            nRounds)
-    {
-        int nr;
-
-        __m256i rKey0 = amd_mm256_broadcast_i64x2(&rKey[0]);
-        __m256i rKey1 = amd_mm256_broadcast_i64x2(&rKey[1]);
-
-        __m256i b0 = _mm256_xor_si256(*blk0, rKey0);
-        __m256i b1 = _mm256_xor_si256(*blk1, rKey0);
-        rKey0      = amd_mm256_broadcast_i64x2(&rKey[2]);
-
-        for (nr = 1, rKey++; nr < nRounds; nr += 2, rKey += 2) {
-            b0    = _mm256_aesenc_epi128(b0, rKey1);
-            b1    = _mm256_aesenc_epi128(b1, rKey1);
-            rKey1 = amd_mm256_broadcast_i64x2(&rKey[2]);
-
-            b0    = _mm256_aesenc_epi128(b0, rKey0);
-            b1    = _mm256_aesenc_epi128(b1, rKey0);
-            rKey0 = amd_mm256_broadcast_i64x2(&rKey[3]);
-        }
-
-        b0 = _mm256_aesenc_epi128(b0, rKey1);
-        b1 = _mm256_aesenc_epi128(b1, rKey1);
-
-        *blk0 = _mm256_aesenclast_epi128(b0, rKey0);
-        *blk1 = _mm256_aesenclast_epi128(b1, rKey0);
-
-        rKey0 = _mm256_setzero_si256();
-        rKey1 = _mm256_setzero_si256();
-    }
-
-    /* Three blocks at a time */
-    static void AESEncrypt(__m256i*       blk0,
-                           __m256i*       blk1,
-                           __m256i*       blk2,
-                           const __m128i* rKey, /* Round keys */
-                           int            nRounds)
-    {
-        int nr;
-
-        __m256i rKey0 = amd_mm256_broadcast_i64x2(&rKey[0]);
-        __m256i rKey1 = amd_mm256_broadcast_i64x2(&rKey[1]);
-
-        __m256i b0 = _mm256_xor_si256(*blk0, rKey0);
-        __m256i b1 = _mm256_xor_si256(*blk1, rKey0);
-        __m256i b2 = _mm256_xor_si256(*blk2, rKey0);
-        rKey0      = amd_mm256_broadcast_i64x2(&rKey[2]);
-
-        for (nr = 1, rKey++; nr < nRounds; nr += 2, rKey += 2) {
-            b0    = _mm256_aesenc_epi128(b0, rKey1);
-            b1    = _mm256_aesenc_epi128(b1, rKey1);
-            b2    = _mm256_aesenc_epi128(b2, rKey1);
-            rKey1 = amd_mm256_broadcast_i64x2(&rKey[2]);
-
-            b0    = _mm256_aesenc_epi128(b0, rKey0);
-            b1    = _mm256_aesenc_epi128(b1, rKey0);
-            b2    = _mm256_aesenc_epi128(b2, rKey0);
-            rKey0 = amd_mm256_broadcast_i64x2(&rKey[3]);
-        }
-
-        b0 = _mm256_aesenc_epi128(b0, rKey1);
-        b1 = _mm256_aesenc_epi128(b1, rKey1);
-        b2 = _mm256_aesenc_epi128(b2, rKey1);
-
-        *blk0 = _mm256_aesenclast_epi128(b0, rKey0);
-        *blk1 = _mm256_aesenclast_epi128(b1, rKey0);
-        *blk2 = _mm256_aesenclast_epi128(b2, rKey0);
-
-        rKey0 = _mm256_setzero_si256();
-        rKey1 = _mm256_setzero_si256();
-    }
-
-    /* 4 blocks at a time */
-    static void AESEncrypt(__m256i*       blk0,
-                           __m256i*       blk1,
-                           __m256i*       blk2,
-                           __m256i*       blk3,
-                           const __m128i* rKey, /* Round keys */
-                           int            nRounds)
-    {
-        int nr;
-
-        __m256i rKey0 = amd_mm256_broadcast_i64x2(&rKey[0]);
-        __m256i rKey1 = amd_mm256_broadcast_i64x2(&rKey[1]);
-
-        __m256i b0 = _mm256_xor_si256(*blk0, rKey0);
-        __m256i b1 = _mm256_xor_si256(*blk1, rKey0);
-        __m256i b2 = _mm256_xor_si256(*blk2, rKey0);
-        __m256i b3 = _mm256_xor_si256(*blk3, rKey0);
-        rKey0      = amd_mm256_broadcast_i64x2(&rKey[2]);
-
-        for (nr = 1, rKey++; nr < nRounds; nr += 2, rKey += 2) {
-            b0    = _mm256_aesenc_epi128(b0, rKey1);
-            b1    = _mm256_aesenc_epi128(b1, rKey1);
-            b2    = _mm256_aesenc_epi128(b2, rKey1);
-            b3    = _mm256_aesenc_epi128(b3, rKey1);
-            rKey1 = amd_mm256_broadcast_i64x2(&rKey[2]);
-
-            b0    = _mm256_aesenc_epi128(b0, rKey0);
-            b1    = _mm256_aesenc_epi128(b1, rKey0);
-            b2    = _mm256_aesenc_epi128(b2, rKey0);
-            b3    = _mm256_aesenc_epi128(b3, rKey0);
-            rKey0 = amd_mm256_broadcast_i64x2(&rKey[3]);
-        }
-
-        b0 = _mm256_aesenc_epi128(b0, rKey1);
-        b1 = _mm256_aesenc_epi128(b1, rKey1);
-        b2 = _mm256_aesenc_epi128(b2, rKey1);
-        b3 = _mm256_aesenc_epi128(b3, rKey1);
-
-        *blk0 = _mm256_aesenclast_epi128(b0, rKey0);
-        *blk1 = _mm256_aesenclast_epi128(b1, rKey0);
-        *blk2 = _mm256_aesenclast_epi128(b2, rKey0);
-        *blk3 = _mm256_aesenclast_epi128(b3, rKey0);
-
-        rKey0 = _mm256_setzero_si256();
-        rKey1 = _mm256_setzero_si256();
-    }
-
-    namespace experimantal {
-        static void AESEncrypt(__m256i*       blk0,
-                               __m256i*       blk1,
-                               __m256i*       blk2,
-                               __m256i*       blk3,
-                               const __m128i* rKey, /* Round keys */
-                               int            nRounds)
-        {
-            int nr;
-
-            __m256i rKey0 = amd_mm256_broadcast_i64x2(&rKey[0]);
-
-            __m256i b0 = _mm256_xor_si256(*blk0, rKey0);
-            __m256i b1 = _mm256_xor_si256(*blk1, rKey0);
-            __m256i b2 = _mm256_xor_si256(*blk2, rKey0);
-            __m256i b3 = _mm256_xor_si256(*blk3, rKey0);
-            rKey0      = amd_mm256_broadcast_i64x2(&rKey[1]);
-
-            for (nr = 1, rKey++; nr < nRounds; nr++, rKey++) {
-                b0    = _mm256_aesenc_epi128(b0, rKey0);
-                b1    = _mm256_aesenc_epi128(b1, rKey0);
-                b2    = _mm256_aesenc_epi128(b2, rKey0);
-                b3    = _mm256_aesenc_epi128(b3, rKey0);
-                rKey0 = amd_mm256_broadcast_i64x2(&rKey[2]);
-            }
-
-            *blk0 = _mm256_aesenclast_epi128(b0, rKey0);
-            *blk1 = _mm256_aesenclast_epi128(b1, rKey0);
-            *blk2 = _mm256_aesenclast_epi128(b2, rKey0);
-            *blk3 = _mm256_aesenclast_epi128(b3, rKey0);
-
-            rKey0 = _mm256_setzero_si256();
-        }
-    } // namespace experimantal
-
-} // namespace aesni
 
 } // namespace alcp::cipher
 

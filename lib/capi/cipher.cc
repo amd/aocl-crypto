@@ -33,6 +33,7 @@
 #include "algorithm.hh"
 #include "cipher.hh"
 #include "cipher/aes.hh" /* for cipher::Aes */
+#include "defs.hh"
 #include "error.hh"
 #include "module.hh"
 #include "modulemanager.hh"
@@ -68,35 +69,42 @@ alc_error_t
 alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
                     alc_cipher_handle_p     pCipherHandle)
 {
-    alc_error_t e = ALC_ERROR_NONE;
+    alc_error_t err = ALC_ERROR_NONE;
 
-    /* TODO: Check pCipherInfo for pointer validity */
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherInfo, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->context, err);
 
-    /* TODO: Check pCipherHandle  */
+    auto handle = static_cast<cipher::Handle*>(pCipherHandle->context);
 
     auto cipher_context =
-        cipher::CipherBuilder::Build(*pCipherInfo, pCipherHandle, e);
-    if (Error::isError(e)) {
-        return e;
-    }
+        cipher::CipherBuilder::Build(*pCipherInfo, *handle, err);
 
-    pCipherHandle->context = cipher_context;
-
-    return e;
+		handle->m_cipher = cipher_context;
+		
+    return err;
 }
 
 alc_error_t
 alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
                     const uint8_t*            pPlainText,
                     uint8_t*                  pCipherText,
-                    uint64_t                  len)
+                    uint64_t                  len,
+                    const uint8_t*            pIv)
 {
-    /* TODO: Check for pointer validity */
-    auto cp = reinterpret_cast<Cipher*>(&pCipherHandle->context);
+    alc_error_t err = ALC_ERROR_NONE;
 
-    // Error& e = cp->encrypt(plaintxt, ciphertxt, len);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pPlainText, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherText, err);
+    ALCP_BAD_PTR_ERR_RET(pIv, err);
 
-    return ALC_ERROR_NONE;
+    auto handle = static_cast<cipher::Handle*>(pCipherHandle->context);
+
+    err = handle->wrapper.decrypt(
+        *handle->m_cipher, pPlainText, pCipherText, len, pIv);
+
+    return err;
 }
 
 alc_error_t
@@ -104,23 +112,35 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
                     const uint8_t*            pCipherText,
                     uint8_t*                  pPlainText,
                     uint64_t                  len,
-                    const uint8_t*            pKey,
                     const uint8_t*            pIv)
 {
+    alc_error_t err = ALC_ERROR_NONE;
 
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pPlainText, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherText, err);
+    ALCP_BAD_PTR_ERR_RET(pIv, err);
+
+    auto handle = static_cast<cipher::Handle*>(pCipherHandle->context);
+
+    err = handle->wrapper.decrypt(
+        *handle->m_cipher, pCipherText, pPlainText, len, pIv);
+
+    return err;
+}
+
+/**
+ * \notes
+ */
+void
+alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle)
+{
     /* TODO: Check for pointer validity */
     cipher::Handle* h =
         reinterpret_cast<cipher::Handle*>(pCipherHandle->context);
 
-    return h->wrapper.decrypt(
-        h->m_cipher, pCipherText, pPlainText, len, pKey, pIv);
-}
-
-void
-alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle)
-{
-    auto cp = reinterpret_cast<Cipher*>(pCipherHandle->context);
-    delete cp;
+    // pCipherHandle will be freed by the application
+    delete h->m_cipher;
 }
 
 EXTERN_C_END

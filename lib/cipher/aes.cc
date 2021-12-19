@@ -26,24 +26,30 @@
  *
  */
 
+#include <immintrin.h>
+
 #include "alcp/error.h"
 
 #include "cipher/aes.hh"
+#include "cipher/aesni.hh"
+#include "cipher/vaes.hh"
 
 namespace alcp::cipher {
 
 static alc_error_t
-__aes_wrapper_decrypt(const Cipher*  rCipher,
+__aes_wrapper_decrypt(const Cipher&  rCipher,
                       const uint8_t* pCipherText,
                       uint8_t*       pPlainText,
                       uint64_t       len,
-                      const uint8_t* pKey,
                       const uint8_t* pIv)
 {
+    /*
+     * We can safely assume all pointers are checked before coming here ..
+     */
     alc_error_t e  = ALC_ERROR_NONE;
-    auto        cp = reinterpret_cast<const Aes*>(rCipher);
+    const Aes&  ap = static_cast<const Aes&>(rCipher);
 
-    e = cp->decrypt(pCipherText, pPlainText, len, pKey, pIv);
+    e = ap.decrypt(pCipherText, pPlainText, len, pIv);
 
     return e;
 }
@@ -51,10 +57,11 @@ __aes_wrapper_decrypt(const Cipher*  rCipher,
 Cipher*
 AesBuilder::Build(const alc_aes_info_t& aesInfo,
                   const alc_key_info_t& keyInfo,
-                  alc_cipher_handle_p   pCipherHandle,
+                  Handle&               rHandle,
                   alc_error_t&          err)
 {
     Cipher* cp = nullptr;
+
     switch (aesInfo.mode) {
         case ALC_AES_MODE_CFB: {
             Cfb::isSupported(aesInfo, keyInfo);
@@ -68,13 +75,71 @@ AesBuilder::Build(const alc_aes_info_t& aesInfo,
     }
 
     if (!Error::isError(err)) {
-        cipher::Handle* h =
-            static_cast<cipher::Handle*>(pCipherHandle->context);
-        h->m_cipher        = cp;
-        h->wrapper.decrypt = __aes_wrapper_decrypt;
+        rHandle.m_cipher        = cp;
+        rHandle.wrapper.decrypt = __aes_wrapper_decrypt;
     }
 
     return cp;
 }
 
+void
+Rijndael::expandKeys(const uint8_t* pUserKey,
+                     uint8_t*       pEncKey,
+                     uint8_t*       pDecKey)
+{
+    if (isVaesAvailable()) {
+        vaes::ExpandKeys(pUserKey, pEncKey, pDecKey);
+        return;
+    }
+
+    if (isAesniAvailable()) {
+        aesni::ExpandKeys(pUserKey, pEncKey, pDecKey);
+        return;
+    }
+    /* Default Key expansion */
+}
+
+alc_error_t
+Cfb::decrypt(const uint8_t* pCipherText,
+             uint8_t*       pPlainText,
+             uint64_t       len,
+             const uint8_t* pIv) const
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    if (Cipher::isVaesAvailable()) {
+        err = vaes::DecryptCfb(
+            pCipherText, pPlainText, len, m_decKey, m_nrounds, pIv);
+
+        return err;
+    }
+    if (Cipher::isAesniAvailable()) {
+        err = aesni::DecryptCfb(
+            pCipherText, pPlainText, len, m_decKey, m_nrounds, pIv);
+
+        return err;
+    }
+
+    // dispatch to REF
+
+    return err;
+}
+
+alc_error_t
+Cfb::encrypt(const uint8_t* pPlainText,
+             uint8_t*       pCipherText,
+             uint64_t       len,
+             const uint8_t* pIv) const
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    // TODO: Check for CPUID before dispatching
+    if (Cipher::isAesniAvailable()) {
+        // dispatch to VAESNI
+    }
+
+    // dispatch to REF
+
+    return err;
+}
 } // namespace alcp::cipher
