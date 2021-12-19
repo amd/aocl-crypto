@@ -1,0 +1,7 @@
+# add_compile_options_config(<CONFIG> <option> ...)
+FUNCTION(ADD_COMPILE_OPTIONS_CONFIG CONFIG)
+	FOREACH(opt ${ARGN})
+		ADD_COMPILE_OPTIONS("$<$<CONFIG:${CONFIG}>:${opt}>")
+	ENDFOREACH()
+ENDFUNCTION()
+
