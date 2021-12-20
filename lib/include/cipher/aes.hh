@@ -29,18 +29,17 @@
 #ifndef _CIPHER_AES_HH_
 #define _CIPHER_AES_HH_ 2
 
-//#include <array>
 #include <cstdalign>
 #include <cstdint>
+#include <map>
 
 #include <immintrin.h>
 
 #include "alcp/cipher.h"
 
-#include "algorithm.hh"
+//#include "algorithm.hh"
 #include "cipher.hh"
 #include "error.hh"
-#include "misc/notimplemented.hh"
 
 namespace alcp::cipher {
 
@@ -54,6 +53,7 @@ class Rijndael : public alcp::BlockCipher
     static int constexpr cMaxKeySize      = 256;
     static int constexpr cMaxKeySizeBytes = cMaxKeySize / 8;
 
+    static int constexpr cMaxRounds = 14;
     /* Message size, key size, etc */
     enum BlockSize
     {
@@ -70,6 +70,10 @@ class Rijndael : public alcp::BlockCipher
         eWords256 = eBytes256 / 4,
     };
 
+    const std::map<BlockSize, int> NR = { { eBits128, 10 },
+                                          { eBits192, 12 },
+                                          { eBits256, 14 } };
+
     constexpr int BitsToBytes(int cBits) { return cBits / 8; }
     constexpr int BitsToWord(int cBits) { return cBits / 32; }
     constexpr int BytesToWord(int cBytes) { return cBytes / 4; }
@@ -77,13 +81,20 @@ class Rijndael : public alcp::BlockCipher
   public:
     uint64_t       getRounds() { return m_nrounds; }
     uint64_t       getKeySize() { return m_key_size; }
-    const uint8_t* getKey() { return m_key; }
+    const uint8_t* getRoundKey() { return m_round_key; }
 
   protected:
-    Rijndael() {}
+    Rijndael()
+        : m_nrounds{ 10 }
+    {}
+
     Rijndael(const alc_key_info_t& rKeyInfo)
     {
-        m_encKey = &m_key[0];
+        /* FIXME: need to check rKeyInfo for number of rounds */
+        m_nrounds = 10;
+
+        m_encKey = &m_round_key[0];
+
         /* TODO: Fix the decrypt key offset */
         m_decKey = m_encKey + m_nrounds * m_key_size;
     }
@@ -97,7 +108,7 @@ class Rijndael : public alcp::BlockCipher
 #define RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
 #define RIJ_ALIGN           (16)
   protected:
-    alignas(cMaxKeySizeBytes) uint8_t m_key[RIJ_SIZE_ALIGNED(cMaxKeySizeBytes)];
+    uint8_t  m_round_key[RIJ_SIZE_ALIGNED(cMaxKeySizeBytes) * cMaxRounds];
     uint8_t* m_encKey; /* encryption key: points to offset in 'm_key' */
     uint8_t* m_decKey; /* decryption key: points to offset in 'm_key' */
 
@@ -117,7 +128,7 @@ class Rijndael : public alcp::BlockCipher
 class Aes : public Rijndael
 {
   public:
-    Aes(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Aes(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
         : Rijndael{ keyInfo }
         , m_mode{ aesInfo.mode }
 
@@ -142,7 +153,7 @@ class Aes : public Rijndael
 class Cfb final : public Aes
 {
   public:
-    Cfb(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Cfb(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
         : Aes(aesInfo, keyInfo)
     {}
 
@@ -199,11 +210,9 @@ class Cfb final : public Aes
                                 const uint8_t* pIv) const final;
 
   private:
-    Cfb() = default;
+    Cfb(){};
 
   private:
-    /* TODO: Do we really need to store Initialization Vector ? */
-    uint8_t m_iv[256];
 };
 
 class AesBuilder
