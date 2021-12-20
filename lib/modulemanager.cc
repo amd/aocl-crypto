@@ -67,17 +67,25 @@ ModuleManager::findModule(const alc_module_info_t* ainfo, alc_error_t& err)
     std::vector<Module*> loc = impl->m_modules.at(ainfo->type);
 
     for (auto& m : loc) {
-        switch (m->getType())
+        switch (m->getType()) {
 
-        case ALC_MODULE_TYPE_CIPHER: {
-            alc_error_t e;
-            if (m->isSupported(ainfo->data.cipher, e))
-                if (Error::isError(e))
-                    return m;
-        } break;
+            case ALC_MODULE_TYPE_CIPHER: {
+                alc_error_t e;
+                if (m->isSupported(ainfo->data.cipher, e))
+                    if (Error::isError(e))
+                        return m;
+            } break;
+
+            case ALC_MODULE_TYPE_MAC:
+                break;
+            case ALC_MODULE_TYPE_RNG:
+                break;
+            case ALC_MODULE_TYPE_DIGEST:
+                break;
+            default:
+                break;
+        }
     }
-
     return nullptr;
 }
-
 } // namespace alcp

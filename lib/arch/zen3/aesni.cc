@@ -104,7 +104,6 @@ namespace alcp::cipher { namespace aesni {
          *     pRoundKey[i] = tmp[0];
          * }
          */
-#if 1
         pRoundKey[1] = __aes128keyassist(
             pRoundKey[1], _mm_aeskeygenassist_si128(pRoundKey[1], 0x1));
         pRoundKey[2] = __aes128keyassist(
@@ -125,7 +124,6 @@ namespace alcp::cipher { namespace aesni {
             pRoundKey[1], _mm_aeskeygenassist_si128(pRoundKey[9], 0x1b));
         pRoundKey[10] = __aes128keyassist(
             pRoundKey[1], _mm_aeskeygenassist_si128(pRoundKey[10], 0x36));
-#endif
 
         aesni::ExpandDecryptKeys(pDecKey, pEncKey, 10);
 
