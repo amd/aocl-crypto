@@ -4,7 +4,7 @@ FILE(GLOB ZEN3_SRCS "*.cc")
 IF (MSVC)
 	SET(ARCH_COMPILE_FLAG /arch:znver3)
 ELSE()
-	SET(ARCH_COMPILE_FLAG -fPIC -znver3)
+	SET(ARCH_COMPILE_FLAG -fPIC -znver3 -mavx -mavx2 -maes -mvaes)
 ENDIF()
 	
 #CMAKE_POLICY(SET CMP0079 NEW)

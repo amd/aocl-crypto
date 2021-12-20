@@ -29,7 +29,6 @@
 #ifndef _CIPHER_VAES_HH
 #define _CIPHER_VAES_HH 2
 
-#pragma GCC target("aes,sse2,avx,avx2,vaes,fma")
 #include <immintrin.h>
 
 #include "alcp/error.h"

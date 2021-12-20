@@ -28,7 +28,6 @@
 
 #include <cstdint>
 
-#pragma GCC target("aes,sse2,avx,avx2,vaes,fma")
 #include <immintrin.h>
 
 #include "cipher/aesni.hh"
