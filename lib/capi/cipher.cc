@@ -80,8 +80,8 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
     auto cipher_context =
         cipher::CipherBuilder::Build(*pCipherInfo, *handle, err);
 
-		handle->m_cipher = cipher_context;
-		
+    handle->m_cipher = cipher_context;
+
     return err;
 }
 
@@ -101,7 +101,7 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
 
     auto handle = static_cast<cipher::Handle*>(pCipherHandle->context);
 
-    err = handle->wrapper.decrypt(
+    err = handle->wrapper.encrypt(
         *handle->m_cipher, pPlainText, pCipherText, len, pIv);
 
     return err;

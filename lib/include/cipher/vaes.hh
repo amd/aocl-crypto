@@ -36,10 +36,18 @@
 namespace alcp::cipher { namespace vaes {
     alc_error_t ExpandKeys(const uint8_t* pUserKey,
                            uint8_t*       pEncKey,
-                           uint8_t*       pDecKey);
+                           uint8_t*       pDecKey,
+                           int            nRounds);
 
     alc_error_t DecryptCfb(const uint8_t* pCipherText,
                            uint8_t*       pPlainText,
+                           uint64_t       len,
+                           const uint8_t* pKey,
+                           int            nRounds,
+                           const uint8_t* pIv);
+
+    alc_error_t EncryptCfb(const uint8_t* pPlainText,
+                           uint8_t*       pCipherText,
                            uint64_t       len,
                            const uint8_t* pKey,
                            int            nRounds,

@@ -27,9 +27,59 @@
  */
 
 #include "cipher/aes.hh"
-
-#include <iostream>
+#include "cipher/aesni.hh"
+#include "cipher/vaes.hh"
 
 namespace alcp::cipher {
+alc_error_t
+Cfb::decrypt(const uint8_t* pCipherText,
+             uint8_t*       pPlainText,
+             uint64_t       len,
+             const uint8_t* pIv) const
+{
+    alc_error_t err = ALC_ERROR_NONE;
 
+    if (Cipher::isVaesAvailable()) {
+        err = vaes::DecryptCfb(
+            pCipherText, pPlainText, len, m_dec_key, m_nrounds, pIv);
+
+        return err;
+    }
+    if (Cipher::isAesniAvailable()) {
+        err = aesni::DecryptCfb(
+            pCipherText, pPlainText, len, m_dec_key, m_nrounds, pIv);
+
+        return err;
+    }
+
+    // dispatch to REF
+
+    return err;
+}
+
+alc_error_t
+Cfb::encrypt(const uint8_t* pPlainText,
+             uint8_t*       pCipherText,
+             uint64_t       len,
+             const uint8_t* pIv) const
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    if (Cipher::isVaesAvailable()) {
+        err = vaes::EncryptCfb(
+            pPlainText, pCipherText, len, m_dec_key, m_nrounds, pIv);
+
+        return err;
+    }
+    if (Cipher::isAesniAvailable()) {
+        err = aesni::EncryptCfb(
+            pPlainText, pCipherText, len, m_enc_key, m_nrounds, pIv);
+
+        return err;
+    }
+
+    // dispatch to REF
+
+    return err;
+}
 } // namespace alcp::cipher

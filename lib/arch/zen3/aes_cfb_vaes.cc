@@ -167,4 +167,15 @@ DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
     return err;
 }
 
+alc_error_t
+EncryptCfb(const uint8_t* pPlainText,
+           uint8_t*       pCipherText,
+           uint64_t       len,
+           const uint8_t* pKey,
+           int            nRounds,
+           const uint8_t* pIv)
+{
+    return DecryptCfb(pPlainText, pCipherText, len, pKey, nRounds, pIv);
+}
+
 } // namespace alcp::cipher::vaes

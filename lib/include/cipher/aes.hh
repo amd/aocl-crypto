@@ -50,10 +50,12 @@ class Rijndael : public alcp::BlockCipher
     static int constexpr cAlignment     = 16;
     static int constexpr cAlignmentWord = cAlignment / 4;
 
+    static int constexpr cMinKeySize      = 128;
     static int constexpr cMaxKeySize      = 256;
     static int constexpr cMaxKeySizeBytes = cMaxKeySize / 8;
 
     static int constexpr cMaxRounds = 14;
+
     /* Message size, key size, etc */
     enum BlockSize
     {
@@ -70,9 +72,26 @@ class Rijndael : public alcp::BlockCipher
         eWords256 = eBytes256 / 4,
     };
 
-    const std::map<BlockSize, int> NR = { { eBits128, 10 },
-                                          { eBits192, 12 },
-                                          { eBits256, 14 } };
+    static BlockSize BitsToBlockSize(int iVal)
+    {
+        switch (iVal) {
+            case 128:
+                return eBits128;
+            case 192:
+                return eBits192;
+            case 256:
+                return eBits256;
+            default:
+                assert(false);
+                break;
+        }
+    }
+
+    const std::map<BlockSize, int> RoundMap = {
+        { eBits128, 10 },  { eBits192, 12 },  { eBits256, 14 },
+        { eBytes128, 10 }, { eBytes192, 12 }, { eBytes256, 14 },
+
+    };
 
     constexpr int BitsToBytes(int cBits) { return cBits / 8; }
     constexpr int BitsToWord(int cBits) { return cBits / 32; }
@@ -84,19 +103,22 @@ class Rijndael : public alcp::BlockCipher
     const uint8_t* getRoundKey() { return m_round_key; }
 
   protected:
-    Rijndael()
-        : m_nrounds{ 10 }
-    {}
+    Rijndael() {}
 
     Rijndael(const alc_key_info_t& rKeyInfo)
     {
-        /* FIXME: need to check rKeyInfo for number of rounds */
-        m_nrounds = 10;
+        int len      = rKeyInfo.len;
+        m_block_size = BitsToBlockSize(len);
+        m_nrounds    = RoundMap.at(m_block_size);
 
-        m_encKey = &m_round_key[0];
+        m_key_size = BitsToBytes(len);
 
-        /* TODO: Fix the decrypt key offset */
-        m_decKey = m_encKey + m_nrounds * m_key_size;
+        /* Encryption and Decryption key offsets */
+        m_enc_key = &m_round_key[0];
+        /* +1 as the actual key is also stored  */
+        m_dec_key = m_enc_key + ((m_nrounds + 1) * m_key_size);
+
+        expandKeys(rKeyInfo.key, m_enc_key, m_dec_key);
     }
 
     virtual ~Rijndael() {}
@@ -108,12 +130,14 @@ class Rijndael : public alcp::BlockCipher
 #define RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
 #define RIJ_ALIGN           (16)
   protected:
-    uint8_t  m_round_key[RIJ_SIZE_ALIGNED(cMaxKeySizeBytes) * cMaxRounds];
-    uint8_t* m_encKey; /* encryption key: points to offset in 'm_key' */
-    uint8_t* m_decKey; /* decryption key: points to offset in 'm_key' */
+    /* +2 as we store actual key as well */
+    uint8_t  m_round_key[RIJ_SIZE_ALIGNED(cMaxKeySizeBytes) * (cMaxRounds + 2)];
+    uint8_t* m_enc_key; /* encryption key: points to offset in 'm_key' */
+    uint8_t* m_dec_key; /* decryption key: points to offset in 'm_key' */
 
-    uint64_t m_nrounds;
-    uint64_t m_key_size;
+    uint64_t  m_nrounds;
+    uint64_t  m_key_size;
+    BlockSize m_block_size;
 
   private:
 };
@@ -132,11 +156,7 @@ class Aes : public Rijndael
         : Rijndael{ keyInfo }
         , m_mode{ aesInfo.mode }
 
-    {
-
-        /* TODO: adjust m_encKey and m_decKey accordingly */
-        expandKeys(keyInfo.key, m_encKey, m_decKey);
-    }
+    {}
 
   protected:
     Aes() {}
@@ -188,10 +208,13 @@ class Cfb final : public Aes
     }
 
     /**
-     * \brief
+     * \brief   CFB Encrypt Operation
      * \notes
-     * \param
-     * \return
+     * \param   pPlainText      Pointer to output buffer
+     * \param   pCipherText     Pointer to encrypted buffer
+     * \param   len             Len of plain and encrypted text
+     * \param   pIv             Pointer to Initialization Vector
+     * \return  alc_error_t     Error code
      */
     virtual alc_error_t encrypt(const uint8_t* pPlainText,
                                 uint8_t*       pCipherText,
@@ -199,10 +222,13 @@ class Cfb final : public Aes
                                 const uint8_t* pIv) const final;
 
     /**
-     * \brief
+     * \brief   CFB Decrypt Operation
      * \notes
-     * \param
-     * \return
+     * \param   pCipherText     Pointer to encrypted buffer
+     * \param   pPlainText      Pointer to output buffer
+     * \param   len             Len of plain and encrypted text
+     * \param   pIv             Pointer to Initialization Vector
+     * \return  alc_error_t     Error code
      */
     virtual alc_error_t decrypt(const uint8_t* pCipherText,
                                 uint8_t*       pPlainText,
@@ -234,4 +260,4 @@ class CipherBuilder
 
 } // namespace alcp::cipher
 
-#endif /* _CIPHER_AES_H_ */
+#endif /* _CIPHER_AES_HH_ */

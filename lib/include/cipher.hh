@@ -157,9 +157,9 @@ namespace cipher {
                                    uint64_t       len,
                                    const uint8_t* pIv);
 
-            alc_error_t (*encrypt)(const Cipher*  rCipher,
-                                   const uint8_t* pSrc,
-                                   uint8_t*       pDst,
+            alc_error_t (*encrypt)(const Cipher&  rCipher,
+                                   const uint8_t* pSrt,
+                                   uint8_t*       pDrc,
                                    uint64_t       len,
                                    const uint8_t* pIv);
 
