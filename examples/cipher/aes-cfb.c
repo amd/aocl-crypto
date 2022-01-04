@@ -2,21 +2,20 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h> /* for malloc */
+#include <string.h>
 
 #include "alcp/alcp.h"
 
+static alc_cipher_handle_t handle;
+
 void
-decrypt_demo(const uint8_t* ciphertxt,
-             const uint32_t len, /* Describes both 'plaintxt' and 'ciphertxt' */
-             uint8_t*       plaintxt,
-             uint8_t*       key,
-             uint8_t*       iv,
-             const uint32_t key_len)
+create_demo_session(const uint8_t* key,
+                    const uint8_t* iv,
+                    const uint32_t key_len)
 {
-    alc_error_t         err;
-    alc_cipher_handle_t handle;
-    const int           err_size = 256;
-    uint8_t             err_buf[err_size];
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
 
     alc_aes_info_t aes_data = {
         .mode = ALC_AES_MODE_CFB,
@@ -75,6 +74,38 @@ decrypt_demo(const uint8_t* ciphertxt,
         return;
     }
     printf("request succeeded\n");
+}
+
+void
+encrypt_demo(const uint8_t* plaintxt,
+             const uint32_t len, /*  for both 'plaintxt' and 'ciphertxt' */
+             uint8_t*       ciphertxt,
+             const int8_t*  iv)
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
+
+    err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len, iv);
+    if (alcp_is_error(err)) {
+        printf("Error: unable to encrypt \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
+
+    printf("encrypt succeeded\n");
+}
+
+void
+decrypt_demo(const uint8_t* ciphertxt,
+             const uint32_t len, /* for both 'plaintxt' and 'ciphertxt' */
+             uint8_t*       plaintxt,
+             const uint8_t* iv)
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
+
     err = alcp_cipher_decrypt(&handle, ciphertxt, plaintxt, len, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
@@ -83,32 +114,34 @@ decrypt_demo(const uint8_t* ciphertxt,
     }
 
     printf("decrypt succeeded\n");
-    /*
-     * Complete the transaction
-     */
-    alcp_cipher_finish(&handle);
-
-    // free(ctx);
 }
 
-char*   sample_plaintxt = "Hello world from AOCL Crypto";
-uint8_t sample_key1[]    = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
-                         0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
+//static char* sample_plaintxt = "Hello World from AOCL Crypto !!!";
+static char* sample_plaintxt = "Happy and Fantastic New Year from AOCL Crypto !!";
 
-uint8_t sample_key[] = {
+static const uint8_t sample_key[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
     0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf,
 };
 
-uint8_t sample_iv[] = {
-    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
-    0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf,
+static const uint8_t sample_iv[] = {
+    0xf, 0xe, 0xd, 0xc, 0xb, 0xa, 0x9, 0x8,
+    0x7, 0x6, 0x5, 0x4, 0x3, 0x2, 0x1, 0x0,
 };
 
-uint8_t sample_ciphertxt[] = { 0x18, 0xbd, 0x68, 0x25, 0x31, 0x11, 0x07,
-                               0x1e, 0x90, 0x40, 0x32, 0xe6, 0x1f, 0x48,
-                               0x16, 0x12, 0xa3, 0x85, 0xcd, 0xe6, 0x0e,
-                               0x53, 0x63, 0x31, 0x7b, 0x68, 0x36, 0xee };
+#if 0
+/*
+ * Encrypted text of "Hello World from AOCL Crypto !!!"
+ * with key = {00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 0a, 0b, 0c, 0d, 0e, 0f};
+ * with iv = {00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 0a, 0b, 0c, 0d, 0e, 0f};
+ */
+
+static uint8_t cipher = {68,cc,95,fe,db,6c,0c,87,76,73,98,fc,0a,dc,f6,07,9e,33,17,75,ad,0a,eb,27,66,29,f3,9e,b6,8d,1f,05};
+#else
+static uint8_t sample_ciphertxt[512] = {
+    0,
+};
+#endif
 
 #define BITS_PER_BYTE 8
 
@@ -158,15 +191,28 @@ out:
 int
 main(void)
 {
-    uint8_t sample_output[512];
+    uint8_t sample_output[512] = { 0 };
+
+    assert(sizeof(sample_plaintxt) < sizeof(sample_output));
+
+    create_demo_session(sample_key, sample_iv, sizeof(sample_key) * 8);
+
+    encrypt_demo(
+        sample_plaintxt,
+        strlen(sample_plaintxt), /* len of 'plaintxt' and 'ciphertxt' */
+        sample_ciphertxt,
+        sample_iv);
 
     decrypt_demo(
         sample_ciphertxt,
-        sizeof(sample_ciphertxt), /* len of both 'plaintxt' and 'ciphertxt' */
+        sizeof(sample_ciphertxt), /* len of 'plaintxt' and 'ciphertxt' */
         sample_output,
-        sample_key,
-        sample_iv,
-        sizeof(sample_key));
+        sample_iv);
+
+    /*
+     * Complete the transaction
+     */
+    alcp_cipher_finish(&handle);
 
     return 0;
 }

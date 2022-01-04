@@ -75,13 +75,13 @@ namespace aesni {
         auto p_dec128 = reinterpret_cast<__m128i*>(pDecKey);
         auto p_enc128 = reinterpret_cast<const __m128i*>(pEncKey);
 
-        p_dec128[nr] = p_enc128[nr];
+        p_dec128[nr] = p_enc128[0];
 
         for (int i = nr - 1; i > 0; i--) {
             p_dec128[i] = _mm_aesimc_si128(p_enc128[i]);
         }
 
-        p_dec128[0] = p_enc128[0];
+        p_dec128[0] = p_enc128[nr];
     }
 
     alc_error_t ExpandKeys256(const uint8_t* pUserKey,
@@ -175,20 +175,20 @@ namespace aesni {
         auto        p_src128  = reinterpret_cast<const __m128i*>(pSrc);
         auto        p_dest128 = reinterpret_cast<__m128i*>(pDest);
 
-        __m128i  IV     = _mm_loadu_si128((const __m128i*)pIv);
-        __m128i* pIv128 = (__m128i*)&IV;
+        __m128i  iv128   = _mm_loadu_si128((const __m128i*)pIv);
+        __m128i* p_iv128 = (__m128i*)&iv128;
 
         uint64_t blocks = len / Rijndael::eBytes128;
 
         for (; blocks >= 4; blocks -= 4) {
-            __m128i blk0 = _mm_loadu_si128(pIv128);
+            __m128i blk0 = _mm_loadu_si128(p_iv128);
             __m128i blk1 = _mm_loadu_si128(p_src128);
             __m128i blk2 = _mm_loadu_si128(p_src128 + 1);
             __m128i blk3 = _mm_loadu_si128(p_src128 + 2);
 
             aesni::AesEncrypt(&blk0, &blk1, &blk2, &blk3, p_key128, nRounds);
 
-            IV = blk1;
+            iv128 = blk1;
 
             blk0 = _mm_xor_si128(blk0, p_dest128[0]);
             blk1 = _mm_xor_si128(blk0, p_dest128[1]);
@@ -206,12 +206,12 @@ namespace aesni {
         }
 
         if (blocks >= 2) {
-            __m128i blk0 = _mm_loadu_si128(pIv128);
+            __m128i blk0 = _mm_loadu_si128(p_iv128);
             __m128i blk1 = _mm_loadu_si128(p_src128);
 
             aesni::AesEncrypt(&blk0, &blk1, p_key128, nRounds);
 
-            IV = blk1;
+            iv128 = blk1;
 
             blk0 = _mm_xor_si128(blk0, p_dest128[0]);
             blk1 = _mm_xor_si128(blk0, p_dest128[1]);
@@ -226,7 +226,7 @@ namespace aesni {
 
         if (blocks) {
             /* Still one block left */
-            __m128i blk0 = _mm_loadu_si128(pIv128);
+            __m128i blk0 = _mm_loadu_si128(p_iv128);
 
             aesni::AesEncrypt(&blk0, p_key128, nRounds);
 
@@ -249,9 +249,7 @@ namespace aesni {
         auto p_src128  = reinterpret_cast<const __m128i*>(pSrc);
         auto p_dest128 = reinterpret_cast<__m128i*>(pDest);
 
-        __m128i  iv128   = _mm_loadu_si128((const __m128i*)pIv);
-        __m128i* p_iv128 = (__m128i*)&iv128;
-
+        __m128i  iv128  = _mm_loadu_si128((const __m128i*)pIv);
         uint64_t blocks = len / Rijndael::eBytes128;
 
         while (blocks >= 4) {

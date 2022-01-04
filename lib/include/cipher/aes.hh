@@ -90,7 +90,6 @@ class Rijndael : public alcp::BlockCipher
     const std::map<BlockSize, int> RoundMap = {
         { eBits128, 10 },  { eBits192, 12 },  { eBits256, 14 },
         { eBytes128, 10 }, { eBytes192, 12 }, { eBytes256, 14 },
-
     };
 
     constexpr int BitsToBytes(int cBits) { return cBits / 8; }
