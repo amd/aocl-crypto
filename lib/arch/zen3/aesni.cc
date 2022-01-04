@@ -75,13 +75,13 @@ namespace aesni {
         auto p_dec128 = reinterpret_cast<__m128i*>(pDecKey);
         auto p_enc128 = reinterpret_cast<const __m128i*>(pEncKey);
 
-        p_dec128[nr] = p_enc128[0];
+        p_dec128[nr] = p_enc128[nr];
 
         for (int i = nr - 1; i > 0; i--) {
             p_dec128[i] = _mm_aesimc_si128(p_enc128[i]);
         }
 
-        p_dec128[0] = p_enc128[nr];
+        p_dec128[0] = p_enc128[0];
     }
 
     alc_error_t ExpandKeys256(const uint8_t* pUserKey,
@@ -294,7 +294,7 @@ namespace aesni {
 
         if (blocks) {
             __m128i tmpblk = iv128;
-            __m128i srcblk = _mm_loadu_si64(p_src128);
+            __m128i srcblk = _mm_loadu_si128(p_src128);
 
             aesni::AesEncrypt(&tmpblk, p_key128, nRounds);
             tmpblk = _mm_xor_si128(tmpblk, srcblk);
