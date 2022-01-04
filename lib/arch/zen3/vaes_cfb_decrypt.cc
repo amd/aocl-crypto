@@ -36,12 +36,6 @@
 namespace alcp::cipher::vaes {
 
 alc_error_t
-ExpandKeys(const uint8_t* pUserKey, uint8_t* pEncKey, uint8_t* pDecKey)
-{
-    return ALC_ERROR_NONE;
-}
-
-alc_error_t
 DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
            uint8_t*       pPlainText,  // ptr to plaintext
            uint64_t       len,         // message length in bytes
@@ -52,130 +46,119 @@ DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    uint64_t* pIv64   = (uint64_t*)pIv;
-    __m128i*  pKey128 = (__m128i*)pKey;
-    __m256i*  ct256_p = (__m256i*)pCipherText;
-    __m256i*  pt256_p = (__m256i*)pPlainText;
+    uint64_t* p_iv64   = (uint64_t*)pIv;
+    __m128i*  p_key128 = (__m128i*)pKey;
+    __m256i*  p_ct256  = (__m256i*)pCipherText;
+    __m256i*  p_pt256  = (__m256i*)pPlainText;
 
-    __m256i IV = _mm256_set_epi64x(0, 0, pIv64[1], pIv64[0]);
+    __m256i iv256 = _mm256_set_epi64x(0, 0, p_iv64[1], p_iv64[0]);
 
     uint64_t blocks = len / Rijndael::eBytes128;
 
     for (; blocks > (4 * 2); blocks -= (4 * 2)) {
-        __m256i blk0 = _mm256_loadu_si256(ct256_p);
-        __m256i blk1 = _mm256_loadu_si256(ct256_p + 1);
-        __m256i blk2 = _mm256_loadu_si256(ct256_p + 2);
-        __m256i blk3 = _mm256_loadu_si256(ct256_p + 3);
+        __m256i blk0 = _mm256_loadu_si256(p_ct256);
+        __m256i blk1 = _mm256_loadu_si256(p_ct256 + 1);
+        __m256i blk2 = _mm256_loadu_si256(p_ct256 + 2);
+        __m256i blk3 = _mm256_loadu_si256(p_ct256 + 3);
 
         __m256i y0 = _mm256_set_epi64x(blk0[1], blk0[0], 0, 0);
         __m256i y1 = _mm256_set_epi64x(blk1[1], blk1[0], 0, 0);
         __m256i y2 = _mm256_set_epi64x(blk2[1], blk2[0], 0, 0);
         __m256i y3 = _mm256_set_epi64x(blk3[1], blk3[0], 0, 0);
 
-        y0 |= IV;
+        y0 |= iv256;
         y1 |= blk0;
         y2 |= blk1;
         y3 |= blk2;
 
-        // update IV
-        IV = _mm256_set_epi64x(0, 0, blk1[3], blk1[2]);
+        // update iv256
+        iv256 = _mm256_set_epi64x(0, 0, blk1[3], blk1[2]);
 
-        vaes::AESEncrypt(&y0, &y1, &y2, &y3, pKey128, nRounds);
+        vaes::AESEncrypt(&y0, &y1, &y2, &y3, p_key128, nRounds);
 
         blk0 = _mm256_xor_si256(blk0, y0);
         blk1 = _mm256_xor_si256(blk1, y1);
         blk2 = _mm256_xor_si256(blk2, y2);
         blk3 = _mm256_xor_si256(blk3, y3);
 
-        _mm256_storeu_si256(pt256_p, blk0);
-        _mm256_storeu_si256(pt256_p + 1, blk1);
-        _mm256_storeu_si256(pt256_p + 2, blk2);
-        _mm256_storeu_si256(pt256_p + 3, blk3);
+        _mm256_storeu_si256(p_pt256, blk0);
+        _mm256_storeu_si256(p_pt256 + 1, blk1);
+        _mm256_storeu_si256(p_pt256 + 2, blk2);
+        _mm256_storeu_si256(p_pt256 + 3, blk3);
 
-        ct256_p += 4;
-        pt256_p += 4;
+        p_ct256 += 4;
+        p_pt256 += 4;
         blocks -= (8 * 2);
     }
 
     if ((4 * 2) <= blocks) {
         // load ciphertext
-        __m256i blk0 = _mm256_loadu_si256(ct256_p);
-        __m256i blk1 = _mm256_loadu_si256(ct256_p + 1);
+        __m256i blk0 = _mm256_loadu_si256(p_ct256);
+        __m256i blk1 = _mm256_loadu_si256(p_ct256 + 1);
         __m256i y0   = _mm256_set_epi64x(blk0[1], blk0[0], 0, 0);
         __m256i y1   = _mm256_set_epi64x(blk1[1], blk1[0], 0, 0);
 
-        y0 |= IV;
+        y0 |= iv256;
         y1 |= blk0;
 
-        // update IV
-        IV = _mm256_set_epi64x(0, 0, blk1[3], blk1[2]);
+        // update iv256
+        iv256 = _mm256_set_epi64x(0, 0, blk1[3], blk1[2]);
 
-        vaes::AESEncrypt(&y0, &y1, pKey128, nRounds);
+        vaes::AESEncrypt(&y0, &y1, p_key128, nRounds);
 
         blk0 = _mm256_xor_si256(blk0, y0);
         blk1 = _mm256_xor_si256(blk1, y1);
 
-        _mm256_storeu_si256(pt256_p, blk0);
-        _mm256_storeu_si256(pt256_p + 1, blk1);
+        _mm256_storeu_si256(p_pt256, blk0);
+        _mm256_storeu_si256(p_pt256 + 1, blk1);
 
-        ct256_p += 2;
-        pt256_p += 2;
+        p_ct256 += 2;
+        p_pt256 += 2;
         blocks -= (2 * 4);
     }
 
     for (; blocks >= 2; blocks -= 2) {
-        uint64_t* pIv64 = (uint64_t*)ct256_p;
+        uint64_t* p_iv64 = (uint64_t*)p_ct256;
         // load ciphertext
-        __m256i blk0 = _mm256_loadu_si256(ct256_p);
+        __m256i blk0 = _mm256_loadu_si256(p_ct256);
 
-        __m256i y0 = _mm256_set_epi64x(pIv64[1], pIv64[0], 0, 0);
+        __m256i y0 = _mm256_set_epi64x(p_iv64[1], p_iv64[0], 0, 0);
 
-        y0 = (y0 | IV);
+        y0 = (y0 | iv256);
 
-        // update IV
-        IV = _mm256_set_epi64x(0, 0, blk0[3], blk0[2]);
+        // update iv256
+        iv256 = _mm256_set_epi64x(0, 0, blk0[3], blk0[2]);
 
-        vaes::AESEncrypt(&y0, pKey128, nRounds);
+        vaes::AESEncrypt(&y0, p_key128, nRounds);
 
         blk0 = _mm256_xor_si256(blk0, y0);
 
-        _mm256_storeu_si256(pt256_p, blk0);
+        _mm256_storeu_si256(p_pt256, blk0);
 
-        ct256_p += 1;
-        pt256_p += 1;
+        p_ct256 += 1;
+        p_pt256 += 1;
     }
 
     if (blocks) {
         /* There is one block left - 128bit / 16bytes left */
         /* TODO: This part is untested */
-        uint64_t* pIv64 = (uint64_t*)ct256_p;
-        __m256i   mask  = _mm256_set_epi64x(1UL << 63, 1UL << 63, 0, 0);
+        uint64_t* p_iv64 = (uint64_t*)p_ct256;
+        __m256i   mask   = _mm256_set_epi64x(1UL << 63, 1UL << 63, 0, 0);
 
         // load ciphertext
-        __m256i blk0 = _mm256_maskload_epi64((const long long*)pIv64, mask);
-        __m256i y0   = _mm256_set_epi64x(pIv64[1], pIv64[0], 0, 0);
+        __m256i blk0 = _mm256_maskload_epi64((const long long*)p_iv64, mask);
+        __m256i y0   = _mm256_set_epi64x(p_iv64[1], p_iv64[0], 0, 0);
 
-        y0 = (y0 | IV);
+        y0 = (y0 | iv256);
 
-        vaes::AESEncrypt(&y0, pKey128, nRounds);
+        vaes::AESEncrypt(&y0, p_key128, nRounds);
 
         blk0 = _mm256_xor_si256(blk0, y0);
 
-        _mm256_maskstore_epi64((long long*)pt256_p, mask, blk0);
+        _mm256_maskstore_epi64((long long*)p_pt256, mask, blk0);
     }
 
     return err;
-}
-
-alc_error_t
-EncryptCfb(const uint8_t* pPlainText,
-           uint8_t*       pCipherText,
-           uint64_t       len,
-           const uint8_t* pKey,
-           int            nRounds,
-           const uint8_t* pIv)
-{
-    return DecryptCfb(pPlainText, pCipherText, len, pKey, nRounds, pIv);
 }
 
 } // namespace alcp::cipher::vaes

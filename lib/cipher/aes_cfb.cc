@@ -65,12 +65,6 @@ Cfb::encrypt(const uint8_t* pPlainText,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    if (Cipher::isVaesAvailable()) {
-        err = vaes::EncryptCfb(
-            pPlainText, pCipherText, len, m_dec_key, m_nrounds, pIv);
-
-        return err;
-    }
     if (Cipher::isAesniAvailable()) {
         err = aesni::EncryptCfb(
             pPlainText, pCipherText, len, m_enc_key, m_nrounds, pIv);
@@ -78,7 +72,7 @@ Cfb::encrypt(const uint8_t* pPlainText,
         return err;
     }
 
-    // dispatch to REF
+    // TODO: Encrypt with reference code
 
     return err;
 }

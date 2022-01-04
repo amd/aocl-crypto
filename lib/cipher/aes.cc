@@ -111,16 +111,11 @@ Rijndael::expandKeys(const uint8_t* pUserKey,
 
     const uint8_t* key = pUserKey ? pUserKey : &dummy_key[0];
 
-    if (isVaesAvailable()) {
-        vaes::ExpandKeys(key, pEncKey, pDecKey, m_nrounds);
-        return;
-    }
-
     if (isAesniAvailable()) {
         aesni::ExpandKeys(key, pEncKey, pDecKey, m_nrounds);
         return;
     }
 
-    /* Default Key expansion */
+    /* TODO: Default Key expansion */
 }
 } // namespace alcp::cipher
