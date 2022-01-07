@@ -41,18 +41,18 @@ Cfb::decrypt(const uint8_t* pCipherText,
 
     if (Cipher::isVaesAvailable()) {
         err = vaes::DecryptCfb(
-            pCipherText, pPlainText, len, m_dec_key, m_nrounds, pIv);
+            pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
 
         return err;
     }
     if (Cipher::isAesniAvailable()) {
         err = aesni::DecryptCfb(
-            pCipherText, pPlainText, len, m_dec_key, m_nrounds, pIv);
+            pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
 
         return err;
     }
 
-    // dispatch to REF
+    // TODO: dispatch to REF
 
     return err;
 }
