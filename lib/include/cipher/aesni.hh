@@ -99,28 +99,28 @@ namespace alcp::cipher { namespace aesni {
                                   int            nRounds)
     {
         int     nr;
-        __m128i rkey0 = pKey[0];
+        __m128i rkey = pKey[0];
 
-        __m128i b0 = _mm_xor_si128(*pBlk0, rkey0);
-        __m128i b1 = _mm_xor_si128(*pBlk1, rkey0);
+        __m128i b0 = _mm_xor_si128(*pBlk0, rkey);
+        __m128i b1 = _mm_xor_si128(*pBlk1, rkey);
 
         pKey++;
 
         for (nr = 1; nr < nRounds; nr++) {
-            rkey0 = pKey[0];
+            rkey = pKey[0];
 
-            b0 = _mm_aesenc_si128(b0, rkey0);
-            b1 = _mm_aesenc_si128(b1, rkey0);
+            b0 = _mm_aesenc_si128(b0, rkey);
+            b1 = _mm_aesenc_si128(b1, rkey);
 
             pKey++;
         }
 
-        rkey0 = pKey[0];
+        rkey = pKey[0];
 
-        *pBlk0 = _mm_aesenclast_si128(b0, rkey0);
-        *pBlk1 = _mm_aesenclast_si128(b1, rkey0);
+        *pBlk0 = _mm_aesenclast_si128(b0, rkey);
+        *pBlk1 = _mm_aesenclast_si128(b1, rkey);
 
-        rkey0 = _mm_setzero_si128();
+        rkey = _mm_setzero_si128();
     }
 
     /**
