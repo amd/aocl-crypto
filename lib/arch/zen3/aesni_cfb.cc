@@ -47,30 +47,29 @@ namespace alcp::cipher { namespace aesni {
         auto        p_src128  = reinterpret_cast<const __m128i*>(pSrc);
         auto        p_dest128 = reinterpret_cast<__m128i*>(pDest);
 
-        __m128i  iv128   = _mm_loadu_si128((const __m128i*)pIv);
-        __m128i* p_iv128 = (__m128i*)&iv128;
+        __m128i iv128 = _mm_loadu_si128((const __m128i*)pIv);
 
         uint64_t blocks = len / Rijndael::eBytes128;
 
         for (; blocks >= 4; blocks -= 4) {
-            __m128i blk0 = _mm_loadu_si128(p_iv128);
-            __m128i blk1 = _mm_loadu_si128(p_src128);
-            __m128i blk2 = _mm_loadu_si128(p_src128 + 1);
-            __m128i blk3 = _mm_loadu_si128(p_src128 + 2);
+            __m128i blk0 = iv128;
+            __m128i blk1 = _mm_loadu_si128(&p_src128[0]);
+            __m128i blk2 = _mm_loadu_si128(&p_src128[1]);
+            __m128i blk3 = _mm_loadu_si128(&p_src128[2]);
 
             aesni::AesEncrypt(&blk0, &blk1, &blk2, &blk3, p_key128, nRounds);
 
-            iv128 = blk1;
+            blk0 = _mm_xor_si128(blk0, p_src128[0]);
+            blk1 = _mm_xor_si128(blk1, p_src128[1]);
+            blk2 = _mm_xor_si128(blk2, p_src128[2]);
+            blk3 = _mm_xor_si128(blk3, p_src128[3]);
 
-            blk0 = _mm_xor_si128(blk0, p_dest128[0]);
-            blk1 = _mm_xor_si128(blk0, p_dest128[1]);
-            blk2 = _mm_xor_si128(blk0, p_dest128[2]);
-            blk3 = _mm_xor_si128(blk0, p_dest128[3]);
+            iv128 = p_src128[3];
 
-            _mm_storeu_si128(p_dest128, blk0);
-            _mm_storeu_si128(p_dest128 + 1, blk1);
-            _mm_storeu_si128(p_dest128 + 2, blk2);
-            _mm_storeu_si128(p_dest128 + 3, blk3);
+            _mm_storeu_si128(&p_dest128[0], blk0);
+            _mm_storeu_si128(&p_dest128[1], blk1);
+            _mm_storeu_si128(&p_dest128[2], blk2);
+            _mm_storeu_si128(&p_dest128[3], blk3);
 
             p_src128 += 4;
             p_dest128 += 4;
@@ -78,18 +77,18 @@ namespace alcp::cipher { namespace aesni {
         }
 
         if (blocks >= 2) {
-            __m128i blk0 = _mm_loadu_si128(p_iv128);
-            __m128i blk1 = _mm_loadu_si128(p_src128);
+            __m128i blk0 = iv128;
+            __m128i blk1 = _mm_loadu_si128(&p_src128[0]);
 
             aesni::AesEncrypt(&blk0, &blk1, p_key128, nRounds);
 
-            iv128 = blk1;
+            blk0 = _mm_xor_si128(blk0, p_src128[0]);
+            blk1 = _mm_xor_si128(blk1, p_src128[1]);
 
-            blk0 = _mm_xor_si128(blk0, p_dest128[0]);
-            blk1 = _mm_xor_si128(blk0, p_dest128[1]);
+            iv128 = p_src128[1];
 
-            _mm_storeu_si128(p_dest128, blk0);
-            _mm_storeu_si128(p_dest128 + 1, blk1);
+            _mm_storeu_si128(&p_dest128[0], blk0);
+            _mm_storeu_si128(&p_dest128[1], blk1);
 
             p_src128 += 2;
             p_dest128 += 2;
@@ -98,14 +97,18 @@ namespace alcp::cipher { namespace aesni {
 
         if (blocks) {
             /* Still one block left */
-            __m128i blk0 = _mm_loadu_si128(p_iv128);
+            __m128i blk = iv128;
 
-            aesni::AesEncrypt(&blk0, p_key128, nRounds);
+            aesni::AesEncrypt(&blk, p_key128, nRounds);
 
-            blk0 = _mm_xor_si128(blk0, p_src128[0]);
+            blk = _mm_xor_si128(blk, p_src128[0]);
 
-            _mm_storeu_si128(p_dest128, blk0);
+            _mm_storeu_si128(p_dest128, blk);
+
+            blocks--;
         }
+
+        assert(blocks == 0);
 
         return err;
     }
