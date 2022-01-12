@@ -203,12 +203,15 @@ main(void)
         sample_ciphertxt,
         sample_iv);
 
+    int size = strlen(sample_plaintxt);
+
     decrypt_demo(
         sample_ciphertxt,
-        sizeof(sample_ciphertxt), /* len of 'plaintxt' and 'ciphertxt' */
+        size, 
         sample_output,
         sample_iv);
 
+    printf("sample_output: %s\n", sample_output);
     /*
      * Complete the transaction
      */
