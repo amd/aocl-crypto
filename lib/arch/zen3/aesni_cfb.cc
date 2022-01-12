@@ -73,7 +73,6 @@ namespace alcp::cipher { namespace aesni {
 
             p_src128 += 4;
             p_dest128 += 4;
-            blocks -= 4;
         }
 
         if (blocks >= 2) {
