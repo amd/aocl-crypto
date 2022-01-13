@@ -1,0 +1,17 @@
+set env LD_LIBRARY_PATH /home/pmallapp/tmp/ipp-install/lib
+
+# program       mode   numbuf  datalen count  target  debug
+start   0        3       1       256     1     0.0002    1
+
+b ippsAESInit
+cont
+
+b l9_EncryptCFB128_RIJ128_AES_NI
+cont
+
+layout asm
+
+#b ippsAESDecryptCFB
+#cont
+
+
