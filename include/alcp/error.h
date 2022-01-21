@@ -109,6 +109,10 @@ typedef enum _alc_error_generic
      */
     ALC_ERROR_HARDWARE_FAILURE,
 
+  /* There is not enough entropy for RNG
+      retry needed with more entropy */
+  ALC_ERROR_NO_ENTROPY,
+
 } alc_error_generic_t;
 
 typedef uint64_t alc_error_t;
