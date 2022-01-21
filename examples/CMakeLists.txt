@@ -9,4 +9,6 @@ ADD_SUBDIRECTORY(cipher)
 
 ADD_SUBDIRECTORY(digest)
 
+ADD_SUBDIRECTORY(rng)
+
 
