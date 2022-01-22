@@ -17,7 +17,7 @@ create_demo_session(const uint8_t* key,
     const int   err_size = 256;
     uint8_t     err_buf[err_size];
 
-    alc_aes_info_t aes_data = {
+    const alc_aes_info_t aes_data = {
         .mode = ALC_AES_MODE_CFB,
         .iv   = iv,
     };
