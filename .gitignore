@@ -3,6 +3,7 @@
 #------------------------------------#
 *~
 *.orig
+**/build
 
 # Nested build directory
 /build
