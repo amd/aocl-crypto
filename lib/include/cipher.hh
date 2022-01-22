@@ -26,6 +26,8 @@
  *
  */
 
+#pragma once
+
 #ifndef _INCLUDE_CIPHER_HH_
 #define _INCLUDE_CIPHER_HH_ 2
 
@@ -35,7 +37,6 @@
 
 #include "alcp/cipher.h"
 
-#include "algorithm.hh"
 #include "error.hh"
 
 namespace alcp {
@@ -90,8 +91,6 @@ class DecryptUpdateInterface
 
   protected:
     virtual ~DecryptUpdateInterface() {}
-
-  private:
     DecryptUpdateInterface() {}
 };
 
@@ -100,6 +99,7 @@ class Cipher
   public:
     Cipher(alc_cipher_info_p pCipherInfo) {}
     virtual ~Cipher() {}
+
     /**
      * \brief           Checks if a given algorithm is supported
      * \notes           Function  checks for algorithm and its
@@ -144,29 +144,6 @@ class Cipher
   private:
     alc_cipher_type_t m_cipher_type;
 };
-
-namespace cipher {
-    struct Handle
-    {
-        Cipher* m_cipher;
-        struct
-        {
-            alc_error_t (*decrypt)(const Cipher&  rCipher,
-                                   const uint8_t* pSrc,
-                                   uint8_t*       pDst,
-                                   uint64_t       len,
-                                   const uint8_t* pIv);
-
-            alc_error_t (*encrypt)(const Cipher&  rCipher,
-                                   const uint8_t* pSrt,
-                                   uint8_t*       pDrc,
-                                   uint64_t       len,
-                                   const uint8_t* pIv);
-
-            alc_error_t (*finish)(Cipher* rCipher);
-        } wrapper;
-    };
-} // namespace cipher
 
 class BlockCipherOperation
     : public DecryptInterface

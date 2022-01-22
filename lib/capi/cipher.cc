@@ -28,15 +28,14 @@
 
 #include <iostream> /* TODO: remove after debug messages */
 
+#include "alcp/cipher.h"
 #include "alcp/macros.h"
 
-#include "algorithm.hh"
 #include "cipher.hh"
-#include "cipher/aes.hh" /* for cipher::Aes */
 #include "defs.hh"
 #include "error.hh"
-#include "module.hh"
-#include "modulemanager.hh"
+
+#include "capi/cipher.hh"
 
 using namespace alcp;
 
@@ -61,7 +60,7 @@ outa:
 uint64_t
 alcp_cipher_context_size(const alc_cipher_info_p pCipherInfo)
 {
-    uint64_t size = sizeof(cipher::Handle);
+    uint64_t size = sizeof(cipher::Context);
     return size;
 }
 
@@ -75,12 +74,9 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
     ALCP_BAD_PTR_ERR_RET(pCipherInfo, err);
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->context, err);
 
-    auto handle = static_cast<cipher::Handle*>(pCipherHandle->context);
+    auto ctx = static_cast<cipher::Context*>(pCipherHandle->context);
 
-    auto cipher_context =
-        cipher::CipherBuilder::Build(*pCipherInfo, *handle, err);
-
-    handle->m_cipher = cipher_context;
+    err = cipher::CipherBuilder::Build(*pCipherInfo, *ctx);
 
     return err;
 }
@@ -99,10 +95,9 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherText, err);
     ALCP_BAD_PTR_ERR_RET(pIv, err);
 
-    auto handle = static_cast<cipher::Handle*>(pCipherHandle->context);
+    auto ctx = static_cast<cipher::Context*>(pCipherHandle->context);
 
-    err = handle->wrapper.encrypt(
-        *handle->m_cipher, pPlainText, pCipherText, len, pIv);
+    err = ctx->encrypt(ctx->m_cipher, pPlainText, pCipherText, len, pIv);
 
     return err;
 }
@@ -121,10 +116,9 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherText, err);
     ALCP_BAD_PTR_ERR_RET(pIv, err);
 
-    auto handle = static_cast<cipher::Handle*>(pCipherHandle->context);
+    auto ctx = static_cast<cipher::Context*>(pCipherHandle->context);
 
-    err = handle->wrapper.decrypt(
-        *handle->m_cipher, pCipherText, pPlainText, len, pIv);
+    err = ctx->decrypt(ctx->m_cipher, pCipherText, pPlainText, len, pIv);
 
     return err;
 }
@@ -136,11 +130,11 @@ void
 alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle)
 {
     /* TODO: Check for pointer validity */
-    cipher::Handle* h =
-        reinterpret_cast<cipher::Handle*>(pCipherHandle->context);
+    cipher::Context* ctx =
+        reinterpret_cast<cipher::Context*>(pCipherHandle->context);
 
     // pCipherHandle will be freed by the application
-    delete h->m_cipher;
+    ctx->finish(ctx->m_cipher);
 }
 
 EXTERN_C_END

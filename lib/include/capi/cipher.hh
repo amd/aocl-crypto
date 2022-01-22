@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2021, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,34 +25,43 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#pragma once
+
+#ifndef _CAPI_CIPHER_HH
+#define _CAPI_CIPHER_HH 2
 
 #include "alcp/cipher.h"
 
 #include "cipher.hh"
-#include "cipher/aes_build.hh"
-
-#include "capi/cipher.hh"
+#include "defs.hh"
 
 namespace alcp::cipher {
 
-alc_error_t
-CipherBuilder::Build(const alc_cipher_info_t& cipherInfo, Context& ctx)
+struct Context
 {
+    void* m_cipher;
 
-    alc_error_t err;
+    alc_error_t (*decrypt)(const void*    rCipher,
+                           const uint8_t* pSrc,
+                           uint8_t*       pDst,
+                           uint64_t       len,
+                           const uint8_t* pIv);
 
-    switch (cipherInfo.cipher_type) {
-        case ALC_CIPHER_TYPE_AES: {
-            err = AesBuilder::Build(
-                cipherInfo.mode_data.aes, cipherInfo.key_info, ctx);
-        } break;
+    alc_error_t (*encrypt)(const void*    rCipher,
+                           const uint8_t* pSrt,
+                           uint8_t*       pDrc,
+                           uint64_t       len,
+                           const uint8_t* pIv);
 
-        default:
-            Error::setGeneric(err, ALC_ERROR_NOT_SUPPORTED);
-            break;
-    }
+    alc_error_t (*finish)(const void*);
+};
 
-    return err;
-}
+class CipherBuilder
+{
+  public:
+    static alc_error_t Build(const alc_cipher_info_t& cipherInfo, Context& ctx);
+};
 
 } // namespace alcp::cipher
+
+#endif /* _CAPI_CIPHER_HH */

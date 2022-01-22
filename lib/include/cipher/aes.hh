@@ -74,17 +74,16 @@ class Rijndael : public alcp::BlockCipher
 
     static BlockSize BitsToBlockSize(int iVal)
     {
+        BlockSize bs = eBits128;
+        // clang-format off
         switch (iVal) {
-            case 128:
-                return eBits128;
-            case 192:
-                return eBits192;
-            case 256:
-                return eBits256;
-            default:
-                assert(false);
-                break;
+            case 128: bs = eBits128; break;
+            case 192: bs = eBits192; break;
+            case 256: bs = eBits256; break;
+            default:  assert(false); break;
         }
+        // clang-format on
+        return bs;
     }
 
     const std::map<BlockSize, int> RoundMap = {
@@ -125,6 +124,11 @@ class Rijndael : public alcp::BlockCipher
     void expandKeys(const uint8_t* pUserKey,
                     uint8_t*       pEncKey,
                     uint8_t*       pDecKey);
+
+    void subBytes(uint8_t state[][4]);
+    void shiftRows(uint8_t state[][4]);
+    void mixColumns(uint8_t state[][4]);
+    void addRoundKey(uint8_t state[][4], uint8_t k[][4]);
 
 #define RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
 #define RIJ_ALIGN           (16)
@@ -218,7 +222,7 @@ class Cfb final : public Aes
     virtual alc_error_t encrypt(const uint8_t* pPlainText,
                                 uint8_t*       pCipherText,
                                 uint64_t       len,
-                                const uint8_t* pIv) const final;
+                                const uint8_t* pIv) const override final;
 
     /**
      * \brief   CFB Decrypt Operation
@@ -238,23 +242,6 @@ class Cfb final : public Aes
     Cfb(){};
 
   private:
-};
-
-class AesBuilder
-{
-  public:
-    static Cipher* Build(const alc_aes_info_t& aesInfo,
-                         const alc_key_info_t& keyInfo,
-                         Handle&               rHandle,
-                         alc_error_t&          err);
-};
-
-class CipherBuilder
-{
-  public:
-    static Cipher* Build(const alc_cipher_info_t& cipherInfo,
-                         Handle&                  rHandle,
-                         alc_error_t&             err);
 };
 
 } // namespace alcp::cipher
