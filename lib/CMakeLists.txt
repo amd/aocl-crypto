@@ -19,6 +19,7 @@ SET(ALCP_VRS_SRC
 
 SET(ALCP_COMMON_SRCS
 	algorithm.cc
+	dynlib.cc
 	error.cc
 	module.cc
 	modulemanager.cc
@@ -57,6 +58,7 @@ ADD_SUBDIRECTORY(compat)
 ADD_SUBDIRECTORY(cipher)
 ADD_SUBDIRECTORY(ref)
 
+
 TARGET_SOURCES(alcp
 	PRIVATE
 	#${ARCH_SRCS} 
@@ -67,6 +69,8 @@ TARGET_SOURCES(alcp
 
 TARGET_INCLUDE_DIRECTORIES(alcp PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+TARGET_LINK_LIBRARIES(alcp PUBLIC dl)
 
 # Need to build comapt libs after building the libalcp.so
 #${COMPAT_SRCS} 
