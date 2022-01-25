@@ -28,31 +28,33 @@
 
 #ifndef __RNG_H
 #define __RNG_H
-#include <stdint.h>
 #include "error.h"
 #include <alcp/macros.h>
+#include <stdint.h>
 
 EXTERN_C_BEGIN
 
-typedef enum {
+typedef enum
+{
     ALC_RNG_TYPE_INVALID = 0,
     ALC_RNG_TYPE_SIMPLE,
     ALC_RNG_TYPE_CONTINUOUS,
     ALC_RNG_TYPE_DESCRETE,
 
     ALC_RNG_TYPE_MAX,
-} alc_rng_type_t ;
+} alc_rng_type_t;
 
-typedef enum {
-    ALC_RNG_SOURCE_ALGO = 0,  /* Default: select software CRNG/PRNG */
-    ALC_RNG_SOURCE_OS,        /* Use the operating system based support */
-    ALC_RNG_SOURCE_DEV,       /* Device based off-loading support */
-    ALC_RNG_SOURCE_ARCH,      /* Architecture specific source */
+typedef enum
+{
+    ALC_RNG_SOURCE_ALGO = 0, /* Default: select software CRNG/PRNG */
+    ALC_RNG_SOURCE_OS,       /* Use the operating system based support */
+    ALC_RNG_SOURCE_DEV,      /* Device based off-loading support */
+    ALC_RNG_SOURCE_ARCH,     /* Architecture specific source */
     ALC_RNG_SOURCE_MAX,
 } alc_rng_source_t;
 
-
-typedef enum {
+typedef enum
+{
     ALC_RNG_DISTRIB_UNKNOWN = 0,
 
     ALC_RNG_DISTRIB_BETA,
@@ -86,31 +88,41 @@ typedef enum {
     ALC_RNG_DISTRIB_MAX,
 } alc_rng_distrib_t;
 
-typedef enum {
+typedef enum
+{
     ALC_DUMMY_FLAG,
 } alc_rng_algo_flags_t;
 
-typedef struct {
-    alc_rng_type_t        r_type;
-    alc_rng_source_t      r_source;
-    alc_rng_distrib_t     r_distrib;
-    alc_rng_algo_flags_t  r_flags;
+typedef struct
+{
+    alc_rng_type_t       r_type;
+    alc_rng_source_t     r_source;
+    alc_rng_distrib_t    r_distrib;
+    alc_rng_algo_flags_t r_flags;
 } alc_rng_info_t;
 
-typedef struct{
-    alc_rng_info_t rng_info;
-    int (* engine)(uint8_t *,int);
-} alc_context_t;
+typedef struct
+{
+    void* ctx;
+} alc_rng_handle_t;
 
+uint64_t
+alcp_rng_context_size(const alc_rng_info_t rng_info);
 
+alc_error_t
+alcp_rng_supported(const alc_rng_info_t* tt);
 
-alc_error_t alcp_rng_supported(const alc_rng_info_t *tt);
+alc_error_t
+alcp_rng_request(const alc_rng_info_t* tt, alc_rng_handle_t* cntxt);
 
-alc_error_t alcp_rng_request(const alc_rng_info_t *tt, alc_context_t * cntxt);
+alc_error_t
+alcp_rng_gen_random(alc_rng_handle_t* tt,
+                    uint8_t*          buf, /* RNG output buffer */
+                    uint64_t          size /* output buffer size */
+);
 
-alc_error_t alcp_rng_gen_random(alc_context_t *tt,
-                                    uint8_t       *buf,  /* RNG output buffer */
-                                    uint64_t       size  /* output buffer size */
-                                    );
+alc_error_t
+alcp_rng_finish(alc_rng_handle_t* tt);
+
 EXTERN_C_END
 #endif
