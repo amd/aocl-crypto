@@ -1,9 +1,8 @@
-INCLUDE_DIRECTORIES(
-	${CMAKE_SOURCE_DIR}/include
-	${CMAKE_SOURCE_DIR}/lib/include
-	)
+#INCLUDE_DIRECTORIES(
+#	${CMAKE_SOURCE_DIR}/include
+#	${CMAKE_SOURCE_DIR}/lib/include
+#	)
 
 ADD_EXECUTABLE(aes-cfb aes-cfb.c)
 
-TARGET_LINK_LIBRARIES(aes-cfb PUBLIC alcp)
 

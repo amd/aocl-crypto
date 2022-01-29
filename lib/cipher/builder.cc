@@ -35,10 +35,11 @@
 
 namespace alcp::cipher {
 
+using Context = alcp::cipher::Context;
+
 alc_error_t
 CipherBuilder::Build(const alc_cipher_info_t& cipherInfo, Context& ctx)
 {
-
     alc_error_t err;
 
     switch (cipherInfo.cipher_type) {
