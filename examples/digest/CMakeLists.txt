@@ -1,2 +1,2 @@
-#ADD_EXECUTABLE(sha256_example sha256.c)
+ADD_EXECUTABLE(sha256_example sha2_256_example.c)
 
