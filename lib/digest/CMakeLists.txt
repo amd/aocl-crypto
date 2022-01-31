@@ -1,0 +1,8 @@
+
+FILE(GLOB DIGEST_SRCS "*.cc")
+
+TARGET_SOURCES(alcp
+	PRIVATE
+		${DIGEST_SRCS}
+	)
+
