@@ -53,6 +53,7 @@ typedef enum _alc_aes_mode
 
     ALC_AES_MODE_ECB,
     ALC_AES_MODE_CBC,
+    ALC_AES_MODE_OFB,
     ALC_AES_MODE_CTR,
     ALC_AES_MODE_CFB,
     ALC_AES_MODE_XTR,
