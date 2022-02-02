@@ -39,19 +39,6 @@ static alc_cipher_handle_t handle;
 #define ALCP_PRINT_LU(I, L, S)
 #endif//DEBUG_P
 
-//key expansion added for functionality: to be removed from here.
-int mbedtls_aes_setkey_enc(int* nr,
-    uint32_t* rk,
-    uint32_t* buf,
-    const unsigned char* key,
-    unsigned int keybits);
-
-int mbedtls_aes_setkey_dec(int* nr,
-    uint32_t* rk,
-    uint32_t* buf,
-    const unsigned char* key,
-    unsigned int keybits);
-
 
 // to do: these macro is better to be moved to common header.
 #define ALCP_CRYPT_TIMER_INIT struct timeval begin, end;
@@ -219,15 +206,7 @@ encrypt_decrypt_demo(uint8_t* inputText, //plaintext
         printf("\n keybits %d ", keybits);
         int nr;
         memset(key, ((i*10)+m), 32);
-        uint8_t *rk;
-        uint32_t buf[68];
-        rk = (uint8_t*)buf;
-
-#if HACK_KEY_EXPANSION// needed to verify 192bit and 256bit path.
-        ret = mbedtls_aes_setkey_enc(&nr, (uint32_t*)rk, buf, key, keybits);
-#endif
-        ALCP_PRINT_LU(key, 32, "key        ")
-        ALCP_PRINT_LU(buf, 32, "keyExpanded")
+        ALCP_PRINT_LU(key, 32, "key ")
 
         memset(inputText, i, inputLen);
 
@@ -247,18 +226,10 @@ encrypt_decrypt_demo(uint8_t* inputText, //plaintext
         ALCP_PRINT_TEXT(inputText, inputLen, "inputText ")
         //ALCP_PRINT_TEXT(iv, 8, "iv")
 
-#if HACK_KEY_EXPANSION// needed to verify 192bit and 256bit path.
-        // rk is expanded key buffer from mbedTLS
-        create_aes_session( rk,
-                            iv,
-                            keybits,
-                            m);
-#else
         create_aes_session( key,
                             iv,
                             keybits,
                             m);
-#endif
 
 
 #if SPEED_CHECK
@@ -284,15 +255,6 @@ encrypt_decrypt_demo(uint8_t* inputText, //plaintext
                 break;
             }
         }
-#endif
-
-#if HACK_KEY_EXPANSION// needed to verify 192bit and 256bit path.
-        /* Decrypt test */
-        //OFB and CFB decrypt expansion key is same as encrypt
-        if((m!=ALC_AES_MODE_OFB)&&(m!=ALC_AES_MODE_CFB)) {
-            ret = mbedtls_aes_setkey_dec(&nr, (uint32_t*)rk, buf, key, keybits);
-        }
-        ALCP_PRINT_LU(buf, 32, "decKey")
 #endif
 
 #if SPEED_CHECK

@@ -123,6 +123,7 @@ cryptOfb(  const uint8_t* pInputText,  // ptr to inputText
         //11 xmm registers for keys + 2 xmm registers used.
         for (i = 0; i < blocks; i++) {
             a1 = _mm_loadu_si128(pInput128);
+            b1 = _mm_xor_si128(b1, key_128_0);
 
             ALCP_AESENC_128BIT_10ROUND_LAST(b1, key_128)
             /* cipher = plaintext xor AESENCoutput*/
@@ -138,6 +139,7 @@ cryptOfb(  const uint8_t* pInputText,  // ptr to inputText
         ALCP_AES_LOAD_KEYS_12_ROUND_XMM_EXTRA2(pkey128)
         for (i = 0; i < blocks; i++) {
             a1 = _mm_loadu_si128(pInput128);
+            b1 = _mm_xor_si128(b1, key_128_0);
 
             ALCP_AESENC_128BIT_12ROUND_LAST(b1, key_128)
             /* cipher = plaintext xor AESENCoutput*/
@@ -154,6 +156,7 @@ cryptOfb(  const uint8_t* pInputText,  // ptr to inputText
 	    ALCP_AES_LOAD_KEYS_14_ROUND_XMM_EXTRA2(pkey128)
         for (i = 0; i < blocks; i++) {
             a1 = _mm_loadu_si128(pInput128);
+            b1 = _mm_xor_si128(b1, key_128_0);
 
             ALCP_AESENC_128BIT_14ROUND_LAST(b1, key_128)
             /* cipher = plaintext xor AESENCoutput*/

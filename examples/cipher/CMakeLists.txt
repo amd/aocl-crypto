@@ -4,8 +4,6 @@
 #	)
 
 ADD_EXECUTABLE(aes-cfb aes-cfb.c)
-TARGET_LINK_LIBRARIES(aes-cfb PUBLIC alcp)
 
+ADD_EXECUTABLE(aes-demo aes-demo.c)
 
-ADD_EXECUTABLE(aes-demo aes-demo.c aes-key_expansion.c)
-TARGET_LINK_LIBRARIES(aes-demo PUBLIC alcp)
