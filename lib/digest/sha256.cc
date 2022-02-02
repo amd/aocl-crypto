@@ -93,13 +93,13 @@ class Sha256::Impl
         /*
          * FIXME: call cpuid::isShaniAvailable() initialize
          */
-        static bool s_shani_available = true;
+        static bool s_shani_available = false;
         return s_shani_available;
     }
 
   private:
     static void extendMsg(uint32_t w[], uint32_t start, uint32_t end);
-    void        compressMsg(uint32_t w[], uint32_t v[]);
+    void        compressMsg(uint32_t w[]);
     alc_error_t processChunk(const uint8_t* pSrc, uint64_t len);
 
   private:
@@ -137,8 +137,13 @@ Sha256::Impl::copyHash(uint8_t* pHash, uint64_t size)
         Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
     }
 
-    if (!Error::isError(err))
-        utils::CopyBlock(pHash, m_hash, cHashSize);
+    for (unsigned long int i = 0, j = 0; i < cHashSizeWords; ++i) {
+        //uint32_t tmp = m_hash[i];
+        pHash[j++] = (uint8_t)(m_hash[i] >> 24);
+        pHash[j++] = (uint8_t)(m_hash[i] >> 16);
+        pHash[j++] = (uint8_t)(m_hash[i] >> 8);
+        pHash[j++] = (uint8_t)m_hash[i];
+    }
 
     return err;
 }
@@ -156,7 +161,7 @@ Sha256::Impl::extendMsg(uint32_t w[], uint32_t start, uint32_t end)
 }
 
 void
-Sha256::Impl::compressMsg(uint32_t w[], uint32_t v[])
+Sha256::Impl::compressMsg(uint32_t w[])
 {
     uint32_t a, b, c, d, e, f, g, h;
 
@@ -213,35 +218,30 @@ Sha256::Impl::processChunk(const uint8_t* pSrc, uint64_t len)
     uint64_t input_buffer_index = 0;
     uint64_t msg_size           = len;
     uint8_t* msg_buffer         = (uint8_t*)pSrc;
+    uint8_t* chunk = NULL;
 
     uint32_t w[cNumRounds];
-    uint32_t v[cHashSizeWords];
-    utils::CopyBlock(v, m_hash, cHashSize);
 
-    while (input_buffer_index <= msg_size) {
+    while (1) {
+        if (input_buffer_index >= msg_size) {
+            break;
+        }
 
         if (input_buffer_index + cChunkSize <= len) {
+            chunk = msg_buffer;
             msg_buffer += cChunkSize;
             input_buffer_index += cChunkSize;
         }
-
-        for (uint64_t i = 0; i < cNumRounds; i++) {
-            w[i] = alcp::digest::ToBigEndian(msg_buffer[i]);
+        for (uint64_t i = 0; i < 16; i++) {
+            w[i] = alcp::digest::ToBigEndian(*((uint32_t*)&chunk[i*4]));
         }
-
         // Extend the first 16 words into the remaining words of the message
         // schedule array:
         extendMsg(w, 16, cNumRounds);
 
         // Compress the message
-        compressMsg(v, w);
+        compressMsg(w);
 
-        pSrc += cChunkSize;
-    }
-
-    /* update the hash */
-    for (uint64_t i = 0; i < cHashSizeWords; i++) {
-        m_hash[i] += v[i];
     }
 
     return ALC_ERROR_NONE;
@@ -268,9 +268,9 @@ Sha256::Impl::update(const uint8_t* pSrc, uint64_t input_size)
     uint64_t to_process = std::min((input_size + m_idx), cChunkSize);
     if (to_process < cChunkSize) {
         /* copy them to internal buffer and return */
-        utils::CopyBlock(&m_buffer[m_idx], pSrc, to_process);
+        utils::CopyBytes(&m_buffer[m_idx], pSrc, to_process);
         m_idx += to_process;
-
+        m_msg_len += to_process;
         return err;
     }
 
@@ -342,18 +342,29 @@ Sha256::Impl::finalize(const uint8_t* pBuf, uint64_t size)
      * padding the rest of it to ensure correct computation
      * Default padding is 'length encoding'
      */
-    m_buffer[++m_idx]   = 0x80;
+    m_buffer[m_idx++]   = 0x80;
     uint64_t bytes_left = cChunkSize - m_idx;
 
-    if (bytes_left) {
+    if (bytes_left < 8) {
         utils::PadBlock<uint8_t>(&m_buffer[m_idx], 0x0, bytes_left);
-
-        /* Store total length in the last 64-bit (8-bytes) */
-        uint64_t* msg_len_ptr = (uint64_t*)&m_buffer[sizeof(m_buffer) - 8];
-
-        /* TODO: Check if m_msg_len to be converted to big-endian */
-        *msg_len_ptr = m_msg_len;
+        err = processChunk(m_buffer, cChunkSize);
+        m_idx = 0;
+        bytes_left = cChunkSize;
     }
+    utils::PadBlock<uint8_t>(&m_buffer[m_idx], 0x0, bytes_left);
+
+    /* Store total length in the last 64-bit (8-bytes) */
+    uint8_t* msg_len_ptr = (uint8_t*)&m_buffer[sizeof(m_buffer) - 8];
+
+    int64_t len_in_bits = m_msg_len * 8;
+    msg_len_ptr[0] = (uint8_t)(len_in_bits >> 56);
+    msg_len_ptr[1] = (uint8_t)(len_in_bits >> 48);
+    msg_len_ptr[2] = (uint8_t)(len_in_bits >> 40);
+    msg_len_ptr[3] = (uint8_t)(len_in_bits >> 32);
+    msg_len_ptr[4] = (uint8_t)(len_in_bits >> 24);
+    msg_len_ptr[5] = (uint8_t)(len_in_bits >> 16);
+    msg_len_ptr[6] = (uint8_t)(len_in_bits >> 8);
+    msg_len_ptr[7] = (uint8_t)(len_in_bits);
     err = processChunk(m_buffer, cChunkSize);
 
     m_finished = true;

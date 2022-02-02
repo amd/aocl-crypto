@@ -90,6 +90,7 @@ static void hash_to_string(char string[65], const uint8_t hash[32])
     for (i = 0; i < 32; i++) {
         string += sprintf(string, "%02x", hash[i]);
     }
+    string[65] = '\0';
 }
 
 
@@ -122,11 +123,13 @@ main(void)
         }
     };
 
-    char* sample_input, expected_output;
+    char* sample_input;
+
+    char* expected_output;
 
     uint8_t sample_output[512] = { 0 };
 
-    char output_string[33];
+    char output_string[65];
 
     for (int i = 0; i < (sizeof STRING_VECTORS / sizeof(struct string_vector)); i++) {
 
@@ -151,8 +154,7 @@ main(void)
 
         //check if the outputs are matching
         hash_to_string(output_string, sample_output);
-
-        if (strcmp(output_string, expected_output)) {
+        if (strcmp(expected_output, output_string)) {
             printf("Demo Program Output is different from the Expected Output for input at index: %d\n", i);
             printf("Expected output : %s\n", expected_output);
             printf("Demo output: %s\n", output_string);
