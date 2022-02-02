@@ -137,12 +137,11 @@ Sha256::Impl::copyHash(uint8_t* pHash, uint64_t size)
         Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
     }
 
-    for (unsigned long int i = 0, j = 0; i < cHashSizeWords; ++i) {
-        //uint32_t tmp = m_hash[i];
-        pHash[j++] = (uint8_t)(m_hash[i] >> 24);
-        pHash[j++] = (uint8_t)(m_hash[i] >> 16);
-        pHash[j++] = (uint8_t)(m_hash[i] >> 8);
-        pHash[j++] = (uint8_t)m_hash[i];
+    if (!Error::isError(err)) {
+        for (uint64_t i = 0, j = 0; i < cHashSizeWords; ++i) {
+            *((uint32_t*)(pHash + j)) = alcp::digest::ToBigEndian(m_hash[i]);
+            j = j+4;
+        }
     }
 
     return err;
@@ -217,23 +216,17 @@ Sha256::Impl::processChunk(const uint8_t* pSrc, uint64_t len)
 
     uint64_t input_buffer_index = 0;
     uint64_t msg_size           = len;
-    uint8_t* msg_buffer         = (uint8_t*)pSrc;
-    uint8_t* chunk = NULL;
+    uint8_t* p_msg_buffer32       = (uint8_t*)pSrc;
 
     uint32_t w[cNumRounds];
 
-    while (1) {
-        if (input_buffer_index >= msg_size) {
-            break;
-        }
+    while (input_buffer_index < msg_size) {
 
         if (input_buffer_index + cChunkSize <= len) {
-            chunk = msg_buffer;
-            msg_buffer += cChunkSize;
             input_buffer_index += cChunkSize;
         }
         for (uint64_t i = 0; i < 16; i++) {
-            w[i] = alcp::digest::ToBigEndian(*((uint32_t*)&chunk[i*4]));
+            w[i] = alcp::digest::ToBigEndian(*((uint32_t*)&p_msg_buffer32[i*4]));
         }
         // Extend the first 16 words into the remaining words of the message
         // schedule array:
@@ -242,6 +235,7 @@ Sha256::Impl::processChunk(const uint8_t* pSrc, uint64_t len)
         // Compress the message
         compressMsg(w);
 
+        p_msg_buffer32 += cChunkSize;
     }
 
     return ALC_ERROR_NONE;
@@ -354,17 +348,12 @@ Sha256::Impl::finalize(const uint8_t* pBuf, uint64_t size)
     utils::PadBlock<uint8_t>(&m_buffer[m_idx], 0x0, bytes_left);
 
     /* Store total length in the last 64-bit (8-bytes) */
-    uint8_t* msg_len_ptr = (uint8_t*)&m_buffer[sizeof(m_buffer) - 8];
+    uint64_t* msg_len_ptr = (uint64_t*)&m_buffer[sizeof(m_buffer) - 8];
 
-    int64_t len_in_bits = m_msg_len * 8;
-    msg_len_ptr[0] = (uint8_t)(len_in_bits >> 56);
-    msg_len_ptr[1] = (uint8_t)(len_in_bits >> 48);
-    msg_len_ptr[2] = (uint8_t)(len_in_bits >> 40);
-    msg_len_ptr[3] = (uint8_t)(len_in_bits >> 32);
-    msg_len_ptr[4] = (uint8_t)(len_in_bits >> 24);
-    msg_len_ptr[5] = (uint8_t)(len_in_bits >> 16);
-    msg_len_ptr[6] = (uint8_t)(len_in_bits >> 8);
-    msg_len_ptr[7] = (uint8_t)(len_in_bits);
+    uint64_t len_in_bits = m_msg_len * 8;
+
+    *msg_len_ptr = ToBigEndian(len_in_bits);
+
     err = processChunk(m_buffer, cChunkSize);
 
     m_finished = true;
