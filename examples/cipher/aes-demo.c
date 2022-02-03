@@ -1,9 +1,9 @@
 #include <assert.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h> /* for malloc */
 #include <string.h>
-#include <math.h>
 #include <time.h>
 #ifdef WIN32
 #include <Windows.h>
@@ -16,7 +16,6 @@
 
 static alc_cipher_handle_t handle;
 
-
 #define SPEED_CHECK 1
 
 //#define DEBUG_P /* Enable for debugging only */
@@ -25,60 +24,58 @@ static alc_cipher_handle_t handle;
     debug prints to be print input, cipher, iv and decrypted output
 */
 #ifdef DEBUG_P
-#define ALCP_PRINT_TEXT(I, L, S) printf("\n %s", S); \
-    for(int x = 0; x < L; x++) { \
-        printf(" %2x", I[x]);\
+#define ALCP_PRINT_TEXT(I, L, S)                                               \
+    printf("\n %s", S);                                                        \
+    for (int x = 0; x < L; x++) {                                              \
+        printf(" %2x", I[x]);                                                  \
     }
 
-#define ALCP_PRINT_LU(I, L, S) printf("\n %s", S); \
-    for(int x = 0; x < L; x++) { \
-        printf(" %lx", I[x]);\
+#define ALCP_PRINT_LU(I, L, S)                                                 \
+    printf("\n %s", S);                                                        \
+    for (int x = 0; x < L; x++) {                                              \
+        printf(" %lx", I[x]);                                                  \
     }
-#else//DEBUG_P
+#else // DEBUG_P
 #define ALCP_PRINT_TEXT(I, L, S)
 #define ALCP_PRINT_LU(I, L, S)
-#endif//DEBUG_P
-
+#endif // DEBUG_P
 
 // to do: these macro is better to be moved to common header.
 #define ALCP_CRYPT_TIMER_INIT struct timeval begin, end;
-    long seconds;\
-    long microseconds;\
-    double elapsed;\
-    double totalTimeElapsed;
+long   seconds;
+long   microseconds;
+double elapsed;
+double totalTimeElapsed;
 
-#define ALCP_CRYPT_TIMER_START \
-    gettimeofday(&begin, 0);
+#define ALCP_CRYPT_TIMER_START gettimeofday(&begin, 0);
 
-#define ALCP_CRYPT_GET_TIME(X, Y) \
-    gettimeofday(&end, 0);\
-    seconds = end.tv_sec - begin.tv_sec;\
-    microseconds = end.tv_usec - begin.tv_usec;\
-    elapsed = seconds + microseconds * 1e-6;\
-    totalTimeElapsed += elapsed;\
-    if (X) {\
-        printf("\t" Y);\
-            printf(" %2.2f ms ", elapsed * 1000);\
+#define ALCP_CRYPT_GET_TIME(X, Y)                                              \
+    gettimeofday(&end, 0);                                                     \
+    seconds      = end.tv_sec - begin.tv_sec;                                  \
+    microseconds = end.tv_usec - begin.tv_usec;                                \
+    elapsed      = seconds + microseconds * 1e-6;                              \
+    totalTimeElapsed += elapsed;                                               \
+    if (X) {                                                                   \
+        printf("\t" Y);                                                        \
+        printf(" %2.2f ms ", elapsed * 1000);                                  \
     }
 
-
-void getinput(uint8_t *output, int inputLen, int seed)
+void
+getinput(uint8_t* output, int inputLen, int seed)
 {
-    //generate same random input based on seed value.
+    // generate same random input based on seed value.
     srand(seed);
-    for (int i = 0; i < inputLen; i++)
-    {
+    for (int i = 0; i < inputLen; i++) {
         *output = (uint8_t)rand();
         output++;
     }
 }
 
-
 void
-create_aes_session( uint8_t* key,
-                    uint8_t* iv,
-                    const uint32_t key_len,
-                    const alc_aes_mode_t mode)
+create_aes_session(uint8_t*             key,
+                   uint8_t*             iv,
+                   const uint32_t       key_len,
+                   const alc_aes_mode_t mode)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -132,18 +129,18 @@ create_aes_session( uint8_t* key,
         alcp_error_str(err, err_buf, err_size);
         return;
     }
-
 }
 
 void
-aclp_aes_encrypt_demo(  const uint8_t*  plaintxt,
-                        const uint32_t  len,        /* Describes both 'plaintxt' and 'ciphertxt' */
-                        uint8_t*        ciphertxt,
-                        uint8_t*        iv)
+aclp_aes_encrypt_demo(
+    const uint8_t* plaintxt,
+    const uint32_t len, /* Describes both 'plaintxt' and 'ciphertxt' */
+    uint8_t*       ciphertxt,
+    uint8_t*       iv)
 {
-    alc_error_t         err;
-    const int           err_size = 256;
-    uint8_t             err_buf[err_size];
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
 
     err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len, iv);
     if (alcp_is_error(err)) {
@@ -154,14 +151,15 @@ aclp_aes_encrypt_demo(  const uint8_t*  plaintxt,
 }
 
 void
-aclp_aes_decrypt_demo(const uint8_t* ciphertxt,
-                        const uint32_t len, /* Describes both 'plaintxt' and 'ciphertxt' */
-                        uint8_t*       plaintxt,
-                        uint8_t*       iv)
+aclp_aes_decrypt_demo(
+    const uint8_t* ciphertxt,
+    const uint32_t len, /* Describes both 'plaintxt' and 'ciphertxt' */
+    uint8_t*       plaintxt,
+    uint8_t*       iv)
 {
-    alc_error_t         err;
-    const int           err_size = 256;
-    uint8_t             err_buf[err_size];
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
 
     err = alcp_cipher_decrypt(&handle, ciphertxt, plaintxt, len, iv);
     if (alcp_is_error(err)) {
@@ -178,14 +176,14 @@ aclp_aes_decrypt_demo(const uint8_t* ciphertxt,
 
 */
 int
-encrypt_decrypt_demo(uint8_t* inputText, //plaintext
-                     uint32_t inputLen,  //input length
-                     uint8_t* cipherText,//ciphertext output
+encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
+                     uint32_t       inputLen,   // input length
+                     uint8_t*       cipherText, // ciphertext output
                      alc_aes_mode_t m)
 {
     unsigned int keybits;
-    uint8_t key[32];
-    int ret = 0;
+    uint8_t      key[32];
+    int          ret = 0;
 
     memset(key, 0, 32);
 
@@ -193,19 +191,19 @@ encrypt_decrypt_demo(uint8_t* inputText, //plaintext
     outputText = malloc(inputLen);
 
     uint8_t* iv;
-    iv = malloc(16*4);
-    memset(iv, 0, 16*4);
+    iv = malloc(16 * 4);
+    memset(iv, 0, 16 * 4);
 
     uint8_t* ref;
     ref = malloc(inputLen);
 
-    for (int i = 0; i < 1; i++) { //limit the test to 128bit.
-    //for (int i = 0; i < 3; i++) {
-        int u = i;
+    for (int i = 0; i < 1; i++) { // limit the test to 128bit.
+        // for (int i = 0; i < 3; i++) {
+        int u   = i;
         keybits = 128 + u * 64;
         printf("\n keybits %d ", keybits);
         int nr;
-        memset(key, ((i*10)+m), 32);
+        memset(key, ((i * 10) + m), 32);
         ALCP_PRINT_LU(key, 32, "key ")
 
         memset(inputText, i, inputLen);
@@ -222,36 +220,31 @@ encrypt_decrypt_demo(uint8_t* inputText, //plaintext
 
         ALCP_CRYPT_TIMER_INIT
 
-
         ALCP_PRINT_TEXT(inputText, inputLen, "inputText ")
-        //ALCP_PRINT_TEXT(iv, 8, "iv")
+        // ALCP_PRINT_TEXT(iv, 8, "iv")
 
-        create_aes_session( key,
-                            iv,
-                            keybits,
-                            m);
-
+        create_aes_session(key, iv, keybits, m);
 
 #if SPEED_CHECK
         totalTimeElapsed = 0.0;
-        for(int k=0; k<100000000; k++) {
+        for (int k = 0; k < 100000000; k++) {
 #endif
             ALCP_CRYPT_TIMER_START
-            aclp_aes_encrypt_demo(inputText,
-                                  inputLen,
-                                  cipherText,
-                                  iv);
+            aclp_aes_encrypt_demo(inputText, inputLen, cipherText, iv);
 #if SPEED_CHECK
             ALCP_CRYPT_GET_TIME(0, "Encrypt time")
 #else
-            ALCP_CRYPT_GET_TIME(1, "Encrypt time")
+        ALCP_CRYPT_GET_TIME(1, "Encrypt time")
 #endif
             ALCP_PRINT_TEXT(cipherText, inputLen, "cipherText")
 
 #if SPEED_CHECK
-            if(totalTimeElapsed>.5)
-            {
-                printf("\t :  %6.3lf GB Encrypted per second with block size (%5d bytes) ", (double)(((k/1000.0)*inputLen)/(totalTimeElapsed*1000000.0)), inputLen);
+            if (totalTimeElapsed > .5) {
+                printf("\t :  %6.3lf GB Encrypted per second with block size "
+                       "(%5d bytes) ",
+                       (double)(((k / 1000.0) * inputLen)
+                                / (totalTimeElapsed * 1000000.0)),
+                       inputLen);
                 break;
             }
         }
@@ -259,25 +252,29 @@ encrypt_decrypt_demo(uint8_t* inputText, //plaintext
 
 #if SPEED_CHECK
         totalTimeElapsed = 0.0;
-        for(int k=0; k<100000000; k++) {
+        for (int k = 0; k < 100000000; k++) {
 #endif
             ALCP_CRYPT_TIMER_START
-            aclp_aes_decrypt_demo(cipherText, //pointer to the PLAINTEXT
-                                    inputLen, //text length in bytes
-                                    outputText, //pointer to the CIPHERTEXT buffer
-                                    iv);
+            aclp_aes_decrypt_demo(
+                cipherText, // pointer to the PLAINTEXT
+                inputLen,   // text length in bytes
+                outputText, // pointer to the CIPHERTEXT buffer
+                iv);
 
 #if SPEED_CHECK
             ALCP_CRYPT_GET_TIME(0, "Decrypt time")
 #else
-            ALCP_CRYPT_GET_TIME(1, "Decrypt time")
+        ALCP_CRYPT_GET_TIME(1, "Decrypt time")
 #endif
             ALCP_PRINT_TEXT(outputText, inputLen, "outputText")
 
 #if SPEED_CHECK
-            if(totalTimeElapsed>.5)
-            {
-                printf("\t :  %6.3lf GB Decrypted per second with block size (%5d bytes) ", (double)(((k/1000.0)*inputLen)/(totalTimeElapsed*1000000.0)), inputLen);
+            if (totalTimeElapsed > .5) {
+                printf("\t :  %6.3lf GB Decrypted per second with block size "
+                       "(%5d bytes) ",
+                       (double)(((k / 1000.0) * inputLen)
+                                / (totalTimeElapsed * 1000000.0)),
+                       inputLen);
                 break;
             }
         }
@@ -285,17 +282,15 @@ encrypt_decrypt_demo(uint8_t* inputText, //plaintext
 
         if (memcmp(inputText, outputText, (long unsigned int)inputLen) != 0) {
             printf("\n\t\t\t\t input->enc->dec->input FAILED \n");
-        }
-        else {
-            //printf("\t input->encrypt&decrypt->input::Passed");
+        } else {
+            // printf("\t input->encrypt&decrypt->input::Passed");
         }
         /*
-        * Complete the transaction
-        */
+         * Complete the transaction
+         */
         alcp_cipher_finish(&handle);
         free(handle.context);
     }
-
 
     if (outputText) {
         free(outputText);
@@ -313,7 +308,7 @@ encrypt_decrypt_demo(uint8_t* inputText, //plaintext
 int
 main(void)
 {
-    uint8_t *inputText;
+    uint8_t* inputText;
     uint8_t* cipherText;
 
     /*
@@ -326,74 +321,65 @@ main(void)
     for (alc_aes_mode_t m = ALC_AES_MODE_ECB; m < ALC_AES_MODE_MAX; m++) {
 
         if (m == ALC_AES_MODE_ECB) {
-            printf("\n\nAES-CRT not implemented");
+            printf("\n\nAES-ECB not implemented");
             continue;
-        }
-        else if (m == ALC_AES_MODE_CBC) {
-            printf("\n\nAES-CRT not implemented");
+        } else if (m == ALC_AES_MODE_CBC) {
+            printf("\n\nAES-CBC not implemented");
             continue;
-        }
-        else if (m == ALC_AES_MODE_OFB) {
+        } else if (m == ALC_AES_MODE_OFB) {
             printf("\n\nAES-OFB");
-        }
-        else if (m == ALC_AES_MODE_CTR) {
-            printf("\n\nAES-CRT not implemented");
+        } else if (m == ALC_AES_MODE_CTR) {
+            printf("\n\nAES-CTR not implemented");
             continue;
-        }
-        else if (m == ALC_AES_MODE_CFB) {
+        } else if (m == ALC_AES_MODE_CFB) {
             printf("\n\nAES-CFB");
-        }
-        else if (m == ALC_AES_MODE_XTR) {
+        } else if (m == ALC_AES_MODE_XTR) {
             printf("\n\nALC_AES-XTR not implemented\n");
             continue;
-        }
-        else{
+        } else {
             printf("\n Invalid AES mode");
             continue;
         }
 
-        //keep length multiple of 128bit (16x8)
+        // keep length multiple of 128bit (16x8)
 #if SPEED_CHECK
         int inputLen = 16;
 #else
         int inputLen = 16384;
-        printf(" :Encrypt and decrypt demo with input length %d bytes",inputLen);
+        printf(" :Encrypt and decrypt demo with input length %d bytes",
+               inputLen);
 #endif
-        for(; inputLen <= 16384; inputLen = (inputLen*4)) {
+        for (; inputLen <= 16384; inputLen = (inputLen * 4)) {
 
-            //allocate inputText and cipherText memory
-            inputText    = malloc(inputLen);
-            if(inputText==NULL) {
+            // allocate inputText and cipherText memory
+            inputText = malloc(inputLen);
+            if (inputText == NULL) {
                 return -1;
             }
-            cipherText   = malloc(inputLen);
-            if(cipherText==NULL) {
-                if(inputText)
-                {
+            cipherText = malloc(inputLen);
+            if (cipherText == NULL) {
+                if (inputText) {
                     free(inputText);
                 }
                 return -1;
             }
 
-            //run full path demo for specific aes mode
+            // run full path demo for specific aes mode
             encrypt_decrypt_demo(
                 inputText,
                 inputLen, /* len of both 'plaintxt' and 'ciphertxt' */
                 cipherText,
                 m);
 
-
-            //its time to free!
-            if(inputText) {
+            // its time to free!
+            if (inputText) {
                 free(inputText);
             }
-            if(cipherText) {
+            if (cipherText) {
                 free(cipherText);
             }
         }
-
     }
-
 
     return 0;
 }
