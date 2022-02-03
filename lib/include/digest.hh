@@ -64,10 +64,10 @@ ToBigEndian(uint64_t value)
         uint8_t  v8[4];
     } u = { .v = value };
 
-    return ((uint64_t)u.v8[0]) << 56  | ((uint64_t)u.v8[1]) << 48
-           |((uint64_t)u.v8[2]) << 40 | ((uint64_t)u.v8[3]) << 32
-           |((uint64_t)u.v8[4]) << 24 | ((uint64_t)u.v8[5]) << 16
-           |((uint64_t)u.v8[6]) << 8  | (uint64_t)u.v8[7];
+    return ((uint64_t)u.v8[0]) << 56 | ((uint64_t)u.v8[1]) << 48
+           | ((uint64_t)u.v8[2]) << 40 | ((uint64_t)u.v8[3]) << 32
+           | ((uint64_t)u.v8[4]) << 24 | ((uint64_t)u.v8[5]) << 16
+           | ((uint64_t)u.v8[6]) << 8 | (uint64_t)u.v8[7];
 }
 
 class DigestInterface

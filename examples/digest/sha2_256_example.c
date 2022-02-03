@@ -44,7 +44,7 @@ create_demo_session(void)
         .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
     };
 
-    uint64_t size = alcp_digest_context_size(&dinfo);
+    uint64_t size       = alcp_digest_context_size(&dinfo);
     s_dg_handle.context = malloc(size);
 
     err = alcp_digest_request(&dinfo, &s_dg_handle);
@@ -84,7 +84,8 @@ out:
     return err;
 }
 
-static void hash_to_string(char string[65], const uint8_t hash[32])
+static void
+hash_to_string(char string[65], const uint8_t hash[32])
 {
     size_t i;
     for (i = 0; i < 32; i++) {
@@ -93,34 +94,32 @@ static void hash_to_string(char string[65], const uint8_t hash[32])
     string[65] = '\0';
 }
 
-
 int
 main(void)
 {
-    struct string_vector {
-        const char* input;
-        const char* output;
+    struct string_vector
+    {
+        char* input;
+        char* output;
     };
 
     static const struct string_vector STRING_VECTORS[] = {
-        {"", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
-        {"abc", "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"},
-        {   "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-            "a8ae6e6ee929abea3afcfc5258c8ccd6f85273e0d4626d26c7279f3250f77c8e"
-        },
-        {   "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
-            "057ee79ece0b9a849552ab8d3c335fe9a5f1c46ef5f1d9b190c295728628299c"
-        },
-        {   "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0",
-            "2a6ad82f3620d3ebe9d678c812ae12312699d673240d5be8fac0910a70000d93"
-        },
-        {   "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
-            "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1"
-        },
-        {   "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno"
-            "ijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
-            "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1"
-        }
+        { "",
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" },
+        { "abc",
+          "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad" },
+        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+          "a8ae6e6ee929abea3afcfc5258c8ccd6f85273e0d4626d26c7279f3250f77c8e" },
+        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
+          "057ee79ece0b9a849552ab8d3c335fe9a5f1c46ef5f1d9b190c295728628299c" },
+        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0",
+          "2a6ad82f3620d3ebe9d678c812ae12312699d673240d5be8fac0910a70000d93" },
+        { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+          "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1" },
+        { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno"
+          "ijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
+          "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d"
+          "1" }
     };
 
     char* sample_input;
@@ -131,7 +130,8 @@ main(void)
 
     char output_string[65];
 
-    for (int i = 0; i < (sizeof STRING_VECTORS / sizeof(struct string_vector)); i++) {
+    for (int i = 0; i < (sizeof STRING_VECTORS / sizeof(struct string_vector));
+         i++) {
 
         sample_input = STRING_VECTORS[i].input;
 
@@ -141,21 +141,23 @@ main(void)
 
         if (!alcp_is_error(err)) {
             err = hash_demo(sample_input,
-                           strlen(sample_input),
-                           sample_output,
-                           sizeof(sample_output));
+                            strlen(sample_input),
+                            sample_output,
+                            sizeof(sample_output));
         }
 
         /*
-        * Complete the transaction
-        */
+         * Complete the transaction
+         */
         if (alcp_is_error(err))
             alcp_digest_finish(&s_dg_handle);
 
-        //check if the outputs are matching
+        // check if the outputs are matching
         hash_to_string(output_string, sample_output);
         if (strcmp(expected_output, output_string)) {
-            printf("Demo Program Output is different from the Expected Output for input at index: %d\n", i);
+            printf("Demo Program Output is different from the Expected Output "
+                   "for input at index: %d\n",
+                   i);
             printf("Expected output : %s\n", expected_output);
             printf("Demo output: %s\n", output_string);
         }

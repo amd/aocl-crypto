@@ -138,9 +138,9 @@ Sha256::Impl::copyHash(uint8_t* pHash, uint64_t size)
     }
 
     if (!Error::isError(err)) {
-        for (uint64_t i = 0, j = 0; i < cHashSizeWords; ++i) {
-            *((uint32_t*)(pHash + j)) = alcp::digest::ToBigEndian(m_hash[i]);
-            j = j+4;
+        uint32_t* pBuff32 = (uint32_t*)pHash;
+        for (uint64_t i = 0; i < cHashSizeWords; ++i) {
+            *pBuff32++ = alcp::digest::ToBigEndian(m_hash[i]);
         }
     }
 
@@ -214,9 +214,9 @@ Sha256::Impl::processChunk(const uint8_t* pSrc, uint64_t len)
         return shani::ShaUpdate256(m_hash, pSrc, len, cRoundConstants);
     }
 
-    uint64_t input_buffer_index = 0;
-    uint64_t msg_size           = len;
-    uint32_t* p_msg_buffer32    = (uint32_t*)pSrc;
+    uint64_t  input_buffer_index = 0;
+    uint64_t  msg_size           = len;
+    uint32_t* p_msg_buffer32     = (uint32_t*)pSrc;
 
     uint32_t w[cNumRounds];
 
@@ -346,8 +346,8 @@ Sha256::Impl::finalize(const uint8_t* pBuf, uint64_t size)
      */
     if (bytes_left < 8) {
         utils::PadBlock<uint8_t>(&m_buffer[m_idx], 0x0, bytes_left);
-        err = processChunk(m_buffer, cChunkSize);
-        m_idx = 0;
+        err        = processChunk(m_buffer, cChunkSize);
+        m_idx      = 0;
         bytes_left = cChunkSize;
     }
     utils::PadBlock<uint8_t>(&m_buffer[m_idx], 0x0, bytes_left);
