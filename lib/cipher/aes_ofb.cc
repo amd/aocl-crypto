@@ -40,7 +40,7 @@ Ofb::decrypt(const uint8_t* pCipherText,
     alc_error_t err = ALC_ERROR_NONE;
 
     if (Cipher::isVaesAvailable()) {
-        //err = vaes::DecryptOfb(
+        // err = vaes::DecryptOfb(
         err = aesni::DecryptOfb(
             pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
 
@@ -67,7 +67,7 @@ Ofb::encrypt(const uint8_t* pPlainText,
     alc_error_t err = ALC_ERROR_NONE;
 
     if (Cipher::isVaesAvailable()) {
-        //err = vaes::EncryptOfb(
+        // err = vaes::EncryptOfb(
         err = aesni::EncryptOfb(
             pPlainText, pCipherText, len, m_enc_key, m_nrounds, pIv);
 

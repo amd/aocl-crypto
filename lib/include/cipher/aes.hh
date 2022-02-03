@@ -244,7 +244,6 @@ class Cfb final : public Aes
   private:
 };
 
-
 /*
  * \brief        AES Encryption in OFB(Output Feedback)
  * \notes        TODO: Move this to a aes_ofb.hh or other

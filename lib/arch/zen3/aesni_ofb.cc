@@ -29,11 +29,11 @@
 #include <immintrin.h>
 #include <wmmintrin.h>
 
+#include "aesni_macros.hh"
 #include "cipher/aes.hh"
+#include "cipher/aesni.hh"
 #include "error.hh"
 #include "key.hh"
-#include "aesni_macros.hh"
-#include "cipher/aesni.hh"
 
 namespace alcp::cipher::aesni {
 
@@ -45,82 +45,81 @@ namespace alcp::cipher::aesni {
 #if !SINGLE_KEY_LOAD
 
 alc_error_t
-cryptOfb(  const uint8_t* pInputText,  // ptr to inputText
-           uint8_t*       pOutputText, // ptr to outputtext
-           uint64_t       len,         // message length in bytes
-           const uint8_t* pKey,        // ptr to Key
-           int            nRounds,     // No. of rounds
-           const uint8_t* pIv          // ptr to Initialization Vector
+cryptOfb(const uint8_t* pInputText,  // ptr to inputText
+         uint8_t*       pOutputText, // ptr to outputtext
+         uint64_t       len,         // message length in bytes
+         const uint8_t* pKey,        // ptr to Key
+         int            nRounds,     // No. of rounds
+         const uint8_t* pIv          // ptr to Initialization Vector
 )
 {
-    alc_error_t err = ALC_ERROR_NONE;
-    int blocks = len / AES_BLOCK_SIZE(128);
-    __m128i a1;//plaintext data
-    __m128i b1;
-    int i = 0;
-    __m128i* pInput128  = (__m128i*)pInputText;
-    __m128i* pOutput128 = (__m128i*)pOutputText;
-    __m128i* pkey128    = (__m128i*)pKey;
+    alc_error_t err    = ALC_ERROR_NONE;
+    int         blocks = len / AES_BLOCK_SIZE(128);
+    __m128i     a1; // plaintext data
+    __m128i     b1;
+    int         i          = 0;
+    __m128i*    pInput128  = (__m128i*)pInputText;
+    __m128i*    pOutput128 = (__m128i*)pOutputText;
+    __m128i*    pkey128    = (__m128i*)pKey;
 
-	b1 = _mm_loadu_si128((__m128i*)pIv);
+    b1 = _mm_loadu_si128((__m128i*)pIv);
 
-	/*
-	Effective usage of two 128bit AESENC pipe is not done, since
-	OFB has dependency on previous output.
-	*/
+    /*
+    Effective usage of two 128bit AESENC pipe is not done, since
+    OFB has dependency on previous output.
+    */
 
-	for (i = 0; i < blocks; i++) {
-		a1 = _mm_loadu_si128(pInput128);//plaintext
-		//10 rounds
-		aesni::AesEncrypt(&b1, pkey128, nRounds);
+    for (i = 0; i < blocks; i++) {
+        a1 = _mm_loadu_si128(pInput128); // plaintext
+        // 10 rounds
+        aesni::AesEncrypt(&b1, pkey128, nRounds);
 
-		a1 = _mm_xor_si128(a1, b1);// cipher = plaintext xor AESENCoutput
-		_mm_storeu_si128(pOutput128, a1);
-		pInput128++;
-		pOutput128++;
-	}
+        a1 = _mm_xor_si128(a1, b1); // cipher = plaintext xor AESENCoutput
+        _mm_storeu_si128(pOutput128, a1);
+        pInput128++;
+        pOutput128++;
+    }
 
     return err;
 }
 
 #else
 
-//SINGLE_KEY_LOAD
+// SINGLE_KEY_LOAD
 
 alc_error_t
-cryptOfb(  const uint8_t* pInputText,  // ptr to inputText
-           uint8_t*       pOutputText, // ptr to outputtext
-           uint64_t       len,         // message length in bytes
-           const uint8_t* pKey,        // ptr to Key
-           int            nRounds,     // No. of rounds
-           const uint8_t* pIv          // ptr to Initialization Vector
+cryptOfb(const uint8_t* pInputText,  // ptr to inputText
+         uint8_t*       pOutputText, // ptr to outputtext
+         uint64_t       len,         // message length in bytes
+         const uint8_t* pKey,        // ptr to Key
+         int            nRounds,     // No. of rounds
+         const uint8_t* pIv          // ptr to Initialization Vector
 )
 {
-    alc_error_t err = ALC_ERROR_NONE;
-    int blocks = len / AES_BLOCK_SIZE(128);
-    __m128i a1;//plaintext data
-    __m128i b1;
-    int i = 0;
-    __m128i* pInput128  = (__m128i*)pInputText;
-    __m128i* pOutput128 = (__m128i*)pOutputText;
-    __m128i* pkey128    = (__m128i*)pKey;
+    alc_error_t err    = ALC_ERROR_NONE;
+    int         blocks = len / AES_BLOCK_SIZE(128);
+    __m128i     a1; // plaintext data
+    __m128i     b1;
+    int         i          = 0;
+    __m128i*    pInput128  = (__m128i*)pInputText;
+    __m128i*    pOutput128 = (__m128i*)pOutputText;
+    __m128i*    pkey128    = (__m128i*)pKey;
 
-	/*
+    /*
      * load first 10 keys in xmm register
      * 2 or 4 extra keys are loaded based on nRounds
      */
-	ALCP_AES_LOAD_KEYS_10_ROUND_XMM(pkey128)
+    ALCP_AES_LOAD_KEYS_10_ROUND_XMM(pkey128)
 
-	b1 = _mm_loadu_si128((__m128i*)pIv);
+    b1 = _mm_loadu_si128((__m128i*)pIv);
 
-	/*
-	* loading of keys are minimized for 10,12 and 14 round
-	* Effective usage of two 128bit AESENC pipe is not done, since
-	* OFB has dependency on previous output.
-	*/
-	if (nRounds == 10)
-	{
-        //11 xmm registers for keys + 2 xmm registers used.
+    /*
+     * loading of keys are minimized for 10,12 and 14 round
+     * Effective usage of two 128bit AESENC pipe is not done, since
+     * OFB has dependency on previous output.
+     */
+    if (nRounds == 10) {
+        // 11 xmm registers for keys + 2 xmm registers used.
         for (i = 0; i < blocks; i++) {
             a1 = _mm_loadu_si128(pInput128);
             b1 = _mm_xor_si128(b1, key_128_0);
@@ -131,11 +130,9 @@ cryptOfb(  const uint8_t* pInputText,  // ptr to inputText
             _mm_storeu_si128(pOutput128, a1);
             pInput128++;
             pOutput128++;
-	    }
-	}
-	else if (nRounds == 12)
-	{
-        //13 xmm registers for keys + 2 xmm registers used.
+        }
+    } else if (nRounds == 12) {
+        // 13 xmm registers for keys + 2 xmm registers used.
         ALCP_AES_LOAD_KEYS_12_ROUND_XMM_EXTRA2(pkey128)
         for (i = 0; i < blocks; i++) {
             a1 = _mm_loadu_si128(pInput128);
@@ -147,13 +144,11 @@ cryptOfb(  const uint8_t* pInputText,  // ptr to inputText
             _mm_storeu_si128(pOutput128, a1);
             pInput128++;
             pOutput128++;
-	    }
-	}
-	else
-	{
-        //15 xmm registers for keys + 2 xmm registers used.
+        }
+    } else {
+        // 15 xmm registers for keys + 2 xmm registers used.
         ALCP_AES_LOAD_KEYS_12_ROUND_XMM_EXTRA2(pkey128)
-	    ALCP_AES_LOAD_KEYS_14_ROUND_XMM_EXTRA2(pkey128)
+        ALCP_AES_LOAD_KEYS_14_ROUND_XMM_EXTRA2(pkey128)
         for (i = 0; i < blocks; i++) {
             a1 = _mm_loadu_si128(pInput128);
             b1 = _mm_xor_si128(b1, key_128_0);
@@ -164,8 +159,8 @@ cryptOfb(  const uint8_t* pInputText,  // ptr to inputText
             _mm_storeu_si128(pOutput128, a1);
             pInput128++;
             pOutput128++;
-	    }
-	}
+        }
+    }
     return err;
 }
 #endif
@@ -180,12 +175,12 @@ EncryptOfb(const uint8_t* pPlainText,  // ptr to plaintext
 )
 {
     alc_error_t err = ALC_ERROR_NONE;
-    err = cryptOfb( pPlainText,  // ptr to inputText
-                    pCipherText, // ptr to outputtext
-                    len,         // message length in bytes
-                    pKey,        // ptr to Key
-                    nRounds,     // No. of rounds
-                    pIv);        // ptr to Initialization Vector
+    err             = cryptOfb(pPlainText,  // ptr to inputText
+                   pCipherText, // ptr to outputtext
+                   len,         // message length in bytes
+                   pKey,        // ptr to Key
+                   nRounds,     // No. of rounds
+                   pIv);        // ptr to Initialization Vector
     return err;
 }
 
@@ -199,12 +194,12 @@ DecryptOfb(const uint8_t* pCipherText, // ptr to ciphertext
 )
 {
     alc_error_t err = ALC_ERROR_NONE;
-    err = cryptOfb( pCipherText, // ptr to inputText
-                    pPlainText,  // ptr to outputtext
-                    len,         // message length in bytes
-                    pKey,        // ptr to Key
-                    nRounds,     // No. of rounds
-                    pIv);        // ptr to Initialization Vector
+    err             = cryptOfb(pCipherText, // ptr to inputText
+                   pPlainText,  // ptr to outputtext
+                   len,         // message length in bytes
+                   pKey,        // ptr to Key
+                   nRounds,     // No. of rounds
+                   pIv);        // ptr to Initialization Vector
     return err;
 }
 
