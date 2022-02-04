@@ -70,7 +70,7 @@ static constexpr uint64_t /* define word size */
     /* num rounds in sha256 */ cNumRounds   = 64,
     /* chunk size in bits */ cChunkSizeBits = 512,
     /* chunks to proces */ cChunkSize       = cChunkSizeBits / 8,
-    /* same in words */ cChunkSizeWrods     = cChunkSizeBits / cWordSize,
+    /* same in words */ cChunkSizeWords     = cChunkSizeBits / cWordSize,
     /* same in bits */ cHashSizeBits        = 256,
     /* Hash size in bytes */ cHashSize      = cHashSizeBits / 8,
     cHashSizeWords                          = cHashSizeBits / cWordSize;
@@ -93,13 +93,13 @@ class Sha256::Impl
         /*
          * FIXME: call cpuid::isShaniAvailable() initialize
          */
-        static bool s_shani_available = true;
+        static bool s_shani_available = false;
         return s_shani_available;
     }
 
   private:
     static void extendMsg(uint32_t w[], uint32_t start, uint32_t end);
-    void        compressMsg(uint32_t w[], uint32_t v[]);
+    void        compressMsg(uint32_t w[]);
     alc_error_t processChunk(const uint8_t* pSrc, uint64_t len);
 
   private:
@@ -137,8 +137,12 @@ Sha256::Impl::copyHash(uint8_t* pHash, uint64_t size)
         Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
     }
 
-    if (!Error::isError(err))
-        utils::CopyBlock(pHash, m_hash, cHashSize);
+    if (!Error::isError(err)) {
+        uint32_t* pBuff32 = (uint32_t*)pHash;
+        for (uint64_t i = 0; i < cHashSizeWords; ++i) {
+            *pBuff32++ = alcp::digest::ToBigEndian(m_hash[i]);
+        }
+    }
 
     return err;
 }
@@ -156,7 +160,7 @@ Sha256::Impl::extendMsg(uint32_t w[], uint32_t start, uint32_t end)
 }
 
 void
-Sha256::Impl::compressMsg(uint32_t w[], uint32_t v[])
+Sha256::Impl::compressMsg(uint32_t w[])
 {
     uint32_t a, b, c, d, e, f, g, h;
 
@@ -210,38 +214,28 @@ Sha256::Impl::processChunk(const uint8_t* pSrc, uint64_t len)
         return shani::ShaUpdate256(m_hash, pSrc, len, cRoundConstants);
     }
 
-    uint64_t input_buffer_index = 0;
-    uint64_t msg_size           = len;
-    uint8_t* msg_buffer         = (uint8_t*)pSrc;
+    uint64_t  input_buffer_index = 0;
+    uint64_t  msg_size           = len;
+    uint32_t* p_msg_buffer32     = (uint32_t*)pSrc;
 
     uint32_t w[cNumRounds];
-    uint32_t v[cHashSizeWords];
-    utils::CopyBlock(v, m_hash, cHashSize);
 
-    while (input_buffer_index <= msg_size) {
+    while (input_buffer_index < msg_size) {
 
         if (input_buffer_index + cChunkSize <= len) {
-            msg_buffer += cChunkSize;
             input_buffer_index += cChunkSize;
         }
-
-        for (uint64_t i = 0; i < cNumRounds; i++) {
-            w[i] = alcp::digest::ToBigEndian(msg_buffer[i]);
+        for (uint64_t i = 0; i < 16; i++) {
+            w[i] = alcp::digest::ToBigEndian(p_msg_buffer32[i]);
         }
-
         // Extend the first 16 words into the remaining words of the message
         // schedule array:
         extendMsg(w, 16, cNumRounds);
 
         // Compress the message
-        compressMsg(v, w);
+        compressMsg(w);
 
-        pSrc += cChunkSize;
-    }
-
-    /* update the hash */
-    for (uint64_t i = 0; i < cHashSizeWords; i++) {
-        m_hash[i] += v[i];
+        p_msg_buffer32 += cChunkSizeWords;
     }
 
     return ALC_ERROR_NONE;
@@ -268,9 +262,9 @@ Sha256::Impl::update(const uint8_t* pSrc, uint64_t input_size)
     uint64_t to_process = std::min((input_size + m_idx), cChunkSize);
     if (to_process < cChunkSize) {
         /* copy them to internal buffer and return */
-        utils::CopyBlock(&m_buffer[m_idx], pSrc, to_process);
+        utils::CopyBytes(&m_buffer[m_idx], pSrc, to_process);
         m_idx += to_process;
-
+        m_msg_len += to_process;
         return err;
     }
 
@@ -342,18 +336,29 @@ Sha256::Impl::finalize(const uint8_t* pBuf, uint64_t size)
      * padding the rest of it to ensure correct computation
      * Default padding is 'length encoding'
      */
-    m_buffer[++m_idx]   = 0x80;
+    m_buffer[m_idx++]   = 0x80;
     uint64_t bytes_left = cChunkSize - m_idx;
 
-    if (bytes_left) {
+    /* When the bytes left in the current chunk are less than 8,
+     * current chunk can NOT accomodate the message length.
+     * The curent chunk is processed and the message length is
+     * placed in a new chunk and will be processed.
+     */
+    if (bytes_left < 8) {
         utils::PadBlock<uint8_t>(&m_buffer[m_idx], 0x0, bytes_left);
-
-        /* Store total length in the last 64-bit (8-bytes) */
-        uint64_t* msg_len_ptr = (uint64_t*)&m_buffer[sizeof(m_buffer) - 8];
-
-        /* TODO: Check if m_msg_len to be converted to big-endian */
-        *msg_len_ptr = m_msg_len;
+        err        = processChunk(m_buffer, cChunkSize);
+        m_idx      = 0;
+        bytes_left = cChunkSize;
     }
+    utils::PadBlock<uint8_t>(&m_buffer[m_idx], 0x0, bytes_left);
+
+    /* Store total length in the last 64-bit (8-bytes) */
+    uint64_t* msg_len_ptr = (uint64_t*)&m_buffer[sizeof(m_buffer) - 8];
+
+    uint64_t len_in_bits = m_msg_len * 8;
+
+    *msg_len_ptr = ToBigEndian(len_in_bits);
+
     err = processChunk(m_buffer, cChunkSize);
 
     m_finished = true;
