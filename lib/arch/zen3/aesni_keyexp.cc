@@ -74,13 +74,15 @@ namespace alcp::cipher { namespace aesni {
         auto p_dec128 = reinterpret_cast<__m128i*>(pDecKey);
         auto p_enc128 = reinterpret_cast<const __m128i*>(pEncKey);
 
-        p_dec128[nr] = p_enc128[nr];
+        p_dec128[nr] = p_enc128[0];
+        int j = 1;
 
-        for (int i = nr - 1; i > 0; i--) {
-            p_dec128[i] = _mm_aesimc_si128(p_enc128[i]);
+        for (int i = nr-1 ; i > 0; i--) {
+            p_dec128[i] = _mm_aesimc_si128(p_enc128[j]);
+            j++;
         }
 
-        p_dec128[0] = p_enc128[0];
+        p_dec128[0] = p_enc128[nr];
     }
 
     alc_error_t ExpandKeys256(const uint8_t* pUserKey,
