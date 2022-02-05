@@ -154,12 +154,13 @@ main(void)
 
         // check if the outputs are matching
         hash_to_string(output_string, sample_output);
+            printf("Input : %s\n", sample_input);
+            printf("output : %s\n", output_string);
         if (strcmp(expected_output, output_string)) {
-            printf("Demo Program Output is different from the Expected Output "
-                   "for input at index: %d\n",
-                   i);
+            printf("=== FAILED ==== \n");
             printf("Expected output : %s\n", expected_output);
-            printf("Demo output: %s\n", output_string);
+        } else {
+            printf("=== Passed ===\n");
         }
     }
     return 0;
