@@ -42,51 +42,6 @@ namespace alcp::cipher::aesni {
     We re-use cryptOfb() for both
 
     */
-#if !SINGLE_KEY_LOAD
-
-alc_error_t
-cryptOfb(const uint8_t* pInputText,  // ptr to inputText
-         uint8_t*       pOutputText, // ptr to outputtext
-         uint64_t       len,         // message length in bytes
-         const uint8_t* pKey,        // ptr to Key
-         int            nRounds,     // No. of rounds
-         const uint8_t* pIv          // ptr to Initialization Vector
-)
-{
-    alc_error_t err    = ALC_ERROR_NONE;
-    int         blocks = len / AES_BLOCK_SIZE(128);
-    __m128i     a1; // plaintext data
-    __m128i     b1;
-    int         i          = 0;
-    __m128i*    pInput128  = (__m128i*)pInputText;
-    __m128i*    pOutput128 = (__m128i*)pOutputText;
-    __m128i*    pkey128    = (__m128i*)pKey;
-
-    b1 = _mm_loadu_si128((__m128i*)pIv);
-
-    /*
-    Effective usage of two 128bit AESENC pipe is not done, since
-    OFB has dependency on previous output.
-    */
-
-    for (i = 0; i < blocks; i++) {
-        a1 = _mm_loadu_si128(pInput128); // plaintext
-        // 10 rounds
-        aesni::AesEncrypt(&b1, pkey128, nRounds);
-
-        a1 = _mm_xor_si128(a1, b1); // cipher = plaintext xor AESENCoutput
-        _mm_storeu_si128(pOutput128, a1);
-        pInput128++;
-        pOutput128++;
-    }
-
-    return err;
-}
-
-#else
-
-// SINGLE_KEY_LOAD
-
 alc_error_t
 cryptOfb(const uint8_t* pInputText,  // ptr to inputText
          uint8_t*       pOutputText, // ptr to outputtext
@@ -163,7 +118,48 @@ cryptOfb(const uint8_t* pInputText,  // ptr to inputText
     }
     return err;
 }
-#endif
+
+// multiple keyload code path: currently under experiments.
+namespace experimental {
+    alc_error_t cryptOfb(const uint8_t* pInputText,  // ptr to inputText
+                         uint8_t*       pOutputText, // ptr to outputtext
+                         uint64_t       len,         // message length in bytes
+                         const uint8_t* pKey,        // ptr to Key
+                         int            nRounds,     // No. of rounds
+                         const uint8_t* pIv // ptr to Initialization Vector
+    )
+    {
+        alc_error_t err    = ALC_ERROR_NONE;
+        int         blocks = len / AES_BLOCK_SIZE(128);
+        __m128i     a1; // plaintext data
+        __m128i     b1;
+        int         i          = 0;
+        __m128i*    pInput128  = (__m128i*)pInputText;
+        __m128i*    pOutput128 = (__m128i*)pOutputText;
+        __m128i*    pkey128    = (__m128i*)pKey;
+
+        b1 = _mm_loadu_si128((__m128i*)pIv);
+
+        /*
+        Effective usage of two 128bit AESENC pipe is not done, since
+        OFB has dependency on previous output.
+        */
+
+        for (i = 0; i < blocks; i++) {
+            a1 = _mm_loadu_si128(pInput128); // plaintext
+            // 10 rounds
+            aesni::AesEncrypt(&b1, pkey128, nRounds);
+
+            a1 = _mm_xor_si128(a1, b1); // cipher = plaintext xor AESENCoutput
+            _mm_storeu_si128(pOutput128, a1);
+            pInput128++;
+            pOutput128++;
+        }
+
+        return err;
+    }
+
+} // namespace experimental
 
 alc_error_t
 EncryptOfb(const uint8_t* pPlainText,  // ptr to plaintext

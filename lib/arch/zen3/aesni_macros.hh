@@ -3,8 +3,6 @@
 
 #define AES_BLOCK_SIZE(x) ((x) / 8)
 
-#define SINGLE_KEY_LOAD 1 // Non -macro based implementation
-
 // Load AES keys for 10 rounds in xmm register
 #define ALCP_AES_LOAD_KEYS_10_ROUND_XMM(X)                                     \
     __m128i key_128_0, key_128_1, key_128_2, key_128_3, key_128_4, key_128_5,  \
