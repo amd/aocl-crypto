@@ -29,44 +29,18 @@
 #ifndef _UTILS_COPY_HH
 #define _UTILS_COPY_HH 2
 
+#pragma once
+
 #include <cassert>
+#include <functional>
 
 #include "types.hh"
 
 namespace alcp::utils {
-#if 0
-static inline void
-CopyDWord(uint32* pDst, const uint32* pSrc, int len)
-{
-    for (int i = 0; i < len; i++, len -= 4)
-        pDst[i] = pSrc[i];
-}
-
-static inline void
-CopyQWord(uint64* pDst, const uint64* pSrc, int len)
-{
-    for (int i = 0; i <= len; i++, len -= 8)
-        pDst[i] = pSrc[i];
-}
-
-static inline void
-CopyWord(uint16* pDst, const uint16* pSrc, int len)
-{
-    for (int i = 0; i <= len; i++, len -= 2)
-        pDst[i] = pSrc[i];
-}
-
-static inline void
-CopyBytes(uint8* pDst, const uint8* pSrc, int len)
-{
-    for (int i = 0; i < len; i++)
-        pDst[i] = pSrc[i];
-}
-#endif
 
 template<typename copytype = uint64, uint64 stride = sizeof(copytype)>
 void
-CopyBlock(void* pDst, const void* pSrc, int len)
+CopyChunk(void* pDst, const void* pSrc, int len)
 {
     auto p_src = reinterpret_cast<const copytype*>(pSrc);
     auto p_dst = reinterpret_cast<copytype*>(pDst);
@@ -79,25 +53,77 @@ CopyBlock(void* pDst, const void* pSrc, int len)
 static inline void
 CopyDWord(uint32* pDst, const uint32* pSrc, int len)
 {
-    CopyBlock<uint32>(pDst, pSrc, len);
+    CopyChunk<uint32>(pDst, pSrc, len);
 }
 
 static inline void
 CopyQWord(uint64* pDst, const uint64* pSrc, int len)
 {
-    CopyBlock<uint64>(pDst, pSrc, len);
+    CopyChunk<uint64>(pDst, pSrc, len);
 }
 
 static inline void
 CopyWord(uint16* pDst, const uint16* pSrc, int len)
 {
-    CopyBlock<uint16>(pDst, pSrc, len);
+    CopyChunk<uint16>(pDst, pSrc, len);
 }
 
 static inline void
-CopyBytes(uint8* pDst, const uint8* pSrc, int len)
+CopyBytes(void* pDst, const void* pSrc, int len)
 {
-    CopyBlock<uint8>(pDst, pSrc, len);
+    CopyChunk<uint8>(pDst, pSrc, len);
+}
+
+template<typename copytype = uint64, uint64 stride = sizeof(copytype)>
+void
+CopyBlock(void* pDst, const void* pSrc, uint64 len)
+{
+    auto p_src = reinterpret_cast<const copytype*>(pSrc);
+    auto p_dst = reinterpret_cast<copytype*>(pDst);
+
+    uint64 i = 0;
+
+    for (; i < len / stride; i++) {
+        p_dst[i] = p_src[i];
+    }
+
+    uint64 offset    = i * stride;
+    uint64 remaining = len - offset;
+
+    if (remaining) {
+        CopyBytes(&p_dst[i], &p_src[i], remaining);
+    }
+}
+
+template<typename cptype   = uint64,
+         uint64 stride     = sizeof(cptype),
+         typename trn_func = std::function<cptype(cptype)>>
+void
+CopyBlockWith(void* pDst, const void* pSrc, uint64 len, trn_func func)
+{
+    auto p_src = reinterpret_cast<const cptype*>(pSrc);
+    auto p_dst = reinterpret_cast<cptype*>(pDst);
+
+    uint64 i = 0;
+
+    for (; i < len / stride; i++) {
+        p_dst[i] = func(p_src[i]);
+    }
+
+    uint64 offset    = i * stride;
+    uint64 remaining = len - offset;
+
+    if (remaining) {
+        CopyBytes(&p_dst[i], &p_src[i], remaining);
+    }
+}
+
+static inline void
+PadBytes(uint8* pDst, uint32 val, uint64 len)
+{
+    for (uint64 i = 0; i < len; i++) {
+        pDst[i] = (uint8)(val & 0xff);
+    }
 }
 
 template<typename copytype = uint64, uint64 stride = sizeof(copytype)>

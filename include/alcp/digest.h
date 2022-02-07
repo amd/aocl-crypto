@@ -106,22 +106,26 @@ typedef struct _alc_digest_handle
 } alc_digest_handle_t, *alc_digest_handle_p;
 
 /**
- * \brief       TODO: fix this comment
+ * \brief       Returns the context size of the interaction
+ *
  * \notes       alcp_cipher_supported() should be called first to
  *              know if the given cipher/key length configuration is valid.
  *
- * \param pCipherInfo Description of the requested cipher session
- * \return      size > 0 if valid session is found, size otherwise
+ * \param       p_digest_info   Description of the requested cipher session
+ *
+ * \return      size > 0        if valid session is found, size otherwise
  */
 uint64_t
 alcp_digest_context_size(const alc_digest_info_p p_digest_info);
 
 /**
  * \brief       TODO: fix this comment
+ *
  * \notes       alcp_cipher_supported() should be called first to
  *              know if the given cipher/key length configuration is valid.
  *
- * \param pCipherInfo Description of the requested cipher session
+ * \param       p_digest_info Description of the requested cipher session
+ *
  * \return      size > 0 if valid session is found, size otherwise
  */
 alc_error_t
@@ -133,8 +137,11 @@ alcp_digest_supported(const alc_digest_info_p p_digest_info);
  * \notes       alcp_cipher_supported() should be called first to
  *              know if the given type/digest length configuration is valid.
  *
- * \param p_digest_info Description of the requested digest session
- * \return      size > 0 if valid session is found, size otherwise
+ * \param       p_digest_info   Description of the requested digest session
+ *
+ * \param        p_digest_handle The handle returned by the Library
+ *
+ * \return      size > 0        if valid session is found, size otherwise
  */
 alc_error_t
 alcp_digest_request(const alc_digest_info_p p_digest_info,
@@ -163,13 +170,15 @@ alcp_digest_update(const alc_digest_handle_p p_digest_handle,
  *              it to be copied to specified buffer
  * \notes
  *
- * \param  p_digest_handle The handle that was returned as part of call together
- *                         alcp_digest_request()
- * \param buf              Destination buffer to which digest will be copied
- * \param size             Destination buffer size, should be big enough
- *                         to hold the digest
- * \return      ALC_ERROR_NONE if buffer is big enough and handle is valid;
- *              otherwise corresponding error is returned.
+ * \param  p_digest_handle The handle that was returned as part of
+ *                         call together alcp_digest_request()
+ * \param       buf     Destination buffer to which digest will be copied
+ *
+ * \param       size    Destination buffer size, should be big enough
+ *                      to hold the digest
+ *
+ * \return      ALC_ERROR_NONE  if buffer is big enough and handle is valid;
+ *                      otherwise corresponding error is returned.
  */
 alc_error_t
 alcp_digest_copy(const alc_digest_handle_p p_digest_handle,
@@ -205,7 +214,8 @@ alcp_digest_finalize(const alc_digest_handle_p p_digest_handle,
  * \param  p_digest_handle The handle that was returned as part of call
  *                       together alcp_digest_request(), once this function
  *                       is called. the handle is will not be valid for future
- * calls. \return      None
+ *
+ * \return      None
  */
 void
 alcp_digest_finish(const alc_digest_handle_p p_digest_handle);
