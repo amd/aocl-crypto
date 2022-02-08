@@ -75,7 +75,6 @@ typedef union _alc_digest_mode
 typedef struct _alc_digest_data
 {
     void* dd_ptr;
-    ;
 } alc_digest_data_t;
 
 typedef struct _alc_digest_info
