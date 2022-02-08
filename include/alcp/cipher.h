@@ -62,8 +62,8 @@ typedef enum _alc_aes_mode
 
 typedef struct _alc_aes_info_t
 {
-    alc_aes_mode_t mode; /* Mode eg: ALC_AES_MODE_CFB */
-    uint8_t*       iv;   /* Initialization Vector */
+    alc_aes_mode_t       mode; /* Mode eg: ALC_AES_MODE_CFB */
+    const uint8_t*       iv;   /* Initialization Vector */
 } alc_aes_info_t, *alc_aes_info_p;
 
 typedef union _alc_cipher_mode_data

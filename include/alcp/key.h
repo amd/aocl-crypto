@@ -70,11 +70,11 @@ typedef enum
 
 typedef struct _alc_key_info
 {
-    alc_key_type_t type;
-    alc_key_fmt_t  fmt;
-    alc_key_alg_t  algo;
-    uint32_t       len; /* Key length in bits */
-    uint8_t*       key; /* Key follows the rest of the structure */
+    alc_key_type_t      type;
+    alc_key_fmt_t       fmt;
+    alc_key_alg_t       algo;
+    uint32_t            len; /* Key length in bits */
+    const uint8_t*      key; /* Key follows the rest of the structure */
 } alc_key_info_t, *alc_key_info_p;
 
 alc_key_alg_t
