@@ -163,6 +163,8 @@ class Sha256 final : public Sha2
     alc_error_t copyHash(uint8_t* pHashBuf, uint64_t size) const override;
 
   protected:
+    alc_error_t setIv(const uint8_t pIv, uint64_t size);
+
   private:
     class Impl;
     Impl* m_pimpl;

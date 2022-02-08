@@ -26,88 +26,10 @@
  *
  */
 
-#pragma once
+#ifndef _INCLUDE_CONFIG_H
+#define _INCLUDE_CONFIG_H 2
 
-#include "config.h"
-#include "types.hh"
+#define ALCP_CONFIG_LITTLE_ENDIAN 1
+// #undef ALCP_CONFIG_BIG_ENDIAN
 
-namespace alcp::utils {
-
-template<typename T>
-constexpr inline T
-ToBigEndian(T value);
-
-template<typename T>
-constexpr inline T
-ToLittleEndian(T value);
-
-template<typename T>
-constexpr inline T
-ReverseBytes(T value);
-
-template<>
-constexpr uint64
-ReverseBytes(uint64 value)
-{
-    value = ((value & 0xFF00FF00FF00FF00ULL) >> 8U)
-            | ((value & 0x00FF00FF00FF00FFULL) << 8U);
-    value = ((value & 0xFFFF0000FFFF0000ULL) >> 16U)
-            | ((value & 0x0000FFFF0000FFFFULL) << 16U);
-    value = (value >> 32U) | (value << 32U);
-
-    return value;
-}
-
-template<>
-constexpr uint32
-ReverseBytes(uint32 value)
-{
-    value = ((value & 0xFF00FF00U) >> 8U) | ((value & 0x00FF00FFU) << 8U);
-    value = (value >> 16U) | (value << 16U);
-
-    return value;
-}
-
-template<>
-constexpr uint16
-ReverseBytes(uint16 value)
-{
-    value = ((value & 0xFF00U) >> 8U) | ((value & 0x00FFU) << 8U);
-
-    return value;
-}
-
-#if defined(ALCP_CONFIG_LITTLE_ENDIAN)
-template<typename T>
-constexpr T
-ToLittleEndian(T value)
-{
-    return value;
-}
-
-template<typename T>
-constexpr inline T
-ToBigEndian(T value)
-{
-    return ReverseBytes<T>(value);
-}
-
-#else
-
-template<typename T>
-constexpr T
-ToBigEndian(T value)
-{
-    return value;
-}
-
-template<typename T>
-constexpr inline T
-ToLittleEndian(T value)
-{
-    return ReverseBytes<T>(value);
-}
-
-#endif
-
-} // namespace alcp::utils
+#endif /* _INCLUDE_CONFIG_H */
