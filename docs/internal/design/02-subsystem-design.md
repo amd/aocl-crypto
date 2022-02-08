@@ -88,11 +88,20 @@ typedef struct {
 ```
 
 
-
-## Digests (TODO: WIP)
+## Digests
 
 ### Design
-Digests are of two categories, block based and stream based. 
+Digests are of two categories, block based and stream based. A block based will
+call a single API `compute()` to compute the digest for whole buffer, and the session will
+end after the digest/hash is computed.
+
+However, in a stream based approach, the whole session is split between
+`init()`, `update()` and `final()` calls.
+
+The digests also provides an additional api to copy the digest, as all the
+requested handle parameters are with a `const` qualifier, the digest is not
+directly accessible to the application program.
+
 
 ```c
 typedef enum _alc_digest_type {
@@ -107,8 +116,8 @@ typedef enum _alc_digest_type {
 } alc_digest_type_t;
 
 typedef enum _alc_digest_attr {
-    ALC_DIGEST_ATTR_SINGLE,
-    ALC_DIGEST_ATTR_MULTIPART,
+    ALC_DIGEST_ATTR_SINGLE,  /* Block */
+    ALC_DIGEST_ATTR_MULTIPART,  /* Stream */
 } alc_digest_attr_t;
 
 typedef struct _alc_digest_ctx alc_digest_ctx_t;
@@ -130,18 +139,23 @@ This is the C++ interface to the Digests, all digest algorithms will be
 inherited by this class.
 
 ```c++
-class Digest {
-public:
-virtual init() = 0;
-virtual update() = 0;
-virtual finalize() = 0;
-
-protected:
+class DigestInterface {
+  public:
+    virtual init() = 0;
+    virtual update() = 0;
+    virtual finalize() = 0;
+    virtual compute() = 0;
+  protected:
     //static cpuid_variant cpu;
 };
+```
+All algorithms are expected to implement the `DigestInterface` abstract base class.
 
 
-class Sha2 : public Digest {
+
+ 
+```c++
+class Sha2 : public DigestInterface {
   public:
     Sha2(alc_sha2_mode_t mode)
             :m_mode{mode}
@@ -165,19 +179,6 @@ class Sha2 : public Digest {
 
     std::function m_fupdate, m_ffinalize, m_fcompute;
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ```
 
