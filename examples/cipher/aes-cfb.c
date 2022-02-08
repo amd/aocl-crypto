@@ -17,7 +17,7 @@ create_demo_session(const uint8_t* key,
     const int   err_size = 256;
     uint8_t     err_buf[err_size];
 
-    const alc_aes_info_t aes_data = {
+    alc_aes_info_t aes_data = {
         .mode = ALC_AES_MODE_CFB,
         .iv   = iv,
     };
@@ -116,8 +116,9 @@ decrypt_demo(const uint8_t* ciphertxt,
     printf("decrypt succeeded\n");
 }
 
-//static char* sample_plaintxt = "Hello World from AOCL Crypto !!!";
-static char* sample_plaintxt = "Happy and Fantastic New Year from AOCL Crypto !!";
+// static char* sample_plaintxt = "Hello World from AOCL Crypto !!!";
+static char* sample_plaintxt =
+    "Happy and Fantastic New Year from AOCL Crypto !!";
 
 static const uint8_t sample_key[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
@@ -205,11 +206,7 @@ main(void)
 
     int size = strlen(sample_plaintxt);
 
-    decrypt_demo(
-        sample_ciphertxt,
-        size, 
-        sample_output,
-        sample_iv);
+    decrypt_demo(sample_ciphertxt, size, sample_output, sample_iv);
 
     printf("sample_output: %s\n", sample_output);
     /*
