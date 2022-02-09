@@ -29,7 +29,7 @@
 #include <functional>
 #include <string>
 
-#include "digest.hh"
+#include "digest/sha2.hh"
 #include "digest/shani.hh"
 
 #include "utils/bits.hh"
@@ -91,6 +91,8 @@ class Sha256::Impl
     alc_error_t finalize(const uint8* buf, uint64 size);
     alc_error_t copyHash(uint8* buf, uint64 size);
 
+    alc_error_t setIv(const void* pIv, uint64 size);
+
     /*
      * \brief  Checks if SHANI feature is enabled
      */
@@ -126,6 +128,14 @@ Sha256::Impl::Impl()
 {
 
     utils::CopyDWord(&m_hash[0], &cIv[0], cHashSize);
+}
+
+alc_error_t
+Sha256::Impl::setIv(const void* pIv, uint64 size)
+{
+    utils::CopyBytes(m_hash, pIv, size);
+
+    return ALC_ERROR_NONE;
 }
 
 Sha256::Impl::~Impl() {}
@@ -389,6 +399,12 @@ Sha256::Sha256(const alc_digest_info_t& rDigestInfo)
 Sha256::~Sha256()
 {
     delete m_pimpl;
+}
+
+alc_error_t
+Sha256::setIv(const void* pIv, uint64_t size)
+{
+    return m_pimpl->setIv(pIv, size);
 }
 
 alc_error_t

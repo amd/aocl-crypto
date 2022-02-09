@@ -30,6 +30,7 @@
 #include "capi/digest/ctx.hh"
 
 #include "digest.hh"
+#include "digest/sha2.hh"
 
 namespace alcp::digest {
 
@@ -130,6 +131,10 @@ class Sha2Builder
         switch (rDigestInfo.dt_len) {
             case ALC_DIGEST_LEN_256:
                 __build_sha<Sha256>(rDigestInfo, rCtx);
+                break;
+
+            case ALC_DIGEST_LEN_224:
+                __build_sha<Sha224>(rDigestInfo, rCtx);
                 break;
 
             default:
