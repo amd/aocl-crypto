@@ -55,41 +55,42 @@ static constexpr uint64 /* define word size */
 Sha224::Sha224(const alc_digest_info_t& rDInfo)
     : Sha2{ "sha2-224" }
 {
-    m_sha256 = Sha256{ rDInfo };
-    m_sha256.setIv(cIv, sizeof(cIv));
+    m_psha256 = new Sha256{ rDInfo };
+    m_psha256->setIv(cIv, sizeof(cIv));
 }
 
-Sha224::Sha224()
+Sha224::Sha224() {}
+Sha224::~Sha224()
 {
-    m_sha256.setIv(cIv, sizeof(cIv));
+    delete m_psha256;
 }
 
 alc_error_t
 Sha224::update(const uint8_t* pBuf, uint64_t size)
 {
-    return m_sha256.update(pBuf, size);
+    return m_psha256->update(pBuf, size);
 }
 
 void
 Sha224::finish()
 {
-    return m_sha256.finish();
+    return m_psha256->finish();
 }
 
 alc_error_t
 Sha224::finalize(const uint8_t* pBuf, uint64_t size)
 {
-    return m_sha256.finalize(pBuf, size);
+    return m_psha256->finalize(pBuf, size);
 }
 
 alc_error_t
 Sha224::copyHash(uint8_t* pHash, uint64_t size) const
 {
     alc_error_t err = ALC_ERROR_NONE;
-    // assert(size < cHashSize);
+    assert(size >= cHashSize);
 
     uint8_t intrim_hash[cHashSize * 2];
-    err = m_sha256.copyHash(intrim_hash, sizeof(intrim_hash));
+    err = m_psha256->copyHash(intrim_hash, sizeof(intrim_hash));
 
     if (!Error::isError(err)) {
         uint64_t len = std::min(size, cHashSize);

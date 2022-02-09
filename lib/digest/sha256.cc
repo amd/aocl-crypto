@@ -121,11 +121,10 @@ class Sha256::Impl
 };
 
 Sha256::Impl::Impl()
-    : m_msg_len{0},
-      m_hash{
-          0,
-      },
-      m_idx{0}, m_finished{false}
+    : m_msg_len{ 0 }
+    , m_hash{0,}
+    , m_idx{ 0 }
+    , m_finished{ false }
 {
 
     utils::CopyDWord(&m_hash[0], &cIv[0], cHashSize);
@@ -401,17 +400,6 @@ Sha256::~Sha256()
 {
     delete m_pimpl;
 }
-Sha256&
-Sha256::operator=(Sha256&& rhs)
-{
-    if (this != &rhs) {
-        delete m_pimpl;
-        m_pimpl     = rhs.m_pimpl;
-        rhs.m_pimpl = nullptr;
-    }
-    return *this;
-}
-
 alc_error_t
 Sha256::setIv(const void* pIv, uint64_t size)
 {
@@ -447,7 +435,6 @@ void
 Sha256::finish()
 {
     delete m_pimpl;
-    m_pimpl = nullptr;
 }
 
 alc_error_t
