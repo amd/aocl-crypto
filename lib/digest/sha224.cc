@@ -56,6 +56,7 @@ Sha224::Sha224(const alc_digest_info_t& rDInfo)
     : Sha2{ "sha2-224" }
 {
     m_sha256 = Sha256{ rDInfo };
+    m_sha256.setIv(cIv, sizeof(cIv));
 }
 
 Sha224::Sha224()
@@ -85,7 +86,7 @@ alc_error_t
 Sha224::copyHash(uint8_t* pHash, uint64_t size) const
 {
     alc_error_t err = ALC_ERROR_NONE;
-    assert(size < cHashSize);
+    // assert(size < cHashSize);
 
     uint8_t intrim_hash[cHashSize * 2];
     err = m_sha256.copyHash(intrim_hash, sizeof(intrim_hash));

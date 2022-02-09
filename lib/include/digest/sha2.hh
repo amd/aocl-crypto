@@ -122,6 +122,7 @@ class Sha256 final : public Sha2
      *                   assumed to be zero
      */
     alc_error_t copyHash(uint8_t* pHashBuf, uint64_t size) const override;
+    Sha256&     operator=(Sha256&& rhs);
 
   public:
     alc_error_t setIv(const void* pIv, uint64_t size);
