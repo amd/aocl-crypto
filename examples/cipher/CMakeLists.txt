@@ -5,4 +5,5 @@
 
 ADD_EXECUTABLE(aes-cfb aes-cfb.c)
 
+ADD_EXECUTABLE(aes-demo aes-demo.c)
 
