@@ -89,10 +89,11 @@ __digest_func_wrapper(void* pDigest, const uint8_t* pBuf, uint64_t len)
 
 template<typename DIGESTTYPE>
 static alc_error_t
-__sha_dtor(const void* pDigest)
+__sha_dtor(void* pDigest)
 {
     alc_error_t e  = ALC_ERROR_NONE;
-    auto        ap = static_cast<const DIGESTTYPE*>(pDigest);
+    auto        ap = static_cast<DIGESTTYPE*>(pDigest);
+    ap->finish();
     delete ap;
     return e;
 }

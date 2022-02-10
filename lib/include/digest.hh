@@ -42,6 +42,12 @@ RotateRight(uint32_t value, uint32_t count)
     return value >> count | value << (32 - count);
 }
 
+static inline uint64_t
+RotateRight(uint64_t value, uint64_t count)
+{
+    return value >> count | value << (64 - count);
+}
+
 class DigestInterface
 {
   public:
