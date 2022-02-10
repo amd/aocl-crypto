@@ -1,0 +1,8 @@
+
+FILE(GLOB UTILS_SRCS "*.cc")
+
+TARGET_SOURCES(alcp
+	PRIVATE
+		${UTILS_SRCS}
+	)
+
