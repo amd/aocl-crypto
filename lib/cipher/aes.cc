@@ -34,6 +34,8 @@
 #include "cipher/aesni.hh"
 #include "cipher/vaes.hh"
 
+#include "utils/copy.hh"
+
 namespace alcp::cipher {
 
 uint8_t
@@ -168,8 +170,6 @@ Rijndael::shiftRows(uint8_t state[][4])
         }
     }
 }
-
-#include "utils/copy.hh"
 
 void
 Rijndael::expandKeys(const uint8_t* pUserKey,
