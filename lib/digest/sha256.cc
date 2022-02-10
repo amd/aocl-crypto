@@ -122,7 +122,7 @@ class Sha256::Impl
 
 Sha256::Impl::Impl()
     : m_msg_len{ 0 }
-    , m_hash{0,} 
+    , m_hash{0,}
     , m_idx{ 0 }
     , m_finished{ false }
 {
@@ -400,7 +400,6 @@ Sha256::~Sha256()
 {
     delete m_pimpl;
 }
-
 alc_error_t
 Sha256::setIv(const void* pIv, uint64_t size)
 {
