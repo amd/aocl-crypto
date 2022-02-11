@@ -34,7 +34,7 @@
 #endif
 
 // Enable debug for debugging the code
-#define DEBUG
+// #define DEBUG
 
 namespace alcp::rng {
 int

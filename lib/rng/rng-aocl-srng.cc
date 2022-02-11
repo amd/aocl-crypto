@@ -27,11 +27,11 @@
  */
 #include "rng.hh"
 #include "alcp/macros.h"
-#include <secrng.h>
+// #include <secrng.h>
 #include <stdio.h>
 
 // Enable debug for debugging the code
-#define DEBUG
+// #define DEBUG
 
 namespace alcp::rng {
 int
