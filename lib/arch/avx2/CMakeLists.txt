@@ -2,9 +2,9 @@
 FILE(GLOB AVX2_SRCS "*.cc")
 
 IF (MSVC)
-	SET(ARCH_COMPILE_FLAG /arch:znver3)
+	SET(ARCH_COMPILE_FLAG /arch:avx2)
 ELSE()
-	SET(ARCH_COMPILE_FLAG -fPIC -mavx -mavx2 -maes)
+	SET(ARCH_COMPILE_FLAG -fPIC -msse2 -maes -mno-vaes)
 ENDIF()
 	
 #CMAKE_POLICY(SET CMP0079 NEW)

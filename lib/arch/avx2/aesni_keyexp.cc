@@ -61,12 +61,6 @@ namespace alcp::cipher { namespace aesni {
         return tmp1;
     }
 
-    static inline __m256i __aes256keyassist(__m256i tmp0, __m256i tmp1)
-    {
-        NotImplemented();
-        return tmp1;
-    }
-
     static inline void ExpandDecryptKeys(uint8_t*       pDecKey,
                                          const uint8_t* pEncKey,
                                          int            nr)

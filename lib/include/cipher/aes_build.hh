@@ -102,7 +102,7 @@ AesBuilder::Build(const alc_aes_info_t& aesInfo,
                   const alc_key_info_t& keyInfo,
                   Context&              ctx)
 {
-    alc_error_t err;
+    alc_error_t err = ALC_ERROR_NONE;
 
     switch (aesInfo.mode) {
         case ALC_AES_MODE_CFB:
