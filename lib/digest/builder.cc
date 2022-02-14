@@ -142,6 +142,10 @@ class Sha2Builder
                 __build_sha<Sha512>(rDigestInfo, rCtx);
                 break;
 
+            case ALC_DIGEST_LEN_384:
+                __build_sha<Sha384>(rDigestInfo, rCtx);
+                break;
+
             default:
                 Error::setGeneric(err, ALC_ERROR_NOT_SUPPORTED);
                 break;

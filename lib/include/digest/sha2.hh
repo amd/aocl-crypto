@@ -220,5 +220,19 @@ class Sha224 final : public Sha2
   private:
     Sha256* m_psha256;
 };
+class Sha384 final : public Sha2
+{
+  public:
+    Sha384();
+    Sha384(const alc_digest_info_t& rDInfo);
+    ~Sha384();
+    alc_error_t update(const uint8_t* pMsgBuf, uint64_t size) override;
+    void        finish() override;
+    alc_error_t finalize(const uint8_t* pMsgBuf, uint64_t size) override;
+    alc_error_t copyHash(uint8_t* pHashBuf, uint64_t size) const override;
+
+  private:
+    Sha512* m_psha512;
+};
 
 } // namespace alcp::digest
