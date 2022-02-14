@@ -110,7 +110,7 @@ AesBuilder::Build(const alc_aes_info_t& aesInfo,
             break;
 
         case ALC_AES_MODE_CBC:
-            // err = __build_aes<Cbc>(aesInfo, keyInfo, ctx);
+            err = __build_aes<Cbc>(aesInfo, keyInfo, ctx);
             break;
 
         case ALC_AES_MODE_OFB:

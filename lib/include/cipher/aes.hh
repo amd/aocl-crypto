@@ -245,6 +245,81 @@ class Cfb final : public Aes
 };
 
 /*
+ * \brief        AES Encryption in CBC(Cipher block chaining)
+ * \notes        TODO: Move this to a aes_cbc.hh or other
+ */
+class Cbc final : public Aes
+{
+  public:
+    explicit Cbc(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+        : Aes(aesInfo, keyInfo)
+    {}
+
+    ~Cbc() {}
+
+  public:
+    static bool isSupported(const alc_aes_info_t& cipherInfo,
+                            const alc_key_info_t& keyInfo)
+    {
+        return true;
+    }
+
+    /**
+     * \brief
+     * \notes
+     * \param
+     * \return
+     */
+    virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
+                             alc_error_t&             err) override
+    {
+        Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
+
+        if (cipherInfo.cipher_type == ALC_CIPHER_TYPE_AES) {
+            if (cipherInfo.mode_data.aes.mode == ALC_AES_MODE_CBC) {
+                Error::setDetail(err, ALC_ERROR_NONE);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * \brief   CBC Encrypt Operation
+     * \notes
+     * \param   pPlainText      Pointer to output buffer
+     * \param   pCipherText     Pointer to encrypted buffer
+     * \param   len             Len of plain and encrypted text
+     * \param   pIv             Pointer to Initialization Vector
+     * \return  alc_error_t     Error code
+     */
+    virtual alc_error_t encrypt(const uint8_t* pPlainText,
+                                uint8_t*       pCipherText,
+                                uint64_t       len,
+                                const uint8_t* pIv) const final;
+
+    /**
+     * \brief   CBC Decrypt Operation
+     * \notes
+     * \param   pCipherText     Pointer to encrypted buffer
+     * \param   pPlainText      Pointer to output buffer
+     * \param   len             Len of plain and encrypted text
+     * \param   pIv             Pointer to Initialization Vector
+     * \return  alc_error_t     Error code
+     */
+    virtual alc_error_t decrypt(const uint8_t* pCipherText,
+                                uint8_t*       pPlainText,
+                                uint64_t       len,
+                                const uint8_t* pIv) const final;
+
+  private:
+    Cbc(){};
+
+  private:
+};
+
+/*
  * \brief        AES Encryption in OFB(Output Feedback)
  * \notes        TODO: Move this to a aes_ofb.hh or other
  */
