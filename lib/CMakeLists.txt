@@ -21,6 +21,7 @@ SET(ALCP_COMMON_SRCS
 	algorithm.cc
 	dynlib.cc
 	error.cc
+	exception.cc
 	module.cc
 	modulemanager.cc
 	)

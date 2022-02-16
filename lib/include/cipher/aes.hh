@@ -39,7 +39,7 @@
 
 //#include "algorithm.hh"
 #include "cipher.hh"
-#include "error.hh"
+#include "exception.hh"
 
 namespace alcp::cipher {
 

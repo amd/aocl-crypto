@@ -37,61 +37,77 @@
 EXTERN_C_BEGIN
 
 typedef enum _alc_error_generic
-{ /* All is well */
-  ALC_ERROR_NONE = 0UL,
+{
+    /*
+     * All is well
+     */
+    ALC_ERROR_NONE = 0UL,
 
-  /* An Error but cant be categorized
-     correctly */
-  ALC_ERROR_GENERIC,
+    /*
+     * An Error,
+     *    but cant be categorized correctly
+     */
+    ALC_ERROR_GENERIC,
 
-  /* A Feature, configuration, Algorithm,
-   * Keysize not supported
-   */
-  ALC_ERROR_NOT_SUPPORTED,
+    /*
+     * Not Supported,
+     *  Any of Feature, configuration,  Algorithm or  Keysize not supported
+     */
+    ALC_ERROR_NOT_SUPPORTED,
 
-  /*
-   * Kind of permission Denied situation,
-   * could be from the OS
-   */
-  ALC_ERROR_NOT_PERMITTED,
+    /*
+     * Not Permitted,
+     *  Operation supported but not permitted by this module/user etc.
+     *  Kind of permission Denied situation, could be from the OS
+     */
+    ALC_ERROR_NOT_PERMITTED,
 
-  /*
-   * Something that is already exists is
-   * requested to register or replace
-   */
-  ALC_ERROR_EXISTS,
+    /*
+     * Exists,
+     *  Something that is already exists is requested to register or replace
+     */
+    ALC_ERROR_EXISTS,
 
-  /* Requested
-   * configuration/algorithm/module/feature
-   * does not exists
-   */
-  ALC_ERROR_NOT_EXISTS,
+    /*
+     * Does not Exist,
+     *   Requested configuration/algorithm/module/feature  does not exists
+     */
+    ALC_ERROR_NOT_EXISTS,
 
-  /*
-   * Invalid argument
-   */
-  ALC_ERROR_INVALID_ARG,
+    /*
+     * Invalid argument
+     */
+    ALC_ERROR_INVALID_ARG,
 
-  /*
-   * Algorithm/context is in bad state due
-   * to internal Error
-   */
-  ALC_ERROR_BAD_STATE,
+    /*
+     * Bad Internal State,
+     *   Algorithm/context is in bad state due to internal Error
+     */
+    ALC_ERROR_BAD_STATE,
 
-  /*
-   * Unable to allocate memory
-   */
-  ALC_ERROR_NO_MEMORY,
+    /*
+     * No Memory,
+     *  Not enough free space available, Unable to allocate memory
+     */
+    ALC_ERROR_NO_MEMORY,
 
-  /* Sent data is invalid */
-  ALC_ERROR_INVALID_DATA,
+    /*
+     * Data validation failure,
+     *   Invalid pointer / Sent data is invalid
+     */
+    ALC_ERROR_INVALID_DATA,
 
-  /* Data/Key size is invalid */
-  ALC_ERROR_INVALID_SIZE,
+    /*
+     * Size Error,
+     *   Data/Key size is invalid
+     */
+    ALC_ERROR_INVALID_SIZE,
 
-  /* Hardware not in sane state, or failed
-     during operation */
-  ALC_ERROR_HARDWARE_FAILURE,
+    /*
+     * Hardware Error,
+     *   not in sane state, or failed during operation
+     */
+    ALC_ERROR_HARDWARE_FAILURE,
 
 } alc_error_generic_t;
 

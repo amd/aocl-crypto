@@ -32,7 +32,7 @@
 
 #include "cipher/aesni.hh"
 #include "error.hh"
-#include "misc/notimplemented.hh"
+#include "exception.hh"
 
 namespace alcp::cipher { namespace aesni {
 
@@ -53,12 +53,6 @@ namespace alcp::cipher { namespace aesni {
         tmp = _mm_xor_si128(tmp0, tmp1);
 
         return tmp;
-    }
-
-    static inline __m128i __aes192keyassist(__m128i tmp0, __m128i tmp1)
-    {
-        NotImplemented();
-        return tmp1;
     }
 
     static inline void ExpandDecryptKeys(uint8_t*       pDecKey,
@@ -83,15 +77,21 @@ namespace alcp::cipher { namespace aesni {
                               uint8_t*       pEncKey,
                               uint8_t*       pDecKey)
     {
-        NotImplemented();
+        NotImplementedException();
         return ALC_ERROR_NONE;
+    }
+
+    static inline __m128i __aes192keyassist(__m128i tmp0, __m128i tmp1)
+    {
+        NotImplementedException();
+        return tmp1;
     }
 
     alc_error_t ExpandKeys192(const uint8_t* pUserKey,
                               uint8_t*       pEncKey,
                               uint8_t*       pDecKey)
     {
-        NotImplemented();
+        NotImplementedException();
         return ALC_ERROR_NONE;
     }
 

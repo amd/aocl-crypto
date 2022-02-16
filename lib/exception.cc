@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2021, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,30 +26,10 @@
  *
  */
 
-#ifndef _MISC_NOTIMPLEMENTED_HH
-#define _MISC_NOTIMPLEMENTED_HH 2
+#include "exception.hh"
 
-#include <stdexcept>
-#include <string>
+namespace alcp {
 
-class NotImplemented : public std::logic_error
-{
-  private:
-    NotImplemented(const std::string& pMsg, const std::string& pFunc)
-        : std::logic_error(pMsg)
-    {
-        m_text = pFunc + pMsg;
-    }
+const std::string NotImplementedException::m_def_str = "Not Implemented";
 
-  public:
-    NotImplemented()
-        : NotImplemented("Not Implemented", __FUNCTION__)
-    {}
-
-    virtual const char* what() const noexcept { return m_text.c_str(); }
-
-  private:
-    std::string m_text;
-};
-
-#endif /* _MISC_NOTIMPLEMENTED_HH */
+}
