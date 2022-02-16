@@ -324,8 +324,7 @@ main(void)
             printf("\n\nAES-ECB not implemented");
             continue;
         } else if (m == ALC_AES_MODE_CBC) {
-            printf("\n\nAES-CBC not implemented");
-            continue;
+            printf("\n\nAES-CBC");
         } else if (m == ALC_AES_MODE_OFB) {
             printf("\n\nAES-OFB");
         } else if (m == ALC_AES_MODE_CTR) {

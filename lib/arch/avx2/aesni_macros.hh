@@ -32,7 +32,7 @@
     key_128_13 = _mm_loadu_si128(pkey128 + 13);                                \
     key_128_14 = _mm_loadu_si128(pkey128 + 14);
 
-/****************** 128x2 = 256 bit *************************/
+/****************** 128x1 = 128 bit *************************/
 
 /* 128 bit aes encrypt and decrypt MACROS */
 
@@ -70,7 +70,7 @@
 
 // dec
 #define ALCP_AESDEC_128BIT_12ROUND(A, KEY)                                     \
-    ALCP_AESDEC_128BIT_10ROUND(A, KEY, )                                       \
+    ALCP_AESDEC_128BIT_10ROUND(A, KEY)                                         \
     A = _mm_aesdec_si128(A, KEY##_10);                                         \
     A = _mm_aesdec_si128(A, KEY##_11);
 
