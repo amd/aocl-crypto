@@ -463,6 +463,7 @@ void
 Sha512::finish()
 {
     delete m_pimpl;
+    m_pimpl = nullptr;
 }
 
 alc_error_t

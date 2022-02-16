@@ -435,6 +435,7 @@ void
 Sha256::finish()
 {
     delete m_pimpl;
+    m_pimpl = nullptr;
 }
 
 alc_error_t
