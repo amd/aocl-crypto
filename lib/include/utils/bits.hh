@@ -74,4 +74,10 @@ WordToBytes(T x)
     return x * sizeof(uint32);
 }
 
+template<typename T>
+constexpr T
+DWordToBytes(T x)
+{
+    return x * sizeof(uint64);
+}
 } // namespace alcp::utils

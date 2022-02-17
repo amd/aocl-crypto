@@ -131,6 +131,81 @@ class Sha256 final : public Sha2
     Impl* m_pimpl;
 };
 
+class Sha512 final : public Sha2
+{
+  public:
+    Sha512();
+    Sha512(const alc_digest_info_t& rDigestInfo);
+
+  public:
+    ~Sha512();
+
+  public:
+    /**
+     * \brief   Updates hash for given buffer
+     *
+     * \notes    Can be called repeatedly, if the hashsize is smaller
+     *           it will be cached for future use. and hash is only updated
+     *           after finalize() is called.
+     *
+     * \param    pBuf    Pointer to message buffer
+     *
+     * \param    size    should be valid size > 0
+     */
+    alc_error_t update(const uint8_t* pMsgBuf, uint64_t size) override;
+
+    /**
+     * \brief   Cleans up any resource that was allocated
+     *
+     * \notes   `finish()` to be called as a means to cleanup, no operation
+     *           permitted after this call. The context will be unusable.
+     *
+     * \return nothing
+     */
+    void finish() override;
+
+    /**
+     * \brief    Call for the final chunk
+     *
+     * \notes   `finish()` to be called as a means to cleanup, necessary
+     *           actions. Application can also call finalize() with
+     *           empty/null args application must call copyHash before
+     *           calling finish()
+     *
+     * \param    buf     Either valid pointer to last chunk or nullptr,
+     *                   if nullptr then has is not modified, once finalize()
+     *                   is called, only operation that can be performed
+     *                   is copyHash()
+     *
+     * \param    size    Either valid size or 0, if \buf is nullptr, size
+     *                   is assumed to be zero
+     */
+    alc_error_t finalize(const uint8_t* pMsgBuf, uint64_t size) override;
+
+    /**
+     * \brief  Copies the has from context to supplied buffer
+     *
+     * \notes `finalize()` to be called with last chunks that should
+     *           perform all the necessary actions, can be called with
+     *           NULL argument.
+     *
+     * \param    buf     Either valid pointer to last chunk or nullptr,
+     *                   if nullptr then has is not modified, once finalize()
+     *                   is called, only operation that can  be performed
+     *                   is copyHash()
+     *
+     * \param    size    Either valid size or 0, if \buf is nullptr, size is
+     *                   assumed to be zero
+     */
+    alc_error_t copyHash(uint8_t* pHashBuf, uint64_t size) const override;
+
+  public:
+    alc_error_t setIv(const void* pIv, uint64_t size);
+
+  private:
+    class Impl;
+    Impl* m_pimpl;
+};
 class Sha224 final : public Sha2
 {
   public:
@@ -144,6 +219,20 @@ class Sha224 final : public Sha2
 
   private:
     Sha256* m_psha256;
+};
+class Sha384 final : public Sha2
+{
+  public:
+    Sha384();
+    Sha384(const alc_digest_info_t& rDInfo);
+    ~Sha384();
+    alc_error_t update(const uint8_t* pMsgBuf, uint64_t size) override;
+    void        finish() override;
+    alc_error_t finalize(const uint8_t* pMsgBuf, uint64_t size) override;
+    alc_error_t copyHash(uint8_t* pHashBuf, uint64_t size) const override;
+
+  private:
+    Sha512* m_psha512;
 };
 
 } // namespace alcp::digest

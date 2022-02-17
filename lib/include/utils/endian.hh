@@ -44,7 +44,6 @@ ToLittleEndian(T value);
 template<typename T>
 constexpr inline T
 ReverseBytes(T value);
-
 template<>
 constexpr inline uint64
 ReverseBytes(uint64 value)
@@ -76,6 +75,19 @@ ReverseBytes(uint16 value)
 
     return value;
 }
+#ifdef __SIZEOF_INT128__
+template<>
+constexpr inline __uint128_t
+ReverseBytes(__uint128_t value)
+{
+    uint64 high = (uint64)(value >> 64);
+    uint64 low  = (uint64)value;
+    high        = ReverseBytes(high);
+    low         = ReverseBytes(low);
+    value       = ((__uint128_t)low) << 64 | ((__uint128_t)high);
+    return value;
+}
+#endif
 
 #if defined(ALCP_CONFIG_LITTLE_ENDIAN)
 template<typename T>

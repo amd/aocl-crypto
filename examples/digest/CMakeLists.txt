@@ -1,3 +1,4 @@
 ADD_EXECUTABLE(sha256_example sha2_256_example.c)
 ADD_EXECUTABLE(sha224_example sha2_224_example.c)
-
+ADD_EXECUTABLE(sha512_example sha2_512_example.c)
+ADD_EXECUTABLE(sha384_example sha2_384_example.c)
