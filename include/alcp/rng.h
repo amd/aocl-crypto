@@ -103,7 +103,7 @@ typedef struct
 
 typedef struct
 {
-    void* ctx;
+    void* context;
 } alc_rng_handle_t;
 
 uint64_t

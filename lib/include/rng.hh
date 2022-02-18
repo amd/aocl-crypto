@@ -12,8 +12,9 @@ class Rng
 };
 typedef struct
 {
+    void*          m_rng;
     alc_rng_info_t rng_info;
-    Rng*           exec;
+    alc_error_t (*read_random)(void* pRng, uint8_t* buffer, int buffersize);
 } rng_Handle;
 } // namespace alcp
 namespace alcp::rng {
@@ -36,6 +37,10 @@ class ArchRng : public Rng
   public:
     int engineDefault(uint8_t* buffer, int buffersize);
 };
+
+namespace RngBuilder {
+    alc_error_t Build(const alc_rng_info_t* tt, rng_Handle* ctx);
+}
 } // namespace alcp::rng
 
 #endif

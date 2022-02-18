@@ -4,11 +4,10 @@
 #include <iostream>
 #include <stdio.h>
 
-EXTERN_C_BEGIN
-uint64_t
+EXTERN_C_BEGIN uint64_t
 alcp_rng_context_size(const alc_rng_info_t rng_info)
 {
-    uint64_t size = sizeof(alc_rng_handle_t);
+    uint64_t size = sizeof(alcp::rng_Handle);
     return size;
 }
 alc_error_t
@@ -37,36 +36,19 @@ alcp_rng_supported(const alc_rng_info_t* tt)
 alc_error_t
 alcp_rng_request(const alc_rng_info_t* tt, alc_rng_handle_t* ctx)
 {
-    alc_error_t       error = ALC_ERROR_NOT_SUPPORTED;
-    alcp::rng_Handle* cntxt = new alcp::rng_Handle;
-    ctx->ctx                = cntxt;
+    alc_error_t error = ALC_ERROR_NOT_SUPPORTED;
+    /*
+     * TODO: Move this to builder, find a way to check support without redundant
+     * code
+     */
     switch (tt->r_type) {
         case ALC_RNG_TYPE_DESCRETE:
             switch (tt->r_distrib) {
                 case ALC_RNG_DISTRIB_UNIFORM:
                     error = ALC_ERROR_NONE;
-                    switch (tt->r_source) {
-                        case ALC_RNG_SOURCE_OS:
-                            cntxt->rng_info.r_distrib = tt->r_distrib;
-                            cntxt->rng_info.r_type    = tt->r_type;
-                            cntxt->rng_info.r_source  = tt->r_source;
-                            cntxt->rng_info.r_flags   = tt->r_flags;
-                            cntxt->exec               = new alcp::rng::OsRng();
-                            // cntxt->engine =
-                            // &(alcp::rng::rng_engine_linux_urandom);
-                            break;
-                        case ALC_RNG_SOURCE_ARCH:
-                            cntxt->rng_info.r_distrib = tt->r_distrib;
-                            cntxt->rng_info.r_type    = tt->r_type;
-                            cntxt->rng_info.r_source  = tt->r_source;
-                            cntxt->rng_info.r_flags   = tt->r_flags;
-                            cntxt->exec = new alcp::rng::ArchRng();
-                            // cntxt->engine =
-                            // &(alcp::rng::rng_engine_amd_rdrand_bytes);
-                            break;
-                        default:
-                            error = ALC_ERROR_NOT_SUPPORTED;
-                    }
+                    alcp::rng::RngBuilder::Build(
+                        tt, static_cast<alcp::rng_Handle*>(ctx->context));
+                    break;
             }
     }
     return error;
@@ -78,28 +60,20 @@ alcp_rng_gen_random(alc_rng_handle_t* tt,
                     uint64_t          size /* output buffer size */
 )
 {
-    alcp::rng_Handle* cntxt = (alcp::rng_Handle*)tt->ctx;
+    alcp::rng_Handle* cntxt = (alcp::rng_Handle*)tt->context;
     uint64_t          randn = 0;
     int               tries = 10;
     if (buf == NULL) {
         return ALC_ERROR_INVALID_ARG;
     }
-    while (randn != size) {
-        randn += cntxt->exec->engineDefault(buf + randn, size - randn);
-        tries -= 1;
-        if (tries == 0) {
-            return ALC_ERROR_NO_ENTROPY;
-        }
-    }
+    randn += cntxt->read_random(cntxt->m_rng, buf, size);
     return ALC_ERROR_NONE;
 }
 
 alc_error_t
 alcp_rng_finish(alc_rng_handle_t* tt)
 {
-    alcp::rng_Handle* cntxt = (alcp::rng_Handle*)tt->ctx;
-    delete cntxt->exec;
-    delete cntxt;
+    delete ((static_cast<alcp::rng_Handle*>(tt->context))->m_rng);
     return ALC_ERROR_NONE;
 }
 

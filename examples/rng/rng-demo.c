@@ -16,9 +16,9 @@ bytesToHexString(unsigned char*, int);
 int
 main(int argc, char const* argv[])
 {
-    unsigned char     buffer[RANDOM_SIZE];
-    unsigned char*    out;
-    alc_rng_handle_t* ctx;
+    unsigned char    buffer[RANDOM_SIZE];
+    unsigned char*   out;
+    alc_rng_handle_t ctx;
     {
         alc_rng_info_t rng_info;
         rng_info.r_distrib =
@@ -40,9 +40,9 @@ main(int argc, char const* argv[])
         printf("Support Success\n");
 
         /* Application has to allocate memory*/
-        ctx = malloc(alcp_rng_context_size(rng_info));
+        ctx.context = malloc(alcp_rng_context_size(rng_info));
         /* Request context for RNG with RNG info */
-        if (alcp_rng_request(&rng_info, ctx) != ALC_ERROR_NONE) {
+        if (alcp_rng_request(&rng_info, &ctx) != ALC_ERROR_NONE) {
             printf("Request Failed!\n");
             exit(-1);
         }
@@ -51,12 +51,12 @@ main(int argc, char const* argv[])
     }
 
     /* Generate RANDOM_SIZE bytes of random values */
-    if (alcp_rng_gen_random(ctx, buffer, RANDOM_SIZE) != ALC_ERROR_NONE) {
+    if (alcp_rng_gen_random(&ctx, buffer, RANDOM_SIZE) != ALC_ERROR_NONE) {
         printf("Random number generation Failed!\n");
         exit(-1);
     }
 
-    if (alcp_rng_finish(ctx) != ALC_ERROR_NONE) {
+    if (alcp_rng_finish(&ctx) != ALC_ERROR_NONE) {
         printf("Finish Failed!\n");
         exit(-1);
     }
@@ -66,7 +66,7 @@ main(int argc, char const* argv[])
     out = bytesToHexString(buffer, RANDOM_SIZE);
     printf("Random Value in Buffer: %s\n", out);
     free(out);
-    free(ctx);
+    free(ctx.context);
     return 0;
 }
 
