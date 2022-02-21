@@ -49,7 +49,7 @@ namespace alcp::cipher { namespace aesni {
 
         __m128i iv128 = _mm_loadu_si128((const __m128i*)pIv);
 
-        uint64_t blocks = len / Rijndael::eBytes128;
+        uint64_t blocks = len / Rijndael::cBlockSize;
 
         for (; blocks >= 4; blocks -= 4) {
             __m128i blk0 = iv128;
@@ -124,7 +124,7 @@ namespace alcp::cipher { namespace aesni {
         auto p_dest128 = reinterpret_cast<__m128i*>(pDest);
 
         __m128i  iv128  = _mm_loadu_si128((const __m128i*)pIv);
-        uint64_t blocks = len / Rijndael::eBytes128;
+        uint64_t blocks = len / Rijndael::cBlockSize;
 
         while (blocks >= 4) {
             __m128i tmpblk = iv128;

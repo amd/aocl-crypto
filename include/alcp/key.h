@@ -31,9 +31,6 @@
 
 #include <stdint.h>
 
-#define ALC_KEY_LEN_DEFAULT 128
-#define BITS_TO_BYTES(x)    (x >> 8)
-
 typedef enum
 {
     ALC_KEY_TYPE_UNKNOWN = 0,
@@ -64,17 +61,34 @@ typedef enum
 
 typedef enum
 {
+    ALC_KEY_LEN_128 = 128,
+    ALC_KEY_LEN_192 = 192,
+    ALC_KEY_LEN_256 = 256,
+    ALC_KEY_LEN_384 = 384,
+    ALC_KEY_LEN_512 = 512,
+
+    ALC_KEY_LEN_1024 = 1024,
+    ALC_KEY_LEN_2048 = 2048,
+    ALC_KEY_LEN_4096 = 4096,
+
+    ALC_KEY_LEN_CUSTOM,
+    ALC_KEY_LEN_DEFAULT = ALC_KEY_LEN_128,
+} alc_key_len_t;
+
+typedef enum
+{
     ALC_KEY_FMT_RAW,    /* Default should be fine */
     ALC_KEY_FMT_BASE64, /* Base64 encoding */
 } alc_key_fmt_t;
 
 typedef struct _alc_key_info
 {
-    alc_key_type_t      type;
-    alc_key_fmt_t       fmt;
-    alc_key_alg_t       algo;
-    uint32_t            len; /* Key length in bits */
-    const uint8_t*      key; /* Key follows the rest of the structure */
+    alc_key_type_t type;
+    alc_key_fmt_t  fmt;
+    alc_key_alg_t  algo;
+    alc_key_len_t  len_type;
+    uint32_t       len; /* Key length in bits */
+    const uint8_t* key; /* Key follows the rest of the structure */
 } alc_key_info_t, *alc_key_info_p;
 
 alc_key_alg_t

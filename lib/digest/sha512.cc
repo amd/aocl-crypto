@@ -250,11 +250,11 @@ Sha512::Impl::processChunk(const uint8* pSrc, uint64 len)
     while (msg_size) {
         utils::CopyBlockWith<uint64>(w,
                                      p_msg_buffer64,
-                                     utils::DWordToBytes(16),
+                                     cChunkSize,
                                      utils::ToBigEndian<uint64>);
         // Extend the first 16 words into the remaining words of the message
         // schedule array:
-        extendMsg(w, 16, cNumRounds);
+        extendMsg(w, cChunkSizeWords, cNumRounds);
 
         // Compress the message
         compressMsg(w);

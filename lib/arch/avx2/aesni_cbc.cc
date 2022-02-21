@@ -47,7 +47,7 @@ EncryptCbc(const uint8_t* pPlainText,  // ptr to plaintext
 )
 {
     alc_error_t err    = ALC_ERROR_NONE;
-    uint64_t    blocks = len / Rijndael::eBytes128;
+    uint64_t    blocks = len / Rijndael::cBlockSize;
     __m128i     a1; // plaintext data
     __m128i     b1;
 
@@ -80,7 +80,7 @@ DecryptCbc(const uint8_t* pCipherText, // ptr to ciphertext
            const uint8_t* pIv          // ptr to Initialization Vector
 )
 {
-    uint64_t    blocks = len / Rijndael::eBytes128;
+    uint64_t    blocks = len / Rijndael::cBlockSize;
     alc_error_t err    = ALC_ERROR_NONE;
 
     auto p_in_128  = reinterpret_cast<const __m128i*>(pCipherText);

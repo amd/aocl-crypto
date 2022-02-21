@@ -239,12 +239,12 @@ Sha256::Impl::processChunk(const uint8* pSrc, uint64 len)
     while (msg_size) {
         utils::CopyBlockWith<uint32>(w,
                                      p_msg_buffer32,
-                                     utils::WordToBytes(16),
+                                     cChunkSize,
                                      utils::ToBigEndian<uint32>);
 
         // Extend the first 16 words into the remaining words of the message
         // schedule array:
-        extendMsg(w, 16, cNumRounds);
+        extendMsg(w, cChunkSizeWords, cNumRounds);
 
         // Compress the message
         compressMsg(w);
@@ -363,7 +363,7 @@ Sha256::Impl::finalize(const uint8* pBuf, uint64 size)
     local_buf[m_idx++] = 0x80;
 
     uint64 buf_len = m_idx < (cChunkSize - 8) ? cChunkSize : sizeof(local_buf);
-    uint64 bytes_left = buf_len - m_idx - utils::BytesInDWord<uint64>;
+    uint64 bytes_left = buf_len - m_idx - utils::BytesPerDWord;
 
     utils::PadBlock<uint8>(&local_buf[m_idx], 0x0, bytes_left);
 

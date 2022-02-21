@@ -35,6 +35,8 @@
 
 #include "aes.hh"
 
+#include "utils/copy.hh"
+
 namespace alcp::cipher { namespace aesni {
     alc_error_t ExpandKeys(const uint8_t* pUserKey,
                            uint8_t*       pEncKey,
@@ -68,6 +70,7 @@ namespace alcp::cipher { namespace aesni {
                            const uint8_t* pKey,
                            int            nRounds,
                            const uint8_t* pIv);
+
     alc_error_t DecryptCfb(const uint8_t* pCipherText,
                            uint8_t*       pPlainText,
                            uint64_t       len,

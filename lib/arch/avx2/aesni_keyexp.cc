@@ -73,6 +73,7 @@ namespace alcp::cipher { namespace aesni {
         p_dec128[0] = p_enc128[nr];
     }
 
+    /* keys256 is equivalent to 2x128 */
     alc_error_t ExpandKeys256(const uint8_t* pUserKey,
                               uint8_t*       pEncKey,
                               uint8_t*       pDecKey)
@@ -87,14 +88,43 @@ namespace alcp::cipher { namespace aesni {
         return tmp1;
     }
 
+    /*
+     * \brief    Key Expansion for 192-bit keys, h/w assisted
+     *
+     * \notes    keys192 is equivalent to 2x128, [256:192] are ignored
+     *
+     * \param    pUserKey        Pointer to user supplied key
+     * \param    pEncKey         Pointer to Round-key for encryption
+     * \param    pDecKey         Pointer to Round-key for decryption
+     *
+     * \return   alc_error_t
+     */
     alc_error_t ExpandKeys192(const uint8_t* pUserKey,
                               uint8_t*       pEncKey,
                               uint8_t*       pDecKey)
     {
+#if 0
+        __m128i  tmp[2];
+        __m128i* p_round_key = reinterpret_cast<__m128i*>(pEncKey);
+
+        tmp[0] = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pUserKey));
+#endif
         NotImplementedException();
+
         return ALC_ERROR_NONE;
     }
 
+    /*
+     * \brief    Key Expansion for 128-bit keys, h/w assisted
+     *
+     * \notes
+     *
+     * \param    pUserKey        Pointer to user supplied key
+     * \param    pEncKey         Pointer to Round-key for encryption
+     * \param    pDecKey         Pointer to Round-key for decryption
+     *
+     * \return   alc_error_t
+     */
     alc_error_t ExpandKeys128(const uint8_t* pUserKey,
                               uint8_t*       pEncKey,
                               uint8_t*       pDecKey)

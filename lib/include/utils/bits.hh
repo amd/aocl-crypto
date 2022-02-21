@@ -28,56 +28,89 @@
 
 #pragma once
 
+#include <type_traits>
+
 #include "types.hh"
 
 namespace alcp::utils {
 
+#if 1
+constexpr uint32 BitsPerByte   = 8;
+constexpr uint32 BytesPerWord  = 4;
+constexpr uint32 BytesPerDWord = 8;
+
+#else
 template<typename T>
-constexpr T BitsInBytes = 8;
-template<typename T>
-constexpr T BytesInWord = 4;
-template<typename T>
-constexpr T BytesInDWord = 8;
+constexpr T
+BitsPerByte()
+{
+    return 8;
+}
 
 template<typename T>
 constexpr T
-BitsToBytes(T x)
+BytesPerHWord()
+{
+    return 2; /* half word - x86->word */
+}
+template<typename T>
+constexpr T
+BytesPerWord()
+{
+    return 4; /* word -x86->double - word */
+}
+
+template<typename T>
+constexpr T
+BytesPerDWord()
+{
+    return 8; /* dword  - x86->quad-word */
+}
+#endif
+
+template<typename T>
+T
+BytesPer()
+{
+    return sizeof(T);
+}
+
+template<typename T>
+constexpr T
+BitsInBytes(T x)
 {
     return x / 8;
 }
 
 template<typename T>
 constexpr T
-BytesToBits(T x)
+BytesInBits(T x)
 {
-    return x * 8;
+    return x / BitsPerByte;
 }
 
 template<typename T>
 constexpr T
-BytesToWord(T x)
+BytesIn(T x)
 {
-    return x / sizeof(uint32);
+    return x * BytesPer<T>();
 }
 
 template<typename T>
 constexpr T
-BytesToDWord(T x)
+GetByte(T val, int idx)
 {
-    return x / sizeof(uint64);
+    uint32 offset = idx * 8;
+
+    return (val & (0xff << offset)) >> offset;
 }
 
-template<typename T>
-constexpr T
-WordToBytes(T x)
+template<typename T, std::enable_if_t<std::is_unsigned_v<T>, int> = 0>
+constexpr uint32
+BytesToWord(T byte0, T byte1, T byte2, T byte3)
 {
-    return x * sizeof(uint32);
+    return ((uint32)byte3 << 24) | ((uint32)byte2 << 16) | ((uint32)byte1 << 8)
+           | (byte0);
 }
 
-template<typename T>
-constexpr T
-DWordToBytes(T x)
-{
-    return x * sizeof(uint64);
-}
 } // namespace alcp::utils

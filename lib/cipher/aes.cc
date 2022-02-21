@@ -148,7 +148,7 @@ __ffmul(uint8_t a, uint8_t b)
 }
 
 void
-Rijndael::subBytes(uint8_t state[][4])
+Rijndael::subBytes(uint8_t state[][4]) noexcept
 {
     for (int r = 0; r < 4; r++) {
         for (int c = 0; c < 4; c++) {
@@ -158,7 +158,7 @@ Rijndael::subBytes(uint8_t state[][4])
 }
 
 void
-Rijndael::shiftRows(uint8_t state[][4])
+Rijndael::shiftRows(uint8_t state[][4]) noexcept
 {
     uint8_t t[4];
     for (int r = 1; r < 4; r++) {
@@ -171,10 +171,105 @@ Rijndael::shiftRows(uint8_t state[][4])
     }
 }
 
+#define BYTE0_TO_WORD(x) utils::BytesToWord<uint8_t>((x), 0, 0, 0)
+// clang-format off
+/*
+ * FIPS-197 Section 4.2
+ * s_round_constants[] contains
+ * [x**(i),{00},{00},{00}], i=0,..,10 GF(256)
+ */
+static const uint32_t s_round_constants[] = {
+    BYTE0_TO_WORD(0x01), BYTE0_TO_WORD(0x02), BYTE0_TO_WORD(0x04), BYTE0_TO_WORD(0x08),
+    BYTE0_TO_WORD(0x10), BYTE0_TO_WORD(0x20), BYTE0_TO_WORD(0x40), BYTE0_TO_WORD(0x80),
+    BYTE0_TO_WORD(0x1B), BYTE0_TO_WORD(0x36), BYTE0_TO_WORD(0x6C), BYTE0_TO_WORD(0xD8),
+    BYTE0_TO_WORD(0xAB), BYTE0_TO_WORD(0x4D), BYTE0_TO_WORD(0x9A), BYTE0_TO_WORD(0x2F),
+    BYTE0_TO_WORD(0x5E), BYTE0_TO_WORD(0xBC), BYTE0_TO_WORD(0x63), BYTE0_TO_WORD(0xC6),
+    BYTE0_TO_WORD(0x97), BYTE0_TO_WORD(0x35), BYTE0_TO_WORD(0x6A), BYTE0_TO_WORD(0xD4),
+    BYTE0_TO_WORD(0xB3), BYTE0_TO_WORD(0x7D), BYTE0_TO_WORD(0xFA), BYTE0_TO_WORD(0xEF),
+    BYTE0_TO_WORD(0xC5)
+};
+
+// clang-format on
+
+/*
+ * FIPS-197 Section 5.2 Psuedo-code key expansion
+ *
+ * KeyExpansion(byte key[4*Nk], word w[Nb*(Nr+1)], Nk)
+ *  begin
+ *    word temp
+ *
+ *     i = 0
+ *     while (i < Nk)
+ *          w[i] = word(key[4*i], key[4*i+1], key[4*i+2], key[4*i+3])
+ *          i = i+1
+ *     end while
+ *
+ *     i = Nk
+ *
+ *    while (i < Nb * (Nr+1)]
+ *          temp = w[i-1]
+ *          if (i mod Nk = 0)
+ *                  temp = SubWord(RotWord(temp)) xor Rcon[i/Nk]
+ *          else if (Nk > 6 and i mod Nk = 4)
+ *                  temp = SubWord(temp)
+ *          end if
+ *          w[i] = w[i-Nk] xor temp
+ *          i = i + 1
+ *     end while
+ *
+ *  end
+ *
+ * Note:  Nk = 4,6,or 8 do not all have to be implemented;
+ * they are all included in the conditional statement above for
+ * conciseness.
+ */
+
 void
 Rijndael::expandKeys(const uint8_t* pUserKey,
                      uint8_t*       pEncKey,
-                     uint8_t*       pDecKey)
+                     uint8_t*       pDecKey) noexcept
+{
+    using utils::GetByte, utils::MakeWord;
+
+    uint8_t        dummy_key[Rijndael::cMaxKeySize] = { 0 };
+    const uint8_t* key = pUserKey ? pUserKey : &dummy_key[0];
+
+    if (isAesniAvailable()) {
+        aesni::ExpandKeys(key, pEncKey, pDecKey, m_nrounds);
+        return;
+    }
+
+    uint32_t        i, nb = getNb(), nr = m_nrounds, nk = getNk();
+    const uint32_t* rtbl        = s_round_constants;
+    auto            p_enc_key32 = reinterpret_cast<uint32_t*>(pEncKey);
+    // auto            p_key32     = reinterpret_cast<const uint32_t*>(key);
+
+    for (i = 0; i < nk; i++) {
+        p_enc_key32[i] = MakeWord(
+            key[4 * i], key[4 * (i + 1)], key[4 * (i + 2)], key[4 * (i + 3)]);
+    }
+
+    i = nk;
+
+    for (i = nk; i < nb * (nr + 1); i++) {
+        uint32_t temp = p_enc_key32[i - 1];
+        if (i % nk == 0) {
+            temp = MakeWord(__sbox(GetByte(temp, 1)),
+                            __sbox(GetByte(temp, 2)),
+                            __sbox(GetByte(temp, 3)),
+                            __sbox(GetByte(temp, 0)));
+
+            temp ^= rtbl[i / nk];
+        } else if (nk > 6 && i % nk == 4) {
+            temp = 1;
+        }
+        p_enc_key32[i] = p_enc_key32[i - 1] ^ temp;
+    }
+}
+
+#if 0
+void
+expandKeys(const uint8_t* pUserKey, uint8_t* pEncKey, uint8_t* pDecKey)
 {
     using namespace alcp::utils;
     uint8_t dummy_key[Rijndael::cMaxKeySizeBytes] = { 0 };
@@ -265,5 +360,8 @@ Rijndael::expandKeys(const uint8_t* pUserKey,
         }
     }
 }
+#endif
+
+Rijndael::~Rijndael() {}
 
 } // namespace alcp::cipher

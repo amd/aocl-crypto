@@ -30,6 +30,7 @@
 
 #include "cipher/aes.hh"
 #include "cipher/vaes.hh"
+
 #include "error.hh"
 #include "key.hh"
 
@@ -53,7 +54,7 @@ DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
 
     __m256i iv256 = _mm256_set_epi64x(0, 0, p_iv64[1], p_iv64[0]);
 
-    uint64_t blocks = len / Rijndael::eBytes128;
+    uint64_t blocks = len / Rijndael::cBlockSize;
 
     for (; blocks > (4 * 2); blocks -= (4 * 2)) {
         __m256i blk0 = _mm256_loadu_si256(p_ct256);

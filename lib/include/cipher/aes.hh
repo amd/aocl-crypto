@@ -41,40 +41,60 @@
 #include "cipher.hh"
 #include "exception.hh"
 
+#include "utils/bits.hh"
+
 namespace alcp::cipher {
 
 class Rijndael : public alcp::BlockCipher
 //, public Algorithm
 {
   public:
-    static int constexpr cAlignment     = 16;
-    static int constexpr cAlignmentWord = cAlignment / 4;
+    static uint32 constexpr cAlignment     = 16;
+    static uint32 constexpr cAlignmentWord = cAlignment / utils::BytesPerWord;
 
-    static int constexpr cMinKeySize      = 128;
-    static int constexpr cMaxKeySize      = 256;
-    static int constexpr cMaxKeySizeBytes = cMaxKeySize / 8;
+    static uint32 constexpr cMinKeySizeBits = 128;
+    static uint32 constexpr cMaxKeySizeBits = 256;
+    static uint32 constexpr cMaxKeySize = cMaxKeySizeBits / utils::BitsPerByte;
 
-    static int constexpr cMaxRounds = 14;
+    /*
+     * FIPS-197  Chapter5, Figure-4
+     *                Key Length         Block Size     No. of Rounds
+     *                (Nk words)         (Nb words)      (Nr)
+     *   AES-128         4               4               10
+     *   AES-192         6               4               12
+     *   AES-256         8               4               14
+     *
+     */
+    static uint32 constexpr cBlockSizeBits = 128;
+    static uint32 constexpr cBlockSize = cBlockSizeBits / utils::BitsPerByte;
+    static uint32 constexpr cBlockSizeWord = cBlockSize / utils::BytesPerWord;
+
+    static uint32 constexpr cMaxRounds = 14;
 
     /* Message size, key size, etc */
-    enum BlockSize
+    enum BlockSize : uint32_t
     {
         eBits128 = 128,
         eBits192 = 192,
         eBits256 = 256,
+    };
 
-        eBytes128 = eBits128 / 8,
-        eBytes192 = eBits192 / 8,
-        eBytes256 = eBits256 / 8,
+    struct Params
+    {
+        uint32 Nk;
+        uint32 Nb;
+        uint32 Nr;
+    };
 
-        eWords128 = eBytes128 / 4,
-        eWords192 = eBytes192 / 4,
-        eWords256 = eBytes256 / 4,
+    const std::map<BlockSize, Params> ParamsMap = {
+        { eBits128, { 4, 4, 10 } },
+        { eBits192, { 6, 4, 12 } },
+        { eBits256, { 8, 4, 14 } },
     };
 
     static BlockSize BitsToBlockSize(int iVal)
     {
-        BlockSize bs = eBits128;
+        BlockSize bs;
         // clang-format off
         switch (iVal) {
             case 128: bs = eBits128; break;
@@ -86,14 +106,20 @@ class Rijndael : public alcp::BlockCipher
         return bs;
     }
 
-    const std::map<BlockSize, int> RoundMap = {
-        { eBits128, 10 },  { eBits192, 12 },  { eBits256, 14 },
-        { eBytes128, 10 }, { eBytes192, 12 }, { eBytes256, 14 },
-    };
+    /* TODO: Use bit/byte conversion from utils */
+    constexpr uint32_t BitsToWords(uint32_t cBits)
+    {
+        return utils::BytesInBits(int(m_block_size));
+    }
 
-    constexpr int BitsToBytes(int cBits) { return cBits / 8; }
-    constexpr int BitsToWord(int cBits) { return cBits / 32; }
-    constexpr int BytesToWord(int cBytes) { return cBytes / 4; }
+    /* Nk - number of words in key128/key192/key256 */
+    constexpr uint32 getNk() { return m_nk; }
+
+    /* Nr - Number of rounds */
+    constexpr uint32 getNr() { return m_nrounds; }
+
+    /* Nb - No of words in a block (block is always 128-bits) */
+    constexpr uint32_t getNb() { return 4 * utils::BytesPerWord; }
 
   public:
     uint64_t       getRounds() { return m_nrounds; }
@@ -104,12 +130,20 @@ class Rijndael : public alcp::BlockCipher
     Rijndael() {}
 
     Rijndael(const alc_key_info_t& rKeyInfo)
+        : Rijndael{}
     {
-        int len      = rKeyInfo.len;
-        m_block_size = BitsToBlockSize(len);
-        m_nrounds    = RoundMap.at(m_block_size);
+        setUp(rKeyInfo);
+    }
 
-        m_key_size = BitsToBytes(len);
+    void setUp(const alc_key_info_t& rKeyInfo)
+    {
+        int len           = rKeyInfo.len;
+        m_block_size      = BitsToBlockSize(len);
+        const Params& prm = ParamsMap.at(m_block_size);
+        m_nrounds         = prm.Nr;
+        m_nk              = prm.Nk;
+
+        m_key_size = len / utils::BitsPerByte;
 
         /* Encryption and Decryption key offsets */
         m_enc_key = &m_round_key[0];
@@ -119,27 +153,29 @@ class Rijndael : public alcp::BlockCipher
         expandKeys(rKeyInfo.key, m_enc_key, m_dec_key);
     }
 
-    virtual ~Rijndael() {}
+    virtual ~Rijndael();
 
     void expandKeys(const uint8_t* pUserKey,
                     uint8_t*       pEncKey,
-                    uint8_t*       pDecKey);
+                    uint8_t*       pDecKey) noexcept;
 
-    void subBytes(uint8_t state[][4]);
-    void shiftRows(uint8_t state[][4]);
-    void mixColumns(uint8_t state[][4]);
-    void addRoundKey(uint8_t state[][4], uint8_t k[][4]);
+    void subBytes(uint8_t state[][4]) noexcept;
+    void shiftRows(uint8_t state[][4]) noexcept;
+    void mixColumns(uint8_t state[][4]) noexcept;
+    void addRoundKey(uint8_t state[][4], uint8_t k[][4]) noexcept;
 
 #define RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
 #define RIJ_ALIGN           (16)
   protected:
     /* +2 as we store actual key as well */
-    uint8_t  m_round_key[RIJ_SIZE_ALIGNED(cMaxKeySizeBytes) * (cMaxRounds + 2)];
+    uint8_t  m_round_key[RIJ_SIZE_ALIGNED(cMaxKeySize) * (cMaxRounds + 2)];
     uint8_t* m_enc_key; /* encryption key: points to offset in 'm_key' */
     uint8_t* m_dec_key; /* decryption key: points to offset in 'm_key' */
 
-    uint64_t  m_nrounds;
-    uint64_t  m_key_size;
+    uint64_t  m_nrounds;  /* no of rounds */
+    uint64_t  m_ncolumns; /* no of columns in a input block seen as matrix */
+    uint64_t  m_key_size; /* key size in bits */
+    uint64_t  m_nk;       /* Nk of FIPS-197 */
     BlockSize m_block_size;
 
   private:
@@ -151,6 +187,9 @@ class Rijndael : public alcp::BlockCipher
  * \notes       AES is currently same as Rijndael, This may be renamed to
  *              other as well in the future.
  *
+ * TODO: We need to move the exception to an init() function. as the constructor
+ * is notes fully complete, and exception would cause destructor to be called on
+ * object that is not fully constructed
  */
 class Aes : public Rijndael
 {
@@ -159,14 +198,25 @@ class Aes : public Rijndael
         : Rijndael{ keyInfo }
         , m_mode{ aesInfo.mode }
 
-    {}
+    { // clang-format off
+        switch (keyInfo.len_type) {
+            case ALC_KEY_LEN_128: m_ncolumns = 4; m_nk = 4; break;
+            case ALC_KEY_LEN_192: m_ncolumns = 5; m_nk = 6; break;
+            case ALC_KEY_LEN_256: m_ncolumns = 6; m_nk = 8; break;
+            default:
+                InvalidArgumentException("Length not supported");
+                break;
+        }
+        // clang-format on
+    }
 
   protected:
-    Aes() {}
+    Aes() { m_this = this; }
     virtual ~Aes() {}
 
   protected:
     alc_aes_mode_t m_mode;
+    void*          m_this;
 };
 
 /*
