@@ -27,28 +27,29 @@
  */
 
 #include "rng.hh"
+#include "capi/rng/builder.hh"
 
 #include "error.hh"
 
 EXTERN_C_BEGIN
 
 uint64_t
-alcp_rng_context_size(const alc_rng_info_t rng_info)
+alcp_rng_context_size(const alc_rng_info_p pRngInfo)
 {
-    uint64_t size = sizeof(alcp::rng_Handle);
+    uint64_t size = sizeof(alcp::rng::Context);
     return size;
 }
 
 alc_error_t
-alcp_rng_supported(const alc_rng_info_t* tt)
+alcp_rng_supported(const alc_rng_info_p pRngInfo)
 {
     alc_error_t error = ALC_ERROR_NONE;
 
-    switch (tt->r_type) {
+    switch (pRngInfo->ri_type) {
         case ALC_RNG_TYPE_DESCRETE:
-            switch (tt->r_distrib) {
+            switch (pRngInfo->ri_distrib) {
                 case ALC_RNG_DISTRIB_UNIFORM:
-                    switch (tt->r_source) {
+                    switch (pRngInfo->ri_source) {
                         case ALC_RNG_SOURCE_OS:
                             break;
                         case ALC_RNG_SOURCE_ARCH:
@@ -71,20 +72,21 @@ alcp_rng_supported(const alc_rng_info_t* tt)
 }
 
 alc_error_t
-alcp_rng_request(const alc_rng_info_t* tt, alc_rng_handle_t* ctx)
+alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pHandle)
 {
     alc_error_t error = ALC_ERROR_NOT_SUPPORTED;
     /*
      * TODO: Move this to builder, find a way to check support without redundant
      * code
      */
-    switch (tt->r_type) {
+    switch (pRngInfo->ri_type) {
         case ALC_RNG_TYPE_DESCRETE:
-            switch (tt->r_distrib) {
+            switch (pRngInfo->ri_distrib) {
                 case ALC_RNG_DISTRIB_UNIFORM:
-                    error = alcp::rng::RngBuilder::Build(
-                        tt, static_cast<alcp::rng_Handle*>(ctx->context));
+                    { auto ctx = static_cast<alcp::rng::Context*>(pHandle->rh_context);
+                    error = alcp::rng::RngBuilder::Build(*pRngInfo, *ctx);
                     break;
+                    }
                 default:
                     error = ALC_ERROR_NOT_SUPPORTED;
                     break;
@@ -97,28 +99,28 @@ alcp_rng_request(const alc_rng_info_t* tt, alc_rng_handle_t* ctx)
 }
 
 alc_error_t
-alcp_rng_gen_random(alc_rng_handle_t* tt,
-                    uint8_t*          buf, /* RNG output buffer */
-                    uint64_t          size /* output buffer size */
+alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
+                    uint8_t*         buf, /* RNG output buffer */
+                    uint64_t         size /* output buffer size */
 )
 {
-    alcp::rng_Handle* cntxt = (alcp::rng_Handle*)tt->context;
-    uint64_t          randn = 0;
-    int               tries = 10;
-
-    if (buf == NULL) {
+    if (buf == nullptr) {
         return ALC_ERROR_INVALID_ARG;
     }
 
-    randn += cntxt->read_random(cntxt->m_rng, buf, size);
+    alcp::rng::Context* ctx   = (alcp::rng::Context*)pRngHandle->rh_context;
+
+    ctx->read_random(ctx->m_rng, buf, size);
 
     return ALC_ERROR_NONE;
 }
 
 alc_error_t
-alcp_rng_finish(alc_rng_handle_t* tt)
+alcp_rng_finish(alc_rng_handle_p pRngHandle)
 {
-    delete ((static_cast<alcp::rng_Handle*>(tt->context))->m_rng);
+    alcp::rng::Context* ctx   = (alcp::rng::Context*)pRngHandle->rh_context;
+
+    ctx->finish(ctx->m_rng);
 
     return ALC_ERROR_NONE;
 }

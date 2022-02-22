@@ -26,8 +26,18 @@
  *
  */
 
-#include "rng.hh"
-#include "error.hh"
-#include <iostream>
+#pragma once
 
-// No use for this file for now.. TODO: Delete this file..
+#include "alcp/error.h"
+
+namespace alcp::rng {
+
+struct Context
+{
+    void* m_rng;
+
+    alc_error_t (*read_random)(void* pRng, uint8_t* buffer, int size);
+    alc_error_t (*finish)(void* pRng);
+};
+
+} // namespace alcp::rng

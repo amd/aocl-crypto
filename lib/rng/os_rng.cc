@@ -26,60 +26,55 @@
  *
  */
 
-#pragma once
+#include "error.hh"
+#include "rng.hh"
+#include <iostream>
+#ifndef WIN32
+#include <sys/random.h>
+#endif
 
-#include <alcp/rng.h>
-
-#include "types.hh"
+// Enable debug for debugging the code
+// #define DEBUG
 
 namespace alcp::rng {
 
-class Interface
+alc_error_t
+OsRng::readRandom(uint8_t* pBuf, uint64 size)
 {
-  public:
-    Interface() {}
+#ifdef DEBUG
+    printf("Engine linux_urandom64\n");
+#endif
+    // Linux Systemcall to get random values.
+    uint64 out = getrandom(pBuf, size, 0);
 
-  public:
-    // virtual alc_error_t engineDefault(uint8* pBuf, uint64 size) = 0;
-    virtual alc_error_t readRandom(uint8* pBuf, uint64 size) = 0;
-    virtual void        finish()                             = 0;
+    assert(out == size);
+    /* FIXME: Just to get rid of unused-variable compiler message */
+    out = out;
 
-  protected:
-    virtual ~Interface() {}
-};
+    return ALC_ERROR_NONE;
+}
 
-class Rng : public Interface
+alc_error_t
+OsRng::readUrandom(uint8_t* pBuf, uint64 size)
 {
-  protected:
-    Rng()          = default;
-    virtual ~Rng() = default;
+#ifdef DEBUG
+    printf("Engine linux_random64\n");
+#endif
+    // Linux Systemcall to get random values.
+    uint64 out = getrandom(pBuf, size, GRND_RANDOM);
 
-  private:
-    bool m_initialized = false;
-};
+    assert(out == size);
 
-class OsRng final : public Rng
-{
-  public:
-    OsRng() {}
-    explicit OsRng(const alc_rng_info_t& rRnginfo);
-    ~OsRng() {}
+    /* FIXME: Just to get rid of unused-variable compiler message */
+    out = out;
 
-  public:
-    alc_error_t readRandom(uint8* pBuf, uint64 size);
-    alc_error_t readUrandom(uint8* buffer, uint64 size);
-    void        finish() final;
-};
+    return ALC_ERROR_NONE;
+}
 
-class ArchRng : public Rng
-{
-  public:
-    ArchRng() {}
-    explicit ArchRng(const alc_rng_info_t& rRnginfo);
-    ~ArchRng() {}
+OsRng::OsRng(const alc_rng_info_t& rRngInfo) {}
 
-    alc_error_t readRandom(uint8* pBuf, uint64 size) final;
-    void        finish() final;
-};
+void
+OsRng::finish()
+{}
 
 } // namespace alcp::rng

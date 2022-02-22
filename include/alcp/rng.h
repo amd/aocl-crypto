@@ -26,8 +26,9 @@
  *
  */
 
-#ifndef __RNG_H
-#define __RNG_H
+#ifndef _ALCP_RNG_H_
+#define _ALCP_RNG_H_ 2
+
 #include "error.h"
 #include <alcp/macros.h>
 #include <stdint.h>
@@ -88,41 +89,113 @@ typedef enum
     ALC_RNG_DISTRIB_MAX,
 } alc_rng_distrib_t;
 
-typedef enum
+typedef enum _alc_rng_algo_flags
 {
-    ALC_DUMMY_FLAG,
+    ALC_RNG_FLAG_DUMMY,
 } alc_rng_algo_flags_t;
 
-typedef struct
+typedef struct _alc_rng_info
 {
-    alc_rng_type_t       r_type;
-    alc_rng_source_t     r_source;
-    alc_rng_distrib_t    r_distrib;
-    alc_rng_algo_flags_t r_flags;
-} alc_rng_info_t;
+    alc_rng_type_t       ri_type;
+    alc_rng_source_t     ri_source;
+    alc_rng_distrib_t    ri_distrib;
+    alc_rng_algo_flags_t ri_flags;
+} alc_rng_info_t, *alc_rng_info_p;
 
 typedef struct
 {
-    void* context;
-} alc_rng_handle_t;
+    void* rh_context;
+} alc_rng_handle_t, *alc_rng_handle_p;
 
+/**
+ * \brief   Query Library if the given configuration is supported
+ * \notes
+ *
+ * \param   pRngInfo      Pointer to alc_rng_info_t structure
+ *
+ * \return  alc_error_t     Error code
+ */
+alc_error_t
+alcp_rng_supported(const alc_rng_info_p pRngInfo);
+
+/**
+ * \brief   Get the context/session size
+ *
+ * \notes       User is expected to allocate for the session
+ *               this function returns size to be allocated
+ *
+ * \param   pRngInfo Pointer to RNG configuration
+ *
+ * \return  alc_error_t     Error code
+ */
 uint64_t
-alcp_rng_context_size(const alc_rng_info_t rng_info);
+alcp_rng_context_size(const alc_rng_info_p pRngInfo);
 
+/**
+ * \brief       Request an handle for given RNG configuration
+ * \notes       Requested algorithm may be first checked using
+ *              alcp_rng_context_size() and pHandle as allocated by user.
+ *
+ * \param       pRngInfo        Pointer to RNG configuration
+ * \param       pRngHandle      Pointer to user allocated session
+ * \return      alc_error_t     Error code
+ */
 alc_error_t
-alcp_rng_supported(const alc_rng_info_t* tt);
+alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pRngHandle);
 
+/**
+ * \brief   Generate and fill buffer with random numbers
+ * \notes
+ *
+ * \param   pRngHandle  Pointer to Handle
+ * \param   pBuf        Pointer buffer that needs to be filled with random
+ *                      numbers
+ * \param   size        size of pBuf
+ *
+ * \return  alc_error_t     Error code
+ */
 alc_error_t
-alcp_rng_request(const alc_rng_info_t* tt, alc_rng_handle_t* cntxt);
-
-alc_error_t
-alcp_rng_gen_random(alc_rng_handle_t* tt,
-                    uint8_t*          buf, /* RNG output buffer */
-                    uint64_t          size /* output buffer size */
+alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
+                    uint8_t*         pBuf, /* RNG output buffer */
+                    uint64_t         size  /* output buffer size */
 );
 
+/**
+ * \brief       Initialize a random number generator
+ *
+ * \notes       Some hardware RNGs require initialization
+ *
+ * \param   rng_handle      Pointer to handle returned in alcp_rng_request()
+ *
+ * \return  alc_error_t     Error code
+ */
+alc_error_t
+alcp_rng_init(alc_rng_handle_p pRngHandle);
+
+/**
+ * \brief   Seed a PRNG or other if supported
+ *
+ * \notes
+ *
+ * \param   rng_handle      Pointer to user allocated handle
+ * \param   seed           Pointer to seed
+ * \param   size           Length of seed in bytes
+ *
+ * \return  alc_error_t     Error code, usually ALC_ERROR_NONE
+ */
+alc_error_t
+alcp_rng_seed(alc_rng_handle_t* rng_handle, const uint8_t* seed, uint64_t size);
+
+/**
+ * \brief   Complete a session
+ * \notes   Completes the session which was previously requested using
+ *              alcp_rng_request()
+ * \param   rng_handle      Pointer to handle
+ * \return  alc_error_t     Error code
+ */
 alc_error_t
 alcp_rng_finish(alc_rng_handle_t* tt);
 
 EXTERN_C_END
+
 #endif

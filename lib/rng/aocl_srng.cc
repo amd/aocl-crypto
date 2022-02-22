@@ -26,16 +26,15 @@
  *
  */
 #include "rng.hh"
-#include "alcp/macros.h"
-// #include <secrng.h>
-#include <stdio.h>
 
+// #include <secrng.h>
 // Enable debug for debugging the code
 // #define DEBUG
 
 namespace alcp::rng {
-int
-ArchRng::rdRandReadBytes(uint8_t* buffer, int buffersize)
+
+alc_error_t
+ArchRng::readRandom(uint8_t* pBuf, uint64 size)
 {
 #ifdef DEBUG
     printf("Engine amd_rdrand_bytes\n");
@@ -58,12 +57,14 @@ ArchRng::rdRandReadBytes(uint8_t* buffer, int buffersize)
     }
     return opt;
 #else
-    return -1; // Error not implemented
+    return ALC_ERROR_NOT_SUPPORTED; // Error not implemented
 #endif
 }
-int
-ArchRng::engineDefault(uint8_t* buffer, int buffersize)
-{
-    return rdRandReadBytes(buffer, buffersize);
-}
+
+ArchRng::ArchRng(const alc_rng_info_t& rRngInfo) {}
+
+void
+ArchRng::finish()
+{}
+
 } // namespace alcp::rng

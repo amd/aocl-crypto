@@ -26,40 +26,20 @@
  *
  */
 
-#include "error.hh"
-#include "rng.hh"
-#include <iostream>
-#ifndef WIN32
-#include <sys/random.h>
-#endif
+#pragma once
 
-// Enable debug for debugging the code
-// #define DEBUG
+#include "alcp/error.h"
+#include "alcp/rng.h"
+
+#include "capi/rng/ctx.hh"
+
+#include "rng.hh"
 
 namespace alcp::rng {
-int
-OsRng::randomRead(uint8_t* buffer, int buffersize)
+class RngBuilder
 {
-#ifdef DEBUG
-    printf("Engine linux_urandom64\n");
-#endif
-    // Linux Systemcall to get random values.
-    int out = getrandom(buffer, buffersize, 0);
-    return out;
-}
-int
-OsRng::urandomRead(uint8_t* buffer, int buffersize)
-{
-#ifdef DEBUG
-    printf("Engine linux_random64\n");
-#endif
-    // Linux Systemcall to get random values.
-    int out = getrandom(buffer, buffersize, GRND_RANDOM);
-    return out;
-}
-int
-OsRng::engineDefault(uint8_t* buffer, int buffersize)
-{
-    return urandomRead(buffer, buffersize);
-}
+  public:
+    static alc_error_t Build(const alc_rng_info_t& rRngInfo, Context& ctx);
+};
+
 } // namespace alcp::rng
