@@ -1,0 +1,19 @@
+FILE(GLOB RNG_SRCS "*.cc" "*.c" )
+
+IF (MSVC)
+	SET(ARCH_COMPILE_FLAG /arch:znver3) # Replace with something windows rdrand
+ELSE()
+	SET(ARCH_COMPILE_FLAG -fPIC -march=native)
+ENDIF()
+
+MESSAGE("${ARCH_COMPILE_FLAG}")
+
+ADD_COMPILE_OPTIONS(${ARCH_COMPILE_FLAG})
+
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib/include)
+
+ADD_LIBRARY(rng
+	STATIC
+	${RNG_SRCS})
+
+TARGET_LINK_LIBRARIES(alcp PRIVATE rng)
