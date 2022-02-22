@@ -105,7 +105,7 @@ class Sha512::Impl
 
     alc_error_t update(const uint8* buf, uint64 size);
     alc_error_t finalize(const uint8* buf, uint64 size);
-    alc_error_t copyHash(uint8* buf, uint64 size);
+    alc_error_t copyHash(uint8* buf, uint64 size) const;
 
     alc_error_t setIv(const void* pIv, uint64 size);
 
@@ -157,24 +157,14 @@ Sha512::Impl::setIv(const void* pIv, uint64 size)
 Sha512::Impl::~Impl() {}
 
 alc_error_t
-Sha512::Impl::copyHash(uint8* pHash, uint64 size)
+Sha512::Impl::copyHash(uint8* pHash, uint64 size) const 
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    if (pHash == nullptr) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
-    }
-
-    if (size < cHashSize) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
-    }
-
-    if (!Error::isError(err)) {
-        uint64* pBuff64 = (uint64*)pHash;
-        for (uint64 i = 0; i < cHashSizeWords; ++i) {
-            *pBuff64++ = utils::ToBigEndian(m_hash[i]);
-        }
-    }
+    utils::CopyBlockWith<uint64>(pHash, 
+                                 m_hash, 
+                                 cHashSize, 
+                                 utils::ToBigEndian<uint64>);
 
     return err;
 }
@@ -412,7 +402,7 @@ Sha512::Impl::finalize(const uint8* pBuf, uint64 size)
 
 Sha512::Sha512()
     : Sha2{ "sha2-512" }
-    , m_pimpl{ new Sha512::Impl() }
+    , m_pimpl{ std::make_unique<Sha512::Impl>() }
 
 {
     m_mode             = ALC_SHA2_512;
@@ -426,12 +416,12 @@ Sha512::Sha512(const alc_digest_info_t& rDigestInfo)
 
 Sha512::~Sha512()
 {
-    delete m_pimpl;
 }
+
 alc_error_t
 Sha512::setIv(const void* pIv, uint64_t size)
 {
-    return m_pimpl->setIv(pIv, size);
+    return pImpl()->setIv(pIv, size);
 }
 
 alc_error_t
@@ -444,7 +434,7 @@ Sha512::update(const uint8* pSrc, uint64 size)
     }
 
     if (!alcp_is_error(err))
-        err = m_pimpl->update(pSrc, size);
+        err = pImpl()->update(pSrc, size);
 
     return err;
 }
@@ -454,7 +444,7 @@ Sha512::finalize(const uint8* pSrc, uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    err = m_pimpl->finalize(pSrc, size);
+    err = pImpl()->finalize(pSrc, size);
 
     return err;
 }
@@ -462,14 +452,28 @@ Sha512::finalize(const uint8* pSrc, uint64 size)
 void
 Sha512::finish()
 {
-    delete m_pimpl;
-    m_pimpl = nullptr;
+    //delete pImpl();
+    //pImpl() = nullptr;
 }
 
 alc_error_t
 Sha512::copyHash(uint8* pHash, uint64 size) const
 {
-    return m_pimpl->copyHash(pHash, size);
+    alc_error_t err = ALC_ERROR_NONE;
+
+    if (pHash == nullptr) {
+        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+    }
+
+    if (size < cHashSize) {
+        Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
+    }
+
+    if (!Error::isError(err)) {
+        err = pImpl()->copyHash(pHash, size);
+    }
+
+    return err;
 }
 
 } // namespace alcp::digest

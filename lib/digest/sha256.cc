@@ -89,7 +89,7 @@ class Sha256::Impl
 
     alc_error_t update(const uint8* buf, uint64 size);
     alc_error_t finalize(const uint8* buf, uint64 size);
-    alc_error_t copyHash(uint8* buf, uint64 size);
+    alc_error_t copyHash(uint8* buf, uint64 size) const;
 
     alc_error_t setIv(const void* pIv, uint64 size);
 
@@ -141,26 +141,14 @@ Sha256::Impl::setIv(const void* pIv, uint64 size)
 Sha256::Impl::~Impl() {}
 
 alc_error_t
-Sha256::Impl::copyHash(uint8* pHash, uint64 size)
+Sha256::Impl::copyHash(uint8* pHash, uint64 size) const
 {
-    alc_error_t err = ALC_ERROR_NONE;
+    utils::CopyBlockWith<uint32>(pHash,
+                                 m_hash, 
+                                 cHashSize, 
+                                 utils::ToBigEndian<uint32>);
 
-    if (pHash == nullptr) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
-    }
-
-    if (size < cHashSize) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
-    }
-
-    if (!Error::isError(err)) {
-        uint32* pBuff32 = (uint32*)pHash;
-        for (uint64 i = 0; i < cHashSizeWords; ++i) {
-            *pBuff32++ = utils::ToBigEndian(m_hash[i]);
-        }
-    }
-
-    return err;
+    return ALC_ERROR_NONE;
 }
 
 void
@@ -384,7 +372,7 @@ Sha256::Impl::finalize(const uint8* pBuf, uint64 size)
 
 Sha256::Sha256()
     : Sha2{ "sha2-256" }
-    , m_pimpl{ new Sha256::Impl() }
+    , m_pimpl{ std::make_unique<Sha256::Impl>() }
 
 {
     m_mode             = ALC_SHA2_256;
@@ -398,12 +386,12 @@ Sha256::Sha256(const alc_digest_info_t& rDigestInfo)
 
 Sha256::~Sha256()
 {
-    delete m_pimpl;
 }
+
 alc_error_t
 Sha256::setIv(const void* pIv, uint64_t size)
 {
-    return m_pimpl->setIv(pIv, size);
+    return pImpl()->setIv(pIv, size);
 }
 
 alc_error_t
@@ -416,7 +404,7 @@ Sha256::update(const uint8* pSrc, uint64 size)
     }
 
     if (!alcp_is_error(err))
-        err = m_pimpl->update(pSrc, size);
+        err = pImpl()->update(pSrc, size);
 
     return err;
 }
@@ -426,7 +414,27 @@ Sha256::finalize(const uint8* pSrc, uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    err = m_pimpl->finalize(pSrc, size);
+    err = pImpl()->finalize(pSrc, size);
+
+    return err;
+}
+
+alc_error_t
+Sha256::copyHash(uint8* pHash, uint64 size) const
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    if (pHash == nullptr) {
+        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+    }
+
+    if (size < cHashSize) {
+        Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
+    }
+
+    if (!Error::isError(err)) {
+        err =  pImpl()->copyHash(pHash, size);
+    }
 
     return err;
 }
@@ -434,16 +442,11 @@ Sha256::finalize(const uint8* pSrc, uint64 size)
 void
 Sha256::finish()
 {
-    delete m_pimpl;
-    m_pimpl = nullptr;
-}
-
-alc_error_t
-Sha256::copyHash(uint8* pHash, uint64 size) const
-{
-    return m_pimpl->copyHash(pHash, size);
+    //delete pImpl();
+    //pImpl() = nullptr;
 }
 
 Sha2::~Sha2() {}
 
 } // namespace alcp::digest
+

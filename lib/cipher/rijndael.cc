@@ -375,7 +375,7 @@ Rijndael::Impl::expandKeys(const uint8* pUserKey) noexcept
 }
 
 Rijndael::Rijndael()
-    : m_pimpl{ new Rijndael::Impl() }
+    : m_pimpl{ std::make_unique<Rijndael::Impl>() }
 {}
 
 Rijndael::Rijndael(const alc_key_info_t& rKeyInfo)

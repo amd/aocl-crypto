@@ -128,7 +128,9 @@ class Sha256 final : public Sha2
 
   private:
     class Impl;
-    Impl* m_pimpl;
+    const Impl* pImpl() const { return m_pimpl.get(); }
+    Impl* pImpl() { return m_pimpl.get(); }
+    std::unique_ptr<Impl> m_pimpl;
 };
 
 class Sha512 final : public Sha2
@@ -204,8 +206,12 @@ class Sha512 final : public Sha2
 
   private:
     class Impl;
-    Impl* m_pimpl;
+    const Impl *pImpl() const { return m_pimpl.get(); }
+    Impl* pImpl() { return m_pimpl.get(); }
+    std::unique_ptr<Impl> m_pimpl;
 };
+
+
 class Sha224 final : public Sha2
 {
   public:
@@ -220,6 +226,8 @@ class Sha224 final : public Sha2
   private:
     Sha256* m_psha256;
 };
+
+
 class Sha384 final : public Sha2
 {
   public:
