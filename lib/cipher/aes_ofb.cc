@@ -42,13 +42,13 @@ Ofb::decrypt(const uint8_t* pCipherText,
     if (Cipher::isVaesAvailable()) {
         // err = vaes::DecryptOfb(
         err = aesni::DecryptOfb(
-            pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
+            pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
 
         return err;
     }
     if (Cipher::isAesniAvailable()) {
         err = aesni::DecryptOfb(
-            pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
+            pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
 
         return err;
     }
@@ -69,13 +69,13 @@ Ofb::encrypt(const uint8_t* pPlainText,
     if (Cipher::isVaesAvailable()) {
         // err = vaes::EncryptOfb(
         err = aesni::EncryptOfb(
-            pPlainText, pCipherText, len, m_enc_key, m_nrounds, pIv);
+            pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
 
         return err;
     }
     if (Cipher::isAesniAvailable()) {
         err = aesni::EncryptOfb(
-            pPlainText, pCipherText, len, m_enc_key, m_nrounds, pIv);
+            pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
 
         return err;
     }

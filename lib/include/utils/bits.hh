@@ -34,39 +34,9 @@
 
 namespace alcp::utils {
 
-#if 1
 constexpr uint32 BitsPerByte   = 8;
 constexpr uint32 BytesPerWord  = 4;
 constexpr uint32 BytesPerDWord = 8;
-
-#else
-template<typename T>
-constexpr T
-BitsPerByte()
-{
-    return 8;
-}
-
-template<typename T>
-constexpr T
-BytesPerHWord()
-{
-    return 2; /* half word - x86->word */
-}
-template<typename T>
-constexpr T
-BytesPerWord()
-{
-    return 4; /* word -x86->double - word */
-}
-
-template<typename T>
-constexpr T
-BytesPerDWord()
-{
-    return 8; /* dword  - x86->quad-word */
-}
-#endif
 
 template<typename T>
 T

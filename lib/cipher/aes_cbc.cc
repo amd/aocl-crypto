@@ -42,13 +42,13 @@ Cbc::decrypt(const uint8_t* pCipherText,
     if (Cipher::isVaesAvailable()) {
         // err = vaes::DecryptCbc(
         err = aesni::DecryptCbc(
-            pCipherText, pPlainText, len, m_dec_key, m_nrounds, pIv);
+            pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
 
         return err;
     }
     if (Cipher::isAesniAvailable()) {
         err = aesni::DecryptCbc(
-            pCipherText, pPlainText, len, m_dec_key, m_nrounds, pIv);
+            pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
         return err;
     }
 
@@ -68,13 +68,13 @@ Cbc::encrypt(const uint8_t* pPlainText,
     if (Cipher::isVaesAvailable()) {
         // err = vaes::EncryptCbc(
         err = aesni::EncryptCbc(
-            pPlainText, pCipherText, len, m_enc_key, m_nrounds, pIv);
+            pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
 
         return err;
     }
     if (Cipher::isAesniAvailable()) {
         err = aesni::EncryptCbc(
-            pPlainText, pCipherText, len, m_enc_key, m_nrounds, pIv);
+            pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
 
         return err;
     }

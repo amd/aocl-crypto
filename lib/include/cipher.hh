@@ -137,7 +137,7 @@ class Cipher
         /*
          * FIXME: call cpuid::isAesniAvailable() initialize
          */
-        static bool s_aesni_available = true;
+        static bool s_aesni_available = false;
         return s_aesni_available;
     }
 
