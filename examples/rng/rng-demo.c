@@ -46,13 +46,13 @@ main(int argc, char const* argv[])
 {
     unsigned char    buffer[RANDOM_SIZE];
     unsigned char*   out;
-    alc_rng_handle_t ctx;
+    alc_rng_handle_t handle;
     {
         alc_rng_info_t rng_info;
-        rng_info.r_distrib =
+        rng_info.ri_distrib =
             ALC_RNG_DISTRIB_UNIFORM; // Output should be uniform probablilty
-        rng_info.r_source = SOURCE;  // Use OS RNG
-        rng_info.r_type   = ALC_RNG_TYPE_DESCRETE; // Discrete output (uint8)
+        rng_info.ri_source = SOURCE;  // Use OS RNG
+        rng_info.ri_type   = ALC_RNG_TYPE_DESCRETE; // Discrete output (uint8)
 
         /* Erase buffer and prove its empty */
         memset(buffer, 0, RANDOM_SIZE); // Erase buffer
@@ -68,9 +68,9 @@ main(int argc, char const* argv[])
         printf("Support Success\n");
 
         /* Application has to allocate memory*/
-        ctx.context = malloc(alcp_rng_context_size(rng_info));
+        handle.rh_context = malloc(alcp_rng_context_size(&rng_info));
         /* Request context for RNG with RNG info */
-        if (alcp_rng_request(&rng_info, &ctx) != ALC_ERROR_NONE) {
+        if (alcp_rng_request(&rng_info, &handle) != ALC_ERROR_NONE) {
             printf("Request Failed!\n");
             exit(-1);
         }
@@ -79,12 +79,12 @@ main(int argc, char const* argv[])
     }
 
     /* Generate RANDOM_SIZE bytes of random values */
-    if (alcp_rng_gen_random(&ctx, buffer, RANDOM_SIZE) != ALC_ERROR_NONE) {
+    if (alcp_rng_gen_random(&handle, buffer, RANDOM_SIZE) != ALC_ERROR_NONE) {
         printf("Random number generation Failed!\n");
         exit(-1);
     }
 
-    if (alcp_rng_finish(&ctx) != ALC_ERROR_NONE) {
+    if (alcp_rng_finish(&handle) != ALC_ERROR_NONE) {
         printf("Finish Failed!\n");
         exit(-1);
     }
@@ -94,7 +94,7 @@ main(int argc, char const* argv[])
     out = bytesToHexString(buffer, RANDOM_SIZE);
     printf("Random Value in Buffer: %s\n", out);
     free(out);
-    free(ctx.context);
+    free(handle.rh_context);
     return 0;
 }
 
