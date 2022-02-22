@@ -1,0 +1,7 @@
+INCLUDE_DIRECTORIES(
+	"${CMAKE_SOURCE_DIR}/include" 
+	"${CMAKE_SOURCE_DIR}/lib/include")
+
+LINK_LIBRARIES(alcp)
+
+ADD_SUBDIRECTORY(digest)
