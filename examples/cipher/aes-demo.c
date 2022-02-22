@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h> /* for malloc */
 #include <string.h>
-#include <time.h>
+#include <sys/time.h>
 #ifdef WIN32
 #include <Windows.h>
 #endif
