@@ -13,8 +13,10 @@ INCLUDE_DIRECTORIES(
 add_subdirectory(common)
 
 file(GLOB src_common "${CMAKE_SOURCE_DIR}/bench/digest/common/*.cc")
+#file(GLOB src_benchmarks "${CMAKE_SOURCE_DIR}/bench/digest/benchmarks/*.cc")
 
 link_directories("${CMAKE_SOURCE_DIR}/bench/digest/common")
+#link_directories("${CMAKE_SOURCE_DIR}/bench/digest/benchmarks")
 
 set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Werror")
 
