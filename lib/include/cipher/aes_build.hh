@@ -117,6 +117,10 @@ AesBuilder::Build(const alc_aes_info_t& aesInfo,
             err = __build_aes<Ofb>(aesInfo, keyInfo, ctx);
             break;
 
+        case ALC_AES_MODE_CTR:
+            err = __build_aes<Ctr>(aesInfo, keyInfo, ctx);
+            break;
+
         default:
             Error::setGeneric(err, ALC_ERROR_NOT_SUPPORTED);
             break;

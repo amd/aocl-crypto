@@ -71,6 +71,20 @@ namespace alcp::cipher { namespace aesni {
                            int            nRounds,
                            const uint8_t* pIv);
 
+    alc_error_t EncryptCtr(const uint8_t* pPlainText,
+                           uint8_t*       pCipherText,
+                           uint64_t       len,
+                           const uint8_t* pKey,
+                           int            nRounds,
+                           const uint8_t* pIv);
+
+    alc_error_t DecryptCtr(const uint8_t* pCipherText,
+                           uint8_t*       pPlainText,
+                           uint64_t       len,
+                           const uint8_t* pKey,
+                           int            nRounds,
+                           const uint8_t* pIv);
+
     alc_error_t DecryptCfb(const uint8_t* pCipherText,
                            uint8_t*       pPlainText,
                            uint64_t       len,
