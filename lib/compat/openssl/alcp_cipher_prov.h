@@ -45,7 +45,9 @@
 struct _alc_prov_cipher_ctx
 {
     /* Must be first */
-    alc_prov_ctx_t* pc_prov_ctx;
+    alc_prov_ctx_t*     pc_prov_ctx;
+    alc_cipher_handle_t handle;
+    int                 enc_flag;
 
     int               pc_nid;
     EVP_CIPHER*       pc_evp_cipher;

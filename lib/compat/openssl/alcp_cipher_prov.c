@@ -224,17 +224,98 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
 {
     alc_prov_cipher_ctx_p cctx  = vctx;
     alc_cipher_info_p     cinfo = &cctx->pc_cipher_info;
+    alc_error_t           err;
+    // const int             err_size = 256;
+    // uint8_t               err_buf[err_size];
     ENTER();
 
     assert(cinfo->ci_type == ALC_CIPHER_TYPE_AES);
 
     switch (cinfo->ci_mode_data.cm_aes.ai_mode) {
         case ALC_AES_MODE_CFB:
+#ifdef DEBUG
+            printf("Provider: CFB\n");
+#endif
+            break;
+        case ALC_AES_MODE_CBC:
+#ifdef DEBUG
+            printf("Provider: CBC\n");
+#endif
+            break;
+        case ALC_AES_MODE_OFB:
+#ifdef DEBUG
+            printf("Provider: OFB\n");
+#endif
+            break;
+        case ALC_AES_MODE_CTR:
+#ifdef DEBUG
+            printf("Provider: CTR\n");
+#endif
+            break;
+        case ALC_AES_MODE_ECB:
+#ifdef DEBUG
+            printf("Provider: ECB\n");
+#endif
+            break;
+        case ALC_AES_MODE_XTR:
+#ifdef DEBUG
+            printf("Provider: XTR\n");
+#endif
             break;
         default:
-            break;
+            return 0;
+    }
+#ifdef DEBUG
+    printf(
+        "Provider: %d keylen:%ld, key:%p\n", cinfo->key_info.len, keylen, iv);
+#endif
+    cctx->pc_cipher_info.ci_type = ALC_CIPHER_TYPE_AES;
+    // Mode Already set
+    if (iv != NULL) {
+        cctx->pc_cipher_info.ci_mode_data.cm_aes.ai_iv = iv;
+    } else {
+        // iv = OPENSSL_malloc(128); // Don't make sense
+    }
+    cctx->pc_cipher_info.ci_key_info.key  = key;
+    cctx->pc_cipher_info.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
+    cctx->pc_cipher_info.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
+
+    // OpenSSL Speed likes to keep keylen 0
+    if (keylen != 0) {
+        cctx->pc_cipher_info.ci_key_info.len = keylen;
+    } else {
+        cctx->pc_cipher_info.ci_key_info.len = 128;
+        cctx->pc_cipher_info.ci_key_info.key = OPENSSL_malloc(128);
     }
 
+    // Check for support
+    err = alcp_cipher_supported(cinfo);
+    if (alcp_is_error(err)) {
+        printf("Provider: Not supported algorithm!\n");
+        return 0;
+    }
+#ifdef DEBUG
+    else {
+        printf("Provider: Support success!\n");
+    }
+#endif
+
+    // Manually allocate context
+    (cctx->handle).ch_context = OPENSSL_malloc(alcp_cipher_context_size(cinfo));
+
+    // Request handle for the cipher
+    err = alcp_cipher_request(cinfo, &(cctx->handle));
+    if (alcp_is_error(err)) {
+        printf("Provider: Request somehow failed!\n");
+        return 0;
+    }
+#ifdef DEBUG
+    else {
+        printf("Provider: Request success!\n");
+    }
+#endif
+    // Enable Encryption Mode
+    cctx->enc_flag = true;
     EXIT();
     return 1;
 }
@@ -247,10 +328,100 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
                               size_t               ivlen,
                               const OSSL_PARAM     params[])
 {
-    alc_prov_cipher_ctx_p cctx = vctx;
+    alc_prov_cipher_ctx_p cctx  = vctx;
+    alc_cipher_info_p     cinfo = &cctx->pc_cipher_info;
+    alc_error_t           err;
+    // const int             err_size = 256;
+    // uint8_t               err_buf[err_size];
     ENTER();
-    cctx = cctx;
-    return 0;
+    assert(cinfo->ci_type == ALC_CIPHER_TYPE_AES);
+    switch (cinfo->ci_mode_data.cm_aes.ai_mode) {
+        case ALC_AES_MODE_CFB:
+#ifdef DEBUG
+            printf("Provider: CFB\n");
+#endif
+            break;
+        case ALC_AES_MODE_CBC:
+#ifdef DEBUG
+            printf("Provider: CBC\n");
+#endif
+            break;
+        case ALC_AES_MODE_OFB:
+#ifdef DEBUG
+            printf("Provider: OFB\n");
+#endif
+            break;
+        case ALC_AES_MODE_CTR:
+#ifdef DEBUG
+            printf("Provider: CTR\n");
+#endif
+            break;
+        case ALC_AES_MODE_ECB:
+#ifdef DEBUG
+            printf("Provider: ECB\n");
+#endif
+            break;
+        case ALC_AES_MODE_XTR:
+#ifdef DEBUG
+            printf("Provider: XTR\n");
+#endif
+            break;
+        default:
+            return 0;
+    }
+#ifdef DEBUG
+    printf(
+        "Provider: %d keylen:%ld, key:%p\n", cinfo->key_info.len, keylen, iv);
+#endif
+    cctx->pc_cipher_info.ci_type = ALC_CIPHER_TYPE_AES;
+    // Mode Already set
+    if (iv != NULL) {
+        cctx->pc_cipher_info.ci_mode_data.cm_aes.ai_iv = iv;
+    } else {
+        // iv = OPENSSL_malloc(128); // Don't make sense
+    }
+    cctx->pc_cipher_info.ci_key_info.key  = key;
+    cctx->pc_cipher_info.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
+    cctx->pc_cipher_info.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
+
+    // OpenSSL Speed likes to keep keylen 0
+    if (keylen != 0) {
+        cctx->pc_cipher_info.ci_key_info.len = keylen;
+    } else {
+        cctx->pc_cipher_info.ci_key_info.len = 128;
+        cctx->pc_cipher_info.ci_key_info.key = OPENSSL_malloc(128);
+    }
+
+    // Check for support
+    err = alcp_cipher_supported(cinfo);
+    if (alcp_is_error(err)) {
+        printf("Provider: Not supported algorithm!\n");
+        return 0;
+    }
+#ifdef DEBUG
+    else {
+        printf("Provider: Support success!\n");
+    }
+#endif
+
+    // Manually allocate context
+    (cctx->handle).ch_context = OPENSSL_malloc(alcp_cipher_context_size(cinfo));
+
+    // Request handle for the cipher
+    err = alcp_cipher_request(cinfo, &(cctx->handle));
+    if (alcp_is_error(err)) {
+        printf("Provider: Request somehow failed!\n");
+        return 0;
+    }
+#ifdef DEBUG
+    else {
+        printf("Provider: Request success!\n");
+    }
+#endif
+    // Enable Encryption Mode
+    cctx->enc_flag = false;
+    EXIT();
+    return 1;
 }
 
 int
@@ -262,9 +433,40 @@ ALCP_prov_cipher_update(void*                vctx,
                         size_t               inl)
 {
     alc_prov_cipher_ctx_p cctx = vctx;
+    alc_error_t           err;
+    const int             err_size = 256;
+    uint8_t               err_buf[err_size];
     ENTER();
-    cctx = cctx;
-    return 0;
+    if (cctx->enc_flag) {
+        err =
+            alcp_cipher_encrypt(&(cctx->handle),
+                                in,
+                                out,
+                                inl,
+                                cctx->pc_cipher_info.ci_mode_data.cm_aes.ai_iv);
+    } else {
+        err =
+            alcp_cipher_decrypt(&(cctx->handle),
+                                in,
+                                out,
+                                inl,
+                                cctx->pc_cipher_info.ci_mode_data.cm_aes.ai_iv);
+    }
+    // printf("%d\n", cctx->pc_cipher_info.mode_data.aes.mode ==
+    // ALC_AES_MODE_CFB);
+    if (alcp_is_error(err)) {
+        alcp_error_str(err, err_buf, err_size);
+        printf("Provider: Encyption/Decryption Failure! ALCP:%s\n", err_buf);
+        printf("%p,%ld,%p\n", in, inl, out);
+        printf("%d\n",
+               cctx->pc_cipher_info.ci_mode_data.cm_aes.ai_mode
+                   == ALC_AES_MODE_CFB);
+        printf("%p\n", cctx->pc_cipher_info.ci_mode_data.cm_aes.ai_iv);
+        alcp_error_str(err, err_buf, err_size);
+        return 0;
+    }
+    *outl = inl;
+    return 1;
 }
 
 int
@@ -273,14 +475,20 @@ ALCP_prov_cipher_final(void*          vctx,
                        size_t*        outl,
                        size_t         outsize)
 {
-    alc_prov_cipher_ctx_p cctx = vctx;
+    // alc_prov_cipher_ctx_p cctx = vctx;
     ENTER();
-    cctx = cctx;
-    return 0;
+    // Northing to do!
+    *outl = outsize;
+    return 1;
 }
 
 static const char          CIPHER_DEF_PROP[] = "provider=alcp,fips=no";
 extern const OSSL_DISPATCH cfb_functions[];
+extern const OSSL_DISPATCH cbc_functions[];
+extern const OSSL_DISPATCH ofb_functions[];
+extern const OSSL_DISPATCH ctr_functions[];
+extern const OSSL_DISPATCH ecb_functions[];
+extern const OSSL_DISPATCH xtr_functions[];
 const OSSL_ALGORITHM       ALC_prov_ciphers[] = {
     { PROV_NAMES_AES_256_CFB, CIPHER_DEF_PROP, cfb_functions },
     { PROV_NAMES_AES_192_CFB, CIPHER_DEF_PROP, cfb_functions },
@@ -291,6 +499,23 @@ const OSSL_ALGORITHM       ALC_prov_ciphers[] = {
     { PROV_NAMES_AES_256_CFB8, CIPHER_DEF_PROP, cfb_functions },
     { PROV_NAMES_AES_192_CFB8, CIPHER_DEF_PROP, cfb_functions },
     { PROV_NAMES_AES_128_CFB8, CIPHER_DEF_PROP, cfb_functions },
+    { PROV_NAMES_AES_256_CBC, CIPHER_DEF_PROP, cbc_functions },
+    { PROV_NAMES_AES_192_CBC, CIPHER_DEF_PROP, cbc_functions },
+    { PROV_NAMES_AES_128_CBC, CIPHER_DEF_PROP, cbc_functions },
+    { PROV_NAMES_AES_256_OFB, CIPHER_DEF_PROP, ofb_functions },
+    { PROV_NAMES_AES_192_OFB, CIPHER_DEF_PROP, ofb_functions },
+    { PROV_NAMES_AES_128_OFB, CIPHER_DEF_PROP, ofb_functions },
+    { PROV_NAMES_AES_256_CTR, CIPHER_DEF_PROP, ctr_functions },
+    { PROV_NAMES_AES_192_CTR, CIPHER_DEF_PROP, ctr_functions },
+    { PROV_NAMES_AES_128_CTR, CIPHER_DEF_PROP, ctr_functions },
+    { PROV_NAMES_AES_256_ECB, CIPHER_DEF_PROP, ecb_functions },
+    { PROV_NAMES_AES_192_ECB, CIPHER_DEF_PROP, ecb_functions },
+    { PROV_NAMES_AES_128_ECB, CIPHER_DEF_PROP, ecb_functions },
+#if 0
+    { PROV_NAMES_AES_256_XTR, CIPHER_DEF_PROP, xtr_functions },
+    { PROV_NAMES_AES_192_XTR, CIPHER_DEF_PROP, xtr_functions },
+    { PROV_NAMES_AES_128_XTR, CIPHER_DEF_PROP, xtr_functions },
+#endif
     { NULL, NULL, NULL },
 };
 
