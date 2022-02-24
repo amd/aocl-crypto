@@ -2,6 +2,8 @@
 #include <benchmark/benchmark.h>
 #include <iostream>
 #include "common.hh"
+#include "perf.hh"
+#include "conf.hh"
 
 /*move these to a different file later on */
 static void

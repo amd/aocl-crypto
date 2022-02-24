@@ -8,8 +8,6 @@
 #include "alcp/digest.h"
 #include "types.hh"
 
-#define PERF_TEST_LOOP 1000
-
 /* functions for test hash*/
 alc_error_t
 create_hash_session(alc_digest_handle_t * s_dg_handle,
@@ -27,30 +25,5 @@ hash_function(alc_digest_handle_t * s_dg_handle,
 void
 hash_to_string(char string[65], const uint8_t hash[32]);
 
-int
-CheckHashResult(const char * sample_input,
-                    uint8_t * output,
-                    const char * expected_output);
-
-int
-test_hash(_alc_sha2_mode digest_mode,
-		_alc_hash_test_data * test_data);
-
-int
-RunHashConformanceTest(_alc_sha2_mode digest_mode);
-
-int
-RunConformance(_alc_sha2_mode digest_mode,
-               _alc_hash_test_data * test_data,
-               std::vector <string_vector> test_vector);
-
-/*perf*/
-int
-RunHashPerformance(_alc_sha2_mode digest_mode,
-               _alc_hash_test_data * test_data,
-               std::vector <string_vector> test_vector);
-
-int
-RunHashPerformanceTest(_alc_sha2_mode digest_mode);
 
 #endif //COMMON_HH_

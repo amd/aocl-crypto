@@ -2,10 +2,10 @@
 #define DIGEST_DATA_HH_
 
 #include <string.h>
-#include<vector>
+#include <vector>
 #include "common.hh"
 
-std::vector <string_vector> STRING_VECTORS_SHA224 = {
+static std::vector <string_vector> STRING_VECTORS_SHA224 = {
         { "",
 	  "d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f" },
         { "abc", 
@@ -23,7 +23,7 @@ std::vector <string_vector> STRING_VECTORS_SHA224 = {
           "c97ca9a559850ce97a04a96def6d99a9e0e0e2ab14e6b8df265fc0b3" }
 };
 
-std::vector <string_vector> STRING_VECTORS_SHA256 = {
+static std::vector <string_vector> STRING_VECTORS_SHA256 = {
     { "",
           "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" },
         { "abc",
