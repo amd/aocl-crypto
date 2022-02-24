@@ -36,7 +36,6 @@ test_hash(_alc_sha2_mode digest_mode, _alc_hash_test_data * test_data)
         err = hash_function(&s_dg_handle,
                             sample_input,
                             strlen(sample_input),
-                            //sample_output,
 			    test_data->output_data,
                             sizeof(sample_output));
     }
@@ -46,33 +45,40 @@ test_hash(_alc_sha2_mode digest_mode, _alc_hash_test_data * test_data)
 
 int RunHashConformanceTest(_alc_sha2_mode digest_mode)
 {
-   /* this comes from digest_data.hh */
-    struct string_vector* test_data_array;
+    _alc_hash_test_data test_data;
+    /* Add more SHA digest cases here */
+    switch (digest_mode)
+    {
+    case ALC_SHA2_224:
+        RunConformance(digest_mode, &test_data, STRING_VECTORS_SHA224);
+        break;
+    
+    default:
+        break;
+    }
+
+    return 0;
+}
+
+/* run conformance with the test data provided */
+int RunConformance(_alc_sha2_mode digest_mode,
+               _alc_hash_test_data * test_data,
+               std::vector <string_vector> test_vector)
+{
     const char * sample_input;
     const char * expected_output;
     uint8_t * sample_output;
-    _alc_hash_test_data test_data;    
+    long unsigned int test_data_len = test_vector.size();
+    printf ("Data len: %ld\n", test_data_len);
 
-    /* Add more SHA digest cases here */
-    switch (digest_mode) {
-        case ALC_SHA2_224:
-                test_data_array = STRING_VECTORS_SHA224;
-                break;
-        default:
-                test_data_array = STRING_VECTORS_SHA224;
-                break;
-    }
-
-    /*read it on the go, later*/
-    long unsigned int test_data_len = 7;
     for (long unsigned int i = 0; i < test_data_len; i++) {
-        sample_input    = test_data_array[i].input;
-        expected_output = test_data_array[i].output;
-	test_data.input_data = sample_input;
-	test_hash(digest_mode, &test_data);
-	sample_output = test_data.output_data;
+        sample_input    = test_vector[i].input;
+        expected_output = test_vector[i].output;
+	    test_data->input_data = sample_input;
+	    test_hash(digest_mode, test_data);
+	    sample_output = test_data->output_data;
 
-	CheckHashResult(sample_input, sample_output, expected_output);
+	    CheckHashResult(sample_input, sample_output, expected_output);
     } 
 
     return 0;
@@ -85,7 +91,6 @@ int CheckHashResult(const char * sample_input,
 {
     int result = 1;
     char output_string[65];
-    //char* output_string;
 
     printf("Input len: %ld\n", strlen(sample_input));
 

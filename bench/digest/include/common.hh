@@ -4,10 +4,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <vector>
 #include "alcp/digest.h"
 
 /* test types */
+struct string_vector {
+    const char* input;
+    const char* output;
+};
+
 typedef enum _alc_test_type
 {
     ALC_TEST_HASH_PERF,
@@ -17,8 +22,8 @@ typedef enum _alc_test_type
 /*test data*/
 typedef struct _alc_hash_test_data
 {
-   const char * input_data;
-   uint8_t * output_data;
+    const char * input_data;
+    uint8_t * output_data;
 } _alc_hash_test_data;
 
 /* functions for test hash*/
@@ -49,5 +54,10 @@ test_hash(_alc_sha2_mode digest_mode,
 
 int
 RunHashConformanceTest(_alc_sha2_mode digest_mode);
+
+int
+RunConformance(_alc_sha2_mode digest_mode,
+               _alc_hash_test_data * test_data,
+               std::vector <string_vector> test_vector);
 
 #endif //COMMON_HH_

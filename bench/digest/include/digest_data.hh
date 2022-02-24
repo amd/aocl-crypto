@@ -2,13 +2,10 @@
 #define DIGEST_DATA_HH_
 
 #include <string.h>
+#include<vector>
+#include "common.hh"
 
-struct string_vector {
-    const char* input;
-    const char* output;
-};
-
-struct string_vector STRING_VECTORS_SHA224[] = {
+std::vector <string_vector> STRING_VECTORS_SHA224 = {
         { "",
 	  "d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f" },
         { "abc", 
