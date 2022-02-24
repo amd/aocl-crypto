@@ -21,9 +21,15 @@ test_hash(_alc_sha2_mode digest_mode, _alc_hash_test_data * test_data)
 		digest_type = ALC_DIGEST_TYPE_SHA2;
 		digest_len  = ALC_DIGEST_LEN_224;
 		break;
+    
+        case ALC_SHA2_256:
+        digest_type = ALC_DIGEST_TYPE_SHA2;
+        digest_len = ALC_DIGEST_LEN_256;
+        break;
+
 	default:
 		digest_type = ALC_DIGEST_TYPE_SHA2;
-                digest_len  = ALC_DIGEST_LEN_224;
+        digest_len  = ALC_DIGEST_LEN_224;
 		break;
     }
 
@@ -52,7 +58,9 @@ int RunHashConformanceTest(_alc_sha2_mode digest_mode)
     case ALC_SHA2_224:
         RunConformance(digest_mode, &test_data, STRING_VECTORS_SHA224);
         break;
-    
+    case ALC_SHA2_256:
+        RunConformance(digest_mode, &test_data, STRING_VECTORS_SHA256);
+        break;
     default:
         break;
     }
@@ -92,6 +100,9 @@ int RunHashPerformanceTest(_alc_sha2_mode digest_mode)
     {
     case ALC_SHA2_224:
         RunHashPerformance(digest_mode, &test_data, STRING_VECTORS_SHA224);
+        break;
+    case ALC_SHA2_256:
+        RunHashPerformance(digest_mode, &test_data, STRING_VECTORS_SHA256);
         break;
     default:
         break;

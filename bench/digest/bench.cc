@@ -5,15 +5,23 @@
 
 /*move these to a different file later on */
 static void
-HashConformanceTest(benchmark::State& state)
+HashConformanceTest_SHA2_224(benchmark::State& state)
 {
     RunHashConformanceTest(ALC_SHA2_224);
     return;
 }
-BENCHMARK(HashConformanceTest);
+BENCHMARK(HashConformanceTest_SHA2_224);
 
 static void
-HashPerformanceTest(benchmark::State& state)
+HashConformanceTest_SHA2_256(benchmark::State& state)
+{
+    RunHashConformanceTest(ALC_SHA2_256);
+    return;
+}
+BENCHMARK(HashConformanceTest_SHA2_256);
+
+static void
+HashPerformanceTest_SHA2_224(benchmark::State& state)
 {
     for (auto _ : state) {
         for(int i=0; i<PERF_TEST_LOOP; i++) {
@@ -23,7 +31,20 @@ HashPerformanceTest(benchmark::State& state)
     state.counters["MOPS"] = benchmark::Counter(state.iterations()*PERF_TEST_LOOP, benchmark::Counter::kIsRate);
     return;
 }
-BENCHMARK(HashPerformanceTest);
+BENCHMARK(HashPerformanceTest_SHA2_224);
+
+static void
+HashPerformanceTest_SHA2_256(benchmark::State& state)
+{
+    for (auto _ : state) {
+        for(int i=0; i<PERF_TEST_LOOP; i++) {
+            benchmark::DoNotOptimize(RunHashPerformanceTest(ALC_SHA2_256));
+        }
+    }
+    state.counters["MOPS"] = benchmark::Counter(state.iterations()*PERF_TEST_LOOP, benchmark::Counter::kIsRate);
+    return;
+}
+BENCHMARK(HashPerformanceTest_SHA2_256);
 
 int main(int argc, char** argv) {
     ::benchmark::Initialize(&argc, argv);
