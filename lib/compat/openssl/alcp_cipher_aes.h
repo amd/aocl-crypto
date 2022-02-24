@@ -32,15 +32,6 @@
 #include "alcp_cipher_prov.h"
 #include "debug.h"
 
-struct _alc_prov_aes_ctx
-{
-    /* Must be First */
-    alc_prov_cipher_ctx_p aa_prov_cipher_ctx;
-    alc_prov_ctx_p        aa_prov_ctx;
-};
-
 extern const OSSL_DISPATCH cfb_functions[];
-
-typedef struct _alc_prov_aes_ctx alc_prov_aes_ctx_t, *alc_prov_aes_ctx_p;
 
 #endif /* _OPENSSL_ALCP_CIPHER_AES_H */

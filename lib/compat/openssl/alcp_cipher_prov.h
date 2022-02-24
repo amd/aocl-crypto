@@ -30,8 +30,10 @@
 #define _OPENSSL_ALCP_CIPHER_PROV_H 2
 
 #include <openssl/core.h>
+#include <openssl/core_names.h>
 #include <openssl/engine.h>
 #include <openssl/evp.h>
+#include <openssl/proverr.h>
 
 #include <alcp/cipher.h>
 #include <alcp/key.h>
@@ -50,10 +52,9 @@ struct _alc_prov_cipher_ctx
     EVP_CIPHER_CTX*   pc_evp_cipher_ctx;
     const OSSL_PARAM* pc_params;
 
-    const alc_cipher_info_t* pc_cipher_info;
-    const alc_key_info_t*    pc_key_info;
-    int                      pc_ctx_size;
-    int                      pc_flags;
+    alc_cipher_info_t pc_cipher_info;
+    int               pc_ctx_size;
+    int               pc_flags;
 
     OSSL_LIB_CTX* pc_libctx;
 };
@@ -69,18 +70,22 @@ extern const OSSL_ALGORITHM ALC_prov_ciphers[];
 typedef void (*fptr_t)(void);
 
 extern void*
-ALCP_prov_cipher_newctx(void*                vprovctx,
-                        const alc_prov_ctx_p pprov_ctx,
-                        const OSSL_PARAM*    pparms);
+ALCP_prov_cipher_newctx(void* vprovctx, const alc_cipher_info_p cinfo);
+void
+ALCP_prov_cipher_freectx(void* vctx);
 
 int
 ALCP_prov_cipher_get_ctx_params(void* vctx, OSSL_PARAM params[]);
 int
 ALCP_prov_cipher_set_ctx_params(void* vctx, const OSSL_PARAM params[]);
 const OSSL_PARAM*
+ALCP_prov_cipher_gettable_ctx_params(void* cctx, void* provctx);
+const OSSL_PARAM*
+ALCP_prov_cipher_settable_ctx_params(void* cctx, void* provctx);
+const OSSL_PARAM*
 ALCP_prov_cipher_gettable_params(void* provctx);
 int
-ALCP_prov_cipher_get_params(OSSL_PARAM params[]);
+ALCP_prov_cipher_get_params(OSSL_PARAM params[], int mode);
 int
 ALCP_prov_cipher_set_params(const OSSL_PARAM params[]);
 
@@ -93,20 +98,19 @@ extern OSSL_FUNC_cipher_decrypt_init_fn   ALCP_prov_cipher_decrypt_init;
 extern OSSL_FUNC_cipher_update_fn         ALCP_prov_cipher_update;
 extern OSSL_FUNC_cipher_final_fn          ALCP_prov_cipher_final;
 
-#define CREATE_CIPHER_DISPATCHERS(name, grp)                                   \
+#define CREATE_CIPHER_DISPATCHERS(name, grp, mode)                             \
     static OSSL_FUNC_cipher_get_params_fn ALCP_prov_##name##_get_params;       \
     static int ALCP_prov_##name##_get_params(OSSL_PARAM* params)               \
     {                                                                          \
         ENTER();                                                               \
-        return ALCP_prov_cipher_get_params(params);                            \
+        return ALCP_prov_cipher_get_params(params, mode);                      \
     }                                                                          \
                                                                                \
     static OSSL_FUNC_cipher_newctx_fn ALCP_prov_##name##_newctx;               \
     static void*                      ALCP_prov_##name##_newctx(void* provctx) \
     {                                                                          \
         ENTER();                                                               \
-        return ALCP_prov_aes_newctx(                                           \
-            provctx, &s_cipher_##name##_info, s_cipher_##name##_params);       \
+        return ALCP_prov_aes_newctx(provctx, &s_cipher_##name##_info);         \
     }                                                                          \
     const OSSL_DISPATCH name##_functions[] = {                                 \
         { OSSL_FUNC_CIPHER_GET_PARAMS,                                         \
@@ -116,8 +120,12 @@ extern OSSL_FUNC_cipher_final_fn          ALCP_prov_cipher_final;
         { OSSL_FUNC_CIPHER_FREECTX, (fptr_t)ALCP_prov_cipher_freectx },        \
         { OSSL_FUNC_CIPHER_GETTABLE_PARAMS,                                    \
           (fptr_t)ALCP_prov_cipher_gettable_params },                          \
+        { OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS,                                \
+          (fptr_t)ALCP_prov_cipher_gettable_params },                          \
         { OSSL_FUNC_CIPHER_GET_CTX_PARAMS,                                     \
           (fptr_t)ALCP_prov_##grp##_get_ctx_params },                          \
+        { OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS,                                \
+          (fptr_t)ALCP_prov_cipher_settable_ctx_params },                      \
         { OSSL_FUNC_CIPHER_SET_CTX_PARAMS,                                     \
           (fptr_t)ALCP_prov_##grp##_set_ctx_params },                          \
         { OSSL_FUNC_CIPHER_ENCRYPT_INIT,                                       \

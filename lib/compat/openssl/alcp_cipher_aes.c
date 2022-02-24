@@ -28,50 +28,59 @@
 
 #include "alcp_cipher_aes.h"
 
-const OSSL_PARAM*        s_cipher_cfb_params;
 static alc_cipher_info_t s_cipher_cfb_info = {
-    ALC_CIPHER_TYPE_AES,
-    {
+    .cipher_type = ALC_CIPHER_TYPE_AES,
+    .key_info = {
         ALC_KEY_TYPE_SYMMETRIC,
         ALC_KEY_FMT_RAW,
         ALC_KEY_ALG_SYMMETRIC,
         ALC_KEY_LEN_128,
+        128,
     },
-    { {
-        ALC_AES_MODE_CFB,
-    } },
+    .mode_data = { .aes = {
+            .mode =      ALC_AES_MODE_CFB,
+        }, },
 };
 
 int
 ALCP_prov_aes_get_ctx_params(void* vctx, OSSL_PARAM params[])
 {
-    return 1;
+    EXIT();
+    return ALCP_prov_cipher_get_ctx_params(vctx, params);
 }
 
 int
 ALCP_prov_aes_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 {
-    return 1;
+    EXIT();
+    return ALCP_prov_cipher_set_ctx_params(vctx, params);
+}
+
+void
+ALCP_prov_aes_ctxfree(alc_prov_cipher_ctx_p ciph_ctx)
+{
+    ALCP_prov_cipher_freectx(ciph_ctx);
 }
 
 void*
-ALCP_prov_aes_newctx(void*                    vprovctx,
-                     const alc_cipher_info_t* p_cipher_info,
-                     const OSSL_PARAM         params[])
+ALCP_prov_aes_newctx(void* vprovctx, const alc_cipher_info_p cinfo)
 {
-    alc_prov_aes_ctx_p ctx      = OPENSSL_zalloc(sizeof(*ctx));
-    alc_prov_ctx_p     prov_ctx = vprovctx;
-    ENTER();
-    if (!ctx) {
-        alc_prov_cipher_ctx_p cipher_ctx = ctx->aa_prov_cipher_ctx;
-        ctx->aa_prov_ctx                 = prov_ctx;
-        cipher_ctx->pc_cipher_info       = p_cipher_info;
-    } else {
-        ctx = NULL;
-    }
+    alc_prov_cipher_ctx_p ciph_ctx;
 
-    return ctx;
+    ENTER();
+
+    ciph_ctx = ALCP_prov_cipher_newctx(vprovctx, cinfo);
+    if (!ciph_ctx)
+        goto out;
+
+    EXIT();
+    return ciph_ctx;
+
+out:
+    ALCP_prov_cipher_freectx(ciph_ctx);
+
+    return NULL;
 }
 
 /* cfb_functions */
-CREATE_CIPHER_DISPATCHERS(cfb, aes);
+CREATE_CIPHER_DISPATCHERS(cfb, aes, EVP_CIPH_CFB_MODE);

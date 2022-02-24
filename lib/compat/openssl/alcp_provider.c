@@ -103,8 +103,22 @@ ALCP_get_reason_strings(void* vctx)
 static int
 ALCP_get_params(void* provctx, OSSL_PARAM* params)
 {
+    OSSL_PARAM*        p;
+    const static char* VERSION = "1.0";
+    char static BUILDTYPE[100];
+
     ENTER();
-    return -1;
+
+    if ((p = OSSL_PARAM_locate(params, "version")) != NULL
+        && !OSSL_PARAM_set_utf8_ptr(p, VERSION))
+        return 0;
+
+    if ((p = OSSL_PARAM_locate(params, "buildinfo")) != NULL
+        && BUILDTYPE[0] != '\0' && !OSSL_PARAM_set_utf8_ptr(p, BUILDTYPE))
+        return 0;
+
+    EXIT();
+    return 1;
 }
 
 static void

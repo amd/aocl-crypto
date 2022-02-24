@@ -33,42 +33,41 @@ void
 ALCP_prov_cipher_freectx(void* vctx)
 {
     alc_prov_cipher_ctx_p pcctx = vctx;
-
+    ENTER();
     /*
      * pcctx->pc_evp_cipher will be  freed in provider teardown,
      */
     EVP_CIPHER_CTX_free(pcctx->pc_evp_cipher_ctx);
-    ENTER();
+
     OPENSSL_free(vctx);
 }
 
 void*
-ALCP_prov_cipher_newctx(void*                vprovctx,
-                        const alc_prov_ctx_p pprov_ctx,
-                        const OSSL_PARAM*    pparams)
+ALCP_prov_cipher_newctx(void* vprovctx, const alc_cipher_info_p cinfo)
 {
-    alc_prov_cipher_ctx_p gctx;
-    alc_prov_ctx_p        pctx = pprov_ctx;
+    alc_prov_cipher_ctx_p ciph_ctx;
+    alc_prov_ctx_p        pctx = (alc_prov_ctx_p)vprovctx;
 
     ENTER();
-    gctx = OPENSSL_zalloc(sizeof(*gctx));
+    ciph_ctx = OPENSSL_zalloc(sizeof(*ciph_ctx));
 
-    if (gctx != NULL) {
-        gctx->pc_prov_ctx       = pprov_ctx;
-        gctx->pc_params         = pparams;
-        gctx->pc_libctx         = pctx->ap_libctx;
-        gctx->pc_evp_cipher_ctx = EVP_CIPHER_CTX_new();
-        if (!gctx->pc_evp_cipher_ctx || !gctx->pc_prov_ctx) {
-            ALCP_prov_cipher_freectx(gctx);
-            gctx = NULL;
+    if (ciph_ctx != NULL) {
+        ciph_ctx->pc_prov_ctx = pctx;
+        // ciph_ctx->pc_params         = pparams;
+        ciph_ctx->pc_libctx         = pctx->ap_libctx;
+        ciph_ctx->pc_cipher_info    = *cinfo;
+        ciph_ctx->pc_evp_cipher_ctx = EVP_CIPHER_CTX_new();
+        if (!ciph_ctx->pc_evp_cipher_ctx || !ciph_ctx->pc_prov_ctx) {
+            ALCP_prov_cipher_freectx(ciph_ctx);
+            ciph_ctx = NULL;
         }
 #if 0
-        // gctx->descriptor = descriptor;
-        // gctx->cipher     = ALCP_prov_cipher_init(descriptor);
+        // ciph_ctx->descriptor = descriptor;
+        // ciph_ctx->cipher     = ALCP_prov_cipher_init(descriptor);
 #endif
     }
 
-    return gctx;
+    return ciph_ctx;
 }
 
 void*
@@ -87,11 +86,11 @@ ALCP_prov_cipher_dupctx(void* vctx)
  * Generic cipher functions for OSSL_PARAM gettables and settables
  */
 static const OSSL_PARAM cipher_known_gettable_params[] = {
-#if 0
     OSSL_PARAM_uint(OSSL_CIPHER_PARAM_MODE, NULL),
     OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_KEYLEN, NULL),
     OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_IVLEN, NULL),
     OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_BLOCK_SIZE, NULL),
+#if 0
     OSSL_PARAM_int(OSSL_CIPHER_PARAM_AEAD, NULL),
     OSSL_PARAM_int(OSSL_CIPHER_PARAM_CUSTOM_IV, NULL),
     OSSL_PARAM_int(OSSL_CIPHER_PARAM_CTS, NULL),
@@ -104,51 +103,114 @@ static const OSSL_PARAM cipher_known_gettable_params[] = {
 const OSSL_PARAM*
 ALCP_prov_cipher_gettable_params(void* provctx)
 {
+    EXIT();
     return cipher_known_gettable_params;
 }
 
 int
-ALCP_prov_cipher_get_params(OSSL_PARAM params[])
+ALCP_prov_cipher_get_params(OSSL_PARAM params[], int mode)
 {
+    OSSL_PARAM* p;
+    int         kbits   = 128;
+    int         blkbits = 128;
+    int         ivbits  = 128;
+
     ENTER();
-    return 0;
+
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_MODE);
+    if (p != NULL && !OSSL_PARAM_set_uint(p, mode)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        EXIT();
+        return 0;
+    }
+
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_KEYLEN);
+    if (p != NULL && !OSSL_PARAM_set_size_t(p, kbits / 8)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        EXIT();
+        return 0;
+    }
+
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_BLOCK_SIZE);
+    if (p != NULL && !OSSL_PARAM_set_size_t(p, blkbits / 8)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        EXIT();
+        return 0;
+    }
+
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_IVLEN);
+    if (p != NULL && !OSSL_PARAM_set_size_t(p, ivbits / 8)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        EXIT();
+        return 0;
+    }
+
+    EXIT();
+    return 1;
+}
+
+const OSSL_PARAM*
+ALCP_prov_cipher_gettable_ctx_params(void* cctx, void* provctx)
+{
+    return cipher_known_gettable_params;
+}
+
+/* Parameters that libcrypto can send to this implementation */
+const OSSL_PARAM*
+ALCP_prov_cipher_settable_ctx_params(void* cctx, void* provctx)
+{
+    static const OSSL_PARAM table[] = {
+        OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_KEYLEN, NULL),
+        OSSL_PARAM_END,
+    };
+    EXIT();
+    return table;
 }
 
 int
 ALCP_prov_cipher_set_params(const OSSL_PARAM params[])
 {
     ENTER();
-
-    return 0;
+    return 1;
 }
 
 int
 ALCP_prov_cipher_get_ctx_params(void* vctx, OSSL_PARAM params[])
 {
-    alc_prov_cipher_ctx_p cctx = (alc_prov_cipher_ctx_p)vctx;
+    OSSL_PARAM*           p;
+    alc_prov_cipher_ctx_p cctx   = (alc_prov_cipher_ctx_p)vctx;
+    size_t                keylen = cctx->pc_cipher_info.key_info.len;
 
-    OSSL_PARAM*        p;
-    const static char* VERSION = "1.0";
-    char static BUILDTYPE[100];
-    /* FIXME: */
-    cctx = cctx;
     ENTER();
 
-    if ((p = OSSL_PARAM_locate(params, "version")) != NULL
-        && !OSSL_PARAM_set_utf8_ptr(p, VERSION))
-        return 0;
-    if ((p = OSSL_PARAM_locate(params, "buildinfo")) != NULL
-        && BUILDTYPE[0] != '\0' && !OSSL_PARAM_set_utf8_ptr(p, BUILDTYPE))
+    if (keylen > 0
+        && (p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_KEYLEN)) != NULL
+        && !OSSL_PARAM_set_size_t(p, keylen))
         return 0;
 
+    EXIT();
     return 1;
 }
 
 int
 ALCP_prov_cipher_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 {
+    const OSSL_PARAM*     p;
+    alc_prov_cipher_ctx_p cctx = (alc_prov_cipher_ctx_p)vctx;
     ENTER();
 
+    p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_KEYLEN);
+    if (p != NULL) {
+        size_t keylen;
+        if (!OSSL_PARAM_get_size_t(p, &keylen)) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_GET_PARAMETER);
+            HERE();
+            return 0;
+        }
+        cctx->pc_cipher_info.key_info.len = keylen;
+    }
+
+    EXIT();
     return 1;
 }
 
@@ -160,10 +222,21 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
                               size_t               ivlen,
                               const OSSL_PARAM     params[])
 {
-    alc_prov_cipher_ctx_p cctx = vctx;
+    alc_prov_cipher_ctx_p cctx  = vctx;
+    alc_cipher_info_p     cinfo = &cctx->pc_cipher_info;
     ENTER();
-    cctx = cctx;
-    return 0;
+
+    assert(cinfo->cipher_type == ALC_CIPHER_TYPE_AES);
+
+    switch (cinfo->mode_data.aes.mode) {
+        case ALC_AES_MODE_CFB:
+            break;
+        default:
+            break;
+    }
+
+    EXIT();
+    return 1;
 }
 
 int
