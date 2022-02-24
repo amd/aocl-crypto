@@ -8,6 +8,8 @@
 #include "alcp/digest.h"
 #include "types.hh"
 
+#define PERF_TEST_LOOP 1000
+
 /* functions for test hash*/
 alc_error_t
 create_hash_session(alc_digest_handle_t * s_dg_handle,
@@ -41,5 +43,14 @@ int
 RunConformance(_alc_sha2_mode digest_mode,
                _alc_hash_test_data * test_data,
                std::vector <string_vector> test_vector);
+
+/*perf*/
+int
+RunHashPerformance(_alc_sha2_mode digest_mode,
+               _alc_hash_test_data * test_data,
+               std::vector <string_vector> test_vector);
+
+int
+RunHashPerformanceTest(_alc_sha2_mode digest_mode);
 
 #endif //COMMON_HH_
