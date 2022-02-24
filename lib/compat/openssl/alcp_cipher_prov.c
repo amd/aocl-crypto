@@ -233,34 +233,22 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
 
     switch (cinfo->ci_mode_data.cm_aes.ai_mode) {
         case ALC_AES_MODE_CFB:
-#ifdef DEBUG
-            printf("Provider: CFB\n");
-#endif
+            PRINT("Provider: CFB\n");
             break;
         case ALC_AES_MODE_CBC:
-#ifdef DEBUG
-            printf("Provider: CBC\n");
-#endif
+            PRINT("Provider: CBC\n");
             break;
         case ALC_AES_MODE_OFB:
-#ifdef DEBUG
-            printf("Provider: OFB\n");
-#endif
+            PRINT("Provider: OFB\n");
             break;
         case ALC_AES_MODE_CTR:
-#ifdef DEBUG
-            printf("Provider: CTR\n");
-#endif
+            PRINT("Provider: CTR\n");
             break;
         case ALC_AES_MODE_ECB:
-#ifdef DEBUG
-            printf("Provider: ECB\n");
-#endif
+            PRINT("Provider: ECB\n");
             break;
         case ALC_AES_MODE_XTR:
-#ifdef DEBUG
-            printf("Provider: XTR\n");
-#endif
+            PRINT("Provider: XTR\n");
             break;
         default:
             return 0;
@@ -337,34 +325,22 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
     assert(cinfo->ci_type == ALC_CIPHER_TYPE_AES);
     switch (cinfo->ci_mode_data.cm_aes.ai_mode) {
         case ALC_AES_MODE_CFB:
-#ifdef DEBUG
-            printf("Provider: CFB\n");
-#endif
+            PRINT("Provider: CFB\n");
             break;
         case ALC_AES_MODE_CBC:
-#ifdef DEBUG
-            printf("Provider: CBC\n");
-#endif
+            PRINT("Provider: CBC\n");
             break;
         case ALC_AES_MODE_OFB:
-#ifdef DEBUG
-            printf("Provider: OFB\n");
-#endif
+            PRINT("Provider: OFB\n");
             break;
         case ALC_AES_MODE_CTR:
-#ifdef DEBUG
-            printf("Provider: CTR\n");
-#endif
+            PRINT("Provider: CTR\n");
             break;
         case ALC_AES_MODE_ECB:
-#ifdef DEBUG
-            printf("Provider: ECB\n");
-#endif
+            PRINT("Provider: ECB\n");
             break;
         case ALC_AES_MODE_XTR:
-#ifdef DEBUG
-            printf("Provider: XTR\n");
-#endif
+            PRINT("Provider: XTR\n");
             break;
         default:
             return 0;
