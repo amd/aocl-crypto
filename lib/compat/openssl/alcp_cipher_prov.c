@@ -454,7 +454,7 @@ ALCP_prov_cipher_final(void*          vctx,
     // alc_prov_cipher_ctx_p cctx = vctx;
     ENTER();
     // Northing to do!
-    *outl = outsize;
+    *outl = 0;
     return 1;
 }
 
