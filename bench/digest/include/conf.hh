@@ -5,7 +5,8 @@
 #include <vector>
 #include "types.hh"
 
-int RunHashConformanceTest(_alc_sha2_mode digest_mode);
+int
+RunHashConformanceTest(_alc_sha2_mode digest_mode);
 
 /* run conformance with the test data provided */
 int RunConformance(_alc_sha2_mode digest_mode,

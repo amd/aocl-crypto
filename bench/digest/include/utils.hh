@@ -9,7 +9,8 @@ int
 test_hash(_alc_sha2_mode digest_mode, _alc_hash_test_data * test_data);
 
 /* just check input output */
-int CheckHashResult(const char * sample_input, 
+int
+CheckHashResult(const char * sample_input, 
 		    uint8_t * sample_output,
 		    const char * expected_output);
 
