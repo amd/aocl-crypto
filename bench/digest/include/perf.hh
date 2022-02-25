@@ -4,6 +4,7 @@
 #include "alcp/digest.h"
 #include "types.hh"
 #include <vector>
+#include "digest_data.hh"
 
 #define PERF_TEST_LOOP 1000
 

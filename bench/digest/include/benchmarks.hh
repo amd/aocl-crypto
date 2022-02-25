@@ -50,5 +50,4 @@ HashPerformanceTest_SHA2_256(benchmark::State& state)
 }
 BENCHMARK(HashPerformanceTest_SHA2_256);
 
-
 #endif  //BENCHMARKS_HH

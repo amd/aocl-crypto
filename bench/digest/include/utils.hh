@@ -3,6 +3,7 @@
 
 #include "alcp/digest.h"
 #include "types.hh"
+#include "digest_data.hh"
 
 /*function to accept one test data, one digest algo, at a time, calculate hash of it */
 int

@@ -8,7 +8,8 @@ INCLUDE_DIRECTORIES(
 
 #include test inc files
 INCLUDE_DIRECTORIES(
-        "${CMAKE_SOURCE_DIR}/bench/digest/include")
+        "${CMAKE_SOURCE_DIR}/bench/digest/include"
+        "${CMAKE_SOURCE_DIR}/bench/digest/test_data")
 
 add_subdirectory(common)
 

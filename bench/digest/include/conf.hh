@@ -4,6 +4,7 @@
 #include "alcp/digest.h"
 #include <vector>
 #include "types.hh"
+#include "digest_data.hh"
 
 int
 RunHashConformanceTest(_alc_sha2_mode digest_mode);
