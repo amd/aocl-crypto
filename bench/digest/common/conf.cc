@@ -6,14 +6,17 @@
 int RunHashConformanceTest(_alc_sha2_mode digest_mode)
 {
     _alc_hash_test_data test_data;
+    int fail=0;
     /* Add more SHA digest cases here */
     switch (digest_mode)
     {
     case ALC_SHA2_224:
-        RunConformance(digest_mode, &test_data, STRING_VECTORS_SHA224);
+        fail = RunConformance(digest_mode, &test_data, STRING_VECTORS_SHA224);
+        printf ("%d Conformance Tests failures for SHA224\n", fail);
         break;
     case ALC_SHA2_256:
-        RunConformance(digest_mode, &test_data, STRING_VECTORS_SHA256);
+        fail = RunConformance(digest_mode, &test_data, STRING_VECTORS_SHA256);
+        printf ("%d Conformance Test failures for SHA256\n", fail);
         break;
     default:
         break;
@@ -32,6 +35,7 @@ int RunConformance(_alc_sha2_mode digest_mode,
     uint8_t * sample_output;
     long unsigned int test_data_len = test_vector.size();
     printf ("Data len: %ld\n", test_data_len);
+    int fail=0;
 
     for (long unsigned int i = 0; i < test_data_len; i++) {
         sample_input    = test_vector[i].input;
@@ -40,8 +44,8 @@ int RunConformance(_alc_sha2_mode digest_mode,
 	    test_hash(digest_mode, test_data);
 	    sample_output = test_data->output_data;
 
-	    CheckHashResult(sample_input, sample_output, expected_output);
+	    if (CheckHashResult(sample_input, sample_output, expected_output))
+            fail++;
     } 
-
-    return 0;
+    return fail;
 }
