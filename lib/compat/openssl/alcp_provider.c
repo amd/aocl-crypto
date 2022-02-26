@@ -76,6 +76,10 @@ ALCP_query_operation(void* vctx, int operation_id, const int* no_cache)
             EXIT();
             return ALC_prov_ciphers;
             break;
+        case OSSL_OP_DIGEST:
+            EXIT();
+            return ALC_prov_digests;
+            break;
         default:
             break;
     }

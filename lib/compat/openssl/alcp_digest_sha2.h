@@ -26,28 +26,12 @@
  *
  */
 
-#ifndef _OPENSSL_ALCP_PROVIDER_H
-#define _OPENSSL_ALCP_PROVIDER_H 2
+#ifndef _OPENSSL_ALCP_DIGEST_SHA2_H
+#define _OPENSSL_ALCP_DIGEST_SHA2_H 2
 
-#include <openssl/core.h>
-#include <openssl/evp.h>
-
-#include <alcp/alcp.h>
-#include <alcp/cipher.h>
-#include <alcp/digest.h>
-
+#include "alcp_digest_prov.h"
 #include "debug.h"
 
-extern const OSSL_ALGORITHM ALC_prov_ciphers[];
-extern const OSSL_ALGORITHM ALC_prov_digests[];
+extern const OSSL_DISPATCH cfb_functions[];
 
-typedef struct _alc_prov_cipher_ctx* alc_prov_cipher_ctx_p;
-
-struct _alc_prov_ctx
-{
-    OSSL_LIB_CTX*           ap_libctx;
-    const OSSL_CORE_HANDLE* ap_core_handle;
-};
-typedef struct _alc_prov_ctx alc_prov_ctx_t, *alc_prov_ctx_p;
-
-#endif /* _OPENSSL_ALCP_PROV_H */
+#endif /* _OPENSSL_ALCP_DIGEST_SHA2_H */

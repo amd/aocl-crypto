@@ -26,28 +26,67 @@
  *
  */
 
-#ifndef _OPENSSL_ALCP_PROVIDER_H
-#define _OPENSSL_ALCP_PROVIDER_H 2
+#include "alcp_digest_sha2.h"
 
-#include <openssl/core.h>
-#include <openssl/evp.h>
-
-#include <alcp/alcp.h>
-#include <alcp/cipher.h>
-#include <alcp/digest.h>
-
-#include "debug.h"
-
-extern const OSSL_ALGORITHM ALC_prov_ciphers[];
-extern const OSSL_ALGORITHM ALC_prov_digests[];
-
-typedef struct _alc_prov_cipher_ctx* alc_prov_cipher_ctx_p;
-
-struct _alc_prov_ctx
-{
-    OSSL_LIB_CTX*           ap_libctx;
-    const OSSL_CORE_HANDLE* ap_core_handle;
+alc_digest_info_t s_digest_sha256_info = {
+        .dt_type = ALC_DIGEST_TYPE_SHA2,
+        .dt_len = ALC_DIGEST_LEN_256,
+        .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
 };
-typedef struct _alc_prov_ctx alc_prov_ctx_t, *alc_prov_ctx_p;
 
-#endif /* _OPENSSL_ALCP_PROV_H */
+// static alc_digest_info_t s_digest_cfb_info = {
+//     .digest_type = ALC_CIPHER_TYPE_AES,
+//     .key_info = {
+//         ALC_KEY_TYPE_SYMMETRIC,
+//         ALC_KEY_FMT_RAW,
+//         ALC_KEY_ALG_SYMMETRIC,
+//         ALC_KEY_LEN_128,
+//         128,
+//     },
+//     .mode_data = { .sha2 = {
+//             .mode =      ALC_AES_MODE_CFB,
+//         }, },
+// };
+
+int
+ALCP_prov_sha2_get_ctx_params(void* vctx, OSSL_PARAM params[])
+{
+    EXIT();
+    return ALCP_prov_digest_get_ctx_params(vctx, params);
+}
+
+int
+ALCP_prov_sha2_set_ctx_params(void* vctx, const OSSL_PARAM params[])
+{
+    EXIT();
+    return ALCP_prov_digest_set_ctx_params(vctx, params);
+}
+
+void
+ALCP_prov_sha2_ctxfree(alc_prov_digest_ctx_p ciph_ctx)
+{
+    ALCP_prov_digest_freectx(ciph_ctx);
+}
+
+void*
+ALCP_prov_sha2_newctx(void* vprovctx, const alc_digest_info_p cinfo)
+{
+    alc_prov_digest_ctx_p ciph_ctx;
+
+    ENTER();
+
+    ciph_ctx = ALCP_prov_digest_newctx(vprovctx, cinfo);
+    if (!ciph_ctx)
+        goto out;
+
+    EXIT();
+    return ciph_ctx;
+
+out:
+    ALCP_prov_digest_freectx(ciph_ctx);
+
+    return NULL;
+}
+
+/* cfb_functions */
+CREATE_DIGEST_DISPATCHERS(sha256, sha2, EVP_CIPH_CFB_MODE);
