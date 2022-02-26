@@ -111,7 +111,7 @@ extern OSSL_FUNC_digest_final_fn          ALCP_prov_digest_final;
     static void*                      ALCP_prov_##name##_newctx(void* provctx) \
     {                                                                          \
         ENTER();                                                               \
-        return ALCP_prov_aes_newctx(provctx, &s_digest_##name##_info);         \
+        return ALCP_prov_digest_newctx(provctx, &s_digest_##name##_info);      \
     }                                                                          \
     const OSSL_DISPATCH name##_functions[] = {                                 \
         { OSSL_FUNC_DIGEST_GET_PARAMS,                                         \

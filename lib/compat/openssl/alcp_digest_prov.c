@@ -38,9 +38,9 @@ ALCP_prov_digest_freectx(void* vctx)
      * pcctx->pc_evp_digest will be  freed in provider teardown,
      */
 
-    // EVP_MD_CTX_free(pcctx->pc_evp_digest_ctx);
+    EVP_MD_CTX_free(pcctx->pc_evp_digest_ctx);
 
-    // OPENSSL_free(vctx);
+    OPENSSL_free(vctx);
 }
 
 void*
@@ -51,7 +51,7 @@ ALCP_prov_digest_newctx(void* vprovctx, const alc_digest_info_p cinfo)
 
     ENTER();
     ciph_ctx = OPENSSL_zalloc(sizeof(*ciph_ctx));
-
+    // printf("Provider: Create Pointer:%p\n", pctx);
     if (ciph_ctx != NULL) {
         ciph_ctx->pc_prov_ctx = pctx;
         // ciph_ctx->pc_params         = pparams;
@@ -218,16 +218,44 @@ ALCP_prov_digest_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 int
 ALCP_prov_digest_init(void* vctx, const OSSL_PARAM params[])
 {
-
+    alc_prov_digest_ctx_p cctx = vctx;
+    alc_error_t           err;
+    ENTER();
+    // printf("Provider: Pointer->%p\n", cctx);
+    alc_digest_info_p dinfo = &cctx->pc_digest_info;
+    dinfo->dt_type          = ALC_DIGEST_TYPE_SHA2;
+    dinfo->dt_len           = ALC_DIGEST_LEN_256;
+    uint64_t size           = alcp_digest_context_size(&dinfo);
+    switch (dinfo->dt_mode.dm_sha2) {
+        case ALC_SHA2_256:
+            PRINT("Provider:SHA256_SELECTED!\n");
+            break;
+        default:
+            return 0;
+    }
+    cctx->handle.context = OPENSSL_malloc(size);
+    err                  = alcp_digest_request(dinfo, &(cctx->handle));
+    if (alcp_is_error(err)) {
+        printf("Provider: Somehow request failed\n");
+        return 0;
+    }
+    EXIT();
     return 1;
 }
 
 int
 ALCP_prov_digest_update(void* vctx, const unsigned char* in, size_t inl)
 {
+    alc_error_t           err;
     alc_prov_digest_ctx_p cctx = vctx;
-
-    return 0;
+    ENTER();
+    err = alcp_digest_update(&(cctx->handle), in, inl);
+    if (alcp_is_error(err)) {
+        printf("Provider: Unable to compute SHA2 hash\n");
+        return 0;
+    }
+    EXIT();
+    return 1;
 }
 
 int
@@ -238,9 +266,10 @@ ALCP_prov_digest_final(void*          vctx,
 {
     alc_prov_digest_ctx_p cctx = vctx;
     ENTER();
+    alcp_digest_finalize(&(cctx->handle), out, outsize);
     // Northing to do!
-    *outl = 0;
-    return 0;
+    *outl = outsize;
+    return 1;
 }
 
 static const char          DIGEST_DEF_PROP[] = "provider=alcp,fips=no";

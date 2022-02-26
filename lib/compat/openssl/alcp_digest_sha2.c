@@ -74,7 +74,6 @@ ALCP_prov_sha2_newctx(void* vprovctx, const alc_digest_info_p cinfo)
     alc_prov_digest_ctx_p ciph_ctx;
 
     ENTER();
-
     ciph_ctx = ALCP_prov_digest_newctx(vprovctx, cinfo);
     if (!ciph_ctx)
         goto out;

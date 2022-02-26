@@ -36,7 +36,7 @@
 #define ENTER()    printf("Enter : %s\n", __func__)
 #define HERE()     printf("Here : %s:%d\n", __func__, __LINE__)
 #define EXIT()     printf("Exit : %s:%d\n", __func__, __LINE__)
-#define PRINT(MSG) printf(##MSG##)
+#define PRINT(MSG) printf(MSG)
 
 #else
 #define ENTRY()
