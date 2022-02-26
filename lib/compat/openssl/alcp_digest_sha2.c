@@ -34,6 +34,12 @@ alc_digest_info_t s_digest_sha256_info = {
         .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
 };
 
+alc_digest_info_t s_digest_sha224_info = {
+        .dt_type = ALC_DIGEST_TYPE_SHA2,
+        .dt_len = ALC_DIGEST_LEN_224,
+        .dt_mode = {.dm_sha2 = ALC_SHA2_224,},
+};
+
 // static alc_digest_info_t s_digest_cfb_info = {
 //     .digest_type = ALC_CIPHER_TYPE_AES,
 //     .key_info = {
@@ -89,3 +95,4 @@ out:
 
 /* cfb_functions */
 CREATE_DIGEST_DISPATCHERS(sha256, sha2, EVP_CIPH_CFB_MODE);
+CREATE_DIGEST_DISPATCHERS(sha224, sha2, EVP_CIPH_CFB_MODE);

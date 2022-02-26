@@ -230,6 +230,9 @@ ALCP_prov_digest_init(void* vctx, const OSSL_PARAM params[])
         case ALC_SHA2_256:
             PRINT("Provider:SHA256_SELECTED!\n");
             break;
+        case ALC_SHA2_224:
+            PRINT("Provider:SHA224_SELECTED!\n");
+            break;
         default:
             return 0;
     }
@@ -274,8 +277,10 @@ ALCP_prov_digest_final(void*          vctx,
 
 static const char          DIGEST_DEF_PROP[] = "provider=alcp,fips=no";
 extern const OSSL_DISPATCH sha256_functions[];
+extern const OSSL_DISPATCH sha224_functions[];
 const OSSL_ALGORITHM       ALC_prov_digests[] = {
     { PROV_NAMES_SHA2_256, DIGEST_DEF_PROP, sha256_functions },
+    { PROV_NAMES_SHA2_224, DIGEST_DEF_PROP, sha224_functions },
     { NULL, NULL, NULL },
 };
 
