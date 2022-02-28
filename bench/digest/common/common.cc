@@ -1,6 +1,7 @@
 #include "alcp/digest.h"
 #include "common.hh"
 
+/* create digest session */
 alc_error_t
 create_hash_session(alc_digest_handle_t* s_dg_handle,
                     _alc_digest_type     digest_type,
@@ -27,6 +28,8 @@ create_hash_session(alc_digest_handle_t* s_dg_handle,
     return err;
 }
 
+/* actual digest function, using the created handle, and passed
+ * scheme type, perform on one input data */
 alc_error_t
 hash_function(alc_digest_handle_t* s_dg_handle,
               const char*          src,
@@ -54,15 +57,5 @@ hash_function(alc_digest_handle_t* s_dg_handle,
 
 out:
     return err;
-}
-
-
-void
-hash_to_string(char string[65], const uint8_t hash[32])
-{
-    size_t i;
-    for (i = 0; i < 28; i++) {
-        string += sprintf(string, "%02x", hash[i]);
-    }
 }
 

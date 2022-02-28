@@ -3,21 +3,20 @@
 
 #include "alcp/digest.h"
 
-/* test types */
-struct string_vector {
+/* conformance test vector */
+typedef struct _alc_hash_kat_vector {
     const char* input;
     const char* output;
-};
+} _alc_hash_kat_vector;
 
-typedef enum _alc_test_type
-{
+/* test type */
+typedef enum _alc_test_type {
     ALC_TEST_HASH_PERF,
     ALC_TEST_HASH_CONF,
 } _alc_test_type_t;
 
 /*test data*/
-typedef struct _alc_hash_test_data
-{
+typedef struct _alc_hash_test_data {
     const char * input_data;
     uint8_t * output_data;
 } _alc_hash_test_data;
