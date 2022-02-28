@@ -28,6 +28,18 @@
 
 #include "alcp_digest_sha2.h"
 
+alc_digest_info_t s_digest_sha512_info = {
+        .dt_type = ALC_DIGEST_TYPE_SHA2,
+        .dt_len = ALC_DIGEST_LEN_512,
+        .dt_mode = {.dm_sha2 = ALC_SHA2_512,},
+};
+
+alc_digest_info_t s_digest_sha384_info = {
+        .dt_type = ALC_DIGEST_TYPE_SHA2,
+        .dt_len = ALC_DIGEST_LEN_384,
+        .dt_mode = {.dm_sha2 = ALC_SHA2_384,},
+};
+
 alc_digest_info_t s_digest_sha256_info = {
         .dt_type = ALC_DIGEST_TYPE_SHA2,
         .dt_len = ALC_DIGEST_LEN_256,
@@ -94,5 +106,7 @@ out:
 }
 
 /* cfb_functions */
+CREATE_DIGEST_DISPATCHERS(sha512, sha2, EVP_CIPH_CFB_MODE);
+CREATE_DIGEST_DISPATCHERS(sha384, sha2, EVP_CIPH_CFB_MODE);
 CREATE_DIGEST_DISPATCHERS(sha256, sha2, EVP_CIPH_CFB_MODE);
 CREATE_DIGEST_DISPATCHERS(sha224, sha2, EVP_CIPH_CFB_MODE);

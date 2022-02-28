@@ -223,15 +223,27 @@ ALCP_prov_digest_init(void* vctx, const OSSL_PARAM params[])
     ENTER();
     // printf("Provider: Pointer->%p\n", cctx);
     alc_digest_info_p dinfo = &cctx->pc_digest_info;
-    dinfo->dt_type          = ALC_DIGEST_TYPE_SHA2;
-    dinfo->dt_len           = ALC_DIGEST_LEN_256;
-    uint64_t size           = alcp_digest_context_size(&dinfo);
+    uint64_t          size  = alcp_digest_context_size(&dinfo);
     switch (dinfo->dt_mode.dm_sha2) {
+        case ALC_SHA2_512:
+            PRINT("Provider:SHA512_SELECTED!\n");
+            dinfo->dt_len          = ALC_DIGEST_LEN_512;
+            dinfo->dt_mode.dm_sha2 = ALC_SHA2_512;
+            break;
+        case ALC_SHA2_384:
+            PRINT("Provider:SHA384_SELECTED!\n");
+            dinfo->dt_len          = ALC_DIGEST_LEN_384;
+            dinfo->dt_mode.dm_sha2 = ALC_SHA2_384;
+            break;
         case ALC_SHA2_256:
             PRINT("Provider:SHA256_SELECTED!\n");
+            dinfo->dt_len          = ALC_DIGEST_LEN_256;
+            dinfo->dt_mode.dm_sha2 = ALC_SHA2_256;
             break;
         case ALC_SHA2_224:
             PRINT("Provider:SHA224_SELECTED!\n");
+            dinfo->dt_len          = ALC_DIGEST_LEN_224;
+            dinfo->dt_mode.dm_sha2 = ALC_SHA2_224;
             break;
         default:
             return 0;
@@ -269,16 +281,23 @@ ALCP_prov_digest_final(void*          vctx,
 {
     alc_prov_digest_ctx_p cctx = vctx;
     ENTER();
-    alcp_digest_finalize(&(cctx->handle), out, outsize);
+    alcp_digest_finalize(&(cctx->handle), NULL, 0);
+    alcp_digest_copy(&(cctx->handle), out, outl);
     // Northing to do!
     *outl = outsize;
     return 1;
 }
 
-static const char          DIGEST_DEF_PROP[] = "provider=alcp,fips=no";
-extern const OSSL_DISPATCH sha256_functions[];
+static const char DIGEST_DEF_PROP[] = "provider=alcp,fips=no";
+
 extern const OSSL_DISPATCH sha224_functions[];
-const OSSL_ALGORITHM       ALC_prov_digests[] = {
+extern const OSSL_DISPATCH sha256_functions[];
+extern const OSSL_DISPATCH sha384_functions[];
+extern const OSSL_DISPATCH sha512_functions[];
+
+const OSSL_ALGORITHM ALC_prov_digests[] = {
+    { PROV_NAMES_SHA2_512, DIGEST_DEF_PROP, sha512_functions },
+    { PROV_NAMES_SHA2_384, DIGEST_DEF_PROP, sha384_functions },
     { PROV_NAMES_SHA2_256, DIGEST_DEF_PROP, sha256_functions },
     { PROV_NAMES_SHA2_224, DIGEST_DEF_PROP, sha224_functions },
     { NULL, NULL, NULL },
