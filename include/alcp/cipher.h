@@ -63,21 +63,21 @@ typedef enum _alc_aes_mode
 
 typedef struct _alc_aes_info_t
 {
-    alc_aes_mode_t       mode; /* Mode eg: ALC_AES_MODE_CFB */
-    const uint8_t*       iv;   /* Initialization Vector */
+    alc_aes_mode_t ai_mode; /* Mode eg: ALC_AES_MODE_CFB */
+    const Uint8*   ai_iv;   /* Initialization Vector */
 } alc_aes_info_t, *alc_aes_info_p;
 
 typedef union _alc_cipher_mode_data
 {
-    alc_aes_info_t aes;
+    alc_aes_info_t cm_aes;
     // alc_des_info_t des;
 } alc_cipher_data_t, *alc_cipher_data_p;
 
 typedef struct _alc_cipher_info
 {
-    alc_cipher_type_t cipher_type;
-    alc_key_info_t    key_info;
-    alc_cipher_data_t mode_data;
+    alc_cipher_type_t ci_type;
+    alc_key_info_t    ci_key_info;
+    alc_cipher_data_t ci_mode_data; /* mode specific data */
 } alc_cipher_info_t, *alc_cipher_info_p;
 
 /**
@@ -94,8 +94,8 @@ typedef alc_cipher_context_t* alc_cipher_context_p;
  */
 typedef struct _alc_cipher_handle
 {
-    alc_cipher_context_p context;
-} alc_cipher_handle_t, *alc_cipher_handle_p;
+    alc_cipher_context_p ch_context;
+} alc_cipher_handle_t, *alc_cipher_handle_p, AlcCipherHandle;
 
 /**
  * \brief       Allows to check if a given algorithm is supported
@@ -116,7 +116,7 @@ alcp_cipher_supported(const alc_cipher_info_p pCipherInfo);
  * \param pCipherInfo Description of the requested cipher session
  * \return      size > 0 if valid session is found, size otherwise
  */
-uint64_t
+Uint64
 alcp_cipher_context_size(const alc_cipher_info_p pCipherInfo);
 
 /**
@@ -149,10 +149,10 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
  */
 alc_error_t
 alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
-                    const uint8_t*            pPlainText,
-                    uint8_t*                  pCipherText,
-                    uint64_t                  len,
-                    const uint8_t*            pIv);
+                    const Uint8*              pPlainText,
+                    Uint8*                    pCipherText,
+                    Uint64                    len,
+                    const Uint8*              pIv);
 
 /**
  * \brief    Allows caller to request for a cipher as described by
@@ -171,10 +171,10 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
  */
 alc_error_t
 alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
-                    const uint8_t*            pCipherText,
-                    uint8_t*                  pPlainText,
-                    uint64_t                  len,
-                    const uint8_t*            pIv);
+                    const Uint8*              pCipherText,
+                    Uint8*                    pPlainText,
+                    Uint64                    len,
+                    const Uint8*              pIv);
 
 /**
  * \brief       Free resources that was allotted by alcp_cipher_request

@@ -25,6 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include <cstdalign>
 #include <map>
 
 #include "alcp/error.h"
@@ -38,7 +39,7 @@
 namespace alcp::cipher {
 
 /* Message size, key size, etc */
-enum BlockSize : uint32
+enum BlockSize : Uint32
 {
     eBits128 = 128,
     eBits192 = 192,
@@ -47,9 +48,9 @@ enum BlockSize : uint32
 
 struct Params
 {
-    uint32 Nk;
-    uint32 Nb;
-    uint32 Nr;
+    Uint32 Nk;
+    Uint32 Nb;
+    Uint32 Nr;
 };
 
 /*
@@ -84,33 +85,32 @@ BitsToBlockSize(int iVal)
 
 class Rijndael::Impl
 {
-    void subBytes(uint8 state[][4]) noexcept;
-    void shiftRows(uint8 state[][4]) noexcept;
-    void mixColumns(uint8 state[][4]) noexcept;
-    void invMixColumns(uint8 state[][4]) noexcept;
-    void addRoundKey(uint8 state[][4], uint8 k[][4]) noexcept;
+    void subBytes(Uint8 state[][4]) noexcept;
+    void shiftRows(Uint8 state[][4]) noexcept;
+    void mixColumns(Uint8 state[][4]) noexcept;
+    void invMixColumns(Uint8 state[][4]) noexcept;
+    void addRoundKey(Uint8 state[][4], Uint8 k[][4]) noexcept;
 
 #define RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
 #define RIJ_ALIGN           (16)
 
   private:
-    uint8  m_round_key[RIJ_SIZE_ALIGNED(cMaxKeySize) * (cMaxRounds + 2)];
-    uint8* m_enc_key; /* encryption key: points to offset in 'm_key' */
-    uint8* m_dec_key; /* decryption key: points to offset in 'm_key' */
+    Uint8  m_round_key[RIJ_SIZE_ALIGNED(cMaxKeySize) * (cMaxRounds + 2)];
+    Uint8* m_enc_key; /* encryption key: points to offset in 'm_key' */
+    Uint8* m_dec_key; /* decryption key: points to offset in 'm_key' */
 
-    uint32    m_nrounds;  /* no of rounds */
-    uint32    m_ncolumns; /* no of columns in matrix */
-    uint32    m_key_size; /* key size in bits */
-    uint32    m_nk;       /* Nk of FIPS-197 */
+    Uint32    m_nrounds;  /* no of rounds */
+    Uint32    m_ncolumns; /* no of columns in matrix */
+    Uint32    m_key_size; /* key size in bytes */
     BlockSize m_block_size;
 
   public:
     ~Impl() = default;
-    uint32       getRounds() const { return m_nrounds; }
-    uint32       getNk() const { return m_nk; }
-    const uint8* getEncryptKeys() const { return m_enc_key; }
-    const uint8* getDecryptKeys() const { return m_dec_key; }
-    void         expandKeys(const uint8* pUserKey) noexcept;
+    Uint32       getRounds() const { return m_nrounds; }
+    Uint32       getKeySize() const { return m_key_size; }
+    const Uint8* getEncryptKeys() const { return m_enc_key; }
+    const Uint8* getDecryptKeys() const { return m_dec_key; }
+    void         expandKeys(const Uint8* pUserKey) noexcept;
 
     void setUp(const alc_key_info_t& rKeyInfo)
     {
@@ -118,20 +118,8 @@ class Rijndael::Impl
         m_block_size      = BitsToBlockSize(len);
         const Params& prm = ParamsMap.at(m_block_size);
         m_nrounds         = prm.Nr;
-        m_nk              = prm.Nk;
-
-        m_key_size = len / utils::BitsPerByte;
-
-        // clang-format off
-        switch (rKeyInfo.len_type) {
-            case ALC_KEY_LEN_128: m_ncolumns = 4; m_nk = 4; break;
-            case ALC_KEY_LEN_192: m_ncolumns = 5; m_nk = 6; break;
-            case ALC_KEY_LEN_256: m_ncolumns = 6; m_nk = 8; break;
-            default:
-                InvalidArgumentException("Length not supported");
-                break;
-        }
-        // clang-format on
+        m_ncolumns        = prm.Nk;
+        m_key_size        = len / utils::BitsPerByte;
 
         /* Encryption and Decryption key offsets */
         m_enc_key = &m_round_key[0];
@@ -142,10 +130,10 @@ class Rijndael::Impl
     }
 };
 
-static uint8
-GetSbox(uint8 offset, bool use_invsbox = false)
+static Uint8
+GetSbox(Uint8 offset, bool use_invsbox = false)
 {
-    static const uint8 sBox[] = {
+    static const Uint8 sBox[] = {
         /* 0   1     2     3     4      5     6    7 */
         /* 8   9     10    11    12    13    14    15  */
         0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5,
@@ -182,7 +170,7 @@ GetSbox(uint8 offset, bool use_invsbox = false)
         0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16 /*f*/
     };
 
-    static const uint8 invsBox[257] = {
+    static const Uint8 invsBox[257] = {
         /*
          0     1     2     3     4     5     6     7
          8     9     a     b     c     d     e     f
@@ -227,11 +215,11 @@ GetSbox(uint8 offset, bool use_invsbox = false)
     return sBox[offset];
 }
 
-static inline uint8
-__ffmul(uint8 a, uint8 b)
+static inline Uint8
+__ffmul(Uint8 a, Uint8 b)
 {
-    uint8 bw[4];
-    uint8 res = 0;
+    Uint8 bw[4];
+    Uint8 res = 0;
 
     bw[0] = b;
 
@@ -252,7 +240,7 @@ __ffmul(uint8 a, uint8 b)
 }
 
 void
-Rijndael::Impl::subBytes(uint8 state[][4]) noexcept
+Rijndael::Impl::subBytes(Uint8 state[][4]) noexcept
 {
     for (int r = 0; r < 4; r++) {
         for (int c = 0; c < 4; c++) {
@@ -262,9 +250,9 @@ Rijndael::Impl::subBytes(uint8 state[][4]) noexcept
 }
 
 void
-Rijndael::Impl::shiftRows(uint8 state[][4]) noexcept
+Rijndael::Impl::shiftRows(Uint8 state[][4]) noexcept
 {
-    uint8 t[4];
+    Uint8 t[4];
     for (int r = 1; r < 4; r++) {
         for (int c = 0; c < 4; c++) {
             t[c] = state[r][(c + r) % 4];
@@ -275,22 +263,22 @@ Rijndael::Impl::shiftRows(uint8 state[][4]) noexcept
     }
 }
 
-#define BYTE0O_WORD(x) utils::BytesToWord<uint8>((x), 0, 0, 0)
+#define BYTE0_WORD(x) utils::BytesToWord<Uint8>((x), 0, 0, 0)
 
 /*
  * FIPS-197 Section 4.2
  * s_round_constants[] contains
  * [x**(i),{00},{00},{00}], i=0,..,10 GF(256)
  */
-static const uint32 s_round_constants[] = {
-    BYTE0O_WORD(0x01), BYTE0O_WORD(0x02), BYTE0O_WORD(0x04), BYTE0O_WORD(0x08),
-    BYTE0O_WORD(0x10), BYTE0O_WORD(0x20), BYTE0O_WORD(0x40), BYTE0O_WORD(0x80),
-    BYTE0O_WORD(0x1B), BYTE0O_WORD(0x36), BYTE0O_WORD(0x6C), BYTE0O_WORD(0xD8),
-    BYTE0O_WORD(0xAB), BYTE0O_WORD(0x4D), BYTE0O_WORD(0x9A), BYTE0O_WORD(0x2F),
-    BYTE0O_WORD(0x5E), BYTE0O_WORD(0xBC), BYTE0O_WORD(0x63), BYTE0O_WORD(0xC6),
-    BYTE0O_WORD(0x97), BYTE0O_WORD(0x35), BYTE0O_WORD(0x6A), BYTE0O_WORD(0xD4),
-    BYTE0O_WORD(0xB3), BYTE0O_WORD(0x7D), BYTE0O_WORD(0xFA), BYTE0O_WORD(0xEF),
-    BYTE0O_WORD(0xC5)
+static const Uint32 s_round_constants[] = {
+    BYTE0_WORD(0x01), BYTE0_WORD(0x02), BYTE0_WORD(0x04), BYTE0_WORD(0x08),
+    BYTE0_WORD(0x10), BYTE0_WORD(0x20), BYTE0_WORD(0x40), BYTE0_WORD(0x80),
+    BYTE0_WORD(0x1B), BYTE0_WORD(0x36), BYTE0_WORD(0x6C), BYTE0_WORD(0xD8),
+    BYTE0_WORD(0xAB), BYTE0_WORD(0x4D), BYTE0_WORD(0x9A), BYTE0_WORD(0x2F),
+    BYTE0_WORD(0x5E), BYTE0_WORD(0xBC), BYTE0_WORD(0x63), BYTE0_WORD(0xC6),
+    BYTE0_WORD(0x97), BYTE0_WORD(0x35), BYTE0_WORD(0x6A), BYTE0_WORD(0xD4),
+    BYTE0_WORD(0xB3), BYTE0_WORD(0x7D), BYTE0_WORD(0xFA), BYTE0_WORD(0xEF),
+    BYTE0_WORD(0xC5)
 };
 
 /*
@@ -327,23 +315,25 @@ static const uint32 s_round_constants[] = {
  */
 
 void
-Rijndael::Impl::expandKeys(const uint8* pUserKey) noexcept
+Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
 {
     using utils::GetByte, utils::MakeWord;
 
-    uint8        dummy_key[Rijndael::cMaxKeySize] = { 0 };
-    const uint8* key     = pUserKey ? pUserKey : &dummy_key[0];
-    uint8 *      pEncKey = m_enc_key, *pDecKey = m_dec_key;
+    Uint8        dummy_key[Rijndael::cMaxKeySize] = { 0 };
+    const Uint8* key     = pUserKey ? pUserKey : &dummy_key[0];
+    Uint8 *      pEncKey = m_enc_key, *pDecKey = m_dec_key;
 
     if (isAesniAvailable()) {
         aesni::ExpandKeys(key, pEncKey, pDecKey, m_nrounds);
         return;
     }
 
-    uint32        i, nb = Rijndael::cBlockSizeWord, nr = m_nrounds, nk = m_nk;
-    const uint32* rtbl        = s_round_constants;
-    auto          p_enc_key32 = reinterpret_cast<uint32*>(pEncKey);
-    // auto            p_key32     = reinterpret_cast<const uint32*>(key);
+    Uint32 i;
+    Uint32 nb = Rijndael::cBlockSizeWord, nr = m_nrounds,
+           nk                 = m_key_size / utils::BytesPerWord;
+    const Uint32* rtbl        = s_round_constants;
+    auto          p_enc_key32 = reinterpret_cast<Uint32*>(pEncKey);
+    // auto            p_key32     = reinterpret_cast<const Uint32*>(key);
 
     for (i = 0; i < nk; i++) {
         p_enc_key32[i] = MakeWord(
@@ -353,7 +343,7 @@ Rijndael::Impl::expandKeys(const uint8* pUserKey) noexcept
     i = nk;
 
     for (i = nk; i < nb * (nr + 1); i++) {
-        uint32 temp = p_enc_key32[i - 1];
+        Uint32 temp = p_enc_key32[i - 1];
         if (i % nk == 0) {
             temp = MakeWord(GetSbox(GetByte(temp, 1)),
                             GetSbox(GetByte(temp, 2)),
@@ -386,48 +376,51 @@ Rijndael::Rijndael(const alc_key_info_t& rKeyInfo)
 
 Rijndael::~Rijndael() {}
 
-const uint8*
+const Uint8*
 Rijndael::getEncryptKeys() const
 {
     return pImpl()->getEncryptKeys();
 }
 
-const uint8*
+const Uint8*
 Rijndael::getDecryptKeys() const
 {
     return pImpl()->getDecryptKeys();
 }
 
-#define BYTE0O_WORD(x) utils::BytesToWord<uint8>((x), 0, 0, 0)
+#define BYTE0O_WORD(x) utils::BytesToWord<Uint8>((x), 0, 0, 0)
 
 void
-Rijndael::setKey(const uint8* pUserKey, uint64 len)
+Rijndael::setKey(const Uint8* pUserKey, Uint64 len)
 {
     if ((len < cMinKeySize) || (len > cMaxKeySize))
-        throw InvalidArgumentException("Key length not acceptible");
+        throw InvalidArgumentException("Key length not acceptable");
 
     pImpl()->expandKeys(pUserKey);
 }
 
 void
-Rijndael::setDecryptKey(const uint8*, uint64)
+Rijndael::setDecryptKey(const Uint8*, Uint64)
 {}
 
 void
-Rijndael::setEncryptKey(const uint8*, uint64)
+Rijndael::setEncryptKey(const Uint8*, Uint64)
 {}
 
-uint32
+Uint32
 Rijndael::getNr() const
 {
     return pImpl()->getRounds();
 }
-uint32
+
+Uint32
 Rijndael::getNk() const
 {
-    return pImpl()->getNk();
+    /* getKeySize() returns length in bits */
+    return pImpl()->getKeySize() / utils::BitsPerByte / utils::BytesPerWord;
 }
-uint32
+
+Uint32
 Rijndael::getRounds() const
 {
     return pImpl()->getRounds();

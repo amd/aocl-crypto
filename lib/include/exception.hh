@@ -94,10 +94,10 @@ class GenericException : public Exception
     {}
 };
 
-class NotImplementedException : public Exception
+class NotImplemented : public Exception
 {
   private:
-    NotImplementedException(const std::string& pMsg, const std::string& pFunc)
+    NotImplemented(const std::string& pMsg, const std::string& pFunc)
         : Exception{ ALC_ERROR_NOT_EXISTS, "" }
     {
         m_text = pFunc + pMsg;
@@ -105,8 +105,8 @@ class NotImplementedException : public Exception
     }
 
   public:
-    NotImplementedException()
-        : NotImplementedException(m_def_str, __FUNCTION__)
+    NotImplemented()
+        : NotImplemented(m_def_str, __FUNCTION__)
     {}
 
     virtual const char* what() const noexcept { return m_text.c_str(); }

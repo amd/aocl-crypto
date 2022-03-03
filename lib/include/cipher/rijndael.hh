@@ -28,9 +28,7 @@
 
 #pragma once
 
-#include <cstdalign>
-#include <cstdint>
-#include <map>
+#include <memory>
 
 #include "alcp/cipher.h"
 

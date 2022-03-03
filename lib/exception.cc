@@ -30,6 +30,6 @@
 
 namespace alcp {
 
-const std::string NotImplementedException::m_def_str = "Not Implemented";
+const std::string NotImplemented::m_def_str = "Not Implemented";
 
 }

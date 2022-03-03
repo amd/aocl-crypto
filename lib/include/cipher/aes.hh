@@ -54,7 +54,7 @@ class Aes : public Rijndael
   public:
     explicit Aes(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
         : Rijndael{ keyInfo }
-        , m_mode{ aesInfo.mode }
+        , m_mode{ aesInfo.ai_mode }
     {}
 
   protected:
@@ -99,8 +99,9 @@ class Cfb final : public Aes
     {
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
-        if (cipherInfo.cipher_type == ALC_CIPHER_TYPE_AES) {
-            if (cipherInfo.mode_data.aes.mode == ALC_AES_MODE_CFB) {
+        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
+            auto aip = &cipherInfo.ci_mode_data.cm_aes;
+            if (aip->ai_mode == ALC_AES_MODE_CFB) {
                 Error::setDetail(err, ALC_ERROR_NONE);
                 return true;
             }
@@ -174,8 +175,9 @@ class Cbc final : public Aes
     {
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
-        if (cipherInfo.cipher_type == ALC_CIPHER_TYPE_AES) {
-            if (cipherInfo.mode_data.aes.mode == ALC_AES_MODE_CBC) {
+        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
+            auto aip = &cipherInfo.ci_mode_data.cm_aes;
+            if (aip->ai_mode == ALC_AES_MODE_CBC) {
                 Error::setDetail(err, ALC_ERROR_NONE);
                 return true;
             }
@@ -249,8 +251,9 @@ class Ofb final : public Aes
     {
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
-        if (cipherInfo.cipher_type == ALC_CIPHER_TYPE_AES) {
-            if (cipherInfo.mode_data.aes.mode == ALC_AES_MODE_OFB) {
+        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
+            auto aip = &cipherInfo.ci_mode_data.cm_aes;
+            if (aip->ai_mode == ALC_AES_MODE_OFB) {
                 Error::setDetail(err, ALC_ERROR_NONE);
                 return true;
             }

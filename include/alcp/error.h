@@ -29,7 +29,6 @@
 #define _ALCP_ERROR_H_ 2
 
 #include <assert.h>
-#include <stdint.h>
 
 #include "alcp/macros.h"
 #include "alcp/types.h"
@@ -115,7 +114,9 @@ typedef enum _alc_error_generic
 
 } alc_error_generic_t;
 
-typedef uint64_t alc_error_t;
+typedef Uint64 alc_error_t;
+/* TODO: eventually we convert all types to AlcError */
+typedef Uint64 AlcError;
 
 /**
  * \brief        Converts AOCL Crypto errors to human readable form
@@ -127,7 +128,7 @@ typedef uint64_t alc_error_t;
  */
 
 void
-alcp_error_str(alc_error_t err, uint8_t* buf, uint64_t size);
+alcp_error_str(alc_error_t err, Uint8* buf, Uint64 size);
 
 /**
  * \brief        Returns true if an error has occurred

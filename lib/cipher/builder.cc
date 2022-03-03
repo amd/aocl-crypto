@@ -42,10 +42,10 @@ CipherBuilder::Build(const alc_cipher_info_t& cipherInfo, Context& ctx)
 {
     alc_error_t err;
 
-    switch (cipherInfo.cipher_type) {
+    switch (cipherInfo.ci_type) {
         case ALC_CIPHER_TYPE_AES: {
             err = AesBuilder::Build(
-                cipherInfo.mode_data.aes, cipherInfo.key_info, ctx);
+                cipherInfo.ci_mode_data.cm_aes, cipherInfo.ci_key_info, ctx);
         } break;
 
         default:

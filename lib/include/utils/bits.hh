@@ -30,6 +30,7 @@
 
 #include <type_traits>
 
+#include "exception.hh"
 #include "types.hh"
 
 namespace alcp::utils {
@@ -54,14 +55,14 @@ BitsInBytes(T x)
 
 template<typename T>
 constexpr T
-BytesInBits(T x)
+BitSizeOf(T x)
 {
     return x / BitsPerByte;
 }
 
 template<typename T>
 constexpr T
-BytesIn(T x)
+ByteSizeOf(T x)
 {
     return x * BytesPer<T>();
 }
@@ -82,5 +83,37 @@ BytesToWord(T byte0, T byte1, T byte2, T byte3)
     return ((uint32)byte3 << 24) | ((uint32)byte2 << 16) | ((uint32)byte1 << 8)
            | (byte0);
 }
+
+template<typename T,
+         int size                                = sizeof(T) * 8,
+         std::enable_if_t<std::is_integral_v<T>> = 0>
+class Bits
+{
+  public:
+    explicit Bits(T t)
+        : m_val{ t }
+    {}
+
+    T extract(int start, int end) const
+    {
+        assert(end >= start);
+        int nbits = end - start;
+        T   mask  = ~(1UL << nbits);
+
+        return (T)(m_val >> start) & mask;
+    }
+
+    void set(int start, int end) { NotImplemented(); }
+    void reset(int start, int end) { NotImplemented(); }
+    void replace(int start, int end) { NotImplemented(); }
+
+  private:
+    Bits() {}
+    Bits(const Bits&) {}
+    Bits& operator=(const Bits&) {}
+
+  private:
+    T m_val;
+};
 
 } // namespace alcp::utils

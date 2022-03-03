@@ -62,7 +62,7 @@ bool
 Module::Impl::isCipherSupported(const alc_cipher_info_p pCipherInfo,
                                 alc_error_t&            err) const
 {
-    CipherModuleList mlist = m_cipher_map.at(pCipherInfo->cipher_type);
+    CipherModuleList mlist = m_cipher_map.at(pCipherInfo->ci_type);
 
     /* TODO: investigate if we need to take a 'rwlock' before reading */
     for (auto& m : mlist) {

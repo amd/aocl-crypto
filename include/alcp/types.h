@@ -30,9 +30,39 @@
 #define _ALCP_TYPES_H_ 2
 
 #ifndef __cplusplus
-#ifndef  bool 
-typedef enum {false, true} bool;
+#ifndef bool
+typedef enum
+{
+    false,
+    true
+} bool;
 #endif
 #endif
+
+#include <stdint.h>
+
+typedef int8_t  Int8;
+typedef int16_t Int16;
+typedef int32_t Int32;
+typedef int32_t Int64;
+
+typedef uint8_t  Uint8;
+typedef uint16_t Uint16;
+typedef uint32_t Uint32;
+typedef uint64_t Uint64;
+
+/* Pointers */
+typedef void*     VoidP;
+typedef int8_t*   Int8P;
+typedef int16_t*  Int16P;
+typedef int32_t*  Int32P;
+typedef int64_t*  Int64P;
+typedef uint8_t*  Uint8P;
+typedef uint16_t* Uint16P;
+typedef uint32_t* Uint32P;
+typedef uint64_t* Uint64P;
+
+/* Any handle that is returned by ALCP APIs */
+typedef VoidP AlcHandleP;
 
 #endif /* _ALCP_TYPES_H_ */

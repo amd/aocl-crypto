@@ -83,7 +83,7 @@ typedef struct _alc_digest_info
     alc_digest_type_t dt_type;
     alc_digest_len_t  dt_len;
     /* valid when dgst_len == ALC_DIGEST_LEN_CUSTOM */
-    uint32_t          dt_custom_len;
+    Uint32            dt_custom_len;
     alc_digest_mode_t dt_mode;
     alc_digest_data_t dt_data;
 } alc_digest_info_t, *alc_digest_info_p;
@@ -103,7 +103,7 @@ typedef alc_digest_context_t* alc_digest_context_p;
 typedef struct _alc_digest_handle
 {
     alc_digest_context_p context;
-} alc_digest_handle_t, *alc_digest_handle_p;
+} alc_digest_handle_t, *alc_digest_handle_p, AlcDigestHandle, *AlcDigestHandleP;
 
 /**
  * \brief       Returns the context size of the interaction
@@ -115,7 +115,7 @@ typedef struct _alc_digest_handle
  *
  * \return      size > 0        if valid session is found, size otherwise
  */
-uint64_t
+Uint64
 alcp_digest_context_size(const alc_digest_info_p p_digest_info);
 
 /**
@@ -162,8 +162,8 @@ alcp_digest_request(const alc_digest_info_p p_digest_info,
  */
 alc_error_t
 alcp_digest_update(const alc_digest_handle_p p_digest_handle,
-                   const uint8_t*            buf,
-                   uint64_t                  size);
+                   const Uint8*              buf,
+                   Uint64                    size);
 
 /**
  * \brief       Digest is kept as part of p_digest_handle, this API allows
@@ -182,8 +182,8 @@ alcp_digest_update(const alc_digest_handle_p p_digest_handle,
  */
 alc_error_t
 alcp_digest_copy(const alc_digest_handle_p p_digest_handle,
-                 uint8_t*                  buf,
-                 uint64_t                  size);
+                 Uint8*                    buf,
+                 Uint64                    size);
 
 /**
  * \brief       Final buffer call
@@ -203,8 +203,8 @@ alcp_digest_copy(const alc_digest_handle_p p_digest_handle,
  */
 alc_error_t
 alcp_digest_finalize(const alc_digest_handle_p p_digest_handle,
-                     const uint8_t*            p_msg_buf,
-                     uint64_t                  size);
+                     const Uint8*              p_msg_buf,
+                     Uint64                    size);
 
 /**
  * \brief       Performs any cleanup actions

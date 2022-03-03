@@ -78,13 +78,13 @@ namespace alcp::cipher { namespace aesni {
                               uint8_t*       pEncKey,
                               uint8_t*       pDecKey)
     {
-        NotImplementedException();
+        NotImplemented();
         return ALC_ERROR_NONE;
     }
 
     static inline __m128i __aes192keyassist(__m128i tmp0, __m128i tmp1)
     {
-        NotImplementedException();
+        NotImplemented();
         return tmp1;
     }
 
@@ -109,7 +109,7 @@ namespace alcp::cipher { namespace aesni {
 
         tmp[0] = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pUserKey));
 #endif
-        NotImplementedException();
+        NotImplemented();
 
         return ALC_ERROR_NONE;
     }
