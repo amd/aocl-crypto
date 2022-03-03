@@ -18,8 +18,8 @@ create_demo_session(const uint8_t* key,
     uint8_t     err_buf[err_size];
 
     alc_aes_info_t aes_data = {
-        .mode = ALC_AES_MODE_CFB,
-        .iv   = iv,
+        .ai_mode = ALC_AES_MODE_CFB,
+        .ai_iv   = iv,
     };
 
     /*
@@ -31,13 +31,13 @@ create_demo_session(const uint8_t* key,
     };
     */
     alc_cipher_info_t cinfo = {
-        .cipher_type = ALC_CIPHER_TYPE_AES,
-        .mode_data   = {
-            .aes = aes_data,
+        .ci_type = ALC_CIPHER_TYPE_AES,
+        .ci_mode_data   = {
+            .cm_aes = aes_data,
         },
         /* No padding, Not Implemented yet*/
         //.pad     = ALC_CIPHER_PADDING_NONE, 
-        .key_info     = {
+        .ci_key_info     = {
             .type    = ALC_KEY_TYPE_SYMMETRIC,
             .fmt     = ALC_KEY_FMT_RAW,
             .key     = key,
@@ -62,7 +62,7 @@ create_demo_session(const uint8_t* key,
     /*
      * Application is expected to allocate for context
      */
-    handle.context = malloc(alcp_cipher_context_size(&cinfo));
+    handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
     // if (!ctx)
     //    return;
 
@@ -213,6 +213,8 @@ main(void)
      * Complete the transaction
      */
     alcp_cipher_finish(&handle);
+
+    free(handle.ch_context);
 
     return 0;
 }

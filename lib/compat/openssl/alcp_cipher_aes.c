@@ -29,16 +29,16 @@
 #include "alcp_cipher_aes.h"
 
 static alc_cipher_info_t s_cipher_cfb_info = {
-    .cipher_type = ALC_CIPHER_TYPE_AES,
-    .key_info = {
+    .ci_type = ALC_CIPHER_TYPE_AES,
+    .ci_key_info = {
         ALC_KEY_TYPE_SYMMETRIC,
         ALC_KEY_FMT_RAW,
         ALC_KEY_ALG_SYMMETRIC,
         ALC_KEY_LEN_128,
         128,
     },
-    .mode_data = { .aes = {
-            .mode =      ALC_AES_MODE_CFB,
+    .ci_mode_data = { .cm_aes = {
+            .ai_mode =      ALC_AES_MODE_CFB,
         }, },
 };
 

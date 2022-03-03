@@ -179,7 +179,7 @@ ALCP_prov_cipher_get_ctx_params(void* vctx, OSSL_PARAM params[])
 {
     OSSL_PARAM*           p;
     alc_prov_cipher_ctx_p cctx   = (alc_prov_cipher_ctx_p)vctx;
-    size_t                keylen = cctx->pc_cipher_info.key_info.len;
+    size_t                keylen = cctx->pc_cipher_info.ci_key_info.len;
 
     ENTER();
 
@@ -207,7 +207,7 @@ ALCP_prov_cipher_set_ctx_params(void* vctx, const OSSL_PARAM params[])
             HERE();
             return 0;
         }
-        cctx->pc_cipher_info.key_info.len = keylen;
+        cctx->pc_cipher_info.ci_key_info.len = keylen;
     }
 
     EXIT();
@@ -226,9 +226,9 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
     alc_cipher_info_p     cinfo = &cctx->pc_cipher_info;
     ENTER();
 
-    assert(cinfo->cipher_type == ALC_CIPHER_TYPE_AES);
+    assert(cinfo->ci_type == ALC_CIPHER_TYPE_AES);
 
-    switch (cinfo->mode_data.aes.mode) {
+    switch (cinfo->ci_mode_data.cm_aes.ai_mode) {
         case ALC_AES_MODE_CFB:
             break;
         default:
