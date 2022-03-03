@@ -35,7 +35,7 @@
 #include "defs.hh"
 #include "error.hh"
 
-#include "capi/cipher.hh"
+#include "capi/cipher/builder.hh"
 
 using namespace alcp;
 

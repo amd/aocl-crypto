@@ -29,7 +29,7 @@
 #ifndef _CIPHER_AES_BUILD_HH
 #define _CIPHER_AES_BUILD_HH 2
 
-#include "capi/cipher.hh"
+#include "capi/cipher/builder.hh"
 
 #include "cipher.hh"
 #include "cipher/aes.hh"

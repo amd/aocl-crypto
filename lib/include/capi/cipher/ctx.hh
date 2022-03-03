@@ -25,60 +25,52 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 #pragma once
 
-/* C-API headers */
-#include "alcp/digest.h"
-#include "alcp/types.h"
+#include "alcp/cipher.h"
 
-/* C++ headers */
-#include "error.hh"
+#include "cipher.hh"
 
-/* System headers */
-#include <string>
+#include <functional>
 
-namespace alcp::digest {
+namespace alcp::cipher {
 
-static inline Uint32
-RotateRight(Uint32 value, Uint32 count)
+struct Context
 {
-    return value >> count | value << (32 - count);
-}
+    void* m_cipher;
 
-static inline Uint64
-RotateRight(Uint64 value, Uint64 count)
-{
-    return value >> count | value << (64 - count);
-}
+    alc_error_t (*decrypt)(const void*  rCipher,
+                           const Uint8* pSrc,
+                           Uint8*       pDst,
+                           Uint64       len,
+                           const Uint8* pIv);
 
-class DigestInterface
-{
-  public:
-    DigestInterface() {}
+    alc_error_t (*encrypt)(const void*  rCipher,
+                           const Uint8* pSrt,
+                           Uint8*       pDrc,
+                           Uint64       len,
+                           const Uint8* pIv);
 
-  public:
-    virtual alc_error_t update(const Uint8* pBuf, Uint64 size)   = 0;
-    virtual alc_error_t finalize(const Uint8* pBuf, Uint64 size) = 0;
-    virtual void        finish()                                 = 0;
-    // virtual alc_error_t compute(const Uint8* buf, Uint64 size)  = 0;
-    virtual alc_error_t copyHash(Uint8* pBuf, Uint64 size) const = 0;
-
-  protected:
-    virtual ~DigestInterface() {}
+    alc_error_t (*finish)(const void*);
 };
 
-class Digest : public DigestInterface
+struct ContextR
 {
+    std::function<alc_error_t(const void*  rCipher,
+                              const Uint8* pSrc,
+                              Uint8*       pDst,
+                              Uint64       len,
+                              const Uint8* pIv)>
+        decrypt;
 
-  protected:
-    alc_digest_len_t  m_digest_len; /* digest len in bytes */
-    Uint64            m_digest_len_bytes;
-    alc_digest_data_t m_data;
+    std::function<alc_error_t(const void*  rCipher,
+                              const Uint8* pSrc,
+                              Uint8*       pDst,
+                              Uint64       len,
+                              const Uint8* pIv)>
+        encrypt;
 
-  protected:
-    Digest()          = default;
-    virtual ~Digest() = default;
+    std::function<alc_error_t(const void* rCipher)> finish;
 };
 
-} // namespace alcp::digest
+} // namespace alcp::cipher

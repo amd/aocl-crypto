@@ -31,7 +31,7 @@
 #include "cipher.hh"
 #include "cipher/aes_build.hh"
 
-#include "capi/cipher.hh"
+#include "capi/cipher/builder.hh"
 
 namespace alcp::cipher {
 

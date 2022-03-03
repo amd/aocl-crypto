@@ -27,41 +27,18 @@
  */
 #pragma once
 
-#ifndef _CAPI_CIPHER_HH
-#define _CAPI_CIPHER_HH 2
-
 #include "alcp/cipher.h"
 
+#include "capi/cipher/ctx.hh"
 #include "cipher.hh"
-#include "defs.hh"
 
 namespace alcp::cipher {
-
-struct Context
-{
-    void* m_cipher;
-
-    alc_error_t (*decrypt)(const void*    rCipher,
-                           const uint8_t* pSrc,
-                           uint8_t*       pDst,
-                           uint64_t       len,
-                           const uint8_t* pIv);
-
-    alc_error_t (*encrypt)(const void*    rCipher,
-                           const uint8_t* pSrt,
-                           uint8_t*       pDrc,
-                           uint64_t       len,
-                           const uint8_t* pIv);
-
-    alc_error_t (*finish)(const void*);
-};
 
 class CipherBuilder
 {
   public:
-    static alc_error_t Build(const alc_cipher_info_t& cipherInfo, Context& ctx);
+    static alc_error_t Build(const alc_cipher_info_t& cipherInfo,
+                             alcp::cipher::Context&   ctx);
 };
 
 } // namespace alcp::cipher
-
-#endif /* _CAPI_CIPHER_HH */
