@@ -82,7 +82,8 @@ namespace alcp::digest { namespace shani {
             prev_state_abef = state0;
             prev_state_cdgh = state1;
             // Calculate the rounds for the first 16 words
-            for (uint32_t i = 0; i < 4; i++) {
+            _Pragma("GCC unroll 4") for (uint32_t i = 0; i < 4; i++)
+            {
                 msg    = _mm_add_epi32(chunk_vect[i],
                                     _mm_set_epi32(pHashConstants[4 * i + 3],
                                                   pHashConstants[4 * i + 2],
@@ -94,7 +95,8 @@ namespace alcp::digest { namespace shani {
             }
             // Extend the message to 64 words and calcute the rounds on the
             // extended message.
-            for (uint32_t i = 4; i < 16; i++) {
+            _Pragma("GCC unroll 12") for (uint32_t i = 4; i < 16; i++)
+            {
                 msg0 =
                     _mm_sha256msg1_epu32(chunk_vect[i - 4], chunk_vect[i - 3]);
                 tmp  = _mm_alignr_epi8(chunk_vect[i - 1], chunk_vect[i - 2], 4);
