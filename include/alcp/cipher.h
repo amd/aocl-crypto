@@ -103,6 +103,7 @@ typedef struct _alc_cipher_handle
  *              fallback mechanism
  * \params pCipherInfo The information about the cipher algorithm and modes
  *                     as described by alc_cipher_info_t
+ * \return              alc_error_t
  */
 alc_error_t
 alcp_cipher_supported(const alc_cipher_info_p pCipherInfo);
@@ -142,9 +143,11 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
  *           valid.
  * \param    pCipherHandle Session handle for future encrypt decrypt
  *                         operation
- * \param    pPlainText    Pointer to Plain Text
- * \param    pCipherText   Pointer to Cipher Text
- * \param    len           Length of cipher/plain text
+ * \param[in]    pPlainText    Pointer to Plain Text
+ * \param[out]   pCipherText   Pointer to Cipher Text
+ * \param[in]    pKey          Pointer to Key
+ * \param[in]    pIv           Pointer to Initialization Vector
+ * \param[in]    len           Length of cipher/plain text
  * \return   Error described by alc_error_t
  */
 alc_error_t
@@ -181,7 +184,8 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
  * \notes       alcp_cipher_request() should be called first to know if the
  *              given cipher/key length configuration is valid.
  *
- * \param pCipherInfo Description of the requested cipher session
+ * \param[in]    pCipherHandle    Session handle for future encrypt decrypt
+ *                         operation
  * \return            None
  */
 void
