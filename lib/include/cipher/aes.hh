@@ -327,8 +327,9 @@ class Ctr final : public Aes
     {
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
-        if (cipherInfo.cipher_type == ALC_CIPHER_TYPE_AES) {
-            if (cipherInfo.mode_data.aes.mode == ALC_AES_MODE_CTR) {
+        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
+            auto aip = &cipherInfo.ci_mode_data.cm_aes;
+            if (aip->ai_mode == ALC_AES_MODE_CTR) {
                 Error::setDetail(err, ALC_ERROR_NONE);
                 return true;
             }
