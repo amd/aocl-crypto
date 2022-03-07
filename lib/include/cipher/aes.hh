@@ -295,6 +295,82 @@ class Ofb final : public Aes
 
   private:
 };
+
+/*
+ * \brief        AES Encryption in Ctr(Counter mode)
+ * \notes        TODO: Move this to a aes_Ctr.hh or other
+ */
+class Ctr final : public Aes
+{
+  public:
+    explicit Ctr(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+        : Aes(aesInfo, keyInfo)
+    {}
+
+    ~Ctr() {}
+
+  public:
+    static bool isSupported(const alc_aes_info_t& cipherInfo,
+                            const alc_key_info_t& keyInfo)
+    {
+        return true;
+    }
+
+    /**
+     * \brief
+     * \notes
+     * \param
+     * \return
+     */
+    virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
+                             alc_error_t&             err) override
+    {
+        Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
+
+        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
+            auto aip = &cipherInfo.ci_mode_data.cm_aes;
+            if (aip->ai_mode == ALC_AES_MODE_CTR) {
+                Error::setDetail(err, ALC_ERROR_NONE);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * \brief   CTR Encrypt Operation
+     * \notes
+     * \param   pPlainText      Pointer to output buffer
+     * \param   pCipherText     Pointer to encrypted buffer
+     * \param   len             Len of plain and encrypted text
+     * \param   pIv             Pointer to Initialization Vector
+     * \return  alc_error_t     Error code
+     */
+    virtual alc_error_t encrypt(const uint8_t* pPlainText,
+                                uint8_t*       pCipherText,
+                                uint64_t       len,
+                                const uint8_t* pIv) const final;
+
+    /**
+     * \brief   CTR Decrypt Operation
+     * \notes
+     * \param   pCipherText     Pointer to encrypted buffer
+     * \param   pPlainText      Pointer to output buffer
+     * \param   len             Len of plain and encrypted text
+     * \param   pIv             Pointer to Initialization Vector
+     * \return  alc_error_t     Error code
+     */
+    virtual alc_error_t decrypt(const uint8_t* pCipherText,
+                                uint8_t*       pPlainText,
+                                uint64_t       len,
+                                const uint8_t* pIv) const final;
+
+  private:
+    Ctr(){};
+
+  private:
+};
 } // namespace alcp::cipher
 
 #endif /* _CIPHER_AES_HH_ */

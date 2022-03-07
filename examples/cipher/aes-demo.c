@@ -328,8 +328,7 @@ main(void)
         } else if (m == ALC_AES_MODE_OFB) {
             printf("\n\nAES-OFB");
         } else if (m == ALC_AES_MODE_CTR) {
-            printf("\n\nAES-CTR not implemented");
-            continue;
+            printf("\n\nAES-CTR");
         } else if (m == ALC_AES_MODE_CFB) {
             printf("\n\nAES-CFB");
         } else if (m == ALC_AES_MODE_XTR) {
