@@ -42,6 +42,76 @@ static alc_cipher_info_t s_cipher_cfb_info = {
         }, },
 };
 
+static alc_cipher_info_t s_cipher_cbc_info = {
+    .ci_type = ALC_CIPHER_TYPE_AES,
+    .ci_key_info = {
+        ALC_KEY_TYPE_SYMMETRIC,
+        ALC_KEY_FMT_RAW,
+        ALC_KEY_ALG_SYMMETRIC,
+        ALC_KEY_LEN_128,
+        128,
+    },
+    .ci_mode_data = { .cm_aes = {
+            .ai_mode =      ALC_AES_MODE_CBC,
+        }, },
+};
+
+static alc_cipher_info_t s_cipher_ofb_info = {
+    .ci_type = ALC_CIPHER_TYPE_AES,
+    .ci_key_info = {
+        ALC_KEY_TYPE_SYMMETRIC,
+        ALC_KEY_FMT_RAW,
+        ALC_KEY_ALG_SYMMETRIC,
+        ALC_KEY_LEN_128,
+        128,
+    },
+    .ci_mode_data = { .cm_aes = {
+            .ai_mode =      ALC_AES_MODE_OFB,
+        }, },
+};
+
+static alc_cipher_info_t s_cipher_ecb_info = {
+    .ci_type = ALC_CIPHER_TYPE_AES,
+    .ci_key_info = {
+        ALC_KEY_TYPE_SYMMETRIC,
+        ALC_KEY_FMT_RAW,
+        ALC_KEY_ALG_SYMMETRIC,
+        ALC_KEY_LEN_128,
+        128,
+    },
+    .ci_mode_data = { .cm_aes = {
+            .ai_mode =      ALC_AES_MODE_ECB,
+        }, },
+};
+
+static alc_cipher_info_t s_cipher_ctr_info = {
+    .ci_type = ALC_CIPHER_TYPE_AES,
+    .ci_key_info = {
+        ALC_KEY_TYPE_SYMMETRIC,
+        ALC_KEY_FMT_RAW,
+        ALC_KEY_ALG_SYMMETRIC,
+        ALC_KEY_LEN_128,
+        128,
+    },
+    .ci_mode_data = { .cm_aes = {
+            .ai_mode =      ALC_AES_MODE_CTR,
+        }, },
+};
+
+static alc_cipher_info_t s_cipher_xtr_info = {
+    .ci_type = ALC_CIPHER_TYPE_AES,
+    .ci_key_info = {
+        ALC_KEY_TYPE_SYMMETRIC,
+        ALC_KEY_FMT_RAW,
+        ALC_KEY_ALG_SYMMETRIC,
+        ALC_KEY_LEN_128,
+        128,
+    },
+    .ci_mode_data = { .cm_aes = {
+            .ai_mode =      ALC_AES_MODE_XTR,
+        }, },
+};
+
 int
 ALCP_prov_aes_get_ctx_params(void* vctx, OSSL_PARAM params[])
 {
@@ -84,3 +154,9 @@ out:
 
 /* cfb_functions */
 CREATE_CIPHER_DISPATCHERS(cfb, aes, EVP_CIPH_CFB_MODE);
+CREATE_CIPHER_DISPATCHERS(cbc, aes, EVP_CIPH_CBC_MODE);
+CREATE_CIPHER_DISPATCHERS(ofb, aes, EVP_CIPH_OFB_MODE);
+CREATE_CIPHER_DISPATCHERS(ecb, aes, EVP_CIPH_ECB_MODE);
+CREATE_CIPHER_DISPATCHERS(ctr, aes, EVP_CIPH_CTR_MODE);
+// EVP_CIPH_XTR_MODE not defined..
+CREATE_CIPHER_DISPATCHERS(xtr, aes, EVP_CIPH_CTR_MODE);

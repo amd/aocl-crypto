@@ -37,10 +37,11 @@ ALCP_prov_freectx(alc_prov_ctx_t* ctx)
     if (ctx != NULL) {
         // ENGINE_free(ctx->e);
         // proverr_free_handle(ctx->proverr_handle);
-        OSSL_LIB_CTX_free(ctx->ap_libctx);
+        /* Below line commented because of segmentation fault*/
+        // OSSL_LIB_CTX_free(ctx->ap_libctx);
     }
 
-    OPENSSL_free(ctx);
+    // OPENSSL_free(ctx);
 }
 
 static alc_prov_ctx_t*
@@ -74,6 +75,10 @@ ALCP_query_operation(void* vctx, int operation_id, const int* no_cache)
         case OSSL_OP_CIPHER:
             EXIT();
             return ALC_prov_ciphers;
+            break;
+        case OSSL_OP_DIGEST:
+            EXIT();
+            return ALC_prov_digests;
             break;
         default:
             break;
