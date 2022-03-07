@@ -101,7 +101,7 @@ class Sha256::Impl
         /*
          * FIXME: call cpuid::isShaniAvailable() initialize
          */
-        static bool s_shani_available = false;
+        static bool s_shani_available = true;
         return s_shani_available;
     }
 

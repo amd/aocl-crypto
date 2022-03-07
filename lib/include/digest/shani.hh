@@ -35,9 +35,5 @@ namespace alcp::digest { namespace shani {
     alc_error_t ShaUpdate256(uint32_t*       pHash,
                              const uint8_t*  pSrc,
                              uint64_t        src_len,
-                             const uint32_t* pHashConstants)
-    {
-        return ALC_ERROR_NONE;
-    }
-
+                             const uint32_t* pHashConstants);
 }} // namespace alcp::digest::shani
