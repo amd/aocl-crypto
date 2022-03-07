@@ -25,10 +25,4 @@ hash_function(alc_digest_handle_t * s_dg_handle,
               uint8_t * output,
               uint64_t  out_size);
 
-/* hash to string */
-void
-hash_to_string(char string[65],
-               const uint8_t hash[32],
-               int sha_len);
-
 #endif //COMMON_HH_
