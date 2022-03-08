@@ -100,6 +100,21 @@ extern OSSL_FUNC_cipher_decrypt_init_fn   ALCP_prov_cipher_decrypt_init;
 extern OSSL_FUNC_cipher_update_fn         ALCP_prov_cipher_update;
 extern OSSL_FUNC_cipher_final_fn          ALCP_prov_cipher_final;
 
+#define CIPHER_CONTEXT(mode, alcp_mode)                                        \
+    static alc_cipher_info_t s_cipher_##mode##_info = {                        \
+        .ci_type = ALC_CIPHER_TYPE_AES,                                        \
+        .ci_key_info = {                                                       \
+            ALC_KEY_TYPE_SYMMETRIC,                                            \
+            ALC_KEY_FMT_RAW,                                                   \
+            ALC_KEY_ALG_SYMMETRIC,                                             \
+            ALC_KEY_LEN_128,                                                   \
+            128,                                                               \
+        },                                                                     \
+        .ci_mode_data = { .cm_aes = {                                          \
+                .ai_mode =      alcp_mode,                                     \
+            }, },                                                              \
+    }
+
 #define CREATE_CIPHER_DISPATCHERS(name, grp, mode)                             \
     static OSSL_FUNC_cipher_get_params_fn ALCP_prov_##name##_get_params;       \
     static int ALCP_prov_##name##_get_params(OSSL_PARAM* params)               \

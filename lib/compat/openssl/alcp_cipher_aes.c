@@ -28,89 +28,12 @@
 
 #include "alcp_cipher_aes.h"
 
-static alc_cipher_info_t s_cipher_cfb_info = {
-    .ci_type = ALC_CIPHER_TYPE_AES,
-    .ci_key_info = {
-        ALC_KEY_TYPE_SYMMETRIC,
-        ALC_KEY_FMT_RAW,
-        ALC_KEY_ALG_SYMMETRIC,
-        ALC_KEY_LEN_128,
-        128,
-    },
-    .ci_mode_data = { .cm_aes = {
-            .ai_mode =      ALC_AES_MODE_CFB,
-        }, },
-};
-
-static alc_cipher_info_t s_cipher_cbc_info = {
-    .ci_type = ALC_CIPHER_TYPE_AES,
-    .ci_key_info = {
-        ALC_KEY_TYPE_SYMMETRIC,
-        ALC_KEY_FMT_RAW,
-        ALC_KEY_ALG_SYMMETRIC,
-        ALC_KEY_LEN_128,
-        128,
-    },
-    .ci_mode_data = { .cm_aes = {
-            .ai_mode =      ALC_AES_MODE_CBC,
-        }, },
-};
-
-static alc_cipher_info_t s_cipher_ofb_info = {
-    .ci_type = ALC_CIPHER_TYPE_AES,
-    .ci_key_info = {
-        ALC_KEY_TYPE_SYMMETRIC,
-        ALC_KEY_FMT_RAW,
-        ALC_KEY_ALG_SYMMETRIC,
-        ALC_KEY_LEN_128,
-        128,
-    },
-    .ci_mode_data = { .cm_aes = {
-            .ai_mode =      ALC_AES_MODE_OFB,
-        }, },
-};
-
-static alc_cipher_info_t s_cipher_ecb_info = {
-    .ci_type = ALC_CIPHER_TYPE_AES,
-    .ci_key_info = {
-        ALC_KEY_TYPE_SYMMETRIC,
-        ALC_KEY_FMT_RAW,
-        ALC_KEY_ALG_SYMMETRIC,
-        ALC_KEY_LEN_128,
-        128,
-    },
-    .ci_mode_data = { .cm_aes = {
-            .ai_mode =      ALC_AES_MODE_ECB,
-        }, },
-};
-
-static alc_cipher_info_t s_cipher_ctr_info = {
-    .ci_type = ALC_CIPHER_TYPE_AES,
-    .ci_key_info = {
-        ALC_KEY_TYPE_SYMMETRIC,
-        ALC_KEY_FMT_RAW,
-        ALC_KEY_ALG_SYMMETRIC,
-        ALC_KEY_LEN_128,
-        128,
-    },
-    .ci_mode_data = { .cm_aes = {
-            .ai_mode =      ALC_AES_MODE_CTR,
-        }, },
-};
-
-static alc_cipher_info_t s_cipher_xtr_info = {
-    .ci_type = ALC_CIPHER_TYPE_AES,
-    .ci_key_info = {
-        ALC_KEY_TYPE_SYMMETRIC,
-        ALC_KEY_FMT_RAW,
-        ALC_KEY_ALG_SYMMETRIC,
-        ALC_KEY_LEN_128,
-        128,
-    },
-    .ci_mode_data = { .cm_aes = {
-            .ai_mode =      ALC_AES_MODE_XTR,
-        }, },
-};
+CIPHER_CONTEXT(cfb, ALC_AES_MODE_CFB);
+CIPHER_CONTEXT(cbc, ALC_AES_MODE_CBC);
+CIPHER_CONTEXT(ofb, ALC_AES_MODE_OFB);
+CIPHER_CONTEXT(ecb, ALC_AES_MODE_ECB);
+CIPHER_CONTEXT(ctr, ALC_AES_MODE_CTR);
+CIPHER_CONTEXT(xtr, ALC_AES_MODE_XTR);
 
 int
 ALCP_prov_aes_get_ctx_params(void* vctx, OSSL_PARAM params[])
