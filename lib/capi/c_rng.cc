@@ -26,8 +26,8 @@
  *
  */
 
-#include "rng.hh"
 #include "capi/rng/builder.hh"
+#include "rng.hh"
 
 #include "error.hh"
 
@@ -58,6 +58,7 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo)
                             error = ALC_ERROR_NOT_SUPPORTED;
                             break;
                     }
+                    break;
                 default:
                     error = ALC_ERROR_NOT_SUPPORTED;
                     break;
@@ -82,15 +83,17 @@ alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pHandle)
     switch (pRngInfo->ri_type) {
         case ALC_RNG_TYPE_DESCRETE:
             switch (pRngInfo->ri_distrib) {
-                case ALC_RNG_DISTRIB_UNIFORM:
-                    { auto ctx = static_cast<alcp::rng::Context*>(pHandle->rh_context);
+                case ALC_RNG_DISTRIB_UNIFORM: {
+                    auto ctx =
+                        static_cast<alcp::rng::Context*>(pHandle->rh_context);
                     error = alcp::rng::RngBuilder::Build(*pRngInfo, *ctx);
                     break;
-                    }
+                }
                 default:
                     error = ALC_ERROR_NOT_SUPPORTED;
                     break;
             }
+            break;
         default:
             error = ALC_ERROR_NOT_SUPPORTED;
             break;
@@ -108,7 +111,7 @@ alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
         return ALC_ERROR_INVALID_ARG;
     }
 
-    alcp::rng::Context* ctx   = (alcp::rng::Context*)pRngHandle->rh_context;
+    alcp::rng::Context* ctx = (alcp::rng::Context*)pRngHandle->rh_context;
 
     ctx->read_random(ctx->m_rng, buf, size);
 
@@ -118,7 +121,7 @@ alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
 alc_error_t
 alcp_rng_finish(alc_rng_handle_p pRngHandle)
 {
-    alcp::rng::Context* ctx   = (alcp::rng::Context*)pRngHandle->rh_context;
+    alcp::rng::Context* ctx = (alcp::rng::Context*)pRngHandle->rh_context;
 
     ctx->finish(ctx->m_rng);
 
