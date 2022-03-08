@@ -65,6 +65,7 @@ typedef struct _alc_prov_digest_ctx alc_prov_digest_ctx_t,
 
 EVP_MD*
 ALCP_prov_init_digest(alc_prov_digest_ctx_p c);
+int
 ALCP_prov_digest_init(void* vctx, const OSSL_PARAM params[]);
 
 extern const OSSL_ALGORITHM ALC_prov_digests[];

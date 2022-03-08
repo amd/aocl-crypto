@@ -112,9 +112,9 @@ int
 ALCP_prov_digest_get_params(OSSL_PARAM params[], int mode)
 {
     OSSL_PARAM* p;
-    int         kbits   = 128;
-    int         blkbits = 128;
-    int         ivbits  = 128;
+    // int         kbits   = 128;
+    int blkbits = 128;
+    // int         ivbits  = 128;
 
     ENTER();
 
@@ -162,7 +162,7 @@ ALCP_prov_digest_settable_ctx_params(void* cctx, void* provctx)
 {
     static const OSSL_PARAM table[] = {
         // OSSL_PARAM_size_t(OSSL_DIGEST_PARAM_KEYLEN, NULL),
-        // OSSL_PARAM_END,
+        OSSL_PARAM_END,
     };
     EXIT();
     return table;
@@ -178,8 +178,8 @@ ALCP_prov_digest_set_params(const OSSL_PARAM params[])
 int
 ALCP_prov_digest_get_ctx_params(void* vctx, OSSL_PARAM params[])
 {
-    OSSL_PARAM*           p;
-    alc_prov_digest_ctx_p cctx = (alc_prov_digest_ctx_p)vctx;
+    // OSSL_PARAM* p;
+    // alc_prov_digest_ctx_p cctx = (alc_prov_digest_ctx_p)vctx;
     // size_t                keylen = cctx->pc_digest_info.key_info.len;
 
     ENTER();
@@ -196,8 +196,8 @@ ALCP_prov_digest_get_ctx_params(void* vctx, OSSL_PARAM params[])
 int
 ALCP_prov_digest_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 {
-    const OSSL_PARAM*     p;
-    alc_prov_digest_ctx_p cctx = (alc_prov_digest_ctx_p)vctx;
+    // const OSSL_PARAM*     p;
+    // alc_prov_digest_ctx_p cctx = (alc_prov_digest_ctx_p)vctx;
     ENTER();
 
     // p = OSSL_PARAM_locate_const(params, OSSL_DIGEST_PARAM_KEYLEN);
@@ -223,7 +223,7 @@ ALCP_prov_digest_init(void* vctx, const OSSL_PARAM params[])
     ENTER();
     // printf("Provider: Pointer->%p\n", cctx);
     alc_digest_info_p dinfo = &cctx->pc_digest_info;
-    uint64_t          size  = alcp_digest_context_size(&dinfo);
+    uint64_t          size  = alcp_digest_context_size(dinfo);
     switch (dinfo->dt_mode.dm_sha2) {
         case ALC_SHA2_512:
             PRINT("Provider:SHA512_SELECTED!\n");
@@ -282,7 +282,7 @@ ALCP_prov_digest_final(void*          vctx,
     alc_prov_digest_ctx_p cctx = vctx;
     ENTER();
     alcp_digest_finalize(&(cctx->handle), NULL, 0);
-    alcp_digest_copy(&(cctx->handle), out, outl);
+    alcp_digest_copy(&(cctx->handle), out, (uint64_t)outl);
     // Northing to do!
     *outl = outsize;
     return 1;
