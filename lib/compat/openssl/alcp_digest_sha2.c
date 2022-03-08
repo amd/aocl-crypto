@@ -28,43 +28,10 @@
 
 #include "alcp_digest_sha2.h"
 
-alc_digest_info_t s_digest_sha512_info = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len = ALC_DIGEST_LEN_512,
-        .dt_mode = {.dm_sha2 = ALC_SHA2_512,},
-};
-
-alc_digest_info_t s_digest_sha384_info = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len = ALC_DIGEST_LEN_384,
-        .dt_mode = {.dm_sha2 = ALC_SHA2_384,},
-};
-
-alc_digest_info_t s_digest_sha256_info = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len = ALC_DIGEST_LEN_256,
-        .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
-};
-
-alc_digest_info_t s_digest_sha224_info = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len = ALC_DIGEST_LEN_224,
-        .dt_mode = {.dm_sha2 = ALC_SHA2_224,},
-};
-
-// static alc_digest_info_t s_digest_cfb_info = {
-//     .digest_type = ALC_CIPHER_TYPE_AES,
-//     .key_info = {
-//         ALC_KEY_TYPE_SYMMETRIC,
-//         ALC_KEY_FMT_RAW,
-//         ALC_KEY_ALG_SYMMETRIC,
-//         ALC_KEY_LEN_128,
-//         128,
-//     },
-//     .mode_data = { .sha2 = {
-//             .mode =      ALC_AES_MODE_CFB,
-//         }, },
-// };
+DIGEST_CONTEXT(sha512, ALC_SHA2_512);
+DIGEST_CONTEXT(sha384, ALC_SHA2_384);
+DIGEST_CONTEXT(sha256, ALC_SHA2_256);
+DIGEST_CONTEXT(sha224, ALC_SHA2_224);
 
 int
 ALCP_prov_sha2_get_ctx_params(void* vctx, OSSL_PARAM params[])
