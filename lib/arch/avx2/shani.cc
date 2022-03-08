@@ -31,6 +31,14 @@
 #include <x86intrin.h>
 #define SHA256_CHUNK_NUM_VECT                                                  \
     4 // number of vectors needed to accomodate an input chunk
+
+#if defined(__GNUC__)
+#define UNROLL_4  _Pragma("GCC unroll 4")
+#define UNROLL_12 _Pragma("GCC unroll 12")
+#else
+#define UNROLL_4
+#define UNROLL_12
+#endif
 namespace alcp::digest { namespace shani {
 
     inline static void load_data(__m128i        x[SHA256_CHUNK_NUM_VECT],
@@ -39,8 +47,7 @@ namespace alcp::digest { namespace shani {
         const __m128i shuf_mask =
             _mm_set_epi64x(0x0c0d0e0f08090a0bULL, 0x0405060700010203ULL);
 
-        _Pragma("GCC unroll 4") for (size_t i = 0; i < SHA256_CHUNK_NUM_VECT;
-                                     i++)
+        UNROLL_4 for (size_t i = 0; i < SHA256_CHUNK_NUM_VECT; i++)
         {
             x[i] =
                 _mm_loadu_si128((const __m128i*)(&data[sizeof(__m128i) * i]));
@@ -82,7 +89,8 @@ namespace alcp::digest { namespace shani {
             prev_state_abef = state0;
             prev_state_cdgh = state1;
             // Calculate the rounds for the first 16 words
-            for (uint32_t i = 0; i < 4; i++) {
+            UNROLL_4 for (uint32_t i = 0; i < 4; i++)
+            {
                 msg    = _mm_add_epi32(chunk_vect[i],
                                     _mm_set_epi32(pHashConstants[4 * i + 3],
                                                   pHashConstants[4 * i + 2],
@@ -94,7 +102,8 @@ namespace alcp::digest { namespace shani {
             }
             // Extend the message to 64 words and calcute the rounds on the
             // extended message.
-            for (uint32_t i = 4; i < 16; i++) {
+            UNROLL_12 for (uint32_t i = 4; i < 16; i++)
+            {
                 msg0 =
                     _mm_sha256msg1_epu32(chunk_vect[i - 4], chunk_vect[i - 3]);
                 tmp  = _mm_alignr_epi8(chunk_vect[i - 1], chunk_vect[i - 2], 4);

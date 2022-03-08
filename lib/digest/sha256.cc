@@ -30,6 +30,7 @@
 #include <string>
 
 #include "digest/sha2.hh"
+#include "digest/sha_avx2.hh"
 #include "digest/shani.hh"
 
 #include "utils/bits.hh"
@@ -104,6 +105,11 @@ class Sha256::Impl
         static bool s_shani_available = true;
         return s_shani_available;
     }
+    static bool isAvx2Available()
+    {
+        static bool s_avx2_available = false;
+        return s_avx2_available;
+    }
 
   private:
     static void extendMsg(uint32 w[], uint32 start, uint32 end);
@@ -143,10 +149,8 @@ Sha256::Impl::~Impl() {}
 alc_error_t
 Sha256::Impl::copyHash(uint8* pHash, uint64 size) const
 {
-    utils::CopyBlockWith<uint32>(pHash,
-                                 m_hash, 
-                                 cHashSize, 
-                                 utils::ToBigEndian<uint32>);
+    utils::CopyBlockWith<uint32>(
+        pHash, m_hash, cHashSize, utils::ToBigEndian<uint32>);
 
     return ALC_ERROR_NONE;
 }
@@ -211,12 +215,15 @@ alc_error_t
 Sha256::Impl::processChunk(const uint8* pSrc, uint64 len)
 {
     static bool shani_available = isShaniAvailable();
+    static bool avx2_available  = isAvx2Available();
 
     /* we need len to be multiple of cChunkSize */
     assert((len & cChunkSizeMask) == 0);
 
     if (shani_available) {
         return shani::ShaUpdate256(m_hash, pSrc, len, cRoundConstants);
+    } else if (avx2_available) {
+        return shaavx2::ShaUpdate256(m_hash, pSrc, len, cRoundConstants);
     }
 
     uint64  msg_size       = len;
@@ -225,10 +232,8 @@ Sha256::Impl::processChunk(const uint8* pSrc, uint64 len)
     uint32 w[cNumRounds];
 
     while (msg_size) {
-        utils::CopyBlockWith<uint32>(w,
-                                     p_msg_buffer32,
-                                     cChunkSize,
-                                     utils::ToBigEndian<uint32>);
+        utils::CopyBlockWith<uint32>(
+            w, p_msg_buffer32, cChunkSize, utils::ToBigEndian<uint32>);
 
         // Extend the first 16 words into the remaining words of the message
         // schedule array:
@@ -384,9 +389,7 @@ Sha256::Sha256(const alc_digest_info_t& rDigestInfo)
     : Sha256()
 {}
 
-Sha256::~Sha256()
-{
-}
+Sha256::~Sha256() {}
 
 alc_error_t
 Sha256::setIv(const void* pIv, uint64_t size)
@@ -433,7 +436,7 @@ Sha256::copyHash(uint8* pHash, uint64 size) const
     }
 
     if (!Error::isError(err)) {
-        err =  pImpl()->copyHash(pHash, size);
+        err = pImpl()->copyHash(pHash, size);
     }
 
     return err;
@@ -442,11 +445,10 @@ Sha256::copyHash(uint8* pHash, uint64 size) const
 void
 Sha256::finish()
 {
-    //delete pImpl();
-    //pImpl() = nullptr;
+    // delete pImpl();
+    // pImpl() = nullptr;
 }
 
 Sha2::~Sha2() {}
 
 } // namespace alcp::digest
-
