@@ -100,14 +100,6 @@ extern OSSL_FUNC_digest_set_ctx_params_fn ALCP_prov_digest_set_ctx_params;
 extern OSSL_FUNC_digest_update_fn         ALCP_prov_digest_update;
 extern OSSL_FUNC_digest_final_fn          ALCP_prov_digest_final;
 
-#define DIGEST_CONTEXT(mode, alcp_mode)                                        \
-    alc_digest_info_t s_digest_##mode##_info = {                               \
-.dt_type = ALC_DIGEST_TYPE_SHA2, .dt_len = ALC_DIGEST_LEN_512,                 \
-                                 .dt_mode = {                                  \
-                                     .dm_sha2 = alcp_mode,                     \
-                                 },                                            \
-}
-
 #define CREATE_DIGEST_DISPATCHERS(name, grp, mode)                             \
     static OSSL_FUNC_digest_get_params_fn ALCP_prov_##name##_get_params;       \
     static int ALCP_prov_##name##_get_params(OSSL_PARAM* params)               \

@@ -28,10 +28,10 @@
 
 #include "alcp_digest_sha2.h"
 
-DIGEST_CONTEXT(sha512, ALC_SHA2_512);
-DIGEST_CONTEXT(sha384, ALC_SHA2_384);
-DIGEST_CONTEXT(sha256, ALC_SHA2_256);
-DIGEST_CONTEXT(sha224, ALC_SHA2_224);
+SHA2_CONTEXT(sha512, ALC_DIGEST_LEN_512, ALC_SHA2_512);
+SHA2_CONTEXT(sha384, ALC_DIGEST_LEN_384, ALC_SHA2_384);
+SHA2_CONTEXT(sha256, ALC_DIGEST_LEN_256, ALC_SHA2_256);
+SHA2_CONTEXT(sha224, ALC_DIGEST_LEN_224, ALC_SHA2_224);
 
 int
 ALCP_prov_sha2_get_ctx_params(void* vctx, OSSL_PARAM params[])
@@ -48,32 +48,14 @@ ALCP_prov_sha2_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 }
 
 void
-ALCP_prov_sha2_ctxfree(alc_prov_digest_ctx_p ciph_ctx)
+ALCP_prov_sha2_ctxfree(alc_prov_digest_ctx_p dig_ctx)
 {
-    ALCP_prov_digest_freectx(ciph_ctx);
-}
-
-void*
-ALCP_prov_sha2_newctx(void* vprovctx, const alc_digest_info_p cinfo)
-{
-    alc_prov_digest_ctx_p ciph_ctx;
-
-    ENTER();
-    ciph_ctx = ALCP_prov_digest_newctx(vprovctx, cinfo);
-    if (!ciph_ctx)
-        goto out;
-
     EXIT();
-    return ciph_ctx;
-
-out:
-    ALCP_prov_digest_freectx(ciph_ctx);
-
-    return NULL;
+    ALCP_prov_digest_freectx(dig_ctx);
 }
 
-/* cfb_functions */
-CREATE_DIGEST_DISPATCHERS(sha512, sha2, EVP_CIPH_CFB_MODE);
-CREATE_DIGEST_DISPATCHERS(sha384, sha2, EVP_CIPH_CFB_MODE);
-CREATE_DIGEST_DISPATCHERS(sha256, sha2, EVP_CIPH_CFB_MODE);
-CREATE_DIGEST_DISPATCHERS(sha224, sha2, EVP_CIPH_CFB_MODE);
+/* Sha2 dispatchers */
+CREATE_DIGEST_DISPATCHERS(sha512, sha2, 0);
+CREATE_DIGEST_DISPATCHERS(sha384, sha2, 0);
+CREATE_DIGEST_DISPATCHERS(sha256, sha2, 0);
+CREATE_DIGEST_DISPATCHERS(sha224, sha2, 0);

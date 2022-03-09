@@ -32,43 +32,43 @@
 void
 ALCP_prov_digest_freectx(void* vctx)
 {
-    alc_prov_digest_ctx_p pcctx = vctx;
+    alc_prov_digest_ctx_p pdctx = vctx;
     ENTER();
     /*
-     * pcctx->pc_evp_digest will be  freed in provider teardown,
+     * pdctx->pc_evp_digest will be  freed in provider teardown,
      */
 
-    EVP_MD_CTX_free(pcctx->pc_evp_digest_ctx);
+    EVP_MD_CTX_free(pdctx->pc_evp_digest_ctx);
 
     OPENSSL_free(vctx);
 }
 
 void*
-ALCP_prov_digest_newctx(void* vprovctx, const alc_digest_info_p cinfo)
+ALCP_prov_digest_newctx(void* vprovctx, const alc_digest_info_p dinfo)
 {
-    alc_prov_digest_ctx_p ciph_ctx;
+    alc_prov_digest_ctx_p dig_ctx;
     alc_prov_ctx_p        pctx = (alc_prov_ctx_p)vprovctx;
 
     ENTER();
-    ciph_ctx = OPENSSL_zalloc(sizeof(*ciph_ctx));
-    // printf("Provider: Create Pointer:%p\n", pctx);
-    if (ciph_ctx != NULL) {
-        ciph_ctx->pc_prov_ctx = pctx;
-        // ciph_ctx->pc_params         = pparams;
-        ciph_ctx->pc_libctx         = pctx->ap_libctx;
-        ciph_ctx->pc_digest_info    = *cinfo;
-        ciph_ctx->pc_evp_digest_ctx = EVP_MD_CTX_new();
-        if (!ciph_ctx->pc_evp_digest_ctx || !ciph_ctx->pc_prov_ctx) {
-            ALCP_prov_digest_freectx(ciph_ctx);
-            ciph_ctx = NULL;
-        }
+
+    dig_ctx = OPENSSL_zalloc(sizeof(*dig_ctx));
+    if (dig_ctx != NULL) {
+        dig_ctx->pc_prov_ctx = pctx;
+        // dig_ctx->pc_params         = pparams;
+        dig_ctx->pc_libctx      = pctx->ap_libctx;
+        dig_ctx->pc_digest_info = *dinfo;
 #if 0
-        // ciph_ctx->descriptor = descriptor;
-        // ciph_ctx->digest     = ALCP_prov_digest_init(descriptor);
+        dig_ctx->pc_evp_digest_ctx = EVP_MD_CTX_new();
+        if (!dig_ctx->pc_evp_digest_ctx || !dig_ctx->pc_prov_ctx) {
+            ALCP_prov_digest_freectx(dig_ctx);
+            dig_ctx = NULL;
+        }
+        // dig_ctx->descriptor = descriptor;
+        // dig_ctx->digest     = ALCP_prov_digest_init(descriptor);
 #endif
     }
 
-    return ciph_ctx;
+    return dig_ctx;
 }
 
 void*
@@ -112,9 +112,7 @@ int
 ALCP_prov_digest_get_params(OSSL_PARAM params[], int mode)
 {
     OSSL_PARAM* p;
-    // int         kbits   = 128;
-    int blkbits = 128;
-    // int         ivbits  = 128;
+    int         blkbits = 128;
 
     ENTER();
 

@@ -32,6 +32,15 @@
 #include "alcp_digest_prov.h"
 #include "debug.h"
 
+#define SHA2_CONTEXT(mode, len, alcp_mode)                                     \
+    alc_digest_info_t s_digest_##mode##_info = {                               \
+        .dt_type = ALC_DIGEST_TYPE_SHA2,                                       \
+        .dt_len = len,                                                         \
+        .dt_mode = {                                                           \
+            .dm_sha2 = alcp_mode,                                              \
+        },                                                                     \
+}
+
 extern const OSSL_DISPATCH cfb_functions[];
 
 #endif /* _OPENSSL_ALCP_DIGEST_SHA2_H */
