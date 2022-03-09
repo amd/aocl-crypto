@@ -222,32 +222,8 @@ ALCP_prov_digest_init(void* vctx, const OSSL_PARAM params[])
     // printf("Provider: Pointer->%p\n", cctx);
     alc_digest_info_p dinfo = &cctx->pc_digest_info;
     uint64_t          size  = alcp_digest_context_size(dinfo);
-    switch (dinfo->dt_mode.dm_sha2) {
-        case ALC_SHA2_512:
-            PRINT("Provider:SHA512_SELECTED!\n");
-            dinfo->dt_len          = ALC_DIGEST_LEN_512;
-            dinfo->dt_mode.dm_sha2 = ALC_SHA2_512;
-            break;
-        case ALC_SHA2_384:
-            PRINT("Provider:SHA384_SELECTED!\n");
-            dinfo->dt_len          = ALC_DIGEST_LEN_384;
-            dinfo->dt_mode.dm_sha2 = ALC_SHA2_384;
-            break;
-        case ALC_SHA2_256:
-            PRINT("Provider:SHA256_SELECTED!\n");
-            dinfo->dt_len          = ALC_DIGEST_LEN_256;
-            dinfo->dt_mode.dm_sha2 = ALC_SHA2_256;
-            break;
-        case ALC_SHA2_224:
-            PRINT("Provider:SHA224_SELECTED!\n");
-            dinfo->dt_len          = ALC_DIGEST_LEN_224;
-            dinfo->dt_mode.dm_sha2 = ALC_SHA2_224;
-            break;
-        default:
-            return 0;
-    }
-    cctx->handle.context = OPENSSL_malloc(size);
-    err                  = alcp_digest_request(dinfo, &(cctx->handle));
+    cctx->handle.context    = OPENSSL_malloc(size);
+    err                     = alcp_digest_request(dinfo, &(cctx->handle));
     if (alcp_is_error(err)) {
         printf("Provider: Somehow request failed\n");
         return 0;
