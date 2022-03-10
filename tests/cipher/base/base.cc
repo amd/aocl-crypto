@@ -110,13 +110,13 @@ DataSet::readPtIvKeyCt()
     line = readLineCharByChar();
     // std::cout << line << std::endl;
 #endif
-    if (line.empty()) {
+    if (line.empty() || line == "\n") {
         return false;
     }
     int pos1 = line.find(",");           // End of Plain Text (PT)
     int pos2 = line.find(",", pos1 + 1); // End of IV
     int pos3 = line.find(",", pos2 + 1); // End of Key
-    if ((pos1 == 0) || (pos2 == 0) || (pos3 == 0)) {
+    if ((pos1 == -1) || (pos2 == -1) || (pos3 == -1)) {
         return false;
     }
     pt  = line.substr(0, pos1);
