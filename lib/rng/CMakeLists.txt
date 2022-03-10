@@ -1,8 +1,8 @@
 
-FILE(GLOB DIGEST_SRCS "*.cc")
+FILE(GLOB RNG_SRCS "*.cc")
 
 TARGET_SOURCES(alcp
 	PRIVATE
-		${DIGEST_SRCS}
+		${RNG_SRCS}
 	)
 
