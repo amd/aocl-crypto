@@ -42,6 +42,10 @@ class File
     std::string readWord();
     // Read file line by line
     std::string readLine();
+    // Reads a line by reading char by char
+    std::string readLineCharByChar();
+    // Read file n char
+    char* readChar(int n);
     // Rewind file to initial position
     void rewind();
 };
