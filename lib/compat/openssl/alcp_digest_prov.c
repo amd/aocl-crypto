@@ -253,12 +253,13 @@ ALCP_prov_digest_final(void*          vctx,
                        size_t*        outl,
                        size_t         outsize)
 {
-    alc_prov_digest_ctx_p cctx = vctx;
+    alc_prov_digest_ctx_p dctx = vctx;
     ENTER();
-    alcp_digest_finalize(&(cctx->handle), NULL, 0);
-    alcp_digest_copy(&(cctx->handle), out, (uint64_t)outl);
+    alcp_digest_finalize(&(dctx->handle), NULL, 0);
+    alcp_digest_copy(&(dctx->handle), out, (uint64_t)outl);
     // Northing to do!
     *outl = outsize;
+    OPENSSL_free(dctx->handle.context);
     return 1;
 }
 

@@ -32,7 +32,7 @@
 #include "alcp_digest_prov.h"
 #include "debug.h"
 
-#define SHA2_CONTEXT(mode, len, alcp_mode)                                     \
+#define DEFINE_SHA2_CONTEXT(mode, len, alcp_mode)                              \
     alc_digest_info_t s_digest_##mode##_info = {                               \
         .dt_type = ALC_DIGEST_TYPE_SHA2,                                       \
         .dt_len = len,                                                         \
