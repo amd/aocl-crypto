@@ -31,6 +31,7 @@
 #include <string>
 
 #include "digest/sha2.hh"
+#include "digest/sha_avx2.hh"
 
 #include "utils/bits.hh"
 #include "utils/copy.hh"
@@ -120,6 +121,11 @@ class Sha512::Impl
         static bool s_shani_available = false;
         return s_shani_available;
     }
+    static bool isAvx2Available()
+    {
+        static bool s_avx2_available = true;
+        return s_avx2_available;
+    }
 
   private:
     static void extendMsg(uint64 w[], uint32 start, uint32 end);
@@ -157,14 +163,12 @@ Sha512::Impl::setIv(const void* pIv, uint64 size)
 Sha512::Impl::~Impl() {}
 
 alc_error_t
-Sha512::Impl::copyHash(uint8* pHash, uint64 size) const 
+Sha512::Impl::copyHash(uint8* pHash, uint64 size) const
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    utils::CopyBlockWith<uint64>(pHash, 
-                                 m_hash, 
-                                 cHashSize, 
-                                 utils::ToBigEndian<uint64>);
+    utils::CopyBlockWith<uint64>(
+        pHash, m_hash, cHashSize, utils::ToBigEndian<uint64>);
 
     return err;
 }
@@ -229,8 +233,13 @@ alc_error_t
 Sha512::Impl::processChunk(const uint8* pSrc, uint64 len)
 {
 
+    static bool avx2_available = isAvx2Available();
     /* we need len to be multiple of cChunkSize */
     assert((len & cChunkSizeMask) == 0);
+
+    if (avx2_available) {
+        return shaavx2::ShaUpdate512(m_hash, pSrc, len, cRoundConstants);
+    }
 
     uint64  msg_size       = len;
     uint64* p_msg_buffer64 = (uint64*)pSrc;
@@ -238,10 +247,8 @@ Sha512::Impl::processChunk(const uint8* pSrc, uint64 len)
     uint64 w[cNumRounds];
 
     while (msg_size) {
-        utils::CopyBlockWith<uint64>(w,
-                                     p_msg_buffer64,
-                                     cChunkSize,
-                                     utils::ToBigEndian<uint64>);
+        utils::CopyBlockWith<uint64>(
+            w, p_msg_buffer64, cChunkSize, utils::ToBigEndian<uint64>);
         // Extend the first 16 words into the remaining words of the message
         // schedule array:
         extendMsg(w, cChunkSizeWords, cNumRounds);
@@ -414,9 +421,7 @@ Sha512::Sha512(const alc_digest_info_t& rDigestInfo)
     : Sha512()
 {}
 
-Sha512::~Sha512()
-{
-}
+Sha512::~Sha512() {}
 
 alc_error_t
 Sha512::setIv(const void* pIv, uint64_t size)
@@ -452,8 +457,8 @@ Sha512::finalize(const uint8* pSrc, uint64 size)
 void
 Sha512::finish()
 {
-    //delete pImpl();
-    //pImpl() = nullptr;
+    // delete pImpl();
+    // pImpl() = nullptr;
 }
 
 alc_error_t

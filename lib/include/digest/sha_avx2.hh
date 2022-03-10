@@ -36,4 +36,8 @@ namespace alcp::digest { namespace shaavx2 {
                              const uint8_t*  pSrc,
                              uint64_t        src_len,
                              const uint32_t* pHashConstants);
+    alc_error_t ShaUpdate512(uint64_t*       pHash,
+                             const uint8_t*  pSrc,
+                             uint64_t        src_len,
+                             const uint64_t* pHashConstants);
 }} // namespace alcp::digest::shaavx2
