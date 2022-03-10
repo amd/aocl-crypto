@@ -48,6 +48,7 @@ __finish_wrapper(void* pRng)
 {
     alc_error_t e  = ALC_ERROR_NONE;
     auto        ap = static_cast<RNGTYPE*>(pRng);
+    delete (ap);
 
     ap->finish();
 
