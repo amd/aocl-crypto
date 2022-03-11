@@ -30,14 +30,16 @@
 
 #include "error.hh"
 
-namespace alcp::digest { namespace shaavx2 {
+namespace alcp::digest { namespace avx2 {
 
     alc_error_t ShaUpdate256(uint32_t*       pHash,
                              const uint8_t*  pSrc,
                              uint64_t        src_len,
                              const uint32_t* pHashConstants);
+
     alc_error_t ShaUpdate512(uint64_t*       pHash,
                              const uint8_t*  pSrc,
                              uint64_t        src_len,
                              const uint64_t* pHashConstants);
-}} // namespace alcp::digest::shaavx2
+
+}} // namespace alcp::digest::avx2

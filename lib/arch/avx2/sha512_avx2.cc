@@ -40,7 +40,7 @@
 #define SHA512_MSG_SCH_NUM_VECT_AVX2                                           \
     20 // Number of registers needed for accomodating the message scheduling
        // array
-namespace alcp::digest { namespace shaavx2 {
+namespace alcp::digest { namespace avx2 {
 
     // Loads data into the 128 bit registers
     inline void load_data(__m128i        x[SHA512_CHUNK_NUM_VECT_AVX],
@@ -133,11 +133,11 @@ namespace alcp::digest { namespace shaavx2 {
     // Extends the 16 word message into 80 word message.
     // The processing has been done using 256 bit registers.
     // Two blocks are processed at a time.
-    inline void extend_msg(__m256i   x[],
+    inline void extend_msg(__m256i  x[],
                            uint64_t msg_sch_array1[],
                            uint64_t msg_sch_array2[])
     {
-        printf("extend_msg for 256 bits\n");
+
         __m256i temp[5];
 
         for (uint32_t i = 0; i < 8; i++) {
@@ -268,4 +268,4 @@ namespace alcp::digest { namespace shaavx2 {
         return ALC_ERROR_NONE;
     }
 
-}} // namespace alcp::digest::shaavx2
+}} // namespace alcp::digest::avx2

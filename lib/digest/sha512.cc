@@ -45,10 +45,10 @@ namespace alcp::digest {
  * first 64 bits of the fractional parts of the square roots
  * of the first 8 primes 2..19
  */
-static constexpr uint64_t cIv[] = { 0x6a09e667f3bcc908, 0xbb67ae8584caa73b,
-                                    0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
-                                    0x510e527fade682d1, 0x9b05688c2b3e6c1f,
-                                    0x1f83d9abfb41bd6b, 0x5be0cd19137e2179 };
+static constexpr Uint64 cIv[] = { 0x6a09e667f3bcc908, 0xbb67ae8584caa73b,
+                                  0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
+                                  0x510e527fade682d1, 0x9b05688c2b3e6c1f,
+                                  0x1f83d9abfb41bd6b, 0x5be0cd19137e2179 };
 
 /*
  * Round constants:
@@ -57,7 +57,7 @@ static constexpr uint64_t cIv[] = { 0x6a09e667f3bcc908, 0xbb67ae8584caa73b,
  * Values are first 64 bits of the fractional parts of the cube
  * roots of the first 80 primes 2.409.
  */
-static constexpr uint64_t cRoundConstants[] = {
+static constexpr Uint64 cRoundConstants[] = {
     0x428a2f98d728ae22, 0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f,
     0xe9b5dba58189dbbc, 0x3956c25bf348b538, 0x59f111f1b605d019,
     0x923f82a4af194f9b, 0xab1c5ed5da6d8118, 0xd807aa98a3030242,
@@ -87,28 +87,17 @@ static constexpr uint64_t cRoundConstants[] = {
     0x5fcb6fab3ad6faec, 0x6c44198c4a475817
 };
 
-static constexpr uint64 /* define word size */
-    cWordSize                               = 64,
-    /* num rounds in sha512 */ cNumRounds   = 80,
-    /* chunk size in bits */ cChunkSizeBits = 1024,
-    /* chunks to proces */ cChunkSize       = cChunkSizeBits / 8,
-    /*  */ cChunkSizeMask                   = cChunkSize - 1,
-    /* same in words */ cChunkSizeWords     = cChunkSizeBits / cWordSize,
-    /* same in bits */ cHashSizeBits        = 512,
-    /* Hash size in bytes */ cHashSize      = cHashSizeBits / 8,
-    cHashSizeWords                          = cHashSizeBits / cWordSize;
-
 class Sha512::Impl
 {
   public:
     Impl();
     ~Impl();
 
-    alc_error_t update(const uint8* buf, uint64 size);
-    alc_error_t finalize(const uint8* buf, uint64 size);
-    alc_error_t copyHash(uint8* buf, uint64 size) const;
+    alc_error_t update(const Uint8* buf, Uint64 size);
+    alc_error_t finalize(const Uint8* buf, Uint64 size);
+    alc_error_t copyHash(Uint8* buf, Uint64 size) const;
 
-    alc_error_t setIv(const void* pIv, uint64 size);
+    alc_error_t setIv(const void* pIv, Uint64 size);
 
     /*
      * \brief  Checks if SHANI feature is enabled
@@ -128,17 +117,17 @@ class Sha512::Impl
     }
 
   private:
-    static void extendMsg(uint64 w[], uint32 start, uint32 end);
-    void        compressMsg(uint64 w[]);
-    alc_error_t processChunk(const uint8* pSrc, uint64 len);
+    static void extendMsg(Uint64 w[], Uint32 start, Uint32 end);
+    void        compressMsg(Uint64 w[]);
+    alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
 
   private:
-    uint64 m_msg_len;
+    Uint64 m_msg_len;
     /* Any unprocessed bytes from last call to update() */
-    uint8  m_buffer[cChunkSize];
-    uint64 m_hash[cHashSizeWords];
+    Uint8  m_buffer[cChunkSize];
+    Uint64 m_hash[cHashSizeWords];
     /* index to m_buffer of previously unprocessed bytes */
-    uint32 m_idx;
+    Uint32 m_idx;
     bool   m_finished;
 };
 
@@ -153,7 +142,7 @@ Sha512::Impl::Impl()
 }
 
 alc_error_t
-Sha512::Impl::setIv(const void* pIv, uint64 size)
+Sha512::Impl::setIv(const void* pIv, Uint64 size)
 {
     utils::CopyBytes(m_hash, pIv, size);
 
@@ -163,74 +152,36 @@ Sha512::Impl::setIv(const void* pIv, uint64 size)
 Sha512::Impl::~Impl() {}
 
 alc_error_t
-Sha512::Impl::copyHash(uint8* pHash, uint64 size) const
+Sha512::Impl::copyHash(Uint8* pHash, Uint64 size) const
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    utils::CopyBlockWith<uint64>(
-        pHash, m_hash, cHashSize, utils::ToBigEndian<uint64>);
+    utils::CopyBlockWith<Uint64>(
+        pHash, m_hash, cHashSize, utils::ToBigEndian<Uint64>);
 
     return err;
 }
 
 void
-Sha512::Impl::extendMsg(uint64 w[], uint32 start, uint32 end)
+Sha512::Impl::extendMsg(Uint64 w[], Uint32 start, Uint32 end)
 {
-    for (uint32 i = start; i < end; i++) {
-        const uint64 s0 = RotateRight(w[i - 15], 1) ^ RotateRight(w[i - 15], 8)
+    for (Uint32 i = start; i < end; i++) {
+        const Uint64 s0 = RotateRight(w[i - 15], 1) ^ RotateRight(w[i - 15], 8)
                           ^ (w[i - 15] >> 7);
-        const uint64 s1 = RotateRight(w[i - 2], 19) ^ RotateRight(w[i - 2], 61)
+        const Uint64 s1 = RotateRight(w[i - 2], 19) ^ RotateRight(w[i - 2], 61)
                           ^ (w[i - 2] >> 6);
         w[i] = w[i - 16] + s0 + w[i - 7] + s1;
     }
 }
 
 void
-Sha512::Impl::compressMsg(uint64 w[])
+Sha512::Impl::compressMsg(Uint64 w[])
 {
-    uint64 a, b, c, d, e, f, g, h;
-
-    a = m_hash[0];
-    b = m_hash[1];
-    c = m_hash[2];
-    d = m_hash[3];
-    e = m_hash[4];
-    f = m_hash[5];
-    g = m_hash[6];
-    h = m_hash[7];
-
-    /* Compression function main loop: */
-    for (uint32 i = 0; i < cNumRounds; i++) {
-        uint64 s1, ch, temp1, s0, maj, temp2;
-        s1    = RotateRight(e, 14) ^ RotateRight(e, 18) ^ RotateRight(e, 41);
-        ch    = (e & f) ^ (~e & g);
-        temp1 = h + s1 + ch + cRoundConstants[i] + w[i];
-        s0    = RotateRight(a, 28) ^ RotateRight(a, 34) ^ RotateRight(a, 39);
-        maj   = (a & b) ^ (a & c) ^ (b & c);
-        temp2 = s0 + maj;
-
-        h = g;
-        g = f;
-        f = e;
-        e = d + temp1;
-        d = c;
-        c = b;
-        b = a;
-        a = temp1 + temp2;
-    }
-    /* Add the compressed chunk to the current hash value: */
-    m_hash[0] += a;
-    m_hash[1] += b;
-    m_hash[2] += c;
-    m_hash[3] += d;
-    m_hash[4] += e;
-    m_hash[5] += f;
-    m_hash[6] += g;
-    m_hash[7] += h;
+    alcp::digest::CompressMsg(w, m_hash, cRoundConstants);
 }
 
 alc_error_t
-Sha512::Impl::processChunk(const uint8* pSrc, uint64 len)
+Sha512::Impl::processChunk(const Uint8* pSrc, Uint64 len)
 {
 
     static bool avx2_available = isAvx2Available();
@@ -238,17 +189,17 @@ Sha512::Impl::processChunk(const uint8* pSrc, uint64 len)
     assert((len & cChunkSizeMask) == 0);
 
     if (avx2_available) {
-        return shaavx2::ShaUpdate512(m_hash, pSrc, len, cRoundConstants);
+        return avx2::ShaUpdate512(m_hash, pSrc, len, cRoundConstants);
     }
 
-    uint64  msg_size       = len;
-    uint64* p_msg_buffer64 = (uint64*)pSrc;
+    Uint64  msg_size       = len;
+    Uint64* p_msg_buffer64 = (Uint64*)pSrc;
 
-    uint64 w[cNumRounds];
+    Uint64 w[cNumRounds];
 
     while (msg_size) {
-        utils::CopyBlockWith<uint64>(
-            w, p_msg_buffer64, cChunkSize, utils::ToBigEndian<uint64>);
+        utils::CopyBlockWith<Uint64>(
+            w, p_msg_buffer64, cChunkSize, utils::ToBigEndian<Uint64>);
         // Extend the first 16 words into the remaining words of the message
         // schedule array:
         extendMsg(w, cChunkSizeWords, cNumRounds);
@@ -264,7 +215,7 @@ Sha512::Impl::processChunk(const uint8* pSrc, uint64 len)
 }
 
 alc_error_t
-Sha512::Impl::update(const uint8* pSrc, uint64 input_size)
+Sha512::Impl::update(const Uint8* pSrc, Uint64 input_size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -281,7 +232,7 @@ Sha512::Impl::update(const uint8* pSrc, uint64 input_size)
         return err;
     }
 
-    uint64 to_process = std::min((input_size + m_idx), cChunkSize);
+    Uint64 to_process = std::min((input_size + m_idx), cChunkSize);
     if (to_process < cChunkSize) {
         /* copy them to internal buffer and return */
         utils::CopyBytes(&m_buffer[m_idx], pSrc, to_process);
@@ -290,8 +241,8 @@ Sha512::Impl::update(const uint8* pSrc, uint64 input_size)
         return err;
     }
 
-    uint64 idx               = m_idx;
-    uint64 msg_len_processed = m_idx + input_size;
+    Uint64 idx               = m_idx;
+    Uint64 msg_len_processed = m_idx + input_size;
 
     if (idx) {
         /*
@@ -313,9 +264,9 @@ Sha512::Impl::update(const uint8* pSrc, uint64 input_size)
     }
 
     /* Calculate leftover bytes that can be processed as multiple chunks */
-    uint64 num_chunks = input_size / cChunkSize;
+    Uint64 num_chunks = input_size / cChunkSize;
     if (num_chunks) {
-        uint64 size = num_chunks * cChunkSize;
+        Uint64 size = num_chunks * cChunkSize;
 
         err = processChunk(pSrc, size);
 
@@ -338,7 +289,7 @@ Sha512::Impl::update(const uint8* pSrc, uint64 input_size)
 }
 
 alc_error_t
-Sha512::Impl::finalize(const uint8* pBuf, uint64 size)
+Sha512::Impl::finalize(const Uint8* pBuf, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -364,16 +315,17 @@ Sha512::Impl::finalize(const uint8* pBuf, uint64 size)
      * The curent chunk is processed and the message length is
      * placed in a new chunk and will be processed.
      */
-    uint8 local_buf[cChunkSize * 2];
+    Uint8 local_buf[cChunkSize * 2];
     utils::CopyBlock(local_buf, m_buffer, m_idx);
 
     local_buf[m_idx++] = 0x80;
 
-    uint64 buf_len = m_idx < (cChunkSize - 8) ? cChunkSize : sizeof(local_buf);
-    // uint64 bytes_left = buf_len - m_idx - utils::BytesInDWord<uint64>;
-    uint64 bytes_left = buf_len - m_idx - 16;
+    Uint64 buf_len = m_idx < (cChunkSize - 8) ? cChunkSize : sizeof(local_buf);
+    // Uint64 bytes_left = buf_len - m_idx - utils::BytesInDWord<Uint64>;
+    Uint64 bytes_left = buf_len - m_idx - 16;
 
-    utils::PadBlock<uint8>(&local_buf[m_idx], 0x0, bytes_left);
+    utils::PadBlock<Uint8>(&local_buf[m_idx], 0x0, bytes_left);
+
 #ifdef __SIZEOF_INT128__
     /* Store total length in the last 128-bit (16-bytes) */
     __uint128_t  len_in_bits = m_msg_len * 8;
@@ -381,8 +333,8 @@ Sha512::Impl::finalize(const uint8* pBuf, uint64 size)
         &local_buf[buf_len] - sizeof(__uint128_t));
     msg_len_ptr[0] = utils::ToBigEndian(len_in_bits);
 #else
-    uint64 len_in_bits_high;
-    uint64 len_in_bits;
+    Uint64 len_in_bits_high;
+    Uint64 len_in_bits;
 
     if (m_msg_len > ULLONG_MAX / 8) { // overflow happens
         // extract the left most 3bits
@@ -393,8 +345,8 @@ Sha512::Impl::finalize(const uint8* pBuf, uint64 size)
         len_in_bits_high = 0;
         len_in_bits      = m_msg_len * 8;
     }
-    uint64* msg_len_ptr =
-        reinterpret_cast<uint64*>(&local_buf[buf_len] - (sizeof(uint64) * 2));
+    Uint64* msg_len_ptr =
+        reinterpret_cast<Uint64*>(&local_buf[buf_len] - (sizeof(Uint64) * 2));
     msg_len_ptr[0] = utils::ToBigEndian(len_in_bits_high);
     msg_len_ptr[1] = utils::ToBigEndian(len_in_bits);
 #endif
@@ -424,13 +376,13 @@ Sha512::Sha512(const alc_digest_info_t& rDigestInfo)
 Sha512::~Sha512() {}
 
 alc_error_t
-Sha512::setIv(const void* pIv, uint64_t size)
+Sha512::setIv(const void* pIv, Uint64 size)
 {
     return pImpl()->setIv(pIv, size);
 }
 
 alc_error_t
-Sha512::update(const uint8* pSrc, uint64 size)
+Sha512::update(const Uint8* pSrc, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -445,7 +397,7 @@ Sha512::update(const uint8* pSrc, uint64 size)
 }
 
 alc_error_t
-Sha512::finalize(const uint8* pSrc, uint64 size)
+Sha512::finalize(const Uint8* pSrc, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -462,7 +414,7 @@ Sha512::finish()
 }
 
 alc_error_t
-Sha512::copyHash(uint8* pHash, uint64 size) const
+Sha512::copyHash(Uint8* pHash, Uint64 size) const
 {
     alc_error_t err = ALC_ERROR_NONE;
 

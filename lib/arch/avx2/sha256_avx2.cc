@@ -40,9 +40,8 @@
 #define SHA256_MSG_SCH_NUM_VECT_AVX2                                           \
     8 // Number of registers needed for accomodating the message scheduling
       // array
-#define SHA256_WORDS_IN_VEC_AVX  4 // Number of sha256 words in the mm register
-#define SHA256_WORDS_IN_VEC_AVX2 4 // Number of sha256 words in the mm register
-namespace alcp::digest { namespace shaavx2 {
+
+namespace alcp::digest { namespace avx2 {
 
     // Loads data into the 128 bit registers
     inline void load_data(__m128i        x[SHA256_CHUNK_NUM_VECT_AVX],
@@ -311,4 +310,4 @@ namespace alcp::digest { namespace shaavx2 {
         return ALC_ERROR_NONE;
     }
 
-}} // namespace alcp::digest::shaavx2
+}} // namespace alcp::digest::avx2

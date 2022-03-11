@@ -43,13 +43,23 @@ namespace alcp::digest {
 static inline Uint32
 RotateRight(Uint32 value, Uint32 count)
 {
+#if 1
+    __asm__("rorl %%cl, %0" : "+r"(value) : "c"(count));
+    return value;
+#else
     return value >> count | value << (32 - count);
+#endif
 }
 
 static inline Uint64
 RotateRight(Uint64 value, Uint64 count)
 {
+#if 1
+    __asm__("rorq %%cl, %0" : "+r"(value) : "c"(count));
+    return value;
+#else
     return value >> count | value << (64 - count);
+#endif
 }
 
 class DigestInterface

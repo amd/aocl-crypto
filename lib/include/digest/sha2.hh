@@ -58,6 +58,18 @@ class Sha2 : public Digest
 class Sha256 final : public Sha2
 {
   public:
+    static constexpr Uint64 /* define word size */
+        cWordSize                               = 32,
+        /* num rounds in sha256 */ cNumRounds   = 64,
+        /* chunk size in bits */ cChunkSizeBits = 512,
+        /* chunks to proces */ cChunkSize       = cChunkSizeBits / 8,
+        /*  */ cChunkSizeMask                   = cChunkSize - 1,
+        /* same in words */ cChunkSizeWords     = cChunkSizeBits / cWordSize,
+        /* same in bits */ cHashSizeBits        = 256,
+        /* Hash size in bytes */ cHashSize      = cHashSizeBits / 8,
+        cHashSizeWords                          = cHashSizeBits / cWordSize;
+
+  public:
     Sha256();
     Sha256(const alc_digest_info_t& rDigestInfo);
 
@@ -128,13 +140,25 @@ class Sha256 final : public Sha2
 
   private:
     class Impl;
-    const Impl* pImpl() const { return m_pimpl.get(); }
-    Impl* pImpl() { return m_pimpl.get(); }
+    const Impl*           pImpl() const { return m_pimpl.get(); }
+    Impl*                 pImpl() { return m_pimpl.get(); }
     std::unique_ptr<Impl> m_pimpl;
 };
 
 class Sha512 final : public Sha2
 {
+  public:
+    static constexpr Uint64 /* define word size */
+        cWordSize                               = 64,
+        /* num rounds in sha512 */ cNumRounds   = 80,
+        /* chunk size in bits */ cChunkSizeBits = 1024,
+        /* chunks to proces */ cChunkSize       = cChunkSizeBits / 8,
+        /*  */ cChunkSizeMask                   = cChunkSize - 1,
+        /* same in words */ cChunkSizeWords     = cChunkSizeBits / cWordSize,
+        /* same in bits */ cHashSizeBits        = 512,
+        /* Hash size in bytes */ cHashSize      = cHashSizeBits / 8,
+        cHashSizeWords                          = cHashSizeBits / cWordSize;
+
   public:
     Sha512();
     Sha512(const alc_digest_info_t& rDigestInfo);
@@ -206,11 +230,10 @@ class Sha512 final : public Sha2
 
   private:
     class Impl;
-    const Impl *pImpl() const { return m_pimpl.get(); }
-    Impl* pImpl() { return m_pimpl.get(); }
+    const Impl*           pImpl() const { return m_pimpl.get(); }
+    Impl*                 pImpl() { return m_pimpl.get(); }
     std::unique_ptr<Impl> m_pimpl;
 };
-
 
 class Sha224 final : public Sha2
 {
@@ -227,7 +250,6 @@ class Sha224 final : public Sha2
     Sha256* m_psha256;
 };
 
-
 class Sha384 final : public Sha2
 {
   public:
@@ -242,5 +264,90 @@ class Sha384 final : public Sha2
   private:
     Sha512* m_psha512;
 };
+
+static inline void
+CompressMsg(uint64_t*       pMsgSchArray,
+            uint64_t*       pHash,
+            const uint64_t* pHashConstants)
+{
+    uint64_t a, b, c, d, e, f, g, h;
+    a = pHash[0];
+    b = pHash[1];
+    c = pHash[2];
+    d = pHash[3];
+    e = pHash[4];
+    f = pHash[5];
+    g = pHash[6];
+    h = pHash[7];
+    for (uint32_t i = 0; i < 80; i++) {
+        uint64_t s1, ch, temp1, s0, maj, temp2;
+        s1    = RotateRight(e, 14) ^ RotateRight(e, 18) ^ RotateRight(e, 41);
+        ch    = (e & f) ^ (~e & g);
+        temp1 = h + s1 + ch + pHashConstants[i] + pMsgSchArray[i];
+        s0    = RotateRight(a, 28) ^ RotateRight(a, 34) ^ RotateRight(a, 39);
+        maj   = (a & b) ^ (a & c) ^ (b & c);
+        temp2 = s0 + maj;
+        h     = g;
+        g     = f;
+        f     = e;
+        e     = d + temp1;
+        d     = c;
+        c     = b;
+        b     = a;
+        a     = temp1 + temp2;
+    }
+
+    pHash[0] += a;
+    pHash[1] += b;
+    pHash[2] += c;
+    pHash[3] += d;
+    pHash[4] += e;
+    pHash[5] += f;
+    pHash[6] += g;
+    pHash[7] += h;
+}
+
+static inline void
+CompressMsg(uint32_t*       pMsgSchArray,
+            uint32_t*       pHash,
+            const uint32_t* pHashConstants)
+
+{
+    uint32_t a, b, c, d, e, f, g, h;
+    a = pHash[0];
+    b = pHash[1];
+    c = pHash[2];
+    d = pHash[3];
+    e = pHash[4];
+    f = pHash[5];
+    g = pHash[6];
+    h = pHash[7];
+    for (uint32_t i = 0; i < 64; i++) {
+        uint32_t s1, ch, temp1, s0, maj, temp2;
+        s1    = RotateRight(e, 6) ^ RotateRight(e, 11) ^ RotateRight(e, 25);
+        ch    = (e & f) ^ (~e & g);
+        temp1 = h + s1 + ch + pHashConstants[i] + pMsgSchArray[i];
+        s0    = RotateRight(a, 2) ^ RotateRight(a, 13) ^ RotateRight(a, 22);
+        maj   = (a & b) ^ (a & c) ^ (b & c);
+        temp2 = s0 + maj;
+        h     = g;
+        g     = f;
+        f     = e;
+        e     = d + temp1;
+        d     = c;
+        c     = b;
+        b     = a;
+        a     = temp1 + temp2;
+    }
+
+    pHash[0] += a;
+    pHash[1] += b;
+    pHash[2] += c;
+    pHash[3] += d;
+    pHash[4] += e;
+    pHash[5] += f;
+    pHash[6] += g;
+    pHash[7] += h;
+}
 
 } // namespace alcp::digest
