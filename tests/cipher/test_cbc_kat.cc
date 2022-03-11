@@ -43,8 +43,8 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
         unsigned char* iv                  = hexStringToBytes(ds.getIv());
         unsigned char* plaintext           = hexStringToBytes(ds.getPt());
         unsigned char* expected_ciphertext = hexStringToBytes(ds.getCt());
-        unsigned char  ciphertext[key_size];
         int            ciphertext_len, plaintext_len = ds.getPt().size() / 2;
+        unsigned char  ciphertext[plaintext_len];
         ciphertext_len =
             encrypt(plaintext, plaintext_len, key, key_size, iv, ciphertext);
         EXPECT_TRUE(ArraysMatch(ciphertext,
@@ -67,8 +67,8 @@ TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
         unsigned char* iv                  = hexStringToBytes(ds.getIv());
         unsigned char* plaintext           = hexStringToBytes(ds.getPt());
         unsigned char* expected_ciphertext = hexStringToBytes(ds.getCt());
-        unsigned char  ciphertext[key_size];
         int            ciphertext_len, plaintext_len = ds.getPt().size() / 2;
+        unsigned char  ciphertext[plaintext_len];
         ciphertext_len =
             encrypt(plaintext, plaintext_len, key, key_size, iv, ciphertext);
         EXPECT_TRUE(ArraysMatch(ciphertext,
@@ -91,8 +91,8 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
         unsigned char* iv                  = hexStringToBytes(ds.getIv());
         unsigned char* plaintext           = hexStringToBytes(ds.getPt());
         unsigned char* expected_ciphertext = hexStringToBytes(ds.getCt());
-        unsigned char  ciphertext[key_size];
         int            ciphertext_len, plaintext_len = ds.getPt().size() / 2;
+        unsigned char  ciphertext[plaintext_len];
         ciphertext_len =
             encrypt(plaintext, plaintext_len, key, key_size, iv, ciphertext);
         EXPECT_TRUE(ArraysMatch(ciphertext,
@@ -116,7 +116,7 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
         unsigned char* plaintext  = hexStringToBytes(ds.getPt());
         unsigned char* ciphertext = hexStringToBytes(ds.getCt());
         int           decryptedtext_len, ciphertext_len = ds.getCt().size() / 2;
-        unsigned char decryptedtext[key_size];
+        unsigned char decryptedtext[ciphertext_len];
         decryptedtext_len = decrypt(
             ciphertext, ciphertext_len, key, key_size, iv, decryptedtext);
         EXPECT_TRUE(ArraysMatch(decryptedtext,
@@ -140,7 +140,7 @@ TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
         unsigned char* plaintext  = hexStringToBytes(ds.getPt());
         unsigned char* ciphertext = hexStringToBytes(ds.getCt());
         int           decryptedtext_len, ciphertext_len = ds.getCt().size() / 2;
-        unsigned char decryptedtext[key_size];
+        unsigned char decryptedtext[ciphertext_len];
         decryptedtext_len = decrypt(
             ciphertext, ciphertext_len, key, key_size, iv, decryptedtext);
         EXPECT_TRUE(ArraysMatch(decryptedtext,
@@ -164,7 +164,7 @@ TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
         unsigned char* plaintext  = hexStringToBytes(ds.getPt());
         unsigned char* ciphertext = hexStringToBytes(ds.getCt());
         int           decryptedtext_len, ciphertext_len = ds.getCt().size() / 2;
-        unsigned char decryptedtext[key_size];
+        unsigned char decryptedtext[ciphertext_len];
         decryptedtext_len = decrypt(
             ciphertext, ciphertext_len, key, key_size, iv, decryptedtext);
         EXPECT_TRUE(ArraysMatch(decryptedtext,

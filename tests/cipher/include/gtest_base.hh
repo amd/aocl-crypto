@@ -26,27 +26,32 @@
  *
  */
 
-#include <gtest/gtest.h>
 #pragma once
+#include <base.hh>
+#include <gtest/gtest.h>
 
 #ifndef __GTEST_BASE_HH
 #define __GTEST_BASE_HH 2
 
 static bool verbose = false;
 
-template<typename T, typename SIZE>
 ::testing::AssertionResult
-ArraysMatch(const T*    expected,
-            const T*    actual,
-            SIZE        size,
-            int         lineNo,
-            std::string testName)
+ArraysMatch(const unsigned char* expected,
+            const unsigned char* actual,
+            size_t               size,
+            int                  lineNo,
+            std::string          testName)
 {
-    for (SIZE i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
         if (expected[i] != actual[i]) {
+            std::string actual_error =
+                ALCP_TESTING::bytesToHexString((unsigned char*)(actual + i), 1);
+            std::string expected_error = ALCP_TESTING::bytesToHexString(
+                (unsigned char*)(expected + i), 1);
             return ::testing::AssertionFailure()
-                   << "array[" << i << "] (" << actual[i] << ") != expected["
-                   << i << "] (" << expected[i] << ")"
+                   << "array[" << i << "] ("
+                   << "0x" << actual_error << ") != expected[" << i << "] ("
+                   << "0x" << expected_error << ")"
                    << "Test: " << testName << " line: " << lineNo << " Failed";
         }
     }

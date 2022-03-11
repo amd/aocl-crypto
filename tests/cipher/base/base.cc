@@ -56,6 +56,27 @@ File::readLine()
     std::getline(file, buff);
     return buff;
 }
+std::string
+File::readLineCharByChar()
+{
+    std::string buff;
+    while (!file.eof()) {
+        char s = file.get();
+        if (s != '\n')
+            buff += s;
+        else
+            break;
+    }
+    return buff;
+}
+char*
+File::readChar(int n)
+{
+    // TODO: Deallocation in the calling function.
+    char* c_buff = new char[n];
+    file.read(c_buff, n);
+    return c_buff;
+}
 
 /* Class Data
 /**
@@ -82,14 +103,20 @@ DataSet::readPtIvKeyCt(int keybits)
 bool
 DataSet::readPtIvKeyCt()
 {
+#if 0
     line = readLine();
-    if (line.empty()) {
+#else
+    // Reference slower implementation
+    line = readLineCharByChar();
+    // std::cout << line << std::endl;
+#endif
+    if (line.empty() || line == "\n") {
         return false;
     }
     int pos1 = line.find(",");           // End of Plain Text (PT)
     int pos2 = line.find(",", pos1 + 1); // End of IV
     int pos3 = line.find(",", pos2 + 1); // End of Key
-    if ((pos1 == 0) || (pos2 == 0) || (pos3 == 0)) {
+    if ((pos1 == -1) || (pos2 == -1) || (pos3 == -1)) {
         return false;
     }
     pt  = line.substr(0, pos1);
