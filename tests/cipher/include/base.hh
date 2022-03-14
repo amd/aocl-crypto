@@ -26,7 +26,9 @@
  *
  */
 #pragma once
+
 #include <fstream>
+#include <sstream>
 
 namespace alcp::testing {
 class File
@@ -76,8 +78,12 @@ class DataSet : private File
     // Return private data cipher text
     std::string getCt();
 };
+
+
 unsigned char*
 hexStringToBytes(std::string hexStr);
+
 std::string
 bytesToHexString(unsigned char* bytes, int length);
+
 } // namespace alcp::testing

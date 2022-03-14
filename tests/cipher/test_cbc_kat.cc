@@ -32,8 +32,40 @@
 
 using namespace alcp::testing;
 
-/* Testing Starts Here! */
+uint8_t
+hexToNum(unsigned char c)
+{
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
+    if (c >= '0' && c <= '9') 
+        return c - '0';
 
+    return 0;
+}
+
+/*
+ * TODO: move this to base.hh once other functions are ready
+ */
+const std::string
+hexStringToBytesNew(const std::string& hexStr)
+{
+    std::stringstream ss;
+    int len = hexStr.size();
+    const char *cstr = hexStr.c_str();
+
+    for (int i = 0; i < len; i+=2) {
+        uint8_t val = hexToNum(cstr[0]) << 4 | hexToNum(cstr[1]);
+        cstr +=2;
+        ss << std::hex << val;
+    }
+
+    return ss.str();
+}
+
+
+/* Testing Starts Here! */
 TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
 {
     const int key_size = 128;
@@ -44,16 +76,22 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
         AlcpCipherTesting(ALC_AES_MODE_CBC, nullptr);
 
     while (ds.readPtIvKeyCt(key_size)) {
-        unsigned char* key                 = hexStringToBytes(ds.getKey());
-        unsigned char* iv                  = hexStringToBytes(ds.getIv());
-        unsigned char* plaintext           = hexStringToBytes(ds.getPt());
-        unsigned char* expected_ciphertext = hexStringToBytes(ds.getCt());
+        auto key                 = hexStringToBytesNew(ds.getKey());
+        auto iv                  = hexStringToBytesNew(ds.getIv());
+        auto plaintext           = hexStringToBytes(ds.getPt());
+        auto expected_ciphertext = hexStringToBytes(ds.getCt());
         int            ciphertext_len, plaintext_len = ds.getPt().size() / 2;
         unsigned char  ciphertext[plaintext_len];
 
+        //std::cout << "key: " << key.c_str() << std::endl << "key1: " << key1 << std::endl;
+
         // Encrypt data with above params
         cipherHander.testingEncrypt(
-            plaintext, plaintext_len, key, key_size, iv, ciphertext);
+            plaintext, plaintext_len, 
+            (uint8_t*)key.c_str(), 
+            key_size, 
+            (uint8_t*)iv.c_str(), 
+            ciphertext);
         ciphertext_len = plaintext_len;
 
         // Check if output is correct
@@ -62,13 +100,13 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
                                 plaintext_len,
                                 ds.getLineNumber(),
                                 std::string("AES_CBC_128_ENC")));
-        delete[] key;
-        delete[] iv;
-        delete[] plaintext;
-        delete[] expected_ciphertext;
+        //delete[] key;
+        //delete[] iv;
+        //delete[] plaintext;
+        //delete[] expected_ciphertext;
     }
 }
-
+#if 0
 TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
 {
     const int key_size = 192;
@@ -240,6 +278,7 @@ TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
         delete[] ciphertext;
     }
 }
+#endif
 
 int
 main(int argc, char** argv)
