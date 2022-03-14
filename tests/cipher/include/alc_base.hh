@@ -75,6 +75,7 @@ class AlcpCipherBase
      * @return true -  if no failure
      * @return false - if there is some failure
      */
+    ~AlcpCipherBase();
     bool alcpInit(uint8_t* iv, uint8_t* key, const uint32_t key_len);
 
     bool alcpInit(uint8_t* key, const uint32_t key_len);
