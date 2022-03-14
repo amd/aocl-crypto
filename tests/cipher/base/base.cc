@@ -103,7 +103,7 @@ DataSet::readPtIvKeyCt(int keybits)
 bool
 DataSet::readPtIvKeyCt()
 {
-#if 0
+#if 1
     line = readLine();
 #else
     // Reference slower implementation
