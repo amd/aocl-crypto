@@ -37,11 +37,11 @@ namespace alcp::testing {
 class AlcpCipherBase
 {
   private:
-    alc_cipher_handle_p handle = nullptr;
-    alc_cipher_info_t   cinfo;
-    alc_key_info_t      keyinfo;
-    alc_aes_mode_t      mode;
-    uint8_t*            iv;
+    alc_cipher_handle_p m_handle = nullptr;
+    alc_cipher_info_t   m_cinfo;
+    alc_key_info_t      m_keyinfo;
+    alc_aes_mode_t      m_mode;
+    uint8_t*            m_iv;
 
   public:
     /**

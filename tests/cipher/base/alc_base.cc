@@ -32,36 +32,35 @@ namespace alcp::testing {
 
 // AlcpCipherBase class functions
 AlcpCipherBase::AlcpCipherBase(alc_aes_mode_t mode, uint8_t* iv)
-{
-    this->mode = mode;
-    this->iv   = iv;
-}
+    : m_mode{ mode }
+    , m_iv{ iv }
+{}
 
 AlcpCipherBase::AlcpCipherBase(alc_aes_mode_t mode,
                                uint8_t*       iv,
                                uint8_t*       key,
                                const uint32_t key_len)
+    : m_mode{ mode }
+    , m_iv{ iv }
 {
-    this->mode = mode;
-    this->iv   = iv;
     alcpInit(iv, key, key_len);
 }
 
 AlcpCipherBase::~AlcpCipherBase()
 {
-    if (handle != nullptr) {
-        alcp_cipher_finish(handle);
-        if (handle->ch_context != NULL) {
-            free(handle->ch_context);
+    if (m_handle != nullptr) {
+        alcp_cipher_finish(m_handle);
+        if (m_handle->ch_context != NULL) {
+            free(m_handle->ch_context);
         }
-        delete handle;
+        delete m_handle;
     }
 }
 
 bool
 AlcpCipherBase::alcpInit(uint8_t* iv, uint8_t* key, const uint32_t key_len)
 {
-    this->iv = iv;
+    this->m_iv = iv;
     return alcpInit(key, key_len);
 }
 
@@ -72,37 +71,37 @@ AlcpCipherBase::alcpInit(uint8_t* key, const uint32_t key_len)
     const int   err_size = 256;
     uint8_t     err_buf[err_size];
 
-    if (handle != nullptr) {
-        alcp_cipher_finish(handle);
-        free(handle->ch_context);
-        delete handle; // Free old handle
+    if (m_handle != nullptr) {
+        alcp_cipher_finish(m_handle);
+        free(m_handle->ch_context);
+        delete m_handle; // Free old handle
     }
-    handle = new alc_cipher_handle_t;
-    if (handle == nullptr) {
+    m_handle = new alc_cipher_handle_t;
+    if (m_handle == nullptr) {
         std::cout << "alcp_base.c: Memory allocation for handle failure!"
                   << std::endl;
         goto out;
     }
-    handle->ch_context = malloc(alcp_cipher_context_size(&cinfo));
-    if (handle->ch_context == NULL) {
+    m_handle->ch_context = malloc(alcp_cipher_context_size(&m_cinfo));
+    if (m_handle->ch_context == NULL) {
         std::cout << "alcp_base.c: Memory allocation for context failure!"
                   << std::endl;
         goto out;
     }
 
     /* Initialize keyinfo */
-    keyinfo.type = ALC_KEY_TYPE_SYMMETRIC;
-    keyinfo.fmt  = ALC_KEY_FMT_RAW;
-    keyinfo.len  = key_len;
-    keyinfo.key  = key;
+    m_keyinfo.type = ALC_KEY_TYPE_SYMMETRIC;
+    m_keyinfo.fmt  = ALC_KEY_FMT_RAW;
+    m_keyinfo.len  = key_len;
+    m_keyinfo.key  = key;
     /* Initialize cinfo */
-    cinfo.ci_mode_data.cm_aes.ai_mode = mode;
-    cinfo.ci_mode_data.cm_aes.ai_iv   = iv;
-    cinfo.ci_type                     = ALC_CIPHER_TYPE_AES;
-    cinfo.ci_key_info                 = keyinfo;
+    m_cinfo.ci_mode_data.cm_aes.ai_mode = m_mode;
+    m_cinfo.ci_mode_data.cm_aes.ai_iv   = m_iv;
+    m_cinfo.ci_type                     = ALC_CIPHER_TYPE_AES;
+    m_cinfo.ci_key_info                 = m_keyinfo;
 
     /* Check support */
-    err = alcp_cipher_supported(&cinfo);
+    err = alcp_cipher_supported(&m_cinfo);
     if (alcp_is_error(err)) {
         printf("Error: not supported \n");
         alcp_error_str(err, err_buf, err_size);
@@ -110,7 +109,7 @@ AlcpCipherBase::alcpInit(uint8_t* key, const uint32_t key_len)
     }
 
     /* Request Handle */
-    err = alcp_cipher_request(&cinfo, handle);
+    err = alcp_cipher_request(&m_cinfo, m_handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);
@@ -118,10 +117,10 @@ AlcpCipherBase::alcpInit(uint8_t* key, const uint32_t key_len)
     }
     return true;
 out:
-    if (handle != nullptr) {
-        if (handle->ch_context != NULL)
-            free(handle->ch_context);
-        delete handle; // Free old handle
+    if (m_handle != nullptr) {
+        if (m_handle->ch_context != NULL)
+            free(m_handle->ch_context);
+        delete m_handle; // Free old handle
     }
     return false;
 }
@@ -134,7 +133,7 @@ AlcpCipherBase::encrypt(uint8_t* plaintxt, int len, uint8_t* ciphertxt)
     uint8_t     err_buf[err_size];
 
     /* Encrypt Data */
-    err = alcp_cipher_encrypt(handle, plaintxt, ciphertxt, len, iv);
+    err = alcp_cipher_encrypt(m_handle, plaintxt, ciphertxt, len, m_iv);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -151,7 +150,7 @@ AlcpCipherBase::decrypt(uint8_t* ciphertxt, int len, uint8_t* plaintxt)
     uint8_t     err_buf[err_size];
 
     /* Decrypt Data */
-    err = alcp_cipher_decrypt(handle, ciphertxt, plaintxt, len, iv);
+    err = alcp_cipher_decrypt(m_handle, ciphertxt, plaintxt, len, m_iv);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);
