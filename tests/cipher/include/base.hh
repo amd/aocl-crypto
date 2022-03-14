@@ -28,7 +28,7 @@
 #pragma once
 #include <fstream>
 
-namespace ALCP_TESTING {
+namespace alcp::testing {
 class File
 {
   private:
@@ -80,4 +80,4 @@ unsigned char*
 hexStringToBytes(std::string hexStr);
 std::string
 bytesToHexString(unsigned char* bytes, int length);
-} // namespace ALCP_TESTING
+} // namespace alcp::testing

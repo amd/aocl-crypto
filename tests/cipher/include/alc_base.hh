@@ -27,12 +27,80 @@
  */
 
 #include <alcp/alcp.h>
+#include <iostream>
 #include <malloc.h>
 
 #pragma once
 #ifndef __ALC_BASE_HH
 #define __ALC_BASE_HH 2
+namespace alcp::testing {
+class AlcpCipherBase
+{
+  private:
+    alc_cipher_handle_p handle = nullptr;
+    alc_cipher_info_t   cinfo;
+    alc_key_info_t      keyinfo;
+    alc_aes_mode_t      mode;
+    uint8_t*            iv;
 
+  public:
+    /**
+     * @brief Construct a new Alcp Base object - Manual initilization needed,
+     * run alcpInit
+     *
+     * @param mode
+     * @param iv
+     */
+    AlcpCipherBase(alc_aes_mode_t mode, uint8_t* iv);
+
+    /**
+     * @brief Construct a new Alcp Base object - Initlized and ready to go
+     *
+     * @param mode
+     * @param iv
+     * @param key
+     * @param key_len
+     */
+    AlcpCipherBase(alc_aes_mode_t mode,
+                   uint8_t*       iv,
+                   uint8_t*       key,
+                   const uint32_t key_len);
+
+    /**
+     * @brief         Initialization/Reinitialization function, created handle
+     *
+     * @param iv      Intilization vector or start of counter (CTR mode)
+     * @param key     Binary(RAW) Key 128/192/256 bits
+     * @param key_len Length of the Key
+     * @return true -  if no failure
+     * @return false - if there is some failure
+     */
+    bool alcpInit(uint8_t* iv, uint8_t* key, const uint32_t key_len);
+
+    bool alcpInit(uint8_t* key, const uint32_t key_len);
+    bool encrypt(uint8_t* plaintxt, int len, uint8_t* ciphertxt);
+    bool decrypt(uint8_t* ciphertxt, int len, uint8_t* plaintxt);
+};
+
+class AlcpCipherTesting : public AlcpCipherBase
+{
+  public:
+    AlcpCipherTesting(alc_aes_mode_t mode, uint8_t* iv);
+    bool testingEncrypt(unsigned char* plaintext,
+                        int            plaintext_len,
+                        unsigned char* key,
+                        int            keylen,
+                        unsigned char* iv,
+                        unsigned char* ciphertext);
+    bool testingDecrypt(unsigned char* ciphertext,
+                        int            ciphertext_len,
+                        unsigned char* key,
+                        int            keylen,
+                        unsigned char* iv,
+                        unsigned char* plaintext);
+};
+
+// Legacy warning, depreciated!, future pure classes
 #if 1
 void
 alcp_encrypt_data(
@@ -71,5 +139,5 @@ decrypt(unsigned char* ciphertext,
         int            keylen,
         unsigned char* iv,
         unsigned char* plaintext);
-
+} // namespace alcp::testing
 #endif
