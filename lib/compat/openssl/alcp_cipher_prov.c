@@ -361,12 +361,12 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
     cctx->pc_cipher_info.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
 
     // OpenSSL Speed likes to keep keylen 0
-    if (keylen != 0) {
-        cctx->pc_cipher_info.ci_key_info.len = keylen;
-    } else {
-        cctx->pc_cipher_info.ci_key_info.len = 128;
-        cctx->pc_cipher_info.ci_key_info.key = OPENSSL_malloc(128);
-    }
+    // if (keylen != 0) {
+    //     cctx->pc_cipher_info.ci_key_info.len = keylen;
+    // } else {
+    //     cctx->pc_cipher_info.ci_key_info.len = 128;
+    //     cctx->pc_cipher_info.ci_key_info.key = OPENSSL_malloc(128);
+    // }
 
     // Check for support
     err = alcp_cipher_supported(cinfo);
@@ -451,8 +451,9 @@ ALCP_prov_cipher_final(void*          vctx,
                        size_t*        outl,
                        size_t         outsize)
 {
-    // alc_prov_cipher_ctx_p cctx = vctx;
+    alc_prov_cipher_ctx_p cctx = vctx;
     ENTER();
+    free((cctx->handle).ch_context);
     // Northing to do!
     *outl = 0;
     return 1;
