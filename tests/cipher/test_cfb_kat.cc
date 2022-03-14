@@ -30,7 +30,7 @@
 #include "base.hh"
 #include "gtest_base.hh"
 
-using namespace ALCP_TESTING;
+using namespace alcp::testing;
 
 /* Testing Starts Here! */
 

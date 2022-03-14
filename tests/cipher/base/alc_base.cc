@@ -27,6 +27,159 @@
  */
 
 #include "alc_base.hh"
+
+namespace alcp::testing {
+
+// AlcpCipherBase class functions
+AlcpCipherBase::AlcpCipherBase(alc_aes_mode_t mode, uint8_t* iv)
+{
+    this->mode = mode;
+    this->iv   = iv;
+}
+
+AlcpCipherBase::AlcpCipherBase(alc_aes_mode_t mode,
+                               uint8_t*       iv,
+                               uint8_t*       key,
+                               const uint32_t key_len)
+{
+    this->mode = mode;
+    this->iv   = iv;
+    alcpInit(iv, key, key_len);
+}
+
+bool
+AlcpCipherBase::alcpInit(uint8_t* iv, uint8_t* key, const uint32_t key_len)
+{
+    this->iv = iv;
+    return alcpInit(key, key_len);
+}
+
+bool
+AlcpCipherBase::alcpInit(uint8_t* key, const uint32_t key_len)
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
+
+    if (handle != nullptr) {
+        free(handle->ch_context);
+        delete handle; // Free old handle
+    }
+    handle = new alc_cipher_handle_t;
+    if (handle == nullptr) {
+        std::cout << "alcp_base.c: Memory allocation for handle failure!"
+                  << std::endl;
+        goto out;
+    }
+    handle->ch_context = malloc(alcp_cipher_context_size(&cinfo));
+    if (handle->ch_context == NULL) {
+        std::cout << "alcp_base.c: Memory allocation for context failure!"
+                  << std::endl;
+        goto out;
+    }
+
+    /* Initialize keyinfo */
+    keyinfo.type = ALC_KEY_TYPE_SYMMETRIC;
+    keyinfo.fmt  = ALC_KEY_FMT_RAW;
+    keyinfo.len  = key_len;
+    keyinfo.key  = key;
+    /* Initialize cinfo */
+    cinfo.ci_mode_data.cm_aes.ai_mode = mode;
+    cinfo.ci_mode_data.cm_aes.ai_iv   = iv;
+    cinfo.ci_type                     = ALC_CIPHER_TYPE_AES;
+    cinfo.ci_key_info                 = keyinfo;
+
+    /* Check support */
+    err = alcp_cipher_supported(&cinfo);
+    if (alcp_is_error(err)) {
+        printf("Error: not supported \n");
+        alcp_error_str(err, err_buf, err_size);
+        goto out;
+    }
+
+    /* Request Handle */
+    err = alcp_cipher_request(&cinfo, handle);
+    if (alcp_is_error(err)) {
+        printf("Error: unable to request \n");
+        alcp_error_str(err, err_buf, err_size);
+        goto out;
+    }
+    return true;
+out:
+    if (handle->ch_context != NULL)
+        free(handle->ch_context);
+    if (handle != nullptr)
+        delete handle; // Free old handle
+    return false;
+}
+
+bool
+AlcpCipherBase::encrypt(uint8_t* plaintxt, int len, uint8_t* ciphertxt)
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
+
+    /* Encrypt Data */
+    err = alcp_cipher_encrypt(handle, plaintxt, ciphertxt, len, iv);
+    if (alcp_is_error(err)) {
+        printf("Error: unable to encrypt \n");
+        alcp_error_str(err, err_buf, err_size);
+        return false;
+    }
+    return true;
+}
+
+bool
+AlcpCipherBase::decrypt(uint8_t* ciphertxt, int len, uint8_t* plaintxt)
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
+
+    /* Decrypt Data */
+    err = alcp_cipher_decrypt(handle, ciphertxt, plaintxt, len, iv);
+    if (alcp_is_error(err)) {
+        printf("Error: unable decrypt \n");
+        alcp_error_str(err, err_buf, err_size);
+        return false;
+    }
+    return true;
+}
+
+// AlcpCipherTesting class functions
+AlcpCipherTesting::AlcpCipherTesting(alc_aes_mode_t mode, uint8_t* iv)
+    : AlcpCipherBase(mode, iv)
+{}
+
+bool
+AlcpCipherTesting::testingEncrypt(unsigned char* plaintext,
+                                  int            plaintext_len,
+                                  unsigned char* key,
+                                  int            keylen,
+                                  unsigned char* iv,
+                                  unsigned char* ciphertext)
+{
+    if (alcpInit(iv, key, keylen)) {
+        return encrypt(plaintext, plaintext_len, ciphertext);
+    }
+    return false;
+}
+bool
+AlcpCipherTesting::testingDecrypt(unsigned char* ciphertext,
+                                  int            ciphertext_len,
+                                  unsigned char* key,
+                                  int            keylen,
+                                  unsigned char* iv,
+                                  unsigned char* plaintext)
+{
+    if (alcpInit(iv, key, keylen)) {
+        return decrypt(ciphertext, ciphertext_len, plaintext);
+    }
+    return false;
+}
+
+// Legacy warning, depreciated!, future pure classes
 void
 alcp_encrypt_data(
     const uint8_t* plaintxt,
@@ -232,3 +385,5 @@ decrypt(unsigned char* ciphertext,
                       ALC_AES_MODE_CBC);
     return ciphertext_len;
 }
+
+} // namespace alcp::testing

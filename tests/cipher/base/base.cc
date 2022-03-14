@@ -29,7 +29,7 @@
 #include "base.hh"
 #include <iostream>
 
-namespace ALCP_TESTING {
+namespace alcp::testing {
 
 /* Class File procedures */
 File::File(std::string fileName)
@@ -310,7 +310,7 @@ bytesToHexString(unsigned char* bytes, int length)
     outputHexString[length * 2] = 0x0;
     return std::string(outputHexString);
 }
-} // namespace ALCP_TESTING
+} // namespace alcp::testing
 
 // int
 // main()

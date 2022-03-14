@@ -44,9 +44,9 @@ ArraysMatch(const unsigned char* expected,
 {
     for (size_t i = 0; i < size; i++) {
         if (expected[i] != actual[i]) {
-            std::string actual_error =
-                ALCP_TESTING::bytesToHexString((unsigned char*)(actual + i), 1);
-            std::string expected_error = ALCP_TESTING::bytesToHexString(
+            std::string actual_error = alcp::testing::bytesToHexString(
+                (unsigned char*)(actual + i), 1);
+            std::string expected_error = alcp::testing::bytesToHexString(
                 (unsigned char*)(expected + i), 1);
             return ::testing::AssertionFailure()
                    << "array[" << i << "] ("
