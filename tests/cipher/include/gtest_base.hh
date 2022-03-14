@@ -29,6 +29,7 @@
 #pragma once
 #include <base.hh>
 #include <gtest/gtest.h>
+#include <vector>
 
 #ifndef __GTEST_BASE_HH
 #define __GTEST_BASE_HH 2
@@ -36,21 +37,22 @@
 static bool verbose = false;
 
 ::testing::AssertionResult
-ArraysMatch(const unsigned char* expected,
-            const unsigned char* actual,
+ArraysMatch(std::vector<uint8_t> expected,
+            std::vector<uint8_t> actual,
             size_t               size,
             int                  lineNo,
             std::string          testName)
 {
     for (size_t i = 0; i < size; i++) {
-        if (expected[i] != actual[i]) {
+        // TODO: Replace with proper cast
+        if (expected.at(i) != actual.at(i)) {
             std::string actual_error = alcp::testing::bytesToHexString(
-                (unsigned char*)(actual + i), 1);
+                (unsigned char*)(&actual.at(i)), 1);
             std::string expected_error = alcp::testing::bytesToHexString(
-                (unsigned char*)(expected + i), 1);
+                (unsigned char*)(&expected.at(i)), 1);
             return ::testing::AssertionFailure()
                    << "array[" << i << "] ("
-                   << "0x" << actual_error << ") != expected[" << i << "] ("
+                   << "0x" << actual_error << ") != expected[" << i << "]("
                    << "0x" << expected_error << ")"
                    << "Test: " << testName << " line: " << lineNo << " Failed";
         }

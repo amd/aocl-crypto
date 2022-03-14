@@ -29,6 +29,7 @@
 #include <alcp/alcp.h>
 #include <iostream>
 #include <malloc.h>
+#include <vector>
 
 #pragma once
 #ifndef __ALC_BASE_HH
@@ -41,7 +42,7 @@ class AlcpCipherBase
     alc_cipher_info_t   m_cinfo;
     alc_key_info_t      m_keyinfo;
     alc_aes_mode_t      m_mode;
-    uint8_t*            m_iv;
+    const uint8_t*      m_iv;
 
   public:
     /**
@@ -76,29 +77,25 @@ class AlcpCipherBase
      * @return false - if there is some failure
      */
     ~AlcpCipherBase();
-    bool alcpInit(uint8_t* iv, uint8_t* key, const uint32_t key_len);
+    bool alcpInit(const uint8_t* iv,
+                  const uint8_t* key,
+                  const uint32_t key_len);
 
-    bool alcpInit(uint8_t* key, const uint32_t key_len);
-    bool encrypt(uint8_t* plaintxt, int len, uint8_t* ciphertxt);
-    bool decrypt(uint8_t* ciphertxt, int len, uint8_t* plaintxt);
+    bool alcpInit(const uint8_t* key, const uint32_t key_len);
+    bool encrypt(const uint8_t* plaintxt, int len, uint8_t* ciphertxt);
+    bool decrypt(const uint8_t* ciphertxt, int len, uint8_t* plaintxt);
 };
 
 class AlcpCipherTesting : public AlcpCipherBase
 {
   public:
     AlcpCipherTesting(alc_aes_mode_t mode, uint8_t* iv);
-    bool testingEncrypt(unsigned char* plaintext,
-                        int            plaintext_len,
-                        unsigned char* key,
-                        int            keylen,
-                        unsigned char* iv,
-                        unsigned char* ciphertext);
-    bool testingDecrypt(unsigned char* ciphertext,
-                        int            ciphertext_len,
-                        unsigned char* key,
-                        int            keylen,
-                        unsigned char* iv,
-                        unsigned char* plaintext);
+    std::vector<uint8_t> testingEncrypt(std::vector<uint8_t> plaintext,
+                                        std::vector<uint8_t> key,
+                                        std::vector<uint8_t> iv);
+    std::vector<uint8_t> testingDecrypt(std::vector<uint8_t> ciphertext,
+                                        std::vector<uint8_t> key,
+                                        std::vector<uint8_t> iv);
 };
 
 // Legacy warning, depreciated!, future pure classes

@@ -27,6 +27,7 @@
  */
 
 #include "alc_base.hh"
+#include "base.hh"
 
 namespace alcp::testing {
 
@@ -58,14 +59,16 @@ AlcpCipherBase::~AlcpCipherBase()
 }
 
 bool
-AlcpCipherBase::alcpInit(uint8_t* iv, uint8_t* key, const uint32_t key_len)
+AlcpCipherBase::alcpInit(const uint8_t* iv,
+                         const uint8_t* key,
+                         const uint32_t key_len)
 {
-    this->m_iv = iv;
+    this->m_iv = reinterpret_cast<const uint8_t*>(iv);
     return alcpInit(key, key_len);
 }
 
 bool
-AlcpCipherBase::alcpInit(uint8_t* key, const uint32_t key_len)
+AlcpCipherBase::alcpInit(const uint8_t* key, const uint32_t key_len)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -126,7 +129,7 @@ out:
 }
 
 bool
-AlcpCipherBase::encrypt(uint8_t* plaintxt, int len, uint8_t* ciphertxt)
+AlcpCipherBase::encrypt(const uint8_t* plaintxt, int len, uint8_t* ciphertxt)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -143,7 +146,7 @@ AlcpCipherBase::encrypt(uint8_t* plaintxt, int len, uint8_t* ciphertxt)
 }
 
 bool
-AlcpCipherBase::decrypt(uint8_t* ciphertxt, int len, uint8_t* plaintxt)
+AlcpCipherBase::decrypt(const uint8_t* ciphertxt, int len, uint8_t* plaintxt)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -164,31 +167,30 @@ AlcpCipherTesting::AlcpCipherTesting(alc_aes_mode_t mode, uint8_t* iv)
     : AlcpCipherBase(mode, iv)
 {}
 
-bool
-AlcpCipherTesting::testingEncrypt(unsigned char* plaintext,
-                                  int            plaintext_len,
-                                  unsigned char* key,
-                                  int            keylen,
-                                  unsigned char* iv,
-                                  unsigned char* ciphertext)
+std::vector<uint8_t>
+AlcpCipherTesting::testingEncrypt(std::vector<uint8_t> plaintext,
+                                  std::vector<uint8_t> key,
+                                  std::vector<uint8_t> iv)
 {
-    if (alcpInit(iv, key, keylen)) {
-        return encrypt(plaintext, plaintext_len, ciphertext);
+    if (alcpInit(&iv[0], &key[0], key.size() * 8)) {
+        uint8_t* ciphertext = new uint8_t[plaintext.size()];
+        encrypt(&plaintext[0], plaintext.size(), ciphertext);
+        std::vector<uint8_t> vt;
+        return std::vector<uint8_t>(ciphertext, ciphertext + plaintext.size());
     }
-    return false;
+    return {};
 }
-bool
-AlcpCipherTesting::testingDecrypt(unsigned char* ciphertext,
-                                  int            ciphertext_len,
-                                  unsigned char* key,
-                                  int            keylen,
-                                  unsigned char* iv,
-                                  unsigned char* plaintext)
+std::vector<uint8_t>
+AlcpCipherTesting::testingDecrypt(std::vector<uint8_t> ciphertext,
+                                  std::vector<uint8_t> key,
+                                  std::vector<uint8_t> iv)
 {
-    if (alcpInit(iv, key, keylen)) {
-        return decrypt(ciphertext, ciphertext_len, plaintext);
+    if (alcpInit(&iv[0], &key[0], key.size() * 8)) {
+        uint8_t* plaintext = new uint8_t[ciphertext.size()];
+        decrypt(&ciphertext[0], ciphertext.size(), plaintext);
+        return std::vector<uint8_t>(plaintext, plaintext + ciphertext.size());
     }
-    return false;
+    return {};
 }
 
 // Legacy warning, depreciated!, future pure classes

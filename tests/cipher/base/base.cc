@@ -42,6 +42,7 @@ File::File(std::string fileName)
     }
     return;
 }
+
 std::string
 File::readWord()
 {
@@ -49,6 +50,7 @@ File::readWord()
     file >> buff;
     return buff;
 }
+
 std::string
 File::readLine()
 {
@@ -56,6 +58,7 @@ File::readLine()
     std::getline(file, buff);
     return buff;
 }
+
 std::string
 File::readLineCharByChar()
 {
@@ -69,6 +72,7 @@ File::readLineCharByChar()
     }
     return buff;
 }
+
 char*
 File::readChar(int n)
 {
@@ -90,13 +94,14 @@ DataSet::DataSet(std::string filename)
     line = readLine(); // Read header out
     return;
 }
+
 bool
 DataSet::readPtIvKeyCt(int keybits)
 {
     while (true) {
         if (readPtIvKeyCt() == false)
             return false;
-        else if (key.size() * 4 == keybits)
+        else if (key.size() * 8 == keybits)
             return true;
     }
 }
@@ -119,34 +124,67 @@ DataSet::readPtIvKeyCt()
     if ((pos1 == -1) || (pos2 == -1) || (pos3 == -1)) {
         return false;
     }
-    pt  = line.substr(0, pos1);
-    iv  = line.substr(pos1 + 1, pos2 - pos1 - 1);
-    key = line.substr(pos2 + 1, pos3 - pos2 - 1);
-    ct  = line.substr(pos3 + 1);
+    pt  = parseHexStrToBin(line.substr(0, pos1));
+    iv  = parseHexStrToBin(line.substr(pos1 + 1, pos2 - pos1 - 1));
+    key = parseHexStrToBin(line.substr(pos2 + 1, pos3 - pos2 - 1));
+    ct  = parseHexStrToBin(line.substr(pos3 + 1));
     lineno++;
     return true;
 }
+
+uint8_t
+DataSet::parseHexToNum(unsigned char c)
+{
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
+    if (c >= '0' && c <= '9')
+        return c - '0';
+
+    return 0;
+}
+
+std::vector<uint8_t>
+DataSet::parseHexStrToBin(std::string in)
+{
+    std::vector<uint8_t> vector;
+    int                  len = in.size();
+    int                  ind = 0;
+
+    for (int i = 0; i < len; i += 2) {
+        uint8_t val =
+            parseHexToNum(in.at(ind++)) << 4 | parseHexToNum(in.at(ind++));
+        vector.push_back(val);
+    }
+    return vector;
+}
+
 int
 DataSet::getLineNumber()
 {
     return lineno;
 }
-std::string
+
+std::vector<uint8_t>
 DataSet::getPt()
 {
     return pt;
 }
-std::string
+
+std::vector<uint8_t>
 DataSet::getIv()
 {
     return iv;
 }
-std::string
+
+std::vector<uint8_t>
 DataSet::getKey()
 {
     return key;
 }
-std::string
+
+std::vector<uint8_t>
 DataSet::getCt()
 {
     return ct;
@@ -311,16 +349,3 @@ bytesToHexString(unsigned char* bytes, int length)
     return std::string(outputHexString);
 }
 } // namespace alcp::testing
-
-// int
-// main()
-// {
-//     using namespace ALCP_TESTING;
-//     std::string filename = "../../../openssl/libcrypto/test/dataset.csv";
-//     DataSet     d        = DataSet(filename);
-//     while (d.readPtIvKeyCt(256)) {
-//         std::cout << "PT:" << d.getPt() << "\tIV:" << d.getIv()
-//                   << "\tKey:" << d.getKey() << "\tCT:" << d.getCt()
-//                   << std::endl;
-//     }
-// }
