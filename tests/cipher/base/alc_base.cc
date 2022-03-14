@@ -47,6 +47,17 @@ AlcpCipherBase::AlcpCipherBase(alc_aes_mode_t mode,
     alcpInit(iv, key, key_len);
 }
 
+AlcpCipherBase::~AlcpCipherBase()
+{
+    if (handle != nullptr) {
+        alcp_cipher_finish(handle);
+        if (handle->ch_context != NULL) {
+            free(handle->ch_context);
+        }
+        delete handle;
+    }
+}
+
 bool
 AlcpCipherBase::alcpInit(uint8_t* iv, uint8_t* key, const uint32_t key_len)
 {
@@ -62,6 +73,7 @@ AlcpCipherBase::alcpInit(uint8_t* key, const uint32_t key_len)
     uint8_t     err_buf[err_size];
 
     if (handle != nullptr) {
+        alcp_cipher_finish(handle);
         free(handle->ch_context);
         delete handle; // Free old handle
     }
@@ -106,10 +118,11 @@ AlcpCipherBase::alcpInit(uint8_t* key, const uint32_t key_len)
     }
     return true;
 out:
-    if (handle->ch_context != NULL)
-        free(handle->ch_context);
-    if (handle != nullptr)
+    if (handle != nullptr) {
+        if (handle->ch_context != NULL)
+            free(handle->ch_context);
         delete handle; // Free old handle
+    }
     return false;
 }
 

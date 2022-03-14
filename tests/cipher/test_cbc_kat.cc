@@ -62,10 +62,10 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
                                 plaintext_len,
                                 ds.getLineNumber(),
                                 std::string("AES_CBC_128_ENC")));
-        delete key;
-        delete iv;
-        delete plaintext;
-        delete expected_ciphertext;
+        delete[] key;
+        delete[] iv;
+        delete[] plaintext;
+        delete[] expected_ciphertext;
     }
 }
 
@@ -97,10 +97,10 @@ TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
                                 plaintext_len,
                                 ds.getLineNumber(),
                                 std::string("AES_CBC_192_ENC")));
-        delete key;
-        delete iv;
-        delete plaintext;
-        delete expected_ciphertext;
+        delete[] key;
+        delete[] iv;
+        delete[] plaintext;
+        delete[] expected_ciphertext;
     }
 }
 
@@ -132,10 +132,10 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
                                 plaintext_len,
                                 ds.getLineNumber(),
                                 std::string("AES_CBC_256_ENC")));
-        delete key;
-        delete iv;
-        delete plaintext;
-        delete expected_ciphertext;
+        delete[] key;
+        delete[] iv;
+        delete[] plaintext;
+        delete[] expected_ciphertext;
     }
 }
 
@@ -166,9 +166,10 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
                                 ciphertext_len,
                                 ds.getLineNumber(),
                                 std::string("AES_CBC_128_DEC")));
-        free(key);
-        free(iv);
-        free(plaintext);
+        delete[] key;
+        delete[] iv;
+        delete[] plaintext;
+        delete[] ciphertext;
     }
 }
 
@@ -199,9 +200,10 @@ TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
                                 ciphertext_len,
                                 ds.getLineNumber(),
                                 std::string("AES_CBC_192_DEC")));
-        free(key);
-        free(iv);
-        free(plaintext);
+        delete[] key;
+        delete[] iv;
+        delete[] plaintext;
+        delete[] ciphertext;
     }
 }
 
@@ -232,9 +234,10 @@ TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
                                 ciphertext_len,
                                 ds.getLineNumber(),
                                 std::string("AES_CBC_256_DEC")));
-        free(key);
-        free(iv);
-        free(plaintext);
+        delete[] key;
+        delete[] iv;
+        delete[] plaintext;
+        delete[] ciphertext;
     }
 }
 
