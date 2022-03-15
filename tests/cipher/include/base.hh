@@ -26,9 +26,9 @@
  *
  */
 #pragma once
-
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 namespace alcp::testing {
 class File
@@ -55,35 +55,32 @@ class File
 class DataSet : private File
 {
   private:
-    std::string line = "";
-    std::string pt, iv, key, ct;
+    std::string          line = "";
+    std::vector<uint8_t> pt, iv, key, ct;
     // First line is skipped, linenum starts from 1
     int lineno = 1;
 
   public:
     // Treats file as CSV, skips first line
-    DataSet(std::string filename);
+    DataSet(const std::string filename);
     // Read without condition
     bool readPtIvKeyCt();
     // Read only specified key size
-    bool readPtIvKeyCt(int keybits);
+    bool readPtIvKeyCt(const int keybits);
+    // Convert a hex char to number;
+    uint8_t parseHexToNum(const unsigned char c);
+    // Parse hexString to binary
+    std::vector<uint8_t> parseHexStrToBin(const std::string in);
+    std::string parseBytesToHexStr(const uint8_t* bytes, const int length);
     // To print which line in dataset failed
     int getLineNumber();
     // Return private data plain text
-    std::string getPt();
+    std::vector<uint8_t> getPt();
     // Return private data initialization vector
-    std::string getIv();
+    std::vector<uint8_t> getIv();
     // Return private data key
-    std::string getKey();
+    std::vector<uint8_t> getKey();
     // Return private data cipher text
-    std::string getCt();
+    std::vector<uint8_t> getCt();
 };
-
-
-unsigned char*
-hexStringToBytes(std::string hexStr);
-
-std::string
-bytesToHexString(unsigned char* bytes, int length);
-
 } // namespace alcp::testing
