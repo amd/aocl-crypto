@@ -37,29 +37,27 @@
 static bool verbose = false;
 
 ::testing::AssertionResult
-ArraysMatch(std::vector<uint8_t> expected,
-            std::vector<uint8_t> actual,
-            size_t               size,
-            int                  lineNo,
-            std::string          testName)
+ArraysMatch(std::vector<uint8_t>    actual,
+            std::vector<uint8_t>    expected,
+            alcp::testing::DataSet& ds,
+            std::string             testName)
 {
-    for (size_t i = 0; i < size; i++) {
+    for (size_t i = 0; i < expected.size(); i++) {
         // TODO: Replace with proper cast
-        if (expected.at(i) != actual.at(i)) {
-            std::string actual_error = alcp::testing::bytesToHexString(
-                (unsigned char*)(&actual.at(i)), 1);
-            std::string expected_error = alcp::testing::bytesToHexString(
-                (unsigned char*)(&expected.at(i)), 1);
+        if (expected[i] != actual[i]) {
+            std::string actual_error   = ds.parseBytesToHexStr(&actual[i], 1);
+            std::string expected_error = ds.parseBytesToHexStr(&expected[i], 1);
             return ::testing::AssertionFailure()
                    << "array[" << i << "] ("
                    << "0x" << actual_error << ") != expected[" << i << "]("
                    << "0x" << expected_error << ")"
-                   << "Test: " << testName << " line: " << lineNo << " Failed";
+                   << "Test: " << testName << " line: " << ds.getLineNumber()
+                   << " Failed";
         }
     }
     if (verbose) {
-        std::cout << "Test: " << testName << " line: " << lineNo << " Success"
-                  << std::endl;
+        std::cout << "Test: " << testName << " line: " << ds.getLineNumber()
+                  << " Success" << std::endl;
     }
     return ::testing::AssertionSuccess();
 }

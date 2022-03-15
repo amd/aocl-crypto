@@ -56,8 +56,7 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
         // Check if output is correct
         EXPECT_TRUE(ArraysMatch(ciphertext,
                                 expected_ciphertext,
-                                plaintext_len,
-                                ds.getLineNumber(),
+                                ds,
                                 std::string("AES_CBC_128_ENC")));
     }
 }
@@ -85,8 +84,7 @@ TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
         // Check if output is correct
         EXPECT_TRUE(ArraysMatch(ciphertext,
                                 expected_ciphertext,
-                                plaintext_len,
-                                ds.getLineNumber(),
+                                ds,
                                 std::string("AES_CBC_192_ENC")));
     }
 }
@@ -114,8 +112,7 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
         // Check if output is correct
         EXPECT_TRUE(ArraysMatch(ciphertext,
                                 expected_ciphertext,
-                                plaintext_len,
-                                ds.getLineNumber(),
+                                ds,
                                 std::string("AES_CBC_256_ENC")));
     }
 }
@@ -141,11 +138,8 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
         decryptedtext     = cipherHander.testingDecrypt(ciphertext, key, iv);
         decryptedtext_len = ciphertext_len;
 
-        EXPECT_TRUE(ArraysMatch(decryptedtext,
-                                plaintext,
-                                ciphertext_len,
-                                ds.getLineNumber(),
-                                std::string("AES_CBC_128_DEC")));
+        EXPECT_TRUE(ArraysMatch(
+            decryptedtext, plaintext, ds, std::string("AES_CBC_128_DEC")));
     }
 }
 
@@ -170,11 +164,8 @@ TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
         decryptedtext     = cipherHander.testingDecrypt(ciphertext, key, iv);
         decryptedtext_len = ciphertext_len;
 
-        EXPECT_TRUE(ArraysMatch(decryptedtext,
-                                plaintext,
-                                ciphertext_len,
-                                ds.getLineNumber(),
-                                std::string("AES_CBC_192_DEC")));
+        EXPECT_TRUE(ArraysMatch(
+            decryptedtext, plaintext, ds, std::string("AES_CBC_192_DEC")));
     }
 }
 
@@ -199,11 +190,8 @@ TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
         decryptedtext     = cipherHander.testingDecrypt(ciphertext, key, iv);
         decryptedtext_len = ciphertext_len;
 
-        EXPECT_TRUE(ArraysMatch(decryptedtext,
-                                plaintext,
-                                ciphertext_len,
-                                ds.getLineNumber(),
-                                std::string("AES_CBC_256_DEC")));
+        EXPECT_TRUE(ArraysMatch(
+            decryptedtext, plaintext, ds, std::string("AES_CBC_256_DEC")));
     }
 }
 

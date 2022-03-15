@@ -190,162 +190,17 @@ DataSet::getCt()
     return ct;
 }
 
-// Functions
-unsigned char*
-hexStringToBytes(std::string hexStr)
-{
-    const char* hexString = hexStr.c_str();
-    int         length    = hexStr.size();
-    if (length % 2 != 0) {
-        return NULL;
-    }
-    // At this point we know size of hexString is even.
-
-    // Need to dellocate after use
-    unsigned char* outputBytes = new unsigned char[(length / 2) + 1];
-    // unsigned char* outputBytes =
-    //     (unsigned char*)malloc((sizeof(char) * length / 2) + 1);
-    int outputBytesIndex = 0;
-    for (int i = 0; i < length; i += 2) {
-        unsigned char value     = 0;
-        unsigned char outputval = 0;
-
-        for (int j = 0; j < 2; j++) {
-
-            // Master switchcase to compare char (most probably faster than
-            // plain substract)
-            switch (*(hexString + i + j)) {
-                case '0':
-                    value = 0x0;
-                    break;
-                case '1':
-                    value = 0x1;
-                    break;
-                case '2':
-                    value = 0x2;
-                    break;
-                case '3':
-                    value = 0x3;
-                    break;
-                case '4':
-                    value = 0x4;
-                    break;
-                case '5':
-                    value = 0x5;
-                    break;
-                case '6':
-                    value = 0x6;
-                    break;
-                case '7':
-                    value = 0x7;
-                    break;
-                case '8':
-                    value = 0x8;
-                    break;
-                case '9':
-                    value = 0x9;
-                    break;
-                case 'a':
-                    value = 0xa;
-                    break;
-                case 'b':
-                    value = 0xb;
-                    break;
-                case 'c':
-                    value = 0xc;
-                    break;
-                case 'd':
-                    value = 0xd;
-                    break;
-                case 'e':
-                    value = 0xe;
-                    break;
-                case 'f':
-                    value = 0xf;
-                    break;
-            }
-
-            // Most significant to least (otherway is faster.. meh)
-            value = value << (4 * (2 - j - 1));
-            // Acc the values into a single variable
-            outputval = outputval | value;
-        }
-        // Set output with correct index
-        *(outputBytes + outputBytesIndex) = outputval;
-        // Can be done with eqn, we rnt runnin out of ram r we?
-        outputBytesIndex++;
-    }
-    // Zero terminate for sanity.. AES won't care anyway
-    outputBytes[outputBytesIndex] = 0x00;
-    return outputBytes;
-}
-
 std::string
-bytesToHexString(unsigned char* bytes, int length)
+DataSet::parseBytesToHexStr(uint8_t* bytes, int length)
 {
-    char* outputHexString = new char[(sizeof(char) * ((length * 2) + 1))];
+    std::stringstream ss;
     for (int i = 0; i < length; i++) {
-        char chararray[2];
-        chararray[0] = (bytes[i] & 0xf0) >> 4; // Upper Half
-        chararray[1] = bytes[i] & 0x0f;        // Lower Half
-        for (int j = 0; j < 2; j++) {
-            switch (chararray[j]) {
-                case 0x0:
-                    chararray[j] = '0';
-                    break;
-                case 0x1:
-                    chararray[j] = '1';
-                    break;
-                case 0x2:
-                    chararray[j] = '2';
-                    break;
-                case 0x3:
-                    chararray[j] = '3';
-                    break;
-                case 0x4:
-                    chararray[j] = '4';
-                    break;
-                case 0x5:
-                    chararray[j] = '5';
-                    break;
-                case 0x6:
-                    chararray[j] = '6';
-                    break;
-                case 0x7:
-                    chararray[j] = '7';
-                    break;
-                case 0x8:
-                    chararray[j] = '8';
-                    break;
-                case 0x9:
-                    chararray[j] = '9';
-                    break;
-                case 0xa:
-                    chararray[j] = 'a';
-                    break;
-                case 0xb:
-                    chararray[j] = 'b';
-                    break;
-                case 0xc:
-                    chararray[j] = 'c';
-                    break;
-                case 0xd:
-                    chararray[j] = 'd';
-                    break;
-                case 0xe:
-                    chararray[j] = 'e';
-                    break;
-                case 0xf:
-                    chararray[j] = 'f';
-                    break;
-                default:
-                    printf("%x %d\n", chararray[j], j);
-            }
-            outputHexString[i * 2 + j] = chararray[j];
-        }
+        int charRep;
+        charRep = bytes[i];
+        // Convert int to hex
+        ss << std::hex << charRep;
     }
-    // Terminate output string to enable printing.
-    outputHexString[length * 2] = 0x0;
-    return std::string(outputHexString);
+    return ss.str();
 }
+
 } // namespace alcp::testing

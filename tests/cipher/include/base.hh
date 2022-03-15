@@ -71,6 +71,7 @@ class DataSet : private File
     uint8_t parseHexToNum(unsigned char c);
     // Parse hexString to binary
     std::vector<uint8_t> parseHexStrToBin(std::string in);
+    std::string          parseBytesToHexStr(uint8_t* bytes, int length);
     // To print which line in dataset failed
     int getLineNumber();
     // Return private data plain text
@@ -82,11 +83,4 @@ class DataSet : private File
     // Return private data cipher text
     std::vector<uint8_t> getCt();
 };
-
-unsigned char*
-hexStringToBytes(std::string hexStr);
-
-std::string
-bytesToHexString(unsigned char* bytes, int length);
-
 } // namespace alcp::testing
