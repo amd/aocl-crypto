@@ -43,21 +43,12 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
         AlcpCipherTesting(ALC_AES_MODE_OFB, nullptr);
 
     while (ds.readPtIvKeyCt(key_size)) {
-        auto key                 = ds.getKey();
-        auto iv                  = ds.getIv();
-        auto plaintext           = ds.getPt();
-        auto expected_ciphertext = ds.getCt();
-        int  ciphertext_len, plaintext_len = ds.getPt().size();
-
-        // Encrypt data with above params
-        auto ciphertext = cipherHander.testingEncrypt(plaintext, key, iv);
-        ciphertext_len  = plaintext_len;
-
         // Check if output is correct
-        EXPECT_TRUE(ArraysMatch(ciphertext,
-                                expected_ciphertext,
-                                ds,
-                                std::string("AES_OFB_128_ENC")));
+        EXPECT_TRUE(ArraysMatch(
+            cipherHander.testingEncrypt(ds.getPt(), ds.getKey(), ds.getIv()),
+            ds.getCt(),
+            ds,
+            std::string("AES_OFB_128_ENC")));
     }
 }
 
@@ -71,21 +62,12 @@ TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
         AlcpCipherTesting(ALC_AES_MODE_OFB, nullptr);
 
     while (ds.readPtIvKeyCt(key_size)) {
-        auto key                 = ds.getKey();
-        auto iv                  = ds.getIv();
-        auto plaintext           = ds.getPt();
-        auto expected_ciphertext = ds.getCt();
-        int  ciphertext_len, plaintext_len = ds.getPt().size();
-
-        // Encrypt data with above params
-        auto ciphertext = cipherHander.testingEncrypt(plaintext, key, iv);
-        ciphertext_len  = plaintext_len;
-
         // Check if output is correct
-        EXPECT_TRUE(ArraysMatch(ciphertext,
-                                expected_ciphertext,
-                                ds,
-                                std::string("AES_OFB_192_ENC")));
+        EXPECT_TRUE(ArraysMatch(
+            cipherHander.testingEncrypt(ds.getPt(), ds.getKey(), ds.getIv()),
+            ds.getCt(),
+            ds,
+            std::string("AES_OFB_192_ENC")));
     }
 }
 
@@ -99,21 +81,12 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
         AlcpCipherTesting(ALC_AES_MODE_OFB, nullptr);
 
     while (ds.readPtIvKeyCt(key_size)) {
-        auto key                 = ds.getKey();
-        auto iv                  = ds.getIv();
-        auto plaintext           = ds.getPt();
-        auto expected_ciphertext = ds.getCt();
-        int  ciphertext_len, plaintext_len = ds.getPt().size();
-
-        // Encrypt data with above params
-        auto ciphertext = cipherHander.testingEncrypt(plaintext, key, iv);
-        ciphertext_len  = plaintext_len;
-
         // Check if output is correct
-        EXPECT_TRUE(ArraysMatch(ciphertext,
-                                expected_ciphertext,
-                                ds,
-                                std::string("AES_OFB_256_ENC")));
+        EXPECT_TRUE(ArraysMatch(
+            cipherHander.testingEncrypt(ds.getPt(), ds.getKey(), ds.getIv()),
+            ds.getCt(),
+            ds,
+            std::string("AES_OFB_256_ENC")));
     }
 }
 
@@ -127,19 +100,12 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
         AlcpCipherTesting(ALC_AES_MODE_OFB, nullptr);
 
     while (ds.readPtIvKeyCt(key_size)) {
-        std::vector<uint8_t> key        = ds.getKey();
-        std::vector<uint8_t> iv         = ds.getIv();
-        std::vector<uint8_t> plaintext  = ds.getPt();
-        std::vector<uint8_t> ciphertext = ds.getCt();
-        int decryptedtext_len, ciphertext_len = ds.getCt().size();
-        std::vector<uint8_t> decryptedtext;
-
-        // Decrypt data with above params
-        decryptedtext     = cipherHander.testingDecrypt(ciphertext, key, iv);
-        decryptedtext_len = ciphertext_len;
-
+        // Check if output is correct
         EXPECT_TRUE(ArraysMatch(
-            decryptedtext, plaintext, ds, std::string("AES_OFB_128_DEC")));
+            cipherHander.testingDecrypt(ds.getCt(), ds.getKey(), ds.getIv()),
+            ds.getPt(),
+            ds,
+            std::string("AES_OFB_128_DEC")));
     }
 }
 
@@ -153,19 +119,12 @@ TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
         AlcpCipherTesting(ALC_AES_MODE_OFB, nullptr);
 
     while (ds.readPtIvKeyCt(key_size)) {
-        std::vector<uint8_t> key        = ds.getKey();
-        std::vector<uint8_t> iv         = ds.getIv();
-        std::vector<uint8_t> plaintext  = ds.getPt();
-        std::vector<uint8_t> ciphertext = ds.getCt();
-        int decryptedtext_len, ciphertext_len = ds.getCt().size();
-        std::vector<uint8_t> decryptedtext;
-
-        // Decrypt data with above params
-        decryptedtext     = cipherHander.testingDecrypt(ciphertext, key, iv);
-        decryptedtext_len = ciphertext_len;
-
+        // Check if output is correct
         EXPECT_TRUE(ArraysMatch(
-            decryptedtext, plaintext, ds, std::string("AES_OFB_192_DEC")));
+            cipherHander.testingDecrypt(ds.getCt(), ds.getKey(), ds.getIv()),
+            ds.getPt(),
+            ds,
+            std::string("AES_OFB_192_DEC")));
     }
 }
 
@@ -179,19 +138,12 @@ TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
         AlcpCipherTesting(ALC_AES_MODE_OFB, nullptr);
 
     while (ds.readPtIvKeyCt(key_size)) {
-        std::vector<uint8_t> key        = ds.getKey();
-        std::vector<uint8_t> iv         = ds.getIv();
-        std::vector<uint8_t> plaintext  = ds.getPt();
-        std::vector<uint8_t> ciphertext = ds.getCt();
-        int decryptedtext_len, ciphertext_len = ds.getCt().size();
-        std::vector<uint8_t> decryptedtext;
-
-        // Decrypt data with above params
-        decryptedtext     = cipherHander.testingDecrypt(ciphertext, key, iv);
-        decryptedtext_len = ciphertext_len;
-
+        // Check if output is correct
         EXPECT_TRUE(ArraysMatch(
-            decryptedtext, plaintext, ds, std::string("AES_OFB_256_DEC")));
+            cipherHander.testingDecrypt(ds.getCt(), ds.getKey(), ds.getIv()),
+            ds.getPt(),
+            ds,
+            std::string("AES_OFB_256_DEC")));
     }
 }
 
