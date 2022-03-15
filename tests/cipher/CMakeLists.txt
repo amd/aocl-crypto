@@ -18,38 +18,38 @@ if(GTest_FOUND)
     target_link_libraries(aes_cbc_kat "${GTEST_LIBRARY}/libgtest.a")
     target_link_libraries(aes_cbc_kat pthread)
 
-    # # OFB
-    # ADD_EXECUTABLE(aes_ofb_kat base/alc_base.cc base/base.cc test_ofb_kat.cc)
-    # # Depending on the person, they are gonna run from root dir or binary directory
-    # # Link dataset to the root dir
-    # file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_ofb.csv ${CMAKE_BINARY_DIR}/dataset_ofb.csv SYMBOLIC)
-    # # Link dataset to the actual place of test binary
-    # file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_ofb.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_ofb.csv SYMBOLIC)
-    # target_link_libraries(aes_ofb_kat alcp)
-    # target_link_libraries(aes_ofb_kat "${GTEST_LIBRARY}/libgtest.a")
-    # target_link_libraries(aes_ofb_kat pthread)
+    # OFB
+    ADD_EXECUTABLE(aes_ofb_kat base/alc_base.cc base/base.cc test_ofb_kat.cc)
+    # Depending on the person, they are gonna run from root dir or binary directory
+    # Link dataset to the root dir
+    file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_ofb.csv ${CMAKE_BINARY_DIR}/dataset_ofb.csv SYMBOLIC)
+    # Link dataset to the actual place of test binary
+    file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_ofb.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_ofb.csv SYMBOLIC)
+    target_link_libraries(aes_ofb_kat alcp)
+    target_link_libraries(aes_ofb_kat "${GTEST_LIBRARY}/libgtest.a")
+    target_link_libraries(aes_ofb_kat pthread)
 
-    # # CFB
-    # ADD_EXECUTABLE(aes_cfb_kat base/alc_base.cc base/base.cc test_cfb_kat.cc)
-    # # Depending on the person, they are gonna run from root dir or binary directory
-    # # Link dataset to the root dir
-    # file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_cfb.csv ${CMAKE_BINARY_DIR}/dataset_cfb.csv SYMBOLIC)
-    # # Link dataset to the actual place of test binary
-    # file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_cfb.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_cfb.csv SYMBOLIC)
-    # target_link_libraries(aes_cfb_kat alcp)
-    # target_link_libraries(aes_cfb_kat "${GTEST_LIBRARY}/libgtest.a")
-    # target_link_libraries(aes_cfb_kat pthread)
+    # CFB
+    ADD_EXECUTABLE(aes_cfb_kat base/alc_base.cc base/base.cc test_cfb_kat.cc)
+    # Depending on the person, they are gonna run from root dir or binary directory
+    # Link dataset to the root dir
+    file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_cfb.csv ${CMAKE_BINARY_DIR}/dataset_cfb.csv SYMBOLIC)
+    # Link dataset to the actual place of test binary
+    file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_cfb.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_cfb.csv SYMBOLIC)
+    target_link_libraries(aes_cfb_kat alcp)
+    target_link_libraries(aes_cfb_kat "${GTEST_LIBRARY}/libgtest.a")
+    target_link_libraries(aes_cfb_kat pthread)
 
-    #  # CTR
-    # ADD_EXECUTABLE(aes_ctr_kat base/alc_base.cc base/base.cc test_ctr_kat.cc)
-    # # Depending on the person, they are gonna run from root dir or binary directory
-    # # Link dataset to the root dir
-    # file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_ctr.csv ${CMAKE_BINARY_DIR}/dataset_ctr.csv SYMBOLIC)
-    # # Link dataset to the actual place of test binary
-    # file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_ctr.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_ctr.csv SYMBOLIC)
-    # target_link_libraries(aes_ctr_kat alcp)
-    # target_link_libraries(aes_ctr_kat "${GTEST_LIBRARY}/libgtest.a")
-    # target_link_libraries(aes_ctr_kat pthread)
+     # CTR
+    ADD_EXECUTABLE(aes_ctr_kat base/alc_base.cc base/base.cc test_ctr_kat.cc)
+    # Depending on the person, they are gonna run from root dir or binary directory
+    # Link dataset to the root dir
+    file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_ctr.csv ${CMAKE_BINARY_DIR}/dataset_ctr.csv SYMBOLIC)
+    # Link dataset to the actual place of test binary
+    file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_ctr.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_ctr.csv SYMBOLIC)
+    target_link_libraries(aes_ctr_kat alcp)
+    target_link_libraries(aes_ctr_kat "${GTEST_LIBRARY}/libgtest.a")
+    target_link_libraries(aes_ctr_kat pthread)
     
 else(GTest_FOUND)
     message(FATAL_ERROR "Gtest not found, cannot build tests!")

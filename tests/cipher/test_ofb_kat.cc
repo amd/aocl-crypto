@@ -33,34 +33,31 @@
 using namespace alcp::testing;
 
 /* Testing Starts Here! */
-
 TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
 {
     const int key_size = 128;
     DataSet   ds       = DataSet("dataset_ofb.csv");
+
+    // Initialize cipher testing classes
+    AlcpCipherTesting cipherHander =
+        AlcpCipherTesting(ALC_AES_MODE_OFB, nullptr);
+
     while (ds.readPtIvKeyCt(key_size)) {
-        unsigned char* key                 = hexStringToBytes(ds.getKey());
-        unsigned char* iv                  = hexStringToBytes(ds.getIv());
-        unsigned char* plaintext           = hexStringToBytes(ds.getPt());
-        unsigned char* expected_ciphertext = hexStringToBytes(ds.getCt());
-        int            ciphertext_len, plaintext_len = ds.getPt().size() / 2;
-        unsigned char  ciphertext[plaintext_len];
-        alcp_encrypt_data(plaintext,
-                          plaintext_len,
-                          key,
-                          key_size,
-                          iv,
-                          ciphertext,
-                          ALC_AES_MODE_OFB);
-        ciphertext_len = plaintext_len;
+        auto key                 = ds.getKey();
+        auto iv                  = ds.getIv();
+        auto plaintext           = ds.getPt();
+        auto expected_ciphertext = ds.getCt();
+        int  ciphertext_len, plaintext_len = ds.getPt().size();
+
+        // Encrypt data with above params
+        auto ciphertext = cipherHander.testingEncrypt(plaintext, key, iv);
+        ciphertext_len  = plaintext_len;
+
+        // Check if output is correct
         EXPECT_TRUE(ArraysMatch(ciphertext,
                                 expected_ciphertext,
-                                plaintext_len,
-                                ds.getLineNumber(),
+                                ds,
                                 std::string("AES_OFB_128_ENC")));
-        free(key);
-        free(iv);
-        free(plaintext);
     }
 }
 
@@ -68,29 +65,27 @@ TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
 {
     const int key_size = 192;
     DataSet   ds       = DataSet("dataset_ofb.csv");
+
+    // Initialize cipher testing classes
+    AlcpCipherTesting cipherHander =
+        AlcpCipherTesting(ALC_AES_MODE_OFB, nullptr);
+
     while (ds.readPtIvKeyCt(key_size)) {
-        unsigned char* key                 = hexStringToBytes(ds.getKey());
-        unsigned char* iv                  = hexStringToBytes(ds.getIv());
-        unsigned char* plaintext           = hexStringToBytes(ds.getPt());
-        unsigned char* expected_ciphertext = hexStringToBytes(ds.getCt());
-        int            ciphertext_len, plaintext_len = ds.getPt().size() / 2;
-        unsigned char  ciphertext[plaintext_len];
-        alcp_encrypt_data(plaintext,
-                          plaintext_len,
-                          key,
-                          key_size,
-                          iv,
-                          ciphertext,
-                          ALC_AES_MODE_OFB);
-        ciphertext_len = plaintext_len;
+        auto key                 = ds.getKey();
+        auto iv                  = ds.getIv();
+        auto plaintext           = ds.getPt();
+        auto expected_ciphertext = ds.getCt();
+        int  ciphertext_len, plaintext_len = ds.getPt().size();
+
+        // Encrypt data with above params
+        auto ciphertext = cipherHander.testingEncrypt(plaintext, key, iv);
+        ciphertext_len  = plaintext_len;
+
+        // Check if output is correct
         EXPECT_TRUE(ArraysMatch(ciphertext,
                                 expected_ciphertext,
-                                plaintext_len,
-                                ds.getLineNumber(),
+                                ds,
                                 std::string("AES_OFB_192_ENC")));
-        free(key);
-        free(iv);
-        free(plaintext);
     }
 }
 
@@ -98,29 +93,27 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
 {
     const int key_size = 256;
     DataSet   ds       = DataSet("dataset_ofb.csv");
+
+    // Initialize cipher testing classes
+    AlcpCipherTesting cipherHander =
+        AlcpCipherTesting(ALC_AES_MODE_OFB, nullptr);
+
     while (ds.readPtIvKeyCt(key_size)) {
-        unsigned char* key                 = hexStringToBytes(ds.getKey());
-        unsigned char* iv                  = hexStringToBytes(ds.getIv());
-        unsigned char* plaintext           = hexStringToBytes(ds.getPt());
-        unsigned char* expected_ciphertext = hexStringToBytes(ds.getCt());
-        int            ciphertext_len, plaintext_len = ds.getPt().size() / 2;
-        unsigned char  ciphertext[plaintext_len];
-        alcp_encrypt_data(plaintext,
-                          plaintext_len,
-                          key,
-                          key_size,
-                          iv,
-                          ciphertext,
-                          ALC_AES_MODE_OFB);
-        ciphertext_len = plaintext_len;
+        auto key                 = ds.getKey();
+        auto iv                  = ds.getIv();
+        auto plaintext           = ds.getPt();
+        auto expected_ciphertext = ds.getCt();
+        int  ciphertext_len, plaintext_len = ds.getPt().size();
+
+        // Encrypt data with above params
+        auto ciphertext = cipherHander.testingEncrypt(plaintext, key, iv);
+        ciphertext_len  = plaintext_len;
+
+        // Check if output is correct
         EXPECT_TRUE(ArraysMatch(ciphertext,
                                 expected_ciphertext,
-                                plaintext_len,
-                                ds.getLineNumber(),
+                                ds,
                                 std::string("AES_OFB_256_ENC")));
-        free(key);
-        free(iv);
-        free(plaintext);
     }
 }
 
@@ -128,29 +121,25 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
 {
     const int key_size = 128;
     DataSet   ds       = DataSet("dataset_ofb.csv");
+
+    // Initialize cipher testing classes
+    AlcpCipherTesting cipherHander =
+        AlcpCipherTesting(ALC_AES_MODE_OFB, nullptr);
+
     while (ds.readPtIvKeyCt(key_size)) {
-        unsigned char* key        = hexStringToBytes(ds.getKey());
-        unsigned char* iv         = hexStringToBytes(ds.getIv());
-        unsigned char* plaintext  = hexStringToBytes(ds.getPt());
-        unsigned char* ciphertext = hexStringToBytes(ds.getCt());
-        int           decryptedtext_len, ciphertext_len = ds.getCt().size() / 2;
-        unsigned char decryptedtext[ciphertext_len];
-        alcp_decrypt_data(ciphertext,
-                          ciphertext_len,
-                          key,
-                          key_size,
-                          iv,
-                          decryptedtext,
-                          ALC_AES_MODE_OFB);
+        std::vector<uint8_t> key        = ds.getKey();
+        std::vector<uint8_t> iv         = ds.getIv();
+        std::vector<uint8_t> plaintext  = ds.getPt();
+        std::vector<uint8_t> ciphertext = ds.getCt();
+        int decryptedtext_len, ciphertext_len = ds.getCt().size();
+        std::vector<uint8_t> decryptedtext;
+
+        // Decrypt data with above params
+        decryptedtext     = cipherHander.testingDecrypt(ciphertext, key, iv);
         decryptedtext_len = ciphertext_len;
-        EXPECT_TRUE(ArraysMatch(decryptedtext,
-                                plaintext,
-                                ciphertext_len,
-                                ds.getLineNumber(),
-                                std::string("AES_OFB_128_DEC")));
-        free(key);
-        free(iv);
-        free(plaintext);
+
+        EXPECT_TRUE(ArraysMatch(
+            decryptedtext, plaintext, ds, std::string("AES_OFB_128_DEC")));
     }
 }
 
@@ -158,29 +147,25 @@ TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
 {
     const int key_size = 192;
     DataSet   ds       = DataSet("dataset_ofb.csv");
+
+    // Initialize cipher testing classes
+    AlcpCipherTesting cipherHander =
+        AlcpCipherTesting(ALC_AES_MODE_OFB, nullptr);
+
     while (ds.readPtIvKeyCt(key_size)) {
-        unsigned char* key        = hexStringToBytes(ds.getKey());
-        unsigned char* iv         = hexStringToBytes(ds.getIv());
-        unsigned char* plaintext  = hexStringToBytes(ds.getPt());
-        unsigned char* ciphertext = hexStringToBytes(ds.getCt());
-        int           decryptedtext_len, ciphertext_len = ds.getCt().size() / 2;
-        unsigned char decryptedtext[ciphertext_len];
-        alcp_decrypt_data(ciphertext,
-                          ciphertext_len,
-                          key,
-                          key_size,
-                          iv,
-                          decryptedtext,
-                          ALC_AES_MODE_OFB);
+        std::vector<uint8_t> key        = ds.getKey();
+        std::vector<uint8_t> iv         = ds.getIv();
+        std::vector<uint8_t> plaintext  = ds.getPt();
+        std::vector<uint8_t> ciphertext = ds.getCt();
+        int decryptedtext_len, ciphertext_len = ds.getCt().size();
+        std::vector<uint8_t> decryptedtext;
+
+        // Decrypt data with above params
+        decryptedtext     = cipherHander.testingDecrypt(ciphertext, key, iv);
         decryptedtext_len = ciphertext_len;
-        EXPECT_TRUE(ArraysMatch(decryptedtext,
-                                plaintext,
-                                16,
-                                ds.getLineNumber(),
-                                std::string("AES_OFB_192_DEC")));
-        free(key);
-        free(iv);
-        free(plaintext);
+
+        EXPECT_TRUE(ArraysMatch(
+            decryptedtext, plaintext, ds, std::string("AES_OFB_192_DEC")));
     }
 }
 
@@ -188,29 +173,25 @@ TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
 {
     const int key_size = 256;
     DataSet   ds       = DataSet("dataset_ofb.csv");
+
+    // Initialize cipher testing classes
+    AlcpCipherTesting cipherHander =
+        AlcpCipherTesting(ALC_AES_MODE_OFB, nullptr);
+
     while (ds.readPtIvKeyCt(key_size)) {
-        unsigned char* key        = hexStringToBytes(ds.getKey());
-        unsigned char* iv         = hexStringToBytes(ds.getIv());
-        unsigned char* plaintext  = hexStringToBytes(ds.getPt());
-        unsigned char* ciphertext = hexStringToBytes(ds.getCt());
-        int           decryptedtext_len, ciphertext_len = ds.getCt().size() / 2;
-        unsigned char decryptedtext[ciphertext_len];
-        alcp_decrypt_data(ciphertext,
-                          ciphertext_len,
-                          key,
-                          key_size,
-                          iv,
-                          decryptedtext,
-                          ALC_AES_MODE_OFB);
+        std::vector<uint8_t> key        = ds.getKey();
+        std::vector<uint8_t> iv         = ds.getIv();
+        std::vector<uint8_t> plaintext  = ds.getPt();
+        std::vector<uint8_t> ciphertext = ds.getCt();
+        int decryptedtext_len, ciphertext_len = ds.getCt().size();
+        std::vector<uint8_t> decryptedtext;
+
+        // Decrypt data with above params
+        decryptedtext     = cipherHander.testingDecrypt(ciphertext, key, iv);
         decryptedtext_len = ciphertext_len;
-        EXPECT_TRUE(ArraysMatch(decryptedtext,
-                                plaintext,
-                                16,
-                                ds.getLineNumber(),
-                                std::string("AES_OFB_256_DEC")));
-        free(key);
-        free(iv);
-        free(plaintext);
+
+        EXPECT_TRUE(ArraysMatch(
+            decryptedtext, plaintext, ds, std::string("AES_OFB_256_DEC")));
     }
 }
 
