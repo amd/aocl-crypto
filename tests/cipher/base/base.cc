@@ -32,7 +32,7 @@
 namespace alcp::testing {
 
 /* Class File procedures */
-File::File(std::string fileName)
+File::File(const std::string fileName)
 {
     file.open(fileName, std::ios::in);
     if (file.is_open()) {
@@ -74,7 +74,7 @@ File::readLineCharByChar()
 }
 
 char*
-File::readChar(int n)
+File::readChar(const int n)
 {
     // TODO: Deallocation in the calling function.
     char* c_buff = new char[n];
@@ -88,7 +88,7 @@ File::readChar(int n)
  *
  * @param filename
  */
-DataSet::DataSet(std::string filename)
+DataSet::DataSet(const std::string filename)
     : File(filename)
 {
     line = readLine(); // Read header out
@@ -96,7 +96,7 @@ DataSet::DataSet(std::string filename)
 }
 
 bool
-DataSet::readPtIvKeyCt(int keybits)
+DataSet::readPtIvKeyCt(const int keybits)
 {
     while (true) {
         if (readPtIvKeyCt() == false)
@@ -133,7 +133,7 @@ DataSet::readPtIvKeyCt()
 }
 
 uint8_t
-DataSet::parseHexToNum(unsigned char c)
+DataSet::parseHexToNum(const unsigned char c)
 {
     if (c >= 'a' && c <= 'f')
         return c - 'a' + 10;
@@ -146,7 +146,7 @@ DataSet::parseHexToNum(unsigned char c)
 }
 
 std::vector<uint8_t>
-DataSet::parseHexStrToBin(std::string in)
+DataSet::parseHexStrToBin(const std::string in)
 {
     std::vector<uint8_t> vector;
     int                  len = in.size();
@@ -158,6 +158,19 @@ DataSet::parseHexStrToBin(std::string in)
         vector.push_back(val);
     }
     return vector;
+}
+
+std::string
+DataSet::parseBytesToHexStr(const uint8_t* bytes, const int length)
+{
+    std::stringstream ss;
+    for (int i = 0; i < length; i++) {
+        int charRep;
+        charRep = bytes[i];
+        // Convert int to hex
+        ss << std::hex << charRep;
+    }
+    return ss.str();
 }
 
 int
@@ -188,19 +201,6 @@ std::vector<uint8_t>
 DataSet::getCt()
 {
     return ct;
-}
-
-std::string
-DataSet::parseBytesToHexStr(uint8_t* bytes, int length)
-{
-    std::stringstream ss;
-    for (int i = 0; i < length; i++) {
-        int charRep;
-        charRep = bytes[i];
-        // Convert int to hex
-        ss << std::hex << charRep;
-    }
-    return ss.str();
 }
 
 } // namespace alcp::testing

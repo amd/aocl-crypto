@@ -32,15 +32,15 @@
 namespace alcp::testing {
 
 // AlcpCipherBase class functions
-AlcpCipherBase::AlcpCipherBase(alc_aes_mode_t mode, uint8_t* iv)
+AlcpCipherBase::AlcpCipherBase(const alc_aes_mode_t mode, const uint8_t* iv)
     : m_mode{ mode }
     , m_iv{ iv }
 {}
 
-AlcpCipherBase::AlcpCipherBase(alc_aes_mode_t mode,
-                               uint8_t*       iv,
-                               uint8_t*       key,
-                               const uint32_t key_len)
+AlcpCipherBase::AlcpCipherBase(const alc_aes_mode_t mode,
+                               const uint8_t*       iv,
+                               const uint8_t*       key,
+                               const uint32_t       key_len)
     : m_mode{ mode }
     , m_iv{ iv }
 {
@@ -129,7 +129,9 @@ out:
 }
 
 bool
-AlcpCipherBase::encrypt(const uint8_t* plaintxt, int len, uint8_t* ciphertxt)
+AlcpCipherBase::encrypt(const uint8_t* plaintxt,
+                        const int      len,
+                        uint8_t*       ciphertxt)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -146,7 +148,9 @@ AlcpCipherBase::encrypt(const uint8_t* plaintxt, int len, uint8_t* ciphertxt)
 }
 
 bool
-AlcpCipherBase::decrypt(const uint8_t* ciphertxt, int len, uint8_t* plaintxt)
+AlcpCipherBase::decrypt(const uint8_t* ciphertxt,
+                        const int      len,
+                        uint8_t*       plaintxt)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -163,14 +167,15 @@ AlcpCipherBase::decrypt(const uint8_t* ciphertxt, int len, uint8_t* plaintxt)
 }
 
 // AlcpCipherTesting class functions
-AlcpCipherTesting::AlcpCipherTesting(alc_aes_mode_t mode, uint8_t* iv)
+AlcpCipherTesting::AlcpCipherTesting(const alc_aes_mode_t mode,
+                                     const uint8_t*       iv)
     : AlcpCipherBase(mode, iv)
 {}
 
 std::vector<uint8_t>
-AlcpCipherTesting::testingEncrypt(std::vector<uint8_t> plaintext,
-                                  std::vector<uint8_t> key,
-                                  std::vector<uint8_t> iv)
+AlcpCipherTesting::testingEncrypt(const std::vector<uint8_t> plaintext,
+                                  const std::vector<uint8_t> key,
+                                  const std::vector<uint8_t> iv)
 {
     if (alcpInit(&iv[0], &key[0], key.size() * 8)) {
         uint8_t* ciphertext = new uint8_t[plaintext.size()];
@@ -181,9 +186,9 @@ AlcpCipherTesting::testingEncrypt(std::vector<uint8_t> plaintext,
     return {};
 }
 std::vector<uint8_t>
-AlcpCipherTesting::testingDecrypt(std::vector<uint8_t> ciphertext,
-                                  std::vector<uint8_t> key,
-                                  std::vector<uint8_t> iv)
+AlcpCipherTesting::testingDecrypt(const std::vector<uint8_t> ciphertext,
+                                  const std::vector<uint8_t> key,
+                                  const std::vector<uint8_t> iv)
 {
     if (alcpInit(&iv[0], &key[0], key.size() * 8)) {
         uint8_t* plaintext = new uint8_t[ciphertext.size()];
@@ -196,13 +201,13 @@ AlcpCipherTesting::testingDecrypt(std::vector<uint8_t> ciphertext,
 // Legacy warning, depreciated!, future pure classes
 void
 alcp_encrypt_data(
-    const uint8_t* plaintxt,
-    const uint32_t len, /* Describes both 'plaintxt' and 'ciphertxt' */
-    uint8_t*       key,
-    const uint32_t key_len,
-    uint8_t*       iv,
-    uint8_t*       ciphertxt,
-    alc_aes_mode_t mode)
+    const uint8_t*       plaintxt,
+    const uint32_t       len, /* Describes both 'plaintxt' and 'ciphertxt' */
+    const uint8_t*       key,
+    const uint32_t       key_len,
+    const uint8_t*       iv,
+    uint8_t*             ciphertxt,
+    const alc_aes_mode_t mode)
 {
     static alc_cipher_handle_t handle;
     alc_error_t                err;
@@ -280,12 +285,12 @@ alcp_encrypt_data(
 }
 
 int
-encrypt(unsigned char* plaintext,
-        int            plaintext_len,
-        unsigned char* key,
-        int            keylen,
-        unsigned char* iv,
-        unsigned char* ciphertext)
+encrypt(const unsigned char* plaintext,
+        int                  plaintext_len,
+        const unsigned char* key,
+        int                  keylen,
+        const unsigned char* iv,
+        unsigned char*       ciphertext)
 {
     alcp_encrypt_data(plaintext,
                       plaintext_len,
@@ -299,13 +304,13 @@ encrypt(unsigned char* plaintext,
 
 void
 alcp_decrypt_data(
-    const uint8_t* ciphertxt,
-    const uint32_t len, /* Describes both 'plaintxt' and 'ciphertxt' */
-    uint8_t*       key,
-    const uint32_t key_len,
-    uint8_t*       iv,
-    uint8_t*       plaintxt,
-    alc_aes_mode_t mode)
+    const uint8_t*       ciphertxt,
+    const uint32_t       len, /* Describes both 'plaintxt' and 'ciphertxt' */
+    const uint8_t*       key,
+    const uint32_t       key_len,
+    const uint8_t*       iv,
+    uint8_t*             plaintxt,
+    const alc_aes_mode_t mode)
 {
     static alc_cipher_handle_t handle;
     alc_error_t                err;
@@ -383,12 +388,12 @@ alcp_decrypt_data(
 }
 
 int
-decrypt(unsigned char* ciphertext,
-        int            ciphertext_len,
-        unsigned char* key,
-        int            keylen,
-        unsigned char* iv,
-        unsigned char* plaintext)
+decrypt(const unsigned char* ciphertext,
+        int                  ciphertext_len,
+        const unsigned char* key,
+        int                  keylen,
+        const unsigned char* iv,
+        unsigned char*       plaintext)
 {
     alcp_decrypt_data(ciphertext,
                       ciphertext_len,

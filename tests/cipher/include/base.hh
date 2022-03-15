@@ -62,16 +62,16 @@ class DataSet : private File
 
   public:
     // Treats file as CSV, skips first line
-    DataSet(std::string filename);
+    DataSet(const std::string filename);
     // Read without condition
     bool readPtIvKeyCt();
     // Read only specified key size
-    bool readPtIvKeyCt(int keybits);
+    bool readPtIvKeyCt(const int keybits);
     // Convert a hex char to number;
-    uint8_t parseHexToNum(unsigned char c);
+    uint8_t parseHexToNum(const unsigned char c);
     // Parse hexString to binary
-    std::vector<uint8_t> parseHexStrToBin(std::string in);
-    std::string          parseBytesToHexStr(uint8_t* bytes, int length);
+    std::vector<uint8_t> parseHexStrToBin(const std::string in);
+    std::string parseBytesToHexStr(const uint8_t* bytes, const int length);
     // To print which line in dataset failed
     int getLineNumber();
     // Return private data plain text
