@@ -1,4 +1,5 @@
 find_package(GTest REQUIRED)
+find_package(ippcp)
 
 # Include all the ALCP Headers
 INCLUDE_DIRECTORIES(
@@ -7,8 +8,15 @@ INCLUDE_DIRECTORIES(
     "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 if(GTest_FOUND)
+    if(ippcp_FOUND)
+        message(STATUS "Found IPPCP: ${ippcp_DIR}")
+    endif(ippcp_FOUND)
     # CBC
-    ADD_EXECUTABLE(aes_cbc_kat base/alc_base.cc base/base.cc test_cbc_kat.cc)
+    if(ippcp_FOUND)
+        ADD_EXECUTABLE(aes_cbc_kat base/ipp_base.cc base/alc_base.cc base/base.cc test_cbc_kat.cc)
+    else(ippcp_FOUND)
+        ADD_EXECUTABLE(aes_cbc_kat base/alc_base.cc base/base.cc test_cbc_kat.cc)
+    endif(ippcp_FOUND)
     # Depending on the person, they are gonna run from root dir or binary directory
     # Link dataset to the root dir
     file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_cbc.csv ${CMAKE_BINARY_DIR}/dataset_cbc.csv SYMBOLIC)
@@ -17,6 +25,9 @@ if(GTest_FOUND)
     target_link_libraries(aes_cbc_kat alcp)
     target_link_libraries(aes_cbc_kat "${GTEST_LIBRARY}/libgtest.a")
     target_link_libraries(aes_cbc_kat pthread)
+    if(ippcp_FOUND)
+       target_link_libraries(aes_cbc_kat ippcpmx)
+    endif(ippcp_FOUND)
 
     # OFB
     ADD_EXECUTABLE(aes_ofb_kat base/alc_base.cc base/base.cc test_ofb_kat.cc)
@@ -50,6 +61,7 @@ if(GTest_FOUND)
     target_link_libraries(aes_ctr_kat alcp)
     target_link_libraries(aes_ctr_kat "${GTEST_LIBRARY}/libgtest.a")
     target_link_libraries(aes_ctr_kat pthread)
+    
     
 else(GTest_FOUND)
     message(FATAL_ERROR "Gtest not found, cannot build tests!")
