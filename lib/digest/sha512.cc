@@ -57,7 +57,7 @@ static constexpr Uint64 cIv[] = { 0x6a09e667f3bcc908, 0xbb67ae8584caa73b,
  * Values are first 64 bits of the fractional parts of the cube
  * roots of the first 80 primes 2.409.
  */
-static constexpr Uint64 cRoundConstants[] = {
+__attribute__((aligned(64))) static constexpr Uint64 cRoundConstants[] = {
     0x428a2f98d728ae22, 0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f,
     0xe9b5dba58189dbbc, 0x3956c25bf348b538, 0x59f111f1b605d019,
     0x923f82a4af194f9b, 0xab1c5ed5da6d8118, 0xd807aa98a3030242,
@@ -340,7 +340,7 @@ Sha512::Impl::finalize(const Uint8* pBuf, Uint64 size)
         len_in_bits      = m_msg_len * 8;
     }
     Uint64* msg_len_ptr =
-        reinterpret_cast<Uint64*>(&local_buf[buf_len] - (sizeof(Uint64) * 2));
+        reinterpret_cast<Uint64*>(&m_buffer[buf_len] - (sizeof(Uint64) * 2));
     msg_len_ptr[0] = utils::ToBigEndian(len_in_bits_high);
     msg_len_ptr[1] = utils::ToBigEndian(len_in_bits);
 #endif

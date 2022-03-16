@@ -43,7 +43,7 @@ namespace alcp::digest {
 static inline Uint32
 RotateRight(Uint32 value, Uint32 count)
 {
-#if 1
+#if 0
     __asm__("rorl %%cl, %0" : "+r"(value) : "c"(count));
     return value;
 #else
@@ -54,7 +54,7 @@ RotateRight(Uint32 value, Uint32 count)
 static inline Uint64
 RotateRight(Uint64 value, Uint64 count)
 {
-#if 1
+#if 0
     __asm__("rorq %%cl, %0" : "+r"(value) : "c"(count));
     return value;
 #else
