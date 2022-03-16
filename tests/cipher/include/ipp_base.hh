@@ -1,10 +1,15 @@
+#include "base.hh"
 #include <alcp/alcp.h>
 #include <iostream>
 #include <ippcp.h>
 #include <stdio.h>
 #include <string.h>
 
-class IPPCipherBase
+#pragma once
+#ifndef __IPP_BASE_HH
+#define __IPP_BASE_HH 2
+namespace alcp::testing {
+class IPPCipherBase : public CipherBase
 {
   private:
     alc_aes_mode_t m_mode;
@@ -46,10 +51,10 @@ class IPPCipherBase
      * @return false - if there is some failure
      */
     ~IPPCipherBase();
-    bool alcpInit(const uint8_t* iv,
-                  const uint8_t* key,
-                  const uint32_t key_len);
-    bool alcpInit(const uint8_t* key, const uint32_t key_len);
+    bool init(const uint8_t* iv, const uint8_t* key, const uint32_t key_len);
+    bool init(const uint8_t* key, const uint32_t key_len);
     bool encrypt(const uint8_t* plaintxt, const int len, uint8_t* ciphertxt);
     bool decrypt(const uint8_t* ciphertxt, const int len, uint8_t* plaintxt);
 };
+} // namespace alcp::testing
+#endif

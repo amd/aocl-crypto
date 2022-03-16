@@ -27,6 +27,9 @@
  */
 
 #include "base.hh"
+#ifdef USE_IPP
+#include "ipp_base.hh"
+#endif
 #include <iostream>
 
 namespace alcp::testing {
@@ -101,7 +104,7 @@ DataSet::readPtIvKeyCt(const int keybits)
     while (true) {
         if (readPtIvKeyCt() == false)
             return false;
-        else if (key.size() * 8 == keybits)
+        else if (m_key.size() * 8 == keybits)
             return true;
     }
 }
@@ -124,10 +127,10 @@ DataSet::readPtIvKeyCt()
     if ((pos1 == -1) || (pos2 == -1) || (pos3 == -1)) {
         return false;
     }
-    pt  = parseHexStrToBin(line.substr(0, pos1));
-    iv  = parseHexStrToBin(line.substr(pos1 + 1, pos2 - pos1 - 1));
-    key = parseHexStrToBin(line.substr(pos2 + 1, pos3 - pos2 - 1));
-    ct  = parseHexStrToBin(line.substr(pos3 + 1));
+    m_pt  = parseHexStrToBin(line.substr(0, pos1));
+    m_iv  = parseHexStrToBin(line.substr(pos1 + 1, pos2 - pos1 - 1));
+    m_key = parseHexStrToBin(line.substr(pos2 + 1, pos3 - pos2 - 1));
+    m_ct  = parseHexStrToBin(line.substr(pos3 + 1));
     lineno++;
     return true;
 }
@@ -182,25 +185,25 @@ DataSet::getLineNumber()
 std::vector<uint8_t>
 DataSet::getPt()
 {
-    return pt;
+    return m_pt;
 }
 
 std::vector<uint8_t>
 DataSet::getIv()
 {
-    return iv;
+    return m_iv;
 }
 
 std::vector<uint8_t>
 DataSet::getKey()
 {
-    return key;
+    return m_key;
 }
 
 std::vector<uint8_t>
 DataSet::getCt()
 {
-    return ct;
+    return m_ct;
 }
 
 } // namespace alcp::testing

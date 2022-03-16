@@ -27,6 +27,10 @@
  */
 
 #pragma once
+#include "alc_base.hh"
+#ifdef USE_IPP
+#include "ipp_base.hh"
+#endif
 #include <base.hh>
 #include <gtest/gtest.h>
 #include <vector>
@@ -35,6 +39,7 @@
 #define __GTEST_BASE_HH 2
 
 static bool verbose = false;
+static bool useipp  = false;
 
 ::testing::AssertionResult
 ArraysMatch(std::vector<uint8_t>    actual,
@@ -204,9 +209,14 @@ parseArgs(int argc, char** argv)
                 std::cout << std::endl
                           << "Additional help for microtests" << std::endl;
                 std::cout << "--verbose or -v per line status." << std::endl;
+                std::cout << "--use-ipp or -i force IPP use in testing."
+                          << std::endl;
             } else if ((currentArg == std::string("--verbose"))
                        || (currentArg == std::string("-v"))) {
                 verbose = true;
+            } else if ((currentArg == std::string("--use-ipp"))
+                       || (currentArg == std::string("-i"))) {
+                useipp = true;
             }
         }
     }

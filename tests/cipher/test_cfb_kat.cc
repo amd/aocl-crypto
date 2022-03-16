@@ -29,6 +29,7 @@
 #include "alc_base.hh"
 #include "base.hh"
 #include "gtest_base.hh"
+#include "ipp_base.hh"
 
 using namespace alcp::testing;
 
@@ -39,11 +40,29 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
     DataSet   ds       = DataSet("dataset_cfb.csv");
 
     // Initialize cipher testing classes
-    AlcpCipherTesting cipherHander =
-        AlcpCipherTesting(ALC_AES_MODE_CFB, nullptr);
-
+    CipherTesting  cipherHander = CipherTesting();
+    AlcpCipherBase acb          = AlcpCipherBase(ALC_AES_MODE_CFB, NULL);
+#ifdef USE_IPP
+    IPPCipherBase icb = IPPCipherBase(ALC_AES_MODE_CFB, NULL);
+    if (useipp) {
+        // std::cout << "Using IPP" << std::endl;
+        cipherHander.setcb(&icb);
+    } else {
+        // std::cout << "Using ALCP" << std::endl;
+        cipherHander.setcb(&acb);
+    }
+#else
+    if (useipp) {
+        std::cout << "IPP is unavailable at the moment switching to ALCP!"
+                  << std::endl;
+    }
+    cipherHander.setcb(&acb);
+#endif
     while (ds.readPtIvKeyCt(key_size)) {
         // Check if output is correct
+        // for (int i = 0; i < 10000; i++) {
+        //     cipherHander.testingEncrypt(ds.getPt(), ds.getKey(), ds.getIv());
+        // }
         EXPECT_TRUE(ArraysMatch(
             cipherHander.testingEncrypt(ds.getPt(), ds.getKey(), ds.getIv()),
             ds.getCt(),
@@ -58,8 +77,24 @@ TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
     DataSet   ds       = DataSet("dataset_cfb.csv");
 
     // Initialize cipher testing classes
-    AlcpCipherTesting cipherHander =
-        AlcpCipherTesting(ALC_AES_MODE_CFB, nullptr);
+    CipherTesting  cipherHander = CipherTesting();
+    AlcpCipherBase acb          = AlcpCipherBase(ALC_AES_MODE_CFB, NULL);
+#ifdef USE_IPP
+    IPPCipherBase icb = IPPCipherBase(ALC_AES_MODE_CFB, NULL);
+    if (useipp) {
+        // std::cout << "Using IPP" << std::endl;
+        cipherHander.setcb(&icb);
+    } else {
+        // std::cout << "Using ALCP" << std::endl;
+        cipherHander.setcb(&acb);
+    }
+#else
+    if (useipp) {
+        std::cout << "IPP is unavailable at the moment switching to ALCP!"
+                  << std::endl;
+    }
+    cipherHander.setcb(&acb);
+#endif
 
     while (ds.readPtIvKeyCt(key_size)) {
         // Check if output is correct
@@ -77,8 +112,24 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
     DataSet   ds       = DataSet("dataset_cfb.csv");
 
     // Initialize cipher testing classes
-    AlcpCipherTesting cipherHander =
-        AlcpCipherTesting(ALC_AES_MODE_CFB, nullptr);
+    CipherTesting  cipherHander = CipherTesting();
+    AlcpCipherBase acb          = AlcpCipherBase(ALC_AES_MODE_CFB, NULL);
+#ifdef USE_IPP
+    IPPCipherBase icb = IPPCipherBase(ALC_AES_MODE_CFB, NULL);
+    if (useipp) {
+        // std::cout << "Using IPP" << std::endl;
+        cipherHander.setcb(&icb);
+    } else {
+        // std::cout << "Using ALCP" << std::endl;
+        cipherHander.setcb(&acb);
+    }
+#else
+    if (useipp) {
+        std::cout << "IPP is unavailable at the moment switching to ALCP!"
+                  << std::endl;
+    }
+    cipherHander.setcb(&acb);
+#endif
 
     while (ds.readPtIvKeyCt(key_size)) {
         // Check if output is correct
@@ -96,8 +147,24 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
     DataSet   ds       = DataSet("dataset_cfb.csv");
 
     // Initialize cipher testing classes
-    AlcpCipherTesting cipherHander =
-        AlcpCipherTesting(ALC_AES_MODE_CFB, nullptr);
+    CipherTesting  cipherHander = CipherTesting();
+    AlcpCipherBase acb          = AlcpCipherBase(ALC_AES_MODE_CFB, NULL);
+#ifdef USE_IPP
+    IPPCipherBase icb = IPPCipherBase(ALC_AES_MODE_CFB, NULL);
+    if (useipp) {
+        // std::cout << "Using IPP" << std::endl;
+        cipherHander.setcb(&icb);
+    } else {
+        // std::cout << "Using ALCP" << std::endl;
+        cipherHander.setcb(&acb);
+    }
+#else
+    if (useipp) {
+        std::cout << "IPP is unavailable at the moment switching to ALCP!"
+                  << std::endl;
+    }
+    cipherHander.setcb(&acb);
+#endif
 
     while (ds.readPtIvKeyCt(key_size)) {
         // Check if output is correct
@@ -115,8 +182,24 @@ TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
     DataSet   ds       = DataSet("dataset_cfb.csv");
 
     // Initialize cipher testing classes
-    AlcpCipherTesting cipherHander =
-        AlcpCipherTesting(ALC_AES_MODE_CFB, nullptr);
+    CipherTesting  cipherHander = CipherTesting();
+    AlcpCipherBase acb          = AlcpCipherBase(ALC_AES_MODE_CFB, NULL);
+#ifdef USE_IPP
+    IPPCipherBase icb = IPPCipherBase(ALC_AES_MODE_CFB, NULL);
+    if (useipp) {
+        // std::cout << "Using IPP" << std::endl;
+        cipherHander.setcb(&icb);
+    } else {
+        // std::cout << "Using ALCP" << std::endl;
+        cipherHander.setcb(&acb);
+    }
+#else
+    if (useipp) {
+        std::cout << "IPP is unavailable at the moment switching to ALCP!"
+                  << std::endl;
+    }
+    cipherHander.setcb(&acb);
+#endif
 
     while (ds.readPtIvKeyCt(key_size)) {
         // Check if output is correct
@@ -134,8 +217,24 @@ TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
     DataSet   ds       = DataSet("dataset_cfb.csv");
 
     // Initialize cipher testing classes
-    AlcpCipherTesting cipherHander =
-        AlcpCipherTesting(ALC_AES_MODE_CFB, nullptr);
+    CipherTesting  cipherHander = CipherTesting();
+    AlcpCipherBase acb          = AlcpCipherBase(ALC_AES_MODE_CFB, NULL);
+#ifdef USE_IPP
+    IPPCipherBase icb = IPPCipherBase(ALC_AES_MODE_CFB, NULL);
+    if (useipp) {
+        // std::cout << "Using IPP" << std::endl;
+        cipherHander.setcb(&icb);
+    } else {
+        // std::cout << "Using ALCP" << std::endl;
+        cipherHander.setcb(&acb);
+    }
+#else
+    if (useipp) {
+        std::cout << "IPP is unavailable at the moment switching to ALCP!"
+                  << std::endl;
+    }
+    cipherHander.setcb(&acb);
+#endif
 
     while (ds.readPtIvKeyCt(key_size)) {
         // Check if output is correct

@@ -26,7 +26,9 @@
  *
  */
 #pragma once
+#include "alcp/alcp.h"
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <vector>
 
@@ -56,7 +58,7 @@ class DataSet : private File
 {
   private:
     std::string          line = "";
-    std::vector<uint8_t> pt, iv, key, ct;
+    std::vector<uint8_t> m_pt, m_iv, m_key, m_ct;
     // First line is skipped, linenum starts from 1
     int lineno = 1;
 
@@ -82,5 +84,68 @@ class DataSet : private File
     std::vector<uint8_t> getKey();
     // Return private data cipher text
     std::vector<uint8_t> getCt();
+};
+
+/**
+ * @brief CipherBase is a wrapper for which library to use
+ *
+ */
+class CipherBase
+{
+  public:
+    virtual bool init(const uint8_t* iv,
+                      const uint8_t* key,
+                      const uint32_t key_len)                     = 0;
+    virtual bool init(const uint8_t* key, const uint32_t key_len) = 0;
+    virtual bool encrypt(const uint8_t* plaintxt,
+                         const int      len,
+                         uint8_t*       ciphertxt)                      = 0;
+    virtual bool decrypt(const uint8_t* ciphertxt,
+                         const int      len,
+                         uint8_t*       plaintxt)                       = 0;
+};
+
+class CipherTesting
+{
+  private:
+    CipherBase* cb = nullptr;
+
+  public:
+    std::vector<uint8_t> testingEncrypt(const std::vector<uint8_t> plaintext,
+                                        const std::vector<uint8_t> key,
+                                        const std::vector<uint8_t> iv)
+    {
+        if (cb != nullptr) {
+            if (cb->init(&iv[0], &key[0], key.size() * 8)) {
+                uint8_t* ciphertext = new uint8_t[plaintext.size()];
+                cb->encrypt(&(plaintext[0]), plaintext.size(), ciphertext);
+                std::vector<uint8_t> vt;
+                return std::vector<uint8_t>(ciphertext,
+                                            ciphertext + plaintext.size());
+            }
+        } else {
+            std::cout << "base.hh: CipherTesting: Implementation missing!"
+                      << std::endl;
+        }
+        return {};
+    }
+    std::vector<uint8_t> testingDecrypt(const std::vector<uint8_t> ciphertext,
+                                        const std::vector<uint8_t> key,
+                                        const std::vector<uint8_t> iv)
+    {
+        if (cb != nullptr) {
+            if (cb->init(&iv[0], &key[0], key.size() * 8)) {
+                uint8_t* plaintext = new uint8_t[ciphertext.size()];
+                cb->decrypt(&ciphertext[0], ciphertext.size(), plaintext);
+                return std::vector<uint8_t>(plaintext,
+                                            plaintext + ciphertext.size());
+            }
+        } else {
+            std::cout << "base.hh: CipherTesting: Implementation missing!"
+                      << std::endl;
+        }
+        return {};
+    }
+    void setcb(CipherBase* impl) { cb = impl; }
 };
 } // namespace alcp::testing
