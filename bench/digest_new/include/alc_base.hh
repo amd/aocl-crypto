@@ -17,22 +17,23 @@ class AlcpDigestBase {
 
     public:
         AlcpDigestBase(alc_digest_handle_t * m_handle,
-                      _alc_sha2_mode       mode,
-                      _alc_digest_type     type,
-                      _alc_digest_len     sha_len);
+                       _alc_sha2_mode        mode,
+                       _alc_digest_type      type,
+                       _alc_digest_len       sha_len);
 
-        alc_error_t digestInit(alc_digest_handle_t * m_handle,
-                      _alc_sha2_mode       mode,
-                      _alc_digest_type     type,
-                      _alc_digest_len     sha_len);
-
-        alc_error_t digest_function(alc_digest_handle_t* m_handle,
-                                    uint8_t *          src,
-                                    uint64_t             src_size,
-                                    uint8_t *             output,
-                                    uint64_t             out_size);
+        alc_error_t
+        digestInit(alc_digest_handle_t * m_handle,
+                   _alc_sha2_mode        mode,
+                   _alc_digest_type      type,
+                   _alc_digest_len       sha_len);
+ 
+        alc_error_t
+        digest_function(alc_digest_handle_t * m_handle,
+                        uint8_t *             src,
+                        uint64_t              src_size,
+                        uint8_t *             output,
+                        uint64_t              out_size);
 
 };
-
 
 } // namespace alcp::bench

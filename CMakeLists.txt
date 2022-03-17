@@ -63,7 +63,7 @@ IF (ALCP_BENCH)
 ENDIF()
 
 #test
-IF (TESTS)
+IF (BENCH)
         ADD_SUBDIRECTORY(bench)
 	MESSAGE(STATUS "Building test bench")
 ENDIF()

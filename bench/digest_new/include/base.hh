@@ -38,8 +38,6 @@ class DataSet : private File
     DataSet(const std::string filename);
     // Read without condition
     bool readMsgDigest();
-    // Read only specified key size
-    //bool readMsgDigest(const int keybits);
     // Convert a hex char to number;
     uint8_t parseHexToNum(const unsigned char c);
     // Parse hexString to binary
@@ -47,6 +45,7 @@ class DataSet : private File
     std::string parseBytesToHexStr(const uint8_t* bytes, const int length);
     // To print which line in dataset failed
     int getLineNumber();
+    /* fetch Message / Digest */
     std::vector<uint8_t> getMessage();
     std::vector<uint8_t> getDigest();
 };
