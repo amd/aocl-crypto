@@ -19,7 +19,7 @@ BENCHMARK_SHA_2_224(benchmark::State& state) {
     DataSet ds = DataSet("/home/pjayaraj/aocl-crypto/bench/digest_new/test_data/dataset_SHA.csv");
 
     while (ds.readMsgDigest()) {
-        for (auto _ : state) {
+        for (auto _ : state) { 
             AlcpDigestBase DigestBase(&handle, ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
             uint8_t * message = &(ds.getMessage()[0]);
             //uint8_t * expected = &(ds.getDigest()[0]);
