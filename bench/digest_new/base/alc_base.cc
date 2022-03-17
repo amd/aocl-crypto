@@ -3,6 +3,8 @@
 
 namespace alcp::bench {
 
+static uint8_t size_[4096] = {0};
+
 AlcpDigestBase::AlcpDigestBase(alc_digest_handle_t * m_handle,
                                _alc_sha2_mode        mode,
                                _alc_digest_type      type,
@@ -24,8 +26,7 @@ AlcpDigestBase::digestInit(alc_digest_handle_t * m_handle,
         .dt_mode = {.dm_sha2 = mode,},
     };
 
-    uint64_t size     = alcp_digest_context_size(&dinfo);
-    m_handle->context = malloc(size);
+    m_handle->context = &size_[0];
 
     err = alcp_digest_request(&dinfo, m_handle);
 
