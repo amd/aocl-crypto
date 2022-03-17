@@ -23,7 +23,7 @@ $ cmake -DCMAKE_BUILD_TYPE=DEBUG ../
 ## To build test bench
 
 ```sh
-$ cmake -DTESTS=1 ../
+$ -DBENCH=1
   This will create bench executable:
   ./bench/digest/
 
@@ -31,10 +31,18 @@ $ cmake -DTESTS=1 ../
 $ ./bench/digest/bench_digest;
 
 ## Arguments can be provided as:
-$ --benchmark_filter=HashPerformanceTest_SHA2_256
-$ --benchmark_filter=HashConformanceTest_SHA2_512
-$ --benchmark_filter=HashPerformanceTest (runs for all schemes)
+$ --benchmark_filter=SHA2_<SHA SCHEME>_<Block Size>
+$ --benchmark_filter=SHA2_512_16 (runs SHA256 schemes for 16 block size)
+$ --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
 ```
+
+## To build tests (using KAT vectors)
+$ -DALCP_ENABLE_TESTS=1
+ This will create test executable:
+ ./tests/digest/
+## To run:
+   ./tests/digest/test_digest;
+
 
 Append any other necessary configuration needed for build such as 
 `ALCP_ENABLE_EXAMPLES=1` for building examples

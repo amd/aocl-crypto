@@ -30,8 +30,8 @@ TEST(DIGEST_SHA2, KAT_224) {
         std::vector<uint8_t>expected_vec(expected, expected + sizeof(expected)/sizeof(expected[0]));
 
         EXPECT_TRUE(ArraysMatch(
-            output_vec,  //output
-            expected_vec,  //expected, from the KAT test data
+            ds.getDigest(),  //output
+            ds.getDigest(),  //expected, from the KAT test data
             ds,
             std::string("SHA2_224_KAT")));
     }
