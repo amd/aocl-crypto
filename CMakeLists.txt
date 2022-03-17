@@ -64,8 +64,8 @@ ENDIF()
 
 #test
 IF (BENCH)
-        ADD_SUBDIRECTORY(bench)
-	MESSAGE(STATUS "Building test bench")
+    ADD_SUBDIRECTORY(bench)
+	MESSAGE(STATUS "Building test benches")
 ENDIF()
 
 #INSTALL(TARGETS ALCP
