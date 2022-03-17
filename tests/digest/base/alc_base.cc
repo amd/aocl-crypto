@@ -63,4 +63,4 @@ AlcpDigestBase::digest_function(alc_digest_handle_t* s_dg_handle,
     return err;
 }
 
-} // namespace alcp::bench
+} // namespace alcp::testing
