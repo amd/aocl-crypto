@@ -6,17 +6,11 @@ find_package(GTest REQUIRED)
 INCLUDE_DIRECTORIES(
 	"${CMAKE_SOURCE_DIR}/include" 
 	"${CMAKE_SOURCE_DIR}/lib/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include")
+        "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-#include test inc files
-INCLUDE_DIRECTORIES(
-        "${CMAKE_SOURCE_DIR}/bench/digest/include"
-        "${CMAKE_SOURCE_DIR}/bench/digest/test_data"
-        )
+link_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 
-link_directories("${CMAKE_SOURCE_DIR}/bench/digest/")
-
-set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
 
 if(benchmark_FOUND)
     ADD_EXECUTABLE(bench_digest 
