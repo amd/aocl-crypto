@@ -1,6 +1,10 @@
 #include <alcp/alcp.h>
 #include <benchmark/benchmark.h>
 #include <iostream>
+#include "alc_base.hh"
+#include "base.hh"
+#include "string.h"
+#include "gtest_base.hh"
 #include "benchmarks.hh"
 
 int main(int argc, char** argv) {
@@ -10,5 +14,3 @@ int main(int argc, char** argv) {
     ::benchmark::RunSpecifiedBenchmarks();
     return 0;
 }
-
-
