@@ -206,4 +206,54 @@ DataSet::getCt()
     return m_ct;
 }
 
+// CipherTesting class functions
+CipherTesting::CipherTesting(CipherBase* impl)
+{
+    setcb(impl);
+}
+std::vector<uint8_t>
+CipherTesting::testingEncrypt(const std::vector<uint8_t> plaintext,
+                              const std::vector<uint8_t> key,
+                              const std::vector<uint8_t> iv)
+{
+    if (cb != nullptr) {
+        if (cb->init(&iv[0], &key[0], key.size() * 8)) {
+            uint8_t ciphertext[plaintext.size()];
+            cb->encrypt(&(plaintext[0]), plaintext.size(), ciphertext);
+            std::vector<uint8_t> vt =
+                std::vector<uint8_t>(ciphertext, ciphertext + plaintext.size());
+            return vt;
+        }
+    } else {
+        std::cout << "base.hh: CipherTesting: Implementation missing!"
+                  << std::endl;
+    }
+    return {};
+}
+
+std::vector<uint8_t>
+CipherTesting::testingDecrypt(const std::vector<uint8_t> ciphertext,
+                              const std::vector<uint8_t> key,
+                              const std::vector<uint8_t> iv)
+{
+    if (cb != nullptr) {
+        if (cb->init(&iv[0], &key[0], key.size() * 8)) {
+            uint8_t plaintext[ciphertext.size()];
+            cb->decrypt(&ciphertext[0], ciphertext.size(), plaintext);
+            std::vector<uint8_t> vt =
+                std::vector<uint8_t>(plaintext, plaintext + ciphertext.size());
+            return vt;
+        }
+    } else {
+        std::cout << "base.hh: CipherTesting: Implementation missing!"
+                  << std::endl;
+    }
+    return {};
+}
+void
+CipherTesting::setcb(CipherBase* impl)
+{
+    cb = impl;
+}
+
 } // namespace alcp::testing

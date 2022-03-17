@@ -13,7 +13,7 @@ class IPPCipherBase : public CipherBase
 {
   private:
     alc_aes_mode_t m_mode;
-    IppsAESSpec*   m_pAES = 0;
+    IppsAESSpec*   m_ctx = 0;
     const uint8_t* m_iv;
     const uint8_t* m_key;
     uint32_t       m_key_len;

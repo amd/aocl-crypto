@@ -18,14 +18,14 @@ IPPCipherBase::IPPCipherBase(const alc_aes_mode_t mode,
 
     IppStatus status = ippStsNoErr;
     status           = ippsAESGetSize(&m_ctxSize);
-    m_pAES           = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
-    status           = ippsAESInit(key, key_len, m_pAES, m_ctxSize);
+    m_ctx            = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
+    status           = ippsAESInit(key, key_len, m_ctx, m_ctxSize);
 }
 
 IPPCipherBase::~IPPCipherBase()
 {
-    if (m_pAES != nullptr) {
-        delete[](Ipp8u*) m_pAES;
+    if (m_ctx != nullptr) {
+        delete[](Ipp8u*) m_ctx;
     }
 }
 bool
@@ -44,12 +44,12 @@ IPPCipherBase::init(const uint8_t* key, const uint32_t key_len)
     m_key_len        = key_len;
     IppStatus status = ippStsNoErr;
     status           = ippsAESGetSize(&m_ctxSize);
-    if (m_pAES != nullptr) {
-        delete[](Ipp8u*) m_pAES;
+    if (m_ctx != nullptr) {
+        delete[](Ipp8u*) m_ctx;
         ;
     }
-    m_pAES = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
-    status = ippsAESInit(key, key_len / 8, m_pAES, m_ctxSize);
+    m_ctx  = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
+    status = ippsAESInit(key, key_len / 8, m_ctx, m_ctxSize);
     return true;
 }
 
@@ -65,30 +65,30 @@ IPPCipherBase::alcpModeToFuncCall(const uint8_t* in,
     switch (m_mode) {
         case ALC_AES_MODE_CBC:
             if (enc) {
-                status = ippsAESEncryptCBC(in, out, len, m_pAES, iv);
+                status = ippsAESEncryptCBC(in, out, len, m_ctx, iv);
             } else {
-                status = ippsAESDecryptCBC(in, out, len, m_pAES, iv);
+                status = ippsAESDecryptCBC(in, out, len, m_ctx, iv);
             }
             break;
         case ALC_AES_MODE_CFB:
             if (enc) {
-                status = ippsAESEncryptCFB(in, out, len, 16, m_pAES, iv);
+                status = ippsAESEncryptCFB(in, out, len, 16, m_ctx, iv);
             } else {
-                status = ippsAESDecryptCFB(in, out, len, 16, m_pAES, iv);
+                status = ippsAESDecryptCFB(in, out, len, 16, m_ctx, iv);
             }
             break;
         case ALC_AES_MODE_OFB:
             if (enc) {
-                status = ippsAESEncryptOFB(in, out, len, 16, m_pAES, iv);
+                status = ippsAESEncryptOFB(in, out, len, 16, m_ctx, iv);
             } else {
-                status = ippsAESDecryptOFB(in, out, len, 16, m_pAES, iv);
+                status = ippsAESDecryptOFB(in, out, len, 16, m_ctx, iv);
             }
             break;
         case ALC_AES_MODE_CTR:
             if (enc) {
-                status = ippsAESEncryptCTR(in, out, len, m_pAES, iv, 128);
+                status = ippsAESEncryptCTR(in, out, len, m_ctx, iv, 128);
             } else {
-                status = ippsAESDecryptCTR(in, out, len, m_pAES, iv, 128);
+                status = ippsAESDecryptCTR(in, out, len, m_ctx, iv, 128);
             }
             break;
         default:

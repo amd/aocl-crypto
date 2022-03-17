@@ -111,41 +111,14 @@ class CipherTesting
     CipherBase* cb = nullptr;
 
   public:
+    CipherTesting() {}
+    CipherTesting(CipherBase* impl);
     std::vector<uint8_t> testingEncrypt(const std::vector<uint8_t> plaintext,
                                         const std::vector<uint8_t> key,
-                                        const std::vector<uint8_t> iv)
-    {
-        if (cb != nullptr) {
-            if (cb->init(&iv[0], &key[0], key.size() * 8)) {
-                uint8_t* ciphertext = new uint8_t[plaintext.size()];
-                cb->encrypt(&(plaintext[0]), plaintext.size(), ciphertext);
-                std::vector<uint8_t> vt;
-                return std::vector<uint8_t>(ciphertext,
-                                            ciphertext + plaintext.size());
-            }
-        } else {
-            std::cout << "base.hh: CipherTesting: Implementation missing!"
-                      << std::endl;
-        }
-        return {};
-    }
+                                        const std::vector<uint8_t> iv);
     std::vector<uint8_t> testingDecrypt(const std::vector<uint8_t> ciphertext,
                                         const std::vector<uint8_t> key,
-                                        const std::vector<uint8_t> iv)
-    {
-        if (cb != nullptr) {
-            if (cb->init(&iv[0], &key[0], key.size() * 8)) {
-                uint8_t* plaintext = new uint8_t[ciphertext.size()];
-                cb->decrypt(&ciphertext[0], ciphertext.size(), plaintext);
-                return std::vector<uint8_t>(plaintext,
-                                            plaintext + ciphertext.size());
-            }
-        } else {
-            std::cout << "base.hh: CipherTesting: Implementation missing!"
-                      << std::endl;
-        }
-        return {};
-    }
-    void setcb(CipherBase* impl) { cb = impl; }
+                                        const std::vector<uint8_t> iv);
+    void                 setcb(CipherBase* impl);
 };
 } // namespace alcp::testing

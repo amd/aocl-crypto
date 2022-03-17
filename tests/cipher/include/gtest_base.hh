@@ -35,6 +35,8 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+using namespace alcp::testing;
+
 #ifndef __GTEST_BASE_HH
 #define __GTEST_BASE_HH 2
 
@@ -195,6 +197,58 @@ class ConfigurableEventListener : public testing::TestEventListener
     {
         eventListener->OnTestProgramEnd(unit_test);
     }
+};
+
+// Just a class to reduce duplication of lines
+class TestingCore
+{
+  private:
+    DataSet*        ds;
+    CipherTesting*  cipherHandler;
+    AlcpCipherBase* acb;
+#ifdef USE_IPP
+    IPPCipherBase* icb;
+#endif
+  public:
+    TestingCore(const int      key_size,
+                std::string    modeStr,
+                alc_aes_mode_t alcpMode,
+                bool           useipp)
+    {
+        ds = new DataSet(std::string("dataset_") + modeStr
+                         + std::string(".csv"));
+
+        // Initialize cipher testing classes
+        cipherHandler = new CipherTesting();
+        acb           = new AlcpCipherBase(alcpMode, NULL);
+#ifdef USE_IPP
+        icb = new IPPCipherBase(alcpMode, NULL);
+        if (useipp) {
+            // std::cout << "Using IPP" << std::endl;
+            cipherHandler->setcb(icb);
+        } else {
+            // std::cout << "Using ALCP" << std::endl;
+            cipherHandler->setcb(acb);
+        }
+#else
+        if (useipp) {
+            std::cout << "IPP is unavailable at the moment switching to ALCP!"
+                      << std::endl;
+        }
+        cipherHandler->setcb(acb);
+#endif
+    }
+    ~TestingCore()
+    {
+        delete ds;
+        delete cipherHandler;
+        delete acb;
+#ifdef USE_IPP
+        delete icb;
+#endif
+    }
+    DataSet*       getDs() { return ds; }
+    CipherTesting* getCipherHandler() { return cipherHandler; }
 };
 
 void
