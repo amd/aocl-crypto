@@ -1,15 +1,9 @@
-#include <alcp/alcp.h>
-#include <benchmark/benchmark.h>
-#include <iostream>
 #include "benchmarks.hh"
-#include "common.hh"
 
-int main(int argc, char** argv) {
-    ::benchmark::Initialize(&argc, argv);
-    if (::benchmark::ReportUnrecognizedArguments(argc, argv))
-        return 1;
-    ::benchmark::RunSpecifiedBenchmarks();
-    return 0;
+int main(int argc, char **argv) {
+  ::benchmark::Initialize(&argc, argv);
+  if (::benchmark::ReportUnrecognizedArguments(argc, argv))
+    return 1;
+  ::benchmark::RunSpecifiedBenchmarks();
+  return 0;
 }
-
-
