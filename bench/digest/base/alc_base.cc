@@ -14,9 +14,9 @@ AlcpDigestBase::AlcpDigestBase(_alc_sha2_mode   mode,
 {
     alc_error_t err;
     alc_digest_info_t dinfo = {
-        .dt_type = this->m_type,
-        .dt_len = this->m_sha_len,
-        .dt_mode = {.dm_sha2 = this->m_mode,},
+        .dt_type = m_type,
+        .dt_len = m_sha_len,
+        .dt_mode = {.dm_sha2 = m_mode,},
     };
 
     m_handle = new alc_digest_handle_t;
@@ -35,24 +35,24 @@ AlcpDigestBase::digest_function(uint8_t * src,
                                 uint64_t  out_size)
 {
     alc_error_t err;
-    err = alcp_digest_update(this->m_handle, src, src_size);
+    err = alcp_digest_update(m_handle, src, src_size);
     if (alcp_is_error(err)) {
         printf("Digest update failed\n");
         return err;
     }
 
-    alcp_digest_finalize(this->m_handle, NULL, 0);
+    alcp_digest_finalize(m_handle, NULL, 0);
     if (alcp_is_error(err)) {
         printf("Digest finalize failed\n");
         return err;
     }
 
-    err = alcp_digest_copy(this->m_handle, output, out_size);
+    err = alcp_digest_copy(m_handle, output, out_size);
     if (alcp_is_error(err)) {
         printf("Digest copy failed\n");
         return err;
     }
-    alcp_digest_finish(this->m_handle);
+    alcp_digest_finish(m_handle);
     return err;
 }
 

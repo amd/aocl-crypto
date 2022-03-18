@@ -1,8 +1,5 @@
 
-#include "alc_base.hh"
-#include "base.hh"
-#include "gtest_base.hh"
-#include "benchmarks.hh"
+#include "kat_tests.hh"
 
 int
 main(int argc, char** argv)
