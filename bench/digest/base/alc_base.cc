@@ -5,61 +5,54 @@ namespace alcp::bench {
 
 static uint8_t size_[4096] = {0};
 
-AlcpDigestBase::AlcpDigestBase(alc_digest_handle_t * m_handle,
-                               _alc_sha2_mode        mode,
-                               _alc_digest_type      type,
-                               _alc_digest_len       sha_len)
-{
-    digestInit(m_handle, mode, type, sha_len);
-}
-
-alc_error_t
-AlcpDigestBase::digestInit(alc_digest_handle_t * m_handle,
-                           _alc_sha2_mode        mode,
-                           _alc_digest_type      type,
-                           _alc_digest_len       sha_len)
+AlcpDigestBase::AlcpDigestBase(_alc_sha2_mode   mode,
+                               _alc_digest_type type, 
+                               _alc_digest_len  sha_len)
+    : m_mode { mode },
+      m_type { type },
+      m_sha_len { sha_len }
 {
     alc_error_t err;
     alc_digest_info_t dinfo = {
-        .dt_type = type,
-        .dt_len = sha_len,
-        .dt_mode = {.dm_sha2 = mode,},
+        .dt_type = this->m_type,
+        .dt_len = this->m_sha_len,
+        .dt_mode = {.dm_sha2 = this->m_mode,},
     };
 
+    m_handle = new alc_digest_handle_t;
     m_handle->context = &size_[0];
 
     err = alcp_digest_request(&dinfo, m_handle);
-
     if (alcp_is_error(err)) {
-        return err;
+        printf("Error!\n");
     }
-    return err;
 }
 
-
 alc_error_t
-AlcpDigestBase::digest_function(alc_digest_handle_t* s_dg_handle,
-                                uint8_t*             src,
-                                uint64_t             src_size,
-                                uint8_t*             output,
-                                uint64_t             out_size)
+AlcpDigestBase::digest_function(uint8_t * src,
+                                uint64_t  src_size,
+                                uint8_t * output,
+                                uint64_t  out_size)
 {
     alc_error_t err;
-
-    err = alcp_digest_update(s_dg_handle, src, src_size);
+    err = alcp_digest_update(this->m_handle, src, src_size);
     if (alcp_is_error(err)) {
-        printf("Unable to compute hash\n");
+        printf("Digest update failed\n");
         return err;
     }
 
-    alcp_digest_finalize(s_dg_handle, NULL, 0);
-
-    err = alcp_digest_copy(s_dg_handle, output, out_size);
+    alcp_digest_finalize(this->m_handle, NULL, 0);
     if (alcp_is_error(err)) {
-        printf("Unable to copy digest\n");
+        printf("Digest finalize failed\n");
         return err;
     }
-    //alcp_digest_finish(s_dg_handle);
+
+    err = alcp_digest_copy(this->m_handle, output, out_size);
+    if (alcp_is_error(err)) {
+        printf("Digest copy failed\n");
+        return err;
+    }
+    alcp_digest_finish(this->m_handle);
     return err;
 }
 

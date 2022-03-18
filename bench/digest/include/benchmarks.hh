@@ -5,25 +5,21 @@
 #include "alc_base.hh"
 #include "base.hh"
 #include "string.h"
-#include "gtest_base.hh"
 
 using namespace alcp::bench;
 
 void
 Digest_SHA2_224(benchmark::State& state, uint64_t block_size) {
     alc_error_t error;
-    alc_digest_handle_t handle;
-    /*update this*/
     uint8_t * message = (uint8_t*)malloc(16384);
     uint8_t * digest = (uint8_t*)malloc(512);
     for (auto _ : state) {
-        AlcpDigestBase DigestBase(&handle, ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
-        error = DigestBase.digest_function(&handle, message, block_size, digest, sizeof(digest));
+        AlcpDigestBase DigestBase(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+        error = DigestBase.digest_function(message, block_size, digest, sizeof(digest));
         if (alcp_is_error(error)) {
-            printf("Error");
+            printf("Error in running benchmark");
             return;
         }
-        alcp_digest_finish(&handle);
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(state.iterations() * block_size,
                                                         benchmark::Counter::kIsRate);
@@ -36,18 +32,15 @@ Digest_SHA2_224(benchmark::State& state, uint64_t block_size) {
 void
 Digest_SHA2_256(benchmark::State& state, uint64_t block_size) {
     alc_error_t error;
-    alc_digest_handle_t handle;
-    /*update this*/
     uint8_t * message = (uint8_t*)malloc(16384);
     uint8_t * digest = (uint8_t*)malloc(512);
     for (auto _ : state) {
-        AlcpDigestBase DigestBase(&handle, ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
-        error = DigestBase.digest_function(&handle, message, block_size, digest, sizeof(digest));
+        AlcpDigestBase DigestBase(ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
+        error = DigestBase.digest_function(message, block_size, digest, sizeof(digest));
         if (alcp_is_error(error)) {
-            printf("Error");
+            printf("Error in running benchmark");
             return;
         }
-        alcp_digest_finish(&handle);
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(state.iterations() * block_size,
                                                         benchmark::Counter::kIsRate);
@@ -60,18 +53,15 @@ Digest_SHA2_256(benchmark::State& state, uint64_t block_size) {
 void
 Digest_SHA2_384(benchmark::State& state, uint64_t block_size) {
     alc_error_t error;
-    alc_digest_handle_t handle;
-    /*update this*/
     uint8_t * message = (uint8_t*)malloc(16384);
     uint8_t * digest = (uint8_t*)malloc(512);
     for (auto _ : state) {
-        AlcpDigestBase DigestBase(&handle, ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
-        error = DigestBase.digest_function(&handle, message, block_size, digest, sizeof(digest));
+        AlcpDigestBase DigestBase(ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
+        error = DigestBase.digest_function(message, block_size, digest, sizeof(digest));
         if (alcp_is_error(error)) {
-            printf("Error");
+            printf("Error in running benchmark");
             return;
         }
-        alcp_digest_finish(&handle);
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(state.iterations() * block_size,
                                                         benchmark::Counter::kIsRate);
@@ -84,18 +74,15 @@ Digest_SHA2_384(benchmark::State& state, uint64_t block_size) {
 void
 Digest_SHA2_512(benchmark::State& state, uint64_t block_size) {
     alc_error_t error;
-    alc_digest_handle_t handle;
-    /*update this*/
     uint8_t * message = (uint8_t*)malloc(16384);
     uint8_t * digest = (uint8_t*)malloc(512);
     for (auto _ : state) {
-        AlcpDigestBase DigestBase(&handle, ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
-        error = DigestBase.digest_function(&handle, message, block_size, digest, sizeof(digest));
+        AlcpDigestBase DigestBase(ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
+        error = DigestBase.digest_function(message, block_size, digest, sizeof(digest));
         if (alcp_is_error(error)) {
-            printf("Error");
+            printf("Error in running benchmark");
             return;
         }
-        alcp_digest_finish(&handle);
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(state.iterations() * block_size,
                                                         benchmark::Counter::kIsRate);
@@ -104,6 +91,7 @@ Digest_SHA2_512(benchmark::State& state, uint64_t block_size) {
     free(digest);
     return;
 }
+
 
 /* add all your new benchmarks here */
 static void
@@ -181,7 +169,6 @@ BENCH_SHA2_256_16384(benchmark::State& state) {
 BENCHMARK(BENCH_SHA2_256_16384);
 
 /*384*/
-/* add all your new benchmarks here */
 static void
 BENCH_SHA2_384_16(benchmark::State& state) {
     Digest_SHA2_384(state, 16);
