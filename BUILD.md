@@ -23,11 +23,11 @@ $ cmake -DCMAKE_BUILD_TYPE=DEBUG ../
 ## To build test bench
 
 ```sh
-$ Append the argument -DBENCH=1
+$ Append the argument -DALCP_ENABLE_BENCH=1
   This will create bench executable:
   ./bench/digest/
 
-## To Run:
+ ## To Run:
 $ ./bench/digest/bench_digest;
 
 ## Arguments can be provided as:
@@ -40,10 +40,11 @@ $ --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
 $ Append the argument '-DALCP_ENABLE_TESTS=1'
  This will create test executable:
  ./tests/digest/
-## To run:
+ ## To run:
    ./tests/digest/test_digest;
 
 
+## To build examples
 Append any other necessary configuration needed for build such as 
 `ALCP_ENABLE_EXAMPLES=1` for building examples
 
