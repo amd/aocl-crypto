@@ -56,7 +56,7 @@ IPPCipherBase::init(const uint8_t* key, const uint32_t key_len)
 bool
 IPPCipherBase::alcpModeToFuncCall(const uint8_t* in,
                                   uint8_t*       out,
-                                  int            len,
+                                  size_t         len,
                                   bool           enc)
 {
     IppStatus status = ippStsNoErr;
@@ -98,18 +98,14 @@ IPPCipherBase::alcpModeToFuncCall(const uint8_t* in,
 }
 
 bool
-IPPCipherBase::encrypt(const uint8_t* plaintxt,
-                       const int      len,
-                       uint8_t*       ciphertxt)
+IPPCipherBase::encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt)
 {
     alcpModeToFuncCall(plaintxt, ciphertxt, len, true);
     return true;
 }
 
 bool
-IPPCipherBase::decrypt(const uint8_t* ciphertxt,
-                       const int      len,
-                       uint8_t*       plaintxt)
+IPPCipherBase::decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt)
 {
     alcpModeToFuncCall(ciphertxt, plaintxt, len, false);
     return true;
