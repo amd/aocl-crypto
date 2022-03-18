@@ -129,9 +129,7 @@ out:
 }
 
 bool
-AlcpCipherBase::encrypt(const uint8_t* plaintxt,
-                        const int      len,
-                        uint8_t*       ciphertxt)
+AlcpCipherBase::encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -148,9 +146,7 @@ AlcpCipherBase::encrypt(const uint8_t* plaintxt,
 }
 
 bool
-AlcpCipherBase::decrypt(const uint8_t* ciphertxt,
-                        const int      len,
-                        uint8_t*       plaintxt)
+AlcpCipherBase::decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt)
 {
     alc_error_t err;
     const int   err_size = 256;
