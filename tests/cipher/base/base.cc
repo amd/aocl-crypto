@@ -157,7 +157,7 @@ DataSet::parseHexStrToBin(const std::string in)
 
     for (int i = 0; i < len; i += 2) {
         uint8_t val =
-            parseHexToNum(in.at(ind + 1)) << 4 | parseHexToNum(in.at(ind));
+            parseHexToNum(in.at(ind)) << 4 | parseHexToNum(in.at(ind + 1));
         vector.push_back(val);
         ind += 2;
     }
