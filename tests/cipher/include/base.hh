@@ -68,7 +68,7 @@ class DataSet : private File
     // Read without condition
     bool readPtIvKeyCt();
     // Read only specified key size
-    bool readPtIvKeyCt(const int keybits);
+    bool readPtIvKeyCt(size_t keybits);
     // Convert a hex char to number;
     uint8_t parseHexToNum(const unsigned char c);
     // Parse hexString to binary

@@ -85,7 +85,7 @@ File::readChar(const int n)
     return c_buff;
 }
 
-/* Class Data
+// Class Data
 /**
  * @brief Construct a new Data Set:: Data Set object
  *
@@ -99,7 +99,7 @@ DataSet::DataSet(const std::string filename)
 }
 
 bool
-DataSet::readPtIvKeyCt(const int keybits)
+DataSet::readPtIvKeyCt(size_t keybits)
 {
     while (true) {
         if (readPtIvKeyCt() == false)
@@ -157,8 +157,9 @@ DataSet::parseHexStrToBin(const std::string in)
 
     for (int i = 0; i < len; i += 2) {
         uint8_t val =
-            parseHexToNum(in.at(ind++)) << 4 | parseHexToNum(in.at(ind++));
+            parseHexToNum(in.at(ind + 1)) << 4 | parseHexToNum(in.at(ind));
         vector.push_back(val);
+        ind += 2;
     }
     return vector;
 }
