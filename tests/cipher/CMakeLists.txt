@@ -27,7 +27,7 @@ if(GTest_FOUND)
     target_link_libraries(aes_cbc_kat "${GTEST_LIBRARY}/libgtest.a")
     target_link_libraries(aes_cbc_kat pthread)
     if(ippcp_FOUND)
-       target_link_libraries(aes_cbc_kat ippcpmx)
+       target_link_libraries(aes_cbc_kat ippcp)
     endif(ippcp_FOUND)
 
     # OFB
@@ -45,7 +45,7 @@ if(GTest_FOUND)
     target_link_libraries(aes_ofb_kat "${GTEST_LIBRARY}/libgtest.a")
     target_link_libraries(aes_ofb_kat pthread)
     if(ippcp_FOUND)
-       target_link_libraries(aes_ofb_kat ippcpmx)
+       target_link_libraries(aes_ofb_kat ippcp)
     endif(ippcp_FOUND)
 
     # CFB
@@ -63,7 +63,7 @@ if(GTest_FOUND)
     target_link_libraries(aes_cfb_kat "${GTEST_LIBRARY}/libgtest.a")
     target_link_libraries(aes_cfb_kat pthread)
     if(ippcp_FOUND)
-       target_link_libraries(aes_cfb_kat ippcpmx)
+       target_link_libraries(aes_cfb_kat ippcp)
     endif(ippcp_FOUND)
 
      # CTR
@@ -81,7 +81,7 @@ if(GTest_FOUND)
     target_link_libraries(aes_ctr_kat "${GTEST_LIBRARY}/libgtest.a")
     target_link_libraries(aes_ctr_kat pthread)
     if(ippcp_FOUND)
-       target_link_libraries(aes_ctr_kat ippcpmx)
+       target_link_libraries(aes_ctr_kat ippcp)
     endif(ippcp_FOUND)
     
     

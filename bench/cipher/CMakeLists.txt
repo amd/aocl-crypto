@@ -1,7 +1,9 @@
 # Find google benchmark package
 find_package(benchmark REQUIRED)
 find_package(GTest REQUIRED)
-find_package(ippcp)
+if(ENABLE_TESTS_IPP_API)
+    find_package(ippcp)
+endif(ENABLE_TESTS_IPP_API)
 
 # Include all the ALCP Headers
 INCLUDE_DIRECTORIES(
@@ -34,7 +36,7 @@ if(benchmark_FOUND)
     endif(ippcp_FOUND)
     message(STATUS "Found google benchmark lib in ${benchmark_DIR}")
     if(ippcp_FOUND)
-       target_link_libraries(bench_cipher ippcpmx)
+       target_link_libraries(bench_cipher ippcp)
     endif(ippcp_FOUND)
     target_link_libraries(bench_cipher alcp)
     target_link_libraries(bench_cipher gtest)
