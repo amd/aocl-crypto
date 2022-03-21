@@ -14,18 +14,18 @@
 
 ### Setting Up Environment GTest
 
-1. <code>export C_LIBRARY_PATH=$HOME/.local/include:$C_LIBRARY_PATH</code>
-2. <code>export CPLUS_LIBRARY_PATH=$HOME/.local/include:$CPLUS_LIBRARY_PATH</code>
-3. <code>export LD_LIBRARY_PATH=$HOME/.local/lib:$HOME/.local/lib64</code>
+1. `export C_LIBRARY_PATH=$HOME/.local/include:$C_LIBRARY_PATH`
+2. `export CPLUS_LIBRARY_PATH=$HOME/.local/include:$CPLUS_LIBRARY_PATH`
+3. `export LD_LIBRARY_PATH=$HOME/.local/lib:$HOME/.local/lib64`
 
 ### Building ALCP with Testing framework
 
-<font color=red>Note: Depeding on multilib(x86_64) or singlelib(amd64) setup, gtest may install in $HOME/local/lib or $HOME/local/lib64 respectively so please do change below line number 3 to use lib64 if you use singlelib (amd64)</font>
-
 1. <code>git clone [alcp-crypto git url here]</code>
 2. <code>cd alcp-crypto</code>
-3. <code>cmake -B build -DALCP_ENABLE_EXAMPLES=ON -DALCP_ENABLE_TESTS=ON -DGTEST_LIBRARY=$HOME/.local/lib -DGTEST_MAIN_LIBRARY=$HOME/.local/lib -DGTEST_INCLUDE_DIR=$HOME/.local/include</code>
+3. <code>cmake -B build -DALCP_ENABLE_EXAMPLES=ON -DALCP_ENABLE_TESTS=ON -DGTEST_INSTALL_DIR=$HOME/.local</code> - <font color="red">Please replace <code>$HOME/.local</code> with GTest Prefix, if you have installed some other place</font>
 4. <code>cmake --build build</code>
+
+<font color="red"> Note - To include IPP, please define <code>-DENABLE_TESTS_IPP_API=ON -DIPP_INSTALL_DIR=/path/to/ipp_prefix</code> in step 3.</font>
 
 ## AES
 
@@ -54,4 +54,3 @@ Always you can use <code>--help</code> to know all the command line arguments wh
 ### Testing Datasets
 
 Datasets are located in directory <code>alcp-crypto/tests/cipher/dataset/</code>. File name should be dataset_\<aes\_mode\>.csv. Order of elements are mentioned in line number 1. Line number 1 is always ignored, please forbid form deleting that line.
-
