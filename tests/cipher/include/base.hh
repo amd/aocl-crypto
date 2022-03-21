@@ -68,7 +68,7 @@ class DataSet : private File
     // Read without condition
     bool readPtIvKeyCt();
     // Read only specified key size
-    bool readPtIvKeyCt(const int keybits);
+    bool readPtIvKeyCt(size_t keybits);
     // Convert a hex char to number;
     uint8_t parseHexToNum(const unsigned char c);
     // Parse hexString to binary
@@ -98,10 +98,10 @@ class CipherBase
                       const uint32_t key_len)                     = 0;
     virtual bool init(const uint8_t* key, const uint32_t key_len) = 0;
     virtual bool encrypt(const uint8_t* plaintxt,
-                         const int      len,
+                         size_t         len,
                          uint8_t*       ciphertxt)                      = 0;
     virtual bool decrypt(const uint8_t* ciphertxt,
-                         const int      len,
+                         size_t         len,
                          uint8_t*       plaintxt)                       = 0;
 };
 

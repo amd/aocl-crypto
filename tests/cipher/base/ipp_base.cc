@@ -16,10 +16,9 @@ IPPCipherBase::IPPCipherBase(const alc_aes_mode_t mode,
     , m_key_len{ key_len }
 {
 
-    IppStatus status = ippStsNoErr;
-    status           = ippsAESGetSize(&m_ctxSize);
-    m_ctx            = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
-    status           = ippsAESInit(key, key_len, m_ctx, m_ctxSize);
+    ippsAESGetSize(&m_ctxSize);
+    m_ctx = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
+    ippsAESInit(key, key_len / 8, m_ctx, m_ctxSize);
 }
 
 IPPCipherBase::~IPPCipherBase()
@@ -40,23 +39,22 @@ IPPCipherBase::init(const uint8_t* iv,
 bool
 IPPCipherBase::init(const uint8_t* key, const uint32_t key_len)
 {
-    m_key            = key;
-    m_key_len        = key_len;
-    IppStatus status = ippStsNoErr;
-    status           = ippsAESGetSize(&m_ctxSize);
+    m_key     = key;
+    m_key_len = key_len;
+    ippsAESGetSize(&m_ctxSize);
     if (m_ctx != nullptr) {
         delete[](Ipp8u*) m_ctx;
         ;
     }
-    m_ctx  = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
-    status = ippsAESInit(key, key_len / 8, m_ctx, m_ctxSize);
+    m_ctx = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
+    ippsAESInit(key, key_len / 8, m_ctx, m_ctxSize);
     return true;
 }
 
 bool
 IPPCipherBase::alcpModeToFuncCall(const uint8_t* in,
                                   uint8_t*       out,
-                                  int            len,
+                                  size_t         len,
                                   bool           enc)
 {
     IppStatus status = ippStsNoErr;
@@ -94,25 +92,22 @@ IPPCipherBase::alcpModeToFuncCall(const uint8_t* in,
         default:
             return false;
     }
-    return true;
+    if (status != ippStsNoErr)
+        return false;
+    else
+        return true;
 }
 
 bool
-IPPCipherBase::encrypt(const uint8_t* plaintxt,
-                       const int      len,
-                       uint8_t*       ciphertxt)
+IPPCipherBase::encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt)
 {
-    alcpModeToFuncCall(plaintxt, ciphertxt, len, true);
-    return true;
+    return alcpModeToFuncCall(plaintxt, ciphertxt, len, true);
 }
 
 bool
-IPPCipherBase::decrypt(const uint8_t* ciphertxt,
-                       const int      len,
-                       uint8_t*       plaintxt)
+IPPCipherBase::decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt)
 {
-    alcpModeToFuncCall(ciphertxt, plaintxt, len, false);
-    return true;
+    return alcpModeToFuncCall(ciphertxt, plaintxt, len, false);
 }
 
 } // namespace alcp::testing

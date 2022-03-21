@@ -81,8 +81,8 @@ class AlcpCipherBase : public CipherBase
     bool init(const uint8_t* iv, const uint8_t* key, const uint32_t key_len);
 
     bool init(const uint8_t* key, const uint32_t key_len);
-    bool encrypt(const uint8_t* plaintxt, const int len, uint8_t* ciphertxt);
-    bool decrypt(const uint8_t* ciphertxt, const int len, uint8_t* plaintxt);
+    bool encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt);
+    bool decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt);
 };
 
 class AlcpCipherTesting : public AlcpCipherBase
