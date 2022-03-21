@@ -1,27 +1,19 @@
-#ifndef BENCHMARKS_HH_
-#define BENCHMARKS_HH_
+#pragma once
 
+#include "alc_base.hh"
+#include "base.hh"
+#include "string.h"
 #include <alcp/alcp.h>
 #include <benchmark/benchmark.h>
 #include <iostream>
-#include "common.hh"
 
-/*conformance*/
-static void
-CipherConformanceTest_AES_CBC(benchmark::State& state)
+#ifdef USE_IPP
+#include "ipp_base.hh"
+#endif
+
+typedef enum
 {
-    cipher_test(state, ALC_AES_MODE_CBC, ALC_TEST_CIPHER_CONF);
-    return;
-}
-BENCHMARK(CipherConformanceTest_AES_CBC);
+    DECRYPT = 0,
+    ENCRYPT = 1,
 
-/*perf tests*/
-static void
-CipherPerformanceTest_AES_CBC(benchmark::State& state)
-{
-    benchmark::DoNotOptimize(cipher_test(state, ALC_AES_MODE_CBC, ALC_TEST_CIPHER_PERF));
-    return;
-}
-BENCHMARK(CipherPerformanceTest_AES_CBC);
-
-#endif  //BENCHMARKS_HH
+} encrypt_t;

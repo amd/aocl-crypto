@@ -29,121 +29,118 @@
 #include "alc_base.hh"
 #include "base.hh"
 #include "gtest_base.hh"
+#include <boost/algorithm/string.hpp>
 
 using namespace alcp::testing;
+#define MODE_STR "ofb"
+#define ALC_MODE ALC_AES_MODE_OFB
 
 /* Testing Starts Here! */
 TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
 {
-    const int key_size = 128;
-    DataSet   ds       = DataSet("dataset_ofb.csv");
-
-    // Initialize cipher testing classes
-    AlcpCipherTesting cipherHander =
-        AlcpCipherTesting(ALC_AES_MODE_OFB, nullptr);
-
-    while (ds.readPtIvKeyCt(key_size)) {
-        // Check if output is correct
+    int         key_size    = 128;
+    TestingCore testingCore = TestingCore(key_size, MODE_STR, ALC_MODE, useipp);
+    while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
+        // Checks if output is correct
         EXPECT_TRUE(ArraysMatch(
-            cipherHander.testingEncrypt(ds.getPt(), ds.getKey(), ds.getIv()),
-            ds.getCt(),
-            ds,
-            std::string("AES_OFB_128_ENC")));
+            testingCore.getCipherHandler()->testingEncrypt(
+                testingCore.getDs()->getPt(),
+                testingCore.getDs()->getKey(),
+                testingCore.getDs()->getIv()),
+            testingCore.getDs()->getCt(),
+            *(testingCore.getDs()),
+            std::string("AES_" + boost::to_upper_copy<std::string>(MODE_STR)
+                        + "_128_ENC")));
     }
 }
 
 TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
 {
-    const int key_size = 192;
-    DataSet   ds       = DataSet("dataset_ofb.csv");
-
-    // Initialize cipher testing classes
-    AlcpCipherTesting cipherHander =
-        AlcpCipherTesting(ALC_AES_MODE_OFB, nullptr);
-
-    while (ds.readPtIvKeyCt(key_size)) {
-        // Check if output is correct
+    int         key_size    = 192;
+    TestingCore testingCore = TestingCore(key_size, MODE_STR, ALC_MODE, useipp);
+    while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
+        // Checks if output is correct
         EXPECT_TRUE(ArraysMatch(
-            cipherHander.testingEncrypt(ds.getPt(), ds.getKey(), ds.getIv()),
-            ds.getCt(),
-            ds,
-            std::string("AES_OFB_192_ENC")));
+            testingCore.getCipherHandler()->testingEncrypt(
+                testingCore.getDs()->getPt(),
+                testingCore.getDs()->getKey(),
+                testingCore.getDs()->getIv()),
+            testingCore.getDs()->getCt(),
+            *(testingCore.getDs()),
+            std::string("AES_" + boost::to_upper_copy<std::string>(MODE_STR)
+                        + "_192_ENC")));
     }
 }
 
 TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
 {
-    const int key_size = 256;
-    DataSet   ds       = DataSet("dataset_ofb.csv");
-
-    // Initialize cipher testing classes
-    AlcpCipherTesting cipherHander =
-        AlcpCipherTesting(ALC_AES_MODE_OFB, nullptr);
-
-    while (ds.readPtIvKeyCt(key_size)) {
-        // Check if output is correct
+    int         key_size    = 256;
+    TestingCore testingCore = TestingCore(key_size, MODE_STR, ALC_MODE, useipp);
+    while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
+        // Checks if output is correct
         EXPECT_TRUE(ArraysMatch(
-            cipherHander.testingEncrypt(ds.getPt(), ds.getKey(), ds.getIv()),
-            ds.getCt(),
-            ds,
-            std::string("AES_OFB_256_ENC")));
+            testingCore.getCipherHandler()->testingEncrypt(
+                testingCore.getDs()->getPt(),
+                testingCore.getDs()->getKey(),
+                testingCore.getDs()->getIv()),
+            testingCore.getDs()->getCt(),
+            *(testingCore.getDs()),
+            std::string("AES_" + boost::to_upper_copy<std::string>(MODE_STR)
+                        + "_256_ENC")));
     }
 }
 
 TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
 {
-    const int key_size = 128;
-    DataSet   ds       = DataSet("dataset_ofb.csv");
-
-    // Initialize cipher testing classes
-    AlcpCipherTesting cipherHander =
-        AlcpCipherTesting(ALC_AES_MODE_OFB, nullptr);
-
-    while (ds.readPtIvKeyCt(key_size)) {
-        // Check if output is correct
+    int         key_size    = 128;
+    TestingCore testingCore = TestingCore(key_size, MODE_STR, ALC_MODE, useipp);
+    while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
+        // Checks if output is correct
         EXPECT_TRUE(ArraysMatch(
-            cipherHander.testingDecrypt(ds.getCt(), ds.getKey(), ds.getIv()),
-            ds.getPt(),
-            ds,
-            std::string("AES_OFB_128_DEC")));
+            testingCore.getCipherHandler()->testingDecrypt(
+                testingCore.getDs()->getCt(),
+                testingCore.getDs()->getKey(),
+                testingCore.getDs()->getIv()),
+            testingCore.getDs()->getPt(),
+            *(testingCore.getDs()),
+            std::string("AES_" + boost::to_upper_copy<std::string>(MODE_STR)
+                        + "_128_DEC")));
     }
 }
 
 TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
 {
-    const int key_size = 192;
-    DataSet   ds       = DataSet("dataset_ofb.csv");
-
-    // Initialize cipher testing classes
-    AlcpCipherTesting cipherHander =
-        AlcpCipherTesting(ALC_AES_MODE_OFB, nullptr);
-
-    while (ds.readPtIvKeyCt(key_size)) {
-        // Check if output is correct
+    int         key_size    = 192;
+    TestingCore testingCore = TestingCore(key_size, MODE_STR, ALC_MODE, useipp);
+    while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
+        // Checks if output is correct
         EXPECT_TRUE(ArraysMatch(
-            cipherHander.testingDecrypt(ds.getCt(), ds.getKey(), ds.getIv()),
-            ds.getPt(),
-            ds,
-            std::string("AES_OFB_192_DEC")));
+            testingCore.getCipherHandler()->testingDecrypt(
+                testingCore.getDs()->getCt(),
+                testingCore.getDs()->getKey(),
+                testingCore.getDs()->getIv()),
+            testingCore.getDs()->getPt(),
+            *(testingCore.getDs()),
+            std::string("AES_" + boost::to_upper_copy<std::string>(MODE_STR)
+                        + "_192_DEC")));
     }
 }
 
 TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
 {
-    const int key_size = 256;
-    DataSet   ds       = DataSet("dataset_ofb.csv");
-
-    // Initialize cipher testing classes
-    AlcpCipherTesting cipherHander =
-        AlcpCipherTesting(ALC_AES_MODE_OFB, nullptr);
-
-    while (ds.readPtIvKeyCt(key_size)) {
-        // Check if output is correct
+    int         key_size    = 256;
+    TestingCore testingCore = TestingCore(key_size, MODE_STR, ALC_MODE, useipp);
+    while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
+        // Checks if output is correct
         EXPECT_TRUE(ArraysMatch(
-            cipherHander.testingDecrypt(ds.getCt(), ds.getKey(), ds.getIv()),
-            ds.getPt(),
-            ds,
-            std::string("AES_OFB_256_DEC")));
+            testingCore.getCipherHandler()->testingDecrypt(
+                testingCore.getDs()->getCt(),
+                testingCore.getDs()->getKey(),
+                testingCore.getDs()->getIv()),
+            testingCore.getDs()->getPt(),
+            *(testingCore.getDs()),
+            std::string("AES_" + boost::to_upper_copy<std::string>(MODE_STR)
+                        + "_256_DEC")));
     }
 }
 

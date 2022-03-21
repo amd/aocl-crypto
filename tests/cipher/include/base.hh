@@ -26,7 +26,9 @@
  *
  */
 #pragma once
+#include "alcp/alcp.h"
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <vector>
 
@@ -56,7 +58,7 @@ class DataSet : private File
 {
   private:
     std::string          line = "";
-    std::vector<uint8_t> pt, iv, key, ct;
+    std::vector<uint8_t> m_pt, m_iv, m_key, m_ct;
     // First line is skipped, linenum starts from 1
     int lineno = 1;
 
@@ -66,7 +68,7 @@ class DataSet : private File
     // Read without condition
     bool readPtIvKeyCt();
     // Read only specified key size
-    bool readPtIvKeyCt(const int keybits);
+    bool readPtIvKeyCt(size_t keybits);
     // Convert a hex char to number;
     uint8_t parseHexToNum(const unsigned char c);
     // Parse hexString to binary
@@ -82,5 +84,41 @@ class DataSet : private File
     std::vector<uint8_t> getKey();
     // Return private data cipher text
     std::vector<uint8_t> getCt();
+};
+
+/**
+ * @brief CipherBase is a wrapper for which library to use
+ *
+ */
+class CipherBase
+{
+  public:
+    virtual bool init(const uint8_t* iv,
+                      const uint8_t* key,
+                      const uint32_t key_len)                     = 0;
+    virtual bool init(const uint8_t* key, const uint32_t key_len) = 0;
+    virtual bool encrypt(const uint8_t* plaintxt,
+                         size_t         len,
+                         uint8_t*       ciphertxt)                      = 0;
+    virtual bool decrypt(const uint8_t* ciphertxt,
+                         size_t         len,
+                         uint8_t*       plaintxt)                       = 0;
+};
+
+class CipherTesting
+{
+  private:
+    CipherBase* cb = nullptr;
+
+  public:
+    CipherTesting() {}
+    CipherTesting(CipherBase* impl);
+    std::vector<uint8_t> testingEncrypt(const std::vector<uint8_t> plaintext,
+                                        const std::vector<uint8_t> key,
+                                        const std::vector<uint8_t> iv);
+    std::vector<uint8_t> testingDecrypt(const std::vector<uint8_t> ciphertext,
+                                        const std::vector<uint8_t> key,
+                                        const std::vector<uint8_t> iv);
+    void                 setcb(CipherBase* impl);
 };
 } // namespace alcp::testing

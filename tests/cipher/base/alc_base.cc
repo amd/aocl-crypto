@@ -44,7 +44,7 @@ AlcpCipherBase::AlcpCipherBase(const alc_aes_mode_t mode,
     : m_mode{ mode }
     , m_iv{ iv }
 {
-    alcpInit(iv, key, key_len);
+    init(iv, key, key_len);
 }
 
 AlcpCipherBase::~AlcpCipherBase()
@@ -59,16 +59,16 @@ AlcpCipherBase::~AlcpCipherBase()
 }
 
 bool
-AlcpCipherBase::alcpInit(const uint8_t* iv,
-                         const uint8_t* key,
-                         const uint32_t key_len)
+AlcpCipherBase::init(const uint8_t* iv,
+                     const uint8_t* key,
+                     const uint32_t key_len)
 {
     this->m_iv = reinterpret_cast<const uint8_t*>(iv);
-    return alcpInit(key, key_len);
+    return init(key, key_len);
 }
 
 bool
-AlcpCipherBase::alcpInit(const uint8_t* key, const uint32_t key_len)
+AlcpCipherBase::init(const uint8_t* key, const uint32_t key_len)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -129,9 +129,7 @@ out:
 }
 
 bool
-AlcpCipherBase::encrypt(const uint8_t* plaintxt,
-                        const int      len,
-                        uint8_t*       ciphertxt)
+AlcpCipherBase::encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -148,9 +146,7 @@ AlcpCipherBase::encrypt(const uint8_t* plaintxt,
 }
 
 bool
-AlcpCipherBase::decrypt(const uint8_t* ciphertxt,
-                        const int      len,
-                        uint8_t*       plaintxt)
+AlcpCipherBase::decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -167,9 +163,9 @@ AlcpCipherBase::decrypt(const uint8_t* ciphertxt,
 }
 
 // AlcpCipherTesting class functions
-AlcpCipherTesting::AlcpCipherTesting(const alc_aes_mode_t mode,
-                                     const uint8_t*       iv)
-    : AlcpCipherBase(mode, iv)
+AlcpCipherTesting::AlcpCipherTesting(const alc_aes_mode_t       mode,
+                                     const std::vector<uint8_t> iv)
+    : AlcpCipherBase(mode, &iv[0])
 {}
 
 std::vector<uint8_t>
@@ -177,10 +173,9 @@ AlcpCipherTesting::testingEncrypt(const std::vector<uint8_t> plaintext,
                                   const std::vector<uint8_t> key,
                                   const std::vector<uint8_t> iv)
 {
-    if (alcpInit(&iv[0], &key[0], key.size() * 8)) {
+    if (init(&iv[0], &key[0], key.size() * 8)) {
         uint8_t* ciphertext = new uint8_t[plaintext.size()];
         encrypt(&plaintext[0], plaintext.size(), ciphertext);
-        std::vector<uint8_t> vt;
         return std::vector<uint8_t>(ciphertext, ciphertext + plaintext.size());
     }
     return {};
@@ -190,7 +185,7 @@ AlcpCipherTesting::testingDecrypt(const std::vector<uint8_t> ciphertext,
                                   const std::vector<uint8_t> key,
                                   const std::vector<uint8_t> iv)
 {
-    if (alcpInit(&iv[0], &key[0], key.size() * 8)) {
+    if (init(&iv[0], &key[0], key.size() * 8)) {
         uint8_t* plaintext = new uint8_t[ciphertext.size()];
         decrypt(&ciphertext[0], ciphertext.size(), plaintext);
         return std::vector<uint8_t>(plaintext, plaintext + ciphertext.size());

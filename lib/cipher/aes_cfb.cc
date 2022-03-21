@@ -52,7 +52,7 @@ Cfb::decrypt(const uint8_t* pCipherText,
         return err;
     }
 
-    // TODO: dispatch to REF
+    err = Rijndael::decrypt(pCipherText, pPlainText, len, pIv);
 
     return err;
 }
@@ -72,7 +72,7 @@ Cfb::encrypt(const uint8_t* pPlainText,
         return err;
     }
 
-    // TODO: Encrypt with reference code
+    err = Rijndael::encrypt(pPlainText, pCipherText, len, pIv);
 
     return err;
 }

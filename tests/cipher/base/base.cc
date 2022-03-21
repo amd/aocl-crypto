@@ -27,6 +27,9 @@
  */
 
 #include "base.hh"
+#ifdef USE_IPP
+#include "ipp_base.hh"
+#endif
 #include <iostream>
 
 namespace alcp::testing {
@@ -82,7 +85,7 @@ File::readChar(const int n)
     return c_buff;
 }
 
-/* Class Data
+// Class Data
 /**
  * @brief Construct a new Data Set:: Data Set object
  *
@@ -96,12 +99,12 @@ DataSet::DataSet(const std::string filename)
 }
 
 bool
-DataSet::readPtIvKeyCt(const int keybits)
+DataSet::readPtIvKeyCt(size_t keybits)
 {
     while (true) {
         if (readPtIvKeyCt() == false)
             return false;
-        else if (key.size() * 8 == keybits)
+        else if (m_key.size() * 8 == keybits)
             return true;
     }
 }
@@ -124,10 +127,10 @@ DataSet::readPtIvKeyCt()
     if ((pos1 == -1) || (pos2 == -1) || (pos3 == -1)) {
         return false;
     }
-    pt  = parseHexStrToBin(line.substr(0, pos1));
-    iv  = parseHexStrToBin(line.substr(pos1 + 1, pos2 - pos1 - 1));
-    key = parseHexStrToBin(line.substr(pos2 + 1, pos3 - pos2 - 1));
-    ct  = parseHexStrToBin(line.substr(pos3 + 1));
+    m_pt  = parseHexStrToBin(line.substr(0, pos1));
+    m_iv  = parseHexStrToBin(line.substr(pos1 + 1, pos2 - pos1 - 1));
+    m_key = parseHexStrToBin(line.substr(pos2 + 1, pos3 - pos2 - 1));
+    m_ct  = parseHexStrToBin(line.substr(pos3 + 1));
     lineno++;
     return true;
 }
@@ -154,8 +157,9 @@ DataSet::parseHexStrToBin(const std::string in)
 
     for (int i = 0; i < len; i += 2) {
         uint8_t val =
-            parseHexToNum(in.at(ind++)) << 4 | parseHexToNum(in.at(ind++));
+            parseHexToNum(in.at(ind)) << 4 | parseHexToNum(in.at(ind + 1));
         vector.push_back(val);
+        ind += 2;
     }
     return vector;
 }
@@ -182,25 +186,75 @@ DataSet::getLineNumber()
 std::vector<uint8_t>
 DataSet::getPt()
 {
-    return pt;
+    return m_pt;
 }
 
 std::vector<uint8_t>
 DataSet::getIv()
 {
-    return iv;
+    return m_iv;
 }
 
 std::vector<uint8_t>
 DataSet::getKey()
 {
-    return key;
+    return m_key;
 }
 
 std::vector<uint8_t>
 DataSet::getCt()
 {
-    return ct;
+    return m_ct;
+}
+
+// CipherTesting class functions
+CipherTesting::CipherTesting(CipherBase* impl)
+{
+    setcb(impl);
+}
+std::vector<uint8_t>
+CipherTesting::testingEncrypt(const std::vector<uint8_t> plaintext,
+                              const std::vector<uint8_t> key,
+                              const std::vector<uint8_t> iv)
+{
+    if (cb != nullptr) {
+        if (cb->init(&iv[0], &key[0], key.size() * 8)) {
+            uint8_t ciphertext[plaintext.size()];
+            cb->encrypt(&(plaintext[0]), plaintext.size(), ciphertext);
+            std::vector<uint8_t> vt =
+                std::vector<uint8_t>(ciphertext, ciphertext + plaintext.size());
+            return vt;
+        }
+    } else {
+        std::cout << "base.hh: CipherTesting: Implementation missing!"
+                  << std::endl;
+    }
+    return {};
+}
+
+std::vector<uint8_t>
+CipherTesting::testingDecrypt(const std::vector<uint8_t> ciphertext,
+                              const std::vector<uint8_t> key,
+                              const std::vector<uint8_t> iv)
+{
+    if (cb != nullptr) {
+        if (cb->init(&iv[0], &key[0], key.size() * 8)) {
+            uint8_t plaintext[ciphertext.size()];
+            cb->decrypt(&ciphertext[0], ciphertext.size(), plaintext);
+            std::vector<uint8_t> vt =
+                std::vector<uint8_t>(plaintext, plaintext + ciphertext.size());
+            return vt;
+        }
+    } else {
+        std::cout << "base.hh: CipherTesting: Implementation missing!"
+                  << std::endl;
+    }
+    return {};
+}
+void
+CipherTesting::setcb(CipherBase* impl)
+{
+    cb = impl;
 }
 
 } // namespace alcp::testing

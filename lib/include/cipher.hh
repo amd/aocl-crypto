@@ -38,25 +38,36 @@
 #include "alcp/cipher.h"
 
 #include "error.hh"
+#include "types.hh"
 
 namespace alcp {
 
 namespace cipher {
-    typedef alc_error_t(Operation)(const uint8_t* pSrc,
-                                   uint8_t*       pDst,
-                                   uint64_t       len,
-                                   const uint8_t* pIv) const;
+    typedef alc_error_t(Operation)(const Uint8* pSrc,
+                                   Uint8*       pDst,
+                                   Uint64       len,
+                                   const Uint8* pIv) const;
 
 } // namespace cipher
 
 class EncryptInterface
 {
   public:
-    virtual cipher::Operation encrypt = 0;
+    virtual alc_error_t encrypt(const Uint8* pSrc,
+                                Uint8*       pDst,
+                                Uint64       len,
+                                const Uint8* pIv) const = 0;
 
   protected:
     virtual ~EncryptInterface() {}
     EncryptInterface() {}
+
+    std::function<alc_error_t(const void*  rCipher,
+                              const Uint8* pSrc,
+                              Uint8*       pDst,
+                              Uint64       len,
+                              const Uint8* pIv)>
+        m_encrypt_fn;
 
   private:
 };
@@ -64,11 +75,21 @@ class EncryptInterface
 class DecryptInterface
 {
   public:
-    virtual cipher::Operation decrypt = 0;
+    virtual alc_error_t decrypt(const Uint8* pSrc,
+                                Uint8*       pDst,
+                                Uint64       len,
+                                const Uint8* pIv) const = 0;
 
   protected:
     virtual ~DecryptInterface() {}
     DecryptInterface() {}
+
+    std::function<alc_error_t(const void*  rCipher,
+                              const Uint8* pSrc,
+                              Uint8*       pDst,
+                              Uint64       len,
+                              const Uint8* pIv)>
+        m_decrypt_fn;
 
   private:
 };
@@ -137,7 +158,7 @@ class Cipher
         /*
          * FIXME: call cpuid::isAesniAvailable() initialize
          */
-        static bool s_aesni_available = true;
+        static bool s_aesni_available = false;
         return s_aesni_available;
     }
 
@@ -145,17 +166,17 @@ class Cipher
     alc_cipher_type_t m_cipher_type;
 };
 
-class BlockCipherOperation
+class BlockCipherInterface
     : public DecryptInterface
     , public EncryptInterface
 {
   public:
-    BlockCipherOperation() {}
+    BlockCipherInterface() {}
 };
 
 class BlockCipher
     : public Cipher
-    , public BlockCipherOperation
+    , public BlockCipherInterface
 {
   public:
     BlockCipher() {}
@@ -164,11 +185,13 @@ class BlockCipher
   private:
 };
 
+#if 0
 class StreamCipher : public Cipher
-//, public StreamCipherOperation
+                   , public StreamCipherInterfacd
 {
   public:
 };
+#endif
 
 namespace cipher {
     // Cipher& FindCipher(alc_cipher_info_t& cipherInfo) { return nullptr; }
