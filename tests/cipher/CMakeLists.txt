@@ -1,5 +1,7 @@
 find_package(GTest REQUIRED)
-find_package(ippcp)
+if(ENABLE_TESTS_IPP_API)
+    find_package(ippcp)
+endif(ENABLE_TESTS_IPP_API)
 
 # Include all the ALCP Headers
 INCLUDE_DIRECTORIES(
