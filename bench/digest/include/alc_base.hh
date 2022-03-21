@@ -26,12 +26,34 @@
  *
  */
 
-#include "benchmarks.hh"
+#include <alcp/alcp.h>
+#include <iostream>
+#include <malloc.h>
+#include <vector>
+#include "alcp/digest.h"
 
-int main(int argc, char** argv) {
-    ::benchmark::Initialize(&argc, argv);
-    if (::benchmark::ReportUnrecognizedArguments(argc, argv))
-        return 1;
-    ::benchmark::RunSpecifiedBenchmarks();
-    return 0;
-}
+#pragma once
+
+namespace alcp::bench {
+class AlcpDigestBase {
+    alc_digest_handle_t * m_handle;
+    _alc_sha2_mode        m_mode;
+    _alc_digest_type      m_type;
+    _alc_digest_len       m_sha_len;
+    uint8_t *             m_message;
+    uint8_t *             m_digest;
+
+    public:
+        AlcpDigestBase(_alc_sha2_mode   mode,
+                       _alc_digest_type type,
+                       _alc_digest_len  sha_len);
+ 
+        alc_error_t
+        digest_function(uint8_t  * src,
+                        uint64_t   src_size,
+                        uint8_t  * output,
+                        uint64_t   out_size);
+
+};
+
+} // namespace alcp::bench

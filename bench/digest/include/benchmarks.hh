@@ -1,77 +1,263 @@
-#ifndef BENCHMARKS_HH_
-#define BENCHMARKS_HH_
+/*
+ * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 3. Neither the name of the copyright holder nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
 
+#pragma once
 #include <alcp/alcp.h>
 #include <benchmark/benchmark.h>
 #include <iostream>
-#include "common.hh"
-#include "perf.hh"
-#include "conf.hh"
+#include "alc_base.hh"
+#include "base.hh"
+#include "string.h"
 
-/*conformance*/
-static void
-HashConformanceTest_SHA2_224(benchmark::State& state)
-{
-    RunHashConformanceTest(ALC_SHA2_224);
+using namespace alcp::bench;
+
+void
+Digest_SHA2_224(benchmark::State& state, uint64_t block_size) {
+    alc_error_t error;
+    uint8_t message[16384] = {0};
+    uint8_t digest[512] = {0};
+    for (auto _ : state) {
+        AlcpDigestBase DigestBase(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+        error = DigestBase.digest_function(message, block_size, digest, sizeof(digest));
+        if (alcp_is_error(error)) {
+            printf("Error in running benchmark");
+            return;
+        }
+    }
+    state.counters["Speed(Bytes/s)"] = benchmark::Counter(state.iterations() * block_size,
+                                                        benchmark::Counter::kIsRate);
+    state.counters["BlockSize(Bytes)"] = block_size;
     return;
 }
-BENCHMARK(HashConformanceTest_SHA2_224);
 
-static void
-HashConformanceTest_SHA2_256(benchmark::State& state)
-{
-    RunHashConformanceTest(ALC_SHA2_256);
+void
+Digest_SHA2_256(benchmark::State& state, uint64_t block_size) {
+    alc_error_t error;
+    uint8_t message[16384] = {0};
+    uint8_t digest[512] = {0};
+    for (auto _ : state) {
+        AlcpDigestBase DigestBase(ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
+        error = DigestBase.digest_function(message, block_size, digest, sizeof(digest));
+        if (alcp_is_error(error)) {
+            printf("Error in running benchmark");
+            return;
+        }
+    }
+    state.counters["Speed(Bytes/s)"] = benchmark::Counter(state.iterations() * block_size,
+                                                        benchmark::Counter::kIsRate);
+    state.counters["BlockSize(Bytes)"] = block_size;
     return;
 }
-BENCHMARK(HashConformanceTest_SHA2_256);
 
-static void
-HashConformanceTest_SHA2_384(benchmark::State& state)
-{
-    RunHashConformanceTest(ALC_SHA2_384);
+void
+Digest_SHA2_384(benchmark::State& state, uint64_t block_size) {
+    alc_error_t error;
+    uint8_t message[16384] = {0};
+    uint8_t digest[512] = {0};
+    for (auto _ : state) {
+        AlcpDigestBase DigestBase(ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
+        error = DigestBase.digest_function(message, block_size, digest, sizeof(digest));
+        if (alcp_is_error(error)) {
+            printf("Error in running benchmark");
+            return;
+        }
+    }
+    state.counters["Speed(Bytes/s)"] = benchmark::Counter(state.iterations() * block_size,
+                                                        benchmark::Counter::kIsRate);
+    state.counters["BlockSize(Bytes)"] = block_size;
     return;
 }
-BENCHMARK(HashConformanceTest_SHA2_384);
 
-static void
-HashConformanceTest_SHA2_512(benchmark::State& state)
-{
-    RunHashConformanceTest(ALC_SHA2_512);
+void
+Digest_SHA2_512(benchmark::State& state, uint64_t block_size) {
+    alc_error_t error;
+    uint8_t message[16384] = {0};
+    uint8_t digest[512] = {0};
+    for (auto _ : state) {
+        AlcpDigestBase DigestBase(ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
+        error = DigestBase.digest_function(message, block_size, digest, sizeof(digest));
+        if (alcp_is_error(error)) {
+            printf("Error in running benchmark");
+            return;
+        }
+    }
+    state.counters["Speed(Bytes/s)"] = benchmark::Counter(state.iterations() * block_size,
+                                                        benchmark::Counter::kIsRate);
+    state.counters["BlockSize(Bytes)"] = block_size;
     return;
 }
-BENCHMARK(HashConformanceTest_SHA2_512);
 
-/*perf tests*/
+
+/* add all your new benchmarks here */
 static void
-HashPerformanceTest_SHA2_224(benchmark::State& state)
-{
-    benchmark::DoNotOptimize(RunHashPerformanceTest(state, ALC_SHA2_224));
-    return;
+BENCH_SHA2_224_16(benchmark::State& state) {
+    Digest_SHA2_224(state, 16);
 }
-BENCHMARK(HashPerformanceTest_SHA2_224);
+BENCHMARK(BENCH_SHA2_224_16);
 
 static void
-HashPerformanceTest_SHA2_256(benchmark::State& state)
-{
-    benchmark::DoNotOptimize(RunHashPerformanceTest(state, ALC_SHA2_256));
-    return;
+BENCH_SHA2_224_64(benchmark::State& state) {
+    Digest_SHA2_224(state, 64);
 }
-BENCHMARK(HashPerformanceTest_SHA2_256);
+BENCHMARK(BENCH_SHA2_224_64);
 
 static void
-HashPerformanceTest_SHA2_384(benchmark::State& state)
-{
-    benchmark::DoNotOptimize(RunHashPerformanceTest(state, ALC_SHA2_384));
-    return;
+BENCH_SHA2_224_256(benchmark::State& state) {
+    Digest_SHA2_224(state, 256);
 }
-BENCHMARK(HashPerformanceTest_SHA2_384);
+BENCHMARK(BENCH_SHA2_224_256);
 
 static void
-HashPerformanceTest_SHA2_512(benchmark::State& state)
-{
-    benchmark::DoNotOptimize(RunHashPerformanceTest(state, ALC_SHA2_512));
-    return;
+BENCH_SHA2_224_1024(benchmark::State& state) {
+    Digest_SHA2_224(state, 1024);
 }
-BENCHMARK(HashPerformanceTest_SHA2_512);
+BENCHMARK(BENCH_SHA2_224_1024);
 
-#endif  //BENCHMARKS_HH
+static void
+BENCH_SHA2_224_8192(benchmark::State& state) {
+    Digest_SHA2_224(state, 8192);
+}
+BENCHMARK(BENCH_SHA2_224_8192);
+
+static void
+BENCH_SHA2_224_16384(benchmark::State& state) {
+    Digest_SHA2_224(state, 16384);
+}
+BENCHMARK(BENCH_SHA2_224_16384);
+
+/*256*/
+/* add all your new benchmarks here */
+static void
+BENCH_SHA2_256_16(benchmark::State& state) {
+    Digest_SHA2_256(state, 16);
+}
+BENCHMARK(BENCH_SHA2_256_16);
+
+static void
+BENCH_SHA2_256_64(benchmark::State& state) {
+    Digest_SHA2_256(state, 64);
+}
+BENCHMARK(BENCH_SHA2_256_64);
+
+static void
+BENCH_SHA2_256_256(benchmark::State& state) {
+    Digest_SHA2_256(state, 256);
+}
+BENCHMARK(BENCH_SHA2_256_256);
+
+static void
+BENCH_SHA2_256_1024(benchmark::State& state) {
+    Digest_SHA2_256(state, 1024);
+}
+BENCHMARK(BENCH_SHA2_256_1024);
+
+static void
+BENCH_SHA2_256_8192(benchmark::State& state) {
+    Digest_SHA2_256(state, 8192);
+}
+BENCHMARK(BENCH_SHA2_256_8192);
+
+static void
+BENCH_SHA2_256_16384(benchmark::State& state) {
+    Digest_SHA2_256(state, 16384);
+}
+BENCHMARK(BENCH_SHA2_256_16384);
+
+/*384*/
+static void
+BENCH_SHA2_384_16(benchmark::State& state) {
+    Digest_SHA2_384(state, 16);
+}
+BENCHMARK(BENCH_SHA2_384_16);
+
+static void
+BENCH_SHA2_384_64(benchmark::State& state) {
+    Digest_SHA2_384(state, 64);
+}
+BENCHMARK(BENCH_SHA2_384_64);
+
+static void
+BENCH_SHA2_384_256(benchmark::State& state) {
+    Digest_SHA2_384(state, 256);
+}
+BENCHMARK(BENCH_SHA2_384_256);
+
+static void
+BENCH_SHA2_384_1024(benchmark::State& state) {
+    Digest_SHA2_384(state, 1024);
+}
+BENCHMARK(BENCH_SHA2_384_1024);
+
+static void
+BENCH_SHA2_384_8192(benchmark::State& state) {
+    Digest_SHA2_384(state, 8192);
+}
+BENCHMARK(BENCH_SHA2_384_8192);
+
+static void
+BENCH_SHA2_384_16384(benchmark::State& state) {
+    Digest_SHA2_384(state, 16384);
+}
+BENCHMARK(BENCH_SHA2_384_16384);
+
+/*SHA512*/
+static void
+BENCH_SHA2_512_16(benchmark::State& state) {
+    Digest_SHA2_512(state, 16);
+}
+BENCHMARK(BENCH_SHA2_512_16);
+
+static void
+BENCH_SHA2_512_64(benchmark::State& state) {
+    Digest_SHA2_512(state, 64);
+}
+BENCHMARK(BENCH_SHA2_512_64);
+
+static void
+BENCH_SHA2_512_256(benchmark::State& state) {
+    Digest_SHA2_512(state, 256);
+}
+BENCHMARK(BENCH_SHA2_512_256);
+
+static void
+BENCH_SHA2_512_1024(benchmark::State& state) {
+    Digest_SHA2_512(state, 1024);
+}
+BENCHMARK(BENCH_SHA2_512_1024);
+
+static void
+BENCH_SHA2_512_8192(benchmark::State& state) {
+    Digest_SHA2_512(state, 8192);
+}
+BENCHMARK(BENCH_SHA2_512_8192);
+
+static void
+BENCH_SHA2_512_16384(benchmark::State& state) {
+    Digest_SHA2_512(state, 16384);
+}
+BENCHMARK(BENCH_SHA2_512_16384);

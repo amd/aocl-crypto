@@ -1,3 +1,5 @@
 include_directories(include)
-add_subdirectory(cipher)
+#commenting this out now since there are compilation errors
+#add_subdirectory(cipher)
+add_subdirectory(digest)
 

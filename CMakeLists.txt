@@ -44,22 +44,32 @@ IF (ALCP_ENABLE_DOCS)
 	ADD_SUBDIRECTORY(docs)
 ENDIF()
 
+# building examples
 IF (ALCP_ENABLE_EXAMPLES)
+	IF (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/examples)
+		MESSAGE(FATAL_ERROR "Examples dir not found!")
+        ENDIF()
 	ADD_SUBDIRECTORY(examples)
-	MESSAGE(STATUS "Adding Examples to the build")
+	MESSAGE(STATUS "Building examples")
 ENDIF()
 
+# building tests
 IF (ALCP_ENABLE_TESTS)
 	ENABLE_TESTING()
+	IF (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/tests)
+                MESSAGE(FATAL_ERROR "Tests folder not found!")
+	ENDIF()
 	ADD_SUBDIRECTORY(tests)
+  MESSAGE(STATUS "Enabling Tests")
 ENDIF()
 
-IF (ALCP_BENCH)
+# building test bench
+IF (ALCP_ENABLE_BENCH)
 	IF (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/bench)
-		MESSAGE(FATAL_ERROR "BENCHMARKS NOT SUPPORTED")
-	ENDIF()
-	ENABLE_TESTING()
+                MESSAGE(FATAL_ERROR "Bench folder not found!")
+        ENDIF()
 	ADD_SUBDIRECTORY(bench)
+  MESSAGE(STATUS "Enabling Benchmarks")
 ENDIF()
 
 #INSTALL(TARGETS ALCP
