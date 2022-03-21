@@ -57,13 +57,13 @@ AlcpDigestBase::AlcpDigestBase(_alc_sha2_mode   mode,
 }
 
 alc_error_t
-AlcpDigestBase::digest_function(uint8_t * pSrc,
+AlcpDigestBase::digest_function(const std::vector<uint8_t> pSrc,
                                 uint64_t  src_size,
                                 uint8_t * pOutput,
                                 uint64_t  out_size)
 {
     alc_error_t err;
-    err = alcp_digest_update(m_handle, pSrc, src_size);
+    err = alcp_digest_update(m_handle, &pSrc[0], src_size);
     if (alcp_is_error(err)) {
         printf("Digest update failed\n");
         return err;
@@ -82,6 +82,18 @@ AlcpDigestBase::digest_function(uint8_t * pSrc,
     }
     alcp_digest_finish(m_handle);
     return err;
+}
+
+/* Hash value to string */
+void
+AlcpDigestBase::hash_to_string(char * output_string,
+                               const uint8_t * hash,
+                               int sha_len)
+{
+    for (int i = 0; i < sha_len/8; i++) {
+        output_string += sprintf(output_string, "%02x", hash[i]);
+    }
+    output_string[(sha_len/8)*2 + 1] = '\0';
 }
 
 } // namespace alcp::bench

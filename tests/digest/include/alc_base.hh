@@ -49,10 +49,16 @@ class AlcpDigestBase {
                        _alc_digest_len  sha_len);
  
         alc_error_t
-        digest_function(uint8_t  * src,
+        digest_function(const std::vector<uint8_t> src,
                         uint64_t   src_size,
-                        uint8_t  * output,
+                        uint8_t *  output,
                         uint64_t   out_size);
+
+        /* Hash value to string */
+        void
+        hash_to_string(char * output_string,
+                       const uint8_t * hash,
+                       int sha_len);
 
 };
 
