@@ -122,7 +122,7 @@ class Cfb final : public Aes
     virtual alc_error_t encrypt(const uint8_t* pPlainText,
                                 uint8_t*       pCipherText,
                                 uint64_t       len,
-                                const uint8_t* pIv) const override final;
+                                const uint8_t* pIv) const final;
 
     /**
      * \brief   CFB Decrypt Operation

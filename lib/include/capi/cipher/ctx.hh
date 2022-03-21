@@ -54,23 +54,4 @@ struct Context
     alc_error_t (*finish)(const void*);
 };
 
-struct ContextR
-{
-    std::function<alc_error_t(const void*  rCipher,
-                              const Uint8* pSrc,
-                              Uint8*       pDst,
-                              Uint64       len,
-                              const Uint8* pIv)>
-        decrypt;
-
-    std::function<alc_error_t(const void*  rCipher,
-                              const Uint8* pSrc,
-                              Uint8*       pDst,
-                              Uint64       len,
-                              const Uint8* pIv)>
-        encrypt;
-
-    std::function<alc_error_t(const void* rCipher)> finish;
-};
-
 } // namespace alcp::cipher

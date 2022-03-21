@@ -86,9 +86,13 @@ BitsToBlockSize(int iVal)
 class Rijndael::Impl
 {
     void subBytes(Uint8 state[][4]) noexcept;
+
     void shiftRows(Uint8 state[][4]) noexcept;
     void mixColumns(Uint8 state[][4]) noexcept;
+
+    void invShiftRows(Uint8 state[][4]) noexcept;
     void invMixColumns(Uint8 state[][4]) noexcept;
+
     void addRoundKey(Uint8 state[][4], Uint8 k[][4]) noexcept;
 
 #define RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
@@ -111,6 +115,16 @@ class Rijndael::Impl
     const Uint8* getEncryptKeys() const { return m_enc_key; }
     const Uint8* getDecryptKeys() const { return m_dec_key; }
     void         expandKeys(const Uint8* pUserKey) noexcept;
+
+    alc_error_t encrypt(const uint8_t* pSrc,
+                        uint8_t*       pDst,
+                        uint64_t       len,
+                        const uint8_t* pIv) const;
+
+    alc_error_t decrypt(const uint8_t* pSrc,
+                        uint8_t*       pDst,
+                        uint64_t       len,
+                        const uint8_t* pIv) const;
 
     void setUp(const alc_key_info_t& rKeyInfo)
     {
@@ -239,6 +253,23 @@ __ffmul(Uint8 a, Uint8 b)
     return res;
 }
 
+static inline Uint32
+InvMixColumns(const Uint32& val)
+{
+    /* FIXME */
+    return val;
+}
+
+static inline Uint32
+SubBytes(const Uint32& val)
+{
+    using namespace utils;
+    return MakeWord(GetSbox(GetByte(val, 0)),
+                    GetSbox(GetByte(val, 1)),
+                    GetSbox(GetByte(val, 2)),
+                    GetSbox(GetByte(val, 3)));
+}
+
 void
 Rijndael::Impl::subBytes(Uint8 state[][4]) noexcept
 {
@@ -261,6 +292,77 @@ Rijndael::Impl::shiftRows(Uint8 state[][4]) noexcept
             state[r][c] = t[c];
         }
     }
+}
+
+/*
+ * FIPS-197 Section 5.1 Psuedo-code for Encryption
+ *
+ * Cipher(byte in[4*Nb], byte out[4*Nb], word w[Nb*(Nr+1)])
+ *  begin
+ *
+ *       byte state[4,Nb]
+ *
+ *       state = in
+ *
+ *       AddRoundKey(state, w[0, Nb-1]) // See Sec. 5.1.4
+ *
+ *       for round = 1 step 1 to Nr–1
+ *           SubBytes(state) // See Sec. 5.1.1
+ *           ShiftRows(state) // See Sec. 5.1.2
+ *           MixColumns(state) // See Sec. 5.1.3
+ *           AddRoundKey(state, w[round*Nb, (round+1)*Nb-1])
+ *       end for
+ *
+ *       SubBytes(state)
+ *       ShiftRows(state)
+ *       AddRoundKey(state, w[Nr*Nb, (Nr+1)*Nb-1])
+ *
+ *       out = state
+ *
+ *  end
+ */
+alc_error_t
+Rijndael::Impl::encrypt(const uint8_t* pSrc,
+                        uint8_t*       pDst,
+                        uint64_t       len,
+                        const uint8_t* pIv) const
+{
+    return ALC_ERROR_NONE;
+}
+
+/*
+ * FIPS-197 Section 5.3 Psuedo-code for Decryption
+ * InvCipher(byte in[4*Nb], byte out[4*Nb], word w[Nb*(Nr+1)])
+ *  begin
+ *
+ *   byte state[4,Nb]
+ *
+ *   state = in
+ *
+ *   AddRoundKey(state, w[Nr*Nb, (Nr+1)*Nb-1]) // See Sec. 5.1.4
+ *
+ *   for round = Nr-1 step -1 downto 1
+ *         InvShiftRows(state) // See Sec. 5.3.1
+ *         InvSubBytes(state) // See Sec. 5.3.2
+ *         AddRoundKey(state, w[round*Nb, (round+1)*Nb-1])
+ *         InvMixColumns(state) // See Sec. 5.3.3
+ *   end for
+ *
+ *   InvShiftRows(state)
+ *   InvSubBytes(state)
+ *   AddRoundKey(state, w[0, Nb-1])
+ *
+ *   out = state
+ *
+ *  end
+ */
+alc_error_t
+Rijndael::Impl::decrypt(const uint8_t* pSrc,
+                        uint8_t*       pDst,
+                        uint64_t       len,
+                        const uint8_t* pIv) const
+{
+    return ALC_ERROR_NONE;
 }
 
 #define BYTE0_WORD(x) utils::BytesToWord<Uint8>((x), 0, 0, 0)
@@ -340,8 +442,6 @@ Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
             key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]);
     }
 
-    i = nk;
-
     for (i = nk; i < nb * (nr + 1); i++) {
         Uint32 temp = p_enc_key32[i - 1];
         if (i % nk == 0) {
@@ -351,7 +451,7 @@ Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
                             GetSbox(GetByte(temp, 0)));
 
             temp ^= *rtbl++;
-        } else if (nk > 6 && i % nk == 4) {
+        } else if (nk > 6 && (i % nk == 4)) {
             temp = MakeWord(GetSbox(GetByte(temp, 0)),
                             GetSbox(GetByte(temp, 1)),
                             GetSbox(GetByte(temp, 2)),
@@ -361,7 +461,13 @@ Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
         p_enc_key32[i] = p_enc_key32[i - nk] ^ temp;
     }
 
-    utils::CopyBlock(pDecKey, pEncKey, nb * (nr + 1));
+    utils::CopyBlock(pDecKey, pEncKey, nk * nr);
+
+    auto p_dec_key32 = reinterpret_cast<Uint32*>(pDecKey);
+
+    for (i = nk; i < nb * (nr + 1); i++) {
+        p_dec_key32[i] = InvMixColumns(p_enc_key32[i]);
+    }
 }
 
 Rijndael::Rijndael()
@@ -401,11 +507,16 @@ Rijndael::setKey(const Uint8* pUserKey, Uint64 len)
 
 void
 Rijndael::setDecryptKey(const Uint8*, Uint64)
-{}
+{
+    NotImplemented();
+}
+
 
 void
 Rijndael::setEncryptKey(const Uint8*, Uint64)
-{}
+{
+    NotImplemented();
+}
 
 Uint32
 Rijndael::getNr() const
@@ -424,6 +535,24 @@ Uint32
 Rijndael::getRounds() const
 {
     return pImpl()->getRounds();
+}
+
+alc_error_t
+Rijndael::encrypt(const Uint8* pPlaintxt,
+                  Uint8*       pCihpertxt,
+                  Uint64       len,
+                  const Uint8* pIv) const
+{
+    return pImpl()->encrypt(pPlaintxt, pCihpertxt, len, pIv);
+}
+
+alc_error_t
+Rijndael::decrypt(const Uint8* pCihpertxt,
+                  Uint8*       pPlaintxt,
+                  Uint64       len,
+                  const Uint8* pIv) const
+{
+    return pImpl()->decrypt(pCihpertxt, pPlaintxt, len, pIv);
 }
 
 } // namespace alcp::cipher

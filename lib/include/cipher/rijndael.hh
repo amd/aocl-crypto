@@ -43,19 +43,19 @@ class Rijndael : public alcp::BlockCipher
 //, public Algorithm
 {
   public:
-    static uint32 constexpr cAlignment     = 16;
-    static uint32 constexpr cAlignmentWord = cAlignment / utils::BytesPerWord;
+    static Uint32 constexpr cAlignment     = 16;
+    static Uint32 constexpr cAlignmentWord = cAlignment / utils::BytesPerWord;
 
-    static uint32 constexpr cMinKeySizeBits = 128;
-    static uint32 constexpr cMaxKeySizeBits = 256;
-    static uint32 constexpr cMinKeySize = cMinKeySizeBits / utils::BitsPerByte;
-    static uint32 constexpr cMaxKeySize = cMaxKeySizeBits / utils::BitsPerByte;
+    static Uint32 constexpr cMinKeySizeBits = 128;
+    static Uint32 constexpr cMaxKeySizeBits = 256;
+    static Uint32 constexpr cMinKeySize = cMinKeySizeBits / utils::BitsPerByte;
+    static Uint32 constexpr cMaxKeySize = cMaxKeySizeBits / utils::BitsPerByte;
 
-    static uint32 constexpr cBlockSizeBits = 128;
-    static uint32 constexpr cBlockSize = cBlockSizeBits / utils::BitsPerByte;
-    static uint32 constexpr cBlockSizeWord = cBlockSize / utils::BytesPerWord;
+    static Uint32 constexpr cBlockSizeBits = 128;
+    static Uint32 constexpr cBlockSize = cBlockSizeBits / utils::BitsPerByte;
+    static Uint32 constexpr cBlockSizeWord = cBlockSize / utils::BytesPerWord;
 
-    static uint32 constexpr cMaxRounds = 14;
+    static Uint32 constexpr cMaxRounds = 14;
 
   private:
     // non-movable:
@@ -71,23 +71,33 @@ class Rijndael : public alcp::BlockCipher
      * FIPS-197 compatible getters
      */
     /* Nk - number of words in key128/key192/key256 */
-    uint32 getNk() const;
+    Uint32 getNk() const;
 
     /* Nr - Number of rounds */
-    uint32 getNr() const;
+    Uint32 getNr() const;
 
     /* Nb - No of words in a block (block is always 128-bits) */
-    uint32 getNb() const { return cBlockSizeWord; };
+    Uint32 getNb() const { return cBlockSizeWord; };
 
   public:
-    uint32       getRounds() const;
-    uint32       getKeySize() const;
-    const uint8* getEncryptKeys() const;
-    const uint8* getDecryptKeys() const;
+    Uint32       getRounds() const;
+    Uint32       getKeySize() const;
+    const Uint8* getEncryptKeys() const;
+    const Uint8* getDecryptKeys() const;
 
-    virtual void setKey(const uint8* pUserKey, uint64 len);
-    virtual void setEncryptKey(const uint8* pEncKey, uint64 len);
-    virtual void setDecryptKey(const uint8* pDecKey, uint64 len);
+    virtual void setKey(const Uint8* pUserKey, Uint64 len);
+    virtual void setEncryptKey(const Uint8* pEncKey, Uint64 len);
+    virtual void setDecryptKey(const Uint8* pDecKey, Uint64 len);
+
+    virtual alc_error_t encrypt(const Uint8* pSrc,
+                                Uint8*       pDst,
+                                Uint64       len,
+                                const Uint8* pIv) const override;
+
+    virtual alc_error_t decrypt(const Uint8* pSrc,
+                                Uint8*       pDst,
+                                Uint64       len,
+                                const Uint8* pIv) const override;
 
   protected:
     Rijndael();
