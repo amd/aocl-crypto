@@ -25,22 +25,36 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#pragma once
 
-#include "benchmarks.hh"
-#include "gbench_base.hh"
-
-int
-main(int argc, char** argv)
+static bool verbose = false;
+static bool useipp  = false;
+void
+parseArgs(int* argc, char** argv)
 {
-    parseArgs(&argc, argv);
-#ifndef USE_IPP
-    if (useipp) {
-        std::cout << "Error IPP not found defaulting to ALCP" << std::endl;
+    std::string currentArg;
+    const int   _argc = *argc;
+    if (*argc > 1) {
+        for (int i = 1; i < _argc; i++) {
+            currentArg = std::string(argv[i]);
+            if ((currentArg == std::string("--help"))
+                || (currentArg == std::string("-h"))) {
+                std::cout << std::endl
+                          << "Additional help for microbenches" << std::endl;
+                std::cout << "Append these after gtest arguments only"
+                          << std::endl;
+                std::cout << "--verbose or -v per line status." << std::endl;
+                std::cout << "--use-ipp or -i force IPP use in testing."
+                          << std::endl;
+            } else if ((currentArg == std::string("--verbose"))
+                       || (currentArg == std::string("-v"))) {
+                verbose = true;
+                *argc -= 1;
+            } else if ((currentArg == std::string("--use-ipp"))
+                       || (currentArg == std::string("-i"))) {
+                useipp = true;
+                *argc -= 1;
+            }
+        }
     }
-#endif
-    ::benchmark::Initialize(&argc, argv);
-    if (::benchmark::ReportUnrecognizedArguments(argc, argv))
-        return 1;
-    ::benchmark::RunSpecifiedBenchmarks();
-    return 0;
 }

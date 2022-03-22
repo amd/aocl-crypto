@@ -29,6 +29,10 @@
 #pragma once
 #include "alc_base.hh"
 #include "base.hh"
+#ifdef USE_IPP
+#include "ipp_base.hh"
+#endif
+#include "gbench_base.hh"
 #include "string.h"
 #include <alcp/alcp.h>
 #include <benchmark/benchmark.h>
@@ -39,13 +43,21 @@ using namespace alcp::bench;
 void
 Digest_SHA2_224(benchmark::State& state, uint64_t block_size)
 {
-    alc_error_t error;
-    uint8_t     message[16384] = { 0 };
-    uint8_t     digest[512]    = { 0 };
+    alc_error_t    error;
+    uint8_t        message[16384] = { 0 };
+    uint8_t        digest[512]    = { 0 };
+    AlcpDigestBase adb(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+    DigestBase*    db = &adb;
+#ifdef USE_IPP
+    IPPDigestBase idb(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+    if (useipp) {
+        db = &idb;
+    }
+#endif
     for (auto _ : state) {
-        AlcpDigestBase db(
-            ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
-        error = db.digest_function(message, block_size, digest, sizeof(digest));
+        error =
+            db->digest_function(message, block_size, digest, sizeof(digest));
+        db->init(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
         if (alcp_is_error(error)) {
             printf("Error in running benchmark");
             return;
@@ -60,13 +72,21 @@ Digest_SHA2_224(benchmark::State& state, uint64_t block_size)
 void
 Digest_SHA2_256(benchmark::State& state, uint64_t block_size)
 {
-    alc_error_t error;
-    uint8_t     message[16384] = { 0 };
-    uint8_t     digest[512]    = { 0 };
+    alc_error_t    error;
+    uint8_t        message[16384] = { 0 };
+    uint8_t        digest[512]    = { 0 };
+    AlcpDigestBase adb(ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
+    DigestBase*    db = &adb;
+#ifdef USE_IPP
+    IPPDigestBase idb(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+    if (useipp) {
+        db = &idb;
+    }
+#endif
     for (auto _ : state) {
-        AlcpDigestBase db(
-            ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
-        error = db.digest_function(message, block_size, digest, sizeof(digest));
+        error =
+            db->digest_function(message, block_size, digest, sizeof(digest));
+        db->init(ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
         if (alcp_is_error(error)) {
             printf("Error in running benchmark");
             return;
@@ -81,13 +101,21 @@ Digest_SHA2_256(benchmark::State& state, uint64_t block_size)
 void
 Digest_SHA2_384(benchmark::State& state, uint64_t block_size)
 {
-    alc_error_t error;
-    uint8_t     message[16384] = { 0 };
-    uint8_t     digest[512]    = { 0 };
+    alc_error_t    error;
+    uint8_t        message[16384] = { 0 };
+    uint8_t        digest[512]    = { 0 };
+    AlcpDigestBase adb(ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
+    DigestBase*    db = &adb;
+#ifdef USE_IPP
+    IPPDigestBase idb(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+    if (useipp) {
+        db = &idb;
+    }
+#endif
     for (auto _ : state) {
-        AlcpDigestBase db(
-            ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
-        error = db.digest_function(message, block_size, digest, sizeof(digest));
+        error =
+            db->digest_function(message, block_size, digest, sizeof(digest));
+        db->init(ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
         if (alcp_is_error(error)) {
             printf("Error in running benchmark");
             return;
@@ -102,13 +130,21 @@ Digest_SHA2_384(benchmark::State& state, uint64_t block_size)
 void
 Digest_SHA2_512(benchmark::State& state, uint64_t block_size)
 {
-    alc_error_t error;
-    uint8_t     message[16384] = { 0 };
-    uint8_t     digest[512]    = { 0 };
+    alc_error_t    error;
+    uint8_t        message[16384] = { 0 };
+    uint8_t        digest[512]    = { 0 };
+    AlcpDigestBase adb(ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
+    DigestBase*    db = &adb;
+#ifdef USE_IPP
+    IPPDigestBase idb(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+    if (useipp) {
+        db = &idb;
+    }
+#endif
     for (auto _ : state) {
-        AlcpDigestBase db(
-            ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
-        error = db.digest_function(message, block_size, digest, sizeof(digest));
+        error =
+            db->digest_function(message, block_size, digest, sizeof(digest));
+        db->init(ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
         if (alcp_is_error(error)) {
             printf("Error in running benchmark");
             return;

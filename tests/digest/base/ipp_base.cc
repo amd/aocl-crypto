@@ -61,6 +61,7 @@ IPPDigestBase::init()
         switch (m_mode) {
             case ALC_SHA2_224:
                 ippsHashInit(m_handle, ippHashAlg_SHA224);
+                // std::cout << "Chosen SHA224" << std::endl;
                 break;
             case ALC_SHA2_256:
                 ippsHashInit(m_handle, ippHashAlg_SHA256);
