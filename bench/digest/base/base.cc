@@ -94,7 +94,6 @@ DataSet::DataSet(const std::string filename)
     return;
 }
 
-
 bool
 DataSet::readMsgDigest()
 {
@@ -108,13 +107,13 @@ DataSet::readMsgDigest()
     if (line.empty() || line == "\n") {
         return false;
     }
-    int pos1 = line.find(",");           // End of Msg
+    int pos1 = line.find(","); // End of Msg
     if ((pos1 == -1)) {
-        printf ("Error in parsing csv\n");
+        printf("Error in parsing csv\n");
         return false;
     }
-    Message  = parseHexStrToBin(line.substr(0, pos1));
-    Digest = parseHexStrToBin(line.substr(pos1 + 1));
+    Message = parseHexStrToBin(line.substr(0, pos1));
+    Digest  = parseHexStrToBin(line.substr(pos1 + 1));
     lineno++;
     return true;
 }

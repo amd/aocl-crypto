@@ -61,7 +61,6 @@ IPPDigestBase::init()
         switch (m_mode) {
             case ALC_SHA2_224:
                 ippsHashInit(m_handle, ippHashAlg_SHA224);
-                std::cout << "Chosen SHA224" << std::endl;
                 break;
             case ALC_SHA2_256:
                 ippsHashInit(m_handle, ippHashAlg_SHA256);
@@ -96,12 +95,12 @@ IPPDigestBase::init(_alc_sha2_mode   mode,
 }
 
 alc_error_t
-IPPDigestBase::digest_function(const std::vector<uint8_t> in,
-                               uint64_t                   in_size,
-                               uint8_t*                   out,
-                               uint64_t                   out_size)
+IPPDigestBase::digest_function(const uint8_t* in,
+                               uint64_t       in_size,
+                               uint8_t*       out,
+                               uint64_t       out_size)
 {
-    ippsHashUpdate(&(in.at(0)), in.size(), m_handle);
+    ippsHashUpdate(in, in_size, m_handle);
     ippsHashFinal(out, m_handle);
     return ALC_ERROR_NONE;
 }
