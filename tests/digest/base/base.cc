@@ -94,7 +94,6 @@ DataSet::DataSet(const std::string filename)
     return;
 }
 
-
 bool
 DataSet::readMsgDigest()
 {
@@ -108,13 +107,13 @@ DataSet::readMsgDigest()
     if (line.empty() || line == "\n") {
         return false;
     }
-    int pos1 = line.find(",");           // End of Msg
+    int pos1 = line.find(","); // End of Msg
     if ((pos1 == -1)) {
-        printf ("Error in parsing csv\n");
+        printf("Error in parsing csv\n");
         return false;
     }
-    Message  = parseHexStrToBin(line.substr(0, pos1));
-    Digest = parseHexStrToBin(line.substr(pos1 + 1));
+    Message = line.substr(0, pos1);
+    Digest  = parseHexStrToBin(line.substr(pos1 + 1));
     lineno++;
     return true;
 }
@@ -135,8 +134,17 @@ DataSet::parseHexToNum(const unsigned char c)
 std::vector<uint8_t>
 DataSet::parseHexStrToBin(const std::string in)
 {
-    std::vector<uint8_t> vec(in.begin(), in.end());
-    return vec;
+    std::vector<uint8_t> vector;
+    int                  len = in.size();
+    int                  ind = 0;
+
+    for (int i = 0; i < len; i += 2) {
+        uint8_t val =
+            parseHexToNum(in.at(ind)) << 4 | parseHexToNum(in.at(ind + 1));
+        vector.push_back(val);
+        ind += 2;
+    }
+    return vector;
 }
 
 std::string
@@ -158,7 +166,7 @@ DataSet::getLineNumber()
     return lineno;
 }
 
-std::vector<uint8_t>
+std::string
 DataSet::getMessage()
 {
     return Message;

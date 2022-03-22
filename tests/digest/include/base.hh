@@ -58,7 +58,8 @@ class DataSet : private File
 {
   private:
     std::string          line = "";
-    std::vector<uint8_t> Message, Digest;
+    std::vector<uint8_t> Digest;
+    std::string          Message;
     // First line is skipped, linenum starts from 1
     int lineno = 1;
 
@@ -75,7 +76,7 @@ class DataSet : private File
     // To print which line in dataset failed
     int getLineNumber();
     /* fetch Message / Digest */
-    std::vector<uint8_t> getMessage();
+    std::string          getMessage();
     std::vector<uint8_t> getDigest();
 };
 class DigestBase
@@ -85,10 +86,10 @@ class DigestBase
                              _alc_digest_type type,
                              _alc_digest_len  sha_len)      = 0;
     virtual bool        init()                             = 0;
-    virtual alc_error_t digest_function(const std::vector<uint8_t> src,
-                                        uint64_t                   src_size,
-                                        uint8_t*                   output,
-                                        uint64_t out_size) = 0;
+    virtual alc_error_t digest_function(const uint8_t* src,
+                                        uint64_t       src_size,
+                                        uint8_t*       output,
+                                        uint64_t       out_size) = 0;
     virtual void        hash_to_string(char*          output_string,
                                        const uint8_t* hash,
                                        int            sha_len)        = 0;

@@ -76,13 +76,13 @@ AlcpDigestBase::init(_alc_sha2_mode   mode,
 }
 
 alc_error_t
-AlcpDigestBase::digest_function(const std::vector<uint8_t> pSrc,
-                                size_t                     src_size,
-                                uint8_t*                   pOutput,
-                                uint64_t                   out_size)
+AlcpDigestBase::digest_function(const uint8_t* pSrc,
+                                size_t         src_size,
+                                uint8_t*       pOutput,
+                                uint64_t       out_size)
 {
     alc_error_t err;
-    err = alcp_digest_update(m_handle, &pSrc[0], src_size);
+    err = alcp_digest_update(m_handle, pSrc, src_size);
     if (alcp_is_error(err)) {
         printf("Digest update failed\n");
         return err;
