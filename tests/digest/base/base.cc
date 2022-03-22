@@ -112,7 +112,10 @@ DataSet::readMsgDigest()
         printf("Error in parsing csv\n");
         return false;
     }
-    Message = line.substr(0, pos1);
+    std::string          messageStr = line.substr(0, pos1);
+    std::vector<uint8_t> messageVect(messageStr.c_str(),
+                                     (messageStr.c_str() + messageStr.size()));
+    Message = messageVect;
     Digest  = parseHexStrToBin(line.substr(pos1 + 1));
     lineno++;
     return true;
@@ -166,7 +169,7 @@ DataSet::getLineNumber()
     return lineno;
 }
 
-std::string
+std::vector<uint8_t>
 DataSet::getMessage()
 {
     return Message;

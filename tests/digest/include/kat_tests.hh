@@ -40,19 +40,16 @@ using namespace alcp::bench;
 /* Add all the KAT tests here */
 TEST(DIGEST_SHA2, KAT_224)
 {
-    alc_error_t error;
-    DataSet     ds = DataSet("dataset_SHA_224.csv");
+    alc_error_t          error;
+    DataSet              ds = DataSet("dataset_SHA_224.csv");
+    std::vector<uint8_t> digest(28, 0);
     while (ds.readMsgDigest()) {
         AlcpDigestBase adb(
             ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
-
-        std::vector<uint8_t> digest(28, 0);
-
-        error = adb.digest_function(
-            reinterpret_cast<const uint8_t*>(ds.getMessage().c_str()),
-            ds.getMessage().size(),
-            &(digest[0]),
-            digest.size());
+        error = adb.digest_function(&(ds.getMessage()[0]),
+                                    ds.getMessage().size(),
+                                    &(digest[0]),
+                                    digest.size());
         if (alcp_is_error(error)) {
             printf("Error");
             return;
@@ -68,19 +65,16 @@ TEST(DIGEST_SHA2, KAT_224)
 /* SHA256 */
 TEST(DIGEST_SHA2, KAT_256)
 {
-    alc_error_t error;
-    DataSet     ds = DataSet("dataset_SHA_256.csv");
+    alc_error_t          error;
+    DataSet              ds = DataSet("dataset_SHA_256.csv");
+    std::vector<uint8_t> digest(32, 0);
     while (ds.readMsgDigest()) {
         AlcpDigestBase adb(
             ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
-
-        std::vector<uint8_t> digest(32, 0);
-
-        error = adb.digest_function(
-            reinterpret_cast<const uint8_t*>(ds.getMessage().c_str()),
-            ds.getMessage().size(),
-            &(digest[0]),
-            digest.size());
+        error = adb.digest_function(&(ds.getMessage()[0]),
+                                    ds.getMessage().size(),
+                                    &(digest[0]),
+                                    digest.size());
         if (alcp_is_error(error)) {
             printf("Error");
             return;
@@ -96,19 +90,16 @@ TEST(DIGEST_SHA2, KAT_256)
 /* SHA384 */
 TEST(DIGEST_SHA2, KAT_384)
 {
-    alc_error_t error;
-    DataSet     ds = DataSet("dataset_SHA_384.csv");
+    alc_error_t          error;
+    DataSet              ds = DataSet("dataset_SHA_384.csv");
+    std::vector<uint8_t> digest(48, 0);
     while (ds.readMsgDigest()) {
         AlcpDigestBase adb(
             ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
-
-        std::vector<uint8_t> digest(48, 0);
-
-        error = adb.digest_function(
-            reinterpret_cast<const uint8_t*>(ds.getMessage().c_str()),
-            ds.getMessage().size(),
-            &(digest[0]),
-            digest.size());
+        error = adb.digest_function(&(ds.getMessage()[0]),
+                                    ds.getMessage().size(),
+                                    &(digest[0]),
+                                    digest.size());
         if (alcp_is_error(error)) {
             printf("Error");
             return;
@@ -124,19 +115,16 @@ TEST(DIGEST_SHA2, KAT_384)
 /* SHA512 */
 TEST(DIGEST_SHA2, KAT_512)
 {
-    alc_error_t error;
-    DataSet     ds = DataSet("dataset_SHA_512.csv");
+    alc_error_t          error;
+    DataSet              ds = DataSet("dataset_SHA_512.csv");
+    std::vector<uint8_t> digest(64, 0);
     while (ds.readMsgDigest()) {
         AlcpDigestBase adb(
             ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
-
-        std::vector<uint8_t> digest(64, 0);
-
-        error = adb.digest_function(
-            reinterpret_cast<const uint8_t*>(ds.getMessage().c_str()),
-            ds.getMessage().size(),
-            &(digest[0]),
-            digest.size());
+        error = adb.digest_function(&(ds.getMessage()[0]),
+                                    ds.getMessage().size(),
+                                    &(digest[0]),
+                                    digest.size());
         if (alcp_is_error(error)) {
             printf("Error");
             return;

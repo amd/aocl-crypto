@@ -58,8 +58,7 @@ class DataSet : private File
 {
   private:
     std::string          line = "";
-    std::vector<uint8_t> Digest;
-    std::string          Message;
+    std::vector<uint8_t> Digest, Message;
     // First line is skipped, linenum starts from 1
     int lineno = 1;
 
@@ -76,7 +75,7 @@ class DataSet : private File
     // To print which line in dataset failed
     int getLineNumber();
     /* fetch Message / Digest */
-    std::string          getMessage();
+    std::vector<uint8_t> getMessage();
     std::vector<uint8_t> getDigest();
 };
 class DigestBase
