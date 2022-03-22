@@ -27,6 +27,7 @@
  */
 
 #pragma once
+#include <alcp/alcp.h>
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -77,4 +78,19 @@ class DataSet : private File
     std::vector<uint8_t> getMessage();
     std::vector<uint8_t> getDigest();
 };
-} // namespace alcp::testing
+class DigestBase
+{
+  public:
+    virtual bool        init(_alc_sha2_mode   mode,
+                             _alc_digest_type type,
+                             _alc_digest_len  sha_len)      = 0;
+    virtual bool        init()                             = 0;
+    virtual alc_error_t digest_function(const std::vector<uint8_t> src,
+                                        uint64_t                   src_size,
+                                        uint8_t*                   output,
+                                        uint64_t out_size) = 0;
+    virtual void        hash_to_string(char*          output_string,
+                                       const uint8_t* hash,
+                                       int            sha_len)        = 0;
+};
+} // namespace alcp::bench

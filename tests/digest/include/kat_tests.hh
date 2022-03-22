@@ -27,131 +27,144 @@
  */
 
 #pragma once
-#include <alcp/alcp.h>
-#include <iostream>
 #include "alc_base.hh"
 #include "base.hh"
-#include "string.h"
 #include "gtest_base.hh"
+#include "ipp_base.hh"
+#include "string.h"
+#include <alcp/alcp.h>
+#include <iostream>
 
 using namespace alcp::bench;
 
 /* Add all the KAT tests here */
-TEST(DIGEST_SHA2, KAT_224) {
+TEST(DIGEST_SHA2, KAT_224)
+{
     alc_error_t error;
-    DataSet ds = DataSet("dataset_SHA_224.csv");
+    DataSet     ds = DataSet("dataset_SHA_224.csv");
     while (ds.readMsgDigest()) {
-        AlcpDigestBase DigestBase(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
-        uint8_t digest[512] = { 0 };
-        char digest_string[57] = {0};
+        AlcpDigestBase adb(
+            ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+        uint8_t digest[512]       = { 0 };
+        char    digest_string[57] = { 0 };
 
-        error = DigestBase.digest_function(ds.getMessage(), ds.getMessage().size(), digest, sizeof(digest));
+        error = adb.digest_function(
+            ds.getMessage(), ds.getMessage().size(), digest, sizeof(digest));
         if (alcp_is_error(error)) {
             printf("Error");
             return;
         }
 
-        DigestBase.hash_to_string(digest_string, digest, 224);
+        adb.hash_to_string(digest_string, digest, 224);
 
         /*now check expected and actual */
-        std::vector<uint8_t> output_vec(digest_string, 
-                            digest_string + 
-                            sizeof digest_string / sizeof digest_string[0]);
+        std::vector<uint8_t> output_vec(
+            digest_string,
+            digest_string + sizeof digest_string / sizeof digest_string[0]);
 
-        EXPECT_TRUE(ArraysMatch(
-            output_vec,  //output
-            ds.getDigest(),  //expected, from the KAT test data
-            ds,
-            std::string("SHA2_224_KAT")));
+        EXPECT_TRUE(
+            ArraysMatch(output_vec,     // output
+                        ds.getDigest(), // expected, from the KAT test data
+                        ds,
+                        std::string("SHA2_224_KAT")));
     }
 }
 
 /* SHA256 */
-TEST(DIGEST_SHA2, KAT_256) {
+TEST(DIGEST_SHA2, KAT_256)
+{
     alc_error_t error;
-    DataSet ds = DataSet("dataset_SHA_256.csv");
+    DataSet     ds = DataSet("dataset_SHA_256.csv");
     while (ds.readMsgDigest()) {
-        AlcpDigestBase DigestBase(ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
-        uint8_t digest[512] = { 0 };
-        char digest_string[65] = {0};
+        AlcpDigestBase adb(
+            ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
+        uint8_t digest[512]       = { 0 };
+        char    digest_string[65] = { 0 };
 
-        error = DigestBase.digest_function(ds.getMessage(), ds.getMessage().size(), digest, sizeof(digest));
+        error = adb.digest_function(
+            ds.getMessage(), ds.getMessage().size(), digest, sizeof(digest));
         if (alcp_is_error(error)) {
             printf("Error");
             return;
         }
 
-        DigestBase.hash_to_string(digest_string, digest, 256);
+        adb.hash_to_string(digest_string, digest, 256);
 
         /*now check expected and actual */
-        std::vector<uint8_t> output_vec(digest_string, 
-                            digest_string + 
-                            sizeof digest_string / sizeof digest_string[0]);
+        std::vector<uint8_t> output_vec(
+            digest_string,
+            digest_string + sizeof digest_string / sizeof digest_string[0]);
 
-        EXPECT_TRUE(ArraysMatch(
-            output_vec,  //output
-            ds.getDigest(),  //expected, from the KAT test data
-            ds,
-            std::string("SHA2_256_KAT")));
+        EXPECT_TRUE(
+            ArraysMatch(output_vec,     // output
+                        ds.getDigest(), // expected, from the KAT test data
+                        ds,
+                        std::string("SHA2_256_KAT")));
     }
 }
 
 /* SHA384 */
-TEST(DIGEST_SHA2, KAT_384) {
+TEST(DIGEST_SHA2, KAT_384)
+{
     alc_error_t error;
-    DataSet ds = DataSet("dataset_SHA_384.csv");
+    DataSet     ds = DataSet("dataset_SHA_384.csv");
     while (ds.readMsgDigest()) {
-        AlcpDigestBase DigestBase(ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
-        uint8_t digest[512] = { 0 };
-        char digest_string[97] = {0};
+        AlcpDigestBase adb(
+            ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
+        uint8_t digest[512]       = { 0 };
+        char    digest_string[97] = { 0 };
 
-        error = DigestBase.digest_function(ds.getMessage(), ds.getMessage().size(), digest, sizeof(digest));
+        error = adb.digest_function(
+            ds.getMessage(), ds.getMessage().size(), digest, sizeof(digest));
         if (alcp_is_error(error)) {
             printf("Error");
             return;
         }
 
-        DigestBase.hash_to_string(digest_string, digest, 384);
+        adb.hash_to_string(digest_string, digest, 384);
 
         /*now check expected and actual */
-        std::vector<uint8_t> output_vec(digest_string, 
-                            digest_string + 
-                            sizeof digest_string / sizeof digest_string[0]);
+        std::vector<uint8_t> output_vec(
+            digest_string,
+            digest_string + sizeof digest_string / sizeof digest_string[0]);
 
-        EXPECT_TRUE(ArraysMatch(
-            output_vec,  //output
-            ds.getDigest(),  //expected, from the KAT test data
-            ds,
-            std::string("SHA2_384_KAT")));
+        EXPECT_TRUE(
+            ArraysMatch(output_vec,     // output
+                        ds.getDigest(), // expected, from the KAT test data
+                        ds,
+                        std::string("SHA2_384_KAT")));
     }
 }
 
 /* SHA512 */
-TEST(DIGEST_SHA2, KAT_512) {
+TEST(DIGEST_SHA2, KAT_512)
+{
     alc_error_t error;
-    DataSet ds = DataSet("dataset_SHA_512.csv");
+    DataSet     ds = DataSet("dataset_SHA_512.csv");
     while (ds.readMsgDigest()) {
-        AlcpDigestBase DigestBase(ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
-        uint8_t digest[512] = { 0 };
-        char digest_string[129] = {0};
+        AlcpDigestBase adb(
+            ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
+        uint8_t digest[512]        = { 0 };
+        char    digest_string[129] = { 0 };
 
-        error = DigestBase.digest_function(ds.getMessage(), ds.getMessage().size(), digest, sizeof(digest));
+        error = adb.digest_function(
+            ds.getMessage(), ds.getMessage().size(), digest, sizeof(digest));
         if (alcp_is_error(error)) {
             printf("Error");
             return;
         }
 
-        DigestBase.hash_to_string(digest_string, digest, 512);
+        adb.hash_to_string(digest_string, digest, 512);
 
         /*now check expected and actual */
-        std::vector<uint8_t> output_vec(digest_string, 
-                            digest_string + 
-                            sizeof digest_string / sizeof digest_string[0]);
+        std::vector<uint8_t> output_vec(
+            digest_string,
+            digest_string + sizeof digest_string / sizeof digest_string[0]);
 
-        EXPECT_TRUE(ArraysMatch(
-            output_vec,  //output
-            ds.getDigest(),  //expected, from the KAT test data
-            ds,
-            std::string("SHA2_512_KAT")));
+        EXPECT_TRUE(
+            ArraysMatch(output_vec,     // output
+                        ds.getDigest(), // expected, from the KAT test data
+                        ds,
+                        std::string("SHA2_512_KAT")));
     }
 }

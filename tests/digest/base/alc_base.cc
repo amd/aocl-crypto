@@ -31,14 +31,20 @@
 
 namespace alcp::bench {
 
-static uint8_t size_[4096] = {0};
+static uint8_t size_[4096] = { 0 };
 
 AlcpDigestBase::AlcpDigestBase(_alc_sha2_mode   mode,
-                               _alc_digest_type type, 
+                               _alc_digest_type type,
                                _alc_digest_len  sha_len)
-    : m_mode { mode },
-      m_type { type },
-      m_sha_len { sha_len }
+    : m_mode{ mode }
+    , m_type{ type }
+    , m_sha_len{ sha_len }
+{
+    init();
+}
+
+bool
+AlcpDigestBase::init()
 {
     alc_error_t err;
     alc_digest_info_t dinfo = {
@@ -47,20 +53,33 @@ AlcpDigestBase::AlcpDigestBase(_alc_sha2_mode   mode,
         .dt_mode = {.dm_sha2 = m_mode,},
     };
 
-    m_handle = new alc_digest_handle_t;
+    m_handle          = new alc_digest_handle_t;
     m_handle->context = &size_[0];
 
     err = alcp_digest_request(&dinfo, m_handle);
     if (alcp_is_error(err)) {
         printf("Error!\n");
+        return false;
     }
+    return true;
+}
+
+bool
+AlcpDigestBase::init(_alc_sha2_mode   mode,
+                     _alc_digest_type type,
+                     _alc_digest_len  sha_len)
+{
+    this->m_mode    = mode;
+    this->m_type    = type;
+    this->m_sha_len = sha_len;
+    return init();
 }
 
 alc_error_t
 AlcpDigestBase::digest_function(const std::vector<uint8_t> pSrc,
-                                uint64_t  src_size,
-                                uint8_t * pOutput,
-                                uint64_t  out_size)
+                                size_t                     src_size,
+                                uint8_t*                   pOutput,
+                                uint64_t                   out_size)
 {
     alc_error_t err;
     err = alcp_digest_update(m_handle, &pSrc[0], src_size);
@@ -86,14 +105,14 @@ AlcpDigestBase::digest_function(const std::vector<uint8_t> pSrc,
 
 /* Hash value to string */
 void
-AlcpDigestBase::hash_to_string(char * output_string,
-                               const uint8_t * hash,
-                               int sha_len)
+AlcpDigestBase::hash_to_string(char*          output_string,
+                               const uint8_t* hash,
+                               int            sha_len)
 {
-    for (int i = 0; i < sha_len/8; i++) {
+    for (int i = 0; i < sha_len / 8; i++) {
         output_string += sprintf(output_string, "%02x", hash[i]);
     }
-    output_string[(sha_len/8)*2 + 1] = '\0';
+    output_string[(sha_len / 8) * 2 + 1] = '\0';
 }
 
 } // namespace alcp::bench

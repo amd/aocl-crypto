@@ -25,44 +25,39 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
-#include "alcp/digest.h"
-#include <alcp/alcp.h>
-#include <base.hh>
-#include <iostream>
-#include <malloc.h>
-#include <vector>
-
 #pragma once
 
+#include "base.hh"
+#include <alcp/alcp.h>
+#include <iostream>
+#include <ippcp.h>
+#include <stdio.h>
+#include <string.h>
+
 namespace alcp::bench {
-class AlcpDigestBase : public DigestBase
+class IPPDigestBase : public DigestBase
 {
-    alc_digest_handle_t* m_handle;
-    _alc_sha2_mode       m_mode;
-    _alc_digest_type     m_type;
-    _alc_digest_len      m_sha_len;
-    uint8_t*             m_message;
-    uint8_t*             m_digest;
+    IppsHashState*   m_handle = nullptr;
+    _alc_sha2_mode   m_mode;
+    _alc_digest_type m_type;
+    _alc_digest_len  m_sha_len;
+    uint8_t*         m_message;
+    uint8_t*         m_digest;
 
   public:
-    AlcpDigestBase(_alc_sha2_mode   mode,
-                   _alc_digest_type type,
-                   _alc_digest_len  sha_len);
-
+    IPPDigestBase(_alc_sha2_mode   mode,
+                  _alc_digest_type type,
+                  _alc_digest_len  sha_len);
+    ~IPPDigestBase();
+    bool init();
     bool init(_alc_sha2_mode   mode,
               _alc_digest_type type,
               _alc_digest_len  sha_len);
 
-    bool init();
-
     alc_error_t digest_function(const std::vector<uint8_t> src,
-                                size_t                     src_size,
+                                uint64_t                   src_size,
                                 uint8_t*                   output,
                                 uint64_t                   out_size);
-
-    /* Hash value to string */
     void hash_to_string(char* output_string, const uint8_t* hash, int sha_len);
 };
-
 } // namespace alcp::bench
