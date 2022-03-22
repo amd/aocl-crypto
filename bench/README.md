@@ -10,7 +10,7 @@ Skip to [Executing Benches](##Executing Benches) if already installed
 2. <code>cd benchmark</code>
 3. <code>mkdir build</code>
 4. <code>cd build</code>
-5. <code>cmake ../ -DCMAKE_INSTALL_PREFIX="$HOME/local" -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON -DCMAKE_BUILD_TYPE="Release"</code> 
+5. <code>cmake ../ -DCMAKE_INSTALL_PREFIX="$HOME/.local" -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON -DCMAKE_BUILD_TYPE="Release"</code> 
 6. <code>make -j $(nproc --all)</code>
 7. <code>make install</code>
 
