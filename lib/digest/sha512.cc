@@ -57,7 +57,7 @@ static constexpr Uint64 cIv[] = { 0x6a09e667f3bcc908, 0xbb67ae8584caa73b,
  * Values are first 64 bits of the fractional parts of the cube
  * roots of the first 80 primes 2.409.
  */
-static constexpr Uint64 cRoundConstants[] = {
+__attribute__((aligned(64))) static constexpr Uint64 cRoundConstants[] = {
     0x428a2f98d728ae22, 0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f,
     0xe9b5dba58189dbbc, 0x3956c25bf348b538, 0x59f111f1b605d019,
     0x923f82a4af194f9b, 0xab1c5ed5da6d8118, 0xd807aa98a3030242,
@@ -124,7 +124,7 @@ class Sha512::Impl
   private:
     Uint64 m_msg_len;
     /* Any unprocessed bytes from last call to update() */
-    Uint8  m_buffer[cChunkSize];
+    Uint8  m_buffer[2 * cChunkSize];
     Uint64 m_hash[cHashSizeWords];
     /* index to m_buffer of previously unprocessed bytes */
     Uint32 m_idx;
@@ -231,18 +231,16 @@ Sha512::Impl::update(const Uint8* pSrc, Uint64 input_size)
     if (input_size == 0) {
         return err;
     }
-
+    m_msg_len += input_size;
     Uint64 to_process = std::min((input_size + m_idx), cChunkSize);
     if (to_process < cChunkSize) {
         /* copy them to internal buffer and return */
-        utils::CopyBytes(&m_buffer[m_idx], pSrc, to_process);
-        m_idx += to_process;
-        m_msg_len += to_process;
+        utils::CopyBytes(&m_buffer[m_idx], pSrc, input_size);
+        m_idx += input_size;
         return err;
     }
 
-    Uint64 idx               = m_idx;
-    Uint64 msg_len_processed = m_idx + input_size;
+    Uint64 idx = m_idx;
 
     if (idx) {
         /*
@@ -258,7 +256,7 @@ Sha512::Impl::update(const Uint8* pSrc, Uint64 input_size)
         idx += to_process;
 
         if (idx == cChunkSize) {
-            err = processChunk(pSrc, input_size);
+            err = processChunk(m_buffer, cChunkSize);
             idx = 0;
         }
     }
@@ -283,7 +281,6 @@ Sha512::Impl::update(const Uint8* pSrc, Uint64 input_size)
     }
 
     m_idx = idx;
-    m_msg_len += msg_len_processed;
 
     return err;
 }
@@ -315,22 +312,19 @@ Sha512::Impl::finalize(const Uint8* pBuf, Uint64 size)
      * The curent chunk is processed and the message length is
      * placed in a new chunk and will be processed.
      */
-    Uint8 local_buf[cChunkSize * 2];
-    utils::CopyBlock(local_buf, m_buffer, m_idx);
+    m_buffer[m_idx++] = 0x80;
 
-    local_buf[m_idx++] = 0x80;
-
-    Uint64 buf_len = m_idx < (cChunkSize - 8) ? cChunkSize : sizeof(local_buf);
+    Uint64 buf_len = m_idx < (cChunkSize - 16) ? cChunkSize : sizeof(m_buffer);
     // Uint64 bytes_left = buf_len - m_idx - utils::BytesInDWord<Uint64>;
     Uint64 bytes_left = buf_len - m_idx - 16;
 
-    utils::PadBlock<Uint8>(&local_buf[m_idx], 0x0, bytes_left);
+    utils::PadBlock<Uint8>(&m_buffer[m_idx], 0x0, bytes_left);
 
 #ifdef __SIZEOF_INT128__
     /* Store total length in the last 128-bit (16-bytes) */
     __uint128_t  len_in_bits = m_msg_len * 8;
     __uint128_t* msg_len_ptr = reinterpret_cast<__uint128_t*>(
-        &local_buf[buf_len] - sizeof(__uint128_t));
+        &m_buffer[buf_len] - sizeof(__uint128_t));
     msg_len_ptr[0] = utils::ToBigEndian(len_in_bits);
 #else
     Uint64 len_in_bits_high;
@@ -346,11 +340,11 @@ Sha512::Impl::finalize(const Uint8* pBuf, Uint64 size)
         len_in_bits      = m_msg_len * 8;
     }
     Uint64* msg_len_ptr =
-        reinterpret_cast<Uint64*>(&local_buf[buf_len] - (sizeof(Uint64) * 2));
+        reinterpret_cast<Uint64*>(&m_buffer[buf_len] - (sizeof(Uint64) * 2));
     msg_len_ptr[0] = utils::ToBigEndian(len_in_bits_high);
     msg_len_ptr[1] = utils::ToBigEndian(len_in_bits);
 #endif
-    err = processChunk(local_buf, buf_len);
+    err = processChunk(m_buffer, buf_len);
 
     m_idx = 0;
 

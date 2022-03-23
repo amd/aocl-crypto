@@ -67,7 +67,7 @@ Sha384::~Sha384()
 }
 
 alc_error_t
-Sha384::update(const uint8_t* pBuf, uint64_t size)
+Sha384::update(const Uint8* pBuf, Uint64 size)
 {
     return m_psha512->update(pBuf, size);
 }
@@ -79,22 +79,22 @@ Sha384::finish()
 }
 
 alc_error_t
-Sha384::finalize(const uint8_t* pBuf, uint64_t size)
+Sha384::finalize(const Uint8* pBuf, Uint64 size)
 {
     return m_psha512->finalize(pBuf, size);
 }
 
 alc_error_t
-Sha384::copyHash(uint8_t* pHash, uint64_t size) const
+Sha384::copyHash(Uint8* pHash, Uint64 size) const
 {
     alc_error_t err = ALC_ERROR_NONE;
     assert(size >= cHashSize);
 
-    uint8_t intrim_hash[cHashSize * 2];
+    Uint8 intrim_hash[cHashSize * 2];
     err = m_psha512->copyHash(intrim_hash, sizeof(intrim_hash));
 
     if (!Error::isError(err)) {
-        uint64_t len = std::min(size, cHashSize);
+        Uint64 len = std::min(size, cHashSize);
 
         utils::CopyBlock(pHash, intrim_hash, len);
     }

@@ -31,6 +31,7 @@
 
 #include "alcp/digest.h"
 
+#define NUM_IP_CHUNKS 10
 static alc_digest_handle_t s_dg_handle;
 
 static alc_error_t
@@ -64,13 +65,23 @@ hash_demo(const uint8_t* src,
 {
     alc_error_t err;
 
-    err = alcp_digest_update(&s_dg_handle, src, src_size);
-    if (alcp_is_error(err)) {
-        printf("Unable to compute SHA2 hash\n");
-        goto out;
+    // divide the input size into multiple chunks
+    uint32_t       num_chunks      = NUM_IP_CHUNKS;
+    const uint32_t chunk_size      = src_size / num_chunks;
+    const uint32_t last_chunk_size = src_size % num_chunks;
+    const uint8_t* p               = src;
+
+    while (num_chunks-- > 0) {
+
+        err = alcp_digest_update(&s_dg_handle, p, chunk_size);
+        if (alcp_is_error(err)) {
+            printf("Unable to compute SHA2 hash 1\n");
+            goto out;
+        }
+        p += chunk_size;
     }
 
-    alcp_digest_finalize(&s_dg_handle, NULL, 0);
+    alcp_digest_finalize(&s_dg_handle, p, last_chunk_size);
 
     err = alcp_digest_copy(&s_dg_handle, output, out_size);
     if (alcp_is_error(err)) {
@@ -154,8 +165,8 @@ main(void)
 
         // check if the outputs are matching
         hash_to_string(output_string, sample_output);
-            printf("Input : %s\n", sample_input);
-            printf("output : %s\n", output_string);
+        printf("Input : %s\n", sample_input);
+        printf("output : %s\n", output_string);
         if (strcmp(expected_output, output_string)) {
             printf("=== FAILED ==== \n");
             printf("Expected output : %s\n", expected_output);

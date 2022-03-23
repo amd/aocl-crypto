@@ -217,18 +217,17 @@ Sha256::Impl::update(const Uint8* pSrc, Uint64 input_size)
     if (input_size == 0) {
         return err;
     }
+    m_msg_len += input_size;
 
     Uint64 to_process = std::min((input_size + m_idx), cChunkSize);
     if (to_process < cChunkSize) {
         /* copy them to internal buffer and return */
-        utils::CopyBytes(&m_buffer[m_idx], pSrc, to_process);
-        m_idx += to_process;
-        m_msg_len += to_process;
+        utils::CopyBytes(&m_buffer[m_idx], pSrc, input_size);
+        m_idx += input_size;
         return err;
     }
 
-    Uint64 idx               = m_idx;
-    Uint64 msg_len_processed = m_idx + input_size;
+    Uint64 idx = m_idx;
 
     if (idx) {
         /*
@@ -244,7 +243,7 @@ Sha256::Impl::update(const Uint8* pSrc, Uint64 input_size)
         idx += to_process;
 
         if (idx == cChunkSize) {
-            err = processChunk(pSrc, input_size);
+            err = processChunk(m_buffer, idx);
             idx = 0;
         }
     }
@@ -252,6 +251,7 @@ Sha256::Impl::update(const Uint8* pSrc, Uint64 input_size)
     /* Calculate leftover bytes that can be processed as multiple chunks */
     Uint64 num_chunks = input_size / cChunkSize;
     if (num_chunks) {
+
         Uint64 size = num_chunks * cChunkSize;
 
         err = processChunk(pSrc, size);
@@ -269,8 +269,6 @@ Sha256::Impl::update(const Uint8* pSrc, Uint64 input_size)
     }
 
     m_idx = idx;
-    m_msg_len += msg_len_processed;
-
     return err;
 }
 
