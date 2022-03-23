@@ -215,6 +215,8 @@ class TestingCore
                 alc_aes_mode_t alcpMode,
                 bool           useipp)
     {
+        std::transform(
+            modeStr.begin(), modeStr.end(), modeStr.begin(), ::tolower);
         ds = new DataSet(std::string("dataset_") + modeStr
                          + std::string(".csv"));
 
