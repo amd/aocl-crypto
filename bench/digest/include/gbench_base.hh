@@ -25,35 +25,36 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
-#include <alcp/alcp.h>
-#include <iostream>
-#include <malloc.h>
-#include <vector>
-#include "alcp/digest.h"
-
 #pragma once
 
-namespace alcp::bench {
-class AlcpDigestBase {
-    alc_digest_handle_t * m_handle;
-    _alc_sha2_mode        m_mode;
-    _alc_digest_type      m_type;
-    _alc_digest_len       m_sha_len;
-    uint8_t *             m_message;
-    uint8_t *             m_digest;
-
-    public:
-        AlcpDigestBase(_alc_sha2_mode   mode,
-                       _alc_digest_type type,
-                       _alc_digest_len  sha_len);
- 
-        alc_error_t
-        digest_function(uint8_t  * src,
-                        uint64_t   src_size,
-                        uint8_t  * output,
-                        uint64_t   out_size);
-
-};
-
-} // namespace alcp::bench
+static bool verbose = false;
+static bool useipp  = false;
+void
+parseArgs(int* argc, char** argv)
+{
+    std::string currentArg;
+    const int   _argc = *argc;
+    if (*argc > 1) {
+        for (int i = 1; i < _argc; i++) {
+            currentArg = std::string(argv[i]);
+            if ((currentArg == std::string("--help"))
+                || (currentArg == std::string("-h"))) {
+                std::cout << std::endl
+                          << "Additional help for microbenches" << std::endl;
+                std::cout << "Append these after gtest arguments only"
+                          << std::endl;
+                std::cout << "--verbose or -v per line status." << std::endl;
+                std::cout << "--use-ipp or -i force IPP use in testing."
+                          << std::endl;
+            } else if ((currentArg == std::string("--verbose"))
+                       || (currentArg == std::string("-v"))) {
+                verbose = true;
+                *argc -= 1;
+            } else if ((currentArg == std::string("--use-ipp"))
+                       || (currentArg == std::string("-i"))) {
+                useipp = true;
+                *argc -= 1;
+            }
+        }
+    }
+}

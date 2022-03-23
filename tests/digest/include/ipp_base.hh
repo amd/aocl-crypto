@@ -25,56 +25,39 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 #pragma once
-#include <fstream>
-#include <sstream>
-#include <vector>
+
+#include "base.hh"
+#include <alcp/alcp.h>
+#include <iostream>
+#include <ippcp.h>
+#include <stdio.h>
+#include <string.h>
 
 namespace alcp::bench {
-class File
+class IPPDigestBase : public DigestBase
 {
-  private:
-    std::fstream file;
-    bool         fileExists;
+    IppsHashState*   m_handle = nullptr;
+    _alc_sha2_mode   m_mode;
+    _alc_digest_type m_type;
+    _alc_digest_len  m_sha_len;
+    uint8_t*         m_message;
+    uint8_t*         m_digest;
 
   public:
-    // Opens File as ASCII Text File
-    File(std::string fileName);
-    // Read file word by word excludes newlines and spaces
-    std::string readWord();
-    // Read file line by line
-    std::string readLine();
-    // Reads a line by reading char by char
-    std::string readLineCharByChar();
-    // Read file n char
-    char* readChar(int n);
-    // Rewind file to initial position
-    void rewind();
-};
+    IPPDigestBase(_alc_sha2_mode   mode,
+                  _alc_digest_type type,
+                  _alc_digest_len  sha_len);
+    ~IPPDigestBase();
+    bool init();
+    bool init(_alc_sha2_mode   mode,
+              _alc_digest_type type,
+              _alc_digest_len  sha_len);
 
-class DataSet : private File
-{
-  private:
-    std::string          line = "";
-    std::vector<uint8_t> Message, Digest;
-    // First line is skipped, linenum starts from 1
-    int lineno = 1;
-
-  public:
-    // Treats file as CSV, skips first line
-    DataSet(const std::string filename);
-    // Read without condition
-    bool readMsgDigest();
-    // Convert a hex char to number;
-    uint8_t parseHexToNum(const unsigned char c);
-    // Parse hexString to binary
-    std::vector<uint8_t> parseHexStrToBin(const std::string in);
-    std::string parseBytesToHexStr(const uint8_t* bytes, const int length);
-    // To print which line in dataset failed
-    int getLineNumber();
-    /* fetch Message / Digest */
-    std::vector<uint8_t> getMessage();
-    std::vector<uint8_t> getDigest();
+    alc_error_t digest_function(const uint8_t* src,
+                                uint64_t       src_size,
+                                uint8_t*       output,
+                                uint64_t       out_size);
+    void hash_to_string(char* output_string, const uint8_t* hash, int sha_len);
 };
 } // namespace alcp::bench

@@ -26,16 +26,13 @@
  *
  */
 
-#include "alc_base.hh"
-#include "base.hh"
+#include "ipp_base.hh"
 
 namespace alcp::bench {
 
-static uint8_t size_[4096] = { 0 };
-
-AlcpDigestBase::AlcpDigestBase(_alc_sha2_mode   mode,
-                               _alc_digest_type type,
-                               _alc_digest_len  sha_len)
+IPPDigestBase::IPPDigestBase(_alc_sha2_mode   mode,
+                             _alc_digest_type type,
+                             _alc_digest_len  sha_len)
     : m_mode{ mode }
     , m_type{ type }
     , m_sha_len{ sha_len }
@@ -43,31 +40,54 @@ AlcpDigestBase::AlcpDigestBase(_alc_sha2_mode   mode,
     init();
 }
 
-bool
-AlcpDigestBase::init()
+IPPDigestBase::~IPPDigestBase()
 {
-    alc_error_t err;
-    alc_digest_info_t dinfo = {
-        .dt_type = m_type,
-        .dt_len = m_sha_len,
-        .dt_mode = {.dm_sha2 = m_mode,},
-    };
+    if (m_handle != nullptr) {
+        delete[] reinterpret_cast<uint8_t*>(m_handle);
+    }
+}
 
-    m_handle          = new alc_digest_handle_t;
-    m_handle->context = &size_[0];
-
-    err = alcp_digest_request(&dinfo, m_handle);
-    if (alcp_is_error(err)) {
-        printf("Error!\n");
+bool
+IPPDigestBase::init()
+{
+    if (m_handle != nullptr) {
+        delete[] reinterpret_cast<uint8_t*>(m_handle);
+        m_handle = nullptr;
+    }
+    int ctx_size;
+    ippsHashGetSize(&ctx_size);
+    m_handle = reinterpret_cast<IppsHashState*>(new uint8_t[ctx_size]);
+    if (m_type == ALC_DIGEST_TYPE_SHA2) {
+        switch (m_mode) {
+            case ALC_SHA2_224:
+                ippsHashInit(m_handle, ippHashAlg_SHA224);
+                // std::cout << "Chosen SHA224" << std::endl;
+                break;
+            case ALC_SHA2_256:
+                ippsHashInit(m_handle, ippHashAlg_SHA256);
+                // std::cout << "Chosen SHA256" << std::endl;
+                break;
+            case ALC_SHA2_384:
+                ippsHashInit(m_handle, ippHashAlg_SHA384);
+                // std::cout << "Chosen SHA384" << std::endl;
+                break;
+            case ALC_SHA2_512:
+                ippsHashInit(m_handle, ippHashAlg_SHA512);
+                // std::cout << "Chosen SHA512" << std::endl;
+                break;
+            default:
+                return false;
+        }
+    } else {
         return false;
     }
     return true;
 }
 
 bool
-AlcpDigestBase::init(_alc_sha2_mode   mode,
-                     _alc_digest_type type,
-                     _alc_digest_len  sha_len)
+IPPDigestBase::init(_alc_sha2_mode   mode,
+                    _alc_digest_type type,
+                    _alc_digest_len  sha_len)
 {
     this->m_mode    = mode;
     this->m_type    = type;
@@ -76,38 +96,20 @@ AlcpDigestBase::init(_alc_sha2_mode   mode,
 }
 
 alc_error_t
-AlcpDigestBase::digest_function(const uint8_t* pSrc,
-                                size_t         src_size,
-                                uint8_t*       pOutput,
-                                uint64_t       out_size)
+IPPDigestBase::digest_function(const uint8_t* in,
+                               uint64_t       in_size,
+                               uint8_t*       out,
+                               uint64_t       out_size)
 {
-    alc_error_t err;
-    err = alcp_digest_update(m_handle, pSrc, src_size);
-    if (alcp_is_error(err)) {
-        printf("Digest update failed\n");
-        return err;
-    }
-
-    alcp_digest_finalize(m_handle, NULL, 0);
-    if (alcp_is_error(err)) {
-        printf("Digest finalize failed\n");
-        return err;
-    }
-
-    err = alcp_digest_copy(m_handle, pOutput, out_size);
-    if (alcp_is_error(err)) {
-        printf("Digest copy failed\n");
-        return err;
-    }
-    alcp_digest_finish(m_handle);
-    return err;
+    ippsHashUpdate(in, in_size, m_handle);
+    ippsHashFinal(out, m_handle);
+    return ALC_ERROR_NONE;
 }
 
-/* Hash value to string */
 void
-AlcpDigestBase::hash_to_string(char*          output_string,
-                               const uint8_t* hash,
-                               int            sha_len)
+IPPDigestBase::hash_to_string(char*          output_string,
+                              const uint8_t* hash,
+                              int            sha_len)
 {
     for (int i = 0; i < sha_len / 8; i++) {
         output_string += sprintf(output_string, "%02x", hash[i]);

@@ -27,8 +27,17 @@
  */
 
 #include "benchmarks.hh"
+#include "gbench_base.hh"
 
-int main(int argc, char** argv) {
+int
+main(int argc, char** argv)
+{
+    parseArgs(&argc, argv);
+#ifndef USE_IPP
+    if (useipp) {
+        std::cout << "Error IPP not found defaulting to ALCP" << std::endl;
+    }
+#endif
     ::benchmark::Initialize(&argc, argv);
     if (::benchmark::ReportUnrecognizedArguments(argc, argv))
         return 1;

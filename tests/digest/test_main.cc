@@ -35,6 +35,10 @@ main(int argc, char** argv)
     testing::TestEventListeners& listeners =
         testing::UnitTest::GetInstance()->listeners();
     parseArgs(argc, argv);
+#ifndef USE_IPP
+    if (useipp)
+        std::cout << "IPP is not avaiable, defaulting to ALCP" << std::endl;
+#endif
     auto default_printer =
         listeners.Release(listeners.default_result_printer());
 

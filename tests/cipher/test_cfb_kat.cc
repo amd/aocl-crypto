@@ -32,7 +32,7 @@
 #include <boost/algorithm/string.hpp>
 
 using namespace alcp::testing;
-#define MODE_STR "cfb"
+std::string MODE_STR = "CFB";
 #define ALC_MODE ALC_AES_MODE_CFB
 
 /* Testing Starts Here! */
@@ -49,7 +49,7 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
                 testingCore.getDs()->getIv()),
             testingCore.getDs()->getCt(),
             *(testingCore.getDs()),
-            std::string("AES_" + boost::to_upper_copy<std::string>(MODE_STR)
+            std::string("AES_" + MODE_STR
                         + "_128_ENC")));
     }
 }
@@ -67,7 +67,7 @@ TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
                 testingCore.getDs()->getIv()),
             testingCore.getDs()->getCt(),
             *(testingCore.getDs()),
-            std::string("AES_" + boost::to_upper_copy<std::string>(MODE_STR)
+            std::string("AES_" + MODE_STR
                         + "_192_ENC")));
     }
 }
@@ -85,7 +85,7 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
                 testingCore.getDs()->getIv()),
             testingCore.getDs()->getCt(),
             *(testingCore.getDs()),
-            std::string("AES_" + boost::to_upper_copy<std::string>(MODE_STR)
+            std::string("AES_" + MODE_STR
                         + "_256_ENC")));
     }
 }
@@ -103,7 +103,7 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
                 testingCore.getDs()->getIv()),
             testingCore.getDs()->getPt(),
             *(testingCore.getDs()),
-            std::string("AES_" + boost::to_upper_copy<std::string>(MODE_STR)
+            std::string("AES_" + MODE_STR
                         + "_128_DEC")));
     }
 }
@@ -121,7 +121,7 @@ TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
                 testingCore.getDs()->getIv()),
             testingCore.getDs()->getPt(),
             *(testingCore.getDs()),
-            std::string("AES_" + boost::to_upper_copy<std::string>(MODE_STR)
+            std::string("AES_" + MODE_STR
                         + "_192_DEC")));
     }
 }
@@ -139,7 +139,7 @@ TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
                 testingCore.getDs()->getIv()),
             testingCore.getDs()->getPt(),
             *(testingCore.getDs()),
-            std::string("AES_" + boost::to_upper_copy<std::string>(MODE_STR)
+            std::string("AES_" + MODE_STR
                         + "_256_DEC")));
     }
 }
