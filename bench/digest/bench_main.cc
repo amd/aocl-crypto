@@ -27,6 +27,7 @@
  */
 
 #include "benchmarks.hh"
+#include "colors.hh"
 #include "gbench_base.hh"
 
 int
@@ -35,9 +36,8 @@ main(int argc, char** argv)
     parseArgs(&argc, argv);
 #ifndef USE_IPP
     if (useipp) {
-        std::cout << "\033[1;31m"
-                  << "Error IPP not found defaulting to ALCP"
-                  << "\033[0m" << std::endl;
+        std::cout << RED << "Error IPP not found defaulting to ALCP" << RESET
+                  << std::endl;
     }
 #endif
     ::benchmark::Initialize(&argc, argv);
