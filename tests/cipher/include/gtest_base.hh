@@ -238,7 +238,7 @@ class TestingCore
 #ifdef USE_IPP
         icb = new IPPCipherBase(alcpMode, NULL);
         if (useipp) {
-            // std::cout << "Using IPP" << std::endl;
+            std::cout << "Using IPP" << std::endl;
             cipherHandler->setcb(icb);
         }
 #else
@@ -250,7 +250,7 @@ class TestingCore
 #ifdef USE_OSSL
         ocb = new OpenSSLCipherBase(alcpMode, NULL);
         if (useossl) {
-            // std::cout << "Using OpenSSL" << std::endl;
+            std::cout << "Using OpenSSL" << std::endl;
             cipherHandler->setcb(ocb);
         }
 #else

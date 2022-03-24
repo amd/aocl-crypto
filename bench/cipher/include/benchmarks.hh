@@ -38,6 +38,10 @@
 #include "ipp_base.hh"
 #endif
 
+#ifdef USE_OSSL
+#include "openssl_base.hh"
+#endif
+
 typedef enum
 {
     DECRYPT = 0,

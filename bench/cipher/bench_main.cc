@@ -40,25 +40,27 @@ CipherAes(benchmark::State& state,
           size_t            keylen)
 {
     // Dynamic allocation better for larger sizes
-    std::vector<uint8_t>       vec_in(blockSize, 1);
-    std::vector<uint8_t>       vec_out(blockSize, 10);
-    uint8_t                    key[keylen / 8];
-    uint8_t                    iv[16];
-    alcp::testing::CipherBase* cb;
-#ifdef USE_IPP
-    alcp::testing::IPPCipherBase icb =
-        alcp::testing::IPPCipherBase(alcpMode, iv, key, keylen);
-    alcp::testing::AlcpCipherBase acb =
-        alcp::testing::AlcpCipherBase(alcpMode, iv, key, keylen);
-    if (useipp) {
-        cb = &icb;
-    } else {
-        cb = &acb;
-    }
-#else
+    std::vector<uint8_t>          vec_in(blockSize, 1);
+    std::vector<uint8_t>          vec_out(blockSize, 10);
+    uint8_t                       key[keylen / 8];
+    uint8_t                       iv[16];
+    alcp::testing::CipherBase*    cb;
     alcp::testing::AlcpCipherBase acb =
         alcp::testing::AlcpCipherBase(alcpMode, iv, key, keylen);
     cb = &acb;
+#ifdef USE_IPP
+    alcp::testing::IPPCipherBase icb =
+        alcp::testing::IPPCipherBase(alcpMode, iv, key, keylen);
+    if (useipp) {
+        cb = &icb;
+    }
+#endif
+#ifdef USE_OSSL
+    alcp::testing::OpenSSLCipherBase ocb =
+        alcp::testing::OpenSSLCipherBase(alcpMode, iv, key, keylen);
+    if (useossl) {
+        cb = &ocb;
+    }
 #endif
     for (auto _ : state) {
         if (enc) {
