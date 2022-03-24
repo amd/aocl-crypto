@@ -26,8 +26,9 @@
  *
  */
 
-#include <benchmarks.hh>
-#include <gbench_base.hh>
+#include "base.hh"
+#include "benchmarks.hh"
+#include "gbench_base.hh"
 
 // Test blocksizes, append more if needed, size is in bytes
 std::vector<int64_t> blocksizes = { 16, 64, 256, 1024, 8192, 16384 };
@@ -163,16 +164,13 @@ main(int argc, char** argv)
     parseArgs(&argc, argv);
 #ifndef USE_IPP
     if (useipp) {
-        std::cout << "\033[1;31m"
-                  << "Error IPP not found defaulting to ALCP"
-                  << "\033[0m" << std::endl;
+        alcp::testing::printErrors("Error IPP not found defaulting to ALCP");
     }
 #endif
 #ifndef USE_OSSL
     if (useossl) {
-        std::cout << "\033[1;31m"
-                  << "Error OpenSSL not found defaulting to ALCP"
-                  << "\033[0m" << std::endl;
+        alcp::testing::printErrors(
+            "Error OpenSSL not found defaulting to ALCP");
     }
 #endif
     ::benchmark::Initialize(&argc, argv);

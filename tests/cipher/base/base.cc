@@ -27,10 +27,12 @@
  */
 
 #include "base.hh"
+#include "colors.hh"
+#include <sstream>
+#include <unistd.h>
 #ifdef USE_IPP
 #include "ipp_base.hh"
 #endif
-#include <iostream>
 
 namespace alcp::testing {
 
@@ -255,6 +257,19 @@ void
 CipherTesting::setcb(CipherBase* impl)
 {
     cb = impl;
+}
+
+void
+printErrors(std::string in)
+{
+    if (isatty(fileno(stderr))) {
+        // stdout is a real terminal, safe to output color
+        std::cerr << RED_BOLD << in << RESET << std::endl;
+
+    } else {
+        // stdout is a pseudo terminal, unsafe to output color
+        std::cerr << in << std::endl;
+    }
 }
 
 } // namespace alcp::testing
