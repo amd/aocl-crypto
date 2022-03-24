@@ -243,8 +243,9 @@ class TestingCore
         }
 #else
         if (useipp) {
-            std::cout << "IPP is unavailable at the moment switching to ALCP!"
-                      << std::endl;
+            std::cout << "\033[1;31m"
+                      << "IPP is unavailable at the moment switching to ALCP!"
+                      << "\033[0m" << std::endl;
         }
 #endif
 #ifdef USE_OSSL
@@ -256,8 +257,9 @@ class TestingCore
 #else
         if (useossl) {
             std::cout
+                << "\033[1;31m"
                 << "OpenSSL is unavailable at the moment switching to ALCP!"
-                << std::endl;
+                << "\033[0m" << std::endl;
         }
 #endif
     }

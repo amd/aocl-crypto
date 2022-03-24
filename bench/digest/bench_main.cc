@@ -35,7 +35,9 @@ main(int argc, char** argv)
     parseArgs(&argc, argv);
 #ifndef USE_IPP
     if (useipp) {
-        std::cout << "Error IPP not found defaulting to ALCP" << std::endl;
+        std::cout << "\033[1;31m"
+                  << "Error IPP not found defaulting to ALCP"
+                  << "\033[0m" << std::endl;
     }
 #endif
     ::benchmark::Initialize(&argc, argv);

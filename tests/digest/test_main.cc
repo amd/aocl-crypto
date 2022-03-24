@@ -37,7 +37,9 @@ main(int argc, char** argv)
     parseArgs(argc, argv);
 #ifndef USE_IPP
     if (useipp)
-        std::cout << "IPP is not avaiable, defaulting to ALCP" << std::endl;
+        std::cout << "\033[1;31m"
+                  << "IPP is not avaiable, defaulting to ALCP"
+                  << "\033[0m" << std::endl;
 #endif
     auto default_printer =
         listeners.Release(listeners.default_result_printer());
