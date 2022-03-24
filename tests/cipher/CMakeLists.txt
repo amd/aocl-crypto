@@ -1,7 +1,44 @@
-find_package(GTest REQUIRED)
+include(FetchContent)
+FetchContent_Declare(gtest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG 4523B6410BFCD3289597FA2B5B6E18DE)
+FetchContent_MakeAvailable(gtest)
+
 if(ENABLE_TESTS_IPP_API)
     find_package(ippcp)
 endif(ENABLE_TESTS_IPP_API)
+
+# Basic sources and libs needed for ALCP
+set(ALC_BASE_FILES ${ALC_BASE_FILES} base/alc_base.cc base/base.cc)
+set(LIBS ${LIBS} gtest alcp)
+
+if(ippcp_FOUND)
+    message(STATUS "Found IPPCP: ${ippcp_DIR}")
+    add_compile_options("-DUSE_IPP")
+    # If there is IPP, add IPP source and add IPP liberary
+    set(EXTRA_SOURCES ${EXTRA_SOURCES} base/ipp_base.cc)
+    set(LIBS ${LIBS} ippcp)
+endif(ippcp_FOUND)
+
+if(OPENSSL_INSTALL_DIR)
+    add_compile_options("-DUSE_OSSL")
+    # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
+    set(EXTRA_SOURCES ${EXTRA_SOURCES} base/openssl_base.cc)
+    set(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
+endif(OPENSSL_INSTALL_DIR)
+
+set(LIBS ${LIBS} pthread)
+
+# Function to dynamically generate compilation of each test cases
+function(KAT_AES MOD)
+    ADD_EXECUTABLE(aes_${MOD}_kat test_${MOD}_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
+    # Depending on the person, they are gonna run from root dir or binary directory
+    # Link dataset to the root dir
+    file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.csv ${CMAKE_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
+    # Link dataset to the actual place of test binary
+    file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
+    target_link_libraries(aes_${MOD}_kat ${LIBS})
+endfunction()
 
 # Include all the ALCP Headers
 INCLUDE_DIRECTORIES(
@@ -9,84 +46,7 @@ INCLUDE_DIRECTORIES(
 	"${CMAKE_SOURCE_DIR}/lib/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-if(GTest_FOUND)
-    if(ippcp_FOUND)
-        message(STATUS "Found IPPCP: ${ippcp_DIR}")
-        add_compile_options("-DUSE_IPP")
-    endif(ippcp_FOUND)
-    # CBC
-    if(ippcp_FOUND)
-        ADD_EXECUTABLE(aes_cbc_kat base/ipp_base.cc base/alc_base.cc base/base.cc test_cbc_kat.cc)
-    else(ippcp_FOUND)
-        ADD_EXECUTABLE(aes_cbc_kat base/alc_base.cc base/base.cc test_cbc_kat.cc)
-    endif(ippcp_FOUND)
-    # Depending on the person, they are gonna run from root dir or binary directory
-    # Link dataset to the root dir
-    file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_cbc.csv ${CMAKE_BINARY_DIR}/dataset_cbc.csv SYMBOLIC)
-    # Link dataset to the actual place of test binary
-    file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_cbc.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_cbc.csv SYMBOLIC)
-    target_link_libraries(aes_cbc_kat alcp)
-    target_link_libraries(aes_cbc_kat "${GTEST_LIBRARY}")
-    target_link_libraries(aes_cbc_kat pthread)
-    if(ippcp_FOUND)
-       target_link_libraries(aes_cbc_kat ippcp)
-    endif(ippcp_FOUND)
-
-    # OFB
-    if(ippcp_FOUND)
-        ADD_EXECUTABLE(aes_ofb_kat base/ipp_base.cc base/alc_base.cc base/base.cc test_ofb_kat.cc)
-    else(ippcp_FOUND)
-        ADD_EXECUTABLE(aes_ofb_kat base/alc_base.cc base/base.cc test_ofb_kat.cc)
-    endif(ippcp_FOUND)
-    # Depending on the person, they are gonna run from root dir or binary directory
-    # Link dataset to the root dir
-    file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_ofb.csv ${CMAKE_BINARY_DIR}/dataset_ofb.csv SYMBOLIC)
-    # Link dataset to the actual place of test binary
-    file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_ofb.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_ofb.csv SYMBOLIC)
-    target_link_libraries(aes_ofb_kat alcp)
-    target_link_libraries(aes_ofb_kat "${GTEST_LIBRARY}")
-    target_link_libraries(aes_ofb_kat pthread)
-    if(ippcp_FOUND)
-       target_link_libraries(aes_ofb_kat ippcp)
-    endif(ippcp_FOUND)
-
-    # CFB
-    if(ippcp_FOUND)
-        ADD_EXECUTABLE(aes_cfb_kat base/ipp_base.cc base/alc_base.cc base/base.cc test_cfb_kat.cc)
-    else(ippcp_FOUND)
-        ADD_EXECUTABLE(aes_cfb_kat base/alc_base.cc base/base.cc test_cfb_kat.cc)
-    endif(ippcp_FOUND)
-    # Depending on the person, they are gonna run from root dir or binary directory
-    # Link dataset to the root dir
-    file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_cfb.csv ${CMAKE_BINARY_DIR}/dataset_cfb.csv SYMBOLIC)
-    # Link dataset to the actual place of test binary
-    file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_cfb.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_cfb.csv SYMBOLIC)
-    target_link_libraries(aes_cfb_kat alcp)
-    target_link_libraries(aes_cfb_kat "${GTEST_LIBRARY}")
-    target_link_libraries(aes_cfb_kat pthread)
-    if(ippcp_FOUND)
-       target_link_libraries(aes_cfb_kat ippcp)
-    endif(ippcp_FOUND)
-
-     # CTR
-    if(ippcp_FOUND)
-        ADD_EXECUTABLE(aes_ctr_kat base/ipp_base.cc base/alc_base.cc base/base.cc test_ctr_kat.cc)
-    else(ippcp_FOUND)
-        ADD_EXECUTABLE(aes_ctr_kat base/alc_base.cc base/base.cc test_ctr_kat.cc)
-    endif(ippcp_FOUND)
-    # Depending on the person, they are gonna run from root dir or binary directory
-    # Link dataset to the root dir
-    file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_ctr.csv ${CMAKE_BINARY_DIR}/dataset_ctr.csv SYMBOLIC)
-    # Link dataset to the actual place of test binary
-    file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_ctr.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_ctr.csv SYMBOLIC)
-    target_link_libraries(aes_ctr_kat alcp)
-    target_link_libraries(aes_ctr_kat "${GTEST_LIBRARY}")
-    target_link_libraries(aes_ctr_kat pthread)
-    if(ippcp_FOUND)
-       target_link_libraries(aes_ctr_kat ippcp)
-    endif(ippcp_FOUND)
-    
-    
-else(GTest_FOUND)
-    message(FATAL_ERROR "Gtest not found, cannot build tests!")
-endif(GTest_FOUND)
+KAT_AES(cbc)
+KAT_AES(cfb)
+KAT_AES(ctr)
+KAT_AES(ofb)
