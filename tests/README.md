@@ -1,31 +1,14 @@
 # ALCP Micro Tests
 
-## Building
-
-### Installing GTest
-
-1. <code>git clone https://github.com/google/googletest.git</code>
-2. <code>cd googletest/googletest</code>
-3. <code>mkdir build</code>
-4. <code>cd build</code>
-5. <code>cmake ../ -DCMAKE_INSTALL_PREFIX=$HOME/.local</code> 
-6. <code>make -j $(nproc --all)</code>
-7. <code>make install</code>
-
-### Setting Up Environment GTest
-
-1. `export C_LIBRARY_PATH=$HOME/.local/include:$C_LIBRARY_PATH`
-2. `export CPLUS_LIBRARY_PATH=$HOME/.local/include:$CPLUS_LIBRARY_PATH`
-3. `export LD_LIBRARY_PATH=$HOME/.local/lib:$HOME/.local/lib64`
-
 ### Building ALCP with Testing framework
 
 1. <code>git clone [alcp-crypto git url here]</code>
 2. <code>cd alcp-crypto</code>
-3. <code>cmake -B build -DALCP_ENABLE_EXAMPLES=ON -DALCP_ENABLE_TESTS=ON -DGTEST_INSTALL_DIR=$HOME/.local</code> - <font color="red">Please replace <code>$HOME/.local</code> with GTest Prefix, if you have installed some other place</font>
+3. <code>cmake -B build -DALCP_ENABLE_EXAMPLES=ON -DALCP_ENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release</code>
 4. <code>cmake --build build</code>
 
-<font color="red"> Note - To include IPP, please define <code>-DENABLE_TESTS_IPP_API=ON -DIPP_INSTALL_DIR=/path/to/ipp_prefix</code> in step 3.</font>
+<font color="red"> Note - To include IPP, please define <code>-DENABLE_TESTS_IPP_API=ON -DIPP_INSTALL_DIR=/path/to/ipp_prefix</code> in step 3.</font><br>
+<font color="red"> Note - To include OpenSSL, please define <code>-DOPENSSL_INSTALL_DIR=/path/to/openssl_prefix</code> in step 3.</font>
 
 ## AES
 
@@ -40,6 +23,7 @@ To run tests with verbose mode (prints also success)
 3. <code>./tests/cipher/aes_cfb_kat -v</code>
 4. <code>./tests/cipher/aes_ctr_kat -v</code>
 5. <code>./tests/cipher/aes_ofb_kat -v</code>
+6. <code>./tests/digests/test_digest -v</code>
 
 #### Selecting tests
 
@@ -50,6 +34,14 @@ Example filtering just 128 bit keysize tests.
 ​	 <code>./tests/cipher/aes\_\<aes\_mode\>\_kat --gtest_filter="\*128.\*" -v</code>
 
 Always you can use <code>--help</code> to know all the command line arguments which can be given to the executable.
+
+#### Using IPP
+
+For using IPP just specify <code>-i</code> command line argument.
+
+#### Using OpenSSL
+
+For using OpenSSL just specify <code>-o</code> command line argument.
 
 ### Testing Datasets
 
