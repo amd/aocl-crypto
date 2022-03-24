@@ -4,21 +4,16 @@ FetchContent_Declare(gtest
         GIT_TAG 4523B6410BFCD3289597FA2B5B6E18DE)
 FetchContent_MakeAvailable(gtest)
 
-if(ENABLE_TESTS_IPP_API)
-    find_package(ippcp)
-endif(ENABLE_TESTS_IPP_API)
-
 # Basic sources and libs needed for ALCP
 set(ALC_BASE_FILES ${ALC_BASE_FILES} base/alc_base.cc base/base.cc)
 set(LIBS ${LIBS} gtest alcp)
 
-if(ippcp_FOUND)
-    message(STATUS "Found IPPCP: ${ippcp_DIR}")
+if(ENABLE_TESTS_IPP_API)
     add_compile_options("-DUSE_IPP")
     # If there is IPP, add IPP source and add IPP liberary
     set(EXTRA_SOURCES ${EXTRA_SOURCES} base/ipp_base.cc)
-    set(LIBS ${LIBS} ippcp)
-endif(ippcp_FOUND)
+    set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.a)
+endif(ENABLE_TESTS_IPP_API)
 
 if(OPENSSL_INSTALL_DIR)
     add_compile_options("-DUSE_OSSL")

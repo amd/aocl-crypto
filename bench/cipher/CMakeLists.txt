@@ -4,10 +4,6 @@ FetchContent_Declare(benchmark
         GIT_TAG v1.6.1)
 FetchContent_MakeAvailable(benchmark)
 
-if(ENABLE_TESTS_IPP_API)
-    find_package(ippcp)
-endif(ENABLE_TESTS_IPP_API)
-
 # Include all the ALCP Headers
 INCLUDE_DIRECTORIES(
 	"${CMAKE_SOURCE_DIR}/include" 
@@ -21,13 +17,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 set(ALC_BASE_FILES ${ALC_BASE_FILES} ../../tests/cipher/base/alc_base.cc ../../tests/cipher/base/base.cc)
 set(LIBS ${LIBS} benchmark alcp)
-if(ippcp_FOUND)
-    message(STATUS "Found IPPCP: ${ippcp_DIR}")
+if(ENABLE_TESTS_IPP_API)
     add_compile_options("-DUSE_IPP")
     # If there is IPP, add IPP source and add IPP liberary
     set(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cipher/base/ipp_base.cc)
-    set(LIBS ${LIBS} ippcp)
-endif(ippcp_FOUND)
+    set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.a)
+endif(ENABLE_TESTS_IPP_API)
 
 if(OPENSSL_INSTALL_DIR)
     add_compile_options("-DUSE_OSSL")
