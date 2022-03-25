@@ -26,8 +26,9 @@
  *
  */
 
-#include <benchmarks.hh>
-#include <gbench_base.hh>
+#include "base.hh"
+#include "benchmarks.hh"
+#include "gbench_base.hh"
 
 // Test blocksizes, append more if needed, size is in bytes
 std::vector<int64_t> blocksizes = { 16, 64, 256, 1024, 8192, 16384 };
@@ -40,25 +41,27 @@ CipherAes(benchmark::State& state,
           size_t            keylen)
 {
     // Dynamic allocation better for larger sizes
-    std::vector<uint8_t>       vec_in(blockSize, 1);
-    std::vector<uint8_t>       vec_out(blockSize, 10);
-    uint8_t                    key[keylen / 8];
-    uint8_t                    iv[16];
-    alcp::testing::CipherBase* cb;
-#ifdef USE_IPP
-    alcp::testing::IPPCipherBase icb =
-        alcp::testing::IPPCipherBase(alcpMode, iv, key, keylen);
-    alcp::testing::AlcpCipherBase acb =
-        alcp::testing::AlcpCipherBase(alcpMode, iv, key, keylen);
-    if (useipp) {
-        cb = &icb;
-    } else {
-        cb = &acb;
-    }
-#else
+    std::vector<uint8_t>          vec_in(blockSize, 1);
+    std::vector<uint8_t>          vec_out(blockSize, 10);
+    uint8_t                       key[keylen / 8];
+    uint8_t                       iv[16];
+    alcp::testing::CipherBase*    cb;
     alcp::testing::AlcpCipherBase acb =
         alcp::testing::AlcpCipherBase(alcpMode, iv, key, keylen);
     cb = &acb;
+#ifdef USE_IPP
+    alcp::testing::IPPCipherBase icb =
+        alcp::testing::IPPCipherBase(alcpMode, iv, key, keylen);
+    if (useipp) {
+        cb = &icb;
+    }
+#endif
+#ifdef USE_OSSL
+    alcp::testing::OpenSSLCipherBase ocb =
+        alcp::testing::OpenSSLCipherBase(alcpMode, iv, key, keylen);
+    if (useossl) {
+        cb = &ocb;
+    }
 #endif
     for (auto _ : state) {
         if (enc) {
@@ -161,7 +164,13 @@ main(int argc, char** argv)
     parseArgs(&argc, argv);
 #ifndef USE_IPP
     if (useipp) {
-        std::cout << "Error IPP not found defaulting to ALCP" << std::endl;
+        alcp::testing::printErrors("Error IPP not found defaulting to ALCP");
+    }
+#endif
+#ifndef USE_OSSL
+    if (useossl) {
+        alcp::testing::printErrors(
+            "Error OpenSSL not found defaulting to ALCP");
     }
 #endif
     ::benchmark::Initialize(&argc, argv);

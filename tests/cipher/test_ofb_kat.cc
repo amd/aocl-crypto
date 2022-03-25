@@ -41,15 +41,13 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
     TestingCore testingCore = TestingCore(key_size, MODE_STR, ALC_MODE, useipp);
     while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
         // Checks if output is correct
-        EXPECT_TRUE(ArraysMatch(
-            testingCore.getCipherHandler()->testingEncrypt(
-                testingCore.getDs()->getPt(),
-                testingCore.getDs()->getKey(),
-                testingCore.getDs()->getIv()),
-            testingCore.getDs()->getCt(),
-            *(testingCore.getDs()),
-            std::string("AES_" + MODE_STR
-                        + "_128_ENC")));
+        EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingEncrypt(
+                                    testingCore.getDs()->getPt(),
+                                    testingCore.getDs()->getKey(),
+                                    testingCore.getDs()->getIv()),
+                                testingCore.getDs()->getCt(),
+                                *(testingCore.getDs()),
+                                std::string("AES_" + MODE_STR + "_128_ENC")));
     }
 }
 
@@ -59,15 +57,13 @@ TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
     TestingCore testingCore = TestingCore(key_size, MODE_STR, ALC_MODE, useipp);
     while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
         // Checks if output is correct
-        EXPECT_TRUE(ArraysMatch(
-            testingCore.getCipherHandler()->testingEncrypt(
-                testingCore.getDs()->getPt(),
-                testingCore.getDs()->getKey(),
-                testingCore.getDs()->getIv()),
-            testingCore.getDs()->getCt(),
-            *(testingCore.getDs()),
-            std::string("AES_" + MODE_STR
-                        + "_192_ENC")));
+        EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingEncrypt(
+                                    testingCore.getDs()->getPt(),
+                                    testingCore.getDs()->getKey(),
+                                    testingCore.getDs()->getIv()),
+                                testingCore.getDs()->getCt(),
+                                *(testingCore.getDs()),
+                                std::string("AES_" + MODE_STR + "_192_ENC")));
     }
 }
 
@@ -77,15 +73,13 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
     TestingCore testingCore = TestingCore(key_size, MODE_STR, ALC_MODE, useipp);
     while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
         // Checks if output is correct
-        EXPECT_TRUE(ArraysMatch(
-            testingCore.getCipherHandler()->testingEncrypt(
-                testingCore.getDs()->getPt(),
-                testingCore.getDs()->getKey(),
-                testingCore.getDs()->getIv()),
-            testingCore.getDs()->getCt(),
-            *(testingCore.getDs()),
-            std::string("AES_" + MODE_STR
-                        + "_256_ENC")));
+        EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingEncrypt(
+                                    testingCore.getDs()->getPt(),
+                                    testingCore.getDs()->getKey(),
+                                    testingCore.getDs()->getIv()),
+                                testingCore.getDs()->getCt(),
+                                *(testingCore.getDs()),
+                                std::string("AES_" + MODE_STR + "_256_ENC")));
     }
 }
 
@@ -95,15 +89,13 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
     TestingCore testingCore = TestingCore(key_size, MODE_STR, ALC_MODE, useipp);
     while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
         // Checks if output is correct
-        EXPECT_TRUE(ArraysMatch(
-            testingCore.getCipherHandler()->testingDecrypt(
-                testingCore.getDs()->getCt(),
-                testingCore.getDs()->getKey(),
-                testingCore.getDs()->getIv()),
-            testingCore.getDs()->getPt(),
-            *(testingCore.getDs()),
-            std::string("AES_" + MODE_STR
-                        + "_128_DEC")));
+        EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingDecrypt(
+                                    testingCore.getDs()->getCt(),
+                                    testingCore.getDs()->getKey(),
+                                    testingCore.getDs()->getIv()),
+                                testingCore.getDs()->getPt(),
+                                *(testingCore.getDs()),
+                                std::string("AES_" + MODE_STR + "_128_DEC")));
     }
 }
 
@@ -113,15 +105,13 @@ TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
     TestingCore testingCore = TestingCore(key_size, MODE_STR, ALC_MODE, useipp);
     while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
         // Checks if output is correct
-        EXPECT_TRUE(ArraysMatch(
-            testingCore.getCipherHandler()->testingDecrypt(
-                testingCore.getDs()->getCt(),
-                testingCore.getDs()->getKey(),
-                testingCore.getDs()->getIv()),
-            testingCore.getDs()->getPt(),
-            *(testingCore.getDs()),
-            std::string("AES_" + MODE_STR
-                        + "_192_DEC")));
+        EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingDecrypt(
+                                    testingCore.getDs()->getCt(),
+                                    testingCore.getDs()->getKey(),
+                                    testingCore.getDs()->getIv()),
+                                testingCore.getDs()->getPt(),
+                                *(testingCore.getDs()),
+                                std::string("AES_" + MODE_STR + "_192_DEC")));
     }
 }
 
@@ -131,15 +121,13 @@ TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
     TestingCore testingCore = TestingCore(key_size, MODE_STR, ALC_MODE, useipp);
     while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
         // Checks if output is correct
-        EXPECT_TRUE(ArraysMatch(
-            testingCore.getCipherHandler()->testingDecrypt(
-                testingCore.getDs()->getCt(),
-                testingCore.getDs()->getKey(),
-                testingCore.getDs()->getIv()),
-            testingCore.getDs()->getPt(),
-            *(testingCore.getDs()),
-            std::string("AES_" + MODE_STR
-                        + "_256_DEC")));
+        EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingDecrypt(
+                                    testingCore.getDs()->getCt(),
+                                    testingCore.getDs()->getKey(),
+                                    testingCore.getDs()->getIv()),
+                                testingCore.getDs()->getPt(),
+                                *(testingCore.getDs()),
+                                std::string("AES_" + MODE_STR + "_256_DEC")));
     }
 }
 

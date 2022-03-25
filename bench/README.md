@@ -4,30 +4,15 @@
 
 Skip to [Executing Benches](##Executing Benches) if already installed
 
-### Installing GBench
-
-1. <code>git clone https://github.com/google/benchmark.git</code>
-2. <code>cd benchmark</code>
-3. <code>mkdir build</code>
-4. <code>cd build</code>
-5. <code>cmake ../ -DCMAKE_INSTALL_PREFIX="$HOME/.local" -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON -DCMAKE_BUILD_TYPE="Release"</code> 
-6. <code>make -j $(nproc --all)</code>
-7. <code>make install</code>
-
-### Setting Up Environment GBench
-
-1. <code>export C_LIBRARY_PATH=$HOME/.local/include:$C_LIBRARY_PATH</code>
-2. <code>export CPLUS_LIBRARY_PATH=$HOME/.local/include:$CPLUS_LIBRARY_PATH</code>
-3. <code>export LD_LIBRARY_PATH=$HOME/.local/lib:$HOME/.local/lib64</code>
-
 ### Building ALCP with Testing framework
 
 1. <code>git clone [alcp-crypto git url here]</code>
 2. <code>cd alcp-crypto</code>
-3. <code>cmake -B build -DALCP_ENABLE_EXAMPLES=ON -DALCP_BENCH=ON -DGBENCH_INSTALL_DIR=$HOME/.local</code> - <font color="red">Please replace <code>$HOME/.local</code> with GBench Prefix, if you have installed some other place</font>
+3. <code>cmake -B build -DALCP_ENABLE_EXAMPLES=ON -DALCP_ENABLE_BENCH=ON  -DCMAKE_BUILD_TYPE=Release</code>
 4. <code>cmake --build build</code>
 
-<font color="red">Note - To include IPP, please define <code>-DENABLE_TESTS_IPP_API=ON -DIPP_INSTALL_DIR=/path/to/ipp_prefix</code> in step 3.</font>
+<font color="red">Note - To include IPP, please define <code>-DENABLE_TESTS_IPP_API=ON -DIPP_INSTALL_DIR=/path/to/ipp_prefix</code> in step 3.</font><br>
+<font color="red"> Note - To include OpenSSL, please define <code>-DOPENSSL_INSTALL_DIR=/path/to/openssl_prefix</code> in step 3.</font>
 
 ## AES
 
@@ -41,7 +26,7 @@ To run tests with verbose mode (prints also success)
 2. <code>./bench/cipher/bench_cipher</code>
 3. <code>./tests/digest/bench_digest</code>
 
-#### Selecting tests
+#### Selecting benchmarks
 
 Example for selecting only "CBC" benchmarks
 
@@ -56,6 +41,10 @@ Always you can use <code>--help</code> to know all the command line arguments wh
 #### Using IPP
 
 For using IPP just specify <code>-i</code> command line argument.
+
+#### Using OpenSSL
+
+For using OpenSSL just specify <code>-o</code> command line argument.
 
 ### Testing Datasets
 
