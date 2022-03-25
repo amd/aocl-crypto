@@ -5,7 +5,7 @@ GIT_TAG 4523B6410BFCD3289597FA2B5B6E18DE)
 FetchContent_MakeAvailable(gtest)
 
 # Basic sources and libs needed for ALCP
-set(ALC_BASE_FILES ${ALC_BASE_FILES} base/alc_base.cc base/base.cc)
+set(ALC_BASE_FILES ${ALC_BASE_FILES} ../common/base/rng_base.cc base/alc_base.cc base/base.cc)
 set(LIBS ${LIBS} gtest alcp)
 
 if(ENABLE_TESTS_IPP_API)
@@ -40,8 +40,19 @@ function(KAT_AES MOD)
     target_link_libraries(aes_${MOD}_kat ${LIBS})
 endfunction()
 
+function(CROSS_AES MOD)
+    ADD_EXECUTABLE(aes_${MOD}_cross test_${MOD}_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
+    target_include_directories(aes_${MOD}_cross PRIVATE
+        "${CMAKE_SOURCE_DIR}/include" 
+        "${CMAKE_SOURCE_DIR}/lib/include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../common/include")
+    target_link_libraries(aes_${MOD}_cross ${LIBS})
+endfunction()
+
 
 KAT_AES(cbc)
 KAT_AES(cfb)
 KAT_AES(ctr)
 KAT_AES(ofb)
+CROSS_AES(cbc)

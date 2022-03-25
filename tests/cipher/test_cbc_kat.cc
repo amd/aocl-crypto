@@ -39,8 +39,8 @@ std::string MODE_STR = "CBC";
 /* Testing Starts Here! */
 TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
 {
-    int         key_size    = 128;
-    TestingCore testingCore = TestingCore(key_size, MODE_STR, ALC_MODE, useipp);
+    int            key_size    = 128;
+    KATTestingCore testingCore = KATTestingCore(MODE_STR, ALC_MODE);
     while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
         // Checks if output is correct
         EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingEncrypt(
@@ -55,8 +55,8 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
 
 TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
 {
-    int         key_size    = 192;
-    TestingCore testingCore = TestingCore(key_size, MODE_STR, ALC_MODE, useipp);
+    int            key_size    = 192;
+    KATTestingCore testingCore = KATTestingCore(MODE_STR, ALC_MODE);
     while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
         // Checks if output is correct
         EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingEncrypt(
@@ -71,8 +71,8 @@ TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
 
 TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
 {
-    int         key_size    = 256;
-    TestingCore testingCore = TestingCore(key_size, MODE_STR, ALC_MODE, useipp);
+    int            key_size    = 256;
+    KATTestingCore testingCore = KATTestingCore(MODE_STR, ALC_MODE);
     while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
         // Checks if output is correct
         EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingEncrypt(
@@ -87,8 +87,8 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
 
 TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
 {
-    int         key_size    = 128;
-    TestingCore testingCore = TestingCore(key_size, MODE_STR, ALC_MODE, useipp);
+    int            key_size    = 128;
+    KATTestingCore testingCore = KATTestingCore(MODE_STR, ALC_MODE);
     while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
         // Checks if output is correct
         EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingDecrypt(
@@ -103,8 +103,8 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
 
 TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
 {
-    int         key_size    = 192;
-    TestingCore testingCore = TestingCore(key_size, MODE_STR, ALC_MODE, useipp);
+    int            key_size    = 192;
+    KATTestingCore testingCore = KATTestingCore(MODE_STR, ALC_MODE);
     while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
         // Checks if output is correct
         EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingDecrypt(
@@ -119,8 +119,8 @@ TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
 
 TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
 {
-    int         key_size    = 256;
-    TestingCore testingCore = TestingCore(key_size, MODE_STR, ALC_MODE, useipp);
+    int            key_size    = 256;
+    KATTestingCore testingCore = KATTestingCore(MODE_STR, ALC_MODE);
     while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
         // Checks if output is correct
         EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingDecrypt(

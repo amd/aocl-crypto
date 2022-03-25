@@ -271,5 +271,44 @@ printErrors(std::string in)
         std::cerr << in << std::endl;
     }
 }
+std::vector<uint8_t>
+parseHexStrToBin(const std::string in)
+{
+    std::vector<uint8_t> vector;
+    int                  len = in.size();
+    int                  ind = 0;
+
+    for (int i = 0; i < len; i += 2) {
+        uint8_t val =
+            parseHexToNum(in.at(ind)) << 4 | parseHexToNum(in.at(ind + 1));
+        vector.push_back(val);
+        ind += 2;
+    }
+    return vector;
+}
+std::string
+parseBytesToHexStr(const uint8_t* bytes, const int length)
+{
+    std::stringstream ss;
+    for (int i = 0; i < length; i++) {
+        int charRep;
+        charRep = bytes[i];
+        // Convert int to hex
+        ss << std::hex << charRep;
+    }
+    return ss.str();
+}
+uint8_t
+parseHexToNum(const unsigned char c)
+{
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
+    if (c >= '0' && c <= '9')
+        return c - '0';
+
+    return 0;
+}
 
 } // namespace alcp::testing

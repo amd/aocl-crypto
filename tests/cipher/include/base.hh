@@ -123,4 +123,10 @@ class CipherTesting
 
 void
 printErrors(std::string in);
+std::vector<uint8_t>
+parseHexStrToBin(const std::string in);
+std::string
+parseBytesToHexStr(const uint8_t* bytes, const int length);
+uint8_t
+parseHexToNum(const unsigned char c);
 } // namespace alcp::testing
