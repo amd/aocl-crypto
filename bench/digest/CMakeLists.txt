@@ -22,7 +22,7 @@ if(OPENSSL_INSTALL_DIR)
 #     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
      set(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/digest/base/openssl_base.cc)
      set(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
- endif(OPENSSL_INSTALL_DIR)
+endif(OPENSSL_INSTALL_DIR)
 
 ADD_EXECUTABLE(bench_digest bench_main.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
