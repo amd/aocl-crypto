@@ -59,7 +59,9 @@ class OpenSSLDigestBase : public DigestBase
     alc_error_t digest_function(const uint8_t* src,
                                 uint64_t       src_size,
                                 uint8_t*       output,
-                                unsigned int       out_size);
-    void hash_to_string(char* output_string, const uint8_t* hash, int sha_len);
+                                unsigned int   out_size);
+    void hash_to_string(char* output_string,
+                        const uint8_t* hash,
+                        int sha_len);
 };
 } // namespace alcp::bench

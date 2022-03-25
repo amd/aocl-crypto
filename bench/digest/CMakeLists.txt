@@ -17,17 +17,17 @@ if(ENABLE_TESTS_IPP_API)
 endif(ENABLE_TESTS_IPP_API)
 
 # Enable below code once openssl support for digest is done
-# if(OPENSSL_INSTALL_DIR)
-#     add_compile_options("-DUSE_OSSL")
+if(OPENSSL_INSTALL_DIR)
+     add_compile_options("-DUSE_OSSL")
 #     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
-#     set(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/digest/base/openssl_base.cc)
-#     set(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
-# endif(OPENSSL_INSTALL_DIR)
+     set(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/digest/base/openssl_base.cc)
+     set(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
+ endif(OPENSSL_INSTALL_DIR)
 
 ADD_EXECUTABLE(bench_digest bench_main.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
 target_include_directories(bench_digest PRIVATE
-	"${CMAKE_SOURCE_DIR}/include" 
+	"${CMAKE_SOURCE_DIR}/include"
 	"${CMAKE_SOURCE_DIR}/lib/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${CMAKE_SOURCE_DIR}/tests/digest/include"

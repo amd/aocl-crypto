@@ -93,9 +93,9 @@ OpenSSLDigestBase::init(_alc_sha2_mode   mode,
 
 alc_error_t
 OpenSSLDigestBase::digest_function(const uint8_t* in,
-                               uint64_t       in_size,
-                               uint8_t*       out,
-                               unsigned int       out_size)
+                                   uint64_t       in_size,
+                                   uint8_t*       out,
+                                   unsigned int   out_size)
 {
     EVP_DigestUpdate(m_handle, in, in_size);
     EVP_DigestFinal_ex(m_handle, out, &out_size);
@@ -106,8 +106,8 @@ OpenSSLDigestBase::digest_function(const uint8_t* in,
 
 void
 OpenSSLDigestBase::hash_to_string(char*          output_string,
-                              const uint8_t* hash,
-                              int            sha_len)
+                                  const uint8_t* hash,
+                                  int            sha_len)
 {
     for (int i = 0; i < sha_len / 8; i++) {
         output_string += sprintf(output_string, "%02x", hash[i]);

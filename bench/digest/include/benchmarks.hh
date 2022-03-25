@@ -29,9 +29,15 @@
 #pragma once
 #include "alc_base.hh"
 #include "base.hh"
+
 #ifdef USE_IPP
 #include "ipp_base.hh"
 #endif
+
+#ifdef USE_OSSL
+#include "openssl_base.hh"
+#endif
+
 #include "gbench_base.hh"
 #include "string.h"
 #include <alcp/alcp.h>
@@ -54,6 +60,14 @@ Digest_SHA2_224(benchmark::State& state, uint64_t block_size)
         db = &idb;
     }
 #endif
+
+#ifdef USE_OSSL
+    OpenSSLDigestBase odb(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+    if (useossl) {
+        db = &odb;
+    }
+#endif
+
     for (auto _ : state) {
         error =
             db->digest_function(message, block_size, digest, sizeof(digest));
@@ -78,11 +92,19 @@ Digest_SHA2_256(benchmark::State& state, uint64_t block_size)
     AlcpDigestBase adb(ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
     DigestBase*    db = &adb;
 #ifdef USE_IPP
-    IPPDigestBase idb(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+    IPPDigestBase idb(ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
     if (useipp) {
         db = &idb;
     }
 #endif
+
+#ifdef USE_OSSL
+    OpenSSLDigestBase odb(ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
+    if (useossl) {
+        db = &odb;
+    }
+#endif
+
     for (auto _ : state) {
         error =
             db->digest_function(message, block_size, digest, sizeof(digest));
@@ -107,11 +129,19 @@ Digest_SHA2_384(benchmark::State& state, uint64_t block_size)
     AlcpDigestBase adb(ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
     DigestBase*    db = &adb;
 #ifdef USE_IPP
-    IPPDigestBase idb(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+    IPPDigestBase idb(ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
     if (useipp) {
         db = &idb;
     }
 #endif
+
+#ifdef USE_OSSL
+    OpenSSLDigestBase odb(ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
+    if (useossl) {
+        db = &odb;
+    }
+#endif
+
     for (auto _ : state) {
         error =
             db->digest_function(message, block_size, digest, sizeof(digest));
@@ -136,11 +166,19 @@ Digest_SHA2_512(benchmark::State& state, uint64_t block_size)
     AlcpDigestBase adb(ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
     DigestBase*    db = &adb;
 #ifdef USE_IPP
-    IPPDigestBase idb(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+    IPPDigestBase idb(ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
     if (useipp) {
         db = &idb;
     }
 #endif
+
+#ifdef USE_OSSL
+    OpenSSLDigestBase odb(ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
+    if (useossl) {
+        db = &odb;
+    }
+#endif
+
     for (auto _ : state) {
         error =
             db->digest_function(message, block_size, digest, sizeof(digest));

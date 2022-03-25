@@ -29,6 +29,7 @@
 
 static bool verbose = false;
 static bool useipp  = false;
+static bool useossl = false;
 void
 parseArgs(int* argc, char** argv)
 {
@@ -53,6 +54,10 @@ parseArgs(int* argc, char** argv)
             } else if ((currentArg == std::string("--use-ipp"))
                        || (currentArg == std::string("-i"))) {
                 useipp = true;
+                *argc -= 1;
+            } else if ((currentArg == std::string("--use-ossl"))
+                        || (currentArg == std::string("-o"))) {
+                useossl = true;
                 *argc -= 1;
             }
         }
