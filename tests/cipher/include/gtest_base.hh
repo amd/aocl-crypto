@@ -31,6 +31,10 @@
 #ifdef USE_IPP
 #include "ipp_base.hh"
 #endif
+#ifdef USE_OSSL
+#include "openssl_base.hh"
+#endif
+#include "openssl_base.hh"
 #include <base.hh>
 #include <gtest/gtest.h>
 #include <vector>
@@ -42,6 +46,7 @@ using namespace alcp::testing;
 
 static bool verbose = false;
 static bool useipp  = false;
+static bool useossl = false;
 
 ::testing::AssertionResult
 ArraysMatch(std::vector<uint8_t>    actual,
@@ -49,7 +54,10 @@ ArraysMatch(std::vector<uint8_t>    actual,
             alcp::testing::DataSet& ds,
             std::string             testName)
 {
-    for (size_t i = 0; i < expected.size(); i++) {
+    if (actual.size() != expected.size()) {
+        return ::testing::AssertionFailure() << "Size mismatch!";
+    }
+    for (size_t i = 0; i < actual.size(); i++) {
         // TODO: Replace with proper cast
         if (expected[i] != actual[i]) {
             std::string actual_error   = ds.parseBytesToHexStr(&actual[i], 1);
@@ -209,6 +217,9 @@ class TestingCore
 #ifdef USE_IPP
     IPPCipherBase* icb;
 #endif
+#ifdef USE_OSSL
+    OpenSSLCipherBase* ocb;
+#endif
   public:
     TestingCore(const int      key_size,
                 std::string    modeStr,
@@ -223,21 +234,29 @@ class TestingCore
         // Initialize cipher testing classes
         cipherHandler = new CipherTesting();
         acb           = new AlcpCipherBase(alcpMode, NULL);
+        cipherHandler->setcb(acb);
 #ifdef USE_IPP
         icb = new IPPCipherBase(alcpMode, NULL);
         if (useipp) {
-            // std::cout << "Using IPP" << std::endl;
+            std::cout << "Using IPP" << std::endl;
             cipherHandler->setcb(icb);
-        } else {
-            // std::cout << "Using ALCP" << std::endl;
-            cipherHandler->setcb(acb);
         }
 #else
         if (useipp) {
-            std::cout << "IPP is unavailable at the moment switching to ALCP!"
-                      << std::endl;
+            printErrors("IPP is unavailable at the moment switching to ALCP!");
         }
-        cipherHandler->setcb(acb);
+#endif
+#ifdef USE_OSSL
+        ocb = new OpenSSLCipherBase(alcpMode, NULL);
+        if (useossl) {
+            std::cout << "Using OpenSSL" << std::endl;
+            cipherHandler->setcb(ocb);
+        }
+#else
+        if (useossl) {
+            printErrors(
+                "OpenSSL is unavailable at the moment switching to ALCP!");
+        }
 #endif
     }
     ~TestingCore()
@@ -247,6 +266,9 @@ class TestingCore
         delete acb;
 #ifdef USE_IPP
         delete icb;
+#endif
+#ifdef USE_OSSL
+        delete ocb;
 #endif
     }
     DataSet*       getDs() { return ds; }
@@ -267,12 +289,17 @@ parseArgs(int argc, char** argv)
                 std::cout << "--verbose or -v per line status." << std::endl;
                 std::cout << "--use-ipp or -i force IPP use in testing."
                           << std::endl;
+                std::cout << "--use-ossl or -o force OpenSSL use in testing"
+                          << std::endl;
             } else if ((currentArg == std::string("--verbose"))
                        || (currentArg == std::string("-v"))) {
                 verbose = true;
             } else if ((currentArg == std::string("--use-ipp"))
                        || (currentArg == std::string("-i"))) {
                 useipp = true;
+            } else if ((currentArg == std::string("--use-ossl"))
+                       || (currentArg == std::string("-o"))) {
+                useossl = true;
             }
         }
     }

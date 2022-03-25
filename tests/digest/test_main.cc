@@ -26,6 +26,7 @@
  *
  */
 
+#include "colors.hh"
 #include "kat_tests.hh"
 
 int
@@ -37,7 +38,8 @@ main(int argc, char** argv)
     parseArgs(argc, argv);
 #ifndef USE_IPP
     if (useipp)
-        std::cout << "IPP is not avaiable, defaulting to ALCP" << std::endl;
+        std::cout << RED << "IPP is not avaiable, defaulting to ALCP" << RESET
+                  << std::endl;
 #endif
     auto default_printer =
         listeners.Release(listeners.default_result_printer());

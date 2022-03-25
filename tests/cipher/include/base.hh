@@ -29,7 +29,6 @@
 #include "alcp/alcp.h"
 #include <fstream>
 #include <iostream>
-#include <sstream>
 #include <vector>
 
 namespace alcp::testing {
@@ -121,4 +120,7 @@ class CipherTesting
                                         const std::vector<uint8_t> iv);
     void                 setcb(CipherBase* impl);
 };
+
+void
+printErrors(std::string in);
 } // namespace alcp::testing
