@@ -171,10 +171,17 @@ DataSet::parseBytesToHexStr(const uint8_t* bytes, const int length)
 {
     std::stringstream ss;
     for (int i = 0; i < length; i++) {
-        int charRep;
+        int               charRep;
+        std::stringstream il;
         charRep = bytes[i];
         // Convert int to hex
-        ss << std::hex << charRep;
+        il << std::hex << charRep;
+        std::string ilStr = il.str();
+        // 01 will be 0x1 so we need to make it 0x01
+        if (ilStr.size() != 2) {
+            ilStr = "0" + ilStr;
+        }
+        ss << ilStr;
     }
     return ss.str();
 }
@@ -221,10 +228,12 @@ CipherTesting::testingEncrypt(const std::vector<uint8_t> plaintext,
 {
     if (cb != nullptr) {
         if (cb->init(&iv[0], &key[0], key.size() * 8)) {
-            uint8_t ciphertext[plaintext.size()];
+            // For very large sizes, dynamic is better.
+            uint8_t* ciphertext = new uint8_t[plaintext.size()];
             cb->encrypt(&(plaintext[0]), plaintext.size(), ciphertext);
             std::vector<uint8_t> vt =
                 std::vector<uint8_t>(ciphertext, ciphertext + plaintext.size());
+            delete[] ciphertext;
             return vt;
         }
     } else {
@@ -241,10 +250,12 @@ CipherTesting::testingDecrypt(const std::vector<uint8_t> ciphertext,
 {
     if (cb != nullptr) {
         if (cb->init(&iv[0], &key[0], key.size() * 8)) {
-            uint8_t plaintext[ciphertext.size()];
+            // For very large sizes, dynamic is better.
+            uint8_t* plaintext = new uint8_t[ciphertext.size()];
             cb->decrypt(&ciphertext[0], ciphertext.size(), plaintext);
             std::vector<uint8_t> vt =
                 std::vector<uint8_t>(plaintext, plaintext + ciphertext.size());
+            delete[] plaintext;
             return vt;
         }
     } else {
@@ -291,10 +302,17 @@ parseBytesToHexStr(const uint8_t* bytes, const int length)
 {
     std::stringstream ss;
     for (int i = 0; i < length; i++) {
-        int charRep;
+        int               charRep;
+        std::stringstream il;
         charRep = bytes[i];
         // Convert int to hex
-        ss << std::hex << charRep;
+        il << std::hex << charRep;
+        std::string ilStr = il.str();
+        // 01 will be 0x1 so we need to make it 0x01
+        if (ilStr.size() != 2) {
+            ilStr = "0" + ilStr;
+        }
+        ss << ilStr;
     }
     return ss.str();
 }

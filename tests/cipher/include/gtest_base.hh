@@ -85,11 +85,13 @@ ArraysMatch(std::vector<uint8_t> actual, std::vector<uint8_t> expected)
     for (size_t i = 0; i < actual.size(); i++) {
         // TODO: Replace with proper cast
         if (expected[i] != actual[i]) {
-            return ::testing::AssertionFailure() << "Does not match, Failure!";
+            return ::testing::AssertionFailure()
+                   << "Does not match,"
+                   << "Size:" << actual.size() << " Failure!";
         }
     }
     if (verbose) {
-        std::cout << " Success" << std::endl;
+        std::cout << "Size:" << actual.size() << " Success" << std::endl;
     }
     return ::testing::AssertionSuccess();
 }

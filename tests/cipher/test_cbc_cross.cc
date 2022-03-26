@@ -26,6 +26,14 @@
  *
  */
 
+/**
+ * @brief Comparing ALCP's output to another external liberary
+ *
+ * Mandatory Dependances: alcp-cipher,alcp-rng,openssl/ipp (one of them needs to
+ * be present)
+ *
+ */
+
 #include "alc_base.hh"
 #include "base.hh"
 #include "gtest_base.hh"
@@ -33,12 +41,45 @@
 
 using namespace alcp::testing;
 
-std::string MODE_STR = "CBC";
-
 #define ALC_MODE ALC_AES_MODE_CBC
 
 /* Testing Starts Here! */
-TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
+TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
+{
+    int             key_size = 128;
+    KATTestingCore  alcpTC   = KATTestingCore(ALCP, ALC_MODE);
+    KATTestingCore* extTC    = nullptr;
+    RngBase         rb;
+    // Set extTC based on which external testing core user asks
+    try {
+        if (useossl)
+            extTC = new KATTestingCore(OPENSSL, ALC_MODE);
+        else if (useipp)
+            extTC = new KATTestingCore(IPP, ALC_MODE);
+        else {
+            printErrors("No Lib Specified!");
+        }
+    } catch (const char* exc) {
+        std::cerr << exc << std::endl;
+    }
+    if (extTC != nullptr) {
+        for (int i = 16; i < 16 * 100000; i += 1616) {
+            std::vector<uint8_t> pt, key, iv;
+            pt  = rb.genRandomBytes(i);
+            key = rb.genRandomBytes(16);
+            iv  = rb.genRandomBytes(16);
+            std::vector enc_1 =
+                alcpTC.getCipherHandler()->testingEncrypt(pt, key, iv);
+            std::vector enc_2 =
+                extTC->getCipherHandler()->testingEncrypt(pt, key, iv);
+            EXPECT_TRUE(ArraysMatch(enc_1, enc_2));
+        }
+        delete extTC;
+    }
+}
+
+/* Testing Starts Here! */
+TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
 {
     int             key_size = 128;
     KATTestingCore  alcpTC   = KATTestingCore(ALCP, ALC_MODE);
@@ -56,31 +97,111 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
         std::cerr << exc << std::endl;
     }
     if (extTC != nullptr) {
-        std::vector<uint8_t> pt(50, 1), key(16, 0), iv(16, 0);
-        pt = rb.genRandomBytes(50);
-        std::vector enc_1 =
-            alcpTC.getCipherHandler()->testingEncrypt(pt, key, iv);
-        std::vector enc_2 =
-            extTC->getCipherHandler()->testingEncrypt(pt, key, iv);
-        ArraysMatch(enc_1, enc_2);
-        std::cout << parseBytesToHexStr(&pt[0], pt.size()) << std::endl;
-        std::cout << parseBytesToHexStr(&enc_1[0], enc_1.size()) << std::endl;
-        std::cout << parseBytesToHexStr(&enc_2[0], enc_2.size());
-        // << std::endl;
+        for (int i = 1; i <= 2; i++) {
+            size_t size = 16 * 10000000 * i; // 0.16g
+            // size *= 10;                      // 0.16g
+            std::vector<uint8_t> pt, key, iv;
+            try {
+                pt  = rb.genRandomBytes(size);
+                key = rb.genRandomBytes(16);
+                iv  = rb.genRandomBytes(16);
+            } catch (const char* err) {
+                printErrors(std::string(err));
+                std::exit(-1);
+            }
+            std::vector enc_1 =
+                alcpTC.getCipherHandler()->testingEncrypt(pt, key, iv);
+            std::vector enc_2 =
+                extTC->getCipherHandler()->testingEncrypt(pt, key, iv);
+            // std::cout << " PT " << parseBytesToHexStr(&pt[0], pt.size())
+            //           << std::endl;
+            // std::cout << "CT ALCP " << parseBytesToHexStr(&(enc_1[0]),
+            // enc_1.size())
+            //           << std::endl;
+            // std::cout << "CT EXTR " << parseBytesToHexStr(&(enc_2[0]),
+            // enc_2.size())
+            //           << std::endl;
+            EXPECT_TRUE(ArraysMatch(enc_1, enc_2));
+            // << std::endl;
+        }
         delete extTC;
     }
+}
 
-    // while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
-    //     // Checks if output is correct
-    //     EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingEncrypt(
-    //                                 testingCore.getDs()->getPt(),
-    //                                 testingCore.getDs()->getKey(),
-    //                                 testingCore.getDs()->getIv()),
-    //                             testingCore.getDs()->getCt(),
-    //                             *(testingCore.getDs()),
-    //                             std::string("AES_" + MODE_STR +
-    //                             "_128_ENC")));
-    // }
+TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
+{
+    int             key_size = 128;
+    KATTestingCore  alcpTC   = KATTestingCore(ALCP, ALC_MODE);
+    KATTestingCore* extTC    = nullptr;
+    RngBase         rb;
+    // Set extTC based on which external testing core user asks
+    try {
+        if (useossl)
+            extTC = new KATTestingCore(OPENSSL, ALC_MODE);
+        else if (useipp)
+            extTC = new KATTestingCore(IPP, ALC_MODE);
+        else {
+            printErrors("No Lib Specified!");
+        }
+    } catch (const char* exc) {
+        std::cerr << exc << std::endl;
+    }
+    if (extTC != nullptr) {
+        for (int i = 16; i < 16 * 100000; i += 1616) {
+            std::vector<uint8_t> ct, key, iv;
+            ct  = rb.genRandomBytes(i);
+            key = rb.genRandomBytes(16);
+            iv  = rb.genRandomBytes(16);
+            std::vector dec_1 =
+                alcpTC.getCipherHandler()->testingDecrypt(ct, key, iv);
+            std::vector dec_2 =
+                extTC->getCipherHandler()->testingDecrypt(ct, key, iv);
+            EXPECT_TRUE(ArraysMatch(dec_1, dec_2));
+        }
+        delete extTC;
+    }
+}
+
+/* Testing Starts Here! */
+TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
+{
+    int             key_size = 128;
+    KATTestingCore  alcpTC   = KATTestingCore(ALCP, ALC_MODE);
+    KATTestingCore* extTC    = nullptr;
+    RngBase         rb;
+    try {
+        if (useossl)
+            extTC = new KATTestingCore(OPENSSL, ALC_MODE);
+        else if (useipp)
+            extTC = new KATTestingCore(IPP, ALC_MODE);
+        else {
+            printErrors("No Lib Specified!");
+        }
+    } catch (const char* exc) {
+        std::cerr << exc << std::endl;
+    }
+    if (extTC != nullptr) {
+        for (int i = 1; i <= 2; i++) {
+            size_t size = 16 * 10000000 * i; // 0.16g
+            // size *= 10;                      // 0.16g
+            std::vector<uint8_t> ct, key, iv;
+            try {
+                ct  = rb.genRandomBytes(size);
+                key = rb.genRandomBytes(16);
+                iv  = rb.genRandomBytes(16);
+            } catch (const char* err) {
+                printErrors(std::string(err));
+                std::exit(-1);
+            }
+            // May need encryption step for GCM cuz of MAC
+            std::vector dec_1 =
+                alcpTC.getCipherHandler()->testingDecrypt(ct, key, iv);
+            std::vector dec_2 =
+                extTC->getCipherHandler()->testingDecrypt(ct, key, iv);
+            EXPECT_TRUE(ArraysMatch(dec_1, dec_2));
+        }
+        delete extTC;
+    }
 }
 
 int

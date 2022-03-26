@@ -59,7 +59,9 @@ std::vector<uint8_t>
 RngBase::genRandomBytes(size_t l)
 {
     std::vector<uint8_t> ret(l, 0);
-    alcp_rng_gen_random(&m_handle, &(ret[0]), l);
+    if (alcp_rng_gen_random(&m_handle, &(ret[0]), l) == ALC_ERROR_NO_ENTROPY) {
+        throw "rng_base.cc : Bail out! not enough entropy!";
+    }
     return ret;
 }
 } // namespace alcp::testing
