@@ -62,7 +62,8 @@ Digest_SHA2_224(benchmark::State& state, uint64_t block_size)
 #endif
 
 #ifdef USE_OSSL
-    OpenSSLDigestBase odb(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+    OpenSSLDigestBase odb(
+        ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
     if (useossl) {
         db = &odb;
     }
@@ -99,7 +100,8 @@ Digest_SHA2_256(benchmark::State& state, uint64_t block_size)
 #endif
 
 #ifdef USE_OSSL
-    OpenSSLDigestBase odb(ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
+    OpenSSLDigestBase odb(
+        ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
     if (useossl) {
         db = &odb;
     }
@@ -136,7 +138,8 @@ Digest_SHA2_384(benchmark::State& state, uint64_t block_size)
 #endif
 
 #ifdef USE_OSSL
-    OpenSSLDigestBase odb(ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
+    OpenSSLDigestBase odb(
+        ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
     if (useossl) {
         db = &odb;
     }
@@ -173,7 +176,8 @@ Digest_SHA2_512(benchmark::State& state, uint64_t block_size)
 #endif
 
 #ifdef USE_OSSL
-    OpenSSLDigestBase odb(ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
+    OpenSSLDigestBase odb(
+        ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
     if (useossl) {
         db = &odb;
     }

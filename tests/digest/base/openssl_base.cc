@@ -31,8 +31,8 @@
 namespace alcp::bench {
 
 OpenSSLDigestBase::OpenSSLDigestBase(_alc_sha2_mode   mode,
-                             _alc_digest_type type,
-                             _alc_digest_len  sha_len)
+                                     _alc_digest_type type,
+                                     _alc_digest_len  sha_len)
     : m_mode{ mode }
     , m_type{ type }
     , m_sha_len{ sha_len }
@@ -51,7 +51,7 @@ bool
 OpenSSLDigestBase::init()
 {
     if (m_handle != nullptr) {
-        delete[] reinterpret_cast<uint8_t*>(m_handle);
+        EVP_MD_CTX_free(m_handle);
         m_handle = nullptr;
     }
 
@@ -82,8 +82,8 @@ OpenSSLDigestBase::init()
 
 bool
 OpenSSLDigestBase::init(_alc_sha2_mode   mode,
-                    _alc_digest_type type,
-                    _alc_digest_len  sha_len)
+                        _alc_digest_type type,
+                        _alc_digest_len  sha_len)
 {
     this->m_mode    = mode;
     this->m_type    = type;
@@ -95,11 +95,12 @@ alc_error_t
 OpenSSLDigestBase::digest_function(const uint8_t* in,
                                    uint64_t       in_size,
                                    uint8_t*       out,
-                                   unsigned int   out_size)
+                                   uint64_t       out_size)
 {
+    unsigned int outsize = 0;
     EVP_DigestUpdate(m_handle, in, in_size);
-    EVP_DigestFinal_ex(m_handle, out, &out_size);
-    EVP_MD_CTX_free(m_handle);
+    EVP_DigestFinal_ex(m_handle, out, &outsize);
+    out_size = outsize;
 
     return ALC_ERROR_NONE;
 }

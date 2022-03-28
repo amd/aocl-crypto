@@ -36,6 +36,7 @@
 
 static bool verbose = false;
 static bool useipp  = false;
+static bool useossl = false;
 
 ::testing::AssertionResult
 ArraysMatch(std::vector<uint8_t>  actual,
@@ -207,12 +208,17 @@ parseArgs(int argc, char** argv)
                 std::cout << "--verbose or -v per line status." << std::endl;
                 std::cout << "--use-ipp or -i force IPP use in testing."
                           << std::endl;
+                std::cout << "--use-ossl or -o force OpenSSL use in testing"
+                          << std::endl;
             } else if ((currentArg == std::string("--verbose"))
                        || (currentArg == std::string("-v"))) {
                 verbose = true;
             } else if ((currentArg == std::string("--use-ipp"))
                        || (currentArg == std::string("-i"))) {
                 useipp = true;
+            } else if ((currentArg == std::string("--use-ossl"))
+                       || (currentArg == std::string("-o"))) {
+                useossl = true;
             }
         }
     }

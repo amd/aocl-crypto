@@ -29,17 +29,17 @@
 
 #include "base.hh"
 #include <alcp/alcp.h>
+#include <iostream>
 #include <openssl/conf.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
-#include <iostream>
 #include <stdio.h>
 #include <string.h>
 
 namespace alcp::bench {
 class OpenSSLDigestBase : public DigestBase
 {
-    EVP_MD_CTX *     m_handle = nullptr;
+    EVP_MD_CTX*      m_handle = nullptr;
     _alc_sha2_mode   m_mode;
     _alc_digest_type m_type;
     _alc_digest_len  m_sha_len;
@@ -48,8 +48,8 @@ class OpenSSLDigestBase : public DigestBase
 
   public:
     OpenSSLDigestBase(_alc_sha2_mode   mode,
-                  _alc_digest_type type,
-                  _alc_digest_len  sha_len);
+                      _alc_digest_type type,
+                      _alc_digest_len  sha_len);
     ~OpenSSLDigestBase();
     bool init();
     bool init(_alc_sha2_mode   mode,
@@ -59,9 +59,7 @@ class OpenSSLDigestBase : public DigestBase
     alc_error_t digest_function(const uint8_t* src,
                                 uint64_t       src_size,
                                 uint8_t*       output,
-                                unsigned int   out_size);
-    void hash_to_string(char* output_string,
-                        const uint8_t* hash,
-                        int sha_len);
+                                uint64_t       out_size);
+    void hash_to_string(char* output_string, const uint8_t* hash, int sha_len);
 };
 } // namespace alcp::bench
