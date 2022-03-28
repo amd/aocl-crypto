@@ -1,4 +1,5 @@
 include(FetchContent)
+include(GoogleTest)
 FetchContent_Declare(gtest
     GIT_REPOSITORY https://github.com/google/googletest.git
     GIT_TAG 4523B6410BFCD3289597FA2B5B6E18DE)
@@ -31,7 +32,6 @@ target_include_directories(test_digest PRIVATE
 	"${CMAKE_SOURCE_DIR}/lib/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/../common/include")
-    
 target_link_libraries(test_digest ${LIBS})
 
 function(TEST_DATA_LINK SHA_ALG)
@@ -45,3 +45,6 @@ TEST_DATA_LINK(SHA_224)
 TEST_DATA_LINK(SHA_256)
 TEST_DATA_LINK(SHA_384)
 TEST_DATA_LINK(SHA_512)
+
+gtest_add_tests(TARGET      test_digest
+                TEST_SUFFIX .${MOD})

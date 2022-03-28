@@ -1,4 +1,5 @@
 include(FetchContent)
+include(GoogleTest)
 FetchContent_Declare(gtest
     GIT_REPOSITORY https://github.com/google/googletest.git
     GIT_TAG 4523B6410BFCD3289597FA2B5B6E18DE)
@@ -38,6 +39,8 @@ function(KAT_AES MOD)
         "${CMAKE_CURRENT_SOURCE_DIR}/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/../common/include")
     target_link_libraries(aes_${MOD}_kat ${LIBS})
+    gtest_add_tests(TARGET      aes_${MOD}_kat
+                    TEST_SUFFIX .${MOD})
 endfunction()
 
 function(CROSS_AES MOD)
