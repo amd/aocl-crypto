@@ -1,7 +1,11 @@
 include(FetchContent)
+FetchContent_Declare(gtest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG 4523B6410BFCD3289597FA2B5B6E18DE)
+FetchContent_MakeAvailable(gtest)
 FetchContent_Declare(benchmark
-        GIT_REPOSITORY https://github.com/google/benchmark.git
-        GIT_TAG v1.6.1)
+    GIT_REPOSITORY https://github.com/google/benchmark.git
+    GIT_TAG v1.6.1)
 FetchContent_MakeAvailable(benchmark)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
