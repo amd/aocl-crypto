@@ -46,16 +46,16 @@ using namespace alcp::testing;
 /* Testing Starts Here! */
 TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
 {
-    int             key_size = 128;
-    KATTestingCore  alcpTC   = KATTestingCore(ALCP, ALC_MODE);
-    KATTestingCore* extTC    = nullptr;
-    RngBase         rb;
+    int          key_size = 128;
+    TestingCore  alcpTC   = TestingCore(ALCP, ALC_MODE);
+    TestingCore* extTC    = nullptr;
+    RngBase      rb;
     // Set extTC based on which external testing core user asks
     try {
         if (useossl)
-            extTC = new KATTestingCore(OPENSSL, ALC_MODE);
+            extTC = new TestingCore(OPENSSL, ALC_MODE);
         else if (useipp)
-            extTC = new KATTestingCore(IPP, ALC_MODE);
+            extTC = new TestingCore(IPP, ALC_MODE);
         else {
             printErrors("No Lib Specified!");
         }
@@ -81,15 +81,15 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
 /* Testing Starts Here! */
 TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
 {
-    int             key_size = 128;
-    KATTestingCore  alcpTC   = KATTestingCore(ALCP, ALC_MODE);
-    KATTestingCore* extTC    = nullptr;
-    RngBase         rb;
+    int          key_size = 128;
+    TestingCore  alcpTC   = TestingCore(ALCP, ALC_MODE);
+    TestingCore* extTC    = nullptr;
+    RngBase      rb;
     try {
         if (useossl)
-            extTC = new KATTestingCore(OPENSSL, ALC_MODE);
+            extTC = new TestingCore(OPENSSL, ALC_MODE);
         else if (useipp)
-            extTC = new KATTestingCore(IPP, ALC_MODE);
+            extTC = new TestingCore(IPP, ALC_MODE);
         else {
             printErrors("No Lib Specified!");
         }
@@ -113,14 +113,6 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
                 alcpTC.getCipherHandler()->testingEncrypt(pt, key, iv);
             std::vector enc_2 =
                 extTC->getCipherHandler()->testingEncrypt(pt, key, iv);
-            // std::cout << " PT " << parseBytesToHexStr(&pt[0], pt.size())
-            //           << std::endl;
-            // std::cout << "CT ALCP " << parseBytesToHexStr(&(enc_1[0]),
-            // enc_1.size())
-            //           << std::endl;
-            // std::cout << "CT EXTR " << parseBytesToHexStr(&(enc_2[0]),
-            // enc_2.size())
-            //           << std::endl;
             EXPECT_TRUE(ArraysMatch(enc_1, enc_2));
             // << std::endl;
         }
@@ -130,16 +122,16 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
 
 TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
 {
-    int             key_size = 128;
-    KATTestingCore  alcpTC   = KATTestingCore(ALCP, ALC_MODE);
-    KATTestingCore* extTC    = nullptr;
-    RngBase         rb;
+    int          key_size = 128;
+    TestingCore  alcpTC   = TestingCore(ALCP, ALC_MODE);
+    TestingCore* extTC    = nullptr;
+    RngBase      rb;
     // Set extTC based on which external testing core user asks
     try {
         if (useossl)
-            extTC = new KATTestingCore(OPENSSL, ALC_MODE);
+            extTC = new TestingCore(OPENSSL, ALC_MODE);
         else if (useipp)
-            extTC = new KATTestingCore(IPP, ALC_MODE);
+            extTC = new TestingCore(IPP, ALC_MODE);
         else {
             printErrors("No Lib Specified!");
         }
@@ -165,15 +157,15 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
 /* Testing Starts Here! */
 TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
 {
-    int             key_size = 128;
-    KATTestingCore  alcpTC   = KATTestingCore(ALCP, ALC_MODE);
-    KATTestingCore* extTC    = nullptr;
-    RngBase         rb;
+    int          key_size = 128;
+    TestingCore  alcpTC   = TestingCore(ALCP, ALC_MODE);
+    TestingCore* extTC    = nullptr;
+    RngBase      rb;
     try {
         if (useossl)
-            extTC = new KATTestingCore(OPENSSL, ALC_MODE);
+            extTC = new TestingCore(OPENSSL, ALC_MODE);
         else if (useipp)
-            extTC = new KATTestingCore(IPP, ALC_MODE);
+            extTC = new TestingCore(IPP, ALC_MODE);
         else {
             printErrors("No Lib Specified!");
         }

@@ -233,7 +233,7 @@ typedef enum
 } lib_t;
 
 // Just a class to reduce duplication of lines
-class KATTestingCore
+class TestingCore
 {
   private:
     DataSet*        ds            = nullptr;
@@ -246,7 +246,7 @@ class KATTestingCore
     OpenSSLCipherBase* ocb = nullptr;
 #endif
   public:
-    KATTestingCore(lib_t lib, alc_aes_mode_t alcpMode)
+    TestingCore(lib_t lib, alc_aes_mode_t alcpMode)
     {
         cipherHandler = new CipherTesting();
         switch (lib) {
@@ -282,7 +282,7 @@ class KATTestingCore
                 break;
         }
     }
-    KATTestingCore(std::string modeStr, alc_aes_mode_t alcpMode)
+    TestingCore(std::string modeStr, alc_aes_mode_t alcpMode)
     {
         std::transform(
             modeStr.begin(), modeStr.end(), modeStr.begin(), ::tolower);
@@ -317,7 +317,7 @@ class KATTestingCore
         }
 #endif
     }
-    ~KATTestingCore()
+    ~TestingCore()
     {
         if (ds != nullptr)
             delete ds;
