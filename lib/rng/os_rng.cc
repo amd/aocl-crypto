@@ -47,9 +47,17 @@ OsRng::readRandom(uint8_t* pBuf, uint64 size)
     // Linux Systemcall to get random values.
     uint64 out = getrandom(pBuf, size, 0);
 
-    assert(out == size);
-    /* FIXME: Just to get rid of unused-variable compiler message */
-    out = out;
+    for (int i = 0; i < 10; i++) { // Retry 10 times
+        if (out == size) {
+            break;
+        } else {
+            int delta = size - out;
+            out += getrandom(pBuf + out, delta, 0);
+        }
+    }
+    if (out != size) {
+        return ALC_ERROR_NO_ENTROPY;
+    }
 
     return ALC_ERROR_NONE;
 }
@@ -63,10 +71,18 @@ OsRng::readUrandom(uint8_t* pBuf, uint64 size)
     // Linux Systemcall to get random values.
     uint64 out = getrandom(pBuf, size, GRND_RANDOM);
 
-    assert(out == size);
+    for (int i = 0; i < 10; i++) { // Retry 10 times
+        if (out == size) {
+            break;
+        } else {
+            int delta = size - out;
+            out += getrandom(pBuf + out, delta, 0);
+        }
+    }
 
-    /* FIXME: Just to get rid of unused-variable compiler message */
-    out = out;
+    if (out != size) {
+        return ALC_ERROR_NO_ENTROPY;
+    }
 
     return ALC_ERROR_NONE;
 }

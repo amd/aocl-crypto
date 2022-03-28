@@ -51,7 +51,7 @@ main(int argc, char const* argv[])
         alc_rng_info_t rng_info;
         rng_info.ri_distrib =
             ALC_RNG_DISTRIB_UNIFORM; // Output should be uniform probablilty
-        rng_info.ri_source = SOURCE;  // Use OS RNG
+        rng_info.ri_source = SOURCE;
         rng_info.ri_type   = ALC_RNG_TYPE_DESCRETE; // Discrete output (uint8)
 
         /* Erase buffer and prove its empty */
