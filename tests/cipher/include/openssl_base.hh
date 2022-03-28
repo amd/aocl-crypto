@@ -39,10 +39,10 @@ class OpenSSLCipherBase : public CipherBase
   private:
     EVP_CIPHER_CTX* m_ctx_enc = nullptr;
     EVP_CIPHER_CTX* m_ctx_dec = nullptr;
-    const uint8_t*  m_iv;
-    const uint8_t*  m_key;
-    uint32_t        m_key_len;
-    alc_aes_mode_t  m_mode;
+    alc_aes_mode_t  m_mode    = {};
+    const uint8_t*  m_iv      = nullptr;
+    const uint8_t*  m_key     = nullptr;
+    uint32_t        m_key_len = 0;
 
     void              handleErrors();
     const EVP_CIPHER* alcpModeKeyLenToCipher(alc_aes_mode_t mode,

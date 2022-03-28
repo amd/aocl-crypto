@@ -150,42 +150,6 @@ DataSet::parseHexToNum(const unsigned char c)
     return 0;
 }
 
-std::vector<uint8_t>
-DataSet::parseHexStrToBin(const std::string in)
-{
-    std::vector<uint8_t> vector;
-    int                  len = in.size();
-    int                  ind = 0;
-
-    for (int i = 0; i < len; i += 2) {
-        uint8_t val =
-            parseHexToNum(in.at(ind)) << 4 | parseHexToNum(in.at(ind + 1));
-        vector.push_back(val);
-        ind += 2;
-    }
-    return vector;
-}
-
-std::string
-DataSet::parseBytesToHexStr(const uint8_t* bytes, const int length)
-{
-    std::stringstream ss;
-    for (int i = 0; i < length; i++) {
-        int               charRep;
-        std::stringstream il;
-        charRep = bytes[i];
-        // Convert int to hex
-        il << std::hex << charRep;
-        std::string ilStr = il.str();
-        // 01 will be 0x1 so we need to make it 0x01
-        if (ilStr.size() != 2) {
-            ilStr = "0" + ilStr;
-        }
-        ss << ilStr;
-    }
-    return ss.str();
-}
-
 int
 DataSet::getLineNumber()
 {

@@ -70,9 +70,6 @@ class DataSet : private File
     bool readPtIvKeyCt(size_t keybits);
     // Convert a hex char to number;
     uint8_t parseHexToNum(const unsigned char c);
-    // Parse hexString to binary
-    std::vector<uint8_t> parseHexStrToBin(const std::string in);
-    std::string parseBytesToHexStr(const uint8_t* bytes, const int length);
     // To print which line in dataset failed
     int getLineNumber();
     // Return private data plain text
@@ -121,6 +118,7 @@ class CipherTesting
     void                 setcb(CipherBase* impl);
 };
 
+/* Some functions which don't belong to any class but is common */
 void
 printErrors(std::string in);
 std::vector<uint8_t>

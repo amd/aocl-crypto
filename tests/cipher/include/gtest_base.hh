@@ -28,16 +28,15 @@
 
 #pragma once
 #include "alc_base.hh"
+#include <base.hh>
+#include <gtest/gtest.h>
+#include <vector>
 #ifdef USE_IPP
 #include "ipp_base.hh"
 #endif
 #ifdef USE_OSSL
 #include "openssl_base.hh"
 #endif
-#include "openssl_base.hh"
-#include <base.hh>
-#include <gtest/gtest.h>
-#include <vector>
 
 using namespace alcp::testing;
 
@@ -60,8 +59,8 @@ ArraysMatch(std::vector<uint8_t>    actual,
     for (size_t i = 0; i < actual.size(); i++) {
         // TODO: Replace with proper cast
         if (expected[i] != actual[i]) {
-            std::string actual_error   = ds.parseBytesToHexStr(&actual[i], 1);
-            std::string expected_error = ds.parseBytesToHexStr(&expected[i], 1);
+            std::string actual_error   = parseBytesToHexStr(&actual[i], 1);
+            std::string expected_error = parseBytesToHexStr(&expected[i], 1);
             return ::testing::AssertionFailure()
                    << "array[" << i << "] ("
                    << "0x" << actual_error << ") != expected[" << i << "]("
