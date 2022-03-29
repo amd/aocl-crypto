@@ -16,14 +16,13 @@ if(ENABLE_TESTS_IPP_API)
     set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.a)
 endif(ENABLE_TESTS_IPP_API)
 
-# Enable below code once openssl support for digest is done
-# if(OPENSSL_INSTALL_DIR)
-#     add_compile_options("-DUSE_OSSL")
-#     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
-#     set(EXTRA_SOURCES ${EXTRA_SOURCES} base/openssl_base.cc)
-#     set(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
-# endif(OPENSSL_INSTALL_DIR)
-# set(LIBS ${LIBS} pthread)
+if(OPENSSL_INSTALL_DIR)
+    add_compile_options("-DUSE_OSSL")
+    #  If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
+    set(EXTRA_SOURCES ${EXTRA_SOURCES} base/openssl_base.cc)
+    set(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
+ endif(OPENSSL_INSTALL_DIR)
+ set(LIBS ${LIBS} pthread)
 
 ADD_EXECUTABLE(test_digest test_main.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 

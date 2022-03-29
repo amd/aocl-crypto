@@ -27,39 +27,39 @@
  */
 #pragma once
 
-static bool verbose = false;
-static bool useipp  = false;
-static bool useossl = false;
-void
-parseArgs(int* argc, char** argv)
+#include "base.hh"
+#include <alcp/alcp.h>
+#include <iostream>
+#include <openssl/conf.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <stdio.h>
+#include <string.h>
+
+namespace alcp::bench {
+class OpenSSLDigestBase : public DigestBase
 {
-    std::string currentArg;
-    const int   _argc = *argc;
-    if (*argc > 1) {
-        for (int i = 1; i < _argc; i++) {
-            currentArg = std::string(argv[i]);
-            if ((currentArg == std::string("--help"))
-                || (currentArg == std::string("-h"))) {
-                std::cout << std::endl
-                          << "Additional help for microbenches" << std::endl;
-                std::cout << "Append these after gtest arguments only"
-                          << std::endl;
-                std::cout << "--verbose or -v per line status." << std::endl;
-                std::cout << "--use-ipp or -i force IPP use in testing."
-                          << std::endl;
-            } else if ((currentArg == std::string("--verbose"))
-                       || (currentArg == std::string("-v"))) {
-                verbose = true;
-                *argc -= 1;
-            } else if ((currentArg == std::string("--use-ipp"))
-                       || (currentArg == std::string("-i"))) {
-                useipp = true;
-                *argc -= 1;
-            } else if ((currentArg == std::string("--use-ossl"))
-                        || (currentArg == std::string("-o"))) {
-                useossl = true;
-                *argc -= 1;
-            }
-        }
-    }
-}
+    EVP_MD_CTX*      m_handle = nullptr;
+    _alc_sha2_mode   m_mode;
+    _alc_digest_type m_type;
+    _alc_digest_len  m_sha_len;
+    uint8_t*         m_message;
+    uint8_t*         m_digest;
+
+  public:
+    OpenSSLDigestBase(_alc_sha2_mode   mode,
+                      _alc_digest_type type,
+                      _alc_digest_len  sha_len);
+    ~OpenSSLDigestBase();
+    bool init();
+    bool init(_alc_sha2_mode   mode,
+              _alc_digest_type type,
+              _alc_digest_len  sha_len);
+
+    alc_error_t digest_function(const uint8_t* src,
+                                uint64_t       src_size,
+                                uint8_t*       output,
+                                uint64_t       out_size);
+    void hash_to_string(char* output_string, const uint8_t* hash, int sha_len);
+};
+} // namespace alcp::bench

@@ -33,6 +33,9 @@
 #ifdef USE_IPP
 #include "ipp_base.hh"
 #endif
+#ifdef USE_OSSL
+#include "openssl_base.hh"
+#endif
 #include "string.h"
 #include <alcp/alcp.h>
 #include <iostream>
@@ -52,6 +55,12 @@ TEST(DIGEST_SHA2, KAT_224)
     IPPDigestBase idb(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
     if (useipp == true)
         db = &idb;
+#endif
+#ifdef USE_OSSL
+    OpenSSLDigestBase odb(
+        ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+    if (useossl == true)
+        db = &odb;
 #endif
     while (ds.readMsgDigest()) {
         error = db->digest_function(&(ds.getMessage()[0]),
