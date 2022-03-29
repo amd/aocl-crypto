@@ -150,35 +150,6 @@ DataSet::parseHexToNum(const unsigned char c)
     return 0;
 }
 
-std::vector<uint8_t>
-DataSet::parseHexStrToBin(const std::string in)
-{
-    std::vector<uint8_t> vector;
-    int                  len = in.size();
-    int                  ind = 0;
-
-    for (int i = 0; i < len; i += 2) {
-        uint8_t val =
-            parseHexToNum(in.at(ind)) << 4 | parseHexToNum(in.at(ind + 1));
-        vector.push_back(val);
-        ind += 2;
-    }
-    return vector;
-}
-
-std::string
-DataSet::parseBytesToHexStr(const uint8_t* bytes, const int length)
-{
-    std::stringstream ss;
-    for (int i = 0; i < length; i++) {
-        int charRep;
-        charRep = bytes[i];
-        // Convert int to hex
-        ss << std::hex << charRep;
-    }
-    return ss.str();
-}
-
 int
 DataSet::getLineNumber()
 {
@@ -221,10 +192,12 @@ CipherTesting::testingEncrypt(const std::vector<uint8_t> plaintext,
 {
     if (cb != nullptr) {
         if (cb->init(&iv[0], &key[0], key.size() * 8)) {
-            uint8_t ciphertext[plaintext.size()];
+            // For very large sizes, dynamic is better.
+            uint8_t* ciphertext = new uint8_t[plaintext.size()];
             cb->encrypt(&(plaintext[0]), plaintext.size(), ciphertext);
             std::vector<uint8_t> vt =
                 std::vector<uint8_t>(ciphertext, ciphertext + plaintext.size());
+            delete[] ciphertext;
             return vt;
         }
     } else {
@@ -241,10 +214,12 @@ CipherTesting::testingDecrypt(const std::vector<uint8_t> ciphertext,
 {
     if (cb != nullptr) {
         if (cb->init(&iv[0], &key[0], key.size() * 8)) {
-            uint8_t plaintext[ciphertext.size()];
+            // For very large sizes, dynamic is better.
+            uint8_t* plaintext = new uint8_t[ciphertext.size()];
             cb->decrypt(&ciphertext[0], ciphertext.size(), plaintext);
             std::vector<uint8_t> vt =
                 std::vector<uint8_t>(plaintext, plaintext + ciphertext.size());
+            delete[] plaintext;
             return vt;
         }
     } else {
@@ -270,6 +245,52 @@ printErrors(std::string in)
         // stdout is a pseudo terminal, unsafe to output color
         std::cerr << in << std::endl;
     }
+}
+std::vector<uint8_t>
+parseHexStrToBin(const std::string in)
+{
+    std::vector<uint8_t> vector;
+    int                  len = in.size();
+    int                  ind = 0;
+
+    for (int i = 0; i < len; i += 2) {
+        uint8_t val =
+            parseHexToNum(in.at(ind)) << 4 | parseHexToNum(in.at(ind + 1));
+        vector.push_back(val);
+        ind += 2;
+    }
+    return vector;
+}
+std::string
+parseBytesToHexStr(const uint8_t* bytes, const int length)
+{
+    std::stringstream ss;
+    for (int i = 0; i < length; i++) {
+        int               charRep;
+        std::stringstream il;
+        charRep = bytes[i];
+        // Convert int to hex
+        il << std::hex << charRep;
+        std::string ilStr = il.str();
+        // 01 will be 0x1 so we need to make it 0x01
+        if (ilStr.size() != 2) {
+            ilStr = "0" + ilStr;
+        }
+        ss << ilStr;
+    }
+    return ss.str();
+}
+uint8_t
+parseHexToNum(const unsigned char c)
+{
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
+    if (c >= '0' && c <= '9')
+        return c - '0';
+
+    return 0;
 }
 
 } // namespace alcp::testing

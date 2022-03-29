@@ -31,7 +31,7 @@
 #include "gbench_base.hh"
 
 // Test blocksizes, append more if needed, size is in bytes
-std::vector<int64_t> blocksizes = { 16, 64, 256, 1024, 8192, 16384 };
+std::vector<int64_t> blocksizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
 
 int
 CipherAes(benchmark::State& state,

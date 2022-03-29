@@ -25,39 +25,43 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#pragma once
-
-#include "base.hh"
-#include <alcp/alcp.h>
-#include <openssl/conf.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
-
+#include "rng_base.hh"
+#include <malloc.h>
 namespace alcp::testing {
-class OpenSSLCipherBase : public CipherBase
+
+RngBase::RngBase()
 {
-  private:
-    EVP_CIPHER_CTX* m_ctx_enc = nullptr;
-    EVP_CIPHER_CTX* m_ctx_dec = nullptr;
-    alc_aes_mode_t  m_mode    = {};
-    const uint8_t*  m_iv      = nullptr;
-    const uint8_t*  m_key     = nullptr;
-    uint32_t        m_key_len = 0;
-
-    void              handleErrors();
-    const EVP_CIPHER* alcpModeKeyLenToCipher(alc_aes_mode_t mode,
-                                             size_t         keylen);
-
-  public:
-    OpenSSLCipherBase(const alc_aes_mode_t mode, const uint8_t* iv);
-    OpenSSLCipherBase(const alc_aes_mode_t mode,
-                      const uint8_t*       iv,
-                      const uint8_t*       key,
-                      const uint32_t       key_len);
-    ~OpenSSLCipherBase();
-    bool init(const uint8_t* iv, const uint8_t* key, const uint32_t key_len);
-    bool init(const uint8_t* key, const uint32_t key_len);
-    bool encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt);
-    bool decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt);
-};
+    alc_rng_info_t rng_info;
+    rng_info.ri_distrib =
+        ALC_RNG_DISTRIB_UNIFORM; // Output should be uniform probablilty
+    rng_info.ri_source = ALC_RNG_SOURCE_OS;     // Use OS RNG
+    rng_info.ri_type   = ALC_RNG_TYPE_DESCRETE; // Discrete output (uint8)
+    /* Check if RNG mode is supported with RNG info */
+    if (alcp_rng_supported(&rng_info) != ALC_ERROR_NONE) {
+        printf("Support Failed!\n");
+        throw "RNG not supported";
+    }
+    if (m_handle.rh_context != nullptr) {
+        free(m_handle.rh_context);
+    }
+    m_handle.rh_context = malloc(alcp_rng_context_size(&rng_info));
+    if (alcp_rng_request(&rng_info, &m_handle) != ALC_ERROR_NONE) {
+        printf("Request Failed!\n");
+        throw "RNG request failed!";
+    }
+}
+RngBase::~RngBase()
+{
+    alcp_rng_finish(&m_handle);
+    free(m_handle.rh_context);
+}
+std::vector<uint8_t>
+RngBase::genRandomBytes(size_t l)
+{
+    std::vector<uint8_t> ret(l, 0);
+    if (alcp_rng_gen_random(&m_handle, &(ret[0]), l) == ALC_ERROR_NO_ENTROPY) {
+        throw "rng_base.cc : Bail out! not enough entropy!";
+    }
+    return ret;
+}
 } // namespace alcp::testing

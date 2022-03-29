@@ -28,16 +28,15 @@
 
 #pragma once
 #include "alc_base.hh"
+#include <base.hh>
+#include <gtest/gtest.h>
+#include <vector>
 #ifdef USE_IPP
 #include "ipp_base.hh"
 #endif
 #ifdef USE_OSSL
 #include "openssl_base.hh"
 #endif
-#include "openssl_base.hh"
-#include <base.hh>
-#include <gtest/gtest.h>
-#include <vector>
 
 using namespace alcp::testing;
 
@@ -60,8 +59,8 @@ ArraysMatch(std::vector<uint8_t>    actual,
     for (size_t i = 0; i < actual.size(); i++) {
         // TODO: Replace with proper cast
         if (expected[i] != actual[i]) {
-            std::string actual_error   = ds.parseBytesToHexStr(&actual[i], 1);
-            std::string expected_error = ds.parseBytesToHexStr(&expected[i], 1);
+            std::string actual_error   = parseBytesToHexStr(&actual[i], 1);
+            std::string expected_error = parseBytesToHexStr(&expected[i], 1);
             return ::testing::AssertionFailure()
                    << "array[" << i << "] ("
                    << "0x" << actual_error << ") != expected[" << i << "]("
@@ -73,6 +72,25 @@ ArraysMatch(std::vector<uint8_t>    actual,
     if (verbose) {
         std::cout << "Test: " << testName << " line: " << ds.getLineNumber()
                   << " Success" << std::endl;
+    }
+    return ::testing::AssertionSuccess();
+}
+::testing::AssertionResult
+ArraysMatch(std::vector<uint8_t> actual, std::vector<uint8_t> expected)
+{
+    if (actual.size() != expected.size()) {
+        return ::testing::AssertionFailure() << "Size mismatch!";
+    }
+    for (size_t i = 0; i < actual.size(); i++) {
+        // TODO: Replace with proper cast
+        if (expected[i] != actual[i]) {
+            return ::testing::AssertionFailure()
+                   << "Does not match,"
+                   << "Size:" << actual.size() << " Failure!";
+        }
+    }
+    if (verbose) {
+        std::cout << "Size:" << actual.size() << " Success" << std::endl;
     }
     return ::testing::AssertionSuccess();
 }
@@ -207,24 +225,64 @@ class ConfigurableEventListener : public testing::TestEventListener
     }
 };
 
+typedef enum
+{
+    OPENSSL = 0,
+    IPP,
+    ALCP,
+} lib_t;
+
 // Just a class to reduce duplication of lines
 class TestingCore
 {
   private:
-    DataSet*        ds;
-    CipherTesting*  cipherHandler;
-    AlcpCipherBase* acb;
+    DataSet*        ds            = nullptr;
+    CipherTesting*  cipherHandler = nullptr;
+    AlcpCipherBase* acb           = nullptr;
 #ifdef USE_IPP
-    IPPCipherBase* icb;
+    IPPCipherBase* icb = nullptr;
 #endif
 #ifdef USE_OSSL
-    OpenSSLCipherBase* ocb;
+    OpenSSLCipherBase* ocb = nullptr;
 #endif
   public:
-    TestingCore(const int      key_size,
-                std::string    modeStr,
-                alc_aes_mode_t alcpMode,
-                bool           useipp)
+    TestingCore(lib_t lib, alc_aes_mode_t alcpMode)
+    {
+        cipherHandler = new CipherTesting();
+        switch (lib) {
+            case OPENSSL:
+#ifndef USE_OSSL
+                delete cipherHandler;
+                throw "OpenSSL not avaiable!";
+#else
+                if (!useossl) {
+                    delete cipherHandler;
+                    throw "OpenSSL disabled!";
+                }
+                ocb = new OpenSSLCipherBase(alcpMode, NULL);
+                cipherHandler->setcb(ocb);
+#endif
+                break;
+            case IPP:
+#ifndef USE_IPP
+                delete cipherHandler;
+                throw "IPP not avaiable!";
+#else
+                if (!useipp) {
+                    delete cipherHandler;
+                    throw "IPP disabled!";
+                }
+                icb = new IPPCipherBase(alcpMode, NULL);
+                cipherHandler->setcb(icb);
+#endif
+                break;
+            case ALCP:
+                acb = new AlcpCipherBase(alcpMode, NULL);
+                cipherHandler->setcb(acb);
+                break;
+        }
+    }
+    TestingCore(std::string modeStr, alc_aes_mode_t alcpMode)
     {
         std::transform(
             modeStr.begin(), modeStr.end(), modeStr.begin(), ::tolower);
@@ -261,14 +319,19 @@ class TestingCore
     }
     ~TestingCore()
     {
-        delete ds;
-        delete cipherHandler;
-        delete acb;
+        if (ds != nullptr)
+            delete ds;
+        if (cipherHandler != nullptr)
+            delete cipherHandler;
+        if (acb != nullptr)
+            delete acb;
 #ifdef USE_IPP
-        delete icb;
+        if (icb != nullptr)
+            delete icb;
 #endif
 #ifdef USE_OSSL
-        delete ocb;
+        if (ocb != nullptr)
+            delete ocb;
 #endif
     }
     DataSet*       getDs() { return ds; }
