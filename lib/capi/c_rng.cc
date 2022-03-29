@@ -113,9 +113,7 @@ alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
 
     alcp::rng::Context* ctx = (alcp::rng::Context*)pRngHandle->rh_context;
 
-    ctx->read_random(ctx->m_rng, buf, size);
-
-    return ALC_ERROR_NONE;
+    return ctx->read_random(ctx->m_rng, buf, size);
 }
 
 alc_error_t
