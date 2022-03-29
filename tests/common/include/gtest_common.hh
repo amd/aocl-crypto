@@ -46,7 +46,6 @@ ArraysMatch(std::vector<uint8_t>    actual,
         return ::testing::AssertionFailure() << "Size mismatch!";
     }
     for (size_t i = 0; i < actual.size(); i++) {
-        // TODO: Replace with proper cast
         if (expected[i] != actual[i]) {
             std::string actual_error   = parseBytesToHexStr(&actual[i], 1);
             std::string expected_error = parseBytesToHexStr(&expected[i], 1);
@@ -64,6 +63,28 @@ ArraysMatch(std::vector<uint8_t>    actual,
     }
     return ::testing::AssertionSuccess();
 }
+
+::testing::AssertionResult
+ArraysMatch(std::vector<uint8_t> actual,
+            std::vector<uint8_t> expected,
+            size_t               len)
+{
+    if (actual.size() != expected.size()) {
+        return ::testing::AssertionFailure() << "Size mismatch!";
+    }
+    for (size_t i = 0; i < actual.size(); i++) {
+        if (expected[i] != actual[i]) {
+            return ::testing::AssertionFailure()
+                   << "Does not match,"
+                   << "Length:" << len << " Failure!";
+        }
+    }
+    if (verbose) {
+        std::cout << "Length:" << len << " Success" << std::endl;
+    }
+    return ::testing::AssertionSuccess();
+}
+
 ::testing::AssertionResult
 ArraysMatch(std::vector<uint8_t> actual, std::vector<uint8_t> expected)
 {
@@ -71,7 +92,6 @@ ArraysMatch(std::vector<uint8_t> actual, std::vector<uint8_t> expected)
         return ::testing::AssertionFailure() << "Size mismatch!";
     }
     for (size_t i = 0; i < actual.size(); i++) {
-        // TODO: Replace with proper cast
         if (expected[i] != actual[i]) {
             return ::testing::AssertionFailure()
                    << "Does not match,"
