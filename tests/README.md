@@ -14,16 +14,36 @@
 
 ### Executing Tests
 
+##### With Make
+
+1. `cd aocl-crypto/build`
+2. `make test`
+
+##### Manual
+
 After building ALCP, there should be binary files with name aocl-crypto/build/tests/cipher/aes\_\<aes\_mode\>\_kat. These executables expect the csv files to be located in the present working directory. CMAKE is already configured to symlink csv files to root build directory and also tests/cipher. When running these tests, please ensure you do have appropriate csv fille in the present directory.
 
 To run tests with verbose mode (prints also success)
 
+1.   <code>cd aocl-crypto/build</code>
+2.  <code>./tests/cipher/aes_cbc_kat -v</code>
+3.  <code>./tests/cipher/aes_cfb_kat -v</code>
+4.  <code>./tests/cipher/aes_ctr_kat -v</code>
+5.  <code>./tests/cipher/aes_ofb_kat -v</code>
+6.  <code>./tests/digests/test_digest -v</code>
+
+##### Additional (Selecting OpenSSL)
+
 1. <code>cd aocl-crypto/build</code>
-2. <code>./tests/cipher/aes_cbc_kat -v</code>
-3. <code>./tests/cipher/aes_cfb_kat -v</code>
-4. <code>./tests/cipher/aes_ctr_kat -v</code>
-5. <code>./tests/cipher/aes_ofb_kat -v</code>
-6. <code>./tests/digests/test_digest -v</code>
+
+2. `./tests/cipher/aes_cbc_cross -o` 
+
+3.  `./tests/cipher/aes_cfb_cross -o`
+
+4.  `./tests/cipher/aes_ctr_cross -o`
+
+5.  `./tests/cipher/aes_ofb_cross -o`
+6. `./tests/digest/test_digest_cross -o`
 
 #### Selecting tests
 
@@ -32,6 +52,10 @@ To select tests, you can always use --gtest_filter.
 Example filtering just 128 bit keysize tests.
 
 ​	 <code>./tests/cipher/aes\_\<aes\_mode\>\_kat --gtest_filter="\*128.\*" -v</code>
+
+Example filtering just additional small tests.
+
+​    `./tests/cipher/aes_<aes\_mode\>_cross --gtest_filter="\*SMALL" -o `
 
 Always you can use <code>--help</code> to know all the command line arguments which can be given to the executable.
 
