@@ -34,7 +34,7 @@
 #include <stdio.h>
 #include <string.h>
 
-namespace alcp::bench {
+namespace alcp::testing {
 class IPPDigestBase : public DigestBase
 {
     IppsHashState*   m_handle = nullptr;
@@ -60,4 +60,4 @@ class IPPDigestBase : public DigestBase
                                 uint64_t       out_size);
     void hash_to_string(char* output_string, const uint8_t* hash, int sha_len);
 };
-} // namespace alcp::bench
+} // namespace alcp::testing

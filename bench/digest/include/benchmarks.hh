@@ -44,7 +44,7 @@
 #include <benchmark/benchmark.h>
 #include <iostream>
 
-using namespace alcp::bench;
+using namespace alcp::testing;
 
 void
 Digest_SHA2_224(benchmark::State& state, uint64_t block_size)

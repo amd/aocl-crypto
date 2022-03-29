@@ -28,7 +28,6 @@
 
 #include "alc_base.hh"
 #include "base.hh"
-#include "colors.hh"
 #include "gtest_base.hh"
 #include "string.h"
 #include <alcp/alcp.h>
@@ -41,7 +40,7 @@
 #include "openssl_base.hh"
 #endif
 
-using namespace alcp::bench;
+using namespace alcp::testing;
 
 /* Add all the KAT tests here */
 TEST(DIGEST_SHA2, KAT_224)

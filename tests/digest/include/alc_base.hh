@@ -35,7 +35,7 @@
 
 #pragma once
 
-namespace alcp::bench {
+namespace alcp::testing {
 class AlcpDigestBase : public DigestBase
 {
     alc_digest_handle_t* m_handle;
@@ -65,4 +65,4 @@ class AlcpDigestBase : public DigestBase
     void hash_to_string(char* output_string, const uint8_t* hash, int sha_len);
 };
 
-} // namespace alcp::bench
+} // namespace alcp::testing

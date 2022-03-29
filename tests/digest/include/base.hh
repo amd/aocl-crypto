@@ -32,7 +32,7 @@
 #include <sstream>
 #include <vector>
 
-namespace alcp::bench {
+namespace alcp::testing {
 class File
 {
   private:
@@ -67,11 +67,6 @@ class DataSet : private File
     DataSet(const std::string filename);
     // Read without condition
     bool readMsgDigest();
-    // Convert a hex char to number;
-    uint8_t parseHexToNum(const unsigned char c);
-    // Parse hexString to binary
-    std::vector<uint8_t> parseHexStrToBin(const std::string in);
-    std::string parseBytesToHexStr(const uint8_t* bytes, const int length);
     // To print which line in dataset failed
     int getLineNumber();
     /* fetch Message / Digest */
@@ -93,4 +88,14 @@ class DigestBase
                                        const uint8_t* hash,
                                        int            sha_len)        = 0;
 };
-} // namespace alcp::bench
+
+/* Some functions which don't belong to any class but is common */
+void
+printErrors(std::string in);
+std::vector<uint8_t>
+parseHexStrToBin(const std::string in);
+std::string
+parseBytesToHexStr(const uint8_t* bytes, const int length);
+uint8_t
+parseHexToNum(const unsigned char c);
+} // namespace alcp::testing

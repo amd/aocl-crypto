@@ -36,7 +36,7 @@
 #include <stdio.h>
 #include <string.h>
 
-namespace alcp::bench {
+namespace alcp::testing {
 class OpenSSLDigestBase : public DigestBase
 {
     EVP_MD_CTX*      m_handle = nullptr;
@@ -62,4 +62,4 @@ class OpenSSLDigestBase : public DigestBase
                                 uint64_t       out_size);
     void hash_to_string(char* output_string, const uint8_t* hash, int sha_len);
 };
-} // namespace alcp::bench
+} // namespace alcp::testing

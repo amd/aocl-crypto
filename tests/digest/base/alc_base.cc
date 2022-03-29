@@ -29,7 +29,7 @@
 #include "alc_base.hh"
 #include "base.hh"
 
-namespace alcp::bench {
+namespace alcp::testing {
 
 static uint8_t size_[4096] = { 0 };
 
@@ -115,4 +115,4 @@ AlcpDigestBase::hash_to_string(char*          output_string,
     output_string[(sha_len / 8) * 2 + 1] = '\0';
 }
 
-} // namespace alcp::bench
+} // namespace alcp::testing

@@ -27,9 +27,11 @@
  */
 
 #include "base.hh"
+#include "colors.hh"
 #include <iostream>
+#include <unistd.h>
 
-namespace alcp::bench {
+namespace alcp::testing {
 
 /* Class File procedures */
 File::File(const std::string fileName)
@@ -121,48 +123,6 @@ DataSet::readMsgDigest()
     return true;
 }
 
-uint8_t
-DataSet::parseHexToNum(const unsigned char c)
-{
-    if (c >= 'a' && c <= 'f')
-        return c - 'a' + 10;
-    if (c >= 'A' && c <= 'F')
-        return c - 'A' + 10;
-    if (c >= '0' && c <= '9')
-        return c - '0';
-
-    return 0;
-}
-
-std::vector<uint8_t>
-DataSet::parseHexStrToBin(const std::string in)
-{
-    std::vector<uint8_t> vector;
-    int                  len = in.size();
-    int                  ind = 0;
-
-    for (int i = 0; i < len; i += 2) {
-        uint8_t val =
-            parseHexToNum(in.at(ind)) << 4 | parseHexToNum(in.at(ind + 1));
-        vector.push_back(val);
-        ind += 2;
-    }
-    return vector;
-}
-
-std::string
-DataSet::parseBytesToHexStr(const uint8_t* bytes, const int length)
-{
-    std::stringstream ss;
-    for (int i = 0; i < length; i++) {
-        int charRep;
-        charRep = bytes[i];
-        // Convert int to hex
-        ss << std::hex << charRep;
-    }
-    return ss.str();
-}
-
 int
 DataSet::getLineNumber()
 {
@@ -181,4 +141,63 @@ DataSet::getDigest()
     return Digest;
 }
 
-} // namespace alcp::bench
+void
+printErrors(std::string in)
+{
+    if (isatty(fileno(stderr))) {
+        // stdout is a real terminal, safe to output color
+        std::cerr << RED_BOLD << in << RESET << std::endl;
+
+    } else {
+        // stdout is a pseudo terminal, unsafe to output color
+        std::cerr << in << std::endl;
+    }
+}
+std::vector<uint8_t>
+parseHexStrToBin(const std::string in)
+{
+    std::vector<uint8_t> vector;
+    int                  len = in.size();
+    int                  ind = 0;
+
+    for (int i = 0; i < len; i += 2) {
+        uint8_t val =
+            parseHexToNum(in.at(ind)) << 4 | parseHexToNum(in.at(ind + 1));
+        vector.push_back(val);
+        ind += 2;
+    }
+    return vector;
+}
+std::string
+parseBytesToHexStr(const uint8_t* bytes, const int length)
+{
+    std::stringstream ss;
+    for (int i = 0; i < length; i++) {
+        int               charRep;
+        std::stringstream il;
+        charRep = bytes[i];
+        // Convert int to hex
+        il << std::hex << charRep;
+        std::string ilStr = il.str();
+        // 01 will be 0x1 so we need to make it 0x01
+        if (ilStr.size() != 2) {
+            ilStr = "0" + ilStr;
+        }
+        ss << ilStr;
+    }
+    return ss.str();
+}
+uint8_t
+parseHexToNum(const unsigned char c)
+{
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
+    if (c >= '0' && c <= '9')
+        return c - '0';
+
+    return 0;
+}
+
+} // namespace alcp::testing

@@ -68,8 +68,6 @@ class DataSet : private File
     bool readPtIvKeyCt();
     // Read only specified key size
     bool readPtIvKeyCt(size_t keybits);
-    // Convert a hex char to number;
-    uint8_t parseHexToNum(const unsigned char c);
     // To print which line in dataset failed
     int getLineNumber();
     // Return private data plain text
