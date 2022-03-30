@@ -72,6 +72,18 @@ __sha_copy_wrapper(const void* pDigest, uint8_t* pBuf, uint64_t len)
     return e;
 }
 
+template<typename DIGESTTYPE>
+static alc_error_t
+__sha_reset_wrapper(void* pDigest)
+{
+    alc_error_t e = ALC_ERROR_NONE;
+
+    auto ap = static_cast<DIGESTTYPE*>(pDigest);
+    ap->reset();
+
+    return e;
+}
+
 #if 0
 template<typename DIGESTTYPE,
          alc_error_t (DIGESTTYPE::*func)(void*, const uint8_t*, uint64_t)>
@@ -116,6 +128,7 @@ __build_sha(const alc_digest_info_t& sha2Info, Context& ctx)
         //   ctx.finalize = __digest_func_wrapper<ALGONAME,
         //   &ALGONAME::finalize>;
         ctx.finish = __sha_dtor<ALGONAME>;
+        ctx.reset  = __sha_reset_wrapper<ALGONAME>;
     }
 
     return err;
@@ -150,7 +163,6 @@ class Sha2Builder
                 Error::setGeneric(err, ALC_ERROR_NOT_SUPPORTED);
                 break;
         }
-
         return err;
     }
 };

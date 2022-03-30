@@ -98,6 +98,7 @@ class Sha512::Impl
     alc_error_t copyHash(Uint8* buf, Uint64 size) const;
 
     alc_error_t setIv(const void* pIv, Uint64 size);
+    void        reset();
 
     /*
      * \brief  Checks if SHANI feature is enabled
@@ -147,6 +148,15 @@ Sha512::Impl::setIv(const void* pIv, Uint64 size)
     utils::CopyBytes(m_hash, pIv, size);
 
     return ALC_ERROR_NONE;
+}
+
+void
+Sha512::Impl::reset()
+{
+    m_msg_len  = 0;
+    m_finished = false;
+    m_idx      = 0;
+    utils::CopyQWord(&m_hash[0], &cIv[0], cHashSize);
 }
 
 Sha512::Impl::~Impl() {}
@@ -405,6 +415,12 @@ Sha512::finish()
 {
     // delete pImpl();
     // pImpl() = nullptr;
+}
+
+void
+Sha512::reset()
+{
+    pImpl()->reset();
 }
 
 alc_error_t

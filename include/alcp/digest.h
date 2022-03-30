@@ -220,6 +220,21 @@ alcp_digest_finalize(const alc_digest_handle_p p_digest_handle,
 void
 alcp_digest_finish(const alc_digest_handle_p p_digest_handle);
 
+/**
+ * \brief       resets the internal state of the digest handle
+ *
+ * \notes       Must be called to restart the digest operation on an already
+ * existing handle.
+ *
+ * \param  p_digest_handle The handle that was returned as part of call
+ *                       together alcp_digest_request(), once this function
+ *                       is called. the handle is will not be valid for future
+ *
+ * \return      None
+ */
+void
+alcp_digest_reset(const alc_digest_handle_p p_digest_handle);
+
 EXTERN_C_END
 
 #endif /* _ALCP_DIGEST_H */
