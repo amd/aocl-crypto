@@ -29,7 +29,6 @@
 #include "alc_base.hh"
 #include "base.hh"
 #include "gtest_base.hh"
-#include <boost/algorithm/string.hpp>
 
 using namespace alcp::testing;
 std::string MODE_STR = "CFB";

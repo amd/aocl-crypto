@@ -51,6 +51,10 @@ function(CROSS_AES MOD)
         "${CMAKE_CURRENT_SOURCE_DIR}/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/../common/include")
     target_link_libraries(aes_${MOD}_cross ${LIBS})
+    if(OPENSSL_INSTALL_DIR)
+        gtest_add_tests(TARGET      aes_${MOD}_cross
+                        TEST_SUFFIX .${MOD})
+    endif(OPENSSL_INSTALL_DIR)
 endfunction()
 
 

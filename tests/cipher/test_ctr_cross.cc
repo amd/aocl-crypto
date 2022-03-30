@@ -57,7 +57,8 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
         else if (useipp)
             extTC = new TestingCore(IPP, ALC_MODE);
         else {
-            printErrors("No Lib Specified!");
+            printErrors("No Lib Specified!.. but trying OpenSSL");
+            extTC = new TestingCore(OPENSSL, ALC_MODE);
         }
     } catch (const char* exc) {
         std::cerr << exc << std::endl;
@@ -91,7 +92,8 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
         else if (useipp)
             extTC = new TestingCore(IPP, ALC_MODE);
         else {
-            printErrors("No Lib Specified!");
+            printErrors("No Lib Specified!.. but trying OpenSSL");
+            extTC = new TestingCore(OPENSSL, ALC_MODE);
         }
     } catch (const char* exc) {
         std::cerr << exc << std::endl;
@@ -133,7 +135,8 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
         else if (useipp)
             extTC = new TestingCore(IPP, ALC_MODE);
         else {
-            printErrors("No Lib Specified!");
+            printErrors("No Lib Specified!.. but trying OpenSSL");
+            extTC = new TestingCore(OPENSSL, ALC_MODE);
         }
     } catch (const char* exc) {
         std::cerr << exc << std::endl;
@@ -167,7 +170,8 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
         else if (useipp)
             extTC = new TestingCore(IPP, ALC_MODE);
         else {
-            printErrors("No Lib Specified!");
+            printErrors("No Lib Specified!.. but trying OpenSSL");
+            extTC = new TestingCore(OPENSSL, ALC_MODE);
         }
     } catch (const char* exc) {
         std::cerr << exc << std::endl;

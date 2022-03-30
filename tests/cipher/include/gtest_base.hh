@@ -64,10 +64,6 @@ class TestingCore
                 delete cipherHandler;
                 throw "OpenSSL not avaiable!";
 #else
-                if (!useossl) {
-                    delete cipherHandler;
-                    throw "OpenSSL disabled!";
-                }
                 ocb = new OpenSSLCipherBase(alcpMode, NULL);
                 cipherHandler->setcb(ocb);
 #endif

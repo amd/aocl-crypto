@@ -63,7 +63,7 @@ TEST(DIGEST_SHA2, CROSS_224)
 #endif
 #ifdef USE_OSSL
     OpenSSLDigestBase odb(alc_mode, ALC_DIGEST_TYPE_SHA2, alc_digest_len);
-    if (useossl == true)
+    if ((useossl == true) || (extDb == nullptr)) // Select OpenSSL by default
         extDb = &odb;
 #endif
     if (extDb == nullptr) {
@@ -113,7 +113,7 @@ TEST(DIGEST_SHA2, CROSS_256)
 #endif
 #ifdef USE_OSSL
     OpenSSLDigestBase odb(alc_mode, ALC_DIGEST_TYPE_SHA2, alc_digest_len);
-    if (useossl == true)
+    if ((useossl == true) || (extDb == nullptr)) // Select OpenSSL by default
         extDb = &odb;
 #endif
     if (extDb == nullptr) {
@@ -163,7 +163,7 @@ TEST(DIGEST_SHA2, CROSS_384)
 #endif
 #ifdef USE_OSSL
     OpenSSLDigestBase odb(alc_mode, ALC_DIGEST_TYPE_SHA2, alc_digest_len);
-    if (useossl == true)
+    if ((useossl == true) || (extDb == nullptr)) // Select OpenSSL by default
         extDb = &odb;
 #endif
     if (extDb == nullptr) {
@@ -213,9 +213,10 @@ TEST(DIGEST_SHA2, CROSS_512)
 #endif
 #ifdef USE_OSSL
     OpenSSLDigestBase odb(alc_mode, ALC_DIGEST_TYPE_SHA2, alc_digest_len);
-    if (useossl == true)
+    if ((useossl == true) || (extDb == nullptr)) // Select OpenSSL by default
         extDb = &odb;
 #endif
+
     if (extDb == nullptr) {
         printErrors("No external lib selected!");
         exit(-1);

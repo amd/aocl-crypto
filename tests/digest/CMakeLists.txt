@@ -54,5 +54,7 @@ TEST_DATA_LINK(SHA_256)
 TEST_DATA_LINK(SHA_384)
 TEST_DATA_LINK(SHA_512)
 
-gtest_add_tests(TARGET      test_digest
-                TEST_SUFFIX .${MOD})
+gtest_add_tests(TARGET      test_digest)
+if(OPENSSL_INSTALL_DIR)
+    gtest_add_tests(TARGET      test_digest_cross)
+endif(OPENSSL_INSTALL_DIR)
