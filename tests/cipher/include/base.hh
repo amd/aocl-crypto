@@ -51,6 +51,10 @@ class File
     char* readChar(int n);
     // Rewind file to initial position
     void rewind();
+    //seekG
+    void seek(long pos);
+    //tell
+    size_t tell();
 };
 
 class DataSet : private File

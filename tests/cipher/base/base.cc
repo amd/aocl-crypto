@@ -87,6 +87,18 @@ File::readChar(const int n)
     return c_buff;
 }
 
+void 
+File::seek(long position)
+{
+     file.seekg(position,std::ios::beg);
+}
+
+size_t 
+File::tell()
+{
+    return file.tellg();
+}
+
 // Class Data
 /**
  * @brief Construct a new Data Set:: Data Set object
