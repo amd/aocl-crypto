@@ -94,6 +94,12 @@ TEST(DIGEST_SHA2, KAT_256)
     if (useipp == true)
         db = &idb;
 #endif
+
+#ifdef USE_OSSL
+    OpenSSLDigestBase odb(ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
+    if (useossl == true)
+        db = &odb;
+#endif
     while (ds.readMsgDigest()) {
         error = db->digest_function(&(ds.getMessage()[0]),
                                     ds.getMessage().size(),
@@ -126,6 +132,13 @@ TEST(DIGEST_SHA2, KAT_384)
     if (useipp == true)
         db = &idb;
 #endif
+
+#ifdef USE_OSSL
+    OpenSSLDigestBase odb(ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
+    if (useossl == true)
+        db = &odb;
+#endif
+
     while (ds.readMsgDigest()) {
         error = db->digest_function(&(ds.getMessage()[0]),
                                     ds.getMessage().size(),
@@ -158,6 +171,13 @@ TEST(DIGEST_SHA2, KAT_512)
     if (useipp == true)
         db = &idb;
 #endif
+
+#ifdef USE_OSSL
+    OpenSSLDigestBase odb(ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
+    if (useossl == true)
+        db = &odb;
+#endif
+
     while (ds.readMsgDigest()) {
         error = db->digest_function(&(ds.getMessage()[0]),
                                     ds.getMessage().size(),
