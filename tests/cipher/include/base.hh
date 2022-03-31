@@ -39,6 +39,8 @@ class File
     bool         fileExists;
 
   public:
+    // Opens File as Bin/ASCII File with write support.
+    File(std::string fileName, bool binary, bool write);
     // Opens File as ASCII Text File
     File(std::string fileName);
     // Read file word by word excludes newlines and spaces
@@ -47,13 +49,17 @@ class File
     std::string readLine();
     // Reads a line by reading char by char
     std::string readLineCharByChar();
-    // Read file n char
-    char* readChar(int n);
+    // Read file n bytes from a file
+    char* readChar(size_t n);
+    // Reads a set of bytes
+    bool readBytes(size_t n, uint8_t* buffer);
+    // Writes a set of bytes
+    bool writeBytes(size_t n, const uint8_t* buffer);
     // Rewind file to initial position
     void rewind();
-    //seekG
+    // seekG
     void seek(long pos);
-    //tell
+    // tell
     size_t tell();
 };
 

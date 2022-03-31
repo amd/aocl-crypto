@@ -37,6 +37,25 @@
 namespace alcp::testing {
 
 /* Class File procedures */
+File::File(const std::string fileName, bool binary, bool write)
+{
+    if (binary && write) { // Binary write
+        file.open(fileName, std::ios::out | std::ios::binary);
+    } else if (binary) { // Binary read
+        file.open(fileName, std::ios::binary);
+    } else if (write) { // Write
+        file.open(fileName, std::ios::out);
+    } else { // Read
+        file.open(fileName, std::ios::in);
+    }
+    if (file.is_open()) { // In read mode, this means file did exist
+        fileExists = true;
+    } else {
+        fileExists = false;
+    }
+    return;
+}
+
 File::File(const std::string fileName)
 {
     file.open(fileName, std::ios::in);
@@ -78,8 +97,22 @@ File::readLineCharByChar()
     return buff;
 }
 
+bool
+File::readBytes(size_t n, uint8_t* buffer)
+{
+    file.read(reinterpret_cast<char*>(buffer), n);
+    return true;
+}
+
+bool
+File::writeBytes(size_t n, const uint8_t* buffer)
+{
+    file.write(reinterpret_cast<const char*>(buffer), n);
+    return true;
+}
+
 char*
-File::readChar(const int n)
+File::readChar(size_t n)
 {
     // TODO: Deallocation in the calling function.
     char* c_buff = new char[n];
