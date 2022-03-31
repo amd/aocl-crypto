@@ -56,6 +56,8 @@ class AlcpDigestBase : public DigestBase
 
     bool init();
 
+    ~AlcpDigestBase();
+
     alc_error_t digest_function(const uint8_t* src,
                                 size_t         src_size,
                                 uint8_t*       output,

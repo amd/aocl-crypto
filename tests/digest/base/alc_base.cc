@@ -75,6 +75,14 @@ AlcpDigestBase::init(_alc_sha2_mode   mode,
     return init();
 }
 
+AlcpDigestBase::~AlcpDigestBase()
+{
+    if (m_handle != nullptr) {
+        alcp_digest_finish(m_handle);
+        delete m_handle;
+    }
+}
+
 alc_error_t
 AlcpDigestBase::digest_function(const uint8_t* pSrc,
                                 size_t         src_size,
