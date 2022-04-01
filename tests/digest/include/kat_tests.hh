@@ -67,7 +67,6 @@ TEST(DIGEST_SHA2, KAT_224)
                                     ds.getMessage().size(),
                                     &(digest[0]),
                                     digest.size());
-        db->init(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
         if (alcp_is_error(error)) {
             printf("Error");
             return;
@@ -99,7 +98,6 @@ TEST(DIGEST_SHA2, KAT_256)
                                     ds.getMessage().size(),
                                     &(digest[0]),
                                     digest.size());
-        db->init(ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
         if (alcp_is_error(error)) {
             printf("Error");
             return;
@@ -131,7 +129,6 @@ TEST(DIGEST_SHA2, KAT_384)
                                     ds.getMessage().size(),
                                     &(digest[0]),
                                     digest.size());
-        db->init(ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
         if (alcp_is_error(error)) {
             printf("Error");
             return;
@@ -163,7 +160,6 @@ TEST(DIGEST_SHA2, KAT_512)
                                     ds.getMessage().size(),
                                     &(digest[0]),
                                     digest.size());
-        db->init(ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
         if (alcp_is_error(error)) {
             printf("Error");
             return;

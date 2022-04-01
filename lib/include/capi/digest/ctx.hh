@@ -48,6 +48,8 @@ struct Context
     alc_error_t (*finalize)(void* pDigest, const uint8_t* pBuf, uint64_t len);
 
     alc_error_t (*finish)(void* pDigest);
+
+    alc_error_t (*reset)(void* pDigest);
 };
 
 } // namespace alcp::digest

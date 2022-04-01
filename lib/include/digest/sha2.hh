@@ -101,6 +101,16 @@ class Sha256 final : public Sha2
     void finish() override;
 
     /**
+     * \brief    Resets the internal state.
+     *
+     * \notes   `reset()` to be called as a means to reset the internal state.
+     *           This enables the processing the new buffer.
+     *
+     * \return nothing
+     */
+    void reset() override;
+
+    /**
      * \brief    Call for the final chunk
      *
      * \notes   `finish()` to be called as a means to cleanup, necessary
@@ -191,6 +201,16 @@ class Sha512 final : public Sha2
     void finish() override;
 
     /**
+     * \brief    Resets the internal state.
+     *
+     * \notes   `reset()` to be called as a means to reset the internal state.
+     *           This enables the processing the new buffer.
+     *
+     * \return nothing
+     */
+    void reset() override;
+
+    /**
      * \brief    Call for the final chunk
      *
      * \notes   `finish()` to be called as a means to cleanup, necessary
@@ -243,6 +263,7 @@ class Sha224 final : public Sha2
     ~Sha224();
     alc_error_t update(const uint8_t* pMsgBuf, uint64_t size) override;
     void        finish() override;
+    void        reset() override;
     alc_error_t finalize(const uint8_t* pMsgBuf, uint64_t size) override;
     alc_error_t copyHash(uint8_t* pHashBuf, uint64_t size) const override;
 
@@ -258,6 +279,7 @@ class Sha384 final : public Sha2
     ~Sha384();
     alc_error_t update(const uint8_t* pMsgBuf, uint64_t size) override;
     void        finish() override;
+    void        reset() override;
     alc_error_t finalize(const uint8_t* pMsgBuf, uint64_t size) override;
     alc_error_t copyHash(uint8_t* pHashBuf, uint64_t size) const override;
 

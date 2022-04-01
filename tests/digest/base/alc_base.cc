@@ -99,7 +99,7 @@ AlcpDigestBase::digest_function(const uint8_t* pSrc,
         printf("Digest copy failed\n");
         return err;
     }
-    alcp_digest_finish(m_handle);
+    alcp_digest_reset(m_handle);
     return err;
 }
 

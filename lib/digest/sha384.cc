@@ -78,6 +78,14 @@ Sha384::finish()
     return m_psha512->finish();
 }
 
+void
+Sha384::reset()
+{
+    m_psha512->reset();
+    m_psha512->setIv(cIv, sizeof(cIv));
+    return;
+}
+
 alc_error_t
 Sha384::finalize(const Uint8* pBuf, Uint64 size)
 {

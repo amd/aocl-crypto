@@ -111,6 +111,15 @@ alcp_digest_finish(const alc_digest_handle_p pDigestHandle)
     ctx->finish(ctx->m_digest);
 }
 
+void
+alcp_digest_reset(const alc_digest_handle_p pDigestHandle)
+{
+    auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
+
+    /* TODO: fix the argument */
+    ctx->reset(ctx->m_digest);
+}
+
 alc_error_t
 alcp_digest_copy(const alc_digest_handle_p pDigestHandle,
                  uint8_t*                  pBuf,

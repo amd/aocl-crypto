@@ -77,6 +77,14 @@ Sha224::finish()
     return m_psha256->finish();
 }
 
+void
+Sha224::reset()
+{
+    m_psha256->reset();
+    m_psha256->setIv(cIv, sizeof(cIv));
+    return;
+}
+
 alc_error_t
 Sha224::finalize(const Uint8* pBuf, Uint64 size)
 {
