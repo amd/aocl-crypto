@@ -40,29 +40,29 @@ namespace alcp::testing {
 File::File(const std::string fileName, bool binary, bool write)
 {
     if (binary && write) { // Binary write
-        file.open(fileName, std::ios::out | std::ios::binary);
+        m_file.open(fileName, std::ios::out | std::ios::binary);
     } else if (binary) { // Binary read
-        file.open(fileName, std::ios::binary);
+        m_file.open(fileName, std::ios::binary);
     } else if (write) { // Write
-        file.open(fileName, std::ios::out);
+        m_file.open(fileName, std::ios::out);
     } else { // Read
-        file.open(fileName, std::ios::in);
+        m_file.open(fileName, std::ios::in);
     }
-    if (file.is_open()) { // In read mode, this means file did exist
-        fileExists = true;
+    if (m_file.is_open()) { // In read mode, this means file did exist
+        m_fileExists = true;
     } else {
-        fileExists = false;
+        m_fileExists = false;
     }
     return;
 }
 
 File::File(const std::string fileName)
 {
-    file.open(fileName, std::ios::in);
-    if (file.is_open()) {
-        fileExists = true;
+    m_file.open(fileName, std::ios::in);
+    if (m_file.is_open()) {
+        m_fileExists = true;
     } else {
-        fileExists = false;
+        m_fileExists = false;
     }
     return;
 }
@@ -71,7 +71,7 @@ std::string
 File::readWord()
 {
     std::string buff;
-    file >> buff;
+    m_file >> buff;
     return buff;
 }
 
@@ -79,16 +79,23 @@ std::string
 File::readLine()
 {
     std::string buff;
-    std::getline(file, buff);
+    std::getline(m_file, buff);
     return buff;
+}
+
+bool
+File::writeLine(std::string buff)
+{
+    m_file << buff << "\n";
+    return true;
 }
 
 std::string
 File::readLineCharByChar()
 {
     std::string buff;
-    while (!file.eof()) {
-        char s = file.get();
+    while (!m_file.eof()) {
+        char s = m_file.get();
         if (s != '\n')
             buff += s;
         else
@@ -100,14 +107,14 @@ File::readLineCharByChar()
 bool
 File::readBytes(size_t n, uint8_t* buffer)
 {
-    file.read(reinterpret_cast<char*>(buffer), n);
+    m_file.read(reinterpret_cast<char*>(buffer), n);
     return true;
 }
 
 bool
 File::writeBytes(size_t n, const uint8_t* buffer)
 {
-    file.write(reinterpret_cast<const char*>(buffer), n);
+    m_file.write(reinterpret_cast<const char*>(buffer), n);
     return true;
 }
 
@@ -116,23 +123,114 @@ File::readChar(size_t n)
 {
     // TODO: Deallocation in the calling function.
     char* c_buff = new char[n];
-    file.read(c_buff, n);
+    m_file.read(c_buff, n);
     return c_buff;
 }
 
-void 
+void
 File::seek(long position)
 {
-     file.seekg(position,std::ios::beg);
+    m_file.seekg(position, std::ios::beg);
 }
 
-size_t 
+size_t
 File::tell()
 {
-    return file.tellg();
+    return m_file.tellg();
 }
 
-// Class Data
+// Class FlightRecorder
+FlightRecorder::FlightRecorder()
+{
+    m_blackbox_bin = new File("crosstest_blackbox.bin", true, true);
+    m_log          = new File("crosstest.log", true, true);
+}
+
+FlightRecorder::FlightRecorder(std::string str_mode)
+{
+    m_blackbox_bin =
+        new File("crosstest_" + str_mode + "_blackbox.bin", true, true);
+    m_log = new File("crosstest_" + str_mode + ".log", true, true);
+}
+
+void
+FlightRecorder::startEvent()
+{
+    m_start_time         = time(0);
+    m_blackbox_start_pos = m_blackbox_bin->tell();
+}
+
+void
+FlightRecorder::endEvent()
+{
+    m_end_time         = time(0);
+    m_blackbox_end_pos = m_blackbox_bin->tell();
+}
+
+void
+FlightRecorder::setEvent(std::vector<uint8_t> key,
+                         std::vector<uint8_t> iv,
+                         std::vector<uint8_t> data,
+                         record_t             rec)
+{
+    setKey(key);
+    setIv(iv);
+    setData(data);
+    setRecType(rec);
+}
+
+void
+FlightRecorder::setKey(std::vector<uint8_t> key)
+{
+    m_key = key;
+}
+
+void
+FlightRecorder::setIv(std::vector<uint8_t> iv)
+{
+    m_iv = iv;
+}
+
+void
+FlightRecorder::setData(std::vector<uint8_t> data)
+{
+    m_data = data;
+}
+
+void
+FlightRecorder::setRecType(record_t rec)
+{
+    m_rec_type = rec;
+}
+
+void
+FlightRecorder::writeBackBox()
+{
+    m_blackbox_bin->writeBytes(m_iv.size(), &(m_iv[0]));
+    m_blackbox_bin->writeBytes(m_key.size(), &(m_key[0]));
+    m_blackbox_bin->writeBytes(m_data.size(), &(m_data[0]));
+}
+
+void
+FlightRecorder::writeLog()
+{
+    /*
+       Format of the log file is
+       start_time, end_time, blackbox_start, blackbox_end, record_type,
+       key_size, data_size # TODO FAILED/SUCCESS record
+    */
+    std::stringstream ss;
+    ss << m_start_time << ",";
+    ss << m_end_time << ",";
+    ss << m_blackbox_start_pos << ",";
+    ss << m_blackbox_end_pos << ",";
+    ss << m_rec_type << ",";
+    ss << m_key.size() << ",";
+    ss << m_data.size();
+    m_log->writeLine(ss.str());
+}
+
+// Class DataSet
 /**
  * @brief Construct a new Data Set:: Data Set object
  *

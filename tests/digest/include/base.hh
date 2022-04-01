@@ -36,8 +36,8 @@ namespace alcp::testing {
 class File
 {
   private:
-    std::fstream file;
-    bool         fileExists;
+    std::fstream m_file;
+    bool         m_fileExists;
 
   public:
     // Opens File as ASCII Text File

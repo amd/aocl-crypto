@@ -32,11 +32,20 @@
 #include <vector>
 
 namespace alcp::testing {
+
+typedef enum
+{
+    SMALL_DEC = 0,
+    SMALL_ENC,
+    BIG_DEC,
+    BIG_ENC,
+} record_t;
+
 class File
 {
   private:
-    std::fstream file;
-    bool         fileExists;
+    std::fstream m_file;
+    bool         m_fileExists;
 
   public:
     // Opens File as Bin/ASCII File with write support.
@@ -61,6 +70,64 @@ class File
     void seek(long pos);
     // tell
     size_t tell();
+};
+
+class FlightRecorder
+{
+  private:
+    File*                m_blackbox_bin = nullptr;
+    File*                m_log          = nullptr;
+    time_t               m_start_time;
+    time_t               m_end_time;
+    std::size_t          m_blackbox_start_pos = 0;
+    std::size_t          m_blackbox_end_pos   = 0;
+    record_t             m_rec_type;
+    std::vector<uint8_t> m_key;
+    std::vector<uint8_t> m_iv;
+    std::vector<uint8_t> m_data;
+    std::string          m_str_mode = "";
+
+  public:
+    // Create new files for writing
+    FlightRecorder();
+    FlightRecorder(std::string str_mode);
+
+    // Start a new event, so initalize new entry.
+    void startEvent();
+
+    // End the event, so record end time.
+    void endEvent();
+
+    /**
+     * @brief Set everything generated during test
+     *
+     * @param key - 128/192/256 bit KEY
+     * @param iv - 128 bit IV
+     * @param data - PlainText/CipherText
+     * @param rec - Test type, BIG_ENC,SMALL_ENC etc..
+     */
+    void setEvent(std::vector<uint8_t> key,
+                  std::vector<uint8_t> iv,
+                  std::vector<uint8_t> data,
+                  record_t             rec);
+
+    // Sets the Key of the event
+    void setKey(std::vector<uint8_t> key);
+
+    // Sets the IV of the event
+    void setIv(std::vector<uint8_t> iv);
+
+    // Sets the Data in the event
+    void setData(std::vector<uint8_t> data);
+
+    // Set Test type, BIG_ENC,SMALL_ENC etc..
+    void setRecType(record_t rec);
+
+    // Write to backbox, write binary data, not the actual log
+    void writeBackBox();
+
+    // Write to event log, csv file about the event
+    void writeLog();
 };
 
 class DataSet : private File

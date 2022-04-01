@@ -36,11 +36,11 @@ namespace alcp::testing {
 /* Class File procedures */
 File::File(const std::string fileName)
 {
-    file.open(fileName, std::ios::in);
-    if (file.is_open()) {
-        fileExists = true;
+    m_file.open(fileName, std::ios::in);
+    if (m_file.is_open()) {
+        m_fileExists = true;
     } else {
-        fileExists = false;
+        m_fileExists = false;
     }
     return;
 }
@@ -49,7 +49,7 @@ std::string
 File::readWord()
 {
     std::string buff;
-    file >> buff;
+    m_file >> buff;
     return buff;
 }
 
@@ -57,7 +57,7 @@ std::string
 File::readLine()
 {
     std::string buff;
-    std::getline(file, buff);
+    std::getline(m_file, buff);
     return buff;
 }
 
@@ -65,8 +65,8 @@ std::string
 File::readLineCharByChar()
 {
     std::string buff;
-    while (!file.eof()) {
-        char s = file.get();
+    while (!m_file.eof()) {
+        char s = m_file.get();
         if (s != '\n')
             buff += s;
         else
@@ -80,7 +80,7 @@ File::readChar(const int n)
 {
     // TODO: Deallocation in the calling function.
     char* c_buff = new char[n];
-    file.read(c_buff, n);
+    m_file.read(c_buff, n);
     return c_buff;
 }
 
