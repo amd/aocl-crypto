@@ -62,7 +62,7 @@ class Algorithm
 };
 
 #if 0
-class CipherAlgorithm : public DecryptInterface
+class CipherAlgorithm : public IDecrypt
 {
   public:
     CipherAlgorithm(alc_cipher_info_p pCipherInfo)

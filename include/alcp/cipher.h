@@ -57,14 +57,33 @@ typedef enum _alc_aes_mode
     ALC_AES_MODE_CTR,
     ALC_AES_MODE_CFB,
     ALC_AES_MODE_XTR,
+    ALC_AES_MODE_GCM,
 
     ALC_AES_MODE_MAX,
 } alc_aes_mode_t;
 
+typedef enum _alc_aes_ctrl
+{
+    ALC_AES_CTRL_NONE = 0,
+
+    ALC_AES_CTRL_SET_IV_LEN,
+    ALC_AES_CTRL_GET_IV_LEN,
+    ALC_AES_CTRL_SET_AD_LEN,
+    ALC_AES_CTRL_GET_AD_LEN,
+    ALC_AES_CTRL_SET_TAG_LEN,
+    ALC_AES_CTRL_GET_TAG,
+
+    ALC_AES_CTRL_MAX,
+} alc_aes_ctrl_t;
+
 typedef struct _alc_aes_info_t
 {
-    alc_aes_mode_t ai_mode; /* Mode eg: ALC_AES_MODE_CFB */
-    const Uint8*   ai_iv;   /* Initialization Vector */
+    alc_aes_mode_t ai_mode;      /* Mode eg: ALC_AES_MODE_CFB */
+    const Uint8*   ai_iv;        /* Initialization Vector */
+    const Uint8*   ai_ad;        /* Additional data */
+    Uint64         ai_ivLength;  /* Initialization Vector length */
+    Uint64         ai_adLength;  /* Additional data length */
+    Uint64         ai_tagLength; /* tag length */
 } alc_aes_info_t, *alc_aes_info_p;
 
 typedef union _alc_cipher_mode_data
@@ -156,6 +175,49 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
                     Uint8*                    pCipherText,
                     Uint64                    len,
                     const Uint8*              pIv);
+
+/**
+ * \brief    Allows caller to request for a cipher as described by
+ *           pCipherInfo
+ * \notes    Error needs to be checked for each call,
+ *           only upon returned is ALC_ERROR_NONE, ctx to be considered
+ *           valid.
+ * \param    pCipherHandle Session handle for future encrypt decrypt
+ *                         operation
+ * \param[in]    pInput    Pointer to Input data
+ * \param[out]   pOutput   Pointer to Cipher Text
+ * \param[in]    len           Length of input or output data
+ * \param[in]    pIv           Pointer to Initialization Vector
+ * \return   Error described by alc_error_t
+ */
+alc_error_t
+alcp_cipher_encryptUpdate(const alc_cipher_handle_p pCipherHandle,
+                          const Uint8*              pInput,
+                          Uint8*                    pOutput,
+                          Uint64                    len,
+                          const Uint8*              pIv);
+
+#if 0 // need to check if this interface would be useful
+/**
+ * \brief    Allows caller to control cipher mode based on control param as
+ *           described by pCipherInfo.
+ * \param    pCipherHandle              Session handle for future encrypt
+ *                                      decrypt operation
+ *
+ * \param       controlParam            specific control functionality to done
+ *                                      on cipher
+ * \param       val            value to be set based on controlParam input
+ * \param       size           size of the input/output data.
+ * \param       ptr            ptr to input/output data.
+ * \return      ALC_ERROR_NONE if no error occurs
+ */
+alc_error_t
+alcp_cipher_ctrl(const alc_cipher_handle_p pCipherHandle,
+                 const Uint8               controlParam,
+                 Uint64                    val,
+                 Uint64                    size,
+                 const void*               ptr);
+#endif
 
 /**
  * \brief    Allows caller to request for a cipher as described by
