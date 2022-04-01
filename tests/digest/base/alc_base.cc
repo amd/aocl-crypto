@@ -107,10 +107,14 @@ AlcpDigestBase::digest_function(const uint8_t* pSrc,
         printf("Digest copy failed\n");
         return err;
     }
-    alcp_digest_reset(m_handle);
     return err;
 }
 
+void
+AlcpDigestBase::reset()
+{
+    alcp_digest_reset(m_handle);
+}
 /* Hash value to string */
 void
 AlcpDigestBase::hash_to_string(char*          output_string,

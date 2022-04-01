@@ -60,6 +60,7 @@ class OpenSSLDigestBase : public DigestBase
                                 uint64_t       src_size,
                                 uint8_t*       output,
                                 uint64_t       out_size);
+    void        reset();
     void hash_to_string(char* output_string, const uint8_t* hash, int sha_len);
 };
 } // namespace alcp::testing

@@ -107,6 +107,10 @@ IPPDigestBase::digest_function(const uint8_t* in,
 }
 
 void
+IPPDigestBase::reset()
+{}
+
+void
 IPPDigestBase::hash_to_string(char*          output_string,
                               const uint8_t* hash,
                               int            sha_len)

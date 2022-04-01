@@ -87,6 +87,7 @@ class DigestBase
     virtual void        hash_to_string(char*          output_string,
                                        const uint8_t* hash,
                                        int            sha_len)        = 0;
+    virtual void        reset()                            = 0;
 };
 
 /* Some functions which don't belong to any class but is common */

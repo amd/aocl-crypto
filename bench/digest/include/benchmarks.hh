@@ -72,6 +72,7 @@ Digest_SHA2_224(benchmark::State& state, uint64_t block_size)
     for (auto _ : state) {
         error =
             db->digest_function(message, block_size, digest, sizeof(digest));
+        db->reset();
         if (alcp_is_error(error)) {
             printf("Error in running benchmark");
             return;
@@ -109,6 +110,7 @@ Digest_SHA2_256(benchmark::State& state, uint64_t block_size)
     for (auto _ : state) {
         error =
             db->digest_function(message, block_size, digest, sizeof(digest));
+        db->reset();
         if (alcp_is_error(error)) {
             printf("Error in running benchmark");
             return;
@@ -146,6 +148,7 @@ Digest_SHA2_384(benchmark::State& state, uint64_t block_size)
     for (auto _ : state) {
         error =
             db->digest_function(message, block_size, digest, sizeof(digest));
+        db->reset();
         if (alcp_is_error(error)) {
             printf("Error in running benchmark");
             return;
@@ -183,6 +186,7 @@ Digest_SHA2_512(benchmark::State& state, uint64_t block_size)
     for (auto _ : state) {
         error =
             db->digest_function(message, block_size, digest, sizeof(digest));
+        db->reset();
         if (alcp_is_error(error)) {
             printf("Error in running benchmark");
             return;

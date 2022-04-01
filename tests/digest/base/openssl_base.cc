@@ -104,6 +104,11 @@ OpenSSLDigestBase::digest_function(const uint8_t* in,
 
     return ALC_ERROR_NONE;
 }
+void
+OpenSSLDigestBase::reset()
+{
+    EVP_MD_CTX_reset(m_handle);
+}
 
 void
 OpenSSLDigestBase::hash_to_string(char*          output_string,
