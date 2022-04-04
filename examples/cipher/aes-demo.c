@@ -169,7 +169,7 @@ aclp_aes_gcm_encrypt_demo(
     uint8_t     err_buf[err_size];
 
     // GCM init
-    err = alcp_cipher_encryptUpdate(&handle, NULL, NULL, ivLen, iv);
+    err = alcp_cipher_encrypt_update(&handle, NULL, NULL, ivLen, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm encrypt init \n");
         alcp_error_str(err, err_buf, err_size);
@@ -177,7 +177,7 @@ aclp_aes_gcm_encrypt_demo(
     }
 
     // Additional Data
-    err = alcp_cipher_encryptUpdate(&handle, plaintxt, NULL, adLen, iv);
+    err = alcp_cipher_encrypt_update(&handle, plaintxt, NULL, adLen, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm add data processing \n");
         alcp_error_str(err, err_buf, err_size);
@@ -185,7 +185,7 @@ aclp_aes_gcm_encrypt_demo(
     }
 
     // GCM encrypt
-    err = alcp_cipher_encryptUpdate(&handle, plaintxt, ciphertxt, len, iv);
+    err = alcp_cipher_encrypt_update(&handle, plaintxt, ciphertxt, len, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -193,7 +193,7 @@ aclp_aes_gcm_encrypt_demo(
     }
 
     // get tag
-    err = alcp_cipher_encryptUpdate(&handle, NULL, tag, tagLen, iv);
+    err = alcp_cipher_encrypt_update(&handle, NULL, tag, tagLen, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);

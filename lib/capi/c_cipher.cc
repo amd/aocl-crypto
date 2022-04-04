@@ -103,11 +103,11 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
 }
 
 alc_error_t
-alcp_cipher_encryptUpdate(const alc_cipher_handle_p pCipherHandle,
-                          const Uint8*              pInput,
-                          Uint8*                    pOutput,
-                          Uint64                    len,
-                          const Uint8*              pIv)
+alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
+                           const Uint8*              pInput,
+                           Uint8*                    pOutput,
+                           Uint64                    len,
+                           const Uint8*              pIv)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
