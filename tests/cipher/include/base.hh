@@ -56,6 +56,8 @@ class File
     std::string readWord();
     // Read file line by line
     std::string readLine();
+    // Write a line to the file
+    bool writeLine(std::string buff);
     // Reads a line by reading char by char
     std::string readLineCharByChar();
     // Read file n bytes from a file
