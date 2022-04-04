@@ -131,6 +131,7 @@ create_aes_session(uint8_t*             key,
     }
 }
 
+/* AES modes: Encryption Demo */
 void
 aclp_aes_encrypt_demo(
     const uint8_t* plaintxt,
@@ -145,6 +146,56 @@ aclp_aes_encrypt_demo(
     err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
+}
+
+/* GCM: Authenticated Encryption demo */
+void
+aclp_aes_gcm_encrypt_demo(
+    const uint8_t* plaintxt,
+    const uint32_t len, /* Describes both 'plaintxt' and 'ciphertxt' */
+    uint8_t*       ciphertxt,
+    uint8_t*       iv,
+    const uint32_t ivLen,
+    uint8_t*       ad,
+    const uint32_t adLen,
+    uint8_t*       tag,
+    const uint32_t tagLen)
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
+
+    // GCM init
+    err = alcp_cipher_encryptUpdate(&handle, NULL, NULL, ivLen, iv);
+    if (alcp_is_error(err)) {
+        printf("Error: unable gcm encrypt init \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
+
+    // Additional Data
+    err = alcp_cipher_encryptUpdate(&handle, plaintxt, NULL, adLen, iv);
+    if (alcp_is_error(err)) {
+        printf("Error: unable gcm add data processing \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
+
+    // GCM encrypt
+    err = alcp_cipher_encryptUpdate(&handle, plaintxt, ciphertxt, len, iv);
+    if (alcp_is_error(err)) {
+        printf("Error: unable encrypt \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
+
+    // get tag
+    err = alcp_cipher_encryptUpdate(&handle, NULL, tag, tagLen, iv);
+    if (alcp_is_error(err)) {
+        printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);
         return;
     }
@@ -168,6 +219,19 @@ aclp_aes_decrypt_demo(
         return;
     }
 }
+
+/* GCM: Authenticated Decryption demo */
+void
+aclp_aes_gcm_decrypt_demo(const uint8_t* ciphertxt,
+                          const uint32_t len,
+                          uint8_t*       plaintxt,
+                          uint8_t*       iv,
+                          const uint32_t ivLen,
+                          uint8_t*       ad,
+                          const uint32_t adLen,
+                          uint8_t*       tag,
+                          const uint32_t tagLen)
+{}
 
 /*
     Demo application for complete path:
@@ -197,6 +261,15 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
     uint8_t* ref;
     ref = malloc(inputLen);
 
+    /* additional data, tag used in GCM */
+    uint32_t ivLen  = 12;
+    uint32_t adLen  = 16;
+    uint32_t tagLen = 16;
+    uint8_t* ad     = malloc(adLen);
+    uint8_t  tag[16];
+    memset(ad, 33, adLen);
+    memset(tag, 0, tagLen);
+
     for (int i = 0; i < 1; i++) { // limit the test to 128bit.
         // for (int i = 0; i < 3; i++) {
         int u   = i;
@@ -218,19 +291,32 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
         memset(ref, 0, inputLen);
         memset(outputText, 0, inputLen);
 
-        ALCP_CRYPT_TIMER_INIT
+        ALCP_CRYPT_TIMER_INIT ALCP_PRINT_TEXT(inputText, inputLen, "inputText ")
+            // ALCP_PRINT_TEXT(iv, 8, "iv")
 
-        ALCP_PRINT_TEXT(inputText, inputLen, "inputText ")
-        // ALCP_PRINT_TEXT(iv, 8, "iv")
-
-        create_aes_session(key, iv, keybits, m);
+            create_aes_session(key, iv, keybits, m);
 
 #if SPEED_CHECK
         totalTimeElapsed = 0.0;
         for (int k = 0; k < 100000000; k++) {
 #endif
+
+            //
             ALCP_CRYPT_TIMER_START
-            aclp_aes_encrypt_demo(inputText, inputLen, cipherText, iv);
+
+            if (m != ALC_AES_MODE_GCM) {
+                aclp_aes_encrypt_demo(inputText, inputLen, cipherText, iv);
+            } else {
+                aclp_aes_gcm_encrypt_demo(inputText,
+                                          inputLen,
+                                          cipherText,
+                                          iv,
+                                          ivLen,
+                                          ad,
+                                          adLen,
+                                          tag,
+                                          tagLen);
+            }
 #if SPEED_CHECK
             ALCP_CRYPT_GET_TIME(0, "Encrypt time")
 #else
@@ -255,11 +341,23 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
         for (int k = 0; k < 100000000; k++) {
 #endif
             ALCP_CRYPT_TIMER_START
-            aclp_aes_decrypt_demo(
-                cipherText, // pointer to the PLAINTEXT
-                inputLen,   // text length in bytes
-                outputText, // pointer to the CIPHERTEXT buffer
-                iv);
+            if (m != ALC_AES_MODE_GCM) {
+                aclp_aes_decrypt_demo(
+                    cipherText, // pointer to the PLAINTEXT
+                    inputLen,   // text length in bytes
+                    outputText, // pointer to the CIPHERTEXT buffer
+                    iv);
+            } else {
+                aclp_aes_gcm_decrypt_demo(cipherText,
+                                          inputLen,
+                                          outputText,
+                                          iv,
+                                          ivLen,
+                                          ad,
+                                          adLen,
+                                          tag,
+                                          tagLen);
+            }
 
 #if SPEED_CHECK
             ALCP_CRYPT_GET_TIME(0, "Decrypt time")
@@ -301,6 +399,9 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
     if (ref) {
         free(ref);
     }
+    if (ad) {
+        free(ad);
+    }
 
     return 0;
 }
@@ -332,7 +433,10 @@ main(void)
         } else if (m == ALC_AES_MODE_CFB) {
             printf("\n\nAES-CFB");
         } else if (m == ALC_AES_MODE_XTR) {
-            printf("\n\nALC_AES-XTR not implemented\n");
+            printf("\n\nAES-XTR not implemented\n");
+            continue;
+        } else if (m == ALC_AES_MODE_GCM) {
+            printf("\n\nAES-GCM\n");
             continue;
         } else {
             printf("\n Invalid AES mode");
