@@ -81,13 +81,13 @@ namespace alcp::cipher { namespace aesni {
         NotImplemented();
         return ALC_ERROR_NONE;
     }
-
+/*
     static inline __m128i __aes192keyassist(__m128i tmp0, __m128i tmp1)
     {
         NotImplemented();
         return tmp1;
     }
-
+*/
     /*
      * \brief    Key Expansion for 192-bit keys, h/w assisted
      *

@@ -162,8 +162,8 @@ class Cipher
         return s_aesni_available;
     }
 
-  private:
-    alc_cipher_type_t m_cipher_type;
+  //private:
+    //alc_cipher_type_t m_cipher_type;
 };
 
 class BlockCipherInterface
