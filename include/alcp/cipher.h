@@ -191,11 +191,11 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
  * \return   Error described by alc_error_t
  */
 alc_error_t
-alcp_cipher_encryptUpdate(const alc_cipher_handle_p pCipherHandle,
-                          const Uint8*              pInput,
-                          Uint8*                    pOutput,
-                          Uint64                    len,
-                          const Uint8*              pIv);
+alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
+                           const Uint8*              pInput,
+                           Uint8*                    pOutput,
+                           Uint64                    len,
+                           const Uint8*              pIv);
 
 #if 0 // need to check if this interface would be useful
 /**
