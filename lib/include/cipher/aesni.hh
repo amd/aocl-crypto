@@ -110,7 +110,6 @@ namespace alcp::cipher { namespace aesni {
                                int            nRounds,
                                const uint8_t* pIv,
                                uint64_t       ivBytes,
-                               __m128i*       pgHash_128,
                                __m128i*       phash_subKey_128,
                                __m128i*       ptag_128,
                                __m128i        reverse_mask_128);
@@ -136,6 +135,7 @@ namespace alcp::cipher { namespace aesni {
                           __m128i* pgHash_128,
                           __m128i* ptag128,
                           __m128i  Hsubkey_128,
+                          __m128i  reverse_mask_128,
                           uint8_t* tag);
 
     static inline void AesEncrypt(__m128i*       pBlk0,

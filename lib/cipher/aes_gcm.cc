@@ -93,7 +93,6 @@ Gcm::encryptUpdate(const uint8_t* pInput,
                                         getRounds(),
                                         pIv,
                                         m_ivLen,
-                                        &m_gHash_128,
                                         &m_hash_subKey_128,
                                         &m_tag_128,
                                         m_reverse_mask_128);
@@ -104,7 +103,7 @@ Gcm::encryptUpdate(const uint8_t* pInput,
             const uint8_t* pAdditionalData = pInput;
             m_additionalDataLen            = len;
 
-            // Additional data call when
+            // Additional data call
             err = aesni::processAdditionalDataGcm(pAdditionalData,
                                                   m_additionalDataLen,
                                                   &m_gHash_128,
@@ -136,6 +135,7 @@ Gcm::encryptUpdate(const uint8_t* pInput,
                                    &m_gHash_128,
                                    &m_tag_128,
                                    m_hash_subKey_128,
+                                   m_reverse_mask_128,
                                    ptag);
         }
         return err;

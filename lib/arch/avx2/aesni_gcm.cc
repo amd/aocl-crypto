@@ -38,17 +38,46 @@
 namespace alcp::cipher::aesni {
 
 static void
-gMul(__m128i a, __m128i hash_subKey_128, __m128i* res)
+carrylessMul(__m128i a, __m128i b, __m128i* c, __m128i* d)
 {
-    // tbd
+    __m128i e, f;
+    /* carryless multiplication of a1:a0 * b1:b0 */
+    *c = _mm_clmulepi64_si128(a, b, 0x00); // C1:C0 = a0*b0
+    *d = _mm_clmulepi64_si128(a, b, 0x11); // D1:D0 = a1*b1
+    e  = _mm_clmulepi64_si128(a, b, 0x10); // E1:E0 = a0*b1
+    f  = _mm_clmulepi64_si128(a, b, 0x01); // F1:F0 = a1*b0
+    /*
+     * compute D1  :  D0+E1+F1 : C1+E0+F0: C0
+     */
+    e = _mm_xor_si128(e, f);  // E1+F1 : E0+F0
+    f = _mm_slli_si128(e, 8); // E0+F0:0
+    e = _mm_srli_si128(e, 8); // 0:E1+F1
+
+    /* d : c = D1 : D0+E1+F1 : C1+E0+F1 : C0 */
+    *c = _mm_xor_si128(*c, f); // C1+(E0+F1):C0
+    *d = _mm_xor_si128(*d, e); // D1:D0+(E1+F1)
+}
+
+/* Reduction  */
+static void
+redMod(__m128i c, __m128i d, __m128i* res)
+{
+    // to be implemented
+}
+
+static void
+gMul(__m128i a, __m128i b, __m128i* res)
+{
+    __m128i c, d;
+    carrylessMul(a, b, &c, &d);
+    redMod(c, d, res);
 }
 
 alc_error_t
-EncryptInitGcm(const uint8_t* pKey,    // ptr to Key
-               int            nRounds, // No. of rounds
-               const uint8_t* pIv,     // ptr to Initialization Vector
+EncryptInitGcm(const uint8_t* pKey,
+               int            nRounds,
+               const uint8_t* pIv,
                uint64_t       ivBytes,
-               __m128i*       pgHash_128,
                __m128i*       phash_subKey_128,
                __m128i*       ptag_128,
                __m128i        reverse_mask_128)
@@ -56,25 +85,22 @@ EncryptInitGcm(const uint8_t* pKey,    // ptr to Key
     alc_error_t err     = ALC_ERROR_NONE;
     auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
 
-    // ghash0 and parital Tag Aesenc
-    *pgHash_128       = _mm_setzero_si128();
-    *phash_subKey_128 = _mm_setzero_si128();
-
-    if ((ivBytes * 8) == 96) {
-        // iv
-        *ptag_128 = _mm_loadu_si128((__m128i*)pIv);
-        // T= iv || 32bit counter
-        *ptag_128 = _mm_insert_epi32(*ptag_128, 0x1000000, 3);
-
-        // compute Hash subkey and aesEnc for Tag in parallel.
-        aesni::AesEncrypt(phash_subKey_128, ptag_128, pkey128, nRounds);
-    } else {
-        printf("\n iv length!=96bit not supported ");
-        return ALC_ERROR_NOT_SUPPORTED;
-    }
-
+    // Hash subkey generation.
+    aesni::AesEncrypt(phash_subKey_128, pkey128, nRounds);
     // Hash sub key reversed for gf multiplication.
     *phash_subKey_128 = _mm_shuffle_epi8(*phash_subKey_128, reverse_mask_128);
+
+    // Tag computation
+    if ((ivBytes) == 12) {
+        // iv
+        *ptag_128 = _mm_loadu_si128((__m128i*)pIv);
+        // T= 96 bit iv : 32bit counter
+        *ptag_128 = _mm_insert_epi32(*ptag_128, 0x1000000, 3);
+        aesni::AesEncrypt(ptag_128, pkey128, nRounds);
+    } else {
+        printf("\n iv length!=12bytes (or 96bits) not supported ");
+        return ALC_ERROR_NOT_SUPPORTED;
+    }
 
     return err;
 }
@@ -86,7 +112,7 @@ EncryptGcm(const uint8_t* pPlainText,  // ptr to plaintext
            const uint8_t* pKey,        // ptr to Key
            int            nRounds,     // No. of rounds
            const uint8_t* pIv,         // ptr to Initialization Vector
-           __m128i*       pgHash,
+           __m128i*       pgHash_128,
            __m128i        Hsubkey_128,
            __m128i        reverse_mask_128)
 {
@@ -99,7 +125,7 @@ EncryptGcm(const uint8_t* pPlainText,  // ptr to plaintext
     auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
 
     __m128i a1, a2, a3, a4;
-    __m128i ctr1, ctr2, ctr3, ctr4, swap_ctr;
+    __m128i c1, c2, c3, c4, swap_ctr;
     __m128i b1, b2, b3, b4;
 
     // counter 4 bytes are arranged in reverse order
@@ -107,19 +133,18 @@ EncryptGcm(const uint8_t* pPlainText,  // ptr to plaintext
     swap_ctr =
         _mm_setr_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 14, 13, 12);
     // nonce counter
-    ctr1 = _mm_loadu_si128((__m128i*)pIv);
-    ctr1 =
-        _mm_insert_epi32(ctr1, 0x2000000, 3); // ctr1.m128i_i32[3] = 0x2000000;
+    c1                = _mm_loadu_si128((__m128i*)pIv);
+    c1                = _mm_insert_epi32(c1, 0x2000000, 3);
     __m128i one_128   = _mm_set_epi32(1, 0, 0, 0);
     __m128i two_128   = _mm_set_epi32(2, 0, 0, 0);
     __m128i three_128 = _mm_set_epi32(3, 0, 0, 0);
     __m128i four_128  = _mm_set_epi32(4, 0, 0, 0);
-    ctr1              = _mm_shuffle_epi8(ctr1, swap_ctr);
+    c1                = _mm_shuffle_epi8(c1, swap_ctr);
 
     for (; blocks >= 4; blocks -= 4) {
-        ctr2 = _mm_add_epi32(ctr1, one_128);
-        ctr3 = _mm_add_epi32(ctr1, two_128);
-        ctr4 = _mm_add_epi32(ctr1, three_128);
+        c2 = _mm_add_epi32(c1, one_128);
+        c3 = _mm_add_epi32(c1, two_128);
+        c4 = _mm_add_epi32(c1, three_128);
 
         a1 = _mm_loadu_si128(p_in_128);
         a2 = _mm_loadu_si128(p_in_128 + 1);
@@ -127,10 +152,10 @@ EncryptGcm(const uint8_t* pPlainText,  // ptr to plaintext
         a4 = _mm_loadu_si128(p_in_128 + 3);
 
         // re-arrange as per spec
-        b1 = _mm_shuffle_epi8(ctr1, swap_ctr);
-        b2 = _mm_shuffle_epi8(ctr2, swap_ctr);
-        b3 = _mm_shuffle_epi8(ctr3, swap_ctr);
-        b4 = _mm_shuffle_epi8(ctr4, swap_ctr);
+        b1 = _mm_shuffle_epi8(c1, swap_ctr);
+        b2 = _mm_shuffle_epi8(c2, swap_ctr);
+        b3 = _mm_shuffle_epi8(c3, swap_ctr);
+        b4 = _mm_shuffle_epi8(c4, swap_ctr);
 
         aesni::AesEncrypt(&b1, &b2, &b3, &b4, pkey128, nRounds);
 
@@ -140,23 +165,23 @@ EncryptGcm(const uint8_t* pPlainText,  // ptr to plaintext
         a4 = _mm_xor_si128(b4, a4);
 
         // increment counter
-        ctr1 = _mm_add_epi32(ctr1, four_128);
+        c1 = _mm_add_epi32(c1, four_128);
 
-        __m128i ra = _mm_shuffle_epi8(a1, reverse_mask_128);
-        *pgHash    = _mm_xor_si128(ra, *pgHash);
-        gMul(*pgHash, Hsubkey_128, pgHash);
+        __m128i ra  = _mm_shuffle_epi8(a1, reverse_mask_128);
+        *pgHash_128 = _mm_xor_si128(ra, *pgHash_128);
+        gMul(*pgHash_128, Hsubkey_128, pgHash_128);
 
-        ra      = _mm_shuffle_epi8(a2, reverse_mask_128);
-        *pgHash = _mm_xor_si128(ra, *pgHash);
-        gMul(*pgHash, Hsubkey_128, pgHash);
+        ra          = _mm_shuffle_epi8(a2, reverse_mask_128);
+        *pgHash_128 = _mm_xor_si128(ra, *pgHash_128);
+        gMul(*pgHash_128, Hsubkey_128, pgHash_128);
 
-        ra      = _mm_shuffle_epi8(a3, reverse_mask_128);
-        *pgHash = _mm_xor_si128(ra, *pgHash);
-        gMul(*pgHash, Hsubkey_128, pgHash);
+        ra          = _mm_shuffle_epi8(a3, reverse_mask_128);
+        *pgHash_128 = _mm_xor_si128(ra, *pgHash_128);
+        gMul(*pgHash_128, Hsubkey_128, pgHash_128);
 
-        ra      = _mm_shuffle_epi8(a4, reverse_mask_128);
-        *pgHash = _mm_xor_si128(ra, *pgHash);
-        gMul(*pgHash, Hsubkey_128, pgHash);
+        ra          = _mm_shuffle_epi8(a4, reverse_mask_128);
+        *pgHash_128 = _mm_xor_si128(ra, *pgHash_128);
+        gMul(*pgHash_128, Hsubkey_128, pgHash_128);
 
         _mm_storeu_si128(p_out_128, a1);
         _mm_storeu_si128(p_out_128 + 1, a2);
@@ -168,14 +193,14 @@ EncryptGcm(const uint8_t* pPlainText,  // ptr to plaintext
     }
 
     for (; blocks >= 2; blocks -= 2) {
-        ctr2 = _mm_add_epi32(ctr1, one_128);
+        c2 = _mm_add_epi32(c1, one_128);
 
         a1 = _mm_loadu_si128(p_in_128);
         a2 = _mm_loadu_si128(p_in_128 + 1);
 
         // re-arrange as per spec
-        b1 = _mm_shuffle_epi8(ctr1, swap_ctr);
-        b2 = _mm_shuffle_epi8(ctr2, swap_ctr);
+        b1 = _mm_shuffle_epi8(c1, swap_ctr);
+        b2 = _mm_shuffle_epi8(c2, swap_ctr);
 
         aesni::AesEncrypt(&b1, &b2, pkey128, nRounds);
 
@@ -183,15 +208,15 @@ EncryptGcm(const uint8_t* pPlainText,  // ptr to plaintext
         a2 = _mm_xor_si128(b2, a2);
 
         // increment counter
-        ctr1 = _mm_add_epi32(ctr1, two_128);
+        c1 = _mm_add_epi32(c1, two_128);
 
         __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
-        *pgHash     = _mm_xor_si128(ra1, *pgHash);
-        gMul(*pgHash, Hsubkey_128, pgHash);
+        *pgHash_128 = _mm_xor_si128(ra1, *pgHash_128);
+        gMul(*pgHash_128, Hsubkey_128, pgHash_128);
 
         __m128i ra2 = _mm_shuffle_epi8(a2, reverse_mask_128);
-        *pgHash     = _mm_xor_si128(ra2, *pgHash);
-        gMul(*pgHash, Hsubkey_128, pgHash);
+        *pgHash_128 = _mm_xor_si128(ra2, *pgHash_128);
+        gMul(*pgHash_128, Hsubkey_128, pgHash_128);
 
         _mm_storeu_si128(p_out_128, a1);
         _mm_storeu_si128(p_out_128 + 1, a2);
@@ -204,16 +229,16 @@ EncryptGcm(const uint8_t* pPlainText,  // ptr to plaintext
         a1 = _mm_loadu_si128(p_in_128);
 
         // re-arrange as per spec
-        b1 = _mm_shuffle_epi8(ctr1, swap_ctr);
+        b1 = _mm_shuffle_epi8(c1, swap_ctr);
         aesni::AesEncrypt(&b1, pkey128, nRounds);
         a1 = _mm_xor_si128(b1, a1);
 
         // increment counter
-        ctr1 = _mm_add_epi32(ctr1, one_128);
+        c1 = _mm_add_epi32(c1, one_128);
 
         __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
-        *pgHash     = _mm_xor_si128(ra1, *pgHash);
-        gMul(*pgHash, Hsubkey_128, pgHash);
+        *pgHash_128 = _mm_xor_si128(ra1, *pgHash_128);
+        gMul(*pgHash_128, Hsubkey_128, pgHash_128);
 
         _mm_storeu_si128(p_out_128, a1);
 
@@ -223,25 +248,25 @@ EncryptGcm(const uint8_t* pPlainText,  // ptr to plaintext
 
     if (remBytes) {
         // re-arrange as per spec
-        b1 = _mm_shuffle_epi8(ctr1, swap_ctr);
+        b1 = _mm_shuffle_epi8(c1, swap_ctr);
         aesni::AesEncrypt(&b1, pkey128, nRounds);
 
         unsigned char* p_in  = (unsigned char*)p_in_128;
         unsigned char* p_out = (unsigned char*)&a1;
         int            i     = 0;
         for (; i < remBytes; i++) {
-            p_out[i] = p_in[i]; // a1.m128i_i8[i] = p_in[i];
+            p_out[i] = p_in[i];
         }
         for (; i < 16; i++) {
-            p_out[i] = 0; // a1.m128i_i8[i] = 0;
+            p_out[i] = 0;
         }
         a1 = _mm_xor_si128(b1, a1);
 
         __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
-        *pgHash     = _mm_xor_si128(ra1, *pgHash);
-        gMul(*pgHash, Hsubkey_128, pgHash);
+        *pgHash_128 = _mm_xor_si128(ra1, *pgHash_128);
+        gMul(*pgHash_128, Hsubkey_128, pgHash_128);
     }
-    *pgHash = _mm_shuffle_epi8(*pgHash, reverse_mask_128);
+    *pgHash_128 = _mm_shuffle_epi8(*pgHash_128, reverse_mask_128);
     return err;
 }
 
@@ -267,7 +292,6 @@ processAdditionalDataGcm(const uint8_t* pAdditionalData,
         ad1 = _mm_loadu_si128(pAd128);
         ad1 = _mm_shuffle_epi8(ad1, reverse_mask_128);
 
-        // xor with gh0.
         *pgHash_128 = _mm_xor_si128(ad1, *pgHash_128);
         gMul(*pgHash_128, hash_subKey_128, pgHash_128);
 
@@ -284,23 +308,22 @@ GetTagGcm(uint64_t len,
           __m128i* pgHash_128,
           __m128i* ptag128,
           __m128i  Hsubkey_128,
+          __m128i  reverse_mask_128,
           uint8_t* tag)
 {
     alc_error_t err       = ALC_ERROR_NONE;
     auto        p_tag_128 = reinterpret_cast<__m128i*>(tag);
-    __m128i     reverse_mask =
-        _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-    __m128i a1 = _mm_set_epi32(0, 0, 0, 0);
+    __m128i     a1        = _mm_set_epi32(0, 0, 0, 0);
 
     a1 = _mm_insert_epi64(a1, (len << 3), 0);
     a1 = _mm_insert_epi64(a1, (adLength << 3), 1);
-    a1 = _mm_shuffle_epi8(a1, reverse_mask);
+    a1 = _mm_shuffle_epi8(a1, reverse_mask_128);
 
     *pgHash_128 = _mm_xor_si128(a1, *pgHash_128);
-    *pgHash_128 = _mm_shuffle_epi8(*pgHash_128, reverse_mask);
+    *pgHash_128 = _mm_shuffle_epi8(*pgHash_128, reverse_mask_128);
     gMul(*pgHash_128, Hsubkey_128, pgHash_128);
 
-    *pgHash_128 = _mm_shuffle_epi8(*pgHash_128, reverse_mask);
+    *pgHash_128 = _mm_shuffle_epi8(*pgHash_128, reverse_mask_128);
     *ptag128    = _mm_xor_si128(*pgHash_128, *ptag128);
     _mm_storeu_si128(p_tag_128, *ptag128);
 
