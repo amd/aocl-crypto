@@ -32,9 +32,10 @@
 
 using namespace alcp::testing;
 
-static bool verbose = false;
-static bool useipp  = false;
-static bool useossl = false;
+static bool verbose   = false;
+static bool useipp    = false;
+static bool useossl   = false;
+static bool bbxreplay = false;
 
 ::testing::AssertionResult
 ArraysMatch(std::vector<uint8_t>    actual,

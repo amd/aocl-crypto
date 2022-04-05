@@ -159,6 +159,9 @@ parseArgs(int argc, char** argv)
                           << std::endl;
                 std::cout << "--use-ossl or -o force OpenSSL use in testing"
                           << std::endl;
+                std::cout
+                    << "--replay-blackbox or -r replay blackbox with log file"
+                    << std::endl;
             } else if ((currentArg == std::string("--verbose"))
                        || (currentArg == std::string("-v"))) {
                 verbose = true;
@@ -167,6 +170,9 @@ parseArgs(int argc, char** argv)
                 useipp = true;
             } else if ((currentArg == std::string("--use-ossl"))
                        || (currentArg == std::string("-o"))) {
+                useossl = true;
+            } else if ((currentArg == std::string("--replay-blackbox"))
+                       || (currentArg == std::string("-r"))) {
                 useossl = true;
             }
         }
