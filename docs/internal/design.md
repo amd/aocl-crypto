@@ -115,7 +115,7 @@ built or running.
   - CMake (3.18.4 or later)
   - GCC (11.0 or later)
   - Git (2.30.2 or later)
-  - OpenSSL ( 1.1.1k or later)
+  - OpenSSL ( 3.1 or later)
   - Pandoc ( + LaTeX for generating pdf docs)
 
 ## General Constraints (TODO: TBD)

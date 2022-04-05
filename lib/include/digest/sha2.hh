@@ -267,6 +267,17 @@ class Sha224 final : public Sha2
     alc_error_t finalize(const uint8_t* pMsgBuf, uint64_t size) override;
     alc_error_t copyHash(uint8_t* pHashBuf, uint64_t size) const override;
 
+    static void* operator new(size_t size)
+    {
+        return GetDefaultDigestPool().allocate(size);
+    }
+
+    static void operator delete(void* ptr, size_t size)
+    {
+        auto p = reinterpret_cast<Sha224*>(ptr);
+        GetDefaultDigestPool().deallocate(p, size);
+    }
+
   private:
     Sha256* m_psha256;
 };
@@ -282,6 +293,17 @@ class Sha384 final : public Sha2
     void        reset() override;
     alc_error_t finalize(const uint8_t* pMsgBuf, uint64_t size) override;
     alc_error_t copyHash(uint8_t* pHashBuf, uint64_t size) const override;
+
+    static void* operator new(size_t size)
+    {
+        return GetDefaultDigestPool().allocate(size);
+    }
+
+    static void operator delete(void* ptr, size_t size)
+    {
+        auto p = reinterpret_cast<Sha384*>(ptr);
+        GetDefaultDigestPool().deallocate(p, size);
+    }
 
   private:
     Sha512* m_psha512;

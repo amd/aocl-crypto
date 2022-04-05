@@ -36,9 +36,15 @@
 #include "error.hh"
 
 /* System headers */
+#include <memory_resource>
 #include <string>
 
 namespace alcp::digest {
+
+// typedef std::pmr::synchronized_pool_resource DigestPool;
+
+std::pmr::synchronized_pool_resource&
+GetDefaultDigestPool();
 
 static inline Uint32
 RotateRight(Uint32 value, Uint32 count)

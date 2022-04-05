@@ -18,7 +18,7 @@
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS!
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
@@ -114,6 +114,7 @@ class Rijndael::Impl
     Uint32       getKeySize() const { return m_key_size; }
     const Uint8* getEncryptKeys() const { return m_enc_key; }
     const Uint8* getDecryptKeys() const { return m_dec_key; }
+    void         addRoundKey(Uint8 state[][4]) noexcept;
     void         expandKeys(const Uint8* pUserKey) noexcept;
 
     alc_error_t encrypt(const uint8_t* pSrc,
@@ -304,6 +305,18 @@ Rijndael::Impl::shiftRows(Uint8 state[][4]) noexcept
     }
 }
 
+Uint32
+AddRoundKey(Uint32 input, Uint32 key)
+{
+    return input ^ key;
+}
+
+void
+Rijndael::Impl::addRoundKey(Uint8 state[][4]) noexcept
+{
+    /* FIXME: call with Uint32 for easier calculation */
+}
+
 /*
  * FIPS-197 Section 5.1 Psuedo-code for Encryption
  *
@@ -381,6 +394,10 @@ Rijndael::Impl::decrypt(const uint8_t* pSrc,
                         uint64_t       len,
                         const uint8_t* pIv) const
 {
+#if 0
+    Uint32 nb = cBlockSizeWord;
+    Uint8  state[4][cBlockSizeWord];
+#endif
     return ALC_ERROR_NONE;
 }
 

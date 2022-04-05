@@ -36,6 +36,14 @@ namespace alcp::digest {
 
 using Context = alcp::digest::Context;
 
+static std::pmr::synchronized_pool_resource s_digest_pool{};
+
+std::pmr::synchronized_pool_resource&
+GetDefaultDigestPool()
+{
+    return s_digest_pool;
+}
+
 template<typename DIGESTTYPE>
 static alc_error_t
 __sha_update_wrapper(void* pDigest, const uint8_t* pSrc, uint64_t len)

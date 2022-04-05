@@ -117,6 +117,17 @@ class Sha512::Impl
         return s_avx2_available;
     }
 
+    static void* operator new(size_t size)
+    {
+        return GetDefaultDigestPool().allocate(size);
+    }
+
+    static void operator delete(void* ptr, size_t size)
+    {
+        auto p = reinterpret_cast<Sha512::Impl*>(ptr);
+        GetDefaultDigestPool().deallocate(p, size);
+    }
+
   private:
     static void extendMsg(Uint64 w[], Uint32 start, Uint32 end);
     void        compressMsg(Uint64 w[]);
@@ -134,7 +145,7 @@ class Sha512::Impl
 
 Sha512::Impl::Impl()
     : m_msg_len{ 0 }
-    , m_hash{0,}
+    , m_hash{ 0,}
     , m_idx{ 0 }
     , m_finished{ false }
 {
@@ -172,8 +183,8 @@ Sha512::Impl::copyHash(Uint8* pHash, Uint64 size) const
     return err;
 }
 
-void
-Sha512::Impl::extendMsg(Uint64 w[], Uint32 start, Uint32 end)
+static inline void
+ExtendMsg(Uint64 w[], Uint32 start, Uint32 end)
 {
     for (Uint32 i = start; i < end; i++) {
         const Uint64 s0 = RotateRight(w[i - 15], 1) ^ RotateRight(w[i - 15], 8)
@@ -213,7 +224,7 @@ Sha512::Impl::processChunk(const Uint8* pSrc, Uint64 len)
             w, p_msg_buffer64, cChunkSize, utils::ToBigEndian<Uint64>);
         // Extend the first 16 words into the remaining words of the message
         // schedule array:
-        extendMsg(w, cChunkSizeWords, cNumRounds);
+        ExtendMsg(w, cChunkSizeWords, cNumRounds);
 
         // Compress the message
         compressMsg(w);

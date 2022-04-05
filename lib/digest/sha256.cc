@@ -100,6 +100,17 @@ class Sha256::Impl
         return s_avx2_available;
     }
 
+    static void* operator new(size_t size)
+    {
+        return GetDefaultDigestPool().allocate(size);
+    }
+
+    static void operator delete(void* ptr, size_t size)
+    {
+        auto p = reinterpret_cast<Sha256::Impl*>(ptr);
+        GetDefaultDigestPool().deallocate(p, size);
+    }
+
   private:
     static void extendMsg(Uint32 w[], Uint32 start, Uint32 end);
     void        compressMsg(Uint32 w[]);

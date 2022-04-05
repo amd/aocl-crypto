@@ -35,21 +35,35 @@
 #include "defs.hh"
 #include "digest.hh"
 
+#include "utils/pool.hh"
+
 namespace alcp::digest {
 
-struct Context
+class Context
 {
+    // using PoolAllocator = alcp::utils::PoolAllocator;
+
+  public:
     void* m_digest;
 
-    alc_error_t (*update)(void* pDigest, const uint8_t* pSrc, uint64_t len);
-
-    alc_error_t (*copy)(const void* pDigest, uint8_t* pBuf, uint64_t len);
-
-    alc_error_t (*finalize)(void* pDigest, const uint8_t* pBuf, uint64_t len);
-
+    alc_error_t (*update)(void* pDigest, const Uint8* pSrc, Uint64 len);
+    alc_error_t (*copy)(const void* pDigest, Uint8* pBuf, Uint64 len);
+    alc_error_t (*finalize)(void* pDigest, const Uint8* pBuf, Uint64 len);
     alc_error_t (*finish)(void* pDigest);
-
     alc_error_t (*reset)(void* pDigest);
+ 
+#if 0
+    static void* operator new(size_t size) { return s_ctx_pool.allocate(size); }
+
+    static void operator delete(void* ptr, size_t size)
+    {
+        auto p = reinterpret_cast<Context*>(ptr);
+        s_ctx_pool.deallocate(p, size);
+    }
+
+ private:
+    static utils::Pool<digest::Context> s_ctx_pool;
+#endif
 };
 
 } // namespace alcp::digest
