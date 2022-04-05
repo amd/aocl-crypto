@@ -444,8 +444,11 @@ class Gcm final : public Aes
     {
         m_reverse_mask_128 =
             _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+        m_gHash_128         = _mm_setzero_si128();
+        m_hash_subKey_128   = _mm_setzero_si128();
         m_len               = 0;
         m_additionalDataLen = 0;
+        m_tagLen            = 0;
         m_ivLen             = 12; // default 12 bytes or 96bits
     }
 
