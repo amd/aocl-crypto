@@ -139,72 +139,84 @@ File::tell()
     return m_file.tellg();
 }
 
-// Class FlightRecorder
-FlightRecorder::FlightRecorder()
+// Class ExecRecPlay - FlightRecorder/FlightReplay
+ExecRecPlay::ExecRecPlay()
 {
     m_blackbox_bin = new File("crosstest_blackbox.bin", true, true);
     m_log          = new File("crosstest.log", true, true);
 }
 
-FlightRecorder::FlightRecorder(std::string str_mode)
+ExecRecPlay::ExecRecPlay(std::string str_mode)
 {
     m_blackbox_bin =
         new File("crosstest_" + str_mode + "_blackbox.bin", true, true);
     m_log = new File("crosstest_" + str_mode + ".log", true, true);
 }
 
+ExecRecPlay::~ExecRecPlay()
+{
+    if (m_blackbox_bin != nullptr) {
+        delete m_blackbox_bin;
+        m_blackbox_bin = nullptr;
+    }
+    if (m_log != nullptr) {
+        delete m_log;
+        m_log = nullptr;
+    }
+}
+
 void
-FlightRecorder::startEvent()
+ExecRecPlay::startRecEvent()
 {
     m_start_time         = time(0);
     m_blackbox_start_pos = m_blackbox_bin->tell();
 }
 
 void
-FlightRecorder::endEvent()
+ExecRecPlay::endRecEvent()
 {
     m_end_time         = time(0);
     m_blackbox_end_pos = m_blackbox_bin->tell();
 }
 
 void
-FlightRecorder::setEvent(std::vector<uint8_t> key,
+ExecRecPlay::setRecEvent(std::vector<uint8_t> key,
                          std::vector<uint8_t> iv,
                          std::vector<uint8_t> data,
                          record_t             rec)
 {
-    setKey(key);
-    setIv(iv);
-    setData(data);
+    setRecKey(key);
+    setRecIv(iv);
+    setRecData(data);
     setRecType(rec);
 }
 
 void
-FlightRecorder::setKey(std::vector<uint8_t> key)
+ExecRecPlay::setRecKey(std::vector<uint8_t> key)
 {
     m_key = key;
 }
 
 void
-FlightRecorder::setIv(std::vector<uint8_t> iv)
+ExecRecPlay::setRecIv(std::vector<uint8_t> iv)
 {
     m_iv = iv;
 }
 
 void
-FlightRecorder::setData(std::vector<uint8_t> data)
+ExecRecPlay::setRecData(std::vector<uint8_t> data)
 {
     m_data = data;
 }
 
 void
-FlightRecorder::setRecType(record_t rec)
+ExecRecPlay::setRecType(record_t rec)
 {
     m_rec_type = rec;
 }
 
 void
-FlightRecorder::writeBackBox()
+ExecRecPlay::dumpBlackBox()
 {
     m_blackbox_bin->writeBytes(m_iv.size(), &(m_iv[0]));
     m_blackbox_bin->writeBytes(m_key.size(), &(m_key[0]));
@@ -212,7 +224,7 @@ FlightRecorder::writeBackBox()
 }
 
 void
-FlightRecorder::writeLog()
+ExecRecPlay::dumpLog()
 {
     /*
        Format of the log file is

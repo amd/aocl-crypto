@@ -74,7 +74,7 @@ class File
     size_t tell();
 };
 
-class FlightRecorder
+class ExecRecPlay
 {
   private:
     File*                m_blackbox_bin = nullptr;
@@ -91,14 +91,17 @@ class FlightRecorder
 
   public:
     // Create new files for writing
-    FlightRecorder();
-    FlightRecorder(std::string str_mode);
+    ExecRecPlay();
+    ExecRecPlay(std::string str_mode);
+
+    // Destructor, free and clear pointers
+    ~ExecRecPlay();
 
     // Start a new event, so initalize new entry.
-    void startEvent();
+    void startRecEvent();
 
     // End the event, so record end time.
-    void endEvent();
+    void endRecEvent();
 
     /**
      * @brief Set everything generated during test
@@ -108,28 +111,28 @@ class FlightRecorder
      * @param data - PlainText/CipherText
      * @param rec - Test type, BIG_ENC,SMALL_ENC etc..
      */
-    void setEvent(std::vector<uint8_t> key,
-                  std::vector<uint8_t> iv,
-                  std::vector<uint8_t> data,
-                  record_t             rec);
+    void setRecEvent(std::vector<uint8_t> key,
+                     std::vector<uint8_t> iv,
+                     std::vector<uint8_t> data,
+                     record_t             rec);
 
     // Sets the Key of the event
-    void setKey(std::vector<uint8_t> key);
+    void setRecKey(std::vector<uint8_t> key);
 
     // Sets the IV of the event
-    void setIv(std::vector<uint8_t> iv);
+    void setRecIv(std::vector<uint8_t> iv);
 
     // Sets the Data in the event
-    void setData(std::vector<uint8_t> data);
+    void setRecData(std::vector<uint8_t> data);
 
     // Set Test type, BIG_ENC,SMALL_ENC etc..
     void setRecType(record_t rec);
 
     // Write to backbox, write binary data, not the actual log
-    void writeBackBox();
+    void dumpBlackBox();
 
     // Write to event log, csv file about the event
-    void writeLog();
+    void dumpLog();
 };
 
 class DataSet : private File

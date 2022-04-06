@@ -41,7 +41,7 @@
 
 using namespace alcp::testing;
 
-FlightRecorder* fr;
+ExecRecPlay* fr;
 
 #define ALC_MODE ALC_AES_MODE_CFB
 #define STR_MODE "AES_CFB"
@@ -68,20 +68,20 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
     }
     if (extTC != nullptr) {
         for (int i = 16; i < 16 * 100000; i += 1616) {
-            fr->startEvent();
+            fr->startRecEvent();
             std::vector<uint8_t> pt, key, iv;
             pt  = rb.genRandomBytes(i);
             key = rb.genRandomBytes(16);
             iv  = rb.genRandomBytes(16);
-            fr->setEvent(key, iv, pt, SMALL_ENC);
+            fr->setRecEvent(key, iv, pt, SMALL_ENC);
             std::vector enc_1 =
                 alcpTC.getCipherHandler()->testingEncrypt(pt, key, iv);
             std::vector enc_2 =
                 extTC->getCipherHandler()->testingEncrypt(pt, key, iv);
             EXPECT_TRUE(ArraysMatch(enc_1, enc_2));
-            fr->writeBackBox();
-            fr->endEvent();
-            fr->writeLog();
+            fr->dumpBlackBox();
+            fr->endRecEvent();
+            fr->dumpLog();
         }
         delete extTC;
     }
@@ -108,7 +108,7 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
     }
     if (extTC != nullptr) {
         for (int i = 1; i <= 2; i++) {
-            fr->startEvent();
+            fr->startRecEvent();
             size_t size = 16 * 10000000 * i; // 0.16g
             // size *= 10;                      // 0.16g
             std::vector<uint8_t> pt, key, iv;
@@ -116,7 +116,7 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
                 pt  = rb.genRandomBytes(size);
                 key = rb.genRandomBytes(16);
                 iv  = rb.genRandomBytes(16);
-                fr->setEvent(key, iv, pt, BIG_ENC);
+                fr->setRecEvent(key, iv, pt, BIG_ENC);
             } catch (const char* err) {
                 printErrors(std::string(err));
                 std::exit(-1);
@@ -126,9 +126,9 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
             std::vector enc_2 =
                 extTC->getCipherHandler()->testingEncrypt(pt, key, iv);
             EXPECT_TRUE(ArraysMatch(enc_1, enc_2));
-            fr->writeBackBox();
-            fr->endEvent();
-            fr->writeLog();
+            fr->dumpBlackBox();
+            fr->endRecEvent();
+            fr->dumpLog();
         }
         delete extTC;
     }
@@ -155,20 +155,20 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
     }
     if (extTC != nullptr) {
         for (int i = 16; i < 16 * 100000; i += 1616) {
-            fr->startEvent();
+            fr->startRecEvent();
             std::vector<uint8_t> ct, key, iv;
             ct  = rb.genRandomBytes(i);
             key = rb.genRandomBytes(16);
             iv  = rb.genRandomBytes(16);
-            fr->setEvent(key, iv, ct, SMALL_DEC);
+            fr->setRecEvent(key, iv, ct, SMALL_DEC);
             std::vector dec_1 =
                 alcpTC.getCipherHandler()->testingDecrypt(ct, key, iv);
             std::vector dec_2 =
                 extTC->getCipherHandler()->testingDecrypt(ct, key, iv);
             EXPECT_TRUE(ArraysMatch(dec_1, dec_2));
-            fr->writeBackBox();
-            fr->endEvent();
-            fr->writeLog();
+            fr->dumpBlackBox();
+            fr->endRecEvent();
+            fr->dumpLog();
         }
         delete extTC;
     }
@@ -195,7 +195,7 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
     }
     if (extTC != nullptr) {
         for (int i = 1; i <= 2; i++) {
-            fr->startEvent();
+            fr->startRecEvent();
             size_t size = 16 * 10000000 * i; // 0.16g
             // size *= 10;                      // 0.16g
             std::vector<uint8_t> ct, key, iv;
@@ -203,7 +203,7 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
                 ct  = rb.genRandomBytes(size);
                 key = rb.genRandomBytes(16);
                 iv  = rb.genRandomBytes(16);
-                fr->setEvent(key, iv, ct, SMALL_DEC);
+                fr->setRecEvent(key, iv, ct, SMALL_DEC);
             } catch (const char* err) {
                 printErrors(std::string(err));
                 std::exit(-1);
@@ -214,9 +214,9 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
             std::vector dec_2 =
                 extTC->getCipherHandler()->testingDecrypt(ct, key, iv);
             EXPECT_TRUE(ArraysMatch(dec_1, dec_2));
-            fr->writeBackBox();
-            fr->endEvent();
-            fr->writeLog();
+            fr->dumpBlackBox();
+            fr->endRecEvent();
+            fr->dumpLog();
         }
         delete extTC;
     }
@@ -225,7 +225,7 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
 int
 main(int argc, char** argv)
 {
-    fr = new FlightRecorder(std::string(STR_MODE));
+    fr = new ExecRecPlay(std::string(STR_MODE));
     ::testing::InitGoogleTest(&argc, argv);
     testing::TestEventListeners& listeners =
         testing::UnitTest::GetInstance()->listeners();
