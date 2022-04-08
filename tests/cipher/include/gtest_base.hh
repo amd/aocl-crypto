@@ -173,7 +173,7 @@ parseArgs(int argc, char** argv)
                 useossl = true;
             } else if ((currentArg == std::string("--replay-blackbox"))
                        || (currentArg == std::string("-r"))) {
-                useossl = true;
+                bbxreplay = true;
             }
         }
     }

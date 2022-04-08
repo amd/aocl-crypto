@@ -52,6 +52,7 @@ class File
     File(std::string fileName, bool binary, bool write);
     // Opens File as ASCII Text File
     File(std::string fileName);
+    ~File();
     // Read file word by word excludes newlines and spaces
     std::string readWord();
     // Read file line by line
@@ -71,7 +72,8 @@ class File
     // seekG
     void seek(long pos);
     // tell
-    size_t tell();
+    long tell();
+    void flush();
 };
 
 class ExecRecPlay
@@ -88,14 +90,29 @@ class ExecRecPlay
     std::vector<uint8_t> m_iv;
     std::vector<uint8_t> m_data;
     std::string          m_str_mode = "";
+    long m_byte_start, m_byte_end, m_rec_t, m_key_size, m_data_size;
+    long m_prev_log_point;
 
   public:
     // Create new files for writing
-    ExecRecPlay();
-    ExecRecPlay(std::string str_mode);
+    ExecRecPlay();                     // Default Record Mode
+    ExecRecPlay(std::string str_mode); // Default Record Mode
+    ExecRecPlay(std::string str_mode, bool playback);
 
     // Destructor, free and clear pointers
     ~ExecRecPlay();
+
+    void init(std::string str_mode, bool playback);
+
+    // Rewind log pointer
+    bool rewindLog();
+    bool nextLog();
+    bool fastForward(record_t rec);
+    bool getValues(std::vector<uint8_t>* key,
+                   std::vector<uint8_t>* iv,
+                   std::vector<uint8_t>* data);
+
+    bool playbackLocateEvent(record_t rec);
 
     // Start a new event, so initalize new entry.
     void startRecEvent();
