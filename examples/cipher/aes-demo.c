@@ -16,7 +16,7 @@
 
 static alc_cipher_handle_t handle;
 
-#define SPEED_CHECK 1
+#define SPEED_CHECK 0
 
 //#define DEBUG_P /* Enable for debugging only */
 
@@ -231,7 +231,68 @@ aclp_aes_gcm_decrypt_demo(const uint8_t* ciphertxt,
                           const uint32_t adLen,
                           uint8_t*       tag,
                           const uint32_t tagLen)
-{}
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
+
+    // GCM init
+    err = alcp_cipher_decrypt_update(&handle, NULL, NULL, ivLen, iv);
+    if (alcp_is_error(err)) {
+        printf("Error: unable gcm decrypt init \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
+
+    // Additional Data
+    err = alcp_cipher_decrypt_update(&handle, plaintxt, NULL, adLen, iv);
+    if (alcp_is_error(err)) {
+        printf("Error: unable gcm add data processing \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
+
+    // GCM encrypt
+    err = alcp_cipher_decrypt_update(&handle, ciphertxt, plaintxt, len, iv);
+    if (alcp_is_error(err)) {
+        printf("Error: unable decrypt \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
+
+    // get tag
+    err = alcp_cipher_decrypt_update(&handle, NULL, tag, tagLen, iv);
+    if (alcp_is_error(err)) {
+        printf("Error: unable getting tag \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
+}
+
+/*    GCM Encrypt test vector
+ *    Test vector from gcmEncryptExtIV128.rsp file in below path
+ *    http://csrc.nist.gov/groups/STM/cavp/documents/mac/gcmtestvectors.zip
+ *
+ */
+static unsigned char test_key[16] = { 0xc7, 0x51, 0x16, 0xc1, 0x9f, 0x5e,
+                                      0xa4, 0xed, 0x1b, 0x10, 0xbf, 0x0e,
+                                      0xaa, 0xeb, 0xe5, 0xa1 };
+static unsigned char test_iv[12]  = { 0x48, 0xa5, 0x3f, 0xc1, 0x7d, 0x43,
+                                     0x00, 0xf4, 0xa2, 0x3a, 0x5a, 0x39 };
+static unsigned char test_pt[32]  = { 0x45, 0x69, 0x94, 0x4f, 0xcd, 0xe5, 0xb3,
+                                     0xf4, 0xae, 0x4d, 0x50, 0xeb, 0x7a, 0x0e,
+                                     0x3e, 0xf8, 0x8d, 0xab, 0x44, 0xb6, 0x84,
+                                     0xc7, 0x37, 0xb9, 0x0a, 0xa8, 0x8c, 0xf5,
+                                     0x79, 0xbf, 0x05, 0x58 };
+static unsigned char test_ct[32]  = { 0xd5, 0x8b, 0x89, 0x30, 0x0c, 0x62, 0xe0,
+                                     0xb0, 0xea, 0x72, 0x9d, 0x6d, 0xe3, 0x95,
+                                     0x45, 0xea, 0x35, 0xdd, 0xc5, 0xa0, 0x4e,
+                                     0x22, 0xb7, 0x09, 0xf4, 0x5a, 0xf5, 0x32,
+                                     0xbc, 0x67, 0xd9, 0x0d };
+static unsigned char test_tag[14] = {
+    0xc4, 0x28, 0xab, 0xd4, 0xbf, 0x85, 0x46,
+    0x8d, 0x57, 0x23, 0x6e, 0xd1, 0x6d, 0x36
+};
 
 /*
     Demo application for complete path:
@@ -262,12 +323,15 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
     ref = malloc(inputLen);
 
     /* additional data, tag used in GCM */
+
     uint32_t ivLen  = 12;
-    uint32_t adLen  = 16;
+    uint32_t adLen  = 0; // 16;
     uint32_t tagLen = 16;
     uint8_t* ad     = malloc(adLen);
     uint8_t  tag[16];
-    memset(ad, 33, adLen);
+    if (adLen) {
+        memset(ad, 33, adLen);
+    }
     memset(tag, 0, tagLen);
 
     for (int i = 0; i < 1; i++) { // limit the test to 128bit.
@@ -286,21 +350,28 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
             modified for testing. */
         int seed = 1;
         getinput(inputText, inputLen, seed);
-
+        if (m == ALC_AES_MODE_GCM) {
+            /* Verify gcm encrypt with sample test vector */
+            if (inputLen >= 32)
+                inputLen = 32;
+            memcpy(key, test_key, 16);
+            memcpy(iv, test_iv, 12);
+            memcpy(inputText, test_pt, inputLen);
+        }
         memset(cipherText, 0, inputLen);
         memset(ref, 0, inputLen);
         memset(outputText, 0, inputLen);
 
-        ALCP_CRYPT_TIMER_INIT ALCP_PRINT_TEXT(inputText, inputLen, "inputText ")
-            // ALCP_PRINT_TEXT(iv, 8, "iv")
+        ALCP_CRYPT_TIMER_INIT
+        ALCP_PRINT_TEXT(inputText, inputLen, "inputText")
+        ALCP_PRINT_TEXT(iv, 16, "iv       ")
 
-            create_aes_session(key, iv, keybits, m);
+        create_aes_session(key, iv, keybits, m);
 
 #if SPEED_CHECK
         totalTimeElapsed = 0.0;
         for (int k = 0; k < 100000000; k++) {
 #endif
-
             //
             ALCP_CRYPT_TIMER_START
 
@@ -316,13 +387,15 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
                                           adLen,
                                           tag,
                                           tagLen);
+
+                ALCP_PRINT_TEXT(tag, tagLen, "tag      ")
             }
 #if SPEED_CHECK
             ALCP_CRYPT_GET_TIME(0, "Encrypt time")
 #else
         ALCP_CRYPT_GET_TIME(1, "Encrypt time")
 #endif
-            ALCP_PRINT_TEXT(cipherText, inputLen, "cipherText")
+            ALCP_PRINT_TEXT(cipherText, inputLen, "cipherTxt")
 
 #if SPEED_CHECK
             if (totalTimeElapsed > .5) {
@@ -357,6 +430,7 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
                                           adLen,
                                           tag,
                                           tagLen);
+                ALCP_PRINT_TEXT(tag, tagLen, "tag      ")
             }
 
 #if SPEED_CHECK
@@ -364,7 +438,7 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
 #else
         ALCP_CRYPT_GET_TIME(1, "Decrypt time")
 #endif
-            ALCP_PRINT_TEXT(outputText, inputLen, "outputText")
+            ALCP_PRINT_TEXT(outputText, inputLen, "outputTxt")
 
 #if SPEED_CHECK
             if (totalTimeElapsed > .5) {
@@ -437,7 +511,6 @@ main(void)
             continue;
         } else if (m == ALC_AES_MODE_GCM) {
             printf("\n\nAES-GCM\n");
-            continue;
         } else {
             printf("\n Invalid AES mode");
             continue;

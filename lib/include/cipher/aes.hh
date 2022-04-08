@@ -525,6 +525,10 @@ class Gcm final : public Aes
                                       const uint8_t* pIv);
 
   private:
+    virtual alc_error_t cryptUpdate(const uint8_t* pInput,
+                                    uint8_t*       pOutput,
+                                    uint64_t       len,
+                                    const uint8_t* pIv);
     Gcm(){};
 
   private:

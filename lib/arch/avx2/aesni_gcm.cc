@@ -58,7 +58,7 @@ carrylessMul(__m128i a, __m128i b, __m128i* c, __m128i* d)
     *d = _mm_xor_si128(*d, e); // D1:D0+(E1+F1)
 }
 
-/* Reduction  */
+/* Modulo Reduction  */
 static void
 redMod(__m128i c, __m128i d, __m128i* res)
 {
@@ -74,13 +74,13 @@ gMul(__m128i a, __m128i b, __m128i* res)
 }
 
 alc_error_t
-EncryptInitGcm(const uint8_t* pKey,
-               int            nRounds,
-               const uint8_t* pIv,
-               uint64_t       ivBytes,
-               __m128i*       phash_subKey_128,
-               __m128i*       ptag_128,
-               __m128i        reverse_mask_128)
+InitGcm(const uint8_t* pKey,
+        int            nRounds,
+        const uint8_t* pIv,
+        uint64_t       ivBytes,
+        __m128i*       phash_subKey_128,
+        __m128i*       ptag_128,
+        __m128i        reverse_mask_128)
 {
     alc_error_t err     = ALC_ERROR_NONE;
     auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
@@ -106,15 +106,15 @@ EncryptInitGcm(const uint8_t* pKey,
 }
 
 alc_error_t
-EncryptGcm(const uint8_t* pPlainText,  // ptr to plaintext
-           uint8_t*       pCipherText, // ptr to ciphertext
-           uint64_t       len,         // message length in bytes
-           const uint8_t* pKey,        // ptr to Key
-           int            nRounds,     // No. of rounds
-           const uint8_t* pIv,         // ptr to Initialization Vector
-           __m128i*       pgHash_128,
-           __m128i        Hsubkey_128,
-           __m128i        reverse_mask_128)
+CryptGcm(const uint8_t* pPlainText,  // ptr to plaintext
+         uint8_t*       pCipherText, // ptr to ciphertext
+         uint64_t       len,         // message length in bytes
+         const uint8_t* pKey,        // ptr to Key
+         int            nRounds,     // No. of rounds
+         const uint8_t* pIv,         // ptr to Initialization Vector
+         __m128i*       pgHash_128,
+         __m128i        Hsubkey_128,
+         __m128i        reverse_mask_128)
 {
     alc_error_t err      = ALC_ERROR_NONE;
     uint64_t    blocks   = len / Rijndael::cBlockSize;
