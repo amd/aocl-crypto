@@ -53,6 +53,9 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
     TestingCore  alcpTC   = TestingCore(ALCP, ALC_MODE);
     TestingCore* extTC    = nullptr;
     RngBase      rb;
+    if (bbxreplay) {
+        fr->fastForward(SMALL_ENC);
+    }
     // Set extTC based on which external testing core user asks
     try {
         if (useossl)
@@ -68,20 +71,30 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
     }
     if (extTC != nullptr) {
         for (int i = 16; i < 16 * 100000; i += 1616) {
-            fr->startRecEvent();
+            if (!bbxreplay)
+                fr->startRecEvent();
             std::vector<uint8_t> pt, key, iv;
-            pt  = rb.genRandomBytes(i);
-            key = rb.genRandomBytes(16);
-            iv  = rb.genRandomBytes(16);
-            fr->setRecEvent(key, iv, pt, SMALL_ENC);
+            if (!bbxreplay) {
+                pt  = rb.genRandomBytes(i);
+                key = rb.genRandomBytes(16);
+                iv  = rb.genRandomBytes(16);
+                fr->setRecEvent(key, iv, pt, SMALL_ENC);
+            } else {
+                fr->nextLog();
+                fr->getValues(&key, &iv, &pt);
+            }
+            // std::cout << "KEY:" << parseBytesToHexStr(&(key[0]), key.size())
+            //           << std::endl;
             std::vector enc_1 =
                 alcpTC.getCipherHandler()->testingEncrypt(pt, key, iv);
             std::vector enc_2 =
                 extTC->getCipherHandler()->testingEncrypt(pt, key, iv);
             EXPECT_TRUE(ArraysMatch(enc_1, enc_2));
-            fr->dumpBlackBox();
-            fr->endRecEvent();
-            fr->dumpLog();
+            if (!bbxreplay) {
+                fr->dumpBlackBox();
+                fr->endRecEvent();
+                fr->dumpLog();
+            }
         }
         delete extTC;
     }
@@ -94,6 +107,9 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
     TestingCore  alcpTC   = TestingCore(ALCP, ALC_MODE);
     TestingCore* extTC    = nullptr;
     RngBase      rb;
+    if (bbxreplay) {
+        fr->fastForward(BIG_ENC);
+    }
     try {
         if (useossl)
             extTC = new TestingCore(OPENSSL, ALC_MODE);
@@ -108,27 +124,37 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
     }
     if (extTC != nullptr) {
         for (int i = 1; i <= 2; i++) {
-            fr->startRecEvent();
+            if (!bbxreplay)
+                fr->startRecEvent();
             size_t size = 16 * 10000000 * i; // 0.16g
             // size *= 10;                      // 0.16g
             std::vector<uint8_t> pt, key, iv;
             try {
-                pt  = rb.genRandomBytes(size);
-                key = rb.genRandomBytes(16);
-                iv  = rb.genRandomBytes(16);
-                fr->setRecEvent(key, iv, pt, BIG_ENC);
+                if (!bbxreplay) {
+                    pt  = rb.genRandomBytes(size);
+                    key = rb.genRandomBytes(16);
+                    iv  = rb.genRandomBytes(16);
+                    fr->setRecEvent(key, iv, pt, BIG_ENC);
+                } else {
+                    fr->nextLog();
+                    fr->getValues(&key, &iv, &pt);
+                }
             } catch (const char* err) {
                 printErrors(std::string(err));
                 std::exit(-1);
             }
+            // std::cout << "KEY:" << parseBytesToHexStr(&(key[0]), key.size())
+            //           << std::endl;
             std::vector enc_1 =
                 alcpTC.getCipherHandler()->testingEncrypt(pt, key, iv);
             std::vector enc_2 =
                 extTC->getCipherHandler()->testingEncrypt(pt, key, iv);
             EXPECT_TRUE(ArraysMatch(enc_1, enc_2));
-            fr->dumpBlackBox();
-            fr->endRecEvent();
-            fr->dumpLog();
+            if (!bbxreplay) {
+                fr->dumpBlackBox();
+                fr->endRecEvent();
+                fr->dumpLog();
+            }
         }
         delete extTC;
     }
@@ -140,6 +166,9 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
     TestingCore  alcpTC   = TestingCore(ALCP, ALC_MODE);
     TestingCore* extTC    = nullptr;
     RngBase      rb;
+    if (bbxreplay) {
+        fr->fastForward(SMALL_DEC);
+    }
     // Set extTC based on which external testing core user asks
     try {
         if (useossl)
@@ -155,20 +184,28 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
     }
     if (extTC != nullptr) {
         for (int i = 16; i < 16 * 100000; i += 1616) {
-            fr->startRecEvent();
+            if (!bbxreplay)
+                fr->startRecEvent();
             std::vector<uint8_t> ct, key, iv;
-            ct  = rb.genRandomBytes(i);
-            key = rb.genRandomBytes(16);
-            iv  = rb.genRandomBytes(16);
-            fr->setRecEvent(key, iv, ct, SMALL_DEC);
+            if (!bbxreplay) {
+                ct  = rb.genRandomBytes(i);
+                key = rb.genRandomBytes(16);
+                iv  = rb.genRandomBytes(16);
+                fr->setRecEvent(key, iv, ct, SMALL_DEC);
+            } else {
+                fr->nextLog();
+                fr->getValues(&key, &iv, &ct);
+            }
             std::vector dec_1 =
                 alcpTC.getCipherHandler()->testingDecrypt(ct, key, iv);
             std::vector dec_2 =
                 extTC->getCipherHandler()->testingDecrypt(ct, key, iv);
             EXPECT_TRUE(ArraysMatch(dec_1, dec_2));
-            fr->dumpBlackBox();
-            fr->endRecEvent();
-            fr->dumpLog();
+            if (!bbxreplay) {
+                fr->dumpBlackBox();
+                fr->endRecEvent();
+                fr->dumpLog();
+            }
         }
         delete extTC;
     }
@@ -181,6 +218,9 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
     TestingCore  alcpTC   = TestingCore(ALCP, ALC_MODE);
     TestingCore* extTC    = nullptr;
     RngBase      rb;
+    if (bbxreplay) {
+        fr->fastForward(BIG_DEC);
+    }
     try {
         if (useossl)
             extTC = new TestingCore(OPENSSL, ALC_MODE);
@@ -200,10 +240,15 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
             // size *= 10;                      // 0.16g
             std::vector<uint8_t> ct, key, iv;
             try {
-                ct  = rb.genRandomBytes(size);
-                key = rb.genRandomBytes(16);
-                iv  = rb.genRandomBytes(16);
-                fr->setRecEvent(key, iv, ct, SMALL_DEC);
+                if (!bbxreplay) {
+                    ct  = rb.genRandomBytes(size);
+                    key = rb.genRandomBytes(16);
+                    iv  = rb.genRandomBytes(16);
+                    fr->setRecEvent(key, iv, ct, BIG_DEC);
+                } else {
+                    fr->nextLog();
+                    fr->getValues(&key, &iv, &ct);
+                }
             } catch (const char* err) {
                 printErrors(std::string(err));
                 std::exit(-1);
@@ -214,9 +259,11 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
             std::vector dec_2 =
                 extTC->getCipherHandler()->testingDecrypt(ct, key, iv);
             EXPECT_TRUE(ArraysMatch(dec_1, dec_2));
-            fr->dumpBlackBox();
-            fr->endRecEvent();
-            fr->dumpLog();
+            if (!bbxreplay) {
+                fr->dumpBlackBox();
+                fr->endRecEvent();
+                fr->dumpLog();
+            }
         }
         delete extTC;
     }
@@ -225,11 +272,14 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
 int
 main(int argc, char** argv)
 {
-    fr = new ExecRecPlay(std::string(STR_MODE));
     ::testing::InitGoogleTest(&argc, argv);
     testing::TestEventListeners& listeners =
         testing::UnitTest::GetInstance()->listeners();
     parseArgs(argc, argv);
+    if (bbxreplay)
+        fr = new ExecRecPlay(std::string(STR_MODE), true);
+    else
+        fr = new ExecRecPlay(std::string(STR_MODE), false);
     auto default_printer =
         listeners.Release(listeners.default_result_printer());
 

@@ -254,13 +254,15 @@ ExecRecPlay::nextLog() // Parser
 bool
 ExecRecPlay::fastForward(record_t rec)
 {
-
+    bool ret = false;
     while (nextLog()) {
         if (m_rec_t == rec) {
+            ret = true;
             break;
         }
     }
     m_log->seek(m_prev_log_point);
+    return ret;
 }
 
 bool
@@ -268,6 +270,7 @@ ExecRecPlay::getValues(std::vector<uint8_t>* key,
                        std::vector<uint8_t>* iv,
                        std::vector<uint8_t>* data)
 {
+    bool     ret    = false;
     uint8_t* buffer = new uint8_t[m_byte_end - m_byte_start];
     // uint8_t  buffer[m_byte_end - m_byte_start];
     m_blackbox_bin->seek(m_byte_start);
@@ -286,17 +289,19 @@ ExecRecPlay::getValues(std::vector<uint8_t>* key,
         std::cout << "END:" << m_byte_end << "\tSTART:" << m_byte_start
                   << std::endl;
 #endif
+        ret = true;
     }
     if (buffer) {
         delete[] buffer;
     }
+    return ret;
 }
 
 bool
 ExecRecPlay::playbackLocateEvent(record_t rec)
 {
     rewindLog();
-    fastForward(rec);
+    return fastForward(rec);
     // Write a parser and locate the recorder..
 }
 
