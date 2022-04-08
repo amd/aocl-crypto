@@ -252,7 +252,7 @@ aclp_aes_gcm_decrypt_demo(const uint8_t* ciphertxt,
         return;
     }
 
-    // GCM encrypt
+    // GCM decrypt
     err = alcp_cipher_decrypt_update(&handle, ciphertxt, plaintxt, len, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
