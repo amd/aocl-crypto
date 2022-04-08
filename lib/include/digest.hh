@@ -68,10 +68,10 @@ RotateRight(Uint64 value, Uint64 count)
 #endif
 }
 
-class DigestInterface
+class IDigest
 {
   public:
-    DigestInterface() {}
+    IDigest() {}
 
   public:
     virtual alc_error_t update(const Uint8* pBuf, Uint64 size)   = 0;
@@ -82,10 +82,10 @@ class DigestInterface
     virtual alc_error_t copyHash(Uint8* pBuf, Uint64 size) const = 0;
 
   protected:
-    virtual ~DigestInterface() {}
+    virtual ~IDigest() {}
 };
 
-class Digest : public DigestInterface
+class Digest : public IDigest
 {
 
   protected:
