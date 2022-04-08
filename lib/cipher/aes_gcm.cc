@@ -40,11 +40,7 @@ Gcm::decrypt(const uint8_t* pInput,
              uint64_t       len,
              const uint8_t* pIv) const
 {
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // dispatch to REF
-
-    return err;
+    return ALC_ERROR_NONE;
 }
 
 alc_error_t
@@ -53,35 +49,19 @@ Gcm::encrypt(const uint8_t* pInput,
              uint64_t       len,
              const uint8_t* pIv) const
 {
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // dispatch to REF
-
-    return err;
+    return ALC_ERROR_NONE;
 }
 
 alc_error_t
-Gcm::decryptUpdate(const uint8_t* pInput,
-                   uint8_t*       pOutput,
-                   uint64_t       len,
-                   const uint8_t* pIv)
+Gcm::cryptUpdate(const uint8_t* pInput,
+                 uint8_t*       pOutput,
+                 uint64_t       len,
+                 const uint8_t* pIv)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    // dispatch to REF
-
-    return err;
-}
-
-alc_error_t
-Gcm::encryptUpdate(const uint8_t* pInput,
-                   uint8_t*       pOutput,
-                   uint64_t       len,
-                   const uint8_t* pIv)
-{
-    alc_error_t err = ALC_ERROR_NONE;
     /*  Follow in Gcm:
-     *  InitGcm -> processAdditionalDataGcm ->EncryptGcm-> GetTagGcm */
+     *  InitGcm -> processAdditionalDataGcm ->CryptGcm-> GetTagGcm */
     if (Cipher::isAesniAvailable()) {
         // gcm init, both input and output pointers are NULL
         if ((pInput == NULL) && (pOutput == NULL)) {
@@ -89,14 +69,13 @@ Gcm::encryptUpdate(const uint8_t* pInput,
             // len is used as ivlen
             // In init call, we generate HashSubKey, partial tag data.
             m_ivLen = len;
-            err     = aesni::EncryptInitGcm(getEncryptKeys(),
-                                        getRounds(),
-                                        pIv,
-                                        m_ivLen,
-                                        &m_hash_subKey_128,
-                                        &m_tag_128,
-                                        m_reverse_mask_128);
-
+            err     = aesni::InitGcm(getEncryptKeys(),
+                                 getRounds(),
+                                 pIv,
+                                 m_ivLen,
+                                 &m_hash_subKey_128,
+                                 &m_tag_128,
+                                 m_reverse_mask_128);
         } else if ((pInput != NULL) && (pOutput == NULL)) {
             // additional data processing, when input is additional data &
             // output is NULL
@@ -109,7 +88,6 @@ Gcm::encryptUpdate(const uint8_t* pInput,
                                                   &m_gHash_128,
                                                   m_hash_subKey_128,
                                                   m_reverse_mask_128);
-
         } else if ((pInput != NULL) && (pOutput != NULL)) {
             // CTR encrypt and Hash
             const uint8_t* pPlainText  = pInput;
@@ -117,16 +95,15 @@ Gcm::encryptUpdate(const uint8_t* pInput,
             m_len                      = len;
 
             // Encrypt call
-            err = aesni::EncryptGcm(pPlainText,
-                                    pCipherText,
-                                    m_len,
-                                    getEncryptKeys(),
-                                    getRounds(),
-                                    pIv,
-                                    &m_gHash_128,
-                                    m_hash_subKey_128,
-                                    m_reverse_mask_128);
-
+            err = aesni::CryptGcm(pPlainText,
+                                  pCipherText,
+                                  m_len,
+                                  getEncryptKeys(),
+                                  getRounds(),
+                                  pIv,
+                                  &m_gHash_128,
+                                  m_hash_subKey_128,
+                                  m_reverse_mask_128);
         } else if ((pInput == NULL) && (pOutput != NULL)) {
             // Get tag info, when Output is not Null and Input is Null.
             uint8_t* ptag = pOutput;
@@ -140,6 +117,29 @@ Gcm::encryptUpdate(const uint8_t* pInput,
         }
         return err;
     }
+
+    return err;
+}
+
+alc_error_t
+Gcm::decryptUpdate(const uint8_t* pInput,
+                   uint8_t*       pOutput,
+                   uint64_t       len,
+                   const uint8_t* pIv)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    err             = cryptUpdate(pInput, pOutput, len, pIv);
+    return err;
+}
+
+alc_error_t
+Gcm::encryptUpdate(const uint8_t* pInput,
+                   uint8_t*       pOutput,
+                   uint64_t       len,
+                   const uint8_t* pIv)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    err             = cryptUpdate(pInput, pOutput, len, pIv);
     return err;
 }
 
