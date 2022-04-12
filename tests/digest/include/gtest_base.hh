@@ -34,34 +34,4 @@
 #include <base.hh>
 #include <vector>
 
-void
-parseArgs(int argc, char** argv)
-{
-    std::string currentArg;
-    if (argc > 1) {
-        for (int i = 1; i < argc; i++) {
-            currentArg = std::string(argv[i]);
-            if ((currentArg == std::string("--help"))
-                || (currentArg == std::string("-h"))) {
-                std::cout << std::endl
-                          << "Additional help for microtests" << std::endl;
-                std::cout << "--verbose or -v per line status." << std::endl;
-                std::cout << "--use-ipp or -i force IPP use in testing."
-                          << std::endl;
-                std::cout << "--use-ossl or -o force OpenSSL use in testing"
-                          << std::endl;
-            } else if ((currentArg == std::string("--verbose"))
-                       || (currentArg == std::string("-v"))) {
-                verbose = true;
-            } else if ((currentArg == std::string("--use-ipp"))
-                       || (currentArg == std::string("-i"))) {
-                useipp = true;
-            } else if ((currentArg == std::string("--use-ossl"))
-                       || (currentArg == std::string("-o"))) {
-                useossl = true;
-            }
-        }
-    }
-}
-
 #endif

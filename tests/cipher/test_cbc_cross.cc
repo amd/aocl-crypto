@@ -41,7 +41,7 @@
 
 using namespace alcp::testing;
 
-ExecRecPlay* fr;
+ExecRecPlay* fr = nullptr;
 
 #define ALC_MODE ALC_AES_MODE_CBC
 #define STR_MODE "AES_CBC"

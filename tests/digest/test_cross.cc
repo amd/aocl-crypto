@@ -42,6 +42,8 @@
 
 using namespace alcp::testing;
 
+ExecRecPlay* fr;
+
 /* Add all the KAT tests here */
 TEST(DIGEST_SHA2, CROSS_224)
 {
@@ -56,6 +58,11 @@ TEST(DIGEST_SHA2, CROSS_224)
     DigestBase*            db;
     DigestBase*            extDb = nullptr;
     db                           = &adb;
+    if (bbxreplay) {
+        fr = new ExecRecPlay(std::string("SHA2_224"), true);
+        fr->fastForward(SHA2_224);
+    } else
+        fr = new ExecRecPlay(std::string("SHA2_224"), false);
 #ifdef USE_IPP
     IPPDigestBase idb(alc_mode, ALC_DIGEST_TYPE_SHA2, alc_digest_len);
     if (useipp == true)
@@ -73,24 +80,38 @@ TEST(DIGEST_SHA2, CROSS_224)
 
     // TODO: Improve the incementor and start condition of forloop
     for (int i = 16; i < 16 * 100000; i += 1616) {
-        try {
-            data = rng.genRandomBytes(i);
-        } catch (const char* error) {
-            printErrors(error);
-            exit(-1);
+        if (!bbxreplay) {
+            fr->startRecEvent();
+            try {
+                data = rng.genRandomBytes(i);
+                fr->setRecEvent(data, SHA2_224);
+            } catch (const char* error) {
+                printErrors(error);
+                exit(-1);
+            }
+        } else {
+            fr->nextLog();
+            fr->getValues(&data);
         }
+
         error = db->digest_function(
             &(data[0]), data.size(), &(digestAlcp[0]), digestAlcp.size());
         error = extDb->digest_function(
             &(data[0]), data.size(), &(digestExt[0]), digestExt.size());
-        db->init(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
-        extDb->init(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+        db->init(alc_mode, ALC_DIGEST_TYPE_SHA2, alc_digest_len);
+        extDb->init(alc_mode, ALC_DIGEST_TYPE_SHA2, alc_digest_len);
         if (alcp_is_error(error)) {
             printf("Error");
             return;
         }
         EXPECT_TRUE(ArraysMatch(digestAlcp, digestExt, i));
+        if (!bbxreplay) {
+            fr->dumpBlackBox();
+            fr->endRecEvent();
+            fr->dumpLog();
+        }
     }
+    delete fr;
 }
 
 TEST(DIGEST_SHA2, CROSS_256)
@@ -106,6 +127,11 @@ TEST(DIGEST_SHA2, CROSS_256)
     DigestBase*            db;
     DigestBase*            extDb = nullptr;
     db                           = &adb;
+    if (bbxreplay) {
+        fr = new ExecRecPlay(std::string("SHA2_256"), true);
+        fr->fastForward(SHA2_256);
+    } else
+        fr = new ExecRecPlay(std::string("SHA2_256"), false);
 #ifdef USE_IPP
     IPPDigestBase idb(alc_mode, ALC_DIGEST_TYPE_SHA2, alc_digest_len);
     if (useipp == true)
@@ -123,24 +149,38 @@ TEST(DIGEST_SHA2, CROSS_256)
 
     // TODO: Improve the incementor and start condition of forloop
     for (int i = 16; i < 16 * 100000; i += 1616) {
-        try {
-            data = rng.genRandomBytes(i);
-        } catch (const char* error) {
-            printErrors(error);
-            exit(-1);
+        if (!bbxreplay) {
+            fr->startRecEvent();
+            try {
+                data = rng.genRandomBytes(i);
+                fr->setRecEvent(data, SHA2_256);
+            } catch (const char* error) {
+                printErrors(error);
+                exit(-1);
+            }
+        } else {
+            fr->nextLog();
+            fr->getValues(&data);
         }
+
         error = db->digest_function(
             &(data[0]), data.size(), &(digestAlcp[0]), digestAlcp.size());
         error = extDb->digest_function(
             &(data[0]), data.size(), &(digestExt[0]), digestExt.size());
-        db->init(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
-        extDb->init(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+        db->init(alc_mode, ALC_DIGEST_TYPE_SHA2, alc_digest_len);
+        extDb->init(alc_mode, ALC_DIGEST_TYPE_SHA2, alc_digest_len);
         if (alcp_is_error(error)) {
             printf("Error");
             return;
         }
         EXPECT_TRUE(ArraysMatch(digestAlcp, digestExt, i));
+        if (!bbxreplay) {
+            fr->dumpBlackBox();
+            fr->endRecEvent();
+            fr->dumpLog();
+        }
     }
+    delete fr;
 }
 
 TEST(DIGEST_SHA2, CROSS_384)
@@ -156,6 +196,11 @@ TEST(DIGEST_SHA2, CROSS_384)
     DigestBase*            db;
     DigestBase*            extDb = nullptr;
     db                           = &adb;
+    if (bbxreplay) {
+        fr = new ExecRecPlay(std::string("SHA2_384"), true);
+        fr->fastForward(SHA2_384);
+    } else
+        fr = new ExecRecPlay(std::string("SHA2_384"), false);
 #ifdef USE_IPP
     IPPDigestBase idb(alc_mode, ALC_DIGEST_TYPE_SHA2, alc_digest_len);
     if (useipp == true)
@@ -173,24 +218,38 @@ TEST(DIGEST_SHA2, CROSS_384)
 
     // TODO: Improve the incementor and start condition of forloop
     for (int i = 16; i < 16 * 100000; i += 1616) {
-        try {
-            data = rng.genRandomBytes(i);
-        } catch (const char* error) {
-            printErrors(error);
-            exit(-1);
+        if (!bbxreplay) {
+            fr->startRecEvent();
+            try {
+                data = rng.genRandomBytes(i);
+                fr->setRecEvent(data, SHA2_384);
+            } catch (const char* error) {
+                printErrors(error);
+                exit(-1);
+            }
+        } else {
+            fr->nextLog();
+            fr->getValues(&data);
         }
+
         error = db->digest_function(
             &(data[0]), data.size(), &(digestAlcp[0]), digestAlcp.size());
         error = extDb->digest_function(
             &(data[0]), data.size(), &(digestExt[0]), digestExt.size());
-        db->init(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
-        extDb->init(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+        db->init(alc_mode, ALC_DIGEST_TYPE_SHA2, alc_digest_len);
+        extDb->init(alc_mode, ALC_DIGEST_TYPE_SHA2, alc_digest_len);
         if (alcp_is_error(error)) {
             printf("Error");
             return;
         }
         EXPECT_TRUE(ArraysMatch(digestAlcp, digestExt, i));
+        if (!bbxreplay) {
+            fr->dumpBlackBox();
+            fr->endRecEvent();
+            fr->dumpLog();
+        }
     }
+    delete fr;
 }
 
 TEST(DIGEST_SHA2, CROSS_512)
@@ -206,6 +265,11 @@ TEST(DIGEST_SHA2, CROSS_512)
     DigestBase*            db;
     DigestBase*            extDb = nullptr;
     db                           = &adb;
+    if (bbxreplay) {
+        fr = new ExecRecPlay(std::string("SHA2_512"), true);
+        fr->fastForward(SHA2_512);
+    } else
+        fr = new ExecRecPlay(std::string("SHA2_512"), false);
 #ifdef USE_IPP
     IPPDigestBase idb(alc_mode, ALC_DIGEST_TYPE_SHA2, alc_digest_len);
     if (useipp == true)
@@ -224,6 +288,19 @@ TEST(DIGEST_SHA2, CROSS_512)
 
     // TODO: Improve the incementor and start condition of forloop
     for (int i = 16; i < 16 * 100000; i += 1616) {
+        if (!bbxreplay) {
+            fr->startRecEvent();
+            try {
+                data = rng.genRandomBytes(i);
+                fr->setRecEvent(data, SHA2_512);
+            } catch (const char* error) {
+                printErrors(error);
+                exit(-1);
+            }
+        } else {
+            fr->nextLog();
+            fr->getValues(&data);
+        }
         try {
             data = rng.genRandomBytes(i);
         } catch (const char* error) {
@@ -234,14 +311,20 @@ TEST(DIGEST_SHA2, CROSS_512)
             &(data[0]), data.size(), &(digestAlcp[0]), digestAlcp.size());
         error = extDb->digest_function(
             &(data[0]), data.size(), &(digestExt[0]), digestExt.size());
-        db->init(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
-        extDb->init(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+        db->init(alc_mode, ALC_DIGEST_TYPE_SHA2, alc_digest_len);
+        extDb->init(alc_mode, ALC_DIGEST_TYPE_SHA2, alc_digest_len);
         if (alcp_is_error(error)) {
             printf("Error");
             return;
         }
         EXPECT_TRUE(ArraysMatch(digestAlcp, digestExt, i));
+        if (!bbxreplay) {
+            fr->dumpBlackBox();
+            fr->endRecEvent();
+            fr->dumpLog();
+        }
     }
+    delete fr;
 }
 
 int

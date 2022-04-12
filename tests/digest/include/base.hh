@@ -32,6 +32,77 @@
 #include <vector>
 
 namespace alcp::testing {
+
+typedef enum
+{
+    SHA2_224 = 0,
+    SHA2_256,
+    SHA2_384,
+    SHA2_512,
+} record_t;
+
+class ExecRecPlay
+{
+  private:
+    File*                m_blackbox_bin = nullptr;
+    File*                m_log          = nullptr;
+    time_t               m_start_time;
+    time_t               m_end_time;
+    std::size_t          m_blackbox_start_pos = 0;
+    std::size_t          m_blackbox_end_pos   = 0;
+    record_t             m_rec_type;
+    std::vector<uint8_t> m_data;
+    std::string          m_str_mode = "";
+    long                 m_byte_start, m_byte_end, m_rec_t, m_data_size;
+    long                 m_prev_log_point;
+
+  public:
+    // Create new files for writing
+    ExecRecPlay();                     // Default Record Mode
+    ExecRecPlay(std::string str_mode); // Default Record Mode
+    ExecRecPlay(std::string str_mode, bool playback);
+
+    // Destructor, free and clear pointers
+    ~ExecRecPlay();
+
+    void init(std::string str_mode, bool playback);
+
+    // Rewind log pointer
+    bool rewindLog();
+    bool nextLog();
+    bool fastForward(record_t rec);
+    bool getValues(std::vector<uint8_t>* data);
+
+    bool playbackLocateEvent(record_t rec);
+
+    // Start a new event, so initalize new entry.
+    void startRecEvent();
+
+    // End the event, so record end time.
+    void endRecEvent();
+
+    /**
+     * @brief Set everything generated during test
+     *
+     * @param key - 128/192/256 bit KEY
+     * @param iv - 128 bit IV
+     * @param data - PlainText/CipherText
+     * @param rec - Test type, BIG_ENC,SMALL_ENC etc..
+     */
+    void setRecEvent(std::vector<uint8_t> data, record_t rec);
+
+    // Sets the Data in the event
+    void setRecData(std::vector<uint8_t> data);
+
+    // Set Test type, BIG_ENC,SMALL_ENC etc..
+    void setRecType(record_t rec);
+
+    // Write to backbox, write binary data, not the actual log
+    void dumpBlackBox();
+
+    // Write to event log, csv file about the event
+    void dumpLog();
+};
 class DataSet : private File
 {
   private:
