@@ -28,6 +28,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <sys/stat.h>
 #include <vector>
 
 namespace alcp::testing {
@@ -75,4 +76,6 @@ std::string
 parseBytesToHexStr(const uint8_t* bytes, const int length);
 uint8_t
 parseHexToNum(const unsigned char c);
+bool
+IsPathExist(const std::string dir);
 } // namespace alcp::testing
