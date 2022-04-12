@@ -27,7 +27,7 @@
  */
 #pragma once
 #include "alcp/alcp.h"
-#include <fstream>
+#include "base_common.hh"
 #include <iostream>
 #include <vector>
 
@@ -40,41 +40,6 @@ typedef enum
     BIG_DEC,
     BIG_ENC,
 } record_t;
-
-class File
-{
-  private:
-    std::fstream m_file;
-    bool         m_fileExists;
-
-  public:
-    // Opens File as Bin/ASCII File with write support.
-    File(std::string fileName, bool binary, bool write);
-    // Opens File as ASCII Text File
-    File(std::string fileName);
-    ~File();
-    // Read file word by word excludes newlines and spaces
-    std::string readWord();
-    // Read file line by line
-    std::string readLine();
-    // Write a line to the file
-    bool writeLine(std::string buff);
-    // Reads a line by reading char by char
-    std::string readLineCharByChar();
-    // Read file n bytes from a file
-    char* readChar(size_t n);
-    // Reads a set of bytes
-    bool readBytes(size_t n, uint8_t* buffer);
-    // Writes a set of bytes
-    bool writeBytes(size_t n, const uint8_t* buffer);
-    // Rewind file to initial position
-    void rewind();
-    // seekG
-    void seek(long pos);
-    // tell
-    long tell();
-    void flush();
-};
 
 class ExecRecPlay
 {
@@ -214,14 +179,4 @@ class CipherTesting
                                         const std::vector<uint8_t> iv);
     void                 setcb(CipherBase* impl);
 };
-
-/* Some functions which don't belong to any class but is common */
-void
-printErrors(std::string in);
-std::vector<uint8_t>
-parseHexStrToBin(const std::string in);
-std::string
-parseBytesToHexStr(const uint8_t* bytes, const int length);
-uint8_t
-parseHexToNum(const unsigned char c);
 } // namespace alcp::testing

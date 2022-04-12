@@ -6,7 +6,7 @@ FetchContent_Declare(gtest
 FetchContent_MakeAvailable(gtest)
 
 # Basic sources and libs needed for ALCP
-set(ALC_BASE_FILES ${ALC_BASE_FILES} ../common/base/rng_base.cc base/alc_base.cc base/base.cc)
+set(ALC_BASE_FILES ${ALC_BASE_FILES} ../common/base/rng_base.cc ../common/base/base_common.cc base/alc_base.cc base/base.cc)
 set(LIBS ${LIBS} gtest alcp)
 
 if(ENABLE_TESTS_IPP_API)

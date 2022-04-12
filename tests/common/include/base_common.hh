@@ -26,46 +26,53 @@
  *
  */
 
-#pragma once
-#include "base_common.hh"
-#include <alcp/alcp.h>
+#include <fstream>
+#include <iostream>
 #include <vector>
 
 namespace alcp::testing {
-class DataSet : private File
+class File
 {
   private:
-    std::string          line = "";
-    std::vector<uint8_t> Digest, Message;
-    // First line is skipped, linenum starts from 1
-    int lineno = 1;
+    std::fstream m_file;
+    bool         m_fileExists;
 
   public:
-    // Treats file as CSV, skips first line
-    DataSet(const std::string filename);
-    // Read without condition
-    bool readMsgDigest();
-    // To print which line in dataset failed
-    int getLineNumber();
-    /* fetch Message / Digest */
-    std::vector<uint8_t> getMessage();
-    std::vector<uint8_t> getDigest();
-};
-class DigestBase
-{
-  public:
-    virtual bool        init(_alc_sha2_mode   mode,
-                             _alc_digest_type type,
-                             _alc_digest_len  sha_len)      = 0;
-    virtual bool        init()                             = 0;
-    virtual alc_error_t digest_function(const uint8_t* src,
-                                        uint64_t       src_size,
-                                        uint8_t*       output,
-                                        uint64_t       out_size) = 0;
-    virtual void        hash_to_string(char*          output_string,
-                                       const uint8_t* hash,
-                                       int            sha_len)        = 0;
-    virtual void        reset()                            = 0;
+    // Opens File as Bin/ASCII File with write support.
+    File(std::string fileName, bool binary, bool write);
+    // Opens File as ASCII Text File
+    File(std::string fileName);
+    ~File();
+    // Read file word by word excludes newlines and spaces
+    std::string readWord();
+    // Read file line by line
+    std::string readLine();
+    // Write a line to the file
+    bool writeLine(std::string buff);
+    // Reads a line by reading char by char
+    std::string readLineCharByChar();
+    // Read file n bytes from a file
+    char* readChar(size_t n);
+    // Reads a set of bytes
+    bool readBytes(size_t n, uint8_t* buffer);
+    // Writes a set of bytes
+    bool writeBytes(size_t n, const uint8_t* buffer);
+    // Rewind file to initial position
+    void rewind();
+    // seekG
+    void seek(long pos);
+    // tell
+    long tell();
+    void flush();
 };
 
+/* Some functions which don't belong to any class but is common */
+void
+printErrors(std::string in);
+std::vector<uint8_t>
+parseHexStrToBin(const std::string in);
+std::string
+parseBytesToHexStr(const uint8_t* bytes, const int length);
+uint8_t
+parseHexToNum(const unsigned char c);
 } // namespace alcp::testing
