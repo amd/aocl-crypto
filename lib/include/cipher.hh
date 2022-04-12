@@ -50,7 +50,7 @@ namespace cipher {
 
 } // namespace cipher
 
-class EncryptInterface
+class IEncrypt
 {
   public:
     virtual alc_error_t encrypt(const Uint8* pSrc,
@@ -58,9 +58,19 @@ class EncryptInterface
                                 Uint64       len,
                                 const Uint8* pIv) const = 0;
 
+    virtual alc_error_t encryptUpdate(const Uint8* pSrc,
+                                      Uint8*       pDst,
+                                      Uint64       len,
+                                      const Uint8* pIv) = 0;
+    /*
+        virtual alc_error_t encryptUpdate(const Uint8* pInput,
+                                          Uint64       inputLen,
+                                          Uint8*       pOutput,
+                                          Uint64*      pOutputLen) = 0;*/
+
   protected:
-    virtual ~EncryptInterface() {}
-    EncryptInterface() {}
+    virtual ~IEncrypt() {}
+    IEncrypt() {}
 
     std::function<alc_error_t(const void*  rCipher,
                               const Uint8* pSrc,
@@ -69,10 +79,17 @@ class EncryptInterface
                               const Uint8* pIv)>
         m_encrypt_fn;
 
+    std::function<alc_error_t(const void*  rCipher,
+                              const Uint8* pSrc,
+                              Uint8*       pDst,
+                              Uint64       len,
+                              const Uint8* pIv)>
+        m_encryptUpdate_fn;
+
   private:
 };
 
-class DecryptInterface
+class IDecrypt
 {
   public:
     virtual alc_error_t decrypt(const Uint8* pSrc,
@@ -80,9 +97,14 @@ class DecryptInterface
                                 Uint64       len,
                                 const Uint8* pIv) const = 0;
 
+    virtual alc_error_t decryptUpdate(const Uint8* pSrc,
+                                      Uint8*       pDst,
+                                      Uint64       len,
+                                      const Uint8* pIv) = 0;
+
   protected:
-    virtual ~DecryptInterface() {}
-    DecryptInterface() {}
+    virtual ~IDecrypt() {}
+    IDecrypt() {}
 
     std::function<alc_error_t(const void*  rCipher,
                               const Uint8* pSrc,
@@ -91,24 +113,32 @@ class DecryptInterface
                               const Uint8* pIv)>
         m_decrypt_fn;
 
+    std::function<alc_error_t(const void*  rCipher,
+                              const Uint8* pSrc,
+                              Uint8*       pDst,
+                              Uint64       len,
+                              const Uint8* pIv)>
+        m_decryptUpdate_fn;
+
   private:
 };
 
 class EncryptUpdateInterface
 {
   public:
-    virtual cipher::Operation encryptUpdate = 0;
-    virtual cipher::Operation encryptFinal  = 0;
+    // virtual cipher::Operation encryptUpdate = 0;
+    // virtual cipher::Operation encryptFinal  = 0;
 
   protected:
     virtual ~EncryptUpdateInterface() {}
+    EncryptUpdateInterface() {}
 };
 
 class DecryptUpdateInterface
 {
   public:
-    virtual cipher::Operation decryptUpdate = 0;
-    virtual cipher::Operation decryptFinal  = 0;
+    // virtual cipher::Operation decryptUpdate = 0;
+    // virtual cipher::Operation decryptFinal  = 0;
 
   protected:
     virtual ~DecryptUpdateInterface() {}
@@ -167,8 +197,8 @@ class Cipher
 };
 
 class BlockCipherInterface
-    : public DecryptInterface
-    , public EncryptInterface
+    : public IDecrypt
+    , public IEncrypt
 {
   public:
     BlockCipherInterface() {}

@@ -57,9 +57,24 @@ typedef enum _alc_aes_mode
     ALC_AES_MODE_CTR,
     ALC_AES_MODE_CFB,
     ALC_AES_MODE_XTR,
+    ALC_AES_MODE_GCM,
 
     ALC_AES_MODE_MAX,
 } alc_aes_mode_t;
+
+typedef enum _alc_aes_ctrl
+{
+    ALC_AES_CTRL_NONE = 0,
+
+    ALC_AES_CTRL_SET_IV_LEN,
+    ALC_AES_CTRL_GET_IV_LEN,
+    ALC_AES_CTRL_SET_AD_LEN,
+    ALC_AES_CTRL_GET_AD_LEN,
+    ALC_AES_CTRL_SET_TAG_LEN,
+    ALC_AES_CTRL_GET_TAG,
+
+    ALC_AES_CTRL_MAX,
+} alc_aes_ctrl_t;
 
 typedef struct _alc_aes_info_t
 {
@@ -156,6 +171,48 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
                     Uint8*                    pCipherText,
                     Uint64                    len,
                     const Uint8*              pIv);
+
+/**
+ * \brief    Allows caller to request for a cipher as described by
+ *           pCipherInfo
+ * \notes    Error needs to be checked for each call,
+ *           only upon returned is ALC_ERROR_NONE, ctx to be considered
+ *           valid.
+ * \param    pCipherHandle Session handle for future encrypt decrypt
+ *                         operation
+ * \param[in]    pInput    Pointer to Input data (plainText or additional data)
+ * \param[out]   pOutput   Pointer to output data (cipherText or Tag)
+ * \param[in]    len       Length of input or output data
+ * \param[in]    pIv       Pointer to Initialization Vector
+ * \return   Error described by alc_error_t
+ */
+alc_error_t
+alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
+                           const Uint8*              pInput,
+                           Uint8*                    pOutput,
+                           Uint64                    len,
+                           const Uint8*              pIv);
+
+/**
+ * \brief    Allows caller to request for a cipher as described by
+ *           pCipherInfo
+ * \notes    Error needs to be checked for each call,
+ *           only upon returned is ALC_ERROR_NONE, ctx to be considered
+ *           valid.
+ * \param    pCipherHandle Session handle for future encrypt decrypt
+ *                         operation
+ * \param[in]    pInput    Pointer to Input data (CipherText or additional data)
+ * \param[out]   pOutput   Pointer to output data (PlainText or Tag)
+ * \param[in]    len       Length of input or output data
+ * \param[in]    pIv       Pointer to Initialization Vector
+ * \return   Error described by alc_error_t
+ */
+alc_error_t
+alcp_cipher_decrypt_update(const alc_cipher_handle_p pCipherHandle,
+                           const Uint8*              pInput,
+                           Uint8*                    pOutput,
+                           Uint64                    len,
+                           const Uint8*              pIv);
 
 /**
  * \brief    Allows caller to request for a cipher as described by

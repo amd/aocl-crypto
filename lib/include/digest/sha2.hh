@@ -287,12 +287,14 @@ class Sha384 final : public Sha2
     Sha512* m_psha512;
 };
 
+template<typename T>
 static inline void
-CompressMsg(uint64_t*       pMsgSchArray,
-            uint64_t*       pHash,
-            const uint64_t* pHashConstants)
+CompressMsg(T*       pMsgSchArray,
+            T*       pHash,
+            const T* pHashConstants,
+            const T (&shift)[6])
 {
-    uint64_t a, b, c, d, e, f, g, h;
+    T a, b, c, d, e, f, g, h;
     a = pHash[0];
     b = pHash[1];
     c = pHash[2];
@@ -301,55 +303,14 @@ CompressMsg(uint64_t*       pMsgSchArray,
     f = pHash[5];
     g = pHash[6];
     h = pHash[7];
-    for (uint32_t i = 0; i < 80; i++) {
-        uint64_t s1, ch, temp1, s0, maj, temp2;
-        s1    = RotateRight(e, 14) ^ RotateRight(e, 18) ^ RotateRight(e, 41);
+    for (Uint32 i = 0; i < 80; i++) {
+        T s1, ch, temp1, s0, maj, temp2;
+        s1 = RotateRight(e, shift[0]) ^ RotateRight(e, shift[1])
+             ^ RotateRight(e, shift[2]);
         ch    = (e & f) ^ (~e & g);
         temp1 = h + s1 + ch + pHashConstants[i] + pMsgSchArray[i];
-        s0    = RotateRight(a, 28) ^ RotateRight(a, 34) ^ RotateRight(a, 39);
-        maj   = (a & b) ^ (a & c) ^ (b & c);
-        temp2 = s0 + maj;
-        h     = g;
-        g     = f;
-        f     = e;
-        e     = d + temp1;
-        d     = c;
-        c     = b;
-        b     = a;
-        a     = temp1 + temp2;
-    }
-
-    pHash[0] += a;
-    pHash[1] += b;
-    pHash[2] += c;
-    pHash[3] += d;
-    pHash[4] += e;
-    pHash[5] += f;
-    pHash[6] += g;
-    pHash[7] += h;
-}
-
-static inline void
-CompressMsg(uint32_t*       pMsgSchArray,
-            uint32_t*       pHash,
-            const uint32_t* pHashConstants)
-
-{
-    uint32_t a, b, c, d, e, f, g, h;
-    a = pHash[0];
-    b = pHash[1];
-    c = pHash[2];
-    d = pHash[3];
-    e = pHash[4];
-    f = pHash[5];
-    g = pHash[6];
-    h = pHash[7];
-    for (uint32_t i = 0; i < 64; i++) {
-        uint32_t s1, ch, temp1, s0, maj, temp2;
-        s1    = RotateRight(e, 6) ^ RotateRight(e, 11) ^ RotateRight(e, 25);
-        ch    = (e & f) ^ (~e & g);
-        temp1 = h + s1 + ch + pHashConstants[i] + pMsgSchArray[i];
-        s0    = RotateRight(a, 2) ^ RotateRight(a, 13) ^ RotateRight(a, 22);
+        s0    = RotateRight(a, shift[3]) ^ RotateRight(a, shift[4])
+             ^ RotateRight(a, shift[5]);
         maj   = (a & b) ^ (a & c) ^ (b & c);
         temp2 = s0 + maj;
         h     = g;

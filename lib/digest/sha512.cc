@@ -187,7 +187,8 @@ Sha512::Impl::extendMsg(Uint64 w[], Uint32 start, Uint32 end)
 void
 Sha512::Impl::compressMsg(Uint64 w[])
 {
-    alcp::digest::CompressMsg(w, m_hash, cRoundConstants);
+    Uint64 shift[6] { 14, 18, 41, 28, 34, 39 };
+    alcp::digest::CompressMsg<Uint64>(w, m_hash, cRoundConstants, shift);
 }
 
 alc_error_t
