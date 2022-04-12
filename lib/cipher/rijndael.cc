@@ -121,10 +121,20 @@ class Rijndael::Impl
                         uint64_t       len,
                         const uint8_t* pIv) const;
 
+    alc_error_t encryptUpdate(const uint8_t* pSrc,
+                              uint8_t*       pDst,
+                              uint64_t       len,
+                              const uint8_t* pIv);
+
     alc_error_t decrypt(const uint8_t* pSrc,
                         uint8_t*       pDst,
                         uint64_t       len,
                         const uint8_t* pIv) const;
+
+    alc_error_t decryptUpdate(const uint8_t* pSrc,
+                              uint8_t*       pDst,
+                              uint64_t       len,
+                              const uint8_t* pIv);
 
     void setUp(const alc_key_info_t& rKeyInfo)
     {
@@ -330,6 +340,15 @@ Rijndael::Impl::encrypt(const uint8_t* pSrc,
     return ALC_ERROR_NONE;
 }
 
+alc_error_t
+Rijndael::Impl::encryptUpdate(const uint8_t* pSrc,
+                              uint8_t*       pDst,
+                              uint64_t       len,
+                              const uint8_t* pIv)
+{
+    return ALC_ERROR_NONE;
+}
+
 /*
  * FIPS-197 Section 5.3 Psuedo-code for Decryption
  * InvCipher(byte in[4*Nb], byte out[4*Nb], word w[Nb*(Nr+1)])
@@ -361,6 +380,15 @@ Rijndael::Impl::decrypt(const uint8_t* pSrc,
                         uint8_t*       pDst,
                         uint64_t       len,
                         const uint8_t* pIv) const
+{
+    return ALC_ERROR_NONE;
+}
+
+alc_error_t
+Rijndael::Impl::decryptUpdate(const uint8_t* pSrc,
+                              uint8_t*       pDst,
+                              uint64_t       len,
+                              const uint8_t* pIv)
 {
     return ALC_ERROR_NONE;
 }
@@ -511,7 +539,6 @@ Rijndael::setDecryptKey(const Uint8*, Uint64)
     NotImplemented();
 }
 
-
 void
 Rijndael::setEncryptKey(const Uint8*, Uint64)
 {
@@ -547,10 +574,28 @@ Rijndael::encrypt(const Uint8* pPlaintxt,
 }
 
 alc_error_t
+Rijndael::encryptUpdate(const Uint8* pPlaintxt,
+                        Uint8*       pCihpertxt,
+                        Uint64       len,
+                        const Uint8* pIv)
+{
+    return pImpl()->encryptUpdate(pPlaintxt, pCihpertxt, len, pIv);
+}
+
+alc_error_t
 Rijndael::decrypt(const Uint8* pCihpertxt,
                   Uint8*       pPlaintxt,
                   Uint64       len,
                   const Uint8* pIv) const
+{
+    return pImpl()->decrypt(pCihpertxt, pPlaintxt, len, pIv);
+}
+
+alc_error_t
+Rijndael::decryptUpdate(const Uint8* pCihpertxt,
+                        Uint8*       pPlaintxt,
+                        Uint64       len,
+                        const Uint8* pIv)
 {
     return pImpl()->decrypt(pCihpertxt, pPlaintxt, len, pIv);
 }

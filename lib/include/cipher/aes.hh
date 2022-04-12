@@ -36,6 +36,8 @@
 #include "cipher/rijndael.hh"
 #include "exception.hh"
 #include "utils/bits.hh"
+#include <immintrin.h>
+#include <wmmintrin.h>
 
 namespace alcp::cipher {
 
@@ -124,6 +126,11 @@ class Cfb final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
+    virtual alc_error_t encryptUpdate(const uint8_t* pPlainText,
+                                      uint8_t*       pCipherText,
+                                      uint64_t       len,
+                                      const uint8_t* pIv);
+
     /**
      * \brief   CFB Decrypt Operation
      * \notes
@@ -137,6 +144,11 @@ class Cfb final : public Aes
                                 uint8_t*       pPlainText,
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
+
+    virtual alc_error_t decryptUpdate(const uint8_t* pCipherText,
+                                      uint8_t*       pPlainText,
+                                      uint64_t       len,
+                                      const uint8_t* pIv);
 
   private:
     Cfb(){};
@@ -200,6 +212,10 @@ class Cbc final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
+    virtual alc_error_t encryptUpdate(const uint8_t* pPlainText,
+                                      uint8_t*       pCipherText,
+                                      uint64_t       len,
+                                      const uint8_t* pIv);
     /**
      * \brief   CBC Decrypt Operation
      * \notes
@@ -213,6 +229,11 @@ class Cbc final : public Aes
                                 uint8_t*       pPlainText,
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
+
+    virtual alc_error_t decryptUpdate(const uint8_t* pCipherText,
+                                      uint8_t*       pPlainText,
+                                      uint64_t       len,
+                                      const uint8_t* pIv);
 
   private:
     Cbc(){};
@@ -276,6 +297,10 @@ class Ofb final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
+    virtual alc_error_t encryptUpdate(const uint8_t* pPlainText,
+                                      uint8_t*       pCipherText,
+                                      uint64_t       len,
+                                      const uint8_t* pIv);
     /**
      * \brief   OFB Decrypt Operation
      * \notes
@@ -289,6 +314,11 @@ class Ofb final : public Aes
                                 uint8_t*       pPlainText,
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
+
+    virtual alc_error_t decryptUpdate(const uint8_t* pCipherText,
+                                      uint8_t*       pPlainText,
+                                      uint64_t       len,
+                                      const uint8_t* pIv);
 
   private:
     Ofb(){};
@@ -352,6 +382,11 @@ class Ctr final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
+    virtual alc_error_t encryptUpdate(const uint8_t* pPlainText,
+                                      uint8_t*       pCipherText,
+                                      uint64_t       len,
+                                      const uint8_t* pIv);
+
     /**
      * \brief   CTR Decrypt Operation
      * \notes
@@ -366,11 +401,139 @@ class Ctr final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
+    virtual alc_error_t decryptUpdate(const uint8_t* pCipherText,
+                                      uint8_t*       pPlainText,
+                                      uint64_t       len,
+                                      const uint8_t* pIv);
+
   private:
     Ctr(){};
 
   private:
 };
+
+/*
+ * \brief        AES Encryption in GCM(Galois Counter mode)
+ * \notes        TODO: Move this to a aes_Gcm.hh or other
+ */
+class Gcm final : public Aes
+{
+
+  public:
+    // union to be used here: tbd
+    // uint8_t m_hash_subKey[16];
+    __m128i m_hash_subKey_128;
+
+    // uint8_t m_gHash[16];
+    __m128i m_gHash_128;
+
+    // uint8_t m_tag[16];
+    __m128i m_tag_128;
+
+    __m128i m_reverse_mask_128;
+
+    uint64_t m_len;
+    uint64_t m_additionalDataLen;
+    uint64_t m_ivLen;
+    uint64_t m_tagLen;
+    uint64_t m_isHashSubKeyGenerated = false;
+
+  public:
+    explicit Gcm(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+        : Aes(aesInfo, keyInfo)
+    {
+        m_reverse_mask_128 =
+            _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+        m_gHash_128         = _mm_setzero_si128();
+        m_hash_subKey_128   = _mm_setzero_si128();
+        m_len               = 0;
+        m_additionalDataLen = 0;
+        m_tagLen            = 0;
+        m_ivLen             = 12; // default 12 bytes or 96bits
+    }
+
+    ~Gcm() {}
+
+  public:
+    static bool isSupported(const alc_aes_info_t& cipherInfo,
+                            const alc_key_info_t& keyInfo)
+    {
+        return true;
+    }
+
+    /**
+     * \brief
+     * \notes
+     * \param
+     * \return
+     */
+    virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
+                             alc_error_t&             err) override
+    {
+        Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
+
+        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
+            auto aip = &cipherInfo.ci_mode_data.cm_aes;
+            if (aip->ai_mode == ALC_AES_MODE_GCM) {
+                Error::setDetail(err, ALC_ERROR_NONE);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * \brief   GCM Encrypt Operation
+     * \notes
+     * \param   pInput      Pointer to input buffer
+     *                          (plainText or Additional data)
+     * \param   pOuput          Pointer to encrypted buffer
+     *                          when pointer NULL, input is additional data
+     * \param   len             Len of input buffer
+     *                          (plainText or Additional data)
+     * \param   pIv             Pointer to Initialization Vector \return
+     * alc_error_t     Error code
+     */
+    virtual alc_error_t encrypt(const uint8_t* pInput,
+                                uint8_t*       pOutput,
+                                uint64_t       len,
+                                const uint8_t* pIv) const final;
+
+    virtual alc_error_t encryptUpdate(const uint8_t* pInput,
+                                      uint8_t*       pOutput,
+                                      uint64_t       len,
+                                      const uint8_t* pIv);
+
+    /**
+     * \brief   GCM Decrypt Operation
+     * \notes
+     * \param   pCipherText     Pointer to encrypted buffer
+     * \param   pPlainText      Pointer to output buffer
+     * \param   len             Len of plain and encrypted text
+     * \param   pIv             Pointer to Initialization Vector
+     * \return  alc_error_t     Error code
+     */
+    virtual alc_error_t decrypt(const uint8_t* pCipherText,
+                                uint8_t*       pPlainText,
+                                uint64_t       len,
+                                const uint8_t* pIv) const final;
+
+    virtual alc_error_t decryptUpdate(const uint8_t* pCipherText,
+                                      uint8_t*       pPlainText,
+                                      uint64_t       len,
+                                      const uint8_t* pIv);
+
+  private:
+    virtual alc_error_t cryptUpdate(const uint8_t* pInput,
+                                    uint8_t*       pOutput,
+                                    uint64_t       len,
+                                    const uint8_t* pIv);
+    Gcm(){};
+
+  private:
+};
+
 } // namespace alcp::cipher
 
 #endif /* _CIPHER_AES_HH_ */

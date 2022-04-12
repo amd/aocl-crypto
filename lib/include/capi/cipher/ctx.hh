@@ -51,6 +51,18 @@ struct Context
                            Uint64       len,
                            const Uint8* pIv);
 
+    alc_error_t (*decryptUpdate)(void*        rCipher,
+                                 const Uint8* pSrc,
+                                 Uint8*       pDst,
+                                 Uint64       len,
+                                 const Uint8* pIv);
+
+    alc_error_t (*encryptUpdate)(void*        rCipher,
+                                 const Uint8* pSrc,
+                                 Uint8*       pDst,
+                                 Uint64       len,
+                                 const Uint8* pIv);
+
     alc_error_t (*finish)(const void*);
 };
 

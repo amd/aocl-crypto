@@ -99,6 +99,45 @@ namespace alcp::cipher { namespace aesni {
                            int            nRounds,
                            const uint8_t* pIv);
 
+    alc_error_t DecryptGcm(const uint8_t* pInput,
+                           uint8_t*       pOutput,
+                           uint64_t       len,
+                           const uint8_t* pKey,
+                           int            nRounds,
+                           const uint8_t* pIv);
+
+    alc_error_t InitGcm(const uint8_t* pKey,
+                        int            nRounds,
+                        const uint8_t* pIv,
+                        uint64_t       ivBytes,
+                        __m128i*       phash_subKey_128,
+                        __m128i*       ptag_128,
+                        __m128i        reverse_mask_128);
+
+    alc_error_t processAdditionalDataGcm(const uint8_t* pAdditionalData,
+                                         uint64_t       additionalDataLen,
+                                         __m128i*       pgHash_128,
+                                         __m128i        hash_subKey_128,
+                                         __m128i        reverse_mask_128);
+
+    alc_error_t CryptGcm(const uint8_t* pPlainText,
+                         uint8_t*       pCipherText,
+                         uint64_t       len,
+                         const uint8_t* pKey,
+                         int            nRounds,
+                         const uint8_t* pIv,
+                         __m128i*       pgHash,
+                         __m128i        Hsubkey_128,
+                         __m128i        reverse_mask_128);
+
+    alc_error_t GetTagGcm(uint64_t len,
+                          uint64_t adLength,
+                          __m128i* pgHash_128,
+                          __m128i* ptag128,
+                          __m128i  Hsubkey_128,
+                          __m128i  reverse_mask_128,
+                          uint8_t* tag);
+
     static inline void AesEncrypt(__m128i*       pBlk0,
                                   __m128i*       pBlk1,
                                   __m128i*       pBlk2,

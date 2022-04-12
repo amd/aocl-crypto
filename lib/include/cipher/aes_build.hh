@@ -57,6 +57,26 @@ __aes_wrapper(const void*    rCipher,
     return e;
 }
 
+template<typename CIPHERTYPE, bool encrypt = true>
+static alc_error_t
+__aes_wrapperUpdate(void*          rCipher,
+                    const uint8_t* pSrc,
+                    uint8_t*       pDest,
+                    uint64_t       len,
+                    const uint8_t* pIv)
+{
+    alc_error_t e = ALC_ERROR_NONE;
+
+    auto ap = static_cast<CIPHERTYPE*>(rCipher);
+
+    if (encrypt)
+        e = ap->encryptUpdate(pSrc, pDest, len, pIv);
+    else
+        e = ap->decryptUpdate(pSrc, pDest, len, pIv);
+
+    return e;
+}
+
 template<typename CIPHERTYPE>
 static alc_error_t
 __aes_dtor(const void* rCipher)
@@ -79,11 +99,13 @@ __build_aes(const alc_aes_info_t& aesInfo,
         err = ALC_ERROR_NOT_SUPPORTED;
 
     if (!Error::isError(err)) {
-        auto algo    = new ALGONAME(aesInfo, keyInfo);
-        ctx.m_cipher = static_cast<void*>(algo);
-        ctx.decrypt  = __aes_wrapper<ALGONAME, false>;
-        ctx.encrypt  = __aes_wrapper<ALGONAME, true>;
-        ctx.finish   = __aes_dtor<ALGONAME>;
+        auto algo         = new ALGONAME(aesInfo, keyInfo);
+        ctx.m_cipher      = static_cast<void*>(algo);
+        ctx.decrypt       = __aes_wrapper<ALGONAME, false>;
+        ctx.encrypt       = __aes_wrapper<ALGONAME, true>;
+        ctx.decryptUpdate = __aes_wrapperUpdate<ALGONAME, false>;
+        ctx.encryptUpdate = __aes_wrapperUpdate<ALGONAME, true>;
+        ctx.finish        = __aes_dtor<ALGONAME>;
     }
 
     return err;
@@ -119,6 +141,10 @@ AesBuilder::Build(const alc_aes_info_t& aesInfo,
 
         case ALC_AES_MODE_CTR:
             err = __build_aes<Ctr>(aesInfo, keyInfo, ctx);
+            break;
+
+        case ALC_AES_MODE_GCM:
+            err = __build_aes<Gcm>(aesInfo, keyInfo, ctx);
             break;
 
         default:
