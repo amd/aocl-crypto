@@ -6,7 +6,7 @@ FetchContent_Declare(gtest
 FetchContent_MakeAvailable(gtest)
 
 # Basic sources and libs needed for ALCP
-set(ALC_BASE_FILES ${ALC_BASE_FILES} base/alc_base.cc base/base.cc)
+set(ALC_BASE_FILES ${ALC_BASE_FILES} ../common/base/rng_base.cc ../common/base/base_common.cc base/alc_base.cc base/base.cc)
 set(LIBS ${LIBS} gtest alcp)
 
 if(ENABLE_TESTS_IPP_API)
@@ -33,6 +33,15 @@ target_include_directories(test_digest PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/../common/include")
 target_link_libraries(test_digest ${LIBS})
 
+ADD_EXECUTABLE(test_digest_cross test_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
+
+target_include_directories(test_digest_cross PRIVATE
+	"${CMAKE_SOURCE_DIR}/include" 
+	"${CMAKE_SOURCE_DIR}/lib/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include")
+target_link_libraries(test_digest_cross ${LIBS})
+
 function(TEST_DATA_LINK SHA_ALG)
     # Link dataset to the root dir
     file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${SHA_ALG}.csv ${CMAKE_BINARY_DIR}/dataset_${SHA_ALG}.csv SYMBOLIC)
@@ -45,5 +54,7 @@ TEST_DATA_LINK(SHA_256)
 TEST_DATA_LINK(SHA_384)
 TEST_DATA_LINK(SHA_512)
 
-gtest_add_tests(TARGET      test_digest
-                TEST_SUFFIX .${MOD})
+gtest_add_tests(TARGET      test_digest)
+if(OPENSSL_INSTALL_DIR)
+    gtest_add_tests(TARGET      test_digest_cross)
+endif(OPENSSL_INSTALL_DIR)

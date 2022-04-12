@@ -10,7 +10,7 @@ FetchContent_MakeAvailable(benchmark)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
-set(ALC_BASE_FILES ${ALC_BASE_FILES} ../../tests/cipher/base/alc_base.cc ../../tests/cipher/base/base.cc)
+set(ALC_BASE_FILES ${ALC_BASE_FILES} ../../tests/common/base/base_common.cc ../../tests/cipher/base/alc_base.cc ../../tests/cipher/base/base.cc)
 set(LIBS ${LIBS} benchmark alcp)
 
 if(ENABLE_TESTS_IPP_API)

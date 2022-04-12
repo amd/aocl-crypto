@@ -27,30 +27,94 @@
  */
 #pragma once
 #include "alcp/alcp.h"
-#include <fstream>
+#include "base_common.hh"
 #include <iostream>
 #include <vector>
 
 namespace alcp::testing {
-class File
+
+typedef enum
+{
+    SMALL_DEC = 0,
+    SMALL_ENC,
+    BIG_DEC,
+    BIG_ENC,
+} record_t;
+
+class ExecRecPlay
 {
   private:
-    std::fstream file;
-    bool         fileExists;
+    File*                m_blackbox_bin = nullptr;
+    File*                m_log          = nullptr;
+    time_t               m_start_time;
+    time_t               m_end_time;
+    std::size_t          m_blackbox_start_pos = 0;
+    std::size_t          m_blackbox_end_pos   = 0;
+    record_t             m_rec_type;
+    std::vector<uint8_t> m_key;
+    std::vector<uint8_t> m_iv;
+    std::vector<uint8_t> m_data;
+    std::string          m_str_mode = "";
+    long m_byte_start, m_byte_end, m_rec_t, m_key_size, m_data_size;
+    long m_prev_log_point;
 
   public:
-    // Opens File as ASCII Text File
-    File(std::string fileName);
-    // Read file word by word excludes newlines and spaces
-    std::string readWord();
-    // Read file line by line
-    std::string readLine();
-    // Reads a line by reading char by char
-    std::string readLineCharByChar();
-    // Read file n char
-    char* readChar(int n);
-    // Rewind file to initial position
-    void rewind();
+    // Create new files for writing
+    ExecRecPlay();                     // Default Record Mode
+    ExecRecPlay(std::string str_mode); // Default Record Mode
+    ExecRecPlay(std::string str_mode, bool playback);
+
+    // Destructor, free and clear pointers
+    ~ExecRecPlay();
+
+    void init(std::string str_mode, bool playback);
+
+    // Rewind log pointer
+    bool rewindLog();
+    bool nextLog();
+    bool fastForward(record_t rec);
+    bool getValues(std::vector<uint8_t>* key,
+                   std::vector<uint8_t>* iv,
+                   std::vector<uint8_t>* data);
+
+    bool playbackLocateEvent(record_t rec);
+
+    // Start a new event, so initalize new entry.
+    void startRecEvent();
+
+    // End the event, so record end time.
+    void endRecEvent();
+
+    /**
+     * @brief Set everything generated during test
+     *
+     * @param key - 128/192/256 bit KEY
+     * @param iv - 128 bit IV
+     * @param data - PlainText/CipherText
+     * @param rec - Test type, BIG_ENC,SMALL_ENC etc..
+     */
+    void setRecEvent(std::vector<uint8_t> key,
+                     std::vector<uint8_t> iv,
+                     std::vector<uint8_t> data,
+                     record_t             rec);
+
+    // Sets the Key of the event
+    void setRecKey(std::vector<uint8_t> key);
+
+    // Sets the IV of the event
+    void setRecIv(std::vector<uint8_t> iv);
+
+    // Sets the Data in the event
+    void setRecData(std::vector<uint8_t> data);
+
+    // Set Test type, BIG_ENC,SMALL_ENC etc..
+    void setRecType(record_t rec);
+
+    // Write to backbox, write binary data, not the actual log
+    void dumpBlackBox();
+
+    // Write to event log, csv file about the event
+    void dumpLog();
 };
 
 class DataSet : private File
@@ -68,8 +132,6 @@ class DataSet : private File
     bool readPtIvKeyCt();
     // Read only specified key size
     bool readPtIvKeyCt(size_t keybits);
-    // Convert a hex char to number;
-    uint8_t parseHexToNum(const unsigned char c);
     // To print which line in dataset failed
     int getLineNumber();
     // Return private data plain text
@@ -117,14 +179,4 @@ class CipherTesting
                                         const std::vector<uint8_t> iv);
     void                 setcb(CipherBase* impl);
 };
-
-/* Some functions which don't belong to any class but is common */
-void
-printErrors(std::string in);
-std::vector<uint8_t>
-parseHexStrToBin(const std::string in);
-std::string
-parseBytesToHexStr(const uint8_t* bytes, const int length);
-uint8_t
-parseHexToNum(const unsigned char c);
 } // namespace alcp::testing

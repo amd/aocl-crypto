@@ -38,6 +38,6 @@ class RngBase
   public:
     RngBase();
     ~RngBase();
-    std::vector<uint8_t> genRandomBytes(size_t l);
+    std::vector<uint8_t> genRandomBytes(std::size_t l);
 };
 } // namespace alcp::testing

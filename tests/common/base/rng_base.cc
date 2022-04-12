@@ -56,7 +56,7 @@ RngBase::~RngBase()
     free(m_handle.rh_context);
 }
 std::vector<uint8_t>
-RngBase::genRandomBytes(size_t l)
+RngBase::genRandomBytes(std::size_t l)
 {
     std::vector<uint8_t> ret(l, 0);
     if (alcp_rng_gen_random(&m_handle, &(ret[0]), l) == ALC_ERROR_NO_ENTROPY) {

@@ -28,59 +28,9 @@
 
 #include "base.hh"
 #include <iostream>
+#include <unistd.h>
 
-namespace alcp::bench {
-
-/* Class File procedures */
-File::File(const std::string fileName)
-{
-    file.open(fileName, std::ios::in);
-    if (file.is_open()) {
-        fileExists = true;
-    } else {
-        fileExists = false;
-    }
-    return;
-}
-
-std::string
-File::readWord()
-{
-    std::string buff;
-    file >> buff;
-    return buff;
-}
-
-std::string
-File::readLine()
-{
-    std::string buff;
-    std::getline(file, buff);
-    return buff;
-}
-
-std::string
-File::readLineCharByChar()
-{
-    std::string buff;
-    while (!file.eof()) {
-        char s = file.get();
-        if (s != '\n')
-            buff += s;
-        else
-            break;
-    }
-    return buff;
-}
-
-char*
-File::readChar(const int n)
-{
-    // TODO: Deallocation in the calling function.
-    char* c_buff = new char[n];
-    file.read(c_buff, n);
-    return c_buff;
-}
+namespace alcp::testing {
 
 /**
  * @brief Construct a new Data Set:: Data Set object
@@ -121,48 +71,6 @@ DataSet::readMsgDigest()
     return true;
 }
 
-uint8_t
-DataSet::parseHexToNum(const unsigned char c)
-{
-    if (c >= 'a' && c <= 'f')
-        return c - 'a' + 10;
-    if (c >= 'A' && c <= 'F')
-        return c - 'A' + 10;
-    if (c >= '0' && c <= '9')
-        return c - '0';
-
-    return 0;
-}
-
-std::vector<uint8_t>
-DataSet::parseHexStrToBin(const std::string in)
-{
-    std::vector<uint8_t> vector;
-    int                  len = in.size();
-    int                  ind = 0;
-
-    for (int i = 0; i < len; i += 2) {
-        uint8_t val =
-            parseHexToNum(in.at(ind)) << 4 | parseHexToNum(in.at(ind + 1));
-        vector.push_back(val);
-        ind += 2;
-    }
-    return vector;
-}
-
-std::string
-DataSet::parseBytesToHexStr(const uint8_t* bytes, const int length)
-{
-    std::stringstream ss;
-    for (int i = 0; i < length; i++) {
-        int charRep;
-        charRep = bytes[i];
-        // Convert int to hex
-        ss << std::hex << charRep;
-    }
-    return ss.str();
-}
-
 int
 DataSet::getLineNumber()
 {
@@ -180,5 +88,4 @@ DataSet::getDigest()
 {
     return Digest;
 }
-
-} // namespace alcp::bench
+} // namespace alcp::testing

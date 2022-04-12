@@ -29,7 +29,7 @@
 #include "alc_base.hh"
 #include "base.hh"
 
-namespace alcp::bench {
+namespace alcp::testing {
 
 static uint8_t size_[4096] = { 0 };
 
@@ -75,6 +75,14 @@ AlcpDigestBase::init(_alc_sha2_mode   mode,
     return init();
 }
 
+AlcpDigestBase::~AlcpDigestBase()
+{
+    if (m_handle != nullptr) {
+        alcp_digest_finish(m_handle);
+        delete m_handle;
+    }
+}
+
 alc_error_t
 AlcpDigestBase::digest_function(const uint8_t* pSrc,
                                 size_t         src_size,
@@ -99,10 +107,14 @@ AlcpDigestBase::digest_function(const uint8_t* pSrc,
         printf("Digest copy failed\n");
         return err;
     }
-    alcp_digest_reset(m_handle);
     return err;
 }
 
+void
+AlcpDigestBase::reset()
+{
+    alcp_digest_reset(m_handle);
+}
 /* Hash value to string */
 void
 AlcpDigestBase::hash_to_string(char*          output_string,
@@ -115,4 +127,4 @@ AlcpDigestBase::hash_to_string(char*          output_string,
     output_string[(sha_len / 8) * 2 + 1] = '\0';
 }
 
-} // namespace alcp::bench
+} // namespace alcp::testing

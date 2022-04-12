@@ -27,67 +27,247 @@
  */
 
 #include "base.hh"
-#include "colors.hh"
 #include <sstream>
-#include <unistd.h>
 #ifdef USE_IPP
 #include "ipp_base.hh"
 #endif
 
 namespace alcp::testing {
 
-/* Class File procedures */
-File::File(const std::string fileName)
+// Class ExecRecPlay - FlightRecorder/FlightReplay
+ExecRecPlay::ExecRecPlay()
 {
-    file.open(fileName, std::ios::in);
-    if (file.is_open()) {
-        fileExists = true;
-    } else {
-        fileExists = false;
+    init("", false);
+}
+
+ExecRecPlay::ExecRecPlay(std::string str_mode)
+{
+    init(str_mode, false);
+}
+
+ExecRecPlay::ExecRecPlay(std::string str_mode, bool playback)
+{
+    init(str_mode, playback);
+}
+
+ExecRecPlay::~ExecRecPlay()
+{
+    if (m_blackbox_bin != nullptr) {
+        delete m_blackbox_bin;
+        m_blackbox_bin = nullptr;
     }
-    return;
+    if (m_log != nullptr) {
+        delete m_log;
+        m_log = nullptr;
+    }
 }
 
-std::string
-File::readWord()
+void
+ExecRecPlay::init(std::string str_mode, bool playback)
 {
-    std::string buff;
-    file >> buff;
-    return buff;
+    if (!playback) { // Record
+        // Binary File, need to open binary
+        m_blackbox_bin =
+            new File("crosstest_" + str_mode + "_blackbox.bin", true, true);
+        // ASCII File, need to open as ASCII
+        if (m_blackbox_bin == nullptr) {
+            std::cout << "base.cc: Blackbox creation failure" << std::endl;
+        }
+        m_log = new File("crosstest_" + str_mode + ".log", false, true);
+        if (m_log == nullptr) {
+            std::cout << "base.cc: Log creation failure" << std::endl;
+        }
+    } else { // Playback
+        // Binary File, need to open binary
+        m_blackbox_bin =
+            new File("crosstest_" + str_mode + "_blackbox.bin", true, false);
+        // ASCII File, need to open as ASCII
+        m_log = new File("crosstest_" + str_mode + ".log", false, false);
+    }
 }
 
-std::string
-File::readLine()
+bool
+ExecRecPlay::rewindLog()
 {
-    std::string buff;
-    std::getline(file, buff);
-    return buff;
+    if (m_log != nullptr) {
+        m_log->seek(0);
+        return 1; // No Error
+    }
+    return 0; // There is Error
 }
 
-std::string
-File::readLineCharByChar()
+bool
+ExecRecPlay::nextLog() // Parser
 {
-    std::string buff;
-    while (!file.eof()) {
-        char s = file.get();
-        if (s != '\n')
-            buff += s;
-        else
+    int comma[6]; // There are 6 comma and 7 values
+    m_prev_log_point = m_log->tell();
+    std::string line = m_log->readLine();
+    if (line.size() == 0) { // Enof of File condition
+        return false;
+    }
+    // Locate all comma
+    comma[0] = line.find(",");
+    comma[1] = line.find(",", comma[0] + 1);
+    comma[2] = line.find(",", comma[1] + 1);
+    comma[3] = line.find(",", comma[2] + 1);
+    comma[4] = line.find(",", comma[3] + 1);
+    comma[5] = line.find(",", comma[4] + 1);
+
+    // Extract the data from the current log
+    m_start_time = stol(line.substr(0, comma[0]));
+    m_end_time   = stol(line.substr(comma[0] + 1, comma[1] - comma[0] - 1));
+    m_byte_start = stol(line.substr(comma[1] + 1, comma[2] - comma[1] - 1));
+    m_byte_end   = stol(line.substr(comma[2] + 1, comma[3] - comma[2] - 1));
+    m_rec_t      = stol(line.substr(comma[3] + 1, comma[4] - comma[3] - 1));
+    m_key_size   = stol(line.substr(comma[4] + 1, comma[5] - comma[4] - 1));
+    m_data_size  = stol(line.substr(comma[5] + 1));
+
+#if 0 // Enable for Debug
+    std::cout << "start_time->" << start_time << " "
+              << "end_time->" << end_time << " "
+              << "byte_start->" << byte_start << " "
+              << "byte_end->" << byte_end << " "
+              << "rec_dec->" << rec_dec << " "
+              << "key_size->" << key_size << " "
+              << "data_size->" << data_size << std::endl;
+#endif
+    return true;
+}
+
+bool
+ExecRecPlay::fastForward(record_t rec)
+{
+    bool ret = false;
+    while (nextLog()) {
+        if (m_rec_t == rec) {
+            ret = true;
             break;
+        }
     }
-    return buff;
+    m_log->seek(m_prev_log_point);
+    return ret;
 }
 
-char*
-File::readChar(const int n)
+bool
+ExecRecPlay::getValues(std::vector<uint8_t>* key,
+                       std::vector<uint8_t>* iv,
+                       std::vector<uint8_t>* data)
 {
-    // TODO: Deallocation in the calling function.
-    char* c_buff = new char[n];
-    file.read(c_buff, n);
-    return c_buff;
+    bool     ret    = false;
+    uint8_t* buffer = new uint8_t[m_byte_end - m_byte_start];
+    // uint8_t  buffer[m_byte_end - m_byte_start];
+    m_blackbox_bin->seek(m_byte_start);
+    if (m_blackbox_bin->readBytes(m_byte_end - m_byte_start, buffer)) {
+        *iv   = std::vector<uint8_t>(buffer, buffer + 16);
+        *key  = std::vector<uint8_t>(buffer + 16, buffer + 16 + m_key_size);
+        *data = std::vector<uint8_t>(buffer + 16 + m_key_size,
+                                     buffer + m_byte_end - m_byte_start);
+#if 0
+        std::cout << "IV:" << parseBytesToHexStr(&((*iv)[0]), iv->size())
+                  << std::endl;
+        std::cout << "KEY:" << parseBytesToHexStr(&((*key)[0]), key->size())
+                  << std::endl;
+        std::cout << "DATA:" << parseBytesToHexStr(&((*data)[0]), data->size())
+                  << std::endl;
+        std::cout << "END:" << m_byte_end << "\tSTART:" << m_byte_start
+                  << std::endl;
+#endif
+        ret = true;
+    }
+    if (buffer) {
+        delete[] buffer;
+    }
+    return ret;
 }
 
-// Class Data
+bool
+ExecRecPlay::playbackLocateEvent(record_t rec)
+{
+    rewindLog();
+    return fastForward(rec);
+    // Write a parser and locate the recorder..
+}
+
+void
+ExecRecPlay::startRecEvent()
+{
+    m_start_time         = time(0);
+    m_blackbox_start_pos = m_blackbox_bin->tell();
+}
+
+void
+ExecRecPlay::endRecEvent()
+{
+    m_end_time         = time(0);
+    m_blackbox_end_pos = m_blackbox_bin->tell();
+}
+
+void
+ExecRecPlay::setRecEvent(std::vector<uint8_t> key,
+                         std::vector<uint8_t> iv,
+                         std::vector<uint8_t> data,
+                         record_t             rec)
+{
+    setRecKey(key);
+    setRecIv(iv);
+    setRecData(data);
+    setRecType(rec);
+}
+
+void
+ExecRecPlay::setRecKey(std::vector<uint8_t> key)
+{
+    m_key = key;
+}
+
+void
+ExecRecPlay::setRecIv(std::vector<uint8_t> iv)
+{
+    m_iv = iv;
+}
+
+void
+ExecRecPlay::setRecData(std::vector<uint8_t> data)
+{
+    m_data = data;
+}
+
+void
+ExecRecPlay::setRecType(record_t rec)
+{
+    m_rec_type = rec;
+}
+
+void
+ExecRecPlay::dumpBlackBox()
+{
+    m_blackbox_bin->writeBytes(m_iv.size(), &(m_iv[0]));
+    m_blackbox_bin->writeBytes(m_key.size(), &(m_key[0]));
+    m_blackbox_bin->writeBytes(m_data.size(), &(m_data[0]));
+    m_blackbox_bin->flush();
+}
+
+void
+ExecRecPlay::dumpLog()
+{
+    /*
+       Format of the log file is
+       start_time, end_time, blackbox_start, blackbox_end, record_type,
+       key_size, data_size # TODO FAILED/SUCCESS record
+    */
+    std::stringstream ss;
+    ss << m_start_time << ",";
+    ss << m_end_time << ",";
+    ss << m_blackbox_start_pos << ",";
+    ss << m_blackbox_end_pos << ",";
+    ss << m_rec_type << ",";
+    ss << m_key.size() << ",";
+    ss << m_data.size();
+    m_log->writeLine(ss.str());
+    m_log->flush();
+}
+
+// Class DataSet
 /**
  * @brief Construct a new Data Set:: Data Set object
  *
@@ -135,19 +315,6 @@ DataSet::readPtIvKeyCt()
     m_ct  = parseHexStrToBin(line.substr(pos3 + 1));
     lineno++;
     return true;
-}
-
-uint8_t
-DataSet::parseHexToNum(const unsigned char c)
-{
-    if (c >= 'a' && c <= 'f')
-        return c - 'a' + 10;
-    if (c >= 'A' && c <= 'F')
-        return c - 'A' + 10;
-    if (c >= '0' && c <= '9')
-        return c - '0';
-
-    return 0;
 }
 
 int
@@ -232,65 +399,6 @@ void
 CipherTesting::setcb(CipherBase* impl)
 {
     cb = impl;
-}
-
-void
-printErrors(std::string in)
-{
-    if (isatty(fileno(stderr))) {
-        // stdout is a real terminal, safe to output color
-        std::cerr << RED_BOLD << in << RESET << std::endl;
-
-    } else {
-        // stdout is a pseudo terminal, unsafe to output color
-        std::cerr << in << std::endl;
-    }
-}
-std::vector<uint8_t>
-parseHexStrToBin(const std::string in)
-{
-    std::vector<uint8_t> vector;
-    int                  len = in.size();
-    int                  ind = 0;
-
-    for (int i = 0; i < len; i += 2) {
-        uint8_t val =
-            parseHexToNum(in.at(ind)) << 4 | parseHexToNum(in.at(ind + 1));
-        vector.push_back(val);
-        ind += 2;
-    }
-    return vector;
-}
-std::string
-parseBytesToHexStr(const uint8_t* bytes, const int length)
-{
-    std::stringstream ss;
-    for (int i = 0; i < length; i++) {
-        int               charRep;
-        std::stringstream il;
-        charRep = bytes[i];
-        // Convert int to hex
-        il << std::hex << charRep;
-        std::string ilStr = il.str();
-        // 01 will be 0x1 so we need to make it 0x01
-        if (ilStr.size() != 2) {
-            ilStr = "0" + ilStr;
-        }
-        ss << ilStr;
-    }
-    return ss.str();
-}
-uint8_t
-parseHexToNum(const unsigned char c)
-{
-    if (c >= 'a' && c <= 'f')
-        return c - 'a' + 10;
-    if (c >= 'A' && c <= 'F')
-        return c - 'A' + 10;
-    if (c >= '0' && c <= '9')
-        return c - '0';
-
-    return 0;
 }
 
 } // namespace alcp::testing

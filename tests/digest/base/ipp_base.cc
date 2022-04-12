@@ -28,7 +28,7 @@
 
 #include "ipp_base.hh"
 
-namespace alcp::bench {
+namespace alcp::testing {
 
 IPPDigestBase::IPPDigestBase(_alc_sha2_mode   mode,
                              _alc_digest_type type,
@@ -107,6 +107,10 @@ IPPDigestBase::digest_function(const uint8_t* in,
 }
 
 void
+IPPDigestBase::reset()
+{}
+
+void
 IPPDigestBase::hash_to_string(char*          output_string,
                               const uint8_t* hash,
                               int            sha_len)
@@ -117,4 +121,4 @@ IPPDigestBase::hash_to_string(char*          output_string,
     output_string[(sha_len / 8) * 2 + 1] = '\0';
 }
 
-} // namespace alcp::bench
+} // namespace alcp::testing

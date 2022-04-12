@@ -28,7 +28,7 @@
 
 #include "openssl_base.hh"
 
-namespace alcp::bench {
+namespace alcp::testing {
 
 OpenSSLDigestBase::OpenSSLDigestBase(_alc_sha2_mode   mode,
                                      _alc_digest_type type,
@@ -104,6 +104,11 @@ OpenSSLDigestBase::digest_function(const uint8_t* in,
 
     return ALC_ERROR_NONE;
 }
+void
+OpenSSLDigestBase::reset()
+{
+    EVP_MD_CTX_reset(m_handle);
+}
 
 void
 OpenSSLDigestBase::hash_to_string(char*          output_string,
@@ -116,4 +121,4 @@ OpenSSLDigestBase::hash_to_string(char*          output_string,
     output_string[(sha_len / 8) * 2 + 1] = '\0';
 }
 
-} // namespace alcp::bench
+} // namespace alcp::testing

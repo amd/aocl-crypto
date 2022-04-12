@@ -35,7 +35,7 @@
 
 #pragma once
 
-namespace alcp::bench {
+namespace alcp::testing {
 class AlcpDigestBase : public DigestBase
 {
     alc_digest_handle_t* m_handle;
@@ -56,13 +56,16 @@ class AlcpDigestBase : public DigestBase
 
     bool init();
 
+    ~AlcpDigestBase();
+
     alc_error_t digest_function(const uint8_t* src,
                                 size_t         src_size,
                                 uint8_t*       output,
                                 uint64_t       out_size);
-
+    /* Resets the context back to initial condition, reuse context */
+    void reset();
     /* Hash value to string */
     void hash_to_string(char* output_string, const uint8_t* hash, int sha_len);
 };
 
-} // namespace alcp::bench
+} // namespace alcp::testing

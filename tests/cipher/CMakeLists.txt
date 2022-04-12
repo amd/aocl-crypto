@@ -6,7 +6,7 @@ FetchContent_Declare(gtest
 FetchContent_MakeAvailable(gtest)
 
 # Basic sources and libs needed for ALCP
-set(ALC_BASE_FILES ${ALC_BASE_FILES} ../common/base/rng_base.cc base/alc_base.cc base/base.cc)
+set(ALC_BASE_FILES ${ALC_BASE_FILES} ../common/base/rng_base.cc ../common/base/base_common.cc base/alc_base.cc base/base.cc)
 set(LIBS ${LIBS} gtest alcp)
 
 if(ENABLE_TESTS_IPP_API)
@@ -51,6 +51,10 @@ function(CROSS_AES MOD)
         "${CMAKE_CURRENT_SOURCE_DIR}/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/../common/include")
     target_link_libraries(aes_${MOD}_cross ${LIBS})
+    if(OPENSSL_INSTALL_DIR)
+        gtest_add_tests(TARGET      aes_${MOD}_cross
+                        TEST_SUFFIX .${MOD})
+    endif(OPENSSL_INSTALL_DIR)
 endfunction()
 
 

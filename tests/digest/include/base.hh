@@ -27,33 +27,11 @@
  */
 
 #pragma once
+#include "base_common.hh"
 #include <alcp/alcp.h>
-#include <fstream>
-#include <sstream>
 #include <vector>
 
-namespace alcp::bench {
-class File
-{
-  private:
-    std::fstream file;
-    bool         fileExists;
-
-  public:
-    // Opens File as ASCII Text File
-    File(std::string fileName);
-    // Read file word by word excludes newlines and spaces
-    std::string readWord();
-    // Read file line by line
-    std::string readLine();
-    // Reads a line by reading char by char
-    std::string readLineCharByChar();
-    // Read file n char
-    char* readChar(int n);
-    // Rewind file to initial position
-    void rewind();
-};
-
+namespace alcp::testing {
 class DataSet : private File
 {
   private:
@@ -67,11 +45,6 @@ class DataSet : private File
     DataSet(const std::string filename);
     // Read without condition
     bool readMsgDigest();
-    // Convert a hex char to number;
-    uint8_t parseHexToNum(const unsigned char c);
-    // Parse hexString to binary
-    std::vector<uint8_t> parseHexStrToBin(const std::string in);
-    std::string parseBytesToHexStr(const uint8_t* bytes, const int length);
     // To print which line in dataset failed
     int getLineNumber();
     /* fetch Message / Digest */
@@ -92,5 +65,7 @@ class DigestBase
     virtual void        hash_to_string(char*          output_string,
                                        const uint8_t* hash,
                                        int            sha_len)        = 0;
+    virtual void        reset()                            = 0;
 };
-} // namespace alcp::bench
+
+} // namespace alcp::testing

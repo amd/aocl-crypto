@@ -27,9 +27,12 @@
  */
 
 #pragma once
+#ifndef __GTEST_BASE_HH
+#define __GTEST_BASE_HH 2
+
 #include "alc_base.hh"
-#include <base.hh>
-#include <gtest/gtest.h>
+#include "base.hh"
+#include "gtest_common.hh"
 #include <vector>
 #ifdef USE_IPP
 #include "ipp_base.hh"
@@ -37,200 +40,6 @@
 #ifdef USE_OSSL
 #include "openssl_base.hh"
 #endif
-
-using namespace alcp::testing;
-
-#ifndef __GTEST_BASE_HH
-#define __GTEST_BASE_HH 2
-
-static bool verbose = false;
-static bool useipp  = false;
-static bool useossl = false;
-
-::testing::AssertionResult
-ArraysMatch(std::vector<uint8_t>    actual,
-            std::vector<uint8_t>    expected,
-            alcp::testing::DataSet& ds,
-            std::string             testName)
-{
-    if (actual.size() != expected.size()) {
-        return ::testing::AssertionFailure() << "Size mismatch!";
-    }
-    for (size_t i = 0; i < actual.size(); i++) {
-        // TODO: Replace with proper cast
-        if (expected[i] != actual[i]) {
-            std::string actual_error   = parseBytesToHexStr(&actual[i], 1);
-            std::string expected_error = parseBytesToHexStr(&expected[i], 1);
-            return ::testing::AssertionFailure()
-                   << "array[" << i << "] ("
-                   << "0x" << actual_error << ") != expected[" << i << "]("
-                   << "0x" << expected_error << ")"
-                   << "Test: " << testName << " line: " << ds.getLineNumber()
-                   << " Failed";
-        }
-    }
-    if (verbose) {
-        std::cout << "Test: " << testName << " line: " << ds.getLineNumber()
-                  << " Success" << std::endl;
-    }
-    return ::testing::AssertionSuccess();
-}
-::testing::AssertionResult
-ArraysMatch(std::vector<uint8_t> actual, std::vector<uint8_t> expected)
-{
-    if (actual.size() != expected.size()) {
-        return ::testing::AssertionFailure() << "Size mismatch!";
-    }
-    for (size_t i = 0; i < actual.size(); i++) {
-        // TODO: Replace with proper cast
-        if (expected[i] != actual[i]) {
-            return ::testing::AssertionFailure()
-                   << "Does not match,"
-                   << "Size:" << actual.size() << " Failure!";
-        }
-    }
-    if (verbose) {
-        std::cout << "Size:" << actual.size() << " Success" << std::endl;
-    }
-    return ::testing::AssertionSuccess();
-}
-
-class ConfigurableEventListener : public testing::TestEventListener
-{
-
-  protected:
-    testing::TestEventListener* eventListener;
-
-  public:
-    /**
-     * Show the names of each test case.
-     */
-    bool showTestCases;
-
-    /**
-     * Show the names of each test.
-     */
-    bool showTestNames;
-
-    /**
-     * Show each success.
-     */
-    bool showSuccesses;
-
-    /**
-     * Show each failure as it occurs. You will also see it at the bottom after
-     * the full suite is run.
-     */
-    bool showInlineFailures;
-
-    /**
-     * Show the setup of the global environment.
-     */
-    bool showEnvironment;
-
-    explicit ConfigurableEventListener(TestEventListener* theEventListener)
-        : eventListener(theEventListener)
-    {
-        showTestCases      = true;
-        showTestNames      = true;
-        showSuccesses      = true;
-        showInlineFailures = true;
-        showEnvironment    = true;
-    }
-
-    virtual ~ConfigurableEventListener() { delete eventListener; }
-
-    virtual void OnTestProgramStart(const testing::UnitTest& unit_test)
-    {
-        eventListener->OnTestProgramStart(unit_test);
-    }
-
-    virtual void OnTestIterationStart(const testing::UnitTest& unit_test,
-                                      int                      iteration)
-    {
-        eventListener->OnTestIterationStart(unit_test, iteration);
-    }
-
-    virtual void OnEnvironmentsSetUpStart(const testing::UnitTest& unit_test)
-    {
-        if (showEnvironment) {
-            eventListener->OnEnvironmentsSetUpStart(unit_test);
-        }
-    }
-
-    virtual void OnEnvironmentsSetUpEnd(const testing::UnitTest& unit_test)
-    {
-        if (showEnvironment) {
-            eventListener->OnEnvironmentsSetUpEnd(unit_test);
-        }
-    }
-
-    virtual void OnTestCaseStart(const testing::TestCase& test_case)
-    {
-        if (showTestCases) {
-            eventListener->OnTestCaseStart(test_case);
-        }
-    }
-
-    virtual void OnTestStart(const testing::TestInfo& test_info)
-    {
-        if (showTestNames) {
-            eventListener->OnTestStart(test_info);
-        }
-    }
-
-    virtual void OnTestPartResult(const testing::TestPartResult& result)
-    {
-        eventListener->OnTestPartResult(result);
-    }
-
-    virtual void OnTestEnd(const testing::TestInfo& test_info)
-    {
-        if ((showInlineFailures && test_info.result()->Failed())
-            || (showSuccesses && !test_info.result()->Failed())) {
-            eventListener->OnTestEnd(test_info);
-        }
-    }
-
-    virtual void OnTestCaseEnd(const testing::TestCase& test_case)
-    {
-        if (showTestCases) {
-            eventListener->OnTestCaseEnd(test_case);
-        }
-    }
-
-    virtual void OnEnvironmentsTearDownStart(const testing::UnitTest& unit_test)
-    {
-        if (showEnvironment) {
-            eventListener->OnEnvironmentsTearDownStart(unit_test);
-        }
-    }
-
-    virtual void OnEnvironmentsTearDownEnd(const testing::UnitTest& unit_test)
-    {
-        if (showEnvironment) {
-            eventListener->OnEnvironmentsTearDownEnd(unit_test);
-        }
-    }
-
-    virtual void OnTestIterationEnd(const testing::UnitTest& unit_test,
-                                    int                      iteration)
-    {
-        eventListener->OnTestIterationEnd(unit_test, iteration);
-    }
-
-    virtual void OnTestProgramEnd(const testing::UnitTest& unit_test)
-    {
-        eventListener->OnTestProgramEnd(unit_test);
-    }
-};
-
-typedef enum
-{
-    OPENSSL = 0,
-    IPP,
-    ALCP,
-} lib_t;
 
 // Just a class to reduce duplication of lines
 class TestingCore
@@ -255,10 +64,6 @@ class TestingCore
                 delete cipherHandler;
                 throw "OpenSSL not avaiable!";
 #else
-                if (!useossl) {
-                    delete cipherHandler;
-                    throw "OpenSSL disabled!";
-                }
                 ocb = new OpenSSLCipherBase(alcpMode, NULL);
                 cipherHandler->setcb(ocb);
 #endif
@@ -354,6 +159,9 @@ parseArgs(int argc, char** argv)
                           << std::endl;
                 std::cout << "--use-ossl or -o force OpenSSL use in testing"
                           << std::endl;
+                std::cout
+                    << "--replay-blackbox or -r replay blackbox with log file"
+                    << std::endl;
             } else if ((currentArg == std::string("--verbose"))
                        || (currentArg == std::string("-v"))) {
                 verbose = true;
@@ -363,6 +171,9 @@ parseArgs(int argc, char** argv)
             } else if ((currentArg == std::string("--use-ossl"))
                        || (currentArg == std::string("-o"))) {
                 useossl = true;
+            } else if ((currentArg == std::string("--replay-blackbox"))
+                       || (currentArg == std::string("-r"))) {
+                bbxreplay = true;
             }
         }
     }
