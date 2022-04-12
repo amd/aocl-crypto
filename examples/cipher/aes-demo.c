@@ -29,15 +29,8 @@ static alc_cipher_handle_t handle;
     for (int x = 0; x < L; x++) {                                              \
         printf(" %2x", I[x]);                                                  \
     }
-
-#define ALCP_PRINT_LU(I, L, S)                                                 \
-    printf("\n %s", S);                                                        \
-    for (int x = 0; x < L; x++) {                                              \
-        printf(" %lx", I[x]);                                                  \
-    }
 #else // DEBUG_P
 #define ALCP_PRINT_TEXT(I, L, S)
-#define ALCP_PRINT_LU(I, L, S)
 #endif // DEBUG_P
 
 // to do: these macro is better to be moved to common header.
@@ -341,7 +334,6 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
         printf("\n keybits %d ", keybits);
         int nr;
         memset(key, ((i * 10) + m), 32);
-        ALCP_PRINT_LU(key, 32, "key ")
 
         memset(inputText, i, inputLen);
 
@@ -361,11 +353,11 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
         memset(cipherText, 0, inputLen);
         memset(ref, 0, inputLen);
         memset(outputText, 0, inputLen);
-
-        ALCP_CRYPT_TIMER_INIT
+        ALCP_PRINT_TEXT(key, 32, "key      ")
         ALCP_PRINT_TEXT(inputText, inputLen, "inputText")
         ALCP_PRINT_TEXT(iv, 16, "iv       ")
 
+        ALCP_CRYPT_TIMER_INIT
         create_aes_session(key, iv, keybits, m);
 
 #if SPEED_CHECK
