@@ -54,8 +54,15 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
     TestingCore* extTC    = nullptr;
     RngBase      rb;
     if (bbxreplay) {
+        fr = new ExecRecPlay(std::string(STR_MODE) + "ENC_128_SMALL",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             true);
         fr->fastForward(SMALL_ENC);
-    }
+    } else
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_ENC_128_SMALL",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             false);
+
     // Set extTC based on which external testing core user asks
     try {
         if (useossl)
@@ -98,6 +105,7 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
         }
         delete extTC;
     }
+    delete fr;
 }
 
 /* Testing Starts Here! */
@@ -108,8 +116,16 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
     TestingCore* extTC    = nullptr;
     RngBase      rb;
     if (bbxreplay) {
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_ENC_128_BIG",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             true);
         fr->fastForward(BIG_ENC);
-    }
+    } else
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_ENC_128_BIG",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             false);
+
+    // Set extTC based on which external testing core user asks
     try {
         if (useossl)
             extTC = new TestingCore(OPENSSL, ALC_MODE);
@@ -158,6 +174,7 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
         }
         delete extTC;
     }
+    delete fr;
 }
 
 TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
@@ -167,8 +184,15 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
     TestingCore* extTC    = nullptr;
     RngBase      rb;
     if (bbxreplay) {
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_DEC_128_SMALL",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             true);
         fr->fastForward(SMALL_DEC);
-    }
+    } else
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_DEC_128_SMALL",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             false);
+
     // Set extTC based on which external testing core user asks
     try {
         if (useossl)
@@ -209,6 +233,7 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
         }
         delete extTC;
     }
+    delete fr;
 }
 
 /* Testing Starts Here! */
@@ -219,8 +244,16 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
     TestingCore* extTC    = nullptr;
     RngBase      rb;
     if (bbxreplay) {
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_DEC_128_BIG",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             true);
         fr->fastForward(BIG_DEC);
-    }
+    } else
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_DEC_128_BIG",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             false);
+
+    // Set extTC based on which external testing core user asks
     try {
         if (useossl)
             extTC = new TestingCore(OPENSSL, ALC_MODE);
@@ -267,6 +300,7 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
         }
         delete extTC;
     }
+    delete fr;
 }
 
 int
@@ -276,10 +310,6 @@ main(int argc, char** argv)
     testing::TestEventListeners& listeners =
         testing::UnitTest::GetInstance()->listeners();
     parseArgs(argc, argv);
-    if (bbxreplay)
-        fr = new ExecRecPlay(std::string(STR_MODE), true);
-    else
-        fr = new ExecRecPlay(std::string(STR_MODE), false);
     auto default_printer =
         listeners.Release(listeners.default_result_printer());
 

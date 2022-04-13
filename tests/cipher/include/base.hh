@@ -55,7 +55,8 @@ class ExecRecPlay
     std::vector<uint8_t> m_iv;
     std::vector<uint8_t> m_data;
     std::string          m_str_mode = "";
-    long m_byte_start, m_byte_end, m_rec_t, m_key_size, m_data_size;
+    long m_byte_start = 0, m_byte_end = 0, m_rec_t = 0, m_key_size = 0,
+         m_data_size = 0;
     long m_prev_log_point;
 
   public:
@@ -63,11 +64,12 @@ class ExecRecPlay
     ExecRecPlay();                     // Default Record Mode
     ExecRecPlay(std::string str_mode); // Default Record Mode
     ExecRecPlay(std::string str_mode, bool playback);
+    ExecRecPlay(std::string str_mode, std::string dir_name, bool playback);
 
     // Destructor, free and clear pointers
     ~ExecRecPlay();
 
-    void init(std::string str_mode, bool playback);
+    void init(std::string str_mode, std::string dir_name, bool playback);
 
     // Rewind log pointer
     bool rewindLog();
