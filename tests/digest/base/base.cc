@@ -36,17 +36,24 @@ namespace alcp::testing {
 // Class ExecRecPlay - FlightRecorder/FlightReplay
 ExecRecPlay::ExecRecPlay()
 {
-    init("", false);
+    init("", "digest_test_data", false);
 }
 
 ExecRecPlay::ExecRecPlay(std::string str_mode)
 {
-    init(str_mode, false);
+    init(str_mode, "digest_test_data", false);
 }
 
 ExecRecPlay::ExecRecPlay(std::string str_mode, bool playback)
 {
-    init(str_mode, playback);
+    init(str_mode, "digest_test_data", playback);
+}
+
+ExecRecPlay::ExecRecPlay(std::string str_mode,
+                         std::string dir_name,
+                         bool        playback)
+{
+    init(str_mode, dir_name, playback);
 }
 
 ExecRecPlay::~ExecRecPlay()
@@ -62,26 +69,31 @@ ExecRecPlay::~ExecRecPlay()
 }
 
 void
-ExecRecPlay::init(std::string str_mode, bool playback)
+ExecRecPlay::init(std::string str_mode, std::string dir_name, bool playback)
 {
+    if (!isPathExist(dir_name)) {
+        mkdir(dir_name.c_str(), 0755);
+    }
     if (!playback) { // Record
         // Binary File, need to open binary
-        m_blackbox_bin =
-            new File("crosstest_" + str_mode + "_blackbox.bin", true, true);
+        m_blackbox_bin = new File(
+            dir_name + "/crosstest_" + str_mode + "_blackbox.bin", true, true);
         // ASCII File, need to open as ASCII
         if (m_blackbox_bin == nullptr) {
             std::cout << "base.cc: Blackbox creation failure" << std::endl;
         }
-        m_log = new File("crosstest_" + str_mode + ".log", false, true);
+        m_log =
+            new File(dir_name + "/crosstest_" + str_mode + ".log", false, true);
         if (m_log == nullptr) {
             std::cout << "base.cc: Log creation failure" << std::endl;
         }
     } else { // Playback
         // Binary File, need to open binary
-        m_blackbox_bin =
-            new File("crosstest_" + str_mode + "_blackbox.bin", true, false);
+        m_blackbox_bin = new File(
+            dir_name + "/crosstest_" + str_mode + "_blackbox.bin", true, false);
         // ASCII File, need to open as ASCII
-        m_log = new File("crosstest_" + str_mode + ".log", false, false);
+        m_log = new File(
+            dir_name + "/crosstest_" + str_mode + ".log", false, false);
     }
 }
 

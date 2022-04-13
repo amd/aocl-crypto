@@ -61,11 +61,12 @@ class ExecRecPlay
     ExecRecPlay();                     // Default Record Mode
     ExecRecPlay(std::string str_mode); // Default Record Mode
     ExecRecPlay(std::string str_mode, bool playback);
+    ExecRecPlay(std::string str_mode, std::string dir_name, bool playback);
 
     // Destructor, free and clear pointers
     ~ExecRecPlay();
 
-    void init(std::string str_mode, bool playback);
+    void init(std::string str_mode, std::string dir_name, bool playback);
 
     // Rewind log pointer
     bool rewindLog();

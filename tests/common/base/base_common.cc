@@ -208,7 +208,7 @@ parseHexToNum(const unsigned char c)
     return 0;
 }
 bool
-IsPathExist(const std::string dir)
+isPathExist(const std::string dir)
 {
     struct stat buffer;
     if (stat(dir.c_str(), &buffer) == 0) {
