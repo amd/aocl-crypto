@@ -27,6 +27,17 @@
  */
 
 #include "dynlib.hh"
+#include "types.hh"
+
+enum class DynLoadError : Uint32
+{
+    Success = 0,
+    None    = Success,
+
+    LibNotFound,
+    SymNotFound,
+    Other,
+};
 
 #if defined(__linux__)
 #include "impl/dynlib_linux.cc"
@@ -37,11 +48,11 @@
 namespace alcp {
 
 DynamicLibrary::DynamicLibrary(const std::string& path)
-    : m_pimpl{ new DynamicLibrary::Impl(path) }
+    : m_pimpl{ std::make_unique<DynamicLibrary::Impl>(path) }
 {}
 
 DynamicLibrary::DynamicLibrary(const std::string& path, int flags)
-    : m_pimpl{ new DynamicLibrary::Impl(path, flags) }
+    : m_pimpl{ std::make_unique<DynamicLibrary::Impl>(path, flags) }
 {}
 
 bool
@@ -64,7 +75,6 @@ DynamicLibrary::load(const std::string& path, int flags)
 
 DynamicLibrary::~DynamicLibrary()
 {
-    delete m_pimpl;
 }
 
 } // namespace alcp

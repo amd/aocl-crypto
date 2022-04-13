@@ -29,6 +29,7 @@
 #pragma once
 
 #include <string>
+#include <memory>
 
 /**
  * DynamicLibrary class : The design is simple, it uses dlopen/dlclose etc on
@@ -59,7 +60,7 @@ class DynamicLibrary
 
   private:
     class Impl;
-    Impl* m_pimpl;
+    std::unique_ptr<Impl> m_pimpl;
 
     DynamicLibrary(const DynamicLibrary&);
     DynamicLibrary& operator=(const DynamicLibrary&);
