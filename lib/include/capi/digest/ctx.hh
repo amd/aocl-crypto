@@ -35,8 +35,6 @@
 #include "defs.hh"
 #include "digest.hh"
 
-#include "utils/pool.hh"
-
 namespace alcp::digest {
 
 class Context
