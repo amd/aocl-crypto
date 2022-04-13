@@ -50,7 +50,7 @@ namespace cipher {
 
 } // namespace cipher
 
-class IEncrypt
+class IEncrypter
 {
   public:
     virtual alc_error_t encrypt(const Uint8* pSrc,
@@ -69,8 +69,8 @@ class IEncrypt
                                           Uint64*      pOutputLen) = 0;*/
 
   protected:
-    virtual ~IEncrypt() {}
-    IEncrypt() {}
+    virtual ~IEncrypter() {}
+    IEncrypter() {}
 
     std::function<alc_error_t(const void*  rCipher,
                               const Uint8* pSrc,
@@ -89,7 +89,7 @@ class IEncrypt
   private:
 };
 
-class IDecrypt
+class IDecrypter
 {
   public:
     virtual alc_error_t decrypt(const Uint8* pSrc,
@@ -103,8 +103,8 @@ class IDecrypt
                                       const Uint8* pIv) = 0;
 
   protected:
-    virtual ~IDecrypt() {}
-    IDecrypt() {}
+    virtual ~IDecrypter() {}
+    IDecrypter() {}
 
     std::function<alc_error_t(const void*  rCipher,
                               const Uint8* pSrc,
@@ -123,26 +123,25 @@ class IDecrypt
   private:
 };
 
-class EncryptUpdateInterface
+class IEncryptUpdater
 {
   public:
     // virtual cipher::Operation encryptUpdate = 0;
     // virtual cipher::Operation encryptFinal  = 0;
 
   protected:
-    virtual ~EncryptUpdateInterface() {}
-    EncryptUpdateInterface() {}
+    virtual ~IEncryptUpdater() {}
 };
 
-class DecryptUpdateInterface
+class IDecryptUpdater
 {
   public:
     // virtual cipher::Operation decryptUpdate = 0;
     // virtual cipher::Operation decryptFinal  = 0;
 
   protected:
-    virtual ~DecryptUpdateInterface() {}
-    DecryptUpdateInterface() {}
+    virtual ~IDecryptUpdater() {}
+    IDecryptUpdater() {}
 };
 
 class Cipher
@@ -196,17 +195,17 @@ class Cipher
     //alc_cipher_type_t m_cipher_type;
 };
 
-class BlockCipherInterface
-    : public IDecrypt
-    , public IEncrypt
+class IBlockCipher
+    : public IDecrypter
+    , public IEncrypter
 {
   public:
-    BlockCipherInterface() {}
+    IBlockCipher() {}
 };
 
 class BlockCipher
     : public Cipher
-    , public BlockCipherInterface
+    , public IBlockCipher
 {
   public:
     BlockCipher() {}
