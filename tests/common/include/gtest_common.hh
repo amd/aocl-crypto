@@ -32,10 +32,11 @@
 
 using namespace alcp::testing;
 
-static bool verbose   = false;
-static bool useipp    = false;
-static bool useossl   = false;
-static bool bbxreplay = false;
+static bool verbose     = false;
+static bool useipp      = false;
+static bool useossl     = false;
+static bool bbxreplay   = false;
+static bool oa_override = false;
 
 ::testing::AssertionResult
 ArraysMatch(std::vector<uint8_t>    actual,
@@ -273,6 +274,9 @@ parseArgs(int argc, char** argv)
             } else if ((currentArg == std::string("--replay-blackbox"))
                        || (currentArg == std::string("-r"))) {
                 bbxreplay = true;
+            } else if ((currentArg == std::string("--override-alcp"))
+                       || (currentArg == std::string("-oa"))) {
+                oa_override = true;
             }
         }
     }
