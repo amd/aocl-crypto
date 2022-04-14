@@ -45,6 +45,14 @@ ExecRecPlay* fr = nullptr;
 
 #define ALC_MODE ALC_AES_MODE_OFB
 #define STR_MODE "AES_OFB"
+// Below in bytes
+#define SMALL_MAX_LOOP   160000
+#define SMALL_INC_LOOP   16
+#define SMALL_START_LOOP 16
+// Below in 0.1MB size
+#define BIG_MAX_LOOP   1
+#define BIG_INC_LOOP   1
+#define BIG_START_LOOP 2
 
 /* Testing Starts Here! */
 TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
@@ -54,7 +62,7 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
     TestingCore* extTC    = nullptr;
     RngBase      rb;
     if (bbxreplay) {
-        fr = new ExecRecPlay(std::string(STR_MODE) + "ENC_128_SMALL",
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_ENC_128_SMALL",
                              std::string(STR_MODE) + "_TEST_DATA",
                              true);
         fr->fastForward(SMALL_ENC);
@@ -77,7 +85,8 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
         std::cerr << exc << std::endl;
     }
     if (extTC != nullptr) {
-        for (int i = 16; i < 16 * 100000; i += 1616) {
+        for (int i = SMALL_START_LOOP; i < SMALL_MAX_LOOP;
+             i += SMALL_INC_LOOP) {
             if (!bbxreplay)
                 fr->startRecEvent();
             std::vector<uint8_t> pt, key, iv;
@@ -88,7 +97,12 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
                 fr->setRecEvent(key, iv, pt, SMALL_ENC);
             } else {
                 fr->nextLog();
-                fr->getValues(&key, &iv, &pt);
+                try {
+                    fr->getValues(&key, &iv, &pt);
+                } catch (std::string excp) {
+                    std::cout << excp << std::endl;
+                    exit(-1);
+                }
             }
             // std::cout << "KEY:" << parseBytesToHexStr(&(key[0]), key.size())
             //           << std::endl;
@@ -139,7 +153,7 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
         std::cerr << exc << std::endl;
     }
     if (extTC != nullptr) {
-        for (int i = 1; i <= 2; i++) {
+        for (int i = BIG_START_LOOP; i <= BIG_MAX_LOOP; i += BIG_INC_LOOP) {
             if (!bbxreplay)
                 fr->startRecEvent();
             size_t size = 16 * 10000000 * i; // 0.16g
@@ -207,7 +221,8 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
         std::cerr << exc << std::endl;
     }
     if (extTC != nullptr) {
-        for (int i = 16; i < 16 * 100000; i += 1616) {
+        for (int i = SMALL_START_LOOP; i < SMALL_MAX_LOOP;
+             i += SMALL_INC_LOOP) {
             if (!bbxreplay)
                 fr->startRecEvent();
             std::vector<uint8_t> ct, key, iv;
@@ -267,7 +282,7 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
         std::cerr << exc << std::endl;
     }
     if (extTC != nullptr) {
-        for (int i = 1; i <= 2; i++) {
+        for (int i = BIG_START_LOOP; i <= BIG_MAX_LOOP; i += BIG_INC_LOOP) {
             fr->startRecEvent();
             size_t size = 16 * 10000000 * i; // 0.16g
             // size *= 10;                      // 0.16g
