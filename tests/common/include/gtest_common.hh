@@ -78,7 +78,7 @@ ArraysMatch(std::vector<uint8_t> actual,
         if (expected[i] != actual[i]) {
             return ::testing::AssertionFailure()
                    << "Does not match,"
-                   << "Length:" << len << " Failure!";
+                   << "Length:" << len << " Failure i:" << i << " !";
         }
     }
     if (verbose) {
@@ -97,7 +97,10 @@ ArraysMatch(std::vector<uint8_t> actual, std::vector<uint8_t> expected)
         if (expected[i] != actual[i]) {
             return ::testing::AssertionFailure()
                    << "Does not match,"
-                   << "Size:" << actual.size() << " Failure!";
+                   << "Size:" << actual.size() << " Failure i:" << i << " ! "
+                   << "Expected "
+                   << parseBytesToHexStr(&(actual[0]) + i - 10, 20) << " Got "
+                   << parseBytesToHexStr(&(expected[0]) + i - 10, 20);
         }
     }
     if (verbose) {

@@ -40,6 +40,10 @@
 #include "openssl_base.hh"
 #endif
 
+#define MAX_LOOP   160000
+#define INC_LOOP   16
+#define START_LOOP 16
+
 using namespace alcp::testing;
 
 ExecRecPlay* fr;
@@ -79,7 +83,7 @@ TEST(DIGEST_SHA2, CROSS_224)
     }
 
     // TODO: Improve the incementor and start condition of forloop
-    for (int i = 16; i < 16 * 100000; i += 1616) {
+    for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
         if (!bbxreplay) {
             fr->startRecEvent();
             try {
@@ -148,7 +152,7 @@ TEST(DIGEST_SHA2, CROSS_256)
     }
 
     // TODO: Improve the incementor and start condition of forloop
-    for (int i = 16; i < 16 * 100000; i += 1616) {
+    for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
         if (!bbxreplay) {
             fr->startRecEvent();
             try {
@@ -217,7 +221,7 @@ TEST(DIGEST_SHA2, CROSS_384)
     }
 
     // TODO: Improve the incementor and start condition of forloop
-    for (int i = 16; i < 16 * 100000; i += 1616) {
+    for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
         if (!bbxreplay) {
             fr->startRecEvent();
             try {
@@ -287,7 +291,7 @@ TEST(DIGEST_SHA2, CROSS_512)
     }
 
     // TODO: Improve the incementor and start condition of forloop
-    for (int i = 16; i < 16 * 100000; i += 1616) {
+    for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
         if (!bbxreplay) {
             fr->startRecEvent();
             try {

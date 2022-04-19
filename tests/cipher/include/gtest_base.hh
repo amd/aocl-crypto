@@ -45,9 +45,11 @@
 class TestingCore
 {
   private:
-    DataSet*        ds            = nullptr;
-    CipherTesting*  cipherHandler = nullptr;
-    AlcpCipherBase* acb           = nullptr;
+    DataSet*        m_ds            = nullptr;
+    CipherTesting*  m_cipherHandler = nullptr;
+    AlcpCipherBase* m_acb           = nullptr;
+    lib_t           m_lib;
+    alc_aes_mode_t  m_alcpMode;
 #ifdef USE_IPP
     IPPCipherBase* icb = nullptr;
 #endif
@@ -57,33 +59,35 @@ class TestingCore
   public:
     TestingCore(lib_t lib, alc_aes_mode_t alcpMode)
     {
-        cipherHandler = new CipherTesting();
+        m_lib           = lib;
+        m_alcpMode      = alcpMode;
+        m_cipherHandler = new CipherTesting();
         switch (lib) {
             case OPENSSL:
 #ifndef USE_OSSL
-                delete cipherHandler;
+                delete m_cipherHandler;
                 throw "OpenSSL not avaiable!";
 #else
                 ocb = new OpenSSLCipherBase(alcpMode, NULL);
-                cipherHandler->setcb(ocb);
+                m_cipherHandler->setcb(ocb);
 #endif
                 break;
             case IPP:
 #ifndef USE_IPP
-                delete cipherHandler;
+                delete m_cipherHandler;
                 throw "IPP not avaiable!";
 #else
                 if (!useipp) {
-                    delete cipherHandler;
+                    delete m_cipherHandler;
                     throw "IPP disabled!";
                 }
                 icb = new IPPCipherBase(alcpMode, NULL);
-                cipherHandler->setcb(icb);
+                m_cipherHandler->setcb(icb);
 #endif
                 break;
             case ALCP:
-                acb = new AlcpCipherBase(alcpMode, NULL);
-                cipherHandler->setcb(acb);
+                m_acb = new AlcpCipherBase(alcpMode, NULL);
+                m_cipherHandler->setcb(m_acb);
                 break;
         }
     }
@@ -91,18 +95,18 @@ class TestingCore
     {
         std::transform(
             modeStr.begin(), modeStr.end(), modeStr.begin(), ::tolower);
-        ds = new DataSet(std::string("dataset_") + modeStr
-                         + std::string(".csv"));
+        m_ds = new DataSet(std::string("dataset_") + modeStr
+                           + std::string(".csv"));
 
         // Initialize cipher testing classes
-        cipherHandler = new CipherTesting();
-        acb           = new AlcpCipherBase(alcpMode, NULL);
-        cipherHandler->setcb(acb);
+        m_cipherHandler = new CipherTesting();
+        m_acb           = new AlcpCipherBase(alcpMode, NULL);
+        m_cipherHandler->setcb(m_acb);
 #ifdef USE_IPP
         icb = new IPPCipherBase(alcpMode, NULL);
         if (useipp) {
             std::cout << "Using IPP" << std::endl;
-            cipherHandler->setcb(icb);
+            m_cipherHandler->setcb(icb);
         }
 #else
         if (useipp) {
@@ -113,7 +117,7 @@ class TestingCore
         ocb = new OpenSSLCipherBase(alcpMode, NULL);
         if (useossl) {
             std::cout << "Using OpenSSL" << std::endl;
-            cipherHandler->setcb(ocb);
+            m_cipherHandler->setcb(ocb);
         }
 #else
         if (useossl) {
@@ -124,12 +128,12 @@ class TestingCore
     }
     ~TestingCore()
     {
-        if (ds != nullptr)
-            delete ds;
-        if (cipherHandler != nullptr)
-            delete cipherHandler;
-        if (acb != nullptr)
-            delete acb;
+        if (m_ds != nullptr)
+            delete m_ds;
+        if (m_cipherHandler != nullptr)
+            delete m_cipherHandler;
+        if (m_acb != nullptr)
+            delete m_acb;
 #ifdef USE_IPP
         if (icb != nullptr)
             delete icb;
@@ -139,8 +143,8 @@ class TestingCore
             delete ocb;
 #endif
     }
-    DataSet*       getDs() { return ds; }
-    CipherTesting* getCipherHandler() { return cipherHandler; }
+    DataSet*       getDs() { return m_ds; }
+    CipherTesting* getCipherHandler() { return m_cipherHandler; }
 };
 
 #endif
