@@ -35,8 +35,8 @@
 #define RANDOM_SIZE 50 // Size of buffer
 
 /* Change sources to use different random engine */
-#define SOURCE ALC_RNG_SOURCE_OS
-// #define SOURCE      ALC_RNG_SOURCE_ARCH
+// #define SOURCE ALC_RNG_SOURCE_OS
+#define SOURCE ALC_RNG_SOURCE_ARCH
 
 char*
 bytesToHexString(unsigned char*, int);

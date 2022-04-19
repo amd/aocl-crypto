@@ -25,9 +25,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include "iostream"
 #include "rng.hh"
 
-// #include <secrng.h>
+#ifdef USE_AOCL_SRNG
+#include <secrng.h>
+#endif
 // Enable debug for debugging the code
 // #define DEBUG
 
@@ -39,23 +42,18 @@ ArchRng::readRandom(uint8_t* pBuf, uint64 size)
 #ifdef DEBUG
     printf("Engine amd_rdrand_bytes\n");
 #endif
-#if 0
-    int opt = is_RDRAND_supported();
-    if (opt == 0) {
-        opt = -1;
+#ifdef USE_AOCL_SRNG
+    int opt;
+    opt = get_rdrand_bytes_arr(
+        pBuf,
+        size,
+        100 // Retires is hard coded as 100, may be add this to context.
+    );
+    if (opt <= 0) {
+        return ALC_ERROR_NO_ENTROPY;
     } else {
-        opt = get_rdrand_bytes_arr(
-            buffer,
-            buffersize,
-            100 // Retires is hard coded as 100, may be add this to context.
-        );
-        if (opt <= 0) {
-            opt = -1;
-        } else {
-            opt = buffersize;
-        }
+        return ALC_ERROR_NONE;
     }
-    return opt;
 #else
     return ALC_ERROR_NOT_SUPPORTED; // Error not implemented
 #endif
