@@ -49,7 +49,7 @@ ArchRng::readRandom(uint8_t* pBuf, uint64 size)
         size,
         100 // Retires is hard coded as 100, may be add this to context.
     );
-    if (opt <= 0) {
+    if (opt != SECRNG_SUCCESS) {
         return ALC_ERROR_NO_ENTROPY;
     } else {
         return ALC_ERROR_NONE;
