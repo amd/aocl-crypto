@@ -41,21 +41,46 @@
 
 using namespace alcp::testing;
 
-ExecRecPlay* fr;
+ExecRecPlay* fr = nullptr;
 
 #define ALC_MODE ALC_AES_MODE_CFB
 #define STR_MODE "AES_CFB"
+// Below in bytes
+#define SMALL_MAX_LOOP   160000
+#define SMALL_INC_LOOP   16
+#define SMALL_START_LOOP 16
+// Below in 0.1MB size
+#define BIG_MAX_LOOP   1
+#define BIG_INC_LOOP   1
+#define BIG_START_LOOP 2
 
 /* Testing Starts Here! */
 TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
 {
-    int          key_size = 128;
-    TestingCore  alcpTC   = TestingCore(ALCP, ALC_MODE);
-    TestingCore* extTC    = nullptr;
+    int key_size = 128;
+    // Request from others to validate openssl with ipp
+    TestingCore* alcpTC = nullptr;
+    if (oa_override) {
+        alcpTC = new TestingCore(OPENSSL, ALC_MODE);
+        printErrors("ALCP is overriden!... OpenSSL is now main lib");
+        printErrors("ALCP is overriden!... Forcing IPP as extlib");
+        useipp  = true;
+        useossl = false;
+    } else {
+        alcpTC = new TestingCore(ALCP, ALC_MODE);
+    }
+    TestingCore* extTC = nullptr;
     RngBase      rb;
     if (bbxreplay) {
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_ENC_128_SMALL",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             true);
         fr->fastForward(SMALL_ENC);
-    }
+    } else
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_ENC_128_SMALL",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             false);
+
     // Set extTC based on which external testing core user asks
     try {
         if (useossl)
@@ -70,7 +95,8 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
         std::cerr << exc << std::endl;
     }
     if (extTC != nullptr) {
-        for (int i = 16; i < 16 * 100000; i += 1616) {
+        for (int i = SMALL_START_LOOP; i < SMALL_MAX_LOOP;
+             i += SMALL_INC_LOOP) {
             if (!bbxreplay)
                 fr->startRecEvent();
             std::vector<uint8_t> pt, key, iv;
@@ -81,12 +107,17 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
                 fr->setRecEvent(key, iv, pt, SMALL_ENC);
             } else {
                 fr->nextLog();
-                fr->getValues(&key, &iv, &pt);
+                try {
+                    fr->getValues(&key, &iv, &pt);
+                } catch (std::string excp) {
+                    std::cout << excp << std::endl;
+                    exit(-1);
+                }
             }
             // std::cout << "KEY:" << parseBytesToHexStr(&(key[0]), key.size())
             //           << std::endl;
             std::vector enc_1 =
-                alcpTC.getCipherHandler()->testingEncrypt(pt, key, iv);
+                alcpTC->getCipherHandler()->testingEncrypt(pt, key, iv);
             std::vector enc_2 =
                 extTC->getCipherHandler()->testingEncrypt(pt, key, iv);
             EXPECT_TRUE(ArraysMatch(enc_1, enc_2));
@@ -97,19 +128,39 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
             }
         }
         delete extTC;
+        delete alcpTC;
     }
+    delete fr;
 }
 
 /* Testing Starts Here! */
 TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
 {
-    int          key_size = 128;
-    TestingCore  alcpTC   = TestingCore(ALCP, ALC_MODE);
-    TestingCore* extTC    = nullptr;
+    int key_size = 128;
+    // Request from others to validate openssl with ipp
+    TestingCore* alcpTC = nullptr;
+    if (oa_override) {
+        alcpTC = new TestingCore(OPENSSL, ALC_MODE);
+        printErrors("ALCP is overriden!... OpenSSL is now main lib");
+        printErrors("ALCP is overriden!... Forcing IPP as extlib");
+        useipp  = true;
+        useossl = false;
+    } else {
+        alcpTC = new TestingCore(ALCP, ALC_MODE);
+    }
+    TestingCore* extTC = nullptr;
     RngBase      rb;
     if (bbxreplay) {
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_ENC_128_BIG",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             true);
         fr->fastForward(BIG_ENC);
-    }
+    } else
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_ENC_128_BIG",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             false);
+
+    // Set extTC based on which external testing core user asks
     try {
         if (useossl)
             extTC = new TestingCore(OPENSSL, ALC_MODE);
@@ -123,7 +174,7 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
         std::cerr << exc << std::endl;
     }
     if (extTC != nullptr) {
-        for (int i = 1; i <= 2; i++) {
+        for (int i = BIG_START_LOOP; i <= BIG_MAX_LOOP; i += BIG_INC_LOOP) {
             if (!bbxreplay)
                 fr->startRecEvent();
             size_t size = 16 * 10000000 * i; // 0.16g
@@ -146,7 +197,7 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
             // std::cout << "KEY:" << parseBytesToHexStr(&(key[0]), key.size())
             //           << std::endl;
             std::vector enc_1 =
-                alcpTC.getCipherHandler()->testingEncrypt(pt, key, iv);
+                alcpTC->getCipherHandler()->testingEncrypt(pt, key, iv);
             std::vector enc_2 =
                 extTC->getCipherHandler()->testingEncrypt(pt, key, iv);
             EXPECT_TRUE(ArraysMatch(enc_1, enc_2));
@@ -157,18 +208,37 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
             }
         }
         delete extTC;
+        delete alcpTC;
     }
+    delete fr;
 }
 
 TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
 {
-    int          key_size = 128;
-    TestingCore  alcpTC   = TestingCore(ALCP, ALC_MODE);
-    TestingCore* extTC    = nullptr;
+    int key_size = 128;
+    // Request from others to validate openssl with ipp
+    TestingCore* alcpTC = nullptr;
+    if (oa_override) {
+        alcpTC = new TestingCore(OPENSSL, ALC_MODE);
+        printErrors("ALCP is overriden!... OpenSSL is now main lib");
+        printErrors("ALCP is overriden!... Forcing IPP as extlib");
+        useipp  = true;
+        useossl = false;
+    } else {
+        alcpTC = new TestingCore(ALCP, ALC_MODE);
+    }
+    TestingCore* extTC = nullptr;
     RngBase      rb;
     if (bbxreplay) {
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_DEC_128_SMALL",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             true);
         fr->fastForward(SMALL_DEC);
-    }
+    } else
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_DEC_128_SMALL",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             false);
+
     // Set extTC based on which external testing core user asks
     try {
         if (useossl)
@@ -183,7 +253,8 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
         std::cerr << exc << std::endl;
     }
     if (extTC != nullptr) {
-        for (int i = 16; i < 16 * 100000; i += 1616) {
+        for (int i = SMALL_START_LOOP; i < SMALL_MAX_LOOP;
+             i += SMALL_INC_LOOP) {
             if (!bbxreplay)
                 fr->startRecEvent();
             std::vector<uint8_t> ct, key, iv;
@@ -197,7 +268,7 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
                 fr->getValues(&key, &iv, &ct);
             }
             std::vector dec_1 =
-                alcpTC.getCipherHandler()->testingDecrypt(ct, key, iv);
+                alcpTC->getCipherHandler()->testingDecrypt(ct, key, iv);
             std::vector dec_2 =
                 extTC->getCipherHandler()->testingDecrypt(ct, key, iv);
             EXPECT_TRUE(ArraysMatch(dec_1, dec_2));
@@ -208,19 +279,39 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
             }
         }
         delete extTC;
+        delete alcpTC;
     }
+    delete fr;
 }
 
 /* Testing Starts Here! */
 TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
 {
-    int          key_size = 128;
-    TestingCore  alcpTC   = TestingCore(ALCP, ALC_MODE);
-    TestingCore* extTC    = nullptr;
+    int key_size = 128;
+    // Request from others to validate openssl with ipp
+    TestingCore* alcpTC = nullptr;
+    if (oa_override) {
+        alcpTC = new TestingCore(OPENSSL, ALC_MODE);
+        printErrors("ALCP is overriden!... OpenSSL is now main lib");
+        printErrors("ALCP is overriden!... Forcing IPP as extlib");
+        useipp  = true;
+        useossl = false;
+    } else {
+        alcpTC = new TestingCore(ALCP, ALC_MODE);
+    }
+    TestingCore* extTC = nullptr;
     RngBase      rb;
     if (bbxreplay) {
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_DEC_128_BIG",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             true);
         fr->fastForward(BIG_DEC);
-    }
+    } else
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_DEC_128_BIG",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             false);
+
+    // Set extTC based on which external testing core user asks
     try {
         if (useossl)
             extTC = new TestingCore(OPENSSL, ALC_MODE);
@@ -234,7 +325,7 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
         std::cerr << exc << std::endl;
     }
     if (extTC != nullptr) {
-        for (int i = 1; i <= 2; i++) {
+        for (int i = BIG_START_LOOP; i <= BIG_MAX_LOOP; i += BIG_INC_LOOP) {
             fr->startRecEvent();
             size_t size = 16 * 10000000 * i; // 0.16g
             // size *= 10;                      // 0.16g
@@ -255,7 +346,7 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
             }
             // May need encryption step for GCM cuz of MAC
             std::vector dec_1 =
-                alcpTC.getCipherHandler()->testingDecrypt(ct, key, iv);
+                alcpTC->getCipherHandler()->testingDecrypt(ct, key, iv);
             std::vector dec_2 =
                 extTC->getCipherHandler()->testingDecrypt(ct, key, iv);
             EXPECT_TRUE(ArraysMatch(dec_1, dec_2));
@@ -266,7 +357,9 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
             }
         }
         delete extTC;
+        delete alcpTC;
     }
+    delete fr;
 }
 
 int
@@ -276,10 +369,6 @@ main(int argc, char** argv)
     testing::TestEventListeners& listeners =
         testing::UnitTest::GetInstance()->listeners();
     parseArgs(argc, argv);
-    if (bbxreplay)
-        fr = new ExecRecPlay(std::string(STR_MODE), true);
-    else
-        fr = new ExecRecPlay(std::string(STR_MODE), false);
     auto default_printer =
         listeners.Release(listeners.default_result_printer());
 

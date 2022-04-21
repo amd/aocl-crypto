@@ -207,4 +207,14 @@ parseHexToNum(const unsigned char c)
 
     return 0;
 }
+bool
+isPathExist(const std::string dir)
+{
+    struct stat buffer;
+    if (stat(dir.c_str(), &buffer) == 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
 } // namespace alcp::testing

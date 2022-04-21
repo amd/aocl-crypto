@@ -32,10 +32,11 @@
 
 using namespace alcp::testing;
 
-static bool verbose   = false;
-static bool useipp    = false;
-static bool useossl   = false;
-static bool bbxreplay = false;
+static bool verbose     = false;
+static bool useipp      = false;
+static bool useossl     = false;
+static bool bbxreplay   = false;
+static bool oa_override = false;
 
 ::testing::AssertionResult
 ArraysMatch(std::vector<uint8_t>    actual,
@@ -77,7 +78,7 @@ ArraysMatch(std::vector<uint8_t> actual,
         if (expected[i] != actual[i]) {
             return ::testing::AssertionFailure()
                    << "Does not match,"
-                   << "Length:" << len << " Failure!";
+                   << "Length:" << len << " Failure i:" << i << " !";
         }
     }
     if (verbose) {
@@ -96,7 +97,10 @@ ArraysMatch(std::vector<uint8_t> actual, std::vector<uint8_t> expected)
         if (expected[i] != actual[i]) {
             return ::testing::AssertionFailure()
                    << "Does not match,"
-                   << "Size:" << actual.size() << " Failure!";
+                   << "Size:" << actual.size() << " Failure i:" << i << " ! "
+                   << "Expected "
+                   << parseBytesToHexStr(&(actual[0]) + i - 10, 20) << " Got "
+                   << parseBytesToHexStr(&(expected[0]) + i - 10, 20);
         }
     }
     if (verbose) {
@@ -241,3 +245,42 @@ typedef enum
     IPP,
     ALCP,
 } lib_t;
+
+void
+parseArgs(int argc, char** argv)
+{
+    std::string currentArg;
+    if (argc > 1) {
+        for (int i = 1; i < argc; i++) {
+            currentArg = std::string(argv[i]);
+            if ((currentArg == std::string("--help"))
+                || (currentArg == std::string("-h"))) {
+                std::cout << std::endl
+                          << "Additional help for microtests" << std::endl;
+                std::cout << "--verbose or -v per line status." << std::endl;
+                std::cout << "--use-ipp or -i force IPP use in testing."
+                          << std::endl;
+                std::cout << "--use-ossl or -o force OpenSSL use in testing"
+                          << std::endl;
+                std::cout
+                    << "--replay-blackbox or -r replay blackbox with log file"
+                    << std::endl;
+            } else if ((currentArg == std::string("--verbose"))
+                       || (currentArg == std::string("-v"))) {
+                verbose = true;
+            } else if ((currentArg == std::string("--use-ipp"))
+                       || (currentArg == std::string("-i"))) {
+                useipp = true;
+            } else if ((currentArg == std::string("--use-ossl"))
+                       || (currentArg == std::string("-o"))) {
+                useossl = true;
+            } else if ((currentArg == std::string("--replay-blackbox"))
+                       || (currentArg == std::string("-r"))) {
+                bbxreplay = true;
+            } else if ((currentArg == std::string("--override-alcp"))
+                       || (currentArg == std::string("-oa"))) {
+                oa_override = true;
+            }
+        }
+    }
+}
