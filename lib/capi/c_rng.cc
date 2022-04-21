@@ -52,8 +52,11 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo)
                     switch (pRngInfo->ri_source) {
                         case ALC_RNG_SOURCE_OS:
                             break;
+#ifdef USE_AOCL_SRNG
                         case ALC_RNG_SOURCE_ARCH:
+                            // TODO: CPUID check if RDRAND/RDSEED is supported
                             break;
+#endif
                         default:
                             error = ALC_ERROR_NOT_SUPPORTED;
                             break;
