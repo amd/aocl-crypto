@@ -385,7 +385,7 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
 #if SPEED_CHECK
             ALCP_CRYPT_GET_TIME(0, "Encrypt time")
 #else
-        ALCP_CRYPT_GET_TIME(1, "Encrypt time")
+            ALCP_CRYPT_GET_TIME(1, "Encrypt time")
 #endif
             ALCP_PRINT_TEXT(cipherText, inputLen, "cipherTxt")
 

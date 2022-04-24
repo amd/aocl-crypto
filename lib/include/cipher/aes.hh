@@ -528,7 +528,8 @@ class Gcm final : public Aes
     virtual alc_error_t cryptUpdate(const uint8_t* pInput,
                                     uint8_t*       pOutput,
                                     uint64_t       len,
-                                    const uint8_t* pIv);
+                                    const uint8_t* pIv,
+                                    bool           isEncrypt);
     Gcm(){};
 
   private:

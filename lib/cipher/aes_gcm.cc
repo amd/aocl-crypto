@@ -56,7 +56,8 @@ alc_error_t
 Gcm::cryptUpdate(const uint8_t* pInput,
                  uint8_t*       pOutput,
                  uint64_t       len,
-                 const uint8_t* pIv)
+                 const uint8_t* pIv,
+                 bool           isEncrypt)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -68,6 +69,13 @@ Gcm::cryptUpdate(const uint8_t* pInput,
             // GCM init call
             // len is used as ivlen
             // In init call, we generate HashSubKey, partial tag data.
+            m_gHash_128         = _mm_setzero_si128();
+            m_hash_subKey_128   = _mm_setzero_si128();
+            m_len               = 0;
+            m_additionalDataLen = 0;
+            m_tagLen            = 0;
+            m_ivLen             = 12; // default 12 bytes or 96bits
+
             m_ivLen = len;
             err     = aesni::InitGcm(getEncryptKeys(),
                                  getRounds(),
@@ -103,7 +111,8 @@ Gcm::cryptUpdate(const uint8_t* pInput,
                                   pIv,
                                   &m_gHash_128,
                                   m_hash_subKey_128,
-                                  m_reverse_mask_128);
+                                  m_reverse_mask_128,
+                                  isEncrypt);
         } else if ((pInput == NULL) && (pOutput != NULL)) {
             // Get tag info, when Output is not Null and Input is Null.
             uint8_t* ptag = pOutput;
@@ -128,7 +137,7 @@ Gcm::decryptUpdate(const uint8_t* pInput,
                    const uint8_t* pIv)
 {
     alc_error_t err = ALC_ERROR_NONE;
-    err             = cryptUpdate(pInput, pOutput, len, pIv);
+    err             = cryptUpdate(pInput, pOutput, len, pIv, false);
     return err;
 }
 
@@ -139,7 +148,7 @@ Gcm::encryptUpdate(const uint8_t* pInput,
                    const uint8_t* pIv)
 {
     alc_error_t err = ALC_ERROR_NONE;
-    err             = cryptUpdate(pInput, pOutput, len, pIv);
+    err             = cryptUpdate(pInput, pOutput, len, pIv, true);
     return err;
 }
 
