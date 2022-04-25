@@ -60,8 +60,8 @@ carrylessMul(__m128i a, __m128i b, __m128i* c, __m128i* d)
 
 /*
  Modulo Reduction of 256bit to 128bit
- Modulor reduction algorithm 5 in "Intel carry-less multiplication instruction
- in gcm mode" paper
+ Modulo reduction algorithm 5 in "Intel carry-less multiplication instruction
+ in gcm mode" paper is used.
 */
 static void
 redMod(__m128i x10, __m128i x32, __m128i* res)
