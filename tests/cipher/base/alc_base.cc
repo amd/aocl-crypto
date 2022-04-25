@@ -146,6 +146,60 @@ AlcpCipherBase::encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt)
 }
 
 bool
+AlcpCipherBase::encrypt(alcp_data_ex_t data)
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buff[err_size];
+
+    if (m_mode == ALC_AES_MODE_GCM) {
+
+        // GCM Init
+        err = alcp_cipher_encrypt_update(
+            m_handle, nullptr, nullptr, data.ivl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: unable to encrypt \n");
+            alcp_error_str(err, err_buff, err_size);
+            return false;
+        }
+        // Additional Data
+        err = alcp_cipher_encrypt_update(
+            m_handle, data.ad, nullptr, data.adl, m_iv);
+
+        if (alcp_is_error(err)) {
+            printf("Error: unable to encrypt \n");
+            alcp_error_str(err, err_buff, err_size);
+            return false;
+        }
+        // GCM Encrypt
+        err = alcp_cipher_encrypt_update(
+            m_handle, data.in, data.out, data.inl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: unable to encrypt \n");
+            alcp_error_str(err, err_buff, err_size);
+            return false;
+        }
+        // Get Tag
+        err = alcp_cipher_encrypt_update(
+            m_handle, nullptr, data.tag, data.tagl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: unable to encrypt \n");
+            alcp_error_str(err, err_buff, err_size);
+            return false;
+        }
+    } else {
+        // For non GCM mode
+        err = alcp_cipher_encrypt(m_handle, data.in, data.out, data.inl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: unable to encrypt \n");
+            alcp_error_str(err, err_buff, err_size);
+            return false;
+        }
+    }
+    return true;
+}
+
+bool
 AlcpCipherBase::decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt)
 {
     alc_error_t err;
@@ -162,6 +216,57 @@ AlcpCipherBase::decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt)
     return true;
 }
 
+bool
+AlcpCipherBase::decrypt(alcp_data_ex_t data)
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
+
+    if (m_mode == ALC_AES_MODE_GCM) {
+        // GCM Init
+        err = alcp_cipher_decrypt_update(
+            m_handle, nullptr, nullptr, data.ivl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: unable decrypt 1\n");
+            alcp_error_str(err, err_buf, err_size);
+            return false;
+        }
+        // Additional Data
+        err = alcp_cipher_decrypt_update(
+            m_handle, data.ad, nullptr, data.adl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: unable decrypt 2\n");
+            alcp_error_str(err, err_buf, err_size);
+            return false;
+        }
+        // GCM Decrypt
+        err = alcp_cipher_decrypt_update(
+            m_handle, data.in, data.out, data.inl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: unable decrypt 3\n");
+            alcp_error_str(err, err_buf, err_size);
+            return false;
+        }
+        // Get Tag
+        err = alcp_cipher_decrypt_update(
+            m_handle, nullptr, data.tag, data.tagl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: unable decrypt 4\n");
+            alcp_error_str(err, err_buf, err_size);
+            return false;
+        }
+    } else {
+        // For non GCM mode
+        err = alcp_cipher_decrypt(m_handle, data.in, data.out, data.inl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: unable decrypt 5\n");
+            alcp_error_str(err, err_buf, err_size);
+            return false;
+        }
+        return true;
+    }
+}
 // AlcpCipherTesting class functions
 AlcpCipherTesting::AlcpCipherTesting(const alc_aes_mode_t       mode,
                                      const std::vector<uint8_t> iv)
