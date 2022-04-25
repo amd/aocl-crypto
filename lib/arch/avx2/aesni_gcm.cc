@@ -35,6 +35,21 @@
 #include "error.hh"
 #include "key.hh"
 
+//#define DEBUG_P /* Enable for debugging only */
+
+/*
+    debug prints to be print input, cipher, iv and decrypted output
+*/
+#ifdef DEBUG_P
+#define ALCP_PRINT_TEXT(I, L, S)                                               \
+    printf("\n %s", S);                                                        \
+    for (int x = 0; x < L; x++) {                                              \
+        printf(" %2x", *(I + x));                                              \
+    }
+#else // DEBUG_P
+#define ALCP_PRINT_TEXT(I, L, S)
+#endif // DEBUG_P
+
 namespace alcp::cipher::aesni {
 
 static void
@@ -145,7 +160,7 @@ InitGcm(const uint8_t* pKey,
 {
     alc_error_t err     = ALC_ERROR_NONE;
     auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
-
+    // phash_subKey_128 is already set to zero
     // Hash subkey generation.
     aesni::AesEncrypt(phash_subKey_128, pkey128, nRounds);
     // Hash sub key reversed for gf multiplication.
@@ -163,6 +178,7 @@ InitGcm(const uint8_t* pKey,
         return ALC_ERROR_NOT_SUPPORTED;
     }
 
+    ALCP_PRINT_TEXT((uint8_t*)phash_subKey_128, 16, "subkey   ")
     return err;
 }
 
@@ -377,7 +393,9 @@ CryptGcm(const uint8_t* pInputText,  // ptr to inputText
             gMul(*pgHash_128, Hsubkey_128, pgHash_128);
         }
     }
-    *pgHash_128 = _mm_shuffle_epi8(*pgHash_128, reverse_mask_128);
+    if (len) {
+        *pgHash_128 = _mm_shuffle_epi8(*pgHash_128, reverse_mask_128);
+    }
     return err;
 }
 
@@ -409,6 +427,9 @@ processAdditionalDataGcm(const uint8_t* pAdditionalData,
         pAd128++;
     }
     *pgHash_128 = _mm_shuffle_epi8(*pgHash_128, reverse_mask_128);
+
+    ALCP_PRINT_TEXT((uint8_t*)pAd128, 16, "adddata  ")
+    ALCP_PRINT_TEXT((uint8_t*)pgHash_128, 16, "addHash  ")
 
     return err;
 }
