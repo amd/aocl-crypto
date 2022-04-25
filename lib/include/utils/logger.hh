@@ -28,41 +28,20 @@
 
 #pragma once
 
+#include <chrono>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <vector>
 
-namespace alcp::utils::log {
+namespace alcp::utils {
 
-class Message;
-
-class LogWriter
+class Priority
 {
   public:
-    LogWriter();
-
-    virtual void open() {}
-    virtual void close() {}
-    virtual void log(const Message& msg) = 0;
-
-    void setProperty(const std::string& name, const std::string& value) {}
-    std::string& getProperty(const std::string& name) const;
-
-  protected:
-    virtual ~LogWriter();
-
-  private:
-    // Disable copy constructor and assignment operator
-    LogWriter(const LogWriter&);
-    LogWriter& operator=(const LogWriter&);
-};
-
-class LogLevel
-{
-  public:
-    enum Category
+    enum Level
     {
-
         eFatal   = (1 << 0), /* Highest, Application will terminate (mostly) */
         ePanic   = (1 << 1), /* Application might not work as expected */
         eError   = (1 << 2), /* API wont complete, but app will continue */
@@ -74,16 +53,16 @@ class LogLevel
     };
 
   public:
-    LogLevel() = default;
-    ~LogLevel() {}
+    Priority() = default;
+    ~Priority() {}
 
-    LogLevel(const Category c)
-        : m_category{ c }
+    Priority(const Level c)
+        : m_level{ c }
     {}
 
-    inline static const std::string name(Category& c)
+    inline static const std::string& name(const Level& c)
     {
-        static std::map<Category, std::string> str_map{
+        static std::map<Level, std::string> str_map{
             { eFatal, "Fatal" },     { ePanic, "Panic" }, { eError, "Error" },
             { eWarning, "Warning" }, { eInfo, "Info" },   { eNotice, "Notice" },
             { eDebug, "Debug" }
@@ -93,64 +72,136 @@ class LogLevel
         return str_map[c];
     }
 
-    inline bool operator==(const Category& r)
+    inline bool operator==(const Priority& r)
     {
-        return (int)m_category == (int)r;
+        return (int)m_level == r.m_level;
     }
 
-    inline bool operator<(const Category& r)
+    inline bool operator<(const Priority& r)
     {
-        return (int)m_category < (int)r;
+        return (int)m_level < r.m_level;
     }
 
-    inline bool operator<=(const Category& r)
+    inline bool operator<=(const Priority& r)
     {
-        return (int)m_category == (int)r;
+        return (int)m_level == r.m_level;
     }
 
-    inline bool operator>(const Category& r)
+    inline bool operator>(const Priority& r)
     {
-        return !((int)m_category <= (int)r);
+        return !((int)m_level <= r.m_level);
     }
 
-    inline bool operator>=(const Category& r)
+    inline bool operator>=(const Priority& r)
     {
-        return !((int)m_category < (int)r);
+        return !((int)m_level < r.m_level);
     }
 
   private:
-    Category m_category;
+    Level m_level;
+};
+
+#include "types.hh"
+class Time
+{
+    using clock = std::chrono::system_clock;
+
+  public:
+    using Stamp = Uint64;
+
+  public:
+    Time(Uint64 t) {}
+
+    static Stamp now()
+    {
+        /*
+        const std::time_t t = clock::to_time_t(now());
+        return std::put_time(std::localtime(&t), "%F %T");
+        */
+        return 0x0000000;
+    }
+
+    Uint64 getHour(Stamp st) const;
+    Uint64 getMinute(Stamp st) const;
+    Uint64 getSeconds(Stamp st) const;
+    Uint64 getMilliSeconds(Stamp st) const;
+    Uint64 getMicroSeconds(Stamp st) const;
+    Uint64 getNanoSeconds(Stamp st) const;
 };
 
 class Message
 {
   public:
+    Message(Priority prt, const std::string& s) { m_time = Time::now(); }
+
+    Message(const std::string s)
+        : Message{ Priority::Level::eInfo, s }
+    {}
+
+    Message(const std::string& s)
+        : Message{ Priority::Level::eInfo, s }
+    {}
+
+    Message(const std::string&& s)
+        : Message{ Priority::Level::eInfo, s }
+    {}
+
+    /**
+     * \brief    Construct Message with default priority
+     * \notes     A Logger uses operates on message
+     *
+     * \param   rSrc    Message source such as subsystem, thread etc
+     * \param   pText   Actual message
+     * \param   level   Message priority
+     */
+    Message(const std::string& rSrc,
+            const std::string& rText,
+            Priority           prty = Priority::Level::eInfo)
+        : Message{ prty, rText }
+    {
+        m_text = rSrc + m_text;
+    }
+
+  public:
+    void               setPriority();
+    const Priority&    getPriority() { return m_prio; }
+    const std::string& c_str() { return m_text; }
+
   private:
-    LogLevel m_level;
+    Priority    m_prio;
+    std::string m_text;
+    Time::Stamp m_time;
+    // Uint32 m_tid; // Thread ID
 };
 
-#define LOG(msg) util::log::get_instance()->log(msg)
+#define TRACE(str)  utils::Logger::getDefaultLogger()->trace(str)
+#define LOG(str)    TRACE(str)
+#define WARN(str)   utils::Logger::getDefaultLogger()->warn(str)
+#define INFO(str)   utils::Logger::getDefaultLogger()->info(str)
+#define PANIC(str)  utils::Logger::getDefaultLogger()->panic(str)
+#define NOTICE(str) utils::Logger::getDefaultLogger()->notice(str)
+#define DEBUG(str)  utils::Logger::getDefaultLogger()->debug(str)
 
-class LoggerInterface
+class ILogger
 {
   public:
-    virtual bool debug(const std::string& msg)  = 0;
-    virtual bool error(const std::string& msg)  = 0;
-    virtual bool panic(const std::string& msg)  = 0;
-    virtual bool info(const std::string& msg)   = 0;
-    virtual bool notice(const std::string& msg) = 0;
-    virtual bool log(const std::string& msg)    = 0;
+    virtual bool info(const Message& msg)   = 0;
+    virtual bool debug(const Message& msg)  = 0;
+    virtual bool error(const Message& msg)  = 0;
+    virtual bool panic(const Message& msg)  = 0;
+    virtual bool trace(const Message& msg)  = 0;
+    virtual bool notice(const Message& msg) = 0;
 
   protected:
-    LoggerInterface() {}
-    virtual ~LoggerInterface();
+    ILogger() {}
+    virtual ~ILogger();
 };
 
 enum class LoggerType
 {
-    eConsoleLogger,
-    eDummyLogger,
-    eFileLogger,
+    eConsoleLogger, /* Logs to console, presumably ANSI compliant */
+    eDummyLogger,   /* Discards all messages, regardless of priority */
+    eFileLogger,    /* Logs to a file, provided via builder */
 };
 
 /**
@@ -158,12 +209,12 @@ enum class LoggerType
  *
  *
  */
-class Logger : LoggerInterface
+class Logger : ILogger
 {
   public:
     Logger(std::string&& name)
         : m_name{ name }
-        , m_level{ LogLevel::eWarning }
+        , m_allowed_priority{ Priority::eWarning }
     {}
 
     Logger(const char* name)
@@ -172,21 +223,12 @@ class Logger : LoggerInterface
 
     ~Logger() {}
 
-    static LogLevel   s_default_level;
-    static LoggerType s_default_type;
-
-    static void initialize();
-    static void setDefaultType(LoggerType lt) { s_default_type = lt; }
-    static void setDefaultLevel(LogLevel ll) { s_default_level = ll; }
+    void setPriority(Priority ll) { m_allowed_priority = ll; }
+    void setThreshold(Uint32 t);
 
     static Logger& getDefaultLogger();
     static Logger& getLogger(const std::string& name);
-    static Logger* createLogger(const std::string& name,
-                                LoggerType ltype = LoggerType::eDummyLogger,
-                                LogLevel   lvl   = LogLevel::eInfo);
-
-    LogLevel   getLevel() { return m_level; }
-    LoggerType getType() { return m_logger_type; }
+    Priority       getPriority() { return m_allowed_priority; }
 
   public:
     class Stream
@@ -206,14 +248,32 @@ class Logger : LoggerInterface
         std::shared_ptr<std::ostringstream> m_ostream;
     };
 
+  public:
+    // ostream based implementations
+    // Logger.warn() << "This is a warning"
+    // Stream& warn(void) { return m_stream; }
+
   protected:
     std::string m_name;
-    LogLevel    m_level;
-    LoggerType  m_logger_type;
+    Priority    m_allowed_priority;
     Stream      m_stream;
 };
 
-class DummyLogger final : public log::Logger
+class ILoggerFactory
+{
+  public:
+    virtual Logger* createLogger() = 0;
+};
+
+class LoggerFactory : public ILoggerFactory
+{
+  public:
+    static Logger* createLogger(const std::string& name,
+                                LoggerType         ltype,
+                                Priority::Level    lvl);
+};
+
+class DummyLogger final : public Logger
 {
   public:
     DummyLogger()
@@ -222,34 +282,38 @@ class DummyLogger final : public log::Logger
     ~DummyLogger() {}
 
   public:
-    virtual bool debug(const std::string& msg) override { return true; }
-    virtual bool error(const std::string& msg) override { return true; }
-    virtual bool panic(const std::string& msg) override { return true; }
-    virtual bool info(const std::string& msg) override { return true; }
-    virtual bool notice(const std::string& msg) override { return true; }
-    virtual bool log(const std::string& msg) override { return true; }
+    virtual bool debug(const Message& msg) override { return true; }
+    virtual bool error(const Message& msg) override { return true; }
+    virtual bool panic(const Message& msg) override { return true; }
+    virtual bool info(const Message& msg) override { return true; }
+    virtual bool notice(const Message& msg) override { return true; }
+    virtual bool trace(const Message& msg) override { return true; }
 };
 
-class ConsoleLogger : public Logger
+class ConsoleLogger final : public Logger
 {
   public:
     ConsoleLogger();
+    ConsoleLogger(const std::string& name);
+    ConsoleLogger(const std::string& name, Priority::Level lvl);
     ~ConsoleLogger();
 
   public:
-    virtual bool debug(const std::string& msg) override;
-    virtual bool error(const std::string& msg) override;
-    virtual bool panic(const std::string& msg) override;
-    virtual bool info(const std::string& msg) override;
-    virtual bool notice(const std::string& msg) override;
-    virtual bool log(const std::string& msg) override;
+    virtual bool debug(const Message& msg) override;
+    virtual bool error(const Message& msg) override;
+    virtual bool panic(const Message& msg) override;
+    virtual bool info(const Message& msg) override;
+    virtual bool notice(const Message& msg) override;
+    virtual bool trace(const Message& msg) override;
 
   private:
     class Impl;
-    Impl* m_impl;
+    const Impl*           pImpl() const { return m_pimpl.get(); }
+    Impl*                 pImpl() { return m_pimpl.get(); }
+    std::unique_ptr<Impl> m_pimpl;
 };
 
-class FileLogger : public LoggerInterface
+class FileLogger : public ILogger
 {};
 
-} // namespace alcp::utils::log
+} // namespace alcp::utils
