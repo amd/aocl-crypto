@@ -267,6 +267,11 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
     }
     return true;
 }
+
+void
+AlcpCipherBase::reset()
+{}
+
 // AlcpCipherTesting class functions
 AlcpCipherTesting::AlcpCipherTesting(const alc_aes_mode_t       mode,
                                      const std::vector<uint8_t> iv)

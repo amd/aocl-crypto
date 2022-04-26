@@ -85,6 +85,7 @@ class AlcpCipherBase : public CipherBase
     bool encrypt(alcp_data_ex_t data);
     bool decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt);
     bool decrypt(alcp_data_ex_t data);
+    void reset();
 };
 
 class AlcpCipherTesting : public AlcpCipherBase

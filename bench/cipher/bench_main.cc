@@ -73,7 +73,7 @@ CipherAes(benchmark::State& state,
     data.iv   = iv;
     data.ivl  = 12;
     data.ad   = ad;
-    data.adl  = 0;
+    data.adl  = 16;
     data.tag  = tag;
     data.tagl = 16;
     if (enc == false && alcpMode == ALC_AES_MODE_GCM) {
@@ -82,6 +82,8 @@ CipherAes(benchmark::State& state,
         }
         data.in  = &(vec_out[0]);
         data.out = &(vec_in[0]);
+        if (alcpMode == ALC_AES_MODE_GCM)
+            cb->reset();
     }
     for (auto _ : state) {
         if (enc) {
@@ -92,6 +94,8 @@ CipherAes(benchmark::State& state,
             std::cout << "BENCH_DEC_FAILURE" << std::endl;
             exit(-1);
         }
+        if (alcpMode == ALC_AES_MODE_GCM)
+            cb->reset();
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(
         state.iterations() * blockSize, benchmark::Counter::kIsRate);

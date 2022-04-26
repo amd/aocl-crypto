@@ -179,6 +179,7 @@ class CipherBase
                          size_t         len,
                          uint8_t*       plaintxt)                       = 0;
     virtual bool decrypt(alcp_data_ex_t data)                     = 0;
+    virtual void reset()                                          = 0;
 };
 
 class CipherTesting
