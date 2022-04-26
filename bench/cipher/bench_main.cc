@@ -32,6 +32,7 @@
 
 // Test blocksizes, append more if needed, size is in bytes
 std::vector<int64_t> blocksizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
+// std::vector<int64_t> blocksizes = { 16 };
 
 int
 CipherAes(benchmark::State& state,
@@ -41,8 +42,8 @@ CipherAes(benchmark::State& state,
           size_t            keylen)
 {
     // Dynamic allocation better for larger sizes
-    std::vector<uint8_t>          vec_in(blockSize, 1);
-    std::vector<uint8_t>          vec_out(blockSize, 10);
+    std::vector<uint8_t>          vec_in(blockSize, 56);
+    std::vector<uint8_t>          vec_out(blockSize, 21);
     uint8_t                       key[keylen / 8];
     uint8_t                       iv[16];
     uint8_t                       ad[16];
@@ -72,7 +73,7 @@ CipherAes(benchmark::State& state,
     data.iv   = iv;
     data.ivl  = 12;
     data.ad   = ad;
-    data.adl  = 16;
+    data.adl  = 0;
     data.tag  = tag;
     data.tagl = 16;
     if (enc == false && alcpMode == ALC_AES_MODE_GCM) {
