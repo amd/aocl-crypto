@@ -1,3 +1,4 @@
-add_subdirectory(cipher)
-add_subdirectory(digest)
+ADD_SUBDIRECTORY(cipher)
+ADD_SUBDIRECTORY(digest)
 
+ADD_SUBDIRECTORY(unit)
