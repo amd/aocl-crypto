@@ -12,12 +12,18 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 set(ALC_BASE_FILES ${ALC_BASE_FILES} ../../tests/common/base/base_common.cc ../../tests/cipher/base/alc_base.cc ../../tests/cipher/base/base.cc)
 set(LIBS ${LIBS} benchmark alcp)
+set(EXTRA_INCLUDES "")
 
 if(ENABLE_TESTS_IPP_API)
     add_compile_options("-DUSE_IPP")
     # If there is IPP, add IPP source and add IPP liberary
     set(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cipher/base/ipp_base.cc)
-    set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.a)
+    if(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.a)
+        set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.a)
+    else(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.a)
+        set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel/libippcp.a)
+    endif(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.a)
+    set(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${IPP_INSTALL_DIR}/include)
 endif(ENABLE_TESTS_IPP_API)
 
 if(OPENSSL_INSTALL_DIR)
@@ -34,7 +40,8 @@ target_include_directories(bench_cipher PRIVATE
 	"${CMAKE_SOURCE_DIR}/lib/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${CMAKE_SOURCE_DIR}/tests/cipher/include"
-    "${CMAKE_SOURCE_DIR}/tests/common/include")
+    "${CMAKE_SOURCE_DIR}/tests/common/include"
+    ${EXTRA_INCLUDES})
 
 target_link_libraries(bench_cipher ${LIBS})
 

@@ -8,12 +8,18 @@ FetchContent_MakeAvailable(gtest)
 # Basic sources and libs needed for ALCP
 set(ALC_BASE_FILES ${ALC_BASE_FILES} ../common/base/rng_base.cc ../common/base/base_common.cc base/alc_base.cc base/base.cc)
 set(LIBS ${LIBS} gtest alcp)
+set(EXTRA_INCLUDES "")
 
 if(ENABLE_TESTS_IPP_API)
     add_compile_options("-DUSE_IPP")
     # If there is IPP, add IPP source and add IPP liberary
     set(EXTRA_SOURCES ${EXTRA_SOURCES} base/ipp_base.cc)
-    set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.a)
+    if(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.a)
+        set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.a)
+    else(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.a)
+        set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel/libippcp.a)
+    endif(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.a)
+    set(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${IPP_INSTALL_DIR}/include)
 endif(ENABLE_TESTS_IPP_API)
 
 if(OPENSSL_INSTALL_DIR)
@@ -37,7 +43,8 @@ function(KAT_AES MOD)
         "${CMAKE_SOURCE_DIR}/include" 
         "${CMAKE_SOURCE_DIR}/lib/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/include"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../common/include")
+        "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+        ${EXTRA_INCLUDES})
     target_link_libraries(aes_${MOD}_kat ${LIBS})
     gtest_add_tests(TARGET      aes_${MOD}_kat
                     TEST_SUFFIX .${MOD})
@@ -49,7 +56,8 @@ function(CROSS_AES MOD)
         "${CMAKE_SOURCE_DIR}/include" 
         "${CMAKE_SOURCE_DIR}/lib/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/include"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../common/include")
+        "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+        ${EXTRA_INCLUDES})
     target_link_libraries(aes_${MOD}_cross ${LIBS})
     if(OPENSSL_INSTALL_DIR)
         gtest_add_tests(TARGET      aes_${MOD}_cross
