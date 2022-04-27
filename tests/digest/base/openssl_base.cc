@@ -108,6 +108,22 @@ void
 OpenSSLDigestBase::reset()
 {
     EVP_MD_CTX_reset(m_handle);
+    if (m_type == ALC_DIGEST_TYPE_SHA2) {
+        switch (m_mode) {
+            case ALC_SHA2_224:
+                EVP_DigestInit(m_handle, EVP_sha224());
+                break;
+            case ALC_SHA2_256:
+                EVP_DigestInit(m_handle, EVP_sha256());
+                break;
+            case ALC_SHA2_384:
+                EVP_DigestInit(m_handle, EVP_sha384());
+                break;
+            case ALC_SHA2_512:
+                EVP_DigestInit(m_handle, EVP_sha512());
+                break;
+        }
+    }
 }
 
 void
