@@ -17,8 +17,7 @@ if(ENABLE_TESTS_IPP_API)
     add_compile_options("-DUSE_IPP")
     # If there is IPP, add IPP source and add IPP liberary
     set(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cipher/base/ipp_base.cc)
-    set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/libippcp.a)
-    include_directories("${IPP_INSTALL_DIR}/include/")
+    set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.a)
 endif(ENABLE_TESTS_IPP_API)
 
 if(OPENSSL_INSTALL_DIR)
@@ -35,8 +34,7 @@ target_include_directories(bench_cipher PRIVATE
 	"${CMAKE_SOURCE_DIR}/lib/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${CMAKE_SOURCE_DIR}/tests/cipher/include"
-    "${CMAKE_SOURCE_DIR}/tests/common/include"
-    )
+    "${CMAKE_SOURCE_DIR}/tests/common/include")
 
 target_link_libraries(bench_cipher ${LIBS})
 

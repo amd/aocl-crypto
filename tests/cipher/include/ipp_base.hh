@@ -39,22 +39,24 @@ namespace alcp::testing {
 class IPPCipherBase : public CipherBase
 {
   private:
-    alc_aes_mode_t m_mode;
-    IppsAESSpec*   m_ctx = 0;
-    IppsAES_GCMState* pState = NULL;
-    const uint8_t* m_iv;
-    const uint8_t* m_key;
-    uint32_t       m_key_len;
-    int            m_ctxSize = 0;
-    bool           alcpModeToFuncCall(const uint8_t* in,
-                                      uint8_t*       out,
-                                      size_t         len,
-                                      bool           enc);
+    alc_aes_mode_t    m_mode;
+    IppsAESSpec*      m_ctx     = 0;
+    IppsAES_GCMState* m_ctx_gcm = 0;
+    IppsAES_GCMState* pState    = NULL;
+    const uint8_t*    m_iv;
+    const uint8_t*    m_key;
+    uint32_t          m_key_len;
+    int               m_ctxSize = 0;
+    bool              alcpModeToFuncCall(const uint8_t* in,
+                                         uint8_t*       out,
+                                         size_t         len,
+                                         bool           enc);
+    bool              alcpGCMModeToFuncCall(alcp_data_ex_t data, bool enc);
 
   public:
     /**
-     * @brief Construct a new Alcp Base object - Manual initilization needed,
-     * run alcpInit
+     * @brief Construct a new Alcp Base object - Manual initilization
+     * needed, run alcpInit
      *
      * @param mode
      * @param iv
