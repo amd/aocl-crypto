@@ -29,6 +29,7 @@
 #pragma once
 
 #include <chrono>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -132,7 +133,12 @@ class Time
 class Message
 {
   public:
-    Message(Priority prt, const std::string& s) { m_time = Time::now(); }
+    Message(Priority prt, const std::string& s)
+    {
+        m_time = Time::now();
+        m_text = s;
+        m_prio = prt;
+    }
 
     Message(const std::string s)
         : Message{ Priority::Level::eInfo, s }
@@ -174,21 +180,13 @@ class Message
     // Uint32 m_tid; // Thread ID
 };
 
-#define TRACE(str)  utils::Logger::getDefaultLogger()->trace(str)
-#define LOG(str)    TRACE(str)
-#define WARN(str)   utils::Logger::getDefaultLogger()->warn(str)
-#define INFO(str)   utils::Logger::getDefaultLogger()->info(str)
-#define PANIC(str)  utils::Logger::getDefaultLogger()->panic(str)
-#define NOTICE(str) utils::Logger::getDefaultLogger()->notice(str)
-#define DEBUG(str)  utils::Logger::getDefaultLogger()->debug(str)
-
 class ILogger
 {
   public:
     virtual bool info(const Message& msg)   = 0;
     virtual bool debug(const Message& msg)  = 0;
     virtual bool error(const Message& msg)  = 0;
-    virtual bool panic(const Message& msg)  = 0;
+    virtual void panic(const Message& msg)  = 0;
     virtual bool trace(const Message& msg)  = 0;
     virtual bool notice(const Message& msg) = 0;
 
@@ -209,10 +207,15 @@ enum class LoggerType
  *
  *
  */
-class Logger : ILogger
+class Logger : public ILogger
 {
   public:
-    Logger(std::string&& name)
+    Logger(const std::string& name)
+        : m_name{ name }
+        , m_allowed_priority{ Priority::eWarning }
+    {}
+
+    Logger(const std::string&& name)
         : m_name{ name }
         , m_allowed_priority{ Priority::eWarning }
     {}
@@ -226,9 +229,9 @@ class Logger : ILogger
     void setPriority(Priority ll) { m_allowed_priority = ll; }
     void setThreshold(Uint32 t);
 
-    static Logger& getDefaultLogger();
-    static Logger& getLogger(const std::string& name);
-    Priority       getPriority() { return m_allowed_priority; }
+    static ILogger* getDefaultLogger();
+    static ILogger* getLogger(const std::string& name);
+    Priority        getPriority() { return m_allowed_priority; }
 
   public:
     class Stream
@@ -254,18 +257,13 @@ class Logger : ILogger
     // Stream& warn(void) { return m_stream; }
 
   protected:
+    ILogger*    m_p_ilogger;
     std::string m_name;
     Priority    m_allowed_priority;
     Stream      m_stream;
 };
 
-class ILoggerFactory
-{
-  public:
-    virtual Logger* createLogger() = 0;
-};
-
-class LoggerFactory : public ILoggerFactory
+class LoggerFactory
 {
   public:
     static Logger* createLogger(const std::string& name,
@@ -284,7 +282,7 @@ class DummyLogger final : public Logger
   public:
     virtual bool debug(const Message& msg) override { return true; }
     virtual bool error(const Message& msg) override { return true; }
-    virtual bool panic(const Message& msg) override { return true; }
+    virtual void panic(const Message& msg) override {}
     virtual bool info(const Message& msg) override { return true; }
     virtual bool notice(const Message& msg) override { return true; }
     virtual bool trace(const Message& msg) override { return true; }
@@ -301,7 +299,7 @@ class ConsoleLogger final : public Logger
   public:
     virtual bool debug(const Message& msg) override;
     virtual bool error(const Message& msg) override;
-    virtual bool panic(const Message& msg) override;
+    virtual void panic(const Message& msg) override;
     virtual bool info(const Message& msg) override;
     virtual bool notice(const Message& msg) override;
     virtual bool trace(const Message& msg) override;
@@ -313,7 +311,30 @@ class ConsoleLogger final : public Logger
     std::unique_ptr<Impl> m_pimpl;
 };
 
-class FileLogger : public ILogger
+class FileLogger : public Logger
 {};
 
 } // namespace alcp::utils
+
+#include "alcp/macros.h"
+
+EXTERN_C_BEGIN
+
+#define MAKE_MSG(prio, str) alcp::utils::Message(prio, str)
+#define LOG(str)            TRACE(str)
+
+static inline bool
+TRACE(const char* str)
+{
+    using namespace alcp::utils;
+    auto lgr = Logger::getDefaultLogger();
+    return lgr->trace(MAKE_MSG(Priority::Level::eInfo, std::string(str)));
+}
+
+#define WARN(str)   Logger::getDefaultLogger()->warn(str)
+#define INFO(str)   Logger::getDefaultLogger()->info(str)
+#define PANIC(str)  Logger::getDefaultLogger()->panic(str)
+#define NOTICE(str) Logger::getDefaultLogger()->notice(str)
+#define DEBUG(str)  Logger::getDefaultLogger()->debug(str)
+
+EXTERN_C_END

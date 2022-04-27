@@ -39,21 +39,23 @@ namespace alcp::utils {
  * Multiple loggers can co-exists and output to same backend(console/file)
  * Any other logger created by individual modules are held here
  */
-using logger_map = std::map<std::string, Logger*>;
+using logger_map = std::map<std::string, ILogger*>;
 static logger_map g_s_loggers_map;
 
-Logger&
+ILogger*
 Logger::getDefaultLogger()
 {
 #ifdef DEBUG
-    static Logger* s_logger = new ConsoleLogger;
+    static std::string def_name = std::string("DefaultLogger");
+    static Logger*     s_logger = LoggerFactory::createLogger(
+        def_name, LoggerType::eConsoleLogger, Priority::eTrace);
 #else
     static Logger* s_logger = new log::DummyLogger();
 #endif
-    return *s_logger;
+    return s_logger;
 }
 
-Logger&
+ILogger*
 Logger::getLogger(const std::string& name)
 {
     if (name.empty()) {
@@ -64,16 +66,16 @@ Logger::getLogger(const std::string& name)
 
     if (it != g_s_loggers_map.end()) {
         /* found */
-        return *(it)->second;
+        return (it)->second;
     }
 
     /* not found, create one */
-    Logger* lg = LoggerFactory::createLogger(
+    ILogger* lg = LoggerFactory::createLogger(
         name, LoggerType::eDummyLogger, Priority::Level::eInfo);
 
     g_s_loggers_map[name] = lg;
 
-    return *lg;
+    return lg;
 }
 
 Logger*

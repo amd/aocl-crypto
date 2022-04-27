@@ -145,13 +145,17 @@ class ConsoleLogger::Impl
          * m_console.setColor(s_levelmap.at(Level::eTrace));
          */
         std::scoped_lock lock(m_mutex);
+        for (auto msg = m_msgs.begin(); msg != m_msgs.end();) {
+            std::cout << msg->c_str() << std::endl;
+            m_msgs.erase(msg);
+        }
     }
 
   private:
     static const std::map<Level, Color::Name> s_levelmap;
     std::mutex                                m_mutex;
     Console                                   m_console;
-    Uint32 m_threashold_size; /* Number of messages to keep in vector */
+    Uint32 m_threashold_size = 10; /* Number of messages to keep in vector */
     std::vector<Message> m_msgs;
 };
 
@@ -221,6 +225,10 @@ ConsoleLogger::Impl::trace(const Message& msg)
     return true;
 }
 
+ConsoleLogger::ConsoleLogger()
+    : Logger{ std::string("Default Logger") }
+{}
+
 ConsoleLogger::ConsoleLogger(const std::string& name)
     : Logger{ std::string(name) }
 {}
@@ -231,6 +239,8 @@ ConsoleLogger::ConsoleLogger(const std::string& name, Priority::Level lvl)
     m_allowed_priority = lvl;
     m_pimpl            = std::make_unique<ConsoleLogger::Impl>();
 }
+
+ConsoleLogger::~ConsoleLogger() {}
 
 bool
 ConsoleLogger::debug(const Message& msg)
@@ -245,11 +255,10 @@ ConsoleLogger::error(const Message& msg)
     return false; // though this never returns
 }
 
-bool
+void
 ConsoleLogger::panic(const Message& msg)
 {
     m_pimpl->panic(msg);
-    return false;
 }
 
 bool
