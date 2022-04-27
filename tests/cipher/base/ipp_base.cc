@@ -29,6 +29,7 @@
 #include "ipp_base.hh"
 
 namespace alcp::testing {
+
 IPPCipherBase::IPPCipherBase(const alc_aes_mode_t mode, const uint8_t* iv)
     : m_mode{ mode }
     , m_iv{ iv }
@@ -67,16 +68,28 @@ IPPCipherBase::init(const uint8_t* iv,
 bool
 IPPCipherBase::init(const uint8_t* key, const uint32_t key_len)
 {
+    IppStatus status = ippStsNoErr;
     m_key     = key;
     m_key_len = key_len;
     ippsAESGetSize(&m_ctxSize);
     if (m_ctx != nullptr) {
         delete[](Ipp8u*) m_ctx;
-        ;
     }
     m_ctx = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
-    ippsAESInit(key, key_len / 8, m_ctx, m_ctxSize);
-    return true;
+    /*
+    if (m_mode == ALC_AES_MODE_GCM) {
+        ippsAES_GCMGetSize(&m_ctxSize);
+        status = ippsAES_GCMInit(key, key_len, pstate, m_ctxSize);
+    }
+    */
+    //else 
+    {
+        status = ippsAESInit(key, key_len / 8, m_ctx, m_ctxSize);
+    }
+    if (status != ippStsNoErr)
+        return false;
+    else
+        return true;
 }
 
 bool
@@ -132,10 +145,22 @@ IPPCipherBase::encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt)
     return alcpModeToFuncCall(plaintxt, ciphertxt, len, true);
 }
 
+bool IPPCipherBase::encrypt(alcp_data_ex_t data) {
+    
+    return true;
+}
+
 bool
 IPPCipherBase::decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt)
 {
     return alcpModeToFuncCall(ciphertxt, plaintxt, len, false);
+}
+bool IPPCipherBase::decrypt(alcp_data_ex_t data) {
+    return true;
+}
+
+void IPPCipherBase::reset() {
+    return;
 }
 
 } // namespace alcp::testing

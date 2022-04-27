@@ -13,7 +13,7 @@ if(ENABLE_TESTS_IPP_API)
     add_compile_options("-DUSE_IPP")
     # If there is IPP, add IPP source and add IPP liberary
     set(EXTRA_SOURCES ${EXTRA_SOURCES} base/ipp_base.cc)
-    set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.a)
+    set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/libippcp.a)
 endif(ENABLE_TESTS_IPP_API)
 
 if(OPENSSL_INSTALL_DIR)
@@ -30,7 +30,11 @@ target_include_directories(test_digest PRIVATE
 	"${CMAKE_SOURCE_DIR}/include" 
 	"${CMAKE_SOURCE_DIR}/lib/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include")
+    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+    "${IPP_INSTALL_DIR}/include")
+
+MESSAGE(STATUS "${IPP_INSTALL_DIR}/include")
+
 target_link_libraries(test_digest ${LIBS})
 
 ADD_EXECUTABLE(test_digest_cross test_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
@@ -39,7 +43,8 @@ target_include_directories(test_digest_cross PRIVATE
 	"${CMAKE_SOURCE_DIR}/include" 
 	"${CMAKE_SOURCE_DIR}/lib/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include")
+    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+    "${IPP_INSTALL_DIR}/include")
 target_link_libraries(test_digest_cross ${LIBS})
 
 function(TEST_DATA_LINK SHA_ALG)
