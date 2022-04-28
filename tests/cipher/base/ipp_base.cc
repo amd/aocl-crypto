@@ -29,6 +29,7 @@
 #include "ipp_base.hh"
 
 namespace alcp::testing {
+
 IPPCipherBase::IPPCipherBase(const alc_aes_mode_t mode, const uint8_t* iv)
     : m_mode{ mode }
     , m_iv{ iv }
@@ -43,16 +44,24 @@ IPPCipherBase::IPPCipherBase(const alc_aes_mode_t mode,
     , m_key{ key }
     , m_key_len{ key_len }
 {
-
-    ippsAESGetSize(&m_ctxSize);
-    m_ctx = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
-    ippsAESInit(key, key_len / 8, m_ctx, m_ctxSize);
+    if (m_mode == ALC_AES_MODE_GCM) {
+        ippsAES_GCMGetSize(&m_ctxSize);
+        m_ctx_gcm = (IppsAES_GCMState*)(new Ipp8u[m_ctxSize]);
+        ippsAES_GCMInit(key, key_len / 8, m_ctx_gcm, m_ctxSize);
+    } else {
+        ippsAESGetSize(&m_ctxSize);
+        m_ctx = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
+        ippsAESInit(key, key_len / 8, m_ctx, m_ctxSize);
+    }
 }
 
 IPPCipherBase::~IPPCipherBase()
 {
     if (m_ctx != nullptr) {
         delete[](Ipp8u*) m_ctx;
+    }
+    if (m_ctx_gcm != nullptr) {
+        delete[](Ipp8u*) m_ctx_gcm;
     }
 }
 bool
@@ -67,16 +76,7 @@ IPPCipherBase::init(const uint8_t* iv,
 bool
 IPPCipherBase::init(const uint8_t* key, const uint32_t key_len)
 {
-    m_key     = key;
-    m_key_len = key_len;
-    ippsAESGetSize(&m_ctxSize);
-    if (m_ctx != nullptr) {
-        delete[](Ipp8u*) m_ctx;
-        ;
-    }
-    m_ctx = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
-    ippsAESInit(key, key_len / 8, m_ctx, m_ctxSize);
-    return true;
+    return init(m_iv, key, key_len);
 }
 
 bool
@@ -127,15 +127,61 @@ IPPCipherBase::alcpModeToFuncCall(const uint8_t* in,
 }
 
 bool
+IPPCipherBase::alcpGCMModeToFuncCall(alcp_data_ex_t data, bool enc)
+{
+    if (enc) {
+        ippsAES_GCMStart(m_iv, data.ivl, data.ad, data.adl, m_ctx_gcm);
+        ippsAES_GCMEncrypt(data.in, data.out, data.inl, m_ctx_gcm);
+        ippsAES_GCMGetTag(data.tag, data.tagl, m_ctx_gcm);
+    } else {
+        ippsAES_GCMStart(m_iv, data.ivl, data.ad, data.adl, m_ctx_gcm);
+        ippsAES_GCMDecrypt(data.in, data.out, data.inl, m_ctx_gcm);
+        ippsAES_GCMGetTag(data.tag, data.tagl, m_ctx_gcm);
+    }
+    return true;
+}
+
+bool
 IPPCipherBase::encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt)
 {
     return alcpModeToFuncCall(plaintxt, ciphertxt, len, true);
 }
 
 bool
+IPPCipherBase::encrypt(alcp_data_ex_t data)
+{
+    if (m_mode == ALC_AES_MODE_GCM) {
+        alcpGCMModeToFuncCall(data, true);
+    } else {
+        return alcpModeToFuncCall(data.in, data.out, data.inl, true);
+    }
+    return true;
+}
+
+bool
 IPPCipherBase::decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt)
 {
     return alcpModeToFuncCall(ciphertxt, plaintxt, len, false);
+}
+bool
+IPPCipherBase::decrypt(alcp_data_ex_t data)
+{
+    if (m_mode == ALC_AES_MODE_GCM) {
+        alcpGCMModeToFuncCall(data, true);
+    } else {
+        return alcpModeToFuncCall(data.in, data.out, data.inl, false);
+    }
+    return true;
+}
+
+void
+IPPCipherBase::reset()
+{
+    if (m_mode == ALC_AES_MODE_GCM) {
+        IppStatus ippsAES_GCMReset(IppsAES_GCMState * pState);
+        ippsAES_GCMInit(m_key, m_key_len / 8, m_ctx_gcm, m_ctxSize);
+    }
+    return;
 }
 
 } // namespace alcp::testing

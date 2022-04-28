@@ -33,6 +33,20 @@
 
 namespace alcp::testing {
 
+typedef struct
+{
+    const uint8_t* in;
+    uint64_t       inl;
+    uint8_t*       out;
+    uint64_t       outl;
+    const uint8_t* iv;
+    uint64_t       ivl;
+    const uint8_t* ad;
+    uint64_t       adl;
+    uint8_t*       tag;
+    uint64_t       tagl;
+} alcp_data_ex_t;
+
 typedef enum
 {
     SMALL_DEC = 0,
@@ -160,9 +174,12 @@ class CipherBase
     virtual bool encrypt(const uint8_t* plaintxt,
                          size_t         len,
                          uint8_t*       ciphertxt)                      = 0;
+    virtual bool encrypt(alcp_data_ex_t data)                     = 0;
     virtual bool decrypt(const uint8_t* ciphertxt,
                          size_t         len,
                          uint8_t*       plaintxt)                       = 0;
+    virtual bool decrypt(alcp_data_ex_t data)                     = 0;
+    virtual void reset()                                          = 0;
 };
 
 class CipherTesting

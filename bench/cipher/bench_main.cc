@@ -32,6 +32,7 @@
 
 // Test blocksizes, append more if needed, size is in bytes
 std::vector<int64_t> blocksizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
+// std::vector<int64_t> blocksizes = { 16 };
 
 int
 CipherAes(benchmark::State& state,
@@ -41,10 +42,12 @@ CipherAes(benchmark::State& state,
           size_t            keylen)
 {
     // Dynamic allocation better for larger sizes
-    std::vector<uint8_t>          vec_in(blockSize, 1);
-    std::vector<uint8_t>          vec_out(blockSize, 10);
+    std::vector<uint8_t>          vec_in(blockSize, 56);
+    std::vector<uint8_t>          vec_out(blockSize, 21);
     uint8_t                       key[keylen / 8];
     uint8_t                       iv[16];
+    uint8_t                       ad[16];
+    uint8_t                       tag[16];
     alcp::testing::CipherBase*    cb;
     alcp::testing::AlcpCipherBase acb =
         alcp::testing::AlcpCipherBase(alcpMode, iv, key, keylen);
@@ -63,15 +66,36 @@ CipherAes(benchmark::State& state,
         cb = &ocb;
     }
 #endif
+    alcp::testing::alcp_data_ex_t data;
+    data.in   = &(vec_in[0]);
+    data.inl  = blockSize;
+    data.out  = &(vec_out[0]);
+    data.iv   = iv;
+    data.ivl  = 12;
+    data.ad   = ad;
+    data.adl  = 16;
+    data.tag  = tag;
+    data.tagl = 16;
+    if (enc == false && alcpMode == ALC_AES_MODE_GCM) {
+        if (cb->encrypt(data) == false) {
+            std::cout << "BENCH_ENC_FAILURE" << std::endl;
+        }
+        data.in  = &(vec_out[0]);
+        data.out = &(vec_in[0]);
+        if (alcpMode == ALC_AES_MODE_GCM)
+            cb->reset();
+    }
     for (auto _ : state) {
         if (enc) {
-            if (cb->encrypt(&(vec_in[0]), blockSize, &(vec_out[0])) == false) {
+            if (cb->encrypt(data) == false) {
                 std::cout << "BENCH_ENC_FAILURE" << std::endl;
             }
-        } else if (cb->decrypt(&(vec_in[0]), blockSize, &(vec_out[0]))
-                   == false) {
+        } else if (cb->decrypt(data) == false) {
             std::cout << "BENCH_DEC_FAILURE" << std::endl;
+            exit(-1);
         }
+        if (alcpMode == ALC_AES_MODE_GCM)
+            cb->reset();
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(
         state.iterations() * blockSize, benchmark::Counter::kIsRate);
@@ -120,6 +144,14 @@ BENCH_AES_ENCRYPT_CFB_128(benchmark::State& state)
 }
 BENCHMARK(BENCH_AES_ENCRYPT_CFB_128)->ArgsProduct({ blocksizes });
 
+static void
+BENCH_AES_ENCRYPT_GCM_128(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_GCM, 128));
+}
+BENCHMARK(BENCH_AES_ENCRYPT_GCM_128)->ArgsProduct({ blocksizes });
+
 /**
  * @brief Decrypt
  *
@@ -157,6 +189,14 @@ BENCH_AES_DECRYPT_CFB_128(benchmark::State& state)
         CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_CFB, 128));
 }
 BENCHMARK(BENCH_AES_DECRYPT_CFB_128)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_DECRYPT_GCM_128(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_GCM, 128));
+}
+BENCHMARK(BENCH_AES_DECRYPT_GCM_128)->ArgsProduct({ blocksizes });
 
 int
 main(int argc, char** argv)

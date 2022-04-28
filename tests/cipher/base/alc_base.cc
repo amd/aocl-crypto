@@ -146,6 +146,60 @@ AlcpCipherBase::encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt)
 }
 
 bool
+AlcpCipherBase::encrypt(alcp_data_ex_t data)
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buff[err_size];
+
+    if (m_mode == ALC_AES_MODE_GCM) {
+
+        // GCM Init
+        err = alcp_cipher_encrypt_update(
+            m_handle, nullptr, nullptr, data.ivl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: GCM encrypt init failure! code:11\n");
+            alcp_error_str(err, err_buff, err_size);
+            return false;
+        }
+        // Additional Data
+        err = alcp_cipher_encrypt_update(
+            m_handle, data.ad, nullptr, data.adl, m_iv);
+
+        if (alcp_is_error(err)) {
+            printf("Error: GCM additional data failure! code:12\n");
+            alcp_error_str(err, err_buff, err_size);
+            return false;
+        }
+        // GCM Encrypt
+        err = alcp_cipher_encrypt_update(
+            m_handle, data.in, data.out, data.inl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: GCM ecnryption failure! code:13\n");
+            alcp_error_str(err, err_buff, err_size);
+            return false;
+        }
+        // Get Tag
+        err = alcp_cipher_encrypt_update(
+            m_handle, nullptr, data.tag, data.tagl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: GCM tag fetch failure! code:14\n");
+            alcp_error_str(err, err_buff, err_size);
+            return false;
+        }
+    } else {
+        // For non GCM mode
+        err = alcp_cipher_encrypt(m_handle, data.in, data.out, data.inl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: Encryption failure! code:10\n");
+            alcp_error_str(err, err_buff, err_size);
+            return false;
+        }
+    }
+    return true;
+}
+
+bool
 AlcpCipherBase::decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt)
 {
     alc_error_t err;
@@ -161,6 +215,62 @@ AlcpCipherBase::decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt)
     }
     return true;
 }
+
+bool
+AlcpCipherBase::decrypt(alcp_data_ex_t data)
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
+
+    if (m_mode == ALC_AES_MODE_GCM) {
+        // GCM Init
+        err = alcp_cipher_decrypt_update(
+            m_handle, nullptr, nullptr, data.ivl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: GCM decrypt init failure! code:1\n");
+            alcp_error_str(err, err_buf, err_size);
+            return false;
+        }
+        // Additional Data
+        err = alcp_cipher_decrypt_update(
+            m_handle, data.ad, nullptr, data.adl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: GCM additional data failure! code:2\n");
+            alcp_error_str(err, err_buf, err_size);
+            return false;
+        }
+        // GCM Decrypt
+        err = alcp_cipher_decrypt_update(
+            m_handle, data.in, data.out, data.inl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: GCM decryption failure! code:3\n");
+            alcp_error_str(err, err_buf, err_size);
+            return false;
+        }
+        // Get Tag
+        err = alcp_cipher_decrypt_update(
+            m_handle, nullptr, data.tag, data.tagl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: GCM tag fetch failure! code:4\n");
+            alcp_error_str(err, err_buf, err_size);
+            return false;
+        }
+    } else {
+        // For non GCM mode
+        err = alcp_cipher_decrypt(m_handle, data.in, data.out, data.inl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: Decryption failure! code:0\n");
+            alcp_error_str(err, err_buf, err_size);
+            return false;
+        }
+    }
+    return true;
+}
+
+void
+AlcpCipherBase::reset()
+{}
 
 // AlcpCipherTesting class functions
 AlcpCipherTesting::AlcpCipherTesting(const alc_aes_mode_t       mode,
