@@ -30,6 +30,10 @@
 #include <functional>
 #include <string>
 
+#ifdef USE_AOCL_CPUID
+#include "alci/cpu_features.h"
+#endif
+
 #include "digest/sha2.hh"
 #include "digest/sha_avx2.hh"
 
@@ -108,7 +112,12 @@ class Sha512::Impl
         /*
          * FIXME: call cpuid::isShaniAvailable() initialize
          */
-        static bool s_shani_available = false;
+
+#ifdef USE_AOCL_CPUID
+        static bool s_shani_available = (alc_cpu_has_sha() > 0);
+#else
+        static bool s_shani_available = true;
+#endif
         return s_shani_available;
     }
     static bool isAvx2Available()
@@ -198,7 +207,7 @@ ExtendMsg(Uint64 w[], Uint32 start, Uint32 end)
 void
 Sha512::Impl::compressMsg(Uint64 w[])
 {
-    Uint64 shift[6] { 14, 18, 41, 28, 34, 39 };
+    Uint64 shift[6]{ 14, 18, 41, 28, 34, 39 };
     alcp::digest::CompressMsg<Uint64>(w, m_hash, cRoundConstants, shift);
 }
 
@@ -246,7 +255,7 @@ Sha512::Impl::update(const Uint8* pSrc, Uint64 input_size)
         return err;
     }
 
-    /*
+    /*shani
      * Valid request, last computed has itself is good,
      * default is m_iv
      */
@@ -355,11 +364,11 @@ Sha512::Impl::finalize(const Uint8* pBuf, Uint64 size)
     if (m_msg_len > ULLONG_MAX / 8) { // overflow happens
         // extract the left most 3bits
         len_in_bits_high = m_msg_len >> 61;
-        len_in_bits      = m_msg_len << 3;
+        len_in_bits = m_msg_len << 3;
 
     } else {
         len_in_bits_high = 0;
-        len_in_bits      = m_msg_len * 8;
+        len_in_bits = m_msg_len * 8;
     }
     Uint64* msg_len_ptr =
         reinterpret_cast<Uint64*>(&m_buffer[buf_len] - (sizeof(Uint64) * 2));

@@ -36,6 +36,11 @@
 #include <functional>
 
 #include "alcp/cipher.h"
+#ifdef USE_AOCL_CPUID
+#include "alci/cpu_features.h"
+#endif
+
+#include <iostream>
 
 #include "error.hh"
 #include "types.hh"
@@ -175,7 +180,11 @@ class Cipher
     static bool isVaesAvailable()
     {
         // FIXME: call cpuid::isVaesAvailable()
-        static bool s_vaes_available = false;
+#ifdef USE_AOCL_CPUID
+        static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
+#else
+        static bool s_vaes_available  = false;
+#endif
         return s_vaes_available;
     }
 
@@ -187,12 +196,16 @@ class Cipher
         /*
          * FIXME: call cpuid::isAesniAvailable() initialize
          */
+#ifdef USE_AOCL_CPUID
+        static bool s_aesni_available = (alc_cpu_has_aes() > 0);
+#else
         static bool s_aesni_available = true;
+#endif
         return s_aesni_available;
     }
 
-  //private:
-    //alc_cipher_type_t m_cipher_type;
+    // private:
+    // alc_cipher_type_t m_cipher_type;
 };
 
 class IBlockCipher

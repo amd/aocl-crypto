@@ -29,6 +29,10 @@
 #include "capi/rng/builder.hh"
 #include "rng.hh"
 
+#ifdef USE_AOCL_CPUID
+#include "alci/cpu_features.h"
+#endif
+
 #include "error.hh"
 
 EXTERN_C_BEGIN
@@ -44,6 +48,13 @@ alc_error_t
 alcp_rng_supported(const alc_rng_info_p pRngInfo)
 {
     alc_error_t error = ALC_ERROR_NONE;
+#ifdef USE_AOCL_CPUID
+    bool rd_rand_available = (alc_cpu_has_rdrnd()  > 0);
+    bool rd_seed_available = (alc_cpu_has_rdseed() > 0);
+#else
+    bool rd_rand_available = true;
+    bool rd_seed_available = true;
+#endif
 
     switch (pRngInfo->ri_type) {
         case ALC_RNG_TYPE_DESCRETE:
@@ -54,8 +65,10 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo)
                             break;
 #ifdef USE_AOCL_SRNG
                         case ALC_RNG_SOURCE_ARCH:
-                            // TODO: CPUID check if RDRAND/RDSEED is supported
-                            break;
+                            if (rd_rand_available && rd_seed_available) {
+                                break;
+                            }
+
 #endif
                         default:
                             error = ALC_ERROR_NOT_SUPPORTED;
