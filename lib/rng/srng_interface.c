@@ -25,44 +25,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "rng.hh"
-#include <iostream>
 
-#ifdef USE_AOCL_SRNG
 #include "srng_interface.h"
-#endif
-// Enable debug for debugging the code
-// #define DEBUG
 
-namespace alcp::rng {
-
-alc_error_t
-ArchRng::readRandom(uint8_t* pBuf, uint64 size)
+int
+get_rdrnd_bytes_arr_wrapper(unsigned char* rng_arr,
+                            unsigned int   N,
+                            unsigned int   retry_count)
 {
-#ifdef DEBUG
-    printf("Engine amd_rdrand_bytes\n");
-#endif
-#ifdef USE_AOCL_SRNG
-    int opt;
-    opt = get_rdrnd_bytes_arr_wrapper(
-        pBuf,
-        size,
-        100 // Retires is hard coded as 100, may be add this to context.
-    );
-    if (opt != SECRNG_SUCCESS) {
-        return ALC_ERROR_NO_ENTROPY;
-    } else {
-        return ALC_ERROR_NONE;
-    }
-#else
-    return ALC_ERROR_NOT_SUPPORTED; // Error not implemented
-#endif
+    return get_rdrand_bytes_arr(rng_arr, N, retry_count);
 }
-
-ArchRng::ArchRng(const alc_rng_info_t& rRngInfo) {}
-
-void
-ArchRng::finish()
-{}
-
-} // namespace alcp::rng
