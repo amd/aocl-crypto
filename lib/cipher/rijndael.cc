@@ -83,7 +83,7 @@ BitsToBlockSize(int iVal)
     return bs;
 }
 
-class Rijndael::Impl
+class alignas(16) Rijndael::Impl
 {
   private:
     void expandKeys(const Uint8* pUserKey) noexcept;
@@ -148,8 +148,8 @@ class Rijndael::Impl
 
         /* Encryption and Decryption key offsets */
         m_enc_key = &m_round_key[0];
-        /* +1 as the actual key is also stored  */
-        m_dec_key = m_enc_key + ((m_nrounds + 1) * m_key_size);
+        /* +2 as the actual key is also stored  */
+        m_dec_key = m_enc_key + ((m_nrounds + 2) * m_key_size);
 
         expandKeys(rKeyInfo.key);
     }

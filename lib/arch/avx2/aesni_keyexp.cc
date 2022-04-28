@@ -330,17 +330,21 @@ namespace alcp::cipher { namespace aesni {
                            uint8_t*       pDecKey,
                            int            nRounds)
     {
+        alc_error_t err = ALC_ERROR_NONE;
         switch (nRounds) {
             case 14:
-                return ExpandKeys256(pUserKey, pEncKey, pDecKey);
+                err = ExpandKeys256(pUserKey, pEncKey, pDecKey);
                 break;
             case 12:
-                return ExpandKeys192(pUserKey, pEncKey, pDecKey);
+                err = ExpandKeys192(pUserKey, pEncKey, pDecKey);
                 break;
             default:
-                return ExpandKeys128(pUserKey, pEncKey, pDecKey);
+                err = ExpandKeys128(pUserKey, pEncKey, pDecKey);
         }
 
-        aesni::ExpandDecryptKeys(pDecKey, pEncKey, nRounds);
+        if (!Error::isError(err))
+            aesni::ExpandDecryptKeys(pDecKey, pEncKey, nRounds);
+
+        return err;
     }
 }} // namespace alcp::cipher::aesni
