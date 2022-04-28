@@ -187,7 +187,7 @@ namespace alcp::cipher { namespace aesni {
         __aes256keyassist_1(&tmp[0], &tmp[1]);
         p_round_key[14] = tmp[0];
 
-        aesni::ExpandDecryptKeys(pDecKey, pEncKey, 14);
+        // aesni::ExpandDecryptKeys(pDecKey, pEncKey, 14);
 
         return ALC_ERROR_NONE;
     }
@@ -203,9 +203,9 @@ namespace alcp::cipher { namespace aesni {
      *
      * \return   alc_error_t
      */
-    alc_error_t ExpandKeys192(const uint8_t* pUserKey,
-                              uint8_t*       pEncKey,
-                              uint8_t*       pDecKey)
+    alc_error_t ExpandKeys192(const Uint8* pUserKey,
+                              Uint8*       pEncKey,
+                              Uint8*       pDecKey)
     {
 
         __m128i  tmp[3];
@@ -266,7 +266,7 @@ namespace alcp::cipher { namespace aesni {
         tmp[1] = _mm_aeskeygenassist_si128(tmp[2], 0x80);
         __aes192keyassist(&tmp[0], &tmp[1], &tmp[2]);
         p_round_key[12] = tmp[0];
-        p_round_key[13] = tmp[2];
+        // p_round_key[13] = tmp[2];
 
         return ALC_ERROR_NONE;
     }
@@ -322,8 +322,6 @@ namespace alcp::cipher { namespace aesni {
         p_round_key[10] = __aes128keyassist(
             p_round_key[9], _mm_aeskeygenassist_si128(p_round_key[9], 0x36));
 
-        aesni::ExpandDecryptKeys(pDecKey, pEncKey, 10);
-
         return ALC_ERROR_NONE;
     }
 
@@ -342,5 +340,7 @@ namespace alcp::cipher { namespace aesni {
             default:
                 return ExpandKeys128(pUserKey, pEncKey, pDecKey);
         }
+
+        aesni::ExpandDecryptKeys(pDecKey, pEncKey, nRounds);
     }
 }} // namespace alcp::cipher::aesni
