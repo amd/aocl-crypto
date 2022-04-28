@@ -104,7 +104,7 @@ CipherAes(benchmark::State& state,
     return 0;
 }
 
-// TODO: Implement for 192,256 bit keysizes
+// 128 bit key size
 
 /**
  * @brief Encrypt
@@ -197,6 +197,200 @@ BENCH_AES_DECRYPT_GCM_128(benchmark::State& state)
         CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_GCM, 128));
 }
 BENCHMARK(BENCH_AES_DECRYPT_GCM_128)->ArgsProduct({ blocksizes });
+
+// END 128 bit key size
+
+// 192 bit key size
+
+/**
+ * @brief Encrypt
+ *
+ * @param state Google Bench state
+ */
+
+static void
+BENCH_AES_ENCRYPT_CBC_192(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_CBC, 192));
+}
+BENCHMARK(BENCH_AES_ENCRYPT_CBC_192)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_ENCRYPT_CTR_192(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_CTR, 192));
+}
+BENCHMARK(BENCH_AES_ENCRYPT_CTR_192)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_ENCRYPT_OFB_192(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_OFB, 192));
+}
+BENCHMARK(BENCH_AES_ENCRYPT_OFB_192)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_ENCRYPT_CFB_192(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_CFB, 192));
+}
+BENCHMARK(BENCH_AES_ENCRYPT_CFB_192)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_ENCRYPT_GCM_192(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_GCM, 192));
+}
+BENCHMARK(BENCH_AES_ENCRYPT_GCM_192)->ArgsProduct({ blocksizes });
+
+/**
+ * @brief Decrypt
+ *
+ * @param state Google Bench state
+ */
+
+static void
+BENCH_AES_DECRYPT_CBC_192(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_CBC, 192));
+}
+BENCHMARK(BENCH_AES_DECRYPT_CBC_192)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_DECRYPT_CTR_192(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_CTR, 192));
+}
+BENCHMARK(BENCH_AES_DECRYPT_CTR_192)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_DECRYPT_OFB_192(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_OFB, 192));
+}
+BENCHMARK(BENCH_AES_DECRYPT_OFB_192)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_DECRYPT_CFB_192(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_CFB, 192));
+}
+BENCHMARK(BENCH_AES_DECRYPT_CFB_192)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_DECRYPT_GCM_192(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_GCM, 192));
+}
+BENCHMARK(BENCH_AES_DECRYPT_GCM_192)->ArgsProduct({ blocksizes });
+
+// END 192 bit keysize
+
+// 256 bit key size
+
+/**
+ * @brief Encrypt
+ *
+ * @param state Google Bench state
+ */
+
+static void
+BENCH_AES_ENCRYPT_CBC_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_CBC, 256));
+}
+BENCHMARK(BENCH_AES_ENCRYPT_CBC_256)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_ENCRYPT_CTR_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_CTR, 256));
+}
+BENCHMARK(BENCH_AES_ENCRYPT_CTR_256)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_ENCRYPT_OFB_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_OFB, 256));
+}
+BENCHMARK(BENCH_AES_ENCRYPT_OFB_256)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_ENCRYPT_CFB_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_CFB, 256));
+}
+BENCHMARK(BENCH_AES_ENCRYPT_CFB_256)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_ENCRYPT_GCM_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_GCM, 256));
+}
+BENCHMARK(BENCH_AES_ENCRYPT_GCM_256)->ArgsProduct({ blocksizes });
+
+/**
+ * @brief Decrypt
+ *
+ * @param state Google Bench state
+ */
+
+static void
+BENCH_AES_DECRYPT_CBC_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_CBC, 256));
+}
+BENCHMARK(BENCH_AES_DECRYPT_CBC_256)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_DECRYPT_CTR_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_CTR, 256));
+}
+BENCHMARK(BENCH_AES_DECRYPT_CTR_256)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_DECRYPT_OFB_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_OFB, 256));
+}
+BENCHMARK(BENCH_AES_DECRYPT_OFB_256)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_DECRYPT_CFB_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_CFB, 256));
+}
+BENCHMARK(BENCH_AES_DECRYPT_CFB_256)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_DECRYPT_GCM_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_GCM, 256));
+}
+BENCHMARK(BENCH_AES_DECRYPT_GCM_256)->ArgsProduct({ blocksizes });
+
+// END 256 bit keysize
 
 int
 main(int argc, char** argv)
