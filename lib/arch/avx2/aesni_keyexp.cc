@@ -73,21 +73,107 @@ namespace alcp::cipher { namespace aesni {
         p_dec128[0] = p_enc128[nr];
     }
 
-    /* keys256 is equivalent to 2x128 */
-    alc_error_t ExpandKeys256(const uint8_t* pUserKey,
-                              uint8_t*       pEncKey,
-                              uint8_t*       pDecKey)
-    {
-        NotImplemented();
-        return ALC_ERROR_NONE;
-    }
-/*
     static inline __m128i __aes192keyassist(__m128i tmp0, __m128i tmp1)
     {
         NotImplemented();
         return tmp1;
     }
-*/
+
+    // TODO: static inline
+    void __aes256keyassist_1(__m128i* tmp1, __m128i* tmp2)
+    {
+        *tmp2 = _mm_shuffle_epi32(*tmp2, 0xff);
+
+        __m128i tmp3 = _mm_slli_si128(*tmp1, 0x4);
+        *tmp1        = _mm_xor_si128(*tmp1, tmp3);
+
+        tmp3  = _mm_slli_si128(tmp3, 0x4);
+        *tmp1 = _mm_xor_si128(*tmp1, tmp3);
+
+        tmp3  = _mm_slli_si128(tmp3, 0x4);
+        *tmp1 = _mm_xor_si128(*tmp1, tmp3);
+        *tmp1 = _mm_xor_si128(*tmp1, *tmp2);
+    }
+
+    // TODO: static inline
+    void __aes256keyassist_2(__m128i* tmp1, __m128i* tmp3)
+    {
+        __m128i tmp4 = _mm_aeskeygenassist_si128(*tmp1, 0x0);
+        __m128i tmp0 = _mm_shuffle_epi32(tmp4, 0xaa);
+
+        tmp4 = _mm_slli_si128(*tmp3, 0x4);
+
+        *tmp3 = _mm_xor_si128(*tmp3, tmp4);
+        tmp4  = _mm_slli_si128(tmp4, 0x4);
+
+        *tmp3 = _mm_xor_si128(*tmp3, tmp4);
+        tmp4  = _mm_slli_si128(tmp4, 0x4);
+
+        *tmp3 = _mm_xor_si128(*tmp3, tmp4);
+        *tmp3 = _mm_xor_si128(*tmp3, tmp0);
+    }
+
+    /* keys256 is equivalent to 2x128 */
+    alc_error_t ExpandKeys256(const uint8_t* pUserKey,
+                              uint8_t*       pEncKey,
+                              uint8_t*       pDecKey)
+    {
+        __m128i  tmp[3];
+        __m128i* p_round_key = reinterpret_cast<__m128i*>(pEncKey);
+
+        tmp[0] = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pUserKey));
+        p_round_key[0] = tmp[0];
+
+        tmp[2] =
+            _mm_loadu_si128(reinterpret_cast<const __m128i*>(pUserKey + 16));
+        p_round_key[1] = tmp[2];
+
+        tmp[1] = _mm_aeskeygenassist_si128(tmp[2], 0x01);
+
+        __aes256keyassist_1(&tmp[0], &tmp[1]);
+        p_round_key[2] = tmp[0];
+        __aes256keyassist_2(&tmp[0], &tmp[2]);
+        p_round_key[3] = tmp[2];
+
+        tmp[1] = _mm_aeskeygenassist_si128(tmp[2], 0x02);
+        __aes256keyassist_1(&tmp[0], &tmp[1]);
+        p_round_key[4] = tmp[0];
+        __aes256keyassist_2(&tmp[0], &tmp[2]);
+        p_round_key[5] = tmp[2];
+
+        tmp[1] = _mm_aeskeygenassist_si128(tmp[2], 0x04);
+        __aes256keyassist_1(&tmp[0], &tmp[1]);
+        p_round_key[6] = tmp[0];
+        __aes256keyassist_2(&tmp[0], &tmp[2]);
+        p_round_key[7] = tmp[2];
+
+        tmp[1] = _mm_aeskeygenassist_si128(tmp[2], 0x08);
+        __aes256keyassist_1(&tmp[0], &tmp[1]);
+        p_round_key[8] = tmp[0];
+        __aes256keyassist_2(&tmp[0], &tmp[2]);
+        p_round_key[9] = tmp[2];
+
+        tmp[1] = _mm_aeskeygenassist_si128(tmp[2], 0x10);
+        __aes256keyassist_1(&tmp[0], &tmp[1]);
+        p_round_key[10] = tmp[0];
+        __aes256keyassist_2(&tmp[0], &tmp[2]);
+        p_round_key[11] = tmp[2];
+
+        tmp[1] = _mm_aeskeygenassist_si128(tmp[2], 0x20);
+        __aes256keyassist_1(&tmp[0], &tmp[1]);
+        p_round_key[12] = tmp[0];
+        __aes256keyassist_2(&tmp[0], &tmp[2]);
+        p_round_key[13] = tmp[2];
+
+        tmp[1] = _mm_aeskeygenassist_si128(tmp[2], 0x40);
+        __aes256keyassist_1(&tmp[0], &tmp[1]);
+        p_round_key[14] = tmp[0];
+
+        aesni::ExpandDecryptKeys(pDecKey, pEncKey, 14);
+
+        return ALC_ERROR_NONE;
+    }
+
     /*
      * \brief    Key Expansion for 192-bit keys, h/w assisted
      *
@@ -129,11 +215,10 @@ namespace alcp::cipher { namespace aesni {
                               uint8_t*       pEncKey,
                               uint8_t*       pDecKey)
     {
-        __m128i  tmp[2];
         __m128i* p_round_key = reinterpret_cast<__m128i*>(pEncKey);
 
-        tmp[0] = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pUserKey));
-        p_round_key[0] = tmp[0];
+        p_round_key[0] =
+            _mm_loadu_si128(reinterpret_cast<const __m128i*>(pUserKey));
 
         /**
          * Something similar to following,
@@ -187,5 +272,4 @@ namespace alcp::cipher { namespace aesni {
                 return ExpandKeys128(pUserKey, pEncKey, pDecKey);
         }
     }
-
 }} // namespace alcp::cipher::aesni

@@ -85,6 +85,8 @@ BitsToBlockSize(int iVal)
 
 class Rijndael::Impl
 {
+  private:
+    void expandKeys(const Uint8* pUserKey) noexcept;
     void subBytes(Uint8 state[][4]) noexcept;
 
     void shiftRows(Uint8 state[][4]) noexcept;
@@ -114,8 +116,6 @@ class Rijndael::Impl
     Uint32       getKeySize() const { return m_key_size; }
     const Uint8* getEncryptKeys() const { return m_enc_key; }
     const Uint8* getDecryptKeys() const { return m_dec_key; }
-    void         addRoundKey(Uint8 state[][4]) noexcept;
-    void         expandKeys(const Uint8* pUserKey) noexcept;
 
     alc_error_t encrypt(const uint8_t* pSrc,
                         uint8_t*       pDst,
@@ -264,10 +264,39 @@ __ffmul(Uint8 a, Uint8 b)
     return res;
 }
 
+void
+Rijndael::Impl::invMixColumns(Uint8 state[][4]) noexcept
+{
+    Uint8 tmp[4 * 6]; /* At max we we'll have 6 columns */
+    for (int r = 0; r < 4; r++) {
+        for (int c = 0; c < 4; c++) {
+            tmp[4 * r + c] = state[r][c];
+        }
+    }
+
+    for (int c = 0; c < 4; c++) {
+        state[0][c] = __ffmul(tmp[0 + c], 0xe) ^ __ffmul(tmp[4 + c], 0xb)
+                      ^ __ffmul(tmp[4 * 2 + c], 0xd)
+                      ^ __ffmul(tmp[4 * 3 + c], 0x9);
+
+        state[1][c] = __ffmul(tmp[0 + c], 0x9) ^ __ffmul(tmp[4 + c], 0xe)
+                      ^ __ffmul(tmp[4 * 2 + c], 0xb)
+                      ^ __ffmul(tmp[4 * 3 + c], 0xd);
+
+        state[2][c] = __ffmul(tmp[0 + c], 0xd) ^ __ffmul(tmp[4 + c], 0x9)
+                      ^ __ffmul(tmp[4 * 2 + c], 0xe)
+                      ^ __ffmul(tmp[4 * 3 + c], 0xb);
+
+        state[3][c] = __ffmul(tmp[0 + c], 0xe) ^ __ffmul(tmp[4 + c], 0xb)
+                      ^ __ffmul(tmp[4 * 2 + c], 0x9)
+                      ^ __ffmul(tmp[4 * 3 + c], 0xe);
+    }
+}
+
 static inline Uint32
 InvMixColumns(const Uint32& val)
 {
-    /* FIXME */
+    /* FIXME: */
     return val;
 }
 
@@ -312,7 +341,7 @@ AddRoundKey(Uint32 input, Uint32 key)
 }
 
 void
-Rijndael::Impl::addRoundKey(Uint8 state[][4]) noexcept
+Rijndael::Impl::addRoundKey(Uint8 state[][4], Uint8 k[][4]) noexcept
 {
     /* FIXME: call with Uint32 for easier calculation */
 }
@@ -547,7 +576,8 @@ Rijndael::setKey(const Uint8* pUserKey, Uint64 len)
     if ((len < cMinKeySize) || (len > cMaxKeySize))
         throw InvalidArgumentException("Key length not acceptable");
 
-    pImpl()->expandKeys(pUserKey);
+    /* FIXME: we should make Impl::setKey to get this done */
+    // pImpl()->expandKeys(pUserKey);
 }
 
 void
