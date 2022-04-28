@@ -35,9 +35,7 @@
 #define RANDOM_SIZE 50 // Size of buffer
 
 /* Change sources to use different random engine */
-#define SOURCE ALC_RNG_SOURCE_OS
-// #define SOURCE ALC_RNG_SOURCE_ARCH
-
+alc_rng_source_t source = ALC_RNG_SOURCE_OS;
 char*
 bytesToHexString(unsigned char*, int);
 
@@ -47,11 +45,27 @@ main(int argc, char const* argv[])
     unsigned char    buffer[RANDOM_SIZE];
     unsigned char*   out;
     alc_rng_handle_t handle;
+
+    // Parse Arguments
+    if (argc > 1) {
+        for (int i = 1; i < argc; i++) {
+            if (strcmp(argv[i], "--arch") == 0) {
+                source = ALC_RNG_SOURCE_ARCH;
+            } else if (strcmp(argv[i], "--os") == 0) {
+                source = ALC_RNG_SOURCE_OS;
+            } else if (strcmp(argv[i], "--help") == 0) {
+                printf("Source selection\nUse --os for OS source\nUse --arch "
+                       "for SRNG source\n");
+                return 0;
+            }
+        }
+    }
+
     {
         alc_rng_info_t rng_info;
         rng_info.ri_distrib =
             ALC_RNG_DISTRIB_UNIFORM; // Output should be uniform probablilty
-        rng_info.ri_source = SOURCE;
+        rng_info.ri_source = source;
         rng_info.ri_type   = ALC_RNG_TYPE_DESCRETE; // Discrete output (uint8)
 
         /* Erase buffer and prove its empty */

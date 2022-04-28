@@ -29,7 +29,7 @@
 #include <iostream>
 
 #ifdef USE_AOCL_SRNG
-#include "srng_interface.h"
+#include "srng_wrapper.hh"
 #endif
 // Enable debug for debugging the code
 // #define DEBUG
@@ -44,7 +44,7 @@ ArchRng::readRandom(uint8_t* pBuf, uint64 size)
 #endif
 #ifdef USE_AOCL_SRNG
     int opt;
-    opt = get_rdrnd_bytes_arr_wrapper(
+    opt = get_rdrand_bytes_arr(
         pBuf,
         size,
         100 // Retires is hard coded as 100, may be add this to context.
