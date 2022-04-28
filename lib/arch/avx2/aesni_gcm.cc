@@ -393,9 +393,7 @@ CryptGcm(const uint8_t* pInputText,  // ptr to inputText
             gMul(*pgHash_128, Hsubkey_128, pgHash_128);
         }
     }
-    if (len) {
-        *pgHash_128 = _mm_shuffle_epi8(*pgHash_128, reverse_mask_128);
-    }
+
     return err;
 }
 
@@ -426,7 +424,6 @@ processAdditionalDataGcm(const uint8_t* pAdditionalData,
 
         pAd128++;
     }
-    *pgHash_128 = _mm_shuffle_epi8(*pgHash_128, reverse_mask_128);
 
     ALCP_PRINT_TEXT((uint8_t*)pAd128, 16, "adddata  ")
     ALCP_PRINT_TEXT((uint8_t*)pgHash_128, 16, "addHash  ")
@@ -449,10 +446,8 @@ GetTagGcm(uint64_t len,
 
     a1 = _mm_insert_epi64(a1, (len << 3), 0);
     a1 = _mm_insert_epi64(a1, (adLength << 3), 1);
-    a1 = _mm_shuffle_epi8(a1, reverse_mask_128);
 
     *pgHash_128 = _mm_xor_si128(a1, *pgHash_128);
-    *pgHash_128 = _mm_shuffle_epi8(*pgHash_128, reverse_mask_128);
     gMul(*pgHash_128, Hsubkey_128, pgHash_128);
 
     *pgHash_128 = _mm_shuffle_epi8(*pgHash_128, reverse_mask_128);
