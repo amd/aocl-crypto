@@ -25,13 +25,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#pragma once
+#ifndef __SRNG_WRAPPER_H
+#define __SRNG_WRAPPER_H
 
-#include "srng_interface.h"
+#include "alcp/macros.h"
 
-int
-get_rdrnd_bytes_arr_wrapper(unsigned char* rng_arr,
-                            unsigned int   N,
-                            unsigned int   retry_count)
-{
-    return get_rdrand_bytes_arr(rng_arr, N, retry_count);
-}
+EXTERN_C_BEGIN
+
+#include <secrng.h>
+
+EXTERN_C_END
+
+#endif
