@@ -31,7 +31,9 @@
 #include "gtest_base.hh"
 
 using namespace alcp::testing;
+
 std::string MODE_STR = "CTR";
+
 #define ALC_MODE ALC_AES_MODE_CTR
 
 /* Testing Starts Here! */
@@ -39,8 +41,10 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
 {
     int         key_size    = 128;
     TestingCore testingCore = TestingCore(MODE_STR, ALC_MODE);
+    bool        test_ran    = false;
     while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
         // Checks if output is correct
+        test_ran = true;
         EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingEncrypt(
                                     testingCore.getDs()->getPt(),
                                     testingCore.getDs()->getKey(),
@@ -49,14 +53,20 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_128_ENC")));
     }
+    if (!test_ran) {
+        EXPECT_TRUE(::testing::AssertionFailure()
+                    << "No tests to run, check dataset");
+    }
 }
 
 TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
 {
     int         key_size    = 192;
     TestingCore testingCore = TestingCore(MODE_STR, ALC_MODE);
+    bool        test_ran    = false;
     while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
         // Checks if output is correct
+        test_ran = true;
         EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingEncrypt(
                                     testingCore.getDs()->getPt(),
                                     testingCore.getDs()->getKey(),
@@ -65,14 +75,20 @@ TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_192_ENC")));
     }
+    if (!test_ran) {
+        EXPECT_TRUE(::testing::AssertionFailure()
+                    << "No tests to run, check dataset");
+    }
 }
 
 TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
 {
     int         key_size    = 256;
     TestingCore testingCore = TestingCore(MODE_STR, ALC_MODE);
+    bool        test_ran    = false;
     while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
         // Checks if output is correct
+        test_ran = true;
         EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingEncrypt(
                                     testingCore.getDs()->getPt(),
                                     testingCore.getDs()->getKey(),
@@ -81,14 +97,20 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_256_ENC")));
     }
+    if (!test_ran) {
+        EXPECT_TRUE(::testing::AssertionFailure()
+                    << "No tests to run, check dataset");
+    }
 }
 
 TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
 {
     int         key_size    = 128;
     TestingCore testingCore = TestingCore(MODE_STR, ALC_MODE);
+    bool        test_ran    = false;
     while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
         // Checks if output is correct
+        test_ran = true;
         EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingDecrypt(
                                     testingCore.getDs()->getCt(),
                                     testingCore.getDs()->getKey(),
@@ -97,14 +119,20 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_128_DEC")));
     }
+    if (!test_ran) {
+        EXPECT_TRUE(::testing::AssertionFailure()
+                    << "No tests to run, check dataset");
+    }
 }
 
 TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
 {
     int         key_size    = 192;
     TestingCore testingCore = TestingCore(MODE_STR, ALC_MODE);
+    bool        test_ran    = false;
     while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
         // Checks if output is correct
+        test_ran = true;
         EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingDecrypt(
                                     testingCore.getDs()->getCt(),
                                     testingCore.getDs()->getKey(),
@@ -113,14 +141,20 @@ TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_192_DEC")));
     }
+    if (!test_ran) {
+        EXPECT_TRUE(::testing::AssertionFailure()
+                    << "No tests to run, check dataset");
+    }
 }
 
 TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
 {
     int         key_size    = 256;
     TestingCore testingCore = TestingCore(MODE_STR, ALC_MODE);
+    bool        test_ran    = false;
     while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
         // Checks if output is correct
+        test_ran = true;
         EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingDecrypt(
                                     testingCore.getDs()->getCt(),
                                     testingCore.getDs()->getKey(),
@@ -128,6 +162,10 @@ TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
                                 testingCore.getDs()->getPt(),
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_256_DEC")));
+    }
+    if (!test_ran) {
+        EXPECT_TRUE(::testing::AssertionFailure()
+                    << "No tests to run, check dataset");
     }
 }
 

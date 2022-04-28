@@ -76,7 +76,22 @@ IPPCipherBase::init(const uint8_t* iv,
 bool
 IPPCipherBase::init(const uint8_t* key, const uint32_t key_len)
 {
-    return init(m_iv, key, key_len);
+    if (m_mode == ALC_AES_MODE_GCM) {
+        ippsAES_GCMGetSize(&m_ctxSize);
+        if (m_ctx_gcm != nullptr) {
+            delete[](Ipp8u*) m_ctx_gcm;
+        }
+        m_ctx_gcm = (IppsAES_GCMState*)(new Ipp8u[m_ctxSize]);
+        ippsAES_GCMInit(key, key_len / 8, m_ctx_gcm, m_ctxSize);
+    } else {
+        ippsAESGetSize(&m_ctxSize);
+        if (m_ctx != nullptr) {
+            delete[](Ipp8u*) m_ctx;
+        }
+        m_ctx = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
+        ippsAESInit(key, key_len / 8, m_ctx, m_ctxSize);
+    }
+    return true;
 }
 
 bool
