@@ -369,9 +369,10 @@ CryptGcm(const uint8_t* pInputText,  // ptr to inputText
         b1 = _mm_shuffle_epi8(c1, swap_ctr);
         aesni::AesEncrypt(&b1, pkey128, nRounds);
 
-        unsigned char* p_in  = (unsigned char*)p_in_128;
-        unsigned char* p_out = (unsigned char*)&a1;
-        int            i     = 0;
+        const uint8_t* p_in  = reinterpret_cast<const uint8_t*>(p_in_128);
+        uint8_t*       p_out = reinterpret_cast<uint8_t*>(&a1);
+
+        int i = 0;
         for (; i < remBytes; i++) {
             p_out[i] = p_in[i];
         }
@@ -386,6 +387,14 @@ CryptGcm(const uint8_t* pInputText,  // ptr to inputText
         }
 
         a1 = _mm_xor_si128(b1, a1);
+        for (i = remBytes; i < 16; i++) {
+            p_out[i] = 0;
+        }
+
+        uint8_t* p_store = reinterpret_cast<uint8_t*>(p_out_128);
+        for (i = 0; i < 16; i++) {
+            p_store[i] = p_out[i];
+        }
 
         if (isEncrypt == true) {
             __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
@@ -411,9 +420,7 @@ processAdditionalDataGcm(const uint8_t* pAdditionalData,
     __m128i ad1;
     int     adBlocks = additionalDataLen / AES_BLOCK_SIZE(128);
 
-    // assumption is padding of ad taking care outside
-    // and ad_remBytes = 0
-    // int ad_remBytes = additionalDataLen - (adBlocks * AES_BLOCK_SIZE(128));
+    int ad_remBytes = additionalDataLen - (adBlocks * AES_BLOCK_SIZE(128));
 
     for (; adBlocks >= 1; adBlocks--) {
         ad1 = _mm_loadu_si128(pAd128);
@@ -423,6 +430,24 @@ processAdditionalDataGcm(const uint8_t* pAdditionalData,
         gMul(*pgHash_128, hash_subKey_128, pgHash_128);
 
         pAd128++;
+    }
+
+    if (ad_remBytes) {
+        const uint8_t* p_in  = reinterpret_cast<const uint8_t*>(pAd128);
+        uint8_t*       p_out = reinterpret_cast<uint8_t*>(&ad1);
+        int            i     = 0;
+
+        for (; i < ad_remBytes; i++) {
+            p_out[i] = p_in[i];
+        }
+        for (; i < 16; i++) {
+            p_out[i] = 0;
+        }
+
+        ad1 = _mm_shuffle_epi8(ad1, reverse_mask_128);
+
+        *pgHash_128 = _mm_xor_si128(ad1, *pgHash_128);
+        gMul(*pgHash_128, hash_subKey_128, pgHash_128);
     }
 
     ALCP_PRINT_TEXT((uint8_t*)pAd128, 16, "adddata  ")
