@@ -49,11 +49,14 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo)
 {
     alc_error_t error = ALC_ERROR_NONE;
 #ifdef USE_AOCL_CPUID
-    bool rd_rand_available = (alc_cpu_has_rdrnd()  > 0);
+    bool rd_rand_available = (alc_cpu_has_rdrnd() > 0);
     bool rd_seed_available = (alc_cpu_has_rdseed() > 0);
 #else
     bool rd_rand_available = true;
     bool rd_seed_available = true;
+    // FIXME: unused variable
+    rd_rand_available = rd_rand_available;
+    rd_seed_available = rd_seed_available;
 #endif
 
     switch (pRngInfo->ri_type) {
