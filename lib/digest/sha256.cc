@@ -28,6 +28,9 @@
 #include <algorithm>
 #include <functional>
 #include <string>
+#ifdef USE_AOCL_CPUID
+#include "alci/cpu_features.h"
+#endif
 
 #include "digest/sha2.hh"
 #include "digest/sha_avx2.hh"
@@ -91,8 +94,14 @@ class Sha256::Impl
         /*
          * FIXME: call cpuid::isShaniAvailable() initialize
          */
-        static bool s_shani_available = true;
-        return s_shani_available;
+        {
+#ifdef USE_AOCL_CPUID
+            static bool s_shani_available = (alc_cpu_has_sha() > 0);
+#else
+            static bool s_shani_available = true;
+#endif
+            return s_shani_available;
+        }
     }
     static bool isAvx2Available()
     {
@@ -179,7 +188,7 @@ Sha256::Impl::extendMsg(Uint32 w[], Uint32 start, Uint32 end)
 void
 Sha256::Impl::compressMsg(Uint32 w[])
 {
-    Uint32 shift[] = {6, 11, 25, 2, 13, 22};
+    Uint32 shift[] = { 6, 11, 25, 2, 13, 22 };
     alcp::digest::CompressMsg<Uint32>(w, m_hash, cRoundConstants, shift);
 }
 
