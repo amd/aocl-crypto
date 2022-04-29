@@ -30,7 +30,12 @@ if(OPENSSL_INSTALL_DIR)
     add_compile_options("-DUSE_OSSL")
     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
     set(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cipher/base/openssl_base.cc)
-    set(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
+    if(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
+        set(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
+    else(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
+        set(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
+    endif(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
+    set(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${OPENSSL_INSTALL_DIR}/include)
 endif(OPENSSL_INSTALL_DIR)
 
 ADD_EXECUTABLE(bench_cipher bench_main.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
