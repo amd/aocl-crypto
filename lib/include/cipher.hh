@@ -180,11 +180,11 @@ class Cipher
     static bool isVaesAvailable()
     {
         // FIXME: call cpuid::isVaesAvailable()
-#ifdef USE_AOCL_CPUID
-        static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
-#else
+// #ifdef USE_AOCL_CPUID
+//         static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
+// #else
         static bool s_vaes_available  = false;
-#endif
+// #endif
         return s_vaes_available;
     }
 
