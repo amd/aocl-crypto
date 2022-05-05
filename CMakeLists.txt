@@ -80,3 +80,20 @@ ENDIF()
 #INSTALL(DIRECTORY INCLUDE/API
 #	RENAME DESTINATION INCLUDE/ALCP)
 
+INSTALL(TARGETS alcp alcp_static)
+
+INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/include/alcp
+        TYPE INCLUDE
+		)
+INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/examples/
+		DESTINATION examples
+		)
+# INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/examples/cipher
+#         DESTINATION examples
+# 		)
+# INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/examples/digest
+#         DESTINATION examples
+# 		)
+# INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/examples/rng
+#         DESTINATION examples
+# 		)
