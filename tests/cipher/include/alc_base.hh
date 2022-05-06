@@ -88,17 +88,5 @@ class AlcpCipherBase : public CipherBase
     void reset();
 };
 
-class AlcpCipherTesting : public AlcpCipherBase
-{
-  public:
-    AlcpCipherTesting(const alc_aes_mode_t mode, const std::vector<uint8_t> iv);
-    std::vector<uint8_t> testingEncrypt(const std::vector<uint8_t> plaintext,
-                                        const std::vector<uint8_t> key,
-                                        const std::vector<uint8_t> iv);
-    std::vector<uint8_t> testingDecrypt(const std::vector<uint8_t> ciphertext,
-                                        const std::vector<uint8_t> key,
-                                        const std::vector<uint8_t> iv);
-};
-
 } // namespace alcp::testing
 #endif

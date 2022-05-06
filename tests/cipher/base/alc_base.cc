@@ -272,35 +272,4 @@ void
 AlcpCipherBase::reset()
 {}
 
-// AlcpCipherTesting class functions
-AlcpCipherTesting::AlcpCipherTesting(const alc_aes_mode_t       mode,
-                                     const std::vector<uint8_t> iv)
-    : AlcpCipherBase(mode, &iv[0])
-{}
-
-std::vector<uint8_t>
-AlcpCipherTesting::testingEncrypt(const std::vector<uint8_t> plaintext,
-                                  const std::vector<uint8_t> key,
-                                  const std::vector<uint8_t> iv)
-{
-    if (init(&iv[0], &key[0], key.size() * 8)) {
-        uint8_t* ciphertext = new uint8_t[plaintext.size()];
-        encrypt(&plaintext[0], plaintext.size(), ciphertext);
-        return std::vector<uint8_t>(ciphertext, ciphertext + plaintext.size());
-    }
-    return {};
-}
-std::vector<uint8_t>
-AlcpCipherTesting::testingDecrypt(const std::vector<uint8_t> ciphertext,
-                                  const std::vector<uint8_t> key,
-                                  const std::vector<uint8_t> iv)
-{
-    if (init(&iv[0], &key[0], key.size() * 8)) {
-        uint8_t* plaintext = new uint8_t[ciphertext.size()];
-        decrypt(&ciphertext[0], ciphertext.size(), plaintext);
-        return std::vector<uint8_t>(plaintext, plaintext + ciphertext.size());
-    }
-    return {};
-}
-
 } // namespace alcp::testing
