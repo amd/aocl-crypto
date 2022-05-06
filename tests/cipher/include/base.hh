@@ -190,12 +190,55 @@ class CipherTesting
   public:
     CipherTesting() {}
     CipherTesting(CipherBase* impl);
+    /**
+     * @brief Encrypts the data and returns the vector.
+     *
+     * @param plaintext - Data to encrypt.
+     * @param key - Key for ecryption.
+     * @param iv - IV for encryption.
+     * @return std::vector<uint8_t>
+     */
     std::vector<uint8_t> testingEncrypt(const std::vector<uint8_t> plaintext,
                                         const std::vector<uint8_t> key,
                                         const std::vector<uint8_t> iv);
+    /**
+     * @brief Encrypts data and puts in data.out, expects data.out to already
+     * have valid memory pointer with appropriate size
+     *
+     * @param data - Everything that should go in or out of the cipher except
+     * the key
+     * @param key - Key used to encrypt, should be std::vector
+     * @return true
+     * @return false
+     */
+    bool testingEncrypt(alcp_data_ex_t data, const std::vector<uint8_t> key);
+    /**
+     * @brief Decrypts the data and returns the vector.
+     *
+     * @param ciphertext - Data to decrypt.
+     * @param key - Key used for encryption of ciphertext.
+     * @param iv  - IV used for encryption.
+     * @return std::vector<uint8_t>
+     */
     std::vector<uint8_t> testingDecrypt(const std::vector<uint8_t> ciphertext,
                                         const std::vector<uint8_t> key,
                                         const std::vector<uint8_t> iv);
-    void                 setcb(CipherBase* impl);
+    /**
+     * @brief Decrypts data and puts in data.out, expects data.out to already
+     * have valid memory point with appropriate size
+     *
+     * @param data - Everything that should go in or out of the cipher expect
+     * the key
+     * @param key - Key ysed to decrypt, should be std::vector
+     * @return true
+     * @return false
+     */
+    bool testingDecrypt(alcp_data_ex_t data, const std::vector<uint8_t> key);
+    /**
+     * @brief Set CipherBase pimpl
+     *
+     * @param impl - Object of class extended from CipherBase
+     */
+    void setcb(CipherBase* impl);
 };
 } // namespace alcp::testing

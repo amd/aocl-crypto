@@ -393,6 +393,22 @@ CipherTesting::testingEncrypt(const std::vector<uint8_t> plaintext,
     return {};
 }
 
+bool
+CipherTesting::testingEncrypt(alcp_data_ex_t             data,
+                              const std::vector<uint8_t> key)
+{
+    if (cb != nullptr) {
+        if (cb->init(data.iv, &(key[0]), key.size() * 8)) {
+            // For very large sizes, dynamic is better.
+            return cb->encrypt(data);
+        }
+    } else {
+        std::cout << "base.hh: CipherTesting: Implementation missing!"
+                  << std::endl;
+    }
+    return false;
+}
+
 std::vector<uint8_t>
 CipherTesting::testingDecrypt(const std::vector<uint8_t> ciphertext,
                               const std::vector<uint8_t> key,
@@ -414,6 +430,22 @@ CipherTesting::testingDecrypt(const std::vector<uint8_t> ciphertext,
     }
     return {};
 }
+
+bool
+CipherTesting::testingDecrypt(alcp_data_ex_t             data,
+                              const std::vector<uint8_t> key)
+{
+    if (cb != nullptr) {
+        if (cb->init(data.iv, &key[0], key.size() * 8)) {
+            return cb->decrypt(data);
+        }
+    } else {
+        std::cout << "base.hh: CipherTesting: Implementation missing!"
+                  << std::endl;
+    }
+    return false;
+}
+
 void
 CipherTesting::setcb(CipherBase* impl)
 {
