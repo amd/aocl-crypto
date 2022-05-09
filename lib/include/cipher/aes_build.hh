@@ -37,7 +37,7 @@
 
 namespace alcp::cipher {
 
-template<typename CIPHERTYPE, bool encrypt = true>
+template<typename CIPHERMODE, bool encrypt = true>
 static alc_error_t
 __aes_wrapper(const void*    rCipher,
               const uint8_t* pSrc,
@@ -47,7 +47,7 @@ __aes_wrapper(const void*    rCipher,
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<const CIPHERTYPE*>(rCipher);
+    auto ap = static_cast<const CIPHERMODE*>(rCipher);
 
     if (encrypt)
         e = ap->encrypt(pSrc, pDest, len, pIv);
@@ -57,7 +57,7 @@ __aes_wrapper(const void*    rCipher,
     return e;
 }
 
-template<typename CIPHERTYPE, bool encrypt = true>
+template<typename CIPHERMODE, bool encrypt = true>
 static alc_error_t
 __aes_wrapperUpdate(void*          rCipher,
                     const uint8_t* pSrc,
@@ -67,7 +67,7 @@ __aes_wrapperUpdate(void*          rCipher,
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<CIPHERTYPE*>(rCipher);
+    auto ap = static_cast<CIPHERMODE*>(rCipher);
 
     if (encrypt)
         e = ap->encryptUpdate(pSrc, pDest, len, pIv);
@@ -77,17 +77,17 @@ __aes_wrapperUpdate(void*          rCipher,
     return e;
 }
 
-template<typename CIPHERTYPE>
+template<typename CIPHERMODE>
 static alc_error_t
 __aes_dtor(const void* rCipher)
 {
     alc_error_t e  = ALC_ERROR_NONE;
-    auto        ap = static_cast<const CIPHERTYPE*>(rCipher);
+    auto        ap = static_cast<const CIPHERMODE*>(rCipher);
     delete ap;
     return e;
 }
 
-template<typename ALGONAME>
+template<typename CIPHERMODE>
 static alc_error_t
 __build_aes(const alc_aes_info_t& aesInfo,
             const alc_key_info_t& keyInfo,
@@ -99,13 +99,13 @@ __build_aes(const alc_aes_info_t& aesInfo,
         err = ALC_ERROR_NOT_SUPPORTED;
 
     if (!Error::isError(err)) {
-        auto algo         = new ALGONAME(aesInfo, keyInfo);
+        auto algo         = new CIPHERMODE(aesInfo, keyInfo);
         ctx.m_cipher      = static_cast<void*>(algo);
-        ctx.decrypt       = __aes_wrapper<ALGONAME, false>;
-        ctx.encrypt       = __aes_wrapper<ALGONAME, true>;
-        ctx.decryptUpdate = __aes_wrapperUpdate<ALGONAME, false>;
-        ctx.encryptUpdate = __aes_wrapperUpdate<ALGONAME, true>;
-        ctx.finish        = __aes_dtor<ALGONAME>;
+        ctx.decrypt       = __aes_wrapper<CIPHERMODE, false>;
+        ctx.encrypt       = __aes_wrapper<CIPHERMODE, true>;
+        ctx.decryptUpdate = __aes_wrapperUpdate<CIPHERMODE, false>;
+        ctx.encryptUpdate = __aes_wrapperUpdate<CIPHERMODE, true>;
+        ctx.finish        = __aes_dtor<CIPHERMODE>;
     }
 
     return err;
