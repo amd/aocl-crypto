@@ -392,7 +392,7 @@ CryptGcm(const uint8_t* pInputText,  // ptr to inputText
         }
 
         uint8_t* p_store = reinterpret_cast<uint8_t*>(p_out_128);
-        for (i = 0; i < 16; i++) {
+        for (i = 0; i < remBytes; i++) {
             p_store[i] = p_out[i];
         }
 
