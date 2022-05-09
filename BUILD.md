@@ -9,6 +9,13 @@ $ cd build
 $ cmake ../
 ```
 
+### Extra steps for making STATIC library work
+ To generate a single .a file from all the .a files
+```shell
+ar crsT libnew.a libalcp.a libarch_zen3.a libarch_avx2.a
+mv libnew.a libalcp.a
+```
+
 ## Enabling features of AOCL-Crypto
 
 1. [Enable Examples - To compile example/demo code.](##Enable Examples append)
@@ -26,7 +33,7 @@ $ cmake -DALCP_ENABLE_EXAMPLES=1 ../
 ```sh
 $ cmake -DAOCL_INSTALL_DIR=path/to/aocl/root
 ```
-
+For srng if linked statically, please also link ```libamdsecrng.a```
 ### Enable CPUID append
 
 ```bash
