@@ -137,7 +137,7 @@ class DataSet : private File
 {
   private:
     std::string          line = "";
-    std::vector<uint8_t> m_pt, m_iv, m_key, m_ct;
+    std::vector<uint8_t> m_pt, m_iv, m_key, m_ct, m_add, m_tag;
     // First line is skipped, linenum starts from 1
     int lineno = 1;
 
@@ -146,8 +146,10 @@ class DataSet : private File
     DataSet(const std::string filename);
     // Read without condition
     bool readPtIvKeyCt();
+    bool readPtIvKeyCtAddTag();
     // Read only specified key size
     bool readPtIvKeyCt(size_t keybits);
+    bool readPtIvKeyCtAddTag(size_t keybits);
     // To print which line in dataset failed
     int getLineNumber();
     // Return private data plain text
@@ -158,6 +160,10 @@ class DataSet : private File
     std::vector<uint8_t> getKey();
     // Return private data cipher text
     std::vector<uint8_t> getCt();
+    // Return private data additional data
+    std::vector<uint8_t> getAdd();
+    // Return private data tag
+    std::vector<uint8_t> getTag();
 };
 
 /**
