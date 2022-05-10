@@ -285,7 +285,8 @@ aclp_aes_gcm_decrypt_demo(const uint8_t* ciphertxt,
  *    http://csrc.nist.gov/groups/STM/cavp/documents/mac/gcmtestvectors.zip
  *
  */
-#define VERIFY_GCM_TEST_VECTOR     1 //Enable to test std gcm test vector
+// when SPEED_CHECK is enabled VERIFY_GCM_TEST_VECTOR should be set to 0
+#define VERIFY_GCM_TEST_VECTOR     0 //Enable to test std gcm test vector
 #define TEST_VECTOR_COUNT          5 //currently 4 encrypt test vectors added.
 #define VERIFY_GCM_TEST_VECTOR_NUM 4 //set test id 0 or 1 or 2 or 3 or 4
 
