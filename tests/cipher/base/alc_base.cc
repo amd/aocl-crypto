@@ -63,7 +63,7 @@ AlcpCipherBase::init(const uint8_t* iv,
                      const uint8_t* key,
                      const uint32_t key_len)
 {
-    this->m_iv = reinterpret_cast<const uint8_t*>(iv);
+    this->m_iv = iv;
     return init(key, key_len);
 }
 
@@ -85,6 +85,7 @@ AlcpCipherBase::init(const uint8_t* key, const uint32_t key_len)
                   << std::endl;
         goto out;
     }
+    // TODO: Check support before allocating
     m_handle->ch_context = malloc(alcp_cipher_context_size(&m_cinfo));
     if (m_handle->ch_context == NULL) {
         std::cout << "alcp_base.c: Memory allocation for context failure!"
@@ -163,6 +164,11 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
             return false;
         }
         // Additional Data
+        if (data.adl == 0 && data.ad == nullptr) {
+            // FIXME: Hack to prevent ad from being null
+            uint8_t a;
+            data.ad = &a; // Some random value other than NULL
+        }
         err = alcp_cipher_encrypt_update(
             m_handle, data.ad, nullptr, data.adl, m_iv);
 
@@ -180,6 +186,11 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
             return false;
         }
         // Get Tag
+        if (data.tagl == 0 && data.tag == nullptr) {
+            // FIXME: Hack to prevent ad from being null
+            uint8_t a;
+            data.tag = &a; // Some random value other than NULL
+        }
         err = alcp_cipher_encrypt_update(
             m_handle, nullptr, data.tag, data.tagl, m_iv);
         if (alcp_is_error(err)) {
@@ -233,6 +244,11 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
             return false;
         }
         // Additional Data
+        if (data.adl == 0 && data.ad == nullptr) {
+            // FIXME: Hack to prevent ad from being null
+            uint8_t a;
+            data.ad = &a; // Some random value other than NULL
+        }
         err = alcp_cipher_decrypt_update(
             m_handle, data.ad, nullptr, data.adl, m_iv);
         if (alcp_is_error(err)) {
@@ -249,6 +265,11 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
             return false;
         }
         // Get Tag
+        if (data.tagl == 0 && data.tag == nullptr) {
+            // FIXME: Hack to prevent ad from being null
+            uint8_t a;
+            data.tag = &a; // Some random value other than NULL
+        }
         err = alcp_cipher_decrypt_update(
             m_handle, nullptr, data.tag, data.tagl, m_iv);
         if (alcp_is_error(err)) {
