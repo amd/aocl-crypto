@@ -77,7 +77,7 @@ namespace alcp::cipher { namespace vaes {
 
         amd_mm256_broadcast_i64x2(&pKey[2], &rkey0);
 
-        for (nr = 1, pKey++; nr < nRounds; nr += 2, pKey += 2) {
+        for (nr = 2, pKey++; nr < nRounds; nr += 2, pKey += 2) {
             b0 = _mm256_aesenc_epi128(b0, rkey1);
             amd_mm256_broadcast_i64x2(&pKey[2], &rkey1);
             b0 = _mm256_aesenc_epi128(b0, rkey0);
@@ -110,7 +110,7 @@ namespace alcp::cipher { namespace vaes {
 
         amd_mm256_broadcast_i64x2(&pKey[2], &rkey0);
 
-        for (nr = 1, pKey++; nr < nRounds; nr += 2, pKey += 2) {
+        for (nr = 2, pKey++; nr < nRounds; nr += 2, pKey += 2) {
             b0 = _mm256_aesenc_epi128(b0, rkey1);
             b1 = _mm256_aesenc_epi128(b1, rkey1);
             amd_mm256_broadcast_i64x2(&pKey[2], &rkey1);
@@ -151,7 +151,7 @@ namespace alcp::cipher { namespace vaes {
 
         amd_mm256_broadcast_i64x2(&pKey[2], &rkey0);
 
-        for (nr = 1, pKey++; nr < nRounds; nr += 2, pKey += 2) {
+        for (nr = 2, pKey++; nr < nRounds; nr += 2, pKey += 2) {
             b0 = _mm256_aesenc_epi128(b0, rkey1);
             b1 = _mm256_aesenc_epi128(b1, rkey1);
             b2 = _mm256_aesenc_epi128(b2, rkey1);

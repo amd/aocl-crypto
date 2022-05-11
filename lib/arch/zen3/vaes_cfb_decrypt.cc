@@ -33,30 +33,32 @@
 
 #include "error.hh"
 #include "key.hh"
+#include "types.hh"
 
 namespace alcp::cipher::vaes {
 
 alc_error_t
-DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
-           uint8_t*       pPlainText,  // ptr to plaintext
-           uint64_t       len,         // message length in bytes
-           const uint8_t* pKey,        // ptr to Key
-           int            nRounds,     // No. of rounds
-           const uint8_t* pIv          // ptr to Initialization Vector
+DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
+           Uint8*       pPlainText,  // ptr to plaintext
+           Uint64       len,         // message length in bytes
+           const Uint8* pKey,        // ptr to Key
+           int          nRounds,     // No. of rounds
+           const Uint8* pIv          // ptr to Initialization Vector
 )
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    uint64_t* p_iv64   = (uint64_t*)pIv;
-    __m128i*  p_key128 = (__m128i*)pKey;
-    __m256i*  p_ct256  = (__m256i*)pCipherText;
-    __m256i*  p_pt256  = (__m256i*)pPlainText;
+    Uint64*  p_iv64   = (Uint64*)pIv;
+    __m128i* p_key128 = (__m128i*)pKey;
+    __m256i* p_ct256  = (__m256i*)pCipherText;
+    __m256i* p_pt256  = (__m256i*)pPlainText;
 
     __m256i iv256 = _mm256_set_epi64x(0, 0, p_iv64[1], p_iv64[0]);
 
-    uint64_t blocks = len / Rijndael::cBlockSize;
+    Uint64 blocks = len / Rijndael::cBlockSize;
+    Uint64 chunk  = 4 * 2;
 
-    for (; blocks > (4 * 2); blocks -= (4 * 2)) {
+    for (; blocks >= chunk; blocks -= chunk) {
         __m256i blk0 = _mm256_loadu_si256(p_ct256);
         __m256i blk1 = _mm256_loadu_si256(p_ct256 + 1);
         __m256i blk2 = _mm256_loadu_si256(p_ct256 + 2);
@@ -72,10 +74,10 @@ DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
         y2 |= blk1;
         y3 |= blk2;
 
+        vaes::AESEncrypt(&y0, &y1, &y2, &y3, p_key128, nRounds);
+
         // update iv256
         iv256 = _mm256_set_epi64x(0, 0, blk1[3], blk1[2]);
-
-        vaes::AESEncrypt(&y0, &y1, &y2, &y3, p_key128, nRounds);
 
         blk0 = _mm256_xor_si256(blk0, y0);
         blk1 = _mm256_xor_si256(blk1, y1);
@@ -89,10 +91,10 @@ DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
 
         p_ct256 += 4;
         p_pt256 += 4;
-        blocks -= (8 * 2);
     }
 
-    if ((4 * 2) <= blocks) {
+    chunk = 2 * 2;
+    for (; blocks >= chunk; blocks -= chunk) {
         // load ciphertext
         __m256i blk0 = _mm256_loadu_si256(p_ct256);
         __m256i blk1 = _mm256_loadu_si256(p_ct256 + 1);
@@ -102,10 +104,10 @@ DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
         y0 |= iv256;
         y1 |= blk0;
 
+        vaes::AESEncrypt(&y0, &y1, p_key128, nRounds);
+
         // update iv256
         iv256 = _mm256_set_epi64x(0, 0, blk1[3], blk1[2]);
-
-        vaes::AESEncrypt(&y0, &y1, p_key128, nRounds);
 
         blk0 = _mm256_xor_si256(blk0, y0);
         blk1 = _mm256_xor_si256(blk1, y1);
@@ -115,11 +117,11 @@ DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
 
         p_ct256 += 2;
         p_pt256 += 2;
-        blocks -= (2 * 4);
     }
 
-    for (; blocks >= 2; blocks -= 2) {
-        uint64_t* p_iv64 = (uint64_t*)p_ct256;
+    /* 3/2/1 blocks left */
+    if (blocks >= 2) {
+        Uint64* p_iv64 = (Uint64*)p_ct256;
         // load ciphertext
         __m256i blk0 = _mm256_loadu_si256(p_ct256);
 
@@ -127,10 +129,10 @@ DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
 
         y0 = (y0 | iv256);
 
+        vaes::AESEncrypt(&y0, p_key128, nRounds);
+
         // update iv256
         iv256 = _mm256_set_epi64x(0, 0, blk0[3], blk0[2]);
-
-        vaes::AESEncrypt(&y0, p_key128, nRounds);
 
         blk0 = _mm256_xor_si256(blk0, y0);
 
@@ -138,13 +140,14 @@ DecryptCfb(const uint8_t* pCipherText, // ptr to ciphertext
 
         p_ct256 += 1;
         p_pt256 += 1;
+        blocks -= 2;
     }
 
+    /* process single block of 128-bit */
     if (blocks) {
-        /* There is one block left - 128bit / 16bytes left */
-        /* TODO: This part is untested */
-        uint64_t* p_iv64 = (uint64_t*)p_ct256;
-        __m256i   mask   = _mm256_set_epi64x(1UL << 63, 1UL << 63, 0, 0);
+        /* FIXME: This part is untested */
+        Uint64* p_iv64 = (Uint64*)p_ct256;
+        __m256i mask   = _mm256_set_epi64x(1UL << 63, 1UL << 63, 0, 0);
 
         // load ciphertext
         __m256i blk0 = _mm256_maskload_epi64((const long long*)p_iv64, mask);
