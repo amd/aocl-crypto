@@ -64,15 +64,15 @@ DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
         __m256i blk2 = _mm256_loadu_si256(p_ct256 + 2);
         __m256i blk3 = _mm256_loadu_si256(p_ct256 + 3);
 
-        __m256i y0 = _mm256_set_epi64x(blk0[1], blk0[0], 0, 0);
-        __m256i y1 = _mm256_set_epi64x(blk1[1], blk1[0], 0, 0);
-        __m256i y2 = _mm256_set_epi64x(blk2[1], blk2[0], 0, 0);
-        __m256i y3 = _mm256_set_epi64x(blk3[1], blk3[0], 0, 0);
+        __m256i y0 = _mm256_set_epi64x(blk0[1], blk0[0], iv256[1], iv256[0]);
+        __m256i y1 = _mm256_set_epi64x(blk1[1], blk1[0], blk0[3], blk0[2]);
+        __m256i y2 = _mm256_set_epi64x(blk2[1], blk2[0], blk1[3], blk1[2]);
+        __m256i y3 = _mm256_set_epi64x(blk3[1], blk3[0], blk2[3], blk2[2]);
 
-        y0 |= iv256;
-        y1 |= blk0;
-        y2 |= blk1;
-        y3 |= blk2;
+        /* y0 |= iv256; */
+        /* y1 |= blk0; */
+        /* y2 |= blk1; */
+        /* y3 |= blk2; */
 
         vaes::AESEncrypt(&y0, &y1, &y2, &y3, p_key128, nRounds);
 
@@ -94,15 +94,16 @@ DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
     }
 
     chunk = 2 * 2;
-    for (; blocks >= chunk; blocks -= chunk) {
+    if (blocks >= chunk) {
         // load ciphertext
         __m256i blk0 = _mm256_loadu_si256(p_ct256);
         __m256i blk1 = _mm256_loadu_si256(p_ct256 + 1);
-        __m256i y0   = _mm256_set_epi64x(blk0[1], blk0[0], 0, 0);
-        __m256i y1   = _mm256_set_epi64x(blk1[1], blk1[0], 0, 0);
 
-        y0 |= iv256;
-        y1 |= blk0;
+        __m256i y0 = _mm256_set_epi64x(blk0[1], blk0[0], iv256[1], iv256[0]);
+        __m256i y1 = _mm256_set_epi64x(blk1[1], blk1[0], blk0[3], blk0[2]);
+
+        /* y0 |= iv256; */
+        /* y1 |= blk0; */
 
         vaes::AESEncrypt(&y0, &y1, p_key128, nRounds);
 
@@ -117,6 +118,8 @@ DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
 
         p_ct256 += 2;
         p_pt256 += 2;
+
+        blocks -= chunk;
     }
 
     /* 3/2/1 blocks left */
@@ -145,21 +148,19 @@ DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
 
     /* process single block of 128-bit */
     if (blocks) {
-        /* FIXME: This part is untested */
-        Uint64* p_iv64 = (Uint64*)p_ct256;
-        __m256i mask   = _mm256_set_epi64x(1UL << 63, 1UL << 63, 0, 0);
+        Uint64* p_iv64  = (uint64_t*)p_ct256;
+        __m256i mask_lo = _mm256_set_epi64x(0, 0, 1UL << 63, 1UL << 63);
 
-        // load ciphertext
-        __m256i blk0 = _mm256_maskload_epi64((const long long*)p_iv64, mask);
-        __m256i y0   = _mm256_set_epi64x(p_iv64[1], p_iv64[0], 0, 0);
+        __m256i blk0 = _mm256_set_epi64x(p_iv64[1], p_iv64[0], 0, 0);
+        __m256i y0   = (blk0 | iv256);
 
-        y0 = (y0 | iv256);
-
+        __m256i tmpblk = _mm256_permute2x128_si256(blk0, blk0, 1);
         vaes::AESEncrypt(&y0, p_key128, nRounds);
 
-        blk0 = _mm256_xor_si256(blk0, y0);
+        blk0 = _mm256_xor_si256(tmpblk, y0);
+        _mm256_maskstore_epi64((long long*)p_pt256, mask_lo, blk0);
 
-        _mm256_maskstore_epi64((long long*)p_pt256, mask, blk0);
+        blocks--;
     }
 
     return err;
