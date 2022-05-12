@@ -77,7 +77,7 @@ DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
         vaes::AESEncrypt(&y0, &y1, &y2, &y3, p_key128, nRounds);
 
         // update iv256
-        iv256 = _mm256_set_epi64x(0, 0, blk1[3], blk1[2]);
+        iv256 = _mm256_set_epi64x(0, 0, blk3[3], blk3[2]);
 
         blk0 = _mm256_xor_si256(blk0, y0);
         blk1 = _mm256_xor_si256(blk1, y1);
