@@ -137,7 +137,7 @@ class DataSet : private File
 {
   private:
     std::string          line = "";
-    std::vector<uint8_t> m_pt, m_iv, m_key, m_ct;
+    std::vector<uint8_t> m_pt, m_iv, m_key, m_ct, m_add, m_tag;
     // First line is skipped, linenum starts from 1
     int lineno = 1;
 
@@ -146,8 +146,10 @@ class DataSet : private File
     DataSet(const std::string filename);
     // Read without condition
     bool readPtIvKeyCt();
+    bool readPtIvKeyCtAddTag();
     // Read only specified key size
     bool readPtIvKeyCt(size_t keybits);
+    bool readPtIvKeyCtAddTag(size_t keybits);
     // To print which line in dataset failed
     int getLineNumber();
     // Return private data plain text
@@ -158,6 +160,10 @@ class DataSet : private File
     std::vector<uint8_t> getKey();
     // Return private data cipher text
     std::vector<uint8_t> getCt();
+    // Return private data additional data
+    std::vector<uint8_t> getAdd();
+    // Return private data tag
+    std::vector<uint8_t> getTag();
 };
 
 /**
@@ -190,12 +196,55 @@ class CipherTesting
   public:
     CipherTesting() {}
     CipherTesting(CipherBase* impl);
+    /**
+     * @brief Encrypts the data and returns the vector.
+     *
+     * @param plaintext - Data to encrypt.
+     * @param key - Key for ecryption.
+     * @param iv - IV for encryption.
+     * @return std::vector<uint8_t>
+     */
     std::vector<uint8_t> testingEncrypt(const std::vector<uint8_t> plaintext,
                                         const std::vector<uint8_t> key,
                                         const std::vector<uint8_t> iv);
+    /**
+     * @brief Encrypts data and puts in data.out, expects data.out to already
+     * have valid memory pointer with appropriate size
+     *
+     * @param data - Everything that should go in or out of the cipher except
+     * the key
+     * @param key - Key used to encrypt, should be std::vector
+     * @return true
+     * @return false
+     */
+    bool testingEncrypt(alcp_data_ex_t data, const std::vector<uint8_t> key);
+    /**
+     * @brief Decrypts the data and returns the vector.
+     *
+     * @param ciphertext - Data to decrypt.
+     * @param key - Key used for encryption of ciphertext.
+     * @param iv  - IV used for encryption.
+     * @return std::vector<uint8_t>
+     */
     std::vector<uint8_t> testingDecrypt(const std::vector<uint8_t> ciphertext,
                                         const std::vector<uint8_t> key,
                                         const std::vector<uint8_t> iv);
-    void                 setcb(CipherBase* impl);
+    /**
+     * @brief Decrypts data and puts in data.out, expects data.out to already
+     * have valid memory point with appropriate size
+     *
+     * @param data - Everything that should go in or out of the cipher expect
+     * the key
+     * @param key - Key ysed to decrypt, should be std::vector
+     * @return true
+     * @return false
+     */
+    bool testingDecrypt(alcp_data_ex_t data, const std::vector<uint8_t> key);
+    /**
+     * @brief Set CipherBase pimpl
+     *
+     * @param impl - Object of class extended from CipherBase
+     */
+    void setcb(CipherBase* impl);
 };
 } // namespace alcp::testing
