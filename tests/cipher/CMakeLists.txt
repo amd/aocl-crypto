@@ -12,6 +12,12 @@ SET(EXTRA_INCLUDES "")
 
 IF(ENABLE_TESTS_IPP_API)
     ADD_COMPILE_OPTIONS("-DUSE_IPP")
+    IF(IPP_INSTALL_DIR)
+        MESSAGE(STATUS "IPP_INSTALL_DIR set, overriding fetch path")
+    ELSE(IPP_INSTALL_DIR)
+        SET(IPP_INSTALL_DIR "${CMAKE_SOURCE_DIR}/external")
+        MESSAGE(STATUS "IPP_INSTALL_DIR not set, defaulting to external")
+    ENDIF(IPP_INSTALL_DIR)
     # If there is IPP, add IPP source and add IPP liberary
     SET(EXTRA_SOURCES ${EXTRA_SOURCES} base/ipp_base.cc)
     IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.a)
@@ -22,8 +28,14 @@ IF(ENABLE_TESTS_IPP_API)
     SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${IPP_INSTALL_DIR}/include)
 ENDIF(ENABLE_TESTS_IPP_API)
 
-IF(OPENSSL_INSTALL_DIR)
+IF(ENABLE_TESTS_OPENSSL_API)
     ADD_COMPILE_OPTIONS("-DUSE_OSSL")
+    IF(OPENSSL_INSTALL_DIR)
+        MESSAGE(STATUS "OPENSSL_INSTALL_DIR set, overriding fetch path")
+    ELSE(OPENSSL_INSTALL_DIR)
+        SET(OPENSSL_INSTALL_DIR "${CMAKE_SOURCE_DIR}/external")
+        MESSAGE(STATUS "OPENSSL_INSTALL_DIR not set, defaulting to external")
+    ENDIF(OPENSSL_INSTALL_DIR)
     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
     SET(EXTRA_SOURCES ${EXTRA_SOURCES} base/openssl_base.cc)
     IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
@@ -32,7 +44,7 @@ IF(OPENSSL_INSTALL_DIR)
         SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
     ENDIF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
     SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${OPENSSL_INSTALL_DIR}/include)
-ENDIF(OPENSSL_INSTALL_DIR)
+ENDIF(ENABLE_TESTS_OPENSSL_API)
 
 SET(LIBS ${LIBS} pthread)
 
@@ -51,7 +63,7 @@ FUNCTION(KAT_AES MOD)
         "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
         ${EXTRA_INCLUDES})
     TARGET_LINK_LIBRARIES(aes_${MOD}_kat ${LIBS})
-    gtest_add_tests(TARGET      aes_${MOD}_kat
+    gtest_add_tests(TARGET aes_${MOD}_kat
                     TEST_SUFFIX .${MOD})
 ENDFUNCTION()
 
@@ -64,10 +76,10 @@ FUNCTION(CROSS_AES MOD)
         "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
         ${EXTRA_INCLUDES})
     TARGET_LINK_LIBRARIES(aes_${MOD}_cross ${LIBS})
-    IF(OPENSSL_INSTALL_DIR)
-        gtest_add_tests(TARGET      aes_${MOD}_cross
+    IF(ENABLE_TESTS_OPENSSL_API)
+        gtest_add_tests(TARGET aes_${MOD}_cross
                         TEST_SUFFIX .${MOD})
-    ENDIF(OPENSSL_INSTALL_DIR)
+    ENDIF(ENABLE_TESTS_OPENSSL_API)
 ENDFUNCTION()
 
 
