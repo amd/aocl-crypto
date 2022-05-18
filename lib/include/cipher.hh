@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2021, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -179,12 +179,11 @@ class Cipher
 
     static bool isVaesAvailable()
     {
-        // FIXME: call cpuid::isVaesAvailable()
-// #ifdef USE_AOCL_CPUID
-//         static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
-// #else
+#ifdef USE_AOCL_CPUID
+        static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
+#else
         static bool s_vaes_available  = false;
-// #endif
+#endif
         return s_vaes_available;
     }
 
@@ -193,9 +192,6 @@ class Cipher
      */
     static bool isAesniAvailable()
     {
-        /*
-         * FIXME: call cpuid::isAesniAvailable() initialize
-         */
 #ifdef USE_AOCL_CPUID
         static bool s_aesni_available = (alc_cpu_has_aes() > 0);
 #else
