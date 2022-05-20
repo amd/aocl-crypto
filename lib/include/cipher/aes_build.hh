@@ -35,6 +35,8 @@
 #include "cipher/aes.hh"
 #include "cipher/aes_cfb.hh"
 
+#include <type_traits> /* for is_same_v<> */
+
 namespace alcp::cipher {
 
 template<typename CIPHERMODE, bool encrypt = true>
@@ -99,13 +101,15 @@ __build_aes(const alc_cipher_algo_info_t& aesInfo,
         err = ALC_ERROR_NOT_SUPPORTED;
 
     if (!Error::isError(err)) {
-        auto algo         = new CIPHERMODE(aesInfo, keyInfo);
-        ctx.m_cipher      = static_cast<void*>(algo);
-        ctx.decrypt       = __aes_wrapper<CIPHERMODE, false>;
-        ctx.encrypt       = __aes_wrapper<CIPHERMODE, true>;
-        ctx.decryptUpdate = __aes_wrapperUpdate<CIPHERMODE, false>;
-        ctx.encryptUpdate = __aes_wrapperUpdate<CIPHERMODE, true>;
-        ctx.finish        = __aes_dtor<CIPHERMODE>;
+        auto algo    = new CIPHERMODE(aesInfo, keyInfo);
+        ctx.m_cipher = static_cast<void*>(algo);
+        ctx.decrypt  = __aes_wrapper<CIPHERMODE, false>;
+        ctx.encrypt  = __aes_wrapper<CIPHERMODE, true>;
+        if constexpr (std::is_same_v<CIPHERMODE, Gcm>) {
+            ctx.decryptUpdate = __aes_wrapperUpdate<Gcm, false>;
+            ctx.encryptUpdate = __aes_wrapperUpdate<Gcm, true>;
+        }
+        ctx.finish = __aes_dtor<CIPHERMODE>;
     }
 
     return err;

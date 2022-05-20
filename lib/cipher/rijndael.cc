@@ -621,21 +621,22 @@ Rijndael::encrypt(const Uint8* pPlaintxt,
 }
 
 alc_error_t
-Rijndael::encryptUpdate(const Uint8* pPlaintxt,
-                        Uint8*       pCihpertxt,
-                        Uint64       len,
-                        const Uint8* pIv)
-{
-    return pImpl()->encryptUpdate(pPlaintxt, pCihpertxt, len, pIv);
-}
-
-alc_error_t
 Rijndael::decrypt(const Uint8* pCihpertxt,
                   Uint8*       pPlaintxt,
                   Uint64       len,
                   const Uint8* pIv) const
 {
     return pImpl()->decrypt(pCihpertxt, pPlaintxt, len, pIv);
+}
+
+#if 0
+alc_error_t
+Rijndael::encryptUpdate(const Uint8* pPlaintxt,
+                        Uint8*       pCihpertxt,
+                        Uint64       len,
+                        const Uint8* pIv)
+{
+    return pImpl()->encryptUpdate(pPlaintxt, pCihpertxt, len, pIv);
 }
 
 alc_error_t
@@ -646,5 +647,6 @@ Rijndael::decryptUpdate(const Uint8* pCihpertxt,
 {
     return pImpl()->decrypt(pCihpertxt, pPlaintxt, len, pIv);
 }
+#endif
 
 } // namespace alcp::cipher

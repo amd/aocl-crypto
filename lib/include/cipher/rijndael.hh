@@ -99,16 +99,6 @@ class Rijndael : public alcp::BlockCipher
                                 Uint64       len,
                                 const Uint8* pIv) const override;
 
-    virtual alc_error_t encryptUpdate(const Uint8* pSrc,
-                                      Uint8*       pDst,
-                                      Uint64       len,
-                                      const Uint8* pIv);
-
-    virtual alc_error_t decryptUpdate(const Uint8* pSrc,
-                                      Uint8*       pDst,
-                                      Uint64       len,
-                                      const Uint8* pIv);
-
   protected:
     Rijndael();
     explicit Rijndael(const alc_key_info_t& rKeyInfo);

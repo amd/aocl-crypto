@@ -126,10 +126,6 @@ class Cbc final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
-    virtual alc_error_t encryptUpdate(const uint8_t* pPlainText,
-                                      uint8_t*       pCipherText,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
     /**
      * \brief   CBC Decrypt Operation
      * \notes
@@ -143,11 +139,6 @@ class Cbc final : public Aes
                                 uint8_t*       pPlainText,
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
-
-    virtual alc_error_t decryptUpdate(const uint8_t* pCipherText,
-                                      uint8_t*       pPlainText,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
 
   private:
     Cbc(){};
@@ -211,10 +202,6 @@ class Ofb final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
-    virtual alc_error_t encryptUpdate(const uint8_t* pPlainText,
-                                      uint8_t*       pCipherText,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
     /**
      * \brief   OFB Decrypt Operation
      * \notes
@@ -228,11 +215,6 @@ class Ofb final : public Aes
                                 uint8_t*       pPlainText,
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
-
-    virtual alc_error_t decryptUpdate(const uint8_t* pCipherText,
-                                      uint8_t*       pPlainText,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
 
   private:
     Ofb(){};
@@ -296,11 +278,6 @@ class Ctr final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
-    virtual alc_error_t encryptUpdate(const uint8_t* pPlainText,
-                                      uint8_t*       pCipherText,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
-
     /**
      * \brief   CTR Decrypt Operation
      * \notes
@@ -315,11 +292,6 @@ class Ctr final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
-    virtual alc_error_t decryptUpdate(const uint8_t* pCipherText,
-                                      uint8_t*       pPlainText,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
-
   private:
     Ctr(){};
 
@@ -330,7 +302,10 @@ class Ctr final : public Aes
  * \brief        AES Encryption in GCM(Galois Counter mode)
  * \notes        TODO: Move this to a aes_Gcm.hh or other
  */
-class Gcm final : public Aes
+class Gcm final
+    : public Aes
+    , cipher::IDecryptUpdater
+    , cipher::IEncryptUpdater
 {
 
   public:

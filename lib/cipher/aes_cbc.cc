@@ -90,24 +90,4 @@ Cbc::encrypt(const uint8_t* pPlainText,
     return err;
 }
 
-alc_error_t
-Cbc::decryptUpdate(const uint8_t* pCipherText,
-                   uint8_t*       pPlainText,
-                   uint64_t       len,
-                   const uint8_t* pIv)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    return err;
-}
-
-alc_error_t
-Cbc::encryptUpdate(const uint8_t* pPlainText,
-                   uint8_t*       pCipherText,
-                   uint64_t       len,
-                   const uint8_t* pIv)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    return err;
-}
 } // namespace alcp::cipher

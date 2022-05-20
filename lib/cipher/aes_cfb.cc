@@ -77,28 +77,4 @@ Cfb::encrypt(const uint8_t* pPlainText,
     return err;
 }
 
-#if 0
-alc_error_t
-Cfb::decryptUpdate(const uint8_t* pCipherText,
-                   uint8_t*       pPlainText,
-                   uint64_t       len,
-                   const uint8_t* pIv)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    return err;
-}
-
-alc_error_t
-Cfb::encryptUpdate(const uint8_t* pPlainText,
-                   uint8_t*       pCipherText,
-                   uint64_t       len,
-                   const uint8_t* pIv)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    return err;
-}
-#endif
-
 } // namespace alcp::cipher
