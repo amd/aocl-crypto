@@ -46,108 +46,99 @@
 #include "types.hh"
 
 namespace alcp {
-
 namespace cipher {
-    typedef alc_error_t(Operation)(const Uint8* pSrc,
-                                   Uint8*       pDst,
-                                   Uint64       len,
-                                   const Uint8* pIv) const;
+
+    class IEncrypter
+    {
+      public:
+        virtual alc_error_t encrypt(const Uint8* pSrc,
+                                    Uint8*       pDst,
+                                    Uint64       len,
+                                    const Uint8* pIv) const = 0;
+
+        /*
+        virtual alc_error_t encryptUpdate(const Uint8* pInput,
+        Uint64       inputLen,
+        Uint8*       pOutput,
+        Uint64*      pOutputLen) = 0;*/
+
+      protected:
+        virtual ~IEncrypter() {}
+        IEncrypter() {}
+
+        std::function<alc_error_t(const void*  rCipher,
+                                  const Uint8* pSrc,
+                                  Uint8*       pDst,
+                                  Uint64       len,
+                                  const Uint8* pIv)>
+            m_encrypt_fn;
+
+      private:
+    };
+
+    class IDecrypter
+    {
+      public:
+        virtual alc_error_t decrypt(const Uint8* pSrc,
+                                    Uint8*       pDst,
+                                    Uint64       len,
+                                    const Uint8* pIv) const = 0;
+
+      protected:
+        virtual ~IDecrypter() {}
+        IDecrypter() {}
+
+        std::function<alc_error_t(const void*  rCipher,
+                                  const Uint8* pSrc,
+                                  Uint8*       pDst,
+                                  Uint64       len,
+                                  const Uint8* pIv)>
+            m_decrypt_fn;
+
+      private:
+    };
+
+    class IEncryptUpdater
+    {
+      public:
+        virtual alc_error_t encryptUpdate(const Uint8* pSrc,
+                                          Uint8*       pDst,
+                                          Uint64       len,
+                                          const Uint8* pIv) = 0;
+
+      protected:
+        virtual ~IEncryptUpdater() {}
+        IEncryptUpdater() {}
+
+        std::function<alc_error_t(const void*  rCipher,
+                                  const Uint8* pSrc,
+                                  Uint8*       pDst,
+                                  Uint64       len,
+                                  const Uint8* pIv)>
+            m_encryptUpdate_fn;
+    };
+
+    class IDecryptUpdater
+    {
+      public:
+        virtual alc_error_t decryptUpdate(const Uint8* pSrc,
+                                          Uint8*       pDst,
+                                          Uint64       len,
+                                          const Uint8* pIv) = 0;
+
+      protected:
+        virtual ~IDecryptUpdater() {}
+        IDecryptUpdater() {}
+
+        std::function<alc_error_t(const void*  rCipher,
+                                  const Uint8* pSrc,
+                                  Uint8*       pDst,
+                                  Uint64       len,
+                                  const Uint8* pIv)>
+            m_decryptUpdate_fn;
+    };
 
 } // namespace cipher
-
-class IEncrypter
-{
-  public:
-    virtual alc_error_t encrypt(const Uint8* pSrc,
-                                Uint8*       pDst,
-                                Uint64       len,
-                                const Uint8* pIv) const = 0;
-
-    virtual alc_error_t encryptUpdate(const Uint8* pSrc,
-                                      Uint8*       pDst,
-                                      Uint64       len,
-                                      const Uint8* pIv) = 0;
-    /*
-        virtual alc_error_t encryptUpdate(const Uint8* pInput,
-                                          Uint64       inputLen,
-                                          Uint8*       pOutput,
-                                          Uint64*      pOutputLen) = 0;*/
-
-  protected:
-    virtual ~IEncrypter() {}
-    IEncrypter() {}
-
-    std::function<alc_error_t(const void*  rCipher,
-                              const Uint8* pSrc,
-                              Uint8*       pDst,
-                              Uint64       len,
-                              const Uint8* pIv)>
-        m_encrypt_fn;
-
-    std::function<alc_error_t(const void*  rCipher,
-                              const Uint8* pSrc,
-                              Uint8*       pDst,
-                              Uint64       len,
-                              const Uint8* pIv)>
-        m_encryptUpdate_fn;
-
-  private:
-};
-
-class IDecrypter
-{
-  public:
-    virtual alc_error_t decrypt(const Uint8* pSrc,
-                                Uint8*       pDst,
-                                Uint64       len,
-                                const Uint8* pIv) const = 0;
-
-    virtual alc_error_t decryptUpdate(const Uint8* pSrc,
-                                      Uint8*       pDst,
-                                      Uint64       len,
-                                      const Uint8* pIv) = 0;
-
-  protected:
-    virtual ~IDecrypter() {}
-    IDecrypter() {}
-
-    std::function<alc_error_t(const void*  rCipher,
-                              const Uint8* pSrc,
-                              Uint8*       pDst,
-                              Uint64       len,
-                              const Uint8* pIv)>
-        m_decrypt_fn;
-
-    std::function<alc_error_t(const void*  rCipher,
-                              const Uint8* pSrc,
-                              Uint8*       pDst,
-                              Uint64       len,
-                              const Uint8* pIv)>
-        m_decryptUpdate_fn;
-
-  private:
-};
-
-class IEncryptUpdater
-{
-  public:
-    // virtual cipher::Operation encryptUpdate = 0;
-    // virtual cipher::Operation encryptFinal  = 0;
-
-  protected:
-    virtual ~IEncryptUpdater() {}
-};
-
-class IDecryptUpdater
-{
-  public:
-    // virtual cipher::Operation decryptUpdate = 0;
-    // virtual cipher::Operation decryptFinal  = 0;
-
-  protected:
-    virtual ~IDecryptUpdater() {}
-    IDecryptUpdater() {}
-};
 
 class Cipher
 {
@@ -160,8 +151,8 @@ class Cipher
      * \notes           Function  checks for algorithm and its
      *                  configuration for supported options
      * \param   pCipherInfo  Pointer to Cipher information
-     * \return          'true' if the given configuration/cipher is supported
-     *                  'false' otherwise
+     * \return          'true' if the given configuration/cipher is
+     * supported 'false' otherwise
      */
     virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
                              alc_error_t&             err)
@@ -235,11 +226,14 @@ class Cipher
 };
 
 class IBlockCipher
-    : public IDecrypter
-    , public IEncrypter
+    : public cipher::IDecrypter
+    , public cipher::IEncrypter
 {
   public:
     IBlockCipher() {}
+
+  protected:
+    virtual ~IBlockCipher() {}
 };
 
 class BlockCipher
@@ -250,20 +244,18 @@ class BlockCipher
     BlockCipher() {}
 
   protected:
+    virtual ~BlockCipher() {}
+
   private:
 };
 
 #if 0
 class StreamCipher : public Cipher
-                   , public StreamCipherInterfacd
+                   , public IStreamCipher
 {
   public:
 };
 #endif
-
-namespace cipher {
-    // Cipher& FindCipher(alc_cipher_info_t& cipherInfo) { return nullptr; }
-} // namespace cipher
 
 } // namespace alcp
 

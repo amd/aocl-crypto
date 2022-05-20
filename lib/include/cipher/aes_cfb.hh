@@ -94,11 +94,6 @@ class Cfb final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
-    virtual alc_error_t encryptUpdate(const uint8_t* pPlainText,
-                                      uint8_t*       pCipherText,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
-
     /**
      * \brief   CFB Decrypt Operation
      * \notes
@@ -112,11 +107,6 @@ class Cfb final : public Aes
                                 uint8_t*       pPlainText,
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
-
-    virtual alc_error_t decryptUpdate(const uint8_t* pCipherText,
-                                      uint8_t*       pPlainText,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
 
   private:
     Cfb(){};
