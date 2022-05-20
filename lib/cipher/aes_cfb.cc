@@ -26,7 +26,7 @@
  *
  */
 
-#include "cipher/aes.hh"
+#include "cipher/aes_cfb.hh"
 #include "cipher/aesni.hh"
 #include "cipher/vaes.hh"
 
