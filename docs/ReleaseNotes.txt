@@ -1,0 +1,18 @@
+(C) 2008-2022 Advanced Micro Devices, Inc. All Rights Reserved.
+
+AOCL Crypto - Release Notes - AOCL version 3.2
+----------------------------------------------
+
+AOCL Crypto Contents
+--------------------
+AOCL-Crypto is a library consisting of basic cryptographic functions
+optimized for AMD Zen microarchitecture. This library has multiple
+implementations of different AES cryptographic encryption / decryption and SHA2 Digest routines.
+
+Hightlights of AOCL Crypto version 3.2
+--------------------------------------
+This is the first release of the AOCL-Crypto library and supports the following functions.
+    * AES Encrypt / Decrypt routines which will support the following cipher schemes:
+          - CBC, CFB, OFB, CTR, GCM.
+    * SHA2 Digest routines for the following SHA2 digest schemes:
+          - SHA2_224, SHA2_256, SHA2_384, SHA2_512
