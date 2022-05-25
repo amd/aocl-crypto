@@ -40,7 +40,69 @@
 #ifdef USE_OSSL
 #include "openssl_base.hh"
 #endif
+enum ENC_DEC
+{
+    DECRYPT = 0,
+    ENCRYPT
+};
 
+/**
+ * returns respective string based on AES modes
+ */
+std::string
+GetModeSTR(alc_aes_mode_t mode)
+{
+    switch (mode) {
+        case ALC_AES_MODE_ECB:
+            return "ECB";
+        case ALC_AES_MODE_CBC:
+            return "CBC";
+        case ALC_AES_MODE_OFB:
+            return "OFB";
+        case ALC_AES_MODE_CTR:
+            return "CTR";
+        case ALC_AES_MODE_CFB:
+            return "CFB";
+        case ALC_AES_MODE_XTR:
+            return "XTR";
+        case ALC_AES_MODE_GCM:
+            return "GCM";
+        default:
+            return "NULL";
+    }
+}
+/**
+ * Macro for Cipher KAT
+ */
+#define KAT_TEST_MACRO(TEST_NAME, TEST_TYPE, keySize, enc_dec, mode)                          \
+    TEST(TEST_NAME, TEST_TYPE)                                                                \
+    {                                                                                         \
+        int         key_size = keySize;                                                       \
+        std::string MODE_STR = GetModeSTR(mode);                                              \
+        bool        test_ran = false;                                                         \
+        std::string enc_dec_str;                                                              \
+        if (enc_dec == ENCRYPT)                                                               \
+            enc_dec_str = "_ENC";                                                             \
+        else                                                                                  \
+            enc_dec_str = "_DEC";                                                             \
+        TestingCore testingCore = TestingCore(MODE_STR, ALC_MODE);                            \
+        \ 
+        while (testingCore.getDs()->readPtIvKeyCt(key_size))                                  \
+        { /*Checks if output is correct*/                                                     \
+            test_ran = true;                                                                  \
+            EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingEncrypt(         \
+                                    testingCore.getDs()->getPt(),                           \
+                                    testingCore.getDs()->getKey(),                          \
+                                    testingCore.getDs()->getIv()),                          \
+                                    testingCore.getDs()->getCt(),                           \
+                                    *(testingCore.getDs()),                                 \      
+                                    std::string("AES_" + MODE_STR + "_"+ std::to_string(keySize) + enc_dec_str))); \
+        }                                                                                     \
+        if (!test_ran) {                                                                      \
+            EXPECT_TRUE(::testing::AssertionFailure()                                         \
+                        << "No tests to run, check dataset");                                 \
+        }                                                                                     \
+    }
 // Just a class to reduce duplication of lines
 class TestingCore
 {
