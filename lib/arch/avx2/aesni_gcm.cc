@@ -154,31 +154,79 @@ InitGcm(const uint8_t* pKey,
         int            nRounds,
         const uint8_t* pIv,
         uint64_t       ivBytes,
-        __m128i*       phash_subKey_128,
+        __m128i*       pHsubKey_128,
         __m128i*       ptag_128,
+        __m128i*       piv_128,
         __m128i        reverse_mask_128)
 {
     alc_error_t err     = ALC_ERROR_NONE;
     auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
-    // phash_subKey_128 is already set to zero
+    auto        pIv128  = reinterpret_cast<const __m128i*>(pIv);
+    // pHsubKey_128 is already set to zero
     // Hash subkey generation.
-    aesni::AesEncrypt(phash_subKey_128, pkey128, nRounds);
+    aesni::AesEncrypt(pHsubKey_128, pkey128, nRounds);
     // Hash sub key reversed for gf multiplication.
-    *phash_subKey_128 = _mm_shuffle_epi8(*phash_subKey_128, reverse_mask_128);
+    *pHsubKey_128 = _mm_shuffle_epi8(*pHsubKey_128, reverse_mask_128);
+
+    // counter 4 bytes are arranged in reverse order
+    // for counter increment
+    __m128i swap_ctr =
+        _mm_setr_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 14, 13, 12);
 
     // Tag computation
     if ((ivBytes) == 12) {
         // iv
-        *ptag_128 = _mm_loadu_si128((__m128i*)pIv);
+        *piv_128 = _mm_loadu_si128((__m128i*)pIv);
         // T= 96 bit iv : 32bit counter
-        *ptag_128 = _mm_insert_epi32(*ptag_128, 0x1000000, 3);
+        *ptag_128 = _mm_insert_epi32(*piv_128, 0x1000000, 3);
         aesni::AesEncrypt(ptag_128, pkey128, nRounds);
+
+        // nonce counter
+        *piv_128 = _mm_insert_epi32(*piv_128, 0x2000000, 3);
+        *piv_128 = _mm_shuffle_epi8(*piv_128, swap_ctr);
     } else {
-        printf("\n iv length!=12bytes (or 96bits) not supported ");
-        return ALC_ERROR_NOT_SUPPORTED;
+        int     ivBlocks = ivBytes / AES_BLOCK_SIZE(128);
+        int     remBytes = ivBytes - (ivBlocks * AES_BLOCK_SIZE(128));
+        __m128i a128;
+        __m128i one_128 = _mm_set_epi32(1, 0, 0, 0);
+
+        *ptag_128 = _mm_setzero_si128();
+        for (; ivBlocks >= 1; ivBlocks--) {
+            a128      = _mm_loadu_si128(pIv128);
+            a128      = _mm_shuffle_epi8(a128, reverse_mask_128);
+            *ptag_128 = _mm_xor_si128(a128, *ptag_128);
+            gMul(*ptag_128, *pHsubKey_128, ptag_128);
+            pIv128++;
+        }
+        if (remBytes) {
+            a128                 = _mm_setzero_si128();
+            const uint8_t* p_in  = pIv;
+            uint8_t*       p_out = reinterpret_cast<uint8_t*>(&a128);
+            for (int i = 0; i < remBytes; i++) {
+                p_out[i] = p_in[i];
+            }
+            a128      = _mm_shuffle_epi8(a128, reverse_mask_128);
+            *ptag_128 = _mm_xor_si128(a128, *ptag_128);
+            gMul(*ptag_128, *pHsubKey_128, ptag_128);
+        }
+
+        a128 = _mm_setzero_si128();
+        a128 = _mm_insert_epi64(a128, (ivBytes << 3), 0);
+        a128 = _mm_insert_epi64(a128, 0, 1);
+
+        *ptag_128 = _mm_xor_si128(a128, *ptag_128);
+        gMul(*ptag_128, *pHsubKey_128, ptag_128);
+
+        *ptag_128 = _mm_shuffle_epi8(*ptag_128, reverse_mask_128);
+        *piv_128  = *ptag_128;
+
+        *piv_128 = _mm_shuffle_epi8(*piv_128, swap_ctr);
+        *piv_128 = _mm_add_epi32(*piv_128, one_128);
+
+        aesni::AesEncrypt(ptag_128, pkey128, nRounds);
     }
 
-    ALCP_PRINT_TEXT((uint8_t*)phash_subKey_128, 16, "subkey   ")
+    ALCP_PRINT_TEXT((uint8_t*)pHsubKey_128, 16, "subkey   ")
     return err;
 }
 
@@ -191,6 +239,7 @@ CryptGcm(const uint8_t* pInputText,  // ptr to inputText
          const uint8_t* pIv,         // ptr to Initialization Vector
          __m128i*       pgHash_128,
          __m128i        Hsubkey_128,
+         __m128i        iv_128,
          __m128i        reverse_mask_128,
          bool           isEncrypt)
 {
@@ -210,14 +259,12 @@ CryptGcm(const uint8_t* pInputText,  // ptr to inputText
     // for counter increment
     swap_ctr =
         _mm_setr_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 14, 13, 12);
-    // nonce counter
-    c1                = _mm_loadu_si128((__m128i*)pIv);
-    c1                = _mm_insert_epi32(c1, 0x2000000, 3);
+
+    c1                = iv_128;
     __m128i one_128   = _mm_set_epi32(1, 0, 0, 0);
     __m128i two_128   = _mm_set_epi32(2, 0, 0, 0);
     __m128i three_128 = _mm_set_epi32(3, 0, 0, 0);
     __m128i four_128  = _mm_set_epi32(4, 0, 0, 0);
-    c1                = _mm_shuffle_epi8(c1, swap_ctr);
 
     for (; blocks >= 4; blocks -= 4) {
         c2 = _mm_add_epi32(c1, one_128);

@@ -432,6 +432,8 @@ class Gcm final : public Aes
 
     __m128i m_reverse_mask_128;
 
+    __m128i m_iv_128;
+
     uint64_t m_len;
     uint64_t m_additionalDataLen;
     uint64_t m_ivLen;

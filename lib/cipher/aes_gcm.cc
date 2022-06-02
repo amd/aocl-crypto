@@ -83,6 +83,7 @@ Gcm::cryptUpdate(const uint8_t* pInput,
                                  m_ivLen,
                                  &m_hash_subKey_128,
                                  &m_tag_128,
+                                 &m_iv_128,
                                  m_reverse_mask_128);
         } else if ((pInput != NULL) && (pOutput == NULL)) {
             // additional data processing, when input is additional data &
@@ -111,8 +112,10 @@ Gcm::cryptUpdate(const uint8_t* pInput,
                                   pIv,
                                   &m_gHash_128,
                                   m_hash_subKey_128,
+                                  m_iv_128,
                                   m_reverse_mask_128,
                                   isEncrypt);
+
         } else if ((pInput == NULL) && (pOutput != NULL)) {
             // Get tag info, when Output is not Null and Input is Null.
             uint8_t* ptag = pOutput;
