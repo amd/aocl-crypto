@@ -63,9 +63,9 @@ cryptCtr(const uint8_t* pPlainText,  // ptr to plaintext
     auto p_out_128 = reinterpret_cast<__m128i*>(pCipherText);
     auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
 
-    vect_256_t block0, block1;
-    vect_256_t ctr1, ctr2, swap_ctrx;
-    vect_256_t b1, b2;
+    __m256i    block0, block1;
+    vect_256_t ctr1, ctr2;
+    __m256i    b1, b2, swap_ctrx;
 
     //
     // counterblock :: counter 4 bytes: IV 8 bytes : Nonce 4 bytes
@@ -74,14 +74,14 @@ cryptCtr(const uint8_t* pPlainText,  // ptr to plaintext
 
     // counter 4 bytes are arranged in reverse order
     // for counter increment
-    swap_ctrx.ymm = _mm256_set_epi32(0x0c0d0e0f,
-                                     0x0b0a0908,
-                                     0x07060504,
-                                     0x03020100,
-                                     0x0c0d0e0f, // Repeats here
-                                     0x0b0a0908,
-                                     0x07060504,
-                                     0x03020100);
+    swap_ctrx = _mm256_set_epi32(0x0c0d0e0f,
+                                 0x0b0a0908,
+                                 0x07060504,
+                                 0x03020100,
+                                 0x0c0d0e0f, // Repeats here
+                                 0x0b0a0908,
+                                 0x07060504,
+                                 0x03020100);
 
     // Mask for loading and storing half register
     __m256i mask_lo = _mm256_set_epi64x(0, 0, 1UL << 63, 1UL << 63);
@@ -97,68 +97,66 @@ cryptCtr(const uint8_t* pPlainText,  // ptr to plaintext
     __m256i fourhilo = _mm256_setr_epi32(0, 0, 0, 4, 0, 0, 0, 4);
 
     // Rearrange to add
-    ctr1.ymm = _mm256_shuffle_epi8(ctr1.ymm, swap_ctrx.ymm);
+    ctr1.ymm = _mm256_shuffle_epi8(ctr1.ymm, swap_ctrx);
 
     // Keep both counters ready
     ctr1.ymm = _mm256_add_epi32(ctr1.ymm, onehi);
     ctr2.ymm = _mm256_add_epi32(ctr1.ymm, twohilo);
 
     for (; blocks >= 4; blocks -= 4) {
-        block0.ymm = _mm256_loadu_si256((__m256i*)p_in_128);
-        block1.ymm = _mm256_loadu_si256((__m256i*)p_in_128 + 1);
+        block0 = _mm256_loadu_si256((__m256i*)p_in_128);
+        block1 = _mm256_loadu_si256((__m256i*)p_in_128 + 1);
 
         // re-arrange as per spec
-        b1.ymm = _mm256_shuffle_epi8(ctr1.ymm, swap_ctrx.ymm);
-        b2.ymm = _mm256_shuffle_epi8(ctr2.ymm, swap_ctrx.ymm);
+        b1 = _mm256_shuffle_epi8(ctr1.ymm, swap_ctrx);
+        b2 = _mm256_shuffle_epi8(ctr2.ymm, swap_ctrx);
 
-        vaes::AESEncrypt(&(b1.ymm), &(b2.ymm), pkey128, nRounds);
+        vaes::AESEncrypt(&(b1), &(b2), pkey128, nRounds);
 
-        block0.ymm = _mm256_xor_si256(b1.ymm, block0.ymm);
-        block1.ymm = _mm256_xor_si256(b2.ymm, block1.ymm);
+        block0 = _mm256_xor_si256(b1, block0);
+        block1 = _mm256_xor_si256(b2, block1);
 
         ctr1.ymm = _mm256_add_epi32(ctr1.ymm, fourhilo);
         ctr2.ymm = _mm256_add_epi32(ctr2.ymm, fourhilo);
 
-        _mm256_storeu_si256(reinterpret_cast<__m256i*>(p_out_128), block0.ymm);
-        _mm256_storeu_si256(reinterpret_cast<__m256i*>(p_out_128) + 1,
-                            block1.ymm);
+        _mm256_storeu_si256(reinterpret_cast<__m256i*>(p_out_128), block0);
+        _mm256_storeu_si256(reinterpret_cast<__m256i*>(p_out_128) + 1, block1);
 
         p_in_128 += 4;
         p_out_128 += 4;
     }
 
     for (; blocks >= 2; blocks -= 2) {
-        block0.ymm = _mm256_loadu_si256((__m256i*)p_in_128);
+        block0 = _mm256_loadu_si256((__m256i*)p_in_128);
 
         // re-arrange as per spec
-        b1.ymm = _mm256_shuffle_epi8(ctr1.ymm, swap_ctrx.ymm);
+        b1 = _mm256_shuffle_epi8(ctr1.ymm, swap_ctrx);
 
-        vaes::AESEncrypt(&(b1.ymm), pkey128, nRounds);
+        vaes::AESEncrypt(&(b1), pkey128, nRounds);
 
-        block0.ymm = _mm256_xor_si256(b1.ymm, block0.ymm);
+        block0 = _mm256_xor_si256(b1, block0);
 
         ctr1.ymm = _mm256_add_epi32(ctr1.ymm, twohilo);
 
-        _mm256_storeu_si256((__m256i*)p_out_128, block0.ymm);
+        _mm256_storeu_si256((__m256i*)p_out_128, block0);
 
         p_in_128 += 2;
         p_out_128 += 2;
     }
 
     for (; blocks >= 1; blocks -= 1) {
-        block0.ymm = _mm256_maskload_epi64((long long*)p_in_128, mask_lo);
-        // print_ymm(ax);
+        block0 = _mm256_maskload_epi64((long long*)p_in_128, mask_lo);
 
         // re-arrange as per spec
-        b1.ymm = _mm256_shuffle_epi8(ctr1.ymm, swap_ctrx.ymm);
+        b1 = _mm256_shuffle_epi8(ctr1.ymm, swap_ctrx);
 
-        vaes::AESEncrypt(&(b1.ymm), pkey128, nRounds);
+        vaes::AESEncrypt(&(b1), pkey128, nRounds);
 
-        block0.ymm = _mm256_xor_si256(b1.ymm, block0.ymm);
+        block0 = _mm256_xor_si256(b1, block0);
 
         ctr1.ymm = _mm256_add_epi32(ctr1.ymm, onelo);
 
-        _mm256_maskstore_epi64((long long*)p_out_128, mask_lo, block0.ymm);
+        _mm256_maskstore_epi64((long long*)p_out_128, mask_lo, block0);
 
         p_in_128++;
         p_out_128++;
