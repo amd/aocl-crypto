@@ -153,7 +153,6 @@ cryptCtr(const uint8_t* pPlainText,  // ptr to plaintext
         b1.ymm = _mm256_shuffle_epi8(ctr1.ymm, swap_ctrx.ymm);
 
         vaes::AESEncrypt(&(b1.ymm), pkey128, nRounds);
-        // std::cout << "HERE" << std::endl;
 
         block0.ymm = _mm256_xor_si256(b1.ymm, block0.ymm);
 
