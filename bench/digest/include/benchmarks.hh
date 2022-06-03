@@ -50,7 +50,7 @@ void
 Digest_SHA2_224(benchmark::State& state, uint64_t block_size)
 {
     alc_error_t    error;
-    uint8_t        message[16384] = { 0 };
+    uint8_t        message[32768] = { 0 };
     uint8_t        digest[512]    = { 0 };
     AlcpDigestBase adb(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
     DigestBase*    db = &adb;
@@ -88,7 +88,7 @@ void
 Digest_SHA2_256(benchmark::State& state, uint64_t block_size)
 {
     alc_error_t    error;
-    uint8_t        message[16384] = { 0 };
+    uint8_t        message[32768] = { 0 };
     uint8_t        digest[512]    = { 0 };
     AlcpDigestBase adb(ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
     DigestBase*    db = &adb;
@@ -126,7 +126,7 @@ void
 Digest_SHA2_384(benchmark::State& state, uint64_t block_size)
 {
     alc_error_t    error;
-    uint8_t        message[16384] = { 0 };
+    uint8_t        message[32768] = { 0 };
     uint8_t        digest[512]    = { 0 };
     AlcpDigestBase adb(ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
     DigestBase*    db = &adb;
@@ -164,7 +164,7 @@ void
 Digest_SHA2_512(benchmark::State& state, uint64_t block_size)
 {
     alc_error_t    error;
-    uint8_t        message[16384] = { 0 };
+    uint8_t        message[32768] = { 0 };
     uint8_t        digest[512]    = { 0 };
     AlcpDigestBase adb(ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
     DigestBase*    db = &adb;
@@ -241,6 +241,13 @@ BENCH_SHA2_224_16384(benchmark::State& state)
 }
 BENCHMARK(BENCH_SHA2_224_16384);
 
+static void
+BENCH_SHA2_224_32768(benchmark::State& state)
+{
+    Digest_SHA2_224(state, 32768);
+}
+BENCHMARK(BENCH_SHA2_224_32768);
+
 /*256*/
 /* add all your new benchmarks here */
 static void
@@ -285,6 +292,13 @@ BENCH_SHA2_256_16384(benchmark::State& state)
 }
 BENCHMARK(BENCH_SHA2_256_16384);
 
+static void
+BENCH_SHA2_256_32768(benchmark::State& state)
+{
+    Digest_SHA2_256(state, 32768);
+}
+BENCHMARK(BENCH_SHA2_256_32768);
+
 /*384*/
 static void
 BENCH_SHA2_384_16(benchmark::State& state)
@@ -328,6 +342,13 @@ BENCH_SHA2_384_16384(benchmark::State& state)
 }
 BENCHMARK(BENCH_SHA2_384_16384);
 
+static void
+BENCH_SHA2_384_32768(benchmark::State& state)
+{
+    Digest_SHA2_384(state, 32768);
+}
+BENCHMARK(BENCH_SHA2_384_32768);
+
 /*SHA512*/
 static void
 BENCH_SHA2_512_16(benchmark::State& state)
@@ -370,3 +391,10 @@ BENCH_SHA2_512_16384(benchmark::State& state)
     Digest_SHA2_512(state, 16384);
 }
 BENCHMARK(BENCH_SHA2_512_16384);
+
+static void
+BENCH_SHA2_512_32768(benchmark::State& state)
+{
+    Digest_SHA2_512(state, 32768);
+}
+BENCHMARK(BENCH_SHA2_512_32768);
