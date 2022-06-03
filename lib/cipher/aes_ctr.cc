@@ -41,7 +41,7 @@ Ctr::decrypt(const uint8_t* pCipherText,
 
     if (Cipher::isVaesAvailable()) {
         // err = vaes::DecryptCtr(
-        err = aesni::DecryptCtr(
+        err = vaes::DecryptCtr(
             pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
 
         return err;
@@ -68,7 +68,7 @@ Ctr::encrypt(const uint8_t* pPlainText,
 
     if (Cipher::isVaesAvailable()) {
         // err = vaes::EncryptCtr(
-        err = aesni::EncryptCtr(
+        err = vaes::EncryptCtr(
             pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
 
         return err;
