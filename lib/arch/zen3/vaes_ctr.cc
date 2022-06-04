@@ -87,8 +87,7 @@ cryptCtr(const uint8_t* pPlainText,  // ptr to plaintext
     __m256i mask_lo = _mm256_set_epi64x(0, 0, 1UL << 63, 1UL << 63);
 
     // Nonce Counter
-    ctr1.ymm    = _mm256_maskload_epi64((long long*)pIv, mask_lo);
-    ctr1.xmm[1] = ctr1.xmm[0]; // Replicate information
+    amd_mm256_broadcast_i64x2((__m128i*)pIv, &ctr1.ymm);
 
     // Incrementer registers
     __m256i onelo    = _mm256_setr_epi32(0, 0, 0, 1, 0, 0, 0, 0);
