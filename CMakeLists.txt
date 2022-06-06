@@ -85,9 +85,40 @@ INSTALL(TARGETS alcp alcp_static)
 INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/include/alcp
         TYPE INCLUDE
 		)
-INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/examples/
-		DESTINATION examples
-		)
+
+IF (ALCP_ENABLE_EXAMPLES)
+	FILE(GLOB EXAMPLES_FILES_CIPHER
+			${CMAKE_CURRENT_SOURCE_DIR}/examples/cipher/*.c
+	#		${CMAKE_CURRENT_SOURCE_DIR}/examples/cipher/*.cc
+			)
+	FILE(GLOB EXAMPLES_FILES_DIGEST
+			${CMAKE_CURRENT_SOURCE_DIR}/examples/digest/*.c
+	#		${CMAKE_CURRENT_SOURCE_DIR}/examples/digest/*.cc
+			)
+	FILE(GLOB EXAMPLES_FILES_RNG
+			${CMAKE_CURRENT_SOURCE_DIR}/examples/rng/*.c
+	#		${CMAKE_CURRENT_SOURCE_DIR}/examples/rng/*.cc
+			)
+	FILE(GLOB EXAMPLES_FILES_MISC
+			${CMAKE_CURRENT_SOURCE_DIR}/examples/misc/*.c
+	#		${CMAKE_CURRENT_SOURCE_DIR}/examples/misc/*.cc
+			)
+
+	INSTALL(FILES ${EXAMPLES_FILES_CIPHER}
+			DESTINATION examples/cipher
+			)
+	INSTALL(FILES ${EXAMPLES_FILES_DIGEST}
+			DESTINATION examples/digest
+			)
+	INSTALL(FILES ${EXAMPLES_FILES_RNG}
+			DESTINATION examples/rng
+			)
+	INSTALL(FILES ${EXAMPLES_FILES_MISC} 
+			DESTINATION examples/misc
+			)
+	INSTALL(FILES examples/Makefile
+			DESTINATION .)
+ENDIF (ALCP_ENABLE_EXAMPLES)
 # INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/examples/cipher
 #         DESTINATION examples
 # 		)
