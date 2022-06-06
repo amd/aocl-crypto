@@ -110,8 +110,9 @@ namespace alcp::cipher { namespace aesni {
                         int            nRounds,
                         const uint8_t* pIv,
                         uint64_t       ivBytes,
-                        __m128i*       phash_subKey_128,
+                        __m128i*       pHsubKey_128,
                         __m128i*       ptag_128,
+                        __m128i*       piv_128,
                         __m128i        reverse_mask_128);
 
     alc_error_t processAdditionalDataGcm(const uint8_t* pAdditionalData,
@@ -128,6 +129,7 @@ namespace alcp::cipher { namespace aesni {
                          const uint8_t* pIv,
                          __m128i*       pgHash,
                          __m128i        Hsubkey_128,
+                         __m128i        iv_128,
                          __m128i        reverse_mask_128,
                          bool           isEncrypt);
 
