@@ -53,6 +53,20 @@ namespace alcp::cipher { namespace vaes {
                            int            nRounds,
                            const uint8_t* pIv);
 
+    alc_error_t DecryptCtr(const uint8_t* pCipherText,
+                           uint8_t*       pPlainText,
+                           uint64_t       len,
+                           const uint8_t* pKey,
+                           int            nRounds,
+                           const uint8_t* pIv);
+
+    alc_error_t EncryptCtr(const uint8_t* pPlainText,
+                           uint8_t*       pCipherText,
+                           uint64_t       len,
+                           const uint8_t* pKey,
+                           int            nRounds,
+                           const uint8_t* pIv);
+
     static inline void amd_mm256_broadcast_i64x2(const __m128i* rKey,
                                                  __m256i*       dst)
     {
