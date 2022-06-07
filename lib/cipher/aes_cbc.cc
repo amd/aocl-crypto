@@ -38,10 +38,9 @@ Cbc::decrypt(const uint8_t* pCipherText,
              const uint8_t* pIv) const
 {
     alc_error_t err = ALC_ERROR_NONE;
-
     if (Cipher::isVaesAvailable()) {
         // err = vaes::DecryptCbc(
-        err = aesni::DecryptCbc(
+        err = vaes::DecryptCbc(
             pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
 
         return err;
@@ -64,7 +63,6 @@ Cbc::encrypt(const uint8_t* pPlainText,
              const uint8_t* pIv) const
 {
     alc_error_t err = ALC_ERROR_NONE;
-
     if (Cipher::isVaesAvailable()) {
         // err = vaes::EncryptCbc(
         err = aesni::EncryptCbc(
