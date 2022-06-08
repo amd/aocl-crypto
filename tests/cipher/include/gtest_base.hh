@@ -74,34 +74,47 @@ GetModeSTR(alc_aes_mode_t mode)
 /**
  * Macro for Cipher KAT
  */
-#define KAT_TEST_MACRO(TEST_NAME, TEST_TYPE, keySize, enc_dec, mode)                          \
-    TEST(TEST_NAME, TEST_TYPE)                                                                \
-    {                                                                                         \
-        int         key_size = keySize;                                                       \
-        std::string MODE_STR = GetModeSTR(mode);                                              \
-        bool        test_ran = false;                                                         \
-        std::string enc_dec_str;                                                              \
-        if (enc_dec == ENCRYPT)                                                               \
-            enc_dec_str = "_ENC";                                                             \
-        else                                                                                  \
-            enc_dec_str = "_DEC";                                                             \
-        TestingCore testingCore = TestingCore(MODE_STR, ALC_MODE);                            \
-        \ 
-        while (testingCore.getDs()->readPtIvKeyCt(key_size))                                  \
-        { /*Checks if output is correct*/                                                     \
-            test_ran = true;                                                                  \
-            EXPECT_TRUE(ArraysMatch(testingCore.getCipherHandler()->testingEncrypt(         \
-                                    testingCore.getDs()->getPt(),                           \
-                                    testingCore.getDs()->getKey(),                          \
-                                    testingCore.getDs()->getIv()),                          \
-                                    testingCore.getDs()->getCt(),                           \
-                                    *(testingCore.getDs()),                                 \      
-                                    std::string("AES_" + MODE_STR + "_"+ std::to_string(keySize) + enc_dec_str))); \
-        }                                                                                     \
-        if (!test_ran) {                                                                      \
-            EXPECT_TRUE(::testing::AssertionFailure()                                         \
-                        << "No tests to run, check dataset");                                 \
-        }                                                                                     \
+#define KAT_TEST_MACRO(TEST_NAME, TEST_TYPE, keySize, enc_dec, mode)           \
+    TEST(TEST_NAME, TEST_TYPE)                                                 \
+    {                                                                          \
+        int         key_size = keySize;                                        \
+        std::string MODE_STR = GetModeSTR(mode);                               \
+        bool        test_ran = false;                                          \
+        std::string enc_dec_str;                                               \
+        if (enc_dec == ENCRYPT)                                                \
+            enc_dec_str = "_ENC";                                              \
+        else                                                                   \
+            enc_dec_str = "_DEC";                                              \
+        TestingCore testingCore = TestingCore(MODE_STR, ALC_MODE);             \
+                                                                               \
+        while (testingCore.getDs()->readPtIvKeyCt(                             \
+            key_size)) { /*Checks if output is correct*/                       \
+            test_ran = true;                                                   \
+            if (enc_dec == ENCRYPT)                                            \
+                EXPECT_TRUE(ArraysMatch(                                       \
+                    testingCore.getCipherHandler()->testingEncrypt(            \
+                        testingCore.getDs()->getPt(),                          \
+                        testingCore.getDs()->getKey(),                         \
+                        testingCore.getDs()->getIv()),                         \
+                    testingCore.getDs()->getCt(),                              \
+                    *(testingCore.getDs()),                                    \
+                    std::string("AES_" + MODE_STR + "_"                        \
+                                + std::to_string(keySize) + enc_dec_str)));    \
+            else                                                               \
+                EXPECT_TRUE(ArraysMatch(                                       \
+                    testingCore.getCipherHandler()->testingDecrypt(            \
+                        testingCore.getDs()->getCt(),                          \
+                        testingCore.getDs()->getKey(),                         \
+                        testingCore.getDs()->getIv()),                         \
+                    testingCore.getDs()->getPt(),                              \
+                    *(testingCore.getDs()),                                    \
+                    std::string("AES_" + MODE_STR + "_"                        \
+                                + std::to_string(keySize) + enc_dec_str)));    \
+        }                                                                      \
+        if (!test_ran) {                                                       \
+            EXPECT_TRUE(::testing::AssertionFailure()                          \
+                        << "No tests to run, check dataset");                  \
+        }                                                                      \
     }
 // Just a class to reduce duplication of lines
 class TestingCore
