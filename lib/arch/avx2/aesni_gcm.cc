@@ -150,6 +150,7 @@ gMul(__m128i a, __m128i b, __m128i* res)
     redMod(c, d, res);
 }
 
+#ifdef AGGREGATED_REDUCTION
 static void
 computeKaratsubaZ0_Z2(__m128i  H1,
                       __m128i  H2,
@@ -310,6 +311,7 @@ gMul(__m128i  H1,
     // A mod P
     redMod(low, high, res);
 }
+#endif // AGGREGATED_REDUCTION
 
 alc_error_t
 InitGcm(const uint8_t* pKey,

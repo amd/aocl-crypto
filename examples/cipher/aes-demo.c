@@ -600,7 +600,6 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
             }
         }
 #endif
-    printf("\n");
 
 #if SPEED_CHECK
         totalTimeElapsed = 0.0;
