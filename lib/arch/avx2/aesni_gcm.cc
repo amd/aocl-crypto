@@ -35,6 +35,7 @@
 #include "error.hh"
 #include "key.hh"
 
+#define AGGREGATED_REDUCTION
 //#define DEBUG_P /* Enable for debugging only */
 
 /*
@@ -147,6 +148,167 @@ gMul(__m128i a, __m128i b, __m128i* res)
     __m128i c, d;
     carrylessMul(a, b, &c, &d);
     redMod(c, d, res);
+}
+
+static void
+computeKaratsubaZ0_Z2(__m128i  H1,
+                      __m128i  H2,
+                      __m128i  H3,
+                      __m128i  H4,
+                      __m128i  a,
+                      __m128i  b,
+                      __m128i  c,
+                      __m128i  d,
+                      __m128i* z0,
+                      __m128i* z2)
+{
+    __m128i z0_a, z0_b, z0_c, z0_d, z2_a, z2_b, z2_c, z2_d;
+
+    // compute x0y0
+    // (Xi • H1)
+    z0_a = _mm_clmulepi64_si128(H1, a, 0x00);
+    // (Xi-1 • H2)
+    z0_b = _mm_clmulepi64_si128(H2, b, 0x00);
+    // (Xi-2 • H3)
+    z0_c = _mm_clmulepi64_si128(H3, c, 0x00);
+    // (Xi-3+Yi-4) •H4
+    z0_d = _mm_clmulepi64_si128(H4, d, 0x00);
+
+    // compute x1y1
+    z2_a = _mm_clmulepi64_si128(H1, a, 0x11);
+    z2_b = _mm_clmulepi64_si128(H2, b, 0x11);
+    z2_c = _mm_clmulepi64_si128(H3, c, 0x11);
+    z2_d = _mm_clmulepi64_si128(H4, d, 0x11);
+
+    /* compute: z0 = x0y0
+    z0 component of below equation:
+    [(Xi • H1) + (Xi-1 • H2) + (Xi-2 • H3) + (Xi-3+Yi-4) •H4] */
+    *z0 = _mm_xor_si128(z0_a, z0_b);
+    *z0 = _mm_xor_si128(*z0, z0_c);
+    *z0 = _mm_xor_si128(*z0, z0_d);
+
+    /* compute: z2 = x1y1
+    z2 component of below equation:
+    [(Xi • H1) + (Xi-1 • H2) + (Xi-2 • H3) + (Xi-3+Yi-4) •H4] */
+    *z2 = _mm_xor_si128(z2_a, z2_b);
+    *z2 = _mm_xor_si128(*z2, z2_c);
+    *z2 = _mm_xor_si128(*z2, z2_d);
+}
+
+static void
+carrylessMul(__m128i  H1,
+             __m128i  H2,
+             __m128i  H3,
+             __m128i  H4,
+             __m128i  a,
+             __m128i  b,
+             __m128i  c,
+             __m128i  d,
+             __m128i* high,
+             __m128i* low)
+{
+    /*
+        Karatsuba algorithm to multiply two elements x,y
+        Elements x,y are split as two equal 64 bit elements each.
+        x = x1:x0
+        y = y1:y0
+
+        compute z2 and z0
+        z0 = x0y0
+        z2 = x1y1
+
+        Reduce two multiplications in z1 to one.
+        original: z1 = x1y0 + x0y1
+        Reduced : z1 = (x1+x0) (y1+y0) - z2 - z0
+
+        Aggregrated Reduction:
+        [(Xi • H1) + (Xi-1 • H2) + (Xi-2 • H3) + (Xi-3+Yi-4) •H4] mod P
+
+    */
+
+    __m128i z0, z2;
+    __m128i a0, a1, a2, a3, a4, a5, a6, a7;
+    __m128i xt, yt;
+    computeKaratsubaZ0_Z2(H1, H2, H3, H4, a, b, c, d, &z0, &z2);
+
+    /* compute: z1 = (x1+x0) (y1+y0) - z2 - z0 */
+
+    // compute (x1+x0) and (y1+y0) for all 4 components
+    // 1st component
+    xt = _mm_srli_si128(a, 8);
+    a1 = _mm_xor_si128(a, xt);
+    yt = _mm_srli_si128(H1, 8);
+    a0 = _mm_xor_si128(H1, yt);
+
+    // 2nd component
+    xt = _mm_srli_si128(b, 8);
+    a3 = _mm_xor_si128(b, xt);
+    yt = _mm_srli_si128(H2, 8);
+    a2 = _mm_xor_si128(H2, yt);
+
+    // 3rd component
+    xt = _mm_srli_si128(c, 8);
+    a5 = _mm_xor_si128(c, xt);
+    yt = _mm_srli_si128(H3, 8);
+    a4 = _mm_xor_si128(H3, yt);
+
+    // 4th component
+    xt = _mm_srli_si128(d, 8);
+    a7 = _mm_xor_si128(d, xt);
+    yt = _mm_srli_si128(H4, 8);
+    a6 = _mm_xor_si128(H4, yt);
+
+    // multiply (x1+x0) and (y1+y0)
+    a0 = _mm_clmulepi64_si128(a0, a1, 0x00);
+    a1 = _mm_clmulepi64_si128(a2, a3, 0x00);
+    a2 = _mm_clmulepi64_si128(a4, a5, 0x00);
+    a3 = _mm_clmulepi64_si128(a6, a7, 0x00);
+
+    // add (-z2 -z0)
+    a0 = _mm_xor_si128(z0, a0);
+    a0 = _mm_xor_si128(z2, a0);
+
+    // add 4 components
+    a0 = _mm_xor_si128(a1, a0);
+    a0 = _mm_xor_si128(a2, a0);
+    a0 = _mm_xor_si128(a3, a0);
+
+    a1 = _mm_slli_si128(a0, 8);
+    a0 = _mm_srli_si128(a0, 8);
+
+    *low  = _mm_xor_si128(a1, z0);
+    *high = _mm_xor_si128(a0, z2);
+}
+
+static void
+gMul(__m128i  H1,
+     __m128i  H2,
+     __m128i  H3,
+     __m128i  H4,
+     __m128i  a,
+     __m128i  b,
+     __m128i  c,
+     __m128i  d,
+     __m128i* res)
+{
+    __m128i high, low;
+
+    /*
+        Instead of 4 moduloReduction, perform aggregated reduction as per below
+        equation.
+        Aggregrated Reduction:
+        [(Xi • H1) + (Xi - 1 • H2) + (Xi - 2 • H3) +
+            (Xi - 3 + Yi - 4) • H4] mod P
+    */
+
+    /*
+        A = [(Xi • H1) + (Xi - 1 • H2) + (Xi - 2 • H3) +
+            (Xi - 3 + Yi - 4) • H4]
+            */
+    carrylessMul(H1, H2, H3, H4, a, b, c, d, &high, &low);
+
+    // A mod P
+    redMod(low, high, res);
 }
 
 alc_error_t
@@ -266,6 +428,16 @@ CryptGcm(const uint8_t* pInputText,  // ptr to inputText
     __m128i three_128 = _mm_set_epi32(3, 0, 0, 0);
     __m128i four_128  = _mm_set_epi32(4, 0, 0, 0);
 
+#ifdef AGGREGATED_REDUCTION
+    __m128i Hsubkey_128_2, Hsubkey_128_3, Hsubkey_128_4;
+
+    if (blocks >= 4) {
+        gMul(Hsubkey_128, Hsubkey_128, &Hsubkey_128_2);
+        gMul(Hsubkey_128_2, Hsubkey_128, &Hsubkey_128_3);
+        gMul(Hsubkey_128_3, Hsubkey_128, &Hsubkey_128_4);
+    }
+#endif
+
     for (; blocks >= 4; blocks -= 4) {
         c2 = _mm_add_epi32(c1, one_128);
         c3 = _mm_add_epi32(c1, two_128);
@@ -277,21 +449,39 @@ CryptGcm(const uint8_t* pInputText,  // ptr to inputText
         a4 = _mm_loadu_si128(p_in_128 + 3);
 
         if (isEncrypt == false) {
-            __m128i ra  = _mm_shuffle_epi8(a1, reverse_mask_128);
-            *pgHash_128 = _mm_xor_si128(ra, *pgHash_128);
-            gMul(*pgHash_128, Hsubkey_128, pgHash_128);
+            __m128i ra1, ra2, ra3, ra4;
 
-            ra          = _mm_shuffle_epi8(a2, reverse_mask_128);
-            *pgHash_128 = _mm_xor_si128(ra, *pgHash_128);
-            gMul(*pgHash_128, Hsubkey_128, pgHash_128);
+            ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
+            ra2 = _mm_shuffle_epi8(a2, reverse_mask_128);
+            ra3 = _mm_shuffle_epi8(a3, reverse_mask_128);
+            ra4 = _mm_shuffle_epi8(a4, reverse_mask_128);
 
-            ra          = _mm_shuffle_epi8(a3, reverse_mask_128);
-            *pgHash_128 = _mm_xor_si128(ra, *pgHash_128);
-            gMul(*pgHash_128, Hsubkey_128, pgHash_128);
+#ifdef AGGREGATED_REDUCTION
+            ra1 = _mm_xor_si128(ra1, *pgHash_128);
 
-            ra          = _mm_shuffle_epi8(a4, reverse_mask_128);
-            *pgHash_128 = _mm_xor_si128(ra, *pgHash_128);
-            gMul(*pgHash_128, Hsubkey_128, pgHash_128);
+            gMul(Hsubkey_128,
+                 Hsubkey_128_2,
+                 Hsubkey_128_3,
+                 Hsubkey_128_4,
+                 ra4,
+                 ra3,
+                 ra2,
+                 ra1,
+                 pgHash_128);
+
+#else
+            ra1 = _mm_xor_si128(ra1, *pgHash_128);
+            gMul(ra1, Hsubkey_128, pgHash_128);
+
+            ra2 = _mm_xor_si128(ra2, *pgHash_128);
+            gMul(ra2, Hsubkey_128, pgHash_128);
+
+            ra3 = _mm_xor_si128(ra3, *pgHash_128);
+            gMul(ra3, Hsubkey_128, pgHash_128);
+
+            ra4 = _mm_xor_si128(ra4, *pgHash_128);
+            gMul(ra4, Hsubkey_128, pgHash_128);
+#endif
         }
 
         // re-arrange as per spec
@@ -311,21 +501,40 @@ CryptGcm(const uint8_t* pInputText,  // ptr to inputText
         c1 = _mm_add_epi32(c1, four_128);
 
         if (isEncrypt == true) {
-            __m128i ra  = _mm_shuffle_epi8(a1, reverse_mask_128);
-            *pgHash_128 = _mm_xor_si128(ra, *pgHash_128);
-            gMul(*pgHash_128, Hsubkey_128, pgHash_128);
+            __m128i ra1, ra2, ra3, ra4;
 
-            ra          = _mm_shuffle_epi8(a2, reverse_mask_128);
-            *pgHash_128 = _mm_xor_si128(ra, *pgHash_128);
-            gMul(*pgHash_128, Hsubkey_128, pgHash_128);
+            ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
+            ra2 = _mm_shuffle_epi8(a2, reverse_mask_128);
+            ra3 = _mm_shuffle_epi8(a3, reverse_mask_128);
+            ra4 = _mm_shuffle_epi8(a4, reverse_mask_128);
 
-            ra          = _mm_shuffle_epi8(a3, reverse_mask_128);
-            *pgHash_128 = _mm_xor_si128(ra, *pgHash_128);
-            gMul(*pgHash_128, Hsubkey_128, pgHash_128);
+#ifdef AGGREGATED_REDUCTION
 
-            ra          = _mm_shuffle_epi8(a4, reverse_mask_128);
-            *pgHash_128 = _mm_xor_si128(ra, *pgHash_128);
-            gMul(*pgHash_128, Hsubkey_128, pgHash_128);
+            ra1 = _mm_xor_si128(ra1, *pgHash_128);
+
+            gMul(Hsubkey_128,
+                 Hsubkey_128_2,
+                 Hsubkey_128_3,
+                 Hsubkey_128_4,
+                 ra4,
+                 ra3,
+                 ra2,
+                 ra1,
+                 pgHash_128);
+
+#else
+            ra1 = _mm_xor_si128(ra1, *pgHash_128);
+            gMul(ra1, Hsubkey_128, pgHash_128);
+
+            ra2 = _mm_xor_si128(ra2, *pgHash_128);
+            gMul(ra2, Hsubkey_128, pgHash_128);
+
+            ra3 = _mm_xor_si128(ra3, *pgHash_128);
+            gMul(ra3, Hsubkey_128, pgHash_128);
+
+            ra4 = _mm_xor_si128(ra4, *pgHash_128);
+            gMul(ra4, Hsubkey_128, pgHash_128);
+#endif
         }
 
         _mm_storeu_si128(p_out_128, a1);
