@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2021, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,10 +38,9 @@ Cbc::decrypt(const uint8_t* pCipherText,
              const uint8_t* pIv) const
 {
     alc_error_t err = ALC_ERROR_NONE;
-
     if (Cipher::isVaesAvailable()) {
         // err = vaes::DecryptCbc(
-        err = aesni::DecryptCbc(
+        err = vaes::DecryptCbc(
             pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
 
         return err;
@@ -64,7 +63,6 @@ Cbc::encrypt(const uint8_t* pPlainText,
              const uint8_t* pIv) const
 {
     alc_error_t err = ALC_ERROR_NONE;
-
     if (Cipher::isVaesAvailable()) {
         // err = vaes::EncryptCbc(
         err = aesni::EncryptCbc(
