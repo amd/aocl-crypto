@@ -63,7 +63,6 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
         data.tag  = &(outtag[0]);
         data.tagl = outtag.size();
         if (data.ivl != 12) {
-            // std::cout << "IVL:" << data.ivl << std::endl;
             continue;
         }
         testingCore.getCipherHandler()->testingEncrypt(
@@ -77,27 +76,6 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
                         testingCore.getDs()->getTag(),
                         *(testingCore.getDs()),
                         std::string("AES_" + MODE_STR + "_128_ENC_TAG")));
-        // std::cout << "Line:" << testingCore.getDs()->getLineNumber()
-        //           << std::endl
-        //           << "PT:" << parseBytesToHexStr(data.in, data.inl) <<
-        //           std::endl
-        //           << "INCT:"
-        //           << parseBytesToHexStr(&(testingCore.getDs()->getCt()[0]),
-        //                                 testingCore.getDs()->getCt().size())
-        //           << std::endl
-        //           << "OUTCT:" << parseBytesToHexStr(data.out, data.outl)
-        //           << std::endl
-        //           << "IV:" << parseBytesToHexStr(data.iv, data.ivl) <<
-        //           std::endl
-        //           << "AD:" << parseBytesToHexStr(data.ad, data.adl) <<
-        //           std::endl
-        //           << "INTAG:"
-        //           << parseBytesToHexStr(&(testingCore.getDs()->getTag()[0]),
-        //                                 testingCore.getDs()->getTag().size())
-        //           << std::endl
-        //           << "OUTTAG:" << parseBytesToHexStr(data.tag, data.tagl)
-        //           << std::endl
-        //           << std::endl;
     }
     if (!test_ran) {
         EXPECT_TRUE(::testing::AssertionFailure()
@@ -131,7 +109,6 @@ TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
         data.tag  = &(outtag[0]);
         data.tagl = outtag.size();
         if (data.ivl != 12) {
-            // std::cout << "IVL:" << data.ivl << std::endl;
             continue;
         }
         testingCore.getCipherHandler()->testingEncrypt(
@@ -145,27 +122,6 @@ TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
                         testingCore.getDs()->getTag(),
                         *(testingCore.getDs()),
                         std::string("AES_" + MODE_STR + "_192_ENC_TAG")));
-        // std::cout << "Line:" << testingCore.getDs()->getLineNumber()
-        //           << std::endl
-        //           << "PT:" << parseBytesToHexStr(data.in, data.inl) <<
-        //           std::endl
-        //           << "INCT:"
-        //           << parseBytesToHexStr(&(testingCore.getDs()->getCt()[0]),
-        //                                 testingCore.getDs()->getCt().size())
-        //           << std::endl
-        //           << "OUTCT:" << parseBytesToHexStr(data.out, data.outl)
-        //           << std::endl
-        //           << "IV:" << parseBytesToHexStr(data.iv, data.ivl) <<
-        //           std::endl
-        //           << "AD:" << parseBytesToHexStr(data.ad, data.adl) <<
-        //           std::endl
-        //           << "INTAG:"
-        //           << parseBytesToHexStr(&(testingCore.getDs()->getTag()[0]),
-        //                                 testingCore.getDs()->getTag().size())
-        //           << std::endl
-        //           << "OUTTAG:" << parseBytesToHexStr(data.tag, data.tagl)
-        //           << std::endl
-        //           << std::endl;
     }
     if (!test_ran) {
         EXPECT_TRUE(::testing::AssertionFailure()
@@ -199,7 +155,6 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
         data.tag  = &(outtag[0]);
         data.tagl = outtag.size();
         if (data.ivl != 12) {
-            // std::cout << "IVL:" << data.ivl << std::endl;
             continue;
         }
         testingCore.getCipherHandler()->testingEncrypt(
@@ -213,27 +168,6 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
                         testingCore.getDs()->getTag(),
                         *(testingCore.getDs()),
                         std::string("AES_" + MODE_STR + "_256_ENC_TAG")));
-        // std::cout << "Line:" << testingCore.getDs()->getLineNumber()
-        //           << std::endl
-        //           << "PT:" << parseBytesToHexStr(data.in, data.inl) <<
-        //           std::endl
-        //           << "INCT:"
-        //           << parseBytesToHexStr(&(testingCore.getDs()->getCt()[0]),
-        //                                 testingCore.getDs()->getCt().size())
-        //           << std::endl
-        //           << "OUTCT:" << parseBytesToHexStr(data.out, data.outl)
-        //           << std::endl
-        //           << "IV:" << parseBytesToHexStr(data.iv, data.ivl) <<
-        //           std::endl
-        //           << "AD:" << parseBytesToHexStr(data.ad, data.adl) <<
-        //           std::endl
-        //           << "INTAG:"
-        //           << parseBytesToHexStr(&(testingCore.getDs()->getTag()[0]),
-        //                                 testingCore.getDs()->getTag().size())
-        //           << std::endl
-        //           << "OUTTAG:" << parseBytesToHexStr(data.tag, data.tagl)
-        //           << std::endl
-        //           << std::endl;
     }
     if (!test_ran) {
         EXPECT_TRUE(::testing::AssertionFailure()
@@ -252,53 +186,33 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
         test_ran = true;
         // Create vector for cipher text
         std::vector<uint8_t> outpt(testingCore.getDs()->getCt().size(), 0);
-        std::vector<uint8_t> ct = testingCore.getDs()->getCt();
-        std::vector<uint8_t> iv = testingCore.getDs()->getIv();
-        std::vector<uint8_t> ad = testingCore.getDs()->getAdd();
-        std::vector<uint8_t> outtag(testingCore.getDs()->getTag().size(), 0);
-        data.in   = &(ct[0]);
-        data.inl  = ct.size();
-        data.iv   = &(iv[0]);
-        data.ivl  = iv.size();
-        data.out  = &(outpt[0]);
-        data.outl = data.inl;
-        data.ad   = &(ad[0]);
-        data.adl  = ad.size();
-        data.tag  = &(outtag[0]);
-        data.tagl = outtag.size();
+        std::vector<uint8_t> ct     = testingCore.getDs()->getCt();
+        std::vector<uint8_t> iv     = testingCore.getDs()->getIv();
+        std::vector<uint8_t> ad     = testingCore.getDs()->getAdd();
+        std::vector<uint8_t> outtag = testingCore.getDs()->getTag();
+        data.in                     = &(ct[0]);
+        data.inl                    = ct.size();
+        data.iv                     = &(iv[0]);
+        data.ivl                    = iv.size();
+        data.out                    = &(outpt[0]);
+        data.outl                   = data.inl;
+        data.ad                     = &(ad[0]);
+        data.adl                    = ad.size();
+        data.tag                    = &(outtag[0]);
+        data.tagl                   = outtag.size();
         if (data.ivl != 12) {
-            // std::cout << "IVL:" << data.ivl << std::endl;
             continue;
         }
-        testingCore.getCipherHandler()->testingDecrypt(
+        bool ret = testingCore.getCipherHandler()->testingDecrypt(
             data, testingCore.getDs()->getKey());
+        if (data.tagl == 0) {
+            ret = true; // Skip tag test
+        }
         EXPECT_TRUE(ArraysMatch(outpt,
                                 testingCore.getDs()->getPt(),
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_128_DEC")));
-        EXPECT_TRUE(
-            ArraysMatch(outtag,
-                        testingCore.getDs()->getTag(),
-                        *(testingCore.getDs()),
-                        std::string("AES_" + MODE_STR + "_128_DEC_TAG")));
-        std::cout << "Line:" << testingCore.getDs()->getLineNumber()
-                  << std::endl
-                  << "CT:" << parseBytesToHexStr(data.in, data.inl) << std::endl
-                  << "INPT:"
-                  << parseBytesToHexStr(&(testingCore.getDs()->getPt()[0]),
-                                        testingCore.getDs()->getPt().size())
-                  << std::endl
-                  << "OUTPT:" << parseBytesToHexStr(data.out, data.outl)
-                  << std::endl
-                  << "IV:" << parseBytesToHexStr(data.iv, data.ivl) << std::endl
-                  << "AD:" << parseBytesToHexStr(data.ad, data.adl) << std::endl
-                  << "INTAG:"
-                  << parseBytesToHexStr(&(testingCore.getDs()->getTag()[0]),
-                                        testingCore.getDs()->getTag().size())
-                  << std::endl
-                  << "OUTTAG:" << parseBytesToHexStr(data.tag, data.tagl)
-                  << std::endl
-                  << std::endl;
+        EXPECT_TRUE(ret);
     }
     if (!test_ran) {
         EXPECT_TRUE(::testing::AssertionFailure()
@@ -317,56 +231,33 @@ TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
         test_ran = true;
         // Create vector for cipher text
         std::vector<uint8_t> outpt(testingCore.getDs()->getCt().size(), 0);
-        std::vector<uint8_t> ct = testingCore.getDs()->getCt();
-        std::vector<uint8_t> iv = testingCore.getDs()->getIv();
-        std::vector<uint8_t> ad = testingCore.getDs()->getAdd();
-        std::vector<uint8_t> outtag(testingCore.getDs()->getTag().size(), 0);
-        data.in   = &(ct[0]);
-        data.inl  = ct.size();
-        data.iv   = &(iv[0]);
-        data.ivl  = iv.size();
-        data.out  = &(outpt[0]);
-        data.outl = data.inl;
-        data.ad   = &(ad[0]);
-        data.adl  = ad.size();
-        data.tag  = &(outtag[0]);
-        data.tagl = outtag.size();
+        std::vector<uint8_t> ct     = testingCore.getDs()->getCt();
+        std::vector<uint8_t> iv     = testingCore.getDs()->getIv();
+        std::vector<uint8_t> ad     = testingCore.getDs()->getAdd();
+        std::vector<uint8_t> outtag = testingCore.getDs()->getTag();
+        data.in                     = &(ct[0]);
+        data.inl                    = ct.size();
+        data.iv                     = &(iv[0]);
+        data.ivl                    = iv.size();
+        data.out                    = &(outpt[0]);
+        data.outl                   = data.inl;
+        data.ad                     = &(ad[0]);
+        data.adl                    = ad.size();
+        data.tag                    = &(outtag[0]);
+        data.tagl                   = outtag.size();
         if (data.ivl != 12) {
-            // std::cout << "IVL:" << data.ivl << std::endl;
             continue;
         }
-        testingCore.getCipherHandler()->testingDecrypt(
+        bool ret = testingCore.getCipherHandler()->testingDecrypt(
             data, testingCore.getDs()->getKey());
+        if (data.tagl == 0) {
+            ret = true; // Skip tag test
+        }
         EXPECT_TRUE(ArraysMatch(outpt,
                                 testingCore.getDs()->getPt(),
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_192_DEC")));
-        EXPECT_TRUE(
-            ArraysMatch(outtag,
-                        testingCore.getDs()->getTag(),
-                        *(testingCore.getDs()),
-                        std::string("AES_" + MODE_STR + "_192_DEC_TAG")));
-        // std::cout << "Line:" << testingCore.getDs()->getLineNumber()
-        //           << std::endl
-        //           << "CT:" << parseBytesToHexStr(data.in, data.inl) <<
-        //           std::endl
-        //           << "INPT:"
-        //           << parseBytesToHexStr(&(testingCore.getDs()->getPt()[0]),
-        //                                 testingCore.getDs()->getPt().size())
-        //           << std::endl
-        //           << "OUTPT:" << parseBytesToHexStr(data.out, data.outl)
-        //           << std::endl
-        //           << "IV:" << parseBytesToHexStr(data.iv, data.ivl) <<
-        //           std::endl
-        //           << "AD:" << parseBytesToHexStr(data.ad, data.adl) <<
-        //           std::endl
-        //           << "INTAG:"
-        //           << parseBytesToHexStr(&(testingCore.getDs()->getTag()[0]),
-        //                                 testingCore.getDs()->getTag().size())
-        //           << std::endl
-        //           << "OUTTAG:" << parseBytesToHexStr(data.tag, data.tagl)
-        //           << std::endl
-        //           << std::endl;
+        EXPECT_TRUE(ret);
     }
     if (!test_ran) {
         EXPECT_TRUE(::testing::AssertionFailure()
@@ -385,56 +276,33 @@ TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
         test_ran = true;
         // Create vector for cipher text
         std::vector<uint8_t> outpt(testingCore.getDs()->getCt().size(), 0);
-        std::vector<uint8_t> ct = testingCore.getDs()->getCt();
-        std::vector<uint8_t> iv = testingCore.getDs()->getIv();
-        std::vector<uint8_t> ad = testingCore.getDs()->getAdd();
-        std::vector<uint8_t> outtag(testingCore.getDs()->getTag().size(), 0);
-        data.in   = &(ct[0]);
-        data.inl  = ct.size();
-        data.iv   = &(iv[0]);
-        data.ivl  = iv.size();
-        data.out  = &(outpt[0]);
-        data.outl = data.inl;
-        data.ad   = &(ad[0]);
-        data.adl  = ad.size();
-        data.tag  = &(outtag[0]);
-        data.tagl = outtag.size();
+        std::vector<uint8_t> ct     = testingCore.getDs()->getCt();
+        std::vector<uint8_t> iv     = testingCore.getDs()->getIv();
+        std::vector<uint8_t> ad     = testingCore.getDs()->getAdd();
+        std::vector<uint8_t> outtag = testingCore.getDs()->getTag();
+        data.in                     = &(ct[0]);
+        data.inl                    = ct.size();
+        data.iv                     = &(iv[0]);
+        data.ivl                    = iv.size();
+        data.out                    = &(outpt[0]);
+        data.outl                   = data.inl;
+        data.ad                     = &(ad[0]);
+        data.adl                    = ad.size();
+        data.tag                    = &(outtag[0]);
+        data.tagl                   = outtag.size();
         if (data.ivl != 12) {
-            // std::cout << "IVL:" << data.ivl << std::endl;
             continue;
         }
-        testingCore.getCipherHandler()->testingDecrypt(
+        bool ret = testingCore.getCipherHandler()->testingDecrypt(
             data, testingCore.getDs()->getKey());
+        if (data.tagl == 0) {
+            ret = true; // Skip tag test
+        }
         EXPECT_TRUE(ArraysMatch(outpt,
                                 testingCore.getDs()->getPt(),
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_256_DEC")));
-        EXPECT_TRUE(
-            ArraysMatch(outtag,
-                        testingCore.getDs()->getTag(),
-                        *(testingCore.getDs()),
-                        std::string("AES_" + MODE_STR + "_256_DEC_TAG")));
-        // std::cout << "Line:" << testingCore.getDs()->getLineNumber()
-        //           << std::endl
-        //           << "CT:" << parseBytesToHexStr(data.in, data.inl) <<
-        //           std::endl
-        //           << "INPT:"
-        //           << parseBytesToHexStr(&(testingCore.getDs()->getPt()[0]),
-        //                                 testingCore.getDs()->getPt().size())
-        //           << std::endl
-        //           << "OUTPT:" << parseBytesToHexStr(data.out, data.outl)
-        //           << std::endl
-        //           << "IV:" << parseBytesToHexStr(data.iv, data.ivl) <<
-        //           std::endl
-        //           << "AD:" << parseBytesToHexStr(data.ad, data.adl) <<
-        //           std::endl
-        //           << "INTAG:"
-        //           << parseBytesToHexStr(&(testingCore.getDs()->getTag()[0]),
-        //                                 testingCore.getDs()->getTag().size())
-        //           << std::endl
-        //           << "OUTTAG:" << parseBytesToHexStr(data.tag, data.tagl)
-        //           << std::endl
-        //           << std::endl;
+        EXPECT_TRUE(ret);
     }
     if (!test_ran) {
         EXPECT_TRUE(::testing::AssertionFailure()

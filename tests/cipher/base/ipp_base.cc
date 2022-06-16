@@ -149,9 +149,17 @@ IPPCipherBase::alcpGCMModeToFuncCall(alcp_data_ex_t data, bool enc)
         ippsAES_GCMEncrypt(data.in, data.out, data.inl, m_ctx_gcm);
         ippsAES_GCMGetTag(data.tag, data.tagl, m_ctx_gcm);
     } else {
+        uint8_t tagbuff[data.tagl];
         ippsAES_GCMStart(m_iv, data.ivl, data.ad, data.adl, m_ctx_gcm);
         ippsAES_GCMDecrypt(data.in, data.out, data.inl, m_ctx_gcm);
-        ippsAES_GCMGetTag(data.tag, data.tagl, m_ctx_gcm);
+        ippsAES_GCMGetTag(tagbuff, data.tagl, m_ctx_gcm);
+        // ippsAES_GCMReset(m_ctx_gcm);
+        // Tag verification
+        for (int i = 0; i < data.tagl; i++) {
+            if (tagbuff[i] != data.tag[i]) {
+                return false;
+            }
+        }
     }
     return true;
 }
@@ -166,7 +174,7 @@ bool
 IPPCipherBase::encrypt(alcp_data_ex_t data)
 {
     if (m_mode == ALC_AES_MODE_GCM) {
-        alcpGCMModeToFuncCall(data, true);
+        return alcpGCMModeToFuncCall(data, true);
     } else {
         return alcpModeToFuncCall(data.in, data.out, data.inl, true);
     }
@@ -182,7 +190,7 @@ bool
 IPPCipherBase::decrypt(alcp_data_ex_t data)
 {
     if (m_mode == ALC_AES_MODE_GCM) {
-        alcpGCMModeToFuncCall(data, true);
+        return alcpGCMModeToFuncCall(data, false);
     } else {
         return alcpModeToFuncCall(data.in, data.out, data.inl, false);
     }

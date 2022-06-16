@@ -233,6 +233,7 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
     alc_error_t err;
     const int   err_size = 256;
     uint8_t     err_buf[err_size];
+    uint8_t     tagbuff[data.tagl];
 
     if (m_mode == ALC_AES_MODE_GCM) {
         // GCM Init
@@ -271,11 +272,17 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
             data.tag = &a; // Some random value other than NULL
         }
         err = alcp_cipher_decrypt_update(
-            m_handle, nullptr, data.tag, data.tagl, m_iv);
+            m_handle, nullptr, tagbuff, data.tagl, m_iv);
         if (alcp_is_error(err)) {
             printf("Error: GCM tag fetch failure! code:4\n");
             alcp_error_str(err, err_buf, err_size);
             return false;
+        }
+        // Tag verification
+        for (int i = 0; i < data.tagl; i++) {
+            if (tagbuff[i] != data.tag[i]) {
+                return false;
+            }
         }
     } else {
         // For non GCM mode

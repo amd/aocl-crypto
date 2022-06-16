@@ -43,7 +43,7 @@ typedef struct
     uint64_t       ivl;
     const uint8_t* ad;
     uint64_t       adl;
-    uint8_t*       tag;
+    uint8_t*       tag; // Probably const but openssl expects non const
     uint64_t       tagl;
 } alcp_data_ex_t;
 
