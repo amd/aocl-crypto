@@ -24,7 +24,7 @@ To run tests with verbose mode (prints also success)
 
 1. $<code>cd aocl-crypto/build</code>
 2. $<code>./bench/cipher/bench_cipher</code>
-3. $<code>./tests/digest/bench_digest</code>
+3. $<code>./bench/digest/bench_digest</code>
 
 #### Selecting benchmarks
 
