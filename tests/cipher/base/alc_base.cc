@@ -27,7 +27,6 @@
  */
 
 #include "alc_base.hh"
-#include "base.hh"
 
 namespace alcp::testing {
 
@@ -279,10 +278,8 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
             return false;
         }
         // Tag verification
-        for (int i = 0; i < data.tagl; i++) {
-            if (tagbuff[i] != data.tag[i]) {
-                return false;
-            }
+        if (std::memcmp(tagbuff, data.tag, data.tagl) != 0) {
+            return false;
         }
     } else {
         // For non GCM mode

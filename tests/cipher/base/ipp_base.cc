@@ -153,12 +153,9 @@ IPPCipherBase::alcpGCMModeToFuncCall(alcp_data_ex_t data, bool enc)
         ippsAES_GCMStart(m_iv, data.ivl, data.ad, data.adl, m_ctx_gcm);
         ippsAES_GCMDecrypt(data.in, data.out, data.inl, m_ctx_gcm);
         ippsAES_GCMGetTag(tagbuff, data.tagl, m_ctx_gcm);
-        // ippsAES_GCMReset(m_ctx_gcm);
         // Tag verification
-        for (int i = 0; i < data.tagl; i++) {
-            if (tagbuff[i] != data.tag[i]) {
-                return false;
-            }
+        if (std::memcmp(tagbuff, data.tag, data.tagl) != 0) {
+            return false;
         }
     }
     return true;

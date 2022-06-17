@@ -28,6 +28,7 @@
 #pragma once
 #include "alcp/alcp.h"
 #include "base_common.hh"
+#include <cstring>
 #include <iostream>
 #include <vector>
 
