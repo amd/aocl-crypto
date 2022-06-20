@@ -27,6 +27,7 @@
  */
 
 #include "alcp/digest.h"
+#include "base.hh"
 #include <alcp/alcp.h>
 #include <base.hh>
 #include <iostream>
