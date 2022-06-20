@@ -102,6 +102,19 @@ OpenSSLCipherBase::OpenSSLCipherBase(const alc_aes_mode_t mode,
 {
     init(key, key_len);
 }
+OpenSSLCipherBase::OpenSSLCipherBase(const alc_aes_mode_t mode,
+                                     const uint8_t*       iv,
+                                     const uint32_t       iv_len,
+                                     const uint8_t*       key,
+                                     const uint32_t       key_len)
+    : m_mode{ mode }
+    , m_iv{ iv }
+    , m_iv_len{ iv_len }
+    , m_key{ key }
+    , m_key_len{ key_len }
+{
+    init(key, key_len);
+}
 OpenSSLCipherBase::~OpenSSLCipherBase()
 {
     // Destroy call contexts
@@ -111,6 +124,15 @@ OpenSSLCipherBase::~OpenSSLCipherBase()
     if (m_ctx_dec != nullptr) {
         EVP_CIPHER_CTX_free(m_ctx_dec);
     }
+}
+bool
+OpenSSLCipherBase::init(const uint8_t* iv,
+                        const uint32_t iv_len,
+                        const uint8_t* key,
+                        const uint32_t key_len)
+{
+    m_iv_len = iv_len;
+    return init(iv, key, key_len);
 }
 bool
 OpenSSLCipherBase::init(const uint8_t* iv,
@@ -144,9 +166,10 @@ OpenSSLCipherBase::init(const uint8_t* key, const uint32_t key_len)
                                   NULL,
                                   NULL))
             handleErrors();
-        // if (1
-        //     != EVP_CIPHER_CTX_ctrl(m_ctx_enc, EVP_CTRL_GCM_SET_IVLEN, 12,
-        //     NULL)) handleErrors();
+        if (1
+            != EVP_CIPHER_CTX_ctrl(
+                m_ctx_enc, EVP_CTRL_GCM_SET_IVLEN, m_iv_len, NULL))
+            handleErrors();
 
         if (1 != EVP_EncryptInit_ex(m_ctx_enc, NULL, NULL, m_key, m_iv))
             handleErrors();
@@ -182,9 +205,9 @@ OpenSSLCipherBase::init(const uint8_t* key, const uint32_t key_len)
                                   NULL))
             handleErrors();
         /* Set IV length. Not necessary if this is 12 bytes (96 bits) */
-        // if (!EVP_CIPHER_CTX_ctrl(
-        //         m_ctx_dec, EVP_CTRL_GCM_SET_IVLEN, 12, NULL))
-        //     handleErrors();
+        if (!EVP_CIPHER_CTX_ctrl(
+                m_ctx_dec, EVP_CTRL_GCM_SET_IVLEN, m_iv_len, NULL))
+            handleErrors();
 
         /* Initialise key and IV */
         if (1 != EVP_DecryptInit_ex(m_ctx_dec, NULL, NULL, m_key, m_iv))

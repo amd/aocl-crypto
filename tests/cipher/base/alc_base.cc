@@ -59,6 +59,16 @@ AlcpCipherBase::~AlcpCipherBase()
 
 bool
 AlcpCipherBase::init(const uint8_t* iv,
+                     const uint32_t iv_len,
+                     const uint8_t* key,
+                     const uint32_t key_len)
+{
+    this->m_iv = iv;
+    return init(key, key_len);
+}
+
+bool
+AlcpCipherBase::init(const uint8_t* iv,
                      const uint8_t* key,
                      const uint32_t key_len)
 {
