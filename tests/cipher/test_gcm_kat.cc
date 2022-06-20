@@ -62,9 +62,6 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
         data.adl  = ad.size();
         data.tag  = &(outtag[0]);
         data.tagl = outtag.size();
-        if (data.ivl != 12) {
-            continue;
-        }
         testingCore.getCipherHandler()->testingEncrypt(
             data, testingCore.getDs()->getKey());
         EXPECT_TRUE(ArraysMatch(outct,
@@ -108,9 +105,6 @@ TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
         data.adl  = ad.size();
         data.tag  = &(outtag[0]);
         data.tagl = outtag.size();
-        if (data.ivl != 12) {
-            continue;
-        }
         testingCore.getCipherHandler()->testingEncrypt(
             data, testingCore.getDs()->getKey());
         EXPECT_TRUE(ArraysMatch(outct,
@@ -154,9 +148,6 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
         data.adl  = ad.size();
         data.tag  = &(outtag[0]);
         data.tagl = outtag.size();
-        if (data.ivl != 12) {
-            continue;
-        }
         testingCore.getCipherHandler()->testingEncrypt(
             data, testingCore.getDs()->getKey());
         EXPECT_TRUE(ArraysMatch(outct,
@@ -200,9 +191,6 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
         data.adl                    = ad.size();
         data.tag                    = &(outtag[0]);
         data.tagl                   = outtag.size();
-        if (data.ivl != 12) {
-            continue;
-        }
         bool ret = testingCore.getCipherHandler()->testingDecrypt(
             data, testingCore.getDs()->getKey());
         if (data.tagl == 0) {
@@ -245,9 +233,6 @@ TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
         data.adl                    = ad.size();
         data.tag                    = &(outtag[0]);
         data.tagl                   = outtag.size();
-        if (data.ivl != 12) {
-            continue;
-        }
         bool ret = testingCore.getCipherHandler()->testingDecrypt(
             data, testingCore.getDs()->getKey());
         if (data.tagl == 0) {
@@ -290,9 +275,6 @@ TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
         data.adl                    = ad.size();
         data.tag                    = &(outtag[0]);
         data.tagl                   = outtag.size();
-        if (data.ivl != 12) {
-            continue;
-        }
         bool ret = testingCore.getCipherHandler()->testingDecrypt(
             data, testingCore.getDs()->getKey());
         if (data.tagl == 0) {
