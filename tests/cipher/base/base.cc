@@ -455,7 +455,7 @@ CipherTesting::testingEncrypt(alcp_data_ex_t             data,
                               const std::vector<uint8_t> key)
 {
     if (cb != nullptr) {
-        if (cb->init(data.iv, &(key[0]), key.size() * 8)) {
+        if (cb->init(data.iv, data.ivl, &(key[0]), key.size() * 8)) {
             // For very large sizes, dynamic is better.
             return cb->encrypt(data);
         }
@@ -493,7 +493,7 @@ CipherTesting::testingDecrypt(alcp_data_ex_t             data,
                               const std::vector<uint8_t> key)
 {
     if (cb != nullptr) {
-        if (cb->init(data.iv, &key[0], key.size() * 8)) {
+        if (cb->init(data.iv, data.ivl, &key[0], key.size() * 8)) {
             return cb->decrypt(data);
         }
     } else {

@@ -84,6 +84,10 @@ class IPPCipherBase : public CipherBase
      * @return false - if there is some failure
      */
     ~IPPCipherBase();
+    bool init(const uint8_t* iv,
+              const uint32_t iv_len,
+              const uint8_t* key,
+              const uint32_t key_len);
     bool init(const uint8_t* iv, const uint8_t* key, const uint32_t key_len);
     bool init(const uint8_t* key, const uint32_t key_len);
     bool encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt);
