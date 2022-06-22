@@ -74,7 +74,7 @@ GetModeSTR(alc_aes_mode_t mode)
 /**
  * Macro for Cipher KAT
  */
-#define KAT_TEST_MACRO(TEST_NAME, TEST_TYPE, keySize, enc_dec, mode)           \
+#define KAT_TEST_MACRO( keySize, enc_dec, mode)           \
     int         key_size = keySize;                                            \
     std::string MODE_STR = GetModeSTR(mode);                                   \
     bool        test_ran = false;                                              \
