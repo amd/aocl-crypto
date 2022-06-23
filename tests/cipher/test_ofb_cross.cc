@@ -50,9 +50,9 @@ ExecRecPlay* fr = nullptr;
 #define SMALL_INC_LOOP   16
 #define SMALL_START_LOOP 16
 // Below in 0.1MB size
-#define BIG_MAX_LOOP   1
+#define BIG_MAX_LOOP   2
 #define BIG_INC_LOOP   1
-#define BIG_START_LOOP 2
+#define BIG_START_LOOP 1
 
 /* Testing Starts Here! */
 TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
