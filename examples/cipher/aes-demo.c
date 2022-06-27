@@ -508,13 +508,13 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
 
     uint8_t* iv;
     iv = malloc(128 * 4);
-    memset(iv, 0, 128 * 4);
+    memset(iv, 10, 128 * 4);
 
     uint8_t* ref;
     ref = malloc(inputLen);
+    uint32_t ivLen  = 16;
 
     /* additional data, tag used in GCM */
-    uint32_t ivLen  = test_iv_len[VERIFY_GCM_TEST_VECTOR_NUM];
     uint32_t adLen  = test_ad_len[VERIFY_GCM_TEST_VECTOR_NUM];
     uint32_t tagLen = test_tag_len[VERIFY_GCM_TEST_VECTOR_NUM];
 
@@ -545,6 +545,7 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
             inputLen = test_pt_len[VERIFY_GCM_TEST_VECTOR_NUM];
             memcpy(inputText, test_pt[VERIFY_GCM_TEST_VECTOR_NUM], inputLen);
 #endif
+            ivLen  = test_iv_len[VERIFY_GCM_TEST_VECTOR_NUM];
             memcpy(key, test_key[VERIFY_GCM_TEST_VECTOR_NUM], 16);
             memcpy(iv, test_iv[VERIFY_GCM_TEST_VECTOR_NUM], ivLen);
             memcpy(ad, test_ad[VERIFY_GCM_TEST_VECTOR_NUM], adLen);

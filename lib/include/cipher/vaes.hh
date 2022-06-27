@@ -34,6 +34,7 @@
 #include "alcp/error.h"
 
 namespace alcp::cipher { namespace vaes {
+
     alc_error_t ExpandKeys(const uint8_t* pUserKey,
                            uint8_t*       pEncKey,
                            uint8_t*       pDecKey,
@@ -60,19 +61,22 @@ namespace alcp::cipher { namespace vaes {
                            int            nRounds,
                            const uint8_t* pIv);
 
-    alc_error_t DecryptCtr(const uint8_t* pCipherText,
-                           uint8_t*       pPlainText,
-                           uint64_t       len,
-                           const uint8_t* pKey,
-                           int            nRounds,
-                           const uint8_t* pIv);
+    // ctr APIs for vaes
+    void ctrInit(__m256i*       c1,
+                 const uint8_t* pIv,
+                 __m256i*       one_x,
+                 __m256i*       two_x,
+                 __m256i*       three_x,
+                 __m256i*       four_x,
+                 __m256i*       eight_x,
+                 __m256i*       swap_ctr);
 
-    alc_error_t EncryptCtr(const uint8_t* pPlainText,
-                           uint8_t*       pCipherText,
-                           uint64_t       len,
-                           const uint8_t* pKey,
-                           int            nRounds,
-                           const uint8_t* pIv);
+    uint64_t ctrProcess(const __m256i* p_in_x,
+                        __m256i*       p_out_x,
+                        uint64_t       blocks,
+                        const __m128i* pkey128,
+                        const uint8_t* pIv,
+                        int            nRounds);
 
     static inline void amd_mm256_broadcast_i64x2(const __m128i* rKey,
                                                  __m256i*       dst)
@@ -82,9 +86,8 @@ namespace alcp::cipher { namespace vaes {
     }
 
     // Encrypt Begins here
-
     /* 1 x 2 block at a time */
-    static inline void AESEncrypt(__m256i*       blk0,
+    static inline void AesEncrypt(__m256i*       blk0,
                                   const __m128i* pKey, /* Round key */
                                   int            nRounds)
     {
@@ -115,7 +118,7 @@ namespace alcp::cipher { namespace vaes {
     }
 
     /* 2 x 2 blocks at a time */
-    static inline void AESEncrypt(__m256i*       blk0,
+    static inline void AesEncrypt(__m256i*       blk0,
                                   __m256i*       blk1,
                                   const __m128i* pKey, /* Round key */
                                   int            nRounds)
@@ -154,7 +157,7 @@ namespace alcp::cipher { namespace vaes {
     }
 
     /* 3 x 2 blocks at a time */
-    static inline void AESEncrypt(__m256i*       blk0,
+    static inline void AesEncrypt(__m256i*       blk0,
                                   __m256i*       blk1,
                                   __m256i*       blk2,
                                   const __m128i* pKey, /* Round keys */
@@ -199,7 +202,7 @@ namespace alcp::cipher { namespace vaes {
     }
 
     /* 4 x 2 blocks at a time */
-    static inline void AESEncrypt(__m256i*       blk0,
+    static inline void AesEncrypt(__m256i*       blk0,
                                   __m256i*       blk1,
                                   __m256i*       blk2,
                                   __m256i*       blk3,
@@ -250,7 +253,7 @@ namespace alcp::cipher { namespace vaes {
     // Decrypt begins here
 
     /* 1 x 2 block at a time */
-    static inline void AESDecrypt(__m256i*       blk0,
+    static inline void AesDecrypt(__m256i*       blk0,
                                   const __m128i* pKey, /* Round key */
                                   int            nRounds)
     {
@@ -281,7 +284,7 @@ namespace alcp::cipher { namespace vaes {
     }
 
     /* 2 x 2 blocks at a time */
-    static inline void AESDecrypt(__m256i*       blk0,
+    static inline void AesDecrypt(__m256i*       blk0,
                                   __m256i*       blk1,
                                   const __m128i* pKey, /* Round key */
                                   int            nRounds)
@@ -320,7 +323,7 @@ namespace alcp::cipher { namespace vaes {
     }
 
     /* 3 x 2 blocks at a time */
-    static inline void AESDecrypt(__m256i*       blk0,
+    static inline void AesDecrypt(__m256i*       blk0,
                                   __m256i*       blk1,
                                   __m256i*       blk2,
                                   const __m128i* pKey, /* Round keys */
@@ -365,7 +368,7 @@ namespace alcp::cipher { namespace vaes {
     }
 
     /* 4 x 2  blocks at a time */
-    static inline void AESDecrypt(__m256i*       blk0,
+    static inline void AesDecrypt(__m256i*       blk0,
                                   __m256i*       blk1,
                                   __m256i*       blk2,
                                   __m256i*       blk3,
@@ -414,7 +417,7 @@ namespace alcp::cipher { namespace vaes {
     }
 
     namespace experimantal {
-        static inline void AESEncrypt(__m256i*       blk0,
+        static inline void AesEncrypt(__m256i*       blk0,
                                       __m256i*       blk1,
                                       __m256i*       blk2,
                                       __m256i*       blk3,
@@ -451,7 +454,7 @@ namespace alcp::cipher { namespace vaes {
             rkey0 = _mm256_setzero_si256();
         }
 
-        static inline void AESDecrypt(__m256i*       blk0,
+        static inline void AesDecrypt(__m256i*       blk0,
                                       __m256i*       blk1,
                                       __m256i*       blk2,
                                       __m256i*       blk3,

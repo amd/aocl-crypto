@@ -29,6 +29,7 @@
 #include <immintrin.h>
 
 #include "cipher/aes.hh"
+#include "cipher/aes_ctr.hh"
 #include "cipher/vaes.hh"
 
 #include "error.hh"
@@ -37,25 +38,22 @@
 
 namespace alcp::cipher::vaes {
 
-alc_error_t
-cryptCtr(const uint8_t* pPlainText,  // ptr to plaintext
-         uint8_t*       pCipherText, // ptr to ciphertext
-         uint64_t       len,         // message length in bytes
-         const uint8_t* pKey,        // ptr to Key
-         int            nRounds,     // No. of rounds
-         const uint8_t* pIv          // ptr to Initialization Vector
-)
+void
+ctrInit(__m256i*       c1,
+        const uint8_t* pIv,
+        __m256i*       one_x,
+        __m256i*       two_x,
+        __m256i*       three_x,
+        __m256i*       four_x,
+        __m256i*       eight_x,
+        __m256i*       swap_ctr)
 {
-    alc_error_t err    = ALC_ERROR_NONE;
-    uint64_t    blocks = len / Rijndael::cBlockSize;
 
-    auto p_in_128  = reinterpret_cast<const __m128i*>(pPlainText);
-    auto p_out_128 = reinterpret_cast<__m128i*>(pCipherText);
-    auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
-
-    __m256i block0, block1, block2, block3;
-    __m256i ctr1, ctr2, ctr3, ctr4;
-    __m256i b1, b2, b3, b4, swap_ctrx;
+    *one_x   = alcp_set_epi32(2, 0, 0, 0, 2, 0, 0, 0);
+    *two_x   = alcp_set_epi32(4, 0, 0, 0, 4, 0, 0, 0);
+    *three_x = alcp_set_epi32(6, 0, 0, 0, 6, 0, 0, 0);
+    *four_x  = alcp_set_epi32(8, 0, 0, 0, 8, 0, 0, 0);
+    *eight_x = alcp_set_epi32(16, 0, 0, 0, 16, 0, 0, 0);
 
     //
     // counterblock :: counter 4 bytes: IV 8 bytes : Nonce 4 bytes
@@ -64,170 +62,30 @@ cryptCtr(const uint8_t* pPlainText,  // ptr to plaintext
 
     // counter 4 bytes are arranged in reverse order
     // for counter increment
-    swap_ctrx = _mm256_set_epi32(0x0c0d0e0f,
-                                 0x0b0a0908,
-                                 0x07060504,
-                                 0x03020100,
-                                 0x0c0d0e0f, // Repeats here
-                                 0x0b0a0908,
-                                 0x07060504,
-                                 0x03020100);
+    // clang-format off
+    *swap_ctr = _mm256_setr_epi8( 0,  1,  2,  3,  4,  5,  6,  7,
+                                  8,  9, 10, 11, 15, 14, 13, 12, /* switching last 4 bytes */
+                                 16, 17, 18, 19, 20, 21, 22, 23,
+                                 24, 25, 26, 27, 31, 30, 29, 28); /* switching last 4 bytes */
+    // clang-format on
+    // nonce counter
+    amd_mm256_broadcast_i64x2((__m128i*)pIv, c1);
+    *c1 = alcp_shuffle_epi8(*c1, *swap_ctr);
 
-    // Mask for loading and storing half register
-    __m256i mask_lo = _mm256_set_epi64x(0, 0, 1UL << 63, 1UL << 63);
-
-    // Nonce Counter
-    amd_mm256_broadcast_i64x2((__m128i*)pIv, &ctr1);
-
-    // Incrementer registers
-    __m256i onelo    = _mm256_setr_epi32(0, 0, 0, 1, 0, 0, 0, 0);
-    __m256i onehi    = _mm256_setr_epi32(0, 0, 0, 0, 0, 0, 0, 1);
-    __m256i twohilo  = _mm256_setr_epi32(0, 0, 0, 2, 0, 0, 0, 2);
-    __m256i fourhilo = _mm256_setr_epi32(0, 0, 0, 4, 0, 0, 0, 4);
-    // __m256i sixhilo   = _mm256_setr_epi32(0, 0, 0, 6, 0, 0, 0, 6);
-    __m256i eighthilo = _mm256_setr_epi32(0, 0, 0, 8, 0, 0, 0, 8);
-
-    // Rearrange to add
-    ctr1 = _mm256_shuffle_epi8(ctr1, swap_ctrx);
-
-    // Keep both counters ready
-    ctr1 = _mm256_add_epi32(ctr1, onehi);
-    ctr2 = _mm256_add_epi32(ctr1, twohilo);
-    ctr3 = _mm256_add_epi32(ctr2, twohilo);
-    ctr4 = _mm256_add_epi32(ctr3, twohilo);
-
-    for (; blocks >= 8; blocks -= 8) {
-        block0 = _mm256_loadu_si256((__m256i*)p_in_128);
-        block1 = _mm256_loadu_si256((__m256i*)p_in_128 + 1);
-        block2 = _mm256_loadu_si256((__m256i*)p_in_128 + 2);
-        block3 = _mm256_loadu_si256((__m256i*)p_in_128 + 3);
-
-        // re-arrange as per spec
-        b1 = _mm256_shuffle_epi8(ctr1, swap_ctrx);
-        b2 = _mm256_shuffle_epi8(ctr2, swap_ctrx);
-        b3 = _mm256_shuffle_epi8(ctr3, swap_ctrx);
-        b4 = _mm256_shuffle_epi8(ctr4, swap_ctrx);
-
-        vaes::AESEncrypt(&(b1), &(b2), &(b3), &(b4), pkey128, nRounds);
-
-        block0 = _mm256_xor_si256(b1, block0);
-        block1 = _mm256_xor_si256(b2, block1);
-        block2 = _mm256_xor_si256(b3, block2);
-        block3 = _mm256_xor_si256(b4, block3);
-
-        ctr1 = _mm256_add_epi32(ctr1, eighthilo);
-        ctr2 = _mm256_add_epi32(ctr2, eighthilo);
-        ctr3 = _mm256_add_epi32(ctr3, eighthilo);
-        ctr4 = _mm256_add_epi32(ctr4, eighthilo);
-
-        _mm256_storeu_si256(reinterpret_cast<__m256i*>(p_out_128), block0);
-        _mm256_storeu_si256(reinterpret_cast<__m256i*>(p_out_128) + 1, block1);
-        _mm256_storeu_si256(reinterpret_cast<__m256i*>(p_out_128) + 2, block2);
-        _mm256_storeu_si256(reinterpret_cast<__m256i*>(p_out_128) + 3, block3);
-
-        p_in_128 += 8;
-        p_out_128 += 8;
-    }
-
-    for (; blocks >= 4; blocks -= 4) {
-        block0 = _mm256_loadu_si256((__m256i*)p_in_128);
-        block1 = _mm256_loadu_si256((__m256i*)p_in_128 + 1);
-
-        // re-arrange as per spec
-        b1 = _mm256_shuffle_epi8(ctr1, swap_ctrx);
-        b2 = _mm256_shuffle_epi8(ctr2, swap_ctrx);
-
-        vaes::AESEncrypt(&(b1), &(b2), pkey128, nRounds);
-
-        block0 = _mm256_xor_si256(b1, block0);
-        block1 = _mm256_xor_si256(b2, block1);
-
-        ctr1 = _mm256_add_epi32(ctr1, fourhilo);
-        ctr2 = _mm256_add_epi32(ctr2, fourhilo);
-
-        _mm256_storeu_si256(reinterpret_cast<__m256i*>(p_out_128), block0);
-        _mm256_storeu_si256(reinterpret_cast<__m256i*>(p_out_128) + 1, block1);
-
-        p_in_128 += 4;
-        p_out_128 += 4;
-    }
-
-    for (; blocks >= 2; blocks -= 2) {
-        block0 = _mm256_loadu_si256((__m256i*)p_in_128);
-
-        // re-arrange as per spec
-        b1 = _mm256_shuffle_epi8(ctr1, swap_ctrx);
-
-        vaes::AESEncrypt(&(b1), pkey128, nRounds);
-
-        block0 = _mm256_xor_si256(b1, block0);
-
-        ctr1 = _mm256_add_epi32(ctr1, twohilo);
-
-        _mm256_storeu_si256((__m256i*)p_out_128, block0);
-
-        p_in_128 += 2;
-        p_out_128 += 2;
-    }
-
-    for (; blocks >= 1; blocks -= 1) {
-        block0 = _mm256_maskload_epi64((long long*)p_in_128, mask_lo);
-
-        // re-arrange as per spec
-        b1 = _mm256_shuffle_epi8(ctr1, swap_ctrx);
-
-        vaes::AESEncrypt(&(b1), pkey128, nRounds);
-
-        block0 = _mm256_xor_si256(b1, block0);
-
-        ctr1 = _mm256_add_epi32(ctr1, onelo);
-
-        _mm256_maskstore_epi64((long long*)p_out_128, mask_lo, block0);
-
-        p_in_128++;
-        p_out_128++;
-    }
-
-    return err;
+    __m256i onehi = _mm256_setr_epi32(0, 0, 0, 0, 0, 0, 0, 1);
+    *c1           = alcp_add_epi32(*c1, onehi);
 }
 
-alc_error_t
-EncryptCtr(const uint8_t* pPlainText,  // ptr to plaintext
-           uint8_t*       pCipherText, // ptr to ciphertext
-           uint64_t       len,         // message length in bytes
-           const uint8_t* pKey,        // ptr to Key
-           int            nRounds,     // No. of rounds
-           const uint8_t* pIv          // ptr to Initialization Vector
-)
+uint64_t
+ctrProcess(const __m256i* p_in_x,
+           __m256i*       p_out_x,
+           uint64_t       blocks,
+           const __m128i* pkey128,
+           const uint8_t* pIv,
+           int            nRounds)
 {
-    alc_error_t err = ALC_ERROR_NONE;
-    err             = cryptCtr(pPlainText,  // ptr to inputText
-                   pCipherText, // ptr to outputtext
-                   len,         // message length in bytes
-                   pKey,        // ptr to Key
-                   nRounds,     // No. of rounds
-                   pIv);        // ptr to Initialization Vector
-    return err;
-}
-
-alc_error_t
-DecryptCtr(const uint8_t* pCipherText, // ptr to ciphertext
-           uint8_t*       pPlainText,  // ptr to plaintext
-           uint64_t       len,         // message length in bytes
-           const uint8_t* pKey,        // ptr to Key
-           int            nRounds,     // No. of rounds
-           const uint8_t* pIv          // ptr to Initialization Vector
-)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    err             = cryptCtr(pCipherText, // ptr to inputText
-                   pPlainText,  // ptr to outputtext
-                   len,         // message length in bytes
-                   pKey,        // ptr to Key
-                   nRounds,     // No. of rounds
-                   pIv);        // ptr to Initialization Vector
-
-    return err;
+    return alcp::cipher::aes::ctrBlk(
+        p_in_x, p_out_x, blocks, pkey128, pIv, nRounds, 2);
 }
 
 } // namespace alcp::cipher::vaes

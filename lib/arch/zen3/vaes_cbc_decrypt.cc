@@ -67,7 +67,7 @@ DecryptCbc(const uint8_t* pCipherText, // ptr to ciphertext
         a1 = input_128_a1 =
             _mm256_maskload_epi64((long long*)p_in_128, mask_lo);
 
-        vaes::AESDecrypt(&a1, pkey128, nRounds);
+        vaes::AesDecrypt(&a1, pkey128, nRounds);
         a1 = _mm256_xor_si256(a1, b1);
 
         _mm256_maskstore_epi64((long long*)p_out_128, mask_lo, a1);
@@ -91,7 +91,7 @@ DecryptCbc(const uint8_t* pCipherText, // ptr to ciphertext
         b3 = input_128_a1 = _mm256_loadu_si256(((__m256i*)(p_in_128 - 1)) + 2);
         b4 = input_128_a1 = _mm256_loadu_si256(((__m256i*)(p_in_128 - 1)) + 3);
 
-        vaes::AESDecrypt(&a1, &a2, &a3, &a4, pkey128, nRounds);
+        vaes::AesDecrypt(&a1, &a2, &a3, &a4, pkey128, nRounds);
 
         // Do xor with previous cipher text to complete decryption.
         a1 = _mm256_xor_si256(a1, b1);
@@ -119,7 +119,7 @@ DecryptCbc(const uint8_t* pCipherText, // ptr to ciphertext
         b1 = input_128_a1 = _mm256_loadu_si256((__m256i*)(p_in_128 - 1) + 0);
         b2 = input_128_a1 = _mm256_loadu_si256(((__m256i*)(p_in_128 - 1)) + 1);
 
-        vaes::AESDecrypt(&a1, &a2, pkey128, nRounds);
+        vaes::AesDecrypt(&a1, &a2, pkey128, nRounds);
 
         // Do xor with previous cipher text to complete decryption.
         a1 = _mm256_xor_si256(a1, b1);
@@ -141,7 +141,7 @@ DecryptCbc(const uint8_t* pCipherText, // ptr to ciphertext
         // Load in the format b1 = c0,c1. Counting on cache to have data
         b1 = input_128_a1 = _mm256_loadu_si256((__m256i*)(p_in_128 - 1));
 
-        vaes::AESDecrypt(&a1, pkey128, nRounds);
+        vaes::AesDecrypt(&a1, pkey128, nRounds);
 
         // Do xor with previous cipher text to complete decryption.
         a1 = _mm256_xor_si256(a1, b1);
@@ -162,7 +162,7 @@ DecryptCbc(const uint8_t* pCipherText, // ptr to ciphertext
         a1 = input_128_a1 =
             _mm256_maskload_epi64((long long*)p_in_128, mask_lo);
 
-        vaes::AESDecrypt(&a1, pkey128, nRounds);
+        vaes::AesDecrypt(&a1, pkey128, nRounds);
 
         // Do xor with previous cipher text to complete decryption.
         a1 = _mm256_xor_si256(a1, b1);

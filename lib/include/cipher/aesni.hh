@@ -141,6 +141,23 @@ namespace alcp::cipher { namespace aesni {
                           __m128i  reverse_mask_128,
                           uint8_t* tag);
 
+    // ctr APIs for aesni
+    void ctrInit(__m128i*       c1,
+                 const uint8_t* pIv,
+                 __m128i*       one_x,
+                 __m128i*       two_x,
+                 __m128i*       three_x,
+                 __m128i*       four_x,
+                 __m128i*       eight_x,
+                 __m128i*       swap_ctr);
+
+    uint64_t ctrProcess(const __m128i* p_in_x,
+                        __m128i*       p_out_x,
+                        uint64_t       blocks,
+                        const __m128i* pkey128,
+                        const uint8_t* pIv,
+                        int            nRounds);
+
     static inline void AesEncrypt(__m128i*       pBlk0,
                                   __m128i*       pBlk1,
                                   __m128i*       pBlk2,

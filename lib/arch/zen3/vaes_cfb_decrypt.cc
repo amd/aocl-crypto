@@ -74,7 +74,7 @@ DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
         /* y2 |= blk1; */
         /* y3 |= blk2; */
 
-        vaes::AESEncrypt(&y0, &y1, &y2, &y3, p_key128, nRounds);
+        vaes::AesEncrypt(&y0, &y1, &y2, &y3, p_key128, nRounds);
 
         // update iv256
         iv256 = _mm256_set_epi64x(0, 0, blk3[3], blk3[2]);
@@ -105,7 +105,7 @@ DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
         /* y0 |= iv256; */
         /* y1 |= blk0; */
 
-        vaes::AESEncrypt(&y0, &y1, p_key128, nRounds);
+        vaes::AesEncrypt(&y0, &y1, p_key128, nRounds);
 
         // update iv256
         iv256 = _mm256_set_epi64x(0, 0, blk1[3], blk1[2]);
@@ -132,7 +132,7 @@ DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
 
         y0 = (y0 | iv256);
 
-        vaes::AESEncrypt(&y0, p_key128, nRounds);
+        vaes::AesEncrypt(&y0, p_key128, nRounds);
 
         // update iv256
         iv256 = _mm256_set_epi64x(0, 0, blk0[3], blk0[2]);
@@ -155,7 +155,7 @@ DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
         __m256i y0   = (blk0 | iv256);
 
         __m256i tmpblk = _mm256_permute2x128_si256(blk0, blk0, 1);
-        vaes::AESEncrypt(&y0, p_key128, nRounds);
+        vaes::AesEncrypt(&y0, p_key128, nRounds);
 
         blk0 = _mm256_xor_si256(tmpblk, y0);
         _mm256_maskstore_epi64((long long*)p_pt256, mask_lo, blk0);

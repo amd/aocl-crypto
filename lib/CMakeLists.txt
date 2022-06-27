@@ -63,12 +63,12 @@ INCLUDE_DIRECTORIES(
 	${CMAKE_SOURCE_DIR}/include
 	)
 
-SET(ALCP_LIB_SOURCES  
+SET(ALCP_LIB_SOURCES
 	${ALCP_VRS_SRC}
 	${ALCP_COMMON_SRCS}
 	)
 
-ADD_LIBRARY(alcp SHARED 
+ADD_LIBRARY(alcp SHARED
 	${ALCP_LIB_SOURCES}
 	)
 
@@ -125,4 +125,4 @@ TARGET_LINK_LIBRARIES(alcp PUBLIC dl)
 TARGET_LINK_LIBRARIES(alcp_static PUBLIC dl)
 
 # Need to build comapt libs after building the libalcp.so
-#${COMPAT_SRCS} 
+#${COMPAT_SRCS}

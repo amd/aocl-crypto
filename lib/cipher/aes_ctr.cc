@@ -31,29 +31,59 @@
 #include "cipher/vaes.hh"
 
 namespace alcp::cipher {
+
+alc_error_t
+cryptCtr(const uint8_t* pInputText, // ptr to plaintext for encrypt and
+                                    // ciphertext for decrypt
+         uint8_t* pOutputText,   // ptr to ciphertext for encrypt and plaintext
+                                 // for decrypt
+         uint64_t       len,     // message length in bytes
+         const uint8_t* pKey,    // ptr to Key
+         int            nRounds, // No. of rounds
+         const uint8_t* pIv,     // ptr to Initialization Vector
+         bool           isVaes)
+{
+    alc_error_t err     = ALC_ERROR_NONE;
+    uint64_t    blocks  = len / Rijndael::cBlockSize;
+    auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
+
+    if (isVaes) {
+        auto p_in_256  = reinterpret_cast<const __m256i*>(pInputText);
+        auto p_out_256 = reinterpret_cast<__m256i*>(pOutputText);
+
+        blocks = vaes::ctrProcess(
+            p_in_256, p_out_256, blocks, pkey128, pIv, nRounds);
+
+    } else {
+        auto p_in_128  = reinterpret_cast<const __m128i*>(pInputText);
+        auto p_out_128 = reinterpret_cast<__m128i*>(pOutputText);
+
+        blocks = aesni::ctrProcess(
+            p_in_128, p_out_128, blocks, pkey128, pIv, nRounds);
+    }
+
+    return err;
+}
+
 alc_error_t
 Ctr::decrypt(const uint8_t* pCipherText,
              uint8_t*       pPlainText,
              uint64_t       len,
              const uint8_t* pIv) const
 {
-    alc_error_t err = ALC_ERROR_NONE;
-
+    alc_error_t err    = ALC_ERROR_NONE;
+    bool        isVaes = false;
     if (Cipher::isVaesAvailable()) {
-        // err = vaes::DecryptCtr(
-        err = vaes::DecryptCtr(
-            pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
-
-        return err;
-    }
-    if (Cipher::isAesniAvailable()) {
-        err = aesni::DecryptCtr(
-            pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
-
-        return err;
+        isVaes = true;
     }
 
-    // dispatch to REF
+    err = cryptCtr(pCipherText,
+                   pPlainText,
+                   len,
+                   getEncryptKeys(),
+                   getRounds(),
+                   pIv,
+                   isVaes);
 
     return err;
 }
@@ -64,23 +94,18 @@ Ctr::encrypt(const uint8_t* pPlainText,
              uint64_t       len,
              const uint8_t* pIv) const
 {
-    alc_error_t err = ALC_ERROR_NONE;
-
+    alc_error_t err    = ALC_ERROR_NONE;
+    bool        isVaes = false;
     if (Cipher::isVaesAvailable()) {
-        // err = vaes::EncryptCtr(
-        err = vaes::EncryptCtr(
-            pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
-
-        return err;
+        isVaes = true;
     }
-    if (Cipher::isAesniAvailable()) {
-        err = aesni::EncryptCtr(
-            pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
-
-        return err;
-    }
-
-    // dispatch to REF
+    err = cryptCtr(pPlainText,
+                   pCipherText,
+                   len,
+                   getEncryptKeys(),
+                   getRounds(),
+                   pIv,
+                   isVaes);
 
     return err;
 }
