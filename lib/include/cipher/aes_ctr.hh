@@ -38,7 +38,11 @@
 #include "cipher/aesni.hh"
 #include "cipher/avx128.hh"
 #include "cipher/avx256.hh"
+#ifdef USE_AVX512
+#include "cipher/avx512.hh"
+#endif
 #include "cipher/vaes.hh"
+#include "cipher/vaes_avx512.hh"
 #include "error.hh"
 
 namespace alcp::cipher { namespace aes {
