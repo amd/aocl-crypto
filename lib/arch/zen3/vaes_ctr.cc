@@ -41,6 +41,7 @@ namespace alcp::cipher::vaes {
 void
 ctrInit(__m256i*       c1,
         const uint8_t* pIv,
+        __m256i*       onelo,
         __m256i*       one_x,
         __m256i*       two_x,
         __m256i*       three_x,
@@ -49,6 +50,7 @@ ctrInit(__m256i*       c1,
         __m256i*       swap_ctr)
 {
 
+    *onelo   = alcp_set_epi32(0, 0, 0, 0, 1, 0, 0, 0);
     *one_x   = alcp_set_epi32(2, 0, 0, 0, 2, 0, 0, 0);
     *two_x   = alcp_set_epi32(4, 0, 0, 0, 4, 0, 0, 0);
     *three_x = alcp_set_epi32(6, 0, 0, 0, 6, 0, 0, 0);

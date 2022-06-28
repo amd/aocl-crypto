@@ -6,7 +6,8 @@ IF (MSVC)
 ELSE()
 
 	SET(ARCH_COMPILE_FLAG -fPIC -znver3 -mavx -mavx2 -maes -mvaes -mpclmul -mavx512f -mavx512dq -mavx512ifma -mavx512cd
-	                      -mavx512bw -mavx512vl -mavx512vbmi -mavx512vbmi2 -mavx512vnni -mavx512bitalg -mavx512vpopcntdq)
+	                      -mavx512bw -mavx512vl -mavx512vbmi -mavx512vbmi2 -mavx512vnni -mavx512bitalg -mavx512vpopcntdq
+						  -DUSE_AVX512)
 
 ENDIF()
 

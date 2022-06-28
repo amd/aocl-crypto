@@ -62,10 +62,17 @@ namespace alcp::cipher { namespace aes {
         T a1, a2, a3, a4;
         T b1, b2, b3, b4;
         T c1, c2, c3, c4, swap_ctr;
-        T one_x, two_x, three_x, four_x, eight_x;
+        T one_lo, one_x, two_x, three_x, four_x, eight_x;
 
-        ctrInit(
-            &c1, pIv, &one_x, &two_x, &three_x, &four_x, &eight_x, &swap_ctr);
+        ctrInit(&c1,
+                pIv,
+                &one_lo,
+                &one_x,
+                &two_x,
+                &three_x,
+                &four_x,
+                &eight_x,
+                &swap_ctr);
 
         uint64_t blockCount4 = 4 * factor;
         uint64_t blockCount2 = 2 * factor;
@@ -149,10 +156,8 @@ namespace alcp::cipher { namespace aes {
         }
 
         // residual block=1 when factor = 2, load and store only lower half.
-        // TBD: when factor = 4 (avx512) and block = 3, 2 or 1, below condition
-        // needs to be handled properly.
 
-        if (blocks) {
+        for (; blocks != 0; blocks--) {
             a1 = alcp_loadu_128(p_in_x);
 
             // re-arrange as per spec
@@ -161,10 +166,11 @@ namespace alcp::cipher { namespace aes {
             a1 = alcp_xor(b1, a1);
 
             // increment counter
-            c1 = alcp_add_epi32(c1, one_x);
+            c1 = alcp_add_epi32(c1, one_lo);
 
             alcp_storeu_128(p_out_x, a1);
-            blocks--;
+            p_in_x  = (T*)(((__uint128_t*)p_in_x) + 1);
+            p_out_x = (T*)(((__uint128_t*)p_out_x) + 1);
         }
         return blocks;
     }

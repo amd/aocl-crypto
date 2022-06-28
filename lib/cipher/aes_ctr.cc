@@ -29,6 +29,7 @@
 #include "cipher/aes.hh"
 #include "cipher/aesni.hh"
 #include "cipher/vaes.hh"
+#include "cipher/vaes_avx512.hh"
 
 namespace alcp::cipher {
 
@@ -43,11 +44,18 @@ cryptCtr(const uint8_t* pInputText, // ptr to plaintext for encrypt and
          const uint8_t* pIv,     // ptr to Initialization Vector
          bool           isVaes)
 {
-    alc_error_t err     = ALC_ERROR_NONE;
-    uint64_t    blocks  = len / Rijndael::cBlockSize;
-    auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
+    alc_error_t err      = ALC_ERROR_NONE;
+    uint64_t    blocks   = len / Rijndael::cBlockSize;
+    auto        pkey128  = reinterpret_cast<const __m128i*>(pKey);
+    bool        isAVX512 = false;
 
-    if (isVaes) {
+    if (isVaes && isAVX512) {
+        auto p_in_512  = reinterpret_cast<const __m512i*>(pInputText);
+        auto p_out_512 = reinterpret_cast<__m512i*>(pOutputText);
+
+        blocks = vaes::ctrProcess(
+            p_in_512, p_out_512, blocks, pkey128, pIv, nRounds);
+    } else if (isVaes) {
         auto p_in_256  = reinterpret_cast<const __m256i*>(pInputText);
         auto p_out_256 = reinterpret_cast<__m256i*>(pOutputText);
 

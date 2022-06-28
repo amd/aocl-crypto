@@ -60,28 +60,23 @@ namespace alcp::cipher { namespace vaes {
     //                        int            nRounds,
     //                        const uint8_t* pIv);
 
-    // // ctr APIs for vaes
-    // void ctrInit(__m256i*       c1,
-    //              const uint8_t* pIv,
-    //              __m256i*       one_x,
-    //              __m256i*       two_x,
-    //              __m256i*       three_x,
-    //              __m256i*       four_x,
-    //              __m256i*       eight_x,
-    //              __m256i*       swap_ctr);
+    // ctr APIs for vaes
+    void ctrInit(__m512i*       c1,
+                 const uint8_t* pIv,
+                 __m512i*       onelo,
+                 __m512i*       one_x,
+                 __m512i*       two_x,
+                 __m512i*       three_x,
+                 __m512i*       four_x,
+                 __m512i*       eight_x,
+                 __m512i*       swap_ctr);
 
-    // uint64_t ctrProcess(const __m256i* p_in_x,
-    //                     __m256i*       p_out_x,
-    //                     uint64_t       blocks,
-    //                     const __m128i* pkey128,
-    //                     const uint8_t* pIv,
-    //                     int            nRounds);
-
-    static inline void amd_mm512_broadcast_i64x2(const __m128i rKey,
-                                                 __m512i*      dst)
-    {
-        *dst = _mm512_broadcast_i64x2(rKey);
-    }
+    uint64_t ctrProcess(const __m512i* p_in_x,
+                        __m512i*       p_out_x,
+                        uint64_t       blocks,
+                        const __m128i* pkey128,
+                        const uint8_t* pIv,
+                        int            nRounds);
 
     // Encrypt Begins here
     /* 1 x 2 block at a time */
@@ -94,18 +89,18 @@ namespace alcp::cipher { namespace vaes {
         __m512i rkey0;
         __m512i rkey1;
 
-        amd_mm512_broadcast_i64x2(pKey[0], &rkey0);
-        amd_mm512_broadcast_i64x2(pKey[1], &rkey1);
+        rkey0 = _mm512_broadcast_i64x2(pKey[0]);
+        rkey1 = _mm512_broadcast_i64x2(pKey[1]);
 
         __m512i b0 = _mm512_xor_si512(*blk0, rkey0);
 
-        amd_mm512_broadcast_i64x2(pKey[3], &rkey0);
+        rkey0 = _mm512_broadcast_i64x2(pKey[2]);
 
         for (nr = 2, pKey += 1; nr < nRounds; nr += 2, pKey += 2) {
-            b0 = _mm512_aesenc_epi128(b0, rkey1);
-            amd_mm512_broadcast_i64x2(pKey[2], &rkey1);
-            b0 = _mm512_aesenc_epi128(b0, rkey0);
-            amd_mm512_broadcast_i64x2(pKey[3], &rkey0);
+            b0    = _mm512_aesenc_epi128(b0, rkey1);
+            rkey1 = _mm512_broadcast_i64x2(pKey[2]);
+            b0    = _mm512_aesenc_epi128(b0, rkey0);
+            rkey0 = _mm512_broadcast_i64x2(pKey[3]);
         }
 
         b0    = _mm512_aesenc_epi128(b0, rkey1);
@@ -126,22 +121,22 @@ namespace alcp::cipher { namespace vaes {
         __m512i rkey0;
         __m512i rkey1;
 
-        amd_mm512_broadcast_i64x2(pKey[0], &rkey0);
-        amd_mm512_broadcast_i64x2(pKey[1], &rkey1);
+        rkey0 = _mm512_broadcast_i64x2(pKey[0]);
+        rkey1 = _mm512_broadcast_i64x2(pKey[1]);
 
         __m512i b0 = _mm512_xor_si512(*blk0, rkey0);
         __m512i b1 = _mm512_xor_si512(*blk1, rkey0);
 
-        amd_mm512_broadcast_i64x2(pKey[2], &rkey0);
+        rkey0 = _mm512_broadcast_i64x2(pKey[2]);
 
         for (nr = 2, pKey++; nr < nRounds; nr += 2, pKey += 2) {
-            b0 = _mm512_aesenc_epi128(b0, rkey1);
-            b1 = _mm512_aesenc_epi128(b1, rkey1);
-            amd_mm512_broadcast_i64x2(pKey[2], &rkey1);
+            b0    = _mm512_aesenc_epi128(b0, rkey1);
+            b1    = _mm512_aesenc_epi128(b1, rkey1);
+            rkey1 = _mm512_broadcast_i64x2(pKey[2]);
 
-            b0 = _mm512_aesenc_epi128(b0, rkey0);
-            b1 = _mm512_aesenc_epi128(b1, rkey0);
-            amd_mm512_broadcast_i64x2(pKey[3], &rkey0);
+            b0    = _mm512_aesenc_epi128(b0, rkey0);
+            b1    = _mm512_aesenc_epi128(b1, rkey0);
+            rkey0 = _mm512_broadcast_i64x2(pKey[3]);
         }
 
         b0 = _mm512_aesenc_epi128(b0, rkey1);
@@ -166,25 +161,25 @@ namespace alcp::cipher { namespace vaes {
         __m512i rkey0;
         __m512i rkey1;
 
-        amd_mm512_broadcast_i64x2(pKey[0], &rkey0);
-        amd_mm512_broadcast_i64x2(pKey[1], &rkey0);
+        rkey0 = _mm512_broadcast_i64x2(pKey[0]);
+        rkey1 = _mm512_broadcast_i64x2(pKey[1]);
 
         __m512i b0 = _mm512_xor_si512(*blk0, rkey0);
         __m512i b1 = _mm512_xor_si512(*blk1, rkey0);
         __m512i b2 = _mm512_xor_si512(*blk2, rkey0);
 
-        amd_mm512_broadcast_i64x2(pKey[2], &rkey0);
+        rkey0 = _mm512_broadcast_i64x2(pKey[2]);
 
         for (nr = 2, pKey++; nr < nRounds; nr += 2, pKey += 2) {
-            b0 = _mm512_aesenc_epi128(b0, rkey1);
-            b1 = _mm512_aesenc_epi128(b1, rkey1);
-            b2 = _mm512_aesenc_epi128(b2, rkey1);
-            amd_mm512_broadcast_i64x2(pKey[2], &rkey1);
+            b0    = _mm512_aesenc_epi128(b0, rkey1);
+            b1    = _mm512_aesenc_epi128(b1, rkey1);
+            b2    = _mm512_aesenc_epi128(b2, rkey1);
+            rkey1 = _mm512_broadcast_i64x2(pKey[2]);
 
-            b0 = _mm512_aesenc_epi128(b0, rkey0);
-            b1 = _mm512_aesenc_epi128(b1, rkey0);
-            b2 = _mm512_aesenc_epi128(b2, rkey0);
-            amd_mm512_broadcast_i64x2(pKey[3], &rkey0);
+            b0    = _mm512_aesenc_epi128(b0, rkey0);
+            b1    = _mm512_aesenc_epi128(b1, rkey0);
+            b2    = _mm512_aesenc_epi128(b2, rkey0);
+            rkey0 = _mm512_broadcast_i64x2(pKey[3]);
         }
 
         b0 = _mm512_aesenc_epi128(b0, rkey1);
@@ -210,28 +205,28 @@ namespace alcp::cipher { namespace vaes {
         int     nr;
         __m512i rkey0, rkey1;
 
-        amd_mm512_broadcast_i64x2(pKey[0], &rkey0);
-        amd_mm512_broadcast_i64x2(pKey[1], &rkey1);
+        rkey0 = _mm512_broadcast_i64x2(pKey[0]);
+        rkey1 = _mm512_broadcast_i64x2(pKey[1]);
 
         __m512i b0 = _mm512_xor_si512(*blk0, rkey0);
         __m512i b1 = _mm512_xor_si512(*blk1, rkey0);
         __m512i b2 = _mm512_xor_si512(*blk2, rkey0);
         __m512i b3 = _mm512_xor_si512(*blk3, rkey0);
 
-        amd_mm512_broadcast_i64x2(pKey[2], &rkey0);
+        rkey0 = _mm512_broadcast_i64x2(pKey[2]);
 
         for (nr = 2, pKey++; nr < nRounds; nr += 2, pKey += 2) {
-            b0 = _mm512_aesenc_epi128(b0, rkey1);
-            b1 = _mm512_aesenc_epi128(b1, rkey1);
-            b2 = _mm512_aesenc_epi128(b2, rkey1);
-            b3 = _mm512_aesenc_epi128(b3, rkey1);
-            amd_mm512_broadcast_i64x2(pKey[2], &rkey1);
+            b0    = _mm512_aesenc_epi128(b0, rkey1);
+            b1    = _mm512_aesenc_epi128(b1, rkey1);
+            b2    = _mm512_aesenc_epi128(b2, rkey1);
+            b3    = _mm512_aesenc_epi128(b3, rkey1);
+            rkey1 = _mm512_broadcast_i64x2(pKey[2]);
 
-            b0 = _mm512_aesenc_epi128(b0, rkey0);
-            b1 = _mm512_aesenc_epi128(b1, rkey0);
-            b2 = _mm512_aesenc_epi128(b2, rkey0);
-            b3 = _mm512_aesenc_epi128(b3, rkey0);
-            amd_mm512_broadcast_i64x2(pKey[3], &rkey0);
+            b0    = _mm512_aesenc_epi128(b0, rkey0);
+            b1    = _mm512_aesenc_epi128(b1, rkey0);
+            b2    = _mm512_aesenc_epi128(b2, rkey0);
+            b3    = _mm512_aesenc_epi128(b3, rkey0);
+            rkey0 = _mm512_broadcast_i64x2(pKey[3]);
         }
 
         b0 = _mm512_aesenc_epi128(b0, rkey1);

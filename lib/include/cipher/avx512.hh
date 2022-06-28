@@ -83,9 +83,9 @@ namespace alcp::cipher { namespace vaes {
     }
 
     // shuffle functions.
-    static inline __m256i alcp_shuffle_epi8(__m256i a, __m256i b)
+    static inline __m512i alcp_shuffle_epi8(__m512i a, __m512i b)
     {
-        return _mm256_shuffle_epi8(a, b);
+        return _mm512_shuffle_epi8(a, b);
     }
 
     // store functions
@@ -96,8 +96,8 @@ namespace alcp::cipher { namespace vaes {
 
     static inline void alcp_storeu_128(__m512i* ad, __m512i x)
     {
-        ((uint64_t*)ad)[0] = ((uint64_t*)&x)[0];
-        ((uint64_t*)ad)[1] = ((uint64_t*)&x)[1];
+        ((uint64_t*)ad)[0] = x[0];
+        ((uint64_t*)ad)[1] = x[1];
     }
 
 }} // namespace alcp::cipher::vaes
