@@ -25,9 +25,15 @@ static alc_cipher_handle_t handle;
 */
 #ifdef DEBUG_P
 #define ALCP_PRINT_TEXT(I, L, S)                                               \
-    printf("\n %s", S);                                                        \
+    printf("\n %s ", S);                                                       \
     for (int x = 0; x < L; x++) {                                              \
-        printf(" %2x", I[x]);                                                  \
+        if ((x % (16 * 4) == 0)) {                                             \
+            printf("\n");                                                      \
+        }                                                                      \
+        if (x % 16 == 0) {                                                     \
+            printf("   ");                                                     \
+        }                                                                      \
+        printf(" %2x", *(I + x));                                              \
     }
 #else // DEBUG_P
 #define ALCP_PRINT_TEXT(I, L, S)

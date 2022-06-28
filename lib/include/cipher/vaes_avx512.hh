@@ -400,4 +400,70 @@ namespace alcp::cipher { namespace vaes {
         rkey0 = _mm512_setzero_si512();
         rkey1 = _mm512_setzero_si512();
     }
+
+    static inline void AesEncrypt(__m512i*       blk0,
+                                  __m512i*       blk1,
+                                  __m512i*       blk2,
+                                  __m512i*       blk3,
+                                  __m512i*       blk4,
+                                  __m512i*       blk5,
+                                  const __m128i* pKey, /* Round keys */
+                                  int            nRounds)
+    {
+        int     nr;
+        __m512i rkey0, rkey1;
+
+        rkey0 = _mm512_broadcast_i64x2(pKey[0]);
+        rkey1 = _mm512_broadcast_i64x2(pKey[1]);
+
+        __m512i b0 = _mm512_xor_si512(*blk0, rkey0);
+        __m512i b1 = _mm512_xor_si512(*blk1, rkey0);
+        __m512i b2 = _mm512_xor_si512(*blk2, rkey0);
+        __m512i b3 = _mm512_xor_si512(*blk3, rkey0);
+
+        __m512i b4 = _mm512_xor_si512(*blk4, rkey0);
+        __m512i b5 = _mm512_xor_si512(*blk5, rkey0);
+
+        rkey0 = _mm512_broadcast_i64x2(pKey[2]);
+
+        for (nr = 2, pKey++; nr < nRounds; nr += 2, pKey += 2) {
+            b0 = _mm512_aesenc_epi128(b0, rkey1);
+            b1 = _mm512_aesenc_epi128(b1, rkey1);
+            b2 = _mm512_aesenc_epi128(b2, rkey1);
+            b3 = _mm512_aesenc_epi128(b3, rkey1);
+
+            b4 = _mm512_aesenc_epi128(b4, rkey1);
+            b5 = _mm512_aesenc_epi128(b5, rkey1);
+
+            rkey1 = _mm512_broadcast_i64x2(pKey[2]);
+
+            b0 = _mm512_aesenc_epi128(b0, rkey0);
+            b1 = _mm512_aesenc_epi128(b1, rkey0);
+            b2 = _mm512_aesenc_epi128(b2, rkey0);
+            b3 = _mm512_aesenc_epi128(b3, rkey0);
+
+            b4 = _mm512_aesenc_epi128(b4, rkey0);
+            b5 = _mm512_aesenc_epi128(b5, rkey0);
+
+            rkey0 = _mm512_broadcast_i64x2(pKey[3]);
+        }
+
+        b0 = _mm512_aesenc_epi128(b0, rkey1);
+        b1 = _mm512_aesenc_epi128(b1, rkey1);
+        b2 = _mm512_aesenc_epi128(b2, rkey1);
+        b3 = _mm512_aesenc_epi128(b3, rkey1);
+        b4 = _mm512_aesenc_epi128(b4, rkey1);
+        b5 = _mm512_aesenc_epi128(b5, rkey1);
+
+        *blk0 = _mm512_aesenclast_epi128(b0, rkey0);
+        *blk1 = _mm512_aesenclast_epi128(b1, rkey0);
+        *blk2 = _mm512_aesenclast_epi128(b2, rkey0);
+        *blk3 = _mm512_aesenclast_epi128(b3, rkey0);
+        *blk4 = _mm512_aesenclast_epi128(b4, rkey0);
+        *blk5 = _mm512_aesenclast_epi128(b5, rkey0);
+
+        rkey0 = _mm512_setzero_si512();
+        rkey1 = _mm512_setzero_si512();
+    }
+
 }} // namespace alcp::cipher::vaes

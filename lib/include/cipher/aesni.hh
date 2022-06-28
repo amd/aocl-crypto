@@ -106,6 +106,32 @@ namespace alcp::cipher { namespace aesni {
                            int            nRounds,
                            const uint8_t* pIv);
 
+    void gMulR(__m128i a, __m128i b, __m128i reverse_mask_128, __m128i* res);
+    void gMul(__m128i a, __m128i b, __m128i* res);
+
+    void gMulR(__m128i  H1,
+               __m128i  H2,
+               __m128i  H3,
+               __m128i  H4,
+               __m128i  a,
+               __m128i  b,
+               __m128i  c,
+               __m128i  d,
+               __m128i  reverse_mask_128,
+               __m128i* res);
+
+    void gMul(__m128i  H1,
+              __m128i  H2,
+              __m128i  H3,
+              __m128i  H4,
+              __m128i  a,
+              __m128i  b,
+              __m128i  c,
+              __m128i  d,
+              __m128i* res);
+
+    void redMod(__m128i x10, __m128i x32, __m128i* res);
+
     alc_error_t InitGcm(const uint8_t* pKey,
                         int            nRounds,
                         const uint8_t* pIv,
@@ -120,6 +146,16 @@ namespace alcp::cipher { namespace aesni {
                                          __m128i*       pgHash_128,
                                          __m128i        hash_subKey_128,
                                          __m128i        reverse_mask_128);
+
+    void gcmCryptInit(__m128i* c1,
+                      __m128i  iv_128,
+                      __m128i* one_lo,
+                      __m128i* one_x,
+                      __m128i* two_x,
+                      __m128i* three_x,
+                      __m128i* four_x,
+                      __m128i* eight_x,
+                      __m128i* swap_ctr);
 
     alc_error_t CryptGcm(const uint8_t* pPlainText,
                          uint8_t*       pCipherText,
