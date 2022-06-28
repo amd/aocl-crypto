@@ -68,30 +68,22 @@ ctrInit(__m512i*       c1,
 
     // counter 4 bytes are arranged in reverse order
     // for counter increment
-    // clang-format off
-    *swap_ctr =  _mm512_set_epi32(0x0c0d0e0f,
-                                  0x0b0a0908,
-                                  0x07060504,
-                                  0x03020100,
-                                  0x0c0d0e0f, // Repeats here
-                                  0x0b0a0908,
-                                  0x07060504,
-                                  0x03020100,
-                                  0x0c0d0e0f, // Repeats here
-                                  0x0b0a0908,
-                                  0x07060504,
-                                  0x03020100,
-                                  0x0c0d0e0f, // Repeats here
-                                  0x0b0a0908,
-                                  0x07060504,
-                                  0x03020100);
-    // *swap_ctr = _mm256_setr_epi8( 0,  1,  2,  3,  4,  5,  6,  7,
-    //                               8,  9, 10, 11, 15, 14, 13, 12, /* switching
-    //                               last 4 bytes */
-    //                              16, 17, 18, 19, 20, 21, 22, 23,
-    //                              24, 25, 26, 27, 31, 30, 29, 28); /*
-    //                              switching last 4 bytes */
-    // clang-format on
+    *swap_ctr = _mm512_set_epi32(0x0c0d0e0f,
+                                 0x0b0a0908,
+                                 0x07060504,
+                                 0x03020100,
+                                 0x0c0d0e0f, // Repeats here
+                                 0x0b0a0908,
+                                 0x07060504,
+                                 0x03020100,
+                                 0x0c0d0e0f, // Repeats here
+                                 0x0b0a0908,
+                                 0x07060504,
+                                 0x03020100,
+                                 0x0c0d0e0f, // Repeats here
+                                 0x0b0a0908,
+                                 0x07060504,
+                                 0x03020100);
     // nonce counter
     *c1 = _mm512_broadcast_i64x2(*((__m128i*)pIv));
     *c1 = alcp_shuffle_epi8(*c1, *swap_ctr);
