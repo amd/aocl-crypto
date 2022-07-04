@@ -42,14 +42,14 @@ cryptCtr(const uint8_t* pInputText, // ptr to plaintext for encrypt and
          const uint8_t* pKey,    // ptr to Key
          int            nRounds, // No. of rounds
          const uint8_t* pIv,     // ptr to Initialization Vector
-         bool           isVaes)
+         bool           isVaes,
+         bool           isAvx512Cap)
 {
-    alc_error_t err      = ALC_ERROR_NONE;
-    uint64_t    blocks   = len / Rijndael::cBlockSize;
-    auto        pkey128  = reinterpret_cast<const __m128i*>(pKey);
-    bool        isAVX512 = false;
+    alc_error_t err     = ALC_ERROR_NONE;
+    uint64_t    blocks  = len / Rijndael::cBlockSize;
+    auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
 
-    if (isVaes && isAVX512) {
+    if (isVaes && isAvx512Cap) {
         auto p_in_512  = reinterpret_cast<const __m512i*>(pInputText);
         auto p_out_512 = reinterpret_cast<__m512i*>(pOutputText);
 
@@ -79,10 +79,15 @@ Ctr::decrypt(const uint8_t* pCipherText,
              uint64_t       len,
              const uint8_t* pIv) const
 {
-    alc_error_t err    = ALC_ERROR_NONE;
-    bool        isVaes = false;
+    alc_error_t err         = ALC_ERROR_NONE;
+    bool        isVaes      = false;
+    bool        isAvx512Cap = false;
     if (Cipher::isVaesAvailable()) {
         isVaes = true;
+        if (Cipher::isAvx512fAvailable() && Cipher::isAvx512dqAvailable()
+            && Cipher::isAvx512bwAvailable()) {
+            isAvx512Cap = true;
+        }
     }
 
     err = cryptCtr(pCipherText,
@@ -91,7 +96,8 @@ Ctr::decrypt(const uint8_t* pCipherText,
                    getEncryptKeys(),
                    getRounds(),
                    pIv,
-                   isVaes);
+                   isVaes,
+                   isAvx512Cap);
 
     return err;
 }
@@ -102,10 +108,14 @@ Ctr::encrypt(const uint8_t* pPlainText,
              uint64_t       len,
              const uint8_t* pIv) const
 {
-    alc_error_t err    = ALC_ERROR_NONE;
-    bool        isVaes = false;
+    alc_error_t err         = ALC_ERROR_NONE;
+    bool        isVaes      = false;
+    bool        isAvx512Cap = false;
     if (Cipher::isVaesAvailable()) {
         isVaes = true;
+        if (Cipher::isAvx512fAvailable() && Cipher::isAvx512dqAvailable()) {
+            isAvx512Cap = true;
+        }
     }
     err = cryptCtr(pPlainText,
                    pCipherText,
@@ -113,7 +123,8 @@ Ctr::encrypt(const uint8_t* pPlainText,
                    getEncryptKeys(),
                    getRounds(),
                    pIv,
-                   isVaes);
+                   isVaes,
+                   isAvx512Cap);
 
     return err;
 }
