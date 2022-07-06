@@ -42,6 +42,7 @@ namespace alcp::cipher::aesni {
 void
 ctrInit(__m128i*       c1,
         const uint8_t* pIv,
+        __m128i*       one_lo,
         __m128i*       one_x,
         __m128i*       two_x,
         __m128i*       three_x,
@@ -54,6 +55,7 @@ ctrInit(__m128i*       c1,
     *two_x   = alcp_set_epi32(2, 0, 0, 0);
     *three_x = alcp_set_epi32(3, 0, 0, 0);
     *four_x  = alcp_set_epi32(4, 0, 0, 0);
+    one_lo   = one_x;
 
     //
     // counterblock :: counter 4 bytes: IV 8 bytes : Nonce 4 bytes

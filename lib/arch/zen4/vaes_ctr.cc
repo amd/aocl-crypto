@@ -31,6 +31,7 @@
 #include "cipher/aes.hh"
 #include "cipher/aes_ctr.hh"
 #include "cipher/vaes.hh"
+#include "cipher/vaes_avx512.hh"
 
 #include "error.hh"
 #include "key.hh"
@@ -39,23 +40,26 @@
 namespace alcp::cipher::vaes {
 
 void
-ctrInit(__m256i*       c1,
+ctrInit(__m512i*       c1,
         const uint8_t* pIv,
-        __m256i*       onelo,
-        __m256i*       one_x,
-        __m256i*       two_x,
-        __m256i*       three_x,
-        __m256i*       four_x,
-        __m256i*       eight_x,
-        __m256i*       swap_ctr)
+        __m512i*       one_lo,
+        __m512i*       one_x,
+        __m512i*       two_x,
+        __m512i*       three_x,
+        __m512i*       four_x,
+        __m512i*       eight_x,
+        __m512i*       swap_ctr)
 {
 
-    *onelo   = alcp_set_epi32(0, 0, 0, 0, 1, 0, 0, 0);
-    *one_x   = alcp_set_epi32(2, 0, 0, 0, 2, 0, 0, 0);
-    *two_x   = alcp_set_epi32(4, 0, 0, 0, 4, 0, 0, 0);
-    *three_x = alcp_set_epi32(6, 0, 0, 0, 6, 0, 0, 0);
-    *four_x  = alcp_set_epi32(8, 0, 0, 0, 8, 0, 0, 0);
-    *eight_x = alcp_set_epi32(16, 0, 0, 0, 16, 0, 0, 0);
+    *one_lo = alcp_set_epi32(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
+    *one_x  = alcp_set_epi32(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0);
+    *two_x  = alcp_set_epi32(8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0);
+    *three_x =
+        alcp_set_epi32(12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0);
+    *four_x =
+        alcp_set_epi32(16, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0);
+    *eight_x =
+        alcp_set_epi32(32, 0, 0, 0, 32, 0, 0, 0, 32, 0, 0, 0, 32, 0, 0, 0);
 
     //
     // counterblock :: counter 4 bytes: IV 8 bytes : Nonce 4 bytes
@@ -64,30 +68,41 @@ ctrInit(__m256i*       c1,
 
     // counter 4 bytes are arranged in reverse order
     // for counter increment
-    // clang-format off
-    *swap_ctr = _mm256_setr_epi8( 0,  1,  2,  3,  4,  5,  6,  7,
-                                  8,  9, 10, 11, 15, 14, 13, 12, /* switching last 4 bytes */
-                                 16, 17, 18, 19, 20, 21, 22, 23,
-                                 24, 25, 26, 27, 31, 30, 29, 28); /* switching last 4 bytes */
-    // clang-format on
+    *swap_ctr = _mm512_set_epi32(0x0c0d0e0f,
+                                 0x0b0a0908,
+                                 0x07060504,
+                                 0x03020100,
+                                 0x0c0d0e0f, // Repeats here
+                                 0x0b0a0908,
+                                 0x07060504,
+                                 0x03020100,
+                                 0x0c0d0e0f, // Repeats here
+                                 0x0b0a0908,
+                                 0x07060504,
+                                 0x03020100,
+                                 0x0c0d0e0f, // Repeats here
+                                 0x0b0a0908,
+                                 0x07060504,
+                                 0x03020100);
     // nonce counter
-    amd_mm256_broadcast_i64x2((__m128i*)pIv, c1);
+    *c1 = _mm512_broadcast_i64x2(*((__m128i*)pIv));
     *c1 = alcp_shuffle_epi8(*c1, *swap_ctr);
 
-    __m256i onehi = _mm256_setr_epi32(0, 0, 0, 0, 0, 0, 0, 1);
-    *c1           = alcp_add_epi32(*c1, onehi);
+    __m512i onehi =
+        _mm512_setr_epi32(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3);
+    *c1 = alcp_add_epi32(*c1, onehi);
 }
 
 uint64_t
-ctrProcess(const __m256i* p_in_x,
-           __m256i*       p_out_x,
+ctrProcess(const __m512i* p_in_x,
+           __m512i*       p_out_x,
            uint64_t       blocks,
            const __m128i* pkey128,
            const uint8_t* pIv,
            int            nRounds)
 {
     return alcp::cipher::aes::ctrBlk(
-        p_in_x, p_out_x, blocks, pkey128, pIv, nRounds, 2);
+        p_in_x, p_out_x, blocks, pkey128, pIv, nRounds, 4);
 }
 
 } // namespace alcp::cipher::vaes
