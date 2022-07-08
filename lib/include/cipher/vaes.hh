@@ -64,6 +64,7 @@ namespace alcp::cipher { namespace vaes {
     // ctr APIs for vaes
     void ctrInit(__m256i*       c1,
                  const uint8_t* pIv,
+                 __m256i*       onelo,
                  __m256i*       one_x,
                  __m256i*       two_x,
                  __m256i*       three_x,

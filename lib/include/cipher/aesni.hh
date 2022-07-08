@@ -160,6 +160,7 @@ namespace alcp::cipher { namespace aesni {
     // ctr APIs for aesni
     void ctrInit(__m128i*       c1,
                  const uint8_t* pIv,
+                 __m128i*       one_lo,
                  __m128i*       one_x,
                  __m128i*       two_x,
                  __m128i*       three_x,

@@ -182,9 +182,39 @@ class Cipher
 #ifdef USE_AOCL_CPUID
         static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
 #else
-        static bool s_vaes_available  = false;
+        static bool s_vaes_available     = false;
 #endif
         return s_vaes_available;
+    }
+
+    static bool isAvx512fAvailable()
+    {
+#ifdef USE_AOCL_CPUID
+        static bool s_avx512f_available = (alc_cpu_has_avx512f() > 0);
+#else
+        static bool s_avx512f_available  = false;
+#endif
+        return s_avx512f_available;
+    }
+
+    static bool isAvx512dqAvailable()
+    {
+#ifdef USE_AOCL_CPUID
+        static bool s_avx512dq_available = (alc_cpu_has_avx512dq() > 0);
+#else
+        static bool s_avx512dq_available = false;
+#endif
+        return s_avx512dq_available;
+    }
+
+    static bool isAvx512bwAvailable()
+    {
+#ifdef USE_AOCL_CPUID
+        static bool s_avx512bw_available = (alc_cpu_has_avx512bw() > 0);
+#else
+        static bool s_avx512bw_available = false;
+#endif
+        return s_avx512bw_available;
     }
 
     /*
@@ -195,7 +225,7 @@ class Cipher
 #ifdef USE_AOCL_CPUID
         static bool s_aesni_available = (alc_cpu_has_aes() > 0);
 #else
-        static bool s_aesni_available = true;
+        static bool s_aesni_available    = true;
 #endif
         return s_aesni_available;
     }
