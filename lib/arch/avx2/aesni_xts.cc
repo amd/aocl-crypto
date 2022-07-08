@@ -34,19 +34,6 @@
 #include "cipher/aesni.hh"
 #include "error.hh"
 
-#define DEBUG_P  1
-#define trace(x) std::cout << #x << " : " << std::endl;
-#ifdef DEBUG_P
-#define ALCP_PRINT_TEXT(I, L, S)                                               \
-    printf("\n %s", S);                                                        \
-    for (int x = 0; x < L; x++) {                                              \
-        printf(" %2x", I[x]);                                                  \
-    }                                                                          \
-    printf("\n");
-#else // DEBUG_P
-#define ALCP_PRINT_TEXT(I, L, S)
-#endif // DEBUG_P
-
 namespace alcp::cipher { namespace aesni {
 
     static void InceaseAlpha(__m128i& alpha)
