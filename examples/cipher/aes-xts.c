@@ -6,88 +6,7 @@
 
 #include "alcp/alcp.h"
 
-#define DEBUG_P 1
-
-#ifdef DEBUG_P
-#define ALCP_PRINT_TEXT(I, L, S)                                               \
-    printf("\n %s", S);                                                        \
-    for (int x = 0; x < L; x++) {                                              \
-        printf(" %2x", I[x]);                                                  \
-    }                                                                          \
-    printf("\n");
-#else // DEBUG_P
-#define ALCP_PRINT_TEXT(I, L, S)
-#endif // DEBUG_P
-
 static alc_cipher_handle_t handle;
-
-char*
-bytesToHexString(unsigned char* bytes, int length)
-{
-    char* outputHexString = malloc(sizeof(char) * ((length * 2) + 1));
-    for (int i = 0; i < length; i++) {
-        char chararray[2];
-        chararray[0] = (bytes[i] & 0xf0) >> 4;
-        chararray[1] = bytes[i] & 0x0f;
-        for (int j = 0; j < 2; j++) {
-            switch (chararray[j]) {
-                case 0x0:
-                    chararray[j] = '0';
-                    break;
-                case 0x1:
-                    chararray[j] = '1';
-                    break;
-                case 0x2:
-                    chararray[j] = '2';
-                    break;
-                case 0x3:
-                    chararray[j] = '3';
-                    break;
-                case 0x4:
-                    chararray[j] = '4';
-                    break;
-                case 0x5:
-                    chararray[j] = '5';
-                    break;
-                case 0x6:
-                    chararray[j] = '6';
-                    break;
-                case 0x7:
-                    chararray[j] = '7';
-                    break;
-                case 0x8:
-                    chararray[j] = '8';
-                    break;
-                case 0x9:
-                    chararray[j] = '9';
-                    break;
-                case 0xa:
-                    chararray[j] = 'a';
-                    break;
-                case 0xb:
-                    chararray[j] = 'b';
-                    break;
-                case 0xc:
-                    chararray[j] = 'c';
-                    break;
-                case 0xd:
-                    chararray[j] = 'd';
-                    break;
-                case 0xe:
-                    chararray[j] = 'e';
-                    break;
-                case 0xf:
-                    chararray[j] = 'f';
-                    break;
-                default:
-                    printf("%x %d\n", chararray[j], j);
-            }
-            outputHexString[i * 2 + j] = chararray[j];
-        }
-    }
-    outputHexString[length * 2] = 0x0;
-    return outputHexString;
-}
 
 void
 create_demo_session(const uint8_t* key,
@@ -201,7 +120,7 @@ decrypt_demo(const uint8_t* ciphertxt,
 
 // static char* sample_plaintxt = "Hello World from AOCL Crypto !!!";
 static uint8_t sample_plaintxt[] =
-    "Happy and Fantastic!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+    "Happy and Fantastic New Year from AOCL Crypto !!";
 
 unsigned char* sample_key = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
@@ -293,19 +212,16 @@ main(void)
         strlen(sample_plaintxt), /* len of 'plaintxt' and 'ciphertxt' */
         &sample_ciphertxt,
         &sample_iv);
-    // printf(" Chiper text %s \n",
-    //        bytesToHexString(&sample_ciphertxt, strlen(sample_ciphertxt)));
+
     ALCP_PRINT_TEXT(sample_ciphertxt, strlen(sample_ciphertxt), "cipher text:");
     printf(" size of cipher text %d\n", strlen(sample_ciphertxt));
     int size = strlen(sample_plaintxt);
-
-    // printf("this is the chiper text %s\n", sample_ciphertxt);
 
     decrypt_demo(&sample_ciphertxt, size, &sample_output, &sample_iv);
 
     ALCP_PRINT_TEXT(sample_output, strlen(sample_output), "sample_output :\n");
     printf(" size of output %d\n", strlen(sample_output));
-    // printf("sample_output: %s\n", sample_output);
+
     /*
      * Complete the transaction
      */

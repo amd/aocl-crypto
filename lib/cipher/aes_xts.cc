@@ -40,6 +40,12 @@ Xts::encrypt(const uint8_t* pPlainText,
 
     alc_error_t err = ALC_ERROR_NONE;
 
+    // Data should never be less than a block or greater than 2^20 blocks
+    if (len < 16 || len > (1 << 21)) {
+        err = ALC_ERROR_INVALID_DATA;
+        return err;
+    }
+
     if (Cipher::isAesniAvailable()) {
 
         err = aesni::EncryptXts(pPlainText,
@@ -53,8 +59,6 @@ Xts::encrypt(const uint8_t* pPlainText,
         return err;
     }
 
-    // err = Rijndael::encrypt(pPlainText, pCipherText, len, pIv);
-
     return err;
 }
 
@@ -66,6 +70,12 @@ Xts::decrypt(const uint8_t* pPlainText,
 {
 
     alc_error_t err = ALC_ERROR_NONE;
+
+    // Data should never be less than a block or greater than 2^20 blocks
+    if (len < 16 || len > (1 << 21)) {
+        err = ALC_ERROR_INVALID_DATA;
+        return err;
+    }
 
     if (Cipher::isAesniAvailable()) {
 
