@@ -147,6 +147,10 @@ AesBuilder::Build(const alc_aes_info_t& aesInfo,
             err = __build_aes<Gcm>(aesInfo, keyInfo, ctx);
             break;
 
+        case ALC_AES_MODE_XTS:
+            err = __build_aes<Xts>(aesInfo, keyInfo, ctx);
+            break;
+
         default:
             Error::setGeneric(err, ALC_ERROR_NOT_SUPPORTED);
             break;

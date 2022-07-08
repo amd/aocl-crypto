@@ -89,6 +89,7 @@ typedef struct _alc_key_info
     alc_key_len_t  len_type;
     uint32_t       len; /* Key length in bits */
     const uint8_t* key; /* Key follows the rest of the structure */
+    const uint8_t* tweak_key; /* Key follows the rest of the structure */
 } alc_key_info_t, *alc_key_info_p;
 
 alc_key_alg_t

@@ -99,6 +99,22 @@ namespace alcp::cipher { namespace aesni {
                            int            nRounds,
                            const uint8_t* pIv);
 
+    alc_error_t EncryptXts(const uint8_t* pPlainText,
+                           uint8_t*       pCipherText,
+                           uint64_t       len,
+                           const uint8_t* pKey,
+                           const uint8_t* pTweakKey,
+                           int            nRounds,
+                           const uint8_t* pIv);
+
+    alc_error_t DecryptXts(const uint8_t* pPlainText,
+                           uint8_t*       pCipherText,
+                           uint64_t       len,
+                           const uint8_t* pKey,
+                           const uint8_t* pTweakKey,
+                           int            nRounds,
+                           const uint8_t* pIv);
+
     alc_error_t DecryptGcm(const uint8_t* pInput,
                            uint8_t*       pOutput,
                            uint64_t       len,
