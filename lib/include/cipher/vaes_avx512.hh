@@ -58,7 +58,7 @@ namespace alcp::cipher { namespace vaes {
                         int            nRounds);
 
     // Encrypt Begins here
-    /* 1 x 2 block at a time */
+    /* 1 x 4 block at a time */
     static inline void AesEncrypt(__m512i*       blk0,
                                   const __m128i* pKey, /* Round key */
                                   int            nRounds)
@@ -89,7 +89,7 @@ namespace alcp::cipher { namespace vaes {
         rkey1 = _mm512_setzero_si512();
     }
 
-    /* 2 x 2 blocks at a time */
+    /* 2 x 4 blocks at a time */
     static inline void AesEncrypt(__m512i*       blk0,
                                   __m512i*       blk1,
                                   const __m128i* pKey, /* Round key */
@@ -128,7 +128,7 @@ namespace alcp::cipher { namespace vaes {
         rkey1 = _mm512_setzero_si512();
     }
 
-    /* 3 x 2 blocks at a time */
+    /* 3 x 4 blocks at a time */
     static inline void AesEncrypt(__m512i*       blk0,
                                   __m512i*       blk1,
                                   __m512i*       blk2,
@@ -173,7 +173,7 @@ namespace alcp::cipher { namespace vaes {
         rkey1 = _mm512_setzero_si512();
     }
 
-    /* 4 x 2 blocks at a time */
+    /* 4 x 4 blocks at a time */
     static inline void AesEncrypt(__m512i*       blk0,
                                   __m512i*       blk1,
                                   __m512i*       blk2,
@@ -217,6 +217,171 @@ namespace alcp::cipher { namespace vaes {
         *blk1 = _mm512_aesenclast_epi128(b1, rkey0);
         *blk2 = _mm512_aesenclast_epi128(b2, rkey0);
         *blk3 = _mm512_aesenclast_epi128(b3, rkey0);
+
+        rkey0 = _mm512_setzero_si512();
+        rkey1 = _mm512_setzero_si512();
+    }
+
+    // From here decrypt starts
+
+    static inline void AesDecrypt(__m512i*       blk0,
+                                  const __m128i* pKey, /* Round key */
+                                  int            nRounds)
+    {
+        int nr;
+
+        __m512i rkey0;
+        __m512i rkey1;
+
+        rkey0 = _mm512_broadcast_i64x2(pKey[0]);
+        rkey1 = _mm512_broadcast_i64x2(pKey[1]);
+
+        __m512i b0 = _mm512_xor_si512(*blk0, rkey0);
+
+        rkey0 = _mm512_broadcast_i64x2(pKey[2]);
+
+        for (nr = 2, pKey += 1; nr < nRounds; nr += 2, pKey += 2) {
+            b0    = _mm512_aesdec_epi128(b0, rkey1);
+            rkey1 = _mm512_broadcast_i64x2(pKey[2]);
+            b0    = _mm512_aesdec_epi128(b0, rkey0);
+            rkey0 = _mm512_broadcast_i64x2(pKey[3]);
+        }
+
+        b0    = _mm512_aesdec_epi128(b0, rkey1);
+        *blk0 = _mm512_aesdeclast_epi128(b0, rkey0);
+
+        rkey0 = _mm512_setzero_si512();
+        rkey1 = _mm512_setzero_si512();
+    }
+
+    /* 2 x 4 blocks at a time */
+    static inline void AesDecrypt(__m512i*       blk0,
+                                  __m512i*       blk1,
+                                  const __m128i* pKey, /* Round key */
+                                  int            nRounds)
+    {
+        int nr;
+
+        __m512i rkey0;
+        __m512i rkey1;
+
+        rkey0 = _mm512_broadcast_i64x2(pKey[0]);
+        rkey1 = _mm512_broadcast_i64x2(pKey[1]);
+
+        __m512i b0 = _mm512_xor_si512(*blk0, rkey0);
+        __m512i b1 = _mm512_xor_si512(*blk1, rkey0);
+
+        rkey0 = _mm512_broadcast_i64x2(pKey[2]);
+
+        for (nr = 2, pKey++; nr < nRounds; nr += 2, pKey += 2) {
+            b0    = _mm512_aesdec_epi128(b0, rkey1);
+            b1    = _mm512_aesdec_epi128(b1, rkey1);
+            rkey1 = _mm512_broadcast_i64x2(pKey[2]);
+
+            b0    = _mm512_aesdec_epi128(b0, rkey0);
+            b1    = _mm512_aesdec_epi128(b1, rkey0);
+            rkey0 = _mm512_broadcast_i64x2(pKey[3]);
+        }
+
+        b0 = _mm512_aesdec_epi128(b0, rkey1);
+        b1 = _mm512_aesdec_epi128(b1, rkey1);
+
+        *blk0 = _mm512_aesdeclast_epi128(b0, rkey0);
+        *blk1 = _mm512_aesdeclast_epi128(b1, rkey0);
+
+        rkey0 = _mm512_setzero_si512();
+        rkey1 = _mm512_setzero_si512();
+    }
+
+    /* 3 x 4 blocks at a time */
+    static inline void AesDecrypt(__m512i*       blk0,
+                                  __m512i*       blk1,
+                                  __m512i*       blk2,
+                                  const __m128i* pKey, /* Round keys */
+                                  int            nRounds)
+    {
+        int nr;
+
+        __m512i rkey0;
+        __m512i rkey1;
+
+        rkey0 = _mm512_broadcast_i64x2(pKey[0]);
+        rkey1 = _mm512_broadcast_i64x2(pKey[1]);
+
+        __m512i b0 = _mm512_xor_si512(*blk0, rkey0);
+        __m512i b1 = _mm512_xor_si512(*blk1, rkey0);
+        __m512i b2 = _mm512_xor_si512(*blk2, rkey0);
+
+        rkey0 = _mm512_broadcast_i64x2(pKey[2]);
+
+        for (nr = 2, pKey++; nr < nRounds; nr += 2, pKey += 2) {
+            b0    = _mm512_aesdec_epi128(b0, rkey1);
+            b1    = _mm512_aesdec_epi128(b1, rkey1);
+            b2    = _mm512_aesdec_epi128(b2, rkey1);
+            rkey1 = _mm512_broadcast_i64x2(pKey[2]);
+
+            b0    = _mm512_aesdec_epi128(b0, rkey0);
+            b1    = _mm512_aesdec_epi128(b1, rkey0);
+            b2    = _mm512_aesdec_epi128(b2, rkey0);
+            rkey0 = _mm512_broadcast_i64x2(pKey[3]);
+        }
+
+        b0 = _mm512_aesdec_epi128(b0, rkey1);
+        b1 = _mm512_aesdec_epi128(b1, rkey1);
+        b2 = _mm512_aesdec_epi128(b2, rkey1);
+
+        *blk0 = _mm512_aesdeclast_epi128(b0, rkey0);
+        *blk1 = _mm512_aesdeclast_epi128(b1, rkey0);
+        *blk2 = _mm512_aesdeclast_epi128(b2, rkey0);
+
+        rkey0 = _mm512_setzero_si512();
+        rkey1 = _mm512_setzero_si512();
+    }
+
+    /* 4 x 4 blocks at a time */
+    static inline void AesDecrypt(__m512i*       blk0,
+                                  __m512i*       blk1,
+                                  __m512i*       blk2,
+                                  __m512i*       blk3,
+                                  const __m128i* pKey, /* Round keys */
+                                  int            nRounds)
+    {
+        int     nr;
+        __m512i rkey0, rkey1;
+
+        rkey0 = _mm512_broadcast_i64x2(pKey[0]);
+        rkey1 = _mm512_broadcast_i64x2(pKey[1]);
+
+        __m512i b0 = _mm512_xor_si512(*blk0, rkey0);
+        __m512i b1 = _mm512_xor_si512(*blk1, rkey0);
+        __m512i b2 = _mm512_xor_si512(*blk2, rkey0);
+        __m512i b3 = _mm512_xor_si512(*blk3, rkey0);
+
+        rkey0 = _mm512_broadcast_i64x2(pKey[2]);
+
+        for (nr = 2, pKey++; nr < nRounds; nr += 2, pKey += 2) {
+            b0    = _mm512_aesdec_epi128(b0, rkey1);
+            b1    = _mm512_aesdec_epi128(b1, rkey1);
+            b2    = _mm512_aesdec_epi128(b2, rkey1);
+            b3    = _mm512_aesdec_epi128(b3, rkey1);
+            rkey1 = _mm512_broadcast_i64x2(pKey[2]);
+
+            b0    = _mm512_aesdec_epi128(b0, rkey0);
+            b1    = _mm512_aesdec_epi128(b1, rkey0);
+            b2    = _mm512_aesdec_epi128(b2, rkey0);
+            b3    = _mm512_aesdec_epi128(b3, rkey0);
+            rkey0 = _mm512_broadcast_i64x2(pKey[3]);
+        }
+
+        b0 = _mm512_aesdec_epi128(b0, rkey1);
+        b1 = _mm512_aesdec_epi128(b1, rkey1);
+        b2 = _mm512_aesdec_epi128(b2, rkey1);
+        b3 = _mm512_aesdec_epi128(b3, rkey1);
+
+        *blk0 = _mm512_aesdeclast_epi128(b0, rkey0);
+        *blk1 = _mm512_aesdeclast_epi128(b1, rkey0);
+        *blk2 = _mm512_aesdeclast_epi128(b2, rkey0);
+        *blk3 = _mm512_aesdeclast_epi128(b3, rkey0);
 
         rkey0 = _mm512_setzero_si512();
         rkey1 = _mm512_setzero_si512();
