@@ -55,12 +55,12 @@ DecryptCbcAvx512(const uint8_t* pCipherText, // ptr to ciphertext
     auto p_out_128 = reinterpret_cast<__m128i*>(pPlainText);
     auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
 
-    // Mask for loading and storing half register
-
     __m512i input_128_a1;
 
     __m512i a1, a2, a3, a4;
     __m512i b1, b2, b3, b4;
+
+    // Load IV into b1 to process 1st block.
     b1 = alcp_loadu_128((const __m512i*)pIv);
 
     // First block is an exception, it needs to be xord with IV
@@ -76,8 +76,7 @@ DecryptCbcAvx512(const uint8_t* pCipherText, // ptr to ciphertext
         p_out_128++;
         blocks--;
     }
-    // std::cout << "HERE" << std::endl;
-    // Process 16 blocks at a time
+    // Process 16 (1x128x16) blocks at a time
     for (; blocks >= 16; blocks -= 16) {
         // Note below uses up 1 Kilobit of data, 128 bytes
         // Load in the format b1 = c0,c1. Counting on cache to have data
@@ -86,21 +85,9 @@ DecryptCbcAvx512(const uint8_t* pCipherText, // ptr to ciphertext
         b3 = alcp_loadu(((__m512i*)(p_in_128 - 1)) + 2);
         b4 = alcp_loadu(((__m512i*)(p_in_128 - 1)) + 3);
         // Load in the format a1 = c1,c2.
-#if 0
-        a1    = _mm512_shuffle_i64x2(b1, b1, 0b00111001);
-        a1[6] = b2[0];
-        a1[7] = b2[1];
-        a2    = _mm512_shuffle_i64x2(b2, b2, 0b00111001);
-        a2[6] = b3[0];
-        a2[7] = b3[1];
-        a3    = _mm512_shuffle_i64x2(b3, b3, 0b00111001);
-        a3[6] = b4[0];
-        a3[7] = b4[1];
-#else
-        a1    = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 0);
-        a2    = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 1);
-        a3    = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 2);
-#endif
+        a1 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 0);
+        a2 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 1);
+        a3 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 2);
         a4 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 3);
 
         vaes::AesDecrypt(&a1, &a2, &a3, &a4, pkey128, nRounds);
@@ -121,25 +108,15 @@ DecryptCbcAvx512(const uint8_t* pCipherText, // ptr to ciphertext
         p_out_128 += 16;
     }
 
-    // Process 8 blocks at a time
+    // Process 8 (1x128x8) blocks at a time
     for (; blocks >= 8; blocks -= 8) {
         // Note below uses up 1 Kilobit of data, 128 bytes
         // Load in the format b1 = c0,c1. Counting on cache to have data
         b1 = alcp_loadu(((__m512i*)(p_in_128 - 1)) + 0);
         b2 = alcp_loadu(((__m512i*)(p_in_128 - 1)) + 1);
-// Load in the format a1 = c1,c2.
-#if 0
-        a1    = _mm512_shuffle_i64x2(b1, b1, 0b00111001);
-        a1[6] = b2[0];
-        a1[7] = b2[1];
-        a2    = _mm512_shuffle_i64x2(b2, b2, 0b00111001);
-        a2[6] = (*(p_in_128 + 7))[0];
-        a2[7] = (*(p_in_128 + 7))[1];
-        // a2 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 1);
-#else
-        a1    = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 0);
-        a2    = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 1);
-#endif
+        // Load in the format a1 = c1,c2.
+        a1 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 0);
+        a2 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 1);
 
         vaes::AesDecrypt(&a1, &a2, pkey128, nRounds);
 
@@ -155,20 +132,13 @@ DecryptCbcAvx512(const uint8_t* pCipherText, // ptr to ciphertext
         p_out_128 += 8;
     }
 
-    // Process 4 blocks at a time
+    // Process 4 (1x128x4) blocks at a time
     for (; blocks >= 4; blocks -= 4) {
         // Note below uses up 1 Kilobit of data, 128 bytes
-        // Load in the format a1 = c1,c2.
-        b1 = alcp_loadu(((__m512i*)(p_in_128 - 1)) + 0);
-#if 1
-        a1 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 0);
-#else
-        a1    = _mm512_shuffle_i64x2(b1, b1, 0b00111001);
-        a1[6] = (*(p_in_128 + 3))[0];
-        a1[7] = (*(p_in_128 + 3))[1];
-#endif
-        // a1 = input_128_a1 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 0);
         // Load in the format b1 = c0,c1. Counting on cache to have data
+        b1 = alcp_loadu(((__m512i*)(p_in_128 - 1)) + 0);
+        // Load in the format a1 = c1,c2.
+        a1 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 0);
 
         vaes::AesDecrypt(&a1, &a2, pkey128, nRounds);
 
