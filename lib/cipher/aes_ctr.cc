@@ -113,7 +113,8 @@ Ctr::encrypt(const uint8_t* pPlainText,
     bool        isAvx512Cap = false;
     if (Cipher::isVaesAvailable()) {
         isVaes = true;
-        if (Cipher::isAvx512fAvailable() && Cipher::isAvx512dqAvailable()) {
+        if (Cipher::isAvx512fAvailable() && Cipher::isAvx512dqAvailable()
+            && Cipher::isAvx512bwAvailable()) {
             isAvx512Cap = true;
         }
     }
