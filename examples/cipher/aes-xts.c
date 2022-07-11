@@ -5,6 +5,21 @@
 #include <string.h>
 
 #include "alcp/alcp.h"
+#define DEBUG_P 1 /* Enable for debugging only */
+
+/*
+    debug prints to be print input, cipher, iv and decrypted output
+*/
+#ifdef DEBUG_P
+#define ALCP_PRINT_TEXT(I, L, S)                                               \
+    printf("\n %s", S);                                                        \
+    for (int x = 0; x < L; x++) {                                              \
+        printf(" %2x", I[x]);                                                  \
+    }                                                                          \
+    printf("\n");
+#else // DEBUG_P
+#define ALCP_PRINT_TEXT(I, L, S)
+#endif // DEBUG_P
 
 static alc_cipher_handle_t handle;
 
@@ -61,6 +76,7 @@ create_demo_session(const uint8_t* key,
         return;
     }
     printf("supported succeeded\n");
+    ALCP_PRINT_TEXT((cinfo.ci_key_info.tweak_key), 16, "Initial TweakKey : ");
     /*
      * Application is expected to allocate for context
      */
@@ -120,9 +136,9 @@ decrypt_demo(const uint8_t* ciphertxt,
 
 // static char* sample_plaintxt = "Hello World from AOCL Crypto !!!";
 static uint8_t sample_plaintxt[] =
-    "Happy and Fantastic New Year from AOCL Crypto !!";
+    "Happy and FantastFantastFantastHappy and FantastFantastFantast";
 
-unsigned char* sample_key = {
+static const uint8_t sample_key[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
     0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf,
 };
@@ -202,8 +218,11 @@ main(void)
     unsigned char sample_output[512] = "";
 
     assert(sizeof(sample_plaintxt) < sizeof(sample_output));
-    create_demo_session(
-        sample_key, sample_tweak_key, sample_iv, sizeof(sample_tweak_key) * 8);
+    create_demo_session(((const uint8_t*)&sample_key),
+                        ((const uint8_t*)&sample_tweak_key),
+                        sample_iv,
+                        sizeof(sample_tweak_key) * 8);
+    ALCP_PRINT_TEXT(((uint8_t*)&(sample_tweak_key)), 16, "Initial TweakKey : ");
     ALCP_PRINT_TEXT(
         sample_plaintxt, strlen(sample_plaintxt), "sample_plaintext :\n");
     printf(" size of input %d\n", strlen(sample_plaintxt));
@@ -213,13 +232,13 @@ main(void)
         &sample_ciphertxt,
         &sample_iv);
 
-    ALCP_PRINT_TEXT(sample_ciphertxt, strlen(sample_ciphertxt), "cipher text:");
+    ALCP_PRINT_TEXT(sample_ciphertxt, strlen(sample_ciphertxt), "ciphertext:");
     printf(" size of cipher text %d\n", strlen(sample_ciphertxt));
     int size = strlen(sample_plaintxt);
 
     decrypt_demo(&sample_ciphertxt, size, &sample_output, &sample_iv);
 
-    ALCP_PRINT_TEXT(sample_output, strlen(sample_output), "sample_output :\n");
+    ALCP_PRINT_TEXT(sample_output, strlen(sample_output), "sample_output:\n");
     printf(" size of output %d\n", strlen(sample_output));
 
     /*
