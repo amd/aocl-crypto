@@ -57,14 +57,19 @@ namespace alcp::cipher { namespace vaes {
                         const uint8_t* pIv,
                         int            nRounds);
 
-    alc_error_t DecryptCbcAvx512(
-        const uint8_t* pCipherText, // ptr to ciphertext
-        uint8_t*       pPlainText,  // ptr to plaintext
-        uint64_t       len,         // message length in bytes
-        const uint8_t* pKey,        // ptr to Key
-        int            nRounds,     // No. of rounds
-        const uint8_t* pIv          // ptr to Initialization Vector
-    );
+    alc_error_t DecryptCbcAvx512(const uint8_t* pCipherText,
+                                 uint8_t*       pPlainText,
+                                 uint64_t       len,
+                                 const uint8_t* pKey,
+                                 int            nRounds,
+                                 const uint8_t* pIv);
+
+    alc_error_t DecryptCfbAvx512(const uint8_t* pSrc,
+                                 uint8_t*       pDest,
+                                 uint64_t       len,
+                                 const uint8_t* pKey,
+                                 int            nRounds,
+                                 const uint8_t* pIv);
 
     // Encrypt Begins here
     /* 1 x 4 block at a time */
