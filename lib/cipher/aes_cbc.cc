@@ -29,6 +29,7 @@
 #include "cipher/aes.hh"
 #include "cipher/aesni.hh"
 #include "cipher/vaes.hh"
+#include "cipher/vaes_avx512.hh"
 
 namespace alcp::cipher {
 alc_error_t
@@ -38,6 +39,13 @@ Cbc::decrypt(const uint8_t* pCipherText,
              const uint8_t* pIv) const
 {
     alc_error_t err = ALC_ERROR_NONE;
+    if (Cipher::isVaesAvailable() && Cipher::isAvx512fAvailable()
+        && Cipher::isAvx512dqAvailable()) {
+        err = vaes::DecryptCbcAvx512(
+            pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
+
+        return err;
+    }
     if (Cipher::isVaesAvailable()) {
         // err = vaes::DecryptCbc(
         err = vaes::DecryptCbc(
