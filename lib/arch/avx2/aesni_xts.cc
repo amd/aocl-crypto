@@ -78,8 +78,7 @@ namespace alcp::cipher { namespace aesni {
         while (blocks >= 2 || (blocks > 1 && (last_Round_Byte > 0))) {
 
             // Encrypting Text using EncKey
-            __m128i tweaked_src_text =
-                _mm_xor_si128(current_alpha, p_src128[0]);
+            __m128i tweaked_src_text = _mm_xor_si128(current_alpha, *p_src128);
             AesEncrypt(&tweaked_src_text, p_key128, nRounds);
             tweaked_src_text = _mm_xor_si128(tweaked_src_text, current_alpha);
 
@@ -99,8 +98,7 @@ namespace alcp::cipher { namespace aesni {
         //  place and direct results are stored to destination
         if (blocks == 1 && last_Round_Byte == 0) {
 
-            __m128i tweaked_src_text =
-                _mm_xor_si128(current_alpha, p_src128[0]);
+            __m128i tweaked_src_text = _mm_xor_si128(current_alpha, *p_src128);
             AesEncrypt(&tweaked_src_text, p_key128, nRounds);
             tweaked_src_text = _mm_xor_si128(current_alpha, tweaked_src_text);
 
@@ -109,7 +107,7 @@ namespace alcp::cipher { namespace aesni {
             return ALC_ERROR_NONE;
         }
 
-        __m128i tweaked_src_text = _mm_xor_si128(current_alpha, p_src128[0]);
+        __m128i tweaked_src_text = _mm_xor_si128(current_alpha, *p_src128);
         AesEncrypt(&tweaked_src_text, p_key128, nRounds);
         tweaked_src_text = _mm_xor_si128(current_alpha, tweaked_src_text);
 
@@ -142,6 +140,7 @@ namespace alcp::cipher { namespace aesni {
 
         return ALC_ERROR_NONE;
     }
+
     alc_error_t DecryptXts(const uint8_t* pSrc,
                            uint8_t*       pDest,
                            uint64_t       len,
@@ -168,8 +167,7 @@ namespace alcp::cipher { namespace aesni {
         while (blocks >= 2 || (blocks > 1 && (last_Round_Byte > 0))) {
 
             // Decrypting Text using DecKey
-            __m128i tweaked_src_text =
-                _mm_xor_si128(current_alpha, p_src128[0]);
+            __m128i tweaked_src_text = _mm_xor_si128(current_alpha, *p_src128);
             AesDecrypt(&tweaked_src_text, p_key128, nRounds);
             tweaked_src_text = _mm_xor_si128(tweaked_src_text, current_alpha);
 
@@ -189,8 +187,7 @@ namespace alcp::cipher { namespace aesni {
         //  place at encryption time so direct results are stored to destination
         if (blocks == 1 && last_Round_Byte == 0) {
 
-            __m128i tweaked_src_text =
-                _mm_xor_si128(current_alpha, p_src128[0]);
+            __m128i tweaked_src_text = _mm_xor_si128(current_alpha, *p_src128);
             AesDecrypt(&tweaked_src_text, p_key128, nRounds);
             tweaked_src_text = _mm_xor_si128(current_alpha, tweaked_src_text);
 
@@ -203,7 +200,7 @@ namespace alcp::cipher { namespace aesni {
 
         MultiplyAplhaByTwo(current_alpha);
 
-        __m128i tweaked_src_text = _mm_xor_si128(current_alpha, p_src128[0]);
+        __m128i tweaked_src_text = _mm_xor_si128(current_alpha, *p_src128);
         AesDecrypt(&tweaked_src_text, p_key128, nRounds);
         tweaked_src_text = _mm_xor_si128(current_alpha, tweaked_src_text);
 
