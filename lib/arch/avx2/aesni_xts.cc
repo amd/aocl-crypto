@@ -36,7 +36,7 @@
 
 namespace alcp::cipher { namespace aesni {
 
-    static inline void InceaseAlpha(__m128i& alpha)
+    static inline void MultiplyAplhaByTwo(__m128i& alpha)
     {
         unsigned int res, carry;
 
@@ -90,7 +90,7 @@ namespace alcp::cipher { namespace aesni {
             p_src128++;
 
             // Increasing Aplha  for the next round
-            InceaseAlpha(current_alpha);
+            MultiplyAplhaByTwo(current_alpha);
 
             blocks--;
         }
@@ -121,7 +121,7 @@ namespace alcp::cipher { namespace aesni {
 
         p_src128++;
 
-        InceaseAlpha(current_alpha);
+        MultiplyAplhaByTwo(current_alpha);
 
         // appending 16-last_Round_Byte bytes to last message block to make it
         // complete block for encryption (Called Stealing of bytes in xts terms)
@@ -181,7 +181,7 @@ namespace alcp::cipher { namespace aesni {
             p_src128++;
 
             // Increasing Aplha  for the next round
-            InceaseAlpha(current_alpha);
+            MultiplyAplhaByTwo(current_alpha);
 
             blocks--;
         }
@@ -202,7 +202,7 @@ namespace alcp::cipher { namespace aesni {
 
         __m128i prevAlpha = current_alpha;
 
-        InceaseAlpha(current_alpha);
+        MultiplyAplhaByTwo(current_alpha);
 
         __m128i tweaked_src_text = _mm_xor_si128(current_alpha, p_src128[0]);
         AesDecrypt(&tweaked_src_text, p_key128, nRounds);
