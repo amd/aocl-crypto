@@ -76,6 +76,13 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
+    if (pCipherInfo->ci_mode_data.cm_aes.ai_mode == ALC_AES_MODE_XTS
+        && (pCipherInfo->ci_key_info.tweak_key == nullptr
+            || (pCipherInfo->ci_key_info.len != 128
+                && pCipherInfo->ci_key_info.len != 256))) {
+        return ALC_ERROR_INVALID_ARG;
+    }
+
     err = cipher::CipherBuilder::Build(*pCipherInfo, *ctx);
 
     return err;

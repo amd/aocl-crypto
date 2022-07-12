@@ -69,27 +69,34 @@ namespace alcp::cipher { namespace aesni {
         uint64_t blocks          = len / Rijndael::cBlockSize;
         int      last_Round_Byte = len % Rijndael::cBlockSize;
 
+        // iv encryption using tweak key to get alpha
         __m128i current_alpha = iv128;
         AesEncrypt(&current_alpha, p_tweak_key128, nRounds);
 
+        // Encrypting all blocks except last 2 if extra bytes present in source
+        // text
         while (blocks >= 2 || (blocks > 1 && (last_Round_Byte > 0))) {
 
+            // Encrypting Text using EncKey
             __m128i tweaked_src_text =
                 _mm_xor_si128(current_alpha, p_src128[0]);
-
             AesEncrypt(&tweaked_src_text, p_key128, nRounds);
             tweaked_src_text = _mm_xor_si128(tweaked_src_text, current_alpha);
 
+            // storing the results in destination
             _mm_storeu_si128(&p_dest128[0], tweaked_src_text);
 
             p_dest128++;
             p_src128++;
+
             // Increasing Aplha  for the next round
             InceaseAlpha(current_alpha);
 
             blocks--;
         }
 
+        //  if message blocks do not have any residue bytes no stealing takes
+        //  place and direct results are stored to destination
         if (blocks == 1 && last_Round_Byte == 0) {
 
             __m128i tweaked_src_text =
@@ -103,19 +110,21 @@ namespace alcp::cipher { namespace aesni {
         }
 
         __m128i tweaked_src_text = _mm_xor_si128(current_alpha, p_src128[0]);
-
         AesEncrypt(&tweaked_src_text, p_key128, nRounds);
-
         tweaked_src_text = _mm_xor_si128(current_alpha, tweaked_src_text);
-        uint8_t* a       = (uint8_t*)&tweaked_src_text;
-        __m128i  b       = _mm_set1_epi8(0);
 
+        // stealing bytes from (m-1)th chiper message and storing it at mth
+        // destinatIon on last line of code
+        uint8_t* a = (uint8_t*)&tweaked_src_text;
+        __m128i  b = _mm_set1_epi8(0);
         memcpy((uint8_t*)&b, a, last_Round_Byte);
 
         p_src128++;
 
         InceaseAlpha(current_alpha);
 
+        // appending 16-last_Round_Byte bytes to last message block to make it
+        // complete block for encryption (Called Stealing of bytes in xts terms)
         __m128i temp = p_src128[0];
         memcpy((uint8_t*)&temp + last_Round_Byte,
                a + last_Round_Byte,
@@ -151,17 +160,21 @@ namespace alcp::cipher { namespace aesni {
         uint64_t blocks          = len / Rijndael::cBlockSize;
         int      last_Round_Byte = len % Rijndael::cBlockSize;
 
+        // iv encryption using tweak key to get alpha
         __m128i current_alpha = iv128;
         AesEncrypt(&current_alpha, p_tweak_key128, nRounds);
 
+        // Decrypting all blocks except last 2 if extra bytes present in source
+        // text
         while (blocks >= 2 || (blocks > 1 && (last_Round_Byte > 0))) {
 
+            // Decrypting Text using DecKey
             __m128i tweaked_src_text =
                 _mm_xor_si128(current_alpha, p_src128[0]);
-
             AesDecrypt(&tweaked_src_text, p_key128, nRounds);
-
             tweaked_src_text = _mm_xor_si128(tweaked_src_text, current_alpha);
+
+            // storing the results in destination
             _mm_storeu_si128(&p_dest128[0], tweaked_src_text);
 
             p_dest128++;
@@ -173,6 +186,8 @@ namespace alcp::cipher { namespace aesni {
             blocks--;
         }
 
+        //  if message blocks do not have any residue bytes no stealing took
+        //  place at encryption time so direct results are stored to destination
         if (blocks == 1 && last_Round_Byte == 0) {
 
             __m128i tweaked_src_text =
@@ -193,13 +208,17 @@ namespace alcp::cipher { namespace aesni {
         AesDecrypt(&tweaked_src_text, p_key128, nRounds);
         tweaked_src_text = _mm_xor_si128(current_alpha, tweaked_src_text);
 
+        // stealing bytes from (m-1)th message block and storing it at mth
+        // destinatIon on last line of code
         uint8_t* a = (uint8_t*)&tweaked_src_text;
         __m128i  b = _mm_set1_epi8(0);
-
         memcpy((uint8_t*)&b, a, last_Round_Byte);
 
         p_src128++;
 
+        // appending 16-last_Round_Byte bytes to last chiper message block to
+        // make it complete block for decryption and storing it to (m-1)th
+        // destination
         __m128i temp = p_src128[0];
         memcpy((uint8_t*)&temp + last_Round_Byte,
                a + last_Round_Byte,
