@@ -39,22 +39,6 @@
 #include "utils/bits.hh"
 #include "utils/copy.hh"
 
-#define DEBUG_P 1 /* Enable for debugging only */
-
-/*
-    debug prints to be print input, cipher, iv and decrypted output
-*/
-#ifdef DEBUG_P
-#define ALCP_PRINT_TEXT(I, L, S)                                               \
-    printf("\n %s", S);                                                        \
-    for (int x = 0; x < L; x++) {                                              \
-        printf(" %2x", I[x]);                                                  \
-    }                                                                          \
-    printf("\n");
-#else // DEBUG_P
-#define ALCP_PRINT_TEXT(I, L, S)
-#endif // DEBUG_P
-
 namespace alcp::cipher {
 
 /* Message size, key size, etc */
@@ -175,12 +159,10 @@ class alignas(16) Rijndael::Impl
         m_enc_key = &m_round_key[0];
         /* +2 as the actual key is also stored  */
         m_dec_key = m_enc_key + ((m_nrounds + 2) * m_key_size);
-        ALCP_PRINT_TEXT((uint8_t*)&rKeyInfo.key, 16, "Initial EncKey : ");
+
         expandKeys(rKeyInfo.key, false);
         if (rKeyInfo.tweak_key != nullptr) {
-            ALCP_PRINT_TEXT((rKeyInfo.tweak_key), 16, "Initial TweakKey : ");
             expandKeys(rKeyInfo.tweak_key, true);
-            ALCP_PRINT_TEXT((m_tweak_key), 16, "Initial TweakKey : ");
         }
     }
 };
