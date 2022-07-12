@@ -347,4 +347,23 @@ namespace alcp::cipher { namespace aesni {
 
         return err;
     }
+
+    alc_error_t ExpandTweakKeys(const uint8_t* pUserKey,
+                                uint8_t*       pTweakKey,
+                                int            nRounds)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        switch (nRounds) {
+            case 14:
+                err = ExpandKeys256(pUserKey, pTweakKey, nullptr);
+                break;
+            case 12:
+                err = ExpandKeys192(pUserKey, pTweakKey, nullptr);
+                break;
+            default:
+                err = ExpandKeys128(pUserKey, pTweakKey, nullptr);
+        }
+
+        return err;
+    }
 }} // namespace alcp::cipher::aesni

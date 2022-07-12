@@ -89,7 +89,8 @@ BitsToBlockSize(int iVal)
 class alignas(16) Rijndael::Impl
 {
   private:
-    void expandKeys(const Uint8* pUserKey, bool is_tweak_key) noexcept;
+    void expandKeys(const Uint8* pUserKey) noexcept;
+    void expandTweakKeys(const Uint8* pUserKey) noexcept;
     void subBytes(Uint8 state[][4]) noexcept;
 
     void shiftRows(Uint8 state[][4]) noexcept;
@@ -160,9 +161,9 @@ class alignas(16) Rijndael::Impl
         /* +2 as the actual key is also stored  */
         m_dec_key = m_enc_key + ((m_nrounds + 2) * m_key_size);
 
-        expandKeys(rKeyInfo.key, false);
+        expandKeys(rKeyInfo.key);
         if (rKeyInfo.tweak_key != nullptr) {
-            expandKeys(rKeyInfo.tweak_key, true);
+            expandTweakKeys(rKeyInfo.tweak_key);
         }
     }
 };
@@ -501,30 +502,21 @@ static const Uint32 s_round_constants[] = {
  * they are all included in the conditional statement above for
  * conciseness.
  */
-
 void
-Rijndael::Impl::expandKeys(const Uint8* pUserKey, bool is_tweak_key) noexcept
+Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
 {
     using utils::GetByte, utils::MakeWord;
 
     Uint8        dummy_key[Rijndael::cMaxKeySize] = { 0 };
     const Uint8* key     = pUserKey ? pUserKey : &dummy_key[0];
-    Uint8 *      pEncKey = nullptr, *pDecKey = nullptr, *pTweakKey = nullptr;
-    if (!is_tweak_key) {
-        pEncKey = m_enc_key;
-        pDecKey = m_dec_key;
-    } else {
-        pTweakKey = m_tweak_key;
-    }
+    Uint8 *      pEncKey = nullptr, *pDecKey = nullptr;
+
+    pEncKey = m_enc_key;
+    pDecKey = m_dec_key;
 
     if (isAesniAvailable()) {
-        if (!is_tweak_key) {
-            aesni::ExpandKeys(key, pEncKey, pDecKey, m_nrounds);
-            return;
-        } else {
-            aesni::ExpandKeys(key, pTweakKey, nullptr, m_nrounds);
-            return;
-        }
+        aesni::ExpandKeys(key, pEncKey, pDecKey, m_nrounds);
+        return;
     }
 
     Uint32 i;
@@ -533,11 +525,8 @@ Rijndael::Impl::expandKeys(const Uint8* pUserKey, bool is_tweak_key) noexcept
     const Uint32* rtbl = s_round_constants;
     Uint32*       p_enc_key32;
     // auto            p_key32     = reinterpret_cast<const Uint32*>(key);
-    if (!is_tweak_key) {
-        p_enc_key32 = reinterpret_cast<Uint32*>(pEncKey);
-    } else {
-        p_enc_key32 = reinterpret_cast<Uint32*>(pTweakKey);
-    }
+    p_enc_key32 = reinterpret_cast<Uint32*>(pEncKey);
+
     for (i = 0; i < nk; i++) {
         p_enc_key32[i] = MakeWord(
             key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]);
@@ -562,14 +551,59 @@ Rijndael::Impl::expandKeys(const Uint8* pUserKey, bool is_tweak_key) noexcept
         p_enc_key32[i] = p_enc_key32[i - nk] ^ temp;
     }
 
-    if (!is_tweak_key) {
-        utils::CopyBlock(pDecKey, pEncKey, nk * nr);
+    utils::CopyBlock(pDecKey, pEncKey, nk * nr);
 
-        auto p_dec_key32 = reinterpret_cast<Uint32*>(pDecKey);
+    auto p_dec_key32 = reinterpret_cast<Uint32*>(pDecKey);
 
-        for (i = nk; i < nb * (nr + 1); i++) {
-            p_dec_key32[i] = InvMixColumns(p_enc_key32[i]);
+    for (i = nk; i < nb * (nr + 1); i++) {
+        p_dec_key32[i] = InvMixColumns(p_enc_key32[i]);
+    }
+}
+
+void
+Rijndael::Impl::expandTweakKeys(const Uint8* pUserKey) noexcept
+{
+    using utils::GetByte, utils::MakeWord;
+
+    Uint8        dummy_key[Rijndael::cMaxKeySize] = { 0 };
+    const Uint8* key       = pUserKey ? pUserKey : &dummy_key[0];
+    Uint8*       pTweakKey = nullptr;
+    pTweakKey              = m_tweak_key;
+
+    if (isAesniAvailable()) {
+        aesni::ExpandTweakKeys(key, pTweakKey, m_nrounds);
+        return;
+    }
+
+    Uint32 i;
+    Uint32 nb = Rijndael::cBlockSizeWord, nr = m_nrounds,
+           nk          = m_key_size / utils::BytesPerWord;
+    const Uint32* rtbl = s_round_constants;
+    Uint32*       p_tweak_key32;
+    // auto            p_key32     = reinterpret_cast<const Uint32*>(key);
+    p_tweak_key32 = reinterpret_cast<Uint32*>(pTweakKey);
+    for (i = 0; i < nk; i++) {
+        p_tweak_key32[i] = MakeWord(
+            key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]);
+    }
+
+    for (i = nk; i < nb * (nr + 1); i++) {
+        Uint32 temp = p_tweak_key32[i - 1];
+        if (i % nk == 0) {
+            temp = MakeWord(GetSbox(GetByte(temp, 1)),
+                            GetSbox(GetByte(temp, 2)),
+                            GetSbox(GetByte(temp, 3)),
+                            GetSbox(GetByte(temp, 0)));
+
+            temp ^= *rtbl++;
+        } else if (nk > 6 && (i % nk == 4)) {
+            temp = MakeWord(GetSbox(GetByte(temp, 0)),
+                            GetSbox(GetByte(temp, 1)),
+                            GetSbox(GetByte(temp, 2)),
+                            GetSbox(GetByte(temp, 3)));
         }
+
+        p_tweak_key32[i] = p_tweak_key32[i - nk] ^ temp;
     }
 }
 

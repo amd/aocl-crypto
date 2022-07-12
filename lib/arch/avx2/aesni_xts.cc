@@ -36,7 +36,7 @@
 
 namespace alcp::cipher { namespace aesni {
 
-    static void InceaseAlpha(__m128i& alpha)
+    static inline void InceaseAlpha(__m128i& alpha)
     {
         unsigned int res, carry;
 
@@ -104,7 +104,7 @@ namespace alcp::cipher { namespace aesni {
             AesEncrypt(&tweaked_src_text, p_key128, nRounds);
             tweaked_src_text = _mm_xor_si128(current_alpha, tweaked_src_text);
 
-            _mm_storeu_si128(&p_dest128[0], tweaked_src_text);
+            _mm_storeu_si128(p_dest128, tweaked_src_text);
 
             return ALC_ERROR_NONE;
         }
@@ -134,11 +134,11 @@ namespace alcp::cipher { namespace aesni {
         AesEncrypt(&tweaked_src_text, p_key128, nRounds);
         tweaked_src_text = _mm_xor_si128(current_alpha, tweaked_src_text);
 
-        _mm_storeu_si128(&p_dest128[0], tweaked_src_text);
+        _mm_storeu_si128(p_dest128, tweaked_src_text);
 
         p_dest128++;
 
-        memcpy(((uint8_t*)&p_dest128[0]), (uint8_t*)&b, last_Round_Byte);
+        memcpy(((uint8_t*)p_dest128), (uint8_t*)&b, last_Round_Byte);
 
         return ALC_ERROR_NONE;
     }
@@ -175,7 +175,7 @@ namespace alcp::cipher { namespace aesni {
             tweaked_src_text = _mm_xor_si128(tweaked_src_text, current_alpha);
 
             // storing the results in destination
-            _mm_storeu_si128(&p_dest128[0], tweaked_src_text);
+            _mm_storeu_si128(p_dest128, tweaked_src_text);
 
             p_dest128++;
             p_src128++;
@@ -195,7 +195,7 @@ namespace alcp::cipher { namespace aesni {
             AesDecrypt(&tweaked_src_text, p_key128, nRounds);
             tweaked_src_text = _mm_xor_si128(current_alpha, tweaked_src_text);
 
-            _mm_storeu_si128(&p_dest128[0], tweaked_src_text);
+            _mm_storeu_si128(p_dest128, tweaked_src_text);
 
             return ALC_ERROR_NONE;
         }
@@ -228,11 +228,11 @@ namespace alcp::cipher { namespace aesni {
         AesDecrypt(&tweaked_src_text, p_key128, nRounds);
         tweaked_src_text = _mm_xor_si128(prevAlpha, tweaked_src_text);
 
-        _mm_storeu_si128(&p_dest128[0], tweaked_src_text);
+        _mm_storeu_si128(p_dest128, tweaked_src_text);
 
         p_dest128++;
 
-        memcpy(((uint8_t*)&p_dest128[0]), (uint8_t*)&b, last_Round_Byte);
+        memcpy(((uint8_t*)p_dest128), (uint8_t*)&b, last_Round_Byte);
 
         return ALC_ERROR_NONE;
     }

@@ -43,6 +43,10 @@ namespace alcp::cipher { namespace aesni {
                            uint8_t*       pDecKey,
                            int            nRounds);
 
+    alc_error_t ExpandTweakKeys(const uint8_t* pUserKey,
+                                uint8_t*       pEncKey,
+                                int            nRounds);
+
     alc_error_t EncryptCbc(const uint8_t* pPlainText,
                            uint8_t*       pCipherText,
                            uint64_t       len,

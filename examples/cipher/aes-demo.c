@@ -699,8 +699,8 @@ main(void)
             printf("\n\nAES-CTR");
         } else if (m == ALC_AES_MODE_CFB) {
             printf("\n\nAES-CFB");
-        } else if (m == ALC_AES_MODE_XTR) {
-            printf("\n\nAES-XTR not implemented\n");
+        } else if (m == ALC_AES_MODE_XTS) {
+            printf("\n\nAES-XTS not implemented\n");
             continue;
         } else if (m == ALC_AES_MODE_GCM) {
             printf("\n\nAES-GCM\n");

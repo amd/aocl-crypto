@@ -538,8 +538,8 @@ class Gcm final : public Aes
 };
 
 /*
- * \brief        AES Encryption in XTS(XEX Tweakable Block Ciphertext Stealing Mode)
- * \notes        TODO: Move this to a aes_Gcm.hh or other
+ * \brief        AES Encryption in XTS(XEX Tweakable Block Ciphertext Stealing
+ *               Mode)
  */
 class Xts final : public Aes
 {
@@ -581,7 +581,7 @@ class Xts final : public Aes
     }
 
     /**
-     * \brief   CTR Encrypt Operation
+     * \brief   XTS Encrypt Operation
      * \notes
      * \param   pPlainText      Pointer to output buffer
      * \param   pCipherText     Pointer to encrypted buffer
@@ -594,13 +594,8 @@ class Xts final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
-    // virtual alc_error_t encryptUpdate(const uint8_t* pPlainText,
-    //                                   uint8_t*       pCipherText,
-    //                                   uint64_t       len,
-    //                                   const uint8_t* pIv);
-
     /**
-     * \brief   CTR Decrypt Operation
+     * \brief   XTS Decrypt Operation
      * \notes
      * \param   pCipherText     Pointer to encrypted buffer
      * \param   pPlainText      Pointer to output buffer
@@ -612,11 +607,6 @@ class Xts final : public Aes
                                 uint8_t*       pPlainText,
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
-
-    // virtual alc_error_t decryptUpdate(const uint8_t* pCipherText,
-    //                                   uint8_t*       pPlainText,
-    //                                   uint64_t       len,
-    //                                   const uint8_t* pIv);
 
   private:
     Xts(){};
