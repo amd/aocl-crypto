@@ -342,7 +342,7 @@ namespace alcp::cipher { namespace aesni {
                 err = ExpandKeys128(pUserKey, pEncKey, pDecKey);
         }
 
-        if (!Error::isError(err) && pDecKey != nullptr)
+        if (!Error::isError(err))
             aesni::ExpandDecryptKeys(pDecKey, pEncKey, nRounds);
 
         return err;
