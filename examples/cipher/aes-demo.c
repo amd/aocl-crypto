@@ -16,6 +16,8 @@
 
 static alc_cipher_handle_t handle;
 
+// clang-format off
+
 #define SPEED_CHECK 1
 
 //#define DEBUG_P /* Enable for debugging only */
@@ -74,6 +76,15 @@ create_aes_session(uint8_t*             key,
     const int   err_size = 256;
     uint8_t     err_buf[err_size];
 
+    /* additional data used for xts mode*/
+    uint8_t      tweak_key[key_len/8];
+    uint8_t* p_tweak_key = NULL;
+    if(mode == ALC_AES_MODE_XTS){
+        memset(tweak_key, mode , key_len/8);
+        p_tweak_key = &tweak_key;
+    }
+    
+
     alc_aes_info_t aes_data = {
         .ai_mode = mode,
         .ai_iv   = iv,
@@ -90,6 +101,7 @@ create_aes_session(uint8_t*             key,
             .type    = ALC_KEY_TYPE_SYMMETRIC,
             .fmt     = ALC_KEY_FMT_RAW,
             .key     = key,
+            .tweak_key = p_tweak_key,
             .len     = key_len,
         },
     };
@@ -700,8 +712,7 @@ main(void)
         } else if (m == ALC_AES_MODE_CFB) {
             printf("\n\nAES-CFB");
         } else if (m == ALC_AES_MODE_XTS) {
-            printf("\n\nAES-XTS not implemented\n");
-            continue;
+            printf("\n\nAES-XTS\n");
         } else if (m == ALC_AES_MODE_GCM) {
             printf("\n\nAES-GCM\n");
         } else {

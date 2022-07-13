@@ -47,7 +47,11 @@ namespace alcp::cipher { namespace aesni {
         carry = (unsigned int)((((uint64_t*)&alpha)[0])
                                >> 63); // a0 | a1 if a0 sign bit high 1 else 0
 
+        // if sign bit of alpha is high xor least significant bit with 0x87
         (((uint64_t*)&alpha)[0]) = ((((uint64_t*)&alpha)[0]) << 1) ^ res;
+
+        // if most significant bit of a0 is high make least significant bit of
+        // a1 high
         (((uint64_t*)&alpha)[1]) = ((((uint64_t*)&alpha)[1]) << 1) | carry;
     }
 
