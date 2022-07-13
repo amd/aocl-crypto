@@ -20,11 +20,13 @@ IF(ENABLE_TESTS_IPP_API)
     ENDIF(IPP_INSTALL_DIR)
     # If there is IPP, add IPP source and add IPP liberary
     SET(EXTRA_SOURCES ${EXTRA_SOURCES} base/ipp_base.cc)
+    
     IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
         SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
-    ELSE(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
+    ELSE(EXISTS ${IPP_INSTALL_DIR}/lib/intel/libippcp.so)
         SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel/libippcp.so)
     ENDIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
+
     SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${IPP_INSTALL_DIR}/include)
 ENDIF(ENABLE_TESTS_IPP_API)
 
