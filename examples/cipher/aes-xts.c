@@ -214,12 +214,6 @@ main(void)
         sample_ciphertxt,
         sample_iv);
 
-    int size = strlen(sample_plaintxt);
-    // for (int x = 0; x < size; x++) {
-    //     printf(" %2x ", ((uint8_t*)&sample_ciphertxt)[x]);
-    // }
-    // printf("\n");
-
     decrypt_demo(sample_ciphertxt, size, sample_output, sample_iv);
 
     printf("sample_output: %s\n", sample_output);

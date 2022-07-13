@@ -105,13 +105,10 @@ class alignas(16) Rijndael::Impl
 #define RIJ_ALIGN           (16)
 
   private:
-    Uint8  m_round_key[RIJ_SIZE_ALIGNED(cMaxKeySize) * (cMaxRounds + 2)];
-    Uint8  m_tweak_round_key[(RIJ_SIZE_ALIGNED(cMaxKeySize) * (cMaxRounds + 2))
-                            / 2];
-    Uint8* m_enc_key;   /* encryption key: points to offset in 'm_key' */
-    Uint8* m_dec_key;   /* decryption key: points to offset in 'm_key' */
-    Uint8* m_tweak_key; /* Tweak key(for aes-xts mode): points to offset in
-                           'm_tweak_key' */
+    Uint8 m_round_key[RIJ_SIZE_ALIGNED(cMaxKeySize) * (cMaxRounds + 2)];
+
+    Uint8* m_enc_key; /* encryption key: points to offset in 'm_key' */
+    Uint8* m_dec_key; /* decryption key: points to offset in 'm_key' */
 
     Uint32    m_nrounds;  /* no of rounds */
     Uint32    m_ncolumns; /* no of columns in matrix */
@@ -124,7 +121,6 @@ class alignas(16) Rijndael::Impl
     Uint32       getKeySize() const { return m_key_size; }
     const Uint8* getEncryptKeys() const { return m_enc_key; }
     const Uint8* getDecryptKeys() const { return m_dec_key; }
-    const Uint8* getTweakKeys() const { return m_tweak_key; }
 
     alc_error_t encrypt(const uint8_t* pSrc,
                         uint8_t*       pDst,
@@ -154,17 +150,15 @@ class alignas(16) Rijndael::Impl
         m_nrounds         = prm.Nr;
         m_key_size        = len / utils::BitsPerByte;
 
-        m_tweak_key = &m_tweak_round_key[0];
-
         /* Encryption and Decryption key offsets */
         m_enc_key = &m_round_key[0];
         /* +2 as the actual key is also stored  */
         m_dec_key = m_enc_key + ((m_nrounds + 2) * m_key_size);
 
         expandKeys(rKeyInfo.key);
-        if (rKeyInfo.tweak_key != nullptr) {
-            expandTweakKeys(rKeyInfo.tweak_key);
-        }
+        // if (rKeyInfo.tweak_key != nullptr) {
+
+        // }
     }
 };
 
@@ -560,53 +554,6 @@ Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
     }
 }
 
-void
-Rijndael::Impl::expandTweakKeys(const Uint8* pUserKey) noexcept
-{
-    using utils::GetByte, utils::MakeWord;
-
-    Uint8        dummy_key[Rijndael::cMaxKeySize] = { 0 };
-    const Uint8* key       = pUserKey ? pUserKey : &dummy_key[0];
-    Uint8*       pTweakKey = nullptr;
-    pTweakKey              = m_tweak_key;
-
-    if (isAesniAvailable()) {
-        aesni::ExpandTweakKeys(key, pTweakKey, m_nrounds);
-        return;
-    }
-
-    Uint32 i;
-    Uint32 nb = Rijndael::cBlockSizeWord, nr = m_nrounds,
-           nk          = m_key_size / utils::BytesPerWord;
-    const Uint32* rtbl = s_round_constants;
-    Uint32*       p_tweak_key32;
-    // auto            p_key32     = reinterpret_cast<const Uint32*>(key);
-    p_tweak_key32 = reinterpret_cast<Uint32*>(pTweakKey);
-    for (i = 0; i < nk; i++) {
-        p_tweak_key32[i] = MakeWord(
-            key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]);
-    }
-
-    for (i = nk; i < nb * (nr + 1); i++) {
-        Uint32 temp = p_tweak_key32[i - 1];
-        if (i % nk == 0) {
-            temp = MakeWord(GetSbox(GetByte(temp, 1)),
-                            GetSbox(GetByte(temp, 2)),
-                            GetSbox(GetByte(temp, 3)),
-                            GetSbox(GetByte(temp, 0)));
-
-            temp ^= *rtbl++;
-        } else if (nk > 6 && (i % nk == 4)) {
-            temp = MakeWord(GetSbox(GetByte(temp, 0)),
-                            GetSbox(GetByte(temp, 1)),
-                            GetSbox(GetByte(temp, 2)),
-                            GetSbox(GetByte(temp, 3)));
-        }
-
-        p_tweak_key32[i] = p_tweak_key32[i - nk] ^ temp;
-    }
-}
-
 Rijndael::Rijndael()
     : m_pimpl{ std::make_unique<Rijndael::Impl>() }
 {}
@@ -623,12 +570,6 @@ const Uint8*
 Rijndael::getEncryptKeys() const
 {
     return pImpl()->getEncryptKeys();
-}
-
-const Uint8*
-Rijndael::getTweakKeys() const
-{
-    return pImpl()->getTweakKeys();
 }
 
 const Uint8*

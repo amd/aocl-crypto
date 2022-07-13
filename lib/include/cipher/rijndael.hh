@@ -83,7 +83,6 @@ class Rijndael : public alcp::BlockCipher
     Uint32       getRounds() const;
     Uint32       getKeySize() const;
     const Uint8* getEncryptKeys() const;
-    const Uint8* getTweakKeys() const;
     const Uint8* getDecryptKeys() const;
 
     virtual void setKey(const Uint8* pUserKey, Uint64 len);

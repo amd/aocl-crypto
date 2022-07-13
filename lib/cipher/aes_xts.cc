@@ -31,6 +31,22 @@
 
 namespace alcp::cipher {
 
+void
+Xts::expandTweakKeys(const Uint8* pUserKey) noexcept
+{
+
+    Uint8        dummy_key[32] = { 0 };
+    const Uint8* key           = pUserKey ? pUserKey : &dummy_key[0];
+    Uint8*       pTweakKey     = nullptr;
+
+    pTweakKey = p_tweak_key;
+
+    if (isAesniAvailable()) {
+        aesni::ExpandTweakKeys(key, pTweakKey, getRounds());
+        return;
+    }
+}
+
 alc_error_t
 Xts::encrypt(const uint8_t* pPlainText,
              uint8_t*       pCipherText,
@@ -52,7 +68,7 @@ Xts::encrypt(const uint8_t* pPlainText,
                                 pCipherText,
                                 len,
                                 getEncryptKeys(),
-                                getTweakKeys(),
+                                p_tweak_key,
                                 getRounds(),
                                 pIv);
 
@@ -83,7 +99,7 @@ Xts::decrypt(const uint8_t* pPlainText,
                                 pCipherText,
                                 len,
                                 getDecryptKeys(),
-                                getTweakKeys(),
+                                p_tweak_key,
                                 getRounds(),
                                 pIv);
 

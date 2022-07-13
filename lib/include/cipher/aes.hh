@@ -39,6 +39,8 @@
 #include <immintrin.h>
 #include <wmmintrin.h>
 
+#define RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
+
 namespace alcp::cipher {
 
 /*
@@ -547,7 +549,10 @@ class Xts final : public Aes
   public:
     explicit Xts(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
         : Aes(aesInfo, keyInfo)
-    {}
+    {
+        p_tweak_key = &m_tweak_round_key[0];
+        expandTweakKeys(keyInfo.tweak_key);
+    }
 
     ~Xts() {}
 
@@ -608,10 +613,15 @@ class Xts final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
-  private:
-    Xts(){};
+    virtual void expandTweakKeys(const Uint8* pUserKey) noexcept;
 
   private:
+    Xts() { p_tweak_key = &m_tweak_round_key[0]; };
+
+  private:
+    Uint8  m_tweak_round_key[(RIJ_SIZE_ALIGNED(32) * (16))];
+    Uint8* p_tweak_key; /* Tweak key(for aes-xts mode): points to offset in
+                           'm_tweak_key' */
 };
 
 } // namespace alcp::cipher
