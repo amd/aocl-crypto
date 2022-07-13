@@ -381,6 +381,51 @@ DataSet::readPtIvKeyCtAddTag()
     return true;
 }
 
+bool DataSet::readPtIvKeyCtTKey(size_t keybits)
+{
+    while (true)
+    {
+        if (readPtIvKeyCtTKey() == false)
+            return false;
+        else if (m_key.size() * 8 == keybits)
+            return true;
+    }
+}
+
+bool DataSet::readPtIvKeyCtTKey()
+{
+#if 1
+    line = readLine();
+#else
+    // Reference slower implementation
+    line = readLineCharByChar();
+    // std::cout << line << std::endl;
+#endif
+    if (line.empty() || line == "\n")
+    {
+        return false;
+    }
+    int pos1 = line.find(",");           // End of Plain Text (PT)
+    int pos2 = line.find(",", pos1 + 1); // End of IV
+    int pos3 = line.find(",", pos2 + 1); // End of Key
+    int pos4 = line.find(",", pos3 + 1); // End of CT
+    //int pos5 = line.find(",", pos4 + 1); // End of additional data
+    if ((pos1 == -1) || (pos2 == -1) || (pos3 == -1) || (pos4 == -1))
+    {
+        return false;
+    }
+
+    m_pt = parseHexStrToBin(line.substr(0, pos1));
+    m_iv = parseHexStrToBin(line.substr(pos1 + 1, pos2 - pos1 - 1));
+    m_key = parseHexStrToBin(line.substr(pos2 + 1, pos3 - pos2 - 1));
+    m_ct = parseHexStrToBin(line.substr(pos3 + 1, pos4 - pos3 - 1));
+    //m_add = parseHexStrToBin(line.substr(pos4 + 1, pos5 - pos4 - 1));
+    m_tkey = parseHexStrToBin(line.substr(pos4 + 1));
+
+    lineno++;
+    return true;
+}
+
 int
 DataSet::getLineNumber()
 {
@@ -421,6 +466,13 @@ std::vector<uint8_t>
 DataSet::getTag()
 {
     return m_tag;
+}
+
+/*for aes xtr*/
+std::vector<uint8_t>
+DataSet::getTKey()
+{
+    return m_tkey;
 }
 
 // CipherTesting class functions

@@ -100,6 +100,8 @@ KAT_AES(cfb)
 KAT_AES(ctr)
 KAT_AES(ofb)
 KAT_AES(gcm)
+KAT_AES(xts)
+
 CROSS_AES(cbc)
 CROSS_AES(cfb)
 CROSS_AES(ctr)
