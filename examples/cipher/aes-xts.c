@@ -120,7 +120,9 @@ decrypt_demo(const uint8_t* ciphertxt,
 
 // static char* sample_plaintxt = "Hello World from AOCL Crypto !!!";
 static uint8_t sample_plaintxt[] =
-    "Happy and Fantastic New Year from AOCL Crypto !!";
+    "A paragraph is a series of sentences that are organized and coherent, and "
+    "are all related to a single topic. Almost every piece of writing you do "
+    "that is longer than a few sentences should be organized into paragraphs.";
 
 static const uint8_t sample_key[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
@@ -213,6 +215,10 @@ main(void)
         sample_iv);
 
     int size = strlen(sample_plaintxt);
+    // for (int x = 0; x < size; x++) {
+    //     printf(" %2x ", ((uint8_t*)&sample_ciphertxt)[x]);
+    // }
+    // printf("\n");
 
     decrypt_demo(sample_ciphertxt, size, sample_output, sample_iv);
 
