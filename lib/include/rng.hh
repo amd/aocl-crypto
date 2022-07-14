@@ -40,8 +40,8 @@ class Interface
     Interface() {}
 
   public:
-    // virtual alc_error_t engineDefault(uint8* pBuf, uint64 size) = 0;
-    virtual alc_error_t readRandom(uint8* pBuf, uint64 size) = 0;
+    // virtual alc_error_t engineDefault(Uint8* pBuf, Uint64 size) = 0;
+    virtual alc_error_t readRandom(Uint8* pBuf, Uint64 size) = 0;
     virtual void        finish()                             = 0;
 
   protected:
@@ -66,8 +66,8 @@ class OsRng final : public Rng
     ~OsRng() {}
 
   public:
-    alc_error_t readRandom(uint8* pBuf, uint64 size);
-    alc_error_t readUrandom(uint8* buffer, uint64 size);
+    alc_error_t readRandom(Uint8* pBuf, Uint64 size);
+    alc_error_t readUrandom(Uint8* buffer, Uint64 size);
     void        finish() final;
 };
 
@@ -78,7 +78,7 @@ class ArchRng : public Rng
     explicit ArchRng(const alc_rng_info_t& rRnginfo);
     ~ArchRng() {}
 
-    alc_error_t readRandom(uint8* pBuf, uint64 size) final;
+    alc_error_t readRandom(Uint8* pBuf, Uint64 size) final;
     void        finish() final;
 };
 

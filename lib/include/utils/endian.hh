@@ -45,8 +45,8 @@ template<typename T>
 constexpr inline T
 ReverseBytes(T value);
 template<>
-constexpr inline uint64
-ReverseBytes(uint64 value)
+constexpr inline Uint64
+ReverseBytes(Uint64 value)
 {
     value = ((value & 0xFF00FF00FF00FF00ULL) >> 8U)
             | ((value & 0x00FF00FF00FF00FFULL) << 8U);
@@ -58,8 +58,8 @@ ReverseBytes(uint64 value)
 }
 
 template<>
-constexpr inline uint32
-ReverseBytes(uint32 value)
+constexpr inline Uint32
+ReverseBytes(Uint32 value)
 {
     value = ((value & 0xFF00FF00U) >> 8U) | ((value & 0x00FF00FFU) << 8U);
     value = (value >> 16U) | (value << 16U);
@@ -68,8 +68,8 @@ ReverseBytes(uint32 value)
 }
 
 template<>
-constexpr inline uint16
-ReverseBytes(uint16 value)
+constexpr inline Uint16
+ReverseBytes(Uint16 value)
 {
     value = ((value & 0xFF00U) >> 8U) | ((value & 0x00FFU) << 8U);
 
@@ -80,8 +80,8 @@ template<>
 constexpr inline __uint128_t
 ReverseBytes(__uint128_t value)
 {
-    uint64 high = (uint64)(value >> 64);
-    uint64 low  = (uint64)value;
+    Uint64 high = (Uint64)(value >> 64);
+    Uint64 low  = (Uint64)value;
     high        = ReverseBytes(high);
     low         = ReverseBytes(low);
     value       = ((__uint128_t)low) << 64 | ((__uint128_t)high);

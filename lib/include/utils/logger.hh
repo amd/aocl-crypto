@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include "types.hh"
+
 #include <chrono>
 #include <iostream>
 #include <map>
