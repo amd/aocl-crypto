@@ -46,6 +46,17 @@ AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode,
     init(iv, key, key_len);
 }
 
+/* xts */
+AlcpCipherBase::AlcpCipherBase(const alc_aes_mode_t mode,
+                               const uint8_t * iv,
+                               const uint8_t * key,
+                               const uint32_t  key_len,
+                               const uint8_t * tkey)
+    : m_mode{mode}, m_iv{iv}
+{
+    init(iv, key, key_len, tkey);
+}
+
 AlcpCipherBase::~AlcpCipherBase()
 {
     if (m_handle != nullptr) {
@@ -64,6 +75,17 @@ AlcpCipherBase::init(const uint8_t* iv,
                      const uint32_t key_len)
 {
     this->m_iv = iv;
+    return init(key, key_len);
+}
+
+/* for XTS */
+bool AlcpCipherBase::init(const uint8_t *iv,
+                          const uint8_t *key,
+                          const uint32_t key_len,
+                          const uint8_t *tkey)
+{
+    this->m_iv = iv;
+    this->m_tkey = tkey;
     return init(key, key_len);
 }
 
@@ -107,6 +129,10 @@ AlcpCipherBase::init(const uint8_t* key, const uint32_t key_len)
     m_keyinfo.fmt  = ALC_KEY_FMT_RAW;
     m_keyinfo.len  = key_len;
     m_keyinfo.key  = key;
+
+    /* XTS */
+    m_keyinfo.tweak_key = m_tkey;
+
     /* Initialize cinfo */
     m_cinfo.ci_algo_info.ai_mode = m_mode;
     m_cinfo.ci_algo_info.ai_iv   = m_iv;

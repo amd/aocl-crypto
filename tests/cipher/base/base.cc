@@ -409,7 +409,6 @@ bool DataSet::readPtIvKeyCtTKey()
     int pos2 = line.find(",", pos1 + 1); // End of IV
     int pos3 = line.find(",", pos2 + 1); // End of Key
     int pos4 = line.find(",", pos3 + 1); // End of CT
-    //int pos5 = line.find(",", pos4 + 1); // End of additional data
     if ((pos1 == -1) || (pos2 == -1) || (pos3 == -1) || (pos4 == -1))
     {
         return false;
@@ -419,7 +418,6 @@ bool DataSet::readPtIvKeyCtTKey()
     m_iv = parseHexStrToBin(line.substr(pos1 + 1, pos2 - pos1 - 1));
     m_key = parseHexStrToBin(line.substr(pos2 + 1, pos3 - pos2 - 1));
     m_ct = parseHexStrToBin(line.substr(pos3 + 1, pos4 - pos3 - 1));
-    //m_add = parseHexStrToBin(line.substr(pos4 + 1, pos5 - pos4 - 1));
     m_tkey = parseHexStrToBin(line.substr(pos4 + 1));
 
     lineno++;
@@ -507,7 +505,7 @@ CipherTesting::testingEncrypt(alcp_data_ex_t             data,
                               const std::vector<uint8_t> key)
 {
     if (cb != nullptr) {
-        if (cb->init(data.iv, data.ivl, &(key[0]), key.size() * 8)) {
+        if (cb->init(data.iv, &(key[0]), key.size() * 8, data.tkey)) {
             // For very large sizes, dynamic is better.
             return cb->encrypt(data);
         }

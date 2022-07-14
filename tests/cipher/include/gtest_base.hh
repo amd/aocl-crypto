@@ -68,8 +68,8 @@ GetModeSTR(alc_cipher_mode_t mode)
             return "CTR";
         case ALC_AES_MODE_CFB:
             return "CFB";
-        case ALC_AES_MODE_XTR:
-            return "XTR";
+        case ALC_AES_MODE_XTS:
+            return "XTS";
         case ALC_AES_MODE_GCM:
             return "GCM";
         default:

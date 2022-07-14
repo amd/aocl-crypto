@@ -189,6 +189,11 @@ class CipherBase
                       const uint8_t* key,
                       const uint32_t key_len)                     = 0;
     virtual bool init(const uint8_t* key, const uint32_t key_len) = 0;
+    virtual bool init(const uint8_t *iv,
+                      const uint8_t *key,
+                      const uint32_t key_len,
+                      const uint8_t *tkey) = 0;
+
     virtual bool encrypt(const uint8_t* plaintxt,
                          size_t         len,
                          uint8_t*       ciphertxt)                      = 0;

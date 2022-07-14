@@ -51,16 +51,14 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
         std::vector<uint8_t> outct(testingCore.getDs()->getPt().size(), 0);
         std::vector<uint8_t> pt = testingCore.getDs()->getPt();
         std::vector<uint8_t> iv = testingCore.getDs()->getIv();
-        //std::vector<uint8_t> ad = testingCore.getDs()->getAdd();
-        std::vector<uint8_t> tkey(testingCore.getDs()->getTKey().size(), 0);
+        std::vector<uint8_t> tkey = testingCore.getDs()->getTKey();
+
         data.in   = &(pt[0]);
         data.inl  = pt.size();
         data.iv   = &(iv[0]);
         data.ivl  = iv.size();
         data.out  = &(outct[0]);
         data.outl = data.inl;
-        //data.ad   = &(ad[0]);
-        //data.adl  = ad.size();
         data.tkey = &(tkey[0]);
         data.tkeyl = tkey.size();
         testingCore.getCipherHandler()->testingEncrypt(
@@ -69,13 +67,6 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
                                 testingCore.getDs()->getCt(),
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_128_ENC")));
-        /*
-        EXPECT_TRUE(
-            ArraysMatch(outtag,
-                        testingCore.getDs()->getTKey(),
-                        *(testingCore.getDs()),
-                        std::string("AES_" + MODE_STR + "_128_ENC_TKEY")));
-                        */
     }
     if (!test_ran) {
         EXPECT_TRUE(::testing::AssertionFailure()
