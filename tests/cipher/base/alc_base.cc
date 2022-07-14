@@ -31,12 +31,12 @@
 namespace alcp::testing {
 
 // AlcpCipherBase class functions
-AlcpCipherBase::AlcpCipherBase(const alc_aes_mode_t mode, const uint8_t* iv)
+AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode, const uint8_t* iv)
     : m_mode{ mode }
     , m_iv{ iv }
 {}
 
-AlcpCipherBase::AlcpCipherBase(const alc_aes_mode_t mode,
+AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode,
                                const uint8_t*       iv,
                                const uint8_t*       key,
                                const uint32_t       key_len)
@@ -108,8 +108,8 @@ AlcpCipherBase::init(const uint8_t* key, const uint32_t key_len)
     m_keyinfo.len  = key_len;
     m_keyinfo.key  = key;
     /* Initialize cinfo */
-    m_cinfo.ci_mode_data.cm_aes.ai_mode = m_mode;
-    m_cinfo.ci_mode_data.cm_aes.ai_iv   = m_iv;
+    m_cinfo.ci_algo_info.ai_mode = m_mode;
+    m_cinfo.ci_algo_info.ai_iv   = m_iv;
     m_cinfo.ci_type                     = ALC_CIPHER_TYPE_AES;
     m_cinfo.ci_key_info                 = m_keyinfo;
 

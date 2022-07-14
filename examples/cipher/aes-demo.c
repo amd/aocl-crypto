@@ -68,21 +68,17 @@ void
 create_aes_session(uint8_t*             key,
                    uint8_t*             iv,
                    const uint32_t       key_len,
-                   const alc_aes_mode_t mode)
+                   const alc_cipher_mode_t mode)
 {
     alc_error_t err;
     const int   err_size = 256;
     uint8_t     err_buf[err_size];
 
-    alc_aes_info_t aes_data = {
-        .ai_mode = mode,
-        .ai_iv   = iv,
-    };
-
     alc_cipher_info_t cinfo = {
         .ci_type = ALC_CIPHER_TYPE_AES,
-        .ci_mode_data   = {
-            .cm_aes = aes_data,
+        .ci_algo_info   = {
+            .ai_mode = mode,
+            .ai_iv   = iv,
         },
         /* No padding, Not Implemented yet*/
         //.pad     = ALC_CIPHER_PADDING_NONE,
@@ -495,7 +491,7 @@ int
 encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
                      uint32_t       inputLen,   // input length
                      uint8_t*       cipherText, // ciphertext output
-                     alc_aes_mode_t m)
+                     alc_cipher_mode_t m)
 {
     unsigned int keybits;
     uint8_t      key[32];
@@ -686,7 +682,7 @@ main(void)
 
     printf("\n AOCL-CRYPTO: AES Demo application ");
 
-    for (alc_aes_mode_t m = ALC_AES_MODE_ECB; m < ALC_AES_MODE_MAX; m++) {
+    for (alc_cipher_mode_t m = ALC_AES_MODE_ECB; m < ALC_AES_MODE_MAX; m++) {
 
         if (m == ALC_AES_MODE_ECB) {
             printf("\n\nAES-ECB not implemented");

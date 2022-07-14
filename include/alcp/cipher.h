@@ -60,7 +60,7 @@ typedef enum _alc_aes_mode
     ALC_AES_MODE_GCM,
 
     ALC_AES_MODE_MAX,
-} alc_aes_mode_t;
+} alc_cipher_mode_t;
 
 typedef enum _alc_aes_ctrl
 {
@@ -76,27 +76,52 @@ typedef enum _alc_aes_ctrl
     ALC_AES_CTRL_MAX,
 } alc_aes_ctrl_t;
 
-typedef struct _alc_aes_info_t
-{
-    alc_aes_mode_t ai_mode; /* Mode eg: ALC_AES_MODE_CFB */
-    const Uint8*   ai_iv;   /* Initialization Vector */
-} alc_aes_info_t, *alc_aes_info_p;
 
-typedef union _alc_cipher_mode_data
+/**
+ * \brief  Mode specific inforamtion, for XTS it is the secondary key
+ *         for GCM it is nounce etc.
+ *
+ * \notes
+ */
+typedef union _alc_cipher_mode_xts_info
 {
-    alc_aes_info_t cm_aes;
-    // alc_des_info_t des;
-} alc_cipher_data_t, *alc_cipher_data_p;
+    alc_key_info_t   xi_tweak_key;
+} alc_cipher_mode_xts_info_t, *alc_cipher_mode_xts_info_p;
 
+typedef struct _alc_cipher_mode_gcm_info {
+} alc_cipher_mode_gcm_info_t, *alc_cipher_mode_gcm_info_p;
+
+
+/**
+ * \brief  Algorithm specific info, 
+ *
+ * \notes
+ */
+typedef struct _alc_cipher_algo_info
+{
+    alc_cipher_mode_t           ai_mode; /* Mode: ALC_AES_MODE_CFB etc */
+    const Uint8*                ai_iv;   /* Initialization Vector */
+    union {
+        alc_cipher_mode_xts_info_t   ai_xts;
+        alc_cipher_mode_gcm_info_t   ai_gcm;
+    }; 
+    
+} alc_cipher_algo_info_t, *alc_cpher_algo_info_p;
+
+/**
+ * \brief  The opaque type of a cipher context, comes from the library
+ *
+ * \notes
+ */
 typedef struct _alc_cipher_info
 {
-    alc_cipher_type_t ci_type;
-    alc_key_info_t    ci_key_info;
-    alc_cipher_data_t ci_mode_data; /* mode specific data */
+    alc_cipher_type_t      ci_type;      /* Type: ALC_CIPHER_AES etc */
+    alc_key_info_t         ci_key_info;
+    alc_cipher_algo_info_t ci_algo_info; /* mode specific data */
 } alc_cipher_info_t, *alc_cipher_info_p;
 
 /**
- * \brief
+ * \brief  The opaque type of a cipher context, comes from the library
  *
  * \notes
  */

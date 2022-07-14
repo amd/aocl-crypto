@@ -89,9 +89,9 @@ __aes_dtor(const void* rCipher)
 
 template<typename CIPHERMODE>
 static alc_error_t
-__build_aes(const alc_aes_info_t& aesInfo,
-            const alc_key_info_t& keyInfo,
-            Context&              ctx)
+__build_aes(const alc_cipher_algo_info_t& aesInfo,
+            const alc_key_info_t&         keyInfo,
+            Context&                      ctx)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -114,15 +114,15 @@ __build_aes(const alc_aes_info_t& aesInfo,
 class AesBuilder
 {
   public:
-    static alc_error_t Build(const alc_aes_info_t& aesInfo,
-                             const alc_key_info_t& keyInfo,
-                             Context&              ctx);
+    static alc_error_t Build(const alc_cipher_algo_info_t&  aesInfo,
+                             const alc_key_info_t&          keyInfo,
+                             Context&                       ctx);
 };
 
 alc_error_t
-AesBuilder::Build(const alc_aes_info_t& aesInfo,
-                  const alc_key_info_t& keyInfo,
-                  Context&              ctx)
+AesBuilder::Build(const alc_cipher_algo_info_t&  aesInfo,
+                  const alc_key_info_t&          keyInfo,
+                  Context&                       ctx)
 {
     alc_error_t err = ALC_ERROR_NONE;
 

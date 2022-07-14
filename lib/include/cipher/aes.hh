@@ -54,7 +54,7 @@ namespace alcp::cipher {
 class Aes : public Rijndael
 {
   public:
-    explicit Aes(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Aes(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
         : Rijndael{ keyInfo }
         , m_mode{ aesInfo.ai_mode }
     {}
@@ -66,8 +66,8 @@ class Aes : public Rijndael
     void setKey(const uint8_t* pUserKey, uint64_t len) override;
 
   protected:
-    alc_aes_mode_t m_mode;
-    void*          m_this;
+    alc_cipher_mode_t     m_mode;
+    void*                 m_this;
 };
 
 /*
@@ -77,14 +77,14 @@ class Aes : public Rijndael
 class Cfb final : public Aes
 {
   public:
-    explicit Cfb(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Cfb(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
         : Aes(aesInfo, keyInfo)
     {}
 
     ~Cfb() {}
 
   public:
-    static bool isSupported(const alc_aes_info_t& cipherInfo,
+    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
                             const alc_key_info_t& keyInfo)
     {
         return true;
@@ -102,7 +102,7 @@ class Cfb final : public Aes
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_mode_data.cm_aes;
+            auto aip = &cipherInfo.ci_algo_info;
             if (aip->ai_mode == ALC_AES_MODE_CFB) {
                 Error::setDetail(err, ALC_ERROR_NONE);
                 return true;
@@ -163,14 +163,14 @@ class Cfb final : public Aes
 class Cbc final : public Aes
 {
   public:
-    explicit Cbc(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Cbc(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
         : Aes(aesInfo, keyInfo)
     {}
 
     ~Cbc() {}
 
   public:
-    static bool isSupported(const alc_aes_info_t& cipherInfo,
+    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
                             const alc_key_info_t& keyInfo)
     {
         return true;
@@ -188,7 +188,7 @@ class Cbc final : public Aes
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_mode_data.cm_aes;
+            auto aip = &cipherInfo.ci_algo_info;
             if (aip->ai_mode == ALC_AES_MODE_CBC) {
                 Error::setDetail(err, ALC_ERROR_NONE);
                 return true;
@@ -248,14 +248,14 @@ class Cbc final : public Aes
 class Ofb final : public Aes
 {
   public:
-    explicit Ofb(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Ofb(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
         : Aes(aesInfo, keyInfo)
     {}
 
     ~Ofb() {}
 
   public:
-    static bool isSupported(const alc_aes_info_t& cipherInfo,
+    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
                             const alc_key_info_t& keyInfo)
     {
         return true;
@@ -273,7 +273,7 @@ class Ofb final : public Aes
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_mode_data.cm_aes;
+            auto aip = &cipherInfo.ci_algo_info;
             if (aip->ai_mode == ALC_AES_MODE_OFB) {
                 Error::setDetail(err, ALC_ERROR_NONE);
                 return true;
@@ -333,14 +333,14 @@ class Ofb final : public Aes
 class Ctr final : public Aes
 {
   public:
-    explicit Ctr(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Ctr(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
         : Aes(aesInfo, keyInfo)
     {}
 
     ~Ctr() {}
 
   public:
-    static bool isSupported(const alc_aes_info_t& cipherInfo,
+    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
                             const alc_key_info_t& keyInfo)
     {
         return true;
@@ -358,7 +358,7 @@ class Ctr final : public Aes
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_mode_data.cm_aes;
+            auto aip = &cipherInfo.ci_algo_info;
             if (aip->ai_mode == ALC_AES_MODE_CTR) {
                 Error::setDetail(err, ALC_ERROR_NONE);
                 return true;
@@ -441,7 +441,7 @@ class Gcm final : public Aes
     uint64_t m_isHashSubKeyGenerated = false;
 
   public:
-    explicit Gcm(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Gcm(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
         : Aes(aesInfo, keyInfo)
     {
         m_reverse_mask_128 =
@@ -457,7 +457,7 @@ class Gcm final : public Aes
     ~Gcm() {}
 
   public:
-    static bool isSupported(const alc_aes_info_t& cipherInfo,
+    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
                             const alc_key_info_t& keyInfo)
     {
         return true;
@@ -475,7 +475,7 @@ class Gcm final : public Aes
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_mode_data.cm_aes;
+            auto aip = &cipherInfo.ci_algo_info;
             if (aip->ai_mode == ALC_AES_MODE_GCM) {
                 Error::setDetail(err, ALC_ERROR_NONE);
                 return true;

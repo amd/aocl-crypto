@@ -17,11 +17,6 @@ create_demo_session(const uint8_t* key,
     const int   err_size = 256;
     uint8_t     err_buf[err_size];
 
-    alc_aes_info_t aes_data = {
-        .ai_mode = ALC_AES_MODE_CFB,
-        .ai_iv   = iv,
-    };
-
     /*
     const alc_key_info_t kinfo = {
         .type    = ALC_KEY_TYPE_SYMMETRIC,
@@ -32,8 +27,9 @@ create_demo_session(const uint8_t* key,
     */
     alc_cipher_info_t cinfo = {
         .ci_type = ALC_CIPHER_TYPE_AES,
-        .ci_mode_data   = {
-            .cm_aes = aes_data,
+        .ci_algo_info   = {
+           .ai_mode = ALC_AES_MODE_CFB,
+           .ai_iv   = iv,
         },
         /* No padding, Not Implemented yet*/
         //.pad     = ALC_CIPHER_PADDING_NONE, 

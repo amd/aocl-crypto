@@ -38,7 +38,7 @@ int
 CipherAes(benchmark::State& state,
           uint64_t          blockSize,
           encrypt_t         enc,
-          alc_aes_mode_t    alcpMode,
+          alc_cipher_mode_t alcpMode,
           size_t            keylen)
 {
     // Dynamic allocation better for larger sizes
