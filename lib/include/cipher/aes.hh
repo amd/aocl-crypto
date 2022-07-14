@@ -56,7 +56,8 @@ namespace alcp::cipher {
 class Aes : public Rijndael
 {
   public:
-    explicit Aes(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Aes(const alc_cipher_algo_info_t& aesInfo,
+                 const alc_key_info_t&         keyInfo)
         : Rijndael{ keyInfo }
         , m_mode{ aesInfo.ai_mode }
     {}
@@ -68,8 +69,8 @@ class Aes : public Rijndael
     void setKey(const uint8_t* pUserKey, uint64_t len) override;
 
   protected:
-    alc_cipher_mode_t     m_mode;
-    void*                 m_this;
+    alc_cipher_mode_t m_mode;
+    void*             m_this;
 };
 
 /*
@@ -79,7 +80,8 @@ class Aes : public Rijndael
 class Cbc final : public Aes
 {
   public:
-    explicit Cbc(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Cbc(const alc_cipher_algo_info_t& aesInfo,
+                 const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
     {}
 
@@ -87,7 +89,7 @@ class Cbc final : public Aes
 
   public:
     static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                            const alc_key_info_t& keyInfo)
+                            const alc_key_info_t&         keyInfo)
     {
         return true;
     }
@@ -155,7 +157,8 @@ class Cbc final : public Aes
 class Ofb final : public Aes
 {
   public:
-    explicit Ofb(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Ofb(const alc_cipher_algo_info_t& aesInfo,
+                 const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
     {}
 
@@ -163,7 +166,7 @@ class Ofb final : public Aes
 
   public:
     static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                            const alc_key_info_t& keyInfo)
+                            const alc_key_info_t&         keyInfo)
     {
         return true;
     }
@@ -231,7 +234,8 @@ class Ofb final : public Aes
 class Ctr final : public Aes
 {
   public:
-    explicit Ctr(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Ctr(const alc_cipher_algo_info_t& aesInfo,
+                 const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
     {}
 
@@ -239,7 +243,7 @@ class Ctr final : public Aes
 
   public:
     static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                            const alc_key_info_t& keyInfo)
+                            const alc_key_info_t&         keyInfo)
     {
         return true;
     }
@@ -332,7 +336,8 @@ class Gcm final
     uint64_t m_isHashSubKeyGenerated = false;
 
   public:
-    explicit Gcm(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Gcm(const alc_cipher_algo_info_t& aesInfo,
+                 const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
     {
         m_reverse_mask_128 =
@@ -349,7 +354,7 @@ class Gcm final
 
   public:
     static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                            const alc_key_info_t& keyInfo)
+                            const alc_key_info_t&         keyInfo)
     {
         return true;
     }
@@ -436,18 +441,19 @@ class Xts final : public Aes
 {
 
   public:
-    explicit Xts(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Xts(const alc_cipher_algo_info_t& aesInfo,
+                 const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
     {
         p_tweak_key = &m_tweak_round_key[0];
-        expandTweakKeys(keyInfo.tweak_key);
+        expandTweakKeys(aesInfo.ai_xts.xi_tweak_key->key);
     }
 
     ~Xts() {}
 
   public:
     static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                            const alc_key_info_t& keyInfo)
+                            const alc_key_info_t&         keyInfo)
     {
         return true;
     }

@@ -19,12 +19,12 @@ create_demo_session(const uint8_t* key,
     uint8_t     err_buf[err_size];
 
     alc_key_info_t kinfo = {
-        .type    = ALC_KEY_TYPE_SYMMETRIC,
-        .fmt     = ALC_KEY_FMT_RAW,
-        .key     = tweak_key,
-        .len     = key_len,
+        .type = ALC_KEY_TYPE_SYMMETRIC,
+        .fmt  = ALC_KEY_FMT_RAW,
+        .key  = tweak_key,
+        .len  = key_len,
     };
-    
+
     alc_cipher_info_t cinfo = {
         .ci_type = ALC_CIPHER_TYPE_AES,
 
@@ -212,8 +212,12 @@ main(void)
         sample_ciphertxt,
         sample_iv);
     int size = strlen(sample_plaintxt);
+    for (int x = 0; x < size; x++) {
+        printf(" %2x ", ((uint8_t*)&sample_ciphertxt)[x]);
+    }
+    printf("\n");
 
-    decrypt_demo(sample_ciphertxt, sizeof(sample_output), sample_output, sample_iv);
+    decrypt_demo(sample_ciphertxt, size, sample_output, sample_iv);
 
     printf("sample_output: %s\n", sample_output);
     /*
