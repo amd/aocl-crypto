@@ -56,6 +56,7 @@ typedef enum _alc_aes_mode
     ALC_AES_MODE_OFB,
     ALC_AES_MODE_CTR,
     ALC_AES_MODE_CFB,
+    ALC_AES_MODE_XTR,
     ALC_AES_MODE_XTS,
     ALC_AES_MODE_GCM,
 
@@ -85,7 +86,7 @@ typedef enum _alc_aes_ctrl
  */
 typedef union _alc_cipher_mode_xts_info
 {
-    alc_key_info_t   xi_tweak_key;
+    alc_key_info_t   *xi_tweak_key;
 } alc_cipher_mode_xts_info_t, *alc_cipher_mode_xts_info_p;
 
 typedef struct _alc_cipher_mode_gcm_info {

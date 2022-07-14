@@ -436,7 +436,7 @@ class Xts final : public Aes
 {
 
   public:
-    explicit Xts(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Xts(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
         : Aes(aesInfo, keyInfo)
     {
         p_tweak_key = &m_tweak_round_key[0];
@@ -446,7 +446,7 @@ class Xts final : public Aes
     ~Xts() {}
 
   public:
-    static bool isSupported(const alc_aes_info_t& cipherInfo,
+    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
                             const alc_key_info_t& keyInfo)
     {
         return true;
@@ -464,7 +464,7 @@ class Xts final : public Aes
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_mode_data.cm_aes;
+            auto aip = &cipherInfo.ci_algo_info;
             if (aip->ai_mode == ALC_AES_MODE_XTS) {
                 Error::setDetail(err, ALC_ERROR_NONE);
                 return true;

@@ -74,14 +74,16 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
     ALCP_BAD_PTR_ERR_RET(pCipherInfo, err);
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
 
-    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
-
-    if (pCipherInfo->ci_mode_data.cm_aes.ai_mode == ALC_AES_MODE_XTS
-        && (pCipherInfo->ci_key_info.tweak_key == nullptr
-            || (pCipherInfo->ci_key_info.len != 128
-                && pCipherInfo->ci_key_info.len != 256))) {
-        return ALC_ERROR_INVALID_ARG;
+    if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
+        auto tweak_key = pCipherInfo->ci_algo_info.ai_xts.xi_tweak_key;
+        if (tweak_key == nullptr || 
+                (tweak_key->len != 128 && 
+                 tweak_key->len != 256)) {
+            return ALC_ERROR_INVALID_ARG;
+        }
     }
+
+    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     err = cipher::CipherBuilder::Build(*pCipherInfo, *ctx);
 

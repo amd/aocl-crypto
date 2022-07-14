@@ -75,16 +75,6 @@ create_aes_session(uint8_t*             key,
     alc_error_t err;
     const int   err_size = 256;
     uint8_t     err_buf[err_size];
-    uint8_t     tweak_key[key_len/8];
-    uint8_t     *p_tweak_key;
-
-    /* additional data used for xts mode*/
-    alc_key_info_t tweak_key     = {
-            .type    = ALC_KEY_TYPE_SYMMETRIC,
-            .fmt     = ALC_KEY_FMT_RAW,
-            .key     = tweak_key_buf,
-            .len     = key_len,
-    };
 
     alc_cipher_info_t cinfo = {
         .ci_type = ALC_CIPHER_TYPE_AES,
@@ -92,14 +82,7 @@ create_aes_session(uint8_t*             key,
             .ai_mode = mode,
             .ai_iv   = iv,
         },
-        .ci_algo_info {
-            .ai_mode = mode,
-            .ai_iv   = iv,
-            //.ai_xts  = {
-            //   .tweak_key = tweak_key,
-            //},
-        }
-        /* No padding, Not Implemented yet*/
+       /* No padding, Not Implemented yet*/
         //.pad     = ALC_CIPHER_PADDING_NONE,
         .ci_key_info     = {
             .type    = ALC_KEY_TYPE_SYMMETRIC,
@@ -109,12 +92,6 @@ create_aes_session(uint8_t*             key,
         },
     };
 
-    if (mode == ALC_AES_MODE_XTS) {
-        memset(tweak_key_buf; mode , key_len/8);
-        p_tweak_key = &tweak_key_buf;
- 
-        cinfo.ci_algo_info.ai_xts.tweak_key = p_tweak_key;
-    }
     /*
      * Check if the current cipher is supported,
      * optional call, alcp_cipher_request() will anyway return

@@ -18,31 +18,29 @@ create_demo_session(const uint8_t* key,
     const int   err_size = 256;
     uint8_t     err_buf[err_size];
 
-    alc_aes_info_t aes_data = {
-        .ai_mode = ALC_AES_MODE_XTS,
-        .ai_iv   = iv,
-    };
-
-    /*
-    const alc_key_info_t kinfo = {
+    alc_key_info_t kinfo = {
         .type    = ALC_KEY_TYPE_SYMMETRIC,
         .fmt     = ALC_KEY_FMT_RAW,
-        .key     = key,
+        .key     = tweak_key,
         .len     = key_len,
     };
-    */
+    
     alc_cipher_info_t cinfo = {
         .ci_type = ALC_CIPHER_TYPE_AES,
-        .ci_mode_data   = {
-            .cm_aes = aes_data,
+
+        .ci_algo_info = {
+            .ai_mode = ALC_AES_MODE_XTS,
+            .ai_iv   = iv,
+            .ai_xts = {
+                .xi_tweak_key = &kinfo,
+            }
         },
-        /* No padding, Not Implemented yet*/
+            /* No padding, Not Implemented yet*/
         //.pad     = ALC_CIPHER_PADDING_NONE, 
         .ci_key_info     = {
             .type    = ALC_KEY_TYPE_SYMMETRIC,
             .fmt     = ALC_KEY_FMT_RAW,
             .key     = key,
-            .tweak_key = tweak_key,
             .len     = key_len,
         },
     };
@@ -214,7 +212,7 @@ main(void)
         sample_ciphertxt,
         sample_iv);
 
-    decrypt_demo(sample_ciphertxt, size, sample_output, sample_iv);
+    decrypt_demo(sample_ciphertxt, sizeof(sample_output), sample_output, sample_iv);
 
     printf("sample_output: %s\n", sample_output);
     /*
