@@ -51,6 +51,7 @@ namespace alcp::cipher { namespace vaes {
 
         __m512i a1, a2, a3, a4;
         __m512i b1, b2, b3, b4;
+        __m512i _a1;
 
         uint64_t blocks = len / Rijndael::cBlockSize;
 
@@ -92,10 +93,10 @@ namespace alcp::cipher { namespace vaes {
             a4 = alcp_xor(a4, b4);
 
             // Store the decrypted cipher text back
-            alcp_storeu_128((__m512i*)p_out_128, a1);
-            alcp_storeu_128(((__m512i*)p_out_128) + 1, a2);
-            alcp_storeu_128(((__m512i*)p_out_128) + 2, a3);
-            alcp_storeu_128(((__m512i*)p_out_128) + 3, a4);
+            alcp_storeu((__m512i*)p_out_128, a1);
+            alcp_storeu(((__m512i*)p_out_128) + 1, a2);
+            alcp_storeu(((__m512i*)p_out_128) + 2, a3);
+            alcp_storeu(((__m512i*)p_out_128) + 3, a4);
             p_in_128 += 16;
             p_out_128 += 16;
         }
@@ -117,8 +118,8 @@ namespace alcp::cipher { namespace vaes {
             a2 = alcp_xor(a2, b2);
 
             // Store the decrypted cipher text back
-            alcp_storeu_128((__m512i*)p_out_128, a1);
-            alcp_storeu_128(((__m512i*)p_out_128) + 1, a2);
+            alcp_storeu((__m512i*)p_out_128, a1);
+            alcp_storeu(((__m512i*)p_out_128) + 1, a2);
             p_in_128 += 8;
             p_out_128 += 8;
         }
@@ -137,7 +138,7 @@ namespace alcp::cipher { namespace vaes {
             a1 = alcp_xor(a1, b1);
 
             // Store the decrypted cipher text back
-            alcp_storeu_128((__m512i*)p_out_128, a1);
+            alcp_storeu((__m512i*)p_out_128, a1);
             p_in_128 += 4;
             p_out_128 += 4;
         }
@@ -149,12 +150,12 @@ namespace alcp::cipher { namespace vaes {
 
         // Chain block individually and decrypt
         for (; blocks >= 1; blocks--) {
-            a1 = alcp_loadu_128((const __m512i*)p_in_128);
+            a1 = _a1 = alcp_loadu_128((const __m512i*)p_in_128);
 
             vaes::AesEncrypt(&b1, pkey128, nRounds);
             a1 = alcp_xor(a1, b1);
 
-            b1 = a1;
+            b1 = _a1;
             alcp_storeu_128((__m512i*)p_out_128, a1);
             p_in_128++;
             p_out_128++;
