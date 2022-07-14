@@ -211,6 +211,7 @@ main(void)
         strlen(sample_plaintxt), /* len of 'plaintxt' and 'ciphertxt' */
         sample_ciphertxt,
         sample_iv);
+    int size = strlen(sample_plaintxt);
 
     decrypt_demo(sample_ciphertxt, sizeof(sample_output), sample_output, sample_iv);
 
