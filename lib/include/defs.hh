@@ -33,7 +33,7 @@
 
 #define ALCP_BAD_PTR_ERR_RET(ptr, err)                                         \
     do {                                                                       \
-        if (NULL == ptr) {                                                     \
+        if (nullptr == ptr) {                                                  \
             alcp::Error::setGeneric(err, ALC_ERROR_INVALID_ARG);               \
             return err;                                                        \
         }                                                                      \
