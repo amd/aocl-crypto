@@ -48,9 +48,10 @@ CipherAes(benchmark::State& state,
     uint8_t                       iv[16];
     uint8_t                       ad[16];
     uint8_t                       tag[16];
+    uint8_t                       tkey[16];
     alcp::testing::CipherBase*    cb;
     alcp::testing::AlcpCipherBase acb =
-        alcp::testing::AlcpCipherBase(alcpMode, iv, key, keylen);
+        alcp::testing::AlcpCipherBase(alcpMode, iv, key, keylen, tkey);
     cb = &acb;
 #ifdef USE_IPP
     alcp::testing::IPPCipherBase icb =
@@ -76,6 +77,9 @@ CipherAes(benchmark::State& state,
     data.adl  = 16;
     data.tag  = tag;
     data.tagl = 16;
+    data.tkey = tkey;
+    data.tkeyl = 16;
+
     if (enc == false && alcpMode == ALC_AES_MODE_GCM) {
         if (cb->encrypt(data) == false) {
             std::cout << "BENCH_ENC_FAILURE" << std::endl;
@@ -152,6 +156,14 @@ BENCH_AES_ENCRYPT_GCM_128(benchmark::State& state)
 }
 BENCHMARK(BENCH_AES_ENCRYPT_GCM_128)->ArgsProduct({ blocksizes });
 
+static void
+BENCH_AES_ENCRYPT_XTS_128(benchmark::State &state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_XTS, 128));
+}
+BENCHMARK(BENCH_AES_ENCRYPT_XTS_128)->ArgsProduct({blocksizes});
+
 /**
  * @brief Decrypt
  *
@@ -197,6 +209,14 @@ BENCH_AES_DECRYPT_GCM_128(benchmark::State& state)
         CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_GCM, 128));
 }
 BENCHMARK(BENCH_AES_DECRYPT_GCM_128)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_DECRYPT_XTS_128(benchmark::State &state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_XTS, 128));
+}
+BENCHMARK(BENCH_AES_DECRYPT_XTS_128)->ArgsProduct({blocksizes});
 
 // END 128 bit key size
 

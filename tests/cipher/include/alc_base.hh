@@ -47,6 +47,7 @@ class AlcpCipherBase : public CipherBase
     const uint8_t*      m_tkey = nullptr;
 
   public:
+    AlcpCipherBase() {}
     /**
      * @brief Construct a new Alcp Cipher Base object
      * 
