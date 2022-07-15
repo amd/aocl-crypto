@@ -41,11 +41,13 @@ class IPPCipherBase : public CipherBase
   private:
     alc_cipher_mode_t m_mode;
     IppsAESSpec*      m_ctx     = 0;
+    IppsAES_XTSSpec*  m_ctx_xts = 0;
     IppsAES_GCMState* m_ctx_gcm = 0;
     IppsAES_GCMState* pState    = NULL;
     const uint8_t*    m_iv;
     const uint8_t*    m_key;
     uint32_t          m_key_len;
+    const uint8_t*    m_tkey = NULL;
     int               m_ctxSize = 0;
     bool              alcpModeToFuncCall(const uint8_t* in,
                                          uint8_t*       out,
@@ -83,11 +85,25 @@ class IPPCipherBase : public CipherBase
      * @return true -  if no failure
      * @return false - if there is some failure
      */
+
+    /* xts */
+    IPPCipherBase(const alc_aes_mode_t mode,
+                  const uint8_t *iv,
+                  const uint8_t *key,
+                  const uint32_t key_len,
+                  const uint8_t *tkey);
+
     ~IPPCipherBase();
     bool init(const uint8_t* iv,
               const uint32_t iv_len,
               const uint8_t* key,
               const uint32_t key_len);
+    /* xts */
+    bool init(const uint8_t *iv,
+              //const uint32_t iv_len,
+              const uint8_t *key,
+              const uint32_t key_len,
+              const uint8_t *tkey);
     bool init(const uint8_t* iv, const uint8_t* key, const uint32_t key_len);
     bool init(const uint8_t* key, const uint32_t key_len);
     bool encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt);

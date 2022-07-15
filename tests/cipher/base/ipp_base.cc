@@ -63,6 +63,9 @@ IPPCipherBase::~IPPCipherBase()
     if (m_ctx_gcm != nullptr) {
         delete[](Ipp8u*) m_ctx_gcm;
     }
+    if (m_ctx_xts != nullptr) {
+        delete[](Ipp8u*) m_ctx_xts;
+    }
 }
 
 bool
@@ -72,6 +75,18 @@ IPPCipherBase::init(const uint8_t* iv,
                     const uint32_t key_len)
 {
     m_iv = iv;
+    return init(key, key_len);
+}
+
+/*xts */
+bool IPPCipherBase::init(const uint8_t *iv,
+                         //const uint32_t iv_len,
+                         const uint8_t *key,
+                         const uint32_t key_len,
+                         const uint8_t *tkey)
+{
+    m_iv = iv;
+    m_tkey = tkey;
     return init(key, key_len);
 }
 
@@ -87,21 +102,43 @@ IPPCipherBase::init(const uint8_t* iv,
 bool
 IPPCipherBase::init(const uint8_t* key, const uint32_t key_len)
 {
-    if (m_mode == ALC_AES_MODE_GCM) {
+    switch (m_mode)
+    {
+    case ALC_AES_MODE_GCM:
         ippsAES_GCMGetSize(&m_ctxSize);
-        if (m_ctx_gcm != nullptr) {
-            delete[](Ipp8u*) m_ctx_gcm;
+        if (m_ctx_gcm != nullptr)
+        {
+            delete[](Ipp8u *) m_ctx_gcm;
         }
-        m_ctx_gcm = (IppsAES_GCMState*)(new Ipp8u[m_ctxSize]);
+        m_ctx_gcm = (IppsAES_GCMState *)(new Ipp8u[m_ctxSize]);
         ippsAES_GCMInit(key, key_len / 8, m_ctx_gcm, m_ctxSize);
-    } else {
-        ippsAESGetSize(&m_ctxSize);
-        if (m_ctx != nullptr) {
-            delete[](Ipp8u*) m_ctx;
+        break;
+
+    case ALC_AES_MODE_XTS:
+        ippsAES_XTSGetSize(&m_ctxSize);
+        if (m_ctx_xts != nullptr)
+        {
+            delete[](Ipp8u *) m_ctx_xts;
         }
-        m_ctx = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
+        m_ctx_xts = (IppsAES_XTSSpec *)(new Ipp8u[m_ctxSize]);
+        ippsAES_XTSInit(key, key_len / 8, 0, m_ctx_xts, m_ctxSize);
+
+        // (const Ipp8u* pKey, int keyLen,
+        //                           int duBitsize,
+         //                          IppsAES_XTSSpec* pCtx,int ctxSize))
+
+        break;
+
+    default : ippsAESGetSize(&m_ctxSize);
+        if (m_ctx != nullptr)
+        {
+            delete[](Ipp8u *) m_ctx;
+        }
+        m_ctx = (IppsAESSpec *)(new Ipp8u[m_ctxSize]);
         ippsAESInit(key, key_len / 8, m_ctx, m_ctxSize);
+        break;
     }
+
     return true;
 }
 
@@ -143,6 +180,12 @@ IPPCipherBase::alcpModeToFuncCall(const uint8_t* in,
                 status = ippsAESDecryptCTR(in, out, len, m_ctx, iv, 128);
             }
             break;
+        case ALC_AES_MODE_XTS:
+            if (enc) {
+                status = ippsAES_XTSEncrypt(in, out, len, m_ctx_xts, m_tkey, 128);
+            } else {
+                status = ippsAES_XTSDecrypt(in, out, len, m_ctx_xts, m_tkey, 128);
+            }
         default:
             return false;
     }
