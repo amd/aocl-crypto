@@ -364,6 +364,14 @@ BENCH_AES_ENCRYPT_GCM_256(benchmark::State& state)
 }
 BENCHMARK(BENCH_AES_ENCRYPT_GCM_256)->ArgsProduct({ blocksizes });
 
+static void
+BENCH_AES_ENCRYPT_XTS_256(benchmark::State &state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_XTS, 256));
+}
+BENCHMARK(BENCH_AES_ENCRYPT_XTS_256)->ArgsProduct({blocksizes});
+
 /**
  * @brief Decrypt
  *
@@ -409,6 +417,14 @@ BENCH_AES_DECRYPT_GCM_256(benchmark::State& state)
         CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_GCM, 256));
 }
 BENCHMARK(BENCH_AES_DECRYPT_GCM_256)->ArgsProduct({ blocksizes });
+
+static void
+BENCH_AES_DECRYPT_XTS_256(benchmark::State &state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_XTS, 256));
+}
+BENCHMARK(BENCH_AES_DECRYPT_XTS_256)->ArgsProduct({blocksizes});
 
 // END 256 bit keysize
 

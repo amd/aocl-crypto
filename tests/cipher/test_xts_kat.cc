@@ -74,6 +74,46 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
     }
 }
 
+/* Testing Starts Here! */
+TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
+{
+    int key_size = 256;
+    TestingCore testingCore = TestingCore(MODE_STR, ALC_MODE);
+    bool test_ran = false;
+    alcp_data_ex_t data;
+    while (testingCore.getDs()->readPtIvKeyCtTKey(key_size))
+    {
+        // Checks if output is correct
+        test_ran = true;
+        // Create vector for cipher text
+        std::vector<uint8_t> outct(testingCore.getDs()->getPt().size(), 0);
+        std::vector<uint8_t> pt = testingCore.getDs()->getPt();
+        std::vector<uint8_t> iv = testingCore.getDs()->getIv();
+        std::vector<uint8_t> tkey = testingCore.getDs()->getTKey();
+
+        data.in = &(pt[0]);
+        data.inl = pt.size();
+        data.iv = &(iv[0]);
+        data.ivl = iv.size();
+        data.out = &(outct[0]);
+        data.outl = data.inl;
+        data.tkey = &(tkey[0]);
+        data.tkeyl = tkey.size();
+        testingCore.getCipherHandler()->testingEncrypt(
+            data, testingCore.getDs()->getKey());
+        EXPECT_TRUE(ArraysMatch(outct,
+                                testingCore.getDs()->getCt(),
+                                *(testingCore.getDs()),
+                                std::string("AES_" + MODE_STR + "_256_ENC")));
+    }
+    if (!test_ran)
+    {
+        EXPECT_TRUE(::testing::AssertionFailure()
+                    << "No tests to run, check dataset");
+    }
+}
+
+
 int
 main(int argc, char** argv)
 {
