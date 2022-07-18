@@ -79,37 +79,6 @@ namespace alcp::cipher { namespace vaes {
                         const uint8_t* pIv,
                         int            nRounds);
 
-    void gMulR(__m512i  H1,
-               __m512i  H2,
-               __m512i  H3,
-               __m512i  H4,
-               __m512i  a,
-               __m512i  b,
-               __m512i  c,
-               __m512i  d,
-               __m512i  reverse_mask_512,
-               __m128i* res);
-
-    void gMulR(__m512i  H1,
-               __m512i  H2,
-               __m512i  H3,
-               __m512i  H4,
-               __m512i  H5,
-               __m512i  H6,
-               __m512i  a,
-               __m512i  b,
-               __m512i  c,
-               __m512i  d,
-               __m512i  e,
-               __m512i  f,
-               __m512i  reverse_mask_512,
-               __m128i* res);
-
-    void gMulR(__m512i  H_512,
-               __m512i  abcd_512,
-               __m512i  reverse_mask_512,
-               __m128i* res);
-
     alc_error_t CryptGcm(const uint8_t* pPlainText,
                          uint8_t*       pCipherText,
                          uint64_t       len,

@@ -70,6 +70,45 @@ namespace alcp::cipher { namespace vaes {
                                  const uint8_t* pKey,
                                  int            nRounds,
                                  const uint8_t* pIv);
+    void        gMulR(__m512i  H1,
+                      __m512i  H2,
+                      __m512i  H3,
+                      __m512i  H4,
+                      __m512i  a,
+                      __m512i  b,
+                      __m512i  c,
+                      __m512i  d,
+                      __m512i  reverse_mask_512,
+                      __m128i* res);
+
+    void gMulR(__m512i  H1,
+               __m512i  H2,
+               __m512i  H3,
+               __m512i  H4,
+               __m512i  H5,
+               __m512i  H6,
+               __m512i  a,
+               __m512i  b,
+               __m512i  c,
+               __m512i  d,
+               __m512i  e,
+               __m512i  f,
+               __m512i  reverse_mask_512,
+               __m128i* res);
+
+    void gMulR(__m512i  H_512,
+               __m512i  abcd_512,
+               __m512i  reverse_mask_512,
+               __m128i* res);
+
+    alc_error_t DecryptCbcAvx512(
+        const uint8_t* pCipherText, // ptr to ciphertext
+        uint8_t*       pPlainText,  // ptr to plaintext
+        uint64_t       len,         // message length in bytes
+        const uint8_t* pKey,        // ptr to Key
+        int            nRounds,     // No. of rounds
+        const uint8_t* pIv          // ptr to Initialization Vector
+    );
 
     // Encrypt Begins here
     /* 1 x 4 block at a time */
