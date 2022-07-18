@@ -112,7 +112,6 @@ InitGcm(const uint8_t* pKey,
         aesni::AesEncrypt(ptag_128, pkey128, nRounds);
     }
 
-    ALCP_PRINT_TEXT((uint8_t*)pHsubKey_128, 16, "subkey   ")
     return err;
 }
 

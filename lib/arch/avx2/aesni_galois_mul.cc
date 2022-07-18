@@ -226,8 +226,6 @@ carrylessMul(__m128i  H1,
     __m128i a0, a1, a2, a3, a4, a5, a6, a7;
     __m128i xt, yt;
     computeKaratsuba_Z0_Z2(H1, H2, H3, H4, a, b, c, d, &z0, &z2);
-    ALCP_PRINT_TEXT((uint8_t*)&z0, 16, "rz0   \t    ")
-    ALCP_PRINT_TEXT((uint8_t*)&z2, 16, "rz2   \t    ")
 
     /* compute: z1 = (x1+x0) (y1+y0) - z2 - z0 */
 
@@ -271,8 +269,6 @@ carrylessMul(__m128i  H1,
     a0 = _mm_xor_si128(a2, a0);
     a0 = _mm_xor_si128(a3, a0);
 
-    ALCP_PRINT_TEXT((uint8_t*)&a0, 16, "ra0   \t    ")
-
     a1 = _mm_slli_si128(a0, 8);
     a0 = _mm_srli_si128(a0, 8);
 
@@ -292,24 +288,13 @@ gMulR(__m128i  H1,
       __m128i  reverse_mask_128,
       __m128i* res)
 {
-    ALCP_PRINT_TEXT((uint8_t*)&a, 16, "ra    \t    ")
-    ALCP_PRINT_TEXT((uint8_t*)&b, 16, "rb    \t    ")
-    ALCP_PRINT_TEXT((uint8_t*)&c, 16, "rc    \t    ")
-    ALCP_PRINT_TEXT((uint8_t*)&d, 16, "rd    \t    ")
     a = _mm_shuffle_epi8(a, reverse_mask_128);
     b = _mm_shuffle_epi8(b, reverse_mask_128);
     c = _mm_shuffle_epi8(c, reverse_mask_128);
     d = _mm_shuffle_epi8(d, reverse_mask_128);
-    ALCP_PRINT_TEXT((uint8_t*)res, 16, "rres  \t    ")
 
     *res = alcp_xor(d, *res);
 
-    ALCP_PRINT_TEXT((uint8_t*)&H1, 16, "rH1   \t    ")
-    ALCP_PRINT_TEXT((uint8_t*)&H2, 16, "rH2   \t    ")
-    ALCP_PRINT_TEXT((uint8_t*)&H3, 16, "rH3   \t    ")
-    ALCP_PRINT_TEXT((uint8_t*)&H4, 16, "rH4   \t    ")
-
-    ALCP_PRINT_TEXT((uint8_t*)res, 16, "rresO \t    ")
     __m128i high, low;
 
     /*
@@ -324,12 +309,6 @@ gMulR(__m128i  H1,
         A = [(Xi • H1) + (Xi - 1 • H2) + (Xi - 2 • H3) +
             (Xi - 3 + Yi - 4) • H4]
             */
-
-    // printf("\n\n input to carrylessMul ");
-    ALCP_PRINT_TEXT((uint8_t*)&a, 16, "ra    \t    ")
-    ALCP_PRINT_TEXT((uint8_t*)&b, 16, "rb    \t    ")
-    ALCP_PRINT_TEXT((uint8_t*)&c, 16, "rc    \t    ")
-    ALCP_PRINT_TEXT((uint8_t*)res, 16, "rres  \t    ")
 
     carrylessMul(H1, H2, H3, H4, a, b, c, *res, &high, &low);
 
