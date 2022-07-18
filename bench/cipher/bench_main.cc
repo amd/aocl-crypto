@@ -50,12 +50,13 @@ CipherAes(benchmark::State& state,
     uint8_t                       tag[16];
     uint8_t                       tkey[16];
     alcp::testing::CipherBase*    cb;
-    alcp::testing::AlcpCipherBase acb =
-        alcp::testing::AlcpCipherBase(alcpMode, iv, key, keylen, tkey);
+ 
+    alcp::testing::AlcpCipherBase acb = alcp::testing::AlcpCipherBase(alcpMode, iv, key, keylen, tkey);
+
     cb = &acb;
 #ifdef USE_IPP
     alcp::testing::IPPCipherBase icb =
-        alcp::testing::IPPCipherBase(alcpMode, iv, key, keylen);
+        alcp::testing::IPPCipherBase(alcpMode, iv, key, keylen, tkey);
     if (useipp) {
         cb = &icb;
     }
@@ -79,7 +80,6 @@ CipherAes(benchmark::State& state,
     data.tagl = 16;
     data.tkey = tkey;
     data.tkeyl = 16;
-
     if (enc == false && alcpMode == ALC_AES_MODE_GCM) {
         if (cb->encrypt(data) == false) {
             std::cout << "BENCH_ENC_FAILURE" << std::endl;

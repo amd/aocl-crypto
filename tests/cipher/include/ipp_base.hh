@@ -87,7 +87,8 @@ class IPPCipherBase : public CipherBase
      */
 
     /* xts */
-    IPPCipherBase(const alc_aes_mode_t mode,
+    IPPCipherBase(
+                  const alc_aes_mode_t mode,
                   const uint8_t *iv,
                   const uint8_t *key,
                   const uint32_t key_len,
@@ -100,7 +101,6 @@ class IPPCipherBase : public CipherBase
               const uint32_t key_len);
     /* xts */
     bool init(const uint8_t *iv,
-              //const uint32_t iv_len,
               const uint8_t *key,
               const uint32_t key_len,
               const uint8_t *tkey);
