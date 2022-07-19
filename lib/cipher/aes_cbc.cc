@@ -39,8 +39,9 @@ Cbc::decrypt(const uint8_t* pCipherText,
              const uint8_t* pIv) const
 {
     alc_error_t err = ALC_ERROR_NONE;
-    if (Cipher::isVaesAvailable() && Cipher::isAvx512fAvailable()
-        && Cipher::isAvx512dqAvailable()) {
+    if (Cipher::isAvx512Has(cipher::AVX512_F)
+        && Cipher::isAvx512Has(cipher::AVX512_DQ)
+        && Cipher::isAvx512Has(cipher::AVX512_BW)) {
         err = vaes::DecryptCbcAvx512(
             pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
 

@@ -47,6 +47,16 @@
 
 namespace alcp {
 namespace cipher {
+    typedef alc_error_t(Operation)(const Uint8* pSrc,
+                                   Uint8*       pDst,
+                                   Uint64       len,
+                                   const Uint8* pIv) const;
+    typedef enum
+    {
+        AVX512_DQ = 1,
+        AVX512_F,
+        AVX512_BW,
+    } avx512_flags_t;
 
     class IEncrypter
     {
@@ -173,39 +183,26 @@ class Cipher
 #ifdef USE_AOCL_CPUID
         static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
 #else
-        static bool s_vaes_available     = false;
+        static bool s_vaes_available  = false;
 #endif
         return s_vaes_available;
     }
 
-    static bool isAvx512fAvailable()
+    static bool isAvx512Has(cipher::avx512_flags_t flag)
     {
-#ifdef USE_AOCL_CPUID
-        static bool s_avx512f_available = (alc_cpu_has_avx512f() > 0);
-#else
-        static bool s_avx512f_available  = false;
-#endif
-        return s_avx512f_available;
-    }
-
-    static bool isAvx512dqAvailable()
-    {
-#ifdef USE_AOCL_CPUID
+        // static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
+        static bool s_avx512f_available  = (alc_cpu_has_avx512f() > 0);
         static bool s_avx512dq_available = (alc_cpu_has_avx512dq() > 0);
-#else
-        static bool s_avx512dq_available = false;
-#endif
-        return s_avx512dq_available;
-    }
-
-    static bool isAvx512bwAvailable()
-    {
-#ifdef USE_AOCL_CPUID
         static bool s_avx512bw_available = (alc_cpu_has_avx512bw() > 0);
-#else
-        static bool s_avx512bw_available = false;
-#endif
-        return s_avx512bw_available;
+        switch (flag) {
+            case cipher::AVX512_DQ:
+                return s_avx512dq_available;
+            case cipher::AVX512_F:
+                return s_avx512f_available;
+            case cipher::AVX512_BW:
+                return s_avx512bw_available;
+        }
+        return false;
     }
 
     /*
@@ -216,7 +213,7 @@ class Cipher
 #ifdef USE_AOCL_CPUID
         static bool s_aesni_available = (alc_cpu_has_aes() > 0);
 #else
-        static bool s_aesni_available    = true;
+        static bool s_aesni_available = true;
 #endif
         return s_aesni_available;
     }
@@ -256,6 +253,11 @@ class StreamCipher : public Cipher
   public:
 };
 #endif
+
+namespace cipher {
+    // Cipher& FindCipher(alc_cipher_info_t& cipherInfo) { return
+    // nullptr; }
+} // namespace cipher
 
 } // namespace alcp
 
