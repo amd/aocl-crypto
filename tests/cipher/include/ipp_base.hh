@@ -39,7 +39,7 @@ namespace alcp::testing {
 class IPPCipherBase : public CipherBase
 {
   private:
-    alc_aes_mode_t    m_mode;
+    alc_cipher_mode_t m_mode;
     IppsAESSpec*      m_ctx     = 0;
     IppsAES_GCMState* m_ctx_gcm = 0;
     IppsAES_GCMState* pState    = NULL;
@@ -61,7 +61,7 @@ class IPPCipherBase : public CipherBase
      * @param mode
      * @param iv
      */
-    IPPCipherBase(const alc_aes_mode_t mode, const uint8_t* iv);
+    IPPCipherBase(const alc_cipher_mode_t mode, const uint8_t* iv);
     /**
      * @brief Construct a new Alcp Base object - Initlized and ready to go
      *
@@ -70,10 +70,10 @@ class IPPCipherBase : public CipherBase
      * @param key
      * @param key_len
      */
-    IPPCipherBase(const alc_aes_mode_t mode,
-                  const uint8_t*       iv,
-                  const uint8_t*       key,
-                  const uint32_t       key_len);
+    IPPCipherBase(const alc_cipher_mode_t mode,
+                  const uint8_t*          iv,
+                  const uint8_t*          key,
+                  const uint32_t          key_len);
     /**
      * @brief         Initialization/Reinitialization function, created handle
      *
