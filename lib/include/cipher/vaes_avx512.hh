@@ -70,6 +70,45 @@ namespace alcp::cipher { namespace vaes {
                                  const uint8_t* pKey,
                                  int            nRounds,
                                  const uint8_t* pIv);
+    void        gMulR(__m512i  H1,
+                      __m512i  H2,
+                      __m512i  H3,
+                      __m512i  H4,
+                      __m512i  a,
+                      __m512i  b,
+                      __m512i  c,
+                      __m512i  d,
+                      __m512i  reverse_mask_512,
+                      __m128i* res);
+
+    void gMulR(__m512i  H1,
+               __m512i  H2,
+               __m512i  H3,
+               __m512i  H4,
+               __m512i  H5,
+               __m512i  H6,
+               __m512i  a,
+               __m512i  b,
+               __m512i  c,
+               __m512i  d,
+               __m512i  e,
+               __m512i  f,
+               __m512i  reverse_mask_512,
+               __m128i* res);
+
+    void gMulR(__m512i  H_512,
+               __m512i  abcd_512,
+               __m512i  reverse_mask_512,
+               __m128i* res);
+
+    alc_error_t DecryptCbcAvx512(
+        const uint8_t* pCipherText, // ptr to ciphertext
+        uint8_t*       pPlainText,  // ptr to plaintext
+        uint64_t       len,         // message length in bytes
+        const uint8_t* pKey,        // ptr to Key
+        int            nRounds,     // No. of rounds
+        const uint8_t* pIv          // ptr to Initialization Vector
+    );
 
     // Encrypt Begins here
     /* 1 x 4 block at a time */
@@ -400,4 +439,70 @@ namespace alcp::cipher { namespace vaes {
         rkey0 = _mm512_setzero_si512();
         rkey1 = _mm512_setzero_si512();
     }
+
+    static inline void AesEncrypt(__m512i*       blk0,
+                                  __m512i*       blk1,
+                                  __m512i*       blk2,
+                                  __m512i*       blk3,
+                                  __m512i*       blk4,
+                                  __m512i*       blk5,
+                                  const __m128i* pKey, /* Round keys */
+                                  int            nRounds)
+    {
+        int     nr;
+        __m512i rkey0, rkey1;
+
+        rkey0 = _mm512_broadcast_i64x2(pKey[0]);
+        rkey1 = _mm512_broadcast_i64x2(pKey[1]);
+
+        __m512i b0 = _mm512_xor_si512(*blk0, rkey0);
+        __m512i b1 = _mm512_xor_si512(*blk1, rkey0);
+        __m512i b2 = _mm512_xor_si512(*blk2, rkey0);
+        __m512i b3 = _mm512_xor_si512(*blk3, rkey0);
+
+        __m512i b4 = _mm512_xor_si512(*blk4, rkey0);
+        __m512i b5 = _mm512_xor_si512(*blk5, rkey0);
+
+        rkey0 = _mm512_broadcast_i64x2(pKey[2]);
+
+        for (nr = 2, pKey++; nr < nRounds; nr += 2, pKey += 2) {
+            b0 = _mm512_aesenc_epi128(b0, rkey1);
+            b1 = _mm512_aesenc_epi128(b1, rkey1);
+            b2 = _mm512_aesenc_epi128(b2, rkey1);
+            b3 = _mm512_aesenc_epi128(b3, rkey1);
+
+            b4 = _mm512_aesenc_epi128(b4, rkey1);
+            b5 = _mm512_aesenc_epi128(b5, rkey1);
+
+            rkey1 = _mm512_broadcast_i64x2(pKey[2]);
+
+            b0 = _mm512_aesenc_epi128(b0, rkey0);
+            b1 = _mm512_aesenc_epi128(b1, rkey0);
+            b2 = _mm512_aesenc_epi128(b2, rkey0);
+            b3 = _mm512_aesenc_epi128(b3, rkey0);
+
+            b4 = _mm512_aesenc_epi128(b4, rkey0);
+            b5 = _mm512_aesenc_epi128(b5, rkey0);
+
+            rkey0 = _mm512_broadcast_i64x2(pKey[3]);
+        }
+
+        b0 = _mm512_aesenc_epi128(b0, rkey1);
+        b1 = _mm512_aesenc_epi128(b1, rkey1);
+        b2 = _mm512_aesenc_epi128(b2, rkey1);
+        b3 = _mm512_aesenc_epi128(b3, rkey1);
+        b4 = _mm512_aesenc_epi128(b4, rkey1);
+        b5 = _mm512_aesenc_epi128(b5, rkey1);
+
+        *blk0 = _mm512_aesenclast_epi128(b0, rkey0);
+        *blk1 = _mm512_aesenclast_epi128(b1, rkey0);
+        *blk2 = _mm512_aesenclast_epi128(b2, rkey0);
+        *blk3 = _mm512_aesenclast_epi128(b3, rkey0);
+        *blk4 = _mm512_aesenclast_epi128(b4, rkey0);
+        *blk5 = _mm512_aesenclast_epi128(b5, rkey0);
+
+        rkey0 = _mm512_setzero_si512();
+        rkey1 = _mm512_setzero_si512();
+    }
+
 }} // namespace alcp::cipher::vaes

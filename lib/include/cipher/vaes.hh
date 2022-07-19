@@ -79,6 +79,18 @@ namespace alcp::cipher { namespace vaes {
                         const uint8_t* pIv,
                         int            nRounds);
 
+    alc_error_t CryptGcm(const uint8_t* pPlainText,
+                         uint8_t*       pCipherText,
+                         uint64_t       len,
+                         const uint8_t* pKey,
+                         int            nRounds,
+                         const uint8_t* pIv,
+                         __m128i*       pgHash,
+                         __m128i        Hsubkey_128,
+                         __m128i        iv_128,
+                         __m128i        reverse_mask_128,
+                         bool           isEncrypt);
+
     static inline void amd_mm256_broadcast_i64x2(const __m128i* rKey,
                                                  __m256i*       dst)
     {

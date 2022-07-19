@@ -5,7 +5,7 @@ IF (MSVC)
 	SET(ARCH_COMPILE_FLAG /arch:znver3)
 ELSE()
 
-	SET(ARCH_COMPILE_FLAG -fPIC -znver3 -mavx -mavx2 -maes -mvaes -mpclmul)
+	SET(ARCH_COMPILE_FLAG -fPIC -znver3 -mavx -mavx2 -maes -mvaes -mpclmul -mvpclmulqdq)
 
 ENDIF()
 
