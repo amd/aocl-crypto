@@ -29,6 +29,7 @@ IF(ENABLE_TESTS_IPP_API)
     ELSE(EXISTS ${IPP_INSTALL_DIR}/lib/intel/libippcp.so)
         set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel/libippcp.so)
     ENDIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
+
     SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${IPP_INSTALL_DIR}/include)
 ENDIF(ENABLE_TESTS_IPP_API)
 
