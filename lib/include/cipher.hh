@@ -183,17 +183,23 @@ class Cipher
 #ifdef USE_AOCL_CPUID
         static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
 #else
-        static bool s_vaes_available  = false;
+        static bool s_vaes_available     = false;
 #endif
         return s_vaes_available;
     }
 
     static bool isAvx512Has(cipher::avx512_flags_t flag)
     {
-        // static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
+// static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
+#ifdef USE_AOCL_CPUID
         static bool s_avx512f_available  = (alc_cpu_has_avx512f() > 0);
         static bool s_avx512dq_available = (alc_cpu_has_avx512dq() > 0);
         static bool s_avx512bw_available = (alc_cpu_has_avx512bw() > 0);
+#else
+        static bool s_avx512f_available  = false;
+        static bool s_avx512dq_available = false;
+        static bool s_avx512bw_available = false;
+#endif
         switch (flag) {
             case cipher::AVX512_DQ:
                 return s_avx512dq_available;
@@ -213,7 +219,7 @@ class Cipher
 #ifdef USE_AOCL_CPUID
         static bool s_aesni_available = (alc_cpu_has_aes() > 0);
 #else
-        static bool s_aesni_available = true;
+        static bool s_aesni_available    = true;
 #endif
         return s_aesni_available;
     }
