@@ -29,7 +29,7 @@
 #include "dynlib.hh"
 #include "types.hh"
 
-enum class DynLoadError : Uint32
+enum class DynLoadError : alcp::Uint32
 {
     Success = 0,
     None    = Success,

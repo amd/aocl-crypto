@@ -38,80 +38,80 @@
 
 namespace alcp::utils {
 
-template<typename copytype = uint64, uint64 stride = sizeof(copytype)>
+template<typename copytype = Uint64, Uint64 stride = sizeof(copytype)>
 void
 CopyChunk(void* pDst, const void* pSrc, int len)
 {
     auto p_src = reinterpret_cast<const copytype*>(pSrc);
     auto p_dst = reinterpret_cast<copytype*>(pDst);
 
-    for (uint64 i = 0; i < len / stride; i++) {
+    for (Uint64 i = 0; i < len / stride; i++) {
         p_dst[i] = p_src[i];
     }
 }
 
 static inline void
-CopyDWord(uint32* pDst, const uint32* pSrc, int len)
+CopyDWord(Uint32* pDst, const Uint32* pSrc, int len)
 {
-    CopyChunk<uint32>(pDst, pSrc, len);
+    CopyChunk<Uint32>(pDst, pSrc, len);
 }
 
 static inline void
-CopyQWord(uint64* pDst, const uint64* pSrc, int len)
+CopyQWord(Uint64* pDst, const Uint64* pSrc, int len)
 {
-    CopyChunk<uint64>(pDst, pSrc, len);
+    CopyChunk<Uint64>(pDst, pSrc, len);
 }
 
 static inline void
-CopyWord(uint16* pDst, const uint16* pSrc, int len)
+CopyWord(Uint16* pDst, const Uint16* pSrc, int len)
 {
-    CopyChunk<uint16>(pDst, pSrc, len);
+    CopyChunk<Uint16>(pDst, pSrc, len);
 }
 
 static inline void
 CopyBytes(void* pDst, const void* pSrc, int len)
 {
-    CopyChunk<uint8>(pDst, pSrc, len);
+    CopyChunk<Uint8>(pDst, pSrc, len);
 }
 
-template<typename copytype = uint64, uint64 stride = sizeof(copytype)>
+template<typename copytype = Uint64, Uint64 stride = sizeof(copytype)>
 void
-CopyBlock(void* pDst, const void* pSrc, uint64 len)
+CopyBlock(void* pDst, const void* pSrc, Uint64 len)
 {
     auto p_src = reinterpret_cast<const copytype*>(pSrc);
     auto p_dst = reinterpret_cast<copytype*>(pDst);
 
-    uint64 i = 0;
+    Uint64 i = 0;
 
     for (; i < len / stride; i++) {
         p_dst[i] = p_src[i];
     }
 
-    uint64 offset    = i * stride;
-    uint64 remaining = len - offset;
+    Uint64 offset    = i * stride;
+    Uint64 remaining = len - offset;
 
     if (remaining) {
         CopyBytes(&p_dst[i], &p_src[i], remaining);
     }
 }
 
-template<typename cptype   = uint64,
-         uint64 stride     = sizeof(cptype),
+template<typename cptype   = Uint64,
+         Uint64 stride     = sizeof(cptype),
          typename trn_func = std::function<cptype(cptype)>>
 void
-CopyBlockWith(void* pDst, const void* pSrc, uint64 len, trn_func func)
+CopyBlockWith(void* pDst, const void* pSrc, Uint64 len, trn_func func)
 {
     auto p_src = reinterpret_cast<const cptype*>(pSrc);
     auto p_dst = reinterpret_cast<cptype*>(pDst);
 
-    uint64 i = 0;
+    Uint64 i = 0;
 
     for (; i < len / stride; i++) {
         p_dst[i] = func(p_src[i]);
     }
 
-    uint64 offset    = i * stride;
-    uint64 remaining = len - offset;
+    Uint64 offset    = i * stride;
+    Uint64 remaining = len - offset;
 
     if (remaining) {
         CopyBytes(&p_dst[i], &p_src[i], remaining);
@@ -119,39 +119,39 @@ CopyBlockWith(void* pDst, const void* pSrc, uint64 len, trn_func func)
 }
 
 static inline void
-PadBytes(uint8* pDst, uint32 val, uint64 len)
+PadBytes(Uint8* pDst, Uint32 val, Uint64 len)
 {
-    for (uint64 i = 0; i < len; i++) {
-        pDst[i] = (uint8)(val & 0xff);
+    for (Uint64 i = 0; i < len; i++) {
+        pDst[i] = (Uint8)(val & 0xff);
     }
 }
 
-template<typename copytype = uint64, uint64 stride = sizeof(copytype)>
+template<typename copytype = Uint64, Uint64 stride = sizeof(copytype)>
 static inline void
-PadBlock(void* pDst, copytype val, uint64 len)
+PadBlock(void* pDst, copytype val, Uint64 len)
 {
     auto p_dst = reinterpret_cast<copytype*>(pDst);
 
-    for (uint64 i = 0; i < len / stride; i++) {
+    for (Uint64 i = 0; i < len / stride; i++) {
         p_dst[i] = val;
     }
 }
 
-static inline uint32 constexpr MakeWord(uint8 b, bool msb = false)
+static inline Uint32 constexpr MakeWord(Uint8 b, bool msb = false)
 {
-    return msb ? (uint32)b << 24 : (uint32)b;
+    return msb ? (Uint32)b << 24 : (Uint32)b;
 }
 
-static inline uint32 constexpr MakeWord(uint8 b0, uint8 b1, uint8 b2, uint8 b3)
+static inline Uint32 constexpr MakeWord(Uint8 b0, Uint8 b1, Uint8 b2, Uint8 b3)
 {
-    return ((uint32)b3 << 24) | ((uint32)b2 << 16) | ((uint32)b1 << 8)
-           | ((uint32)b0);
+    return ((Uint32)b3 << 24) | ((Uint32)b2 << 16) | ((Uint32)b1 << 8)
+           | ((Uint32)b0);
 }
 
-static inline uint8 constexpr GetByte(uint32 u, int byte)
+static inline Uint8 constexpr GetByte(Uint32 u, int byte)
 {
     assert(byte < 4);
-    return (uint8)((u >> (byte * 8)) & 0xFF);
+    return (Uint8)((u >> (byte * 8)) & 0xFF);
 }
 
 } // namespace alcp::utils

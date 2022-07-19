@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2021, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,60 +26,87 @@
  *
  */
 
-#include "cipher/aes_cfb.hh"
+#include "cipher/aes.hh"
 #include "cipher/aesni.hh"
-#include "cipher/vaes.hh"
-#include "cipher/vaes_avx512.hh"
 
 namespace alcp::cipher {
+
+void
+Xts::expandTweakKeys(const Uint8* pUserKey) noexcept
+{
+
+    Uint8        dummy_key[32] = { 0 };
+    const Uint8* key           = pUserKey ? pUserKey : &dummy_key[0];
+    Uint8*       pTweakKey     = nullptr;
+
+    pTweakKey = p_tweak_key;
+
+    if (isAesniAvailable()) {
+        aesni::ExpandTweakKeys(key, pTweakKey, getRounds());
+        return;
+    }
+}
+
 alc_error_t
-Cfb::decrypt(const uint8_t* pCipherText,
-             uint8_t*       pPlainText,
+Xts::encrypt(const uint8_t* pPlainText,
+             uint8_t*       pCipherText,
              uint64_t       len,
              const uint8_t* pIv) const
 {
+
     alc_error_t err = ALC_ERROR_NONE;
-    if (Cipher::isAvx512Has(cipher::AVX512_F)
-        && Cipher::isAvx512Has(cipher::AVX512_DQ)
-        && Cipher::isAvx512Has(cipher::AVX512_BW)) {
-        err = vaes::DecryptCfbAvx512(
-            pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
-        return err;
-    }
-    if (Cipher::isVaesAvailable()) {
-        err = vaes::DecryptCfb(
-            pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
 
+    // Data should never be less than a block or greater than 2^20 blocks
+    if (len < 16 || len > (1 << 21)) {
+        err = ALC_ERROR_INVALID_DATA;
         return err;
     }
+
     if (Cipher::isAesniAvailable()) {
-        err = aesni::DecryptCfb(
-            pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
+
+        err = aesni::EncryptXts(pPlainText,
+                                pCipherText,
+                                len,
+                                getEncryptKeys(),
+                                p_tweak_key,
+                                getRounds(),
+                                pIv);
 
         return err;
     }
-
-    err = Rijndael::decrypt(pCipherText, pPlainText, len, pIv);
 
     return err;
 }
 
 alc_error_t
-Cfb::encrypt(const uint8_t* pPlainText,
+Xts::decrypt(const uint8_t* pPlainText,
              uint8_t*       pCipherText,
              uint64_t       len,
              const uint8_t* pIv) const
 {
+
     alc_error_t err = ALC_ERROR_NONE;
 
+    // Data should never be less than a block or greater than 2^20 blocks
+    if (len < 16 || len > (1 << 21)) {
+        err = ALC_ERROR_INVALID_DATA;
+        return err;
+    }
+
     if (Cipher::isAesniAvailable()) {
-        err = aesni::EncryptCfb(
-            pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
+
+        err = aesni::DecryptXts(pPlainText,
+                                pCipherText,
+                                len,
+                                getDecryptKeys(),
+                                p_tweak_key,
+                                getRounds(),
+                                pIv);
 
         return err;
     }
 
-    err = Rijndael::encrypt(pPlainText, pCipherText, len, pIv);
+    // err = Rijndael::encrypt(pPlainText, pCipherText, len, pIv);
 
     return err;
 }

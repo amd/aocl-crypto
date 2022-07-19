@@ -48,7 +48,7 @@ namespace alcp::digest {
  * first 32 bits of the fractional parts of the square roots
  * of the first 8 primes 2..19
  */
-static constexpr uint32 cIv[] = {
+static constexpr Uint32 cIv[] = {
     0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
     0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
 };
@@ -109,9 +109,11 @@ class Sha256::Impl
         return s_avx2_available;
     }
 
+#if defined(USE_ALCP_MEMPOOL)
     static void* operator new(size_t size)
     {
-        return GetDefaultDigestPool().allocate(size);
+        return alcp::utils::mem::PoolAllocator pa =
+                   alcp::digest::GetDefaultPool().allocate(size);
     }
 
     static void operator delete(void* ptr, size_t size)
@@ -119,6 +121,7 @@ class Sha256::Impl
         auto p = reinterpret_cast<Sha256::Impl*>(ptr);
         GetDefaultDigestPool().deallocate(p, size);
     }
+#endif
 
   private:
     static void extendMsg(Uint32 w[], Uint32 start, Uint32 end);
@@ -137,7 +140,7 @@ class Sha256::Impl
 
 Sha256::Impl::Impl()
     : m_msg_len{ 0 }
-    , m_hash{0,}
+    , m_hash{ 0, }
     , m_idx{ 0 }
     , m_finished{ false }
 {

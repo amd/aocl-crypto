@@ -10,6 +10,7 @@ static alc_cipher_handle_t handle;
 
 void
 create_demo_session(const uint8_t* key,
+                    const uint8_t* tweak_key,
                     const uint8_t* iv,
                     const uint32_t key_len)
 {
@@ -17,21 +18,24 @@ create_demo_session(const uint8_t* key,
     const int   err_size = 256;
     uint8_t     err_buf[err_size];
 
-    /*
-    const alc_key_info_t kinfo = {
-        .type    = ALC_KEY_TYPE_SYMMETRIC,
-        .fmt     = ALC_KEY_FMT_RAW,
-        .key     = key,
-        .len     = key_len,
+    alc_key_info_t kinfo = {
+        .type = ALC_KEY_TYPE_SYMMETRIC,
+        .fmt  = ALC_KEY_FMT_RAW,
+        .key  = tweak_key,
+        .len  = key_len,
     };
-    */
+
     alc_cipher_info_t cinfo = {
         .ci_type = ALC_CIPHER_TYPE_AES,
-        .ci_algo_info   = {
-           .ai_mode = ALC_AES_MODE_CFB,
-           .ai_iv   = iv,
+
+        .ci_algo_info = {
+            .ai_mode = ALC_AES_MODE_XTS,
+            .ai_iv   = iv,
+            .ai_xts = {
+                .xi_tweak_key = &kinfo,
+            }
         },
-        /* No padding, Not Implemented yet*/
+            /* No padding, Not Implemented yet*/
         //.pad     = ALC_CIPHER_PADDING_NONE, 
         .ci_key_info     = {
             .type    = ALC_KEY_TYPE_SYMMETRIC,
@@ -113,12 +117,19 @@ decrypt_demo(const uint8_t* ciphertxt,
 }
 
 // static char* sample_plaintxt = "Hello World from AOCL Crypto !!!";
-static char* sample_plaintxt =
-    "Happy and Fantastic New Year from AOCL Crypto !!";
+static uint8_t sample_plaintxt[] =
+    "A paragraph is a series of sentences that are organized and coherent, and "
+    "are all related to a single topic. Almost every piece of writing you do "
+    "that is longer than a few sentences should be organized into paragraphs.";
 
 static const uint8_t sample_key[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
     0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf,
+};
+
+static const uint8_t sample_tweak_key[] = {
+    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
+    0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xf, 0xf,
 };
 
 static const uint8_t sample_iv[] = {
@@ -192,15 +203,19 @@ main(void)
 
     assert(sizeof(sample_plaintxt) < sizeof(sample_output));
 
-    create_demo_session(sample_key, sample_iv, sizeof(sample_key) * 8);
+    create_demo_session(
+        sample_key, sample_tweak_key, sample_iv, sizeof(sample_key) * 8);
 
     encrypt_demo(
         sample_plaintxt,
         strlen(sample_plaintxt), /* len of 'plaintxt' and 'ciphertxt' */
         sample_ciphertxt,
         sample_iv);
-
     int size = strlen(sample_plaintxt);
+    for (int x = 0; x < size; x++) {
+        printf(" %2x ", ((uint8_t*)&sample_ciphertxt)[x]);
+    }
+    printf("\n");
 
     decrypt_demo(sample_ciphertxt, size, sample_output, sample_iv);
 

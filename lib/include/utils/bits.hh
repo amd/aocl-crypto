@@ -35,9 +35,9 @@
 
 namespace alcp::utils {
 
-constexpr uint32 BitsPerByte   = 8;
-constexpr uint32 BytesPerWord  = 4;
-constexpr uint32 BytesPerDWord = 8;
+constexpr Uint32 BitsPerByte   = 8;
+constexpr Uint32 BytesPerWord  = 4;
+constexpr Uint32 BytesPerDWord = 8;
 
 template<typename T>
 T
@@ -71,16 +71,16 @@ template<typename T>
 constexpr T
 GetByte(T val, int idx)
 {
-    uint32 offset = idx * 8;
+    Uint32 offset = idx * 8;
 
     return (val & (0xff << offset)) >> offset;
 }
 
 template<typename T, std::enable_if_t<std::is_unsigned_v<T>, int> = 0>
-constexpr uint32
+constexpr Uint32
 BytesToWord(T byte0, T byte1, T byte2, T byte3)
 {
-    return ((uint32)byte3 << 24) | ((uint32)byte2 << 16) | ((uint32)byte1 << 8)
+    return ((Uint32)byte3 << 24) | ((Uint32)byte2 << 16) | ((Uint32)byte1 << 8)
            | (byte0);
 }
 

@@ -42,7 +42,7 @@ class AlcpCipherBase : public CipherBase
     alc_cipher_handle_p m_handle = nullptr;
     alc_cipher_info_t   m_cinfo;
     alc_key_info_t      m_keyinfo;
-    alc_aes_mode_t      m_mode;
+    alc_cipher_mode_t   m_mode;
     const uint8_t*      m_iv;
 
   public:
@@ -53,7 +53,7 @@ class AlcpCipherBase : public CipherBase
      * @param mode
      * @param iv
      */
-    AlcpCipherBase(const alc_aes_mode_t mode, const uint8_t* iv);
+    AlcpCipherBase(const alc_cipher_mode_t mode, const uint8_t* iv);
 
     /**
      * @brief Construct a new Alcp Base object - Initlized and ready to go
@@ -63,7 +63,7 @@ class AlcpCipherBase : public CipherBase
      * @param key
      * @param key_len
      */
-    AlcpCipherBase(const alc_aes_mode_t mode,
+    AlcpCipherBase(const alc_cipher_mode_t mode,
                    const uint8_t*       iv,
                    const uint8_t*       key,
                    const uint32_t       key_len);

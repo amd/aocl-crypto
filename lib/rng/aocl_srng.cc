@@ -37,7 +37,7 @@
 namespace alcp::rng {
 
 alc_error_t
-ArchRng::readRandom(uint8_t* pBuf, uint64 size)
+ArchRng::readRandom(Uint8* pBuf, Uint64 size)
 {
 #ifdef DEBUG
     printf("Engine amd_rdrand_bytes\n");

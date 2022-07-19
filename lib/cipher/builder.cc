@@ -45,7 +45,7 @@ CipherBuilder::Build(const alc_cipher_info_t& cipherInfo, Context& ctx)
     switch (cipherInfo.ci_type) {
         case ALC_CIPHER_TYPE_AES: {
             err = AesBuilder::Build(
-                cipherInfo.ci_mode_data.cm_aes, cipherInfo.ci_key_info, ctx);
+                cipherInfo.ci_algo_info, cipherInfo.ci_key_info, ctx);
         } break;
 
         default:

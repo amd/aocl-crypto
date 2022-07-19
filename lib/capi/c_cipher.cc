@@ -74,6 +74,14 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
     ALCP_BAD_PTR_ERR_RET(pCipherInfo, err);
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
 
+    if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
+        auto tweak_key = pCipherInfo->ci_algo_info.ai_xts.xi_tweak_key;
+        if (tweak_key == nullptr
+            || (tweak_key->len != 128 && tweak_key->len != 256)) {
+            return ALC_ERROR_INVALID_ARG;
+        }
+    }
+
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     err = cipher::CipherBuilder::Build(*pCipherInfo, *ctx);
@@ -166,16 +174,17 @@ alcp_cipher_decrypt_update(const alc_cipher_handle_p pCipherHandle,
 }
 
 /**
- * \notes
+ * \notes pCipherHandle will be freed by the application
  */
 void
 alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle)
 {
-    /* TODO: Check for pointer validity */
+    if (nullptr == pCipherHandle)
+        return;
+
     cipher::Context* ctx =
         reinterpret_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    // pCipherHandle will be freed by the application
     ctx->finish(ctx->m_cipher);
 }
 

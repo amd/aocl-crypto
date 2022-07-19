@@ -39,13 +39,13 @@
 namespace alcp::rng {
 
 alc_error_t
-OsRng::readRandom(uint8_t* pBuf, uint64 size)
+OsRng::readRandom(Uint8* pBuf, Uint64 size)
 {
 #ifdef DEBUG
     printf("Engine linux_urandom64\n");
 #endif
     // Linux Systemcall to get random values.
-    uint64 out = getrandom(pBuf, size, 0);
+    Uint64 out = getrandom(pBuf, size, 0);
 
     for (int i = 0; i < 10; i++) { // Retry 10 times
         if (out == size) {
@@ -63,13 +63,13 @@ OsRng::readRandom(uint8_t* pBuf, uint64 size)
 }
 
 alc_error_t
-OsRng::readUrandom(uint8_t* pBuf, uint64 size)
+OsRng::readUrandom(Uint8* pBuf, Uint64 size)
 {
 #ifdef DEBUG
     printf("Engine linux_random64\n");
 #endif
     // Linux Systemcall to get random values.
-    uint64 out = getrandom(pBuf, size, GRND_RANDOM);
+    Uint64 out = getrandom(pBuf, size, GRND_RANDOM);
 
     for (int i = 0; i < 10; i++) { // Retry 10 times
         if (out == size) {

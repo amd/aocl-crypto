@@ -37,12 +37,12 @@ namespace alcp::digest {
  * of the first 8 primes 2..19
  */
 
-static constexpr uint64 cIv[] = { 0xcbbb9d5dc1059ed8, 0x629a292a367cd507,
+static constexpr Uint64 cIv[] = { 0xcbbb9d5dc1059ed8, 0x629a292a367cd507,
                                   0x9159015a3070dd17, 0x152fecd8f70e5939,
                                   0x67332667ffc00b31, 0x8eb44a8768581511,
                                   0xdb0c2e0d64f98fa7, 0x47b5481dbefa4fa4 };
 
-static constexpr uint64 /* define word size */
+static constexpr Uint64 /* define word size */
     cWordSize                               = 64,
     /* num rounds in sha512 */ cNumRounds   = 80,
     /* chunk size in bits */ cChunkSizeBits = 1024,

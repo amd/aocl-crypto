@@ -35,6 +35,8 @@
 #include "cipher/aes.hh"
 #include "cipher/aes_cfb.hh"
 
+#include <type_traits> /* for is_same_v<> */
+
 namespace alcp::cipher {
 
 template<typename CIPHERMODE, bool encrypt = true>
@@ -89,9 +91,9 @@ __aes_dtor(const void* rCipher)
 
 template<typename CIPHERMODE>
 static alc_error_t
-__build_aes(const alc_aes_info_t& aesInfo,
-            const alc_key_info_t& keyInfo,
-            Context&              ctx)
+__build_aes(const alc_cipher_algo_info_t& aesInfo,
+            const alc_key_info_t&         keyInfo,
+            Context&                      ctx)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -99,13 +101,15 @@ __build_aes(const alc_aes_info_t& aesInfo,
         err = ALC_ERROR_NOT_SUPPORTED;
 
     if (!Error::isError(err)) {
-        auto algo         = new CIPHERMODE(aesInfo, keyInfo);
-        ctx.m_cipher      = static_cast<void*>(algo);
-        ctx.decrypt       = __aes_wrapper<CIPHERMODE, false>;
-        ctx.encrypt       = __aes_wrapper<CIPHERMODE, true>;
-        ctx.decryptUpdate = __aes_wrapperUpdate<CIPHERMODE, false>;
-        ctx.encryptUpdate = __aes_wrapperUpdate<CIPHERMODE, true>;
-        ctx.finish        = __aes_dtor<CIPHERMODE>;
+        auto algo    = new CIPHERMODE(aesInfo, keyInfo);
+        ctx.m_cipher = static_cast<void*>(algo);
+        ctx.decrypt  = __aes_wrapper<CIPHERMODE, false>;
+        ctx.encrypt  = __aes_wrapper<CIPHERMODE, true>;
+        if constexpr (std::is_same_v<CIPHERMODE, Gcm>) {
+            ctx.decryptUpdate = __aes_wrapperUpdate<Gcm, false>;
+            ctx.encryptUpdate = __aes_wrapperUpdate<Gcm, true>;
+        }
+        ctx.finish = __aes_dtor<CIPHERMODE>;
     }
 
     return err;
@@ -114,15 +118,15 @@ __build_aes(const alc_aes_info_t& aesInfo,
 class AesBuilder
 {
   public:
-    static alc_error_t Build(const alc_aes_info_t& aesInfo,
-                             const alc_key_info_t& keyInfo,
-                             Context&              ctx);
+    static alc_error_t Build(const alc_cipher_algo_info_t&  aesInfo,
+                             const alc_key_info_t&          keyInfo,
+                             Context&                       ctx);
 };
 
 alc_error_t
-AesBuilder::Build(const alc_aes_info_t& aesInfo,
-                  const alc_key_info_t& keyInfo,
-                  Context&              ctx)
+AesBuilder::Build(const alc_cipher_algo_info_t&  aesInfo,
+                  const alc_key_info_t&          keyInfo,
+                  Context&                       ctx)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -145,6 +149,10 @@ AesBuilder::Build(const alc_aes_info_t& aesInfo,
 
         case ALC_AES_MODE_GCM:
             err = __build_aes<Gcm>(aesInfo, keyInfo, ctx);
+            break;
+
+        case ALC_AES_MODE_XTS:
+            err = __build_aes<Xts>(aesInfo, keyInfo, ctx);
             break;
 
         default:

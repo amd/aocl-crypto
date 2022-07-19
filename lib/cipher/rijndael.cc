@@ -27,6 +27,9 @@
  */
 #include <cstdalign>
 #include <map>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "alcp/error.h"
 
@@ -87,6 +90,7 @@ class alignas(16) Rijndael::Impl
 {
   private:
     void expandKeys(const Uint8* pUserKey) noexcept;
+    void expandTweakKeys(const Uint8* pUserKey) noexcept;
     void subBytes(Uint8 state[][4]) noexcept;
 
     void shiftRows(Uint8 state[][4]) noexcept;
@@ -101,7 +105,8 @@ class alignas(16) Rijndael::Impl
 #define RIJ_ALIGN           (16)
 
   private:
-    Uint8  m_round_key[RIJ_SIZE_ALIGNED(cMaxKeySize) * (cMaxRounds + 2)];
+    Uint8 m_round_key[RIJ_SIZE_ALIGNED(cMaxKeySize) * (cMaxRounds + 2)];
+
     Uint8* m_enc_key; /* encryption key: points to offset in 'm_key' */
     Uint8* m_dec_key; /* decryption key: points to offset in 'm_key' */
 
@@ -143,7 +148,6 @@ class alignas(16) Rijndael::Impl
         m_block_size      = BitsToBlockSize(len);
         const Params& prm = ParamsMap.at(m_block_size);
         m_nrounds         = prm.Nr;
-        m_ncolumns        = prm.Nk;
         m_key_size        = len / utils::BitsPerByte;
 
         /* Encryption and Decryption key offsets */
@@ -152,6 +156,9 @@ class alignas(16) Rijndael::Impl
         m_dec_key = m_enc_key + ((m_nrounds + 2) * m_key_size);
 
         expandKeys(rKeyInfo.key);
+        // if (rKeyInfo.tweak_key != nullptr) {
+
+        // }
     }
 };
 
@@ -489,7 +496,6 @@ static const Uint32 s_round_constants[] = {
  * they are all included in the conditional statement above for
  * conciseness.
  */
-
 void
 Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
 {
@@ -497,7 +503,10 @@ Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
 
     Uint8        dummy_key[Rijndael::cMaxKeySize] = { 0 };
     const Uint8* key     = pUserKey ? pUserKey : &dummy_key[0];
-    Uint8 *      pEncKey = m_enc_key, *pDecKey = m_dec_key;
+    Uint8 *      pEncKey = nullptr, *pDecKey = nullptr;
+
+    pEncKey = m_enc_key;
+    pDecKey = m_dec_key;
 
     if (isAesniAvailable()) {
         aesni::ExpandKeys(key, pEncKey, pDecKey, m_nrounds);
@@ -506,10 +515,11 @@ Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
 
     Uint32 i;
     Uint32 nb = Rijndael::cBlockSizeWord, nr = m_nrounds,
-           nk                 = m_key_size / utils::BytesPerWord;
-    const Uint32* rtbl        = s_round_constants;
-    auto          p_enc_key32 = reinterpret_cast<Uint32*>(pEncKey);
+           nk          = m_key_size / utils::BytesPerWord;
+    const Uint32* rtbl = s_round_constants;
+    Uint32*       p_enc_key32;
     // auto            p_key32     = reinterpret_cast<const Uint32*>(key);
+    p_enc_key32 = reinterpret_cast<Uint32*>(pEncKey);
 
     for (i = 0; i < nk; i++) {
         p_enc_key32[i] = MakeWord(
@@ -621,21 +631,22 @@ Rijndael::encrypt(const Uint8* pPlaintxt,
 }
 
 alc_error_t
-Rijndael::encryptUpdate(const Uint8* pPlaintxt,
-                        Uint8*       pCihpertxt,
-                        Uint64       len,
-                        const Uint8* pIv)
-{
-    return pImpl()->encryptUpdate(pPlaintxt, pCihpertxt, len, pIv);
-}
-
-alc_error_t
 Rijndael::decrypt(const Uint8* pCihpertxt,
                   Uint8*       pPlaintxt,
                   Uint64       len,
                   const Uint8* pIv) const
 {
     return pImpl()->decrypt(pCihpertxt, pPlaintxt, len, pIv);
+}
+
+#if 0
+alc_error_t
+Rijndael::encryptUpdate(const Uint8* pPlaintxt,
+                        Uint8*       pCihpertxt,
+                        Uint64       len,
+                        const Uint8* pIv)
+{
+    return pImpl()->encryptUpdate(pPlaintxt, pCihpertxt, len, pIv);
 }
 
 alc_error_t
@@ -646,5 +657,6 @@ Rijndael::decryptUpdate(const Uint8* pCihpertxt,
 {
     return pImpl()->decrypt(pCihpertxt, pPlaintxt, len, pIv);
 }
+#endif
 
 } // namespace alcp::cipher

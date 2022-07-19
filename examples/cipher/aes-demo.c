@@ -16,6 +16,8 @@
 
 static alc_cipher_handle_t handle;
 
+// clang-format off
+
 #define SPEED_CHECK 1
 
 //#define DEBUG_P /* Enable for debugging only */
@@ -68,23 +70,32 @@ void
 create_aes_session(uint8_t*             key,
                    uint8_t*             iv,
                    const uint32_t       key_len,
-                   const alc_aes_mode_t mode)
+                   const alc_cipher_mode_t mode)
 {
     alc_error_t err;
     const int   err_size = 256;
     uint8_t     err_buf[err_size];
+    uint8_t tweakKey[16] = {
+    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
+    0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xf, 0xf,
+    };
+    uint8_t* tweak_Key = &tweakKey;
 
-    alc_aes_info_t aes_data = {
-        .ai_mode = mode,
-        .ai_iv   = iv,
+    alc_key_info_t kinfo = {
+        .type = ALC_KEY_TYPE_SYMMETRIC,
+        .fmt  = ALC_KEY_FMT_RAW,
+        .key  = tweak_Key,
+        .len  = key_len,
     };
 
     alc_cipher_info_t cinfo = {
         .ci_type = ALC_CIPHER_TYPE_AES,
-        .ci_mode_data   = {
-            .cm_aes = aes_data,
+        .ci_algo_info   = {
+            .ai_mode = mode,
+            .ai_iv   = iv,
+            .ai_xts = &kinfo,
         },
-        /* No padding, Not Implemented yet*/
+       /* No padding, Not Implemented yet*/
         //.pad     = ALC_CIPHER_PADDING_NONE,
         .ci_key_info     = {
             .type    = ALC_KEY_TYPE_SYMMETRIC,
@@ -495,7 +506,7 @@ int
 encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
                      uint32_t       inputLen,   // input length
                      uint8_t*       cipherText, // ciphertext output
-                     alc_aes_mode_t m)
+                     alc_cipher_mode_t m)
 {
     unsigned int keybits;
     uint8_t      key[32];
@@ -686,7 +697,7 @@ main(void)
 
     printf("\n AOCL-CRYPTO: AES Demo application ");
 
-    for (alc_aes_mode_t m = ALC_AES_MODE_ECB; m < ALC_AES_MODE_MAX; m++) {
+    for (alc_cipher_mode_t m = ALC_AES_MODE_ECB; m < ALC_AES_MODE_MAX; m++) {
 
         if (m == ALC_AES_MODE_ECB) {
             printf("\n\nAES-ECB not implemented");
@@ -699,9 +710,8 @@ main(void)
             printf("\n\nAES-CTR");
         } else if (m == ALC_AES_MODE_CFB) {
             printf("\n\nAES-CFB");
-        } else if (m == ALC_AES_MODE_XTR) {
-            printf("\n\nAES-XTR not implemented\n");
-            continue;
+        } else if (m == ALC_AES_MODE_XTS) {
+            printf("\n\nAES-XTS\n");
         } else if (m == ALC_AES_MODE_GCM) {
             printf("\n\nAES-GCM\n");
         } else {

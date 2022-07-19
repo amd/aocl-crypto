@@ -33,14 +33,87 @@
 
 #include "alcp/error.h"
 
+#include "cipher/aes.hh"
 #include "error.hh"
 
-namespace alcp::cipher { namespace aes {
-    alc_error_t Decrypt256(const uint8_t* pCiphertxt,
-                           uint8_t*       pPlaintxt,
-                           int            len,
-                           uint8_t*       pKey,
-                           const uint8_t* pIv);
-}} // namespace alcp::cipher::aes
+namespace alcp::cipher {
+
+/*
+ * \brief        AES Encryption in CFB(Cipher Feedback mode)
+ * \notes        TODO: Move this to a aes_cbc.hh or other
+ */
+class Cfb final : public Aes
+{
+  public:
+    explicit Cfb(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
+        : Aes(aesInfo, keyInfo)
+    {}
+
+    ~Cfb() {}
+
+  public:
+    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
+                            const alc_key_info_t& keyInfo)
+    {
+        return true;
+    }
+
+    /**
+     * \brief
+     * \notes
+     * \param
+     * \return
+     */
+    virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
+                             alc_error_t&             err) override
+    {
+        Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
+
+        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
+            auto aip = &cipherInfo.ci_algo_info;
+            if (aip->ai_mode == ALC_AES_MODE_CFB) {
+                Error::setDetail(err, ALC_ERROR_NONE);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * \brief   CFB Encrypt Operation
+     * \notes
+     * \param   pPlainText      Pointer to output buffer
+     * \param   pCipherText     Pointer to encrypted buffer
+     * \param   len             Len of plain and encrypted text
+     * \param   pIv             Pointer to Initialization Vector
+     * \return  alc_error_t     Error code
+     */
+    virtual alc_error_t encrypt(const uint8_t* pPlainText,
+                                uint8_t*       pCipherText,
+                                uint64_t       len,
+                                const uint8_t* pIv) const final;
+
+    /**
+     * \brief   CFB Decrypt Operation
+     * \notes
+     * \param   pCipherText     Pointer to encrypted buffer
+     * \param   pPlainText      Pointer to output buffer
+     * \param   len             Len of plain and encrypted text
+     * \param   pIv             Pointer to Initialization Vector
+     * \return  alc_error_t     Error code
+     */
+    virtual alc_error_t decrypt(const uint8_t* pCipherText,
+                                uint8_t*       pPlainText,
+                                uint64_t       len,
+                                const uint8_t* pIv) const final;
+
+  private:
+    Cfb(){};
+
+  private:
+};
+
+} // namespace alcp::cipher
 
 #endif /* _CIPHER_AES_CFB_HH_ */

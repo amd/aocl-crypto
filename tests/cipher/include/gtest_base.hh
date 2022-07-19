@@ -50,7 +50,7 @@ enum ENC_DEC
  * returns respective string based on AES modes
  */
 std::string
-GetModeSTR(alc_aes_mode_t mode)
+GetModeSTR(alc_cipher_mode_t mode)
 {
     switch (mode) {
         case ALC_AES_MODE_ECB:
@@ -121,7 +121,7 @@ class TestingCore
     CipherTesting*  m_cipherHandler = nullptr;
     AlcpCipherBase* m_acb           = nullptr;
     lib_t           m_lib;
-    alc_aes_mode_t  m_alcpMode;
+    alc_cipher_mode_t  m_alcpMode;
 #ifdef USE_IPP
     IPPCipherBase* icb = nullptr;
 #endif
@@ -129,7 +129,7 @@ class TestingCore
     OpenSSLCipherBase* ocb = nullptr;
 #endif
   public:
-    TestingCore(lib_t lib, alc_aes_mode_t alcpMode)
+    TestingCore(lib_t lib, alc_cipher_mode_t alcpMode)
     {
         m_lib           = lib;
         m_alcpMode      = alcpMode;
@@ -163,7 +163,7 @@ class TestingCore
                 break;
         }
     }
-    TestingCore(std::string modeStr, alc_aes_mode_t alcpMode)
+    TestingCore(std::string modeStr, alc_cipher_mode_t alcpMode)
     {
         std::transform(
             modeStr.begin(), modeStr.end(), modeStr.begin(), ::tolower);

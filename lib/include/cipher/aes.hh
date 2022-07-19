@@ -39,6 +39,8 @@
 #include <immintrin.h>
 #include <wmmintrin.h>
 
+#define RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
+
 namespace alcp::cipher {
 
 /*
@@ -54,7 +56,8 @@ namespace alcp::cipher {
 class Aes : public Rijndael
 {
   public:
-    explicit Aes(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Aes(const alc_cipher_algo_info_t& aesInfo,
+                 const alc_key_info_t&         keyInfo)
         : Rijndael{ keyInfo }
         , m_mode{ aesInfo.ai_mode }
     {}
@@ -66,94 +69,8 @@ class Aes : public Rijndael
     void setKey(const uint8_t* pUserKey, uint64_t len) override;
 
   protected:
-    alc_aes_mode_t m_mode;
-    void*          m_this;
-};
-
-/*
- * \brief        AES Encryption in CFB(Cipher Feedback mode)
- * \notes        TODO: Move this to a aes_cbc.hh or other
- */
-class Cfb final : public Aes
-{
-  public:
-    explicit Cfb(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
-        : Aes(aesInfo, keyInfo)
-    {}
-
-    ~Cfb() {}
-
-  public:
-    static bool isSupported(const alc_aes_info_t& cipherInfo,
-                            const alc_key_info_t& keyInfo)
-    {
-        return true;
-    }
-
-    /**
-     * \brief
-     * \notes
-     * \param
-     * \return
-     */
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
-                             alc_error_t&             err) override
-    {
-        Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
-
-        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_mode_data.cm_aes;
-            if (aip->ai_mode == ALC_AES_MODE_CFB) {
-                Error::setDetail(err, ALC_ERROR_NONE);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * \brief   CFB Encrypt Operation
-     * \notes
-     * \param   pPlainText      Pointer to output buffer
-     * \param   pCipherText     Pointer to encrypted buffer
-     * \param   len             Len of plain and encrypted text
-     * \param   pIv             Pointer to Initialization Vector
-     * \return  alc_error_t     Error code
-     */
-    virtual alc_error_t encrypt(const uint8_t* pPlainText,
-                                uint8_t*       pCipherText,
-                                uint64_t       len,
-                                const uint8_t* pIv) const final;
-
-    virtual alc_error_t encryptUpdate(const uint8_t* pPlainText,
-                                      uint8_t*       pCipherText,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
-
-    /**
-     * \brief   CFB Decrypt Operation
-     * \notes
-     * \param   pCipherText     Pointer to encrypted buffer
-     * \param   pPlainText      Pointer to output buffer
-     * \param   len             Len of plain and encrypted text
-     * \param   pIv             Pointer to Initialization Vector
-     * \return  alc_error_t     Error code
-     */
-    virtual alc_error_t decrypt(const uint8_t* pCipherText,
-                                uint8_t*       pPlainText,
-                                uint64_t       len,
-                                const uint8_t* pIv) const final;
-
-    virtual alc_error_t decryptUpdate(const uint8_t* pCipherText,
-                                      uint8_t*       pPlainText,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
-
-  private:
-    Cfb(){};
-
-  private:
+    alc_cipher_mode_t m_mode;
+    void*             m_this;
 };
 
 /*
@@ -163,15 +80,16 @@ class Cfb final : public Aes
 class Cbc final : public Aes
 {
   public:
-    explicit Cbc(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Cbc(const alc_cipher_algo_info_t& aesInfo,
+                 const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
     {}
 
     ~Cbc() {}
 
   public:
-    static bool isSupported(const alc_aes_info_t& cipherInfo,
-                            const alc_key_info_t& keyInfo)
+    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
+                            const alc_key_info_t&         keyInfo)
     {
         return true;
     }
@@ -188,7 +106,7 @@ class Cbc final : public Aes
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_mode_data.cm_aes;
+            auto aip = &cipherInfo.ci_algo_info;
             if (aip->ai_mode == ALC_AES_MODE_CBC) {
                 Error::setDetail(err, ALC_ERROR_NONE);
                 return true;
@@ -212,10 +130,6 @@ class Cbc final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
-    virtual alc_error_t encryptUpdate(const uint8_t* pPlainText,
-                                      uint8_t*       pCipherText,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
     /**
      * \brief   CBC Decrypt Operation
      * \notes
@@ -230,11 +144,6 @@ class Cbc final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
-    virtual alc_error_t decryptUpdate(const uint8_t* pCipherText,
-                                      uint8_t*       pPlainText,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
-
   private:
     Cbc(){};
 
@@ -248,15 +157,16 @@ class Cbc final : public Aes
 class Ofb final : public Aes
 {
   public:
-    explicit Ofb(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Ofb(const alc_cipher_algo_info_t& aesInfo,
+                 const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
     {}
 
     ~Ofb() {}
 
   public:
-    static bool isSupported(const alc_aes_info_t& cipherInfo,
-                            const alc_key_info_t& keyInfo)
+    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
+                            const alc_key_info_t&         keyInfo)
     {
         return true;
     }
@@ -273,7 +183,7 @@ class Ofb final : public Aes
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_mode_data.cm_aes;
+            auto aip = &cipherInfo.ci_algo_info;
             if (aip->ai_mode == ALC_AES_MODE_OFB) {
                 Error::setDetail(err, ALC_ERROR_NONE);
                 return true;
@@ -297,10 +207,6 @@ class Ofb final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
-    virtual alc_error_t encryptUpdate(const uint8_t* pPlainText,
-                                      uint8_t*       pCipherText,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
     /**
      * \brief   OFB Decrypt Operation
      * \notes
@@ -315,11 +221,6 @@ class Ofb final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
-    virtual alc_error_t decryptUpdate(const uint8_t* pCipherText,
-                                      uint8_t*       pPlainText,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
-
   private:
     Ofb(){};
 
@@ -333,15 +234,16 @@ class Ofb final : public Aes
 class Ctr final : public Aes
 {
   public:
-    explicit Ctr(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Ctr(const alc_cipher_algo_info_t& aesInfo,
+                 const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
     {}
 
     ~Ctr() {}
 
   public:
-    static bool isSupported(const alc_aes_info_t& cipherInfo,
-                            const alc_key_info_t& keyInfo)
+    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
+                            const alc_key_info_t&         keyInfo)
     {
         return true;
     }
@@ -358,7 +260,7 @@ class Ctr final : public Aes
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_mode_data.cm_aes;
+            auto aip = &cipherInfo.ci_algo_info;
             if (aip->ai_mode == ALC_AES_MODE_CTR) {
                 Error::setDetail(err, ALC_ERROR_NONE);
                 return true;
@@ -382,11 +284,6 @@ class Ctr final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
-    virtual alc_error_t encryptUpdate(const uint8_t* pPlainText,
-                                      uint8_t*       pCipherText,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
-
     /**
      * \brief   CTR Decrypt Operation
      * \notes
@@ -401,11 +298,6 @@ class Ctr final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
-    virtual alc_error_t decryptUpdate(const uint8_t* pCipherText,
-                                      uint8_t*       pPlainText,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
-
   private:
     Ctr(){};
 
@@ -416,7 +308,10 @@ class Ctr final : public Aes
  * \brief        AES Encryption in GCM(Galois Counter mode)
  * \notes        TODO: Move this to a aes_Gcm.hh or other
  */
-class Gcm final : public Aes
+class Gcm final
+    : public Aes
+    , cipher::IDecryptUpdater
+    , cipher::IEncryptUpdater
 {
 
   public:
@@ -441,7 +336,8 @@ class Gcm final : public Aes
     uint64_t m_isHashSubKeyGenerated = false;
 
   public:
-    explicit Gcm(const alc_aes_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Gcm(const alc_cipher_algo_info_t& aesInfo,
+                 const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
     {
         m_reverse_mask_128 =
@@ -457,8 +353,8 @@ class Gcm final : public Aes
     ~Gcm() {}
 
   public:
-    static bool isSupported(const alc_aes_info_t& cipherInfo,
-                            const alc_key_info_t& keyInfo)
+    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
+                            const alc_key_info_t&         keyInfo)
     {
         return true;
     }
@@ -475,7 +371,7 @@ class Gcm final : public Aes
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_mode_data.cm_aes;
+            auto aip = &cipherInfo.ci_algo_info;
             if (aip->ai_mode == ALC_AES_MODE_GCM) {
                 Error::setDetail(err, ALC_ERROR_NONE);
                 return true;
@@ -535,6 +431,92 @@ class Gcm final : public Aes
     Gcm(){};
 
   private:
+};
+
+/*
+ * \brief        AES Encryption in XTS(XEX Tweakable Block Ciphertext Stealing
+ *               Mode)
+ */
+class Xts final : public Aes
+{
+
+  public:
+    explicit Xts(const alc_cipher_algo_info_t& aesInfo,
+                 const alc_key_info_t&         keyInfo)
+        : Aes(aesInfo, keyInfo)
+    {
+        p_tweak_key = &m_tweak_round_key[0];
+        expandTweakKeys(aesInfo.ai_xts.xi_tweak_key->key);
+    }
+
+    ~Xts() {}
+
+  public:
+    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
+                            const alc_key_info_t&         keyInfo)
+    {
+        return true;
+    }
+
+    /**
+     * \brief
+     * \notes
+     * \param
+     * \return
+     */
+    virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
+                             alc_error_t&             err) override
+    {
+        Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
+
+        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
+            auto aip = &cipherInfo.ci_algo_info;
+            if (aip->ai_mode == ALC_AES_MODE_XTS) {
+                Error::setDetail(err, ALC_ERROR_NONE);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * \brief   XTS Encrypt Operation
+     * \notes
+     * \param   pPlainText      Pointer to output buffer
+     * \param   pCipherText     Pointer to encrypted buffer
+     * \param   len             Len of plain and encrypted text
+     * \param   pIv             Pointer to Initialization Vector
+     * \return  alc_error_t     Error code
+     */
+    virtual alc_error_t encrypt(const uint8_t* pPlainText,
+                                uint8_t*       pCipherText,
+                                uint64_t       len,
+                                const uint8_t* pIv) const final;
+
+    /**
+     * \brief   XTS Decrypt Operation
+     * \notes
+     * \param   pCipherText     Pointer to encrypted buffer
+     * \param   pPlainText      Pointer to output buffer
+     * \param   len             Len of plain and encrypted text
+     * \param   pIv             Pointer to Initialization Vector
+     * \return  alc_error_t     Error code
+     */
+    virtual alc_error_t decrypt(const uint8_t* pCipherText,
+                                uint8_t*       pPlainText,
+                                uint64_t       len,
+                                const uint8_t* pIv) const final;
+
+    virtual void expandTweakKeys(const Uint8* pUserKey) noexcept;
+
+  private:
+    Xts() { p_tweak_key = &m_tweak_round_key[0]; };
+
+  private:
+    Uint8  m_tweak_round_key[(RIJ_SIZE_ALIGNED(32) * (16))];
+    Uint8* p_tweak_key; /* Tweak key(for aes-xts mode): points to offset in
+                           'm_tweak_key' */
 };
 
 } // namespace alcp::cipher
