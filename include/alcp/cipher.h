@@ -47,7 +47,7 @@ typedef enum _alc_cipher_type
     ALC_CIPHER_TYPE_MAX,
 } alc_cipher_type_t;
 
-typedef enum _alc_aes_mode
+typedef enum _alc_cipher_mode
 {
     ALC_AES_MODE_NONE = 0,
 
@@ -77,7 +77,6 @@ typedef enum _alc_aes_ctrl
     ALC_AES_CTRL_MAX,
 } alc_aes_ctrl_t;
 
-
 /**
  * \brief  Mode specific inforamtion, for XTS it is the secondary key
  *         for GCM it is nounce etc.
@@ -86,27 +85,28 @@ typedef enum _alc_aes_ctrl
  */
 typedef union _alc_cipher_mode_xts_info
 {
-    alc_key_info_t   *xi_tweak_key;
+    alc_key_info_t* xi_tweak_key;
 } alc_cipher_mode_xts_info_t, *alc_cipher_mode_xts_info_p;
 
-typedef struct _alc_cipher_mode_gcm_info {
+typedef struct _alc_cipher_mode_gcm_info
+{
 } alc_cipher_mode_gcm_info_t, *alc_cipher_mode_gcm_info_p;
 
-
 /**
- * \brief  Algorithm specific info, 
+ * \brief  Algorithm specific info,
  *
  * \notes
  */
 typedef struct _alc_cipher_algo_info
 {
-    alc_cipher_mode_t           ai_mode; /* Mode: ALC_AES_MODE_CFB etc */
-    const Uint8*                ai_iv;   /* Initialization Vector */
-    union {
-        alc_cipher_mode_xts_info_t   ai_xts;
-        alc_cipher_mode_gcm_info_t   ai_gcm;
-    }; 
-    
+    alc_cipher_mode_t ai_mode; /* Mode: ALC_AES_MODE_CFB etc */
+    const Uint8*      ai_iv;   /* Initialization Vector */
+    union
+    {
+        alc_cipher_mode_xts_info_t ai_xts;
+        alc_cipher_mode_gcm_info_t ai_gcm;
+    };
+
 } alc_cipher_algo_info_t, *alc_cpher_algo_info_p;
 
 /**
@@ -116,7 +116,7 @@ typedef struct _alc_cipher_algo_info
  */
 typedef struct _alc_cipher_info
 {
-    alc_cipher_type_t      ci_type;      /* Type: ALC_CIPHER_AES etc */
+    alc_cipher_type_t      ci_type; /* Type: ALC_CIPHER_AES etc */
     alc_key_info_t         ci_key_info;
     alc_cipher_algo_info_t ci_algo_info; /* mode specific data */
 } alc_cipher_info_t, *alc_cipher_info_p;
