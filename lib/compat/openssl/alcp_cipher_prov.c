@@ -231,7 +231,7 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
 
     assert(cinfo->ci_type == ALC_CIPHER_TYPE_AES);
 
-    switch (cinfo->ci_mode_data.cm_aes.ai_mode) {
+    switch (cinfo->ci_algo_info.ai_mode) {
         case ALC_AES_MODE_CFB:
             PRINT("Provider: CFB\n");
             break;
@@ -260,7 +260,7 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
     cctx->pc_cipher_info.ci_type = ALC_CIPHER_TYPE_AES;
     // Mode Already set
     if (iv != NULL) {
-        cctx->pc_cipher_info.ci_mode_data.cm_aes.ai_iv = iv;
+        cctx->pc_cipher_info.ci_algo_info.ai_iv = iv;
     } else {
         // iv = OPENSSL_malloc(128); // Don't make sense
     }
@@ -323,7 +323,7 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
     // uint8_t               err_buf[err_size];
     ENTER();
     assert(cinfo->ci_type == ALC_CIPHER_TYPE_AES);
-    switch (cinfo->ci_mode_data.cm_aes.ai_mode) {
+    switch (cinfo->ci_algo_info.ai_mode) {
         case ALC_AES_MODE_CFB:
             PRINT("Provider: CFB\n");
             break;
@@ -352,7 +352,7 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
     cctx->pc_cipher_info.ci_type = ALC_CIPHER_TYPE_AES;
     // Mode Already set
     if (iv != NULL) {
-        cctx->pc_cipher_info.ci_mode_data.cm_aes.ai_iv = iv;
+        cctx->pc_cipher_info.ci_algo_info.ai_iv = iv;
     } else {
         // iv = OPENSSL_malloc(128); // Don't make sense
     }
@@ -414,19 +414,17 @@ ALCP_prov_cipher_update(void*                vctx,
     uint8_t               err_buf[err_size];
     ENTER();
     if (cctx->enc_flag) {
-        err =
-            alcp_cipher_encrypt(&(cctx->handle),
-                                in,
-                                out,
-                                inl,
-                                cctx->pc_cipher_info.ci_mode_data.cm_aes.ai_iv);
+        err = alcp_cipher_encrypt(&(cctx->handle),
+                                  in,
+                                  out,
+                                  inl,
+                                  cctx->pc_cipher_info.ci_algo_info.ai_iv);
     } else {
-        err =
-            alcp_cipher_decrypt(&(cctx->handle),
-                                in,
-                                out,
-                                inl,
-                                cctx->pc_cipher_info.ci_mode_data.cm_aes.ai_iv);
+        err = alcp_cipher_decrypt(&(cctx->handle),
+                                  in,
+                                  out,
+                                  inl,
+                                  cctx->pc_cipher_info.ci_algo_info.ai_iv);
     }
     // printf("%d\n", cctx->pc_cipher_info.mode_data.aes.mode ==
     // ALC_AES_MODE_CFB);
@@ -435,9 +433,8 @@ ALCP_prov_cipher_update(void*                vctx,
         printf("Provider: Encyption/Decryption Failure! ALCP:%s\n", err_buf);
         printf("%p,%ld,%p\n", in, inl, out);
         printf("%d\n",
-               cctx->pc_cipher_info.ci_mode_data.cm_aes.ai_mode
-                   == ALC_AES_MODE_CFB);
-        printf("%p\n", cctx->pc_cipher_info.ci_mode_data.cm_aes.ai_iv);
+               cctx->pc_cipher_info.ci_algo_info.ai_mode == ALC_AES_MODE_CFB);
+        printf("%p\n", cctx->pc_cipher_info.ci_algo_info.ai_iv);
         alcp_error_str(err, err_buf, err_size);
         return 0;
     }
