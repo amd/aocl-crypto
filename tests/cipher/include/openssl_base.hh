@@ -37,29 +37,29 @@ namespace alcp::testing {
 class OpenSSLCipherBase : public CipherBase
 {
   private:
-    EVP_CIPHER_CTX* m_ctx_enc = nullptr;
-    EVP_CIPHER_CTX* m_ctx_dec = nullptr;
-    alc_aes_mode_t  m_mode    = {};
-    const uint8_t*  m_iv      = nullptr;
-    uint32_t        m_iv_len  = 12;
-    const uint8_t*  m_key     = nullptr;
-    uint32_t        m_key_len = 0;
+    EVP_CIPHER_CTX*   m_ctx_enc = nullptr;
+    EVP_CIPHER_CTX*   m_ctx_dec = nullptr;
+    alc_cipher_mode_t m_mode    = {};
+    const uint8_t*    m_iv      = nullptr;
+    uint32_t          m_iv_len  = 12;
+    const uint8_t*    m_key     = nullptr;
+    uint32_t          m_key_len = 0;
 
     void              handleErrors();
-    const EVP_CIPHER* alcpModeKeyLenToCipher(alc_aes_mode_t mode,
-                                             size_t         keylen);
+    const EVP_CIPHER* alcpModeKeyLenToCipher(alc_cipher_mode_t mode,
+                                             size_t            keylen);
 
   public:
-    OpenSSLCipherBase(const alc_aes_mode_t mode, const uint8_t* iv);
-    OpenSSLCipherBase(const alc_aes_mode_t mode,
-                      const uint8_t*       iv,
-                      const uint8_t*       key,
-                      const uint32_t       key_len);
-    OpenSSLCipherBase(const alc_aes_mode_t mode,
-                      const uint8_t*       iv,
-                      const uint32_t       iv_len,
-                      const uint8_t*       key,
-                      const uint32_t       key_len);
+    OpenSSLCipherBase(const alc_cipher_mode_t mode, const uint8_t* iv);
+    OpenSSLCipherBase(const alc_cipher_mode_t mode,
+                      const uint8_t*          iv,
+                      const uint8_t*          key,
+                      const uint32_t          key_len);
+    OpenSSLCipherBase(const alc_cipher_mode_t mode,
+                      const uint8_t*          iv,
+                      const uint32_t          iv_len,
+                      const uint8_t*          key,
+                      const uint32_t          key_len);
     ~OpenSSLCipherBase();
     bool init(const uint8_t* iv,
               const uint32_t iv_len,

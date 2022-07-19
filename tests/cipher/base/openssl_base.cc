@@ -34,7 +34,7 @@ OpenSSLCipherBase::handleErrors()
     ERR_print_errors_fp(stderr);
 }
 const EVP_CIPHER*
-OpenSSLCipherBase::alcpModeKeyLenToCipher(alc_aes_mode_t mode, size_t keylen)
+OpenSSLCipherBase::alcpModeKeyLenToCipher(alc_cipher_mode_t mode, size_t keylen)
 {
     switch (mode) {
         case ALC_AES_MODE_CBC:
@@ -86,15 +86,15 @@ OpenSSLCipherBase::alcpModeKeyLenToCipher(alc_aes_mode_t mode, size_t keylen)
             return nullptr;
     }
 }
-OpenSSLCipherBase::OpenSSLCipherBase(const alc_aes_mode_t mode,
-                                     const uint8_t*       iv)
+OpenSSLCipherBase::OpenSSLCipherBase(const alc_cipher_mode_t mode,
+                                     const uint8_t*          iv)
     : m_mode{ mode }
     , m_iv{ iv }
 {}
-OpenSSLCipherBase::OpenSSLCipherBase(const alc_aes_mode_t mode,
-                                     const uint8_t*       iv,
-                                     const uint8_t*       key,
-                                     const uint32_t       key_len)
+OpenSSLCipherBase::OpenSSLCipherBase(const alc_cipher_mode_t mode,
+                                     const uint8_t*          iv,
+                                     const uint8_t*          key,
+                                     const uint32_t          key_len)
     : m_mode{ mode }
     , m_iv{ iv }
     , m_key{ key }
@@ -102,11 +102,11 @@ OpenSSLCipherBase::OpenSSLCipherBase(const alc_aes_mode_t mode,
 {
     init(key, key_len);
 }
-OpenSSLCipherBase::OpenSSLCipherBase(const alc_aes_mode_t mode,
-                                     const uint8_t*       iv,
-                                     const uint32_t       iv_len,
-                                     const uint8_t*       key,
-                                     const uint32_t       key_len)
+OpenSSLCipherBase::OpenSSLCipherBase(const alc_cipher_mode_t mode,
+                                     const uint8_t*          iv,
+                                     const uint32_t          iv_len,
+                                     const uint8_t*          key,
+                                     const uint32_t          key_len)
     : m_mode{ mode }
     , m_iv{ iv }
     , m_iv_len{ iv_len }
