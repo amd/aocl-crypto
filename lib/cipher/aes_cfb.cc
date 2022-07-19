@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2021, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,6 +29,7 @@
 #include "cipher/aes.hh"
 #include "cipher/aesni.hh"
 #include "cipher/vaes.hh"
+#include "cipher/vaes_avx512.hh"
 
 namespace alcp::cipher {
 alc_error_t
@@ -38,7 +39,13 @@ Cfb::decrypt(const uint8_t* pCipherText,
              const uint8_t* pIv) const
 {
     alc_error_t err = ALC_ERROR_NONE;
-
+    if (Cipher::isAvx512Has(cipher::AVX512_F)
+        && Cipher::isAvx512Has(cipher::AVX512_DQ)
+        && Cipher::isAvx512Has(cipher::AVX512_BW)) {
+        err = vaes::DecryptCfbAvx512(
+            pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
+        return err;
+    }
     if (Cipher::isVaesAvailable()) {
         err = vaes::DecryptCfb(
             pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
