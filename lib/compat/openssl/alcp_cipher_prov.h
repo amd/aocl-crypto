@@ -110,9 +110,9 @@ extern OSSL_FUNC_cipher_final_fn          ALCP_prov_cipher_final;
             ALC_KEY_LEN_128,                                                   \
             128,                                                               \
         },                                                                     \
-        .ci_mode_data = { .cm_aes = {                                          \
+        .ci_algo_info = {                                       \
                 .ai_mode =      alcp_mode,                                     \
-            }, },                                                              \
+            },                                                             \
     }
 
 #define CREATE_CIPHER_DISPATCHERS(name, grp, mode)                             \
