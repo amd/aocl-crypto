@@ -40,7 +40,7 @@ namespace alcp::cipher { namespace aesni {
     {
         unsigned int res, carry;
 
-        res = 0x87
+        res = 0x87 // GF Polynomial
               & (((int)(((uint32_t*)&alpha)[3]))
                  >> 31); // a0 | a1 | a2 | a3  if a3 sign bit high res = 0x87
 
