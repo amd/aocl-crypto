@@ -265,7 +265,7 @@ record_t EncDecType(enc_dec_t e_d, big_small_t b_s){
  * @param mode AES modes (CTR, OFB, CBC and CFB)
  * @param big_small Type (Big or Small) of test 
  */
-void AesCrosstest(int keySize, enc_dec_t enc_dec, alc_aes_mode_t mode, big_small_t big_small)
+void AesCrosstest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode, big_small_t big_small)
 {
     int         key_size = keySize;
     int         LOOP_START, MAX_LOOP, INC_LOOP;
