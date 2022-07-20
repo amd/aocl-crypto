@@ -62,7 +62,7 @@ Xts::encrypt(const uint8_t* pPlainText,
         err = ALC_ERROR_INVALID_DATA;
         return err;
     }
-    if (isVaesAvailable()) {
+    if (Cipher::isVaesAvailable()) {
         err = vaes::EncryptXts(pPlainText,
                                pCipherText,
                                len,
@@ -74,7 +74,7 @@ Xts::encrypt(const uint8_t* pPlainText,
         return err;
     }
 
-    if (isAesniAvailable()) {
+    if (Cipher::isAesniAvailable()) {
 
         err = aesni::EncryptXts(pPlainText,
                                 pCipherText,
@@ -107,7 +107,7 @@ Xts::decrypt(const uint8_t* pPlainText,
         return err;
     }
 
-    if (isVaesAvailable()) {
+    if (Cipher::isVaesAvailable()) {
         err = vaes::DecryptXts(pPlainText,
                                pCipherText,
                                len,
@@ -119,7 +119,7 @@ Xts::decrypt(const uint8_t* pPlainText,
         return err;
     }
 
-    if (isAesniAvailable()) {
+    if (Cipher::isAesniAvailable()) {
 
         err = aesni::DecryptXts(pPlainText,
                                 pCipherText,
