@@ -42,7 +42,8 @@ IPPCipherBase::IPPCipherBase(const alc_aes_mode_t mode,
                              const uint8_t *tkey)
     : m_tkey{tkey}, m_mode{mode}
 {
-    IPPCipherBase(mode, iv, key, key_len);
+    //IPPCipherBase(mode, iv, key, key_len);
+    init(key, key_len);
 }
 
 IPPCipherBase::IPPCipherBase(const alc_aes_mode_t mode,
@@ -66,10 +67,6 @@ IPPCipherBase::IPPCipherBase(const alc_aes_mode_t mode,
         break;
     default:
         ippsAESGetSize(&m_ctxSize);
-        if (m_ctx != nullptr)
-        {
-            delete[](Ipp8u *) m_ctx;
-        }
         m_ctx = (IppsAESSpec *)(new Ipp8u[m_ctxSize]);
         status = ippsAESInit(key, key_len / 8, m_ctx, m_ctxSize);
         break;
@@ -99,6 +96,7 @@ IPPCipherBase::init(const uint8_t* iv,
     return init(key, key_len);
 }
 
+/*xts */
 bool IPPCipherBase::init(const uint8_t *iv,
                          const uint8_t *key,
                          const uint32_t key_len,
@@ -125,23 +123,23 @@ IPPCipherBase::init(const uint8_t* key, const uint32_t key_len)
     switch (m_mode)
     {
     case ALC_AES_MODE_GCM:
-        ippsAES_GCMGetSize(&m_ctxSize);
+        status = ippsAES_GCMGetSize(&m_ctxSize);
         if (m_ctx_gcm != nullptr)
         {
             delete[](Ipp8u *) m_ctx_gcm;
         }
         m_ctx_gcm = (IppsAES_GCMState *)(new Ipp8u[m_ctxSize]);
-        ippsAES_GCMInit(key, key_len / 8, m_ctx_gcm, m_ctxSize);
+        status = ippsAES_GCMInit(key, key_len / 8, m_ctx_gcm, m_ctxSize);
         break;
 
     case ALC_AES_MODE_XTS:
-        ippsAES_XTSGetSize(&m_ctxSize);
+        status = ippsAES_XTSGetSize(&m_ctxSize);
         if (m_ctx_xts != nullptr)
         {
             delete[](Ipp8u *) m_ctx_xts;
         }
         m_ctx_xts = (IppsAES_XTSSpec *)(new Ipp8u[m_ctxSize]);
-        ippsAES_XTSInit(key, key_len / 8, 0, m_ctx_xts, m_ctxSize);
+        status = ippsAES_XTSInit(key, key_len / 8, 0, m_ctx_xts, m_ctxSize);
 
         // (const Ipp8u* pKey, int keyLen,
         //                           int duBitsize,
@@ -150,7 +148,7 @@ IPPCipherBase::init(const uint8_t* key, const uint32_t key_len)
         break;
 
     default :
-        ippsAESGetSize(&m_ctxSize);
+        status = ippsAESGetSize(&m_ctxSize);
         if (m_ctx != nullptr)
         {
             delete[](Ipp8u *) m_ctx;
@@ -160,7 +158,10 @@ IPPCipherBase::init(const uint8_t* key, const uint32_t key_len)
         break;
     }
 
-    return true;
+    if (status != ippStsNoErr)
+        return false;
+    else
+        return true;
 }
 
 bool
