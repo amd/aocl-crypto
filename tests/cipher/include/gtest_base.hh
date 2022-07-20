@@ -385,4 +385,52 @@ void AesCrosstest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode, big_sm
     delete fr;
 }
 
+/**
+ * @brief function to run KAT for AES Schemes CTR,CFB,OFB,CBC
+ * 
+ * @param keySize keysize in bits(128,192,256)
+ * @param enc_dec enum for encryption or decryption
+ * @param mode Aode of encryption/Decryption (CTR,CFB,OFB,CBC)
+ */
+void AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode){
+    int         key_size = keySize;                                            
+    std::string MODE_STR = GetModeSTR(mode);                                   
+    bool        test_ran = false;                                              
+    std::string enc_dec_str;                                                   
+    if (enc_dec == ENCRYPT)                                                    
+        enc_dec_str = "_ENC";                                                  
+    else                                                                       
+        enc_dec_str = "_DEC";                                                  
+    TestingCore testingCore = TestingCore(MODE_STR, mode);                 
+                                                                               
+    while (testingCore.getDs()->readPtIvKeyCt(                                 
+        key_size)) { /*Checks if output is correct*/                           
+        test_ran = true;                                                       
+        if (enc_dec == ENCRYPT)                                                
+            EXPECT_TRUE(ArraysMatch(                                           
+                testingCore.getCipherHandler()->testingEncrypt(                
+                    testingCore.getDs()->getPt(),                              
+                    testingCore.getDs()->getKey(),                             
+                    testingCore.getDs()->getIv()),                             
+                testingCore.getDs()->getCt(),                                  
+                *(testingCore.getDs()),                                        
+                std::string("AES_" + MODE_STR + "_" + std::to_string(keySize)  
+                            + enc_dec_str)));                                  
+        else                                                                   
+            EXPECT_TRUE(ArraysMatch(                                           
+                testingCore.getCipherHandler()->testingDecrypt(                
+                    testingCore.getDs()->getCt(),                              
+                    testingCore.getDs()->getKey(),                             
+                    testingCore.getDs()->getIv()),                             
+                testingCore.getDs()->getPt(),                                  
+                *(testingCore.getDs()),                                        
+                std::string("AES_" + MODE_STR + "_" + std::to_string(keySize)  
+                            + enc_dec_str)));                                  
+    }                                                                          
+    if (!test_ran) {                                                           
+        EXPECT_TRUE(::testing::AssertionFailure()                              
+                    << "No tests to run, check dataset");                      
+    }
+}
+
 #endif
