@@ -33,44 +33,55 @@
 #include <openssl/err.h>
 #include <openssl/evp.h>
 
-namespace alcp::testing {
-class OpenSSLCipherBase : public CipherBase
+namespace alcp::testing
 {
+  class OpenSSLCipherBase : public CipherBase
+  {
   private:
-    EVP_CIPHER_CTX*   m_ctx_enc = nullptr;
-    EVP_CIPHER_CTX*   m_ctx_dec = nullptr;
-    alc_cipher_mode_t m_mode    = {};
-    const uint8_t*    m_iv      = nullptr;
-    uint32_t          m_iv_len  = 12;
-    const uint8_t*    m_key     = nullptr;
-    uint32_t          m_key_len = 0;
+    EVP_CIPHER_CTX *m_ctx_enc = nullptr;
+    EVP_CIPHER_CTX *m_ctx_dec = nullptr;
+    alc_cipher_mode_t m_mode = {};
+    const uint8_t *m_iv = nullptr;
+    uint32_t m_iv_len = 12;
+    const uint8_t *m_key = nullptr;
+    uint32_t m_key_len = 0;
+    const uint8_t *m_tkey = nullptr;
 
-    void              handleErrors();
-    const EVP_CIPHER* alcpModeKeyLenToCipher(alc_cipher_mode_t mode,
-                                             size_t            keylen);
+    void handleErrors();
+    const EVP_CIPHER *alcpModeKeyLenToCipher(alc_cipher_mode_t mode,
+                                             size_t keylen);
 
   public:
-    OpenSSLCipherBase(const alc_cipher_mode_t mode, const uint8_t* iv);
+    OpenSSLCipherBase(const alc_cipher_mode_t mode, const uint8_t *iv);
     OpenSSLCipherBase(const alc_cipher_mode_t mode,
-                      const uint8_t*          iv,
-                      const uint8_t*          key,
-                      const uint32_t          key_len);
+                      const uint8_t *iv,
+                      const uint8_t *key,
+                      const uint32_t key_len);
     OpenSSLCipherBase(const alc_cipher_mode_t mode,
-                      const uint8_t*          iv,
-                      const uint32_t          iv_len,
-                      const uint8_t*          key,
-                      const uint32_t          key_len);
+                      const uint8_t *iv,
+                      const uint8_t *key,
+                      const uint32_t key_len,
+                      const uint8_t *tkey);
+    OpenSSLCipherBase(const alc_cipher_mode_t mode,
+                      const uint8_t *iv,
+                      const uint32_t iv_len,
+                      const uint8_t *key,
+                      const uint32_t key_len);
     ~OpenSSLCipherBase();
-    bool init(const uint8_t* iv,
+    bool init(const uint8_t *iv,
               const uint32_t iv_len,
-              const uint8_t* key,
+              const uint8_t *key,
               const uint32_t key_len);
-    bool init(const uint8_t* iv, const uint8_t* key, const uint32_t key_len);
-    bool init(const uint8_t* key, const uint32_t key_len);
-    bool encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt);
+    bool init(const uint8_t *iv,
+              const uint8_t *key,
+              const uint32_t key_len,
+              const uint8_t *tkey);
+    bool init(const uint8_t *iv, const uint8_t *key, const uint32_t key_len);
+    bool init(const uint8_t *key, const uint32_t key_len);
+    bool encrypt(const uint8_t *plaintxt, size_t len, uint8_t *ciphertxt);
     bool encrypt(alcp_data_ex_t data);
-    bool decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt);
+    bool decrypt(const uint8_t *ciphertxt, size_t len, uint8_t *plaintxt);
     bool decrypt(alcp_data_ex_t data);
     void reset();
-};
+  };
 } // namespace alcp::testing
