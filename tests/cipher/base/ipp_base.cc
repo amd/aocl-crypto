@@ -35,7 +35,7 @@ IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t mode, const uint8_t* iv)
     , m_iv{ iv }
 {}
 
-IPPCipherBase::IPPCipherBase(const alc_aes_mode_t mode,
+IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t mode,
                              const uint8_t *iv,
                              const uint8_t *key,
                              const uint32_t key_len,
@@ -45,10 +45,10 @@ IPPCipherBase::IPPCipherBase(const alc_aes_mode_t mode,
     init(key, key_len);
 }
 
-IPPCipherBase::IPPCipherBase(const alc_aes_mode_t mode,
-                                   const uint8_t *iv,
-                                   const uint8_t *key,
-                                   const uint32_t key_len)
+IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t mode,
+                             const uint8_t *iv,
+                             const uint8_t *key,
+                             const uint32_t key_len)
     : m_mode{mode}, m_iv{iv}, m_key{key}, m_key_len{key_len}
 {
     IppStatus status = ippStsNoErr;

@@ -47,11 +47,11 @@ AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode,
 }
 
 /* xts */
-AlcpCipherBase::AlcpCipherBase(const alc_aes_mode_t mode,
-                               const uint8_t * iv,
-                               const uint8_t * key,
-                               const uint32_t  key_len,
-                               const uint8_t * tkey)
+AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode,
+                               const uint8_t *iv,
+                               const uint8_t *key,
+                               const uint32_t key_len,
+                               const uint8_t *tkey)
     : m_mode{mode}, m_iv{iv}
 {
     init(iv, key, key_len, tkey);

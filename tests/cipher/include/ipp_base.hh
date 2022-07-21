@@ -88,7 +88,7 @@ class IPPCipherBase : public CipherBase
 
     /* xts */
     IPPCipherBase(
-                  const alc_aes_mode_t mode,
+                  const alc_cipher_mode_t mode,
                   const uint8_t *iv,
                   const uint8_t *key,
                   const uint32_t key_len,

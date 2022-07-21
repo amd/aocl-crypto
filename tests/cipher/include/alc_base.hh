@@ -57,7 +57,7 @@ class AlcpCipherBase : public CipherBase
      * @param key_len 
      * @param tkey 
      */
-    AlcpCipherBase(const alc_aes_mode_t mode,
+    AlcpCipherBase(const alc_cipher_mode_t mode,
                    const uint8_t *iv,
                    const uint8_t *key,
                    const uint32_t key_len,
