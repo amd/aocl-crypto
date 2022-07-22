@@ -6,30 +6,44 @@
 
 #include "alcp/alcp.h"
 
+#define ALC_PRINT(a, size)                                                     \
+    for (int x = 0; x < size; x++) {                                           \
+        printf(" %2x ", (a)[x]);                                               \
+    }                                                                          \
+    printf("\n");
+
 static alc_cipher_handle_t handle;
 
-void create_demo_session(const uint8_t *key, const uint8_t *tweak_key,
-                         const uint8_t *iv, const uint32_t key_len) {
-  alc_error_t err;
-  const int err_size = 256;
-  uint8_t err_buf[err_size];
+void
+create_demo_session(const uint8_t* key,
+                    const uint8_t* tweak_key,
+                    const uint8_t* iv,
+                    const uint32_t key_len)
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
 
-  alc_key_info_t kinfo = {
-      .type = ALC_KEY_TYPE_SYMMETRIC,
-      .fmt = ALC_KEY_FMT_RAW,
-      .key = tweak_key,
-      .len = key_len,
-  };
+    alc_key_info_t kinfo = {
+        .type = ALC_KEY_TYPE_SYMMETRIC,
+        .fmt  = ALC_KEY_FMT_RAW,
+        .key  = tweak_key,
+        .len  = key_len,
+    };
 
-  alc_cipher_info_t cinfo = {
+    alc_cipher_info_t cinfo = {
       .ci_type = ALC_CIPHER_TYPE_AES,
 
-      .ci_algo_info = {.ai_mode = ALC_AES_MODE_XTS,
-                       .ai_iv = iv,
-                       .ai_xts =
-                           {
-                               .xi_tweak_key = &kinfo,
-                           }},
+      .ci_algo_info = 
+        {
+            .ai_mode = ALC_AES_MODE_XTS,
+            .ai_iv = iv,
+            .ai_xts =
+                       {
+                           .xi_tweak_key = &kinfo,
+                       }
+        },
+
       /* No padding, Not Implemented yet*/
       //.pad     = ALC_CIPHER_PADDING_NONE,
       .ci_key_info =
@@ -41,73 +55,108 @@ void create_demo_session(const uint8_t *key, const uint8_t *tweak_key,
           },
   };
 
-  /*
-   * Check if the current cipher is supported,
-   * optional call, alcp_cipher_request() will anyway return
-   * ALC_ERR_NOSUPPORT error.
-   *
-   * This query call is provided to support fallback mode for applications
-   */
-  err = alcp_cipher_supported(&cinfo);
-  if (alcp_is_error(err)) {
-    printf("Error: not supported \n");
-    alcp_error_str(err, err_buf, err_size);
-    return;
-  }
-  printf("supported succeeded\n");
-  /*
-   * Application is expected to allocate for context
-   */
-  handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
-  // if (!ctx)
-  //    return;
+    /*
+     * Check if the current cipher is supported,
+     * optional call, alcp_cipher_request() will anyway return
+     * ALC_ERR_NOSUPPORT error.
+     *
+     * This query call is provided to support fallback mode for applications
+     */
+    err = alcp_cipher_supported(&cinfo);
+    if (alcp_is_error(err)) {
+        printf("Error: not supported \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
+    printf("supported succeeded\n");
+    /*
+     * Application is expected to allocate for context
+     */
+    handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
+    // if (!ctx)
+    //    return;
 
-  /* Request a context with cinfo */
-  err = alcp_cipher_request(&cinfo, &handle);
-  if (alcp_is_error(err)) {
-    printf("Error: unable to request \n");
-    alcp_error_str(err, err_buf, err_size);
-    return;
-  }
-  printf("request succeeded\n");
+    /* Request a context with cinfo */
+    err = alcp_cipher_request(&cinfo, &handle);
+    if (alcp_is_error(err)) {
+        printf("Error: unable to request \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
+    printf("request succeeded\n");
+    /*
+     * Check if the current cipher is supported,
+     * optional call, alcp_cipher_request() will anyway return
+     * ALC_ERR_NOSUPPORT error.
+     *
+     * This query call is provided to support fallback mode for applications
+     */
+    err = alcp_cipher_supported(&cinfo);
+    if (alcp_is_error(err)) {
+        printf("Error: not supported \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
+    printf("supported succeeded\n");
+    /*
+     * Application is expected to allocate for context
+     */
+    handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
+    // if (!ctx)
+    //    return;
+
+    /* Request a context with cinfo */
+    err = alcp_cipher_request(&cinfo, &handle);
+    if (alcp_is_error(err)) {
+        printf("Error: unable to request \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
+    printf("request succeeded\n");
 }
 
-void encrypt_demo(const uint8_t *plaintxt,
-                  const uint32_t len, /*  for both 'plaintxt' and 'ciphertxt' */
-                  uint8_t *ciphertxt, const int8_t *iv) {
-  alc_error_t err;
-  const int err_size = 256;
-  uint8_t err_buf[err_size];
+void
+encrypt_demo(const uint8_t* plaintxt,
+             const uint32_t len, /*  for both 'plaintxt' and 'ciphertxt' */
+             uint8_t*       ciphertxt,
+             const int8_t*  iv)
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
 
-  err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len, iv);
-  if (alcp_is_error(err)) {
-    printf("Error: unable to encrypt \n");
-    alcp_error_str(err, err_buf, err_size);
-    return;
-  }
+    err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len, iv);
+    if (alcp_is_error(err)) {
+        printf("Error: unable to encrypt \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
 
-  printf("encrypt succeeded\n");
+    printf("encrypt succeeded\n");
 }
 
-void decrypt_demo(const uint8_t *ciphertxt,
-                  const uint32_t len, /* for both 'plaintxt' and 'ciphertxt' */
-                  uint8_t *plaintxt, const uint8_t *iv) {
-  alc_error_t err;
-  const int err_size = 256;
-  uint8_t err_buf[err_size];
+void
+decrypt_demo(const uint8_t* ciphertxt,
+             const uint32_t len, /* for both 'plaintxt' and 'ciphertxt' */
+             uint8_t*       plaintxt,
+             const uint8_t* iv)
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
 
-  err = alcp_cipher_decrypt(&handle, ciphertxt, plaintxt, len, iv);
-  if (alcp_is_error(err)) {
-    printf("Error: unable decrypt \n");
-    alcp_error_str(err, err_buf, err_size);
-    return;
-  }
+    err = alcp_cipher_decrypt(&handle, ciphertxt, plaintxt, len, iv);
+    if (alcp_is_error(err)) {
+        printf("Error: unable decrypt \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
 
-  printf("decrypt succeeded\n");
+    printf("decrypt succeeded\n");
 }
 
 // static char* sample_plaintxt = "Hello World from AOCL Crypto !!!";
-static uint8_t sample_plaintxt[] =
+static char* sample_plaintxt =
     "A paragraph is a series of sentences that are organized and coherent, and "
     "are all related to a single topic. Almost every piece of writing you do "
     "that is longer than a few sentences should be organized into paragraphs.";
@@ -143,71 +192,77 @@ static uint8_t sample_ciphertxt[512] = {
 
 #define BITS_PER_BYTE 8
 
-int alloc_and_test() {
-  void *plaintxt, *ciphertxt, *output;
-  const int keylen = 256, keylen_bytes = keylen / 8,
-            keylen_words = keylen / sizeof(uint32_t) * BITS_PER_BYTE;
+int
+alloc_and_test()
+{
+    void *    plaintxt, *ciphertxt, *output;
+    const int keylen = 256, keylen_bytes = keylen / 8,
+              keylen_words = keylen / sizeof(uint32_t) * BITS_PER_BYTE;
 
-  uint8_t key[keylen_bytes];
-  uint32_t iv[] = {
-      0x1,
-      0x2,
-      0x3,
-      0x4,
-  };
+    uint8_t  key[keylen_bytes];
+    uint32_t iv[] = {
+        0x1,
+        0x2,
+        0x3,
+        0x4,
+    };
 
-  assert(keylen_words == sizeof(iv));
+    assert(keylen_words == sizeof(iv));
 
-  /* TODO: get this through command line */
-  int buf_len = 1024 * 1024; /* Length of 1 buffer */
-  int num_buf = 1;           /* number of buffers of length 'buf_len' */
+    /* TODO: get this through command line */
+    int buf_len = 1024 * 1024; /* Length of 1 buffer */
+    int num_buf = 1;           /* number of buffers of length 'buf_len' */
 
-  plaintxt = calloc(buf_len, num_buf);
-  if (!plaintxt)
-    goto out;
+    plaintxt = calloc(buf_len, num_buf);
+    if (!plaintxt)
+        goto out;
 
-  ciphertxt = calloc(buf_len, num_buf);
-  if (!ciphertxt)
-    goto free_plaintxt_out;
+    ciphertxt = calloc(buf_len, num_buf);
+    if (!ciphertxt)
+        goto free_plaintxt_out;
 
-  output = calloc(buf_len, num_buf);
-  if (!output)
-    goto free_ciphertxt_out;
+    output = calloc(buf_len, num_buf);
+    if (!output)
+        goto free_ciphertxt_out;
 
 free_ciphertxt_out:
-  free(ciphertxt);
+    free(ciphertxt);
 
 free_plaintxt_out:
-  free(plaintxt);
+    free(plaintxt);
 
 out:
-  return 0;
+    return 0;
 }
 
-int main(void) {
-  uint8_t sample_output[512] = {0};
+int
+main(void)
+{
+    uint8_t sample_output[1000000] = { 0 };
 
-  assert(sizeof(sample_plaintxt) < sizeof(sample_output));
+    int pt_size = strlen(sample_plaintxt);
+    assert(sizeof(sample_plaintxt) < sizeof(sample_output));
 
-  create_demo_session(sample_key, sample_tweak_key, sample_iv,
-                      sizeof(sample_key) * 8);
+    create_demo_session(
+        sample_key, sample_tweak_key, sample_iv, sizeof(sample_key) * 8);
+    ALC_PRINT(((uint8_t*)sample_plaintxt), pt_size);
+    encrypt_demo(sample_plaintxt,
+                 pt_size, /* len of 'plaintxt' and 'ciphertxt' */
+                 sample_ciphertxt,
+                 sample_iv);
+    ALC_PRINT(((uint8_t*)&sample_ciphertxt), pt_size);
 
-  encrypt_demo(sample_plaintxt,
-               strlen(sample_plaintxt), /* len of 'plaintxt' and 'ciphertxt' */
-               sample_ciphertxt, sample_iv);
-  int size = strlen(sample_plaintxt);
+    decrypt_demo(sample_ciphertxt, pt_size, sample_output, sample_iv);
+    ALC_PRINT(((uint8_t*)&sample_output), pt_size);
+    printf("sample_output: %s\n", sample_output);
+    /*
+     * Complete the transaction
+     */
+    alcp_cipher_finish(&handle);
 
-  decrypt_demo(sample_ciphertxt, size, sample_output, sample_iv);
+    free(handle.ch_context);
 
-  printf("sample_output: %s\n", sample_output);
-  /*
-   * Complete the transaction
-   */
-  alcp_cipher_finish(&handle);
-
-  free(handle.ch_context);
-
-  return 0;
+    return 0;
 }
 
 /*  LocalWords:  decrypt Crypto AOCL
