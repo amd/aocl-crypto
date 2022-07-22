@@ -53,7 +53,6 @@ ippsAESInit(const Ipp8u* pKey, int keyLen, IppsAESSpec* pCtx, int ctxSize)
     printMsg(ss.str());
     ipp_wrp_ctx* context = reinterpret_cast<ipp_wrp_ctx*>(pCtx);
     if (pKey != nullptr) {
-        // context->key           = std::vector<uint8_t>(pKey, pKey + keyLen);
         context->cinfo.ci_type          = ALC_CIPHER_TYPE_AES;
         context->cinfo.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
         context->cinfo.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
@@ -65,7 +64,6 @@ ippsAESInit(const Ipp8u* pKey, int keyLen, IppsAESSpec* pCtx, int ctxSize)
             alcp_cipher_finish(&(context->handle));
             free(context->handle.ch_context);
             context->handle.ch_context = nullptr;
-            context->key               = std::vector<uint8_t>(0, 0);
         }
     }
     printMsg("Init End");

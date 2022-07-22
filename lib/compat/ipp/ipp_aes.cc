@@ -55,15 +55,6 @@ alcp_encdecAES(const Ipp8u*       pSrc,
        already initialized. */
 
     if (context->handle.ch_context == nullptr) {
-        // alc_cipher_info_t cinfo = {
-        //     .ci_type = ALC_CIPHER_TYPE_AES,
-        //     /* No padding, Not Implemented yet*/
-        //     //.pad     = ALC_CIPHER_PADDING_NONE,
-        //     .ci_algo_info   = {
-        //         .ai_mode = mode,
-        //         .ai_iv   = (uint8_t*)pCtrValue,
-        //     },
-        // };
         context->cinfo.ci_type              = ALC_CIPHER_TYPE_AES;
         context->cinfo.ci_algo_info.ai_mode = mode;
         context->cinfo.ci_algo_info.ai_iv   = (uint8_t*)pCtrValue;
