@@ -31,41 +31,42 @@
 #include <alcp/alcp.h>
 #include <iostream>
 #include <ippcp.h>
-#include <sstream>
 #include <stdint.h>
 #include <string.h>
 
 IppStatus
-ippsAESGetSize(int* pSize)
+ippsSHA256Update(const Ipp8u* pSrc, int len, IppsSHA256State* pState)
 {
-    printMsg("GetSize");
-    *pSize = sizeof(ipp_wrp_aes_ctx);
-    printMsg("GetSize End");
+    printMsg("SHA256 Update");
+    ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
+    alc_error_t       err;
+
+    err = alcp_digest_update(&(context->handle), (const uint8_t*)pSrc, len);
+    if (alcp_is_error(err)) {
+        printErr("Unable to compute SHA2 hash\n");
+        return ippStsUnderRunErr;
+    }
+    printMsg("SHA256 Update End");
     return ippStsNoErr;
 }
 
 IppStatus
-ippsAESInit(const Ipp8u* pKey, int keyLen, IppsAESSpec* pCtx, int ctxSize)
+ippsSHA256Final(Ipp8u* pMD, IppsSHA256State* pState)
 {
-    printMsg("Init");
-    std::stringstream ss;
-    ss << "KeyLength:" << keyLen;
-    printMsg(ss.str());
-    ipp_wrp_aes_ctx* context = reinterpret_cast<ipp_wrp_aes_ctx*>(pCtx);
-    if (pKey != nullptr) {
-        context->cinfo.ci_type          = ALC_CIPHER_TYPE_AES;
-        context->cinfo.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
-        context->cinfo.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
-        context->cinfo.ci_key_info.key  = (uint8_t*)pKey;
-        context->cinfo.ci_key_info.len  = keyLen * 8;
-        context->handle.ch_context      = nullptr;
-    } else {
-        if (context->handle.ch_context != nullptr) {
-            alcp_cipher_finish(&(context->handle));
-            free(context->handle.ch_context);
-            context->handle.ch_context = nullptr;
-        }
+    printMsg("SHA256 Final");
+    ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
+    alc_error_t       err;
+
+    alcp_digest_finalize(&(context->handle), nullptr, 0);
+
+    err = alcp_digest_copy(&(context->handle), (uint8_t*)pMD, 32);
+    if (alcp_is_error(err)) {
+        printErr("Unable to copy digest\n");
+        return ippStsUnderRunErr;
     }
-    printMsg("Init End");
+    // Messup digest to test wrapper
+    // *(reinterpret_cast<uint8_t*>(pMD)) = 0x00;
+
+    printMsg("SHA256 Final End");
     return ippStsNoErr;
 }

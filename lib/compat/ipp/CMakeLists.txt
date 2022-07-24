@@ -1,9 +1,7 @@
 # Added aocl-compat as a seperate liberary
+FILE(GLOB IPP_SRCS "*.cc" )
 ADD_LIBRARY(ipp-compat 
-	ipp_aes.cc
-    ipp_aes_init.cc
-    ipp_sizes.cc
-    ipp_wrp.cc
+	${IPP_SRCS}
 	)
 
 # Link to ALCP shared object file

@@ -45,10 +45,10 @@ alcp_encdecAES(const Ipp8u*       pSrc,
                bool               enc)
 {
     // Should replace below with something better as it does discard const
-    ipp_wrp_ctx* context = (ipp_wrp_ctx*)(pCtx);
-    alc_error_t  err;
-    const int    err_size = 256;
-    uint8_t      err_buf[err_size];
+    ipp_wrp_aes_ctx* context = (ipp_wrp_aes_ctx*)(pCtx);
+    alc_error_t      err;
+    const int        err_size = 256;
+    uint8_t          err_buf[err_size];
 
     /* Continue initialization as we didnt have iv in initialization function
        if we already have context then it's already good, we can take it as

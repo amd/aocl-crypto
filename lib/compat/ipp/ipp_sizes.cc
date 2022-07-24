@@ -33,7 +33,7 @@
 // ippsAESGetSize(int* pSize)
 // {
 //     // Return context size
-//     *pSize = sizeof(ipp_wrp_ctx);
+//     *pSize = sizeof(ipp_wrp_aes_ctx);
 //     return ippStsNoErr;
 // }
 
@@ -41,7 +41,7 @@
 // ippsAES_XTSGetSize(int* pSize)
 // {
 //     // Return context size
-//     *pSize = sizeof(ipp_wrp_ctx);
+//     *pSize = sizeof(ipp_wrp_aes_ctx);
 //     return ippStsNoErr;
 // }
 
@@ -49,6 +49,6 @@
 // ippsAES_GCMGetSize(int* pSize)
 // {
 //     // Return context size
-//     *pSize = sizeof(ipp_wrp_ctx);
+//     *pSize = sizeof(ipp_wrp_aes_ctx);
 //     return ippStsNoErr;
 // }

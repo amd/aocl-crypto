@@ -33,4 +33,10 @@ typedef struct
 {
     alc_cipher_handle_t handle;
     alc_cipher_info_t   cinfo;
-} ipp_wrp_ctx;
+} ipp_wrp_aes_ctx;
+
+typedef struct
+{
+    alc_digest_handle_t handle;
+    alc_digest_info_t   dinfo;
+} ipp_wrp_sha2_ctx;
