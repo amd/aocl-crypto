@@ -30,7 +30,12 @@ IF (AOCL_COMPAT_LIBS)
 ENDIF(AOCL_COMPAT_LIBS)
 
 IF (ENABLE_OPENSSL_COMPAT)
-    # Added aocl-compat as a seperate liberary
+    # Adding openssl-compat as a seperate liberary
     ADD_SUBDIRECTORY(openssl)
 ENDIF (ENABLE_OPENSSL_COMPAT)
+
+IF (ENABLE_IPP_COMPAT)
+	# Adding ipp-compat as a seperate liberary
+	ADD_SUBDIRECTORY(ipp)
+ENDIF (ENABLE_IPP_COMPAT)
 

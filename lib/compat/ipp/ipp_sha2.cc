@@ -1,0 +1,72 @@
+/*
+ * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 3. Neither the name of the copyright holder nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+#include "context.hh"
+#include "error.hh"
+#include <alcp/alcp.h>
+#include <iostream>
+#include <ippcp.h>
+#include <stdint.h>
+#include <string.h>
+
+IppStatus
+ippsSHA256Update(const Ipp8u* pSrc, int len, IppsSHA256State* pState)
+{
+    printMsg("SHA256 Update");
+    ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
+    alc_error_t       err;
+
+    err = alcp_digest_update(&(context->handle), (const uint8_t*)pSrc, len);
+    if (alcp_is_error(err)) {
+        printErr("Unable to compute SHA2 hash\n");
+        return ippStsUnderRunErr;
+    }
+    printMsg("SHA256 Update End");
+    return ippStsNoErr;
+}
+
+IppStatus
+ippsSHA256Final(Ipp8u* pMD, IppsSHA256State* pState)
+{
+    printMsg("SHA256 Final");
+    ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
+    alc_error_t       err;
+
+    alcp_digest_finalize(&(context->handle), nullptr, 0);
+
+    err = alcp_digest_copy(&(context->handle), (uint8_t*)pMD, 32);
+    if (alcp_is_error(err)) {
+        printErr("Unable to copy digest\n");
+        return ippStsUnderRunErr;
+    }
+    // Messup digest to test wrapper
+    // *(reinterpret_cast<uint8_t*>(pMD)) = 0x00;
+
+    printMsg("SHA256 Final End");
+    return ippStsNoErr;
+}
