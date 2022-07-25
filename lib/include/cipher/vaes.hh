@@ -61,6 +61,22 @@ namespace alcp::cipher { namespace vaes {
                            int            nRounds,
                            const uint8_t* pIv);
 
+    alc_error_t EncryptXts(const uint8_t* pPlainText,
+                           uint8_t*       pCipherText,
+                           uint64_t       len,
+                           const uint8_t* pKey,
+                           const uint8_t* pTweakKey,
+                           int            nRounds,
+                           const uint8_t* pIv);
+
+    alc_error_t DecryptXts(const uint8_t* pPlainText,
+                           uint8_t*       pCipherText,
+                           uint64_t       len,
+                           const uint8_t* pKey,
+                           const uint8_t* pTweakKey,
+                           int            nRounds,
+                           const uint8_t* pIv);
+
     // ctr APIs for vaes
     void ctrInit(__m256i*       c1,
                  const uint8_t* pIv,

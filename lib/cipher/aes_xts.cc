@@ -28,6 +28,7 @@
 
 #include "cipher/aes.hh"
 #include "cipher/aesni.hh"
+#include "cipher/vaes.hh"
 
 namespace alcp::cipher {
 
@@ -61,6 +62,17 @@ Xts::encrypt(const uint8_t* pPlainText,
         err = ALC_ERROR_INVALID_DATA;
         return err;
     }
+    if (Cipher::isVaesAvailable()) {
+        err = vaes::EncryptXts(pPlainText,
+                               pCipherText,
+                               len,
+                               getEncryptKeys(),
+                               p_tweak_key,
+                               getRounds(),
+                               pIv);
+
+        return err;
+    }
 
     if (Cipher::isAesniAvailable()) {
 
@@ -74,6 +86,8 @@ Xts::encrypt(const uint8_t* pPlainText,
 
         return err;
     }
+
+    err = Rijndael::encrypt(pPlainText, pCipherText, len, pIv);
 
     return err;
 }
@@ -93,6 +107,18 @@ Xts::decrypt(const uint8_t* pPlainText,
         return err;
     }
 
+    if (Cipher::isVaesAvailable()) {
+        err = vaes::DecryptXts(pPlainText,
+                               pCipherText,
+                               len,
+                               getDecryptKeys(),
+                               p_tweak_key,
+                               getRounds(),
+                               pIv);
+
+        return err;
+    }
+
     if (Cipher::isAesniAvailable()) {
 
         err = aesni::DecryptXts(pPlainText,
@@ -106,7 +132,7 @@ Xts::decrypt(const uint8_t* pPlainText,
         return err;
     }
 
-    // err = Rijndael::encrypt(pPlainText, pCipherText, len, pIv);
+    err = Rijndael::decrypt(pPlainText, pCipherText, len, pIv);
 
     return err;
 }
