@@ -94,10 +94,8 @@ namespace alcp::testing
             {
             case 128:
                 return EVP_aes_128_xts();
-                break;
             case 256:
                 return EVP_aes_256_xts();
-                break;
             }
         default:
             return nullptr;
@@ -181,6 +179,15 @@ namespace alcp::testing
     {
         m_key = key;
         m_key_len = key_len;
+        uint8_t key_final[64];
+
+        /* xts */
+        if (m_mode == ALC_AES_MODE_XTS)
+        {
+            /* add key with tkey for xts */
+            memcpy(key_final, m_key, key_len / 8);
+            memcpy(key_final + key_len / 8, m_tkey, key_len / 8);
+        }
 
         // Create context for encryption and initialize
         if (m_ctx_enc != nullptr)
@@ -194,6 +201,7 @@ namespace alcp::testing
             handleErrors();
             return false;
         }
+
         if (m_mode == ALC_AES_MODE_GCM)
         {
             if (1 != EVP_EncryptInit_ex(m_ctx_enc,
@@ -209,13 +217,15 @@ namespace alcp::testing
             if (1 != EVP_EncryptInit_ex(m_ctx_enc, NULL, NULL, m_key, m_iv))
                 handleErrors();
         }
+
         else
         {
-            EVP_EncryptInit_ex(m_ctx_enc,
-                               alcpModeKeyLenToCipher(m_mode, m_key_len),
-                               NULL,
-                               m_key,
-                               m_iv);
+            if (1 != EVP_EncryptInit_ex(m_ctx_enc,
+                                        alcpModeKeyLenToCipher(m_mode, m_key_len),
+                                        NULL,
+                                        m_key,
+                                        m_iv))
+                handleErrors();
 
             if (m_ctx_dec != nullptr)
             {
@@ -253,11 +263,12 @@ namespace alcp::testing
         }
         else
         {
-            EVP_DecryptInit_ex(m_ctx_dec,
-                               alcpModeKeyLenToCipher(m_mode, m_key_len),
-                               NULL,
-                               m_key,
-                               m_iv);
+            if (1 != EVP_DecryptInit_ex(m_ctx_dec,
+                                        alcpModeKeyLenToCipher(m_mode, m_key_len),
+                                        NULL,
+                                        m_key,
+                                        m_iv))
+                handleErrors();
 
             if (1 != EVP_CIPHER_CTX_set_padding(m_ctx_dec, 0))
                 handleErrors();
@@ -321,6 +332,7 @@ namespace alcp::testing
             if (1 != EVP_EncryptUpdate(
                          m_ctx_enc, data.out, &len_ct, data.in, data.inl))
             {
+                std::cout << "Error: Encrypt update" << std::endl;
                 handleErrors();
                 return false;
             }
