@@ -61,6 +61,7 @@ alcp_SHA2Init(ipp_wrp_sha2_ctx* pState,
 
     uint64_t size           = alcp_digest_context_size(&dinfo);
     context->handle.context = malloc(size);
+    context->dinfo          = dinfo;
 
     err = alcp_digest_request(&dinfo, &(context->handle));
 
