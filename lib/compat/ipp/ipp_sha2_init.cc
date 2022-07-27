@@ -45,6 +45,15 @@ ippsSHA256GetSize(int* pSize)
 }
 
 IppStatus
+ippsHashGetSize_rmf(int* pSize)
+{
+    printMsg("HashGetSize");
+    *pSize = sizeof(ipp_wrp_sha2_ctx);
+    printMsg("HashGetSize End");
+    return ippStsNoErr;
+}
+
+IppStatus
 alcp_SHA2Init(ipp_wrp_sha2_ctx* pState,
               alc_digest_len_t  len,
               alc_sha2_mode_t   mode)
@@ -124,6 +133,31 @@ ippsHashInit(IppsHashState* pState, IppHashAlgId hashAlg)
             printMsg("SHA2-512");
             return alcp_SHA2Init(
                 (ipp_wrp_sha2_ctx*)pState, ALC_DIGEST_LEN_512, ALC_SHA2_512);
+        default:
+            return ippStsNotSupportedModeErr;
+    }
+    return ippStsNoErr;
+}
+
+IppStatus
+ippsHashInit_rmf(IppsHashState_rmf* pState, const IppsHashMethod* pMethod)
+{
+    ipp_wrp_sha2_ctx*      context    = (ipp_wrp_sha2_ctx*)pState;
+    ipp_sha2_rmf_algo_ctx* method_ctx = (ipp_sha2_rmf_algo_ctx*)pMethod;
+    IppHashAlgId           hashAlg    = method_ctx->algId;
+    switch (hashAlg) {
+        case ippHashAlg_SHA224:
+            printMsg("SHA2-224");
+            return alcp_SHA2Init(context, ALC_DIGEST_LEN_224, ALC_SHA2_224);
+        case ippHashAlg_SHA256:
+            printMsg("SHA2-256");
+            return alcp_SHA2Init(context, ALC_DIGEST_LEN_256, ALC_SHA2_256);
+        case ippHashAlg_SHA384:
+            printMsg("SHA2-384");
+            return alcp_SHA2Init(context, ALC_DIGEST_LEN_384, ALC_SHA2_384);
+        case ippHashAlg_SHA512:
+            printMsg("SHA2-512");
+            return alcp_SHA2Init(context, ALC_DIGEST_LEN_512, ALC_SHA2_512);
         default:
             return ippStsNotSupportedModeErr;
     }

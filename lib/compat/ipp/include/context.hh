@@ -27,6 +27,7 @@
  */
 
 #include "alcp/alcp.h"
+#include "ippcp.h"
 #include <vector>
 #pragma once
 typedef struct
@@ -40,3 +41,12 @@ typedef struct
     alc_digest_handle_t handle;
     alc_digest_info_t   dinfo;
 } ipp_wrp_sha2_ctx;
+
+typedef struct
+{
+    IppHashAlgId algId;      // ID of the current algorithm
+    int          len;        // Length of hash output in bytes
+    int          blockSize;  // Length of a block in bytes
+    int          lenRepSize; // Length of processed message
+    // There are more, for now they are useless.
+} ipp_sha2_rmf_algo_ctx;

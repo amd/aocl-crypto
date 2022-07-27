@@ -99,6 +99,16 @@ ippsHashUpdate(const Ipp8u* pSrc, int len, IppsHashState* pState)
 }
 
 IppStatus
+ippsHashUpdate_rmf(const Ipp8u* pSrc, int len, IppsHashState_rmf* pState)
+{
+    printMsg("Hash Update RMF");
+    ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
+    IppStatus         sts     = alcp_DigestUpdate(pSrc, len, context);
+    printMsg("Hash Update RMF End");
+    return sts;
+}
+
+IppStatus
 alcp_DigestFinal(Ipp8u* pMD, ipp_wrp_sha2_ctx* pState)
 {
     ipp_wrp_sha2_ctx* context = pState;
@@ -174,5 +184,17 @@ ippsHashFinal(Ipp8u* pMD, IppsHashState* pState)
     printMsg("Hash Final");
     sts = alcp_DigestFinal(pMD, context);
     printMsg("Hash Final End");
+    return sts;
+}
+
+IppStatus
+ippsHashFinal_rmf(Ipp8u* pMD, IppsHashState_rmf* pState)
+{
+    ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
+    IppStatus         sts;
+
+    printMsg("Hash Final RMF");
+    sts = alcp_DigestFinal(pMD, context);
+    printMsg("Hash Final RMF End");
     return sts;
 }
