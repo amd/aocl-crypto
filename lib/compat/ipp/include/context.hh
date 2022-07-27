@@ -34,7 +34,14 @@ typedef struct
 {
     alc_cipher_handle_t handle;
     alc_cipher_info_t   cinfo;
+
 } ipp_wrp_aes_ctx;
+typedef struct
+{
+    bool            is_encrypt;
+    ipp_wrp_aes_ctx encrypt_ctx;
+    ipp_wrp_aes_ctx decrypt_ctx;
+} ipp_wrp_aes_aead_ctx;
 
 typedef struct
 {
