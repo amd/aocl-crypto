@@ -36,11 +36,47 @@
 #include <string.h>
 
 IppStatus
+ippsSHA224GetSize(int* pSize)
+{
+    printMsg("GetSize");
+    *pSize = sizeof(ipp_wrp_sha2_ctx);
+    printMsg("GetSize End");
+    return ippStsNoErr;
+}
+
+IppStatus
 ippsSHA256GetSize(int* pSize)
 {
     printMsg("GetSize");
     *pSize = sizeof(ipp_wrp_sha2_ctx);
     printMsg("GetSize End");
+    return ippStsNoErr;
+}
+
+IppStatus
+ippsSHA384GetSize(int* pSize)
+{
+    printMsg("GetSize");
+    *pSize = sizeof(ipp_wrp_sha2_ctx);
+    printMsg("GetSize End");
+    return ippStsNoErr;
+}
+
+IppStatus
+ippsSHA512GetSize(int* pSize)
+{
+    printMsg("GetSize");
+    *pSize = sizeof(ipp_wrp_sha2_ctx);
+    printMsg("GetSize End");
+    return ippStsNoErr;
+}
+
+IppStatus
+ippsHashGetSize(int* pSize)
+{
+    printMsg("HashGetSize");
+    *pSize = sizeof(ipp_wrp_sha2_ctx);
+    printMsg("HashGetSize End");
     return ippStsNoErr;
 }
 
