@@ -26,7 +26,6 @@
  *
  */
 #include "openssl_base.hh"
-
 namespace alcp::testing
 {
     void
@@ -154,6 +153,7 @@ namespace alcp::testing
                             const uint8_t *tkey)
     {
         m_tkey = tkey;
+        m_iv = iv;
         return init(key, key_len);
     }
 
@@ -187,6 +187,7 @@ namespace alcp::testing
             /* add key with tkey for xts */
             memcpy(key_final, m_key, key_len / 8);
             memcpy(key_final + key_len / 8, m_tkey, key_len / 8);
+            m_key = key_final;
         }
 
         // Create context for encryption and initialize

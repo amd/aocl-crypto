@@ -130,10 +130,10 @@ TEST(SYMMETRIC_CRYPT_128, 128_CROSS_CHECK_SMALL)
                 data_alc.ivl = iv.size();
                 data_alc.out = &(out_ct_alc[0]);
                 data_alc.outl = data_alc.inl;
-                data_alc.ad = &(add[0]);
-                data_alc.adl = add.size();
-                // data_alc.tag = &(tag_alc[0]);
-                // data_alc.tagl = tag_alc.size();
+                // data_alc.ad = &(add[0]);
+                // data_alc.adl = add.size();
+                //  data_alc.tag = &(tag_alc[0]);
+                //  data_alc.tagl = tag_alc.size();
                 data_alc.tkey = &(tkey[0]);
                 data_alc.tkeyl = 16;
 
@@ -144,10 +144,10 @@ TEST(SYMMETRIC_CRYPT_128, 128_CROSS_CHECK_SMALL)
                 data_ext.ivl = iv.size();
                 data_ext.out = &(out_ct_ext[0]);
                 data_ext.outl = data_alc.inl;
-                data_ext.ad = &(add[0]);
-                data_ext.adl = add.size();
-                // data_ext.tag = &(tag_ext[0]);
-                // data_ext.tagl = tag_ext.size();
+                // data_ext.ad = &(add[0]);
+                // data_ext.adl = add.size();
+                //  data_ext.tag = &(tag_ext[0]);
+                //  data_ext.tagl = tag_ext.size();
                 data_ext.tkey = &(tkey[0]);
                 data_ext.tkeyl = 16;
 

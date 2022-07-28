@@ -25,18 +25,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
+#pragma once
 #include <fstream>
 #include <iostream>
 #include <sys/stat.h>
 #include <vector>
 
-namespace alcp::testing {
-class File
+namespace alcp::testing
 {
+  class File
+  {
   private:
     std::fstream m_file;
-    bool         m_fileExists;
+    bool m_fileExists;
 
   public:
     // Opens File as Bin/ASCII File with write support.
@@ -53,11 +54,11 @@ class File
     // Reads a line by reading char by char
     std::string readLineCharByChar();
     // Read file n bytes from a file
-    char* readChar(size_t n);
+    char *readChar(size_t n);
     // Reads a set of bytes
-    bool readBytes(size_t n, uint8_t* buffer);
+    bool readBytes(size_t n, uint8_t *buffer);
     // Writes a set of bytes
-    bool writeBytes(size_t n, const uint8_t* buffer);
+    bool writeBytes(size_t n, const uint8_t *buffer);
     // Rewind file to initial position
     void rewind();
     // seekG
@@ -65,17 +66,17 @@ class File
     // tell
     long tell();
     void flush();
-};
+  };
 
-/* Some functions which don't belong to any class but is common */
-void
-printErrors(std::string in);
-std::vector<uint8_t>
-parseHexStrToBin(const std::string in);
-std::string
-parseBytesToHexStr(const uint8_t* bytes, const int length);
-uint8_t
-parseHexToNum(const unsigned char c);
-bool
-isPathExist(const std::string dir);
+  /* Some functions which don't belong to any class but is common */
+  void
+  printErrors(std::string in);
+  std::vector<uint8_t>
+  parseHexStrToBin(const std::string in);
+  std::string
+  parseBytesToHexStr(const uint8_t *bytes, const int length);
+  uint8_t
+  parseHexToNum(const unsigned char c);
+  bool
+  isPathExist(const std::string dir);
 } // namespace alcp::testing

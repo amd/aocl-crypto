@@ -39,9 +39,9 @@ std::string MODE_STR = "XTS";
 /* Testing Starts Here! */
 TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
 {
-    int            key_size    = 128;
-    TestingCore    testingCore = TestingCore(MODE_STR, ALC_MODE);
-    bool           test_ran    = false;
+    int key_size = 128;
+    TestingCore testingCore = TestingCore(MODE_STR, ALC_MODE);
+    bool test_ran = false;
     alcp_data_ex_t data;
     while (testingCore.getDs()->readPtIvKeyCtTKey(key_size))
     {
@@ -53,11 +53,11 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
         std::vector<uint8_t> iv = testingCore.getDs()->getIv();
         std::vector<uint8_t> tkey = testingCore.getDs()->getTKey();
 
-        data.in   = &(pt[0]);
-        data.inl  = pt.size();
-        data.iv   = &(iv[0]);
-        data.ivl  = iv.size();
-        data.out  = &(outct[0]);
+        data.in = &(pt[0]);
+        data.inl = pt.size();
+        data.iv = &(iv[0]);
+        data.ivl = iv.size();
+        data.out = &(outct[0]);
         data.outl = data.inl;
         data.tkey = &(tkey[0]);
         data.tkeyl = tkey.size();
@@ -68,7 +68,8 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_128_ENC")));
     }
-    if (!test_ran) {
+    if (!test_ran)
+    {
         EXPECT_TRUE(::testing::AssertionFailure()
                     << "No tests to run, check dataset");
     }
@@ -113,24 +114,22 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
     }
 }
 
-
-int
-main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
-    testing::TestEventListeners& listeners =
+    testing::TestEventListeners &listeners =
         testing::UnitTest::GetInstance()->listeners();
     parseArgs(argc, argv);
     auto default_printer =
         listeners.Release(listeners.default_result_printer());
 
-    ConfigurableEventListener* listener =
+    ConfigurableEventListener *listener =
         new ConfigurableEventListener(default_printer);
 
-    listener->showEnvironment    = true;
-    listener->showTestCases      = true;
-    listener->showTestNames      = true;
-    listener->showSuccesses      = true;
+    listener->showEnvironment = true;
+    listener->showTestCases = true;
+    listener->showTestNames = true;
+    listener->showSuccesses = true;
     listener->showInlineFailures = true;
     listeners.Append(listener);
     return RUN_ALL_TESTS();
