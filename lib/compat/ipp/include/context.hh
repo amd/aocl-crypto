@@ -27,16 +27,33 @@
  */
 
 #include "alcp/alcp.h"
+#include "ippcp.h"
 #include <vector>
 #pragma once
 typedef struct
 {
     alc_cipher_handle_t handle;
     alc_cipher_info_t   cinfo;
+
 } ipp_wrp_aes_ctx;
+typedef struct
+{
+    bool            is_encrypt;
+    ipp_wrp_aes_ctx encrypt_ctx;
+    ipp_wrp_aes_ctx decrypt_ctx;
+} ipp_wrp_aes_aead_ctx;
 
 typedef struct
 {
     alc_digest_handle_t handle;
     alc_digest_info_t   dinfo;
 } ipp_wrp_sha2_ctx;
+
+typedef struct
+{
+    IppHashAlgId algId;      // ID of the current algorithm
+    int          len;        // Length of hash output in bytes
+    int          blockSize;  // Length of a block in bytes
+    int          lenRepSize; // Length of processed message
+    // There are more, for now they are useless.
+} ipp_sha2_rmf_algo_ctx;

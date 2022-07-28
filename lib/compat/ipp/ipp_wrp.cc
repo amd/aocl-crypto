@@ -39,10 +39,3 @@ ippsAES_XTSGetSize(int* pSize)
     *pSize = sizeof(ipp_wrp_aes_ctx);
     return ippStsNoErr;
 }
-
-IppStatus
-ippsAES_GCMGetSize(int* pSize)
-{
-    *pSize = sizeof(ipp_wrp_aes_ctx);
-    return ippStsNoErr;
-}
