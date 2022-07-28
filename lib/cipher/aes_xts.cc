@@ -29,6 +29,7 @@
 #include "cipher/aes.hh"
 #include "cipher/aesni.hh"
 #include "cipher/vaes.hh"
+#include "cipher/vaes_avx512.hh"
 
 namespace alcp::cipher {
 
@@ -74,6 +75,32 @@ Xts::encrypt(const uint8_t* pPlainText,
         return err;
     }
 
+    if ((Cipher::isAvx512Has(cipher::AVX512_F)
+         && Cipher::isAvx512Has(cipher::AVX512_DQ)
+         && Cipher::isAvx512Has(cipher::AVX512_BW))) {
+        err = vaes::EncryptXtsAvx512(pPlainText,
+                                     pCipherText,
+                                     len,
+                                     getEncryptKeys(),
+                                     p_tweak_key,
+                                     getRounds(),
+                                     pIv);
+        return err;
+    }
+
+    if (Cipher::isVaesAvailable()) {
+
+        err = vaes::EncryptXts(pPlainText,
+                               pCipherText,
+                               len,
+                               getEncryptKeys(),
+                               p_tweak_key,
+                               getRounds(),
+                               pIv);
+
+        return err;
+    }
+
     if (Cipher::isAesniAvailable()) {
 
         err = aesni::EncryptXts(pPlainText,
@@ -93,8 +120,8 @@ Xts::encrypt(const uint8_t* pPlainText,
 }
 
 alc_error_t
-Xts::decrypt(const uint8_t* pPlainText,
-             uint8_t*       pCipherText,
+Xts::decrypt(const uint8_t* pCipherText,
+             uint8_t*       pPlainText,
              uint64_t       len,
              const uint8_t* pIv) const
 {
@@ -107,9 +134,25 @@ Xts::decrypt(const uint8_t* pPlainText,
         return err;
     }
 
+
+    if (Cipher::isAvx512Has(cipher::AVX512_F)
+        && Cipher::isAvx512Has(cipher::AVX512_DQ)
+        && Cipher::isAvx512Has(cipher::AVX512_BW)) {
+
+        err = vaes::DecryptXtsAvx512(pCipherText,
+                                     pPlainText,
+                                     len,
+                                     getDecryptKeys(),
+                                     p_tweak_key,
+                                     getRounds(),
+                                     pIv);
+        return err;
+    }
+
     if (Cipher::isVaesAvailable()) {
-        err = vaes::DecryptXts(pPlainText,
-                               pCipherText,
+
+        err = vaes::DecryptXts(pCipherText,
+                               pPlainText,
                                len,
                                getDecryptKeys(),
                                p_tweak_key,
@@ -121,8 +164,8 @@ Xts::decrypt(const uint8_t* pPlainText,
 
     if (Cipher::isAesniAvailable()) {
 
-        err = aesni::DecryptXts(pPlainText,
-                                pCipherText,
+        err = aesni::DecryptXts(pCipherText,
+                                pPlainText,
                                 len,
                                 getDecryptKeys(),
                                 p_tweak_key,
@@ -132,7 +175,7 @@ Xts::decrypt(const uint8_t* pPlainText,
         return err;
     }
 
-    err = Rijndael::decrypt(pPlainText, pCipherText, len, pIv);
+    err = Rijndael::decrypt(pCipherText, pPlainText, len, pIv);
 
     return err;
 }

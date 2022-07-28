@@ -32,58 +32,25 @@ create_demo_session(const uint8_t* key,
     };
 
     alc_cipher_info_t cinfo = {
-      .ci_type = ALC_CIPHER_TYPE_AES,
+        .ci_type = ALC_CIPHER_TYPE_AES,
 
-      .ci_algo_info = 
-        {
+        .ci_algo_info = {
             .ai_mode = ALC_AES_MODE_XTS,
-            .ai_iv = iv,
-            .ai_xts =
-                       {
-                           .xi_tweak_key = &kinfo,
-                       }
+            .ai_iv   = iv,
+            .ai_xts = {
+                .xi_tweak_key = &kinfo,
+            }
         },
+            /* No padding, Not Implemented yet*/
+        //.pad     = ALC_CIPHER_PADDING_NONE, 
+        .ci_key_info     = {
+            .type    = ALC_KEY_TYPE_SYMMETRIC,
+            .fmt     = ALC_KEY_FMT_RAW,
+            .key     = key,
+            .len     = key_len,
+        },
+    };
 
-      /* No padding, Not Implemented yet*/
-      //.pad     = ALC_CIPHER_PADDING_NONE,
-      .ci_key_info =
-          {
-              .type = ALC_KEY_TYPE_SYMMETRIC,
-              .fmt = ALC_KEY_FMT_RAW,
-              .key = key,
-              .len = key_len,
-          },
-  };
-
-    /*
-     * Check if the current cipher is supported,
-     * optional call, alcp_cipher_request() will anyway return
-     * ALC_ERR_NOSUPPORT error.
-     *
-     * This query call is provided to support fallback mode for applications
-     */
-    err = alcp_cipher_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
-        return;
-    }
-    printf("supported succeeded\n");
-    /*
-     * Application is expected to allocate for context
-     */
-    handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
-    // if (!ctx)
-    //    return;
-
-    /* Request a context with cinfo */
-    err = alcp_cipher_request(&cinfo, &handle);
-    if (alcp_is_error(err)) {
-        printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
-        return;
-    }
-    printf("request succeeded\n");
     /*
      * Check if the current cipher is supported,
      * optional call, alcp_cipher_request() will anyway return
@@ -185,7 +152,7 @@ static const uint8_t sample_iv[] = {
 
 static uint8_t cipher = {68,cc,95,fe,db,6c,0c,87,76,73,98,fc,0a,dc,f6,07,9e,33,17,75,ad,0a,eb,27,66,29,f3,9e,b6,8d,1f,05};
 #else
-static uint8_t sample_ciphertxt[512] = {
+static uint8_t sample_ciphertxt[100000] = {
     0,
 };
 #endif
@@ -245,15 +212,16 @@ main(void)
 
     create_demo_session(
         sample_key, sample_tweak_key, sample_iv, sizeof(sample_key) * 8);
-    ALC_PRINT(((uint8_t*)sample_plaintxt), pt_size);
+
+    // ALC_PRINT(((uint8_t*)sample_plaintxt), pt_size);
     encrypt_demo(sample_plaintxt,
                  pt_size, /* len of 'plaintxt' and 'ciphertxt' */
                  sample_ciphertxt,
                  sample_iv);
-    ALC_PRINT(((uint8_t*)&sample_ciphertxt), pt_size);
+    // ALC_PRINT(((uint8_t*)&sample_ciphertxt), pt_size);
 
     decrypt_demo(sample_ciphertxt, pt_size, sample_output, sample_iv);
-    ALC_PRINT(((uint8_t*)&sample_output), pt_size);
+    // ALC_PRINT(((uint8_t*)&sample_output), pt_size);
     printf("sample_output: %s\n", sample_output);
     /*
      * Complete the transaction

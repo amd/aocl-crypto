@@ -110,6 +110,22 @@ namespace alcp::cipher { namespace vaes {
         const uint8_t* pIv          // ptr to Initialization Vector
     );
 
+    alc_error_t EncryptXtsAvx512(const uint8_t* pSrc,
+                                 uint8_t*       pDest,
+                                 uint64_t       len,
+                                 const uint8_t* pKey,
+                                 const uint8_t* pTweakKey,
+                                 int            nRounds,
+                                 const uint8_t* pIv);
+
+    alc_error_t DecryptXtsAvx512(const uint8_t* pSrc,
+                                 uint8_t*       pDest,
+                                 uint64_t       len,
+                                 const uint8_t* pKey,
+                                 const uint8_t* pTweakKey,
+                                 int            nRounds,
+                                 const uint8_t* pIv);
+
     // Encrypt Begins here
     /* 1 x 4 block at a time */
     static inline void AesEncrypt(__m512i*       blk0,

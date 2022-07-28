@@ -218,7 +218,8 @@ EncryptXts(const uint8_t* pSrc,
 
         // getting Tweaked Text after xor of message and Alpha ^ j
         __m256i tweaked_src_text_1 =
-            _mm256_xor_si256(current_alpha_1, p_src256[0]);
+            _mm256_xor_si256(current_alpha_1, _mm256_loadu_si256(p_src256));
+
 
         AesEncrypt(&tweaked_src_text_1, p_key128, nRounds);
 
@@ -282,7 +283,10 @@ EncryptXts(const uint8_t* pSrc,
             (((__m128i*)&tweaked_src_text_1)[0]);
         uint8_t* p_second_last_message_block =
             (uint8_t*)&second_last_message_block;
-        __m128i last_message_block = (((__m128i*)p_src256)[1]);
+        __m128i last_message_block = _mm_setzero_si128();
+        memcpy(((uint8_t*)&last_message_block),
+               (((uint8_t*)(p_src256)) + 16),
+               last_Round_Byte);
 
         memcpy(((uint8_t*)&last_message_block) + last_Round_Byte,
                p_second_last_message_block + last_Round_Byte,
@@ -313,7 +317,10 @@ EncryptXts(const uint8_t* pSrc,
         __m128i  second_last_message_block = ((((__m128i*)p_dest256) - 1)[0]);
         uint8_t* p_second_last_message_block =
             (uint8_t*)&second_last_message_block;
-        __m128i last_message_block = ((((__m128i*)p_src256))[0]);
+        __m128i last_message_block = _mm_setzero_si128();
+        memcpy(((uint8_t*)&last_message_block),
+               (((uint8_t*)(p_src256))),
+               last_Round_Byte);
         memcpy((uint8_t*)&last_message_block + last_Round_Byte,
                p_second_last_message_block + last_Round_Byte,
                16 - last_Round_Byte);
@@ -525,7 +532,7 @@ DecryptXts(const uint8_t* pSrc,
 
         // getting Tweaked Text after xor of message and Alpha ^ j
         __m256i tweaked_src_text_1 =
-            _mm256_xor_si256(current_alpha_1, p_src256[0]);
+            _mm256_xor_si256(current_alpha_1, _mm256_loadu_si256(p_src256));
 
         AesDecrypt(&tweaked_src_text_1, p_key128, nRounds);
 
@@ -535,9 +542,6 @@ DecryptXts(const uint8_t* pSrc,
 
         // storing the results in destination
         _mm256_storeu_si256(p_dest256, tweaked_src_text_1);
-
-        // p_dest256 += 1;
-        // p_src256 += 1;
 
         blocks -= 1;
         p_dest256 = (__m256i*)(((__m128i*)p_dest256) + 1);
@@ -595,15 +599,14 @@ DecryptXts(const uint8_t* pSrc,
         tweaked_src_text_1 =
             _mm256_xor_si256(current_alpha_1, tweaked_src_text_1);
 
-        // storing the results in destination
-        // _mm_store_si128((__m128i*)p_dest256,
-        //                 (((__m128i*)&tweaked_src_text_1)[1]));
-
         __m128i second_last_message_block =
             (((__m128i*)&tweaked_src_text_1)[0]);
         uint8_t* p_second_last_message_block =
             (uint8_t*)&second_last_message_block;
-        __m128i last_message_block = (((__m128i*)p_src256)[1]);
+        __m128i last_message_block = _mm_setzero_si128();
+        memcpy(((uint8_t*)&last_message_block),
+               (((uint8_t*)(p_src256)) + 16),
+               last_Round_Byte);
 
         memcpy(((uint8_t*)&last_message_block) + last_Round_Byte,
                p_second_last_message_block + last_Round_Byte,
@@ -634,7 +637,10 @@ DecryptXts(const uint8_t* pSrc,
         __m128i  second_last_message_block = ((((__m128i*)p_dest256) - 1)[0]);
         uint8_t* p_second_last_message_block =
             (uint8_t*)&second_last_message_block;
-        __m128i last_message_block = ((((__m128i*)p_src256))[0]);
+        __m128i last_message_block = _mm_setzero_si128();
+        memcpy(((uint8_t*)&last_message_block),
+               (((uint8_t*)(p_src256))),
+               last_Round_Byte);
         memcpy((uint8_t*)&last_message_block + last_Round_Byte,
                (p_second_last_message_block) + last_Round_Byte,
                16 - last_Round_Byte);
