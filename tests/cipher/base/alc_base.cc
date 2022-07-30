@@ -26,362 +26,331 @@
  *
  */
 
-#include "alc_base.hh"
+#include "cipher/alc_base.hh"
 
-namespace alcp::testing
+namespace alcp::testing {
+
+// AlcpCipherBase class functions
+AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode, const uint8_t* iv)
+    : m_mode{ mode }
+    , m_iv{ iv }
+{}
+
+AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode,
+                               const uint8_t*          iv,
+                               const uint8_t*          key,
+                               const uint32_t          key_len)
+    : m_mode{ mode }
+    , m_iv{ iv }
 {
+    init(iv, key, key_len);
+}
 
-    // AlcpCipherBase class functions
-    AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode, const uint8_t *iv)
-        : m_mode{mode}, m_iv{iv}
-    {
-    }
+/* xts */
+AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode,
+                               const uint8_t*          iv,
+                               const uint8_t*          key,
+                               const uint32_t          key_len,
+                               const uint8_t*          tkey)
+    : m_mode{ mode }
+    , m_iv{ iv }
+{
+    init(iv, key, key_len, tkey);
+}
 
-    AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode,
-                                   const uint8_t *iv,
-                                   const uint8_t *key,
-                                   const uint32_t key_len)
-        : m_mode{mode}, m_iv{iv}
-    {
-        init(iv, key, key_len);
-    }
-
-    /* xts */
-    AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode,
-                                   const uint8_t *iv,
-                                   const uint8_t *key,
-                                   const uint32_t key_len,
-                                   const uint8_t *tkey)
-        : m_mode{mode}, m_iv{iv}
-    {
-        init(iv, key, key_len, tkey);
-    }
-
-    AlcpCipherBase::~AlcpCipherBase()
-    {
-        if (m_handle != nullptr)
-        {
-            alcp_cipher_finish(m_handle);
-            if (m_handle->ch_context != NULL)
-            {
-                if (m_cinfo.ci_algo_info.ai_xts.xi_tweak_key != nullptr)
-                    free(m_cinfo.ci_algo_info.ai_xts.xi_tweak_key);
-                free(m_handle->ch_context);
-            }
-            delete m_handle;
-        }
-    }
-
-    bool
-    AlcpCipherBase::init(const uint8_t *iv,
-                         const uint32_t iv_len,
-                         const uint8_t *key,
-                         const uint32_t key_len)
-    {
-        this->m_iv = iv;
-        return init(key, key_len);
-    }
-
-    /* for XTS */
-    bool AlcpCipherBase::init(const uint8_t *iv,
-                              const uint8_t *key,
-                              const uint32_t key_len,
-                              const uint8_t *tkey)
-    {
-        this->m_iv = iv;
-        this->m_tkey = tkey;
-        return init(key, key_len);
-    }
-
-    bool
-    AlcpCipherBase::init(const uint8_t *iv,
-                         const uint8_t *key,
-                         const uint32_t key_len)
-    {
-        this->m_iv = iv;
-        return init(key, key_len);
-    }
-
-    bool
-    AlcpCipherBase::init(const uint8_t *key, const uint32_t key_len)
-    {
-        alc_error_t err;
-        const int err_size = 256;
-        uint8_t err_buf[err_size];
-
-        if (m_handle != nullptr)
-        {
-            alcp_cipher_finish(m_handle);
+AlcpCipherBase::~AlcpCipherBase()
+{
+    if (m_handle != nullptr) {
+        alcp_cipher_finish(m_handle);
+        if (m_handle->ch_context != NULL) {
             if (m_cinfo.ci_algo_info.ai_xts.xi_tweak_key != nullptr)
                 free(m_cinfo.ci_algo_info.ai_xts.xi_tweak_key);
             free(m_handle->ch_context);
-            delete m_handle; // Free old handle
         }
-        m_handle = new alc_cipher_handle_t;
-        if (m_handle == nullptr)
-        {
-            std::cout << "alcp_base.c: Memory allocation for handle failure!"
-                      << std::endl;
-            goto out;
-        }
-        // TODO: Check support before allocating
-        m_handle->ch_context = malloc(alcp_cipher_context_size(&m_cinfo));
-        if (m_handle->ch_context == NULL)
-        {
-            std::cout << "alcp_base.c: Memory allocation for context failure!"
-                      << std::endl;
-            goto out;
-        }
+        delete m_handle;
+    }
+}
 
-        /* Initialize keyinfo */
-        m_cinfo.ci_algo_info.ai_xts.xi_tweak_key = nullptr;
+bool
+AlcpCipherBase::init(const uint8_t* iv,
+                     const uint32_t iv_len,
+                     const uint8_t* key,
+                     const uint32_t key_len)
+{
+    this->m_iv = iv;
+    return init(key, key_len);
+}
 
-        m_keyinfo.algo = ALC_KEY_ALG_SYMMETRIC;
-        m_keyinfo.type = ALC_KEY_TYPE_SYMMETRIC;
-        m_keyinfo.fmt = ALC_KEY_FMT_RAW;
-        m_keyinfo.len = key_len;
-        m_keyinfo.key = key;
+/* for XTS */
+bool
+AlcpCipherBase::init(const uint8_t* iv,
+                     const uint8_t* key,
+                     const uint32_t key_len,
+                     const uint8_t* tkey)
+{
+    this->m_iv   = iv;
+    this->m_tkey = tkey;
+    return init(key, key_len);
+}
 
-        /* Initialize cinfo */
-        m_cinfo.ci_algo_info.ai_mode = m_mode;
-        m_cinfo.ci_algo_info.ai_iv = m_iv;
+bool
+AlcpCipherBase::init(const uint8_t* iv,
+                     const uint8_t* key,
+                     const uint32_t key_len)
+{
+    this->m_iv = iv;
+    return init(key, key_len);
+}
 
-        m_cinfo.ci_type = ALC_CIPHER_TYPE_AES;
-        m_cinfo.ci_key_info = m_keyinfo;
-        /* set these only for XTS */
-        if (m_mode == ALC_AES_MODE_XTS)
-        {
-            m_cinfo.ci_algo_info.ai_xts.xi_tweak_key = (alc_key_info_p)malloc(sizeof(alc_key_info_t));
-            // m_cinfo.ci_algo_info.ai_xts.xi_tweak_key->tweak_key = m_tkey;
-            m_cinfo.ci_algo_info.ai_xts.xi_tweak_key->key = m_tkey;
-            m_cinfo.ci_algo_info.ai_xts.xi_tweak_key->len = key_len;
-            m_cinfo.ci_algo_info.ai_xts.xi_tweak_key->algo = ALC_KEY_ALG_SYMMETRIC;
-            m_cinfo.ci_algo_info.ai_xts.xi_tweak_key->fmt = ALC_KEY_FMT_RAW;
+bool
+AlcpCipherBase::init(const uint8_t* key, const uint32_t key_len)
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
+
+    if (m_handle != nullptr) {
+        alcp_cipher_finish(m_handle);
+        if (m_cinfo.ci_algo_info.ai_xts.xi_tweak_key != nullptr)
+            free(m_cinfo.ci_algo_info.ai_xts.xi_tweak_key);
+        free(m_handle->ch_context);
+        delete m_handle; // Free old handle
+    }
+    m_handle = new alc_cipher_handle_t;
+    if (m_handle == nullptr) {
+        std::cout << "alcp_base.c: Memory allocation for handle failure!"
+                  << std::endl;
+        goto out;
+    }
+    // TODO: Check support before allocating
+    m_handle->ch_context = malloc(alcp_cipher_context_size(&m_cinfo));
+    if (m_handle->ch_context == NULL) {
+        std::cout << "alcp_base.c: Memory allocation for context failure!"
+                  << std::endl;
+        goto out;
+    }
+
+    /* Initialize keyinfo */
+    m_cinfo.ci_algo_info.ai_xts.xi_tweak_key = nullptr;
+
+    m_keyinfo.algo = ALC_KEY_ALG_SYMMETRIC;
+    m_keyinfo.type = ALC_KEY_TYPE_SYMMETRIC;
+    m_keyinfo.fmt  = ALC_KEY_FMT_RAW;
+    m_keyinfo.len  = key_len;
+    m_keyinfo.key  = key;
+
+    /* Initialize cinfo */
+    m_cinfo.ci_algo_info.ai_mode = m_mode;
+    m_cinfo.ci_algo_info.ai_iv   = m_iv;
+
+    m_cinfo.ci_type     = ALC_CIPHER_TYPE_AES;
+    m_cinfo.ci_key_info = m_keyinfo;
+    /* set these only for XTS */
+    if (m_mode == ALC_AES_MODE_XTS) {
+        m_cinfo.ci_algo_info.ai_xts.xi_tweak_key =
+            (alc_key_info_p)malloc(sizeof(alc_key_info_t));
+        // m_cinfo.ci_algo_info.ai_xts.xi_tweak_key->tweak_key = m_tkey;
+        m_cinfo.ci_algo_info.ai_xts.xi_tweak_key->key  = m_tkey;
+        m_cinfo.ci_algo_info.ai_xts.xi_tweak_key->len  = key_len;
+        m_cinfo.ci_algo_info.ai_xts.xi_tweak_key->algo = ALC_KEY_ALG_SYMMETRIC;
+        m_cinfo.ci_algo_info.ai_xts.xi_tweak_key->fmt  = ALC_KEY_FMT_RAW;
+    }
+
+    /* Check support */
+    err = alcp_cipher_supported(&m_cinfo);
+    if (alcp_is_error(err)) {
+        printf("Error: not supported \n");
+        alcp_error_str(err, err_buf, err_size);
+        goto out;
+    }
+
+    /* Request Handle */
+    err = alcp_cipher_request(&m_cinfo, m_handle);
+    if (alcp_is_error(err)) {
+        printf("Error: unable to request \n");
+        alcp_error_str(err, err_buf, err_size);
+        goto out;
+    }
+    return true;
+out:
+    if (m_handle != nullptr) {
+        if (m_handle->ch_context != NULL) {
+            if (m_cinfo.ci_algo_info.ai_xts.xi_tweak_key != nullptr)
+                free(m_cinfo.ci_algo_info.ai_xts.xi_tweak_key);
+            free(m_handle->ch_context);
         }
+        delete m_handle; // Free old handle
+    }
+    return false;
+}
 
-        /* Check support */
-        err = alcp_cipher_supported(&m_cinfo);
-        if (alcp_is_error(err))
-        {
-            printf("Error: not supported \n");
-            alcp_error_str(err, err_buf, err_size);
-            goto out;
-        }
+bool
+AlcpCipherBase::encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt)
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
 
-        /* Request Handle */
-        err = alcp_cipher_request(&m_cinfo, m_handle);
-        if (alcp_is_error(err))
-        {
-            printf("Error: unable to request \n");
-            alcp_error_str(err, err_buf, err_size);
-            goto out;
-        }
-        return true;
-    out:
-        if (m_handle != nullptr)
-        {
-            if (m_handle->ch_context != NULL)
-            {
-                if (m_cinfo.ci_algo_info.ai_xts.xi_tweak_key != nullptr)
-                    free(m_cinfo.ci_algo_info.ai_xts.xi_tweak_key);
-                free(m_handle->ch_context);
-            }
-            delete m_handle; // Free old handle
-        }
+    /* Encrypt Data */
+    err = alcp_cipher_encrypt(m_handle, plaintxt, ciphertxt, len, m_iv);
+    if (alcp_is_error(err)) {
+        printf("Error: unable to encrypt \n");
+        alcp_error_str(err, err_buf, err_size);
         return false;
     }
+    return true;
+}
 
-    bool
-    AlcpCipherBase::encrypt(const uint8_t *plaintxt, size_t len, uint8_t *ciphertxt)
-    {
-        alc_error_t err;
-        const int err_size = 256;
-        uint8_t err_buf[err_size];
+bool
+AlcpCipherBase::encrypt(alcp_data_ex_t data)
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buff[err_size];
 
-        /* Encrypt Data */
-        err = alcp_cipher_encrypt(m_handle, plaintxt, ciphertxt, len, m_iv);
-        if (alcp_is_error(err))
-        {
-            printf("Error: unable to encrypt \n");
+    if (m_mode == ALC_AES_MODE_GCM) {
+
+        // GCM Init
+        err = alcp_cipher_encrypt_update(
+            m_handle, nullptr, nullptr, data.ivl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: GCM encrypt init failure! code:11\n");
+            alcp_error_str(err, err_buff, err_size);
+            return false;
+        }
+        // Additional Data
+        if (data.adl == 0 && data.ad == nullptr) {
+            // FIXME: Hack to prevent ad from being null
+            uint8_t a;
+            data.ad = &a; // Some random value other than NULL
+        }
+        err = alcp_cipher_encrypt_update(
+            m_handle, data.ad, nullptr, data.adl, m_iv);
+
+        if (alcp_is_error(err)) {
+            printf("Error: GCM additional data failure! code:12\n");
+            alcp_error_str(err, err_buff, err_size);
+            return false;
+        }
+        // GCM Encrypt
+        err = alcp_cipher_encrypt_update(
+            m_handle, data.in, data.out, data.inl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: GCM ecnryption failure! code:13\n");
+            alcp_error_str(err, err_buff, err_size);
+            return false;
+        }
+        // Get Tag
+        if (data.tagl == 0 && data.tag == nullptr) {
+            // FIXME: Hack to prevent ad from being null
+            uint8_t a;
+            data.tag = &a; // Some random value other than NULL
+        }
+        err = alcp_cipher_encrypt_update(
+            m_handle, nullptr, data.tag, data.tagl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: GCM tag fetch failure! code:14\n");
+            alcp_error_str(err, err_buff, err_size);
+            return false;
+        }
+    } else {
+        // For non GCM mode
+        err = alcp_cipher_encrypt(m_handle, data.in, data.out, data.inl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: Encryption failure! code:10\n");
+            alcp_error_str(err, err_buff, err_size);
+            return false;
+        }
+    }
+    return true;
+}
+
+bool
+AlcpCipherBase::decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt)
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
+
+    /* Decrypt Data */
+    err = alcp_cipher_decrypt(m_handle, ciphertxt, plaintxt, len, m_iv);
+    if (alcp_is_error(err)) {
+        printf("Error: unable decrypt \n");
+        alcp_error_str(err, err_buf, err_size);
+        return false;
+    }
+    return true;
+}
+
+bool
+AlcpCipherBase::decrypt(alcp_data_ex_t data)
+{
+    alc_error_t err;
+    const int   err_size = 256;
+    uint8_t     err_buf[err_size];
+    uint8_t     tagbuff[data.tagl];
+
+    if (m_mode == ALC_AES_MODE_GCM) {
+        // GCM Init
+        err = alcp_cipher_decrypt_update(
+            m_handle, nullptr, nullptr, data.ivl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: GCM decrypt init failure! code:1\n");
             alcp_error_str(err, err_buf, err_size);
             return false;
         }
-        return true;
-    }
-
-    bool
-    AlcpCipherBase::encrypt(alcp_data_ex_t data)
-    {
-        alc_error_t err;
-        const int err_size = 256;
-        uint8_t err_buff[err_size];
-
-        if (m_mode == ALC_AES_MODE_GCM)
-        {
-
-            // GCM Init
-            err = alcp_cipher_encrypt_update(
-                m_handle, nullptr, nullptr, data.ivl, m_iv);
-            if (alcp_is_error(err))
-            {
-                printf("Error: GCM encrypt init failure! code:11\n");
-                alcp_error_str(err, err_buff, err_size);
-                return false;
-            }
-            // Additional Data
-            if (data.adl == 0 && data.ad == nullptr)
-            {
-                // FIXME: Hack to prevent ad from being null
-                uint8_t a;
-                data.ad = &a; // Some random value other than NULL
-            }
-            err = alcp_cipher_encrypt_update(
-                m_handle, data.ad, nullptr, data.adl, m_iv);
-
-            if (alcp_is_error(err))
-            {
-                printf("Error: GCM additional data failure! code:12\n");
-                alcp_error_str(err, err_buff, err_size);
-                return false;
-            }
-            // GCM Encrypt
-            err = alcp_cipher_encrypt_update(
-                m_handle, data.in, data.out, data.inl, m_iv);
-            if (alcp_is_error(err))
-            {
-                printf("Error: GCM ecnryption failure! code:13\n");
-                alcp_error_str(err, err_buff, err_size);
-                return false;
-            }
-            // Get Tag
-            if (data.tagl == 0 && data.tag == nullptr)
-            {
-                // FIXME: Hack to prevent ad from being null
-                uint8_t a;
-                data.tag = &a; // Some random value other than NULL
-            }
-            err = alcp_cipher_encrypt_update(
-                m_handle, nullptr, data.tag, data.tagl, m_iv);
-            if (alcp_is_error(err))
-            {
-                printf("Error: GCM tag fetch failure! code:14\n");
-                alcp_error_str(err, err_buff, err_size);
-                return false;
-            }
+        // Additional Data
+        if (data.adl == 0 && data.ad == nullptr) {
+            // FIXME: Hack to prevent ad from being null
+            uint8_t a;
+            data.ad = &a; // Some random value other than NULL
         }
-        else
-        {
-            // For non GCM mode
-            err = alcp_cipher_encrypt(m_handle, data.in, data.out, data.inl, m_iv);
-            if (alcp_is_error(err))
-            {
-                printf("Error: Encryption failure! code:10\n");
-                alcp_error_str(err, err_buff, err_size);
-                return false;
-            }
-        }
-        return true;
-    }
-
-    bool
-    AlcpCipherBase::decrypt(const uint8_t *ciphertxt, size_t len, uint8_t *plaintxt)
-    {
-        alc_error_t err;
-        const int err_size = 256;
-        uint8_t err_buf[err_size];
-
-        /* Decrypt Data */
-        err = alcp_cipher_decrypt(m_handle, ciphertxt, plaintxt, len, m_iv);
-        if (alcp_is_error(err))
-        {
-            printf("Error: unable decrypt \n");
+        err = alcp_cipher_decrypt_update(
+            m_handle, data.ad, nullptr, data.adl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: GCM additional data failure! code:2\n");
             alcp_error_str(err, err_buf, err_size);
             return false;
         }
-        return true;
-    }
-
-    bool
-    AlcpCipherBase::decrypt(alcp_data_ex_t data)
-    {
-        alc_error_t err;
-        const int err_size = 256;
-        uint8_t err_buf[err_size];
-        uint8_t tagbuff[data.tagl];
-
-        if (m_mode == ALC_AES_MODE_GCM)
-        {
-            // GCM Init
-            err = alcp_cipher_decrypt_update(
-                m_handle, nullptr, nullptr, data.ivl, m_iv);
-            if (alcp_is_error(err))
-            {
-                printf("Error: GCM decrypt init failure! code:1\n");
-                alcp_error_str(err, err_buf, err_size);
-                return false;
-            }
-            // Additional Data
-            if (data.adl == 0 && data.ad == nullptr)
-            {
-                // FIXME: Hack to prevent ad from being null
-                uint8_t a;
-                data.ad = &a; // Some random value other than NULL
-            }
-            err = alcp_cipher_decrypt_update(
-                m_handle, data.ad, nullptr, data.adl, m_iv);
-            if (alcp_is_error(err))
-            {
-                printf("Error: GCM additional data failure! code:2\n");
-                alcp_error_str(err, err_buf, err_size);
-                return false;
-            }
-            // GCM Decrypt
-            err = alcp_cipher_decrypt_update(
-                m_handle, data.in, data.out, data.inl, m_iv);
-            if (alcp_is_error(err))
-            {
-                printf("Error: GCM decryption failure! code:3\n");
-                alcp_error_str(err, err_buf, err_size);
-                return false;
-            }
-            // Get Tag
-            if (data.tagl == 0 && data.tag == nullptr)
-            {
-                // FIXME: Hack to prevent ad from being null
-                uint8_t a;
-                data.tag = &a; // Some random value other than NULL
-            }
-            err = alcp_cipher_decrypt_update(
-                m_handle, nullptr, tagbuff, data.tagl, m_iv);
-            if (alcp_is_error(err))
-            {
-                printf("Error: GCM tag fetch failure! code:4\n");
-                alcp_error_str(err, err_buf, err_size);
-                return false;
-            }
-            // Tag verification
-            if (std::memcmp(tagbuff, data.tag, data.tagl) != 0)
-            {
-                return false;
-            }
+        // GCM Decrypt
+        err = alcp_cipher_decrypt_update(
+            m_handle, data.in, data.out, data.inl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: GCM decryption failure! code:3\n");
+            alcp_error_str(err, err_buf, err_size);
+            return false;
         }
-        else
-        {
-            // For non GCM mode
-            err = alcp_cipher_decrypt(m_handle, data.in, data.out, data.inl, m_iv);
-            if (alcp_is_error(err))
-            {
-                printf("Error: Decryption failure! code:0\n");
-                alcp_error_str(err, err_buf, err_size);
-                return false;
-            }
+        // Get Tag
+        if (data.tagl == 0 && data.tag == nullptr) {
+            // FIXME: Hack to prevent ad from being null
+            uint8_t a;
+            data.tag = &a; // Some random value other than NULL
         }
-        return true;
+        err = alcp_cipher_decrypt_update(
+            m_handle, nullptr, tagbuff, data.tagl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: GCM tag fetch failure! code:4\n");
+            alcp_error_str(err, err_buf, err_size);
+            return false;
+        }
+        // Tag verification
+        if (std::memcmp(tagbuff, data.tag, data.tagl) != 0) {
+            return false;
+        }
+    } else {
+        // For non GCM mode
+        err = alcp_cipher_decrypt(m_handle, data.in, data.out, data.inl, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: Decryption failure! code:0\n");
+            alcp_error_str(err, err_buf, err_size);
+            return false;
+        }
     }
+    return true;
+}
 
-    void
-    AlcpCipherBase::reset()
-    {
-    }
+void
+AlcpCipherBase::reset()
+{}
 
 } // namespace alcp::testing

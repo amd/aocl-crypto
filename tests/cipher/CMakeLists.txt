@@ -71,7 +71,7 @@ FUNCTION(KAT_AES MOD)
     TARGET_INCLUDE_DIRECTORIES(aes_${MOD}_kat PRIVATE
         "${CMAKE_SOURCE_DIR}/include"
         "${CMAKE_SOURCE_DIR}/lib/include"
-        "${CMAKE_CURRENT_SOURCE_DIR}/include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../include"
         "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
         ${EXTRA_INCLUDES})
     TARGET_LINK_LIBRARIES(aes_${MOD}_kat ${LIBS})
@@ -84,7 +84,7 @@ FUNCTION(CROSS_AES MOD)
     TARGET_INCLUDE_DIRECTORIES(aes_${MOD}_cross PRIVATE
         "${CMAKE_SOURCE_DIR}/include"
         "${CMAKE_SOURCE_DIR}/lib/include"
-        "${CMAKE_CURRENT_SOURCE_DIR}/include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../include"
         "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
         ${EXTRA_INCLUDES})
     TARGET_LINK_LIBRARIES(aes_${MOD}_cross ${LIBS})

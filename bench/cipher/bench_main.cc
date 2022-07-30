@@ -26,8 +26,8 @@
  *
  */
 
-#include "base.hh"
 #include "benchmarks.hh"
+#include "cipher/base.hh"
 #include "gbench_base.hh"
 
 // Test blocksizes, append more if needed, size is in bytes

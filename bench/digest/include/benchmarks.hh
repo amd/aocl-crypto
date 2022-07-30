@@ -27,22 +27,22 @@
  */
 
 #pragma once
-#include "alc_base.hh"
-#include "base.hh"
+#include "digest/alc_base.hh"
+#include "digest/base.hh"
 
 #ifdef USE_IPP
-#include "ipp_base.hh"
+#include "digest/ipp_base.hh"
 #endif
 
 #ifdef USE_OSSL
-#include "openssl_base.hh"
+#include "digest/openssl_base.hh"
 #endif
 
 #include "gbench_base.hh"
-#include "string.h"
 #include <alcp/alcp.h>
 #include <benchmark/benchmark.h>
 #include <iostream>
+#include <string.h>
 
 using namespace alcp::testing;
 

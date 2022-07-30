@@ -59,7 +59,7 @@ TARGET_INCLUDE_DIRECTORIES(bench_cipher PRIVATE
 	"${CMAKE_SOURCE_DIR}/include" 
 	"${CMAKE_SOURCE_DIR}/lib/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    "${CMAKE_SOURCE_DIR}/tests/cipher/include"
+    "${CMAKE_SOURCE_DIR}/tests/include"
     "${CMAKE_SOURCE_DIR}/tests/common/include"
     ${EXTRA_INCLUDES})
 

@@ -26,18 +26,18 @@
  *
  */
 
-#include "alc_base.hh"
-#include "base.hh"
-#include "gtest_base.hh"
+#include "digest/alc_base.hh"
+#include "digest/base.hh"
+#include "digest/gtest_base.hh"
 #include "string.h"
 #include <alcp/alcp.h>
 #include <iostream>
 
 #ifdef USE_IPP
-#include "ipp_base.hh"
+#include "digest/ipp_base.hh"
 #endif
 #ifdef USE_OSSL
-#include "openssl_base.hh"
+#include "digest/openssl_base.hh"
 #endif
 
 using namespace alcp::testing;
@@ -96,7 +96,8 @@ TEST(DIGEST_SHA2, KAT_256)
 #endif
 
 #ifdef USE_OSSL
-    OpenSSLDigestBase odb(ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
+    OpenSSLDigestBase odb(
+        ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
     if (useossl == true)
         db = &odb;
 #endif
@@ -134,7 +135,8 @@ TEST(DIGEST_SHA2, KAT_384)
 #endif
 
 #ifdef USE_OSSL
-    OpenSSLDigestBase odb(ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
+    OpenSSLDigestBase odb(
+        ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
     if (useossl == true)
         db = &odb;
 #endif
@@ -173,7 +175,8 @@ TEST(DIGEST_SHA2, KAT_512)
 #endif
 
 #ifdef USE_OSSL
-    OpenSSLDigestBase odb(ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
+    OpenSSLDigestBase odb(
+        ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
     if (useossl == true)
         db = &odb;
 #endif

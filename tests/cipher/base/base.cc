@@ -26,10 +26,10 @@
  *
  */
 
-#include "base.hh"
+#include "cipher/base.hh"
 #include <sstream>
 #ifdef USE_IPP
-#include "ipp_base.hh"
+#include "cipher/ipp_base.hh"
 #endif
 
 namespace alcp::testing

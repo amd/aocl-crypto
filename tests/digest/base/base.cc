@@ -26,7 +26,7 @@
  *
  */
 
-#include "base.hh"
+#include "digest/base.hh"
 #include <iostream>
 #include <sstream>
 #include <unistd.h>

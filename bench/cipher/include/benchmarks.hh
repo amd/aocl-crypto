@@ -27,19 +27,19 @@
  */
 #pragma once
 
-#include "alc_base.hh"
-#include "base.hh"
-#include "string.h"
+#include "cipher/alc_base.hh"
+#include "cipher/base.hh"
 #include <alcp/alcp.h>
 #include <benchmark/benchmark.h>
 #include <iostream>
+#include <string.h>
 
 #ifdef USE_IPP
-#include "ipp_base.hh"
+#include "cipher/ipp_base.hh"
 #endif
 
 #ifdef USE_OSSL
-#include "openssl_base.hh"
+#include "cipher/openssl_base.hh"
 #endif
 
 typedef enum

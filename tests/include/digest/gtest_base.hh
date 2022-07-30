@@ -31,7 +31,6 @@
 #define __GTEST_BASE_HH 2
 
 #include "gtest_common.hh"
-#include <base.hh>
 #include <vector>
 
 #endif

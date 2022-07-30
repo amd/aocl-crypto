@@ -34,9 +34,9 @@
  *
  */
 
-#include "alc_base.hh"
-#include "base.hh"
-#include "gtest_base.hh"
+#include "cipher/alc_base.hh"
+#include "cipher/base.hh"
+#include "cipher/gtest_base.hh"
 #include "rng_base.hh"
 
 using namespace alcp::testing;
@@ -47,19 +47,23 @@ ExecRecPlay* fr = nullptr;
 #define STR_MODE "AES_CTR"
 
 /* Testing Starts Here! */
-TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL){
+TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
+{
     AesCrosstest(128, ENCRYPT, ALC_MODE, SMALL);
 }
 
-TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG){
+TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
+{
     AesCrosstest(128, ENCRYPT, ALC_MODE, BIG);
 }
 
-TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL){
+TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
+{
     AesCrosstest(128, DECRYPT, ALC_MODE, SMALL);
 }
 
-TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG){
+TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
+{
     AesCrosstest(128, DECRYPT, ALC_MODE, BIG);
 }
 

@@ -26,9 +26,9 @@
  *
  */
 
-#include "alc_base.hh"
-#include "base.hh"
-#include "gtest_base.hh"
+#include "cipher/alc_base.hh"
+#include "cipher/base.hh"
+#include "cipher/gtest_base.hh"
 
 using namespace alcp::testing;
 
@@ -37,32 +37,32 @@ using namespace alcp::testing;
 /* Testing Starts Here! */
 TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
 {
-    AesKatTest(128, ENCRYPT,    ALC_MODE);
+    AesKatTest(128, ENCRYPT, ALC_MODE);
 }
 
 TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
 {
-    AesKatTest(192, ENCRYPT,    ALC_MODE);
+    AesKatTest(192, ENCRYPT, ALC_MODE);
 }
 
 TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
 {
-    AesKatTest(256, ENCRYPT,    ALC_MODE);
+    AesKatTest(256, ENCRYPT, ALC_MODE);
 }
 
 TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
 {
-    AesKatTest(128, DECRYPT,    ALC_MODE);
+    AesKatTest(128, DECRYPT, ALC_MODE);
 }
 
 TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
 {
-    AesKatTest(192, DECRYPT,    ALC_MODE);
+    AesKatTest(192, DECRYPT, ALC_MODE);
 }
 
 TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
 {
-    AesKatTest(256, DECRYPT,    ALC_MODE);
+    AesKatTest(256, DECRYPT, ALC_MODE);
 }
 
 int

@@ -26,8 +26,8 @@
  *
  */
 
-#include "alc_base.hh"
-#include "base.hh"
+#include "digest/alc_base.hh"
+#include "digest/base.hh"
 
 namespace alcp::testing {
 

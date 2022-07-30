@@ -26,7 +26,7 @@
  *
  */
 
-#include "ipp_base.hh"
+#include "cipher/ipp_base.hh"
 
 namespace alcp::testing
 {

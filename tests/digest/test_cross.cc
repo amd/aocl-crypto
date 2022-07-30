@@ -25,19 +25,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "alc_base.hh"
-#include "base.hh"
-#include "gtest_base.hh"
+#include "digest/alc_base.hh"
+#include "digest/base.hh"
+#include "digest/gtest_base.hh"
 #include "rng_base.hh"
-#include "string.h"
 #include <alcp/alcp.h>
 #include <iostream>
+#include <string.h>
 
 #ifdef USE_IPP
-#include "ipp_base.hh"
+#include "digest/ipp_base.hh"
 #endif
 #ifdef USE_OSSL
-#include "openssl_base.hh"
+#include "digest/openssl_base.hh"
 #endif
 
 #define MAX_LOOP   160000
