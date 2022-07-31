@@ -31,6 +31,7 @@
 
 #include "digest.hh"
 #include "digest/sha2.hh"
+#include "digest/sha2_512.hh"
 
 namespace alcp::digest {
 
@@ -114,7 +115,7 @@ __sha_dtor(void* pDigest)
     alc_error_t e  = ALC_ERROR_NONE;
     auto        ap = static_cast<DIGESTTYPE*>(pDigest);
     ap->finish();
-    delete ap;
+    // delete ap;
     return e;
 }
 
@@ -127,8 +128,10 @@ __build_sha(const alc_digest_info_t& sha2Info, Context& ctx)
     /* if (!Sha256::isSupported(sha2Info)) */
     /*     err = ALC_ERROR_NOT_SUPPORTED; */
 
+    auto addr = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
+
     if (!Error::isError(err)) {
-        auto algo    = new ALGONAME(sha2Info);
+        auto algo    = new (addr) ALGONAME(sha2Info);
         ctx.m_digest = static_cast<void*>(algo);
         ctx.update   = __sha_update_wrapper<ALGONAME>;
         ctx.copy     = __sha_copy_wrapper<ALGONAME>;
@@ -174,6 +177,35 @@ class Sha2Builder
         return err;
     }
 };
+
+Uint32
+DigestBuilder::getSize(const alc_digest_info_t& rDigestInfo)
+{
+    /*
+     * WARNING: Only works for SHA512 now ,
+     * as the pImpl pattern is removed
+     */
+    switch (rDigestInfo.dt_type) {
+        case ALC_DIGEST_TYPE_SHA2: {
+            switch (rDigestInfo.dt_len) {
+                case ALC_DIGEST_LEN_256:
+                    return sizeof(Sha256);
+                case ALC_DIGEST_LEN_224:
+                    return sizeof(Sha224);
+                case ALC_DIGEST_LEN_512:
+                    return sizeof(Sha512);
+                case ALC_DIGEST_LEN_384:
+                    return sizeof(Sha512);
+                default:
+                    break;
+            }
+        }
+            return 0; // Sha2.getSize();
+
+        default:
+            return 0;
+    }
+}
 
 alc_error_t
 DigestBuilder::Build(const alc_digest_info_t& rDigestInfo, Context& rCtx)

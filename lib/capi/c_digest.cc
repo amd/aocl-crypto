@@ -39,7 +39,8 @@ EXTERN_C_BEGIN
 uint64_t
 alcp_digest_context_size(const alc_digest_info_p pDigestInfo)
 {
-    uint64_t size = sizeof(digest::Context);
+    uint64_t size =
+        sizeof(digest::Context) + digest::DigestBuilder::getSize(*pDigestInfo);
     return size;
 }
 

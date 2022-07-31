@@ -29,50 +29,29 @@
 #pragma once
 
 #include "digest.hh"
+#include "sha2.hh"
 
 namespace alcp::digest {
 
-class Sha2 : public Digest
+class Sha512 final : public Sha2
 {
   public:
-    Sha2(const std::string& name)
-        : m_name{ name }
-        , m_msg_len{ 0 }
-    {}
-
-    Sha2(const char* name)
-        : Sha2(std::string(name))
-    {}
-
-  protected:
-    Sha2() {}
-    virtual ~Sha2();
-
-  protected:
-    alc_sha2_mode_t m_mode;
-    std::string     m_name;
-    Uint64          m_msg_len;
-    // alc_sha2_param_t m_param;
-};
-
-class Sha256 final : public Sha2
-{
-  public:
-    static constexpr Uint64 /* define word size */
-        cWordSizeBits   = 32,
-        cNumRounds      = 64,                 /* num rounds in sha256 */
-        cChunkSizeBits  = 512,                /* chunk size in bits */
-        cChunkSize      = cChunkSizeBits / 8, /* chunks to proces */
-        cChunkSizeMask  = cChunkSize - 1,
+    static constexpr Uint64 cWordSizeBits = 64,   /* define word size */
+        cNumRounds                        = 80,   /* num rounds in sha512 */
+        cChunkSizeBits                    = 1024, /* chunk size in bits */
+        cChunkSize      = cChunkSizeBits / 8,     /* chunks to proces */
+        cChunkSizeMask  = cChunkSize - 1,         /*  */
         cChunkSizeWords = cChunkSizeBits / cWordSizeBits, /* same in words */
-        cHashSizeBits   = 256,                            /* same in bits */
+        cHashSizeBits   = 512,                            /* same in bits */
         cHashSize       = cHashSizeBits / 8, /* Hash size in bytes */
         cHashSizeWords  = cHashSizeBits / cWordSizeBits;
 
   public:
-    Sha256();
-    Sha256(const alc_digest_info_t& rDigestInfo);
-    virtual ~Sha256();
+    Sha512();
+    Sha512(const alc_digest_info_t& rDigestInfo);
+
+  private:
+    virtual ~Sha512();
 
   public:
     /**
@@ -143,22 +122,28 @@ class Sha256 final : public Sha2
      */
     alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const override;
 
-  public:
     alc_error_t setIv(const void* pIv, Uint64 size);
 
   private:
-    class Impl;
-    const Impl*           pImpl() const { return m_pimpl.get(); }
-    Impl*                 pImpl() { return m_pimpl.get(); }
-    std::unique_ptr<Impl> m_pimpl;
+    void        compressMsg(Uint64 w[]);
+    alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
+
+  private:
+    Uint64 m_msg_len;
+    /* Any unprocessed bytes from last call to update() */
+    Uint8  m_buffer[2 * cChunkSize];
+    Uint64 m_hash[cHashSizeWords];
+    /* index to m_buffer of previously unprocessed bytes */
+    Uint32 m_idx;
+    bool   m_finished;
 };
 
-class Sha224 final : public Sha2
+class Sha384 final : public Sha2
 {
   public:
-    Sha224();
-    Sha224(const alc_digest_info_t& rDInfo);
-    ~Sha224();
+    Sha384();
+    Sha384(const alc_digest_info_t& rDInfo);
+    virtual ~Sha384();
     alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
     void        finish() override;
     void        reset() override;
@@ -166,47 +151,7 @@ class Sha224 final : public Sha2
     alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const override;
 
   private:
-    Sha256* m_psha256;
+    Sha512* m_psha512;
 };
-
-static inline void
-CompressMsg(Uint32* pMsgSchArray, Uint32* pHash, const Uint32* pHashConstants)
-{
-    Uint32 a, b, c, d, e, f, g, h;
-    a = pHash[0];
-    b = pHash[1];
-    c = pHash[2];
-    d = pHash[3];
-    e = pHash[4];
-    f = pHash[5];
-    g = pHash[6];
-    h = pHash[7];
-    for (Uint32 i = 0; i < 64; i++) {
-        Uint32 s1, ch, temp1, s0, maj, temp2;
-        s1    = RotateRight(e, 6) ^ RotateRight(e, 11) ^ RotateRight(e, 25);
-        ch    = (e & f) ^ (~e & g);
-        temp1 = h + s1 + ch + pHashConstants[i] + pMsgSchArray[i];
-        s0    = RotateRight(a, 2) ^ RotateRight(a, 13) ^ RotateRight(a, 22);
-        maj   = (a & b) ^ (a & c) ^ (b & c);
-        temp2 = s0 + maj;
-        h     = g;
-        g     = f;
-        f     = e;
-        e     = d + temp1;
-        d     = c;
-        c     = b;
-        b     = a;
-        a     = temp1 + temp2;
-    }
-
-    pHash[0] += a;
-    pHash[1] += b;
-    pHash[2] += c;
-    pHash[3] += d;
-    pHash[4] += e;
-    pHash[5] += f;
-    pHash[6] += g;
-    pHash[7] += h;
-}
 
 } // namespace alcp::digest

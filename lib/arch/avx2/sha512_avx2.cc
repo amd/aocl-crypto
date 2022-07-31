@@ -30,7 +30,7 @@
 #include <x86intrin.h>
 
 #include "digest.hh"
-#include "digest/sha2.hh"
+#include "digest/sha2_512.hh"
 #include "error.hh"
 
 #define SHA512_WORDS_IN_128_BIT_VEC                                            \

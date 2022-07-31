@@ -26,7 +26,7 @@
  *
  */
 
-#include "digest/sha2.hh"
+#include "digest/sha2_512.hh"
 
 #include "utils/copy.hh"
 
@@ -63,7 +63,7 @@ Sha384::Sha384(const alc_digest_info_t& rDInfo)
 Sha384::Sha384() {}
 Sha384::~Sha384()
 {
-    delete m_psha512;
+    // delete m_psha512;
 }
 
 alc_error_t

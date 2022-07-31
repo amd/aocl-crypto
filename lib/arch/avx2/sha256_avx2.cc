@@ -27,7 +27,9 @@
  */
 
 #include "digest.hh"
+#include "digest/sha2.hh"
 #include "error.hh"
+
 #include <x86intrin.h>
 
 #define SHA256_CHUNK_NUM_VECT_AVX                                              \
@@ -238,46 +240,7 @@ namespace alcp::digest { namespace avx2 {
                             _mm256_extracti128_si256(x[(index + 4) % 4], 0));
         }
     }
-    inline void compress_msg(uint32_t*       pMsgSchArray,
-                             uint32_t*       pHash,
-                             const uint32_t* pHashConstants)
-    {
-        uint32_t a, b, c, d, e, f, g, h;
-        a = pHash[0];
-        b = pHash[1];
-        c = pHash[2];
-        d = pHash[3];
-        e = pHash[4];
-        f = pHash[5];
-        g = pHash[6];
-        h = pHash[7];
-        for (uint32_t i = 0; i < 64; i++) {
-            uint32_t s1, ch, temp1, s0, maj, temp2;
-            s1    = RotateRight(e, 6) ^ RotateRight(e, 11) ^ RotateRight(e, 25);
-            ch    = (e & f) ^ (~e & g);
-            temp1 = h + s1 + ch + pHashConstants[i] + pMsgSchArray[i];
-            s0    = RotateRight(a, 2) ^ RotateRight(a, 13) ^ RotateRight(a, 22);
-            maj   = (a & b) ^ (a & c) ^ (b & c);
-            temp2 = s0 + maj;
-            h     = g;
-            g     = f;
-            f     = e;
-            e     = d + temp1;
-            d     = c;
-            c     = b;
-            b     = a;
-            a     = temp1 + temp2;
-        }
 
-        pHash[0] += a;
-        pHash[1] += b;
-        pHash[2] += c;
-        pHash[3] += d;
-        pHash[4] += e;
-        pHash[5] += f;
-        pHash[6] += g;
-        pHash[7] += h;
-    }
     alc_error_t ShaUpdate256(uint32_t*       pHash,
                              const uint8_t*  pSrc,
                              uint64_t        src_len,
@@ -292,7 +255,7 @@ namespace alcp::digest { namespace avx2 {
             uint32_t msg_sch_array[64];
             load_data(chunk_vect, pSrc);
             extend_msg(chunk_vect, msg_sch_array);
-            compress_msg(msg_sch_array, pHash, pHashConstants);
+            CompressMsg(msg_sch_array, pHash, pHashConstants);
             pSrc += 64;
             src_len -= 64;
         }
@@ -302,8 +265,8 @@ namespace alcp::digest { namespace avx2 {
             uint32_t msg_sch_array_2[64];
             load_data(chunk_vect, pSrc);
             extend_msg(chunk_vect, msg_sch_array_1, msg_sch_array_2);
-            compress_msg(msg_sch_array_1, pHash, pHashConstants);
-            compress_msg(msg_sch_array_2, pHash, pHashConstants);
+            CompressMsg(msg_sch_array_1, pHash, pHashConstants);
+            CompressMsg(msg_sch_array_2, pHash, pHashConstants);
             pSrc += 128;
             src_len -= 128;
         }

@@ -34,7 +34,8 @@
 #include "alci/cpu_features.h"
 #endif
 
-#include "digest/sha2.hh"
+#include "digest/sha2_512.hh"
+
 #include "digest/sha_avx2.hh"
 
 #include "utils/bits.hh"
@@ -91,79 +92,34 @@ __attribute__((aligned(64))) static constexpr Uint64 cRoundConstants[] = {
     0x5fcb6fab3ad6faec, 0x6c44198c4a475817
 };
 
-class Sha512::Impl
+static bool
+isAvx2Available()
 {
-  public:
-    Impl();
-    ~Impl();
+    static bool s_avx2_available = true;
+    return s_avx2_available;
+}
 
-    alc_error_t update(const Uint8* buf, Uint64 size);
-    alc_error_t finalize(const Uint8* buf, Uint64 size);
-    alc_error_t copyHash(Uint8* buf, Uint64 size) const;
-
-    alc_error_t setIv(const void* pIv, Uint64 size);
-    void        reset();
-
-    /*
-     * \brief  Checks if SHANI feature is enabled
-     */
-    static bool isShaniAvailable()
-    {
-        /*
-         * FIXME: call cpuid::isShaniAvailable() initialize
-         */
-
-#ifdef USE_AOCL_CPUID
-        static bool s_shani_available = (alc_cpu_has_sha() > 0);
-#else
-        static bool s_shani_available = true;
-#endif
-        return s_shani_available;
-    }
-    static bool isAvx2Available()
-    {
-        static bool s_avx2_available = true;
-        return s_avx2_available;
-    }
-
-    static void* operator new(size_t size)
-    {
-        return GetDefaultDigestPool().allocate(size);
-    }
-
-    static void operator delete(void* ptr, size_t size)
-    {
-        auto p = reinterpret_cast<Sha512::Impl*>(ptr);
-        GetDefaultDigestPool().deallocate(p, size);
-    }
-
-  private:
-    static void extendMsg(Uint64 w[], Uint32 start, Uint32 end);
-    void        compressMsg(Uint64 w[]);
-    alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
-
-  private:
-    Uint64 m_msg_len;
-    /* Any unprocessed bytes from last call to update() */
-    Uint8  m_buffer[2 * cChunkSize];
-    Uint64 m_hash[cHashSizeWords];
-    /* index to m_buffer of previously unprocessed bytes */
-    Uint32 m_idx;
-    bool   m_finished;
-};
-
-Sha512::Impl::Impl()
+Sha512::Sha512()
     : m_msg_len{ 0 }
     , m_hash{ 0,}
     , m_idx{ 0 }
     , m_finished{ false }
 {
+    m_mode             = ALC_SHA2_512;
+    m_digest_len       = ALC_DIGEST_LEN_512;
+    m_digest_len_bytes = 512 / 8;
 
     utils::CopyQWord(&m_hash[0], &cIv[0], cHashSize);
 }
 
+Sha512::Sha512(const alc_digest_info_t& rDigestInfo)
+    : Sha512()
+{}
+
+Sha512::~Sha512() {}
+
 alc_error_t
-Sha512::Impl::setIv(const void* pIv, Uint64 size)
+Sha512::setIv(const void* pIv, Uint64 size)
 {
     utils::CopyBytes(m_hash, pIv, size);
 
@@ -171,7 +127,7 @@ Sha512::Impl::setIv(const void* pIv, Uint64 size)
 }
 
 void
-Sha512::Impl::reset()
+Sha512::reset()
 {
     m_msg_len  = 0;
     m_finished = false;
@@ -179,17 +135,68 @@ Sha512::Impl::reset()
     utils::CopyQWord(&m_hash[0], &cIv[0], cHashSize);
 }
 
-Sha512::Impl::~Impl() {}
-
 alc_error_t
-Sha512::Impl::copyHash(Uint8* pHash, Uint64 size) const
+Sha512::copyHash(Uint8* pHash, Uint64 size) const
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    utils::CopyBlockWith<Uint64>(
-        pHash, m_hash, cHashSize, utils::ToBigEndian<Uint64>);
+    if (pHash == nullptr) {
+        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+    }
+
+    if (size < cHashSize) {
+        Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
+    }
+
+    if (!Error::isError(err))
+        utils::CopyBlockWith<Uint64>(
+            pHash, m_hash, cHashSize, utils::ToBigEndian<Uint64>);
 
     return err;
+}
+
+static inline void
+CompressMsg(Uint64       pMsgSchArray[],
+            Uint64*       pHash,
+            const Uint64* pHashConstants)
+{
+    Uint64 a, b, c, d, e, f, g, h;
+    a = pHash[0];
+    b = pHash[1];
+    c = pHash[2];
+    d = pHash[3];
+    e = pHash[4];
+    f = pHash[5];
+    g = pHash[6];
+    h = pHash[7];
+    for (Uint32 i = 0; i < 80; i++) {
+        Uint64 s1, ch, temp1, s0, maj, temp2;
+        s1 = RotateRight(e, 14) ^ RotateRight(e, 18)
+             ^ RotateRight(e, 41);
+        ch    = (e & f) ^ (~e & g);
+        temp1 = h + s1 + ch + pHashConstants[i] + pMsgSchArray[i];
+        s0    = RotateRight(a, 28) ^ RotateRight(a, 34)
+             ^ RotateRight(a, 39);
+        maj   = (a & b) ^ (a & c) ^ (b & c);
+        temp2 = s0 + maj;
+        h     = g;
+        g     = f;
+        f     = e;
+        e     = d + temp1;
+        d     = c;
+        c     = b;
+        b     = a;
+        a     = temp1 + temp2;
+    }
+
+    pHash[0] += a;
+    pHash[1] += b;
+    pHash[2] += c;
+    pHash[3] += d;
+    pHash[4] += e;
+    pHash[5] += f;
+    pHash[6] += g;
+    pHash[7] += h;
 }
 
 static inline void
@@ -205,14 +212,13 @@ ExtendMsg(Uint64 w[], Uint32 start, Uint32 end)
 }
 
 void
-Sha512::Impl::compressMsg(Uint64 w[])
+Sha512::compressMsg(Uint64 w[])
 {
-    Uint64 shift[6]{ 14, 18, 41, 28, 34, 39 };
-    alcp::digest::CompressMsg<Uint64>(w, m_hash, cRoundConstants, shift);
+    CompressMsg(w, m_hash, cRoundConstants);
 }
 
 alc_error_t
-Sha512::Impl::processChunk(const Uint8* pSrc, Uint64 len)
+Sha512::processChunk(const Uint8* pSrc, Uint64 len)
 {
 
     static bool avx2_available = isAvx2Available();
@@ -246,28 +252,34 @@ Sha512::Impl::processChunk(const Uint8* pSrc, Uint64 len)
 }
 
 alc_error_t
-Sha512::Impl::update(const Uint8* pSrc, Uint64 input_size)
+Sha512::update(const Uint8* pSrc, Uint64 input_size)
 {
     alc_error_t err = ALC_ERROR_NONE;
+
+    if (pSrc == nullptr) {
+        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+    }
+
+    /*
+     * input_size == 0 is valid in shani case
+     * Returned hash is same as IV
+     */
+    if (Error::isError(err) || input_size == 0)
+        return err;
 
     if (m_finished) {
         Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
         return err;
     }
 
-    /*shani
-     * Valid request, last computed has itself is good,
-     * default is m_iv
-     */
-    if (input_size == 0) {
-        return err;
-    }
     m_msg_len += input_size;
+
     Uint64 to_process = std::min((input_size + m_idx), cChunkSize);
     if (to_process < cChunkSize) {
         /* copy them to internal buffer and return */
         utils::CopyBytes(&m_buffer[m_idx], pSrc, input_size);
         m_idx += input_size;
+
         return err;
     }
 
@@ -292,15 +304,13 @@ Sha512::Impl::update(const Uint8* pSrc, Uint64 input_size)
         }
     }
 
-    /* Calculate leftover bytes that can be processed as multiple chunks */
-    Uint64 num_chunks = input_size / cChunkSize;
-    if (num_chunks) {
-        Uint64 size = num_chunks * cChunkSize;
+    /* No of bytes that can be processed as Chunks */
+    to_process = input_size & Sha512::cChunkSizeMask;
+    if (to_process) {
+        err = processChunk(pSrc, input_size);
 
-        err = processChunk(pSrc, size);
-
-        pSrc += size;
-        input_size -= size;
+        input_size -= to_process;
+        pSrc += to_process;
     }
 
     /*
@@ -317,7 +327,7 @@ Sha512::Impl::update(const Uint8* pSrc, Uint64 input_size)
 }
 
 alc_error_t
-Sha512::Impl::finalize(const Uint8* pBuf, Uint64 size)
+Sha512::finalize(const Uint8* pBuf, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -364,11 +374,11 @@ Sha512::Impl::finalize(const Uint8* pBuf, Uint64 size)
     if (m_msg_len > ULLONG_MAX / 8) { // overflow happens
         // extract the left most 3bits
         len_in_bits_high = m_msg_len >> 61;
-        len_in_bits = m_msg_len << 3;
+        len_in_bits      = m_msg_len << 3;
 
     } else {
         len_in_bits_high = 0;
-        len_in_bits = m_msg_len * 8;
+        len_in_bits      = m_msg_len * 8;
     }
     Uint64* msg_len_ptr =
         reinterpret_cast<Uint64*>(&m_buffer[buf_len] - (sizeof(Uint64) * 2));
@@ -384,84 +394,11 @@ Sha512::Impl::finalize(const Uint8* pBuf, Uint64 size)
     return err;
 }
 
-Sha512::Sha512()
-    : Sha2{ "sha2-512" }
-    , m_pimpl{ std::make_unique<Sha512::Impl>() }
-
-{
-    m_mode             = ALC_SHA2_512;
-    m_digest_len       = ALC_DIGEST_LEN_512;
-    m_digest_len_bytes = 512 / 8;
-}
-
-Sha512::Sha512(const alc_digest_info_t& rDigestInfo)
-    : Sha512()
-{}
-
-Sha512::~Sha512() {}
-
-alc_error_t
-Sha512::setIv(const void* pIv, Uint64 size)
-{
-    return pImpl()->setIv(pIv, size);
-}
-
-alc_error_t
-Sha512::update(const Uint8* pSrc, Uint64 size)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    if (pSrc == nullptr) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
-    }
-
-    if (!alcp_is_error(err))
-        err = pImpl()->update(pSrc, size);
-
-    return err;
-}
-
-alc_error_t
-Sha512::finalize(const Uint8* pSrc, Uint64 size)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    err = pImpl()->finalize(pSrc, size);
-
-    return err;
-}
-
 void
 Sha512::finish()
 {
     // delete pImpl();
     // pImpl() = nullptr;
-}
-
-void
-Sha512::reset()
-{
-    pImpl()->reset();
-}
-
-alc_error_t
-Sha512::copyHash(Uint8* pHash, Uint64 size) const
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    if (pHash == nullptr) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
-    }
-
-    if (size < cHashSize) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
-    }
-
-    if (!Error::isError(err)) {
-        err = pImpl()->copyHash(pHash, size);
-    }
-
-    return err;
 }
 
 } // namespace alcp::digest

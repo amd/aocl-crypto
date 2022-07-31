@@ -191,8 +191,7 @@ Sha256::Impl::extendMsg(Uint32 w[], Uint32 start, Uint32 end)
 void
 Sha256::Impl::compressMsg(Uint32 w[])
 {
-    Uint32 shift[] = { 6, 11, 25, 2, 13, 22 };
-    alcp::digest::CompressMsg<Uint32>(w, m_hash, cRoundConstants, shift);
+    alcp::digest::CompressMsg(w, m_hash, cRoundConstants);
 }
 
 alc_error_t
