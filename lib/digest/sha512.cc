@@ -156,9 +156,7 @@ Sha512::copyHash(Uint8* pHash, Uint64 size) const
 }
 
 static inline void
-CompressMsg(Uint64       pMsgSchArray[],
-            Uint64*       pHash,
-            const Uint64* pHashConstants)
+CompressMsg(Uint64 pMsgSchArray[], Uint64* pHash, const Uint64* pHashConstants)
 {
     Uint64 a, b, c, d, e, f, g, h;
     a = pHash[0];
@@ -171,12 +169,10 @@ CompressMsg(Uint64       pMsgSchArray[],
     h = pHash[7];
     for (Uint32 i = 0; i < 80; i++) {
         Uint64 s1, ch, temp1, s0, maj, temp2;
-        s1 = RotateRight(e, 14) ^ RotateRight(e, 18)
-             ^ RotateRight(e, 41);
+        s1    = RotateRight(e, 14) ^ RotateRight(e, 18) ^ RotateRight(e, 41);
         ch    = (e & f) ^ (~e & g);
         temp1 = h + s1 + ch + pHashConstants[i] + pMsgSchArray[i];
-        s0    = RotateRight(a, 28) ^ RotateRight(a, 34)
-             ^ RotateRight(a, 39);
+        s0    = RotateRight(a, 28) ^ RotateRight(a, 34) ^ RotateRight(a, 39);
         maj   = (a & b) ^ (a & c) ^ (b & c);
         temp2 = s0 + maj;
         h     = g;
@@ -222,8 +218,9 @@ Sha512::processChunk(const Uint8* pSrc, Uint64 len)
 {
 
     static bool avx2_available = isAvx2Available();
+
     /* we need len to be multiple of cChunkSize */
-    assert((len & cChunkSizeMask) == 0);
+    assert((len & Sha512::cChunkSizeMask) == 0);
 
     if (avx2_available) {
         return avx2::ShaUpdate512(m_hash, pSrc, len, cRoundConstants);
@@ -305,7 +302,7 @@ Sha512::update(const Uint8* pSrc, Uint64 input_size)
     }
 
     /* No of bytes that can be processed as Chunks */
-    to_process = input_size & Sha512::cChunkSizeMask;
+    to_process = input_size - Sha512::cChunkSize;
     if (to_process) {
         err = processChunk(pSrc, input_size);
 
@@ -317,6 +314,8 @@ Sha512::update(const Uint8* pSrc, Uint64 input_size)
      * We still have some leftover bytes, copy them to internal buffer
      */
     if (input_size) {
+        assert(input_size <= cChunkSize);
+
         utils::CopyBytes(&m_buffer[idx], pSrc, input_size);
         idx += input_size;
     }
@@ -326,6 +325,11 @@ Sha512::update(const Uint8* pSrc, Uint64 input_size)
     return err;
 }
 
+/*
+ * We may have some left over data for which the hash to be computed padding
+ * the rest of it to ensure correct computation Default padding is 'length
+ * encoding'
+ */
 alc_error_t
 Sha512::finalize(const Uint8* pBuf, Uint64 size)
 {
@@ -342,16 +346,9 @@ Sha512::finalize(const Uint8* pBuf, Uint64 size)
     }
 
     /*
-     * We may have some left over data for which the hash to be computed
-     * padding the rest of it to ensure correct computation
-     * Default padding is 'length encoding'
-     */
-
-    /*
-     * When the bytes left in the current chunk are less than 8,
-     * current chunk can NOT accomodate the message length.
-     * The curent chunk is processed and the message length is
-     * placed in a new chunk and will be processed.
+     * When the bytes left in the current chunk are less than 8, current chunk
+     * can NOT accomodate the message length. The current chunk is processed and
+     * the message length is placed in a new chunk and will be processed.
      */
     m_buffer[m_idx++] = 0x80;
 
