@@ -302,8 +302,8 @@ Sha512::update(const Uint8* pSrc, Uint64 input_size)
     }
 
     /* No of bytes that can be processed as Chunks */
-    to_process = input_size - Sha512::cChunkSize;
-    if (to_process) {
+    to_process = input_size - (input_size & Sha512::cChunkSizeMask);
+    if (to_process > 0) {
         err = processChunk(pSrc, input_size);
 
         input_size -= to_process;
