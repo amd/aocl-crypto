@@ -223,7 +223,7 @@ Sha512::processChunk(const Uint8* pSrc, Uint64 len)
     assert((len & Sha512::cChunkSizeMask) == 0);
 
     if (avx2_available) {
-        return avx2::ShaUpdate512(m_hash, pSrc, len, cRoundConstants);
+        //return avx2::ShaUpdate512(m_hash, pSrc, len, cRoundConstants);
     }
 
     Uint64  msg_size       = len;
