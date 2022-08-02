@@ -37,12 +37,12 @@
 namespace alcp::testing {
 class IPPDigestBase : public DigestBase
 {
-    IppsHashState*   m_handle = nullptr;
-    _alc_sha2_mode   m_mode;
-    _alc_digest_type m_type;
-    _alc_digest_len  m_sha_len;
-    uint8_t*         m_message;
-    uint8_t*         m_digest;
+    IppsHashState_rmf* m_handle = nullptr;
+    _alc_sha2_mode     m_mode;
+    _alc_digest_type   m_type;
+    _alc_digest_len    m_sha_len;
+    uint8_t*           m_message;
+    uint8_t*           m_digest;
 
   public:
     IPPDigestBase(_alc_sha2_mode   mode,

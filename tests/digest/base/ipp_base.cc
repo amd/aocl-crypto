@@ -55,24 +55,24 @@ IPPDigestBase::init()
         m_handle = nullptr;
     }
     int ctx_size;
-    ippsHashGetSize(&ctx_size);
-    m_handle = reinterpret_cast<IppsHashState*>(new uint8_t[ctx_size]);
+    ippsHashGetSize_rmf(&ctx_size);
+    m_handle = reinterpret_cast<IppsHashState_rmf*>(new uint8_t[ctx_size]);
     if (m_type == ALC_DIGEST_TYPE_SHA2) {
         switch (m_mode) {
             case ALC_SHA2_224:
-                ippsHashInit(m_handle, ippHashAlg_SHA224);
+                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA224());
                 // std::cout << "Chosen SHA224" << std::endl;
                 break;
             case ALC_SHA2_256:
-                ippsHashInit(m_handle, ippHashAlg_SHA256);
+                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA256());
                 // std::cout << "Chosen SHA256" << std::endl;
                 break;
             case ALC_SHA2_384:
-                ippsHashInit(m_handle, ippHashAlg_SHA384);
+                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA384());
                 // std::cout << "Chosen SHA384" << std::endl;
                 break;
             case ALC_SHA2_512:
-                ippsHashInit(m_handle, ippHashAlg_SHA512);
+                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512());
                 // std::cout << "Chosen SHA512" << std::endl;
                 break;
             default:
@@ -101,8 +101,8 @@ IPPDigestBase::digest_function(const uint8_t* in,
                                uint8_t*       out,
                                uint64_t       out_size)
 {
-    ippsHashUpdate(in, in_size, m_handle);
-    ippsHashFinal(out, m_handle);
+    ippsHashUpdate_rmf(in, in_size, m_handle);
+    ippsHashFinal_rmf(out, m_handle);
     return ALC_ERROR_NONE;
 }
 
