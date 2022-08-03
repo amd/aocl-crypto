@@ -45,6 +45,8 @@
 
 #include "rng.h"
 
+#include "version.h"
+
 /**
  * Version to be printed as : AOCL Crypto   1.0 (0xabcdef)
  *                           `-----------' `-'-'----------'

@@ -25,11 +25,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
-#include <stdio.h>
+#ifndef _VERSION_H_
+#define _VERSION_H_ 2
 
 const char*
-alcp_get_version()
-{
-    return VERSION_STRING;
-}
+alcp_get_version();
+
+#endif
