@@ -1,6 +1,9 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 PROJECT (ALCP)
-#SET(CMAKE_BUILD_TYPE RELEASE)
+
+IF(${CMAKE_VERSION} VERSION_LESS "3.1.0")
+    MESSAGE(FATAL_ERROR "Minimum reqd version is CMake 3.1.0!")
+ENDIF()
 
 # SPECIFY THE C STANDARD
 SET(CMAKE_C_STANDARD 11)
@@ -9,7 +12,7 @@ SET(CMAKE_C_STANDARD_REQUIRED TRUE)
 SET(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 IF(NOT CMAKE_BUILD_TYPE)
- SET(CMAKE_BUILD_TYPE RELEASE) 
+    SET(CMAKE_BUILD_TYPE RELEASE) 
 ENDIF()
 
 SET( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake" )
@@ -57,7 +60,7 @@ ENDIF()
 IF (ALCP_ENABLE_TESTS)
 	ENABLE_TESTING()
 	IF (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/tests)
-                MESSAGE(FATAL_ERROR "Tests folder not found!")
+    	MESSAGE(FATAL_ERROR "Tests folder not found!")
 	ENDIF()
 	ADD_SUBDIRECTORY(tests)
   MESSAGE(STATUS "Enabling Tests")
@@ -66,10 +69,10 @@ ENDIF()
 # building test bench
 IF (ALCP_ENABLE_BENCH)
 	IF (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/bench)
-                MESSAGE(FATAL_ERROR "Bench folder not found!")
-        ENDIF()
+    	MESSAGE(FATAL_ERROR "Bench folder not found!")
+    ENDIF()
 	ADD_SUBDIRECTORY(bench)
-  MESSAGE(STATUS "Enabling Benchmarks")
+	MESSAGE(STATUS "Enabling Benchmarks")
 ENDIF()
 
 #INSTALL(TARGETS ALCP
@@ -93,15 +96,12 @@ IF (ALCP_ENABLE_EXAMPLES)
 			)
 	FILE(GLOB EXAMPLES_FILES_DIGEST
 			${CMAKE_CURRENT_SOURCE_DIR}/examples/digest/*.c
-	#		${CMAKE_CURRENT_SOURCE_DIR}/examples/digest/*.cc
 			)
 	FILE(GLOB EXAMPLES_FILES_RNG
 			${CMAKE_CURRENT_SOURCE_DIR}/examples/rng/*.c
-	#		${CMAKE_CURRENT_SOURCE_DIR}/examples/rng/*.cc
 			)
 	FILE(GLOB EXAMPLES_FILES_MISC
 			${CMAKE_CURRENT_SOURCE_DIR}/examples/misc/*.c
-	#		${CMAKE_CURRENT_SOURCE_DIR}/examples/misc/*.cc
 			)
 
 	INSTALL(FILES ${EXAMPLES_FILES_CIPHER}
@@ -119,12 +119,37 @@ IF (ALCP_ENABLE_EXAMPLES)
 	INSTALL(FILES examples/Makefile
 			DESTINATION .)
 ENDIF (ALCP_ENABLE_EXAMPLES)
-# INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/examples/cipher
-#         DESTINATION examples
-# 		)
-# INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/examples/digest
-#         DESTINATION examples
-# 		)
-# INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/examples/rng
-#         DESTINATION examples
-# 		)
+
+# print configure summary
+MESSAGE(STATUS "--------------------Configure Summary--------------------")
+
+# print all required variables
+FUNCTION (GetVars _prefix variables)
+    GET_CMAKE_PROPERTY(_vars VARIABLES)
+    STRING (REGEX MATCHALL "(^|;)${_prefix}[A-Za-z0-9_]*" matches "${_vars}")
+    SET (${variables} ${matches} PARENT_SCOPE)
+ENDFUNCTION()
+
+# print alcp vars
+# FixMe: the foreach section can be a function later
+GetVars("ALCP_" matchedVars)
+FOREACH (var IN LISTS matchedVars)
+	IF (${var})
+    	MESSAGE("${var}=${${var}}")
+	ENDIF()
+ENDFOREACH()
+
+GetVars("AOCL_" matchedVars)
+FOREACH (var IN LISTS matchedVars)
+IF (${var})
+ 	MESSAGE("${var}=${${var}}")
+	ENDIF()
+ENDFOREACH()
+
+GetVars("AOCL_" matchedVars)
+FOREACH (var IN LISTS matchedVars)
+IF (${var})
+ 	MESSAGE("${var}=${${var}}")
+	ENDIF()
+ENDFOREACH()
+
