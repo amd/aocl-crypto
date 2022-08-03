@@ -121,35 +121,38 @@ IF (ALCP_ENABLE_EXAMPLES)
 ENDIF (ALCP_ENABLE_EXAMPLES)
 
 # print configure summary
-MESSAGE(STATUS "--------------------Configure Summary--------------------")
+MESSAGE(STATUS "\n--------------------Configure Summary--------------------\n")
 
 # print all required variables
-FUNCTION (GetVars _prefix variables)
+FUNCTION (GetVars _prefix _variables)
     GET_CMAKE_PROPERTY(_vars VARIABLES)
-    STRING (REGEX MATCHALL "(^|;)${_prefix}[A-Za-z0-9_]*" matches "${_vars}")
-    SET (${variables} ${matches} PARENT_SCOPE)
+    STRING (REGEX MATCHALL "(^|)${_prefix}[A-Za-z0-9_]*" matches "${_vars}")
+    SET (${_variables} ${matches} PARENT_SCOPE)
 ENDFUNCTION()
 
-# print alcp vars
-# FixMe: the foreach section can be a function later
+# print alcp-vars
+# FixMe: the foreach section can be a function
 GetVars("ALCP_" matchedVars)
 FOREACH (var IN LISTS matchedVars)
-	IF (${var})
-    	MESSAGE("${var}=${${var}}")
-	ENDIF()
+IF (${var})
+    MESSAGE("${var}=${${var}}")
+ENDIF()
 ENDFOREACH()
 
 GetVars("AOCL_" matchedVars)
 FOREACH (var IN LISTS matchedVars)
 IF (${var})
  	MESSAGE("${var}=${${var}}")
-	ENDIF()
+ENDIF()
 ENDFOREACH()
 
-GetVars("AOCL_" matchedVars)
-FOREACH (var IN LISTS matchedVars)
-IF (${var})
- 	MESSAGE("${var}=${${var}}")
-	ENDIF()
-ENDFOREACH()
+MESSAGE ("CMAKE version: ${CMAKE_VERSION}")
+MESSAGE ("CMAKE Compiler ID: ${CMAKE_CXX_COMPILER_ID}")
+MESSAGE ("CMAKE C COMPILER: ${CMAKE_C_COMPILER}")
+MESSAGE ("CMAKE CXX COMPILER: ${CMAKE_CXX_COMPILER}")
+MESSAGE ("CMAKE C Compiler version: ${CMAKE_C_COMPILER_VERSION}")
+MESSAGE ("CMAKE CXX Compiler version: ${CMAKE_CXX_COMPILER_VERSION}")
+MESSAGE ("CMAKE BUILD TYPE: ${CMAKE_BUILD_TYPE}")
+
+# FixMe:project name and version to be printed.. 
 
