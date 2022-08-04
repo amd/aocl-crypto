@@ -65,7 +65,8 @@ IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t mode,
         case ALC_AES_MODE_XTS:
             ippsAES_XTSGetSize(&m_ctxSize);
             m_ctx_xts = (IppsAES_XTSSpec*)(new Ipp8u[m_ctxSize]);
-            status = ippsAES_XTSInit(key, key_len, 128, m_ctx_xts, m_ctxSize);
+            status    = ippsAES_XTSInit(
+                key, key_len, key_len * 2, m_ctx_xts, m_ctxSize);
             break;
         default:
             ippsAESGetSize(&m_ctxSize);
@@ -108,6 +109,7 @@ IPPCipherBase::init(const uint8_t* iv,
 {
     m_iv   = iv;
     m_tkey = tkey;
+    m_key  = key;
     return init(key, key_len);
 }
 
@@ -124,6 +126,7 @@ bool
 IPPCipherBase::init(const uint8_t* key, const uint32_t key_len)
 {
     IppStatus status = ippStsNoErr;
+    uint8_t   key_final[64];
     switch (m_mode) {
         case ALC_AES_MODE_GCM:
             status = ippsAES_GCMGetSize(&m_ctxSize);
@@ -135,18 +138,19 @@ IPPCipherBase::init(const uint8_t* key, const uint32_t key_len)
             break;
 
         case ALC_AES_MODE_XTS:
+            /* add key with tkey for */
+            memcpy(key_final, m_key, key_len / 8);
+            memcpy(key_final + key_len / 8, m_tkey, key_len / 8);
+            m_key  = key_final;
             status = ippsAES_XTSGetSize(&m_ctxSize);
             if (m_ctx_xts != nullptr) {
                 delete[](Ipp8u*) m_ctx_xts;
             }
             m_ctx_xts = (IppsAES_XTSSpec*)(new Ipp8u[m_ctxSize]);
-            status    = ippsAES_XTSInit(
-                key, (key_len / 8) * 16, 128, m_ctx_xts, m_ctxSize);
 
-            // (const Ipp8u* pKey, int keyLen,
-            //                           int duBitsize,
-            //                          IppsAES_XTSSpec* pCtx,int ctxSize))
-
+            /* for xts, pass the key concatenated with tkey */
+            status = ippsAES_XTSInit(
+                m_key, (key_len / 8) * 16, key_len * 2, m_ctx_xts, m_ctxSize);
             break;
 
         default:
@@ -205,11 +209,9 @@ IPPCipherBase::alcpModeToFuncCall(const uint8_t* in,
             break;
         case ALC_AES_MODE_XTS:
             if (enc) {
-                status =
-                    ippsAES_XTSEncrypt(in, out, len * 8, m_ctx_xts, m_tkey, 0);
+                status = ippsAES_XTSEncrypt(in, out, len * 8, m_ctx_xts, iv, 0);
             } else {
-                status =
-                    ippsAES_XTSDecrypt(in, out, len * 8, m_ctx_xts, m_tkey, 0);
+                status = ippsAES_XTSDecrypt(in, out, len * 8, m_ctx_xts, iv, 0);
             }
             break;
         default:
@@ -254,9 +256,6 @@ IPPCipherBase::encrypt(alcp_data_ex_t data)
         case ALC_AES_MODE_GCM:
             return alcpGCMModeToFuncCall(data, true);
             break;
-        // case ALC_AES_MODE_XTS:
-        //     return alcpModeToFuncCall(data.in, data.out, data.inl, true);
-        //     break;
         default:
             return alcpModeToFuncCall(data.in, data.out, data.inl, true);
             break;
@@ -277,9 +276,6 @@ IPPCipherBase::decrypt(alcp_data_ex_t data)
         case ALC_AES_MODE_GCM:
             return alcpGCMModeToFuncCall(data, false);
             break;
-        // case ALC_AES_MODE_XTS:
-        //     return alcpModeToFuncCall(data.in, data.out, data.inl, false);
-        //     break;
         default:
             return alcpModeToFuncCall(data.in, data.out, data.inl, false);
             break;
