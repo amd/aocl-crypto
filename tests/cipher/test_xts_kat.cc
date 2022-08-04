@@ -36,6 +36,43 @@ std::string MODE_STR = "XTS";
 
 #define ALC_MODE ALC_AES_MODE_XTS
 
+TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
+{
+    int            key_size    = 128;
+    TestingCore    testingCore = TestingCore(MODE_STR, ALC_MODE);
+    bool           test_ran    = false;
+    alcp_data_ex_t data;
+    while (testingCore.getDs()->readPtIvKeyCtTKey(key_size)) {
+        test_ran = true;
+        std::vector<uint8_t> outpt(testingCore.getDs()->getCt().size(), 0);
+        std::vector<uint8_t> ct   = testingCore.getDs()->getCt();
+        std::vector<uint8_t> iv   = testingCore.getDs()->getIv();
+        std::vector<uint8_t> tkey = testingCore.getDs()->getTKey();
+
+        data.in    = &(ct[0]);
+        data.inl   = ct.size();
+        data.iv    = &(iv[0]);
+        data.ivl   = iv.size();
+        data.out   = &(outpt[0]);
+        data.outl  = data.inl;
+        data.tkey  = &(tkey[0]);
+        data.tkeyl = tkey.size();
+
+        bool ret = testingCore.getCipherHandler()->testingDecrypt(
+            data, testingCore.getDs()->getKey());
+
+        EXPECT_TRUE(ArraysMatch(outpt,
+                                testingCore.getDs()->getPt(),
+                                *(testingCore.getDs()),
+                                std::string("AES_" + MODE_STR + "_128_DEC")));
+
+        if (!test_ran) {
+            EXPECT_TRUE(::testing::AssertionFailure()
+                        << "No tests to run, check dataset");
+        }
+    }
+}
+
 /* Testing Starts Here! */
 TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
 {
@@ -107,6 +144,43 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
     if (!test_ran) {
         EXPECT_TRUE(::testing::AssertionFailure()
                     << "No tests to run, check dataset");
+    }
+}
+
+TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
+{
+    int            key_size    = 256;
+    TestingCore    testingCore = TestingCore(MODE_STR, ALC_MODE);
+    bool           test_ran    = false;
+    alcp_data_ex_t data;
+    while (testingCore.getDs()->readPtIvKeyCtTKey(key_size)) {
+        test_ran = true;
+        std::vector<uint8_t> outpt(testingCore.getDs()->getCt().size(), 0);
+        std::vector<uint8_t> ct   = testingCore.getDs()->getCt();
+        std::vector<uint8_t> iv   = testingCore.getDs()->getIv();
+        std::vector<uint8_t> tkey = testingCore.getDs()->getTKey();
+
+        data.in    = &(ct[0]);
+        data.inl   = ct.size();
+        data.iv    = &(iv[0]);
+        data.ivl   = iv.size();
+        data.out   = &(outpt[0]);
+        data.outl  = data.inl;
+        data.tkey  = &(tkey[0]);
+        data.tkeyl = tkey.size();
+
+        bool ret = testingCore.getCipherHandler()->testingDecrypt(
+            data, testingCore.getDs()->getKey());
+
+        EXPECT_TRUE(ArraysMatch(outpt,
+                                testingCore.getDs()->getPt(),
+                                *(testingCore.getDs()),
+                                std::string("AES_" + MODE_STR + "_256_DEC")));
+
+        if (!test_ran) {
+            EXPECT_TRUE(::testing::AssertionFailure()
+                        << "No tests to run, check dataset");
+        }
     }
 }
 
