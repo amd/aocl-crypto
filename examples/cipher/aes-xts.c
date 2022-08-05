@@ -152,7 +152,7 @@ static const uint8_t sample_iv[] = {
 
 static uint8_t cipher = {68,cc,95,fe,db,6c,0c,87,76,73,98,fc,0a,dc,f6,07,9e,33,17,75,ad,0a,eb,27,66,29,f3,9e,b6,8d,1f,05};
 #else
-static uint8_t sample_ciphertxt[100000] = {
+static uint8_t sample_ciphertxt[1000] = {
     0,
 };
 #endif
@@ -205,7 +205,7 @@ out:
 int
 main(void)
 {
-    uint8_t sample_output[1000000] = { 0 };
+    uint8_t sample_output[1000] = { 0 };
 
     int pt_size = strlen(sample_plaintxt);
     assert(sizeof(sample_plaintxt) < sizeof(sample_output));

@@ -85,12 +85,11 @@ create_aes_session(uint8_t*             key,
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
     0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xf, 0xf,
     };
-    uint8_t* tweak_Key = &tweakKey;
 
     alc_key_info_t kinfo = {
         .type = ALC_KEY_TYPE_SYMMETRIC,
         .fmt  = ALC_KEY_FMT_RAW,
-        .key  = tweak_Key,
+        .key  = tweakKey,
         .len  = key_len,
     };
 
