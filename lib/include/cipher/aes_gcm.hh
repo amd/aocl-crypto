@@ -37,6 +37,7 @@
 #include "alcp/error.h"
 #include "cipher/aesni.hh"
 #include "cipher/avx128.hh"
+#include "cipher/avx128_gmul.hh"
 #include "cipher/avx256.hh"
 #ifdef USE_AVX512
 #include "cipher/avx512.hh"
@@ -48,7 +49,6 @@
 namespace alcp::cipher { namespace aes {
 
     using namespace aesni;
-    // using namespace vaes;
 
     template<typename T>
     uint64_t gcmBlk(const T*       p_in_x,
