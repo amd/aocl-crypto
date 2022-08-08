@@ -64,6 +64,18 @@ alcp_cipher_context_size(const alc_cipher_info_p pCipherInfo)
     return size;
 }
 
+bool
+validateKeys(const uint8_t* tweakKey, const uint8_t* encKey, uint32_t len)
+{
+
+    for (uint32_t i = 0; i < len / 8; i++) {
+        if (tweakKey[i] != encKey[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 alc_error_t
 alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
                     alc_cipher_handle_p     pCipherHandle)
@@ -77,8 +89,14 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
     if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
         auto tweak_key = pCipherInfo->ci_algo_info.ai_xts.xi_tweak_key;
         if (tweak_key == nullptr
-            || (tweak_key->len != 128 && tweak_key->len != 256)) {
+            || (tweak_key->len != 128 && tweak_key->len != 256)
+            || (tweak_key->len != pCipherInfo->ci_key_info.len)) {
             return ALC_ERROR_INVALID_ARG;
+        }
+        if (validateKeys(tweak_key->key,
+                         pCipherInfo->ci_key_info.key,
+                         pCipherInfo->ci_key_info.len)) {
+            return ALC_ERROR_DUPLICATE_KEY;
         }
     }
 
@@ -104,8 +122,7 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pIv, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
-
-    err = ctx->encrypt(ctx->m_cipher, pPlainText, pCipherText, len, pIv);
+    err      = ctx->encrypt(ctx->m_cipher, pPlainText, pCipherText, len, pIv);
 
     return err;
 }

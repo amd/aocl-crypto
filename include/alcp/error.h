@@ -108,9 +108,15 @@ typedef enum _alc_error_generic
      */
     ALC_ERROR_HARDWARE_FAILURE,
 
-  /* There is not enough entropy for RNG
-      retry needed with more entropy */
-  ALC_ERROR_NO_ENTROPY,
+    /* There is not enough entropy for RNG
+        retry needed with more entropy */
+    ALC_ERROR_NO_ENTROPY,
+
+    /*
+     *The Tweak key and Encryption is same
+     *for AES-XTS mode
+     */
+    ALC_ERROR_DUPLICATE_KEY,
 
 } alc_error_generic_t;
 
