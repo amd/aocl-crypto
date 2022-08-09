@@ -41,6 +41,7 @@ IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t mode,
                              const uint32_t          key_len,
                              const uint8_t*          tkey)
     : m_mode{ mode }
+    , m_iv{ iv }
     , m_tkey{ tkey }
 {
     init(key, key_len);

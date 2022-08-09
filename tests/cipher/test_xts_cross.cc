@@ -58,6 +58,7 @@ ExecRecPlay* fr = nullptr;
 TEST(SYMMETRIC_CRYPT_128, 128_CROSS_CHECK_SMALL)
 {
     int key_size = 128;
+
     // Request from others to validate openssl with ipp
     // TODO: Upgrade flight recorder
     TestingCore* alcpTC = nullptr;
@@ -95,9 +96,15 @@ TEST(SYMMETRIC_CRYPT_128, 128_CROSS_CHECK_SMALL)
     } catch (const char* exc) {
         std::cerr << exc << std::endl;
     }
+
+    int max_loop = SMALL_MAX_LOOP;
+
+    /*FIXME Need to update this for ippcp */
+    if (useipp) {
+        max_loop = 32;
+    }
     if (extTC != nullptr) {
-        for (int i = SMALL_START_LOOP; i < SMALL_MAX_LOOP;
-             i += SMALL_INC_LOOP) {
+        for (int i = SMALL_START_LOOP; i < max_loop; i += SMALL_INC_LOOP) {
             if (!bbxreplay)
                 fr->startRecEvent();
             alcp_data_ex_t       data_alc, data_ext;
@@ -142,18 +149,6 @@ TEST(SYMMETRIC_CRYPT_128, 128_CROSS_CHECK_SMALL)
             alcpTC->getCipherHandler()->testingEncrypt(data_alc, key);
             extTC->getCipherHandler()->testingEncrypt(data_ext, key);
             ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
-
-            // We dont need to cross test decrypt as tag&output will do
-            // verification. Output matches plain text means that decrypt was
-            // success. If tag verification also succeded then we can safely say
-            // that algorithm has passed the test
-            // data_alc.in  = &(out_ct_alc[0]);
-            // data_alc.out = &(out_pt[0]);
-            // if below line fails, tag verification failed
-            // ASSERT_TRUE(
-            //    alcpTC->getCipherHandler()->testingDecrypt(data_alc, key));
-            // ASSERT_TRUE(ArraysMatch(out_pt, pt)); // Check against original
-            // PT
 
             if (!bbxreplay) {
                 fr->dumpBlackBox();
@@ -208,9 +203,14 @@ TEST(SYMMETRIC_CRYPT_256, 256_CROSS_CHECK_BIG)
     } catch (const char* exc) {
         std::cerr << exc << std::endl;
     }
+    int max_loop = SMALL_MAX_LOOP;
+
+    /*FIXME Need to update this for ippcp */
+    if (useipp) {
+        max_loop = 32;
+    }
     if (extTC != nullptr) {
-        for (int i = SMALL_START_LOOP; i < SMALL_MAX_LOOP;
-             i += SMALL_INC_LOOP) {
+        for (int i = SMALL_START_LOOP; i < max_loop; i += SMALL_INC_LOOP) {
             if (!bbxreplay)
                 fr->startRecEvent();
             alcp_data_ex_t       data_alc, data_ext;
@@ -230,7 +230,7 @@ TEST(SYMMETRIC_CRYPT_256, 256_CROSS_CHECK_BIG)
                 data_alc.out   = &(out_ct_alc[0]);
                 data_alc.outl  = data_alc.inl;
                 data_alc.tkey  = &(tkey[0]);
-                data_alc.tkeyl = 32;
+                data_alc.tkeyl = 16;
 
                 // External Lib Data
                 data_ext.in    = &(pt[0]);
@@ -240,7 +240,7 @@ TEST(SYMMETRIC_CRYPT_256, 256_CROSS_CHECK_BIG)
                 data_ext.out   = &(out_ct_ext[0]);
                 data_ext.outl  = data_alc.inl;
                 data_ext.tkey  = &(tkey[0]);
-                data_ext.tkeyl = 32;
+                data_ext.tkeyl = 16;
 
                 fr->setRecEvent(key, iv, pt, SMALL_ENC);
             } else {
@@ -255,18 +255,6 @@ TEST(SYMMETRIC_CRYPT_256, 256_CROSS_CHECK_BIG)
             alcpTC->getCipherHandler()->testingEncrypt(data_alc, key);
             extTC->getCipherHandler()->testingEncrypt(data_ext, key);
             ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
-
-            // We dont need to cross test decrypt as tag&output will do
-            // verification. Output matches plain text means that decrypt was
-            // success. If tag verification also succeded then we can safely say
-            // that algorithm has passed the test
-            // data_alc.in  = &(out_ct_alc[0]);
-            // data_alc.out = &(out_pt[0]);
-            // if below line fails, tag verification failed
-            // ASSERT_TRUE(
-            //    alcpTC->getCipherHandler()->testingDecrypt(data_alc, key));
-            // ASSERT_TRUE(ArraysMatch(out_pt, pt)); // Check against original
-            // PT
 
             if (!bbxreplay) {
                 fr->dumpBlackBox();
