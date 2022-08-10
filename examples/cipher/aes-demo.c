@@ -545,7 +545,7 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
         // for (int i = 0; i < 3; i++) {
         int u   = i;
         keybits = 128 + u * 64;
-        printf("\n keybits %d ", keybits);
+        printf(" keybits %d ", keybits);
         int nr;
         memset(key, ((i * 10) + m), 32);
 
@@ -618,6 +618,7 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
         }
 #endif
 
+//Decrypt section
 #if SPEED_CHECK
         totalTimeElapsed = 0.0;
         for (int k = 0; k < 100000000; k++) {
@@ -663,9 +664,8 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
 
         if (memcmp(inputText, outputText, (long unsigned int)inputLen) != 0) {
             printf("\n\t\t\t\t input->enc->dec->input FAILED \n");
-        } else {
-            // printf("\t input->encrypt&decrypt->input::Passed");
         }
+
         /*
          * Complete the transaction
          */
@@ -725,14 +725,16 @@ main(void)
         }
 
         // keep length multiple of 128bit (16x8)
+        int testblkSizes[7] = {16, 64, 256, 1024, 8192, 16384, 32768};
+        #define MAX_TEST_CASE 7
+
+        for (int i =0; i < MAX_TEST_CASE; i++) {
+            int inputLen = testblkSizes[i];
+            printf(" \n");
 #if SPEED_CHECK
-        int inputLen = 16;
 #else
-        int inputLen = 16384;
-        printf(" :Encrypt and decrypt demo with input length %d bytes",
-               inputLen);
+            printf(" input length %5d x_blks", inputLen/16/4);
 #endif
-        for (; inputLen <= 16384; inputLen = (inputLen * 4)) {
 
             // allocate inputText and cipherText memory
             inputText = malloc(inputLen);
