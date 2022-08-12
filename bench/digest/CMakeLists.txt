@@ -68,4 +68,5 @@ TARGET_INCLUDE_DIRECTORIES(bench_digest PRIVATE
     "${CMAKE_SOURCE_DIR}/tests/common/include"
     ${EXTRA_INCLUDES})
 
+target_compile_options(bench_digest PUBLIC -Wall -Werror)
 TARGET_LINK_LIBRARIES(bench_digest ${LIBS})
