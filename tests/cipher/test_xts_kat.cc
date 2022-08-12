@@ -61,7 +61,7 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
         data.tag   = &(outtag[0]);
         data.tagl  = outtag.size();
 
-        bool ret = testingCore.getCipherHandler()->testingDecrypt(
+        testingCore.getCipherHandler()->testingDecrypt(
             data, testingCore.getDs()->getKey());
 
         EXPECT_TRUE(ArraysMatch(outpt,
@@ -181,7 +181,7 @@ TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
         data.tkeyl = tkey.size();
         data.tag   = &(outtag[0]);
         data.tagl  = outtag.size();
-        bool ret   = testingCore.getCipherHandler()->testingDecrypt(
+        testingCore.getCipherHandler()->testingDecrypt(
             data, testingCore.getDs()->getKey());
 
         EXPECT_TRUE(ArraysMatch(outpt,

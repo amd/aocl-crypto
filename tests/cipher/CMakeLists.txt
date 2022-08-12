@@ -74,6 +74,8 @@ FUNCTION(KAT_AES MOD)
         "${CMAKE_CURRENT_SOURCE_DIR}/../include"
         "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
         ${EXTRA_INCLUDES})
+    
+    target_compile_options(aes_${MOD}_kat PUBLIC -Wall -Werror)
     TARGET_LINK_LIBRARIES(aes_${MOD}_kat ${LIBS})
     gtest_add_tests(TARGET aes_${MOD}_kat
         TEST_SUFFIX .${MOD})
@@ -87,6 +89,8 @@ FUNCTION(CROSS_AES MOD)
         "${CMAKE_CURRENT_SOURCE_DIR}/../include"
         "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
         ${EXTRA_INCLUDES})
+
+    target_compile_options(aes_${MOD}_cross PUBLIC -Wall -Werror)
     TARGET_LINK_LIBRARIES(aes_${MOD}_cross ${LIBS})
 
     IF(ENABLE_TESTS_OPENSSL_API)

@@ -194,7 +194,6 @@ class CipherBase
                       const uint8_t* key,
                       const uint32_t key_len,
                       const uint8_t* tkey)                        = 0;
-
     virtual bool encrypt(const uint8_t* plaintxt,
                          size_t         len,
                          uint8_t*       ciphertxt)  = 0;
@@ -204,6 +203,7 @@ class CipherBase
                          uint8_t*       plaintxt)   = 0;
     virtual bool decrypt(alcp_data_ex_t data) = 0;
     virtual void reset()                      = 0;
+    virtual ~CipherBase(){};
 };
 
 class CipherTesting
