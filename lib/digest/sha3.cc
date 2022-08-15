@@ -79,9 +79,12 @@ namespace alcp::digest {
   }
 
   void Sha3::absorb_chunk(Uint64 *state_flat, Uint64* p_msg_buffer64){
+    std::cout << *state_flat << " state init\n";
+    std::cout << *p_msg_buffer64 << " buff\n";
     for (Uint64 i = 0; i < chunk_size_u64; ++i){
       state_flat[i] ^= p_msg_buffer64[i];
     }
+    std::cout << *state_flat << " state final\n" ;
   }
 
   inline void Sha3::round(Uint64 round_const){
@@ -179,10 +182,10 @@ namespace alcp::digest {
     // flat representation of the state, used in absorbing the user message.
     // state[i][j] = state_flat[5*i + j], i.e. the final index of state varies first, to move in memory order.
     Uint64 *state_flat = &state[0][0];
+    absorb_chunk(state_flat, p_msg_buffer64);
 
     while (msg_size) {
       // xor message chunk into state.
-      absorb_chunk(state_flat, p_msg_buffer64);
       f_function();
 
       p_msg_buffer64 += chunk_size_u64;
@@ -243,11 +246,8 @@ namespace alcp::digest {
     /* Calculate leftover bytes that can be processed as multiple chunks */
     Uint64 num_chunks = input_size / chunk_size;
     if (num_chunks) {
-
       Uint64 size = num_chunks * chunk_size;
-
       err = processChunk(pSrc, size);
-
       pSrc += size;
       input_size -= size;
     }
