@@ -8,7 +8,7 @@ FetchContent_Declare(benchmark
     GIT_TAG v1.6.1)
 FetchContent_MakeAvailable(benchmark)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ../../tests/common/base/base_common.cc ../../tests/digest/base/alc_base.cc ../../tests/digest/base/base.cc)
 SET(LIBS ${LIBS} benchmark alcp)
@@ -68,5 +68,5 @@ TARGET_INCLUDE_DIRECTORIES(bench_digest PRIVATE
     "${CMAKE_SOURCE_DIR}/tests/common/include"
     ${EXTRA_INCLUDES})
 
-TARGET_COMPILE_OPTIONS(bench_digest PUBLIC -Wall -Werror)
+TARGET_COMPILE_OPTIONS(bench_digest PUBLIC ${ALCP_WARNINGS})
 TARGET_LINK_LIBRARIES(bench_digest ${LIBS})
