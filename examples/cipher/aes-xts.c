@@ -8,6 +8,8 @@
 
 #define ALC_PRINT(a, size)                                                     \
     for (int x = 0; x < size; x++) {                                           \
+        if (x % 16 == 0)                                                       \
+            printf("\n0x%x0 - ", (x / 16));                                    \
         printf(" %2x ", (a)[x]);                                               \
     }                                                                          \
     printf("\n");
@@ -126,7 +128,25 @@ decrypt_demo(const uint8_t* ciphertxt,
 static char* sample_plaintxt =
     "A paragraph is a series of sentences that are organized and coherent, and "
     "are all related to a single topic. Almost every piece of writing you do "
-    "that is longer than a few sentences should be organized into paragraphs.";
+    "that is longer than a few sentences should be organized into paragraphs."
+    "A paragraph is a series of sentences that are organized and coherent, and "
+    "are all related to a single topic. Almost every piece of writing you do "
+    "that is longer than a few sentences should be organized into paragraphs."
+    "A paragraph is a series of sentences that are organized and coherent, and "
+    "are all related to a single topic. Almost every piece of writing you do "
+    "that is longer than a few sentences should be organized into paragraphs."
+    "A paragraph is a series of sentences that are organized and coherent, and "
+    "are all related to a single topic. Almost every piece of writing you do "
+    "that is longer than a few sentences should be organized into paragraphs."
+    "A paragraph is a series of sentences that are organized and coherent, and "
+    "are all related to a single topic. Almost every piece of writing you do "
+    "that is longer than a few sentences should be organized into paragraphs."
+    "A paragraph is a series of sentences that are organized and coherent, and "
+    "are all related to a single topic. Almost every piece of writing you do "
+    "that is longer than a few sentences should be organized into paragraphs."
+    "A paragraph is a series of sentences that are organized and coherent, and "
+    "are all related to a single topic. Almost every piece of writing you do "
+    "that is longer than a few sentences should be organized into ";
 
 static const uint8_t sample_key[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
@@ -135,7 +155,7 @@ static const uint8_t sample_key[] = {
 
 static const uint8_t sample_tweak_key[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
-    0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xf, 0xf,
+    0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xf, 0xe,
 };
 
 static const uint8_t sample_iv[] = {
@@ -152,7 +172,7 @@ static const uint8_t sample_iv[] = {
 
 static uint8_t cipher = {68,cc,95,fe,db,6c,0c,87,76,73,98,fc,0a,dc,f6,07,9e,33,17,75,ad,0a,eb,27,66,29,f3,9e,b6,8d,1f,05};
 #else
-static uint8_t sample_ciphertxt[1000] = {
+static uint8_t sample_ciphertxt[10000] = {
     0,
 };
 #endif
@@ -205,7 +225,7 @@ out:
 int
 main(void)
 {
-    uint8_t sample_output[1000] = { 0 };
+    uint8_t sample_output[10000] = { 0 };
 
     int pt_size = strlen(sample_plaintxt);
     assert(sizeof(sample_plaintxt) < sizeof(sample_output));
@@ -213,15 +233,18 @@ main(void)
     create_demo_session(
         sample_key, sample_tweak_key, sample_iv, sizeof(sample_key) * 8);
 
-    // ALC_PRINT(((uint8_t*)sample_plaintxt), pt_size);
+    printf("plain text : \n");
+    ALC_PRINT(((uint8_t*)sample_plaintxt), pt_size);
     encrypt_demo(sample_plaintxt,
                  pt_size, /* len of 'plaintxt' and 'ciphertxt' */
                  sample_ciphertxt,
                  sample_iv);
-    // ALC_PRINT(((uint8_t*)&sample_ciphertxt), pt_size);
+    printf("cipher text : \n");
+    ALC_PRINT(((uint8_t*)&sample_ciphertxt), pt_size);
 
     decrypt_demo(sample_ciphertxt, pt_size, sample_output, sample_iv);
-    // ALC_PRINT(((uint8_t*)&sample_output), pt_size);
+    printf("out text : \n");
+    ALC_PRINT(((uint8_t*)&sample_output), pt_size);
     printf("sample_output: %s\n", sample_output);
     /*
      * Complete the transaction
