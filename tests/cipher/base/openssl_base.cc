@@ -251,7 +251,8 @@ OpenSSLCipherBase::init(const uint8_t* key, const uint32_t key_len)
                                   NULL))
             handleErrors();
         /* Set IV length. Not necessary if this is 12 bytes (96 bits) */
-        if (!EVP_CIPHER_CTX_ctrl(
+        if (1
+            != EVP_CIPHER_CTX_ctrl(
                 m_ctx_dec, EVP_CTRL_GCM_SET_IVLEN, m_iv_len, NULL))
             handleErrors();
 
@@ -293,6 +294,12 @@ OpenSSLCipherBase::encrypt(alcp_data_ex_t data)
 {
     int len_ct = 0;
     if (m_mode == ALC_AES_MODE_GCM) {
+        // Additional Data
+        if (data.adl == 0 && data.ad == nullptr) {
+            // FIXME: Hack to prevent ad from being null
+            uint8_t a;
+            data.ad = &a; // Some random value other than NULL
+        }
         if (1
             != EVP_EncryptUpdate(m_ctx_enc, NULL, &len_ct, data.ad, data.adl)) {
             std::cout << "Error: Additional Data" << std::endl;
@@ -306,13 +313,21 @@ OpenSSLCipherBase::encrypt(alcp_data_ex_t data)
             handleErrors();
             return false;
         }
+        // data.outl = len_ct;
 
         if (1 != EVP_EncryptFinal_ex(m_ctx_enc, data.out + len_ct, &len_ct)) {
             std::cout << "Error: Finalize" << std::endl;
             handleErrors();
             return false;
         }
+        // data.outl += len_ct;
 
+        // Get Tag
+        if (data.tagl == 0 && data.tag == nullptr) {
+            // FIXME: Hack to prevent ad from being null
+            uint8_t a;
+            data.tag = &a; // Some random value other than NULL
+        }
         /* Get the tag */
         if (1
             != EVP_CIPHER_CTX_ctrl(
