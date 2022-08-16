@@ -63,6 +63,6 @@ TARGET_INCLUDE_DIRECTORIES(bench_cipher PRIVATE
     "${CMAKE_SOURCE_DIR}/tests/common/include"
     ${EXTRA_INCLUDES})
 
-target_compile_options(bench_cipher PUBLIC -Wall -Werror)
+TARGET_COMPILE_OPTIONS(bench_cipher PUBLIC -Wall -Werror)
 TARGET_LINK_LIBRARIES(bench_cipher ${LIBS})
 
