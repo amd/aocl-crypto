@@ -150,6 +150,13 @@ TEST(SYMMETRIC_CRYPT_128, 128_CROSS_CHECK_SMALL)
             extTC->getCipherHandler()->testingEncrypt(data_ext, key);
             ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
 
+            data_alc.in  = &(out_ct_alc[0]);
+            data_alc.out = &(out_pt[0]);
+
+            ASSERT_TRUE(
+                alcpTC->getCipherHandler()->testingDecrypt(data_alc, key));
+            ASSERT_TRUE(ArraysMatch(out_pt, pt)); // Check against original PT
+
             if (!bbxreplay) {
                 fr->dumpBlackBox();
                 fr->endRecEvent();
@@ -255,6 +262,13 @@ TEST(SYMMETRIC_CRYPT_256, 256_CROSS_CHECK_BIG)
             alcpTC->getCipherHandler()->testingEncrypt(data_alc, key);
             extTC->getCipherHandler()->testingEncrypt(data_ext, key);
             ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
+
+            data_alc.in  = &(out_ct_alc[0]);
+            data_alc.out = &(out_pt[0]);
+
+            ASSERT_TRUE(
+                alcpTC->getCipherHandler()->testingDecrypt(data_alc, key));
+            ASSERT_TRUE(ArraysMatch(out_pt, pt)); // Check against original PT
 
             if (!bbxreplay) {
                 fr->dumpBlackBox();
