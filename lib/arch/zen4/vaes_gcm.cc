@@ -145,8 +145,10 @@ gcmBlk_512(const __m512i* p_in_x,
 
     int num_512_blks = 0;
 
-    /* 96 (24*4) blocks per loop. Minimum 20 loops required to get benefit of
-     *     precomputing hash^x table.
+    /* 96 (24*4) or 64 (16*4) blocks per loop. Minimum 20 loops required to get
+     * benefit of precomputing hash^x table.
+     * 32 (16*2) blocks per loop needs minimum 4 loops to get benefit from
+     * precomputing hash^x table.
      */
 
     // 16*num_unroll*MinloopCount
@@ -162,18 +164,12 @@ gcmBlk_512(const __m512i* p_in_x,
     if (blocks >= threshold_4x512_4unroll) {
 #endif
         num_512_blks = 4 * 4;
-        // printf(" 4x4 ");
     } else if (blocks >= threshold_4x512_2unroll) {
         num_512_blks = 4 * 2;
-        // printf(" 4x2 ");
     } else if (blocks >= 16) {
         num_512_blks = 4;
-        // printf(" 4x1 ");
     } else if (blocks >= 4) {
         num_512_blks = 1;
-        // printf(" 1x1 ");
-    } else {
-        // printf(" 0x0 ");
     }
 
     if (num_512_blks > MAX_NUM_512_BLKS) {
