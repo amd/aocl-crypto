@@ -35,26 +35,22 @@
 #include "key.hh"
 #include "types.hh"
 
+#define GF_POLYNOMIAL 0x87
+
 namespace alcp::cipher::vaes {
 
 static inline void
 MultiplyAplhaByTwo(__m128i& alpha)
 {
-    unsigned int res, carry;
+    unsigned long long res, carry;
 
-    res = 0x87 // GF Polynomial
-          & (((int)(((uint32_t*)&alpha)[3]))
-             >> 31); // a0 | a1 | a2 | a3  if a3 sign bit high res = 0x87
+    unsigned long long* tmp_tweak = (unsigned long long*)&alpha;
 
-    carry = (unsigned int)((((uint64_t*)&alpha)[0])
-                           >> 63); // a0 | a1 if a0 sign bit high 1 else 0
+    res   = (((long long)tmp_tweak[1]) >> 63) & GF_POLYNOMIAL;
+    carry = (((long long)tmp_tweak[0]) >> 63) & 1;
 
-    // if sign bit of alpha is high xor least significant bit with 0x87
-    (((uint64_t*)&alpha)[0]) = ((((uint64_t*)&alpha)[0]) << 1) ^ res;
-
-    // if most significant bit of a0 is high make least significant bit of
-    // a1 high
-    (((uint64_t*)&alpha)[1]) = ((((uint64_t*)&alpha)[1]) << 1) | carry;
+    tmp_tweak[0] = ((tmp_tweak[0]) << 1) ^ res;
+    tmp_tweak[1] = ((tmp_tweak[1]) << 1) | carry;
 }
 
 static inline __m256i
@@ -219,7 +215,6 @@ EncryptXts(const uint8_t* pSrc,
         // getting Tweaked Text after xor of message and Alpha ^ j
         __m256i tweaked_src_text_1 =
             _mm256_xor_si256(current_alpha_1, _mm256_loadu_si256(p_src256));
-
 
         AesEncrypt(&tweaked_src_text_1, p_key128, nRounds);
 

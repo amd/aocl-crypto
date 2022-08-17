@@ -34,25 +34,21 @@
 #include "cipher/aesni.hh"
 #include "error.hh"
 
+#define GF_POLYNOMIAL 0x87
+
 namespace alcp::cipher { namespace aesni {
 
     static inline void MultiplyAplhaByTwo(__m128i& alpha)
     {
-        unsigned int res, carry;
+        unsigned long long res, carry;
 
-        res = 0x87 // GF Polynomial
-              & (((int)(((uint32_t*)&alpha)[3]))
-                 >> 31); // a0 | a1 | a2 | a3  if a3 sign bit high res = 0x87
+        unsigned long long* tmp_tweak = (unsigned long long*)&alpha;
 
-        carry = (unsigned int)((((uint64_t*)&alpha)[0])
-                               >> 63); // a0 | a1 if a0 sign bit high 1 else 0
+        res   = (((long long)tmp_tweak[1]) >> 63) & GF_POLYNOMIAL;
+        carry = (((long long)tmp_tweak[0]) >> 63) & 1;
 
-        // if sign bit of alpha is high xor least significant bit with 0x87
-        (((uint64_t*)&alpha)[0]) = ((((uint64_t*)&alpha)[0]) << 1) ^ res;
-
-        // if most significant bit of a0 is high make least significant bit of
-        // a1 high
-        (((uint64_t*)&alpha)[1]) = ((((uint64_t*)&alpha)[1]) << 1) | carry;
+        tmp_tweak[0] = ((tmp_tweak[0]) << 1) ^ res;
+        tmp_tweak[1] = ((tmp_tweak[1]) << 1) | carry;
     }
 
     alc_error_t EncryptXts(const uint8_t* pSrc,
