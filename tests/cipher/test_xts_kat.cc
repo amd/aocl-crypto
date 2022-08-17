@@ -61,13 +61,14 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
         data.tag   = &(outtag[0]);
         data.tagl  = outtag.size();
 
-        testingCore.getCipherHandler()->testingDecrypt(
+        bool ret = testingCore.getCipherHandler()->testingDecrypt(
             data, testingCore.getDs()->getKey());
 
         EXPECT_TRUE(ArraysMatch(outpt,
                                 testingCore.getDs()->getPt(),
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_128_DEC")));
+        EXPECT_TRUE(ret);
 
         if (!test_ran) {
             EXPECT_TRUE(::testing::AssertionFailure()
@@ -104,12 +105,13 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
         data.tag   = &(outtag[0]);
         data.tagl  = outtag.size();
 
-        testingCore.getCipherHandler()->testingEncrypt(
+        bool ret = testingCore.getCipherHandler()->testingEncrypt(
             data, testingCore.getDs()->getKey());
         EXPECT_TRUE(ArraysMatch(outct,
                                 testingCore.getDs()->getCt(),
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_128_ENC")));
+        EXPECT_TRUE(ret);
     }
     if (!test_ran) {
         EXPECT_TRUE(::testing::AssertionFailure()
@@ -144,12 +146,13 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
         data.tkeyl = tkey.size();
         data.tag   = &(outtag[0]);
         data.tagl  = outtag.size();
-        testingCore.getCipherHandler()->testingEncrypt(
+        bool ret   = testingCore.getCipherHandler()->testingEncrypt(
             data, testingCore.getDs()->getKey());
         EXPECT_TRUE(ArraysMatch(outct,
                                 testingCore.getDs()->getCt(),
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_256_ENC")));
+        EXPECT_TRUE(ret);
     }
     if (!test_ran) {
         EXPECT_TRUE(::testing::AssertionFailure()
@@ -181,13 +184,14 @@ TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
         data.tkeyl = tkey.size();
         data.tag   = &(outtag[0]);
         data.tagl  = outtag.size();
-        testingCore.getCipherHandler()->testingDecrypt(
+        bool ret   = testingCore.getCipherHandler()->testingDecrypt(
             data, testingCore.getDs()->getKey());
 
         EXPECT_TRUE(ArraysMatch(outpt,
                                 testingCore.getDs()->getPt(),
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_256_DEC")));
+        EXPECT_TRUE(ret);
 
         if (!test_ran) {
             EXPECT_TRUE(::testing::AssertionFailure()
