@@ -90,6 +90,8 @@ typedef union _alc_cipher_mode_xts_info
 
 typedef struct _alc_cipher_mode_gcm_info
 {
+    // FIXME: C do not support empty structures, populate with actual ones
+    char dummy;
 } alc_cipher_mode_gcm_info_t, *alc_cipher_mode_gcm_info_p;
 
 /**
