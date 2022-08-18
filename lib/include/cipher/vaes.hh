@@ -198,7 +198,7 @@ namespace alcp::cipher { namespace vaes {
         __m256i rkey1;
 
         amd_mm256_broadcast_i64x2(&pKey[0], &rkey0);
-        amd_mm256_broadcast_i64x2(&pKey[1], &rkey0);
+        amd_mm256_broadcast_i64x2(&pKey[1], &rkey1);
 
         __m256i b0 = _mm256_xor_si256(*blk0, rkey0);
         __m256i b1 = _mm256_xor_si256(*blk1, rkey0);
@@ -364,7 +364,7 @@ namespace alcp::cipher { namespace vaes {
         __m256i rkey1;
 
         amd_mm256_broadcast_i64x2(&pKey[0], &rkey0);
-        amd_mm256_broadcast_i64x2(&pKey[1], &rkey0);
+        amd_mm256_broadcast_i64x2(&pKey[1], &rkey1);
 
         __m256i b0 = _mm256_xor_si256(*blk0, rkey0);
         __m256i b1 = _mm256_xor_si256(*blk1, rkey0);

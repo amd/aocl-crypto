@@ -128,25 +128,7 @@ decrypt_demo(const uint8_t* ciphertxt,
 static char* sample_plaintxt =
     "A paragraph is a series of sentences that are organized and coherent, and "
     "are all related to a single topic. Almost every piece of writing you do "
-    "that is longer than a few sentences should be organized into paragraphs."
-    "A paragraph is a series of sentences that are organized and coherent, and "
-    "are all related to a single topic. Almost every piece of writing you do "
-    "that is longer than a few sentences should be organized into paragraphs."
-    "A paragraph is a series of sentences that are organized and coherent, and "
-    "are all related to a single topic. Almost every piece of writing you do "
-    "that is longer than a few sentences should be organized into paragraphs."
-    "A paragraph is a series of sentences that are organized and coherent, and "
-    "are all related to a single topic. Almost every piece of writing you do "
-    "that is longer than a few sentences should be organized into paragraphs."
-    "A paragraph is a series of sentences that are organized and coherent, and "
-    "are all related to a single topic. Almost every piece of writing you do "
-    "that is longer than a few sentences should be organized into paragraphs."
-    "A paragraph is a series of sentences that are organized and coherent, and "
-    "are all related to a single topic. Almost every piece of writing you do "
-    "that is longer than a few sentences should be organized into paragraphs."
-    "A paragraph is a series of sentences that are organized and coherent, and "
-    "are all related to a single topic. Almost every piece of writing you do "
-    "that is longer than a few sentences should be organized into ";
+    "that is longer than a few sentences should be organized into paragraphs.";
 
 static const uint8_t sample_key[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
@@ -233,18 +215,18 @@ main(void)
     create_demo_session(
         sample_key, sample_tweak_key, sample_iv, sizeof(sample_key) * 8);
 
-    printf("plain text : \n");
-    ALC_PRINT(((uint8_t*)sample_plaintxt), pt_size);
+    // printf("plain text : \n");
+    // ALC_PRINT(((uint8_t*)sample_plaintxt), pt_size);
     encrypt_demo(sample_plaintxt,
                  pt_size, /* len of 'plaintxt' and 'ciphertxt' */
                  sample_ciphertxt,
                  sample_iv);
-    printf("cipher text : \n");
-    ALC_PRINT(((uint8_t*)&sample_ciphertxt), pt_size);
+    // printf("cipher text : \n");
+    // ALC_PRINT(((uint8_t*)&sample_ciphertxt), pt_size);
 
     decrypt_demo(sample_ciphertxt, pt_size, sample_output, sample_iv);
-    printf("out text : \n");
-    ALC_PRINT(((uint8_t*)&sample_output), pt_size);
+    // printf("out text : \n");
+    // ALC_PRINT(((uint8_t*)&sample_output), pt_size);
     printf("sample_output: %s\n", sample_output);
     /*
      * Complete the transaction
