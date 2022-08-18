@@ -184,11 +184,6 @@ EncryptXtsAvx512(const uint8_t* pSrc,
         tweakx8[2] = nextTweaks(_mm512_loadu_si512(tweakx8));
         tweakx8[3] = nextTweaks(_mm512_loadu_si512(tweakx8 + 1));
 
-        __m512i src_text_5 = _mm512_loadu_si512(p_src512 + 4);
-        __m512i src_text_6 = _mm512_loadu_si512(p_src512 + 5);
-        __m512i src_text_7 = _mm512_loadu_si512(p_src512 + 6);
-        __m512i src_text_8 = _mm512_loadu_si512(p_src512 + 7);
-
         __m512i tweaked_src_text_5 =
             _mm512_xor_si512(_mm512_loadu_si512(tweakx8 + 4), src_text_5);
         __m512i tweaked_src_text_6 =
@@ -235,8 +230,7 @@ EncryptXtsAvx512(const uint8_t* pSrc,
     chunk                = 4 * 4;
     int tweak_to_be_used = 0;
 
-    int tweak_to_be_used = 0;
-    // Encrypting 4*2 source text blocks at a time
+    // Encrypting 4*4 source text blocks at a time
     if (blocks >= chunk) {
 
         __m512i src_text_1 = _mm512_loadu_si512(p_src512);
@@ -555,7 +549,7 @@ DecryptXtsAvx512(const uint8_t* pSrc,
 
     int tweak_to_be_used = 0;
 
-    // Encrypting 4*2 source text blocks at a time
+    // Encrypting 4*4 source text blocks at a time
     if (blocks >= chunk) {
 
         __m512i src_text_1 = _mm512_loadu_si512(p_src512);
