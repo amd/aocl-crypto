@@ -8,8 +8,6 @@ FetchContent_Declare(benchmark
     GIT_TAG v1.6.1)
 FetchContent_MakeAvailable(benchmark)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ../../tests/common/base/base_common.cc ../../tests/cipher/base/alc_base.cc ../../tests/cipher/base/base.cc)
 SET(LIBS ${LIBS} benchmark alcp)
 SET(EXTRA_INCLUDES "")
