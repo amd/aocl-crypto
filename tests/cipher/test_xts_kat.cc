@@ -68,6 +68,7 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
                                 testingCore.getDs()->getPt(),
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_128_DEC")));
+        // Enforce that no errors are reported from lib side.
         EXPECT_TRUE(ret);
 
         if (!test_ran) {
@@ -111,6 +112,7 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
                                 testingCore.getDs()->getCt(),
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_128_ENC")));
+        // Enforce that no errors are reported from lib side.
         EXPECT_TRUE(ret);
     }
     if (!test_ran) {
@@ -152,6 +154,7 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
                                 testingCore.getDs()->getCt(),
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_256_ENC")));
+        // Enforce that no errors are reported from lib side.
         EXPECT_TRUE(ret);
     }
     if (!test_ran) {
@@ -191,6 +194,7 @@ TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
                                 testingCore.getDs()->getPt(),
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_256_DEC")));
+        // Enforce that no errors are reported from lib side.
         EXPECT_TRUE(ret);
 
         if (!test_ran) {
