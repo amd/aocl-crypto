@@ -66,7 +66,7 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
             data, testingCore.getDs()->getKey());
 
         /* for openssl, IV != 12 is an invalid case */
-        if ((useossl) && data.ivl != 12)
+        if ((useossl) && data.ivl != 12 && false)
             EXPECT_TRUE(true);
         else {
             EXPECT_TRUE(

@@ -50,18 +50,19 @@ class AlcpCipherBase : public CipherBase
     AlcpCipherBase() {}
     /**
      * @brief Construct a new Alcp Cipher Base object
-     * 
-     * @param mode 
-     * @param iv 
-     * @param key 
-     * @param key_len 
-     * @param tkey 
+     *
+     * @param mode
+     * @param iv
+     * @param key
+     * @param key_len
+     * @param tkey
      */
     AlcpCipherBase(const alc_cipher_mode_t mode,
-                   const uint8_t *iv,
-                   const uint8_t *key,
-                   const uint32_t key_len,
-                   const uint8_t *tkey);
+                   const uint8_t*          iv,
+                   const uint32_t          iv_len,
+                   const uint8_t*          key,
+                   const uint32_t          key_len,
+                   const uint8_t*          tkey);
     /**
      * @brief Construct a new Alcp Base object - Manual initilization needed,
      * run alcpInit
@@ -80,9 +81,9 @@ class AlcpCipherBase : public CipherBase
      * @param key_len
      */
     AlcpCipherBase(const alc_cipher_mode_t mode,
-                   const uint8_t*       iv,
-                   const uint8_t*       key,
-                   const uint32_t       key_len);
+                   const uint8_t*          iv,
+                   const uint8_t*          key,
+                   const uint32_t          key_len);
 
     /**
      * @brief         Initialization/Reinitialization function, created handle
@@ -95,10 +96,11 @@ class AlcpCipherBase : public CipherBase
      */
     ~AlcpCipherBase();
 
-    bool init(const uint8_t *iv,
-              const uint8_t *key,
+    bool init(const uint8_t* iv,
+              const uint32_t iv_len,
+              const uint8_t* key,
               const uint32_t key_len,
-              const uint8_t *tkey);
+              const uint8_t* tkey);
     bool init(const uint8_t* iv,
               uint32_t       iv_len,
               const uint8_t* key,

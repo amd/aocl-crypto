@@ -35,26 +35,25 @@
 
 #ifndef __IPP_BASE_HH
 #define __IPP_BASE_HH 2
-namespace alcp::testing
+namespace alcp::testing {
+class IPPCipherBase : public CipherBase
 {
-  class IPPCipherBase : public CipherBase
-  {
   private:
     alc_cipher_mode_t m_mode;
-    IppsAESSpec *m_ctx = 0;
-    IppsAES_XTSSpec *m_ctx_xts = 0;
-    IppsAES_GCMState *m_ctx_gcm = 0;
-    IppsAES_GCMState *pState = NULL;
-    const uint8_t *m_iv;
-    const uint8_t *m_key;
-    uint32_t m_key_len;
-    const uint8_t *m_tkey = NULL;
-    int m_ctxSize = 0;
-    bool alcpModeToFuncCall(const uint8_t *in,
-                            uint8_t *out,
-                            size_t len,
-                            bool enc);
-    bool alcpGCMModeToFuncCall(alcp_data_ex_t data, bool enc);
+    IppsAESSpec*      m_ctx     = 0;
+    IppsAES_XTSSpec*  m_ctx_xts = 0;
+    IppsAES_GCMState* m_ctx_gcm = 0;
+    IppsAES_GCMState* pState    = NULL;
+    const uint8_t*    m_iv;
+    const uint8_t*    m_key;
+    uint32_t          m_key_len;
+    const uint8_t*    m_tkey    = NULL;
+    int               m_ctxSize = 0;
+    bool              alcpModeToFuncCall(const uint8_t* in,
+                                         uint8_t*       out,
+                                         size_t         len,
+                                         bool           enc);
+    bool              alcpGCMModeToFuncCall(alcp_data_ex_t data, bool enc);
 
   public:
     /**
@@ -64,7 +63,7 @@ namespace alcp::testing
      * @param mode
      * @param iv
      */
-    IPPCipherBase(const alc_cipher_mode_t mode, const uint8_t *iv);
+    IPPCipherBase(const alc_cipher_mode_t mode, const uint8_t* iv);
     /**
      * @brief Construct a new Alcp Base object - Initlized and ready to go
      *
@@ -74,9 +73,9 @@ namespace alcp::testing
      * @param key_len
      */
     IPPCipherBase(const alc_cipher_mode_t mode,
-                  const uint8_t *iv,
-                  const uint8_t *key,
-                  const uint32_t key_len);
+                  const uint8_t*          iv,
+                  const uint8_t*          key,
+                  const uint32_t          key_len);
     /**
      * @brief         Initialization/Reinitialization function, created handle
      *
@@ -87,30 +86,31 @@ namespace alcp::testing
      * @return false - if there is some failure
      */
 
-    IPPCipherBase(
-        const alc_cipher_mode_t mode,
-        const uint8_t *iv,
-        const uint8_t *key,
-        const uint32_t key_len,
-        const uint8_t *tkey);
+    IPPCipherBase(const alc_cipher_mode_t mode,
+                  const uint8_t*          iv,
+                  const uint32_t          iv_len,
+                  const uint8_t*          key,
+                  const uint32_t          key_len,
+                  const uint8_t*          tkey);
 
     ~IPPCipherBase();
-    bool init(const uint8_t *iv,
+    bool init(const uint8_t* iv,
               const uint32_t iv_len,
-              const uint8_t *key,
+              const uint8_t* key,
               const uint32_t key_len);
     /* xts */
-    bool init(const uint8_t *iv,
-              const uint8_t *key,
+    bool init(const uint8_t* iv,
+              const uint32_t iv_len,
+              const uint8_t* key,
               const uint32_t key_len,
-              const uint8_t *tkey);
-    bool init(const uint8_t *iv, const uint8_t *key, const uint32_t key_len);
-    bool init(const uint8_t *key, const uint32_t key_len);
-    bool encrypt(const uint8_t *plaintxt, size_t len, uint8_t *ciphertxt);
+              const uint8_t* tkey);
+    bool init(const uint8_t* iv, const uint8_t* key, const uint32_t key_len);
+    bool init(const uint8_t* key, const uint32_t key_len);
+    bool encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt);
     bool encrypt(alcp_data_ex_t data);
-    bool decrypt(const uint8_t *ciphertxt, size_t len, uint8_t *plaintxt);
+    bool decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt);
     bool decrypt(alcp_data_ex_t data);
     void reset();
-  };
+};
 } // namespace alcp::testing
 #endif

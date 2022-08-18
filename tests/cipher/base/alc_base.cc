@@ -49,13 +49,14 @@ AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode,
 /* xts */
 AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode,
                                const uint8_t*          iv,
+                               const uint32_t          iv_len,
                                const uint8_t*          key,
                                const uint32_t          key_len,
                                const uint8_t*          tkey)
     : m_mode{ mode }
     , m_iv{ iv }
 {
-    init(iv, key, key_len, tkey);
+    init(iv, iv_len, key, key_len, tkey);
 }
 
 AlcpCipherBase::~AlcpCipherBase()
@@ -84,6 +85,7 @@ AlcpCipherBase::init(const uint8_t* iv,
 /* for XTS */
 bool
 AlcpCipherBase::init(const uint8_t* iv,
+                     const uint32_t iv_len,
                      const uint8_t* key,
                      const uint32_t key_len,
                      const uint8_t* tkey)
