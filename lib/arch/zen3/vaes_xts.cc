@@ -437,7 +437,7 @@ DecryptXts(const uint8_t* pSrc,
     AesEncrypt(&extendedIV, p_tweak_key128, nRounds);
 
     __m128i temp_iv = (((__m128i*)&extendedIV)[0]);
-    __m128i tweaks[8 * 4]; // 8*4 Tweak values stored inside this
+    __m128i tweaks[8 * 2]; // 8*4 Tweak values stored inside this
 
     init_alphax8(temp_iv, tweaks);
 
@@ -495,7 +495,11 @@ DecryptXts(const uint8_t* pSrc,
         tweakx8[1] = nextTweaks(tweakx8[5]);
         tweakx8[2] = nextTweaks(tweakx8[6]);
         tweakx8[3] = nextTweaks(tweakx8[7]);
-
+        if (blocks == chunk && extra_bytes_in_message_block) {
+            __m128i temp = tweaks[15];
+            tweaks[15]   = tweaks[14];
+            tweaks[14]   = temp;
+        }
         __m256i tweaked_src_text_5 =
             _mm256_xor_si256(*(tweakx8 + 4), src_text_5);
         __m256i tweaked_src_text_6 =
@@ -550,6 +554,11 @@ DecryptXts(const uint8_t* pSrc,
         __m256i src_text_2 = _mm256_loadu_si256(p_src256 + 1);
         __m256i src_text_3 = _mm256_loadu_si256(p_src256 + 2);
         __m256i src_text_4 = _mm256_loadu_si256(p_src256 + 3);
+        if (blocks == chunk && extra_bytes_in_message_block) {
+            __m128i temp = tweaks[7];
+            tweaks[7]    = tweaks[6];
+            tweaks[6]    = temp;
+        }
 
         // getting Tweaked Text after xor of message and Alpha ^ j
         __m256i tweaked_src_text_1 = _mm256_xor_si256(*(tweakx8), src_text_1);
@@ -595,7 +604,11 @@ DecryptXts(const uint8_t* pSrc,
         __m256i src_text_1 = _mm256_loadu_si256(p_src256);
         __m256i src_text_2 = _mm256_loadu_si256(p_src256 + 1);
         __m256i src_text_3 = _mm256_loadu_si256(p_src256 + 2);
-
+        if (blocks == chunk && extra_bytes_in_message_block) {
+            __m128i temp                     = tweaks[tweak_to_be_used * 4 + 5];
+            tweaks[tweak_to_be_used * 4 + 5] = tweaks[tweak_to_be_used * 4 + 4];
+            tweaks[tweak_to_be_used * 4 + 4] = temp;
+        }
         __m256i tweak_1 = _mm256_loadu_si256(tweakx8 + tweak_to_be_used);
         __m256i tweak_2 = _mm256_loadu_si256(tweakx8 + tweak_to_be_used + 1);
         __m256i tweak_3 = _mm256_loadu_si256(tweakx8 + tweak_to_be_used + 2);
@@ -633,7 +646,11 @@ DecryptXts(const uint8_t* pSrc,
 
         __m256i src_text_1 = _mm256_loadu_si256(p_src256);
         __m256i src_text_2 = _mm256_loadu_si256(p_src256 + 1);
-
+        if (blocks == chunk && extra_bytes_in_message_block) {
+            __m128i temp                     = tweaks[tweak_to_be_used * 4 + 3];
+            tweaks[tweak_to_be_used * 4 + 3] = tweaks[tweak_to_be_used * 4 + 2];
+            tweaks[tweak_to_be_used * 4 + 2] = temp;
+        }
         __m256i tweak_1 = _mm256_loadu_si256(tweakx8 + tweak_to_be_used);
         __m256i tweak_2 = _mm256_loadu_si256(tweakx8 + tweak_to_be_used + 1);
 
@@ -663,7 +680,11 @@ DecryptXts(const uint8_t* pSrc,
     if (blocks >= chunk) {
 
         __m256i src_text_1 = _mm256_loadu_si256(p_src256);
-
+        if (blocks == chunk && extra_bytes_in_message_block) {
+            __m128i temp                     = tweaks[tweak_to_be_used * 4 + 1];
+            tweaks[tweak_to_be_used * 4 + 1] = tweaks[tweak_to_be_used * 4 + 0];
+            tweaks[tweak_to_be_used * 4 + 0] = temp;
+        }
         __m256i tweak_1 = _mm256_loadu_si256(tweakx8 + tweak_to_be_used);
 
         // getting Tweaked Text after xor of message and Alpha ^ j
@@ -707,53 +728,8 @@ DecryptXts(const uint8_t* pSrc,
         memcpy((uint8_t*)p_dest256 + (16 * blocks),
                (uint8_t*)&src_text_1 + (16 * (blocks - 1)),
                extra_bytes_in_message_block);
-    } else {
-        __m256i secondlastTweak, last_src_text;
-
-        if (tweak_to_be_used > 0) {
-            secondlastTweak =
-                _mm256_loadu_si256(tweakx8 + tweak_to_be_used - 1);
-        } else {
-
-            secondlastTweak = _mm256_setr_epi64x(
-                0LL, 0LL, ((long long*)&temp_iv)[0], ((long long*)&temp_iv)[1]);
-
-            for (uint64_t i = 1; i < (len / (64)); i++) {
-                secondlastTweak = nextTweaks(secondlastTweak);
-            }
-        }
-        __m256i src_text_1 = _mm256_setr_epi64x(((long long*)p_src256 - 2)[0],
-                                                ((long long*)p_src256 - 2)[1],
-                                                0LL,
-                                                0LL);
-
-        src_text_1 = _mm256_xor_si256(lastTweak, src_text_1);
-
-        AesDecrypt(&src_text_1, p_key128, nRounds);
-
-        src_text_1 = _mm256_xor_si256(lastTweak, src_text_1);
-        memcpy((uint8_t*)p_dest256,
-               (uint8_t*)&src_text_1,
-               extra_bytes_in_message_block);
-        memcpy((uint8_t*)&last_src_text,
-               (uint8_t*)p_src256,
-               extra_bytes_in_message_block);
-        memcpy((uint8_t*)&last_src_text + extra_bytes_in_message_block,
-               (uint8_t*)&src_text_1 + extra_bytes_in_message_block,
-               16 - extra_bytes_in_message_block);
-        src_text_1 = _mm256_setr_epi64x(0LL,
-                                        0LL,
-                                        ((long long*)&last_src_text)[0],
-                                        ((long long*)&last_src_text)[1]);
-        src_text_1 = _mm256_xor_si256(secondlastTweak, src_text_1);
-
-        AesDecrypt(&src_text_1, p_key128, nRounds);
-
-        src_text_1 = _mm256_xor_si256(secondlastTweak, src_text_1);
-
-        memcpy((uint8_t*)p_dest256 - 16, (uint8_t*)&src_text_1 + 16, 16);
-        return ALC_ERROR_NONE;
     }
+
     if (extra_bytes_in_message_block) {
         __m256i stealed_text, tweak_1;
 
