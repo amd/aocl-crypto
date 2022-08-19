@@ -41,11 +41,11 @@
 namespace alcp::cipher::vaes {
 
 static inline void
-MultiplyAplhaByTwo(__m128i& alpha)
+MultiplyAlphaByTwo(__m128i& alpha)
 {
-    unsigned long long res, carry;
+    Uint64 res, carry;
 
-    unsigned long long* tmp_tweak = (unsigned long long*)&alpha;
+    Uint64* tmp_tweak = (Uint64*)&alpha;
 
     res   = (((long long)tmp_tweak[1]) >> 63) & GF_POLYNOMIAL;
     carry = (((long long)tmp_tweak[0]) >> 63) & 1;
@@ -60,13 +60,13 @@ finalAlphaVal(__m128i& alpha)
     __m512i finalAlpha = _mm512_setzero_si512();
 
     (((__m128i*)&finalAlpha)[0]) = alpha;
-    MultiplyAplhaByTwo(alpha);
+    MultiplyAlphaByTwo(alpha);
     (((__m128i*)&finalAlpha)[1]) = alpha;
-    MultiplyAplhaByTwo(alpha);
+    MultiplyAlphaByTwo(alpha);
     (((__m128i*)&finalAlpha)[2]) = alpha;
-    MultiplyAplhaByTwo(alpha);
+    MultiplyAlphaByTwo(alpha);
     (((__m128i*)&finalAlpha)[3]) = alpha;
-    MultiplyAplhaByTwo(alpha);
+    MultiplyAlphaByTwo(alpha);
 
     return finalAlpha;
 }
@@ -214,7 +214,7 @@ EncryptXtsAvx512(const uint8_t* pSrc,
         for (int i = 0; i < blocks_to_be_encrypted; i++) {
             Alphas[i]        = current_alpha;
             temp_src_text[i] = ((__m128i*)p_src512)[i];
-            MultiplyAplhaByTwo(current_alpha);
+            MultiplyAlphaByTwo(current_alpha);
             blocks--;
         }
 
@@ -297,7 +297,7 @@ EncryptXtsAvx512(const uint8_t* pSrc,
 
         // getting Chiper Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = alcp_xor(current_alpha_1, tweaked_src_text_1);
-        MultiplyAplhaByTwo(current_alpha);
+        MultiplyAlphaByTwo(current_alpha);
 
         __m128i second_last_message_block =
             (((__m128i*)&tweaked_src_text_1)[0]);
@@ -521,7 +521,7 @@ DecryptXtsAvx512(const uint8_t* pSrc,
         for (int i = 0; i < blocks_to_be_encrypted; i++) {
             Alphas[i]        = current_alpha;
             temp_src_text[i] = ((__m128i*)p_src512)[i];
-            MultiplyAplhaByTwo(current_alpha);
+            MultiplyAlphaByTwo(current_alpha);
             blocks--;
         }
 
@@ -583,7 +583,7 @@ DecryptXtsAvx512(const uint8_t* pSrc,
     } else if (blocks == 1 && last_Round_Byte > 0) {
 
         __m128i prevAlpha = current_alpha;
-        MultiplyAplhaByTwo(current_alpha);
+        MultiplyAlphaByTwo(current_alpha);
 
         __m128i Alphas[4]        = { current_alpha,
                               _mm_set1_epi32(0),

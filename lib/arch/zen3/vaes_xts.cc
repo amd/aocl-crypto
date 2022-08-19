@@ -40,11 +40,11 @@
 namespace alcp::cipher::vaes {
 
 static inline void
-MultiplyAplhaByTwo(__m128i& alpha)
+MultiplyAlphaByTwo(__m128i& alpha)
 {
-    unsigned long long res, carry;
+    Uint64 res, carry;
 
-    unsigned long long* tmp_tweak = (unsigned long long*)&alpha;
+    Uint64* tmp_tweak = (Uint64*)&alpha;
 
     res   = (((long long)tmp_tweak[1]) >> 63) & GF_POLYNOMIAL;
     carry = (((long long)tmp_tweak[0]) >> 63) & 1;
@@ -58,9 +58,9 @@ finalAlphaVal(__m128i& alpha)
 {
     __m256i finalAlpha           = _mm256_setzero_si256();
     (((__m128i*)&finalAlpha)[0]) = alpha;
-    MultiplyAplhaByTwo(alpha);
+    MultiplyAlphaByTwo(alpha);
     (((__m128i*)&finalAlpha)[1]) = alpha;
-    MultiplyAplhaByTwo(alpha);
+    MultiplyAlphaByTwo(alpha);
     return finalAlpha;
 }
 
@@ -209,7 +209,7 @@ EncryptXts(const uint8_t* pSrc,
     while (blocks > 1) {
         // Calulating Aplha for the next 1 blocks
         __m128i prevAlpha = current_alpha;
-        MultiplyAplhaByTwo(current_alpha);
+        MultiplyAlphaByTwo(current_alpha);
         __m256i current_alpha_1 = _mm256_set_m128i(current_alpha, prevAlpha);
 
         // getting Tweaked Text after xor of message and Alpha ^ j
@@ -272,7 +272,7 @@ EncryptXts(const uint8_t* pSrc,
         // getting Chiper Text after xor of message and Alpha ^ j
         tweaked_src_text_1 =
             _mm256_xor_si256(current_alpha_1, tweaked_src_text_1);
-        MultiplyAplhaByTwo(current_alpha);
+        MultiplyAlphaByTwo(current_alpha);
 
         __m128i second_last_message_block =
             (((__m128i*)&tweaked_src_text_1)[0]);
@@ -491,7 +491,7 @@ DecryptXts(const uint8_t* pSrc,
 
         __m256i current_alpha_1 =
             _mm256_set_m128i(_mm_setzero_si128(), current_alpha);
-        MultiplyAplhaByTwo(current_alpha);
+        MultiplyAlphaByTwo(current_alpha);
 
         // getting Tweaked Text after xor of message and Alpha ^ j
         __m256i tweaked_src_text_1 =
@@ -522,7 +522,7 @@ DecryptXts(const uint8_t* pSrc,
 
         // Calulating Aplha for the next 2*1 blocks
         __m128i prevAlpha = current_alpha;
-        MultiplyAplhaByTwo(current_alpha);
+        MultiplyAlphaByTwo(current_alpha);
         __m256i current_alpha_1 = _mm256_set_m128i(current_alpha, prevAlpha);
 
         // getting Tweaked Text after xor of message and Alpha ^ j
@@ -576,7 +576,7 @@ DecryptXts(const uint8_t* pSrc,
     } else if (blocks == 1 && last_Round_Byte > 0) {
 
         __m128i prevAlpha = current_alpha;
-        MultiplyAplhaByTwo(current_alpha);
+        MultiplyAlphaByTwo(current_alpha);
 
         __m256i current_alpha_1 =
             _mm256_set_m128i(_mm_setzero_si128(), current_alpha);
