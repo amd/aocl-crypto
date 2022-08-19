@@ -67,13 +67,13 @@ namespace alcp::cipher { namespace aesni {
 
                 // Calulating Aplha for the next 4 blocks
                 __m128i current_alpha_1 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
                 __m128i current_alpha_2 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
                 __m128i current_alpha_3 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
                 __m128i current_alpha_4 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
 
                 // getting Tweaked Text after xor of message and Alpha ^ j
                 __m128i tweaked_src_text_1 =
@@ -118,9 +118,9 @@ namespace alcp::cipher { namespace aesni {
 
                 // Calulating Aplha for the next 4 blocks
                 __m128i current_alpha_1 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
                 __m128i current_alpha_2 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
 
                 // getting Tweaked Text after xor of message and Alpha ^ j
                 __m128i tweaked_src_text_1 =
@@ -167,7 +167,7 @@ namespace alcp::cipher { namespace aesni {
                 p_src128++;
 
                 // Increasing Aplha  for the next round
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
 
                 blocks--;
             }
@@ -179,13 +179,13 @@ namespace alcp::cipher { namespace aesni {
 
                 // Calulating Aplha for the next 4 blocks
                 __m128i current_alpha_1 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
                 __m128i current_alpha_2 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
                 __m128i current_alpha_3 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
                 __m128i current_alpha_4 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
 
                 // getting Tweaked Text after xor of message and Alpha ^ j
                 __m128i tweaked_src_text_1 =
@@ -230,9 +230,9 @@ namespace alcp::cipher { namespace aesni {
 
                 // Calulating Aplha for the next 4 blocks
                 __m128i current_alpha_1 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
                 __m128i current_alpha_2 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
 
                 // getting Tweaked Text after xor of message and Alpha ^ j
                 __m128i tweaked_src_text_1 =
@@ -279,7 +279,7 @@ namespace alcp::cipher { namespace aesni {
                 p_src128++;
 
                 // Increasing Aplha  for the next round
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
 
                 blocks--;
             }
@@ -297,7 +297,7 @@ namespace alcp::cipher { namespace aesni {
 
         p_src128++;
 
-        aes::MultiplyAplhaByTwo(current_alpha);
+        aes::MultiplyAlphaByTwo(current_alpha);
 
         // appending 16-last_Round_Byte bytes to last message block to make
         // it complete block for encryption (Called Stealing of bytes in xts
@@ -347,13 +347,13 @@ namespace alcp::cipher { namespace aesni {
 
                 // Calulating Aplha for the next 4 blocks
                 __m128i current_alpha_1 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
                 __m128i current_alpha_2 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
                 __m128i current_alpha_3 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
                 __m128i current_alpha_4 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
 
                 // getting Tweaked Text after xor of message and Alpha ^ j
                 __m128i tweaked_src_text_1 =
@@ -398,9 +398,9 @@ namespace alcp::cipher { namespace aesni {
 
                 // Calulating Aplha for the next 2 blocks
                 __m128i current_alpha_1 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
                 __m128i current_alpha_2 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
 
                 // getting Tweaked Text after xor of message and Alpha ^ j
                 __m128i tweaked_src_text_1 =
@@ -446,7 +446,7 @@ namespace alcp::cipher { namespace aesni {
                 p_src128++;
 
                 // Increasing Aplha  for the next round
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
 
                 blocks--;
             }
@@ -456,13 +456,13 @@ namespace alcp::cipher { namespace aesni {
 
                 // Calulating Aplha for the next 4 blocks
                 __m128i current_alpha_1 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
                 __m128i current_alpha_2 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
                 __m128i current_alpha_3 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
                 __m128i current_alpha_4 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
 
                 // getting Tweaked Text after xor of message and Alpha ^ j
                 __m128i tweaked_src_text_1 =
@@ -507,9 +507,9 @@ namespace alcp::cipher { namespace aesni {
 
                 // Calulating Aplha for the next 4 blocks
                 __m128i current_alpha_1 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
                 __m128i current_alpha_2 = current_alpha;
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
 
                 // getting Tweaked Text after xor of message and Alpha ^ j
                 __m128i tweaked_src_text_1 =
@@ -556,14 +556,14 @@ namespace alcp::cipher { namespace aesni {
                 p_src128++;
 
                 // Increasing Aplha  for the next round
-                aes::MultiplyAplhaByTwo(current_alpha);
+                aes::MultiplyAlphaByTwo(current_alpha);
 
                 blocks--;
             }
         }
         __m128i prevAlpha = current_alpha;
 
-        aes::MultiplyAplhaByTwo(current_alpha);
+        aes::MultiplyAlphaByTwo(current_alpha);
 
         __m128i tweaked_src_text = _mm_xor_si128(current_alpha, *p_src128);
         AesDecrypt(&tweaked_src_text, p_key128, nRounds);

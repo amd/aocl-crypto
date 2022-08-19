@@ -36,7 +36,7 @@
 
 namespace alcp::cipher { namespace aes {
 
-    static inline void MultiplyAplhaByTwo(__m128i& alpha)
+    static inline void MultiplyAlphaByTwo(__m128i& alpha)
     {
         unsigned long long res, carry;
 
@@ -53,19 +53,19 @@ namespace alcp::cipher { namespace aes {
     {
 
         dst[0] = alpha;
-        MultiplyAplhaByTwo(alpha);
+        MultiplyAlphaByTwo(alpha);
         dst[1] = alpha;
-        MultiplyAplhaByTwo(alpha);
+        MultiplyAlphaByTwo(alpha);
         dst[2] = alpha;
-        MultiplyAplhaByTwo(alpha);
+        MultiplyAlphaByTwo(alpha);
         dst[3] = alpha;
-        MultiplyAplhaByTwo(alpha);
+        MultiplyAlphaByTwo(alpha);
         dst[4] = alpha;
-        MultiplyAplhaByTwo(alpha);
+        MultiplyAlphaByTwo(alpha);
         dst[5] = alpha;
-        MultiplyAplhaByTwo(alpha);
+        MultiplyAlphaByTwo(alpha);
         dst[6] = alpha;
-        MultiplyAplhaByTwo(alpha);
+        MultiplyAlphaByTwo(alpha);
         dst[7] = alpha;
     }
 
