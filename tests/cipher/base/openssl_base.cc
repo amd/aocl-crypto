@@ -287,10 +287,6 @@ OpenSSLCipherBase::encrypt(const uint8_t* plaintxt,
         handleErrors();
         return false;
     }
-    // if (1 != EVP_EncryptFinal_ex(m_ctx_enc, ciphertxt + len_ct, &len_ct)) {
-    //     handleErrors();
-    //     return false;
-    // }
     return true;
 }
 bool
@@ -298,12 +294,6 @@ OpenSSLCipherBase::encrypt(alcp_data_ex_t data)
 {
     int len_ct = 0;
     if (m_mode == ALC_AES_MODE_GCM) {
-        // Additional Data
-        if (data.adl == 0 && data.ad == nullptr) {
-            // FIXME: Hack to prevent ad from being null
-            uint8_t a;
-            data.ad = &a; // Some random value other than NULL
-        }
         if (1
             != EVP_EncryptUpdate(m_ctx_enc, NULL, &len_ct, data.ad, data.adl)) {
             std::cout << "Error: Additional Data" << std::endl;
@@ -317,21 +307,13 @@ OpenSSLCipherBase::encrypt(alcp_data_ex_t data)
             handleErrors();
             return false;
         }
-        // data.outl = len_ct;
 
         if (1 != EVP_EncryptFinal_ex(m_ctx_enc, data.out + len_ct, &len_ct)) {
             std::cout << "Error: Finalize" << std::endl;
             handleErrors();
             return false;
         }
-        // data.outl += len_ct;
 
-        // Get Tag
-        if (data.tagl == 0 && data.tag == nullptr) {
-            // FIXME: Hack to prevent ad from being null
-            uint8_t a;
-            data.tag = &a; // Some random value other than NULL
-        }
         /* Get the tag */
         if (1
             != EVP_CIPHER_CTX_ctrl(
@@ -347,11 +329,6 @@ OpenSSLCipherBase::encrypt(alcp_data_ex_t data)
             handleErrors();
             return false;
         }
-        // if (1 != EVP_EncryptFinal_ex(m_ctx_enc, data.out + len_ct, &len_ct))
-        // {
-        //     handleErrors();
-        //     return false;
-        // }
     }
     return true;
 }
@@ -370,7 +347,6 @@ OpenSSLCipherBase::decrypt(alcp_data_ex_t data)
 {
     int len_pt = 0;
     if (m_mode == ALC_AES_MODE_GCM) {
-
         if (1
             != EVP_DecryptUpdate(m_ctx_dec, NULL, &len_pt, data.ad, data.adl)) {
             handleErrors();
@@ -393,10 +369,8 @@ OpenSSLCipherBase::decrypt(alcp_data_ex_t data)
 
         int ret = EVP_DecryptFinal_ex(m_ctx_dec, data.out + len_pt, &len_pt);
         if (ret > 0) {
-            /* Success */
             return true;
         } else {
-            /* Verify failed */
             return false;
         }
     } else {
@@ -428,10 +402,6 @@ OpenSSLCipherBase::reset()
         if (1 != EVP_EncryptInit_ex(m_ctx_enc, NULL, NULL, m_key, m_iv))
             handleErrors();
 
-        // if (1
-        //     != EVP_CIPHER_CTX_ctrl(m_ctx_enc, EVP_CTRL_GCM_SET_IVLEN, 12,
-        //     NULL)) handleErrors();
-
         if (1
             != EVP_DecryptInit_ex(m_ctx_dec,
                                   alcpModeKeyLenToCipher(m_mode, m_key_len),
@@ -443,20 +413,21 @@ OpenSSLCipherBase::reset()
         if (1 != EVP_DecryptInit_ex(m_ctx_dec, NULL, NULL, m_key, m_iv))
             handleErrors();
 
-        // if (1
-        //     != EVP_CIPHER_CTX_ctrl(m_ctx_enc, EVP_CTRL_GCM_SET_IVLEN, 12,
-        //     NULL)) handleErrors();
     } else {
-        EVP_EncryptInit_ex(m_ctx_enc,
-                           alcpModeKeyLenToCipher(m_mode, m_key_len),
-                           NULL,
-                           m_key,
-                           m_iv);
-        EVP_DecryptInit_ex(m_ctx_dec,
-                           alcpModeKeyLenToCipher(m_mode, m_key_len),
-                           NULL,
-                           m_key,
-                           m_iv);
+        if (1
+            != EVP_EncryptInit_ex(m_ctx_enc,
+                                  alcpModeKeyLenToCipher(m_mode, m_key_len),
+                                  NULL,
+                                  m_key,
+                                  m_iv))
+            handleErrors();
+        if (1
+            != EVP_DecryptInit_ex(m_ctx_dec,
+                                  alcpModeKeyLenToCipher(m_mode, m_key_len),
+                                  NULL,
+                                  m_key,
+                                  m_iv))
+            handleErrors();
     }
     if (1 != EVP_CIPHER_CTX_set_padding(m_ctx_enc, 0))
         handleErrors();

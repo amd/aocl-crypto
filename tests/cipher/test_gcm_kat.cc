@@ -65,21 +65,15 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
         testingCore.getCipherHandler()->testingEncrypt(
             data, testingCore.getDs()->getKey());
 
-        /* for openssl, IV != 12 is an invalid case */
-        if ((useossl) && data.ivl != 12 && false)
-            EXPECT_TRUE(true);
-        else {
-            EXPECT_TRUE(
-                ArraysMatch(outct,
-                            testingCore.getDs()->getCt(),
-                            *(testingCore.getDs()),
-                            std::string("AES_" + MODE_STR + "_128_ENC")));
-            EXPECT_TRUE(
-                ArraysMatch(outtag,
-                            testingCore.getDs()->getTag(),
-                            *(testingCore.getDs()),
-                            std::string("AES_" + MODE_STR + "_128_ENC_TAG")));
-        }
+        EXPECT_TRUE(ArraysMatch(outct,
+                                testingCore.getDs()->getCt(),
+                                *(testingCore.getDs()),
+                                std::string("AES_" + MODE_STR + "_128_ENC")));
+        EXPECT_TRUE(
+            ArraysMatch(outtag,
+                        testingCore.getDs()->getTag(),
+                        *(testingCore.getDs()),
+                        std::string("AES_" + MODE_STR + "_128_ENC_TAG")));
     }
     if (!test_ran) {
         EXPECT_TRUE(::testing::AssertionFailure()
@@ -115,21 +109,15 @@ TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
         testingCore.getCipherHandler()->testingEncrypt(
             data, testingCore.getDs()->getKey());
 
-        /* for openssl, IV != 12 is an invalid case */
-        if ((useossl) && data.ivl != 12)
-            EXPECT_TRUE(true);
-        else {
-            EXPECT_TRUE(
-                ArraysMatch(outct,
-                            testingCore.getDs()->getCt(),
-                            *(testingCore.getDs()),
-                            std::string("AES_" + MODE_STR + "_192_ENC")));
-            EXPECT_TRUE(
-                ArraysMatch(outtag,
-                            testingCore.getDs()->getTag(),
-                            *(testingCore.getDs()),
-                            std::string("AES_" + MODE_STR + "_192_ENC_TAG")));
-        }
+        EXPECT_TRUE(ArraysMatch(outct,
+                                testingCore.getDs()->getCt(),
+                                *(testingCore.getDs()),
+                                std::string("AES_" + MODE_STR + "_192_ENC")));
+        EXPECT_TRUE(
+            ArraysMatch(outtag,
+                        testingCore.getDs()->getTag(),
+                        *(testingCore.getDs()),
+                        std::string("AES_" + MODE_STR + "_192_ENC_TAG")));
     }
     if (!test_ran) {
         EXPECT_TRUE(::testing::AssertionFailure()
@@ -165,21 +153,15 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
         testingCore.getCipherHandler()->testingEncrypt(
             data, testingCore.getDs()->getKey());
 
-        /* for openssl, IV != 12 is an invalid case */
-        if ((useossl) && data.ivl != 12)
-            EXPECT_TRUE(true);
-        else {
-            EXPECT_TRUE(
-                ArraysMatch(outct,
-                            testingCore.getDs()->getCt(),
-                            *(testingCore.getDs()),
-                            std::string("AES_" + MODE_STR + "_256_ENC")));
-            EXPECT_TRUE(
-                ArraysMatch(outtag,
-                            testingCore.getDs()->getTag(),
-                            *(testingCore.getDs()),
-                            std::string("AES_" + MODE_STR + "_256_ENC_TAG")));
-        }
+        EXPECT_TRUE(ArraysMatch(outct,
+                                testingCore.getDs()->getCt(),
+                                *(testingCore.getDs()),
+                                std::string("AES_" + MODE_STR + "_256_ENC")));
+        EXPECT_TRUE(
+            ArraysMatch(outtag,
+                        testingCore.getDs()->getTag(),
+                        *(testingCore.getDs()),
+                        std::string("AES_" + MODE_STR + "_256_ENC_TAG")));
     }
     if (!test_ran) {
         EXPECT_TRUE(::testing::AssertionFailure()
@@ -217,15 +199,10 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
         if (data.tagl == 0) {
             ret = true; // Skip tag test
         }
-        /* for openssl, IV != 12 is an invalid case */
-        // if ((useossl) && data.ivl != 12)
-        //    ret = true;
-        // else {
         EXPECT_TRUE(ArraysMatch(outpt,
                                 testingCore.getDs()->getPt(),
                                 *(testingCore.getDs()),
                                 std::string("AES_" + MODE_STR + "_128_DEC")));
-        //}
         EXPECT_TRUE(ret);
     }
     if (!test_ran) {
@@ -264,10 +241,6 @@ TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
         if (data.tagl == 0) {
             ret = true; // Skip tag test
         }
-        /* for openssl, IV != 12 is an invalid case */
-        // if ((useossl) && data.ivl != 12)
-        //    ret = true;
-        // else
         EXPECT_TRUE(ArraysMatch(outpt,
                                 testingCore.getDs()->getPt(),
                                 *(testingCore.getDs()),
@@ -310,10 +283,6 @@ TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
         if (data.tagl == 0) {
             ret = true; // Skip tag test
         }
-        /* for openssl, IV != 12 is an invalid case */
-        // if ((useossl) && data.ivl != 12)
-        //    ret = true;
-        // else
         EXPECT_TRUE(ArraysMatch(outpt,
                                 testingCore.getDs()->getPt(),
                                 *(testingCore.getDs()),
