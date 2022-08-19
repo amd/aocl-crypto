@@ -6,6 +6,7 @@
 
 #include "alcp/alcp.h"
 
+#ifdef DEBUG
 #define ALC_PRINT(a, size)                                                     \
     for (int x = 0; x < size; x++) {                                           \
         if (x % 16 == 0)                                                       \
@@ -13,6 +14,9 @@
         printf(" %2x ", (a)[x]);                                               \
     }                                                                          \
     printf("\n");
+#else
+#define ALC_PRINT(a, size)
+#endif
 
 static alc_cipher_handle_t handle;
 
@@ -215,18 +219,23 @@ main(void)
     create_demo_session(
         sample_key, sample_tweak_key, sample_iv, sizeof(sample_key) * 8);
 
-    // printf("plain text : \n");
-    // ALC_PRINT(((uint8_t*)sample_plaintxt), pt_size);
+#ifdef DEBUG
+    printf("plain text : \n");
+    ALC_PRINT(((uint8_t*)sample_plaintxt), pt_size);
+#endif
     encrypt_demo(sample_plaintxt,
                  pt_size, /* len of 'plaintxt' and 'ciphertxt' */
                  sample_ciphertxt,
                  sample_iv);
-    // printf("cipher text : \n");
-    // ALC_PRINT(((uint8_t*)&sample_ciphertxt), pt_size);
-
+#ifdef DEBUG
+    printf("cipher text : \n");
+    ALC_PRINT(((uint8_t*)&sample_ciphertxt), pt_size);
+#endif
     decrypt_demo(sample_ciphertxt, pt_size, sample_output, sample_iv);
-    // printf("out text : \n");
-    // ALC_PRINT(((uint8_t*)&sample_output), pt_size);
+#ifdef DEBUG
+    printf("out text : \n");
+    ALC_PRINT(((uint8_t*)&sample_output), pt_size);
+#endif
     printf("sample_output: %s\n", sample_output);
     /*
      * Complete the transaction
