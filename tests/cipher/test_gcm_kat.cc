@@ -218,15 +218,14 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
             ret = true; // Skip tag test
         }
         /* for openssl, IV != 12 is an invalid case */
-        if ((useossl) && data.ivl != 12)
-            ret = true;
-        else {
-            EXPECT_TRUE(
-                ArraysMatch(outpt,
-                            testingCore.getDs()->getPt(),
-                            *(testingCore.getDs()),
-                            std::string("AES_" + MODE_STR + "_128_DEC")));
-        }
+        // if ((useossl) && data.ivl != 12)
+        //    ret = true;
+        // else {
+        EXPECT_TRUE(ArraysMatch(outpt,
+                                testingCore.getDs()->getPt(),
+                                *(testingCore.getDs()),
+                                std::string("AES_" + MODE_STR + "_128_DEC")));
+        //}
         EXPECT_TRUE(ret);
     }
     if (!test_ran) {
@@ -266,14 +265,13 @@ TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
             ret = true; // Skip tag test
         }
         /* for openssl, IV != 12 is an invalid case */
-        if ((useossl) && data.ivl != 12)
-            ret = true;
-        else
-            EXPECT_TRUE(
-                ArraysMatch(outpt,
-                            testingCore.getDs()->getPt(),
-                            *(testingCore.getDs()),
-                            std::string("AES_" + MODE_STR + "_192_DEC")));
+        // if ((useossl) && data.ivl != 12)
+        //    ret = true;
+        // else
+        EXPECT_TRUE(ArraysMatch(outpt,
+                                testingCore.getDs()->getPt(),
+                                *(testingCore.getDs()),
+                                std::string("AES_" + MODE_STR + "_192_DEC")));
         EXPECT_TRUE(ret);
     }
     if (!test_ran) {
@@ -313,14 +311,13 @@ TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
             ret = true; // Skip tag test
         }
         /* for openssl, IV != 12 is an invalid case */
-        if ((useossl) && data.ivl != 12)
-            ret = true;
-        else
-            EXPECT_TRUE(
-                ArraysMatch(outpt,
-                            testingCore.getDs()->getPt(),
-                            *(testingCore.getDs()),
-                            std::string("AES_" + MODE_STR + "_256_DEC")));
+        // if ((useossl) && data.ivl != 12)
+        //    ret = true;
+        // else
+        EXPECT_TRUE(ArraysMatch(outpt,
+                                testingCore.getDs()->getPt(),
+                                *(testingCore.getDs()),
+                                std::string("AES_" + MODE_STR + "_256_DEC")));
         EXPECT_TRUE(ret);
     }
     if (!test_ran) {

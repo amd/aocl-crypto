@@ -53,19 +53,19 @@ CipherAes(benchmark::State& state,
     alcp::testing::CipherBase* cb;
 
     alcp::testing::AlcpCipherBase acb =
-        alcp::testing::AlcpCipherBase(alcpMode, iv, key, keylen, tkey);
+        alcp::testing::AlcpCipherBase(alcpMode, iv, 12, key, keylen, tkey);
 
     cb = &acb;
 #ifdef USE_IPP
     alcp::testing::IPPCipherBase icb =
-        alcp::testing::IPPCipherBase(alcpMode, iv, key, keylen, tkey);
+        alcp::testing::IPPCipherBase(alcpMode, iv, 12, key, keylen, tkey);
     if (useipp) {
         cb = &icb;
     }
 #endif
 #ifdef USE_OSSL
     alcp::testing::OpenSSLCipherBase ocb =
-        alcp::testing::OpenSSLCipherBase(alcpMode, iv, key, keylen, tkey);
+        alcp::testing::OpenSSLCipherBase(alcpMode, iv, 12, key, keylen, tkey);
     if (useossl) {
         cb = &ocb;
     }
