@@ -137,7 +137,7 @@ static const uint8_t sample_key[] = {
 
 static const uint8_t sample_tweak_key[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
-    0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xf, 0xe,
+    0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xf, 0xf,
 };
 
 static const uint8_t sample_iv[] = {
@@ -154,7 +154,7 @@ static const uint8_t sample_iv[] = {
 
 static uint8_t cipher = {68,cc,95,fe,db,6c,0c,87,76,73,98,fc,0a,dc,f6,07,9e,33,17,75,ad,0a,eb,27,66,29,f3,9e,b6,8d,1f,05};
 #else
-static uint8_t sample_ciphertxt[10000] = {
+static uint8_t sample_ciphertxt[1000] = {
     0,
 };
 #endif
@@ -207,7 +207,7 @@ out:
 int
 main(void)
 {
-    uint8_t sample_output[10000] = { 0 };
+    uint8_t sample_output[1000] = { 0 };
 
     int pt_size = strlen(sample_plaintxt);
     assert(sizeof(sample_plaintxt) < sizeof(sample_output));

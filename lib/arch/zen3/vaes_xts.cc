@@ -26,6 +26,7 @@
  *
  */
 #include "cipher/aes.hh"
+#include "cipher/aes_xts.hh"
 #include "cipher/avx256.hh"
 #include "cipher/vaes.hh"
 #include <cstdint>
@@ -36,65 +37,7 @@
 #include "key.hh"
 #include "types.hh"
 
-#define GF_POLYNOMIAL 0x87
-
 namespace alcp::cipher::vaes {
-
-static inline void
-MultiplyAlphaByTwo(__m128i& alpha)
-{
-    Uint64 res, carry;
-
-    Uint64* tmp_tweak = (Uint64*)&alpha;
-
-    res   = (((long long)tmp_tweak[1]) >> 63) & GF_POLYNOMIAL;
-    carry = (((long long)tmp_tweak[0]) >> 63) & 1;
-
-    tmp_tweak[0] = ((tmp_tweak[0]) << 1) ^ res;
-    tmp_tweak[1] = ((tmp_tweak[1]) << 1) | carry;
-}
-
-static inline void
-init_alphax8(__m128i& alpha, __m128i* dst)
-{
-
-    dst[0] = alpha;
-    MultiplyAplhaByTwo(alpha);
-    dst[1] = alpha;
-    MultiplyAplhaByTwo(alpha);
-    dst[2] = alpha;
-    MultiplyAplhaByTwo(alpha);
-    dst[3] = alpha;
-    MultiplyAplhaByTwo(alpha);
-    dst[4] = alpha;
-    MultiplyAplhaByTwo(alpha);
-    dst[5] = alpha;
-    MultiplyAplhaByTwo(alpha);
-    dst[6] = alpha;
-    MultiplyAplhaByTwo(alpha);
-    dst[7] = alpha;
-}
-
-/* Generate next 4 tweaks with 2^8 multiplier */
-static inline __m256i
-nextTweaks(__m256i tweak128x4)
-{
-
-    const __m256i poly = _mm256_set_epi64x(0, 0x87, 0, 0x87);
-    __m256i       nexttweak;
-
-    // Shifting individual 128 bit to right by 15*8 bits
-    __m256i highBytes = _mm256_bsrli_epi128(tweak128x4, 15);
-
-    // Multiplying each 128 bit individually to 64 bit at even index of poly
-    __m256i tmp = _mm256_clmulepi64_epi128(highBytes, poly, 0);
-
-    // Shifting individual 128 bit to left by 1*8 bits
-    nexttweak = _mm256_bslli_epi128(tweak128x4, 1);
-    nexttweak = _mm256_xor_si256(nexttweak, tmp);
-
-    return nexttweak;
-}
 
 alc_error_t
 EncryptXts(const uint8_t* pSrc,
@@ -122,14 +65,14 @@ EncryptXts(const uint8_t* pSrc,
     AesEncrypt(&extendedIV, p_tweak_key128, nRounds);
     __m128i tweaks[8 * 2]; // 8*2 Tweak values stored inside this
 
-    init_alphax8(*((__m128i*)&extendedIV), tweaks);
+    aes::init_alphax8(*((__m128i*)&extendedIV), tweaks);
 
     __m256i* tweakx8 = (__m256i*)tweaks;
 
-    tweakx8[4] = nextTweaks(tweakx8[0]);
-    tweakx8[5] = nextTweaks(tweakx8[1]);
-    tweakx8[6] = nextTweaks(tweakx8[2]);
-    tweakx8[7] = nextTweaks(tweakx8[3]);
+    tweakx8[4] = aes::nextTweaks(tweakx8[0]);
+    tweakx8[5] = aes::nextTweaks(tweakx8[1]);
+    tweakx8[6] = aes::nextTweaks(tweakx8[2]);
+    tweakx8[7] = aes::nextTweaks(tweakx8[3]);
 
     while (blocks >= chunk) {
 
@@ -176,10 +119,10 @@ EncryptXts(const uint8_t* pSrc,
         _mm256_storeu_si256(p_dest256 + 3, tweaked_src_text_4);
 
         // 2^8 multiplied to all previous tweaks
-        tweakx8[0] = nextTweaks(tweakx8[4]);
-        tweakx8[1] = nextTweaks(tweakx8[5]);
-        tweakx8[2] = nextTweaks(tweakx8[6]);
-        tweakx8[3] = nextTweaks(tweakx8[7]);
+        tweakx8[0] = aes::nextTweaks(tweakx8[4]);
+        tweakx8[1] = aes::nextTweaks(tweakx8[5]);
+        tweakx8[2] = aes::nextTweaks(tweakx8[6]);
+        tweakx8[3] = aes::nextTweaks(tweakx8[7]);
 
         __m256i tweaked_src_text_5 =
             _mm256_xor_si256(_mm256_loadu_si256(tweakx8 + 4), src_text_5);
@@ -214,10 +157,10 @@ EncryptXts(const uint8_t* pSrc,
         _mm256_storeu_si256(p_dest256 + 7, tweaked_src_text_8);
 
         // 2^8 multiplied to all previous tweaks
-        tweakx8[4] = nextTweaks(tweakx8[0]);
-        tweakx8[5] = nextTweaks(tweakx8[1]);
-        tweakx8[6] = nextTweaks(tweakx8[2]);
-        tweakx8[7] = nextTweaks(tweakx8[3]);
+        tweakx8[4] = aes::nextTweaks(tweakx8[0]);
+        tweakx8[5] = aes::nextTweaks(tweakx8[1]);
+        tweakx8[6] = aes::nextTweaks(tweakx8[2]);
+        tweakx8[7] = aes::nextTweaks(tweakx8[3]);
 
         p_dest256 += 8;
         p_src256 += 8;
@@ -439,14 +382,14 @@ DecryptXts(const uint8_t* pSrc,
     __m128i temp_iv = (((__m128i*)&extendedIV)[0]);
     __m128i tweaks[8 * 2]; // 8*4 Tweak values stored inside this
 
-    init_alphax8(temp_iv, tweaks);
+    aes::init_alphax8(temp_iv, tweaks);
 
     __m256i* tweakx8 = (__m256i*)tweaks;
 
-    tweakx8[4] = nextTweaks(tweakx8[0]);
-    tweakx8[5] = nextTweaks(tweakx8[1]);
-    tweakx8[6] = nextTweaks(tweakx8[2]);
-    tweakx8[7] = nextTweaks(tweakx8[3]);
+    tweakx8[4] = aes::nextTweaks(tweakx8[0]);
+    tweakx8[5] = aes::nextTweaks(tweakx8[1]);
+    tweakx8[6] = aes::nextTweaks(tweakx8[2]);
+    tweakx8[7] = aes::nextTweaks(tweakx8[3]);
 
     while (blocks >= chunk) {
         // Loading next 2*8 blocks of message
@@ -491,10 +434,10 @@ DecryptXts(const uint8_t* pSrc,
         _mm256_storeu_si256(p_dest256 + 3, tweaked_src_text_4);
 
         // 2^8 multiplied to all previous tweaks
-        tweakx8[0] = nextTweaks(tweakx8[4]);
-        tweakx8[1] = nextTweaks(tweakx8[5]);
-        tweakx8[2] = nextTweaks(tweakx8[6]);
-        tweakx8[3] = nextTweaks(tweakx8[7]);
+        tweakx8[0] = aes::nextTweaks(tweakx8[4]);
+        tweakx8[1] = aes::nextTweaks(tweakx8[5]);
+        tweakx8[2] = aes::nextTweaks(tweakx8[6]);
+        tweakx8[3] = aes::nextTweaks(tweakx8[7]);
         if (blocks == chunk && extra_bytes_in_message_block) {
             __m128i temp = tweaks[15];
             tweaks[15]   = tweaks[14];
@@ -533,10 +476,10 @@ DecryptXts(const uint8_t* pSrc,
         _mm256_storeu_si256(p_dest256 + 7, tweaked_src_text_8);
 
         // 2^8 multiplied to all previous tweaks
-        tweakx8[4] = nextTweaks(tweakx8[0]);
-        tweakx8[5] = nextTweaks(tweakx8[1]);
-        tweakx8[6] = nextTweaks(tweakx8[2]);
-        tweakx8[7] = nextTweaks(tweakx8[3]);
+        tweakx8[4] = aes::nextTweaks(tweakx8[0]);
+        tweakx8[5] = aes::nextTweaks(tweakx8[1]);
+        tweakx8[6] = aes::nextTweaks(tweakx8[2]);
+        tweakx8[7] = aes::nextTweaks(tweakx8[3]);
 
         p_dest256 += 8;
         p_src256 += 8;
