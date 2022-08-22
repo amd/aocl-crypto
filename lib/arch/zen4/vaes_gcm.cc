@@ -102,14 +102,14 @@ gcmCryptInit(__m512i* c1,
 #define MAX_NUM_512_BLKS       24 // 96 HashSubkeys
 #define ENABLE_96_BLK_AGG_GMUL 0  // disable would use 64 block GMUL
 
-uint64_t
+Uint64
 gcmBlk_512(const __m512i* p_in_x,
            __m512i*       p_out_x,
-           uint64_t       blocks,
+           Uint64         blocks,
            const __m128i* pkey128,
-           const uint8_t* pIv,
+           const Uint8*   pIv,
            int            nRounds,
-           uint8_t        factor,
+           Uint8          factor,
            // gcm specific params
            __m128i* pgHash_128,
            __m128i  Hsubkey_128,
@@ -152,11 +152,11 @@ gcmBlk_512(const __m512i* p_in_x,
      */
 
     // 16*num_unroll*MinloopCount
-    uint64_t threshold_4x512_4unroll = 16 * 4 * 20;
-    uint64_t threshold_4x512_2unroll = 16 * 2 * 4;
+    Uint64 threshold_4x512_4unroll = 16 * 4 * 20;
+    Uint64 threshold_4x512_2unroll = 16 * 2 * 4;
 
 #if ENABLE_96_BLK_AGG_GMUL
-    uint64_t threshold_6x512_4unroll = 24 * 4 * 20;
+    Uint64 threshold_6x512_4unroll = 24 * 4 * 20;
     if (blocks >= threshold_6x512_4unroll) {
         num_512_blks = 6 * 4;
     } else if (blocks >= threshold_4x512_4unroll) {
@@ -177,8 +177,8 @@ gcmBlk_512(const __m512i* p_in_x,
     }
 
     if (num_512_blks) {
-        const uint64_t* H1_64 = (const uint64_t*)&Hsubkey_128;
-        pH_512_128[0]         = (__m128i*)&Hsubkey_512[0];
+        const Uint64* H1_64 = (const Uint64*)&Hsubkey_128;
+        pH_512_128[0]       = (__m128i*)&Hsubkey_512[0];
 
         Hsubkey_512[0] = _mm512_set_epi64(H1_64[1], // 3
                                           H1_64[0], // 3
@@ -210,11 +210,11 @@ gcmBlk_512(const __m512i* p_in_x,
         }
     }
 
-    uint64_t blockCount_1x512 = factor;
-    __m512i  a1, b1;
+    Uint64  blockCount_1x512 = factor;
+    __m512i a1, b1;
 
-    uint64_t blockCount_4x512 = 4 * factor;
-    uint64_t blockCount_2x512 = 2 * factor;
+    Uint64 blockCount_4x512 = 4 * factor;
+    Uint64 blockCount_2x512 = 2 * factor;
 
     __m512i a2, a3, a4;
     __m512i b2, b3, b4;
@@ -224,7 +224,7 @@ gcmBlk_512(const __m512i* p_in_x,
 #if ENABLE_96_BLK_AGG_GMUL
     numParallel_512blks = 6;
 
-    uint64_t blockCount_6x512 = numParallel_512blks * factor;
+    Uint64 blockCount_6x512 = numParallel_512blks * factor;
     if (blocks < 48) {
         blockCount_6x512 =
             blocks + 1; // stop condition, not to use blockCount_6x512 loop.
@@ -235,7 +235,7 @@ gcmBlk_512(const __m512i* p_in_x,
     __m512i b5, b6;
     __m512i c5, c6;
 
-    uint64_t blockCount_6x512_4unroll = blockCount_6x512 * 4;
+    Uint64 blockCount_6x512_4unroll = blockCount_6x512 * 4;
     if (blocks < threshold_6x512_4unroll) {
         blockCount_6x512_4unroll =
             blocks
@@ -441,7 +441,7 @@ gcmBlk_512(const __m512i* p_in_x,
 
 #if 1 // variable LOOP count
     numParallel_512blks = 4;
-    uint64_t blockCount_4x512_N_unroll =
+    Uint64 blockCount_4x512_N_unroll =
         blockCount_4x512 * (num_512_blks / numParallel_512blks);
 
     if (blocks < threshold_4x512_2unroll) {
@@ -784,8 +784,8 @@ gcmBlk_512(const __m512i* p_in_x,
         __m128i b1 = _mm_shuffle_epi8(c1_128, swap_ctr_128);
         alcp::cipher::aesni::AesEncrypt(&b1, pkey128, nRounds);
 
-        const uint8_t* p_in  = reinterpret_cast<const uint8_t*>(p_in_x);
-        uint8_t*       p_out = reinterpret_cast<uint8_t*>(&a1);
+        const Uint8* p_in  = reinterpret_cast<const Uint8*>(p_in_x);
+        Uint8*       p_out = reinterpret_cast<Uint8*>(&a1);
 
         int i = 0;
         for (; i < remBytes; i++) {
@@ -806,7 +806,7 @@ gcmBlk_512(const __m512i* p_in_x,
             p_out[i] = 0;
         }
 
-        uint8_t* p_store = reinterpret_cast<uint8_t*>(p_out_x);
+        Uint8* p_store = reinterpret_cast<Uint8*>(p_out_x);
         for (i = 0; i < remBytes; i++) {
             p_store[i] = p_out[i];
         }
@@ -821,22 +821,22 @@ gcmBlk_512(const __m512i* p_in_x,
 }
 
 alc_error_t
-CryptGcm(const uint8_t* pInputText,  // ptr to inputText
-         uint8_t*       pOutputText, // ptr to outputtext
-         uint64_t       len,         // message length in bytes
-         const uint8_t* pKey,        // ptr to Key
-         int            nRounds,     // No. of rounds
-         const uint8_t* pIv,         // ptr to Initialization Vector
-         __m128i*       pgHash_128,
-         __m128i        Hsubkey_128,
-         __m128i        iv_128,
-         __m128i        reverse_mask_128,
-         bool           isEncrypt)
+CryptGcm(const Uint8* pInputText,  // ptr to inputText
+         Uint8*       pOutputText, // ptr to outputtext
+         Uint64       len,         // message length in bytes
+         const Uint8* pKey,        // ptr to Key
+         int          nRounds,     // No. of rounds
+         const Uint8* pIv,         // ptr to Initialization Vector
+         __m128i*     pgHash_128,
+         __m128i      Hsubkey_128,
+         __m128i      iv_128,
+         __m128i      reverse_mask_128,
+         bool         isEncrypt)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    uint64_t blocks   = len / Rijndael::cBlockSize;
-    int      remBytes = len - (blocks * Rijndael::cBlockSize);
+    Uint64 blocks   = len / Rijndael::cBlockSize;
+    int    remBytes = len - (blocks * Rijndael::cBlockSize);
 
     auto p_in_512  = reinterpret_cast<const __m512i*>(pInputText);
     auto p_out_512 = reinterpret_cast<__m512i*>(pOutputText);

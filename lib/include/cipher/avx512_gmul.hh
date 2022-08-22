@@ -65,7 +65,7 @@ namespace alcp::cipher { namespace vaes {
 
 #define SWIZZLE(a, b, c, d) (((a) << 0) | ((b) << 2) | ((c) << 4) | ((d) << 6))
 
-    static const uint64_t const_factor[] = {
+    static const Uint64 const_factor[] = {
         0x0, 0xC200000000000000, 0x0, 0xC200000000000000
     };
 
@@ -132,8 +132,8 @@ namespace alcp::cipher { namespace vaes {
     static inline __m512i amd512xorLast128bit(__m512i a, __m128i b_128)
     {
         // a3:a2:a1:(a0 xor b_128)
-        uint64_t* b_64  = (uint64_t*)&b_128;
-        __m512i   b_512 = _mm512_set_epi64(0, 0, 0, 0, 0, 0, b_64[1], b_64[0]);
+        Uint64* b_64  = (Uint64*)&b_128;
+        __m512i b_512 = _mm512_set_epi64(0, 0, 0, 0, 0, 0, b_64[1], b_64[0]);
         return _mm512_mask_xor_epi64(a, 3, a, b_512);
     }
 
