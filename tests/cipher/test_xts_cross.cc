@@ -55,7 +55,7 @@ ExecRecPlay* fr = nullptr;
 #define BIG_START_LOOP 1
 
 /* Testing Starts Here! */
-TEST(SYMMETRIC_CRYPT_128, 128_CROSS_CHECK_SMALL)
+TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
 {
     int key_size = 128;
 
@@ -109,7 +109,7 @@ TEST(SYMMETRIC_CRYPT_128, 128_CROSS_CHECK_SMALL)
                 fr->startRecEvent();
             alcp_data_ex_t       data_alc, data_ext;
             std::vector<uint8_t> pt, key, tkey, iv, add, out_ct_alc(i, 0),
-                out_ct_ext(i, 0), out_pt(i, 0);
+                out_ct_ext(i, 0);
             if (!bbxreplay) {
                 pt   = rb.genRandomBytes(i);
                 key  = rb.genRandomBytes(key_size / 8);
@@ -150,12 +150,113 @@ TEST(SYMMETRIC_CRYPT_128, 128_CROSS_CHECK_SMALL)
             extTC->getCipherHandler()->testingEncrypt(data_ext, key);
             ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
 
-            data_alc.in  = &(out_ct_alc[0]);
-            data_alc.out = &(out_pt[0]);
+            if (!bbxreplay) {
+                fr->dumpBlackBox();
+                fr->endRecEvent();
+                fr->dumpLog();
+            }
+        }
+        delete extTC;
+        delete alcpTC;
+    }
+    delete fr;
+}
 
-            ASSERT_TRUE(
-                alcpTC->getCipherHandler()->testingDecrypt(data_alc, key));
-            ASSERT_TRUE(ArraysMatch(out_pt, pt)); // Check against original PT
+TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
+{
+    int key_size = 128;
+
+    // Request from others to validate openssl with ipp
+    // TODO: Upgrade flight recorder
+    TestingCore* alcpTC = nullptr;
+    if (oa_override) {
+        alcpTC = new TestingCore(OPENSSL, ALC_MODE);
+        printErrors("ALCP is overriden!... OpenSSL is now main lib");
+        printErrors("ALCP is overriden!... Forcing IPP as extlib");
+        useipp  = true;
+        useossl = false;
+    } else {
+        alcpTC = new TestingCore(ALCP, ALC_MODE);
+    }
+    TestingCore* extTC = nullptr;
+    RngBase      rb;
+    if (bbxreplay) {
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_DEC_128_SMALL",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             true);
+        fr->fastForward(SMALL_ENC);
+    } else
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_DEC_128_SMALL",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             false);
+
+    // Set extTC based on which external testing core user asks
+    try {
+        if (useossl)
+            extTC = new TestingCore(OPENSSL, ALC_MODE);
+        else if (useipp)
+            extTC = new TestingCore(IPP, ALC_MODE);
+        else {
+            printErrors("No Lib Specified!.. but trying OpenSSL");
+            extTC = new TestingCore(OPENSSL, ALC_MODE);
+        }
+    } catch (const char* exc) {
+        std::cerr << exc << std::endl;
+    }
+
+    int max_loop = SMALL_MAX_LOOP;
+
+    /*FIXME Need to update this for ippcp */
+    if (useipp) {
+        max_loop = 32;
+    }
+    if (extTC != nullptr) {
+        for (int i = SMALL_START_LOOP; i < max_loop; i += SMALL_INC_LOOP) {
+            fprintf(stderr, "RUNNING: %d\n", i);
+            if (!bbxreplay)
+                fr->startRecEvent();
+            alcp_data_ex_t       data_alc, data_ext;
+            std::vector<uint8_t> ct, key, tkey, iv, add, out_pt_alc(i, 0),
+                out_pt_ext(i, 0);
+            if (!bbxreplay) {
+                ct   = rb.genRandomBytes(i);
+                key  = rb.genRandomBytes(key_size / 8);
+                tkey = rb.genRandomBytes(key_size / 8);
+                iv   = rb.genRandomBytes(12);
+
+                // ALC/Main Lib Data
+                data_alc.in    = &(ct[0]);
+                data_alc.inl   = ct.size();
+                data_alc.iv    = &(iv[0]);
+                data_alc.ivl   = iv.size();
+                data_alc.out   = &(out_pt_alc[0]);
+                data_alc.outl  = data_alc.inl;
+                data_alc.tkey  = &(tkey[0]);
+                data_alc.tkeyl = 16;
+
+                // External Lib Data
+                data_ext.in    = &(ct[0]);
+                data_ext.inl   = ct.size();
+                data_ext.iv    = &(iv[0]);
+                data_ext.ivl   = iv.size();
+                data_ext.out   = &(out_pt_ext[0]);
+                data_ext.outl  = data_alc.inl;
+                data_ext.tkey  = &(tkey[0]);
+                data_ext.tkeyl = 16;
+
+                fr->setRecEvent(key, iv, ct, SMALL_DEC);
+            } else {
+                fr->nextLog();
+                try {
+                    fr->getValues(&key, &iv, &ct);
+                } catch (std::string excp) {
+                    std::cout << excp << std::endl;
+                    exit(-1);
+                }
+            }
+            alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
+            extTC->getCipherHandler()->testingDecrypt(data_ext, key);
+            ASSERT_TRUE(ArraysMatch(out_pt_alc, out_pt_ext));
 
             if (!bbxreplay) {
                 fr->dumpBlackBox();
@@ -170,7 +271,7 @@ TEST(SYMMETRIC_CRYPT_128, 128_CROSS_CHECK_SMALL)
 }
 
 /* 256 */
-TEST(SYMMETRIC_CRYPT_256, 256_CROSS_CHECK_BIG)
+TEST(SYMMETRIC_ENC_256, 256_CROSS_CHECK_BIG)
 {
     int key_size = 256;
     // Request from others to validate openssl with ipp
@@ -222,7 +323,7 @@ TEST(SYMMETRIC_CRYPT_256, 256_CROSS_CHECK_BIG)
                 fr->startRecEvent();
             alcp_data_ex_t       data_alc, data_ext;
             std::vector<uint8_t> pt, key, tkey, iv, add, out_ct_alc(i, 0),
-                out_ct_ext(i, 0), out_pt(i, 0);
+                out_ct_ext(i, 0);
             if (!bbxreplay) {
                 pt   = rb.genRandomBytes(i);
                 key  = rb.genRandomBytes(key_size / 8);
@@ -263,12 +364,110 @@ TEST(SYMMETRIC_CRYPT_256, 256_CROSS_CHECK_BIG)
             extTC->getCipherHandler()->testingEncrypt(data_ext, key);
             ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
 
-            data_alc.in  = &(out_ct_alc[0]);
-            data_alc.out = &(out_pt[0]);
+            if (!bbxreplay) {
+                fr->dumpBlackBox();
+                fr->endRecEvent();
+                fr->dumpLog();
+            }
+        }
+        delete extTC;
+        delete alcpTC;
+    }
+    delete fr;
+}
 
-            ASSERT_TRUE(
-                alcpTC->getCipherHandler()->testingDecrypt(data_alc, key));
-            ASSERT_TRUE(ArraysMatch(out_pt, pt)); // Check against original PT
+TEST(SYMMETRIC_DEC_256, 256_CROSS_CHECK_BIG)
+{
+    int key_size = 256;
+    // Request from others to validate openssl with ipp
+    // TODO: Upgrade flight recorder
+    TestingCore* alcpTC = nullptr;
+    if (oa_override) {
+        alcpTC = new TestingCore(OPENSSL, ALC_MODE);
+        printErrors("ALCP is overriden!... OpenSSL is now main lib");
+        printErrors("ALCP is overriden!... Forcing IPP as extlib");
+        useipp  = true;
+        useossl = false;
+    } else {
+        alcpTC = new TestingCore(ALCP, ALC_MODE);
+    }
+    TestingCore* extTC = nullptr;
+    RngBase      rb;
+    if (bbxreplay) {
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_DEC_256_SMALL",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             true);
+        fr->fastForward(SMALL_ENC);
+    } else
+        fr = new ExecRecPlay(std::string(STR_MODE) + "_DEC_256_SMALL",
+                             std::string(STR_MODE) + "_TEST_DATA",
+                             false);
+
+    // Set extTC based on which external testing core user asks
+    try {
+        if (useossl)
+            extTC = new TestingCore(OPENSSL, ALC_MODE);
+        else if (useipp)
+            extTC = new TestingCore(IPP, ALC_MODE);
+        else {
+            printErrors("No Lib Specified!.. but trying OpenSSL");
+            extTC = new TestingCore(OPENSSL, ALC_MODE);
+        }
+    } catch (const char* exc) {
+        std::cerr << exc << std::endl;
+    }
+    int max_loop = SMALL_MAX_LOOP;
+
+    /*FIXME Need to update this for ippcp */
+    if (useipp) {
+        max_loop = 32;
+    }
+    if (extTC != nullptr) {
+        for (int i = SMALL_START_LOOP; i < max_loop; i += SMALL_INC_LOOP) {
+            if (!bbxreplay)
+                fr->startRecEvent();
+            alcp_data_ex_t       data_alc, data_ext;
+            std::vector<uint8_t> ct, key, tkey, iv, add, out_pt_alc(i, 0),
+                out_pt_ext(i, 0);
+            if (!bbxreplay) {
+                ct   = rb.genRandomBytes(i);
+                key  = rb.genRandomBytes(key_size / 8);
+                tkey = rb.genRandomBytes(key_size / 8);
+                iv   = rb.genRandomBytes(12);
+
+                // ALC/Main Lib Data
+                data_alc.in    = &(ct[0]);
+                data_alc.inl   = ct.size();
+                data_alc.iv    = &(iv[0]);
+                data_alc.ivl   = iv.size();
+                data_alc.out   = &(out_pt_alc[0]);
+                data_alc.outl  = data_alc.inl;
+                data_alc.tkey  = &(tkey[0]);
+                data_alc.tkeyl = 16;
+
+                // External Lib Data
+                data_ext.in    = &(ct[0]);
+                data_ext.inl   = ct.size();
+                data_ext.iv    = &(iv[0]);
+                data_ext.ivl   = iv.size();
+                data_ext.out   = &(out_pt_ext[0]);
+                data_ext.outl  = data_alc.inl;
+                data_ext.tkey  = &(tkey[0]);
+                data_ext.tkeyl = 16;
+
+                fr->setRecEvent(key, iv, ct, SMALL_DEC);
+            } else {
+                fr->nextLog();
+                try {
+                    fr->getValues(&key, &iv, &ct);
+                } catch (std::string excp) {
+                    std::cout << excp << std::endl;
+                    exit(-1);
+                }
+            }
+            alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
+            extTC->getCipherHandler()->testingDecrypt(data_ext, key);
+            ASSERT_TRUE(ArraysMatch(out_pt_alc, out_pt_ext));
 
             if (!bbxreplay) {
                 fr->dumpBlackBox();
