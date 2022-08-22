@@ -46,12 +46,12 @@ include(utils)
 # update all cflags, warnings, here
 SET(ALCP_WARNINGS
     -Wall
-    -Werror
 	CACHE INTERNAL ""
 )
 SET(ALCP_CFLAGS
     -O2
 	-pedantic
+	-Werror
 	CACHE INTERNAL ""
 )
 SET (ALCP_CFLAGS_DEBUG
