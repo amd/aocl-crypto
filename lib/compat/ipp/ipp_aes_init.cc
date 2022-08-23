@@ -30,6 +30,7 @@
 #include "debug.hh"
 #include "error.hh"
 #include <alcp/alcp.h>
+#include <alcp/types.h>
 #include <iostream>
 #include <ippcp.h>
 #include <sstream>
@@ -75,7 +76,7 @@ ippsAESInit(const Ipp8u* pKey, int keyLen, IppsAESSpec* pCtx, int ctxSize)
         context->cinfo.ci_type          = ALC_CIPHER_TYPE_AES;
         context->cinfo.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
         context->cinfo.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
-        context->cinfo.ci_key_info.key  = (uint8_t*)pKey;
+        context->cinfo.ci_key_info.key  = (Uint8*)pKey;
         context->cinfo.ci_key_info.len  = keyLen * 8;
         context->handle.ch_context      = nullptr;
     } else {
@@ -107,7 +108,7 @@ ippsAES_GCMInit(const Ipp8u*      pKey,
         context_dec->cinfo.ci_type              = ALC_CIPHER_TYPE_AES;
         context_dec->cinfo.ci_key_info.type     = ALC_KEY_TYPE_SYMMETRIC;
         context_dec->cinfo.ci_key_info.fmt      = ALC_KEY_FMT_RAW;
-        context_dec->cinfo.ci_key_info.key      = (uint8_t*)pKey;
+        context_dec->cinfo.ci_key_info.key      = (Uint8*)pKey;
         context_dec->cinfo.ci_key_info.len      = keyLen * 8;
         context_dec->cinfo.ci_algo_info.ai_mode = ALC_AES_MODE_GCM;
         context_dec->handle.ch_context          = nullptr;
@@ -146,14 +147,13 @@ ippsAES_XTSInit(const Ipp8u*     pKey,
         &((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->encrypt_ctx);
     alc_key_info_t* tkey =
         &((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->tweak_key);
-    uint8_t* tweak = ((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->tkey);
-    uint8_t* key   = ((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->key);
+    Uint8* tweak = ((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->tkey);
+    Uint8* key   = ((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->key);
     if (pKey != nullptr) {
 
         // FIXME: This is not needed but test framework is insane as of now.
-        memcpy(
-            tweak, ((uint8_t*)pKey) + (keyLen / (8 * 2)), (keyLen / (8 * 2)));
-        memcpy(key, ((uint8_t*)pKey), (keyLen / (8 * 2)));
+        memcpy(tweak, ((Uint8*)pKey) + (keyLen / (8 * 2)), (keyLen / (8 * 2)));
+        memcpy(key, ((Uint8*)pKey), (keyLen / (8 * 2)));
 
         alc_key_info_t kinfo;
         kinfo.type = ALC_KEY_TYPE_SYMMETRIC;

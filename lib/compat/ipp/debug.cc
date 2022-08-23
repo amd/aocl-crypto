@@ -26,11 +26,12 @@
  *
  */
 #include "debug.hh"
+#include <alcp/types.h>
 #include <iostream>
 #include <sstream>
 #include <stdint.h>
 
-uint8_t
+Uint8
 parseHexToNum(const unsigned char c)
 {
     if (c >= 'a' && c <= 'f')
@@ -42,15 +43,15 @@ parseHexToNum(const unsigned char c)
 
     return 0;
 }
-std::vector<uint8_t>
+std::vector<Uint8>
 parseHexStrToBin(const std::string in)
 {
-    std::vector<uint8_t> vector;
-    int                  len = in.size();
-    int                  ind = 0;
+    std::vector<Uint8> vector;
+    int                len = in.size();
+    int                ind = 0;
 
     for (int i = 0; i < len; i += 2) {
-        uint8_t val =
+        Uint8 val =
             parseHexToNum(in.at(ind)) << 4 | parseHexToNum(in.at(ind + 1));
         vector.push_back(val);
         ind += 2;
@@ -58,7 +59,7 @@ parseHexStrToBin(const std::string in)
     return vector;
 }
 std::string
-parseBytesToHexStr(const uint8_t* bytes, const int length)
+parseBytesToHexStr(const Uint8* bytes, const int length)
 {
     std::stringstream ss;
     for (int i = 0; i < length; i++) {

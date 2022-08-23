@@ -27,12 +27,13 @@
  */
 
 #pragma once
+#include <alcp/types.h>
 #include <string>
 #include <vector>
 // #define DEBUG
 
-std::vector<uint8_t>
+std::vector<Uint8>
 parseHexStrToBin(const std::string in);
 
 std::string
-parseBytesToHexStr(const uint8_t* bytes, const int length);
+parseBytesToHexStr(const Uint8* bytes, const int length);

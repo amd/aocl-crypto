@@ -29,6 +29,7 @@
 #include "context.hh"
 #include "error.hh"
 #include <alcp/alcp.h>
+#include <alcp/types.h>
 #include <iostream>
 #include <ippcp.h>
 #include <sstream>

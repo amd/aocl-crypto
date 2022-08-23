@@ -29,6 +29,7 @@
 #include "context.hh"
 #include "error.hh"
 #include <alcp/alcp.h>
+#include <alcp/types.h>
 #include <iostream>
 #include <ippcp.h>
 #include <stdint.h>
@@ -40,7 +41,7 @@ alcp_DigestUpdate(const Ipp8u* pSrc, int len, ipp_wrp_sha2_ctx* pState)
     ipp_wrp_sha2_ctx* context = pState;
     alc_error_t       err;
 
-    err = alcp_digest_update(&(context->handle), (const uint8_t*)pSrc, len);
+    err = alcp_digest_update(&(context->handle), (const Uint8*)pSrc, len);
     if (alcp_is_error(err)) {
         printErr("Unable to compute SHA2 hash\n");
         return ippStsUnderRunErr;
@@ -117,13 +118,13 @@ alcp_DigestFinal(Ipp8u* pMD, ipp_wrp_sha2_ctx* pState)
     alcp_digest_finalize(&(context->handle), nullptr, 0);
 
     err = alcp_digest_copy(
-        &(context->handle), (uint8_t*)pMD, context->dinfo.dt_len);
+        &(context->handle), (Uint8*)pMD, context->dinfo.dt_len);
     if (alcp_is_error(err)) {
         printErr("Unable to copy digest\n");
         return ippStsUnderRunErr;
     }
     // Messup digest to test wrapper
-    // *(reinterpret_cast<uint8_t*>(pMD)) = 0x00;
+    // *(reinterpret_cast<Uint8*>(pMD)) = 0x00;
     return ippStsNoErr;
 }
 
