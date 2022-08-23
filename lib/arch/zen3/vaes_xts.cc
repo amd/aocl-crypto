@@ -87,14 +87,10 @@ EncryptXts(const uint8_t* pSrc,
         __m256i src_text_8 = _mm256_loadu_si256(p_src256 + 7);
 
         // getting Tweaked Text after xor of message and Alpha ^ j
-        __m256i tweaked_src_text_1 =
-            _mm256_xor_si256(_mm256_loadu_si256(tweakx8), src_text_1);
-        __m256i tweaked_src_text_2 =
-            _mm256_xor_si256(_mm256_loadu_si256(tweakx8 + 1), src_text_2);
-        __m256i tweaked_src_text_3 =
-            _mm256_xor_si256(_mm256_loadu_si256(tweakx8 + 2), src_text_3);
-        __m256i tweaked_src_text_4 =
-            _mm256_xor_si256(_mm256_loadu_si256(tweakx8 + 3), src_text_4);
+        __m256i tweaked_src_text_1 = tweakx8[0] ^ src_text_1;
+        __m256i tweaked_src_text_2 = tweakx8[1] ^ src_text_2;
+        __m256i tweaked_src_text_3 = tweakx8[2] ^ src_text_3;
+        __m256i tweaked_src_text_4 = tweakx8[3] ^ src_text_4;
         AesEncrypt(&tweaked_src_text_1,
                    &tweaked_src_text_2,
                    &tweaked_src_text_3,
@@ -103,14 +99,10 @@ EncryptXts(const uint8_t* pSrc,
                    nRounds);
 
         // getting Cipher Text after xor of message and Alpha ^ j
-        tweaked_src_text_1 =
-            _mm256_xor_si256(_mm256_loadu_si256(tweakx8), tweaked_src_text_1);
-        tweaked_src_text_2 = _mm256_xor_si256(_mm256_loadu_si256(tweakx8 + 1),
-                                              tweaked_src_text_2);
-        tweaked_src_text_3 = _mm256_xor_si256(_mm256_loadu_si256(tweakx8 + 2),
-                                              tweaked_src_text_3);
-        tweaked_src_text_4 = _mm256_xor_si256(_mm256_loadu_si256(tweakx8 + 3),
-                                              tweaked_src_text_4);
+        tweaked_src_text_1 = tweakx8[0] ^ tweaked_src_text_1;
+        tweaked_src_text_2 = tweakx8[1] ^ tweaked_src_text_2;
+        tweaked_src_text_3 = tweakx8[2] ^ tweaked_src_text_3;
+        tweaked_src_text_4 = tweakx8[3] ^ tweaked_src_text_4;
 
         // storing the results in destination
         _mm256_storeu_si256(p_dest256, tweaked_src_text_1);
@@ -124,14 +116,10 @@ EncryptXts(const uint8_t* pSrc,
         tweakx8[2] = aes::nextTweaks(tweakx8[6]);
         tweakx8[3] = aes::nextTweaks(tweakx8[7]);
 
-        __m256i tweaked_src_text_5 =
-            _mm256_xor_si256(_mm256_loadu_si256(tweakx8 + 4), src_text_5);
-        __m256i tweaked_src_text_6 =
-            _mm256_xor_si256(_mm256_loadu_si256(tweakx8 + 5), src_text_6);
-        __m256i tweaked_src_text_7 =
-            _mm256_xor_si256(_mm256_loadu_si256(tweakx8 + 6), src_text_7);
-        __m256i tweaked_src_text_8 =
-            _mm256_xor_si256(_mm256_loadu_si256(tweakx8 + 7), src_text_8);
+        __m256i tweaked_src_text_5 = tweakx8[4] ^ src_text_5;
+        __m256i tweaked_src_text_6 = tweakx8[5] ^ src_text_6;
+        __m256i tweaked_src_text_7 = tweakx8[6] ^ src_text_7;
+        __m256i tweaked_src_text_8 = tweakx8[7] ^ src_text_8;
 
         AesEncrypt(&tweaked_src_text_5,
                    &tweaked_src_text_6,
@@ -141,14 +129,10 @@ EncryptXts(const uint8_t* pSrc,
                    nRounds);
 
         // getting Cipher Text after xor of message and Alpha ^ j
-        tweaked_src_text_5 = _mm256_xor_si256(_mm256_loadu_si256(tweakx8 + 4),
-                                              tweaked_src_text_5);
-        tweaked_src_text_6 = _mm256_xor_si256(_mm256_loadu_si256(tweakx8 + 5),
-                                              tweaked_src_text_6);
-        tweaked_src_text_7 = _mm256_xor_si256(_mm256_loadu_si256(tweakx8 + 6),
-                                              tweaked_src_text_7);
-        tweaked_src_text_8 = _mm256_xor_si256(_mm256_loadu_si256(tweakx8 + 7),
-                                              tweaked_src_text_8);
+        tweaked_src_text_5 = tweakx8[4] ^ tweaked_src_text_5;
+        tweaked_src_text_6 = tweakx8[5] ^ tweaked_src_text_6;
+        tweaked_src_text_7 = tweakx8[6] ^ tweaked_src_text_7;
+        tweaked_src_text_8 = tweakx8[7] ^ tweaked_src_text_8;
 
         // storing the results in destination
         _mm256_storeu_si256(p_dest256 + 4, tweaked_src_text_5);
@@ -179,13 +163,10 @@ EncryptXts(const uint8_t* pSrc,
         __m256i src_text_4 = _mm256_loadu_si256(p_src256 + 3);
 
         // getting Tweaked Text after xor of message and Alpha ^ j
-        __m256i tweaked_src_text_1 = _mm256_xor_si256(*(tweakx8), src_text_1);
-        __m256i tweaked_src_text_2 =
-            _mm256_xor_si256(*(tweakx8 + 1), src_text_2);
-        __m256i tweaked_src_text_3 =
-            _mm256_xor_si256(*(tweakx8 + 2), src_text_3);
-        __m256i tweaked_src_text_4 =
-            _mm256_xor_si256(*(tweakx8 + 3), src_text_4);
+        __m256i tweaked_src_text_1 = tweakx8[0] ^ src_text_1;
+        __m256i tweaked_src_text_2 = tweakx8[1] ^ src_text_2;
+        __m256i tweaked_src_text_3 = tweakx8[2] ^ src_text_3;
+        __m256i tweaked_src_text_4 = tweakx8[3] ^ src_text_4;
 
         AesEncrypt(&tweaked_src_text_1,
                    &tweaked_src_text_2,
@@ -195,13 +176,10 @@ EncryptXts(const uint8_t* pSrc,
                    nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
-        tweaked_src_text_1 = _mm256_xor_si256(*(tweakx8), tweaked_src_text_1);
-        tweaked_src_text_2 =
-            _mm256_xor_si256(*(tweakx8 + 1), tweaked_src_text_2);
-        tweaked_src_text_3 =
-            _mm256_xor_si256(*(tweakx8 + 2), tweaked_src_text_3);
-        tweaked_src_text_4 =
-            _mm256_xor_si256(*(tweakx8 + 3), tweaked_src_text_4);
+        tweaked_src_text_1 = tweakx8[0] ^ tweaked_src_text_1;
+        tweaked_src_text_2 = tweakx8[1] ^ tweaked_src_text_2;
+        tweaked_src_text_3 = tweakx8[2] ^ tweaked_src_text_3;
+        tweaked_src_text_4 = tweakx8[3] ^ tweaked_src_text_4;
 
         // storing the results in destination
         _mm256_storeu_si256(p_dest256, tweaked_src_text_1);
@@ -229,9 +207,9 @@ EncryptXts(const uint8_t* pSrc,
         __m256i tweak_3 = _mm256_loadu_si256(tweakx8 + tweak_to_be_used + 2);
 
         // getting Tweaked Text after xor of message and Alpha ^ j
-        __m256i tweaked_src_text_1 = _mm256_xor_si256(tweak_1, src_text_1);
-        __m256i tweaked_src_text_2 = _mm256_xor_si256(tweak_2, src_text_2);
-        __m256i tweaked_src_text_3 = _mm256_xor_si256(tweak_3, src_text_3);
+        __m256i tweaked_src_text_1 = tweak_1 ^ src_text_1;
+        __m256i tweaked_src_text_2 = tweak_2 ^ src_text_2;
+        __m256i tweaked_src_text_3 = tweak_3 ^ src_text_3;
         AesEncrypt(&tweaked_src_text_1,
                    &tweaked_src_text_2,
                    &tweaked_src_text_3,
@@ -239,9 +217,9 @@ EncryptXts(const uint8_t* pSrc,
                    nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
-        tweaked_src_text_1 = _mm256_xor_si256(tweak_1, tweaked_src_text_1);
-        tweaked_src_text_2 = _mm256_xor_si256(tweak_2, tweaked_src_text_2);
-        tweaked_src_text_3 = _mm256_xor_si256(tweak_3, tweaked_src_text_3);
+        tweaked_src_text_1 = tweak_1 ^ tweaked_src_text_1;
+        tweaked_src_text_2 = tweak_2 ^ tweaked_src_text_2;
+        tweaked_src_text_3 = tweak_3 ^ tweaked_src_text_3;
 
         // storing the results in destination
         _mm256_storeu_si256(p_dest256, tweaked_src_text_1);
@@ -266,14 +244,14 @@ EncryptXts(const uint8_t* pSrc,
         __m256i tweak_2 = _mm256_loadu_si256(tweakx8 + tweak_to_be_used + 1);
 
         // getting Tweaked Text after xor of message and Alpha ^ j
-        __m256i tweaked_src_text_1 = _mm256_xor_si256(tweak_1, src_text_1);
-        __m256i tweaked_src_text_2 = _mm256_xor_si256(tweak_2, src_text_2);
+        __m256i tweaked_src_text_1 = tweak_1 ^ src_text_1;
+        __m256i tweaked_src_text_2 = tweak_2 ^ src_text_2;
 
         AesEncrypt(&tweaked_src_text_1, &tweaked_src_text_2, p_key128, nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
-        tweaked_src_text_1 = _mm256_xor_si256(tweak_1, tweaked_src_text_1);
-        tweaked_src_text_2 = _mm256_xor_si256(tweak_2, tweaked_src_text_2);
+        tweaked_src_text_1 = tweak_1 ^ tweaked_src_text_1;
+        tweaked_src_text_2 = tweak_2 ^ tweaked_src_text_2;
 
         // storing the results in destination
         _mm256_storeu_si256(p_dest256, tweaked_src_text_1);
@@ -295,12 +273,12 @@ EncryptXts(const uint8_t* pSrc,
         __m256i tweak_1 = _mm256_loadu_si256(tweakx8 + tweak_to_be_used);
 
         // getting Tweaked Text after xor of message and Alpha ^ j
-        __m256i tweaked_src_text_1 = _mm256_xor_si256(tweak_1, src_text_1);
+        __m256i tweaked_src_text_1 = tweak_1 ^ src_text_1;
 
         AesEncrypt(&tweaked_src_text_1, p_key128, nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
-        tweaked_src_text_1 = _mm256_xor_si256(tweak_1, tweaked_src_text_1);
+        tweaked_src_text_1 = tweak_1 ^ tweaked_src_text_1;
 
         // storing the results in destination
         _mm256_storeu_si256(p_dest256, tweaked_src_text_1);
@@ -315,11 +293,11 @@ EncryptXts(const uint8_t* pSrc,
 
         __m256i src_text_1 = alcp_loadu_128(p_src256);
 
-        src_text_1 = _mm256_xor_si256(lastTweak, src_text_1);
+        src_text_1 = lastTweak ^ src_text_1;
 
         AesEncrypt(&src_text_1, p_key128, nRounds);
 
-        src_text_1 = _mm256_xor_si256(lastTweak, src_text_1);
+        src_text_1 = lastTweak ^ src_text_1;
 
         memcpy((uint8_t*)p_dest256, (uint8_t*)&src_text_1, (16));
         memcpy((uint8_t*)p_dest256 + (16),
@@ -343,11 +321,10 @@ EncryptXts(const uint8_t* pSrc,
                (uint8_t*)p_src256 + ((16 * (blocks))),
                (extra_bytes_in_message_block));
 
-        stealed_text = _mm256_xor_si256(tweak_1, stealed_text);
-
+        stealed_text = (tweak_1 ^ stealed_text);
         AesEncrypt(&stealed_text, p_key128, nRounds);
+        stealed_text = (tweak_1 ^ stealed_text);
 
-        stealed_text = _mm256_xor_si256(tweak_1, stealed_text);
         memcpy((uint8_t*)p_dest256 + (16 * (blocks - 1)),
                (uint8_t*)&stealed_text,
                16);
@@ -403,13 +380,10 @@ DecryptXts(const uint8_t* pSrc,
         __m256i src_text_8 = _mm256_loadu_si256(p_src256 + 7);
 
         // getting Tweaked Text after xor of message and Alpha ^ j
-        __m256i tweaked_src_text_1 = _mm256_xor_si256(*tweakx8, src_text_1);
-        __m256i tweaked_src_text_2 =
-            _mm256_xor_si256(*(tweakx8 + 1), src_text_2);
-        __m256i tweaked_src_text_3 =
-            _mm256_xor_si256(*(tweakx8 + 2), src_text_3);
-        __m256i tweaked_src_text_4 =
-            _mm256_xor_si256(*(tweakx8 + 3), src_text_4);
+        __m256i tweaked_src_text_1 = tweakx8[0] ^ src_text_1;
+        __m256i tweaked_src_text_2 = tweakx8[1] ^ src_text_2;
+        __m256i tweaked_src_text_3 = tweakx8[2] ^ src_text_3;
+        __m256i tweaked_src_text_4 = tweakx8[3] ^ src_text_4;
 
         AesDecrypt(&tweaked_src_text_1,
                    &tweaked_src_text_2,
@@ -419,13 +393,10 @@ DecryptXts(const uint8_t* pSrc,
                    nRounds);
 
         // getting Cipher Text after xor of message and Alpha ^ j
-        tweaked_src_text_1 = _mm256_xor_si256(*(tweakx8), tweaked_src_text_1);
-        tweaked_src_text_2 =
-            _mm256_xor_si256(*(tweakx8 + 1), tweaked_src_text_2);
-        tweaked_src_text_3 =
-            _mm256_xor_si256(*(tweakx8 + 2), tweaked_src_text_3);
-        tweaked_src_text_4 =
-            _mm256_xor_si256(*(tweakx8 + 3), tweaked_src_text_4);
+        tweaked_src_text_1 = tweakx8[0] ^ tweaked_src_text_1;
+        tweaked_src_text_2 = tweakx8[1] ^ tweaked_src_text_2;
+        tweaked_src_text_3 = tweakx8[2] ^ tweaked_src_text_3;
+        tweaked_src_text_4 = tweakx8[3] ^ tweaked_src_text_4;
 
         // storing the results in destination
         _mm256_storeu_si256(p_dest256, tweaked_src_text_1);
@@ -443,14 +414,10 @@ DecryptXts(const uint8_t* pSrc,
             tweaks[15]   = tweaks[14];
             tweaks[14]   = temp;
         }
-        __m256i tweaked_src_text_5 =
-            _mm256_xor_si256(*(tweakx8 + 4), src_text_5);
-        __m256i tweaked_src_text_6 =
-            _mm256_xor_si256(*(tweakx8 + 5), src_text_6);
-        __m256i tweaked_src_text_7 =
-            _mm256_xor_si256(*(tweakx8 + 6), src_text_7);
-        __m256i tweaked_src_text_8 =
-            _mm256_xor_si256(*(tweakx8 + 7), src_text_8);
+        __m256i tweaked_src_text_5 = tweakx8[4] ^ src_text_5;
+        __m256i tweaked_src_text_6 = tweakx8[5] ^ src_text_6;
+        __m256i tweaked_src_text_7 = tweakx8[6] ^ src_text_7;
+        __m256i tweaked_src_text_8 = tweakx8[7] ^ src_text_8;
 
         AesDecrypt(&tweaked_src_text_5,
                    &tweaked_src_text_6,
@@ -460,14 +427,10 @@ DecryptXts(const uint8_t* pSrc,
                    nRounds);
 
         // getting Cipher Text after xor of message and Alpha ^ j
-        tweaked_src_text_5 =
-            _mm256_xor_si256(*(tweakx8 + 4), tweaked_src_text_5);
-        tweaked_src_text_6 =
-            _mm256_xor_si256(*(tweakx8 + 5), tweaked_src_text_6);
-        tweaked_src_text_7 =
-            _mm256_xor_si256(*(tweakx8 + 6), tweaked_src_text_7);
-        tweaked_src_text_8 =
-            _mm256_xor_si256(*(tweakx8 + 7), tweaked_src_text_8);
+        tweaked_src_text_5 = tweakx8[4] ^ tweaked_src_text_5;
+        tweaked_src_text_6 = tweakx8[5] ^ tweaked_src_text_6;
+        tweaked_src_text_7 = tweakx8[6] ^ tweaked_src_text_7;
+        tweaked_src_text_8 = tweakx8[7] ^ tweaked_src_text_8;
 
         // storing the results in destination
         _mm256_storeu_si256(p_dest256 + 4, tweaked_src_text_5);
@@ -504,13 +467,10 @@ DecryptXts(const uint8_t* pSrc,
         }
 
         // getting Tweaked Text after xor of message and Alpha ^ j
-        __m256i tweaked_src_text_1 = _mm256_xor_si256(*(tweakx8), src_text_1);
-        __m256i tweaked_src_text_2 =
-            _mm256_xor_si256(*(tweakx8 + 1), src_text_2);
-        __m256i tweaked_src_text_3 =
-            _mm256_xor_si256(*(tweakx8 + 2), src_text_3);
-        __m256i tweaked_src_text_4 =
-            _mm256_xor_si256(*(tweakx8 + 3), src_text_4);
+        __m256i tweaked_src_text_1 = tweakx8[0] ^ src_text_1;
+        __m256i tweaked_src_text_2 = tweakx8[1] ^ src_text_2;
+        __m256i tweaked_src_text_3 = tweakx8[2] ^ src_text_3;
+        __m256i tweaked_src_text_4 = tweakx8[3] ^ src_text_4;
 
         AesDecrypt(&tweaked_src_text_1,
                    &tweaked_src_text_2,
@@ -520,13 +480,10 @@ DecryptXts(const uint8_t* pSrc,
                    nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
-        tweaked_src_text_1 = _mm256_xor_si256(*(tweakx8), tweaked_src_text_1);
-        tweaked_src_text_2 =
-            _mm256_xor_si256(*(tweakx8 + 1), tweaked_src_text_2);
-        tweaked_src_text_3 =
-            _mm256_xor_si256(*(tweakx8 + 2), tweaked_src_text_3);
-        tweaked_src_text_4 =
-            _mm256_xor_si256(*(tweakx8 + 3), tweaked_src_text_4);
+        tweaked_src_text_1 = tweakx8[0] ^ tweaked_src_text_1;
+        tweaked_src_text_2 = tweakx8[1] ^ tweaked_src_text_2;
+        tweaked_src_text_3 = tweakx8[2] ^ tweaked_src_text_3;
+        tweaked_src_text_4 = tweakx8[3] ^ tweaked_src_text_4;
 
         // storing the results in destination
         _mm256_storeu_si256(p_dest256, tweaked_src_text_1);
@@ -557,9 +514,9 @@ DecryptXts(const uint8_t* pSrc,
         __m256i tweak_3 = _mm256_loadu_si256(tweakx8 + tweak_to_be_used + 2);
 
         // getting Tweaked Text after xor of message and Alpha ^ j
-        __m256i tweaked_src_text_1 = _mm256_xor_si256(tweak_1, src_text_1);
-        __m256i tweaked_src_text_2 = _mm256_xor_si256(tweak_2, src_text_2);
-        __m256i tweaked_src_text_3 = _mm256_xor_si256(tweak_3, src_text_3);
+        __m256i tweaked_src_text_1 = tweak_1 ^ src_text_1;
+        __m256i tweaked_src_text_2 = tweak_2 ^ src_text_2;
+        __m256i tweaked_src_text_3 = tweak_3 ^ src_text_3;
 
         AesDecrypt(&tweaked_src_text_1,
                    &tweaked_src_text_2,
@@ -568,9 +525,9 @@ DecryptXts(const uint8_t* pSrc,
                    nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
-        tweaked_src_text_1 = _mm256_xor_si256(tweak_1, tweaked_src_text_1);
-        tweaked_src_text_2 = _mm256_xor_si256(tweak_2, tweaked_src_text_2);
-        tweaked_src_text_3 = _mm256_xor_si256(tweak_3, tweaked_src_text_3);
+        tweaked_src_text_1 = tweak_1 ^ tweaked_src_text_1;
+        tweaked_src_text_2 = tweak_2 ^ tweaked_src_text_2;
+        tweaked_src_text_3 = tweak_3 ^ tweaked_src_text_3;
 
         // storing the results in destination
         _mm256_storeu_si256(p_dest256, tweaked_src_text_1);
@@ -598,14 +555,14 @@ DecryptXts(const uint8_t* pSrc,
         __m256i tweak_2 = _mm256_loadu_si256(tweakx8 + tweak_to_be_used + 1);
 
         // getting Tweaked Text after xor of message and Alpha ^ j
-        __m256i tweaked_src_text_1 = _mm256_xor_si256(tweak_1, src_text_1);
-        __m256i tweaked_src_text_2 = _mm256_xor_si256(tweak_2, src_text_2);
+        __m256i tweaked_src_text_1 = tweak_1 ^ src_text_1;
+        __m256i tweaked_src_text_2 = tweak_2 ^ src_text_2;
 
         AesDecrypt(&tweaked_src_text_1, &tweaked_src_text_2, p_key128, nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
-        tweaked_src_text_1 = _mm256_xor_si256(tweak_1, tweaked_src_text_1);
-        tweaked_src_text_2 = _mm256_xor_si256(tweak_2, tweaked_src_text_2);
+        tweaked_src_text_1 = tweak_1 ^ tweaked_src_text_1;
+        tweaked_src_text_2 = tweak_2 ^ tweaked_src_text_2;
 
         // storing the results in destination
         _mm256_storeu_si256(p_dest256, tweaked_src_text_1);
@@ -631,12 +588,12 @@ DecryptXts(const uint8_t* pSrc,
         __m256i tweak_1 = _mm256_loadu_si256(tweakx8 + tweak_to_be_used);
 
         // getting Tweaked Text after xor of message and Alpha ^ j
-        __m256i tweaked_src_text_1 = _mm256_xor_si256(tweak_1, src_text_1);
+        __m256i tweaked_src_text_1 = tweak_1 ^ src_text_1;
 
         AesDecrypt(&tweaked_src_text_1, p_key128, nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
-        tweaked_src_text_1 = _mm256_xor_si256(tweak_1, tweaked_src_text_1);
+        tweaked_src_text_1 = tweak_1 ^ tweaked_src_text_1;
 
         // storing the results in destination
         _mm256_storeu_si256(p_dest256, tweaked_src_text_1);
@@ -659,11 +616,11 @@ DecryptXts(const uint8_t* pSrc,
             tweak_p[blocks - 1] = tweak_p[blocks];
             tweak_p[blocks]     = temp_tweak;
         }
-        src_text_1 = _mm256_xor_si256(lastTweak, src_text_1);
+        src_text_1 = lastTweak ^ src_text_1;
 
         AesDecrypt(&src_text_1, p_key128, nRounds);
 
-        src_text_1 = _mm256_xor_si256(lastTweak, src_text_1);
+        src_text_1 = lastTweak ^ src_text_1;
 
         memcpy((uint8_t*)p_dest256,
                (uint8_t*)&src_text_1,
@@ -686,11 +643,11 @@ DecryptXts(const uint8_t* pSrc,
         memcpy((uint8_t*)&stealed_text,
                (uint8_t*)p_src256 + ((16 * (blocks))),
                (extra_bytes_in_message_block));
-        stealed_text = _mm256_xor_si256(tweak_1, stealed_text);
 
+        stealed_text = (tweak_1 ^ stealed_text);
         AesDecrypt(&stealed_text, p_key128, nRounds);
+        stealed_text = (tweak_1 ^ stealed_text);
 
-        stealed_text = _mm256_xor_si256(tweak_1, stealed_text);
         memcpy((uint8_t*)p_dest256 + (16 * (blocks - 1)),
                (uint8_t*)&stealed_text,
                16);
