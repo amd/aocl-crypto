@@ -27,7 +27,7 @@
  */
 
 #include "context.hh"
-// #include "debug.hh"
+#include "debug.hh"
 #include "error.hh"
 #include <alcp/alcp.h>
 #include <iostream>
@@ -35,14 +35,6 @@
 #include <sstream>
 #include <stdint.h>
 #include <string.h>
-
-#define ALC_PRINT(a, size)                                                     \
-    for (int x = 0; x < size; x++) {                                           \
-        if (x % 16 == 0)                                                       \
-            printf("\n0x%x0 - ", (x / 16));                                    \
-        printf(" %2x ", (a)[x]);                                               \
-    }                                                                          \
-    printf("\n");
 
 IppStatus
 ippsAESGetSize(int* pSize)
@@ -170,14 +162,12 @@ ippsAES_XTSInit(const Ipp8u*     pKey,
         kinfo.key  = tweak;
         *tkey      = kinfo;
 
-        context_dec->cinfo.ci_type          = ALC_CIPHER_TYPE_AES;
-        context_dec->cinfo.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
-        context_dec->cinfo.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
-        context_dec->cinfo.ci_key_info.key  = key;
-        context_dec->cinfo.ci_key_info.len  = keyLen / 2;
-        // std::cout << "INIT_KEY:" << std::endl;
-        // ALC_PRINT(context_dec->cinfo.ci_key_info.key, (keyLen / (8 * 2)));
-        context_dec->cinfo.ci_algo_info.ai_mode             = ALC_AES_MODE_XTS;
+        context_dec->cinfo.ci_type              = ALC_CIPHER_TYPE_AES;
+        context_dec->cinfo.ci_key_info.type     = ALC_KEY_TYPE_SYMMETRIC;
+        context_dec->cinfo.ci_key_info.fmt      = ALC_KEY_FMT_RAW;
+        context_dec->cinfo.ci_key_info.key      = key;
+        context_dec->cinfo.ci_key_info.len      = keyLen / 2;
+        context_dec->cinfo.ci_algo_info.ai_mode = ALC_AES_MODE_XTS;
         context_dec->cinfo.ci_algo_info.ai_xts.xi_tweak_key = tkey;
         context_dec->handle.ch_context                      = nullptr;
 
