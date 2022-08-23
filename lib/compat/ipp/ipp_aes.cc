@@ -27,13 +27,14 @@
  */
 
 #include "context.hh"
+#include "debug.hh"
 #include "error.hh"
 #include <alcp/alcp.h>
 #include <iostream>
 #include <ippcp.h>
 #include <stdint.h>
 #include <string.h>
-
+// CBC, CTR, OFB, CFB, XTS
 inline IppStatus
 alcp_encdecAES(const Ipp8u*       pSrc,
                Ipp8u*             pDst,
@@ -68,6 +69,41 @@ alcp_encdecAES(const Ipp8u*       pSrc,
         }
         context->handle.ch_context =
             malloc(alcp_cipher_context_size(&(context->cinfo)));
+
+// Debug statements, remove once done.
+// Leaving debug statements here as XTS testing framework needs to be debugged.
+#ifdef DEBUG
+        if (mode == ALC_AES_MODE_XTS) {
+            std::cout << "MODE:XTS" << std::endl;
+            std::cout << "KEY:"
+                      << parseBytesToHexStr(context->cinfo.ci_key_info.key,
+                                            (context->cinfo.ci_key_info.len)
+                                                / 8)
+                      << std::endl;
+            std::cout << "KEYLen:" << context->cinfo.ci_key_info.len / 8
+                      << std::endl;
+            std::cout
+                << "TKEY:"
+                << parseBytesToHexStr(
+                       context->cinfo.ci_algo_info.ai_xts.xi_tweak_key->key,
+                       (context->cinfo.ci_algo_info.ai_xts.xi_tweak_key->len)
+                           / 8)
+                << std::endl;
+            std::cout << "KEYLen:"
+                      << context->cinfo.ci_algo_info.ai_xts.xi_tweak_key->len
+                             / 8
+                      << std::endl;
+            std::cout << "IV:"
+                      << parseBytesToHexStr(context->cinfo.ci_algo_info.ai_iv,
+                                            16)
+                      << std::endl;
+            std::cout << "INLEN:" << len << std::endl;
+            std::cout << "IN:"
+                      << parseBytesToHexStr(
+                             reinterpret_cast<const uint8_t*>(pSrc), len)
+                      << std::endl;
+        }
+#endif
         err = alcp_cipher_request(&(context->cinfo), &(context->handle));
         if (alcp_is_error(err)) {
             printErr("unable to request");
@@ -80,6 +116,7 @@ alcp_encdecAES(const Ipp8u*       pSrc,
 
     // Do the actual decryption
     if (enc) {
+        // err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len, iv);
         err = alcp_cipher_encrypt(&(context->handle),
                                   reinterpret_cast<const uint8_t*>(pSrc),
                                   reinterpret_cast<uint8_t*>(pDst),
@@ -92,7 +129,14 @@ alcp_encdecAES(const Ipp8u*       pSrc,
                                   len,
                                   reinterpret_cast<const uint8_t*>(pCtrValue));
     }
-
+#ifdef DEBUG
+    if (mode == ALC_AES_MODE_XTS) {
+        std::cout << "OUT:"
+                  << parseBytesToHexStr(reinterpret_cast<const uint8_t*>(pDst),
+                                        len)
+                  << std::endl;
+    }
+#endif
     // Messup ciphertext to test wrapper
     // *(reinterpret_cast<uint8_t*>(pDst)) = 0x00;
 
@@ -101,9 +145,12 @@ alcp_encdecAES(const Ipp8u*       pSrc,
         alcp_error_str(err, err_buf, err_size);
         return ippStsUnderRunErr;
     }
-
     printMsg("Decrypt succeeded");
-
+#ifdef DEBUG
+    if (mode == ALC_AES_MODE_XTS) {
+        std::cout << std::endl;
+    }
+#endif
     /*At this point it should be supported and alcp context should exist*/
     return ippStsNoErr;
 }
@@ -422,6 +469,50 @@ ippsAES_GCMGetTag(Ipp8u* pDstTag, int tagLen, const IppsAES_GCMState* pState)
     }
     printMsg("GCMGetTag End");
     return ippStsNoErr;
+}
+
+IppStatus
+ippsAES_XTSEncrypt(const Ipp8u*           pSrc,
+                   Ipp8u*                 pDst,
+                   int                    bitSizeLen,
+                   const IppsAES_XTSSpec* pCtx,
+                   const Ipp8u*           pTweak,
+                   int                    startCipherBlkNo)
+{
+    printMsg("XTSEncrypt Start");
+    ipp_wrp_aes_ctx* context_enc =
+        &(((ipp_wrp_aes_xts_ctx*)(pCtx))->encrypt_ctx);
+    return alcp_encdecAES(pSrc,
+                          pDst,
+                          bitSizeLen / 8,
+                          (IppsAESSpec*)context_enc,
+                          pTweak,
+                          startCipherBlkNo,
+                          ALC_AES_MODE_XTS,
+                          true);
+    printMsg("XTSEncrypt End");
+}
+
+IppStatus
+ippsAES_XTSDecrypt(const Ipp8u*           pSrc,
+                   Ipp8u*                 pDst,
+                   int                    bitSizeLen,
+                   const IppsAES_XTSSpec* pCtx,
+                   const Ipp8u*           pTweak,
+                   int                    startCipherBlkNo)
+{
+    printMsg("XTSDecrypt Start");
+    ipp_wrp_aes_ctx* context_dec =
+        &(((ipp_wrp_aes_xts_ctx*)(pCtx))->decrypt_ctx);
+    return alcp_encdecAES(pSrc,
+                          pDst,
+                          bitSizeLen / 8,
+                          (IppsAESSpec*)context_dec,
+                          pTweak,
+                          startCipherBlkNo,
+                          ALC_AES_MODE_XTS,
+                          false);
+    printMsg("XTSDecrypt End");
 }
 
 IppStatus

@@ -45,6 +45,16 @@ typedef struct
 
 typedef struct
 {
+    bool            is_encrypt;
+    ipp_wrp_aes_ctx encrypt_ctx;
+    ipp_wrp_aes_ctx decrypt_ctx;
+    alc_key_info_t  tweak_key;
+    uint8_t         tkey[32];
+    uint8_t         key[32];
+} ipp_wrp_aes_xts_ctx;
+
+typedef struct
+{
     alc_digest_handle_t handle;
     alc_digest_info_t   dinfo;
 } ipp_wrp_sha2_ctx;

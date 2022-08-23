@@ -32,10 +32,3 @@
 #include <ippcp.h>
 #include <stdint.h>
 #include <string.h>
-
-IppStatus
-ippsAES_XTSGetSize(int* pSize)
-{
-    *pSize = sizeof(ipp_wrp_aes_ctx);
-    return ippStsNoErr;
-}

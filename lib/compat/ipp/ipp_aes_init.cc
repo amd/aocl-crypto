@@ -27,6 +27,7 @@
  */
 
 #include "context.hh"
+// #include "debug.hh"
 #include "error.hh"
 #include <alcp/alcp.h>
 #include <iostream>
@@ -34,6 +35,14 @@
 #include <sstream>
 #include <stdint.h>
 #include <string.h>
+
+#define ALC_PRINT(a, size)                                                     \
+    for (int x = 0; x < size; x++) {                                           \
+        if (x % 16 == 0)                                                       \
+            printf("\n0x%x0 - ", (x / 16));                                    \
+        printf(" %2x ", (a)[x]);                                               \
+    }                                                                          \
+    printf("\n");
 
 IppStatus
 ippsAESGetSize(int* pSize)
@@ -50,6 +59,15 @@ ippsAES_GCMGetSize(int* pSize)
     printMsg("GCM GetSize");
     *pSize = sizeof(ipp_wrp_aes_aead_ctx);
     printMsg("GCM GetSize End");
+    return ippStsNoErr;
+}
+
+IppStatus
+ippsAES_XTSGetSize(int* pSize)
+{
+    printMsg("XTS GetSize");
+    *pSize = sizeof(ipp_wrp_aes_xts_ctx);
+    printMsg("XTS GetSize End");
     return ippStsNoErr;
 }
 
@@ -116,5 +134,67 @@ ippsAES_GCMInit(const Ipp8u*      pKey,
         }
     }
     printMsg("GCM Init End");
+    return ippStsNoErr;
+}
+
+IppStatus
+ippsAES_XTSInit(const Ipp8u*     pKey,
+                int              keyLen,
+                int              duBitsize,
+                IppsAES_XTSSpec* pCtx,
+                int              ctxSize)
+{
+    printMsg("XTS Init");
+    std::stringstream ss;
+    ss << "KeyLength:" << keyLen;
+    printMsg(ss.str());
+    ipp_wrp_aes_ctx* context_dec =
+        &((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->decrypt_ctx);
+    ipp_wrp_aes_ctx* context_enc =
+        &((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->encrypt_ctx);
+    alc_key_info_t* tkey =
+        &((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->tweak_key);
+    uint8_t* tweak = ((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->tkey);
+    uint8_t* key   = ((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->key);
+    if (pKey != nullptr) {
+
+        // FIXME: This is not needed but test framework is insane as of now.
+        memcpy(
+            tweak, ((uint8_t*)pKey) + (keyLen / (8 * 2)), (keyLen / (8 * 2)));
+        memcpy(key, ((uint8_t*)pKey), (keyLen / (8 * 2)));
+
+        alc_key_info_t kinfo;
+        kinfo.type = ALC_KEY_TYPE_SYMMETRIC;
+        kinfo.fmt  = ALC_KEY_FMT_RAW;
+        kinfo.len  = keyLen / 2;
+        kinfo.key  = tweak;
+        *tkey      = kinfo;
+
+        context_dec->cinfo.ci_type          = ALC_CIPHER_TYPE_AES;
+        context_dec->cinfo.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
+        context_dec->cinfo.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
+        context_dec->cinfo.ci_key_info.key  = key;
+        context_dec->cinfo.ci_key_info.len  = keyLen / 2;
+        // std::cout << "INIT_KEY:" << std::endl;
+        // ALC_PRINT(context_dec->cinfo.ci_key_info.key, (keyLen / (8 * 2)));
+        context_dec->cinfo.ci_algo_info.ai_mode             = ALC_AES_MODE_XTS;
+        context_dec->cinfo.ci_algo_info.ai_xts.xi_tweak_key = tkey;
+        context_dec->handle.ch_context                      = nullptr;
+
+        context_enc->cinfo             = context_dec->cinfo;
+        context_enc->handle.ch_context = nullptr;
+    } else {
+        if (context_dec->handle.ch_context != nullptr) {
+            alcp_cipher_finish(&(context_dec->handle));
+            free(context_dec->handle.ch_context);
+            context_dec->handle.ch_context = nullptr;
+        }
+        if (context_enc->handle.ch_context != nullptr) {
+            alcp_cipher_finish(&(context_enc->handle));
+            free(context_enc->handle.ch_context);
+            context_enc->handle.ch_context = nullptr;
+        }
+    }
+    printMsg("XTS Init End");
     return ippStsNoErr;
 }

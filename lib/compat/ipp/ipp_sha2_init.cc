@@ -98,11 +98,10 @@ alcp_SHA2Init(ipp_wrp_sha2_ctx* pState,
     ipp_wrp_sha2_ctx* context = pState;
     alc_error_t       err;
 
-    alc_digest_info_t dinfo = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len = len,
-        .dt_mode = {.dm_sha2 = mode,},
-    };
+    alc_digest_info_t dinfo;
+    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    dinfo.dt_len          = len;
+    dinfo.dt_mode.dm_sha2 = mode;
 
     uint64_t size           = alcp_digest_context_size(&dinfo);
     context->handle.context = malloc(size);

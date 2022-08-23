@@ -26,26 +26,53 @@
  *
  */
 
-#include <iostream>
-
 #pragma once
-
-inline void
-printErr(std::string error)
+#include <sstream>
+#include <string>
+// #define DEBUG
+uint8_t
+parseHexToNum(const unsigned char c)
 {
-    std::cout << "IPP_wrpr_ERR:" << error << std::endl;
-}
-#ifdef DEBUG
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
+    if (c >= '0' && c <= '9')
+        return c - '0';
 
-inline void
-printMsg(std::string error)
+    return 0;
+}
+std::vector<uint8_t>
+parseHexStrToBin(const std::string in)
 {
-    std::cout << "IPP_wrpr_MSG:" << error << std::endl;
+    std::vector<uint8_t> vector;
+    int                  len = in.size();
+    int                  ind = 0;
+
+    for (int i = 0; i < len; i += 2) {
+        uint8_t val =
+            parseHexToNum(in.at(ind)) << 4 | parseHexToNum(in.at(ind + 1));
+        vector.push_back(val);
+        ind += 2;
+    }
+    return vector;
 }
-
-#else
-
-inline void
-printMsg(std::string error)
-{}
-#endif
+std::string
+parseBytesToHexStr(const uint8_t* bytes, const int length)
+{
+    std::stringstream ss;
+    for (int i = 0; i < length; i++) {
+        int               charRep;
+        std::stringstream il;
+        charRep = bytes[i];
+        // Convert int to hex
+        il << std::hex << charRep;
+        std::string ilStr = il.str();
+        // 01 will be 0x1 so we need to make it 0x01
+        if (ilStr.size() != 2) {
+            ilStr = "0" + ilStr;
+        }
+        ss << ilStr;
+    }
+    return ss.str();
+}
