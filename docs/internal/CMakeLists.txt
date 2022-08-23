@@ -1,19 +1,25 @@
-
+# Index/Main files to read from
 SET(ALCP_DESIGN_DOC  ${CMAKE_CURRENT_SOURCE_DIR}/design.md)
 
-
+# Combine one or more Index/Main doc files into an array for
+# generating each pdf
 SET(ALCRYPTO_DOCS  ${ALCP_DESIGN_DOC}
   ${ALCP_TESTING_DOC}
   )
 
-STRING(REGEX REPLACE "\\.md(;|$)" ".pdf\\1" DOC_PDFS "${ALCRYPTO_DOCS}") 
+# Replace .md with .pdf in all entry of ALCRYPTO_DOCS array
+STRING(REGEX REPLACE "\\.md(;|$)" ".pdf\\1" DOC_PDFS "${ALCRYPTO_DOCS}")
+# Remove .md and assuming a directory like that will
+# exist for each entry in ALCRYPTO_DOCS array
 STRING(REGEX REPLACE "\\.md(;|$)" "\\1" DOC_STEMS "${ALCRYPTO_DOCS}") 
 
 IF( PDFLATEX AND PANDOC )
     MESSAGE("${DOC_STEMS}")
+    # For each "Index/Main" file named directory, include all .md
+    # files in them.
     FOREACH(CDOC "${DOC_STEMS}")
       FILE(GLOB DOC_FILES ${CDOC}/*.md)
-      MESSAGE("ayyayyo ${DOC_FILES}")
+      MESSAGE("Including Documents: ${DOC_FILES}")
       ADD_CUSTOM_COMMAND(
             OUTPUT ${CDOC}.pdf
             DEPENDS ${CDOC}.md ${THIS_DOC}
@@ -26,15 +32,32 @@ IF( PDFLATEX AND PANDOC )
             --top-level-division=part
             --indented-code-classes=c++
             --highlight-style=zenburn
-            -V mainfont="Klavika"
+            # Klavika font needs to be downloaded
+            # -V mainfont="Klavika"
+            -V mainfont="OpenSans"
             -V documentclass=report
             -V fontsize=12pt
             -V papersize=B4
             -V geometry:margin=1in
             -o ${CDOC}.pdf ${CDOC}.md ${DOC_FILES}
         )
-        ADD_CUSTOM_TARGET(docs ALL DEPENDS ${CDOC}.pdf)
-    ENDFOREACH()
+        MESSAGE(STATUS "DOC OUTPUT FILE ${CDOC}.pdf")
+        ENDFOREACH()
+    # Create a target named docs and add "Index/Main" file name 
+    # with pdf extension as a dependancy
+    ADD_CUSTOM_TARGET(docs ALL DEPENDS ${DOC_PDFS})
+ELSE()
+  IF(NOT PDFLATEX)
+    MESSAGE(STATUS "PDFLATEX NOT FOUND")
+  ELSE()
+    MESSAGE(STATUS "PDFLATEX IS FOUND")
+  ENDIF()
+  IF(NOT PANDOC)
+    MESSAGE(STATUS "PANDOC NOT FOUND")
+  ELSE()
+    MESSAGE(STATUS "PANDOC IS FOUND")
+  ENDIF()
+  MESSAGE(FATAL_ERROR "PANDOC OR PDFLATEX is missing, cannot")
 ENDIF()
 
 #ADD_CUSTOM_TARGET(docs ALL DEPENDS ${PDFDESIGN})
