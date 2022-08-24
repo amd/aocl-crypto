@@ -31,9 +31,7 @@ IF( PDFLATEX AND PANDOC )
             --top-level-division=part
             --indented-code-classes=c++
             --highlight-style=zenburn
-            # Klavika font needs to be downloaded
-            # -V mainfont="Klavika"
-            -V mainfont="OpenSans"
+            -V mainfont="Klavika"
             -V documentclass=report
             -V fontsize=12pt
             -V papersize=B4

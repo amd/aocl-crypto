@@ -33,7 +33,7 @@ IF( PDFLATEX AND PANDOC )
             --highlight-style=zenburn
             # Klavika font needs to be downloaded
             # -V mainfont="Klavika"
-            -V mainfont="OpenSans"
+            # -V mainfont="sans"
             -V documentclass=report
             -V fontsize=12pt
             -V papersize=B4
