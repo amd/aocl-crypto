@@ -1,11 +1,11 @@
 # Index/Main files to read from
-SET(ALCP_DESIGN_DOC  ${CMAKE_CURRENT_SOURCE_DIR}/design.md)
+SET(ALCP_DESIGN_DOC design.md)
 
 # Combine one or more Index/Main doc files into an array for
 # generating each pdf
 SET(ALCRYPTO_DOCS  ${ALCP_DESIGN_DOC}
   ${ALCP_TESTING_DOC}
-  )
+)
 
 # Replace .md with .pdf in all entry of ALCRYPTO_DOCS array
 STRING(REGEX REPLACE "\\.md(;|$)" ".pdf\\1" DOC_PDFS "${ALCRYPTO_DOCS}")
@@ -17,7 +17,7 @@ IF( PDFLATEX AND PANDOC )
     MESSAGE("${DOC_STEMS}")
     # For each "Index/Main" file named directory, include all .md
     # files in them.
-    FOREACH(CDOC "${DOC_STEMS}")
+    FOREACH(CDOC ${DOC_STEMS})
       FILE(GLOB DOC_FILES ${CDOC}/*.md)
       MESSAGE("Including Documents: ${DOC_FILES}")
       ADD_CUSTOM_COMMAND(
@@ -40,9 +40,9 @@ IF( PDFLATEX AND PANDOC )
             -V papersize=B4
             -V geometry:margin=1in
             -o ${CDOC}.pdf ${CDOC}.md ${DOC_FILES}
-        )
-        MESSAGE(STATUS "DOC OUTPUT FILE ${CDOC}.pdf")
-        ENDFOREACH()
+      )
+      MESSAGE(STATUS "DOC OUTPUT FILE ${CDOC}.pdf")
+    ENDFOREACH()
     # Create a target named docs and add "Index/Main" file name 
     # with pdf extension as a dependancy
     ADD_CUSTOM_TARGET(docs ALL DEPENDS ${DOC_PDFS})
