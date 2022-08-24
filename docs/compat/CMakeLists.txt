@@ -1,9 +1,9 @@
 # Index/Main files to read from
-SET(ALCP_DESIGN_DOC design.md)
+SET(ALCP_USAGE_DOC  openssl.md ipp.md)
 
 # Combine one or more Index/Main doc files into an array for
 # generating each pdf
-SET(ALCRYPTO_DOCS  ${ALCP_DESIGN_DOC}
+SET(ALCRYPTO_DOCS  ${ALCP_USAGE_DOC}
   ${ALCP_TESTING_DOC}
 )
 
@@ -44,7 +44,7 @@ IF( PDFLATEX AND PANDOC )
     ENDFOREACH()
     # Create a target named docs and add "Index/Main" file name 
     # with pdf extension as a dependancy
-    ADD_CUSTOM_TARGET(docs ALL DEPENDS ${DOC_PDFS})
+    ADD_CUSTOM_TARGET(docs_compat ALL DEPENDS ${DOC_PDFS})
 ENDIF()
 
 #ADD_CUSTOM_TARGET(docs ALL DEPENDS ${PDFDESIGN})
