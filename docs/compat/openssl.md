@@ -10,11 +10,6 @@ lof: true
 lof-own-page: true
 toc-own-page: true
 titlepage: true
-mainfont: OpenSans-Regular.ttf
-mainfontoptions:
-- BoldFont=OpenSans-Bold.ttf
-- ItalicFont=OpenSans-Italic.ttf
-- BoldItalicFont=OpenSans-BoldItalic.ttf
 #;titlepage-background: backgrounds/background10.pdf
 #titlepage-text-color: "333333"
 #titlepage-rule-color: "00737C"
