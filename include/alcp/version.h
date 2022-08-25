@@ -25,10 +25,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include "alcp/macros.h"
 #ifndef _VERSION_H_
 #define _VERSION_H_ 2
 
+EXTERN_C_BEGIN
 const char*
 alcp_get_version();
+EXTERN_C_END
 
 #endif

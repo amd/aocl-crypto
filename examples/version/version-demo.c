@@ -26,11 +26,13 @@
  *
  */
 
-#include "alcp/version.h"
+#include <alcp/alcp.h>
 #include <stdio.h>
 
-const char*
-alcp_get_version()
+int
+main()
 {
-    return VERSION_STRING;
+    // Call alcp_get_version function which returns a string
+    printf("ALCP_VERSION_IS: %s\n", alcp_get_version());
+    return 0;
 }
