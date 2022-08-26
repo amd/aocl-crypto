@@ -10,8 +10,7 @@ Instructions to use provider in a C program is given in [this link](https://gith
 
 int main(void)
 {
-    OSSL_PROVIDER *legacy;
-    OSSL_PROVIDER *deflt;
+    OSSL_PROVIDER *alcp_provider;
 
 	OSSL_PROVIDER_set_default_search_path("/path/to/alcp/lib")
     /* Load Multiple providers into the default (NULL) library context */
