@@ -42,6 +42,22 @@ namespace alcp::cipher { namespace vaes {
     {
         return _mm512_loadu_si512(ad);
     }
+    static inline void alcp_loadu_4values(
+        const __m512i* ad, __m512i& a1, __m512i& a2, __m512i& a3, __m512i& a4)
+    {
+        a1 = _mm512_loadu_si512(ad);
+        a2 = _mm512_loadu_si512(ad + 1);
+        a3 = _mm512_loadu_si512(ad + 2);
+        a4 = _mm512_loadu_si512(ad + 3);
+    }
+    static inline void alcp_loadu_4values(
+        __m512i* ad, __m512i& a1, __m512i& a2, __m512i& a3, __m512i& a4)
+    {
+        a1 = _mm512_loadu_si512(ad);
+        a2 = _mm512_loadu_si512(ad + 1);
+        a3 = _mm512_loadu_si512(ad + 2);
+        a4 = _mm512_loadu_si512(ad + 3);
+    }
     static inline __m512i alcp_loadu_128(__m512i* ad)
     {
         __m512i ret = _mm512_setr_epi64(
@@ -59,6 +75,25 @@ namespace alcp::cipher { namespace vaes {
     static inline __m512i alcp_xor(__m512i a, __m512i b)
     {
         return _mm512_xor_si512(a, b);
+    }
+
+    static inline void alcp_xor_4values(__m512i  a1, // inputs A
+                                        __m512i  a2,
+                                        __m512i  a3,
+                                        __m512i  a4,
+                                        __m512i  b1, // inputs B
+                                        __m512i  b2,
+                                        __m512i  b3,
+                                        __m512i  b4,
+                                        __m512i& c1, // outputs C = A xor B
+                                        __m512i& c2,
+                                        __m512i& c3,
+                                        __m512i& c4)
+    {
+        c1 = _mm512_xor_si512(a1, b1);
+        c2 = _mm512_xor_si512(a2, b2);
+        c3 = _mm512_xor_si512(a3, b3);
+        c4 = _mm512_xor_si512(a4, b4);
     }
 
     // add functions.
@@ -88,10 +123,35 @@ namespace alcp::cipher { namespace vaes {
         return _mm512_shuffle_epi8(a, b);
     }
 
+    static inline void alcp_shuffle_epi8(__m512i  in1, // inputs
+                                         __m512i  in2,
+                                         __m512i  in3,
+                                         __m512i  in4,
+                                         __m512i  swap_ctr, // swap control
+                                         __m512i& out1,     // outputs
+                                         __m512i& out2,
+                                         __m512i& out3,
+                                         __m512i& out4)
+    {
+        out1 = _mm512_shuffle_epi8(in1, swap_ctr);
+        out2 = _mm512_shuffle_epi8(in2, swap_ctr);
+        out3 = _mm512_shuffle_epi8(in3, swap_ctr);
+        out4 = _mm512_shuffle_epi8(in4, swap_ctr);
+    }
+
     // store functions
     static inline void alcp_storeu(__m512i* ad, __m512i x)
     {
         _mm512_storeu_si512(ad, x);
+    }
+
+    static inline void alcp_storeu_4values(
+        __m512i* ad, __m512i a1, __m512i a2, __m512i a3, __m512i a4)
+    {
+        _mm512_storeu_si512(ad, a1);
+        _mm512_storeu_si512(ad + 1, a2);
+        _mm512_storeu_si512(ad + 2, a3);
+        _mm512_storeu_si512(ad + 3, a4);
     }
 
     static inline void alcp_storeu_128(__m512i* ad, __m512i x)

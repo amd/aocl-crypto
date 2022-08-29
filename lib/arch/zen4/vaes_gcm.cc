@@ -33,13 +33,17 @@
 #include "cipher/aesni.hh"
 #include "cipher/avx128.hh"
 #include "cipher/avx128_gmul.hh"
+//
 #include "cipher/avx512_gmul.hh"
 #include "cipher/vaes.hh"
 #include "cipher/vaes_avx512.hh"
+#include "cipher/vaes_avx512_core.hh"
 
 #include "error.hh"
 #include "key.hh"
 #include "types.hh"
+
+#define MAX_NUM_512_BLKS 24
 
 namespace alcp::cipher::vaes {
 // tbd: code currently duplicated, to be replaced with template code in
@@ -99,24 +103,54 @@ gcmCryptInit(__m512i* c1,
     *c1 = alcp_add_epi32(*c1, onehi);
 }
 
-#define MAX_NUM_512_BLKS       24 // 96 HashSubkeys
-#define ENABLE_96_BLK_AGG_GMUL 0  // disable would use 64 block GMUL
+static inline void
+computeHashSubKeys(int num_512_blks, __m128i Hsubkey_128, __m512i* Hsubkey_512)
+{
+    __m128i*      pH_512_128[MAX_NUM_512_BLKS];
+    const Uint64* H1_64 = (const Uint64*)&Hsubkey_128;
+    pH_512_128[0]       = (__m128i*)&Hsubkey_512[0];
+
+    Hsubkey_512[0] = _mm512_set_epi64(H1_64[1], // 3
+                                      H1_64[0], // 3
+                                      0,        // 2
+                                      0,        // 2
+                                      0,        // 1
+                                      0,        // 1
+                                      0,        // 0
+                                      0);       // 0
+
+    gMul(Hsubkey_128, Hsubkey_128, &pH_512_128[0][2]);
+    gMul(pH_512_128[0][2], Hsubkey_128, &pH_512_128[0][1]);
+    gMul(pH_512_128[0][1], Hsubkey_128, &pH_512_128[0][0]);
+
+    for (int i = 1; i < num_512_blks; i++) {
+        pH_512_128[i] = (__m128i*)&Hsubkey_512[i];
+        // compute 4 hash to be used in a 4 block parallel Ghash
+        // computation.
+        gMul(pH_512_128[i - 1][0], Hsubkey_128, &pH_512_128[i][3]);
+        gMul(pH_512_128[i][3], Hsubkey_128, &pH_512_128[i][2]);
+        gMul(pH_512_128[i][2], Hsubkey_128, &pH_512_128[i][1]);
+        gMul(pH_512_128[i][1], Hsubkey_128, &pH_512_128[i][0]);
+    }
+}
+
+#define ONE_TIME_KEY_LOAD   1
+#define PARALLEL_512_BLKS_4 4
 
 Uint64
-gcmBlk_512(const __m512i* p_in_x,
-           __m512i*       p_out_x,
-           Uint64         blocks,
-           const __m128i* pkey128,
-           const Uint8*   pIv,
-           int            nRounds,
-           Uint8          factor,
-           // gcm specific params
-           __m128i* pgHash_128,
-           __m128i  Hsubkey_128,
-           __m128i  iv_128,
-           __m128i  reverse_mask_128,
-           bool     isEncrypt,
-           int      remBytes)
+gcmBlk_512_dec(const __m512i* p_in_x,
+               __m512i*       p_out_x,
+               Uint64         blocks,
+               const __m128i* pkey128,
+               const Uint8*   pIv,
+               int            nRounds,
+               Uint8          factor,
+               // gcm specific params
+               __m128i* pgHash_128,
+               __m128i  Hsubkey_128,
+               __m128i  iv_128,
+               __m128i  reverse_mask_128,
+               int      remBytes)
 {
     __m512i swap_ctr, c1;
     __m512i one_lo, one_x, two_x, three_x, four_x, eight_x;
@@ -132,8 +166,30 @@ gcmBlk_512(const __m512i* p_in_x,
                  &eight_x,
                  &swap_ctr);
 
-    __m512i  Hsubkey_512[MAX_NUM_512_BLKS];
-    __m128i* pH_512_128[MAX_NUM_512_BLKS];
+#if ONE_TIME_KEY_LOAD
+
+    __m512i key_512_0, key_512_1, key_512_2, key_512_3, key_512_4, key_512_5,
+        key_512_6, key_512_7, key_512_8, key_512_9, key_512_10, key_512_11,
+        key_512_12, key_512_13, key_512_14;
+    alcp_load_key_zmm(pkey128,
+                      key_512_0,
+                      key_512_1,
+                      key_512_2,
+                      key_512_3,
+                      key_512_4,
+                      key_512_5,
+                      key_512_6,
+                      key_512_7,
+                      key_512_8,
+                      key_512_9,
+                      key_512_10,
+                      key_512_11,
+                      key_512_12,
+                      key_512_13,
+                      key_512_14);
+#endif
+    __attribute__((aligned(64))) Uint64 Hsubkey_64[MAX_NUM_512_BLKS * 8];
+    __m512i*                            Hsubkey_512 = (__m512i*)Hsubkey_64;
 
     // clang-format off
     __m512i reverse_mask_512 =
@@ -145,7 +201,7 @@ gcmBlk_512(const __m512i* p_in_x,
 
     int num_512_blks = 0;
 
-    /* 96 (24*4) or 64 (16*4) blocks per loop. Minimum 20 loops required to get
+    /* 64 (16*4) blocks per loop. Minimum 20 loops required to get
      * benefit of precomputing hash^x table.
      * 32 (16*2) blocks per loop needs minimum 4 loops to get benefit from
      * precomputing hash^x table.
@@ -154,18 +210,15 @@ gcmBlk_512(const __m512i* p_in_x,
     // 16*num_unroll*MinloopCount
     Uint64 threshold_4x512_4unroll = 16 * 4 * 20;
     Uint64 threshold_4x512_2unroll = 16 * 2 * 4;
+    bool   do_4_unroll             = false;
+    bool   do_2_unroll             = false;
 
-#if ENABLE_96_BLK_AGG_GMUL
-    Uint64 threshold_6x512_4unroll = 24 * 4 * 20;
-    if (blocks >= threshold_6x512_4unroll) {
-        num_512_blks = 6 * 4;
-    } else if (blocks >= threshold_4x512_4unroll) {
-#else
     if (blocks >= threshold_4x512_4unroll) {
-#endif
         num_512_blks = 4 * 4;
+        do_4_unroll  = true;
     } else if (blocks >= threshold_4x512_2unroll) {
         num_512_blks = 4 * 2;
+        do_2_unroll  = true;
     } else if (blocks >= 16) {
         num_512_blks = 4;
     } else if (blocks >= 4) {
@@ -177,37 +230,7 @@ gcmBlk_512(const __m512i* p_in_x,
     }
 
     if (num_512_blks) {
-        const Uint64* H1_64 = (const Uint64*)&Hsubkey_128;
-        pH_512_128[0]       = (__m128i*)&Hsubkey_512[0];
-
-        Hsubkey_512[0] = _mm512_set_epi64(H1_64[1], // 3
-                                          H1_64[0], // 3
-                                          0,        // 2
-                                          0,        // 2
-                                          0,        // 1
-                                          0,        // 1
-                                          0,        // 0
-                                          0);       // 0
-
-        alcp::cipher::aesni::gMul(Hsubkey_128, Hsubkey_128, &pH_512_128[0][2]);
-        alcp::cipher::aesni::gMul(
-            pH_512_128[0][2], Hsubkey_128, &pH_512_128[0][1]);
-        alcp::cipher::aesni::gMul(
-            pH_512_128[0][1], Hsubkey_128, &pH_512_128[0][0]);
-
-        for (int i = 1; i < num_512_blks; i++) {
-            pH_512_128[i] = (__m128i*)&Hsubkey_512[i];
-            // compute 4 hash to be used in a 4 block parallel Ghash
-            // computation.
-            alcp::cipher::aesni::gMul(
-                pH_512_128[i - 1][0], Hsubkey_128, &pH_512_128[i][3]);
-            alcp::cipher::aesni::gMul(
-                pH_512_128[i][3], Hsubkey_128, &pH_512_128[i][2]);
-            alcp::cipher::aesni::gMul(
-                pH_512_128[i][2], Hsubkey_128, &pH_512_128[i][1]);
-            alcp::cipher::aesni::gMul(
-                pH_512_128[i][1], Hsubkey_128, &pH_512_128[i][0]);
-        }
+        computeHashSubKeys(num_512_blks, Hsubkey_128, Hsubkey_512);
     }
 
     Uint64  blockCount_1x512 = factor;
@@ -220,462 +243,798 @@ gcmBlk_512(const __m512i* p_in_x,
     __m512i b2, b3, b4;
     __m512i c2, c3, c4;
 
-    int numParallel_512blks = 1;
-#if ENABLE_96_BLK_AGG_GMUL
-    numParallel_512blks = 6;
+    __m512i Hsubkey_512_0, Hsubkey_512_1, Hsubkey_512_2, Hsubkey_512_3;
 
-    Uint64 blockCount_6x512 = numParallel_512blks * factor;
-    if (blocks < 48) {
-        blockCount_6x512 =
-            blocks + 1; // stop condition, not to use blockCount_6x512 loop.
-    }
+    if (do_4_unroll) {
+        Uint64 blockCount_4x512_4_unroll = 16 * 4;
 
-    __m512i six_x = alcp_add_epi32(four_x, two_x);
-    __m512i a5, a6;
-    __m512i b5, b6;
-    __m512i c5, c6;
+        for (; blocks >= blockCount_4x512_4_unroll;
+             blocks -= blockCount_4x512_4_unroll) {
 
-    Uint64 blockCount_6x512_4unroll = blockCount_6x512 * 4;
-    if (blocks < threshold_6x512_4unroll) {
-        blockCount_6x512_4unroll =
-            blocks
-            + 1; // stop condition, not to use blockCount_6x512_4unroll loop.
-    }
+            __m512i  z0_512, z1_512, z2_512;
+            __m512i  z0_512_t, z1_512_t, z2_512_t;
+            int      n            = 12;
+            __m512i* pHsubkey_512 = Hsubkey_512 + n;
 
-    for (; blocks >= blockCount_6x512_4unroll;
-         blocks -= blockCount_6x512_4unroll) {
-        __m512i z0_512, z1_512, z2_512;
-
-        __m512i z0_512_t, z1_512_t, z2_512_t;
-        int     k = (num_512_blks / numParallel_512blks - 1);
-        int     n = numParallel_512blks * k;
-
-        c2 = alcp_add_epi32(c1, one_x);
-        c3 = alcp_add_epi32(c1, two_x);
-        c4 = alcp_add_epi32(c1, three_x);
-        c5 = alcp_add_epi32(c4, one_x);
-        c6 = alcp_add_epi32(c5, one_x);
-
-        a1 = alcp_loadu(p_in_x);
-        a2 = alcp_loadu(p_in_x + 1);
-        a3 = alcp_loadu(p_in_x + 2);
-        a4 = alcp_loadu(p_in_x + 3);
-        a5 = alcp_loadu(p_in_x + 4);
-        a6 = alcp_loadu(p_in_x + 5);
-
-        if (isEncrypt == false) {
-
-            get_aggregated_karatsuba_components(Hsubkey_512[0 + n],
-                                                Hsubkey_512[1 + n],
-                                                Hsubkey_512[2 + n],
-                                                Hsubkey_512[3 + n],
-                                                Hsubkey_512[4 + n],
-                                                Hsubkey_512[5 + n],
-                                                a1,
-                                                a2,
-                                                a3,
-                                                a4,
-                                                a5,
-                                                a6,
-                                                reverse_mask_512,
-                                                &z0_512,
-                                                &z1_512,
-                                                &z2_512,
-                                                *pgHash_128,
-                                                1);
-        }
-
-        // re-arrange as per spec
-        b1 = alcp_shuffle_epi8(c1, swap_ctr);
-        b2 = alcp_shuffle_epi8(c2, swap_ctr);
-        b3 = alcp_shuffle_epi8(c3, swap_ctr);
-        b4 = alcp_shuffle_epi8(c4, swap_ctr);
-        b5 = alcp_shuffle_epi8(c5, swap_ctr);
-        b6 = alcp_shuffle_epi8(c6, swap_ctr);
-
-        AesEncrypt(&b1, &b2, &b3, &b4, &b5, &b6, pkey128, nRounds);
-
-        a1 = alcp_xor(b1, a1);
-        a2 = alcp_xor(b2, a2);
-        a3 = alcp_xor(b3, a3);
-        a4 = alcp_xor(b4, a4);
-        a5 = alcp_xor(b5, a5);
-        a6 = alcp_xor(b6, a6);
-
-        // increment counter
-        c1 = alcp_add_epi32(c1, six_x);
-
-        if (isEncrypt == true) {
-            get_aggregated_karatsuba_components(Hsubkey_512[0 + n],
-                                                Hsubkey_512[1 + n],
-                                                Hsubkey_512[2 + n],
-                                                Hsubkey_512[3 + n],
-                                                Hsubkey_512[4 + n],
-                                                Hsubkey_512[5 + n],
-                                                a1,
-                                                a2,
-                                                a3,
-                                                a4,
-                                                a5,
-                                                a6,
-                                                reverse_mask_512,
-                                                &z0_512,
-                                                &z1_512,
-                                                &z2_512,
-                                                *pgHash_128,
-                                                1);
-        }
-
-        alcp_storeu(p_out_x, a1);
-        alcp_storeu(p_out_x + 1, a2);
-        alcp_storeu(p_out_x + 2, a3);
-        alcp_storeu(p_out_x + 3, a4);
-        alcp_storeu(p_out_x + 4, a5);
-        alcp_storeu(p_out_x + 5, a6);
-
-        p_in_x += numParallel_512blks;
-        p_out_x += numParallel_512blks;
-
-        for (k = (num_512_blks / numParallel_512blks - 2); k >= 0; k--) {
-
-            n  = numParallel_512blks * k;
-            c2 = alcp_add_epi32(c1, one_x);
-            c3 = alcp_add_epi32(c1, two_x);
-            c4 = alcp_add_epi32(c1, three_x);
-            c5 = alcp_add_epi32(c4, one_x);
-            c6 = alcp_add_epi32(c5, one_x);
-
-            a1 = alcp_loadu(p_in_x);
-            a2 = alcp_loadu(p_in_x + 1);
-            a3 = alcp_loadu(p_in_x + 2);
-            a4 = alcp_loadu(p_in_x + 3);
-            a5 = alcp_loadu(p_in_x + 4);
-            a6 = alcp_loadu(p_in_x + 5);
-
-            if (isEncrypt == false) {
-                get_aggregated_karatsuba_components(Hsubkey_512[0 + n],
-                                                    Hsubkey_512[1 + n],
-                                                    Hsubkey_512[2 + n],
-                                                    Hsubkey_512[3 + n],
-                                                    Hsubkey_512[4 + n],
-                                                    Hsubkey_512[5 + n],
-                                                    a1,
-                                                    a2,
-                                                    a3,
-                                                    a4,
-                                                    a5,
-                                                    a6,
-                                                    reverse_mask_512,
-                                                    &z0_512_t,
-                                                    &z1_512_t,
-                                                    &z2_512_t,
-                                                    *pgHash_128,
-                                                    0);
-
-                z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
-                z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
-                z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
-            }
-
-            // re-arrange as per spec
-            b1 = alcp_shuffle_epi8(c1, swap_ctr);
-            b2 = alcp_shuffle_epi8(c2, swap_ctr);
-            b3 = alcp_shuffle_epi8(c3, swap_ctr);
-            b4 = alcp_shuffle_epi8(c4, swap_ctr);
-            b5 = alcp_shuffle_epi8(c5, swap_ctr);
-            b6 = alcp_shuffle_epi8(c6, swap_ctr);
-
-            AesEncrypt(&b1, &b2, &b3, &b4, &b5, &b6, pkey128, nRounds);
-
-            a1 = alcp_xor(b1, a1);
-            a2 = alcp_xor(b2, a2);
-            a3 = alcp_xor(b3, a3);
-            a4 = alcp_xor(b4, a4);
-            a5 = alcp_xor(b5, a5);
-            a6 = alcp_xor(b6, a6);
-
-            // increment counter
-            c1 = alcp_add_epi32(c1, six_x);
-
-            if (isEncrypt == true) {
-                get_aggregated_karatsuba_components(Hsubkey_512[0 + n],
-                                                    Hsubkey_512[1 + n],
-                                                    Hsubkey_512[2 + n],
-                                                    Hsubkey_512[3 + n],
-                                                    Hsubkey_512[4 + n],
-                                                    Hsubkey_512[5 + n],
-                                                    a1,
-                                                    a2,
-                                                    a3,
-                                                    a4,
-                                                    a5,
-                                                    a6,
-                                                    reverse_mask_512,
-                                                    &z0_512_t,
-                                                    &z1_512_t,
-                                                    &z2_512_t,
-                                                    *pgHash_128,
-                                                    0);
-
-                z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
-                z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
-                z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
-            }
-
-            alcp_storeu(p_out_x, a1);
-            alcp_storeu(p_out_x + 1, a2);
-            alcp_storeu(p_out_x + 2, a3);
-            alcp_storeu(p_out_x + 3, a4);
-            alcp_storeu(p_out_x + 4, a5);
-            alcp_storeu(p_out_x + 5, a6);
-
-            p_in_x += numParallel_512blks;
-            p_out_x += numParallel_512blks;
-        }
-
-        getGhash(z0_512, z1_512, z2_512, pgHash_128);
-    }
-#else // ENABLE_96_BLK_AGG_GMUL
-
-    /* 64 blocks Aggregrated Reductions */
-
-#if 1 // variable LOOP count
-    numParallel_512blks = 4;
-    Uint64 blockCount_4x512_N_unroll =
-        blockCount_4x512 * (num_512_blks / numParallel_512blks);
-
-    if (blocks < threshold_4x512_2unroll) {
-        blockCount_4x512_N_unroll =
-            blocks + 1; // stop condition, not to skip this loop.
-    }
-
-    for (; blocks >= blockCount_4x512_N_unroll;
-         blocks -= blockCount_4x512_N_unroll) {
-
-        __m512i z0_512, z1_512, z2_512;
-
-        __m512i z0_512_t, z1_512_t, z2_512_t;
-        int     k = (num_512_blks / numParallel_512blks - 1);
-        int     n = numParallel_512blks * k;
-
-        c2 = alcp_add_epi32(c1, one_x);
-        c3 = alcp_add_epi32(c1, two_x);
-        c4 = alcp_add_epi32(c1, three_x);
-
-        a1 = alcp_loadu(p_in_x);
-        a2 = alcp_loadu(p_in_x + 1);
-        a3 = alcp_loadu(p_in_x + 2);
-        a4 = alcp_loadu(p_in_x + 3);
-
-        if (isEncrypt == false) {
-            get_aggregated_karatsuba_components(Hsubkey_512[0 + n],
-                                                Hsubkey_512[1 + n],
-                                                Hsubkey_512[2 + n],
-                                                Hsubkey_512[3 + n],
-                                                a1,
-                                                a2,
-                                                a3,
-                                                a4,
-                                                reverse_mask_512,
-                                                &z0_512,
-                                                &z1_512,
-                                                &z2_512,
-                                                *pgHash_128,
-                                                1);
-        }
-
-        // re-arrange as per spec
-        b1 = alcp_shuffle_epi8(c1, swap_ctr);
-        b2 = alcp_shuffle_epi8(c2, swap_ctr);
-        b3 = alcp_shuffle_epi8(c3, swap_ctr);
-        b4 = alcp_shuffle_epi8(c4, swap_ctr);
-
-        AesEncrypt(&b1, &b2, &b3, &b4, pkey128, nRounds);
-
-        a1 = alcp_xor(b1, a1);
-        a2 = alcp_xor(b2, a2);
-        a3 = alcp_xor(b3, a3);
-        a4 = alcp_xor(b4, a4);
-
-        // increment counter
-        c1 = alcp_add_epi32(c1, four_x);
-
-        if (isEncrypt == true) {
-            get_aggregated_karatsuba_components(Hsubkey_512[0 + n],
-                                                Hsubkey_512[1 + n],
-                                                Hsubkey_512[2 + n],
-                                                Hsubkey_512[3 + n],
-                                                a1,
-                                                a2,
-                                                a3,
-                                                a4,
-                                                reverse_mask_512,
-                                                &z0_512,
-                                                &z1_512,
-                                                &z2_512,
-                                                *pgHash_128,
-                                                1);
-        }
-
-        alcp_storeu(p_out_x, a1);
-        alcp_storeu(p_out_x + 1, a2);
-        alcp_storeu(p_out_x + 2, a3);
-        alcp_storeu(p_out_x + 3, a4);
-
-        p_in_x += numParallel_512blks;
-        p_out_x += numParallel_512blks;
-
-        for (k = (num_512_blks / numParallel_512blks - 2); k >= 0; k--) {
-
-            n  = numParallel_512blks * k;
+            alcp_loadu_4values(pHsubkey_512, // address
+                               Hsubkey_512_0,
+                               Hsubkey_512_1,
+                               Hsubkey_512_2,
+                               Hsubkey_512_3);
             c2 = alcp_add_epi32(c1, one_x);
             c3 = alcp_add_epi32(c1, two_x);
             c4 = alcp_add_epi32(c1, three_x);
 
-            a1 = alcp_loadu(p_in_x);
-            a2 = alcp_loadu(p_in_x + 1);
-            a3 = alcp_loadu(p_in_x + 2);
-            a4 = alcp_loadu(p_in_x + 3);
-
-            if (isEncrypt == false) {
-                __m512i Hsubkey_512_0 = Hsubkey_512[0 + n];
-                __m512i Hsubkey_512_1 = Hsubkey_512[1 + n];
-                __m512i Hsubkey_512_2 = Hsubkey_512[2 + n];
-                __m512i Hsubkey_512_3 = Hsubkey_512[3 + n];
-
-                get_aggregated_karatsuba_components(Hsubkey_512_0,
-                                                    Hsubkey_512_1,
-                                                    Hsubkey_512_2,
-                                                    Hsubkey_512_3,
-                                                    a1,
-                                                    a2,
-                                                    a3,
-                                                    a4,
-                                                    reverse_mask_512,
-                                                    &z0_512_t,
-                                                    &z1_512_t,
-                                                    &z2_512_t,
-                                                    *pgHash_128,
-                                                    0);
-
-                z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
-                z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
-                z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
-            }
-
             // re-arrange as per spec
-            b1 = alcp_shuffle_epi8(c1, swap_ctr);
-            b2 = alcp_shuffle_epi8(c2, swap_ctr);
-            b3 = alcp_shuffle_epi8(c3, swap_ctr);
-            b4 = alcp_shuffle_epi8(c4, swap_ctr);
+            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
+#if (!ONE_TIME_KEY_LOAD)
             AesEncrypt(&b1, &b2, &b3, &b4, pkey128, nRounds);
-
-            a1 = alcp_xor(b1, a1);
-            a2 = alcp_xor(b2, a2);
-            a3 = alcp_xor(b3, a3);
-            a4 = alcp_xor(b4, a4);
-
+#else
+            if (nRounds == 10) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else if (nRounds == 12) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             key_512_13,
+                                             key_512_14,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            }
+#endif
+            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
+            alcp_xor_4values(a1, // inputs A
+                             a2,
+                             a3,
+                             a4,
+                             b1, // inputs B
+                             b2,
+                             b3,
+                             b4,
+                             b1, // outputs B = A xor B
+                             b2,
+                             b3,
+                             b4);
             // increment counter
             c1 = alcp_add_epi32(c1, four_x);
 
-            if (isEncrypt == true) {
-                __m512i Hsubkey_512_0 = Hsubkey_512[0 + n];
-                __m512i Hsubkey_512_1 = Hsubkey_512[1 + n];
-                __m512i Hsubkey_512_2 = Hsubkey_512[2 + n];
-                __m512i Hsubkey_512_3 = Hsubkey_512[3 + n];
+            alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
 
-                get_aggregated_karatsuba_components(Hsubkey_512_0,
-                                                    Hsubkey_512_1,
-                                                    Hsubkey_512_2,
-                                                    Hsubkey_512_3,
-                                                    a1,
-                                                    a2,
-                                                    a3,
-                                                    a4,
-                                                    reverse_mask_512,
-                                                    &z0_512_t,
-                                                    &z1_512_t,
-                                                    &z2_512_t,
-                                                    *pgHash_128,
-                                                    0);
+            p_in_x += PARALLEL_512_BLKS_4;
+            p_out_x += PARALLEL_512_BLKS_4;
 
-                z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
-                z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
-                z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
+            // 2nd iteration
+            n            = PARALLEL_512_BLKS_4 * 2;
+            pHsubkey_512 = Hsubkey_512 + n;
+
+            c2 = alcp_add_epi32(c1, one_x);
+            c3 = alcp_add_epi32(c1, two_x);
+            c4 = alcp_add_epi32(c1, three_x);
+
+            // re-arrange as per spec
+            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
+
+#if (!ONE_TIME_KEY_LOAD)
+            AesEncrypt(&b1, &b2, &b3, &b4, pkey128, nRounds);
+#else
+            if (nRounds == 10) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else if (nRounds == 12) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             key_512_13,
+                                             key_512_14,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
             }
+#endif
+            get_aggregated_karatsuba_components(Hsubkey_512_0,
+                                                Hsubkey_512_1,
+                                                Hsubkey_512_2,
+                                                Hsubkey_512_3,
+                                                a1,
+                                                a2,
+                                                a3,
+                                                a4,
+                                                reverse_mask_512,
+                                                &z0_512,
+                                                &z1_512,
+                                                &z2_512,
+                                                *pgHash_128,
+                                                1);
+            alcp_loadu_4values(pHsubkey_512,
+                               Hsubkey_512_0,
+                               Hsubkey_512_1,
+                               Hsubkey_512_2,
+                               Hsubkey_512_3);
 
-            alcp_storeu(p_out_x, a1);
-            alcp_storeu(p_out_x + 1, a2);
-            alcp_storeu(p_out_x + 2, a3);
-            alcp_storeu(p_out_x + 3, a4);
+            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
+            alcp_xor_4values(a1, // inputs A
+                             a2,
+                             a3,
+                             a4,
+                             b1, // inputs B
+                             b2,
+                             b3,
+                             b4,
+                             b1, // outputs B = A xor B
+                             b2,
+                             b3,
+                             b4);
+            // increment counter
+            c1 = alcp_add_epi32(c1, four_x);
 
-            p_in_x += numParallel_512blks;
-            p_out_x += numParallel_512blks;
+            alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
+            p_in_x += PARALLEL_512_BLKS_4;
+            p_out_x += PARALLEL_512_BLKS_4;
+
+            // 3rd
+            n            = PARALLEL_512_BLKS_4 * 1;
+            pHsubkey_512 = Hsubkey_512 + n;
+
+            c2 = alcp_add_epi32(c1, one_x);
+            c3 = alcp_add_epi32(c1, two_x);
+            c4 = alcp_add_epi32(c1, three_x);
+
+            // re-arrange as per spec
+            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
+#if (!ONE_TIME_KEY_LOAD)
+            AesEncrypt(&b1, &b2, &b3, &b4, pkey128, nRounds);
+#else
+            if (nRounds == 10) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else if (nRounds == 12) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             key_512_13,
+                                             key_512_14,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            }
+#endif
+            get_aggregated_karatsuba_components(Hsubkey_512_0,
+                                                Hsubkey_512_1,
+                                                Hsubkey_512_2,
+                                                Hsubkey_512_3,
+                                                a1,
+                                                a2,
+                                                a3,
+                                                a4,
+                                                reverse_mask_512,
+                                                &z0_512_t,
+                                                &z1_512_t,
+                                                &z2_512_t,
+                                                *pgHash_128,
+                                                0);
+            z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
+            z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
+            z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
+
+            alcp_loadu_4values(pHsubkey_512,
+                               Hsubkey_512_0,
+                               Hsubkey_512_1,
+                               Hsubkey_512_2,
+                               Hsubkey_512_3);
+
+            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
+            alcp_xor_4values(a1, // inputs A
+                             a2,
+                             a3,
+                             a4,
+                             b1, // inputs B
+                             b2,
+                             b3,
+                             b4,
+                             b1, // outputs B = A xor B
+                             b2,
+                             b3,
+                             b4);
+            // increment counter
+            c1 = alcp_add_epi32(c1, four_x);
+
+            alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
+            p_in_x += PARALLEL_512_BLKS_4;
+            p_out_x += PARALLEL_512_BLKS_4;
+
+            // 4th
+            n            = 0;
+            pHsubkey_512 = Hsubkey_512 + n;
+
+            c2 = alcp_add_epi32(c1, one_x);
+            c3 = alcp_add_epi32(c1, two_x);
+            c4 = alcp_add_epi32(c1, three_x);
+
+            // re-arrange as per spec
+            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
+#if (!ONE_TIME_KEY_LOAD)
+            AesEncrypt(&b1, &b2, &b3, &b4, pkey128, nRounds);
+#else
+            if (nRounds == 10) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else if (nRounds == 12) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             key_512_13,
+                                             key_512_14,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            }
+#endif
+            get_aggregated_karatsuba_components(Hsubkey_512_0,
+                                                Hsubkey_512_1,
+                                                Hsubkey_512_2,
+                                                Hsubkey_512_3,
+                                                a1,
+                                                a2,
+                                                a3,
+                                                a4,
+                                                reverse_mask_512,
+                                                &z0_512_t,
+                                                &z1_512_t,
+                                                &z2_512_t,
+                                                *pgHash_128,
+                                                0);
+            z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
+            z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
+            z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
+
+            alcp_loadu_4values(pHsubkey_512,
+                               Hsubkey_512_0,
+                               Hsubkey_512_1,
+                               Hsubkey_512_2,
+                               Hsubkey_512_3);
+
+            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
+            alcp_xor_4values(a1, // inputs A
+                             a2,
+                             a3,
+                             a4,
+                             b1, // inputs B
+                             b2,
+                             b3,
+                             b4,
+                             b1, // outputs B = A xor B
+                             b2,
+                             b3,
+                             b4);
+            // increment counter
+            c1 = alcp_add_epi32(c1, four_x);
+
+            get_aggregated_karatsuba_components(Hsubkey_512_0,
+                                                Hsubkey_512_1,
+                                                Hsubkey_512_2,
+                                                Hsubkey_512_3,
+                                                a1,
+                                                a2,
+                                                a3,
+                                                a4,
+                                                reverse_mask_512,
+                                                &z0_512_t,
+                                                &z1_512_t,
+                                                &z2_512_t,
+                                                *pgHash_128,
+                                                0);
+            z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
+            z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
+            z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
+
+            alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
+            p_in_x += PARALLEL_512_BLKS_4;
+            p_out_x += PARALLEL_512_BLKS_4;
+
+            // compute Ghash
+            getGhash(z0_512, z1_512, z2_512, pgHash_128);
         }
 
-        getGhash(z0_512, z1_512, z2_512, pgHash_128);
-    }
-#else // LOOP Fixed = 4
+    } else if (do_2_unroll) {
+        Uint64 blockCount_4x512_2_unroll = 16 * 2;
 
-#endif // LOOP
-#endif // ENABLE_96_BLK_AGG_GMUL
+        for (; blocks >= blockCount_4x512_2_unroll;
+             blocks -= blockCount_4x512_2_unroll) {
+            __m512i z0_512, z1_512, z2_512;
+            __m512i z0_512_t, z1_512_t, z2_512_t;
+
+            int      n            = 4; // numParallel_512blks * k;
+            __m512i* pHsubkey_512 = Hsubkey_512 + n;
+
+            alcp_loadu_4values(pHsubkey_512, // address
+                               Hsubkey_512_0,
+                               Hsubkey_512_1,
+                               Hsubkey_512_2,
+                               Hsubkey_512_3);
+            c2 = alcp_add_epi32(c1, one_x);
+            c3 = alcp_add_epi32(c1, two_x);
+            c4 = alcp_add_epi32(c1, three_x);
+
+            // re-arrange as per spec
+            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
+#if (!ONE_TIME_KEY_LOAD)
+            AesEncrypt(&b1, &b2, &b3, &b4, pkey128, nRounds);
+#else
+            if (nRounds == 10) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else if (nRounds == 12) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             key_512_13,
+                                             key_512_14,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            }
+#endif
+            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
+            alcp_xor_4values(a1, // inputs A
+                             a2,
+                             a3,
+                             a4,
+                             b1, // inputs B
+                             b2,
+                             b3,
+                             b4,
+                             b1, // outputs B = A xor B
+                             b2,
+                             b3,
+                             b4);
+            // increment counter
+            c1 = alcp_add_epi32(c1, four_x);
+
+            alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
+
+            p_in_x += PARALLEL_512_BLKS_4;
+            p_out_x += PARALLEL_512_BLKS_4;
+
+            // 2nd
+            n            = 0;
+            pHsubkey_512 = Hsubkey_512 + n;
+
+            c2 = alcp_add_epi32(c1, one_x);
+            c3 = alcp_add_epi32(c1, two_x);
+            c4 = alcp_add_epi32(c1, three_x);
+
+            // re-arrange as per spec
+            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
+#if (!ONE_TIME_KEY_LOAD)
+            AesEncrypt(&b1, &b2, &b3, &b4, pkey128, nRounds);
+#else
+            if (nRounds == 10) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else if (nRounds == 12) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             key_512_13,
+                                             key_512_14,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            }
+#endif
+            // first iteration gmul
+            get_aggregated_karatsuba_components(Hsubkey_512_0,
+                                                Hsubkey_512_1,
+                                                Hsubkey_512_2,
+                                                Hsubkey_512_3,
+                                                a1,
+                                                a2,
+                                                a3,
+                                                a4,
+                                                reverse_mask_512,
+                                                &z0_512,
+                                                &z1_512,
+                                                &z2_512,
+                                                *pgHash_128,
+                                                1);
+            alcp_loadu_4values(pHsubkey_512,
+                               Hsubkey_512_0,
+                               Hsubkey_512_1,
+                               Hsubkey_512_2,
+                               Hsubkey_512_3);
+
+            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
+            alcp_xor_4values(a1, // inputs A
+                             a2,
+                             a3,
+                             a4,
+                             b1, // inputs B
+                             b2,
+                             b3,
+                             b4,
+                             b1, // outputs B = A xor B
+                             b2,
+                             b3,
+                             b4);
+            // increment counter
+            c1 = alcp_add_epi32(c1, four_x);
+
+            get_aggregated_karatsuba_components(Hsubkey_512_0,
+                                                Hsubkey_512_1,
+                                                Hsubkey_512_2,
+                                                Hsubkey_512_3,
+                                                a1,
+                                                a2,
+                                                a3,
+                                                a4,
+                                                reverse_mask_512,
+                                                &z0_512_t,
+                                                &z1_512_t,
+                                                &z2_512_t,
+                                                *pgHash_128,
+                                                0);
+            z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
+            z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
+            z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
+
+            alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
+            p_in_x += PARALLEL_512_BLKS_4;
+            p_out_x += PARALLEL_512_BLKS_4;
+
+            // compute Ghash
+            getGhash(z0_512, z1_512, z2_512, pgHash_128);
+        }
+    }
+
+    Hsubkey_512_0 = Hsubkey_512[0];
 
     for (; blocks >= blockCount_4x512; blocks -= blockCount_4x512) {
+
+        Hsubkey_512_1 = Hsubkey_512[1];
+        Hsubkey_512_2 = Hsubkey_512[2];
+        Hsubkey_512_3 = Hsubkey_512[3];
+
         c2 = alcp_add_epi32(c1, one_x);
         c3 = alcp_add_epi32(c1, two_x);
         c4 = alcp_add_epi32(c1, three_x);
 
-        a1 = alcp_loadu(p_in_x);
-        a2 = alcp_loadu(p_in_x + 1);
-        a3 = alcp_loadu(p_in_x + 2);
-        a4 = alcp_loadu(p_in_x + 3);
+        alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
 
-        if (isEncrypt == false) {
-            gMulR(Hsubkey_512[0],
-                  Hsubkey_512[1],
-                  Hsubkey_512[2],
-                  Hsubkey_512[3],
-                  a1,
-                  a2,
-                  a3,
-                  a4,
-                  reverse_mask_512,
-                  pgHash_128);
-        }
+        gMulR(Hsubkey_512_0,
+              Hsubkey_512_1,
+              Hsubkey_512_2,
+              Hsubkey_512_3,
+              a1,
+              a2,
+              a3,
+              a4,
+              reverse_mask_512,
+              pgHash_128);
+
         // re-arrange as per spec
-        b1 = alcp_shuffle_epi8(c1, swap_ctr);
-        b2 = alcp_shuffle_epi8(c2, swap_ctr);
-        b3 = alcp_shuffle_epi8(c3, swap_ctr);
-        b4 = alcp_shuffle_epi8(c4, swap_ctr);
+        alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
+#if (!ONE_TIME_KEY_LOAD)
         AesEncrypt(&b1, &b2, &b3, &b4, pkey128, nRounds);
+#else
+        if (nRounds == 10) {
+            vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                         key_512_1,
+                                         key_512_2,
+                                         key_512_3,
+                                         key_512_4,
+                                         key_512_5,
+                                         key_512_6,
+                                         key_512_7,
+                                         key_512_8,
+                                         key_512_9,
+                                         key_512_10,
+                                         b1,
+                                         b2,
+                                         b3,
+                                         b4);
+        } else if (nRounds == 12) {
+            vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                         key_512_1,
+                                         key_512_2,
+                                         key_512_3,
+                                         key_512_4,
+                                         key_512_5,
+                                         key_512_6,
+                                         key_512_7,
+                                         key_512_8,
+                                         key_512_9,
+                                         key_512_10,
+                                         key_512_11,
+                                         key_512_12,
+                                         b1,
+                                         b2,
+                                         b3,
+                                         b4);
+        } else {
+            vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                         key_512_1,
+                                         key_512_2,
+                                         key_512_3,
+                                         key_512_4,
+                                         key_512_5,
+                                         key_512_6,
+                                         key_512_7,
+                                         key_512_8,
+                                         key_512_9,
+                                         key_512_10,
+                                         key_512_11,
+                                         key_512_12,
+                                         key_512_13,
+                                         key_512_14,
+                                         b1,
+                                         b2,
+                                         b3,
+                                         b4);
+        }
+#endif
 
-        a1 = alcp_xor(b1, a1);
-        a2 = alcp_xor(b2, a2);
-        a3 = alcp_xor(b3, a3);
-        a4 = alcp_xor(b4, a4);
+        alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4, a1, a2, a3, a4);
 
         // increment counter
         c1 = alcp_add_epi32(c1, four_x);
 
-        if (isEncrypt == true) {
-            gMulR(Hsubkey_512[0],
-                  Hsubkey_512[1],
-                  Hsubkey_512[2],
-                  Hsubkey_512[3],
-                  a1,
-                  a2,
-                  a3,
-                  a4,
-                  reverse_mask_512,
-                  pgHash_128);
-        }
-
-        alcp_storeu(p_out_x, a1);
-        alcp_storeu(p_out_x + 1, a2);
-        alcp_storeu(p_out_x + 2, a3);
-        alcp_storeu(p_out_x + 3, a4);
+        alcp_storeu_4values(p_out_x, a1, a2, a3, a4);
 
         p_in_x += 4;
         p_out_x += 4;
@@ -687,27 +1046,72 @@ gcmBlk_512(const __m512i* p_in_x,
         a1 = alcp_loadu(p_in_x);
         a2 = alcp_loadu(p_in_x + 1);
 
-        if (isEncrypt == false) {
-            gMulR(Hsubkey_512[0], a1, reverse_mask_512, pgHash_128);
-            gMulR(Hsubkey_512[0], a2, reverse_mask_512, pgHash_128);
-        }
+        gMulR(Hsubkey_512_0, a1, reverse_mask_512, pgHash_128);
+        gMulR(Hsubkey_512_0, a2, reverse_mask_512, pgHash_128);
 
         // re-arrange as per spec
         b1 = alcp_shuffle_epi8(c1, swap_ctr);
         b2 = alcp_shuffle_epi8(c2, swap_ctr);
 
+#if (!ONE_TIME_KEY_LOAD)
         AesEncrypt(&b1, &b2, pkey128, nRounds);
+#else
+        if (nRounds == 10) {
+            vaes::AesEncryptNoLoad_2x512(key_512_0,
+                                         key_512_1,
+                                         key_512_2,
+                                         key_512_3,
+                                         key_512_4,
+                                         key_512_5,
+                                         key_512_6,
+                                         key_512_7,
+                                         key_512_8,
+                                         key_512_9,
+                                         key_512_10,
+                                         b1,
+                                         b2);
+        } else if (nRounds == 12) {
+            vaes::AesEncryptNoLoad_2x512(key_512_0,
+                                         key_512_1,
+                                         key_512_2,
+                                         key_512_3,
+                                         key_512_4,
+                                         key_512_5,
+                                         key_512_6,
+                                         key_512_7,
+                                         key_512_8,
+                                         key_512_9,
+                                         key_512_10,
+                                         key_512_11,
+                                         key_512_12,
+                                         b1,
+                                         b2);
+        } else {
+            vaes::AesEncryptNoLoad_2x512(key_512_0,
+                                         key_512_1,
+                                         key_512_2,
+                                         key_512_3,
+                                         key_512_4,
+                                         key_512_5,
+                                         key_512_6,
+                                         key_512_7,
+                                         key_512_8,
+                                         key_512_9,
+                                         key_512_10,
+                                         key_512_11,
+                                         key_512_12,
+                                         key_512_13,
+                                         key_512_14,
+                                         b1,
+                                         b2);
+        }
+#endif
 
         a1 = alcp_xor(b1, a1);
         a2 = alcp_xor(b2, a2);
 
         // increment counter
         c1 = alcp_add_epi32(c1, two_x);
-
-        if (isEncrypt == true) {
-            gMulR(Hsubkey_512[0], a1, reverse_mask_512, pgHash_128);
-            gMulR(Hsubkey_512[0], a2, reverse_mask_512, pgHash_128);
-        }
 
         alcp_storeu(p_out_x, a1);
         alcp_storeu(p_out_x + 1, a2);
@@ -719,21 +1123,64 @@ gcmBlk_512(const __m512i* p_in_x,
     for (; blocks >= blockCount_1x512; blocks -= blockCount_1x512) {
         a1 = alcp_loadu(p_in_x);
 
-        if (isEncrypt == false) {
-            gMulR(Hsubkey_512[0], a1, reverse_mask_512, pgHash_128);
-        }
+        gMulR(Hsubkey_512_0, a1, reverse_mask_512, pgHash_128);
 
         // re-arrange as per spec
         b1 = alcp_shuffle_epi8(c1, swap_ctr);
+#if (!ONE_TIME_KEY_LOAD)
         AesEncrypt(&b1, pkey128, nRounds);
+#else
+        if (nRounds == 10) {
+            vaes::AesEncryptNoLoad(key_512_0,
+                                   key_512_1,
+                                   key_512_2,
+                                   key_512_3,
+                                   key_512_4,
+                                   key_512_5,
+                                   key_512_6,
+                                   key_512_7,
+                                   key_512_8,
+                                   key_512_9,
+                                   key_512_10,
+                                   b1);
+        } else if (nRounds == 12) {
+            vaes::AesEncryptNoLoad(key_512_0,
+                                   key_512_1,
+                                   key_512_2,
+                                   key_512_3,
+                                   key_512_4,
+                                   key_512_5,
+                                   key_512_6,
+                                   key_512_7,
+                                   key_512_8,
+                                   key_512_9,
+                                   key_512_10,
+                                   key_512_11,
+                                   key_512_12,
+                                   b1);
+        } else {
+            vaes::AesEncryptNoLoad(key_512_0,
+                                   key_512_1,
+                                   key_512_2,
+                                   key_512_3,
+                                   key_512_4,
+                                   key_512_5,
+                                   key_512_6,
+                                   key_512_7,
+                                   key_512_8,
+                                   key_512_9,
+                                   key_512_10,
+                                   key_512_11,
+                                   key_512_12,
+                                   key_512_13,
+                                   key_512_14,
+                                   b1);
+        }
+#endif
         a1 = alcp_xor(b1, a1);
 
         // increment counter
         c1 = alcp_add_epi32(c1, one_x);
-
-        if (isEncrypt == true) {
-            gMulR(Hsubkey_512[0], a1, reverse_mask_512, pgHash_128);
-        }
 
         alcp_storeu(p_out_x, a1);
 
@@ -750,11 +1197,9 @@ gcmBlk_512(const __m512i* p_in_x,
 
         a1 = _mm_loadu_si128((__m128i*)p_in_x);
 
-        if (isEncrypt == false) {
-            __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
-            *pgHash_128 = _mm_xor_si128(ra1, *pgHash_128);
-            alcp::cipher::aesni::gMul(*pgHash_128, Hsubkey_128, pgHash_128);
-        }
+        __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
+        *pgHash_128 = _mm_xor_si128(ra1, *pgHash_128);
+        gMul(*pgHash_128, Hsubkey_128, pgHash_128);
 
         // re-arrange as per spec
         __m128i b1 = _mm_shuffle_epi8(c1_128, swap_ctr_128);
@@ -763,12 +1208,6 @@ gcmBlk_512(const __m512i* p_in_x,
 
         // increment counter
         c1_128 = _mm_add_epi32(c1_128, one_lo_128);
-
-        if (isEncrypt == true) {
-            __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
-            *pgHash_128 = _mm_xor_si128(ra1, *pgHash_128);
-            alcp::cipher::aesni::gMul(*pgHash_128, Hsubkey_128, pgHash_128);
-        }
 
         _mm_storeu_si128((__m128i*)p_out_x, a1);
         p_in_x  = (__m512i*)(((__uint128_t*)p_in_x) + 1);
@@ -795,10 +1234,1112 @@ gcmBlk_512(const __m512i* p_in_x,
             p_out[i] = 0;
         }
 
-        if (isEncrypt == false) {
-            __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
-            *pgHash_128 = _mm_xor_si128(ra1, *pgHash_128);
-            alcp::cipher::aesni::gMul(*pgHash_128, Hsubkey_128, pgHash_128);
+        __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
+        *pgHash_128 = _mm_xor_si128(ra1, *pgHash_128);
+        gMul(*pgHash_128, Hsubkey_128, pgHash_128);
+
+        a1 = _mm_xor_si128(b1, a1);
+        for (i = remBytes; i < 16; i++) {
+            p_out[i] = 0;
+        }
+
+        Uint8* p_store = reinterpret_cast<Uint8*>(p_out_x);
+        for (i = 0; i < remBytes; i++) {
+            p_store[i] = p_out[i];
+        }
+    }
+
+    // clear all keys in registers.
+    key_512_0  = _mm512_setzero_si512();
+    key_512_1  = _mm512_setzero_si512();
+    key_512_2  = _mm512_setzero_si512();
+    key_512_3  = _mm512_setzero_si512();
+    key_512_4  = _mm512_setzero_si512();
+    key_512_5  = _mm512_setzero_si512();
+    key_512_6  = _mm512_setzero_si512();
+    key_512_7  = _mm512_setzero_si512();
+    key_512_8  = _mm512_setzero_si512();
+    key_512_9  = _mm512_setzero_si512();
+    key_512_10 = _mm512_setzero_si512();
+    key_512_11 = _mm512_setzero_si512();
+    key_512_12 = _mm512_setzero_si512();
+    key_512_13 = _mm512_setzero_si512();
+    key_512_14 = _mm512_setzero_si512();
+
+    return blocks;
+}
+
+Uint64
+gcmBlk_512_enc(const __m512i* p_in_x,
+               __m512i*       p_out_x,
+               Uint64         blocks,
+               const __m128i* pkey128,
+               const Uint8*   pIv,
+               int            nRounds,
+               Uint8          factor,
+               // gcm specific params
+               __m128i* pgHash_128,
+               __m128i  Hsubkey_128,
+               __m128i  iv_128,
+               __m128i  reverse_mask_128,
+               int      remBytes)
+{
+    __m512i swap_ctr, c1;
+    __m512i one_lo, one_x, two_x, three_x, four_x, eight_x;
+
+    /* gcm init + Hash subkey init */
+    gcmCryptInit(&c1,
+                 iv_128,
+                 &one_lo,
+                 &one_x,
+                 &two_x,
+                 &three_x,
+                 &four_x,
+                 &eight_x,
+                 &swap_ctr);
+
+#if ONE_TIME_KEY_LOAD
+    __m512i key_512_0, key_512_1, key_512_2, key_512_3, key_512_4, key_512_5,
+        key_512_6, key_512_7, key_512_8, key_512_9, key_512_10, key_512_11,
+        key_512_12, key_512_13, key_512_14;
+    alcp_load_key_zmm(pkey128,
+                      key_512_0,
+                      key_512_1,
+                      key_512_2,
+                      key_512_3,
+                      key_512_4,
+                      key_512_5,
+                      key_512_6,
+                      key_512_7,
+                      key_512_8,
+                      key_512_9,
+                      key_512_10,
+                      key_512_11,
+                      key_512_12,
+                      key_512_13,
+                      key_512_14);
+#endif
+    __attribute__((aligned(64))) Uint64 Hsubkey_64[MAX_NUM_512_BLKS * 8];
+    __m512i*                            Hsubkey_512 = (__m512i*)Hsubkey_64;
+
+    // clang-format off
+    __m512i reverse_mask_512 =
+            _mm512_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+                            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+                            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+                            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+    // clang-format on
+
+    int num_512_blks = 0;
+
+    /* 64 (16*4) blocks per loop. Minimum 20 loops required to get
+     * benefit of precomputing hash^x table.
+     * 32 (16*2) blocks per loop needs minimum 4 loops to get benefit from
+     * precomputing hash^x table.
+     */
+
+    // 16*num_unroll*MinloopCount
+    Uint64 threshold_4x512_4unroll = 16 * 4 * 20;
+    Uint64 threshold_4x512_2unroll = 16 * 2 * 4;
+    bool   do_4_unroll             = false;
+    bool   do_2_unroll             = false;
+
+    if (blocks >= threshold_4x512_4unroll) {
+        num_512_blks = 4 * 4;
+        do_4_unroll  = true;
+    } else if (blocks >= threshold_4x512_2unroll) {
+        num_512_blks = 4 * 2;
+        do_2_unroll  = true;
+    } else if (blocks >= 16) {
+        num_512_blks = 4;
+    } else if (blocks >= 4) {
+        num_512_blks = 1;
+    }
+
+    if (num_512_blks > MAX_NUM_512_BLKS) {
+        num_512_blks = MAX_NUM_512_BLKS;
+    }
+
+    if (num_512_blks) {
+        computeHashSubKeys(num_512_blks, Hsubkey_128, Hsubkey_512);
+    }
+
+    Uint64  blockCount_1x512 = factor;
+    __m512i a1, b1;
+
+    Uint64 blockCount_4x512 = 4 * factor;
+    Uint64 blockCount_2x512 = 2 * factor;
+
+    __m512i a2, a3, a4;
+    __m512i b2, b3, b4;
+    __m512i c2, c3, c4;
+
+    __m512i Hsubkey_512_0, Hsubkey_512_1, Hsubkey_512_2, Hsubkey_512_3;
+
+    if (do_4_unroll) {
+        Uint64 blockCount_4x512_4_unroll = 16 * 4;
+
+        for (; blocks >= blockCount_4x512_4_unroll;
+             blocks -= blockCount_4x512_4_unroll) {
+
+            __m512i  z0_512, z1_512, z2_512;
+            __m512i  z0_512_t, z1_512_t, z2_512_t;
+            int      n            = 12;
+            __m512i* pHsubkey_512 = Hsubkey_512 + n;
+
+            alcp_loadu_4values(pHsubkey_512, // address
+                               Hsubkey_512_0,
+                               Hsubkey_512_1,
+                               Hsubkey_512_2,
+                               Hsubkey_512_3);
+            c2 = alcp_add_epi32(c1, one_x);
+            c3 = alcp_add_epi32(c1, two_x);
+            c4 = alcp_add_epi32(c1, three_x);
+
+            // re-arrange as per spec
+            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
+
+#if (!ONE_TIME_KEY_LOAD)
+            AesEncrypt(&b1, &b2, &b3, &b4, pkey128, nRounds);
+#else
+            if (nRounds == 10) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else if (nRounds == 12) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             key_512_13,
+                                             key_512_14,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            }
+#endif
+            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
+            alcp_xor_4values(a1, // inputs A
+                             a2,
+                             a3,
+                             a4,
+                             b1, // inputs B
+                             b2,
+                             b3,
+                             b4,
+                             a1, // outputs B = A xor B
+                             a2,
+                             a3,
+                             a4);
+            // increment counter
+            c1 = alcp_add_epi32(c1, four_x);
+
+            alcp_storeu_4values(p_out_x, a1, a2, a3, a4);
+
+            p_in_x += PARALLEL_512_BLKS_4;
+            p_out_x += PARALLEL_512_BLKS_4;
+
+            // 2nd iteration
+            n            = PARALLEL_512_BLKS_4 * 2;
+            pHsubkey_512 = Hsubkey_512 + n;
+
+            c2 = alcp_add_epi32(c1, one_x);
+            c3 = alcp_add_epi32(c1, two_x);
+            c4 = alcp_add_epi32(c1, three_x);
+
+            // re-arrange as per spec
+            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
+#if (!ONE_TIME_KEY_LOAD)
+            AesEncrypt(&b1, &b2, &b3, &b4, pkey128, nRounds);
+#else
+            if (nRounds == 10) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else if (nRounds == 12) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             key_512_13,
+                                             key_512_14,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            }
+#endif
+            get_aggregated_karatsuba_components(Hsubkey_512_0,
+                                                Hsubkey_512_1,
+                                                Hsubkey_512_2,
+                                                Hsubkey_512_3,
+                                                a1,
+                                                a2,
+                                                a3,
+                                                a4,
+                                                reverse_mask_512,
+                                                &z0_512,
+                                                &z1_512,
+                                                &z2_512,
+                                                *pgHash_128,
+                                                1);
+            alcp_loadu_4values(pHsubkey_512,
+                               Hsubkey_512_0,
+                               Hsubkey_512_1,
+                               Hsubkey_512_2,
+                               Hsubkey_512_3);
+
+            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
+            alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4, a1, a2, a3, a4);
+            // increment counter
+            c1 = alcp_add_epi32(c1, four_x);
+
+            alcp_storeu_4values(p_out_x, a1, a2, a3, a4);
+            p_in_x += PARALLEL_512_BLKS_4;
+            p_out_x += PARALLEL_512_BLKS_4;
+
+            // 3rd
+            n            = PARALLEL_512_BLKS_4 * 1;
+            pHsubkey_512 = Hsubkey_512 + n;
+
+            c2 = alcp_add_epi32(c1, one_x);
+            c3 = alcp_add_epi32(c1, two_x);
+            c4 = alcp_add_epi32(c1, three_x);
+
+            // re-arrange as per spec
+            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
+
+#if (!ONE_TIME_KEY_LOAD)
+            AesEncrypt(&b1, &b2, &b3, &b4, pkey128, nRounds);
+#else
+            if (nRounds == 10) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else if (nRounds == 12) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             key_512_13,
+                                             key_512_14,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            }
+#endif
+            get_aggregated_karatsuba_components(Hsubkey_512_0,
+                                                Hsubkey_512_1,
+                                                Hsubkey_512_2,
+                                                Hsubkey_512_3,
+                                                a1,
+                                                a2,
+                                                a3,
+                                                a4,
+                                                reverse_mask_512,
+                                                &z0_512_t,
+                                                &z1_512_t,
+                                                &z2_512_t,
+                                                *pgHash_128,
+                                                0);
+            z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
+            z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
+            z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
+
+            alcp_loadu_4values(pHsubkey_512,
+                               Hsubkey_512_0,
+                               Hsubkey_512_1,
+                               Hsubkey_512_2,
+                               Hsubkey_512_3);
+
+            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
+            alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4, a1, a2, a3, a4);
+            // increment counter
+            c1 = alcp_add_epi32(c1, four_x);
+
+            alcp_storeu_4values(p_out_x, a1, a2, a3, a4);
+            p_in_x += PARALLEL_512_BLKS_4;
+            p_out_x += PARALLEL_512_BLKS_4;
+
+            // 4th
+            n            = 0;
+            pHsubkey_512 = Hsubkey_512 + n;
+
+            c2 = alcp_add_epi32(c1, one_x);
+            c3 = alcp_add_epi32(c1, two_x);
+            c4 = alcp_add_epi32(c1, three_x);
+
+            // re-arrange as per spec
+            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
+
+#if (!ONE_TIME_KEY_LOAD)
+            AesEncrypt(&b1, &b2, &b3, &b4, pkey128, nRounds);
+#else
+            if (nRounds == 10) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else if (nRounds == 12) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             key_512_13,
+                                             key_512_14,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            }
+#endif
+            get_aggregated_karatsuba_components(Hsubkey_512_0,
+                                                Hsubkey_512_1,
+                                                Hsubkey_512_2,
+                                                Hsubkey_512_3,
+                                                a1,
+                                                a2,
+                                                a3,
+                                                a4,
+                                                reverse_mask_512,
+                                                &z0_512_t,
+                                                &z1_512_t,
+                                                &z2_512_t,
+                                                *pgHash_128,
+                                                0);
+            z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
+            z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
+            z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
+
+            alcp_loadu_4values(pHsubkey_512,
+                               Hsubkey_512_0,
+                               Hsubkey_512_1,
+                               Hsubkey_512_2,
+                               Hsubkey_512_3);
+
+            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
+            alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4, a1, a2, a3, a4);
+            // increment counter
+            c1 = alcp_add_epi32(c1, four_x);
+
+            get_aggregated_karatsuba_components(Hsubkey_512_0,
+                                                Hsubkey_512_1,
+                                                Hsubkey_512_2,
+                                                Hsubkey_512_3,
+                                                a1,
+                                                a2,
+                                                a3,
+                                                a4,
+                                                reverse_mask_512,
+                                                &z0_512_t,
+                                                &z1_512_t,
+                                                &z2_512_t,
+                                                *pgHash_128,
+                                                0);
+            z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
+            z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
+            z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
+
+            alcp_storeu_4values(p_out_x, a1, a2, a3, a4);
+            p_in_x += PARALLEL_512_BLKS_4;
+            p_out_x += PARALLEL_512_BLKS_4;
+
+            // compute Ghash
+            getGhash(z0_512, z1_512, z2_512, pgHash_128);
+        }
+
+    } else if (do_2_unroll) {
+        Uint64 blockCount_4x512_2_unroll = 16 * 2;
+
+        for (; blocks >= blockCount_4x512_2_unroll;
+             blocks -= blockCount_4x512_2_unroll) {
+
+            __m512i z0_512, z1_512, z2_512;
+            __m512i z0_512_t, z1_512_t, z2_512_t;
+
+            int      n            = 4; // numParallel_512blks * k;
+            __m512i* pHsubkey_512 = Hsubkey_512 + n;
+
+            alcp_loadu_4values(pHsubkey_512, // address
+                               Hsubkey_512_0,
+                               Hsubkey_512_1,
+                               Hsubkey_512_2,
+                               Hsubkey_512_3);
+            c2 = alcp_add_epi32(c1, one_x);
+            c3 = alcp_add_epi32(c1, two_x);
+            c4 = alcp_add_epi32(c1, three_x);
+
+            // re-arrange as per spec
+            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
+
+#if (!ONE_TIME_KEY_LOAD)
+            AesEncrypt(&b1, &b2, &b3, &b4, pkey128, nRounds);
+#else
+            if (nRounds == 10) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else if (nRounds == 12) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             key_512_13,
+                                             key_512_14,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            }
+#endif
+            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
+            alcp_xor_4values(a1,
+                             a2,
+                             a3,
+                             a4, // inputs A
+                             b1,
+                             b2,
+                             b3,
+                             b4, // inputs B
+                             a1,
+                             a2,
+                             a3,
+                             a4); // outputs A = A xor B
+            // increment counter
+            c1 = alcp_add_epi32(c1, four_x);
+
+            alcp_storeu_4values(p_out_x, a1, a2, a3, a4);
+
+            p_in_x += PARALLEL_512_BLKS_4;
+            p_out_x += PARALLEL_512_BLKS_4;
+
+            // 2nd
+            n            = 0;
+            pHsubkey_512 = Hsubkey_512 + n;
+
+            c2 = alcp_add_epi32(c1, one_x);
+            c3 = alcp_add_epi32(c1, two_x);
+            c4 = alcp_add_epi32(c1, three_x);
+
+            // re-arrange as per spec
+            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
+
+#if (!ONE_TIME_KEY_LOAD)
+            AesEncrypt(&b1, &b2, &b3, &b4, pkey128, nRounds);
+#else
+            if (nRounds == 10) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else if (nRounds == 12) {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            } else {
+                vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                             key_512_1,
+                                             key_512_2,
+                                             key_512_3,
+                                             key_512_4,
+                                             key_512_5,
+                                             key_512_6,
+                                             key_512_7,
+                                             key_512_8,
+                                             key_512_9,
+                                             key_512_10,
+                                             key_512_11,
+                                             key_512_12,
+                                             key_512_13,
+                                             key_512_14,
+                                             b1,
+                                             b2,
+                                             b3,
+                                             b4);
+            }
+#endif
+            // first iteration gmul
+            get_aggregated_karatsuba_components(Hsubkey_512_0,
+                                                Hsubkey_512_1,
+                                                Hsubkey_512_2,
+                                                Hsubkey_512_3,
+                                                a1,
+                                                a2,
+                                                a3,
+                                                a4,
+                                                reverse_mask_512,
+                                                &z0_512,
+                                                &z1_512,
+                                                &z2_512,
+                                                *pgHash_128,
+                                                1);
+            alcp_loadu_4values(pHsubkey_512,
+                               Hsubkey_512_0,
+                               Hsubkey_512_1,
+                               Hsubkey_512_2,
+                               Hsubkey_512_3);
+
+            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
+            alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4, a1, a2, a3, a4);
+            // increment counter
+            c1 = alcp_add_epi32(c1, four_x);
+
+            get_aggregated_karatsuba_components(Hsubkey_512_0,
+                                                Hsubkey_512_1,
+                                                Hsubkey_512_2,
+                                                Hsubkey_512_3,
+                                                a1,
+                                                a2,
+                                                a3,
+                                                a4,
+                                                reverse_mask_512,
+                                                &z0_512_t,
+                                                &z1_512_t,
+                                                &z2_512_t,
+                                                *pgHash_128,
+                                                0);
+            z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
+            z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
+            z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
+
+            alcp_storeu_4values(p_out_x, a1, a2, a3, a4);
+            p_in_x += PARALLEL_512_BLKS_4;
+            p_out_x += PARALLEL_512_BLKS_4;
+
+            // compute Ghash
+            getGhash(z0_512, z1_512, z2_512, pgHash_128);
+        }
+    }
+
+    Hsubkey_512_0 = Hsubkey_512[0];
+
+    bool isFirst   = true;
+    bool isLoopHit = false;
+    for (; blocks >= blockCount_4x512; blocks -= blockCount_4x512) {
+        Hsubkey_512_1 = Hsubkey_512[1];
+        Hsubkey_512_2 = Hsubkey_512[2];
+        Hsubkey_512_3 = Hsubkey_512[3];
+
+        c2 = alcp_add_epi32(c1, one_x);
+        c3 = alcp_add_epi32(c1, two_x);
+        c4 = alcp_add_epi32(c1, three_x);
+
+        if (!isFirst) {
+            gMulR(Hsubkey_512_0,
+                  Hsubkey_512_1,
+                  Hsubkey_512_2,
+                  Hsubkey_512_3,
+                  a1,
+                  a2,
+                  a3,
+                  a4,
+                  reverse_mask_512,
+                  pgHash_128);
+        }
+        isFirst   = false;
+        isLoopHit = true;
+
+        alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
+
+        // re-arrange as per spec
+        alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
+
+#if (!ONE_TIME_KEY_LOAD)
+        AesEncrypt(&b1, &b2, &b3, &b4, pkey128, nRounds);
+#else
+        if (nRounds == 10) {
+            vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                         key_512_1,
+                                         key_512_2,
+                                         key_512_3,
+                                         key_512_4,
+                                         key_512_5,
+                                         key_512_6,
+                                         key_512_7,
+                                         key_512_8,
+                                         key_512_9,
+                                         key_512_10,
+                                         b1,
+                                         b2,
+                                         b3,
+                                         b4);
+        } else if (nRounds == 12) {
+            vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                         key_512_1,
+                                         key_512_2,
+                                         key_512_3,
+                                         key_512_4,
+                                         key_512_5,
+                                         key_512_6,
+                                         key_512_7,
+                                         key_512_8,
+                                         key_512_9,
+                                         key_512_10,
+                                         key_512_11,
+                                         key_512_12,
+                                         b1,
+                                         b2,
+                                         b3,
+                                         b4);
+        } else {
+            vaes::AesEncryptNoLoad_4x512(key_512_0,
+                                         key_512_1,
+                                         key_512_2,
+                                         key_512_3,
+                                         key_512_4,
+                                         key_512_5,
+                                         key_512_6,
+                                         key_512_7,
+                                         key_512_8,
+                                         key_512_9,
+                                         key_512_10,
+                                         key_512_11,
+                                         key_512_12,
+                                         key_512_13,
+                                         key_512_14,
+                                         b1,
+                                         b2,
+                                         b3,
+                                         b4);
+        }
+#endif
+
+        alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4, a1, a2, a3, a4);
+
+        // increment counter
+        c1 = alcp_add_epi32(c1, four_x);
+        alcp_storeu_4values(p_out_x, a1, a2, a3, a4);
+
+        p_in_x += 4;
+        p_out_x += 4;
+    }
+
+    if (isLoopHit) {
+        gMulR(Hsubkey_512_0,
+              Hsubkey_512_1,
+              Hsubkey_512_2,
+              Hsubkey_512_3,
+              a1,
+              a2,
+              a3,
+              a4,
+              reverse_mask_512,
+              pgHash_128);
+    }
+
+    for (; blocks >= blockCount_2x512; blocks -= blockCount_2x512) {
+        c2 = alcp_add_epi32(c1, one_x);
+
+        a1 = alcp_loadu(p_in_x);
+        a2 = alcp_loadu(p_in_x + 1);
+
+        // re-arrange as per spec
+        b1 = alcp_shuffle_epi8(c1, swap_ctr);
+        b2 = alcp_shuffle_epi8(c2, swap_ctr);
+
+#if (!ONE_TIME_KEY_LOAD)
+        AesEncrypt(&b1, &b2, pkey128, nRounds);
+#else
+        if (nRounds == 10) {
+            vaes::AesEncryptNoLoad_2x512(key_512_0,
+                                         key_512_1,
+                                         key_512_2,
+                                         key_512_3,
+                                         key_512_4,
+                                         key_512_5,
+                                         key_512_6,
+                                         key_512_7,
+                                         key_512_8,
+                                         key_512_9,
+                                         key_512_10,
+                                         b1,
+                                         b2);
+        } else if (nRounds == 12) {
+            vaes::AesEncryptNoLoad_2x512(key_512_0,
+                                         key_512_1,
+                                         key_512_2,
+                                         key_512_3,
+                                         key_512_4,
+                                         key_512_5,
+                                         key_512_6,
+                                         key_512_7,
+                                         key_512_8,
+                                         key_512_9,
+                                         key_512_10,
+                                         key_512_11,
+                                         key_512_12,
+                                         b1,
+                                         b2);
+        } else {
+            vaes::AesEncryptNoLoad_2x512(key_512_0,
+                                         key_512_1,
+                                         key_512_2,
+                                         key_512_3,
+                                         key_512_4,
+                                         key_512_5,
+                                         key_512_6,
+                                         key_512_7,
+                                         key_512_8,
+                                         key_512_9,
+                                         key_512_10,
+                                         key_512_11,
+                                         key_512_12,
+                                         key_512_13,
+                                         key_512_14,
+                                         b1,
+                                         b2);
+        }
+#endif
+
+        a1 = alcp_xor(b1, a1);
+        a2 = alcp_xor(b2, a2);
+
+        // increment counter
+        c1 = alcp_add_epi32(c1, two_x);
+
+        gMulR(Hsubkey_512_0, a1, reverse_mask_512, pgHash_128);
+        gMulR(Hsubkey_512_0, a2, reverse_mask_512, pgHash_128);
+
+        alcp_storeu(p_out_x, a1);
+        alcp_storeu(p_out_x + 1, a2);
+
+        p_in_x += 2;
+        p_out_x += 2;
+    }
+
+    for (; blocks >= blockCount_1x512; blocks -= blockCount_1x512) {
+        a1 = alcp_loadu(p_in_x);
+
+        // re-arrange as per spec
+        b1 = alcp_shuffle_epi8(c1, swap_ctr);
+#if (!ONE_TIME_KEY_LOAD)
+        AesEncrypt(&b1, pkey128, nRounds);
+#else
+        if (nRounds == 10) {
+            vaes::AesEncryptNoLoad(key_512_0,
+                                   key_512_1,
+                                   key_512_2,
+                                   key_512_3,
+                                   key_512_4,
+                                   key_512_5,
+                                   key_512_6,
+                                   key_512_7,
+                                   key_512_8,
+                                   key_512_9,
+                                   key_512_10,
+                                   b1);
+        } else if (nRounds == 12) {
+            vaes::AesEncryptNoLoad(key_512_0,
+                                   key_512_1,
+                                   key_512_2,
+                                   key_512_3,
+                                   key_512_4,
+                                   key_512_5,
+                                   key_512_6,
+                                   key_512_7,
+                                   key_512_8,
+                                   key_512_9,
+                                   key_512_10,
+                                   key_512_11,
+                                   key_512_12,
+                                   b1);
+        } else {
+            vaes::AesEncryptNoLoad(key_512_0,
+                                   key_512_1,
+                                   key_512_2,
+                                   key_512_3,
+                                   key_512_4,
+                                   key_512_5,
+                                   key_512_6,
+                                   key_512_7,
+                                   key_512_8,
+                                   key_512_9,
+                                   key_512_10,
+                                   key_512_11,
+                                   key_512_12,
+                                   key_512_13,
+                                   key_512_14,
+                                   b1);
+        }
+#endif
+        a1 = alcp_xor(b1, a1);
+
+        // increment counter
+        c1 = alcp_add_epi32(c1, one_x);
+
+        gMulR(Hsubkey_512_0, a1, reverse_mask_512, pgHash_128);
+
+        alcp_storeu(p_out_x, a1);
+
+        p_in_x += 1;
+        p_out_x += 1;
+    }
+
+    // residual block=1 when factor = 2, load and store only lower half.
+    __m128i c1_128     = _mm512_castsi512_si128(c1);
+    __m128i one_lo_128 = _mm_set_epi32(1, 0, 0, 0);
+    for (; blocks != 0; blocks--) {
+        __m128i a1; // remaining bytes handled with 128bit
+        __m128i swap_ctr_128 = _mm512_castsi512_si128(swap_ctr);
+
+        a1 = _mm_loadu_si128((__m128i*)p_in_x);
+
+        // re-arrange as per spec
+        __m128i b1 = _mm_shuffle_epi8(c1_128, swap_ctr_128);
+        alcp::cipher::aesni::AesEncrypt(&b1, pkey128, nRounds);
+        a1 = _mm_xor_si128(b1, a1);
+
+        // increment counter
+        c1_128 = _mm_add_epi32(c1_128, one_lo_128);
+
+        __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
+        *pgHash_128 = _mm_xor_si128(ra1, *pgHash_128);
+        gMul(*pgHash_128, Hsubkey_128, pgHash_128);
+
+        _mm_storeu_si128((__m128i*)p_out_x, a1);
+        p_in_x  = (__m512i*)(((__uint128_t*)p_in_x) + 1);
+        p_out_x = (__m512i*)(((__uint128_t*)p_out_x) + 1);
+    }
+
+    // remaining bytes
+    if (remBytes) {
+        __m128i a1; // remaining bytes handled with 128bit
+        __m128i swap_ctr_128 = _mm512_castsi512_si128(swap_ctr);
+
+        // re-arrange as per spec
+        __m128i b1 = _mm_shuffle_epi8(c1_128, swap_ctr_128);
+        alcp::cipher::aesni::AesEncrypt(&b1, pkey128, nRounds);
+
+        const Uint8* p_in  = reinterpret_cast<const Uint8*>(p_in_x);
+        Uint8*       p_out = reinterpret_cast<Uint8*>(&a1);
+
+        int i = 0;
+        for (; i < remBytes; i++) {
+            p_out[i] = p_in[i];
+        }
+        for (; i < 16; i++) {
+            p_out[i] = 0;
         }
 
         a1 = _mm_xor_si128(b1, a1);
@@ -811,12 +2352,28 @@ gcmBlk_512(const __m512i* p_in_x,
             p_store[i] = p_out[i];
         }
 
-        if (isEncrypt == true) {
-            __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
-            *pgHash_128 = _mm_xor_si128(ra1, *pgHash_128);
-            alcp::cipher::aesni::gMul(*pgHash_128, Hsubkey_128, pgHash_128);
-        }
+        __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
+        *pgHash_128 = _mm_xor_si128(ra1, *pgHash_128);
+        gMul(*pgHash_128, Hsubkey_128, pgHash_128);
     }
+
+    // clear all keys in registers.
+    key_512_0  = _mm512_setzero_si512();
+    key_512_1  = _mm512_setzero_si512();
+    key_512_2  = _mm512_setzero_si512();
+    key_512_3  = _mm512_setzero_si512();
+    key_512_4  = _mm512_setzero_si512();
+    key_512_5  = _mm512_setzero_si512();
+    key_512_6  = _mm512_setzero_si512();
+    key_512_7  = _mm512_setzero_si512();
+    key_512_8  = _mm512_setzero_si512();
+    key_512_9  = _mm512_setzero_si512();
+    key_512_10 = _mm512_setzero_si512();
+    key_512_11 = _mm512_setzero_si512();
+    key_512_12 = _mm512_setzero_si512();
+    key_512_13 = _mm512_setzero_si512();
+    key_512_14 = _mm512_setzero_si512();
+
     return blocks;
 }
 
@@ -842,20 +2399,35 @@ CryptGcm(const Uint8* pInputText,  // ptr to inputText
     auto p_out_512 = reinterpret_cast<__m512i*>(pOutputText);
     auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
 
-    gcmBlk_512(p_in_512,
-               p_out_512,
-               blocks,
-               pkey128,
-               pIv,
-               nRounds,
-               4, // factor*128
-               // gcm specific params
-               pgHash_128,
-               Hsubkey_128,
-               iv_128,
-               reverse_mask_128,
-               isEncrypt,
-               remBytes);
+    if (isEncrypt) {
+        gcmBlk_512_enc(p_in_512,
+                       p_out_512,
+                       blocks,
+                       pkey128,
+                       pIv,
+                       nRounds,
+                       4, // factor*128
+                       // gcm specific params
+                       pgHash_128,
+                       Hsubkey_128,
+                       iv_128,
+                       reverse_mask_128,
+                       remBytes);
+    } else {
+        gcmBlk_512_dec(p_in_512,
+                       p_out_512,
+                       blocks,
+                       pkey128,
+                       pIv,
+                       nRounds,
+                       4, // factor*128
+                       // gcm specific params
+                       pgHash_128,
+                       Hsubkey_128,
+                       iv_128,
+                       reverse_mask_128,
+                       remBytes);
+    }
 
     return err;
 }
