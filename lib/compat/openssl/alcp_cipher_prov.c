@@ -27,7 +27,7 @@
  */
 
 #include "alcp_cipher_prov.h"
-#include "names.h"
+#include "alcp_names.h"
 
 void
 ALCP_prov_cipher_freectx(void* vctx)
@@ -464,31 +464,31 @@ extern const OSSL_DISPATCH ctr_functions[];
 extern const OSSL_DISPATCH ecb_functions[];
 extern const OSSL_DISPATCH xtr_functions[];
 const OSSL_ALGORITHM       ALC_prov_ciphers[] = {
-    { PROV_NAMES_AES_256_CFB, CIPHER_DEF_PROP, cfb_functions },
-    { PROV_NAMES_AES_192_CFB, CIPHER_DEF_PROP, cfb_functions },
-    { PROV_NAMES_AES_128_CFB, CIPHER_DEF_PROP, cfb_functions },
-    { PROV_NAMES_AES_256_CFB1, CIPHER_DEF_PROP, cfb_functions },
-    { PROV_NAMES_AES_192_CFB1, CIPHER_DEF_PROP, cfb_functions },
-    { PROV_NAMES_AES_128_CFB1, CIPHER_DEF_PROP, cfb_functions },
-    { PROV_NAMES_AES_256_CFB8, CIPHER_DEF_PROP, cfb_functions },
-    { PROV_NAMES_AES_192_CFB8, CIPHER_DEF_PROP, cfb_functions },
-    { PROV_NAMES_AES_128_CFB8, CIPHER_DEF_PROP, cfb_functions },
-    { PROV_NAMES_AES_256_CBC, CIPHER_DEF_PROP, cbc_functions },
-    { PROV_NAMES_AES_192_CBC, CIPHER_DEF_PROP, cbc_functions },
-    { PROV_NAMES_AES_128_CBC, CIPHER_DEF_PROP, cbc_functions },
-    { PROV_NAMES_AES_256_OFB, CIPHER_DEF_PROP, ofb_functions },
-    { PROV_NAMES_AES_192_OFB, CIPHER_DEF_PROP, ofb_functions },
-    { PROV_NAMES_AES_128_OFB, CIPHER_DEF_PROP, ofb_functions },
-    { PROV_NAMES_AES_256_CTR, CIPHER_DEF_PROP, ctr_functions },
-    { PROV_NAMES_AES_192_CTR, CIPHER_DEF_PROP, ctr_functions },
-    { PROV_NAMES_AES_128_CTR, CIPHER_DEF_PROP, ctr_functions },
-    { PROV_NAMES_AES_256_ECB, CIPHER_DEF_PROP, ecb_functions },
-    { PROV_NAMES_AES_192_ECB, CIPHER_DEF_PROP, ecb_functions },
-    { PROV_NAMES_AES_128_ECB, CIPHER_DEF_PROP, ecb_functions },
+    { ALCP_PROV_NAMES_AES_256_CFB, CIPHER_DEF_PROP, cfb_functions },
+    { ALCP_PROV_NAMES_AES_192_CFB, CIPHER_DEF_PROP, cfb_functions },
+    { ALCP_PROV_NAMES_AES_128_CFB, CIPHER_DEF_PROP, cfb_functions },
+    { ALCP_PROV_NAMES_AES_256_CFB1, CIPHER_DEF_PROP, cfb_functions },
+    { ALCP_PROV_NAMES_AES_192_CFB1, CIPHER_DEF_PROP, cfb_functions },
+    { ALCP_PROV_NAMES_AES_128_CFB1, CIPHER_DEF_PROP, cfb_functions },
+    { ALCP_PROV_NAMES_AES_256_CFB8, CIPHER_DEF_PROP, cfb_functions },
+    { ALCP_PROV_NAMES_AES_192_CFB8, CIPHER_DEF_PROP, cfb_functions },
+    { ALCP_PROV_NAMES_AES_128_CFB8, CIPHER_DEF_PROP, cfb_functions },
+    { ALCP_PROV_NAMES_AES_256_CBC, CIPHER_DEF_PROP, cbc_functions },
+    { ALCP_PROV_NAMES_AES_192_CBC, CIPHER_DEF_PROP, cbc_functions },
+    { ALCP_PROV_NAMES_AES_128_CBC, CIPHER_DEF_PROP, cbc_functions },
+    { ALCP_PROV_NAMES_AES_256_OFB, CIPHER_DEF_PROP, ofb_functions },
+    { ALCP_PROV_NAMES_AES_192_OFB, CIPHER_DEF_PROP, ofb_functions },
+    { ALCP_PROV_NAMES_AES_128_OFB, CIPHER_DEF_PROP, ofb_functions },
+    { ALCP_PROV_NAMES_AES_256_CTR, CIPHER_DEF_PROP, ctr_functions },
+    { ALCP_PROV_NAMES_AES_192_CTR, CIPHER_DEF_PROP, ctr_functions },
+    { ALCP_PROV_NAMES_AES_128_CTR, CIPHER_DEF_PROP, ctr_functions },
+    { ALCP_PROV_NAMES_AES_256_ECB, CIPHER_DEF_PROP, ecb_functions },
+    { ALCP_PROV_NAMES_AES_192_ECB, CIPHER_DEF_PROP, ecb_functions },
+    { ALCP_PROV_NAMES_AES_128_ECB, CIPHER_DEF_PROP, ecb_functions },
 #if 0
-    { PROV_NAMES_AES_256_XTR, CIPHER_DEF_PROP, xtr_functions },
-    { PROV_NAMES_AES_192_XTR, CIPHER_DEF_PROP, xtr_functions },
-    { PROV_NAMES_AES_128_XTR, CIPHER_DEF_PROP, xtr_functions },
+    { ALCP_PROV_NAMES_AES_256_XTS, CIPHER_DEF_PROP, xts_functions },
+    { ALCP_PROV_NAMES_AES_192_XTS, CIPHER_DEF_PROP, xts_functions },
+    { ALCP_PROV_NAMES_AES_128_XTS, CIPHER_DEF_PROP, xts_functions },
 #endif
     { NULL, NULL, NULL },
 };

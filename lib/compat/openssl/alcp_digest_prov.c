@@ -27,7 +27,7 @@
  */
 
 #include "alcp_digest_prov.h"
-#include "names.h"
+#include "alcp_names.h"
 
 void
 ALCP_prov_digest_freectx(void* vctx)
@@ -271,10 +271,10 @@ extern const OSSL_DISPATCH sha384_functions[];
 extern const OSSL_DISPATCH sha512_functions[];
 
 const OSSL_ALGORITHM ALC_prov_digests[] = {
-    { PROV_NAMES_SHA2_512, DIGEST_DEF_PROP, sha512_functions },
-    { PROV_NAMES_SHA2_384, DIGEST_DEF_PROP, sha384_functions },
-    { PROV_NAMES_SHA2_256, DIGEST_DEF_PROP, sha256_functions },
-    { PROV_NAMES_SHA2_224, DIGEST_DEF_PROP, sha224_functions },
+    { ALCP_PROV_NAMES_SHA2_512, DIGEST_DEF_PROP, sha512_functions },
+    { ALCP_PROV_NAMES_SHA2_384, DIGEST_DEF_PROP, sha384_functions },
+    { ALCP_PROV_NAMES_SHA2_256, DIGEST_DEF_PROP, sha256_functions },
+    { ALCP_PROV_NAMES_SHA2_224, DIGEST_DEF_PROP, sha224_functions },
     { NULL, NULL, NULL },
 };
 
