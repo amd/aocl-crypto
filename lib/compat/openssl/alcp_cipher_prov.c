@@ -487,7 +487,6 @@ const OSSL_ALGORITHM       ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_128_ECB, CIPHER_DEF_PROP, ecb_functions },
 #if 0
     { ALCP_PROV_NAMES_AES_256_XTS, CIPHER_DEF_PROP, xts_functions },
-    { ALCP_PROV_NAMES_AES_192_XTS, CIPHER_DEF_PROP, xts_functions },
     { ALCP_PROV_NAMES_AES_128_XTS, CIPHER_DEF_PROP, xts_functions },
 #endif
     { NULL, NULL, NULL },
