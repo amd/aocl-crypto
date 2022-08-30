@@ -142,6 +142,10 @@ class alignas(16) Rijndael::Impl
                               uint64_t       len,
                               const uint8_t* pIv);
 
+    void expandTweakKeys(const Uint8* pUserKey,
+                         Uint8*       pTweakKey,
+                         Uint32       nrounds);
+
     void setUp(const alc_key_info_t& rKeyInfo)
     {
         int len           = rKeyInfo.len;
@@ -574,6 +578,54 @@ Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
     (p_dec_key128)[0] = ((__m128i*)p_enc_key32)[nr];
 }
 
+void
+Rijndael::Impl::expandTweakKeys(const Uint8* pUserKey,
+                                Uint8*       pTweakKey,
+                                Uint32       nRound)
+{
+
+    using utils::GetByte, utils::MakeWord;
+
+    Uint8        dummy_key[Rijndael::cMaxKeySize] = { 0 };
+    const Uint8* key = pUserKey ? pUserKey : &dummy_key[0];
+
+    if (isAesniAvailable()) {
+        aesni::ExpandTweakKeys(key, pTweakKey, m_nrounds);
+        return;
+    }
+
+    Uint32 i;
+    Uint32 nb = Rijndael::cBlockSizeWord, nr = m_nrounds,
+           nk          = m_key_size / utils::BytesPerWord;
+    const Uint32* rtbl = s_round_constants;
+    Uint32*       p_tweak_key32;
+    p_tweak_key32 = reinterpret_cast<Uint32*>(pTweakKey);
+
+    for (i = 0; i < nk; i++) {
+        p_tweak_key32[i] = MakeWord(
+            key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]);
+    }
+
+    for (i = nk; i < nb * (nr + 1); i++) {
+        Uint32 temp = p_tweak_key32[i - 1];
+        if (i % nk == 0) {
+            temp = MakeWord(GetSbox(GetByte(temp, 1)),
+                            GetSbox(GetByte(temp, 2)),
+                            GetSbox(GetByte(temp, 3)),
+                            GetSbox(GetByte(temp, 0)));
+
+            temp ^= *rtbl++;
+        } else if (nk > 6 && (i % nk == 4)) {
+            temp = MakeWord(GetSbox(GetByte(temp, 0)),
+                            GetSbox(GetByte(temp, 1)),
+                            GetSbox(GetByte(temp, 2)),
+                            GetSbox(GetByte(temp, 3)));
+        }
+
+        p_tweak_key32[i] = p_tweak_key32[i - nk] ^ temp;
+    }
+}
+
 Rijndael::Rijndael()
     : m_pimpl{ std::make_unique<Rijndael::Impl>() }
 {}
@@ -648,6 +700,14 @@ Rijndael::encrypt(const Uint8* pPlaintxt,
                   const Uint8* pIv) const
 {
     return pImpl()->encrypt(pPlaintxt, pCihpertxt, len, pIv);
+}
+
+void
+Rijndael::expandTweakKeys(const Uint8* pUserKey,
+                          Uint8*       pTweakKey,
+                          Uint32       nrounds)
+{
+    pImpl()->expandTweakKeys(pUserKey, pTweakKey, nrounds);
 }
 
 alc_error_t

@@ -34,7 +34,7 @@
 namespace alcp::cipher {
 
 void
-Xts::expandTweakKeys(const Uint8* pUserKey) noexcept
+Xts::expandTweakKeys(const Uint8* pUserKey)
 {
 
     Uint8        dummy_key[32] = { 0 };
@@ -47,6 +47,8 @@ Xts::expandTweakKeys(const Uint8* pUserKey) noexcept
         aesni::ExpandTweakKeys(key, pTweakKey, getRounds());
         return;
     }
+
+    Rijndael::expandTweakKeys(key, pTweakKey, getRounds());
 }
 
 alc_error_t

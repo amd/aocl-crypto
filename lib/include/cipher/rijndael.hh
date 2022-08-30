@@ -99,6 +99,10 @@ class Rijndael : public alcp::BlockCipher
                                 Uint64       len,
                                 const Uint8* pIv) const override;
 
+    void expandTweakKeys(const Uint8* pUserKey,
+                         Uint8*       pTweakKey,
+                         Uint32       nrounds);
+
   protected:
     Rijndael();
     explicit Rijndael(const alc_key_info_t& rKeyInfo);

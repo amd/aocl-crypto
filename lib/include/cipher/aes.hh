@@ -508,7 +508,7 @@ class Xts final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
-    virtual void expandTweakKeys(const Uint8* pUserKey) noexcept;
+    virtual void expandTweakKeys(const Uint8* pUserKey);
 
   private:
     Xts() { p_tweak_key = &m_tweak_round_key[0]; };
