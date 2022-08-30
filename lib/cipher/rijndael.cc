@@ -90,7 +90,7 @@ class alignas(16) Rijndael::Impl
 {
   private:
     void expandKeys(const Uint8* pUserKey) noexcept;
-    void expandTweakKeys(const Uint8* pUserKey) noexcept;
+
     void subBytes(Uint8 state[][4]) noexcept;
 
     void shiftRows(Uint8 state[][4]) noexcept;
@@ -156,9 +156,6 @@ class alignas(16) Rijndael::Impl
         m_dec_key = m_enc_key + ((m_nrounds + 2) * m_key_size);
 
         expandKeys(rKeyInfo.key);
-        // if (rKeyInfo.tweak_key != nullptr) {
-
-        // }
     }
 };
 
@@ -300,11 +297,26 @@ Rijndael::Impl::invMixColumns(Uint8 state[][4]) noexcept
     }
 }
 
+static Uint32
+gmulx2(Uint32 val)
+{
+    return ((val + val) & 0xfefefefe)
+           ^ ((((val & 0x80808080) << 1) - ((val & 0x80808080) >> 7))
+              & 0x1b1b1b1b);
+}
+
 static inline Uint32
 InvMixColumns(const Uint32& val)
 {
-    /* FIXME: */
-    return val;
+    Uint32 val_2 = gmulx2(val);
+    Uint32 val_4 = gmulx2(val_2);
+    Uint32 val_8 = gmulx2(val_4);
+    Uint32 val_9 = val_8 ^ val;
+    Uint32 val_b = val_8 ^ val_2 ^ val;
+    Uint32 val_d = val_8 ^ val_4 ^ val;
+    Uint32 val_e = val_8 ^ val_4 ^ val_2;
+    return val_e ^ ((val_b >> 8) | (val_b << 24))
+           ^ ((val_d >> 16) | (val_d << 16)) ^ ((val_9 >> 24) | (val_9 << 8));
 }
 
 static inline Uint32
@@ -545,13 +557,21 @@ Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
         p_enc_key32[i] = p_enc_key32[i - nk] ^ temp;
     }
 
-    utils::CopyBlock(pDecKey, pEncKey, nk * nr);
+    utils::CopyBlock(pDecKey, pEncKey, m_key_size * 8);
 
-    auto p_dec_key32 = reinterpret_cast<Uint32*>(pDecKey);
+    auto p_dec_key32  = reinterpret_cast<Uint32*>(pDecKey);
+    auto p_dec_key128 = reinterpret_cast<__m128i*>(pDecKey);
 
-    for (i = nk; i < nb * (nr + 1); i++) {
+    for (i = 4; i < nb * (nr + 1); i++) {
         p_dec_key32[i] = InvMixColumns(p_enc_key32[i]);
     }
+
+    for (int i = 0, j = nr; i < j; i += 1, j -= 1) {
+        __m128i temp    = p_dec_key128[i];
+        p_dec_key128[i] = p_dec_key128[j];
+        p_dec_key128[j] = temp;
+    }
+    (p_dec_key128)[0] = ((__m128i*)p_enc_key32)[nr];
 }
 
 Rijndael::Rijndael()
