@@ -29,7 +29,7 @@
 #include <iostream>
 
 #ifdef USE_AOCL_SRNG
-#include "srng_wrapper.hh"
+#include "secrng.h"
 #endif
 // Enable debug for debugging the code
 // #define DEBUG
