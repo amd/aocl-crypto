@@ -191,8 +191,6 @@ class Sha2Builder
       rCtx.update   = __sha_update_wrapper<Sha3>;
       rCtx.copy     = __sha_copy_wrapper<Sha3>;
       rCtx.finalize = __sha_finalize_wrapper<Sha3>;
-      //   ctx.finalize = __digest_func_wrapper<Sha3,
-      //   &Sha3::finalize>;
       rCtx.finish = __sha_dtor<Sha3>;
       rCtx.reset  = __sha_reset_wrapper<Sha3>;
       return err;

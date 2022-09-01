@@ -124,45 +124,87 @@ main(void)
           "11111111111111111111111111111111111111111111111111111111111111111111"
           "11111111111111111111111111111111111111111111111111111111111111111111"
           "111111111111111111111111111111111122",
-          "7838ae76add02b5928efc96d5527007a6e84cce2b68cc27e1b77a9b170d806124ad2"
-          "e77c25ebb0a86dd1f9dc6215dde0ad58735c32594246132d334c347d7ef1" },
+          "c2509d9d11747a41dba76b44034fc7bbf5f36f38abd45e5ae37fc17da6146cabed78"
+          "50146a1219b903ee6e1a01bd422b8b2bbf57912b61c0e60fbaea543d4f19"
+        },
+        
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
           "456789abcdef0123456789abcdef0123456789abcdef012345",
-          "32c4bc0d883f25fbf89f1a4c4dce86b18325d7557cc8f3d433ee294c7cbd5a958623"
-          "6f5dc95196025d2112157ff5b9b7551c7595d51b19a8b455d876751b54b1" },
+          "d6aa3bf678379d7fa2c684f3044aa48a46c60082bd7eba727b8295f8ee69081ae704"
+          "f648991b5f41af9327f627ec686c2949f564afde9d4c714b341b2db9bcf0"
+        },
+        
         { "",
-          "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0"
-          "d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e" },
+          "b751850b1a57168a5693cd924b6b096e08f621827444f70d884f5d0240d2712e10e1"
+          "16e9192af3c91a7ec57647e3934057340b4cf408d5a56592f8274eec53f0"
+        },
+        
         { "abc",
-          "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192"
-          "992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f" },
+          "b751850b1a57168a5693cd924b6b096e08f621827444f70d884f5d0240d2712e10e1"
+          "16e9192af3c91a7ec57647e3934057340b4cf408d5a56592f8274eec53f0"
+        },
+        
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-          "ad2981aa58beca63a49b8831274b89d81766a23d7932474f03e55cf00cbe27004e66"
-          "fd0912aed0b3cb1afee2aa904115c89db49d6c9bad785523023a9c309561" },
+          "3554e37ca417001fce0154e047e7878b18c5ee0e587dd94bf764a4846e500a403f5e"
+          "304aab1d359c295d2740970311b943771af944f67432e719df628fe77b61"
+        },
+        
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
           "456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-          "451e75996b8939bc540be780b33d2e5ab20d6e2a2b89442c9bfe6b4797f6440dac65"
-          "c58b6aff10a2ca34c37735008d671037fa4081bf56b4ee243729fa5e768e" },
+          "0187a5e72fac99b95e76f827ecc111ee2ea9ff810a2a58d082f3eedd435bf6df9274"
+          "a6d7e04553b7b582598b3b6933d3ed8feb0f6ce59b387c89d23b4a6f071c"
+        },
+        
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
-          "f650799be4b8aecf38cf6ad17538690b89cdf7291ba8ad6a19b45dcb25b52ddff42e"
-          "f38ebbf851145e3b8584785d10821068ee17f1e21b36e2b01d888ca71503" },
+          "50047957fd0dc86770b27a9221a0f7c11fd9249156b6b285631db844c0c832f"
+          "4208b6c0d3d4773ee527eb3ea817c970c67bdda262c547e706775dc9f43d425c6"
+        },
+        
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
           "456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
-          "ca8b236e13383f1f2293c9e286376444e99b7f180ba85713f140b55795fd2f8625d8"
-          "b84201154d7956b74e2a1e0d5fbff1b61c7288c3f45834ad409e7bdfe536" },
+          "153539e6d6176f4f808ef888ffada1eb9349f96e8f8c1e363d62f30454d49093dc75"
+          "06099dbdb370f9b62adafaec759ea961609d737a5635b927343b53b12c93"
+        },
+        
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
           "456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-          "451e75996b8939bc540be780b33d2e5ab20d6e2a2b89442c9bfe6b4797f6440dac65"
-          "c58b6aff10a2ca34c37735008d671037fa4081bf56b4ee243729fa5e768e" },
+          "0187a5e72fac99b95e76f827ecc111ee2ea9ff810a2a58d082f3eedd435bf6df9274"
+          "a6d7e04553b7b582598b3b6933d3ed8feb0f6ce59b387c89d23b4a6f071c"
+        },
+        
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0",
-          "72ddcfd4389b0735b8b5cf758592413ef174df8a2d8e21c285f5ea387369b619faa5"
-          "b7b7cb5745a381c65882dd6f1cb757956de9e95b26a38a68b3f75eda6287" },
+          "895f5d389335c55b76991ea0a4772b9b65ebe23251ad53e848b43adf4af55521fae1"
+          "22ed07124109dabb97c71595993b089ef42dd04603d9f7ffc455cadb8ca1"
+        },
+        
         { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
-          "204a8fc6dda82f0a0ced7beb8e08a41657c16ef468b228a8279be331a703c33596fd"
-          "15c13b1b07f9aa1d3bea57789ca031ad85c7a71dd70354ec631238ca3445" },
+          "04a371e84ecfb5b8b77cb48610fca8182dd457ce6f326a0fd3d7ec2f1e91636dee69"
+          "1fbe0c985302ba1b0d8dc78c086346b533b49c030d99a27daf1139d6e75e"
+        },
+        
         { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno",
-          "90d1bdb9a6cbf9cb0d4a7f185ee0870456f440b81f13f514f4561a08112763523033"
-          "245875b68209bb1f5d5215bac81e0d69f77374cc44d1be30f58c8b615141" }
+          "ece1f8872b4604379799bca9c0f3539315b47ba866d421a39eca1ad661956dee2736"
+          "23f8a5d2432e9a244048b3d11388a241267cdd2a211b5dd67482fc0e8ba5"
+        },
+
+        { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoabcd"
+          "efgh",
+          "03ffee86742e264462329844946e3d7c3395dba93061b7f16ee2e2b1114282e8feeb"
+          "4eb048a19198cb47c29d4cdeffd825853658ec58ea0f9983e89f0f6ebc96"
+        },
+
+        { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoabcd"
+          "efg",
+          "32d1adacd8c53106644ca6c929e63b3f4e167a8562fe231793cc8a158741a96c2c1d"
+          "aa9e6a604e020884a8696b7b49307e6d939513f13106475f75f30fe40231"
+          
+        },
+
+        { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoabcd"
+          "efghi",
+          "986a078b5a8300fc48cc5459e9a8e61692bb6679d61f3a91725b6ede2e49396559fe"
+          "04ec12f98c3fbc349197e81aa876a8f5ad16099811a8fd8fd294fea92bdc"
+        }
 
     };
 
@@ -188,7 +230,6 @@ main(void)
                             strlen(sample_input),
                             sample_output,
                             sizeof(sample_output));
-
         }
 
         /*

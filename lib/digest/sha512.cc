@@ -29,6 +29,7 @@
 #include <climits>
 #include <functional>
 #include <string>
+#include <iostream>
 
 #ifdef USE_AOCL_CPUID
 #include "alci/cpu_features.h"
