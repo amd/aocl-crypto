@@ -63,11 +63,9 @@ EncryptXts(const uint8_t* pSrc,
         ((const uint64_t*)pIv)[0], ((const uint64_t*)pIv)[1], 0, 0);
 
     AesEncrypt(&extendedIV, p_tweak_key128, nRounds);
-    __m128i tweaks[8 * 2]; // 8*2 Tweak values stored inside this
+    __m256i tweakx8[8]; // 8*2 Tweak values stored inside this
 
-    aes::init_alphax8(*((__m128i*)&extendedIV), tweaks);
-
-    __m256i* tweakx8 = (__m256i*)tweaks;
+    aes::init_alphax8(*((__m128i*)&extendedIV), (__m128i*)tweakx8);
 
     tweakx8[4] = aes::nextTweaks(tweakx8[0]);
     tweakx8[5] = aes::nextTweaks(tweakx8[1]);
@@ -357,11 +355,11 @@ DecryptXts(const uint8_t* pSrc,
     AesEncrypt(&extendedIV, p_tweak_key128, nRounds);
 
     __m128i temp_iv = (((__m128i*)&extendedIV)[0]);
-    __m128i tweaks[8 * 2]; // 8*4 Tweak values stored inside this
+    __m256i tweakx8[8]; // 8*4 Tweak values stored inside this
 
-    aes::init_alphax8(temp_iv, tweaks);
+    aes::init_alphax8(temp_iv, (__m128i*)tweakx8);
 
-    __m256i* tweakx8 = (__m256i*)tweaks;
+    __m128i* tweaks = (__m128i*)tweakx8;
 
     tweakx8[4] = aes::nextTweaks(tweakx8[0]);
     tweakx8[5] = aes::nextTweaks(tweakx8[1]);
