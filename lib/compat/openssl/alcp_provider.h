@@ -40,8 +40,7 @@
 
 extern const OSSL_ALGORITHM ALC_prov_ciphers[];
 extern const OSSL_ALGORITHM ALC_prov_digests[];
-
-typedef struct _alc_prov_cipher_ctx* alc_prov_cipher_ctx_p;
+extern const OSSL_ALGORITHM ALC_prov_rng[];
 
 struct _alc_prov_ctx
 {

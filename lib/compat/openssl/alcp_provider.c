@@ -80,6 +80,10 @@ ALCP_query_operation(void* vctx, int operation_id, const int* no_cache)
             EXIT();
             return ALC_prov_digests;
             break;
+        case OSSL_OP_RAND:
+            EXIT();
+            return ALC_prov_rng;
+            break;
         default:
             break;
     }

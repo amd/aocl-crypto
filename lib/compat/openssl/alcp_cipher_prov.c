@@ -254,8 +254,10 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
             return 0;
     }
 #ifdef DEBUG
-    printf(
-        "Provider: %d keylen:%ld, key:%p\n", cinfo->key_info.len, keylen, iv);
+    printf("Provider: %d keylen:%ld, key:%p\n",
+           cinfo->ci_key_info.len,
+           keylen,
+           iv);
 #endif
     cctx->pc_cipher_info.ci_type = ALC_CIPHER_TYPE_AES;
     // Mode Already set
@@ -346,8 +348,10 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
             return 0;
     }
 #ifdef DEBUG
-    printf(
-        "Provider: %d keylen:%ld, key:%p\n", cinfo->key_info.len, keylen, iv);
+    printf("Provider: %d keylen:%ld, key:%p\n",
+           cinfo->ci_key_info.len,
+           keylen,
+           iv);
 #endif
     cctx->pc_cipher_info.ci_type = ALC_CIPHER_TYPE_AES;
     // Mode Already set

@@ -5,6 +5,7 @@ ADD_LIBRARY(openssl-compat
 	alcp_cipher_aes.c
 	alcp_digest_prov.c
 	alcp_digest_sha2.c
+	alcp_rng_prov.c
 	)
 
 # Link to ALCP shared object file
