@@ -32,84 +32,53 @@
 static const char CIPHER_DEF_PROP[] = "provider=alcp,fips=no";
 
 RNG_CONTEXT();
-// CIPHER_CONTEXT(cbc, ALC_AES_MODE_CBC);
-// CIPHER_CONTEXT(ofb, ALC_AES_MODE_OFB);
-// CIPHER_CONTEXT(ecb, ALC_AES_MODE_ECB);
-// CIPHER_CONTEXT(ctr, ALC_AES_MODE_CTR);
-// CIPHER_CONTEXT(xtr, ALC_AES_MODE_XTR);
-
-// int
-// ALCP_prov_rng_get_params(void* vctx, OSSL_PARAM params[])
-// {
-//     EXIT();
-//     // return ALCP_prov_cipher_get_ctx_params(vctx, params);
-//     return NULL;
-// }
-
-// int
-// ALCP_prov_aes_set_ctx_params(void* vctx, const OSSL_PARAM params[])
-// {
-//     EXIT();
-//     return ALCP_prov_cipher_set_ctx_params(vctx, params);
-// }
 
 void
-ALCP_prov_rng_freectx(alc_prov_rng_ctx_p ciph_ctx)
+ALCP_prov_rng_freectx(void* vdrbg)
 {
     ENTER();
     EXIT();
-    // ALCP_prov_cipher_freectx(ciph_ctx);
 }
 
 void*
-ALCP_prov_rng_newctx(void* vprovctx, const alc_rng_info_p cinfo)
+ALCP_prov_rng_newctx(void*                provctx,
+                     void*                parent,
+                     const OSSL_DISPATCH* parent_dispatch)
 {
     ENTER();
     EXIT();
     s_rng_info = s_rng_info;
-    //     alc_prov_cipher_ctx_p ciph_ctx;
-
-    //     ENTER();
-
-    //     ciph_ctx = ALCP_prov_cipher_newctx(vprovctx, cinfo);
-    //     if (!ciph_ctx)
-    //         goto out;
-
-    //     EXIT();
-    //     return ciph_ctx;
-
-    // out:
-    //     ALCP_prov_cipher_freectx(ciph_ctx);
 
     return &s_rng_info; // FIXME: Dummy value
 }
-
-// const OSSL_PARAM*
-// ALCP_prov_rng_gettable_params(void* provctx)
-// {
-//     ENTER();
-//     EXIT();
-//     return NULL;
-// }
-
-static const OSSL_PARAM rng_known_gettable_params[] = {
-    OSSL_PARAM_uint(OSSL_RAND_PARAM_MAX_REQUEST, NULL), OSSL_PARAM_END
-};
 
 const OSSL_PARAM*
 ALCP_prov_rng_gettable_ctx_params(void* cctx, void* provctx)
 {
     ENTER();
+    static const OSSL_PARAM known_gettable_ctx_params[] = {
+        OSSL_PARAM_utf8_string(OSSL_DRBG_PARAM_CIPHER, NULL, 0),
+        OSSL_PARAM_int(OSSL_DRBG_PARAM_USE_DF, NULL),
+        ALCP_RNG_GETTABLE_CTX_COMMON,
+        OSSL_PARAM_END
+    };
     EXIT();
-    return rng_known_gettable_params;
+    return known_gettable_ctx_params;
 }
 
 const OSSL_PARAM*
 ALCP_prov_rng_settable_ctx_params(void* cctx, void* provctx)
 {
     ENTER();
+    static const OSSL_PARAM known_settable_ctx_params[] = {
+        OSSL_PARAM_utf8_string(OSSL_DRBG_PARAM_PROPERTIES, NULL, 0),
+        OSSL_PARAM_utf8_string(OSSL_DRBG_PARAM_CIPHER, NULL, 0),
+        OSSL_PARAM_int(OSSL_DRBG_PARAM_USE_DF, NULL),
+        ALCP_RNG_SETTABLE_CTX_COMMON,
+        OSSL_PARAM_END
+    };
+    return known_settable_ctx_params;
     EXIT();
-    return NULL;
 }
 
 int
@@ -172,14 +141,28 @@ ALCP_prov_rng_generate(void*                vdrbg,
     return 1;
 }
 
-// /* cfb_functions */
+int
+ALCP_prov_rng_enable_locking(void* vctx)
+{
+    ENTER();
+    EXIT();
+    return 1;
+}
+int
+ALCP_prov_rng_lock(void* vctx)
+{
+    ENTER();
+    EXIT();
+    return 1;
+}
+void
+ALCP_prov_rng_unlock(void* vctx)
+{
+    ENTER();
+    EXIT();
+}
+
 CREATE_RNG_DISPATCHERS();
-// CREATE_CIPHER_DISPATCHERS(cbc, aes, EVP_CIPH_CBC_MODE);
-// CREATE_CIPHER_DISPATCHERS(ofb, aes, EVP_CIPH_OFB_MODE);
-// CREATE_CIPHER_DISPATCHERS(ecb, aes, EVP_CIPH_ECB_MODE);
-// CREATE_CIPHER_DISPATCHERS(ctr, aes, EVP_CIPH_CTR_MODE);
-// // EVP_CIPH_XTR_MODE not defined..
-// CREATE_CIPHER_DISPATCHERS(xtr, aes, EVP_CIPH_CTR_MODE);
 
 const OSSL_ALGORITHM ALC_prov_rng[] = {
     { ALCP_PROV_NAMES_CTR_DRBG, CIPHER_DEF_PROP, rng_functions },

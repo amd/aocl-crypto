@@ -2,22 +2,17 @@
  * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- met:
+ * modification, are permitted provided that the following conditions are met:
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- notice,
- *    this list of conditions and the following disclaimer in the
- documentation
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 3. Neither the name of the copyright holder nor the names of its
- contributors
+ * 3. Neither the name of the copyright holder nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  * without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- IS"
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -67,76 +62,26 @@ struct _alc_prov_rng_ctx
 };
 typedef struct _alc_prov_rng_ctx alc_prov_rng_ctx_t, *alc_prov_rng_ctx_p;
 
-EVP_RAND*
-ALCP_prov_init_rng(alc_prov_rng_ctx_p c);
-
 extern const OSSL_ALGORITHM ALC_prov_rng[];
 
 /* TODO: ugly hack for openssl table */
 typedef void (*fptr_t)(void);
 
-extern void*
-ALCP_prov_rng_newctx(void* vprovctx, const alc_rng_info_p cinfo);
-// void
-// ALCP_prov_rng_freectx(void* vctx);
-
-int
-ALCP_prov_rng_get_ctx_params(void* vctx, OSSL_PARAM params[]);
-int
-ALCP_prov_rng_set_ctx_params(void* vctx, const OSSL_PARAM params[]);
-int
-ALCP_prov_rng_instantiate(void*                vdrbg,
-                          unsigned int         strength,
-                          int                  prediction_resistance,
-                          const unsigned char* pstr,
-                          size_t               pstr_len,
-                          const OSSL_PARAM     params[]);
-int
-ALCP_prov_rng_uninstantiate(void* drbg);
-int
-ALCP_prov_rng_generate(void*                vdrbg,
-                       unsigned char*       out,
-                       size_t               outlen,
-                       unsigned int         strength,
-                       int                  prediction_resistance,
-                       const unsigned char* adin,
-                       size_t               adin_len);
-const OSSL_PARAM*
-ALCP_prov_rng_gettable_ctx_params(void* cctx, void* provctx);
-const OSSL_PARAM*
-ALCP_prov_rng_settable_ctx_params(void* cctx, void* provctx);
-const OSSL_PARAM*
-ALCP_prov_rng_gettable_params(void* provctx);
-// int
-// ALCP_prov_rng_get_params(OSSL_PARAM params[]);
-int
-ALCP_prov_rng_set_params(const OSSL_PARAM params[]);
-
-// extern OSSL_FUNC_rand_dupctx_fn         ALCP_prov_rng_dupctx;
-// extern OSSL_FUNC_rand_freectx_fn        ALCP_prov_rng_freectx;
-extern OSSL_FUNC_rand_get_ctx_params_fn ALCP_prov_rng_get_ctx_params;
-extern OSSL_FUNC_rand_set_ctx_params_fn ALCP_prov_rng_set_ctx_params;
-OSSL_FUNC_rand_enable_locking_fn        ossl_drbg_enable_locking;
-OSSL_FUNC_rand_lock_fn                  ossl_drbg_lock;
-OSSL_FUNC_rand_unlock_fn                ossl_drbg_unlock;
-int
-ossl_drbg_enable_locking(void* vctx)
-{
-    return 1;
-}
-int
-ossl_drbg_lock(void* vctx)
-{
-    return 1;
-}
-void
-ossl_drbg_unlock(void* vctx)
-{}
-
-// extern OSSL_FUNC_rand_encrypt_init_fn   ALCP_prov_rng_encrypt_init;
-// extern OSSL_FUNC_rand_decrypt_init_fn   ALCP_prov_rng_decrypt_init;
-// extern OSSL_FUNC_rand_update_fn         ALCP_prov_rng_update;
-// extern OSSL_FUNC_rand_final_fn          ALCP_prov_rng_final;
+/* Function prototypes (definitions) */
+extern OSSL_FUNC_rand_newctx_fn        ALCP_prov_rng_newctx;
+extern OSSL_FUNC_rand_freectx_fn       ALCP_prov_rng_freectx;
+extern OSSL_FUNC_rand_instantiate_fn   ALCP_prov_rng_instantiate;
+extern OSSL_FUNC_rand_uninstantiate_fn ALCP_prov_rng_uninstantiate;
+extern OSSL_FUNC_rand_generate_fn      ALCP_prov_rng_generate;
+// extern OSSL_FUNC_rand_reseed_fn              ALCP_prov_rng_reseed;
+extern OSSL_FUNC_rand_settable_ctx_params_fn ALCP_prov_rng_settable_ctx_params;
+extern OSSL_FUNC_rand_set_ctx_params_fn      ALCP_prov_rng_set_ctx_params;
+extern OSSL_FUNC_rand_gettable_ctx_params_fn ALCP_prov_rng_settable_ctx_params;
+extern OSSL_FUNC_rand_get_ctx_params_fn      ALCP_prov_rng_get_ctx_params;
+// extern OSSL_FUNC_rand_verify_zeroization_fn  ALCP_prov_rng_verzero;
+extern OSSL_FUNC_rand_enable_locking_fn ALCP_prov_rng_enable_locking;
+extern OSSL_FUNC_rand_lock_fn           ALCP_prov_rng_lock;
+extern OSSL_FUNC_rand_unlock_fn         ALCP_prov_rng_unlock;
 
 #define RNG_CONTEXT()                                                          \
     static alc_rng_info_t s_rng_info = { .ri_distrib =                         \
@@ -144,6 +89,7 @@ ossl_drbg_unlock(void* vctx)
                                          .ri_source = ALC_RNG_SOURCE_OS,       \
                                          .ri_type   = ALC_RNG_TYPE_DESCRETE }
 
+// TODO: Implement functions which are NULL
 #define CREATE_RNG_DISPATCHERS()                                               \
     const OSSL_DISPATCH rng_functions[] = {                                    \
         { OSSL_FUNC_RAND_NEWCTX, (fptr_t)ALCP_prov_rng_newctx },               \
@@ -152,9 +98,10 @@ ossl_drbg_unlock(void* vctx)
         { OSSL_FUNC_RAND_UNINSTANTIATE, (fptr_t)ALCP_prov_rng_uninstantiate }, \
         { OSSL_FUNC_RAND_GENERATE, (fptr_t)ALCP_prov_rng_generate },           \
         { OSSL_FUNC_RAND_RESEED, NULL },                                       \
-        { OSSL_FUNC_RAND_ENABLE_LOCKING, (fptr_t)ossl_drbg_enable_locking },   \
-        { OSSL_FUNC_RAND_LOCK, (fptr_t)ossl_drbg_lock },                       \
-        { OSSL_FUNC_RAND_UNLOCK, (fptr_t)ossl_drbg_unlock },                   \
+        { OSSL_FUNC_RAND_ENABLE_LOCKING,                                       \
+          (fptr_t)ALCP_prov_rng_enable_locking },                              \
+        { OSSL_FUNC_RAND_LOCK, (fptr_t)ALCP_prov_rng_lock },                   \
+        { OSSL_FUNC_RAND_UNLOCK, (fptr_t)ALCP_prov_rng_unlock },               \
         { OSSL_FUNC_RAND_SETTABLE_CTX_PARAMS,                                  \
           (fptr_t)ALCP_prov_rng_settable_ctx_params },                         \
         { OSSL_FUNC_RAND_SET_CTX_PARAMS,                                       \
@@ -168,5 +115,24 @@ ossl_drbg_unlock(void* vctx)
         { OSSL_FUNC_RAND_CLEAR_SEED, NULL },                                   \
         { 0, NULL }                                                            \
     }
+
+#define ALCP_RNG_GETTABLE_CTX_COMMON                                           \
+    OSSL_PARAM_int(OSSL_RAND_PARAM_STATE, NULL),                               \
+        OSSL_PARAM_uint(OSSL_RAND_PARAM_STRENGTH, NULL),                       \
+        OSSL_PARAM_size_t(OSSL_RAND_PARAM_MAX_REQUEST, NULL),                  \
+        OSSL_PARAM_size_t(OSSL_DRBG_PARAM_MIN_ENTROPYLEN, NULL),               \
+        OSSL_PARAM_size_t(OSSL_DRBG_PARAM_MAX_ENTROPYLEN, NULL),               \
+        OSSL_PARAM_size_t(OSSL_DRBG_PARAM_MIN_NONCELEN, NULL),                 \
+        OSSL_PARAM_size_t(OSSL_DRBG_PARAM_MAX_NONCELEN, NULL),                 \
+        OSSL_PARAM_size_t(OSSL_DRBG_PARAM_MAX_PERSLEN, NULL),                  \
+        OSSL_PARAM_size_t(OSSL_DRBG_PARAM_MAX_ADINLEN, NULL),                  \
+        OSSL_PARAM_uint(OSSL_DRBG_PARAM_RESEED_COUNTER, NULL),                 \
+        OSSL_PARAM_time_t(OSSL_DRBG_PARAM_RESEED_TIME, NULL),                  \
+        OSSL_PARAM_uint(OSSL_DRBG_PARAM_RESEED_REQUESTS, NULL),                \
+        OSSL_PARAM_uint64(OSSL_DRBG_PARAM_RESEED_TIME_INTERVAL, NULL)
+
+#define ALCP_RNG_SETTABLE_CTX_COMMON                                           \
+    OSSL_PARAM_uint(OSSL_DRBG_PARAM_RESEED_REQUESTS, NULL),                    \
+        OSSL_PARAM_uint64(OSSL_DRBG_PARAM_RESEED_TIME_INTERVAL, NULL)
 
 #endif /* _OPENSSL_ALCP_prov_RNG_PROV_H */
