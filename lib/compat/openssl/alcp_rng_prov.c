@@ -31,12 +31,15 @@
 
 static const char CIPHER_DEF_PROP[] = "provider=alcp,fips=no";
 
-RNG_CONTEXT();
-
 void
 ALCP_prov_rng_freectx(void* vdrbg)
 {
     ENTER();
+    alc_prov_rng_ctx_p context = vdrbg;
+    if (context->init_flag) {
+        ALCP_prov_rng_uninstantiate(vdrbg);
+    }
+    OPENSSL_free(vdrbg);
     EXIT();
 }
 
@@ -46,10 +49,12 @@ ALCP_prov_rng_newctx(void*                provctx,
                      const OSSL_DISPATCH* parent_dispatch)
 {
     ENTER();
-    EXIT();
-    s_rng_info = s_rng_info;
 
-    return &s_rng_info; // FIXME: Dummy value
+    alc_prov_rng_ctx_p context = OPENSSL_malloc(sizeof(alc_prov_rng_ctx_t));
+    context->init_flag         = false;
+
+    EXIT();
+    return context;
 }
 
 const OSSL_PARAM*
@@ -112,8 +117,33 @@ ALCP_prov_rng_instantiate(void*                vdrbg,
                           const OSSL_PARAM     params[])
 {
     ENTER();
+
+    // Setup what we want from ALCP
+    alc_prov_rng_ctx_p context      = vdrbg;
+    context->pc_rng_info.ri_distrib = ALC_RNG_DISTRIB_UNIFORM;
+    context->pc_rng_info.ri_source  = ALC_RNG_SOURCE_ARCH; // Use SEC RNG
+    context->pc_rng_info.ri_type    = ALC_RNG_TYPE_DESCRETE;
+
+    // Check if that is possible, if not try another way
+    if (alcp_is_error(alcp_rng_supported(&(context->pc_rng_info)))) {
+        context->pc_rng_info.ri_source = ALC_RNG_SOURCE_OS; // 2nd best OS
+        if (alcp_is_error(alcp_rng_supported(&(context->pc_rng_info))))
+            return 0; // error
+    }
+
+    // Allocate memory for the context
+    context->handle.rh_context =
+        malloc(alcp_rng_context_size(&(context->pc_rng_info)));
+
+    // Create the session
+    if (alcp_is_error(
+            alcp_rng_request(&(context->pc_rng_info), &(context->handle)))) {
+        return 0; // error
+    }
+
+    context->init_flag = true;
+
     EXIT();
-    // TODO: Returning Success for now implement the real deal
     return 1;
 }
 
@@ -121,8 +151,14 @@ int
 ALCP_prov_rng_uninstantiate(void* drbg)
 {
     ENTER();
+    alc_prov_rng_ctx_p context = drbg;
+    alcp_rng_finish(&(context->handle)); // Tear down ALCP session
+
+    context->init_flag = false;
+
+    free(context->handle.rh_context); // Release context memory
+
     EXIT();
-    // TODO: Returning Success for now implement the real deal
     return 1;
 }
 
@@ -136,8 +172,12 @@ ALCP_prov_rng_generate(void*                vdrbg,
                        size_t               adin_len)
 {
     ENTER();
+    memset(out, 0, outlen);
+    alc_prov_rng_ctx_p context = vdrbg;
+    if (alcp_is_error(alcp_rng_gen_random(&(context->handle), out, outlen))) {
+        return 0; // Error
+    }
     EXIT();
-    // TODO: Returning Success for now implement the real deal
     return 1;
 }
 

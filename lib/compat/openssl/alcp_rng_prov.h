@@ -47,7 +47,7 @@ struct _alc_prov_rng_ctx
     /* Must be first */
     alc_prov_ctx_t*  pc_prov_ctx;
     alc_rng_handle_t handle;
-    int              enc_flag;
+    int              init_flag;
 
     int               pc_nid;
     EVP_RAND*         pc_evp_rng;
@@ -82,12 +82,6 @@ extern OSSL_FUNC_rand_get_ctx_params_fn      ALCP_prov_rng_get_ctx_params;
 extern OSSL_FUNC_rand_enable_locking_fn ALCP_prov_rng_enable_locking;
 extern OSSL_FUNC_rand_lock_fn           ALCP_prov_rng_lock;
 extern OSSL_FUNC_rand_unlock_fn         ALCP_prov_rng_unlock;
-
-#define RNG_CONTEXT()                                                          \
-    static alc_rng_info_t s_rng_info = { .ri_distrib =                         \
-                                             ALC_RNG_DISTRIB_UNIFORM,          \
-                                         .ri_source = ALC_RNG_SOURCE_OS,       \
-                                         .ri_type   = ALC_RNG_TYPE_DESCRETE }
 
 // TODO: Implement functions which are NULL
 #define CREATE_RNG_DISPATCHERS()                                               \
