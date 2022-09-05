@@ -50,16 +50,17 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
         std::vector<uint8_t> tkey = testingCore.getDs()->getTKey();
         std::vector<uint8_t> outtag(testingCore.getDs()->getTag().size(), 0);
 
-        data.in    = &(ct[0]);
-        data.inl   = ct.size();
-        data.iv    = &(iv[0]);
-        data.ivl   = iv.size();
-        data.out   = &(outpt[0]);
-        data.outl  = data.inl;
-        data.tkey  = &(tkey[0]);
-        data.tkeyl = tkey.size();
-        data.tag   = &(outtag[0]);
-        data.tagl  = outtag.size();
+        data.in         = &(ct[0]);
+        data.inl        = ct.size();
+        data.iv         = &(iv[0]);
+        data.ivl        = iv.size();
+        data.out        = &(outpt[0]);
+        data.outl       = data.inl;
+        data.tkey       = &(tkey[0]);
+        data.tkeyl      = tkey.size();
+        data.tag        = &(outtag[0]);
+        data.tagl       = outtag.size();
+        data.block_size = ct.size();
 
         bool ret = testingCore.getCipherHandler()->testingDecrypt(
             data, testingCore.getDs()->getKey());
@@ -95,16 +96,17 @@ TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
         std::vector<uint8_t> tkey = testingCore.getDs()->getTKey();
         std::vector<uint8_t> outtag(testingCore.getDs()->getTag().size(), 0);
 
-        data.in    = &(pt[0]);
-        data.inl   = pt.size();
-        data.iv    = &(iv[0]);
-        data.ivl   = iv.size();
-        data.out   = &(outct[0]);
-        data.outl  = data.inl;
-        data.tkey  = &(tkey[0]);
-        data.tkeyl = tkey.size();
-        data.tag   = &(outtag[0]);
-        data.tagl  = outtag.size();
+        data.in         = &(pt[0]);
+        data.inl        = pt.size();
+        data.iv         = &(iv[0]);
+        data.ivl        = iv.size();
+        data.out        = &(outct[0]);
+        data.outl       = data.inl;
+        data.tkey       = &(tkey[0]);
+        data.tkeyl      = tkey.size();
+        data.tag        = &(outtag[0]);
+        data.tagl       = outtag.size();
+        data.block_size = pt.size();
 
         bool ret = testingCore.getCipherHandler()->testingEncrypt(
             data, testingCore.getDs()->getKey());
@@ -138,17 +140,19 @@ TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
         std::vector<uint8_t> tkey = testingCore.getDs()->getTKey();
         std::vector<uint8_t> outtag(testingCore.getDs()->getTag().size(), 0);
 
-        data.in    = &(pt[0]);
-        data.inl   = pt.size();
-        data.iv    = &(iv[0]);
-        data.ivl   = iv.size();
-        data.out   = &(outct[0]);
-        data.outl  = data.inl;
-        data.tkey  = &(tkey[0]);
-        data.tkeyl = tkey.size();
-        data.tag   = &(outtag[0]);
-        data.tagl  = outtag.size();
-        bool ret   = testingCore.getCipherHandler()->testingEncrypt(
+        data.in         = &(pt[0]);
+        data.inl        = pt.size();
+        data.iv         = &(iv[0]);
+        data.ivl        = iv.size();
+        data.out        = &(outct[0]);
+        data.outl       = data.inl;
+        data.tkey       = &(tkey[0]);
+        data.tkeyl      = tkey.size();
+        data.tag        = &(outtag[0]);
+        data.tagl       = outtag.size();
+        data.block_size = pt.size();
+
+        bool ret = testingCore.getCipherHandler()->testingEncrypt(
             data, testingCore.getDs()->getKey());
         EXPECT_TRUE(ArraysMatch(outct,
                                 testingCore.getDs()->getCt(),
@@ -177,17 +181,19 @@ TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
         std::vector<uint8_t> tkey = testingCore.getDs()->getTKey();
         std::vector<uint8_t> outtag(testingCore.getDs()->getTag().size(), 0);
 
-        data.in    = &(ct[0]);
-        data.inl   = ct.size();
-        data.iv    = &(iv[0]);
-        data.ivl   = iv.size();
-        data.out   = &(outpt[0]);
-        data.outl  = data.inl;
-        data.tkey  = &(tkey[0]);
-        data.tkeyl = tkey.size();
-        data.tag   = &(outtag[0]);
-        data.tagl  = outtag.size();
-        bool ret   = testingCore.getCipherHandler()->testingDecrypt(
+        data.in         = &(ct[0]);
+        data.inl        = ct.size();
+        data.iv         = &(iv[0]);
+        data.ivl        = iv.size();
+        data.out        = &(outpt[0]);
+        data.outl       = data.inl;
+        data.tkey       = &(tkey[0]);
+        data.tkeyl      = tkey.size();
+        data.tag        = &(outtag[0]);
+        data.tagl       = outtag.size();
+        data.block_size = ct.size();
+
+        bool ret = testingCore.getCipherHandler()->testingDecrypt(
             data, testingCore.getDs()->getKey());
 
         EXPECT_TRUE(ArraysMatch(outpt,

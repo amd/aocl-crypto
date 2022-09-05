@@ -40,10 +40,12 @@ IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t mode,
                              const uint32_t          iv_len,
                              const uint8_t*          key,
                              const uint32_t          key_len,
-                             const uint8_t*          tkey)
+                             const uint8_t*          tkey,
+                             const uint64_t          block_size)
     : m_mode{ mode }
     , m_iv{ iv }
     , m_tkey{ tkey }
+    , m_block_size{ block_size }
 {
     init(key, key_len);
 }
@@ -68,7 +70,7 @@ IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t mode,
             ippsAES_XTSGetSize(&m_ctxSize);
             m_ctx_xts = (IppsAES_XTSSpec*)(new Ipp8u[m_ctxSize]);
             status    = ippsAES_XTSInit(
-                key, key_len, key_len * 2, m_ctx_xts, m_ctxSize);
+                key, key_len, m_block_size * 8, m_ctx_xts, m_ctxSize);
             break;
         default:
             ippsAESGetSize(&m_ctxSize);
@@ -108,11 +110,13 @@ IPPCipherBase::init(const uint8_t* iv,
                     const uint32_t iv_len,
                     const uint8_t* key,
                     const uint32_t key_len,
-                    const uint8_t* tkey)
+                    const uint8_t* tkey,
+                    const uint64_t block_size)
 {
-    m_iv   = iv;
-    m_tkey = tkey;
-    m_key  = key;
+    m_iv         = iv;
+    m_tkey       = tkey;
+    m_key        = key;
+    m_block_size = block_size;
     return init(key, key_len);
 }
 
@@ -153,8 +157,11 @@ IPPCipherBase::init(const uint8_t* key, const uint32_t key_len)
             m_ctx_xts = (IppsAES_XTSSpec*)(new Ipp8u[m_ctxSize]);
 
             /* for xts, pass the key concatenated with tkey */
-            status = ippsAES_XTSInit(
-                m_key, (key_len / 8) * 16, key_len * 2, m_ctx_xts, m_ctxSize);
+            status = ippsAES_XTSInit(m_key,
+                                     (key_len / 8) * 16,
+                                     m_block_size * 8,
+                                     m_ctx_xts,
+                                     m_ctxSize);
             break;
 
         default:

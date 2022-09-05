@@ -32,8 +32,6 @@
 
 // Test blocksizes, append more if needed, size is in bytes
 std::vector<int64_t> blocksizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
-/* FIXME */
-std::vector<int64_t> blocksizes_xts = { 16, 32 };
 
 int
 CipherAes(benchmark::State& state,
@@ -52,20 +50,20 @@ CipherAes(benchmark::State& state,
     uint8_t                    tkey[16];
     alcp::testing::CipherBase* cb;
 
-    alcp::testing::AlcpCipherBase acb =
-        alcp::testing::AlcpCipherBase(alcpMode, iv, 12, key, keylen, tkey);
+    alcp::testing::AlcpCipherBase acb = alcp::testing::AlcpCipherBase(
+        alcpMode, iv, 12, key, keylen, tkey, blockSize);
 
     cb = &acb;
 #ifdef USE_IPP
-    alcp::testing::IPPCipherBase icb =
-        alcp::testing::IPPCipherBase(alcpMode, iv, 12, key, keylen, tkey);
+    alcp::testing::IPPCipherBase icb = alcp::testing::IPPCipherBase(
+        alcpMode, iv, 12, key, keylen, tkey, blockSize);
     if (useipp) {
         cb = &icb;
     }
 #endif
 #ifdef USE_OSSL
-    alcp::testing::OpenSSLCipherBase ocb =
-        alcp::testing::OpenSSLCipherBase(alcpMode, iv, 12, key, keylen, tkey);
+    alcp::testing::OpenSSLCipherBase ocb = alcp::testing::OpenSSLCipherBase(
+        alcpMode, iv, 12, key, keylen, tkey, blockSize);
     if (useossl) {
         cb = &ocb;
     }
@@ -431,17 +429,10 @@ AddBenchmarks()
     BENCHMARK(BENCH_AES_DECRYPT_CFB_256)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_GCM_256)->ArgsProduct({ blocksizes });
 
-    if (useipp) {
-        BENCHMARK(BENCH_AES_ENCRYPT_XTS_128)->ArgsProduct({ blocksizes_xts });
-        BENCHMARK(BENCH_AES_DECRYPT_XTS_128)->ArgsProduct({ blocksizes_xts });
-        BENCHMARK(BENCH_AES_ENCRYPT_XTS_256)->ArgsProduct({ blocksizes_xts });
-        BENCHMARK(BENCH_AES_DECRYPT_XTS_256)->ArgsProduct({ blocksizes_xts });
-    } else {
-        BENCHMARK(BENCH_AES_ENCRYPT_XTS_128)->ArgsProduct({ blocksizes });
-        BENCHMARK(BENCH_AES_DECRYPT_XTS_128)->ArgsProduct({ blocksizes });
-        BENCHMARK(BENCH_AES_ENCRYPT_XTS_256)->ArgsProduct({ blocksizes });
-        BENCHMARK(BENCH_AES_DECRYPT_XTS_256)->ArgsProduct({ blocksizes });
-    }
+    BENCHMARK(BENCH_AES_ENCRYPT_XTS_128)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_XTS_128)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_ENCRYPT_XTS_256)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_XTS_256)->ArgsProduct({ blocksizes });
 
     return 0;
 }

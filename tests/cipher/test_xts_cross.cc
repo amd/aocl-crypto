@@ -101,19 +101,10 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
     int start_loop = BIG_START_LOOP;
     int inc_loop   = SMALL_INC_LOOP;
 
-    /* FIXME Need to update this for ippcp */
-    if (useipp) {
-        max_loop   = 32;
-        start_loop = 16;
-    }
     if (extTC != nullptr) {
         for (int i = start_loop; i < max_loop; i += inc_loop) {
             /* max size supported by XTS is 2 ^ 20 = 1048576 */
             size_t size = 524288 * i;
-
-            /* FIXME Need to update this for ippcp */
-            if (useipp)
-                size = i;
 
             if (!bbxreplay)
                 fr->startRecEvent();
@@ -135,7 +126,6 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
                 data_alc.outl  = data_alc.inl;
                 data_alc.tkey  = &(tkey[0]);
                 data_alc.tkeyl = 16;
-
                 // External Lib Data
                 data_ext.in    = &(ct[0]);
                 data_ext.inl   = ct.size();
@@ -145,6 +135,7 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
                 data_ext.outl  = data_alc.inl;
                 data_ext.tkey  = &(tkey[0]);
                 data_ext.tkeyl = 16;
+                data_ext.block_size = ct.size();
 
                 fr->setRecEvent(key, iv, ct, BIG_DEC);
             } else {
@@ -218,19 +209,10 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
     int start_loop = BIG_START_LOOP;
     int inc_loop   = SMALL_INC_LOOP;
 
-    /* FIXME Need to update this for ippcp */
-    if (useipp) {
-        max_loop   = 32;
-        start_loop = 16;
-    }
     if (extTC != nullptr) {
         for (int i = start_loop; i < max_loop; i += inc_loop) {
             /* max size supported by XTS is 2 ^ 20 = 1048576 */
             size_t size = 524288 * i;
-
-            /* FIXME Need to update this for ippcp */
-            if (useipp)
-                size = i;
 
             if (!bbxreplay)
                 fr->startRecEvent();
@@ -252,7 +234,6 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
                 data_alc.outl  = data_alc.inl;
                 data_alc.tkey  = &(tkey[0]);
                 data_alc.tkeyl = 16;
-
                 // External Lib Data
                 data_ext.in    = &(pt[0]);
                 data_ext.inl   = pt.size();
@@ -262,6 +243,7 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
                 data_ext.outl  = data_alc.inl;
                 data_ext.tkey  = &(tkey[0]);
                 data_ext.tkeyl = 16;
+                data_ext.block_size = pt.size();
 
                 fr->setRecEvent(key, iv, pt, BIG_ENC);
             } else {
@@ -335,19 +317,10 @@ TEST(SYMMETRIC_ENC_256, 256_CROSS_CHECK_BIG)
     int start_loop = BIG_START_LOOP;
     int inc_loop   = SMALL_INC_LOOP;
 
-    /* FIXME Need to update this for ippcp */
-    if (useipp) {
-        max_loop   = 32;
-        start_loop = 16;
-    }
     if (extTC != nullptr) {
         for (int i = start_loop; i < max_loop; i += inc_loop) {
             /* max size supported by XTS is 2 ^ 20 = 1048576 */
             size_t size = 524288 * i;
-
-            /* FIXME Need to update this for ippcp */
-            if (useipp)
-                size = i;
 
             if (!bbxreplay)
                 fr->startRecEvent();
@@ -379,6 +352,7 @@ TEST(SYMMETRIC_ENC_256, 256_CROSS_CHECK_BIG)
                 data_ext.outl  = data_alc.inl;
                 data_ext.tkey  = &(tkey[0]);
                 data_ext.tkeyl = 16;
+                data_ext.block_size = pt.size();
 
                 fr->setRecEvent(key, iv, pt, BIG_ENC);
             } else {
@@ -452,19 +426,10 @@ TEST(SYMMETRIC_DEC_256, 256_CROSS_CHECK_BIG)
     int start_loop = BIG_START_LOOP;
     int inc_loop   = SMALL_INC_LOOP;
 
-    /* FIXME Need to update this for ippcp */
-    if (useipp) {
-        max_loop   = 32;
-        start_loop = 16;
-    }
     if (extTC != nullptr) {
         for (int i = start_loop; i < max_loop; i += inc_loop) {
             /* max size supported by XTS is 2 ^ 20 = 1048576 */
             size_t size = 524288 * i;
-
-            /* FIXME Need to update this for ippcp */
-            if (useipp)
-                size = i;
 
             if (!bbxreplay)
                 fr->startRecEvent();
@@ -496,6 +461,7 @@ TEST(SYMMETRIC_DEC_256, 256_CROSS_CHECK_BIG)
                 data_ext.outl  = data_alc.inl;
                 data_ext.tkey  = &(tkey[0]);
                 data_ext.tkeyl = 16;
+                data_ext.block_size = ct.size();
 
                 fr->setRecEvent(key, iv, ct, BIG_DEC);
             } else {
@@ -567,7 +533,6 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
 
     int max_loop = SMALL_MAX_LOOP;
 
-    /*FIXME Need to update this for ippcp */
     if (useipp) {
         max_loop = 32;
     }
@@ -603,6 +568,7 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
                 data_ext.outl  = data_alc.inl;
                 data_ext.tkey  = &(tkey[0]);
                 data_ext.tkeyl = 16;
+                data_ext.block_size = pt.size();
 
                 fr->setRecEvent(key, iv, pt, SMALL_ENC);
             } else {
@@ -652,7 +618,7 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
         fr = new ExecRecPlay(std::string(STR_MODE) + "_DEC_128_SMALL",
                              std::string(STR_MODE) + "_TEST_DATA",
                              true);
-        fr->fastForward(SMALL_ENC);
+        fr->fastForward(SMALL_DEC);
     } else
         fr = new ExecRecPlay(std::string(STR_MODE) + "_DEC_128_SMALL",
                              std::string(STR_MODE) + "_TEST_DATA",
@@ -710,6 +676,7 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
                 data_ext.outl  = data_alc.inl;
                 data_ext.tkey  = &(tkey[0]);
                 data_ext.tkeyl = 16;
+                data_ext.block_size = ct.size();
 
                 fr->setRecEvent(key, iv, ct, SMALL_DEC);
             } else {
@@ -817,6 +784,7 @@ TEST(SYMMETRIC_ENC_256, 256_CROSS_CHECK_SMALL)
                 data_ext.outl  = data_alc.inl;
                 data_ext.tkey  = &(tkey[0]);
                 data_ext.tkeyl = 16;
+                data_ext.block_size = pt.size();
 
                 fr->setRecEvent(key, iv, pt, SMALL_ENC);
             } else {
@@ -924,6 +892,7 @@ TEST(SYMMETRIC_DEC_256, 256_CROSS_CHECK_SMALL)
                 data_ext.outl  = data_alc.inl;
                 data_ext.tkey  = &(tkey[0]);
                 data_ext.tkeyl = 16;
+                data_ext.block_size = ct.size();
 
                 fr->setRecEvent(key, iv, ct, SMALL_DEC);
             } else {

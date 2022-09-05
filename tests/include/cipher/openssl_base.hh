@@ -45,6 +45,7 @@ class OpenSSLCipherBase : public CipherBase
     const uint8_t*    m_key     = nullptr;
     uint32_t          m_key_len = 0;
     const uint8_t*    m_tkey    = nullptr;
+    // const uint64_t    m_block_size = 0;
 
     void              handleErrors();
     const EVP_CIPHER* alcpModeKeyLenToCipher(alc_cipher_mode_t mode,
@@ -61,7 +62,8 @@ class OpenSSLCipherBase : public CipherBase
                       const uint32_t          iv_len,
                       const uint8_t*          key,
                       const uint32_t          key_len,
-                      const uint8_t*          tkey);
+                      const uint8_t*          tkey,
+                      const uint64_t          block_size);
     OpenSSLCipherBase(const alc_cipher_mode_t mode,
                       const uint8_t*          iv,
                       const uint32_t          iv_len,
@@ -76,7 +78,8 @@ class OpenSSLCipherBase : public CipherBase
               const uint32_t iv_len,
               const uint8_t* key,
               const uint32_t key_len,
-              const uint8_t* tkey);
+              const uint8_t* tkey,
+              const uint64_t block_size);
     bool init(const uint8_t* iv, const uint8_t* key, const uint32_t key_len);
     bool init(const uint8_t* key, const uint32_t key_len);
     bool encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt);

@@ -47,8 +47,9 @@ class IPPCipherBase : public CipherBase
     const uint8_t*    m_iv;
     const uint8_t*    m_key;
     uint32_t          m_key_len;
-    const uint8_t*    m_tkey    = NULL;
-    int               m_ctxSize = 0;
+    const uint8_t*    m_tkey       = NULL;
+    int               m_ctxSize    = 0;
+    uint64_t          m_block_size = 0;
     bool              alcpModeToFuncCall(const uint8_t* in,
                                          uint8_t*       out,
                                          size_t         len,
@@ -91,7 +92,8 @@ class IPPCipherBase : public CipherBase
                   const uint32_t          iv_len,
                   const uint8_t*          key,
                   const uint32_t          key_len,
-                  const uint8_t*          tkey);
+                  const uint8_t*          tkey,
+                  const uint64_t          block_size);
 
     ~IPPCipherBase();
     bool init(const uint8_t* iv,
@@ -103,7 +105,8 @@ class IPPCipherBase : public CipherBase
               const uint32_t iv_len,
               const uint8_t* key,
               const uint32_t key_len,
-              const uint8_t* tkey);
+              const uint8_t* tkey,
+              const uint64_t block_size);
     bool init(const uint8_t* iv, const uint8_t* key, const uint32_t key_len);
     bool init(const uint8_t* key, const uint32_t key_len);
     bool encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt);

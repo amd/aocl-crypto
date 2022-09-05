@@ -48,6 +48,7 @@ typedef struct
     uint64_t       tagl;
     uint8_t*       tkey;  // tweak key
     uint64_t       tkeyl; // tweak key len
+    uint64_t       block_size;
 } alcp_data_ex_t;
 
 typedef enum
@@ -193,16 +194,17 @@ class CipherBase
                       const uint32_t iv_len,
                       const uint8_t* key,
                       const uint32_t key_len,
-                      const uint8_t* tkey)                        = 0;
+                      const uint8_t* tkey,
+                      const uint64_t block_size)                  = 0;
     virtual bool encrypt(const uint8_t* plaintxt,
                          size_t         len,
-                         uint8_t*       ciphertxt)  = 0;
-    virtual bool encrypt(alcp_data_ex_t data) = 0;
+                         uint8_t*       ciphertxt)                      = 0;
+    virtual bool encrypt(alcp_data_ex_t data)                     = 0;
     virtual bool decrypt(const uint8_t* ciphertxt,
                          size_t         len,
-                         uint8_t*       plaintxt)   = 0;
-    virtual bool decrypt(alcp_data_ex_t data) = 0;
-    virtual void reset()                      = 0;
+                         uint8_t*       plaintxt)                       = 0;
+    virtual bool decrypt(alcp_data_ex_t data)                     = 0;
+    virtual void reset()                                          = 0;
     virtual ~CipherBase(){};
 };
 

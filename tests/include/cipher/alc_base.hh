@@ -45,6 +45,7 @@ class AlcpCipherBase : public CipherBase
     alc_cipher_mode_t   m_mode;
     const uint8_t*      m_iv;
     const uint8_t*      m_tkey = nullptr;
+    // uint64_t            m_block_size;
 
   public:
     AlcpCipherBase() {}
@@ -62,7 +63,8 @@ class AlcpCipherBase : public CipherBase
                    const uint32_t          iv_len,
                    const uint8_t*          key,
                    const uint32_t          key_len,
-                   const uint8_t*          tkey);
+                   const uint8_t*          tkey,
+                   const uint64_t          block_size);
     /**
      * @brief Construct a new Alcp Base object - Manual initilization needed,
      * run alcpInit
@@ -100,7 +102,8 @@ class AlcpCipherBase : public CipherBase
               const uint32_t iv_len,
               const uint8_t* key,
               const uint32_t key_len,
-              const uint8_t* tkey);
+              const uint8_t* tkey,
+              const uint64_t block_size);
     bool init(const uint8_t* iv,
               uint32_t       iv_len,
               const uint8_t* key,

@@ -102,7 +102,8 @@ OpenSSLCipherBase::OpenSSLCipherBase(const alc_cipher_mode_t mode,
                                      const uint32_t          iv_len,
                                      const uint8_t*          key,
                                      const uint32_t          key_len,
-                                     const uint8_t*          tkey)
+                                     const uint8_t*          tkey,
+                                     const uint64_t          block_size)
     : m_mode{ mode }
     , m_iv{ iv }
     , m_iv_len{ iv_len }
@@ -110,7 +111,7 @@ OpenSSLCipherBase::OpenSSLCipherBase(const alc_cipher_mode_t mode,
     , m_key_len{ key_len }
     , m_tkey{ tkey }
 {
-    init(iv, iv_len, key, key_len, tkey);
+    init(iv, iv_len, key, key_len, tkey, block_size);
 }
 
 OpenSSLCipherBase::OpenSSLCipherBase(const alc_cipher_mode_t mode,
@@ -154,7 +155,8 @@ OpenSSLCipherBase::init(const uint8_t* iv,
                         const uint32_t iv_len,
                         const uint8_t* key,
                         const uint32_t key_len,
-                        const uint8_t* tkey)
+                        const uint8_t* tkey,
+                        const uint64_t block_size)
 {
     m_tkey   = tkey;
     m_iv     = iv;
