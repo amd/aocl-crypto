@@ -26,8 +26,7 @@
  *
  */
 
-#include "digest/sha2_512.hh"
-
+#include "digest/sha2_384.hh"
 #include "utils/copy.hh"
 
 namespace alcp::digest {
