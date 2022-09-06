@@ -36,6 +36,7 @@
 #include "error.hh"
 #include "key.hh"
 #include "types.hh"
+#include "utils/copy.hh"
 
 namespace alcp::cipher::vaes {
 
@@ -300,40 +301,43 @@ EncryptXtsAvx512(const uint8_t* pSrc,
 
         src_text_1 = (lastTweak ^ src_text_1);
 
-        memcpy((uint8_t*)p_dest512,
-               (uint8_t*)&src_text_1,
-               (unsigned long)(blocks * 16));
-        memcpy((uint8_t*)p_dest512 + (16 * blocks),
-               (uint8_t*)&src_text_1 + (16 * (blocks - 1)),
-               extra_bytes_in_message_block);
+        utils::CopyBytes((uint8_t*)p_dest512,
+                         (uint8_t*)&src_text_1,
+                         (unsigned long)(blocks * 16));
+
+        utils::CopyBytes(((uint8_t*)p_dest512 + (16 * blocks)),
+                         (const uint8_t*)&src_text_1 + (16 * (blocks - 1)),
+                         extra_bytes_in_message_block);
+
     } else {
-        memcpy((uint8_t*)p_dest512,
-               (uint8_t*)p_dest512 - 16,
-               extra_bytes_in_message_block);
+        utils::CopyBytes((uint8_t*)p_dest512,
+                         (uint8_t*)p_dest512 - 16,
+                         extra_bytes_in_message_block);
     }
     if (extra_bytes_in_message_block) {
         __m512i stealed_text, temp_tweak;
 
-        memcpy((uint8_t*)&temp_tweak,
-               (uint8_t*)&lastTweak + ((16 * (blocks))),
-               (16));
+        utils::CopyBytes((uint8_t*)&temp_tweak,
+                         (uint8_t*)&lastTweak + ((16 * (blocks))),
+                         (16));
 
-        memcpy((uint8_t*)&stealed_text + extra_bytes_in_message_block,
-               (uint8_t*)p_dest512
-                   + (extra_bytes_in_message_block + (16 * (blocks - 1))),
-               (16 - extra_bytes_in_message_block));
-        memcpy((uint8_t*)&stealed_text,
-               (uint8_t*)p_src512 + ((16 * (blocks))),
-               (extra_bytes_in_message_block));
+        utils::CopyBytes(
+            (uint8_t*)&stealed_text + extra_bytes_in_message_block,
+            (uint8_t*)p_dest512
+                + (extra_bytes_in_message_block + (16 * (blocks - 1))),
+            (16 - extra_bytes_in_message_block));
+        utils::CopyBytes((uint8_t*)&stealed_text,
+                         (uint8_t*)p_src512 + ((16 * (blocks))),
+                         (extra_bytes_in_message_block));
 
         stealed_text = _mm512_xor_epi64(temp_tweak, stealed_text);
 
         AesEncrypt(&stealed_text, p_key128, nRounds);
 
         stealed_text = _mm512_xor_epi64(temp_tweak, stealed_text);
-        memcpy((uint8_t*)p_dest512 + (16 * (blocks - 1)),
-               (uint8_t*)&stealed_text,
-               16);
+        utils::CopyBytes((uint8_t*)p_dest512 + (16 * (blocks - 1)),
+                         (uint8_t*)&stealed_text,
+                         16);
     }
     return ALC_ERROR_NONE;
 }
@@ -636,34 +640,35 @@ DecryptXtsAvx512(const uint8_t* pSrc,
 
         src_text_1 = _mm512_xor_epi64(lastTweak, src_text_1);
 
-        memcpy((uint8_t*)p_dest512,
-               (uint8_t*)&src_text_1,
-               (unsigned long)(blocks * 16));
-        memcpy((uint8_t*)p_dest512 + (16 * blocks),
-               (uint8_t*)&src_text_1 + (16 * (blocks - 1)),
-               extra_bytes_in_message_block);
+        utils::CopyBytes((uint8_t*)p_dest512,
+                         (uint8_t*)&src_text_1,
+                         (unsigned long)(blocks * 16));
+        utils::CopyBytes((uint8_t*)p_dest512 + (16 * blocks),
+                         (uint8_t*)&src_text_1 + (16 * (blocks - 1)),
+                         extra_bytes_in_message_block);
     }
     if (extra_bytes_in_message_block) {
         __m512i stealed_text, tweak_1;
 
-        memcpy(
+        utils::CopyBytes(
             (uint8_t*)&tweak_1, (uint8_t*)&lastTweak + ((16 * (blocks))), (16));
 
-        memcpy((uint8_t*)&stealed_text + extra_bytes_in_message_block,
-               (uint8_t*)p_dest512
-                   + (extra_bytes_in_message_block + (16 * (blocks - 1))),
-               (16 - extra_bytes_in_message_block));
-        memcpy((uint8_t*)&stealed_text,
-               (uint8_t*)p_src512 + ((16 * (blocks))),
-               (extra_bytes_in_message_block));
+        utils::CopyBytes(
+            (uint8_t*)&stealed_text + extra_bytes_in_message_block,
+            (uint8_t*)p_dest512
+                + (extra_bytes_in_message_block + (16 * (blocks - 1))),
+            (16 - extra_bytes_in_message_block));
+        utils::CopyBytes((uint8_t*)&stealed_text,
+                         (uint8_t*)p_src512 + ((16 * (blocks))),
+                         (extra_bytes_in_message_block));
         stealed_text = _mm512_xor_epi64(tweak_1, stealed_text);
 
         AesDecrypt(&stealed_text, p_key128, nRounds);
 
         stealed_text = _mm512_xor_epi64(tweak_1, stealed_text);
-        memcpy((uint8_t*)p_dest512 + (16 * (blocks - 1)),
-               (uint8_t*)&stealed_text,
-               16);
+        utils::CopyBytes((uint8_t*)p_dest512 + (16 * (blocks - 1)),
+                         (uint8_t*)&stealed_text,
+                         16);
     }
 
     return ALC_ERROR_NONE;
