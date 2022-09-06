@@ -26,34 +26,7 @@
  *
  */
 
-#include "context.hh"
-#include "debug.hh"
-#include "error.hh"
-#include <alcp/alcp.h>
-#include <alcp/types.h>
-#include <iostream>
-#include <ippcp.h>
-#include <sstream>
-#include <stdint.h>
-#include <string.h>
-
-IppStatus
-ippsAESGetSize(int* pSize)
-{
-    printMsg("GetSize");
-    *pSize = sizeof(ipp_wrp_aes_ctx);
-    printMsg("GetSize End");
-    return ippStsNoErr;
-}
-
-IppStatus
-ippsAES_GCMGetSize(int* pSize)
-{
-    printMsg("GCM GetSize");
-    *pSize = sizeof(ipp_wrp_aes_aead_ctx);
-    printMsg("GCM GetSize End");
-    return ippStsNoErr;
-}
+#include "ipp_aes_init_common.hh"
 
 IppStatus
 ippsAES_XTSGetSize(int* pSize)
@@ -61,72 +34,6 @@ ippsAES_XTSGetSize(int* pSize)
     printMsg("XTS GetSize");
     *pSize = sizeof(ipp_wrp_aes_xts_ctx);
     printMsg("XTS GetSize End");
-    return ippStsNoErr;
-}
-
-IppStatus
-ippsAESInit(const Ipp8u* pKey, int keyLen, IppsAESSpec* pCtx, int ctxSize)
-{
-    printMsg("Init");
-    std::stringstream ss;
-    ss << "KeyLength:" << keyLen;
-    printMsg(ss.str());
-    ipp_wrp_aes_ctx* context = reinterpret_cast<ipp_wrp_aes_ctx*>(pCtx);
-    if (pKey != nullptr) {
-        context->cinfo.ci_type          = ALC_CIPHER_TYPE_AES;
-        context->cinfo.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
-        context->cinfo.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
-        context->cinfo.ci_key_info.key  = (Uint8*)pKey;
-        context->cinfo.ci_key_info.len  = keyLen * 8;
-        context->handle.ch_context      = nullptr;
-    } else {
-        if (context->handle.ch_context != nullptr) {
-            alcp_cipher_finish(&(context->handle));
-            free(context->handle.ch_context);
-            context->handle.ch_context = nullptr;
-        }
-    }
-    printMsg("Init End");
-    return ippStsNoErr;
-}
-
-IppStatus
-ippsAES_GCMInit(const Ipp8u*      pKey,
-                int               keyLen,
-                IppsAES_GCMState* pState,
-                int               ctxSize)
-{
-    printMsg("GCM Init");
-    std::stringstream ss;
-    ss << "KeyLength:" << keyLen;
-    printMsg(ss.str());
-    ipp_wrp_aes_ctx* context_dec =
-        &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->decrypt_ctx);
-    ipp_wrp_aes_ctx* context_enc =
-        &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->encrypt_ctx);
-    if (pKey != nullptr) {
-        context_dec->cinfo.ci_type              = ALC_CIPHER_TYPE_AES;
-        context_dec->cinfo.ci_key_info.type     = ALC_KEY_TYPE_SYMMETRIC;
-        context_dec->cinfo.ci_key_info.fmt      = ALC_KEY_FMT_RAW;
-        context_dec->cinfo.ci_key_info.key      = (Uint8*)pKey;
-        context_dec->cinfo.ci_key_info.len      = keyLen * 8;
-        context_dec->cinfo.ci_algo_info.ai_mode = ALC_AES_MODE_GCM;
-        context_dec->handle.ch_context          = nullptr;
-        context_enc->cinfo                      = context_dec->cinfo;
-        context_enc->handle.ch_context          = nullptr;
-    } else {
-        if (context_dec->handle.ch_context != nullptr) {
-            alcp_cipher_finish(&(context_dec->handle));
-            free(context_dec->handle.ch_context);
-            context_dec->handle.ch_context = nullptr;
-        }
-        if (context_enc->handle.ch_context != nullptr) {
-            alcp_cipher_finish(&(context_enc->handle));
-            free(context_enc->handle.ch_context);
-            context_enc->handle.ch_context = nullptr;
-        }
-    }
-    printMsg("GCM Init End");
     return ippStsNoErr;
 }
 

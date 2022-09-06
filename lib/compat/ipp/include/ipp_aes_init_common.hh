@@ -26,29 +26,33 @@
  *
  */
 
+#pragma once
+
 #include "context.hh"
+#include "debug.hh"
+#include "error.hh"
+#include <alcp/alcp.h>
+#include <alcp/types.h>
+#include <iostream>
 #include <ippcp.h>
+#include <sstream>
+#include <stdint.h>
+#include <string.h>
 
-// IppStatus
-// ippsAESGetSize(int* pSize)
-// {
-//     // Return context size
-//     *pSize = sizeof(ipp_wrp_aes_ctx);
-//     return ippStsNoErr;
-// }
+IppStatus
+ippsAESGetSize(int* pSize);
 
-// IppStatus
-// ippsAES_XTSGetSize(int* pSize)
-// {
-//     // Return context size
-//     *pSize = sizeof(ipp_wrp_aes_ctx);
-//     return ippStsNoErr;
-// }
+IppStatus
+ippsAES_GCMGetSize(int* pSize);
 
-// IppStatus
-// ippsAES_GCMGetSize(int* pSize)
-// {
-//     // Return context size
-//     *pSize = sizeof(ipp_wrp_aes_ctx);
-//     return ippStsNoErr;
-// }
+IppStatus
+ippsAES_XTSGetSize(int* pSize);
+
+IppStatus
+ippsAESInit(const Ipp8u* pKey, int keyLen, IppsAESSpec* pCtx, int ctxSize);
+
+IppStatus
+ippsAES_GCMInit(const Ipp8u*      pKey,
+                int               keyLen,
+                IppsAES_GCMState* pState,
+                int               ctxSize);

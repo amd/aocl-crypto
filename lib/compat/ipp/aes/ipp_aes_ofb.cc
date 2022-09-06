@@ -26,9 +26,32 @@
  *
  */
 
-#include "context.hh"
-#include <alcp/alcp.h>
-#include <iostream>
-#include <ippcp.h>
-#include <stdint.h>
-#include <string.h>
+#include "aes_common.hh"
+
+// OFB Mode
+
+IppStatus
+ippsAESDecryptOFB(const Ipp8u*       pSrc,
+                  Ipp8u*             pDst,
+                  int                len,
+                  int                ofbBlkSize,
+                  const IppsAESSpec* pCtx,
+                  Ipp8u*             pIV)
+{
+    printMsg("OFB-MODE DEC");
+    return alcp_encdecAES(
+        pSrc, pDst, len, pCtx, pIV, ofbBlkSize, ALC_AES_MODE_OFB, false);
+}
+
+IppStatus
+ippsAESEncryptOFB(const Ipp8u*       pSrc,
+                  Ipp8u*             pDst,
+                  int                len,
+                  int                ofbBlkSize,
+                  const IppsAESSpec* pCtx,
+                  Ipp8u*             pIV)
+{
+    printMsg("OFB-MODE ENC");
+    return alcp_encdecAES(
+        pSrc, pDst, len, pCtx, pIV, ofbBlkSize, ALC_AES_MODE_OFB, true);
+}

@@ -1,5 +1,5 @@
 # Added aocl-compat as a seperate liberary
-FILE(GLOB IPP_SRCS "*.cc" )
+FILE(GLOB IPP_SRCS "*.cc" "aes/*.cc" )
 ADD_LIBRARY(ipp-compat 
 	${IPP_SRCS}
 	)
