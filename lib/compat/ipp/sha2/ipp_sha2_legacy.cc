@@ -26,28 +26,7 @@
  *
  */
 
-#include "context.hh"
-#include "error.hh"
-#include <alcp/alcp.h>
-#include <alcp/types.h>
-#include <iostream>
-#include <ippcp.h>
-#include <stdint.h>
-#include <string.h>
-
-IppStatus
-alcp_DigestUpdate(const Ipp8u* pSrc, int len, ipp_wrp_sha2_ctx* pState)
-{
-    ipp_wrp_sha2_ctx* context = pState;
-    alc_error_t       err;
-
-    err = alcp_digest_update(&(context->handle), (const Uint8*)pSrc, len);
-    if (alcp_is_error(err)) {
-        printErr("Unable to compute SHA2 hash\n");
-        return ippStsUnderRunErr;
-    }
-    return ippStsNoErr;
-}
+#include "ipp_sha2_common.hh"
 
 IppStatus
 ippsSHA224Update(const Ipp8u* pSrc, int len, IppsSHA224State* pState)
@@ -87,45 +66,6 @@ ippsSHA512Update(const Ipp8u* pSrc, int len, IppsSHA512State* pState)
     IppStatus         sts     = alcp_DigestUpdate(pSrc, len, context);
     printMsg("SHA512 Update End");
     return sts;
-}
-
-IppStatus
-ippsHashUpdate(const Ipp8u* pSrc, int len, IppsHashState* pState)
-{
-    printMsg("Hash Update");
-    ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
-    IppStatus         sts     = alcp_DigestUpdate(pSrc, len, context);
-    printMsg("Hash Update End");
-    return sts;
-}
-
-IppStatus
-ippsHashUpdate_rmf(const Ipp8u* pSrc, int len, IppsHashState_rmf* pState)
-{
-    printMsg("Hash Update RMF");
-    ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
-    IppStatus         sts     = alcp_DigestUpdate(pSrc, len, context);
-    printMsg("Hash Update RMF End");
-    return sts;
-}
-
-IppStatus
-alcp_DigestFinal(Ipp8u* pMD, ipp_wrp_sha2_ctx* pState)
-{
-    ipp_wrp_sha2_ctx* context = pState;
-    alc_error_t       err;
-
-    alcp_digest_finalize(&(context->handle), nullptr, 0);
-
-    err = alcp_digest_copy(
-        &(context->handle), (Uint8*)pMD, context->dinfo.dt_len);
-    if (alcp_is_error(err)) {
-        printErr("Unable to copy digest\n");
-        return ippStsUnderRunErr;
-    }
-    // Messup digest to test wrapper
-    // *(reinterpret_cast<Uint8*>(pMD)) = 0x00;
-    return ippStsNoErr;
 }
 
 IppStatus
@@ -173,29 +113,5 @@ ippsSHA512Final(Ipp8u* pMD, IppsSHA512State* pState)
     printMsg("SHA512 Final");
     sts = alcp_DigestFinal(pMD, context);
     printMsg("SHA512 Final End");
-    return sts;
-}
-
-IppStatus
-ippsHashFinal(Ipp8u* pMD, IppsHashState* pState)
-{
-    ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
-    IppStatus         sts;
-
-    printMsg("Hash Final");
-    sts = alcp_DigestFinal(pMD, context);
-    printMsg("Hash Final End");
-    return sts;
-}
-
-IppStatus
-ippsHashFinal_rmf(Ipp8u* pMD, IppsHashState_rmf* pState)
-{
-    ipp_wrp_sha2_ctx* context = reinterpret_cast<ipp_wrp_sha2_ctx*>(pState);
-    IppStatus         sts;
-
-    printMsg("Hash Final RMF");
-    sts = alcp_DigestFinal(pMD, context);
-    printMsg("Hash Final RMF End");
     return sts;
 }
