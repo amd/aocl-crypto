@@ -29,14 +29,16 @@
 #include <cstdlib>
 
 #include "system_rng.hh"
+// Enable debug for debugging the code
+// #define DEBUG
 
 namespace alcp::random_number {
 
 #if defined(__linux__)
-#include <fcntl.h>
-#include <unistd.h>
-#define ALCP_CONFIG_OS_HAS_DEVRANDOM 1
-#else
+// #include <fcntl.h>
+// #include <unistd.h>
+// #define ALCP_CONFIG_OS_HAS_DEVRANDOM 1
+// #else
 #include <sys/random.h>
 #define ALCP_CONFIG_OS_HAS_GETRANDOM 1
 #endif
@@ -51,8 +53,11 @@ class SystemRngImpl
 
     ~SystemRngImpl() {}
 
-    static void randomize(Uint8 output[], size_t length)
+    static alc_error_t randomize(Uint8 output[], size_t length)
     {
+#ifdef DEBUG
+        printf("Engine system_randomize_devrandom\n");
+#endif
         static int m_fd = -1;
         size_t     out  = 0;
 
@@ -70,30 +75,34 @@ class SystemRngImpl
                 /* THROW HERE */
             }
         }
+        return ALC_ERROR_NONE;
     }
 };
 
-#elif defined(ALCP_OS_HAS_GETRANDOM)
+#elif defined(ALCP_CONFIG_OS_HAS_GETRANDOM)
 
 class SystemRngImpl
 {
   public:
-    static void randomize(Uint8 output[], size_t length)
+    static alc_error_t randomize(Uint8 output[], size_t length)
     {
+#ifdef DEBUG
+        printf("Engine system_randomize_getrandom\n");
+#endif
         const int flag = 0;
-        size_t    out  = ::getrandom(&output[0], length, flag);
+        size_t    out  = getrandom(&output[0], length, flag);
 
         for (int i = 0; i < 10; i++) {
-            if (out < size) {
-                auto delta = size - out;
-                out += ::getrandom(&output[out], length, flag);
+            if (out < length) {
+                auto delta = length - out;
+                out += getrandom(&output[out], delta, flag);
             }
         }
 
-        if (out != size) // not enough entropy , throw here,
-            return;
+        if (out != length) // not enough entropy , throw here,
+            return ALC_ERROR_NO_ENTROPY;
 
-        return;
+        return ALC_ERROR_NONE;
     }
 };
 
@@ -105,10 +114,10 @@ SystemRng::SystemRng(const alc_rng_info_t& rRngInfo)
     // UNUSED(rRngInfo);
 }
 
-void
+alc_error_t
 SystemRng::randomize(Uint8 output[], size_t length)
 {
-    SystemRngImpl::randomize(output, length);
+    return SystemRngImpl::randomize(output, length);
 }
 
 bool

@@ -45,7 +45,7 @@ namespace alcp { namespace random_number {
       private:
       public:
         explicit HardwareRng(const alc_rng_info_t& rRngInfo);
-        void        randomize(Uint8 output[], size_t length) override;
+        alc_error_t randomize(Uint8 output[], size_t length) override;
         std::string name() const override { return "HwRNG"; }
         Uint8       nextByte();
         bool        isSeeded() const override;

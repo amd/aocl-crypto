@@ -50,7 +50,7 @@ namespace random_number {
          * \param        length          length of output
          * \throws       RngNotSeeded    exception (if available)
          */
-        virtual void randomize(Uint8 output[], size_t length) = 0;
+        virtual alc_error_t randomize(Uint8 output[], size_t length) = 0;
 
         /**
          * \return  Name of the RNG

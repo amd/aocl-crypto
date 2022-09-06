@@ -26,30 +26,67 @@
  *
  */
 
-#pragma once
+#include <cstdlib>
 
-#include "rng.hh"
-#include "types.hh"
+// Enable debug for debugging the code
+// #define DEBUG
 
-namespace alcp { namespace random_number {
+#include "hardware_rng.hh"
 
-    /**
-     * RNG provided by the operating system
-     *
-     */
-    class SystemRng : public IRng
+#ifdef USE_AOCL_SRNG
+#include "secrng.h"
+#endif
+
+namespace alcp::random_number {
+
+class HardwareRngImpl
+{
+  public:
+    static alc_error_t randomize(Uint8 output[], size_t length)
     {
-      public:
-        SystemRng(const alc_rng_info_t& rRngInfo);
-        alc_error_t randomize(Uint8 output[], size_t length) override;
-        std::string name() const override { return "OsRng"; }
-        bool        isSeeded() const override;
-        size_t      reseed() override;
+#ifdef DEBUG
+        printf("Engine hardware_randomize\n");
+#endif
+#ifdef USE_AOCL_SRNG
+        int opt;
+        opt = get_rdrand_bytes_arr(
+            output,
+            length,
+            100 // Retires is hard coded as 100, may be add this to context.
+        );
+        if (opt != SECRNG_SUCCESS) {
+            return ALC_ERROR_NO_ENTROPY;
+        } else {
+            return ALC_ERROR_NONE;
+        }
+#else
+        return ALC_ERROR_NOT_SUPPORTED; // Error not implemented
+#endif
+    }
+};
 
-      private:
-        Uint32 m_fd;
-        // class Impl;
-        // std::unique_ptr<Impl> m_pimpl;
-    };
+HardwareRng::HardwareRng(const alc_rng_info_t& rRngInfo)
+//: m_pimpl{ std::make_unique<SystemRng::Impl>() }
+{
+    // UNUSED(rRngInfo);
+}
 
-}} // namespace alcp::random_number
+alc_error_t
+HardwareRng::randomize(Uint8 output[], size_t length)
+{
+    return HardwareRngImpl::randomize(output, length);
+}
+
+bool
+HardwareRng::isSeeded() const
+{
+    return true;
+}
+
+size_t
+HardwareRng::reseed()
+{
+    return 0;
+}
+
+} // namespace alcp::random_number
