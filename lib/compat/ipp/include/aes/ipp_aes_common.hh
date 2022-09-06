@@ -28,9 +28,9 @@
 
 #pragma once
 
-#include "context.hh"
-#include "debug.hh"
-#include "error.hh"
+#include "common/context.hh"
+#include "common/debug.hh"
+#include "common/error.hh"
 #include <alcp/alcp.h>
 #include <alcp/types.h>
 #include <iostream>

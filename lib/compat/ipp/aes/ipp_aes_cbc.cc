@@ -26,7 +26,7 @@
  *
  */
 
-#include "aes_common.hh"
+#include "aes/ipp_aes_common.hh"
 
 // CBC Mode
 IppStatus

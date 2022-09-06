@@ -11,5 +11,3 @@ TARGET_INCLUDE_DIRECTORIES(ipp-compat PRIVATE include)
 
 # Include ALCP header files
 TARGET_INCLUDE_DIRECTORIES(ipp-compat PRIVATE ${PROJECT_SOURCE_DIR}/include)
-
-

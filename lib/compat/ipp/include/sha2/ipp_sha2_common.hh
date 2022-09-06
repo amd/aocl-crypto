@@ -23,36 +23,20 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
  */
 
-#pragma once
-
-#include "context.hh"
-#include "debug.hh"
-#include "error.hh"
+#include "common/context.hh"
+#include "common/debug.hh"
+#include "common/error.hh"
 #include <alcp/alcp.h>
 #include <alcp/types.h>
 #include <iostream>
 #include <ippcp.h>
-#include <sstream>
 #include <stdint.h>
 #include <string.h>
 
 IppStatus
-ippsAESGetSize(int* pSize);
+alcp_DigestUpdate(const Ipp8u* pSrc, int len, ipp_wrp_sha2_ctx* pState);
 
 IppStatus
-ippsAES_GCMGetSize(int* pSize);
-
-IppStatus
-ippsAES_XTSGetSize(int* pSize);
-
-IppStatus
-ippsAESInit(const Ipp8u* pKey, int keyLen, IppsAESSpec* pCtx, int ctxSize);
-
-IppStatus
-ippsAES_GCMInit(const Ipp8u*      pKey,
-                int               keyLen,
-                IppsAES_GCMState* pState,
-                int               ctxSize);
+alcp_DigestFinal(Ipp8u* pMD, ipp_wrp_sha2_ctx* pState);

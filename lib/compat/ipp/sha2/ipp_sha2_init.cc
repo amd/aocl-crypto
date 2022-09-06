@@ -26,8 +26,8 @@
  *
  */
 
-#include "context.hh"
-#include "error.hh"
+#include "common/context.hh"
+#include "common/error.hh"
 #include <alcp/alcp.h>
 #include <alcp/types.h>
 #include <iostream>

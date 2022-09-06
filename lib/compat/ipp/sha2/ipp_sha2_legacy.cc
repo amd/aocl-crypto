@@ -26,7 +26,7 @@
  *
  */
 
-#include "ipp_sha2_common.hh"
+#include "sha2/ipp_sha2_common.hh"
 
 IppStatus
 ippsSHA224Update(const Ipp8u* pSrc, int len, IppsSHA224State* pState)

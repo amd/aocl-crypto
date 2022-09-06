@@ -26,7 +26,7 @@
  *
  */
 
-#include "ipp_aes_init_common.hh"
+#include "aes/ipp_aes_init_common.hh"
 
 IppStatus
 ippsAESGetSize(int* pSize)

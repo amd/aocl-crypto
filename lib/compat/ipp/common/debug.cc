@@ -25,7 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "debug.hh"
+#include "common/debug.hh"
 #include <alcp/types.h>
 #include <iostream>
 #include <sstream>
