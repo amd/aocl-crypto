@@ -25,44 +25,31 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
+#pragma once
+
 #include "rng.hh"
-#include <iostream>
+#include "types.hh"
 
-#ifdef USE_AOCL_SRNG
-#include "secrng.h"
-#endif
-// Enable debug for debugging the code
-// #define DEBUG
+namespace alcp { namespace random_number {
 
-namespace alcp::rng {
+    /**
+     * RNG provided by the operating system
+     *
+     */
+    class SystemRng : public IRng
+    {
+      public:
+        SystemRng(const alc_rng_info_t& rRngInfo);
+        void        randomize(Uint8 output[], size_t length) override;
+        std::string name() const override { return "OsRng"; }
+        bool        isSeeded() const override;
+        size_t      reseed() override;
 
-alc_error_t
-ArchRng::readRandom(Uint8* pBuf, Uint64 size)
-{
-#ifdef DEBUG
-    printf("Engine amd_rdrand_bytes\n");
-#endif
-#ifdef USE_AOCL_SRNG
-    int opt;
-    opt = get_rdrand_bytes_arr(
-        pBuf,
-        size,
-        100 // Retires is hard coded as 100, may be add this to context.
-    );
-    if (opt != SECRNG_SUCCESS) {
-        return ALC_ERROR_NO_ENTROPY;
-    } else {
-        return ALC_ERROR_NONE;
-    }
-#else
-    return ALC_ERROR_NOT_SUPPORTED; // Error not implemented
-#endif
-}
+      private:
+        Uint32 m_fd;
+        // class Impl;
+        // std::unique_ptr<Impl> m_pimpl;
+    };
 
-ArchRng::ArchRng(const alc_rng_info_t& rRngInfo) {}
-
-void
-ArchRng::finish()
-{}
-
-} // namespace alcp::rng
+}} // namespace alcp::random_number

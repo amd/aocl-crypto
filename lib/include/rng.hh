@@ -28,58 +28,101 @@
 
 #pragma once
 
-#include <alcp/rng.h>
+#include <memory>
+#include <string>
+
+#include "alcp/rng.h"
+#include "alcp/types.h"
 
 #include "types.hh"
 
-namespace alcp::rng {
+namespace alcp {
 
-class Interface
-{
-  public:
-    Interface() {}
+namespace random_number {
+    class IRng
+    {
+      public:
+        /**
+         * Randomize a buffer array (byte-wise)
+         *
+         * May block if RNG is not initialized or not enough entropy available.
+         * \param        output          Array of bytes
+         * \param        length          length of output
+         * \throws       RngNotSeeded    exception (if available)
+         */
+        virtual void randomize(Uint8 output[], size_t length) = 0;
 
-  public:
-    // virtual alc_error_t engineDefault(Uint8* pBuf, Uint64 size) = 0;
-    virtual alc_error_t readRandom(Uint8* pBuf, Uint64 size) = 0;
-    virtual void        finish()                             = 0;
+        /**
+         * \return  Name of the RNG
+         */
+        virtual std::string name() const = 0;
 
-  protected:
-    virtual ~Interface() {}
-};
+        /**
+         * Check if the RNG is seeded
+         * \return  true if RNG is already seeded, false otherwise
+         */
 
-class Rng : public Interface
-{
-  protected:
-    Rng()          = default;
-    virtual ~Rng() = default;
+        virtual bool isSeeded() const = 0;
 
-  private:
-    bool m_initialized = false;
-};
+        /**
+         * Helps to reseed the IRng
+         * \return Bytes used to reseed
+         */
+        virtual size_t reseed() = 0;
 
-class OsRng final : public Rng
-{
-  public:
-    OsRng() {}
-    explicit OsRng(const alc_rng_info_t& rRnginfo);
-    ~OsRng() {}
+      public:
+        virtual ~IRng() = default;
+    };
+} // namespace random_number
 
-  public:
-    alc_error_t readRandom(Uint8* pBuf, Uint64 size);
-    alc_error_t readUrandom(Uint8* buffer, Uint64 size);
-    void        finish() final;
-};
+namespace rng {
+    class Interface
+    {
+      public:
+        Interface() = default;
 
-class ArchRng : public Rng
-{
-  public:
-    ArchRng() {}
-    explicit ArchRng(const alc_rng_info_t& rRnginfo);
-    ~ArchRng() {}
+      public:
+        // virtual alc_error_t engineDefault(Uint8* pBuf, Uint64 size) = 0;
+        virtual alc_error_t readRandom(Uint8* pBuf, Uint64 size) = 0;
+        virtual void        finish()                             = 0;
 
-    alc_error_t readRandom(Uint8* pBuf, Uint64 size) final;
-    void        finish() final;
-};
+      protected:
+        virtual ~Interface() = default;
+    };
 
-} // namespace alcp::rng
+    class Rng : public alcp::rng::Interface
+    {
+      protected:
+        Rng()          = default;
+        virtual ~Rng() = default;
+
+      private:
+        bool m_initialized = false;
+    };
+
+    class OsRng final : public Rng
+    {
+      public:
+        OsRng() {}
+        explicit OsRng(const alc_rng_info_t& rRnginfo);
+        ~OsRng() {}
+
+      public:
+        alc_error_t readRandom(Uint8* pBuf, Uint64 size);
+        alc_error_t readUrandom(Uint8* buffer, Uint64 size);
+        void        finish() final;
+    };
+
+    class ArchRng : public Rng
+    {
+      public:
+        ArchRng() {}
+        explicit ArchRng(const alc_rng_info_t& rRnginfo);
+        ~ArchRng() {}
+
+        alc_error_t readRandom(Uint8* pBuf, Uint64 size) final;
+        void        finish() final;
+    };
+
+} // namespace rng
+} // namespace alcp

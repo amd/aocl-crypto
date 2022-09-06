@@ -26,71 +26,25 @@
  *
  */
 
-#include "error.hh"
 #include "rng.hh"
-#include <iostream>
-#ifndef WIN32
-#include <sys/random.h>
-#endif
 
-// Enable debug for debugging the code
-// #define DEBUG
+namespace alcp { namespace random_number {
+    // forward declaration
+    class IRng;
 
-namespace alcp::rng {
+    class ISeeder
+    {
+      public:
+        virtual ~ISeeder();
+        virtual std::string name() const                         = 0;
+        virtual size_t      poll(alcp::random_number::IRng& rng) = 0;
+    };
 
-alc_error_t
-OsRng::readRandom(Uint8* pBuf, Uint64 size)
-{
-#ifdef DEBUG
-    printf("Engine linux_urandom64\n");
-#endif
-    // Linux Systemcall to get random values.
-    Uint64 out = getrandom(pBuf, size, 0);
+    class rdseed : public ISeeder
+    {
+      public:
+        std::string name() const override { return "rdseed"; }
+        size_t      poll(alcp::random_number::IRng& rng) override;
+    };
 
-    for (int i = 0; i < 10; i++) { // Retry 10 times
-        if (out == size) {
-            break;
-        } else {
-            int delta = size - out;
-            out += getrandom(pBuf + out, delta, 0);
-        }
-    }
-    if (out != size) {
-        return ALC_ERROR_NO_ENTROPY;
-    }
-
-    return ALC_ERROR_NONE;
-}
-
-alc_error_t
-OsRng::readUrandom(Uint8* pBuf, Uint64 size)
-{
-#ifdef DEBUG
-    printf("Engine linux_random64\n");
-#endif
-    // Linux Systemcall to get random values.
-    Uint64 out = getrandom(pBuf, size, GRND_RANDOM);
-
-    for (int i = 0; i < 10; i++) { // Retry 10 times
-        if (out == size) {
-            break;
-        } else {
-            int delta = size - out;
-            out += getrandom(pBuf + out, delta, 0);
-        }
-    }
-
-    if (out != size) {
-        return ALC_ERROR_NO_ENTROPY;
-    }
-
-    return ALC_ERROR_NONE;
-}
-
-OsRng::OsRng(const alc_rng_info_t& rRngInfo) {}
-
-void
-OsRng::finish()
-{}
-
-} // namespace alcp::rng
+}} // namespace alcp::random_number

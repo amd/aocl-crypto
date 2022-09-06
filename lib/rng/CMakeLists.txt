@@ -1,7 +1,7 @@
 
 # FILE(GLOB RNG_SRCS "*.cc")
 
-SET(RNG_SRCS builder.cc os_rng.cc aocl_srng.cc)
+SET(RNG_SRCS builder.cc system_rng.cc rng.cc)
 
 IF(AOCL_INSTALL_DIR)
 	MESSAGE(STATUS "Enabling AOCL SRNG")

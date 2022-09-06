@@ -27,8 +27,13 @@
  */
 
 #include "capi/rng/builder.hh"
+#include "hardware_rng.hh"
+#include "rng.hh"
+#include "system_rng.hh"
 
 namespace alcp::rng {
+
+using namespace random_number;
 
 template<typename RNGTYPE>
 static alc_error_t
@@ -37,7 +42,8 @@ __read_random_wrapper(void* pRng, uint8_t* buffer, int size)
     alc_error_t e  = ALC_ERROR_NONE;
     auto        ap = static_cast<RNGTYPE*>(pRng);
 
-    e = ap->readRandom(buffer, size);
+    // e = ap->readRandom(buffer, size);
+    ap->randomize(buffer, size);
 
     return e;
 }
@@ -48,9 +54,10 @@ __finish_wrapper(void* pRng)
 {
     alc_error_t e  = ALC_ERROR_NONE;
     auto        ap = static_cast<RNGTYPE*>(pRng);
-    delete (ap);
 
-    ap->finish();
+    // ap->finish();
+
+    delete (ap);
 
     return e;
 }
@@ -80,10 +87,12 @@ RngBuilder::Build(const alc_rng_info_t& rRngInfo, Context& rCtx)
 #endif
     switch (rRngInfo.ri_source) {
         case ALC_RNG_SOURCE_OS:
-            __build_rng<OsRng>(rRngInfo, rCtx);
+            //__build_rng<OsRng>(rRngInfo, rCtx);
+            __build_rng<SystemRng>(rRngInfo, rCtx);
             break;
         case ALC_RNG_SOURCE_ARCH:
-            __build_rng<ArchRng>(rRngInfo, rCtx);
+            //__build_rng<ArchRng>(rRngInfo, rCtx);
+            __build_rng<HardwareRng>(rRngInfo, rCtx);
             break;
         default:
             e = ALC_ERROR_NOT_SUPPORTED;
