@@ -31,24 +31,60 @@
 #include "cipher/vaes.hh"
 #include "cipher/vaes_avx512.hh"
 
+#include "utils/constants.hh"
+
 namespace alcp::cipher {
 
-void
-Xts::expandTweakKeys(const Uint8* pUserKey)
+static Uint8
+GetSbox(Uint8 offset, bool use_invsbox = false)
 {
+    return utils::GetSbox(offset, use_invsbox);
+}
 
+void
+Xts::expandTweakKeys(const Uint8* pUserKey, int len)
+{
+    using utils::GetByte, utils::MakeWord;
     Uint8        dummy_key[32] = { 0 };
     const Uint8* key           = pUserKey ? pUserKey : &dummy_key[0];
-    Uint8*       pTweakKey     = nullptr;
-
-    pTweakKey = p_tweak_key;
 
     if (isAesniAvailable()) {
-        aesni::ExpandTweakKeys(key, pTweakKey, getRounds());
+        aesni::ExpandTweakKeys(key, p_tweak_key, getRounds());
         return;
     }
 
-    Rijndael::expandTweakKeys(key, pTweakKey, getRounds());
+    Uint32 i;
+    Uint32 nb = Rijndael::cBlockSizeWord, nr = getRounds(),
+           nk          = len / utils::BitsPerByte / utils::BytesPerWord;
+    const Uint32* rtbl = utils::s_round_constants;
+    Uint32*       p_tweak_key32;
+    // auto            p_key32     = reinterpret_cast<const Uint32*>(key);
+    p_tweak_key32 = reinterpret_cast<Uint32*>(p_tweak_key);
+    // printf("key size : %d, nb %d, nr %d\n", nk, nb, nr);
+
+    for (i = 0; i < nk; i++) {
+        p_tweak_key32[i] = MakeWord(
+            key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]);
+    }
+
+    for (i = nk; i < nb * (nr + 1); i++) {
+        Uint32 temp = p_tweak_key32[i - 1];
+        if (i % nk == 0) {
+            temp = MakeWord(GetSbox(GetByte(temp, 1)),
+                            GetSbox(GetByte(temp, 2)),
+                            GetSbox(GetByte(temp, 3)),
+                            GetSbox(GetByte(temp, 0)));
+
+            temp ^= *rtbl++;
+        } else if (nk > 6 && (i % nk == 4)) {
+            temp = MakeWord(GetSbox(GetByte(temp, 0)),
+                            GetSbox(GetByte(temp, 1)),
+                            GetSbox(GetByte(temp, 2)),
+                            GetSbox(GetByte(temp, 3)));
+        }
+
+        p_tweak_key32[i] = p_tweak_key32[i - nk] ^ temp;
+    }
 }
 
 alc_error_t

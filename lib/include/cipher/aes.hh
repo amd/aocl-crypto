@@ -446,7 +446,8 @@ class Xts final : public Aes
         : Aes(aesInfo, keyInfo)
     {
         p_tweak_key = &m_tweak_round_key[0];
-        expandTweakKeys(aesInfo.ai_xts.xi_tweak_key->key);
+        expandTweakKeys(aesInfo.ai_xts.xi_tweak_key->key,
+                        aesInfo.ai_xts.xi_tweak_key->len);
     }
 
     ~Xts() {}
@@ -508,7 +509,7 @@ class Xts final : public Aes
                                 uint64_t       len,
                                 const uint8_t* pIv) const final;
 
-    virtual void expandTweakKeys(const Uint8* pUserKey);
+    virtual void expandTweakKeys(const Uint8* pUserKey, int len);
 
   private:
     Xts() { p_tweak_key = &m_tweak_round_key[0]; };
