@@ -54,19 +54,23 @@ EncryptXts(const uint8_t* pSrc,
     auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
     auto p_src256       = reinterpret_cast<const __m256i*>(pSrc);
     auto p_dest256      = reinterpret_cast<__m256i*>(pDest);
+    auto p_iv64         = reinterpret_cast<const uint64_t*>(pIv);
 
     uint64_t blocks                       = len / Rijndael::cBlockSize;
     uint64_t extra_bytes_in_message_block = len % Rijndael::cBlockSize;
     uint64_t chunk                        = 2 * 8;
 
     // iv encryption using tweak key to get alpha
-    __m256i extendedIV = _mm256_setr_epi64x(
-        ((const uint64_t*)pIv)[0], ((const uint64_t*)pIv)[1], 0, 0);
+    __m256i extendedIV = _mm256_setr_epi64x(p_iv64[0], p_iv64[1], 0, 0);
 
     AesEncrypt(&extendedIV, p_tweak_key128, nRounds);
+
     __m256i tweakx8[8]; // 8*2 Tweak values stored inside this
 
-    aes::init_alphax8(*((__m128i*)&extendedIV), (__m128i*)tweakx8);
+    auto p_iv128    = reinterpret_cast<__m128i*>(&extendedIV);
+    auto p_tweak128 = reinterpret_cast<__m128i*>(tweakx8);
+
+    aes::init_alphax8(p_iv128[0], p_tweak128);
 
     tweakx8[4] = aes::nextTweaks(tweakx8[0]);
     tweakx8[5] = aes::nextTweaks(tweakx8[1]);
@@ -287,11 +291,14 @@ EncryptXts(const uint8_t* pSrc,
         tweak_idx += 1;
         blocks -= chunk;
     }
+
     __m256i lastTweak = tweakx8[tweak_idx];
+    auto    p_dest8   = reinterpret_cast<uint8_t*>(p_dest256);
 
     if (blocks) {
 
-        __m256i src_text_1 = alcp_loadu_128(p_src256);
+        __m256i src_text_1   = alcp_loadu_128(p_src256);
+        auto    p_src_text_1 = reinterpret_cast<uint8_t*>(&src_text_1);
 
         src_text_1 = lastTweak ^ src_text_1;
 
@@ -299,25 +306,27 @@ EncryptXts(const uint8_t* pSrc,
 
         src_text_1 = lastTweak ^ src_text_1;
 
-        utils::CopyBytes((uint8_t*)p_dest256, (uint8_t*)&src_text_1, (16));
-        utils::CopyBytes((uint8_t*)p_dest256 + (16),
-                         (uint8_t*)&src_text_1,
-                         extra_bytes_in_message_block);
+        utils::CopyBytes(p_dest8, p_src_text_1, (16));
+
+        utils::CopyBytes(
+            p_dest8 + 16, p_src_text_1, extra_bytes_in_message_block);
+
     } else {
-        utils::CopyBytes((uint8_t*)p_dest256,
-                         (uint8_t*)p_dest256 - 16,
-                         extra_bytes_in_message_block);
+        utils::CopyBytes(p_dest8, p_dest8 - 16, extra_bytes_in_message_block);
     }
     if (extra_bytes_in_message_block) {
         __m256i stealed_text, tweak_1;
+        auto    p_stealed_text8 = reinterpret_cast<uint8_t*>(&stealed_text);
+        auto    p_tweak_8       = reinterpret_cast<uint8_t*>(&tweak_1);
 
         utils::CopyBytes(
-            (uint8_t*)&tweak_1, (uint8_t*)&lastTweak + ((16 * (blocks))), (16));
+            p_tweak_8, (uint8_t*)&lastTweak + ((16 * (blocks))), (16));
 
-        utils::CopyBytes((uint8_t*)&stealed_text + extra_bytes_in_message_block,
-                         (uint8_t*)p_dest256 + (extra_bytes_in_message_block),
+        utils::CopyBytes(p_stealed_text8 + extra_bytes_in_message_block,
+                         p_dest8 + (extra_bytes_in_message_block),
                          (16 - extra_bytes_in_message_block));
-        utils::CopyBytes((uint8_t*)&stealed_text,
+
+        utils::CopyBytes(p_stealed_text8,
                          (uint8_t*)p_src256 + ((16 * (blocks))),
                          (extra_bytes_in_message_block));
 
@@ -325,9 +334,7 @@ EncryptXts(const uint8_t* pSrc,
         AesEncrypt(&stealed_text, p_key128, nRounds);
         stealed_text = (tweak_1 ^ stealed_text);
 
-        utils::CopyBytes((uint8_t*)p_dest256 + (16 * (blocks - 1)),
-                         (uint8_t*)&stealed_text,
-                         16);
+        utils::CopyBytes(p_dest8 + (16 * (blocks - 1)), p_stealed_text8, 16);
     }
     return ALC_ERROR_NONE;
 }
@@ -345,22 +352,23 @@ DecryptXts(const uint8_t* pSrc,
     auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
     auto p_src256       = reinterpret_cast<const __m256i*>(pSrc);
     auto p_dest256      = reinterpret_cast<__m256i*>(pDest);
+    auto p_iv64         = reinterpret_cast<const uint64_t*>(pIv);
 
     uint64_t blocks                       = len / Rijndael::cBlockSize;
     uint64_t extra_bytes_in_message_block = len % Rijndael::cBlockSize;
     uint64_t chunk                        = 8 * 2;
 
     // iv encryption using tweak key to get alpha
-    __m256i extendedIV = _mm256_setr_epi64x(
-        ((const uint64_t*)pIv)[0], ((const uint64_t*)pIv)[1], 0, 0);
+    __m256i extendedIV = _mm256_setr_epi64x(p_iv64[0], p_iv64[1], 0, 0);
 
     AesEncrypt(&extendedIV, p_tweak_key128, nRounds);
 
-    __m128i  temp_iv = (((__m128i*)&extendedIV)[0]);
-    __m256i  tweakx8[8]; // 8*2 Tweak values stored inside this
+    __m256i tweakx8[8]; // 8*2 Tweak values stored inside this
+
+    __m128i* p_iv128     = reinterpret_cast<__m128i*>(&extendedIV);
     __m128i* p_tweaks128 = reinterpret_cast<__m128i*>(tweakx8);
 
-    aes::init_alphax8(temp_iv, p_tweaks128);
+    aes::init_alphax8(p_iv128[0], p_tweaks128);
 
     tweakx8[4] = aes::nextTweaks(tweakx8[0]);
     tweakx8[5] = aes::nextTweaks(tweakx8[1]);
@@ -611,10 +619,13 @@ DecryptXts(const uint8_t* pSrc,
 
     __m256i  lastTweak = tweakx8[tweak_idx];
     __m128i* p_tweak   = reinterpret_cast<__m128i*>(&lastTweak);
+    uint8_t* p_tweak8  = reinterpret_cast<uint8_t*>(&lastTweak);
+    uint8_t* p_dest8   = reinterpret_cast<uint8_t*>(p_dest256);
 
     if (blocks) {
 
-        __m256i src_text_1 = alcp_loadu_128(p_src256);
+        __m256i  src_text_1  = alcp_loadu_128(p_src256);
+        uint8_t* p_src_text8 = reinterpret_cast<uint8_t*>(&src_text_1);
 
         if (extra_bytes_in_message_block) {
 
@@ -628,11 +639,10 @@ DecryptXts(const uint8_t* pSrc,
 
         src_text_1 = lastTweak ^ src_text_1;
 
-        utils::CopyBytes((uint8_t*)p_dest256,
-                         (uint8_t*)&src_text_1,
-                         (unsigned long)(blocks * 16));
-        utils::CopyBytes((uint8_t*)p_dest256 + (16 * blocks),
-                         (uint8_t*)&src_text_1 + (16 * (blocks - 1)),
+        utils::CopyBytes(p_dest8, p_src_text8, (unsigned long)(blocks * 16));
+
+        utils::CopyBytes(p_dest8 + (16 * blocks),
+                         p_src_text8 + (16 * (blocks - 1)),
                          extra_bytes_in_message_block);
     }
 
@@ -642,14 +652,13 @@ DecryptXts(const uint8_t* pSrc,
         uint8_t* p_stealed_text = reinterpret_cast<uint8_t*>(&stealed_text);
         uint8_t* p_tweak_1      = reinterpret_cast<uint8_t*>(&tweak_1);
 
-        utils::CopyBytes(
-            p_tweak_1, (uint8_t*)&lastTweak + ((16 * (blocks))), (16));
+        utils::CopyBytes(p_tweak_1, p_tweak8 + ((16 * (blocks))), (16));
 
         utils::CopyBytes(
             p_stealed_text + extra_bytes_in_message_block,
-            (uint8_t*)p_dest256
-                + (extra_bytes_in_message_block + (16 * (blocks - 1))),
+            p_dest8 + (extra_bytes_in_message_block + (16 * (blocks - 1))),
             (16 - extra_bytes_in_message_block));
+
         utils::CopyBytes(p_stealed_text,
                          (uint8_t*)p_src256 + ((16 * (blocks))),
                          (extra_bytes_in_message_block));
@@ -658,8 +667,7 @@ DecryptXts(const uint8_t* pSrc,
         AesDecrypt(&stealed_text, p_key128, nRounds);
         stealed_text = (tweak_1 ^ stealed_text);
 
-        utils::CopyBytes(
-            (uint8_t*)p_dest256 + (16 * (blocks - 1)), p_stealed_text, 16);
+        utils::CopyBytes(p_dest8 + (16 * (blocks - 1)), p_stealed_text, 16);
     }
 
     return ALC_ERROR_NONE;
