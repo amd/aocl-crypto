@@ -58,9 +58,8 @@ Xts::expandTweakKeys(const Uint8* pUserKey, int len)
            nk          = len / utils::BitsPerByte / utils::BytesPerWord;
     const Uint32* rtbl = utils::s_round_constants;
     Uint32*       p_tweak_key32;
-    // auto            p_key32     = reinterpret_cast<const Uint32*>(key);
+
     p_tweak_key32 = reinterpret_cast<Uint32*>(p_tweak_key);
-    // printf("key size : %d, nb %d, nr %d\n", nk, nb, nr);
 
     for (i = 0; i < nk; i++) {
         p_tweak_key32[i] = MakeWord(

@@ -221,6 +221,7 @@ Rijndael::Impl::invMixColumns(Uint8 state[][4]) noexcept
 static Uint32
 gmulx2(Uint32 val)
 {
+    // galois Multiple of val*2 for 32 bit
     return ((val + val) & 0xfefefefe)
            ^ ((((val & 0x80808080) << 1) - ((val & 0x80808080) >> 7))
               & 0x1b1b1b1b);
@@ -229,13 +230,15 @@ gmulx2(Uint32 val)
 static inline Uint32
 InvMixColumns(const Uint32& val)
 {
-    Uint32 val_2 = gmulx2(val);
-    Uint32 val_4 = gmulx2(val_2);
-    Uint32 val_8 = gmulx2(val_4);
-    Uint32 val_9 = val_8 ^ val;
-    Uint32 val_b = val_8 ^ val_2 ^ val;
-    Uint32 val_d = val_8 ^ val_4 ^ val;
-    Uint32 val_e = val_8 ^ val_4 ^ val_2;
+    Uint32 val_2 = gmulx2(val);           // val_2 = galois Multiple of val*2;
+    Uint32 val_4 = gmulx2(val_2);         // val_4 = galois Multiple of val*4;
+    Uint32 val_8 = gmulx2(val_4);         // val_8 = galois Multiple of val*8;
+    Uint32 val_9 = val_8 ^ val;           // val_9 = galois Multiple of val*9;
+    Uint32 val_b = val_8 ^ val_2 ^ val;   // val_b = galois Multiple of val*11;
+    Uint32 val_d = val_8 ^ val_4 ^ val;   // val_d = galois Multiple of val*13;
+    Uint32 val_e = val_8 ^ val_4 ^ val_2; // val_e = galois Multiple of val*14;
+
+    // InvMixColumn is calulated using {0b}x^3 + {0d}x^2 + {09}x + {0e}
     return val_e ^ ((val_b >> 8) | (val_b << 24))
            ^ ((val_d >> 16) | (val_d << 16)) ^ ((val_9 >> 24) | (val_9 << 8));
 }
@@ -435,7 +438,7 @@ Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
     Uint32*       p_enc_key32;
     // auto            p_key32     = reinterpret_cast<const Uint32*>(key);
     p_enc_key32 = reinterpret_cast<Uint32*>(pEncKey);
-    // printf("key size : %d, nb %d, nr %d\n", nk, nb, nr);
+
     for (i = 0; i < nk; i++) {
         p_enc_key32[i] = MakeWord(
             key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]);
