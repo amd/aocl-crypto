@@ -35,10 +35,10 @@
 namespace alcp::random_number {
 
 #if defined(__linux__)
-// #include <fcntl.h>
-// #include <unistd.h>
-// #define ALCP_CONFIG_OS_HAS_DEVRANDOM 1
-// #else
+#include <fcntl.h>
+#include <unistd.h>
+#define ALCP_CONFIG_OS_HAS_DEVRANDOM 1
+#else
 #include <sys/random.h>
 #define ALCP_CONFIG_OS_HAS_GETRANDOM 1
 #endif
@@ -63,18 +63,21 @@ class SystemRngImpl
 
         if (m_fd < 0) {
             m_fd = open("/dev/urandom", O_RDONLY | O_NOCTTY);
-            if (m_fd < 0) { /* THROW HERE */
+            if (m_fd < 0) {
+                return ALC_ERROR_NOT_PERMITTED;
             }
         }
 
-        while (length) {
-            auto delta = length - out;
-            out += read(m_fd, &output[out], delta);
-
-            if (out < 0) {
-                /* THROW HERE */
+        for (int i = 0; i < 10; i++) {
+            if (out < length) {
+                auto delta = length - out;
+                out += read(m_fd, &output[out], delta);
+            } else {
+                break;
             }
         }
+        if (out != length) // not enough entropy , throw here,
+            return ALC_ERROR_NO_ENTROPY;
         return ALC_ERROR_NONE;
     }
 };
@@ -96,6 +99,8 @@ class SystemRngImpl
             if (out < length) {
                 auto delta = length - out;
                 out += getrandom(&output[out], delta, flag);
+            } else {
+                break;
             }
         }
 
