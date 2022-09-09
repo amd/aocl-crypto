@@ -92,7 +92,7 @@ namespace alcp { namespace random_number {
         // UNUSED(rRngInfo);
     }
 
-    void HardwareRng::randomize(Uint8 output[], size_t length)
+    alc_error_t HardwareRng::randomize(Uint8 output[], size_t length)
     {
         const int stride     = 2;
         size_t    new_length = length / stride;
@@ -104,12 +104,14 @@ namespace alcp { namespace random_number {
 
             is_success = read_rdrand<Uint16>(ptr);
             if (!is_success) { /* THROW HERE */
+                return ALC_ERROR_NO_ENTROPY;
             }
 
             ptr++;
         }
 
         /* TODO: check if length is odd */
+        return ALC_ERROR_NONE;
     }
 
     bool HardwareRng::isSeeded() const { return true; }
