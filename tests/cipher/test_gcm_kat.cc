@@ -32,267 +32,32 @@
 
 using namespace alcp::testing;
 
-std::string MODE_STR = "GCM";
-
 #define ALC_MODE ALC_AES_MODE_GCM
+#define STR_MODE "AES_GCM"
 
-/* Testing Starts Here! */
 TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
 {
-    int            key_size    = 128;
-    TestingCore    testingCore = TestingCore(MODE_STR, ALC_MODE);
-    bool           test_ran    = false;
-    alcp_data_ex_t data;
-    while (testingCore.getDs()->readPtIvKeyCtAddTag(key_size)) {
-        // Checks if output is correct
-        test_ran = true;
-        // Create vector for cipher text
-        std::vector<uint8_t> outct(testingCore.getDs()->getPt().size(), 0);
-        std::vector<uint8_t> pt = testingCore.getDs()->getPt();
-        std::vector<uint8_t> iv = testingCore.getDs()->getIv();
-        std::vector<uint8_t> ad = testingCore.getDs()->getAdd();
-        std::vector<uint8_t> outtag(testingCore.getDs()->getTag().size(), 0);
-        data.in   = &(pt[0]);
-        data.inl  = pt.size();
-        data.iv   = &(iv[0]);
-        data.ivl  = iv.size();
-        data.out  = &(outct[0]);
-        data.outl = data.inl;
-        data.ad   = &(ad[0]);
-        data.adl  = ad.size();
-        data.tag  = &(outtag[0]);
-        data.tagl = outtag.size();
-        testingCore.getCipherHandler()->testingEncrypt(
-            data, testingCore.getDs()->getKey());
-
-        EXPECT_TRUE(ArraysMatch(outct,
-                                testingCore.getDs()->getCt(),
-                                *(testingCore.getDs()),
-                                std::string("AES_" + MODE_STR + "_128_ENC")));
-        EXPECT_TRUE(
-            ArraysMatch(outtag,
-                        testingCore.getDs()->getTag(),
-                        *(testingCore.getDs()),
-                        std::string("AES_" + MODE_STR + "_128_ENC_TAG")));
-    }
-    if (!test_ran) {
-        EXPECT_TRUE(::testing::AssertionFailure()
-                    << "No tests to run, check dataset");
-    }
+    AesKatTest(128, ENCRYPT, ALC_MODE);
 }
-
-TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
-{
-    int            key_size    = 192;
-    TestingCore    testingCore = TestingCore(MODE_STR, ALC_MODE);
-    bool           test_ran    = false;
-    alcp_data_ex_t data;
-    while (testingCore.getDs()->readPtIvKeyCtAddTag(key_size)) {
-        // Checks if output is correct
-        test_ran = true;
-        // Create vector for cipher text
-        std::vector<uint8_t> outct(testingCore.getDs()->getPt().size(), 0);
-        std::vector<uint8_t> pt = testingCore.getDs()->getPt();
-        std::vector<uint8_t> iv = testingCore.getDs()->getIv();
-        std::vector<uint8_t> ad = testingCore.getDs()->getAdd();
-        std::vector<uint8_t> outtag(testingCore.getDs()->getTag().size(), 0);
-        data.in   = &(pt[0]);
-        data.inl  = pt.size();
-        data.iv   = &(iv[0]);
-        data.ivl  = iv.size();
-        data.out  = &(outct[0]);
-        data.outl = data.inl;
-        data.ad   = &(ad[0]);
-        data.adl  = ad.size();
-        data.tag  = &(outtag[0]);
-        data.tagl = outtag.size();
-        testingCore.getCipherHandler()->testingEncrypt(
-            data, testingCore.getDs()->getKey());
-
-        EXPECT_TRUE(ArraysMatch(outct,
-                                testingCore.getDs()->getCt(),
-                                *(testingCore.getDs()),
-                                std::string("AES_" + MODE_STR + "_192_ENC")));
-        EXPECT_TRUE(
-            ArraysMatch(outtag,
-                        testingCore.getDs()->getTag(),
-                        *(testingCore.getDs()),
-                        std::string("AES_" + MODE_STR + "_192_ENC_TAG")));
-    }
-    if (!test_ran) {
-        EXPECT_TRUE(::testing::AssertionFailure()
-                    << "No tests to run, check dataset");
-    }
-}
-
-TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
-{
-    int            key_size    = 256;
-    TestingCore    testingCore = TestingCore(MODE_STR, ALC_MODE);
-    bool           test_ran    = false;
-    alcp_data_ex_t data;
-    while (testingCore.getDs()->readPtIvKeyCtAddTag(key_size)) {
-        // Checks if output is correct
-        test_ran = true;
-        // Create vector for cipher text
-        std::vector<uint8_t> outct(testingCore.getDs()->getPt().size(), 0);
-        std::vector<uint8_t> pt = testingCore.getDs()->getPt();
-        std::vector<uint8_t> iv = testingCore.getDs()->getIv();
-        std::vector<uint8_t> ad = testingCore.getDs()->getAdd();
-        std::vector<uint8_t> outtag(testingCore.getDs()->getTag().size(), 0);
-        data.in   = &(pt[0]);
-        data.inl  = pt.size();
-        data.iv   = &(iv[0]);
-        data.ivl  = iv.size();
-        data.out  = &(outct[0]);
-        data.outl = data.inl;
-        data.ad   = &(ad[0]);
-        data.adl  = ad.size();
-        data.tag  = &(outtag[0]);
-        data.tagl = outtag.size();
-        testingCore.getCipherHandler()->testingEncrypt(
-            data, testingCore.getDs()->getKey());
-
-        EXPECT_TRUE(ArraysMatch(outct,
-                                testingCore.getDs()->getCt(),
-                                *(testingCore.getDs()),
-                                std::string("AES_" + MODE_STR + "_256_ENC")));
-        EXPECT_TRUE(
-            ArraysMatch(outtag,
-                        testingCore.getDs()->getTag(),
-                        *(testingCore.getDs()),
-                        std::string("AES_" + MODE_STR + "_256_ENC_TAG")));
-    }
-    if (!test_ran) {
-        EXPECT_TRUE(::testing::AssertionFailure()
-                    << "No tests to run, check dataset");
-    }
-}
-
 TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
 {
-    int            key_size    = 128;
-    TestingCore    testingCore = TestingCore(MODE_STR, ALC_MODE);
-    bool           test_ran    = false;
-    alcp_data_ex_t data;
-    while (testingCore.getDs()->readPtIvKeyCtAddTag(key_size)) {
-        // Checks if output is correct
-        test_ran = true;
-        // Create vector for cipher text
-        std::vector<uint8_t> outpt(testingCore.getDs()->getCt().size(), 0);
-        std::vector<uint8_t> ct     = testingCore.getDs()->getCt();
-        std::vector<uint8_t> iv     = testingCore.getDs()->getIv();
-        std::vector<uint8_t> ad     = testingCore.getDs()->getAdd();
-        std::vector<uint8_t> outtag = testingCore.getDs()->getTag();
-        data.in                     = &(ct[0]);
-        data.inl                    = ct.size();
-        data.iv                     = &(iv[0]);
-        data.ivl                    = iv.size();
-        data.out                    = &(outpt[0]);
-        data.outl                   = data.inl;
-        data.ad                     = &(ad[0]);
-        data.adl                    = ad.size();
-        data.tag                    = &(outtag[0]);
-        data.tagl                   = outtag.size();
-        bool ret = testingCore.getCipherHandler()->testingDecrypt(
-            data, testingCore.getDs()->getKey());
-        if (data.tagl == 0) {
-            ret = true; // Skip tag test
-        }
-        EXPECT_TRUE(ArraysMatch(outpt,
-                                testingCore.getDs()->getPt(),
-                                *(testingCore.getDs()),
-                                std::string("AES_" + MODE_STR + "_128_DEC")));
-        EXPECT_TRUE(ret);
-    }
-    if (!test_ran) {
-        EXPECT_TRUE(::testing::AssertionFailure()
-                    << "No tests to run, check dataset");
-    }
+    AesKatTest(128, DECRYPT, ALC_MODE);
 }
-
-TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
+TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
 {
-    int            key_size    = 192;
-    TestingCore    testingCore = TestingCore(MODE_STR, ALC_MODE);
-    bool           test_ran    = false;
-    alcp_data_ex_t data;
-    while (testingCore.getDs()->readPtIvKeyCtAddTag(key_size)) {
-        // Checks if output is correct
-        test_ran = true;
-        // Create vector for cipher text
-        std::vector<uint8_t> outpt(testingCore.getDs()->getCt().size(), 0);
-        std::vector<uint8_t> ct     = testingCore.getDs()->getCt();
-        std::vector<uint8_t> iv     = testingCore.getDs()->getIv();
-        std::vector<uint8_t> ad     = testingCore.getDs()->getAdd();
-        std::vector<uint8_t> outtag = testingCore.getDs()->getTag();
-        data.in                     = &(ct[0]);
-        data.inl                    = ct.size();
-        data.iv                     = &(iv[0]);
-        data.ivl                    = iv.size();
-        data.out                    = &(outpt[0]);
-        data.outl                   = data.inl;
-        data.ad                     = &(ad[0]);
-        data.adl                    = ad.size();
-        data.tag                    = &(outtag[0]);
-        data.tagl                   = outtag.size();
-        bool ret = testingCore.getCipherHandler()->testingDecrypt(
-            data, testingCore.getDs()->getKey());
-        if (data.tagl == 0) {
-            ret = true; // Skip tag test
-        }
-        EXPECT_TRUE(ArraysMatch(outpt,
-                                testingCore.getDs()->getPt(),
-                                *(testingCore.getDs()),
-                                std::string("AES_" + MODE_STR + "_192_DEC")));
-        EXPECT_TRUE(ret);
-    }
-    if (!test_ran) {
-        EXPECT_TRUE(::testing::AssertionFailure()
-                    << "No tests to run, check dataset");
-    }
+    AesKatTest(256, ENCRYPT, ALC_MODE);
 }
-
 TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
 {
-    int            key_size    = 256;
-    TestingCore    testingCore = TestingCore(MODE_STR, ALC_MODE);
-    bool           test_ran    = false;
-    alcp_data_ex_t data;
-    while (testingCore.getDs()->readPtIvKeyCtAddTag(key_size)) {
-        // Checks if output is correct
-        test_ran = true;
-        // Create vector for cipher text
-        std::vector<uint8_t> outpt(testingCore.getDs()->getCt().size(), 0);
-        std::vector<uint8_t> ct     = testingCore.getDs()->getCt();
-        std::vector<uint8_t> iv     = testingCore.getDs()->getIv();
-        std::vector<uint8_t> ad     = testingCore.getDs()->getAdd();
-        std::vector<uint8_t> outtag = testingCore.getDs()->getTag();
-        data.in                     = &(ct[0]);
-        data.inl                    = ct.size();
-        data.iv                     = &(iv[0]);
-        data.ivl                    = iv.size();
-        data.out                    = &(outpt[0]);
-        data.outl                   = data.inl;
-        data.ad                     = &(ad[0]);
-        data.adl                    = ad.size();
-        data.tag                    = &(outtag[0]);
-        data.tagl                   = outtag.size();
-        bool ret = testingCore.getCipherHandler()->testingDecrypt(
-            data, testingCore.getDs()->getKey());
-        if (data.tagl == 0) {
-            ret = true; // Skip tag test
-        }
-        EXPECT_TRUE(ArraysMatch(outpt,
-                                testingCore.getDs()->getPt(),
-                                *(testingCore.getDs()),
-                                std::string("AES_" + MODE_STR + "_256_DEC")));
-        EXPECT_TRUE(ret);
-    }
-    if (!test_ran) {
-        EXPECT_TRUE(::testing::AssertionFailure()
-                    << "No tests to run, check dataset");
-    }
+    AesKatTest(256, DECRYPT, ALC_MODE);
+}
+TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
+{
+    AesKatTest(192, ENCRYPT, ALC_MODE);
+}
+TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
+{
+    AesKatTest(192, DECRYPT, ALC_MODE);
 }
 
 int

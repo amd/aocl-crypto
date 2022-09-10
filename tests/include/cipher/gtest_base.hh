@@ -385,6 +385,94 @@ void AesCrosstest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode, big_sm
     delete fr;
 }
 
+bool RunTest(TestingCore &testingCore, enc_dec_t enc_dec, std::string enc_dec_str,
+        std::string MODE_STR, int keySize, bool isxts, bool isgcm) 
+{
+    bool ret = false;
+    alcp_data_ex_t data;
+    std::vector<uint8_t> outpt(testingCore.getDs()->getCt().size(), 0);
+    std::vector<uint8_t> outct(testingCore.getDs()->getPt().size(), 0);
+    std::vector<uint8_t> pt   = testingCore.getDs()->getPt();
+    std::vector<uint8_t> ct   = testingCore.getDs()->getCt();
+    std::vector<uint8_t> iv   = testingCore.getDs()->getIv();
+    std::vector<uint8_t> tkey = testingCore.getDs()->getTKey();
+    std::vector<uint8_t> outtag = testingCore.getDs()->getTag();
+    std::vector<uint8_t> ad = testingCore.getDs()->getAdd();
+
+    if (enc_dec == ENCRYPT) {
+        data.in         = &(pt[0]);
+        data.inl        = pt.size();
+        data.iv         = &(iv[0]);
+        data.ivl        = iv.size();
+        data.out        = &(outct[0]);
+        data.outl       = data.inl;
+        data.tkeyl      = 0;
+        data.adl        = 0;
+        data.tagl       = 0;
+        if (isxts) {
+            data.tkey       = &(tkey[0]);
+            data.tkeyl      = tkey.size();
+            data.block_size = pt.size();
+        }
+        if (isgcm) {
+            data.tag  = &(outtag[0]);
+            data.tagl = outtag.size();
+            data.ad   = &(ad[0]);
+            data.adl  = ad.size();
+        }
+        ret = testingCore.getCipherHandler()->testingEncrypt(
+                   data, testingCore.getDs()->getKey());
+        EXPECT_TRUE(ArraysMatch(outct,
+                                testingCore.getDs()->getCt(),
+                                *(testingCore.getDs()),
+                                std::string("AES_" + MODE_STR + "_" + std::to_string(keySize) + enc_dec_str)));
+
+        if (isgcm) {
+            EXPECT_TRUE(ArraysMatch(outtag,
+                        testingCore.getDs()->getTag(),
+                        *(testingCore.getDs()),
+                        std::string("AES_" + MODE_STR + "_" + std::to_string(keySize) + enc_dec_str + "_TAG")));
+        }
+        // Enforce that no errors are reported from lib side.
+        EXPECT_TRUE(ret);
+    }                                 
+    else {
+        data.in         = &(ct[0]);
+        data.inl        = ct.size();
+        data.iv         = &(iv[0]);
+        data.ivl        = iv.size();
+        data.out        = &(outpt[0]);
+        data.outl       = data.inl;
+        data.tkeyl      = 0;
+        data.adl        = 0;
+        data.tagl       = 0;
+        if (isxts) {
+            data.tkey       = &(tkey[0]);
+            data.tkeyl      = tkey.size();
+            data.block_size = ct.size();
+        }
+        if (isgcm){
+            data.tag  = &(outtag[0]);
+            data.tagl = outtag.size();
+            data.ad   = &(ad[0]);
+            data.adl  = ad.size();
+        }
+        bool ret = testingCore.getCipherHandler()->testingDecrypt(
+                   data, testingCore.getDs()->getKey());
+
+        if (isgcm && data.tagl == 0){
+            ret = true; // Skip tag test
+        }
+        EXPECT_TRUE(ArraysMatch(outpt,
+                                testingCore.getDs()->getPt(),
+                                *(testingCore.getDs()),
+                                std::string("AES_" + MODE_STR + "_" + std::to_string(keySize) + enc_dec_str)));
+        // Enforce that no errors are reported from lib side.
+        EXPECT_TRUE(ret);
+    } 
+    return ret;
+}
+
 /**
  * @brief function to run KAT for AES Schemes CTR,CFB,OFB,CBC,XTS
  * 
@@ -397,6 +485,7 @@ void AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode){
     std::string MODE_STR = GetModeSTR(mode);
     std::string enc_dec_str;
     bool isxts = (MODE_STR.compare("XTS") == 0);
+    bool isgcm = (MODE_STR.compare("GCM") == 0);
 
     if (enc_dec == ENCRYPT)
         enc_dec_str = "_ENC";
@@ -405,74 +494,20 @@ void AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode){
 
     TestingCore testingCore = TestingCore(MODE_STR, mode);
 
-    alcp_data_ex_t data;
-
-    if (isxts) {
-        if (!testingCore.getDs()->readPtIvKeyCtTKey(key_size)) {
-            return;
+    if (isxts){
+        while (testingCore.getDs()->readPtIvKeyCtTKey(key_size))
+            RunTest(testingCore, enc_dec, enc_dec_str, MODE_STR, keySize, true, false);
+    }
+    else if (isgcm)
+    {
+        while (testingCore.getDs()->readPtIvKeyCtAddTag(key_size)) {
+            RunTest(testingCore, enc_dec, enc_dec_str, MODE_STR, keySize, false, true);
         }
     }
-    else  {
-        if (!testingCore.getDs()->readPtIvKeyCt(key_size)) {
-            return;
-        }
-    }
-
-    std::vector<uint8_t> outpt(testingCore.getDs()->getCt().size(), 0);
-    std::vector<uint8_t> outct(testingCore.getDs()->getPt().size(), 0);
-    std::vector<uint8_t> pt   = testingCore.getDs()->getPt();
-    std::vector<uint8_t> ct   = testingCore.getDs()->getCt();
-    std::vector<uint8_t> iv   = testingCore.getDs()->getIv();
-    std::vector<uint8_t> tkey = testingCore.getDs()->getTKey();
-    std::vector<uint8_t> outtag(testingCore.getDs()->getTag().size(), 0);
-
-    if (enc_dec == ENCRYPT) {
-        data.in         = &(pt[0]);
-        data.inl        = pt.size();
-        data.iv         = &(iv[0]);
-        data.ivl        = iv.size();
-        data.out        = &(outct[0]);
-        data.outl       = data.inl;
-        data.tag        = &(outtag[0]);
-        data.tagl       = outtag.size();
-        if (isxts) {
-            data.tkey       = &(tkey[0]);
-            data.tkeyl      = tkey.size();
-            data.block_size = pt.size();
-        }
-        bool ret = testingCore.getCipherHandler()->testingEncrypt(
-                   data, testingCore.getDs()->getKey());
-        EXPECT_TRUE(ArraysMatch(outct,
-                                testingCore.getDs()->getCt(),
-                                *(testingCore.getDs()),
-                                std::string("AES_" + MODE_STR + "_" + std::to_string(keySize) + enc_dec_str)));
-        // Enforce that no errors are reported from lib side.
-        EXPECT_TRUE(ret);
-    }                                 
     else {
-        data.in         = &(ct[0]);
-        data.inl        = ct.size();
-        data.iv         = &(iv[0]);
-        data.ivl        = iv.size();
-        data.out        = &(outpt[0]);
-        data.outl       = data.inl;
-        data.tag        = &(outtag[0]);
-        data.tagl       = outtag.size();
-        if (isxts) {
-            data.tkey       = &(tkey[0]);
-            data.tkeyl      = tkey.size();
-            data.block_size = ct.size();
-        }
-        bool ret = testingCore.getCipherHandler()->testingDecrypt(
-                   data, testingCore.getDs()->getKey());
-
-        EXPECT_TRUE(ArraysMatch(outpt,
-                                testingCore.getDs()->getPt(),
-                                *(testingCore.getDs()),
-                                std::string("AES_" + MODE_STR + "_" + std::to_string(keySize) + enc_dec_str)));
-        // Enforce that no errors are reported from lib side.
-        EXPECT_TRUE(ret);
-    }
+        while(testingCore.getDs()->readPtIvKeyCt(key_size))
+            RunTest(testingCore, enc_dec, enc_dec_str, MODE_STR, keySize, false, false);
+    }  
 }
 
 #endif
