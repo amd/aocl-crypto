@@ -299,6 +299,7 @@ EncryptXtsAvx512(const uint8_t* pSrc,
     __m512i  lastTweak    = tweakx8[tweak_idx];
     uint8_t* p_lastTweak8 = reinterpret_cast<uint8_t*>(&lastTweak);
     uint8_t* p_dest8      = reinterpret_cast<uint8_t*>(p_dest512);
+    auto     p_src8       = reinterpret_cast<const uint8_t*>(p_src512);
 
     if (blocks) {
         uint8_t  k           = ((1 << (blocks + blocks)) - 1);
@@ -334,7 +335,7 @@ EncryptXtsAvx512(const uint8_t* pSrc,
             (16 - extra_bytes_in_message_block));
 
         utils::CopyBytes(p_stealed_text,
-                         (uint8_t*)p_src512 + ((16 * (blocks))),
+                         p_src8 + ((16 * (blocks))),
                          (extra_bytes_in_message_block));
 
         stealed_text = _mm512_xor_epi64(temp_tweak, stealed_text);
@@ -628,9 +629,10 @@ DecryptXtsAvx512(const uint8_t* pSrc,
     }
 
     __m512i  lastTweak    = tweakx8[tweak_idx];
-    __m128i* p_tweak      = reinterpret_cast<__m128i*>(&lastTweak);
+    __m128i* p_lastTweak  = reinterpret_cast<__m128i*>(&lastTweak);
     uint8_t* p_lastTweak8 = reinterpret_cast<uint8_t*>(&lastTweak);
     uint8_t* p_dest8      = reinterpret_cast<uint8_t*>(p_dest512);
+    auto     p_src8       = reinterpret_cast<const uint8_t*>(p_src512);
 
     if (blocks) {
         uint8_t  k           = (uint8_t)((1 << (blocks + blocks)) - 1);
@@ -639,9 +641,9 @@ DecryptXtsAvx512(const uint8_t* pSrc,
 
         if (extra_bytes_in_message_block) {
 
-            __m128i temp_tweak  = p_tweak[blocks - 1];
-            p_tweak[blocks - 1] = p_tweak[blocks];
-            p_tweak[blocks]     = temp_tweak;
+            __m128i temp_tweak      = p_lastTweak[blocks - 1];
+            p_lastTweak[blocks - 1] = p_lastTweak[blocks];
+            p_lastTweak[blocks]     = temp_tweak;
         }
         src_text_1 = _mm512_xor_epi64(lastTweak, src_text_1);
 
@@ -669,7 +671,7 @@ DecryptXtsAvx512(const uint8_t* pSrc,
             (16 - extra_bytes_in_message_block));
 
         utils::CopyBytes(p_stealed_text,
-                         (uint8_t*)p_src512 + ((16 * (blocks))),
+                         p_src8 + ((16 * (blocks))),
                          (extra_bytes_in_message_block));
 
         stealed_text = _mm512_xor_epi64(tweak_1, stealed_text);

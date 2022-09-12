@@ -154,7 +154,7 @@ namespace alcp::cipher { namespace aesni {
         }
 
         auto p_dest8 = reinterpret_cast<uint8_t*>(p_dest128);
-        auto p_src8  = reinterpret_cast<uint8_t*>(p_src128);
+        auto p_src8  = reinterpret_cast<const uint8_t*>(p_src128);
 
         if (last_Round_Byte) {
             // stealing bytes for (m-1)th chiper message and storing it at mth
@@ -167,8 +167,7 @@ namespace alcp::cipher { namespace aesni {
             utils::CopyBytes(p_last_messgae_block + last_Round_Byte,
                              p_dest8 - 16 + last_Round_Byte,
                              16 - last_Round_Byte);
-            utils::CopyBytes(
-                p_last_messgae_block, (uint8_t*)p_src128, last_Round_Byte);
+            utils::CopyBytes(p_last_messgae_block, p_src8, last_Round_Byte);
             utils::CopyBytes(p_dest8, p_dest8 - 16, last_Round_Byte);
 
             // encrypting last message block
@@ -309,7 +308,7 @@ namespace alcp::cipher { namespace aesni {
         }
 
         auto p_dest8 = reinterpret_cast<uint8_t*>(p_dest128);
-        auto p_src8  = reinterpret_cast<uint8_t*>(p_src128);
+        auto p_src8  = reinterpret_cast<const uint8_t*>(p_src128);
 
         if (last_Round_Byte) {
             // stealing bytes from (m-1)th message block and storing it at mth
