@@ -173,4 +173,41 @@ void SHA2_CrossTest(int HashSize)
     delete fr;
 }
 
+void SHA2_KATTest(int HashSize)
+{
+    alc_error_t          error;
+    DataSet              ds = DataSet("dataset_SHA_" + std::to_string(HashSize) + ".csv");
+    std::vector<uint8_t> digest(HashSize/8, 0);
+    AlcpDigestBase adb(GetSHA2Mode(HashSize), ALC_DIGEST_TYPE_SHA2, GetSHA2Len(HashSize));
+    DigestBase*    db;
+    db = &adb;
+#ifdef USE_IPP
+    IPPDigestBase idb(GetSHA2Mode(HashSize), ALC_DIGEST_TYPE_SHA2, GetSHA2Len(HashSize));
+    if (useipp == true)
+        db = &idb;
+#endif
+#ifdef USE_OSSL
+    OpenSSLDigestBase odb(
+        GetSHA2Mode(HashSize), ALC_DIGEST_TYPE_SHA2, GetSHA2Len(HashSize));
+    if (useossl == true)
+        db = &odb;
+#endif
+    while (ds.readMsgDigest()) {
+        error = db->digest_function(&(ds.getMessage()[0]),
+                                    ds.getMessage().size(),
+                                    &(digest[0]),
+                                    digest.size());
+        db->init(GetSHA2Mode(HashSize), ALC_DIGEST_TYPE_SHA2, GetSHA2Len(HashSize));
+        if (alcp_is_error(error)) {
+            printf("Error");
+            return;
+        }
+        EXPECT_TRUE(
+            ArraysMatch(digest,         // output
+                        ds.getDigest(), // expected, from the KAT test data
+                        ds,
+                        std::string("SHA2_" + std::to_string(HashSize) + "_KAT")));
+    }
+}
+
 #endif

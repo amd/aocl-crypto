@@ -33,170 +33,17 @@
 #include <alcp/alcp.h>
 #include <iostream>
 
-#ifdef USE_IPP
-#include "digest/ipp_base.hh"
-#endif
-#ifdef USE_OSSL
-#include "digest/openssl_base.hh"
-#endif
-
-using namespace alcp::testing;
-
-/* Add all the KAT tests here */
-TEST(DIGEST_SHA2, KAT_224)
-{
-    alc_error_t          error;
-    DataSet              ds = DataSet("dataset_SHA_224.csv");
-    std::vector<uint8_t> digest(28, 0);
-    AlcpDigestBase adb(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
-    DigestBase*    db;
-    db = &adb;
-#ifdef USE_IPP
-    IPPDigestBase idb(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
-    if (useipp == true)
-        db = &idb;
-#endif
-#ifdef USE_OSSL
-    OpenSSLDigestBase odb(
-        ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
-    if (useossl == true)
-        db = &odb;
-#endif
-    while (ds.readMsgDigest()) {
-        error = db->digest_function(&(ds.getMessage()[0]),
-                                    ds.getMessage().size(),
-                                    &(digest[0]),
-                                    digest.size());
-        db->init(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
-        if (alcp_is_error(error)) {
-            printf("Error");
-            return;
-        }
-        EXPECT_TRUE(
-            ArraysMatch(digest,         // output
-                        ds.getDigest(), // expected, from the KAT test data
-                        ds,
-                        std::string("SHA2_224_KAT")));
-    }
+TEST(DIGEST_SHA2, KAT_224) {
+    SHA2_KATTest(224);
 }
-
-/* SHA256 */
-TEST(DIGEST_SHA2, KAT_256)
-{
-    alc_error_t          error;
-    DataSet              ds = DataSet("dataset_SHA_256.csv");
-    std::vector<uint8_t> digest(32, 0);
-    AlcpDigestBase adb(ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
-    DigestBase*    db;
-    db = &adb;
-#ifdef USE_IPP
-    IPPDigestBase idb(ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
-    if (useipp == true)
-        db = &idb;
-#endif
-
-#ifdef USE_OSSL
-    OpenSSLDigestBase odb(
-        ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
-    if (useossl == true)
-        db = &odb;
-#endif
-    while (ds.readMsgDigest()) {
-        error = db->digest_function(&(ds.getMessage()[0]),
-                                    ds.getMessage().size(),
-                                    &(digest[0]),
-                                    digest.size());
-        db->init(ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
-        if (alcp_is_error(error)) {
-            printf("Error");
-            return;
-        }
-        EXPECT_TRUE(
-            ArraysMatch(digest,         // output
-                        ds.getDigest(), // expected, from the KAT test data
-                        ds,
-                        std::string("SHA2_256_KAT")));
-    }
+TEST(DIGEST_SHA2, KAT_256) {
+    SHA2_KATTest(256);
 }
-
-/* SHA384 */
-TEST(DIGEST_SHA2, KAT_384)
-{
-    alc_error_t          error;
-    DataSet              ds = DataSet("dataset_SHA_384.csv");
-    std::vector<uint8_t> digest(48, 0);
-    AlcpDigestBase adb(ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
-    DigestBase*    db;
-    db = &adb;
-#ifdef USE_IPP
-    IPPDigestBase idb(ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
-    if (useipp == true)
-        db = &idb;
-#endif
-
-#ifdef USE_OSSL
-    OpenSSLDigestBase odb(
-        ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
-    if (useossl == true)
-        db = &odb;
-#endif
-
-    while (ds.readMsgDigest()) {
-        error = db->digest_function(&(ds.getMessage()[0]),
-                                    ds.getMessage().size(),
-                                    &(digest[0]),
-                                    digest.size());
-        db->init(ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
-        if (alcp_is_error(error)) {
-            printf("Error");
-            return;
-        }
-        EXPECT_TRUE(
-            ArraysMatch(digest,         // output
-                        ds.getDigest(), // expected, from the KAT test data
-                        ds,
-                        std::string("SHA2_384_KAT")));
-    }
+TEST(DIGEST_SHA2, KAT_384) {
+    SHA2_KATTest(384);
 }
-
-/* SHA512 */
-TEST(DIGEST_SHA2, KAT_512)
-{
-    alc_error_t          error;
-    DataSet              ds = DataSet("dataset_SHA_512.csv");
-    std::vector<uint8_t> digest(64, 0);
-    AlcpDigestBase adb(ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
-    DigestBase*    db;
-    db = &adb;
-#ifdef USE_IPP
-    IPPDigestBase idb(ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
-    if (useipp == true)
-        db = &idb;
-#endif
-
-#ifdef USE_OSSL
-    OpenSSLDigestBase odb(
-        ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
-    if (useossl == true)
-        db = &odb;
-#endif
-
-    while (ds.readMsgDigest()) {
-        error = db->digest_function(&(ds.getMessage()[0]),
-                                    ds.getMessage().size(),
-                                    &(digest[0]),
-                                    digest.size());
-        db->init(ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
-        if (alcp_is_error(error)) {
-            printf("Error");
-            return;
-        }
-        EXPECT_TRUE(
-            ArraysMatch(digest,         // output
-                        ds.getDigest(), // expected, from the KAT test data
-                        ds,
-                        std::string("SHA2_512_KAT")));
-    }
+TEST(DIGEST_SHA2, KAT_512) {
+    SHA2_KATTest(512);
 }
 
 int
