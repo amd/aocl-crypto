@@ -87,7 +87,7 @@ ALCP_prov_cipher_settable_ctx_params(void* cctx, void* provctx);
 const OSSL_PARAM*
 ALCP_prov_cipher_gettable_params(void* provctx);
 int
-ALCP_prov_cipher_get_params(OSSL_PARAM params[], int mode);
+ALCP_prov_cipher_get_params(OSSL_PARAM params[], int mode, int key_size);
 int
 ALCP_prov_cipher_set_params(const OSSL_PARAM params[]);
 
@@ -115,24 +115,52 @@ extern OSSL_FUNC_cipher_final_fn          ALCP_prov_cipher_final;
             },                                                             \
     }
 
-#define CREATE_CIPHER_DISPATCHERS(name, grp, mode)                             \
-    static OSSL_FUNC_cipher_get_params_fn ALCP_prov_##name##_get_params;       \
-    static int ALCP_prov_##name##_get_params(OSSL_PARAM* params)               \
+#define CREATE_CIPHER_DISPATCHERS(name, grp, mode, key_size)                   \
+    static OSSL_FUNC_cipher_get_params_fn                                      \
+               ALCP_prov_##name##_get_params_##key_size;                       \
+    static int ALCP_prov_##name##_get_params_##key_size(OSSL_PARAM* params)    \
     {                                                                          \
         ENTER();                                                               \
-        return ALCP_prov_cipher_get_params(params, mode);                      \
+        return ALCP_prov_cipher_get_params(params, mode, key_size);            \
     }                                                                          \
                                                                                \
-    static OSSL_FUNC_cipher_newctx_fn ALCP_prov_##name##_newctx;               \
-    static void*                      ALCP_prov_##name##_newctx(void* provctx) \
+    static OSSL_FUNC_cipher_newctx_fn ALCP_prov_##name##_newctx_##key_size;    \
+    static void* ALCP_prov_##name##_newctx_##key_size(void* provctx)           \
     {                                                                          \
         ENTER();                                                               \
         return ALCP_prov_aes_newctx(provctx, &s_cipher_##name##_info);         \
     }                                                                          \
-    const OSSL_DISPATCH name##_functions[] = {                                 \
+    static OSSL_FUNC_cipher_decrypt_init_fn                                    \
+               ALCP_prov_##name##_decrypt_init_##key_size;                     \
+    static int ALCP_prov_##name##_decrypt_init_##key_size(                     \
+        void*                vctx,                                             \
+        const unsigned char* key,                                              \
+        size_t               keylen,                                           \
+        const unsigned char* iv,                                               \
+        size_t               ivlen,                                            \
+        const OSSL_PARAM     params[])                                         \
+    {                                                                          \
+        ENTER();                                                               \
+        return ALCP_prov_cipher_decrypt_init(                                  \
+            vctx, key, key_size, iv, ivlen, params);                           \
+    }                                                                          \
+    static int ALCP_prov_##name##_encrypt_init_##key_size(                     \
+        void*                vctx,                                             \
+        const unsigned char* key,                                              \
+        size_t               keylen,                                           \
+        const unsigned char* iv,                                               \
+        size_t               ivlen,                                            \
+        const OSSL_PARAM     params[])                                         \
+    {                                                                          \
+        ENTER();                                                               \
+        return ALCP_prov_cipher_encrypt_init(                                  \
+            vctx, key, key_size, iv, ivlen, params);                           \
+    }                                                                          \
+    const OSSL_DISPATCH name##_functions_##key_size[] = {                      \
         { OSSL_FUNC_CIPHER_GET_PARAMS,                                         \
-          (fptr_t)ALCP_prov_##name##_get_params },                             \
-        { OSSL_FUNC_CIPHER_NEWCTX, (fptr_t)ALCP_prov_##name##_newctx },        \
+          (fptr_t)ALCP_prov_##name##_get_params_##key_size },                  \
+        { OSSL_FUNC_CIPHER_NEWCTX,                                             \
+          (fptr_t)ALCP_prov_##name##_newctx_##key_size },                      \
         { OSSL_FUNC_CIPHER_DUPCTX, (fptr_t)ALCP_prov_cipher_dupctx },          \
         { OSSL_FUNC_CIPHER_FREECTX, (fptr_t)ALCP_prov_cipher_freectx },        \
         { OSSL_FUNC_CIPHER_GETTABLE_PARAMS,                                    \
@@ -146,9 +174,9 @@ extern OSSL_FUNC_cipher_final_fn          ALCP_prov_cipher_final;
         { OSSL_FUNC_CIPHER_SET_CTX_PARAMS,                                     \
           (fptr_t)ALCP_prov_##grp##_set_ctx_params },                          \
         { OSSL_FUNC_CIPHER_ENCRYPT_INIT,                                       \
-          (fptr_t)ALCP_prov_cipher_encrypt_init },                             \
+          (fptr_t)ALCP_prov_##name##_encrypt_init_##key_size },                \
         { OSSL_FUNC_CIPHER_DECRYPT_INIT,                                       \
-          (fptr_t)ALCP_prov_cipher_decrypt_init },                             \
+          (fptr_t)ALCP_prov_##name##_decrypt_init_##key_size },                \
         { OSSL_FUNC_CIPHER_UPDATE, (fptr_t)ALCP_prov_cipher_update },          \
         { OSSL_FUNC_CIPHER_FINAL, (fptr_t)ALCP_prov_cipher_final },            \
     }

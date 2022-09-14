@@ -108,10 +108,10 @@ ALCP_prov_cipher_gettable_params(void* provctx)
 }
 
 int
-ALCP_prov_cipher_get_params(OSSL_PARAM params[], int mode)
+ALCP_prov_cipher_get_params(OSSL_PARAM params[], int mode, int key_size)
 {
     OSSL_PARAM* p;
-    int         kbits   = 128;
+    int         kbits   = key_size;
     int         blkbits = 128;
     int         ivbits  = 128;
 
@@ -253,12 +253,6 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
         default:
             return 0;
     }
-#ifdef DEBUG
-    printf("Provider: %d keylen:%ld, key:%p\n",
-           cinfo->ci_key_info.len,
-           keylen,
-           iv);
-#endif
     cctx->pc_cipher_info.ci_type = ALC_CIPHER_TYPE_AES;
     // Mode Already set
     if (iv != NULL) {
@@ -277,6 +271,13 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
         cctx->pc_cipher_info.ci_key_info.len = 128;
         cctx->pc_cipher_info.ci_key_info.key = OPENSSL_malloc(128);
     }
+
+#ifdef DEBUG
+    printf("Provider: %d keylen:%ld, key:%p\n",
+           cinfo->ci_key_info.len,
+           keylen,
+           key);
+#endif
 
     // Check for support
     err = alcp_cipher_supported(cinfo);
@@ -347,12 +348,6 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
         default:
             return 0;
     }
-#ifdef DEBUG
-    printf("Provider: %d keylen:%ld, key:%p\n",
-           cinfo->ci_key_info.len,
-           keylen,
-           iv);
-#endif
     cctx->pc_cipher_info.ci_type = ALC_CIPHER_TYPE_AES;
     // Mode Already set
     if (iv != NULL) {
@@ -365,12 +360,19 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
     cctx->pc_cipher_info.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
 
     // OpenSSL Speed likes to keep keylen 0
-    // if (keylen != 0) {
-    //     cctx->pc_cipher_info.ci_key_info.len = keylen;
-    // } else {
-    //     cctx->pc_cipher_info.ci_key_info.len = 128;
-    //     cctx->pc_cipher_info.ci_key_info.key = OPENSSL_malloc(128);
-    // }
+    if (keylen != 0) {
+        cctx->pc_cipher_info.ci_key_info.len = keylen;
+    } else {
+        cctx->pc_cipher_info.ci_key_info.len = 128;
+        cctx->pc_cipher_info.ci_key_info.key = OPENSSL_malloc(128);
+    }
+
+#ifdef DEBUG
+    printf("Provider: %d keylen:%ld, key:%p\n",
+           cinfo->ci_key_info.len,
+           keylen,
+           iv);
+#endif
 
     // Check for support
     err = alcp_cipher_supported(cinfo);
@@ -461,34 +463,46 @@ ALCP_prov_cipher_final(void*          vctx,
 }
 
 static const char          CIPHER_DEF_PROP[] = "provider=alcp,fips=no";
-extern const OSSL_DISPATCH cfb_functions[];
-extern const OSSL_DISPATCH cbc_functions[];
-extern const OSSL_DISPATCH ofb_functions[];
-extern const OSSL_DISPATCH ctr_functions[];
-extern const OSSL_DISPATCH ecb_functions[];
-extern const OSSL_DISPATCH xtr_functions[];
+extern const OSSL_DISPATCH cfb_functions_128[];
+extern const OSSL_DISPATCH cfb_functions_192[];
+extern const OSSL_DISPATCH cfb_functions_256[];
+extern const OSSL_DISPATCH cbc_functions_128[];
+extern const OSSL_DISPATCH cbc_functions_192[];
+extern const OSSL_DISPATCH cbc_functions_256[];
+extern const OSSL_DISPATCH ofb_functions_128[];
+extern const OSSL_DISPATCH ofb_functions_192[];
+extern const OSSL_DISPATCH ofb_functions_256[];
+extern const OSSL_DISPATCH ctr_functions_128[];
+extern const OSSL_DISPATCH ctr_functions_192[];
+extern const OSSL_DISPATCH ctr_functions_256[];
+extern const OSSL_DISPATCH ecb_functions_128[];
+extern const OSSL_DISPATCH ecb_functions_192[];
+extern const OSSL_DISPATCH ecb_functions_256[];
+extern const OSSL_DISPATCH xtr_functions_128[];
+extern const OSSL_DISPATCH xtr_functions_192[];
+extern const OSSL_DISPATCH xtr_functions_256[];
 const OSSL_ALGORITHM       ALC_prov_ciphers[] = {
-    { ALCP_PROV_NAMES_AES_256_CFB, CIPHER_DEF_PROP, cfb_functions },
-    { ALCP_PROV_NAMES_AES_192_CFB, CIPHER_DEF_PROP, cfb_functions },
-    { ALCP_PROV_NAMES_AES_128_CFB, CIPHER_DEF_PROP, cfb_functions },
-    { ALCP_PROV_NAMES_AES_256_CFB1, CIPHER_DEF_PROP, cfb_functions },
-    { ALCP_PROV_NAMES_AES_192_CFB1, CIPHER_DEF_PROP, cfb_functions },
-    { ALCP_PROV_NAMES_AES_128_CFB1, CIPHER_DEF_PROP, cfb_functions },
-    { ALCP_PROV_NAMES_AES_256_CFB8, CIPHER_DEF_PROP, cfb_functions },
-    { ALCP_PROV_NAMES_AES_192_CFB8, CIPHER_DEF_PROP, cfb_functions },
-    { ALCP_PROV_NAMES_AES_128_CFB8, CIPHER_DEF_PROP, cfb_functions },
-    { ALCP_PROV_NAMES_AES_256_CBC, CIPHER_DEF_PROP, cbc_functions },
-    { ALCP_PROV_NAMES_AES_192_CBC, CIPHER_DEF_PROP, cbc_functions },
-    { ALCP_PROV_NAMES_AES_128_CBC, CIPHER_DEF_PROP, cbc_functions },
-    { ALCP_PROV_NAMES_AES_256_OFB, CIPHER_DEF_PROP, ofb_functions },
-    { ALCP_PROV_NAMES_AES_192_OFB, CIPHER_DEF_PROP, ofb_functions },
-    { ALCP_PROV_NAMES_AES_128_OFB, CIPHER_DEF_PROP, ofb_functions },
-    { ALCP_PROV_NAMES_AES_256_CTR, CIPHER_DEF_PROP, ctr_functions },
-    { ALCP_PROV_NAMES_AES_192_CTR, CIPHER_DEF_PROP, ctr_functions },
-    { ALCP_PROV_NAMES_AES_128_CTR, CIPHER_DEF_PROP, ctr_functions },
-    { ALCP_PROV_NAMES_AES_256_ECB, CIPHER_DEF_PROP, ecb_functions },
-    { ALCP_PROV_NAMES_AES_192_ECB, CIPHER_DEF_PROP, ecb_functions },
-    { ALCP_PROV_NAMES_AES_128_ECB, CIPHER_DEF_PROP, ecb_functions },
+    { ALCP_PROV_NAMES_AES_256_CFB, CIPHER_DEF_PROP, cfb_functions_256 },
+    { ALCP_PROV_NAMES_AES_192_CFB, CIPHER_DEF_PROP, cfb_functions_192 },
+    { ALCP_PROV_NAMES_AES_128_CFB, CIPHER_DEF_PROP, cfb_functions_128 },
+    { ALCP_PROV_NAMES_AES_256_CFB1, CIPHER_DEF_PROP, cfb_functions_256 },
+    { ALCP_PROV_NAMES_AES_192_CFB1, CIPHER_DEF_PROP, cfb_functions_192 },
+    { ALCP_PROV_NAMES_AES_128_CFB1, CIPHER_DEF_PROP, cfb_functions_128 },
+    { ALCP_PROV_NAMES_AES_256_CFB8, CIPHER_DEF_PROP, cfb_functions_256 },
+    { ALCP_PROV_NAMES_AES_192_CFB8, CIPHER_DEF_PROP, cfb_functions_192 },
+    { ALCP_PROV_NAMES_AES_128_CFB8, CIPHER_DEF_PROP, cfb_functions_128 },
+    { ALCP_PROV_NAMES_AES_256_CBC, CIPHER_DEF_PROP, cbc_functions_256 },
+    { ALCP_PROV_NAMES_AES_192_CBC, CIPHER_DEF_PROP, cbc_functions_192 },
+    { ALCP_PROV_NAMES_AES_128_CBC, CIPHER_DEF_PROP, cbc_functions_128 },
+    { ALCP_PROV_NAMES_AES_256_OFB, CIPHER_DEF_PROP, ofb_functions_256 },
+    { ALCP_PROV_NAMES_AES_192_OFB, CIPHER_DEF_PROP, ofb_functions_192 },
+    { ALCP_PROV_NAMES_AES_128_OFB, CIPHER_DEF_PROP, ofb_functions_128 },
+    { ALCP_PROV_NAMES_AES_256_CTR, CIPHER_DEF_PROP, ctr_functions_256 },
+    { ALCP_PROV_NAMES_AES_192_CTR, CIPHER_DEF_PROP, ctr_functions_192 },
+    { ALCP_PROV_NAMES_AES_128_CTR, CIPHER_DEF_PROP, ctr_functions_128 },
+    { ALCP_PROV_NAMES_AES_256_ECB, CIPHER_DEF_PROP, ecb_functions_256 },
+    { ALCP_PROV_NAMES_AES_192_ECB, CIPHER_DEF_PROP, ecb_functions_192 },
+    { ALCP_PROV_NAMES_AES_128_ECB, CIPHER_DEF_PROP, ecb_functions_128 },
 #if 0
     { ALCP_PROV_NAMES_AES_256_XTS, CIPHER_DEF_PROP, xts_functions },
     { ALCP_PROV_NAMES_AES_128_XTS, CIPHER_DEF_PROP, xts_functions },
