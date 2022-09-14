@@ -32,19 +32,21 @@
 #include <openssl/conf.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
+#include <openssl/provider.h>
 
 namespace alcp::testing {
 class OpenSSLCipherBase : public CipherBase
 {
   private:
-    EVP_CIPHER_CTX*   m_ctx_enc = nullptr;
-    EVP_CIPHER_CTX*   m_ctx_dec = nullptr;
-    alc_cipher_mode_t m_mode    = {};
-    const uint8_t*    m_iv      = nullptr;
-    uint32_t          m_iv_len  = 12;
-    const uint8_t*    m_key     = nullptr;
-    uint32_t          m_key_len = 0;
-    const uint8_t*    m_tkey    = nullptr;
+    EVP_CIPHER_CTX*   m_ctx_enc       = nullptr;
+    EVP_CIPHER_CTX*   m_ctx_dec       = nullptr;
+    alc_cipher_mode_t m_mode          = {};
+    const uint8_t*    m_iv            = nullptr;
+    uint32_t          m_iv_len        = 12;
+    const uint8_t*    m_key           = nullptr;
+    uint32_t          m_key_len       = 0;
+    const uint8_t*    m_tkey          = nullptr;
+    OSSL_PROVIDER*    m_alcp_provider = nullptr;
     // const uint64_t    m_block_size = 0;
 
     void              handleErrors();

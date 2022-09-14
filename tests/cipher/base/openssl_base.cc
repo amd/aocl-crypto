@@ -26,6 +26,17 @@
  *
  */
 #include "cipher/openssl_base.hh"
+
+/*  Loading ALCP-Provider can be used
+    to test/benchmark provider.       */
+// #define USE_PROVIDER
+#define OPENSSL_PROVIDER_PATH "."
+#if 1
+#define OPENSSL_PROVIDER_NAME "libopenssl-compat"
+#else
+#define OPENSSL_PROVIDER_NAME "libopenssl-compat_DEBUG"
+#endif
+
 namespace alcp::testing {
 void
 OpenSSLCipherBase::handleErrors()
@@ -148,6 +159,12 @@ OpenSSLCipherBase::~OpenSSLCipherBase()
     if (m_ctx_dec != nullptr) {
         EVP_CIPHER_CTX_free(m_ctx_dec);
     }
+#ifdef USE_PROVIDER
+    if (m_alcp_provider != nullptr) {
+        OSSL_PROVIDER_unload(m_alcp_provider);
+        m_alcp_provider = nullptr;
+    }
+#endif
 }
 
 bool
@@ -187,6 +204,18 @@ OpenSSLCipherBase::init(const uint8_t* key, const uint32_t key_len)
     m_key     = key;
     m_key_len = key_len;
     uint8_t key_final[64];
+
+#ifdef USE_PROVIDER
+    if (m_alcp_provider == nullptr) {
+        std::cout << "Using ALCP-OpenSSL-Compat Provider" << std::endl;
+        OSSL_PROVIDER_set_default_search_path(NULL, OPENSSL_PROVIDER_PATH);
+        m_alcp_provider = OSSL_PROVIDER_load(NULL, OPENSSL_PROVIDER_NAME);
+    }
+    if (NULL == m_alcp_provider) {
+        printErrors("Failed to load ALCP provider");
+        return false;
+    }
+#endif
 
     /* xts */
     if (m_mode == ALC_AES_MODE_XTS) {
@@ -436,5 +465,4 @@ OpenSSLCipherBase::reset()
     if (1 != EVP_CIPHER_CTX_set_padding(m_ctx_dec, 0))
         handleErrors();
 }
-
 } // namespace alcp::testing
