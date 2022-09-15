@@ -48,7 +48,7 @@ alc_error_t
 alcp_rng_supported(const alc_rng_info_p pRngInfo)
 {
     alc_error_t error = ALC_ERROR_NONE;
-#ifdef USE_AOCL_SRNG
+
 #ifdef USE_AOCL_CPUID
     bool rd_rand_available = (alc_cpu_has_rdrnd() > 0);
     bool rd_seed_available = (alc_cpu_has_rdseed() > 0);
@@ -56,7 +56,6 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo)
     bool rd_rand_available = true;
     bool rd_seed_available = true;
 #endif // AOCL_CPUID
-#endif // AOCL_SRNG
 
     switch (pRngInfo->ri_type) {
         case ALC_RNG_TYPE_DESCRETE:
@@ -65,13 +64,10 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo)
                     switch (pRngInfo->ri_source) {
                         case ALC_RNG_SOURCE_OS:
                             break;
-#ifdef USE_AOCL_SRNG
                         case ALC_RNG_SOURCE_ARCH:
                             if (rd_rand_available && rd_seed_available) {
                                 break;
                             }
-
-#endif
                         default:
                             error = ALC_ERROR_NOT_SUPPORTED;
                             break;

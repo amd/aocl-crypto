@@ -3,11 +3,6 @@
 
 SET(RNG_SRCS builder.cc system_rng.cc rng.cc)
 
-IF(AOCL_INSTALL_DIR)
-	MESSAGE(STATUS "Enabling AOCL SRNG")
-	TARGET_LINK_LIBRARIES(alcp PRIVATE ${AOCL_INSTALL_DIR}/lib/libamdsecrng.so)
-ENDIF(AOCL_INSTALL_DIR)
-
 TARGET_SOURCES(alcp
 	PRIVATE
 		${RNG_SRCS}
