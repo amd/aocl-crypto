@@ -40,6 +40,46 @@
 #include "utils/constants.hh"
 #include "utils/copy.hh"
 
+#define shift_rows(inp, out)                                                   \
+    (out)[0] = (inp)[0];                                                       \
+    (out)[1] = (inp)[1];                                                       \
+    (out)[2] = (inp)[2];                                                       \
+    (out)[3] = (inp)[3];                                                       \
+    (out)[4] = (inp)[5];                                                       \
+    (out)[5] = (inp)[6];                                                       \
+    (out)[6] = (inp)[7];                                                       \
+    (out)[7] = (inp)[4];                                                       \
+                                                                               \
+    (out)[8]  = (inp)[10];                                                     \
+    (out)[9]  = (inp)[11];                                                     \
+    (out)[10] = (inp)[8];                                                      \
+    (out)[11] = (inp)[9];                                                      \
+                                                                               \
+    (out)[12] = (inp)[15];                                                     \
+    (out)[13] = (inp)[12];                                                     \
+    (out)[14] = (inp)[13];                                                     \
+    (out)[15] = (inp)[14]
+
+#define mix_column_exchange(inp, out)                                          \
+    (out)[0] = (inp)[0];                                                       \
+    (out)[1] = (inp)[4];                                                       \
+    (out)[2] = (inp)[8];                                                       \
+    (out)[3] = (inp)[12];                                                      \
+    (out)[4] = (inp)[7];                                                       \
+    (out)[5] = (inp)[11];                                                      \
+    (out)[6] = (inp)[15];                                                      \
+    (out)[7] = (inp)[3];                                                       \
+                                                                               \
+    (out)[8]  = (inp)[10];                                                     \
+    (out)[9]  = (inp)[14];                                                     \
+    (out)[10] = (inp)[2];                                                      \
+    (out)[11] = (inp)[6];                                                      \
+                                                                               \
+    (out)[12] = (inp)[13];                                                     \
+    (out)[13] = (inp)[1];                                                      \
+    (out)[14] = (inp)[5];                                                      \
+    (out)[15] = (inp)[9]
+
 namespace alcp::cipher {
 
 /* Message size, key size, etc */
@@ -142,6 +182,8 @@ class alignas(16) Rijndael::Impl
                               uint64_t       len,
                               const uint8_t* pIv);
 
+    void AESEncrypt(Uint32* blk0, const uint8_t* pkey, int nr) const;
+
     void setUp(const alc_key_info_t& rKeyInfo)
     {
         int len           = rKeyInfo.len;
@@ -221,28 +263,6 @@ Rijndael::Impl::invMixColumns(Uint8 state[][4]) noexcept
 static Uint32
 gmulx2(Uint32 val)
 {
-    /*
-
-        Reference Link & Source for Understanding:
-        https://en.wikipedia.org/wiki/Finite_field_arithmetic
-        4th topic Multiplication
-
-        galois Multiple of val*2 for 32 bit
-
-        val (32bit) = 4 val (8bit); 0xfefefefe to be used so that 8 bits don't
-        interact with each other and last bit will always be zero as val+val
-        used
-
-        val & 0x80808080 GF modulo: if val has a nonzero term x^7, then must be
-        reduced when it becomes x^8
-
-        Primitive polynomial x^8 + x^4 + x^3 + x + 1
-        (0b1_0001_1011) 0x11b so for 8bit 0x1b corresponds to the irreducible
-        polynomial with the high term eliminated – you can change it but it must
-        be irreducible
-
-    */
-
     return ((val + val) & 0xfefefefe)
            ^ ((((val & 0x80808080) << 1) - ((val & 0x80808080) >> 7))
               & 0x1b1b1b1b);
@@ -264,6 +284,40 @@ InvMixColumns(const Uint32& val)
            ^ ((val_d >> 16) | (val_d << 16)) ^ ((val_9 >> 24) | (val_9 << 8));
 }
 
+static inline void
+MixColumns(Uint8* inp)
+{
+    Uint8 states[16];
+    for (int i = 0; i < 16; i++) {
+        states[i] = inp[i];
+    }
+    for (int i = 0; i < 4; i++) {
+        Uint8 t0, t1, t2, t3;
+        t0 = states[i + 4] ^ states[i + 8] ^ states[i + 12];
+        t1 = states[i + 8] ^ states[i + 12] ^ states[i];
+        t2 = states[i + 12] ^ states[i] ^ states[i + 4];
+        t3 = states[i] ^ states[i + 4] ^ states[i + 8];
+
+        states[i] = gmulx2(states[i]); // state = galois Multiple of state*2;
+        states[i + 4] =
+            gmulx2(states[i + 4]); // state = galois Multiple of state*2;
+        states[i + 8] =
+            gmulx2(states[i + 8]); // state = galois Multiple of state*2;
+        states[i + 12] =
+            gmulx2(states[i + 12]); // state = galois Multiple of state*2;
+
+        t0 ^= states[i] ^ states[i + 4];
+        t1 ^= states[i + 4] ^ states[i + 8];
+        t2 ^= states[i + 8] ^ states[i + 12];
+        t3 ^= states[i + 12] ^ states[i];
+        states[i]      = t0;
+        states[i + 4]  = t1;
+        states[i + 8]  = t2;
+        states[i + 12] = t3;
+    }
+    mix_column_exchange(states, inp);
+}
+
 static inline Uint32
 SubBytes(const Uint32& val)
 {
@@ -272,6 +326,15 @@ SubBytes(const Uint32& val)
                     GetSbox(GetByte(val, 1)),
                     GetSbox(GetByte(val, 2)),
                     GetSbox(GetByte(val, 3)));
+}
+
+static inline void
+SubBytes(const Uint8* inp, Uint8* out)
+{
+    using namespace utils;
+    for (int b = 0; b < 16; b++) {
+        out[b] = GetSbox(inp[b]);
+    }
 }
 
 void
@@ -308,6 +371,83 @@ void
 Rijndael::Impl::addRoundKey(Uint8 state[][4], Uint8 k[][4]) noexcept
 {
     /* FIXME: call with Uint32 for easier calculation */
+}
+
+/*
+ * FIPS-197 Section 5.1 Psuedo-code for Encryption
+ *
+ * Cipher(byte in[4*Nb], byte out[4*Nb], word w[Nb*(Nr+1)])
+ *  begin
+ *
+ *       byte state[4,Nb]
+ *
+ *       state = in
+ *
+ *       AddRoundKey(state, w[0, Nb-1]) // See Sec. 5.1.4
+ *
+ *       for round = 1 step 1 to Nr–1
+ *           SubBytes(state) // See Sec. 5.1.1
+ *           ShiftRows(state) // See Sec. 5.1.2
+ *           MixColumns(state) // See Sec. 5.1.3
+ *           AddRoundKey(state, w[round*Nb, (round+1)*Nb-1])
+ *       end for
+ *
+ *       SubBytes(state)
+ *       ShiftRows(state)
+ *       AddRoundKey(state, w[Nr*Nb, (Nr+1)*Nb-1])
+ *
+ *       out = state
+ *
+ *  end
+ */
+void
+Rijndael::Impl::AESEncrypt(Uint32* blk0, const uint8_t* pkey, int nr) const
+{
+
+    using utils::MakeWord;
+    auto p_key32 = reinterpret_cast<const Uint32*>(pkey);
+
+    Uint32 state[4];
+    memcpy(state, blk0, 16);
+
+    auto p_state = reinterpret_cast<Uint8*>(state);
+
+    state[0] = state[0] ^ p_key32[0];
+    state[1] = state[1] ^ p_key32[1];
+    state[2] = state[2] ^ p_key32[2];
+    state[3] = state[3] ^ p_key32[3];
+
+    p_key32 += 4;
+
+    for (int r = 1; r < nr; r++) {
+
+        Uint8 temp[16];
+
+        SubBytes(p_state, temp);
+        shift_rows(temp, p_state);
+        MixColumns(p_state);
+
+        state[0] = state[0] ^ p_key32[0];
+        state[1] = state[1] ^ p_key32[1];
+        state[2] = state[2] ^ p_key32[2];
+        state[3] = state[3] ^ p_key32[3];
+
+        p_key32 += 4;
+    }
+    Uint8 temp[16];
+
+    SubBytes(p_state, temp);
+    shift_rows(temp, p_state);
+    mix_column_exchange(p_state, temp);
+
+    utils::CopyBytes(p_state, temp, 16);
+
+    state[0] = AddRoundKey(state[0], p_key32[0]);
+    state[1] = state[1] ^ p_key32[1];
+    state[2] = state[2] ^ p_key32[2];
+    state[3] = state[3] ^ p_key32[3];
+
+    utils::CopyBytes(blk0, state, 16);
 }
 
 /*
@@ -459,7 +599,7 @@ Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
     Uint32*       p_enc_key32;
     // auto            p_key32     = reinterpret_cast<const Uint32*>(key);
     p_enc_key32 = reinterpret_cast<Uint32*>(pEncKey);
-
+    // printf("key size : %d, nb %d, nr %d\n", nk, nb, nr);
     for (i = 0; i < nk; i++) {
         p_enc_key32[i] = MakeWord(
             key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]);
@@ -575,6 +715,12 @@ Rijndael::encrypt(const Uint8* pPlaintxt,
                   const Uint8* pIv) const
 {
     return pImpl()->encrypt(pPlaintxt, pCihpertxt, len, pIv);
+}
+
+void
+Rijndael::AesEncrypt(Uint32* blk0, const uint8_t* pkey, int nr) const
+{
+    pImpl()->AESEncrypt(blk0, pkey, nr);
 }
 
 alc_error_t
