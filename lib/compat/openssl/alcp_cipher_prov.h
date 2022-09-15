@@ -47,6 +47,7 @@ struct _alc_prov_cipher_ctx
     /* Must be first */
     alc_prov_ctx_t*     pc_prov_ctx;
     alc_cipher_handle_t handle;
+    alc_key_info_t kinfo_tweak_key;
     int                 enc_flag;
 
     int               pc_nid;

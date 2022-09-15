@@ -222,8 +222,9 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
                               size_t               ivlen,
                               const OSSL_PARAM     params[])
 {
-    alc_prov_cipher_ctx_p cctx  = vctx;
-    alc_cipher_info_p     cinfo = &cctx->pc_cipher_info;
+    alc_prov_cipher_ctx_p cctx            = vctx;
+    alc_cipher_info_p     cinfo           = &cctx->pc_cipher_info;
+    alc_key_info_p        kinfo_tweak_key = &cctx->kinfo_tweak_key;
     alc_error_t           err;
     // const int             err_size = 256;
     // uint8_t               err_buf[err_size];
@@ -247,8 +248,8 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
         case ALC_AES_MODE_ECB:
             PRINT("Provider: ECB\n");
             break;
-        case ALC_AES_MODE_XTR:
-            PRINT("Provider: XTR\n");
+        case ALC_AES_MODE_XTS:
+            PRINT("Provider: XTS\n");
             break;
         default:
             return 0;
@@ -278,6 +279,32 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
            keylen,
            key);
 #endif
+    // For AES XTS Mode, get the tweak key
+    if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
+        const uint8_t* tweak_key     = NULL;
+        int            tweak_key_len = 128;
+        if (keylen == 128) {
+            tweak_key     = key + 16;
+            tweak_key_len = 128;
+
+        } else if (keylen == 256) {
+            tweak_key     = key + 32;
+            tweak_key_len = 256;
+        } else {
+#ifdef DEBUG
+            printf("Provider: Unsupported Key Length %ld in AES XTS Mode of "
+                   "Operation\n",
+                   keylen);
+#endif
+            // Return with error
+            return 0;
+        }
+        kinfo_tweak_key->type                   = ALC_KEY_TYPE_SYMMETRIC;
+        kinfo_tweak_key->fmt                    = ALC_KEY_FMT_RAW;
+        kinfo_tweak_key->key                    = tweak_key;
+        kinfo_tweak_key->len                    = tweak_key_len;
+        cinfo->ci_algo_info.ai_xts.xi_tweak_key = kinfo_tweak_key;
+    }
 
     // Check for support
     err = alcp_cipher_supported(cinfo);
@@ -319,8 +346,9 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
                               size_t               ivlen,
                               const OSSL_PARAM     params[])
 {
-    alc_prov_cipher_ctx_p cctx  = vctx;
-    alc_cipher_info_p     cinfo = &cctx->pc_cipher_info;
+    alc_prov_cipher_ctx_p cctx            = vctx;
+    alc_key_info_p        kinfo_tweak_key = &cctx->kinfo_tweak_key;
+    alc_cipher_info_p     cinfo           = &cctx->pc_cipher_info;
     alc_error_t           err;
     // const int             err_size = 256;
     // uint8_t               err_buf[err_size];
@@ -342,8 +370,8 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
         case ALC_AES_MODE_ECB:
             PRINT("Provider: ECB\n");
             break;
-        case ALC_AES_MODE_XTR:
-            PRINT("Provider: XTR\n");
+        case ALC_AES_MODE_XTS:
+            PRINT("Provider: XTS\n");
             break;
         default:
             return 0;
@@ -359,7 +387,8 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
     cctx->pc_cipher_info.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
     cctx->pc_cipher_info.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
 
-    // OpenSSL Speed likes to keep keylen 0
+    // Special handling for XTS Keylen is required if the below code is ever
+    // commented out OpenSSL Speed likes to keep keylen 0
     if (keylen != 0) {
         cctx->pc_cipher_info.ci_key_info.len = keylen;
     } else {
@@ -373,6 +402,32 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
            keylen,
            iv);
 #endif
+
+    // For AES XTS Mode, get the tweak key
+    if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
+        const uint8_t* tweak_key     = NULL;
+        int            tweak_key_len = 128;
+        if (keylen == 128) {
+            tweak_key     = key + 16;
+            tweak_key_len = 128;
+        } else if (keylen == 256) {
+            tweak_key     = key + 32;
+            tweak_key_len = 256;
+        } else {
+#ifdef DEBUG
+            printf("Provider: Unsupported Key Length %ld in AES XTS Mode of "
+                   "Operation\n",
+                   keylen);
+#endif
+            // Return with Error
+            return 0;
+        }
+        kinfo_tweak_key->type                   = ALC_KEY_TYPE_SYMMETRIC;
+        kinfo_tweak_key->fmt                    = ALC_KEY_FMT_RAW;
+        kinfo_tweak_key->key                    = tweak_key;
+        kinfo_tweak_key->len                    = tweak_key_len;
+        cinfo->ci_algo_info.ai_xts.xi_tweak_key = kinfo_tweak_key;
+    }
 
     // Check for support
     err = alcp_cipher_supported(cinfo);
@@ -478,9 +533,8 @@ extern const OSSL_DISPATCH ctr_functions_256[];
 extern const OSSL_DISPATCH ecb_functions_128[];
 extern const OSSL_DISPATCH ecb_functions_192[];
 extern const OSSL_DISPATCH ecb_functions_256[];
-extern const OSSL_DISPATCH xtr_functions_128[];
-extern const OSSL_DISPATCH xtr_functions_192[];
-extern const OSSL_DISPATCH xtr_functions_256[];
+extern const OSSL_DISPATCH xts_functions_128[];
+extern const OSSL_DISPATCH xts_functions_256[];
 const OSSL_ALGORITHM       ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_256_CFB, CIPHER_DEF_PROP, cfb_functions_256 },
     { ALCP_PROV_NAMES_AES_192_CFB, CIPHER_DEF_PROP, cfb_functions_192 },
@@ -503,10 +557,8 @@ const OSSL_ALGORITHM       ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_256_ECB, CIPHER_DEF_PROP, ecb_functions_256 },
     { ALCP_PROV_NAMES_AES_192_ECB, CIPHER_DEF_PROP, ecb_functions_192 },
     { ALCP_PROV_NAMES_AES_128_ECB, CIPHER_DEF_PROP, ecb_functions_128 },
-#if 0
-    { ALCP_PROV_NAMES_AES_256_XTS, CIPHER_DEF_PROP, xts_functions },
-    { ALCP_PROV_NAMES_AES_128_XTS, CIPHER_DEF_PROP, xts_functions },
-#endif
+    { ALCP_PROV_NAMES_AES_256_XTS, CIPHER_DEF_PROP, xts_functions_256 },
+    { ALCP_PROV_NAMES_AES_128_XTS, CIPHER_DEF_PROP, xts_functions_128 },
     { NULL, NULL, NULL },
 };
 
