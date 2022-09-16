@@ -109,7 +109,8 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
             if (!bbxreplay)
                 fr->startRecEvent();
             alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> ct, key, tkey, iv, add, out_pt_alc(size, 0),
+            std::vector<uint8_t> ct(size, 0), key(key_size / 8, 0),
+                tkey(key_size / 8, 0), iv(12, 0), out_pt_alc(size, 0),
                 out_pt_ext(size, 0);
             if (!bbxreplay) {
                 ct   = rb.genRandomBytes(size);
@@ -127,14 +128,14 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
                 data_alc.tkey  = &(tkey[0]);
                 data_alc.tkeyl = 16;
                 // External Lib Data
-                data_ext.in    = &(ct[0]);
-                data_ext.inl   = ct.size();
-                data_ext.iv    = &(iv[0]);
-                data_ext.ivl   = iv.size();
-                data_ext.out   = &(out_pt_ext[0]);
-                data_ext.outl  = data_alc.inl;
-                data_ext.tkey  = &(tkey[0]);
-                data_ext.tkeyl = 16;
+                data_ext.in         = &(ct[0]);
+                data_ext.inl        = ct.size();
+                data_ext.iv         = &(iv[0]);
+                data_ext.ivl        = iv.size();
+                data_ext.out        = &(out_pt_ext[0]);
+                data_ext.outl       = data_alc.inl;
+                data_ext.tkey       = &(tkey[0]);
+                data_ext.tkeyl      = 16;
                 data_ext.block_size = ct.size();
 
                 fr->setRecEvent(key, iv, ct, BIG_DEC);
@@ -217,7 +218,8 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
             if (!bbxreplay)
                 fr->startRecEvent();
             alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> pt, key, tkey, iv, add, out_ct_alc(size, 0),
+            std::vector<uint8_t> pt(size, 0), key(key_size / 8, 0),
+                tkey(key_size / 8, 0), iv(12, 0), out_ct_alc(size, 0),
                 out_ct_ext(size, 0);
             if (!bbxreplay) {
                 pt   = rb.genRandomBytes(size);
@@ -235,14 +237,14 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
                 data_alc.tkey  = &(tkey[0]);
                 data_alc.tkeyl = 16;
                 // External Lib Data
-                data_ext.in    = &(pt[0]);
-                data_ext.inl   = pt.size();
-                data_ext.iv    = &(iv[0]);
-                data_ext.ivl   = iv.size();
-                data_ext.out   = &(out_ct_ext[0]);
-                data_ext.outl  = data_alc.inl;
-                data_ext.tkey  = &(tkey[0]);
-                data_ext.tkeyl = 16;
+                data_ext.in         = &(pt[0]);
+                data_ext.inl        = pt.size();
+                data_ext.iv         = &(iv[0]);
+                data_ext.ivl        = iv.size();
+                data_ext.out        = &(out_ct_ext[0]);
+                data_ext.outl       = data_alc.inl;
+                data_ext.tkey       = &(tkey[0]);
+                data_ext.tkeyl      = 16;
                 data_ext.block_size = pt.size();
 
                 fr->setRecEvent(key, iv, pt, BIG_ENC);
@@ -325,7 +327,8 @@ TEST(SYMMETRIC_ENC_256, 256_CROSS_CHECK_BIG)
             if (!bbxreplay)
                 fr->startRecEvent();
             alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> pt, key, tkey, iv, add, out_ct_alc(size, 0),
+            std::vector<uint8_t> pt(size, 0), key(key_size / 8, 0),
+                tkey(key_size / 8, 0), iv(12, 0), out_ct_alc(size, 0),
                 out_ct_ext(size, 0);
             if (!bbxreplay) {
                 pt   = rb.genRandomBytes(size);
@@ -344,14 +347,14 @@ TEST(SYMMETRIC_ENC_256, 256_CROSS_CHECK_BIG)
                 data_alc.tkeyl = 16;
 
                 // External Lib Data
-                data_ext.in    = &(pt[0]);
-                data_ext.inl   = pt.size();
-                data_ext.iv    = &(iv[0]);
-                data_ext.ivl   = iv.size();
-                data_ext.out   = &(out_ct_ext[0]);
-                data_ext.outl  = data_alc.inl;
-                data_ext.tkey  = &(tkey[0]);
-                data_ext.tkeyl = 16;
+                data_ext.in         = &(pt[0]);
+                data_ext.inl        = pt.size();
+                data_ext.iv         = &(iv[0]);
+                data_ext.ivl        = iv.size();
+                data_ext.out        = &(out_ct_ext[0]);
+                data_ext.outl       = data_alc.inl;
+                data_ext.tkey       = &(tkey[0]);
+                data_ext.tkeyl      = 16;
                 data_ext.block_size = pt.size();
 
                 fr->setRecEvent(key, iv, pt, BIG_ENC);
@@ -434,7 +437,8 @@ TEST(SYMMETRIC_DEC_256, 256_CROSS_CHECK_BIG)
             if (!bbxreplay)
                 fr->startRecEvent();
             alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> ct, key, tkey, iv, add, out_pt_alc(size, 0),
+            std::vector<uint8_t> ct(size, 0), key(key_size / 8, 0),
+                tkey(key_size / 8, 0), iv(12, 0), out_pt_alc(size, 0),
                 out_pt_ext(size, 0);
             if (!bbxreplay) {
                 ct   = rb.genRandomBytes(size);
@@ -453,14 +457,14 @@ TEST(SYMMETRIC_DEC_256, 256_CROSS_CHECK_BIG)
                 data_alc.tkeyl = 16;
 
                 // External Lib Data
-                data_ext.in    = &(ct[0]);
-                data_ext.inl   = ct.size();
-                data_ext.iv    = &(iv[0]);
-                data_ext.ivl   = iv.size();
-                data_ext.out   = &(out_pt_ext[0]);
-                data_ext.outl  = data_alc.inl;
-                data_ext.tkey  = &(tkey[0]);
-                data_ext.tkeyl = 16;
+                data_ext.in         = &(ct[0]);
+                data_ext.inl        = ct.size();
+                data_ext.iv         = &(iv[0]);
+                data_ext.ivl        = iv.size();
+                data_ext.out        = &(out_pt_ext[0]);
+                data_ext.outl       = data_alc.inl;
+                data_ext.tkey       = &(tkey[0]);
+                data_ext.tkeyl      = 16;
                 data_ext.block_size = ct.size();
 
                 fr->setRecEvent(key, iv, ct, BIG_DEC);
@@ -541,7 +545,8 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
             if (!bbxreplay)
                 fr->startRecEvent();
             alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> pt, key, tkey, iv, add, out_ct_alc(i, 0),
+            std::vector<uint8_t> pt(i, 0), key(key_size / 8, 0),
+                tkey(key_size / 8, 0), iv(12, 0), add, out_ct_alc(i, 0),
                 out_ct_ext(i, 0);
             if (!bbxreplay) {
                 pt   = rb.genRandomBytes(i);
@@ -560,14 +565,14 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
                 data_alc.tkeyl = 16;
 
                 // External Lib Data
-                data_ext.in    = &(pt[0]);
-                data_ext.inl   = pt.size();
-                data_ext.iv    = &(iv[0]);
-                data_ext.ivl   = iv.size();
-                data_ext.out   = &(out_ct_ext[0]);
-                data_ext.outl  = data_alc.inl;
-                data_ext.tkey  = &(tkey[0]);
-                data_ext.tkeyl = 16;
+                data_ext.in         = &(pt[0]);
+                data_ext.inl        = pt.size();
+                data_ext.iv         = &(iv[0]);
+                data_ext.ivl        = iv.size();
+                data_ext.out        = &(out_ct_ext[0]);
+                data_ext.outl       = data_alc.inl;
+                data_ext.tkey       = &(tkey[0]);
+                data_ext.tkeyl      = 16;
                 data_ext.block_size = pt.size();
 
                 fr->setRecEvent(key, iv, pt, SMALL_ENC);
@@ -649,7 +654,8 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
             if (!bbxreplay)
                 fr->startRecEvent();
             alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> ct, key, tkey, iv, add, out_pt_alc(i, 0),
+            std::vector<uint8_t> ct(i, 0), key(key_size / 8, 0),
+                tkey(key_size / 8, 0), iv(12, 0), out_pt_alc(i, 0),
                 out_pt_ext(i, 0);
             if (!bbxreplay) {
                 ct   = rb.genRandomBytes(i);
@@ -668,14 +674,14 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
                 data_alc.tkeyl = 16;
 
                 // External Lib Data
-                data_ext.in    = &(ct[0]);
-                data_ext.inl   = ct.size();
-                data_ext.iv    = &(iv[0]);
-                data_ext.ivl   = iv.size();
-                data_ext.out   = &(out_pt_ext[0]);
-                data_ext.outl  = data_alc.inl;
-                data_ext.tkey  = &(tkey[0]);
-                data_ext.tkeyl = 16;
+                data_ext.in         = &(ct[0]);
+                data_ext.inl        = ct.size();
+                data_ext.iv         = &(iv[0]);
+                data_ext.ivl        = iv.size();
+                data_ext.out        = &(out_pt_ext[0]);
+                data_ext.outl       = data_alc.inl;
+                data_ext.tkey       = &(tkey[0]);
+                data_ext.tkeyl      = 16;
                 data_ext.block_size = ct.size();
 
                 fr->setRecEvent(key, iv, ct, SMALL_DEC);
@@ -757,7 +763,8 @@ TEST(SYMMETRIC_ENC_256, 256_CROSS_CHECK_SMALL)
             if (!bbxreplay)
                 fr->startRecEvent();
             alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> pt, key, tkey, iv, add, out_ct_alc(i, 0),
+            std::vector<uint8_t> pt(i, 0), key(key_size / 8, 0),
+                tkey(key_size / 8, 0), iv(12, 0), add, out_ct_alc(i, 0),
                 out_ct_ext(i, 0);
             if (!bbxreplay) {
                 pt   = rb.genRandomBytes(i);
@@ -776,14 +783,14 @@ TEST(SYMMETRIC_ENC_256, 256_CROSS_CHECK_SMALL)
                 data_alc.tkeyl = 16;
 
                 // External Lib Data
-                data_ext.in    = &(pt[0]);
-                data_ext.inl   = pt.size();
-                data_ext.iv    = &(iv[0]);
-                data_ext.ivl   = iv.size();
-                data_ext.out   = &(out_ct_ext[0]);
-                data_ext.outl  = data_alc.inl;
-                data_ext.tkey  = &(tkey[0]);
-                data_ext.tkeyl = 16;
+                data_ext.in         = &(pt[0]);
+                data_ext.inl        = pt.size();
+                data_ext.iv         = &(iv[0]);
+                data_ext.ivl        = iv.size();
+                data_ext.out        = &(out_ct_ext[0]);
+                data_ext.outl       = data_alc.inl;
+                data_ext.tkey       = &(tkey[0]);
+                data_ext.tkeyl      = 16;
                 data_ext.block_size = pt.size();
 
                 fr->setRecEvent(key, iv, pt, SMALL_ENC);
@@ -865,7 +872,8 @@ TEST(SYMMETRIC_DEC_256, 256_CROSS_CHECK_SMALL)
             if (!bbxreplay)
                 fr->startRecEvent();
             alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> ct, key, tkey, iv, add, out_pt_alc(i, 0),
+            std::vector<uint8_t> ct(i, 0), key(key_size / 8, 0),
+                tkey(key_size / 8, 0), iv(12, 0), add, out_pt_alc(i, 0),
                 out_pt_ext(i, 0);
             if (!bbxreplay) {
                 ct   = rb.genRandomBytes(i);
@@ -884,14 +892,14 @@ TEST(SYMMETRIC_DEC_256, 256_CROSS_CHECK_SMALL)
                 data_alc.tkeyl = 16;
 
                 // External Lib Data
-                data_ext.in    = &(ct[0]);
-                data_ext.inl   = ct.size();
-                data_ext.iv    = &(iv[0]);
-                data_ext.ivl   = iv.size();
-                data_ext.out   = &(out_pt_ext[0]);
-                data_ext.outl  = data_alc.inl;
-                data_ext.tkey  = &(tkey[0]);
-                data_ext.tkeyl = 16;
+                data_ext.in         = &(ct[0]);
+                data_ext.inl        = ct.size();
+                data_ext.iv         = &(iv[0]);
+                data_ext.ivl        = iv.size();
+                data_ext.out        = &(out_pt_ext[0]);
+                data_ext.outl       = data_alc.inl;
+                data_ext.tkey       = &(tkey[0]);
+                data_ext.tkeyl      = 16;
                 data_ext.block_size = ct.size();
 
                 fr->setRecEvent(key, iv, ct, SMALL_DEC);
