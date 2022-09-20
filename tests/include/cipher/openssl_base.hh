@@ -47,6 +47,7 @@
 #include <openssl/conf.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
+#include <utils/copy.hh>
 #ifdef USE_PROVIDER
 #include <openssl/provider.h>
 #endif
