@@ -13,7 +13,7 @@ int main(void)
     OSSL_PROVIDER *alcp_provider;
 
 	OSSL_PROVIDER_set_default_search_path("/path/to/alcp/lib")
-    /* Load Multiple providers into the default (NULL) library context */
+
     alcp_provider = OSSL_PROVIDER_load(NULL, "libopenssl-compat");
     if (NULL == alcp_provider) {
         printf("Failed to load ALCP provider\n");
