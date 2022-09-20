@@ -31,15 +31,15 @@
 namespace alcp::testing {
 
 // AlcpCipherBase class functions
-AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode, const uint8_t* iv)
+AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode, const Uint8* iv)
     : m_mode{ mode }
     , m_iv{ iv }
 {}
 
 AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode,
-                               const uint8_t*          iv,
-                               const uint8_t*          key,
-                               const uint32_t          key_len)
+                               const Uint8*            iv,
+                               const Uint8*            key,
+                               const Uint32            key_len)
     : m_mode{ mode }
     , m_iv{ iv }
 {
@@ -48,12 +48,12 @@ AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode,
 
 /* xts */
 AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode,
-                               const uint8_t*          iv,
-                               const uint32_t          iv_len,
-                               const uint8_t*          key,
-                               const uint32_t          key_len,
-                               const uint8_t*          tkey,
-                               const uint64_t          block_size)
+                               const Uint8*            iv,
+                               const Uint32            iv_len,
+                               const Uint8*            key,
+                               const Uint32            key_len,
+                               const Uint8*            tkey,
+                               const Uint64            block_size)
     : m_mode{ mode }
     , m_iv{ iv }
 {
@@ -74,10 +74,10 @@ AlcpCipherBase::~AlcpCipherBase()
 }
 
 bool
-AlcpCipherBase::init(const uint8_t* iv,
-                     const uint32_t iv_len,
-                     const uint8_t* key,
-                     const uint32_t key_len)
+AlcpCipherBase::init(const Uint8* iv,
+                     const Uint32 iv_len,
+                     const Uint8* key,
+                     const Uint32 key_len)
 {
     this->m_iv = iv;
     return init(key, key_len);
@@ -85,12 +85,12 @@ AlcpCipherBase::init(const uint8_t* iv,
 
 /* for XTS */
 bool
-AlcpCipherBase::init(const uint8_t* iv,
-                     const uint32_t iv_len,
-                     const uint8_t* key,
-                     const uint32_t key_len,
-                     const uint8_t* tkey,
-                     const uint64_t block_size)
+AlcpCipherBase::init(const Uint8* iv,
+                     const Uint32 iv_len,
+                     const Uint8* key,
+                     const Uint32 key_len,
+                     const Uint8* tkey,
+                     const Uint64 block_size)
 {
     this->m_iv   = iv;
     this->m_tkey = tkey;
@@ -98,20 +98,18 @@ AlcpCipherBase::init(const uint8_t* iv,
 }
 
 bool
-AlcpCipherBase::init(const uint8_t* iv,
-                     const uint8_t* key,
-                     const uint32_t key_len)
+AlcpCipherBase::init(const Uint8* iv, const Uint8* key, const Uint32 key_len)
 {
     this->m_iv = iv;
     return init(key, key_len);
 }
 
 bool
-AlcpCipherBase::init(const uint8_t* key, const uint32_t key_len)
+AlcpCipherBase::init(const Uint8* key, const Uint32 key_len)
 {
     alc_error_t err;
     const int   err_size = 256;
-    uint8_t     err_buf[err_size];
+    Uint8       err_buf[err_size];
 
     if (m_handle != nullptr) {
         alcp_cipher_finish(m_handle);
@@ -189,11 +187,11 @@ out:
 }
 
 bool
-AlcpCipherBase::encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt)
+AlcpCipherBase::encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt)
 {
     alc_error_t err;
     const int   err_size = 256;
-    uint8_t     err_buf[err_size];
+    Uint8       err_buf[err_size];
 
     /* Encrypt Data */
     err = alcp_cipher_encrypt(m_handle, plaintxt, ciphertxt, len, m_iv);
@@ -210,7 +208,7 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
 {
     alc_error_t err;
     const int   err_size = 256;
-    uint8_t     err_buff[err_size];
+    Uint8       err_buff[err_size];
 
     if (m_mode == ALC_AES_MODE_GCM) {
 
@@ -225,7 +223,7 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
         // Additional Data
         if (data.adl == 0 && data.ad == nullptr) {
             // FIXME: Hack to prevent ad from being null
-            uint8_t a;
+            Uint8 a;
             data.ad = &a; // Some random value other than NULL
         }
         err = alcp_cipher_encrypt_update(
@@ -247,7 +245,7 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
         // Get Tag
         if (data.tagl == 0 && data.tag == nullptr) {
             // FIXME: Hack to prevent ad from being null
-            uint8_t a;
+            Uint8 a;
             data.tag = &a; // Some random value other than NULL
         }
         err = alcp_cipher_encrypt_update(
@@ -270,11 +268,11 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
 }
 
 bool
-AlcpCipherBase::decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt)
+AlcpCipherBase::decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt)
 {
     alc_error_t err;
     const int   err_size = 256;
-    uint8_t     err_buf[err_size];
+    Uint8       err_buf[err_size];
 
     /* Decrypt Data */
     err = alcp_cipher_decrypt(m_handle, ciphertxt, plaintxt, len, m_iv);
@@ -291,8 +289,8 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
 {
     alc_error_t err;
     const int   err_size = 256;
-    uint8_t     err_buf[err_size];
-    uint8_t     tagbuff[data.tagl];
+    Uint8       err_buf[err_size];
+    Uint8       tagbuff[data.tagl];
 
     if (m_mode == ALC_AES_MODE_GCM) {
         // GCM Init
@@ -306,7 +304,7 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
         // Additional Data
         if (data.adl == 0 && data.ad == nullptr) {
             // FIXME: Hack to prevent ad from being null
-            uint8_t a;
+            Uint8 a;
             data.ad = &a; // Some random value other than NULL
         }
         err = alcp_cipher_decrypt_update(
@@ -327,7 +325,7 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
         // Get Tag
         if (data.tagl == 0 && data.tag == nullptr) {
             // FIXME: Hack to prevent ad from being null
-            uint8_t a;
+            Uint8 a;
             data.tag = &a; // Some random value other than NULL
         }
         err = alcp_cipher_decrypt_update(

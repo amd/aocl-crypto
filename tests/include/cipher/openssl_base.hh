@@ -33,60 +33,62 @@
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/provider.h>
+#include <utils/copy.hh>
 
 namespace alcp::testing {
 class OpenSSLCipherBase : public CipherBase
 {
   private:
-    EVP_CIPHER_CTX*   m_ctx_enc       = nullptr;
-    EVP_CIPHER_CTX*   m_ctx_dec       = nullptr;
-    alc_cipher_mode_t m_mode          = {};
-    const uint8_t*    m_iv            = nullptr;
-    uint32_t          m_iv_len        = 12;
-    const uint8_t*    m_key           = nullptr;
-    uint32_t          m_key_len       = 0;
-    const uint8_t*    m_tkey          = nullptr;
+    EVP_CIPHER_CTX*   m_ctx_enc = nullptr;
+    EVP_CIPHER_CTX*   m_ctx_dec = nullptr;
+    alc_cipher_mode_t m_mode    = {};
+    const Uint8*      m_iv      = nullptr;
+    Uint32            m_iv_len  = 12;
+    const Uint8*      m_key     = nullptr;
+    Uint32            m_key_len = 0;
+    const Uint8*      m_tkey    = nullptr;
+    Uint8             m_key_final[64];
     OSSL_PROVIDER*    m_alcp_provider = nullptr;
-    // const uint64_t    m_block_size = 0;
+    // const Uint64    m_block_size = 0;
 
     void              handleErrors();
     const EVP_CIPHER* alcpModeKeyLenToCipher(alc_cipher_mode_t mode,
                                              size_t            keylen);
 
   public:
-    OpenSSLCipherBase(const alc_cipher_mode_t mode, const uint8_t* iv);
+    OpenSSLCipherBase(const alc_cipher_mode_t mode, const Uint8* iv);
     OpenSSLCipherBase(const alc_cipher_mode_t mode,
-                      const uint8_t*          iv,
-                      const uint8_t*          key,
-                      const uint32_t          key_len);
+                      const Uint8*            iv,
+                      const Uint8*            key,
+                      const Uint32            key_len);
     OpenSSLCipherBase(const alc_cipher_mode_t mode,
-                      const uint8_t*          iv,
-                      const uint32_t          iv_len,
-                      const uint8_t*          key,
-                      const uint32_t          key_len,
-                      const uint8_t*          tkey,
-                      const uint64_t          block_size);
+                      const Uint8*            iv,
+                      const Uint32            iv_len,
+                      const Uint8*            key,
+                      const Uint32            key_len,
+                      const Uint8*            tkey,
+                      const Uint64            block_size);
     OpenSSLCipherBase(const alc_cipher_mode_t mode,
-                      const uint8_t*          iv,
-                      const uint32_t          iv_len,
-                      const uint8_t*          key,
-                      const uint32_t          key_len);
+                      const Uint8*            iv,
+                      const Uint32            iv_len,
+                      const Uint8*            key,
+                      const Uint32            key_len);
     ~OpenSSLCipherBase();
-    bool init(const uint8_t* iv,
-              const uint32_t iv_len,
-              const uint8_t* key,
-              const uint32_t key_len);
-    bool init(const uint8_t* iv,
-              const uint32_t iv_len,
-              const uint8_t* key,
-              const uint32_t key_len,
-              const uint8_t* tkey,
-              const uint64_t block_size);
-    bool init(const uint8_t* iv, const uint8_t* key, const uint32_t key_len);
-    bool init(const uint8_t* key, const uint32_t key_len);
-    bool encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt);
+    bool init(const Uint8* iv,
+              const Uint32 iv_len,
+              const Uint8* key,
+              const Uint32 key_len);
+    bool init(const Uint8* iv,
+              const Uint32 iv_len,
+              const Uint8* key,
+              const Uint32 key_len,
+              const Uint8* tkey,
+              const Uint64 block_size);
+    bool init(const Uint8* iv, const Uint8* key, const Uint32 key_len);
+    bool init(const Uint8* key, const Uint32 key_len);
+    bool encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt);
     bool encrypt(alcp_data_ex_t data);
-    bool decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt);
+    bool decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt);
     bool decrypt(alcp_data_ex_t data);
     void reset();
 };

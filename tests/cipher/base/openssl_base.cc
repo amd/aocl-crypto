@@ -104,17 +104,17 @@ OpenSSLCipherBase::alcpModeKeyLenToCipher(alc_cipher_mode_t mode, size_t keylen)
     }
 }
 OpenSSLCipherBase::OpenSSLCipherBase(const alc_cipher_mode_t mode,
-                                     const uint8_t*          iv)
+                                     const Uint8*            iv)
     : m_mode{ mode }
     , m_iv{ iv }
 {}
 OpenSSLCipherBase::OpenSSLCipherBase(const alc_cipher_mode_t mode,
-                                     const uint8_t*          iv,
-                                     const uint32_t          iv_len,
-                                     const uint8_t*          key,
-                                     const uint32_t          key_len,
-                                     const uint8_t*          tkey,
-                                     const uint64_t          block_size)
+                                     const Uint8*            iv,
+                                     const Uint32            iv_len,
+                                     const Uint8*            key,
+                                     const Uint32            key_len,
+                                     const Uint8*            tkey,
+                                     const Uint64            block_size)
     : m_mode{ mode }
     , m_iv{ iv }
     , m_iv_len{ iv_len }
@@ -126,9 +126,9 @@ OpenSSLCipherBase::OpenSSLCipherBase(const alc_cipher_mode_t mode,
 }
 
 OpenSSLCipherBase::OpenSSLCipherBase(const alc_cipher_mode_t mode,
-                                     const uint8_t*          iv,
-                                     const uint8_t*          key,
-                                     const uint32_t          key_len)
+                                     const Uint8*            iv,
+                                     const Uint8*            key,
+                                     const Uint32            key_len)
     : m_mode{ mode }
     , m_iv{ iv }
     , m_key{ key }
@@ -138,10 +138,10 @@ OpenSSLCipherBase::OpenSSLCipherBase(const alc_cipher_mode_t mode,
 }
 
 OpenSSLCipherBase::OpenSSLCipherBase(const alc_cipher_mode_t mode,
-                                     const uint8_t*          iv,
-                                     const uint32_t          iv_len,
-                                     const uint8_t*          key,
-                                     const uint32_t          key_len)
+                                     const Uint8*            iv,
+                                     const Uint32            iv_len,
+                                     const Uint8*            key,
+                                     const Uint32            key_len)
     : m_mode{ mode }
     , m_iv{ iv }
     , m_iv_len{ iv_len }
@@ -168,12 +168,12 @@ OpenSSLCipherBase::~OpenSSLCipherBase()
 }
 
 bool
-OpenSSLCipherBase::init(const uint8_t* iv,
-                        const uint32_t iv_len,
-                        const uint8_t* key,
-                        const uint32_t key_len,
-                        const uint8_t* tkey,
-                        const uint64_t block_size)
+OpenSSLCipherBase::init(const Uint8* iv,
+                        const Uint32 iv_len,
+                        const Uint8* key,
+                        const Uint32 key_len,
+                        const Uint8* tkey,
+                        const Uint64 block_size)
 {
     m_tkey   = tkey;
     m_iv     = iv;
@@ -182,28 +182,25 @@ OpenSSLCipherBase::init(const uint8_t* iv,
 }
 
 bool
-OpenSSLCipherBase::init(const uint8_t* iv,
-                        const uint32_t iv_len,
-                        const uint8_t* key,
-                        const uint32_t key_len)
+OpenSSLCipherBase::init(const Uint8* iv,
+                        const Uint32 iv_len,
+                        const Uint8* key,
+                        const Uint32 key_len)
 {
     m_iv_len = iv_len;
     return init(iv, key, key_len);
 }
 bool
-OpenSSLCipherBase::init(const uint8_t* iv,
-                        const uint8_t* key,
-                        const uint32_t key_len)
+OpenSSLCipherBase::init(const Uint8* iv, const Uint8* key, const Uint32 key_len)
 {
     m_iv = iv;
     return init(key, key_len);
 }
 bool
-OpenSSLCipherBase::init(const uint8_t* key, const uint32_t key_len)
+OpenSSLCipherBase::init(const Uint8* key, const Uint32 key_len)
 {
     m_key     = key;
     m_key_len = key_len;
-    uint8_t key_final[64];
 
 #ifdef USE_PROVIDER
     if (m_alcp_provider == nullptr) {
@@ -220,9 +217,9 @@ OpenSSLCipherBase::init(const uint8_t* key, const uint32_t key_len)
     /* xts */
     if (m_mode == ALC_AES_MODE_XTS) {
         /* add key with tkey for xts */
-        memcpy(key_final, m_key, key_len / 8);
-        memcpy(key_final + key_len / 8, m_tkey, key_len / 8);
-        m_key = key_final;
+        utils::CopyBytes(m_key_final, m_key, key_len / 8);
+        utils::CopyBytes(m_key_final + key_len / 8, m_tkey, key_len / 8);
+        m_key = m_key_final;
     }
 
     // Create context for encryption and initialize
@@ -309,9 +306,7 @@ OpenSSLCipherBase::init(const uint8_t* key, const uint32_t key_len)
     return true;
 }
 bool
-OpenSSLCipherBase::encrypt(const uint8_t* plaintxt,
-                           size_t         len,
-                           uint8_t*       ciphertxt)
+OpenSSLCipherBase::encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt)
 {
     int len_ct;
     if (1 != EVP_EncryptUpdate(m_ctx_enc, ciphertxt, &len_ct, plaintxt, len)) {
@@ -364,9 +359,7 @@ OpenSSLCipherBase::encrypt(alcp_data_ex_t data)
     return true;
 }
 bool
-OpenSSLCipherBase::decrypt(const uint8_t* ciphertxt,
-                           size_t         len,
-                           uint8_t*       plaintxt)
+OpenSSLCipherBase::decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt)
 {
     int len_pt;
     if (1 != EVP_DecryptUpdate(m_ctx_dec, plaintxt, &len_pt, ciphertxt, len))

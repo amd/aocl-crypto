@@ -30,18 +30,18 @@
 
 namespace alcp::testing {
 
-IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t mode, const uint8_t* iv)
+IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t mode, const Uint8* iv)
     : m_mode{ mode }
     , m_iv{ iv }
 {}
 
 IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t mode,
-                             const uint8_t*          iv,
-                             const uint32_t          iv_len,
-                             const uint8_t*          key,
-                             const uint32_t          key_len,
-                             const uint8_t*          tkey,
-                             const uint64_t          block_size)
+                             const Uint8*            iv,
+                             const Uint32            iv_len,
+                             const Uint8*            key,
+                             const Uint32            key_len,
+                             const Uint8*            tkey,
+                             const Uint64            block_size)
     : m_mode{ mode }
     , m_iv{ iv }
     , m_tkey{ tkey }
@@ -51,9 +51,9 @@ IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t mode,
 }
 
 IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t mode,
-                             const uint8_t*          iv,
-                             const uint8_t*          key,
-                             const uint32_t          key_len)
+                             const Uint8*            iv,
+                             const Uint8*            key,
+                             const Uint32            key_len)
     : m_mode{ mode }
     , m_iv{ iv }
     , m_key{ key }
@@ -96,22 +96,22 @@ IPPCipherBase::~IPPCipherBase()
 }
 
 bool
-IPPCipherBase::init(const uint8_t* iv,
-                    const uint32_t iv_len,
-                    const uint8_t* key,
-                    const uint32_t key_len)
+IPPCipherBase::init(const Uint8* iv,
+                    const Uint32 iv_len,
+                    const Uint8* key,
+                    const Uint32 key_len)
 {
     m_iv = iv;
     return init(key, key_len);
 }
 
 bool
-IPPCipherBase::init(const uint8_t* iv,
-                    const uint32_t iv_len,
-                    const uint8_t* key,
-                    const uint32_t key_len,
-                    const uint8_t* tkey,
-                    const uint64_t block_size)
+IPPCipherBase::init(const Uint8* iv,
+                    const Uint32 iv_len,
+                    const Uint8* key,
+                    const Uint32 key_len,
+                    const Uint8* tkey,
+                    const Uint64 block_size)
 {
     m_iv         = iv;
     m_tkey       = tkey;
@@ -121,20 +121,17 @@ IPPCipherBase::init(const uint8_t* iv,
 }
 
 bool
-IPPCipherBase::init(const uint8_t* iv,
-                    const uint8_t* key,
-                    const uint32_t key_len)
+IPPCipherBase::init(const Uint8* iv, const Uint8* key, const Uint32 key_len)
 {
     m_iv = iv;
     return init(key, key_len);
 }
 
 bool
-IPPCipherBase::init(const uint8_t* key, const uint32_t key_len)
+IPPCipherBase::init(const Uint8* key, const Uint32 key_len)
 {
     IppStatus status = ippStsNoErr;
-    uint8_t   key_final[64];
-    m_key = key;
+    m_key            = key;
     switch (m_mode) {
         case ALC_AES_MODE_GCM:
             status = ippsAES_GCMGetSize(&m_ctxSize);
@@ -147,9 +144,9 @@ IPPCipherBase::init(const uint8_t* key, const uint32_t key_len)
 
         case ALC_AES_MODE_XTS:
             /* add key with tkey for */
-            memcpy(key_final, m_key, key_len / 8);
-            memcpy(key_final + key_len / 8, m_tkey, key_len / 8);
-            m_key  = key_final;
+            memcpy(m_key_final, m_key, key_len / 8);
+            memcpy(m_key_final + key_len / 8, m_tkey, key_len / 8);
+            m_key  = m_key_final;
             status = ippsAES_XTSGetSize(&m_ctxSize);
             if (m_ctx_xts != nullptr) {
                 delete[](Ipp8u*) m_ctx_xts;
@@ -181,13 +178,13 @@ IPPCipherBase::init(const uint8_t* key, const uint32_t key_len)
 }
 
 bool
-IPPCipherBase::alcpModeToFuncCall(const uint8_t* in,
-                                  uint8_t*       out,
-                                  size_t         len,
-                                  bool           enc)
+IPPCipherBase::alcpModeToFuncCall(const Uint8* in,
+                                  Uint8*       out,
+                                  size_t       len,
+                                  bool         enc)
 {
     IppStatus status = ippStsNoErr;
-    uint8_t   iv[16];
+    Uint8     iv[16];
     memcpy(iv, m_iv, 16);
     switch (m_mode) {
         case ALC_AES_MODE_CBC:
@@ -242,7 +239,7 @@ IPPCipherBase::alcpGCMModeToFuncCall(alcp_data_ex_t data, bool enc)
         ippsAES_GCMEncrypt(data.in, data.out, data.inl, m_ctx_gcm);
         ippsAES_GCMGetTag(data.tag, data.tagl, m_ctx_gcm);
     } else {
-        uint8_t tagbuff[data.tagl];
+        Uint8 tagbuff[data.tagl];
         ippsAES_GCMStart(m_iv, data.ivl, data.ad, data.adl, m_ctx_gcm);
         ippsAES_GCMDecrypt(data.in, data.out, data.inl, m_ctx_gcm);
         ippsAES_GCMGetTag(tagbuff, data.tagl, m_ctx_gcm);
@@ -255,7 +252,7 @@ IPPCipherBase::alcpGCMModeToFuncCall(alcp_data_ex_t data, bool enc)
 }
 
 bool
-IPPCipherBase::encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt)
+IPPCipherBase::encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt)
 {
     return alcpModeToFuncCall(plaintxt, ciphertxt, len, true);
 }
@@ -275,7 +272,7 @@ IPPCipherBase::encrypt(alcp_data_ex_t data)
 }
 
 bool
-IPPCipherBase::decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt)
+IPPCipherBase::decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt)
 {
     return alcpModeToFuncCall(ciphertxt, plaintxt, len, false);
 }

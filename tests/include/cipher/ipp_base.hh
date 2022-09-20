@@ -28,6 +28,7 @@
 #pragma once
 #include "base.hh"
 #include <alcp/alcp.h>
+#include <alcp/types.h>
 #include <iostream>
 #include <ippcp.h>
 #include <stdio.h>
@@ -44,17 +45,15 @@ class IPPCipherBase : public CipherBase
     IppsAES_XTSSpec*  m_ctx_xts = 0;
     IppsAES_GCMState* m_ctx_gcm = 0;
     IppsAES_GCMState* pState    = NULL;
-    const uint8_t*    m_iv;
-    const uint8_t*    m_key;
-    uint32_t          m_key_len;
-    const uint8_t*    m_tkey       = NULL;
+    const Uint8*      m_iv;
+    const Uint8*      m_key;
+    Uint32            m_key_len;
+    const Uint8*      m_tkey       = NULL;
     int               m_ctxSize    = 0;
-    uint64_t          m_block_size = 0;
-    bool              alcpModeToFuncCall(const uint8_t* in,
-                                         uint8_t*       out,
-                                         size_t         len,
-                                         bool           enc);
-    bool              alcpGCMModeToFuncCall(alcp_data_ex_t data, bool enc);
+    Uint64            m_block_size = 0;
+    Uint8             m_key_final[64];
+    bool alcpModeToFuncCall(const Uint8* in, Uint8* out, size_t len, bool enc);
+    bool alcpGCMModeToFuncCall(alcp_data_ex_t data, bool enc);
 
   public:
     /**
@@ -64,7 +63,7 @@ class IPPCipherBase : public CipherBase
      * @param mode
      * @param iv
      */
-    IPPCipherBase(const alc_cipher_mode_t mode, const uint8_t* iv);
+    IPPCipherBase(const alc_cipher_mode_t mode, const Uint8* iv);
     /**
      * @brief Construct a new Alcp Base object - Initlized and ready to go
      *
@@ -74,9 +73,9 @@ class IPPCipherBase : public CipherBase
      * @param key_len
      */
     IPPCipherBase(const alc_cipher_mode_t mode,
-                  const uint8_t*          iv,
-                  const uint8_t*          key,
-                  const uint32_t          key_len);
+                  const Uint8*            iv,
+                  const Uint8*            key,
+                  const Uint32            key_len);
     /**
      * @brief         Initialization/Reinitialization function, created handle
      *
@@ -88,30 +87,30 @@ class IPPCipherBase : public CipherBase
      */
 
     IPPCipherBase(const alc_cipher_mode_t mode,
-                  const uint8_t*          iv,
-                  const uint32_t          iv_len,
-                  const uint8_t*          key,
-                  const uint32_t          key_len,
-                  const uint8_t*          tkey,
-                  const uint64_t          block_size);
+                  const Uint8*            iv,
+                  const Uint32            iv_len,
+                  const Uint8*            key,
+                  const Uint32            key_len,
+                  const Uint8*            tkey,
+                  const Uint64            block_size);
 
     ~IPPCipherBase();
-    bool init(const uint8_t* iv,
-              const uint32_t iv_len,
-              const uint8_t* key,
-              const uint32_t key_len);
+    bool init(const Uint8* iv,
+              const Uint32 iv_len,
+              const Uint8* key,
+              const Uint32 key_len);
     /* xts */
-    bool init(const uint8_t* iv,
-              const uint32_t iv_len,
-              const uint8_t* key,
-              const uint32_t key_len,
-              const uint8_t* tkey,
-              const uint64_t block_size);
-    bool init(const uint8_t* iv, const uint8_t* key, const uint32_t key_len);
-    bool init(const uint8_t* key, const uint32_t key_len);
-    bool encrypt(const uint8_t* plaintxt, size_t len, uint8_t* ciphertxt);
+    bool init(const Uint8* iv,
+              const Uint32 iv_len,
+              const Uint8* key,
+              const Uint32 key_len,
+              const Uint8* tkey,
+              const Uint64 block_size);
+    bool init(const Uint8* iv, const Uint8* key, const Uint32 key_len);
+    bool init(const Uint8* key, const Uint32 key_len);
+    bool encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt);
     bool encrypt(alcp_data_ex_t data);
-    bool decrypt(const uint8_t* ciphertxt, size_t len, uint8_t* plaintxt);
+    bool decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt);
     bool decrypt(alcp_data_ex_t data);
     void reset();
 };
