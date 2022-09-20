@@ -25,17 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "cipher/openssl_base.hh"
 
-/*  Loading ALCP-Provider can be used
-    to test/benchmark provider.       */
-// #define USE_PROVIDER
-#define OPENSSL_PROVIDER_PATH "."
-#if 1
-#define OPENSSL_PROVIDER_NAME "libopenssl-compat"
-#else
-#define OPENSSL_PROVIDER_NAME "libopenssl-compat_DEBUG"
-#endif
+#include "cipher/openssl_base.hh"
 
 namespace alcp::testing {
 void

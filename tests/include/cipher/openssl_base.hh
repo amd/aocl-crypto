@@ -27,12 +27,29 @@
  */
 #pragma once
 
+// This define needs to be on the top so that it affects all the includes
+/*
+   FIXME: Need to change this implementation, selection of provider
+   needs to be taken as a command line argument
+*/
+/*  Loading ALCP-Provider can be used
+    to test/benchmark provider.       */
+// #define USE_PROVIDER
+#define OPENSSL_PROVIDER_PATH "."
+#if 1
+#define OPENSSL_PROVIDER_NAME "libopenssl-compat"
+#else
+#define OPENSSL_PROVIDER_NAME "libopenssl-compat_DEBUG"
+#endif
+
 #include "base.hh"
 #include <alcp/alcp.h>
 #include <openssl/conf.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
+#ifdef USE_PROVIDER
 #include <openssl/provider.h>
+#endif
 #include <utils/copy.hh>
 
 namespace alcp::testing {
@@ -48,7 +65,9 @@ class OpenSSLCipherBase : public CipherBase
     Uint32            m_key_len = 0;
     const Uint8*      m_tkey    = nullptr;
     Uint8             m_key_final[64];
-    OSSL_PROVIDER*    m_alcp_provider = nullptr;
+#ifdef USE_PROVIDER
+    OSSL_PROVIDER* m_alcp_provider = nullptr;
+#endif
     // const Uint64    m_block_size = 0;
 
     void              handleErrors();
