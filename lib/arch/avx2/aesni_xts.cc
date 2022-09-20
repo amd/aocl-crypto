@@ -56,7 +56,7 @@ namespace alcp::cipher { namespace aesni {
         int      last_Round_Byte = len % Rijndael::cBlockSize;
 
         // iv encryption using tweak key to get alpha
-        __m128i current_alpha = p_iv128[0];
+        __m128i current_alpha = _mm_loadu_si128(p_iv128); // loadu to handle unaligned memory 
         AesEncrypt(&current_alpha, p_tweak_key128, nRounds);
 
         // Encrypting 4 source text blocks at a time
