@@ -1,4 +1,22 @@
-
+---
+title: AOCL Crypto Coding Style
+subtitle: Coding Style Reference Document
+author: Prem Mallappa <pmallapp@amd.com>
+subject: "markdown"
+keywords: [books,programming]
+language: en-US
+#cover-image: img/example-book-cover.png
+lof: true
+lof-own-page: true
+toc-own-page: true
+titlepage: true
+#;titlepage-background: backgrounds/background10.pdf
+#titlepage-text-color: "333333"
+#titlepage-rule-color: "00737C"
+papersize: a4
+#prepend-titlepage: img/example-book-cover.pdf
+colorlinks: true
+---
 
 # Naming
 

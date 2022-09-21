@@ -1,5 +1,5 @@
 # Index/Main files to read from
-SET(ALCP_DESIGN_DOC design.md)
+SET(ALCP_DESIGN_DOC design.md CodingStyle.md)
 
 # Combine one or more Index/Main doc files into an array for
 # generating each pdf
