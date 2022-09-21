@@ -21,28 +21,31 @@ colorlinks: true
 # Naming
 
 Allowed Cases:
-//	lower_case,
-//	UPPER_CASE,
-//	camelBack,
-//	CamelCase,
-//	camel_Snake_Back,
-//	Camel_Snake_Case,
-//	aNy_CasE.
-//
+
+* lower_case
+
+ * UPPER_CASE
+ * camelBack
+ * CamelCase
+ * camel_Snake_Back
+ * aNy_CasE
+ * Camel_Snake_Case
+  
 
 ## Abstract Class
 
-AbstractClassCase    - CamelCase
-AbstractClassPrefix  - Abstract
-AbstractClassSuffix  - NA
+* AbstractClassCase    - CamelCase
+* AbstractClassPrefix  - Abstract
+* AbstractClassSuffix  - NA
 
 ``` c++
-// before
 class model {
 public:
   model();
 };
 ```
+
+After:
 
 ```c++
 class AbstractModel {
@@ -53,17 +56,18 @@ public:
 
 ## Class 
 
-ClassCase	- CamelCase
-ClassPrefix - None
-ClassSuffix - None
+- ClassCase	- CamelCase
+- ClassPrefix  - None
+- ClassSuffix  - None
 
 ``` c++
-// before
 class model_blah {
 public:
   model();
 };
 ```
+
+After:
 
 ```c++
 class ModelBlah {
@@ -75,9 +79,10 @@ public:
 
 ## Class Constants
 
-ClassConstantCase	- CamelCase
-ClassConstantPrefix	- c 
-ClassConstantSuffix - NA
+- ClassConstantCase  	- CamelCase
+
+- ClassConstantPrefix	- c 
+- ClassConstantSuffix    - NA
 
 ```c++
 class FOO {
@@ -96,9 +101,10 @@ public:
 
 ## Class Member
 
-ClassMemberCase		- lower_case
-ClassMemberPrefix	- m_
-ClassMemberSuffix	- NA
+- ClassMemberCase	  - lower_case
+
+- ClassMemberPrefix	- m_
+- ClassMemberSuffix	- NA
 
 ```c++
 class FOO {
@@ -121,9 +127,10 @@ public:
 
 Class methods should use 'camelBack' case with no prefix or suffix.
 
-ClassMethodCase		- camelBack
-ClassMethodPrefix	- NA 
-ClassMethodSuffix	- NA
+- ClassMethodCase	  - camelBack
+
+- ClassMethodPrefix	- NA 
+- ClassMethodSuffix	- NA
 
 ```c++
 class FOO {
@@ -142,9 +149,10 @@ public:
 
 ## Constants
 
-ConstantCase	- CamelCase
-ConstantPrefix	- c
-ConstantSuffix	- NA
+- ConstantCase	  - CamelCase
+
+- ConstantPrefix	- c
+- ConstantSuffix	- NA
 
 ```c++
 void function() { unsigned const MyConst_array[] = {1, 2, 3}; }
@@ -156,9 +164,10 @@ void function() { unsigned const cMyconstArray[] = {1, 2, 3}; }
 
 ## Constant Members of a class
 
-ConstantMemberCase		- CamelCase
-ConstantMemberPrefix	- c
-ConstantMemberSuffix	- NA
+- ConstantMemberCase	  - CamelCase
+
+- ConstantMemberPrefix	- c
+- ConstantMemberSuffix	- NA
 
 ```c++
 class Foo {
@@ -174,9 +183,10 @@ class Foo {
 ```
 
 ## Constant Parameter 
-ConstantParameterCase	- CamelCase
-ConstantParameterPrefix	- c
-ConstantParameterSuffix	- NA
+- ConstantParameterCase	  - CamelCase
+- ConstantParameterPrefix	- c
+- ConstantParameterSuffix	- NA
+
 ```c++
 void GLOBAL_FUNCTION(int PARAMETER_1, int const CONST_parameter);
 ```
@@ -188,9 +198,10 @@ void GLOBAL_FUNCTION(int PARAMETER_1, int const cConstParameter);
 
 
 ## Constant Pointer Parameter 
-ConstantPointerParameterCase	- CamelCase
-ConstantPointerParameterPrefix	- pc
-ConstantPointerParameterSuffix	- NA
+- ConstantPointerParameterCase 	- CamelCase
+
+- ConstantPointerParameterPrefix	- pc
+- ConstantPointerParameterSuffix	- NA
 
 ```c++
 void GLOBAL_FUNCTION(int const *CONST_parameter);
@@ -207,9 +218,10 @@ Follow same naming conventions for
 GlobalFunctionCase and no prefix or suffix is needed for Global constexpr function.
 and MethodCase with no prefix or suffix for Method constexpr functions
 
-ConstexprFunctionCase	- GlobalFunctionCase
-ConstexprFunctionPrefix	- NA
-ConstexprFunctionSuffix	- NA
+- ConstexprFunctionCase	  - GlobalFunctionCase
+
+- ConstexprFunctionPrefix	- NA
+- ConstexprFunctionSuffix	- NA
 
 ```c++
 constexpr int CE_function() { return 3; }
@@ -223,10 +235,11 @@ constexpr int Function() { return 3; }
 ## Constexpr Method
 Follow same naming conventions of MethodCase with no prefix or suffix for Method constexpr functions.
 
+- 
+  ConstexprMethodCase  	- MethodCase (camelBack)
 
-ConstexprMethodCase		- MethodCase (camelBack)
-ConstexprMethodPrefix	- NA
-ConstexprMethodSuffix	- NA
+- ConstexprMethodPrefix	- NA
+- ConstexprMethodSuffix	- NA
 
 ```c++
 class Foo {
@@ -245,9 +258,10 @@ public:
 
 ## Constexpr Variable
 
-ConstexprVariableCase
-ConstexprVariablePrefix
-ConstexprVariableSuffix
+- ConstexprVariableCase
+
+- ConstexprVariablePrefix
+- ConstexprVariableSuffix
 
 ```c++
 constexpr int ConstExpr_variable = MyConstant;
@@ -260,9 +274,10 @@ constexpr int pre_constexpr_variable_post = MyConstant;
 
 ## Enumerations 
 
-EnumCase	- CamelCase
-EnumPrefix	- NA
-EnumSuffix	- NA
+- EnumCase	  - CamelCase
+
+- EnumPrefix	- NA
+- EnumSuffix	- NA
 
 ```c++
 enum FOO { One, Two, Three };
@@ -279,9 +294,10 @@ enum Foo { One, Two, Three };
 
 Follow Enumeration style.
 
-EnumConstantCase	- CamelCase
-EnumConstantPrefix	- e
-EnumConstantSuffix	- NA
+- EnumConstantCase	  - CamelCase
+
+- EnumConstantPrefix	- e
+- EnumConstantSuffix	- NA
 
 ```c++
 enum FOO { One, Two, Three };
@@ -296,9 +312,10 @@ enum Foo { eOne, eTwo, eThree };
 ## Function
 Functions are global entities (others are Methods). Both Static and non-static global functions use the same style.
 
-FunctionCase	- CamelCase
-FunctionPrefix	- NA
-FunctionSuffix	- NA
+- FunctionCase  	- CamelCase
+
+- FunctionPrefix	- NA
+- FunctionSuffix	- NA
 
 ```c++
 char MY_Function_string();
@@ -310,9 +327,10 @@ char MyFunctionString();
 
 ## Global Constant
 
-GlobalConstantCase		- CamelCase
-GlobalConstantPrefix	- gc
-GlobalConstantSuffix	- NA
+- GlobalConstantCase	  - CamelCase
+
+- GlobalConstantPrefix	- gc
+- GlobalConstantSuffix	- NA
 
 ```c++
 unsigned const MyConstGlobal_array[] = {1, 2, 3};
@@ -324,9 +342,10 @@ unsigned const gcMyConstGlobalArray[] = {1, 2, 3};
 
 ## Global Constant Pointer 
 
-GlobalConstantPointerCase	- gp
-GlobalConstantPointerPrefix	- NA
-GlobalConstantPointerSuffix	- NA
+- GlobalConstantPointerCase	  - gp
+
+- GlobalConstantPointerPrefix	- NA
+- GlobalConstantPointerSuffix	- NA
 
 ```c++
 int *const MyConstantGlobalPointer = nullptr;
@@ -338,9 +357,10 @@ int *const gpcMyConstantGlobalPointer = nullptr;
 ```
 
 ## Global Constant Function
-GlobalFunctionCase		- CamelCase
-GlobalFunctionPrefix	- NA
-GlobalFunctionSuffix	- NA
+- GlobalFunctionCase	  - CamelCase
+
+- GlobalFunctionPrefix	- NA
+- GlobalFunctionSuffix	- NA
 
 ```c++
 void GLOBAL_FUNCTION(int PARAMETER_1, int const CONST_parameter);
@@ -352,9 +372,10 @@ void GlobalFunction(int PARAMETER_1, int const CONST_parameter);
 
 ## Global Pointer
 
-GlobalPointerCase
-GlobalPointerPrefix
-GlobalPointerSuffix
+- GlobalPointerCase
+
+- GlobalPointerPrefix
+- GlobalPointerSuffix
 
 ```c++
 int *GLOBAL3;
@@ -366,9 +387,10 @@ int *pre_global3_post;
 ```
 
 ## Global Variable 
-GlobalVariableCase
-GlobalVariablePrefix
-GlobalVariableSuffix
+- GlobalVariableCase
+
+- GlobalVariablePrefix
+- GlobalVariableSuffix
 
 ```c++
 int GLOBAL3;
@@ -380,9 +402,10 @@ int pre_global3_post;
 ```
 
 ## Inline Namespace
-InlineNamespaceCase
-InlineNamespacePrefix
-InlineNamespaceSuffix
+- InlineNamespaceCase
+
+- InlineNamespacePrefix
+- InlineNamespaceSuffix
 
 ```c++
 namespace FOO_NS {
@@ -403,9 +426,10 @@ inline namespace pre_inlinenamespace_post {
 
 
 ## Local Constant
-LocalConstantCase		- lower_case
-LocalConstantPrefix		- c_
-LocalConstantSuffix		- NA
+- LocalConstantCase	  	- lower_case
+
+- LocalConstantPrefix		- c_
+- LocalConstantSuffix		- NA
 
 ```c++
 void foo() { int const local_Constant = 3; }
@@ -418,9 +442,10 @@ void foo() { int const c_local_constant = 3; }
 
 
 ## Local Constant 
-LocalConstantPointerCase	- lower_case
-LocalConstantPointerPrefix	- p_
-LocalConstantPointerSuffix	- NA
+- LocalConstantPointerCase	  - lower_case
+
+- LocalConstantPointerPrefix	- p_
+- LocalConstantPointerSuffix	- NA
 
 ```c++
 void foo() { int const *local_var = 3; }
@@ -432,9 +457,10 @@ void foo() { int const *cp_local_var = 3; }
 ```
 
 ## Local Pointer 
-LocalPointerCase
-LocalPointerPrefix
-LocalPointerSuffix
+- LocalPointerCase
+
+- LocalPointerPrefix
+- LocalPointerSuffix
 
 ```c++
 void foo() { int *local_Variable; }
@@ -446,9 +472,10 @@ void foo() { int *p_local_var; }
 ```
 
 ## Local Variable 
-LocalVariableCase
-LocalVariablePrefix
-LocalVariableSuffix
+- LocalVariableCase
+- LocalVariablePrefix
+- LocalVariableSuffix
+
 ```c++
 void foo() { int local_Variable; }
 ```
@@ -459,9 +486,10 @@ void foo() { int local_var; }
 ```
 
 ## Member Variable 
-MemberCase
-MemberPrefix
-MemberSuffix
+- MemberCase
+- MemberPrefix
+- MemberSuffix
+
 ```c++
 ```
 
@@ -470,9 +498,10 @@ After:
 ```
 
 ## Methods
-MethodCase
-MethodPrefix
-MethodSuffix
+- MethodCase
+- MethodPrefix
+- MethodSuffix
+
 ```c++
 ```
 
@@ -481,9 +510,10 @@ After:
 ```
 
 ## Namespace 
-NamespaceCase
-NamespacePrefix
-NamespaceSuffix
+- NamespaceCase
+- NamespacePrefix
+- NamespaceSuffix
+
 ```c++
 ```
 
@@ -492,9 +522,10 @@ After:
 ```
 
 ## Function Parameters 
-ParameterCase
-ParameterPrefix
-ParameterSuffix
+- ParameterCase
+- ParameterPrefix
+- ParameterSuffix
+
 ```c++
 ```
 
@@ -503,9 +534,10 @@ After:
 ```
 
 ## Parameter Packs 
-ParameterPackCase
-ParameterPackPrefix
-ParameterPackSuffix
+- ParameterPackCase
+- ParameterPackPrefix
+- ParameterPackSuffix
+
 ```c++
 ```
 
@@ -514,9 +546,10 @@ After:
 ```
 
 ## Pointer Parameter 
-PointerParameterCase
-PointerParameterPrefix
-PointerParameterSuffix
+- PointerParameterCase
+- PointerParameterPrefix
+- PointerParameterSuffix
+
 ```c++
 ```
 
@@ -525,9 +558,10 @@ After:
 ```
 
 ## Private members
-PrivateMemberCase
-PrivateMemberPrefix
-PrivateMemberSuffix
+- PrivateMemberCase
+- PrivateMemberPrefix
+- PrivateMemberSuffix
+
 ```c++
 ```
 
@@ -536,9 +570,10 @@ After:
 ```
 
 ## Private Methods
-PrivateMethodCase
-PrivateMethodPrefix
-PrivateMethodSuffix
+- PrivateMethodCase
+- PrivateMethodPrefix
+- PrivateMethodSuffix
+
 ```c++
 ```
 
@@ -547,9 +582,10 @@ After:
 ```
 
 ## Protected Members
-ProtectedMemberCase
-ProtectedMemberPrefix
-ProtectedMemberSuffix
+- ProtectedMemberCase
+- ProtectedMemberPrefix
+- ProtectedMemberSuffix
+
 ```c++
 ```
 
@@ -558,9 +594,10 @@ After:
 ```
 
 ## Protected Methods
-ProtectedMethodCase
-ProtectedMethodPrefix
-ProtectedMethodSuffix
+- ProtectedMethodCase
+- ProtectedMethodPrefix
+- ProtectedMethodSuffix
+
 ```c++
 ```
 
@@ -569,9 +606,10 @@ After:
 ```
 
 ## Public Members
-PublicMemberCase
-PublicMemberPrefix
-PublicMemberSuffix
+- PublicMemberCase
+- PublicMemberPrefix
+- PublicMemberSuffix
+
 ```c++
 ```
 
@@ -580,9 +618,10 @@ After:
 ```
 
 ## Public Methods
-PublicMethodCase
-PublicMethodPrefix
-PublicMethodSuffix
+- PublicMethodCase
+- PublicMethodPrefix
+- PublicMethodSuffix
+
 ```c++
 ```
 
@@ -591,9 +630,10 @@ After:
 ```
 
 ## Static Constants
-StaticConstantCase
-StaticConstantPrefix
-StaticConstantSuffix
+- StaticConstantCase
+- StaticConstantPrefix
+- StaticConstantSuffix
+
 ```c++
 ```
 
@@ -602,9 +642,10 @@ After:
 ```
 
 ## Static Variables
-StaticVariableCase
-StaticVariablePrefix
-StaticVariableSuffix
+- StaticVariableCase
+- StaticVariablePrefix
+- StaticVariableSuffix
+
 ```c++
 ```
 
@@ -613,9 +654,10 @@ After:
 ```
 
 ## Structures
-StructCase
-StructPrefix
-StructSuffix
+- StructCase
+- StructPrefix
+- StructSuffix
+
 ```c++
 ```
 
@@ -624,9 +666,10 @@ After:
 ```
 
 ## Template Parameters
-TemplateParameterCase
-TemplateParameterPrefix
-TemplateParameterSuffix
+- TemplateParameterCase
+- TemplateParameterPrefix
+- TemplateParameterSuffix
+
 ```c++
 ```
 
@@ -635,9 +678,10 @@ After:
 ```
 
 ## Template Template Parameters
-TemplateTemplateParameterCase
-TemplateTemplateParameterPrefix
-TemplateTemplateParameterSuffix
+- TemplateTemplateParameterCase
+- TemplateTemplateParameterPrefix
+- TemplateTemplateParameterSuffix
+
 ```c++
 ```
 
@@ -646,9 +690,10 @@ After:
 ```
 
 ## Type Aliases
-TypeAliasCase
-TypeAliasPrefix
-TypeAliasSuffix
+- TypeAliasCase
+- TypeAliasPrefix
+- TypeAliasSuffix
+
 ```c++
 ```
 
@@ -657,9 +702,10 @@ After:
 ```
 
 ## Typedefs
-TypedefCase
-TypedefPrefix
-TypedefSuffix
+- TypedefCase
+- TypedefPrefix
+- TypedefSuffix
+
 ```c++
 ```
 
@@ -668,9 +714,10 @@ After:
 ```
 
 ## Type Template Parameters
-TypeTemplateParameterCase
-TypeTemplateParameterPrefix
-TypeTemplateParameterSuffix
+- TypeTemplateParameterCase
+- TypeTemplateParameterPrefix
+- TypeTemplateParameterSuffix
+
 ```c++
 ```
 
@@ -679,9 +726,10 @@ After:
 ```
 
 ## Union 
-UnionCase
-UnionPrefix
-UnionSuffix
+- UnionCase
+- UnionPrefix
+- UnionSuffix
+
 ```c++
 ```
 
@@ -690,9 +738,10 @@ After:
 ```
 
 ## Value Template 
-ValueTemplateParameterCase
-ValueTemplateParameterPrefix
-ValueTemplateParameterSuffix
+- ValueTemplateParameterCase
+- ValueTemplateParameterPrefix
+- ValueTemplateParameterSuffix
+
 ```c++
 ```
 
@@ -701,9 +750,10 @@ After:
 ```
 
 ## Variable 
-VariableCase
-VariablePrefix
-VariableSuffix
+- VariableCase
+- VariablePrefix
+- VariableSuffix
+
 ```c++
 ```
 
@@ -712,9 +762,10 @@ After:
 ```
 
 ## Virtual Method
-VirtualMethodCase
-VirtualMethodPrefix
-VirtualMethodSuffix
+- VirtualMethodCase
+- VirtualMethodPrefix
+- VirtualMethodSuffix
+
 ```c++
 ```
 
