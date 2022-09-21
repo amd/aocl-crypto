@@ -221,7 +221,28 @@ Rijndael::Impl::invMixColumns(Uint8 state[][4]) noexcept
 static Uint32
 gmulx2(Uint32 val)
 {
-    // galois Multiple of val*2 for 32 bit
+    /*
+
+        Reference Link & Source for Understanding:
+        https://en.wikipedia.org/wiki/Finite_field_arithmetic
+        4th topic Multiplication
+
+        galois Multiple of val*2 for 32 bit
+
+        val (32bit) = 4 val (8bit); 0xfefefefe to be used so that 8 bits don't
+        interact with each other and last bit will always be zero as val+val
+        used
+
+        val & 0x80808080 GF modulo: if val has a nonzero term x^7, then must be
+        reduced when it becomes x^8
+
+        Primitive polynomial x^8 + x^4 + x^3 + x + 1
+        (0b1_0001_1011) 0x11b so for 8bit 0x1b corresponds to the irreducible
+        polynomial with the high term eliminated – you can change it but it must
+        be irreducible
+
+    */
+
     return ((val + val) & 0xfefefefe)
            ^ ((((val & 0x80808080) << 1) - ((val & 0x80808080) >> 7))
               & 0x1b1b1b1b);
