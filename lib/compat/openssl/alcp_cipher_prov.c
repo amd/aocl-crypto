@@ -283,6 +283,10 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
     if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
         const uint8_t* tweak_key     = NULL;
         int            tweak_key_len = 128;
+        if (!key) {
+            // For handling when openssl speed probes the code with null key
+            return 1;
+        }
         if (keylen == 128) {
             tweak_key     = key + 16;
             tweak_key_len = 128;
@@ -405,6 +409,10 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
 
     // For AES XTS Mode, get the tweak key
     if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
+        if (!key) {
+            // For handling when openssl speed probes the code with null key
+            return 1;
+        }
         const uint8_t* tweak_key     = NULL;
         int            tweak_key_len = 128;
         if (keylen == 128) {
