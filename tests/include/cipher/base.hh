@@ -34,7 +34,7 @@
 
 namespace alcp::testing {
 
-typedef struct
+struct alcp_data_ex_t
 {
     const uint8_t* in;
     uint64_t       inl;
@@ -49,7 +49,24 @@ typedef struct
     uint8_t*       tkey;  // tweak key
     uint64_t       tkeyl; // tweak key len
     uint64_t       block_size;
-} alcp_data_ex_t;
+    // Initialize everything to 0
+    alcp_data_ex_t()
+    {
+        in         = nullptr;
+        inl        = 0;
+        out        = nullptr;
+        outl       = 0;
+        iv         = nullptr;
+        ivl        = 0;
+        ad         = nullptr;
+        adl        = 0;
+        tag        = nullptr;
+        tagl       = 0;
+        tkey       = nullptr;
+        tkey       = 0;
+        block_size = 0;
+    }
+};
 
 typedef enum
 {

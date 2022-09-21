@@ -127,8 +127,6 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
                 data_alc.outl  = data_alc.inl;
                 data_alc.tkey  = &(tkey[0]);
                 data_alc.tkeyl = 16;
-                data_alc.tagl  = 0;
-                data_alc.adl   = 0;
 
                 // External Lib Data
                 data_ext.in         = &(ct[0]);
@@ -140,8 +138,6 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
                 data_ext.tkey       = &(tkey[0]);
                 data_ext.tkeyl      = 16;
                 data_ext.block_size = ct.size();
-                data_ext.tagl       = 0;
-                data_ext.adl        = 0;
 
                 fr->setRecEvent(key, iv, ct, BIG_DEC);
             } else {
@@ -241,8 +237,6 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
                 data_alc.outl  = data_alc.inl;
                 data_alc.tkey  = &(tkey[0]);
                 data_alc.tkeyl = 16;
-                data_alc.tagl  = 0;
-                data_alc.adl   = 0;
 
                 // External Lib Data
                 data_ext.in         = &(pt[0]);
@@ -254,8 +248,6 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
                 data_ext.tkey       = &(tkey[0]);
                 data_ext.tkeyl      = 16;
                 data_ext.block_size = pt.size();
-                data_ext.tagl       = 0;
-                data_ext.adl        = 0;
 
                 fr->setRecEvent(key, iv, pt, BIG_ENC);
             } else {
@@ -355,8 +347,6 @@ TEST(SYMMETRIC_ENC_256, 256_CROSS_CHECK_BIG)
                 data_alc.outl  = data_alc.inl;
                 data_alc.tkey  = &(tkey[0]);
                 data_alc.tkeyl = 16;
-                data_alc.tagl  = 0;
-                data_alc.adl   = 0;
 
                 // External Lib Data
                 data_ext.in         = &(pt[0]);
@@ -368,8 +358,6 @@ TEST(SYMMETRIC_ENC_256, 256_CROSS_CHECK_BIG)
                 data_ext.tkey       = &(tkey[0]);
                 data_ext.tkeyl      = 16;
                 data_ext.block_size = pt.size();
-                data_ext.tagl       = 0;
-                data_ext.adl        = 0;
 
                 fr->setRecEvent(key, iv, pt, BIG_ENC);
             } else {
@@ -469,8 +457,6 @@ TEST(SYMMETRIC_DEC_256, 256_CROSS_CHECK_BIG)
                 data_alc.outl  = data_alc.inl;
                 data_alc.tkey  = &(tkey[0]);
                 data_alc.tkeyl = 16;
-                data_alc.tagl  = 0;
-                data_alc.adl   = 0;
 
                 // External Lib Data
                 data_ext.in         = &(ct[0]);
@@ -482,8 +468,6 @@ TEST(SYMMETRIC_DEC_256, 256_CROSS_CHECK_BIG)
                 data_ext.tkey       = &(tkey[0]);
                 data_ext.tkeyl      = 16;
                 data_ext.block_size = ct.size();
-                data_ext.tagl       = 0;
-                data_ext.adl        = 0;
 
                 fr->setRecEvent(key, iv, ct, BIG_DEC);
             } else {
@@ -581,8 +565,6 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
                 data_alc.outl  = data_alc.inl;
                 data_alc.tkey  = &(tkey[0]);
                 data_alc.tkeyl = 16;
-                data_alc.tagl  = 0;
-                data_alc.adl   = 0;
 
                 // External Lib Data
                 data_ext.in         = &(pt[0]);
@@ -594,8 +576,6 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
                 data_ext.tkey       = &(tkey[0]);
                 data_ext.tkeyl      = 16;
                 data_ext.block_size = pt.size();
-                data_ext.tagl       = 0;
-                data_ext.adl        = 0;
 
                 fr->setRecEvent(key, iv, pt, SMALL_ENC);
             } else {
@@ -695,8 +675,6 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
                 data_alc.outl  = data_alc.inl;
                 data_alc.tkey  = &(tkey[0]);
                 data_alc.tkeyl = 16;
-                data_alc.tagl  = 0;
-                data_alc.adl   = 0;
 
                 // External Lib Data
                 data_ext.in         = &(ct[0]);
@@ -708,8 +686,6 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
                 data_ext.tkey       = &(tkey[0]);
                 data_ext.tkeyl      = 16;
                 data_ext.block_size = ct.size();
-                data_ext.tagl       = 0;
-                data_ext.adl        = 0;
 
                 fr->setRecEvent(key, iv, ct, SMALL_DEC);
             } else {
@@ -808,8 +784,6 @@ TEST(SYMMETRIC_ENC_256, 256_CROSS_CHECK_SMALL)
                 data_alc.outl  = data_alc.inl;
                 data_alc.tkey  = &(tkey[0]);
                 data_alc.tkeyl = 16;
-                data_alc.tagl  = 0;
-                data_alc.adl   = 0;
 
                 // External Lib Data
                 data_ext.in         = &(pt[0]);
@@ -821,8 +795,6 @@ TEST(SYMMETRIC_ENC_256, 256_CROSS_CHECK_SMALL)
                 data_ext.tkey       = &(tkey[0]);
                 data_ext.tkeyl      = 16;
                 data_ext.block_size = pt.size();
-                data_ext.tagl       = 0;
-                data_ext.adl        = 0;
 
                 fr->setRecEvent(key, iv, pt, SMALL_ENC);
             } else {
@@ -921,8 +893,6 @@ TEST(SYMMETRIC_DEC_256, 256_CROSS_CHECK_SMALL)
                 data_alc.outl  = data_alc.inl;
                 data_alc.tkey  = &(tkey[0]);
                 data_alc.tkeyl = 16;
-                data_alc.tagl  = 0;
-                data_alc.adl   = 0;
 
                 // External Lib Data
                 data_ext.in         = &(ct[0]);
@@ -934,8 +904,6 @@ TEST(SYMMETRIC_DEC_256, 256_CROSS_CHECK_SMALL)
                 data_ext.tkey       = &(tkey[0]);
                 data_ext.tkeyl      = 16;
                 data_ext.block_size = ct.size();
-                data_ext.tagl       = 0;
-                data_ext.adl        = 0;
 
                 fr->setRecEvent(key, iv, ct, SMALL_DEC);
             } else {

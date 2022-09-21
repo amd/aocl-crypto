@@ -291,6 +291,7 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
 
     if (m_mode == ALC_AES_MODE_GCM) {
         // GCM Init
+        Uint8 tagbuff[data.tagl];
         err = alcp_cipher_decrypt_update(
             m_handle, nullptr, nullptr, data.ivl, m_iv);
         if (alcp_is_error(err)) {
