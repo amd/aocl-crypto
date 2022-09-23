@@ -162,27 +162,27 @@ class alignas(16) Rijndael::Impl
     const Uint8* getEncryptKeys() const { return m_enc_key; }
     const Uint8* getDecryptKeys() const { return m_dec_key; }
 
-    alc_error_t encrypt(const uint8_t* pSrc,
-                        uint8_t*       pDst,
-                        uint64_t       len,
-                        const uint8_t* pIv) const;
+    alc_error_t encrypt(const Uint8* pSrc,
+                        Uint8*       pDst,
+                        Uint64       len,
+                        const Uint8* pIv) const;
 
-    alc_error_t encryptUpdate(const uint8_t* pSrc,
-                              uint8_t*       pDst,
-                              uint64_t       len,
-                              const uint8_t* pIv);
+    alc_error_t encryptUpdate(const Uint8* pSrc,
+                              Uint8*       pDst,
+                              Uint64       len,
+                              const Uint8* pIv);
 
-    alc_error_t decrypt(const uint8_t* pSrc,
-                        uint8_t*       pDst,
-                        uint64_t       len,
-                        const uint8_t* pIv) const;
+    alc_error_t decrypt(const Uint8* pSrc,
+                        Uint8*       pDst,
+                        Uint64       len,
+                        const Uint8* pIv) const;
 
-    alc_error_t decryptUpdate(const uint8_t* pSrc,
-                              uint8_t*       pDst,
-                              uint64_t       len,
-                              const uint8_t* pIv);
+    alc_error_t decryptUpdate(const Uint8* pSrc,
+                              Uint8*       pDst,
+                              Uint64       len,
+                              const Uint8* pIv);
 
-    void AESEncrypt(Uint32* blk0, const uint8_t* pkey, int nr) const;
+    void AESEncrypt(Uint32* blk0, const Uint8* pkey, int nr) const;
 
     void setUp(const alc_key_info_t& rKeyInfo)
     {
@@ -424,7 +424,7 @@ Rijndael::Impl::addRoundKey(Uint8 state[][4], Uint8 k[][4]) noexcept
  *  end
  */
 void
-Rijndael::Impl::AESEncrypt(Uint32* blk0, const uint8_t* pkey, int nr) const
+Rijndael::Impl::AESEncrypt(Uint32* blk0, const Uint8* pkey, int nr) const
 {
 
     using utils::MakeWord;
@@ -501,19 +501,19 @@ Rijndael::Impl::AESEncrypt(Uint32* blk0, const uint8_t* pkey, int nr) const
  *  end
  */
 alc_error_t
-Rijndael::Impl::encrypt(const uint8_t* pSrc,
-                        uint8_t*       pDst,
-                        uint64_t       len,
-                        const uint8_t* pIv) const
+Rijndael::Impl::encrypt(const Uint8* pSrc,
+                        Uint8*       pDst,
+                        Uint64       len,
+                        const Uint8* pIv) const
 {
     return ALC_ERROR_NONE;
 }
 
 alc_error_t
-Rijndael::Impl::encryptUpdate(const uint8_t* pSrc,
-                              uint8_t*       pDst,
-                              uint64_t       len,
-                              const uint8_t* pIv)
+Rijndael::Impl::encryptUpdate(const Uint8* pSrc,
+                              Uint8*       pDst,
+                              Uint64       len,
+                              const Uint8* pIv)
 {
     return ALC_ERROR_NONE;
 }
@@ -545,10 +545,10 @@ Rijndael::Impl::encryptUpdate(const uint8_t* pSrc,
  *  end
  */
 alc_error_t
-Rijndael::Impl::decrypt(const uint8_t* pSrc,
-                        uint8_t*       pDst,
-                        uint64_t       len,
-                        const uint8_t* pIv) const
+Rijndael::Impl::decrypt(const Uint8* pSrc,
+                        Uint8*       pDst,
+                        Uint64       len,
+                        const Uint8* pIv) const
 {
 #if 0
     Uint32 nb = cBlockSizeWord;
@@ -558,10 +558,10 @@ Rijndael::Impl::decrypt(const uint8_t* pSrc,
 }
 
 alc_error_t
-Rijndael::Impl::decryptUpdate(const uint8_t* pSrc,
-                              uint8_t*       pDst,
-                              uint64_t       len,
-                              const uint8_t* pIv)
+Rijndael::Impl::decryptUpdate(const Uint8* pSrc,
+                              Uint8*       pDst,
+                              Uint64       len,
+                              const Uint8* pIv)
 {
     return ALC_ERROR_NONE;
 }
@@ -741,7 +741,7 @@ Rijndael::encrypt(const Uint8* pPlaintxt,
 }
 
 void
-Rijndael::AesEncrypt(Uint32* blk0, const uint8_t* pkey, int nr) const
+Rijndael::AesEncrypt(Uint32* blk0, const Uint8* pkey, int nr) const
 {
     pImpl()->AESEncrypt(blk0, pkey, nr);
 }

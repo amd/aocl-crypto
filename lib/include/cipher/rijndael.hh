@@ -94,7 +94,7 @@ class Rijndael : public alcp::BlockCipher
                                 Uint64       len,
                                 const Uint8* pIv) const override;
 
-    virtual void AesEncrypt(Uint32* blk0, const uint8_t* pkey, int nr) const;
+    virtual void AesEncrypt(Uint32* blk0, const Uint8* pkey, int nr) const;
 
     virtual alc_error_t decrypt(const Uint8* pSrc,
                                 Uint8*       pDst,
