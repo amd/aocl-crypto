@@ -50,8 +50,8 @@ void
 Digest_SHA2_224(benchmark::State& state, uint64_t block_size)
 {
     alc_error_t    error;
-    uint8_t        message[32768] = { 0 };
-    uint8_t        digest[512]    = { 0 };
+    Uint8          message[32768] = { 0 };
+    Uint8          digest[512]    = { 0 };
     AlcpDigestBase adb(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
     DigestBase*    db = &adb;
 #ifdef USE_IPP
@@ -88,8 +88,8 @@ void
 Digest_SHA2_256(benchmark::State& state, uint64_t block_size)
 {
     alc_error_t    error;
-    uint8_t        message[32768] = { 0 };
-    uint8_t        digest[512]    = { 0 };
+    Uint8          message[32768] = { 0 };
+    Uint8          digest[512]    = { 0 };
     AlcpDigestBase adb(ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
     DigestBase*    db = &adb;
 #ifdef USE_IPP
@@ -126,8 +126,8 @@ void
 Digest_SHA2_384(benchmark::State& state, uint64_t block_size)
 {
     alc_error_t    error;
-    uint8_t        message[32768] = { 0 };
-    uint8_t        digest[512]    = { 0 };
+    Uint8          message[32768] = { 0 };
+    Uint8          digest[512]    = { 0 };
     AlcpDigestBase adb(ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
     DigestBase*    db = &adb;
 #ifdef USE_IPP
@@ -164,8 +164,8 @@ void
 Digest_SHA2_512(benchmark::State& state, uint64_t block_size)
 {
     alc_error_t    error;
-    uint8_t        message[32768] = { 0 };
-    uint8_t        digest[512]    = { 0 };
+    Uint8          message[32768] = { 0 };
+    Uint8          digest[512]    = { 0 };
     AlcpDigestBase adb(ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
     DigestBase*    db = &adb;
 #ifdef USE_IPP

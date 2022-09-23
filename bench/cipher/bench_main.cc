@@ -41,13 +41,13 @@ CipherAes(benchmark::State& state,
           size_t            keylen)
 {
     // Dynamic allocation better for larger sizes
-    std::vector<uint8_t>       vec_in(blockSize, 56);
-    std::vector<uint8_t>       vec_out(blockSize, 21);
-    uint8_t                    key[keylen / 8];
-    uint8_t                    iv[16];
-    uint8_t                    ad[16];
-    uint8_t                    tag[16];
-    uint8_t                    tkey[16];
+    std::vector<Uint8>         vec_in(blockSize, 56);
+    std::vector<Uint8>         vec_out(blockSize, 21);
+    Uint8                      key[keylen / 8];
+    Uint8                      iv[16];
+    Uint8                      ad[16];
+    Uint8                      tag[16];
+    Uint8                      tkey[16];
     alcp::testing::CipherBase* cb;
 
     alcp::testing::AlcpCipherBase acb = alcp::testing::AlcpCipherBase(
