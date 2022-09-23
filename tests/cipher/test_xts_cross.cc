@@ -108,8 +108,8 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
 
             if (!bbxreplay)
                 fr->startRecEvent();
-            alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> ct(size, 0), key(key_size / 8, 0),
+            alcp_data_ex_t     data_alc, data_ext;
+            std::vector<Uint8> ct(size, 0), key(key_size / 8, 0),
                 tkey(key_size / 8, 0), iv(12, 0), out_pt_alc(size, 0),
                 out_pt_ext(size, 0);
             if (!bbxreplay) {
@@ -218,8 +218,8 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
 
             if (!bbxreplay)
                 fr->startRecEvent();
-            alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> pt(size, 0), key(key_size / 8, 0),
+            alcp_data_ex_t     data_alc, data_ext;
+            std::vector<Uint8> pt(size, 0), key(key_size / 8, 0),
                 tkey(key_size / 8, 0), iv(12, 0), out_ct_alc(size, 0),
                 out_ct_ext(size, 0);
             if (!bbxreplay) {
@@ -328,8 +328,8 @@ TEST(SYMMETRIC_ENC_256, 256_CROSS_CHECK_BIG)
 
             if (!bbxreplay)
                 fr->startRecEvent();
-            alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> pt(size, 0), key(key_size / 8, 0),
+            alcp_data_ex_t     data_alc, data_ext;
+            std::vector<Uint8> pt(size, 0), key(key_size / 8, 0),
                 tkey(key_size / 8, 0), iv(12, 0), out_ct_alc(size, 0),
                 out_ct_ext(size, 0);
             if (!bbxreplay) {
@@ -438,8 +438,8 @@ TEST(SYMMETRIC_DEC_256, 256_CROSS_CHECK_BIG)
 
             if (!bbxreplay)
                 fr->startRecEvent();
-            alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> ct(size, 0), key(key_size / 8, 0),
+            alcp_data_ex_t     data_alc, data_ext;
+            std::vector<Uint8> ct(size, 0), key(key_size / 8, 0),
                 tkey(key_size / 8, 0), iv(12, 0), out_pt_alc(size, 0),
                 out_pt_ext(size, 0);
             if (!bbxreplay) {
@@ -546,8 +546,8 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
         for (int i = SMALL_START_LOOP; i < max_loop; i += SMALL_INC_LOOP) {
             if (!bbxreplay)
                 fr->startRecEvent();
-            alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> pt(i, 0), key(key_size / 8, 0),
+            alcp_data_ex_t     data_alc, data_ext;
+            std::vector<Uint8> pt(i, 0), key(key_size / 8, 0),
                 tkey(key_size / 8, 0), iv(12, 0), add, out_ct_alc(i, 0),
                 out_ct_ext(i, 0);
             if (!bbxreplay) {
@@ -655,8 +655,8 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
         for (int i = SMALL_START_LOOP; i < max_loop; i += SMALL_INC_LOOP) {
             if (!bbxreplay)
                 fr->startRecEvent();
-            alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> ct(i, 0), key(key_size / 8, 0),
+            alcp_data_ex_t     data_alc, data_ext;
+            std::vector<Uint8> ct(i, 0), key(key_size / 8, 0),
                 tkey(key_size / 8, 0), iv(12, 0), out_pt_alc(i, 0),
                 out_pt_ext(i, 0);
             // FIXME: There is some uninitialized problem with out_pt
@@ -765,8 +765,8 @@ TEST(SYMMETRIC_ENC_256, 256_CROSS_CHECK_SMALL)
         for (int i = SMALL_START_LOOP; i < max_loop; i += SMALL_INC_LOOP) {
             if (!bbxreplay)
                 fr->startRecEvent();
-            alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> pt(i, 0), key(key_size / 8, 0),
+            alcp_data_ex_t     data_alc, data_ext;
+            std::vector<Uint8> pt(i, 0), key(key_size / 8, 0),
                 tkey(key_size / 8, 0), iv(12, 0), add, out_ct_alc(i, 0),
                 out_ct_ext(i, 0);
             if (!bbxreplay) {
@@ -874,8 +874,8 @@ TEST(SYMMETRIC_DEC_256, 256_CROSS_CHECK_SMALL)
         for (int i = SMALL_START_LOOP; i < max_loop; i += SMALL_INC_LOOP) {
             if (!bbxreplay)
                 fr->startRecEvent();
-            alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> ct(i, 0), key(key_size / 8, 0),
+            alcp_data_ex_t     data_alc, data_ext;
+            std::vector<Uint8> ct(i, 0), key(key_size / 8, 0),
                 tkey(key_size / 8, 0), iv(12, 0), add, out_pt_alc(i, 0),
                 out_pt_ext(i, 0);
             if (!bbxreplay) {

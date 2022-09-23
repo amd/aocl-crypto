@@ -39,8 +39,8 @@ static bool bbxreplay   = false;
 static bool oa_override = false;
 
 ::testing::AssertionResult
-ArraysMatch(std::vector<uint8_t>    actual,
-            std::vector<uint8_t>    expected,
+ArraysMatch(std::vector<Uint8>      actual,
+            std::vector<Uint8>      expected,
             alcp::testing::DataSet& ds,
             std::string             testName)
 {
@@ -67,9 +67,7 @@ ArraysMatch(std::vector<uint8_t>    actual,
 }
 
 ::testing::AssertionResult
-ArraysMatch(std::vector<uint8_t> actual,
-            std::vector<uint8_t> expected,
-            size_t               len)
+ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected, size_t len)
 {
     if (actual.size() != expected.size()) {
         return ::testing::AssertionFailure() << "Size mismatch!";
@@ -88,7 +86,7 @@ ArraysMatch(std::vector<uint8_t> actual,
 }
 
 ::testing::AssertionResult
-ArraysMatch(std::vector<uint8_t> actual, std::vector<uint8_t> expected)
+ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected)
 {
     if (actual.size() != expected.size()) {
         return ::testing::AssertionFailure() << "Size mismatch!";

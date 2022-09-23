@@ -55,10 +55,10 @@ RngBase::~RngBase()
     alcp_rng_finish(&m_handle);
     free(m_handle.rh_context);
 }
-std::vector<uint8_t>
+std::vector<Uint8>
 RngBase::genRandomBytes(std::size_t l)
 {
-    std::vector<uint8_t> ret(l, 0);
+    std::vector<Uint8> ret(l, 0);
     if (alcp_rng_gen_random(&m_handle, &(ret[0]), l) == ALC_ERROR_NO_ENTROPY) {
         throw "rng_base.cc : Bail out! not enough entropy!";
     }

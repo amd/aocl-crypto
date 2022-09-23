@@ -44,17 +44,17 @@ typedef enum
 class ExecRecPlay
 {
   private:
-    File*                m_blackbox_bin = nullptr;
-    File*                m_log          = nullptr;
-    time_t               m_start_time;
-    time_t               m_end_time;
-    std::size_t          m_blackbox_start_pos = 0;
-    std::size_t          m_blackbox_end_pos   = 0;
-    record_t             m_rec_type;
-    std::vector<uint8_t> m_data;
-    std::string          m_str_mode = "";
-    long                 m_byte_start, m_byte_end, m_rec_t, m_data_size;
-    long                 m_prev_log_point;
+    File*              m_blackbox_bin = nullptr;
+    File*              m_log          = nullptr;
+    time_t             m_start_time;
+    time_t             m_end_time;
+    std::size_t        m_blackbox_start_pos = 0;
+    std::size_t        m_blackbox_end_pos   = 0;
+    record_t           m_rec_type;
+    std::vector<Uint8> m_data;
+    std::string        m_str_mode = "";
+    long               m_byte_start, m_byte_end, m_rec_t, m_data_size;
+    long               m_prev_log_point;
 
   public:
     // Create new files for writing
@@ -72,7 +72,7 @@ class ExecRecPlay
     bool rewindLog();
     bool nextLog();
     bool fastForward(record_t rec);
-    bool getValues(std::vector<uint8_t>* data);
+    bool getValues(std::vector<Uint8>* data);
 
     bool playbackLocateEvent(record_t rec);
 
@@ -90,10 +90,10 @@ class ExecRecPlay
      * @param data - PlainText/CipherText
      * @param rec - Test type, BIG_ENC,SMALL_ENC etc..
      */
-    void setRecEvent(std::vector<uint8_t> data, record_t rec);
+    void setRecEvent(std::vector<Uint8> data, record_t rec);
 
     // Sets the Data in the event
-    void setRecData(std::vector<uint8_t> data);
+    void setRecData(std::vector<Uint8> data);
 
     // Set Test type, BIG_ENC,SMALL_ENC etc..
     void setRecType(record_t rec);
@@ -107,8 +107,8 @@ class ExecRecPlay
 class DataSet : private File
 {
   private:
-    std::string          line = "";
-    std::vector<uint8_t> Digest, Message;
+    std::string        line = "";
+    std::vector<Uint8> Digest, Message;
     // First line is skipped, linenum starts from 1
     int lineno = 1;
 
@@ -120,24 +120,24 @@ class DataSet : private File
     // To print which line in dataset failed
     int getLineNumber();
     /* fetch Message / Digest */
-    std::vector<uint8_t> getMessage();
-    std::vector<uint8_t> getDigest();
+    std::vector<Uint8> getMessage();
+    std::vector<Uint8> getDigest();
 };
 class DigestBase
 {
   public:
     virtual bool        init(_alc_sha2_mode   mode,
                              _alc_digest_type type,
-                             _alc_digest_len  sha_len)      = 0;
-    virtual bool        init()                             = 0;
-    virtual alc_error_t digest_function(const uint8_t* src,
-                                        uint64_t       src_size,
-                                        uint8_t*       output,
-                                        uint64_t       out_size) = 0;
-    virtual void        hash_to_string(char*          output_string,
-                                       const uint8_t* hash,
-                                       int            sha_len)        = 0;
-    virtual void        reset()                            = 0;
+                             _alc_digest_len  sha_len)    = 0;
+    virtual bool        init()                           = 0;
+    virtual alc_error_t digest_function(const Uint8* src,
+                                        Uint64       src_size,
+                                        Uint8*       output,
+                                        Uint64       out_size) = 0;
+    virtual void        hash_to_string(char*        output_string,
+                                       const Uint8* hash,
+                                       int          sha_len)      = 0;
+    virtual void        reset()                          = 0;
 };
 
 } // namespace alcp::testing

@@ -36,19 +36,19 @@ namespace alcp::testing {
 
 struct alcp_data_ex_t
 {
-    const uint8_t* in;
-    uint64_t       inl;
-    uint8_t*       out;
-    uint64_t       outl;
-    const uint8_t* iv;
-    uint64_t       ivl;
-    const uint8_t* ad;
-    uint64_t       adl;
-    uint8_t*       tag; // Probably const but openssl expects non const
-    uint64_t       tagl;
-    uint8_t*       tkey;  // tweak key
-    uint64_t       tkeyl; // tweak key len
-    uint64_t       block_size;
+    const Uint8* in;
+    Uint64       inl;
+    Uint8*       out;
+    Uint64       outl;
+    const Uint8* iv;
+    Uint64       ivl;
+    const Uint8* ad;
+    Uint64       adl;
+    Uint8*       tag; // Probably const but openssl expects non const
+    Uint64       tagl;
+    Uint8*       tkey;  // tweak key
+    Uint64       tkeyl; // tweak key len
+    Uint64       block_size;
     // Initialize everything to 0
     alcp_data_ex_t()
     {
@@ -79,17 +79,17 @@ typedef enum
 class ExecRecPlay
 {
   private:
-    File*                m_blackbox_bin = nullptr;
-    File*                m_log          = nullptr;
-    time_t               m_start_time;
-    time_t               m_end_time;
-    std::size_t          m_blackbox_start_pos = 0;
-    std::size_t          m_blackbox_end_pos   = 0;
-    record_t             m_rec_type;
-    std::vector<uint8_t> m_key;
-    std::vector<uint8_t> m_iv;
-    std::vector<uint8_t> m_data;
-    std::string          m_str_mode = "";
+    File*              m_blackbox_bin = nullptr;
+    File*              m_log          = nullptr;
+    time_t             m_start_time;
+    time_t             m_end_time;
+    std::size_t        m_blackbox_start_pos = 0;
+    std::size_t        m_blackbox_end_pos   = 0;
+    record_t           m_rec_type;
+    std::vector<Uint8> m_key;
+    std::vector<Uint8> m_iv;
+    std::vector<Uint8> m_data;
+    std::string        m_str_mode = "";
     long m_byte_start = 0, m_byte_end = 0, m_rec_t = 0, m_key_size = 0,
          m_data_size = 0;
     long m_prev_log_point;
@@ -110,9 +110,9 @@ class ExecRecPlay
     bool rewindLog();
     bool nextLog();
     bool fastForward(record_t rec);
-    bool getValues(std::vector<uint8_t>* key,
-                   std::vector<uint8_t>* iv,
-                   std::vector<uint8_t>* data);
+    bool getValues(std::vector<Uint8>* key,
+                   std::vector<Uint8>* iv,
+                   std::vector<Uint8>* data);
 
     bool playbackLocateEvent(record_t rec);
 
@@ -130,19 +130,19 @@ class ExecRecPlay
      * @param data - PlainText/CipherText
      * @param rec - Test type, BIG_ENC,SMALL_ENC etc..
      */
-    void setRecEvent(std::vector<uint8_t> key,
-                     std::vector<uint8_t> iv,
-                     std::vector<uint8_t> data,
-                     record_t             rec);
+    void setRecEvent(std::vector<Uint8> key,
+                     std::vector<Uint8> iv,
+                     std::vector<Uint8> data,
+                     record_t           rec);
 
     // Sets the Key of the event
-    void setRecKey(std::vector<uint8_t> key);
+    void setRecKey(std::vector<Uint8> key);
 
     // Sets the IV of the event
-    void setRecIv(std::vector<uint8_t> iv);
+    void setRecIv(std::vector<Uint8> iv);
 
     // Sets the Data in the event
-    void setRecData(std::vector<uint8_t> data);
+    void setRecData(std::vector<Uint8> data);
 
     // Set Test type, BIG_ENC,SMALL_ENC etc..
     void setRecType(record_t rec);
@@ -157,8 +157,8 @@ class ExecRecPlay
 class DataSet : private File
 {
   private:
-    std::string          line = "";
-    std::vector<uint8_t> m_pt, m_iv, m_key, m_ct, m_add, m_tag, m_tkey;
+    std::string        line = "";
+    std::vector<Uint8> m_pt, m_iv, m_key, m_ct, m_add, m_tag, m_tkey;
     // First line is skipped, linenum starts from 1
     int lineno = 1;
 
@@ -177,19 +177,19 @@ class DataSet : private File
     // To print which line in dataset failed
     int getLineNumber();
     // Return private data plain text
-    std::vector<uint8_t> getPt();
+    std::vector<Uint8> getPt();
     // Return private data initialization vector
-    std::vector<uint8_t> getIv();
+    std::vector<Uint8> getIv();
     // Return private data key
-    std::vector<uint8_t> getKey();
+    std::vector<Uint8> getKey();
     // Return private data cipher text
-    std::vector<uint8_t> getCt();
+    std::vector<Uint8> getCt();
     // Return private data additional data
-    std::vector<uint8_t> getAdd();
+    std::vector<Uint8> getAdd();
     // Return private data tag
-    std::vector<uint8_t> getTag();
+    std::vector<Uint8> getTag();
     // return tweak key
-    std::vector<uint8_t> getTKey();
+    std::vector<Uint8> getTKey();
 };
 
 /**
@@ -199,29 +199,29 @@ class DataSet : private File
 class CipherBase
 {
   public:
-    virtual bool init(const uint8_t* iv,
-                      const uint32_t iv_len,
-                      const uint8_t* key,
-                      const uint32_t key_len)                     = 0;
-    virtual bool init(const uint8_t* iv,
-                      const uint8_t* key,
-                      const uint32_t key_len)                     = 0;
-    virtual bool init(const uint8_t* key, const uint32_t key_len) = 0;
-    virtual bool init(const uint8_t* iv,
-                      const uint32_t iv_len,
-                      const uint8_t* key,
-                      const uint32_t key_len,
-                      const uint8_t* tkey,
-                      const uint64_t block_size)                  = 0;
-    virtual bool encrypt(const uint8_t* plaintxt,
-                         size_t         len,
-                         uint8_t*       ciphertxt)                      = 0;
-    virtual bool encrypt(alcp_data_ex_t data)                     = 0;
-    virtual bool decrypt(const uint8_t* ciphertxt,
-                         size_t         len,
-                         uint8_t*       plaintxt)                       = 0;
-    virtual bool decrypt(alcp_data_ex_t data)                     = 0;
-    virtual void reset()                                          = 0;
+    virtual bool init(const Uint8* iv,
+                      const Uint32 iv_len,
+                      const Uint8* key,
+                      const Uint32 key_len)                   = 0;
+    virtual bool init(const Uint8* iv,
+                      const Uint8* key,
+                      const Uint32 key_len)                   = 0;
+    virtual bool init(const Uint8* key, const Uint32 key_len) = 0;
+    virtual bool init(const Uint8* iv,
+                      const Uint32 iv_len,
+                      const Uint8* key,
+                      const Uint32 key_len,
+                      const Uint8* tkey,
+                      const Uint64 block_size)                = 0;
+    virtual bool encrypt(const Uint8* plaintxt,
+                         size_t       len,
+                         Uint8*       ciphertxt)                    = 0;
+    virtual bool encrypt(alcp_data_ex_t data)                 = 0;
+    virtual bool decrypt(const Uint8* ciphertxt,
+                         size_t       len,
+                         Uint8*       plaintxt)                     = 0;
+    virtual bool decrypt(alcp_data_ex_t data)                 = 0;
+    virtual void reset()                                      = 0;
     virtual ~CipherBase(){};
 };
 
@@ -239,11 +239,11 @@ class CipherTesting
      * @param plaintext - Data to encrypt.
      * @param key - Key for ecryption.
      * @param iv - IV for encryption.
-     * @return std::vector<uint8_t>
+     * @return std::vector<Uint8>
      */
-    std::vector<uint8_t> testingEncrypt(const std::vector<uint8_t> plaintext,
-                                        const std::vector<uint8_t> key,
-                                        const std::vector<uint8_t> iv);
+    std::vector<Uint8> testingEncrypt(const std::vector<Uint8> plaintext,
+                                      const std::vector<Uint8> key,
+                                      const std::vector<Uint8> iv);
     /**
      * @brief Encrypts data and puts in data.out, expects data.out to already
      * have valid memory pointer with appropriate size
@@ -254,18 +254,18 @@ class CipherTesting
      * @return true
      * @return false
      */
-    bool testingEncrypt(alcp_data_ex_t data, const std::vector<uint8_t> key);
+    bool testingEncrypt(alcp_data_ex_t data, const std::vector<Uint8> key);
     /**
      * @brief Decrypts the data and returns the vector.
      *
      * @param ciphertext - Data to decrypt.
      * @param key - Key used for encryption of ciphertext.
      * @param iv  - IV used for encryption.
-     * @return std::vector<uint8_t>
+     * @return std::vector<Uint8>
      */
-    std::vector<uint8_t> testingDecrypt(const std::vector<uint8_t> ciphertext,
-                                        const std::vector<uint8_t> key,
-                                        const std::vector<uint8_t> iv);
+    std::vector<Uint8> testingDecrypt(const std::vector<Uint8> ciphertext,
+                                      const std::vector<Uint8> key,
+                                      const std::vector<Uint8> iv);
     /**
      * @brief Decrypts data and puts in data.out, expects data.out to already
      * have valid memory point with appropriate size
@@ -276,7 +276,7 @@ class CipherTesting
      * @return true
      * @return false
      */
-    bool testingDecrypt(alcp_data_ex_t data, const std::vector<uint8_t> key);
+    bool testingDecrypt(alcp_data_ex_t data, const std::vector<Uint8> key);
     /**
      * @brief Set CipherBase pimpl
      *

@@ -103,10 +103,9 @@ TEST(SYMMETRIC_CRYPT_128, 128_CROSS_CHECK_SMALL)
              i += SMALL_INC_LOOP) {
             if (!bbxreplay)
                 fr->startRecEvent();
-            alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> pt, key, iv, add, tag_alc(16, 0),
-                tag_ext(16, 0), out_ct_alc(i, 0), out_ct_ext(i, 0),
-                out_pt(i, 0);
+            alcp_data_ex_t     data_alc, data_ext;
+            std::vector<Uint8> pt, key, iv, add, tag_alc(16, 0), tag_ext(16, 0),
+                out_ct_alc(i, 0), out_ct_ext(i, 0), out_pt(i, 0);
             if (!bbxreplay) {
                 pt  = rb.genRandomBytes(i);
                 key = rb.genRandomBytes(key_size / 8);
@@ -220,10 +219,9 @@ TEST(SYMMETRIC_CRYPT_128, 128_CROSS_CHECK_BIG)
             size_t size = 16 * 10000000 * i; // 0.16g
             if (!bbxreplay)
                 fr->startRecEvent();
-            alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> pt, key, iv, add, tag_alc(16, 0),
-                tag_ext(16, 0), out_ct_alc(size, 0), out_ct_ext(size, 0),
-                out_pt(size, 0);
+            alcp_data_ex_t     data_alc, data_ext;
+            std::vector<Uint8> pt, key, iv, add, tag_alc(16, 0), tag_ext(16, 0),
+                out_ct_alc(size, 0), out_ct_ext(size, 0), out_pt(size, 0);
             if (!bbxreplay) {
 
                 pt  = rb.genRandomBytes(size);
@@ -338,10 +336,9 @@ TEST(SYMMETRIC_CRYPT_192, 192_CROSS_CHECK_SMALL)
              i += SMALL_INC_LOOP) {
             if (!bbxreplay)
                 fr->startRecEvent();
-            alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> pt, key, iv, add, tag_alc(16, 0),
-                tag_ext(16, 0), out_ct_alc(i, 0), out_ct_ext(i, 0),
-                out_pt(i, 0);
+            alcp_data_ex_t     data_alc, data_ext;
+            std::vector<Uint8> pt, key, iv, add, tag_alc(16, 0), tag_ext(16, 0),
+                out_ct_alc(i, 0), out_ct_ext(i, 0), out_pt(i, 0);
             if (!bbxreplay) {
                 pt  = rb.genRandomBytes(i);
                 key = rb.genRandomBytes(key_size / 8);
@@ -455,10 +452,9 @@ TEST(SYMMETRIC_CRYPT_192, 192_CROSS_CHECK_BIG)
             size_t size = 16 * 10000000 * i; // 0.16g
             if (!bbxreplay)
                 fr->startRecEvent();
-            alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> pt, key, iv, add, tag_alc(16, 0),
-                tag_ext(16, 0), out_ct_alc(size, 0), out_ct_ext(size, 0),
-                out_pt(size, 0);
+            alcp_data_ex_t     data_alc, data_ext;
+            std::vector<Uint8> pt, key, iv, add, tag_alc(16, 0), tag_ext(16, 0),
+                out_ct_alc(size, 0), out_ct_ext(size, 0), out_pt(size, 0);
             if (!bbxreplay) {
 
                 pt  = rb.genRandomBytes(size);
@@ -573,10 +569,9 @@ TEST(SYMMETRIC_CRYPT_256, 256_CROSS_CHECK_SMALL)
              i += SMALL_INC_LOOP) {
             if (!bbxreplay)
                 fr->startRecEvent();
-            alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> pt, key, iv, add, tag_alc(16, 0),
-                tag_ext(16, 0), out_ct_alc(i, 0), out_ct_ext(i, 0),
-                out_pt(i, 0);
+            alcp_data_ex_t     data_alc, data_ext;
+            std::vector<Uint8> pt, key, iv, add, tag_alc(16, 0), tag_ext(16, 0),
+                out_ct_alc(i, 0), out_ct_ext(i, 0), out_pt(i, 0);
             if (!bbxreplay) {
                 pt  = rb.genRandomBytes(i);
                 key = rb.genRandomBytes(key_size / 8);
@@ -690,10 +685,9 @@ TEST(SYMMETRIC_CRYPT_256, 256_CROSS_CHECK_BIG)
             size_t size = 16 * 10000000 * i; // 0.16g
             if (!bbxreplay)
                 fr->startRecEvent();
-            alcp_data_ex_t       data_alc, data_ext;
-            std::vector<uint8_t> pt, key, iv, add, tag_alc(16, 0),
-                tag_ext(16, 0), out_ct_alc(size, 0), out_ct_ext(size, 0),
-                out_pt(size, 0);
+            alcp_data_ex_t     data_alc, data_ext;
+            std::vector<Uint8> pt, key, iv, add, tag_alc(16, 0), tag_ext(16, 0),
+                out_ct_alc(size, 0), out_ct_ext(size, 0), out_pt(size, 0);
             if (!bbxreplay) {
 
                 pt  = rb.genRandomBytes(size);

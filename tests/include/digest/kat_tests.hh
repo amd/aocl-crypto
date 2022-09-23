@@ -45,9 +45,9 @@ using namespace alcp::bench;
 /* Add all the KAT tests here */
 TEST(DIGEST_SHA2, KAT_224)
 {
-    alc_error_t          error;
-    DataSet              ds = DataSet("dataset_SHA_224.csv");
-    std::vector<uint8_t> digest(28, 0);
+    alc_error_t        error;
+    DataSet            ds = DataSet("dataset_SHA_224.csv");
+    std::vector<Uint8> digest(28, 0);
     AlcpDigestBase adb(ALC_SHA2_224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
     DigestBase*    db;
     db = &adb;
@@ -82,9 +82,9 @@ TEST(DIGEST_SHA2, KAT_224)
 /* SHA256 */
 TEST(DIGEST_SHA2, KAT_256)
 {
-    alc_error_t          error;
-    DataSet              ds = DataSet("dataset_SHA_256.csv");
-    std::vector<uint8_t> digest(32, 0);
+    alc_error_t        error;
+    DataSet            ds = DataSet("dataset_SHA_256.csv");
+    std::vector<Uint8> digest(32, 0);
     AlcpDigestBase adb(ALC_SHA2_256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
     DigestBase*    db;
     db = &adb;
@@ -120,9 +120,9 @@ TEST(DIGEST_SHA2, KAT_256)
 /* SHA384 */
 TEST(DIGEST_SHA2, KAT_384)
 {
-    alc_error_t          error;
-    DataSet              ds = DataSet("dataset_SHA_384.csv");
-    std::vector<uint8_t> digest(48, 0);
+    alc_error_t        error;
+    DataSet            ds = DataSet("dataset_SHA_384.csv");
+    std::vector<Uint8> digest(48, 0);
     AlcpDigestBase adb(ALC_SHA2_384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
     DigestBase*    db;
     db = &adb;
@@ -158,9 +158,9 @@ TEST(DIGEST_SHA2, KAT_384)
 /* SHA512 */
 TEST(DIGEST_SHA2, KAT_512)
 {
-    alc_error_t          error;
-    DataSet              ds = DataSet("dataset_SHA_512.csv");
-    std::vector<uint8_t> digest(64, 0);
+    alc_error_t        error;
+    DataSet            ds = DataSet("dataset_SHA_512.csv");
+    std::vector<Uint8> digest(64, 0);
     AlcpDigestBase adb(ALC_SHA2_512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
     DigestBase*    db;
     db = &adb;

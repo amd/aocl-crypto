@@ -69,7 +69,7 @@ get_rand(int* rand_array, int size)
 int debug = 0;
 
 void
-print_data(const uint8_t* data, int len)
+print_data(const Uint8* data, int len)
 {
     int* bp = (int*)data;
     for (int k = 0; k < (len / 4); k++)
@@ -143,10 +143,10 @@ encrypt_demo(const Ipp8u* plaintxt,
     }
 }
 
-const uint8_t sample_key[] = { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
-                               0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf };
+const Uint8 sample_key[] = { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
+                             0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf };
 
-const uint8_t sample_iv[CIPHER_IV_LENGTH_BYTE] = {
+const Uint8 sample_iv[CIPHER_IV_LENGTH_BYTE] = {
     0xf, 0xe, 0xd, 0xc, 0xb, 0xa, 0x9, 0x8,
     0x7, 0x6, 0x5, 0x4, 0x3, 0x2, 0x1, 0x0,
 };
@@ -175,17 +175,17 @@ main(int argc, char* argv[])
     }
 
     // 128 bit enc key
-    uint8_t* iv       = calloc(ivlen, 1);
-    uint8_t* key      = calloc(keylen, 1);
-    uint8_t* cipertxt = calloc(datalen, num_buf);
-    uint8_t* output   = calloc(datalen, num_buf);
-    int      destlen  = datalen;
+    Uint8* iv       = calloc(ivlen, 1);
+    Uint8* key      = calloc(keylen, 1);
+    Uint8* cipertxt = calloc(datalen, num_buf);
+    Uint8* output   = calloc(datalen, num_buf);
+    int    destlen  = datalen;
 
     memcpy(key, sample_key, keylen);
     memcpy(iv, sample_iv, ivlen);
 
     if (config.random_key) {
-        uint8_t* enc_key = key;
+        Uint8* enc_key = key;
         get_rand((int*)enc_key, keylen / 4);
         printf("Created random key:\n");
     }
@@ -207,7 +207,7 @@ main(int argc, char* argv[])
     /*
      *  PLAINTEXT, override for demo
      */
-    //const char* plaintxt = "Hello World from AOCL Crypto !!!";
+    // const char* plaintxt = "Hello World from AOCL Crypto !!!";
     const char* plaintxt = "Happy and Fantastic New Year from AOCL Crypto !!";
     datalen              = strlen(plaintxt);
     num_buf              = 1;
@@ -216,7 +216,7 @@ main(int argc, char* argv[])
         // initialize the random arrays
         plaintxt = calloc(datalen, num_buf);
 
-        uint8_t* tmpBuf = (uint8_t*)plaintxt;
+        Uint8* tmpBuf = (Uint8*)plaintxt;
         for (int j = 0; j < num_buf; j++) {
             get_rand((int*)tmpBuf, (datalen) / 4);
             tmpBuf += datalen;
@@ -226,11 +226,10 @@ main(int argc, char* argv[])
 
     // encryption first and then do decrption in a loop
     for (int j = 0; j < num_buf; j++) {
-        uint8_t* cipher = cipertxt;
-        destlen         = datalen;
+        Uint8* cipher = cipertxt;
+        destlen       = datalen;
 
-        encrypt_demo(
-            (uint8_t*)plaintxt, cipher, destlen, CFB_BLOCK, aesCtx, iv);
+        encrypt_demo((Uint8*)plaintxt, cipher, destlen, CFB_BLOCK, aesCtx, iv);
 
         if (debug) {
             printf("After enc data [%d]:\n", j);
@@ -260,8 +259,8 @@ main(int argc, char* argv[])
             index = 0;
         }
         //      int index = i;// randomIndex[i];
-        uint8_t* cipher   = (cipertxt + (datalen * index));
-        uint8_t* dest_new = (output + (datalen * index));
+        Uint8* cipher   = (cipertxt + (datalen * index));
+        Uint8* dest_new = (output + (datalen * index));
 
         status = ippsAESDecryptCFB((Ipp8u*)cipher,
                                    (Ipp8u*)dest_new, // dest,
@@ -276,8 +275,8 @@ main(int argc, char* argv[])
 
         if (debug) {
             printf("\nVerifying data [%d]: ", index);
-            uint8_t* plntxt = (uint8_t*)plaintxt + (index * datalen);
-            uint8_t* out    = dest_new;
+            Uint8* plntxt = (Uint8*)plaintxt + (index * datalen);
+            Uint8* out    = dest_new;
             if (memcmp(plntxt, out, datalen)) {
                 printf("\n");
                 print_data(plntxt, 20);

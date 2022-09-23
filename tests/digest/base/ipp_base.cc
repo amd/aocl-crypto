@@ -43,7 +43,7 @@ IPPDigestBase::IPPDigestBase(_alc_sha2_mode   mode,
 IPPDigestBase::~IPPDigestBase()
 {
     if (m_handle != nullptr) {
-        delete[] reinterpret_cast<uint8_t*>(m_handle);
+        delete[] reinterpret_cast<Uint8*>(m_handle);
     }
 }
 
@@ -51,12 +51,12 @@ bool
 IPPDigestBase::init()
 {
     if (m_handle != nullptr) {
-        delete[] reinterpret_cast<uint8_t*>(m_handle);
+        delete[] reinterpret_cast<Uint8*>(m_handle);
         m_handle = nullptr;
     }
     int ctx_size;
     ippsHashGetSize_rmf(&ctx_size);
-    m_handle = reinterpret_cast<IppsHashState_rmf*>(new uint8_t[ctx_size]);
+    m_handle = reinterpret_cast<IppsHashState_rmf*>(new Uint8[ctx_size]);
     if (m_type == ALC_DIGEST_TYPE_SHA2) {
         switch (m_mode) {
             case ALC_SHA2_224:
@@ -96,10 +96,10 @@ IPPDigestBase::init(_alc_sha2_mode   mode,
 }
 
 alc_error_t
-IPPDigestBase::digest_function(const uint8_t* in,
-                               uint64_t       in_size,
-                               uint8_t*       out,
-                               uint64_t       out_size)
+IPPDigestBase::digest_function(const Uint8* in,
+                               Uint64       in_size,
+                               Uint8*       out,
+                               Uint64       out_size)
 {
     ippsHashUpdate_rmf(in, in_size, m_handle);
     ippsHashFinal_rmf(out, m_handle);
@@ -111,9 +111,9 @@ IPPDigestBase::reset()
 {}
 
 void
-IPPDigestBase::hash_to_string(char*          output_string,
-                              const uint8_t* hash,
-                              int            sha_len)
+IPPDigestBase::hash_to_string(char*        output_string,
+                              const Uint8* hash,
+                              int          sha_len)
 {
     for (int i = 0; i < sha_len / 8; i++) {
         output_string += sprintf(output_string, "%02x", hash[i]);

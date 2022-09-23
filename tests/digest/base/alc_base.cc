@@ -31,7 +31,7 @@
 
 namespace alcp::testing {
 
-static uint8_t size_[4096] = { 0 };
+static Uint8 size_[4096] = { 0 };
 
 AlcpDigestBase::AlcpDigestBase(_alc_sha2_mode   mode,
                                _alc_digest_type type,
@@ -84,10 +84,10 @@ AlcpDigestBase::~AlcpDigestBase()
 }
 
 alc_error_t
-AlcpDigestBase::digest_function(const uint8_t* pSrc,
-                                size_t         src_size,
-                                uint8_t*       pOutput,
-                                uint64_t       out_size)
+AlcpDigestBase::digest_function(const Uint8* pSrc,
+                                size_t       src_size,
+                                Uint8*       pOutput,
+                                Uint64       out_size)
 {
     alc_error_t err;
     err = alcp_digest_update(m_handle, pSrc, src_size);
@@ -117,9 +117,9 @@ AlcpDigestBase::reset()
 }
 /* Hash value to string */
 void
-AlcpDigestBase::hash_to_string(char*          output_string,
-                               const uint8_t* hash,
-                               int            sha_len)
+AlcpDigestBase::hash_to_string(char*        output_string,
+                               const Uint8* hash,
+                               int          sha_len)
 {
     for (int i = 0; i < sha_len / 8; i++) {
         output_string += sprintf(output_string, "%02x", hash[i]);

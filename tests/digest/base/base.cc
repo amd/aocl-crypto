@@ -157,14 +157,13 @@ ExecRecPlay::fastForward(record_t rec)
 }
 
 bool
-ExecRecPlay::getValues(std::vector<uint8_t>* data)
+ExecRecPlay::getValues(std::vector<Uint8>* data)
 {
-    bool     ret    = false;
-    uint8_t* buffer = new uint8_t[m_byte_end - m_byte_start];
+    bool   ret    = false;
+    Uint8* buffer = new Uint8[m_byte_end - m_byte_start];
     m_blackbox_bin->seek(m_byte_start);
     if (m_blackbox_bin->readBytes(m_byte_end - m_byte_start, buffer)) {
-        *data =
-            std::vector<uint8_t>(buffer, buffer + m_byte_end - m_byte_start);
+        *data = std::vector<Uint8>(buffer, buffer + m_byte_end - m_byte_start);
 #if 0
         std::cout << "DATA:" << parseBytesToHexStr(&((*data)[0]), data->size())
                   << std::endl;
@@ -202,14 +201,14 @@ ExecRecPlay::endRecEvent()
 }
 
 void
-ExecRecPlay::setRecEvent(std::vector<uint8_t> data, record_t rec)
+ExecRecPlay::setRecEvent(std::vector<Uint8> data, record_t rec)
 {
     setRecData(data);
     setRecType(rec);
 }
 
 void
-ExecRecPlay::setRecData(std::vector<uint8_t> data)
+ExecRecPlay::setRecData(std::vector<Uint8> data)
 {
     m_data = data;
 }
@@ -277,9 +276,9 @@ DataSet::readMsgDigest()
         printf("Error in parsing csv\n");
         return false;
     }
-    std::string          messageStr = line.substr(0, pos1);
-    std::vector<uint8_t> messageVect(messageStr.c_str(),
-                                     (messageStr.c_str() + messageStr.size()));
+    std::string        messageStr = line.substr(0, pos1);
+    std::vector<Uint8> messageVect(messageStr.c_str(),
+                                   (messageStr.c_str() + messageStr.size()));
     Message = messageVect;
     Digest  = parseHexStrToBin(line.substr(pos1 + 1));
     lineno++;
@@ -292,13 +291,13 @@ DataSet::getLineNumber()
     return lineno;
 }
 
-std::vector<uint8_t>
+std::vector<Uint8>
 DataSet::getMessage()
 {
     return Message;
 }
 
-std::vector<uint8_t>
+std::vector<Uint8>
 DataSet::getDigest()
 {
     return Digest;

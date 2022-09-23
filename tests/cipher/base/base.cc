@@ -161,9 +161,9 @@ ExecRecPlay::fastForward(record_t rec)
 }
 
 bool
-ExecRecPlay::getValues(std::vector<uint8_t>* key,
-                       std::vector<uint8_t>* iv,
-                       std::vector<uint8_t>* data)
+ExecRecPlay::getValues(std::vector<Uint8>* key,
+                       std::vector<Uint8>* iv,
+                       std::vector<Uint8>* data)
 {
     bool ret = false;
     if ((m_byte_end - m_byte_start) <= 0) {
@@ -173,14 +173,14 @@ ExecRecPlay::getValues(std::vector<uint8_t>* key,
         ss << "m_byte_start:" << m_byte_start;
         throw ss.str();
     }
-    uint8_t* buffer = new uint8_t[m_byte_end - m_byte_start];
-    // uint8_t  buffer[m_byte_end - m_byte_start];
+    Uint8* buffer = new Uint8[m_byte_end - m_byte_start];
+    // Uint8  buffer[m_byte_end - m_byte_start];
     m_blackbox_bin->seek(m_byte_start);
     if (m_blackbox_bin->readBytes(m_byte_end - m_byte_start, buffer)) {
-        *iv   = std::vector<uint8_t>(buffer, buffer + 16);
-        *key  = std::vector<uint8_t>(buffer + 16, buffer + 16 + m_key_size);
-        *data = std::vector<uint8_t>(buffer + 16 + m_key_size,
-                                     buffer + m_byte_end - m_byte_start);
+        *iv   = std::vector<Uint8>(buffer, buffer + 16);
+        *key  = std::vector<Uint8>(buffer + 16, buffer + 16 + m_key_size);
+        *data = std::vector<Uint8>(buffer + 16 + m_key_size,
+                                   buffer + m_byte_end - m_byte_start);
 #if 0
         std::cout << "IV:" << parseBytesToHexStr(&((*iv)[0]), iv->size())
                   << std::endl;
@@ -222,10 +222,10 @@ ExecRecPlay::endRecEvent()
 }
 
 void
-ExecRecPlay::setRecEvent(std::vector<uint8_t> key,
-                         std::vector<uint8_t> iv,
-                         std::vector<uint8_t> data,
-                         record_t             rec)
+ExecRecPlay::setRecEvent(std::vector<Uint8> key,
+                         std::vector<Uint8> iv,
+                         std::vector<Uint8> data,
+                         record_t           rec)
 {
     setRecKey(key);
     setRecIv(iv);
@@ -234,19 +234,19 @@ ExecRecPlay::setRecEvent(std::vector<uint8_t> key,
 }
 
 void
-ExecRecPlay::setRecKey(std::vector<uint8_t> key)
+ExecRecPlay::setRecKey(std::vector<Uint8> key)
 {
     m_key = key;
 }
 
 void
-ExecRecPlay::setRecIv(std::vector<uint8_t> iv)
+ExecRecPlay::setRecIv(std::vector<Uint8> iv)
 {
     m_iv = iv;
 }
 
 void
-ExecRecPlay::setRecData(std::vector<uint8_t> data)
+ExecRecPlay::setRecData(std::vector<Uint8> data)
 {
     m_data = data;
 }
@@ -429,44 +429,44 @@ DataSet::getLineNumber()
     return lineno;
 }
 
-std::vector<uint8_t>
+std::vector<Uint8>
 DataSet::getPt()
 {
     return m_pt;
 }
 
-std::vector<uint8_t>
+std::vector<Uint8>
 DataSet::getIv()
 {
     return m_iv;
 }
 
-std::vector<uint8_t>
+std::vector<Uint8>
 DataSet::getKey()
 {
     return m_key;
 }
 
-std::vector<uint8_t>
+std::vector<Uint8>
 DataSet::getCt()
 {
     return m_ct;
 }
 
-std::vector<uint8_t>
+std::vector<Uint8>
 DataSet::getAdd()
 {
     return m_add;
 }
 
-std::vector<uint8_t>
+std::vector<Uint8>
 DataSet::getTag()
 {
     return m_tag;
 }
 
 /*for aes xtr*/
-std::vector<uint8_t>
+std::vector<Uint8>
 DataSet::getTKey()
 {
     return m_tkey;
@@ -477,18 +477,18 @@ CipherTesting::CipherTesting(CipherBase* impl)
 {
     setcb(impl);
 }
-std::vector<uint8_t>
-CipherTesting::testingEncrypt(const std::vector<uint8_t> plaintext,
-                              const std::vector<uint8_t> key,
-                              const std::vector<uint8_t> iv)
+std::vector<Uint8>
+CipherTesting::testingEncrypt(const std::vector<Uint8> plaintext,
+                              const std::vector<Uint8> key,
+                              const std::vector<Uint8> iv)
 {
     if (cb != nullptr) {
         if (cb->init(&iv[0], &key[0], key.size() * 8)) {
             // For very large sizes, dynamic is better.
-            uint8_t* ciphertext = new uint8_t[plaintext.size()];
+            Uint8* ciphertext = new Uint8[plaintext.size()];
             cb->encrypt(&(plaintext[0]), plaintext.size(), ciphertext);
-            std::vector<uint8_t> vt =
-                std::vector<uint8_t>(ciphertext, ciphertext + plaintext.size());
+            std::vector<Uint8> vt =
+                std::vector<Uint8>(ciphertext, ciphertext + plaintext.size());
             delete[] ciphertext;
             return vt;
         }
@@ -500,8 +500,7 @@ CipherTesting::testingEncrypt(const std::vector<uint8_t> plaintext,
 }
 
 bool
-CipherTesting::testingEncrypt(alcp_data_ex_t             data,
-                              const std::vector<uint8_t> key)
+CipherTesting::testingEncrypt(alcp_data_ex_t data, const std::vector<Uint8> key)
 {
     if (cb != nullptr) {
         if (cb->init(data.iv,
@@ -520,18 +519,18 @@ CipherTesting::testingEncrypt(alcp_data_ex_t             data,
     return false;
 }
 
-std::vector<uint8_t>
-CipherTesting::testingDecrypt(const std::vector<uint8_t> ciphertext,
-                              const std::vector<uint8_t> key,
-                              const std::vector<uint8_t> iv)
+std::vector<Uint8>
+CipherTesting::testingDecrypt(const std::vector<Uint8> ciphertext,
+                              const std::vector<Uint8> key,
+                              const std::vector<Uint8> iv)
 {
     if (cb != nullptr) {
         if (cb->init(&iv[0], &key[0], key.size() * 8)) {
             // For very large sizes, dynamic is better.
-            uint8_t* plaintext = new uint8_t[ciphertext.size()];
+            Uint8* plaintext = new Uint8[ciphertext.size()];
             cb->decrypt(&ciphertext[0], ciphertext.size(), plaintext);
-            std::vector<uint8_t> vt =
-                std::vector<uint8_t>(plaintext, plaintext + ciphertext.size());
+            std::vector<Uint8> vt =
+                std::vector<Uint8>(plaintext, plaintext + ciphertext.size());
             delete[] plaintext;
             return vt;
         }
@@ -543,8 +542,7 @@ CipherTesting::testingDecrypt(const std::vector<uint8_t> ciphertext,
 }
 
 bool
-CipherTesting::testingDecrypt(alcp_data_ex_t             data,
-                              const std::vector<uint8_t> key)
+CipherTesting::testingDecrypt(alcp_data_ex_t data, const std::vector<Uint8> key)
 {
     if (cb != nullptr) {
         if (cb->init(data.iv,

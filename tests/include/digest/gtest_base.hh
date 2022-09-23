@@ -30,15 +30,15 @@
 #ifndef __GTEST_BASE_HH
 #define __GTEST_BASE_HH 2
 
-#include "gtest_common.hh"
-#include <vector>
 #include "digest/alc_base.hh"
 #include "digest/base.hh"
 #include "digest/gtest_base.hh"
+#include "gtest_common.hh"
 #include "rng_base.hh"
 #include <alcp/alcp.h>
 #include <iostream>
 #include <string.h>
+#include <vector>
 
 #ifdef USE_IPP
 #include "digest/ipp_base.hh"
@@ -88,28 +88,28 @@ GetSHA2Len(int HashSize)
 record_t
 GetSHA2Record(int HashSize)
 {
-    switch (HashSize)
-    {
-    case 224:
-        return SHA2_224;
-    case 256:
-        return SHA2_256;
-    case 384:
-        return SHA2_384;
-    case 512:
-        return SHA2_512;
-    default:
-        return SHA2_224;
+    switch (HashSize) {
+        case 224:
+            return SHA2_224;
+        case 256:
+            return SHA2_256;
+        case 384:
+            return SHA2_384;
+        case 512:
+            return SHA2_512;
+        default:
+            return SHA2_224;
     }
 }
 
 ExecRecPlay* fr;
-void SHA2_CrossTest(int HashSize)
+void
+SHA2_CrossTest(int HashSize)
 {
     alc_error_t            error;
-    std::vector<uint8_t>   data;
-    std::vector<uint8_t>   digestAlcp(HashSize/8, 0);
-    std::vector<uint8_t>   digestExt(HashSize/8, 0);
+    std::vector<Uint8>     data;
+    std::vector<Uint8>     digestAlcp(HashSize / 8, 0);
+    std::vector<Uint8>     digestExt(HashSize / 8, 0);
     const alc_sha2_mode_t  alc_mode       = GetSHA2Mode(HashSize);
     const alc_digest_len_t alc_digest_len = GetSHA2Len(HashSize);
     AlcpDigestBase         adb(alc_mode, ALC_DIGEST_TYPE_SHA2, alc_digest_len);
@@ -173,16 +173,19 @@ void SHA2_CrossTest(int HashSize)
     delete fr;
 }
 
-void SHA2_KATTest(int HashSize)
+void
+SHA2_KATTest(int HashSize)
 {
-    alc_error_t          error;
-    DataSet              ds = DataSet("dataset_SHA_" + std::to_string(HashSize) + ".csv");
-    std::vector<uint8_t> digest(HashSize/8, 0);
-    AlcpDigestBase adb(GetSHA2Mode(HashSize), ALC_DIGEST_TYPE_SHA2, GetSHA2Len(HashSize));
-    DigestBase*    db;
+    alc_error_t error;
+    DataSet ds = DataSet("dataset_SHA_" + std::to_string(HashSize) + ".csv");
+    std::vector<Uint8> digest(HashSize / 8, 0);
+    AlcpDigestBase     adb(
+        GetSHA2Mode(HashSize), ALC_DIGEST_TYPE_SHA2, GetSHA2Len(HashSize));
+    DigestBase* db;
     db = &adb;
 #ifdef USE_IPP
-    IPPDigestBase idb(GetSHA2Mode(HashSize), ALC_DIGEST_TYPE_SHA2, GetSHA2Len(HashSize));
+    IPPDigestBase idb(
+        GetSHA2Mode(HashSize), ALC_DIGEST_TYPE_SHA2, GetSHA2Len(HashSize));
     if (useipp == true)
         db = &idb;
 #endif
@@ -197,16 +200,17 @@ void SHA2_KATTest(int HashSize)
                                     ds.getMessage().size(),
                                     &(digest[0]),
                                     digest.size());
-        db->init(GetSHA2Mode(HashSize), ALC_DIGEST_TYPE_SHA2, GetSHA2Len(HashSize));
+        db->init(
+            GetSHA2Mode(HashSize), ALC_DIGEST_TYPE_SHA2, GetSHA2Len(HashSize));
         if (alcp_is_error(error)) {
             printf("Error");
             return;
         }
-        EXPECT_TRUE(
-            ArraysMatch(digest,         // output
-                        ds.getDigest(), // expected, from the KAT test data
-                        ds,
-                        std::string("SHA2_" + std::to_string(HashSize) + "_KAT")));
+        EXPECT_TRUE(ArraysMatch(
+            digest,         // output
+            ds.getDigest(), // expected, from the KAT test data
+            ds,
+            std::string("SHA2_" + std::to_string(HashSize) + "_KAT")));
     }
 }
 
