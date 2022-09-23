@@ -113,28 +113,28 @@ TEST(SYMMETRIC_CRYPT_128, 128_CROSS_CHECK_SMALL)
                 add = rb.genRandomBytes(16);
 
                 // ALC/Main Lib Data
-                data_alc.in   = &(pt[0]);
-                data_alc.inl  = pt.size();
-                data_alc.iv   = &(iv[0]);
-                data_alc.ivl  = iv.size();
-                data_alc.out  = &(out_ct_alc[0]);
-                data_alc.outl = data_alc.inl;
-                data_alc.ad   = &(add[0]);
-                data_alc.adl  = add.size();
-                data_alc.tag  = &(tag_alc[0]);
-                data_alc.tagl = tag_alc.size();
+                data_alc.m_in   = &(pt[0]);
+                data_alc.m_inl  = pt.size();
+                data_alc.m_iv   = &(iv[0]);
+                data_alc.m_ivl  = iv.size();
+                data_alc.m_out  = &(out_ct_alc[0]);
+                data_alc.m_outl = data_alc.m_inl;
+                data_alc.m_ad   = &(add[0]);
+                data_alc.m_adl  = add.size();
+                data_alc.m_tag  = &(tag_alc[0]);
+                data_alc.m_tagl = tag_alc.size();
 
                 // External Lib Data
-                data_ext.in   = &(pt[0]);
-                data_ext.inl  = pt.size();
-                data_ext.iv   = &(iv[0]);
-                data_ext.ivl  = iv.size();
-                data_ext.out  = &(out_ct_ext[0]);
-                data_ext.outl = data_alc.inl;
-                data_ext.ad   = &(add[0]);
-                data_ext.adl  = add.size();
-                data_ext.tag  = &(tag_ext[0]);
-                data_ext.tagl = tag_ext.size();
+                data_ext.m_in   = &(pt[0]);
+                data_ext.m_inl  = pt.size();
+                data_ext.m_iv   = &(iv[0]);
+                data_ext.m_ivl  = iv.size();
+                data_ext.m_out  = &(out_ct_ext[0]);
+                data_ext.m_outl = data_alc.m_inl;
+                data_ext.m_ad   = &(add[0]);
+                data_ext.m_adl  = add.size();
+                data_ext.m_tag  = &(tag_ext[0]);
+                data_ext.m_tagl = tag_ext.size();
 
                 fr->setRecEvent(key, iv, pt, SMALL_ENC);
             } else {
@@ -155,8 +155,8 @@ TEST(SYMMETRIC_CRYPT_128, 128_CROSS_CHECK_SMALL)
             // verification. Output matches plain text means that decrypt was
             // success. If tag verification also succeded then we can safely say
             // that algorithm has passed the test
-            data_alc.in  = &(out_ct_alc[0]);
-            data_alc.out = &(out_pt[0]);
+            data_alc.m_in  = &(out_ct_alc[0]);
+            data_alc.m_out = &(out_pt[0]);
             // if below line fails, tag verification failed
             ASSERT_TRUE(
                 alcpTC->getCipherHandler()->testingDecrypt(data_alc, key));
@@ -230,28 +230,28 @@ TEST(SYMMETRIC_CRYPT_128, 128_CROSS_CHECK_BIG)
                 add = rb.genRandomBytes(16);
 
                 // ALC/Main Lib Data
-                data_alc.in   = &(pt[0]);
-                data_alc.inl  = pt.size();
-                data_alc.iv   = &(iv[0]);
-                data_alc.ivl  = iv.size();
-                data_alc.out  = &(out_ct_alc[0]);
-                data_alc.outl = data_alc.inl;
-                data_alc.ad   = &(add[0]);
-                data_alc.adl  = add.size();
-                data_alc.tag  = &(tag_alc[0]);
-                data_alc.tagl = tag_alc.size();
+                data_alc.m_in   = &(pt[0]);
+                data_alc.m_inl  = pt.size();
+                data_alc.m_iv   = &(iv[0]);
+                data_alc.m_ivl  = iv.size();
+                data_alc.m_out  = &(out_ct_alc[0]);
+                data_alc.m_outl = data_alc.m_inl;
+                data_alc.m_ad   = &(add[0]);
+                data_alc.m_adl  = add.size();
+                data_alc.m_tag  = &(tag_alc[0]);
+                data_alc.m_tagl = tag_alc.size();
 
                 // External Lib Data
-                data_ext.in   = &(pt[0]);
-                data_ext.inl  = pt.size();
-                data_ext.iv   = &(iv[0]);
-                data_ext.ivl  = iv.size();
-                data_ext.out  = &(out_ct_ext[0]);
-                data_ext.outl = data_alc.inl;
-                data_ext.ad   = &(add[0]);
-                data_ext.adl  = add.size();
-                data_ext.tag  = &(tag_ext[0]);
-                data_ext.tagl = tag_ext.size();
+                data_ext.m_in   = &(pt[0]);
+                data_ext.m_inl  = pt.size();
+                data_ext.m_iv   = &(iv[0]);
+                data_ext.m_ivl  = iv.size();
+                data_ext.m_out  = &(out_ct_ext[0]);
+                data_ext.m_outl = data_alc.m_inl;
+                data_ext.m_ad   = &(add[0]);
+                data_ext.m_adl  = add.size();
+                data_ext.m_tag  = &(tag_ext[0]);
+                data_ext.m_tagl = tag_ext.size();
 
                 fr->setRecEvent(key, iv, pt, BIG_ENC);
             } else {
@@ -272,8 +272,8 @@ TEST(SYMMETRIC_CRYPT_128, 128_CROSS_CHECK_BIG)
             // verification. Output matches plain text means that decrypt was
             // success. If tag verification also succeded then we can safely say
             // that algorithm has passed the test
-            data_alc.in  = &(out_ct_alc[0]);
-            data_alc.out = &(out_pt[0]);
+            data_alc.m_in  = &(out_ct_alc[0]);
+            data_alc.m_out = &(out_pt[0]);
             // if below line fails, tag verification failed
             ASSERT_TRUE(
                 alcpTC->getCipherHandler()->testingDecrypt(data_alc, key));
@@ -346,28 +346,28 @@ TEST(SYMMETRIC_CRYPT_192, 192_CROSS_CHECK_SMALL)
                 add = rb.genRandomBytes(16);
 
                 // ALC/Main Lib Data
-                data_alc.in   = &(pt[0]);
-                data_alc.inl  = pt.size();
-                data_alc.iv   = &(iv[0]);
-                data_alc.ivl  = iv.size();
-                data_alc.out  = &(out_ct_alc[0]);
-                data_alc.outl = data_alc.inl;
-                data_alc.ad   = &(add[0]);
-                data_alc.adl  = add.size();
-                data_alc.tag  = &(tag_alc[0]);
-                data_alc.tagl = tag_alc.size();
+                data_alc.m_in   = &(pt[0]);
+                data_alc.m_inl  = pt.size();
+                data_alc.m_iv   = &(iv[0]);
+                data_alc.m_ivl  = iv.size();
+                data_alc.m_out  = &(out_ct_alc[0]);
+                data_alc.m_outl = data_alc.m_inl;
+                data_alc.m_ad   = &(add[0]);
+                data_alc.m_adl  = add.size();
+                data_alc.m_tag  = &(tag_alc[0]);
+                data_alc.m_tagl = tag_alc.size();
 
                 // External Lib Data
-                data_ext.in   = &(pt[0]);
-                data_ext.inl  = pt.size();
-                data_ext.iv   = &(iv[0]);
-                data_ext.ivl  = iv.size();
-                data_ext.out  = &(out_ct_ext[0]);
-                data_ext.outl = data_alc.inl;
-                data_ext.ad   = &(add[0]);
-                data_ext.adl  = add.size();
-                data_ext.tag  = &(tag_ext[0]);
-                data_ext.tagl = tag_ext.size();
+                data_ext.m_in   = &(pt[0]);
+                data_ext.m_inl  = pt.size();
+                data_ext.m_iv   = &(iv[0]);
+                data_ext.m_ivl  = iv.size();
+                data_ext.m_out  = &(out_ct_ext[0]);
+                data_ext.m_outl = data_alc.m_inl;
+                data_ext.m_ad   = &(add[0]);
+                data_ext.m_adl  = add.size();
+                data_ext.m_tag  = &(tag_ext[0]);
+                data_ext.m_tagl = tag_ext.size();
 
                 fr->setRecEvent(key, iv, pt, SMALL_ENC);
             } else {
@@ -388,8 +388,8 @@ TEST(SYMMETRIC_CRYPT_192, 192_CROSS_CHECK_SMALL)
             // verification. Output matches plain text means that decrypt was
             // success. If tag verification also succeded then we can safely say
             // that algorithm has passed the test
-            data_alc.in  = &(out_ct_alc[0]);
-            data_alc.out = &(out_pt[0]);
+            data_alc.m_in  = &(out_ct_alc[0]);
+            data_alc.m_out = &(out_pt[0]);
             // if below line fails, tag verification failed
             ASSERT_TRUE(
                 alcpTC->getCipherHandler()->testingDecrypt(data_alc, key));
@@ -463,28 +463,28 @@ TEST(SYMMETRIC_CRYPT_192, 192_CROSS_CHECK_BIG)
                 add = rb.genRandomBytes(16);
 
                 // ALC/Main Lib Data
-                data_alc.in   = &(pt[0]);
-                data_alc.inl  = pt.size();
-                data_alc.iv   = &(iv[0]);
-                data_alc.ivl  = iv.size();
-                data_alc.out  = &(out_ct_alc[0]);
-                data_alc.outl = data_alc.inl;
-                data_alc.ad   = &(add[0]);
-                data_alc.adl  = add.size();
-                data_alc.tag  = &(tag_alc[0]);
-                data_alc.tagl = tag_alc.size();
+                data_alc.m_in   = &(pt[0]);
+                data_alc.m_inl  = pt.size();
+                data_alc.m_iv   = &(iv[0]);
+                data_alc.m_ivl  = iv.size();
+                data_alc.m_out  = &(out_ct_alc[0]);
+                data_alc.m_outl = data_alc.m_inl;
+                data_alc.m_ad   = &(add[0]);
+                data_alc.m_adl  = add.size();
+                data_alc.m_tag  = &(tag_alc[0]);
+                data_alc.m_tagl = tag_alc.size();
 
                 // External Lib Data
-                data_ext.in   = &(pt[0]);
-                data_ext.inl  = pt.size();
-                data_ext.iv   = &(iv[0]);
-                data_ext.ivl  = iv.size();
-                data_ext.out  = &(out_ct_ext[0]);
-                data_ext.outl = data_alc.inl;
-                data_ext.ad   = &(add[0]);
-                data_ext.adl  = add.size();
-                data_ext.tag  = &(tag_ext[0]);
-                data_ext.tagl = tag_ext.size();
+                data_ext.m_in   = &(pt[0]);
+                data_ext.m_inl  = pt.size();
+                data_ext.m_iv   = &(iv[0]);
+                data_ext.m_ivl  = iv.size();
+                data_ext.m_out  = &(out_ct_ext[0]);
+                data_ext.m_outl = data_alc.m_inl;
+                data_ext.m_ad   = &(add[0]);
+                data_ext.m_adl  = add.size();
+                data_ext.m_tag  = &(tag_ext[0]);
+                data_ext.m_tagl = tag_ext.size();
 
                 fr->setRecEvent(key, iv, pt, BIG_ENC);
             } else {
@@ -505,8 +505,8 @@ TEST(SYMMETRIC_CRYPT_192, 192_CROSS_CHECK_BIG)
             // verification. Output matches plain text means that decrypt was
             // success. If tag verification also succeded then we can safely say
             // that algorithm has passed the test
-            data_alc.in  = &(out_ct_alc[0]);
-            data_alc.out = &(out_pt[0]);
+            data_alc.m_in  = &(out_ct_alc[0]);
+            data_alc.m_out = &(out_pt[0]);
             // if below line fails, tag verification failed
             ASSERT_TRUE(
                 alcpTC->getCipherHandler()->testingDecrypt(data_alc, key));
@@ -579,28 +579,28 @@ TEST(SYMMETRIC_CRYPT_256, 256_CROSS_CHECK_SMALL)
                 add = rb.genRandomBytes(16);
 
                 // ALC/Main Lib Data
-                data_alc.in   = &(pt[0]);
-                data_alc.inl  = pt.size();
-                data_alc.iv   = &(iv[0]);
-                data_alc.ivl  = iv.size();
-                data_alc.out  = &(out_ct_alc[0]);
-                data_alc.outl = data_alc.inl;
-                data_alc.ad   = &(add[0]);
-                data_alc.adl  = add.size();
-                data_alc.tag  = &(tag_alc[0]);
-                data_alc.tagl = tag_alc.size();
+                data_alc.m_in   = &(pt[0]);
+                data_alc.m_inl  = pt.size();
+                data_alc.m_iv   = &(iv[0]);
+                data_alc.m_ivl  = iv.size();
+                data_alc.m_out  = &(out_ct_alc[0]);
+                data_alc.m_outl = data_alc.m_inl;
+                data_alc.m_ad   = &(add[0]);
+                data_alc.m_adl  = add.size();
+                data_alc.m_tag  = &(tag_alc[0]);
+                data_alc.m_tagl = tag_alc.size();
 
                 // External Lib Data
-                data_ext.in   = &(pt[0]);
-                data_ext.inl  = pt.size();
-                data_ext.iv   = &(iv[0]);
-                data_ext.ivl  = iv.size();
-                data_ext.out  = &(out_ct_ext[0]);
-                data_ext.outl = data_alc.inl;
-                data_ext.ad   = &(add[0]);
-                data_ext.adl  = add.size();
-                data_ext.tag  = &(tag_ext[0]);
-                data_ext.tagl = tag_ext.size();
+                data_ext.m_in   = &(pt[0]);
+                data_ext.m_inl  = pt.size();
+                data_ext.m_iv   = &(iv[0]);
+                data_ext.m_ivl  = iv.size();
+                data_ext.m_out  = &(out_ct_ext[0]);
+                data_ext.m_outl = data_alc.m_inl;
+                data_ext.m_ad   = &(add[0]);
+                data_ext.m_adl  = add.size();
+                data_ext.m_tag  = &(tag_ext[0]);
+                data_ext.m_tagl = tag_ext.size();
 
                 fr->setRecEvent(key, iv, pt, SMALL_ENC);
             } else {
@@ -621,8 +621,8 @@ TEST(SYMMETRIC_CRYPT_256, 256_CROSS_CHECK_SMALL)
             // verification. Output matches plain text means that decrypt was
             // success. If tag verification also succeded then we can safely say
             // that algorithm has passed the test
-            data_alc.in  = &(out_ct_alc[0]);
-            data_alc.out = &(out_pt[0]);
+            data_alc.m_in  = &(out_ct_alc[0]);
+            data_alc.m_out = &(out_pt[0]);
             // if below line fails, tag verification failed
             ASSERT_TRUE(
                 alcpTC->getCipherHandler()->testingDecrypt(data_alc, key));
@@ -696,28 +696,28 @@ TEST(SYMMETRIC_CRYPT_256, 256_CROSS_CHECK_BIG)
                 add = rb.genRandomBytes(16);
 
                 // ALC/Main Lib Data
-                data_alc.in   = &(pt[0]);
-                data_alc.inl  = pt.size();
-                data_alc.iv   = &(iv[0]);
-                data_alc.ivl  = iv.size();
-                data_alc.out  = &(out_ct_alc[0]);
-                data_alc.outl = data_alc.inl;
-                data_alc.ad   = &(add[0]);
-                data_alc.adl  = add.size();
-                data_alc.tag  = &(tag_alc[0]);
-                data_alc.tagl = tag_alc.size();
+                data_alc.m_in   = &(pt[0]);
+                data_alc.m_inl  = pt.size();
+                data_alc.m_iv   = &(iv[0]);
+                data_alc.m_ivl  = iv.size();
+                data_alc.m_out  = &(out_ct_alc[0]);
+                data_alc.m_outl = data_alc.m_inl;
+                data_alc.m_ad   = &(add[0]);
+                data_alc.m_adl  = add.size();
+                data_alc.m_tag  = &(tag_alc[0]);
+                data_alc.m_tagl = tag_alc.size();
 
                 // External Lib Data
-                data_ext.in   = &(pt[0]);
-                data_ext.inl  = pt.size();
-                data_ext.iv   = &(iv[0]);
-                data_ext.ivl  = iv.size();
-                data_ext.out  = &(out_ct_ext[0]);
-                data_ext.outl = data_alc.inl;
-                data_ext.ad   = &(add[0]);
-                data_ext.adl  = add.size();
-                data_ext.tag  = &(tag_ext[0]);
-                data_ext.tagl = tag_ext.size();
+                data_ext.m_in   = &(pt[0]);
+                data_ext.m_inl  = pt.size();
+                data_ext.m_iv   = &(iv[0]);
+                data_ext.m_ivl  = iv.size();
+                data_ext.m_out  = &(out_ct_ext[0]);
+                data_ext.m_outl = data_alc.m_inl;
+                data_ext.m_ad   = &(add[0]);
+                data_ext.m_adl  = add.size();
+                data_ext.m_tag  = &(tag_ext[0]);
+                data_ext.m_tagl = tag_ext.size();
 
                 fr->setRecEvent(key, iv, pt, BIG_ENC);
             } else {
@@ -738,8 +738,8 @@ TEST(SYMMETRIC_CRYPT_256, 256_CROSS_CHECK_BIG)
             // verification. Output matches plain text means that decrypt was
             // success. If tag verification also succeded then we can safely say
             // that algorithm has passed the test
-            data_alc.in  = &(out_ct_alc[0]);
-            data_alc.out = &(out_pt[0]);
+            data_alc.m_in  = &(out_ct_alc[0]);
+            data_alc.m_out = &(out_pt[0]);
             // if below line fails, tag verification failed
             ASSERT_TRUE(
                 alcpTC->getCipherHandler()->testingDecrypt(data_alc, key));

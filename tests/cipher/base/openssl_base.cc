@@ -312,20 +312,21 @@ OpenSSLCipherBase::encrypt(alcp_data_ex_t data)
     int len_ct = 0;
     if (m_mode == ALC_AES_MODE_GCM) {
         if (1
-            != EVP_EncryptUpdate(m_ctx_enc, NULL, &len_ct, data.ad, data.adl)) {
+            != EVP_EncryptUpdate(
+                m_ctx_enc, NULL, &len_ct, data.m_ad, data.m_adl)) {
             std::cout << "Error: Additional Data" << std::endl;
             handleErrors();
             return false;
         }
         if (1
             != EVP_EncryptUpdate(
-                m_ctx_enc, data.out, &len_ct, data.in, data.inl)) {
+                m_ctx_enc, data.m_out, &len_ct, data.m_in, data.m_inl)) {
             std::cout << "Error: Encrypt Data" << std::endl;
             handleErrors();
             return false;
         }
 
-        if (1 != EVP_EncryptFinal_ex(m_ctx_enc, data.out + len_ct, &len_ct)) {
+        if (1 != EVP_EncryptFinal_ex(m_ctx_enc, data.m_out + len_ct, &len_ct)) {
             std::cout << "Error: Finalize" << std::endl;
             handleErrors();
             return false;
@@ -334,14 +335,14 @@ OpenSSLCipherBase::encrypt(alcp_data_ex_t data)
         /* Get the tag */
         if (1
             != EVP_CIPHER_CTX_ctrl(
-                m_ctx_enc, EVP_CTRL_GCM_GET_TAG, data.tagl, data.tag)) {
+                m_ctx_enc, EVP_CTRL_GCM_GET_TAG, data.m_tagl, data.m_tag)) {
             handleErrors();
             return false;
         }
     } else {
         if (1
             != EVP_EncryptUpdate(
-                m_ctx_enc, data.out, &len_ct, data.in, data.inl)) {
+                m_ctx_enc, data.m_out, &len_ct, data.m_in, data.m_inl)) {
             std::cout << "Error: Encrypt update" << std::endl;
             handleErrors();
             return false;
@@ -363,26 +364,27 @@ OpenSSLCipherBase::decrypt(alcp_data_ex_t data)
     int len_pt = 0;
     if (m_mode == ALC_AES_MODE_GCM) {
         if (1
-            != EVP_DecryptUpdate(m_ctx_dec, NULL, &len_pt, data.ad, data.adl)) {
+            != EVP_DecryptUpdate(
+                m_ctx_dec, NULL, &len_pt, data.m_ad, data.m_adl)) {
             handleErrors();
             return false;
         }
 
         if (1
             != EVP_DecryptUpdate(
-                m_ctx_dec, data.out, &len_pt, data.in, data.inl)) {
+                m_ctx_dec, data.m_out, &len_pt, data.m_in, data.m_inl)) {
             handleErrors();
             return false;
         }
 
         if (1
             != EVP_CIPHER_CTX_ctrl(
-                m_ctx_dec, EVP_CTRL_GCM_SET_TAG, data.tagl, data.tag)) {
+                m_ctx_dec, EVP_CTRL_GCM_SET_TAG, data.m_tagl, data.m_tag)) {
             handleErrors();
             return false;
         }
 
-        int ret = EVP_DecryptFinal_ex(m_ctx_dec, data.out + len_pt, &len_pt);
+        int ret = EVP_DecryptFinal_ex(m_ctx_dec, data.m_out + len_pt, &len_pt);
         if (ret > 0) {
             return true;
         } else {
@@ -392,7 +394,7 @@ OpenSSLCipherBase::decrypt(alcp_data_ex_t data)
 
         if (1
             != EVP_DecryptUpdate(
-                m_ctx_dec, data.out, &len_pt, data.in, data.inl)) {
+                m_ctx_dec, data.m_out, &len_pt, data.m_in, data.m_inl)) {
             handleErrors();
             return false;
         }

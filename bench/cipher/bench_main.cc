@@ -69,23 +69,23 @@ CipherAes(benchmark::State& state,
     }
 #endif
     alcp::testing::alcp_data_ex_t data;
-    data.in    = &(vec_in[0]);
-    data.inl   = blockSize;
-    data.out   = &(vec_out[0]);
-    data.iv    = iv;
-    data.ivl   = 12;
-    data.ad    = ad;
-    data.adl   = 16;
-    data.tag   = tag;
-    data.tagl  = 16;
-    data.tkey  = tkey;
-    data.tkeyl = 16;
+    data.m_in    = &(vec_in[0]);
+    data.m_inl   = blockSize;
+    data.m_out   = &(vec_out[0]);
+    data.m_iv    = iv;
+    data.m_ivl   = 12;
+    data.m_ad    = ad;
+    data.m_adl   = 16;
+    data.m_tag   = tag;
+    data.m_tagl  = 16;
+    data.m_tkey  = tkey;
+    data.m_tkeyl = 16;
     if (enc == false && alcpMode == ALC_AES_MODE_GCM) {
         if (cb->encrypt(data) == false) {
             std::cout << "BENCH_ENC_FAILURE" << std::endl;
         }
-        data.in  = &(vec_out[0]);
-        data.out = &(vec_in[0]);
+        data.m_in  = &(vec_out[0]);
+        data.m_out = &(vec_in[0]);
         if (alcpMode == ALC_AES_MODE_GCM)
             cb->reset();
     }

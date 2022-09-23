@@ -214,14 +214,14 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
 
         // GCM Init
         err = alcp_cipher_encrypt_update(
-            m_handle, nullptr, nullptr, data.ivl, m_iv);
+            m_handle, nullptr, nullptr, data.m_ivl, m_iv);
         if (alcp_is_error(err)) {
             goto enc_out;
         }
 
-        if (data.adl > 0) {
+        if (data.m_adl > 0) {
             err = alcp_cipher_encrypt_update(
-                m_handle, data.ad, nullptr, data.adl, m_iv);
+                m_handle, data.m_ad, nullptr, data.m_adl, m_iv);
 
             if (alcp_is_error(err)) {
                 goto enc_out;
@@ -230,24 +230,25 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
 
         // GCM Encrypt
         err = alcp_cipher_encrypt_update(
-            m_handle, data.in, data.out, data.inl, m_iv);
+            m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
         if (alcp_is_error(err)) {
             goto enc_out;
         }
         // Get Tag
-        if (data.tagl == 0 && data.tag == nullptr) {
+        if (data.m_tagl == 0 && data.m_tag == nullptr) {
             // FIXME: Hack to prevent ad from being null
             Uint8 a;
-            data.tag = &a; // Some random value other than NULL
+            data.m_tag = &a; // Some random value other than NULL
         }
         err = alcp_cipher_encrypt_update(
-            m_handle, nullptr, data.tag, data.tagl, m_iv);
+            m_handle, nullptr, data.m_tag, data.m_tagl, m_iv);
         if (alcp_is_error(err)) {
             goto enc_out;
         }
     } else {
         // For non GCM mode
-        err = alcp_cipher_encrypt(m_handle, data.in, data.out, data.inl, m_iv);
+        err = alcp_cipher_encrypt(
+            m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
         if (alcp_is_error(err)) {
             goto enc_out;
         }
@@ -282,7 +283,7 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buff[err_size];
-    Uint8*      tagbuff = new Uint8[data.tagl];
+    Uint8*      tagbuff = new Uint8[data.m_tagl];
     if (tagbuff == nullptr) {
         std::cout << __FILE__ << ":" << __LINE__ - 2
                   << " Memory Allocation error" << std::endl;
@@ -291,44 +292,45 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
 
     if (m_mode == ALC_AES_MODE_GCM) {
         // GCM Init
-        Uint8 tagbuff[data.tagl];
+        Uint8 tagbuff[data.m_tagl];
         err = alcp_cipher_decrypt_update(
-            m_handle, nullptr, nullptr, data.ivl, m_iv);
+            m_handle, nullptr, nullptr, data.m_ivl, m_iv);
         if (alcp_is_error(err)) {
             goto dec_out;
         }
 
-        if (data.adl > 0) {
+        if (data.m_adl > 0) {
             err = alcp_cipher_decrypt_update(
-                m_handle, data.ad, nullptr, data.adl, m_iv);
+                m_handle, data.m_ad, nullptr, data.m_adl, m_iv);
             if (alcp_is_error(err)) {
                 goto dec_out;
             }
         }
         // GCM Decrypt
         err = alcp_cipher_decrypt_update(
-            m_handle, data.in, data.out, data.inl, m_iv);
+            m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
         if (alcp_is_error(err)) {
             goto dec_out;
         }
         // Get Tag
-        if (data.tagl == 0 && data.tag == nullptr) {
+        if (data.m_tagl == 0 && data.m_tag == nullptr) {
             // FIXME: Hack to prevent ad from being null
             Uint8 a;
-            data.tag = &a; // Some random value other than NULL
+            data.m_tag = &a; // Some random value other than NULL
         }
         err = alcp_cipher_decrypt_update(
-            m_handle, nullptr, tagbuff, data.tagl, m_iv);
+            m_handle, nullptr, tagbuff, data.m_tagl, m_iv);
         if (alcp_is_error(err)) {
             goto dec_out;
         }
         // Tag verification
-        if (std::memcmp(tagbuff, data.tag, data.tagl) != 0) {
+        if (std::memcmp(tagbuff, data.m_tag, data.m_tagl) != 0) {
             return false;
         }
     } else {
         // For non GCM mode
-        err = alcp_cipher_decrypt(m_handle, data.in, data.out, data.inl, m_iv);
+        err = alcp_cipher_decrypt(
+            m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
         if (alcp_is_error(err)) {
             goto dec_out;
         }

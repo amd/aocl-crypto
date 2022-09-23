@@ -420,25 +420,25 @@ RunTest(TestingCore& testingCore,
     std::vector<Uint8> ad     = testingCore.getDs()->getAdd();
 
     if (enc_dec == ENCRYPT) {
-        data.in    = &(pt[0]);
-        data.inl   = pt.size();
-        data.iv    = &(iv[0]);
-        data.ivl   = iv.size();
-        data.out   = &(outct[0]);
-        data.outl  = data.inl;
-        data.tkeyl = 0;
-        data.adl   = 0;
-        data.tagl  = 0;
+        data.m_in    = &(pt[0]);
+        data.m_inl   = pt.size();
+        data.m_iv    = &(iv[0]);
+        data.m_ivl   = iv.size();
+        data.m_out   = &(outct[0]);
+        data.m_outl  = data.m_inl;
+        data.m_tkeyl = 0;
+        data.m_adl   = 0;
+        data.m_tagl  = 0;
         if (isxts) {
-            data.tkey       = &(tkey[0]);
-            data.tkeyl      = tkey.size();
-            data.block_size = pt.size();
+            data.m_tkey       = &(tkey[0]);
+            data.m_tkeyl      = tkey.size();
+            data.m_block_size = pt.size();
         }
         if (isgcm) {
-            data.tag  = &(outtag[0]);
-            data.tagl = outtag.size();
-            data.ad   = &(ad[0]);
-            data.adl  = ad.size();
+            data.m_tag  = &(outtag[0]);
+            data.m_tagl = outtag.size();
+            data.m_ad   = &(ad[0]);
+            data.m_adl  = ad.size();
         }
         ret = testingCore.getCipherHandler()->testingEncrypt(
             data, testingCore.getDs()->getKey());
@@ -460,30 +460,30 @@ RunTest(TestingCore& testingCore,
         // Enforce that no errors are reported from lib side.
         EXPECT_TRUE(ret);
     } else {
-        data.in    = &(ct[0]);
-        data.inl   = ct.size();
-        data.iv    = &(iv[0]);
-        data.ivl   = iv.size();
-        data.out   = &(outpt[0]);
-        data.outl  = data.inl;
-        data.tkeyl = 0;
-        data.adl   = 0;
-        data.tagl  = 0;
+        data.m_in    = &(ct[0]);
+        data.m_inl   = ct.size();
+        data.m_iv    = &(iv[0]);
+        data.m_ivl   = iv.size();
+        data.m_out   = &(outpt[0]);
+        data.m_outl  = data.m_inl;
+        data.m_tkeyl = 0;
+        data.m_adl   = 0;
+        data.m_tagl  = 0;
         if (isxts) {
-            data.tkey       = &(tkey[0]);
-            data.tkeyl      = tkey.size();
-            data.block_size = ct.size();
+            data.m_tkey       = &(tkey[0]);
+            data.m_tkeyl      = tkey.size();
+            data.m_block_size = ct.size();
         }
         if (isgcm) {
-            data.tag  = &(outtag[0]);
-            data.tagl = outtag.size();
-            data.ad   = &(ad[0]);
-            data.adl  = ad.size();
+            data.m_tag  = &(outtag[0]);
+            data.m_tagl = outtag.size();
+            data.m_ad   = &(ad[0]);
+            data.m_adl  = ad.size();
         }
         bool ret = testingCore.getCipherHandler()->testingDecrypt(
             data, testingCore.getDs()->getKey());
 
-        if (isgcm && data.tagl == 0) {
+        if (isgcm && data.m_tagl == 0) {
             ret = true; // Skip tag test
         }
         EXPECT_TRUE(

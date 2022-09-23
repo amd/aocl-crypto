@@ -119,25 +119,25 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_BIG)
                 iv   = rb.genRandomBytes(12);
 
                 // ALC/Main Lib Data
-                data_alc.in    = &(ct[0]);
-                data_alc.inl   = ct.size();
-                data_alc.iv    = &(iv[0]);
-                data_alc.ivl   = iv.size();
-                data_alc.out   = &(out_pt_alc[0]);
-                data_alc.outl  = data_alc.inl;
-                data_alc.tkey  = &(tkey[0]);
-                data_alc.tkeyl = 16;
+                data_alc.m_in    = &(ct[0]);
+                data_alc.m_inl   = ct.size();
+                data_alc.m_iv    = &(iv[0]);
+                data_alc.m_ivl   = iv.size();
+                data_alc.m_out   = &(out_pt_alc[0]);
+                data_alc.m_outl  = data_alc.m_inl;
+                data_alc.m_tkey  = &(tkey[0]);
+                data_alc.m_tkeyl = 16;
 
                 // External Lib Data
-                data_ext.in         = &(ct[0]);
-                data_ext.inl        = ct.size();
-                data_ext.iv         = &(iv[0]);
-                data_ext.ivl        = iv.size();
-                data_ext.out        = &(out_pt_ext[0]);
-                data_ext.outl       = data_alc.inl;
-                data_ext.tkey       = &(tkey[0]);
-                data_ext.tkeyl      = 16;
-                data_ext.block_size = ct.size();
+                data_ext.m_in         = &(ct[0]);
+                data_ext.m_inl        = ct.size();
+                data_ext.m_iv         = &(iv[0]);
+                data_ext.m_ivl        = iv.size();
+                data_ext.m_out        = &(out_pt_ext[0]);
+                data_ext.m_outl       = data_alc.m_inl;
+                data_ext.m_tkey       = &(tkey[0]);
+                data_ext.m_tkeyl      = 16;
+                data_ext.m_block_size = ct.size();
 
                 fr->setRecEvent(key, iv, ct, BIG_DEC);
             } else {
@@ -229,25 +229,25 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_BIG)
                 iv   = rb.genRandomBytes(12);
 
                 // ALC/Main Lib Data
-                data_alc.in    = &(pt[0]);
-                data_alc.inl   = pt.size();
-                data_alc.iv    = &(iv[0]);
-                data_alc.ivl   = iv.size();
-                data_alc.out   = &(out_ct_alc[0]);
-                data_alc.outl  = data_alc.inl;
-                data_alc.tkey  = &(tkey[0]);
-                data_alc.tkeyl = 16;
+                data_alc.m_in    = &(pt[0]);
+                data_alc.m_inl   = pt.size();
+                data_alc.m_iv    = &(iv[0]);
+                data_alc.m_ivl   = iv.size();
+                data_alc.m_out   = &(out_ct_alc[0]);
+                data_alc.m_outl  = data_alc.m_inl;
+                data_alc.m_tkey  = &(tkey[0]);
+                data_alc.m_tkeyl = 16;
 
                 // External Lib Data
-                data_ext.in         = &(pt[0]);
-                data_ext.inl        = pt.size();
-                data_ext.iv         = &(iv[0]);
-                data_ext.ivl        = iv.size();
-                data_ext.out        = &(out_ct_ext[0]);
-                data_ext.outl       = data_alc.inl;
-                data_ext.tkey       = &(tkey[0]);
-                data_ext.tkeyl      = 16;
-                data_ext.block_size = pt.size();
+                data_ext.m_in         = &(pt[0]);
+                data_ext.m_inl        = pt.size();
+                data_ext.m_iv         = &(iv[0]);
+                data_ext.m_ivl        = iv.size();
+                data_ext.m_out        = &(out_ct_ext[0]);
+                data_ext.m_outl       = data_alc.m_inl;
+                data_ext.m_tkey       = &(tkey[0]);
+                data_ext.m_tkeyl      = 16;
+                data_ext.m_block_size = pt.size();
 
                 fr->setRecEvent(key, iv, pt, BIG_ENC);
             } else {
@@ -339,25 +339,25 @@ TEST(SYMMETRIC_ENC_256, 256_CROSS_CHECK_BIG)
                 iv   = rb.genRandomBytes(12);
 
                 // ALC/Main Lib Data
-                data_alc.in    = &(pt[0]);
-                data_alc.inl   = pt.size();
-                data_alc.iv    = &(iv[0]);
-                data_alc.ivl   = iv.size();
-                data_alc.out   = &(out_ct_alc[0]);
-                data_alc.outl  = data_alc.inl;
-                data_alc.tkey  = &(tkey[0]);
-                data_alc.tkeyl = 16;
+                data_alc.m_in    = &(pt[0]);
+                data_alc.m_inl   = pt.size();
+                data_alc.m_iv    = &(iv[0]);
+                data_alc.m_ivl   = iv.size();
+                data_alc.m_out   = &(out_ct_alc[0]);
+                data_alc.m_outl  = data_alc.m_inl;
+                data_alc.m_tkey  = &(tkey[0]);
+                data_alc.m_tkeyl = 16;
 
                 // External Lib Data
-                data_ext.in         = &(pt[0]);
-                data_ext.inl        = pt.size();
-                data_ext.iv         = &(iv[0]);
-                data_ext.ivl        = iv.size();
-                data_ext.out        = &(out_ct_ext[0]);
-                data_ext.outl       = data_alc.inl;
-                data_ext.tkey       = &(tkey[0]);
-                data_ext.tkeyl      = 16;
-                data_ext.block_size = pt.size();
+                data_ext.m_in         = &(pt[0]);
+                data_ext.m_inl        = pt.size();
+                data_ext.m_iv         = &(iv[0]);
+                data_ext.m_ivl        = iv.size();
+                data_ext.m_out        = &(out_ct_ext[0]);
+                data_ext.m_outl       = data_alc.m_inl;
+                data_ext.m_tkey       = &(tkey[0]);
+                data_ext.m_tkeyl      = 16;
+                data_ext.m_block_size = pt.size();
 
                 fr->setRecEvent(key, iv, pt, BIG_ENC);
             } else {
@@ -449,25 +449,25 @@ TEST(SYMMETRIC_DEC_256, 256_CROSS_CHECK_BIG)
                 iv   = rb.genRandomBytes(12);
 
                 // ALC/Main Lib Data
-                data_alc.in    = &(ct[0]);
-                data_alc.inl   = ct.size();
-                data_alc.iv    = &(iv[0]);
-                data_alc.ivl   = iv.size();
-                data_alc.out   = &(out_pt_alc[0]);
-                data_alc.outl  = data_alc.inl;
-                data_alc.tkey  = &(tkey[0]);
-                data_alc.tkeyl = 16;
+                data_alc.m_in    = &(ct[0]);
+                data_alc.m_inl   = ct.size();
+                data_alc.m_iv    = &(iv[0]);
+                data_alc.m_ivl   = iv.size();
+                data_alc.m_out   = &(out_pt_alc[0]);
+                data_alc.m_outl  = data_alc.m_inl;
+                data_alc.m_tkey  = &(tkey[0]);
+                data_alc.m_tkeyl = 16;
 
                 // External Lib Data
-                data_ext.in         = &(ct[0]);
-                data_ext.inl        = ct.size();
-                data_ext.iv         = &(iv[0]);
-                data_ext.ivl        = iv.size();
-                data_ext.out        = &(out_pt_ext[0]);
-                data_ext.outl       = data_alc.inl;
-                data_ext.tkey       = &(tkey[0]);
-                data_ext.tkeyl      = 16;
-                data_ext.block_size = ct.size();
+                data_ext.m_in         = &(ct[0]);
+                data_ext.m_inl        = ct.size();
+                data_ext.m_iv         = &(iv[0]);
+                data_ext.m_ivl        = iv.size();
+                data_ext.m_out        = &(out_pt_ext[0]);
+                data_ext.m_outl       = data_alc.m_inl;
+                data_ext.m_tkey       = &(tkey[0]);
+                data_ext.m_tkeyl      = 16;
+                data_ext.m_block_size = ct.size();
 
                 fr->setRecEvent(key, iv, ct, BIG_DEC);
             } else {
@@ -557,25 +557,25 @@ TEST(SYMMETRIC_ENC_128, 128_CROSS_CHECK_SMALL)
                 iv   = rb.genRandomBytes(12);
 
                 // ALC/Main Lib Data
-                data_alc.in    = &(pt[0]);
-                data_alc.inl   = pt.size();
-                data_alc.iv    = &(iv[0]);
-                data_alc.ivl   = iv.size();
-                data_alc.out   = &(out_ct_alc[0]);
-                data_alc.outl  = data_alc.inl;
-                data_alc.tkey  = &(tkey[0]);
-                data_alc.tkeyl = 16;
+                data_alc.m_in    = &(pt[0]);
+                data_alc.m_inl   = pt.size();
+                data_alc.m_iv    = &(iv[0]);
+                data_alc.m_ivl   = iv.size();
+                data_alc.m_out   = &(out_ct_alc[0]);
+                data_alc.m_outl  = data_alc.m_inl;
+                data_alc.m_tkey  = &(tkey[0]);
+                data_alc.m_tkeyl = 16;
 
                 // External Lib Data
-                data_ext.in         = &(pt[0]);
-                data_ext.inl        = pt.size();
-                data_ext.iv         = &(iv[0]);
-                data_ext.ivl        = iv.size();
-                data_ext.out        = &(out_ct_ext[0]);
-                data_ext.outl       = data_alc.inl;
-                data_ext.tkey       = &(tkey[0]);
-                data_ext.tkeyl      = 16;
-                data_ext.block_size = pt.size();
+                data_ext.m_in         = &(pt[0]);
+                data_ext.m_inl        = pt.size();
+                data_ext.m_iv         = &(iv[0]);
+                data_ext.m_ivl        = iv.size();
+                data_ext.m_out        = &(out_ct_ext[0]);
+                data_ext.m_outl       = data_alc.m_inl;
+                data_ext.m_tkey       = &(tkey[0]);
+                data_ext.m_tkeyl      = 16;
+                data_ext.m_block_size = pt.size();
 
                 fr->setRecEvent(key, iv, pt, SMALL_ENC);
             } else {
@@ -667,25 +667,25 @@ TEST(SYMMETRIC_DEC_128, 128_CROSS_CHECK_SMALL)
                 iv   = rb.genRandomBytes(12);
 
                 // ALC/Main Lib Data
-                data_alc.in    = &(ct[0]);
-                data_alc.inl   = ct.size();
-                data_alc.iv    = &(iv[0]);
-                data_alc.ivl   = iv.size();
-                data_alc.out   = &(out_pt_alc[0]);
-                data_alc.outl  = data_alc.inl;
-                data_alc.tkey  = &(tkey[0]);
-                data_alc.tkeyl = 16;
+                data_alc.m_in    = &(ct[0]);
+                data_alc.m_inl   = ct.size();
+                data_alc.m_iv    = &(iv[0]);
+                data_alc.m_ivl   = iv.size();
+                data_alc.m_out   = &(out_pt_alc[0]);
+                data_alc.m_outl  = data_alc.m_inl;
+                data_alc.m_tkey  = &(tkey[0]);
+                data_alc.m_tkeyl = 16;
 
                 // External Lib Data
-                data_ext.in         = &(ct[0]);
-                data_ext.inl        = ct.size();
-                data_ext.iv         = &(iv[0]);
-                data_ext.ivl        = iv.size();
-                data_ext.out        = &(out_pt_ext[0]);
-                data_ext.outl       = data_alc.inl;
-                data_ext.tkey       = &(tkey[0]);
-                data_ext.tkeyl      = 16;
-                data_ext.block_size = ct.size();
+                data_ext.m_in         = &(ct[0]);
+                data_ext.m_inl        = ct.size();
+                data_ext.m_iv         = &(iv[0]);
+                data_ext.m_ivl        = iv.size();
+                data_ext.m_out        = &(out_pt_ext[0]);
+                data_ext.m_outl       = data_alc.m_inl;
+                data_ext.m_tkey       = &(tkey[0]);
+                data_ext.m_tkeyl      = 16;
+                data_ext.m_block_size = ct.size();
 
                 fr->setRecEvent(key, iv, ct, SMALL_DEC);
             } else {
@@ -776,25 +776,25 @@ TEST(SYMMETRIC_ENC_256, 256_CROSS_CHECK_SMALL)
                 iv   = rb.genRandomBytes(12);
 
                 // ALC/Main Lib Data
-                data_alc.in    = &(pt[0]);
-                data_alc.inl   = pt.size();
-                data_alc.iv    = &(iv[0]);
-                data_alc.ivl   = iv.size();
-                data_alc.out   = &(out_ct_alc[0]);
-                data_alc.outl  = data_alc.inl;
-                data_alc.tkey  = &(tkey[0]);
-                data_alc.tkeyl = 16;
+                data_alc.m_in    = &(pt[0]);
+                data_alc.m_inl   = pt.size();
+                data_alc.m_iv    = &(iv[0]);
+                data_alc.m_ivl   = iv.size();
+                data_alc.m_out   = &(out_ct_alc[0]);
+                data_alc.m_outl  = data_alc.m_inl;
+                data_alc.m_tkey  = &(tkey[0]);
+                data_alc.m_tkeyl = 16;
 
                 // External Lib Data
-                data_ext.in         = &(pt[0]);
-                data_ext.inl        = pt.size();
-                data_ext.iv         = &(iv[0]);
-                data_ext.ivl        = iv.size();
-                data_ext.out        = &(out_ct_ext[0]);
-                data_ext.outl       = data_alc.inl;
-                data_ext.tkey       = &(tkey[0]);
-                data_ext.tkeyl      = 16;
-                data_ext.block_size = pt.size();
+                data_ext.m_in         = &(pt[0]);
+                data_ext.m_inl        = pt.size();
+                data_ext.m_iv         = &(iv[0]);
+                data_ext.m_ivl        = iv.size();
+                data_ext.m_out        = &(out_ct_ext[0]);
+                data_ext.m_outl       = data_alc.m_inl;
+                data_ext.m_tkey       = &(tkey[0]);
+                data_ext.m_tkeyl      = 16;
+                data_ext.m_block_size = pt.size();
 
                 fr->setRecEvent(key, iv, pt, SMALL_ENC);
             } else {
@@ -885,25 +885,25 @@ TEST(SYMMETRIC_DEC_256, 256_CROSS_CHECK_SMALL)
                 iv   = rb.genRandomBytes(12);
 
                 // ALC/Main Lib Data
-                data_alc.in    = &(ct[0]);
-                data_alc.inl   = ct.size();
-                data_alc.iv    = &(iv[0]);
-                data_alc.ivl   = iv.size();
-                data_alc.out   = &(out_pt_alc[0]);
-                data_alc.outl  = data_alc.inl;
-                data_alc.tkey  = &(tkey[0]);
-                data_alc.tkeyl = 16;
+                data_alc.m_in    = &(ct[0]);
+                data_alc.m_inl   = ct.size();
+                data_alc.m_iv    = &(iv[0]);
+                data_alc.m_ivl   = iv.size();
+                data_alc.m_out   = &(out_pt_alc[0]);
+                data_alc.m_outl  = data_alc.m_inl;
+                data_alc.m_tkey  = &(tkey[0]);
+                data_alc.m_tkeyl = 16;
 
                 // External Lib Data
-                data_ext.in         = &(ct[0]);
-                data_ext.inl        = ct.size();
-                data_ext.iv         = &(iv[0]);
-                data_ext.ivl        = iv.size();
-                data_ext.out        = &(out_pt_ext[0]);
-                data_ext.outl       = data_alc.inl;
-                data_ext.tkey       = &(tkey[0]);
-                data_ext.tkeyl      = 16;
-                data_ext.block_size = ct.size();
+                data_ext.m_in         = &(ct[0]);
+                data_ext.m_inl        = ct.size();
+                data_ext.m_iv         = &(iv[0]);
+                data_ext.m_ivl        = iv.size();
+                data_ext.m_out        = &(out_pt_ext[0]);
+                data_ext.m_outl       = data_alc.m_inl;
+                data_ext.m_tkey       = &(tkey[0]);
+                data_ext.m_tkeyl      = 16;
+                data_ext.m_block_size = ct.size();
 
                 fr->setRecEvent(key, iv, ct, SMALL_DEC);
             } else {

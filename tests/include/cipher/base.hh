@@ -36,35 +36,35 @@ namespace alcp::testing {
 
 struct alcp_data_ex_t
 {
-    const Uint8* in;
-    Uint64       inl;
-    Uint8*       out;
-    Uint64       outl;
-    const Uint8* iv;
-    Uint64       ivl;
-    const Uint8* ad;
-    Uint64       adl;
-    Uint8*       tag; // Probably const but openssl expects non const
-    Uint64       tagl;
-    Uint8*       tkey;  // tweak key
-    Uint64       tkeyl; // tweak key len
-    Uint64       block_size;
+    const Uint8* m_in;
+    Uint64       m_inl;
+    Uint8*       m_out;
+    Uint64       m_outl;
+    const Uint8* m_iv;
+    Uint64       m_ivl;
+    const Uint8* m_ad;
+    Uint64       m_adl;
+    Uint8*       m_tag; // Probably const but openssl expects non const
+    Uint64       m_tagl;
+    Uint8*       m_tkey;  // tweak key
+    Uint64       m_tkeyl; // tweak key len
+    Uint64       m_block_size;
     // Initialize everything to 0
     alcp_data_ex_t()
     {
-        in         = nullptr;
-        inl        = 0;
-        out        = nullptr;
-        outl       = 0;
-        iv         = nullptr;
-        ivl        = 0;
-        ad         = nullptr;
-        adl        = 0;
-        tag        = nullptr;
-        tagl       = 0;
-        tkey       = nullptr;
-        tkey       = 0;
-        block_size = 0;
+        m_in         = nullptr;
+        m_inl        = 0;
+        m_out        = nullptr;
+        m_outl       = 0;
+        m_iv         = nullptr;
+        m_ivl        = 0;
+        m_ad         = nullptr;
+        m_adl        = 0;
+        m_tag        = nullptr;
+        m_tagl       = 0;
+        m_tkey       = nullptr;
+        m_tkey       = 0;
+        m_block_size = 0;
     }
 };
 

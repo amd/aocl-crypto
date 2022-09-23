@@ -235,16 +235,16 @@ bool
 IPPCipherBase::alcpGCMModeToFuncCall(alcp_data_ex_t data, bool enc)
 {
     if (enc) {
-        ippsAES_GCMStart(m_iv, data.ivl, data.ad, data.adl, m_ctx_gcm);
-        ippsAES_GCMEncrypt(data.in, data.out, data.inl, m_ctx_gcm);
-        ippsAES_GCMGetTag(data.tag, data.tagl, m_ctx_gcm);
+        ippsAES_GCMStart(m_iv, data.m_ivl, data.m_ad, data.m_adl, m_ctx_gcm);
+        ippsAES_GCMEncrypt(data.m_in, data.m_out, data.m_inl, m_ctx_gcm);
+        ippsAES_GCMGetTag(data.m_tag, data.m_tagl, m_ctx_gcm);
     } else {
-        Uint8 tagbuff[data.tagl];
-        ippsAES_GCMStart(m_iv, data.ivl, data.ad, data.adl, m_ctx_gcm);
-        ippsAES_GCMDecrypt(data.in, data.out, data.inl, m_ctx_gcm);
-        ippsAES_GCMGetTag(tagbuff, data.tagl, m_ctx_gcm);
+        Uint8 tagbuff[data.m_tagl];
+        ippsAES_GCMStart(m_iv, data.m_ivl, data.m_ad, data.m_adl, m_ctx_gcm);
+        ippsAES_GCMDecrypt(data.m_in, data.m_out, data.m_inl, m_ctx_gcm);
+        ippsAES_GCMGetTag(tagbuff, data.m_tagl, m_ctx_gcm);
         // Tag verification
-        if (std::memcmp(tagbuff, data.tag, data.tagl) != 0) {
+        if (std::memcmp(tagbuff, data.m_tag, data.m_tagl) != 0) {
             return false;
         }
     }
@@ -265,7 +265,7 @@ IPPCipherBase::encrypt(alcp_data_ex_t data)
             return alcpGCMModeToFuncCall(data, true);
             break;
         default:
-            return alcpModeToFuncCall(data.in, data.out, data.inl, true);
+            return alcpModeToFuncCall(data.m_in, data.m_out, data.m_inl, true);
             break;
     }
     return true;
@@ -285,7 +285,7 @@ IPPCipherBase::decrypt(alcp_data_ex_t data)
             return alcpGCMModeToFuncCall(data, false);
             break;
         default:
-            return alcpModeToFuncCall(data.in, data.out, data.inl, false);
+            return alcpModeToFuncCall(data.m_in, data.m_out, data.m_inl, false);
             break;
     }
 
