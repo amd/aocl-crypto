@@ -29,7 +29,6 @@
 #include <immintrin.h>
 #include <wmmintrin.h>
 
-#include "aesni_macros.hh"
 #include "cipher/aes.hh"
 #include "cipher/aes_gcm.hh"
 #include "cipher/aesni.hh"
@@ -76,8 +75,8 @@ InitGcm(const uint8_t* pKey,
         *piv_128 = _mm_insert_epi32(*piv_128, 0x2000000, 3);
         *piv_128 = _mm_shuffle_epi8(*piv_128, swap_ctr);
     } else {
-        int     ivBlocks = ivBytes / AES_BLOCK_SIZE(128);
-        int     remBytes = ivBytes - (ivBlocks * AES_BLOCK_SIZE(128));
+        int     ivBlocks = ivBytes / Rijndael::cBlockSize;
+        int     remBytes = ivBytes - (ivBlocks * Rijndael::cBlockSize);
         __m128i a128;
         __m128i one_128 = _mm_set_epi32(1, 0, 0, 0);
 
@@ -199,9 +198,9 @@ processAdditionalDataGcm(const uint8_t* pAdditionalData,
 
     // additional data hash.
     __m128i ad1;
-    int     adBlocks = additionalDataLen / AES_BLOCK_SIZE(128);
+    int     adBlocks = additionalDataLen / Rijndael::cBlockSize;
 
-    int ad_remBytes = additionalDataLen - (adBlocks * AES_BLOCK_SIZE(128));
+    int ad_remBytes = additionalDataLen - (adBlocks * Rijndael::cBlockSize);
 
     for (; adBlocks >= 1; adBlocks--) {
         ad1 = _mm_loadu_si128(pAd128);

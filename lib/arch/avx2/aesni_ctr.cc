@@ -29,7 +29,6 @@
 #include <immintrin.h>
 #include <wmmintrin.h>
 
-#include "aesni_macros.hh"
 #include "cipher/aes.hh"
 #include "cipher/aes_ctr.hh"
 #include "cipher/aesni.hh"
