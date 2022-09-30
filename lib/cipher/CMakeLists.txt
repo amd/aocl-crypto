@@ -6,3 +6,4 @@ TARGET_SOURCES(alcp
 		${CIPHER_SRCS}
 	)
 
+ADD_SUBDIRECTORY(tests)
