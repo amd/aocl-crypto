@@ -69,6 +69,10 @@ Gcm::cryptUpdate(const uint8_t* pInput,
         // GCM init call
         // len is used as ivlen
         // In init call, we generate HashSubKey, partial tag data.
+        if (len == 0) {
+            // Len 0 is invalid so return error.
+            return ALC_ERROR_INVALID_ARG;
+        }
         m_gHash_128         = _mm_setzero_si128();
         m_hash_subKey_128   = _mm_setzero_si128();
         m_len               = 0;
@@ -150,8 +154,6 @@ Gcm::cryptUpdate(const uint8_t* pInput,
                                m_reverse_mask_128,
                                ptag);
     }
-    return err;
-
     return err;
 }
 

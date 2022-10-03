@@ -220,20 +220,18 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
             alcp_error_str(err, err_buff, err_size);
             return false;
         }
-        // Additional Data
-        if (data.adl == 0 && data.ad == nullptr) {
-            // FIXME: Hack to prevent ad from being null
-            Uint8 a;
-            data.ad = &a; // Some random value other than NULL
-        }
-        err = alcp_cipher_encrypt_update(
-            m_handle, data.ad, nullptr, data.adl, m_iv);
 
-        if (alcp_is_error(err)) {
-            printf("Error: GCM additional data failure! code:12\n");
-            alcp_error_str(err, err_buff, err_size);
-            return false;
+        if (data.adl > 0) {
+            err = alcp_cipher_encrypt_update(
+                m_handle, data.ad, nullptr, data.adl, m_iv);
+
+            if (alcp_is_error(err)) {
+                printf("Error: GCM additional data failure! code:12\n");
+                alcp_error_str(err, err_buff, err_size);
+                return false;
+            }
         }
+
         // GCM Encrypt
         err = alcp_cipher_encrypt_update(
             m_handle, data.in, data.out, data.inl, m_iv);
