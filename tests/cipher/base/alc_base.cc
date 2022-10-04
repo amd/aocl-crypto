@@ -216,9 +216,7 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
         err = alcp_cipher_encrypt_update(
             m_handle, nullptr, nullptr, data.ivl, m_iv);
         if (alcp_is_error(err)) {
-            printf("Error: GCM encrypt init failure! code:11\n");
-            alcp_error_str(err, err_buff, err_size);
-            return false;
+            goto enc_out;
         }
 
         if (data.adl > 0) {
@@ -226,9 +224,7 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
                 m_handle, data.ad, nullptr, data.adl, m_iv);
 
             if (alcp_is_error(err)) {
-                printf("Error: GCM additional data failure! code:12\n");
-                alcp_error_str(err, err_buff, err_size);
-                return false;
+                goto enc_out;
             }
         }
 
@@ -236,9 +232,7 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
         err = alcp_cipher_encrypt_update(
             m_handle, data.in, data.out, data.inl, m_iv);
         if (alcp_is_error(err)) {
-            printf("Error: GCM ecnryption failure! code:13\n");
-            alcp_error_str(err, err_buff, err_size);
-            return false;
+            goto enc_out;
         }
         // Get Tag
         if (data.tagl == 0 && data.tag == nullptr) {
@@ -249,20 +243,20 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
         err = alcp_cipher_encrypt_update(
             m_handle, nullptr, data.tag, data.tagl, m_iv);
         if (alcp_is_error(err)) {
-            printf("Error: GCM tag fetch failure! code:14\n");
-            alcp_error_str(err, err_buff, err_size);
-            return false;
+            goto enc_out;
         }
     } else {
         // For non GCM mode
         err = alcp_cipher_encrypt(m_handle, data.in, data.out, data.inl, m_iv);
         if (alcp_is_error(err)) {
-            printf("Error: Encryption failure! code:10\n");
-            alcp_error_str(err, err_buff, err_size);
-            return false;
+            goto enc_out;
         }
     }
     return true;
+enc_out:
+    alcp_error_str(err, err_buff, err_size);
+    printf("Error:%s", err_buf);
+    return false;
 }
 
 bool
@@ -288,37 +282,28 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
-    Uint8       tagbuff[data.tagl];
+    Uint8*      tagbuff = new Uint8[data.tagl];
 
     if (m_mode == ALC_AES_MODE_GCM) {
         // GCM Init
         err = alcp_cipher_decrypt_update(
             m_handle, nullptr, nullptr, data.ivl, m_iv);
         if (alcp_is_error(err)) {
-            printf("Error: GCM decrypt init failure! code:1\n");
-            alcp_error_str(err, err_buf, err_size);
-            return false;
+            goto dec_out;
         }
-        // Additional Data
-        if (data.adl == 0 && data.ad == nullptr) {
-            // FIXME: Hack to prevent ad from being null
-            Uint8 a;
-            data.ad = &a; // Some random value other than NULL
-        }
-        err = alcp_cipher_decrypt_update(
-            m_handle, data.ad, nullptr, data.adl, m_iv);
-        if (alcp_is_error(err)) {
-            printf("Error: GCM additional data failure! code:2\n");
-            alcp_error_str(err, err_buf, err_size);
-            return false;
+
+        if (data.adl > 0) {
+            err = alcp_cipher_decrypt_update(
+                m_handle, data.ad, nullptr, data.adl, m_iv);
+            if (alcp_is_error(err)) {
+                goto dec_out;
+            }
         }
         // GCM Decrypt
         err = alcp_cipher_decrypt_update(
             m_handle, data.in, data.out, data.inl, m_iv);
         if (alcp_is_error(err)) {
-            printf("Error: GCM decryption failure! code:3\n");
-            alcp_error_str(err, err_buf, err_size);
-            return false;
+            goto dec_out;
         }
         // Get Tag
         if (data.tagl == 0 && data.tag == nullptr) {
@@ -329,9 +314,7 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
         err = alcp_cipher_decrypt_update(
             m_handle, nullptr, tagbuff, data.tagl, m_iv);
         if (alcp_is_error(err)) {
-            printf("Error: GCM tag fetch failure! code:4\n");
-            alcp_error_str(err, err_buf, err_size);
-            return false;
+            goto dec_out;
         }
         // Tag verification
         if (std::memcmp(tagbuff, data.tag, data.tagl) != 0) {
@@ -341,12 +324,16 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
         // For non GCM mode
         err = alcp_cipher_decrypt(m_handle, data.in, data.out, data.inl, m_iv);
         if (alcp_is_error(err)) {
-            printf("Error: Decryption failure! code:0\n");
-            alcp_error_str(err, err_buf, err_size);
-            return false;
+            goto dec_out;
         }
     }
+    delete[] tagbuff;
     return true;
+dec_out:
+    delete[] tagbuff;
+    alcp_error_str(err, err_buf, err_size);
+    printf("Error:%s", err_buf);
+    return false;
 }
 
 void
