@@ -193,8 +193,11 @@ processAdditionalDataGcm(const uint8_t* pAdditionalData,
                          __m128i        hash_subKey_128,
                          __m128i        reverse_mask_128)
 {
-    alc_error_t err    = ALC_ERROR_NONE;
-    auto        pAd128 = reinterpret_cast<const __m128i*>(pAdditionalData);
+    alc_error_t err = ALC_ERROR_NONE;
+    if (additionalDataLen == 0) {
+        return ALC_ERROR_NONE;
+    }
+    auto pAd128 = reinterpret_cast<const __m128i*>(pAdditionalData);
 
     // additional data hash.
     __m128i ad1;
@@ -226,7 +229,8 @@ processAdditionalDataGcm(const uint8_t* pAdditionalData,
 }
 
 alc_error_t
-GetTagGcm(uint64_t len,
+GetTagGcm(uint64_t tagLen,
+          uint64_t plaintextLen,
           uint64_t adLength,
           __m128i* pgHash_128,
           __m128i* ptag128,
@@ -238,7 +242,7 @@ GetTagGcm(uint64_t len,
     auto        p_tag_128 = reinterpret_cast<__m128i*>(tag);
     __m128i     a1        = _mm_set_epi32(0, 0, 0, 0);
 
-    a1 = _mm_insert_epi64(a1, (len << 3), 0);
+    a1 = _mm_insert_epi64(a1, (plaintextLen << 3), 0);
     a1 = _mm_insert_epi64(a1, (adLength << 3), 1);
 
     *pgHash_128 = _mm_xor_si128(a1, *pgHash_128);
@@ -246,8 +250,17 @@ GetTagGcm(uint64_t len,
 
     *pgHash_128 = _mm_shuffle_epi8(*pgHash_128, reverse_mask_128);
     *ptag128    = _mm_xor_si128(*pgHash_128, *ptag128);
-    _mm_storeu_si128(p_tag_128, *ptag128);
 
+    if (tagLen == 16) {
+        _mm_storeu_si128(p_tag_128, *ptag128);
+    } else {
+        uint64_t       i     = 0;
+        const uint8_t* p_in  = reinterpret_cast<const uint8_t*>(ptag128);
+        uint8_t*       p_out = reinterpret_cast<uint8_t*>(tag);
+        for (; i < tagLen; i++) {
+            p_out[i] = p_in[i];
+        }
+    }
     return err;
 }
 

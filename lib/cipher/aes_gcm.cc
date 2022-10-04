@@ -146,7 +146,8 @@ Gcm::cryptUpdate(const uint8_t* pInput,
     } else if ((pInput == NULL) && (pOutput != NULL)) {
         // Get tag info, when Output is not Null and Input is Null.
         uint8_t* ptag = pOutput;
-        err           = aesni::GetTagGcm(m_len,
+        err           = aesni::GetTagGcm(len,
+                               m_len,
                                m_additionalDataLen,
                                &m_gHash_128,
                                &m_tag_128,

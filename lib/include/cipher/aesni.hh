@@ -163,7 +163,8 @@ namespace alcp::cipher { namespace aesni {
                          __m128i        reverse_mask_128,
                          bool           isEncrypt);
 
-    alc_error_t GetTagGcm(uint64_t len,
+    alc_error_t GetTagGcm(uint64_t tagLen,
+                          uint64_t plaintextLen,
                           uint64_t adLength,
                           __m128i* pgHash_128,
                           __m128i* ptag128,
