@@ -255,7 +255,7 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
     return true;
 enc_out:
     alcp_error_str(err, err_buff, err_size);
-    printf("Error:%s", err_buf);
+    std::cout << "Error:" << err_buff << std::endl;
     return false;
 }
 
@@ -281,8 +281,13 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
 {
     alc_error_t err;
     const int   err_size = 256;
-    Uint8       err_buf[err_size];
+    Uint8       err_buff[err_size];
     Uint8*      tagbuff = new Uint8[data.tagl];
+    if (tagbuff == nullptr) {
+        std::cout << __FILE__ << ":" << __LINE__ - 2
+                  << " Memory Allocation error" << std::endl;
+        return false;
+    }
 
     if (m_mode == ALC_AES_MODE_GCM) {
         // GCM Init
@@ -331,8 +336,8 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
     return true;
 dec_out:
     delete[] tagbuff;
-    alcp_error_str(err, err_buf, err_size);
-    printf("Error:%s", err_buf);
+    alcp_error_str(err, err_buff, err_size);
+    std::cout << "Error:" << err_buff << std::endl;
     return false;
 }
 
