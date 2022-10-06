@@ -34,12 +34,19 @@ ALCP_prov_cipher_freectx(void* vctx)
 {
     alc_prov_cipher_ctx_p pcctx = vctx;
     ENTER();
+
+    if (pcctx->handle.ch_context != NULL) {
+        OPENSSL_free(pcctx->handle.ch_context);
+        pcctx->handle.ch_context = NULL;
+    }
     /*
      * pcctx->pc_evp_cipher will be  freed in provider teardown,
      */
     EVP_CIPHER_CTX_free(pcctx->pc_evp_cipher_ctx);
+    pcctx->pc_evp_cipher_ctx = NULL;
 
     OPENSSL_free(vctx);
+    vctx = NULL;
 }
 
 void*
@@ -188,6 +195,23 @@ ALCP_prov_cipher_get_ctx_params(void* vctx, OSSL_PARAM params[])
         && !OSSL_PARAM_set_size_t(p, keylen))
         return 0;
 
+    if ((p = OSSL_PARAM_locate(params, "tag")) != NULL) {
+        const void* tag;
+        size_t      used_length;
+        if (!OSSL_PARAM_get_octet_string_ptr(params, &tag, &used_length)) {
+            printf("Provider: An error has occurred\n");
+        }
+#ifdef DEBUG
+        printf("Provider: Size is %ld and tag is %p\n", used_length, tag);
+#endif
+
+        alcp_cipher_encrypt_update(&(cctx->handle),
+                                   NULL,
+                                   (Uint8*)tag,
+                                   used_length,
+                                   cctx->pc_cipher_info.ci_algo_info.ai_iv);
+    }
+
     EXIT();
     return 1;
 }
@@ -208,6 +232,20 @@ ALCP_prov_cipher_set_ctx_params(void* vctx, const OSSL_PARAM params[])
             return 0;
         }
         cctx->pc_cipher_info.ci_key_info.len = keylen;
+    }
+
+    p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_IVLEN);
+    if (p != NULL) {
+        size_t ivlen;
+        if (!OSSL_PARAM_get_size_t(p, &ivlen)) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_GET_PARAMETER);
+            HERE();
+            return 0;
+        }
+#ifdef DEBUG
+        printf("Provider: IVLEN Length is %ld \n", ivlen);
+#endif
+        cctx->pc_cipher_info.ci_algo_info.ai_gcm.ivlen = ivlen;
     }
 
     EXIT();
@@ -250,6 +288,9 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
             break;
         case ALC_AES_MODE_XTS:
             PRINT("Provider: XTS\n");
+            break;
+        case ALC_AES_MODE_GCM:
+            PRINT("Provider: GCM\n");
             break;
         default:
             return 0;
@@ -338,6 +379,24 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
 #endif
     // Enable Encryption Mode
     cctx->enc_flag = true;
+
+    if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+#ifdef DEBUG
+        printf("Provider: cinfo->ci_algo_info.ai_gcm.ivlen : %d\n",
+               cinfo->ci_algo_info.ai_gcm.ivlen);
+#endif
+        if (key != NULL && iv != NULL) {
+            err = alcp_cipher_encrypt_update(
+                &(cctx->handle),
+                NULL,
+                NULL,
+                cinfo->ci_algo_info.ai_gcm.ivlen,
+                cctx->pc_cipher_info.ci_algo_info.ai_iv);
+            if (alcp_is_error(err)) {
+                printf("Provider: Error While Setting the IVLength\n");
+            }
+        }
+    }
     EXIT();
     return 1;
 }
@@ -376,6 +435,9 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
             break;
         case ALC_AES_MODE_XTS:
             PRINT("Provider: XTS\n");
+            break;
+        case ALC_AES_MODE_GCM:
+            PRINT("Provider: GCM\n");
             break;
         default:
             return 0;
@@ -465,6 +527,21 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
 #endif
     // Enable Encryption Mode
     cctx->enc_flag = false;
+
+    if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+
+        if (key != NULL && iv != NULL) {
+            err = alcp_cipher_decrypt_update(
+                &(cctx->handle),
+                NULL,
+                NULL,
+                cinfo->ci_algo_info.ai_gcm.ivlen,
+                cctx->pc_cipher_info.ci_algo_info.ai_iv);
+            if (alcp_is_error(err)) {
+                printf("Provider: Error While Setting the IVLength\n");
+            }
+        }
+    }
     EXIT();
     return 1;
 }
@@ -479,21 +556,47 @@ ALCP_prov_cipher_update(void*                vctx,
 {
     alc_prov_cipher_ctx_p cctx = vctx;
     alc_error_t           err;
+    alc_cipher_info_p     cinfo    = &cctx->pc_cipher_info;
     const int             err_size = 256;
     uint8_t               err_buf[err_size];
     ENTER();
+
+    if (inl == 0) {
+        *outl = inl;
+        return 1;
+    }
+
     if (cctx->enc_flag) {
-        err = alcp_cipher_encrypt(&(cctx->handle),
-                                  in,
-                                  out,
-                                  inl,
-                                  cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+            err = alcp_cipher_encrypt_update(
+                &(cctx->handle),
+                in,
+                out,
+                inl,
+                cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        } else {
+            err = alcp_cipher_encrypt(&(cctx->handle),
+                                      in,
+                                      out,
+                                      inl,
+                                      cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
     } else {
-        err = alcp_cipher_decrypt(&(cctx->handle),
-                                  in,
-                                  out,
-                                  inl,
-                                  cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+
+            err = alcp_cipher_decrypt_update(
+                &(cctx->handle),
+                in,
+                out,
+                inl,
+                cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        } else {
+            err = alcp_cipher_decrypt(&(cctx->handle),
+                                      in,
+                                      out,
+                                      inl,
+                                      cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
     }
     // printf("%d\n", cctx->pc_cipher_info.mode_data.aes.mode ==
     // ALC_AES_MODE_CFB);
@@ -517,10 +620,13 @@ ALCP_prov_cipher_final(void*          vctx,
                        size_t*        outl,
                        size_t         outsize)
 {
-    alc_prov_cipher_ctx_p cctx = vctx;
     ENTER();
-    free((cctx->handle).ch_context);
-    // Northing to do!
+    // alc_prov_cipher_ctx_p cctx = vctx;
+
+    // TODO: Introduce Finish here for finalising the context and
+    // handle the corresponding memory issues.
+    // alcp_cipher_finish(&cctx->handle);
+    // Nothing to do!
     *outl = 0;
     return 1;
 }
@@ -543,6 +649,9 @@ extern const OSSL_DISPATCH ecb_functions_192[];
 extern const OSSL_DISPATCH ecb_functions_256[];
 extern const OSSL_DISPATCH xts_functions_128[];
 extern const OSSL_DISPATCH xts_functions_256[];
+extern const OSSL_DISPATCH gcm_functions_128[];
+extern const OSSL_DISPATCH gcm_functions_192[];
+extern const OSSL_DISPATCH gcm_functions_256[];
 const OSSL_ALGORITHM       ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_256_CFB, CIPHER_DEF_PROP, cfb_functions_256 },
     { ALCP_PROV_NAMES_AES_192_CFB, CIPHER_DEF_PROP, cfb_functions_192 },
@@ -567,6 +676,9 @@ const OSSL_ALGORITHM       ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_128_ECB, CIPHER_DEF_PROP, ecb_functions_128 },
     { ALCP_PROV_NAMES_AES_256_XTS, CIPHER_DEF_PROP, xts_functions_256 },
     { ALCP_PROV_NAMES_AES_128_XTS, CIPHER_DEF_PROP, xts_functions_128 },
+    { ALCP_PROV_NAMES_AES_128_GCM, CIPHER_DEF_PROP, gcm_functions_128 },
+    { ALCP_PROV_NAMES_AES_192_GCM, CIPHER_DEF_PROP, gcm_functions_192 },
+    { ALCP_PROV_NAMES_AES_256_GCM, CIPHER_DEF_PROP, gcm_functions_256 },
     { NULL, NULL, NULL },
 };
 
