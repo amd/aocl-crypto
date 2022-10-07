@@ -63,6 +63,7 @@ ALCP_prov_cipher_newctx(void* vprovctx, const alc_cipher_info_p cinfo)
         // ciph_ctx->pc_params         = pparams;
         ciph_ctx->pc_libctx         = pctx->ap_libctx;
         ciph_ctx->pc_cipher_info    = *cinfo;
+        ciph_ctx->ivlen             = -1;
         ciph_ctx->pc_evp_cipher_ctx = EVP_CIPHER_CTX_new();
         if (!ciph_ctx->pc_evp_cipher_ctx || !ciph_ctx->pc_prov_ctx) {
             ALCP_prov_cipher_freectx(ciph_ctx);
@@ -245,7 +246,7 @@ ALCP_prov_cipher_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 #ifdef DEBUG
         printf("Provider: IVLEN Length is %ld \n", ivlen);
 #endif
-        cctx->pc_cipher_info.ci_algo_info.ai_gcm.ivlen = ivlen;
+        cctx->ivlen = ivlen;
     }
 
     EXIT();
@@ -386,14 +387,18 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
                cinfo->ci_algo_info.ai_gcm.ivlen);
 #endif
         if (key != NULL && iv != NULL) {
-            err = alcp_cipher_encrypt_update(
-                &(cctx->handle),
-                NULL,
-                NULL,
-                cinfo->ci_algo_info.ai_gcm.ivlen,
-                cctx->pc_cipher_info.ci_algo_info.ai_iv);
-            if (alcp_is_error(err)) {
-                printf("Provider: Error While Setting the IVLength\n");
+            if (cctx->ivlen != -1) {
+                err = alcp_cipher_encrypt_update(
+                    &(cctx->handle),
+                    NULL,
+                    NULL,
+                    cctx->ivlen,
+                    cctx->pc_cipher_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err)) {
+                    printf("Provider: Error While Setting the IVLength\n");
+                }
+            } else {
+                printf("Provider: Error IV Len is not initialized!\n");
             }
         }
     }
@@ -529,16 +534,19 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
     cctx->enc_flag = false;
 
     if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
-
         if (key != NULL && iv != NULL) {
-            err = alcp_cipher_decrypt_update(
-                &(cctx->handle),
-                NULL,
-                NULL,
-                cinfo->ci_algo_info.ai_gcm.ivlen,
-                cctx->pc_cipher_info.ci_algo_info.ai_iv);
-            if (alcp_is_error(err)) {
-                printf("Provider: Error While Setting the IVLength\n");
+            if (ivlen != -1) {
+                err = alcp_cipher_decrypt_update(
+                    &(cctx->handle),
+                    NULL,
+                    NULL,
+                    cctx->ivlen,
+                    cctx->pc_cipher_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err)) {
+                    printf("Provider: Error While Setting the IVLength\n");
+                }
+            } else {
+                printf("Provider: Error IV Len is not initialized!\n");
             }
         }
     }

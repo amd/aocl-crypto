@@ -47,13 +47,14 @@ struct _alc_prov_cipher_ctx
     /* Must be first */
     alc_prov_ctx_t*     pc_prov_ctx;
     alc_cipher_handle_t handle;
-    alc_key_info_t kinfo_tweak_key;
+    alc_key_info_t      kinfo_tweak_key;
     int                 enc_flag;
 
     int               pc_nid;
     EVP_CIPHER*       pc_evp_cipher;
     EVP_CIPHER_CTX*   pc_evp_cipher_ctx;
     const OSSL_PARAM* pc_params;
+    Uint64            ivlen;
 
     alc_cipher_info_t pc_cipher_info;
     int               pc_ctx_size;
