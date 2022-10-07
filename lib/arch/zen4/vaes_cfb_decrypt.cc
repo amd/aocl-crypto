@@ -33,6 +33,7 @@
 #include "cipher/aesni.hh"
 #include "cipher/avx512.hh"
 #include "cipher/vaes_avx512.hh"
+#include "cipher/vaes_avx512_core.hh"
 #include "error.hh"
 
 namespace alcp::cipher { namespace vaes {
@@ -55,13 +56,50 @@ namespace alcp::cipher { namespace vaes {
 
         uint64_t blocks = len / Rijndael::cBlockSize;
 
+        __m512i key_512_0, key_512_1, key_512_2, key_512_3, key_512_4,
+            key_512_5, key_512_6, key_512_7, key_512_8, key_512_9, key_512_10,
+            key_512_11, key_512_12, key_512_13, key_512_14;
+        alcp_load_key_zmm(pkey128,
+                          key_512_0,
+                          key_512_1,
+                          key_512_2,
+                          key_512_3,
+                          key_512_4,
+                          key_512_5,
+                          key_512_6,
+                          key_512_7,
+                          key_512_8,
+                          key_512_9,
+                          key_512_10,
+                          key_512_11,
+                          key_512_12,
+                          key_512_13,
+                          key_512_14);
+
         // IV load 128 into lower 128 bits of 512 bit register.
         b1 = alcp_loadu_128((const __m512i*)pIv);
 
         if (blocks >= 1) {
             a1 = alcp_loadu_128((const __m512i*)p_in_128);
 
-            vaes::AesEncrypt(&b1, pkey128, nRounds);
+            vaes::AesEncryptNoLoad_1x512(b1,
+                                         key_512_0,
+                                         key_512_1,
+                                         key_512_2,
+                                         key_512_3,
+                                         key_512_4,
+                                         key_512_5,
+                                         key_512_6,
+                                         key_512_7,
+                                         key_512_8,
+                                         key_512_9,
+                                         key_512_10,
+                                         key_512_11,
+                                         key_512_12,
+                                         key_512_13,
+                                         key_512_14,
+                                         nRounds);
+
             a1 = alcp_xor(a1, b1);
 
             alcp_storeu_128((__m512i*)p_out_128, a1);
@@ -84,7 +122,26 @@ namespace alcp::cipher { namespace vaes {
             b3 = alcp_loadu(((const __m512i*)(p_in_128 - 1)) + 2);
             b4 = alcp_loadu(((const __m512i*)(p_in_128 - 1)) + 3);
 
-            vaes::AesEncrypt(&b1, &b2, &b3, &b4, pkey128, nRounds);
+            vaes::AesEncryptNoLoad_4x512(b1,
+                                         b2,
+                                         b3,
+                                         b4,
+                                         key_512_0,
+                                         key_512_1,
+                                         key_512_2,
+                                         key_512_3,
+                                         key_512_4,
+                                         key_512_5,
+                                         key_512_6,
+                                         key_512_7,
+                                         key_512_8,
+                                         key_512_9,
+                                         key_512_10,
+                                         key_512_11,
+                                         key_512_12,
+                                         key_512_13,
+                                         key_512_14,
+                                         nRounds);
 
             // Xor reencrypted previous cipher text with current cipher text
             a1 = alcp_xor(a1, b1);
@@ -111,7 +168,24 @@ namespace alcp::cipher { namespace vaes {
             b1 = alcp_loadu(((const __m512i*)(p_in_128 - 1)) + 0);
             b2 = alcp_loadu(((const __m512i*)(p_in_128 - 1)) + 1);
 
-            vaes::AesEncrypt(&b1, &b2, pkey128, nRounds);
+            vaes::AesEncryptNoLoad_2x512(b1,
+                                         b2,
+                                         key_512_0,
+                                         key_512_1,
+                                         key_512_2,
+                                         key_512_3,
+                                         key_512_4,
+                                         key_512_5,
+                                         key_512_6,
+                                         key_512_7,
+                                         key_512_8,
+                                         key_512_9,
+                                         key_512_10,
+                                         key_512_11,
+                                         key_512_12,
+                                         key_512_13,
+                                         key_512_14,
+                                         nRounds);
 
             // Xor reencrypted previous cipher text with current cipher text
             a1 = alcp_xor(a1, b1);
@@ -132,7 +206,23 @@ namespace alcp::cipher { namespace vaes {
             // Load b(cipher text offset -1) to reencrypt and xor
             b1 = alcp_loadu(((const __m512i*)(p_in_128 - 1)) + 0);
 
-            vaes::AesEncrypt(&b1, pkey128, nRounds);
+            vaes::AesEncryptNoLoad_1x512(b1,
+                                         key_512_0,
+                                         key_512_1,
+                                         key_512_2,
+                                         key_512_3,
+                                         key_512_4,
+                                         key_512_5,
+                                         key_512_6,
+                                         key_512_7,
+                                         key_512_8,
+                                         key_512_9,
+                                         key_512_10,
+                                         key_512_11,
+                                         key_512_12,
+                                         key_512_13,
+                                         key_512_14,
+                                         nRounds);
 
             // Xor reencrypted previous cipher text with current cipher text
             a1 = alcp_xor(a1, b1);
@@ -152,7 +242,24 @@ namespace alcp::cipher { namespace vaes {
         for (; blocks >= 1; blocks--) {
             a1 = _a1 = alcp_loadu_128((const __m512i*)p_in_128);
 
-            vaes::AesEncrypt(&b1, pkey128, nRounds);
+            vaes::AesEncryptNoLoad_1x512(b1,
+                                         key_512_0,
+                                         key_512_1,
+                                         key_512_2,
+                                         key_512_3,
+                                         key_512_4,
+                                         key_512_5,
+                                         key_512_6,
+                                         key_512_7,
+                                         key_512_8,
+                                         key_512_9,
+                                         key_512_10,
+                                         key_512_11,
+                                         key_512_12,
+                                         key_512_13,
+                                         key_512_14,
+                                         nRounds);
+
             a1 = alcp_xor(a1, b1);
 
             b1 = _a1;
@@ -160,6 +267,23 @@ namespace alcp::cipher { namespace vaes {
             p_in_128++;
             p_out_128++;
         }
+
+        // clear all keys in registers.
+        key_512_0  = _mm512_setzero_si512();
+        key_512_1  = _mm512_setzero_si512();
+        key_512_2  = _mm512_setzero_si512();
+        key_512_3  = _mm512_setzero_si512();
+        key_512_4  = _mm512_setzero_si512();
+        key_512_5  = _mm512_setzero_si512();
+        key_512_6  = _mm512_setzero_si512();
+        key_512_7  = _mm512_setzero_si512();
+        key_512_8  = _mm512_setzero_si512();
+        key_512_9  = _mm512_setzero_si512();
+        key_512_10 = _mm512_setzero_si512();
+        key_512_11 = _mm512_setzero_si512();
+        key_512_12 = _mm512_setzero_si512();
+        key_512_13 = _mm512_setzero_si512();
+        key_512_14 = _mm512_setzero_si512();
 
         assert(blocks == 0);
 
