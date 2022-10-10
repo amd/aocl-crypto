@@ -19,8 +19,7 @@ mv libnew.a libalcp.a
 ## Enabling features of AOCL-Crypto
 
 1. [Enable Examples - To compile example/demo code.](##Enable Examples append)
-2. [Enable AOCL-SRNG - To enable AOCL-SRNG (RNG source ARCH).](##Enable AOCL-SRNG append this)
-3. [Enable CPUID - To dispatch correct kernel with CPU identification.](##To enable CPUID append this)
+2. [Enable CPUID - To dispatch correct kernel with CPU identification.](##To enable CPUID append this)
 
 ### Enable Examples append
 
@@ -28,12 +27,6 @@ mv libnew.a libalcp.a
 $ cmake -DALCP_ENABLE_EXAMPLES=1 ../
 ```
 
-### Enable AOCL-SRNG append
-
-```sh
-$ cmake -DAOCL_INSTALL_DIR=path/to/aocl/root
-```
-For srng if linked statically, please also link ```libamdsecrng.a```
 ### Enable CPUID append
 
 ```bash
