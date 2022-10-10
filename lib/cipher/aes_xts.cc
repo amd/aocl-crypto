@@ -32,6 +32,9 @@
 #include "cipher/vaes_avx512.hh"
 
 #include "utils/constants.hh"
+#include "utils/copy.hh"
+
+#define GF_POLYNOMIAL 0x87
 
 namespace alcp::cipher {
 
@@ -39,6 +42,20 @@ static Uint8
 GetSbox(Uint8 offset, bool use_invsbox = false)
 {
     return utils::GetSbox(offset, use_invsbox);
+}
+
+static void
+MultiplyAlphaByTwo(Uint32* alpha)
+{
+    unsigned long long res, carry;
+
+    unsigned long long* tmp_tweak = (unsigned long long*)alpha;
+
+    res   = (((long long)tmp_tweak[1]) >> 63) & GF_POLYNOMIAL;
+    carry = (((long long)tmp_tweak[0]) >> 63) & 1;
+
+    tmp_tweak[0] = ((tmp_tweak[0]) << 1) ^ res;
+    tmp_tweak[1] = ((tmp_tweak[1]) << 1) | carry;
 }
 
 void
@@ -87,10 +104,10 @@ Xts::expandTweakKeys(const Uint8* pUserKey, int len)
 }
 
 alc_error_t
-Xts::encrypt(const uint8_t* pPlainText,
-             uint8_t*       pCipherText,
-             uint64_t       len,
-             const uint8_t* pIv) const
+Xts::encrypt(const Uint8* pPlainText,
+             Uint8*       pCipherText,
+             Uint64       len,
+             const Uint8* pIv) const
 {
 
     alc_error_t err = ALC_ERROR_NONE;
@@ -140,16 +157,78 @@ Xts::encrypt(const uint8_t* pPlainText,
         return err;
     }
 
-    err = Rijndael::encrypt(pPlainText, pCipherText, len, pIv);
+    auto p_key128       = reinterpret_cast<const Uint8*>(getEncryptKeys());
+    auto p_tweak_key128 = reinterpret_cast<const Uint8*>(p_tweak_key);
+    auto p_src128       = reinterpret_cast<const Uint32*>(pPlainText);
+    auto p_dest128      = reinterpret_cast<Uint32*>(pCipherText);
+    auto p_iv128        = reinterpret_cast<const Uint32*>(pIv);
+
+    Uint32 currentAlpha[4];
+    utils::CopyBytes(currentAlpha, p_iv128, 16);
+
+    Uint64 blocks          = len / Rijndael::cBlockSize;
+    int    last_Round_Byte = len % Rijndael::cBlockSize;
+
+    Rijndael::AesEncrypt(currentAlpha, p_tweak_key128, getRounds());
+
+    blocks *= 4;
+
+    while (blocks >= 4) {
+
+        Uint32 tweaked_src_text_1[4];
+
+        for (int i = 0; i < 4; i++)
+            tweaked_src_text_1[i] = (currentAlpha[i] ^ p_src128[i]);
+
+        Rijndael::AesEncrypt(tweaked_src_text_1, p_key128, getRounds());
+
+        for (int i = 0; i < 4; i++)
+            tweaked_src_text_1[i] = (currentAlpha[i] ^ tweaked_src_text_1[i]);
+
+        utils::CopyBytes(p_dest128, tweaked_src_text_1, 16);
+
+        MultiplyAlphaByTwo(currentAlpha);
+
+        blocks -= 4;
+        p_src128 += 4;
+        p_dest128 += 4;
+    }
+
+    auto p_dest8 = reinterpret_cast<Uint8*>(p_dest128);
+    auto p_src8  = reinterpret_cast<const Uint8*>(p_src128);
+
+    if (last_Round_Byte > 0) {
+
+        Uint32 last_messgae_block[4];
+        auto   p_last_messgae_block =
+            reinterpret_cast<Uint8*>(last_messgae_block);
+
+        utils::CopyBytes(p_last_messgae_block + last_Round_Byte,
+                         p_dest8 - 16 + last_Round_Byte,
+                         16 - last_Round_Byte);
+        utils::CopyBytes(p_last_messgae_block, p_src8, last_Round_Byte);
+        utils::CopyBytes(p_dest8, p_dest8 - 16, last_Round_Byte);
+
+        // encrypting last message block
+        for (int i = 0; i < 4; i++)
+            last_messgae_block[i] = (currentAlpha[i] ^ last_messgae_block[i]);
+
+        AesEncrypt(last_messgae_block, p_key128, getRounds());
+
+        for (int i = 0; i < 4; i++)
+            last_messgae_block[i] = (currentAlpha[i] ^ last_messgae_block[i]);
+
+        utils::CopyBytes((p_dest8 - 16), p_last_messgae_block, 16);
+    }
 
     return err;
 }
 
 alc_error_t
-Xts::decrypt(const uint8_t* pCipherText,
-             uint8_t*       pPlainText,
-             uint64_t       len,
-             const uint8_t* pIv) const
+Xts::decrypt(const Uint8* pCipherText,
+             Uint8*       pPlainText,
+             Uint64       len,
+             const Uint8* pIv) const
 {
 
     alc_error_t err = ALC_ERROR_NONE;
