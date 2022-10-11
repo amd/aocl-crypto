@@ -25,3 +25,38 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include "alcp/digest.h"
+#include "alcp/key.h"
+
+typedef enum _alc_mac_type
+{
+    ALC_MAC_HMAC,
+    ALC_MAC_CMAC
+} alc_mac_type_t;
+
+typedef struct _alc_hmac_info
+{
+    // Info about the hash function to be used in HMAC
+    alc_digest_info_t hmac_digest;
+    // Other specific info about HMAC
+
+} alc_hmac_info_t, *alc_hmac_info_p;
+
+typedef struct _alc_cmac_info
+{
+    alc_cipher_info_t cmac_cipher;
+    // Other specific info about CMAC
+} alc_cmac_info_t, *alc_cmac_info_p;
+
+typedef struct _alc_mac_info_t
+{
+    alc_mac_type_t mi_type;
+    union
+    {
+        alc_hmac_info_t hmac;
+        alc_cmac_info_t cmac;
+    } mi_algoinfo;
+
+    // any other common fields that are needed
+    alc_key_info_t mi_keyinfo;
+} alc_mac_info_t, *alc_mac_info_p;
