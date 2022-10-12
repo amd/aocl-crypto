@@ -48,7 +48,7 @@ create_demo_session(void)
         .dt_mode = {.dm_sha2 = ALC_SHA2_224,},
     };
 
-    uint64_t size       = alcp_digest_context_size(&dinfo);
+    Uint64 size       = alcp_digest_context_size(&dinfo);
     s_dg_handle.context = malloc(size);
 
     err = alcp_digest_request(&dinfo, &s_dg_handle);
@@ -61,18 +61,17 @@ create_demo_session(void)
 }
 
 static alc_error_t
-hash_demo(const uint8_t* src,
-          uint64_t       src_size,
-          uint8_t*       output,
-          uint64_t       out_size)
+hash_demo(const Uint8* src,
+          Uint64       src_size,
+          Uint8*       output,
+          Uint64       out_size,
+          Uint64       num_chunks)
 {
     alc_error_t err;
 
-    // divide the input size into multiple chunks
-    uint32_t       num_chunks      = NUM_IP_CHUNKS;
-    const uint32_t chunk_size      = src_size / num_chunks;
-    const uint32_t last_chunk_size = src_size % num_chunks;
-    const uint8_t* p               = src;
+    const Uint32 chunk_size      = src_size / num_chunks;
+    const Uint32 last_chunk_size = src_size % num_chunks;
+    const Uint8* p               = src;
 
     while (num_chunks-- > 0) {
         err = alcp_digest_update(&s_dg_handle, p, chunk_size);
@@ -82,6 +81,11 @@ hash_demo(const uint8_t* src,
         }
         p += chunk_size;
     }
+    
+    if (last_chunk_size == 0) {
+        p = NULL;
+    }
+
     alcp_digest_finalize(&s_dg_handle, p, last_chunk_size);
 
     err = alcp_digest_copy(&s_dg_handle, output, out_size);
@@ -99,7 +103,7 @@ out:
 }
 
 static void
-hash_to_string(char string[65], const uint8_t hash[DIGEST_SIZE])
+hash_to_string(char string[65], const Uint8 hash[DIGEST_SIZE])
 {
     size_t i;
     for (i = 0; i < DIGEST_SIZE; i++) {
@@ -114,29 +118,32 @@ main(void)
     {
         char* input;
         char* output;
+        Uint64 num_chunks;
     };
 
     static const struct string_vector STRING_VECTORS[] = {
-        { "", "d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f" },
-        { "abc", "23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7" },
+        { "", "d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f", 1 },
+        { "abc", "23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7", 2 },
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-          "43f95590b27f2afde6dd97d951f5ba4fe1d154056ec3f8ffeaea6347" },
+          "43f95590b27f2afde6dd97d951f5ba4fe1d154056ec3f8ffeaea6347", 3 },
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
-          "99da0faf832c6b266c5db29a034e536a2a81df95c499ed0ce14d7978" },
+          "99da0faf832c6b266c5db29a034e536a2a81df95c499ed0ce14d7978", 4 },
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0",
-          "0a132954fcaf53473a7d4eb87d44038a17e3175d67214750a963a868" },
+          "0a132954fcaf53473a7d4eb87d44038a17e3175d67214750a963a868", 1 },
         { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
-          "75388b16512776cc5dba5da1fd890150b0c6455cb4f58b1952522525" },
+          "75388b16512776cc5dba5da1fd890150b0c6455cb4f58b1952522525", 2 },
         { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno"
           "ijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
-          "c97ca9a559850ce97a04a96def6d99a9e0e0e2ab14e6b8df265fc0b3" }
+          "c97ca9a559850ce97a04a96def6d99a9e0e0e2ab14e6b8df265fc0b3", 3 }
     };
 
     char* sample_input;
 
     char* expected_output;
 
-    uint8_t sample_output[DIGEST_SIZE] = { 0 };
+    Uint8 sample_output[DIGEST_SIZE] = { 0 };
+
+    Uint64 num_chunks;
 
     char output_string[65];
 
@@ -147,13 +154,16 @@ main(void)
 
         expected_output = STRING_VECTORS[i].output;
 
+        num_chunks = STRING_VECTORS[i].num_chunks;
+
         alc_error_t err = create_demo_session();
 
         if (!alcp_is_error(err)) {
             err = hash_demo(sample_input,
                             strlen(sample_input),
                             sample_output,
-                            sizeof(sample_output));
+                            sizeof(sample_output),
+                            num_chunks);
         }
 
         /*
@@ -165,6 +175,7 @@ main(void)
         // check if the outputs are matching
         hash_to_string(output_string, sample_output);
         printf("Input : %s\n", sample_input);
+        printf("Input chunks : %d\n", num_chunks);
         printf("output : %s\n", output_string);
         if (strcmp(expected_output, output_string)) {
             printf("=== FAILED ==== \n");
