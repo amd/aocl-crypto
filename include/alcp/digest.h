@@ -52,6 +52,7 @@ typedef enum _alc_sha2_mode
     ALC_SHA2_256,
     ALC_SHA2_384,
     ALC_SHA2_512,
+    ALC_SHA3,
 } alc_sha2_mode_t;
 
 typedef enum _alc_digest_len

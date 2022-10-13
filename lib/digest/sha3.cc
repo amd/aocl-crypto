@@ -107,14 +107,14 @@ namespace alcp::digest {
   inline void Sha3::round(Uint64 roundConst){
     ///
     //theta
+    
     Uint64 temp[5];
     for (int x = 0; x < 5; ++x){
       temp[x] = m_state[x][0] xor m_state[x][1] xor m_state[x][2] xor m_state[x][3] xor m_state[x][4];
     }  
     for (int x = 0; x < 5; ++x){
       for (int y = 0; y < 5; ++y){
-        //possible: rot wrong way?
-        m_state[x][y] ^= (temp[(x-1)%5] xor alcp::digest::RotateRight(temp[(x+1)%5], 1));
+        m_state[x][y] ^= (temp[(x+4)%5] xor alcp::digest::RotateRight(temp[(x+1)%5], 1));
       }
     }
 
@@ -123,7 +123,7 @@ namespace alcp::digest {
     //pho and pi
     for (int x = 0; x < 5; ++x){
       for (int y = 0; y < 5; ++y){
-        temp2[y][(2*x + 3*y)%5] = alcp::digest::RotateRight(m_state[x][y], c_rot_consts[x][y]);     
+        temp2[y][(2*x + 3*y)%5] = alcp::digest::RotateRight(m_state[x][y], c_rot_consts[x][y]);
       }
     }
 
@@ -171,15 +171,13 @@ namespace alcp::digest {
     return err;
   }
 
-
-
-  // possible: read  error is process, update or finalise
+  //
   alc_error_t
   Sha3::processChunk(const Uint8* pSrc, Uint64 len)
   {
 
     /* we need len to be multiple of m_chunk_size */
-    assert((len & m_chunk_sizeMask) == 0);
+    //    assert((len & m_chunk_sizeMask) == 0);
     
     Uint64  msg_size       = len;
     Uint64* p_msg_buffer64 = (Uint64*)pSrc;
@@ -284,7 +282,7 @@ namespace alcp::digest {
       m_buffer[m_idx++] = 0x60;
       for (; m_idx < m_chunk_size - 1; ++m_idx){
         m_buffer[m_idx] = 0x00;
-      }      
+      }
       m_buffer[m_idx++] = 0x01;
     }
 

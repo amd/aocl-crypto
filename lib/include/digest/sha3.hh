@@ -42,7 +42,7 @@ namespace alcp::digest {
     Uint32
       m_idx;
     alc_sha2_mode_t
-      m_mode;
+      m_mode = ALC_SHA3;
     bool
       m_finished;
     Uint8
