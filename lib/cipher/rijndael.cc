@@ -40,25 +40,7 @@
 #include "utils/constants.hh"
 #include "utils/copy.hh"
 
-#define shift_rows(inp, out)                                                   \
-    (out)[0] = (inp)[0];                                                       \
-    (out)[1] = (inp)[1];                                                       \
-    (out)[2] = (inp)[2];                                                       \
-    (out)[3] = (inp)[3];                                                       \
-    (out)[4] = (inp)[5];                                                       \
-    (out)[5] = (inp)[6];                                                       \
-    (out)[6] = (inp)[7];                                                       \
-    (out)[7] = (inp)[4];                                                       \
-                                                                               \
-    (out)[8]  = (inp)[10];                                                     \
-    (out)[9]  = (inp)[11];                                                     \
-    (out)[10] = (inp)[8];                                                      \
-    (out)[11] = (inp)[9];                                                      \
-                                                                               \
-    (out)[12] = (inp)[15];                                                     \
-    (out)[13] = (inp)[12];                                                     \
-    (out)[14] = (inp)[13];                                                     \
-    (out)[15] = (inp)[14]
+#define ROR(inp, n) ((inp >> n) | (inp << (32 - n)))
 
 #define mix_column_exchange(inp, out)                                          \
     (out)[0] = (inp)[0];                                                       \
@@ -79,6 +61,26 @@
     (out)[13] = (inp)[1];                                                      \
     (out)[14] = (inp)[5];                                                      \
     (out)[15] = (inp)[9]
+
+#define mix_column_last_exchange(inp, out)                                     \
+    (out)[0] = (inp)[0];                                                       \
+    (out)[1] = (inp)[5];                                                       \
+    (out)[2] = (inp)[10];                                                      \
+    (out)[3] = (inp)[15];                                                      \
+    (out)[4] = (inp)[4];                                                       \
+    (out)[5] = (inp)[9];                                                       \
+    (out)[6] = (inp)[14];                                                      \
+    (out)[7] = (inp)[3];                                                       \
+                                                                               \
+    (out)[8]  = (inp)[8];                                                      \
+    (out)[9]  = (inp)[13];                                                     \
+    (out)[10] = (inp)[2];                                                      \
+    (out)[11] = (inp)[7];                                                      \
+                                                                               \
+    (out)[12] = (inp)[12];                                                     \
+    (out)[13] = (inp)[1];                                                      \
+    (out)[14] = (inp)[6];                                                      \
+    (out)[15] = (inp)[11]
 
 namespace alcp::cipher {
 
@@ -352,11 +354,11 @@ SubBytes(const Uint32& val)
 }
 
 static inline void
-SubBytes(const Uint8* inp, Uint8* out)
+SubBytes(Uint8* inp)
 {
     using namespace utils;
     for (int b = 0; b < 16; b++) {
-        out[b] = GetSbox(inp[b]);
+        inp[b] = GetSbox(inp[b]);
     }
 }
 
@@ -444,10 +446,12 @@ Rijndael::Impl::AESEncrypt(Uint32* blk0, const Uint8* pkey, int nr) const
 
     for (int r = 1; r < nr; r++) {
 
-        Uint8 temp[16];
+        SubBytes(p_state);
 
-        SubBytes(p_state, temp);
-        shift_rows(temp, p_state);
+        state[1] = ROR(state[1], 8);
+        state[2] = ROR(state[2], 16);
+        state[3] = ROR(state[3], 24);
+
         MixColumns(p_state);
 
         state[0] = state[0] ^ p_key32[0];
@@ -459,11 +463,9 @@ Rijndael::Impl::AESEncrypt(Uint32* blk0, const Uint8* pkey, int nr) const
     }
     Uint8 temp[16];
 
-    SubBytes(p_state, temp);
-    shift_rows(temp, p_state);
-    mix_column_exchange(p_state, temp);
-
-    utils::CopyBytes(p_state, temp, 16);
+    SubBytes(p_state);
+    utils::CopyBytes(temp, p_state, 16);
+    mix_column_last_exchange(temp, p_state);
 
     state[0] = AddRoundKey(state[0], p_key32[0]);
     state[1] = state[1] ^ p_key32[1];
