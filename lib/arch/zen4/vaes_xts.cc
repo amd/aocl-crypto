@@ -429,9 +429,9 @@ DecryptXtsAvx512(const uint8_t* pSrc,
         tweakx8[3] = aes::nextTweaks(tweakx8[1]);
 
         if (blocks == chunk && extra_bytes_in_message_block) {
-            __m128i temp    = p_tweaks128[31];
-            p_tweaks128[31] = p_tweaks128[30];
-            p_tweaks128[30] = temp;
+            __m128i temp    = p_tweaks128[0];
+            p_tweaks128[0]  = p_tweaks128[31];
+            p_tweaks128[31] = temp;
         }
 
         __m512i tweaked_src_text_5 = tweakx8[4] ^ src_text_5;
@@ -481,9 +481,9 @@ DecryptXtsAvx512(const uint8_t* pSrc,
         __m512i src_text_4 = _mm512_loadu_si512(p_src512 + 3);
 
         if (blocks == chunk && extra_bytes_in_message_block) {
-            __m128i temp    = p_tweaks128[15];
-            p_tweaks128[15] = p_tweaks128[14];
-            p_tweaks128[14] = temp;
+            __m128i temp    = p_tweaks128[16];
+            p_tweaks128[16] = p_tweaks128[15];
+            p_tweaks128[15] = temp;
         }
 
         // getting Tweaked Text after xor of message and Alpha ^ j
@@ -526,9 +526,9 @@ DecryptXtsAvx512(const uint8_t* pSrc,
         __m512i src_text_3 = _mm512_loadu_si512(p_src512 + 2);
 
         if (blocks == chunk && extra_bytes_in_message_block) {
-            __m128i temp                    = p_tweaks128[tweak_idx * 4 + 11];
-            p_tweaks128[tweak_idx * 4 + 11] = p_tweaks128[tweak_idx * 4 + 10];
-            p_tweaks128[tweak_idx * 4 + 10] = temp;
+            __m128i temp                    = p_tweaks128[tweak_idx * 4 + 12];
+            p_tweaks128[tweak_idx * 4 + 12] = p_tweaks128[tweak_idx * 4 + 11];
+            p_tweaks128[tweak_idx * 4 + 11] = temp;
         }
 
         __m512i tweak_1 = tweakx8[tweak_idx];
@@ -570,9 +570,9 @@ DecryptXtsAvx512(const uint8_t* pSrc,
         __m512i src_text_2 = _mm512_loadu_si512(p_src512 + 1);
 
         if (blocks == chunk && extra_bytes_in_message_block) {
-            __m128i temp                   = p_tweaks128[tweak_idx * 4 + 7];
-            p_tweaks128[tweak_idx * 4 + 7] = p_tweaks128[tweak_idx * 4 + 6];
-            p_tweaks128[tweak_idx * 4 + 6] = temp;
+            __m128i temp                   = p_tweaks128[tweak_idx * 4 + 8];
+            p_tweaks128[tweak_idx * 4 + 8] = p_tweaks128[tweak_idx * 4 + 7];
+            p_tweaks128[tweak_idx * 4 + 7] = temp;
         }
         __m512i tweak_1 = tweakx8[tweak_idx];
         __m512i tweak_2 = tweakx8[tweak_idx + 1];
@@ -605,9 +605,9 @@ DecryptXtsAvx512(const uint8_t* pSrc,
         __m512i src_text_1 = _mm512_loadu_si512(p_src512);
 
         if (blocks == chunk && extra_bytes_in_message_block) {
-            __m128i temp                   = p_tweaks128[tweak_idx * 4 + 3];
-            p_tweaks128[tweak_idx * 4 + 3] = p_tweaks128[tweak_idx * 4 + 2];
-            p_tweaks128[tweak_idx * 4 + 2] = temp;
+            __m128i temp                   = p_tweaks128[tweak_idx * 4 + 4];
+            p_tweaks128[tweak_idx * 4 + 4] = p_tweaks128[tweak_idx * 4 + 3];
+            p_tweaks128[tweak_idx * 4 + 3] = temp;
         }
         __m512i tweak_1 = tweakx8[tweak_idx];
 
@@ -652,13 +652,14 @@ DecryptXtsAvx512(const uint8_t* pSrc,
         src_text_1 = _mm512_xor_epi64(lastTweak, src_text_1);
 
         utils::CopyBytes(p_dest8, p_src_text8, (unsigned long)(blocks * 16));
-
-        utils::CopyBytes(p_dest8 + (16 * blocks),
-                         p_src_text8 + (16 * (blocks - 1)),
-                         extra_bytes_in_message_block);
     }
 
     if (extra_bytes_in_message_block) {
+
+        utils::CopyBytes(p_dest8 + (16 * blocks),
+                         p_dest8 + (16 * (blocks - 1)),
+                         extra_bytes_in_message_block);
+
         __m512i  stealed_text, tweak_1;
         uint8_t* p_stealed_text = reinterpret_cast<uint8_t*>(&stealed_text);
         uint8_t* p_tweak_1      = reinterpret_cast<uint8_t*>(&tweak_1);
