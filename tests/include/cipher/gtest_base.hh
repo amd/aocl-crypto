@@ -350,7 +350,9 @@ AesCrosstest(int               keySize,
 
     if (extTC != nullptr) {
         for (int i = LOOP_START; i < MAX_LOOP; i += INC_LOOP) {
-            //size = 524288 * i;
+            if (big_small == BIG) {
+                size = 524288;
+            }
             if (!bbxreplay)
                 fr->startRecEvent();
 
