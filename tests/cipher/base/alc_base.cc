@@ -280,19 +280,13 @@ AlcpCipherBase::decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt)
 bool
 AlcpCipherBase::decrypt(alcp_data_ex_t data)
 {
-    alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buff[err_size];
-    Uint8*      tagbuff = new Uint8[data.m_tagl];
-    if (tagbuff == nullptr) {
-        std::cout << __FILE__ << ":" << __LINE__ - 2
-                  << " Memory Allocation error" << std::endl;
-        return false;
-    }
+    alc_error_t        err;
+    const int          err_size = 256;
+    Uint8              err_buff[err_size];
+    std::vector<Uint8> tagbuff(data.m_tagl, 0);
 
     if (m_mode == ALC_AES_MODE_GCM) {
         // GCM Init
-        Uint8 tagbuff[data.m_tagl];
         err = alcp_cipher_decrypt_update(
             m_handle, nullptr, nullptr, data.m_ivl, m_iv);
         if (alcp_is_error(err)) {
@@ -318,14 +312,16 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
             Uint8 a;
             data.m_tag = &a; // Some random value other than NULL
         }
-        err = alcp_cipher_decrypt_update(
-            m_handle, nullptr, tagbuff, data.m_tagl, m_iv);
-        if (alcp_is_error(err)) {
-            goto dec_out;
-        }
-        // Tag verification
-        if (std::memcmp(tagbuff, data.m_tag, data.m_tagl) != 0) {
-            return false;
+        if (data.m_tagl > 0) {
+            err = alcp_cipher_decrypt_update(
+                m_handle, nullptr, &(tagbuff.at(0)), data.m_tagl, m_iv);
+            if (alcp_is_error(err)) {
+                goto dec_out;
+            }
+            // Tag verification
+            if (std::memcmp(&(tagbuff.at(0)), data.m_tag, data.m_tagl) != 0) {
+                return false;
+            }
         }
     } else {
         // For non GCM mode
@@ -335,10 +331,8 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
             goto dec_out;
         }
     }
-    delete[] tagbuff;
     return true;
 dec_out:
-    delete[] tagbuff;
     alcp_error_str(err, err_buff, err_size);
     std::cout << "Error:" << err_buff << std::endl;
     return false;
