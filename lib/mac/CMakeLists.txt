@@ -1,0 +1,6 @@
+FILE(GLOB MAC_SRCS "*.cc")
+
+TARGET_SOURCES(alcp
+	PRIVATE
+		${MAC_SRCS}
+	)
