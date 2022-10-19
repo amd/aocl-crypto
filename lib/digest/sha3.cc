@@ -55,13 +55,13 @@ namespace alcp::digest {
     },
   ///
     c_rot_consts [5][5] =
-      {
-        0, 36,  3, 41, 18,
-        1, 44, 10, 45,  2,
-        62,  6, 43, 15, 61,
-        28, 55, 25, 21, 56,
-        27, 20, 39,  8, 14
-      };
+    {
+      0, 1, 62, 28, 27,
+      36, 44, 6, 55, 20,
+      3, 10, 43, 25, 39,
+      41, 45, 15, 21, 8,
+      18, 2, 61, 56, 14
+    };
   ///
   Sha3::Sha3(){}
   ///
@@ -89,6 +89,7 @@ namespace alcp::digest {
     m_chunk_size = m_chunk_size_bits / 8;
     m_hash_size = m_hash_size_bits / 8;
 
+    //std::cout<<" m_chunk_size_bits="<<m_chunk_size_bits << " m_capacity_bits=" << m_capacity_bits << " m_chunk_size_u64="<<m_chunk_size_u64 << " m_chunk_size="<<m_chunk_size << " m_hash_size="<<m_hash_size<<std::endl;
     for (Uint64 i=0; i<25; ++i){
       m_state_flat[i] = 0;
     }
@@ -101,37 +102,60 @@ namespace alcp::digest {
   void Sha3::absorbChunk(Uint64* pMsgBuffer64){
     for (Uint64 i = 0; i < m_chunk_size_u64; ++i){
       m_state_flat[i] ^= pMsgBuffer64[i];
+      //std::cout << std::hex << m_state_flat[i] << " ";
     }
+    //std::cout<<std::endl;
   }
 
   inline void Sha3::round(Uint64 roundConst){
     ///
     //theta
     
-    Uint64 temp[5];
+    Uint64 c[5], d[5];
+    
     for (int x = 0; x < 5; ++x){
-      temp[x] = m_state[x][0] xor m_state[x][1] xor m_state[x][2] xor m_state[x][3] xor m_state[x][4];
-    }  
-    for (int x = 0; x < 5; ++x){
-      for (int y = 0; y < 5; ++y){
-        m_state[x][y] ^= (temp[(x+4)%5] xor alcp::digest::RotateRight(temp[(x+1)%5], 1));
+      c[x] = m_state[0][x];
+      for (int y = 1; y < 5; ++y)
+      {
+        c[x] ^= m_state[y][x];   
       }
     }
 
-    ///
-    Uint64 temp2[5][5];
-    //pho and pi
+    for (int x = 0; x < 5; ++x)
+    {
+      d[x] = c[(5 + x - 1) % 5] ^ alcp::digest::RotateLeft(c[(x+1)%5], 1);
+    }
+
     for (int x = 0; x < 5; ++x){
       for (int y = 0; y < 5; ++y){
-        temp2[y][(2*x + 3*y)%5] = alcp::digest::RotateRight(m_state[x][y], c_rot_consts[x][y]);
+        m_state[x][y] ^= d[y];
+      }
+    }
+    //std::cout << std::endl;
+    ///
+    Uint64 temp[5][5];
+    //Rho 
+    for (int x = 0; x < 5; x++)
+    {
+      for (int y = 0; y < 5 ;y++)
+      {
+        temp[x][y] = alcp::digest::RotateLeft(m_state[x][y], c_rot_consts[x][y]);
+      }
+    }
+    
+    //pi
+    for (int x = 0; x < 5; ++x){
+      for (int y = 0; y < 5; ++y){
+        m_state[(2*x + 3*y)%5][y] = temp[y][x];
       }
     }
 
     ///
     //xi
+    utils::CopyBytes(temp, m_state, sizeof(temp));
     for (int x = 0; x < 5; ++x){
       for (int y = 0; y < 5; ++y){
-        m_state[x][y] = temp2[x][y] xor (~temp2[(x+1)%5][y] & temp2[(x+2)%5][y]);
+        m_state[x][y] = temp[x][y] ^ (~temp[x][(y+1)%5] & temp[x][(y+2) % 5]);
       }
     }
 
@@ -146,6 +170,12 @@ namespace alcp::digest {
     for (Uint64 i=0 ; i<m_num_rounds; ++i){
       round(c_round_consts[i]);
     }
+    /*for (int x = 0; x < 5; ++x){
+      for (int y = 0; y < 5; ++y){
+        std::cout << std::hex << m_state[x][y]<<" ";
+      }
+      std::cout << std::endl;
+    }*/
   }
   
   alc_error_t
@@ -166,8 +196,9 @@ namespace alcp::digest {
     alc_error_t err = ALC_ERROR_NONE;
     // hash must be copied from m_state, because for sha3, iterations do not operate on the hash directly.
     // Hash is first m_hash_size_bits, which is the first 
-    utils::CopyBlockWith<Uint64>(
-           pHash, m_state_flat, m_hash_size, utils::ToBigEndian<Uint64>);
+    utils::CopyBytes(pHash, (Uint8*)m_state_flat, size);
+    //utils::CopyBlockWith<Uint8>(
+    //       pHash, (Uint8*)m_state_flat, m_hash_size, utils::ToBigEndian<Uint64>);
     return err;
   }
 
@@ -181,7 +212,7 @@ namespace alcp::digest {
     
     Uint64  msg_size       = len;
     Uint64* p_msg_buffer64 = (Uint64*)pSrc;
-
+    //std::cout<<std::endl<<"this will be called only once" << std::endl;
     while (msg_size) {
       // xor message chunk into m_state.
       absorbChunk(p_msg_buffer64);
@@ -230,7 +261,7 @@ namespace alcp::digest {
       pSrc += to_process;
       inputSize -= to_process;
       idx += to_process;
-
+      //std::cout << "will not come here";
       if (idx == m_chunk_size) {
         err = processChunk(m_buffer, m_chunk_size);
         idx = 0;
@@ -239,6 +270,7 @@ namespace alcp::digest {
 
     /* Calculate leftover bytes that can be processed as multiple chunks */
     Uint64 num_chunks = inputSize / m_chunk_size;
+    //std::cout << "num_chunks=" << num_chunks << " inputSize="<<inputSize<<std::endl;
     if (num_chunks) {
       Uint64 size = num_chunks * m_chunk_size;
       err = processChunk(pSrc, size);
@@ -271,6 +303,7 @@ namespace alcp::digest {
       err = update(pBuf, size);
 
     // sha3 padding
+/*
     if (m_idx == m_chunk_size - 1){
       // if one byte is available, fill it with 01100001
       m_buffer[m_idx++] = 0x61;
@@ -285,12 +318,31 @@ namespace alcp::digest {
       }
       m_buffer[m_idx++] = 0x01;
     }
+*/
+    utils::PadBlock<Uint8>(&m_buffer[m_idx], 0x0, m_chunk_size - m_idx);
+    //memset(m_buffer+m_idx, 0, m_chunk_size - m_idx);
+    m_buffer[m_idx] = 0x06;
+    m_buffer[m_chunk_size - 1] |= 0x80;
 
     if (Error::isError(err)) {
       return err;
     }
-    
+    //std::cout<<"calling process chunk=" << std::string((const char *)m_buffer)<<" m_chunk_size="<<m_chunk_size;
     err = processChunk(m_buffer, m_chunk_size);
+
+    /*int index = 0;
+    Uint64 len = m_hash_size;
+    while (len > 0)
+    {
+      Uint64 num = m_state_flat[index];
+      Uint8 *buffer = (Uint8 *)&m_state_flat[index++];
+      for (int i = 0 ; i < 8 ; i++)
+      {
+        buffer[i] = (Uint8)(num >> 8*i);
+      }
+      len-=8;
+    }*/
+
     m_idx = 0;
     m_finished = true;
 

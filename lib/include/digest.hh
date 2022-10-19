@@ -68,6 +68,19 @@ RotateRight(Uint64 value, Uint64 count)
 #endif
 }
 
+static inline Uint32
+RotateLeft(Uint32 value, Uint32 count)
+{
+    return value << count | value >> (32 - count);
+}
+
+static inline Uint64
+RotateLeft(Uint64 value, Uint64 count)
+{
+    return value << count | value >> (64 - count);
+}
+
+
 class IDigest
 {
   public:
