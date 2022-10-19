@@ -341,6 +341,9 @@ AesCrosstest(int               keySize,
         MAX_LOOP   = SMALL_MAX_LOOP;
         INC_LOOP   = SMALL_INC_LOOP;
         size       = 1;
+        if (useipp){
+            MAX_LOOP = 128;
+        }
     } else {
         LOOP_START = BIG_START_LOOP;
         MAX_LOOP   = BIG_MAX_LOOP;
@@ -433,11 +436,14 @@ AesCrosstest(int               keySize,
                 if (isgcm) {
                     ASSERT_TRUE(ArraysMatch(tag_alc, tag_ext));
                 }
-                //ASSERT_TRUE(ArraysMatch(tag_alc, tag_ext));
             } else {
                 alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
                 extTC->getCipherHandler()->testingDecrypt(data_ext, key);
                 ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
+                /* for gcm*/
+                if (isgcm) {
+                    ASSERT_TRUE(ArraysMatch(tag_alc, tag_ext));
+                }
             }
             if (!bbxreplay) {
                 fr->dumpBlackBox();
