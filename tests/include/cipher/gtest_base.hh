@@ -341,7 +341,7 @@ AesCrosstest(int               keySize,
         MAX_LOOP   = SMALL_MAX_LOOP;
         INC_LOOP   = SMALL_INC_LOOP;
         size       = 1;
-        if (useipp){
+        if (useipp && isxts){
             MAX_LOOP = 128;
         }
     } else {
@@ -367,10 +367,9 @@ AesCrosstest(int               keySize,
                 pt = rb.genRandomBytes(i * size);
                 ct = rb.genRandomBytes(i * size);
                 key = rb.genRandomBytes(key_size/8);
-                iv  = rb.genRandomBytes(16);
+                iv  = rb.genRandomBytes(12);
                 add = rb.genRandomBytes(16);
                 tkey = rb.genRandomBytes(key_size/8);
-                iv  = rb.genRandomBytes(12);
 
                 // ALC/Main Lib Data
                 data_alc.m_in   = &(pt[0]);
@@ -428,7 +427,6 @@ AesCrosstest(int               keySize,
                 }
             }
             if (enc_dec == ENCRYPT) {
-                //printf("%p %p %p\n", data_alc.m_in, data_alc.m_ad, data_alc.m_out);
                 alcpTC->getCipherHandler()->testingEncrypt(data_alc, key);
                 extTC->getCipherHandler()->testingEncrypt(data_ext, key);
                 ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
