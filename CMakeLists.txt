@@ -165,6 +165,7 @@ MESSAGE ("CMAKE CXX Flags Release: ${CMAKE_CXX_FLAGS_RELEASE}")
 MESSAGE ("CMAKE CXX Flags Debug: ${CMAKE_CXX_FLAGS_DEBUG}")
 MESSAGE ("CMAKE CXX Flags: ${CMAKE_CXX_FLAGS}")
 MESSAGE ("CMAKE BUILD TYPE: ${CMAKE_BUILD_TYPE}")
+MESSAGE ("CMAKE CXX STANDARD: ${CMAKE_CXX_STANDARD}")
 
 # alcp vars
 # FIXME: better to have all the below arguments starting with alcp_*, 

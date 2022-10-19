@@ -1,6 +1,8 @@
 Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTests.cmake)
 
 file(GLOB TEST_FILES "*.cc")
+# Bump up C++ standard
+SET(CMAKE_CXX_STANDARD 20)
 
 message(STATUS "Cipher Unit Tests Imported ${TEST_FILES}")
 foreach(testFile IN LISTS TEST_FILES)
