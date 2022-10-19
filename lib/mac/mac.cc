@@ -48,6 +48,8 @@ class alignas(16) Mac::Impl
                 break;
             case ALC_KEY_FMT_BASE64:
                 // TODO: For base64 conversions
+                return ALC_ERROR_NOT_SUPPORTED; // remove this return when above
+                                                // todo is resolved.
                 break;
             // TODO: Subsequest switch cases for other formats
             default:
