@@ -637,14 +637,14 @@ TEST(XTS_ERROR_TEST, valid_encrypt_decrypt_test)
 
         RngBase rb;
 
-        Uint8* plainText = (Uint8*)malloc(i);
-        rb.setRandomBytes(plainText, i);
+        std::vector<Uint8> plainText(i, 0);
+        plainText      = rb.genRandomBytes(i);
         Uint64 ct_size = i;
         Uint8* dest    = (Uint8*)malloc(i);
         // auto ctx = static_cast<Context*>(handler.ch_context);
 
         err = alcp_cipher_encrypt(
-            &handler, plainText, dest, ct_size, cinfo.ci_algo_info.ai_iv);
+            &handler, &(plainText[0]), dest, ct_size, cinfo.ci_algo_info.ai_iv);
 
         Uint8* pt = (Uint8*)malloc(i);
 
@@ -653,7 +653,7 @@ TEST(XTS_ERROR_TEST, valid_encrypt_decrypt_test)
 
         // FIXME: Dellocate ctx variable
         EXPECT_TRUE(err == ALC_ERROR_NONE);
-        EXPECT_TRUE(validateArrays(plainText, pt, i));
+        EXPECT_TRUE(validateArrays(&(plainText[0]), pt, i));
     }
 }
 
