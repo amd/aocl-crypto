@@ -342,6 +342,7 @@ AesCrosstest(int               keySize,
         INC_LOOP   = SMALL_INC_LOOP;
         size       = 1;
         if (useipp && isxts){
+            /* ipp max supported block size is 128 */
             MAX_LOOP = 128;
         }
     } else {
@@ -354,6 +355,7 @@ AesCrosstest(int               keySize,
     if (extTC != nullptr) {
         for (int i = LOOP_START; i < MAX_LOOP; i += INC_LOOP) {
             if (big_small == BIG) {
+                /* max size supported by XTS is 2 ^ 20 = 1048576 */
                 size = 524288;
             }
             if (!bbxreplay)
