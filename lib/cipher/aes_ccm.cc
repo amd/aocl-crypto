@@ -115,8 +115,7 @@ Ccm::cryptUpdate(const uint8_t* pInput,
 #ifndef NDEBUG
                 std::cout << "Init" << std::endl;
 #endif
-                // FIXME: TAG length hard coded to 4
-                aesni::CcmInit(&m_ccm_data, 4, 8, keys, rounds);
+                aesni::CcmInit(&m_ccm_data, m_tagLen, 8, keys, rounds);
 #ifndef NDEBUG
                 std::cout << "IV" << std::endl;
 #endif
@@ -140,9 +139,8 @@ Ccm::cryptUpdate(const uint8_t* pInput,
 #ifndef NDEBUG
                 std::cout << "Init" << std::endl;
 #endif
-                // FIXME: TAG length hard coded to 4
                 aesni::CcmInit(
-                    &m_ccm_data, 4, 8, getEncryptKeys(), getRounds());
+                    &m_ccm_data, m_tagLen, 8, getEncryptKeys(), getRounds());
 #ifndef NDEBUG
                 std::cout << "IV" << std::endl;
 #endif
@@ -165,15 +163,18 @@ Ccm::cryptUpdate(const uint8_t* pInput,
             err = ALC_ERROR_INVALID_SIZE;
             return err;
         }
+        // If tagLen is 0 that means it's a set call
+        if (m_tagLen == 0) {
+            m_tagLen = len;
+        } else {
+            bool ret = aesni::CcmGetTag(&m_ccm_data, pOutput, len);
 
-        m_tagLen = len;
-        bool ret = aesni::CcmGetTag(&m_ccm_data, pOutput, len);
-
-        if (ret == 0) {
-            std::cout << "TAG Error Occured!\n" << std::endl;
-            // Error::setDetail(err, ALC_ERROR_BAD_STATE);
-            err = ALC_ERROR_BAD_STATE;
-            return err;
+            if (ret == 0) {
+                std::cout << "TAG Error Occured!\n" << std::endl;
+                // Error::setDetail(err, ALC_ERROR_BAD_STATE);
+                err = ALC_ERROR_BAD_STATE;
+                return err;
+            }
         }
     }
     return err;

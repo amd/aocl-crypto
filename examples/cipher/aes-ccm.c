@@ -205,6 +205,14 @@ aclp_aes_ccm_encrypt_demo(
     const int   err_size = 256;
     uint8_t     err_buf[err_size];
 
+    // set tag length
+    err = alcp_cipher_encrypt_update(&handle, NULL, tag, tagLen, iv);
+    if (alcp_is_error(err)) {
+        printf("Error: unable getting tag \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
+
     // CCM init
     err = alcp_cipher_encrypt_update(&handle, NULL, NULL, ivLen, iv);
     if (alcp_is_error(err)) {
@@ -238,14 +246,14 @@ aclp_aes_ccm_encrypt_demo(
     }
 }
 
-/* GCM: Authenticated Decryption demo */
+/* CCM: Authenticated Decryption demo */
 void
-aclp_aes_gcm_decrypt_demo(const uint8_t* ciphertxt,
+aclp_aes_ccm_decrypt_demo(const uint8_t* ciphertxt,
                           const uint32_t len,
                           uint8_t*       plaintxt,
-                          uint8_t*       iv,
+                          const uint8_t* iv,
                           const uint32_t ivLen,
-                          uint8_t*       ad,
+                          const uint8_t* ad,
                           const uint32_t adLen,
                           uint8_t*       tag,
                           const uint32_t tagLen)
@@ -254,6 +262,14 @@ aclp_aes_gcm_decrypt_demo(const uint8_t* ciphertxt,
     const int   err_size = 256;
     uint8_t     err_buf[err_size];
     uint8_t     tagDecrypt[16];
+
+    // set tag length
+    err = alcp_cipher_decrypt_update(&handle, NULL, tagDecrypt, tagLen, iv);
+    if (alcp_is_error(err)) {
+        printf("Error: unable getting tag \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
 
     // GCM init
     err = alcp_cipher_decrypt_update(&handle, NULL, NULL, ivLen, iv);
@@ -349,7 +365,7 @@ main(void)
 
     // decrypt_demo(sample_ciphertxt, size, sample_output, sample_iv);
 
-    aclp_aes_gcm_decrypt_demo(sample_ciphertxt,
+    aclp_aes_ccm_decrypt_demo(sample_ciphertxt,
                               size,
                               sample_output,
                               sample_iv,
