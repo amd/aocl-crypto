@@ -97,9 +97,6 @@ __build_aes(const alc_cipher_algo_info_t& aesInfo,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    if (!Cfb::isSupported(aesInfo, keyInfo))
-        err = ALC_ERROR_NOT_SUPPORTED;
-
     if (!Error::isError(err)) {
         auto algo    = new CIPHERMODE(aesInfo, keyInfo);
         ctx.m_cipher = static_cast<void*>(algo);
@@ -118,42 +115,66 @@ __build_aes(const alc_cipher_algo_info_t& aesInfo,
 class AesBuilder
 {
   public:
-    static alc_error_t Build(const alc_cipher_algo_info_t&  aesInfo,
-                             const alc_key_info_t&          keyInfo,
-                             Context&                       ctx);
+    static alc_error_t Build(const alc_cipher_algo_info_t& aesInfo,
+                             const alc_key_info_t&         keyInfo,
+                             Context&                      ctx);
 };
 
 alc_error_t
-AesBuilder::Build(const alc_cipher_algo_info_t&  aesInfo,
-                  const alc_key_info_t&          keyInfo,
-                  Context&                       ctx)
+AesBuilder::Build(const alc_cipher_algo_info_t& aesInfo,
+                  const alc_key_info_t&         keyInfo,
+                  Context&                      ctx)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     switch (aesInfo.ai_mode) {
-        case ALC_AES_MODE_CFB:
+        case ALC_AES_MODE_CFB: {
+            if (!Cfb::isSupported(aesInfo, keyInfo)) {
+                err = ALC_ERROR_NOT_SUPPORTED;
+                return err;
+            };
             err = __build_aes<Cfb>(aesInfo, keyInfo, ctx);
-            break;
+        } break;
 
-        case ALC_AES_MODE_CBC:
+        case ALC_AES_MODE_CBC: {
+            if (!Cbc::isSupported(aesInfo, keyInfo)) {
+                err = ALC_ERROR_NOT_SUPPORTED;
+                return err;
+            };
             err = __build_aes<Cbc>(aesInfo, keyInfo, ctx);
-            break;
+        } break;
 
-        case ALC_AES_MODE_OFB:
+        case ALC_AES_MODE_OFB: {
+            if (!Ofb::isSupported(aesInfo, keyInfo)) {
+                err = ALC_ERROR_NOT_SUPPORTED;
+                return err;
+            };
             err = __build_aes<Ofb>(aesInfo, keyInfo, ctx);
-            break;
+        } break;
 
-        case ALC_AES_MODE_CTR:
+        case ALC_AES_MODE_CTR: {
+            if (!Ctr::isSupported(aesInfo, keyInfo)) {
+                err = ALC_ERROR_NOT_SUPPORTED;
+                return err;
+            };
             err = __build_aes<Ctr>(aesInfo, keyInfo, ctx);
-            break;
+        } break;
 
-        case ALC_AES_MODE_GCM:
+        case ALC_AES_MODE_GCM: {
+            if (!Gcm::isSupported(aesInfo, keyInfo)) {
+                err = ALC_ERROR_NOT_SUPPORTED;
+                return err;
+            };
             err = __build_aes<Gcm>(aesInfo, keyInfo, ctx);
-            break;
+        } break;
 
-        case ALC_AES_MODE_XTS:
+        case ALC_AES_MODE_XTS: {
+            if (!Xts::isSupported(aesInfo, keyInfo)) {
+                err = ALC_ERROR_NOT_SUPPORTED;
+                return err;
+            };
             err = __build_aes<Xts>(aesInfo, keyInfo, ctx);
-            break;
+        } break;
 
         default:
             Error::setGeneric(err, ALC_ERROR_NOT_SUPPORTED);
