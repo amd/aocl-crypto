@@ -6,3 +6,4 @@ TARGET_SOURCES(alcp
 		${DIGEST_SRCS}
 	)
 
+ADD_SUBDIRECTORY(tests)

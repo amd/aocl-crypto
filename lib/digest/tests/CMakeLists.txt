@@ -4,9 +4,9 @@ file(GLOB TEST_FILES "*.cc")
 # Bump up C++ standard
 SET(CMAKE_CXX_STANDARD 20)
 
-alcp_module("Cipher")
+alcp_module("Digest")
 
-message(STATUS "Cipher Unit Tests Imported ${TEST_FILES}")
+message(STATUS "Digest Unit Tests Imported ${TEST_FILES}")
 
 foreach(testFile IN LISTS TEST_FILES)
     get_filename_component(currentTestName ${testFile} NAME_WLE)
