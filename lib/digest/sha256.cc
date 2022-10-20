@@ -381,7 +381,7 @@ Sha256::setIv(const void* pIv, Uint64 size)
         Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
     }
 
-    if (size < cIvSize || size > cIvSize) {
+    if (size < cIvSize) {
         Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
     }
 
@@ -425,7 +425,7 @@ Sha256::copyHash(Uint8* pHash, Uint64 size) const
         Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
     }
 
-    if (size < cHashSize || size > cHashSize) {
+    if (size < cHashSize) {
         Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
     }
 

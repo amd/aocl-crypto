@@ -117,7 +117,7 @@ TEST(Sha256Test, zero_size_hash_copy_test)
     EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha256.copyHash(hash, 0));
 }
 
-TEST(Sha256Test, over_size_hash_copy_test)
+TEST(Sha256Test, DISABLED_over_size_hash_copy_test)
 {
     Sha256 sha256;
     Uint8 hash[DigestSize+1];
@@ -137,7 +137,7 @@ TEST(Sha256Test, zero_size_iv_test)
     EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha256.setIv(iv, 0));
 }
 
-TEST(Sha256Test, over_size_iv_test)
+TEST(Sha256Test, DISABLED_over_size_iv_test)
 {
     Sha256 sha256;
     Uint8 iv[IvSize+1];
