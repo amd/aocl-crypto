@@ -284,6 +284,8 @@ AesCrosstest(int               keySize,
     size_t      size = 1;
     std::string enc_dec_str, big_small_str;
     std::string MODE_STR = GetModeSTR(mode);
+    int32_t ivl, adl, tkeyl = 16;
+    int32_t IVL_START = 12, IVL_MAX = 16, ADL_START = 12, ADL_MAX = 16;
 
     bool        isxts = (MODE_STR.compare("XTS") == 0);
     bool        isgcm = (MODE_STR.compare("GCM") == 0);
@@ -361,17 +363,22 @@ AesCrosstest(int               keySize,
             if (!bbxreplay)
                 fr->startRecEvent();
 
+            /* generate multiple iv and adl */
+            ivl = IVL_START + (std::rand() % (IVL_START - IVL_MAX + 1));
+            adl = ADL_START + (std::rand() % (ADL_MAX - ADL_START + 1));
+
             alcp_data_ex_t     data_alc, data_ext;
-            std::vector<Uint8> pt(i*size, 0), ct(i*size, 0), key(key_size/8, 0), iv(12, 0), tkey(key_size / 8, 0), add(16,0), tag_alc(16, 0), tag_ext(16, 0),
+            std::vector<Uint8> pt(i * size, 0), ct(i * size, 0), key(key_size / 8, 0), 
+                iv(ivl, 0), tkey(key_size / 8, 0), add(adl, 0), tag_alc(16, 0), tag_ext(16, 0),
                 out_ct_alc(i * size, 0), out_ct_ext(i * size, 0), out_pt(i * size, 0);
 
             if (!bbxreplay) {
                 pt = rb.genRandomBytes(i * size);
                 ct = rb.genRandomBytes(i * size);
-                key = rb.genRandomBytes(key_size/8);
-                iv  = rb.genRandomBytes(12);
-                add = rb.genRandomBytes(16);
-                tkey = rb.genRandomBytes(key_size/8);
+                key = rb.genRandomBytes(key_size / 8);
+                iv  = rb.genRandomBytes(ivl);
+                add = rb.genRandomBytes(adl);
+                tkey = rb.genRandomBytes(key_size / 8);
 
                 // ALC/Main Lib Data
                 data_alc.m_in   = &(pt[0]);
@@ -388,9 +395,9 @@ AesCrosstest(int               keySize,
                 }
                 if (isxts) {
                     data_alc.m_tkey  = &(tkey[0]);
-                    data_alc.m_tkeyl = 16;
+                    data_alc.m_tkeyl = tkeyl;
                 }
-                
+
                 // External Lib Data
                 data_ext.m_in   = &(pt[0]);
                 data_ext.m_inl  = pt.size();
@@ -406,7 +413,7 @@ AesCrosstest(int               keySize,
                 }
                 if (isxts) {
                     data_ext.m_tkey  = &(tkey[0]);
-                    data_ext.m_tkeyl      = 16;
+                    data_ext.m_tkeyl      = tkeyl;
                     data_ext.m_block_size = ct.size();
                 }
                 if (enc_dec == ENCRYPT)
