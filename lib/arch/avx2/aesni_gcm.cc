@@ -66,7 +66,8 @@ InitGcm(const uint8_t* pKey,
     // Tag computation
     if ((ivBytes) == 12) {
         // iv
-        *piv_128 = _mm_loadu_si128((__m128i*)pIv);
+        //*piv_128 = _mm_loadu_si128((__m128i*)pIv);
+        utils::CopyBytes((Uint8*)piv_128, pIv, 12);
         // T= 96 bit iv : 32bit counter
         *ptag_128 = _mm_insert_epi32(*piv_128, 0x1000000, 3);
         aesni::AesEncrypt(ptag_128, pkey128, nRounds);
