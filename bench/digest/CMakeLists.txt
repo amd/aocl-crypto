@@ -10,6 +10,9 @@ FetchContent_MakeAvailable(benchmark)
 
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ../../tests/common/base/base_common.cc ../../tests/digest/base/alc_base.cc ../../tests/digest/base/base.cc)
 SET(LIBS ${LIBS} benchmark alcp)
+if (ALCP_USE_ASAN)
+    SET(LIBS ${LIBS} asan)
+endif()
 SET(EXTRA_INCLUDES "")
 
 IF(ENABLE_TESTS_IPP_API)

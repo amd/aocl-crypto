@@ -13,7 +13,6 @@ IF(POLICY CMP0079)
     CMAKE_POLICY(SET CMP0079 NEW)
 ENDIF()
 
-
 string(TIMESTAMP ALC_BUILD_VERSION "AOCL-Crypto ${AOCL_RELEASE_VERSION} Build %Y%m%d")
 ADD_COMPILE_OPTIONS("-DVERSION_STRING=\"${ALC_BUILD_VERSION}\"")
 
@@ -55,6 +54,19 @@ SET (ALCP_CFLAGS_DEBUG
     "-ggdb"
 	CACHE INTERNAL ""
 )
+
+# add these cflags if ASAN is used
+if (ALCP_USE_ASAN)
+	if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    	SET(ALCP_CFLAGS ${ALCP_CFLAGS}
+		-static-libasan -fsanitize=address
+		CACHE INTERNAL "")
+	elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+		SET(ALCP_CFLAGS_DEBUG ${ALCP_CFLAGS_DEBUG}
+		-static-libasan -fsanitize=address
+		CACHE INTERNAL "")
+	endif()
+endif()
 
 IF (MSVC)
 	ADD_COMPILE_OPTIONS(/W3 /WX)

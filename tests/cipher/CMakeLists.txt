@@ -8,6 +8,12 @@ FetchContent_MakeAvailable(gtest)
 # Basic sources and libs needed for ALCP
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ../common/base/rng_base.cc ../common/base/base_common.cc base/alc_base.cc base/base.cc)
 SET(LIBS ${LIBS} gtest alcp)
+
+# add this if asan is used
+if (ALCP_USE_ASAN)
+    SET(LIBS ${LIBS} asan)
+endif()
+
 SET(EXTRA_INCLUDES "")
 
 IF(ENABLE_TESTS_IPP_API)
