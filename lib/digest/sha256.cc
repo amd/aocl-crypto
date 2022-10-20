@@ -375,7 +375,20 @@ Sha256::~Sha256() {}
 alc_error_t
 Sha256::setIv(const void* pIv, Uint64 size)
 {
-    return pImpl()->setIv(pIv, size);
+    alc_error_t err = ALC_ERROR_NONE;
+
+    if (pIv == nullptr) {
+        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+    }
+
+    if (size < cIvSize || size > cIvSize) {
+        Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
+    }
+
+    if (!alcp_is_error(err))
+        err = pImpl()->setIv(pIv, size);
+
+    return err;
 }
 
 alc_error_t
@@ -412,7 +425,7 @@ Sha256::copyHash(Uint8* pHash, Uint64 size) const
         Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
     }
 
-    if (size < cHashSize) {
+    if (size < cHashSize || size > cHashSize) {
         Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
     }
 

@@ -91,7 +91,7 @@ Error::setGeneric(alc_error_t& err, alc_error_generic_t gen)
     e.m_data.value          = err;
     e.m_data.fields.general = gen;
 
-    err = e.m_data.value;
+    err = e.m_data.fields.general;
 }
 
 void

@@ -67,7 +67,8 @@ class Sha256 final : public Sha2
         cChunkSizeWords = cChunkSizeBits / cWordSizeBits, /* same in words */
         cHashSizeBits   = 256,                            /* same in bits */
         cHashSize       = cHashSizeBits / 8, /* Hash size in bytes */
-        cHashSizeWords  = cHashSizeBits / cWordSizeBits;
+        cHashSizeWords  = cHashSizeBits / cWordSizeBits,
+        cIvSize         = 8;
 
   public:
     Sha256();
