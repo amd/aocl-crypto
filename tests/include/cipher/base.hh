@@ -213,13 +213,7 @@ class CipherBase
                       const Uint32 key_len,
                       const Uint8* tkey,
                       const Uint64 block_size)                = 0;
-    virtual bool encrypt(const Uint8* plaintxt,
-                         size_t       len,
-                         Uint8*       ciphertxt)                    = 0;
     virtual bool encrypt(alcp_data_ex_t data)                 = 0;
-    virtual bool decrypt(const Uint8* ciphertxt,
-                         size_t       len,
-                         Uint8*       plaintxt)                     = 0;
     virtual bool decrypt(alcp_data_ex_t data)                 = 0;
     virtual void reset()                                      = 0;
     virtual ~CipherBase(){};
@@ -234,17 +228,6 @@ class CipherTesting
     CipherTesting() {}
     CipherTesting(CipherBase* impl);
     /**
-     * @brief Encrypts the data and returns the vector.
-     *
-     * @param plaintext - Data to encrypt.
-     * @param key - Key for ecryption.
-     * @param iv - IV for encryption.
-     * @return std::vector<Uint8>
-     */
-    std::vector<Uint8> testingEncrypt(const std::vector<Uint8> plaintext,
-                                      const std::vector<Uint8> key,
-                                      const std::vector<Uint8> iv);
-    /**
      * @brief Encrypts data and puts in data.out, expects data.out to already
      * have valid memory pointer with appropriate size
      *
@@ -255,17 +238,7 @@ class CipherTesting
      * @return false
      */
     bool testingEncrypt(alcp_data_ex_t data, const std::vector<Uint8> key);
-    /**
-     * @brief Decrypts the data and returns the vector.
-     *
-     * @param ciphertext - Data to decrypt.
-     * @param key - Key used for encryption of ciphertext.
-     * @param iv  - IV used for encryption.
-     * @return std::vector<Uint8>
-     */
-    std::vector<Uint8> testingDecrypt(const std::vector<Uint8> ciphertext,
-                                      const std::vector<Uint8> key,
-                                      const std::vector<Uint8> iv);
+
     /**
      * @brief Decrypts data and puts in data.out, expects data.out to already
      * have valid memory point with appropriate size

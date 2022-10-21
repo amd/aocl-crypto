@@ -477,27 +477,6 @@ CipherTesting::CipherTesting(CipherBase* impl)
 {
     setcb(impl);
 }
-std::vector<Uint8>
-CipherTesting::testingEncrypt(const std::vector<Uint8> plaintext,
-                              const std::vector<Uint8> key,
-                              const std::vector<Uint8> iv)
-{
-    if (cb != nullptr) {
-        if (cb->init(&iv[0], &key[0], key.size() * 8)) {
-            // For very large sizes, dynamic is better.
-            Uint8* ciphertext = new Uint8[plaintext.size()];
-            cb->encrypt(&(plaintext[0]), plaintext.size(), ciphertext);
-            std::vector<Uint8> vt =
-                std::vector<Uint8>(ciphertext, ciphertext + plaintext.size());
-            delete[] ciphertext;
-            return vt;
-        }
-    } else {
-        std::cout << "base.hh: CipherTesting: Implementation missing!"
-                  << std::endl;
-    }
-    return {};
-}
 
 bool
 CipherTesting::testingEncrypt(alcp_data_ex_t data, const std::vector<Uint8> key)
@@ -517,28 +496,6 @@ CipherTesting::testingEncrypt(alcp_data_ex_t data, const std::vector<Uint8> key)
                   << std::endl;
     }
     return false;
-}
-
-std::vector<Uint8>
-CipherTesting::testingDecrypt(const std::vector<Uint8> ciphertext,
-                              const std::vector<Uint8> key,
-                              const std::vector<Uint8> iv)
-{
-    if (cb != nullptr) {
-        if (cb->init(&iv[0], &key[0], key.size() * 8)) {
-            // For very large sizes, dynamic is better.
-            Uint8* plaintext = new Uint8[ciphertext.size()];
-            cb->decrypt(&ciphertext[0], ciphertext.size(), plaintext);
-            std::vector<Uint8> vt =
-                std::vector<Uint8>(plaintext, plaintext + ciphertext.size());
-            delete[] plaintext;
-            return vt;
-        }
-    } else {
-        std::cout << "base.hh: CipherTesting: Implementation missing!"
-                  << std::endl;
-    }
-    return {};
 }
 
 bool

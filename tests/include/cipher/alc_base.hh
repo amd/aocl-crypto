@@ -45,7 +45,6 @@ class AlcpCipherBase : public CipherBase
     alc_cipher_mode_t   m_mode;
     const Uint8*        m_iv;
     const Uint8*        m_tkey = nullptr;
-    // Uint64            m_block_size;
 
   public:
     AlcpCipherBase() {}
@@ -110,9 +109,7 @@ class AlcpCipherBase : public CipherBase
               const Uint32 key_len);
     bool init(const Uint8* iv, const Uint8* key, const Uint32 key_len);
     bool init(const Uint8* key, const Uint32 key_len);
-    bool encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt);
     bool encrypt(alcp_data_ex_t data);
-    bool decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt);
     bool decrypt(alcp_data_ex_t data);
     void reset();
 };

@@ -187,23 +187,6 @@ out:
 }
 
 bool
-AlcpCipherBase::encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt)
-{
-    alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
-
-    /* Encrypt Data */
-    err = alcp_cipher_encrypt(m_handle, plaintxt, ciphertxt, len, m_iv);
-    if (alcp_is_error(err)) {
-        printf("Error: unable to encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
-    }
-    return true;
-}
-
-bool
 AlcpCipherBase::encrypt(alcp_data_ex_t data)
 {
     alc_error_t err;
@@ -258,23 +241,6 @@ enc_out:
     alcp_error_str(err, err_buff, err_size);
     std::cout << "Error:" << err_buff << std::endl;
     return false;
-}
-
-bool
-AlcpCipherBase::decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt)
-{
-    alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
-
-    /* Decrypt Data */
-    err = alcp_cipher_decrypt(m_handle, ciphertxt, plaintxt, len, m_iv);
-    if (alcp_is_error(err)) {
-        printf("Error: unable decrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
-    }
-    return true;
 }
 
 bool
