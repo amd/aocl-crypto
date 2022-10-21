@@ -163,6 +163,7 @@ TEST_P(CCM_KAT, Encrypt)
     std::vector<Uint8> out_tag(tag.size(), 0),
         out_ciphertext(plaintext.size(), 0);
 
+    /* Initialization */
     const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_CCM,
                                              .ai_iv   = &(nonce.at(0)) };
     // clang-format off
@@ -171,15 +172,24 @@ TEST_P(CCM_KAT, Encrypt)
                                      .len  = static_cast<Uint32>(key.size()*8),
                                      .key  = &(key.at(0)) };
     // clang-format on
-    Ccm         ccm_obj = Ccm(aesInfo, keyInfo);
+    Ccm ccm_obj = Ccm(aesInfo, keyInfo);
+
     alc_error_t err;
+    /* Encryption begins here */
+    if (!tag.empty()) {
+        err = ccm_obj.encryptUpdate(
+            nullptr, &(out_tag.at(0)), tag.size(), &(nonce.at(0)));
+    }
+    // Nonce
     err = ccm_obj.encryptUpdate(nullptr, nullptr, nonce.size(), &(nonce.at(0)));
     EXPECT_EQ(err, ALC_ERROR_NONE);
+    // Additional Data
     if (!aad.empty()) {
         err = ccm_obj.encryptUpdate(
             &(aad.at(0)), nullptr, aad.size(), &(nonce.at(0)));
         EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
     }
+    // Encrypt the plaintext into ciphertext.
     if (!plaintext.empty()) {
         err = ccm_obj.encryptUpdate(&(plaintext.at(0)),
                                     &(out_ciphertext.at(0)),
@@ -187,10 +197,12 @@ TEST_P(CCM_KAT, Encrypt)
                                     &(nonce.at(0)));
         EXPECT_TRUE(ArraysMatch(out_ciphertext, ciphertext));
     } else {
+        // Call encrypt update with a valid memory if no plaintext
         Uint8 a;
         err = ccm_obj.encryptUpdate(&a, &a, 0, &(nonce.at(0)));
     }
     EXPECT_EQ(err, ALC_ERROR_NONE);
+    // If there is tag, try to get the tag.
     if (!tag.empty()) {
         printf("tagLen:%ld\n", tag.size());
         err = ccm_obj.encryptUpdate(
@@ -214,6 +226,7 @@ TEST_P(CCM_KAT, Decrypt)
     std::vector<Uint8> out_tag(tag.size(), 0),
         out_plaintext(ciphertext.size(), 0);
 
+    /* Initialization */
     const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_CCM,
                                              .ai_iv   = &(nonce.at(0)) };
     // clang-format off
@@ -224,13 +237,21 @@ TEST_P(CCM_KAT, Decrypt)
     // clang-format on
     Ccm         ccm_obj = Ccm(aesInfo, keyInfo);
     alc_error_t err;
+    /* Decryption begins here*/
+    if (!tag.empty()) {
+        err = ccm_obj.decryptUpdate(
+            nullptr, &(out_tag.at(0)), tag.size(), &(nonce.at(0)));
+    }
+    // Nonce
     err = ccm_obj.decryptUpdate(nullptr, nullptr, nonce.size(), &(nonce.at(0)));
     EXPECT_EQ(err, ALC_ERROR_NONE);
+    // Additional Data
     if (!aad.empty()) {
         err = ccm_obj.decryptUpdate(
             &(aad.at(0)), nullptr, aad.size(), &(nonce.at(0)));
         EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
     }
+    // Decrypt the ciphertext into plaintext
     if (!ciphertext.empty()) {
         err = ccm_obj.decryptUpdate(&(ciphertext.at(0)),
                                     &(out_plaintext.at(0)),
@@ -238,12 +259,13 @@ TEST_P(CCM_KAT, Decrypt)
                                     &(nonce.at(0)));
         EXPECT_TRUE(ArraysMatch(out_plaintext, plaintext));
     } else {
+        // Call decrypt update with a valid memory if no plaintext
         Uint8 a;
         err = ccm_obj.decryptUpdate(&a, &a, 0, &(nonce.at(0)));
     }
     EXPECT_EQ(err, ALC_ERROR_NONE);
+    // If there is tag, try to get the tag.
     if (!tag.empty()) {
-        printf("tagLen:%ld\n", tag.size());
         err = ccm_obj.decryptUpdate(
             nullptr, &(out_tag.at(0)), tag.size(), &(nonce.at(0)));
         if (test_name.at(0) == 'P')
@@ -290,6 +312,7 @@ INSTANTIATE_TEST_SUITE_P(
 //     EXPECT_EQ(err,ALC_ERROR_INVALID_SIZE);
 // }
 
+#if 0
 int
 main(int argc, char** argv)
 {
@@ -310,3 +333,4 @@ main(int argc, char** argv)
     listeners.Append(listener);
     return RUN_ALL_TESTS();
 }
+#endif
