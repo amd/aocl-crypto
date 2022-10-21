@@ -39,6 +39,12 @@ $ cmake -DAOCL_CPUID_INSTALL_DIR=path/to/aocl/cpuid/source ../
 $ cmake -DCMAKE_BUILD_TYPE=DEBUG ../
 ```
 
+## For compiling with Address Sanitizer support
+
+```sh
+$ Add argument -DALCP_USE_ASAN=ON
+```
+
 ## To build test bench
 
 ```sh
