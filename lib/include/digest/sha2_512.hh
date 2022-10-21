@@ -33,6 +33,7 @@
 
 namespace alcp::digest {
 
+/* TODO: Add pImpl support as done in sha256 */
 class Sha512 final : public Sha2
 {
   public:
@@ -44,13 +45,12 @@ class Sha512 final : public Sha2
         cChunkSizeWords = cChunkSizeBits / cWordSizeBits, /* same in words */
         cHashSizeBits   = 512,                            /* same in bits */
         cHashSize       = cHashSizeBits / 8, /* Hash size in bytes */
-        cHashSizeWords  = cHashSizeBits / cWordSizeBits;
+        cHashSizeWords  = cHashSizeBits / cWordSizeBits,
+        cIvSizeBytes    = 64; /* IV size in bytes */
 
   public:
     Sha512();
     Sha512(const alc_digest_info_t& rDigestInfo);
-
-  private:
     virtual ~Sha512();
 
   public:

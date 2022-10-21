@@ -32,6 +32,8 @@
 #include "alcp/digest.h"
 
 #define NUM_IP_CHUNKS 10
+#define DIGEST_SIZE 32
+
 static alc_digest_handle_t s_dg_handle;
 
 static alc_error_t
@@ -96,10 +98,10 @@ out:
 }
 
 static void
-hash_to_string(char string[65], const uint8_t hash[32])
+hash_to_string(char string[65], const uint8_t hash[DIGEST_SIZE])
 {
     size_t i;
-    for (i = 0; i < 32; i++) {
+    for (i = 0; i < DIGEST_SIZE; i++) {
         string += sprintf(string, "%02x", hash[i]);
     }
     string[65] = '\0';
@@ -137,7 +139,7 @@ main(void)
 
     char* expected_output;
 
-    uint8_t sample_output[512] = { 0 };
+    uint8_t sample_output[DIGEST_SIZE] = { 0 };
 
     char output_string[65];
 

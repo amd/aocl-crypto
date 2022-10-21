@@ -68,7 +68,7 @@ class Sha256 final : public Sha2
         cHashSizeBits   = 256,                            /* same in bits */
         cHashSize       = cHashSizeBits / 8, /* Hash size in bytes */
         cHashSizeWords  = cHashSizeBits / cWordSizeBits,
-        cIvSize         = 8;
+        cIvSizeBytes         = 32; /* IV size in bytes */
 
   public:
     Sha256();

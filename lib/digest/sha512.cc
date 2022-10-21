@@ -121,9 +121,22 @@ Sha512::~Sha512() {}
 alc_error_t
 Sha512::setIv(const void* pIv, Uint64 size)
 {
-    utils::CopyBytes(m_hash, pIv, size);
+    alc_error_t err = ALC_ERROR_NONE;
 
-    return ALC_ERROR_NONE;
+    if (!pIv) {
+        printf("%lu", size);
+        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+        return err;
+    }
+
+    if (size != cIvSizeBytes) {
+        Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
+    }
+    
+    if (!alcp_is_error(err))
+        utils::CopyBytes(m_hash, pIv, size);
+
+    return err;
 }
 
 void
@@ -140,11 +153,12 @@ Sha512::copyHash(Uint8* pHash, Uint64 size) const
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    if (pHash == nullptr) {
+    if (!pHash) {
         Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+        return err;
     }
 
-    if (size < cHashSize) {
+    if (size != cHashSize) {
         Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
     }
 
