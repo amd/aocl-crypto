@@ -87,6 +87,7 @@ namespace alcp::cipher {
 /* Message size, key size, etc */
 enum BlockSize : Uint32
 {
+    eBits0   = 0,
     eBits128 = 128,
     eBits192 = 192,
     eBits256 = 256,
@@ -123,7 +124,9 @@ BitsToBlockSize(int iVal)
             case 128: bs = eBits128; break;
             case 192: bs = eBits192; break;
             case 256: bs = eBits256; break;
-            default:  assert(false); break;
+            default:
+                bs = eBits0;  
+                assert(false); break;
         }
     // clang-format on
     return bs;
