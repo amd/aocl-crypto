@@ -166,6 +166,7 @@ TEST_P(CCM_KAT, Encrypt)
     /* Initialization */
     const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_CCM,
                                              .ai_iv   = &(nonce.at(0)) };
+
     // clang-format off
     const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
                                      .fmt  = ALC_KEY_FMT_RAW,
@@ -180,15 +181,18 @@ TEST_P(CCM_KAT, Encrypt)
         err = ccm_obj.encryptUpdate(
             nullptr, &(out_tag.at(0)), tag.size(), &(nonce.at(0)));
     }
+
     // Nonce
     err = ccm_obj.encryptUpdate(nullptr, nullptr, nonce.size(), &(nonce.at(0)));
     EXPECT_EQ(err, ALC_ERROR_NONE);
+
     // Additional Data
     if (!aad.empty()) {
         err = ccm_obj.encryptUpdate(
             &(aad.at(0)), nullptr, aad.size(), &(nonce.at(0)));
         EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
     }
+
     // Encrypt the plaintext into ciphertext.
     if (!plaintext.empty()) {
         err = ccm_obj.encryptUpdate(&(plaintext.at(0)),
@@ -202,9 +206,9 @@ TEST_P(CCM_KAT, Encrypt)
         err = ccm_obj.encryptUpdate(&a, &a, 0, &(nonce.at(0)));
     }
     EXPECT_EQ(err, ALC_ERROR_NONE);
+
     // If there is tag, try to get the tag.
     if (!tag.empty()) {
-        printf("tagLen:%ld\n", tag.size());
         err = ccm_obj.encryptUpdate(
             nullptr, &(out_tag.at(0)), tag.size(), &(nonce.at(0)));
         if (test_name.at(0) == 'P')
@@ -237,20 +241,24 @@ TEST_P(CCM_KAT, Decrypt)
     // clang-format on
     Ccm         ccm_obj = Ccm(aesInfo, keyInfo);
     alc_error_t err;
+
     /* Decryption begins here*/
     if (!tag.empty()) {
         err = ccm_obj.decryptUpdate(
             nullptr, &(out_tag.at(0)), tag.size(), &(nonce.at(0)));
     }
+
     // Nonce
     err = ccm_obj.decryptUpdate(nullptr, nullptr, nonce.size(), &(nonce.at(0)));
     EXPECT_EQ(err, ALC_ERROR_NONE);
+
     // Additional Data
     if (!aad.empty()) {
         err = ccm_obj.decryptUpdate(
             &(aad.at(0)), nullptr, aad.size(), &(nonce.at(0)));
         EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
     }
+
     // Decrypt the ciphertext into plaintext
     if (!ciphertext.empty()) {
         err = ccm_obj.decryptUpdate(&(ciphertext.at(0)),
@@ -264,6 +272,7 @@ TEST_P(CCM_KAT, Decrypt)
         err = ccm_obj.decryptUpdate(&a, &a, 0, &(nonce.at(0)));
     }
     EXPECT_EQ(err, ALC_ERROR_NONE);
+
     // If there is tag, try to get the tag.
     if (!tag.empty()) {
         err = ccm_obj.decryptUpdate(
@@ -284,33 +293,58 @@ INSTANTIATE_TEST_SUITE_P(
         return info.param.first;
     });
 
-// TEST(CCM, InvalidTagLen)
-// {
-//     Uint8  iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
-//     Uint8  key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-//                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-//     Uint8  tagbuff[14];
-//     char*  ad        = "This is a sample additional data";
-//     char*  message   = "This is a sample message to encrypt!";
-//     Uint8* output_ct = new Uint8[strlen(message)];
-//     const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_CCM,
-//                                              .ai_iv   = iv };
-//     // clang-format off
-//     const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-//                                      .fmt  = ALC_KEY_FMT_RAW,
-//                                      .len  = 128,
-//                                      .key  = key };
-//     Ccm                  ccm_obj = Ccm(aesInfo, keyInfo);
-//     alc_error_t err;
-//     err = ccm_obj.encryptUpdate(nullptr,nullptr,0,iv);
-//     EXPECT_EQ(err,ALC_ERROR_INVALID_SIZE);
-//     err = ccm_obj.encryptUpdate(reinterpret_cast<Uint8 *>(ad),
-//     nullptr,0,iv); EXPECT_EQ(err,ALC_ERROR_INVALID_SIZE); err =
-//     ccm_obj.encryptUpdate(reinterpret_cast<Uint8
-//     *>(message),output_ct,0,iv); EXPECT_EQ(err,ALC_ERROR_INVALID_SIZE);
-//     err = ccm_obj.encryptUpdate(nullptr,tagbuff,0,iv);
-//     EXPECT_EQ(err,ALC_ERROR_INVALID_SIZE);
-// }
+TEST(CCM, InvalidTagLen)
+{
+    Uint8              iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
+    Uint8              key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+    Uint8              tagbuff[17];
+    std::vector<Uint8> out_tag(sizeof(tagbuff), 0);
+    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_CCM,
+                                             .ai_iv   = iv };
+    // clang-format off
+    const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
+                                     .fmt  = ALC_KEY_FMT_RAW,
+                                     .len  = 128,
+                                     .key  = key };
+    Ccm                  ccm_obj = Ccm(aesInfo, keyInfo);
+    alc_error_t err;
+
+    // TODO: Create a parametrized test
+    err = ccm_obj.decryptUpdate(
+            nullptr, &(out_tag.at(0)), out_tag.size(), iv);
+    EXPECT_EQ(err,ALC_ERROR_INVALID_SIZE);
+
+}
+
+TEST(CCM, InvalidNonceLen)
+{
+    Uint8              iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
+    Uint8              key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+    Uint8              tagbuff[16];
+    std::vector<Uint8> out_tag(sizeof(tagbuff), 0);
+    std::vector<Uint8> nonce(14,0);
+    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_CCM,
+                                             .ai_iv   = iv };
+    // clang-format off
+    const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
+                                     .fmt  = ALC_KEY_FMT_RAW,
+                                     .len  = 128,
+                                     .key  = key };
+    Ccm                  ccm_obj = Ccm(aesInfo, keyInfo);
+    alc_error_t err;
+
+    // TODO: Create a parametrized test
+    err = ccm_obj.decryptUpdate(
+            nullptr, &(out_tag.at(0)), out_tag.size(), iv);
+    
+    EXPECT_EQ(err,ALC_ERROR_NONE);
+
+    // Nonce
+    err = ccm_obj.decryptUpdate(nullptr, nullptr, nonce.size(), &(nonce.at(0)));
+    EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
+}
 
 #if 0
 int

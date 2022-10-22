@@ -67,7 +67,7 @@ Ccm::cryptUpdate(const uint8_t* pInput,
         // Ccm init call
         // len is used as ivlen
         // In init call, we generate HashSubKey, partial tag data.
-        if (len == 0) {
+        if (len == 0 || len < 7 || len > 13) {
             err = ALC_ERROR_INVALID_SIZE;
             return err;
         }
@@ -129,9 +129,8 @@ Ccm::cryptUpdate(const uint8_t* pInput,
             }
         }
     } else if ((pInput == NULL) && (pOutput != NULL)) {
-        if (len == 0) {
-            err = ALC_ERROR_INVALID_SIZE;
-            return err;
+        if (len < 4 || len > 16 || len == 0) {
+            return ALC_ERROR_INVALID_SIZE;
         }
         // If tagLen is 0 that means it's a set call
         if (m_tagLen == 0) {
