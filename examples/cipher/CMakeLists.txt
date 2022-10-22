@@ -9,3 +9,4 @@ ADD_EXECUTABLE(aes-demo aes-demo.c)
 
 ADD_EXECUTABLE(aes-xts aes-xts.c)
 
+ADD_EXECUTABLE(aes-ccm aes-ccm.c)
