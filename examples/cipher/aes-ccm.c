@@ -115,9 +115,7 @@ decrypt_demo(const uint8_t* ciphertxt,
     printf("decrypt succeeded\n");
 }
 
-// static char* sample_plaintxt = "Hello World from AOCL Crypto !!!";
-static char* sample_plaintxt =
-    "Happy and Fantastic Christmas from AOCL Crypto !!";
+static char* sample_plaintxt = "Happy and Fantastic Diwali from AOCL Crypto !!";
 
 static const uint8_t sample_key[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
@@ -129,19 +127,9 @@ static const uint8_t sample_iv[] = { 0xf, 0xe, 0xd, 0xc, 0xb, 0xa, 0x9 };
 static const uint8_t* sample_ad =
     "Hello World, this is a sample AAD, there can be a large value for AAD";
 
-#if 0
-/*
- * Encrypted text of "Hello World from AOCL Crypto !!!"
- * with key = {00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 0a, 0b, 0c, 0d, 0e, 0f};
- * with iv = {00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 0a, 0b, 0c, 0d, 0e, 0f};
- */
-
-static uint8_t cipher = {68,cc,95,fe,db,6c,0c,87,76,73,98,fc,0a,dc,f6,07,9e,33,17,75,ad,0a,eb,27,66,29,f3,9e,b6,8d,1f,05};
-#else
 static uint8_t sample_ciphertxt[512] = {
     0,
 };
-#endif
 
 #define BITS_PER_BYTE 8
 
@@ -341,12 +329,6 @@ main(void)
                               sample_tag_output,
                               14);
 
-    // encrypt_demo(
-    //     sample_plaintxt,
-    //     strlen(sample_plaintxt), /* len of 'plaintxt' and 'ciphertxt' */
-    //     sample_ciphertxt,
-    //     sample_iv);
-
     int size = strlen(sample_plaintxt);
 
     char* hex_sample_output =
@@ -363,8 +345,6 @@ main(void)
     free(hex_sample_input);
     free(hex_sample_tag_output);
 
-    // decrypt_demo(sample_ciphertxt, size, sample_output, sample_iv);
-
     aclp_aes_ccm_decrypt_demo(sample_ciphertxt,
                               size,
                               sample_output,
@@ -376,6 +356,7 @@ main(void)
                               14);
 
     printf("sample_output: %s\n", sample_output);
+
     // /*
     //  * Complete the transaction
     //  */

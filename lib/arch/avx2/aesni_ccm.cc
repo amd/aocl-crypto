@@ -192,19 +192,13 @@ bytesToHexString(Uint8* bytes, int length)
 }
 
 namespace alcp::cipher { namespace aesni {
-    void CcmInit(ccm_data_p   ccm_data,
-                 unsigned int t,
-                 unsigned int q,
-                 const Uint8* key,
-                 const Uint32 rounds)
+    void CcmInit(ccm_data_p ccm_data, unsigned int t, unsigned int q)
     {
         ENTER();
         memset(ccm_data->nonce, 0, sizeof(ccm_data->nonce));
         ccm_data->nonce[0] =
             ((Uint8)(q - 1) & 7) | (Uint8)(((t - 2) / 2) & 7) << 3;
         ccm_data->blocks = 0;
-        ccm_data->key    = key;
-        ccm_data->rounds = rounds;
         EXIT();
     }
 

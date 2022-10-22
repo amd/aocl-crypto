@@ -146,11 +146,7 @@ namespace alcp::cipher { namespace aesni {
      * @param key - Key used for encryption
      * @param block
      */
-    void CcmInit(ccm_data_p   ctx,
-                 unsigned int t,
-                 unsigned int q,
-                 const Uint8* key,
-                 const Uint32 rounds);
+    void CcmInit(ccm_data_p ctx, unsigned int t, unsigned int q);
 
     int CcmSetIv(ccm_data_p ctx, const Uint8* nonce, size_t nlen, size_t mlen);
 

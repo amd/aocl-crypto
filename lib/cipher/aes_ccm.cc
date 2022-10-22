@@ -62,24 +62,29 @@ Ccm::cryptUpdate(const uint8_t* pInput,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    /*  Follow in Ccm:
-     *  InitCcm -> processAdditionalDataCcm ->CryptCcm-> GetTagCcm */
-
     // Ccm init, both input and output pointers are NULL
     if ((pInput == NULL) && (pOutput == NULL)) {
         // Ccm init call
         // len is used as ivlen
         // In init call, we generate HashSubKey, partial tag data.
         if (len == 0) {
-            // Error::setDetail(err, ALC_ERROR_INVALID_SIZE);
             err = ALC_ERROR_INVALID_SIZE;
             return err;
         }
         m_ivLen = len;
+
+        // Initialize ccm_data
+        m_ccm_data.blocks = 0;
+        m_ccm_data.key    = nullptr;
+        m_ccm_data.rounds = 0;
+        memset(m_ccm_data.cmac, 0, 16);
+        memset(m_ccm_data.nonce, 0, 16);
+        // 8 is the length required to store length of plain text.
+        aesni::CcmInit(&m_ccm_data, m_tagLen, 8);
+
     } else if ((pInput != NULL) && (pOutput == NULL)) {
         // additional data processing, when input is additional data &
         if (len == 0) {
-            // Error::setDetail(err, ALC_ERROR_INVALID_SIZE);
             err = ALC_ERROR_INVALID_SIZE;
             return err;
         }
@@ -99,67 +104,32 @@ Ccm::cryptUpdate(const uint8_t* pInput,
                 isAvx512Cap = true;
             }
         }
+
         // FIXME: Convincing compiler to not complain
         isAvx512Cap = isAvx512Cap;
 
-        if (Cipher::isAesniAvailable()) {
-            const Uint8* keys   = getEncryptKeys();
-            const Uint32 rounds = getRounds();
+        const Uint8* keys   = getEncryptKeys();
+        const Uint32 rounds = getRounds();
+        m_ccm_data.key      = keys;
+        m_ccm_data.rounds   = rounds;
 
+        if (Cipher::isAesniAvailable()) {
+
+            // Below operations has to be done in order.
             if (isEncrypt) {
-                m_ccm_data.blocks = 0;
-                m_ccm_data.key    = nullptr;
-                m_ccm_data.rounds = 0;
-                memset(m_ccm_data.cmac, 0, 16);
-                memset(m_ccm_data.nonce, 0, 16);
-#ifndef NDEBUG
-                std::cout << "Init" << std::endl;
-#endif
-                aesni::CcmInit(&m_ccm_data, m_tagLen, 8, keys, rounds);
-#ifndef NDEBUG
-                std::cout << "IV" << std::endl;
-#endif
                 aesni::CcmSetIv(&m_ccm_data, pIv, m_ivLen, len);
-#ifndef NDEBUG
-                std::cout << "AAD" << std::endl;
-#endif
                 aesni::CcmSetAad(
                     &m_ccm_data, m_additionalData, m_additionalDataLen);
-#ifndef NDEBUG
-                std::cout << "ENC" << std::endl;
-#endif
                 aesni::CcmEncrypt(&m_ccm_data, pInput, pOutput, len);
             } else {
-                m_ccm_data.blocks = 0;
-                m_ccm_data.key    = nullptr;
-                m_ccm_data.rounds = 0;
-                memset(m_ccm_data.cmac, 0, 16);
-                memset(m_ccm_data.nonce, 0, 16);
-
-#ifndef NDEBUG
-                std::cout << "Init" << std::endl;
-#endif
-                aesni::CcmInit(
-                    &m_ccm_data, m_tagLen, 8, getEncryptKeys(), getRounds());
-#ifndef NDEBUG
-                std::cout << "IV" << std::endl;
-#endif
                 aesni::CcmSetIv(&m_ccm_data, pIv, m_ivLen, len);
-#ifndef NDEBUG
-                std::cout << "AAD" << std::endl;
-#endif
                 aesni::CcmSetAad(
                     &m_ccm_data, m_additionalData, m_additionalDataLen);
-#ifndef NDEBUG
-                std::cout << "DEC" << std::endl;
-#endif
                 aesni::CcmDecrypt(&m_ccm_data, pInput, pOutput, len);
             }
         }
     } else if ((pInput == NULL) && (pOutput != NULL)) {
-        std::cout << "TAG" << std::endl;
         if (len == 0) {
-            // Error::setDetail(err, ALC_ERROR_INVALID_SIZE);
             err = ALC_ERROR_INVALID_SIZE;
             return err;
         }
@@ -170,8 +140,6 @@ Ccm::cryptUpdate(const uint8_t* pInput,
             bool ret = aesni::CcmGetTag(&m_ccm_data, pOutput, len);
 
             if (ret == 0) {
-                std::cout << "TAG Error Occured!\n" << std::endl;
-                // Error::setDetail(err, ALC_ERROR_BAD_STATE);
                 err = ALC_ERROR_BAD_STATE;
                 return err;
             }
