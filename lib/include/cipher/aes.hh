@@ -433,6 +433,122 @@ class Gcm final
   private:
 };
 
+/**
+ * @brief CCM mode (Copy of GCM class)
+ * Uses encryptUpdate and decryptUpdate instead of
+ * encrypt and decrypt.
+ */
+
+struct _ccm_data_t
+{
+    alignas(16) Uint8 nonce[16];
+    alignas(16) Uint8 cmac[16];
+    const Uint8* key    = nullptr;
+    Uint64       blocks = 0;
+    Uint32       rounds = 0;
+};
+typedef _ccm_data_t *ccm_data_p, ccm_data_t;
+class Ccm            final
+    : public Aes
+    , cipher::IDecryptUpdater
+    , cipher::IEncryptUpdater
+{
+
+  public:
+    Uint64       m_len               = 0;
+    Uint64       m_message_len       = 0;
+    Uint64       m_ivLen             = 0;
+    Uint64       m_tagLen            = 0;
+    Uint64       m_additionalDataLen = 0;
+    const Uint8* m_additionalData;
+
+    ccm_data_t m_ccm_data;
+
+    explicit Ccm(const alc_cipher_algo_info_t& aesInfo,
+                 const alc_key_info_t&         keyInfo)
+        : Aes(aesInfo, keyInfo)
+    {}
+
+    ~Ccm() {}
+
+    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
+                            const alc_key_info_t&         keyInfo)
+    {
+        return true;
+    }
+
+    /**
+     * \brief
+     * \notes
+     * \param
+     * \return
+     */
+    virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
+                             alc_error_t&             err) override
+    {
+        Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
+
+        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
+            auto aip = &cipherInfo.ci_algo_info;
+            if (aip->ai_mode == ALC_AES_MODE_CCM) {
+                Error::setDetail(err, ALC_ERROR_NONE);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * \brief   CCM Encrypt Operation
+     * \notes
+     * \param   pInput      Pointer to input buffer
+     *                          (plainText or Additional data)
+     * \param   pOuput          Pointer to encrypted buffer
+     *                          when pointer NULL, input is additional data
+     * \param   len             Len of input buffer
+     *                          (plainText or Additional data)
+     * \param   pIv             Pointer to Initialization Vector \return
+     * alc_error_t     Error code
+     */
+    virtual alc_error_t encrypt(const uint8_t* pInput,
+                                uint8_t*       pOutput,
+                                uint64_t       len,
+                                const uint8_t* pIv) const final;
+
+    virtual alc_error_t encryptUpdate(const uint8_t* pInput,
+                                      uint8_t*       pOutput,
+                                      uint64_t       len,
+                                      const uint8_t* pIv);
+
+    /**
+     * \brief   CCM Decrypt Operation
+     * \notes
+     * \param   pCipherText     Pointer to encrypted buffer
+     * \param   pPlainText      Pointer to output buffer
+     * \param   len             Len of plain and encrypted text
+     * \param   pIv             Pointer to Initialization Vector
+     * \return  alc_error_t     Error code
+     */
+    virtual alc_error_t decrypt(const uint8_t* pCipherText,
+                                uint8_t*       pPlainText,
+                                uint64_t       len,
+                                const uint8_t* pIv) const final;
+
+    virtual alc_error_t decryptUpdate(const uint8_t* pCipherText,
+                                      uint8_t*       pPlainText,
+                                      uint64_t       len,
+                                      const uint8_t* pIv);
+
+  private:
+    virtual alc_error_t cryptUpdate(const uint8_t* pInput,
+                                    uint8_t*       pOutput,
+                                    uint64_t       len,
+                                    const uint8_t* pIv,
+                                    bool           isEncrypt);
+    Ccm(){};
+};
+
 /*
  * \brief        AES Encryption in XTS(XEX Tweakable Block Ciphertext Stealing
  *               Mode)

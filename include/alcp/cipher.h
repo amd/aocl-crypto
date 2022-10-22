@@ -58,6 +58,7 @@ typedef enum _alc_cipher_mode
     ALC_AES_MODE_CFB,
     ALC_AES_MODE_XTS,
     ALC_AES_MODE_GCM,
+    ALC_AES_MODE_CCM,
 
     ALC_AES_MODE_MAX,
 } alc_cipher_mode_t;

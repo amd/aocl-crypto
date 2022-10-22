@@ -37,7 +37,10 @@
 
 #include "utils/copy.hh"
 
+#include <alcp/types.h>
+
 namespace alcp::cipher { namespace aesni {
+
     alc_error_t ExpandKeys(const uint8_t* pUserKey,
                            uint8_t*       pEncKey,
                            uint8_t*       pDecKey,
@@ -134,6 +137,32 @@ namespace alcp::cipher { namespace aesni {
                         __m128i*       ptag_128,
                         __m128i*       piv_128,
                         __m128i        reverse_mask_128);
+    /**
+     * @brief Initializes CCM
+     *
+     * @param ctx - Context
+     * @param t - Tag Length
+     * @param q - Length required to store length of Plain text
+     * @param key - Key used for encryption
+     * @param block
+     */
+    void CcmInit(ccm_data_p   ctx,
+                 unsigned int t,
+                 unsigned int q,
+                 const Uint8* key,
+                 const Uint32 rounds);
+
+    int CcmSetIv(ccm_data_p ctx, const Uint8* nonce, size_t nlen, size_t mlen);
+
+    void CcmSetAad(ccm_data_p ctx, const Uint8* aad, size_t alen);
+
+    int CcmEncrypt(ccm_data_p ctx, const Uint8* inp, Uint8* out, size_t len);
+
+    int CcmDecrypt(ccm_data_p ctx, const Uint8* inp, Uint8* out, size_t len);
+
+    void ctr64_add(Uint8* counter, size_t inc);
+
+    size_t CcmGetTag(ccm_data_p ctx, Uint8* tag, size_t len);
 
     alc_error_t processAdditionalDataGcm(const uint8_t* pAdditionalData,
                                          uint64_t       additionalDataLen,

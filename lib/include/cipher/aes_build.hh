@@ -105,6 +105,9 @@ __build_aes(const alc_cipher_algo_info_t& aesInfo,
         if constexpr (std::is_same_v<CIPHERMODE, Gcm>) {
             ctx.decryptUpdate = __aes_wrapperUpdate<Gcm, false>;
             ctx.encryptUpdate = __aes_wrapperUpdate<Gcm, true>;
+        } else if constexpr (std::is_same_v<CIPHERMODE, Ccm>) {
+            ctx.decryptUpdate = __aes_wrapperUpdate<Ccm, false>;
+            ctx.encryptUpdate = __aes_wrapperUpdate<Ccm, true>;
         }
         ctx.finish = __aes_dtor<CIPHERMODE>;
     }
@@ -174,6 +177,14 @@ AesBuilder::Build(const alc_cipher_algo_info_t& aesInfo,
                 return err;
             };
             err = __build_aes<Xts>(aesInfo, keyInfo, ctx);
+        } break;
+
+        case ALC_AES_MODE_CCM: {
+            if (!Ccm::isSupported(aesInfo, keyInfo)) {
+                err = ALC_ERROR_NOT_SUPPORTED;
+                return err;
+            };
+            err = __build_aes<Ccm>(aesInfo, keyInfo, ctx);
         } break;
 
         default:
