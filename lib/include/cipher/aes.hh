@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2021, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -66,7 +66,7 @@ class Aes : public Rijndael
     Aes() { m_this = this; }
     virtual ~Aes() {}
 
-    void setKey(const uint8_t* pUserKey, uint64_t len) override;
+    void setKey(const Uint8* pUserKey, Uint64 len) override;
 
   protected:
     alc_cipher_mode_t m_mode;
@@ -125,10 +125,10 @@ class Cbc final : public Aes
      * \param   pIv             Pointer to Initialization Vector
      * \return  alc_error_t     Error code
      */
-    virtual alc_error_t encrypt(const uint8_t* pPlainText,
-                                uint8_t*       pCipherText,
-                                uint64_t       len,
-                                const uint8_t* pIv) const final;
+    virtual alc_error_t encrypt(const Uint8* pPlainText,
+                                Uint8*       pCipherText,
+                                Uint64       len,
+                                const Uint8* pIv) const final;
 
     /**
      * \brief   CBC Decrypt Operation
@@ -139,10 +139,10 @@ class Cbc final : public Aes
      * \param   pIv             Pointer to Initialization Vector
      * \return  alc_error_t     Error code
      */
-    virtual alc_error_t decrypt(const uint8_t* pCipherText,
-                                uint8_t*       pPlainText,
-                                uint64_t       len,
-                                const uint8_t* pIv) const final;
+    virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const final;
 
   private:
     Cbc(){};
@@ -202,10 +202,10 @@ class Ofb final : public Aes
      * \param   pIv             Pointer to Initialization Vector
      * \return  alc_error_t     Error code
      */
-    virtual alc_error_t encrypt(const uint8_t* pPlainText,
-                                uint8_t*       pCipherText,
-                                uint64_t       len,
-                                const uint8_t* pIv) const final;
+    virtual alc_error_t encrypt(const Uint8* pPlainText,
+                                Uint8*       pCipherText,
+                                Uint64       len,
+                                const Uint8* pIv) const final;
 
     /**
      * \brief   OFB Decrypt Operation
@@ -216,10 +216,10 @@ class Ofb final : public Aes
      * \param   pIv             Pointer to Initialization Vector
      * \return  alc_error_t     Error code
      */
-    virtual alc_error_t decrypt(const uint8_t* pCipherText,
-                                uint8_t*       pPlainText,
-                                uint64_t       len,
-                                const uint8_t* pIv) const final;
+    virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const final;
 
   private:
     Ofb(){};
@@ -279,10 +279,10 @@ class Ctr final : public Aes
      * \param   pIv             Pointer to Initialization Vector
      * \return  alc_error_t     Error code
      */
-    virtual alc_error_t encrypt(const uint8_t* pPlainText,
-                                uint8_t*       pCipherText,
-                                uint64_t       len,
-                                const uint8_t* pIv) const final;
+    virtual alc_error_t encrypt(const Uint8* pPlainText,
+                                Uint8*       pCipherText,
+                                Uint64       len,
+                                const Uint8* pIv) const final;
 
     /**
      * \brief   CTR Decrypt Operation
@@ -293,10 +293,10 @@ class Ctr final : public Aes
      * \param   pIv             Pointer to Initialization Vector
      * \return  alc_error_t     Error code
      */
-    virtual alc_error_t decrypt(const uint8_t* pCipherText,
-                                uint8_t*       pPlainText,
-                                uint64_t       len,
-                                const uint8_t* pIv) const final;
+    virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const final;
 
   private:
     Ctr(){};
@@ -316,24 +316,24 @@ class Gcm final
 
   public:
     // union to be used here: tbd
-    // uint8_t m_hash_subKey[16];
+    // Uint8 m_hash_subKey[16];
     __m128i m_hash_subKey_128;
 
-    // uint8_t m_gHash[16];
+    // Uint8 m_gHash[16];
     __m128i m_gHash_128;
 
-    // uint8_t m_tag[16];
+    // Uint8 m_tag[16];
     __m128i m_tag_128;
 
     __m128i m_reverse_mask_128;
 
     __m128i m_iv_128;
 
-    uint64_t m_len;
-    uint64_t m_additionalDataLen;
-    uint64_t m_ivLen;
-    uint64_t m_tagLen;
-    uint64_t m_isHashSubKeyGenerated = false;
+    Uint64 m_len;
+    Uint64 m_additionalDataLen;
+    Uint64 m_ivLen;
+    Uint64 m_tagLen;
+    Uint64 m_isHashSubKeyGenerated = false;
 
   public:
     explicit Gcm(const alc_cipher_algo_info_t& aesInfo,
@@ -393,15 +393,15 @@ class Gcm final
      * \param   pIv             Pointer to Initialization Vector \return
      * alc_error_t     Error code
      */
-    virtual alc_error_t encrypt(const uint8_t* pInput,
-                                uint8_t*       pOutput,
-                                uint64_t       len,
-                                const uint8_t* pIv) const final;
+    virtual alc_error_t encrypt(const Uint8* pInput,
+                                Uint8*       pOutput,
+                                Uint64       len,
+                                const Uint8* pIv) const final;
 
-    virtual alc_error_t encryptUpdate(const uint8_t* pInput,
-                                      uint8_t*       pOutput,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
+    virtual alc_error_t encryptUpdate(const Uint8* pInput,
+                                      Uint8*       pOutput,
+                                      Uint64       len,
+                                      const Uint8* pIv);
 
     /**
      * \brief   GCM Decrypt Operation
@@ -412,22 +412,22 @@ class Gcm final
      * \param   pIv             Pointer to Initialization Vector
      * \return  alc_error_t     Error code
      */
-    virtual alc_error_t decrypt(const uint8_t* pCipherText,
-                                uint8_t*       pPlainText,
-                                uint64_t       len,
-                                const uint8_t* pIv) const final;
+    virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const final;
 
-    virtual alc_error_t decryptUpdate(const uint8_t* pCipherText,
-                                      uint8_t*       pPlainText,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
+    virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
+                                      Uint8*       pPlainText,
+                                      Uint64       len,
+                                      const Uint8* pIv);
 
   private:
-    virtual alc_error_t cryptUpdate(const uint8_t* pInput,
-                                    uint8_t*       pOutput,
-                                    uint64_t       len,
-                                    const uint8_t* pIv,
-                                    bool           isEncrypt);
+    virtual alc_error_t cryptUpdate(const Uint8* pInput,
+                                    Uint8*       pOutput,
+                                    Uint64       len,
+                                    const Uint8* pIv,
+                                    bool         isEncrypt);
     Gcm(){};
 
   private:
@@ -511,15 +511,15 @@ class Ccm            final
      * \param   pIv             Pointer to Initialization Vector \return
      * alc_error_t     Error code
      */
-    virtual alc_error_t encrypt(const uint8_t* pInput,
-                                uint8_t*       pOutput,
-                                uint64_t       len,
-                                const uint8_t* pIv) const final;
+    virtual alc_error_t encrypt(const Uint8* pInput,
+                                Uint8*       pOutput,
+                                Uint64       len,
+                                const Uint8* pIv) const final;
 
-    virtual alc_error_t encryptUpdate(const uint8_t* pInput,
-                                      uint8_t*       pOutput,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
+    virtual alc_error_t encryptUpdate(const Uint8* pInput,
+                                      Uint8*       pOutput,
+                                      Uint64       len,
+                                      const Uint8* pIv);
 
     /**
      * \brief   CCM Decrypt Operation
@@ -530,22 +530,22 @@ class Ccm            final
      * \param   pIv             Pointer to Initialization Vector
      * \return  alc_error_t     Error code
      */
-    virtual alc_error_t decrypt(const uint8_t* pCipherText,
-                                uint8_t*       pPlainText,
-                                uint64_t       len,
-                                const uint8_t* pIv) const final;
+    virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const final;
 
-    virtual alc_error_t decryptUpdate(const uint8_t* pCipherText,
-                                      uint8_t*       pPlainText,
-                                      uint64_t       len,
-                                      const uint8_t* pIv);
+    virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
+                                      Uint8*       pPlainText,
+                                      Uint64       len,
+                                      const Uint8* pIv);
 
   private:
-    virtual alc_error_t cryptUpdate(const uint8_t* pInput,
-                                    uint8_t*       pOutput,
-                                    uint64_t       len,
-                                    const uint8_t* pIv,
-                                    bool           isEncrypt);
+    virtual alc_error_t cryptUpdate(const Uint8* pInput,
+                                    Uint8*       pOutput,
+                                    Uint64       len,
+                                    const Uint8* pIv,
+                                    bool         isEncrypt);
     Ccm(){};
 };
 
@@ -606,10 +606,10 @@ class Xts final : public Aes
      * \param   pIv             Pointer to Initialization Vector
      * \return  alc_error_t     Error code
      */
-    virtual alc_error_t encrypt(const uint8_t* pPlainText,
-                                uint8_t*       pCipherText,
-                                uint64_t       len,
-                                const uint8_t* pIv) const final;
+    virtual alc_error_t encrypt(const Uint8* pPlainText,
+                                Uint8*       pCipherText,
+                                Uint64       len,
+                                const Uint8* pIv) const final;
 
     /**
      * \brief   XTS Decrypt Operation
@@ -620,10 +620,10 @@ class Xts final : public Aes
      * \param   pIv             Pointer to Initialization Vector
      * \return  alc_error_t     Error code
      */
-    virtual alc_error_t decrypt(const uint8_t* pCipherText,
-                                uint8_t*       pPlainText,
-                                uint64_t       len,
-                                const uint8_t* pIv) const final;
+    virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const final;
 
     virtual void expandTweakKeys(const Uint8* pUserKey, int len);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2021, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,29 +36,29 @@
 namespace alcp::cipher {
 
 alc_error_t
-Ccm::decrypt(const uint8_t* pInput,
-             uint8_t*       pOutput,
-             uint64_t       len,
-             const uint8_t* pIv) const
+Ccm::decrypt(const Uint8* pInput,
+             Uint8*       pOutput,
+             Uint64       len,
+             const Uint8* pIv) const
 {
     return ALC_ERROR_NONE;
 }
 
 alc_error_t
-Ccm::encrypt(const uint8_t* pInput,
-             uint8_t*       pOutput,
-             uint64_t       len,
-             const uint8_t* pIv) const
+Ccm::encrypt(const Uint8* pInput,
+             Uint8*       pOutput,
+             Uint64       len,
+             const Uint8* pIv) const
 {
     return ALC_ERROR_NONE;
 }
 
 alc_error_t
-Ccm::cryptUpdate(const uint8_t* pInput,
-                 uint8_t*       pOutput,
-                 uint64_t       len,
-                 const uint8_t* pIv,
-                 bool           isEncrypt)
+Ccm::cryptUpdate(const Uint8* pInput,
+                 Uint8*       pOutput,
+                 Uint64       len,
+                 const Uint8* pIv,
+                 bool         isEncrypt)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -148,10 +148,10 @@ Ccm::cryptUpdate(const uint8_t* pInput,
 }
 
 alc_error_t
-Ccm::decryptUpdate(const uint8_t* pInput,
-                   uint8_t*       pOutput,
-                   uint64_t       len,
-                   const uint8_t* pIv)
+Ccm::decryptUpdate(const Uint8* pInput,
+                   Uint8*       pOutput,
+                   Uint64       len,
+                   const Uint8* pIv)
 {
     alc_error_t err = ALC_ERROR_NONE;
     err             = cryptUpdate(pInput, pOutput, len, pIv, false);
@@ -159,10 +159,10 @@ Ccm::decryptUpdate(const uint8_t* pInput,
 }
 
 alc_error_t
-Ccm::encryptUpdate(const uint8_t* pInput,
-                   uint8_t*       pOutput,
-                   uint64_t       len,
-                   const uint8_t* pIv)
+Ccm::encryptUpdate(const Uint8* pInput,
+                   Uint8*       pOutput,
+                   Uint64       len,
+                   const Uint8* pIv)
 {
     alc_error_t err = ALC_ERROR_NONE;
     err             = cryptUpdate(pInput, pOutput, len, pIv, true);
