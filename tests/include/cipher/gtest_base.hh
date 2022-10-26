@@ -284,8 +284,8 @@ AesCrosstest(int               keySize,
     size_t      size = 1;
     std::string enc_dec_str, big_small_str;
     std::string MODE_STR = GetModeSTR(mode);
-    int32_t ivl, adl, tkeyl = 16;
-    int32_t IVL_START = 12, IVL_MAX = 16, ADL_START = 12, ADL_MAX = 16;
+    Int32 ivl, adl, tkeyl = 16;
+    Int32 IVL_START = 12, IVL_MAX = 16, ADL_START = 12, ADL_MAX = 16;
 
     bool        isxts = (MODE_STR.compare("XTS") == 0);
     bool        isgcm = (MODE_STR.compare("GCM") == 0);
