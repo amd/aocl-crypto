@@ -54,8 +54,8 @@ namespace alcp::cipher { namespace aesni {
     {
         ENTER();
         memset(ccm_data->nonce, 0, sizeof(ccm_data->nonce));
-        ccm_data->nonce[0] =
-            ((Uint8)(q - 1) & 7) | (Uint8)(((t - 2) / 2) & 7) << 3;
+        ccm_data->nonce[0] = (static_cast<Uint8>(q - 1) & 7)
+                             | static_cast<Uint8>(((t - 2) / 2) & 7) << 3;
         ccm_data->blocks = 0;
         EXIT();
     }
@@ -81,10 +81,10 @@ namespace alcp::cipher { namespace aesni {
             memset(ccm_data->nonce + 8, 0, 8);
         }
 
-        ccm_data->nonce[12] = (Uint8)(mlen >> 24);
-        ccm_data->nonce[13] = (Uint8)(mlen >> 16);
-        ccm_data->nonce[14] = (Uint8)(mlen >> 8);
-        ccm_data->nonce[15] = (Uint8)mlen;
+        ccm_data->nonce[12] = static_cast<Uint8>(mlen >> 24);
+        ccm_data->nonce[13] = static_cast<Uint8>(mlen >> 16);
+        ccm_data->nonce[14] = static_cast<Uint8>(mlen >> 8);
+        ccm_data->nonce[15] = static_cast<Uint8>(mlen);
 
         ccm_data->nonce[0] &= ~0x40; /* clear Adata flag */
         utils::CopyBytes(&ccm_data->nonce[1], pnonce, 14 - q);
@@ -217,17 +217,19 @@ namespace alcp::cipher { namespace aesni {
         Uint8*        ptemp_8  = reinterpret_cast<Uint8*>(&tempReg);
 
         // Load nonce to process
-        nonce = _mm_loadu_si128((const __m128i*)ccm_data->nonce);
+        nonce = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
 
         // No additonal data, so encrypt nonce and set it as cmac
         if (!(flags0 & 0x40)) {
             cmac = nonce;
-            AesEncrypt(&cmac, (const __m128i*)pkey, ccm_data->rounds);
+            AesEncrypt(&cmac,
+                       reinterpret_cast<const __m128i*>(pkey),
+                       ccm_data->rounds);
             ccm_data->blocks++;
         } else {
             // Additional data exists so load the cmac (already done in encrypt
             // aad)
-            cmac = _mm_loadu_si128((const __m128i*)ccm_data->cmac);
+            cmac = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
         }
 
         // Set nonce to just length to store size of plain text
@@ -258,25 +260,27 @@ namespace alcp::cipher { namespace aesni {
         }
 
         while (len >= 16) {
-
             // Load the PlainText
-            inReg = _mm_loadu_si128((__m128i*)pinp);
+            inReg = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pinp));
 
             /* CBC */
             // Generate CMAC given plaintext by using cbc algorithm
             cmac = _mm_xor_si128(cmac, inReg);
-            AesEncrypt(&cmac, (const __m128i*)ccm_data->key, ccm_data->rounds);
+            AesEncrypt(&cmac,
+                       reinterpret_cast<const __m128i*>(ccm_data->key),
+                       ccm_data->rounds);
 
             /* CTR */
             // Generate ciphetext given plain text by using ctr algitrithm
             tempReg = nonce;
-            AesEncrypt(
-                &tempReg, (const __m128i*)ccm_data->key, ccm_data->rounds);
+            AesEncrypt(&tempReg,
+                       reinterpret_cast<const __m128i*>(ccm_data->key),
+                       ccm_data->rounds);
             CcmCtrInc(&nonce); // Increment counter
             tempReg = _mm_xor_si128(tempReg, inReg);
 
             // Store CipherText
-            _mm_storeu_si128((__m128i*)(pout), tempReg);
+            _mm_storeu_si128(reinterpret_cast<__m128i*>(pout), tempReg);
 
             pinp += 16;
             pout += 16;
@@ -284,17 +288,19 @@ namespace alcp::cipher { namespace aesni {
         }
 
         if (len) {
-
             /* CBC */
             // For what ever is left, generate block to encrypt using ctr
             for (i = 0; i < len; ++i)
                 pcmac_8[i] ^= pinp[i];
-            AesEncrypt(&cmac, (const __m128i*)ccm_data->key, ccm_data->rounds);
+            AesEncrypt(&cmac,
+                       reinterpret_cast<const __m128i*>(ccm_data->key),
+                       ccm_data->rounds);
 
             /* CTR */
             tempReg = nonce;
-            AesEncrypt(
-                &tempReg, (const __m128i*)ccm_data->key, ccm_data->rounds);
+            AesEncrypt(&tempReg,
+                       reinterpret_cast<const __m128i*>(ccm_data->key),
+                       ccm_data->rounds);
             for (i = 0; i < len; ++i)
                 pout[i] = ptemp_8[i] ^ pinp[i];
         }
@@ -306,7 +312,9 @@ namespace alcp::cipher { namespace aesni {
         // CTR encrypt first counter and XOR with the partial tag to generate
         // the real tag
         tempReg = nonce; // Copy counter
-        AesEncrypt(&tempReg, (const __m128i*)ccm_data->key, ccm_data->rounds);
+        AesEncrypt(&tempReg,
+                   reinterpret_cast<const __m128i*>(ccm_data->key),
+                   ccm_data->rounds);
         cmac = _mm_xor_si128(tempReg, cmac);
 
         // Restore flags into nonce to restore nonce to original state
@@ -339,17 +347,19 @@ namespace alcp::cipher { namespace aesni {
         Uint8*        ptemp_8  = reinterpret_cast<Uint8*>(&tempReg);
 
         // Load nonce to process
-        nonce = _mm_loadu_si128((const __m128i*)ccm_data->nonce);
+        nonce = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce));
 
         // No additonal data, so encrypt nonce and set it as cmac
         if (!(flags0 & 0x40)) {
             cmac = nonce;
-            AesEncrypt(&cmac, (const __m128i*)pkey, ccm_data->rounds);
+            AesEncrypt(&cmac,
+                       reinterpret_cast<const __m128i*>(pkey),
+                       ccm_data->rounds);
             ccm_data->blocks++;
         } else {
             // Additional data exists so load the cmac (already done in encrypt
             // aad)
-            cmac = _mm_loadu_si128((const __m128i*)ccm_data->cmac);
+            cmac = _mm_loadu_si128(reinterpret_cast<__m128i*>(ccm_data->cmac));
         }
 
         // Set nonce to just length to store size of plain text
@@ -375,21 +385,26 @@ namespace alcp::cipher { namespace aesni {
 
             /* CTR */
             tempReg = nonce; // Copy Counter
-            AesEncrypt(
-                &tempReg, (const __m128i*)ccm_data->key, ccm_data->rounds);
+            AesEncrypt(&tempReg,
+                       reinterpret_cast<const __m128i*>(ccm_data->key),
+                       ccm_data->rounds);
             CcmCtrInc(&nonce);
 
-            inReg   = _mm_loadu_si128((__m128i*)pinp); // Load CipherText
+            inReg = _mm_loadu_si128(
+                reinterpret_cast<const __m128i*>(pinp)); // Load CipherText
             tempReg = _mm_xor_si128(
                 inReg, tempReg); // Generate PlainText (Complete CTR)
 
             /* CBC */
             cmac = _mm_xor_si128(cmac, tempReg); // Generate Partial result
 
-            _mm_storeu_si128((__m128i*)pout, tempReg); // Store plaintext.
+            _mm_storeu_si128(reinterpret_cast<__m128i*>(pout),
+                             tempReg); // Store plaintext.
 
             // Generate the partial tag, Xor of CBC is above
-            AesEncrypt(&cmac, (const __m128i*)ccm_data->key, ccm_data->rounds);
+            AesEncrypt(&cmac,
+                       reinterpret_cast<const __m128i*>(ccm_data->key),
+                       ccm_data->rounds);
 
             pinp += 16;
             pout += 16;
@@ -400,8 +415,9 @@ namespace alcp::cipher { namespace aesni {
 
             /* CTR */
             tempReg = nonce; // Copy Counter
-            AesEncrypt(
-                &tempReg, (const __m128i*)ccm_data->key, ccm_data->rounds);
+            AesEncrypt(&tempReg,
+                       reinterpret_cast<const __m128i*>(ccm_data->key),
+                       ccm_data->rounds);
 
             for (i = 0; i < len; ++i) {
                 // CTR XOR operation to generate plaintext
@@ -413,7 +429,9 @@ namespace alcp::cipher { namespace aesni {
             /* CBC */
             // CBC Xor is above, Encrypt the partial result to create partial
             // tag
-            AesEncrypt(&cmac, (const __m128i*)ccm_data->key, ccm_data->rounds);
+            AesEncrypt(&cmac,
+                       reinterpret_cast<const __m128i*>(ccm_data->key),
+                       ccm_data->rounds);
         }
 
         // Zero out counter part
@@ -423,7 +441,9 @@ namespace alcp::cipher { namespace aesni {
         // CTR encrypt first counter and XOR with the partial tag to generate
         // the real tag
         tempReg = nonce;
-        AesEncrypt(&tempReg, (const __m128i*)ccm_data->key, ccm_data->rounds);
+        AesEncrypt(&tempReg,
+                   reinterpret_cast<const __m128i*>(ccm_data->key),
+                   ccm_data->rounds);
         cmac = _mm_xor_si128(cmac, tempReg);
 
         // Restore flags into nonce to restore nonce to original state
