@@ -1,59 +1,110 @@
+/*
+ * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 3. Neither the name of the copyright holder nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+#pragma once
+
 #include "digest.hh"
+
 namespace alcp::digest {
 
-  class Sha3 : public Digest
-  {
+class Sha3 : public Digest
+{
   public:
-    Sha3(const std::string& name)
-      : m_name{ name }
-    {}
-    Sha3(const char* name)
-      : Sha3(std::string(name))
-    {}
     Sha3(const alc_digest_info_t& rDigestInfo);
-    Sha3();
     ~Sha3();
 
   public:
+    /**
+     * \brief   Updates hash for given buffer
+     *
+     * \notes    Can be called repeatedly, if the message size is smaller than 
+     *           chunksize it will be cached for future use. and hash is only updated
+     *           after finalize() is called.
+     *
+     * \param    pMsgBuf    Pointer to message buffer
+     *
+     * \param    size    should be valid size > 0
+     *  
+     */
     alc_error_t update(const uint8_t* pMsgBuf, Uint64 size);
+
+    /**
+     * \brief   Cleans up any resource that was allocated
+     *
+     * \notes   `finish()` to be called as a means to cleanup, no operation
+     *           permitted after this call.
+     *
+     * \return nothing
+     */
     void finish();
+
+    /**
+     * \brief    Resets the internal state.
+     *
+     * \notes   `reset()` to be called as a means to reset the internal state.
+     *           This enables the processing the new buffer.
+     *
+     * \return nothing
+     */
     void reset();
+
+    /**
+     * \brief    Call for the final chunk
+     *
+     * \notes   `finish()` to be called as a means to cleanup, necessary
+     *           actions. Application can also call finalize() with
+     *           empty/null args application must call copyHash before
+     *           calling finish()
+     *
+     * \param    pMsgBuf     Either valid pointer to last chunk or nullptr,
+     *                       once finalize() is called, only operation that 
+     *                       can be performed is copyHash()
+     *
+     * \param    size    Either valid size or 0, if \buf is nullptr, size
+     *                   is assumed to be zero
+     */
     alc_error_t finalize(const uint8_t* pMsgBuf, Uint64 size);
-    alc_error_t copyHash(uint8_t* pHashBuf, Uint64 size) const;
-    alc_error_t setIv(const void* pIv, Uint64 size);
-  private:
-    void absorbChunk(Uint64* p_msg_buf_64);
-    alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
-    inline void round(Uint64 round_const);
-    void fFunction();
+
+    /**
+     * \brief  Copies the has from object to supplied buffer
+     *
+     * \notes `finalize()` to be called before with last chunks that should
+     *           perform all the necessary actions, can be called with
+     *           NULL argument.
+     *
+     * \param    pHash   pointer to the final hash generated 
+     *
+     * \param    size    hash size to be copied from the object
+     */  
+    alc_error_t copyHash(uint8_t* pHash, Uint64 size) const;
 
   private:
-    std::string m_name;
-    Uint64
-      m_chunk_size_bits,
-      m_capacity_bits,
-      m_hash_size_bits,
-      m_hash_size,
-      m_chunk_size,
-      m_chunk_size_u64;
-    const Uint64
-      m_state_size_bits = 1600,
-      m_num_rounds = 24;
-    Uint32
-      m_idx;
-    alc_sha2_mode_t
-      m_mode = ALC_SHA3;
-    bool
-      m_finished;
-    Uint8
-      m_buffer[2* 2* (512 / 8)];
-    // These sizes are to accomodate the max possible hash size, 512 bits.
-    Uint64
-      m_hash[2*  512 / 64],
-      m_state[5][5],
-      // flat representation of the state, used in absorbing the user message.
-      // m_state[i][j] = state_flat[5*i + j], i.e. the final index of m_state
-      // varies first to move in contiguous memory order.
-      *m_state_flat = &m_state[0][0];
-  };
+    class Impl;
+    std::unique_ptr<Impl> m_pimpl;
+};
 }
