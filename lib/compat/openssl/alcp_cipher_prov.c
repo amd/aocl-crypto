@@ -383,8 +383,7 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
 
     if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
 #ifdef DEBUG
-        printf("Provider: cinfo->ci_algo_info.ai_gcm.ivlen : %d\n",
-               cinfo->ci_algo_info.ai_gcm.ivlen);
+        printf("Provider: cctx->ivlen : %llu\n", cctx->ivlen);
 #endif
         if (key != NULL && iv != NULL) {
             if (cctx->ivlen != -1) {
