@@ -73,6 +73,8 @@ GetModeSTR(alc_cipher_mode_t mode)
             return "XTS";
         case ALC_AES_MODE_GCM:
             return "GCM";
+        case ALC_AES_MODE_CCM:
+            return "CCM";
         default:
             return "NULL";
     }
@@ -581,6 +583,7 @@ AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode)
     std::string enc_dec_str;
     bool        isxts = (MODE_STR.compare("XTS") == 0);
     bool        isgcm = (MODE_STR.compare("GCM") == 0);
+    bool        isccm = (MODE_STR.compare("CCM") == 0);
 
     if (enc_dec == ENCRYPT)
         enc_dec_str = "_ENC";
@@ -598,7 +601,7 @@ AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode)
                     keySize,
                     true,
                     false);
-    } else if (isgcm) {
+    } else if (isgcm || isccm) {
         while (testingCore.getDs()->readPtIvKeyCtAddTag(key_size)) {
             RunTest(testingCore,
                     enc_dec,
