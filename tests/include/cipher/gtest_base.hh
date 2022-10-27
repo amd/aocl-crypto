@@ -356,7 +356,7 @@ AesCrosstest(int               keySize,
 
     if (extTC != nullptr) {
         for (int i = LOOP_START; i < MAX_LOOP; i += INC_LOOP) {
-            if (big_small == BIG) {
+            if (big_small == BIG && isxts) {
                 /* max size supported by XTS is 2 ^ 20 = 1048576 */
                 size = 524288;
             }
