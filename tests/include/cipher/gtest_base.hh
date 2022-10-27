@@ -354,12 +354,13 @@ AesCrosstest(int               keySize,
         size       = 16 * 10000000;
     }
 
+    /* max size supported by XTS is 2 ^ 20 = 1048576 */
+    if (big_small == BIG && isxts) {
+        size = 524288;
+    }
+
     if (extTC != nullptr) {
         for (int i = LOOP_START; i < MAX_LOOP; i += INC_LOOP) {
-            if (big_small == BIG && isxts) {
-                /* max size supported by XTS is 2 ^ 20 = 1048576 */
-                size = 524288;
-            }
             if (!bbxreplay)
                 fr->startRecEvent();
 
