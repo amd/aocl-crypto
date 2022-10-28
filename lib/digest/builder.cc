@@ -221,10 +221,7 @@ DigestBuilder::getSize(const alc_digest_info_t& rDigestInfo)
         }
         case ALC_DIGEST_TYPE_SHA3: {
             return sizeof(Sha3);
-            break;
         }
-          return 0; // Sha2.getSize();
-
         default:
             return 0;
     }
