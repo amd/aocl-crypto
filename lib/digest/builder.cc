@@ -32,6 +32,7 @@
 #include "digest.hh"
 #include "digest/sha2.hh"
 #include "digest/sha2_512.hh"
+#include "digest/sha3.hh"
 
 namespace alcp::digest {
 
@@ -178,6 +179,24 @@ class Sha2Builder
     }
 };
 
+  class Sha3Builder
+{
+  public:
+    static alc_error_t Build(const alc_digest_info_t& rDigestInfo,
+                             Context&                 rCtx)
+    {
+      alc_error_t err = ALC_ERROR_NONE;
+      auto algo    = new Sha3(rDigestInfo);
+      rCtx.m_digest = static_cast<void*>(algo);
+      rCtx.update   = __sha_update_wrapper<Sha3>;
+      rCtx.copy     = __sha_copy_wrapper<Sha3>;
+      rCtx.finalize = __sha_finalize_wrapper<Sha3>;
+      rCtx.finish = __sha_dtor<Sha3>;
+      rCtx.reset  = __sha_reset_wrapper<Sha3>;
+      return err;
+    }
+};
+
 Uint32
 DigestBuilder::getSize(const alc_digest_info_t& rDigestInfo)
 {
@@ -200,8 +219,9 @@ DigestBuilder::getSize(const alc_digest_info_t& rDigestInfo)
                     break;
             }
         }
-            return 0; // Sha2.getSize();
-
+        case ALC_DIGEST_TYPE_SHA3: {
+            return sizeof(Sha3);
+        }
         default:
             return 0;
     }
@@ -215,6 +235,9 @@ DigestBuilder::Build(const alc_digest_info_t& rDigestInfo, Context& rCtx)
     switch (rDigestInfo.dt_type) {
         case ALC_DIGEST_TYPE_SHA2:
             err = Sha2Builder::Build(rDigestInfo, rCtx);
+            break;
+        case ALC_DIGEST_TYPE_SHA3:
+            err = Sha3Builder::Build(rDigestInfo, rCtx);
             break;
 
         default:

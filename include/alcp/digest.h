@@ -54,6 +54,14 @@ typedef enum _alc_sha2_mode
     ALC_SHA2_512,
 } alc_sha2_mode_t;
 
+typedef enum _alc_sha3_mode
+{
+    ALC_SHA3_224,
+    ALC_SHA3_256,
+    ALC_SHA3_384,
+    ALC_SHA3_512,
+} alc_sha3_mode_t;
+
 typedef enum _alc_digest_len
 {
     ALC_DIGEST_LEN_128 = 128, /* for MD2,MD4,MD5 */
@@ -70,6 +78,7 @@ typedef enum _alc_digest_len
 typedef union _alc_digest_mode
 {
     alc_sha2_mode_t dm_sha2;
+    alc_sha3_mode_t dm_sha3;
 
 } alc_digest_mode_t, *alc_diget_mode_p;
 
