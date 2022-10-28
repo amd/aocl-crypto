@@ -60,10 +60,23 @@ Sha384::Sha384(const alc_digest_info_t& rDInfo)
     m_psha512->setIv(cIv, sizeof(cIv));
 }
 
-Sha384::Sha384() {}
+Sha384::Sha384()
+{
+    // Initializing the structure with default value
+    alc_digest_info_t d_info;
+    d_info.dt_type = ALC_DIGEST_TYPE_SHA2;
+    d_info.dt_len = ALC_DIGEST_LEN_384;
+    d_info.dt_mode.dm_sha2 = ALC_SHA2_384;
+    d_info.dt_custom_len = 0;
+    d_info.dt_data = {0};
+
+    m_psha512 = new Sha512{ d_info };
+    m_psha512->setIv(cIv, sizeof(cIv));
+}
+
 Sha384::~Sha384()
 {
-    // delete m_psha512;
+    delete m_psha512;
 }
 
 alc_error_t
@@ -96,15 +109,24 @@ alc_error_t
 Sha384::copyHash(Uint8* pHash, Uint64 size) const
 {
     alc_error_t err = ALC_ERROR_NONE;
-    assert(size >= cHashSize);
 
-    Uint8 intrim_hash[cHashSize * 2];
+    if (size != cHashSize) {
+        Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
+        return err;
+    }
+    
+    if (!pHash) {
+        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+        return err;
+    }
+
+    // We should set intrim_hash size as 512 bit as we are calling into SHA512 algorithm.
+    // Later we should trim it to exact 384 bits
+    Uint8 intrim_hash[cHashSize + 16];
     err = m_psha512->copyHash(intrim_hash, sizeof(intrim_hash));
 
     if (!Error::isError(err)) {
-        Uint64 len = std::min(size, cHashSize);
-
-        utils::CopyBlock(pHash, intrim_hash, len);
+        utils::CopyBlock(pHash, intrim_hash, size);
     }
     return err;
 }
