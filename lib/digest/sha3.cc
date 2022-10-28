@@ -203,8 +203,9 @@ inline void Sha3::Impl::round(Uint64 roundConst)
     
     //pi stage
     for (int x = 0; x < cDim; ++x) {
+        int x_indx = 2 * x;
         for (int y = 0; y < cDim; ++y) {
-            m_state[(2*x + 3*y) % cDim][y] = temp[y][x];
+            m_state[(x_indx + 3 * y) % cDim][y] = temp[y][x];
         }
     }
 
