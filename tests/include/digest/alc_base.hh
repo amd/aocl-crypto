@@ -68,4 +68,38 @@ class AlcpDigestBase : public DigestBase
     void hash_to_string(char* output_string, const Uint8* hash, int sha_len);
 };
 
+/* SHA3 */
+class AlcpDigestBaseSHA3 : public DigestBaseSHA3
+{
+    alc_digest_handle_t* m_handle;
+    _alc_sha3_mode       m_mode;
+    _alc_digest_type     m_type;
+    _alc_digest_len      m_sha_len;
+    Uint8*               m_message;
+    Uint8*               m_digest;
+
+  public:
+    AlcpDigestBaseSHA3(_alc_sha3_mode   mode,
+                   _alc_digest_type type,
+                   _alc_digest_len  sha_len);
+
+    bool init(_alc_sha3_mode   mode,
+              _alc_digest_type type,
+              _alc_digest_len  sha_len);
+
+    bool init();
+
+    ~AlcpDigestBaseSHA3();
+
+    alc_error_t digest_function(const Uint8* src,
+                                size_t       src_size,
+                                Uint8*       output,
+                                Uint64       out_size);
+    /* Resets the context back to initial condition, reuse context */
+    void reset();
+    /* Hash value to string */
+    void hash_to_string(char* output_string, const Uint8* hash, int sha_len);
+};
+
+
 } // namespace alcp::testing

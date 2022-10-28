@@ -43,6 +43,16 @@ AlcpDigestBase::AlcpDigestBase(_alc_sha2_mode   mode,
     init();
 }
 
+AlcpDigestBaseSHA3::AlcpDigestBaseSHA3(_alc_sha3_mode   mode,
+                               _alc_digest_type type,
+                               _alc_digest_len  sha_len)
+    : m_mode{ mode }
+    , m_type{ type }
+    , m_sha_len{ sha_len }
+{
+    init();
+}
+
 bool
 AlcpDigestBase::init()
 {
@@ -51,6 +61,27 @@ AlcpDigestBase::init()
         .dt_type = m_type,
         .dt_len = m_sha_len,
         .dt_mode = {.dm_sha2 = m_mode,},
+    };
+
+    m_handle          = new alc_digest_handle_t;
+    m_handle->context = &size_[0];
+
+    err = alcp_digest_request(&dinfo, m_handle);
+    if (alcp_is_error(err)) {
+        printf("Error!\n");
+        return false;
+    }
+    return true;
+}
+
+bool
+AlcpDigestBaseSHA3::init()
+{
+    alc_error_t err;
+    alc_digest_info_t dinfo = {
+        .dt_type = m_type,
+        .dt_len = m_sha_len,
+        .dt_mode = {.dm_sha3 = m_mode,},
     };
 
     m_handle          = new alc_digest_handle_t;
@@ -75,7 +106,26 @@ AlcpDigestBase::init(_alc_sha2_mode   mode,
     return init();
 }
 
+bool
+AlcpDigestBaseSHA3::init(_alc_sha3_mode   mode,
+                     _alc_digest_type type,
+                     _alc_digest_len  sha_len)
+{
+    this->m_mode    = mode;
+    this->m_type    = type;
+    this->m_sha_len = sha_len;
+    return init();
+}
+
 AlcpDigestBase::~AlcpDigestBase()
+{
+    if (m_handle != nullptr) {
+        alcp_digest_finish(m_handle);
+        delete m_handle;
+    }
+}
+
+AlcpDigestBaseSHA3::~AlcpDigestBaseSHA3()
 {
     if (m_handle != nullptr) {
         alcp_digest_finish(m_handle);
@@ -110,14 +160,60 @@ AlcpDigestBase::digest_function(const Uint8* pSrc,
     return err;
 }
 
+alc_error_t
+AlcpDigestBaseSHA3::digest_function(const Uint8* pSrc,
+                                size_t       src_size,
+                                Uint8*       pOutput,
+                                Uint64       out_size)
+{
+    alc_error_t err;
+    err = alcp_digest_update(m_handle, pSrc, src_size);
+    if (alcp_is_error(err)) {
+        printf("Digest update failed\n");
+        return err;
+    }
+
+    alcp_digest_finalize(m_handle, NULL, 0);
+    if (alcp_is_error(err)) {
+        printf("Digest finalize failed\n");
+        return err;
+    }
+
+    err = alcp_digest_copy(m_handle, pOutput, out_size);
+    if (alcp_is_error(err)) {
+        printf("Digest copy failed\n");
+        return err;
+    }
+    return err;
+}
+
 void
 AlcpDigestBase::reset()
 {
     alcp_digest_reset(m_handle);
 }
+
+void
+AlcpDigestBaseSHA3::reset()
+{
+    alcp_digest_reset(m_handle);
+}
+
 /* Hash value to string */
 void
 AlcpDigestBase::hash_to_string(char*        output_string,
+                               const Uint8* hash,
+                               int          sha_len)
+{
+    for (int i = 0; i < sha_len / 8; i++) {
+        output_string += sprintf(output_string, "%02x", hash[i]);
+    }
+    output_string[(sha_len / 8) * 2 + 1] = '\0';
+}
+
+/* Hash value to string */
+void
+AlcpDigestBaseSHA3::hash_to_string(char*        output_string,
                                const Uint8* hash,
                                int          sha_len)
 {

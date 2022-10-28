@@ -68,6 +68,23 @@ GetSHA2Mode(int HashSize)
     }
 }
 
+enum _alc_sha3_mode
+GetSHA3Mode(int HashSize)
+{
+    switch (HashSize) {
+        case 224:
+            return ALC_SHA3_224;
+        case 256:
+            return ALC_SHA3_256;
+        case 384:
+            return ALC_SHA3_384;
+        case 512:
+            return ALC_SHA3_512;
+        default:
+            return ALC_SHA3_224;
+    }
+}
+
 enum _alc_digest_len
 GetSHA2Len(int HashSize)
 {
@@ -85,8 +102,44 @@ GetSHA2Len(int HashSize)
     }
 }
 
+/* FIXME: can this be for SHA in general ? */
+enum _alc_digest_len
+GetSHA3Len(int HashSize)
+{
+    switch (HashSize) {
+        case 224:
+            return ALC_DIGEST_LEN_224;
+        case 256:
+            return ALC_DIGEST_LEN_256;
+        case 384:
+            return ALC_DIGEST_LEN_384;
+        case 512:
+            return ALC_DIGEST_LEN_512;
+        default:
+            return ALC_DIGEST_LEN_128;
+    }
+}
+
 record_t
 GetSHA2Record(int HashSize)
+{
+    switch (HashSize) {
+        case 224:
+            return SHA2_224;
+        case 256:
+            return SHA2_256;
+        case 384:
+            return SHA2_384;
+        case 512:
+            return SHA2_512;
+        default:
+            return SHA2_224;
+    }
+}
+
+/* FIXME: duplicate? */
+record_t
+GetSHA3Record(int HashSize)
 {
     switch (HashSize) {
         case 224:
@@ -211,6 +264,48 @@ SHA2_KATTest(int HashSize)
             ds.getDigest(), // expected, from the KAT test data
             ds,
             std::string("SHA2_" + std::to_string(HashSize) + "_KAT")));
+    }
+}
+
+/* SHA3 KAT tests */
+void
+SHA3_KATTest(int HashSize)
+{
+    alc_error_t error;
+    DataSet ds = DataSet("dataset_SHA3_" + std::to_string(HashSize) + ".csv");
+    std::vector<Uint8> digest(HashSize / 8, 0);
+    AlcpDigestBaseSHA3     adb(
+        GetSHA3Mode(HashSize), ALC_DIGEST_TYPE_SHA3, GetSHA3Len(HashSize));
+    DigestBaseSHA3* db;
+    db = &adb;
+#ifdef USE_IPP
+    IPPDigestBase idb(
+        GetSHA3Mode(HashSize), ALC_DIGEST_TYPE_SHA3, GetSHA3Len(HashSize));
+    if (useipp == true)
+        db = &idb;
+#endif
+#ifdef USE_OSSL
+    OpenSSLDigestBase odb(
+        GetSHA3Mode(HashSize), ALC_DIGEST_TYPE_SHA3, GetSHA3Len(HashSize));
+    if (useossl == true)
+        db = &odb;
+#endif
+    while (ds.readMsgDigest()) {
+        error = db->digest_function(&(ds.getMessage()[0]),
+                                    ds.getMessage().size(),
+                                    &(digest[0]),
+                                    digest.size());
+        db->init(
+            GetSHA3Mode(HashSize), ALC_DIGEST_TYPE_SHA3, GetSHA3Len(HashSize));
+        if (alcp_is_error(error)) {
+            printf("Error");
+            return;
+        }
+        EXPECT_TRUE(ArraysMatch(
+            digest,         // output
+            ds.getDigest(), // expected, from the KAT test data
+            ds,
+            std::string("SHA3_" + std::to_string(HashSize) + "_KAT")));
     }
 }
 

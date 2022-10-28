@@ -45,6 +45,10 @@ TEST(DIGEST_SHA2, KAT_384) {
 TEST(DIGEST_SHA2, KAT_512) {
     SHA2_KATTest(512);
 }
+TEST(DIGEST_SHA3, KAT_224) {
+    SHA3_KATTest(224);
+}
+
 
 int
 main(int argc, char** argv)
