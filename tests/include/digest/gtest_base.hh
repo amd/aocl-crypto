@@ -267,6 +267,77 @@ SHA2_KATTest(int HashSize)
     }
 }
 
+/* SHA3 Cross tests */
+void
+SHA3_CrossTest(int HashSize)
+{
+    alc_error_t            error;
+    std::vector<Uint8>     data;
+    std::vector<Uint8>     digestAlcp(HashSize / 8, 0);
+    std::vector<Uint8>     digestExt(HashSize / 8, 0);
+    const alc_sha3_mode_t  alc_mode       = GetSHA3Mode(HashSize);
+    const alc_digest_len_t alc_digest_len = GetSHA3Len(HashSize);
+    AlcpDigestBaseSHA3         adb(alc_mode, ALC_DIGEST_TYPE_SHA3, alc_digest_len);
+    RngBase                rng;
+    DigestBaseSHA3*            db;
+    DigestBaseSHA3*            extDb = nullptr;
+    db                           = &adb;
+    if (bbxreplay) {
+        fr = new ExecRecPlay("SHA3_" + std::to_string(HashSize), true);
+        fr->fastForward(GetSHA3Record(HashSize));
+    } else
+        fr = new ExecRecPlay("SHA3_" + std::to_string(HashSize), false);
+
+    if (useipp) {
+        printf ("IPPCP doesnt support SHA3 for now, skipping this test\n");
+        return;
+    }
+
+#ifdef USE_OSSL
+    OpenSSLDigestBaseSHA3 odb(alc_mode, ALC_DIGEST_TYPE_SHA3, alc_digest_len);
+    if ((useossl == true) || (extDb == nullptr)) // Select OpenSSL by default
+        extDb = &odb;
+#endif
+    if (extDb == nullptr) {
+        printErrors("No external lib selected!");
+        exit(-1);
+    }
+
+    for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
+        if (!bbxreplay) {
+            fr->startRecEvent();
+            try {
+                data = rng.genRandomBytes(i);
+                fr->setRecEvent(data, GetSHA3Record(HashSize));
+            } catch (const char* error) {
+                printErrors(error);
+                exit(-1);
+            }
+        } else {
+            fr->nextLog();
+            fr->getValues(&data);
+        }
+
+        error = db->digest_function(
+            &(data[0]), data.size(), &(digestAlcp[0]), digestAlcp.size());
+        error = extDb->digest_function(
+            &(data[0]), data.size(), &(digestExt[0]), digestExt.size());
+        db->init(alc_mode, ALC_DIGEST_TYPE_SHA3, alc_digest_len);
+        extDb->init(alc_mode, ALC_DIGEST_TYPE_SHA3, alc_digest_len);
+        if (alcp_is_error(error)) {
+            printf("Error");
+            return;
+        }
+        EXPECT_TRUE(ArraysMatch(digestAlcp, digestExt, i));
+        if (!bbxreplay) {
+            fr->dumpBlackBox();
+            fr->endRecEvent();
+            fr->dumpLog();
+        }
+    }
+    delete fr;
+}
+
 /* SHA3 KAT tests */
 void
 SHA3_KATTest(int HashSize)

@@ -50,6 +50,25 @@ TEST(DIGEST_SHA2, CROSS_512)
     SHA2_CrossTest(512);
 }
 
+/* SHA3 cross tests */
+TEST(DIGEST_SHA3, CROSS_224)
+{
+    SHA3_CrossTest(224);
+}
+TEST(DIGEST_SHA3, CROSS_256)
+{
+    SHA3_CrossTest(256);
+}
+TEST(DIGEST_SHA3, CROSS_384)
+{
+    SHA3_CrossTest(384);
+}
+TEST(DIGEST_SHA3, CROSS_512)
+{
+    SHA3_CrossTest(512);
+}
+
+
 int
 main(int argc, char** argv)
 {
