@@ -143,15 +143,15 @@ GetSHA3Record(int HashSize)
 {
     switch (HashSize) {
         case 224:
-            return SHA2_224;
+            return SHA3_224;
         case 256:
-            return SHA2_256;
+            return SHA3_256;
         case 384:
-            return SHA2_384;
+            return SHA3_384;
         case 512:
-            return SHA2_512;
+            return SHA3_512;
         default:
-            return SHA2_224;
+            return SHA3_224;
     }
 }
 
