@@ -40,7 +40,25 @@ OpenSSLDigestBase::OpenSSLDigestBase(_alc_sha2_mode   mode,
     init();
 }
 
+OpenSSLDigestBaseSHA3::OpenSSLDigestBaseSHA3(_alc_sha3_mode   mode,
+                                     _alc_digest_type type,
+                                     _alc_digest_len  sha_len)
+    : m_mode{ mode }
+    , m_type{ type }
+    , m_sha_len{ sha_len }
+{
+    init();
+}
+
+
 OpenSSLDigestBase::~OpenSSLDigestBase()
+{
+    if (m_handle != nullptr) {
+        EVP_MD_CTX_free(m_handle);
+    }
+}
+
+OpenSSLDigestBaseSHA3::~OpenSSLDigestBaseSHA3()
 {
     if (m_handle != nullptr) {
         EVP_MD_CTX_free(m_handle);
@@ -81,7 +99,51 @@ OpenSSLDigestBase::init()
 }
 
 bool
+OpenSSLDigestBaseSHA3::init()
+{
+    if (m_handle != nullptr) {
+        EVP_MD_CTX_free(m_handle);
+        m_handle = nullptr;
+    }
+
+    m_handle = EVP_MD_CTX_new();
+
+    if (m_type == ALC_DIGEST_TYPE_SHA3) {
+        switch (m_mode) {
+            case ALC_SHA3_224:
+                EVP_DigestInit(m_handle, EVP_sha3_224());
+                break;
+            case ALC_SHA3_256:
+                EVP_DigestInit(m_handle, EVP_sha3_256());
+                break;
+            case ALC_SHA3_384:
+                EVP_DigestInit(m_handle, EVP_sha3_384());
+                break;
+            case ALC_SHA3_512:
+                EVP_DigestInit(m_handle, EVP_sha3_512());
+                break;
+            default:
+                return false;
+        }
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool
 OpenSSLDigestBase::init(_alc_sha2_mode   mode,
+                        _alc_digest_type type,
+                        _alc_digest_len  sha_len)
+{
+    this->m_mode    = mode;
+    this->m_type    = type;
+    this->m_sha_len = sha_len;
+    return init();
+}
+
+bool
+OpenSSLDigestBaseSHA3::init(_alc_sha3_mode   mode,
                         _alc_digest_type type,
                         _alc_digest_len  sha_len)
 {
@@ -104,6 +166,21 @@ OpenSSLDigestBase::digest_function(const Uint8* in,
 
     return ALC_ERROR_NONE;
 }
+
+alc_error_t
+OpenSSLDigestBaseSHA3::digest_function(const Uint8* in,
+                                   Uint64       in_size,
+                                   Uint8*       out,
+                                   Uint64       out_size)
+{
+    unsigned int outsize = 0;
+    EVP_DigestUpdate(m_handle, in, in_size);
+    EVP_DigestFinal_ex(m_handle, out, &outsize);
+    out_size = outsize;
+
+    return ALC_ERROR_NONE;
+}
+
 void
 OpenSSLDigestBase::reset()
 {
@@ -127,7 +204,42 @@ OpenSSLDigestBase::reset()
 }
 
 void
+OpenSSLDigestBaseSHA3::reset()
+{
+    EVP_MD_CTX_reset(m_handle);
+    if (m_type == ALC_DIGEST_TYPE_SHA3) {
+        switch (m_mode) {
+            case ALC_SHA3_224:
+                EVP_DigestInit(m_handle, EVP_sha3_224());
+                break;
+            case ALC_SHA3_256:
+                EVP_DigestInit(m_handle, EVP_sha3_256());
+                break;
+            case ALC_SHA3_384:
+                EVP_DigestInit(m_handle, EVP_sha3_384());
+                break;
+            case ALC_SHA3_512:
+                EVP_DigestInit(m_handle, EVP_sha3_512());
+                break;
+        }
+    }
+}
+
+/*FIXME: This is common across all base classes, need to unify at one point */
+void
 OpenSSLDigestBase::hash_to_string(char*        output_string,
+                                  const Uint8* hash,
+                                  int          sha_len)
+{
+    for (int i = 0; i < sha_len / 8; i++) {
+        output_string += sprintf(output_string, "%02x", hash[i]);
+    }
+    output_string[(sha_len / 8) * 2 + 1] = '\0';
+}
+
+/*FIXME: This is common across all base classes, need to unify at one point */
+void
+OpenSSLDigestBaseSHA3::hash_to_string(char*        output_string,
                                   const Uint8* hash,
                                   int          sha_len)
 {

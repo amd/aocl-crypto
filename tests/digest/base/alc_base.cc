@@ -200,6 +200,7 @@ AlcpDigestBaseSHA3::reset()
 }
 
 /* Hash value to string */
+/*FIXME: This is common across all base classes, need to unify at one point */
 void
 AlcpDigestBase::hash_to_string(char*        output_string,
                                const Uint8* hash,
@@ -212,6 +213,7 @@ AlcpDigestBase::hash_to_string(char*        output_string,
 }
 
 /* Hash value to string */
+/*FIXME: This is common across all base classes, need to unify at one point */
 void
 AlcpDigestBaseSHA3::hash_to_string(char*        output_string,
                                const Uint8* hash,

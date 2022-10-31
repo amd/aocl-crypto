@@ -285,7 +285,7 @@ SHA3_KATTest(int HashSize)
         db = &idb;
 #endif
 #ifdef USE_OSSL
-    OpenSSLDigestBase odb(
+    OpenSSLDigestBaseSHA3 odb(
         GetSHA3Mode(HashSize), ALC_DIGEST_TYPE_SHA3, GetSHA3Len(HashSize));
     if (useossl == true)
         db = &odb;
