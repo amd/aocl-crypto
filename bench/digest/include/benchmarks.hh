@@ -198,7 +198,180 @@ Digest_SHA2_512(benchmark::State& state, uint64_t block_size)
     return;
 }
 
+/* SHA3 functions */
+void
+Digest_SHA3_224(benchmark::State& state, uint64_t block_size)
+{
+    alc_error_t    error;
+    Uint8          message[32768] = { 0 };
+    Uint8          digest[512]    = { 0 };
+    AlcpDigestBaseSHA3 adb(ALC_SHA3_224, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_224);
+    DigestBaseSHA3*    db = &adb;
+
+#ifdef USE_OSSL
+    OpenSSLDigestBaseSHA3 odb(
+        ALC_SHA3_224, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_224);
+    if (useossl) {
+        db = &odb;
+    }
+#endif
+
+    for (auto _ : state) {
+        error =
+            db->digest_function(message, block_size, digest, sizeof(digest));
+        db->reset();
+        if (alcp_is_error(error)) {
+            printf("Error in running benchmark");
+            return;
+        }
+    }
+    state.counters["Speed(Bytes/s)"] = benchmark::Counter(
+        state.iterations() * block_size, benchmark::Counter::kIsRate);
+    state.counters["BlockSize(Bytes)"] = block_size;
+    return;
+}
+
+void
+Digest_SHA3_256(benchmark::State& state, uint64_t block_size)
+{
+    alc_error_t    error;
+    Uint8          message[32768] = { 0 };
+    Uint8          digest[512]    = { 0 };
+    AlcpDigestBaseSHA3 adb(ALC_SHA3_256, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_256);
+    DigestBaseSHA3*    db = &adb;
+
+#ifdef USE_OSSL
+    OpenSSLDigestBaseSHA3 odb(
+        ALC_SHA3_256, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_256);
+    if (useossl) {
+        db = &odb;
+    }
+#endif
+
+    for (auto _ : state) {
+        error =
+            db->digest_function(message, block_size, digest, sizeof(digest));
+        db->reset();
+        if (alcp_is_error(error)) {
+            printf("Error in running benchmark");
+            return;
+        }
+    }
+    state.counters["Speed(Bytes/s)"] = benchmark::Counter(
+        state.iterations() * block_size, benchmark::Counter::kIsRate);
+    state.counters["BlockSize(Bytes)"] = block_size;
+    return;
+}
+
+void
+Digest_SHA3_384(benchmark::State& state, uint64_t block_size)
+{
+    alc_error_t    error;
+    Uint8          message[32768] = { 0 };
+    Uint8          digest[512]    = { 0 };
+    AlcpDigestBaseSHA3 adb(ALC_SHA3_384, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_384);
+    DigestBaseSHA3*    db = &adb;
+
+#ifdef USE_OSSL
+    OpenSSLDigestBaseSHA3 odb(
+        ALC_SHA3_384, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_384);
+    if (useossl) {
+        db = &odb;
+    }
+#endif
+
+    for (auto _ : state) {
+        error =
+            db->digest_function(message, block_size, digest, sizeof(digest));
+        db->reset();
+        if (alcp_is_error(error)) {
+            printf("Error in running benchmark");
+            return;
+        }
+    }
+    state.counters["Speed(Bytes/s)"] = benchmark::Counter(
+        state.iterations() * block_size, benchmark::Counter::kIsRate);
+    state.counters["BlockSize(Bytes)"] = block_size;
+    return;
+}
+
+void
+Digest_SHA3_512(benchmark::State& state, uint64_t block_size)
+{
+    alc_error_t    error;
+    Uint8          message[32768] = { 0 };
+    Uint8          digest[512]    = { 0 };
+    AlcpDigestBaseSHA3 adb(ALC_SHA3_512, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_512);
+    DigestBaseSHA3*    db = &adb;
+
+#ifdef USE_OSSL
+    OpenSSLDigestBaseSHA3 odb(
+        ALC_SHA3_512, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_512);
+    if (useossl) {
+        db = &odb;
+    }
+#endif
+
+    for (auto _ : state) {
+        error =
+            db->digest_function(message, block_size, digest, sizeof(digest));
+        db->reset();
+        if (alcp_is_error(error)) {
+            printf("Error in running benchmark");
+            return;
+        }
+    }
+    state.counters["Speed(Bytes/s)"] = benchmark::Counter(
+        state.iterations() * block_size, benchmark::Counter::kIsRate);
+    state.counters["BlockSize(Bytes)"] = block_size;
+    return;
+}
+
 /* add all your new benchmarks here */
+/* SHA3 benchmarks */
+static void
+BENCH_SHA3_224_16(benchmark::State& state) {
+    Digest_SHA3_224(state, 16);
+}
+BENCHMARK(BENCH_SHA3_224_16);
+
+static void
+BENCH_SHA3_224_64(benchmark::State& state) {
+    Digest_SHA3_224(state, 64);
+}
+BENCHMARK(BENCH_SHA3_224_64);
+
+static void
+BENCH_SHA3_224_256(benchmark::State& state) {
+    Digest_SHA3_224(state, 256);
+}
+BENCHMARK(BENCH_SHA3_224_256);
+
+static void
+BENCH_SHA3_224_1024(benchmark::State& state) {
+    Digest_SHA3_224(state, 1024);
+}
+BENCHMARK(BENCH_SHA3_224_1024);
+
+static void
+BENCH_SHA3_224_8192(benchmark::State& state) {
+    Digest_SHA3_224(state, 8192);
+}
+BENCHMARK(BENCH_SHA3_224_8192);
+
+static void
+BENCH_SHA3_224_16384(benchmark::State& state) {
+    Digest_SHA3_224(state, 16384);
+}
+BENCHMARK(BENCH_SHA3_224_16384);
+
+static void
+BENCH_SHA3_224_32768(benchmark::State& state) {
+    Digest_SHA3_224(state, 32768);
+}
+BENCHMARK(BENCH_SHA3_224_32768);
+
+/* SHA2 benchmarks */
 static void
 BENCH_SHA2_224_16(benchmark::State& state)
 {
