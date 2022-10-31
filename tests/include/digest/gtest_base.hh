@@ -278,12 +278,22 @@ SHA3_KATTest(int HashSize)
         GetSHA3Mode(HashSize), ALC_DIGEST_TYPE_SHA3, GetSHA3Len(HashSize));
     DigestBaseSHA3* db;
     db = &adb;
+
+    if (useipp == true)
+    {
+        printf("IPPCP doesnt support SHA3 digest as of now, skipping the test\n");
+        return;
+    }
+
+#if 0
 #ifdef USE_IPP
-    IPPDigestBase idb(
+    IPPDigestBaseSHA3 idb(
         GetSHA3Mode(HashSize), ALC_DIGEST_TYPE_SHA3, GetSHA3Len(HashSize));
     if (useipp == true)
         db = &idb;
 #endif
+#endif
+
 #ifdef USE_OSSL
     OpenSSLDigestBaseSHA3 odb(
         GetSHA3Mode(HashSize), ALC_DIGEST_TYPE_SHA3, GetSHA3Len(HashSize));

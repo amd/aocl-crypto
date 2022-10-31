@@ -63,4 +63,35 @@ class IPPDigestBase : public DigestBase
 
     void hash_to_string(char* output_string, const Uint8* hash, int sha_len);
 };
+
+/*ipp base class for SHA3 */
+class IPPDigestBaseSHA3 : public DigestBaseSHA3
+{
+    IppsHashState_rmf* m_handle = nullptr;
+    _alc_sha3_mode     m_mode;
+    _alc_digest_type   m_type;
+    _alc_digest_len    m_sha_len;
+    Uint8*             m_message;
+    Uint8*             m_digest;
+
+  public:
+    IPPDigestBaseSHA3(_alc_sha3_mode   mode,
+                  _alc_digest_type type,
+                  _alc_digest_len  sha_len);
+    ~IPPDigestBaseSHA3();
+    bool init();
+    bool init(_alc_sha3_mode   mode,
+              _alc_digest_type type,
+              _alc_digest_len  sha_len);
+
+    alc_error_t digest_function(const Uint8* src,
+                                Uint64       src_size,
+                                Uint8*       output,
+                                Uint64       out_size);
+
+    void reset();
+
+    void hash_to_string(char* output_string, const Uint8* hash, int sha_len);
+};
+
 } // namespace alcp::testing
