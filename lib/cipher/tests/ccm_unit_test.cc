@@ -141,14 +141,14 @@ TEST(CCM, ZeroLEN)
     // clang-format on
     Ccm         ccm_obj = Ccm(aesInfo, keyInfo);
     alc_error_t err;
-    err = ccm_obj.encryptUpdate(nullptr, nullptr, 0, iv);
+    err = ccm_obj.setIv(0, iv);
     EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
-    err = ccm_obj.encryptUpdate(reinterpret_cast<Uint8*>(ad), nullptr, 0, iv);
+    err = ccm_obj.setAad(reinterpret_cast<Uint8*>(ad), 0);
     EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
     err = ccm_obj.encryptUpdate(
         reinterpret_cast<Uint8*>(message), output_ct, 0, iv);
     EXPECT_EQ(err, ALC_ERROR_NONE);
-    err = ccm_obj.encryptUpdate(nullptr, tagbuff, 0, iv);
+    err = ccm_obj.getTag(tagbuff, 0);
     EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
 }
 
@@ -178,18 +178,16 @@ TEST_P(CCM_KAT, Encrypt)
     alc_error_t err;
     /* Encryption begins here */
     if (!tag.empty()) {
-        err = ccm_obj.encryptUpdate(
-            nullptr, &(out_tag.at(0)), tag.size(), &(nonce.at(0)));
+        err = ccm_obj.setTagLength(tag.size());
     }
 
     // Nonce
-    err = ccm_obj.encryptUpdate(nullptr, nullptr, nonce.size(), &(nonce.at(0)));
+    err = ccm_obj.setIv(nonce.size(), &(nonce.at(0)));
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
     // Additional Data
     if (!aad.empty()) {
-        err = ccm_obj.encryptUpdate(
-            &(aad.at(0)), nullptr, aad.size(), &(nonce.at(0)));
+        err = ccm_obj.setAad(&(aad.at(0)), aad.size());
         EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
     }
 
@@ -209,8 +207,7 @@ TEST_P(CCM_KAT, Encrypt)
 
     // If there is tag, try to get the tag.
     if (!tag.empty()) {
-        err = ccm_obj.encryptUpdate(
-            nullptr, &(out_tag.at(0)), tag.size(), &(nonce.at(0)));
+        err = ccm_obj.getTag(&(out_tag.at(0)), tag.size());
         if (test_name.at(0) == 'P')
             EXPECT_TRUE(ArraysMatch(out_tag, tag));
         else
@@ -244,18 +241,16 @@ TEST_P(CCM_KAT, Decrypt)
 
     /* Decryption begins here*/
     if (!tag.empty()) {
-        err = ccm_obj.decryptUpdate(
-            nullptr, &(out_tag.at(0)), tag.size(), &(nonce.at(0)));
+        err = ccm_obj.setTagLength(tag.size());
     }
 
     // Nonce
-    err = ccm_obj.decryptUpdate(nullptr, nullptr, nonce.size(), &(nonce.at(0)));
+    err = ccm_obj.setIv(nonce.size(), &(nonce.at(0)));
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
     // Additional Data
     if (!aad.empty()) {
-        err = ccm_obj.decryptUpdate(
-            &(aad.at(0)), nullptr, aad.size(), &(nonce.at(0)));
+        err = ccm_obj.setAad(&(aad.at(0)), aad.size());
         EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
     }
 
@@ -275,8 +270,7 @@ TEST_P(CCM_KAT, Decrypt)
 
     // If there is tag, try to get the tag.
     if (!tag.empty()) {
-        err = ccm_obj.decryptUpdate(
-            nullptr, &(out_tag.at(0)), tag.size(), &(nonce.at(0)));
+        err = ccm_obj.getTag(&(out_tag.at(0)), tag.size());
         if (test_name.at(0) == 'P')
             EXPECT_TRUE(ArraysMatch(out_tag, tag));
         else
@@ -295,11 +289,9 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST(CCM, InvalidTagLen)
 {
-    Uint8              iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
-    Uint8              key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+    Uint8 iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
+    Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-    Uint8              tagbuff[17];
-    std::vector<Uint8> out_tag(sizeof(tagbuff), 0);
     const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_CCM,
                                              .ai_iv   = iv };
     // clang-format off
@@ -311,8 +303,8 @@ TEST(CCM, InvalidTagLen)
     alc_error_t err;
 
     // TODO: Create a parametrized test
-    err = ccm_obj.decryptUpdate(
-            nullptr, &(out_tag.at(0)), out_tag.size(), iv);
+    err = ccm_obj.setTagLength(
+            17);
     EXPECT_EQ(err,ALC_ERROR_INVALID_SIZE);
 
 }
@@ -336,13 +328,13 @@ TEST(CCM, InvalidNonceLen)
     alc_error_t err;
 
     // TODO: Create a parametrized test
-    err = ccm_obj.decryptUpdate(
-            nullptr, &(out_tag.at(0)), out_tag.size(), iv);
+    err = ccm_obj.setTagLength(
+            out_tag.size());
     
     EXPECT_EQ(err,ALC_ERROR_NONE);
 
     // Nonce
-    err = ccm_obj.decryptUpdate(nullptr, nullptr, nonce.size(), &(nonce.at(0)));
+    err = ccm_obj.setIv(nonce.size(), &(nonce.at(0)));
     EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
 }
 
