@@ -33,39 +33,23 @@
 #include <iostream>
 #include <string.h>
 
+
+
 TEST(DIGEST_SHA2, CROSS_224)
 {
-    SHA2_CrossTest(224);
+    SHA_CrossTest(224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
 }
 TEST(DIGEST_SHA2, CROSS_256)
 {
-    SHA2_CrossTest(256);
+    SHA_CrossTest(256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
 }
-TEST(DIGEST_SHA2, CROSS_384)
-{
-    SHA2_CrossTest(384);
-}
-TEST(DIGEST_SHA2, CROSS_512)
-{
-    SHA2_CrossTest(512);
-}
-
-/* SHA3 cross tests */
 TEST(DIGEST_SHA3, CROSS_224)
 {
-    SHA3_CrossTest(224);
+    SHA_CrossTest(224, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_224);
 }
 TEST(DIGEST_SHA3, CROSS_256)
 {
-    SHA3_CrossTest(256);
-}
-TEST(DIGEST_SHA3, CROSS_384)
-{
-    SHA3_CrossTest(384);
-}
-TEST(DIGEST_SHA3, CROSS_512)
-{
-    SHA3_CrossTest(512);
+    SHA_CrossTest(256, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_256);
 }
 
 

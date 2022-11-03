@@ -30,25 +30,17 @@
 
 namespace alcp::testing {
 
-IPPDigestBase::IPPDigestBase(_alc_sha2_mode   mode,
+IPPDigestBase::IPPDigestBase(
+                            //_alc_sha2_mode   mode,
                              _alc_digest_type type,
                              _alc_digest_len  sha_len)
-    : m_mode{ mode }
-    , m_type{ type }
+    //: m_mode{ mode }
+    : m_type{ type }
     , m_sha_len{ sha_len }
 {
     init();
 }
 
-IPPDigestBaseSHA3::IPPDigestBaseSHA3(_alc_sha3_mode   mode,
-                             _alc_digest_type type,
-                             _alc_digest_len  sha_len)
-    : m_mode{ mode }
-    , m_type{ type }
-    , m_sha_len{ sha_len }
-{
-    init();
-}
 
 IPPDigestBase::~IPPDigestBase()
 {
@@ -57,12 +49,6 @@ IPPDigestBase::~IPPDigestBase()
     }
 }
 
-IPPDigestBaseSHA3::~IPPDigestBaseSHA3()
-{
-    if (m_handle != nullptr) {
-        delete[] reinterpret_cast<Uint8*>(m_handle);
-    }
-}
 
 bool
 IPPDigestBase::init()
@@ -97,56 +83,14 @@ IPPDigestBase::init()
     return true;
 }
 
-bool
-IPPDigestBaseSHA3::init()
-{
-    if (m_handle != nullptr) {
-        delete[] reinterpret_cast<Uint8*>(m_handle);
-        m_handle = nullptr;
-    }
-    int ctx_size;
-    ippsHashGetSize_rmf(&ctx_size);
-    m_handle = reinterpret_cast<IppsHashState_rmf*>(new Uint8[ctx_size]);
-    if (m_type == ALC_DIGEST_TYPE_SHA3) {
-        switch (m_mode) {
-            case ALC_SHA3_224:
-                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA224());
-                break;
-            case ALC_SHA3_256:
-                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA256());
-                break;
-            case ALC_SHA3_384:
-                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA384());
-                break;
-            case ALC_SHA3_512:
-                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512());
-                break;
-            default:
-                return false;
-        }
-    } else {
-        return false;
-    }
-    return true;
-}
 
 bool
-IPPDigestBase::init(_alc_sha2_mode   mode,
+IPPDigestBase::init(
+                    //_alc_sha2_mode   mode,
                     _alc_digest_type type,
                     _alc_digest_len  sha_len)
 {
-    this->m_mode    = mode;
-    this->m_type    = type;
-    this->m_sha_len = sha_len;
-    return init();
-}
-
-bool
-IPPDigestBaseSHA3::init(_alc_sha3_mode   mode,
-                    _alc_digest_type type,
-                    _alc_digest_len  sha_len)
-{
-    this->m_mode    = mode;
+    //this->m_mode    = mode;
     this->m_type    = type;
     this->m_sha_len = sha_len;
     return init();
@@ -164,23 +108,8 @@ IPPDigestBase::digest_function(const Uint8* in,
     return ALC_ERROR_NONE;
 }
 
-alc_error_t
-IPPDigestBaseSHA3::digest_function(const Uint8* in,
-                               Uint64       in_size,
-                               Uint8*       out,
-                               Uint64       out_size)
-{
-    ippsHashUpdate_rmf(in, in_size, m_handle);
-    ippsHashFinal_rmf(out, m_handle);
-    return ALC_ERROR_NONE;
-}
-
 void
 IPPDigestBase::reset()
-{}
-
-void
-IPPDigestBaseSHA3::reset()
 {}
 
 void
@@ -194,15 +123,5 @@ IPPDigestBase::hash_to_string(char*        output_string,
     output_string[(sha_len / 8) * 2 + 1] = '\0';
 }
 
-void
-IPPDigestBaseSHA3::hash_to_string(char*        output_string,
-                              const Uint8* hash,
-                              int          sha_len)
-{
-    for (int i = 0; i < sha_len / 8; i++) {
-        output_string += sprintf(output_string, "%02x", hash[i]);
-    }
-    output_string[(sha_len / 8) * 2 + 1] = '\0';
-}
 
 } // namespace alcp::testing
