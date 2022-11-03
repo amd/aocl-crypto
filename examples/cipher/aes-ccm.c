@@ -194,7 +194,7 @@ aclp_aes_ccm_encrypt_demo(
     uint8_t     err_buf[err_size];
 
     // set tag length
-    err = alcp_cipher_encrypt_update(&handle, NULL, tag, tagLen, iv);
+    err = alcp_cipher_set_tag_length(&handle, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);
@@ -202,7 +202,7 @@ aclp_aes_ccm_encrypt_demo(
     }
 
     // CCM init
-    err = alcp_cipher_encrypt_update(&handle, NULL, NULL, ivLen, iv);
+    err = alcp_cipher_set_iv(&handle, ivLen, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable ccm encrypt init \n");
         alcp_error_str(err, err_buf, err_size);
@@ -210,7 +210,7 @@ aclp_aes_ccm_encrypt_demo(
     }
 
     // Additional Data
-    err = alcp_cipher_encrypt_update(&handle, ad, NULL, adLen, iv);
+    err = alcp_cipher_set_aad(&handle, ad, adLen);
     if (alcp_is_error(err)) {
         printf("Error: unable ccm add data processing \n");
         alcp_error_str(err, err_buf, err_size);
@@ -226,7 +226,7 @@ aclp_aes_ccm_encrypt_demo(
     }
 
     // get tag
-    err = alcp_cipher_encrypt_update(&handle, NULL, tag, tagLen, iv);
+    err = alcp_cipher_get_tag(&handle, tag, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);
@@ -252,7 +252,7 @@ aclp_aes_ccm_decrypt_demo(const uint8_t* ciphertxt,
     uint8_t     tagDecrypt[16];
 
     // set tag length
-    err = alcp_cipher_decrypt_update(&handle, NULL, tagDecrypt, tagLen, iv);
+    err = alcp_cipher_set_tag_length(&handle, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);
@@ -260,7 +260,7 @@ aclp_aes_ccm_decrypt_demo(const uint8_t* ciphertxt,
     }
 
     // GCM init
-    err = alcp_cipher_decrypt_update(&handle, NULL, NULL, ivLen, iv);
+    err = alcp_cipher_set_iv(&handle, ivLen, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm decrypt init \n");
         alcp_error_str(err, err_buf, err_size);
@@ -268,7 +268,7 @@ aclp_aes_ccm_decrypt_demo(const uint8_t* ciphertxt,
     }
 
     // Additional Data
-    err = alcp_cipher_decrypt_update(&handle, ad, NULL, adLen, iv);
+    err = alcp_cipher_set_aad(&handle, ad, adLen);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm add data processing \n");
         alcp_error_str(err, err_buf, err_size);
@@ -284,7 +284,7 @@ aclp_aes_ccm_decrypt_demo(const uint8_t* ciphertxt,
     }
 
     // get tag
-    err = alcp_cipher_decrypt_update(&handle, NULL, tagDecrypt, tagLen, iv);
+    err = alcp_cipher_get_tag(&handle, tagDecrypt, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);
