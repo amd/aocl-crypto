@@ -41,11 +41,11 @@ namespace alcp::cipher {
 
 template<typename CIPHERMODE, bool encrypt = true>
 static alc_error_t
-__aes_wrapper(const void*    rCipher,
-              const uint8_t* pSrc,
-              uint8_t*       pDest,
-              uint64_t       len,
-              const uint8_t* pIv)
+__aes_wrapper(const void*  rCipher,
+              const Uint8* pSrc,
+              Uint8*       pDest,
+              Uint64       len,
+              const Uint8* pIv)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
@@ -61,11 +61,11 @@ __aes_wrapper(const void*    rCipher,
 
 template<typename CIPHERMODE, bool encrypt = true>
 static alc_error_t
-__aes_wrapperUpdate(void*          rCipher,
-                    const uint8_t* pSrc,
-                    uint8_t*       pDest,
-                    uint64_t       len,
-                    const uint8_t* pIv)
+__aes_wrapperUpdate(void*        rCipher,
+                    const Uint8* pSrc,
+                    Uint8*       pDest,
+                    Uint64       len,
+                    const Uint8* pIv)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
@@ -75,6 +75,48 @@ __aes_wrapperUpdate(void*          rCipher,
         e = ap->encryptUpdate(pSrc, pDest, len, pIv);
     else
         e = ap->decryptUpdate(pSrc, pDest, len, pIv);
+
+    return e;
+}
+
+template<typename CIPHERMODE>
+static alc_error_t
+__aes_wrapperSetIv(void* rCipher, Uint64 len, const Uint8* pIv)
+{
+    alc_error_t e = ALC_ERROR_NONE;
+
+    auto ap = static_cast<CIPHERMODE*>(rCipher);
+
+    e = ap->encryptUpdate(nullptr, nullptr, len, pIv);
+
+    return e;
+}
+
+template<typename CIPHERMODE>
+static alc_error_t
+__aes_wrapperGetTag(void* rCipher, Uint8* pTag, Uint64 len, const Uint8* pIv)
+{
+    alc_error_t e = ALC_ERROR_NONE;
+
+    auto ap = static_cast<CIPHERMODE*>(rCipher);
+
+    e = ap->encryptUpdate(nullptr, pTag, len, pIv);
+
+    return e;
+}
+
+template<typename CIPHERMODE>
+static alc_error_t
+__aes_wrapperSetAad(void*        rCipher,
+                    const Uint8* pAad,
+                    Uint64       len,
+                    const Uint8* pIv)
+{
+    alc_error_t e = ALC_ERROR_NONE;
+
+    auto ap = static_cast<CIPHERMODE*>(rCipher);
+
+    e = ap->encryptUpdate(pAad, nullptr, len, pIv);
 
     return e;
 }
@@ -105,6 +147,9 @@ __build_aes(const alc_cipher_algo_info_t& aesInfo,
         if constexpr (std::is_same_v<CIPHERMODE, Gcm>) {
             ctx.decryptUpdate = __aes_wrapperUpdate<Gcm, false>;
             ctx.encryptUpdate = __aes_wrapperUpdate<Gcm, true>;
+            ctx.setAad        = __aes_wrapperSetAad<Gcm>;
+            ctx.setIv         = __aes_wrapperSetIv<Gcm>;
+            ctx.getTag        = __aes_wrapperGetTag<Gcm>;
         } else if constexpr (std::is_same_v<CIPHERMODE, Ccm>) {
             ctx.decryptUpdate = __aes_wrapperUpdate<Ccm, false>;
             ctx.encryptUpdate = __aes_wrapperUpdate<Ccm, true>;

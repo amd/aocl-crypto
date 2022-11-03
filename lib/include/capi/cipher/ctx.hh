@@ -63,6 +63,18 @@ struct Context
                                  Uint64       len,
                                  const Uint8* pIv);
 
+    alc_error_t (*setIv)(void* rCipher, Uint64 len, const Uint8* pIv);
+
+    alc_error_t (*setAad)(void*        rCipher,
+                          const Uint8* pAad,
+                          Uint64       len,
+                          const Uint8* pIv);
+
+    alc_error_t (*getTag)(void*        rCipher,
+                          Uint8*       pTag,
+                          Uint64       len,
+                          const Uint8* pIv);
+
     alc_error_t (*finish)(const void*);
 };
 

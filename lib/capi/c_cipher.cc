@@ -190,6 +190,65 @@ alcp_cipher_decrypt_update(const alc_cipher_handle_p pCipherHandle,
     return err;
 }
 
+alc_error_t
+alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
+                   Uint64                    len,
+                   const Uint8*              pIv)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    // ALCP_BAD_PTR_ERR_RET(pInput, err);
+    // ALCP_BAD_PTR_ERR_RET(pOutput, err);
+    ALCP_BAD_PTR_ERR_RET(pIv, err);
+
+    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
+
+    err = ctx->setIv(ctx->m_cipher, len, pIv);
+
+    return err;
+}
+
+alc_error_t
+alcp_cipher_set_aad(const alc_cipher_handle_p pCipherHandle,
+                    const Uint8*              pInput,
+                    Uint64                    len,
+                    const Uint8*              pIv)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    // ALCP_BAD_PTR_ERR_RET(pInput, err);
+    // ALCP_BAD_PTR_ERR_RET(pOutput, err);
+    ALCP_BAD_PTR_ERR_RET(pIv, err);
+
+    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
+
+    err = ctx->setAad(ctx->m_cipher, pInput, len, pIv);
+
+    return err;
+}
+
+alc_error_t
+alcp_cipher_get_tag(const alc_cipher_handle_p pCipherHandle,
+                    Uint8*                    pOutput,
+                    Uint64                    len,
+                    const Uint8*              pIv)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    // ALCP_BAD_PTR_ERR_RET(pInput, err);
+    // ALCP_BAD_PTR_ERR_RET(pOutput, err);
+    ALCP_BAD_PTR_ERR_RET(pIv, err);
+
+    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
+
+    err = ctx->getTag(ctx->m_cipher, pOutput, len, pIv);
+
+    return err;
+}
+
 /**
  * \notes pCipherHandle will be freed by the application
  */
