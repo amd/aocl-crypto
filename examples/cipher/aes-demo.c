@@ -18,7 +18,7 @@ static alc_cipher_handle_t handle;
 
 // clang-format off
 
-// #define SPEED_CHECK 1
+#define SPEED_CHECK 1
 
 //#define DEBUG_P /* Enable for debugging only */
 
@@ -186,7 +186,7 @@ aclp_aes_gcm_encrypt_demo(
     }
 
     // Additional Data
-    err = alcp_cipher_set_aad(&handle, ad, adLen, iv);
+    err = alcp_cipher_set_aad(&handle, ad, adLen);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm add data processing \n");
         alcp_error_str(err, err_buf, err_size);
@@ -202,7 +202,7 @@ aclp_aes_gcm_encrypt_demo(
     }
 
     // get tag
-    err = alcp_cipher_get_tag(&handle, tag, tagLen, iv);
+    err = alcp_cipher_get_tag(&handle, tag, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);
@@ -255,7 +255,7 @@ aclp_aes_gcm_decrypt_demo(const uint8_t* ciphertxt,
     }
 
     // Additional Data
-    err = alcp_cipher_set_aad(&handle, ad, adLen, iv);
+    err = alcp_cipher_set_aad(&handle, ad, adLen);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm add data processing \n");
         alcp_error_str(err, err_buf, err_size);
@@ -271,7 +271,7 @@ aclp_aes_gcm_decrypt_demo(const uint8_t* ciphertxt,
     }
 
     // get tag
-    err = alcp_cipher_get_tag(&handle, tagDecrypt, tagLen, iv);
+    err = alcp_cipher_get_tag(&handle, tagDecrypt, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);
@@ -702,7 +702,7 @@ main(void)
 
     printf("\n AOCL-CRYPTO: AES Demo application ");
 
-    for (alc_cipher_mode_t m = ALC_AES_MODE_GCM; m <= ALC_AES_MODE_GCM; m++) {
+    for (alc_cipher_mode_t m = ALC_AES_MODE_ECB; m < ALC_AES_MODE_MAX; m++) {
 
         if (m == ALC_AES_MODE_ECB) {
             printf("\n\nAES-ECB not implemented");
