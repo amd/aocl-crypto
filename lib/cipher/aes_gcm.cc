@@ -61,47 +61,7 @@ Gcm::cryptUpdate(const uint8_t* pInput,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    /*  Follow in Gcm:
-     *  InitGcm -> processAdditionalDataGcm ->CryptGcm-> GetTagGcm */
-
-    // gcm init, both input and output pointers are NULL
-    if ((pInput == NULL) && (pOutput == NULL)) {
-        // GCM init call
-        // len is used as ivlen
-        // In init call, we generate HashSubKey, partial tag data.
-        if (len == 0) {
-            // Len 0 is invalid so return error.
-            return ALC_ERROR_INVALID_ARG;
-        }
-        m_gHash_128         = _mm_setzero_si128();
-        m_hash_subKey_128   = _mm_setzero_si128();
-        m_len               = 0;
-        m_additionalDataLen = 0;
-        m_tagLen            = 0;
-        m_ivLen             = 12; // default 12 bytes or 96bits
-
-        m_ivLen = len;
-        err     = aesni::InitGcm(getEncryptKeys(),
-                             getRounds(),
-                             pIv,
-                             m_ivLen,
-                             &m_hash_subKey_128,
-                             &m_tag_128,
-                             &m_iv_128,
-                             m_reverse_mask_128);
-    } else if ((pInput != NULL) && (pOutput == NULL)) {
-        // additional data processing, when input is additional data &
-        // output is NULL
-        const uint8_t* pAdditionalData = pInput;
-        m_additionalDataLen            = len;
-
-        // Additional data call
-        err = aesni::processAdditionalDataGcm(pAdditionalData,
-                                              m_additionalDataLen,
-                                              &m_gHash_128,
-                                              m_hash_subKey_128,
-                                              m_reverse_mask_128);
-    } else if ((pInput != NULL) && (pOutput != NULL)) {
+    if ((pInput != NULL) && (pOutput != NULL)) {
         // CTR encrypt and Hash
         const uint8_t* pPlainText  = pInput;
         uint8_t*       pCipherText = pOutput;
@@ -117,7 +77,7 @@ Gcm::cryptUpdate(const uint8_t* pInput,
         }
 
         if (Cipher::isVaesAvailable() && isAvx512Cap) {
-            // Encrypt call
+            // Encrypt/Decrypt call
             err = vaes::CryptGcm(pPlainText,
                                  pCipherText,
                                  m_len,
@@ -130,7 +90,7 @@ Gcm::cryptUpdate(const uint8_t* pInput,
                                  m_reverse_mask_128,
                                  isEncrypt);
         } else {
-            // Encrypt call
+            // Encrypt/Decrypt call
             err = aesni::CryptGcm(pPlainText,
                                   pCipherText,
                                   m_len,
@@ -143,17 +103,8 @@ Gcm::cryptUpdate(const uint8_t* pInput,
                                   m_reverse_mask_128,
                                   isEncrypt);
         }
-    } else if ((pInput == NULL) && (pOutput != NULL)) {
-        // Get tag info, when Output is not Null and Input is Null.
-        uint8_t* ptag = pOutput;
-        err           = aesni::GetTagGcm(len,
-                               m_len,
-                               m_additionalDataLen,
-                               &m_gHash_128,
-                               &m_tag_128,
-                               m_hash_subKey_128,
-                               m_reverse_mask_128,
-                               ptag);
+    } else {
+        err = ALC_ERROR_INVALID_ARG;
     }
     return err;
 }
