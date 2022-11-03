@@ -329,6 +329,8 @@ class Gcm final
 
     __m128i m_iv_128;
 
+    const Uint8* m_iv = nullptr;
+
     Uint64 m_len;
     Uint64 m_additionalDataLen;
     Uint64 m_ivLen;
@@ -380,6 +382,12 @@ class Gcm final
 
         return false;
     }
+
+    virtual alc_error_t getTag(Uint8* pOutput, Uint64 len);
+
+    virtual alc_error_t setIv(Uint64 len, const Uint8* pIv);
+
+    virtual alc_error_t setAad(const Uint8* pInput, Uint64 len);
 
     /**
      * \brief   GCM Encrypt Operation

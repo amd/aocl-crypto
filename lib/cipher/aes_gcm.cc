@@ -180,4 +180,81 @@ Gcm::encryptUpdate(const uint8_t* pInput,
     return err;
 }
 
+alc_error_t
+Gcm::setIv(Uint64 len, const Uint8* pIv)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    m_iv            = pIv;
+    // GCM init call
+    // len is used as ivlen
+    // In init call, we generate HashSubKey, partial tag data.
+    if (len == 0) {
+        // Len 0 is invalid so return error.
+        err = ALC_ERROR_INVALID_ARG;
+        return err;
+    }
+    m_gHash_128         = _mm_setzero_si128();
+    m_hash_subKey_128   = _mm_setzero_si128();
+    m_len               = 0;
+    m_additionalDataLen = 0;
+    m_tagLen            = 0;
+    m_ivLen             = 12; // default 12 bytes or 96bits
+
+    m_ivLen = len;
+    err     = aesni::InitGcm(getEncryptKeys(),
+                         getRounds(),
+                         pIv,
+                         m_ivLen,
+                         &m_hash_subKey_128,
+                         &m_tag_128,
+                         &m_iv_128,
+                         m_reverse_mask_128);
+    return err;
+}
+
+alc_error_t
+Gcm::setAad(const Uint8* pInput, Uint64 len)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    if (m_iv == nullptr) {
+        err = ALC_ERROR_BAD_STATE;
+        return err;
+    }
+    // additional data processing, when input is additional data &
+    // output is NULL
+    const uint8_t* pAdditionalData = pInput;
+    m_additionalDataLen            = len;
+
+    // Additional data call
+    err = aesni::processAdditionalDataGcm(pAdditionalData,
+                                          m_additionalDataLen,
+                                          &m_gHash_128,
+                                          m_hash_subKey_128,
+                                          m_reverse_mask_128);
+    return err;
+}
+
+alc_error_t
+Gcm::getTag(Uint8* pOutput, Uint64 len)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    if (m_iv == nullptr) {
+        err = ALC_ERROR_BAD_STATE;
+        return err;
+    }
+    uint8_t* ptag = pOutput;
+    err           = aesni::GetTagGcm(len,
+                           m_len,
+                           m_additionalDataLen,
+                           &m_gHash_128,
+                           &m_tag_128,
+                           m_hash_subKey_128,
+                           m_reverse_mask_128,
+                           ptag);
+    if (alcp_is_error(err)) {
+        printf("Error Occured\n");
+    }
+    return err;
+}
+
 } // namespace alcp::cipher

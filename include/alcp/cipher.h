@@ -250,14 +250,12 @@ alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
 alc_error_t
 alcp_cipher_set_aad(const alc_cipher_handle_p pCipherHandle,
                     const Uint8*              pInput,
-                    Uint64                    len,
-                    const Uint8*              pIv);
+                    Uint64                    len);
 
 alc_error_t
 alcp_cipher_get_tag(const alc_cipher_handle_p pCipherHandle,
                     Uint8*                    pOutput,
-                    Uint64                    len,
-                    const Uint8*              pIv);
+                    Uint64                    len);
 
 /**
  * \brief    Allows caller to request for a cipher as described by
