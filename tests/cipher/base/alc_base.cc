@@ -196,15 +196,13 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
     if (m_mode == ALC_AES_MODE_GCM) {
 
         // GCM Init
-        err = alcp_cipher_encrypt_update(
-            m_handle, nullptr, nullptr, data.m_ivl, m_iv);
+        err = alcp_cipher_set_iv(m_handle, data.m_ivl, m_iv);
         if (alcp_is_error(err)) {
             goto enc_out;
         }
 
         if (data.m_adl > 0) {
-            err = alcp_cipher_encrypt_update(
-                m_handle, data.m_ad, nullptr, data.m_adl, m_iv);
+            err = alcp_cipher_set_aad(m_handle, data.m_ad, data.m_adl);
 
             if (alcp_is_error(err)) {
                 goto enc_out;
@@ -217,17 +215,15 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
         if (alcp_is_error(err)) {
             goto enc_out;
         }
+
         // Get Tag
-        if (data.m_tagl == 0 && data.m_tag == nullptr) {
-            // FIXME: Hack to prevent ad from being null
-            Uint8 a;
-            data.m_tag = &a; // Some random value other than NULL
+        if (data.m_tagl > 0) {
+            err = alcp_cipher_get_tag(m_handle, data.m_tag, data.m_tagl);
+            if (alcp_is_error(err)) {
+                goto enc_out;
+            }
         }
-        err = alcp_cipher_encrypt_update(
-            m_handle, nullptr, data.m_tag, data.m_tagl, m_iv);
-        if (alcp_is_error(err)) {
-            goto enc_out;
-        }
+
     } else {
         // For non GCM mode
         err = alcp_cipher_encrypt(
@@ -253,34 +249,27 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
 
     if (m_mode == ALC_AES_MODE_GCM) {
         // GCM Init
-        err = alcp_cipher_decrypt_update(
-            m_handle, nullptr, nullptr, data.m_ivl, m_iv);
+        err = alcp_cipher_set_iv(m_handle, data.m_ivl, m_iv);
         if (alcp_is_error(err)) {
             goto dec_out;
         }
 
         if (data.m_adl > 0) {
-            err = alcp_cipher_decrypt_update(
-                m_handle, data.m_ad, nullptr, data.m_adl, m_iv);
+            err = alcp_cipher_set_aad(m_handle, data.m_ad, data.m_adl);
             if (alcp_is_error(err)) {
                 goto dec_out;
             }
         }
+
         // GCM Decrypt
         err = alcp_cipher_decrypt_update(
             m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
         if (alcp_is_error(err)) {
             goto dec_out;
         }
-        // Get Tag
-        if (data.m_tagl == 0 && data.m_tag == nullptr) {
-            // FIXME: Hack to prevent ad from being null
-            Uint8 a;
-            data.m_tag = &a; // Some random value other than NULL
-        }
+
         if (data.m_tagl > 0) {
-            err = alcp_cipher_decrypt_update(
-                m_handle, nullptr, &(tagbuff.at(0)), data.m_tagl, m_iv);
+            err = alcp_cipher_get_tag(m_handle, &(tagbuff.at(0)), data.m_tagl);
             if (alcp_is_error(err)) {
                 goto dec_out;
             }
@@ -289,6 +278,7 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
                 return false;
             }
         }
+
     } else {
         // For non GCM mode
         err = alcp_cipher_decrypt(
