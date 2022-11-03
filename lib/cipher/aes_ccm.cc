@@ -62,37 +62,7 @@ Ccm::cryptUpdate(const Uint8* pInput,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    // Ccm init, both input and output pointers are NULL
-    if ((pInput == NULL) && (pOutput == NULL)) {
-        // Ccm init call
-        // len is used as ivlen
-        // In init call, we generate HashSubKey, partial tag data.
-        if (len == 0 || len < 7 || len > 13) {
-            err = ALC_ERROR_INVALID_SIZE;
-            return err;
-        }
-        m_ivLen = len;
-
-        // Initialize ccm_data
-        m_ccm_data.blocks = 0;
-        m_ccm_data.key    = nullptr;
-        m_ccm_data.rounds = 0;
-        memset(m_ccm_data.cmac, 0, 16);
-        memset(m_ccm_data.nonce, 0, 16);
-        // 8 is the length required to store length of plain text.
-        aesni::CcmInit(&m_ccm_data, m_tagLen, 8);
-
-    } else if ((pInput != NULL) && (pOutput == NULL)) {
-        // additional data processing, when input is additional data &
-        if (len == 0) {
-            err = ALC_ERROR_INVALID_SIZE;
-            return err;
-        }
-
-        m_additionalData    = pInput;
-        m_additionalDataLen = len;
-
-    } else if ((pInput != NULL) && (pOutput != NULL)) {
+    if ((pInput != NULL) && (pOutput != NULL)) {
         // CTR encrypt and Hash
         m_len = len;
 
@@ -128,21 +98,8 @@ Ccm::cryptUpdate(const Uint8* pInput,
                 aesni::CcmDecrypt(&m_ccm_data, pInput, pOutput, len);
             }
         }
-    } else if ((pInput == NULL) && (pOutput != NULL)) {
-        if (len < 4 || len > 16 || len == 0) {
-            return ALC_ERROR_INVALID_SIZE;
-        }
-        // If tagLen is 0 that means it's a set call
-        if (m_tagLen == 0) {
-            m_tagLen = len;
-        } else {
-            bool ret = aesni::CcmGetTag(&m_ccm_data, pOutput, len);
-
-            if (ret == 0) {
-                err = ALC_ERROR_BAD_STATE;
-                return err;
-            }
-        }
+    } else {
+        err = ALC_ERROR_INVALID_ARG;
     }
     return err;
 }
