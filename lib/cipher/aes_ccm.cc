@@ -169,4 +169,75 @@ Ccm::encryptUpdate(const Uint8* pInput,
     return err;
 }
 
+alc_error_t
+Ccm::setIv(Uint64 len, const Uint8* pIv)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    if (len == 0 || len < 7 || len > 13) {
+        err = ALC_ERROR_INVALID_SIZE;
+        return err;
+    }
+    m_ivLen = len;
+
+    // Initialize ccm_data
+    m_ccm_data.blocks = 0;
+    m_ccm_data.key    = nullptr;
+    m_ccm_data.rounds = 0;
+    memset(m_ccm_data.cmac, 0, 16);
+    memset(m_ccm_data.nonce, 0, 16);
+    // 8 is the length required to store length of plain text.
+    aesni::CcmInit(&m_ccm_data, m_tagLen, 8);
+    return err;
+}
+
+alc_error_t
+Ccm::setAad(const Uint8* pInput, Uint64 len)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    // additional data processing, when input is additional data &
+    if (len == 0) {
+        err = ALC_ERROR_INVALID_SIZE;
+        return err;
+    }
+
+    m_additionalData    = pInput;
+    m_additionalDataLen = len;
+    return err;
+}
+
+alc_error_t
+Ccm::getTag(Uint8* pOutput, Uint64 len)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    if (len < 4 || len > 16 || len == 0) {
+        err = ALC_ERROR_INVALID_SIZE;
+        return err;
+    }
+    // If tagLen is 0 that means it's a set call
+    if (m_tagLen == 0) {
+        m_tagLen = len;
+    } else {
+        bool ret = aesni::CcmGetTag(&m_ccm_data, pOutput, len);
+
+        if (ret == 0) {
+            err = ALC_ERROR_BAD_STATE;
+            return err;
+        }
+    }
+    return err;
+}
+
+alc_error_t
+Ccm::setTagLength(Uint64 len)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    if (len < 4 || len > 16 || len == 0) {
+        err = ALC_ERROR_INVALID_SIZE;
+        return err;
+    }
+    m_tagLen = len;
+
+    return err;
+}
+
 } // namespace alcp::cipher

@@ -507,6 +507,14 @@ class Ccm            final
         return false;
     }
 
+    virtual alc_error_t getTag(Uint8* pOutput, Uint64 len);
+
+    virtual alc_error_t setIv(Uint64 len, const Uint8* pIv);
+
+    virtual alc_error_t setAad(const Uint8* pInput, Uint64 len);
+
+    virtual alc_error_t setTagLength(Uint64 len);
+
     /**
      * \brief   CCM Encrypt Operation
      * \notes

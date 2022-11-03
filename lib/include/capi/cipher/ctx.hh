@@ -69,6 +69,8 @@ struct Context
 
     alc_error_t (*getTag)(void* rCipher, Uint8* pTag, Uint64 len);
 
+    alc_error_t (*setTagLength)(void* rCipher, Uint64 len);
+
     alc_error_t (*finish)(const void*);
 };
 

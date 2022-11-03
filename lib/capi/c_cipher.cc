@@ -241,6 +241,20 @@ alcp_cipher_get_tag(const alc_cipher_handle_p pCipherHandle,
     return err;
 }
 
+alc_error_t
+alcp_cipher_set_tag_length(const alc_cipher_handle_p pCipherHandle, Uint64 len)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+
+    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
+
+    err = ctx->setTagLength(ctx->m_cipher, len);
+
+    return err;
+}
+
 /**
  * \notes pCipherHandle will be freed by the application
  */
