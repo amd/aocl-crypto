@@ -18,7 +18,7 @@ static alc_cipher_handle_t handle;
 
 // clang-format off
 
-#define SPEED_CHECK 1
+// #define SPEED_CHECK 1
 
 //#define DEBUG_P /* Enable for debugging only */
 
@@ -178,7 +178,7 @@ aclp_aes_gcm_encrypt_demo(
     uint8_t     err_buf[err_size];
 
     // GCM init
-    err = alcp_cipher_encrypt_update(&handle, NULL, NULL, ivLen, iv);
+    err = alcp_cipher_set_iv(&handle, ivLen, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm encrypt init \n");
         alcp_error_str(err, err_buf, err_size);
@@ -186,7 +186,7 @@ aclp_aes_gcm_encrypt_demo(
     }
 
     // Additional Data
-    err = alcp_cipher_encrypt_update(&handle, ad, NULL, adLen, iv);
+    err = alcp_cipher_set_aad(&handle, ad, adLen, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm add data processing \n");
         alcp_error_str(err, err_buf, err_size);
@@ -202,7 +202,7 @@ aclp_aes_gcm_encrypt_demo(
     }
 
     // get tag
-    err = alcp_cipher_encrypt_update(&handle, NULL, tag, tagLen, iv);
+    err = alcp_cipher_get_tag(&handle, tag, tagLen, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);
@@ -247,15 +247,15 @@ aclp_aes_gcm_decrypt_demo(const uint8_t* ciphertxt,
     uint8_t     tagDecrypt[16];
 
     // GCM init
-    err = alcp_cipher_decrypt_update(&handle, NULL, NULL, ivLen, iv);
+    err = alcp_cipher_set_iv(&handle, ivLen, iv);
     if (alcp_is_error(err)) {
-        printf("Error: unable gcm decrypt init \n");
+        printf("Error: unable gcm encrypt init \n");
         alcp_error_str(err, err_buf, err_size);
         return;
     }
 
     // Additional Data
-    err = alcp_cipher_decrypt_update(&handle, ad, NULL, adLen, iv);
+    err = alcp_cipher_set_aad(&handle, ad, adLen, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm add data processing \n");
         alcp_error_str(err, err_buf, err_size);
@@ -271,7 +271,7 @@ aclp_aes_gcm_decrypt_demo(const uint8_t* ciphertxt,
     }
 
     // get tag
-    err = alcp_cipher_decrypt_update(&handle, NULL, tagDecrypt, tagLen, iv);
+    err = alcp_cipher_get_tag(&handle, tagDecrypt, tagLen, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);
@@ -702,7 +702,7 @@ main(void)
 
     printf("\n AOCL-CRYPTO: AES Demo application ");
 
-    for (alc_cipher_mode_t m = ALC_AES_MODE_ECB; m < ALC_AES_MODE_MAX; m++) {
+    for (alc_cipher_mode_t m = ALC_AES_MODE_GCM; m <= ALC_AES_MODE_GCM; m++) {
 
         if (m == ALC_AES_MODE_ECB) {
             printf("\n\nAES-ECB not implemented");
