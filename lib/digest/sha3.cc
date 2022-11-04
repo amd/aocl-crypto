@@ -30,6 +30,7 @@
 #include <functional>
 #include <string>
 #include <cstring>
+#include <vector>
 
 #include "digest/sha3.hh"
 #include "utils/bits.hh"
@@ -108,6 +109,7 @@ class Sha3::Impl
 
   private:
     void absorbChunk(Uint64* p_msg_buf_64);
+    void squeezeChunk();
     alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
     void round(Uint64 round_const);
     void fFunction();
@@ -119,12 +121,14 @@ class Sha3::Impl
     Uint32 m_idx = 0;
     bool m_finished = false;
     
-    // 1152 is the maximum size of message block in bits for 224 digest 
-    Uint8 m_buffer[1152 / 8];
+    // 1344 is the maximum size of message block in bits for shake128 digest 
+    Uint8 m_buffer[1344 / 8];
     // state matrix to represent the keccak 1600 bits representation of intermediate hash 
     Uint64 m_state[cDim][cDim];
-      // flat representation of the state, used in absorbing the user message.
+    // flat representation of the state, used in absorbing the user message.
     Uint64 *m_state_flat = &m_state[0][0];
+    // buffer to copy intermediate hash value
+    std::vector<Uint8> m_hash;
 };
 
 Sha3::Impl::Impl(const alc_digest_info_t& rDigestInfo)
@@ -134,22 +138,32 @@ Sha3::Impl::Impl(const alc_digest_info_t& rDigestInfo)
     Uint64 chunk_size_bits = 0;
     m_hash_size = rDigestInfo.dt_len / 8;
 
-    switch(rDigestInfo.dt_len) {
-    case 224:
+    switch(rDigestInfo.dt_mode.dm_sha3) {
+    case ALC_SHA3_224:
         chunk_size_bits = 1152;
         m_name = "SHA3-224";
         break;
-    case 256:
+    case ALC_SHA3_256:
         chunk_size_bits = 1088;
         m_name = "SHA3-256";
         break;
-    case 384:
+    case ALC_SHA3_384:
         chunk_size_bits = 832;
         m_name = "SHA3-384";
         break;
-    case 512:
+    case ALC_SHA3_512:
         chunk_size_bits = 576;
         m_name = "SHA3-512";
+        break;
+    case ALC_SHAKE_128:
+        chunk_size_bits = 1344;
+        m_name = "SHA3-SHAKE-128";
+        m_hash_size = rDigestInfo.dt_custom_len;
+        break;
+    case ALC_SHAKE_256:
+        chunk_size_bits = 1088;
+        m_name = "SHA3-SHAKE-256";
+        m_hash_size = rDigestInfo.dt_custom_len;
         break;
     default:
         ;
@@ -159,12 +173,35 @@ Sha3::Impl::Impl(const alc_digest_info_t& rDigestInfo)
     m_chunk_size = chunk_size_bits / 8;
 
     memset(m_state, 0, sizeof(m_state));
+    m_hash.resize(m_hash_size);
 }
 
 void Sha3::Impl::absorbChunk(Uint64* pMsgBuffer64)
 {
     for (Uint64 i = 0; i < m_chunk_size_u64; ++i) {
         m_state_flat[i] ^= pMsgBuffer64[i];
+    }
+    // keccak function
+    fFunction();
+}
+
+void Sha3::Impl::squeezeChunk()
+{
+    Uint64 hash_copied = 0;
+    while (m_chunk_size <= m_hash_size - hash_copied)
+    {
+        Uint64 data_chunk_copied = std::min(m_hash_size, m_chunk_size);
+        
+        utils::CopyBytes(&m_hash[hash_copied], (Uint8*)m_state_flat, data_chunk_copied);
+        hash_copied += data_chunk_copied; 
+
+        if (hash_copied < m_hash_size) {
+            fFunction();
+        }
+    }
+
+    if (m_hash_size > hash_copied) {
+        utils::CopyBytes(&m_hash[hash_copied], (Uint8*)m_state_flat, m_hash_size - hash_copied);
     }
 }
 
@@ -233,6 +270,7 @@ void
 Sha3::Impl::reset() {
     m_finished = false;
     m_idx      = 0;
+    memset(m_state, 0, sizeof(m_state));
 }
 
 alc_error_t
@@ -245,7 +283,7 @@ Sha3::Impl::copyHash(Uint8* pHash, Uint64 size) const
         return err;
     }
   
-    utils::CopyBytes(pHash, (Uint8*)m_state_flat, size);
+    utils::CopyBytes(pHash, m_hash.data(), size);
     return err;
 }
 
@@ -258,9 +296,6 @@ Sha3::Impl::processChunk(const Uint8* pSrc, Uint64 len)
     while (msg_size) {
         // xor message chunk into m_state.
         absorbChunk(p_msg_buffer64);
-        // keccak function
-        fFunction();
-
         p_msg_buffer64 += m_chunk_size_u64;
         msg_size -= m_chunk_size;
     }
@@ -352,7 +387,13 @@ Sha3::Impl::finalize(const Uint8* pBuf, Uint64 size)
     // sha3 padding
     utils::PadBlock<Uint8>(&m_buffer[m_idx], 0x0, m_chunk_size - m_idx);
 
-    m_buffer[m_idx] = 0x06;
+    if (m_name == "SHA3-SHAKE-128" || m_name == "SHA3-SHAKE-256") {
+        m_buffer[m_idx] = 0x1f;
+    }
+    else {
+        m_buffer[m_idx] = 0x06;
+    }
+
     m_buffer[m_chunk_size - 1] |= 0x80;
 
     if (Error::isError(err)) {
@@ -361,6 +402,8 @@ Sha3::Impl::finalize(const Uint8* pBuf, Uint64 size)
 
     err = processChunk(m_buffer, m_chunk_size);
 
+    squeezeChunk();
+ 
     m_idx = 0;
     m_finished = true;
 

@@ -31,4 +31,5 @@ ADD_EXECUTABLE(sha3_224_example sha3_224_example.c)
 ADD_EXECUTABLE(sha3_256_example sha3_256_example.c)
 ADD_EXECUTABLE(sha3_384_example sha3_384_example.c)
 ADD_EXECUTABLE(sha3_512_example sha3_512_example.c)
-
+ADD_EXECUTABLE(shake_128_example shake_128_example.c)
+ADD_EXECUTABLE(shake_256_example shake_256_example.c)
