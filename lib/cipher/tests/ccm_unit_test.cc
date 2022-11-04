@@ -122,6 +122,8 @@ TEST(CCM, Initiantiation)
     // EXPECT_EQ(ccm_obj.getNk(),16);
 }
 
+// Test disabled as ZeroLength checks moved to C_API
+/*
 TEST(CCM, ZeroLEN)
 {
     Uint8  iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
@@ -151,6 +153,7 @@ TEST(CCM, ZeroLEN)
     err = ccm_obj.getTag(tagbuff, 0);
     EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
 }
+*/
 
 TEST_P(CCM_KAT, Encrypt)
 {

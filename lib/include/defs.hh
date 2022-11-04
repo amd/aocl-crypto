@@ -39,4 +39,12 @@
         }                                                                      \
     } while (0)
 
+#define ALCP_ZERO_LEN_ERR_RET(len, err)                                        \
+    do {                                                                       \
+        if (0 == len) {                                                        \
+            alcp::Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);              \
+            return err;                                                        \
+        }                                                                      \
+    } while (0)
+
 #endif /* _ALCP_DEFS_H */

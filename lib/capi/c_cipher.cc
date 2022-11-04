@@ -121,6 +121,8 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherText, err);
     ALCP_BAD_PTR_ERR_RET(pIv, err);
 
+    ALCP_ZERO_LEN_ERR_RET(len, err);
+
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
     err      = ctx->encrypt(ctx->m_cipher, pPlainText, pCipherText, len, pIv);
 
@@ -137,9 +139,11 @@ alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
-    // ALCP_BAD_PTR_ERR_RET(pInput, err);
-    // ALCP_BAD_PTR_ERR_RET(pOutput, err);
+    ALCP_BAD_PTR_ERR_RET(pInput, err);
+    ALCP_BAD_PTR_ERR_RET(pOutput, err);
     ALCP_BAD_PTR_ERR_RET(pIv, err);
+
+    ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
@@ -162,6 +166,8 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherText, err);
     ALCP_BAD_PTR_ERR_RET(pIv, err);
 
+    ALCP_ZERO_LEN_ERR_RET(len, err);
+
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     err = ctx->decrypt(ctx->m_cipher, pCipherText, pPlainText, len, pIv);
@@ -179,9 +185,11 @@ alcp_cipher_decrypt_update(const alc_cipher_handle_p pCipherHandle,
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
-    // ALCP_BAD_PTR_ERR_RET(pInput, err);
-    // ALCP_BAD_PTR_ERR_RET(pOutput, err);
+    ALCP_BAD_PTR_ERR_RET(pInput, err);
+    ALCP_BAD_PTR_ERR_RET(pOutput, err);
     ALCP_BAD_PTR_ERR_RET(pIv, err);
+
+    ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
@@ -198,9 +206,9 @@ alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
-    // ALCP_BAD_PTR_ERR_RET(pInput, err);
-    // ALCP_BAD_PTR_ERR_RET(pOutput, err);
     ALCP_BAD_PTR_ERR_RET(pIv, err);
+
+    ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
@@ -217,6 +225,9 @@ alcp_cipher_set_aad(const alc_cipher_handle_p pCipherHandle,
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pInput, err);
+
+    ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
@@ -233,6 +244,9 @@ alcp_cipher_get_tag(const alc_cipher_handle_p pCipherHandle,
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pOutput, err);
+
+    ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
@@ -247,6 +261,8 @@ alcp_cipher_set_tag_length(const alc_cipher_handle_p pCipherHandle, Uint64 len)
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+
+    ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 

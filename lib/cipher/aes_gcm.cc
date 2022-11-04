@@ -63,9 +63,7 @@ Gcm::cryptUpdate(const uint8_t* pInput,
 
     if ((pInput != NULL) && (pOutput != NULL)) {
         // CTR encrypt and Hash
-        const uint8_t* pPlainText  = pInput;
-        uint8_t*       pCipherText = pOutput;
-        m_len                      = len;
+        m_len = len;
 
         bool isAvx512Cap = false;
         if (Cipher::isVaesAvailable()) {
@@ -78,8 +76,8 @@ Gcm::cryptUpdate(const uint8_t* pInput,
 
         if (Cipher::isVaesAvailable() && isAvx512Cap) {
             // Encrypt/Decrypt call
-            err = vaes::CryptGcm(pPlainText,
-                                 pCipherText,
+            err = vaes::CryptGcm(pInput,
+                                 pOutput,
                                  m_len,
                                  getEncryptKeys(),
                                  getRounds(),
@@ -91,8 +89,8 @@ Gcm::cryptUpdate(const uint8_t* pInput,
                                  isEncrypt);
         } else {
             // Encrypt/Decrypt call
-            err = aesni::CryptGcm(pPlainText,
-                                  pCipherText,
+            err = aesni::CryptGcm(pInput,
+                                  pOutput,
                                   m_len,
                                   getEncryptKeys(),
                                   getRounds(),
@@ -139,7 +137,8 @@ Gcm::setIv(Uint64 len, const Uint8* pIv)
     // GCM init call
     // len is used as ivlen
     // In init call, we generate HashSubKey, partial tag data.
-    if (len == 0) {
+
+    if (pIv == nullptr) {
         // Len 0 is invalid so return error.
         err = ALC_ERROR_INVALID_ARG;
         return err;
@@ -167,6 +166,9 @@ alc_error_t
 Gcm::setAad(const Uint8* pInput, Uint64 len)
 {
     alc_error_t err = ALC_ERROR_NONE;
+
+    /* iv is not initialized means wrong order, we will return its a bad state
+     * to call setAad*/
     if (m_iv == nullptr) {
         err = ALC_ERROR_BAD_STATE;
         return err;

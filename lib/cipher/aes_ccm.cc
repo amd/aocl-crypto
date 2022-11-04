@@ -61,7 +61,6 @@ Ccm::cryptUpdate(const Uint8* pInput,
                  bool         isEncrypt)
 {
     alc_error_t err = ALC_ERROR_NONE;
-
     if ((pInput != NULL) && (pOutput != NULL)) {
         // CTR encrypt and Hash
         m_len = len;
@@ -84,18 +83,26 @@ Ccm::cryptUpdate(const Uint8* pInput,
         m_ccm_data.rounds   = rounds;
 
         if (Cipher::isAesniAvailable()) {
-
+            bool err_ret;
             // Below operations has to be done in order.
             if (isEncrypt) {
-                aesni::CcmSetIv(&m_ccm_data, pIv, m_ivLen, len);
+                err_ret =
+                    (aesni::CcmSetIv(&m_ccm_data, pIv, m_ivLen, len) == 0);
                 aesni::CcmSetAad(
                     &m_ccm_data, m_additionalData, m_additionalDataLen);
-                aesni::CcmEncrypt(&m_ccm_data, pInput, pOutput, len);
+                err_ret &=
+                    (aesni::CcmEncrypt(&m_ccm_data, pInput, pOutput, len) == 0);
             } else {
-                aesni::CcmSetIv(&m_ccm_data, pIv, m_ivLen, len);
+                err_ret =
+                    (aesni::CcmSetIv(&m_ccm_data, pIv, m_ivLen, len) == 0);
                 aesni::CcmSetAad(
                     &m_ccm_data, m_additionalData, m_additionalDataLen);
-                aesni::CcmDecrypt(&m_ccm_data, pInput, pOutput, len);
+                err_ret &=
+                    (aesni::CcmDecrypt(&m_ccm_data, pInput, pOutput, len) == 0);
+            }
+            if (!err_ret) {
+                err = ALC_ERROR_BAD_STATE;
+                return err;
             }
         }
     } else {
@@ -130,10 +137,11 @@ alc_error_t
 Ccm::setIv(Uint64 len, const Uint8* pIv)
 {
     alc_error_t err = ALC_ERROR_NONE;
-    if (len == 0 || len < 7 || len > 13) {
+    if (len < 7 || len > 13) {
         err = ALC_ERROR_INVALID_SIZE;
         return err;
     }
+
     m_ivLen = len;
 
     // Initialize ccm_data
@@ -151,11 +159,6 @@ alc_error_t
 Ccm::setAad(const Uint8* pInput, Uint64 len)
 {
     alc_error_t err = ALC_ERROR_NONE;
-    // additional data processing, when input is additional data &
-    if (len == 0) {
-        err = ALC_ERROR_INVALID_SIZE;
-        return err;
-    }
 
     m_additionalData    = pInput;
     m_additionalDataLen = len;
@@ -170,9 +173,10 @@ Ccm::getTag(Uint8* pOutput, Uint64 len)
         err = ALC_ERROR_INVALID_SIZE;
         return err;
     }
-    // If tagLen is 0 that means it's a set call
+    // If tagLen is 0 that means something seriously went south
     if (m_tagLen == 0) {
-        m_tagLen = len;
+        err = ALC_ERROR_BAD_STATE;
+        return err;
     } else {
         bool ret = aesni::CcmGetTag(&m_ccm_data, pOutput, len);
 
