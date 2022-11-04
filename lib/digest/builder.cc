@@ -116,6 +116,9 @@ __sha_dtor(void* pDigest)
     alc_error_t e  = ALC_ERROR_NONE;
     auto        ap = static_cast<DIGESTTYPE*>(pDigest);
     ap->finish();
+    // FIXME: Not a good idea!
+    ap->~DIGESTTYPE();
+    // Memory should not be deleted as its allocated by application developer.
     // delete ap;
     return e;
 }
@@ -179,21 +182,21 @@ class Sha2Builder
     }
 };
 
-  class Sha3Builder
+class Sha3Builder
 {
   public:
     static alc_error_t Build(const alc_digest_info_t& rDigestInfo,
                              Context&                 rCtx)
     {
-      alc_error_t err = ALC_ERROR_NONE;
-      auto algo    = new Sha3(rDigestInfo);
-      rCtx.m_digest = static_cast<void*>(algo);
-      rCtx.update   = __sha_update_wrapper<Sha3>;
-      rCtx.copy     = __sha_copy_wrapper<Sha3>;
-      rCtx.finalize = __sha_finalize_wrapper<Sha3>;
-      rCtx.finish = __sha_dtor<Sha3>;
-      rCtx.reset  = __sha_reset_wrapper<Sha3>;
-      return err;
+        alc_error_t err  = ALC_ERROR_NONE;
+        auto        algo = new Sha3(rDigestInfo);
+        rCtx.m_digest    = static_cast<void*>(algo);
+        rCtx.update      = __sha_update_wrapper<Sha3>;
+        rCtx.copy        = __sha_copy_wrapper<Sha3>;
+        rCtx.finalize    = __sha_finalize_wrapper<Sha3>;
+        rCtx.finish      = __sha_dtor<Sha3>;
+        rCtx.reset       = __sha_reset_wrapper<Sha3>;
+        return err;
     }
 };
 
