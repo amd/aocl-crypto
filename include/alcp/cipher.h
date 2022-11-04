@@ -242,21 +242,52 @@ alcp_cipher_decrypt_update(const alc_cipher_handle_p pCipherHandle,
                            Uint64                    len,
                            const Uint8*              pIv);
 
+/**
+ * \brief Allows caller to set the IV/Nonce
+ *
+ * \param pCipherHandle Session handle for encrypt/decrypt operation
+ * \param[in] len  Length in bytes of IV/Nonce
+ * \param[in] pIv  IV/Nonce
+ * \return Error described by alc_error_t
+ */
 alc_error_t
 alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
                    Uint64                    len,
                    const Uint8*              pIv);
 
+/**
+ * \brief Allows caller to set the Additonal Data for Tag Generation
+ *
+ * \param pCipherHandle Session handle for encrypt/decrypt operation
+ * \param[in] pInput    Additonal Data in Bytes
+ * \param[in] len       Length in bytes of Additional Data
+ * \return Error described by alc_error_t
+ */
 alc_error_t
 alcp_cipher_set_aad(const alc_cipher_handle_p pCipherHandle,
                     const Uint8*              pInput,
                     Uint64                    len);
 
+/**
+ * \brief Allows caller to set the get a copy of Tag
+ *
+ * \param pCipherHandle Session handle for encrypt/decrypt operation
+ * \param[out] pOutput  Byte addressible memory to write tag into
+ * \param[in] len       Length in bytes of Tag in bytes
+ * \return Error described by alc_error_t
+ */
 alc_error_t
 alcp_cipher_get_tag(const alc_cipher_handle_p pCipherHandle,
                     Uint8*                    pOutput,
                     Uint64                    len);
 
+/**
+ * \brief Allows caller to set the set tag size
+ *
+ * \param pCipherHandle Session handle for encrypt/decrypt operation
+ * \param[in] len       Length in bytes of Tag in bytes
+ * \return Error described by alc_error_t
+ */
 alc_error_t
 alcp_cipher_set_tag_length(const alc_cipher_handle_p pCipherHandle, Uint64 len);
 

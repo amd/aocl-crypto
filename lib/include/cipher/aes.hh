@@ -383,15 +383,36 @@ class Gcm final
         return false;
     }
 
+    /**
+     * @brief Get a copy of the Tag
+     *
+     * @param pOutput Memory to write tag into
+     * @param len     Length of the tag in bytes
+     * @return alc_error_t Error code
+     */
     virtual alc_error_t getTag(Uint8* pOutput, Uint64 len);
 
+    /**
+     * @brief Set the Iv in bytes
+     *
+     * @param len Length of IV in bytes
+     * @param pIv Address to read the IV from
+     * @return alc_error_t Error code
+     */
     virtual alc_error_t setIv(Uint64 len, const Uint8* pIv);
 
+    /**
+     * @brief Set the Additional Data in bytes
+     *
+     * @param pInput Address to Read Additional Data from
+     * @param len Length of Additional Data in Bytes
+     * @return alc_error_t
+     */
     virtual alc_error_t setAad(const Uint8* pInput, Uint64 len);
 
     /**
-     * \brief   GCM Encrypt Operation
-     * \notes
+     * \brief  GCM Invalid Encrypt Operartion
+     * \notes  Use encryptUpdate instead
      * \param   pInput      Pointer to input buffer
      *                          (plainText or Additional data)
      * \param   pOuput          Pointer to encrypted buffer
@@ -406,14 +427,26 @@ class Gcm final
                                 Uint64       len,
                                 const Uint8* pIv) const final;
 
+    /**
+     * @brief   GCM Encrypt Operation
+     *
+     * @param   pInput      Pointer to input buffer
+     *                          (plainText or Additional data)
+     * @param   pOuput          Pointer to encrypted buffer
+     *                          when pointer NULL, input is additional data
+     * @param   len             Len of input buffer
+     *                          (plainText or Additional data)
+     * @param   pIv             Pointer to Initialization Vector \return
+     * @return alc_error_t
+     */
     virtual alc_error_t encryptUpdate(const Uint8* pInput,
                                       Uint8*       pOutput,
                                       Uint64       len,
                                       const Uint8* pIv);
 
     /**
-     * \brief   GCM Decrypt Operation
-     * \notes
+     * \brief   GCM Invalid Decrypt Operation
+     * \notes   Use decryptUpdate instead
      * \param   pCipherText     Pointer to encrypted buffer
      * \param   pPlainText      Pointer to output buffer
      * \param   len             Len of plain and encrypted text
@@ -425,12 +458,30 @@ class Gcm final
                                 Uint64       len,
                                 const Uint8* pIv) const final;
 
+    /**
+     * @brief   GCM Decrypt Operation
+     *
+     * @param   pCipherText     Pointer to encrypted buffer
+     * @param   pPlainText      Pointer to output buffer
+     * @param   len             Len of plain and encrypted text
+     * @param   pIv             Pointer to Initialization Vector
+     * @return  alc_error_t     Error code
+     */
     virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
                                       Uint8*       pPlainText,
                                       Uint64       len,
                                       const Uint8* pIv);
 
   private:
+    /**
+     * @brief   GCM Encrypt/Decrypt Operation
+     *
+     * @param   pCipherText     Pointer to input buffer
+     * @param   pPlainText      Pointer to output buffer
+     * @param   len             Len of plain and encrypted text
+     * @param   pIv             Pointer to Initialization Vector
+     * @return  alc_error_t     Error code
+     */
     virtual alc_error_t cryptUpdate(const Uint8* pInput,
                                     Uint8*       pOutput,
                                     Uint64       len,
