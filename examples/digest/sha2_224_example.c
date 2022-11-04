@@ -92,6 +92,8 @@ hash_demo(const uint8_t* src,
 
     alcp_digest_finish(&s_dg_handle);
 
+    free(s_dg_handle.context);
+
 out:
     return err;
 }

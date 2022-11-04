@@ -32,7 +32,7 @@
 #include "alcp/digest.h"
 
 #define NUM_IP_CHUNKS 10
-#define DIGEST_SIZE 32
+#define DIGEST_SIZE   32
 
 static alc_digest_handle_t s_dg_handle;
 
@@ -92,6 +92,8 @@ hash_demo(const uint8_t* src,
     }
 
     alcp_digest_finish(&s_dg_handle);
+
+    free(s_dg_handle.context);
 
 out:
     return err;
