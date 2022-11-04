@@ -68,7 +68,7 @@ class Sha256 final : public Sha2
         cHashSizeBits   = 256,                            /* same in bits */
         cHashSize       = cHashSizeBits / 8, /* Hash size in bytes */
         cHashSizeWords  = cHashSizeBits / cWordSizeBits,
-        cIvSizeBytes         = 32; /* IV size in bytes */
+        cIvSizeBytes    = 32; /* IV size in bytes */
 
   public:
     Sha256();
@@ -167,7 +167,7 @@ class Sha224 final : public Sha2
     alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const override;
 
   private:
-    Sha256* m_psha256;
+    std::unique_ptr<Sha256> m_psha256;
 };
 
 static inline void

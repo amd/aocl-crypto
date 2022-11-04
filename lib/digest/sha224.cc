@@ -55,28 +55,25 @@ static constexpr Uint64 /* define word size */
 Sha224::Sha224(const alc_digest_info_t& rDInfo)
     : Sha2{ "sha2-224" }
 {
-    m_psha256 = new Sha256{ rDInfo };
+    m_psha256 = std::make_unique<Sha256>(rDInfo);
     m_psha256->setIv(cIv, sizeof(cIv));
 }
 
-Sha224::Sha224() 
+Sha224::Sha224()
 {
     // Initializing the structure with default value
     alc_digest_info_t d_info;
-    d_info.dt_type = ALC_DIGEST_TYPE_SHA2;
-    d_info.dt_len = ALC_DIGEST_LEN_224;
+    d_info.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    d_info.dt_len          = ALC_DIGEST_LEN_224;
     d_info.dt_mode.dm_sha2 = ALC_SHA2_224;
-    d_info.dt_custom_len = 0;
-    d_info.dt_data = {0};
+    d_info.dt_custom_len   = 0;
+    d_info.dt_data         = { 0 };
 
-    m_psha256 = new Sha256{ d_info };
+    m_psha256 = std::make_unique<Sha256>(d_info);
     m_psha256->setIv(cIv, sizeof(cIv));
 }
 
-Sha224::~Sha224()
-{
-    delete m_psha256;
-}
+Sha224::~Sha224() = default;
 
 alc_error_t
 Sha224::update(const Uint8* pBuf, Uint64 size)
@@ -113,14 +110,14 @@ Sha224::copyHash(Uint8* pHash, Uint64 size) const
         Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
         return err;
     }
-    
+
     if (!pHash) {
         Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
         return err;
     }
 
-    // We should set intrim_hash size as 256 bit as we are calling into SHA256 algorithm.
-    // Later we should trim it to exact 224 bits
+    // We should set intrim_hash size as 256 bit as we are calling into SHA256
+    // algorithm. Later we should trim it to exact 224 bits
     Uint8 intrim_hash[cHashSize + 4];
     err = m_psha256->copyHash(intrim_hash, sizeof(intrim_hash));
 

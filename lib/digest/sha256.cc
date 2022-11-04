@@ -165,7 +165,7 @@ Sha256::Impl::reset()
     utils::CopyDWord(&m_hash[0], &cIv[0], cHashSize);
 }
 
-Sha256::Impl::~Impl() {}
+Sha256::Impl::~Impl() = default;
 
 alc_error_t
 Sha256::Impl::copyHash(Uint8* pHash, Uint64 size) const
@@ -370,7 +370,7 @@ Sha256::Sha256(const alc_digest_info_t& rDigestInfo)
     : Sha256()
 {}
 
-Sha256::~Sha256() {}
+Sha256::~Sha256() = default;
 
 alc_error_t
 Sha256::setIv(const void* pIv, Uint64 size)

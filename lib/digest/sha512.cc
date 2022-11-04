@@ -116,7 +116,7 @@ Sha512::Sha512(const alc_digest_info_t& rDigestInfo)
     : Sha512()
 {}
 
-Sha512::~Sha512() {}
+Sha512::~Sha512() = default;
 
 alc_error_t
 Sha512::setIv(const void* pIv, Uint64 size)
@@ -132,7 +132,7 @@ Sha512::setIv(const void* pIv, Uint64 size)
     if (size != cIvSizeBytes) {
         Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
     }
-    
+
     if (!alcp_is_error(err))
         utils::CopyBytes(m_hash, pIv, size);
 
@@ -237,7 +237,7 @@ Sha512::processChunk(const Uint8* pSrc, Uint64 len)
     assert((len & Sha512::cChunkSizeMask) == 0);
 
     if (avx2_available) {
-        //return avx2::ShaUpdate512(m_hash, pSrc, len, cRoundConstants);
+        // return avx2::ShaUpdate512(m_hash, pSrc, len, cRoundConstants);
     }
 
     Uint64  msg_size       = len;

@@ -56,7 +56,7 @@ static constexpr Uint64 /* define word size */
 Sha384::Sha384(const alc_digest_info_t& rDInfo)
     : Sha2{ "sha2-384" }
 {
-    m_psha512 = new Sha512{ rDInfo };
+    m_psha512 = std::make_unique<Sha512>(rDInfo);
     m_psha512->setIv(cIv, sizeof(cIv));
 }
 
@@ -64,20 +64,17 @@ Sha384::Sha384()
 {
     // Initializing the structure with default value
     alc_digest_info_t d_info;
-    d_info.dt_type = ALC_DIGEST_TYPE_SHA2;
-    d_info.dt_len = ALC_DIGEST_LEN_384;
+    d_info.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    d_info.dt_len          = ALC_DIGEST_LEN_384;
     d_info.dt_mode.dm_sha2 = ALC_SHA2_384;
-    d_info.dt_custom_len = 0;
-    d_info.dt_data = {0};
+    d_info.dt_custom_len   = 0;
+    d_info.dt_data         = { 0 };
 
-    m_psha512 = new Sha512{ d_info };
+    m_psha512 = std::make_unique<Sha512>(d_info);
     m_psha512->setIv(cIv, sizeof(cIv));
 }
 
-Sha384::~Sha384()
-{
-    delete m_psha512;
-}
+Sha384::~Sha384() = default;
 
 alc_error_t
 Sha384::update(const Uint8* pBuf, Uint64 size)
@@ -114,14 +111,14 @@ Sha384::copyHash(Uint8* pHash, Uint64 size) const
         Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
         return err;
     }
-    
+
     if (!pHash) {
         Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
         return err;
     }
 
-    // We should set intrim_hash size as 512 bit as we are calling into SHA512 algorithm.
-    // Later we should trim it to exact 384 bits
+    // We should set intrim_hash size as 512 bit as we are calling into SHA512
+    // algorithm. Later we should trim it to exact 384 bits
     Uint8 intrim_hash[cHashSize + 16];
     err = m_psha512->copyHash(intrim_hash, sizeof(intrim_hash));
 

@@ -46,7 +46,7 @@ class Sha512 final : public Sha2
         cHashSizeBits   = 512,                            /* same in bits */
         cHashSize       = cHashSizeBits / 8, /* Hash size in bytes */
         cHashSizeWords  = cHashSizeBits / cWordSizeBits,
-        cIvSizeBytes    = 64; /* IV size in bytes */
+                            cIvSizeBytes = 64; /* IV size in bytes */
 
   public:
     Sha512();
@@ -151,7 +151,7 @@ class Sha384 final : public Sha2
     alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const override;
 
   private:
-    Sha512* m_psha512;
+    std::unique_ptr<Sha512> m_psha512;
 };
 
 } // namespace alcp::digest
