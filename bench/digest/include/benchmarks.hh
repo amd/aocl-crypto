@@ -46,6 +46,8 @@
 
 using namespace alcp::testing;
 
+std::vector<int64_t> digest_block_sizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
+
 void
 Digest_Bench(benchmark::State& state, _alc_digest_type digest_type, 
                    _alc_digest_len digest_len, uint64_t block_size)
@@ -89,15 +91,56 @@ Digest_Bench(benchmark::State& state, _alc_digest_type digest_type,
 /* add all your new benchmarks here */
 /* SHA2 benchmarks */
 static void
-BENCH_SHA2_224_16(benchmark::State& state)
+BENCH_SHA2_224(benchmark::State& state)
 {
-    Digest_Bench(state, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224, 16);
+    Digest_Bench(state, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224, state.range(0));
 }
-BENCHMARK(BENCH_SHA2_224_16);
-
 static void
-BENCH_SHA3_224_16(benchmark::State& state)
+BENCH_SHA2_256(benchmark::State& state)
 {
-    Digest_Bench(state, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_224, 16);
+    Digest_Bench(state, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256, state.range(0));
 }
-BENCHMARK(BENCH_SHA3_224_16);
+static void
+BENCH_SHA2_384(benchmark::State& state)
+{
+    Digest_Bench(state, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384, state.range(0));
+}
+static void
+BENCH_SHA2_512(benchmark::State& state)
+{
+    Digest_Bench(state, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512, state.range(0));
+}
+/* SHA3 benchmarks */
+static void
+BENCH_SHA3_224(benchmark::State& state)
+{
+    Digest_Bench(state, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_224, state.range(0));
+}
+static void
+BENCH_SHA3_256(benchmark::State& state)
+{
+    Digest_Bench(state, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_256, state.range(0));
+}
+static void
+BENCH_SHA3_384(benchmark::State& state)
+{
+    Digest_Bench(state, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_384, state.range(0));
+}
+static void
+BENCH_SHA3_512(benchmark::State& state)
+{
+    Digest_Bench(state, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_512, state.range(0));
+}
+
+/* add benchmarks */
+int AddBenchmarks() {
+    BENCHMARK(BENCH_SHA2_224)->ArgsProduct({ digest_block_sizes });
+    BENCHMARK(BENCH_SHA2_256)->ArgsProduct({ digest_block_sizes });
+    BENCHMARK(BENCH_SHA2_384)->ArgsProduct({ digest_block_sizes });
+    BENCHMARK(BENCH_SHA2_512)->ArgsProduct({ digest_block_sizes });
+    BENCHMARK(BENCH_SHA3_224)->ArgsProduct({ digest_block_sizes });
+    BENCHMARK(BENCH_SHA3_256)->ArgsProduct({ digest_block_sizes });
+    BENCHMARK(BENCH_SHA3_384)->ArgsProduct({ digest_block_sizes });
+    BENCHMARK(BENCH_SHA3_512)->ArgsProduct({ digest_block_sizes });
+    return 0;
+}

@@ -40,6 +40,13 @@ main(int argc, char** argv)
                   << std::endl;
     }
 #endif
+#ifndef USE_OSSL
+    if (useossl) {
+        std::cout << RED << "Error OpenSSL not found defaulting to ALCP" << RESET
+                  << std::endl;
+    }
+#endif
+    AddBenchmarks();
     ::benchmark::Initialize(&argc, argv);
     if (::benchmark::ReportUnrecognizedArguments(argc, argv))
         return 1;
