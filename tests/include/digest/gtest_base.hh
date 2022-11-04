@@ -103,7 +103,7 @@ GetDigestStr(_alc_digest_type digest_type) {
 
 ExecRecPlay* fr;
 void
-SHA_KATTest(int HashSize, _alc_digest_type digest_type, _alc_digest_len digest_len)
+Digest_KAT(int HashSize, _alc_digest_type digest_type, _alc_digest_len digest_len)
 {
     alc_error_t error;
     std::vector<Uint8> digest(HashSize / 8, 0);
@@ -115,11 +115,11 @@ SHA_KATTest(int HashSize, _alc_digest_type digest_type, _alc_digest_len digest_l
     std::string TestDataFile = "dataset_" + GetDigestStr(digest_type) + "_" + std::to_string(HashSize) + ".csv";
     DataSet ds = DataSet(TestDataFile);
 
-#ifdef USE_IPP
-    IPPDigestBase idb(digest_type, digest_len);
-    if (useipp == true)
-        db = &idb;
-#endif
+    if (useipp && (GetDigestStr(digest_type).compare("SHA3") == 0)) {
+        printf ("IPPCP doesnt support SHA3 for now, skipping this test\n");
+        return;
+    }
+
 #ifdef USE_OSSL
     OpenSSLDigestBase odb(digest_type, digest_len);
     if (useossl == true)
@@ -145,7 +145,7 @@ SHA_KATTest(int HashSize, _alc_digest_type digest_type, _alc_digest_len digest_l
 
 /* SHA3 Cross tests */
 void
-SHA_CrossTest(int HashSize, _alc_digest_type digest_type, _alc_digest_len digest_len)
+Digest_Cross(int HashSize, _alc_digest_type digest_type, _alc_digest_len digest_len)
 {
     alc_error_t            error;
     std::vector<Uint8>     data;
@@ -163,6 +163,7 @@ SHA_CrossTest(int HashSize, _alc_digest_type digest_type, _alc_digest_len digest
     } else
         fr = new ExecRecPlay(GetDigestStr(digest_type) + "_" + std::to_string(HashSize), false);
 
+    /* Skip SHA3 tests for IPP */
     if (useipp && (GetDigestStr(digest_type).compare("SHA3") == 0)) {
         printf ("IPPCP doesnt support SHA3 for now, skipping this test\n");
         return;

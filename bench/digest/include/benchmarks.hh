@@ -47,29 +47,23 @@
 using namespace alcp::testing;
 
 void
-Digest_SHA(benchmark::State& state, _alc_digest_type digest_type, 
+Digest_Bench(benchmark::State& state, _alc_digest_type digest_type, 
                    _alc_digest_len digest_len, uint64_t block_size)
 {
     alc_error_t    error;
     Uint8          message[32768] = { 0 };
     Uint8          digest[512]    = { 0 };
-    AlcpDigestBase adb(
-                       //ALC_SHA2_224, 
-                       digest_type, digest_len);
+    AlcpDigestBase adb(digest_type, digest_len);
     DigestBase*    db = &adb;
 #ifdef USE_IPP
-    IPPDigestBase idb(
-                      //ALC_SHA2_224,
-                      digest_type, digest_len);
+    IPPDigestBase idb(digest_type, digest_len);
     if (useipp) {
         db = &idb;
     }
 #endif
 
 #ifdef USE_OSSL
-    OpenSSLDigestBase odb(
-        //ALC_SHA2_224, 
-        digest_type, digest_len);
+    OpenSSLDigestBase odb(digest_type, digest_len);
     if (useossl) {
         db = &odb;
     }
@@ -97,13 +91,13 @@ Digest_SHA(benchmark::State& state, _alc_digest_type digest_type,
 static void
 BENCH_SHA2_224_16(benchmark::State& state)
 {
-    Digest_SHA(state, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224, 16);
+    Digest_Bench(state, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224, 16);
 }
 BENCHMARK(BENCH_SHA2_224_16);
 
 static void
 BENCH_SHA3_224_16(benchmark::State& state)
 {
-    Digest_SHA(state, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_224, 16);
+    Digest_Bench(state, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_224, 16);
 }
 BENCHMARK(BENCH_SHA3_224_16);
