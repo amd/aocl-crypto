@@ -289,6 +289,7 @@ main(void)
         }
         free(sample_output);
         free(output_string);
+        free(s_dg_handle.context);
     }
     return 0;
 }
