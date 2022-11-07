@@ -60,6 +60,8 @@ typedef enum _alc_sha3_mode
     ALC_SHA3_256,
     ALC_SHA3_384,
     ALC_SHA3_512,
+    ALC_SHAKE_128,
+    ALC_SHAKE_256,
 } alc_sha3_mode_t;
 
 typedef enum _alc_digest_len

@@ -44,6 +44,7 @@ create_demo_session(void)
     alc_digest_info_t dinfo = {
         .dt_type = ALC_DIGEST_TYPE_SHA3,
         .dt_len = ALC_DIGEST_LEN_512,
+        .dt_mode = {.dm_sha3 = ALC_SHA3_512,},
     };
 
     uint64_t size       = alcp_digest_context_size(&dinfo);

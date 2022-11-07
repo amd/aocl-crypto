@@ -32,22 +32,22 @@
 #include "alcp/digest.h"
 
 #define NUM_IP_CHUNKS 1
-#define DIGEST_SIZE 48
 
 static alc_digest_handle_t s_dg_handle;
 
 static alc_error_t
-create_demo_session(void)
+create_demo_session(Uint32 digest_size)
 {
     alc_error_t err;
 
     alc_digest_info_t dinfo = {
         .dt_type = ALC_DIGEST_TYPE_SHA3,
-        .dt_len = ALC_DIGEST_LEN_384,
-        .dt_mode = {.dm_sha3 = ALC_SHA3_384,},
+        .dt_len = ALC_DIGEST_LEN_CUSTOM,
+        .dt_mode = {.dm_sha3 = ALC_SHAKE_128,},
+        .dt_custom_len = digest_size
     };
 
-    uint64_t size       = alcp_digest_context_size(&dinfo);
+    Uint64 size       = alcp_digest_context_size(&dinfo);
     s_dg_handle.context = malloc(size);
 
     err = alcp_digest_request(&dinfo, &s_dg_handle);
@@ -60,17 +60,17 @@ create_demo_session(void)
 }
 
 static alc_error_t
-hash_demo(const uint8_t* src,
-          uint64_t       src_size,
-          uint8_t*       output,
-          uint64_t       out_size)
+hash_demo(const Uint8* src,
+          Uint64       src_size,
+          Uint8*       output,
+          Uint64       out_size)
 {
     alc_error_t err;
     // divide the input size into multiple chunks
-    uint32_t       num_chunks      = NUM_IP_CHUNKS;
-    const uint32_t chunk_size      = src_size / num_chunks;
-    const uint32_t last_chunk_size = src_size % num_chunks;
-    const uint8_t* p               = src;
+    Uint32       num_chunks      = NUM_IP_CHUNKS;
+    const Uint32 chunk_size      = src_size / num_chunks;
+    const Uint32 last_chunk_size = src_size % num_chunks;
+    const Uint8* p               = src;
 
     while (num_chunks-- > 0) {
         err = alcp_digest_update(&s_dg_handle, p, chunk_size);
@@ -101,10 +101,10 @@ out:
 }
 
 static void
-hash_to_string(char *string, const uint8_t hash[DIGEST_SIZE])
+hash_to_string(char *string, const Uint8 *hash, Uint64 digest_size)
 {
     size_t i;
-    for (i = 0; i < DIGEST_SIZE; i++) {
+    for (i = 0; i < digest_size; i++) {
         string += sprintf(string, "%02x", hash[i]);
     }
 }
@@ -116,9 +116,11 @@ main(void)
     {
         char* input;
         char* output;
+        Uint32 digest_size; // digest size in bytes
     };
 
     static const struct string_vector STRING_VECTORS[] = {
+       
        { "11111111111111111111111111111111111111111111111111111111111111111111"
           "11111111111111111111111111111111111111111111111111111111111111111111"
           "11111111111111111111111111111111111111111111111111111111111111111111"
@@ -127,86 +129,112 @@ main(void)
           "11111111111111111111111111111111111111111111111111111111111111111111"
           "11111111111111111111111111111111111111111111111111111111111111111111"
           "111111111111111111111111111111111122",
-          "d69f070fa97a306f530cdfe4d8e64c9edbbe34a30d8fbd96b91331c4d6f2d62aa0e44"
-          "75e824e56faf7a37cb689145856"
+          "a597c3e80e9066f95669",
+          10
         },
         
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
           "456789abcdef0123456789abcdef0123456789abcdef012345",
-          "d24bb0a96cfa410457eaaeb24c6136ef1be1f1cffface827872dbe3a9c27770ece68"
-          "479670378950b5110e22e9de812a"
+          "164f5b797de92b76481b95ecada82fbc55f0a147",
+          20
         },
         
         { "",
-          "0c63a75b845e4f7d01107d852e4c2485c51a50aaaa94fc61995e71bbee983a2ac3713"
-          "831264adb47fb6bd1e058d5f004"
+          "7f9c2ba4e88f827d616045507605853ed73b8093f6efbc88eb1a6eacfa66",
+          30
         },
         
         { "abc",
-          "ec01498288516fc926459f58e2c6ad8df9b473cb0fc08c2596da7cf0e49be4b298d88"
-          "cea927ac7f539f1edf228376d25"
+          "5881092dd818bf5cf8a3ddb793fbcba74097d5c526a6d35f97b83351940f2cc844c50"
+          "af32acd3f2c",
+          40
         },
         
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-          "fcb7582349a4f7e8d13fe6488b275a2daac2eca4e0a303b6386d3e7016586331"
-          "7f329795be37ef3a123c2749bfa3e47a"
+          "f06f86e489f5dae74dbb47026c6f8c3b42bacc3aca17eab6bfbc8f9e3311e2f5"
+          "05a0a5357e2671b0ac4e8dcd2f7ceb0c57e3",
+          50
         },
         
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
           "456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-          "605a9162c27bf0a8a2abe8abdf9a649e6a889a1fff5728828563b3cae839412cb5c54"
-          "30f01eff3367467ddd9a57d1528"
+          "036bb02331d87c9a15f1ab5fe322e2f7f31b07b4b266f5a1567d475cbfffafe73dbd"
+          "f8447b0a7af9826553b13247c8fa97f9c804a10164a44b458268",
+          60
         },
         
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
-          "fd497541c7451befb602abc2e919abace36ae4183f667866fceb1e92ebc44cd"
-          "70c41fb5083646edb8510edd7f0925701"
+          "bd206b4bccced8eaba6f2b6ab404f3473da10a302b11ecf7d44d438347e311c129c70"
+          "aa6c90f1a85600309a8517b831e6a36223dc55306fe771118fdc530127b87ccaff64147",
+          70
         },
         
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
           "456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
-          "3342e284d9293abc4f8b4fac23de01bd89bb6715a795cfc075f53018adb4861bd102"
-          "177ef6a9ab494562673f505c48a1"
+          "106c800085c059fac881a6f7853e96f9a67e80834e485d51f95bccd2a60c4f0fc540"
+          "3a1fb2f7d8e041139cc1ce93a001b9e0b2ad7b21535aa859d8bfb75f0394d9376acb"
+          "690d47e6c0cf008e316e85f2",
+          80
         },
         
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
           "456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-          "605a9162c27bf0a8a2abe8abdf9a649e6a889a1fff5728828563b3cae839412cb5c5"
-          "430f01eff3367467ddd9a57d1528"
+          "036bb02331d87c9a15f1ab5fe322e2f7f31b07b4b266f5a1567d475cbfffafe73dbd"
+          "f8447b0a7af9826553b13247c8fa97f9c804a10164a44b458268c56f788cbcf6e6b6"
+          "b6d10614df3d9ecee9d7eacfb6fd531e1247fd1e07c8",
+          90
         },
         
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0",
-          "8e6822047d571739e0e9247786ed79a41c5a480c3c6f5264e6cb7b8efdab955b7"
-          "892f5c8f8f90cacac65325db2d0af4a"
+          "71e42868c713d4490cd506b3c9740d065656eb9085ff514c79bf318b2b7c63e38"
+          "5b00ae41b034d1d6487249bd6d17729950776ff6b5e3f3ea90c44eaa0b2d0ca8b"
+          "9e23b1f76a5c84a6b38caac9e5482b848b18da52557e88ee80359212dbd68ad65349d2",
+          100
         },
         
         { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
-          "991c665755eb3a4b6bbdfb75c78a492e8c56a22c5c4d7e429bfdbc32b"
-          "9d4ad5aa04a1f076e62fea19eef51acd0657c22"
+          "1a96182b50fb8c7e74e0a707788f55e98209b8d91fade8f32f8dd5cf"
+          "f7bf21f54ee5f19550825a6e070030519e944263ac1c6765287065621"
+          "f9fcb3201723e3223b63a46c2938aa953ba8401d0ea77b8d264907755"
+          "66407b95673c0f4cc1ce9fd966148d7efdff26bbf9f48a21c6",
+          110
         },
         
         { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno",
-          "d37238ca41bbf3a5f04680e2f23c6681798678f7b7f4d8a1663507d7c6877cfa"
-          "f32d76e7c0a8493bda32e499ee8bf904"
+          "28e1d757fc91b7e055d01eabee20a50fda48c6bb12c8feab9a929ac55ce1e1007624"
+          "6b38486a9dd76fe6e3de8b68bc956455c89b05b2d1bd0fa39f834323040b4bd4dbae"
+          "626ff94fd937a3cdea0467ec3aa553e9b9bd952d5c15eedffb8ddcd60b7641ec2eb9"
+          "e26c024fa4bc5eff6e9ac84aed4b015a7744",
+          120
         },
 
         { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoabcd"
           "efgh",
-          "e1fe24e27c0103b4d659789804cbb49eb58237014038e826e1c0e6d41c39b214caef"
-          "76286f8b826cc0a9c775ab6ae05f"
+          "f7ecb883e545e9259fd1467a5bd984a13a6dfbbb4dd547d47afd308b96b8a78872ef"
+          "9e8e8cdd17e0366cfe79383a822232e4de054dd2b508bab1a973eb1f002752be9191"
+          "6c694a2e5a409d5709a7d920157b5cdcdc1a3c58500aab74655ce64b5cac7b93242c"
+          "417c19d9a0d8bffd762ebad68c7b5c44f49826fe6aa009d2ee7c89cf",
+          130
         },
 
         { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoabcd"
           "efg",
-          "e0ea44f082f01015a495ebcde4bdfb23fcda1842b2e86a09adfedae7bddb74241d6a"
-          "082b86d6f6a5ae1599eeb6f4ca87"
-          
+          "7752cddb6eb405a930f3341b51b483b2c3e426920ef3f8d3415c278e866f25f710fa"
+          "86204624ac48d0cec642086c5fa1676b5c329e4bea2ec71fd41d7511e4408ea2c2b0"
+          "71d510d3993caa7ebb13deb9d31307a88fc89d49954ecee04ef2f3bc694110507e81"
+          "fedd81b4ac5031b78a28a7b50f2103b3f02e0f42b651431a134ffe409cdcf2245eb6"
+          "7c56341e",
+          140
         },
 
         { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoabcd"
           "efghi",
-          "cfb9539f640653520a4e9fe79f01caf43bdf558bf31e08cf9f78ed718df25ce546272"
-          "a6f842c0b6628bc12ba234338ea"
+          "1ca64e3267d1ae6197d91b853c1203ba96e788ff85692bdf4382c74d3b2de4f86617"
+          "094635c663fcc852e21ff02e90c9fda20bb0cf3d04d40573de50ac2fa0fbc9fa1dbd"
+          "712b9dba3ef55fd89b8208c3598329e5a37185b88b907641cbe157e4f5584aa17f3a"
+          "ff347bfb8075c075505e55ec8bac2da1414ba98b77085d2a198b251278d92025b78f"
+          "0944845845d5077948cd50d76cd5",
+          150
         }
 
     };
@@ -215,10 +243,10 @@ main(void)
 
     char* expected_output;
 
-    uint8_t sample_output[DIGEST_SIZE] = { 0 };
+    Uint8 *sample_output;
 
     // every byte in digest is represented as hexadecimal and is null terminated
-    char output_string[2 * DIGEST_SIZE + 1];
+    char *output_string;
 
     for (int i = 0; i < (sizeof STRING_VECTORS / sizeof(struct string_vector));
          i++) {
@@ -226,14 +254,17 @@ main(void)
         sample_input = STRING_VECTORS[i].input;
 
         expected_output = STRING_VECTORS[i].output;
+        Uint32 hash_size = STRING_VECTORS[i].digest_size;
+        sample_output =  malloc(hash_size);
+        output_string = malloc(hash_size * 2 + 1);
 
-        alc_error_t err = create_demo_session();
+        alc_error_t err = create_demo_session(hash_size);
 
         if (!alcp_is_error(err)) {
             err = hash_demo(sample_input,
                             strlen(sample_input),
                             sample_output,
-                            sizeof(sample_output));
+                            hash_size);
         }
 
         /*
@@ -246,8 +277,9 @@ main(void)
         // segfault just before here, in "finish" //
         
         // check if the outputs are matching
-        hash_to_string(output_string, sample_output);
+        hash_to_string(output_string, sample_output, hash_size);
         printf("Input : %s\n", sample_input);
+        printf("output size : %u\n", hash_size);
         printf("output : %s\n", output_string);
         if (strcmp(expected_output, output_string)) {
             printf("=== FAILED ==== \n");
@@ -255,6 +287,9 @@ main(void)
         } else {
             printf("=== Passed ===\n");
         }
+        free(sample_output);
+        free(output_string);
+        free(s_dg_handle.context);
     }
     return 0;
 }
