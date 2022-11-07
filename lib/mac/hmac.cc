@@ -30,17 +30,6 @@
 #include "utils/copy.hh"
 #include <immintrin.h>
 
-std::vector<Uint8>
-exor_vect(std::vector<Uint8> a, std::vector<Uint8> b)
-{
-    assert(a.size() == b.size());
-    std::vector<Uint8> d(a.size(), 0);
-    for (size_t i = 0; i < a.size(); i++) {
-        d.at(i) = a.at(i) ^ b.at(i);
-    }
-    return d;
-}
-
 namespace alcp::mac {
 class Hmac::Impl
 {
@@ -83,11 +72,10 @@ class Hmac::Impl
             state = INVALID;
             return;
         }
-        opad        = std::vector<Uint8>(input_block_length, 0x5c);
-        ipad        = std::vector<Uint8>(input_block_length, 0x36);
-        k0          = get_k0(input_block_length);
-        k0_xor_ipad = exor_vect(k0, ipad);
-        k0_xor_opad = exor_vect(k0, opad);
+        opad = std::vector<Uint8>(input_block_length, 0x5c);
+        ipad = std::vector<Uint8>(input_block_length, 0x36);
+        k0   = get_k0(input_block_length);
+        get_k0_xor_pad(k0_xor_ipad, k0_xor_opad);
         // start the hash calculation
         err = calculate_hash(p_digest, k0_xor_ipad);
         if (err) {
@@ -192,6 +180,88 @@ class Hmac::Impl
                 return ALC_ERROR_NOT_SUPPORTED;
         }
         return ALC_ERROR_NONE;
+    }
+    void get_k0_xor_pad(std::vector<Uint8>& k0_xor_ipad,
+                        std::vector<Uint8>& k0_xor_opad)
+    {
+        const int register_size = 128,
+                  no_of_xor_operations =
+                      (input_block_length * 8) / (2 * register_size),
+                  xor_operations_left =
+                      (input_block_length * 8) % (2 * register_size);
+
+        Uint8* temp_k0_xor_ipad = new Uint8[input_block_length];
+        Uint8* temp_k0_xor_opad = new Uint8[input_block_length];
+        Uint8 *p_opad = &(opad.at(0)), *p_ipad = &(ipad.at(0)),
+              *p_k0 = &(k0.at(0));
+
+        Uint8* current_temp_k0_xor_ipad = temp_k0_xor_ipad; //
+        Uint8* current_temp_k0_xor_opad = temp_k0_xor_opad;
+
+        Uint8*        temp_ipad_xor_concat = new Uint8[input_block_length];
+        constexpr int incrementer          = 2 * (128 / 8);
+        Uint8*        current_temp_ipad_xor_concat = temp_ipad_xor_concat;
+        for (int i = 0; i < no_of_xor_operations; i += 1) {
+            __m128i reg_opad_1 =
+                _mm_loadu_si128(reinterpret_cast<const __m128i*>(p_opad));
+            __m128i reg_ipad_1 =
+                _mm_loadu_si128(reinterpret_cast<const __m128i*>(p_ipad));
+            __m128i reg_k0_1 =
+                _mm_loadu_si128(reinterpret_cast<const __m128i*>(p_k0));
+            __m128i reg_k0_xor_ipad_1 = _mm_xor_si128(reg_k0_1, reg_ipad_1);
+            __m128i reg_k0_xor_opad_1 = _mm_xor_si128(reg_k0_1, reg_opad_1);
+            _mm_storeu_si128(
+                reinterpret_cast<__m128i*>(current_temp_k0_xor_ipad),
+                reg_k0_xor_ipad_1); //
+            _mm_storeu_si128(
+                reinterpret_cast<__m128i*>(current_temp_ipad_xor_concat),
+                reg_k0_xor_ipad_1);
+            _mm_storeu_si128(
+                reinterpret_cast<__m128i*>(current_temp_k0_xor_opad),
+                reg_k0_xor_opad_1);
+
+            __m128i reg_opad_2 = _mm_loadu_si128(
+                reinterpret_cast<const __m128i*>(p_opad + register_size / 8));
+            __m128i reg_ipad_2 = _mm_loadu_si128(
+                reinterpret_cast<const __m128i*>(p_ipad + register_size / 8));
+            __m128i reg_k0_2 = _mm_loadu_si128(
+                reinterpret_cast<const __m128i*>(p_k0 + register_size / 8));
+            __m128i reg_k0_xor_ipad_2 = _mm_xor_si128(reg_k0_2, reg_ipad_2);
+            __m128i reg_k0_xor_opad_2 = _mm_xor_si128(reg_k0_2, reg_opad_2);
+            _mm_storeu_si128(reinterpret_cast<__m128i*>(current_temp_k0_xor_ipad
+                                                        + register_size / 8),
+                             reg_k0_xor_ipad_2); //
+            _mm_storeu_si128(
+                reinterpret_cast<__m128i*>(current_temp_ipad_xor_concat
+                                           + register_size / 8),
+                reg_k0_xor_ipad_2);
+            _mm_storeu_si128(reinterpret_cast<__m128i*>(current_temp_k0_xor_opad
+                                                        + register_size / 8),
+                             reg_k0_xor_opad_2);
+
+            p_k0 += incrementer;
+            current_temp_k0_xor_ipad += incrementer;
+            current_temp_k0_xor_opad += incrementer;
+            current_temp_ipad_xor_concat += incrementer;
+            p_opad += incrementer;
+            p_ipad += incrementer;
+        }
+
+        for (int i = 0; i < xor_operations_left; i++) {
+            *current_temp_ipad_xor_concat = *p_k0 ^ *p_ipad;
+            current_temp_ipad_xor_concat++;
+            p_k0++;
+            p_ipad++;
+        }
+
+        k0_xor_ipad = std::vector<Uint8>(temp_k0_xor_ipad,
+                                         temp_k0_xor_ipad + input_block_length);
+        k0_xor_opad = std::vector<Uint8>(temp_k0_xor_opad,
+                                         temp_k0_xor_opad + input_block_length);
+
+        delete[] temp_k0_xor_ipad;
+        delete[] temp_k0_xor_opad;
+        delete[] temp_ipad_xor_concat;
     }
 
     std::vector<Uint8> get_k0(Uint32 block_len)
