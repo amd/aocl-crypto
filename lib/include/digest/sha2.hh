@@ -44,6 +44,18 @@ class Sha2 : public Digest
         : Sha2(std::string(name))
     {}
 
+    // TODO : Removing Return here causes an error
+    /**
+     * @return  0 when function is not implemented
+     */
+
+    Uint64 getInputBlockSize() { return 0; };
+
+    /**
+     * @return 0 when the function is not implemented
+     */
+    Uint64 getHashSize() { return 0; };
+
   protected:
     Sha2() {}
     virtual ~Sha2();
@@ -74,6 +86,16 @@ class Sha256 final : public Sha2
     Sha256();
     Sha256(const alc_digest_info_t& rDigestInfo);
     virtual ~Sha256();
+
+    /**
+     * @return The input block size to the hash function in bytes
+     */
+    Uint64 getInputBlockSize() override;
+
+    /**
+     * @return The digest size in bytes
+     */
+    Uint64 getHashSize() override;
 
   public:
     /**
@@ -165,6 +187,16 @@ class Sha224 final : public Sha2
     void        reset() override;
     alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) override;
     alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const override;
+
+    /**
+     * @return The input block size to the hash function in bytes
+     */
+    Uint64 getInputBlockSize() override;
+
+    /**
+     * @return The digest size in bytes
+     */
+    Uint64 getHashSize() override;
 
   private:
     std::unique_ptr<Sha256> m_psha256;

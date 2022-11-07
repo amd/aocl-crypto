@@ -128,4 +128,16 @@ Sha384::copyHash(Uint8* pHash, Uint64 size) const
     return err;
 }
 
+Uint64
+Sha384::getInputBlockSize()
+{
+    return cChunkSize;
+}
+
+Uint64
+Sha384::getHashSize()
+{
+    return cHashSize;
+}
+
 } // namespace alcp::digest

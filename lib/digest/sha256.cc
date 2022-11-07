@@ -453,4 +453,15 @@ Sha256::reset()
 
 Sha2::~Sha2() {}
 
+Uint64
+Sha256::getInputBlockSize()
+{
+    return cChunkSize;
+}
+Uint64
+Sha256::getHashSize()
+{
+    return cHashSize;
+}
+
 } // namespace alcp::digest

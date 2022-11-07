@@ -42,14 +42,14 @@ class Sha3 : public Digest
     /**
      * \brief   Updates hash for given buffer
      *
-     * \notes    Can be called repeatedly, if the message size is smaller than 
-     *           chunksize it will be cached for future use. and hash is only updated
-     *           after finalize() is called.
+     * \notes    Can be called repeatedly, if the message size is smaller than
+     *           chunksize it will be cached for future use. and hash is only
+     * updated after finalize() is called.
      *
      * \param    pMsgBuf    Pointer to message buffer
      *
      * \param    size    should be valid size > 0
-     *  
+     *
      */
     alc_error_t update(const uint8_t* pMsgBuf, Uint64 size);
 
@@ -82,7 +82,7 @@ class Sha3 : public Digest
      *           calling finish()
      *
      * \param    pMsgBuf     Either valid pointer to last chunk or nullptr,
-     *                       once finalize() is called, only operation that 
+     *                       once finalize() is called, only operation that
      *                       can be performed is copyHash()
      *
      * \param    size    Either valid size or 0, if \buf is nullptr, size
@@ -97,14 +97,24 @@ class Sha3 : public Digest
      *           perform all the necessary actions, can be called with
      *           NULL argument.
      *
-     * \param    pHash   pointer to the final hash generated 
+     * \param    pHash   pointer to the final hash generated
      *
      * \param    size    hash size to be copied from the object
-     */  
+     */
     alc_error_t copyHash(uint8_t* pHash, Uint64 size) const;
+
+    /**
+     * @return The input block size to the hash function in bytes
+     */
+    Uint64 getInputBlockSize();
+
+    /**
+     * @return The digest size in bytes
+     */
+    Uint64 getHashSize();
 
   private:
     class Impl;
     std::unique_ptr<Impl> m_pimpl;
 };
-}
+} // namespace alcp::digest

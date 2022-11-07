@@ -412,4 +412,15 @@ Sha512::finish()
     // pImpl() = nullptr;
 }
 
+Uint64
+Sha512::getHashSize()
+{
+    return cHashSize;
+}
+Uint64
+Sha512::getInputBlockSize()
+{
+    return cChunkSize;
+}
+
 } // namespace alcp::digest

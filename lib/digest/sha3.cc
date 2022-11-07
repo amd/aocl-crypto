@@ -27,9 +27,9 @@
  */
 
 #include <algorithm>
+#include <cstring>
 #include <functional>
 #include <string>
-#include <cstring>
 #include <vector>
 
 #include "digest/sha3.hh"
@@ -43,14 +43,15 @@
 
 namespace utils = alcp::utils;
 
-namespace alcp::digest {  
+namespace alcp::digest {
 
 /*
  * Round constants:
  * For each round, there is one round constant
- * Values are first 64 buts. These are used only in the Iota Step of the round function
+ * Values are first 64 buts. These are used only in the Iota Step of the round
+ * function
  */
-
+// clang-format off
 static constexpr Uint64 cRoundConstants[24] = {
     0x0000000000000001,
     0x0000000000008082,
@@ -94,8 +95,9 @@ static constexpr Uint8 cRotationConstants [cDim][cDim] =
     41, 45, 15, 21, 8,
     18, 2, 61, 56, 14
 };
+// clang-format on
 
-// maximum size of message block in bits is used for shake128 digest 
+// maximum size of message block in bits is used for shake128 digest
 static constexpr Uint32 MaxDigestBlockSizeBits = 1344;
 
 class Sha3::Impl
@@ -108,80 +110,96 @@ class Sha3::Impl
     alc_error_t finalize(const Uint8* buf, Uint64 size);
     alc_error_t copyHash(Uint8* buf, Uint64 size) const;
 
-    void        reset();
+    Uint64 getInputBlockSize();
+    Uint64 getHashSize();
+
+    void reset();
 
   private:
-    void absorbChunk(Uint64* p_msg_buf_64);
-    void squeezeChunk();
+    void        absorbChunk(Uint64* p_msg_buf_64);
+    void        squeezeChunk();
     alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
-    void round(Uint64 round_const);
-    void fFunction();
+    void        round(Uint64 round_const);
+    void        fFunction();
 
   private:
-    std::string m_name;
-    Uint64 m_chunk_size, m_chunk_size_u64, m_hash_size;
+    std::string  m_name;
+    Uint64       m_chunk_size, m_chunk_size_u64, m_hash_size;
     const Uint64 m_num_rounds = 24;
-    Uint32 m_idx = 0;
-    bool m_finished = false;
-    
+    Uint32       m_idx        = 0;
+    bool         m_finished   = false;
+
     // buffer size to hold the chunk size to be processed
     Uint8 m_buffer[MaxDigestBlockSizeBits / 8];
-    // state matrix to represent the keccak 1600 bits representation of intermediate hash 
+    // state matrix to represent the keccak 1600 bits representation of
+    // intermediate hash
     Uint64 m_state[cDim][cDim];
     // flat representation of the state, used in absorbing the user message.
-    Uint64 *m_state_flat = &m_state[0][0];
+    Uint64* m_state_flat = &m_state[0][0];
     // buffer to copy intermediate hash value
     std::vector<Uint8> m_hash;
 };
+
+Uint64
+Sha3::Impl::getInputBlockSize()
+{
+    return m_chunk_size;
+}
+
+Uint64
+Sha3::Impl::getHashSize()
+{
+    return m_hash_size;
+}
 
 Sha3::Impl::Impl(const alc_digest_info_t& rDigestInfo)
     : m_idx{ 0 }
     , m_finished{ false }
 {
     Uint64 chunk_size_bits = 0;
-    m_hash_size = rDigestInfo.dt_len / 8;
+    m_hash_size            = rDigestInfo.dt_len / 8;
 
-    //chunk_size_bits are as per specs befined in 
+    // chunk_size_bits are as per specs befined in
     // https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf
-    switch(rDigestInfo.dt_mode.dm_sha3) {
-    case ALC_SHA3_224:
-        chunk_size_bits = 1152;
-        m_name = "SHA3-224";
-        break;
-    case ALC_SHA3_256:
-        chunk_size_bits = 1088;
-        m_name = "SHA3-256";
-        break;
-    case ALC_SHA3_384:
-        chunk_size_bits = 832;
-        m_name = "SHA3-384";
-        break;
-    case ALC_SHA3_512:
-        chunk_size_bits = 576;
-        m_name = "SHA3-512";
-        break;
-    case ALC_SHAKE_128:
-        chunk_size_bits = 1344;
-        m_name = "SHA3-SHAKE-128";
-        m_hash_size = rDigestInfo.dt_custom_len;
-        break;
-    case ALC_SHAKE_256:
-        chunk_size_bits = 1088;
-        m_name = "SHA3-SHAKE-256";
-        m_hash_size = rDigestInfo.dt_custom_len;
-        break;
-    default:
-        ;
+    switch (rDigestInfo.dt_mode.dm_sha3) {
+        case ALC_SHA3_224:
+            chunk_size_bits = 1152;
+            m_name          = "SHA3-224";
+            break;
+        case ALC_SHA3_256:
+            chunk_size_bits = 1088;
+            m_name          = "SHA3-256";
+            break;
+        case ALC_SHA3_384:
+            chunk_size_bits = 832;
+            m_name          = "SHA3-384";
+            break;
+        case ALC_SHA3_512:
+            chunk_size_bits = 576;
+            m_name          = "SHA3-512";
+            break;
+        case ALC_SHAKE_128:
+            chunk_size_bits = 1344;
+            m_name          = "SHA3-SHAKE-128";
+            m_hash_size     = rDigestInfo.dt_custom_len;
+            break;
+        case ALC_SHAKE_256:
+            chunk_size_bits = 1088;
+            m_name          = "SHA3-SHAKE-256";
+            m_hash_size     = rDigestInfo.dt_custom_len;
+            break;
+        default:;
     }
 
     m_chunk_size_u64 = chunk_size_bits / 64;
-    m_chunk_size = chunk_size_bits / 8;
+    m_chunk_size     = chunk_size_bits / 8;
 
     memset(m_state, 0, sizeof(m_state));
     m_hash.resize(m_hash_size);
 }
 
-void Sha3::Impl::absorbChunk(Uint64* pMsgBuffer64)
+void
+Sha3::Impl::absorbChunk(Uint64* pMsgBuffer64)
 {
     for (Uint64 i = 0; i < m_chunk_size_u64; ++i) {
         m_state_flat[i] ^= pMsgBuffer64[i];
@@ -190,15 +208,16 @@ void Sha3::Impl::absorbChunk(Uint64* pMsgBuffer64)
     fFunction();
 }
 
-void Sha3::Impl::squeezeChunk()
+void
+Sha3::Impl::squeezeChunk()
 {
     Uint64 hash_copied = 0;
-    while (m_chunk_size <= m_hash_size - hash_copied)
-    {
+    while (m_chunk_size <= m_hash_size - hash_copied) {
         Uint64 data_chunk_copied = std::min(m_hash_size, m_chunk_size);
-        
-        utils::CopyBytes(&m_hash[hash_copied], (Uint8*)m_state_flat, data_chunk_copied);
-        hash_copied += data_chunk_copied; 
+
+        utils::CopyBytes(
+            &m_hash[hash_copied], (Uint8*)m_state_flat, data_chunk_copied);
+        hash_copied += data_chunk_copied;
 
         if (hash_copied < m_hash_size) {
             fFunction();
@@ -206,44 +225,46 @@ void Sha3::Impl::squeezeChunk()
     }
 
     if (m_hash_size > hash_copied) {
-        utils::CopyBytes(&m_hash[hash_copied], (Uint8*)m_state_flat, m_hash_size - hash_copied);
+        utils::CopyBytes(&m_hash[hash_copied],
+                         (Uint8*)m_state_flat,
+                         m_hash_size - hash_copied);
     }
 }
 
-inline void Sha3::Impl::round(Uint64 roundConst)
+inline void
+Sha3::Impl::round(Uint64 roundConst)
 {
-    //theta stage
+    // theta stage
     Uint64 c[cDim], d[cDim];
-    
+
     for (int x = 0; x < cDim; ++x) {
         c[x] = m_state[0][x];
-        for (int y = 1; y < cDim; ++y)
-        {
-            c[x] ^= m_state[y][x];   
+        for (int y = 1; y < cDim; ++y) {
+            c[x] ^= m_state[y][x];
         }
     }
 
     for (int x = 0; x < cDim; ++x) {
-        d[x] = c[(cDim + x - 1) % cDim] ^ alcp::digest::RotateLeft(c[(x+1) % cDim], 1);
+        d[x] = c[(cDim + x - 1) % cDim]
+               ^ alcp::digest::RotateLeft(c[(x + 1) % cDim], 1);
     }
 
     for (int x = 0; x < cDim; ++x) {
-        for (int y = 0; y < cDim; ++y){
+        for (int y = 0; y < cDim; ++y) {
             m_state[x][y] ^= d[y];
         }
     }
 
-    //Rho stage
+    // Rho stage
     Uint64 temp[cDim][cDim];
-    for (int x = 0; x < cDim; x++)
-    {
-        for (int y = 0; y < cDim ; y++)
-        {
-            temp[x][y] = alcp::digest::RotateLeft(m_state[x][y], cRotationConstants[x][y]);
+    for (int x = 0; x < cDim; x++) {
+        for (int y = 0; y < cDim; y++) {
+            temp[x][y] = alcp::digest::RotateLeft(m_state[x][y],
+                                                  cRotationConstants[x][y]);
         }
     }
-    
-    //pi stage
+
+    // pi stage
     for (int x = 0; x < cDim; ++x) {
         int x_indx = 2 * x;
         for (int y = 0; y < cDim; ++y) {
@@ -251,28 +272,31 @@ inline void Sha3::Impl::round(Uint64 roundConst)
         }
     }
 
-    //xi stage
+    // xi stage
     utils::CopyBytes(temp, m_state, sizeof(temp));
     for (int x = 0; x < cDim; ++x) {
         for (int y = 0; y < cDim; ++y) {
-            m_state[x][y] = temp[x][y] ^ (~temp[x][(y+1) % cDim] & temp[x][(y+2) % cDim]);
+            m_state[x][y] =
+                temp[x][y]
+                ^ (~temp[x][(y + 1) % cDim] & temp[x][(y + 2) % cDim]);
         }
     }
 
-    //iota stage
+    // iota stage
     m_state[0][0] ^= roundConst;
 }
 
 void
 Sha3::Impl::fFunction()
 {
-    for (Uint64 i=0 ; i < m_num_rounds; ++i) {
+    for (Uint64 i = 0; i < m_num_rounds; ++i) {
         round(cRoundConstants[i]);
     }
 }
-  
+
 void
-Sha3::Impl::reset() {
+Sha3::Impl::reset()
+{
     m_finished = false;
     m_idx      = 0;
     memset(m_state, 0, sizeof(m_state));
@@ -287,7 +311,7 @@ Sha3::Impl::copyHash(Uint8* pHash, Uint64 size) const
         Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
         return err;
     }
-  
+
     utils::CopyBytes(pHash, m_hash.data(), size);
     return err;
 }
@@ -337,10 +361,10 @@ Sha3::Impl::update(const Uint8* pSrc, Uint64 inputSize)
 
     if (idx) {
         /*
-        * Last call to update(), had some unprocessed bytes which is part
-        * of internal buffer, we process first block by copying from pSrc the
-        * remaining bytes of a chunk.
-        */
+         * Last call to update(), had some unprocessed bytes which is part
+         * of internal buffer, we process first block by copying from pSrc the
+         * remaining bytes of a chunk.
+         */
         to_process = std::min(inputSize, m_chunk_size - idx);
         utils::CopyBytes(&m_buffer[idx], pSrc, to_process);
 
@@ -348,8 +372,8 @@ Sha3::Impl::update(const Uint8* pSrc, Uint64 inputSize)
         inputSize -= to_process;
         idx += to_process;
         if (idx == m_chunk_size) {
-          err = processChunk(m_buffer, m_chunk_size);
-          idx = 0;
+            err = processChunk(m_buffer, m_chunk_size);
+            idx = 0;
         }
     }
 
@@ -358,7 +382,7 @@ Sha3::Impl::update(const Uint8* pSrc, Uint64 inputSize)
 
     if (num_chunks) {
         Uint64 size = num_chunks * m_chunk_size;
-        err = processChunk(pSrc, size);
+        err         = processChunk(pSrc, size);
         pSrc += size;
         inputSize -= size;
     }
@@ -394,8 +418,7 @@ Sha3::Impl::finalize(const Uint8* pBuf, Uint64 size)
 
     if (m_name == "SHA3-SHAKE-128" || m_name == "SHA3-SHAKE-256") {
         m_buffer[m_idx] = 0x1f;
-    }
-    else {
+    } else {
         m_buffer[m_idx] = 0x06;
     }
 
@@ -408,17 +431,16 @@ Sha3::Impl::finalize(const Uint8* pBuf, Uint64 size)
     err = processChunk(m_buffer, m_chunk_size);
 
     squeezeChunk();
- 
-    m_idx = 0;
+
+    m_idx      = 0;
     m_finished = true;
 
     return err;
 }
 
 Sha3::Sha3(const alc_digest_info_t& rDigestInfo)
-    : m_pimpl{ std::make_unique<Sha3::Impl>(rDigestInfo) }  
-{
-}
+    : m_pimpl{ std::make_unique<Sha3::Impl>(rDigestInfo) }
+{}
 
 Sha3::~Sha3() {}
 
@@ -443,7 +465,7 @@ Sha3::finalize(const Uint8* pSrc, Uint64 size)
     alc_error_t err = ALC_ERROR_NONE;
 
     if (m_pimpl)
-      err = m_pimpl->finalize(pSrc, size);
+        err = m_pimpl->finalize(pSrc, size);
 
     return err;
 }
@@ -474,7 +496,18 @@ void
 Sha3::reset()
 {
     if (m_pimpl)
-      m_pimpl->reset();
+        m_pimpl->reset();
 }
 
+Uint64
+Sha3::getInputBlockSize()
+{
+    return m_pimpl->getInputBlockSize();
 }
+Uint64
+Sha3::getHashSize()
+{
+    return m_pimpl->getHashSize();
+}
+
+} // namespace alcp::digest

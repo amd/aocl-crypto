@@ -80,7 +80,6 @@ RotateLeft(Uint64 value, Uint64 count)
     return value << count | value >> (64 - count);
 }
 
-
 class IDigest
 {
   public:
@@ -93,6 +92,16 @@ class IDigest
     virtual void        reset()                                  = 0;
     // virtual alc_error_t compute(const Uint8* buf, Uint64 size)  = 0;
     virtual alc_error_t copyHash(Uint8* pBuf, Uint64 size) const = 0;
+
+    /**
+     * @return The input block size to the hash function in bytes
+     */
+    virtual Uint64 getInputBlockSize() = 0;
+
+    /**
+     * @return The digest size in bytes
+     */
+    virtual Uint64 getHashSize() = 0;
 
   protected:
     virtual ~IDigest() {}

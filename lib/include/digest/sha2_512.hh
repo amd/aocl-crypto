@@ -126,6 +126,16 @@ class Sha512 final : public Sha2
 
     alc_error_t setIv(const void* pIv, Uint64 size);
 
+    /**
+     * @return The input block size to the hash function in bytes
+     */
+    Uint64 getInputBlockSize();
+
+    /**
+     * @return The digest size in bytes
+     */
+    Uint64 getHashSize();
+
   private:
     void        compressMsg(Uint64 w[]);
     alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
@@ -151,6 +161,16 @@ class Sha384 final : public Sha2
     void        reset() override;
     alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) override;
     alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const override;
+
+    /**
+     * @return The input block size to the hash function in bytes
+     */
+    Uint64 getInputBlockSize() override;
+
+    /**
+     * @return The digest size in bytes
+     */
+    Uint64 getHashSize() override;
 
   private:
     std::unique_ptr<Sha512> m_psha512;
