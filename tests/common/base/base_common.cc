@@ -217,4 +217,16 @@ isPathExist(const std::string dir)
         return false;
     }
 }
+
+void
+Hash_to_string(char* output_string,
+                const Uint8* hash,
+                int   sha_len) 
+{
+    for (int i = 0; i < sha_len / 8; i++) {
+        output_string += sprintf(output_string, "%02x", hash[i]);
+    }
+    output_string[(sha_len / 8) * 2 + 1] = '\0';
+}
+
 } // namespace alcp::testing

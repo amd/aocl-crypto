@@ -59,8 +59,6 @@ class OpenSSLDigestBase : public DigestBase
                                 Uint8*       output,
                                 Uint64       out_size);
     void        reset();
-    /*FIXME: This is common across all base classes, need to unify at one point */
-    void hash_to_string(char* output_string, const Uint8* hash, int sha_len);
 };
 
 } // namespace alcp::testing

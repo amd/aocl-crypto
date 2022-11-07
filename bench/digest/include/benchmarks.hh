@@ -46,7 +46,7 @@
 
 using namespace alcp::testing;
 
-std::vector<int64_t> digest_block_sizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
+std::vector<Int64> digest_block_sizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
 
 void
 Digest_Bench(benchmark::State& state, _alc_digest_type digest_type, 

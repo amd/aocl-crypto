@@ -30,11 +30,8 @@
 
 namespace alcp::testing {
 
-OpenSSLDigestBase::OpenSSLDigestBase(
-                                     //_alc_sha2_mode   mode,
-                                     _alc_digest_type type,
+OpenSSLDigestBase::OpenSSLDigestBase(_alc_digest_type type,
                                      _alc_digest_len  sha_len)
-    //: m_mode{ mode }
     : m_type{ type }
     , m_sha_len{ sha_len }
 {
@@ -99,12 +96,9 @@ OpenSSLDigestBase::init()
 }
 
 bool
-OpenSSLDigestBase::init(
-                        //_alc_sha2_mode   mode,
-                        _alc_digest_type type,
+OpenSSLDigestBase::init(_alc_digest_type type,
                         _alc_digest_len  sha_len)
 {
-    //this->m_mode    = mode;
     this->m_type    = type;
     this->m_sha_len = sha_len;
     return init();
@@ -161,19 +155,6 @@ OpenSSLDigestBase::reset()
                 break;
         }
     }
-}
-
-
-/*FIXME: This is common across all base classes, need to unify at one point */
-void
-OpenSSLDigestBase::hash_to_string(char*        output_string,
-                                  const Uint8* hash,
-                                  int          sha_len)
-{
-    for (int i = 0; i < sha_len / 8; i++) {
-        output_string += sprintf(output_string, "%02x", hash[i]);
-    }
-    output_string[(sha_len / 8) * 2 + 1] = '\0';
 }
 
 } // namespace alcp::testing

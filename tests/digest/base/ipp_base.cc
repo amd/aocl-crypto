@@ -30,11 +30,8 @@
 
 namespace alcp::testing {
 
-IPPDigestBase::IPPDigestBase(
-                            //_alc_sha2_mode   mode,
-                             _alc_digest_type type,
+IPPDigestBase::IPPDigestBase(_alc_digest_type type,
                              _alc_digest_len  sha_len)
-    //: m_mode{ mode }
     : m_type{ type }
     , m_sha_len{ sha_len }
 {
@@ -85,12 +82,9 @@ IPPDigestBase::init()
 
 
 bool
-IPPDigestBase::init(
-                    //_alc_sha2_mode   mode,
-                    _alc_digest_type type,
+IPPDigestBase::init(_alc_digest_type type,
                     _alc_digest_len  sha_len)
 {
-    //this->m_mode    = mode;
     this->m_type    = type;
     this->m_sha_len = sha_len;
     return init();
@@ -111,17 +105,5 @@ IPPDigestBase::digest_function(const Uint8* in,
 void
 IPPDigestBase::reset()
 {}
-
-void
-IPPDigestBase::hash_to_string(char*        output_string,
-                              const Uint8* hash,
-                              int          sha_len)
-{
-    for (int i = 0; i < sha_len / 8; i++) {
-        output_string += sprintf(output_string, "%02x", hash[i]);
-    }
-    output_string[(sha_len / 8) * 2 + 1] = '\0';
-}
-
 
 } // namespace alcp::testing

@@ -135,16 +135,4 @@ AlcpDigestBase::reset()
     alcp_digest_reset(m_handle);
 }
 
-/* Hash value to string */
-void
-AlcpDigestBase::hash_to_string(char*        output_string,
-                               const Uint8* hash,
-                               int          sha_len)
-{
-    for (int i = 0; i < sha_len / 8; i++) {
-        output_string += sprintf(output_string, "%02x", hash[i]);
-    }
-    output_string[(sha_len / 8) * 2 + 1] = '\0';
-}
-
 } // namespace alcp::testing

@@ -62,8 +62,6 @@ class AlcpDigestBase : public DigestBase
                                 Uint64       out_size);
     /* Resets the context back to initial condition, reuse context */
     void reset();
-    /* Hash value to string */
-    void hash_to_string(char* output_string, const Uint8* hash, int sha_len);
 };
 
 } // namespace alcp::testing
