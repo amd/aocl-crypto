@@ -29,46 +29,7 @@
 #include "mac/mac.hh"
 #include <iostream>
 namespace alcp::mac {
-
-class alignas(16) Mac::Impl
-{
-  private:
-    std::shared_ptr<Uint8> m_key;
-    Uint64                 m_keylen;
-
-  public:
-    alc_error_t setUp(const alc_key_info_t& rKeyInfo)
-    {
-        // For RAW assignments
-        switch (rKeyInfo.fmt) {
-
-            case ALC_KEY_FMT_RAW:
-                m_keylen = rKeyInfo.len;
-                m_key    = std::make_shared<Uint8>(m_keylen);
-                break;
-            case ALC_KEY_FMT_BASE64:
-                // TODO: For base64 conversions
-                return ALC_ERROR_NOT_SUPPORTED; // remove this return when above
-                                                // todo is resolved.
-                break;
-            // TODO: Subsequest switch cases for other formats
-            default:
-                return ALC_ERROR_NOT_SUPPORTED;
-        }
-        return ALC_ERROR_NONE;
-    }
-};
-
-Mac::Mac()
-    : m_pimpl{ std::make_unique<Mac::Impl>() }
-{}
-
-Mac::Mac(const alc_key_info_t& rKeyInfo)
-    : Mac{}
-{
-    m_pimpl->setUp(rKeyInfo);
-}
-
-Mac::~Mac() {}
-
+Mac::Mac()  = default;
+Mac::~Mac() = default;
+// Add more of common Mac functions here
 } // namespace alcp::mac

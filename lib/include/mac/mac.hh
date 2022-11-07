@@ -27,24 +27,17 @@
  */
 #include "alcp/alcp.h"
 #include "alcp/types.h"
-#include <memory>
+#include <vector>
 namespace alcp::mac {
 class Mac
 {
-
-  private:
-    class Impl;
-    // const Impl*           pImpl() const { return m_pimpl.get(); }
-    // Impl*                 pImpl() { return m_pimpl.get(); }
-    std::unique_ptr<Impl> m_pimpl;
-
   public:
     Mac();
     virtual alc_error_t update(const Uint8* pMsgBuf, Uint64 size)   = 0;
+    virtual alc_error_t update(std::vector<Uint8> cipher_text)      = 0;
     virtual void        finish()                                    = 0;
     virtual void        reset()                                     = 0;
     virtual alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) = 0;
-    Mac(const alc_key_info_t& rKeyInfo);
     ~Mac();
 };
 } // namespace alcp::mac
