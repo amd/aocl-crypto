@@ -56,7 +56,7 @@ static constexpr Uint64 /* define word size */
 Sha384::Sha384(const alc_digest_info_t& rDInfo)
     : Sha2{ "sha2-384" }
 {
-    m_psha512 = std::make_unique<Sha512>(rDInfo);
+    m_psha512 = std::make_shared<Sha512>(rDInfo);
     m_psha512->setIv(cIv, sizeof(cIv));
 }
 
@@ -70,7 +70,7 @@ Sha384::Sha384()
     d_info.dt_custom_len   = 0;
     d_info.dt_data         = { 0 };
 
-    m_psha512 = std::make_unique<Sha512>(d_info);
+    m_psha512 = std::make_shared<Sha512>(d_info);
     m_psha512->setIv(cIv, sizeof(cIv));
 }
 

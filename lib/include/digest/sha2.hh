@@ -199,7 +199,7 @@ class Sha224 final : public Sha2
     Uint64 getHashSize() override;
 
   private:
-    std::unique_ptr<Sha256> m_psha256;
+    std::shared_ptr<Sha256> m_psha256;
 };
 
 static inline void

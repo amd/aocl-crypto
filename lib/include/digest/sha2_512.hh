@@ -173,7 +173,7 @@ class Sha384 final : public Sha2
     Uint64 getHashSize() override;
 
   private:
-    std::unique_ptr<Sha512> m_psha512;
+    std::shared_ptr<Sha512> m_psha512;
 };
 
 } // namespace alcp::digest

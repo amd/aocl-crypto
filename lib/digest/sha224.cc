@@ -55,7 +55,7 @@ static constexpr Uint64 /* define word size */
 Sha224::Sha224(const alc_digest_info_t& rDInfo)
     : Sha2{ "sha2-224" }
 {
-    m_psha256 = std::make_unique<Sha256>(rDInfo);
+    m_psha256 = std::make_shared<Sha256>(rDInfo);
     m_psha256->setIv(cIv, sizeof(cIv));
 }
 
@@ -69,7 +69,7 @@ Sha224::Sha224()
     d_info.dt_custom_len   = 0;
     d_info.dt_data         = { 0 };
 
-    m_psha256 = std::make_unique<Sha256>(d_info);
+    m_psha256 = std::make_shared<Sha256>(d_info);
     m_psha256->setIv(cIv, sizeof(cIv));
 }
 
