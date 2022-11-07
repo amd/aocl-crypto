@@ -95,6 +95,9 @@ static constexpr Uint8 cRotationConstants [cDim][cDim] =
     18, 2, 61, 56, 14
 };
 
+// maximum size of message block in bits is used for shake128 digest 
+static constexpr Uint32 MaxDigestBlockSizeBits = 1344;
+
 class Sha3::Impl
 {
   public:
@@ -121,8 +124,8 @@ class Sha3::Impl
     Uint32 m_idx = 0;
     bool m_finished = false;
     
-    // 1344 is the maximum size of message block in bits for shake128 digest 
-    Uint8 m_buffer[1344 / 8];
+    // buffer size to hold the chunk size to be processed
+    Uint8 m_buffer[MaxDigestBlockSizeBits / 8];
     // state matrix to represent the keccak 1600 bits representation of intermediate hash 
     Uint64 m_state[cDim][cDim];
     // flat representation of the state, used in absorbing the user message.
@@ -138,6 +141,8 @@ Sha3::Impl::Impl(const alc_digest_info_t& rDigestInfo)
     Uint64 chunk_size_bits = 0;
     m_hash_size = rDigestInfo.dt_len / 8;
 
+    //chunk_size_bits are as per specs befined in 
+    // https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf
     switch(rDigestInfo.dt_mode.dm_sha3) {
     case ALC_SHA3_224:
         chunk_size_bits = 1152;
