@@ -23,11 +23,29 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
  
-FILE(GLOB MAC_SRCS "*.cc")
+Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTests.cmake)
 
-TARGET_SOURCES(alcp
-	PRIVATE
-		${MAC_SRCS}
-	)
+# Bump up C++ standard
+SET(CMAKE_CXX_STANDARD 20)
 
-ADD_SUBDIRECTORY(tests)
+
+function(UnitTest TEST_NAME)
+    # file(GLOB TEST_FILES "*.cc")
+    set(TEST_FILE ${TEST_FILES} ${TEST_NAME}_unit_test.cc)
+
+    message(STATUS "MAC Unit Tests Imported ${TEST_FILES}")
+    message(STATUS "TEST FILE: ${TEST_FILE}")
+    
+    get_filename_component(currentTestName ${TEST_FILE} NAME_WLE)
+    get_filename_component(currentTestFile ${TEST_FILE} NAME)
+    #get_filename_component(currentTestDir ${TEST_FILE} BASE_DIR)
+    message("Test-> " ${currentTestName} "file " ${currentTestFile} )
+    set(ALCP_MODULE "MAC::${TEST_NAME}")
+    alcp_cc_test(${currentTestName}
+            DIRECTORY tests/
+            SOURCES   "${currentTestFile}"
+            DEPENDS   ${_module_lib}
+    )
+endfunction()
+
+UnitTest(hmac)
