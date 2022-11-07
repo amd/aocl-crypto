@@ -37,17 +37,19 @@ namespace alcp::digest {
 class Sha512 final : public Sha2
 {
   public:
-    static constexpr Uint64 cWordSizeBits = 64,   /* define word size */
-        cNumRounds                        = 80,   /* num rounds in sha512 */
-        cChunkSizeBits                    = 1024, /* chunk size in bits */
-        cChunkSize      = cChunkSizeBits / 8,     /* chunks to proces */
-        cChunkSizeMask  = cChunkSize - 1,         /*  */
-        cChunkSizeWords = cChunkSizeBits / cWordSizeBits, /* same in words */
-        cHashSizeBits   = 512,                            /* same in bits */
-        cHashSize       = cHashSizeBits / 8, /* Hash size in bytes */
-        cHashSizeWords  = cHashSizeBits / cWordSizeBits,
-                            cIvSizeBytes = 64; /* IV size in bytes */
-
+    // clang-format off
+    static constexpr Uint64
+        cWordSizeBits                     = 64,                             /* define word size */
+        cNumRounds                        = 80,                             /* num rounds in sha512 */
+        cChunkSizeBits                    = 1024,                           /* chunk size in bits */
+        cChunkSize                        = cChunkSizeBits / 8,             /* chunks to proces */
+        cChunkSizeMask                    = cChunkSize - 1,                 /*  */
+        cChunkSizeWords                   = cChunkSizeBits / cWordSizeBits, /* same in words */
+        cHashSizeBits                     = 512,                            /* same in bits */
+        cHashSize                         = cHashSizeBits / 8,              /* Hash size in bytes */
+        cHashSizeWords                    = cHashSizeBits / cWordSizeBits,
+        cIvSizeBytes                      = 64;                             /* IV size in bytes */
+    // clang-format on
   public:
     Sha512();
     Sha512(const alc_digest_info_t& rDigestInfo);
