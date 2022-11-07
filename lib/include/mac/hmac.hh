@@ -25,22 +25,91 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
-#include "alcp/alcp.h"
+#include "digest.hh"
 #include "mac.hh"
+#include "utils/copy.hh"
+#include <immintrin.h>
+#include <memory.h>
+
+// To store the class validity status to be used as gatekeeper for HMAC
+// functions
+enum hmac_state_t
+{
+    VALID,
+    INVALID
+};
 
 namespace alcp::mac {
-class Hmac final : public Mac
+class Hmac : public Mac
 {
+
   public:
-    Hmac();
-    Hmac(const alc_mac_info_t& rMacInfo, const alc_key_info_t& keyInfo);
+    alcp::digest::Digest* p_digest;
+
+  private:
+    class Impl;
+    std::unique_ptr<Impl> m_pimpl;
+    const Impl*           pImpl() const { return m_pimpl.get(); }
+    Impl*                 pImpl() { return m_pimpl.get(); }
+
+  public:
+    Hmac(const alc_mac_info_t mac_info, alcp::digest::Digest* p_digest);
+    /**
+     * @brief Can be called continously to update message on small chunks
+     * @param buff: message block to update HMAC
+     * @returns Error Status
+     */
+    alc_error_t update(std::vector<Uint8> buff) override;
+    /**
+     * @brief Can be called continously to update message on small chunks
+     * @param buff: message array block to update HMAC
+     * @param size: Size of the message array
+     * @returns Error Status
+     */
+    alc_error_t update(const Uint8* buff, Uint64 size) override;
+    /**
+     * @brief Can be called only once to update the final message chunk
+     * @param size: Size of the final message chunk
+     * @returns Error Status
+     */
+    alc_error_t finalize(const Uint8* buff, Uint64 size) override;
+    /**
+     * @brief Can be called only once to update the final message chunk
+     * @param buff: Pointer to the array to copy the message hash to
+     * @param size: Message digest Size
+     * @returns Error Status
+     */
+    alc_error_t copyHash(Uint8* buff, Uint64 size) const;
+    /**
+     * @brief get the output hash size to allocate the output array on
+     * @returns the output hash size of HMAC
+     */
+    Uint64 getHashSize();
+    /**
+     * @brief get the state of the HMAC class at any point after initialization.
+     * @returns the output hash size of HMAC
+     */
+    hmac_state_t getState() const;
+
+    // TODO: Implement Finish and Reset after Builder design is complete
+    void finish(){};
+    void reset(){};
+
     ~Hmac();
-    // alcp::digest::Digest m_hash;
-    alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
-    void        finish() override;
-    void        reset() override;
-    alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) override;
-    alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const;
+
+  private:
+    std::vector<Uint8> calculate_hash(alcp::digest::Digest* p_digest,
+                                      std::vector<Uint8>    input);
+
+    int calculate_hash(alcp::digest::Digest* p_digest,
+                       const Uint8*          input,
+                       Uint64                len,
+                       Uint8*                output);
+
+    std::vector<Uint8> get_k0(Uint32 block_len);
+
+    void        get_k0_xor_(std::vector<Uint8>& k0_xor_ipad,
+                            std::vector<Uint8>& k0_xor_opad);
+    alc_error_t setUp(const alc_key_info_t& rKeyInfo);
 };
 } // namespace alcp::mac

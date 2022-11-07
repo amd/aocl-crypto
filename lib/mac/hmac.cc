@@ -34,12 +34,6 @@ Hmac::update(const Uint8* pMsgBuf, Uint64 size)
     return ALC_ERROR_NONE;
 }
 
-void
-Hmac::finish()
-{}
-void
-Hmac::reset()
-{}
 alc_error_t
 Hmac::finalize(const Uint8* pMsgBuf, Uint64 size)
 {
