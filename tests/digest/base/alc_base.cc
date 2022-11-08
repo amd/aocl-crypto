@@ -58,6 +58,12 @@ AlcpDigestBase::init()
             case ALC_DIGEST_LEN_256:
                 dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
                 break;
+            case ALC_DIGEST_LEN_384:
+                dinfo.dt_mode.dm_sha2 = ALC_SHA2_384;
+                break;
+            case ALC_DIGEST_LEN_512:
+                dinfo.dt_mode.dm_sha2 = ALC_SHA2_512;
+                break;
             default:
                 break;
         }
@@ -68,6 +74,12 @@ AlcpDigestBase::init()
                 break;
             case ALC_DIGEST_LEN_256:
                 dinfo.dt_mode.dm_sha3 = ALC_SHA3_256;
+                break;
+            case ALC_DIGEST_LEN_384:
+                dinfo.dt_mode.dm_sha3 = ALC_SHA3_384;
+                break;
+            case ALC_DIGEST_LEN_512:
+                dinfo.dt_mode.dm_sha3 = ALC_SHA3_512;
                 break;
             default:
                 break;
