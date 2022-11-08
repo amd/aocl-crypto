@@ -31,7 +31,6 @@
 
 #include "alcp/digest.h"
 
-#define NUM_IP_CHUNKS 1
 #define DIGEST_SIZE 28
 
 static alc_digest_handle_t s_dg_handle;
@@ -47,7 +46,7 @@ create_demo_session(void)
         .dt_mode = {.dm_sha3 = ALC_SHA3_224,},
     };
 
-    uint64_t size       = alcp_digest_context_size(&dinfo);
+    Uint64 size         = alcp_digest_context_size(&dinfo);
     s_dg_handle.context = malloc(size);
 
     err = alcp_digest_request(&dinfo, &s_dg_handle);
@@ -60,48 +59,46 @@ create_demo_session(void)
 }
 
 static alc_error_t
-hash_demo(const uint8_t* src,
-          uint64_t       src_size,
-          uint8_t*       output,
-          uint64_t       out_size)
+hash_demo(const Uint8* src,
+          Uint64       src_size,
+          Uint8*       output,
+          Uint64       out_size,
+          Uint64       num_chunks)
 {
     alc_error_t err;
     // divide the input size into multiple chunks
-    uint32_t       num_chunks      = NUM_IP_CHUNKS;
-    const uint32_t chunk_size      = src_size / num_chunks;
-    const uint32_t last_chunk_size = src_size % num_chunks;
-    const uint8_t* p               = src;
+    const Uint64 buf_size      = src_size / num_chunks;
+    const Uint64 last_buf_size = src_size % num_chunks;
+    const Uint8* p             = src;
 
     while (num_chunks-- > 0) {
-        err = alcp_digest_update(&s_dg_handle, p, chunk_size);
+        err = alcp_digest_update(&s_dg_handle, p, buf_size);
         if (alcp_is_error(err)) {
             printf("Unable to compute SHA3 hash\n");
             goto out;
         }
-        p += chunk_size;
+        p += buf_size;
     }
-    err = alcp_digest_update(&s_dg_handle, p, last_chunk_size);
-    if (alcp_is_error(err)) {
-        printf("Unable to compute SHA3 hash 2\n");
-        goto out;
+
+    if (last_buf_size == 0) {
+        p = NULL;
     }
-    alcp_digest_finalize(&s_dg_handle, NULL, 0);
+
+    alcp_digest_finalize(&s_dg_handle, p, last_buf_size);
 
     err = alcp_digest_copy(&s_dg_handle, output, out_size);
     if (alcp_is_error(err)) {
         printf("Unable to copy digest\n");
-        goto out;
     }
 
-    alcp_digest_finish(&s_dg_handle);
-
-
 out:
+    alcp_digest_finish(&s_dg_handle);
+    free(s_dg_handle.context);
     return err;
 }
 
 static void
-hash_to_string(char *string, const uint8_t hash[DIGEST_SIZE])
+hash_to_string(char* string, const Uint8 hash[DIGEST_SIZE])
 {
     size_t i;
     for (i = 0; i < DIGEST_SIZE; i++) {
@@ -114,13 +111,14 @@ main(void)
 {
     struct string_vector
     {
-        char* input;
-        char* output;
+        char*  input;
+        char*  output;
+        Uint64 num_chunks;
     };
 
     static const struct string_vector STRING_VECTORS[] = {
 
-       { "11111111111111111111111111111111111111111111111111111111111111111111"
+        { "11111111111111111111111111111111111111111111111111111111111111111111"
           "11111111111111111111111111111111111111111111111111111111111111111111"
           "11111111111111111111111111111111111111111111111111111111111111111111"
           "11111111111111111111111111111111111111111111111111111111111111111111"
@@ -128,72 +126,71 @@ main(void)
           "11111111111111111111111111111111111111111111111111111111111111111111"
           "11111111111111111111111111111111111111111111111111111111111111111111"
           "111111111111111111111111111111111122",
-          "2cc47a6fdd1c3d5b2c0ef397afc67185d67190513ef4c9fbccc0dd3e"
-        },
-        
+          "2cc47a6fdd1c3d5b2c0ef397afc67185d67190513ef4c9fbccc0dd3e",
+          1 },
+
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
           "456789abcdef0123456789abcdef0123456789abcdef012345",
-          "efef752f6af7b3356d3d052f3136c99341b22d2caf0bada48baa7a67"
-        },
-        
-        { "",
-          "6b4e03423667dbb73b6e15454f0eb1abd4597f9a1b078e3f5b5a6bc7"
-        },
-        
+          "efef752f6af7b3356d3d052f3136c99341b22d2caf0bada48baa7a67",
+          2 },
+
+        { "", "6b4e03423667dbb73b6e15454f0eb1abd4597f9a1b078e3f5b5a6bc7", 3 },
+
         { "abc",
-          "e642824c3f8cf24ad09234ee7d3c766fc9a3a5168d0c94ad73b46fdf"
-        },
-        
+          "e642824c3f8cf24ad09234ee7d3c766fc9a3a5168d0c94ad73b46fdf",
+          4 },
+
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-          "2e3d6f2b9c0a8f2c31190609ae79d53530398b36386b754669d46391"
-        },
-        
+          "2e3d6f2b9c0a8f2c31190609ae79d53530398b36386b754669d46391",
+          1 },
+
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
           "456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-          "286195ce66b5fd138c613689b5bf61117811058b5d9417c75d893ca1"
-        },
-        
+          "286195ce66b5fd138c613689b5bf61117811058b5d9417c75d893ca1",
+          2 },
+
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
-          "81c0ede007a3482a6548b142f131ad00fe41eeaf91205bd70e604202"
-        },
-        
+          "81c0ede007a3482a6548b142f131ad00fe41eeaf91205bd70e604202",
+          3 },
+
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
           "456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
-          "91395c2f1a3995a22518c7f06caec243db1a2c111183c18cd0f56b31"
-        },
-        
+          "91395c2f1a3995a22518c7f06caec243db1a2c111183c18cd0f56b31",
+          4 },
+
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
           "456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-          "286195ce66b5fd138c613689b5bf61117811058b5d9417c75d893ca1"
-        },
-        
+          "286195ce66b5fd138c613689b5bf61117811058b5d9417c75d893ca1",
+          1 },
+
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0",
-          "557aa1e94bbb2ada1219c2da6864977b6f6d7ec17539f5fc3da0f3f7"
-        },
-        
+          "557aa1e94bbb2ada1219c2da6864977b6f6d7ec17539f5fc3da0f3f7",
+          2 },
+
         { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
-          "8a24108b154ada21c9fd5574494479ba5c7e7ab76ef264ead0fcce33"
-        },
-        
+          "8a24108b154ada21c9fd5574494479ba5c7e7ab76ef264ead0fcce33",
+          3 },
+
         { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno",
-          "b6091c08b046b400e6e03caec49ec3d023c0607db87848919b47ce0b"
-        },
+          "b6091c08b046b400e6e03caec49ec3d023c0607db87848919b47ce0b",
+          4 },
 
         { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoabcd"
           "efgh",
-          "9a36fa43c52f939c49b656d2de2d09531b5f9e86c8267d83dc0a6f42"
-        },
+          "9a36fa43c52f939c49b656d2de2d09531b5f9e86c8267d83dc0a6f42",
+          1 },
 
         { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoabcd"
           "efg",
-          "a8acfbf85a99564a841dd792382673b98f0242ca7b590658eef4208e"
-          
+          "a8acfbf85a99564a841dd792382673b98f0242ca7b590658eef4208e",
+          2
+
         },
 
         { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoabcd"
           "efghi",
-          "0fbc31d928d20f073c1e40b455ef60ee77bec806bb534034b5bb39f6"
-        }
+          "0fbc31d928d20f073c1e40b455ef60ee77bec806bb534034b5bb39f6",
+          3 }
 
     };
 
@@ -201,7 +198,9 @@ main(void)
 
     char* expected_output;
 
-    uint8_t sample_output[DIGEST_SIZE] = { 0 };
+    Uint64 num_chunks;
+
+    Uint8 sample_output[DIGEST_SIZE] = { 0 };
 
     // every byte in digest is represented as hexadecimal and is null terminated
     char output_string[2 * DIGEST_SIZE + 1];
@@ -213,24 +212,18 @@ main(void)
 
         expected_output = STRING_VECTORS[i].output;
 
+        num_chunks = STRING_VECTORS[i].num_chunks;
+
         alc_error_t err = create_demo_session();
 
         if (!alcp_is_error(err)) {
             err = hash_demo(sample_input,
                             strlen(sample_input),
                             sample_output,
-                            sizeof(sample_output));
+                            sizeof(sample_output),
+                            num_chunks);
         }
 
-        /*
-         * Complete the transaction
-         */
-
-        if (alcp_is_error(err)){
-            alcp_digest_finish(&s_dg_handle);
-        }
-        // segfault just before here, in "finish" //
-        
         // check if the outputs are matching
         hash_to_string(output_string, sample_output);
         printf("Input : %s\n", sample_input);

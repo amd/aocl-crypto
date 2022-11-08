@@ -31,8 +31,7 @@
 
 #include "alcp/digest.h"
 
-#define NUM_IP_CHUNKS 10
-#define DIGEST_SIZE   32
+#define DIGEST_SIZE 32
 
 static alc_digest_handle_t s_dg_handle;
 
@@ -47,7 +46,7 @@ create_demo_session(void)
         .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
     };
 
-    uint64_t size       = alcp_digest_context_size(&dinfo);
+    Uint64 size         = alcp_digest_context_size(&dinfo);
     s_dg_handle.context = malloc(size);
 
     err = alcp_digest_request(&dinfo, &s_dg_handle);
@@ -60,47 +59,48 @@ create_demo_session(void)
 }
 
 static alc_error_t
-hash_demo(const uint8_t* src,
-          uint64_t       src_size,
-          uint8_t*       output,
-          uint64_t       out_size)
+hash_demo(const Uint8* src,
+          Uint64       src_size,
+          Uint8*       output,
+          Uint64       out_size,
+          Uint64       num_chunks)
 {
     alc_error_t err;
 
     // divide the input size into multiple chunks
-    uint32_t       num_chunks      = NUM_IP_CHUNKS;
-    const uint32_t chunk_size      = src_size / num_chunks;
-    const uint32_t last_chunk_size = src_size % num_chunks;
-    const uint8_t* p               = src;
+    const Uint64 buf_size      = src_size / num_chunks;
+    const Uint64 last_buf_size = src_size % num_chunks;
+    const Uint8* p             = src;
 
     while (num_chunks-- > 0) {
 
-        err = alcp_digest_update(&s_dg_handle, p, chunk_size);
+        err = alcp_digest_update(&s_dg_handle, p, buf_size);
         if (alcp_is_error(err)) {
             printf("Unable to compute SHA2 hash 1\n");
             goto out;
         }
-        p += chunk_size;
+        p += buf_size;
     }
 
-    alcp_digest_finalize(&s_dg_handle, p, last_chunk_size);
+    if (last_buf_size == 0) {
+        p = NULL;
+    }
+
+    alcp_digest_finalize(&s_dg_handle, p, last_buf_size);
 
     err = alcp_digest_copy(&s_dg_handle, output, out_size);
     if (alcp_is_error(err)) {
         printf("Unable to copy digest\n");
-        goto out;
     }
 
-    alcp_digest_finish(&s_dg_handle);
-
-    free(s_dg_handle.context);
-
 out:
+    alcp_digest_finish(&s_dg_handle);
+    free(s_dg_handle.context);
     return err;
 }
 
 static void
-hash_to_string(char string[65], const uint8_t hash[DIGEST_SIZE])
+hash_to_string(char string[65], const Uint8 hash[DIGEST_SIZE])
 {
     size_t i;
     for (i = 0; i < DIGEST_SIZE; i++) {
@@ -114,34 +114,44 @@ main(void)
 {
     struct string_vector
     {
-        char* input;
-        char* output;
+        char*  input;
+        char*  output;
+        Uint64 num_chunks;
     };
 
     static const struct string_vector STRING_VECTORS[] = {
         { "",
-          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" },
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          1 },
         { "abc",
-          "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad" },
+          "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+          2 },
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-          "a8ae6e6ee929abea3afcfc5258c8ccd6f85273e0d4626d26c7279f3250f77c8e" },
+          "a8ae6e6ee929abea3afcfc5258c8ccd6f85273e0d4626d26c7279f3250f77c8e",
+          3 },
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
-          "057ee79ece0b9a849552ab8d3c335fe9a5f1c46ef5f1d9b190c295728628299c" },
+          "057ee79ece0b9a849552ab8d3c335fe9a5f1c46ef5f1d9b190c295728628299c",
+          4 },
         { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0",
-          "2a6ad82f3620d3ebe9d678c812ae12312699d673240d5be8fac0910a70000d93" },
+          "2a6ad82f3620d3ebe9d678c812ae12312699d673240d5be8fac0910a70000d93",
+          1 },
         { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
-          "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1" },
+          "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1",
+          2 },
         { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno"
           "ijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
           "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d"
-          "1" }
+          "1",
+          3 }
     };
 
     char* sample_input;
 
     char* expected_output;
 
-    uint8_t sample_output[DIGEST_SIZE] = { 0 };
+    Uint64 num_chunks;
+
+    Uint8 sample_output[DIGEST_SIZE] = { 0 };
 
     char output_string[65];
 
@@ -152,20 +162,17 @@ main(void)
 
         expected_output = STRING_VECTORS[i].output;
 
+        num_chunks = STRING_VECTORS[i].num_chunks;
+
         alc_error_t err = create_demo_session();
 
         if (!alcp_is_error(err)) {
             err = hash_demo(sample_input,
                             strlen(sample_input),
                             sample_output,
-                            sizeof(sample_output));
+                            sizeof(sample_output),
+                            num_chunks);
         }
-
-        /*
-         * Complete the transaction
-         */
-        if (alcp_is_error(err))
-            alcp_digest_finish(&s_dg_handle);
 
         // check if the outputs are matching
         hash_to_string(output_string, sample_output);
