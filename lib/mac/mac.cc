@@ -33,8 +33,8 @@ namespace alcp::mac {
 class alignas(16) Mac::Impl
 {
   private:
-    std::shared_ptr<Uint8[]> m_key;
-    Uint64                   m_keylen;
+    std::shared_ptr<Uint8> m_key;
+    Uint64                 m_keylen;
 
   public:
     alc_error_t setUp(const alc_key_info_t& rKeyInfo)
@@ -44,7 +44,7 @@ class alignas(16) Mac::Impl
 
             case ALC_KEY_FMT_RAW:
                 m_keylen = rKeyInfo.len;
-                m_key    = std::make_shared<Uint8[]>(m_keylen);
+                m_key    = std::make_shared<Uint8>(m_keylen);
                 break;
             case ALC_KEY_FMT_BASE64:
                 // TODO: For base64 conversions
