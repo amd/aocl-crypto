@@ -23,15 +23,84 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
  */
 
 #pragma once
 
-#include "alcp/experimental/defs.hh"
-#include "alcp/experimental/types.hh"
-#include "alcp/experimental/error.hh"
-#include "alcp/experimental/status.hh"
-#include "alcp/experimental/statusor.hh"
-#include "alcp/experimental/exception.hh"
+#include "assert.hh"
+#include "status.hh"
 
+#include <optional>
+
+namespace alcp {
+
+template<typename T>
+class StatusOr
+{
+  public:
+    using value_type = T;
+    using type       = T;
+
+  public:
+    inline StatusOr();
+    inline StatusOr(alcp::Status& sts);
+
+    inline StatusOr(const T& val);
+    inline StatusOr(T&& val);
+
+    ALCP_DEFS_DEFAULT_COPY_AND_ASSIGNMENT(StatusOr);
+
+    /**
+     * @brief status() will return the underlying status
+     *
+     * {
+     *      StatusOr<Aes256Context> sts = Aes::Build("aes-256-cbc")
+     *
+     *      if (!sts.ok()) {
+     *          return sts.status();
+     *      }
+     *
+     *      auto val = *sts;
+     *
+     * }
+     *
+     * @return const Status&
+     */
+    inline const Status& status() const { return m_status; }
+    inline bool          ok() const { return m_status.ok(); }
+
+  private:
+    std::optional<T> m_value;
+    Status           m_status;
+
+  private:
+    inline bool assertNotOk() const
+    {
+        ASSERT(!m_status.ok(), m_status.message());
+        return m_status.ok();
+    }
+};
+
+template<typename T>
+inline StatusOr<T>::StatusOr()
+		: m_status{ ErrorCode::eUnknown }
+{}
+
+template<typename T>
+inline StatusOr<T>::StatusOr(alcp::Status& sts)
+    : m_status{ sts }
+{
+    ASSERT(!m_status.ok(), "Assigned status not ok!!");
+}
+
+template<typename T>
+inline StatusOr<T>::StatusOr(const T& value)
+    : m_value{ value }
+{}
+
+template<typename T>
+inline StatusOr<T>::StatusOr(T&& value)
+    : m_value{ std::move(value) }
+{}
+
+} // namespace alcp

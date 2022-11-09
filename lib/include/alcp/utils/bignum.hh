@@ -29,7 +29,6 @@
 #pragma once
 
 #include "alcp/base.hh"
-#include "alcp/exception.hh"
 
 #include <memory> /* for unique_ptr */
 

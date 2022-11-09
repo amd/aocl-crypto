@@ -23,15 +23,59 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
  */
 
 #pragma once
 
-#include "alcp/experimental/defs.hh"
-#include "alcp/experimental/types.hh"
-#include "alcp/experimental/error.hh"
-#include "alcp/experimental/status.hh"
-#include "alcp/experimental/statusor.hh"
-#include "alcp/experimental/exception.hh"
+#include <string_view>
 
+#include "exception.hh"
+#include "sourcelocation.hh"
+
+namespace alcp {
+
+#if defined(DEBUG) || defined(ALCP_DEBUG)
+// FIXME: default enabled now
+#define ALCP_USE_ASSERTIONS 1
+#endif
+
+#if defined(ALCP_USE_ASSERTIONS)
+static constexpr bool AssertionsBuild = true;
+#else
+static constexpr bool AssertionsBuild = false;
+#endif
+
+/**
+ * @brief Assert using exceptions
+ *
+ * @tparam T Assert condition
+ * @tparam E Exception to raise when assertion condition fails
+ * @param assrt     is of type T
+ * @param s         Source code location to print FILE:LINE:FUNCTION
+ */
+template<typename T, typename E = FatalErrorException>
+inline void
+Assert(T&& assrt, std::string_view s, const SourceLocation& loc)
+{
+    if constexpr (AssertionsBuild) {
+        if (!assrt) {
+            E throwing{ loc, string{ s } };
+            throw throwing;
+        }
+    }
+}
+
+#if defined(ALCP_USE_ASSERTIONS)
+
+#define ASSERT(cond, msg)                                                      \
+    alcp::Assert(cond, std::string_view(msg), ALCP_SOURCE_LOCATION())
+
+#else
+
+#define ASSERT(cond, msg)                                                      \
+    {                                                                          \
+    }
+
+#endif // if ALCP_USE_ASSERTIONS
+
+} // namespace alcp

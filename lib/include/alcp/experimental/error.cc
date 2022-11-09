@@ -23,15 +23,10 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
  */
 
-#pragma once
+#include "error.hh"
 
-#include "alcp/experimental/defs.hh"
-#include "alcp/experimental/types.hh"
-#include "alcp/experimental/error.hh"
-#include "alcp/experimental/status.hh"
-#include "alcp/experimental/statusor.hh"
-#include "alcp/experimental/exception.hh"
+namespace alcp {
 
+}

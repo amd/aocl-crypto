@@ -28,10 +28,63 @@
 
 #pragma once
 
-#include "alcp/experimental/defs.hh"
-#include "alcp/experimental/types.hh"
-#include "alcp/experimental/error.hh"
-#include "alcp/experimental/status.hh"
-#include "alcp/experimental/statusor.hh"
-#include "alcp/experimental/exception.hh"
+#include <cstdint>
+#include <string>
+#include <string_view>
+#include <vector>
 
+// Few useful types from 'std' so that we dont have to use the std::
+// prefix everytime we refer to them, we also restrict their use in 'alcp'
+// namespace
+namespace alcp {
+
+using std::pair;
+using std::string;
+using std::vector;
+
+using String     = ::std::string;
+using StringView = ::std::string_view;
+
+} // namespace alcp
+
+namespace alcp {
+
+typedef char          Schar;
+typedef unsigned char Uchar;
+typedef int           Sint;
+typedef unsigned int  Uint;
+typedef long          Slong;
+typedef unsigned long Ulong;
+
+typedef char*          pSchar;
+typedef unsigned char* pUchar;
+typedef long*          pSlong;
+typedef unsigned long* pUlong;
+typedef int*           pSint;
+typedef unsigned int*  pUint;
+
+typedef int8_t  Int8;
+typedef int16_t Int16;
+typedef int32_t Int32;
+typedef int64_t Int64;
+
+typedef uint8_t  Uint8;
+typedef uint16_t Uint16;
+typedef uint32_t Uint32;
+typedef uint64_t Uint64;
+
+/* Pointers */
+typedef void*     pVoid;
+
+typedef int8_t*   pInt8;
+typedef int16_t*  pInt16;
+typedef int32_t*  pInt32;
+typedef int64_t*  pInt64;
+
+typedef uint8_t*  pUint8;
+typedef uint16_t* pUint16;
+typedef uint32_t* pUint32;
+typedef uint64_t* pUint64;
+
+
+} // namespace alcp

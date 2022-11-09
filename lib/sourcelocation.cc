@@ -26,9 +26,46 @@
  *
  */
 
-#pragma once
+#include "alcp/base.hh"
+#include "alcp/experimental/sourcelocation.hh"
 
-#define __NEW_ALCP_TYPES_H_ 1
+#include <filesystem>
 
-#include "../types.hh"
+namespace alcp {
+
+namespace fs = std::filesystem;
+
+string
+SourceLocation::relativeFile() const
+{
+    auto file_str = string{ m_file };
+
+    // Full path of "SourceLocation.cc" file
+    string this_path{ __FILE__ };
+
+    // finding the two pointers through the mismatch()
+    pair<string::const_iterator, string::const_iterator> p =
+        std::mismatch(file_str.begin(), file_str.end(), this_path.begin());
+
+    auto start = p.first - file_str.begin();
+
+    if (start > 0)
+        return file_str.substr(start, file_str.size());
+
+    return file_str;
+}
+
+/**
+ * Return the, fully qualified name of the function.
+ */
+string
+SourceLocation::qualifiedFunction() const
+{
+    if (m_pretty_function)
+        return m_pretty_function;
+
+    return m_function;
+}
+
+} // namespace alcp
 
