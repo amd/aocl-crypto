@@ -44,13 +44,13 @@ class Hmac : public Mac
 {
 
   public:
-    alcp::digest::Digest* p_digest;
+    alcp::digest::Digest* m_pDigest;
 
   private:
     class Impl;
-    std::unique_ptr<Impl> m_pimpl;
-    const Impl*           pImpl() const { return m_pimpl.get(); }
-    Impl*                 pImpl() { return m_pimpl.get(); }
+    std::unique_ptr<Impl> m_pImpl;
+    const Impl*           pImpl() const { return m_pImpl.get(); }
+    Impl*                 pImpl() { return m_pImpl.get(); }
 
   public:
     Hmac(const alc_mac_info_t mac_info, alcp::digest::Digest* p_digest);
