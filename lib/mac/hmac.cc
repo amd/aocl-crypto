@@ -72,10 +72,23 @@ class Hmac::Impl
             state = INVALID;
             return;
         }
+        /**
+         * TODO: Consider possible memory optimization of never allocating pad
+         * vectors since they contain the same value repeated input_block_size
+         * times
+         * */
         opad = std::vector<Uint8>(input_block_length, 0x5c);
         ipad = std::vector<Uint8>(input_block_length, 0x36);
-        k0   = get_k0(input_block_length);
-        get_k0_xor_pad(k0_xor_ipad, k0_xor_opad);
+
+        k0 = get_k0(input_block_length);
+        // Allocate k0_xor_ipad and k0_xor_opad with same length as k0. But
+        // value will be junk
+        k0_xor_ipad = std::vector<Uint8>(k0.size(), 0);
+        k0_xor_opad = std::vector<Uint8>(k0.size(), 0);
+
+        // obtain k0_xor_ipad and k0_xor_opad
+        get_k0_xor_pad();
+
         // start the hash calculation
         err = calculate_hash(p_digest, k0_xor_ipad);
         if (err) {
@@ -181,87 +194,87 @@ class Hmac::Impl
         }
         return ALC_ERROR_NONE;
     }
-    void get_k0_xor_pad(std::vector<Uint8>& k0_xor_ipad,
-                        std::vector<Uint8>& k0_xor_opad)
+    void get_k0_xor_pad()
     {
-        const int register_size = 128,
-                  no_of_xor_operations =
-                      (input_block_length * 8) / (2 * register_size),
-                  xor_operations_left =
-                      (input_block_length * 8) % (2 * register_size);
+        constexpr int register_size = 128, // sizeof(__m128i)*8
+            no_optimized_xor        = 2;
 
-        Uint8* temp_k0_xor_ipad = new Uint8[input_block_length];
-        Uint8* temp_k0_xor_opad = new Uint8[input_block_length];
-        Uint8 *p_opad = &(opad.at(0)), *p_ipad = &(ipad.at(0)),
-              *p_k0 = &(k0.at(0));
+        const int no_of_xor_operations = (input_block_length * 8)
+                                         / (no_optimized_xor * register_size),
+                  xor_operations_left = (input_block_length * 8)
+                                        % (no_optimized_xor * register_size);
 
-        Uint8* current_temp_k0_xor_ipad = temp_k0_xor_ipad; //
-        Uint8* current_temp_k0_xor_opad = temp_k0_xor_opad;
+        __m128i* pi_opad = reinterpret_cast<__m128i*>(&(opad.at(0)));
+        __m128i* pi_ipad = reinterpret_cast<__m128i*>(&(ipad.at(0)));
+        __m128i* pi_k0   = reinterpret_cast<__m128i*>(&(k0.at(0)));
 
-        Uint8*        temp_ipad_xor_concat = new Uint8[input_block_length];
-        constexpr int incrementer          = 2 * (128 / 8);
-        Uint8*        current_temp_ipad_xor_concat = temp_ipad_xor_concat;
+        __m128i* pi_current_temp_k0_xor_ipad =
+            reinterpret_cast<__m128i*>(&k0_xor_ipad[0]);
+        __m128i* pi_current_temp_k0_xor_opad =
+            reinterpret_cast<__m128i*>(&k0_xor_opad[0]);
+
+        __m128i reg_opad_1;
+        __m128i reg_ipad_1;
+        __m128i reg_k0_1;
+        __m128i reg_k0_xor_ipad_1;
+        __m128i reg_k0_xor_opad_1;
+        __m128i reg_opad_2;
+        __m128i reg_ipad_2;
+        __m128i reg_k0_2;
+        __m128i reg_k0_xor_ipad_2;
+        __m128i reg_k0_xor_opad_2;
+
+        /** TODO: Consider adding more optimized XOR Operations and reducing the
+        register usage */
         for (int i = 0; i < no_of_xor_operations; i += 1) {
-            __m128i reg_opad_1 =
-                _mm_loadu_si128(reinterpret_cast<const __m128i*>(p_opad));
-            __m128i reg_ipad_1 =
-                _mm_loadu_si128(reinterpret_cast<const __m128i*>(p_ipad));
-            __m128i reg_k0_1 =
-                _mm_loadu_si128(reinterpret_cast<const __m128i*>(p_k0));
-            __m128i reg_k0_xor_ipad_1 = _mm_xor_si128(reg_k0_1, reg_ipad_1);
-            __m128i reg_k0_xor_opad_1 = _mm_xor_si128(reg_k0_1, reg_opad_1);
-            _mm_storeu_si128(
-                reinterpret_cast<__m128i*>(current_temp_k0_xor_ipad),
-                reg_k0_xor_ipad_1); //
-            _mm_storeu_si128(
-                reinterpret_cast<__m128i*>(current_temp_ipad_xor_concat),
-                reg_k0_xor_ipad_1);
-            _mm_storeu_si128(
-                reinterpret_cast<__m128i*>(current_temp_k0_xor_opad),
-                reg_k0_xor_opad_1);
+            // Load 128 bits
+            reg_opad_1 = _mm_loadu_si128(pi_opad);
+            reg_ipad_1 = _mm_loadu_si128(pi_ipad);
+            reg_k0_1   = _mm_loadu_si128(pi_k0);
+            // Load the next 128 bits
+            reg_opad_2 = _mm_loadu_si128((pi_opad + 1));
+            reg_ipad_2 = _mm_loadu_si128((pi_ipad + 1));
+            reg_k0_2   = _mm_loadu_si128(pi_k0 + 1);
 
-            __m128i reg_opad_2 = _mm_loadu_si128(
-                reinterpret_cast<const __m128i*>(p_opad + register_size / 8));
-            __m128i reg_ipad_2 = _mm_loadu_si128(
-                reinterpret_cast<const __m128i*>(p_ipad + register_size / 8));
-            __m128i reg_k0_2 = _mm_loadu_si128(
-                reinterpret_cast<const __m128i*>(p_k0 + register_size / 8));
-            __m128i reg_k0_xor_ipad_2 = _mm_xor_si128(reg_k0_2, reg_ipad_2);
-            __m128i reg_k0_xor_opad_2 = _mm_xor_si128(reg_k0_2, reg_opad_2);
-            _mm_storeu_si128(reinterpret_cast<__m128i*>(current_temp_k0_xor_ipad
-                                                        + register_size / 8),
-                             reg_k0_xor_ipad_2); //
-            _mm_storeu_si128(
-                reinterpret_cast<__m128i*>(current_temp_ipad_xor_concat
-                                           + register_size / 8),
-                reg_k0_xor_ipad_2);
-            _mm_storeu_si128(reinterpret_cast<__m128i*>(current_temp_k0_xor_opad
-                                                        + register_size / 8),
+            // Perform XOR
+            reg_k0_xor_ipad_1 = _mm_xor_si128(reg_k0_1, reg_ipad_1);
+            reg_k0_xor_opad_1 = _mm_xor_si128(reg_k0_1, reg_opad_1);
+            reg_k0_xor_ipad_2 = _mm_xor_si128(reg_k0_2, reg_ipad_2);
+            reg_k0_xor_opad_2 = _mm_xor_si128(reg_k0_2, reg_opad_2);
+
+            // Store the XOR Result
+            _mm_storeu_si128(pi_current_temp_k0_xor_ipad, reg_k0_xor_ipad_1);
+            _mm_storeu_si128(pi_current_temp_k0_xor_opad, reg_k0_xor_opad_1);
+            _mm_storeu_si128((pi_current_temp_k0_xor_ipad + 1),
+                             reg_k0_xor_ipad_2);
+            _mm_storeu_si128(pi_current_temp_k0_xor_opad + 1,
                              reg_k0_xor_opad_2);
 
-            p_k0 += incrementer;
-            current_temp_k0_xor_ipad += incrementer;
-            current_temp_k0_xor_opad += incrementer;
-            current_temp_ipad_xor_concat += incrementer;
-            p_opad += incrementer;
-            p_ipad += incrementer;
+            // Increment for the next 256 bits
+            pi_current_temp_k0_xor_ipad += no_optimized_xor;
+            pi_current_temp_k0_xor_opad += no_optimized_xor;
+            pi_opad += no_optimized_xor;
+            pi_ipad += no_optimized_xor;
+            pi_k0 += no_optimized_xor;
         }
 
+        // Obtain Uint8* pointers from the register pointers for remaining
+        // unoptimized xor
+        Uint8* current_temp_k0_xor_ipad =
+            reinterpret_cast<Uint8*>(pi_current_temp_k0_xor_ipad);
+        Uint8* current_temp_k0_xor_opad =
+            reinterpret_cast<Uint8*>(pi_current_temp_k0_xor_opad);
+        auto p_k0   = reinterpret_cast<Uint8*>(pi_k0);
+        auto p_ipad = reinterpret_cast<Uint8*>(pi_ipad);
+        auto p_opad = reinterpret_cast<Uint8*>(pi_opad);
+
         for (int i = 0; i < xor_operations_left; i++) {
-            *current_temp_ipad_xor_concat = *p_k0 ^ *p_ipad;
-            current_temp_ipad_xor_concat++;
+
+            *current_temp_k0_xor_ipad = *p_k0 ^ *p_ipad;
+            *current_temp_k0_xor_opad = *p_k0 ^ *p_opad;
             p_k0++;
             p_ipad++;
         }
-
-        k0_xor_ipad = std::vector<Uint8>(temp_k0_xor_ipad,
-                                         temp_k0_xor_ipad + input_block_length);
-        k0_xor_opad = std::vector<Uint8>(temp_k0_xor_opad,
-                                         temp_k0_xor_opad + input_block_length);
-
-        delete[] temp_k0_xor_ipad;
-        delete[] temp_k0_xor_opad;
-        delete[] temp_ipad_xor_concat;
     }
 
     std::vector<Uint8> get_k0(Uint32 block_len)

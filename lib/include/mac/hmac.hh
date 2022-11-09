@@ -108,8 +108,7 @@ class Hmac : public Mac
 
     std::vector<Uint8> get_k0(Uint32 block_len);
 
-    void        get_k0_xor_(std::vector<Uint8>& k0_xor_ipad,
-                            std::vector<Uint8>& k0_xor_opad);
+    void        get_k0_xor_pad();
     alc_error_t setUp(const alc_key_info_t& rKeyInfo);
 };
 } // namespace alcp::mac
