@@ -35,14 +35,39 @@ class Hmac::Impl
 {
 
   private:
-    std::vector<Uint8>    key;
-    Uint32                keylen;
-    std::vector<Uint8>    k0, opad, ipad;
-    Uint32                output_hash_size{};
-    std::vector<Uint8>    output_mac;
-    Uint32                input_block_length{};
+    // Input Key to HMAC
+    std::vector<Uint8> key;
+    // Length of the input key must be >0 to be valid
+    Uint32 keylen;
+    // Input Block Length / B of the digest used by HMAC
+    Uint32 input_block_length{};
+    /**
+     * Processed Key to match the input block length input_block_length
+     * get_k0 function performs the preprocessing
+     * */
+    std::vector<Uint8> k0;
+    // opad: 0x5c repeated input_block_length times
+    std::vector<Uint8> opad;
+    // ipad: 0x36 repeated input_block_length times
+    std::vector<Uint8> ipad;
+    // Size of the message digest
+    Uint32 output_hash_size{};
+    // Placeholder variable to hold the mac value after finalize has been called
+    std::vector<Uint8> output_mac;
+
+    // TODO: Consider Shared pointer for this implementation
+    /**
+     * Pointer to the Base class Digest, holds the address of the derived class
+     * object of Digest which supports HMAC
+     *
+     */
     alcp::digest::Digest* p_digest;
-    hmac_state_t          state = INVALID;
+
+    /**
+     * holds the state of HMAC Class at any point can be accessed via public
+     * getState()
+     * */
+    hmac_state_t state = INVALID;
 
     std::vector<Uint8> k0_xor_opad, k0_xor_ipad;
 
@@ -137,6 +162,8 @@ class Hmac::Impl
             std::vector<Uint8> h1(output_hash_size, 0);
             p_digest->copyHash(&(h1.at(0)), h1.size());
             p_digest->reset();
+
+            // Contatenate k0_xor_opad with intermediate hash
             std::vector<Uint8> k0_xor_opad_ct_h1;
             k0_xor_opad_ct_h1.insert(k0_xor_opad_ct_h1.end(),
                                      k0_xor_opad.begin(),
@@ -155,14 +182,17 @@ class Hmac::Impl
     alc_error_t copyHash(Uint8* buff, Uint64 size) const
     {
         alc_error_t err = ALC_ERROR_NONE;
-        if (getState() == VALID)
+        if (getState() == VALID) {
             alcp::utils::CopyBytes(buff, &output_mac.at(0), size);
-        else
+        } else {
             err = ALC_ERROR_BAD_STATE;
+        }
         return err;
     }
 
   private:
+    // TODO: This method should be outside the class and a common validation
+    // utility for keys
     alc_error_t validate_keys(const alc_key_info_t& rKeyInfo)
     {
         // For RAW assignments
