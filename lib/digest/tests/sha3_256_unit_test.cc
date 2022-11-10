@@ -49,6 +49,7 @@ static const alc_digest_info_t DigestInfo = []() {
 // Digest size in bytes
 static const Uint8 DigestSize = 32;
 
+// clang-format off
 static const KnownAnswerMap message_digest = {
     { "Empty",
       { "",
@@ -69,6 +70,7 @@ static const KnownAnswerMap message_digest = {
         "8" } }
 };
 
+// clang-format on
 class Sha3_256
     : public testing::TestWithParam<std::pair<const string, ParamTuple>>
 {};

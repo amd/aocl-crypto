@@ -53,6 +53,7 @@ alc_digest_info_t DigestInfoShake = {
 // Digest size in bytes
 static const Uint8 DigestSize = 32;
 
+// clang-format off
 static const KnownAnswerMap message_digest_array = {
     { "Empty", { "", 5, { "7f9c2ba4e8", "46b9dd2b0b" } } },
     { "Symbols",
@@ -75,6 +76,7 @@ static const KnownAnswerMap message_digest_array = {
           "c1f5adb085c1c3dae1d1740b29c7140416b697c990f2b7aa4a" } } }
 };
 
+// clang-format on
 class Shake : public testing::TestWithParam<std::pair<const string, ParamTuple>>
 {};
 

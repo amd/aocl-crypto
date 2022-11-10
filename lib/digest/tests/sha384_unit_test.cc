@@ -26,7 +26,6 @@
  *
  */
 
-
 #include "digest/sha2_512.hh"
 #include "gtest/gtest.h"
 
@@ -34,15 +33,16 @@ namespace {
 using namespace std;
 using namespace alcp::digest;
 
-typedef tuple<const string, const string> ParamTuple;
+typedef tuple<const string, const string>  ParamTuple;
 typedef std::map<const string, ParamTuple> KnownAnswerMap;
 
-//Digest size in bytes
+// Digest size in bytes
 static const Uint8 DigestSize = 48;
 // IV array size where every element is 8 bytes
-static const Uint8 IvArraySize = 8;
+static const Uint8 IvArraySize   = 8;
 static const Uint8 IvElementSize = 8;
 
+// clang-format off
 static const KnownAnswerMap message_digest = {
     { "Empty",   
             { "", 
@@ -67,6 +67,7 @@ static const KnownAnswerMap message_digest = {
                 "c71a557e2db966c3e9fa91746039"}}
 };
 
+// clang-format on
 class Sha384Test
     : public testing::TestWithParam<std::pair<const string, ParamTuple>>
 {};
@@ -74,18 +75,19 @@ class Sha384Test
 TEST_P(Sha384Test, digest_generation_test)
 {
     const auto [plaintext, digest] = GetParam().second;
-    Sha384 sha384;
-    Uint8 hash[DigestSize];
+    Sha384            sha384;
+    Uint8             hash[DigestSize];
     std::stringstream ss;
 
-    ASSERT_EQ(sha384.update((const Uint8 *)plaintext.c_str(), plaintext.size()), ALC_ERROR_NONE);
+    ASSERT_EQ(sha384.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+              ALC_ERROR_NONE);
     ASSERT_EQ(sha384.finalize(nullptr, 0), ALC_ERROR_NONE);
     ASSERT_EQ(sha384.copyHash(hash, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
-    for(Uint16 i = 0; i < DigestSize; ++i)
+    for (Uint16 i = 0; i < DigestSize; ++i)
         ss << std::setw(2) << static_cast<unsigned>(hash[i]);
-    
+
     std::string hash_string = ss.str();
     EXPECT_TRUE(hash_string == digest);
 }
@@ -106,8 +108,8 @@ TEST(Sha384Test, invalid_input_update_test)
 
 TEST(Sha384Test, zero_size_update_test)
 {
-    Sha384 sha384;
-    const Uint8 src[DigestSize] = {0};
+    Sha384      sha384;
+    const Uint8 src[DigestSize] = { 0 };
     EXPECT_EQ(ALC_ERROR_NONE, sha384.update(src, 0));
 }
 
@@ -120,15 +122,14 @@ TEST(Sha384Test, invalid_output_copy_hash_test)
 TEST(Sha384Test, zero_size_hash_copy_test)
 {
     Sha384 sha384;
-    Uint8 hash[DigestSize];
+    Uint8  hash[DigestSize];
     EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha384.copyHash(hash, 0));
 }
 
 TEST(Sha384Test, over_size_hash_copy_test)
 {
     Sha384 sha384;
-    Uint8 hash[DigestSize+1];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha384.copyHash(hash, DigestSize+1));
+    Uint8  hash[DigestSize + 1];
+    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha384.copyHash(hash, DigestSize + 1));
 }
- 
-}
+} // namespace

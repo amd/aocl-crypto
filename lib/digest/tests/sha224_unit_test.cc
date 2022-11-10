@@ -26,7 +26,6 @@
  *
  */
 
-
 #include "digest/sha2.hh"
 #include "gtest/gtest.h"
 
@@ -34,12 +33,13 @@ namespace {
 using namespace std;
 using namespace alcp::digest;
 
-typedef tuple<const string, const string> ParamTuple;
+typedef tuple<const string, const string>  ParamTuple;
 typedef std::map<const string, ParamTuple> KnownAnswerMap;
 
-//Digest size in bytes
+// Digest size in bytes
 static const Uint8 DigestSize = 28;
 
+// clang-format off
 static const KnownAnswerMap message_digest = {
     { "Empty",   
             { "", 
@@ -59,6 +59,7 @@ static const KnownAnswerMap message_digest = {
                 "c97ca9a559850ce97a04a96def6d99a9e0e0e2ab14e6b8df265fc0b3"}}
 };
 
+// clang-format on
 class Sha224Test
     : public testing::TestWithParam<std::pair<const string, ParamTuple>>
 {};
@@ -66,18 +67,19 @@ class Sha224Test
 TEST_P(Sha224Test, digest_generation_test)
 {
     const auto [plaintext, digest] = GetParam().second;
-    Sha224 sha224;
-    Uint8 hash[DigestSize];
+    Sha224            sha224;
+    Uint8             hash[DigestSize];
     std::stringstream ss;
 
-    ASSERT_EQ(sha224.update((const Uint8 *)plaintext.c_str(), plaintext.size()), ALC_ERROR_NONE);
+    ASSERT_EQ(sha224.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+              ALC_ERROR_NONE);
     ASSERT_EQ(sha224.finalize(nullptr, 0), ALC_ERROR_NONE);
     ASSERT_EQ(sha224.copyHash(hash, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
-    for(Uint16 i = 0; i < DigestSize; ++i)
+    for (Uint16 i = 0; i < DigestSize; ++i)
         ss << std::setw(2) << static_cast<unsigned>(hash[i]);
-    
+
     std::string hash_string = ss.str();
     EXPECT_TRUE(hash_string == digest);
 }
@@ -98,8 +100,8 @@ TEST(Sha224Test, invalid_input_update_test)
 
 TEST(Sha224Test, zero_size_update_test)
 {
-    Sha224 sha224;
-    const Uint8 src[DigestSize] = {0};
+    Sha224      sha224;
+    const Uint8 src[DigestSize] = { 0 };
     EXPECT_EQ(ALC_ERROR_NONE, sha224.update(src, 0));
 }
 
@@ -112,15 +114,15 @@ TEST(Sha224Test, invalid_output_copy_hash_test)
 TEST(Sha224Test, zero_size_hash_copy_test)
 {
     Sha224 sha224;
-    Uint8 hash[DigestSize];
+    Uint8  hash[DigestSize];
     EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha224.copyHash(hash, 0));
 }
 
 TEST(Sha224Test, over_size_hash_copy_test)
 {
     Sha224 sha224;
-    Uint8 hash[DigestSize+1];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha224.copyHash(hash, DigestSize+1));
+    Uint8  hash[DigestSize + 1];
+    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha224.copyHash(hash, DigestSize + 1));
 }
 
 TEST(Sha224Test, call_finalize_twice_test)
@@ -131,4 +133,4 @@ TEST(Sha224Test, call_finalize_twice_test)
     EXPECT_EQ(ALC_ERROR_NONE, sha224.finalize(nullptr, 0));
 }
 
-}
+} // namespace

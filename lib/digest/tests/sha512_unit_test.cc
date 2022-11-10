@@ -26,7 +26,6 @@
  *
  */
 
-
 #include "digest/sha2_512.hh"
 #include "gtest/gtest.h"
 
@@ -34,15 +33,16 @@ namespace {
 using namespace std;
 using namespace alcp::digest;
 
-typedef tuple<const string, const string> ParamTuple;
+typedef tuple<const string, const string>  ParamTuple;
 typedef std::map<const string, ParamTuple> KnownAnswerMap;
 
-//Digest size in bytes
+// Digest size in bytes
 static const Uint8 DigestSize = 64;
 // IV array size where every element is 8 bytes
-static const Uint8 IvArraySize = 8;
+static const Uint8 IvArraySize   = 8;
 static const Uint8 IvElementSize = 8;
 
+// clang-format off
 static const KnownAnswerMap message_digest = {
     { "Empty",   
             { "", 
@@ -67,6 +67,7 @@ static const KnownAnswerMap message_digest = {
                 "501d289e4900f7e4331b99dec4b5433ac7d329eeb6dd26545e96e55b874be909"}}
 };
 
+// clang-format on
 class Sha512Test
     : public testing::TestWithParam<std::pair<const string, ParamTuple>>
 {};
@@ -74,18 +75,19 @@ class Sha512Test
 TEST_P(Sha512Test, digest_generation_test)
 {
     const auto [plaintext, digest] = GetParam().second;
-    Sha512 sha512;
-    Uint8 hash[DigestSize];
+    Sha512            sha512;
+    Uint8             hash[DigestSize];
     std::stringstream ss;
 
-    ASSERT_EQ(sha512.update((const Uint8 *)plaintext.c_str(), plaintext.size()), ALC_ERROR_NONE);
+    ASSERT_EQ(sha512.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+              ALC_ERROR_NONE);
     ASSERT_EQ(sha512.finalize(nullptr, 0), ALC_ERROR_NONE);
     ASSERT_EQ(sha512.copyHash(hash, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
-    for(Uint16 i = 0; i < DigestSize; ++i)
+    for (Uint16 i = 0; i < DigestSize; ++i)
         ss << std::setw(2) << static_cast<unsigned>(hash[i]);
-    
+
     std::string hash_string = ss.str();
     EXPECT_TRUE(hash_string == digest);
 }
@@ -106,8 +108,8 @@ TEST(Sha512Test, invalid_input_update_test)
 
 TEST(Sha512Test, zero_size_update_test)
 {
-    Sha512 sha512;
-    const Uint8 src[DigestSize] = {0};
+    Sha512      sha512;
+    const Uint8 src[DigestSize] = { 0 };
     EXPECT_EQ(ALC_ERROR_NONE, sha512.update(src, 0));
 }
 
@@ -120,21 +122,22 @@ TEST(Sha512Test, invalid_output_copy_hash_test)
 TEST(Sha512Test, zero_size_hash_copy_test)
 {
     Sha512 sha512;
-    Uint8 hash[DigestSize];
+    Uint8  hash[DigestSize];
     EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha512.copyHash(hash, 0));
 }
 
 TEST(Sha512Test, over_size_hash_copy_test)
 {
     Sha512 sha512;
-    Uint8 hash[DigestSize+1];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha512.copyHash(hash, DigestSize+1));
+    Uint8  hash[DigestSize + 1];
+    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha512.copyHash(hash, DigestSize + 1));
 }
 
 TEST(Sha512Test, invalid_iv_test)
 {
     Sha512 sha512;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha512.setIv(nullptr, IvArraySize * IvElementSize));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG,
+              sha512.setIv(nullptr, IvArraySize * IvElementSize));
 }
 
 TEST(Sha512Test, zero_size_iv_test)
@@ -147,8 +150,8 @@ TEST(Sha512Test, zero_size_iv_test)
 TEST(Sha512Test, over_size_iv_test)
 {
     Sha512 sha512;
-    Uint64 iv[IvArraySize+1];
+    Uint64 iv[IvArraySize + 1];
     EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha512.setIv(iv, sizeof(iv)));
-}  
-
 }
+
+} // namespace

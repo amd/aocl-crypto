@@ -26,7 +26,6 @@
  *
  */
 
-
 #include "digest/sha2.hh"
 #include "gtest/gtest.h"
 
@@ -34,15 +33,16 @@ namespace {
 using namespace std;
 using namespace alcp::digest;
 
-typedef tuple<const string, const string> ParamTuple;
+typedef tuple<const string, const string>  ParamTuple;
 typedef std::map<const string, ParamTuple> KnownAnswerMap;
 
-//Digest size in bytes
+// Digest size in bytes
 static const Uint8 DigestSize = 32;
 // IV array size where every element is 4 bytes
-static const Uint8 IvArraySize = 8;
+static const Uint8 IvArraySize   = 8;
 static const Uint8 IvElementSize = 4;
 
+// clang-format off
 static const KnownAnswerMap message_digest = {
     { "Empty",   
             { "", 
@@ -62,6 +62,7 @@ static const KnownAnswerMap message_digest = {
                 "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1"}}
 };
 
+// clang-format on
 class Sha256Test
     : public testing::TestWithParam<std::pair<const string, ParamTuple>>
 {};
@@ -69,18 +70,19 @@ class Sha256Test
 TEST_P(Sha256Test, digest_generation_test)
 {
     const auto [plaintext, digest] = GetParam().second;
-    Sha256 sha256;
-    Uint8 hash[DigestSize];
+    Sha256            sha256;
+    Uint8             hash[DigestSize];
     std::stringstream ss;
 
-    ASSERT_EQ(sha256.update((const Uint8 *)plaintext.c_str(), plaintext.size()), ALC_ERROR_NONE);
+    ASSERT_EQ(sha256.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+              ALC_ERROR_NONE);
     ASSERT_EQ(sha256.finalize(nullptr, 0), ALC_ERROR_NONE);
     ASSERT_EQ(sha256.copyHash(hash, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
-    for(Uint16 i = 0; i < DigestSize; ++i)
+    for (Uint16 i = 0; i < DigestSize; ++i)
         ss << std::setw(2) << static_cast<unsigned>(hash[i]);
-    
+
     std::string hash_string = ss.str();
     EXPECT_TRUE(hash_string == digest);
 }
@@ -101,8 +103,8 @@ TEST(Sha256Test, invalid_input_update_test)
 
 TEST(Sha256Test, zero_size_update_test)
 {
-    Sha256 sha256;
-    const Uint8 src[DigestSize] = {0};
+    Sha256      sha256;
+    const Uint8 src[DigestSize] = { 0 };
     EXPECT_EQ(ALC_ERROR_NONE, sha256.update(src, 0));
 }
 
@@ -115,21 +117,22 @@ TEST(Sha256Test, invalid_output_copy_hash_test)
 TEST(Sha256Test, zero_size_hash_copy_test)
 {
     Sha256 sha256;
-    Uint8 hash[DigestSize];
+    Uint8  hash[DigestSize];
     EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha256.copyHash(hash, 0));
 }
 
 TEST(Sha256Test, over_size_hash_copy_test)
 {
     Sha256 sha256;
-    Uint8 hash[DigestSize+1];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha256.copyHash(hash, DigestSize+1));
+    Uint8  hash[DigestSize + 1];
+    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha256.copyHash(hash, DigestSize + 1));
 }
 
 TEST(Sha256Test, invalid_iv_test)
 {
     Sha256 sha256;
-    EXPECT_EQ(ALC_ERROR_INVALID_ARG, sha256.setIv(nullptr, IvArraySize * IvElementSize));
+    EXPECT_EQ(ALC_ERROR_INVALID_ARG,
+              sha256.setIv(nullptr, IvArraySize * IvElementSize));
 }
 
 TEST(Sha256Test, zero_size_iv_test)
@@ -142,7 +145,7 @@ TEST(Sha256Test, zero_size_iv_test)
 TEST(Sha256Test, over_size_iv_test)
 {
     Sha256 sha256;
-    Uint32 iv[IvArraySize+1];
+    Uint32 iv[IvArraySize + 1];
     EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha256.setIv(iv, sizeof(iv)));
 }
 
@@ -154,4 +157,4 @@ TEST(Sha256Test, call_finalize_twice_test)
     EXPECT_EQ(ALC_ERROR_NONE, sha256.finalize(nullptr, 0));
 }
 
-}
+} // namespace
