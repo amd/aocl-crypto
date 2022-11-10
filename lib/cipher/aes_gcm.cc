@@ -195,6 +195,10 @@ Gcm::getTag(Uint8* pOutput, Uint64 len)
         err = ALC_ERROR_BAD_STATE;
         return err;
     }
+    // else if (len > 16 || len < 12) {
+    //     err = ALC_ERROR_INVALID_SIZE;
+    //     return err;
+    // }
     uint8_t* ptag = pOutput;
     err           = aesni::GetTagGcm(len,
                            m_len,

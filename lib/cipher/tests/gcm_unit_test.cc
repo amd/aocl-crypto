@@ -1,0 +1,412 @@
+/*
+ * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 3. Neither the name of the copyright holder nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+#include "capi/cipher/builder.hh"
+#include "cipher.hh"
+#include "cipher/aes_build.hh"
+// FIXME: Remove all the includes from gtest_base related to capi
+#include "cipher/gtest_base.hh"
+#include "gtest/gtest.h"
+#include <math.h>
+// Linux Specific Header Files
+#if __linux__
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#endif
+
+// KAT Data
+// clang-format off
+typedef std::tuple<std::vector<Uint8>, // key
+                   std::vector<Uint8>, // nonce
+                   std::vector<Uint8>, // aad
+                   std::vector<Uint8>, // plaintext
+                   std::vector<Uint8>, // ciphertext
+                   std::vector<Uint8> // tag
+                  >
+            param_tuple;
+typedef std::map<const std::string, param_tuple> known_answer_map_t;
+
+/* Example Encodings
+P_K128b_N7B_A0B_P0B_C0B_T4B 
+P     -> Pass, F -> Fail
+K128b -> Key 128 bit
+N7B   -> Nonce 7 byte
+A0B   -> Additional Data 0 byte
+P0B   -> PlainText 0 byte
+C0B   -> CipherText 0 byte
+T4B   -> Tag 4 byte
+
+Tuple order
+{key,nonce,aad,plain,ciphertext,tag}
+*/
+known_answer_map_t KATDataset{
+    {
+      "P_K128b_N12B_A0B_P0B_C0B_T16B",
+      {
+        {0x11,0x75,0x4c,0xd7,0x2a,0xec,0x30,0x9b,0xf5,0x2f,0x76,0x87,0x21,0x2e,0x89,0x57},
+        {0x3c,0x81,0x9d,0x9a,0x9b,0xed,0x08,0x76,0x15,0x03,0x0b,0x65},
+        {},
+        {},
+        {},
+        {0x25,0x03,0x27,0xc6,0x74,0xaa,0xf4,0x77,0xae,0xf2,0x67,0x57,0x48,0xcf,0x69,0x71},
+      }
+    },
+    {
+      "P_K128b_N12B_A0B_P0B_C0B_T15B",
+      {
+        {0x27,0x2f,0x16,0xed,0xb8,0x1a,0x7a,0xbb,0xea,0x88,0x73,0x57,0xa5,0x8c,0x19,0x17},
+        {0x79,0x4e,0xc5,0x88,0x17,0x6c,0x70,0x3d,0x3d,0x2a,0x7a,0x07},
+        {},
+        {},
+        {},
+        {0xb6,0xe6,0xf1,0x97,0x16,0x8f,0x50,0x49,0xae,0xda,0x32,0xda,0xfb,0xda,0xeb},
+      }
+    },
+    {
+      "P_K128b_N12B_A0B_P0B_C0B_T14B",
+      {
+        {0x81,0xb6,0x84,0x4a,0xab,0x6a,0x56,0x8c,0x45,0x56,0xa2,0xeb,0x7e,0xae,0x75,0x2f},
+        {0xce,0x60,0x0f,0x59,0x61,0x83,0x15,0xa6,0x82,0x9b,0xef,0x4d},
+        {},
+        {},
+        {},
+        {0x89,0xb4,0x3e,0x9d,0xbc,0x1b,0x4f,0x59,0x7d,0xbb,0xc7,0x65,0x5b,0xb5},
+      }
+    },
+    {
+      "P_K128b_N1B_A0B_P16B_C16B_T14B",
+      {
+        {0x4f,0x1d,0xc3,0xda,0xe8,0x3a,0x38,0x90,0xdb,0xa8,0xf8,0x24,0x1d,0x28,0xb0,0xb2},
+        {0x1a},
+        {},
+        {0x05,0x94,0xee,0x26,0x78,0x14,0xdb,0x70,0x24,0x0c,0x77,0xfc,0x53,0x0e,0x19,0x4d},
+        {0xad,0x84,0xfb,0xb4,0x26,0x14,0x33,0xd4,0x90,0x19,0x1d,0xec,0x75,0x1d,0x9e,0x0e},
+        {0x4f,0x49,0x53,0x00,0xf8,0xb0,0xeb,0x15,0x96,0xad,0xfb,0xd3,0x71,0xb0},
+      }
+    },
+    {
+      "P_K128b_N1B_A20B_P16B_C16B_T13B",
+      {
+        {0xe7,0xc1,0x31,0xc0,0x8f,0x41,0x75,0xea,0xbe,0x9e,0x8f,0x88,0xf7,0x79,0x8b,0x4c},
+        {0xad},
+        {0xf7,0x63,0x4f,0x67,0x1a,0x45,0x00,0xa4,0xc6,0xf7,0xec,0x8c,0x70,0xcb,0xe2,0x17,0x0c,0x17,0x21,0xfc},
+        {0x54,0xf7,0xe0,0x47,0x0c,0xc3,0x35,0xe7,0x63,0x14,0x15,0x8a,0x97,0x14,0xa9,0x1c},
+        {0x84,0x50,0x6e,0xa8,0xf1,0x4c,0x23,0x94,0x46,0x56,0x82,0x76,0xc0,0x21,0x44,0xa3},
+        {0xcf,0x21,0x72,0x47,0xec,0x7a,0x7e,0x4e,0x78,0x10,0x97,0x25,0x9e},
+      }
+    },
+    {
+      "P_K128b_N1B_A20B_P16B_C16B_T13B",
+      {
+        {0x37,0x79,0x34,0x37,0xbd,0x77,0x55,0x86,0x10,0xec,0x25,0x60,0x12,0x92,0x65,0xb3},
+        {0x30},
+        {0x7c,0x15,0x90,0x3e,0xb9,0xd3,0xec,0x08,0x65,0x49,0xb7,0x9e,0xed,0x5f,0x66,0x0c,0x27,0xf1,0x68,0xd0},
+        {0x2c,0x03,0x4d,0x88,0x73,0xdb,0x84,0xfa,0x94,0x44,0x8e,0x6a,0x45,0xe9,0x90,0x63},
+        {0x68,0x8d,0xda,0x49,0x85,0x7d,0x02,0xbc,0x34,0xd4,0xe4,0x99,0xa4,0xc2,0xc3,0x7d},
+        {0xee,0xc4,0x02,0xd5,0x90,0x47,0x39,0x66,0x1b,0x20,0xcb,0x9d,0x92},
+      }
+    },
+    {
+      "P_K128b_N12B_A16B_P16B_C16B_T16B",
+      {
+        {0xc9,0x39,0xcc,0x13,0x39,0x7c,0x1d,0x37,0xde,0x6a,0xe0,0xe1,0xcb,0x7c,0x42,0x3c},
+        {0xb3,0xd8,0xcc,0x01,0x7c,0xbb,0x89,0xb3,0x9e,0x0f,0x67,0xe2},
+        {0x24,0x82,0x56,0x02,0xbd,0x12,0xa9,0x84,0xe0,0x09,0x2d,0x3e,0x44,0x8e,0xda,0x5f},
+        {0xc3,0xb3,0xc4,0x1f,0x11,0x3a,0x31,0xb7,0x3d,0x9a,0x5c,0xd4,0x32,0x10,0x30,0x69},
+        {0x93,0xfe,0x7d,0x9e,0x9b,0xfd,0x10,0x34,0x8a,0x56,0x06,0xe5,0xca,0xfa,0x73,0x54},
+        {0x00,0x32,0xa1,0xdc,0x85,0xf1,0xc9,0x78,0x69,0x25,0xa2,0xe7,0x1d,0x82,0x72,0xdd},
+      }
+    },
+    {
+      "P_K128b_N128B_A20B_P51B_C51B_T16B",
+      {
+        {0xc1,0x15,0xa6,0x49,0xeb,0x2a,0x50,0x2f,0xce,0x0a,0x7f,0x55,0x1d,0x02,0x00,0xb7},
+        {0x89,0x62,0xe4,0xfe,0xc5,0xf0,0x32,0x13,0x84,0xba,0x4e,0x23,0xcc,0xa3,0x5a,0x04,0x5b,0xa2,0xe6,0x9c,0x11,0x64,0x0f,0xbd,0x0a,0xd6,0x99,0xa1,0xfc,0xa5,0x22,0xbd,0xb8,0xb8,0x14,0x95,0xd2,0xa1,0xf5,0x7f,0xbf,0x9c,0x52,0x0c,0xd3,0xec,0x9a,0xeb,0xf3,0xe4,0x3b,0x02,0xd9,0x78,0x4a,0x53,0x2a,0x97,0xfa,0xa6,0xd0,0xed,0x17,0xa1,0xb9,0x09,0x6e,0xe0,0x47,0xf0,0xea,0xe5,0x04,0x14,0x96,0x6b,0x8c,0xd6,0x07,0x12,0x36,0xd7,0x05,0x9a,0x34,0xc8,0xdd,0x1d,0x9b,0xa8,0xac,0x73,0xd5,0xd9,0x30,0x40,0xef,0x6a,0xe6,0x4f,0xa9,0xf5,0x78,0x6d,0x4b,0xa7,0x18,0x9b,0x1b,0xa8,0x9d,0x74,0xae,0xaf,0x5e,0x65,0x60,0x0f,0x06,0xc5,0xd9,0xfc,0xf7,0xc6,0xe3,0xd7,0x6e,0xc9},
+        {0x2a,0xb2,0x86,0x75,0x68,0x24,0xc7,0xc2,0xd5,0x3f,0x98,0xef,0x70,0x75,0xfa,0xe4,0x18,0x1b,0xf7,0x41},
+        {0x09,0x62,0xe1,0x3f,0x76,0xe2,0x81,0x94,0x2a,0xec,0x8c,0x9d,0x7b,0xf5,0x9c,0xca,0xf7,0x02,0xde,0xa4,0x9d,0xe4,0x84,0x28,0x0e,0x4c,0xc0,0x7b,0xf4,0x43,0x55,0x62,0x4d,0x26,0x2e,0x5b,0x42,0xee,0xff,0x46,0xa0,0x6e,0xb7,0x98,0xc0,0xdc,0xd7,0x48,0xaa,0xeb,0x66},
+        {0x8f,0xe5,0x9a,0xa7,0xc1,0x12,0xe4,0xb5,0x00,0x0f,0xd8,0x2f,0x19,0x4f,0x0f,0x9b,0x15,0x21,0x8f,0x07,0x26,0x30,0xdf,0x58,0x70,0xd1,0xc8,0xca,0x81,0xd7,0xd6,0x6c,0xcf,0x95,0xdd,0xd3,0xab,0x3c,0x60,0x3a,0xf2,0xfc,0x2b,0xb9,0xed,0xca,0x00,0xc7,0xbd,0xab,0x94},
+        {0x9e,0xab,0x1e,0x03,0x7e,0x70,0x3a,0x77,0x7b,0x76,0x30,0x6d,0x8a,0xa6,0x60,0xd3},
+      }
+    },
+};
+// clang-format on
+
+class GCM_KAT
+    : public testing::TestWithParam<std::pair<const std::string, param_tuple>>
+{};
+
+using namespace alcp::cipher;
+TEST(GCM, Initiantiation)
+{
+    Uint8 iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
+    Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+                    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_GCM,
+                                             .ai_iv   = iv };
+    alc_key_info_t               keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
+                               .fmt  = ALC_KEY_FMT_RAW,
+                               .len  = 128,
+                               .key  = key };
+
+    keyInfo.len = 128;
+    {
+        Gcm gcm_obj = Gcm(aesInfo, keyInfo);
+        EXPECT_EQ(gcm_obj.getRounds(), 10);
+        EXPECT_EQ(gcm_obj.getNr(), 10);
+    }
+    keyInfo.len = 192;
+    {
+        Gcm gcm_obj = Gcm(aesInfo, keyInfo);
+        EXPECT_EQ(gcm_obj.getRounds(), 12);
+        EXPECT_EQ(gcm_obj.getNr(), 12);
+    }
+    keyInfo.len = 256;
+    {
+        Gcm gcm_obj = Gcm(aesInfo, keyInfo);
+        EXPECT_EQ(gcm_obj.getRounds(), 14);
+        EXPECT_EQ(gcm_obj.getNr(), 14);
+    }
+}
+
+#if 0
+// Linux specific test
+#ifdef __linux__
+TEST(GCM, InputOverload)
+{
+    Uint8 iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
+    Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+                    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+    const alc_cipher_algo_info_t aesInfo  = { .ai_mode = ALC_AES_MODE_GCM,
+                                             .ai_iv   = iv };
+    alc_key_info_t               keyInfo  = { .type = ALC_KEY_TYPE_SYMMETRIC,
+                               .fmt  = ALC_KEY_FMT_RAW,
+                               .len  = 256,
+                               .key  = key };
+    Gcm                          gcm_obj  = Gcm(aesInfo, keyInfo);
+    auto                         zero1_fd = open("/dev/zero", O_RDWR);
+    auto                         zero2_fd = open("/dev/zero", O_RDWR);
+    auto                         pread    = mmap(
+        0, pow(2, 39), PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE, zero1_fd, 0);
+    auto pwrite =
+        mmap(0, pow(2, 39), PROT_WRITE, MAP_FILE | MAP_SHARED, zero2_fd, 0);
+    alc_error_t err = ALC_ERROR_NONE;
+    err             = gcm_obj.setIv(sizeof(iv), iv);
+    EXPECT_EQ(err, ALC_ERROR_NONE);
+    printf("%p %p\n", pwrite, pread);
+    err = gcm_obj.encryptUpdate(
+        (const Uint8*)pread, (Uint8*)pwrite, pow(2, 39) - 256 + 1, iv);
+    EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
+}
+#endif
+#endif
+
+TEST_P(GCM_KAT, Encrypt)
+{
+    // Tuple order
+    // {key,nonce,aad,plain,ciphertext,tag}
+    const auto params                                        = GetParam();
+    const auto [key, nonce, aad, plaintext, ciphertext, tag] = params.second;
+    const auto test_name                                     = params.first;
+
+    std::vector<Uint8> out_tag(tag.size(), 0),
+        out_ciphertext(plaintext.size(), 0);
+
+    /* Initialization */
+    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_GCM,
+                                             .ai_iv   = &(nonce.at(0)) };
+
+    // clang-format off
+    const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
+                                     .fmt  = ALC_KEY_FMT_RAW,
+                                     .len  =
+                                     static_cast<Uint32>(key.size()*8), .key
+                                     = &(key.at(0)) };
+    // clang-format on
+    Gcm gcm_obj = Gcm(aesInfo, keyInfo);
+
+    alc_error_t err;
+
+    // Nonce
+    err = gcm_obj.setIv(nonce.size(), &(nonce.at(0)));
+    EXPECT_EQ(err, ALC_ERROR_NONE);
+
+    // Additional Data
+    if (!aad.empty()) {
+        err = gcm_obj.setAad(&(aad.at(0)), aad.size());
+        EXPECT_EQ(err, ALC_ERROR_NONE);
+    }
+
+    // Encrypt the plaintext into ciphertext.
+    if (!plaintext.empty()) {
+        err = gcm_obj.encryptUpdate(&(plaintext.at(0)),
+                                    &(out_ciphertext.at(0)),
+                                    plaintext.size(),
+                                    &(nonce.at(0)));
+        EXPECT_TRUE(ArraysMatch(out_ciphertext, ciphertext));
+    } else {
+        // Call encrypt update with a valid memory if no plaintext
+        Uint8 a;
+        err = gcm_obj.encryptUpdate(&a, &a, 0, &(nonce.at(0)));
+    }
+    EXPECT_EQ(err, ALC_ERROR_NONE);
+
+    // If there is tag, try to get the tag.
+    if (!tag.empty()) {
+        err = gcm_obj.getTag(&(out_tag.at(0)), tag.size());
+        if (test_name.at(0) == 'P') {
+            EXPECT_TRUE(ArraysMatch(out_tag, tag));
+        } else {
+            EXPECT_FALSE(ArraysMatch(out_tag, tag));
+        }
+        EXPECT_EQ(err, ALC_ERROR_NONE);
+    }
+}
+
+TEST_P(GCM_KAT, Decrypt)
+{
+    // Tuple order
+    // {key,nonce,aad,plain,ciphertext,tag}
+    const auto params                                        = GetParam();
+    const auto [key, nonce, aad, plaintext, ciphertext, tag] = params.second;
+    const auto test_name                                     = params.first;
+
+    std::vector<Uint8> out_tag(tag.size(), 0),
+        out_plaintext(ciphertext.size(), 0);
+
+    /* Initialization */
+    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_GCM,
+                                             .ai_iv   = &(nonce.at(0)) };
+    // clang-format off
+    const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
+                                     .fmt  = ALC_KEY_FMT_RAW,
+                                     .len  =
+                                     static_cast<Uint32>(key.size()*8), .key
+                                     = &(key.at(0)) };
+    // clang-format on
+    Gcm         gcm_obj = Gcm(aesInfo, keyInfo);
+    alc_error_t err;
+
+    // Nonce
+    err = gcm_obj.setIv(nonce.size(), &(nonce.at(0)));
+    EXPECT_EQ(err, ALC_ERROR_NONE);
+
+    // Additional Data
+    if (!aad.empty()) {
+        err = gcm_obj.setAad(&(aad.at(0)), aad.size());
+        EXPECT_EQ(err, ALC_ERROR_NONE);
+    }
+
+    // Decrypt the ciphertext into plaintext
+    if (!ciphertext.empty()) {
+        err = gcm_obj.decryptUpdate(&(ciphertext.at(0)),
+                                    &(out_plaintext.at(0)),
+                                    ciphertext.size(),
+                                    &(nonce.at(0)));
+        EXPECT_TRUE(ArraysMatch(out_plaintext, plaintext));
+    } else {
+        // Call decrypt update with a valid memory if no plaintext
+        Uint8 a;
+        err = gcm_obj.decryptUpdate(&a, &a, 0, &(nonce.at(0)));
+    }
+    EXPECT_EQ(err, ALC_ERROR_NONE);
+
+    // If there is tag, try to get the tag.
+    if (!tag.empty()) {
+        err = gcm_obj.getTag(&(out_tag.at(0)), tag.size());
+        if (test_name.at(0) == 'P')
+            EXPECT_TRUE(ArraysMatch(out_tag, tag));
+        else
+            EXPECT_FALSE(ArraysMatch(out_tag, tag));
+        EXPECT_EQ(err, ALC_ERROR_NONE);
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    KnownAnswerTest,
+    GCM_KAT,
+    testing::ValuesIn(KATDataset),
+    [](const testing::TestParamInfo<GCM_KAT::ParamType>& info) {
+        return info.param.first;
+    });
+
+TEST(GCM, InvalidTagLen)
+{
+    Uint8 iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
+    Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+    Uint8 pt[]  = "Hello World!";
+    Uint8 tag[17];
+    Uint8 cipherText[sizeof(pt)];
+    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_GCM,
+                                             .ai_iv   = iv };
+    const alc_key_info_t         keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
+                                     .fmt  = ALC_KEY_FMT_RAW,
+                                     .len  = 128,
+                                     .key  = key };
+    Gcm                          gcm_obj = Gcm(aesInfo, keyInfo);
+    alc_error_t                  err;
+
+    gcm_obj.setIv(7, iv);
+
+    // Skipping Aad as its not mandatory
+
+    gcm_obj.encrypt(pt, cipherText, sizeof(pt), iv);
+
+    // TODO: Create a parametrized test
+    err = gcm_obj.getTag(tag, 17);
+    EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
+}
+
+#if 0
+int
+main(int argc, char** argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    testing::TestEventListeners& listeners =
+        testing::UnitTest::GetInstance()->listeners();
+    auto default_printer =
+        listeners.Release(listeners.default_result_printer());
+
+    ConfigurableEventListener* listener =
+        new ConfigurableEventListener(default_printer);
+
+    listener->showEnvironment    = true;
+    listener->showTestCases      = true;
+    listener->showTestNames      = true;
+    listener->showSuccesses      = true;
+    listener->showInlineFailures = true;
+    listeners.Append(listener);
+    return RUN_ALL_TESTS();
+}
+#endif
