@@ -158,9 +158,64 @@ known_answer_map_t KATDataset{
 };
 // clang-format on
 
+using namespace alcp::cipher;
 class GCM_KAT
     : public testing::TestWithParam<std::pair<const std::string, param_tuple>>
-{};
+{
+  public:
+    // GCM_KAT() {}
+    Gcm*               pGcmObj = nullptr;
+    std::vector<Uint8> m_key, m_nonce, m_aad, m_plaintext, m_ciphertext, m_tag;
+    std::string        m_test_name;
+    alc_error_t        m_err;
+
+    // Setup Test for Encrypt/Decrypt
+    void SetUp() override
+    {
+
+        // Tuple order
+        // {key,nonce,aad,plain,ciphertext,tag}
+        const auto params = GetParam();
+        const auto [key, nonce, aad, plaintext, ciphertext, tag] =
+            params.second;
+        const auto test_name = params.first;
+
+        // Copy Values to class variables
+        m_key        = key;
+        m_nonce      = nonce;
+        m_aad        = aad;
+        m_plaintext  = plaintext;
+        m_ciphertext = ciphertext;
+        m_tag        = tag;
+        m_test_name  = test_name;
+
+        /* Initialization */
+        const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_GCM,
+                                                 .ai_iv   = &(nonce.at(0)) };
+        // clang-format off
+        const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
+                                         .fmt  = ALC_KEY_FMT_RAW,
+                                         .len  = static_cast<Uint32>(key.size() * 8),
+                                         .key  = &(key.at(0)) };
+        // clang-format on
+
+        // Setup GCM Object
+        pGcmObj = new Gcm(aesInfo, keyInfo);
+
+        // Nonce
+        m_err = pGcmObj->setIv(m_nonce.size(), &(m_nonce.at(0)));
+        EXPECT_EQ(m_err, ALC_ERROR_NONE);
+
+        // Additional Data
+        if (!m_aad.empty()) {
+            m_err = pGcmObj->setAad(&(m_aad.at(0)), m_aad.size());
+            EXPECT_EQ(m_err, ALC_ERROR_NONE);
+        }
+    }
+
+    // Teardown Encrypt/Decrypt by verifying the Tag.
+    void TearDown() override { delete pGcmObj; }
+};
 
 using namespace alcp::cipher;
 TEST(GCM, Instantiation)
@@ -179,21 +234,21 @@ TEST(GCM, Instantiation)
 
     keyInfo.len = 128;
     {
-        Gcm gcm_obj = Gcm(aesInfo, keyInfo);
-        EXPECT_EQ(gcm_obj.getRounds(), 10);
-        EXPECT_EQ(gcm_obj.getNr(), 10);
+        Gcm pGcmObj = Gcm(aesInfo, keyInfo);
+        EXPECT_EQ(pGcmObj.getRounds(), 10);
+        EXPECT_EQ(pGcmObj.getNr(), 10);
     }
     keyInfo.len = 192;
     {
-        Gcm gcm_obj = Gcm(aesInfo, keyInfo);
-        EXPECT_EQ(gcm_obj.getRounds(), 12);
-        EXPECT_EQ(gcm_obj.getNr(), 12);
+        Gcm pGcmObj = Gcm(aesInfo, keyInfo);
+        EXPECT_EQ(pGcmObj.getRounds(), 12);
+        EXPECT_EQ(pGcmObj.getNr(), 12);
     }
     keyInfo.len = 256;
     {
-        Gcm gcm_obj = Gcm(aesInfo, keyInfo);
-        EXPECT_EQ(gcm_obj.getRounds(), 14);
-        EXPECT_EQ(gcm_obj.getNr(), 14);
+        Gcm pGcmObj = Gcm(aesInfo, keyInfo);
+        EXPECT_EQ(pGcmObj.getRounds(), 14);
+        EXPECT_EQ(pGcmObj.getNr(), 14);
     }
 }
 
@@ -213,7 +268,7 @@ TEST(GCM, InputOverload)
                                .fmt  = ALC_KEY_FMT_RAW,
                                .len  = 256,
                                .key  = key };
-    Gcm                          gcm_obj  = Gcm(aesInfo, keyInfo);
+    Gcm                          pGcmObj  = Gcm(aesInfo, keyInfo);
     auto                         zero1_fd = open("/dev/zero", O_RDWR);
     auto                         zero2_fd = open("/dev/zero", O_RDWR);
     auto                         pread    = mmap(
@@ -221,134 +276,77 @@ TEST(GCM, InputOverload)
     auto pwrite =
         mmap(0, pow(2, 39), PROT_WRITE, MAP_FILE | MAP_SHARED, zero2_fd, 0);
     alc_error_t err = ALC_ERROR_NONE;
-    err             = gcm_obj.setIv(sizeof(iv), iv);
+    err             = pGcmObj.setIv(sizeof(iv), iv);
     EXPECT_EQ(err, ALC_ERROR_NONE);
     printf("%p %p\n", pwrite, pread);
-    err = gcm_obj.encryptUpdate(
+    err = pGcmObj.encryptUpdate(
         (const Uint8*)pread, (Uint8*)pwrite, pow(2, 39) - 256 + 1, iv);
     EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
 }
 #endif
 #endif
 
+#if 1
 TEST_P(GCM_KAT, Encrypt)
 {
-    // Tuple order
-    // {key,nonce,aad,plain,ciphertext,tag}
-    const auto params                                        = GetParam();
-    const auto [key, nonce, aad, plaintext, ciphertext, tag] = params.second;
-    const auto test_name                                     = params.first;
-
-    std::vector<Uint8> out_tag(tag.size(), 0),
-        out_ciphertext(plaintext.size(), 0);
-
-    /* Initialization */
-    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_GCM,
-                                             .ai_iv   = &(nonce.at(0)) };
-
-    // clang-format off
-    const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                     .fmt  = ALC_KEY_FMT_RAW,
-                                     .len  =
-                                     static_cast<Uint32>(key.size()*8), .key
-                                     = &(key.at(0)) };
-    // clang-format on
-    Gcm gcm_obj = Gcm(aesInfo, keyInfo);
-
-    alc_error_t err;
-
-    // Nonce
-    err = gcm_obj.setIv(nonce.size(), &(nonce.at(0)));
-    EXPECT_EQ(err, ALC_ERROR_NONE);
-
-    // Additional Data
-    if (!aad.empty()) {
-        err = gcm_obj.setAad(&(aad.at(0)), aad.size());
-        EXPECT_EQ(err, ALC_ERROR_NONE);
-    }
+    std::vector<Uint8> out_ciphertext(m_plaintext.size(), 0);
 
     // Encrypt the plaintext into ciphertext.
-    if (!plaintext.empty()) {
-        err = gcm_obj.encryptUpdate(&(plaintext.at(0)),
-                                    &(out_ciphertext.at(0)),
-                                    plaintext.size(),
-                                    &(nonce.at(0)));
-        EXPECT_TRUE(ArraysMatch(out_ciphertext, ciphertext));
+    if (!m_plaintext.empty()) {
+        m_err = pGcmObj->encryptUpdate(&(m_plaintext.at(0)),
+                                       &(out_ciphertext.at(0)),
+                                       m_plaintext.size(),
+                                       &(m_nonce.at(0)));
+        EXPECT_TRUE(ArraysMatch(out_ciphertext, m_ciphertext));
     } else {
         // Call encrypt update with a valid memory if no plaintext
         Uint8 a;
-        err = gcm_obj.encryptUpdate(&a, &a, 0, &(nonce.at(0)));
+        m_err = pGcmObj->encryptUpdate(&a, &a, 0, &(m_nonce.at(0)));
     }
-    EXPECT_EQ(err, ALC_ERROR_NONE);
+    EXPECT_EQ(m_err, ALC_ERROR_NONE);
 
     // If there is tag, try to get the tag.
-    if (!tag.empty()) {
-        err = gcm_obj.getTag(&(out_tag.at(0)), tag.size());
-        if (test_name.at(0) == 'P') {
-            EXPECT_TRUE(ArraysMatch(out_tag, tag));
+    std::vector<Uint8> out_tag(m_tag.size(), 0);
+    if (!m_tag.empty()) {
+        m_err = pGcmObj->getTag(&(out_tag.at(0)), m_tag.size());
+        if (m_test_name.at(0) == 'P') {
+            EXPECT_TRUE(ArraysMatch(out_tag, m_tag));
         } else {
-            EXPECT_FALSE(ArraysMatch(out_tag, tag));
+            EXPECT_FALSE(ArraysMatch(out_tag, m_tag));
         }
-        EXPECT_EQ(err, ALC_ERROR_NONE);
+        EXPECT_EQ(m_err, ALC_ERROR_NONE);
     }
 }
+#endif
 
 TEST_P(GCM_KAT, Decrypt)
 {
-    // Tuple order
-    // {key,nonce,aad,plain,ciphertext,tag}
-    const auto params                                        = GetParam();
-    const auto [key, nonce, aad, plaintext, ciphertext, tag] = params.second;
-    const auto test_name                                     = params.first;
-
-    std::vector<Uint8> out_tag(tag.size(), 0),
-        out_plaintext(ciphertext.size(), 0);
-
-    /* Initialization */
-    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_GCM,
-                                             .ai_iv   = &(nonce.at(0)) };
-    // clang-format off
-    const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                     .fmt  = ALC_KEY_FMT_RAW,
-                                     .len  =
-                                     static_cast<Uint32>(key.size()*8), .key
-                                     = &(key.at(0)) };
-    // clang-format on
-    Gcm         gcm_obj = Gcm(aesInfo, keyInfo);
-    alc_error_t err;
-
-    // Nonce
-    err = gcm_obj.setIv(nonce.size(), &(nonce.at(0)));
-    EXPECT_EQ(err, ALC_ERROR_NONE);
-
-    // Additional Data
-    if (!aad.empty()) {
-        err = gcm_obj.setAad(&(aad.at(0)), aad.size());
-        EXPECT_EQ(err, ALC_ERROR_NONE);
-    }
+    std::vector<Uint8> out_plaintext(m_ciphertext.size(), 0);
 
     // Decrypt the ciphertext into plaintext
-    if (!ciphertext.empty()) {
-        err = gcm_obj.decryptUpdate(&(ciphertext.at(0)),
-                                    &(out_plaintext.at(0)),
-                                    ciphertext.size(),
-                                    &(nonce.at(0)));
-        EXPECT_TRUE(ArraysMatch(out_plaintext, plaintext));
+    if (!m_ciphertext.empty()) {
+        m_err = pGcmObj->decryptUpdate(&(m_ciphertext.at(0)),
+                                       &(out_plaintext.at(0)),
+                                       m_ciphertext.size(),
+                                       &(m_nonce.at(0)));
+        EXPECT_TRUE(ArraysMatch(out_plaintext, m_plaintext));
     } else {
         // Call decrypt update with a valid memory if no plaintext
         Uint8 a;
-        err = gcm_obj.decryptUpdate(&a, &a, 0, &(nonce.at(0)));
+        m_err = pGcmObj->decryptUpdate(&a, &a, 0, &(m_nonce.at(0)));
     }
-    EXPECT_EQ(err, ALC_ERROR_NONE);
+    EXPECT_EQ(m_err, ALC_ERROR_NONE);
 
     // If there is tag, try to get the tag.
-    if (!tag.empty()) {
-        err = gcm_obj.getTag(&(out_tag.at(0)), tag.size());
-        if (test_name.at(0) == 'P')
-            EXPECT_TRUE(ArraysMatch(out_tag, tag));
-        else
-            EXPECT_FALSE(ArraysMatch(out_tag, tag));
-        EXPECT_EQ(err, ALC_ERROR_NONE);
+    std::vector<Uint8> out_tag(m_tag.size(), 0);
+    if (!m_tag.empty()) {
+        m_err = pGcmObj->getTag(&(out_tag.at(0)), m_tag.size());
+        if (m_test_name.at(0) == 'P') {
+            EXPECT_TRUE(ArraysMatch(out_tag, m_tag));
+        } else {
+            EXPECT_FALSE(ArraysMatch(out_tag, m_tag));
+        }
+        EXPECT_EQ(m_err, ALC_ERROR_NONE);
     }
 }
 
@@ -374,17 +372,17 @@ TEST(GCM, InvalidTagLen)
                                      .fmt  = ALC_KEY_FMT_RAW,
                                      .len  = 128,
                                      .key  = key };
-    Gcm                          gcm_obj = Gcm(aesInfo, keyInfo);
+    Gcm                          pGcmObj = Gcm(aesInfo, keyInfo);
     alc_error_t                  err;
 
-    gcm_obj.setIv(7, iv);
+    pGcmObj.setIv(7, iv);
 
     // Skipping Aad as its not mandatory
 
-    gcm_obj.encrypt(pt, cipherText, sizeof(pt), iv);
+    pGcmObj.encrypt(pt, cipherText, sizeof(pt), iv);
 
     // TODO: Create a parametrized test
-    err = gcm_obj.getTag(tag, 17);
+    err = pGcmObj.getTag(tag, 17);
     EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
 }
 
