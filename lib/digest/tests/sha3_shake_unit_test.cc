@@ -236,4 +236,35 @@ TEST(Shake, digest_correction_with_reset_test)
     }
 }
 
+TEST(Shake, Shake128_getInputBlockLenTest)
+{
+    DigestInfoShake.dt_custom_len   = DigestSize;
+    DigestInfoShake.dt_mode.dm_sha3 = ALC_SHAKE_128;
+    Sha3 sha3_shake(DigestInfoShake);
+    EXPECT_EQ(sha3_shake.getInputBlockSize() * 8, 1344);
+}
+
+TEST(Shake, Shake256_getInputBlockLenTest)
+{
+    DigestInfoShake.dt_custom_len   = DigestSize;
+    DigestInfoShake.dt_mode.dm_sha3 = ALC_SHAKE_256;
+    Sha3 sha3_shake(DigestInfoShake);
+    EXPECT_EQ(sha3_shake.getInputBlockSize() * 8, 1088);
+}
+
+TEST(Shake, Shake128_getHashSizeTest)
+{
+    DigestInfoShake.dt_custom_len   = DigestSize;
+    DigestInfoShake.dt_mode.dm_sha3 = ALC_SHAKE_128;
+    Sha3 sha3_shake(DigestInfoShake);
+    EXPECT_EQ(sha3_shake.getHashSize(), DigestSize);
+}
+TEST(Shake, Shake256_getHashSizeTest)
+{
+    DigestInfoShake.dt_custom_len   = DigestSize;
+    DigestInfoShake.dt_mode.dm_sha3 = ALC_SHAKE_256;
+    Sha3 sha3_shake(DigestInfoShake);
+    EXPECT_EQ(sha3_shake.getHashSize(), DigestSize);
+}
+
 } // namespace

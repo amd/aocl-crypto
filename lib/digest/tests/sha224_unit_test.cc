@@ -133,4 +133,14 @@ TEST(Sha224Test, call_finalize_twice_test)
     EXPECT_EQ(ALC_ERROR_NONE, sha224.finalize(nullptr, 0));
 }
 
+TEST(Sha224Test, getInputBlockSizeTest)
+{
+    Sha224 sha224;
+    EXPECT_EQ(sha224.getInputBlockSize() * 8, 512);
+}
+TEST(Sha224Test, getHashSizeTest)
+{
+    Sha224 sha224;
+    EXPECT_EQ(sha224.getHashSize() * 8, 224);
+}
 } // namespace

@@ -154,4 +154,15 @@ TEST(Sha512Test, over_size_iv_test)
     EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha512.setIv(iv, sizeof(iv)));
 }
 
+TEST(Sha512Test, getInputBlockSizeTest)
+{
+    Sha512 sha512;
+    EXPECT_EQ(sha512.getInputBlockSize() * 8, 1024);
+}
+TEST(Sha512Test, getHashSizeTest)
+{
+    Sha512 sha512;
+    EXPECT_EQ(sha512.getHashSize() * 8, 512);
+}
+
 } // namespace

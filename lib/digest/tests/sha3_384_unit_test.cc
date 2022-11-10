@@ -139,4 +139,16 @@ TEST(Sha3_384, over_size_hash_copy_test)
     EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_384.copyHash(hash, DigestSize + 1));
 }
 
+TEST(Sha3_384, getInputBlockSizeTest)
+{
+    Sha3 sha3_384(DigestInfo);
+    EXPECT_EQ(sha3_384.getInputBlockSize() * 8, 832);
+}
+
+TEST(Sha3_384, getHashSizeTest)
+{
+    Sha3 sha3_384(DigestInfo);
+    EXPECT_EQ(sha3_384.getHashSize() * 8, 384);
+}
+
 } // namespace

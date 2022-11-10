@@ -157,4 +157,15 @@ TEST(Sha256Test, call_finalize_twice_test)
     EXPECT_EQ(ALC_ERROR_NONE, sha256.finalize(nullptr, 0));
 }
 
+TEST(Sha256Test, getInputBlockSizeTest)
+{
+    Sha256 sha256;
+    EXPECT_EQ(sha256.getInputBlockSize() * 8, 512);
+}
+TEST(Sha256Test, getHashSizeTest)
+{
+    Sha256 sha256;
+    EXPECT_EQ(sha256.getHashSize() * 8, 256);
+}
+
 } // namespace

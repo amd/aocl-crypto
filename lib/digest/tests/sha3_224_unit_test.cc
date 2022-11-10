@@ -131,4 +131,16 @@ TEST(Sha3_224, over_size_hash_copy_test)
     EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_224.copyHash(hash, DigestSize + 1));
 }
 
+TEST(Sha3_224, getInputBlockSizeTest)
+{
+    Sha3 sha3_224(DigestInfo);
+    EXPECT_EQ(sha3_224.getInputBlockSize() * 8, 1152);
+}
+
+TEST(Sha3_224, getHashSizeTest)
+{
+    Sha3 sha3_224(DigestInfo);
+    EXPECT_EQ(sha3_224.getHashSize() * 8, 224);
+}
+
 } // namespace

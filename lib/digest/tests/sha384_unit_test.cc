@@ -132,4 +132,16 @@ TEST(Sha384Test, over_size_hash_copy_test)
     Uint8  hash[DigestSize + 1];
     EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha384.copyHash(hash, DigestSize + 1));
 }
+
+TEST(Sha384Test, getInputBlockSizeTest)
+{
+    Sha384 sha384;
+    EXPECT_EQ(sha384.getInputBlockSize() * 8, 1024);
+}
+TEST(Sha384Test, getHashSizeTest)
+{
+    Sha384 sha384;
+    EXPECT_EQ(sha384.getHashSize() * 8, 384);
+}
+
 } // namespace
