@@ -46,25 +46,27 @@ struct alcp_data_ex_t
     Uint64       m_adl;
     Uint8*       m_tag; // Probably const but openssl expects non const
     Uint64       m_tagl;
-    Uint8*       m_tkey;  // tweak key
-    Uint64       m_tkeyl; // tweak key len
+    Uint8*       m_tkey;    // tweak key
+    Uint64       m_tkeyl;   // tweak key len
+    Uint8*       m_tagBuff; // Place to store tag buffer
     Uint64       m_block_size;
     // Initialize everything to 0
     alcp_data_ex_t()
     {
-        m_in         = nullptr;
-        m_inl        = 0;
-        m_out        = nullptr;
-        m_outl       = 0;
-        m_iv         = nullptr;
-        m_ivl        = 0;
-        m_ad         = nullptr;
-        m_adl        = 0;
-        m_tag        = nullptr;
-        m_tagl       = 0;
-        m_tkey       = nullptr;
-        m_tkey       = 0;
-        m_block_size = 0;
+        m_in         = {};
+        m_inl        = {};
+        m_out        = {};
+        m_outl       = {};
+        m_iv         = {};
+        m_ivl        = {};
+        m_ad         = {};
+        m_adl        = {};
+        m_tag        = {};
+        m_tagl       = {};
+        m_tkey       = {};
+        m_tkey       = {};
+        m_tagBuff    = {};
+        m_block_size = {};
     }
 };
 

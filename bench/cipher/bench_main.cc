@@ -29,6 +29,7 @@
 #include "benchmarks.hh"
 #include "cipher/base.hh"
 #include "gbench_base.hh"
+#include <memory>
 
 // Test blocksizes, append more if needed, size is in bytes
 std::vector<int64_t> blocksizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
@@ -43,6 +44,7 @@ CipherAes(benchmark::State& state,
     // Dynamic allocation better for larger sizes
     std::vector<Uint8>         vec_in(blockSize, 56);
     std::vector<Uint8>         vec_out(blockSize, 21);
+    std::unique_ptr<Uint8>     tagBuffer = std::make_unique<Uint8>(16);
     Uint8                      key[keylen / 8];
     Uint8                      iv[16];
     Uint8                      ad[16];
@@ -69,17 +71,18 @@ CipherAes(benchmark::State& state,
     }
 #endif
     alcp::testing::alcp_data_ex_t data;
-    data.m_in    = &(vec_in[0]);
-    data.m_inl   = blockSize;
-    data.m_out   = &(vec_out[0]);
-    data.m_iv    = iv;
-    data.m_ivl   = 12;
-    data.m_ad    = ad;
-    data.m_adl   = 16;
-    data.m_tag   = tag;
-    data.m_tagl  = 16;
-    data.m_tkey  = tkey;
-    data.m_tkeyl = 16;
+    data.m_in      = &(vec_in[0]);
+    data.m_inl     = blockSize;
+    data.m_out     = &(vec_out[0]);
+    data.m_iv      = iv;
+    data.m_ivl     = 12;
+    data.m_ad      = ad;
+    data.m_adl     = 16;
+    data.m_tag     = tag;
+    data.m_tagl    = 16;
+    data.m_tkey    = tkey;
+    data.m_tagBuff = tagBuffer.get();
+    data.m_tkeyl   = 16;
     if (enc == false && alcpMode == ALC_AES_MODE_GCM) {
         if (cb->encrypt(data) == false) {
             std::cout << "BENCH_ENC_FAILURE" << std::endl;

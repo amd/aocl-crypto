@@ -29,6 +29,7 @@
 #pragma once
 #include "colors.hh"
 #include <gtest/gtest.h>
+#include <memory>
 
 using namespace alcp::testing;
 

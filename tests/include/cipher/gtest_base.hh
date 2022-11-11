@@ -284,11 +284,13 @@ AesCrosstest(int               keySize,
     size_t      size = 1;
     std::string enc_dec_str, big_small_str;
     std::string MODE_STR = GetModeSTR(mode);
-    Int32 ivl, adl, tkeyl = 16;
-    Int32 IVL_START = 12, IVL_MAX = 16, ADL_START = 12, ADL_MAX = 16;
+    Int32       ivl, adl, tkeyl = 16;
+    Int32       IVL_START = 12, IVL_MAX = 16, ADL_START = 12, ADL_MAX = 16;
+    // FIXME: Tag Length should not be hard coded
+    const Uint64 tagLength = 16;
 
-    bool        isxts = (MODE_STR.compare("XTS") == 0);
-    bool        isgcm = (MODE_STR.compare("GCM") == 0);
+    bool isxts = (MODE_STR.compare("XTS") == 0);
+    bool isgcm = (MODE_STR.compare("GCM") == 0);
 
     if (enc_dec == ENCRYPT)
         enc_dec_str.assign("ENC");
@@ -343,7 +345,7 @@ AesCrosstest(int               keySize,
         MAX_LOOP   = SMALL_MAX_LOOP;
         INC_LOOP   = SMALL_INC_LOOP;
         size       = 1;
-        if (useipp && isxts){
+        if (useipp && isxts) {
             /* ipp max supported block size is 128 */
             MAX_LOOP = 128;
         }
@@ -369,16 +371,20 @@ AesCrosstest(int               keySize,
             adl = ADL_START + (std::rand() % (ADL_MAX - ADL_START + 1));
 
             alcp_data_ex_t     data_alc, data_ext;
-            std::vector<Uint8> pt(i * size, 0), ct(i * size, 0), key(key_size / 8, 0), 
-                iv(ivl, 0), tkey(key_size / 8, 0), add(adl, 0), tag_alc(16, 0), tag_ext(16, 0),
-                out_ct_alc(i * size, 0), out_ct_ext(i * size, 0), out_pt(i * size, 0);
+            std::vector<Uint8> pt(i * size, 0), ct(i * size, 0),
+                key(key_size / 8, 0), iv(ivl, 0), tkey(key_size / 8, 0),
+                add(adl, 0), tag_alc(tagLength, 0), tag_ext(tagLength, 0),
+                out_ct_alc(i * size, 0), out_ct_ext(i * size, 0),
+                out_pt(i * size, 0);
+
+            std::unique_ptr<Uint8> tagBuff = std::make_unique<Uint8>(tagLength);
 
             if (!bbxreplay) {
-                pt = rb.genRandomBytes(i * size);
-                ct = rb.genRandomBytes(i * size);
-                key = rb.genRandomBytes(key_size / 8);
-                iv  = rb.genRandomBytes(ivl);
-                add = rb.genRandomBytes(adl);
+                pt   = rb.genRandomBytes(i * size);
+                ct   = rb.genRandomBytes(i * size);
+                key  = rb.genRandomBytes(key_size / 8);
+                iv   = rb.genRandomBytes(ivl);
+                add  = rb.genRandomBytes(adl);
                 tkey = rb.genRandomBytes(key_size / 8);
 
                 // ALC/Main Lib Data
@@ -389,10 +395,11 @@ AesCrosstest(int               keySize,
                 data_alc.m_out  = &(out_ct_alc[0]);
                 data_alc.m_outl = data_alc.m_inl;
                 if (isgcm) {
-                    data_alc.m_ad   = &(add[0]);
-                    data_alc.m_adl  = add.size();
-                    data_alc.m_tag  = &(tag_alc[0]);
-                    data_alc.m_tagl = tag_alc.size();
+                    data_alc.m_ad      = &(add[0]);
+                    data_alc.m_adl     = add.size();
+                    data_alc.m_tag     = &(tag_alc[0]);
+                    data_alc.m_tagl    = tag_alc.size();
+                    data_alc.m_tagBuff = tagBuff.get();
                 }
                 if (isxts) {
                     data_alc.m_tkey  = &(tkey[0]);
@@ -413,7 +420,7 @@ AesCrosstest(int               keySize,
                     data_ext.m_tagl = tag_ext.size();
                 }
                 if (isxts) {
-                    data_ext.m_tkey  = &(tkey[0]);
+                    data_ext.m_tkey       = &(tkey[0]);
                     data_ext.m_tkeyl      = tkeyl;
                     data_ext.m_block_size = ct.size();
                 }
@@ -478,34 +485,38 @@ RunTest(TestingCore& testingCore,
     alcp_data_ex_t     data;
     std::vector<Uint8> outpt(testingCore.getDs()->getCt().size(), 0);
     std::vector<Uint8> outct(testingCore.getDs()->getPt().size(), 0);
-    std::vector<Uint8> pt     = testingCore.getDs()->getPt();
-    std::vector<Uint8> ct     = testingCore.getDs()->getCt();
-    std::vector<Uint8> iv     = testingCore.getDs()->getIv();
-    std::vector<Uint8> tkey   = testingCore.getDs()->getTKey();
-    std::vector<Uint8> outtag = testingCore.getDs()->getTag();
-    std::vector<Uint8> ad     = testingCore.getDs()->getAdd();
+    std::vector<Uint8> pt      = testingCore.getDs()->getPt();
+    std::vector<Uint8> ct      = testingCore.getDs()->getCt();
+    std::vector<Uint8> iv      = testingCore.getDs()->getIv();
+    std::vector<Uint8> tkey    = testingCore.getDs()->getTKey();
+    std::vector<Uint8> outtag  = testingCore.getDs()->getTag();
+    std::vector<Uint8> ad      = testingCore.getDs()->getAdd();
+    std::vector<Uint8> tagBuff = std::vector<Uint8>(outtag.size());
 
+    // Common Initialization
+    data.m_tkeyl = 0;
+    data.m_adl   = 0;
+    data.m_tagl  = 0;
+    if (isgcm) {
+        data.m_tag     = &(outtag[0]);
+        data.m_tagl    = outtag.size();
+        data.m_ad      = &(ad[0]);
+        data.m_adl     = ad.size();
+        data.m_tagBuff = &tagBuff[0];
+    }
     if (enc_dec == ENCRYPT) {
-        data.m_in    = &(pt[0]);
-        data.m_inl   = pt.size();
-        data.m_iv    = &(iv[0]);
-        data.m_ivl   = iv.size();
-        data.m_out   = &(outct[0]);
-        data.m_outl  = data.m_inl;
-        data.m_tkeyl = 0;
-        data.m_adl   = 0;
-        data.m_tagl  = 0;
+        data.m_in   = &(pt[0]);
+        data.m_inl  = pt.size();
+        data.m_iv   = &(iv[0]);
+        data.m_ivl  = iv.size();
+        data.m_out  = &(outct[0]);
+        data.m_outl = data.m_inl;
         if (isxts) {
             data.m_tkey       = &(tkey[0]);
             data.m_tkeyl      = tkey.size();
             data.m_block_size = pt.size();
         }
-        if (isgcm) {
-            data.m_tag  = &(outtag[0]);
-            data.m_tagl = outtag.size();
-            data.m_ad   = &(ad[0]);
-            data.m_adl  = ad.size();
-        }
+
         ret = testingCore.getCipherHandler()->testingEncrypt(
             data, testingCore.getDs()->getKey());
         EXPECT_TRUE(
@@ -526,25 +537,16 @@ RunTest(TestingCore& testingCore,
         // Enforce that no errors are reported from lib side.
         EXPECT_TRUE(ret);
     } else {
-        data.m_in    = &(ct[0]);
-        data.m_inl   = ct.size();
-        data.m_iv    = &(iv[0]);
-        data.m_ivl   = iv.size();
-        data.m_out   = &(outpt[0]);
-        data.m_outl  = data.m_inl;
-        data.m_tkeyl = 0;
-        data.m_adl   = 0;
-        data.m_tagl  = 0;
+        data.m_in   = &(ct[0]);
+        data.m_inl  = ct.size();
+        data.m_iv   = &(iv[0]);
+        data.m_ivl  = iv.size();
+        data.m_out  = &(outpt[0]);
+        data.m_outl = data.m_inl;
         if (isxts) {
             data.m_tkey       = &(tkey[0]);
             data.m_tkeyl      = tkey.size();
             data.m_block_size = ct.size();
-        }
-        if (isgcm) {
-            data.m_tag  = &(outtag[0]);
-            data.m_tagl = outtag.size();
-            data.m_ad   = &(ad[0]);
-            data.m_adl  = ad.size();
         }
         bool ret = testingCore.getCipherHandler()->testingDecrypt(
             data, testingCore.getDs()->getKey());

@@ -242,10 +242,9 @@ enc_out:
 bool
 AlcpCipherBase::decrypt(alcp_data_ex_t data)
 {
-    alc_error_t        err;
-    const int          err_size = 256;
-    Uint8              err_buff[err_size];
-    std::vector<Uint8> tagbuff(data.m_tagl, 0);
+    alc_error_t err;
+    const int   err_size = 256;
+    Uint8       err_buff[err_size];
 
     if (m_mode == ALC_AES_MODE_GCM) {
         // GCM Init
@@ -269,12 +268,12 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
         }
 
         if (data.m_tagl > 0) {
-            err = alcp_cipher_get_tag(m_handle, &(tagbuff.at(0)), data.m_tagl);
+            err = alcp_cipher_get_tag(m_handle, data.m_tagBuff, data.m_tagl);
             if (alcp_is_error(err)) {
                 goto dec_out;
             }
             // Tag verification
-            if (std::memcmp(&(tagbuff.at(0)), data.m_tag, data.m_tagl) != 0) {
+            if (std::memcmp(data.m_tagBuff, data.m_tag, data.m_tagl) != 0) {
                 return false;
             }
         }
