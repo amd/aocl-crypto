@@ -110,7 +110,7 @@ main(void)
 {
     struct string_vector
     {
-        char*  input;
+        Uint8* input;
         char*  output;
         Uint32 digest_size; // digest size in bytes
         Uint64 num_chunks;
@@ -240,7 +240,7 @@ main(void)
 
     };
 
-    char* sample_input;
+    Uint8* sample_input;
 
     char* expected_output;
 
@@ -275,6 +275,7 @@ main(void)
         // check if the outputs are matching
         hash_to_string(output_string, sample_output, hash_size);
         printf("Input : %s\n", sample_input);
+        printf("Input chunks : %lu\n", num_chunks);
         printf("output size : %u\n", hash_size);
         printf("output : %s\n", output_string);
         if (strcmp(expected_output, output_string)) {
