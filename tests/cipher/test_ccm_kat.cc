@@ -42,6 +42,7 @@ TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
 {
     AesKatTest(128, DECRYPT, ALC_MODE);
 }
+#if 0
 TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
 {
     AesKatTest(256, ENCRYPT, ALC_MODE);
@@ -58,6 +59,7 @@ TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
 {
     AesKatTest(192, DECRYPT, ALC_MODE);
 }
+#endif
 
 int
 main(int argc, char** argv)
