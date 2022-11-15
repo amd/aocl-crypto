@@ -45,7 +45,10 @@ class IPPCipherBase : public CipherBase
     IppsAES_XTSSpec*  m_ctx_xts = 0;
     IppsAES_GCMState* m_ctx_gcm = 0;
     IppsAES_GCMState* pState    = NULL;
-    const Uint8*      m_iv;
+    IppsAES_CCMState* m_ctx_ccm = 0;
+    IppsAES_CCMState *pStateCCM = NULL;
+
+    const Uint8 *m_iv;
     const Uint8*      m_key;
     Uint32            m_key_len;
     const Uint8*      m_tkey       = NULL;
@@ -54,6 +57,7 @@ class IPPCipherBase : public CipherBase
     Uint8             m_key_final[64];
     bool alcpModeToFuncCall(const Uint8* in, Uint8* out, size_t len, bool enc);
     bool alcpGCMModeToFuncCall(alcp_data_ex_t data, bool enc);
+    bool alcpCCMModeToFuncCall(alcp_data_ex_t data, bool enc);
 
   public:
     /**

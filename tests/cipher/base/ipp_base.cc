@@ -66,6 +66,11 @@ IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t mode,
             m_ctx_gcm = (IppsAES_GCMState*)(new Ipp8u[m_ctxSize]);
             ippsAES_GCMInit(key, key_len / 8, m_ctx_gcm, m_ctxSize);
             break;
+        case ALC_AES_MODE_CCM:
+            ippsAES_CCMGetSize(&m_ctxSize);
+            m_ctx_ccm = (IppsAES_CCMState*)(new Ipp8u[m_ctxSize]);
+            ippsAES_CCMInit(key, key_len / 8, m_ctx_ccm, m_ctxSize);
+            break;
         case ALC_AES_MODE_XTS:
             ippsAES_XTSGetSize(&m_ctxSize);
             m_ctx_xts = (IppsAES_XTSSpec*)(new Ipp8u[m_ctxSize]);
@@ -89,6 +94,9 @@ IPPCipherBase::~IPPCipherBase()
     }
     if (m_ctx_gcm != nullptr) {
         delete[](Ipp8u*) m_ctx_gcm;
+    }
+    if (m_ctx_ccm != nullptr) {
+        delete[](Ipp8u*) m_ctx_ccm;
     }
     if (m_ctx_xts != nullptr) {
         delete[](Ipp8u*) m_ctx_xts;
@@ -140,6 +148,15 @@ IPPCipherBase::init(const Uint8* key, const Uint32 key_len)
             }
             m_ctx_gcm = (IppsAES_GCMState*)(new Ipp8u[m_ctxSize]);
             status    = ippsAES_GCMInit(key, key_len / 8, m_ctx_gcm, m_ctxSize);
+            break;
+
+        case ALC_AES_MODE_CCM:
+            status = ippsAES_CCMGetSize(&m_ctxSize);
+            if (m_ctx_ccm != nullptr) {
+                delete[](Ipp8u*) m_ctx_ccm;
+            }
+            m_ctx_ccm = (IppsAES_CCMState*)(new Ipp8u[m_ctxSize]);
+            status    = ippsAES_CCMInit(key, key_len / 8, m_ctx_ccm, m_ctxSize);
             break;
 
         case ALC_AES_MODE_XTS:
@@ -252,6 +269,26 @@ IPPCipherBase::alcpGCMModeToFuncCall(alcp_data_ex_t data, bool enc)
 }
 
 bool
+IPPCipherBase::alcpCCMModeToFuncCall(alcp_data_ex_t data, bool enc)
+{
+    if (enc) {
+        ippsAES_CCMStart(m_iv, data.m_ivl, data.m_ad, data.m_adl, m_ctx_ccm);
+        ippsAES_CCMEncrypt(data.m_in, data.m_out, data.m_inl, m_ctx_ccm);
+        ippsAES_CCMGetTag(data.m_tag, data.m_tagl, m_ctx_ccm);
+    } else {
+        Uint8 tagbuff[data.m_tagl];
+        ippsAES_CCMStart(m_iv, data.m_ivl, data.m_ad, data.m_adl, m_ctx_ccm);
+        ippsAES_CCMDecrypt(data.m_in, data.m_out, data.m_inl, m_ctx_ccm);
+        ippsAES_CCMGetTag(tagbuff, data.m_tagl, m_ctx_ccm);
+        // Tag verification
+        if (std::memcmp(tagbuff, data.m_tag, data.m_tagl) != 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool
 IPPCipherBase::encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt)
 {
     return alcpModeToFuncCall(plaintxt, ciphertxt, len, true);
@@ -263,6 +300,9 @@ IPPCipherBase::encrypt(alcp_data_ex_t data)
     switch (m_mode) {
         case ALC_AES_MODE_GCM:
             return alcpGCMModeToFuncCall(data, true);
+            break;
+        case ALC_AES_MODE_CCM:
+            return alcpCCMModeToFuncCall(data, true);
             break;
         default:
             return alcpModeToFuncCall(data.m_in, data.m_out, data.m_inl, true);
@@ -284,6 +324,9 @@ IPPCipherBase::decrypt(alcp_data_ex_t data)
         case ALC_AES_MODE_GCM:
             return alcpGCMModeToFuncCall(data, false);
             break;
+        case ALC_AES_MODE_CCM:
+            return alcpCCMModeToFuncCall(data, false);
+            break;
         default:
             return alcpModeToFuncCall(data.m_in, data.m_out, data.m_inl, false);
             break;
@@ -298,6 +341,10 @@ IPPCipherBase::reset()
     if (m_mode == ALC_AES_MODE_GCM) {
         IppStatus ippsAES_GCMReset(IppsAES_GCMState * pState);
         ippsAES_GCMInit(m_key, m_key_len / 8, m_ctx_gcm, m_ctxSize);
+    }
+    if (m_mode == ALC_AES_MODE_CCM) {
+        IppStatus ippsAES_CCMReset(IppsAES_CCMState * pStateCCM);
+        ippsAES_CCMInit(m_key, m_key_len / 8, m_ctx_ccm, m_ctxSize);
     }
     return;
 }

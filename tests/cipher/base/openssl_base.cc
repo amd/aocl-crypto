@@ -83,6 +83,15 @@ OpenSSLCipherBase::alcpModeKeyLenToCipher(alc_cipher_mode_t mode, size_t keylen)
                 case 256:
                     return EVP_aes_256_gcm();
             }
+        case ALC_AES_MODE_CCM:
+            switch (keylen) {
+                case 128:
+                    return EVP_aes_128_ccm();
+                case 192:
+                    return EVP_aes_192_ccm();
+                case 256:
+                    return EVP_aes_256_ccm();
+            }
         case ALC_AES_MODE_XTS:
             switch (keylen) {
                 case 128:
@@ -241,6 +250,25 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 key_len)
             handleErrors();
     }
 
+    /* ccm */
+    else if (m_mode == ALC_AES_MODE_CCM) {
+        if (1
+            != EVP_EncryptInit_ex(m_ctx_enc,
+                                  alcpModeKeyLenToCipher(m_mode, m_key_len),
+                                  NULL,
+                                  NULL,
+                                  NULL))
+            handleErrors();
+        if (1
+            != EVP_CIPHER_CTX_ctrl(
+                m_ctx_enc, EVP_CTRL_CCM_SET_IVLEN, m_iv_len, NULL))
+            handleErrors();
+
+        if (1 != EVP_EncryptInit_ex(m_ctx_enc, NULL, NULL, m_key, m_iv))
+            handleErrors();
+    }
+
+    /* for cases other than gcm/ccm/xts */
     else {
         if (1
             != EVP_EncryptInit_ex(m_ctx_enc,
@@ -282,7 +310,29 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 key_len)
         /* Initialise key and IV */
         if (1 != EVP_DecryptInit_ex(m_ctx_dec, NULL, NULL, m_key, m_iv))
             handleErrors();
-    } else {
+    }
+    /* ccm */
+    else if (m_mode == ALC_AES_MODE_CCM) {
+        if (1
+            != EVP_DecryptInit_ex(m_ctx_dec,
+                                  alcpModeKeyLenToCipher(m_mode, m_key_len),
+                                  NULL,
+                                  NULL,
+                                  NULL))
+            handleErrors();
+        /* Set IV length. Not necessary if this is 12 bytes (96 bits) */
+        if (1
+            != EVP_CIPHER_CTX_ctrl(
+                m_ctx_dec, EVP_CTRL_CCM_SET_IVLEN, m_iv_len, NULL))
+            handleErrors();
+
+        /* Initialise key and IV */
+        if (1 != EVP_DecryptInit_ex(m_ctx_dec, NULL, NULL, m_key, m_iv))
+            handleErrors();
+    }
+
+    /* for non gcm/ccm/xts */
+    else {
         if (1
             != EVP_DecryptInit_ex(m_ctx_dec,
                                   alcpModeKeyLenToCipher(m_mode, m_key_len),
@@ -344,7 +394,63 @@ OpenSSLCipherBase::encrypt(alcp_data_ex_t data)
                 handleErrors();
                 return false;
             }
-    } else {
+    } 
+    
+    /* ccm */
+    else if (m_mode == ALC_AES_MODE_CCM) {
+        /* set the tag */
+        if (data.m_tagl != 0) {
+            if (1
+                != EVP_CIPHER_CTX_ctrl(
+                    m_ctx_enc, EVP_CTRL_CCM_SET_TAG, data.m_tagl, data.m_tag)) {
+                std::cout << "Error: Tag Creation Failed" << std::endl;
+                std::cout << "TAG_LEN: " << data.m_tagl << std::endl;
+                handleErrors();
+                return false;
+            }
+        }
+
+        if (data.m_adl > 0)
+            if (1
+                != EVP_EncryptUpdate(
+                    m_ctx_enc, NULL, &len_ct, data.m_ad, data.m_adl)) {
+                std::cout << "Error: Additional Data" << std::endl;
+                handleErrors();
+                return false;
+            }
+
+        if (1
+            != EVP_EncryptUpdate(
+                m_ctx_enc, data.m_out, &len_ct, data.m_in, data.m_inl)) {
+            std::cout << "Error: Encrypt Data" << std::endl;
+            handleErrors();
+            return false;
+        }
+
+        if (1 != EVP_EncryptFinal_ex(m_ctx_enc, data.m_out + len_ct, &len_ct)) {
+            std::cout << "Error: Finalize" << std::endl;
+            handleErrors();
+            return false;
+        }
+
+        // /* set the tag */
+        // if (data.m_tagl != 0) {
+        //     if (1
+        //         != EVP_CIPHER_CTX_ctrl(
+        //             m_ctx_enc, EVP_CTRL_CCM_SET_TAG, data.m_tagl, data.m_tag)) {
+        //         std::cout << "Error: Tag Creation Failed" << std::endl;
+        //         std::cout << "TAG_LEN: " << data.m_tagl << std::endl;
+        //         handleErrors();
+        //         return false;
+        //     }
+        // }
+
+        if(1 != EVP_CIPHER_CTX_ctrl(m_ctx_enc, EVP_CTRL_CCM_GET_TAG, data.m_tagl, data.m_tag)) {
+            handleErrors();
+        }
+    }
+
+    else {
         if (1
             != EVP_EncryptUpdate(
                 m_ctx_enc, data.m_out, &len_ct, data.m_in, data.m_inl)) {
@@ -399,8 +505,45 @@ OpenSSLCipherBase::decrypt(alcp_data_ex_t data)
         } else {
             return false;
         }
-    } else {
+    }
 
+    /* ccm */
+    else if (m_mode == ALC_AES_MODE_CCM) {
+
+        if (data.m_adl > 0)
+            if (1
+                != EVP_DecryptUpdate(
+                    m_ctx_dec, NULL, &len_pt, data.m_ad, data.m_adl)) {
+                handleErrors();
+                return false;
+            }
+
+        if (1
+            != EVP_DecryptUpdate(
+                m_ctx_dec, data.m_out, &len_pt, data.m_in, data.m_inl)) {
+            handleErrors();
+            return false;
+        }
+
+        if (data.m_tagl > 0)
+            if (1
+                != EVP_CIPHER_CTX_ctrl(
+                    m_ctx_dec, EVP_CTRL_CCM_SET_TAG, data.m_tagl, data.m_tag)) {
+                std::cout << "Error: Tag Setting Failed" << std::endl;
+                handleErrors();
+                return false;
+            }
+
+        int ret = EVP_DecryptFinal_ex(m_ctx_dec, data.m_out + len_pt, &len_pt);
+        if (ret > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /* non gcm/ccm/xts*/ 
+    else {
         if (1
             != EVP_DecryptUpdate(
                 m_ctx_dec, data.m_out, &len_pt, data.m_in, data.m_inl)) {
@@ -416,7 +559,7 @@ OpenSSLCipherBase::reset()
 {
     EVP_CIPHER_CTX_reset(m_ctx_enc);
     EVP_CIPHER_CTX_reset(m_ctx_dec);
-    if (m_mode == ALC_AES_MODE_GCM) {
+    if ((m_mode == ALC_AES_MODE_GCM) || (m_mode == ALC_AES_MODE_CCM)) {
         if (1
             != EVP_EncryptInit_ex(m_ctx_enc,
                                   alcpModeKeyLenToCipher(m_mode, m_key_len),
