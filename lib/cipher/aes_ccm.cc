@@ -150,8 +150,11 @@ Ccm::setIv(Uint64 len, const Uint8* pIv)
     m_ccm_data.rounds = 0;
     memset(m_ccm_data.cmac, 0, 16);
     memset(m_ccm_data.nonce, 0, 16);
-    // 8 is the length required to store length of plain text.
-    aesni::CcmInit(&m_ccm_data, m_tagLen, 8);
+    // 15 = n + q where n is size of nonce (iv) and q is the size of
+    // size in bytes of size in bytes of plaintext. Basically size of the
+    // variable which can store size of plaintext. This size can be fixed to a
+    // max of q = 15 - n.
+    aesni::CcmInit(&m_ccm_data, m_tagLen, 15 - len);
     return err;
 }
 
