@@ -292,6 +292,7 @@ namespace alcp::cipher { namespace aesni {
                 last_tweak = current_alpha;
                 aes::MultiplyAlphaByTwo(current_alpha);
             }
+
             // Decrypting Text using DecKey
             __m128i tweaked_src_text = current_alpha ^ p_src128[0];
             AesDecrypt(&tweaked_src_text, p_key128, nRounds);
@@ -303,15 +304,11 @@ namespace alcp::cipher { namespace aesni {
             p_dest128++;
             p_src128++;
 
-            // Increasing Aplha  for the next round
-            aes::MultiplyAlphaByTwo(current_alpha);
-
             blocks--;
         }
 
         auto p_dest8 = reinterpret_cast<uint8_t*>(p_dest128);
         auto p_src8  = reinterpret_cast<const uint8_t*>(p_src128);
-
         if (last_Round_Byte) {
             // stealing bytes from (m-1)th message block and storing it at mth
             // destinatIon on last line of code and getting last message block

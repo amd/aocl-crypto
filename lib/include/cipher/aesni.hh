@@ -469,7 +469,6 @@ namespace alcp::cipher { namespace aesni {
         /* last round, load last key */
         rkey0  = pKey[0];
         *pBlk0 = _mm_aesdeclast_si128(b0, rkey0);
-
         /* clear rkey0 */
         rkey0 = _mm_setzero_si128();
     }

@@ -42,46 +42,96 @@
 
 #define ROR(inp, n) ((inp >> n) | (inp << (32 - n)))
 
-#define mix_column_exchange(inp, out)                                          \
-    (out)[0] = (inp)[0];                                                       \
-    (out)[1] = (inp)[4];                                                       \
-    (out)[2] = (inp)[8];                                                       \
-    (out)[3] = (inp)[12];                                                      \
-    (out)[4] = (inp)[7];                                                       \
-    (out)[5] = (inp)[11];                                                      \
-    (out)[6] = (inp)[15];                                                      \
-    (out)[7] = (inp)[3];                                                       \
-                                                                               \
-    (out)[8]  = (inp)[10];                                                     \
-    (out)[9]  = (inp)[14];                                                     \
-    (out)[10] = (inp)[2];                                                      \
-    (out)[11] = (inp)[6];                                                      \
-                                                                               \
-    (out)[12] = (inp)[13];                                                     \
-    (out)[13] = (inp)[1];                                                      \
-    (out)[14] = (inp)[5];                                                      \
-    (out)[15] = (inp)[9]
+static inline void
+mix_column_exchange(Uint8* inp, Uint8* out)
+{
+    (out)[0] = (inp)[0];
+    (out)[1] = (inp)[4];
+    (out)[2] = (inp)[8];
+    (out)[3] = (inp)[12];
+    (out)[4] = (inp)[7];
+    (out)[5] = (inp)[11];
+    (out)[6] = (inp)[15];
+    (out)[7] = (inp)[3];
 
-#define mix_column_last_exchange(inp, out)                                     \
-    (out)[0] = (inp)[0];                                                       \
-    (out)[1] = (inp)[5];                                                       \
-    (out)[2] = (inp)[10];                                                      \
-    (out)[3] = (inp)[15];                                                      \
-    (out)[4] = (inp)[4];                                                       \
-    (out)[5] = (inp)[9];                                                       \
-    (out)[6] = (inp)[14];                                                      \
-    (out)[7] = (inp)[3];                                                       \
-                                                                               \
-    (out)[8]  = (inp)[8];                                                      \
-    (out)[9]  = (inp)[13];                                                     \
-    (out)[10] = (inp)[2];                                                      \
-    (out)[11] = (inp)[7];                                                      \
-                                                                               \
-    (out)[12] = (inp)[12];                                                     \
-    (out)[13] = (inp)[1];                                                      \
-    (out)[14] = (inp)[6];                                                      \
-    (out)[15] = (inp)[11]
+    (out)[8]  = (inp)[10];
+    (out)[9]  = (inp)[14];
+    (out)[10] = (inp)[2];
+    (out)[11] = (inp)[6];
 
+    (out)[12] = (inp)[13];
+    (out)[13] = (inp)[1];
+    (out)[14] = (inp)[5];
+    (out)[15] = (inp)[9];
+}
+
+static inline void
+mix_column_last_exchange(Uint8* inp, Uint8* out)
+{
+    (out)[0] = (inp)[0];
+    (out)[1] = (inp)[5];
+    (out)[2] = (inp)[10];
+    (out)[3] = (inp)[15];
+    (out)[4] = (inp)[4];
+    (out)[5] = (inp)[9];
+    (out)[6] = (inp)[14];
+    (out)[7] = (inp)[3];
+
+    (out)[8]  = (inp)[8];
+    (out)[9]  = (inp)[13];
+    (out)[10] = (inp)[2];
+    (out)[11] = (inp)[7];
+
+    (out)[12] = (inp)[12];
+    (out)[13] = (inp)[1];
+    (out)[14] = (inp)[6];
+    (out)[15] = (inp)[11];
+}
+
+static inline void
+inv_mix_column_exchange(Uint8* inp, Uint8* out)
+{
+    (out)[0] = (inp)[0];
+    (out)[1] = (inp)[4];
+    (out)[2] = (inp)[8];
+    (out)[3] = (inp)[12];
+    (out)[4] = (inp)[1];
+    (out)[5] = (inp)[5];
+    (out)[6] = (inp)[9];
+    (out)[7] = (inp)[13];
+
+    (out)[8]  = (inp)[2];
+    (out)[9]  = (inp)[6];
+    (out)[10] = (inp)[10];
+    (out)[11] = (inp)[14];
+
+    (out)[12] = (inp)[3];
+    (out)[13] = (inp)[7];
+    (out)[14] = (inp)[11];
+    (out)[15] = (inp)[15];
+}
+static inline void
+inv_mix_column_last_exchange(Uint8* inp, Uint8* out)
+{
+    (out)[0] = (inp)[0];
+    (out)[1] = (inp)[13];
+    (out)[2] = (inp)[10];
+    (out)[3] = (inp)[7];
+    (out)[4] = (inp)[4];
+    (out)[5] = (inp)[1];
+    (out)[6] = (inp)[14];
+    (out)[7] = (inp)[11];
+
+    (out)[8]  = (inp)[8];
+    (out)[9]  = (inp)[5];
+    (out)[10] = (inp)[2];
+    (out)[11] = (inp)[15];
+
+    (out)[12] = (inp)[12];
+    (out)[13] = (inp)[9];
+    (out)[14] = (inp)[6];
+    (out)[15] = (inp)[3];
+}
 namespace alcp::cipher {
 
 /* Message size, key size, etc */
@@ -189,6 +239,8 @@ class alignas(16) Rijndael::Impl
 
     void AESEncrypt(Uint32* blk0, const Uint8* pkey, int nr) const;
 
+    void AESDecrypt(Uint32* blk0, const Uint8* pkey, int nr) const;
+
     void setUp(const alc_key_info_t& rKeyInfo)
     {
         int len           = rKeyInfo.len;
@@ -265,6 +317,13 @@ Rijndael::Impl::invMixColumns(Uint8 state[][4]) noexcept
     }
 }
 
+static Uint8
+gmulx2(Uint8 val)
+{
+    return ((val + val) & 0xfe)
+           ^ ((((val & 0x80) << 1) - ((val & 0x80) >> 7)) & 0x11b);
+}
+
 static Uint32
 gmulx2(Uint32 val)
 {
@@ -277,17 +336,17 @@ gmulx2(Uint32 val)
 
         galois Multiple of val*2 for 32 bit
 
-        val (32bit) = 4 val (8bit); 0xfefefefe to be used so that 8 bits don't
-        interact with each other and last bit will always be zero as val+val
-        used
+        val (32bit) = 4 val (8bit); 0xfefefefe to be used so that 8 bits
+       don't interact with each other and last bit will always be zero as
+       val+val used
 
-        val & 0x80808080 GF modulo: if val has a nonzero term x^7, then must be
-        reduced when it becomes x^8
+        val & 0x80808080 GF modulo: if val has a nonzero term x^7, then must
+       be reduced when it becomes x^8
 
         Primitive polynomial x^8 + x^4 + x^3 + x + 1
-        (0b1_0001_1011) 0x11b so for 8bit 0x1b corresponds to the irreducible
-        polynomial with the high term eliminated – you can change it but it must
-        be irreducible
+        (0b1_0001_1011) 0x11b so for 8bit 0x1b corresponds to the
+       irreducible polynomial with the high term eliminated – you can change
+       it but it must be irreducible
 
     */
 
@@ -313,7 +372,52 @@ InvMixColumns(const Uint32& val)
 }
 
 static inline void
-MixColumns(Uint8* inp)
+InvMixColumnsx8(Uint8* inp)
+{
+    Uint8 states[16];
+
+    utils::CopyBytes(states, inp, 16);
+
+    for (int i = 0; i < 4; i++) {
+        Uint8 t0, t1, t2, t3;
+        t0 = states[i + 4] ^ states[i + 8] ^ states[i + 12];
+        t1 = states[i] ^ states[i + 8] ^ states[i + 12];
+        t2 = states[i] ^ states[i + 4] ^ states[i + 12];
+        t3 = states[i] ^ states[i + 4] ^ states[i + 8];
+
+        states[i] = gmulx2(states[i]); // state = galois Multiple of state*2;
+        states[i + 4] =
+            gmulx2(states[i + 4]); // state = galois Multiple of state*2;
+        states[i + 8] =
+            gmulx2(states[i + 8]); // state = galois Multiple of state*2;
+        states[i + 12] =
+            gmulx2(states[i + 12]); // state = galois Multiple of state*2;
+
+        t0 ^= states[i] ^ states[i + 4];
+        t1 ^= states[i + 4] ^ states[i + 8];
+        t2 ^= states[i + 8] ^ states[i + 12];
+        t3 ^= states[i + 12] ^ states[i];
+
+        Uint8 tm1, tm2, tm3;
+
+        tm1 = states[i] ^ states[i + 8];
+        tm2 = states[i + 4] ^ states[i + 12];
+        tm1 = gmulx2(tm1);
+        tm2 = gmulx2(tm2);
+
+        tm3 = tm1 ^ tm2;
+        tm3 = gmulx2(tm3);
+
+        states[i]      = t0 ^ tm1 ^ tm3;
+        states[i + 4]  = t1 ^ tm2 ^ tm3;
+        states[i + 8]  = t2 ^ tm1 ^ tm3;
+        states[i + 12] = t3 ^ tm2 ^ tm3;
+    }
+    inv_mix_column_exchange(states, inp);
+}
+
+static inline void
+MixColumnsx8(Uint8* inp)
 {
     Uint8 states[16];
 
@@ -362,6 +466,15 @@ SubBytes(Uint8* inp)
     using namespace utils;
     for (int b = 0; b < 16; b++) {
         inp[b] = GetSbox(inp[b]);
+    }
+}
+
+static inline void
+InvSubBytes(Uint8* inp)
+{
+    using namespace utils;
+    for (int b = 0; b < 16; b++) {
+        inp[b] = GetSbox(inp[b], true);
     }
 }
 
@@ -455,7 +568,7 @@ Rijndael::Impl::AESEncrypt(Uint32* blk0, const Uint8* pkey, int nr) const
         state[2] = ROR(state[2], 16);
         state[3] = ROR(state[3], 24);
 
-        MixColumns(p_state);
+        MixColumnsx8(p_state);
 
         state[0] = state[0] ^ p_key32[0];
         state[1] = state[1] ^ p_key32[1];
@@ -469,6 +582,86 @@ Rijndael::Impl::AESEncrypt(Uint32* blk0, const Uint8* pkey, int nr) const
     SubBytes(p_state);
     utils::CopyBytes(temp, p_state, 16);
     mix_column_last_exchange(temp, p_state);
+
+    state[0] = AddRoundKey(state[0], p_key32[0]);
+    state[1] = state[1] ^ p_key32[1];
+    state[2] = state[2] ^ p_key32[2];
+    state[3] = state[3] ^ p_key32[3];
+
+    utils::CopyBytes(blk0, state, 16);
+}
+
+/*
+ * FIPS-197 Section 5.3 Psuedo-code for Decryption
+ * InvCipher(byte in[4*Nb], byte out[4*Nb], word w[Nb*(Nr+1)])
+ *  begin
+ *
+ *   byte state[4,Nb]
+ *
+ *   state = in
+ *
+ *   AddRoundKey(state, w[Nr*Nb, (Nr+1)*Nb-1]) // See Sec. 5.1.4
+ *
+ *   for round = Nr-1 step -1 downto 1
+ *         InvShiftRows(state) // See Sec. 5.3.1
+ *         InvSubBytes(state) // See Sec. 5.3.2
+ *         AddRoundKey(state, w[round*Nb, (round+1)*Nb-1])
+ *         InvMixColumns(state) // See Sec. 5.3.3
+ *   end for
+ *
+ *   InvShiftRows(state)
+ *   InvSubBytes(state)
+ *   AddRoundKey(state, w[0, Nb-1])
+ *
+ *   out = state
+ *
+ *  end
+ */
+
+void
+Rijndael::Impl::AESDecrypt(Uint32* blk0, const Uint8* pkey, int nr) const
+{
+
+    using utils::MakeWord;
+    auto p_key32 = reinterpret_cast<const Uint32*>(pkey);
+
+    Uint32 state[4];
+    memcpy(state, blk0, 16);
+
+    auto p_state = reinterpret_cast<Uint8*>(state);
+
+    state[0] = state[0] ^ p_key32[0];
+    state[1] = state[1] ^ p_key32[1];
+    state[2] = state[2] ^ p_key32[2];
+    state[3] = state[3] ^ p_key32[3];
+
+    p_key32 += 4;
+
+    for (int r = 1; r < nr; r++) {
+        Uint8 tmp[16];
+        memcpy(tmp, p_state, 16);
+        inv_mix_column_exchange(tmp, p_state);
+
+        state[1] = ROR(state[1], 24);
+        state[2] = ROR(state[2], 16);
+        state[3] = ROR(state[3], 8);
+
+        InvSubBytes(p_state);
+
+        InvMixColumnsx8(p_state);
+
+        state[0] = state[0] ^ p_key32[0];
+        state[1] = state[1] ^ p_key32[1];
+        state[2] = state[2] ^ p_key32[2];
+        state[3] = state[3] ^ p_key32[3];
+
+        p_key32 += 4;
+    }
+    Uint8 temp[16];
+
+    InvSubBytes(p_state);
+    utils::CopyBytes(temp, p_state, 16);
+    inv_mix_column_last_exchange(temp, p_state);
 
     state[0] = AddRoundKey(state[0], p_key32[0]);
     state[1] = state[1] ^ p_key32[1];
@@ -749,6 +942,12 @@ void
 Rijndael::AesEncrypt(Uint32* blk0, const Uint8* pkey, int nr) const
 {
     pImpl()->AESEncrypt(blk0, pkey, nr);
+}
+
+void
+Rijndael::AesDecrypt(Uint32* blk0, const Uint8* pkey, int nr) const
+{
+    pImpl()->AESDecrypt(blk0, pkey, nr);
 }
 
 alc_error_t

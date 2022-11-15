@@ -279,7 +279,73 @@ Xts::decrypt(const Uint8* pCipherText,
         return err;
     }
 
-    err = Rijndael::decrypt(pCipherText, pPlainText, len, pIv);
+    auto p_key128       = reinterpret_cast<const Uint8*>(getDecryptKeys());
+    auto p_tweak_key128 = reinterpret_cast<const Uint8*>(p_tweak_key);
+    auto p_src128       = reinterpret_cast<const Uint32*>(pCipherText);
+    auto p_dest128      = reinterpret_cast<Uint32*>(pPlainText);
+    auto p_iv128        = reinterpret_cast<const Uint32*>(pIv);
+
+    Uint32 currentAlpha[4];
+    utils::CopyBytes(currentAlpha, p_iv128, 16);
+
+    Uint64 blocks          = len / Rijndael::cBlockSize;
+    int    last_Round_Byte = len % Rijndael::cBlockSize;
+
+    Rijndael::AesEncrypt(currentAlpha, p_tweak_key128, getRounds());
+    blocks *= 4;
+
+    Uint32 lastAlpha[4];
+
+    while (blocks >= 4) {
+
+        Uint32 tweaked_src_text_1[4];
+        if (blocks == 4 && last_Round_Byte) {
+            utils::CopyBytes(lastAlpha, currentAlpha, 16);
+            MultiplyAlphaByTwo(currentAlpha);
+        }
+        for (int i = 0; i < 4; i++)
+            tweaked_src_text_1[i] = (currentAlpha[i] ^ p_src128[i]);
+
+        Rijndael::AesDecrypt(tweaked_src_text_1, p_key128, getRounds());
+
+        for (int i = 0; i < 4; i++)
+            tweaked_src_text_1[i] = (currentAlpha[i] ^ tweaked_src_text_1[i]);
+
+        utils::CopyBytes(p_dest128, tweaked_src_text_1, 16);
+
+        MultiplyAlphaByTwo(currentAlpha);
+
+        blocks -= 4;
+        p_src128 += 4;
+        p_dest128 += 4;
+    }
+
+    auto p_dest8 = reinterpret_cast<Uint8*>(p_dest128);
+    auto p_src8  = reinterpret_cast<const Uint8*>(p_src128);
+
+    if (last_Round_Byte > 0) {
+
+        Uint32 last_messgae_block[4];
+        auto   p_last_messgae_block =
+            reinterpret_cast<Uint8*>(last_messgae_block);
+
+        utils::CopyBytes(p_last_messgae_block + last_Round_Byte,
+                         p_dest8 - 16 + last_Round_Byte,
+                         16 - last_Round_Byte);
+        utils::CopyBytes(p_last_messgae_block, p_src8, last_Round_Byte);
+        utils::CopyBytes(p_dest8, p_dest8 - 16, last_Round_Byte);
+
+        // encrypting last message block
+        for (int i = 0; i < 4; i++)
+            last_messgae_block[i] = (lastAlpha[i] ^ last_messgae_block[i]);
+
+        AesDecrypt(last_messgae_block, p_key128, getRounds());
+
+        for (int i = 0; i < 4; i++)
+            last_messgae_block[i] = (lastAlpha[i] ^ last_messgae_block[i]);
+
+        utils::CopyBytes((p_dest8 - 16), p_last_messgae_block, 16);
+    }
 
     return err;
 }
