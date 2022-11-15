@@ -28,17 +28,17 @@
 #include <cstdint>
 #include <immintrin.h>
 
+#include "avx512.hh"
 #include "cipher/aes.hh"
 #include "cipher/aes_ctr.hh"
-#include "cipher/vaes.hh"
-#include "cipher/vaes_avx512.hh"
-#include "cipher/vaes_avx512_core.hh"
 
 #include "error.hh"
 #include "key.hh"
 #include "types.hh"
+#include "vaes_avx512.hh"
+#include "vaes_avx512_core.hh"
 
-namespace alcp::cipher::vaes {
+namespace alcp::cipher::vaes512 {
 
 void
 ctrInit(__m512i*     c1,
@@ -159,26 +159,26 @@ ctrBlk(const __m512i* p_in_x,
         b3 = alcp_shuffle_epi8(c3, swap_ctr);
         b4 = alcp_shuffle_epi8(c4, swap_ctr);
 
-        vaes::AesEncryptNoLoad_4x512(b1,
-                                     b2,
-                                     b3,
-                                     b4,
-                                     key_512_0,
-                                     key_512_1,
-                                     key_512_2,
-                                     key_512_3,
-                                     key_512_4,
-                                     key_512_5,
-                                     key_512_6,
-                                     key_512_7,
-                                     key_512_8,
-                                     key_512_9,
-                                     key_512_10,
-                                     key_512_11,
-                                     key_512_12,
-                                     key_512_13,
-                                     key_512_14,
-                                     nRounds);
+        vaes512::AesEncryptNoLoad_4x512(b1,
+                                        b2,
+                                        b3,
+                                        b4,
+                                        key_512_0,
+                                        key_512_1,
+                                        key_512_2,
+                                        key_512_3,
+                                        key_512_4,
+                                        key_512_5,
+                                        key_512_6,
+                                        key_512_7,
+                                        key_512_8,
+                                        key_512_9,
+                                        key_512_10,
+                                        key_512_11,
+                                        key_512_12,
+                                        key_512_13,
+                                        key_512_14,
+                                        nRounds);
 
         a1 = alcp_xor(b1, a1);
         a2 = alcp_xor(b2, a2);
@@ -207,24 +207,24 @@ ctrBlk(const __m512i* p_in_x,
         b1 = alcp_shuffle_epi8(c1, swap_ctr);
         b2 = alcp_shuffle_epi8(c2, swap_ctr);
 
-        vaes::AesEncryptNoLoad_2x512(b1,
-                                     b2,
-                                     key_512_0,
-                                     key_512_1,
-                                     key_512_2,
-                                     key_512_3,
-                                     key_512_4,
-                                     key_512_5,
-                                     key_512_6,
-                                     key_512_7,
-                                     key_512_8,
-                                     key_512_9,
-                                     key_512_10,
-                                     key_512_11,
-                                     key_512_12,
-                                     key_512_13,
-                                     key_512_14,
-                                     nRounds);
+        vaes512::AesEncryptNoLoad_2x512(b1,
+                                        b2,
+                                        key_512_0,
+                                        key_512_1,
+                                        key_512_2,
+                                        key_512_3,
+                                        key_512_4,
+                                        key_512_5,
+                                        key_512_6,
+                                        key_512_7,
+                                        key_512_8,
+                                        key_512_9,
+                                        key_512_10,
+                                        key_512_11,
+                                        key_512_12,
+                                        key_512_13,
+                                        key_512_14,
+                                        nRounds);
 
         a1 = alcp_xor(b1, a1);
         a2 = alcp_xor(b2, a2);
@@ -244,23 +244,23 @@ ctrBlk(const __m512i* p_in_x,
         // re-arrange as per spec
         b1 = alcp_shuffle_epi8(c1, swap_ctr);
 
-        vaes::AesEncryptNoLoad_1x512(b1,
-                                     key_512_0,
-                                     key_512_1,
-                                     key_512_2,
-                                     key_512_3,
-                                     key_512_4,
-                                     key_512_5,
-                                     key_512_6,
-                                     key_512_7,
-                                     key_512_8,
-                                     key_512_9,
-                                     key_512_10,
-                                     key_512_11,
-                                     key_512_12,
-                                     key_512_13,
-                                     key_512_14,
-                                     nRounds);
+        vaes512::AesEncryptNoLoad_1x512(b1,
+                                        key_512_0,
+                                        key_512_1,
+                                        key_512_2,
+                                        key_512_3,
+                                        key_512_4,
+                                        key_512_5,
+                                        key_512_6,
+                                        key_512_7,
+                                        key_512_8,
+                                        key_512_9,
+                                        key_512_10,
+                                        key_512_11,
+                                        key_512_12,
+                                        key_512_13,
+                                        key_512_14,
+                                        nRounds);
 
         a1 = alcp_xor(b1, a1);
 
@@ -279,23 +279,23 @@ ctrBlk(const __m512i* p_in_x,
 
         // re-arrange as per spec
         b1 = alcp_shuffle_epi8(c1, swap_ctr);
-        vaes::AesEncryptNoLoad_1x512(b1,
-                                     key_512_0,
-                                     key_512_1,
-                                     key_512_2,
-                                     key_512_3,
-                                     key_512_4,
-                                     key_512_5,
-                                     key_512_6,
-                                     key_512_7,
-                                     key_512_8,
-                                     key_512_9,
-                                     key_512_10,
-                                     key_512_11,
-                                     key_512_12,
-                                     key_512_13,
-                                     key_512_14,
-                                     nRounds);
+        vaes512::AesEncryptNoLoad_1x512(b1,
+                                        key_512_0,
+                                        key_512_1,
+                                        key_512_2,
+                                        key_512_3,
+                                        key_512_4,
+                                        key_512_5,
+                                        key_512_6,
+                                        key_512_7,
+                                        key_512_8,
+                                        key_512_9,
+                                        key_512_10,
+                                        key_512_11,
+                                        key_512_12,
+                                        key_512_13,
+                                        key_512_14,
+                                        nRounds);
 
         a1 = alcp_xor(b1, a1);
 
@@ -328,14 +328,18 @@ ctrBlk(const __m512i* p_in_x,
 }
 
 Uint64
-ctrProcess(const __m512i* p_in_x,
-           __m512i*       p_out_x,
-           Uint64         blocks,
-           const __m128i* pkey128,
-           const Uint8*   pIv,
-           int            nRounds)
+ctrProcessAvx512(const Uint8*   p_in_x,
+                 Uint8*         p_out_x,
+                 Uint64         blocks,
+                 const __m128i* pkey128,
+                 const Uint8*   pIv,
+                 int            nRounds)
 {
-    return ctrBlk(p_in_x, p_out_x, blocks, pkey128, pIv, nRounds, 4);
+
+    auto p_in_512  = reinterpret_cast<const __m512i*>(p_in_x);
+    auto p_out_512 = reinterpret_cast<__m512i*>(p_out_x);
+
+    return ctrBlk(p_in_512, p_out_512, blocks, pkey128, pIv, nRounds, 4);
 }
 
-} // namespace alcp::cipher::vaes
+} // namespace alcp::cipher::vaes512

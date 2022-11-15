@@ -25,10 +25,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include "avx256.hh"
 #include "cipher/aes.hh"
 #include "cipher/aes_xts.hh"
-#include "cipher/avx256.hh"
-#include "cipher/vaes.hh"
+#include "vaes.hh"
 #include <cstdint>
 #include <cstring>
 #include <immintrin.h>

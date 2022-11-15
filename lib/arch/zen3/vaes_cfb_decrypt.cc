@@ -29,7 +29,7 @@
 #include <immintrin.h>
 
 #include "cipher/aes.hh"
-#include "cipher/vaes.hh"
+#include "vaes.hh"
 
 #include "error.hh"
 #include "key.hh"

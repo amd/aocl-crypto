@@ -27,8 +27,7 @@
  */
 
 #include "cipher/aes.hh"
-#include "cipher/aesni.hh"
-#include "cipher/vaes.hh"
+#include "cipher/cipher_wrapper.hh"
 
 namespace alcp::cipher {
 alc_error_t
@@ -40,7 +39,6 @@ Ofb::decrypt(const uint8_t* pCipherText,
     alc_error_t err = ALC_ERROR_NONE;
 
     if (Cipher::isVaesAvailable()) {
-        // err = vaes::DecryptOfb(
         err = aesni::DecryptOfb(
             pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
 

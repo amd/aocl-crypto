@@ -30,7 +30,6 @@
 
 #include "cipher/aes.hh"
 #include "cipher/aesni.hh"
-#include "cipher/vaes.hh"
 
 namespace alcp::cipher {
 

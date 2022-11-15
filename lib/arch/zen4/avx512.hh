@@ -31,7 +31,7 @@
 #include <immintrin.h>
 #include <stdint.h>
 
-namespace alcp::cipher { namespace vaes {
+namespace alcp::cipher { namespace vaes512 {
 
     // load functions
     static inline __m512i alcp_loadu(__m512i* ad)
@@ -160,4 +160,4 @@ namespace alcp::cipher { namespace vaes {
         ((uint64_t*)ad)[1] = x[1];
     }
 
-}} // namespace alcp::cipher::vaes
+}} // namespace alcp::cipher::vaes512

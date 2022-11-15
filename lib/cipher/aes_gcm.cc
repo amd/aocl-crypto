@@ -27,8 +27,8 @@
  */
 
 #include "cipher/aes.hh"
-#include "cipher/aesni.hh"
-#include "cipher/vaes.hh"
+#include "cipher/cipher_wrapper.hh"
+
 #include <immintrin.h>
 #include <wmmintrin.h>
 
@@ -76,17 +76,17 @@ Gcm::cryptUpdate(const uint8_t* pInput,
 
         if (Cipher::isVaesAvailable() && isAvx512Cap) {
             // Encrypt/Decrypt call
-            err = vaes::CryptGcm(pInput,
-                                 pOutput,
-                                 m_len,
-                                 getEncryptKeys(),
-                                 getRounds(),
-                                 pIv,
-                                 &m_gHash_128,
-                                 m_hash_subKey_128,
-                                 m_iv_128,
-                                 m_reverse_mask_128,
-                                 isEncrypt);
+            err = vaes512::CryptGcm(pInput,
+                                    pOutput,
+                                    m_len,
+                                    getEncryptKeys(),
+                                    getRounds(),
+                                    pIv,
+                                    &m_gHash_128,
+                                    m_hash_subKey_128,
+                                    m_iv_128,
+                                    m_reverse_mask_128,
+                                    isEncrypt);
         } else {
             // Encrypt/Decrypt call
             err = aesni::CryptGcm(pInput,

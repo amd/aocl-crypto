@@ -28,9 +28,11 @@
 #include <cstdint>
 #include <immintrin.h>
 
+#include "avx256.hh"
+#include "vaes.hh"
+
 #include "cipher/aes.hh"
 #include "cipher/aes_ctr.hh"
-#include "cipher/vaes.hh"
 
 #include "error.hh"
 #include "key.hh"
@@ -79,15 +81,18 @@ ctrInit(__m256i*       c1,
 }
 
 uint64_t
-ctrProcess(const __m256i* p_in_x,
-           __m256i*       p_out_x,
-           uint64_t       blocks,
-           const __m128i* pkey128,
-           const uint8_t* pIv,
-           int            nRounds)
+ctrProcessAvx256(const Uint8*   p_in_x,
+                 Uint8*         p_out_x,
+                 uint64_t       blocks,
+                 const __m128i* pkey128,
+                 const uint8_t* pIv,
+                 int            nRounds)
 {
+    auto p_in_256  = reinterpret_cast<const __m256i*>(p_in_x);
+    auto p_out_256 = reinterpret_cast<__m256i*>(p_out_x);
+
     return alcp::cipher::aes::ctrBlk(
-        p_in_x, p_out_x, blocks, pkey128, pIv, nRounds, 2);
+        p_in_256, p_out_256, blocks, pkey128, pIv, nRounds, 2);
 }
 
 } // namespace alcp::cipher::vaes

@@ -28,9 +28,9 @@
 #include <cstdint>
 #include <immintrin.h>
 
+#include "avx256.hh"
 #include "cipher/aes.hh"
-//#include "cipher/aes_gcm.hh"
-#include "cipher/vaes.hh"
+#include "vaes.hh"
 
 #include "error.hh"
 #include "key.hh"

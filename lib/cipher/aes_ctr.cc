@@ -27,21 +27,19 @@
  */
 
 #include "cipher/aes.hh"
-#include "cipher/aesni.hh"
-#include "cipher/vaes.hh"
-#include "cipher/vaes_avx512.hh"
+#include "cipher/cipher_wrapper.hh"
 
 namespace alcp::cipher {
 
 alc_error_t
-cryptCtr(const uint8_t* pInputText, // ptr to plaintext for encrypt and
-                                    // ciphertext for decrypt
-         uint8_t* pOutputText,   // ptr to ciphertext for encrypt and plaintext
-                                 // for decrypt
-         uint64_t       len,     // message length in bytes
-         const uint8_t* pKey,    // ptr to Key
-         int            nRounds, // No. of rounds
-         const uint8_t* pIv,     // ptr to Initialization Vector
+cryptCtr(const uint8_t* pInputText, // ptr to plaintext for encrypt
+                                    // and ciphertext for decrypt
+         uint8_t* pOutputText,      // ptr to ciphertext for encrypt and
+                                    // plaintext for decrypt
+         uint64_t       len,        // message length in bytes
+         const uint8_t* pKey,       // ptr to Key
+         int            nRounds,    // No. of rounds
+         const uint8_t* pIv,        // ptr to Initialization Vector
          bool           isVaes,
          bool           isAvx512Cap)
 {
@@ -50,24 +48,16 @@ cryptCtr(const uint8_t* pInputText, // ptr to plaintext for encrypt and
     auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
 
     if (isVaes && isAvx512Cap) {
-        auto p_in_512  = reinterpret_cast<const __m512i*>(pInputText);
-        auto p_out_512 = reinterpret_cast<__m512i*>(pOutputText);
-
-        blocks = vaes::ctrProcess(
-            p_in_512, p_out_512, blocks, pkey128, pIv, nRounds);
+        blocks = vaes512::ctrProcessAvx512(
+            pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
     } else if (isVaes) {
-        auto p_in_256  = reinterpret_cast<const __m256i*>(pInputText);
-        auto p_out_256 = reinterpret_cast<__m256i*>(pOutputText);
 
-        blocks = vaes::ctrProcess(
-            p_in_256, p_out_256, blocks, pkey128, pIv, nRounds);
+        blocks = vaes::ctrProcessAvx256(
+            pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
 
     } else {
-        auto p_in_128  = reinterpret_cast<const __m128i*>(pInputText);
-        auto p_out_128 = reinterpret_cast<__m128i*>(pOutputText);
-
-        blocks = aesni::ctrProcess(
-            p_in_128, p_out_128, blocks, pkey128, pIv, nRounds);
+        blocks = aesni::ctrProcessAvx128(
+            pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
     }
 
     return err;

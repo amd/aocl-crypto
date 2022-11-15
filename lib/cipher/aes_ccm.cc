@@ -27,8 +27,7 @@
  */
 
 #include "cipher/aes.hh"
-#include "cipher/aesni.hh"
-#include "cipher/vaes.hh"
+#include "cipher/cipher_wrapper.hh"
 #include <immintrin.h>
 #include <string.h>
 #include <wmmintrin.h>

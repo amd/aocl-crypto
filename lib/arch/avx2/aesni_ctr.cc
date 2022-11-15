@@ -29,9 +29,11 @@
 #include <immintrin.h>
 #include <wmmintrin.h>
 
+#include "avx128.hh"
 #include "cipher/aes.hh"
-#include "cipher/aes_ctr.hh"
 #include "cipher/aesni.hh"
+// template code in aes_ctr.hh needs aesni.hh
+#include "cipher/aes_ctr.hh"
 
 #include "error.hh"
 #include "key.hh"
@@ -72,15 +74,18 @@ ctrInit(__m128i*       c1,
 }
 
 uint64_t
-ctrProcess(const __m128i* p_in_x,
-           __m128i*       p_out_x,
-           uint64_t       blocks,
-           const __m128i* pkey128,
-           const uint8_t* pIv,
-           int            nRounds)
+ctrProcessAvx128(const Uint8*   p_in_x,
+                 Uint8*         p_out_x,
+                 uint64_t       blocks,
+                 const __m128i* pkey128,
+                 const uint8_t* pIv,
+                 int            nRounds)
 {
+    auto p_in_128  = reinterpret_cast<const __m128i*>(p_in_x);
+    auto p_out_128 = reinterpret_cast<__m128i*>(p_out_x);
+
     return alcp::cipher::aes::ctrBlk(
-        p_in_x, p_out_x, blocks, pkey128, pIv, nRounds, 1);
+        p_in_128, p_out_128, blocks, pkey128, pIv, nRounds, 1);
 }
 
 } // namespace alcp::cipher::aesni

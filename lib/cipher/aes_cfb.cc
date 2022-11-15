@@ -27,9 +27,7 @@
  */
 
 #include "cipher/aes_cfb.hh"
-#include "cipher/aesni.hh"
-#include "cipher/vaes.hh"
-#include "cipher/vaes_avx512.hh"
+#include "cipher/cipher_wrapper.hh"
 
 namespace alcp::cipher {
 alc_error_t
@@ -42,7 +40,7 @@ Cfb::decrypt(const uint8_t* pCipherText,
     if (Cipher::isAvx512Has(cipher::AVX512_F)
         && Cipher::isAvx512Has(cipher::AVX512_DQ)
         && Cipher::isAvx512Has(cipher::AVX512_BW)) {
-        err = vaes::DecryptCfbAvx512(
+        err = vaes512::DecryptCfbAvx512(
             pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
         return err;
     }

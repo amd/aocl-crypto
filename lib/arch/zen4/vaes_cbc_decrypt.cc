@@ -28,17 +28,17 @@
 #include <cstdint>
 #include <immintrin.h>
 
+#include "avx512.hh"
 #include "cipher/aes.hh"
-#include "cipher/avx512.hh"
-#include "cipher/vaes.hh"
-#include "cipher/vaes_avx512.hh"
-#include "cipher/vaes_avx512_core.hh"
+
+#include "vaes_avx512.hh"
+#include "vaes_avx512_core.hh"
 
 #include "error.hh"
 #include "key.hh"
 #include "types.hh"
 
-namespace alcp::cipher::vaes {
+namespace alcp::cipher::vaes512 {
 
 alc_error_t
 DecryptCbcAvx512(const uint8_t* pCipherText, // ptr to ciphertext
@@ -88,23 +88,23 @@ DecryptCbcAvx512(const uint8_t* pCipherText, // ptr to ciphertext
     if (blocks >= 1) {
         a1 = input_128_a1 = alcp_loadu_128((const __m512i*)p_in_128);
 
-        vaes::AesDecryptNoLoad_1x512(a1,
-                                     key_512_0,
-                                     key_512_1,
-                                     key_512_2,
-                                     key_512_3,
-                                     key_512_4,
-                                     key_512_5,
-                                     key_512_6,
-                                     key_512_7,
-                                     key_512_8,
-                                     key_512_9,
-                                     key_512_10,
-                                     key_512_11,
-                                     key_512_12,
-                                     key_512_13,
-                                     key_512_14,
-                                     nRounds);
+        vaes512::AesDecryptNoLoad_1x512(a1,
+                                        key_512_0,
+                                        key_512_1,
+                                        key_512_2,
+                                        key_512_3,
+                                        key_512_4,
+                                        key_512_5,
+                                        key_512_6,
+                                        key_512_7,
+                                        key_512_8,
+                                        key_512_9,
+                                        key_512_10,
+                                        key_512_11,
+                                        key_512_12,
+                                        key_512_13,
+                                        key_512_14,
+                                        nRounds);
 
         a1 = alcp_xor(a1, b1);
 
@@ -128,26 +128,26 @@ DecryptCbcAvx512(const uint8_t* pCipherText, // ptr to ciphertext
         a3 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 2);
         a4 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 3);
 
-        vaes::AesDecryptNoLoad_4x512(a1,
-                                     a2,
-                                     a3,
-                                     a4,
-                                     key_512_0,
-                                     key_512_1,
-                                     key_512_2,
-                                     key_512_3,
-                                     key_512_4,
-                                     key_512_5,
-                                     key_512_6,
-                                     key_512_7,
-                                     key_512_8,
-                                     key_512_9,
-                                     key_512_10,
-                                     key_512_11,
-                                     key_512_12,
-                                     key_512_13,
-                                     key_512_14,
-                                     nRounds);
+        vaes512::AesDecryptNoLoad_4x512(a1,
+                                        a2,
+                                        a3,
+                                        a4,
+                                        key_512_0,
+                                        key_512_1,
+                                        key_512_2,
+                                        key_512_3,
+                                        key_512_4,
+                                        key_512_5,
+                                        key_512_6,
+                                        key_512_7,
+                                        key_512_8,
+                                        key_512_9,
+                                        key_512_10,
+                                        key_512_11,
+                                        key_512_12,
+                                        key_512_13,
+                                        key_512_14,
+                                        nRounds);
 
         // Do xor with previous cipher text to complete decryption.
         a1 = alcp_xor(a1, b1);
@@ -175,24 +175,24 @@ DecryptCbcAvx512(const uint8_t* pCipherText, // ptr to ciphertext
         a1 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 0);
         a2 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 1);
 
-        vaes::AesDecryptNoLoad_2x512(a1,
-                                     a2,
-                                     key_512_0,
-                                     key_512_1,
-                                     key_512_2,
-                                     key_512_3,
-                                     key_512_4,
-                                     key_512_5,
-                                     key_512_6,
-                                     key_512_7,
-                                     key_512_8,
-                                     key_512_9,
-                                     key_512_10,
-                                     key_512_11,
-                                     key_512_12,
-                                     key_512_13,
-                                     key_512_14,
-                                     nRounds);
+        vaes512::AesDecryptNoLoad_2x512(a1,
+                                        a2,
+                                        key_512_0,
+                                        key_512_1,
+                                        key_512_2,
+                                        key_512_3,
+                                        key_512_4,
+                                        key_512_5,
+                                        key_512_6,
+                                        key_512_7,
+                                        key_512_8,
+                                        key_512_9,
+                                        key_512_10,
+                                        key_512_11,
+                                        key_512_12,
+                                        key_512_13,
+                                        key_512_14,
+                                        nRounds);
 
         // Do xor with previous cipher text to complete decryption.
         a1 = alcp_xor(a1, b1);
@@ -214,24 +214,24 @@ DecryptCbcAvx512(const uint8_t* pCipherText, // ptr to ciphertext
         // Load in the format a1 = c1,c2.
         a1 = alcp_loadu(((__m512i*)(p_in_128 - 0)) + 0);
 
-        vaes::AesDecryptNoLoad_2x512(a1,
-                                     a2,
-                                     key_512_0,
-                                     key_512_1,
-                                     key_512_2,
-                                     key_512_3,
-                                     key_512_4,
-                                     key_512_5,
-                                     key_512_6,
-                                     key_512_7,
-                                     key_512_8,
-                                     key_512_9,
-                                     key_512_10,
-                                     key_512_11,
-                                     key_512_12,
-                                     key_512_13,
-                                     key_512_14,
-                                     nRounds);
+        vaes512::AesDecryptNoLoad_2x512(a1,
+                                        a2,
+                                        key_512_0,
+                                        key_512_1,
+                                        key_512_2,
+                                        key_512_3,
+                                        key_512_4,
+                                        key_512_5,
+                                        key_512_6,
+                                        key_512_7,
+                                        key_512_8,
+                                        key_512_9,
+                                        key_512_10,
+                                        key_512_11,
+                                        key_512_12,
+                                        key_512_13,
+                                        key_512_14,
+                                        nRounds);
 
         // Do xor with previous cipher text to complete decryption.
         a1 = alcp_xor(a1, b1);
@@ -251,23 +251,23 @@ DecryptCbcAvx512(const uint8_t* pCipherText, // ptr to ciphertext
         // Load the Nth block
         a1 = input_128_a1 = alcp_loadu_128((const __m512i*)p_in_128);
 
-        vaes::AesDecryptNoLoad_1x512(a1,
-                                     key_512_0,
-                                     key_512_1,
-                                     key_512_2,
-                                     key_512_3,
-                                     key_512_4,
-                                     key_512_5,
-                                     key_512_6,
-                                     key_512_7,
-                                     key_512_8,
-                                     key_512_9,
-                                     key_512_10,
-                                     key_512_11,
-                                     key_512_12,
-                                     key_512_13,
-                                     key_512_14,
-                                     nRounds);
+        vaes512::AesDecryptNoLoad_1x512(a1,
+                                        key_512_0,
+                                        key_512_1,
+                                        key_512_2,
+                                        key_512_3,
+                                        key_512_4,
+                                        key_512_5,
+                                        key_512_6,
+                                        key_512_7,
+                                        key_512_8,
+                                        key_512_9,
+                                        key_512_10,
+                                        key_512_11,
+                                        key_512_12,
+                                        key_512_13,
+                                        key_512_14,
+                                        nRounds);
         // Do xor with previous cipher text to complete decryption.
         a1 = alcp_xor(a1, b1);
 
@@ -299,4 +299,4 @@ DecryptCbcAvx512(const uint8_t* pCipherText, // ptr to ciphertext
     return err;
 }
 
-} // namespace alcp::cipher::vaes
+} // namespace alcp::cipher::vaes512

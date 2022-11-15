@@ -25,10 +25,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include "avx512.hh"
 #include "cipher/aes.hh"
 #include "cipher/aes_xts.hh"
-#include "cipher/avx512.hh"
-#include "cipher/vaes_avx512.hh"
+#include "vaes_avx512.hh"
 #include <cstdint>
 #include <cstring>
 #include <immintrin.h>
@@ -38,7 +38,7 @@
 #include "types.hh"
 #include "utils/copy.hh"
 
-namespace alcp::cipher::vaes {
+namespace alcp::cipher::vaes512 {
 
 alc_error_t
 EncryptXtsAvx512(const uint8_t* pSrc,
@@ -685,4 +685,4 @@ DecryptXtsAvx512(const uint8_t* pSrc,
     return ALC_ERROR_NONE;
 }
 
-} // namespace alcp::cipher::vaes
+} // namespace alcp::cipher::vaes512

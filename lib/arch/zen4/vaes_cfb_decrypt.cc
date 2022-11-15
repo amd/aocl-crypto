@@ -30,13 +30,13 @@
 
 #include <immintrin.h>
 
+#include "avx512.hh"
 #include "cipher/aesni.hh"
-#include "cipher/avx512.hh"
-#include "cipher/vaes_avx512.hh"
-#include "cipher/vaes_avx512_core.hh"
 #include "error.hh"
+#include "vaes_avx512.hh"
+#include "vaes_avx512_core.hh"
 
-namespace alcp::cipher { namespace vaes {
+namespace alcp::cipher { namespace vaes512 {
 
     alc_error_t DecryptCfbAvx512(const uint8_t* pSrc,
                                  uint8_t*       pDest,
@@ -82,23 +82,23 @@ namespace alcp::cipher { namespace vaes {
         if (blocks >= 1) {
             a1 = alcp_loadu_128((const __m512i*)p_in_128);
 
-            vaes::AesEncryptNoLoad_1x512(b1,
-                                         key_512_0,
-                                         key_512_1,
-                                         key_512_2,
-                                         key_512_3,
-                                         key_512_4,
-                                         key_512_5,
-                                         key_512_6,
-                                         key_512_7,
-                                         key_512_8,
-                                         key_512_9,
-                                         key_512_10,
-                                         key_512_11,
-                                         key_512_12,
-                                         key_512_13,
-                                         key_512_14,
-                                         nRounds);
+            vaes512::AesEncryptNoLoad_1x512(b1,
+                                            key_512_0,
+                                            key_512_1,
+                                            key_512_2,
+                                            key_512_3,
+                                            key_512_4,
+                                            key_512_5,
+                                            key_512_6,
+                                            key_512_7,
+                                            key_512_8,
+                                            key_512_9,
+                                            key_512_10,
+                                            key_512_11,
+                                            key_512_12,
+                                            key_512_13,
+                                            key_512_14,
+                                            nRounds);
 
             a1 = alcp_xor(a1, b1);
 
@@ -122,26 +122,26 @@ namespace alcp::cipher { namespace vaes {
             b3 = alcp_loadu(((const __m512i*)(p_in_128 - 1)) + 2);
             b4 = alcp_loadu(((const __m512i*)(p_in_128 - 1)) + 3);
 
-            vaes::AesEncryptNoLoad_4x512(b1,
-                                         b2,
-                                         b3,
-                                         b4,
-                                         key_512_0,
-                                         key_512_1,
-                                         key_512_2,
-                                         key_512_3,
-                                         key_512_4,
-                                         key_512_5,
-                                         key_512_6,
-                                         key_512_7,
-                                         key_512_8,
-                                         key_512_9,
-                                         key_512_10,
-                                         key_512_11,
-                                         key_512_12,
-                                         key_512_13,
-                                         key_512_14,
-                                         nRounds);
+            vaes512::AesEncryptNoLoad_4x512(b1,
+                                            b2,
+                                            b3,
+                                            b4,
+                                            key_512_0,
+                                            key_512_1,
+                                            key_512_2,
+                                            key_512_3,
+                                            key_512_4,
+                                            key_512_5,
+                                            key_512_6,
+                                            key_512_7,
+                                            key_512_8,
+                                            key_512_9,
+                                            key_512_10,
+                                            key_512_11,
+                                            key_512_12,
+                                            key_512_13,
+                                            key_512_14,
+                                            nRounds);
 
             // Xor reencrypted previous cipher text with current cipher text
             a1 = alcp_xor(a1, b1);
@@ -168,24 +168,24 @@ namespace alcp::cipher { namespace vaes {
             b1 = alcp_loadu(((const __m512i*)(p_in_128 - 1)) + 0);
             b2 = alcp_loadu(((const __m512i*)(p_in_128 - 1)) + 1);
 
-            vaes::AesEncryptNoLoad_2x512(b1,
-                                         b2,
-                                         key_512_0,
-                                         key_512_1,
-                                         key_512_2,
-                                         key_512_3,
-                                         key_512_4,
-                                         key_512_5,
-                                         key_512_6,
-                                         key_512_7,
-                                         key_512_8,
-                                         key_512_9,
-                                         key_512_10,
-                                         key_512_11,
-                                         key_512_12,
-                                         key_512_13,
-                                         key_512_14,
-                                         nRounds);
+            vaes512::AesEncryptNoLoad_2x512(b1,
+                                            b2,
+                                            key_512_0,
+                                            key_512_1,
+                                            key_512_2,
+                                            key_512_3,
+                                            key_512_4,
+                                            key_512_5,
+                                            key_512_6,
+                                            key_512_7,
+                                            key_512_8,
+                                            key_512_9,
+                                            key_512_10,
+                                            key_512_11,
+                                            key_512_12,
+                                            key_512_13,
+                                            key_512_14,
+                                            nRounds);
 
             // Xor reencrypted previous cipher text with current cipher text
             a1 = alcp_xor(a1, b1);
@@ -206,23 +206,23 @@ namespace alcp::cipher { namespace vaes {
             // Load b(cipher text offset -1) to reencrypt and xor
             b1 = alcp_loadu(((const __m512i*)(p_in_128 - 1)) + 0);
 
-            vaes::AesEncryptNoLoad_1x512(b1,
-                                         key_512_0,
-                                         key_512_1,
-                                         key_512_2,
-                                         key_512_3,
-                                         key_512_4,
-                                         key_512_5,
-                                         key_512_6,
-                                         key_512_7,
-                                         key_512_8,
-                                         key_512_9,
-                                         key_512_10,
-                                         key_512_11,
-                                         key_512_12,
-                                         key_512_13,
-                                         key_512_14,
-                                         nRounds);
+            vaes512::AesEncryptNoLoad_1x512(b1,
+                                            key_512_0,
+                                            key_512_1,
+                                            key_512_2,
+                                            key_512_3,
+                                            key_512_4,
+                                            key_512_5,
+                                            key_512_6,
+                                            key_512_7,
+                                            key_512_8,
+                                            key_512_9,
+                                            key_512_10,
+                                            key_512_11,
+                                            key_512_12,
+                                            key_512_13,
+                                            key_512_14,
+                                            nRounds);
 
             // Xor reencrypted previous cipher text with current cipher text
             a1 = alcp_xor(a1, b1);
@@ -242,23 +242,23 @@ namespace alcp::cipher { namespace vaes {
         for (; blocks >= 1; blocks--) {
             a1 = _a1 = alcp_loadu_128((const __m512i*)p_in_128);
 
-            vaes::AesEncryptNoLoad_1x512(b1,
-                                         key_512_0,
-                                         key_512_1,
-                                         key_512_2,
-                                         key_512_3,
-                                         key_512_4,
-                                         key_512_5,
-                                         key_512_6,
-                                         key_512_7,
-                                         key_512_8,
-                                         key_512_9,
-                                         key_512_10,
-                                         key_512_11,
-                                         key_512_12,
-                                         key_512_13,
-                                         key_512_14,
-                                         nRounds);
+            vaes512::AesEncryptNoLoad_1x512(b1,
+                                            key_512_0,
+                                            key_512_1,
+                                            key_512_2,
+                                            key_512_3,
+                                            key_512_4,
+                                            key_512_5,
+                                            key_512_6,
+                                            key_512_7,
+                                            key_512_8,
+                                            key_512_9,
+                                            key_512_10,
+                                            key_512_11,
+                                            key_512_12,
+                                            key_512_13,
+                                            key_512_14,
+                                            nRounds);
 
             a1 = alcp_xor(a1, b1);
 
@@ -289,4 +289,4 @@ namespace alcp::cipher { namespace vaes {
 
         return err;
     }
-}} // namespace alcp::cipher::vaes
+}} // namespace alcp::cipher::vaes512

@@ -34,7 +34,7 @@
 #include "alcp/error.h"
 
 #include "cipher/aes.hh"
-#include "cipher/aesni.hh"
+#include "cipher/cipher_wrapper.hh"
 
 #include "utils/bits.hh"
 #include "utils/constants.hh"
@@ -175,7 +175,7 @@ BitsToBlockSize(int iVal)
             case 192: bs = eBits192; break;
             case 256: bs = eBits256; break;
             default:
-                bs = eBits0;  
+                bs = eBits0;
                 assert(false); break;
         }
     // clang-format on

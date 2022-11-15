@@ -52,7 +52,7 @@
  *
  */
 
-namespace alcp::cipher { namespace vaes {
+namespace alcp::cipher { namespace vaes512 {
 
     /*
      * Modulo Reduction of 256bit to 128bit
@@ -570,4 +570,4 @@ namespace alcp::cipher { namespace vaes {
         modReduction(cd, res);
     }
 
-}} // namespace alcp::cipher::vaes
+}} // namespace alcp::cipher::vaes512

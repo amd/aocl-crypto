@@ -4,7 +4,7 @@
 
 #include "alcp/error.h"
 
-namespace alcp::cipher { namespace vaes {
+namespace alcp::cipher { namespace vaes512 {
 
     static inline void alcp_load_key_zmm(const __m128i* pkey128,
                                          __m512i&       key_512_0,
@@ -778,4 +778,4 @@ namespace alcp::cipher { namespace vaes {
         }
     }
 
-}} // namespace alcp::cipher::vaes
+}} // namespace alcp::cipher::vaes512

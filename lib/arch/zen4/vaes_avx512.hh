@@ -32,7 +32,7 @@
 
 #include "alcp/error.h"
 
-namespace alcp::cipher { namespace vaes {
+namespace alcp::cipher { namespace vaes512 {
 
     alc_error_t ExpandKeys(const uint8_t* pUserKey,
                            uint8_t*       pEncKey,
@@ -49,52 +49,6 @@ namespace alcp::cipher { namespace vaes {
                  __m512i*       four_x,
                  __m512i*       eight_x,
                  __m512i*       swap_ctr);
-
-    uint64_t ctrProcess(const __m512i* p_in_x,
-                        __m512i*       p_out_x,
-                        uint64_t       blocks,
-                        const __m128i* pkey128,
-                        const uint8_t* pIv,
-                        int            nRounds);
-
-    alc_error_t DecryptCbcAvx512(const uint8_t* pCipherText,
-                                 uint8_t*       pPlainText,
-                                 uint64_t       len,
-                                 const uint8_t* pKey,
-                                 int            nRounds,
-                                 const uint8_t* pIv);
-
-    alc_error_t DecryptCfbAvx512(const uint8_t* pSrc,
-                                 uint8_t*       pDest,
-                                 uint64_t       len,
-                                 const uint8_t* pKey,
-                                 int            nRounds,
-                                 const uint8_t* pIv);
-
-    alc_error_t DecryptCbcAvx512(
-        const uint8_t* pCipherText, // ptr to ciphertext
-        uint8_t*       pPlainText,  // ptr to plaintext
-        uint64_t       len,         // message length in bytes
-        const uint8_t* pKey,        // ptr to Key
-        int            nRounds,     // No. of rounds
-        const uint8_t* pIv          // ptr to Initialization Vector
-    );
-
-    alc_error_t EncryptXtsAvx512(const uint8_t* pSrc,
-                                 uint8_t*       pDest,
-                                 uint64_t       len,
-                                 const uint8_t* pKey,
-                                 const uint8_t* pTweakKey,
-                                 int            nRounds,
-                                 const uint8_t* pIv);
-
-    alc_error_t DecryptXtsAvx512(const uint8_t* pSrc,
-                                 uint8_t*       pDest,
-                                 uint64_t       len,
-                                 const uint8_t* pKey,
-                                 const uint8_t* pTweakKey,
-                                 int            nRounds,
-                                 const uint8_t* pIv);
 
     // Encrypt Begins here
     /* 1 x 4 block at a time */
@@ -491,4 +445,4 @@ namespace alcp::cipher { namespace vaes {
         rkey1 = _mm512_setzero_si512();
     }
 
-}} // namespace alcp::cipher::vaes
+}} // namespace alcp::cipher::vaes512

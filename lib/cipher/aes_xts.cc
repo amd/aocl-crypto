@@ -27,10 +27,7 @@
  */
 
 #include "cipher/aes.hh"
-#include "cipher/aesni.hh"
-#include "cipher/vaes.hh"
-#include "cipher/vaes_avx512.hh"
-
+#include "cipher/cipher_wrapper.hh"
 #include "utils/constants.hh"
 #include "utils/copy.hh"
 
@@ -121,13 +118,13 @@ Xts::encrypt(const Uint8* pPlainText,
     if ((Cipher::isAvx512Has(cipher::AVX512_F)
          && Cipher::isAvx512Has(cipher::AVX512_DQ)
          && Cipher::isAvx512Has(cipher::AVX512_BW))) {
-        err = vaes::EncryptXtsAvx512(pPlainText,
-                                     pCipherText,
-                                     len,
-                                     getEncryptKeys(),
-                                     p_tweak_key,
-                                     getRounds(),
-                                     pIv);
+        err = vaes512::EncryptXtsAvx512(pPlainText,
+                                        pCipherText,
+                                        len,
+                                        getEncryptKeys(),
+                                        p_tweak_key,
+                                        getRounds(),
+                                        pIv);
         return err;
     }
 
@@ -243,13 +240,13 @@ Xts::decrypt(const Uint8* pCipherText,
          && Cipher::isAvx512Has(cipher::AVX512_DQ)
          && Cipher::isAvx512Has(cipher::AVX512_BW))) {
 
-        err = vaes::DecryptXtsAvx512(pCipherText,
-                                     pPlainText,
-                                     len,
-                                     getDecryptKeys(),
-                                     p_tweak_key,
-                                     getRounds(),
-                                     pIv);
+        err = vaes512::DecryptXtsAvx512(pCipherText,
+                                        pPlainText,
+                                        len,
+                                        getDecryptKeys(),
+                                        p_tweak_key,
+                                        getRounds(),
+                                        pIv);
         return err;
     }
 
