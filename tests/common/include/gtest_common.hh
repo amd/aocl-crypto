@@ -97,9 +97,10 @@ ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected)
             return ::testing::AssertionFailure()
                    << "Does not match,"
                    << "Size:" << actual.size() << " Failure i:" << i << " ! "
-                   << "Expected "
-                   << parseBytesToHexStr(&(actual[0]) + i - 10, 20) << " Got "
-                   << parseBytesToHexStr(&(expected[0]) + i - 10, 20);
+                   << "Actual "
+                   << parseBytesToHexStr(&(actual[0]), expected.size())
+                   << " Expected "
+                   << parseBytesToHexStr(&(expected[0]), expected.size());
         }
     }
     if (verbose) {
