@@ -263,9 +263,6 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 key_len)
             != EVP_CIPHER_CTX_ctrl(
                 m_ctx_enc, EVP_CTRL_CCM_SET_IVLEN, m_iv_len, NULL))
             handleErrors();
-
-        if (1 != EVP_EncryptInit_ex(m_ctx_enc, NULL, NULL, m_key, m_iv))
-            handleErrors();
     }
 
     /* for cases other than gcm/ccm/xts */
@@ -282,11 +279,8 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 key_len)
             EVP_CIPHER_CTX_free(m_ctx_dec);
         }
     }
-    // if (1 != EVP_CIPHER_CTX_set_padding(m_ctx_enc, 0))
-    //     handleErrors();
 
-    // Create context for decryption and initalized
-
+    // Create context for decryption and initalize
     m_ctx_dec = EVP_CIPHER_CTX_new();
     if (m_ctx_dec == NULL) {
         m_ctx_dec = nullptr;
@@ -324,10 +318,6 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 key_len)
         if (1
             != EVP_CIPHER_CTX_ctrl(
                 m_ctx_dec, EVP_CTRL_CCM_SET_IVLEN, m_iv_len, NULL))
-            handleErrors();
-
-        /* Initialise key and IV */
-        if (1 != EVP_DecryptInit_ex(m_ctx_dec, NULL, NULL, m_key, m_iv))
             handleErrors();
     }
 
@@ -402,12 +392,20 @@ OpenSSLCipherBase::encrypt(alcp_data_ex_t data)
         if (data.m_tagl != 0) {
             if (1
                 != EVP_CIPHER_CTX_ctrl(
-                    m_ctx_enc, EVP_CTRL_CCM_SET_TAG, data.m_tagl, data.m_tag)) {
+                    m_ctx_enc, EVP_CTRL_CCM_SET_TAG, data.m_tagl, NULL)) {
                 std::cout << "Error: Tag Creation Failed" << std::endl;
                 std::cout << "TAG_LEN: " << data.m_tagl << std::endl;
                 handleErrors();
                 return false;
             }
+        }
+
+        if (1 != EVP_EncryptInit_ex(m_ctx_enc, NULL, NULL, m_key, m_iv)) {
+            handleErrors();
+        }
+
+        if(1 != EVP_EncryptUpdate(m_ctx_enc, NULL, &len_ct, NULL, data.m_inl)) {
+            handleErrors();
         }
 
         if (data.m_adl > 0)
@@ -509,36 +507,44 @@ OpenSSLCipherBase::decrypt(alcp_data_ex_t data)
 
     /* ccm */
     else if (m_mode == ALC_AES_MODE_CCM) {
+        /* set the tagl */
+        if (data.m_tagl != 0) {
+            if (1
+                != EVP_CIPHER_CTX_ctrl(
+                    m_ctx_dec, EVP_CTRL_CCM_SET_TAG, data.m_tagl, data.m_tag)) {
+                std::cout << "Error: Tag Creation Failed" << std::endl;
+                std::cout << "TAG_LEN: " << data.m_tagl << std::endl;
+                handleErrors();
+                return false;
+            }
+        }
 
-        if (data.m_adl > 0)
+        if (1 != EVP_DecryptInit_ex(m_ctx_dec, NULL, NULL, m_key, m_iv)) {
+            handleErrors();
+            return false;
+        }
+
+        if(1 != EVP_DecryptUpdate(m_ctx_dec, NULL, &len_pt, NULL, data.m_inl)) {
+            handleErrors();
+            return false;
+        }
+
+        if (data.m_adl > 0) {
             if (1
                 != EVP_DecryptUpdate(
                     m_ctx_dec, NULL, &len_pt, data.m_ad, data.m_adl)) {
                 handleErrors();
                 return false;
             }
-
-        if (1
-            != EVP_DecryptUpdate(
-                m_ctx_dec, data.m_out, &len_pt, data.m_in, data.m_inl)) {
-            handleErrors();
-            return false;
         }
 
-        if (data.m_tagl > 0)
-            if (1
-                != EVP_CIPHER_CTX_ctrl(
-                    m_ctx_dec, EVP_CTRL_CCM_SET_TAG, data.m_tagl, data.m_tag)) {
-                std::cout << "Error: Tag Setting Failed" << std::endl;
-                handleErrors();
-                return false;
-            }
-
-        int ret = EVP_DecryptFinal_ex(m_ctx_dec, data.m_out + len_pt, &len_pt);
-        if (ret > 0) {
-            return true;
-        } else {
+        int ret = EVP_DecryptUpdate(m_ctx_dec, data.m_out, &len_pt, data.m_in, data.m_inl);
+        if (ret == 0)
+        {
             return false;
+        }
+        else {
+            return true;
         }
     }
 

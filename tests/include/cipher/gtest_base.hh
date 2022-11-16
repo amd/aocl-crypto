@@ -286,8 +286,10 @@ AesCrosstest(int               keySize,
     size_t      size = 1;
     std::string enc_dec_str, big_small_str;
     std::string MODE_STR = GetModeSTR(mode);
-    Int32       ivl, adl, tkeyl = 16;
-    Int32       IVL_START = 12, IVL_MAX = 16, ADL_START = 12, ADL_MAX = 16;
+    Int32 ivl, adl, tkeyl = 16;
+
+    /* FIXME: Check valid IVL, ADL for ccm */
+    Int32 IVL_START = 7, IVL_MAX = 13, ADL_START = 12, ADL_MAX = 16;
     // FIXME: Tag Length should not be hard coded
     const Uint64 tagLength = 16;
 
@@ -522,7 +524,6 @@ RunTest(TestingCore& testingCore,
 
         ret = testingCore.getCipherHandler()->testingEncrypt(
             data, testingCore.getDs()->getKey());
-        std::cout << "Outtag: " << parseBytesToHexStr(&outtag[0], outtag.size()) << std::endl;
         EXPECT_TRUE(
             ArraysMatch(outct,
                         testingCore.getDs()->getCt(),
