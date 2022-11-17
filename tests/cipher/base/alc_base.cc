@@ -224,9 +224,13 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
         if (data.m_inl) {
             err = alcp_cipher_encrypt_update(
                 m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
-            if (alcp_is_error(err)) {
-                goto enc_out;
-            }
+        } else {
+            // Call encrypt update with a valid memory if no plaintext
+            Uint8 a;
+            err = alcp_cipher_encrypt_update(m_handle, &a, &a, 0, m_iv);
+        }
+        if (alcp_is_error(err)) {
+            goto enc_out;
         }
 
         // Get Tag
@@ -263,8 +267,7 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
         /* only for ccm */
         if (m_mode == ALC_AES_MODE_CCM) {
             err = alcp_cipher_set_tag_length(m_handle, data.m_tagl);
-            if (alcp_is_error(err))
-            {
+            if (alcp_is_error(err)) {
                 goto dec_out;
             }
         }
@@ -281,8 +284,13 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
         }
 
         // GCM/CCM Decrypt
-        err = alcp_cipher_decrypt_update(
-            m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
+        if (data.m_inl) {
+            err = alcp_cipher_decrypt_update(
+                m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
+        } else {
+            Uint8 a;
+            err = alcp_cipher_decrypt_update(m_handle, &a, &a, 0, m_iv);
+        }
         if (alcp_is_error(err)) {
             goto dec_out;
         }
