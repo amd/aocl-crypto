@@ -263,11 +263,51 @@ known_answer_map_t KATDataset{
 };
 // clang-format on
 
+using namespace alcp::cipher;
 class CCM_KAT
     : public testing::TestWithParam<std::pair<const std::string, param_tuple>>
-{};
+{
+  public:
+    Ccm*               pCcmObj = nullptr;
+    std::vector<Uint8> m_key, m_nonce, m_aad, m_plaintext, m_ciphertext, m_tag;
+    std::string        m_test_name;
+    alc_error_t        m_err;
+    // Setup Test for Encrypt/Decrypt
+    void SetUp() override
+    {
+        // Tuple order
+        // {key,nonce,aad,plain,ciphertext,tag}
+        const auto params = GetParam();
+        const auto [key, nonce, aad, plaintext, ciphertext, tag] =
+            params.second;
+        const auto test_name = params.first;
 
-using namespace alcp::cipher;
+        // Copy Values to class variables
+        m_key        = key;
+        m_nonce      = nonce;
+        m_aad        = aad;
+        m_plaintext  = plaintext;
+        m_ciphertext = ciphertext;
+        m_tag        = tag;
+        m_test_name  = test_name;
+
+        /* Initialization */
+        const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_CCM,
+                                                 .ai_iv   = &(nonce.at(0)) };
+
+        // clang-format off
+        const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
+                                         .fmt  = ALC_KEY_FMT_RAW,
+                                         .len  = static_cast<Uint32>(key.size()*8),
+                                         .key  = &(key.at(0)) };
+        // clang-format on
+
+        // Setup CCM Object
+        pCcmObj = new Ccm(aesInfo, keyInfo);
+    }
+    void TearDown() override { delete pCcmObj; }
+};
+
 TEST(CCM, Initiantiation)
 {
     Uint8 iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
@@ -325,127 +365,93 @@ TEST(CCM, ZeroLEN)
 
 TEST_P(CCM_KAT, Encrypt)
 {
-    // Tuple order
-    // {key,nonce,aad,plain,ciphertext,tag}
-    const auto params                                        = GetParam();
-    const auto [key, nonce, aad, plaintext, ciphertext, tag] = params.second;
-    const auto test_name                                     = params.first;
-
-    std::vector<Uint8> out_tag(tag.size(), 0),
-        out_ciphertext(plaintext.size(), 0);
-
-    /* Initialization */
-    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_CCM,
-                                             .ai_iv   = &(nonce.at(0)) };
-
-    // clang-format off
-    const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                     .fmt  = ALC_KEY_FMT_RAW,
-                                     .len  = static_cast<Uint32>(key.size()*8),
-                                     .key  = &(key.at(0)) };
-    // clang-format on
-    Ccm ccm_obj = Ccm(aesInfo, keyInfo);
+    std::vector<Uint8> out_tag(m_tag.size(), 0),
+        out_ciphertext(m_plaintext.size(), 0);
 
     alc_error_t err;
     /* Encryption begins here */
-    if (!tag.empty()) {
-        err = ccm_obj.setTagLength(tag.size());
+    if (!m_tag.empty()) {
+        err = pCcmObj->setTagLength(m_tag.size());
     }
 
     // Nonce
-    err = ccm_obj.setIv(nonce.size(), &(nonce.at(0)));
+    err = pCcmObj->setIv(m_nonce.size(), &(m_nonce.at(0)));
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
     // Additional Data
-    if (!aad.empty()) {
-        err = ccm_obj.setAad(&(aad.at(0)), aad.size());
+    if (!m_aad.empty()) {
+        err = pCcmObj->setAad(&(m_aad.at(0)), m_aad.size());
         EXPECT_EQ(err, ALC_ERROR_NONE);
     }
 
     // Encrypt the plaintext into ciphertext.
-    if (!plaintext.empty()) {
-        err = ccm_obj.encryptUpdate(&(plaintext.at(0)),
-                                    &(out_ciphertext.at(0)),
-                                    plaintext.size(),
-                                    &(nonce.at(0)));
-        EXPECT_TRUE(ArraysMatch(out_ciphertext, ciphertext));
+    if (!m_plaintext.empty()) {
+        err = pCcmObj->encryptUpdate(&(m_plaintext.at(0)),
+                                     &(out_ciphertext.at(0)),
+                                     m_plaintext.size(),
+                                     &(m_nonce.at(0)));
+        EXPECT_TRUE(ArraysMatch(out_ciphertext, m_ciphertext));
     } else {
         // Call encrypt update with a valid memory if no plaintext
         Uint8 a;
-        err = ccm_obj.encryptUpdate(&a, &a, 0, &(nonce.at(0)));
+        err = pCcmObj->encryptUpdate(&a, &a, 0, &(m_nonce.at(0)));
     }
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
     // If there is tag, try to get the tag.
-    if (!tag.empty()) {
-        err = ccm_obj.getTag(&(out_tag.at(0)), tag.size());
-        if (test_name.at(0) == 'P')
-            EXPECT_TRUE(ArraysMatch(out_tag, tag));
+    if (!m_tag.empty()) {
+        err = pCcmObj->getTag(&(out_tag.at(0)), m_tag.size());
+        if (m_test_name.at(0) == 'P')
+            EXPECT_TRUE(ArraysMatch(out_tag, m_tag));
         else
-            EXPECT_FALSE(ArraysMatch(out_tag, tag));
+            EXPECT_FALSE(ArraysMatch(out_tag, m_tag));
         EXPECT_EQ(err, ALC_ERROR_NONE);
     }
 }
 
 TEST_P(CCM_KAT, Decrypt)
 {
-    // Tuple order
-    // {key,nonce,aad,plain,ciphertext,tag}
-    const auto params                                        = GetParam();
-    const auto [key, nonce, aad, plaintext, ciphertext, tag] = params.second;
-    const auto test_name                                     = params.first;
+    std::vector<Uint8> out_tag(m_tag.size(), 0),
+        out_plaintext(m_ciphertext.size(), 0);
 
-    std::vector<Uint8> out_tag(tag.size(), 0),
-        out_plaintext(ciphertext.size(), 0);
-
-    /* Initialization */
-    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_CCM,
-                                             .ai_iv   = &(nonce.at(0)) };
-    // clang-format off
-    const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                     .fmt  = ALC_KEY_FMT_RAW,
-                                     .len  = static_cast<Uint32>(key.size()*8),
-                                     .key  = &(key.at(0)) };
-    // clang-format on
-    Ccm         ccm_obj = Ccm(aesInfo, keyInfo);
     alc_error_t err;
 
     /* Decryption begins here*/
-    if (!tag.empty()) {
-        err = ccm_obj.setTagLength(tag.size());
+    if (!m_tag.empty()) {
+        err = pCcmObj->setTagLength(m_tag.size());
     }
 
     // Nonce
-    err = ccm_obj.setIv(nonce.size(), &(nonce.at(0)));
+    err = pCcmObj->setIv(m_nonce.size(), &(m_nonce.at(0)));
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
     // Additional Data
-    if (!aad.empty()) {
-        err = ccm_obj.setAad(&(aad.at(0)), aad.size());
+    if (!m_aad.empty()) {
+        err = pCcmObj->setAad(&(m_aad.at(0)), m_aad.size());
         EXPECT_EQ(err, ALC_ERROR_NONE);
     }
 
     // Decrypt the ciphertext into plaintext
-    if (!ciphertext.empty()) {
-        err = ccm_obj.decryptUpdate(&(ciphertext.at(0)),
-                                    &(out_plaintext.at(0)),
-                                    ciphertext.size(),
-                                    &(nonce.at(0)));
-        EXPECT_TRUE(ArraysMatch(out_plaintext, plaintext));
+    if (!m_ciphertext.empty()) {
+        err = pCcmObj->decryptUpdate(&(m_ciphertext.at(0)),
+                                     &(out_plaintext.at(0)),
+                                     m_ciphertext.size(),
+                                     &(m_nonce.at(0)));
+        EXPECT_TRUE(ArraysMatch(out_plaintext, m_plaintext));
     } else {
         // Call decrypt update with a valid memory if no plaintext
         Uint8 a;
-        err = ccm_obj.decryptUpdate(&a, &a, 0, &(nonce.at(0)));
+        err = pCcmObj->decryptUpdate(&a, &a, 0, &(m_nonce.at(0)));
     }
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
     // If there is tag, try to get the tag.
-    if (!tag.empty()) {
-        err = ccm_obj.getTag(&(out_tag.at(0)), tag.size());
-        if (test_name.at(0) == 'P')
-            EXPECT_TRUE(ArraysMatch(out_tag, tag));
+    if (!m_tag.empty()) {
+        err = pCcmObj->getTag(&(out_tag.at(0)), m_tag.size());
+        if (m_test_name.at(0) == 'P')
+            EXPECT_TRUE(ArraysMatch(out_tag, m_tag));
         else
-            EXPECT_FALSE(ArraysMatch(out_tag, tag));
+            EXPECT_FALSE(ArraysMatch(out_tag, m_tag));
         EXPECT_EQ(err, ALC_ERROR_NONE);
     }
 }
