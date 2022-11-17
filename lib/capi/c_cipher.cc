@@ -143,7 +143,8 @@ alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pOutput, err);
     ALCP_BAD_PTR_ERR_RET(pIv, err);
 
-    ALCP_ZERO_LEN_ERR_RET(len, err);
+    // Sometimes Encrypt needs to be called with 0 length
+    // ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
@@ -189,7 +190,8 @@ alcp_cipher_decrypt_update(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pOutput, err);
     ALCP_BAD_PTR_ERR_RET(pIv, err);
 
-    ALCP_ZERO_LEN_ERR_RET(len, err);
+    // Sometimes Encrypt needs to be called with 0 length
+    // ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
