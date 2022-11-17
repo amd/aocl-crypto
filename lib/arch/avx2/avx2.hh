@@ -26,8 +26,7 @@
  *
  */
 
-#ifndef _CIPHER_AVX128_HH
-#define _CIPHER_AVX128_HH 2
+#pragma once
 
 #include <immintrin.h>
 
@@ -92,5 +91,3 @@ namespace alcp::cipher { namespace aesni {
     }
 
 }} // namespace alcp::cipher::aesni
-
-#endif /* _CIPHER_AVX128_HH */

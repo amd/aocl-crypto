@@ -33,7 +33,7 @@
 #include "cipher/aes.hh"
 #include "cipher/aes_gcm.hh"
 #include "cipher/aesni.hh"
-#include "cipher/avx128_gmul.hh"
+#include "cipher/gmul.hh"
 
 #include "vaes_avx512.hh"
 #include "vaes_avx512_core.hh"

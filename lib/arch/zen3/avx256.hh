@@ -26,8 +26,7 @@
  *
  */
 
-#ifndef _CIPHER_AVX256_HH
-#define _CIPHER_AVX256_HH 2
+#pragma once
 
 #include <immintrin.h>
 
@@ -94,5 +93,3 @@ namespace alcp::cipher { namespace vaes {
     }
 
 }} // namespace alcp::cipher::vaes
-
-#endif /* _CIPHER_AVX256_HH */

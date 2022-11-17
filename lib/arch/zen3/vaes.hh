@@ -26,8 +26,7 @@
  *
  */
 
-#ifndef _CIPHER_VAES_HH
-#define _CIPHER_VAES_HH 2
+#pragma once
 
 #include <immintrin.h>
 
@@ -449,5 +448,3 @@ namespace alcp::cipher { namespace vaes {
         }
     } // namespace experimantal
 }}    // namespace alcp::cipher::vaes
-
-#endif /* _CIPHER_VAES_HH */

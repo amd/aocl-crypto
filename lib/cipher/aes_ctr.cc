@@ -56,7 +56,7 @@ cryptCtr(const uint8_t* pInputText, // ptr to plaintext for encrypt
             pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
 
     } else {
-        blocks = aesni::ctrProcessAvx128(
+        blocks = aesni::ctrProcessAvx2(
             pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
     }
 

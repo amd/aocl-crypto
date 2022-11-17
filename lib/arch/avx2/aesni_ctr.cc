@@ -29,7 +29,7 @@
 #include <immintrin.h>
 #include <wmmintrin.h>
 
-#include "avx128.hh"
+#include "avx2.hh"
 #include "cipher/aes.hh"
 #include "cipher/aesni.hh"
 // template code in aes_ctr.hh needs aesni.hh
@@ -74,12 +74,12 @@ ctrInit(__m128i*       c1,
 }
 
 uint64_t
-ctrProcessAvx128(const Uint8*   p_in_x,
-                 Uint8*         p_out_x,
-                 uint64_t       blocks,
-                 const __m128i* pkey128,
-                 const uint8_t* pIv,
-                 int            nRounds)
+ctrProcessAvx2(const Uint8*   p_in_x,
+               Uint8*         p_out_x,
+               uint64_t       blocks,
+               const __m128i* pkey128,
+               const uint8_t* pIv,
+               int            nRounds)
 {
     auto p_in_128  = reinterpret_cast<const __m128i*>(p_in_x);
     auto p_out_128 = reinterpret_cast<__m128i*>(p_out_x);

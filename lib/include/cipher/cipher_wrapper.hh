@@ -211,12 +211,12 @@ namespace aesni {
                  __m128i*       eight_x,
                  __m128i*       swap_ctr);
 
-    uint64_t ctrProcessAvx128(const Uint8*   p_in_x,
-                              Uint8*         p_out_x,
-                              uint64_t       blocks,
-                              const __m128i* pkey128,
-                              const uint8_t* pIv,
-                              int            nRounds);
+    uint64_t ctrProcessAvx2(const Uint8*   p_in_x,
+                            Uint8*         p_out_x,
+                            uint64_t       blocks,
+                            const __m128i* pkey128,
+                            const uint8_t* pIv,
+                            int            nRounds);
 } // namespace aesni
 
 namespace vaes512 {
