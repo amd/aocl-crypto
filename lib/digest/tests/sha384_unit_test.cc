@@ -38,6 +38,8 @@ typedef std::map<const string, ParamTuple> KnownAnswerMap;
 
 // Digest size in bytes
 static const Uint8 DigestSize = 48;
+// Input Block size in bytes
+static constexpr Uint8 InputBlockSize = 128;
 // IV array size where every element is 8 bytes
 static const Uint8 IvArraySize   = 8;
 static const Uint8 IvElementSize = 8;
@@ -136,12 +138,12 @@ TEST(Sha384Test, over_size_hash_copy_test)
 TEST(Sha384Test, getInputBlockSizeTest)
 {
     Sha384 sha384;
-    EXPECT_EQ(sha384.getInputBlockSize() * 8, 1024);
+    EXPECT_EQ(sha384.getInputBlockSize(), InputBlockSize);
 }
 TEST(Sha384Test, getHashSizeTest)
 {
     Sha384 sha384;
-    EXPECT_EQ(sha384.getHashSize() * 8, 384);
+    EXPECT_EQ(sha384.getHashSize(), DigestSize);
 }
 
 } // namespace

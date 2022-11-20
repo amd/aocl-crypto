@@ -38,6 +38,8 @@ typedef std::map<const string, ParamTuple> KnownAnswerMap;
 
 // Digest size in bytes
 static const Uint8 DigestSize = 28;
+// Input Block Size in bytes
+static constexpr Uint8 InputBlockSize = 64;
 
 // clang-format off
 static const KnownAnswerMap message_digest = {
@@ -136,11 +138,11 @@ TEST(Sha224Test, call_finalize_twice_test)
 TEST(Sha224Test, getInputBlockSizeTest)
 {
     Sha224 sha224;
-    EXPECT_EQ(sha224.getInputBlockSize() * 8, 512);
+    EXPECT_EQ(sha224.getInputBlockSize(), InputBlockSize);
 }
 TEST(Sha224Test, getHashSizeTest)
 {
     Sha224 sha224;
-    EXPECT_EQ(sha224.getHashSize() * 8, 224);
+    EXPECT_EQ(sha224.getHashSize(), DigestSize);
 }
 } // namespace

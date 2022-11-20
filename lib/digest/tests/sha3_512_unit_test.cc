@@ -46,6 +46,8 @@ static const alc_digest_info_t DigestInfo = []() {
 
 // Digest size in bytes
 static const Uint8 DigestSize = 64;
+// Input Block size in bytes
+static constexpr Uint8 InputBlockSize = 72;
 
 // clang-format off
 static const KnownAnswerMap message_digest = {
@@ -136,12 +138,12 @@ TEST(Sha3_512, zero_size_hash_copy_test)
 TEST(Sha3_512, getInputBlockSizeTest)
 {
     Sha3 sha3_512(DigestInfo);
-    EXPECT_EQ(sha3_512.getInputBlockSize() * 8, 576);
+    EXPECT_EQ(sha3_512.getInputBlockSize(), InputBlockSize);
 }
 
 TEST(Sha3_512, getHashSizeTest)
 {
     Sha3 sha3_512(DigestInfo);
-    EXPECT_EQ(sha3_512.getHashSize() * 8, 512);
+    EXPECT_EQ(sha3_512.getHashSize(), DigestSize);
 }
 } // namespace

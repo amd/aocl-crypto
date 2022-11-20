@@ -52,6 +52,10 @@ alc_digest_info_t DigestInfoShake = {
 
 // Digest size in bytes
 static const Uint8 DigestSize = 32;
+// Shake 128 Input Block size in bytes
+static constexpr Uint8 Shake128_InputBlockSize = 168;
+// Shake 256 Input Block size in bytes
+static constexpr Uint8 Shake256_InputBlockSize = 136;
 
 // clang-format off
 static const KnownAnswerMap message_digest_array = {
@@ -241,7 +245,7 @@ TEST(Shake, Shake128_getInputBlockLenTest)
     DigestInfoShake.dt_custom_len   = DigestSize;
     DigestInfoShake.dt_mode.dm_sha3 = ALC_SHAKE_128;
     Sha3 sha3_shake(DigestInfoShake);
-    EXPECT_EQ(sha3_shake.getInputBlockSize() * 8, 1344);
+    EXPECT_EQ(sha3_shake.getInputBlockSize(), Shake128_InputBlockSize);
 }
 
 TEST(Shake, Shake256_getInputBlockLenTest)
@@ -249,7 +253,7 @@ TEST(Shake, Shake256_getInputBlockLenTest)
     DigestInfoShake.dt_custom_len   = DigestSize;
     DigestInfoShake.dt_mode.dm_sha3 = ALC_SHAKE_256;
     Sha3 sha3_shake(DigestInfoShake);
-    EXPECT_EQ(sha3_shake.getInputBlockSize() * 8, 1088);
+    EXPECT_EQ(sha3_shake.getInputBlockSize(), Shake256_InputBlockSize);
 }
 
 TEST(Shake, Shake128_getHashSizeTest)
