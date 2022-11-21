@@ -115,27 +115,43 @@ namespace alcp::digest { namespace avx2 {
     {
         __attribute__((aligned(64))) Uint64 state[8];
         memcpy(state, pHash, sizeof(Uint64) * 8);
+        Uint64 a, b, c, d, e, f, g, h;
+        a = pHash[0];
+        b = pHash[1];
+        c = pHash[2];
+        d = pHash[3];
+        e = pHash[4];
+        f = pHash[5];
+        g = pHash[6];
+        h = pHash[7];
+
         for (Uint32 i = 0; i < 80; ++i) {
             Uint64 s1, ch, temp1, s0, maj, temp2;
-            s0 = RotateRight(state[0], 28) ^ RotateRight(state[0], 34)
-                 ^ RotateRight(state[0], 39);
-            maj = (state[0] & state[1]) ^ (state[0] & state[2])
-                  ^ (state[1] & state[2]);
-            s1 = RotateRight(state[4], 14) ^ RotateRight(state[4], 18)
-                 ^ RotateRight(state[4], 41);
-            ch       = (state[4] & state[5]) ^ (~state[4] & state[6]);
-            temp1    = state[7] + s1 + ch + pMsgSchArray[i];
-            temp2    = s0 + maj;
-            state[7] = state[6];
-            state[6] = state[5];
-            state[5] = state[4];
-            state[4] = state[3] + temp1;
-            state[3] = state[2];
-            state[2] = state[1];
-            state[1] = state[0];
-            state[0] = temp1 + temp2;
+            s0  = RotateRight(a, 28) ^ RotateRight(a, 34) ^ RotateRight(a, 39);
+            maj = (a & b) ^ (a & c) ^ (b & c);
+            s1  = RotateRight(e, 14) ^ RotateRight(e, 18) ^ RotateRight(e, 41);
+            ch  = (e & f) ^ (~e & g);
+            temp1 = h + s1 + ch + pMsgSchArray[i];
+            temp2 = s0 + maj;
+            h     = g;
+            g     = f;
+            f     = e;
+            e     = d + temp1;
+            d     = c;
+            c     = b;
+            b     = a;
+            a     = temp1 + temp2;
         }
-        UNROLL_8 for (Uint32 i = 0; i < 8; i++) { pHash[i] += state[i]; }
+        // UNROLL_8 for (Uint32 i = 0; i < 8; i++) { pHash[i] += state[i]; }
+
+        pHash[0] += a;
+        pHash[1] += b;
+        pHash[2] += c;
+        pHash[3] += d;
+        pHash[4] += e;
+        pHash[5] += f;
+        pHash[6] += g;
+        pHash[7] += h;
     }
 
     static inline void load_data(__m256i      x[SHA512_CHUNK_NUM_VECT_AVX2 * 2],
@@ -242,23 +258,42 @@ namespace alcp::digest { namespace avx2 {
     {
         Uint64 s0, s1, maj, ch;
 
-        s0 = RotateRight(s[0], 28) ^ RotateRight(s[0], 34)
-             ^ RotateRight(s[0], 39);
-        s1 = RotateRight(s[4], 14) ^ RotateRight(s[4], 18)
-             ^ RotateRight(s[4], 41);
-        maj = (s[0] & s[1]) ^ (s[0] & s[2]) ^ (s[1] & s[2]);
-        ch  = (s[4] & s[5]) ^ (~s[4] & s[6]);
+        Uint64 a, b, c, d, e, f, g, h;
 
-        Uint64 t = x + s[7] + s1 + ch;
+        a = s[0];
 
-        s[7] = t + s0 + maj;
-        s[3] += t;
-        const Uint64 tmp = s[7];
+        b = s[1];
 
-        for (Uint32 i = 7; i > 0; i--) {
-            s[i] = s[i - 1];
-        }
-        s[0] = tmp;
+        c = s[2];
+
+        d = s[3];
+
+        e = s[4];
+
+        f = s[5];
+
+        g = s[6];
+
+        h = s[7];
+
+        s0  = RotateRight(a, 28) ^ RotateRight(a, 34) ^ RotateRight(a, 39);
+        s1  = RotateRight(e, 14) ^ RotateRight(e, 18) ^ RotateRight(e, 41);
+        maj = (a & b) ^ (a & c) ^ (b & c);
+        ch  = (e & f) ^ (~e & g);
+
+        Uint64 t = x + h + s1 + ch;
+
+        h = t + s0 + maj;
+        d += t;
+
+        s[0] = h;
+        s[1] = a;
+        s[2] = b;
+        s[3] = c;
+        s[4] = d;
+        s[5] = e;
+        s[6] = f;
+        s[7] = g;
     }
 
     static inline void extendMsgandCalcRound(

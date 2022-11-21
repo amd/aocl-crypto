@@ -95,7 +95,11 @@ __attribute__((aligned(64))) static constexpr Uint64 cRoundConstants[] = {
 static bool
 isAvx2Available()
 {
+#ifdef USE_AOCL_CPUID
     static bool s_avx2_available = true;
+#else
+    static bool s_avx2_available = false;
+#endif
     return s_avx2_available;
 }
 
@@ -237,7 +241,7 @@ Sha512::processChunk(const Uint8* pSrc, Uint64 len)
     assert((len & Sha512::cChunkSizeMask) == 0);
 
     if (avx2_available) {
-        // return avx2::ShaUpdate512(m_hash, pSrc, len, cRoundConstants);
+        return avx2::ShaUpdate512(m_hash, pSrc, len, cRoundConstants);
     }
 
     Uint64  msg_size       = len;
@@ -379,8 +383,8 @@ Sha512::finalize(const Uint8* pBuf, Uint64 size)
         &m_buffer[buf_len] - sizeof(__uint128_t));
     msg_len_ptr[0] = utils::ToBigEndian(len_in_bits);
 #else
-    Uint64 len_in_bits_high;
-    Uint64 len_in_bits;
+    Uint64      len_in_bits_high;
+    Uint64      len_in_bits;
 
     if (m_msg_len > ULLONG_MAX / 8) { // overflow happens
         // extract the left most 3bits
