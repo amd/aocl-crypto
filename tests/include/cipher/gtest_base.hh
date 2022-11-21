@@ -286,16 +286,16 @@ AesCrosstest(int               keySize,
     size_t      size = 1;
     std::string enc_dec_str, big_small_str;
     std::string MODE_STR = GetModeSTR(mode);
-    Int32 ivl, adl, tkeyl = 16;
+    Int32       ivl, adl, tkeyl = 16;
 
     /* FIXME: Check valid IVL, ADL for ccm */
     Int32 IVL_START = 7, IVL_MAX = 13, ADL_START = 12, ADL_MAX = 16;
     // FIXME: Tag Length should not be hard coded
     const Uint64 tagLength = 16;
 
-    bool        isxts = (MODE_STR.compare("XTS") == 0);
-    bool        isgcm = (MODE_STR.compare("GCM") == 0);
-    bool        isccm = (MODE_STR.compare("CCM") == 0);
+    bool isxts = (MODE_STR.compare("XTS") == 0);
+    bool isgcm = (MODE_STR.compare("GCM") == 0);
+    bool isccm = (MODE_STR.compare("CCM") == 0);
 
     if (enc_dec == ENCRYPT)
         enc_dec_str.assign("ENC");
@@ -400,10 +400,10 @@ AesCrosstest(int               keySize,
                 data_alc.m_out  = &(out_ct_alc[0]);
                 data_alc.m_outl = data_alc.m_inl;
                 if (isgcm || isccm) {
-                    data_alc.m_ad   = &(add[0]);
-                    data_alc.m_adl  = add.size();
-                    data_alc.m_tag  = &(tag_alc[0]);
-                    data_alc.m_tagl = tag_alc.size();
+                    data_alc.m_ad      = &(add[0]);
+                    data_alc.m_adl     = add.size();
+                    data_alc.m_tag     = &(tag_alc[0]);
+                    data_alc.m_tagl    = tag_alc.size();
                     data_alc.m_tagBuff = tagBuff.get();
                 }
                 if (isxts) {
@@ -454,7 +454,7 @@ AesCrosstest(int               keySize,
                 ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
                 /* for gcm*/
                 if (isgcm || isccm) {
-                    ASSERT_TRUE(ArraysMatch(tag_alc, tag_ext));
+                    EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
                 }
             } else {
                 alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
@@ -462,7 +462,7 @@ AesCrosstest(int               keySize,
                 ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
                 /* for gcm*/
                 if (isgcm || isccm) {
-                    ASSERT_TRUE(ArraysMatch(tag_alc, tag_ext));
+                    EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
                 }
             }
             if (!bbxreplay) {
@@ -557,7 +557,7 @@ RunTest(TestingCore& testingCore,
             data, testingCore.getDs()->getKey());
 
         if (isgcm && data.m_tagl == 0) {
-           ret = true; // Skip tag test
+            ret = true; // Skip tag test
         }
         EXPECT_TRUE(
             ArraysMatch(outpt,

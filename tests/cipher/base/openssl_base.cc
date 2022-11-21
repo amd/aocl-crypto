@@ -349,7 +349,8 @@ OpenSSLCipherBase::encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt)
 bool
 OpenSSLCipherBase::encrypt(alcp_data_ex_t data)
 {
-    int len_ct = 0;
+    int          len_ct = 0;
+    static Uint8 Temp;
     if (m_mode == ALC_AES_MODE_GCM) {
         if (data.m_adl > 0)
             if (1
@@ -384,27 +385,26 @@ OpenSSLCipherBase::encrypt(alcp_data_ex_t data)
                 handleErrors();
                 return false;
             }
-    } 
-    
+    }
+
     /* ccm */
     else if (m_mode == ALC_AES_MODE_CCM) {
         /* set the tag */
-        if (data.m_tagl != 0) {
-            if (1
-                != EVP_CIPHER_CTX_ctrl(
-                    m_ctx_enc, EVP_CTRL_CCM_SET_TAG, data.m_tagl, NULL)) {
-                std::cout << "Error: Tag Creation Failed" << std::endl;
-                std::cout << "TAG_LEN: " << data.m_tagl << std::endl;
-                handleErrors();
-                return false;
-            }
+        if (1
+            != EVP_CIPHER_CTX_ctrl(
+                m_ctx_enc, EVP_CTRL_CCM_SET_TAG, data.m_tagl, NULL)) {
+            std::cout << "Error: Tag Creation Failed" << std::endl;
+            std::cout << "TAG_LEN: " << data.m_tagl << std::endl;
+            handleErrors();
+            return false;
         }
 
         if (1 != EVP_EncryptInit_ex(m_ctx_enc, NULL, NULL, m_key, m_iv)) {
             handleErrors();
         }
 
-        if(1 != EVP_EncryptUpdate(m_ctx_enc, NULL, &len_ct, NULL, data.m_inl)) {
+        if (1
+            != EVP_EncryptUpdate(m_ctx_enc, NULL, &len_ct, NULL, data.m_inl)) {
             handleErrors();
         }
 
@@ -416,6 +416,12 @@ OpenSSLCipherBase::encrypt(alcp_data_ex_t data)
                 handleErrors();
                 return false;
             }
+
+        /* FIXME: Hack for test data when PT is NULL */
+        if (data.m_inl == 0) {
+            data.m_out = &Temp;
+            data.m_in  = &Temp;
+        }
 
         if (1
             != EVP_EncryptUpdate(
@@ -431,19 +437,9 @@ OpenSSLCipherBase::encrypt(alcp_data_ex_t data)
             return false;
         }
 
-        // /* set the tag */
-        // if (data.m_tagl != 0) {
-        //     if (1
-        //         != EVP_CIPHER_CTX_ctrl(
-        //             m_ctx_enc, EVP_CTRL_CCM_SET_TAG, data.m_tagl, data.m_tag)) {
-        //         std::cout << "Error: Tag Creation Failed" << std::endl;
-        //         std::cout << "TAG_LEN: " << data.m_tagl << std::endl;
-        //         handleErrors();
-        //         return false;
-        //     }
-        // }
-
-        if(1 != EVP_CIPHER_CTX_ctrl(m_ctx_enc, EVP_CTRL_CCM_GET_TAG, data.m_tagl, data.m_tag)) {
+        if (1
+            != EVP_CIPHER_CTX_ctrl(
+                m_ctx_enc, EVP_CTRL_CCM_GET_TAG, data.m_tagl, data.m_tag)) {
             handleErrors();
         }
     }
@@ -470,7 +466,8 @@ OpenSSLCipherBase::decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt)
 bool
 OpenSSLCipherBase::decrypt(alcp_data_ex_t data)
 {
-    int len_pt = 0;
+    int          len_pt = 0;
+    static Uint8 Temp;
     if (m_mode == ALC_AES_MODE_GCM) {
 
         if (data.m_adl > 0)
@@ -524,7 +521,8 @@ OpenSSLCipherBase::decrypt(alcp_data_ex_t data)
             return false;
         }
 
-        if(1 != EVP_DecryptUpdate(m_ctx_dec, NULL, &len_pt, NULL, data.m_inl)) {
+        if (1
+            != EVP_DecryptUpdate(m_ctx_dec, NULL, &len_pt, NULL, data.m_inl)) {
             handleErrors();
             return false;
         }
@@ -538,17 +536,22 @@ OpenSSLCipherBase::decrypt(alcp_data_ex_t data)
             }
         }
 
-        int ret = EVP_DecryptUpdate(m_ctx_dec, data.m_out, &len_pt, data.m_in, data.m_inl);
-        if (ret == 0)
-        {
-            return false;
+        /* FIXME: Hack for test data when CT is NULL */
+        if (data.m_inl == 0) {
+            data.m_out = &Temp;
+            data.m_in  = &Temp;
         }
-        else {
+
+        int ret = EVP_DecryptUpdate(
+            m_ctx_dec, data.m_out, &len_pt, data.m_in, data.m_inl);
+        if (ret == 0) {
+            return false;
+        } else {
             return true;
         }
     }
 
-    /* non gcm/ccm/xts*/ 
+    /* non gcm/ccm/xts*/
     else {
         if (1
             != EVP_DecryptUpdate(
