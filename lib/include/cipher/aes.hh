@@ -566,6 +566,18 @@ class Ccm            final
 
     virtual alc_error_t setTagLength(Uint64 len);
 
+    void CcmSetAad(ccm_data_p pccm_data, const Uint8* paad, size_t alen);
+
+    int CcmEncrypt(ccm_data_p   ccm_data,
+                   const Uint8* pinp,
+                   Uint8*       pout,
+                   size_t       len);
+
+    int CcmDecrypt(ccm_data_p   ccm_data,
+                   const Uint8* pinp,
+                   Uint8*       pout,
+                   size_t       len);
+
     /**
      * \brief   CCM Encrypt Operation
      * \notes
@@ -613,12 +625,18 @@ class Ccm            final
                                     Uint64       len,
                                     const Uint8* pIv,
                                     bool         isEncrypt);
+    virtual void   CcmInit(ccm_data_p ccm_data, unsigned int t, unsigned int q);
+    virtual int    CcmSetIv(ccm_data_p   ccm_data,
+                            const Uint8* pnonce,
+                            size_t       nlen,
+                            size_t       mlen);
+    virtual size_t CcmGetTag(ccm_data_p ctx, Uint8* ptag, size_t len);
     Ccm(){};
 };
 
 /*
- * \brief        AES Encryption in XTS(XEX Tweakable Block Ciphertext Stealing
- *               Mode)
+ * \brief        AES Encryption in XTS(XEX Tweakable Block Ciphertext
+ * Stealing Mode)
  */
 class Xts final : public Aes
 {
