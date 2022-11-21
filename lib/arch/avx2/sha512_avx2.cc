@@ -113,8 +113,6 @@ namespace alcp::digest { namespace avx2 {
 
     static inline void CompressMsg(Uint64 pMsgSchArray[80], Uint64 pHash[8])
     {
-        __attribute__((aligned(64))) Uint64 state[8];
-        memcpy(state, pHash, sizeof(Uint64) * 8);
         Uint64 a, b, c, d, e, f, g, h;
         a = pHash[0];
         b = pHash[1];
