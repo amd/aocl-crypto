@@ -83,13 +83,14 @@ CipherAes(benchmark::State& state,
     data.m_tkey    = tkey;
     data.m_tagBuff = tagBuffer.get();
     data.m_tkeyl   = 16;
-    if (enc == false && alcpMode == ALC_AES_MODE_GCM) {
+    if (enc == false
+        && (alcpMode == ALC_AES_MODE_GCM || alcpMode == ALC_AES_MODE_CCM)) {
         if (cb->encrypt(data) == false) {
             std::cout << "BENCH_ENC_FAILURE" << std::endl;
         }
         data.m_in  = &(vec_out[0]);
         data.m_out = &(vec_in[0]);
-        if (alcpMode == ALC_AES_MODE_GCM)
+        if (alcpMode == ALC_AES_MODE_GCM || alcpMode == ALC_AES_MODE_CCM)
             cb->reset();
     }
     for (auto _ : state) {
@@ -102,7 +103,7 @@ CipherAes(benchmark::State& state,
             std::cout << "BENCH_DEC_FAILURE" << std::endl;
             exit(-1);
         }
-        if (alcpMode == ALC_AES_MODE_GCM)
+        if (alcpMode == ALC_AES_MODE_GCM || alcpMode == ALC_AES_MODE_CCM)
             cb->reset();
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(
@@ -153,6 +154,13 @@ BENCH_AES_ENCRYPT_GCM_128(benchmark::State& state)
 {
     benchmark::DoNotOptimize(
         CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_GCM, 128));
+}
+
+static void
+BENCH_AES_ENCRYPT_CCM_128(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_CCM, 128));
 }
 
 static void
@@ -342,6 +350,13 @@ BENCH_AES_ENCRYPT_GCM_256(benchmark::State& state)
 }
 
 static void
+BENCH_AES_ENCRYPT_CCM_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_CCM, 256));
+}
+
+static void
 BENCH_AES_ENCRYPT_XTS_256(benchmark::State& state)
 {
     benchmark::DoNotOptimize(
@@ -436,6 +451,9 @@ AddBenchmarks()
     BENCHMARK(BENCH_AES_DECRYPT_XTS_128)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_XTS_256)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_XTS_256)->ArgsProduct({ blocksizes });
+
+    BENCHMARK(BENCH_AES_ENCRYPT_CCM_128)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_ENCRYPT_CCM_256)->ArgsProduct({ blocksizes });
 
     return 0;
 }
