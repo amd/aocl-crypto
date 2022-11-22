@@ -388,25 +388,6 @@ CcmCtrInc(Uint8* ctr)
     }
 }
 
-std::string
-parseBytesToHexStr(const Uint8* bytes, const int length)
-{
-    std::stringstream ss;
-    for (int i = 0; i < length; i++) {
-        int               charRep;
-        std::stringstream il;
-        charRep = bytes[i];
-        // Convert int to hex
-        il << std::hex << charRep;
-        std::string ilStr = il.str();
-        // 01 will be 0x1 so we need to make it 0x01
-        if (ilStr.size() != 2) {
-            ilStr = "0" + ilStr;
-        }
-        ss << ilStr;
-    }
-    return ss.str();
-}
 int
 Ccm::CcmEncrypt(ccm_data_p   pccm_data,
                 const Uint8* pinp,
@@ -478,7 +459,7 @@ Ccm::CcmEncrypt(ccm_data_p   pccm_data,
         // Generate ciphetext given plain text by using ctr algitrithm
         utils::CopyBytes(tempReg, nonce, 16);
         Rijndael::AesEncrypt(tempReg, pccm_data->key, pccm_data->rounds);
-        CcmCtrInc((Uint8*)nonce); // Increment counter
+        CcmCtrInc(reinterpret_cast<Uint8*>(nonce)); // Increment counter
         for (int i = 0; i < 4; i++) {
             tempReg[i] ^= inReg[i];
         }
@@ -580,7 +561,7 @@ Ccm::CcmDecrypt(ccm_data_p   pccm_data,
         /* CTR */
         utils::CopyBytes(tempReg, nonce, 16);
         Rijndael::AesEncrypt(tempReg, pccm_data->key, pccm_data->rounds);
-        CcmCtrInc((Uint8*)nonce);
+        CcmCtrInc(reinterpret_cast<Uint8*>(nonce)); // Increment counter
 
         utils::CopyBytes(inReg, pinp, 16); // Load CipherText
         // Generate PlainText (Complete CTR)
