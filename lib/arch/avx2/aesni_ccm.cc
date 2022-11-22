@@ -51,6 +51,101 @@
 #endif
 namespace alcp::cipher { namespace aesni {
 
+    void CcmSetAad(ccm_data_p ccm_data, const Uint8* paad, size_t alen)
+    {
+        ENTER();
+        __m128i pBlk0   = { 0 };
+        __m128i aad_128 = { 0 };
+        Uint8*  pBlk0_8 = reinterpret_cast<Uint8*>(&pBlk0);
+        Uint64  i       = 0;
+
+        if (alen == 0) {
+            EXITB();
+            return;
+        }
+
+        ccm_data->nonce[0] |= 0x40; /* set Adata flag */
+
+        pBlk0 =
+            _mm_loadu_si128(reinterpret_cast<const __m128i*>(ccm_data->nonce));
+
+        // ccm_data->cmac should be inside pBlk0
+        AesEncrypt(&pBlk0,
+                   reinterpret_cast<const __m128i*>(ccm_data->key),
+                   ccm_data->rounds);
+        ccm_data->blocks++;
+
+        if (alen < (0x10000 - 0x100)) {
+            // alen < (2^16 - 2^8)
+            *(pBlk0_8 + 0) ^= static_cast<Uint8>(alen >> 8);
+            *(pBlk0_8 + 1) ^= static_cast<Uint8>(alen);
+            i = 2;
+        } else if (sizeof(alen) == 8 && alen >= ((size_t)1 << 32)) {
+            // alen > what 32 bits can hold.
+            *(pBlk0_8 + 0) ^= 0xFF;
+            *(pBlk0_8 + 1) ^= 0xFF;
+            *(pBlk0_8 + 2) ^= static_cast<Uint8>(alen >> 56);
+            *(pBlk0_8 + 3) ^= static_cast<Uint8>(alen >> 48);
+            *(pBlk0_8 + 4) ^= static_cast<Uint8>(alen >> 40);
+            *(pBlk0_8 + 5) ^= static_cast<Uint8>(alen >> 32);
+            *(pBlk0_8 + 6) ^= static_cast<Uint8>(alen >> 24);
+            *(pBlk0_8 + 7) ^= static_cast<Uint8>(alen >> 16);
+            *(pBlk0_8 + 8) ^= static_cast<Uint8>(alen >> 8);
+            *(pBlk0_8 + 9) ^= static_cast<Uint8>(alen);
+            i = 10;
+        } else {
+            // alen is represented by 32 bits but larger than
+            // what 16 bits can hold
+            *(pBlk0_8 + 0) ^= 0xFF;
+            *(pBlk0_8 + 1) ^= 0xFE;
+            *(pBlk0_8 + 2) ^= static_cast<Uint8>(alen >> 24);
+            *(pBlk0_8 + 3) ^= static_cast<Uint8>(alen >> 16);
+            *(pBlk0_8 + 4) ^= static_cast<Uint8>(alen >> 8);
+            *(pBlk0_8 + 5) ^= static_cast<Uint8>(alen);
+            i = 6;
+        }
+
+        // i=2,6,10 to i=16 do the CBC operation
+        for (; i < 16 && alen; ++i, ++paad, --alen)
+            *(pBlk0_8 + i) ^= *paad;
+
+        AesEncrypt(&pBlk0,
+                   reinterpret_cast<const __m128i*>(ccm_data->key),
+                   ccm_data->rounds);
+        ccm_data->blocks++;
+
+        Uint64 alen_16 = alen / 16;
+        for (Uint64 j = 0; j < alen_16; j++) {
+            aad_128 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(paad));
+            // CBC XOR operation
+            pBlk0 = _mm_xor_si128(pBlk0, aad_128);
+            // CBC Encrypt operation
+            AesEncrypt(&pBlk0,
+                       reinterpret_cast<const __m128i*>(ccm_data->key),
+                       ccm_data->rounds);
+            ccm_data->blocks++;
+            paad += 16;
+        }
+
+        // Reduce already processed value from alen
+        alen -= alen_16 * 16;
+
+        // Process the rest in default way
+        for (i = 0; i < 16 && alen; i++, paad++, alen--)
+            *(pBlk0_8 + i) ^= *paad;
+
+        // CBC Encrypt last block
+        AesEncrypt(&pBlk0,
+                   reinterpret_cast<const __m128i*>(ccm_data->key),
+                   ccm_data->rounds);
+        ccm_data->blocks++;
+
+        // Store generated partial tag (cmac)
+        _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), pBlk0);
+
+        EXIT();
+    }
+
     inline void CcmCtrInc(__m128i* ctr)
     {
         ENTER();

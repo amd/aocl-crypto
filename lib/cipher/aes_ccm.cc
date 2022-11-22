@@ -62,9 +62,10 @@ Ccm::cryptUpdate(const Uint8* pInput,
 {
     alc_error_t err = ALC_ERROR_NONE;
     if ((pInput != NULL) && (pOutput != NULL)) {
-        // CTR encrypt and Hash
+
         m_len = len;
 
+#if 0
         bool isAvx512Cap = false;
         if (Cipher::isVaesAvailable()) {
             if (Cipher::isAvx512Has(cipher::AVX512_F)
@@ -73,39 +74,58 @@ Ccm::cryptUpdate(const Uint8* pInput,
                 isAvx512Cap = true;
             }
         }
-
-        // FIXME: Convincing compiler to not complain
-        isAvx512Cap = isAvx512Cap;
+#endif
 
         const Uint8* keys   = getEncryptKeys();
         const Uint32 rounds = getRounds();
         m_ccm_data.key      = keys;
         m_ccm_data.rounds   = rounds;
-        bool err_ret        = (CcmSetIv(&m_ccm_data, pIv, m_ivLen, len) == 0);
+
+        // Below Operations has to be done in order
+        bool err_ret = (CcmSetIv(&m_ccm_data, pIv, m_ivLen, len) == 0);
+
+        // Accelerate with AESNI
         if (Cipher::isAesniAvailable()) {
-            // Below operations has to be done in order.
-            CcmSetAad(&m_ccm_data, m_additionalData, m_additionalDataLen);
+            aesni::CcmSetAad(
+                &m_ccm_data, m_additionalData, m_additionalDataLen);
             if (isEncrypt) {
-#if 1
                 err_ret &=
                     (aesni::CcmEncrypt(&m_ccm_data, pInput, pOutput, len) == 0);
-#else
-                err_ret &= (CcmEncrypt(&m_ccm_data, pInput, pOutput, len) == 0);
-#endif
             } else {
-#if 1
                 err_ret &=
                     (aesni::CcmDecrypt(&m_ccm_data, pInput, pOutput, len) == 0);
-#else
-                err_ret &= (CcmDecrypt(&m_ccm_data, pInput, pOutput, len) == 0);
-#endif
             }
             if (!err_ret) {
                 err = ALC_ERROR_BAD_STATE;
+                // Burn everything
+                // FIXME: Need to clear key when errors
+                // memset(reinterpret_cast<void*>(m_ccm_data.key), 0, 224);
+                memset(m_ccm_data.nonce, 0, 16);
+                memset(m_ccm_data.cmac, 0, 16);
+                memset(pOutput, 0, len);
                 return err;
             }
+            err = ALC_ERROR_NONE;
+            return err;
         }
 
+        // Fallback to reference
+        CcmSetAad(&m_ccm_data, m_additionalData, m_additionalDataLen);
+        if (isEncrypt) {
+            err_ret &= (CcmEncrypt(&m_ccm_data, pInput, pOutput, len) == 0);
+        } else {
+            err_ret &= (CcmDecrypt(&m_ccm_data, pInput, pOutput, len) == 0);
+        }
+        if (!err_ret) {
+            err = ALC_ERROR_BAD_STATE;
+            // Burn everything
+            // FIXME: Need to clear key when errors
+            // memset(reinterpret_cast<void*>(m_ccm_data.key), 0, 224);
+            memset(m_ccm_data.nonce, 0, 16);
+            memset(m_ccm_data.cmac, 0, 16);
+            memset(pOutput, 0, len);
+            return err;
+        }
     } else {
         err = ALC_ERROR_INVALID_ARG;
     }
@@ -471,11 +491,6 @@ Ccm::CcmEncrypt(ccm_data_p   pccm_data,
         len -= 16;
     }
     if (len) {
-        printf("EOE %ld\n", len);
-        std::cout << "EOE nonce " << parseBytesToHexStr((Uint8*)nonce, 16)
-                  << std::endl;
-        std::cout << "EOE cmac " << parseBytesToHexStr((Uint8*)cmac, 16)
-                  << std::endl;
         /* CBC */
         // For what ever is left, generate block to encrypt using ctr
         for (i = 0; i < len; i++) {
@@ -488,11 +503,6 @@ Ccm::CcmEncrypt(ccm_data_p   pccm_data,
         Rijndael::AesEncrypt(tempReg, pccm_data->key, pccm_data->rounds);
         for (i = 0; i < len; ++i)
             pout[i] = ptemp_8[i] ^ pinp[i];
-        printf("EOE %ld\n", len);
-        std::cout << "EOE nonce " << parseBytesToHexStr((Uint8*)nonce, 16)
-                  << std::endl;
-        std::cout << "EOE cmac " << parseBytesToHexStr((Uint8*)cmac, 16)
-                  << std::endl;
     }
     // Zero out counter part
     for (i = 15 - q; i < 16; ++i) // TODO: Optimize this with copy
@@ -503,10 +513,6 @@ Ccm::CcmEncrypt(ccm_data_p   pccm_data,
     utils::CopyBytes(tempReg, nonce, 16);
     Rijndael::AesEncrypt(tempReg, pccm_data->key, pccm_data->rounds);
 
-    std::cout << "EOE tempReg " << parseBytesToHexStr((Uint8*)tempReg, 16)
-              << std::endl;
-    std::cout << "EOE cmac " << parseBytesToHexStr((Uint8*)cmac, 16)
-              << std::endl;
     for (int i = 0; i < 4; i++) {
         cmac[i] ^= tempReg[i];
     }
@@ -514,10 +520,6 @@ Ccm::CcmEncrypt(ccm_data_p   pccm_data,
     // Restore flags into nonce to restore nonce to original state
     pnonce_8[0] = flags0;
 
-    std::cout << "EOE nonce " << parseBytesToHexStr((Uint8*)nonce, 16)
-              << std::endl;
-    std::cout << "EOE cmac " << parseBytesToHexStr((Uint8*)cmac, 16)
-              << std::endl;
     // Copy the current state of cmac and nonce back to memory.
     utils::CopyBytes(pccm_data->cmac, cmac, 16);
     utils::CopyBytes(pccm_data->nonce, nonce, 16);
