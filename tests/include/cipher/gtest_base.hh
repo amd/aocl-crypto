@@ -419,10 +419,11 @@ AesCrosstest(int               keySize,
                 data_ext.m_out  = &(out_ct_ext[0]);
                 data_ext.m_outl = data_alc.m_inl;
                 if (isgcm || isccm) {
-                    data_ext.m_ad   = &(add[0]);
-                    data_ext.m_adl  = add.size();
-                    data_ext.m_tag  = &(tag_ext[0]);
-                    data_ext.m_tagl = tag_ext.size();
+                    data_ext.m_ad      = &(add[0]);
+                    data_ext.m_adl     = add.size();
+                    data_ext.m_tag     = &(tag_ext[0]);
+                    data_ext.m_tagl    = tag_ext.size();
+                    data_ext.m_tagBuff = tagBuff.get();
                 }
                 if (isxts) {
                     data_ext.m_tkey       = &(tkey[0]);

@@ -333,11 +333,24 @@ bool
 IPPCipherBase::alcpCCMModeToFuncCall(alcp_data_ex_t data, bool enc)
 {
     IppStatus status = ippStsNoErr;
+    Ipp8u     Temp   = 0;
     if (enc) {
+        status = ippsAES_CCMMessageLen(data.m_inl, m_ctx_ccm);
+        if (status != 0)
+            PrintErrors(status);
+        status = ippsAES_CCMTagLen(data.m_tagl, m_ctx_ccm);
+        if (status != 0)
+            PrintErrors(status);
         status = ippsAES_CCMStart(
             m_iv, data.m_ivl, data.m_ad, data.m_adl, m_ctx_ccm);
         if (status != 0)
             PrintErrors(status);
+
+        /* FIXME: Hack for test data when PT is NULL */
+        if (data.m_inl == 0) {
+            data.m_out = &Temp;
+            data.m_in  = data.m_out;
+        }
         status =
             ippsAES_CCMEncrypt(data.m_in, data.m_out, data.m_inl, m_ctx_ccm);
         if (status != 0)
@@ -346,20 +359,31 @@ IPPCipherBase::alcpCCMModeToFuncCall(alcp_data_ex_t data, bool enc)
         if (status != 0)
             PrintErrors(status);
     } else {
-        Uint8 tagbuff[data.m_tagl];
+        status = ippsAES_CCMMessageLen(data.m_inl, m_ctx_ccm);
+        if (status != 0)
+            PrintErrors(status);
+        status = ippsAES_CCMTagLen(data.m_tagl, m_ctx_ccm);
+        if (status != 0)
+            PrintErrors(status);
         status = ippsAES_CCMStart(
             m_iv, data.m_ivl, data.m_ad, data.m_adl, m_ctx_ccm);
         if (status != 0)
             PrintErrors(status);
+
+        /* FIXME: Hack for test data when PT is NULL */
+        if (data.m_inl == 0) {
+            data.m_out = &Temp;
+            data.m_in  = data.m_out;
+        }
         status =
             ippsAES_CCMDecrypt(data.m_in, data.m_out, data.m_inl, m_ctx_ccm);
         if (status != 0)
             PrintErrors(status);
-        status = ippsAES_CCMGetTag(tagbuff, data.m_tagl, m_ctx_ccm);
+        status = ippsAES_CCMGetTag(data.m_tagBuff, data.m_tagl, m_ctx_ccm);
         if (status != 0)
             PrintErrors(status);
         // Tag verification
-        if (std::memcmp(tagbuff, data.m_tag, data.m_tagl) != 0) {
+        if (std::memcmp(data.m_tagBuff, data.m_tag, data.m_tagl) != 0) {
             printf("IPP:CCM:Tag verification failed\n");
             return false;
         }
