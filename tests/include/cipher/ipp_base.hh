@@ -46,15 +46,16 @@ class IPPCipherBase : public CipherBase
     IppsAES_GCMState* m_ctx_gcm = 0;
     IppsAES_GCMState* pState    = NULL;
     IppsAES_CCMState* m_ctx_ccm = 0;
-    IppsAES_CCMState *pStateCCM = NULL;
+    IppsAES_CCMState* pStateCCM = NULL;
 
-    const Uint8 *m_iv;
-    const Uint8*      m_key;
-    Uint32            m_key_len;
-    const Uint8*      m_tkey       = NULL;
-    int               m_ctxSize    = 0;
-    Uint64            m_block_size = 0;
-    Uint8             m_key_final[64];
+    const Uint8* m_iv;
+    const Uint8* m_key;
+    Uint32       m_key_len;
+    const Uint8* m_tkey       = NULL;
+    int          m_ctxSize    = 0;
+    Uint64       m_block_size = 0;
+    Uint8        m_key_final[64];
+    void         PrintErrors(IppStatus status);
     bool alcpModeToFuncCall(const Uint8* in, Uint8* out, size_t len, bool enc);
     bool alcpGCMModeToFuncCall(alcp_data_ex_t data, bool enc);
     bool alcpCCMModeToFuncCall(alcp_data_ex_t data, bool enc);

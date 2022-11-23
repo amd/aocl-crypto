@@ -69,7 +69,6 @@ class OpenSSLCipherBase : public CipherBase
 #ifdef USE_PROVIDER
     OSSL_PROVIDER* m_alcp_provider = nullptr;
 #endif
-    // const Uint64    m_block_size = 0;
 
     void              handleErrors();
     const EVP_CIPHER* alcpModeKeyLenToCipher(alc_cipher_mode_t mode,

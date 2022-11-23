@@ -459,8 +459,10 @@ bool
 OpenSSLCipherBase::decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt)
 {
     int len_pt;
-    if (1 != EVP_DecryptUpdate(m_ctx_dec, plaintxt, &len_pt, ciphertxt, len))
+    if (1 != EVP_DecryptUpdate(m_ctx_dec, plaintxt, &len_pt, ciphertxt, len)) {
+        std::cout << "Error: Openssl Decrypt update" << std::endl;
         handleErrors();
+    }
     return true;
 }
 bool
@@ -517,12 +519,14 @@ OpenSSLCipherBase::decrypt(alcp_data_ex_t data)
         }
 
         if (1 != EVP_DecryptInit_ex(m_ctx_dec, NULL, NULL, m_key, m_iv)) {
+            std::cout << "Error: Openssl Decrypt Init" << std::endl;
             handleErrors();
             return false;
         }
 
         if (1
             != EVP_DecryptUpdate(m_ctx_dec, NULL, &len_pt, NULL, data.m_inl)) {
+            std::cout << "Error: Openssl Decrypt update" << std::endl;
             handleErrors();
             return false;
         }
@@ -531,6 +535,7 @@ OpenSSLCipherBase::decrypt(alcp_data_ex_t data)
             if (1
                 != EVP_DecryptUpdate(
                     m_ctx_dec, NULL, &len_pt, data.m_ad, data.m_adl)) {
+                std::cout << "Error: Openssl Decrypt update ADL" << std::endl;
                 handleErrors();
                 return false;
             }
@@ -556,6 +561,7 @@ OpenSSLCipherBase::decrypt(alcp_data_ex_t data)
         if (1
             != EVP_DecryptUpdate(
                 m_ctx_dec, data.m_out, &len_pt, data.m_in, data.m_inl)) {
+            std::cout << "Error: Openssl Decrypt update" << std::endl;
             handleErrors();
             return false;
         }
