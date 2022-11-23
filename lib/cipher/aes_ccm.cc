@@ -302,7 +302,7 @@ Ccm::CcmSetAad(ccm_data_p pccm_data, const Uint8* paad, size_t alen)
     // Set Adata Available Flag
     pccm_data->nonce[0] |= 0x40;
 
-    utils::CopyBytes(pBlk0_8, pccm_data->nonce, 16);
+    utils::CopyBytes(pBlk0, pccm_data->nonce, 16);
 
     Rijndael::AesEncrypt(pBlk0, pccm_data->key, pccm_data->rounds);
 
@@ -361,14 +361,16 @@ Ccm::CcmSetAad(ccm_data_p pccm_data, const Uint8* paad, size_t alen)
     // Reduce already processed value from alen
     alen -= alen_16 * 16;
 
-    // Process the rest in the default way
-    for (i = 0; i < 16 && alen; i++, paad++, alen--) {
-        *(pBlk0_8 + i) ^= *paad;
-    }
+    if (alen != 0) {
+        // Process the rest in the default way
+        for (i = 0; i < 16 && alen; i++, paad++, alen--) {
+            *(pBlk0_8 + i) ^= *paad;
+        }
 
-    // CBC Encrypt last block
-    Rijndael::AesEncrypt(pBlk0, pccm_data->key, pccm_data->rounds);
-    pccm_data->blocks++;
+        // CBC Encrypt last block
+        Rijndael::AesEncrypt(pBlk0, pccm_data->key, pccm_data->rounds);
+        pccm_data->blocks++;
+    }
 
     // Store generated partial tag (cmac)
     utils::CopyBlock(pccm_data->cmac, pBlk0_8, 16);

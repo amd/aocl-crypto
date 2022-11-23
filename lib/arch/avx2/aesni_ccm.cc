@@ -130,15 +130,17 @@ namespace alcp::cipher { namespace aesni {
         // Reduce already processed value from alen
         alen -= alen_16 * 16;
 
-        // Process the rest in default way
-        for (i = 0; i < 16 && alen; i++, paad++, alen--)
-            *(pBlk0_8 + i) ^= *paad;
+        if (alen != 0) {
+            // Process the rest in default way
+            for (i = 0; i < 16 && alen; i++, paad++, alen--)
+                *(pBlk0_8 + i) ^= *paad;
 
-        // CBC Encrypt last block
-        AesEncrypt(&pBlk0,
-                   reinterpret_cast<const __m128i*>(ccm_data->key),
-                   ccm_data->rounds);
-        ccm_data->blocks++;
+            // CBC Encrypt last block
+            AesEncrypt(&pBlk0,
+                       reinterpret_cast<const __m128i*>(ccm_data->key),
+                       ccm_data->rounds);
+            ccm_data->blocks++;
+        }
 
         // Store generated partial tag (cmac)
         _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), pBlk0);
