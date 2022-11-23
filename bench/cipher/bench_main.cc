@@ -218,6 +218,12 @@ BENCH_AES_DECRYPT_XTS_128(benchmark::State& state)
         CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_XTS, 128));
 }
 
+static void
+BENCH_AES_DECRYPT_CCM_128(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_CCM, 128));
+}
 // END 128 bit key size
 
 // 192 bit key size
@@ -263,6 +269,13 @@ BENCH_AES_ENCRYPT_GCM_192(benchmark::State& state)
         CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_GCM, 192));
 }
 
+static void
+BENCH_AES_ENCRYPT_CCM_192(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_CCM, 192));
+}
+
 /**
  * @brief Decrypt
  *
@@ -302,6 +315,13 @@ BENCH_AES_DECRYPT_GCM_192(benchmark::State& state)
 {
     benchmark::DoNotOptimize(
         CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_GCM, 192));
+}
+
+static void
+BENCH_AES_DECRYPT_CCM_192(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_CCM, 192));
 }
 
 // END 192 bit keysize
@@ -411,6 +431,12 @@ BENCH_AES_DECRYPT_XTS_256(benchmark::State& state)
         CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_XTS, 256));
 }
 
+static void
+BENCH_AES_DECRYPT_CCM_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_CCM, 256));
+}
 // END 256 bit keysize
 
 int
@@ -453,8 +479,11 @@ AddBenchmarks()
     BENCHMARK(BENCH_AES_DECRYPT_XTS_256)->ArgsProduct({ blocksizes });
 
     BENCHMARK(BENCH_AES_ENCRYPT_CCM_128)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_CCM_128)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_CCM_256)->ArgsProduct({ blocksizes });
-
+    BENCHMARK(BENCH_AES_DECRYPT_CCM_256)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_ENCRYPT_CCM_192)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_CCM_192)->ArgsProduct({ blocksizes });
     return 0;
 }
 
