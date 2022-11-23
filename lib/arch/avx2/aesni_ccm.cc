@@ -219,24 +219,21 @@ namespace alcp::cipher { namespace aesni {
             EXITB();
             return -2; /* too much data */
         }
-
         while (len >= 16) {
             // Load the PlainText
             inReg = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pinp));
 
-            /* CBC */
-            // Generate CMAC given plaintext by using cbc algorithm
+            // CBC XOR
             cmac = _mm_xor_si128(cmac, inReg);
-            AesEncrypt(&cmac,
-                       reinterpret_cast<const __m128i*>(ccm_data->key),
-                       ccm_data->rounds);
 
-            /* CTR */
-            // Generate ciphetext given plain text by using ctr algitrithm
             tempReg = nonce;
-            AesEncrypt(&tempReg,
+            // CMAC is CBC's encrypt to generate tag, tempReg is CTR's encrypt
+            // to generate CT
+            AesEncrypt(&cmac,
+                       &tempReg,
                        reinterpret_cast<const __m128i*>(ccm_data->key),
                        ccm_data->rounds);
+            // AES-CTR conter inc and xor.
             CcmCtrInc(&nonce); // Increment counter
             tempReg = _mm_xor_si128(tempReg, inReg);
 
