@@ -67,7 +67,7 @@ function(alcp_cc_test testName)
 
   set(_target_name "${_ESCAPED_ALCP_MODULE}_${testName}")
   
-  message(STATUS "UNIT TEST TARGET ${_target_name}")
+  # message(STATUS "UNIT TEST TARGET ${_target_name}")
 
   if ( ${${testPrefix}_SKIP} OR ${${testPrefix}_BROKEN} )
     message("Test : " ${testName} "[SKIPPED]")
@@ -118,11 +118,11 @@ function(alcp_cc_test testName)
   #set_property(TARGET ${_target_name}
   #  PROPERTY FOLDER "${alcp_IDE_FOLDER}/Tests")
 
-# FIXME: Disabled for now, forcing standard.
-#   set_property(TARGET ${_target_name} PROPERTY CXX_STANDARD ${ALCP_CXX_STANDARD})
-#   set_property(TARGET ${_target_name} PROPERTY CXX_STANDARD_REQUIRED true)
+  # FIXME: Disabled for now, forcing standard.
+  #   set_property(TARGET ${_target_name} PROPERTY CXX_STANDARD ${ALCP_CXX_STANDARD})
+  #   set_property(TARGET ${_target_name} PROPERTY CXX_STANDARD_REQUIRED true)
 
-  message("Adding Test: " ${_target_name})
+  # message("Adding Test: " ${_target_name})
   
   if (HAVE_CMAKE_GTEST)
     # If we have CMake's built-in gtest support use it to add each test

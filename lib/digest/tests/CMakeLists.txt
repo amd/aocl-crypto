@@ -25,17 +25,20 @@
  
 Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTests.cmake)
 
-file(GLOB TEST_FILES "*.cc")
+set(TEST_FILES 
+  sha256_unit_test.cc    sha3_256_unit_test.cc  sha3_512_unit_test.cc  sha3_shake_unit_test.cc
+  sha224_unit_test.cc  sha3_224_unit_test.cc  sha3_384_unit_test.cc  sha384_unit_test.cc    sha512_unit_test.cc
+  )
 
 alcp_module("Digest")
 
-message(STATUS "Digest Unit Tests Imported ${TEST_FILES}")
+#message(STATUS "Digest Unit Tests Imported ${TEST_FILES}")
 
 foreach(testFile IN LISTS TEST_FILES)
     get_filename_component(currentTestName ${testFile} NAME_WLE)
     get_filename_component(currentTestFile ${testFile} NAME)
     #get_filename_component(currentTestDir ${testFile} BASE_DIR)
-    message("Test-> " ${currentTestName} " file " ${currentTestFile} )
+    #message("Test-> " ${currentTestName} " file " ${currentTestFile} )
     alcp_cc_test(${currentTestName}
              DIRECTORY tests/
              SOURCES   "${currentTestFile}"
