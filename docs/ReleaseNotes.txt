@@ -7,7 +7,7 @@ AOCL Crypto Contents
 --------------------
 AOCL-Crypto is a library consisting of basic cryptographic functions
 optimized for AMD Zen microarchitecture. This library has multiple
-implementations of different AES cryptographic encryption / decryption and SHA2 Digest routines.
+implementations of different AES cryptographic encryption / decryption and SHA2, SHA3 Digest routines.
 
 Hightlights of AOCL Crypto version 4.0.1
 ----------------------------------------
