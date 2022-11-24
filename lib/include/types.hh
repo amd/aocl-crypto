@@ -31,6 +31,23 @@
 #include "alcp/macros.h"
 
 #include <cstdint>
+#include <string>
+#include <string_view>
+#include <vector>
+
+// Few useful types from 'std' so that we dont have to use the std::
+// prefix everytime we refer to them, we also restrict their use in 'uapi'
+// namespace
+namespace alcp {
+
+using std::pair;
+using std::string;
+using std::vector;
+
+using String     = ::std::string;
+using StringView = ::std::string_view;
+
+} // namespace alcp
 
 namespace alcp {
 
