@@ -56,14 +56,12 @@ ExecRecPlay* fr = nullptr;
 
 // TODO: Don't generate too much random values, rather only generate max
 /* Testing Starts Here! */
-/* FixMe: Later, we can templatize all these gcm cross tests, for now this is ok
- */
 
+/* encrypt tests */
 TEST(SYMMETRIC_ENCRYPT_128, 128_CROSS_CHECK_SMALL)
 {
     AesCrosstest(128, ENCRYPT, ALC_MODE, SMALL);
 }
-
 TEST(SYMMETRIC_ENCRYPT_128, 128_CROSS_CHECK_BIG)
 {
     AesCrosstest(128, ENCRYPT, ALC_MODE, BIG);
@@ -72,12 +70,16 @@ TEST(SYMMETRIC_ENCRYPT_256, 256_CROSS_CHECK_BIG)
 {
     AesCrosstest(256, ENCRYPT, ALC_MODE, BIG);
 }
+TEST(SYMMETRIC_ENCRYPT_256, 256_CROSS_CHECK_SMALL)
+{
+    AesCrosstest(256, ENCRYPT, ALC_MODE, SMALL);
+}
 
+/* decrypt tests */
 TEST(SYMMETRIC_DECRYPT_128, 128_CROSS_CHECK_SMALL)
 {
     AesCrosstest(128, DECRYPT, ALC_MODE, SMALL);
 }
-
 TEST(SYMMETRIC_DECRYPT_128, 128_CROSS_CHECK_BIG)
 {
     AesCrosstest(128, DECRYPT, ALC_MODE, BIG);
@@ -86,7 +88,10 @@ TEST(SYMMETRIC_DECRYPT_256, 256_CROSS_CHECK_BIG)
 {
     AesCrosstest(256, DECRYPT, ALC_MODE, BIG);
 }
-
+TEST(SYMMETRIC_DECRYPT_256, 256_CROSS_CHECK_SMALL)
+{
+    AesCrosstest(256, DECRYPT, ALC_MODE, SMALL);
+}
 
 int
 main(int argc, char** argv)

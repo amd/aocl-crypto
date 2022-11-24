@@ -288,14 +288,27 @@ AesCrosstest(int               keySize,
     std::string MODE_STR = GetModeSTR(mode);
     Int32       ivl, adl, tkeyl = 16;
 
-    /* FIXME: Check valid IVL, ADL for ccm */
-    Int32 IVL_START = 7, IVL_MAX = 13, ADL_START = 12, ADL_MAX = 16;
+    Int32 IVL_START = 0, IVL_MAX = 0, ADL_START = 0, ADL_MAX = 0;
     // FIXME: Tag Length should not be hard coded
     const Uint64 tagLength = 16;
 
     bool isxts = (MODE_STR.compare("XTS") == 0);
     bool isgcm = (MODE_STR.compare("GCM") == 0);
     bool isccm = (MODE_STR.compare("CCM") == 0);
+
+    /* IV, AD Length limits for different cases */
+    if (isccm) {
+        IVL_START = 4;
+        IVL_MAX   = 13;
+        ADL_MAX   = 16;
+    } else if (isgcm) {
+        IVL_START = 12;
+        IVL_MAX   = 16;
+        ADL_MAX   = 16;
+    } else {
+        IVL_START = 16;
+        IVL_MAX   = 16;
+    }
 
     if (enc_dec == ENCRYPT)
         enc_dec_str.assign("ENC");
