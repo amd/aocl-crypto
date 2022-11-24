@@ -47,4 +47,48 @@
         }                                                                      \
     } while (0)
 
+/* cut from here ====== 8< ========= */
+/*
+ * TODO: Remove this when include/config.h is available
+  */
+#if defined(__linux__)
+    #define ALCP_BUILD_OS_LINUX     1
+#else
+    #define ALCP_BUILD_OS_WINDOWS   1
+#endif
+
+/* till here ====== 8< ========= */
+
+#if defined(ALCP_BUILD_OS_WINDOWS)
+    #if defined(VC)
+        #define ALCP_BUILD_COMPILER_IS_VC       1
+    #elif defined(__clang__)
+        #define ALCP_BUILD_COMPILER_IS_CLANG    1
+    #else
+        #warning "Unkown compiler"
+    #endif
+
+#elif defined(ALCP_BUILD_OS_LINUX)
+    #if defined(__GNUC__)
+        #define ALCP_BUILD_COMPILER_IS_GCC      1
+    #elif defined(__clang__)
+        #define ALCP_BUILD_COMPILER_IS_CLANG    1
+    #else
+        #warning "Unkown compiler"
+    #endif
+#endif
+
+
+#if defined(ALCP_BUILD_OS_WINDOWS)
+    #define ALCP_ALIGN(x)        __declspec align((x))
+#elif defined(ALCP_BUILD_OS_LINUX)
+    #if defined(__cplusplus)
+        #define ALCP_ALIGN(x)    alignas(x)
+    #else
+        #define ALCP_ALIGN(x)    __attribute__((aligned((x))))
+    #endif
+#else
+    #define ALCP_ALIGN(x)
+#endif
+
 #endif /* _ALCP_DEFS_H */
