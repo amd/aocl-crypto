@@ -125,7 +125,11 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
     OpenSSLDigestBase odb(info);
     if (useossl == true)
         db = &odb;
-// FIXME:We need IPP here
+#endif
+#ifdef USE_IPP
+    IPPDigestBase idb(info);
+    if (useipp == true)
+        db = &idb;
 #endif
     while (ds.readMsgDigest()) {
         error = db->digest_function(&(ds.getMessage()[0]),
@@ -146,7 +150,7 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
     }
 }
 
-/* SHA3 Cross tests */
+/* Digest Cross tests */
 void
 Digest_Cross(int HashSize, alc_digest_info_t info)
 {
@@ -178,7 +182,11 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
     OpenSSLDigestBase odb(info);
     if ((useossl == true) || (extDb == nullptr)) // Select OpenSSL by default
         extDb = &odb;
-// FIXME: We need IPP here
+#endif
+#ifdef USE_IPP
+    IPPDigestBase idb(info);
+    if (useipp == true)
+        extDb = &idb;
 #endif
     if (extDb == nullptr) {
         printErrors("No external lib selected!");
