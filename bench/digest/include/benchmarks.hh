@@ -50,10 +50,9 @@ std::vector<Int64> digest_block_sizes = {
     16, 64, 256, 1024, 8192, 16384, 32768
 };
 
-void
-Digest_Bench(benchmark::State& state,
-             alc_digest_info_t info,
-             uint64_t          block_size)
+void inline Digest_Bench(benchmark::State& state,
+                         alc_digest_info_t info,
+                         uint64_t          block_size)
 {
     alc_error_t    error;
     Uint8          message[32768] = { 0 };
