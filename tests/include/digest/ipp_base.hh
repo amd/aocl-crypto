@@ -38,19 +38,16 @@ namespace alcp::testing {
 class IPPDigestBase : public DigestBase
 {
     IppsHashState_rmf* m_handle = nullptr;
-    _alc_sha2_mode     m_mode;
-    _alc_digest_type   m_type;
-    _alc_digest_len    m_sha_len;
+    alc_digest_info_t  m_info;
     Uint8*             m_message;
     Uint8*             m_digest;
 
   public:
-    IPPDigestBase(_alc_digest_type type,
-                  _alc_digest_len  sha_len);
+    IPPDigestBase(const alc_digest_info_t& info);
     ~IPPDigestBase();
+
+    bool init(const alc_digest_info_t& info);
     bool init();
-    bool init(_alc_digest_type type,
-              _alc_digest_len  sha_len);
 
     alc_error_t digest_function(const Uint8* src,
                                 Uint64       src_size,

@@ -39,18 +39,14 @@ namespace alcp::testing {
 class AlcpDigestBase : public DigestBase
 {
     alc_digest_handle_t* m_handle;
-    _alc_digest_type     m_type;
-    _alc_digest_len      m_sha_len;
+    alc_digest_info_t    m_info;
     Uint8*               m_message;
     Uint8*               m_digest;
 
   public:
+    AlcpDigestBase(const alc_digest_info_t& info);
 
-    AlcpDigestBase(_alc_digest_type type,
-                   _alc_digest_len  sha_len);
-
-    bool init(_alc_digest_type type,
-              _alc_digest_len  sha_len);
+    bool init(const alc_digest_info_t& info);
 
     bool init();
 

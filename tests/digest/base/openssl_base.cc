@@ -30,14 +30,10 @@
 
 namespace alcp::testing {
 
-OpenSSLDigestBase::OpenSSLDigestBase(_alc_digest_type type,
-                                     _alc_digest_len  sha_len)
-    : m_type{ type }
-    , m_sha_len{ sha_len }
+OpenSSLDigestBase::OpenSSLDigestBase(const alc_digest_info_t& info)
 {
-    init();
+    init(info);
 }
-
 
 OpenSSLDigestBase::~OpenSSLDigestBase()
 {
@@ -46,6 +42,12 @@ OpenSSLDigestBase::~OpenSSLDigestBase()
     }
 }
 
+bool
+OpenSSLDigestBase::init(const alc_digest_info_t& info)
+{
+    m_info = info;
+    return init();
+}
 
 bool
 OpenSSLDigestBase::init()
@@ -57,8 +59,8 @@ OpenSSLDigestBase::init()
 
     m_handle = EVP_MD_CTX_new();
 
-    if (m_type == ALC_DIGEST_TYPE_SHA2) {
-        switch (m_sha_len) {
+    if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
+        switch (m_info.dt_len) {
             case ALC_DIGEST_LEN_224:
                 EVP_DigestInit(m_handle, EVP_sha224());
                 break;
@@ -74,8 +76,8 @@ OpenSSLDigestBase::init()
             default:
                 return false;
         }
-    } else if (m_type == ALC_DIGEST_TYPE_SHA3) {
-        switch (m_sha_len) {
+    } else if (m_info.dt_type == ALC_DIGEST_TYPE_SHA3) {
+        switch (m_info.dt_len) {
             case ALC_DIGEST_LEN_224:
                 EVP_DigestInit(m_handle, EVP_sha3_224());
                 break;
@@ -95,16 +97,6 @@ OpenSSLDigestBase::init()
     return true;
 }
 
-bool
-OpenSSLDigestBase::init(_alc_digest_type type,
-                        _alc_digest_len  sha_len)
-{
-    this->m_type    = type;
-    this->m_sha_len = sha_len;
-    return init();
-}
-
-
 alc_error_t
 OpenSSLDigestBase::digest_function(const Uint8* in,
                                    Uint64       in_size,
@@ -119,13 +111,12 @@ OpenSSLDigestBase::digest_function(const Uint8* in,
     return ALC_ERROR_NONE;
 }
 
-
 void
 OpenSSLDigestBase::reset()
 {
     EVP_MD_CTX_reset(m_handle);
-    if (m_type == ALC_DIGEST_TYPE_SHA2) {
-        switch (m_mode) {
+    if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
+        switch (m_info.dt_mode.dm_sha2) {
             case ALC_SHA2_224:
                 EVP_DigestInit(m_handle, EVP_sha224());
                 break;
@@ -138,9 +129,13 @@ OpenSSLDigestBase::reset()
             case ALC_SHA2_512:
                 EVP_DigestInit(m_handle, EVP_sha512());
                 break;
+            default:
+                std::cout << "Error: " << __FILE__ << ":" << __LINE__
+                          << std::endl;
+                break;
         }
-    } else if (m_type == ALC_DIGEST_TYPE_SHA3) {
-        switch (m_mode) {
+    } else if (m_info.dt_type == ALC_DIGEST_TYPE_SHA3) {
+        switch (m_info.dt_mode.dm_sha3) {
             case ALC_SHA3_224:
                 EVP_DigestInit(m_handle, EVP_sha3_224());
                 break;
@@ -152,6 +147,10 @@ OpenSSLDigestBase::reset()
                 break;
             case ALC_SHA3_512:
                 EVP_DigestInit(m_handle, EVP_sha3_512());
+                break;
+            default:
+                std::cout << "Error: " << __FILE__ << ":" << __LINE__
+                          << std::endl;
                 break;
         }
     }

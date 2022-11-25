@@ -33,32 +33,72 @@
 #include <alcp/alcp.h>
 #include <iostream>
 
-/* SHA3 tests */
-TEST(DIGEST_SHA3, KAT_224) {
-    Digest_KAT(224, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_224);
+/* SHA2 tests */
+TEST(DIGEST_SHA2, KAT_224)
+{
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_224;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len          = ALC_DIGEST_LEN_224;
+    Digest_KAT(224, info);
 }
-TEST(DIGEST_SHA3, KAT_256) {
-    Digest_KAT(256, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_256);
+TEST(DIGEST_SHA2, KAT_256)
+{
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_256;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len          = ALC_DIGEST_LEN_256;
+    Digest_KAT(256, info);
 }
-TEST(DIGEST_SHA3, KAT_384) {
-    Digest_KAT(384, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_384);
+TEST(DIGEST_SHA2, KAT_384)
+{
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_384;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len          = ALC_DIGEST_LEN_384;
+    Digest_KAT(384, info);
 }
-TEST(DIGEST_SHA3, KAT_512) {
-    Digest_KAT(512, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_512);
+TEST(DIGEST_SHA2, KAT_512)
+{
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_512;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len          = ALC_DIGEST_LEN_512;
+    Digest_KAT(512, info);
 }
 
-/* SHA2 tests */
-TEST(DIGEST_SHA2, KAT_224) {
-    Digest_KAT(224, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224);
+/* SHA3 tests */
+TEST(DIGEST_SHA3, KAT_224)
+{
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_224;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
+    info.dt_len          = ALC_DIGEST_LEN_224;
+    Digest_KAT(224, info);
 }
-TEST(DIGEST_SHA2, KAT_256) {
-    Digest_KAT(256, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256);
+TEST(DIGEST_SHA3, KAT_256)
+{
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_256;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
+    info.dt_len          = ALC_DIGEST_LEN_256;
+    Digest_KAT(256, info);
 }
-TEST(DIGEST_SHA2, KAT_384) {
-    Digest_KAT(384, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384);
+TEST(DIGEST_SHA3, KAT_384)
+{
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_384;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
+    info.dt_len          = ALC_DIGEST_LEN_384;
+    Digest_KAT(384, info);
 }
-TEST(DIGEST_SHA2, KAT_512) {
-    Digest_KAT(512, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512);
+TEST(DIGEST_SHA3, KAT_512)
+{
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_512;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
+    info.dt_len          = ALC_DIGEST_LEN_512;
+    Digest_KAT(512, info);
 }
 
 int

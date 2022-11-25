@@ -33,25 +33,26 @@ namespace alcp::testing {
 
 static Uint8 size_[4096] = { 0 };
 
-AlcpDigestBase::AlcpDigestBase(_alc_digest_type type,
-                               _alc_digest_len  sha_len)
-    : m_type{ type }
-    , m_sha_len{ sha_len }
+AlcpDigestBase::AlcpDigestBase(const alc_digest_info_t& info)
 {
-    init();
+    init(info);
+}
+
+bool
+AlcpDigestBase::init(const alc_digest_info_t& info)
+{
+    m_info = info;
+    return init();
 }
 
 bool
 AlcpDigestBase::init()
 {
-    alc_error_t err;
-    alc_digest_info_t dinfo = {
-        .dt_type = m_type,
-        .dt_len = m_sha_len,
-    };
+    alc_error_t       err;
+    alc_digest_info_t dinfo = m_info;
 
-    if (m_type == ALC_DIGEST_TYPE_SHA2) {
-        switch (m_sha_len) {
+    if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
+        switch (m_info.dt_len) {
             case ALC_DIGEST_LEN_224:
                 dinfo.dt_mode.dm_sha2 = ALC_SHA2_224;
                 break;
@@ -67,8 +68,8 @@ AlcpDigestBase::init()
             default:
                 break;
         }
-    } else if (m_type == ALC_DIGEST_TYPE_SHA3) {
-        switch (m_sha_len) {
+    } else if (m_info.dt_type == ALC_DIGEST_TYPE_SHA3) {
+        switch (m_info.dt_len) {
             case ALC_DIGEST_LEN_224:
                 dinfo.dt_mode.dm_sha3 = ALC_SHA3_224;
                 break;
@@ -85,7 +86,7 @@ AlcpDigestBase::init()
                 break;
         }
     }
-    
+
     m_handle          = new alc_digest_handle_t;
     m_handle->context = &size_[0];
 
@@ -95,15 +96,6 @@ AlcpDigestBase::init()
         return false;
     }
     return true;
-}
-
-bool
-AlcpDigestBase::init(_alc_digest_type type,
-                     _alc_digest_len  sha_len)
-{
-    this->m_type    = type;
-    this->m_sha_len = sha_len;
-    return init();
 }
 
 AlcpDigestBase::~AlcpDigestBase()

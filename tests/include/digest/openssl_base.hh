@@ -39,20 +39,25 @@
 namespace alcp::testing {
 class OpenSSLDigestBase : public DigestBase
 {
-    EVP_MD_CTX*      m_handle = nullptr;
-    _alc_sha2_mode   m_mode;
-    _alc_digest_type m_type;
-    _alc_digest_len  m_sha_len;
-    Uint8*           m_message;
-    Uint8*           m_digest;
+    EVP_MD_CTX*       m_handle = nullptr;
+    alc_digest_info_t m_info;
+    Uint8*            m_message;
+    Uint8*            m_digest;
 
   public:
-    OpenSSLDigestBase(_alc_digest_type type,
-                      _alc_digest_len  sha_len);
+    // Class contructor and destructor
+    /**
+     * @brief Creates a digest base of type openssl with alcp_digest_info_t
+     * provided
+     *
+     * @param info Information of which digest to use and what length.
+     */
+    OpenSSLDigestBase(const alc_digest_info_t& info);
     ~OpenSSLDigestBase();
+
+    // All inits
+    bool init(const alc_digest_info_t& info);
     bool init();
-    bool init(_alc_digest_type type,
-              _alc_digest_len  sha_len);
 
     alc_error_t digest_function(const Uint8* src,
                                 Uint64       src_size,

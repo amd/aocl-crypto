@@ -88,91 +88,97 @@ GetSHA3Record(int HashSize)
 
 /* to read csv file */
 std::string
-GetDigestStr(_alc_digest_type digest_type) {
+GetDigestStr(_alc_digest_type digest_type)
+{
     std::string sDigestType;
-    switch (digest_type)
-    {
-    case ALC_DIGEST_TYPE_SHA2:
-        return "SHA";
-    case ALC_DIGEST_TYPE_SHA3:
-        return "SHA3";
-    default:
-        return "";
+    switch (digest_type) {
+        case ALC_DIGEST_TYPE_SHA2:
+            return "SHA";
+        case ALC_DIGEST_TYPE_SHA3:
+            return "SHA3";
+        default:
+            return "";
     }
 }
 
 ExecRecPlay* fr;
 void
-Digest_KAT(int HashSize, _alc_digest_type digest_type, _alc_digest_len digest_len)
+Digest_KAT(int HashSize, alc_digest_info_t info)
 {
-    alc_error_t error;
+    alc_error_t        error;
     std::vector<Uint8> digest(HashSize / 8, 0);
-    AlcpDigestBase adb(digest_type, digest_len);
-    DigestBase* db;
+    AlcpDigestBase     adb(info);
+    DigestBase*        db;
     db = &adb;
 
     /* to find csv file name as per digest type */
-    std::string TestDataFile = "dataset_" + GetDigestStr(digest_type) + "_" + std::to_string(HashSize) + ".csv";
+    std::string TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_"
+                               + std::to_string(HashSize) + ".csv";
     DataSet ds = DataSet(TestDataFile);
 
-    if (useipp && (GetDigestStr(digest_type).compare("SHA3") == 0)) {
-        printf ("IPPCP doesnt support SHA3 for now, skipping this test\n");
+    if (useipp && (GetDigestStr(info.dt_type).compare("SHA3") == 0)) {
+        printf("IPPCP doesnt support SHA3 for now, skipping this test\n");
         return;
     }
 
 #ifdef USE_OSSL
-    OpenSSLDigestBase odb(digest_type, digest_len);
+    OpenSSLDigestBase odb(info);
     if (useossl == true)
         db = &odb;
+// FIXME:We need IPP here
 #endif
     while (ds.readMsgDigest()) {
         error = db->digest_function(&(ds.getMessage()[0]),
                                     ds.getMessage().size(),
                                     &(digest[0]),
                                     digest.size());
-        db->init(digest_type, digest_len);
+        db->init(info);
         if (alcp_is_error(error)) {
             printf("Error");
             return;
         }
-        EXPECT_TRUE(ArraysMatch(
-            digest,         // output
-            ds.getDigest(), // expected, from the KAT test data
-            ds,
-            std::string(GetDigestStr(digest_type) + "_" + std::to_string(HashSize) + "_KAT")));
+        EXPECT_TRUE(
+            ArraysMatch(digest,         // output
+                        ds.getDigest(), // expected, from the KAT test data
+                        ds,
+                        std::string(GetDigestStr(info.dt_type) + "_"
+                                    + std::to_string(HashSize) + "_KAT")));
     }
 }
 
 /* SHA3 Cross tests */
 void
-Digest_Cross(int HashSize, _alc_digest_type digest_type, _alc_digest_len digest_len)
+Digest_Cross(int HashSize, alc_digest_info_t info)
 {
-    alc_error_t            error;
-    std::vector<Uint8>     data;
-    std::vector<Uint8>     digestAlcp(HashSize / 8, 0);
-    std::vector<Uint8>     digestExt(HashSize / 8, 0);
-    AlcpDigestBase         adb(digest_type, digest_len);
-    RngBase                rng;
-    DigestBase*            db;
-    DigestBase*            extDb = nullptr;
-    db                           = &adb;
+    alc_error_t        error;
+    std::vector<Uint8> data;
+    std::vector<Uint8> digestAlcp(HashSize / 8, 0);
+    std::vector<Uint8> digestExt(HashSize / 8, 0);
+    AlcpDigestBase     adb(info);
+    RngBase            rng;
+    DigestBase*        db;
+    DigestBase*        extDb = nullptr;
+    db                       = &adb;
     if (bbxreplay) {
-        fr = new ExecRecPlay(GetDigestStr(digest_type) + "_" + std::to_string(HashSize), true);
+        fr = new ExecRecPlay(
+            GetDigestStr(info.dt_type) + "_" + std::to_string(HashSize), true);
         /* FIXME: we need a generic getsharecord */
         fr->fastForward(GetSHA3Record(HashSize));
     } else
-        fr = new ExecRecPlay(GetDigestStr(digest_type) + "_" + std::to_string(HashSize), false);
+        fr = new ExecRecPlay(
+            GetDigestStr(info.dt_type) + "_" + std::to_string(HashSize), false);
 
     /* Skip SHA3 tests for IPP */
-    if (useipp && (GetDigestStr(digest_type).compare("SHA3") == 0)) {
-        printf ("IPPCP doesnt support SHA3 for now, skipping this test\n");
+    if (useipp && (GetDigestStr(info.dt_type).compare("SHA3") == 0)) {
+        printf("IPPCP doesnt support SHA3 for now, skipping this test\n");
         return;
     }
 
 #ifdef USE_OSSL
-    OpenSSLDigestBase odb(digest_type, digest_len);
+    OpenSSLDigestBase odb(info);
     if ((useossl == true) || (extDb == nullptr)) // Select OpenSSL by default
         extDb = &odb;
+// FIXME: We need IPP here
 #endif
     if (extDb == nullptr) {
         printErrors("No external lib selected!");
@@ -199,8 +205,8 @@ Digest_Cross(int HashSize, _alc_digest_type digest_type, _alc_digest_len digest_
             &(data[0]), data.size(), &(digestAlcp[0]), digestAlcp.size());
         error = extDb->digest_function(
             &(data[0]), data.size(), &(digestExt[0]), digestExt.size());
-        db->init(digest_type, digest_len);
-        extDb->init(digest_type, digest_len);
+        db->init(info);
+        extDb->init(info);
         if (alcp_is_error(error)) {
             printf("Error");
             return;

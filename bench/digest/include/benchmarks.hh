@@ -46,26 +46,29 @@
 
 using namespace alcp::testing;
 
-std::vector<Int64> digest_block_sizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
+std::vector<Int64> digest_block_sizes = {
+    16, 64, 256, 1024, 8192, 16384, 32768
+};
 
 void
-Digest_Bench(benchmark::State& state, _alc_digest_type digest_type, 
-                   _alc_digest_len digest_len, uint64_t block_size)
+Digest_Bench(benchmark::State& state,
+             alc_digest_info_t info,
+             uint64_t          block_size)
 {
     alc_error_t    error;
     Uint8          message[32768] = { 0 };
     Uint8          digest[512]    = { 0 };
-    AlcpDigestBase adb(digest_type, digest_len);
+    AlcpDigestBase adb(info);
     DigestBase*    db = &adb;
 #ifdef USE_IPP
-    IPPDigestBase idb(digest_type, digest_len);
+    IPPDigestBase idb(info);
     if (useipp) {
         db = &idb;
     }
 #endif
 
 #ifdef USE_OSSL
-    OpenSSLDigestBase odb(digest_type, digest_len);
+    OpenSSLDigestBase odb(info);
     if (useossl) {
         db = &odb;
     }
@@ -86,54 +89,86 @@ Digest_Bench(benchmark::State& state, _alc_digest_type digest_type,
     return;
 }
 
-
-
 /* add all your new benchmarks here */
 /* SHA2 benchmarks */
 static void
 BENCH_SHA2_224(benchmark::State& state)
 {
-    Digest_Bench(state, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_224, state.range(0));
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_224;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len          = ALC_DIGEST_LEN_224;
+    Digest_Bench(state, info, state.range(0));
 }
 static void
 BENCH_SHA2_256(benchmark::State& state)
 {
-    Digest_Bench(state, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256, state.range(0));
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_256;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len          = ALC_DIGEST_LEN_256;
+    Digest_Bench(state, info, state.range(0));
 }
 static void
 BENCH_SHA2_384(benchmark::State& state)
 {
-    Digest_Bench(state, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_384, state.range(0));
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_384;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len          = ALC_DIGEST_LEN_384;
+    Digest_Bench(state, info, state.range(0));
 }
 static void
 BENCH_SHA2_512(benchmark::State& state)
 {
-    Digest_Bench(state, ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_512, state.range(0));
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_512;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len          = ALC_DIGEST_LEN_512;
+    Digest_Bench(state, info, state.range(0));
 }
 /* SHA3 benchmarks */
 static void
 BENCH_SHA3_224(benchmark::State& state)
 {
-    Digest_Bench(state, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_224, state.range(0));
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_224;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
+    info.dt_len          = ALC_DIGEST_LEN_224;
+    Digest_Bench(state, info, state.range(0));
 }
 static void
 BENCH_SHA3_256(benchmark::State& state)
 {
-    Digest_Bench(state, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_256, state.range(0));
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_256;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
+    info.dt_len          = ALC_DIGEST_LEN_256;
+    Digest_Bench(state, info, state.range(0));
 }
 static void
 BENCH_SHA3_384(benchmark::State& state)
 {
-    Digest_Bench(state, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_384, state.range(0));
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_384;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
+    info.dt_len          = ALC_DIGEST_LEN_384;
+    Digest_Bench(state, info, state.range(0));
 }
 static void
 BENCH_SHA3_512(benchmark::State& state)
 {
-    Digest_Bench(state, ALC_DIGEST_TYPE_SHA3, ALC_DIGEST_LEN_512, state.range(0));
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_512;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
+    info.dt_len          = ALC_DIGEST_LEN_512;
+    Digest_Bench(state, info, state.range(0));
 }
 
 /* add benchmarks */
-int AddBenchmarks() {
+int
+AddBenchmarks()
+{
     BENCHMARK(BENCH_SHA2_224)->ArgsProduct({ digest_block_sizes });
     BENCHMARK(BENCH_SHA2_256)->ArgsProduct({ digest_block_sizes });
     BENCHMARK(BENCH_SHA2_384)->ArgsProduct({ digest_block_sizes });
