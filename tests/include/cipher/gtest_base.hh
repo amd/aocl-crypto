@@ -298,12 +298,14 @@ AesCrosstest(int               keySize,
 
     /* IV, AD Length limits for different cases */
     if (isccm) {
-        IVL_START = 4;
+        IVL_START = 7;
         IVL_MAX   = 13;
+        ADL_START = 12;
         ADL_MAX   = 16;
     } else if (isgcm) {
         IVL_START = 12;
         IVL_MAX   = 16;
+        ADL_START = 12;
         ADL_MAX   = 16;
     } else {
         IVL_START = 16;
