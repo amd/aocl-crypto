@@ -62,15 +62,19 @@ OpenSSLDigestBase::init()
     if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
         switch (m_info.dt_len) {
             case ALC_DIGEST_LEN_224:
+                m_mode = ALC_SHA2_224;
                 EVP_DigestInit(m_handle, EVP_sha224());
                 break;
             case ALC_DIGEST_LEN_256:
+                m_mode = ALC_SHA2_256;
                 EVP_DigestInit(m_handle, EVP_sha256());
                 break;
             case ALC_DIGEST_LEN_384:
+                m_mode = ALC_SHA2_384;
                 EVP_DigestInit(m_handle, EVP_sha384());
                 break;
             case ALC_DIGEST_LEN_512:
+                m_mode = ALC_SHA2_512;
                 EVP_DigestInit(m_handle, EVP_sha512());
                 break;
             default:

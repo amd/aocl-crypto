@@ -31,7 +31,9 @@
 
 #include "digest.hh"
 #include "digest/sha2_512.hh"
+#include "digest/sha_avx256.hh"
 #include "error.hh"
+#include <iostream>
 
 #define SHA512_WORDS_IN_128_BIT_VEC                                            \
     2 // Number of sha512 words that can be accomodated in 128 bit vector
@@ -40,7 +42,9 @@
 #define SHA512_CHUNK_NUM_VECT_AVX                                              \
     8 // Number of avx registers needed to accomodate a sha512 block
 #define SHA512_CHUNK_NUM_VECT_AVX2                                             \
-    4 // Number of avx2 registers needed to accomodate a sha512 block
+    4 // Number of YMM registers needed to accomodate a sha512 block
+#define SHA512_STATE_SIZE_IN_256_BIT_VEC                                       \
+    2 // Number of avx2 registers needed to STORE THE SHA512 state
 
 #if defined(__GNUC__)
 #define UNROLL_8  _Pragma("GCC unroll 8")
@@ -52,7 +56,7 @@
 #define UNROLL_80
 #endif
 
-namespace alcp::digest { namespace avx2 {
+namespace alcp::digest { namespace zen3 {
 
     __attribute__((aligned(64))) static const Uint64 sha512_hash_constsx2[] = {
         0x428a2f98d728ae22, 0x7137449123ef65cd, 0x428a2f98d728ae22,
@@ -111,6 +115,61 @@ namespace alcp::digest { namespace avx2 {
         0x6c44198c4a475817
     };
 
+    static inline void alcp_load_hash_ymm(const __m256i* phash,
+                                          __m256i&       hash_256_0,
+                                          __m256i&       hash_256_1)
+    {
+        hash_256_0 = _mm256_loadu_si256(phash);
+        hash_256_1 = _mm256_loadu_si256(phash + 1);
+    }
+
+    static inline void load_data(__m256i      x[SHA512_CHUNK_NUM_VECT_AVX2 * 2],
+                                 Uint64       msg_sch_array_1[96],
+                                 const Uint8* data)
+    {
+        const __m256i shuf_mask = _mm256_setr_epi64x(0x0001020304050607ULL,
+                                                     0x08090a0b0c0d0e0fULL,
+                                                     0x0001020304050607ULL,
+                                                     0x08090a0b0c0d0e0fULL);
+        __m256i       tmp;
+        UNROLL_8
+
+        for (Uint32 i = 0; i < SHA512_CHUNK_NUM_VECT_AVX2 * 2; i++) {
+            const Uint32 pos0 = (sizeof(__m256i) / 2) * i;
+            const Uint32 pos1 = pos0 + Sha512::cChunkSize;
+            x[i]              = _mm256_insertf128_si256(
+                x[i], _mm_lddqu_si128((__m128i*)&data[pos1]), 1);
+            x[i] = _mm256_insertf128_si256(
+                x[i], _mm_lddqu_si128((__m128i*)&data[pos0]), 0);
+            x[i] = _mm256_shuffle_epi8(x[i], shuf_mask);
+
+            tmp = _mm256_add_epi64(
+                x[i],
+                _mm256_loadu_si256(
+                    (const __m256i*)(&sha512_hash_constsx2[i * 4])));
+
+            _mm_store_si128((__m128i*)&(msg_sch_array_1[16 + i * 2]),
+                            _mm256_extracti128_si256(tmp, 1));
+            _mm_store_si128((__m128i*)&(msg_sch_array_1[i * 2]),
+                            _mm256_extracti128_si256(tmp, 0));
+        }
+    }
+
+    static inline void rotate_x(__m256i x[8])
+    {
+        const __m256i tmp = x[0];
+
+        x[0] = x[1];
+        x[1] = x[2];
+        x[2] = x[3];
+        x[3] = x[4];
+        x[4] = x[5];
+        x[5] = x[6];
+        x[6] = x[7];
+
+        x[7] = tmp;
+    }
+
     static inline void rotate_x(__m128i x[8])
     {
         const __m128i tmp = x[0];
@@ -123,6 +182,189 @@ namespace alcp::digest { namespace avx2 {
         x[6]              = x[7];
 
         x[7] = tmp;
+    }
+
+    static inline void sha512_update_x_avx2(__m256i x[8])
+    {
+        __m256i temp[4];
+        // Calculation of s0
+        temp[0] = _mm256_alignr_epi8(x[1], x[0], 8);
+
+        temp[1] = _mm256_srli_epi64(temp[0], 1);
+        temp[2] = _mm256_slli_epi64(temp[0], 64 - 1);
+        temp[1] |= temp[2];
+
+        temp[2] = _mm256_srli_epi64(temp[0], 8);
+        temp[3] = _mm256_slli_epi64(temp[0], 64 - 8);
+        temp[2] |= temp[3];
+
+        temp[3] = _mm256_srli_epi64(temp[0], 7);
+
+        temp[0] = temp[1] ^ temp[2] ^ temp[3];
+
+        temp[3] = _mm256_alignr_epi8(x[5], x[4], 8);
+        temp[3] = _mm256_add_epi64(x[0], temp[3]);
+
+        temp[0] = _mm256_add_epi64(temp[0], temp[3]);
+
+        // Calculation of s1
+        temp[1] = _mm256_srli_epi64(x[7], 19);
+        temp[2] = _mm256_slli_epi64(x[7], 64 - 19);
+        temp[1] |= temp[2];
+
+        temp[2] = _mm256_srli_epi64(x[7], 61);
+        temp[3] = _mm256_slli_epi64(x[7], 64 - 61);
+        temp[2] |= temp[3];
+
+        temp[3] = _mm256_srli_epi64(x[7], 6);
+        temp[3] = temp[1] ^ temp[2] ^ temp[3];
+
+        x[0] = _mm256_add_epi64(temp[0], temp[3]);
+
+        rotate_x(x);
+    }
+
+    static inline void extendMsgandCalcRound(
+        __m256i& svec_256_0,
+        __m256i& svec_256_1,
+        __m256i  msg_vect[SHA512_CHUNK_NUM_VECT_AVX2 * 2],
+        Uint64   ms[Sha512::cNumRounds + 16])
+    {
+        Uint32 k512_idx = 2 * 16;
+        Uint64 a, b, c, d, e, f, g, h, temp;
+
+        a = svec_256_0[0];
+
+        b = svec_256_0[1];
+
+        c = svec_256_0[2];
+
+        d = svec_256_0[3];
+
+        e = svec_256_1[0];
+
+        f = svec_256_1[1];
+
+        g = svec_256_1[2];
+
+        h = svec_256_1[3];
+
+        // Rounds 0-63 (0-15, 16-31, 32-47, 48-63)
+        for (Uint32 i = 1; i < 5; i++) {
+
+            UNROLL_8
+
+            for (Uint32 j = 0; j < 8; j++) {
+                const Uint32 pos = SHA512_WORDS_IN_128_BIT_VEC * j;
+                SHA_ROUND(a, b, c, d, e, f, g, h, ms, pos);
+                SHA_ROUND(h, a, b, c, d, e, f, g, ms, pos + 1);
+                sha512_update_x_avx2(msg_vect);
+                const __m256i y = _mm256_add_epi64(
+                    msg_vect[7],
+                    _mm256_loadu_si256(
+                        (const __m256i*)&sha512_hash_constsx2[k512_idx]));
+
+                _mm_store_si128((__m128i*)&(ms[16 + i * 16 + pos]),
+                                _mm256_extracti128_si256(y, 1));
+                _mm_store_si128((__m128i*)&(ms[pos]),
+                                _mm256_extracti128_si256(y, 0));
+                k512_idx += SHA512_WORDS_IN_256_BIT_VEC;
+
+                temp = h;
+                h    = f;
+                f    = d;
+                d    = b;
+                b    = temp;
+                temp = g;
+                g    = e;
+                e    = c;
+                c    = a;
+                a    = temp;
+            }
+        }
+        svec_256_0 = _mm256_set_epi64x(d, c, b, a);
+        svec_256_1 = _mm256_set_epi64x(h, g, f, e);
+    }
+
+    static inline void calcRemainingRounds(__m256i&     hash_256_0,
+                                           __m256i&     hash_256_1,
+                                           __m256i      svec_256_0,
+                                           __m256i      svec_256_1,
+                                           const Uint64 message_sch[80])
+    {
+        Uint64 a, b, c, d, e, f, g, h;
+
+        a = svec_256_0[0];
+
+        b = svec_256_0[1];
+
+        c = svec_256_0[2];
+
+        d = svec_256_0[3];
+
+        e = svec_256_1[0];
+
+        f = svec_256_1[1];
+
+        g = svec_256_1[2];
+
+        h = svec_256_1[3];
+
+        // do 16 of them
+        SHA_ROUND(a, b, c, d, e, f, g, h, message_sch, 0);
+        SHA_ROUND(h, a, b, c, d, e, f, g, message_sch, 1);
+        SHA_ROUND(g, h, a, b, c, d, e, f, message_sch, 2);
+        SHA_ROUND(f, g, h, a, b, c, d, e, message_sch, 3);
+        SHA_ROUND(e, f, g, h, a, b, c, d, message_sch, 4);
+        SHA_ROUND(d, e, f, g, h, a, b, c, message_sch, 5);
+        SHA_ROUND(c, d, e, f, g, h, a, b, message_sch, 6);
+        SHA_ROUND(b, c, d, e, f, g, h, a, message_sch, 7);
+        SHA_ROUND(a, b, c, d, e, f, g, h, message_sch, 8);
+        SHA_ROUND(h, a, b, c, d, e, f, g, message_sch, 9);
+        SHA_ROUND(g, h, a, b, c, d, e, f, message_sch, 10);
+        SHA_ROUND(f, g, h, a, b, c, d, e, message_sch, 11);
+        SHA_ROUND(e, f, g, h, a, b, c, d, message_sch, 12);
+        SHA_ROUND(d, e, f, g, h, a, b, c, message_sch, 13);
+        SHA_ROUND(c, d, e, f, g, h, a, b, message_sch, 14);
+        SHA_ROUND(b, c, d, e, f, g, h, a, message_sch, 15);
+
+        hash_256_0 =
+            _mm256_add_epi64(hash_256_0, _mm256_set_epi64x(d, c, b, a));
+        hash_256_1 =
+            _mm256_add_epi64(hash_256_1, _mm256_set_epi64x(h, g, f, e));
+
+        a = hash_256_0[0];
+        b = hash_256_0[1];
+        c = hash_256_0[2];
+        d = hash_256_0[3];
+        e = hash_256_1[0];
+        f = hash_256_1[1];
+        g = hash_256_1[2];
+        h = hash_256_1[3];
+
+        for (Uint32 i = 16; i < 96; i += 16) {
+            SHA_ROUND(a, b, c, d, e, f, g, h, message_sch, i);
+            SHA_ROUND(h, a, b, c, d, e, f, g, message_sch, i + 1);
+            SHA_ROUND(g, h, a, b, c, d, e, f, message_sch, i + 2);
+            SHA_ROUND(f, g, h, a, b, c, d, e, message_sch, i + 3);
+            SHA_ROUND(e, f, g, h, a, b, c, d, message_sch, i + 4);
+            SHA_ROUND(d, e, f, g, h, a, b, c, message_sch, i + 5);
+            SHA_ROUND(c, d, e, f, g, h, a, b, message_sch, i + 6);
+            SHA_ROUND(b, c, d, e, f, g, h, a, message_sch, i + 7);
+            SHA_ROUND(a, b, c, d, e, f, g, h, message_sch, i + 8);
+            SHA_ROUND(h, a, b, c, d, e, f, g, message_sch, i + 9);
+            SHA_ROUND(g, h, a, b, c, d, e, f, message_sch, i + 10);
+            SHA_ROUND(f, g, h, a, b, c, d, e, message_sch, i + 11);
+            SHA_ROUND(e, f, g, h, a, b, c, d, message_sch, i + 12);
+            SHA_ROUND(d, e, f, g, h, a, b, c, message_sch, i + 13);
+            SHA_ROUND(c, d, e, f, g, h, a, b, message_sch, i + 14);
+            SHA_ROUND(b, c, d, e, f, g, h, a, message_sch, i + 15);
+        }
+
+        hash_256_0 =
+            _mm256_add_epi64(hash_256_0, _mm256_set_epi64x(d, c, b, a));
+        hash_256_1 =
+            _mm256_add_epi64(hash_256_1, _mm256_set_epi64x(h, g, f, e));
     }
 
     static inline void process_buffer_avx(Uint64       state[8],
@@ -250,14 +492,52 @@ namespace alcp::digest { namespace avx2 {
         state[7] += h;
     }
 
+    static inline void process_buffer_avx2(Uint64       state[8],
+                                           const Uint8* data,
+                                           Uint32       num_chunks,
+                                           __m256i      hash_256_0,
+                                           __m256i      hash_256_1)
+    {
+
+        __attribute__((aligned(64)))
+        Uint64  message_sch_1[Sha512::cNumRounds + 16];
+        __m256i msg_vect[SHA512_CHUNK_NUM_VECT_AVX2 * 2];
+        __m256i svec_256_0, svec_256_1;
+
+        for (Uint32 i = 0; i < num_chunks; i = i + 2) {
+
+            svec_256_0 = hash_256_0;
+            svec_256_1 = hash_256_1;
+
+            load_data(msg_vect,
+                      message_sch_1,
+                      /*&message_sch_1[80],*/ data + i * Sha512::cChunkSize);
+
+            extendMsgandCalcRound(
+                svec_256_0, svec_256_1, msg_vect, message_sch_1
+                /*&message_sch_1[80]*/);
+
+            calcRemainingRounds(
+                hash_256_0, hash_256_1, svec_256_0, svec_256_1, message_sch_1);
+        }
+
+        _mm256_storeu_si256((__m256i*)state, hash_256_0);
+
+        _mm256_storeu_si256((__m256i*)(state + 4), hash_256_1);
+    }
+
     alc_error_t ShaUpdate512(Uint64* pHash, const Uint8* pSrc, Uint64 src_len)
     {
         Uint32 num_chunks = src_len / Sha512::cChunkSize;
-
-        for (Uint32 i = 0; i < num_chunks; i++) {
+        if ((num_chunks & 0x01) == 1) {
             process_buffer_avx(pHash, pSrc, Sha512::cChunkSize);
             pSrc += Sha512::cChunkSize;
+            num_chunks--;
         }
+        __m256i hash_256_0, hash_256_1;
+        auto    p_in_256 = reinterpret_cast<const __m256i*>(pHash);
+        alcp_load_hash_ymm(p_in_256, hash_256_0, hash_256_1);
+        process_buffer_avx2(pHash, pSrc, num_chunks, hash_256_0, hash_256_1);
         return ALC_ERROR_NONE;
     }
-}} // namespace alcp::digest::avx2
+}} // namespace alcp::digest::zen3

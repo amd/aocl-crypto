@@ -31,7 +31,9 @@
 /* C-API headers */
 #include "alcp/digest.h"
 #include "alcp/types.h"
-
+#ifdef USE_AOCL_CPUID
+#include "alci/cpu_features.h"
+#endif
 /* C++ headers */
 #include "error.hh"
 
@@ -45,6 +47,13 @@ namespace alcp::digest {
 
 std::pmr::synchronized_pool_resource&
 GetDefaultDigestPool();
+
+typedef enum
+{
+    AVX512_DQ = 1,
+    AVX512_F,
+    AVX512_BW,
+} avx512_flags_t;
 
 static inline Uint32
 RotateRight(Uint32 value, Uint32 count)
@@ -118,6 +127,38 @@ class Digest : public IDigest
   protected:
     Digest()          = default;
     virtual ~Digest() = default;
+
+    static bool isAvx512Has(avx512_flags_t flag)
+    {
+// static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
+#ifdef USE_AOCL_CPUID
+        static bool s_avx512f_available  = (alc_cpu_has_avx512f() > 0);
+        static bool s_avx512dq_available = (alc_cpu_has_avx512dq() > 0);
+        static bool s_avx512bw_available = (alc_cpu_has_avx512bw() > 0);
+#else
+        static bool s_avx512f_available  = false;
+        static bool s_avx512dq_available = false;
+        static bool s_avx512bw_available = false;
+#endif
+        switch (flag) {
+            case digest::AVX512_DQ:
+                return s_avx512dq_available;
+            case digest::AVX512_F:
+                return s_avx512f_available;
+            case digest::AVX512_BW:
+                return s_avx512bw_available;
+        }
+        return false;
+    }
+
+    static bool isZen3()
+    {
+// static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
+#ifdef USE_AOCL_CPUID
+        return alc_cpu_arch_is_zen3();
+#endif
+        return false;
+    }
 };
 
 } // namespace alcp::digest

@@ -30,15 +30,11 @@
 
 #include "error.hh"
 
-namespace alcp::digest { namespace avx2 {
+namespace alcp::digest { namespace zen4 {
 
-    alc_error_t ShaUpdate256(uint32_t*       pHash,
+    alc_error_t ShaUpdate512(uint64_t*       pHash,
                              const uint8_t*  pSrc,
                              uint64_t        src_len,
-                             const uint32_t* pHashConstants);
+                             const uint64_t* pHashConstants);
 
-    alc_error_t ShaUpdate512(uint64_t*      pHash,
-                             const uint8_t* pSrc,
-                             uint64_t       src_len);
-
-}} // namespace alcp::digest::avx2
+}} // namespace alcp::digest::zen4
