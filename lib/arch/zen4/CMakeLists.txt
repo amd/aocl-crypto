@@ -27,12 +27,12 @@
 FILE(GLOB ZEN4_SRCS "*.cc")
 
 IF (MSVC)
-	SET(ARCH_COMPILE_FLAG /arch:znver4)
+	SET(ARCH_COMPILE_FLAG -mavx -mavx2 -maes -mvaes -mpclmul -mvpclmulqdq -DUSE_AVX512 /arch:AVX512)
 ELSE()
 
 	SET(ARCH_COMPILE_FLAG -fPIC -march=znver3 -mavx -mavx2 -maes -mvaes -mpclmul -mavx512f -mavx512dq -mavx512ifma -mavx512cd
 	                      -mavx512bw -mavx512vl -mavx512vbmi -mavx512vbmi2 -mavx512vnni -mavx512bitalg -mavx512vpopcntdq
-						  -mvpclmulqdq -DUSE_AVX512)
+						  -mvpclmulqdq -DUSE_AVX512 )
 
 ENDIF()
 

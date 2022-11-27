@@ -54,7 +54,7 @@ DecryptCbc(const uint8_t* pCipherText, // ptr to ciphertext
     auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
 
     // Mask for loading and storing half register
-    __m256i mask_lo = _mm256_set_epi64x(0, 0, 1UL << 63, 1UL << 63);
+    __m256i mask_lo = _mm256_set_epi64x(0, 0, static_cast<long long>(1UL) << 63, static_cast<long long>(1UL) << 63);
 
     __m256i input_128_a1;
 

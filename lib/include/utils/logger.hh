@@ -231,7 +231,7 @@ class Logger : public ILogger
     void setPriority(Priority ll) { m_allowed_priority = ll; }
     void setThreshold(Uint32 t);
 
-    static ILogger* getDefaultLogger();
+    ALCP_SYMBOLS static ILogger* getDefaultLogger();
     static ILogger* getLogger(const std::string& name);
     Priority        getPriority() { return m_allowed_priority; }
 

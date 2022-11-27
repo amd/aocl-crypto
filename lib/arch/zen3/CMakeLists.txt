@@ -27,7 +27,7 @@
 FILE(GLOB ZEN3_SRCS "*.cc")
 
 IF (MSVC)
-	SET(ARCH_COMPILE_FLAG /arch:znver3)
+	SET(ARCH_COMPILE_FLAG -mavx -mavx2 -maes -mvaes -mpclmul -mvpclmulqdq /arch:AVX2)
 ELSE()
 
 	SET(ARCH_COMPILE_FLAG -fPIC -march=znver3 -mavx -mavx2 -maes -mvaes -mpclmul -mvpclmulqdq)

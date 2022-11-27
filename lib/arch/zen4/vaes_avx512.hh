@@ -31,6 +31,7 @@
 #include <immintrin.h>
 
 #include "alcp/error.h"
+#include <avx512fintrin.h>
 
 namespace alcp::cipher { namespace vaes512 {
 

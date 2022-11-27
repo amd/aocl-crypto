@@ -29,7 +29,7 @@
 #pragma once
 
 #include <immintrin.h>
-
+#include <vaesintrin.h>
 #include "alcp/error.h"
 
 namespace alcp::cipher { namespace vaes {

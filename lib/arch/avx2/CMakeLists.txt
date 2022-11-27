@@ -26,8 +26,8 @@
 
 FILE(GLOB AVX2_SRCS "*.cc")
 
-IF (MSVC)
-	SET(ARCH_COMPILE_FLAG /arch:avx2)
+IF (MSVC )
+	SET(ARCH_COMPILE_FLAG -msse2 -maes -mavx2 -msha -mno-vaes -mpclmul -O2)
 ELSE()
 	SET(ARCH_COMPILE_FLAG -fPIC -msse2 -maes -mavx2 -msha -mno-vaes -mpclmul -O2)
 ENDIF()

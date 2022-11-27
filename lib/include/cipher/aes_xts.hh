@@ -31,6 +31,8 @@
 
 #include <cstdint>
 #include <immintrin.h>
+#include <vpclmulqdqintrin.h>
+#include <avx2intrin.h>
 
 #define GF_POLYNOMIAL 0x87
 

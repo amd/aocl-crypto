@@ -42,4 +42,15 @@
 #define EXTERN_C
 #endif
 
+/**
+* dllexport helps to explicitly export symbols on Windows.
+* Therefore, any new API's must first be declared with ALCP_SYMBOLS to load on Windows.
+*/
+#ifdef WIN32
+#define ALCP_SYMBOLS __declspec(dllexport)
+#else
+#define ALCP_SYMBOLS
+#endif
+
+
 #endif /* _ALCP_MACROS_H_ */

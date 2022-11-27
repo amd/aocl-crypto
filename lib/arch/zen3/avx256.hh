@@ -44,13 +44,13 @@ namespace alcp::cipher { namespace vaes {
     static inline __m256i alcp_loadu_128(__m256i* ad)
     {
         // Mask for loading and storing half register
-        __m256i mask_lo = _mm256_set_epi64x(0, 0, 1UL << 63, 1UL << 63);
+        __m256i mask_lo = _mm256_set_epi64x(0, 0, static_cast<long long>(1UL) << 63, static_cast<long long>(1UL) << 63);
         return _mm256_maskload_epi64((long long*)ad, mask_lo);
     }
     static inline __m256i alcp_loadu_128(const __m256i* ad)
     {
         // Mask for loading and storing half register
-        __m256i mask_lo = _mm256_set_epi64x(0, 0, 1UL << 63, 1UL << 63);
+        __m256i mask_lo = _mm256_set_epi64x(0, 0, static_cast<long long>(1UL) << 63, static_cast<long long>(1UL) << 63);
         return _mm256_maskload_epi64((long long*)ad, mask_lo);
     }
 
@@ -88,7 +88,7 @@ namespace alcp::cipher { namespace vaes {
     static inline void alcp_storeu_128(__m256i* ad, __m256i x)
     {
         // Mask for loading and storing half register
-        __m256i mask_lo = _mm256_set_epi64x(0, 0, 1UL << 63, 1UL << 63);
+        __m256i mask_lo = _mm256_set_epi64x(0, 0, static_cast<long long>(1UL) << 63, static_cast<long long>(1UL) << 63);
         _mm256_maskstore_epi64((long long*)ad, mask_lo, x);
     }
 

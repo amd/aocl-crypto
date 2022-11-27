@@ -25,30 +25,70 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include "dynlib.hh"
 
-#ifndef _INCLUDE_ERROR_H_
-#define _INCLUDE_ERROR_H_ 2
+#include <mutex>
 
-#include <memory>
-
-#include "alcp/error.h"
-#include "alcp/macros.h"
-
+/**
+* This file is defined only for the Windows call-stack.
+*/
 namespace alcp {
-class Error
-{
-  public:
-    ALCP_SYMBOLS static void setGeneric(alc_error_t& err, alc_error_generic_t gen);
-    ALCP_SYMBOLS static void setDetail(alc_error_t& err, alc_error_generic_t det);
-    static void setModule(alc_error_t& err, uint16_t mod);
-    static int  print(alc_error_t& err, uint8_t* buf, uint64_t len);
-    static bool isError(alc_error_t& err) { return err != 0; }
+    class DynamicLibrary::Impl
+    {
+    public:
+        Impl(const std::string& path)
+            : m_path{ path }
+        {}
+        Impl(const std::string& path, int flags)
+            : m_path{ path }
+        {}
+        ~Impl();
 
-  private:
-    Error();
-    ~Error();
-};
+        void               load(const std::string& path, int flags);
+        void               unload();
+        bool               isLoaded() const;
+        void* getSymbol(const std::string& name);
+        static std::string suffix();
 
+    private:
+        std::string m_path;
+        void* m_handle;
+        std::mutex  m_mutex;
+    };
+
+    DynamicLibrary::Impl::~Impl()
+    {
+
+    }
+
+    void
+        DynamicLibrary::Impl::load(const std::string& path, int flags)
+    {
+        
+    }
+
+    void
+        DynamicLibrary::Impl::unload()
+    {
+        
+    }
+
+    bool
+        DynamicLibrary::Impl::isLoaded() const
+    {
+        return false;
+    }
+
+    void*
+        DynamicLibrary::Impl::getSymbol(const std::string& name)
+    {
+        return nullptr;
+    }
+
+    std::string
+        DynamicLibrary::Impl::suffix()
+    {
+
+        return nullptr;
+    }
 } // namespace alcp
-
-#endif /* _INCLUDE_ERROR_H_ */

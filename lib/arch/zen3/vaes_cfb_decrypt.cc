@@ -149,7 +149,7 @@ DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
     /* process single block of 128-bit */
     if (blocks) {
         Uint64* p_iv64  = (uint64_t*)p_ct256;
-        __m256i mask_lo = _mm256_set_epi64x(0, 0, 1UL << 63, 1UL << 63);
+        __m256i mask_lo = _mm256_set_epi64x(0, 0, static_cast<long long>(1UL) << 63, static_cast<long long>(1UL) << 63);
 
         __m256i blk0 = _mm256_set_epi64x(p_iv64[1], p_iv64[0], 0, 0);
         __m256i y0   = (blk0 | iv256);

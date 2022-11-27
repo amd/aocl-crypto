@@ -38,6 +38,10 @@ namespace alcp::random_number {
 #include <fcntl.h>
 #include <unistd.h>
 #define ALCP_CONFIG_OS_HAS_DEVRANDOM 1
+#elif defined(_WIN32)
+#include <stdlib.h>
+#include <time.h>
+#define ALCP_CONFIG_OS_HAS_GETRANDOM 1
 #else
 #include <sys/random.h>
 #define ALCP_CONFIG_OS_HAS_GETRANDOM 1
@@ -92,6 +96,7 @@ class SystemRngImpl
 #ifdef DEBUG
         printf("Engine system_randomize_getrandom\n");
 #endif
+#ifndef WIN32
         const int flag = 0;
         size_t    out  = getrandom(&output[0], length, flag);
 
@@ -106,7 +111,14 @@ class SystemRngImpl
 
         if (out != length) // not enough entropy , throw here,
             return ALC_ERROR_NO_ENTROPY;
-
+#else
+        srand(time(NULL));
+        int* pBuf_int = reinterpret_cast<int*> (output);
+        for (int i = 0; i < (length / sizeof(int)); i++)
+        {
+            *(pBuf_int + i) = rand();
+        }
+#endif
         return ALC_ERROR_NONE;
     }
 };
