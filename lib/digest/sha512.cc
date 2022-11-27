@@ -203,8 +203,7 @@ Sha512::processChunk(const Uint8* pSrc, Uint64 len)
     // if (Digest::isAvx512Has(digest::AVX512_F)
     //     && Digest::isAvx512Has(digest::AVX512_DQ)
     //     && Digest::isAvx512Has(digest::AVX512_BW)) {
-    //     return digest::zen4::ShaUpdate512(m_hash, pSrc, len,
-    //     cRoundConstants);
+    //     return digest::zen4::ShaUpdate512(m_hash, pSrc, len);
     // }
 
     return zen3::ShaUpdate512(m_hash, pSrc, len);

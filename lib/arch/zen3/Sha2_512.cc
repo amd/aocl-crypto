@@ -225,29 +225,29 @@ namespace alcp::digest { namespace zen3 {
     }
 
     static inline void extendMsgandCalcRound(
-        __m256i& svec_256_0,
-        __m256i& svec_256_1,
+        __m256i& hash_256_0,
+        __m256i& hash_256_1,
         __m256i  msg_vect[SHA512_CHUNK_NUM_VECT_AVX2 * 2],
         Uint64   ms[Sha512::cNumRounds + 16])
     {
         Uint32 k512_idx = 2 * 16;
         Uint64 a, b, c, d, e, f, g, h, temp;
 
-        a = svec_256_0[0];
+        a = hash_256_0[0];
 
-        b = svec_256_0[1];
+        b = hash_256_0[1];
 
-        c = svec_256_0[2];
+        c = hash_256_0[2];
 
-        d = svec_256_0[3];
+        d = hash_256_0[3];
 
-        e = svec_256_1[0];
+        e = hash_256_1[0];
 
-        f = svec_256_1[1];
+        f = hash_256_1[1];
 
-        g = svec_256_1[2];
+        g = hash_256_1[2];
 
-        h = svec_256_1[3];
+        h = hash_256_1[3];
 
         // Rounds 0-63 (0-15, 16-31, 32-47, 48-63)
         for (Uint32 i = 1; i < 5; i++) {
@@ -282,51 +282,24 @@ namespace alcp::digest { namespace zen3 {
                 a    = temp;
             }
         }
-        svec_256_0 = _mm256_set_epi64x(d, c, b, a);
-        svec_256_1 = _mm256_set_epi64x(h, g, f, e);
-    }
 
-    static inline void calcRemainingRounds(__m256i&     hash_256_0,
-                                           __m256i&     hash_256_1,
-                                           __m256i      svec_256_0,
-                                           __m256i      svec_256_1,
-                                           const Uint64 message_sch[80])
-    {
-        Uint64 a, b, c, d, e, f, g, h;
-
-        a = svec_256_0[0];
-
-        b = svec_256_0[1];
-
-        c = svec_256_0[2];
-
-        d = svec_256_0[3];
-
-        e = svec_256_1[0];
-
-        f = svec_256_1[1];
-
-        g = svec_256_1[2];
-
-        h = svec_256_1[3];
-
-        // do 16 of them
-        SHA_ROUND(a, b, c, d, e, f, g, h, message_sch, 0);
-        SHA_ROUND(h, a, b, c, d, e, f, g, message_sch, 1);
-        SHA_ROUND(g, h, a, b, c, d, e, f, message_sch, 2);
-        SHA_ROUND(f, g, h, a, b, c, d, e, message_sch, 3);
-        SHA_ROUND(e, f, g, h, a, b, c, d, message_sch, 4);
-        SHA_ROUND(d, e, f, g, h, a, b, c, message_sch, 5);
-        SHA_ROUND(c, d, e, f, g, h, a, b, message_sch, 6);
-        SHA_ROUND(b, c, d, e, f, g, h, a, message_sch, 7);
-        SHA_ROUND(a, b, c, d, e, f, g, h, message_sch, 8);
-        SHA_ROUND(h, a, b, c, d, e, f, g, message_sch, 9);
-        SHA_ROUND(g, h, a, b, c, d, e, f, message_sch, 10);
-        SHA_ROUND(f, g, h, a, b, c, d, e, message_sch, 11);
-        SHA_ROUND(e, f, g, h, a, b, c, d, message_sch, 12);
-        SHA_ROUND(d, e, f, g, h, a, b, c, message_sch, 13);
-        SHA_ROUND(c, d, e, f, g, h, a, b, message_sch, 14);
-        SHA_ROUND(b, c, d, e, f, g, h, a, message_sch, 15);
+        // do 16 of the remaining for the first chunk
+        SHA_ROUND(a, b, c, d, e, f, g, h, ms, 0);
+        SHA_ROUND(h, a, b, c, d, e, f, g, ms, 1);
+        SHA_ROUND(g, h, a, b, c, d, e, f, ms, 2);
+        SHA_ROUND(f, g, h, a, b, c, d, e, ms, 3);
+        SHA_ROUND(e, f, g, h, a, b, c, d, ms, 4);
+        SHA_ROUND(d, e, f, g, h, a, b, c, ms, 5);
+        SHA_ROUND(c, d, e, f, g, h, a, b, ms, 6);
+        SHA_ROUND(b, c, d, e, f, g, h, a, ms, 7);
+        SHA_ROUND(a, b, c, d, e, f, g, h, ms, 8);
+        SHA_ROUND(h, a, b, c, d, e, f, g, ms, 9);
+        SHA_ROUND(g, h, a, b, c, d, e, f, ms, 10);
+        SHA_ROUND(f, g, h, a, b, c, d, e, ms, 11);
+        SHA_ROUND(e, f, g, h, a, b, c, d, ms, 12);
+        SHA_ROUND(d, e, f, g, h, a, b, c, ms, 13);
+        SHA_ROUND(c, d, e, f, g, h, a, b, ms, 14);
+        SHA_ROUND(b, c, d, e, f, g, h, a, ms, 15);
 
         hash_256_0 =
             _mm256_add_epi64(hash_256_0, _mm256_set_epi64x(d, c, b, a));
@@ -342,23 +315,26 @@ namespace alcp::digest { namespace zen3 {
         g = hash_256_1[2];
         h = hash_256_1[3];
 
+        UNROLL_80
+
+        // do 80 rounds for the second chunk
         for (Uint32 i = 16; i < 96; i += 16) {
-            SHA_ROUND(a, b, c, d, e, f, g, h, message_sch, i);
-            SHA_ROUND(h, a, b, c, d, e, f, g, message_sch, i + 1);
-            SHA_ROUND(g, h, a, b, c, d, e, f, message_sch, i + 2);
-            SHA_ROUND(f, g, h, a, b, c, d, e, message_sch, i + 3);
-            SHA_ROUND(e, f, g, h, a, b, c, d, message_sch, i + 4);
-            SHA_ROUND(d, e, f, g, h, a, b, c, message_sch, i + 5);
-            SHA_ROUND(c, d, e, f, g, h, a, b, message_sch, i + 6);
-            SHA_ROUND(b, c, d, e, f, g, h, a, message_sch, i + 7);
-            SHA_ROUND(a, b, c, d, e, f, g, h, message_sch, i + 8);
-            SHA_ROUND(h, a, b, c, d, e, f, g, message_sch, i + 9);
-            SHA_ROUND(g, h, a, b, c, d, e, f, message_sch, i + 10);
-            SHA_ROUND(f, g, h, a, b, c, d, e, message_sch, i + 11);
-            SHA_ROUND(e, f, g, h, a, b, c, d, message_sch, i + 12);
-            SHA_ROUND(d, e, f, g, h, a, b, c, message_sch, i + 13);
-            SHA_ROUND(c, d, e, f, g, h, a, b, message_sch, i + 14);
-            SHA_ROUND(b, c, d, e, f, g, h, a, message_sch, i + 15);
+            SHA_ROUND(a, b, c, d, e, f, g, h, ms, i);
+            SHA_ROUND(h, a, b, c, d, e, f, g, ms, i + 1);
+            SHA_ROUND(g, h, a, b, c, d, e, f, ms, i + 2);
+            SHA_ROUND(f, g, h, a, b, c, d, e, ms, i + 3);
+            SHA_ROUND(e, f, g, h, a, b, c, d, ms, i + 4);
+            SHA_ROUND(d, e, f, g, h, a, b, c, ms, i + 5);
+            SHA_ROUND(c, d, e, f, g, h, a, b, ms, i + 6);
+            SHA_ROUND(b, c, d, e, f, g, h, a, ms, i + 7);
+            SHA_ROUND(a, b, c, d, e, f, g, h, ms, i + 8);
+            SHA_ROUND(h, a, b, c, d, e, f, g, ms, i + 9);
+            SHA_ROUND(g, h, a, b, c, d, e, f, ms, i + 10);
+            SHA_ROUND(f, g, h, a, b, c, d, e, ms, i + 11);
+            SHA_ROUND(e, f, g, h, a, b, c, d, ms, i + 12);
+            SHA_ROUND(d, e, f, g, h, a, b, c, ms, i + 13);
+            SHA_ROUND(c, d, e, f, g, h, a, b, ms, i + 14);
+            SHA_ROUND(b, c, d, e, f, g, h, a, ms, i + 15);
         }
 
         hash_256_0 =
@@ -502,23 +478,15 @@ namespace alcp::digest { namespace zen3 {
         __attribute__((aligned(64)))
         Uint64  message_sch_1[Sha512::cNumRounds + 16];
         __m256i msg_vect[SHA512_CHUNK_NUM_VECT_AVX2 * 2];
-        __m256i svec_256_0, svec_256_1;
 
         for (Uint32 i = 0; i < num_chunks; i = i + 2) {
-
-            svec_256_0 = hash_256_0;
-            svec_256_1 = hash_256_1;
 
             load_data(msg_vect,
                       message_sch_1,
                       /*&message_sch_1[80],*/ data + i * Sha512::cChunkSize);
 
             extendMsgandCalcRound(
-                svec_256_0, svec_256_1, msg_vect, message_sch_1
-                /*&message_sch_1[80]*/);
-
-            calcRemainingRounds(
-                hash_256_0, hash_256_1, svec_256_0, svec_256_1, message_sch_1);
+                hash_256_0, hash_256_1, msg_vect, message_sch_1);
         }
 
         _mm256_storeu_si256((__m256i*)state, hash_256_0);
