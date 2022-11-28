@@ -127,7 +127,7 @@ namespace alcp::digest { namespace avx2 {
         }
 
         // xi stage
-        //utils::CopyBytes(temp, state, sizeof(temp));
+        utils::CopyBytes(temp, state, sizeof(temp));
         for (int x = 0; x < 5; ++x) {
             for (int y = 0; y < 5; ++y) {
                 state[x][y] =

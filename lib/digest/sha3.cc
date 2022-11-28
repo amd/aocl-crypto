@@ -101,6 +101,13 @@ static constexpr Uint8 cRotationConstants [cDim][cDim] =
 // maximum size of message block in bits is used for shake128 digest
 static constexpr Uint32 MaxDigestBlockSizeBits = 1344;
 
+static bool
+isAvx2Available()
+{
+    static bool s_avx2_available = true;
+    return s_avx2_available;
+}
+
 class Sha3::Impl
 {
   public:
@@ -327,8 +334,11 @@ Sha3::Impl::processChunk(const Uint8* pSrc, Uint64 len)
     Uint64  msg_size       = len;
     Uint64* p_msg_buffer64 = (Uint64*)pSrc;
 
-    return avx2::Sha3Update(
-        m_state_flat, p_msg_buffer64, msg_size, m_chunk_size);
+    static bool avx2_available = isAvx2Available();
+    if (avx2_available) {
+        return avx2::Sha3Update(
+            m_state_flat, p_msg_buffer64, msg_size, m_chunk_size);
+    }
 
     while (msg_size) {
         // xor message chunk into m_state.
