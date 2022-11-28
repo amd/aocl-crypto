@@ -32,9 +32,12 @@
 #include <stdio.h>
 #include <stdlib.h> /* for malloc */
 #include <string.h>
+
+#ifdef __linux__
 #include <sys/time.h>
-#ifdef WIN32
+#elif WIN32
 #include <Windows.h>
+#include <time.h>
 #endif
 
 #include <immintrin.h>
@@ -69,12 +72,14 @@ static alc_cipher_handle_t handle;
 #define ALCP_PRINT_TEXT(I, L, S)
 #endif // DEBUG_P
 
+double elapsed;
+double totalTimeElapsed;
+
+#ifdef __linux__
 // to do: these macro is better to be moved to common header.
 #define ALCP_CRYPT_TIMER_INIT struct timeval begin, end;
 long   seconds;
 long   microseconds;
-double elapsed;
-double totalTimeElapsed;
 
 #define ALCP_CRYPT_TIMER_START gettimeofday(&begin, 0);
 
@@ -88,6 +93,20 @@ double totalTimeElapsed;
         printf("\t" Y);                                                        \
         printf(" %2.2f ms ", elapsed * 1000);                                  \
     }
+#elif WIN32
+#define ALCP_CRYPT_TIMER_INIT double begin, end;
+
+#define ALCP_CRYPT_TIMER_START QueryPerformanceCounter(&begin);
+
+#define ALCP_CRYPT_GET_TIME(X, Y)                                                                   \
+        QueryPerformanceCounter(&end);                                                              \
+        elapsed = (end - begin) / CLOCKS_PER_SEC;                                                   \
+        totalTimeElapsed += elapsed;                                                                \
+        if (X) {                                                                                    \
+            printf("\t" Y);                                                                         \
+            printf(" %2.2f ms ", elapsed * 1000);                                                   \
+        }                                                                                           
+#endif
 
 void
 getinput(uint8_t* output, int inputLen, int seed)

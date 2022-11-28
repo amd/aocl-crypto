@@ -352,7 +352,11 @@ Sha512::finalize(const Uint8* pBuf, Uint64 size)
     __uint128_t  len_in_bits = m_msg_len * 8;
     __uint128_t* msg_len_ptr = reinterpret_cast<__uint128_t*>(
         &m_buffer[buf_len] - sizeof(__uint128_t));
-    msg_len_ptr[0] = utils::ToBigEndian(len_in_bits);
+
+    /* TODO: Due to memory alignment, msg_len_ptr gets optimized in Windows.So, using CopyBytes to copy every bits*/
+    __uint128_t len_bits_copy = utils::ToBigEndian(len_in_bits);
+    utils::CopyBytes(&msg_len_ptr[0], &len_bits_copy, 16);
+	 //msg_len_ptr[0] = utils::ToBigEndian(len_in_bits);
 #else
     Uint64      len_in_bits_high;
     Uint64      len_in_bits;

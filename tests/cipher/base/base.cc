@@ -31,6 +31,9 @@
 #ifdef USE_IPP
 #include "cipher/ipp_base.hh"
 #endif
+#ifdef WIN32
+#include <direct.h>
+#endif
 
 namespace alcp::testing {
 
@@ -73,7 +76,11 @@ void
 ExecRecPlay::init(std::string str_mode, std::string dir_name, bool playback)
 {
     if (!isPathExist(dir_name)) {
+    #ifdef __linux__
         mkdir(dir_name.c_str(), 0755);
+    #elif WIN32
+        _mkdir(dir_name.c_str());
+    #endif
     }
     if (!playback) { // Record
         // Binary File, need to open binary

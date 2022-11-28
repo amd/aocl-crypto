@@ -41,6 +41,7 @@
 #include "openssl_base.hh"
 #endif
 #include "rng_base.hh"
+#include <algorithm>
 typedef enum
 {
     DECRYPT = 0,
@@ -537,7 +538,6 @@ RunTest(TestingCore& testingCore,
             data.m_tkeyl      = tkey.size();
             data.m_block_size = pt.size();
         }
-
         ret = testingCore.getCipherHandler()->testingEncrypt(
             data, testingCore.getDs()->getKey());
         EXPECT_TRUE(

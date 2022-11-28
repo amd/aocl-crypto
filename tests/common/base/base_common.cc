@@ -29,7 +29,11 @@
 #include "base_common.hh"
 #include "colors.hh"
 #include <sstream>
+#ifdef __linux__
 #include <unistd.h>
+#else
+#include <io.h>
+#endif
 
 namespace alcp::testing {
 

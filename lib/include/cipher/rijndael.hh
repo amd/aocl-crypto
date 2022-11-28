@@ -39,7 +39,7 @@
 
 namespace alcp::cipher {
 
-class Rijndael : public alcp::BlockCipher
+class ALCP_SYMBOLS Rijndael : public alcp::BlockCipher
 //, public Algorithm
 {
   public:

@@ -83,9 +83,9 @@ class Sha256 final : public Sha2
         cIvSizeBytes    = 32; /* IV size in bytes */
 
   public:
-    Sha256();
+    ALCP_SYMBOLS Sha256();
     Sha256(const alc_digest_info_t& rDigestInfo);
-    virtual ~Sha256();
+    virtual ALCP_SYMBOLS ~Sha256();
 
     /**
      * @return The input block size to the hash function in bytes
@@ -109,7 +109,7 @@ class Sha256 final : public Sha2
      *
      * \param    size    should be valid size > 0
      */
-    alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
+    ALCP_SYMBOLS alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
 
     /**
      * \brief   Cleans up any resource that was allocated
@@ -147,7 +147,7 @@ class Sha256 final : public Sha2
      * \param    size    Either valid size or 0, if \buf is nullptr, size
      *                   is assumed to be zero
      */
-    alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) override;
+    ALCP_SYMBOLS alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) override;
 
     /**
      * \brief  Copies the has from context to supplied buffer
@@ -164,10 +164,10 @@ class Sha256 final : public Sha2
      * \param    size    Either valid size or 0, if \buf is nullptr, size is
      *                   assumed to be zero
      */
-    alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const override;
+    ALCP_SYMBOLS alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const override;
 
   public:
-    alc_error_t setIv(const void* pIv, Uint64 size);
+    ALCP_SYMBOLS alc_error_t setIv(const void* pIv, Uint64 size);
 
   private:
     class Impl;
@@ -176,7 +176,7 @@ class Sha256 final : public Sha2
     std::unique_ptr<Impl> m_pimpl;
 };
 
-class Sha224 final : public Sha2
+class ALCP_SYMBOLS Sha224 final : public Sha2
 {
   public:
     Sha224();

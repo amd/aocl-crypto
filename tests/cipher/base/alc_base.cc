@@ -182,6 +182,7 @@ out:
             free(m_handle->ch_context);
         }
         delete m_handle; // Free old handle
+        m_handle = nullptr;
     }
     return false;
 }

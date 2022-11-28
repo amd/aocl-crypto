@@ -92,7 +92,8 @@ ShaRound(Uint64  a,
 }
 
 /* TODO: Add pImpl support as done in sha256 */
-class Sha512 final : public Sha2
+
+class ALCP_SYMBOLS Sha512 final : public Sha2
 {
   public:
     // clang-format off
@@ -208,7 +209,7 @@ class Sha512 final : public Sha2
     bool   m_finished;
 };
 
-class Sha384 final : public Sha2
+class ALCP_SYMBOLS Sha384 final : public Sha2
 {
   public:
     Sha384();

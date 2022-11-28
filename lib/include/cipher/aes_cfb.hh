@@ -42,7 +42,7 @@ namespace alcp::cipher {
  * \brief        AES Encryption in CFB(Cipher Feedback mode)
  * \notes        TODO: Move this to a aes_cbc.hh or other
  */
-class Cfb final : public Aes
+class ALCP_SYMBOLS Cfb final : public Aes
 {
   public:
     explicit Cfb(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)

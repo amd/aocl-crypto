@@ -30,6 +30,10 @@ FetchContent_Declare(gtest
     GIT_TAG 4523B6410BFCD3289597FA2B5B6E18DE)
 FetchContent_MakeAvailable(gtest)
 
+if (POLICY CMP0079) # Visibility
+  cmake_policy(SET CMP0079 NEW)
+endif (POLICY CMP0079)
+
 # Basic sources and libs needed for ALCP
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ../common/base/rng_base.cc ../common/base/base_common.cc base/alc_base.cc base/base.cc)
 SET(LIBS ${LIBS} gtest alcp)
@@ -38,6 +42,11 @@ SET(LIBS ${LIBS} gtest alcp)
 if (ALCP_USE_ASAN)
     SET(LIBS ${LIBS} asan)
 endif()
+
+IF(WIN32)
+target_link_libraries(gmock PUBLIC gtest)
+target_link_libraries(gmock_main PUBLIC gmock)
+ENDIF()
 
 SET(EXTRA_INCLUDES "")
 
@@ -87,7 +96,9 @@ IF(ENABLE_TESTS_OPENSSL_API)
     SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${OPENSSL_INSTALL_DIR}/include)
 ENDIF(ENABLE_TESTS_OPENSSL_API)
 
+IF(UNIX)
 SET(LIBS ${LIBS} pthread)
+ENDIF()
 
 # Function to dynamically generate compilation of each test cases
 FUNCTION(KAT_AES MOD)
