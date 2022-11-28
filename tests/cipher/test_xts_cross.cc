@@ -44,15 +44,6 @@ using namespace alcp::testing;
 ExecRecPlay* fr = nullptr;
 
 #define ALC_MODE ALC_AES_MODE_XTS
-#define STR_MODE "AES_XTS"
-// Below in bytes
-#define SMALL_MAX_LOOP   160000
-#define SMALL_INC_LOOP   16
-#define SMALL_START_LOOP 16
-// Below in 0.1MB size
-#define BIG_MAX_LOOP   2
-#define BIG_INC_LOOP   1
-#define BIG_START_LOOP 1
 
 TEST(SYMMETRIC_ENCRYPT_128, 128_CROSS_CHECK_SMALL)
 {
@@ -70,8 +61,6 @@ TEST(SYMMETRIC_ENCRYPT_256, 256_CROSS_CHECK_BIG)
 {
     AesCrosstest(256, ENCRYPT, ALC_MODE, BIG);
 }
-
-
 
 int
 main(int argc, char** argv)

@@ -44,20 +44,6 @@ using namespace alcp::testing;
 ExecRecPlay* fr = nullptr;
 
 #define ALC_MODE ALC_AES_MODE_GCM
-#define STR_MODE "AES_CBC"
-// Below in bytes
-#define SMALL_MAX_LOOP   160000
-#define SMALL_INC_LOOP   16
-#define SMALL_START_LOOP 16
-// Below in 0.1MB size
-#define BIG_MAX_LOOP   2
-#define BIG_INC_LOOP   1
-#define BIG_START_LOOP 1
-
-// TODO: Don't generate too much random values, rather only generate max
-/* Testing Starts Here! */
-/* FixMe: Later, we can templatize all these gcm cross tests, for now this is ok
- */
 
 TEST(SYMMETRIC_ENCRYPT_128, 128_CROSS_CHECK_SMALL)
 {
