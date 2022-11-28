@@ -33,6 +33,7 @@
 #include <vector>
 
 #include "digest/sha3.hh"
+#include "digest/sha3_avx2.hh"
 #include "utils/bits.hh"
 #include "utils/copy.hh"
 #include "utils/endian.hh"
@@ -212,6 +213,10 @@ void
 Sha3::Impl::squeezeChunk()
 {
     Uint64 hash_copied = 0;
+
+    return avx2::Sha3Finalize(
+        (Uint8*)m_state_flat, &m_hash[0], m_hash_size, m_chunk_size);
+
     while (m_chunk_size <= m_hash_size - hash_copied) {
         Uint64 data_chunk_copied = std::min(m_hash_size, m_chunk_size);
 
@@ -321,6 +326,9 @@ Sha3::Impl::processChunk(const Uint8* pSrc, Uint64 len)
 {
     Uint64  msg_size       = len;
     Uint64* p_msg_buffer64 = (Uint64*)pSrc;
+
+    return avx2::Sha3Update(
+        m_state_flat, p_msg_buffer64, msg_size, m_chunk_size);
 
     while (msg_size) {
         // xor message chunk into m_state.
