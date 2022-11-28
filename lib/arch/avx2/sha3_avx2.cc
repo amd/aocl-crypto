@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (c) 2019-2022, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,13 +30,12 @@
 #include "digest/sha3.hh"
 #include "error.hh"
 #include "utils/copy.hh"
+#include <iostream>
 
 #include <x86intrin.h>
 
 #if defined(__GNUC__)
-#define UNROLL_8  _Pragma("GCC unroll 8")
-#define UNROLL_16 _Pragma("GCC unroll 16")
-#define UNROLL_80 _Pragma("GCC unroll 80")
+#define UNROLL_5 _Pragma("GCC unroll 5")
 #else
 #define UNROLL_8
 #define UNROLL_16
@@ -80,64 +79,106 @@ static constexpr Uint8 cRotationConstants [5][5] =
     18, 2, 61, 56, 14
 };
 
+// clang-format on
 namespace alcp::digest { namespace avx2 {
     static constexpr Uint64 cNumRounds = 24;
 
-
-
-    inline void fFunction( Uint64 state[5][5])
+    inline void fFunction(Uint64 state[5][5])
     {
         for (Uint64 i = 0; i < cNumRounds; ++i) {
-                    // theta stage
-        Uint64 c[5], d[5];
+            // theta stage
+            Uint64 c[5], d[5];
 
-        for (int x = 0; x < 5; ++x) {
-            c[x] = state[0][x];
-            for (int y = 1; y < 5; ++y) {
-                c[x] ^= state[y][x];
+            UNROLL_5
+            for (int x = 0; x < 5; ++x) {
+
+                c[x] = state[0][x] ^ state[1][x] ^ state[2][x] ^ state[3][x]
+                       ^ state[4][x];
             }
-        }
 
-        for (int x = 0; x < 5; ++x) {
-            d[x] = c[(5 + x - 1) % 5]
-                   ^ alcp::digest::RotateLeft(c[(x + 1) % 5], 1);
-        }
+            d[0] = RotateLeft(c[1], 1) ^ c[4];
+            d[1] = RotateLeft(c[2], 1) ^ c[0];
+            d[2] = RotateLeft(c[3], 1) ^ c[1];
+            d[3] = RotateLeft(c[4], 1) ^ c[2];
+            d[4] = RotateLeft(c[0], 1) ^ c[3];
 
-        for (int x = 0; x < 5; ++x) {
-            for (int y = 0; y < 5; ++y) {
-                state[x][y] ^= d[y];
+            UNROLL_5
+            for (int x = 0; x < 5; ++x) {
+                state[x][0] ^= d[0];
+                state[x][1] ^= d[1];
+                state[x][2] ^= d[2];
+                state[x][3] ^= d[3];
+                state[x][4] ^= d[4];
             }
-        }
 
-        // Rho stage
-        Uint64 temp[5][5];
-        for (int x = 0; x < 5; x++) {
-            for (int y = 0; y < 5; y++) {
-                temp[x][y] = alcp::digest::RotateLeft(state[x][y],
-                                                      cRotationConstants[x][y]);
+            // Rho stage
+            Uint64 temp[5][5];
+            UNROLL_5
+            for (int x = 0; x < 5; x++) {
+                temp[x][0] = alcp::digest::RotateLeft(state[x][0],
+                                                      cRotationConstants[x][0]);
+                temp[x][1] = alcp::digest::RotateLeft(state[x][1],
+
+                                                      cRotationConstants[x][1]);
+                temp[x][2] = alcp::digest::RotateLeft(state[x][2],
+                                                      cRotationConstants[x][2]);
+                temp[x][3] = alcp::digest::RotateLeft(state[x][3],
+                                                      cRotationConstants[x][3]);
+                temp[x][4] = alcp::digest::RotateLeft(state[x][4],
+                                                      cRotationConstants[x][4]);
             }
-        }
 
-        // pi stage
-        for (int x = 0; x < 5; ++x) {
-            int x_indx = 2 * x;
-            for (int y = 0; y < 5; ++y) {
-                state[(x_indx + 3 * y) % 5][y] = temp[y][x];
+            // // pi stage
+            // for (int x = 0; x < 5; ++x) {
+            //     int x_indx = 2 * x;
+            //     for (int y = 0; y < 5; ++y) {
+            //         state[(x_indx + 3 * y) % 5][y] = temp[y][x];
+            //     }
+            // }
+
+            state[0][0] = temp[0][0];
+            state[3][1] = temp[1][0];
+            state[1][2] = temp[2][0];
+            state[4][3] = temp[3][0];
+            state[2][4] = temp[4][0];
+
+            state[2][0] = temp[0][1];
+            state[0][1] = temp[1][1];
+            state[3][2] = temp[2][1];
+            state[1][3] = temp[3][1];
+            state[4][4] = temp[4][1];
+
+            state[4][0] = temp[0][2];
+            state[2][1] = temp[1][2];
+            state[0][2] = temp[2][2];
+            state[3][3] = temp[3][2];
+            state[1][4] = temp[4][2];
+
+            state[1][0] = temp[0][3];
+            state[4][1] = temp[1][3];
+            state[2][2] = temp[2][3];
+            state[0][3] = temp[3][3];
+            state[3][4] = temp[4][3];
+
+            state[3][0] = temp[0][4];
+            state[1][1] = temp[1][4];
+            state[4][2] = temp[2][4];
+            state[2][3] = temp[3][4];
+            state[0][4] = temp[4][4];
+
+            // xi stage
+            utils::CopyBytes(temp, state, sizeof(temp));
+
+            for (int x = 0; x < 5; ++x) {
+                for (int y = 0; y < 5; ++y) {
+                    state[x][y] =
+                        temp[x][y]
+                        ^ (~temp[x][(y + 1) % 5] & temp[x][(y + 2) % 5]);
+                }
             }
-        }
 
-        // xi stage
-        utils::CopyBytes(temp, state, sizeof(temp));
-        for (int x = 0; x < 5; ++x) {
-            for (int y = 0; y < 5; ++y) {
-                state[x][y] =
-                    temp[x][y]
-                    ^ (~temp[x][(y + 1) % 5] & temp[x][(y + 2) % 5]);
-            }
-        }
-
-        // iota stage
-        state[0][0] ^= cRoundConstants[i];
+            // iota stage
+            state[0][0] ^= cRoundConstants[i];
         }
     }
 
@@ -147,30 +188,31 @@ namespace alcp::digest { namespace avx2 {
         for (Uint64 i = 0; i < chunk_size_u64; ++i) {
             state[i] ^= pSrc[i];
         }
-        fFunction((Uint64 (*)[5])state);
+        fFunction((Uint64(*)[5])state);
     }
 
-    void Sha3Finalize(Uint8* state, Uint8* hash, Uint64 hash_size, Uint64 chunk_size)
+    void Sha3Finalize(Uint8* state,
+                      Uint8* hash,
+                      Uint64 hash_size,
+                      Uint64 chunk_size)
     {
         Uint64 hash_copied = 0;
         while (chunk_size <= hash_size - hash_copied) {
             Uint64 data_chunk_copied = std::min(hash_size, chunk_size);
 
-        utils::CopyBytes(
-            &hash[hash_copied], state, data_chunk_copied);
-        hash_copied += data_chunk_copied;
+            utils::CopyBytes(&hash[hash_copied], state, data_chunk_copied);
+            hash_copied += data_chunk_copied;
 
-        if (hash_copied < hash_size) {
-            fFunction((Uint64 (*)[5])state);
+            if (hash_copied < hash_size) {
+                fFunction((Uint64(*)[5])state);
+            }
+        }
+
+        if (hash_size > hash_copied) {
+            utils::CopyBytes(
+                &hash[hash_copied], (Uint8*)state, hash_size - hash_copied);
         }
     }
-
-    if (hash_size > hash_copied) {
-        utils::CopyBytes(&hash[hash_copied],
-                         (Uint8*)state,
-                         hash_size - hash_copied);
-    }
-}
 
     alc_error_t Sha3Update(Uint64* state,
                            Uint64* pSrc,
