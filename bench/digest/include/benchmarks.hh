@@ -131,7 +131,7 @@ static void
 BENCH_SHA3_224(benchmark::State& state)
 {
     alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_224;
+    info.dt_mode.dm_sha3 = ALC_SHA3_224;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
     info.dt_len          = ALC_DIGEST_LEN_224;
     Digest_Bench(state, info, state.range(0));
@@ -140,7 +140,7 @@ static void
 BENCH_SHA3_256(benchmark::State& state)
 {
     alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_256;
+    info.dt_mode.dm_sha3 = ALC_SHA3_256;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
     info.dt_len          = ALC_DIGEST_LEN_256;
     Digest_Bench(state, info, state.range(0));
@@ -149,7 +149,7 @@ static void
 BENCH_SHA3_384(benchmark::State& state)
 {
     alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_384;
+    info.dt_mode.dm_sha3 = ALC_SHA3_384;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
     info.dt_len          = ALC_DIGEST_LEN_384;
     Digest_Bench(state, info, state.range(0));
@@ -158,7 +158,7 @@ static void
 BENCH_SHA3_512(benchmark::State& state)
 {
     alc_digest_info_t info;
-    info.dt_mode.dm_sha2 = ALC_SHA2_512;
+    info.dt_mode.dm_sha3 = ALC_SHA3_512;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
     info.dt_len          = ALC_DIGEST_LEN_512;
     Digest_Bench(state, info, state.range(0));
