@@ -92,10 +92,6 @@ hash_demo(const Uint8* src,
         printf("Unable to copy digest\n");
     }
 
-    alcp_digest_finish(&s_dg_handle);
-
-    free(s_dg_handle.context);
-
 out:
     alcp_digest_finish(&s_dg_handle);
     free(s_dg_handle.context);
