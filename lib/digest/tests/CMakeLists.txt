@@ -26,8 +26,6 @@
 Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTests.cmake)
 
 file(GLOB TEST_FILES "*.cc")
-# Bump up C++ standard
-SET(CMAKE_CXX_STANDARD 20)
 
 alcp_module("Digest")
 

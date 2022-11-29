@@ -33,7 +33,7 @@ namespace alcp::testing {
 class RngBase
 {
   private:
-    alc_rng_handle_t m_handle{ .rh_context = nullptr };
+    alc_rng_handle_t m_handle{ nullptr };
 
   public:
     RngBase();

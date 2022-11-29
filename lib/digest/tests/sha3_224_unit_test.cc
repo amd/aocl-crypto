@@ -26,7 +26,6 @@
  *
  */
 
-
 #include "digest/sha3.hh"
 #include "gtest/gtest.h"
 
@@ -34,36 +33,33 @@ namespace {
 using namespace std;
 using namespace alcp::digest;
 
-typedef tuple<const string, const string> ParamTuple;
+typedef tuple<const string, const string>  ParamTuple;
 typedef std::map<const string, ParamTuple> KnownAnswerMap;
 
+static const alc_digest_info_t DigestInfo = []() {
+    alc_digest_info_t DigestInfo;
+    DigestInfo.dt_type         = ALC_DIGEST_TYPE_SHA3;
+    DigestInfo.dt_len          = ALC_DIGEST_LEN_224;
+    DigestInfo.dt_mode.dm_sha3 = ALC_SHA3_224;
+    return DigestInfo;
+}();
 
-const alc_digest_info_t DigestInfo = {
-    .dt_type = ALC_DIGEST_TYPE_SHA3,
-    .dt_len = ALC_DIGEST_LEN_224,
-    .dt_mode = {.dm_sha3 = ALC_SHA3_224,},
-};
-
-//Digest size in bytes
+// Digest size in bytes
 static const Uint8 DigestSize = 28;
 
 static const KnownAnswerMap message_digest = {
-    { "Empty",   
-            { "", 
-                "6b4e03423667dbb73b6e15454f0eb1abd4597f9a1b078e3f5b5a6bc7"} },
-    { "Symbols", 
-            { "!@#$",
-                "e22e7553367578d29912464418c37de0e24c34522d237408eb0d158e"} },
+    { "Empty",
+      { "", "6b4e03423667dbb73b6e15454f0eb1abd4597f9a1b078e3f5b5a6bc7" } },
+    { "Symbols",
+      { "!@#$", "e22e7553367578d29912464418c37de0e24c34522d237408eb0d158e" } },
     { "All_Char",
-            { "abc",
-                "e642824c3f8cf24ad09234ee7d3c766fc9a3a5168d0c94ad73b46fdf"} },
+      { "abc", "e642824c3f8cf24ad09234ee7d3c766fc9a3a5168d0c94ad73b46fdf" } },
     { "All_Num",
-            { "123", 
-                "602bdc204140db016bee5374895e5568ce422fabe17e064061d80097"} },
+      { "123", "602bdc204140db016bee5374895e5568ce422fabe17e064061d80097" } },
     { "Long_Input",
-            { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno"
-              "ijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
-                "543e6868e1666c1a643630df77367ae5a62a85070a51c14cbf665cbc"}}
+      { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno"
+        "ijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
+        "543e6868e1666c1a643630df77367ae5a62a85070a51c14cbf665cbc" } }
 };
 
 class Sha3_224
@@ -72,19 +68,22 @@ class Sha3_224
 
 TEST_P(Sha3_224, digest_generation_test)
 {
+
     const auto [plaintext, digest] = GetParam().second;
-    Sha3 sha3_224(DigestInfo);
-    Uint8 hash[DigestSize];
+    Sha3              sha3_224(DigestInfo);
+    Uint8             hash[DigestSize];
     std::stringstream ss;
 
-    ASSERT_EQ(sha3_224.update((const Uint8 *)plaintext.c_str(), plaintext.size()), ALC_ERROR_NONE);
+    ASSERT_EQ(
+        sha3_224.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+        ALC_ERROR_NONE);
     ASSERT_EQ(sha3_224.finalize(nullptr, 0), ALC_ERROR_NONE);
     ASSERT_EQ(sha3_224.copyHash(hash, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
-    for(Uint16 i = 0; i < DigestSize; ++i)
+    for (Uint16 i = 0; i < DigestSize; ++i)
         ss << std::setw(2) << static_cast<unsigned>(hash[i]);
-    
+
     std::string hash_string = ss.str();
     EXPECT_TRUE(hash_string == digest);
 }
@@ -105,8 +104,8 @@ TEST(Sha3_224, invalid_input_update_test)
 
 TEST(Sha3_224, zero_size_update_test)
 {
-    Sha3 sha3_224(DigestInfo);
-    const Uint8 src[DigestSize] = {0};
+    Sha3        sha3_224(DigestInfo);
+    const Uint8 src[DigestSize] = { 0 };
     EXPECT_EQ(ALC_ERROR_NONE, sha3_224.update(src, 0));
 }
 
@@ -118,16 +117,16 @@ TEST(Sha3_224, invalid_output_copy_hash_test)
 
 TEST(Sha3_224, zero_size_hash_copy_test)
 {
-    Sha3 sha3_224(DigestInfo);
+    Sha3  sha3_224(DigestInfo);
     Uint8 hash[DigestSize];
     EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_224.copyHash(hash, 0));
 }
 
 TEST(Sha3_224, over_size_hash_copy_test)
 {
-    Sha3 sha3_224(DigestInfo);
-    Uint8 hash[DigestSize+1];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_224.copyHash(hash, DigestSize+1));
+    Sha3  sha3_224(DigestInfo);
+    Uint8 hash[DigestSize + 1];
+    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_224.copyHash(hash, DigestSize + 1));
 }
 
-}
+} // namespace

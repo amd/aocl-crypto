@@ -26,7 +26,6 @@
  *
  */
 
-
 #include "digest/sha3.hh"
 #include "gtest/gtest.h"
 
@@ -36,36 +35,38 @@ namespace {
 using namespace std;
 using namespace alcp::digest;
 
-typedef tuple<const string, const string> ParamTuple;
+typedef tuple<const string, const string>  ParamTuple;
 typedef std::map<const string, ParamTuple> KnownAnswerMap;
 
+static const alc_digest_info_t DigestInfo = []() {
+    alc_digest_info_t DigestInfo;
+    DigestInfo.dt_type         = ALC_DIGEST_TYPE_SHA3;
+    DigestInfo.dt_len          = ALC_DIGEST_LEN_256;
+    DigestInfo.dt_mode.dm_sha3 = ALC_SHA3_256;
+    return DigestInfo;
+}();
 
-const alc_digest_info_t DigestInfo = {
-    .dt_type = ALC_DIGEST_TYPE_SHA3,
-    .dt_len = ALC_DIGEST_LEN_256,
-    .dt_mode = {.dm_sha3 = ALC_SHA3_256,},
-};
-
-//Digest size in bytes
+// Digest size in bytes
 static const Uint8 DigestSize = 32;
 
 static const KnownAnswerMap message_digest = {
-    { "Empty",   
-            { "", 
-                "a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a"} },
-    { "Symbols", 
-            { "!@#$",
-                "91ca6ff7194aefa2ba367d458e87f7912dbb6c514b7d6ee1345f7b8eca699f92"} },
+    { "Empty",
+      { "",
+        "a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a" } },
+    { "Symbols",
+      { "!@#$",
+        "91ca6ff7194aefa2ba367d458e87f7912dbb6c514b7d6ee1345f7b8eca699f92" } },
     { "All_Char",
-            { "abc",
-                "3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532"} },
+      { "abc",
+        "3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532" } },
     { "All_Num",
-            { "123", 
-                "a03ab19b866fc585b5cb1812a2f63ca861e7e7643ee5d43fd7106b623725fd67"} },
+      { "123",
+        "a03ab19b866fc585b5cb1812a2f63ca861e7e7643ee5d43fd7106b623725fd67" } },
     { "Long_Input",
-            { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno"
-              "ijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
-                "916f6061fe879741ca6469b43971dfdb28b1a32dc36cb3254e812be27aad1d18"}}
+      { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno"
+        "ijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
+        "916f6061fe879741ca6469b43971dfdb28b1a32dc36cb3254e812be27aad1d1"
+        "8" } }
 };
 
 class Sha3_256
@@ -75,18 +76,20 @@ class Sha3_256
 TEST_P(Sha3_256, digest_generation_test)
 {
     const auto [plaintext, digest] = GetParam().second;
-    Sha3 sha3_256(DigestInfo);
-    Uint8 hash[DigestSize];
+    Sha3              sha3_256(DigestInfo);
+    Uint8             hash[DigestSize];
     std::stringstream ss;
 
-    ASSERT_EQ(sha3_256.update((const Uint8 *)plaintext.c_str(), plaintext.size()), ALC_ERROR_NONE);
+    ASSERT_EQ(
+        sha3_256.update((const Uint8*)plaintext.c_str(), plaintext.size()),
+        ALC_ERROR_NONE);
     ASSERT_EQ(sha3_256.finalize(nullptr, 0), ALC_ERROR_NONE);
     ASSERT_EQ(sha3_256.copyHash(hash, DigestSize), ALC_ERROR_NONE);
 
     ss << std::hex << std::setfill('0');
-    for(Uint16 i = 0; i < DigestSize; ++i)
+    for (Uint16 i = 0; i < DigestSize; ++i)
         ss << std::setw(2) << static_cast<unsigned>(hash[i]);
-    
+
     std::string hash_string = ss.str();
     EXPECT_TRUE(hash_string == digest);
 }
@@ -107,8 +110,8 @@ TEST(Sha3_256, invalid_input_update_test)
 
 TEST(Sha3_256, zero_size_update_test)
 {
-    Sha3 sha3_256(DigestInfo);
-    const Uint8 src[DigestSize] = {0};
+    Sha3        sha3_256(DigestInfo);
+    const Uint8 src[DigestSize] = { 0 };
     EXPECT_EQ(ALC_ERROR_NONE, sha3_256.update(src, 0));
 }
 
@@ -120,16 +123,16 @@ TEST(Sha3_256, invalid_output_copy_hash_test)
 
 TEST(Sha3_256, zero_size_hash_copy_test)
 {
-    Sha3 sha3_256(DigestInfo);
+    Sha3  sha3_256(DigestInfo);
     Uint8 hash[DigestSize];
     EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_256.copyHash(hash, 0));
 }
 
 TEST(Sha3_256, over_size_hash_copy_test)
 {
-    Sha3 sha3_256(DigestInfo);
-    Uint8 hash[DigestSize+1];
-    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_256.copyHash(hash, DigestSize+1));
+    Sha3  sha3_256(DigestInfo);
+    Uint8 hash[DigestSize + 1];
+    EXPECT_EQ(ALC_ERROR_INVALID_SIZE, sha3_256.copyHash(hash, DigestSize + 1));
 }
 
-}
+} // namespace

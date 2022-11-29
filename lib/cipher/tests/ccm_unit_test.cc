@@ -316,14 +316,16 @@ class CCM_KAT
         m_test_name  = test_name;
 
         /* Initialization */
-        const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_CCM,
-                                                 .ai_iv   = &(nonce.at(0)) };
+        const alc_cipher_algo_info_t aesInfo = { ALC_AES_MODE_CCM,
+                                                 &(nonce.at(0)) };
 
         // clang-format off
-        const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                         .fmt  = ALC_KEY_FMT_RAW,
-                                         .len  = static_cast<Uint32>(key.size()*8),
-                                         .key  = &(key.at(0)) };
+        const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
+                                         ALC_KEY_FMT_RAW,
+                                         {},
+                                         {},
+                                         static_cast<Uint32>(key.size()*8),
+                                         &(key.at(0)) };
         // clang-format on
 
         // Setup CCM Object
@@ -337,13 +339,14 @@ TEST(CCM, Initiantiation)
     Uint8 iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
     Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_CCM,
-                                             .ai_iv   = iv };
+    const alc_cipher_algo_info_t aesInfo = { ALC_AES_MODE_CCM, iv };
     // clang-format off
-    const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                     .fmt  = ALC_KEY_FMT_RAW,
-                                     .len  = 128,
-                                     .key  = key };
+    const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
+                                     ALC_KEY_FMT_RAW,
+                                     {},
+                                     {},
+                                     128,
+                                     key };
     Ccm                  ccm_obj = Ccm(aesInfo, keyInfo);
     // clang-format on
     EXPECT_EQ(ccm_obj.getRounds(), 10);
@@ -493,13 +496,14 @@ TEST(CCM, InvalidTagLen)
     Uint8 iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
     Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_CCM,
-                                             .ai_iv   = iv };
+    const alc_cipher_algo_info_t aesInfo = { ALC_AES_MODE_CCM, iv };
     // clang-format off
-    const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                     .fmt  = ALC_KEY_FMT_RAW,
-                                     .len  = 128,
-                                     .key  = key };
+    const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
+                                     ALC_KEY_FMT_RAW,
+                                     {},
+                                     {},
+                                     128,
+                                     key };
     Ccm                  ccm_obj = Ccm(aesInfo, keyInfo);
     alc_error_t err;
 
@@ -518,13 +522,15 @@ TEST(CCM, InvalidNonceLen)
     Uint8              tagbuff[16];
     std::vector<Uint8> out_tag(sizeof(tagbuff), 0);
     std::vector<Uint8> nonce(14,0);
-    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_CCM,
-                                             .ai_iv   = iv };
+    const alc_cipher_algo_info_t aesInfo = { ALC_AES_MODE_CCM,
+                                             iv };
     // clang-format off
-    const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                     .fmt  = ALC_KEY_FMT_RAW,
-                                     .len  = 128,
-                                     .key  = key };
+    const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
+                                     ALC_KEY_FMT_RAW,
+                                     {},
+                                     {},
+                                     128,
+                                     key };
     Ccm                  ccm_obj = Ccm(aesInfo, keyInfo);
     alc_error_t err;
 

@@ -190,13 +190,15 @@ class GCM_KAT
         m_test_name  = test_name;
 
         /* Initialization */
-        const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_GCM,
-                                                 .ai_iv   = &(nonce.at(0)) };
+        const alc_cipher_algo_info_t aesInfo = { ALC_AES_MODE_GCM,
+                                                 &(nonce.at(0)) };
         // clang-format off
-        const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                         .fmt  = ALC_KEY_FMT_RAW,
-                                         .len  = static_cast<Uint32>(key.size() * 8),
-                                         .key  = &(key.at(0)) };
+        const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
+                                         ALC_KEY_FMT_RAW,
+                                         {},
+                                         {},
+                                         static_cast<Uint32>(key.size() * 8),
+                                         &(key.at(0)) };
         // clang-format on
 
         // Setup GCM Object
@@ -225,12 +227,10 @@ TEST(GCM, Instantiation)
                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
                     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_GCM,
-                                             .ai_iv   = iv };
-    alc_key_info_t               keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                               .fmt  = ALC_KEY_FMT_RAW,
-                               .len  = 128,
-                               .key  = key };
+    const alc_cipher_algo_info_t aesInfo = { ALC_AES_MODE_GCM, iv };
+    alc_key_info_t               keyInfo = {
+        ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 128, key
+    };
 
     keyInfo.len = 128;
     {
@@ -366,14 +366,12 @@ TEST(GCM, InvalidTagLen)
     Uint8 pt[]  = "Hello World!";
     Uint8 tag[17];
     Uint8 cipherText[sizeof(pt)];
-    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_GCM,
-                                             .ai_iv   = iv };
-    const alc_key_info_t         keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                     .fmt  = ALC_KEY_FMT_RAW,
-                                     .len  = 128,
-                                     .key  = key };
-    Gcm                          pGcmObj = Gcm(aesInfo, keyInfo);
-    alc_error_t                  err;
+    const alc_cipher_algo_info_t aesInfo = { ALC_AES_MODE_GCM, iv };
+    const alc_key_info_t         keyInfo = {
+        ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 128, key
+    };
+    Gcm         pGcmObj = Gcm(aesInfo, keyInfo);
+    alc_error_t err;
 
     pGcmObj.setIv(7, iv);
 
