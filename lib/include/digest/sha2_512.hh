@@ -236,3 +236,4 @@ class ALCP_API_EXPORT Sha384 final : public Sha2
 };
 
 } // namespace alcp::digest
+  
