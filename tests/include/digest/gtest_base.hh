@@ -105,19 +105,25 @@ ExecRecPlay* fr;
 void
 Digest_KAT(int HashSize, alc_digest_info_t info)
 {
-    alc_error_t        error;
-    std::vector<Uint8> digest(HashSize / 8, 0);
-    AlcpDigestBase     adb(info);
-    DigestBase*        db;
+    alc_error_t error;
+    // std::vector<Uint8> digest(HashSize / 8, 0);
+    AlcpDigestBase adb(info);
+    DigestBase*    db;
     db = &adb;
 
-    /* to find csv file name as per digest type */
-    // std::string TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_"
-    //                            + std::to_string(HashSize) + ".csv";
+    if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
+        HashSize = 40 * 8;
+    }
+    std::vector<Uint8> digest(HashSize / 8, 0);
 
-    /*FIXME:  change this file name for SHAKE */
-    std::string TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_"
-                               + "SHAKE_" + std::to_string(HashSize) + ".csv";
+    std::string TestDataFile = "";
+    if (info.dt_len == ALC_DIGEST_LEN_CUSTOM)
+        TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_" + "SHAKE_"
+                       + std::to_string(HashSize) + ".csv";
+    else
+        TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_"
+                       + std::to_string(HashSize) + ".csv";
+
     DataSet ds = DataSet(TestDataFile);
 
     if (useipp && (GetDigestStr(info.dt_type).compare("SHA3") == 0)) {
@@ -139,11 +145,12 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
     /* for SHAKE variant */
     if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
         while (ds.readMsgDigestLen()) {
+            db->init(info);
             error = db->digest_function(&(ds.getMessage()[0]),
                                         ds.getMessage().size(),
                                         &(digest[0]),
                                         ds.getDigestLen());
-            db->init(info);
+            // db->init(info);
             if (alcp_is_error(error)) {
                 printf("Error");
                 return;
@@ -157,11 +164,12 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
         }
     } else {
         while (ds.readMsgDigest()) {
+            db->init(info);
             error = db->digest_function(&(ds.getMessage()[0]),
                                         ds.getMessage().size(),
                                         &(digest[0]),
                                         digest.size());
-            db->init(info);
+            // db->init(info);
             if (alcp_is_error(error)) {
                 printf("Error");
                 return;
