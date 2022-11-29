@@ -121,8 +121,6 @@ typedef enum _alc_error_generic
 } alc_error_generic_t;
 
 typedef Uint64 alc_error_t;
-/* TODO: eventually we convert all types to AlcError */
-typedef Uint64 AlcError;
 
 /**
  * \brief        Converts AOCL Crypto errors to human readable form
