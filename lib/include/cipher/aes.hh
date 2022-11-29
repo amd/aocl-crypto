@@ -101,7 +101,7 @@ class ALCP_API_EXPORT Cbc final : public Aes
      * \return
      */
     virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
-                             alc_error_t&             err) override
+                             alc_error_t&             err)
     {
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
@@ -178,7 +178,7 @@ class ALCP_API_EXPORT Ofb final : public Aes
      * \return
      */
     virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
-                             alc_error_t&             err) override
+                             alc_error_t&             err)
     {
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
@@ -255,7 +255,7 @@ class ALCP_API_EXPORT Ctr final : public Aes
      * \return
      */
     virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
-                             alc_error_t&             err) override
+                             alc_error_t&             err)
     {
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
@@ -368,7 +368,7 @@ class ALCP_API_EXPORT Gcm final
      * \return
      */
     virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
-                             alc_error_t&             err) override
+                             alc_error_t&             err) 
     {
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
@@ -543,7 +543,7 @@ class ALCP_API_EXPORT Ccm final
      * \return
      */
     virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
-                             alc_error_t&             err) override
+                             alc_error_t&             err)
     {
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
@@ -669,7 +669,7 @@ class ALCP_API_EXPORT Xts final : public Aes
      * \return
      */
     virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
-                             alc_error_t&             err) override
+                             alc_error_t&             err)
     {
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 

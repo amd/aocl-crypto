@@ -28,9 +28,6 @@
 
 #pragma once
 
-#ifndef _INCLUDE_CIPHER_HH_
-#define _INCLUDE_CIPHER_HH_ 2
-
 #include "config.h"
 #include <array>
 #include <cstdint>
@@ -41,10 +38,11 @@
 #include "alci/cpu_features.h"
 #endif
 
-#include <iostream>
-
 #include "error.hh"
 #include "types.hh"
+
+#include <functional>
+#include <iostream>
 
 namespace alcp {
 namespace cipher {
@@ -154,7 +152,6 @@ namespace cipher {
 class Cipher
 {
   public:
-    Cipher(alc_cipher_info_p pCipherInfo) {}
     virtual ~Cipher() {}
 
     /**
@@ -175,6 +172,7 @@ class Cipher
         return false;
     }
 #endif
+
 
   protected:
     Cipher() {}
@@ -229,43 +227,31 @@ class Cipher
     // alc_cipher_type_t m_cipher_type;
 };
 
-class IBlockCipher
+class ICipher
     : public cipher::IDecrypter
     , public cipher::IEncrypter
 {
   public:
-    IBlockCipher() {}
+    ICipher() {}
 
   protected:
-    virtual ~IBlockCipher() {}
+    virtual ~ICipher() {}
 };
 
-class BlockCipher
-    : public Cipher
-    , public IBlockCipher
+/**
+ * @brief ICypherUpdater  - Class useful when stride of data is not
+ *                    aligned to natural size of the algorithm
+ * @notes
+ */
+class ICipherUpdater
+    : public cipher::IDecryptUpdater
+    , public cipher::IEncryptUpdater
 {
   public:
-    BlockCipher() {}
+    ICipherUpdater() {}
 
   protected:
-    virtual ~BlockCipher() {}
-
-  private:
+    virtual ~ICipherUpdater() {}
 };
-
-#if 0
-class StreamCipher : public Cipher
-                   , public IStreamCipher
-{
-  public:
-};
-#endif
-
-namespace cipher {
-    // Cipher& FindCipher(alc_cipher_info_t& cipherInfo) { return
-    // nullptr; }
-} // namespace cipher
 
 } // namespace alcp
-
-#endif /* _INCLUDE_CIPHER_HH_ */
