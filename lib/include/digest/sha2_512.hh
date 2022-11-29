@@ -70,20 +70,26 @@ __attribute__((aligned(64))) static constexpr Uint64 cRoundConstants[] = {
     0x5fcb6fab3ad6faec, 0x6c44198c4a475817
 };
 
-// clang-format off
-#define SHA_ROUND(a, b, c, d, e, f, g, h, arr, i)                          \
-do {                                                                       \
-    Uint64 s0 = 0, s1 = 0, maj = 0, ch = 0;                                \
-    s0  = RotateRight (a, 28) ^ RotateRight(a, 34) ^ RotateRight(a, 39);    \
-    s1  = RotateRight(e, 14) ^ RotateRight(e, 18) ^ RotateRight(e, 41);    \
-    maj = (a & b) ^ (a & c) ^ (b & c);                                     \
-    ch  = (e & f) ^ (~e & g);                                              \
-    Uint64 x = arr[i];                                                     \
-    Uint64 t = x + h + s1 + ch;                                            \
-    h = t + s0 + maj;                                                      \
-    d += t;                                                                \
-}while (0)
-// clang-format on
+static inline void
+ShaRound(Uint64  a,
+         Uint64  b,
+         Uint64  c,
+         Uint64& d,
+         Uint64  e,
+         Uint64  f,
+         Uint64  g,
+         Uint64& h,
+         Uint64  x)
+{
+    Uint64 s0 = 0, s1 = 0, maj = 0, ch = 0;
+    s0       = RotateRight(a, 28) ^ RotateRight(a, 34) ^ RotateRight(a, 39);
+    s1       = RotateRight(e, 14) ^ RotateRight(e, 18) ^ RotateRight(e, 41);
+    maj      = (a & b) ^ (a & c) ^ (b & c);
+    ch       = (e & f) ^ (~e & g);
+    Uint64 t = x + h + s1 + ch;
+    h        = t + s0 + maj;
+    d += t;
+}
 
 /* TODO: Add pImpl support as done in sha256 */
 class Sha512 final : public Sha2
@@ -134,8 +140,8 @@ class Sha512 final : public Sha2
     /**
      * \brief    Resets the internal state.
      *
-     * \notes   `reset()` to be called as a means to reset the internal state.
-     *           This enables the processing the new buffer.
+     * \notes   `reset()` to be called as a means to reset the internal
+     * state. This enables the processing the new buffer.
      *
      * \return nothing
      */
@@ -150,9 +156,9 @@ class Sha512 final : public Sha2
      *           calling finish()
      *
      * \param    buf     Either valid pointer to last chunk or nullptr,
-     *                   if nullptr then has is not modified, once finalize()
-     *                   is called, only operation that can be performed
-     *                   is copyHash()
+     *                   if nullptr then has is not modified, once
+     * finalize() is called, only operation that can be performed is
+     * copyHash()
      *
      * \param    size    Either valid size or 0, if \buf is nullptr, size
      *                   is assumed to be zero
@@ -167,9 +173,9 @@ class Sha512 final : public Sha2
      *           NULL argument.
      *
      * \param    buf     Either valid pointer to last chunk or nullptr,
-     *                   if nullptr then has is not modified, once finalize()
-     *                   is called, only operation that can  be performed
-     *                   is copyHash()
+     *                   if nullptr then has is not modified, once
+     * finalize() is called, only operation that can  be performed is
+     * copyHash()
      *
      * \param    size    Either valid size or 0, if \buf is nullptr, size is
      *                   assumed to be zero

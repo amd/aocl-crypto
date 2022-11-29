@@ -256,8 +256,8 @@ namespace alcp::digest { namespace zen3 {
 
             for (Uint32 j = 0; j < 8; j++) {
                 const Uint32 pos = SHA512_WORDS_IN_128_BIT_VEC * j;
-                SHA_ROUND(a, b, c, d, e, f, g, h, ms, pos);
-                SHA_ROUND(h, a, b, c, d, e, f, g, ms, pos + 1);
+                ShaRound(a, b, c, d, e, f, g, h, ms[pos]);
+                ShaRound(h, a, b, c, d, e, f, g, ms[pos + 1]);
                 sha512_update_x_avx2(msg_vect);
                 const __m256i y = _mm256_add_epi64(
                     msg_vect[7],
@@ -284,22 +284,22 @@ namespace alcp::digest { namespace zen3 {
         }
 
         // do 16 of the remaining for the first chunk
-        SHA_ROUND(a, b, c, d, e, f, g, h, ms, 0);
-        SHA_ROUND(h, a, b, c, d, e, f, g, ms, 1);
-        SHA_ROUND(g, h, a, b, c, d, e, f, ms, 2);
-        SHA_ROUND(f, g, h, a, b, c, d, e, ms, 3);
-        SHA_ROUND(e, f, g, h, a, b, c, d, ms, 4);
-        SHA_ROUND(d, e, f, g, h, a, b, c, ms, 5);
-        SHA_ROUND(c, d, e, f, g, h, a, b, ms, 6);
-        SHA_ROUND(b, c, d, e, f, g, h, a, ms, 7);
-        SHA_ROUND(a, b, c, d, e, f, g, h, ms, 8);
-        SHA_ROUND(h, a, b, c, d, e, f, g, ms, 9);
-        SHA_ROUND(g, h, a, b, c, d, e, f, ms, 10);
-        SHA_ROUND(f, g, h, a, b, c, d, e, ms, 11);
-        SHA_ROUND(e, f, g, h, a, b, c, d, ms, 12);
-        SHA_ROUND(d, e, f, g, h, a, b, c, ms, 13);
-        SHA_ROUND(c, d, e, f, g, h, a, b, ms, 14);
-        SHA_ROUND(b, c, d, e, f, g, h, a, ms, 15);
+        ShaRound(a, b, c, d, e, f, g, h, ms[0]);
+        ShaRound(h, a, b, c, d, e, f, g, ms[1]);
+        ShaRound(g, h, a, b, c, d, e, f, ms[2]);
+        ShaRound(f, g, h, a, b, c, d, e, ms[3]);
+        ShaRound(e, f, g, h, a, b, c, d, ms[4]);
+        ShaRound(d, e, f, g, h, a, b, c, ms[5]);
+        ShaRound(c, d, e, f, g, h, a, b, ms[6]);
+        ShaRound(b, c, d, e, f, g, h, a, ms[7]);
+        ShaRound(a, b, c, d, e, f, g, h, ms[8]);
+        ShaRound(h, a, b, c, d, e, f, g, ms[9]);
+        ShaRound(g, h, a, b, c, d, e, f, ms[10]);
+        ShaRound(f, g, h, a, b, c, d, e, ms[11]);
+        ShaRound(e, f, g, h, a, b, c, d, ms[12]);
+        ShaRound(d, e, f, g, h, a, b, c, ms[13]);
+        ShaRound(c, d, e, f, g, h, a, b, ms[14]);
+        ShaRound(b, c, d, e, f, g, h, a, ms[15]);
 
         hash_256_0 =
             _mm256_add_epi64(hash_256_0, _mm256_set_epi64x(d, c, b, a));
@@ -319,22 +319,22 @@ namespace alcp::digest { namespace zen3 {
 
         // do 80 rounds for the second chunk
         for (Uint32 i = 16; i < 96; i += 16) {
-            SHA_ROUND(a, b, c, d, e, f, g, h, ms, i);
-            SHA_ROUND(h, a, b, c, d, e, f, g, ms, i + 1);
-            SHA_ROUND(g, h, a, b, c, d, e, f, ms, i + 2);
-            SHA_ROUND(f, g, h, a, b, c, d, e, ms, i + 3);
-            SHA_ROUND(e, f, g, h, a, b, c, d, ms, i + 4);
-            SHA_ROUND(d, e, f, g, h, a, b, c, ms, i + 5);
-            SHA_ROUND(c, d, e, f, g, h, a, b, ms, i + 6);
-            SHA_ROUND(b, c, d, e, f, g, h, a, ms, i + 7);
-            SHA_ROUND(a, b, c, d, e, f, g, h, ms, i + 8);
-            SHA_ROUND(h, a, b, c, d, e, f, g, ms, i + 9);
-            SHA_ROUND(g, h, a, b, c, d, e, f, ms, i + 10);
-            SHA_ROUND(f, g, h, a, b, c, d, e, ms, i + 11);
-            SHA_ROUND(e, f, g, h, a, b, c, d, ms, i + 12);
-            SHA_ROUND(d, e, f, g, h, a, b, c, ms, i + 13);
-            SHA_ROUND(c, d, e, f, g, h, a, b, ms, i + 14);
-            SHA_ROUND(b, c, d, e, f, g, h, a, ms, i + 15);
+            ShaRound(a, b, c, d, e, f, g, h, ms[i]);
+            ShaRound(h, a, b, c, d, e, f, g, ms[i + 1]);
+            ShaRound(g, h, a, b, c, d, e, f, ms[i + 2]);
+            ShaRound(f, g, h, a, b, c, d, e, ms[i + 3]);
+            ShaRound(e, f, g, h, a, b, c, d, ms[i + 4]);
+            ShaRound(d, e, f, g, h, a, b, c, ms[i + 5]);
+            ShaRound(c, d, e, f, g, h, a, b, ms[i + 6]);
+            ShaRound(b, c, d, e, f, g, h, a, ms[i + 7]);
+            ShaRound(a, b, c, d, e, f, g, h, ms[i + 8]);
+            ShaRound(h, a, b, c, d, e, f, g, ms[i + 9]);
+            ShaRound(g, h, a, b, c, d, e, f, ms[i + 10]);
+            ShaRound(f, g, h, a, b, c, d, e, ms[i + 11]);
+            ShaRound(e, f, g, h, a, b, c, d, ms[i + 12]);
+            ShaRound(d, e, f, g, h, a, b, c, ms[i + 13]);
+            ShaRound(c, d, e, f, g, h, a, b, ms[i + 14]);
+            ShaRound(b, c, d, e, f, g, h, a, ms[i + 15]);
         }
 
         hash_256_0 =
@@ -423,8 +423,8 @@ namespace alcp::digest { namespace zen3 {
                     _mm_loadu_si128(
                         (const __m128i*)(&cRoundConstants[k512_idx])));
 
-                SHA_ROUND(a, b, c, d, e, f, g, h, message_sch, pos);
-                SHA_ROUND(h, a, b, c, d, e, f, g, message_sch, pos + 1);
+                ShaRound(a, b, c, d, e, f, g, h, message_sch[pos]);
+                ShaRound(h, a, b, c, d, e, f, g, message_sch[pos + 1]);
 
                 t = h;
                 h = f;
@@ -441,22 +441,22 @@ namespace alcp::digest { namespace zen3 {
             }
         }
         // do 16 of them
-        SHA_ROUND(a, b, c, d, e, f, g, h, message_sch, 0);
-        SHA_ROUND(h, a, b, c, d, e, f, g, message_sch, 1);
-        SHA_ROUND(g, h, a, b, c, d, e, f, message_sch, 2);
-        SHA_ROUND(f, g, h, a, b, c, d, e, message_sch, 3);
-        SHA_ROUND(e, f, g, h, a, b, c, d, message_sch, 4);
-        SHA_ROUND(d, e, f, g, h, a, b, c, message_sch, 5);
-        SHA_ROUND(c, d, e, f, g, h, a, b, message_sch, 6);
-        SHA_ROUND(b, c, d, e, f, g, h, a, message_sch, 7);
-        SHA_ROUND(a, b, c, d, e, f, g, h, message_sch, 8);
-        SHA_ROUND(h, a, b, c, d, e, f, g, message_sch, 9);
-        SHA_ROUND(g, h, a, b, c, d, e, f, message_sch, 10);
-        SHA_ROUND(f, g, h, a, b, c, d, e, message_sch, 11);
-        SHA_ROUND(e, f, g, h, a, b, c, d, message_sch, 12);
-        SHA_ROUND(d, e, f, g, h, a, b, c, message_sch, 13);
-        SHA_ROUND(c, d, e, f, g, h, a, b, message_sch, 14);
-        SHA_ROUND(b, c, d, e, f, g, h, a, message_sch, 15);
+        ShaRound(a, b, c, d, e, f, g, h, message_sch[0]);
+        ShaRound(h, a, b, c, d, e, f, g, message_sch[1]);
+        ShaRound(g, h, a, b, c, d, e, f, message_sch[2]);
+        ShaRound(f, g, h, a, b, c, d, e, message_sch[3]);
+        ShaRound(e, f, g, h, a, b, c, d, message_sch[4]);
+        ShaRound(d, e, f, g, h, a, b, c, message_sch[5]);
+        ShaRound(c, d, e, f, g, h, a, b, message_sch[6]);
+        ShaRound(b, c, d, e, f, g, h, a, message_sch[7]);
+        ShaRound(a, b, c, d, e, f, g, h, message_sch[8]);
+        ShaRound(h, a, b, c, d, e, f, g, message_sch[9]);
+        ShaRound(g, h, a, b, c, d, e, f, message_sch[10]);
+        ShaRound(f, g, h, a, b, c, d, e, message_sch[11]);
+        ShaRound(e, f, g, h, a, b, c, d, message_sch[12]);
+        ShaRound(d, e, f, g, h, a, b, c, message_sch[13]);
+        ShaRound(c, d, e, f, g, h, a, b, message_sch[14]);
+        ShaRound(b, c, d, e, f, g, h, a, message_sch[15]);
         // accumulate the state
         state[0] += a;
         state[1] += b;

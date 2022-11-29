@@ -123,7 +123,6 @@ class Digest : public IDigest
 
     static bool isZen3()
     {
-// static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
 #ifdef USE_AOCL_CPUID
         return alc_cpu_arch_is_zen3();
 #endif
@@ -132,7 +131,6 @@ class Digest : public IDigest
 
     static bool isZen4()
     {
-// static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
 #ifdef USE_AOCL_CPUID
         return alc_cpu_arch_is_zen4();
 #endif
