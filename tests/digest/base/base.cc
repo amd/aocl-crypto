@@ -285,6 +285,31 @@ DataSet::readMsgDigest()
     return true;
 }
 
+/* for shake128/256 */
+bool
+DataSet::readMsgDigestLen()
+{
+    line = readLine();
+    if (line.empty() || line == "\n") {
+        return false;
+    }
+    int pos1 = line.find(",");           // End of Msg
+    int pos2 = line.find(",", pos1 + 1); // End of Msg digest
+    if (pos1 == -1 || pos2 == -1) {
+        printf("Error in parsing csv\n"); // FIXME: Can we print the file name
+                                          // here as well?
+        return false;
+    }
+    std::string        messageStr = line.substr(0, pos1);
+    std::vector<Uint8> messageVect(messageStr.c_str(),
+                                   (messageStr.c_str() + messageStr.size()));
+    Message = messageVect;
+    Digest  = parseHexStrToBin(line.substr(pos1 + 1, pos2 - pos1 - 1));
+    // DigestLen = parseHexStrToBin(line.substr(pos2 + 1));
+    DigestLen = Digest.size();
+    return true;
+}
+
 int
 DataSet::getLineNumber()
 {
@@ -302,4 +327,11 @@ DataSet::getDigest()
 {
     return Digest;
 }
+
+std::int64_t
+DataSet::getDigestLen()
+{
+    return DigestLen;
+}
+
 } // namespace alcp::testing

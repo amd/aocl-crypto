@@ -112,8 +112,12 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
     db = &adb;
 
     /* to find csv file name as per digest type */
+    // std::string TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_"
+    //                            + std::to_string(HashSize) + ".csv";
+
+    /*FIXME:  change this file name for SHAKE */
     std::string TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_"
-                               + std::to_string(HashSize) + ".csv";
+                               + "SHAKE_" + std::to_string(HashSize) + ".csv";
     DataSet ds = DataSet(TestDataFile);
 
     if (useipp && (GetDigestStr(info.dt_type).compare("SHA3") == 0)) {
@@ -131,22 +135,44 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
     if (useipp == true)
         db = &idb;
 #endif
-    while (ds.readMsgDigest()) {
-        error = db->digest_function(&(ds.getMessage()[0]),
-                                    ds.getMessage().size(),
-                                    &(digest[0]),
-                                    digest.size());
-        db->init(info);
-        if (alcp_is_error(error)) {
-            printf("Error");
-            return;
+
+    /* for SHAKE variant */
+    if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
+        while (ds.readMsgDigestLen()) {
+            error = db->digest_function(&(ds.getMessage()[0]),
+                                        ds.getMessage().size(),
+                                        &(digest[0]),
+                                        ds.getDigestLen());
+            db->init(info);
+            if (alcp_is_error(error)) {
+                printf("Error");
+                return;
+            }
+            EXPECT_TRUE(
+                ArraysMatch(digest,         // output
+                            ds.getDigest(), // expected, from the KAT test data
+                            ds,
+                            std::string(GetDigestStr(info.dt_type) + "_"
+                                        + std::to_string(HashSize) + "_KAT")));
         }
-        EXPECT_TRUE(
-            ArraysMatch(digest,         // output
-                        ds.getDigest(), // expected, from the KAT test data
-                        ds,
-                        std::string(GetDigestStr(info.dt_type) + "_"
-                                    + std::to_string(HashSize) + "_KAT")));
+    } else {
+        while (ds.readMsgDigest()) {
+            error = db->digest_function(&(ds.getMessage()[0]),
+                                        ds.getMessage().size(),
+                                        &(digest[0]),
+                                        digest.size());
+            db->init(info);
+            if (alcp_is_error(error)) {
+                printf("Error");
+                return;
+            }
+            EXPECT_TRUE(
+                ArraysMatch(digest,         // output
+                            ds.getDigest(), // expected, from the KAT test data
+                            ds,
+                            std::string(GetDigestStr(info.dt_type) + "_"
+                                        + std::to_string(HashSize) + "_KAT")));
+        }
     }
 }
 

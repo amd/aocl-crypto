@@ -113,6 +113,8 @@ class DataSet : private File
   private:
     std::string        line = "";
     std::vector<Uint8> Digest, Message;
+    /* for shake128/256 support */
+    std::int64_t DigestLen;
     // First line is skipped, linenum starts from 1
     int lineno = 1;
 
@@ -121,11 +123,14 @@ class DataSet : private File
     DataSet(const std::string filename);
     // Read without condition
     bool readMsgDigest();
+    // for shake128/256 support
+    bool readMsgDigestLen();
     // To print which line in dataset failed
     int getLineNumber();
     /* fetch Message / Digest */
     std::vector<Uint8> getMessage();
     std::vector<Uint8> getDigest();
+    std::int64_t       getDigestLen();
 };
 class DigestBase
 {

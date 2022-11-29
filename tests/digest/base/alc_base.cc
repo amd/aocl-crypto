@@ -82,6 +82,9 @@ AlcpDigestBase::init()
             case ALC_DIGEST_LEN_512:
                 dinfo.dt_mode.dm_sha3 = ALC_SHA3_512;
                 break;
+            case ALC_DIGEST_LEN_CUSTOM:
+                dinfo.dt_custom_len = 40;
+                break;
             default:
                 break;
         }
