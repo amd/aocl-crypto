@@ -492,7 +492,8 @@ AesCrosstest(int               keySize,
                 }
             }
 
-            if (verbose) {
+            /* make it >1 to print these data */
+            if (verbose == 1) {
                 PrintTestData(key, data_alc, MODE_STR);
             }
             if (enc_dec == ENCRYPT) {

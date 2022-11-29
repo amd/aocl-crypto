@@ -33,7 +33,7 @@
 
 using namespace alcp::testing;
 
-static bool verbose     = false;
+static int  verbose     = 0;
 static bool useipp      = false;
 static bool useossl     = false;
 static bool bbxreplay   = false;
@@ -60,7 +60,7 @@ ArraysMatch(std::vector<Uint8>      actual,
                    << " Failed";
         }
     }
-    if (verbose) {
+    if (verbose == 1) {
         std::cout << "Test: " << testName << " line: " << ds.getLineNumber()
                   << " Success" << std::endl;
     }
@@ -80,7 +80,7 @@ ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected, size_t len)
                    << "Length:" << len << " Failure i:" << i << " !";
         }
     }
-    if (verbose) {
+    if (verbose == 1) {
         std::cout << "Length:" << len << " Success" << std::endl;
     }
     return ::testing::AssertionSuccess();
@@ -103,7 +103,7 @@ ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected)
                    << parseBytesToHexStr(&(expected[0]), expected.size());
         }
     }
-    if (verbose) {
+    if (verbose == 1) {
         std::cout << "Size:" << actual.size() << " Success" << std::endl;
     }
     return ::testing::AssertionSuccess();
@@ -265,9 +265,12 @@ parseArgs(int argc, char** argv)
                 std::cout
                     << "--replay-blackbox or -r replay blackbox with log file"
                     << std::endl;
-            } else if ((currentArg == std::string("--verbose"))
+            } else if ((currentArg
+                        == std::string(
+                            "--verbose")) /*FIXME: This should be passed as a
+                                             verbosity level (-v 2)*/
                        || (currentArg == std::string("-v"))) {
-                verbose = true;
+                verbose = 1;
             } else if ((currentArg == std::string("--use-ipp"))
                        || (currentArg == std::string("-i"))) {
                 useipp = true;

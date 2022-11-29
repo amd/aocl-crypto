@@ -27,7 +27,7 @@
  */
 #pragma once
 
-static bool verbose = false;
+static int  verbose = 0;
 static bool useipp  = false;
 static bool useossl = false;
 void
@@ -49,14 +49,14 @@ parseArgs(int* argc, char** argv)
                           << std::endl;
             } else if ((currentArg == std::string("--verbose"))
                        || (currentArg == std::string("-v"))) {
-                verbose = true;
+                verbose = 1;
                 *argc -= 1;
             } else if ((currentArg == std::string("--use-ipp"))
                        || (currentArg == std::string("-i"))) {
                 useipp = true;
                 *argc -= 1;
             } else if ((currentArg == std::string("--use-ossl"))
-                        || (currentArg == std::string("-o"))) {
+                       || (currentArg == std::string("-o"))) {
                 useossl = true;
                 *argc -= 1;
             }
