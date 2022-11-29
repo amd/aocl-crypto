@@ -267,6 +267,32 @@ EncDecType(enc_dec_t e_d, big_small_t b_s)
     return SMALL_DEC;
 }
 
+/* print params verbosely */
+void
+PrintTestData(std::vector<Uint8> key, alcp_data_ex_t data, std::string mode)
+{
+    std::cout << "KEY: " << parseBytesToHexStr(&key[0], key.size())
+              << std::endl;
+    std::cout << "PLAINTEXT: " << parseBytesToHexStr(data.m_in, data.m_inl)
+              << std::endl;
+    std::cout << "IV: " << parseBytesToHexStr(data.m_iv, data.m_ivl)
+              << std::endl;
+    std::cout << "CIPHERTEXT: " << parseBytesToHexStr(data.m_out, data.m_outl)
+              << std::endl;
+    /* gcm / ccm / xts specific */
+    if (mode.compare("GCM") == 0 || mode.compare("CCM") == 0) {
+        std::cout << "ADL: " << parseBytesToHexStr(data.m_ad, data.m_adl)
+                  << std::endl;
+        std::cout << "TAG: " << parseBytesToHexStr(data.m_tag, data.m_tagl)
+                  << std::endl;
+    }
+    if (mode.compare("XTS") == 0) {
+        std::cout << "TKEY: " << parseBytesToHexStr(data.m_tkey, data.m_tkeyl)
+                  << std::endl;
+    }
+    return;
+}
+
 /**
  * @brief funtion to avoid repeated code in every cross test, can only be used
  * for AES-CTR,AES-CBC,AES-OFB,AES-CFB
@@ -464,6 +490,10 @@ AesCrosstest(int               keySize,
                     std::cout << excp << std::endl;
                     exit(-1);
                 }
+            }
+
+            if (verbose) {
+                PrintTestData(key, data_alc, MODE_STR);
             }
             if (enc_dec == ENCRYPT) {
                 alcpTC->getCipherHandler()->testingEncrypt(data_alc, key);
