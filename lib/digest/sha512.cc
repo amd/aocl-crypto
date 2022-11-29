@@ -39,7 +39,6 @@
 
 #include "digest/sha_avx2.hh"
 #include "digest/sha_avx256.hh"
-#include "digest/sha_avx512.hh"
 
 #include "utils/bits.hh"
 #include "utils/copy.hh"
@@ -200,13 +199,12 @@ Sha512::compressMsg(Uint64 w[])
 alc_error_t
 Sha512::processChunk(const Uint8* pSrc, Uint64 len)
 {
-    // if (Digest::isAvx512Has(digest::AVX512_F)
-    //     && Digest::isAvx512Has(digest::AVX512_DQ)
-    //     && Digest::isAvx512Has(digest::AVX512_BW)) {
-    //     return digest::zen4::ShaUpdate512(m_hash, pSrc, len);
-    // }
 
-    return zen3::ShaUpdate512(m_hash, pSrc, len);
+    static bool avx256_available = isZen3() || isZen4();
+
+    if (avx256_available) {
+        return zen3::ShaUpdate512(m_hash, pSrc, len);
+    }
 
     static bool avx2_available = isAvx2Available();
 

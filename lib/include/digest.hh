@@ -128,34 +128,20 @@ class Digest : public IDigest
     Digest()          = default;
     virtual ~Digest() = default;
 
-    static bool isAvx512Has(avx512_flags_t flag)
-    {
-// static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
-#ifdef USE_AOCL_CPUID
-        static bool s_avx512f_available  = (alc_cpu_has_avx512f() > 0);
-        static bool s_avx512dq_available = (alc_cpu_has_avx512dq() > 0);
-        static bool s_avx512bw_available = (alc_cpu_has_avx512bw() > 0);
-#else
-        static bool s_avx512f_available  = false;
-        static bool s_avx512dq_available = false;
-        static bool s_avx512bw_available = false;
-#endif
-        switch (flag) {
-            case digest::AVX512_DQ:
-                return s_avx512dq_available;
-            case digest::AVX512_F:
-                return s_avx512f_available;
-            case digest::AVX512_BW:
-                return s_avx512bw_available;
-        }
-        return false;
-    }
-
     static bool isZen3()
     {
 // static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
 #ifdef USE_AOCL_CPUID
         return alc_cpu_arch_is_zen3();
+#endif
+        return false;
+    }
+
+    static bool isZen4()
+    {
+// static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
+#ifdef USE_AOCL_CPUID
+        return alc_cpu_arch_is_zen4();
 #endif
         return false;
     }
