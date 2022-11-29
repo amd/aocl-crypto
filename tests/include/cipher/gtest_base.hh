@@ -268,7 +268,7 @@ EncDecType(enc_dec_t e_d, big_small_t b_s)
 }
 
 /* print params verbosely */
-void
+inline void
 PrintTestData(std::vector<Uint8> key, alcp_data_ex_t data, std::string mode)
 {
     std::cout << "KEY: " << parseBytesToHexStr(&key[0], key.size())
