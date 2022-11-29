@@ -28,7 +28,6 @@
 #include <algorithm>
 #include <climits>
 #include <functional>
-#include <iostream>
 #include <string>
 
 #ifdef USE_AOCL_CPUID

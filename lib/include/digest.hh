@@ -48,13 +48,6 @@ namespace alcp::digest {
 std::pmr::synchronized_pool_resource&
 GetDefaultDigestPool();
 
-typedef enum
-{
-    AVX512_DQ = 1,
-    AVX512_F,
-    AVX512_BW,
-} avx512_flags_t;
-
 static inline Uint32
 RotateRight(Uint32 value, Uint32 count)
 {
