@@ -27,6 +27,11 @@
  */
 
 #include "cipher/openssl_base.hh"
+#ifdef win32
+EXTERN_C_BEGIN
+#include <openssl/applink.c>
+EXTERN_C_END
+#endif
 
 namespace alcp::testing {
 void
