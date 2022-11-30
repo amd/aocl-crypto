@@ -140,18 +140,18 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
     /* for SHAKE variant */
     if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
         while (ds.readMsgDigestLen()) {
-            std::vector<Uint8> digest(ds.getDigestLen(), 0);
+            std::vector<Uint8> digest_(ds.getDigestLen(), 0);
             db->init(info, ds.getDigestLen());
             error = db->digest_function(&(ds.getMessage()[0]),
                                         ds.getMessage().size(),
-                                        &(digest[0]),
+                                        &(digest_[0]),
                                         ds.getDigestLen());
             if (alcp_is_error(error)) {
                 printf("Error");
                 return;
             }
             EXPECT_TRUE(
-                ArraysMatch(digest,         // output
+                ArraysMatch(digest_,        // output
                             ds.getDigest(), // expected, from the KAT test data
                             ds,
                             std::string(GetDigestStr(info.dt_type) + "_"
@@ -164,7 +164,6 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
                                         ds.getMessage().size(),
                                         &(digest[0]),
                                         digest.size());
-            // db->init(info);
             if (alcp_is_error(error)) {
                 printf("Error");
                 return;
@@ -232,12 +231,14 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
             fr->getValues(&data);
         }
 
+        db->init(info, digestAlcp.size());
         error = db->digest_function(
             &(data[0]), data.size(), &(digestAlcp[0]), digestAlcp.size());
+
+        extDb->init(info, digestExt.size());
         error = extDb->digest_function(
             &(data[0]), data.size(), &(digestExt[0]), digestExt.size());
-        db->init(info, digestAlcp.size());
-        extDb->init(info, digestExt.size());
+
         if (alcp_is_error(error)) {
             printf("Error");
             return;

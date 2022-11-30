@@ -33,6 +33,24 @@
 #include <iostream>
 #include <string.h>
 
+/* SHA3 SHAKE Cross */
+TEST(DIGEST_SHA3, CROSS_SHAKE128)
+{
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha3 = ALC_SHAKE_128;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
+    info.dt_len          = ALC_DIGEST_LEN_CUSTOM;
+    Digest_Cross(128, info);
+}
+TEST(DIGEST_SHA3, CROSS_SHAKE256)
+{
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha3 = ALC_SHAKE_256;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
+    info.dt_len          = ALC_DIGEST_LEN_CUSTOM;
+    Digest_Cross(256, info);
+}
+
 /* SHA2 cross tests */
 TEST(DIGEST_SHA2, CROSS_224)
 {

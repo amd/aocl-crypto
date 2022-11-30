@@ -114,9 +114,10 @@ OpenSSLDigestBase::digest_function(const Uint8* in,
                                    Uint64       out_size)
 {
     unsigned int outsize = 0;
-    EVP_DigestUpdate(m_handle, in, in_size);
-    EVP_DigestFinal_ex(m_handle, out, &outsize);
-    out_size = outsize;
+    int          retval  = 0;
+    retval               = EVP_DigestUpdate(m_handle, in, in_size);
+    retval               = EVP_DigestFinal_ex(m_handle, out, &outsize);
+    out_size             = outsize;
 
     return ALC_ERROR_NONE;
 }
@@ -161,8 +162,7 @@ OpenSSLDigestBase::reset()
             case ALC_DIGEST_LEN_CUSTOM:
                 if (m_info.dt_mode.dm_sha3 == ALC_SHAKE_128) {
                     EVP_DigestInit(m_handle, EVP_shake128());
-                }
-                if (m_info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
+                } else if (m_info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
                     EVP_DigestInit(m_handle, EVP_shake256());
                 }
                 break;
