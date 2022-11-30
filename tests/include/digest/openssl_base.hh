@@ -43,6 +43,7 @@ class OpenSSLDigestBase : public DigestBase
     alc_digest_info_t m_info;
     Uint8*            m_message;
     Uint8*            m_digest;
+    Int64             m_digest_len;
 
   public:
     // Class contructor and destructor
@@ -56,7 +57,7 @@ class OpenSSLDigestBase : public DigestBase
     ~OpenSSLDigestBase();
 
     // All inits
-    bool init(const alc_digest_info_t& info);
+    bool init(const alc_digest_info_t& info, Int64 digest_len);
     bool init();
 
     alc_error_t digest_function(const Uint8* src,

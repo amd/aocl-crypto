@@ -32,7 +32,7 @@ namespace alcp::testing {
 
 OpenSSLDigestBase::OpenSSLDigestBase(const alc_digest_info_t& info)
 {
-    init(info);
+    init(info, m_digest_len);
 }
 
 OpenSSLDigestBase::~OpenSSLDigestBase()
@@ -43,9 +43,10 @@ OpenSSLDigestBase::~OpenSSLDigestBase()
 }
 
 bool
-OpenSSLDigestBase::init(const alc_digest_info_t& info)
+OpenSSLDigestBase::init(const alc_digest_info_t& info, Int64 digest_len)
 {
-    m_info = info;
+    m_info       = info;
+    m_digest_len = digest_len;
     return init();
 }
 
@@ -89,6 +90,15 @@ OpenSSLDigestBase::init()
                 break;
             case ALC_DIGEST_LEN_512:
                 EVP_DigestInit(m_handle, EVP_sha3_512());
+                break;
+            /*SHAKE*/
+            case ALC_DIGEST_LEN_CUSTOM:
+                if (m_info.dt_mode.dm_sha3 == ALC_SHAKE_128) {
+                    EVP_DigestInit(m_handle, EVP_shake128());
+                }
+                if (m_info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
+                    EVP_DigestInit(m_handle, EVP_shake256());
+                }
                 break;
             default:
                 return false;
@@ -135,18 +145,26 @@ OpenSSLDigestBase::reset()
                 break;
         }
     } else if (m_info.dt_type == ALC_DIGEST_TYPE_SHA3) {
-        switch (m_info.dt_mode.dm_sha3) {
-            case ALC_SHA3_224:
+        switch (m_info.dt_len) {
+            case ALC_DIGEST_LEN_224:
                 EVP_DigestInit(m_handle, EVP_sha3_224());
                 break;
-            case ALC_SHA3_256:
+            case ALC_DIGEST_LEN_256:
                 EVP_DigestInit(m_handle, EVP_sha3_256());
                 break;
-            case ALC_SHA3_384:
+            case ALC_DIGEST_LEN_384:
                 EVP_DigestInit(m_handle, EVP_sha3_384());
                 break;
-            case ALC_SHA3_512:
+            case ALC_DIGEST_LEN_512:
                 EVP_DigestInit(m_handle, EVP_sha3_512());
+                break;
+            case ALC_DIGEST_LEN_CUSTOM:
+                if (m_info.dt_mode.dm_sha3 == ALC_SHAKE_128) {
+                    EVP_DigestInit(m_handle, EVP_shake128());
+                }
+                if (m_info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
+                    EVP_DigestInit(m_handle, EVP_shake256());
+                }
                 break;
             default:
                 std::cout << "Error: " << __FILE__ << ":" << __LINE__

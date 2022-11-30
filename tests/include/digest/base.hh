@@ -135,13 +135,13 @@ class DataSet : private File
 class DigestBase
 {
   public:
-    virtual bool        init(const alc_digest_info_t& info) = 0;
-    virtual bool        init()                              = 0;
+    virtual bool init(const alc_digest_info_t& info, Int64 digest_len) = 0;
+    virtual bool init()                                                = 0;
     virtual alc_error_t digest_function(const Uint8* src,
                                         Uint64       src_size,
                                         Uint8*       output,
-                                        Uint64       out_size)    = 0;
-    virtual void        reset()                             = 0;
+                                        Uint64       out_size)               = 0;
+    virtual void        reset()                                        = 0;
 };
 
 } // namespace alcp::testing

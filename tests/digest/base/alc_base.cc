@@ -35,13 +35,14 @@ static Uint8 size_[4096] = { 0 };
 
 AlcpDigestBase::AlcpDigestBase(const alc_digest_info_t& info)
 {
-    init(info);
+    init(info, m_digest_len);
 }
 
 bool
-AlcpDigestBase::init(const alc_digest_info_t& info)
+AlcpDigestBase::init(const alc_digest_info_t& info, Int64 digest_len)
 {
-    m_info = info;
+    m_info       = info;
+    m_digest_len = digest_len;
     return init();
 }
 
@@ -83,7 +84,7 @@ AlcpDigestBase::init()
                 dinfo.dt_mode.dm_sha3 = ALC_SHA3_512;
                 break;
             case ALC_DIGEST_LEN_CUSTOM:
-                dinfo.dt_custom_len = 40;
+                dinfo.dt_custom_len = m_digest_len;
                 break;
             default:
                 break;

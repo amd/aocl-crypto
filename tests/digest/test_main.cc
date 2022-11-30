@@ -42,6 +42,14 @@ TEST(DIGEST_SHA3, KAT_SHAKE128)
     info.dt_len          = ALC_DIGEST_LEN_CUSTOM;
     Digest_KAT(128, info);
 }
+TEST(DIGEST_SHA3, KAT_SHAKE256)
+{
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha3 = ALC_SHAKE_256;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
+    info.dt_len          = ALC_DIGEST_LEN_CUSTOM;
+    Digest_KAT(256, info);
+}
 
 /* SHA2 tests */
 TEST(DIGEST_SHA2, KAT_224)

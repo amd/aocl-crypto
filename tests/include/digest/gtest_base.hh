@@ -105,20 +105,15 @@ ExecRecPlay* fr;
 void
 Digest_KAT(int HashSize, alc_digest_info_t info)
 {
-    alc_error_t error;
-    // std::vector<Uint8> digest(HashSize / 8, 0);
-    AlcpDigestBase adb(info);
-    DigestBase*    db;
-    db = &adb;
-
-    if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
-        HashSize = 40 * 8;
-    }
+    alc_error_t        error;
     std::vector<Uint8> digest(HashSize / 8, 0);
+    AlcpDigestBase     adb(info);
+    DigestBase*        db;
+    db = &adb;
 
     std::string TestDataFile = "";
     if (info.dt_len == ALC_DIGEST_LEN_CUSTOM)
-        TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_" + "SHAKE_"
+        TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_SHAKE_"
                        + std::to_string(HashSize) + ".csv";
     else
         TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_"
@@ -145,12 +140,12 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
     /* for SHAKE variant */
     if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
         while (ds.readMsgDigestLen()) {
-            db->init(info);
+            std::vector<Uint8> digest(ds.getDigestLen(), 0);
+            db->init(info, ds.getDigestLen());
             error = db->digest_function(&(ds.getMessage()[0]),
                                         ds.getMessage().size(),
                                         &(digest[0]),
                                         ds.getDigestLen());
-            // db->init(info);
             if (alcp_is_error(error)) {
                 printf("Error");
                 return;
@@ -164,7 +159,7 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
         }
     } else {
         while (ds.readMsgDigest()) {
-            db->init(info);
+            db->init(info, ds.getDigestLen());
             error = db->digest_function(&(ds.getMessage()[0]),
                                         ds.getMessage().size(),
                                         &(digest[0]),
@@ -241,8 +236,8 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
             &(data[0]), data.size(), &(digestAlcp[0]), digestAlcp.size());
         error = extDb->digest_function(
             &(data[0]), data.size(), &(digestExt[0]), digestExt.size());
-        db->init(info);
-        extDb->init(info);
+        db->init(info, digestAlcp.size());
+        extDb->init(info, digestExt.size());
         if (alcp_is_error(error)) {
             printf("Error");
             return;

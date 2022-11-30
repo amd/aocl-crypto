@@ -32,7 +32,7 @@ namespace alcp::testing {
 
 IPPDigestBase::IPPDigestBase(const alc_digest_info_t& info)
 {
-    init(info);
+    init(info, m_digest_len);
 }
 
 IPPDigestBase::~IPPDigestBase()
@@ -43,7 +43,7 @@ IPPDigestBase::~IPPDigestBase()
 }
 
 bool
-IPPDigestBase::init(const alc_digest_info_t& info)
+IPPDigestBase::init(const alc_digest_info_t& info, Int64 digest_len)
 {
     m_info = info;
     return init();

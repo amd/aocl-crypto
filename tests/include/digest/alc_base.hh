@@ -42,11 +42,12 @@ class AlcpDigestBase : public DigestBase
     alc_digest_info_t    m_info;
     Uint8*               m_message;
     Uint8*               m_digest;
+    Int64                m_digest_len; /*SHAKE*/
 
   public:
     AlcpDigestBase(const alc_digest_info_t& info);
 
-    bool init(const alc_digest_info_t& info);
+    bool init(const alc_digest_info_t& info, Int64 digest_len);
 
     bool init();
 
