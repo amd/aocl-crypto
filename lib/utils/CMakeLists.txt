@@ -24,10 +24,18 @@
  # POSSIBILITY OF SUCH DAMAGE.
  
 
-FILE(GLOB UTILS_SRCS "*.cc")
+set(UTILS_SRCS
+  bignum.cc
+  logger.cc
+  mempool.cc
+  console_logger.cc
+  )
 
-TARGET_SOURCES(alcp
+add_subdirectory(tests)
+
+target_sources(alcp
 	PRIVATE
 		${UTILS_SRCS}
 	)
 
+target_link_libraries(alcp PUBLIC libcrypto.so)
