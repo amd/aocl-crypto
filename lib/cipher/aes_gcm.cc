@@ -67,9 +67,9 @@ Gcm::cryptUpdate(const uint8_t* pInput,
 
         bool isAvx512Cap = false;
         if (Cipher::isVaesAvailable()) {
-            if (Cipher::isAvx512Has(cipher::AVX512_F)
-                && Cipher::isAvx512Has(cipher::AVX512_DQ)
-                && Cipher::isAvx512Has(cipher::AVX512_BW)) {
+            if (Cipher::isAvx512Has(utils::AVX512_F)
+                && Cipher::isAvx512Has(utils::AVX512_DQ)
+                && Cipher::isAvx512Has(utils::AVX512_BW)) {
                 isAvx512Cap = true;
             }
         }

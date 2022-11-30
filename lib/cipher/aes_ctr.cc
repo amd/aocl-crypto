@@ -74,9 +74,9 @@ Ctr::decrypt(const uint8_t* pCipherText,
     bool        isAvx512Cap = false;
     if (Cipher::isVaesAvailable()) {
         isVaes = true;
-        if (Cipher::isAvx512Has(cipher::AVX512_F)
-            && Cipher::isAvx512Has(cipher::AVX512_DQ)
-            && Cipher::isAvx512Has(cipher::AVX512_BW)) {
+        if (Cipher::isAvx512Has(utils::AVX512_F)
+            && Cipher::isAvx512Has(utils::AVX512_DQ)
+            && Cipher::isAvx512Has(utils::AVX512_BW)) {
             isAvx512Cap = true;
         }
     }
@@ -104,9 +104,9 @@ Ctr::encrypt(const uint8_t* pPlainText,
     bool        isAvx512Cap = false;
     if (Cipher::isVaesAvailable()) {
         isVaes = true;
-        if (Cipher::isAvx512Has(cipher::AVX512_F)
-            && Cipher::isAvx512Has(cipher::AVX512_DQ)
-            && Cipher::isAvx512Has(cipher::AVX512_BW)) {
+        if (Cipher::isAvx512Has(utils::AVX512_F)
+            && Cipher::isAvx512Has(utils::AVX512_DQ)
+            && Cipher::isAvx512Has(utils::AVX512_BW)) {
             isAvx512Cap = true;
         }
     }

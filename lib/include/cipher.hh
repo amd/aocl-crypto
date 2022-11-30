@@ -28,13 +28,13 @@
 
 #pragma once
 
-#include "config.h"
+#include "utils/cpuid.hh"
 #include <array>
 #include <cstdint>
 #include <functional>
 
 #include "alcp/cipher.h"
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef USE_AOCL_CPUID
 #include "alci/cpu_features.h"
 #endif
 
@@ -50,12 +50,6 @@ namespace cipher {
                                    Uint8*       pDst,
                                    Uint64       len,
                                    const Uint8* pIv) const;
-    typedef enum
-    {
-        AVX512_DQ = 1,
-        AVX512_F,
-        AVX512_BW,
-    } avx512_flags_t;
 
     class IEncrypter
     {
@@ -151,6 +145,7 @@ namespace cipher {
 
 class Cipher
 {
+
   public:
     virtual ~Cipher() {}
 
@@ -178,35 +173,14 @@ class Cipher
 
     static bool isVaesAvailable()
     {
-#ifdef ALCP_ENABLE_AOCL_CPUID
-        static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
-#else
-        static bool s_vaes_available     = false;
-#endif
-        return s_vaes_available;
+        static utils::Cpuid cpuid;
+        return cpuid.cpuHasVaes();
     }
 
-    static bool isAvx512Has(cipher::avx512_flags_t flag)
+    static bool isAvx512Has(utils::avx512_flags_t flag)
     {
-// static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
-#ifdef ALCP_ENABLE_AOCL_CPUID
-        static bool s_avx512f_available  = (alc_cpu_has_avx512f() > 0);
-        static bool s_avx512dq_available = (alc_cpu_has_avx512dq() > 0);
-        static bool s_avx512bw_available = (alc_cpu_has_avx512bw() > 0);
-#else
-        static bool s_avx512f_available  = false;
-        static bool s_avx512dq_available = false;
-        static bool s_avx512bw_available = false;
-#endif
-        switch (flag) {
-            case cipher::AVX512_DQ:
-                return s_avx512dq_available;
-            case cipher::AVX512_F:
-                return s_avx512f_available;
-            case cipher::AVX512_BW:
-                return s_avx512bw_available;
-        }
-        return false;
+        static utils::Cpuid cpuid;
+        return cpuid.cpuHasAvx512(flag);
     }
 
     /*
@@ -214,12 +188,8 @@ class Cipher
      */
     static bool isAesniAvailable()
     {
-#ifdef ALCP_ENABLE_AOCL_CPUID
-        static bool s_aesni_available = (alc_cpu_has_aes() > 0);
-#else
-        static bool s_aesni_available    = true;
-#endif
-        return s_aesni_available;
+        static utils::Cpuid cpuid;
+        return cpuid.cpuHasAesni();
     }
 
     // private:

@@ -127,9 +127,9 @@ Xts::encrypt(const Uint8* pPlainText,
         return err;
     }
 
-    if ((Cipher::isAvx512Has(cipher::AVX512_F)
-         && Cipher::isAvx512Has(cipher::AVX512_DQ)
-         && Cipher::isAvx512Has(cipher::AVX512_BW))) {
+    if ((Cipher::isAvx512Has(utils::AVX512_F)
+         && Cipher::isAvx512Has(utils::AVX512_DQ)
+         && Cipher::isAvx512Has(utils::AVX512_BW))) {
         err = vaes512::EncryptXtsAvx512(pPlainText,
                                         pCipherText,
                                         len,
@@ -248,9 +248,9 @@ Xts::decrypt(const Uint8* pCipherText,
         return err;
     }
 
-    if ((Cipher::isAvx512Has(cipher::AVX512_F)
-         && Cipher::isAvx512Has(cipher::AVX512_DQ)
-         && Cipher::isAvx512Has(cipher::AVX512_BW))) {
+    if ((Cipher::isAvx512Has(utils::AVX512_F)
+         && Cipher::isAvx512Has(utils::AVX512_DQ)
+         && Cipher::isAvx512Has(utils::AVX512_BW))) {
 
         err = vaes512::DecryptXtsAvx512(pCipherText,
                                         pPlainText,

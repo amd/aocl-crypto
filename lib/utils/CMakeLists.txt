@@ -29,6 +29,7 @@ set(UTILS_SRCS
   logger.cc
   #mempool.cc
   console_logger.cc
+  cpuid.cc
   )
 
 add_subdirectory(tests)
