@@ -27,10 +27,11 @@
  */
 
 #include "alcp/version.h"
+#include "config.h"
 #include <stdio.h>
 
 const char*
 alcp_get_version()
 {
-    return VERSION_STRING;
+    return ALCP_RELEASE_VERSION_STRING;
 }

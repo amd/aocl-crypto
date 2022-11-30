@@ -22,7 +22,11 @@
  # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
- 
+
+include(TestBigEndian)
+include(${CMAKE_SOURCE_DIR}/cmake/utils.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/config.cmake)
+
 CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 PROJECT (ALCP)
 
@@ -76,6 +80,13 @@ IF (ALCP_USE_ASAN)
 	ADD_COMPILE_OPTIONS(-static-libasan -fsanitize=address)
 ENDIF()
 
+IF (NOT DEFINED ALCP_BIGNUM_USE_OPENSSL)
+	SET (ALCP_BIGNUM_USE_OPENSSL ON)
+ENDIF()
+
+# Generate Configuration config.h
+GEN_CONF()
+
 if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
 	LINK_LIBRARIES(gcov)
 	ADD_COMPILE_OPTIONS(-O0 -fprofile-arcs -ftest-coverage  --coverage )
@@ -86,11 +97,6 @@ IF (NOT DEFINED BUILD_SHARED_LIBS)
 ENDIF()
 
 SET(CMAKE_DEBUG_POSTFIX _DEBUG)
-
-
-# CONFIGURE A HEADER FILE TO PASS SOME OF THE CMAKE SETTINGS
-# TO THE SOURCE CODE
-CONFIGURE_FILE(include/alcp/config.h.in include/alcp/config.h)
 
 ADD_SUBDIRECTORY(lib)
 
@@ -206,4 +212,3 @@ GetVars("IPP_")
 GetVars("OPENSSL_")
 
 # FixMe:project name and version to be printed..
-
