@@ -26,77 +26,43 @@
  *
  */
 
-#pragma once
-
-#include "alcp/base.hh"
+#include "alcp/utils/bignum.hh"
 
 namespace alcp {
 
-class BigNum final
+class BigNum::Impl
 {
   public:
-    BigNum();
-    ~BigNum();
-
-    BigNum(const BigNum& b);
-    BigNum(const BigNum&& b);
-    void operator=(const BigNum& rhs);
+    Impl();
+    ~Impl();
 
   public:
-    /* Arithmetic operation */
-    BigNum operator+(const BigNum& rhs);
-
-    /* Arithmetic + Assignment */
-    inline BigNum& operator+=(const BigNum& rhs)
-    {
-        *this = *this + rhs;
-        return *this;
-    }
+    BigNum add(const BigNum& rhs);
 
 #if 0
+    BigNum sub(const BigNum& rhs);
+    BigNum mul(const BigNum& rhs);
+    BigNum div(const BigNum& rhs);
+    BigNum mod(const BigNum& rhs);
 
-    BigNum operator-(const BigNum& rhs);
-    BigNum operator*(const BigNum& rhs);
-    BigNum operator/(const BigNum& rhs);
-    BigNum operator%(const BigNum& rhs);
+    /* Cant compare BigNum at the moment */
+    inline bool neq(const BigNum& rhs) { return true; }
 
-    /* Arithmetic + Assignment */
-    BigNum& operator+=(const BigNum& rhs);
-    BigNum& operator-=(const BigNum& rhs);
-    BigNum& operator*=(const BigNum& rhs);
-    BigNum& operator/=(const BigNum& rhs);
-    BigNum& operator%=(const BigNum& rhs);
-
-    /* Logical + Assignment */
-    BigNum& operator>>=(const BigNum& rhs);
-    BigNum& operator<<=(const BigNum& rhs);
-
-    BigNum& operator==(const BigNum& rhs);
-    BigNum& operator!=(const BigNum& rhs);
-
-    /* Increment/Decrement */
-    BigNum& operator++();
-    BigNum& operator--();
+    /* Cant compare BigNum at the moment */
+    inline bool eq(const BigNum& rhs) { return false; }
 #endif
-
-    bool isZero();
-    bool isOne();
-    bool isNegative();
-
-    Int64 toInt64();
-    Int32 toInt32();
-
-    void fromInt64(const Int64 val);
-    void fromInt32(const Int32 val);
-
-    void          fromString(const StringView& str);
-    const String& toString() const;
-
-  private:
-    class Impl;
-    const Impl*           pImpl() const { return m_pimpl.get(); }
-    Impl*                 pImpl() { return m_pimpl.get(); }
-    std::unique_ptr<Impl> m_pimpl;
 };
+
+BigNum
+BigNum::Impl::add(const BigNum& rhs)
+{
+	BigNum result;
+	if(avx512_supported())
+		bn_add_512(result.c_ptr(), this->c_ptr(), rhs.c_ptr());
+
+	bn_add_512(this->c_ptr(), this->c_ptr(), rhs.c_ptr());
+	return result;
+}
+
 
 } // namespace alcp

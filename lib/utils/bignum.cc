@@ -26,77 +26,116 @@
  *
  */
 
-#pragma once
+#include "alcp/utils/bignum.hh"
 
-#include "alcp/base.hh"
+/* FIXME: remove this once we have ALCP's own BigNum */
+#define ALCP_BIGNUM_USE_OPENSSL 1
+
+#if defined(ALCP_BIGNUM_USE_OPENSSL)
+#include "../impl/bignum_openssl.cc"
+#elif defined(ALCP_BIGNUM_USE_IPP)
+#include "../impl/bignum_openssl.cc"
+#else
+#include "../impl/bignum_alcp.cc"
+#endif
 
 namespace alcp {
 
-class BigNum final
+BigNum::BigNum()
+    : m_pimpl{ std::make_unique<BigNum::Impl>() }
+{}
+
+BigNum::~BigNum() {}
+
+BigNum
+BigNum::operator+(const BigNum& rhs)
 {
-  public:
-    BigNum();
-    ~BigNum();
+    return pImpl()->add(rhs);
+}
 
-    BigNum(const BigNum& b);
-    BigNum(const BigNum&& b);
-    void operator=(const BigNum& rhs);
+BigNum::BigNum(const BigNum& b)
+{
+    // throw NotImplementedException(ALCP_SOURCE_LOCATION());
+}
 
-  public:
-    /* Arithmetic operation */
-    BigNum operator+(const BigNum& rhs);
+BigNum::BigNum(const BigNum&& b)
+{
+    // throw NotImplementedException(ALCP_SOURCE_LOCATION());
+}
 
-    /* Arithmetic + Assignment */
-    inline BigNum& operator+=(const BigNum& rhs)
-    {
-        *this = *this + rhs;
-        return *this;
-    }
+Int64
+BigNum::toInt64()
+{
+    return 0;
+}
+
+Int32
+BigNum::toInt32()
+{
+    return 0;
+}
+
+void
+BigNum::fromInt64(const Int64 val)
+{}
+
+void
+BigNum::fromInt32(const Int32 val)
+{}
+
+void
+BigNum::fromString(const StringView& str)
+{}
+
+const String&
+BigNum::toString() const
+{
+    static const std::string help_str = std::string("Hello");
+    return help_str;
+}
+
+void
+BigNum::operator=(const BigNum& rhs)
+{
+    // throw NotImplementedException(ALCP_SOURCE_LOCATION());
+}
 
 #if 0
+BigNum
+BigNum::operator-(const BigNum& rhs)
+{
+    return pImpl()->sub(rhs);
+}
 
-    BigNum operator-(const BigNum& rhs);
-    BigNum operator*(const BigNum& rhs);
-    BigNum operator/(const BigNum& rhs);
-    BigNum operator%(const BigNum& rhs);
+BigNum
+BigNum::operator*(const BigNum& rhs)
+{
+    return pImpl()->mul(rhs);
+}
 
-    /* Arithmetic + Assignment */
-    BigNum& operator+=(const BigNum& rhs);
-    BigNum& operator-=(const BigNum& rhs);
-    BigNum& operator*=(const BigNum& rhs);
-    BigNum& operator/=(const BigNum& rhs);
-    BigNum& operator%=(const BigNum& rhs);
+BigNum
+BigNum::operator/(const BigNum& rhs)
+{
+    return pImpl()->div(rhs);
+}
 
-    /* Logical + Assignment */
-    BigNum& operator>>=(const BigNum& rhs);
-    BigNum& operator<<=(const BigNum& rhs);
+inline BigNum
+BigNum::operator%(const BigNum& rhs)
+{
+    return pImpl()->mod(rhs);
+}
 
-    BigNum& operator==(const BigNum& rhs);
-    BigNum& operator!=(const BigNum& rhs);
+bool
+BigNum::operator==(const BigNum& rhs)
+{
+    return pImpl()->eq(rhs);
+}
 
-    /* Increment/Decrement */
-    BigNum& operator++();
-    BigNum& operator--();
+bool
+BigNum::operator!=(const BigNum& rhs)
+{
+    return pImpl()->neq(rhs);
+}
+
 #endif
-
-    bool isZero();
-    bool isOne();
-    bool isNegative();
-
-    Int64 toInt64();
-    Int32 toInt32();
-
-    void fromInt64(const Int64 val);
-    void fromInt32(const Int32 val);
-
-    void          fromString(const StringView& str);
-    const String& toString() const;
-
-  private:
-    class Impl;
-    const Impl*           pImpl() const { return m_pimpl.get(); }
-    Impl*                 pImpl() { return m_pimpl.get(); }
-    std::unique_ptr<Impl> m_pimpl;
-};
-
 } // namespace alcp
