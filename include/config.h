@@ -25,11 +25,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
+// config.h is cmake generated, please modify config.h.in instead.
 #ifndef _INCLUDE_CONFIG_H
 #define _INCLUDE_CONFIG_H 2
 
-#define ALCP_CONFIG_LITTLE_ENDIAN 1
-// #undef ALCP_CONFIG_BIG_ENDIAN
+#define ALCP_CONFIG_LITTLE_ENDIAN
+
+// CPU Identification
+#define ALCP_ENABLE_AOCL_CPUID
+
+// ALCP Release Version
+#define AOCL_RELEASE_VERSION "4.0.1"
+#define ALCP_RELEASE_VERSION_STRING "AOCL-Crypto 4.0.1 Build 20221130"
+
+// OS Identification
+#define ALCP_BUILD_OS_LINUX
+/* #undef ALCP_BUILD_OS_WINDOWS */
+
+// OpenSSL Overrides
+#define ALCP_BIGNUM_USE_OPENSSL 1
 
 #endif /* _INCLUDE_CONFIG_H */
