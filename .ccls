@@ -1,7 +1,11 @@
 clang
-%c -std=c11
 %cpp -std=c++17
+%c -std=c11
 %h %hpp --include=include/macros.h
 -D__cplusplus
 -Iinclude
 -Ilib/include
+-Ibuild/release/_deps/gtest-src/googletest/include
+-Ibuild/debug/_deps/gtest-src/googletest/include
+-Ibuild/_deps/gtest-src/googletest/include
+
