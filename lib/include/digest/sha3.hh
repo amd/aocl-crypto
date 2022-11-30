@@ -28,6 +28,7 @@
 
 #pragma once
 
+#include "config.h"
 #include "digest.hh"
 
 namespace alcp::digest {

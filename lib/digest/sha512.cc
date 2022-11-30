@@ -25,12 +25,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include "config.h"
 #include <algorithm>
 #include <climits>
 #include <functional>
 #include <string>
 
-#ifdef USE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_CPUID
 #include "alci/cpu_features.h"
 #endif
 
@@ -59,7 +60,7 @@ static constexpr Uint64 cIv[] = { 0x6a09e667f3bcc908, 0xbb67ae8584caa73b,
 static bool
 isAvx2Available()
 {
-#ifdef USE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_CPUID
     static bool s_avx2_available = true;
 #else
     static bool s_avx2_available = false;

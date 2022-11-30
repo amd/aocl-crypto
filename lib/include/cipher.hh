@@ -31,12 +31,13 @@
 #ifndef _INCLUDE_CIPHER_HH_
 #define _INCLUDE_CIPHER_HH_ 2
 
+#include "config.h"
 #include <array>
 #include <cstdint>
 #include <functional>
 
 #include "alcp/cipher.h"
-#ifdef USE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_CPUID
 #include "alci/cpu_features.h"
 #endif
 
@@ -180,7 +181,7 @@ class Cipher
 
     static bool isVaesAvailable()
     {
-#ifdef USE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_CPUID
         static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
 #else
         static bool s_vaes_available     = false;
@@ -191,7 +192,7 @@ class Cipher
     static bool isAvx512Has(cipher::avx512_flags_t flag)
     {
 // static bool s_vaes_available = (alc_cpu_has_vaes() > 0);
-#ifdef USE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_CPUID
         static bool s_avx512f_available  = (alc_cpu_has_avx512f() > 0);
         static bool s_avx512dq_available = (alc_cpu_has_avx512dq() > 0);
         static bool s_avx512bw_available = (alc_cpu_has_avx512bw() > 0);
@@ -216,7 +217,7 @@ class Cipher
      */
     static bool isAesniAvailable()
     {
-#ifdef USE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_CPUID
         static bool s_aesni_available = (alc_cpu_has_aes() > 0);
 #else
         static bool s_aesni_available    = true;

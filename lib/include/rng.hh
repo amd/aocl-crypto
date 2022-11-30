@@ -33,6 +33,7 @@
 
 #include "alcp/rng.h"
 #include "alcp/types.h"
+#include "config.h"
 
 #include "types.hh"
 

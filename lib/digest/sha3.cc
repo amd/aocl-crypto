@@ -37,7 +37,7 @@
 #include "utils/copy.hh"
 #include "utils/endian.hh"
 
-#ifdef USE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_CPUID
 #include "alci/cpu_features.h"
 #endif
 

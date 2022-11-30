@@ -29,7 +29,7 @@
 #include "capi/rng/builder.hh"
 #include "rng.hh"
 
-#ifdef USE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_CPUID
 #include "alci/cpu_features.h"
 #endif
 
@@ -49,13 +49,13 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo)
 {
     alc_error_t error = ALC_ERROR_NONE;
 
-#ifdef USE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_CPUID
     bool rd_rand_available = (alc_cpu_has_rdrnd() > 0);
     bool rd_seed_available = (alc_cpu_has_rdseed() > 0);
 #else
     bool rd_rand_available = true;
     bool rd_seed_available = true;
-#endif // AOCL_CPUID
+#endif // ALCP_ENABLE_AOCL_CPUID
 
     switch (pRngInfo->ri_type) {
         case ALC_RNG_TYPE_DESCRETE:

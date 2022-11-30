@@ -29,9 +29,10 @@
 #pragma once
 
 /* C-API headers */
+#include "config.h"
 #include "alcp/digest.h"
 #include "alcp/types.h"
-#ifdef USE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_CPUID
 #include "alci/cpu_features.h"
 #endif
 /* C++ headers */
@@ -123,7 +124,7 @@ class Digest : public IDigest
 
     static bool isZen3()
     {
-#ifdef USE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_CPUID
         return alc_cpu_arch_is_zen3();
 #endif
         return false;
@@ -131,7 +132,7 @@ class Digest : public IDigest
 
     static bool isZen4()
     {
-#ifdef USE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_CPUID
         return alc_cpu_arch_is_zen4();
 #endif
         return false;

@@ -25,10 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include "config.h"
 #include <algorithm>
 #include <functional>
 #include <string>
-#ifdef USE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_CPUID
 #include "alci/cpu_features.h"
 #endif
 
@@ -95,7 +96,7 @@ class Sha256::Impl
          * FIXME: call cpuid::isShaniAvailable() initialize
          */
         {
-#ifdef USE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_CPUID
             static bool s_shani_available = (alc_cpu_has_sha() > 0);
 #else
             static bool s_shani_available = true;
