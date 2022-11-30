@@ -50,6 +50,7 @@ SET(ALCP_COMMON_SRCS
 	exception.cc
 	module.cc
 	modulemanager.cc
+	sourcelocation.cc
 	)
 
 #[==[
