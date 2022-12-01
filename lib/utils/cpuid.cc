@@ -48,21 +48,21 @@ class Cpuid::Impl
      * @return true
      * @return false
      */
-    bool cpuHasAvx512f();
+    static inline bool cpuHasAvx512f();
     /**
      * @brief Returns true if CPU has AVX512DQ Flag
      *
      * @return true
      * @return false
      */
-    bool cpuHasAvx512dq();
+    static inline bool cpuHasAvx512dq();
     /**
      * @brief Retrurns true if CPU has AVX512BW Flag
      *
      * @return true
      * @return false
      */
-    bool cpuHasAvx512bw();
+    static inline bool cpuHasAvx512bw();
     /**
      * @brief Returns true depending on the flag is available or not on CPU
      *
@@ -70,7 +70,7 @@ class Cpuid::Impl
      * @return true
      * @return false
      */
-    bool cpuHasAvx512(avx512_flags_t flag);
+    static inline bool cpuHasAvx512(avx512_flags_t flag);
 
     // Milan functions
     /**
@@ -80,7 +80,7 @@ class Cpuid::Impl
      * @return true
      * @return false
      */
-    bool cpuHasVaes();
+    static inline bool cpuHasVaes();
 
     // Rome functions
     /**
@@ -89,21 +89,21 @@ class Cpuid::Impl
      * @return true
      * @return false
      */
-    bool cpuHasAesni();
+    static inline bool cpuHasAesni();
     /**
      * @brief Returns true if CPU supports block SHA instruction
      *
      * @return true
      * @return false
      */
-    bool cpuHasShani();
+    static inline bool cpuHasShani();
     /**
      * @brief Returns true if CPU supports AVX2 instructions
      *
      * @return true
      * @return false
      */
-    bool cpuHasAvx2();
+    static inline bool cpuHasAvx2();
     /**
      * @brief Returns true if RDRAND, secure RNG number generator is supported
      * by CPU
@@ -111,7 +111,7 @@ class Cpuid::Impl
      * @return true
      * @return false
      */
-    bool cpuHasRdRand();
+    static inline bool cpuHasRdRand();
     /**
      * @brief Returns true if RDSEED, secure RNG seed generator is supported by
      * CPU
@@ -119,7 +119,7 @@ class Cpuid::Impl
      * @return true
      * @return false
      */
-    bool cpuHasRdSeed();
+    static inline bool cpuHasRdSeed();
 };
 
 bool
@@ -270,66 +270,64 @@ Cpuid::Impl::cpuHasRdSeed()
 bool
 Cpuid::cpuHasAesni()
 {
-    return m_pimpl->cpuHasAesni();
+    return Impl::cpuHasAesni();
 }
 
 bool
 Cpuid::cpuHasAvx2()
 {
-    return m_pimpl->cpuHasAvx2();
+    return Impl::cpuHasAvx2();
 }
 
 bool
 Cpuid::cpuHasAvx512(avx512_flags_t flag)
 {
-    return m_pimpl->cpuHasAvx512(flag);
+    return Impl::cpuHasAvx512(flag);
 }
 
 bool
 Cpuid::cpuHasAvx512bw()
 {
-    return m_pimpl->cpuHasAvx512bw();
+    return Impl::cpuHasAvx512bw();
 }
 
 bool
 Cpuid::cpuHasAvx512dq()
 {
-    return m_pimpl->cpuHasAvx512dq();
+    return Impl::cpuHasAvx512dq();
 }
 
 bool
 Cpuid::cpuHasAvx512f()
 {
-    return m_pimpl->cpuHasAvx512f();
+    return Impl::cpuHasAvx512f();
 }
 
 bool
 Cpuid::cpuHasShani()
 {
-    return m_pimpl->cpuHasShani();
+    return Impl::cpuHasShani();
 }
 
 bool
 Cpuid::cpuHasVaes()
 {
-    return m_pimpl->cpuHasVaes();
+    return Impl::cpuHasVaes();
 }
 
 bool
 Cpuid::cpuHasRdRand()
 {
-    return m_pimpl->cpuHasRdRand();
+    return Impl::cpuHasRdRand();
 }
 
 bool
 Cpuid::cpuHasRdSeed()
 {
-    return m_pimpl->cpuHasRdSeed();
+    return Impl::cpuHasRdSeed();
 }
 
-Cpuid::Cpuid()
-    : m_pimpl{ std::make_unique<Cpuid::Impl>() }
-{}
+Cpuid::Cpuid()  = default;
 Cpuid::~Cpuid() = default;
 
 } // namespace alcp::utils

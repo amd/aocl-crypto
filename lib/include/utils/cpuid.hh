@@ -54,21 +54,21 @@ class Cpuid
      * @return true
      * @return false
      */
-    bool cpuHasAvx512f();
+    static bool cpuHasAvx512f();
     /**
      * @brief Returns true if CPU has AVX512DQ Flag
      *
      * @return true
      * @return false
      */
-    bool cpuHasAvx512dq();
+    static bool cpuHasAvx512dq();
     /**
      * @brief Retrurns true if CPU has AVX512BW Flag
      *
      * @return true
      * @return false
      */
-    bool cpuHasAvx512bw();
+    static bool cpuHasAvx512bw();
     /**
      * @brief Returns true depending on the flag is available or not on CPU
      *
@@ -76,7 +76,7 @@ class Cpuid
      * @return true
      * @return false
      */
-    bool cpuHasAvx512(avx512_flags_t flag);
+    static bool cpuHasAvx512(avx512_flags_t flag);
 
     // Milan functions
     /**
@@ -86,7 +86,7 @@ class Cpuid
      * @return true
      * @return false
      */
-    bool cpuHasVaes();
+    static bool cpuHasVaes();
 
     // Rome functions
     /**
@@ -95,21 +95,21 @@ class Cpuid
      * @return true
      * @return false
      */
-    bool cpuHasAesni();
+    static bool cpuHasAesni();
     /**
      * @brief Returns true if CPU supports block SHA instruction
      *
      * @return true
      * @return false
      */
-    bool cpuHasShani();
+    static bool cpuHasShani();
     /**
      * @brief Returns true if CPU supports AVX2 instructions
      *
      * @return true
      * @return false
      */
-    bool cpuHasAvx2();
+    static bool cpuHasAvx2();
     /**
      * @brief Returns true if RDRAND, secure RNG number generator is supported
      * by CPU
@@ -117,7 +117,7 @@ class Cpuid
      * @return true
      * @return false
      */
-    bool cpuHasRdRand();
+    static bool cpuHasRdRand();
     /**
      * @brief Returns true if RDSEED, secure RNG seed generator is supported by
      * CPU
@@ -125,10 +125,9 @@ class Cpuid
      * @return true
      * @return false
      */
-    bool cpuHasRdSeed();
+    static bool cpuHasRdSeed();
 
   private:
     class Impl;
-    std::unique_ptr<Impl> m_pimpl;
 };
 } // namespace alcp::utils
