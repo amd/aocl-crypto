@@ -171,18 +171,6 @@ class Cipher
   protected:
     Cipher() {}
 
-    static bool isVaesAvailable() { return utils::Cpuid::cpuHasVaes(); }
-
-    static bool isAvx512Has(utils::avx512_flags_t flag)
-    {
-        return utils::Cpuid::cpuHasAvx512(flag);
-    }
-
-    /*
-     * \brief  Checks if VAESNI feature is enabled
-     */
-    static bool isAesniAvailable() { return utils::Cpuid::cpuHasAesni(); }
-
     // private:
     // alc_cipher_type_t m_cipher_type;
 };

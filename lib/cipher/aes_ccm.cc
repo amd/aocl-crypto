@@ -67,10 +67,10 @@ Ccm::cryptUpdate(const Uint8* pInput,
 
 #if 0
         bool isAvx512Cap = false;
-        if (Cipher::isVaesAvailable()) {
-            if (Cipher::isAvx512Has(cipher::AVX512_F)
-                && Cipher::isAvx512Has(cipher::AVX512_DQ)
-                && Cipher::isAvx512Has(cipher::AVX512_BW)) {
+        if (utils::Cpuid::cpuHasVaes()) {
+             if (utils::Cpuid::cpuHasAvx512(utils::AVX512_F)
+                && utils::Cpuid::cpuHasAvx512(utils::AVX512_DQ)
+                && utils::Cpuid::cpuHasAvx512(utils::AVX512_BW)) {
                 isAvx512Cap = true;
             }
         }
@@ -85,7 +85,7 @@ Ccm::cryptUpdate(const Uint8* pInput,
         bool err_ret = (CcmSetIv(&m_ccm_data, pIv, m_ivLen, len) == 0);
 
         // Accelerate with AESNI
-        if (Cipher::isAesniAvailable()) {
+        if (utils::Cpuid::cpuHasAesni()) {
             aesni::CcmSetAad(
                 &m_ccm_data, m_additionalData, m_additionalDataLen);
             if (isEncrypt) {

@@ -72,11 +72,11 @@ Ctr::decrypt(const uint8_t* pCipherText,
     alc_error_t err         = ALC_ERROR_NONE;
     bool        isVaes      = false;
     bool        isAvx512Cap = false;
-    if (Cipher::isVaesAvailable()) {
+    if (utils::Cpuid::cpuHasVaes()) {
         isVaes = true;
-        if (Cipher::isAvx512Has(utils::AVX512_F)
-            && Cipher::isAvx512Has(utils::AVX512_DQ)
-            && Cipher::isAvx512Has(utils::AVX512_BW)) {
+        if (utils::Cpuid::cpuHasAvx512(utils::AVX512_F)
+            && utils::Cpuid::cpuHasAvx512(utils::AVX512_DQ)
+            && utils::Cpuid::cpuHasAvx512(utils::AVX512_BW)) {
             isAvx512Cap = true;
         }
     }
@@ -102,11 +102,11 @@ Ctr::encrypt(const uint8_t* pPlainText,
     alc_error_t err         = ALC_ERROR_NONE;
     bool        isVaes      = false;
     bool        isAvx512Cap = false;
-    if (Cipher::isVaesAvailable()) {
+    if (utils::Cpuid::cpuHasVaes()) {
         isVaes = true;
-        if (Cipher::isAvx512Has(utils::AVX512_F)
-            && Cipher::isAvx512Has(utils::AVX512_DQ)
-            && Cipher::isAvx512Has(utils::AVX512_BW)) {
+        if (utils::Cpuid::cpuHasAvx512(utils::AVX512_F)
+            && utils::Cpuid::cpuHasAvx512(utils::AVX512_DQ)
+            && utils::Cpuid::cpuHasAvx512(utils::AVX512_BW)) {
             isAvx512Cap = true;
         }
     }

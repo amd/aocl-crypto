@@ -811,7 +811,7 @@ Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
     pEncKey = m_enc_key;
     pDecKey = m_dec_key;
 
-    if (isAesniAvailable()) {
+    if (utils::Cpuid::cpuHasAesni()) {
         aesni::ExpandKeys(key, pEncKey, pDecKey, m_nrounds);
         return;
     }

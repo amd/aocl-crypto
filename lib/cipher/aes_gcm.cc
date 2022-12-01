@@ -66,15 +66,15 @@ Gcm::cryptUpdate(const uint8_t* pInput,
         m_len = len;
 
         bool isAvx512Cap = false;
-        if (Cipher::isVaesAvailable()) {
-            if (Cipher::isAvx512Has(utils::AVX512_F)
-                && Cipher::isAvx512Has(utils::AVX512_DQ)
-                && Cipher::isAvx512Has(utils::AVX512_BW)) {
+        if (utils::Cpuid::cpuHasVaes()) {
+            if (utils::Cpuid::cpuHasAvx512(utils::AVX512_F)
+                && utils::Cpuid::cpuHasAvx512(utils::AVX512_DQ)
+                && utils::Cpuid::cpuHasAvx512(utils::AVX512_BW)) {
                 isAvx512Cap = true;
             }
         }
 
-        if (Cipher::isVaesAvailable() && isAvx512Cap) {
+        if (utils::Cpuid::cpuHasVaes() && isAvx512Cap) {
             // Encrypt/Decrypt call
             err = vaes512::CryptGcm(pInput,
                                     pOutput,
