@@ -115,9 +115,15 @@ OpenSSLDigestBase::digest_function(const Uint8* in,
 {
     unsigned int outsize = 0;
     int          retval  = 0;
-    retval               = EVP_DigestUpdate(m_handle, in, in_size);
-    retval               = EVP_DigestFinal_ex(m_handle, out, &outsize);
-    out_size             = outsize;
+
+    retval = EVP_DigestUpdate(m_handle, in, in_size);
+
+    /* for extendable output functions */
+    if (m_info.dt_len == ALC_DIGEST_LEN_CUSTOM)
+        retval = EVP_DigestFinalXOF(m_handle, out, m_digest_len);
+    else
+        retval = EVP_DigestFinal_ex(m_handle, out, &outsize);
+    out_size = outsize;
 
     return ALC_ERROR_NONE;
 }

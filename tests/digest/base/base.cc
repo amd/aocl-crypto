@@ -307,6 +307,7 @@ DataSet::readMsgDigestLen()
     Digest  = parseHexStrToBin(line.substr(pos1 + 1, pos2 - pos1 - 1));
     // DigestLen = parseHexStrToBin(line.substr(pos2 + 1));
     DigestLen = Digest.size();
+    lineno++;
     return true;
 }
 
