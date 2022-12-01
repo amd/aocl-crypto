@@ -29,12 +29,10 @@
 #pragma once
 
 /* C-API headers */
-#include "config.h"
 #include "alcp/digest.h"
 #include "alcp/types.h"
-#ifdef ALCP_ENABLE_AOCL_CPUID
-#include "alci/cpu_features.h"
-#endif
+#include "config.h"
+
 /* C++ headers */
 #include "error.hh"
 
@@ -121,22 +119,6 @@ class Digest : public IDigest
   protected:
     Digest()          = default;
     virtual ~Digest() = default;
-
-    static bool isZen3()
-    {
-#ifdef ALCP_ENABLE_AOCL_CPUID
-        return alc_cpu_arch_is_zen3();
-#endif
-        return false;
-    }
-
-    static bool isZen4()
-    {
-#ifdef ALCP_ENABLE_AOCL_CPUID
-        return alc_cpu_arch_is_zen4();
-#endif
-        return false;
-    }
 };
 
 } // namespace alcp::digest

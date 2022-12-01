@@ -29,9 +29,6 @@
 #include <algorithm>
 #include <functional>
 #include <string>
-#ifdef ALCP_ENABLE_AOCL_CPUID
-#include "alci/cpu_features.h"
-#endif
 
 #include "digest/sha2.hh"
 #include "digest/sha_avx2.hh"
@@ -39,6 +36,7 @@
 
 #include "utils/bits.hh"
 #include "utils/copy.hh"
+#include "utils/cpuid.hh"
 #include "utils/endian.hh"
 
 namespace utils = alcp::utils;
@@ -87,28 +85,6 @@ class Sha256::Impl
 
     alc_error_t setIv(const void* pIv, Uint64 size);
     void        reset();
-    /*
-     * \brief  Checks if SHANI feature is enabled
-     */
-    static bool isShaniAvailable()
-    {
-        /*
-         * FIXME: call cpuid::isShaniAvailable() initialize
-         */
-        {
-#ifdef ALCP_ENABLE_AOCL_CPUID
-            static bool s_shani_available = (alc_cpu_has_sha() > 0);
-#else
-            static bool s_shani_available = true;
-#endif
-            return s_shani_available;
-        }
-    }
-    static bool isAvx2Available()
-    {
-        static bool s_avx2_available = false;
-        return s_avx2_available;
-    }
 
 #if defined(USE_ALCP_MEMPOOL)
     static void* operator new(size_t size)
@@ -198,8 +174,13 @@ Sha256::Impl::compressMsg(Uint32 w[])
 alc_error_t
 Sha256::Impl::processChunk(const Uint8* pSrc, Uint64 len)
 {
-    static bool shani_available = isShaniAvailable();
-    static bool avx2_available  = isAvx2Available();
+    static bool shani_available = utils::Cpuid::cpuHasShani();
+    // FIXME: AVX2 is deliberately disabled due to poor performance
+#if 0
+    static bool avx2_available  = utils::Cpuid::cpuHasAvx2();
+#else
+    static bool avx2_available = false;
+#endif
 
     /* we need len to be multiple of cChunkSize */
     assert((len & cChunkSizeMask) == 0);

@@ -31,10 +31,6 @@
 #include <functional>
 #include <string>
 
-#ifdef ALCP_ENABLE_AOCL_CPUID
-#include "alci/cpu_features.h"
-#endif
-
 #include "digest/sha2_512.hh"
 
 #include "digest/sha_avx2.hh"
@@ -42,6 +38,7 @@
 
 #include "utils/bits.hh"
 #include "utils/copy.hh"
+#include "utils/cpuid.hh"
 #include "utils/endian.hh"
 
 namespace utils = alcp::utils;
@@ -71,17 +68,6 @@ static constexpr Uint64 cIv_224[] = { 0x8c3d37c819544da2, 0x73e1996689dcd4d6,
                                       0x1dfab7ae32ff9c82, 0x679dd514582f9fcf,
                                       0x0f6d2b697bd44da8, 0x77e36f7304c48942,
                                       0x3f9d85a86a1d36c8, 0x1112e6ad91d692a1 };
-
-static bool
-isAvx2Available()
-{
-#ifdef ALCP_ENABLE_AOCL_CPUID
-    static bool s_avx2_available = true;
-#else
-    static bool s_avx2_available = false;
-#endif
-    return s_avx2_available;
-}
 
 Sha512::Sha512(alc_digest_len_t digest_len)
     : m_msg_len{ 0 }
@@ -239,19 +225,19 @@ Sha512::compressMsg(Uint64 w[])
 alc_error_t
 Sha512::processChunk(const Uint8* pSrc, Uint64 len)
 {
+    static bool avx2_available = utils::Cpuid::cpuHasAvx2();
 
-    static bool avx256_available = isZen3() || isZen4();
-
-    if (avx256_available) {
+    if (avx2_available) {
         return zen3::ShaUpdate512(m_hash, pSrc, len);
     }
-
-    static bool avx2_available = isAvx2Available();
 
     /* we need len to be multiple of cChunkSize */
     assert((len & Sha512::cChunkSizeMask) == 0);
 
-    if (avx2_available) {
+    // FIXME: Add cpuid for SSE
+    // NOTE: This kernel is performing a little bit worse than above kernel in
+    // ZEN1+ machine
+    if (!avx2_available) {
         return avx2::ShaUpdate512(m_hash, pSrc, len);
     }
 
@@ -399,8 +385,8 @@ Sha512::finalize(const Uint8* pBuf, Uint64 size)
     utils::CopyBytes(&msg_len_ptr[0], &len_bits_copy, 16);
     // msg_len_ptr[0] = utils::ToBigEndian(len_in_bits);
 #else
-    Uint64      len_in_bits_high;
-    Uint64      len_in_bits;
+    Uint64 len_in_bits_high;
+    Uint64 len_in_bits;
 
     if (m_msg_len > ULLONG_MAX / 8) { // overflow happens
         // extract the left most 3bits
