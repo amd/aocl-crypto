@@ -33,6 +33,22 @@ namespace alcp::testing {
 
 static Uint8 size_[4096] = { 0 };
 
+/* Mapping between ALC sha mode and digest len. Update for upcoming ALC digest
+ * types here*/
+std::map<alc_digest_len_t, alc_sha2_mode_t> sha2_mode_len_map = {
+    { ALC_DIGEST_LEN_224, ALC_SHA2_224 },
+    { ALC_DIGEST_LEN_256, ALC_SHA2_256 },
+    { ALC_DIGEST_LEN_384, ALC_SHA2_384 },
+    { ALC_DIGEST_LEN_512, ALC_SHA2_512 },
+};
+
+std::map<alc_digest_len_t, alc_sha3_mode_t> sha3_mode_len_map = {
+    { ALC_DIGEST_LEN_224, ALC_SHA3_224 },
+    { ALC_DIGEST_LEN_256, ALC_SHA3_256 },
+    { ALC_DIGEST_LEN_384, ALC_SHA3_384 },
+    { ALC_DIGEST_LEN_512, ALC_SHA3_512 },
+};
+
 AlcpDigestBase::AlcpDigestBase(const alc_digest_info_t& info)
 {
     init(info, m_digest_len);
@@ -53,42 +69,12 @@ AlcpDigestBase::init()
     alc_digest_info_t dinfo = m_info;
 
     if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
-        switch (m_info.dt_len) {
-            case ALC_DIGEST_LEN_224:
-                dinfo.dt_mode.dm_sha2 = ALC_SHA2_224;
-                break;
-            case ALC_DIGEST_LEN_256:
-                dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
-                break;
-            case ALC_DIGEST_LEN_384:
-                dinfo.dt_mode.dm_sha2 = ALC_SHA2_384;
-                break;
-            case ALC_DIGEST_LEN_512:
-                dinfo.dt_mode.dm_sha2 = ALC_SHA2_512;
-                break;
-            default:
-                break;
-        }
+        dinfo.dt_mode.dm_sha2 = sha2_mode_len_map[m_info.dt_len];
     } else if (m_info.dt_type == ALC_DIGEST_TYPE_SHA3) {
-        switch (m_info.dt_len) {
-            case ALC_DIGEST_LEN_224:
-                dinfo.dt_mode.dm_sha3 = ALC_SHA3_224;
-                break;
-            case ALC_DIGEST_LEN_256:
-                dinfo.dt_mode.dm_sha3 = ALC_SHA3_256;
-                break;
-            case ALC_DIGEST_LEN_384:
-                dinfo.dt_mode.dm_sha3 = ALC_SHA3_384;
-                break;
-            case ALC_DIGEST_LEN_512:
-                dinfo.dt_mode.dm_sha3 = ALC_SHA3_512;
-                break;
-            case ALC_DIGEST_LEN_CUSTOM:
-                dinfo.dt_custom_len = m_digest_len;
-                break;
-            default:
-                break;
-        }
+        if (m_info.dt_len == ALC_DIGEST_LEN_CUSTOM)
+            dinfo.dt_custom_len = m_digest_len;
+        else
+            dinfo.dt_mode.dm_sha3 = sha3_mode_len_map[m_info.dt_len];
     }
 
     m_handle          = new alc_digest_handle_t;

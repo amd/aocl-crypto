@@ -29,9 +29,13 @@
 #pragma once
 #include "base_common.hh"
 #include <alcp/alcp.h>
+#include <map>
 #include <vector>
 
 namespace alcp::testing {
+/* add mapping for SHA mode and length */
+extern std::map<alc_digest_len_t, alc_sha2_mode_t> sha2_mode_len_map;
+extern std::map<alc_digest_len_t, alc_sha3_mode_t> sha3_mode_len_map;
 
 typedef enum
 {
