@@ -398,7 +398,7 @@ AesCrosstest(int               keySize,
                 out_ct_alc(i * size, 0), out_ct_ext(i * size, 0),
                 out_pt(i * size, 0);
 
-            std::unique_ptr<Uint8> tagBuff = std::make_unique<Uint8>(tagLength);
+            auto tagBuff = std::make_unique<Uint8[]>(tagLength);
 
             if (!bbxreplay) {
                 pt   = rb.genRandomBytes(i * size);
