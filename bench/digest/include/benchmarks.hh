@@ -172,9 +172,13 @@ AddBenchmarks()
     BENCHMARK(BENCH_SHA2_256)->ArgsProduct({ digest_block_sizes });
     BENCHMARK(BENCH_SHA2_384)->ArgsProduct({ digest_block_sizes });
     BENCHMARK(BENCH_SHA2_512)->ArgsProduct({ digest_block_sizes });
-    BENCHMARK(BENCH_SHA3_224)->ArgsProduct({ digest_block_sizes });
-    BENCHMARK(BENCH_SHA3_256)->ArgsProduct({ digest_block_sizes });
-    BENCHMARK(BENCH_SHA3_384)->ArgsProduct({ digest_block_sizes });
-    BENCHMARK(BENCH_SHA3_512)->ArgsProduct({ digest_block_sizes });
+
+    /* SHA3 is not supported for IPP */
+    if (!useipp) {
+        BENCHMARK(BENCH_SHA3_224)->ArgsProduct({ digest_block_sizes });
+        BENCHMARK(BENCH_SHA3_256)->ArgsProduct({ digest_block_sizes });
+        BENCHMARK(BENCH_SHA3_384)->ArgsProduct({ digest_block_sizes });
+        BENCHMARK(BENCH_SHA3_512)->ArgsProduct({ digest_block_sizes });
+    }
     return 0;
 }

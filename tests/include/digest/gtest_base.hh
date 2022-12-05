@@ -172,12 +172,6 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
         fr = new ExecRecPlay(
             GetDigestStr(info.dt_type) + "_" + std::to_string(HashSize), false);
 
-    /* Skip SHA3 tests for IPP */
-    if (useipp && (GetDigestStr(info.dt_type).compare("SHA3") == 0)) {
-        printf("IPPCP doesnt support SHA3 for now, skipping this test\n");
-        return;
-    }
-
 #ifdef USE_OSSL
     OpenSSLDigestBase odb(info);
     if ((useossl == true) || (extDb == nullptr)) // Select OpenSSL by default

@@ -68,8 +68,12 @@ TEST(DIGEST_SHA2, KAT_512)
 }
 
 /* SHA3 tests */
+/* NOTE: SHA3 tests will be skipped for IPPCP
+ IPPCP doesnt have SHA3 as of now */
 TEST(DIGEST_SHA3, KAT_224)
 {
+    if (useipp)
+        GTEST_SKIP();
     alc_digest_info_t info;
     info.dt_mode.dm_sha2 = ALC_SHA2_224;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
@@ -78,6 +82,8 @@ TEST(DIGEST_SHA3, KAT_224)
 }
 TEST(DIGEST_SHA3, KAT_256)
 {
+    if (useipp)
+        GTEST_SKIP();
     alc_digest_info_t info;
     info.dt_mode.dm_sha2 = ALC_SHA2_256;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
@@ -86,6 +92,8 @@ TEST(DIGEST_SHA3, KAT_256)
 }
 TEST(DIGEST_SHA3, KAT_384)
 {
+    if (useipp)
+        GTEST_SKIP();
     alc_digest_info_t info;
     info.dt_mode.dm_sha2 = ALC_SHA2_384;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
@@ -94,6 +102,8 @@ TEST(DIGEST_SHA3, KAT_384)
 }
 TEST(DIGEST_SHA3, KAT_512)
 {
+    if (useipp)
+        GTEST_SKIP();
     alc_digest_info_t info;
     info.dt_mode.dm_sha2 = ALC_SHA2_512;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
@@ -112,6 +122,13 @@ main(int argc, char** argv)
     if (useipp)
         std::cout << RED << "IPP is not avaiable, defaulting to ALCP" << RESET
                   << std::endl;
+#endif
+
+#ifndef USE_OSSL
+    if (useossl) {
+        std::cout << RED << "OpenSSL is not avaiable, defaulting to ALCP"
+                  << RESET << std::endl;
+    }
 #endif
     auto default_printer =
         listeners.Release(listeners.default_result_printer());
