@@ -67,14 +67,14 @@ Assert(T&& assrt, std::string_view s, const SourceLocation& loc)
 
 #if defined(ALCP_USE_ASSERTIONS)
 
-#define ASSERT(cond, msg)                                                      \
+#define ALCP_ASSERT(cond, msg)                                                      \
     alcp::Assert(cond, std::string_view(msg), ALCP_SOURCE_LOCATION())
 
 #else
 
-#define ASSERT(cond, msg)                                                      \
-    {                                                                          \
-    }
+#define ALCP_ASSERT(cond, msg)              \
+    do {                                    \
+    } while(0)
 
 #endif // if ALCP_USE_ASSERTIONS
 

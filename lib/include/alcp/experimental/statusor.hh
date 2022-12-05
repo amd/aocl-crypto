@@ -76,7 +76,7 @@ class StatusOr
   private:
     inline bool assertNotOk() const
     {
-        ASSERT(!m_status.ok(), m_status.message());
+        ALCP_ASSERT(!m_status.ok(), m_status.message());
         return m_status.ok();
     }
 };
@@ -90,7 +90,7 @@ template<typename T>
 inline StatusOr<T>::StatusOr(alcp::Status& sts)
     : m_status{ sts }
 {
-    ASSERT(!m_status.ok(), "Assigned status not ok!!");
+    ALCP_ASSERT(!m_status.ok(), "Assigned status not ok!!");
 }
 
 template<typename T>
