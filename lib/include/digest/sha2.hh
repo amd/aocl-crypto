@@ -90,12 +90,12 @@ class Sha256 final : public Sha2
     /**
      * @return The input block size to the hash function in bytes
      */
-    Uint64 getInputBlockSize() override;
+    ALCP_SYMBOLS Uint64 getInputBlockSize() override;
 
     /**
      * @return The digest size in bytes
      */
-    Uint64 getHashSize() override;
+    ALCP_SYMBOLS Uint64 getHashSize() override;
 
   public:
     /**
