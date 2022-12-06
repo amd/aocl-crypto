@@ -34,7 +34,6 @@ class Mac
   public:
     Mac();
     virtual alc_error_t update(const Uint8* pMsgBuf, Uint64 size)   = 0;
-    virtual alc_error_t update(std::vector<Uint8> cipher_text)      = 0;
     virtual void        finish()                                    = 0;
     virtual void        reset()                                     = 0;
     virtual alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) = 0;

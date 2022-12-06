@@ -35,21 +35,28 @@ class Hmac::Impl
 {
 
   private:
+    /** Single Memory Block to hold h1,
+     * m_k0_xor_ipad,m_k0_xor_opad, m_k0 */
+    Uint8* memory_block;
     // Input Key to HMAC
-    std::vector<Uint8> m_key;
+    const Uint8* m_key;
     // Length of the input key must be >0 to be valid
     Uint32 m_keylen;
+    Uint32 m_k0_length;
     // Input Block Length / B of the digest used by HMAC
     Uint32 m_input_block_length{};
+
+    Uint8* h1;
+
     /**
      * Processed Key to match the input block length input_block_length
      * get_k0 function performs the preprocessing
      * */
-    std::vector<Uint8> m_k0;
+    Uint8* m_k0;
     // Size of the message digest
     Uint32 m_output_hash_size{};
     // Placeholder variable to hold the mac value after finalize has been called
-    std::vector<Uint8> m_output_mac;
+    Uint8* m_output_mac;
 
     // TODO: Consider Shared pointer for this implementation
     /**
@@ -65,10 +72,11 @@ class Hmac::Impl
      * */
     hmac_state_t m_state = INVALID;
 
-    std::vector<Uint8> m_k0_xor_opad, m_k0_xor_ipad;
+    Uint8* m_k0_xor_opad;
+    Uint8* m_k0_xor_ipad;
 
   public:
-    Impl(const alc_mac_info_t mac_info, alcp::digest::Digest* p_digest)
+    Impl(const alc_mac_info_t& mac_info, alcp::digest::Digest* p_digest)
         : m_pDigest{ p_digest }
     {
         alc_error_t    err;
@@ -86,25 +94,34 @@ class Hmac::Impl
             // throw std::length_error("ERROR: Digest Hash Size cannot be 0");
             m_state = INVALID;
         }
-
-        m_output_mac.assign(m_output_hash_size, 0);
         err = validate_keys(kinfo);
         if (err) {
             m_state = INVALID;
             return;
         }
+        m_k0_length = m_input_block_length;
 
-        m_k0 = get_k0(m_input_block_length);
+        // TODO: Investigate Pool Allocator for this optimization
+        /*Optimization: Requesting single block of memory takes less time than
+         * requesting individually*/
+        memory_block = new Uint8[m_output_hash_size + 3 * m_k0_length];
+        m_output_mac = new Uint8[m_output_hash_size];
+
+        h1 = memory_block;
+
         // Allocate k0_xor_ipad and k0_xor_opad with same length as k0. But
         // value will be junk
-        m_k0_xor_ipad = std::vector<Uint8>(m_k0.size(), 0);
-        m_k0_xor_opad = std::vector<Uint8>(m_k0.size(), 0);
+        m_k0_xor_ipad = h1 + m_output_hash_size;
+        m_k0_xor_opad = m_k0_xor_ipad + m_k0_length;
+        m_k0          = m_k0_xor_opad + m_k0_length;
+
+        get_k0();
 
         // obtain k0_xor_ipad and k0_xor_opad
         get_k0_xor_pad();
 
         // start the hash calculation
-        err = calculate_hash(p_digest, m_k0_xor_ipad);
+        err = calculate_hash(p_digest, m_k0_xor_ipad, m_input_block_length);
         if (err) {
         } else {
             m_state = VALID;
@@ -120,62 +137,50 @@ class Hmac::Impl
             return 0;
     }
     hmac_state_t getState() const { return m_state; };
-    alc_error_t  update(std::vector<Uint8> buff)
-    {
-        alc_error_t err = ALC_ERROR_NONE;
-        if (getState() == VALID)
-            err = calculate_hash(m_pDigest, buff);
-        else {
-            err = ALC_ERROR_BAD_STATE;
-        }
-        return err;
-    }
 
     alc_error_t update(const Uint8* buff, Uint64 size)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        if (getState() == VALID)
-            err = calculate_hash(m_pDigest, buff, size, nullptr);
-        else
-            err = ALC_ERROR_BAD_STATE;
-
+        if (buff != nullptr && size != 0) {
+            if (getState() == VALID)
+                err = calculate_hash(m_pDigest, buff, size);
+            else
+                err = ALC_ERROR_BAD_STATE;
+        }
         return err;
     }
     alc_error_t finalize(const Uint8* buff, Uint64 size)
     {
         if (getState() == VALID) {
-            if (sizeof(buff) != 0 && size != 0)
-                calculate_hash(m_pDigest, buff, size, nullptr);
-            m_pDigest->finalize(nullptr, 0);
-
-            std::vector<Uint8> h1(m_output_hash_size, 0);
-            m_pDigest->copyHash(&(h1.at(0)), h1.size());
+            if (sizeof(buff) != 0 && size != 0) {
+                m_pDigest->finalize(buff, size);
+            } else {
+                m_pDigest->finalize(nullptr, 0);
+            }
+            m_pDigest->copyHash(h1, m_output_hash_size);
             m_pDigest->reset();
 
-            // Contatenate k0_xor_opad with intermediate hash
-            std::vector<Uint8> k0_xor_opad_ct_h1;
-            k0_xor_opad_ct_h1.insert(k0_xor_opad_ct_h1.end(),
-                                     m_k0_xor_opad.begin(),
-                                     m_k0_xor_opad.end());
-            k0_xor_opad_ct_h1.insert(
-                k0_xor_opad_ct_h1.end(), h1.begin(), h1.end());
-            calculate_hash(m_pDigest, k0_xor_opad_ct_h1);
+            calculate_hash(m_pDigest, m_k0_xor_opad, m_k0_length);
+            m_pDigest->finalize(h1, m_output_hash_size);
 
-            m_pDigest->finalize(nullptr, 0);
-            m_pDigest->copyHash(&(m_output_mac.at(0)), m_output_mac.size());
+            m_pDigest->copyHash(m_output_mac, m_output_hash_size);
             m_pDigest->reset();
+            delete[] memory_block;
         }
         return ALC_ERROR_NONE;
     }
 
-    alc_error_t copyHash(Uint8* buff, Uint64 size) const
+    alc_error_t copyHash(Uint8* buff, Uint64 size)
     {
         alc_error_t err = ALC_ERROR_NONE;
         if (getState() == VALID) {
-            alcp::utils::CopyBytes(buff, &m_output_mac.at(0), size);
+            alcp::utils::CopyBytes(buff, m_output_mac, size);
         } else {
             err = ALC_ERROR_BAD_STATE;
         }
+        m_state = INVALID;
+        // Since m_output_mac is cleared here. CopyHash can only be called once.
+        delete[] m_output_mac;
         return err;
     }
 
@@ -195,8 +200,7 @@ class Hmac::Impl
                     return ALC_ERROR_INVALID_SIZE;
                 }
                 if (rKeyInfo.key) {
-                    m_key = std::vector<Uint8>(rKeyInfo.key,
-                                               rKeyInfo.key + m_keylen);
+                    m_key = rKeyInfo.key;
                 } else {
                     // std::cout << "ERROR:Key Cannot be NULL" << std::endl;
                     return ALC_ERROR_NOT_PERMITTED;
@@ -227,9 +231,9 @@ class Hmac::Impl
         const int no_of_xor_operations =
             input_block_length_bits / optimized_bits_per_xor;
 
-        __m128i* pi_k0          = reinterpret_cast<__m128i*>(&(m_k0.at(0)));
-        __m128i* pi_k0_xor_ipad = reinterpret_cast<__m128i*>(&m_k0_xor_ipad[0]);
-        __m128i* pi_k0_xor_opad = reinterpret_cast<__m128i*>(&m_k0_xor_opad[0]);
+        __m128i* pi_k0          = reinterpret_cast<__m128i*>(m_k0);
+        __m128i* pi_k0_xor_ipad = reinterpret_cast<__m128i*>(m_k0_xor_ipad);
+        __m128i* pi_k0_xor_opad = reinterpret_cast<__m128i*>(m_k0_xor_opad);
         __m128i  reg_k0_1;
         __m128i  reg_k0_xor_ipad_1;
         __m128i  reg_k0_xor_opad_1;
@@ -306,48 +310,32 @@ class Hmac::Impl
         }
     }
 
-    std::vector<Uint8> get_k0(Uint32 block_len)
+    alc_error_t get_k0()
     {
-        std::vector<Uint8> k0;
-        if (block_len == m_keylen) {
-            k0 = m_key;
-        } else if (m_keylen < block_len) {
-            int L                       = block_len - m_keylen;
-            k0                          = m_key;
-            std::vector<Uint8> zerovect = std::vector<Uint8>(L, 0);
-            k0.insert(k0.end(), zerovect.begin(), zerovect.end());
-        } else if (m_keylen > block_len) {
-            // Optimization: Reusing p_digest for calculating this sha
+        if (m_input_block_length == m_keylen) {
+            utils::CopyBytes(m_k0, m_key, m_keylen);
+        } else if (m_keylen < m_input_block_length) {
+            utils::CopyBytes(m_k0, m_key, m_keylen);
+            memset(m_k0 + m_keylen, 0x0, m_input_block_length - m_keylen);
+        } else if (m_keylen > m_input_block_length) {
+            // Optimization: Reusing p_digest for calculating
             m_pDigest->reset();
-            std::vector<Uint8> hash = std::vector<Uint8>(m_output_hash_size, 0);
-            m_pDigest->update(&(m_key.at(0)), m_key.size());
-            m_pDigest->finalize(nullptr, 0);
-            m_pDigest->copyHash(&(hash.at(0)), m_output_hash_size);
+            m_pDigest->finalize(m_key, m_keylen);
+            m_pDigest->copyHash(m_k0, m_output_hash_size);
             m_pDigest->reset();
-
-            int L = block_len - m_output_hash_size;
-
-            std::vector<Uint8> zerovect = std::vector<Uint8>(L, 0);
-            hash.insert(hash.end(), zerovect.begin(), zerovect.end());
-            k0 = hash;
+            memset(m_k0 + m_output_hash_size,
+                   0x0,
+                   m_input_block_length - m_output_hash_size);
         }
-        return k0;
-    }
-
-    alc_error_t calculate_hash(alcp::digest::Digest* p_digest,
-                               std::vector<Uint8>    input)
-    {
-        return calculate_hash(p_digest, &(input.at(0)), input.size(), nullptr);
+        return ALC_ERROR_NONE;
     }
 
     alc_error_t calculate_hash(alcp::digest::Digest* p_digest,
                                const Uint8*          input,
-                               Uint64                len,
-                               Uint8*                output)
+                               Uint64                len)
     {
         alc_error_t err;
         err = p_digest->update(input, len);
-        p_digest->copyHash(output, m_output_hash_size);
         return err;
     }
 };
@@ -357,12 +345,6 @@ Hmac::Hmac(const alc_mac_info_t mac_info, alcp::digest::Digest* p_digest)
     , m_pImpl{ std::make_unique<Hmac::Impl>(mac_info, p_digest) }
 {}
 Hmac::~Hmac() {}
-
-alc_error_t
-Hmac::update(std::vector<Uint8> buff)
-{
-    return m_pImpl->update(buff);
-}
 
 alc_error_t
 Hmac::update(const Uint8* buff, Uint64 size)

@@ -319,7 +319,7 @@ TEST(HmacReliabilityTest, NullUpdate)
     alcp::mac::Hmac      hmac(mac_info, &sha256);
     hmac.update(nullptr, 0);
     ASSERT_EQ(hmac.getState(), VALID);
-    hmac.update(cipher_text);
+    hmac.update(&cipher_text[0], cipher_text.size());
     hmac.finalize(nullptr, 0);
     auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);
     hmac.copyHash(&mac.at(0), mac.size());
@@ -332,7 +332,7 @@ TEST_P(HmacTestFixture, HMAC_UPDATE)
     setUp(params);
     setUpHash(params.first);
 
-    p_hmac->update(cipher_text);
+    p_hmac->update(&cipher_text[0], cipher_text.size());
 
     p_hmac->finalize(nullptr, 0);
 
@@ -362,8 +362,8 @@ TEST_P(HmacTestFixture, HMAC_UPDATE_FINALISE)
               << std::endl;
 #endif
 
-    p_hmac->update(block1);
-    p_hmac->update(block2);
+    p_hmac->update(&block1[0], block1.size());
+    p_hmac->update(&block2[0], block2.size());
     p_hmac->finalize(nullptr, 0);
 
     std::vector<Uint8> mac = std::vector<Uint8>(p_hmac->getHashSize(), 0);

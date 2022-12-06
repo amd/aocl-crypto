@@ -56,12 +56,6 @@ class Hmac : public Mac
     Hmac(const alc_mac_info_t mac_info, alcp::digest::Digest* p_digest);
     /**
      * @brief Can be called continously to update message on small chunks
-     * @param buff: message block to update HMAC
-     * @returns Error Status
-     */
-    alc_error_t update(std::vector<Uint8> buff) override;
-    /**
-     * @brief Can be called continously to update message on small chunks
      * @param buff: message array block to update HMAC
      * @param size: Size of the message array
      * @returns Error Status
