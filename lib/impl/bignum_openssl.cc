@@ -29,6 +29,7 @@
 #pragma once
 
 #include "alcp/utils/bignum.hh"
+#include "utils/endian.hh"
 
 #include <openssl/bn.h>
 
@@ -83,6 +84,11 @@ class BigNum::Impl
         void operator()(BIGNUM* p) { BN_clear_free(p); }
     };
 
+    struct _OpenSSLDeleter
+    {
+        void operator()(void* p) { OPENSSL_free(p); }
+    };
+
     using unique_bn_ptr_t = std::unique_ptr<BIGNUM, _BnDeleter>;
 
   public:
@@ -125,6 +131,16 @@ class BigNum::Impl
         return result;
     }
 
+    inline bool isZero(const BigNum& num)
+    {
+        return BN_is_zero(num.pImpl()->raw());
+    }
+
+    inline bool isOne(const BigNum& num)
+    {
+        return BN_is_one(num.pImpl()->raw());
+    }
+
     inline Impl sub(const Impl& lhs, const Impl& rhs)
     {
         Impl result;
@@ -143,14 +159,86 @@ class BigNum::Impl
 
         return result;
     }
+
     /* Cant compare BigInt at the moment */
     inline bool neq(const Impl& rhs) { return true; }
 
     /* Cant compare BigInt at the moment */
     inline bool eq(const Impl& rhs) { return false; }
 
-    const std::string& toString();
-    void               fromString(const std::string&);
+    void fromUint64(const Uint64 val)
+    {
+        bool res = BN_set_word(raw(), val);
+        if (!res)
+            throw BigNumError("BigNum: OpenSSL fromInt64 failed");
+    }
+
+    void fromInt64(const Int64 val)
+    {
+        if (val < 0) {
+            Uint64  new_val = utils::ReverseBytes<Uint64>(~val + 1);
+            BIGNUM* b = BN_bin2bn(reinterpret_cast<const Uint8*>(&new_val),
+                                  sizeof(new_val),
+                                  nullptr);
+            BN_copy(raw(), b);
+            BN_free(b);
+            BN_set_negative(raw(), true);
+        } else {
+            fromUint64(val);
+        }
+    }
+
+    void fromInt32(const Int32 val)
+    {
+        auto is_negative = val < 0;
+
+        if (val < 0) {
+            BN_bin2bn(
+                reinterpret_cast<const Uint8*>(&val), sizeof(val), nullptr);
+        } else {
+            bool res = BN_set_word(raw(), val);
+            if (!res)
+                throw BigNumError("BigNum: OpenSSL fromInt32 failed");
+        }
+        BN_set_negative(raw(), is_negative);
+    }
+
+    Int64 toInt64() const { return BN_get_word(raw()); }
+
+    Int32 toInt32() const { return BN_get_word(raw()); }
+
+    /*
+     * The string gets allocated from openssl, need a way to free it
+     */
+    const String toString(BigNum::Format fmt = BigNum::Format::eDecimal) const
+    {
+        String s;
+        switch (fmt) {
+            case BigNum::Format::eDecimal: {
+                std::shared_ptr<char> res(BN_bn2dec(raw()), _OpenSSLDeleter());
+                s = res.get();
+                break;
+            }
+            default:
+                s = String("");
+        }
+
+        return s;
+    }
+
+    void fromString(const std::string& str, BigNum::Format fmt)
+    {
+        switch (fmt) {
+            case BigNum::Format::eDecimal: {
+                BIGNUM* bn = raw();
+                BN_dec2bn(&bn, str.c_str());
+                /* FIXME: Check for errors, set 0 if so */
+
+            } break;
+            default:
+                break;
+        }
+    }
 
   private:
     unique_bn_ptr_t m_pbn;

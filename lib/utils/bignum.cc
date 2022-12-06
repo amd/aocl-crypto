@@ -64,34 +64,45 @@ BigNum::BigNum(const BigNum&& b)
 }
 
 Int64
-BigNum::toInt64()
+BigNum::toInt64() const
 {
-    return 0;
+    return pImpl()->toInt64();
 }
 
 Int32
-BigNum::toInt32()
+BigNum::toInt32() const
 {
-    return 0;
+    return pImpl()->toInt32();
+}
+
+void
+BigNum::fromUint64(const Uint64 val)
+{
+    pImpl()->fromUint64(val);
 }
 
 void
 BigNum::fromInt64(const Int64 val)
-{}
+{
+    pImpl()->fromInt64(val);
+}
 
 void
 BigNum::fromInt32(const Int32 val)
-{}
+{
+    pImpl()->fromInt32(val);
+}
 
 void
-BigNum::fromString(const StringView& str)
-{}
+BigNum::fromString(const String& str, Format f)
+{
+    pImpl()->fromString(str, f);
+}
 
-const String&
+const String
 BigNum::toString() const
 {
-    static const std::string help_str = std::string("Hello");
-    return help_str;
+    return pImpl()->toString();
 }
 
 void

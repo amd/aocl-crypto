@@ -79,18 +79,34 @@ class BigNum final
     BigNum& operator--();
 #endif
 
-    bool isZero();
-    bool isOne();
-    bool isNegative();
+    bool isZero() const;
+    bool isOne() const;
+    bool isNegative() const;
 
-    Int64 toInt64();
-    Int32 toInt32();
+    Int64 toInt64() const;
+    Int32 toInt32() const;
 
     void fromInt64(const Int64 val);
     void fromInt32(const Int32 val);
 
-    void          fromString(const StringView& str);
-    const String& toString() const;
+    void fromUint64(const Uint64 val);
+    void fromUint32(const Uint32 val);
+
+    enum class Format
+    {
+        eBinary,
+        eDecimal,
+        eHex,
+    };
+
+    /**
+     * @brief Convert from Decimal or Hex string to BigNum
+     *
+     * @param str       The string containing the number
+     * @param format    Format of the string, Binary,Decimal,Hex
+     */
+    void         fromString(const String& str, Format f = Format::eDecimal);
+    const String toString() const;
 
   private:
     class Impl;

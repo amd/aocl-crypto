@@ -79,7 +79,7 @@ INSTANTIATE_TEST_SUITE_P(
 /**************************
  * Integer to string
  **************************/
-typedef std::pair<const int, const string>   int_params_t;
+typedef std::pair<const Int64, const string> int_params_t;
 typedef std::map<const string, int_params_t> known_answer_int_map_t;
 
 static const known_answer_int_map_t bignum_int_known_answers = {
@@ -88,11 +88,14 @@ static const known_answer_int_map_t bignum_int_known_answers = {
     { "negative_one_test", { -1, "-1" } },  //
     { "five_test", { 5, "5" } },            //
     { "negative_five_test", { -5, "-5" } }, //
+    { "min_int32_test",
+      { std::numeric_limits<alcp::Int32>::min(), "-2147483648" } },
+    { "max_int32_test",
+      { std::numeric_limits<alcp::Int32>::max(), "2147483647" } },
     { "min_int_test",
       { std::numeric_limits<alcp::Int64>::min(), "-9223372036854775808" } },
     { "max_int_test",
       { std::numeric_limits<alcp::Int64>::max(), "9223372036854775807" } },
-
 };
 
 class SimpleInt
@@ -102,11 +105,11 @@ class SimpleInt
 TEST_P(SimpleInt, Integers)
 {
     BigNum n;
-    auto [intput, output_str] = GetParam().second;
+    auto [input, output] = GetParam().second;
 
-    n.fromInt64(intput);
+    n.fromInt64(input);
 
-    EXPECT_STREQ(n.toString().c_str(), output_str.c_str());
+    EXPECT_STREQ(n.toString().c_str(), output.c_str());
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -116,6 +119,15 @@ INSTANTIATE_TEST_SUITE_P(
     [](const testing::TestParamInfo<SimpleInt::ParamType>& info) {
         return info.param.first;
     });
+
+TEST(BigNumTest, MaxUint64)
+{
+    BigNum n;
+
+    n.fromUint64(std::numeric_limits<alcp::Uint64>::max());
+
+    EXPECT_STREQ(n.toString().c_str(), "18446744073709551615");
+}
 
 /***************************
  * Arithmetic operations
