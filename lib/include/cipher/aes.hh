@@ -66,7 +66,7 @@ class Aes : public Rijndael
     Aes() { m_this = this; }
     virtual ~Aes() {}
 
-    ALCP_SYMBOLS void setKey(const Uint8* pUserKey, Uint64 len) override;
+    ALCP_API_EXPORT void setKey(const Uint8* pUserKey, Uint64 len) override;
 
   protected:
     alc_cipher_mode_t m_mode;
@@ -77,7 +77,7 @@ class Aes : public Rijndael
  * \brief        AES Encryption in CBC(Cipher block chaining)
  * \notes        TODO: Move this to a aes_cbc.hh or other
  */
-class ALCP_SYMBOLS Cbc final : public Aes
+class ALCP_API_EXPORT Cbc final : public Aes
 {
   public:
     explicit Cbc(const alc_cipher_algo_info_t& aesInfo,
@@ -154,7 +154,7 @@ class ALCP_SYMBOLS Cbc final : public Aes
  * \brief        AES Encryption in OFB(Output Feedback)
  * \notes        TODO: Move this to a aes_ofb.hh or other
  */
-class ALCP_SYMBOLS Ofb final : public Aes
+class ALCP_API_EXPORT Ofb final : public Aes
 {
   public:
     explicit Ofb(const alc_cipher_algo_info_t& aesInfo,
@@ -231,7 +231,7 @@ class ALCP_SYMBOLS Ofb final : public Aes
  * \brief        AES Encryption in Ctr(Counter mode)
  * \notes        TODO: Move this to a aes_Ctr.hh or other
  */
-class ALCP_SYMBOLS Ctr final : public Aes
+class ALCP_API_EXPORT Ctr final : public Aes
 {
   public:
     explicit Ctr(const alc_cipher_algo_info_t& aesInfo,
@@ -308,7 +308,7 @@ class ALCP_SYMBOLS Ctr final : public Aes
  * \brief        AES Encryption in GCM(Galois Counter mode)
  * \notes        TODO: Move this to a aes_Gcm.hh or other
  */
-class ALCP_SYMBOLS Gcm final
+class ALCP_API_EXPORT Gcm final
     : public Aes
     , cipher::IDecryptUpdater
     , cipher::IEncryptUpdater
@@ -507,7 +507,7 @@ struct _ccm_data_t
     Uint32       rounds = 0;
 };
 typedef _ccm_data_t *ccm_data_p, ccm_data_t;
-class ALCP_SYMBOLS Ccm            final
+class ALCP_API_EXPORT Ccm            final
     : public Aes
     , cipher::IDecryptUpdater
     , cipher::IEncryptUpdater
@@ -638,7 +638,7 @@ class ALCP_SYMBOLS Ccm            final
  * \brief        AES Encryption in XTS(XEX Tweakable Block Ciphertext
  * Stealing Mode)
  */
-class ALCP_SYMBOLS Xts final : public Aes
+class ALCP_API_EXPORT Xts final : public Aes
 {
 
   public:

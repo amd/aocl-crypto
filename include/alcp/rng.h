@@ -115,7 +115,7 @@ typedef struct
  *
  * \return  alc_error_t     Error code
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_rng_supported(const alc_rng_info_p pRngInfo);
 
 /**
@@ -128,7 +128,7 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo);
  *
  * \return  Uint64      Size of Rng Context
  */
-ALCP_SYMBOLS Uint64
+ALCP_API_EXPORT Uint64
 alcp_rng_context_size(const alc_rng_info_p pRngInfo);
 
 /**
@@ -140,7 +140,7 @@ alcp_rng_context_size(const alc_rng_info_p pRngInfo);
  * \param       pRngHandle      Pointer to user allocated session
  * \return      alc_error_t     Error code
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pRngHandle);
 
 /**
@@ -154,7 +154,7 @@ alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pRngHandle);
  *
  * \return  alc_error_t     Error code
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
                     Uint8*           pBuf, /* RNG output buffer */
                     Uint64           size  /* output buffer size */
@@ -169,7 +169,7 @@ alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
  * \return  alc_error_t     Error code
  *
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_rng_init(alc_rng_handle_p pRngHandle);
 
 /**
@@ -183,7 +183,7 @@ alcp_rng_init(alc_rng_handle_p pRngHandle);
  *
  * \return  alc_error_t     Error code, usually ALC_ERROR_NONE
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_rng_seed(alc_rng_handle_p pRngHandle, const Uint8* seed, Uint64 size);
 
 /**
@@ -195,7 +195,7 @@ alcp_rng_seed(alc_rng_handle_p pRngHandle, const Uint8* seed, Uint64 size);
  * \param   rng_handle      Pointer to handle
  * \return  alc_error_t     Error code
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_rng_finish(alc_rng_handle_p pRngHandle);
 
 EXTERN_C_END

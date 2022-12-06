@@ -126,7 +126,7 @@ typedef struct _alc_digest_handle
  *
  * \return      size > 0        if valid session is found, size otherwise
  */
-ALCP_SYMBOLS Uint64
+ALCP_API_EXPORT Uint64
 alcp_digest_context_size(const alc_digest_info_p p_digest_info);
 
 /**
@@ -139,7 +139,7 @@ alcp_digest_context_size(const alc_digest_info_p p_digest_info);
  *
  * \return      size > 0 if valid session is found, size otherwise
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_digest_supported(const alc_digest_info_p p_digest_info);
 
 /**
@@ -154,7 +154,7 @@ alcp_digest_supported(const alc_digest_info_p p_digest_info);
  *
  * \return      size > 0        if valid session is found, size otherwise
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_digest_request(const alc_digest_info_p p_digest_info,
                     alc_digest_handle_p     p_digest_handle);
 
@@ -171,7 +171,7 @@ alcp_digest_request(const alc_digest_info_p p_digest_info,
  * \return      ALC_ERROR_NONE if buffer is big enough and handle is valid;
  *              otherwise corresponding error is returned.
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_digest_update(const alc_digest_handle_p p_digest_handle,
                    const Uint8*              buf,
                    Uint64                    size);
@@ -191,7 +191,7 @@ alcp_digest_update(const alc_digest_handle_p p_digest_handle,
  * \return      ALC_ERROR_NONE  if buffer is big enough and handle is valid;
  *                      otherwise corresponding error is returned.
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_digest_copy(const alc_digest_handle_p p_digest_handle,
                  Uint8*                    buf,
                  Uint64                    size);
@@ -212,7 +212,7 @@ alcp_digest_copy(const alc_digest_handle_p p_digest_handle,
  *
  * \return      ALC_ERROR_NONE if no error occurs
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_digest_finalize(const alc_digest_handle_p p_digest_handle,
                      const Uint8*              p_msg_buf,
                      Uint64                    size);
@@ -228,7 +228,7 @@ alcp_digest_finalize(const alc_digest_handle_p p_digest_handle,
  *
  * \return      None
  */
-ALCP_SYMBOLS void
+ALCP_API_EXPORT void
 alcp_digest_finish(const alc_digest_handle_p p_digest_handle);
 
 /**
@@ -243,7 +243,7 @@ alcp_digest_finish(const alc_digest_handle_p p_digest_handle);
  *
  * \return      None
  */
-ALCP_SYMBOLS void
+ALCP_API_EXPORT void
 alcp_digest_reset(const alc_digest_handle_p p_digest_handle);
 
 EXTERN_C_END

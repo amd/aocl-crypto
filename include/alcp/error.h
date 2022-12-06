@@ -133,7 +133,7 @@ typedef Uint64 AlcError;
  * \param size   Size of the buffer @buf
  */
 
-ALCP_SYMBOLS void
+ALCP_API_EXPORT void
 alcp_error_str(alc_error_t err, Uint8* buf, Uint64 size);
 
 /**
@@ -143,7 +143,7 @@ alcp_error_str(alc_error_t err, Uint8* buf, Uint64 size);
  *
  * \param err    Actual Error
  */
-ALCP_SYMBOLS bool
+ALCP_API_EXPORT bool
 alcp_is_error(alc_error_t err);
 
 /**
@@ -153,7 +153,7 @@ alcp_is_error(alc_error_t err);
  *
  * \param err    Actual Error
  */
-ALCP_SYMBOLS void
+ALCP_API_EXPORT void
 alcp_error_clear(alc_error_t err);
 
 EXTERN_C_END

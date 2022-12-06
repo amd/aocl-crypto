@@ -148,7 +148,7 @@ typedef struct _alc_cipher_handle
  *                     as described by alc_cipher_info_t
  * \return              alc_error_t
  */
- ALCP_SYMBOLS alc_error_t
+ ALCP_API_EXPORT alc_error_t
 alcp_cipher_supported(const alc_cipher_info_p pCipherInfo);
 
 /**
@@ -160,7 +160,7 @@ alcp_cipher_supported(const alc_cipher_info_p pCipherInfo);
  * \param pCipherInfo Description of the requested cipher session
  * \return      size > 0 if valid session is found, size otherwise
  */
-ALCP_SYMBOLS Uint64
+ALCP_API_EXPORT Uint64
 alcp_cipher_context_size(const alc_cipher_info_p pCipherInfo);
 
 /**
@@ -174,7 +174,7 @@ alcp_cipher_context_size(const alc_cipher_info_p pCipherInfo);
  *                          operation
  * \return   Error described by alc_error_t
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
                     alc_cipher_handle_p     pCipherHandle);
 
@@ -193,7 +193,7 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
  * \param[in]    len           Length of cipher/plain text
  * \return   Error described by alc_error_t
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
                     const Uint8*              pPlainText,
                     Uint8*                    pCipherText,
@@ -214,7 +214,7 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
  * \param[in]    pIv       Pointer to Initialization Vector
  * \return   Error described by alc_error_t
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
                            const Uint8*              pInput,
                            Uint8*                    pOutput,
@@ -235,7 +235,7 @@ alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
  * \param[in]    pIv       Pointer to Initialization Vector
  * \return   Error described by alc_error_t
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_cipher_decrypt_update(const alc_cipher_handle_p pCipherHandle,
                            const Uint8*              pInput,
                            Uint8*                    pOutput,
@@ -250,7 +250,7 @@ alcp_cipher_decrypt_update(const alc_cipher_handle_p pCipherHandle,
  * \param[in] pIv  IV/Nonce
  * \return Error described by alc_error_t
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
                    Uint64                    len,
                    const Uint8*              pIv);
@@ -263,7 +263,7 @@ alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
  * \param[in] len       Length in bytes of Additional Data
  * \return Error described by alc_error_t
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_cipher_set_aad(const alc_cipher_handle_p pCipherHandle,
                     const Uint8*              pInput,
                     Uint64                    len);
@@ -276,7 +276,7 @@ alcp_cipher_set_aad(const alc_cipher_handle_p pCipherHandle,
  * \param[in] len       Length in bytes of Tag in bytes
  * \return Error described by alc_error_t
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_cipher_get_tag(const alc_cipher_handle_p pCipherHandle,
                     Uint8*                    pOutput,
                     Uint64                    len);
@@ -288,7 +288,7 @@ alcp_cipher_get_tag(const alc_cipher_handle_p pCipherHandle,
  * \param[in] len       Length in bytes of Tag in bytes
  * \return Error described by alc_error_t
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_cipher_set_tag_length(const alc_cipher_handle_p pCipherHandle, Uint64 len);
 
 /**
@@ -306,7 +306,7 @@ alcp_cipher_set_tag_length(const alc_cipher_handle_p pCipherHandle, Uint64 len);
  * \param[in]    len           Length of cipher/plain text
  * \return   Error described by alc_error_t
  */
-ALCP_SYMBOLS alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
                     const Uint8*              pCipherText,
                     Uint8*                    pPlainText,
@@ -322,7 +322,7 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
  *                         operation
  * \return            None
  */
-ALCP_SYMBOLS void
+ALCP_API_EXPORT void
 alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle);
 
 EXTERN_C_END

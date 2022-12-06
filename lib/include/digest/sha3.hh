@@ -33,7 +33,7 @@
 
 namespace alcp::digest {
 
-class ALCP_SYMBOLS Sha3 : public Digest
+class ALCP_API_EXPORT Sha3 : public Digest
 {
   public:
     Sha3(const alc_digest_info_t& rDigestInfo);

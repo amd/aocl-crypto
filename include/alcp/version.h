@@ -30,7 +30,7 @@
 #define _VERSION_H_ 2
 
 EXTERN_C_BEGIN
-ALCP_SYMBOLS const char*
+ALCP_API_EXPORT const char*
 alcp_get_version();
 EXTERN_C_END
 
