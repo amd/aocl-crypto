@@ -492,10 +492,6 @@ AesCrosstest(int               keySize,
                 }
             }
 
-            /* make it >1 to print these data */
-            if (verbose == 1) {
-                PrintTestData(key, data_alc, MODE_STR);
-            }
             if (enc_dec == ENCRYPT) {
                 alcpTC->getCipherHandler()->testingEncrypt(data_alc, key);
                 extTC->getCipherHandler()->testingEncrypt(data_ext, key);
@@ -503,6 +499,11 @@ AesCrosstest(int               keySize,
                 /* for gcm*/
                 if (isgcm || isccm) {
                     EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
+                }
+                /* FIXME : make verbose >1 to print these data */
+                if (verbose == 1) {
+                    PrintTestData(key, data_alc, MODE_STR);
+                    PrintTestData(key, data_ext, MODE_STR);
                 }
             } else {
                 alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
@@ -521,6 +522,11 @@ AesCrosstest(int               keySize,
                     }
                 } else {
                     ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
+                }
+                /* FIXME : make verbose >1 to print these data */
+                if (verbose == 1) {
+                    PrintTestData(key, data_alc, MODE_STR);
+                    PrintTestData(key, data_ext, MODE_STR);
                 }
             }
             if (!bbxreplay) {
