@@ -919,8 +919,15 @@ Rijndael::getNr() const
 Uint32
 Rijndael::getNk() const
 {
-    /* getKeySize() returns length in bits */
-    return pImpl()->getKeySize() / utils::BitsPerByte / utils::BytesPerWord;
+    /* getKeySize() returns length in bytes */
+    return pImpl()->getKeySize() / utils::BytesPerWord;
+}
+
+Uint32
+Rijndael::getKeySize() const
+{
+    /* getKeySize() returns length in bytes */
+    return pImpl()->getKeySize();
 }
 
 Uint32

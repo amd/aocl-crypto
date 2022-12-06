@@ -654,6 +654,8 @@ class Xts final : public Aes
     ~Xts() {}
 
   public:
+    virtual alc_error_t setIv(Uint64 len, const Uint8* pIv);
+
     static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
                             const alc_key_info_t&         keyInfo)
     {

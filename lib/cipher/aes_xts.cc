@@ -55,13 +55,25 @@ MultiplyAlphaByTwo(Uint32* alpha)
     tmp_tweak[1] = ((tmp_tweak[1]) << 1) | carry;
 }
 
+alc_error_t
+Xts::setIv(Uint64 len, const Uint8* pIv)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    if (len != 16) {
+        err = ALC_ERROR_INVALID_SIZE;
+        return err;
+    }
+    return err;
+}
+
 void
 Xts::expandTweakKeys(const Uint8* pUserKey, int len)
 {
-    using utils::GetByte, utils::MakeWord;
-    Uint8        dummy_key[32] = { 0 };
-    const Uint8* key           = pUserKey ? pUserKey : &dummy_key[0];
 
+    using utils::GetByte, utils::MakeWord;
+    Uint8 dummy_key[32] = { 0 };
+
+    const Uint8* key = pUserKey ? pUserKey : &dummy_key[0];
     if (isAesniAvailable()) {
         aesni::ExpandTweakKeys(key, p_tweak_key, getRounds());
         return;

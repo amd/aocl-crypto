@@ -167,6 +167,8 @@ __build_aes(const alc_cipher_algo_info_t& aesInfo,
             ctx.setIv         = __aes_wrapperSetIv<Ccm>;
             ctx.getTag        = __aes_wrapperGetTag<Ccm>;
             ctx.setTagLength  = __aes_wrapperSetTagLength<Ccm>;
+        } else if constexpr (std::is_same_v<CIPHERMODE, Xts>) {
+            ctx.setIv = __aes_wrapperSetIv<Xts>;
         }
         ctx.finish = __aes_dtor<CIPHERMODE>;
     }
