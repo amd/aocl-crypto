@@ -28,15 +28,14 @@
 
 #pragma once
 
-#include "alcp/macros.h"
-
 #include <cstdint>
 #include <string>
 #include <string_view>
 #include <vector>
 
+
 // Few useful types from 'std' so that we dont have to use the std::
-// prefix everytime we refer to them, we also restrict their use in 'uapi'
+// prefix everytime we refer to them, we also restrict their use in 'alcp'
 // namespace
 namespace alcp {
 

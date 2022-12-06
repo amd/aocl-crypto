@@ -37,9 +37,11 @@ typedef enum
     true
 } bool;
 #endif
-#endif
 
 #include <stdint.h>
+#else
+#include <cstdint>
+#endif
 
 typedef int8_t  Int8;
 typedef int16_t Int16;

@@ -44,6 +44,7 @@ ToLittleEndian(T value);
 template<typename T>
 constexpr inline T
 ReverseBytes(T value);
+
 template<>
 constexpr inline Uint64
 ReverseBytes(Uint64 value)

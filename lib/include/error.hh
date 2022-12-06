@@ -26,15 +26,21 @@
  *
  */
 
-#ifndef _INCLUDE_ERROR_H_
-#define _INCLUDE_ERROR_H_ 2
+#pragma once
+
+#include "alcp/types.h"
+
+#include "types.hh"
 
 #include <memory>
 
+namespace alcp {
 #include "alcp/error.h"
 #include "alcp/macros.h"
+};
 
 namespace alcp {
+
 class Error
 {
   public:
@@ -51,4 +57,3 @@ class Error
 
 } // namespace alcp
 
-#endif /* _INCLUDE_ERROR_H_ */
