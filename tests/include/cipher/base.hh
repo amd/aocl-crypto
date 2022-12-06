@@ -64,7 +64,7 @@ struct alcp_data_ex_t
         m_tag        = {};
         m_tagl       = {};
         m_tkey       = {};
-        m_tkey       = {};
+        m_tkeyl      = {};
         m_tagBuff    = {};
         m_block_size = {};
     }
