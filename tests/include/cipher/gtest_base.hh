@@ -520,18 +520,28 @@ RunTest(TestingCore& testingCore,
     data.m_adl   = 0;
     data.m_tagl  = 0;
     if (isgcm) {
-        data.m_tag     = &(outtag[0]);
-        data.m_tagl    = outtag.size();
-        data.m_ad      = &(ad[0]);
-        data.m_adl     = ad.size();
-        data.m_tagBuff = &tagBuff[0];
+        if (outtag.size())
+        {
+            data.m_tag = &(outtag[0]);
+            data.m_tagl = outtag.size();
+            data.m_tagBuff = &tagBuff[0];
+        }
+        if (ad.size())
+        {
+            data.m_ad = &(ad[0]);
+            data.m_adl = ad.size();
+        }
     }
     if (enc_dec == ENCRYPT) {
-        data.m_in   = &(pt[0]);
-        data.m_inl  = pt.size();
+        if (pt.size())
+        {
+            data.m_in = &(pt[0]);
+            data.m_inl = pt.size();
+        }
         data.m_iv   = &(iv[0]);
         data.m_ivl  = iv.size();
-        data.m_out  = &(outct[0]);
+        if (outct.size())
+         data.m_out  = &(outct[0]);
         data.m_outl = data.m_inl;
         if (isxts) {
             data.m_tkey       = &(tkey[0]);
@@ -558,11 +568,15 @@ RunTest(TestingCore& testingCore,
         // Enforce that no errors are reported from lib side.
         EXPECT_TRUE(ret);
     } else {
-        data.m_in   = &(ct[0]);
-        data.m_inl  = ct.size();
+        if (ct.size())
+        {
+            data.m_in = &(ct[0]);
+            data.m_inl = ct.size();
+        }
         data.m_iv   = &(iv[0]);
         data.m_ivl  = iv.size();
-        data.m_out  = &(outpt[0]);
+        if (outpt.size())
+         data.m_out  = &(outpt[0]);
         data.m_outl = data.m_inl;
         if (isxts) {
             data.m_tkey       = &(tkey[0]);

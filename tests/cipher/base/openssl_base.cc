@@ -27,7 +27,7 @@
  */
 
 #include "cipher/openssl_base.hh"
-#ifdef win32
+#ifdef WIN32
 EXTERN_C_BEGIN
 #include <openssl/applink.c>
 EXTERN_C_END
