@@ -164,27 +164,24 @@ known_answer_map_t KATDataset{
 
 TEST(XTS, initiantiation_with_valid_input)
 {
+    // clang-format off
     Uint8 iv[]       = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0xff,
-                   0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x04, 0x05 };
+                         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x04, 0x05 };
     Uint8 key[]      = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+                         0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
     Uint8 tweakKey[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                          0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-    alc_key_info_t tweakKeyInfo          = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                    .fmt  = ALC_KEY_FMT_RAW,
-                                    .len  = 128,
-                                    .key  = tweakKey };
-    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_MODE,
-                                             .ai_iv   = iv,
-                                             .ai_xts  = { .xi_tweak_key =
-                                                             &tweakKeyInfo } };
-    // clang-format off
-    const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                     .fmt  = ALC_KEY_FMT_RAW,
-                                     .len  = 128,
-                                     .key  = key };
-    Xts                  xts_obj = Xts(aesInfo, keyInfo);
     // clang-format on
+    alc_key_info_t tweakKeyInfo = {
+        ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 128, tweakKey
+    };
+    const alc_cipher_algo_info_t aesInfo = { ALC_MODE, iv, { &tweakKeyInfo } };
+
+    const alc_key_info_t keyInfo = {
+        ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 128, key
+    };
+    Xts xts_obj = Xts(aesInfo, keyInfo);
+
     EXPECT_EQ(xts_obj.getRounds(), 10);
     // FIXME: Linking Error
     EXPECT_EQ(xts_obj.getKeySize(), 16);
@@ -195,32 +192,28 @@ TEST(XTS, initiantiation_with_valid_input)
 
 TEST(XTS, initiantiation_with_invalid_iv)
 {
+    // clang-format off
     Uint8 iv[]       = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-                   0xff, 0x02, 0x03, 0x04, 0x05, 0x04, 0x05 };
+                         0xff, 0x02, 0x03, 0x04, 0x05, 0x04, 0x05 };
     Uint8 key[]      = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-                    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+                         0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+                         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                         0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
     Uint8 tweakKey[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                          0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
                          0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
                          0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00 };
-    alc_key_info_t tweakKeyInfo          = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                    .fmt  = ALC_KEY_FMT_RAW,
-                                    .len  = 256,
-                                    .key  = tweakKey };
-    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_MODE,
-                                             .ai_iv   = iv,
-                                             .ai_xts  = { .xi_tweak_key =
-                                                             &tweakKeyInfo } };
-    // clang-format off
-    const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                     .fmt  = ALC_KEY_FMT_RAW,
-                                     .len  = 256,
-                                     .key  = key };
-                                
-    Xts xts_obj = Xts(aesInfo, keyInfo);
     // clang-format on
+    alc_key_info_t tweakKeyInfo = {
+        ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 256, tweakKey
+    };
+    const alc_cipher_algo_info_t aesInfo = { ALC_MODE, iv, { &tweakKeyInfo } };
+
+    const alc_key_info_t keyInfo = {
+        ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 256, key
+    };
+
+    Xts xts_obj = Xts(aesInfo, keyInfo);
 
     EXPECT_EQ(xts_obj.setIv(sizeof(iv), iv), ALC_ERROR_INVALID_SIZE);
     // FIXME: Linking Error
@@ -229,33 +222,30 @@ TEST(XTS, initiantiation_with_invalid_iv)
     // FIXME: Below test is not working
     EXPECT_EQ(xts_obj.getNk(), 8);
 }
-// clang-format on
+
 TEST(XTS, valid_all_sizes_encrypt_decrypt_test)
 {
+    // clang-format off
     Uint8 iv[]       = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-                   0xff, 0x02, 0x03, 0x04, 0x05, 0x04, 0x05 };
+                         0xff, 0x02, 0x03, 0x04, 0x05, 0x04, 0x05 };
     Uint8 key[]      = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-                    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+                         0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+                         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                         0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
     Uint8 tweakKey[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                          0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
                          0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
                          0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00 };
-    alc_key_info_t tweakKeyInfo          = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                    .fmt  = ALC_KEY_FMT_RAW,
-                                    .len  = 256,
-                                    .key  = tweakKey };
-    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_MODE,
-                                             .ai_iv   = iv,
-                                             .ai_xts  = { .xi_tweak_key =
-                                                             &tweakKeyInfo } };
-    // clang-format off
-    const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                     .fmt  = ALC_KEY_FMT_RAW,
-                                     .len  = 256,
-                                     .key  = key };
-                                
+    // clang-format on
+    alc_key_info_t tweakKeyInfo = {
+        ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 256, tweakKey
+    };
+    const alc_cipher_algo_info_t aesInfo = { ALC_MODE, iv, { &tweakKeyInfo } };
+
+    const alc_key_info_t keyInfo = {
+        ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 256, key
+    };
+
     Xts xts_obj = Xts(aesInfo, keyInfo);
 
     for (int i = 16; i < 512 * 20; i++) {
@@ -266,13 +256,12 @@ TEST(XTS, valid_all_sizes_encrypt_decrypt_test)
         plainText      = rb.genRandomBytes(i);
         Uint64 ct_size = i;
         Uint8* dest    = (Uint8*)malloc(i);
-      
-        alc_error_t err = xts_obj.encrypt( &(plainText[0]), dest, ct_size, iv);
+
+        alc_error_t err = xts_obj.encrypt(&(plainText[0]), dest, ct_size, iv);
 
         std::vector<Uint8> pt(i, 0);
-      
 
-         err = xts_obj.decrypt( dest, &(pt[0]), ct_size, iv);
+        err = xts_obj.decrypt(dest, &(pt[0]), ct_size, iv);
 
         EXPECT_TRUE(err == ALC_ERROR_NONE);
         ArraysMatch(plainText, pt);
@@ -281,47 +270,42 @@ TEST(XTS, valid_all_sizes_encrypt_decrypt_test)
 
 TEST(XTS, invalid_len_encrypt_decrypt_test)
 {
+    // clang-format off
     Uint8 iv[]       = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-                   0xff, 0x02, 0x03, 0x04, 0x05, 0x04, 0x05 };
+                         0xff, 0x02, 0x03, 0x04, 0x05, 0x04, 0x05 };
     Uint8 key[]      = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-                    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+                         0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+                         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                         0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
     Uint8 tweakKey[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                          0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
                          0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
                          0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00 };
-    alc_key_info_t tweakKeyInfo          = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                    .fmt  = ALC_KEY_FMT_RAW,
-                                    .len  = 256,
-                                    .key  = tweakKey };
-    const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_MODE,
-                                             .ai_iv   = iv,
-                                             .ai_xts  = { .xi_tweak_key =
-                                                             &tweakKeyInfo } };
-    // clang-format off
-    const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                     .fmt  = ALC_KEY_FMT_RAW,
-                                     .len  = 256,
-                                     .key  = key };
-    // clang-format on                          
-    Xts xts_obj = Xts(aesInfo, keyInfo);
+    // clang-format on
+    alc_key_info_t tweakKeyInfo = {
+        ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 256, tweakKey
+    };
+    const alc_cipher_algo_info_t aesInfo = { ALC_MODE, iv, { &tweakKeyInfo } };
+
+    const alc_key_info_t keyInfo = {
+        ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 256, key
+    };
+
+    Xts                xts_obj = Xts(aesInfo, keyInfo);
     std::vector<Uint8> plainText(4, 0);
-    Uint64 ct_size = 4;
-    Uint8* dest    = (Uint8*)malloc(4);
-        
-    alc_error_t err = xts_obj.encrypt( &(plainText[0]), dest, ct_size, iv);
+    Uint64             ct_size = 4;
+    Uint8*             dest    = (Uint8*)malloc(4);
+
+    alc_error_t err = xts_obj.encrypt(&(plainText[0]), dest, ct_size, iv);
 
     EXPECT_TRUE(err == ALC_ERROR_INVALID_DATA);
 
     std::vector<Uint8> cipherText(4, 0);
 
-    err = xts_obj.decrypt( &(cipherText[0]), dest, ct_size, iv);
+    err = xts_obj.decrypt(&(cipherText[0]), dest, ct_size, iv);
     EXPECT_TRUE(err == ALC_ERROR_INVALID_DATA);
 
-        // FIXME: Dellocate ctx variable
-        
-    
+    // FIXME: Dellocate ctx variable
 }
 
 using namespace alcp::cipher;
@@ -351,23 +335,21 @@ class XTS_KAT
         m_test_name  = test_name;
 
         /* Initialization */
-        alc_key_info_t tweakKeyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                        .fmt  = ALC_KEY_FMT_RAW,
-                                        .len  = 256,
-                                        .key  = &(m_tweak.at(0)) };
-
-        const alc_cipher_algo_info_t aesInfo = {
-            .ai_mode = ALC_MODE,
-            .ai_iv   = &(iv.at(0)),
-            .ai_xts  = { .xi_tweak_key = &tweakKeyInfo }
+        alc_key_info_t tweakKeyInfo = {
+            ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 256,
+            &(m_tweak.at(0))
         };
 
-        // clang-format off
-        const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                         .fmt  = ALC_KEY_FMT_RAW,
-                                         .len  = static_cast<Uint32>(key.size()*8),
-                                         .key  = &(key.at(0)) };
-        // clang-format on
+        const alc_cipher_algo_info_t aesInfo = { ALC_MODE,
+                                                 &(iv.at(0)),
+                                                 { &tweakKeyInfo } };
+
+        const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
+                                         ALC_KEY_FMT_RAW,
+                                         {},
+                                         {},
+                                         static_cast<Uint32>(key.size() * 8),
+                                         &(key.at(0)) };
 
         // Setup XTS Object
         pXtsObj = new Xts(aesInfo, keyInfo);
