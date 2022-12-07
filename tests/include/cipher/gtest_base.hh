@@ -297,6 +297,8 @@ AesCrosstest(int               keySize,
     bool isgcm = (MODE_STR.compare("GCM") == 0);
     bool isccm = (MODE_STR.compare("CCM") == 0);
 
+    bool bIsTagNull = false;
+
     /* IV, AD Length limits for different cases */
     if (isccm) {
         IVL_START = 7;
@@ -474,12 +476,19 @@ AesCrosstest(int               keySize,
                     EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
                 }
             } else {
+                /* check if Tag is valid */
+                bIsTagNull = (std::find(tag_alc.begin(), tag_alc.end(), true)
+                              == tag_alc.end());
+
                 alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
                 extTC->getCipherHandler()->testingDecrypt(data_ext, key);
-                ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
-                /* for gcm*/
                 if (isgcm || isccm) {
-                    EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
+                    if (!bIsTagNull) { /* for null tag, its an invalid case */
+                        ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
+                        EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
+                    }
+                } else {
+                    ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
                 }
             }
             if (!bbxreplay) {
