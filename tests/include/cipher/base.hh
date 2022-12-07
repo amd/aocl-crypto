@@ -46,6 +46,7 @@ struct alcp_data_ex_t
     Uint64       m_adl;
     Uint8*       m_tag; // Probably const but openssl expects non const
     Uint64       m_tagl;
+    bool         m_isTagValid;
     Uint8*       m_tkey;    // tweak key
     Uint64       m_tkeyl;   // tweak key len
     Uint8*       m_tagBuff; // Place to store tag buffer
@@ -67,6 +68,7 @@ struct alcp_data_ex_t
         m_tkeyl      = {};
         m_tagBuff    = {};
         m_block_size = {};
+        m_isTagValid = true;
     }
 };
 
