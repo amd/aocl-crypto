@@ -77,35 +77,42 @@ double totalTimeElapsed;
 
 #ifdef __linux__
 // to do: these macro is better to be moved to common header.
-#define ALCP_CRYPT_TIMER_INIT struct timeval begin, end;
+//#define ALCP_CRYPT_TIMER_INIT struct timeval begin, end;
+struct timeval begin, end;
 long   seconds;
 long   microseconds;
 
 #define ALCP_CRYPT_TIMER_START gettimeofday(&begin, 0);
 
-#define ALCP_CRYPT_GET_TIME(X, Y)                                              \
-    gettimeofday(&end, 0);                                                     \
-    seconds      = end.tv_sec - begin.tv_sec;                                  \
-    microseconds = end.tv_usec - begin.tv_usec;                                \
-    elapsed      = seconds + microseconds * 1e-6;                              \
-    totalTimeElapsed += elapsed;                                               \
-    if (X) {                                                                   \
-        printf("\t" Y);                                                        \
-        printf(" %2.2f ms ", elapsed * 1000);                                  \
+static inline void  ALCP_CRYPT_GET_TIME(X, Y)
+{
+    gettimeofday(&end, 0);
+    seconds = end.tv_sec - begin.tv_sec;
+    microseconds = end.tv_usec - begin.tv_usec;
+    elapsed = seconds + microseconds * 1e-6;
+    totalTimeElapsed += elapsed;
+    if (X) {
+        printf("\t",Y);
+        printf(" %2.2f ms ", elapsed * 1000);
     }
+}
 #elif WIN32
-#define ALCP_CRYPT_TIMER_INIT double begin, end;
+LARGE_INTEGER begin, end;
 
 #define ALCP_CRYPT_TIMER_START QueryPerformanceCounter(&begin);
 
-#define ALCP_CRYPT_GET_TIME(X, Y)                                                                   \
-        QueryPerformanceCounter(&end);                                                              \
-        elapsed = (end - begin) / CLOCKS_PER_SEC;                                                   \
-        totalTimeElapsed += elapsed;                                                                \
-        if (X) {                                                                                    \
-            printf("\t" Y);                                                                         \
-            printf(" %2.2f ms ", elapsed * 1000);                                                   \
-        }                                                                                           
+//ALCP_CRYPT_GET_TIME defined as static inline function instead of macro.
+
+static inline void ALCP_CRYPT_GET_TIME(X, Y)
+{
+    QueryPerformanceCounter(&end);
+    elapsed = (end.QuadPart - begin.QuadPart) / CLOCKS_PER_SEC;
+    totalTimeElapsed += elapsed;
+    if (X) {
+        printf("\t", Y);
+        printf(" %2.2f ms ", elapsed * 1000);
+    }
+}
 #endif
 
 void
@@ -629,7 +636,6 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
         ALCP_PRINT_TEXT(iv, ivLen, "iv       ")
         ALCP_PRINT_TEXT(ad, adLen, "ad       ")
 
-        ALCP_CRYPT_TIMER_INIT
         create_aes_session(key, iv, keybits, m);
 
 #if SPEED_CHECK
@@ -655,9 +661,9 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
                 ALCP_PRINT_TEXT(tag, tagLen, "tagEnc   ")
             }
 #if SPEED_CHECK
-            ALCP_CRYPT_GET_TIME(0, "Encrypt time")
+            ALCP_CRYPT_GET_TIME(0, "Encrypt time");
 #else
-            ALCP_CRYPT_GET_TIME(1, "Encrypt time")
+            ALCP_CRYPT_GET_TIME(1, "Encrypt time");
 #endif
             ALCP_PRINT_TEXT(cipherText, inputLen, "cipherTxt")
 
@@ -699,9 +705,9 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
             }
 
 #if SPEED_CHECK
-            ALCP_CRYPT_GET_TIME(0, "Decrypt time")
+            ALCP_CRYPT_GET_TIME(0, "Decrypt time");
 #else
-            ALCP_CRYPT_GET_TIME(1, "Decrypt time")
+            ALCP_CRYPT_GET_TIME(1, "Decrypt time");
 #endif
             ALCP_PRINT_TEXT(outputText, inputLen, "outputTxt")
 
