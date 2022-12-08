@@ -44,7 +44,7 @@ CipherAes(benchmark::State& state,
     // Dynamic allocation better for larger sizes
     std::vector<Uint8>         vec_in(blockSize, 56);
     std::vector<Uint8>         vec_out(blockSize, 21);
-    std::unique_ptr<Uint8>     tagBuffer = std::make_unique<Uint8>(16);
+    std::unique_ptr<Uint8[]>     tagBuffer = std::make_unique<Uint8[]>(16);
     Uint8                      key[keylen / 8];
     Uint8                      iv[16];
     Uint8                      ad[16];
