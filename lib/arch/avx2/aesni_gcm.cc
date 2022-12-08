@@ -89,7 +89,7 @@ InitGcm(const uint8_t* pKey,
         }
         if (remBytes) {
             a128                 = _mm_setzero_si128();
-            const uint8_t* p_in  = pIv;
+            const uint8_t* p_in  = reinterpret_cast<const uint8_t*>(pIv128);
             uint8_t*       p_out = reinterpret_cast<uint8_t*>(&a128);
             for (int i = 0; i < remBytes; i++) {
                 p_out[i] = p_in[i];
