@@ -33,30 +33,19 @@
 namespace alcp::mac {
 class Hmac::Impl
 {
-
   private:
-    /** Single Memory Block to hold h1,
-     * m_k0_xor_ipad,m_k0_xor_opad, m_k0 */
-    Uint8* memory_block;
     // Input Key to HMAC
-    const Uint8* m_key;
+    const Uint8* m_pKey;
     // Length of the input key must be >0 to be valid
     Uint32 m_keylen;
+    // Length of the preprocessed Key
     Uint32 m_k0_length;
-    // Input Block Length / B of the digest used by HMAC
+    // Input Block Length or B of the digest used by HMAC
     Uint32 m_input_block_length{};
-
-    Uint8* h1;
-
-    /**
-     * Processed Key to match the input block length input_block_length
-     * get_k0 function performs the preprocessing
-     * */
-    Uint8* m_k0;
     // Size of the message digest
     Uint32 m_output_hash_size{};
     // Placeholder variable to hold the mac value after finalize has been called
-    Uint8* m_output_mac;
+    Uint8* m_pOutput_mac;
 
     // TODO: Consider Shared pointer for this implementation
     /**
@@ -72,56 +61,70 @@ class Hmac::Impl
      * */
     hmac_state_t m_state = INVALID;
 
-    Uint8* m_k0_xor_opad;
-    Uint8* m_k0_xor_ipad;
+    // Single Memory Block to hold m_pHashValue, m_pK0_xor_ipad,m_pK0_xor_opad,
+    // m_pK0
+    Uint8* m_pMemory_block;
+    Uint8* m_pHashValue;
+    Uint8* m_pK0_xor_opad;
+    Uint8* m_pK0_xor_ipad;
+    /**
+     * Preprocessed Key to match the input block length input_block_length
+     * get_k0 function performs the preprocessing
+     * */
+    Uint8* m_pK0;
 
   public:
     Impl(const alc_mac_info_t& mac_info, alcp::digest::Digest* p_digest)
         : m_pDigest{ p_digest }
     {
-        alc_error_t    err;
-        alc_key_info_t kinfo = mac_info.mi_keyinfo;
+        alc_error_t err;
+
+        // Constructor argument validations
         m_input_block_length = p_digest->getInputBlockSize();
-
         if (m_input_block_length == 0) {
-            // throw std::length_error(
-            //     "ERROR: Block Length of the hash function cannot be 0");
             m_state = INVALID;
+            return;
         }
-        m_output_hash_size = p_digest->getHashSize();
 
+        m_output_hash_size = p_digest->getHashSize();
         if (m_output_hash_size == 0) {
-            // throw std::length_error("ERROR: Digest Hash Size cannot be 0");
             m_state = INVALID;
+            return;
         }
-        err = validate_keys(kinfo);
+
+        alc_key_info_t kinfo = mac_info.mi_keyinfo;
+        err                  = validate_keys(kinfo);
         if (err) {
             m_state = INVALID;
             return;
         }
+
+        // For HMAC, we require k0 to be same length as input block length of
+        // the used hash
         m_k0_length = m_input_block_length;
 
         // TODO: Investigate Pool Allocator for this optimization
         /*Optimization: Requesting single block of memory takes less time than
          * requesting individually*/
-        memory_block = new Uint8[m_output_hash_size + 3 * m_k0_length];
-        m_output_mac = new Uint8[m_output_hash_size];
+        m_pMemory_block = new Uint8[m_output_hash_size + 3 * m_k0_length];
+        m_pOutput_mac   = new Uint8[m_output_hash_size];
 
-        h1 = memory_block;
-
+        // share the allocated memory to appropriate pointers
+        m_pHashValue = m_pMemory_block;
         // Allocate k0_xor_ipad and k0_xor_opad with same length as k0. But
         // value will be junk
-        m_k0_xor_ipad = h1 + m_output_hash_size;
-        m_k0_xor_opad = m_k0_xor_ipad + m_k0_length;
-        m_k0          = m_k0_xor_opad + m_k0_length;
+        m_pK0_xor_ipad = m_pHashValue + m_output_hash_size;
+        m_pK0_xor_opad = m_pK0_xor_ipad + m_k0_length;
+        m_pK0          = m_pK0_xor_opad + m_k0_length;
 
+        // Preprocess key to obtain K0
         get_k0();
 
         // obtain k0_xor_ipad and k0_xor_opad
         get_k0_xor_pad();
 
         // start the hash calculation
-        err = calculate_hash(p_digest, m_k0_xor_ipad, m_input_block_length);
+        err = calculate_hash(p_digest, m_pK0_xor_ipad, m_input_block_length);
         if (err) {
         } else {
             m_state = VALID;
@@ -129,6 +132,8 @@ class Hmac::Impl
     }
 
   public:
+    /// @brief Get hash size in bytes of the digest used for HMAC
+    /// @return hash size in bytes of the HMAC digest
     Uint64 getHashSize()
     {
         if (m_state == VALID)
@@ -136,8 +141,14 @@ class Hmac::Impl
         else
             return 0;
     }
+    /// @brief Get the validity of the HMAC object
+    /// @return VALID/INVALID based on the state
     hmac_state_t getState() const { return m_state; };
 
+    /// @brief Update HMAC with the given buffer chunk
+    /// @param buff The chunk of the message to be updated
+    /// @param size size of buff in bytes
+    /// @return ALC_ERROR_NONE if no errors otherwise appropriate error
     alc_error_t update(const Uint8* buff, Uint64 size)
     {
         alc_error_t err = ALC_ERROR_NONE;
@@ -149,6 +160,12 @@ class Hmac::Impl
         }
         return err;
     }
+
+    /// @brief Last method to be called with any remaining chunks of the message
+    /// to calculate HMAC
+    /// @param buff final chunk of the message. Can be nullptr
+    /// @param size size of buff in bytes
+    /// @return ALC_ERROR_NONE if no errors otherwise appropriate error
     alc_error_t finalize(const Uint8* buff, Uint64 size)
     {
         if (getState() == VALID) {
@@ -157,30 +174,37 @@ class Hmac::Impl
             } else {
                 m_pDigest->finalize(nullptr, 0);
             }
-            m_pDigest->copyHash(h1, m_output_hash_size);
+            m_pDigest->copyHash(m_pHashValue, m_output_hash_size);
             m_pDigest->reset();
 
-            calculate_hash(m_pDigest, m_k0_xor_opad, m_k0_length);
-            m_pDigest->finalize(h1, m_output_hash_size);
+            calculate_hash(m_pDigest, m_pK0_xor_opad, m_k0_length);
+            m_pDigest->finalize(m_pHashValue, m_output_hash_size);
 
-            m_pDigest->copyHash(m_output_mac, m_output_hash_size);
+            m_pDigest->copyHash(m_pOutput_mac, m_output_hash_size);
             m_pDigest->reset();
-            delete[] memory_block;
+
+            delete[] m_pMemory_block;
         }
         return ALC_ERROR_NONE;
     }
 
+    /// @brief copy the result of HMAC to buff. Should be Called only after
+    /// Finalize
+    /// @param buff Output Buffer where HMAC result should be copied to
+    /// @param size Size of buff in bytes
+    /// @return ALC_ERROR_NONE if no errors otherwise appropriate error
     alc_error_t copyHash(Uint8* buff, Uint64 size)
     {
         alc_error_t err = ALC_ERROR_NONE;
         if (getState() == VALID) {
-            alcp::utils::CopyBytes(buff, m_output_mac, size);
+            alcp::utils::CopyBytes(buff, m_pOutput_mac, size);
         } else {
             err = ALC_ERROR_BAD_STATE;
         }
         m_state = INVALID;
-        // Since m_output_mac is cleared here. CopyHash can only be called once.
-        delete[] m_output_mac;
+        // Since m_pOutput_mac is cleared here. CopyHash can only be called
+        // once.
+        delete[] m_pOutput_mac;
         return err;
     }
 
@@ -200,7 +224,7 @@ class Hmac::Impl
                     return ALC_ERROR_INVALID_SIZE;
                 }
                 if (rKeyInfo.key) {
-                    m_key = rKeyInfo.key;
+                    m_pKey = rKeyInfo.key;
                 } else {
                     // std::cout << "ERROR:Key Cannot be NULL" << std::endl;
                     return ALC_ERROR_NOT_PERMITTED;
@@ -220,7 +244,10 @@ class Hmac::Impl
     void get_k0_xor_pad()
     {
         constexpr int register_size = 128, // sizeof(__m128i)*8
-            no_optimized_xor        = 2;
+            no_optimized_xor =
+                2; // No. of XORs performed inside the for loop below
+
+        // Fixed values from the specification
         constexpr Uint64 opad_value = 0x5c5c, ipad_value = 0x3636;
 
         const int input_block_length_bits = m_input_block_length * 8;
@@ -231,9 +258,9 @@ class Hmac::Impl
         const int no_of_xor_operations =
             input_block_length_bits / optimized_bits_per_xor;
 
-        __m128i* pi_k0          = reinterpret_cast<__m128i*>(m_k0);
-        __m128i* pi_k0_xor_ipad = reinterpret_cast<__m128i*>(m_k0_xor_ipad);
-        __m128i* pi_k0_xor_opad = reinterpret_cast<__m128i*>(m_k0_xor_opad);
+        __m128i* pi_k0          = reinterpret_cast<__m128i*>(m_pK0);
+        __m128i* pi_k0_xor_ipad = reinterpret_cast<__m128i*>(m_pK0_xor_ipad);
+        __m128i* pi_k0_xor_opad = reinterpret_cast<__m128i*>(m_pK0_xor_opad);
         __m128i  reg_k0_1;
         __m128i  reg_k0_xor_ipad_1;
         __m128i  reg_k0_xor_opad_1;
@@ -313,17 +340,17 @@ class Hmac::Impl
     alc_error_t get_k0()
     {
         if (m_input_block_length == m_keylen) {
-            utils::CopyBytes(m_k0, m_key, m_keylen);
+            utils::CopyBytes(m_pK0, m_pKey, m_keylen);
         } else if (m_keylen < m_input_block_length) {
-            utils::CopyBytes(m_k0, m_key, m_keylen);
-            memset(m_k0 + m_keylen, 0x0, m_input_block_length - m_keylen);
+            utils::CopyBytes(m_pK0, m_pKey, m_keylen);
+            memset(m_pK0 + m_keylen, 0x0, m_input_block_length - m_keylen);
         } else if (m_keylen > m_input_block_length) {
             // Optimization: Reusing p_digest for calculating
             m_pDigest->reset();
-            m_pDigest->finalize(m_key, m_keylen);
-            m_pDigest->copyHash(m_k0, m_output_hash_size);
+            m_pDigest->finalize(m_pKey, m_keylen);
+            m_pDigest->copyHash(m_pK0, m_output_hash_size);
             m_pDigest->reset();
-            memset(m_k0 + m_output_hash_size,
+            memset(m_pK0 + m_output_hash_size,
                    0x0,
                    m_input_block_length - m_output_hash_size);
         }
