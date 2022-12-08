@@ -323,11 +323,10 @@ IPPCipherBase::alcpGCMModeToFuncCall(alcp_data_ex_t data, bool enc)
             PrintErrors(status);
         // Tag verification
         /* do only if tag contains valid data */
-        if (data.m_isTagValid) {
-            if (std::memcmp(tagbuff, data.m_tag, data.m_tagl) != 0) {
-                printf("IPP:CCM:Tag verification failed\n");
-                return false;
-            }
+        if (data.m_isTagValid
+            && std::memcmp(tagbuff, data.m_tag, data.m_tagl) != 0) {
+            printf("IPP:CCM:Tag verification failed\n");
+            return false;
         }
     }
     return true;

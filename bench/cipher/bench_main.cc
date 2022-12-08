@@ -90,8 +90,9 @@ CipherAes(benchmark::State& state,
         }
         data.m_in  = &(vec_out[0]);
         data.m_out = &(vec_in[0]);
-        if (alcpMode == ALC_AES_MODE_GCM || alcpMode == ALC_AES_MODE_CCM)
+        if (alcpMode == ALC_AES_MODE_GCM || alcpMode == ALC_AES_MODE_CCM) {
             cb->reset();
+        }
     }
     for (auto _ : state) {
         if (enc) {
@@ -99,9 +100,13 @@ CipherAes(benchmark::State& state,
                 std::cout << "BENCH_ENC_FAILURE" << std::endl;
                 exit(-1);
             }
-        } else if (cb->decrypt(data) == false) {
-            std::cout << "BENCH_DEC_FAILURE" << std::endl;
-            exit(-1);
+        } else {
+            if (useossl)
+                cb->init(key, keylen);
+            if (cb->decrypt(data) == false) {
+                std::cout << "BENCH_DEC_FAILURE" << std::endl;
+                exit(-1);
+            }
         }
         if (alcpMode == ALC_AES_MODE_GCM || alcpMode == ALC_AES_MODE_CCM)
             cb->reset();
