@@ -44,8 +44,9 @@ class Hmac::Impl
     Uint32 m_input_block_length{};
     // Size of the message digest
     Uint32 m_output_hash_size{};
-    // Placeholder variable to hold the mac value after finalize has been called
-    Uint8* m_pOutput_mac;
+    // Placeholder variable to hold intermediate hash and the the mac value
+    // after finalize has been called
+    Uint8* m_pTempHash;
 
     // TODO: Consider Shared pointer for this implementation
     /**
@@ -61,10 +62,8 @@ class Hmac::Impl
      * */
     hmac_state_t m_state = INVALID;
 
-    // Single Memory Block to hold m_pHashValue, m_pK0_xor_ipad,m_pK0_xor_opad,
-    // m_pK0
+    // Single Memory Block to hold  m_pK0_xor_ipad,m_pK0_xor_opad,m_pK0
     Uint8* m_pMemory_block;
-    Uint8* m_pHashValue;
     Uint8* m_pK0_xor_opad;
     Uint8* m_pK0_xor_ipad;
     /**
@@ -106,14 +105,15 @@ class Hmac::Impl
         // TODO: Investigate Pool Allocator for this optimization
         /*Optimization: Requesting single block of memory takes less time than
          * requesting individually*/
-        m_pMemory_block = new Uint8[m_output_hash_size + 3 * m_k0_length];
-        m_pOutput_mac   = new Uint8[m_output_hash_size];
+        // 64 byte aligned memory, m_k0_length in bytes will also be multiples
+        // of 64
+        m_pMemory_block = new (std::align_val_t{ 64 }) Uint8[3 * m_k0_length];
+        m_pTempHash = new (std::align_val_t{ 64 }) Uint8[m_output_hash_size];
 
         // share the allocated memory to appropriate pointers
-        m_pHashValue = m_pMemory_block;
         // Allocate k0_xor_ipad and k0_xor_opad with same length as k0. But
         // value will be junk
-        m_pK0_xor_ipad = m_pHashValue + m_output_hash_size;
+        m_pK0_xor_ipad = m_pMemory_block;
         m_pK0_xor_opad = m_pK0_xor_ipad + m_k0_length;
         m_pK0          = m_pK0_xor_opad + m_k0_length;
 
@@ -174,16 +174,16 @@ class Hmac::Impl
             } else {
                 m_pDigest->finalize(nullptr, 0);
             }
-            m_pDigest->copyHash(m_pHashValue, m_output_hash_size);
+            m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
             m_pDigest->reset();
 
             calculate_hash(m_pDigest, m_pK0_xor_opad, m_k0_length);
-            m_pDigest->finalize(m_pHashValue, m_output_hash_size);
+            m_pDigest->finalize(m_pTempHash, m_output_hash_size);
 
-            m_pDigest->copyHash(m_pOutput_mac, m_output_hash_size);
+            m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
             m_pDigest->reset();
 
-            delete[] m_pMemory_block;
+            ::operator delete[](m_pMemory_block, std::align_val_t{ 64 });
         }
         return ALC_ERROR_NONE;
     }
@@ -197,14 +197,15 @@ class Hmac::Impl
     {
         alc_error_t err = ALC_ERROR_NONE;
         if (getState() == VALID) {
-            alcp::utils::CopyBytes(buff, m_pOutput_mac, size);
+            alcp::utils::CopyBytes(buff, m_pTempHash, size);
         } else {
             err = ALC_ERROR_BAD_STATE;
         }
         m_state = INVALID;
-        // Since m_pOutput_mac is cleared here. CopyHash can only be called
+        // Since m_pTempHash is cleared here. CopyHash can only be called
         // once.
-        delete[] m_pOutput_mac;
+        ::operator delete[](m_pTempHash, std::align_val_t{ 64 });
+
         return err;
     }
 
