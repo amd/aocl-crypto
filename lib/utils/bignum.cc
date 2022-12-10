@@ -47,11 +47,6 @@ BigNum::BigNum()
 
 BigNum::~BigNum() {}
 
-BigNum
-BigNum::operator+(const BigNum& rhs)
-{
-    return pImpl()->add(rhs);
-}
 
 BigNum::BigNum(const BigNum& b)
 {
@@ -93,10 +88,10 @@ BigNum::fromInt32(const Int32 val)
     pImpl()->fromInt32(val);
 }
 
-void
+Status
 BigNum::fromString(const String& str, Format f)
 {
-    pImpl()->fromString(str, f);
+    return pImpl()->fromString(str, f);
 }
 
 const String
@@ -111,13 +106,19 @@ BigNum::operator=(const BigNum& rhs)
     // throw NotImplementedException(ALCP_SOURCE_LOCATION());
 }
 
-#if 0
+BigNum
+BigNum::operator+(const BigNum& rhs)
+{
+    return pImpl()->add(rhs);
+}
+
 BigNum
 BigNum::operator-(const BigNum& rhs)
 {
     return pImpl()->sub(rhs);
 }
 
+#if 0
 BigNum
 BigNum::operator*(const BigNum& rhs)
 {

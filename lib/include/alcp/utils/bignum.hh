@@ -45,6 +45,7 @@ class BigNum final
   public:
     /* Arithmetic operation */
     BigNum operator+(const BigNum& rhs);
+    BigNum operator-(const BigNum& rhs);
 
     /* Arithmetic + Assignment */
     inline BigNum& operator+=(const BigNum& rhs)
@@ -54,8 +55,6 @@ class BigNum final
     }
 
 #if 0
-
-    BigNum operator-(const BigNum& rhs);
     BigNum operator*(const BigNum& rhs);
     BigNum operator/(const BigNum& rhs);
     BigNum operator%(const BigNum& rhs);
@@ -105,7 +104,7 @@ class BigNum final
      * @param str       The string containing the number
      * @param format    Format of the string, Binary,Decimal,Hex
      */
-    void         fromString(const String& str, Format f = Format::eDecimal);
+    Status       fromString(const String& str, Format f = Format::eDecimal);
     const String toString() const;
 
   private:

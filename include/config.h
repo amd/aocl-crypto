@@ -36,7 +36,7 @@
 
 // ALCP Release Version
 #define AOCL_RELEASE_VERSION "4.0.1"
-#define ALCP_RELEASE_VERSION_STRING "AOCL-Crypto 4.0.1 Build 20221207"
+#define ALCP_RELEASE_VERSION_STRING "AOCL-Crypto 4.0.1 Build 20221209"
 
 // OS Identification
 /* #undef ALCP_BUILD_OS_LINUX */

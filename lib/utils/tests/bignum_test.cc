@@ -55,11 +55,11 @@ static const bn_kat_str_map_t bignum_str_known_answers = {
     { "negative_five", { "-5", "-5" } },     //
 };
 
-class StrConversion
+class FromString
     : public testing::TestWithParam<std::pair<const string, bn_str_params_t>>
 {};
 
-TEST_P(StrConversion, Simple)
+TEST_P(FromString, Simple)
 {
     const auto [intput_str, output_str] = GetParam().second;
     BigNum n;
@@ -70,9 +70,9 @@ TEST_P(StrConversion, Simple)
 
 INSTANTIATE_TEST_SUITE_P(
     BigNumKAT,
-    StrConversion,
+    FromString,
     testing::ValuesIn(bignum_str_known_answers),
-    [](const testing::TestParamInfo<StrConversion::ParamType>& info) {
+    [](const testing::TestParamInfo<FromString::ParamType>& info) {
         return info.param.first;
     });
 
@@ -98,11 +98,11 @@ static const known_answer_int_map_t bignum_int_known_answers = {
       { std::numeric_limits<alcp::Int64>::max(), "9223372036854775807" } },
 };
 
-class SimpleInt
+class FromInteger
     : public testing::TestWithParam<std::pair<const string, int_params_t>>
 {};
 
-TEST_P(SimpleInt, Integers)
+TEST_P(FromInteger, Integers)
 {
     BigNum n;
     auto [input, output] = GetParam().second;
@@ -114,9 +114,9 @@ TEST_P(SimpleInt, Integers)
 
 INSTANTIATE_TEST_SUITE_P(
     BigNumKAT,
-    SimpleInt,
+    FromInteger,
     testing::ValuesIn(bignum_int_known_answers),
-    [](const testing::TestParamInfo<SimpleInt::ParamType>& info) {
+    [](const testing::TestParamInfo<FromInteger::ParamType>& info) {
         return info.param.first;
     });
 
@@ -140,6 +140,31 @@ TEST(BigNumTest, Add)
     b.fromInt64(1);
 
     EXPECT_EQ(1, (a + b).toInt64());
+
+    /* TODO: Add more tests here */
+}
+
+TEST(BigNumTest, Sub)
+{
+    BigNum a, b;
+
+    a.fromInt64(0);
+    b.fromInt64(1);
+
+    BigNum c = a - b;
+
+    EXPECT_EQ(-1, c.toInt64());
+
+    /* TODO: Add more tests here */
+}
+
+TEST(BigNumTest, InvalidString)
+{
+    BigNum a;
+
+    Status s = a.fromString(String("123xyz"));
+
+    EXPECT_EQ(s.ok(), false);
 }
 
 } // namespace

@@ -31,13 +31,24 @@
 #include "alcp/utils/bignum.hh"
 #include "utils/endian.hh"
 
-#include <openssl/bn.h>
-
 #include <memory>
 #include <stdexcept>
 #include <string>
 
+namespace openssl {
+#include <openssl/bn.h>
+}
+
 namespace alcp {
+
+/*
+ * This point onward, all openssl declarations
+ *   - BIGNUM
+ *   - BN_CTX
+ *   - BN_* functions
+ * are usable, otherwise use openssl:: prefix to resolve
+ */
+using namespace openssl;
 
 /** Errors thrown by the bignum class */
 class BigNumError : public std::runtime_error
@@ -131,89 +142,140 @@ class BigNum::Impl
         return result;
     }
 
-    inline bool isZero(const BigNum& num)
+    inline BigNum sub(const BigNum& rhs)
+    {
+        BigNum result;
+        BN_sub(result.pImpl()->raw(), raw(), rhs.pImpl()->raw());
+
+        return result;
+    }
+
+    inline BigNum mul(const BigNum& rhs)
+    {
+        BigNum    result;
+        BigNumCtx ctx;
+        bool      ret = false;
+
+        ret =
+            BN_mul(result.pImpl()->raw(), raw(), rhs.pImpl()->raw(), ctx.raw());
+        ALCP_ASSERT(ret == true, "BN_mul failed");
+        if (ret)
+            result.fromInt64(0);
+
+        return result;
+    }
+
+    inline bool isZero(const BigNum& num) const
     {
         return BN_is_zero(num.pImpl()->raw());
     }
 
-    inline bool isOne(const BigNum& num)
+    inline bool isOne(const BigNum& num) const
     {
         return BN_is_one(num.pImpl()->raw());
     }
 
-    inline Impl sub(const Impl& lhs, const Impl& rhs)
-    {
-        Impl result;
-
-        BN_sub(result.raw(), lhs.raw(), rhs.raw());
-
-        return result;
-    }
-
-    inline Impl mul(const Impl& lhs, const Impl& rhs)
-    {
-        Impl      result;
-        BigNumCtx ctx;
-        if (!BN_mul(result.raw(), lhs.raw(), rhs.raw(), ctx.raw()))
-            throw BigNumError("BigNum: OpenSSL: mul() failed");
-
-        return result;
-    }
+    /* Cant compare BigInt at the moment */
+    inline bool neq(const Impl& rhs) const { return true; }
 
     /* Cant compare BigInt at the moment */
-    inline bool neq(const Impl& rhs) { return true; }
+    inline bool eq(const Impl& rhs) const { return false; }
 
-    /* Cant compare BigInt at the moment */
-    inline bool eq(const Impl& rhs) { return false; }
-
-    void fromUint64(const Uint64 val)
+    Status fromUint64(const Uint64 val)
     {
         bool res = BN_set_word(raw(), val);
-        if (!res)
-            throw BigNumError("BigNum: OpenSSL fromInt64 failed");
+        ALCP_ASSERT(res == true, "fromInt64: BN_set_word failed");
+        if (res)
+            return InternalError("BN_set_word");
+
+        return StatusOk();
     }
 
-    void fromInt64(const Int64 val)
+    Status fromInt64(const Int64 val)
     {
+        Status sts = StatusOk();
         if (val < 0) {
+            /* create a 2's complement */
             Uint64  new_val = utils::ReverseBytes<Uint64>(~val + 1);
             BIGNUM* b = BN_bin2bn(reinterpret_cast<const Uint8*>(&new_val),
                                   sizeof(new_val),
                                   nullptr);
-            BN_copy(raw(), b);
-            BN_free(b);
-            BN_set_negative(raw(), true);
+            if (b) {
+                // FIXME: avoid extra copy
+                BN_copy(raw(), b);
+                BN_free(b);
+                BN_set_negative(raw(), true);
+            }
+            sts = InternalError("BN_bin2bn");
         } else {
-            fromUint64(val);
+            sts = fromUint64(val);
         }
+
+        return sts;
     }
 
-    void fromInt32(const Int32 val)
+    Status fromUint32(const Uint32 val)
     {
-        auto is_negative = val < 0;
+        Status sts = StatusOk();
+
+        bool ret = BN_set_word(raw(), val);
+        ALCP_ASSERT(ret == 0, "fromInt32: BN_set_word failed");
+        if (ret)
+            sts = InternalError("fromInt32: BN_set_word failed");
+
+        return sts;
+    }
+
+    Status fromInt32(const Int32 val)
+    {
+        Status sts = StatusOk();
 
         if (val < 0) {
-            BN_bin2bn(
-                reinterpret_cast<const Uint8*>(&val), sizeof(val), nullptr);
+            /* create a 2's complement */
+            Uint32 new_val = utils::ReverseBytes<Uint32>(~val + 1);
+            auto   uptr    = reinterpret_cast<const Uint8*>(&new_val);
+
+            BIGNUM* bn = BN_bin2bn(uptr, sizeof(val), nullptr);
+            ALCP_ASSERT(bn == nullptr, "fromInt32: BN_bin2bn failed");
+            if (bn) {
+                // FIXME: avoid extra copy
+                BN_copy(raw(), bn);
+                BN_free(bn);
+                BN_set_negative(raw(), true);
+            }
         } else {
-            bool res = BN_set_word(raw(), val);
-            if (!res)
-                throw BigNumError("BigNum: OpenSSL fromInt32 failed");
+            bool ret = BN_set_word(raw(), val);
+            ALCP_ASSERT(ret == true, "fromInt32: BN_set_word failed");
+            if (ret)
+                sts = InternalError("fromInt32: BN_set_word failed");
         }
-        BN_set_negative(raw(), is_negative);
+
+        return sts;
     }
 
-    Int64 toInt64() const { return BN_get_word(raw()); }
+    bool  isNegative() const { return BN_is_negative(raw()); }
+    Int64 toInt64() const
+    {
+        Int64 res = BN_get_word(raw());
+        if (isNegative())
+            res = -res;
 
-    Int32 toInt32() const { return BN_get_word(raw()); }
+        return res;
+    }
 
-    /*
-     * The string gets allocated from openssl, need a way to free it
-     */
+    Int32 toInt32() const
+    {
+        Int32 res = BN_get_word(raw());
+        if (isNegative())
+            res = -res;
+        return res;
+    }
+
     const String toString(BigNum::Format fmt = BigNum::Format::eDecimal) const
     {
         String s;
         switch (fmt) {
+            /* The string gets allocated from openssl */
             case BigNum::Format::eDecimal: {
                 std::shared_ptr<char> res(BN_bn2dec(raw()), _OpenSSLDeleter());
                 s = res.get();
@@ -226,18 +288,23 @@ class BigNum::Impl
         return s;
     }
 
-    void fromString(const std::string& str, BigNum::Format fmt)
+    Status fromString(const std::string& str, BigNum::Format fmt)
     {
+        Status sts = StatusOk();
+
         switch (fmt) {
             case BigNum::Format::eDecimal: {
-                BIGNUM* bn = raw();
-                BN_dec2bn(&bn, str.c_str());
-                /* FIXME: Check for errors, set 0 if so */
-
+                auto bn  = raw();
+                int  ret = BN_dec2bn(&bn, str.c_str());
+                if (ret)
+                    sts = InternalError("BN_dec2bn");
             } break;
             default:
+                sts = InvalidArgumentError("Invalid Argument");
                 break;
         }
+
+        return sts;
     }
 
   private:
