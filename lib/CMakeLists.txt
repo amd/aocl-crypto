@@ -51,6 +51,7 @@ SET(ALCP_COMMON_SRCS
 	module.cc
 	modulemanager.cc
 	sourcelocation.cc
+  status.cc
 	)
 
 #[==[

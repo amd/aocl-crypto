@@ -25,8 +25,52 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "alcp/base.hh"
 #include "alcp/experimental/error.hh"
+//#include "alcp/experimental/status.hh"
 
 namespace alcp {
 
+Status
+AlreadyExistsError(StringView msg)
+{
+    return Status(ErrorCode::eExists, msg);
 }
+
+Status
+InvalidArgumentError(StringView msg)
+{
+    return Status(ErrorCode::eInvalidArgument, msg);
+}
+
+Status
+NotFoundError(StringView msg)
+{
+    return Status(ErrorCode::eNotFound, msg);
+}
+
+Status
+NotAvailableError(StringView msg)
+{
+    return Status(ErrorCode::eNotAvailable, msg);
+}
+
+Status
+NotImplementedError(StringView msg)
+{
+    return Status(ErrorCode::eNotImplemented, msg);
+}
+
+Status
+UnknownError(StringView msg)
+{
+    return Status(ErrorCode::eUnknown, msg);
+}
+
+Status
+InternalError(StringView sv)
+{
+    return Status(ErrorCode::eInternal, sv);
+}
+
+} // namespace alcp

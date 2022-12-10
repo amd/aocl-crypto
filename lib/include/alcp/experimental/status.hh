@@ -46,10 +46,14 @@ class Status final
   public:
     // Should initialize with an OK status
     Status()
-			: m_error{ ErrorCode::eOk },
-			  m_message { "All is well"}
-    {
-    }
+        : m_error{ ErrorCode::eOk }
+        , m_message{ "All is well" }
+    {}
+
+    Status(ErrorCode code, std::string_view msg)
+        : m_error{ code }
+        , m_message{ msg }
+    {}
 
     ALCP_DEFS_DEFAULT_COPY_AND_ASSIGNMENT(Status);
 
@@ -59,8 +63,8 @@ class Status final
     // Status::ok()
     // All is Well !!! if m_error is eOk or eNone
     ALCP_DEFS_MUST_USE_RETURN bool ok() const;
-    std::string_view          message() const { return m_message; }
-    Uint64                    code() const { return m_error.code(); }
+    std::string_view               message() const { return m_message; }
+    Uint64                         code() const { return m_error.code(); }
 
   private:
     Error  m_error;
@@ -102,7 +106,7 @@ StatusOk()
  */
 ALCP_DEFS_MUST_USE_RETURN bool IsAborted(const Status& status);
 ALCP_DEFS_MUST_USE_RETURN bool IsAlreadyExists(const Status& status);
-ALCP_DEFS_MUST_USE_RETURN bool IsInternal(const Status& status);
+ALCP_DEFS_MUST_USE_RETURN bool IsInternalError(const Status& status);
 ALCP_DEFS_MUST_USE_RETURN bool IsInvalidArgument(const Status& status);
 ALCP_DEFS_MUST_USE_RETURN bool IsNotFound(const Status& status);
 ALCP_DEFS_MUST_USE_RETURN bool IsNotAvailable(const Status& status);
