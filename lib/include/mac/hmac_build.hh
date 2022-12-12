@@ -28,7 +28,9 @@
 
 #include "alcp/error.h"
 #include "digest/sha2_512.hh"
+#include "digest/sha3.hh"
 #include "hmac.hh"
+#include <type_traits> /* for is_same_v<> */
 
 #ifndef _MAC_HMAC_BUILD_HH
 #define _MAC_HMAC_BUILD_HH 2
@@ -85,13 +87,20 @@ __hmac_wrapperFinish(void* hmac, void* digest)
 }
 template<typename DIGESTALGORITHM, typename MACALGORITHM>
 static alc_error_t
-__build_hmac(DIGESTALGORITHM*      digest,
-             const alc_mac_info_t& macInfo,
-             Context&              ctx)
+__build_hmac(const alc_mac_info_t& macInfo, Context& ctx)
 {
     auto err = ALC_ERROR_NONE;
 
-    auto algo    = new MACALGORITHM(macInfo, digest);
+    auto digest = new DIGESTALGORITHM();
+    if (digest == nullptr) {
+        err = ALC_ERROR_NO_MEMORY;
+        return err;
+    }
+    auto algo = new MACALGORITHM(macInfo, digest);
+    if (algo == nullptr) {
+        err = ALC_ERROR_NO_MEMORY;
+        return err;
+    }
     ctx.m_mac    = static_cast<void*>(algo);
     ctx.m_digest = static_cast<void*>(digest);
 
@@ -101,28 +110,90 @@ __build_hmac(DIGESTALGORITHM*      digest,
     ctx.finish   = __hmac_wrapperFinish<MACALGORITHM, DIGESTALGORITHM>;
     return err;
 }
+template<typename MACALGORITHM>
+static alc_error_t
+__build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
+{
+    auto err = ALC_ERROR_NONE;
 
+    auto sha3 = new alcp::digest::Sha3(macInfo.mi_algoinfo.hmac.hmac_digest);
+
+    auto algo = new MACALGORITHM(macInfo, sha3);
+    if (algo == nullptr) {
+        err = ALC_ERROR_NO_MEMORY;
+        return err;
+    }
+    ctx.m_mac    = static_cast<void*>(algo);
+    ctx.m_digest = static_cast<void*>(sha3);
+
+    ctx.update   = __hmac_wrapperUpdate<MACALGORITHM>;
+    ctx.finalize = __hmac_wrapperFinalize<MACALGORITHM>;
+    ctx.copy     = __hmac_wrapperCopy<MACALGORITHM>;
+    ctx.finish   = __hmac_wrapperFinish<MACALGORITHM, alcp::digest::Sha3>;
+    return err;
+}
 alc_error_t
 HmacBuilder::Build(const alc_mac_info_t& macInfo,
                    const alc_key_info_t& keyInfo,
                    Context&              ctx)
 {
     alc_error_t err = ALC_ERROR_NONE;
-    // switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_type) {
-    //     case ALC_DIGEST_TYPE_SHA2:
-    //         switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2) {
-    //             case ALC_SHA2_256:
-
-    //                 break;
-    //         }
-    //         break;
-    // }
-
-    // TODO: Function to build Sha
-    // TODO: Add the switch case here
-    auto sha256 = new alcp::digest::Sha256();
-    err         = __build_hmac<alcp::digest::Sha256, alcp::mac::Hmac>(
-        sha256, macInfo, ctx);
+    switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_type) {
+        case ALC_DIGEST_TYPE_SHA2: {
+            switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2) {
+                case ALC_SHA2_256: {
+                    err = __build_hmac<alcp::digest::Sha256, alcp::mac::Hmac>(
+                        macInfo, ctx);
+                    break;
+                }
+                case ALC_SHA2_224: {
+                    err = __build_hmac<alcp::digest::Sha224, alcp::mac::Hmac>(
+                        macInfo, ctx);
+                    break;
+                }
+                case ALC_SHA2_384: {
+                    err = __build_hmac<alcp::digest::Sha384, alcp::mac::Hmac>(
+                        macInfo, ctx);
+                    break;
+                }
+                case ALC_SHA2_512: {
+                    err = __build_hmac<alcp::digest::Sha512, alcp::mac::Hmac>(
+                        macInfo, ctx);
+                    break;
+                }
+            }
+            break;
+        }
+        case ALC_DIGEST_TYPE_SHA3: {
+            switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3) {
+                case ALC_SHA3_224: {
+                    err = __build_hmac_sha3<alcp::mac::Hmac>(macInfo, ctx);
+                    break;
+                }
+                case ALC_SHA3_256: {
+                    err = __build_hmac_sha3<alcp::mac::Hmac>(macInfo, ctx);
+                    break;
+                }
+                case ALC_SHA3_384: {
+                    err = __build_hmac_sha3<alcp::mac::Hmac>(macInfo, ctx);
+                    break;
+                }
+                case ALC_SHA3_512: {
+                    err = __build_hmac_sha3<alcp::mac::Hmac>(macInfo, ctx);
+                    break;
+                }
+                default: {
+                    err = ALC_ERROR_NOT_SUPPORTED;
+                    break;
+                }
+            }
+            break;
+        }
+        default: {
+            err = ALC_ERROR_NOT_SUPPORTED;
+            break;
+        }
+    }
     return err;
 }
 

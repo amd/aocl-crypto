@@ -44,6 +44,7 @@ MacBuilder::Build(const alc_mac_info_t& macInfo, Context& ctx)
             err = HmacBuilder::Build(macInfo, macInfo.mi_keyinfo, ctx);
             break;
         case ALC_MAC_CMAC:
+            // TODO: Implement CMAC
             // Process CMAC
             break;
         default:
