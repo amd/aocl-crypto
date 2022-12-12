@@ -26,11 +26,11 @@
  *
  */
 
+#include "alcp/base/error.hh"
+#include "alcp/capi/defs.hh"
 #include "alcp/mac.h"
 #include "capi/mac/builder.hh"
 #include "capi/mac/ctx.hh"
-#include "defs.hh"
-#include "error.hh"
 #include "mac/mac.hh"
 
 using namespace alcp;

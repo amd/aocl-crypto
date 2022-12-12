@@ -27,7 +27,7 @@
  */
 
 #include "alcp/error.h"
-#include "digest/sha2_512.hh"
+#include "digest/sha2_384.hh"
 #include "digest/sha3.hh"
 #include "hmac.hh"
 #include <type_traits> /* for is_same_v<> */
