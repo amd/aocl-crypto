@@ -29,8 +29,11 @@
 #ifndef _ALCP_MAC_H_
 #define _ALCP_MAC_H_ 2
 
+#include "alcp/cipher.h"
 #include "alcp/digest.h"
 #include "alcp/key.h"
+
+EXTERN_C_BEGIN
 
 typedef enum _alc_mac_type
 {
@@ -65,4 +68,14 @@ typedef struct _alc_mac_info_t
     alc_key_info_t mi_keyinfo;
 } alc_mac_info_t, *alc_mac_info_p;
 
-#endif
+typedef void               alc_mac_context_t;
+typedef alc_mac_context_t* alc_mac_context_p;
+
+typedef struct alc_mac_handle
+{
+    alc_mac_context_p ch_context;
+} alc_mac_handle_t, *alc_mac_handle_p, AlcMacHandle;
+
+EXTERN_C_END
+
+#endif /* _ALCP_CIPHER_H_ */

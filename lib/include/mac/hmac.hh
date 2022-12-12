@@ -25,6 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include "alcp/key.h"
+#include "alcp/mac.h"
 #include "digest.hh"
 #include "mac.hh"
 #include "utils/copy.hh"
@@ -80,31 +82,19 @@ class ALCP_API_EXPORT Hmac final : public Mac
      * @returns the output hash size of HMAC
      */
     Uint64 getHashSize();
+
+    void finish();
+
     /**
      * @brief get the state of the HMAC class at any point after initialization.
      * @returns the output hash size of HMAC
      */
     hmac_state_t getState() const;
 
-    // TODO: Implement Finish and Reset after Builder design is complete
-    void finish() override{};
-    void reset() override{};
+    // TODO: Implement Reset after Builder design is complete
+    void reset(){};
 
     ~Hmac();
-
-  private:
-    std::vector<Uint8> calculate_hash(alcp::digest::Digest* p_digest,
-                                      std::vector<Uint8>    input);
-
-    int calculate_hash(alcp::digest::Digest* p_digest,
-                       const Uint8*          input,
-                       Uint64                len,
-                       Uint8*                output);
-
-    std::vector<Uint8> get_k0(Uint32 block_len);
-
-    void        get_k0_xor_pad();
-    alc_error_t setUp(const alc_key_info_t& rKeyInfo);
 };
 
 namespace avx2 {

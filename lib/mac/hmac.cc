@@ -26,8 +26,8 @@
  *
  */
 
-#include "mac/hmac.hh"
 #include "alcp/utils/cpuid.hh"
+#include "mac/hmac.hh"
 #include "utils/copy.hh"
 
 #include <cstring> // for std::memset
@@ -429,5 +429,11 @@ hmac_state_t
 Hmac::getState() const
 {
     return m_pImpl->getState();
+}
+
+void
+Hmac::finish()
+{
+    m_pImpl->finish();
 }
 } // namespace alcp::mac

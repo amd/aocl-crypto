@@ -410,6 +410,12 @@ class HmacTestFixture
             p_hmac = std::make_unique<alcp::mac::Hmac>(mac_info, p_sha3.get());
         }
     }
+    void TearDown() override
+    {
+        if (p_hmac) {
+            p_hmac->finish();
+        }
+    }
 };
 
 TEST(HmacReliabilityTest, NullKeyNonNullKeyLength)
@@ -437,6 +443,7 @@ TEST(HmacReliabilityTest, NullKeyNonNullKeyLength)
     alcp::digest::Sha256 sha256;
     alcp::mac::Hmac      hmac{ mac_info, &sha256 };
     ASSERT_EQ(hmac.getState(), INVALID);
+    hmac.finish();
 }
 TEST(HmacReliabilityTest, NonNullKeyNullKeyLength)
 {
@@ -465,6 +472,7 @@ TEST(HmacReliabilityTest, NonNullKeyNullKeyLength)
     alcp::digest::Sha256 sha256;
     alcp::mac::Hmac      hmac(mac_info, &sha256);
     ASSERT_EQ(hmac.getState(), INVALID);
+    hmac.finish();
 }
 
 TEST(HmacReliabilityTest, NullUpdate)
@@ -507,6 +515,7 @@ TEST(HmacReliabilityTest, NullUpdate)
     auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);
     hmac.copyHash(&mac.at(0), mac.size());
     EXPECT_EQ(mac, output_mac);
+    hmac.finish();
 }
 
 TEST_P(HmacTestFixture, HMAC_UPDATE)
