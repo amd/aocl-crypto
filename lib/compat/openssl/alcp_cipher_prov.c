@@ -610,10 +610,10 @@ ALCP_prov_cipher_update(void*                vctx,
     if (alcp_is_error(err)) {
         alcp_error_str(err, err_buf, err_size);
         printf("Provider: Encyption/Decryption Failure! ALCP:%s\n", err_buf);
-        printf("%p,%ld,%p\n", in, inl, out);
+        printf("%p,%ld,%p\n", (void*)in, inl, (void*)out);
         printf("%d\n",
                cctx->pc_cipher_info.ci_algo_info.ai_mode == ALC_AES_MODE_CFB);
-        printf("%p\n", cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        printf("%p\n", (void*)cctx->pc_cipher_info.ci_algo_info.ai_iv);
         alcp_error_str(err, err_buf, err_size);
         return 0;
     }

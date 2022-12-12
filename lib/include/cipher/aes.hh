@@ -442,7 +442,7 @@ class ALCP_API_EXPORT Gcm final
     virtual alc_error_t encryptUpdate(const Uint8* pInput,
                                       Uint8*       pOutput,
                                       Uint64       len,
-                                      const Uint8* pIv);
+                                      const Uint8* pIv) override;
 
     /**
      * \brief   GCM Invalid Decrypt Operation
@@ -470,7 +470,7 @@ class ALCP_API_EXPORT Gcm final
     virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
                                       Uint8*       pPlainText,
                                       Uint64       len,
-                                      const Uint8* pIv);
+                                      const Uint8* pIv) override;
 
   private:
     /**
@@ -506,8 +506,8 @@ struct _ccm_data_t
     Uint64       blocks = 0;
     Uint32       rounds = 0;
 };
-typedef _ccm_data_t *ccm_data_p, ccm_data_t;
-class ALCP_API_EXPORT Ccm            final
+typedef _ccm_data_t *     ccm_data_p, ccm_data_t;
+class ALCP_API_EXPORT Ccm final
     : public Aes
     , cipher::IDecryptUpdater
     , cipher::IEncryptUpdater
@@ -598,7 +598,7 @@ class ALCP_API_EXPORT Ccm            final
     virtual alc_error_t encryptUpdate(const Uint8* pInput,
                                       Uint8*       pOutput,
                                       Uint64       len,
-                                      const Uint8* pIv);
+                                      const Uint8* pIv) override;
 
     /**
      * \brief   CCM Decrypt Operation
@@ -617,7 +617,7 @@ class ALCP_API_EXPORT Ccm            final
     virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
                                       Uint8*       pPlainText,
                                       Uint64       len,
-                                      const Uint8* pIv);
+                                      const Uint8* pIv) override;
 
   private:
     virtual alc_error_t cryptUpdate(const Uint8* pInput,

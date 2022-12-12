@@ -188,12 +188,12 @@ class ALCP_API_EXPORT Sha512 final : public Sha2
     /**
      * @return The input block size to the hash function in bytes
      */
-    Uint64 getInputBlockSize();
+    Uint64 getInputBlockSize() override;
 
     /**
      * @return The digest size in bytes
      */
-    Uint64 getHashSize();
+    Uint64 getHashSize() override;
 
   private:
     void        compressMsg(Uint64 w[]);

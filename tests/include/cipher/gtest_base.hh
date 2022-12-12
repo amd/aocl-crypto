@@ -449,7 +449,7 @@ AesCrosstest(int               keySize,
                 if (enc_dec == ENCRYPT)
                     fr->setRecEvent(
                         key, iv, pt, EncDecType(enc_dec, big_small));
-                else if ((enc_dec == DECRYPT))
+                else if (enc_dec == DECRYPT)
                     fr->setRecEvent(
                         key, iv, ct, EncDecType(enc_dec, big_small));
             } else {
@@ -457,7 +457,7 @@ AesCrosstest(int               keySize,
                 try {
                     if (enc_dec == ENCRYPT)
                         fr->getValues(&key, &iv, &pt);
-                    else if ((enc_dec == DECRYPT))
+                    else if (enc_dec == DECRYPT)
                         fr->getValues(&key, &iv, &ct);
 
                 } catch (std::string excp) {
@@ -530,28 +530,25 @@ RunTest(TestingCore& testingCore,
     data.m_adl   = 0;
     data.m_tagl  = 0;
     if (isgcm) {
-        if (outtag.size())
-        {
-            data.m_tag = &(outtag[0]);
-            data.m_tagl = outtag.size();
+        if (outtag.size()) {
+            data.m_tag     = &(outtag[0]);
+            data.m_tagl    = outtag.size();
             data.m_tagBuff = &tagBuff[0];
         }
-        if (ad.size())
-        {
-            data.m_ad = &(ad[0]);
+        if (ad.size()) {
+            data.m_ad  = &(ad[0]);
             data.m_adl = ad.size();
         }
     }
     if (enc_dec == ENCRYPT) {
-        if (pt.size())
-        {
-            data.m_in = &(pt[0]);
+        if (pt.size()) {
+            data.m_in  = &(pt[0]);
             data.m_inl = pt.size();
         }
-        data.m_iv   = &(iv[0]);
-        data.m_ivl  = iv.size();
+        data.m_iv  = &(iv[0]);
+        data.m_ivl = iv.size();
         if (outct.size())
-         data.m_out  = &(outct[0]);
+            data.m_out = &(outct[0]);
         data.m_outl = data.m_inl;
         if (isxts) {
             data.m_tkey       = &(tkey[0]);
@@ -578,15 +575,14 @@ RunTest(TestingCore& testingCore,
         // Enforce that no errors are reported from lib side.
         EXPECT_TRUE(ret);
     } else {
-        if (ct.size())
-        {
-            data.m_in = &(ct[0]);
+        if (ct.size()) {
+            data.m_in  = &(ct[0]);
             data.m_inl = ct.size();
         }
-        data.m_iv   = &(iv[0]);
-        data.m_ivl  = iv.size();
+        data.m_iv  = &(iv[0]);
+        data.m_ivl = iv.size();
         if (outpt.size())
-         data.m_out  = &(outpt[0]);
+            data.m_out = &(outpt[0]);
         data.m_outl = data.m_inl;
         if (isxts) {
             data.m_tkey       = &(tkey[0]);
