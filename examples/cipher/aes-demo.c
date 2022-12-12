@@ -72,18 +72,39 @@ static alc_cipher_handle_t handle;
 #define ALCP_PRINT_TEXT(I, L, S)
 #endif // DEBUG_P
 
-double elapsed;
-double totalTimeElapsed;
-
-#ifdef __linux__
 // to do: these macro is better to be moved to common header.
 //#define ALCP_CRYPT_TIMER_INIT struct timeval begin, end;
 struct timeval begin, end;
 long   seconds;
 long   microseconds;
+double elapsed;
+double totalTimeElapsed;
 
 #define ALCP_CRYPT_TIMER_START gettimeofday(&begin, 0);
 
+#ifdef WIN32
+//Windows equivalent for gettimeofday
+int gettimeofday(struct timeval* tv, struct timeval* tv1)
+{
+    FILETIME    f_time;
+    uint64_t    time;
+    SYSTEMTIME  s_time;
+
+    //define UNIX EPOCH time for windows
+    static const uint64_t EPOCH = ((uint64_t)116444736000000000ULL);
+
+    GetSystemTimeAsFileTime(&f_time);
+    FileTimeToSystemTime(&f_time, &s_time);
+    time = ((uint64_t)f_time.dwLowDateTime);
+    time += ((uint64_t)f_time.dwHighDateTime) << 32;
+
+    tv->tv_sec = (long)((time - EPOCH) / 10000000L);
+    tv->tv_usec = (long)(s_time.wMilliseconds * 1000);
+    return 0;
+}
+#endif
+
+//ALCP_CRYPT_GET_TIME defined as static inline function instead of macro.
 static inline void  ALCP_CRYPT_GET_TIME(X, Y)
 {
     gettimeofday(&end, 0);
@@ -92,28 +113,10 @@ static inline void  ALCP_CRYPT_GET_TIME(X, Y)
     elapsed = seconds + microseconds * 1e-6;
     totalTimeElapsed += elapsed;
     if (X) {
-        printf("\t",Y);
-        printf(" %2.2f ms ", elapsed * 1000);
-    }
-}
-#elif WIN32
-LARGE_INTEGER begin, end;
-
-#define ALCP_CRYPT_TIMER_START QueryPerformanceCounter(&begin);
-
-//ALCP_CRYPT_GET_TIME defined as static inline function instead of macro.
-
-static inline void ALCP_CRYPT_GET_TIME(X, Y)
-{
-    QueryPerformanceCounter(&end);
-    elapsed = (end.QuadPart - begin.QuadPart) / CLOCKS_PER_SEC;
-    totalTimeElapsed += elapsed;
-    if (X) {
         printf("\t", Y);
         printf(" %2.2f ms ", elapsed * 1000);
     }
 }
-#endif
 
 void
 getinput(uint8_t* output, int inputLen, int seed)
