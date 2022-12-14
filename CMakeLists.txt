@@ -52,6 +52,10 @@ IF(NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE RELEASE) 
 ENDIF()
 
+find_program(CLANG_TIDY "clang-tidy")
+
+set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY}")
+
 SET( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake" )
 
 # Make the static and shared libraries are built in top most directory
