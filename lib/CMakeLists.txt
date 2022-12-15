@@ -52,6 +52,7 @@ SET(ALCP_COMMON_SRCS
 	modulemanager.cc
 	sourcelocation.cc
   status.cc
+  bufferwriter.cc
 	)
 
 #[==[
@@ -155,6 +156,7 @@ ADD_SUBDIRECTORY(utils)
 ADD_SUBDIRECTORY(rng)
 ADD_SUBDIRECTORY(mac)
 
+ADD_SUBDIRECTORY(tests)
 
 TARGET_INCLUDE_DIRECTORIES(alcp PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/include)
