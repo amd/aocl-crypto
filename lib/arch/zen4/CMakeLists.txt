@@ -26,19 +26,12 @@
 
 FILE(GLOB ZEN4_SRCS "*.cc")
 
-IF (MSVC)
-	SET(ARCH_COMPILE_FLAG -mavx -mavx2 -maes -mvaes -mpclmul -mvpclmulqdq -DUSE_AVX512 /arch:AVX512)
-ELSE()
-
-	SET(ARCH_COMPILE_FLAG -fPIC -march=znver3 -mavx -mavx2 -maes -mvaes -mpclmul -mavx512f -mavx512dq -mavx512ifma -mavx512cd
-	                      -mavx512bw -mavx512vl -mavx512vbmi -mavx512vbmi2 -mavx512vnni -mavx512bitalg -mavx512vpopcntdq
-						  -mvpclmulqdq -DUSE_AVX512 )
-
-ENDIF()
+alcp_get_arch_cflags_zen4()
 
 #CMAKE_POLICY(SET CMP0079 NEW)
 
-ADD_COMPILE_OPTIONS(${ARCH_COMPILE_FLAG})
+MESSAGE(STATUS "COMPILE_FLAGS:ZEN4:${ARCH_COMPILE_FLAGS}")
+ADD_COMPILE_OPTIONS(${ARCH_COMPILE_FLAGS})
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib/include)
 

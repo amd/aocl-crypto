@@ -26,15 +26,12 @@
 
 FILE(GLOB AVX2_SRCS "*.cc")
 
-IF (MSVC )
-	SET(ARCH_COMPILE_FLAG -msse2 -maes -mavx2 -msha -mno-vaes -mpclmul -O2)
-ELSE()
-	SET(ARCH_COMPILE_FLAG -fPIC -msse2 -maes -mavx2 -msha -mno-vaes -mpclmul -O2)
-ENDIF()
+alcp_get_arch_cflags_avx2()
 
 #CMAKE_POLICY(SET CMP0079 NEW)
 
-ADD_COMPILE_OPTIONS(${ARCH_COMPILE_FLAG})
+MESSAGE(STATUS "COMPILE_FLAGS:AVX2:${ARCH_COMPILE_FLAGS}")
+ADD_COMPILE_OPTIONS(${ARCH_COMPILE_FLAGS})
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib/include)
 

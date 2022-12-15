@@ -26,17 +26,12 @@
 
 FILE(GLOB ZEN3_SRCS "*.cc")
 
-IF (MSVC)
-	SET(ARCH_COMPILE_FLAG -mavx -mavx2 -maes -mvaes -mpclmul -mvpclmulqdq /arch:AVX2)
-ELSE()
-
-	SET(ARCH_COMPILE_FLAG -fPIC -march=znver3 -mavx -mavx2 -maes -mvaes -mpclmul -mvpclmulqdq)
-
-ENDIF()
+alcp_get_arch_cflags_zen3()
 
 #CMAKE_POLICY(SET CMP0079 NEW)
 
-ADD_COMPILE_OPTIONS(${ARCH_COMPILE_FLAG})
+MESSAGE(STATUS "COMPILE_FLAGS:ZEN3:${ARCH_COMPILE_FLAGS}")
+ADD_COMPILE_OPTIONS(${ARCH_COMPILE_FLAGS})
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib/include)
 
