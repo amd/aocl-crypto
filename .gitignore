@@ -33,3 +33,9 @@ cscope.out
 .vs
 # Clangd index
 .clangd
+
+
+#------------------------------------#
+# Generated files
+#------------------------------------#
+include/config.h
