@@ -134,9 +134,9 @@
     ALCP_DEFS_DEFAULT_DTOR(CLASS_NAME)
 #endif
 
-#ifndef ALCP_DEFS_DEFAULT_CTOR_AND_VIRTUAL_DTOR
-#define ALCP_DEFS_DEFAULT_CTOR_AND_VIRTUAL_DTOR(CLASS_NAME)                              \
-    CLASS_NAME ()                = default;                                         \
+#ifndef ALCP_DEFS_DEFAULT_CTOR_AND_EMPTY_VIRTUAL_DTOR
+#define ALCP_DEFS_DEFAULT_CTOR_AND_EMPTY_VIRTUAL_DTOR(CLASS_NAME)                  \
+    CLASS_NAME ()                = default ;                                       \
     virtual ~ CLASS_NAME() {}
 #endif
 
@@ -147,6 +147,6 @@
 
 #ifndef ALCP_DEFS_DEFAULT_MOVE_CTOR
 #define ALCP_DEFS_DEFAULT_MOVE_CTOR(CLASS_NAME)                                          \
-    CLASS_NAME(CLASS_NAME &&)
+    CLASS_NAME(CLASS_NAME &&) = default
 #endif
 // clang-format on
