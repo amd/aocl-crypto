@@ -329,14 +329,17 @@ class Hmac::Impl
         // Calculating unoptimized xor_operations based on completed optimized
         // xor operation
         const int xor_operations_left =
-            input_block_length_bits
-            - no_of_xor_operations * (optimized_bits_per_xor);
+            (input_block_length_bits
+             - no_of_xor_operations * (optimized_bits_per_xor))
+            / 8;
 
         // Unoptimized XOR operation
         for (int i = 0; i < xor_operations_left; i++) {
             *current_temp_k0_xor_ipad = *p_k0 ^ ipad;
             *current_temp_k0_xor_opad = *p_k0 ^ opad;
             p_k0++;
+            current_temp_k0_xor_ipad++;
+            current_temp_k0_xor_opad++;
         }
     }
 
