@@ -60,7 +60,7 @@ ArraysMatch(std::vector<Uint8>      actual,
                    << " Failed";
         }
     }
-    if (verbose == 1) {
+    if (verbose > 0) {
         std::cout << "Test: " << testName << " line: " << ds.getLineNumber()
                   << " Success" << std::endl;
     }
@@ -80,7 +80,7 @@ ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected, size_t len)
                    << "Length:" << len << " Failure i:" << i << " !";
         }
     }
-    if (verbose == 1) {
+    if (verbose > 1) {
         std::cout << "Length:" << len << " Success" << std::endl;
     }
     return ::testing::AssertionSuccess();
@@ -103,7 +103,7 @@ ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected)
                    << parseBytesToHexStr(&(expected[0]), expected.size());
         }
     }
-    if (verbose == 1) {
+    if (verbose > 0) {
         std::cout << "Size:" << actual.size() << " Success" << std::endl;
     }
     return ::testing::AssertionSuccess();
@@ -250,6 +250,7 @@ void
 parseArgs(int argc, char** argv)
 {
     std::string currentArg;
+    std::string temp;
     if (argc > 1) {
         for (int i = 1; i < argc; i++) {
             currentArg = std::string(argv[i]);
@@ -257,7 +258,9 @@ parseArgs(int argc, char** argv)
                 || (currentArg == std::string("-h"))) {
                 std::cout << std::endl
                           << "Additional help for microtests" << std::endl;
-                std::cout << "--verbose or -v per line status." << std::endl;
+                std::cout << "--verbose=<verbosity level(0/1/2)> or -v per "
+                             "line status."
+                          << std::endl;
                 std::cout << "--use-ipp or -i force IPP use in testing."
                           << std::endl;
                 std::cout << "--use-ossl or -o force OpenSSL use in testing"
@@ -265,12 +268,18 @@ parseArgs(int argc, char** argv)
                 std::cout
                     << "--replay-blackbox or -r replay blackbox with log file"
                     << std::endl;
-            } else if ((currentArg
-                        == std::string(
-                            "--verbose")) /*FIXME: This should be passed as a
-                                             verbosity level (-v 2)*/
-                       || (currentArg == std::string("-v"))) {
-                verbose = 1;
+            } else if ((currentArg.find(std::string("--verbose")))
+                       || (currentArg.find(std::string("-v")))) {
+                /* now extract the verbose level integer */
+                if (currentArg.find(std::string("--verbose"))
+                    != currentArg.npos) {
+                    temp    = currentArg.back();
+                    verbose = std::stoi(temp);
+                } else if (currentArg.find(std::string("-v"))
+                           != currentArg.npos) {
+                    verbose = 1;
+                }
+
             } else if ((currentArg == std::string("--use-ipp"))
                        || (currentArg == std::string("-i"))) {
                 useipp = true;
