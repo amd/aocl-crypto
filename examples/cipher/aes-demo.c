@@ -105,7 +105,7 @@ int gettimeofday(struct timeval* tv, struct timeval* tv1)
 #endif
 
 //ALCP_CRYPT_GET_TIME defined as static inline function instead of macro.
-static inline void  ALCP_CRYPT_GET_TIME(X, Y)
+static inline void  ALCP_CRYPT_GET_TIME(int X, char *Y)
 {
     gettimeofday(&end, 0);
     seconds = end.tv_sec - begin.tv_sec;
@@ -113,7 +113,7 @@ static inline void  ALCP_CRYPT_GET_TIME(X, Y)
     elapsed = seconds + microseconds * 1e-6;
     totalTimeElapsed += elapsed;
     if (X) {
-        printf("\t", Y);
+        printf("%s\t", Y);
         printf(" %2.2f ms ", elapsed * 1000);
     }
 }
