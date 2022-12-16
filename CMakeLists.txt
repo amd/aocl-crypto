@@ -36,9 +36,21 @@ endif(UNIX)
 CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 PROJECT (ALCP)
 
-IF(${CMAKE_VERSION} VERSION_LESS "3.1.0")
-    MESSAGE(FATAL_ERROR "Minimum reqd version is CMake 3.1.0!")
+# check cmake min required version
+SET(CMAKE_MIN_REQ "3.1.0")
+IF(${CMAKE_VERSION} VERSION_LESS ${CMAKE_MIN_REQ})
+    MESSAGE(FATAL_ERROR "CMake version detected: ${CMAKE_VERSION}, Minimum reqd version is CMake ${CMAKE_MIN_REQ}!")
 ENDIF()
+
+#check min reqd compiler versions
+SET(GCC_MIN_REQ "10.3.0")
+IF(${CMAKE_C_COMPILER_VERSION} VERSION_LESS ${GCC_MIN_REQ})
+    MESSAGE(FATAL_ERROR "Using c compiler version ${CMAKE_C_COMPILER_VERSION},min. reqd version is ${GCC_MIN_REQ}!")
+ENDIF()
+IF(${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS ${GCC_MIN_REQ})
+    MESSAGE(FATAL_ERROR "Using c++ compiler version ${CMAKE_CXX_COMPILER_VERSION},min. reqd version is ${GCC_MIN_REQ}!")
+ENDIF()
+#FIXME: once AOCC support is fixed, check for min required versions for aocc as well
 
 # SPECIFY THE C STANDARD
 SET(CMAKE_C_STANDARD 11)
