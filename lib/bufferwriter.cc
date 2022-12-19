@@ -58,7 +58,7 @@ BufferWriter::writeAt(void const* const buffer,
     if (len > bytes_available)
         len = bytes_available;
 
-    std::memcpy(m_ptr + offset, buffer, len);
+    std::memcpy(reinterpret_cast<Uint8*>(m_ptr) + offset, buffer, len);
 
     return len;
 }
