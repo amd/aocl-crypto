@@ -28,7 +28,7 @@
 
 #include "alcp/alcp.h"
 #include "alcp/types.h"
-#include "digest/sha2_512.hh"
+#include "digest/sha2_384.hh"
 #include "mac/hmac.hh"
 #include "gtest/gtest.h"
 

@@ -62,3 +62,4 @@ class Sha384 final : public Sha2
 };
 
 } // namespace alcp::digest
+
