@@ -33,6 +33,8 @@
 
 #define GF_POLYNOMIAL 0x87
 
+using alcp::utils::Cpuid;
+
 namespace alcp::cipher {
 
 static Uint8
@@ -74,7 +76,7 @@ Xts::expandTweakKeys(const Uint8* pUserKey, int len)
     Uint8 dummy_key[32] = { 0 };
 
     const Uint8* key = pUserKey ? pUserKey : &dummy_key[0];
-    if (utils::Cpuid::cpuHasAesni()) {
+    if (Cpuid::cpuHasAesni()) {
         aesni::ExpandTweakKeys(key, p_tweak_key, getRounds());
         return;
     }
@@ -127,9 +129,9 @@ Xts::encrypt(const Uint8* pPlainText,
         return err;
     }
 
-    if (utils::Cpuid::cpuHasAvx512(utils::AVX512_F)
-        && utils::Cpuid::cpuHasAvx512(utils::AVX512_DQ)
-        && utils::Cpuid::cpuHasAvx512(utils::AVX512_BW)) {
+    if (Cpuid::cpuHasAvx512(utils::AVX512_F)
+        && Cpuid::cpuHasAvx512(utils::AVX512_DQ)
+        && Cpuid::cpuHasAvx512(utils::AVX512_BW)) {
         err = vaes512::EncryptXtsAvx512(pPlainText,
                                         pCipherText,
                                         len,
@@ -140,7 +142,7 @@ Xts::encrypt(const Uint8* pPlainText,
         return err;
     }
 
-    if (utils::Cpuid::cpuHasVaes()) {
+    if (Cpuid::cpuHasVaes()) {
 
         err = vaes::EncryptXts(pPlainText,
                                pCipherText,
@@ -153,7 +155,7 @@ Xts::encrypt(const Uint8* pPlainText,
         return err;
     }
 
-    if (utils::Cpuid::cpuHasAesni()) {
+    if (Cpuid::cpuHasAesni()) {
 
         err = aesni::EncryptXts(pPlainText,
                                 pCipherText,
@@ -248,9 +250,9 @@ Xts::decrypt(const Uint8* pCipherText,
         return err;
     }
 
-    if (utils::Cpuid::cpuHasAvx512(utils::AVX512_F)
-        && utils::Cpuid::cpuHasAvx512(utils::AVX512_DQ)
-        && utils::Cpuid::cpuHasAvx512(utils::AVX512_BW)) {
+    if (Cpuid::cpuHasAvx512(utils::AVX512_F)
+        && Cpuid::cpuHasAvx512(utils::AVX512_DQ)
+        && Cpuid::cpuHasAvx512(utils::AVX512_BW)) {
 
         err = vaes512::DecryptXtsAvx512(pCipherText,
                                         pPlainText,
@@ -262,7 +264,7 @@ Xts::decrypt(const Uint8* pCipherText,
         return err;
     }
 
-    if (utils::Cpuid::cpuHasVaes()) {
+    if (Cpuid::cpuHasVaes()) {
 
         err = vaes::DecryptXts(pCipherText,
                                pPlainText,
@@ -275,7 +277,7 @@ Xts::decrypt(const Uint8* pCipherText,
         return err;
     }
 
-    if (utils::Cpuid::cpuHasAesni()) {
+    if (Cpuid::cpuHasAesni()) {
 
         err = aesni::DecryptXts(pCipherText,
                                 pPlainText,

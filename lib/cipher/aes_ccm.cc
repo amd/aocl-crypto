@@ -33,6 +33,7 @@
 #include <string.h>
 #include <wmmintrin.h>
 
+using alcp::utils::Cpuid;
 namespace alcp::cipher {
 
 alc_error_t
@@ -67,10 +68,10 @@ Ccm::cryptUpdate(const Uint8* pInput,
 
 #if 0
         bool isAvx512Cap = false;
-        if (utils::Cpuid::cpuHasVaes()) {
-             if (utils::Cpuid::cpuHasAvx512(utils::AVX512_F)
-                && utils::Cpuid::cpuHasAvx512(utils::AVX512_DQ)
-                && utils::Cpuid::cpuHasAvx512(utils::AVX512_BW)) {
+        if (Cpuid::cpuHasVaes()) {
+             if (Cpuid::cpuHasAvx512(utils::AVX512_F)
+                && Cpuid::cpuHasAvx512(utils::AVX512_DQ)
+                && Cpuid::cpuHasAvx512(utils::AVX512_BW)) {
                 isAvx512Cap = true;
             }
         }
@@ -85,7 +86,7 @@ Ccm::cryptUpdate(const Uint8* pInput,
         bool err_ret = (CcmSetIv(&m_ccm_data, pIv, m_ivLen, len) == 0);
 
         // Accelerate with AESNI
-        if (utils::Cpuid::cpuHasAesni()) {
+        if (Cpuid::cpuHasAesni()) {
             aesni::CcmSetAad(
                 &m_ccm_data, m_additionalData, m_additionalDataLen);
             if (isEncrypt) {

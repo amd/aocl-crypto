@@ -43,6 +43,8 @@
 
 namespace utils = alcp::utils;
 
+using alcp::utils::Cpuid;
+
 namespace alcp::digest {
 
 /*
@@ -225,7 +227,7 @@ Sha512::compressMsg(Uint64 w[])
 alc_error_t
 Sha512::processChunk(const Uint8* pSrc, Uint64 len)
 {
-    static bool avx2_available = utils::Cpuid::cpuHasAvx2();
+    static bool avx2_available = Cpuid::cpuHasAvx2();
 
     if (avx2_available) {
         return zen3::ShaUpdate512(m_hash, pSrc, len);

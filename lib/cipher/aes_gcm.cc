@@ -32,6 +32,8 @@
 #include <immintrin.h>
 #include <wmmintrin.h>
 
+using alcp::utils::Cpuid;
+
 namespace alcp::cipher {
 
 alc_error_t
@@ -66,15 +68,15 @@ Gcm::cryptUpdate(const uint8_t* pInput,
         m_len = len;
 
         bool isAvx512Cap = false;
-        if (utils::Cpuid::cpuHasVaes()) {
-            if (utils::Cpuid::cpuHasAvx512(utils::AVX512_F)
-                && utils::Cpuid::cpuHasAvx512(utils::AVX512_DQ)
-                && utils::Cpuid::cpuHasAvx512(utils::AVX512_BW)) {
+        if (Cpuid::cpuHasVaes()) {
+            if (Cpuid::cpuHasAvx512(utils::AVX512_F)
+                && Cpuid::cpuHasAvx512(utils::AVX512_DQ)
+                && Cpuid::cpuHasAvx512(utils::AVX512_BW)) {
                 isAvx512Cap = true;
             }
         }
 
-        if (utils::Cpuid::cpuHasVaes() && isAvx512Cap) {
+        if (Cpuid::cpuHasVaes() && isAvx512Cap) {
             // Encrypt/Decrypt call
             err = vaes512::CryptGcm(pInput,
                                     pOutput,
