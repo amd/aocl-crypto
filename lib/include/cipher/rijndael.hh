@@ -39,8 +39,7 @@
 
 namespace alcp::cipher {
 
-class ALCP_API_EXPORT Rijndael : public alcp::BlockCipher
-//, public Algorithm
+class ALCP_API_EXPORT Rijndael : public alcp::ICipher, protected Cipher
 {
   public:
     static Uint32 constexpr cAlignment     = 16;
@@ -92,7 +91,7 @@ class ALCP_API_EXPORT Rijndael : public alcp::BlockCipher
     virtual alc_error_t encrypt(const Uint8* pSrc,
                                 Uint8*       pDst,
                                 Uint64       len,
-                                const Uint8* pIv) const override;
+                                const Uint8* pIv) const;
 
     virtual void AesEncrypt(Uint32* blk0, const Uint8* pkey, int nr) const;
 

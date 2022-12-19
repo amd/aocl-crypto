@@ -51,5 +51,6 @@ using StringView = ::std::string_view;
 namespace alcp {
 
 #include "alcp/types.h"
+#include "alcp/macros.h"
 
 } // namespace alcp

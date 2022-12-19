@@ -47,18 +47,6 @@
         }                                                                      \
     } while (0)
 
-/* cut from here ====== 8< ========= */
-/*
- * TODO: Remove this when include/config.h is available
-  */
-#if defined(__linux__)
-    #define ALCP_BUILD_OS_LINUX     1
-#else
-    #define ALCP_BUILD_OS_WINDOWS   1
-#endif
-
-/* till here ====== 8< ========= */
-
 #if defined(ALCP_BUILD_OS_WINDOWS)
     #if defined(VC)
         #define ALCP_BUILD_COMPILER_IS_VC       1

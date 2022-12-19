@@ -27,7 +27,7 @@
 set(UTILS_SRCS
   bignum.cc
   logger.cc
-  mempool.cc
+  #mempool.cc
   console_logger.cc
   )
 
