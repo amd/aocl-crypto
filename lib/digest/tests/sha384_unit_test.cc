@@ -26,7 +26,7 @@
  *
  */
 
-#include "digest/sha2_512.hh"
+#include "digest/sha2_384.hh"
 #include "gtest/gtest.h"
 
 namespace {
