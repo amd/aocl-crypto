@@ -26,9 +26,9 @@
  *
  */
 
+#include "alcp/utils/cpuid.hh"
 #include "capi/rng/builder.hh"
 #include "rng.hh"
-#include "utils/cpuid.hh"
 
 #include "error.hh"
 

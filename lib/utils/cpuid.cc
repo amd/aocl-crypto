@@ -26,7 +26,7 @@
  *
  */
 
-#include "utils/cpuid.hh"
+#include "alcp/utils/cpuid.hh"
 #include "config.h"
 #ifdef ALCP_ENABLE_AOCL_CPUID
 #include "alci/cpu_features.h"

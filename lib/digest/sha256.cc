@@ -34,9 +34,9 @@
 #include "digest/sha_avx2.hh"
 #include "digest/shani.hh"
 
+#include "alcp/utils/cpuid.hh"
 #include "utils/bits.hh"
 #include "utils/copy.hh"
-#include "utils/cpuid.hh"
 #include "utils/endian.hh"
 
 namespace utils = alcp::utils;

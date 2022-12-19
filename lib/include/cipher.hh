@@ -28,21 +28,19 @@
 
 #pragma once
 
-#include "utils/cpuid.hh"
+/* Standard headers*/
 #include <array>
 #include <cstdint>
 #include <functional>
+#include <iostream>
 
+/* CAPI Headers */
 #include "alcp/cipher.h"
-#ifdef USE_AOCL_CPUID
-#include "alci/cpu_features.h"
-#endif
 
+/* Custom C++ headers */
+#include "alcp/utils/cpuid.hh"
 #include "error.hh"
 #include "types.hh"
-
-#include <functional>
-#include <iostream>
 
 namespace alcp {
 namespace cipher {
