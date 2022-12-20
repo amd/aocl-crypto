@@ -1,4 +1,33 @@
 Checks: '-*, readability-identifier-naming'
 CheckOptions:
-# - { key: readability-identifier-naming.ClassCase,           value: CamelCase  }
- - { key: readability-identifier-naming.LocalPointerPrefix,         value: p,p_ }
+# Chap 2
+ - { key: readability-identifier-naming.ClassCase,           value: CamelCase  }
+# Chap 3
+ - { key: readability-identifier-naming.ClassConstantCase,           value: CamelCase  }
+ - { key: readability-identifier-naming.ClassConstantPrefix,           value: c  }
+# Chap 4
+ - { key: readability-identifier-naming.ClassMemberCase,           value: lower_case  }
+ - { key: readability-identifier-naming.ClassMemberPrefix,           value: m_  }
+# Chap 5
+ - { key: readability-identifier-naming.ClassMethodCase,           value: lower_case  }
+# Chap 6
+ - { key: readability-identifier-naming.ConstantCase,           value: CamelCase  }
+ - { key: readability-identifier-naming.ConstantPrefix,           value: c  }
+# Chap 7
+ - { key: readability-identifier-naming.ConstantMemberCase,           value: CamelCase  }
+ - { key: readability-identifier-naming.ConstantMemberPrefix,           value: c  }
+# Chap 8
+ - { key: readability-identifier-naming.ConstantParameterCase,           value: CamelCase  }
+ - { key: readability-identifier-naming.ConstantParameterPrefix,           value: c  }
+# Chap 9
+ - { key: readability-identifier-naming.ConstantPointerParameterCase,           value: CamelCase  }
+ - { key: readability-identifier-naming.ConstantPointerParameterPrefix,           value: pc  }
+# Chap 10
+ - { key: readability-identifier-naming.ConstexprFunctionCase,           value: CamelCase  }
+# Chap 11
+ - { key: readability-identifier-naming.ConstexprMethodCase,           value: camelBack }
+# Chap 24
+ - { key: readability-identifier-naming.LocalPointerPrefix,         value: p_ }
+ - { key: readability-identifier-naming.LocalPointerCase,         value: lower_case }
+# Chap 25
+ - { key: readability-identifier-naming.LocalVariableCase,         value: lower_case }
