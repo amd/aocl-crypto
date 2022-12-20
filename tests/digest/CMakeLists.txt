@@ -27,7 +27,7 @@ INCLUDE(FetchContent)
 INCLUDE(GoogleTest)
 FetchContent_Declare(gtest
     GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG 4523B6410BFCD3289597FA2B5B6E18DE)
+    GIT_TAG release-1.12.1)
 FetchContent_MakeAvailable(gtest)
 
 # Basic sources and libs needed for ALCP
