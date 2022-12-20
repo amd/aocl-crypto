@@ -36,21 +36,11 @@ endif(UNIX)
 CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 PROJECT (ALCP)
 
-# check cmake min required version
-SET(CMAKE_MIN_REQ "3.1.0")
-IF(${CMAKE_VERSION} VERSION_LESS ${CMAKE_MIN_REQ})
-    MESSAGE(FATAL_ERROR "CMake version detected: ${CMAKE_VERSION}, Minimum reqd version is CMake ${CMAKE_MIN_REQ}!")
-ENDIF()
+#FIXME: is this to be made common for win and lin?
+alcp_check_cmake_version()
 
-#check min reqd compiler versions
-SET(GCC_MIN_REQ "10.3.0")
-IF(${CMAKE_C_COMPILER_VERSION} VERSION_LESS ${GCC_MIN_REQ})
-    MESSAGE(FATAL_ERROR "Using c compiler version ${CMAKE_C_COMPILER_VERSION},min. reqd version is ${GCC_MIN_REQ}!")
-ENDIF()
-IF(${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS ${GCC_MIN_REQ})
-    MESSAGE(FATAL_ERROR "Using c++ compiler version ${CMAKE_CXX_COMPILER_VERSION},min. reqd version is ${GCC_MIN_REQ}!")
-ENDIF()
-#FIXME: once AOCC support is fixed, check for min required versions for aocc as well
+# check for compiler version
+alcp_check_compiler_version()
 
 # SPECIFY THE C STANDARD
 SET(CMAKE_C_STANDARD 11)
@@ -100,11 +90,10 @@ set(OPENSSL_INSTALL_DIR "" CACHE STRING "OPENSSL INSTALLED DIRECTORY FOR TESTING
 set(IPP_INSTALL_DIR "" CACHE STRING "IPPCP INSTALLED DIRECTORY FOR TESTING AND BENCHMARKING")
 
 # misc options
-OPTION(ALCP_USE_ASAN "COMPILE WITH ASAN TOOL SUPPORT TO DETECT MEMORY ERRORS" OFF) 
-IF (ALCP_USE_ASAN)
-	LINK_LIBRARIES(asan)
-	ADD_COMPILE_OPTIONS(-static-libasan -fsanitize=address)
-ENDIF()
+OPTION(ALCP_USE_ASAN "COMPILE WITH ASAN TOOL SUPPORT TO DETECT MEMORY ERRORS" OFF)
+if(ALCP_USE_ASAN)
+    alcp_add_asan_flags()
+endif()
 
 IF (NOT DEFINED ALCP_BIGNUM_USE_OPENSSL)
 	SET (ALCP_BIGNUM_USE_OPENSSL ON)
@@ -112,10 +101,8 @@ ENDIF()
 
 # Generate Configuration config.h
 GEN_CONF()
-
 if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
-	LINK_LIBRARIES(gcov)
-	ADD_COMPILE_OPTIONS(-O0 -fprofile-arcs -ftest-coverage  --coverage )
+    alcp_add_coverage_flags()
 endif()
 
 IF (NOT DEFINED BUILD_SHARED_LIBS)

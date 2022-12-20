@@ -1,3 +1,11 @@
+
+
+# check compiler version
+function(alcp_check_compiler_version)
+    set(CLANG_MIN_REQ "x.x.x")
+    # FIXME set and add min version checks for clang / msvc compilers
+endfunction(alcp_check_compiler_version)
+
 # Generic Warnings
 function(alcp_get_cflags_warnings)
     set(ALCP_CFLAGS_WARNINGS  "/W4" CACHE INTERNAL "")
