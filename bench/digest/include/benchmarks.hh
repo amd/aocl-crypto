@@ -77,7 +77,8 @@ void inline Digest_Bench(benchmark::State& state,
     /* FIXME: we can add the digest len as a param later on.
        For now, 256 is the most commonly used case.
     */
-    if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
+    if (info.dt_mode.dm_sha3 == ALC_SHAKE_128
+        || info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
         db->init(info, 256);
     }
     for (auto _ : state) {
