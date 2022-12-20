@@ -33,7 +33,8 @@
 #include <vector>
 
 #include "digest/sha3.hh"
-#include "digest/sha3_avx2.hh"
+#include "digest/sha3_inplace.hh"
+#include "digest/sha3_zen3.hh"
 #include "utils/bits.hh"
 #include "utils/copy.hh"
 #include "utils/endian.hh"
@@ -46,66 +47,16 @@ namespace utils = alcp::utils;
 
 namespace alcp::digest {
 
-/*
- * Round constants:
- * For each round, there is one round constant
- * Values are first 64 buts. These are used only in the Iota Step of the round
- * function
- */
-// clang-format off
-static constexpr Uint64 cRoundConstants[24] = {
-    0x0000000000000001,
-    0x0000000000008082,
-    0x800000000000808A,
-    0x8000000080008000,
-    0x000000000000808B,
-    0x0000000080000001,
-    0x8000000080008081,
-    0x8000000000008009,
-    0x000000000000008A,
-    0x0000000000000088,
-    0x0000000080008009,
-    0x000000008000000A,
-    0x000000008000808B,
-    0x800000000000008B,
-    0x8000000000008089,
-    0x8000000000008003,
-    0x8000000000008002,
-    0x8000000000000080,
-    0x000000000000800A,
-    0x800000008000000A,
-    0x8000000080008081,
-    0x8000000000008080,
-    0x0000000080000001,
-    0x8000000080008008
-};
-
-// matrix dimension
-static constexpr Uint8 cDim = 5;
-
-/*
- * Rotation constants:
- * They take each of the 25 lanes of m_state i.e., word of 64 bits.
- * And rotate it by a fixed number of positions
- */
-static constexpr Uint8 cRotationConstants [cDim][cDim] =
-{
-    0, 1, 62, 28, 27,
-    36, 44, 6, 55, 20,
-    3, 10, 43, 25, 39,
-    41, 45, 15, 21, 8,
-    18, 2, 61, 56, 14
-};
-// clang-format on
+#include "digest/sha3_inplace.cc.inc"
 
 // maximum size of message block in bits is used for shake128 digest
 static constexpr Uint32 MaxDigestBlockSizeBits = 1344;
 
 static bool
-isAvx2Available()
+isInplaceAvailable()
 {
-    static bool s_avx2_available = true;
-    return s_avx2_available;
+    static bool s_inplace_available = true;
+    return s_inplace_available;
 }
 
 class Sha3::Impl
@@ -141,7 +92,7 @@ class Sha3::Impl
     Uint8 m_buffer[MaxDigestBlockSizeBits / 8];
     // state matrix to represent the keccak 1600 bits representation of
     // intermediate hash
-    Uint64 m_state[cDim][cDim];
+    __attribute__((aligned(64))) Uint64 m_state[cDim][cDim];
     // flat representation of the state, used in absorbing the user message.
     Uint64* m_state_flat = &m_state[0][0];
     // buffer to copy intermediate hash value
@@ -221,8 +172,19 @@ Sha3::Impl::squeezeChunk()
 {
     Uint64 hash_copied = 0;
 
-    return avx2::Sha3Finalize(
-        (Uint8*)m_state_flat, &m_hash[0], m_hash_size, m_chunk_size);
+    static bool zen3_available = isZen3() || isZen4();
+
+    if (zen3_available) {
+        return zen3::Sha3Finalize(
+            (Uint8*)m_state_flat, &m_hash[0], m_hash_size, m_chunk_size);
+    }
+
+    static bool inplace_available = isInplaceAvailable();
+
+    if (inplace_available) {
+        return Sha3Finalize(
+            (Uint8*)m_state_flat, &m_hash[0], m_hash_size, m_chunk_size);
+    }
 
     while (m_chunk_size <= m_hash_size - hash_copied) {
         Uint64 data_chunk_copied = std::min(m_hash_size, m_chunk_size);
@@ -334,10 +296,17 @@ Sha3::Impl::processChunk(const Uint8* pSrc, Uint64 len)
     Uint64  msg_size       = len;
     Uint64* p_msg_buffer64 = (Uint64*)pSrc;
 
-    static bool avx2_available = isAvx2Available();
-    if (avx2_available) {
-        return avx2::Sha3Update(
+    static bool zen3_available = isZen3() || isZen4();
+
+    if (zen3_available) {
+        return zen3::Sha3Update(
             m_state_flat, p_msg_buffer64, msg_size, m_chunk_size);
+    }
+
+    static bool inplace_available = isInplaceAvailable();
+
+    if (inplace_available) {
+        return Sha3Update(m_state_flat, p_msg_buffer64, msg_size, m_chunk_size);
     }
 
     while (msg_size) {

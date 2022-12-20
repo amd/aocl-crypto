@@ -30,7 +30,7 @@
 
 #include "error.hh"
 
-namespace alcp::digest { namespace avx2 {
+namespace alcp::digest { namespace zen3 {
 
     alc_error_t Sha3Update(Uint64* state,
                            Uint64* pSrc,
@@ -41,4 +41,4 @@ namespace alcp::digest { namespace avx2 {
                       Uint8* hash,
                       Uint64 hash_size,
                       Uint64 chunk_size);
-}} // namespace alcp::digest::avx2
+}} // namespace alcp::digest::zen3
