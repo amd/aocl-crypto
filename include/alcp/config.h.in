@@ -38,6 +38,11 @@
 #cmakedefine AOCL_RELEASE_VERSION "@AOCL_RELEASE_VERSION@"
 #cmakedefine ALCP_RELEASE_VERSION_STRING "@ALCP_RELEASE_VERSION_STRING@"
 
+// Compiler Detection
+#cmakedefine COMPILER_IS_CLANG
+#cmakedefine COMPILER_IS_GCC
+#cmakedefine COMPILER_IS_MSVC
+
 // OS Identification
 #cmakedefine ALCP_BUILD_OS_LINUX
 #cmakedefine ALCP_BUILD_OS_WINDOWS
