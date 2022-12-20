@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include "alcp/error.h"
+#include "alcp/macros.h"
 #include "alcp/types.h"
 
 #include "types.hh"
@@ -35,18 +37,15 @@
 #include <memory>
 
 namespace alcp {
-#include "alcp/error.h"
-#include "alcp/macros.h"
-};
-
-namespace alcp {
 
 class Error
 {
   public:
-    ALCP_API_EXPORT static void setGeneric(alc_error_t& err, alc_error_generic_t gen);
-    ALCP_API_EXPORT static void setDetail(alc_error_t& err, alc_error_generic_t det);
-    static void setModule(alc_error_t& err, uint16_t mod);
+    ALCP_API_EXPORT static void setGeneric(alc_error_t&        err,
+                                           alc_error_generic_t gen);
+    ALCP_API_EXPORT static void setDetail(alc_error_t&        err,
+                                          alc_error_generic_t det);
+    static void                 setModule(alc_error_t& err, uint16_t mod);
     static int  print(alc_error_t& err, uint8_t* buf, uint64_t len);
     static bool isError(alc_error_t& err) { return err != 0; }
 
@@ -56,4 +55,3 @@ class Error
 };
 
 } // namespace alcp
-
