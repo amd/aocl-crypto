@@ -98,7 +98,10 @@ namespace rng {
         virtual ~Rng() = default;
 
       private:
+// FIXME: Unused Variable
+#if 0
         bool m_initialized = false;
+#endif
     };
 
     class OsRng final : public Rng

@@ -57,8 +57,11 @@ class Algorithm
     ~Algorithm();
 
   private:
-    std::string   m_name;
+    std::string m_name;
+// FIXME: Unused variable
+#if 0
     AlgorithmType m_type;
+#endif
 };
 
 #if 0

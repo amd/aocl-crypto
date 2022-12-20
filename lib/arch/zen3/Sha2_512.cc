@@ -26,14 +26,15 @@
  *
  */
 
+#include <iostream>
 #include <string.h>
 #include <x86intrin.h>
 
+#include "config.h"
 #include "digest.hh"
 #include "digest/sha2_512.hh"
 #include "digest/sha_avx256.hh"
 #include "error.hh"
-#include <iostream>
 
 #define SHA512_WORDS_IN_128_BIT_VEC                                            \
     2 // Number of sha512 words that can be accomodated in 128 bit vector
@@ -46,7 +47,7 @@
 #define SHA512_STATE_SIZE_IN_256_BIT_VEC                                       \
     2 // Number of avx2 registers needed to STORE THE SHA512 state
 
-#if defined(__GNUC__)
+#if defined(COMPILER_IS_GCC)
 #define UNROLL_8  _Pragma("GCC unroll 8")
 #define UNROLL_16 _Pragma("GCC unroll 16")
 #define UNROLL_80 _Pragma("GCC unroll 80")

@@ -26,7 +26,7 @@
  *
  */
 
-#if defined(__GNUC__)
+#ifdef COMPILER_IS_GCC
 #define UNROLL_5 _Pragma("GCC unroll 5")
 #define UNROLL_6 _Pragma("GCC unroll 6")
 #else

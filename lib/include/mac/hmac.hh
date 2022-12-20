@@ -40,7 +40,7 @@ enum hmac_state_t
 };
 
 namespace alcp::mac {
-class Hmac : public Mac
+class Hmac final : public Mac
 {
 
   public:
@@ -86,8 +86,8 @@ class Hmac : public Mac
     hmac_state_t getState() const;
 
     // TODO: Implement Finish and Reset after Builder design is complete
-    void finish(){};
-    void reset(){};
+    void finish() override{};
+    void reset() override{};
 
     ~Hmac();
 

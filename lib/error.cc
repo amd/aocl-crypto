@@ -44,6 +44,8 @@ namespace alcp {
 #define ERROR_RESERVED_LEN                                                     \
     (64 - (ERROR_MODULE_LEN + ERROR_GENERAL_LEN + ERROR_DETAIL_LEN))
 
+// FIXME: Unused Functions
+#if 0
 static inline uint64_t
 __alc_extract64(uint64_t value, int start, int length)
 {
@@ -57,7 +59,7 @@ __alc_extract64(uint64_t value, int start, int length)
     __alc_extract64(x.e_val, ERROR_GENERAL_SHIFT, ERROR_GENERAL_LEN)
 #define ALC_ERROR_MODULE(x)                                                    \
     __alc_extract64(x.e_val, ERROR_MODULE_SHIFT, ERROR_MODULE_LEN)
-
+#endif
 class Impl
 {
   public:

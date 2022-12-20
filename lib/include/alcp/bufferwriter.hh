@@ -78,7 +78,7 @@ class BufferWriter
                            size_t offset = 0) const noexcept override;
 
   private:
-    void* const m_ptr;
+    void* const m_ptr = nullptr;
     size_t      m_length;
 };
 

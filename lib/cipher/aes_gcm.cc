@@ -194,7 +194,7 @@ Gcm::getTag(Uint8* pOutput, Uint64 len)
     if (m_iv == nullptr) {
         err = ALC_ERROR_BAD_STATE;
         return err;
-    } else if (len > 16 && len == 0) {
+    } else if (len > 16 || len == 0) {
         err = ALC_ERROR_INVALID_SIZE;
         return err;
     }

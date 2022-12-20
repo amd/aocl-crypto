@@ -175,7 +175,9 @@ TEST(XTS, initiantiation_with_valid_input)
     alc_key_info_t tweakKeyInfo = {
         ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 128, tweakKey
     };
-    const alc_cipher_algo_info_t aesInfo = { ALC_MODE, iv, { &tweakKeyInfo } };
+    const alc_cipher_algo_info_t aesInfo = { ALC_MODE,
+                                             iv,
+                                             { { &tweakKeyInfo } } };
 
     const alc_key_info_t keyInfo = {
         ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 128, key
@@ -207,7 +209,9 @@ TEST(XTS, initiantiation_with_invalid_iv)
     alc_key_info_t tweakKeyInfo = {
         ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 256, tweakKey
     };
-    const alc_cipher_algo_info_t aesInfo = { ALC_MODE, iv, { &tweakKeyInfo } };
+    const alc_cipher_algo_info_t aesInfo = { ALC_MODE,
+                                             iv,
+                                             { { &tweakKeyInfo } } };
 
     const alc_key_info_t keyInfo = {
         ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 256, key
@@ -240,7 +244,9 @@ TEST(XTS, valid_all_sizes_encrypt_decrypt_test)
     alc_key_info_t tweakKeyInfo = {
         ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 256, tweakKey
     };
-    const alc_cipher_algo_info_t aesInfo = { ALC_MODE, iv, { &tweakKeyInfo } };
+    const alc_cipher_algo_info_t aesInfo = { ALC_MODE,
+                                             iv,
+                                             { { &tweakKeyInfo } } };
 
     const alc_key_info_t keyInfo = {
         ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 256, key
@@ -285,7 +291,9 @@ TEST(XTS, invalid_len_encrypt_decrypt_test)
     alc_key_info_t tweakKeyInfo = {
         ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 256, tweakKey
     };
-    const alc_cipher_algo_info_t aesInfo = { ALC_MODE, iv, { &tweakKeyInfo } };
+    const alc_cipher_algo_info_t aesInfo = { ALC_MODE,
+                                             iv,
+                                             { { &tweakKeyInfo } } };
 
     const alc_key_info_t keyInfo = {
         ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 256, key
@@ -342,7 +350,7 @@ class XTS_KAT
 
         const alc_cipher_algo_info_t aesInfo = { ALC_MODE,
                                                  &(iv.at(0)),
-                                                 { &tweakKeyInfo } };
+                                                 { { &tweakKeyInfo } } };
 
         const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
                                          ALC_KEY_FMT_RAW,

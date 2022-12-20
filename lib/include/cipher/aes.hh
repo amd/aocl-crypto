@@ -367,8 +367,9 @@ class ALCP_API_EXPORT Gcm final
      * \param
      * \return
      */
+
     virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
-                             alc_error_t&             err) 
+                             alc_error_t&             err) override
     {
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 
@@ -543,7 +544,7 @@ class ALCP_API_EXPORT Ccm final
      * \return
      */
     virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
-                             alc_error_t&             err)
+                             alc_error_t&             err) override
     {
         Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
 

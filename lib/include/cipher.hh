@@ -173,7 +173,6 @@ class Cipher
     }
 #endif
 
-
   protected:
     Cipher() {}
 

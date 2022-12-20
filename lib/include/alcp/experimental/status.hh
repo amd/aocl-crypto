@@ -50,6 +50,10 @@ class Status final
         , m_message{ "All is well" }
     {}
 
+    Status(ErrorCode code)
+        : m_error{ code }
+    {}
+
     Status(ErrorCode code, std::string_view msg)
         : m_error{ code }
         , m_message{ msg }

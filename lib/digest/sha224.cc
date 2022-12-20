@@ -42,15 +42,20 @@ static constexpr Uint32 cIv[] = { 0xc1059ed8, 0x367cd507, 0x3070dd17,
                                   0x64f98fa7, 0xbefa4fa4 };
 
 static constexpr Uint64 /* define word size */
-    cWordSize                               = 32,
-    /* num rounds in sha256 */ cNumRounds   = 64,
+    // clang-format off
     /* chunk size in bits */ cChunkSizeBits = 512,
     /* chunks to proces */ cChunkSize       = cChunkSizeBits / 8,
+    /* same in bits */ cHashSizeBits        = 224,
+    /* Hash size in bytes */ cHashSize      = cHashSizeBits / 8;
+// FIXME: Unused Variables
+#if 0
+    cWordSize                               = 32,
+    /* num rounds in sha256 */ cNumRounds   = 64,
     /*  */ cChunkSizeMask                   = cChunkSize - 1,
     /* same in words */ cChunkSizeWords     = cChunkSizeBits / cWordSize,
-    /* same in bits */ cHashSizeBits        = 224,
-    /* Hash size in bytes */ cHashSize      = cHashSizeBits / 8,
-    cHashSizeWords                          = cHashSizeBits / cWordSize;
+    cHashSizeWords                          = cHashSizeBits / cWordSize,
+#endif
+// clang-format on
 
 Sha224::Sha224(const alc_digest_info_t& rDInfo)
     : Sha2{ "sha2-224" }

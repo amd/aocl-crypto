@@ -47,7 +47,10 @@ namespace alcp { namespace random_number {
         size_t      reseed() override;
 
       private:
+        // FIXME: Unused Variable
+#if 0
         Uint32 m_fd;
+#endif
         // class Impl;
         // std::unique_ptr<Impl> m_pimpl;
     };

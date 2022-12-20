@@ -42,7 +42,7 @@
 #define SHA512_CHUNK_NUM_VECT_AVX2                                             \
     4 // Number of avx2 registers needed to accomodate a sha512 block
 
-#if defined(__GNUC__)
+#ifdef COMPILER_IS_GCC
 #define UNROLL_8  _Pragma("GCC unroll 8")
 #define UNROLL_16 _Pragma("GCC unroll 16")
 #define UNROLL_80 _Pragma("GCC unroll 80")
@@ -54,6 +54,8 @@
 
 namespace alcp::digest { namespace avx2 {
 
+// FIXME: Unused Variable
+#if 0
     __attribute__((aligned(64))) static const Uint64 sha512_hash_constsx2[] = {
         0x428a2f98d728ae22, 0x7137449123ef65cd, 0x428a2f98d728ae22,
         0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f, 0xe9b5dba58189dbbc,
@@ -110,6 +112,7 @@ namespace alcp::digest { namespace avx2 {
         0x5fcb6fab3ad6faec, 0x6c44198c4a475817, 0x5fcb6fab3ad6faec,
         0x6c44198c4a475817
     };
+#endif
 
     static inline void rotate_x(__m128i x[8])
     {

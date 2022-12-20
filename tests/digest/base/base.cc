@@ -32,8 +32,8 @@
 #ifdef __linux__
 #include <unistd.h>
 #else
-#include <io.h>
 #include <direct.h>
+#include <io.h>
 #endif
 
 namespace alcp::testing {
@@ -77,11 +77,11 @@ void
 ExecRecPlay::init(std::string str_mode, std::string dir_name, bool playback)
 {
     if (!isPathExist(dir_name)) {
-    #ifdef __linux__
+#ifdef __linux__
         mkdir(dir_name.c_str(), 0755);
-    #elif WIN32
+#elif WIN32
         _mkdir(dir_name.c_str());
-    #endif
+#endif
     }
     if (!playback) { // Record
         // Binary File, need to open binary
@@ -281,7 +281,7 @@ DataSet::readMsgDigest()
         return false;
     }
     int pos1 = line.find(","); // End of Msg
-    if ((pos1 == -1)) {
+    if (pos1 == -1) {
         printf("Error in parsing csv\n");
         return false;
     }

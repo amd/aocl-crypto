@@ -153,13 +153,12 @@ class Error
         if (it != str_map.end()) {
             return it->second;
         } else {
-            return std::string("Unknown Error");
+            return "Unknown Error";
         }
     }
 
   protected:
     ErrorCode m_error_code;
-
 };
 
-} //namespace alcp
+} // namespace alcp
