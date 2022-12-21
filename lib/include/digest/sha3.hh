@@ -33,6 +33,19 @@
 
 namespace alcp::digest {
 
+// matrix dimension
+static constexpr Uint8 cDim = 5;
+
+/*
+ * Rotation constants:
+ * They take each of the 25 lanes of m_state i.e., word of 64 bits.
+ * And rotate it by a fixed number of positions
+ */
+static constexpr Uint8 cRotationConstants[cDim][cDim] = {
+    0,  1,  62, 28, 27, 36, 44, 6,  55, 20, 3,  10, 43,
+    25, 39, 41, 45, 15, 21, 8,  18, 2,  61, 56, 14
+};
+
 class ALCP_API_EXPORT Sha3 : public Digest
 {
   public:

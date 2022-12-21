@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (c) 2019-2022, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,32 +26,11 @@
  *
  */
 
-#pragma once
+#include "digest/sha3.hh"
+#include "digest.hh"
+#include "error.hh"
+#include "utils/copy.hh"
 
-#include "alcp/error.h"
-#include "alcp/macros.h"
-#include "alcp/types.h"
-
-#include "types.hh"
-
-#include <memory>
-
-namespace alcp {
-
-class Error
-{
-  public:
-    ALCP_API_EXPORT static void setGeneric(alc_error_t&        err,
-                                           alc_error_generic_t gen);
-    ALCP_API_EXPORT static void setDetail(alc_error_t&        err,
-                                          alc_error_generic_t det);
-    static void                 setModule(alc_error_t& err, uint16_t mod);
-    static int  print(alc_error_t& err, uint8_t* buf, uint64_t len);
-    static bool isError(alc_error_t& err) { return err != 0; }
-
-  private:
-    Error();
-    ~Error();
-};
-
-} // namespace alcp
+namespace alcp::digest { namespace zen3 {
+#include "digest/sha3_inplace.cc.inc"
+}} // namespace alcp::digest::zen3

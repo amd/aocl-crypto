@@ -28,30 +28,17 @@
 
 #pragma once
 
-#include "alcp/error.h"
-#include "alcp/macros.h"
-#include "alcp/types.h"
+#include "error.hh"
 
-#include "types.hh"
+namespace alcp::digest { namespace zen3 {
 
-#include <memory>
+    alc_error_t Sha3Update(Uint64* state,
+                           Uint64* pSrc,
+                           Uint64  msg_size,
+                           Uint64  m_src_size_u64);
 
-namespace alcp {
-
-class Error
-{
-  public:
-    ALCP_API_EXPORT static void setGeneric(alc_error_t&        err,
-                                           alc_error_generic_t gen);
-    ALCP_API_EXPORT static void setDetail(alc_error_t&        err,
-                                          alc_error_generic_t det);
-    static void                 setModule(alc_error_t& err, uint16_t mod);
-    static int  print(alc_error_t& err, uint8_t* buf, uint64_t len);
-    static bool isError(alc_error_t& err) { return err != 0; }
-
-  private:
-    Error();
-    ~Error();
-};
-
-} // namespace alcp
+    void Sha3Finalize(Uint8* state,
+                      Uint8* hash,
+                      Uint64 hash_size,
+                      Uint64 chunk_size);
+}} // namespace alcp::digest::zen3
