@@ -31,8 +31,8 @@
 
 #include "digest.hh"
 #include "digest/sha2.hh"
-#include "digest/sha2_512.hh"
 #include "digest/sha2_384.hh"
+#include "digest/sha2_512.hh"
 #include "digest/sha3.hh"
 
 namespace alcp::digest {
@@ -190,7 +190,8 @@ class Sha3Builder
                              Context&                 rCtx)
     {
         alc_error_t err  = ALC_ERROR_NONE;
-        auto        algo = new Sha3(rDigestInfo);
+        auto        addr = reinterpret_cast<Uint8*>(&rCtx) + sizeof(rCtx);
+        auto        algo = new (addr) Sha3(rDigestInfo);
         rCtx.m_digest    = static_cast<void*>(algo);
         rCtx.update      = __sha_update_wrapper<Sha3>;
         rCtx.copy        = __sha_copy_wrapper<Sha3>;
