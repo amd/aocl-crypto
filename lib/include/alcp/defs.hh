@@ -142,7 +142,7 @@
 
 #ifndef ALCP_DEFS_VIRTUAL_DTOR
 #define ALCP_DEFS_VIRTUAL_DTOR(CLASS_NAME)                                               \
-    virtual ~ CLASS_NAME() = 0;
+    virtual ~ CLASS_NAME() = 0
 #endif
 
 #ifndef ALCP_DEFS_DEFAULT_MOVE_CTOR

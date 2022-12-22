@@ -34,6 +34,8 @@ namespace alcp {
 
 class BigNum final
 {
+  using Status = alcp::base::Status;
+
   public:
     BigNum();
     ~BigNum();

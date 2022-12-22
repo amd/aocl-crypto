@@ -26,7 +26,6 @@
  *
  */
 
-#include "alcp/experimental/types.hh"
 #include "alcp/utils/bignum.hh"
 
 #include "gtest/gtest.h"
@@ -36,6 +35,7 @@
 
 // using namespace std;
 using namespace alcp;
+using namespace alcp::base;
 
 namespace {
 

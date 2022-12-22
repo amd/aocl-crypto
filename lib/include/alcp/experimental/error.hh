@@ -25,21 +25,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "types.hh"
-
-#include <string>
-#include <string_view>
-#include <unordered_map>
-
 #pragma once
 
-namespace alcp {
+#include "alcp/errorbase.hh"
 
-/**
- * Some of the Error codes are similar but based on the
- * application one makes more sense than other.
- * Application developers are encouraged to use them accordingly.
- */
+namespace alcp::base {
+
 enum ErrorCode : Uint16
 {
     /* ErrorCode:eOk
@@ -103,40 +94,49 @@ enum ErrorCode : Uint16
     eMaxDontUse = 128,
 };
 
-class Error
+class GenericError final : public ErrorBase
 {
+
+  protected:
+    virtual bool isEq(IError const& lhs, IError const& rhs) const
+    {
+        auto l = dynamic_cast<const GenericError&>(lhs);
+        auto r = dynamic_cast<const GenericError&>(rhs);
+
+        return l.getModuleType() == r.getModuleType()
+               && l.getModuleError() == r.getModuleError();
+    }
+
   public:
-    Error()
-        : m_error_code{ ErrorCode::eOk }
+    GenericError()
+        : ErrorBase{ ErrorCode::eOk }
     {}
 
-    Error(ErrorCode ecode)
-        : m_error_code{ ecode }
-    {}
-
-    virtual ~Error(){};
-
-    virtual bool operator==(const Error& other) const
+    GenericError(ErrorCode ecode)
     {
-        return this->m_error_code == other.m_error_code;
+        ErrorBase::setModuleType(0);
+        ErrorBase::setModuleError(static_cast<Uint16>(ecode));
     }
 
-    virtual bool operator!=(const Error& other) const
-    {
-        return this->m_error_code not_eq other.m_error_code;
-    }
+    virtual ~GenericError(){};
 
     /**
      * @brief
      *
      * @return Uint64   A combined error code,
      */
-    virtual Uint64 code() const { return static_cast<Uint64>(m_error_code); }
+    virtual Uint64 code() const override { return ErrorBase::code(); }
 
-    virtual std::string_view message() const
+    /**
+     * @detail
+     *  Convert a given error code into message
+     * @param
+     * @return  String containing message description of the error
+     */
+    virtual const String message() const override
     {
-        using ec        = alcp::ErrorCode;
-        using ErrorMapT = std::unordered_map<ErrorCode, std::string>;
+        using ec        = alcp::base::ErrorCode;
+        using ErrorMapT = std::unordered_map<Uint16, std::string>;
 
         static const ErrorMapT str_map = {
             { ec::eOk, "All is Well !!" },
@@ -148,7 +148,7 @@ class Error
             { ec::eNotImplemented, "Not Implemented" },
         };
 
-        ErrorMapT::const_iterator it = str_map.find(m_error_code);
+        ErrorMapT::const_iterator it = str_map.find(getModuleError());
 
         if (it != str_map.end()) {
             return it->second;
@@ -161,4 +161,4 @@ class Error
     ErrorCode m_error_code;
 };
 
-} // namespace alcp
+} // namespace alcp::base

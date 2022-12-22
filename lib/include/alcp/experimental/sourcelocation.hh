@@ -27,9 +27,30 @@
  */
 #pragma once
 
-#include "types.hh"
+#include "alcp/types.hh"
+
+#include <sstream>
 
 namespace alcp {
+
+
+#if defined(__GNUC__) || defined(CLANG)
+template<typename... Args>
+String
+formatter(Args&&... args)
+{
+    std::stringstream oss;
+    // using fold expression
+    (oss << ... << args);
+    return oss.str();
+}
+
+#else
+#define formatter(const char* format, ...) printf(format, __VA_ARGS__)
+#define va_formatter(const char* format, va_list ap) vprintf(format, ap)
+#endif
+
+String demangle(const char*);
 
 /**
  * Describes the location of a line of code.

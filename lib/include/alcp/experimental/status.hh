@@ -28,9 +28,11 @@
 
 #pragma once
 
-#include "error.hh"
+#include "alcp/experimental/error.hh"
+#include "alcp/interface/Ierror.hh"
+#include "alcp/types.hh"
 
-namespace alcp {
+namespace alcp::base {
 
 /*
  * Example:
@@ -45,10 +47,7 @@ class Status final
 {
   public:
     // Should initialize with an OK status
-    Status()
-        : m_error{ ErrorCode::eOk }
-        , m_message{ "All is well" }
-    {}
+    Status() {}
 
     Status(ErrorCode code)
         : m_error{ code }
@@ -59,6 +58,24 @@ class Status final
         , m_message{ msg }
     {}
 
+    Status(StringView msg)
+        : m_err_message { msg }
+    {
+    }
+
+    Status(IError& ie, StringView msg)
+        : m_code { ie.code() }
+        ,m_err_message { msg }
+    {
+    }
+
+    Status(IError& ie, const String& msg)
+        : Status{}
+    {
+
+        m_message = makeMessage(ie.message(), msg);
+    }
+
     ALCP_DEFS_DEFAULT_COPY_AND_ASSIGNMENT(Status);
 
     bool operator==(const Status& other) const;
@@ -68,35 +85,92 @@ class Status final
     // All is Well !!! if m_error is eOk or eNone
     ALCP_DEFS_MUST_USE_RETURN bool ok() const;
     std::string_view               message() const { return m_message; }
-    Uint64                         code() const { return m_error.code(); }
+
+    /**
+     * @name code()
+     *
+     * @detail
+     * Returns encoded error code
+     *
+     * @params
+     * n/a
+     *
+     * @result          Uint64          encoded error code
+     */
+    Uint64 code() const { return m_code; }
+
+    /**
+     * @name update()
+     *
+     * @detail
+     * Update the error code and message only if there was no error earlier;
+     * this is done to presever the very first error that happens
+     *
+     * @param[in]       ie      IError interface from any component
+     *
+     * @return          boolean Indication if the update was successful
+     */
+    bool update(IError& ie, const String& msg)
+    {
+        if (m_code)
+            return false;
+
+        m_code    = ie.code();
+        m_message = makeMessage(ie.message(), msg);
+        return true;
+    }
+
+    bool update(const Status& s)
+    {
+        if (m_code)
+            return false;
+
+        m_code        = s.code();
+        m_err_message = s.message();
+        // m_err_specifics = msg;
+
+        return true;
+    }
 
   private:
-    Error  m_error;
-    string m_message;
+    String& makeMessage(const String& module_error, const String& details)
+    {
+        m_message = module_error + String(" ") + details;
+        return m_message;
+    }
+
+    Uint64 m_code;
+    String m_message;
+
+    StringView m_err_message, m_err_specifics;
 };
 
 inline bool
 Status::operator==(const Status& other) const
 {
-    return this->m_error == other.m_error;
+    return this->m_code == other.m_code;
 }
 
 inline bool
 Status::ok() const
 {
-    return m_error == Error(ErrorCode::eOk);
+    return m_code == 0;
 }
 
 /**
  * @brief StatusOk()
  * Useful function when returning from a function
  *
+ * @detail
  * Status some_function(some_arg_t arg)
  * {
  *    // .. do something important ..
  *
  *    return StatusOk();
  * }
+ *
+ * @return
+ * Status with message and a code.
  */
 inline Status
 StatusOk()
@@ -118,7 +192,7 @@ ALCP_DEFS_MUST_USE_RETURN bool IsNotImplemented(const Status& status);
 ALCP_DEFS_MUST_USE_RETURN bool IsUnknown(const Status& status);
 
 /*
- * Easy to use creators
+ * Handy creators that return Status
  */
 Status AbortedError(std::string_view msg);
 Status AlreadyExistsError(std::string_view msg);
@@ -131,4 +205,4 @@ Status UnknownError(std::string_view msg);
 
 // clang-format on
 
-} // namespace alcp
+} // namespace alcp::base

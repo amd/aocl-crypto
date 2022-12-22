@@ -25,27 +25,33 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "alcp/bufferwriter.hh"
 
-#include "gtest/gtest.h"
+#pragma once
 
-#include <cstddef>
-#include <string>
+#include "alcp/defs.hh"
+#include "alcp/types.hh"
 
-using namespace alcp;
+namespace alcp::base {
 
-TEST(BufferWriterTest, InvalidSize)
+/**
+ * @detail
+ * IError is an interface class for all errors, to be used with
+ * ErrorBase class which defines few necessary methods.
+ */
+
+class IError
 {
-    constexpr int SIZE = 1024;
+  protected:
+    ALCP_DEFS_DEFAULT_CTOR_AND_EMPTY_VIRTUAL_DTOR(IError);
 
-    char* const buf = new char[SIZE];
+  public:
+    virtual const String message() const = 0;
+    virtual Uint64       code() const    = 0;
 
-    BufferWriter bw{ buf, SIZE };
+    bool operator==(const IError& other) { return isEq(*this, other); }
 
-    auto s   = std::string{ "Hello world" };
-    auto ret = bw.write(s.c_str(), s.length());
+  protected:
+    virtual bool isEq(IError const& lhs, IError const& rhs) const = 0;
+};
 
-    EXPECT_EQ(ret, s.length());
-
-    EXPECT_STREQ(s.c_str(), buf);
-}
+} // namespace alcp

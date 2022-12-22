@@ -27,23 +27,23 @@
 
 #pragma once
 
-#include "assert.hh"
-#include "status.hh"
+#include "alcp/experimental/assert.hh"
+#include "alcp/experimental/status.hh"
 
 #include <optional>
 
-namespace alcp {
+namespace alcp::base {
 
 template<typename T>
 class StatusOr
 {
   public:
-    using value_type = T;
-    using type       = T;
+    //using value_type = T;
+    //using type       = T;
 
   public:
     inline StatusOr();
-    inline StatusOr(alcp::Status& sts);
+    inline StatusOr(Status& sts);
 
     inline StatusOr(const T& val);
     inline StatusOr(T&& val);
@@ -83,11 +83,11 @@ class StatusOr
 
 template<typename T>
 inline StatusOr<T>::StatusOr()
-		: m_status{ ErrorCode::eUnknown }
+		: m_status{ }
 {}
 
 template<typename T>
-inline StatusOr<T>::StatusOr(alcp::Status& sts)
+inline StatusOr<T>::StatusOr(Status& sts)
     : m_status{ sts }
 {
     ALCP_ASSERT(!m_status.ok(), "Assigned status not ok!!");

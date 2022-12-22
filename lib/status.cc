@@ -25,52 +25,59 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "alcp/base.hh"
 #include "alcp/experimental/error.hh"
-//#include "alcp/experimental/status.hh"
+#include "alcp/experimental/status.hh"
 
-namespace alcp {
+namespace alcp::base {
 
 Status
-AlreadyExistsError(StringView msg)
+AlreadyExistsError(const StringView msg)
 {
-    return Status(ErrorCode::eExists, msg);
+    auto e = GenericError{ErrorCode::eExists};
+    return Status(e, msg);
 }
 
 Status
-InvalidArgumentError(StringView msg)
+InvalidArgumentError(const StringView msg)
 {
-    return Status(ErrorCode::eInvalidArgument, msg);
+    auto e = GenericError { ErrorCode::eInvalidArgument };
+    return Status(e, msg);
 }
 
 Status
-NotFoundError(StringView msg)
+NotFoundError(const StringView msg)
 {
-    return Status(ErrorCode::eNotFound, msg);
+    auto e = GenericError { ErrorCode::eNotFound};
+    return Status(e, msg);
 }
 
 Status
-NotAvailableError(StringView msg)
+NotAvailableError(const StringView msg)
 {
-    return Status(ErrorCode::eNotAvailable, msg);
+    auto e = GenericError { ErrorCode::eNotAvailable};
+    return Status(e, msg);
 }
 
 Status
-NotImplementedError(StringView msg)
+NotImplementedError(const StringView msg)
 {
-    return Status(ErrorCode::eNotImplemented, msg);
+    auto e = GenericError { ErrorCode::eNotImplemented};
+    return Status(e, msg);
 }
 
 Status
-UnknownError(StringView msg)
+UnknownError(const StringView msg)
 {
-    return Status(ErrorCode::eUnknown, msg);
+    auto e = GenericError { ErrorCode::eUnknown};
+    return Status(e, msg);
 }
 
 Status
-InternalError(StringView sv)
+InternalError(const StringView sv)
 {
-    return Status(ErrorCode::eInternal, sv);
+    auto e = GenericError { ErrorCode::eInternal};
+    return Status(e,  sv);
 }
 
 } // namespace alcp
+ 

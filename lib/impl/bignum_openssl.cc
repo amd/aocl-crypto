@@ -49,6 +49,8 @@ namespace alcp {
  * are usable, otherwise use openssl:: prefix to resolve
  */
 using namespace openssl;
+using namespace alcp::base;
+using namespace alcp::utils;
 
 /** Errors thrown by the bignum class */
 class BigNumError : public std::runtime_error
@@ -275,7 +277,7 @@ class BigNum::Impl
                 BN_free(b);
                 BN_set_negative(raw(), true);
             }
-            sts = InternalError("BN_bin2bn");
+            sts.update(InternalError("BN_bin2bn"));
         } else {
             sts = fromUint64(val);
         }

@@ -40,47 +40,11 @@
 #include <string_view>
 #include <vector>
 
-// Few useful types from 'std' so that we dont have to use the std::
-// prefix everytime we refer to them, we also restrict their use in 'alcp'
-// namespace
-namespace alcp {
-
-using std::pair;
-using std::string;
-using std::vector;
-
-using String     = ::std::string;
-using StringView = ::std::string_view;
-
-#if defined(__GNUC__) || defined(CLANG)
-
-template<typename... Args>
-std::string
-formatter(Args&&... args)
-{
-    std::stringstream oss;
-    // using fold expression
-    (oss << ... << args);
-    return oss.str();
-}
-
-#else
-string
-formatter(const char* format, ...) printf(format, __VA_ARGS__);
-string
-va_formatter(const char* format, va_list ap) vprintf(format, ap);
-#endif
-
-string
-demangle(const char*);
-
-} // namespace alcp
-
-
-#include "alcp/experimental/defs.hh"
-#include "alcp/experimental/types.hh"
+#include "alcp/defs.hh"
+#include "alcp/types.hh"
 #include "alcp/experimental/error.hh"
 #include "alcp/experimental/status.hh"
 #include "alcp/experimental/statusor.hh"
 #include "alcp/experimental/exception.hh"
+
 

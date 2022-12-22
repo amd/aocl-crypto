@@ -26,7 +26,6 @@
  *
  */
 
-#include "alcp/base.hh"
 #include "alcp/experimental/sourcelocation.hh"
 
 #include <filesystem>

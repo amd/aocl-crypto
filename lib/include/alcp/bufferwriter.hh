@@ -29,7 +29,6 @@
 #pragma once
 
 #include "alcp/base.hh"
-#include "alcp/experimental/defs.hh"
 #include "alcp/interface/Iwriter.hh"
 #include "alcp/pattern/noncopyable.hh"
 #include <algorithm>
