@@ -99,10 +99,10 @@ create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
 }
 
 void
-encrypt_demo(const Uint8*  plaintxt,
-             const Uint32  len, /*  for both 'plaintxt' and 'ciphertxt' */
-             Uint8*        ciphertxt,
-             const int8_t* iv)
+encrypt_demo(const Uint8* plaintxt,
+             const Uint32 len, /*  for both 'plaintxt' and 'ciphertxt' */
+             Uint8*       ciphertxt,
+             const Uint8* iv)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -139,8 +139,8 @@ decrypt_demo(const Uint8* ciphertxt,
 }
 
 // static char* sample_plaintxt = "Hello World from AOCL Crypto !!!";
-static char* sample_plaintxt =
-    "Happy and Fantastic New Year from AOCL Crypto !!";
+static Uint8* sample_plaintxt =
+    (Uint8*)"Happy and Fantastic New Year from AOCL Crypto !!";
 
 static const Uint8 sample_key[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
@@ -222,11 +222,12 @@ main(void)
 
     encrypt_demo(
         sample_plaintxt,
-        strlen(sample_plaintxt), /* len of 'plaintxt' and 'ciphertxt' */
+        strlen((const char*)
+                   sample_plaintxt), /* len of 'plaintxt' and 'ciphertxt' */
         sample_ciphertxt,
         sample_iv);
 
-    int size = strlen(sample_plaintxt);
+    int size = strlen((const char*)sample_plaintxt);
 
     decrypt_demo(sample_ciphertxt, size, sample_output, sample_iv);
 

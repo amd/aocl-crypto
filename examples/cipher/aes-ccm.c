@@ -102,10 +102,10 @@ create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
 }
 
 void
-encrypt_demo(const Uint8*  plaintxt,
-             const Uint32  len, /*  for both 'plaintxt' and 'ciphertxt' */
-             Uint8*        ciphertxt,
-             const int8_t* iv)
+encrypt_demo(const Uint8* plaintxt,
+             const Uint32 len, /*  for both 'plaintxt' and 'ciphertxt' */
+             Uint8*       ciphertxt,
+             const Uint8* iv)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -141,7 +141,8 @@ decrypt_demo(const Uint8* ciphertxt,
     printf("decrypt succeeded\n");
 }
 
-static char* sample_plaintxt = "Happy and Fantastic Diwali from AOCL Crypto !!";
+static Uint8* sample_plaintxt =
+    (Uint8*)"Happy and Fantastic Diwali from AOCL Crypto !!";
 
 static const Uint8 sample_key[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
@@ -150,8 +151,8 @@ static const Uint8 sample_key[] = {
 
 static const Uint8 sample_iv[] = { 0xf, 0xe, 0xd, 0xc, 0xb, 0xa, 0x9 };
 
-static const Uint8* sample_ad =
-    "Hello World, this is a sample AAD, there can be a large value for AAD";
+static const Uint8* sample_ad = (Uint8*)"Hello World, this is a sample AAD, "
+                                        "there can be a large value for AAD";
 
 static Uint8 sample_ciphertxt[512] = {
     0,
@@ -346,21 +347,21 @@ main(void)
     create_demo_session(sample_key, sample_iv, sizeof(sample_key) * 8);
 
     aclp_aes_ccm_encrypt_demo(sample_plaintxt,
-                              strlen(sample_plaintxt),
+                              strlen((const char*)sample_plaintxt),
                               sample_ciphertxt,
                               sample_iv,
                               sizeof(sample_iv),
                               sample_ad,
-                              strlen(sample_ad),
+                              strlen((const char*)sample_ad),
                               sample_tag_output,
                               14);
 
-    int size = strlen(sample_plaintxt);
+    int size = strlen((const char*)sample_plaintxt);
 
-    char* hex_sample_output =
-        bytesToHexString(sample_ciphertxt, strlen(sample_plaintxt));
+    char* hex_sample_output = bytesToHexString(
+        sample_ciphertxt, strlen((const char*)sample_plaintxt));
     char* hex_sample_input =
-        bytesToHexString(sample_plaintxt, strlen(sample_plaintxt));
+        bytesToHexString(sample_plaintxt, strlen((const char*)sample_plaintxt));
     char* hex_sample_tag_output = bytesToHexString(sample_tag_output, 14);
 
     printf("PlainTextOut :%s\n", hex_sample_input);
@@ -377,7 +378,7 @@ main(void)
                               sample_iv,
                               sizeof(sample_iv),
                               sample_ad,
-                              strlen(sample_ad),
+                              strlen((const char*)sample_ad),
                               sample_tag_output,
                               14);
 

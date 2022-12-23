@@ -158,10 +158,12 @@ decrypt_demo(const Uint8* ciphertxt,
 }
 
 // static char* sample_plaintxt = "Hello World from AOCL Crypto !!!";
-static char* sample_plaintxt =
-    "A paragraph is a series of sentences that are organized and coherent, and "
-    "are all related to a single topic. Almost every piece of writing you do "
-    "that is longer than a few sentences should be organized into paragraphs.";
+static Uint8* sample_plaintxt = (Uint8*)"A paragraph is a series of sentences "
+                                        "that are organized and coherent, and "
+                                        "are all related to a single topic. "
+                                        "Almost every piece of writing you do "
+                                        "that is longer than a few sentences "
+                                        "should be organized into paragraphs.";
 
 static const Uint8 sample_key[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
@@ -242,7 +244,7 @@ main(void)
 {
     Uint8 sample_output[1000] = { 0 };
 
-    int pt_size = strlen(sample_plaintxt);
+    int pt_size = strlen((const char*)sample_plaintxt);
     assert(sizeof(sample_plaintxt) < sizeof(sample_output));
 
     create_demo_session(
