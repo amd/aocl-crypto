@@ -60,10 +60,7 @@ class OpenSSLDigestBase : public DigestBase
     bool init(const alc_digest_info_t& info, Int64 digest_len);
     bool init();
 
-    alc_error_t digest_function(const Uint8* src,
-                                Uint64       src_size,
-                                Uint8*       output,
-                                Uint64       out_size);
+    alc_error_t digest_function(alcp_digest_data_t data);
     void        reset();
 };
 

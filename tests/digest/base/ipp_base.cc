@@ -83,13 +83,10 @@ IPPDigestBase::init()
 }
 
 alc_error_t
-IPPDigestBase::digest_function(const Uint8* in,
-                               Uint64       in_size,
-                               Uint8*       out,
-                               Uint64       out_size)
+IPPDigestBase::digest_function(alcp_digest_data_t data)
 {
-    ippsHashUpdate_rmf(in, in_size, m_handle);
-    ippsHashFinal_rmf(out, m_handle);
+    ippsHashUpdate_rmf(data.m_msg, data.m_msg_len, m_handle);
+    ippsHashFinal_rmf(data.m_digest, m_handle);
     return ALC_ERROR_NONE;
 }
 

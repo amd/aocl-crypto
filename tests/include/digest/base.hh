@@ -33,6 +33,25 @@
 #include <vector>
 
 namespace alcp::testing {
+
+struct alcp_digest_data_t
+{
+    const Uint8* m_msg;
+    Uint64       m_msg_len;
+    Uint8*       m_digest;
+    Uint64       m_digest_len;
+    Uint64       m_digest_custom_len;
+    // Initialize everything to 0
+    alcp_digest_data_t()
+    {
+        m_msg               = {};
+        m_msg_len           = {};
+        m_digest            = {};
+        m_digest_len        = {};
+        m_digest_custom_len = {};
+    }
+};
+
 /* add mapping for SHA mode and length */
 extern std::map<alc_digest_len_t, alc_sha2_mode_t> sha2_mode_len_map;
 extern std::map<alc_digest_len_t, alc_sha3_mode_t> sha3_mode_len_map;
@@ -115,8 +134,8 @@ class ExecRecPlay
 class DataSet : private File
 {
   private:
-    std::string        line = "";
-    std::vector<Uint8> Digest, Message;
+    std::string        line   = "";
+    std::vector<Uint8> Digest = {}, Message = {};
     /* for shake128/256 support */
     std::int64_t DigestLen;
     // First line is skipped, linenum starts from 1
@@ -141,10 +160,7 @@ class DigestBase
   public:
     virtual bool init(const alc_digest_info_t& info, Int64 digest_len) = 0;
     virtual bool init()                                                = 0;
-    virtual alc_error_t digest_function(const Uint8* src,
-                                        Uint64       src_size,
-                                        Uint8*       output,
-                                        Uint64       out_size)               = 0;
+    virtual alc_error_t digest_function(alcp_digest_data_t data)       = 0;
     virtual void        reset()                                        = 0;
 };
 

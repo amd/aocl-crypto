@@ -54,11 +54,12 @@ void inline Digest_Bench(benchmark::State& state,
                          alc_digest_info_t info,
                          uint64_t          block_size)
 {
-    alc_error_t    error;
-    Uint8          message[32768] = { 0 };
-    Uint8          digest[512]    = { 0 };
-    AlcpDigestBase adb(info);
-    DigestBase*    db = &adb;
+    alc_error_t        error;
+    Uint8              message[32768] = { 0 };
+    Uint8              digest[512]    = { 0 };
+    AlcpDigestBase     adb(info);
+    DigestBase*        db = &adb;
+    alcp_digest_data_t data;
 #ifdef USE_IPP
     IPPDigestBase idb(info);
     if (useipp) {
@@ -81,9 +82,14 @@ void inline Digest_Bench(benchmark::State& state,
         || info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
         db->init(info, 256);
     }
+
+    data.m_msg        = message;
+    data.m_digest     = digest;
+    data.m_msg_len    = block_size;
+    data.m_digest_len = sizeof(digest);
+
     for (auto _ : state) {
-        error =
-            db->digest_function(message, block_size, digest, sizeof(digest));
+        error = db->digest_function(data);
         db->reset();
         if (alcp_is_error(error)) {
             printf("Error in running benchmark");

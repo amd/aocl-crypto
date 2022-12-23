@@ -106,6 +106,7 @@ void
 Digest_KAT(int HashSize, alc_digest_info_t info)
 {
     alc_error_t        error;
+    alcp_digest_data_t data;
     std::vector<Uint8> digest(HashSize / 8, 0);
     AlcpDigestBase     adb(info);
     DigestBase*        db;
@@ -140,12 +141,16 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
     /* for SHAKE variant */
     if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
         while (ds.readMsgDigestLen()) {
-            std::vector<Uint8> digest_(ds.getDigestLen(), 0);
-            db->init(info, ds.getDigestLen());
-            error = db->digest_function(&(ds.getMessage()[0]),
-                                        ds.getMessage().size(),
-                                        &(digest_[0]),
-                                        ds.getDigestLen());
+            auto msg          = ds.getMessage();
+            data.m_msg        = &(msg[0]);
+            data.m_msg_len    = ds.getMessage().size();
+            data.m_digest_len = ds.getDigestLen();
+            std::vector<Uint8> digest_(data.m_digest_len, 0);
+            data.m_digest = &(digest_[0]);
+
+            db->init(info, data.m_digest_len);
+            error = db->digest_function(data);
+
             if (alcp_is_error(error)) {
                 printf("Error");
                 return;
@@ -159,17 +164,26 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
         }
     } else {
         while (ds.readMsgDigest()) {
-            db->init(info, ds.getDigestLen());
-            error = db->digest_function(&(ds.getMessage()[0]),
-                                        ds.getMessage().size(),
-                                        &(digest[0]),
-                                        digest.size());
+            auto msg          = ds.getMessage();
+            data.m_msg        = &(msg[0]);
+            data.m_msg_len    = ds.getMessage().size();
+            data.m_digest_len = digest.size();
+            data.m_digest     = &(digest[0]);
+
+            db->init(info, data.m_digest_len);
+            error = db->digest_function(data);
+
             if (alcp_is_error(error)) {
                 printf("Error");
                 return;
             }
+
+            /*conv m_digest into a vector */
+            std::vector<uint8_t> digest_vector(std::begin(digest),
+                                               std::end(digest));
+
             EXPECT_TRUE(
-                ArraysMatch(digest,         // output
+                ArraysMatch(digest_vector,  // output
                             ds.getDigest(), // expected, from the KAT test data
                             ds,
                             std::string(GetDigestStr(info.dt_type) + "_"
@@ -184,6 +198,7 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
 {
     alc_error_t        error;
     std::vector<Uint8> data;
+    alcp_digest_data_t test_data, test_data_ext;
     std::vector<Uint8> digestAlcp(HashSize / 8, 0);
     std::vector<Uint8> digestExt(HashSize / 8, 0);
     AlcpDigestBase     adb(info);
@@ -232,12 +247,22 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
         }
 
         db->init(info, digestAlcp.size());
-        error = db->digest_function(
-            &(data[0]), data.size(), &(digestAlcp[0]), digestAlcp.size());
+
+        test_data.m_msg        = &(data[0]);
+        test_data.m_digest     = &(digestAlcp[0]);
+        test_data.m_digest_len = digestAlcp.size();
+        test_data.m_msg_len    = data.size();
+
+        error = db->digest_function(test_data);
 
         extDb->init(info, digestExt.size());
-        error = extDb->digest_function(
-            &(data[0]), data.size(), &(digestExt[0]), digestExt.size());
+
+        test_data_ext.m_msg        = &(data[0]);
+        test_data_ext.m_digest     = &(digestExt[0]);
+        test_data_ext.m_digest_len = digestExt.size();
+        test_data_ext.m_msg_len    = data.size();
+
+        error = extDb->digest_function(test_data_ext);
 
         if (alcp_is_error(error)) {
             printf("Error");

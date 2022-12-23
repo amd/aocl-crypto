@@ -53,10 +53,7 @@ class AlcpDigestBase : public DigestBase
 
     ~AlcpDigestBase();
 
-    alc_error_t digest_function(const Uint8* src,
-                                size_t       src_size,
-                                Uint8*       output,
-                                Uint64       out_size);
+    alc_error_t digest_function(alcp_digest_data_t data);
     /* Resets the context back to initial condition, reuse context */
     void reset();
 };

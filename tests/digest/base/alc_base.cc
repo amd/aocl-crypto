@@ -97,13 +97,10 @@ AlcpDigestBase::~AlcpDigestBase()
 }
 
 alc_error_t
-AlcpDigestBase::digest_function(const Uint8* pSrc,
-                                size_t       src_size,
-                                Uint8*       pOutput,
-                                Uint64       out_size)
+AlcpDigestBase::digest_function(alcp_digest_data_t data)
 {
     alc_error_t err;
-    err = alcp_digest_update(m_handle, pSrc, src_size);
+    err = alcp_digest_update(m_handle, data.m_msg, data.m_msg_len);
     if (alcp_is_error(err)) {
         printf("Digest update failed\n");
         return err;
@@ -115,7 +112,7 @@ AlcpDigestBase::digest_function(const Uint8* pSrc,
         return err;
     }
 
-    err = alcp_digest_copy(m_handle, pOutput, out_size);
+    err = alcp_digest_copy(m_handle, data.m_digest, data.m_digest_len);
     if (alcp_is_error(err)) {
         printf("Digest copy failed\n");
         return err;

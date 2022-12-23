@@ -313,7 +313,8 @@ DataSet::readMsgDigestLen()
     std::vector<Uint8> messageVect(messageStr.c_str(),
                                    (messageStr.c_str() + messageStr.size()));
     Message = messageVect;
-    Digest  = parseHexStrToBin(line.substr(pos1 + 1, pos2 - pos1 - 1));
+
+    Digest = parseHexStrToBin(line.substr(pos1 + 1, pos2 - pos1 - 1));
     // DigestLen = parseHexStrToBin(line.substr(pos2 + 1));
     DigestLen = Digest.size();
     lineno++;

@@ -108,22 +108,19 @@ OpenSSLDigestBase::init()
 }
 
 alc_error_t
-OpenSSLDigestBase::digest_function(const Uint8* in,
-                                   Uint64       in_size,
-                                   Uint8*       out,
-                                   Uint64       out_size)
+OpenSSLDigestBase::digest_function(alcp_digest_data_t data)
 {
     unsigned int outsize = 0;
     int          retval  = 0;
 
-    retval = EVP_DigestUpdate(m_handle, in, in_size);
+    retval = EVP_DigestUpdate(m_handle, data.m_msg, data.m_msg_len);
 
     /* for extendable output functions */
     if (m_info.dt_len == ALC_DIGEST_LEN_CUSTOM)
-        retval = EVP_DigestFinalXOF(m_handle, out, m_digest_len);
+        retval = EVP_DigestFinalXOF(m_handle, data.m_digest, data.m_digest_len);
     else
-        retval = EVP_DigestFinal_ex(m_handle, out, &outsize);
-    out_size = outsize;
+        retval = EVP_DigestFinal_ex(m_handle, data.m_digest, &outsize);
+    outsize = outsize;
 
     return ALC_ERROR_NONE;
 }
