@@ -37,13 +37,11 @@
 static alc_cipher_handle_t handle;
 
 void
-create_demo_session(const uint8_t* key,
-                    const uint8_t* iv,
-                    const uint32_t key_len)
+create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
 {
     alc_error_t err;
     const int   err_size = 256;
-    uint8_t     err_buf[err_size];
+    Uint8       err_buf[err_size];
 
     /*
     const alc_key_info_t kinfo = {
@@ -101,14 +99,14 @@ create_demo_session(const uint8_t* key,
 }
 
 void
-encrypt_demo(const uint8_t* plaintxt,
-             const uint32_t len, /*  for both 'plaintxt' and 'ciphertxt' */
-             uint8_t*       ciphertxt,
-             const int8_t*  iv)
+encrypt_demo(const Uint8*  plaintxt,
+             const Uint32  len, /*  for both 'plaintxt' and 'ciphertxt' */
+             Uint8*        ciphertxt,
+             const int8_t* iv)
 {
     alc_error_t err;
     const int   err_size = 256;
-    uint8_t     err_buf[err_size];
+    Uint8       err_buf[err_size];
 
     err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len, iv);
     if (alcp_is_error(err)) {
@@ -121,14 +119,14 @@ encrypt_demo(const uint8_t* plaintxt,
 }
 
 void
-decrypt_demo(const uint8_t* ciphertxt,
-             const uint32_t len, /* for both 'plaintxt' and 'ciphertxt' */
-             uint8_t*       plaintxt,
-             const uint8_t* iv)
+decrypt_demo(const Uint8* ciphertxt,
+             const Uint32 len, /* for both 'plaintxt' and 'ciphertxt' */
+             Uint8*       plaintxt,
+             const Uint8* iv)
 {
     alc_error_t err;
     const int   err_size = 256;
-    uint8_t     err_buf[err_size];
+    Uint8       err_buf[err_size];
 
     err = alcp_cipher_decrypt(&handle, ciphertxt, plaintxt, len, iv);
     if (alcp_is_error(err)) {
@@ -144,12 +142,12 @@ decrypt_demo(const uint8_t* ciphertxt,
 static char* sample_plaintxt =
     "Happy and Fantastic New Year from AOCL Crypto !!";
 
-static const uint8_t sample_key[] = {
+static const Uint8 sample_key[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
     0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf,
 };
 
-static const uint8_t sample_iv[] = {
+static const Uint8 sample_iv[] = {
     0xf, 0xe, 0xd, 0xc, 0xb, 0xa, 0x9, 0x8,
     0x7, 0x6, 0x5, 0x4, 0x3, 0x2, 0x1, 0x0,
 };
@@ -161,9 +159,9 @@ static const uint8_t sample_iv[] = {
  * with iv = {00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 0a, 0b, 0c, 0d, 0e, 0f};
  */
 
-static uint8_t cipher = {68,cc,95,fe,db,6c,0c,87,76,73,98,fc,0a,dc,f6,07,9e,33,17,75,ad,0a,eb,27,66,29,f3,9e,b6,8d,1f,05};
+static Uint8 cipher = {68,cc,95,fe,db,6c,0c,87,76,73,98,fc,0a,dc,f6,07,9e,33,17,75,ad,0a,eb,27,66,29,f3,9e,b6,8d,1f,05};
 #else
-static uint8_t sample_ciphertxt[512] = {
+static Uint8 sample_ciphertxt[512] = {
     0,
 };
 #endif
@@ -175,10 +173,10 @@ alloc_and_test()
 {
     void *    plaintxt, *ciphertxt, *output;
     const int keylen = 256, keylen_bytes = keylen / 8,
-              keylen_words = keylen / sizeof(uint32_t) * BITS_PER_BYTE;
+              keylen_words = keylen / sizeof(Uint32) * BITS_PER_BYTE;
 
-    uint8_t  key[keylen_bytes];
-    uint32_t iv[] = {
+    Uint8  key[keylen_bytes];
+    Uint32 iv[] = {
         0x1,
         0x2,
         0x3,
@@ -216,7 +214,7 @@ out:
 int
 main(void)
 {
-    uint8_t sample_output[512] = { 0 };
+    Uint8 sample_output[512] = { 0 };
 
     assert(sizeof(sample_plaintxt) < sizeof(sample_output));
 
