@@ -36,7 +36,7 @@
 
 /* Change sources to use different random engine */
 alc_rng_source_t source = ALC_RNG_SOURCE_OS;
-char*
+unsigned char*
 bytesToHexString(unsigned char*, int);
 
 int
@@ -112,10 +112,10 @@ main(int argc, char const* argv[])
     return 0;
 }
 
-char*
+unsigned char*
 bytesToHexString(unsigned char* bytes, int length)
 {
-    char* outputHexString = malloc(sizeof(char) * ((length * 2) + 1));
+    unsigned char* outputHexString = malloc(sizeof(char) * ((length * 2) + 1));
     for (int i = 0; i < length; i++) {
         char chararray[2];
         chararray[0] = (bytes[i] & 0xf0) >> 4;
