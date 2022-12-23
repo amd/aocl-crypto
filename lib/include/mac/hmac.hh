@@ -28,8 +28,9 @@
 #include "digest.hh"
 #include "mac.hh"
 #include "utils/copy.hh"
+
 #include <immintrin.h>
-#include <memory.h>
+#include <memory>
 
 // To store the class validity status to be used as gatekeeper for HMAC
 // functions

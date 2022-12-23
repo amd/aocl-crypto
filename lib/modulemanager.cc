@@ -33,8 +33,7 @@
 
 #include "alcp/error.h"
 
-#include "error.hh"
-#include "modulemanager.hh"
+#include "alcp/modulemanager.hh"
 
 namespace alcp {
 
@@ -70,10 +69,10 @@ ModuleManager::findModule(const alc_module_info_t* ainfo, alc_error_t& err)
         switch (m->getType()) {
 
             case ALC_MODULE_TYPE_CIPHER: {
-                alc_error_t e;
-                if (m->isSupported(ainfo->data.cipher, e))
-                    if (Error::isError(e))
-                        return m;
+                //Status st = m->isSupported(ainfo->data.cipher);
+                //if (!st.ok())
+                //    if (Error::isError(e))
+                //        return m;
             } break;
 
             case ALC_MODULE_TYPE_MAC:

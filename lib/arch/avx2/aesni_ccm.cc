@@ -26,17 +26,12 @@
  *
  */
 
-#include <cstdint>
-#include <immintrin.h>
-#include <string.h>
-#include <wmmintrin.h>
 
 #include "cipher/aes.hh"
 #include "cipher/aes_ccm.hh"
 #include "cipher/aesni.hh"
 
-#include "error.hh"
-#include "key.hh"
+#include <immintrin.h>
 
 #if 0
 #define ENTER() printf("ENTER %s %s:%d\n", __FUNCTION__, __FILE__, __LINE__)

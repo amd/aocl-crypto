@@ -30,6 +30,7 @@
 
 #include "sourcelocation.hh"
 
+#include <cstring>
 #include <string>
 
 namespace alcp {
@@ -167,5 +168,5 @@ struct NotImplementedException : public Exception
     }
 };
 
-
 } // namespace alcp
+

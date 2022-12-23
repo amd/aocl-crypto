@@ -28,7 +28,6 @@
 
 #include "digest.hh"
 #include "digest/sha2.hh"
-#include "error.hh"
 
 #include <x86intrin.h>
 

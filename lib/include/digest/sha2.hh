@@ -30,6 +30,8 @@
 
 #include "digest.hh"
 
+#include <memory>  // for unique_ptr
+
 namespace alcp::digest {
 
 class Sha2 : public Digest

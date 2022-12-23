@@ -25,18 +25,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include <cstdint>
-#include <immintrin.h>
 
-#include "avx512.hh"
 #include "cipher/aes.hh"
 #include "cipher/aes_ctr.hh"
+#include "alcp/types.hh"
 
-#include "error.hh"
-#include "key.hh"
-#include "types.hh"
+#include "avx512.hh"
 #include "vaes_avx512.hh"
 #include "vaes_avx512_core.hh"
+
+#include <cstdint>
+#include <immintrin.h>
 
 namespace alcp::cipher::vaes512 {
 

@@ -112,12 +112,14 @@ Sha384::copyHash(Uint8* pHash, Uint64 size) const
     alc_error_t err = ALC_ERROR_NONE;
 
     if (size != cHashSize) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_SIZE;
         return err;
     }
 
     if (!pHash) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_ARG;
         return err;
     }
 
@@ -126,7 +128,7 @@ Sha384::copyHash(Uint8* pHash, Uint64 size) const
     Uint8 intrim_hash[cHashSize];
     err = m_psha512->copyHash(intrim_hash, sizeof(intrim_hash));
 
-    if (!Error::isError(err)) {
+    if (!err) {
         utils::CopyBlock(pHash, intrim_hash, size);
     }
     return err;

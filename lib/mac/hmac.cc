@@ -28,6 +28,8 @@
 
 #include "mac/hmac.hh"
 #include "utils/copy.hh"
+
+#include <cstring>      // for std::memset
 #include <immintrin.h>
 
 namespace alcp::mac {
@@ -344,14 +346,14 @@ class Hmac::Impl
             utils::CopyBytes(m_pK0, m_pKey, m_keylen);
         } else if (m_keylen < m_input_block_length) {
             utils::CopyBytes(m_pK0, m_pKey, m_keylen);
-            memset(m_pK0 + m_keylen, 0x0, m_input_block_length - m_keylen);
+            std::memset(m_pK0 + m_keylen, 0x0, m_input_block_length - m_keylen);
         } else if (m_keylen > m_input_block_length) {
             // Optimization: Reusing p_digest for calculating
             m_pDigest->reset();
             m_pDigest->finalize(m_pKey, m_keylen);
             m_pDigest->copyHash(m_pK0, m_output_hash_size);
             m_pDigest->reset();
-            memset(m_pK0 + m_output_hash_size,
+            std::memset(m_pK0 + m_output_hash_size,
                    0x0,
                    m_input_block_length - m_output_hash_size);
         }

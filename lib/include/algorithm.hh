@@ -33,9 +33,6 @@
 #include <memory>
 #include <string>
 
-#include "cipher.hh"
-#include "error.hh"
-
 namespace alcp {
 
 enum class AlgorithmType : uint32_t

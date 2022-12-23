@@ -32,7 +32,8 @@
 
 #include "alcp/cipher.h"
 
-#include "module.hh"
+#include "cipher.hh"
+#include "alcp/module.hh"
 
 namespace alcp {
 
@@ -66,7 +67,7 @@ Module::Impl::isCipherSupported(const alc_cipher_info_p pCipherInfo,
 
     /* TODO: investigate if we need to take a 'rwlock' before reading */
     for (auto& m : mlist) {
-        if (m->isSupported(*pCipherInfo, err))
+        if (m->isSupported(*pCipherInfo))
             return true;
     }
 

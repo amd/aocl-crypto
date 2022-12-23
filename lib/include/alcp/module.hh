@@ -25,33 +25,61 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 #pragma once
 
-#include "alcp/error.h"
-#include "alcp/macros.h"
-#include "alcp/types.h"
+#include <string>
 
-#include "types.hh"
+#include "alcp/cipher.h"
 
-#include <memory>
+#include "alcp/module.hh"
+#include "algorithm.hh"
 
 namespace alcp {
 
-class Error
+typedef enum _alc_module_type
+{
+    ALC_MODULE_TYPE_NONE = 0,
+
+    ALC_MODULE_TYPE_CIPHER,
+    ALC_MODULE_TYPE_DIGEST,
+    ALC_MODULE_TYPE_RNG,
+    ALC_MODULE_TYPE_MAC,
+
+    ALC_MODULE_TYPE_MAX,
+} alc_module_type_t;
+
+typedef struct _alc_module_info
+{
+    alc_module_type_t type;
+    union
+    {
+        const alc_cipher_info_p cipher;
+        // const alc_digest_info_p digest;
+        // const alc_mac_info_p mac;
+        // const alc_aead_info_p aead;
+        // const alc_rng_info_p rng;
+    } data;
+} alc_module_info_t;
+
+typedef struct _alc_module_data
+{
+
+} alc_module_data_t;
+
+class Module
 {
   public:
-    ALCP_API_EXPORT static void setGeneric(alc_error_t&        err,
-                                           alc_error_generic_t gen);
-    ALCP_API_EXPORT static void setDetail(alc_error_t&        err,
-                                          alc_error_generic_t det);
-    static void                 setModule(alc_error_t& err, uint16_t mod);
-    static int  print(alc_error_t& err, uint8_t* buf, uint64_t len);
-    static bool isError(alc_error_t& err) { return err != 0; }
+    Module(alc_module_info_t* minfo);
+    std::string       getName();
+    alc_module_type_t getType();
+    bool isSupported(const alc_cipher_info_p c, alc_error_t& e) const;
 
   private:
-    Error();
-    ~Error();
+    alc_module_info_t m_info;
+
+    class Impl;
+    std::unique_ptr<Impl> impl;
 };
 
 } // namespace alcp
+

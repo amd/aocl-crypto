@@ -32,9 +32,9 @@
 #include "alcp/cipher.h"
 
 //#include "algorithm.hh"
+#include "alcp/base.hh"
 #include "cipher.hh"
 #include "cipher/rijndael.hh"
-#include "alcp/base.hh"
 #include "utils/bits.hh"
 
 #include <immintrin.h>
@@ -43,6 +43,8 @@
 #define RIJ_SIZE_ALIGNED(x) ((x * 2) + x)
 
 namespace alcp::cipher {
+
+using Status = alcp::base::Status;
 
 /*
  * \brief       AES (Advanced Encryption Standard)
@@ -67,7 +69,7 @@ class Aes : public Rijndael
     Aes() { m_this = this; }
     virtual ~Aes() {}
 
-    ALCP_API_EXPORT void setKey(const Uint8* pUserKey, Uint64 len) override;
+    ALCP_API_EXPORT virtual Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
   protected:
     alc_cipher_mode_t m_mode;
@@ -101,15 +103,11 @@ class ALCP_API_EXPORT Cbc final : public Aes
      * \param
      * \return
      */
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
-                             alc_error_t&             err)
+    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
     {
-        Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
-
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
             auto aip = &cipherInfo.ci_algo_info;
             if (aip->ai_mode == ALC_AES_MODE_CBC) {
-                Error::setDetail(err, ALC_ERROR_NONE);
                 return true;
             }
         }
@@ -178,15 +176,11 @@ class ALCP_API_EXPORT Ofb final : public Aes
      * \param
      * \return
      */
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
-                             alc_error_t&             err)
+    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
     {
-        Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
-
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
             auto aip = &cipherInfo.ci_algo_info;
             if (aip->ai_mode == ALC_AES_MODE_OFB) {
-                Error::setDetail(err, ALC_ERROR_NONE);
                 return true;
             }
         }
@@ -364,16 +358,11 @@ class ALCP_API_EXPORT Gcm final
      * \param
      * \return
      */
-
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
-                             alc_error_t&             err) override
+    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
     {
-        Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
-
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
             auto aip = &cipherInfo.ci_algo_info;
             if (aip->ai_mode == ALC_AES_MODE_GCM) {
-                Error::setDetail(err, ALC_ERROR_NONE);
                 return true;
             }
         }
@@ -540,15 +529,11 @@ class ALCP_API_EXPORT Ccm final
      * \param
      * \return
      */
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
-                             alc_error_t&             err) override
+    virtual bool isSupported(const alc_cipher_info_t& cipherInfo)
     {
-        Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
-
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
             auto aip = &cipherInfo.ci_algo_info;
             if (aip->ai_mode == ALC_AES_MODE_CCM) {
-                Error::setDetail(err, ALC_ERROR_NONE);
                 return true;
             }
         }
@@ -666,17 +651,12 @@ class ALCP_API_EXPORT Xts final : public Aes
      * \param
      * \return
      */
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
-                             alc_error_t&             err)
+    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
     {
-        Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
-
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
             auto aip = &cipherInfo.ci_algo_info;
-            if (aip->ai_mode == ALC_AES_MODE_XTS) {
-                Error::setDetail(err, ALC_ERROR_NONE);
+            if (aip->ai_mode == ALC_AES_MODE_XTS)
                 return true;
-            }
         }
 
         return false;
@@ -713,7 +693,8 @@ class ALCP_API_EXPORT Xts final : public Aes
     virtual void expandTweakKeys(const Uint8* pUserKey, int len);
 
   private:
-    Xts() { p_tweak_key = &m_tweak_round_key[0]; };
+    Xts() {
+        p_tweak_key = &m_tweak_round_key[0]; };
 
   private:
     Uint8  m_tweak_round_key[(RIJ_SIZE_ALIGNED(32) * (16))];

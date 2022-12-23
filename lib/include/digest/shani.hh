@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include "error.hh"
+#include "alcp/error.h"  // for alc_error_t
 
 namespace alcp::digest { namespace shani {
 

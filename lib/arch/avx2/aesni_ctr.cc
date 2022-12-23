@@ -25,18 +25,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
+#include "avx2.hh"
+
+#include "cipher/aes.hh"
+#include "cipher/aesni.hh" // template code in aes_ctr.hh needs aesni.hh
+#include "cipher/aes_ctr.hh"
+
 #include <cstdint>
 #include <immintrin.h>
 #include <wmmintrin.h>
-
-#include "avx2.hh"
-#include "cipher/aes.hh"
-#include "cipher/aesni.hh"
-// template code in aes_ctr.hh needs aesni.hh
-#include "cipher/aes_ctr.hh"
-
-#include "error.hh"
-#include "key.hh"
 
 namespace alcp::cipher::aesni {
 

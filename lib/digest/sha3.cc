@@ -288,7 +288,8 @@ Sha3::Impl::copyHash(Uint8* pHash, Uint64 size) const
     alc_error_t err = ALC_ERROR_NONE;
 
     if (size != m_hash_size) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_SIZE;
         return err;
     }
 
@@ -339,14 +340,14 @@ Sha3::Impl::update(const Uint8* pSrc, Uint64 inputSize)
     alc_error_t err = ALC_ERROR_NONE;
 
     if (m_finished) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_ARG;
         return err;
     }
 
-    if (pSrc == nullptr) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
-    }
-    if (inputSize == 0) {
+    if (pSrc == nullptr || inputSize == 0) {
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_ARG;
         return err;
     }
 
@@ -425,7 +426,8 @@ Sha3::Impl::finalize(const Uint8* pBuf, Uint64 size)
 
     m_buffer[m_chunk_size - 1] |= 0x80;
 
-    if (Error::isError(err)) {
+    
+    if (err) {
         return err;
     }
 
@@ -451,7 +453,8 @@ Sha3::update(const Uint8* pSrc, Uint64 size)
     alc_error_t err = ALC_ERROR_NONE;
 
     if (pSrc == nullptr) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_ARG;
     }
 
     if (!alcp_is_error(err) && m_pimpl)
@@ -477,10 +480,11 @@ Sha3::copyHash(Uint8* pHash, Uint64 size) const
     alc_error_t err = ALC_ERROR_NONE;
 
     if (pHash == nullptr) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_ARG;
     }
 
-    if (!Error::isError(err) && m_pimpl) {
+    if (!err && m_pimpl) {
         err = m_pimpl->copyHash(pHash, size);
     }
 

@@ -25,20 +25,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#pragma once
 
-#ifndef _CIPHER_AES_CTR_HH_
-#define _CIPHER_AES_CTR_HH_ 2
-
-#include <cstdint>
-
-#include <immintrin.h>
-
-#include "alcp/error.h"
 #include "cipher/cipher_wrapper.hh"
 
-#include "error.hh"
+#include <cstdint>
+#include <immintrin.h>
 
 namespace alcp::cipher { namespace aes {
 }} // namespace alcp::cipher::aes
 
-#endif

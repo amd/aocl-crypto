@@ -220,7 +220,8 @@ Sha256::Impl::update(const Uint8* pSrc, Uint64 input_size)
     alc_error_t err = ALC_ERROR_NONE;
 
     if (m_finished) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+        /* TODO Change to Status */
+        err = ALC_ERROR_INVALID_ARG;
         return err;
     }
 
@@ -297,7 +298,7 @@ Sha256::Impl::finalize(const Uint8* pBuf, Uint64 size)
     if (pBuf && size)
         err = update(pBuf, size);
 
-    if (Error::isError(err)) {
+    if (err) {
         return err;
     }
 
@@ -360,12 +361,14 @@ Sha256::setIv(const void* pIv, Uint64 size)
     alc_error_t err = ALC_ERROR_NONE;
 
     if (pIv == nullptr) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_ARG;
         return err;
     }
 
     if (size != cIvSizeBytes) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_SIZE;
     }
 
     if (!alcp_is_error(err))
@@ -380,10 +383,11 @@ Sha256::update(const Uint8* pSrc, Uint64 size)
     alc_error_t err = ALC_ERROR_NONE;
 
     if (pSrc == nullptr) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_ARG;
     }
 
-    if (!alcp_is_error(err))
+    if (!err)
         err = pImpl()->update(pSrc, size);
 
     return err;
@@ -405,15 +409,17 @@ Sha256::copyHash(Uint8* pHash, Uint64 size) const
     alc_error_t err = ALC_ERROR_NONE;
 
     if (!pHash) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_ARG;
         return err;
     }
 
     if (size != cHashSize) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_SIZE;
     }
 
-    if (!Error::isError(err)) {
+    if (!err) {
         err = pImpl()->copyHash(pHash, size);
     }
 

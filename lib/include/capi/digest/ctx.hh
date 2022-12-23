@@ -32,7 +32,7 @@
 
 #include "alcp/digest.h"
 
-#include "defs.hh"
+#include "alcp/capi/defs.hh"
 #include "digest.hh"
 
 namespace alcp::digest {

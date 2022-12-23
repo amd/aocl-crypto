@@ -47,7 +47,9 @@ class Status final
 {
   public:
     // Should initialize with an OK status
-    Status() {}
+    Status()
+       : m_code{0}
+    {}
 
     Status(ErrorCode code)
         : m_error{ code }
@@ -74,6 +76,14 @@ class Status final
     {
         m_message = makeMessage(ie.message(), msg);
     }
+
+    Status(IError& ie, const StringView msg)
+        : Status{}
+    {
+        m_message = makeMessage(ie.message(), msg);
+    }
+
+
 
     ALCP_DEFS_DEFAULT_COPY_AND_ASSIGNMENT(Status);
 
@@ -137,6 +147,13 @@ class Status final
         m_message = module_error + String(" ") + details;
         return m_message;
     }
+
+    String& makeMessage(const StringView& module_error, const StringView& details)
+    {
+        m_message = String(module_error) + String(" ") + String(details);
+        return m_message;
+    }
+
 
     Uint64 m_code;
     String m_message;

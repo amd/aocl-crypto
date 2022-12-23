@@ -135,17 +135,15 @@ __build_sha(const alc_digest_info_t& sha2Info, Context& ctx)
 
     auto addr = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
 
-    if (!Error::isError(err)) {
-        auto algo    = new (addr) ALGONAME(sha2Info);
-        ctx.m_digest = static_cast<void*>(algo);
-        ctx.update   = __sha_update_wrapper<ALGONAME>;
-        ctx.copy     = __sha_copy_wrapper<ALGONAME>;
-        ctx.finalize = __sha_finalize_wrapper<ALGONAME>;
-        //   ctx.finalize = __digest_func_wrapper<ALGONAME,
-        //   &ALGONAME::finalize>;
-        ctx.finish = __sha_dtor<ALGONAME>;
-        ctx.reset  = __sha_reset_wrapper<ALGONAME>;
-    }
+    auto algo    = new (addr) ALGONAME(sha2Info);
+    ctx.m_digest = static_cast<void*>(algo);
+    ctx.update   = __sha_update_wrapper<ALGONAME>;
+    ctx.copy     = __sha_copy_wrapper<ALGONAME>;
+    ctx.finalize = __sha_finalize_wrapper<ALGONAME>;
+    //   ctx.finalize = __digest_func_wrapper<ALGONAME,
+    //   &ALGONAME::finalize>;
+    ctx.finish = __sha_dtor<ALGONAME>;
+    ctx.reset  = __sha_reset_wrapper<ALGONAME>;
 
     return err;
 }
@@ -184,7 +182,7 @@ class Sha2Builder
                 break;
 
             default:
-                Error::setGeneric(err, ALC_ERROR_NOT_SUPPORTED);
+                err = ALC_ERROR_NOT_SUPPORTED;
                 break;
         }
         return err;
@@ -263,7 +261,7 @@ DigestBuilder::Build(const alc_digest_info_t& rDigestInfo, Context& rCtx)
             break;
 
         default:
-            Error::setGeneric(err, ALC_ERROR_NOT_SUPPORTED);
+            err = ALC_ERROR_NOT_SUPPORTED;
             break;
     }
 

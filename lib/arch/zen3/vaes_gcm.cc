@@ -25,19 +25,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include <cstdint>
-#include <immintrin.h>
 
 #include "avx256.hh"
 #include "cipher/aes.hh"
 #include "vaes.hh"
 
-#include "error.hh"
-#include "key.hh"
-#include "types.hh"
-
 namespace alcp::cipher::vaes {
-// tbd: code currently duplicated, to be replaced with template code in
-// aes_gcm.hh
+// TODO: code currently duplicated, replace with template code in aes_gcm.hh
 
 } // namespace alcp::cipher::vaes

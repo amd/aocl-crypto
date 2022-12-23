@@ -25,22 +25,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include <cstdint>
-#include <immintrin.h>
 
 #include "avx512.hh"
 #include "avx512_gmul.hh"
+#include "vaes_avx512.hh"
+#include "vaes_avx512_core.hh"
+
+#include "alcp/types.hh"
 #include "cipher/aes.hh"
 #include "cipher/aes_gcm.hh"
 #include "cipher/aesni.hh"
 #include "cipher/gmul.hh"
 
-#include "vaes_avx512.hh"
-#include "vaes_avx512_core.hh"
-
-#include "error.hh"
-#include "key.hh"
-#include "types.hh"
+#include <cstdint>
+#include <immintrin.h>
 
 #define MAX_NUM_512_BLKS 24
 

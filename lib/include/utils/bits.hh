@@ -102,9 +102,9 @@ class Bits
         return (T)(m_val >> start) & mask;
     }
 
-    void set(int start, int end) { NotImplemented(); }
-    void reset(int start, int end) { NotImplemented(); }
-    void replace(int start, int end) { NotImplemented(); }
+    void set(int start, int end) { NotImplementedException(); }
+    void reset(int start, int end) { NotImplementedException(); }
+    void replace(int start, int end) { NotImplementedException(); }
 
   private:
     Bits() {}

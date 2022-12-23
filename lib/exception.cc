@@ -26,10 +26,10 @@
  *
  */
 
-#include "exception.hh"
+#include "alcp/base/exception.hh"
 
 namespace alcp {
 
-const std::string NotImplemented::m_def_str = "Not Implemented";
+//const std::string NotImplemented::m_def_str = "Not Implemented";
 
 }

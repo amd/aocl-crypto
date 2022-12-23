@@ -29,6 +29,9 @@
 #include "capi/cipher/builder.hh"
 #include "cipher.hh"
 #include "cipher/aes_build.hh"
+
+#include "cipher/aes_ccm.hh"
+
 // FIXME: Remove all the includes from gtest_base related to capi
 #include "cipher/gtest_base.hh"
 #include "gtest/gtest.h"

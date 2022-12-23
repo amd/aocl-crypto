@@ -113,16 +113,17 @@ Sha512::setIv(const void* pIv, Uint64 size)
     alc_error_t err = ALC_ERROR_NONE;
 
     if (!pIv) {
-        printf("%lu", size);
-        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_ARG;
         return err;
     }
 
     if (size != cIvSizeBytes) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_SIZE;
     }
 
-    if (!alcp_is_error(err))
+    if (!err)
         utils::CopyBytes(m_hash, pIv, size);
 
     return err;
@@ -143,15 +144,15 @@ Sha512::copyHash(Uint8* pHash, Uint64 size) const
     alc_error_t err = ALC_ERROR_NONE;
 
     if (!pHash) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+        err = ALC_ERROR_INVALID_ARG;
         return err;
     }
 
-    if (size != m_digest_len_bytes) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
+   if (size != cHashSize) {
+        err = ALC_ERROR_INVALID_SIZE;
     }
 
-    if (!Error::isError(err)) {
+    if (!err)
         utils::CopyBlockWith<Uint64>(
             pHash, m_hash, m_digest_len_bytes, utils::ToBigEndian<Uint64>);
 
@@ -267,18 +268,20 @@ Sha512::update(const Uint8* pSrc, Uint64 input_size)
     alc_error_t err = ALC_ERROR_NONE;
 
     if (pSrc == nullptr) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_ARG;
     }
 
     /*
      * input_size == 0 is valid in shani case
      * Returned hash is same as IV
      */
-    if (Error::isError(err) || input_size == 0)
+    if (err || input_size == 0)
         return err;
 
     if (m_finished) {
-        Error::setGeneric(err, ALC_ERROR_INVALID_ARG);
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_ARG;
         return err;
     }
 
@@ -354,7 +357,7 @@ Sha512::finalize(const Uint8* pBuf, Uint64 size)
     if (pBuf && size)
         err = update(pBuf, size);
 
-    if (Error::isError(err)) {
+    if (err) {
         return err;
     }
 

@@ -25,14 +25,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include <cstdint>
-#include <immintrin.h>
-#include <wmmintrin.h>
 
 #include "cipher/aes.hh"
 #include "cipher/aesni.hh"
-#include "error.hh"
-#include "key.hh"
+#include "alcp/types.hh"
+
+#include <cstdint>
+#include <immintrin.h>
+#include <wmmintrin.h>
 
 namespace alcp::cipher::aesni {
 

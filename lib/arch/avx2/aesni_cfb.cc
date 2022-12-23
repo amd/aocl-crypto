@@ -26,12 +26,11 @@
  *
  */
 
-#include <cstdint>
-
-#include <immintrin.h>
 
 #include "cipher/aesni.hh"
-#include "error.hh"
+
+#include <cstdint>
+#include <immintrin.h>
 
 namespace alcp::cipher { namespace aesni {
 

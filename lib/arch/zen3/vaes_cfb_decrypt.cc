@@ -25,15 +25,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include <cstdint>
-#include <immintrin.h>
 
-#include "cipher/aes.hh"
 #include "vaes.hh"
 
-#include "error.hh"
-#include "key.hh"
-#include "types.hh"
+#include "cipher/aes.hh"
+#include "alcp/types.hh"
+
+#include <immintrin.h>
 
 namespace alcp::cipher::vaes {
 

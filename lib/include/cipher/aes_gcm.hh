@@ -26,19 +26,14 @@
  *
  */
 
-#ifndef _CIPHER_AES_CTR_HH_
-#define _CIPHER_AES_CTR_HH_ 2
-
-#include <cstdint>
-
-#include <immintrin.h>
+#pragma once
 
 #include "alcp/error.h"
 
-#include "error.hh"
+#include <cstdint>
+#include <immintrin.h>
 
 namespace alcp::cipher { namespace aes {
 
 }} // namespace alcp::cipher::aes
 
-#endif /* _CIPHER_AES_CTR_HH_ */

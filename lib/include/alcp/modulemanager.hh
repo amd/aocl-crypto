@@ -25,64 +25,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#pragma once
 
-#ifndef _INCLUDE_MODULE_H_
-#define _INCLUDE_MODULE_H_ 2
+#include "alcp/alcp.h"
 
-#include <string>
+#include "alcp/base.hh"
+#include "alcp/module.hh"
 
-#include "alcp/cipher.h"
-
-#include "algorithm.hh"
-#include "error.hh"
+#include <memory> /* for std::unique_ptr */
+#include <vector>
 
 namespace alcp {
 
-typedef enum _alc_module_type
+class ModuleManager
 {
-    ALC_MODULE_TYPE_NONE = 0,
-
-    ALC_MODULE_TYPE_CIPHER,
-    ALC_MODULE_TYPE_DIGEST,
-    ALC_MODULE_TYPE_RNG,
-    ALC_MODULE_TYPE_MAC,
-
-    ALC_MODULE_TYPE_MAX,
-} alc_module_type_t;
-
-typedef struct _alc_module_info
-{
-    alc_module_type_t type;
-    union
-    {
-        const alc_cipher_info_p cipher;
-        // const alc_digest_info_p digest;
-        // const alc_mac_info_p mac;
-        // const alc_aead_info_p aead;
-        // const alc_rng_info_p rng;
-    } data;
-} alc_module_info_t;
-
-typedef struct _alc_module_data
-{
-
-} alc_module_data_t;
-
-class Module
-{
+  using Status = alcp::base::Status;
   public:
-    Module(alc_module_info_t* minfo);
-    std::string       getName();
-    alc_module_type_t getType();
-    bool isSupported(const alc_cipher_info_p c, alc_error_t& e) const;
+    static ModuleManager& getInstance();
+
+    Status addModule(alc_module_info_t* minfo);
+    Status deleteModule(alc_module_info_t* minfo);
+
+    Module* findModule(const alc_module_info_t* ctx, alc_error_t& err);
+
+  public:
+    ModuleManager(ModuleManager const&) = delete;
+    void operator=(ModuleManager const&) = delete;
 
   private:
-    alc_module_info_t m_info;
+    ModuleManager();
+    ~ModuleManager();
 
+  private:
     class Impl;
     std::unique_ptr<Impl> impl;
 };
 
 } // namespace alcp
-
-#endif /* _INCLUDE_MODULE_H_ */

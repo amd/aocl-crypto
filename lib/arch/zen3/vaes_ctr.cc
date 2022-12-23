@@ -25,24 +25,21 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include <cstdint>
-#include <immintrin.h>
 
 #include "avx256.hh"
 #include "vaes.hh"
 
 #include "cipher/aes.hh"
 #include "cipher/aes_ctr.hh"
+#include "alcp/types.hh"
 
-#include "error.hh"
-#include "key.hh"
-#include "types.hh"
+#include <immintrin.h>
 
 namespace alcp::cipher::vaes {
 
 void
 ctrInit(__m256i*       c1,
-        const uint8_t* pIv,
+        const Uint8* pIv,
         __m256i*       onelo,
         __m256i*       one_x,
         __m256i*       two_x,
@@ -83,9 +80,9 @@ ctrInit(__m256i*       c1,
 uint64_t
 ctrProcessAvx256(const Uint8*   p_in_x,
                  Uint8*         p_out_x,
-                 uint64_t       blocks,
+                 Uint64       blocks,
                  const __m128i* pkey128,
-                 const uint8_t* pIv,
+                 const Uint8* pIv,
                  int            nRounds)
 {
     auto p_in_256  = reinterpret_cast<const __m256i*>(p_in_x);

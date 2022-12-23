@@ -28,21 +28,22 @@
 
 #pragma once
 
-#include <memory>
-
 #include "alcp/cipher.h"
 
-//#include "algorithm.hh"
+#include "alcp/base.hh"
 #include "cipher.hh"
-#include "types.hh"
 #include "utils/bits.hh"
 
+#include <memory>
+
 namespace alcp::cipher {
+using Status = alcp::base::Status;
 
 class ALCP_API_EXPORT Rijndael
     : public alcp::ICipher
     , protected Cipher
 {
+
   public:
     static Uint32 constexpr cAlignment     = 16;
     static Uint32 constexpr cAlignmentWord = cAlignment / utils::BytesPerWord;
@@ -86,7 +87,7 @@ class ALCP_API_EXPORT Rijndael
     const Uint8* getEncryptKeys() const;
     const Uint8* getDecryptKeys() const;
 
-    virtual void setKey(const Uint8* pUserKey, Uint64 len);
+    virtual Status setKey(const Uint8* pUserKey, Uint64 len);
     virtual void setEncryptKey(const Uint8* pEncKey, Uint64 len);
     virtual void setDecryptKey(const Uint8* pDecKey, Uint64 len);
 

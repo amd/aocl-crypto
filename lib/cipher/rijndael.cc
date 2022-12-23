@@ -25,24 +25,21 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include <cstdalign>
-#include <map>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "alcp/error.h"
 
+#include "alcp/base.hh"
 #include "cipher/aes.hh"
 #include "cipher/cipher_wrapper.hh"
-
 #include "utils/bits.hh"
 #include "utils/constants.hh"
 #include "utils/copy.hh"
 
+#include <map>
+
 #define ROR(inp, n) ((inp >> n) | (inp << (32 - n)))
 
-using alcp::utils::CpuId;
+using namespace alcp::base; // for Status
 
 static inline void
 mix_column_exchange(Uint8* inp, Uint8* out)
@@ -893,26 +890,28 @@ Rijndael::getDecryptKeys() const
 
 #define BYTE0O_WORD(x) utils::BytesToWord<Uint8>((x), 0, 0, 0)
 
-void
+Status
 Rijndael::setKey(const Uint8* pUserKey, Uint64 len)
 {
     if ((len < cMinKeySize) || (len > cMaxKeySize))
-        throw InvalidArgumentException("Key length not acceptable");
+    {}
+        //InvalidArgumentException("Key length not acceptable");
 
     /* FIXME: we should make Impl::setKey to get this done */
     // pImpl()->expandKeys(pUserKey);
+    return StatusOk();
 }
 
 void
 Rijndael::setDecryptKey(const Uint8*, Uint64)
 {
-    NotImplemented();
+    NotImplementedException(ALCP_SOURCE_LOCATION());
 }
 
 void
 Rijndael::setEncryptKey(const Uint8*, Uint64)
 {
-    NotImplemented();
+    NotImplementedException(ALCP_SOURCE_LOCATION());
 }
 
 Uint32

@@ -112,6 +112,10 @@ class GenericError final : public ErrorBase
         : ErrorBase{ ErrorCode::eOk }
     {}
 
+    GenericError(Uint64 ecode)
+        : ErrorBase{ ecode }
+    {}
+
     GenericError(ErrorCode ecode)
     {
         ErrorBase::setModuleType(0);

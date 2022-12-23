@@ -28,15 +28,17 @@
 
 #pragma once
 
-#include "error.hh"
+#include "alcp/error.h"  // for alc_error_t
 
 namespace alcp::digest { namespace avx2 {
 
+    /* TODO: change alc_error_t -> Status */
     alc_error_t ShaUpdate256(uint32_t*       pHash,
                              const uint8_t*  pSrc,
                              uint64_t        src_len,
                              const uint32_t* pHashConstants);
 
+    /* TODO: change alc_error_t -> Status */
     alc_error_t ShaUpdate512(uint64_t*      pHash,
                              const uint8_t* pSrc,
                              uint64_t       src_len);

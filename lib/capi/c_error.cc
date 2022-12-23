@@ -29,28 +29,37 @@
 #include "alcp/error.h"
 #include "alcp/macros.h"
 
-#include "error.hh"
+#include "alcp/types.hh"
+#include "alcp/base/error.hh"
+
+#include <cstring>
 
 EXTERN_C_BEGIN
 
+using namespace alcp::base;
+
 void
 alc_error_str_internal(alc_error_t err,
-                       uint8_t*    buf,
-                       uint64_t    size,
+                       Uint8*    buf,
+                       Uint64    size,
                        const char* file,
-                       uint64_t    line)
+                       Uint64    line)
 {}
 
 void
-alcp_error_str(alc_error_t err, uint8_t* buf, uint64_t size)
+alcp_error_str(alc_error_t err, Uint8* buf, Uint64 size)
 {
-    alcp::Error::print(err, buf, size);
+    auto e = GenericError{err};
+    auto str = e.message();
+    size = std::min(str.size(), size);
+        
+    snprintf((char*)buf, size, "%s", str.c_str());
 }
 
 bool
 alcp_is_error(alc_error_t err)
 {
-    return alcp::Error::isError(err);
+    return err != 0;
 }
 
 EXTERN_C_END

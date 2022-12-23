@@ -31,11 +31,9 @@
 #include "alcp/cipher.h"
 #include "alcp/macros.h"
 
-#include "cipher.hh"
-#include "defs.hh"
-#include "error.hh"
-
+#include "alcp/capi/defs.hh"
 #include "capi/cipher/builder.hh"
+#include "cipher.hh"
 
 using namespace alcp;
 
@@ -50,10 +48,10 @@ alcp_cipher_supported(const alc_cipher_info_p pCipherInfo)
 
     // err = cipher::FindCipher(*pCipherInfo).isSupported();
 
-    if (Error::isError(err))
-        goto outa;
+    // if (Error::isError(err))
+    //    goto outa;
 
-outa:
+    // outa:
     return err;
 }
 

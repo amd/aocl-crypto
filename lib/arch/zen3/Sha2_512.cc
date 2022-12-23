@@ -26,15 +26,14 @@
  *
  */
 
-#include <iostream>
-#include <string.h>
-#include <x86intrin.h>
-
 #include "config.h"
 #include "digest.hh"
 #include "digest/sha2_512.hh"
 #include "digest/sha_avx256.hh"
-#include "error.hh"
+
+#include <string.h>
+#include <x86intrin.h>
+#include <iostream>
 
 #define SHA512_WORDS_IN_128_BIT_VEC                                            \
     2 // Number of sha512 words that can be accomodated in 128 bit vector

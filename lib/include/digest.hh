@@ -29,12 +29,14 @@
 #pragma once
 
 /* C-API headers */
-#include "alcp/digest.h"
-#include "alcp/types.h"
 #include "config.h"
 
-/* C++ headers */
-#include "error.hh"
+#ifdef ALCP_ENABLE_AOCL_CPUID
+#include "alci/cpu_features.h"
+#endif
+
+#include "alcp/digest.h"
+#include "alcp/types.h"
 
 /* System headers */
 #include <memory_resource>

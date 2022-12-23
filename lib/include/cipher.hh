@@ -156,16 +156,7 @@ class Cipher
      * \return          'true' if the given configuration/cipher is
      * supported 'false' otherwise
      */
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
-                             alc_error_t&             err)
-#if 1
-        = 0;
-#else
-    {
-        Error::setGeneric(err, ALC_ERROR_NOT_SUPPORTED);
-        return false;
-    }
-#endif
+    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) = 0;
 
   protected:
     Cipher() {}

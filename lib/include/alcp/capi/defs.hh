@@ -25,58 +25,55 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#pragma once
 
-#ifndef _ALCP_DEFS_H
-#define _ALCP_DEFS_H 2
-
-#include "error.hh"
+#include "alcp/base.hh"
 
 #define ALCP_BAD_PTR_ERR_RET(ptr, err)                                         \
     do {                                                                       \
+        using namespace alcp::base;                                            \
         if (nullptr == ptr) {                                                  \
-            alcp::Error::setGeneric(err, ALC_ERROR_INVALID_ARG);               \
-            return err;                                                        \
+            auto e = GenericError{ eInvalidArgument };                         \
+            return (alc_error_t)e.code();                                      \
         }                                                                      \
     } while (0)
 
 #define ALCP_ZERO_LEN_ERR_RET(len, err)                                        \
     do {                                                                       \
+        using namespace alcp::base;                                            \
         if (0 == len) {                                                        \
-            alcp::Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);              \
-            return err;                                                        \
+            auto e = GenericError{ eInvalidArgument };                         \
+            return (alc_error_t)e.code();                                      \
         }                                                                      \
     } while (0)
 
 #if defined(ALCP_BUILD_OS_WINDOWS)
-    #if defined(VC)
-        #define ALCP_BUILD_COMPILER_IS_VC       1
-    #elif defined(__clang__)
-        #define ALCP_BUILD_COMPILER_IS_CLANG    1
-    #else
-        #warning "Unkown compiler"
-    #endif
-
-#elif defined(ALCP_BUILD_OS_LINUX)
-    #if defined(__GNUC__)
-        #define ALCP_BUILD_COMPILER_IS_GCC      1
-    #elif defined(__clang__)
-        #define ALCP_BUILD_COMPILER_IS_CLANG    1
-    #else
-        #warning "Unkown compiler"
-    #endif
+#if defined(VC)
+#define ALCP_BUILD_COMPILER_IS_VC 1
+#elif defined(__clang__)
+#define ALCP_BUILD_COMPILER_IS_CLANG 1
+#else
+#warning "Unkown compiler"
 #endif
 
+#elif defined(ALCP_BUILD_OS_LINUX)
+#if defined(__GNUC__)
+#define ALCP_BUILD_COMPILER_IS_GCC 1
+#elif defined(__clang__)
+#define ALCP_BUILD_COMPILER_IS_CLANG 1
+#else
+#warning "Unkown compiler"
+#endif
+#endif
 
 #if defined(ALCP_BUILD_OS_WINDOWS)
-    #define ALCP_ALIGN(x)        __declspec align((x))
+#define ALCP_ALIGN(x) __declspec align((x))
 #elif defined(ALCP_BUILD_OS_LINUX)
-    #if defined(__cplusplus)
-        #define ALCP_ALIGN(x)    alignas(x)
-    #else
-        #define ALCP_ALIGN(x)    __attribute__((aligned((x))))
-    #endif
+#if defined(__cplusplus)
+#define ALCP_ALIGN(x) alignas(x)
 #else
-    #define ALCP_ALIGN(x)
+#define ALCP_ALIGN(x) __attribute__((aligned((x))))
 #endif
-
-#endif /* _ALCP_DEFS_H */
+#else
+#define ALCP_ALIGN(x)
+#endif

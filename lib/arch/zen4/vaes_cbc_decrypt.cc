@@ -34,9 +34,8 @@
 #include "vaes_avx512.hh"
 #include "vaes_avx512_core.hh"
 
-#include "error.hh"
+#include "alcp/base.hh"
 #include "key.hh"
-#include "types.hh"
 
 namespace alcp::cipher::vaes512 {
 

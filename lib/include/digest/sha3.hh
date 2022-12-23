@@ -31,6 +31,8 @@
 #include "config.h"
 #include "digest.hh"
 
+#include <memory>
+
 namespace alcp::digest {
 
 // matrix dimension

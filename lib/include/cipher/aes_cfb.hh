@@ -34,7 +34,7 @@
 #include "alcp/error.h"
 
 #include "cipher/aes.hh"
-#include "error.hh"
+#include "alcp/base/error.hh"
 
 namespace alcp::cipher {
 
@@ -64,15 +64,11 @@ class ALCP_API_EXPORT Cfb final : public Aes
      * \param
      * \return
      */
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
-                             alc_error_t&             err) override
+    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
     {
-        Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
-
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
             auto aip = &cipherInfo.ci_algo_info;
             if (aip->ai_mode == ALC_AES_MODE_CFB) {
-                Error::setDetail(err, ALC_ERROR_NONE);
                 return true;
             }
         }

@@ -26,11 +26,14 @@
  *
  */
 
-#include "alcp/utils/cpuid.hh"
-#include "capi/rng/builder.hh"
 #include "rng.hh"
+#include "capi/rng/builder.hh"
 
-#include "error.hh"
+#ifdef ALCP_ENABLE_AOCL_CPUID
+#include "alci/cpu_features.h"
+#endif
+
+#include "alcp/base/error.hh"
 
 EXTERN_C_BEGIN
 

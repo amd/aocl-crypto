@@ -32,7 +32,6 @@
 
 #include "avx512.hh"
 #include "cipher/aesni.hh"
-#include "error.hh"
 #include "vaes_avx512.hh"
 #include "vaes_avx512_core.hh"
 

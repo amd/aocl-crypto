@@ -26,16 +26,13 @@
  *
  */
 #include "avx2.hh"
+
 #include "cipher/aes.hh"
 #include "cipher/aes_gcm.hh"
 #include "cipher/aesni.hh"
 #include "cipher/gmul.hh"
-#include <cstdint>
-#include <immintrin.h>
-#include <wmmintrin.h>
 
-#include "error.hh"
-#include "key.hh"
+#include <immintrin.h>
 
 namespace alcp::cipher::aesni {
 
