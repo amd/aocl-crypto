@@ -116,77 +116,97 @@ main(void)
     };
 
     static const struct string_vector STRING_VECTORS[] = {
-        { "11111111111111111111111111111111111111111111111111111111111111111111"
-          "11111111111111111111111111111111111111111111111111111111111111111111"
-          "11111111111111111111111111111111111111111111111111111111111111111111"
-          "11111111111111111111111111111111111111111111111111111111111111111111"
-          "11111111111111111111111111111111111111111111111111111111111111111111"
-          "11111111111111111111111111111111111111111111111111111111111111111111"
-          "11111111111111111111111111111111111111111111111111111111111111111111"
-          "111111111111111111111111111111111122",
+        { (Uint8*)"111111111111111111111111111111111111111111111111111111111111"
+                  "11111111"
+                  "111111111111111111111111111111111111111111111111111111111111"
+                  "11111111"
+                  "111111111111111111111111111111111111111111111111111111111111"
+                  "11111111"
+                  "111111111111111111111111111111111111111111111111111111111111"
+                  "11111111"
+                  "111111111111111111111111111111111111111111111111111111111111"
+                  "11111111"
+                  "111111111111111111111111111111111111111111111111111111111111"
+                  "11111111"
+                  "111111111111111111111111111111111111111111111111111111111111"
+                  "11111111"
+                  "111111111111111111111111111111111122",
           "4037dd5fb3932ecff8a17c4ad37e251b6b50cb9033cc3db0d64e42320b119367",
           1 },
 
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
-          "456789abcdef0123456789abcdef0123456789abcdef012345",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef0123"
+                  "456789abcdef0123456789abcdef0123456789abcdef012345",
           "11063bb01a3aa3206b499c8170aaa78f964ebead863f4411c97da42cea01d6c9",
           2 },
 
-        { "",
+        { (Uint8*)"",
           "a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a",
           3 },
 
-        { "abc",
+        { (Uint8*)"abc",
           "3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532",
           4 },
 
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef",
           "c3eea27e79a4915ed0ebe3645f242d863142d6062c61ef54dbd80ce4ebd7eb3b",
           1 },
 
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
-          "456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef0123"
+                  "456789abcdef0123456789abcdef0123456789abcdef0123456789abcde"
+                  "f",
           "44b36b3e510e8797e3b090f41ac7fc7864aafec9dd69788ccbc739a00375c168",
           2 },
 
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cde",
           "0c0fc587257a8650fc4d18dcb22640a87686001b6319508e722661c45756563f",
           3 },
 
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
-          "456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef0123"
+                  "456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
           "d59264abd4e1bdaaa6f706baeae5a2280fc049cee539cfa6fba778fffe009e8b",
           4 },
 
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
-          "456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef0123"
+                  "456789abcdef0123456789abcdef0123456789abcdef0123456789abcde"
+                  "f",
           "44b36b3e510e8797e3b090f41ac7fc7864aafec9dd69788ccbc739a00375c168",
           1 },
 
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef0",
           "050f918d4be0234f803753488bc5e27b1bd590018fe7238c3a7974303dd08f66",
           2 },
 
-        { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+        { (Uint8*)"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
           "41c0dba2a9d6240849100376a8235e2c82e1b9998a999e21db32dd97496d3376",
           3 },
 
-        { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno",
+        { (Uint8*)"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijk"
+                  "lmno",
           "3706569f9a29d62991ebe62f080ea3fac18034d2fffd23b136c10f7148fceb38",
           4 },
 
-        { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoabcd"
-          "efgh",
+        { (Uint8*)"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijk"
+                  "lmnoabcd"
+                  "efgh",
           "acc738e667c5dbab2dc0338b2cd7256ec722af18b61bbd4a64092c6eaa9866b8",
           1 },
 
-        { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoabcd"
-          "efg",
+        { (Uint8*)"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijk"
+                  "lmnoabcd"
+                  "efg",
           "071fab7ea3e62cd3440ebc1dfc1d80a8948a4046d43e7c3efaf86cbaf457d810",
           2 },
 
-        { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoabcd"
-          "efghi",
+        { (Uint8*)"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijk"
+                  "lmnoabcd"
+                  "efghi",
           "1723b5fa4fc5ae6a85866d2e41c395a373210e92cea5af41e5d363f2fc0117c"
           "2",
           3 }
@@ -216,7 +236,7 @@ main(void)
 
         if (!alcp_is_error(err)) {
             err = hash_demo(sample_input,
-                            strlen(sample_input),
+                            strlen((const char*)sample_input),
                             sample_output,
                             sizeof(sample_output),
                             num_chunks);

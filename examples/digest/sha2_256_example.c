@@ -120,26 +120,30 @@ main(void)
     };
 
     static const struct string_vector STRING_VECTORS[] = {
-        { "",
+        { (Uint8*)"",
           "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
           1 },
-        { "abc",
+        { (Uint8*)"abc",
           "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
           2 },
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef",
           "a8ae6e6ee929abea3afcfc5258c8ccd6f85273e0d4626d26c7279f3250f77c8e",
           3 },
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cde",
           "057ee79ece0b9a849552ab8d3c335fe9a5f1c46ef5f1d9b190c295728628299c",
           4 },
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef0",
           "2a6ad82f3620d3ebe9d678c812ae12312699d673240d5be8fac0910a70000d93",
           1 },
-        { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+        { (Uint8*)"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
           "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1",
           2 },
-        { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno"
-          "ijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
+        { (Uint8*)"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijk"
+                  "lmno"
+                  "ijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
           "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d"
           "1",
           3 }
@@ -168,7 +172,7 @@ main(void)
 
         if (!alcp_is_error(err)) {
             err = hash_demo(sample_input,
-                            strlen(sample_input),
+                            strlen((const char*)sample_input),
                             sample_output,
                             sizeof(sample_output),
                             num_chunks);

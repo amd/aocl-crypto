@@ -116,97 +116,117 @@ main(void)
     };
 
     static const struct string_vector STRING_VECTORS[] = {
-        { "11111111111111111111111111111111111111111111111111111111111111111111"
-          "11111111111111111111111111111111111111111111111111111111111111111111"
-          "11111111111111111111111111111111111111111111111111111111111111111111"
-          "11111111111111111111111111111111111111111111111111111111111111111111"
-          "11111111111111111111111111111111111111111111111111111111111111111111"
-          "11111111111111111111111111111111111111111111111111111111111111111111"
-          "11111111111111111111111111111111111111111111111111111111111111111111"
-          "111111111111111111111111111111111122",
+        { (Uint8*)"111111111111111111111111111111111111111111111111111111111111"
+                  "11111111"
+                  "111111111111111111111111111111111111111111111111111111111111"
+                  "11111111"
+                  "111111111111111111111111111111111111111111111111111111111111"
+                  "11111111"
+                  "111111111111111111111111111111111111111111111111111111111111"
+                  "11111111"
+                  "111111111111111111111111111111111111111111111111111111111111"
+                  "11111111"
+                  "111111111111111111111111111111111111111111111111111111111111"
+                  "11111111"
+                  "111111111111111111111111111111111111111111111111111111111111"
+                  "11111111"
+                  "111111111111111111111111111111111122",
           "d69f070fa97a306f530cdfe4d8e64c9edbbe34a30d8fbd96b91331c4d6f2d62aa0e4"
           "4"
           "75e824e56faf7a37cb689145856",
           1 },
 
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
-          "456789abcdef0123456789abcdef0123456789abcdef012345",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef0123"
+                  "456789abcdef0123456789abcdef0123456789abcdef012345",
           "d24bb0a96cfa410457eaaeb24c6136ef1be1f1cffface827872dbe3a9c27770ece68"
           "479670378950b5110e22e9de812a",
           2 },
 
-        { "",
+        { (Uint8*)"",
           "0c63a75b845e4f7d01107d852e4c2485c51a50aaaa94fc61995e71bbee983a2ac371"
           "3"
           "831264adb47fb6bd1e058d5f004",
           3 },
 
-        { "abc",
+        { (Uint8*)"abc",
           "ec01498288516fc926459f58e2c6ad8df9b473cb0fc08c2596da7cf0e49be4b298d8"
           "8"
           "cea927ac7f539f1edf228376d25",
           4 },
 
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef",
           "fcb7582349a4f7e8d13fe6488b275a2daac2eca4e0a303b6386d3e7016586331"
           "7f329795be37ef3a123c2749bfa3e47a",
           1 },
 
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
-          "456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef0123"
+                  "456789abcdef0123456789abcdef0123456789abcdef0123456789abcde"
+                  "f",
           "605a9162c27bf0a8a2abe8abdf9a649e6a889a1fff5728828563b3cae839412cb5c5"
           "4"
           "30f01eff3367467ddd9a57d1528",
           2 },
 
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cde",
           "fd497541c7451befb602abc2e919abace36ae4183f667866fceb1e92ebc44cd"
           "70c41fb5083646edb8510edd7f0925701",
           3 },
 
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
-          "456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef0123"
+                  "456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
           "3342e284d9293abc4f8b4fac23de01bd89bb6715a795cfc075f53018adb4861bd102"
           "177ef6a9ab494562673f505c48a1",
           4 },
 
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
-          "456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef0123"
+                  "456789abcdef0123456789abcdef0123456789abcdef0123456789abcde"
+                  "f",
           "605a9162c27bf0a8a2abe8abdf9a649e6a889a1fff5728828563b3cae839412cb5c5"
           "430f01eff3367467ddd9a57d1528",
           1 },
 
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef0",
           "8e6822047d571739e0e9247786ed79a41c5a480c3c6f5264e6cb7b8efdab955b7"
           "892f5c8f8f90cacac65325db2d0af4a",
           2 },
 
-        { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+        { (Uint8*)"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
           "991c665755eb3a4b6bbdfb75c78a492e8c56a22c5c4d7e429bfdbc32b"
           "9d4ad5aa04a1f076e62fea19eef51acd0657c22",
           3 },
 
-        { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno",
+        { (Uint8*)"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijk"
+                  "lmno",
           "d37238ca41bbf3a5f04680e2f23c6681798678f7b7f4d8a1663507d7c6877cfa"
           "f32d76e7c0a8493bda32e499ee8bf904",
           4 },
 
-        { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoabcd"
-          "efgh",
+        { (Uint8*)"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijk"
+                  "lmnoabcd"
+                  "efgh",
           "e1fe24e27c0103b4d659789804cbb49eb58237014038e826e1c0e6d41c39b214caef"
           "76286f8b826cc0a9c775ab6ae05f",
           1 },
 
-        { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoabcd"
-          "efg",
+        { (Uint8*)"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijk"
+                  "lmnoabcd"
+                  "efg",
           "e0ea44f082f01015a495ebcde4bdfb23fcda1842b2e86a09adfedae7bddb74241d6a"
           "082b86d6f6a5ae1599eeb6f4ca87",
           2
 
         },
 
-        { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoabcd"
-          "efghi",
+        { (Uint8*)"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijk"
+                  "lmnoabcd"
+                  "efghi",
           "cfb9539f640653520a4e9fe79f01caf43bdf558bf31e08cf9f78ed718df25ce54627"
           "2"
           "a6f842c0b6628bc12ba234338ea",
@@ -238,7 +258,7 @@ main(void)
 
         if (!alcp_is_error(err)) {
             err = hash_demo(sample_input,
-                            strlen(sample_input),
+                            strlen((const char*)sample_input),
                             sample_output,
                             sizeof(sample_output),
                             num_chunks);

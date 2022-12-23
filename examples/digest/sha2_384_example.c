@@ -119,46 +119,55 @@ main(void)
     };
 
     static const struct string_vector STRING_VECTORS[] = {
-        { "",
+        { (Uint8*)"",
           "38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274e"
           "debfe76f65fbd51ad2f14898b95b",
           1 },
-        { "abc",
+        { (Uint8*)"abc",
           "cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086"
           "072ba1e7cc2358baeca134c825a7",
           2 },
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef",
           "648a627ba7edae512ab128eb8e4ad9cc13c9e89da332f71fe767f1c4dd0e5c2bd3f8"
           "3009b2855c02c7c7e488bcfc84dc",
           3 },
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
-          "456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef0123"
+                  "456789abcdef0123456789abcdef0123456789abcdef0123456789abcde"
+                  "f",
           "f932b89b678dbdddb555807703b3e4ff99d7082cc4008d3a623f40361caa24f8b53f"
           "7b112ed46f027ff66ef842d2d08c",
           4 },
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cde",
           "436ac328cb192b0077f8c29527f7a91214b8fe1b5c872cb176f5410f76c11d16b8b6"
           "d574aea17454afc4cdcd9e6a52ab",
           5 },
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
-          "456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef0123"
+                  "456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
           "5fe52b687a74a341872e833f53ed68fa1fd2efe237214c6b03bba3ef1c4395ae9574"
           "b75f467d3bde21eef1b0826c9041",
           1 },
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
-          "456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef0123"
+                  "456789abcdef0123456789abcdef0123456789abcdef0123456789abcde"
+                  "f",
           "f932b89b678dbdddb555807703b3e4ff99d7082cc4008d3a623f40361caa24f8b53f"
           "7b112ed46f027ff66ef842d2d08c",
           2 },
-        { "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0",
+        { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
+                  "cdef0",
           "1c95c92db36f7794fa23ea4d354b3bab1187cd8ee4a3dd42b70c343c1cf7d0aa92ba"
           "01e31560260caa23de17a5b76f0d",
           3 },
-        { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+        { (Uint8*)"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
           "3391fdddfc8dc7393707a65b1b4709397cf8b1d162af05abfe8f450de5f36bc6b045"
           "5a8520bc4e6f5fe95b1fe3c8452b",
           4 },
-        { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno",
+        { (Uint8*)"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijk"
+                  "lmno",
           "bdc0f4a6e0d7de88f374e6c2562441d856aeabed3f52553103f55eca811f64b422c7"
           "cb47a8067f123e45c1a8ee303635",
           5 }
@@ -188,7 +197,7 @@ main(void)
 
         if (!alcp_is_error(err)) {
             err = hash_demo(sample_input,
-                            strlen(sample_input),
+                            strlen((const char*)sample_input),
                             sample_output,
                             sizeof(sample_output),
                             num_chunks);
