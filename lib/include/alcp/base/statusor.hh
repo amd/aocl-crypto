@@ -25,8 +25,82 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "alcp/experimental/error.hh"
+#pragma once
 
-namespace alcp {
+#include "alcp/base/assert.hh"
+#include "alcp/base/status.hh"
 
+#include <optional>
+
+namespace alcp::base {
+
+template<typename T>
+class StatusOr
+{
+  public:
+    //using value_type = T;
+    //using type       = T;
+
+  public:
+    inline StatusOr();
+    inline StatusOr(Status& sts);
+
+    inline StatusOr(const T& val);
+    inline StatusOr(T&& val);
+
+    ALCP_DEFS_DEFAULT_COPY_AND_ASSIGNMENT(StatusOr);
+
+    /**
+     * @brief status() will return the underlying status
+     *
+     * {
+     *      StatusOr<Aes256Context> sts = Aes::Build("aes-256-cbc")
+     *
+     *      if (!sts.ok()) {
+     *          return sts.status();
+     *      }
+     *
+     *      auto val = *sts;
+     *
+     * }
+     *
+     * @return const Status&
+     */
+    inline const Status& status() const { return m_status; }
+    inline bool          ok() const { return m_status.ok(); }
+
+  private:
+    std::optional<T> m_value;
+    Status           m_status;
+
+  private:
+    inline bool assertNotOk() const
+    {
+        ALCP_ASSERT(!m_status.ok(), m_status.message());
+        return m_status.ok();
+    }
+};
+
+template<typename T>
+inline StatusOr<T>::StatusOr()
+		: m_status{ }
+{}
+
+template<typename T>
+inline StatusOr<T>::StatusOr(Status& sts)
+    : m_status{ sts }
+{
+    ALCP_ASSERT(!m_status.ok(), "Assigned status not ok!!");
 }
+
+template<typename T>
+inline StatusOr<T>::StatusOr(const T& value)
+    : m_value{ value }
+{}
+
+template<typename T>
+inline StatusOr<T>::StatusOr(T&& value)
+    : m_value{ std::move(value) }
+{}
+
+} // namespace alcp

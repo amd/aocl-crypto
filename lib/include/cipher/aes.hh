@@ -34,8 +34,9 @@
 //#include "algorithm.hh"
 #include "cipher.hh"
 #include "cipher/rijndael.hh"
-#include "exception.hh"
+#include "alcp/base.hh"
 #include "utils/bits.hh"
+
 #include <immintrin.h>
 #include <wmmintrin.h>
 
@@ -254,15 +255,11 @@ class ALCP_API_EXPORT Ctr final : public Aes
      * \param
      * \return
      */
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo,
-                             alc_error_t&             err)
+    virtual bool isSupported(const alc_cipher_info_t& cipherInfo)
     {
-        Error::setDetail(err, ALC_ERROR_NOT_SUPPORTED);
-
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
             auto aip = &cipherInfo.ci_algo_info;
             if (aip->ai_mode == ALC_AES_MODE_CTR) {
-                Error::setDetail(err, ALC_ERROR_NONE);
                 return true;
             }
         }
