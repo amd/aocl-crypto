@@ -52,10 +52,25 @@ namespace alcp::digest {
  * first 64 bits of the fractional parts of the square roots
  * of the first 8 primes 2..19
  */
-static constexpr Uint64 cIv[] = { 0x6a09e667f3bcc908, 0xbb67ae8584caa73b,
-                                  0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
-                                  0x510e527fade682d1, 0x9b05688c2b3e6c1f,
-                                  0x1f83d9abfb41bd6b, 0x5be0cd19137e2179 };
+static constexpr Uint64 cIv_512[] = { 0x6a09e667f3bcc908, 0xbb67ae8584caa73b,
+                                      0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
+                                      0x510e527fade682d1, 0x9b05688c2b3e6c1f,
+                                      0x1f83d9abfb41bd6b, 0x5be0cd19137e2179 };
+
+static constexpr Uint64 cIv_384[] = { 0xcbbb9d5dc1059ed8, 0x629a292a367cd507,
+                                      0x9159015a3070dd17, 0x152fecd8f70e5939,
+                                      0x67332667ffc00b31, 0x8eb44a8768581511,
+                                      0xdb0c2e0d64f98fa7, 0x47b5481dbefa4fa4 };
+
+static constexpr Uint64 cIv_256[] = { 0x22312194fc2bf72c, 0x9f555fa3c84c64c2,
+                                      0x2393b86b6f53b151, 0x963877195940eabd,
+                                      0x96283ee2a88effe3, 0xbe5e1e2553863992,
+                                      0x2b0199fc2c85b8aa, 0x0eb72ddc81c52ca2 };
+
+static constexpr Uint64 cIv_224[] = { 0x8c3d37c819544da2, 0x73e1996689dcd4d6,
+                                      0x1dfab7ae32ff9c82, 0x679dd514582f9fcf,
+                                      0x0f6d2b697bd44da8, 0x77e36f7304c48942,
+                                      0x3f9d85a86a1d36c8, 0x1112e6ad91d692a1 };
 
 static bool
 isAvx2Available()
@@ -68,21 +83,38 @@ isAvx2Available()
     return s_avx2_available;
 }
 
-Sha512::Sha512()
+Sha512::Sha512(alc_digest_len_t digest_len)
     : m_msg_len{ 0 }
     , m_hash{ 0,}
     , m_idx{ 0 }
     , m_finished{ false }
 {
-    m_mode             = ALC_SHA2_512;
-    m_digest_len       = ALC_DIGEST_LEN_512;
-    m_digest_len_bytes = 512 / 8;
+    m_mode       = ALC_SHA2_512;
+    m_digest_len = digest_len;
+    m_Iv         = cIv_512;
+    switch (digest_len) {
+        case ALC_DIGEST_LEN_224:
+            m_digest_len_bytes = 224 / 8;
+            m_Iv               = cIv_224;
+            break;
+        case ALC_DIGEST_LEN_256:
+            m_digest_len_bytes = 256 / 8;
+            m_Iv               = cIv_256;
+            break;
+        case ALC_DIGEST_LEN_384:
+            m_digest_len_bytes = 384 / 8;
+            m_Iv               = cIv_384;
+            break;
+        default:
+            m_digest_len_bytes = 512 / 8;
+            m_Iv               = cIv_512;
+    }
 
-    utils::CopyQWord(&m_hash[0], &cIv[0], cHashSize);
+    utils::CopyQWord(&m_hash[0], m_Iv, cIvSizeBytes);
 }
 
 Sha512::Sha512(const alc_digest_info_t& rDigestInfo)
-    : Sha512()
+    : Sha512(rDigestInfo.dt_len)
 {}
 
 Sha512::~Sha512() = default;
@@ -114,7 +146,7 @@ Sha512::reset()
     m_msg_len  = 0;
     m_finished = false;
     m_idx      = 0;
-    utils::CopyQWord(&m_hash[0], &cIv[0], cHashSize);
+    utils::CopyQWord(&m_hash[0], &m_Iv[0], cIvSizeBytes);
 }
 
 alc_error_t
@@ -127,13 +159,21 @@ Sha512::copyHash(Uint8* pHash, Uint64 size) const
         return err;
     }
 
-    if (size != cHashSize) {
+    if (size != m_digest_len_bytes) {
         Error::setGeneric(err, ALC_ERROR_INVALID_SIZE);
     }
 
-    if (!Error::isError(err))
+    if (!Error::isError(err)) {
         utils::CopyBlockWith<Uint64>(
-            pHash, m_hash, cHashSize, utils::ToBigEndian<Uint64>);
+            pHash, m_hash, m_digest_len_bytes, utils::ToBigEndian<Uint64>);
+
+        if (m_digest_len == ALC_DIGEST_LEN_224) {
+            // last 4 bytes can be copied after reversing the 64 bit since it is
+            // in little endian form
+            Uint64 hash = utils::ToBigEndian<Uint64>(m_hash[3]);
+            utils::CopyBytes(&pHash[24], &hash, 4);
+        }
+    }
 
     return err;
 }
@@ -274,8 +314,8 @@ Sha512::update(const Uint8* pSrc, Uint64 input_size)
     if (idx) {
         /*
          * Last call to update(), had some unprocessed bytes which is part
-         * of internal buffer, we process first block by copying from pSrc the
-         * remaining bytes of a chunk.
+         * of internal buffer, we process first block by copying from pSrc
+         * the remaining bytes of a chunk.
          */
         to_process = std::min(input_size, cChunkSize - idx);
         utils::CopyBytes(&m_buffer[idx], pSrc, to_process);
@@ -353,10 +393,11 @@ Sha512::finalize(const Uint8* pBuf, Uint64 size)
     __uint128_t* msg_len_ptr = reinterpret_cast<__uint128_t*>(
         &m_buffer[buf_len] - sizeof(__uint128_t));
 
-    /* TODO: Due to memory alignment, msg_len_ptr gets optimized in Windows.So, using CopyBytes to copy every bits*/
+    /* TODO: Due to memory alignment, msg_len_ptr gets optimized in Windows.So,
+     * using CopyBytes to copy every bits*/
     __uint128_t len_bits_copy = utils::ToBigEndian(len_in_bits);
     utils::CopyBytes(&msg_len_ptr[0], &len_bits_copy, 16);
-	 //msg_len_ptr[0] = utils::ToBigEndian(len_in_bits);
+    // msg_len_ptr[0] = utils::ToBigEndian(len_in_bits);
 #else
     Uint64      len_in_bits_high;
     Uint64      len_in_bits;
@@ -394,7 +435,7 @@ Sha512::finish()
 Uint64
 Sha512::getHashSize()
 {
-    return cHashSize;
+    return m_digest_len_bytes;
 }
 Uint64
 Sha512::getInputBlockSize()
