@@ -120,51 +120,72 @@ class Cpuid::Impl
      * @return false
      */
     static inline bool cpuHasRdSeed();
+    /**
+     * @brief Returns true if currently executing cpu is Zen2
+     *
+     * @return true
+     * @return false
+     */
+    static inline bool cpuIsZen2();
+    /**
+     * @brief Returns true if currently executing cpu is Zen3
+     *
+     * @return true
+     * @return false
+     */
+    static inline bool cpuIsZen3();
+    /**
+     * @brief Returns true if currently executing cpu is Zen4
+     *
+     * @return true
+     * @return false
+     */
+    static inline bool cpuIsZen4();
 };
 
 bool
 Cpuid::Impl::cpuHasAvx512f()
 {
-    static int m_avx512f = -1;
-    if (m_avx512f != -1) {
-        return m_avx512f;
+    static int state = -1;
+    if (state != -1) {
+        return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    m_avx512f = (alc_cpu_has_avx512f() > 0);
+    state = (alc_cpu_has_avx512f() > 0);
 #else
-    m_avx512f  = 0;
+    state = 0;
 #endif
-    return m_avx512f;
+    return state;
 }
 
 bool
 Cpuid::Impl::cpuHasAvx512dq()
 {
-    static int m_avx512dq = -1;
-    if (m_avx512dq != -1) {
-        return m_avx512dq;
+    static int state = -1;
+    if (state != -1) {
+        return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    m_avx512dq = (alc_cpu_has_avx512dq() > 0);
+    state = (alc_cpu_has_avx512dq() > 0);
 #else
-    m_avx512dq = 0;
+    state = 0;
 #endif
-    return m_avx512dq;
+    return state;
 }
 
 bool
 Cpuid::Impl::cpuHasAvx512bw()
 {
-    static int m_avx512bw = -1;
-    if (m_avx512bw != -1) {
-        return m_avx512bw;
+    static int state = -1;
+    if (state != -1) {
+        return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    m_avx512bw = (alc_cpu_has_avx512bw() > 0);
+    state = (alc_cpu_has_avx512bw() > 0);
 #else
-    m_avx512bw = 0;
+    state = 0;
 #endif
-    return m_avx512bw;
+    return state;
 }
 
 bool
@@ -186,85 +207,127 @@ Cpuid::Impl::cpuHasAvx512(avx512_flags_t flag)
 bool
 Cpuid::Impl::cpuHasVaes()
 {
-    static int m_vaes = -1;
-    if (m_vaes != -1) {
-        return m_vaes;
+    static int state = -1;
+    if (state != -1) {
+        return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    m_vaes = (alc_cpu_has_vaes() > 0);
+    state = (alc_cpu_has_vaes() > 0);
 #else
-    m_vaes     = 0;
+    state = 0;
 #endif
-    return m_vaes;
+    return state;
 }
 bool
 Cpuid::Impl::cpuHasAesni()
 {
-    static int m_aesni = -1;
-    if (m_aesni != -1) {
-        return m_aesni;
+    static int state = -1;
+    if (state != -1) {
+        return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    m_aesni = (alc_cpu_has_aes() > 0);
+    state = (alc_cpu_has_aes() > 0);
 #else
     // FIXME: Settig SHANI as available by default
-    m_aesni = 1;
+    state = 1;
 #endif
-    return m_aesni;
+    return state;
 }
 bool
 Cpuid::Impl::cpuHasShani()
 {
-    static int m_shani = -1;
-    if (m_shani != -1) {
-        return m_shani;
+    static int state = -1;
+    if (state != -1) {
+        return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    m_shani = (alc_cpu_has_sha() > 0);
+    state = (alc_cpu_has_sha() > 0);
 #else
     // FIXME: Settig SHANI as available by default
-    m_shani  = 1;
+    state = 1;
 #endif
-    return m_shani;
+    return state;
 }
 bool
 Cpuid::Impl::cpuHasAvx2()
 {
-    static int m_avx2 = -1;
-    if (m_avx2 != -1) {
-        return m_avx2;
+    static int state = -1;
+    if (state != -1) {
+        return state;
     }
     // FIXME: CPUID does not support this.
-    m_avx2 = 1;
-    return m_avx2;
+    state = 1;
+    return state;
 }
 bool
 Cpuid::Impl::cpuHasRdRand()
 {
-    static int m_rdrand = -1;
-    if (m_rdrand != -1) {
-        return m_rdrand;
+    static int state = -1;
+    if (state != -1) {
+        return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    m_rdrand = (alc_cpu_has_rdrnd() > 0);
+    state = (alc_cpu_has_rdrnd() > 0);
 #else
-    m_rdrand = 0;
+    state = 0;
 #endif
-    return m_rdrand;
+    return state;
 }
 bool
 Cpuid::Impl::cpuHasRdSeed()
 {
-    static int m_rdseed = -1;
-    if (m_rdseed != -1) {
-        return m_rdseed;
+    static int state = -1;
+    if (state != -1) {
+        return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    m_rdseed = (alc_cpu_has_rdseed() > 0);
+    state = (alc_cpu_has_rdseed() > 0);
 #else
-    m_rdseed = 0;
+    state = 0;
 #endif
-    return m_rdseed;
+    return state;
+}
+bool
+Cpuid::Impl::cpuIsZen2()
+{
+    static int state = -1;
+    if (state != -1) {
+        return state;
+    }
+#ifdef ALCP_ENABLE_AOCL_CPUID
+    state = (alc_cpu_arch_is_zen2() > 0);
+#else
+    state = 0;
+#endif
+    return state;
+}
+bool
+Cpuid::Impl::cpuIsZen3()
+{
+    static int state = -1;
+    if (state != -1) {
+        return state;
+    }
+#ifdef ALCP_ENABLE_AOCL_CPUID
+    state = (alc_cpu_arch_is_zen3() > 0);
+#else
+    state = 0;
+#endif
+    return state;
+}
+bool
+Cpuid::Impl::cpuIsZen4()
+{
+    static int state = -1;
+    if (state != -1) {
+        return state;
+    }
+#ifdef ALCP_ENABLE_AOCL_CPUID
+    state = (alc_cpu_arch_is_zen4() > 0);
+#else
+    state = 0;
+#endif
+    return state;
 }
 
 bool
@@ -325,6 +388,24 @@ bool
 Cpuid::cpuHasRdSeed()
 {
     return Impl::cpuHasRdSeed();
+}
+
+bool
+Cpuid::cpuIsZen2()
+{
+    return Impl::cpuIsZen2();
+}
+
+bool
+Cpuid::cpuIsZen3()
+{
+    return Impl::cpuIsZen3();
+}
+
+bool
+Cpuid::cpuIsZen4()
+{
+    return Impl::cpuIsZen4();
 }
 
 Cpuid::Cpuid()  = default;

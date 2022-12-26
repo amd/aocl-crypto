@@ -32,6 +32,7 @@
 #include <string>
 #include <vector>
 
+#include "alcp/utils/cpuid.hh"
 #include "digest/sha3.hh"
 #include "digest/sha3_inplace.hh"
 #include "digest/sha3_zen3.hh"
@@ -40,6 +41,8 @@
 #include "utils/endian.hh"
 
 namespace utils = alcp::utils;
+
+using alcp::utils::Cpuid;
 
 namespace alcp::digest {
 
@@ -168,7 +171,9 @@ Sha3::Impl::squeezeChunk()
 {
     Uint64 hash_copied = 0;
 
-    static bool zen3_available = isZen3() || isZen4();
+    // FIXME: Suggestion, in Zen1 this algorithm works and gives better
+    // performance. I guess having similar code in avx2 arch will be better.
+    static bool zen3_available = Cpuid::cpuIsZen3() || Cpuid::cpuIsZen4();
 
     if (zen3_available) {
         return zen3::Sha3Finalize(
@@ -292,7 +297,9 @@ Sha3::Impl::processChunk(const Uint8* pSrc, Uint64 len)
     Uint64  msg_size       = len;
     Uint64* p_msg_buffer64 = (Uint64*)pSrc;
 
-    static bool zen3_available = isZen3() || isZen4();
+    // FIXME: Suggestion, in Zen1 this algorithm works and gives better
+    // performance. I guess having similar code in avx2 arch will be better.
+    static bool zen3_available = Cpuid::cpuIsZen3() || Cpuid::cpuIsZen4();
 
     if (zen3_available) {
         return zen3::Sha3Update(
@@ -345,8 +352,8 @@ Sha3::Impl::update(const Uint8* pSrc, Uint64 inputSize)
     if (idx) {
         /*
          * Last call to update(), had some unprocessed bytes which is part
-         * of internal buffer, we process first block by copying from pSrc the
-         * remaining bytes of a chunk.
+         * of internal buffer, we process first block by copying from pSrc
+         * the remaining bytes of a chunk.
          */
         to_process = std::min(inputSize, m_chunk_size - idx);
         utils::CopyBytes(&m_buffer[idx], pSrc, to_process);

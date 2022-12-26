@@ -126,6 +126,27 @@ class Cpuid
      * @return false
      */
     static bool cpuHasRdSeed();
+    /**
+     * @brief Returns true if currently executing cpu is Zen2
+     *
+     * @return true
+     * @return false
+     */
+    static bool cpuIsZen2();
+    /**
+     * @brief Returns true if currently executing cpu is Zen3
+     *
+     * @return true
+     * @return false
+     */
+    static bool cpuIsZen3();
+    /**
+     * @brief Returns true if currently executing cpu is Zen4
+     *
+     * @return true
+     * @return false
+     */
+    static bool cpuIsZen4();
 
   private:
     class Impl;
