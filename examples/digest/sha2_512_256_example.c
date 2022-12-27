@@ -31,7 +31,7 @@
 
 #include "alcp/digest.h"
 
-#define DIGEST_SIZE 48
+#define DIGEST_SIZE 32
 
 static alc_digest_handle_t s_dg_handle;
 
@@ -42,8 +42,8 @@ create_demo_session(void)
 
     alc_digest_info_t dinfo = {
         .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len = ALC_DIGEST_LEN_384,
-        .dt_mode = {.dm_sha2 = ALC_SHA2_384,},
+        .dt_len = ALC_DIGEST_LEN_256,
+        .dt_mode = {.dm_sha2 = ALC_SHA2_512,},
     };
 
     Uint64 size         = alcp_digest_context_size(&dinfo);
@@ -119,56 +119,46 @@ main(void)
 
     static const struct string_vector STRING_VECTORS[] = {
         { (Uint8*)"",
-          "38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274e"
-          "debfe76f65fbd51ad2f14898b95b",
+          "c672b8d1ef56ed28ab87c3622c5114069bdd3ad7b8f9737498d0c01ecef0967a",
           1 },
         { (Uint8*)"abc",
-          "cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086"
-          "072ba1e7cc2358baeca134c825a7",
+          "53048e2681941ef99b2e29b76b4c7dabe4c2d0c634fc6d46e0e2f13107e7af23",
           2 },
         { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
                   "cdef",
-          "648a627ba7edae512ab128eb8e4ad9cc13c9e89da332f71fe767f1c4dd0e5c2bd3f8"
-          "3009b2855c02c7c7e488bcfc84dc",
+          "604aca8fc36471f3a2498244b365d83de32baf6322fa7a5f4207fe889b07cd87",
           3 },
         { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
                   "cdef0123"
                   "456789abcdef0123456789abcdef0123456789abcdef0123456789abcde"
                   "f",
-          "f932b89b678dbdddb555807703b3e4ff99d7082cc4008d3a623f40361caa24f8b53f"
-          "7b112ed46f027ff66ef842d2d08c",
+          "1c122a430c44df3918a5d534c63d35dea1e7ff2252914d62086cee777e16e003",
           4 },
         { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
                   "cde",
-          "436ac328cb192b0077f8c29527f7a91214b8fe1b5c872cb176f5410f76c11d16b8b6"
-          "d574aea17454afc4cdcd9e6a52ab",
+          "3d1f9a67abccf456f8773712f8bde3acb9ff39ffe806aad5a8a4492b3c3ad0b3",
           5 },
         { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
                   "cdef0123"
                   "456789abcdef0123456789abcdef0123456789abcdef0123456789abcde",
-          "5fe52b687a74a341872e833f53ed68fa1fd2efe237214c6b03bba3ef1c4395ae9574"
-          "b75f467d3bde21eef1b0826c9041",
+          "061b6947fee1a53aee8903e6d0d262ce2d10e675dbe0f83fe55d8c6c0eba4621",
           1 },
         { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
                   "cdef0123"
                   "456789abcdef0123456789abcdef0123456789abcdef0123456789abcde"
                   "f",
-          "f932b89b678dbdddb555807703b3e4ff99d7082cc4008d3a623f40361caa24f8b53f"
-          "7b112ed46f027ff66ef842d2d08c",
+          "1c122a430c44df3918a5d534c63d35dea1e7ff2252914d62086cee777e16e003",
           2 },
         { (Uint8*)"0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab"
                   "cdef0",
-          "1c95c92db36f7794fa23ea4d354b3bab1187cd8ee4a3dd42b70c343c1cf7d0aa92ba"
-          "01e31560260caa23de17a5b76f0d",
+          "26dac7bfda905c286ff40620be79b1118341c17fc40446252a81df39ac1968c0",
           3 },
         { (Uint8*)"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
-          "3391fdddfc8dc7393707a65b1b4709397cf8b1d162af05abfe8f450de5f36bc6b045"
-          "5a8520bc4e6f5fe95b1fe3c8452b",
+          "bde8e1f9f19bb9fd3406c90ec6bc47bd36d8ada9f11880dbc8a22a7078b6a461",
           4 },
         { (Uint8*)"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijk"
                   "lmno",
-          "bdc0f4a6e0d7de88f374e6c2562441d856aeabed3f52553103f55eca811f64b422c7"
-          "cb47a8067f123e45c1a8ee303635",
+          "835f9207766637f832cb3022f9d386b8b9426876f398d6b013a4925cc752806d",
           5 }
 
     };

@@ -110,7 +110,7 @@ class ALCP_API_EXPORT Sha512 final : public Sha2
         cIvSizeBytes                      = 64;                             /* IV size in bytes */
     // clang-format on
   public:
-    Sha512();
+    Sha512(alc_digest_len_t digest_len = ALC_DIGEST_LEN_512);
     Sha512(const alc_digest_info_t& rDigestInfo);
     virtual ~Sha512();
 
@@ -205,9 +205,9 @@ class ALCP_API_EXPORT Sha512 final : public Sha2
     Uint8  m_buffer[2 * cChunkSize];
     Uint64 m_hash[cHashSizeWords];
     /* index to m_buffer of previously unprocessed bytes */
-    Uint32 m_idx;
-    bool   m_finished;
+    Uint32        m_idx;
+    bool          m_finished;
+    const Uint64* m_Iv = nullptr;
 };
 
 } // namespace alcp::digest
-  

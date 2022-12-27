@@ -123,7 +123,7 @@ Sha384::copyHash(Uint8* pHash, Uint64 size) const
 
     // We should set intrim_hash size as 512 bit as we are calling into SHA512
     // algorithm. Later we should trim it to exact 384 bits
-    Uint8 intrim_hash[cHashSize + 16];
+    Uint8 intrim_hash[cHashSize];
     err = m_psha512->copyHash(intrim_hash, sizeof(intrim_hash));
 
     if (!Error::isError(err)) {

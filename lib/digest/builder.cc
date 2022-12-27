@@ -160,11 +160,19 @@ class Sha2Builder
 
         switch (rDigestInfo.dt_len) {
             case ALC_DIGEST_LEN_256:
-                __build_sha<Sha256>(rDigestInfo, rCtx);
+                if (rDigestInfo.dt_mode.dm_sha2 == ALC_SHA2_256) {
+                    __build_sha<Sha256>(rDigestInfo, rCtx);
+                } else {
+                    __build_sha<Sha512>(rDigestInfo, rCtx);
+                }
                 break;
 
             case ALC_DIGEST_LEN_224:
-                __build_sha<Sha224>(rDigestInfo, rCtx);
+                if (rDigestInfo.dt_mode.dm_sha2 == ALC_SHA2_224) {
+                    __build_sha<Sha224>(rDigestInfo, rCtx);
+                } else {
+                    __build_sha<Sha512>(rDigestInfo, rCtx);
+                }
                 break;
 
             case ALC_DIGEST_LEN_512:
@@ -213,9 +221,18 @@ DigestBuilder::getSize(const alc_digest_info_t& rDigestInfo)
         case ALC_DIGEST_TYPE_SHA2: {
             switch (rDigestInfo.dt_len) {
                 case ALC_DIGEST_LEN_256:
-                    return sizeof(Sha256);
+                    if (rDigestInfo.dt_mode.dm_sha2 == ALC_SHA2_256) {
+                        return sizeof(Sha256);
+                    } else {
+                        return sizeof(Sha512);
+                    }
+
                 case ALC_DIGEST_LEN_224:
-                    return sizeof(Sha224);
+                    if (rDigestInfo.dt_mode.dm_sha2 == ALC_SHA2_224) {
+                        return sizeof(Sha224);
+                    } else {
+                        return sizeof(Sha512);
+                    }
                 case ALC_DIGEST_LEN_512:
                     return sizeof(Sha512);
                 case ALC_DIGEST_LEN_384:
