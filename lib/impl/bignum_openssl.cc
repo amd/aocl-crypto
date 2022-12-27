@@ -148,7 +148,7 @@ class BigNum::Impl
     {
         BigNum    result;
         BigNumCtx ctx;
-        int       ret = false;
+        int       ret = 0;
 
         ret =
             BN_mul(result.pImpl()->raw(), raw(), rhs.pImpl()->raw(), ctx.raw());
@@ -221,7 +221,7 @@ class BigNum::Impl
 
         ret = BN_rshift(result.pImpl()->raw(), raw(), shifts);
 
-        ALCP_ASSERT(ret == 1, "BN_lshift failed");
+        ALCP_ASSERT(ret == 1, "BN_rshift failed");
 
         if (!ret)
             result.fromInt64(0);
