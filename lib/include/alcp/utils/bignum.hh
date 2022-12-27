@@ -40,43 +40,37 @@ class BigNum final
 
     BigNum(const BigNum& b);
     BigNum(const BigNum&& b);
-    void operator=(const BigNum& rhs);
+    BigNum& operator=(const BigNum& rhs);
 
   public:
     /* Arithmetic operation */
     BigNum operator+(const BigNum& rhs);
     BigNum operator-(const BigNum& rhs);
 
-    /* Arithmetic + Assignment */
-    inline BigNum& operator+=(const BigNum& rhs)
-    {
-        *this = *this + rhs;
-        return *this;
-    }
-
-#if 0
     BigNum operator*(const BigNum& rhs);
+
     BigNum operator/(const BigNum& rhs);
+
     BigNum operator%(const BigNum& rhs);
 
+    /* Binary operation */
+    BigNum operator>>(int shifts);
+    BigNum operator<<(int shifts);
+
     /* Arithmetic + Assignment */
-    BigNum& operator+=(const BigNum& rhs);
-    BigNum& operator-=(const BigNum& rhs);
-    BigNum& operator*=(const BigNum& rhs);
-    BigNum& operator/=(const BigNum& rhs);
-    BigNum& operator%=(const BigNum& rhs);
-
+    void operator+=(const BigNum& rhs);
+    void operator-=(const BigNum& rhs);
+    void operator*=(const BigNum& rhs);
+    void operator/=(const BigNum& rhs);
+    void operator%=(const BigNum& rhs);
     /* Logical + Assignment */
-    BigNum& operator>>=(const BigNum& rhs);
-    BigNum& operator<<=(const BigNum& rhs);
-
-    BigNum& operator==(const BigNum& rhs);
-    BigNum& operator!=(const BigNum& rhs);
-
+    void operator>>=(int shifts);
+    void operator<<=(int shifts);
+    bool operator==(const BigNum& rhs);
+    bool operator!=(const BigNum& rhs);
     /* Increment/Decrement */
-    BigNum& operator++();
-    BigNum& operator--();
-#endif
+    void operator++();
+    void operator--();
 
     bool isZero() const;
     bool isOne() const;

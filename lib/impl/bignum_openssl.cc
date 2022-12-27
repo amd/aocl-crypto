@@ -118,19 +118,13 @@ class BigNum::Impl
         }
     }
 
-    Impl& operator=(const Impl& rhs)
+    inline void operator=(const BigNum& rhs)
     {
-        // Check for self-assignment!
-        if (this == &rhs)
-            return *this;
-
         // BN_init(raw());
 
-        if (!BN_copy(raw(), rhs.raw())) {
+        if (!BN_copy(raw(), rhs.pImpl()->raw())) {
             BN_clear(raw());
         }
-
-        return *this;
     }
 
     inline BigNum add(const BigNum& rhs)
@@ -154,12 +148,82 @@ class BigNum::Impl
     {
         BigNum    result;
         BigNumCtx ctx;
-        bool      ret = false;
+        int       ret = false;
 
         ret =
             BN_mul(result.pImpl()->raw(), raw(), rhs.pImpl()->raw(), ctx.raw());
-        ALCP_ASSERT(ret == true, "BN_mul failed");
-        if (ret)
+        ALCP_ASSERT(ret == 1, "BN_mul failed");
+        if (!ret)
+            result.fromInt64(0);
+
+        return result;
+    }
+
+    inline BigNum div(const BigNum& rhs)
+    {
+        BigNum    result;
+        BigNum    rem;
+        BigNumCtx ctx;
+        int       ret = 0;
+
+        ret = BN_div(result.pImpl()->raw(),
+                     rem.pImpl()->raw(),
+                     raw(),
+                     rhs.pImpl()->raw(),
+                     ctx.raw());
+
+        ALCP_ASSERT(ret == 1, "BN_div failed");
+
+        if (!ret)
+            result.fromInt64(0);
+
+        return result;
+    }
+
+    inline BigNum mod(const BigNum& rhs)
+    {
+        BigNum    result;
+        BigNumCtx ctx;
+        int       ret = 0;
+
+        ret =
+            BN_mod(result.pImpl()->raw(), raw(), rhs.pImpl()->raw(), ctx.raw());
+
+        ALCP_ASSERT(ret == 1, "BN_mod failed");
+
+        if (!ret)
+            result.fromInt64(0);
+
+        return result;
+    }
+
+    inline BigNum lshift(int shifts)
+    {
+        BigNum    result;
+        BigNumCtx ctx;
+        int       ret = 0;
+
+        ret = BN_lshift(result.pImpl()->raw(), raw(), shifts);
+
+        ALCP_ASSERT(ret == 1, "BN_lshift failed");
+
+        if (!ret)
+            result.fromInt64(0);
+
+        return result;
+    }
+
+    inline BigNum rshift(int shifts)
+    {
+        BigNum    result;
+        BigNumCtx ctx;
+        int       ret = 0;
+
+        ret = BN_rshift(result.pImpl()->raw(), raw(), shifts);
+
+        ALCP_ASSERT(ret == 1, "BN_lshift failed");
+
+        if (!ret)
             result.fromInt64(0);
 
         return result;
@@ -175,17 +239,22 @@ class BigNum::Impl
         return BN_is_one(num.pImpl()->raw());
     }
 
-    /* Cant compare BigInt at the moment */
-    inline bool neq(const Impl& rhs) const { return true; }
+    inline bool eq(const BigNum& rhs) const
+    {
+        int ret = BN_cmp(raw(), rhs.pImpl()->raw());
 
-    /* Cant compare BigInt at the moment */
-    inline bool eq(const Impl& rhs) const { return false; }
+        if (ret == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     Status fromUint64(const Uint64 val)
     {
         bool res = BN_set_word(raw(), val);
         ALCP_ASSERT(res == true, "fromInt64: BN_set_word failed");
-        if (res)
+        if (!res)
             return InternalError("BN_set_word");
 
         return StatusOk();

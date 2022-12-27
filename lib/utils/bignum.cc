@@ -47,7 +47,6 @@ BigNum::BigNum()
 
 BigNum::~BigNum() {}
 
-
 BigNum::BigNum(const BigNum& b)
 {
     // throw NotImplementedException(ALCP_SOURCE_LOCATION());
@@ -100,10 +99,15 @@ BigNum::toString() const
     return pImpl()->toString();
 }
 
-void
+BigNum&
 BigNum::operator=(const BigNum& rhs)
 {
-    // throw NotImplementedException(ALCP_SOURCE_LOCATION());
+    // Check for self-assignment!
+    if (this == &rhs)
+        return *this;
+
+    pImpl()->operator=(rhs);
+    return *this;
 }
 
 BigNum
@@ -118,7 +122,6 @@ BigNum::operator-(const BigNum& rhs)
     return pImpl()->sub(rhs);
 }
 
-#if 0
 BigNum
 BigNum::operator*(const BigNum& rhs)
 {
@@ -131,10 +134,22 @@ BigNum::operator/(const BigNum& rhs)
     return pImpl()->div(rhs);
 }
 
-inline BigNum
+BigNum
 BigNum::operator%(const BigNum& rhs)
 {
     return pImpl()->mod(rhs);
+}
+
+BigNum
+BigNum::operator>>(int shifts)
+{
+    return pImpl()->rshift(shifts);
+}
+
+BigNum
+BigNum::operator<<(int shifts)
+{
+    return pImpl()->lshift(shifts);
 }
 
 bool
@@ -146,8 +161,65 @@ BigNum::operator==(const BigNum& rhs)
 bool
 BigNum::operator!=(const BigNum& rhs)
 {
-    return pImpl()->neq(rhs);
+    return !(pImpl()->eq(rhs));
 }
 
-#endif
+void
+BigNum::operator+=(const BigNum& rhs)
+{
+    *this = *this + rhs;
+}
+
+void
+BigNum::operator-=(const BigNum& rhs)
+{
+    *this = *this - rhs;
+}
+
+void
+BigNum::operator*=(const BigNum& rhs)
+{
+    *this = *this * rhs;
+}
+
+void
+BigNum::operator/=(const BigNum& rhs)
+{
+    *this = *this / rhs;
+}
+
+void
+BigNum::operator%=(const BigNum& rhs)
+{
+    *this = *this % rhs;
+}
+
+void
+BigNum::operator++()
+{
+    BigNum adder;
+    adder.fromUint64(1);
+    *this += adder;
+}
+
+void
+BigNum::operator--()
+{
+    BigNum reducer;
+    reducer.fromUint64(1);
+    *this -= reducer;
+}
+
+void
+BigNum::operator>>=(int shifts)
+{
+    *this = *this >> shifts;
+}
+
+void
+BigNum::operator<<=(int shifts)
+{
+    *this = *this << shifts;
+}
+
 } // namespace alcp

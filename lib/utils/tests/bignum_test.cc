@@ -61,11 +61,11 @@ class FromString
 
 TEST_P(FromString, Simple)
 {
-    const auto [intput_str, output_str] = GetParam().second;
+    const auto [input_str, output_str] = GetParam().second;
     BigNum n;
-    n.fromString(intput_str);
+    n.fromString(input_str);
 
-    EXPECT_STREQ(n.toString().c_str(), output_str.c_str());
+    EXPECT_EQ(n.toString(), output_str);
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -122,11 +122,12 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST(BigNumTest, MaxUint64)
 {
-    BigNum n;
+    BigNum      n;
+    std::string res(std::to_string(std::numeric_limits<alcp::Uint64>::max()));
 
     n.fromUint64(std::numeric_limits<alcp::Uint64>::max());
 
-    EXPECT_STREQ(n.toString().c_str(), "18446744073709551615");
+    EXPECT_EQ(n.toString(), res);
 }
 
 /***************************
@@ -141,7 +142,43 @@ TEST(BigNumTest, Add)
 
     EXPECT_EQ(1, (a + b).toInt64());
 
-    /* TODO: Add more tests here */
+    a.fromInt64(std::numeric_limits<alcp::Int64>::max());
+    b.fromInt64(0);
+
+    EXPECT_EQ(std::numeric_limits<alcp::Int64>::max(), (a + b).toInt64());
+}
+
+TEST(BigNumTest, AddAssign)
+{
+    BigNum a, b;
+
+    a.fromInt64(0);
+    b.fromInt64(1);
+
+    a += b;
+    EXPECT_EQ(1, a.toInt64());
+
+    a.fromInt64(std::numeric_limits<alcp::Int64>::max());
+    b.fromInt64(0);
+
+    a += b;
+
+    EXPECT_EQ(std::numeric_limits<alcp::Int64>::max(), a.toInt64());
+}
+
+TEST(BigNumTest, Increment)
+{
+    BigNum a;
+
+    a.fromInt64(0);
+
+    ++a;
+    EXPECT_EQ(1, a.toInt64());
+
+    a.fromInt64(std::numeric_limits<alcp::Int64>::max() - 1);
+
+    ++a;
+    EXPECT_EQ(std::numeric_limits<alcp::Int64>::max(), a.toInt64());
 }
 
 TEST(BigNumTest, Sub)
@@ -155,7 +192,43 @@ TEST(BigNumTest, Sub)
 
     EXPECT_EQ(-1, c.toInt64());
 
-    /* TODO: Add more tests here */
+    a.fromInt64(std::numeric_limits<alcp::Int64>::max());
+    b.fromInt64(std::numeric_limits<alcp::Int64>::max());
+
+    c = b - a;
+    EXPECT_EQ(0, c.toInt64());
+}
+
+TEST(BigNumTest, SubAssign)
+{
+    BigNum a, b;
+
+    a.fromInt64(0);
+    b.fromInt64(1);
+
+    a -= b;
+
+    EXPECT_EQ(-1, a.toInt64());
+
+    a.fromInt64(std::numeric_limits<alcp::Int64>::max());
+    b.fromInt64(std::numeric_limits<alcp::Int64>::max());
+
+    a -= b;
+    EXPECT_EQ(0, a.toInt64());
+}
+
+TEST(BigNumTest, Decrement)
+{
+    BigNum a, b;
+
+    a.fromInt64(0);
+    --a;
+
+    EXPECT_EQ(-1, a.toInt64());
+
+    a.fromInt64(std::numeric_limits<alcp::Int64>::max());
+    --a;
+    EXPECT_EQ(std::numeric_limits<alcp::Int64>::max() - 1, a.toInt64());
 }
 
 TEST(BigNumTest, InvalidString)
@@ -165,6 +238,130 @@ TEST(BigNumTest, InvalidString)
     Status s = a.fromString(String("123xyz"));
 
     EXPECT_EQ(s.ok(), false);
+}
+
+TEST(BigNumTest, Mul)
+{
+    BigNum a, b;
+
+    a.fromInt64(std::numeric_limits<alcp::Int64>::max());
+    b.fromInt64(1);
+
+    BigNum c = a * b;
+
+    EXPECT_EQ(std::numeric_limits<alcp::Int64>::max(), c.toInt64());
+}
+
+TEST(BigNumTest, MulAssign)
+{
+    BigNum a, b;
+
+    a.fromInt64(std::numeric_limits<alcp::Int64>::max());
+    b.fromInt64(1);
+
+    a *= b;
+
+    EXPECT_EQ(std::numeric_limits<alcp::Int64>::max(), a.toInt64());
+}
+
+TEST(BigNumTest, Div)
+{
+    BigNum a, b;
+
+    a.fromInt64(std::numeric_limits<alcp::Int64>::max());
+    b.fromInt64(1);
+
+    BigNum c = a / b;
+
+    EXPECT_EQ(std::numeric_limits<alcp::Int64>::max(), c.toInt64());
+}
+
+TEST(BigNumTest, DivAssign)
+{
+    BigNum a, b;
+
+    a.fromInt64(std::numeric_limits<alcp::Int64>::max());
+    b.fromInt64(1);
+
+    a /= b;
+
+    EXPECT_EQ(std::numeric_limits<alcp::Int64>::max(), a.toInt64());
+}
+
+TEST(BigNumTest, Mod)
+{
+    BigNum a, b;
+
+    a.fromInt64(std::numeric_limits<alcp::Int64>::max());
+    b.fromInt64(std::numeric_limits<alcp::Int64>::max());
+
+    BigNum c = a % b;
+
+    EXPECT_EQ(0, c.toInt64());
+}
+
+TEST(BigNumTest, ModAssign)
+{
+    BigNum a, b;
+
+    a.fromInt64(std::numeric_limits<alcp::Int64>::max());
+    b.fromInt64(std::numeric_limits<alcp::Int64>::max());
+
+    a %= b;
+
+    EXPECT_EQ(0, a.toInt64());
+}
+
+TEST(BigNumTest, Equal)
+{
+    BigNum a, b;
+
+    a.fromInt64(std::numeric_limits<alcp::Int64>::max());
+    b.fromInt64(std::numeric_limits<alcp::Int64>::max());
+
+    EXPECT_EQ(true, a == b);
+}
+
+TEST(BigNumTest, NotEqual)
+{
+    BigNum a, b;
+
+    a.fromInt64(std::numeric_limits<alcp::Int64>::max());
+    b.fromInt64(std::numeric_limits<alcp::Int64>::min());
+
+    EXPECT_EQ(true, a != b);
+}
+
+TEST(BigNumTest, LeftShift)
+{
+    BigNum a;
+
+    a.fromInt64(std::numeric_limits<alcp::Int64>::max());
+
+    a >>= 1;
+
+    EXPECT_EQ(std::numeric_limits<alcp::Int64>::max() >> 1, a.toInt64());
+
+    // left shift by 2
+    a >>= 2;
+
+    EXPECT_EQ(std::numeric_limits<alcp::Int64>::max() >> 3, a.toInt64());
+}
+
+TEST(BigNumTest, RightShift)
+{
+    BigNum a;
+
+    a.fromInt64(1);
+
+    a <<= 1;
+
+    EXPECT_EQ(2, a.toInt64());
+
+    // right shift by 2
+    a <<= 2;
+
+    EXPECT_EQ(8, a.toInt64());
 }
 
 } // namespace
