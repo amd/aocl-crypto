@@ -34,7 +34,7 @@
 
 namespace alcp::utils {
 
-class Cpuid::Impl
+class CpuId::Impl
 {
   public:
     Impl()  = default;
@@ -144,7 +144,7 @@ class Cpuid::Impl
 };
 
 bool
-Cpuid::Impl::cpuHasAvx512f()
+CpuId::Impl::cpuHasAvx512f()
 {
     static int state = -1;
     if (state != -1) {
@@ -159,7 +159,7 @@ Cpuid::Impl::cpuHasAvx512f()
 }
 
 bool
-Cpuid::Impl::cpuHasAvx512dq()
+CpuId::Impl::cpuHasAvx512dq()
 {
     static int state = -1;
     if (state != -1) {
@@ -174,7 +174,7 @@ Cpuid::Impl::cpuHasAvx512dq()
 }
 
 bool
-Cpuid::Impl::cpuHasAvx512bw()
+CpuId::Impl::cpuHasAvx512bw()
 {
     static int state = -1;
     if (state != -1) {
@@ -189,7 +189,7 @@ Cpuid::Impl::cpuHasAvx512bw()
 }
 
 bool
-Cpuid::Impl::cpuHasAvx512(avx512_flags_t flag)
+CpuId::Impl::cpuHasAvx512(avx512_flags_t flag)
 {
     switch (flag) {
         case AVX512_DQ:
@@ -205,7 +205,7 @@ Cpuid::Impl::cpuHasAvx512(avx512_flags_t flag)
 }
 
 bool
-Cpuid::Impl::cpuHasVaes()
+CpuId::Impl::cpuHasVaes()
 {
     static int state = -1;
     if (state != -1) {
@@ -219,7 +219,7 @@ Cpuid::Impl::cpuHasVaes()
     return state;
 }
 bool
-Cpuid::Impl::cpuHasAesni()
+CpuId::Impl::cpuHasAesni()
 {
     static int state = -1;
     if (state != -1) {
@@ -234,7 +234,7 @@ Cpuid::Impl::cpuHasAesni()
     return state;
 }
 bool
-Cpuid::Impl::cpuHasShani()
+CpuId::Impl::cpuHasShani()
 {
     static int state = -1;
     if (state != -1) {
@@ -249,7 +249,7 @@ Cpuid::Impl::cpuHasShani()
     return state;
 }
 bool
-Cpuid::Impl::cpuHasAvx2()
+CpuId::Impl::cpuHasAvx2()
 {
     static int state = -1;
     if (state != -1) {
@@ -260,7 +260,7 @@ Cpuid::Impl::cpuHasAvx2()
     return state;
 }
 bool
-Cpuid::Impl::cpuHasRdRand()
+CpuId::Impl::cpuHasRdRand()
 {
     static int state = -1;
     if (state != -1) {
@@ -274,7 +274,7 @@ Cpuid::Impl::cpuHasRdRand()
     return state;
 }
 bool
-Cpuid::Impl::cpuHasRdSeed()
+CpuId::Impl::cpuHasRdSeed()
 {
     static int state = -1;
     if (state != -1) {
@@ -288,7 +288,7 @@ Cpuid::Impl::cpuHasRdSeed()
     return state;
 }
 bool
-Cpuid::Impl::cpuIsZen2()
+CpuId::Impl::cpuIsZen2()
 {
     static int state = -1;
     if (state != -1) {
@@ -302,7 +302,7 @@ Cpuid::Impl::cpuIsZen2()
     return state;
 }
 bool
-Cpuid::Impl::cpuIsZen3()
+CpuId::Impl::cpuIsZen3()
 {
     static int state = -1;
     if (state != -1) {
@@ -316,7 +316,7 @@ Cpuid::Impl::cpuIsZen3()
     return state;
 }
 bool
-Cpuid::Impl::cpuIsZen4()
+CpuId::Impl::cpuIsZen4()
 {
     static int state = -1;
     if (state != -1) {
@@ -331,84 +331,84 @@ Cpuid::Impl::cpuIsZen4()
 }
 
 bool
-Cpuid::cpuHasAesni()
+CpuId::cpuHasAesni()
 {
     return Impl::cpuHasAesni();
 }
 
 bool
-Cpuid::cpuHasAvx2()
+CpuId::cpuHasAvx2()
 {
     return Impl::cpuHasAvx2();
 }
 
 bool
-Cpuid::cpuHasAvx512(avx512_flags_t flag)
+CpuId::cpuHasAvx512(avx512_flags_t flag)
 {
     return Impl::cpuHasAvx512(flag);
 }
 
 bool
-Cpuid::cpuHasAvx512bw()
+CpuId::cpuHasAvx512bw()
 {
     return Impl::cpuHasAvx512bw();
 }
 
 bool
-Cpuid::cpuHasAvx512dq()
+CpuId::cpuHasAvx512dq()
 {
     return Impl::cpuHasAvx512dq();
 }
 
 bool
-Cpuid::cpuHasAvx512f()
+CpuId::cpuHasAvx512f()
 {
     return Impl::cpuHasAvx512f();
 }
 
 bool
-Cpuid::cpuHasShani()
+CpuId::cpuHasShani()
 {
     return Impl::cpuHasShani();
 }
 
 bool
-Cpuid::cpuHasVaes()
+CpuId::cpuHasVaes()
 {
     return Impl::cpuHasVaes();
 }
 
 bool
-Cpuid::cpuHasRdRand()
+CpuId::cpuHasRdRand()
 {
     return Impl::cpuHasRdRand();
 }
 
 bool
-Cpuid::cpuHasRdSeed()
+CpuId::cpuHasRdSeed()
 {
     return Impl::cpuHasRdSeed();
 }
 
 bool
-Cpuid::cpuIsZen2()
+CpuId::cpuIsZen2()
 {
     return Impl::cpuIsZen2();
 }
 
 bool
-Cpuid::cpuIsZen3()
+CpuId::cpuIsZen3()
 {
     return Impl::cpuIsZen3();
 }
 
 bool
-Cpuid::cpuIsZen4()
+CpuId::cpuIsZen4()
 {
     return Impl::cpuIsZen4();
 }
 
-Cpuid::Cpuid()  = default;
-Cpuid::~Cpuid() = default;
+CpuId::CpuId()  = default;
+CpuId::~CpuId() = default;
 
 } // namespace alcp::utils

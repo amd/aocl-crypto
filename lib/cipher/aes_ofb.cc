@@ -29,7 +29,7 @@
 #include "cipher/aes.hh"
 #include "cipher/cipher_wrapper.hh"
 
-using alcp::utils::Cpuid;
+using alcp::utils::CpuId;
 
 namespace alcp::cipher {
 alc_error_t
@@ -40,13 +40,13 @@ Ofb::decrypt(const uint8_t* pCipherText,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    if (Cpuid::cpuHasVaes()) {
+    if (CpuId::cpuHasVaes()) {
         err = aesni::DecryptOfb(
             pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
 
         return err;
     }
-    if (Cpuid::cpuHasAesni()) {
+    if (CpuId::cpuHasAesni()) {
         err = aesni::DecryptOfb(
             pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
 
@@ -66,14 +66,14 @@ Ofb::encrypt(const uint8_t* pPlainText,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    if (Cpuid::cpuHasVaes()) {
+    if (CpuId::cpuHasVaes()) {
         // err = vaes::EncryptOfb(
         err = aesni::EncryptOfb(
             pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
 
         return err;
     }
-    if (Cpuid::cpuHasAesni()) {
+    if (CpuId::cpuHasAesni()) {
         err = aesni::EncryptOfb(
             pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
 

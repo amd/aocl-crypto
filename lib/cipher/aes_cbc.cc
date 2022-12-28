@@ -29,7 +29,7 @@
 #include "cipher/aes.hh"
 #include "cipher/cipher_wrapper.hh"
 
-using alcp::utils::Cpuid;
+using alcp::utils::CpuId;
 namespace alcp::cipher {
 alc_error_t
 Cbc::decrypt(const uint8_t* pCipherText,
@@ -38,21 +38,21 @@ Cbc::decrypt(const uint8_t* pCipherText,
              const uint8_t* pIv) const
 {
     alc_error_t err = ALC_ERROR_NONE;
-    if (Cpuid::cpuHasAvx512(utils::AVX512_F)
-        && Cpuid::cpuHasAvx512(utils::AVX512_DQ)
-        && Cpuid::cpuHasAvx512(utils::AVX512_BW)) {
+    if (CpuId::cpuHasAvx512(utils::AVX512_F)
+        && CpuId::cpuHasAvx512(utils::AVX512_DQ)
+        && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
         err = vaes512::DecryptCbcAvx512(
             pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
 
         return err;
     }
-    if (Cpuid::cpuHasVaes()) {
+    if (CpuId::cpuHasVaes()) {
         err = vaes::DecryptCbc(
             pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
 
         return err;
     }
-    if (Cpuid::cpuHasAesni()) {
+    if (CpuId::cpuHasAesni()) {
         err = aesni::DecryptCbc(
             pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
         return err;
@@ -72,7 +72,7 @@ Cbc::encrypt(const uint8_t* pPlainText,
     alc_error_t err = ALC_ERROR_NONE;
 
     // Only AESNI possible as CBC Encrypt is a strictly serial algorithm
-    if (Cpuid::cpuHasAesni()) {
+    if (CpuId::cpuHasAesni()) {
         err = aesni::EncryptCbc(
             pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
 

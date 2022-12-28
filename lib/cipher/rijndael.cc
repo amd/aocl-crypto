@@ -42,7 +42,7 @@
 
 #define ROR(inp, n) ((inp >> n) | (inp << (32 - n)))
 
-using alcp::utils::Cpuid;
+using alcp::utils::CpuId;
 
 static inline void
 mix_column_exchange(Uint8* inp, Uint8* out)
@@ -813,7 +813,7 @@ Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
     pEncKey = m_enc_key;
     pDecKey = m_dec_key;
 
-    if (Cpuid::cpuHasAesni()) {
+    if (CpuId::cpuHasAesni()) {
         aesni::ExpandKeys(key, pEncKey, pDecKey, m_nrounds);
         return;
     }

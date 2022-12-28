@@ -174,10 +174,10 @@ Sha256::Impl::compressMsg(Uint32 w[])
 alc_error_t
 Sha256::Impl::processChunk(const Uint8* pSrc, Uint64 len)
 {
-    static bool shani_available = utils::Cpuid::cpuHasShani();
+    static bool shani_available = utils::CpuId::cpuHasShani();
     // FIXME: AVX2 is deliberately disabled due to poor performance
 #if 0
-    static bool avx2_available  = utils::Cpuid::cpuHasAvx2();
+    static bool avx2_available  = utils::CpuId::cpuHasAvx2();
 #else
     static bool avx2_available = false;
 #endif

@@ -42,7 +42,7 @@
 
 namespace utils = alcp::utils;
 
-using alcp::utils::Cpuid;
+using alcp::utils::CpuId;
 
 namespace alcp::digest {
 
@@ -173,7 +173,7 @@ Sha3::Impl::squeezeChunk()
 
     // FIXME: Suggestion, in Zen1 this algorithm works and gives better
     // performance. I guess having similar code in avx2 arch will be better.
-    static bool zen3_available = Cpuid::cpuIsZen3() || Cpuid::cpuIsZen4();
+    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
 
     if (zen3_available) {
         return zen3::Sha3Finalize(
@@ -299,7 +299,7 @@ Sha3::Impl::processChunk(const Uint8* pSrc, Uint64 len)
 
     // FIXME: Suggestion, in Zen1 this algorithm works and gives better
     // performance. I guess having similar code in avx2 arch will be better.
-    static bool zen3_available = Cpuid::cpuIsZen3() || Cpuid::cpuIsZen4();
+    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
 
     if (zen3_available) {
         return zen3::Sha3Update(

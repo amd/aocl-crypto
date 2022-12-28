@@ -43,7 +43,7 @@
 
 namespace utils = alcp::utils;
 
-using alcp::utils::Cpuid;
+using alcp::utils::CpuId;
 
 namespace alcp::digest {
 
@@ -227,21 +227,17 @@ Sha512::compressMsg(Uint64 w[])
 alc_error_t
 Sha512::processChunk(const Uint8* pSrc, Uint64 len)
 {
-    static bool avx2_available = Cpuid::cpuHasAvx2();
-
-    if (avx2_available) {
-        return zen3::ShaUpdate512(m_hash, pSrc, len);
-    }
+    static bool cpu_is_zen3 = (CpuId::cpuIsZen3() || CpuId::cpuIsZen4());
 
     /* we need len to be multiple of cChunkSize */
     assert((len & Sha512::cChunkSizeMask) == 0);
 
-    // FIXME: Add cpuid for SSE
-    // NOTE: This kernel is performing a little bit worse than above kernel in
-    // ZEN1+ machine
-    if (!avx2_available) {
+    if (cpu_is_zen3) {
+        return zen3::ShaUpdate512(m_hash, pSrc, len);
+    } else if (CpuId::cpuHasAvx2()) {
         return avx2::ShaUpdate512(m_hash, pSrc, len);
     }
+    // Else fall to reference implementation.
 
     Uint64  msg_size       = len;
     Uint64* p_msg_buffer64 = (Uint64*)pSrc;

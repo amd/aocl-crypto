@@ -29,7 +29,7 @@
 #include "cipher/aes_cfb.hh"
 #include "cipher/cipher_wrapper.hh"
 
-using alcp::utils::Cpuid;
+using alcp::utils::CpuId;
 
 namespace alcp::cipher {
 alc_error_t
@@ -39,20 +39,20 @@ Cfb::decrypt(const uint8_t* pCipherText,
              const uint8_t* pIv) const
 {
     alc_error_t err = ALC_ERROR_NONE;
-    if (Cpuid::cpuHasAvx512(utils::AVX512_F)
-        && Cpuid::cpuHasAvx512(utils::AVX512_DQ)
-        && Cpuid::cpuHasAvx512(utils::AVX512_BW)) {
+    if (CpuId::cpuHasAvx512(utils::AVX512_F)
+        && CpuId::cpuHasAvx512(utils::AVX512_DQ)
+        && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
         err = vaes512::DecryptCfbAvx512(
             pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
         return err;
     }
-    if (Cpuid::cpuHasVaes()) {
+    if (CpuId::cpuHasVaes()) {
         err = vaes::DecryptCfb(
             pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
 
         return err;
     }
-    if (Cpuid::cpuHasAesni()) {
+    if (CpuId::cpuHasAesni()) {
         err = aesni::DecryptCfb(
             pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
 
@@ -72,7 +72,7 @@ Cfb::encrypt(const uint8_t* pPlainText,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    if (Cpuid::cpuHasAesni()) {
+    if (CpuId::cpuHasAesni()) {
         err = aesni::EncryptCfb(
             pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
 

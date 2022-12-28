@@ -40,12 +40,12 @@ typedef enum
     AVX512_BW,
 } avx512_flags_t;
 
-class Cpuid
+class CpuId
 {
 
   public:
-    Cpuid();
-    ~Cpuid();
+    CpuId();
+    ~CpuId();
 
     // Genoa functions
     /**
