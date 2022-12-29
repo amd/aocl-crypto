@@ -42,12 +42,21 @@ endfunction(alcp_get_cflags_arch)
 
 # lib/arch/avx2 Compile Flags
 function(alcp_get_arch_cflags_avx2)
+set(ARCH_COMPILE_FLAGS 
+-msse2 -maes -mavx2 -msha -mno-vaes -mpclmul
+CACHE INTERNAL ""
+)
+set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
+endfunction(alcp_get_arch_cflags_avx2)
+
+# lib/arch/zen Compile Flags
+function(alcp_get_arch_cflags_zen)
     set(ARCH_COMPILE_FLAGS 
         -msse2 -maes -mavx2 -msha -mno-vaes -mpclmul
         CACHE INTERNAL ""
         )
     set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
-endfunction(alcp_get_arch_cflags_avx2)
+endfunction(alcp_get_arch_cflags_zen)
 
 # lib/arch/zen3 Compile Flags
 function(alcp_get_arch_cflags_zen3)
