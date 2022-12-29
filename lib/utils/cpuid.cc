@@ -66,7 +66,7 @@ class CpuId::Impl
     /**
      * @brief Returns true depending on the flag is available or not on CPU
      *
-     * @param flag
+     * @param flag Which AVX512 flag to get info on.
      * @return true
      * @return false
      */
@@ -146,14 +146,14 @@ class CpuId::Impl
 bool
 CpuId::Impl::cpuHasAvx512f()
 {
-    static int state = -1;
-    if (state != -1) {
+    static int state = UNKNOWN;
+    if (state != UNKNOWN) {
         return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
     state = (alc_cpu_has_avx512f() > 0);
 #else
-    state = 0;
+    state = UNAVAILABLE;
 #endif
     return state;
 }
@@ -161,14 +161,14 @@ CpuId::Impl::cpuHasAvx512f()
 bool
 CpuId::Impl::cpuHasAvx512dq()
 {
-    static int state = -1;
-    if (state != -1) {
+    static int state = UNKNOWN;
+    if (state != UNKNOWN) {
         return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
     state = (alc_cpu_has_avx512dq() > 0);
 #else
-    state = 0;
+    state = UNAVAILABLE;
 #endif
     return state;
 }
@@ -176,14 +176,14 @@ CpuId::Impl::cpuHasAvx512dq()
 bool
 CpuId::Impl::cpuHasAvx512bw()
 {
-    static int state = -1;
-    if (state != -1) {
+    static int state = UNKNOWN;
+    if (state != UNKNOWN) {
         return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
     state = (alc_cpu_has_avx512bw() > 0);
 #else
-    state = 0;
+    state = UNAVAILABLE;
 #endif
     return state;
 }
@@ -204,128 +204,140 @@ CpuId::Impl::cpuHasAvx512(avx512_flags_t flag)
     }
 }
 
+/**
+ * In the below functions there is a state variable,
+ *
+ * This state variable can be of 3 states,
+ * 1) Unavailable - means the flag is not detected in cpu
+ * 2) Available   - means the flag is detected or force enabled.
+ * 3) Unknown.    - means the flag is uninitialized and unknown.
+ *
+ * Purpose of making state variable static is to cache the information,
+ * thereby not hindering the performance of the code which is calling this
+ * function.
+ */
 bool
 CpuId::Impl::cpuHasVaes()
 {
-    static int state = -1;
-    if (state != -1) {
+    static int state = UNKNOWN;
+    if (state != UNKNOWN) {
         return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
     state = (alc_cpu_has_vaes() > 0);
 #else
-    state = 0;
+    state = UNAVAILABLE;
 #endif
     return state;
 }
 bool
 CpuId::Impl::cpuHasAesni()
 {
-    static int state = -1;
-    if (state != -1) {
+    static int state = UNKNOWN;
+    if (state != UNKNOWN) {
         return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
     state = (alc_cpu_has_aes() > 0);
 #else
     // FIXME: Settig SHANI as available by default
-    state = 1;
+    state = AVAILABLE;
 #endif
     return state;
 }
 bool
 CpuId::Impl::cpuHasShani()
 {
-    static int state = -1;
-    if (state != -1) {
+    static int state = UNKNOWN;
+    if (state != UNKNOWN) {
         return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
     state = (alc_cpu_has_sha() > 0);
 #else
     // FIXME: Settig SHANI as available by default
-    state = 1;
+    state = AVAILABLE;
 #endif
     return state;
 }
 bool
 CpuId::Impl::cpuHasAvx2()
 {
-    static int state = -1;
-    if (state != -1) {
+    static int state = UNKNOWN;
+    if (state != UNKNOWN) {
         return state;
     }
     // FIXME: CPUID does not support this.
-    state = 1;
+    state = AVAILABLE;
     return state;
 }
 bool
 CpuId::Impl::cpuHasRdRand()
 {
-    static int state = -1;
-    if (state != -1) {
+    static int state = UNKNOWN;
+    if (state != UNKNOWN) {
         return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
     state = (alc_cpu_has_rdrnd() > 0);
 #else
-    state = 0;
+    state = UNAVAILABLE;
 #endif
     return state;
 }
 bool
 CpuId::Impl::cpuHasRdSeed()
 {
-    static int state = -1;
-    if (state != -1) {
+    static int state = UNKNOWN;
+    if (state != UNKNOWN) {
         return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
     state = (alc_cpu_has_rdseed() > 0);
 #else
-    state = 0;
+    state = UNAVAILABLE;
 #endif
     return state;
 }
 bool
 CpuId::Impl::cpuIsZen2()
 {
-    static int state = -1;
-    if (state != -1) {
+    static int state = UNKNOWN;
+    if (state != UNKNOWN) {
         return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
     state = (alc_cpu_arch_is_zen2() > 0);
 #else
-    state = 0;
+    state = UNAVAILABLE;
 #endif
     return state;
 }
 bool
 CpuId::Impl::cpuIsZen3()
 {
-    static int state = -1;
-    if (state != -1) {
+    static int state = UNKNOWN;
+    if (state != UNKNOWN) {
         return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
     state = (alc_cpu_arch_is_zen3() > 0);
 #else
-    state = 0;
+    state = UNAVAILABLE;
 #endif
     return state;
 }
 bool
 CpuId::Impl::cpuIsZen4()
 {
-    static int state = -1;
-    if (state != -1) {
+    static int state = UNKNOWN;
+    if (state != UNKNOWN) {
         return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
     state = (alc_cpu_arch_is_zen4() > 0);
 #else
-    state = 0;
+    state = UNAVAILABLE;
 #endif
     return state;
 }

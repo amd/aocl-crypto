@@ -40,6 +40,13 @@ typedef enum
     AVX512_BW,
 } avx512_flags_t;
 
+typedef enum
+{
+    UNKNOWN     = -1,
+    AVAILABLE   = 0,
+    UNAVAILABLE = 1,
+} cpuid_state_t;
+
 class CpuId
 {
 
