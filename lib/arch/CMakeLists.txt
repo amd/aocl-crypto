@@ -25,10 +25,10 @@
  
 
 SET_DIRECTORY_PROPERTIES(PROPERTIES COMPILE_DEFINITIONS SHOW_MESSAGE=1)
-ADD_SUBDIRECTORY(avx2) # Basic Algorithm
-ADD_SUBDIRECTORY(zen)
-ADD_SUBDIRECTORY(zen3)
-ADD_SUBDIRECTORY(zen4)
+ADD_SUBDIRECTORY(avx2) # Basic Algorithm works on every arch
+ADD_SUBDIRECTORY(zen)  # ZEN1/ZEN2 specific, code needs to be optimized for basic ZEN
+ADD_SUBDIRECTORY(zen3) # ZEN3 specific, code needs to be optimized for ZEN3 arch
+ADD_SUBDIRECTORY(zen4) # ZEN4 specific, code needs to be optimized for ZEN4 arch
 
 #CMAKE_POLICY(SET CMP0079 NEW)
 
