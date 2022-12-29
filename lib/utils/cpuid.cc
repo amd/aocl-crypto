@@ -121,6 +121,13 @@ class CpuId::Impl
      */
     static inline bool cpuHasRdSeed();
     /**
+     * @brief Returns true if currently executing cpu is Zen1
+     *
+     * @return true
+     * @return false
+     */
+    static inline bool cpuIsZen1();
+    /**
      * @brief Returns true if currently executing cpu is Zen2
      *
      * @return true
@@ -134,7 +141,7 @@ class CpuId::Impl
      * @return false
      */
     static inline bool cpuIsZen3();
-    /**
+    /**l
      * @brief Returns true if currently executing cpu is Zen4
      *
      * @return true
@@ -300,6 +307,27 @@ CpuId::Impl::cpuHasRdSeed()
     return state;
 }
 bool
+CpuId::Impl::cpuIsZen1()
+{
+    static int state = -1;
+    if (state != -1) {
+        return state;
+    }
+#ifdef ALCP_ENABLE_AOCL_CPUID
+// FIXME: CPUID alc_cpu_arch_is_zen is broken, debug statements below will be
+// removed after that fix
+#if 0
+    state = (alc_cpu_arch_is_zen() > 0);
+#else
+    state = 1;
+#endif
+    // printf("Debug CPUID ZEN1:%d\n", state);
+#else
+    state = 0;
+#endif
+    return state;
+}
+bool
 CpuId::Impl::cpuIsZen2()
 {
     static int state = UNKNOWN;
@@ -400,6 +428,12 @@ bool
 CpuId::cpuHasRdSeed()
 {
     return Impl::cpuHasRdSeed();
+}
+
+bool
+CpuId::cpuIsZen1()
+{
+    return Impl::cpuIsZen1();
 }
 
 bool

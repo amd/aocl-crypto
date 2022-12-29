@@ -134,6 +134,13 @@ class CpuId
      */
     static bool cpuHasRdSeed();
     /**
+     * @brief Returns true if currently executing cpu is Zen1
+     *
+     * @return true
+     * @return false
+     */
+    static bool cpuIsZen1();
+    /**
      * @brief Returns true if currently executing cpu is Zen2
      *
      * @return true
