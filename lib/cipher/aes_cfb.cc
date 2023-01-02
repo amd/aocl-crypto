@@ -29,6 +29,8 @@
 #include "cipher/aes_cfb.hh"
 #include "cipher/cipher_wrapper.hh"
 
+#include "alcp/utils/cpuid.hh"
+
 using alcp::utils::CpuId;
 
 namespace alcp::cipher {

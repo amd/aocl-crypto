@@ -29,6 +29,7 @@
 #include "alcp/error.h"
 
 #include "alcp/base.hh"
+#include "alcp/utils/cpuid.hh"
 #include "cipher/aes.hh"
 #include "cipher/cipher_wrapper.hh"
 #include "utils/bits.hh"
@@ -40,6 +41,7 @@
 #define ROR(inp, n) ((inp >> n) | (inp << (32 - n)))
 
 using namespace alcp::base; // for Status
+using namespace alcp::utils; // for CpuId
 
 static inline void
 mix_column_exchange(Uint8* inp, Uint8* out)

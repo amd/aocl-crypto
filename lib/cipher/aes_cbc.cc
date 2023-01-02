@@ -28,9 +28,12 @@
 
 #include "cipher/aes.hh"
 #include "cipher/cipher_wrapper.hh"
+#include "alcp/utils/cpuid.hh"
 
 using alcp::utils::CpuId;
+
 namespace alcp::cipher {
+
 alc_error_t
 Cbc::decrypt(const uint8_t* pCipherText,
              uint8_t*       pPlainText,

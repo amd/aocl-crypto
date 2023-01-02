@@ -136,4 +136,17 @@ class ALCP_API_EXPORT Sha3 : public Digest
     class Impl;
     std::unique_ptr<Impl> m_pimpl;
 };
+
+namespace zen3 {
+
+    alc_error_t Sha3Update(Uint64* state,
+                           Uint64* pSrc,
+                           Uint64  msg_size,
+                           Uint64  m_src_size_u64);
+
+    void Sha3Finalize(Uint8* state,
+                      Uint8* hash,
+                      Uint64 hash_size,
+                      Uint64 chunk_size);
+} // namespace alcp::digest::zen3
 } // namespace alcp::digest

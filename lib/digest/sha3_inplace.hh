@@ -28,8 +28,6 @@
 
 #pragma once
 
-#include "error.hh"
-
 namespace alcp::digest {
 
 alc_error_t

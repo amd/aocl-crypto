@@ -28,6 +28,7 @@
 
 #include "cipher/aes.hh"
 #include "cipher/cipher_wrapper.hh"
+#include "alcp/utils/cpuid.hh"
 
 #include <immintrin.h>
 #include <wmmintrin.h>

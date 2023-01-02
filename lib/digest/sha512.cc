@@ -150,19 +150,19 @@ Sha512::copyHash(Uint8* pHash, Uint64 size) const
 
    if (size != cHashSize) {
         err = ALC_ERROR_INVALID_SIZE;
-    }
+   }
 
-    if (!err)
-        utils::CopyBlockWith<Uint64>(
-            pHash, m_hash, m_digest_len_bytes, utils::ToBigEndian<Uint64>);
+   if (!err) {
+       utils::CopyBlockWith<Uint64>(
+               pHash, m_hash, m_digest_len_bytes, utils::ToBigEndian<Uint64>);
 
-        if (m_digest_len == ALC_DIGEST_LEN_224) {
-            // last 4 bytes can be copied after reversing the 64 bit since it is
-            // in little endian form
-            Uint64 hash = utils::ToBigEndian<Uint64>(m_hash[3]);
-            utils::CopyBytes(&pHash[24], &hash, 4);
-        }
-    }
+       if (m_digest_len == ALC_DIGEST_LEN_224) {
+           // last 4 bytes can be copied after reversing the 64 bit since it is
+           // in little endian form
+           Uint64 hash = utils::ToBigEndian<Uint64>(m_hash[3]);
+           utils::CopyBytes(&pHash[24], &hash, 4);
+       }
+   }
 
     return err;
 }

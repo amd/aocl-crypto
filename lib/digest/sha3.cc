@@ -34,7 +34,6 @@
 
 #include "alcp/utils/cpuid.hh"
 #include "digest/sha3.hh"
-#include "digest/sha3_inplace.hh"
 #include "digest/sha3_zen.hh"
 #include "digest/sha3_zen3.hh"
 #include "utils/bits.hh"
@@ -42,12 +41,15 @@
 #include "utils/endian.hh"
 
 namespace utils = alcp::utils;
+using namespace alcp::digest;
 
 using alcp::utils::CpuId;
 
+#include "sha3_inplace.hh"
+
 namespace alcp::digest {
 
-#include "digest/sha3_inplace.cc.inc"
+#include "sha3_inplace.cc.inc"
 
 // maximum size of message block in bits is used for shake128 digest
 static constexpr Uint32 MaxDigestBlockSizeBits = 1344;

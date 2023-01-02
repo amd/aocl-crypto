@@ -51,23 +51,8 @@ class Status final
        : m_code{0}
     {}
 
-    Status(ErrorCode code)
-        : m_error{ code }
-    {}
-
-    Status(ErrorCode code, std::string_view msg)
-        : m_error{ code }
-        , m_message{ msg }
-    {}
-
     Status(StringView msg)
         : m_err_message { msg }
-    {
-    }
-
-    Status(IError& ie, StringView msg)
-        : m_code { ie.code() }
-        ,m_err_message { msg }
     {
     }
 
@@ -82,8 +67,6 @@ class Status final
     {
         m_message = makeMessage(ie.message(), msg);
     }
-
-
 
     ALCP_DEFS_DEFAULT_COPY_AND_ASSIGNMENT(Status);
 
