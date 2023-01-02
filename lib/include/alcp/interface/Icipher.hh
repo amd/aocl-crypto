@@ -28,54 +28,6 @@
 
 #pragma once
 
-#include "alcp/status.hh"
-#include "alcp/types.hh"
+#include "alcp/interface/Iencrypter.hh"
+#include "alcp/interface/Idecrypter.hh"
 
-#include <functional>
-
-namespace alcp::cipher {
-class IEncrypter
-{
-  public:
-    virtual Status encrypt(const Uint8* pSrc,
-                           Uint8*       pDst,
-                           Uint64       len,
-                           const Uint8* pIv) const = 0;
-
-  protected:
-    IEncrypter() {}
-    virtual ~IEncrypter() {}
-
-    std::function<Status(const void*  rCipher,
-                         const Uint8* pSrc,
-                         Uint8*       pDst,
-                         Uint64       len,
-                         const Uint8* pIv)>
-        m_encrypt_fn;
-
-  private:
-};
-
-class IDecrypter
-{
-  public:
-    virtual Status decrypt(const Uint8* pSrc,
-                           Uint8*       pDst,
-                           Uint64       len,
-                           const Uint8* pIv) const = 0;
-
-  protected:
-    IDecrypter() {}
-    virtual ~IDecrypter() {}
-
-    std::function<Status(const void*  rCipher,
-                         const Uint8* pSrc,
-                         Uint8*       pDst,
-                         Uint64       len,
-                         const Uint8* pIv)>
-        m_decrypt_fn;
-
-  private:
-};
-
-} // namespace alcp::cipher
