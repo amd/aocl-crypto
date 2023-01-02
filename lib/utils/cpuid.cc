@@ -141,7 +141,7 @@ class CpuId::Impl
      * @return false
      */
     static inline bool cpuIsZen3();
-    /**l
+    /**
      * @brief Returns true if currently executing cpu is Zen4
      *
      * @return true

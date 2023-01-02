@@ -24,7 +24,7 @@
  # POSSIBILITY OF SUCH DAMAGE.
  
 
-FILE(GLOB AVX2_SRCS "*.cc")
+FILE(GLOB ZEN_SRCS "*.cc")
 
 alcp_get_arch_cflags_zen()
 
@@ -37,7 +37,7 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib/include)
 
 ADD_LIBRARY(arch_zen
 	STATIC
-	${AVX2_SRCS})
+	${ZEN_SRCS})
 
 
 TARGET_LINK_LIBRARIES(alcp PRIVATE arch_zen)
