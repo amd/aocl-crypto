@@ -53,13 +53,6 @@ namespace alcp::digest {
 // maximum size of message block in bits is used for shake128 digest
 static constexpr Uint32 MaxDigestBlockSizeBits = 1344;
 
-static bool
-isInplaceAvailable()
-{
-    static bool s_inplace_available = true;
-    return s_inplace_available;
-}
-
 class Sha3::Impl
 {
   public:
@@ -183,13 +176,6 @@ Sha3::Impl::squeezeChunk()
 
     if (zen1_available) {
         return zen::Sha3Finalize(
-            (Uint8*)m_state_flat, &m_hash[0], m_hash_size, m_chunk_size);
-    }
-
-    static bool inplace_available = isInplaceAvailable();
-
-    if (inplace_available) {
-        return Sha3Finalize(
             (Uint8*)m_state_flat, &m_hash[0], m_hash_size, m_chunk_size);
     }
 
@@ -319,12 +305,6 @@ Sha3::Impl::processChunk(const Uint8* pSrc, Uint64 len)
             m_state_flat, p_msg_buffer64, msg_size, m_chunk_size);
     }
 
-    static bool inplace_available = isInplaceAvailable();
-
-    if (inplace_available) {
-        return Sha3Update(m_state_flat, p_msg_buffer64, msg_size, m_chunk_size);
-    }
-
     while (msg_size) {
         // xor message chunk into m_state.
         absorbChunk(p_msg_buffer64);
@@ -427,7 +407,6 @@ Sha3::Impl::finalize(const Uint8* pBuf, Uint64 size)
 
     m_buffer[m_chunk_size - 1] |= 0x80;
 
-    
     if (err) {
         return err;
     }
