@@ -148,7 +148,7 @@ Sha512::copyHash(Uint8* pHash, Uint64 size) const
         return err;
     }
 
-   if (size != cHashSize) {
+   if (size != m_digest_len_bytes) {
         err = ALC_ERROR_INVALID_SIZE;
    }
 
