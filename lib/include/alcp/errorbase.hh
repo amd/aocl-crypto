@@ -76,7 +76,7 @@ class ErrorBase : public IError
      *
      * @return  boolean Status of whether the registration was success
      */
-    static bool registerModuleError(ModuleType mt, IError ie);
+    static bool registerModuleError(ModuleType mt, IError& ie);
 
   protected:
     ErrorBase(Uint16 module_type, Uint16 module_error)
