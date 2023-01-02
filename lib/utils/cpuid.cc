@@ -309,8 +309,8 @@ CpuId::Impl::cpuHasRdSeed()
 bool
 CpuId::Impl::cpuIsZen1()
 {
-    static int state = -1;
-    if (state != -1) {
+    static int state = UNKNOWN;
+    if (state != UNKNOWN) {
         return state;
     }
 #ifdef ALCP_ENABLE_AOCL_CPUID
@@ -319,11 +319,11 @@ CpuId::Impl::cpuIsZen1()
 #if 0
     state = (alc_cpu_arch_is_zen() > 0);
 #else
-    state = 1;
+    state = AVAILABLE;
 #endif
     // printf("Debug CPUID ZEN1:%d\n", state);
 #else
-    state = 0;
+    state = UNAVAILABLE;
 #endif
     return state;
 }
