@@ -28,8 +28,6 @@
 
 #pragma once
 
-#include "error.hh"
-
 namespace alcp::digest { namespace zen {
 
     alc_error_t Sha3Update(Uint64* state,

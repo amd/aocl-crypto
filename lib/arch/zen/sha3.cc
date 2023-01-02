@@ -28,9 +28,8 @@
 
 #include "digest/sha3.hh"
 #include "digest.hh"
-#include "error.hh"
 #include "utils/copy.hh"
 
 namespace alcp::digest { namespace zen {
-#include "digest/sha3_inplace.cc.inc"
+#include "../../digest/sha3_inplace.cc.inc"
 }} // namespace alcp::digest::zen

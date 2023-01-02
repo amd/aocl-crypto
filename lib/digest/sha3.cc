@@ -35,7 +35,6 @@
 #include "alcp/utils/cpuid.hh"
 #include "digest/sha3.hh"
 #include "digest/sha3_zen.hh"
-#include "digest/sha3_zen3.hh"
 #include "utils/bits.hh"
 #include "utils/copy.hh"
 #include "utils/endian.hh"
