@@ -97,7 +97,7 @@ AlcpDigestBase::~AlcpDigestBase()
 }
 
 alc_error_t
-AlcpDigestBase::digest_function(alcp_digest_data_t data)
+AlcpDigestBase::digest_function(const alcp_digest_data_t& data)
 {
     alc_error_t err;
     err = alcp_digest_update(m_handle, data.m_msg, data.m_msg_len);

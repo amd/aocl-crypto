@@ -83,7 +83,7 @@ IPPDigestBase::init()
 }
 
 alc_error_t
-IPPDigestBase::digest_function(alcp_digest_data_t data)
+IPPDigestBase::digest_function(const alcp_digest_data_t& data)
 {
     ippsHashUpdate_rmf(data.m_msg, data.m_msg_len, m_handle);
     ippsHashFinal_rmf(data.m_digest, m_handle);

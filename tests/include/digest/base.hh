@@ -36,20 +36,11 @@ namespace alcp::testing {
 
 struct alcp_digest_data_t
 {
-    const Uint8* m_msg;
-    Uint64       m_msg_len;
-    Uint8*       m_digest;
-    Uint64       m_digest_len;
-    Uint64       m_digest_custom_len;
-    // Initialize everything to 0
-    alcp_digest_data_t()
-    {
-        m_msg               = {};
-        m_msg_len           = {};
-        m_digest            = {};
-        m_digest_len        = {};
-        m_digest_custom_len = {};
-    }
+    const Uint8* m_msg               = nullptr;
+    Uint64       m_msg_len           = 0;
+    Uint8*       m_digest            = nullptr;
+    Uint64       m_digest_len        = 0;
+    Uint64       m_digest_custom_len = 0;
 };
 
 /* add mapping for SHA mode and length */
@@ -134,8 +125,8 @@ class ExecRecPlay
 class DataSet : private File
 {
   private:
-    std::string        line   = "";
-    std::vector<Uint8> Digest = {}, Message = {};
+    std::string        line = "";
+    std::vector<Uint8> Digest, Message;
     /* for shake128/256 support */
     std::int64_t DigestLen;
     // First line is skipped, linenum starts from 1
@@ -158,10 +149,10 @@ class DataSet : private File
 class DigestBase
 {
   public:
-    virtual bool init(const alc_digest_info_t& info, Int64 digest_len) = 0;
-    virtual bool init()                                                = 0;
-    virtual alc_error_t digest_function(alcp_digest_data_t data)       = 0;
-    virtual void        reset()                                        = 0;
+    virtual bool init(const alc_digest_info_t& info, Int64 digest_len)  = 0;
+    virtual bool init()                                                 = 0;
+    virtual alc_error_t digest_function(const alcp_digest_data_t& data) = 0;
+    virtual void        reset()                                         = 0;
 };
 
 } // namespace alcp::testing

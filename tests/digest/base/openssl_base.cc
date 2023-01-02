@@ -108,7 +108,7 @@ OpenSSLDigestBase::init()
 }
 
 alc_error_t
-OpenSSLDigestBase::digest_function(alcp_digest_data_t data)
+OpenSSLDigestBase::digest_function(const alcp_digest_data_t& data)
 {
     unsigned int outsize = 0;
     int          retval  = 0;
