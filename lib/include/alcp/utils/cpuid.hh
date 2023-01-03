@@ -43,8 +43,8 @@ typedef enum
 typedef enum
 {
     UNKNOWN     = -1,
-    AVAILABLE   = 0,
-    UNAVAILABLE = 1,
+    UNAVAILABLE = 0,
+    AVAILABLE   = 1,
 } cpuid_state_t;
 
 class CpuId
