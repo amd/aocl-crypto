@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,11 +27,13 @@
  */
 
 #include "mac/hmac.hh"
+#include "alcp/utils/cpuid.hh"
 #include "utils/copy.hh"
 
-#include <cstring>      // for std::memset
+#include <cstring> // for std::memset
 #include <immintrin.h>
 
+using alcp::utils::CpuId;
 namespace alcp::mac {
 class Hmac::Impl
 {
@@ -48,7 +50,8 @@ class Hmac::Impl
     Uint32 m_output_hash_size{};
     // Placeholder variable to hold intermediate hash and the the mac value
     // after finalize has been called
-    Uint8* m_pTempHash;
+    // Optimization: Max Size of 1024 bits for any SHA
+    Uint8 m_pTempHash[64];
 
     // TODO: Consider Shared pointer for this implementation
     /**
@@ -64,15 +67,17 @@ class Hmac::Impl
      * */
     hmac_state_t m_state = INVALID;
 
-    // Single Memory Block to hold  m_pK0_xor_ipad,m_pK0_xor_opad,m_pK0
-    Uint8* m_pMemory_block;
-    Uint8* m_pK0_xor_opad;
-    Uint8* m_pK0_xor_ipad;
+    // Single Memory Block to hold  m_pK0_xor_ipad,m_pK0_xor_opad,m_pK0.
+    // 3*input_block_length (with SHA input block length max size 144 bytes for
+    // SHA3-224)
+    alignas(16) Uint8 m_pMemory_block[432];
+    Uint8* m_pK0_xor_opad = m_pMemory_block;
+    Uint8* m_pK0_xor_ipad = m_pMemory_block + 144;
     /**
      * Preprocessed Key to match the input block length input_block_length
      * get_k0 function performs the preprocessing
      * */
-    Uint8* m_pK0;
+    Uint8* m_pK0 = m_pMemory_block + 288;
 
   public:
     Impl(const alc_mac_info_t& mac_info, alcp::digest::Digest* p_digest)
@@ -103,21 +108,6 @@ class Hmac::Impl
         // For HMAC, we require k0 to be same length as input block length of
         // the used hash
         m_k0_length = m_input_block_length;
-
-        // TODO: Investigate Pool Allocator for this optimization
-        /*Optimization: Requesting single block of memory takes less time than
-         * requesting individually*/
-        // 64 byte aligned memory, m_k0_length in bytes will also be multiples
-        // of 64
-        m_pMemory_block = new (std::align_val_t{ 64 }) Uint8[3 * m_k0_length];
-        m_pTempHash = new (std::align_val_t{ 64 }) Uint8[m_output_hash_size];
-
-        // share the allocated memory to appropriate pointers
-        // Allocate k0_xor_ipad and k0_xor_opad with same length as k0. But
-        // value will be junk
-        m_pK0_xor_ipad = m_pMemory_block;
-        m_pK0_xor_opad = m_pK0_xor_ipad + m_k0_length;
-        m_pK0          = m_pK0_xor_opad + m_k0_length;
 
         // Preprocess key to obtain K0
         get_k0();
@@ -170,22 +160,41 @@ class Hmac::Impl
     /// @return ALC_ERROR_NONE if no errors otherwise appropriate error
     alc_error_t finalize(const Uint8* buff, Uint64 size)
     {
+        alc_error_t err;
         if (getState() == VALID) {
             if (sizeof(buff) != 0 && size != 0) {
-                m_pDigest->finalize(buff, size);
+                err = m_pDigest->finalize(buff, size);
             } else {
-                m_pDigest->finalize(nullptr, 0);
+                err = m_pDigest->finalize(nullptr, 0);
             }
-            m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
+            if (err != ALC_ERROR_NONE) {
+                m_state = INVALID;
+                return err;
+            }
+            err = m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
+            if (err != ALC_ERROR_NONE) {
+                m_state = INVALID;
+                return err;
+            }
             m_pDigest->reset();
 
-            calculate_hash(m_pDigest, m_pK0_xor_opad, m_k0_length);
-            m_pDigest->finalize(m_pTempHash, m_output_hash_size);
+            err = calculate_hash(m_pDigest, m_pK0_xor_opad, m_k0_length);
+            if (err != ALC_ERROR_NONE) {
+                m_state = INVALID;
+                return err;
+            }
+            err = m_pDigest->finalize(m_pTempHash, m_output_hash_size);
+            if (err != ALC_ERROR_NONE) {
+                m_state = INVALID;
+                return err;
+            }
 
-            m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
-            m_pDigest->reset();
-
-            ::operator delete[](m_pMemory_block, std::align_val_t{ 64 });
+            err = m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
+            if (err != ALC_ERROR_NONE) {
+                m_state = INVALID;
+                return err;
+            }
+            // m_pDigest->reset();
         }
         return ALC_ERROR_NONE;
     }
@@ -199,17 +208,14 @@ class Hmac::Impl
     {
         alc_error_t err = ALC_ERROR_NONE;
         if (getState() == VALID) {
-            alcp::utils::CopyBytes(buff, m_pTempHash, size);
+            copyData(buff, m_pTempHash, size);
         } else {
             err = ALC_ERROR_BAD_STATE;
         }
-        m_state = INVALID;
-        // Since m_pTempHash is cleared here. CopyHash can only be called
-        // once.
-        ::operator delete[](m_pTempHash, std::align_val_t{ 64 });
-
         return err;
     }
+
+    void finish() { m_state = INVALID; }
 
   private:
     // TODO: This method should be outside the class and a common validation
@@ -246,6 +252,11 @@ class Hmac::Impl
     }
     void get_k0_xor_pad()
     {
+        if (CpuId::cpuHasAvx2()) {
+            avx2::get_k0_xor_opad(
+                m_input_block_length, m_pK0, m_pK0_xor_ipad, m_pK0_xor_opad);
+            return;
+        }
         constexpr int register_size = 128, // sizeof(__m128i)*8
             no_optimized_xor =
                 2; // No. of XORs performed inside the for loop below
@@ -255,8 +266,8 @@ class Hmac::Impl
 
         const int input_block_length_bits = m_input_block_length * 8;
 
-        // No of optimized xor output bits that will result from each iteration
-        // in the loop
+        // No of optimized xor output bits that will result from each
+        // iteration in the loop
         const int optimized_bits_per_xor = no_optimized_xor * register_size;
         const int no_of_xor_operations =
             input_block_length_bits / optimized_bits_per_xor;
@@ -288,13 +299,13 @@ class Hmac::Impl
                                                ipad_value,
                                                ipad_value);
 
-        /** TODO: Consider adding more optimized XOR Operations and reducing the
-        register usage */
+        /** TODO: Consider adding more optimized XOR Operations and reducing
+        the register usage */
         for (int i = 0; i < no_of_xor_operations; i += 1) {
             // Load 128 bit key
-            reg_k0_1 = _mm_loadu_si128(pi_k0);
+            reg_k0_1 = _mm_load_si128(pi_k0);
             // Load the next 128 bit key
-            reg_k0_2 = _mm_loadu_si128(pi_k0 + 1);
+            reg_k0_2 = _mm_load_si128(pi_k0 + 1);
 
             // Perform XOR
             reg_k0_xor_ipad_1 = _mm_xor_si128(reg_k0_1, reg_ipad);
@@ -303,10 +314,10 @@ class Hmac::Impl
             reg_k0_xor_opad_2 = _mm_xor_si128(reg_k0_2, reg_opad);
 
             // Store the XOR Result
-            _mm_storeu_si128(pi_k0_xor_ipad, reg_k0_xor_ipad_1);
-            _mm_storeu_si128(pi_k0_xor_opad, reg_k0_xor_opad_1);
-            _mm_storeu_si128((pi_k0_xor_ipad + 1), reg_k0_xor_ipad_2);
-            _mm_storeu_si128(pi_k0_xor_opad + 1, reg_k0_xor_opad_2);
+            _mm_store_si128(pi_k0_xor_ipad, reg_k0_xor_ipad_1);
+            _mm_store_si128(pi_k0_xor_opad, reg_k0_xor_opad_1);
+            _mm_store_si128((pi_k0_xor_ipad + 1), reg_k0_xor_ipad_2);
+            _mm_store_si128(pi_k0_xor_opad + 1, reg_k0_xor_opad_2);
 
             // Increment for the next 256 bits
             pi_k0_xor_ipad += no_optimized_xor;
@@ -326,8 +337,8 @@ class Hmac::Impl
         constexpr Uint8 ipad = 0x36;
         constexpr Uint8 opad = 0x5c;
 
-        // Calculating unoptimized xor_operations based on completed optimized
-        // xor operation
+        // Calculating unoptimized xor_operations based on completed
+        // optimized xor operation
         const int xor_operations_left =
             (input_block_length_bits
              - no_of_xor_operations * (optimized_bits_per_xor))
@@ -342,13 +353,23 @@ class Hmac::Impl
             current_temp_k0_xor_opad++;
         }
     }
+    void copyData(Uint8* destination, const Uint8* source, int len)
+    {
+        if (CpuId::cpuHasAvx2()) {
+
+            avx2::copyData(destination, source, len);
+        } else {
+
+            alcp::utils::CopyBytes(destination, source, len);
+        }
+    }
 
     alc_error_t get_k0()
     {
         if (m_input_block_length == m_keylen) {
-            utils::CopyBytes(m_pK0, m_pKey, m_keylen);
+            copyData(m_pK0, m_pKey, m_keylen);
         } else if (m_keylen < m_input_block_length) {
-            utils::CopyBytes(m_pK0, m_pKey, m_keylen);
+            copyData(m_pK0, m_pKey, m_keylen);
             std::memset(m_pK0 + m_keylen, 0x0, m_input_block_length - m_keylen);
         } else if (m_keylen > m_input_block_length) {
             // Optimization: Reusing p_digest for calculating
@@ -357,8 +378,8 @@ class Hmac::Impl
             m_pDigest->copyHash(m_pK0, m_output_hash_size);
             m_pDigest->reset();
             std::memset(m_pK0 + m_output_hash_size,
-                   0x0,
-                   m_input_block_length - m_output_hash_size);
+                        0x0,
+                        m_input_block_length - m_output_hash_size);
         }
         return ALC_ERROR_NONE;
     }

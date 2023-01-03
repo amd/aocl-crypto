@@ -106,4 +106,12 @@ class ALCP_API_EXPORT Hmac final : public Mac
     void        get_k0_xor_pad();
     alc_error_t setUp(const alc_key_info_t& rKeyInfo);
 };
+
+namespace avx2 {
+    void get_k0_xor_opad(Uint32 m_input_block_length,
+                         Uint8* m_pK0,
+                         Uint8* m_pK0_xor_ipad,
+                         Uint8* m_pK0_xor_opad);
+    void copyData(Uint8* destination, const Uint8* source, int len);
+} // namespace avx2
 } // namespace alcp::mac
