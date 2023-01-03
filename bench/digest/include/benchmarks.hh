@@ -74,25 +74,24 @@ void inline Digest_Bench(benchmark::State& state,
     }
 #endif
 
-    /* for shake variants, set the preferred digest len here */
-    /* FIXME: we can add the digest len as a param later on.
-       For now, 256 is the most commonly used case.
-    */
     if (info.dt_mode.dm_sha3 == ALC_SHAKE_128
         || info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
-        db->init(info, 256);
+        db->init(info, info.dt_custom_len);
+        /* override digest len for shake cases */
+        data.m_digest_len = info.dt_custom_len;
+    } else {
+        data.m_digest_len = info.dt_len / 8;
     }
 
-    data.m_msg        = message;
-    data.m_digest     = digest;
-    data.m_msg_len    = block_size;
-    data.m_digest_len = sizeof(digest);
+    data.m_msg     = message;
+    data.m_digest  = digest;
+    data.m_msg_len = block_size;
 
     for (auto _ : state) {
         error = db->digest_function(data);
         db->reset();
         if (alcp_is_error(error)) {
-            printf("Error in running benchmark");
+            printf("Error code in running benchmark: %d\n", error);
             return;
         }
     }
@@ -186,6 +185,7 @@ BENCH_SHAKE_128(benchmark::State& state)
     info.dt_mode.dm_sha3 = ALC_SHAKE_128;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
     info.dt_len          = ALC_DIGEST_LEN_CUSTOM;
+    info.dt_custom_len   = 256;
     Digest_Bench(state, info, state.range(0));
 }
 static void
@@ -195,6 +195,7 @@ BENCH_SHAKE_256(benchmark::State& state)
     info.dt_mode.dm_sha3 = ALC_SHAKE_256;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
     info.dt_len          = ALC_DIGEST_LEN_CUSTOM;
+    info.dt_custom_len   = 256;
     Digest_Bench(state, info, state.range(0));
 }
 
