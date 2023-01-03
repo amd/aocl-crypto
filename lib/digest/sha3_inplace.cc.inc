@@ -517,7 +517,7 @@ Sha3Finalize(Uint8* state, Uint8* hash, Uint64 hash_size, Uint64 chunk_size)
     while (chunk_size <= hash_size - hash_copied) {
         Uint64 data_chunk_copied = std::min(hash_size, chunk_size);
 
-        utils::CopyBytes(&hash[hash_copied], state, data_chunk_copied);
+        utils::CopyBlock(&hash[hash_copied], state, data_chunk_copied);
         hash_copied += data_chunk_copied;
 
         if (hash_copied < hash_size) {
@@ -526,7 +526,7 @@ Sha3Finalize(Uint8* state, Uint8* hash, Uint64 hash_size, Uint64 chunk_size)
     }
 
     if (hash_size > hash_copied) {
-        utils::CopyBytes(
+        utils::CopyBlock(
             &hash[hash_copied], (Uint8*)state, hash_size - hash_copied);
     }
 }

@@ -182,7 +182,7 @@ Sha3::Impl::squeezeChunk()
     while (m_chunk_size <= m_hash_size - hash_copied) {
         Uint64 data_chunk_copied = std::min(m_hash_size, m_chunk_size);
 
-        utils::CopyBytes(
+        utils::CopyBlock(
             &m_hash[hash_copied], (Uint8*)m_state_flat, data_chunk_copied);
         hash_copied += data_chunk_copied;
 
@@ -192,7 +192,7 @@ Sha3::Impl::squeezeChunk()
     }
 
     if (m_hash_size > hash_copied) {
-        utils::CopyBytes(&m_hash[hash_copied],
+        utils::CopyBlock(&m_hash[hash_copied],
                          (Uint8*)m_state_flat,
                          m_hash_size - hash_copied);
     }
@@ -240,7 +240,7 @@ Sha3::Impl::round(Uint64 roundConst)
     }
 
     // xi stage
-    utils::CopyBytes(temp, m_state, sizeof(temp));
+    utils::CopyBlock(temp, m_state, sizeof(temp));
     for (int x = 0; x < cDim; ++x) {
         for (int y = 0; y < cDim; ++y) {
             m_state[x][y] =
@@ -280,7 +280,7 @@ Sha3::Impl::copyHash(Uint8* pHash, Uint64 size) const
         return err;
     }
 
-    utils::CopyBytes(pHash, m_hash.data(), size);
+    utils::CopyBlock(pHash, m_hash.data(), size);
     return err;
 }
 
@@ -335,7 +335,7 @@ Sha3::Impl::update(const Uint8* pSrc, Uint64 inputSize)
     Uint64 to_process = std::min((inputSize + m_idx), m_chunk_size);
     if (to_process < m_chunk_size) {
         /* copy them to internal buffer and return */
-        utils::CopyBytes(&m_buffer[m_idx], pSrc, inputSize);
+        utils::CopyBlock(&m_buffer[m_idx], pSrc, inputSize);
         m_idx += inputSize;
         return err;
     }
@@ -349,7 +349,7 @@ Sha3::Impl::update(const Uint8* pSrc, Uint64 inputSize)
          * the remaining bytes of a chunk.
          */
         to_process = std::min(inputSize, m_chunk_size - idx);
-        utils::CopyBytes(&m_buffer[idx], pSrc, to_process);
+        utils::CopyBlock(&m_buffer[idx], pSrc, to_process);
 
         pSrc += to_process;
         inputSize -= to_process;
@@ -374,7 +374,7 @@ Sha3::Impl::update(const Uint8* pSrc, Uint64 inputSize)
      * We still have some leftover bytes, copy them to internal buffer
      */
     if (inputSize) {
-        utils::CopyBytes(&m_buffer[idx], pSrc, inputSize);
+        utils::CopyBlock(&m_buffer[idx], pSrc, inputSize);
         idx += inputSize;
     }
 
