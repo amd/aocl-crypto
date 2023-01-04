@@ -29,10 +29,11 @@ INCLUDE(${CMAKE_SOURCE_DIR}/cmake/AlcpTests.cmake)
 SET(TEST_FILES 
 
   bufferwriter_test.cc
+  status_test.cc
 
   )
 
-ALCP_MODULE("core")
+ALCP_MODULE("base")
 
 #message(STATUS "Cipher Unit Tests Imported ${TEST_FILES}")
 
