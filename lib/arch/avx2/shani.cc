@@ -27,11 +27,11 @@
  */
 
 #include "digest/shani.hh"
-
+#include "config.h"
 #include <x86intrin.h>
 
 // number of vectors needed to accomodate an input chunk
-#define SHA256_CHUNK_NUM_VECT           4 
+#define SHA256_CHUNK_NUM_VECT 4
 
 #ifdef COMPILER_IS_GCC
 #define UNROLL_4  _Pragma("GCC unroll 4")
