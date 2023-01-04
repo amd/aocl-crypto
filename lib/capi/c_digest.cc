@@ -126,12 +126,8 @@ alcp_digest_copy(const alc_digest_handle_p pDigestHandle,
                  uint8_t*                  pBuf,
                  uint64_t                  size)
 {
-    alc_error_t err = ALC_ERROR_NONE;
-
     auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
-    ctx->copy(ctx->m_digest, pBuf, size);
-
-    return err;
+    return ctx->copy(ctx->m_digest, pBuf, size);
 }
 
 EXTERN_C_END
