@@ -326,10 +326,14 @@ Sha3::Impl::update(const Uint8* pSrc, Uint64 inputSize)
         return err;
     }
 
-    if (pSrc == nullptr || inputSize == 0) {
+    if (pSrc == nullptr) {
         /* TODO: change to Status */
         err = ALC_ERROR_INVALID_ARG;
         return err;
+    }
+
+    if (inputSize == 0) {
+        return ALC_ERROR_NONE;
     }
 
     Uint64 to_process = std::min((inputSize + m_idx), m_chunk_size);
