@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -80,7 +80,6 @@ class Sha3::Impl
     Uint64       m_chunk_size, m_chunk_size_u64, m_hash_size;
     const Uint64 m_num_rounds = 24;
     Uint32       m_idx        = 0;
-    bool         m_finished   = false;
 
     // buffer size to hold the chunk size to be processed
     Uint8 m_buffer[MaxDigestBlockSizeBits / 8];
@@ -107,7 +106,6 @@ Sha3::Impl::getHashSize()
 
 Sha3::Impl::Impl(const alc_digest_info_t& rDigestInfo)
     : m_idx{ 0 }
-    , m_finished{ false }
 {
     Uint64 chunk_size_bits = 0;
     m_hash_size            = rDigestInfo.dt_len / 8;
@@ -264,8 +262,7 @@ Sha3::Impl::fFunction()
 void
 Sha3::Impl::reset()
 {
-    m_finished = false;
-    m_idx      = 0;
+    m_idx = 0;
     memset(m_state, 0, sizeof(m_state));
 }
 
@@ -319,22 +316,6 @@ alc_error_t
 Sha3::Impl::update(const Uint8* pSrc, Uint64 inputSize)
 {
     alc_error_t err = ALC_ERROR_NONE;
-
-    if (m_finished) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_ARG;
-        return err;
-    }
-
-    if (pSrc == nullptr) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_ARG;
-        return err;
-    }
-
-    if (inputSize == 0) {
-        return ALC_ERROR_NONE;
-    }
 
     Uint64 to_process = std::min((inputSize + m_idx), m_chunk_size);
     if (to_process < m_chunk_size) {
@@ -392,10 +373,6 @@ Sha3::Impl::finalize(const Uint8* pBuf, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    if (m_finished) {
-        return err;
-    }
-
     if (pBuf && size) {
         err = update(pBuf, size);
     }
@@ -419,14 +396,14 @@ Sha3::Impl::finalize(const Uint8* pBuf, Uint64 size)
 
     squeezeChunk();
 
-    m_idx      = 0;
-    m_finished = true;
+    m_idx = 0;
 
     return err;
 }
 
 Sha3::Sha3(const alc_digest_info_t& rDigestInfo)
     : m_pimpl{ std::make_unique<Sha3::Impl>(rDigestInfo) }
+    , m_finished{ false }
 {}
 
 Sha3::~Sha3() {}
@@ -436,9 +413,16 @@ Sha3::update(const Uint8* pSrc, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    if (pSrc == nullptr) {
+    if (m_finished || pSrc == nullptr) {
         /* TODO: change to Status */
         err = ALC_ERROR_INVALID_ARG;
+        return err;
+    }
+
+    if (size == 0) {
+        /* TODO: change to Status */
+        err = ALC_ERROR_NONE;
+        return err;
     }
 
     if (!alcp_is_error(err) && m_pimpl)
@@ -452,9 +436,14 @@ Sha3::finalize(const Uint8* pSrc, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
+    if (m_finished) {
+        return err;
+    }
+
     if (m_pimpl)
         err = m_pimpl->finalize(pSrc, size);
 
+    m_finished = true;
     return err;
 }
 
@@ -484,8 +473,11 @@ Sha3::finish()
 void
 Sha3::reset()
 {
-    if (m_pimpl)
+    if (m_pimpl) {
         m_pimpl->reset();
+    }
+
+    m_finished = false;
 }
 
 Uint64
