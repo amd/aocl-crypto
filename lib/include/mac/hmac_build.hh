@@ -82,6 +82,7 @@ __hmac_wrapperFinish(void* hmac, void* digest)
     auto ap       = static_cast<MACALGORITHM*>(hmac);
     auto digest_p = static_cast<DIGESTALGORITHM*>(digest);
     ap->finish();
+    digest_p->finish();
     delete ap;
     delete digest_p;
 }
