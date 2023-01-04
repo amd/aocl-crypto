@@ -85,6 +85,18 @@ __hmac_wrapperFinish(void* hmac, void* digest)
     delete ap;
     delete digest_p;
 }
+
+template<typename MACALGORITHM, typename DIGESTALGORITHM>
+static alc_error_t
+__hmac_wrapperReset(void* hmac, void* digest)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    auto ap = static_cast<MACALGORITHM*>(hmac);
+    err     = ap->reset();
+
+    return err;
+}
 template<typename DIGESTALGORITHM, typename MACALGORITHM>
 static alc_error_t
 __build_hmac(const alc_mac_info_t& macInfo, Context& ctx)
@@ -108,6 +120,8 @@ __build_hmac(const alc_mac_info_t& macInfo, Context& ctx)
     ctx.finalize = __hmac_wrapperFinalize<MACALGORITHM>;
     ctx.copy     = __hmac_wrapperCopy<MACALGORITHM>;
     ctx.finish   = __hmac_wrapperFinish<MACALGORITHM, DIGESTALGORITHM>;
+    ctx.reset    = __hmac_wrapperReset<MACALGORITHM, DIGESTALGORITHM>;
+
     return err;
 }
 template<typename MACALGORITHM>
@@ -130,6 +144,8 @@ __build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
     ctx.finalize = __hmac_wrapperFinalize<MACALGORITHM>;
     ctx.copy     = __hmac_wrapperCopy<MACALGORITHM>;
     ctx.finish   = __hmac_wrapperFinish<MACALGORITHM, alcp::digest::Sha3>;
+    ctx.reset    = __hmac_wrapperReset<MACALGORITHM, alcp::digest::Sha3>;
+
     return err;
 }
 alc_error_t

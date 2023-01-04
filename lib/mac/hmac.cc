@@ -178,23 +178,11 @@ class Hmac::Impl
             }
             m_pDigest->reset();
 
-            err = calculate_hash(m_pDigest, m_pK0_xor_opad, m_k0_length);
-            if (err != ALC_ERROR_NONE) {
-                m_state = INVALID;
-                return err;
-            }
-            err = m_pDigest->finalize(m_pTempHash, m_output_hash_size);
-            if (err != ALC_ERROR_NONE) {
-                m_state = INVALID;
-                return err;
-            }
+            calculate_hash(m_pDigest, m_pK0_xor_opad, m_k0_length);
+            m_pDigest->finalize(m_pTempHash, m_output_hash_size);
 
-            err = m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
-            if (err != ALC_ERROR_NONE) {
-                m_state = INVALID;
-                return err;
-            }
-            // m_pDigest->reset();
+            m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
+            m_pDigest->reset();
         }
         return ALC_ERROR_NONE;
     }
@@ -216,6 +204,14 @@ class Hmac::Impl
     }
 
     void finish() { m_state = INVALID; }
+
+    alc_error_t reset()
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        m_pDigest->reset();
+        err = calculate_hash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
+        return err;
+    }
 
   private:
     // TODO: This method should be outside the class and a common validation
@@ -435,5 +431,11 @@ void
 Hmac::finish()
 {
     m_pImpl->finish();
+}
+
+alc_error_t
+Hmac::reset()
+{
+    return m_pImpl->reset();
 }
 } // namespace alcp::mac

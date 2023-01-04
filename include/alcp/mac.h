@@ -94,6 +94,9 @@ alcp_mac_copy(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size);
 alc_error_t
 alcp_mac_finish(alc_mac_handle_p pMacHandle);
 
+alc_error_t
+alcp_mac_reset(alc_mac_handle_p pMacHandle);
+
 EXTERN_C_END
 
 #endif /* _ALCP_CIPHER_H_ */

@@ -564,6 +564,102 @@ TEST_P(HmacTestFixture, HMAC_UPDATE_FINALISE)
     EXPECT_EQ(mac, expected_mac);
 }
 
+TEST(HmacReliabilityTest, Reset)
+{
+    auto        pos  = KAT_ShaDataset.find("SHA2_256_KEYLEN_EQ_B");
+    param_tuple data = pos->second;
+
+    auto key         = parseHexStrToBin(std::get<0>(data));
+    auto cipher_text = parseHexStrToBin(std::get<1>(data));
+    auto output_mac  = parseHexStrToBin(std::get<2>(data));
+
+    const alc_key_info_t kinfo = { .type     = ALC_KEY_TYPE_SYMMETRIC,
+                                   .fmt      = ALC_KEY_FMT_RAW,
+                                   .algo     = ALC_KEY_ALG_MAC,
+                                   .len_type = ALC_KEY_LEN_128,
+                                   .len      = static_cast<Uint32>(
+                                       key.size()), // Key Size is not zero but
+                                   .key = &(key[0]) }; // Key is null
+    const alc_mac_info_t  mac_info = {
+        .mi_type = ALC_MAC_HMAC,
+        .mi_algoinfo={
+            .hmac={
+                .hmac_digest = {
+                    .dt_type = ALC_DIGEST_TYPE_SHA2,
+                    .dt_len = ALC_DIGEST_LEN_256,
+                    .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
+                }
+            }
+        },
+        .mi_keyinfo = kinfo
+    };
+    alcp::digest::Sha256 sha256;
+    alcp::mac::Hmac      hmac(mac_info, &sha256);
+    ASSERT_EQ(hmac.getState(), VALID);
+    hmac.update(&cipher_text[0], cipher_text.size());
+
+    hmac.reset();
+
+    hmac.update(&cipher_text[0], cipher_text.size());
+    hmac.finalize(nullptr, 0);
+    auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);
+    hmac.copyHash(&mac.at(0), mac.size());
+    EXPECT_EQ(mac, output_mac);
+    hmac.finish();
+}
+
+TEST(HmacReliabilityTest, UpdateFinalizeReset)
+{
+    auto        pos  = KAT_ShaDataset.find("SHA2_256_KEYLEN_EQ_B");
+    param_tuple data = pos->second;
+
+    auto key         = parseHexStrToBin(std::get<0>(data));
+    auto cipher_text = parseHexStrToBin(std::get<1>(data));
+    auto output_mac  = parseHexStrToBin(std::get<2>(data));
+
+    const alc_key_info_t kinfo = { .type     = ALC_KEY_TYPE_SYMMETRIC,
+                                   .fmt      = ALC_KEY_FMT_RAW,
+                                   .algo     = ALC_KEY_ALG_MAC,
+                                   .len_type = ALC_KEY_LEN_128,
+                                   .len      = static_cast<Uint32>(
+                                       key.size()), // Key Size is not zero but
+                                   .key = &(key[0]) }; // Key is null
+    const alc_mac_info_t  mac_info = {
+        .mi_type = ALC_MAC_HMAC,
+        .mi_algoinfo={
+            .hmac={
+                .hmac_digest = {
+                    .dt_type = ALC_DIGEST_TYPE_SHA2,
+                    .dt_len = ALC_DIGEST_LEN_256,
+                    .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
+                }
+            }
+        },
+        .mi_keyinfo = kinfo
+    };
+
+    auto block1 = std::vector<Uint8>(
+        cipher_text.begin(), cipher_text.begin() + cipher_text.size() / 2);
+
+    auto block2 = std::vector<Uint8>(
+        cipher_text.begin() + cipher_text.size() / 2, cipher_text.end());
+
+    alcp::digest::Sha256 sha256;
+    alcp::mac::Hmac      hmac(mac_info, &sha256);
+    ASSERT_EQ(hmac.getState(), VALID);
+    hmac.update(&cipher_text.at(0), cipher_text.size());
+    hmac.finalize(nullptr, 0);
+    hmac.reset();
+    // State Should be valid: Meaning update can be called right away
+    ASSERT_EQ(hmac.getState(), VALID);
+    hmac.update(&block1[0], block1.size());
+    hmac.finalize(&block2[0], block2.size());
+    auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);
+    hmac.copyHash(&mac.at(0), mac.size());
+    EXPECT_EQ(mac, output_mac);
+    hmac.finish();
+}
+
 INSTANTIATE_TEST_SUITE_P(
     HmacTest,
     HmacTestFixture,

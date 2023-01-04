@@ -37,5 +37,6 @@ struct Context
     alc_error_t (*finalize)(void* hmac, Uint8* buff, Uint64 size);
     alc_error_t (*copy)(void* hmac, Uint8* buff, Uint64 size);
     void (*finish)(void* hmac, void* digest);
+    alc_error_t (*reset)(void* hmac, void* digest);
 };
 } // namespace alcp::mac

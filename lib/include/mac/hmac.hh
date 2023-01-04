@@ -91,8 +91,7 @@ class ALCP_API_EXPORT Hmac final : public Mac
      */
     hmac_state_t getState() const;
 
-    // TODO: Implement Reset after Builder design is complete
-    void reset(){};
+    alc_error_t reset();
 
     ~Hmac();
 };
