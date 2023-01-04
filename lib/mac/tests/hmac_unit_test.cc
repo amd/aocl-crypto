@@ -418,62 +418,62 @@ class HmacTestFixture
     }
 };
 
-TEST(HmacReliabilityTest, NullKeyNonNullKeyLength)
-{
+// Remove these tests once moved as a part of integration tests
+// TEST(HmacReliabilityTest, NullKeyNonNullKeyLength)
+// {
 
-    const alc_key_info_t kinfo = { .type     = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt      = ALC_KEY_FMT_RAW,
-                                   .algo     = ALC_KEY_ALG_MAC,
-                                   .len_type = ALC_KEY_LEN_128,
-                                   .len      = 32,   // Key Size is not zero but
-                                   .key      = nullptr }; // Key is null
-    const alc_mac_info_t  mac_info = {
-        .mi_type = ALC_MAC_HMAC,
-        .mi_algoinfo={
-            .hmac={
-                .hmac_digest = {
-                    .dt_type = ALC_DIGEST_TYPE_SHA2,
-                    .dt_len = ALC_DIGEST_LEN_256,
-                    .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
-                }
-            }
-        },
-        .mi_keyinfo = kinfo
-    };
-    alcp::digest::Sha256 sha256;
-    alcp::mac::Hmac      hmac{ mac_info, &sha256 };
-    ASSERT_EQ(hmac.getState(), INVALID);
-    hmac.finish();
-}
-TEST(HmacReliabilityTest, NonNullKeyNullKeyLength)
-{
+//     const alc_key_info_t kinfo = { .type     = ALC_KEY_TYPE_SYMMETRIC,
+//                                    .fmt      = ALC_KEY_FMT_RAW,
+//                                    .algo     = ALC_KEY_ALG_MAC,
+//                                    .len_type = ALC_KEY_LEN_128,
+//                                    .len      = 32,   // Key Size is not zero
+//                                    but .key      = nullptr }; // Key is null
+//     const alc_mac_info_t  mac_info = {
+//         .mi_type = ALC_MAC_HMAC,
+//         .mi_algoinfo={
+//             .hmac={
+//                 .hmac_digest = {
+//                     .dt_type = ALC_DIGEST_TYPE_SHA2,
+//                     .dt_len = ALC_DIGEST_LEN_256,
+//                     .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
+//                 }
+//             }
+//         },
+//         .mi_keyinfo = kinfo
+//     };
+//     alcp::digest::Sha256 sha256;
+//     alcp::mac::Hmac      hmac{ mac_info, &sha256 };
+//     ASSERT_EQ(hmac.getState(), INVALID);
+//     hmac.finish();
+// }
 
-    auto key = std::vector<Uint8>(20, 0);
-
-    const alc_key_info_t kinfo = { .type     = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt      = ALC_KEY_FMT_RAW,
-                                   .algo     = ALC_KEY_ALG_MAC,
-                                   .len_type = ALC_KEY_LEN_128,
-                                   .len      = 0, // Key Size is not zero but
-                                   .key      = &(key[0]) }; // Key is null
-    const alc_mac_info_t  mac_info = {
-        .mi_type = ALC_MAC_HMAC,
-        .mi_algoinfo={
-            .hmac={
-                .hmac_digest = {
-                    .dt_type = ALC_DIGEST_TYPE_SHA2,
-                    .dt_len = ALC_DIGEST_LEN_256,
-                    .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
-                }
-            }
-        },
-        .mi_keyinfo = kinfo
-    };
-    alcp::digest::Sha256 sha256;
-    alcp::mac::Hmac      hmac(mac_info, &sha256);
-    ASSERT_EQ(hmac.getState(), INVALID);
-    hmac.finish();
-}
+// TEST(HmacReliabilityTest, NonNullKeyNullKeyLength)
+// {
+//     auto key = std::vector<Uint8>(20, 0);
+//     const alc_key_info_t kinfo = { .type     = ALC_KEY_TYPE_SYMMETRIC,
+//                                    .fmt      = ALC_KEY_FMT_RAW,
+//                                    .algo     = ALC_KEY_ALG_MAC,
+//                                    .len_type = ALC_KEY_LEN_128,
+//                                    .len      = 0, // Key Size is not zero but
+//                                    .key      = &(key[0]) }; // Key is null
+//     const alc_mac_info_t  mac_info = {
+//         .mi_type = ALC_MAC_HMAC,
+//         .mi_algoinfo={
+//             .hmac={
+//                 .hmac_digest = {
+//                     .dt_type = ALC_DIGEST_TYPE_SHA2,
+//                     .dt_len = ALC_DIGEST_LEN_256,
+//                     .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
+//                 }
+//             }
+//         },
+//         .mi_keyinfo = kinfo
+//     };
+//     alcp::digest::Sha256 sha256;
+//     alcp::mac::Hmac      hmac(mac_info, &sha256);
+//     ASSERT_EQ(hmac.getState(), INVALID);
+//     hmac.finish();
+// }
 
 TEST(HmacReliabilityTest, NullUpdate)
 {
@@ -506,10 +506,9 @@ TEST(HmacReliabilityTest, NullUpdate)
     };
     alcp::digest::Sha256 sha256;
     alcp::mac::Hmac      hmac(mac_info, &sha256);
-    ASSERT_EQ(hmac.getState(), VALID);
 
-    hmac.update(nullptr, 0);
-    ASSERT_EQ(hmac.getState(), VALID);
+    auto err = hmac.update(nullptr, 0);
+    EXPECT_EQ(err, ALC_ERROR_NONE);
     hmac.update(&cipher_text[0], cipher_text.size());
     hmac.finalize(nullptr, 0);
     auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);
@@ -595,7 +594,6 @@ TEST(HmacReliabilityTest, Reset)
     };
     alcp::digest::Sha256 sha256;
     alcp::mac::Hmac      hmac(mac_info, &sha256);
-    ASSERT_EQ(hmac.getState(), VALID);
     hmac.update(&cipher_text[0], cipher_text.size());
 
     hmac.reset();
@@ -646,12 +644,10 @@ TEST(HmacReliabilityTest, UpdateFinalizeReset)
 
     alcp::digest::Sha256 sha256;
     alcp::mac::Hmac      hmac(mac_info, &sha256);
-    ASSERT_EQ(hmac.getState(), VALID);
     hmac.update(&cipher_text.at(0), cipher_text.size());
     hmac.finalize(nullptr, 0);
     hmac.reset();
-    // State Should be valid: Meaning update can be called right away
-    ASSERT_EQ(hmac.getState(), VALID);
+
     hmac.update(&block1[0], block1.size());
     hmac.finalize(&block2[0], block2.size());
     auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);

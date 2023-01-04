@@ -29,7 +29,6 @@
 #include "alcp/utils/cpuid.hh"
 #include "mac/hmac.hh"
 #include "utils/copy.hh"
-
 #include <cstring> // for std::memset
 #include <immintrin.h>
 
@@ -61,18 +60,13 @@ class Hmac::Impl
      */
     alcp::digest::Digest* m_pDigest;
 
-    /**
-     * holds the state of HMAC Class at any point can be accessed via public
-     * getState()
-     * */
-    hmac_state_t m_state = INVALID;
-
     // Single Memory Block to hold  m_pK0_xor_ipad,m_pK0_xor_opad,m_pK0.
     // 3*input_block_length (with SHA input block length max size 144 bytes for
     // SHA3-224)
     alignas(16) Uint8 m_pMemory_block[432];
     Uint8* m_pK0_xor_opad = m_pMemory_block;
     Uint8* m_pK0_xor_ipad = m_pMemory_block + 144;
+
     /**
      * Preprocessed Key to match the input block length input_block_length
      * get_k0 function performs the preprocessing
@@ -83,27 +77,11 @@ class Hmac::Impl
     Impl(const alc_mac_info_t& mac_info, alcp::digest::Digest* p_digest)
         : m_pDigest{ p_digest }
     {
-        alc_error_t err;
-
         // Constructor argument validations
         m_input_block_length = p_digest->getInputBlockSize();
-        if (m_input_block_length == 0) {
-            m_state = INVALID;
-            return;
-        }
-
-        m_output_hash_size = p_digest->getHashSize();
-        if (m_output_hash_size == 0) {
-            m_state = INVALID;
-            return;
-        }
-
-        alc_key_info_t kinfo = mac_info.mi_keyinfo;
-        err                  = validate_keys(kinfo);
-        if (err) {
-            m_state = INVALID;
-            return;
-        }
+        m_output_hash_size   = p_digest->getHashSize();
+        m_pKey               = mac_info.mi_keyinfo.key;
+        m_keylen             = mac_info.mi_keyinfo.len;
 
         // For HMAC, we require k0 to be same length as input block length of
         // the used hash
@@ -116,26 +94,13 @@ class Hmac::Impl
         get_k0_xor_pad();
 
         // start the hash calculation
-        err = calculate_hash(p_digest, m_pK0_xor_ipad, m_input_block_length);
-        if (err) {
-        } else {
-            m_state = VALID;
-        }
+        calculate_hash(p_digest, m_pK0_xor_ipad, m_input_block_length);
     }
 
   public:
     /// @brief Get hash size in bytes of the digest used for HMAC
     /// @return hash size in bytes of the HMAC digest
-    Uint64 getHashSize()
-    {
-        if (m_state == VALID)
-            return m_output_hash_size;
-        else
-            return 0;
-    }
-    /// @brief Get the validity of the HMAC object
-    /// @return VALID/INVALID based on the state
-    hmac_state_t getState() const { return m_state; };
+    Uint64 getHashSize() { return m_output_hash_size; }
 
     /// @brief Update HMAC with the given buffer chunk
     /// @param buff The chunk of the message to be updated
@@ -145,10 +110,7 @@ class Hmac::Impl
     {
         alc_error_t err = ALC_ERROR_NONE;
         if (buff != nullptr && size != 0) {
-            if (getState() == VALID)
-                err = calculate_hash(m_pDigest, buff, size);
-            else
-                err = ALC_ERROR_BAD_STATE;
+            err = calculate_hash(m_pDigest, buff, size);
         }
         return err;
     }
@@ -160,30 +122,20 @@ class Hmac::Impl
     /// @return ALC_ERROR_NONE if no errors otherwise appropriate error
     alc_error_t finalize(const Uint8* buff, Uint64 size)
     {
-        alc_error_t err;
-        if (getState() == VALID) {
-            if (sizeof(buff) != 0 && size != 0) {
-                err = m_pDigest->finalize(buff, size);
-            } else {
-                err = m_pDigest->finalize(nullptr, 0);
-            }
-            if (err != ALC_ERROR_NONE) {
-                m_state = INVALID;
-                return err;
-            }
-            err = m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
-            if (err != ALC_ERROR_NONE) {
-                m_state = INVALID;
-                return err;
-            }
-            m_pDigest->reset();
-
-            calculate_hash(m_pDigest, m_pK0_xor_opad, m_k0_length);
-            m_pDigest->finalize(m_pTempHash, m_output_hash_size);
-
-            m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
-            m_pDigest->reset();
+        if (sizeof(buff) != 0 && size != 0) {
+            m_pDigest->finalize(buff, size);
+        } else {
+            m_pDigest->finalize(nullptr, 0);
         }
+        m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
+        m_pDigest->reset();
+
+        calculate_hash(m_pDigest, m_pK0_xor_opad, m_k0_length);
+        m_pDigest->finalize(m_pTempHash, m_output_hash_size);
+
+        m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
+        m_pDigest->reset();
+
         return ALC_ERROR_NONE;
     }
 
@@ -195,15 +147,11 @@ class Hmac::Impl
     alc_error_t copyHash(Uint8* buff, Uint64 size)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        if (getState() == VALID) {
-            copyData(buff, m_pTempHash, size);
-        } else {
-            err = ALC_ERROR_BAD_STATE;
-        }
+        copyData(buff, m_pTempHash, size);
         return err;
     }
 
-    void finish() { m_state = INVALID; }
+    void finish() {}
 
     alc_error_t reset()
     {
@@ -214,38 +162,6 @@ class Hmac::Impl
     }
 
   private:
-    // TODO: This method should be outside the class and a common validation
-    // utility for keys
-    alc_error_t validate_keys(const alc_key_info_t& rKeyInfo)
-    {
-        // For RAW assignments
-        switch (rKeyInfo.fmt) {
-
-            case ALC_KEY_FMT_RAW:
-                m_keylen = rKeyInfo.len;
-                if (m_keylen == 0) {
-                    // std::cout << "ERROR:Key Length Cannot be Zero" <<
-                    // std::endl;
-                    return ALC_ERROR_INVALID_SIZE;
-                }
-                if (rKeyInfo.key) {
-                    m_pKey = rKeyInfo.key;
-                } else {
-                    // std::cout << "ERROR:Key Cannot be NULL" << std::endl;
-                    return ALC_ERROR_NOT_PERMITTED;
-                }
-                break;
-            case ALC_KEY_FMT_BASE64:
-                // TODO: For base64 conversions
-                return ALC_ERROR_NOT_SUPPORTED; // remove this return when
-                                                // above todo is resolved.
-                break;
-            // TODO: Subsequest switch cases for other formats
-            default:
-                return ALC_ERROR_NOT_SUPPORTED;
-        }
-        return ALC_ERROR_NONE;
-    }
     void get_k0_xor_pad()
     {
         if (CpuId::cpuHasAvx2()) {
@@ -419,12 +335,6 @@ Uint64
 Hmac::getHashSize()
 {
     return m_pImpl->getHashSize();
-}
-
-hmac_state_t
-Hmac::getState() const
-{
-    return m_pImpl->getState();
 }
 
 void
