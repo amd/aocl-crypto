@@ -28,7 +28,8 @@
 
 #pragma once
 
-#include "alcp/base.hh"
+#include "alcp/types.hh"
+#include "alcp/base/exception.hh"
 
 #include <type_traits>
 
