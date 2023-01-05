@@ -44,18 +44,15 @@ struct Exception : public std::exception
         : m_message(msg + ": " + strerror(errNo))
         , m_errNo(errNo)
         , m_where(where)
-    {
-    }
+    {}
 
     explicit Exception(const SourceLocation& where)
         : Exception(where, "", 0)
-    {
-    }
+    {}
 
     Exception(const SourceLocation& where, std::string msg)
         : Exception(where, msg, 0)
-    {
-    }
+    {}
 
     Exception(const SourceLocation& where, int errNo)
         : Exception(where, "", errNo)
@@ -65,8 +62,7 @@ struct Exception : public std::exception
 
     Exception(const Exception& other)
         : Exception(other.m_where, other.m_message, other.m_errNo)
-    {
-    }
+    {}
 
     virtual ~Exception() throw() {}
 
@@ -75,7 +71,9 @@ struct Exception : public std::exception
     const char* what() const throw()
     {
         string s(str());
-        char*  cStr = new char[s.length() + 1];
+        /* FIXME: the 'new' could fail */
+        /* TODO: convert this to stack based , and use strncopy() */
+        char* cStr = new char[s.length() + 1];
         memcpy(cStr, s.c_str(), s.length() + 1);
         return cStr;
     }
@@ -92,81 +90,64 @@ struct FatalErrorException : public Exception
 {
     explicit FatalErrorException(const SourceLocation& where)
         : Exception(where)
-    {
-    }
+    {}
     FatalErrorException(const SourceLocation& where, std::string msg)
         : Exception(where, msg)
-    {
-    }
+    {}
     FatalErrorException(const SourceLocation& where, int errNo)
         : Exception(where, errNo)
-    {
-    }
+    {}
     FatalErrorException(const SourceLocation& where, string msg, int errNo)
         : Exception(where, msg, errNo)
-    {
-    }
+    {}
 };
 
 struct DataFormatException : public Exception
 {
     explicit DataFormatException(const SourceLocation& where)
         : DataFormatException(where, "", -1)
-    {
-    }
+    {}
     DataFormatException(const SourceLocation& where, std::string msg)
         : DataFormatException(where, msg, -1)
-    {
-    }
+    {}
     DataFormatException(const SourceLocation& where, int errNo)
         : DataFormatException(where, "", errNo)
-    {
-    }
+    {}
     DataFormatException(const SourceLocation& where, string msg, int errNo)
         : Exception(where, msg, errNo)
-    {
-    }
+    {}
 };
 
 struct NotReachedException : public Exception
 {
     explicit NotReachedException(const SourceLocation& where)
         : Exception(where)
-    {
-    }
+    {}
     NotReachedException(const SourceLocation& where, std::string msg)
         : NotReachedException(where, msg, -1)
-    {
-    }
+    {}
     NotReachedException(const SourceLocation& where, int errNo)
         : NotReachedException(where, "", errNo)
-    {
-    }
+    {}
     NotReachedException(const SourceLocation& where, string msg, int errNo)
         : Exception(where, msg, errNo)
-    {
-    }
+    {}
 };
 
 struct NotImplementedException : public Exception
 {
     explicit NotImplementedException(const SourceLocation& where)
         : Exception(where)
-    {
-    }
+    {}
     NotImplementedException(const SourceLocation& where, std::string msg)
         : NotImplementedException(where, msg, -1)
-    {
-    }
+    {}
     NotImplementedException(const SourceLocation& where, int errNo)
         : NotImplementedException(where, "", errNo)
-    {
-    }
+    {}
     NotImplementedException(const SourceLocation& where, string msg, int errNo)
         : Exception(where, msg, errNo)
-    {
-    }
+    {}
 };
 
 } // namespace alcp
-
