@@ -26,9 +26,9 @@
  *
  */
 
+#include "alcp/utils/cpuid.hh"
 #include "cipher/aes.hh"
 #include "cipher/cipher_wrapper.hh"
-#include "alcp/utils/cpuid.hh"
 
 using alcp::utils::CpuId;
 
@@ -39,15 +39,16 @@ Ofb::decrypt(const uint8_t* pCipherText,
              uint64_t       len,
              const uint8_t* pIv) const
 {
-    alc_error_t err = ALC_ERROR_NONE;
+    alc_error_t  err = ALC_ERROR_NONE;
+    static CpuId cpuId;
 
-    if (CpuId::cpuHasVaes()) {
+    if (cpuId.cpuHasVaes()) {
         err = aesni::DecryptOfb(
             pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
 
         return err;
     }
-    if (CpuId::cpuHasAesni()) {
+    if (cpuId.cpuHasAesni()) {
         err = aesni::DecryptOfb(
             pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
 
@@ -65,16 +66,17 @@ Ofb::encrypt(const uint8_t* pPlainText,
              uint64_t       len,
              const uint8_t* pIv) const
 {
-    alc_error_t err = ALC_ERROR_NONE;
+    alc_error_t  err = ALC_ERROR_NONE;
+    static CpuId cpuId;
 
-    if (CpuId::cpuHasVaes()) {
+    if (cpuId.cpuHasVaes()) {
         // err = vaes::EncryptOfb(
         err = aesni::EncryptOfb(
             pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
 
         return err;
     }
-    if (CpuId::cpuHasAesni()) {
+    if (cpuId.cpuHasAesni()) {
         err = aesni::EncryptOfb(
             pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
 

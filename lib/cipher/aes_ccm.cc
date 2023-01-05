@@ -64,7 +64,8 @@ Ccm::cryptUpdate(const Uint8* pInput,
                  const Uint8* pIv,
                  bool         isEncrypt)
 {
-    alc_error_t err = ALC_ERROR_NONE;
+    alc_error_t  err = ALC_ERROR_NONE;
+    static CpuId cpuId;
     if ((pInput != NULL) && (pOutput != NULL)) {
 
         m_len = len;
@@ -89,7 +90,7 @@ Ccm::cryptUpdate(const Uint8* pInput,
         bool err_ret = (CcmSetIv(&m_ccm_data, pIv, m_ivLen, len) == 0);
 
         // Accelerate with AESNI
-        if (CpuId::cpuHasAesni()) {
+        if (cpuId.cpuHasAesni()) {
             aesni::CcmSetAad(
                 &m_ccm_data, m_additionalData, m_additionalDataLen);
             if (isEncrypt) {

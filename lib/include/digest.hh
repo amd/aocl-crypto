@@ -31,10 +31,6 @@
 /* C-API headers */
 #include "config.h"
 
-#ifdef ALCP_ENABLE_AOCL_CPUID
-#include "alci/cpu_features.h"
-#endif
-
 #include "alcp/digest.h"
 #include "alcp/types.h"
 

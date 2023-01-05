@@ -30,16 +30,11 @@
 
 #include "config.h"
 
-#ifdef ALCP_ENABLE_AOCL_CPUID
-#include "alci/cpu_features.h"
-#endif
-
-#include "alcp/cipher.h"
 #include "alcp/base.hh"
+#include "alcp/cipher.h"
 
 #include <array>
 #include <cstdint>
-#include <functional>
 #include <functional>
 #include <iostream>
 

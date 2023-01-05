@@ -26,9 +26,9 @@
  *
  */
 
+#include "alcp/utils/cpuid.hh"
 #include "cipher/aes.hh"
 #include "cipher/cipher_wrapper.hh"
-#include "alcp/utils/cpuid.hh"
 #include "utils/constants.hh"
 #include "utils/copy.hh"
 
@@ -72,12 +72,12 @@ Xts::setIv(Uint64 len, const Uint8* pIv)
 void
 Xts::expandTweakKeys(const Uint8* pUserKey, int len)
 {
-
+    static CpuId cpuId;
     using utils::GetByte, utils::MakeWord;
     Uint8 dummy_key[32] = { 0 };
 
     const Uint8* key = pUserKey ? pUserKey : &dummy_key[0];
-    if (CpuId::cpuHasAesni()) {
+    if (cpuId.cpuHasAesni()) {
         aesni::ExpandTweakKeys(key, p_tweak_key, getRounds());
         return;
     }
@@ -121,8 +121,8 @@ Xts::encrypt(const Uint8* pPlainText,
              Uint64       len,
              const Uint8* pIv) const
 {
-
-    alc_error_t err = ALC_ERROR_NONE;
+    static CpuId cpuId;
+    alc_error_t  err = ALC_ERROR_NONE;
 
     // Data should never be less than a block or greater than 2^20 blocks
     if (len < 16 || len > (1 << 21)) {
@@ -130,9 +130,9 @@ Xts::encrypt(const Uint8* pPlainText,
         return err;
     }
 
-    if (CpuId::cpuHasAvx512(utils::AVX512_F)
-        && CpuId::cpuHasAvx512(utils::AVX512_DQ)
-        && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
+    if (cpuId.cpuHasAvx512(utils::AVX512_F)
+        && cpuId.cpuHasAvx512(utils::AVX512_DQ)
+        && cpuId.cpuHasAvx512(utils::AVX512_BW)) {
         err = vaes512::EncryptXtsAvx512(pPlainText,
                                         pCipherText,
                                         len,
@@ -143,7 +143,7 @@ Xts::encrypt(const Uint8* pPlainText,
         return err;
     }
 
-    if (CpuId::cpuHasVaes()) {
+    if (cpuId.cpuHasVaes()) {
 
         err = vaes::EncryptXts(pPlainText,
                                pCipherText,
@@ -156,7 +156,7 @@ Xts::encrypt(const Uint8* pPlainText,
         return err;
     }
 
-    if (CpuId::cpuHasAesni()) {
+    if (cpuId.cpuHasAesni()) {
 
         err = aesni::EncryptXts(pPlainText,
                                 pCipherText,
@@ -242,8 +242,8 @@ Xts::decrypt(const Uint8* pCipherText,
              Uint64       len,
              const Uint8* pIv) const
 {
-
-    alc_error_t err = ALC_ERROR_NONE;
+    alc_error_t  err = ALC_ERROR_NONE;
+    static CpuId cpuId;
 
     // Data should never be less than a block or greater than 2^20 blocks
     if (len < 16 || len > (1 << 21)) {
@@ -251,9 +251,9 @@ Xts::decrypt(const Uint8* pCipherText,
         return err;
     }
 
-    if (CpuId::cpuHasAvx512(utils::AVX512_F)
-        && CpuId::cpuHasAvx512(utils::AVX512_DQ)
-        && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
+    if (cpuId.cpuHasAvx512(utils::AVX512_F)
+        && cpuId.cpuHasAvx512(utils::AVX512_DQ)
+        && cpuId.cpuHasAvx512(utils::AVX512_BW)) {
 
         err = vaes512::DecryptXtsAvx512(pCipherText,
                                         pPlainText,
@@ -265,7 +265,7 @@ Xts::decrypt(const Uint8* pCipherText,
         return err;
     }
 
-    if (CpuId::cpuHasVaes()) {
+    if (cpuId.cpuHasVaes()) {
 
         err = vaes::DecryptXts(pCipherText,
                                pPlainText,
@@ -278,7 +278,7 @@ Xts::decrypt(const Uint8* pCipherText,
         return err;
     }
 
-    if (CpuId::cpuHasAesni()) {
+    if (cpuId.cpuHasAesni()) {
 
         err = aesni::DecryptXts(pCipherText,
                                 pPlainText,

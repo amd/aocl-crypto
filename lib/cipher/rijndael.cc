@@ -40,7 +40,7 @@
 
 #define ROR(inp, n) ((inp >> n) | (inp << (32 - n)))
 
-using namespace alcp::base; // for Status
+using namespace alcp::base;  // for Status
 using namespace alcp::utils; // for CpuId
 
 static inline void
@@ -803,6 +803,7 @@ Rijndael::Impl::decryptUpdate(const Uint8* pSrc,
 void
 Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
 {
+    static CpuId cpuId;
     using utils::GetByte, utils::MakeWord;
 
     Uint8        dummy_key[Rijndael::cMaxKeySize] = { 0 };
@@ -812,7 +813,7 @@ Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
     pEncKey = m_enc_key;
     pDecKey = m_dec_key;
 
-    if (CpuId::cpuHasAesni()) {
+    if (cpuId.cpuHasAesni()) {
         aesni::ExpandKeys(key, pEncKey, pDecKey, m_nrounds);
         return;
     }
@@ -895,9 +896,9 @@ Rijndael::getDecryptKeys() const
 Status
 Rijndael::setKey(const Uint8* pUserKey, Uint64 len)
 {
-    if ((len < cMinKeySize) || (len > cMaxKeySize))
-    {}
-        //InvalidArgumentException("Key length not acceptable");
+    if ((len < cMinKeySize) || (len > cMaxKeySize)) {
+    }
+    // InvalidArgumentException("Key length not acceptable");
 
     /* FIXME: we should make Impl::setKey to get this done */
     // pImpl()->expandKeys(pUserKey);

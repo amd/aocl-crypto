@@ -29,132 +29,20 @@
 #include "alcp/utils/cpuid.hh"
 #include "config.h"
 #ifdef ALCP_ENABLE_AOCL_CPUID
-#include "alci/cpu_features.h"
+#include "alci/alci.h"
 #endif
 
 namespace alcp::utils {
 
-class CpuId::Impl
-{
-  public:
-    Impl()  = default;
-    ~Impl() = default;
-
-  public:
-    // Genoa functions
-    /**
-     * @brief Returns true if CPU has AVX512f Flag
-     *
-     * @return true
-     * @return false
-     */
-    static inline bool cpuHasAvx512f();
-    /**
-     * @brief Returns true if CPU has AVX512DQ Flag
-     *
-     * @return true
-     * @return false
-     */
-    static inline bool cpuHasAvx512dq();
-    /**
-     * @brief Retrurns true if CPU has AVX512BW Flag
-     *
-     * @return true
-     * @return false
-     */
-    static inline bool cpuHasAvx512bw();
-    /**
-     * @brief Returns true depending on the flag is available or not on CPU
-     *
-     * @param flag Which AVX512 flag to get info on.
-     * @return true
-     * @return false
-     */
-    static inline bool cpuHasAvx512(avx512_flags_t flag);
-
-    // Milan functions
-    /**
-     * @brief Returns true if CPU supports vector AES
-     * @note  Will return true if either 256 or 512 bit vector AES is supported
-     *
-     * @return true
-     * @return false
-     */
-    static inline bool cpuHasVaes();
-
-    // Rome functions
-    /**
-     * @brief Returns true if CPU supports block AES instruction
-     *
-     * @return true
-     * @return false
-     */
-    static inline bool cpuHasAesni();
-    /**
-     * @brief Returns true if CPU supports block SHA instruction
-     *
-     * @return true
-     * @return false
-     */
-    static inline bool cpuHasShani();
-    /**
-     * @brief Returns true if CPU supports AVX2 instructions
-     *
-     * @return true
-     * @return false
-     */
-    static inline bool cpuHasAvx2();
-    /**
-     * @brief Returns true if RDRAND, secure RNG number generator is supported
-     * by CPU
-     *
-     * @return true
-     * @return false
-     */
-    static inline bool cpuHasRdRand();
-    /**
-     * @brief Returns true if RDSEED, secure RNG seed generator is supported by
-     * CPU
-     *
-     * @return true
-     * @return false
-     */
-    static inline bool cpuHasRdSeed();
-    /**
-     * @brief Returns true if currently executing cpu is Zen1
-     *
-     * @return true
-     * @return false
-     */
-    static inline bool cpuIsZen1();
-    /**
-     * @brief Returns true if currently executing cpu is Zen2
-     *
-     * @return true
-     * @return false
-     */
-    static inline bool cpuIsZen2();
-    /**
-     * @brief Returns true if currently executing cpu is Zen3
-     *
-     * @return true
-     * @return false
-     */
-    static inline bool cpuIsZen3();
-    /**
-     * @brief Returns true if currently executing cpu is Zen4
-     *
-     * @return true
-     * @return false
-     */
-    static inline bool cpuIsZen4();
-};
+// FIXME: Memeory Allocations for static variables
+std::unique_ptr<CpuId::Impl> CpuId::pImpl;
+Cpu                          CpuId::Impl::m_cpu;
 
 bool
 CpuId::Impl::cpuHasAvx512f()
 {
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    static bool state = (alc_cpu_has_avx512f() > 0);
+    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AVX512F);
 #else
     static bool state = false;
 #endif
@@ -165,7 +53,7 @@ bool
 CpuId::Impl::cpuHasAvx512dq()
 {
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    static bool state = (alc_cpu_has_avx512dq() > 0);
+    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AVX512DQ);
 #else
     static bool state = false;
 #endif
@@ -176,7 +64,7 @@ bool
 CpuId::Impl::cpuHasAvx512bw()
 {
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    static bool state = (alc_cpu_has_avx512bw() > 0);
+    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AVX512BW);
 #else
     static bool state = false;
 #endif
@@ -203,7 +91,7 @@ bool
 CpuId::Impl::cpuHasVaes()
 {
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    static bool state = (alc_cpu_has_vaes() > 0);
+    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_VAES);
 #else
     static bool state = false;
 #endif
@@ -213,7 +101,7 @@ bool
 CpuId::Impl::cpuHasAesni()
 {
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    static bool state = (alc_cpu_has_aes() > 0);
+    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AES);
 #else
     static bool state = true;
 #endif
@@ -223,7 +111,7 @@ bool
 CpuId::Impl::cpuHasShani()
 {
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    static bool state = (alc_cpu_has_sha() > 0);
+    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_SHA_NI);
 #else
     // FIXME: Settig SHANI as available by default
     static bool state = false;
@@ -241,7 +129,7 @@ bool
 CpuId::Impl::cpuHasRdRand()
 {
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    static bool state = (alc_cpu_has_rdrnd() > 0);
+    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_RDRAND);
 #else
     static bool state = false;
 #endif
@@ -251,7 +139,7 @@ bool
 CpuId::Impl::cpuHasRdSeed()
 {
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    static bool state = (alc_cpu_has_rdseed() > 0);
+    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_RDSEED);
 #else
     static bool state = false;
 #endif
@@ -261,14 +149,7 @@ bool
 CpuId::Impl::cpuIsZen1()
 {
 #ifdef ALCP_ENABLE_AOCL_CPUID
-// FIXME: CPUID alc_cpu_arch_is_zen is broken, debug statements below will be
-// removed after that fix
-#if 0
-    static bool state = (alc_cpu_arch_is_zen() > 0);
-#else
-    static bool state = true;
-#endif
-    // printf("Debug CPUID ZEN1:%d\n", state);
+    static bool state = Impl::m_cpu.isUarch(Uarch::eZen);
 #else
     static bool state = false;
 #endif
@@ -278,7 +159,7 @@ bool
 CpuId::Impl::cpuIsZen2()
 {
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    static bool state = (alc_cpu_arch_is_zen2() > 0);
+    static bool state = Impl::m_cpu.isUarch(Uarch::eZen2);
 #else
     static bool state = false;
 #endif
@@ -288,7 +169,7 @@ bool
 CpuId::Impl::cpuIsZen3()
 {
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    static bool state = (alc_cpu_arch_is_zen3() > 0);
+    static bool state = Impl::m_cpu.isUarch(Uarch::eZen3);
 #else
     static bool state = false;
 #endif
@@ -298,7 +179,7 @@ bool
 CpuId::Impl::cpuIsZen4()
 {
 #ifdef ALCP_ENABLE_AOCL_CPUID
-    static bool state = (alc_cpu_arch_is_zen4() > 0);
+    static bool state = Impl::m_cpu.isUarch(Uarch::eZen4);
 #else
     static bool state = false;
 #endif
@@ -308,88 +189,85 @@ CpuId::Impl::cpuIsZen4()
 bool
 CpuId::cpuHasAesni()
 {
-    return Impl::cpuHasAesni();
+    return pImpl.get()->cpuHasAesni();
 }
 
 bool
 CpuId::cpuHasAvx2()
 {
-    return Impl::cpuHasAvx2();
+    return pImpl.get()->cpuHasAvx2();
 }
 
 bool
 CpuId::cpuHasAvx512(avx512_flags_t flag)
 {
-    return Impl::cpuHasAvx512(flag);
+    return pImpl.get()->cpuHasAvx512(flag);
 }
 
 bool
 CpuId::cpuHasAvx512bw()
 {
-    return Impl::cpuHasAvx512bw();
+    return pImpl.get()->cpuHasAvx512bw();
 }
 
 bool
 CpuId::cpuHasAvx512dq()
 {
-    return Impl::cpuHasAvx512dq();
+    return pImpl.get()->cpuHasAvx512dq();
 }
 
 bool
 CpuId::cpuHasAvx512f()
 {
-    return Impl::cpuHasAvx512f();
+    return pImpl.get()->cpuHasAvx512f();
 }
 
 bool
 CpuId::cpuHasShani()
 {
-    return Impl::cpuHasShani();
+    return pImpl.get()->cpuHasShani();
 }
 
 bool
 CpuId::cpuHasVaes()
 {
-    return Impl::cpuHasVaes();
+    return pImpl.get()->cpuHasVaes();
 }
 
 bool
 CpuId::cpuHasRdRand()
 {
-    return Impl::cpuHasRdRand();
+    return pImpl.get()->cpuHasRdRand();
 }
 
 bool
 CpuId::cpuHasRdSeed()
 {
-    return Impl::cpuHasRdSeed();
+    return pImpl.get()->cpuHasRdSeed();
 }
 
 bool
 CpuId::cpuIsZen1()
 {
-    return Impl::cpuIsZen1();
+    return pImpl.get()->cpuIsZen1();
 }
 
 bool
 CpuId::cpuIsZen2()
 {
-    return Impl::cpuIsZen2();
+    return pImpl.get()->cpuIsZen2();
 }
 
 bool
 CpuId::cpuIsZen3()
 {
-    return Impl::cpuIsZen3();
+    return pImpl.get()->cpuIsZen3();
 }
 
 bool
 CpuId::cpuIsZen4()
 {
-    return Impl::cpuIsZen4();
+    return pImpl.get()->cpuIsZen4();
 }
-
-CpuId::CpuId()  = default;
-CpuId::~CpuId() = default;
 
 } // namespace alcp::utils

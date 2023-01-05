@@ -26,9 +26,9 @@
  *
  */
 
+#include "alcp/utils/cpuid.hh"
 #include "cipher/aes.hh"
 #include "cipher/cipher_wrapper.hh"
-#include "alcp/utils/cpuid.hh"
 
 #include <immintrin.h>
 #include <wmmintrin.h>
@@ -62,22 +62,23 @@ Gcm::cryptUpdate(const uint8_t* pInput,
                  const uint8_t* pIv,
                  bool           isEncrypt)
 {
-    alc_error_t err = ALC_ERROR_NONE;
+    alc_error_t  err = ALC_ERROR_NONE;
+    static CpuId cpuId;
 
     if ((pInput != NULL) && (pOutput != NULL)) {
         // CTR encrypt and Hash
         m_len = len;
 
         bool isAvx512Cap = false;
-        if (CpuId::cpuHasVaes()) {
-            if (CpuId::cpuHasAvx512(utils::AVX512_F)
-                && CpuId::cpuHasAvx512(utils::AVX512_DQ)
-                && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
+        if (cpuId.cpuHasVaes()) {
+            if (cpuId.cpuHasAvx512(utils::AVX512_F)
+                && cpuId.cpuHasAvx512(utils::AVX512_DQ)
+                && cpuId.cpuHasAvx512(utils::AVX512_BW)) {
                 isAvx512Cap = true;
             }
         }
 
-        if (CpuId::cpuHasVaes() && isAvx512Cap) {
+        if (cpuId.cpuHasVaes() && isAvx512Cap) {
             // Encrypt/Decrypt call
             err = vaes512::CryptGcm(pInput,
                                     pOutput,

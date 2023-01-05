@@ -28,6 +28,7 @@
 
 #pragma once
 
+#include <alci/alci.h>
 #include <iostream>
 #include <memory>
 
@@ -40,13 +41,19 @@ typedef enum
     AVX512_BW,
 } avx512_flags_t;
 
+// using alci::Cpu;
+// using alci::Uarch;
+using namespace alci;
 class CpuId
 {
-
   public:
-    CpuId();
-    ~CpuId();
-
+    CpuId()
+    {
+        if (pImpl.get() == nullptr) {
+            pImpl = make_unique<Impl>();
+        }
+    }
+    ~CpuId() = default;
     // Genoa functions
     /**
      * @brief Returns true if CPU has AVX512f Flag
@@ -54,21 +61,21 @@ class CpuId
      * @return true
      * @return false
      */
-    static bool cpuHasAvx512f();
+    bool cpuHasAvx512f();
     /**
      * @brief Returns true if CPU has AVX512DQ Flag
      *
      * @return true
      * @return false
      */
-    static bool cpuHasAvx512dq();
+    bool cpuHasAvx512dq();
     /**
      * @brief Retrurns true if CPU has AVX512BW Flag
      *
      * @return true
      * @return false
      */
-    static bool cpuHasAvx512bw();
+    bool cpuHasAvx512bw();
     /**
      * @brief Returns true depending on the flag is available or not on CPU
      *
@@ -76,7 +83,7 @@ class CpuId
      * @return true
      * @return false
      */
-    static bool cpuHasAvx512(avx512_flags_t flag);
+    bool cpuHasAvx512(avx512_flags_t flag);
 
     // Milan functions
     /**
@@ -86,7 +93,7 @@ class CpuId
      * @return true
      * @return false
      */
-    static bool cpuHasVaes();
+    bool cpuHasVaes();
 
     // Rome functions
     /**
@@ -95,21 +102,21 @@ class CpuId
      * @return true
      * @return false
      */
-    static bool cpuHasAesni();
+    bool cpuHasAesni();
     /**
      * @brief Returns true if CPU supports block SHA instruction
      *
      * @return true
      * @return false
      */
-    static bool cpuHasShani();
+    bool cpuHasShani();
     /**
      * @brief Returns true if CPU supports AVX2 instructions
      *
      * @return true
      * @return false
      */
-    static bool cpuHasAvx2();
+    bool cpuHasAvx2();
     /**
      * @brief Returns true if RDRAND, secure RNG number generator is supported
      * by CPU
@@ -117,7 +124,7 @@ class CpuId
      * @return true
      * @return false
      */
-    static bool cpuHasRdRand();
+    bool cpuHasRdRand();
     /**
      * @brief Returns true if RDSEED, secure RNG seed generator is supported by
      * CPU
@@ -125,37 +132,156 @@ class CpuId
      * @return true
      * @return false
      */
-    static bool cpuHasRdSeed();
+    bool cpuHasRdSeed();
     /**
      * @brief Returns true if currently executing cpu is Zen1
      *
      * @return true
      * @return false
      */
-    static bool cpuIsZen1();
+    bool cpuIsZen1();
     /**
      * @brief Returns true if currently executing cpu is Zen2
      *
      * @return true
      * @return false
      */
-    static bool cpuIsZen2();
+    bool cpuIsZen2();
     /**
      * @brief Returns true if currently executing cpu is Zen3
      *
      * @return true
      * @return false
      */
-    static bool cpuIsZen3();
+    bool cpuIsZen3();
     /**
      * @brief Returns true if currently executing cpu is Zen4
      *
      * @return true
      * @return false
      */
-    static bool cpuIsZen4();
+    bool cpuIsZen4();
 
   private:
-    class Impl;
+    class Impl
+    {
+      public:
+        Impl()  = default;
+        ~Impl() = default;
+        static Cpu m_cpu;
+
+      public:
+        // Genoa functions
+        /**
+         * @brief Returns true if CPU has AVX512f Flag
+         *
+         * @return true
+         * @return false
+         */
+        bool cpuHasAvx512f();
+        /**
+         * @brief Returns true if CPU has AVX512DQ Flag
+         *
+         * @return true
+         * @return false
+         */
+        bool cpuHasAvx512dq();
+        /**
+         * @brief Retrurns true if CPU has AVX512BW Flag
+         *
+         * @return true
+         * @return false
+         */
+        bool cpuHasAvx512bw();
+        /**
+         * @brief Returns true depending on the flag is available or not on CPU
+         *
+         * @param flag Which AVX512 flag to get info on.
+         * @return true
+         * @return false
+         */
+        bool cpuHasAvx512(avx512_flags_t flag);
+
+        // Milan functions
+        /**
+         * @brief Returns true if CPU supports vector AES
+         * @note  Will return true if either 256 or 512 bit vector AES is
+         * supported
+         *
+         * @return true
+         * @return false
+         */
+        bool cpuHasVaes();
+
+        // Rome functions
+        /**
+         * @brief Returns true if CPU supports block AES instruction
+         *
+         * @return true
+         * @return false
+         */
+        bool cpuHasAesni();
+        /**
+         * @brief Returns true if CPU supports block SHA instruction
+         *
+         * @return true
+         * @return false
+         */
+        bool cpuHasShani();
+        /**
+         * @brief Returns true if CPU supports AVX2 instructions
+         *
+         * @return true
+         * @return false
+         */
+        bool cpuHasAvx2();
+        /**
+         * @brief Returns true if RDRAND, secure RNG number generator is
+         * supported by CPU
+         *
+         * @return true
+         * @return false
+         */
+        bool cpuHasRdRand();
+        /**
+         * @brief Returns true if RDSEED, secure RNG seed generator is supported
+         * by CPU
+         *
+         * @return true
+         * @return false
+         */
+        bool cpuHasRdSeed();
+        /**
+         * @brief Returns true if currently executing cpu is Zen1
+         *
+         * @return true
+         * @return false
+         */
+        bool cpuIsZen1();
+        /**
+         * @brief Returns true if currently executing cpu is Zen2
+         *
+         * @return true
+         * @return false
+         */
+        bool cpuIsZen2();
+        /**
+         * @brief Returns true if currently executing cpu is Zen3
+         *
+         * @return true
+         * @return false
+         */
+        bool cpuIsZen3();
+        /**
+         * @brief Returns true if currently executing cpu is Zen4
+         *
+         * @return true
+         * @return false
+         */
+        bool cpuIsZen4();
+    };
+
+  public:
+    static std::unique_ptr<Impl> pImpl;
 };
 } // namespace alcp::utils

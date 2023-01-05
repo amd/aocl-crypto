@@ -40,6 +40,7 @@
 #include "utils/endian.hh"
 
 namespace utils = alcp::utils;
+using utils::CpuId;
 
 namespace alcp::digest {
 
@@ -174,7 +175,8 @@ Sha256::Impl::compressMsg(Uint32 w[])
 alc_error_t
 Sha256::Impl::processChunk(const Uint8* pSrc, Uint64 len)
 {
-    static bool shani_available = utils::CpuId::cpuHasShani();
+    static CpuId cpuId;
+    static bool  shani_available = cpuId.cpuHasShani();
     // FIXME: AVX2 is deliberately disabled due to poor performance
 #if 0
     static bool avx2_available  = utils::CpuId::cpuHasAvx2();

@@ -28,10 +28,9 @@
 
 #include "alcp/base.hh"
 
-
-#include "rng.hh"
-#include "capi/rng/builder.hh"
 #include "alcp/utils/cpuid.hh"
+#include "capi/rng/builder.hh"
+#include "rng.hh"
 
 EXTERN_C_BEGIN
 
@@ -49,8 +48,9 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo)
 {
     alc_error_t error = ALC_ERROR_NONE;
 
-    bool rd_rand_available = CpuId::cpuHasRdRand();
-    bool rd_seed_available = CpuId::cpuHasRdSeed();
+    static CpuId cpuId;
+    bool         rd_rand_available = cpuId.cpuHasRdRand();
+    bool         rd_seed_available = cpuId.cpuHasRdSeed();
 
     switch (pRngInfo->ri_type) {
         case ALC_RNG_TYPE_DESCRETE:
