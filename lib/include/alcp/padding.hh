@@ -23,33 +23,67 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
  */
 
 #pragma once
 
-#include <cstdarg>
-#include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include "alcp/base.hh"
+#include "alcp/interface/Ipadder.hh"
 
-#include <memory>
-#include <sstream>
-#include <string>
-#include <string_view>
+#include <cstddef>
 #include <vector>
-
-#include "alcp/base/error.hh"
-#include "alcp/base/exception.hh"
-#include "alcp/base/status.hh"
-#include "alcp/base/statusor.hh"
-#include "alcp/defs.hh"
-#include "alcp/types.hh"
 
 namespace alcp {
 
-// We support using alcp::base in 'alcp' namespace
-using namespace alcp::base;
+enum class PaddingScheme
+{
+    eNone,       /* Generic padding will have byte/bit padding */
+    ePkcs1_OAEP, /* Optimal Asymmetric Encryption Padding */
+    x931,
+    ePkcs1,
+    ePss, /* Probabilistic Signature Scheme */
+};
+
+class MessageBlock
+{
+    using ByteVector = std::vector<std::byte>;
+
+  public:
+    /**
+     * @brief    Returns number of bits in block
+     * @return   Number of bits in block
+     */
+    Uint64 size() const;
+
+    /**
+     * @brief   Method to return reference to underlaying block
+     * @return  Reference to underlaying message block as vector of bytes
+     */
+    ByteVector& get() const;
+
+  private:
+    /*
+     * m_block contains the message in a byte accessible form,
+     * the last byte contains the half-populated bits in its lower bits
+     */
+    ByteVector m_block;
+
+    /*
+     * if m_size_bits is not multiple of 8, then m_block contains at least one
+     * byte which needs to be padded
+     */
+    Uint64 m_size_bits;
+};
+
+/**
+ * @brief
+ * NullPadder is a dummy class which doesnt' pad, useful when we have to have
+ * a padder built into algorithms
+ */
+class NullPadder : public IPadder
+{
+  public:
+    virtual Status pad(MessageBlock& msgBlk) { return StatusOk(); }
+};
 
 } // namespace alcp

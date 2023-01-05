@@ -53,6 +53,7 @@ SET(ALCP_COMMON_SRCS
 	sourcelocation.cc
   status.cc
   bufferwriter.cc
+  padding.cc
 	)
 
 #[==[

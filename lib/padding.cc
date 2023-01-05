@@ -23,33 +23,37 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
  */
 
-#pragma once
-
-#include <cstdarg>
-#include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-
-#include <memory>
-#include <sstream>
-#include <string>
-#include <string_view>
-#include <vector>
-
-#include "alcp/base/error.hh"
-#include "alcp/base/exception.hh"
-#include "alcp/base/status.hh"
-#include "alcp/base/statusor.hh"
-#include "alcp/defs.hh"
-#include "alcp/types.hh"
+#include "alcp/padding.hh"
+#include "include/alcp/base/exception.hh"
 
 namespace alcp {
 
-// We support using alcp::base in 'alcp' namespace
 using namespace alcp::base;
+
+Status
+IPadder::padBits(MessageBlock& blk, Uint64 valueBits)
+{
+    NotImplementedException(ALCP_SOURCE_LOCATION());
+
+    return NotImplementedError("Abstract class");
+}
+
+Status
+IPadder::padBytes(MessageBlock& blk, Uint64 valueByte)
+{
+    NotImplementedException(ALCP_SOURCE_LOCATION());
+
+    return NotImplementedError("Abstract class");
+}
+
+Status
+IPadder::padZero(MessageBlock& blk, Uint64 count)
+{
+    NotImplementedException(ALCP_SOURCE_LOCATION());
+
+    return NotImplementedError("Abstract class");
+}
 
 } // namespace alcp
