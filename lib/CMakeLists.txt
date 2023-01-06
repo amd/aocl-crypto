@@ -44,7 +44,6 @@ SET(ALCP_VRS_SRC
 	version.cc)
 
 SET(ALCP_COMMON_SRCS
-	algorithm.cc
 	dynlib.cc
 	error.cc
 	exception.cc

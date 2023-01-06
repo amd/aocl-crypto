@@ -98,14 +98,17 @@ class GenericError final : public ErrorBase
 {
 
   protected:
-    virtual bool isEq(IError const& lhs, IError const& rhs) const
+    virtual bool isEq(IError const& lhs, IError const& rhs) const override final
     {
         auto l = dynamic_cast<const GenericError&>(lhs);
         auto r = dynamic_cast<const GenericError&>(rhs);
 
-        return l.getModuleType() == r.getModuleType()
+        return l.moduleId() == r.moduleId()
                && l.getModuleError() == r.getModuleError();
     }
+
+    /* Module ID for Generic errors is 0 */
+    virtual Uint16 moduleId() const override { return 0; }
 
   public:
     GenericError()
@@ -118,7 +121,6 @@ class GenericError final : public ErrorBase
 
     GenericError(ErrorCode ecode)
     {
-        ErrorBase::setModuleType(0);
         ErrorBase::setModuleError(static_cast<Uint16>(ecode));
     }
 
@@ -139,10 +141,16 @@ class GenericError final : public ErrorBase
      */
     virtual const String message() const override
     {
+        return __toStr(ErrorBase::getModuleError());
+    }
+
+  private:
+    static const String __toStr(Uint16 mod_err)
+    {
         using ec        = alcp::base::ErrorCode;
         using ErrorMapT = std::unordered_map<Uint16, std::string>;
 
-        static const ErrorMapT str_map = {
+        static const ErrorMapT err_to_str_map = {
             { ec::eOk, "All is Well !!" },
             { ec::eExists, "Already Exists" },
             { ec::eInternal, "Internal Error" },
@@ -152,17 +160,15 @@ class GenericError final : public ErrorBase
             { ec::eNotImplemented, "Not Implemented" },
         };
 
-        ErrorMapT::const_iterator it = str_map.find(getModuleError());
+        ErrorMapT::const_iterator it =
+            err_to_str_map.find(static_cast<ErrorCode>(mod_err));
 
-        if (it != str_map.end()) {
+        if (it != err_to_str_map.end()) {
             return it->second;
         } else {
             return "Unknown Error";
         }
     }
-
-  protected:
-    ErrorCode m_error_code;
 };
 
 } // namespace alcp::base

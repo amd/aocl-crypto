@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2021, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,18 +26,34 @@
  *
  */
 
-#include <iostream>
+#pragma once
 
-#include "algorithm.hh"
+#include "alcp/types.hh"
+#include "alcp/defs.hh"
+
+#include <cstdint>
+#include <memory>
+#include <string>
 
 namespace alcp {
-/* class Algorithm::Impl */
-/* {}; */
 
-Algorithm::Algorithm()
-//    : impl(new Impl)
-{}
+enum class AlgorithmType : uint32_t
+{
+    eUnknown,
+    eDigest,
+    eCipher,
+    eAead,
+    eMac,
+    eRng
+};
 
-Algorithm::~Algorithm() {}
+class Algorithm
+{
+  public:
+    virtual const String name() = 0;
 
+  protected:
+    ALCP_DEFS_DEFAULT_CTOR_AND_DTOR(Algorithm);
+};
 } // namespace alcp
+

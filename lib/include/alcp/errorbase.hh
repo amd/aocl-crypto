@@ -79,23 +79,22 @@ class ErrorBase : public IError
     static bool registerModuleError(ModuleType mt, IError& ie);
 
   protected:
-    ErrorBase(Uint16 module_type, Uint16 module_error)
+    ErrorBase(Uint16 module_id, Uint16 module_error)
         : ErrorBase{}
     {
-        m_error.field.module_type  = module_type;
+        m_error.field.module_id    = module_id;
         m_error.field.module_error = module_error;
     }
 
-    void setModuleType(Uint16 type)
-    {
-        /* FIXME: check if we can validate 'type' */
-        m_error.field.module_type = type;
-    }
-
-    void setModuleError(Uint16 error) { m_error.field.module_error = error; }
-
-    Uint16 getModuleType() const { return m_error.field.module_type; }
+    void   setModuleError(Uint16 error) { m_error.field.module_error = error; }
     Uint16 getModuleError() const { return m_error.field.module_error; }
+
+    /**
+     * @brief   virtual function to get derived class's module id
+     *
+     * @return  an Uint16 compatible with module_id
+     */
+    virtual Uint16 moduleId() const = 0;
 
   protected:
     union
@@ -104,10 +103,10 @@ class ErrorBase : public IError
 
         struct
         {
-            Uint16 base_error;
-            Uint16 module_error;
-            Uint16 module_type;
-            Uint16 reserved;
+            Uint64 base_error   : 16;
+            Uint64 module_error : 16;
+            Uint64 module_id    : 16;
+            Uint64 __reserved   : 16;
         } field;
     } m_error;
 
