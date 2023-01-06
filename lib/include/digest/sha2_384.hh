@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -51,15 +51,14 @@ class ALCP_API_EXPORT Sha384 final : public Sha2
      * @return The input block size to the hash function in bytes
      */
     Uint64 getInputBlockSize() override;
-    
-   /**
-    * @return The digest size in bytes
-    */
+
+    /**
+     * @return The digest size in bytes
+     */
     Uint64 getHashSize() override;
-    
+
   private:
     std::shared_ptr<Sha512> m_psha512;
 };
 
 } // namespace alcp::digest
-

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,7 +35,7 @@ namespace alcp {
 
 class ALCP_API_EXPORT BigNum final
 {
-  using Status = alcp::base::Status;
+    using Status = alcp::base::Status;
 
   public:
     BigNum();
