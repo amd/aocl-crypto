@@ -39,4 +39,6 @@ target_sources(alcp
 		${UTILS_SRCS}
 	)
 
+IF(UNIX)
 target_link_libraries(alcp PUBLIC libcrypto.so)
+ENDIF()

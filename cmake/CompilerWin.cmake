@@ -2,9 +2,25 @@
 
 # check compiler version
 function(alcp_check_compiler_version)
-    set(CLANG_MIN_REQ "x.x.x")
+    set(CLANG_MIN_REQ "12.0.0")
+	#if clang
+	if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        if(${CMAKE_C_COMPILER_VERSION} VERSION_LESS ${CLANG_MIN_REQ})
+            message(FATAL_ERROR "Using c compiler version ${CMAKE_C_COMPILER_VERSION}, min. reqd version is ${CLANG_MIN_REQ}!")
+        endif()
+        if(${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS ${CLANG_MIN_REQ})
+            message(FATAL_ERROR "Using c++ compiler version ${CMAKE_CXX_COMPILER_VERSION}, min. reqd version is ${CLANG_MIN_REQ}!")
+        endif()
+	endif()
     # FIXME set and add min version checks for clang / msvc compilers
 endfunction(alcp_check_compiler_version)
+
+function(alcp_check_cmake_version)
+    set(CMAKE_MIN_REQ "3.1.0")
+    if(${CMAKE_VERSION} VERSION_LESS ${CMAKE_MIN_REQ})
+        message(FATAL_ERROR "CMake version detected: ${CMAKE_VERSION}, min. reqd. version is ${CMAKE_MIN_REQ}!")
+    endif()
+endfunction(alcp_check_cmake_version)
 
 # Generic Warnings
 function(alcp_get_cflags_warnings)
