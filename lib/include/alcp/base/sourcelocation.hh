@@ -33,7 +33,6 @@
 
 namespace alcp {
 
-
 #if defined(__GNUC__) || defined(__clang__)
 template<typename... Args>
 String
@@ -46,11 +45,12 @@ formatter(Args&&... args)
 }
 
 #else
-#define formatter(const char* format, ...) printf(format, __VA_ARGS__)
+#define formatter(const char* format, ...)           printf(format, __VA_ARGS__)
 #define va_formatter(const char* format, va_list ap) vprintf(format, ap)
 #endif
 
-String demangle(const char*);
+String
+demangle(const char*);
 
 /**
  * Describes the location of a line of code.
@@ -61,8 +61,7 @@ struct SourceLocation
     /// Called by #ALCP_CURRENT_LINE only.
     SourceLocation(const char* file, const Uint32 line, const char* function)
         : SourceLocation{ file, line, function, nullptr }
-    {
-    }
+    {}
 
     SourceLocation(const char*  file,
                    const Uint32 line,
@@ -72,8 +71,7 @@ struct SourceLocation
         , m_line{ line }
         , m_function{ function }
         , m_pretty_function{ prettyFunction }
-    {
-    }
+    {}
 
     string str() const
     {
@@ -96,7 +94,7 @@ struct SourceLocation
 
 #if defined(MSVC)
 #define ALCP_PRETTY_FUNCTION __FUNCSIG__
-#elif defined(__GNUC__) || defined(CLANG)
+#elif defined(__GNUC__) || defined(__clang__)
 #define ALCP_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #endif
 
@@ -110,4 +108,3 @@ struct SourceLocation
     alcp::SourceLocation(__FILE__, __LINE__, __func__)
 
 } // namespace alcp
-
