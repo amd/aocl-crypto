@@ -41,7 +41,7 @@ enum hmac_state_t
 };
 
 namespace alcp::mac {
-class Hmac final : public Mac
+class ALCP_API_EXPORT Hmac final : public Mac
 {
 
   public:

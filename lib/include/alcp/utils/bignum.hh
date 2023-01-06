@@ -29,10 +29,11 @@
 #pragma once
 
 #include "alcp/base.hh"
+#include "alcp/macros.h"
 
 namespace alcp {
 
-class BigNum final
+class ALCP_API_EXPORT BigNum final
 {
   using Status = alcp::base::Status;
 

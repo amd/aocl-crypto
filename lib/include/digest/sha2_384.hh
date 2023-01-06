@@ -35,7 +35,7 @@
 
 namespace alcp::digest {
 
-class Sha384 final : public Sha2
+class ALCP_API_EXPORT Sha384 final : public Sha2
 {
   public:
     Sha384();

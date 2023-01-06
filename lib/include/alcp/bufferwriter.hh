@@ -30,6 +30,7 @@
 
 #include "alcp/base.hh"
 #include "alcp/interface/Iwriter.hh"
+#include "alcp/macros.h"
 #include "alcp/pattern/noncopyable.hh"
 #include <algorithm>
 
@@ -55,7 +56,7 @@ namespace alcp {
  *
  */
 
-class BufferWriter
+class ALCP_API_EXPORT BufferWriter
     : public IWriter
     , public NonCopyable
 {

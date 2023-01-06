@@ -34,7 +34,7 @@
 namespace alcp {
 
 
-#if defined(__GNUC__) || defined(CLANG)
+#if defined(__GNUC__) || defined(__clang__)
 template<typename... Args>
 String
 formatter(Args&&... args)
