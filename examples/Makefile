@@ -3,7 +3,7 @@ OBJ := bin
 # Default compiler
 CC := gcc
 INCLUDE := include
-CFLAGS := -Llib -I$(INCLUDE) -lalcp -lamdsecrng -lcpu
+CFLAGS := -Llib -I$(INCLUDE) -lalcp -lcpu
 # Add more targets as they come.
 TARGETS := cipher/aes-cfb cipher/aes-demo digest/sha2_224_example digest/sha2_256_example digest/sha2_384_example digest/sha2_512_example rng/rng-demo
 
