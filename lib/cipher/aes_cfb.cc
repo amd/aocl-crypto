@@ -81,7 +81,34 @@ Cfb::encrypt(const uint8_t* pPlainText,
         return err;
     }
 
-    err = Rijndael::encrypt(pPlainText, pCipherText, len, pIv);
+    auto n_words = len / Rijndael::cBlockSizeWord;
+    auto src     = reinterpret_cast<const Uint32*>(pPlainText);
+    auto dst     = reinterpret_cast<Uint32*>(pCipherText);
+
+    Uint32 iv32[4];
+    utils::CopyBytes(iv32, pIv, sizeof(iv32));
+
+    while (n_words >= 4) {
+
+        Uint32 out[4];
+
+        utils::CopyBytes(out, iv32, sizeof(out));
+
+        Rijndael::encryptBlock(out, getEncryptKeys(), getRounds());
+
+        for (int i = 0; i < 4; i++)
+            out[i] ^= src[i];
+
+        utils::CopyBytes(dst, out, sizeof(out));
+
+        utils::CopyBytes(iv32, out, sizeof(out));
+
+        src += 4;
+        dst += 4;
+        n_words -= 4;
+    }
+
+    // err = Rijndael::encrypt(pPlainText, pCipherText, len, pIv);
 
     return err;
 }

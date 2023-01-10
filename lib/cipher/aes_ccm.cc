@@ -308,7 +308,7 @@ Ccm::CcmSetAad(ccm_data_p pccm_data, const Uint8* paad, size_t alen)
 
     utils::CopyBytes(pBlk0, pccm_data->nonce, 16);
 
-    Rijndael::AesEncrypt(pBlk0, pccm_data->key, pccm_data->rounds);
+    Rijndael::encryptBlock(pBlk0, pccm_data->key, pccm_data->rounds);
 
     pccm_data->blocks++;
 
@@ -346,7 +346,7 @@ Ccm::CcmSetAad(ccm_data_p pccm_data, const Uint8* paad, size_t alen)
     for (; i < 16 && alen; ++i, ++paad, --alen)
         *(pBlk0_8 + i) ^= *paad;
 
-    Rijndael::AesEncrypt(pBlk0, pccm_data->key, pccm_data->rounds);
+    Rijndael::encryptBlock(pBlk0, pccm_data->key, pccm_data->rounds);
     pccm_data->blocks++;
 
     Uint64 alen_16 = alen / 16;
@@ -357,7 +357,7 @@ Ccm::CcmSetAad(ccm_data_p pccm_data, const Uint8* paad, size_t alen)
             pBlk0[i] ^= aad_32[i];
         }
         // CBC Encrypt Operation
-        Rijndael::AesEncrypt(pBlk0, pccm_data->key, pccm_data->rounds);
+        Rijndael::encryptBlock(pBlk0, pccm_data->key, pccm_data->rounds);
         pccm_data->blocks++;
         paad += 16;
     }
@@ -372,7 +372,7 @@ Ccm::CcmSetAad(ccm_data_p pccm_data, const Uint8* paad, size_t alen)
         }
 
         // CBC Encrypt last block
-        Rijndael::AesEncrypt(pBlk0, pccm_data->key, pccm_data->rounds);
+        Rijndael::encryptBlock(pBlk0, pccm_data->key, pccm_data->rounds);
         pccm_data->blocks++;
     }
 
@@ -415,7 +415,7 @@ Ccm::CcmEncrypt(ccm_data_p   pccm_data,
 
     if (!(flags0 & 0x40)) {
         utils::CopyBytes(cmac, nonce, 16);
-        Rijndael::AesEncrypt(cmac, pkey, pccm_data->rounds);
+        Rijndael::encryptBlock(cmac, pkey, pccm_data->rounds);
         pccm_data->blocks++;
     } else {
         // Additional data exists so load the cmac (already done in encrypt
@@ -459,12 +459,12 @@ Ccm::CcmEncrypt(ccm_data_p   pccm_data,
         for (int i = 0; i < 4; i++) {
             cmac[i] ^= inReg[i];
         }
-        Rijndael::AesEncrypt(cmac, pccm_data->key, pccm_data->rounds);
+        Rijndael::encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
 
         /* CTR */
         // Generate ciphetext given plain text by using ctr algitrithm
         utils::CopyBytes(tempReg, nonce, 16);
-        Rijndael::AesEncrypt(tempReg, pccm_data->key, pccm_data->rounds);
+        Rijndael::encryptBlock(tempReg, pccm_data->key, pccm_data->rounds);
         CcmCtrInc(reinterpret_cast<Uint8*>(nonce)); // Increment counter
         for (int i = 0; i < 4; i++) {
             tempReg[i] ^= inReg[i];
@@ -483,11 +483,11 @@ Ccm::CcmEncrypt(ccm_data_p   pccm_data,
         for (i = 0; i < len; i++) {
             pcmac_8[i] ^= pinp[i];
         }
-        Rijndael::AesEncrypt(cmac, pccm_data->key, pccm_data->rounds);
+        Rijndael::encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
 
         /* CTR */
         utils::CopyBytes(tempReg, nonce, 16);
-        Rijndael::AesEncrypt(tempReg, pccm_data->key, pccm_data->rounds);
+        Rijndael::encryptBlock(tempReg, pccm_data->key, pccm_data->rounds);
         for (i = 0; i < len; ++i)
             pout[i] = ptemp_8[i] ^ pinp[i];
     }
@@ -498,7 +498,7 @@ Ccm::CcmEncrypt(ccm_data_p   pccm_data,
     // CTR encrypt first counter and XOR with the partial tag to generate
     // the real tag
     utils::CopyBytes(tempReg, nonce, 16);
-    Rijndael::AesEncrypt(tempReg, pccm_data->key, pccm_data->rounds);
+    Rijndael::encryptBlock(tempReg, pccm_data->key, pccm_data->rounds);
 
     for (int i = 0; i < 4; i++) {
         cmac[i] ^= tempReg[i];
@@ -535,7 +535,7 @@ Ccm::CcmDecrypt(ccm_data_p   pccm_data,
 
     if (!(flags0 & 0x40)) {
         utils::CopyBytes(cmac, nonce, 16);
-        Rijndael::AesEncrypt(cmac, pkey, pccm_data->rounds);
+        Rijndael::encryptBlock(cmac, pkey, pccm_data->rounds);
         pccm_data->blocks++;
     } else {
         // Additional data exists so load the cmac (already done in encrypt
@@ -566,7 +566,7 @@ Ccm::CcmDecrypt(ccm_data_p   pccm_data,
 
         /* CTR */
         utils::CopyBytes(tempReg, nonce, 16);
-        Rijndael::AesEncrypt(tempReg, pccm_data->key, pccm_data->rounds);
+        Rijndael::encryptBlock(tempReg, pccm_data->key, pccm_data->rounds);
         CcmCtrInc(reinterpret_cast<Uint8*>(nonce)); // Increment counter
 
         utils::CopyBytes(inReg, pinp, 16); // Load CipherText
@@ -584,7 +584,7 @@ Ccm::CcmDecrypt(ccm_data_p   pccm_data,
         utils::CopyBytes(pout, tempReg, 16); // Store plaintext.
 
         // Generate the partial tag, Xor of CBC is above
-        Rijndael::AesEncrypt(cmac, pccm_data->key, pccm_data->rounds);
+        Rijndael::encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
 
         pinp += 16;
         pout += 16;
@@ -594,7 +594,7 @@ Ccm::CcmDecrypt(ccm_data_p   pccm_data,
     if (len) {
         /* CTR */
         utils::CopyBytes(tempReg, nonce, 16); // Copy Counter
-        Rijndael::AesEncrypt(tempReg, pccm_data->key, pccm_data->rounds);
+        Rijndael::encryptBlock(tempReg, pccm_data->key, pccm_data->rounds);
 
         for (i = 0; i < len; ++i) {
             // CTR XOR operation to generate plaintext
@@ -606,7 +606,7 @@ Ccm::CcmDecrypt(ccm_data_p   pccm_data,
         /* CBC */
         // CBC Xor is above, Encrypt the partial result to create partial
         // tag
-        Rijndael::AesEncrypt(cmac, pccm_data->key, pccm_data->rounds);
+        Rijndael::encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
     }
 
     // Zero out counter part
@@ -616,7 +616,7 @@ Ccm::CcmDecrypt(ccm_data_p   pccm_data,
     // CTR encrypt first counter and XOR with the partial tag to generate
     // the real tag
     utils::CopyBytes(tempReg, nonce, 16);
-    Rijndael::AesEncrypt(tempReg, pccm_data->key, pccm_data->rounds);
+    Rijndael::encryptBlock(tempReg, pccm_data->key, pccm_data->rounds);
 
     for (int i = 0; i < 4; i++) {
         cmac[i] ^= tempReg[i];

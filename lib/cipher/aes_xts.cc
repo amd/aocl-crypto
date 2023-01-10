@@ -176,30 +176,30 @@ Xts::encrypt(const Uint8* pPlainText,
     Uint32 currentAlpha[4];
     utils::CopyBytes(currentAlpha, p_iv128, 16);
 
-    Uint64 blocks          = len / Rijndael::cBlockSize;
-    int    last_Round_Byte = len % Rijndael::cBlockSize;
+    auto n_words         = len / Rijndael::cBlockSizeWord;
+    int  last_Round_Byte = len % Rijndael::cBlockSize;
 
-    Rijndael::AesEncrypt(currentAlpha, p_tweak_key128, getRounds());
+    Rijndael::encryptBlock(currentAlpha, p_tweak_key128, getRounds());
 
-    blocks *= 4;
+    // blocks *= 4;
 
-    while (blocks >= 4) {
+    while (n_words >= 4) {
 
         Uint32 tweaked_src_text_1[4];
 
         for (int i = 0; i < 4; i++)
             tweaked_src_text_1[i] = (currentAlpha[i] ^ p_src128[i]);
 
-        Rijndael::AesEncrypt(tweaked_src_text_1, p_key128, getRounds());
+        Rijndael::encryptBlock(tweaked_src_text_1, p_key128, getRounds());
 
         for (int i = 0; i < 4; i++)
             tweaked_src_text_1[i] = (currentAlpha[i] ^ tweaked_src_text_1[i]);
 
-        utils::CopyBytes(p_dest128, tweaked_src_text_1, 16);
+        utils::CopyBytes(p_dest128, tweaked_src_text_1, Rijndael::cBlockSize);
 
         MultiplyAlphaByTwo(currentAlpha);
 
-        blocks -= 4;
+        n_words -= 4;
         p_src128 += 4;
         p_dest128 += 4;
     }
@@ -223,7 +223,7 @@ Xts::encrypt(const Uint8* pPlainText,
         for (int i = 0; i < 4; i++)
             last_messgae_block[i] = (currentAlpha[i] ^ last_messgae_block[i]);
 
-        AesEncrypt(last_messgae_block, p_key128, getRounds());
+        encryptBlock(last_messgae_block, p_key128, getRounds());
 
         for (int i = 0; i < 4; i++)
             last_messgae_block[i] = (currentAlpha[i] ^ last_messgae_block[i]);
@@ -300,7 +300,7 @@ Xts::decrypt(const Uint8* pCipherText,
     Uint64 blocks          = len / Rijndael::cBlockSize;
     int    last_Round_Byte = len % Rijndael::cBlockSize;
 
-    Rijndael::AesEncrypt(currentAlpha, p_tweak_key128, getRounds());
+    Rijndael::encryptBlock(currentAlpha, p_tweak_key128, getRounds());
     blocks *= 4;
 
     Uint32 lastAlpha[4];

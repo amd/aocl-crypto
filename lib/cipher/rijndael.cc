@@ -187,13 +187,6 @@ class alignas(16) Rijndael::Impl
 {
   private:
     void expandKeys(const Uint8* pUserKey) noexcept;
-    void subBytes(Uint8 state[][4]) noexcept;
-
-    void shiftRows(Uint8 state[][4]) noexcept;
-    void mixColumns(Uint8 state[][4]) noexcept;
-
-    void invShiftRows(Uint8 state[][4]) noexcept;
-    void invMixColumns(Uint8 state[][4]) noexcept;
 
     void addRoundKey(Uint8 state[][4], Uint8 k[][4]) noexcept;
 
@@ -218,25 +211,15 @@ class alignas(16) Rijndael::Impl
     const Uint8* getEncryptKeys() const { return m_enc_key; }
     const Uint8* getDecryptKeys() const { return m_dec_key; }
 
-    alc_error_t encrypt(const Uint8* pSrc,
-                        Uint8*       pDst,
-                        Uint64       len,
-                        const Uint8* pIv) const;
-
-    alc_error_t encryptUpdate(const Uint8* pSrc,
-                              Uint8*       pDst,
-                              Uint64       len,
-                              const Uint8* pIv);
+    void encryptBlock(const Uint32 (&blk0)[4],
+                      Uint32 (&dst)[4],
+                      const Uint8* pkey,
+                      int          nr) const;
 
     alc_error_t decrypt(const Uint8* pSrc,
                         Uint8*       pDst,
                         Uint64       len,
                         const Uint8* pIv) const;
-
-    alc_error_t decryptUpdate(const Uint8* pSrc,
-                              Uint8*       pDst,
-                              Uint64       len,
-                              const Uint8* pIv);
 
     void AESEncrypt(Uint32* blk0, const Uint8* pkey, int nr) const;
 
@@ -263,59 +246,6 @@ static Uint8
 GetSbox(Uint8 offset, bool use_invsbox = false)
 {
     return utils::GetSbox(offset, use_invsbox);
-}
-
-static inline Uint8
-__ffmul(Uint8 a, Uint8 b)
-{
-    Uint8 bw[4];
-    Uint8 res = 0;
-
-    bw[0] = b;
-
-    for (int i = 1; i < 4; i++) {
-        bw[i] = bw[i - 1] << 1;
-        if (bw[i - 1] & 0x80) {
-            bw[i] ^= 0x1b;
-        }
-    }
-
-    for (int i = 0; i < 4; i++) {
-        if ((a >> i) & 0x01) {
-            res ^= bw[i];
-        }
-    }
-
-    return res;
-}
-
-void
-Rijndael::Impl::invMixColumns(Uint8 state[][4]) noexcept
-{
-    Uint8 tmp[4 * 6]; /* At max we we'll have 6 columns */
-    for (int r = 0; r < 4; r++) {
-        for (int c = 0; c < 4; c++) {
-            tmp[4 * r + c] = state[r][c];
-        }
-    }
-
-    for (int c = 0; c < 4; c++) {
-        state[0][c] = __ffmul(tmp[0 + c], 0xe) ^ __ffmul(tmp[4 + c], 0xb)
-                      ^ __ffmul(tmp[4 * 2 + c], 0xd)
-                      ^ __ffmul(tmp[4 * 3 + c], 0x9);
-
-        state[1][c] = __ffmul(tmp[0 + c], 0x9) ^ __ffmul(tmp[4 + c], 0xe)
-                      ^ __ffmul(tmp[4 * 2 + c], 0xb)
-                      ^ __ffmul(tmp[4 * 3 + c], 0xd);
-
-        state[2][c] = __ffmul(tmp[0 + c], 0xd) ^ __ffmul(tmp[4 + c], 0x9)
-                      ^ __ffmul(tmp[4 * 2 + c], 0xe)
-                      ^ __ffmul(tmp[4 * 3 + c], 0xb);
-
-        state[3][c] = __ffmul(tmp[0 + c], 0xe) ^ __ffmul(tmp[4 + c], 0xb)
-                      ^ __ffmul(tmp[4 * 2 + c], 0x9)
-                      ^ __ffmul(tmp[4 * 3 + c], 0xe);
-    }
 }
 
 static Uint8
@@ -482,40 +412,10 @@ InvSubBytes(Uint8* inp)
     }
 }
 
-void
-Rijndael::Impl::subBytes(Uint8 state[][4]) noexcept
-{
-    for (int r = 0; r < 4; r++) {
-        for (int c = 0; c < 4; c++) {
-            state[r][c] = GetSbox(state[r][c]);
-        }
-    }
-}
-
-void
-Rijndael::Impl::shiftRows(Uint8 state[][4]) noexcept
-{
-    Uint8 t[4];
-    for (int r = 1; r < 4; r++) {
-        for (int c = 0; c < 4; c++) {
-            t[c] = state[r][(c + r) % 4];
-        }
-        for (int c = 0; c < 4; c++) {
-            state[r][c] = t[c];
-        }
-    }
-}
-
-Uint32
+static Uint32
 AddRoundKey(Uint32 input, Uint32 key)
 {
     return input ^ key;
-}
-
-void
-Rijndael::Impl::addRoundKey(Uint8 state[][4], Uint8 k[][4]) noexcept
-{
-    /* FIXME: call with Uint32 for easier calculation */
 }
 
 /*
@@ -546,7 +446,10 @@ Rijndael::Impl::addRoundKey(Uint8 state[][4], Uint8 k[][4]) noexcept
  *  end
  */
 void
-Rijndael::Impl::AESEncrypt(Uint32* blk0, const Uint8* pkey, int nr) const
+Rijndael::Impl::encryptBlock(const Uint32 (&blk0)[4],
+                             Uint32 (&dst)[4],
+                             const Uint8* pkey,
+                             int          nr) const
 {
 
     using utils::MakeWord;
@@ -592,7 +495,7 @@ Rijndael::Impl::AESEncrypt(Uint32* blk0, const Uint8* pkey, int nr) const
     state[2] = state[2] ^ p_key32[2];
     state[3] = state[3] ^ p_key32[3];
 
-    utils::CopyBytes(blk0, state, 16);
+    utils::CopyBytes(dst, state, sizeof(state));
 }
 
 /*
@@ -676,51 +579,6 @@ Rijndael::Impl::AESDecrypt(Uint32* blk0, const Uint8* pkey, int nr) const
 }
 
 /*
- * FIPS-197 Section 5.1 Psuedo-code for Encryption
- *
- * Cipher(byte in[4*Nb], byte out[4*Nb], word w[Nb*(Nr+1)])
- *  begin
- *
- *       byte state[4,Nb]
- *
- *       state = in
- *
- *       AddRoundKey(state, w[0, Nb-1]) // See Sec. 5.1.4
- *
- *       for round = 1 step 1 to Nr–1
- *           SubBytes(state) // See Sec. 5.1.1
- *           ShiftRows(state) // See Sec. 5.1.2
- *           MixColumns(state) // See Sec. 5.1.3
- *           AddRoundKey(state, w[round*Nb, (round+1)*Nb-1])
- *       end for
- *
- *       SubBytes(state)
- *       ShiftRows(state)
- *       AddRoundKey(state, w[Nr*Nb, (Nr+1)*Nb-1])
- *
- *       out = state
- *
- *  end
- */
-alc_error_t
-Rijndael::Impl::encrypt(const Uint8* pSrc,
-                        Uint8*       pDst,
-                        Uint64       len,
-                        const Uint8* pIv) const
-{
-    return ALC_ERROR_NONE;
-}
-
-alc_error_t
-Rijndael::Impl::encryptUpdate(const Uint8* pSrc,
-                              Uint8*       pDst,
-                              Uint64       len,
-                              const Uint8* pIv)
-{
-    return ALC_ERROR_NONE;
-}
-
-/*
  * FIPS-197 Section 5.3 Psuedo-code for Decryption
  * InvCipher(byte in[4*Nb], byte out[4*Nb], word w[Nb*(Nr+1)])
  *  begin
@@ -756,15 +614,6 @@ Rijndael::Impl::decrypt(const Uint8* pSrc,
     Uint32 nb = cBlockSizeWord;
     Uint8  state[4][cBlockSizeWord];
 #endif
-    return ALC_ERROR_NONE;
-}
-
-alc_error_t
-Rijndael::Impl::decryptUpdate(const Uint8* pSrc,
-                              Uint8*       pDst,
-                              Uint64       len,
-                              const Uint8* pIv)
-{
     return ALC_ERROR_NONE;
 }
 
@@ -942,19 +791,58 @@ Rijndael::getRounds() const
     return pImpl()->getRounds();
 }
 
+#if 0
+template<typename T, size_t N>
+struct ArrayRef
+{
+    typedef std::array<T, N> Array;
+    typedef T                ArrayT[N];
+    typedef ArrayT&          ArrayR;
+    typedef ArrayT*          ArrayP;
+
+    static ArrayP to_arrayP(const Array& arr)
+    {
+        return (ArrayP) const_cast<T*>(arr.data());
+    }
+    static ArrayR to_arrayR(const Array& arr)
+    {
+        return *(ArrayP) const_cast<T*>(arr.data());
+    }
+
+    static ArrayP to_arrayP(const Array&& arr) = delete;
+    static ArrayR to_arrayR(const Array&& arr) = delete;
+};
+#endif
+
 alc_error_t
 Rijndael::encrypt(const Uint8* pPlaintxt,
-                  Uint8*       pCihpertxt,
+                  Uint8*       pCiphertxt,
                   Uint64       len,
                   const Uint8* pIv) const
 {
-    return pImpl()->encrypt(pPlaintxt, pCihpertxt, len, pIv);
+    auto n_words = len / Rijndael::cBlockSizeWord;
+
+    ALCP_ASSERT(len % Rijndael::cBlockSize == 0,
+                "Plaintext length is not a multiple of cBlockSize");
+
+    while (n_words >= 4) {
+        auto   pt = reinterpret_cast<const Uint32(*)[4]>(&pPlaintxt);
+        Uint32 ct[4];
+
+        pImpl()->encryptBlock(*pt, ct, getEncryptKeys(), getRounds());
+        utils::CopyBytes(pCiphertxt, ct, sizeof(ct));
+
+        pPlaintxt += cBlockSize;
+        pCiphertxt += cBlockSize;
+        n_words -= 4;
+    }
+
+    return ALC_ERROR_NONE;
 }
 
-void
-Rijndael::AesEncrypt(Uint32* blk0, const Uint8* pkey, int nr) const
+void Rijndael::encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const
 {
-    pImpl()->AESEncrypt(blk0, pkey, nr);
+    pImpl()->encryptBlock(blk0, blk0, pkey, nr);
 }
 
 void

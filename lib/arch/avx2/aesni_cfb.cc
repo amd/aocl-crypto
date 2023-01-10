@@ -34,12 +34,12 @@
 
 namespace alcp::cipher { namespace aesni {
 
-    alc_error_t DecryptCfb(const uint8_t* pSrc,
-                           uint8_t*       pDest,
-                           uint64_t       len,
-                           const uint8_t* pKey,
+    alc_error_t DecryptCfb(const Uint8* pSrc,
+                           Uint8*       pDest,
+                           Uint64       len,
+                           const Uint8* pKey,
                            int            nRounds,
-                           const uint8_t* pIv)
+                           const Uint8* pIv)
     {
         alc_error_t err       = ALC_ERROR_NONE;
         auto        p_key128  = reinterpret_cast<const __m128i*>(pKey);
@@ -48,7 +48,7 @@ namespace alcp::cipher { namespace aesni {
 
         __m128i iv128 = _mm_loadu_si128((const __m128i*)pIv);
 
-        uint64_t blocks = len / Rijndael::cBlockSize;
+        Uint64 blocks = len / Rijndael::cBlockSize;
 
         for (; blocks >= 4; blocks -= 4) {
             __m128i blk0 = iv128;
@@ -111,19 +111,19 @@ namespace alcp::cipher { namespace aesni {
         return err;
     }
 
-    alc_error_t EncryptCfb(const uint8_t* pSrc,
-                           uint8_t*       pDest,
-                           uint64_t       len,
-                           const uint8_t* pKey,
+    alc_error_t EncryptCfb(const Uint8* pSrc,
+                           Uint8*       pDest,
+                           Uint64       len,
+                           const Uint8* pKey,
                            int            nRounds,
-                           const uint8_t* pIv)
+                           const Uint8* pIv)
     {
         auto p_key128  = reinterpret_cast<const __m128i*>(pKey);
         auto p_src128  = reinterpret_cast<const __m128i*>(pSrc);
         auto p_dest128 = reinterpret_cast<__m128i*>(pDest);
 
         __m128i  iv128  = _mm_loadu_si128((const __m128i*)pIv);
-        uint64_t blocks = len / Rijndael::cBlockSize;
+        Uint64 blocks = len / Rijndael::cBlockSize;
 
         while (blocks >= 4) {
             __m128i tmpblk = iv128;
