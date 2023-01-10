@@ -67,7 +67,7 @@ IF( PDFLATEX AND PANDOC )
     ENDFOREACH()
     # Create a target named docs and add "Index/Main" file name 
     # with pdf extension as a dependancy
-    ADD_CUSTOM_TARGET(docs ALL DEPENDS ${DOC_PDFS})
+    ADD_CUSTOM_TARGET(docs_pdf ALL DEPENDS ${DOC_PDFS})
 ENDIF()
 
 #ADD_CUSTOM_TARGET(docs ALL DEPENDS ${PDFDESIGN})
