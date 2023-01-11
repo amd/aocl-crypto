@@ -41,22 +41,21 @@ Cbc::decrypt(const uint8_t* pCipherText,
              const uint8_t* pIv) const
 {
     alc_error_t  err = ALC_ERROR_NONE;
-    static CpuId cpuId;
-    if (cpuId.cpuHasAvx512(utils::AVX512_F)
-        && cpuId.cpuHasAvx512(utils::AVX512_DQ)
-        && cpuId.cpuHasAvx512(utils::AVX512_BW)) {
+    if (CpuId::cpuHasAvx512(utils::AVX512_F)
+        && CpuId::cpuHasAvx512(utils::AVX512_DQ)
+        && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
         err = vaes512::DecryptCbcAvx512(
             pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
 
         return err;
     }
-    if (cpuId.cpuHasVaes()) {
+    if (CpuId::cpuHasVaes()) {
         err = vaes::DecryptCbc(
             pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
 
         return err;
     }
-    if (cpuId.cpuHasAesni()) {
+    if (CpuId::cpuHasAesni()) {
         err = aesni::DecryptCbc(
             pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
         return err;
@@ -74,9 +73,8 @@ Cbc::encrypt(const uint8_t* pPlainText,
              const uint8_t* pIv) const
 {
     alc_error_t  err = ALC_ERROR_NONE;
-    static CpuId cpuId;
     // Only AESNI possible as CBC Encrypt is a strictly serial algorithm
-    if (cpuId.cpuHasAesni()) {
+    if (CpuId::cpuHasAesni()) {
         err = aesni::EncryptCbc(
             pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
 

@@ -803,7 +803,6 @@ Rijndael::Impl::decryptUpdate(const Uint8* pSrc,
 void
 Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
 {
-    static CpuId cpuId;
     using utils::GetByte, utils::MakeWord;
 
     Uint8        dummy_key[Rijndael::cMaxKeySize] = { 0 };
@@ -813,7 +812,7 @@ Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
     pEncKey = m_enc_key;
     pDecKey = m_dec_key;
 
-    if (cpuId.cpuHasAesni()) {
+    if (CpuId::cpuHasAesni()) {
         aesni::ExpandKeys(key, pEncKey, pDecKey, m_nrounds);
         return;
     }

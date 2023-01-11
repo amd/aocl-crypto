@@ -162,11 +162,10 @@ Sha3::Impl::absorbChunk(Uint64* pMsgBuffer64)
 void
 Sha3::Impl::squeezeChunk()
 {
-    static CpuId cpuId;
     Uint64       hash_copied = 0;
 
-    static bool zen1_available = cpuId.cpuIsZen1() || cpuId.cpuIsZen2();
-    static bool zen3_available = cpuId.cpuIsZen3() || cpuId.cpuIsZen4();
+    static bool zen1_available = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
+    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
 
     if (zen3_available) {
         return zen3::Sha3Finalize(
@@ -285,14 +284,13 @@ Sha3::Impl::copyHash(Uint8* pHash, Uint64 size) const
 alc_error_t
 Sha3::Impl::processChunk(const Uint8* pSrc, Uint64 len)
 {
-    static CpuId cpuId;
     Uint64       msg_size       = len;
     Uint64*      p_msg_buffer64 = (Uint64*)pSrc;
 
     // FIXME: Suggestion, in Zen1 this algorithm works and gives better
     // performance. I guess having similar code in avx2 arch will be better.
-    static bool zen1_available = cpuId.cpuIsZen1() || cpuId.cpuIsZen2();
-    static bool zen3_available = cpuId.cpuIsZen3() || cpuId.cpuIsZen4();
+    static bool zen1_available = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
+    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
 
     if (zen3_available) {
         return zen3::Sha3Update(

@@ -48,9 +48,8 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo)
 {
     alc_error_t error = ALC_ERROR_NONE;
 
-    static CpuId cpuId;
-    bool         rd_rand_available = cpuId.cpuHasRdRand();
-    bool         rd_seed_available = cpuId.cpuHasRdSeed();
+    bool         rd_rand_available = CpuId::cpuHasRdRand();
+    bool         rd_seed_available = CpuId::cpuHasRdSeed();
 
     switch (pRngInfo->ri_type) {
         case ALC_RNG_TYPE_DESCRETE:

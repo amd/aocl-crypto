@@ -228,15 +228,14 @@ Sha512::compressMsg(Uint64 w[])
 alc_error_t
 Sha512::processChunk(const Uint8* pSrc, Uint64 len)
 {
-    static CpuId cpuId;
-    static bool  cpu_is_zen3 = (cpuId.cpuIsZen3() || cpuId.cpuIsZen4());
+    static bool  cpu_is_zen3 = (CpuId::cpuIsZen3() || CpuId::cpuIsZen4());
 
     /* we need len to be multiple of cChunkSize */
     assert((len & Sha512::cChunkSizeMask) == 0);
 
     if (cpu_is_zen3) {
         return zen3::ShaUpdate512(m_hash, pSrc, len);
-    } else if (cpuId.cpuHasAvx2()) {
+    } else if (CpuId::cpuHasAvx2()) {
         return avx2::ShaUpdate512(m_hash, pSrc, len);
     }
     // Else fall to reference implementation.

@@ -41,21 +41,20 @@ Cfb::decrypt(const uint8_t* pCipherText,
              const uint8_t* pIv) const
 {
     alc_error_t  err = ALC_ERROR_NONE;
-    static CpuId cpuId;
-    if (cpuId.cpuHasAvx512(utils::AVX512_F)
-        && cpuId.cpuHasAvx512(utils::AVX512_DQ)
-        && cpuId.cpuHasAvx512(utils::AVX512_BW)) {
+    if (CpuId::cpuHasAvx512(utils::AVX512_F)
+        && CpuId::cpuHasAvx512(utils::AVX512_DQ)
+        && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
         err = vaes512::DecryptCfbAvx512(
             pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
         return err;
     }
-    if (cpuId.cpuHasVaes()) {
+    if (CpuId::cpuHasVaes()) {
         err = vaes::DecryptCfb(
             pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
 
         return err;
     }
-    if (cpuId.cpuHasAesni()) {
+    if (CpuId::cpuHasAesni()) {
         err = aesni::DecryptCfb(
             pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
 
@@ -74,9 +73,8 @@ Cfb::encrypt(const uint8_t* pPlainText,
              const uint8_t* pIv) const
 {
     alc_error_t  err = ALC_ERROR_NONE;
-    static CpuId cpuId;
 
-    if (cpuId.cpuHasAesni()) {
+    if (CpuId::cpuHasAesni()) {
         err = aesni::EncryptCfb(
             pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
 
