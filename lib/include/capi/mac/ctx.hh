@@ -26,17 +26,18 @@
  *
  */
 #pragma once
-#include <alcp/types.h>
+#include "alcp/base.hh"
+#include "alcp/types.h"
 namespace alcp::mac {
 
 struct Context
 {
     void* m_mac;
     void* m_digest;
-    alc_error_t (*update)(void* hmac, Uint8* buff, Uint64 size);
-    alc_error_t (*finalize)(void* hmac, Uint8* buff, Uint64 size);
-    alc_error_t (*copy)(void* hmac, Uint8* buff, Uint64 size);
+    alcp::base::Status (*update)(void* hmac, Uint8* buff, Uint64 size);
+    alcp::base::Status (*finalize)(void* hmac, Uint8* buff, Uint64 size);
+    alcp::base::Status (*copy)(void* hmac, Uint8* buff, Uint64 size);
     void (*finish)(void* hmac, void* digest);
-    alc_error_t (*reset)(void* hmac, void* digest);
+    alcp::base::Status (*reset)(void* hmac, void* digest);
 };
 } // namespace alcp::mac

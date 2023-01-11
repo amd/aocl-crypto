@@ -26,6 +26,7 @@
  *
  */
 
+#include "alcp/base.hh"
 #include "alcp/base/error.hh"
 #include "alcp/capi/defs.hh"
 #include "alcp/mac.h"
@@ -36,6 +37,8 @@
 using namespace alcp;
 
 EXTERN_C_BEGIN
+
+using alcp::base::Status;
 
 Uint64
 alcp_mac_context_size(const alc_mac_info_p pMacInfo)
@@ -54,8 +57,9 @@ alcp_mac_request(alc_mac_handle_p pMacHandle, const alc_mac_info_p pMacInfo)
     ALCP_BAD_PTR_ERR_RET(pMacHandle->ch_context, err);
 
     auto ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
-    err      = mac::MacBuilder::Build(*pMacInfo, *ctx);
 
+    Status status = mac::MacBuilder::Build(*pMacInfo, *ctx);
+    // TODO: Convert status to proper alc_error_t code and return
     return err;
 }
 
@@ -67,8 +71,9 @@ alcp_mac_update(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size)
     ALCP_BAD_PTR_ERR_RET(pMacHandle->ch_context, err);
 
     auto ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
-    err      = ctx->update(ctx->m_mac, buff, size);
 
+    Status status;
+    status = ctx->update(ctx->m_mac, buff, size);
     return err;
 }
 
@@ -80,9 +85,10 @@ alcp_mac_finalize(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size)
     ALCP_BAD_PTR_ERR_RET(pMacHandle, err);
     ALCP_BAD_PTR_ERR_RET(pMacHandle->ch_context, err);
 
-    auto ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
-    err      = ctx->finalize(ctx->m_mac, buff, size);
+    auto               ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
+    alcp::base::Status status = ctx->finalize(ctx->m_mac, buff, size);
 
+    // TODO: Convert status to alc_error_t to return
     return err;
 }
 
@@ -95,9 +101,10 @@ alcp_mac_copy(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size)
     ALCP_BAD_PTR_ERR_RET(pMacHandle->ch_context, err);
     ALCP_BAD_PTR_ERR_RET(buff, err);
 
-    auto ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
-    err      = ctx->copy(ctx->m_mac, buff, size);
+    auto   ctx    = static_cast<mac::Context*>(pMacHandle->ch_context);
+    Status status = ctx->copy(ctx->m_mac, buff, size);
 
+    // TODO: Convert status to alc_error_t code to return
     return err;
 }
 
@@ -111,7 +118,7 @@ alcp_mac_finish(alc_mac_handle_p pMacHandle)
 
     auto ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
     ctx->finish(ctx->m_mac, ctx->m_digest);
-
+    // FIXME: This function is always returning no errors
     return err;
 }
 

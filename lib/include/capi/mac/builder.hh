@@ -36,8 +36,8 @@ namespace alcp::mac {
 class MacBuilder
 {
   public:
-    static alc_error_t Build(const alc_mac_info_t& cipherInfo,
-                             alcp::mac::Context&   ctx);
+    static alcp::base::Status Build(const alc_mac_info_t& cipherInfo,
+                                    alcp::mac::Context&   ctx);
 };
 
 } // namespace alcp::mac

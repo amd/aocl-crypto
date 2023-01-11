@@ -33,7 +33,6 @@
 
 #include <immintrin.h>
 #include <memory>
-
 // To store the class validity status to be used as gatekeeper for HMAC
 // functions
 enum hmac_state_t
@@ -63,20 +62,20 @@ class ALCP_API_EXPORT Hmac final : public Mac
      * @param size: Size of the message array
      * @returns Error Status
      */
-    alc_error_t update(const Uint8* buff, Uint64 size) override;
+    alcp::base::Status update(const Uint8* buff, Uint64 size) override;
     /**
      * @brief Can be called only once to update the final message chunk
      * @param size: Size of the final message chunk
      * @returns Error Status
      */
-    alc_error_t finalize(const Uint8* buff, Uint64 size) override;
+    alcp::base::Status finalize(const Uint8* buff, Uint64 size) override;
     /**
      * @brief Can be called only once to update the final message chunk
      * @param buff: Pointer to the array to copy the message hash to
      * @param size: Message digest Size
      * @returns Error Status
      */
-    alc_error_t copyHash(Uint8* buff, Uint64 size) const;
+    alcp::base::Status copyHash(Uint8* buff, Uint64 size) const;
     /**
      * @brief get the output hash size to allocate the output array on
      * @returns the output hash size of HMAC
@@ -85,13 +84,7 @@ class ALCP_API_EXPORT Hmac final : public Mac
 
     void finish();
 
-    /**
-     * @brief get the state of the HMAC class at any point after initialization.
-     * @returns the output hash size of HMAC
-     */
-    hmac_state_t getState() const;
-
-    alc_error_t reset();
+    alcp::base::Status reset();
 
     ~Hmac();
 };

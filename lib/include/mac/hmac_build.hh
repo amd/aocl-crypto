@@ -40,39 +40,34 @@ using Context = alcp::mac::Context;
 class HmacBuilder
 {
   public:
-    static alc_error_t Build(const alc_mac_info_t& macInfo,
-                             const alc_key_info_t& keyInfo,
-                             Context&              ctx);
+    static alcp::base::Status Build(const alc_mac_info_t& macInfo,
+                                    const alc_key_info_t& keyInfo,
+                                    Context&              ctx);
 };
 
 template<typename MACALGORITHM>
-static alc_error_t
+static alcp::base::Status
 __hmac_wrapperUpdate(void* hmac, Uint8* buff, Uint64 size)
 {
-    alc_error_t err = ALC_ERROR_NONE;
-    auto        ap  = static_cast<MACALGORITHM*>(hmac);
-    err             = ap->update(buff, size);
-    return err;
+
+    auto ap = static_cast<MACALGORITHM*>(hmac);
+    return ap->update(buff, size);
 }
 
 template<typename MACALGORITHM>
-static alc_error_t
+static alcp::base::Status
 __hmac_wrapperFinalize(void* hmac, Uint8* buff, Uint64 size)
 {
-    alc_error_t err = ALC_ERROR_NONE;
-    auto        ap  = static_cast<MACALGORITHM*>(hmac);
-    err             = ap->finalize(buff, size);
-    return err;
+    auto ap = static_cast<MACALGORITHM*>(hmac);
+    return ap->finalize(buff, size);
 }
 
 template<typename MACALGORITHM>
-static alc_error_t
+static alcp::base::Status
 __hmac_wrapperCopy(void* hmac, Uint8* buff, Uint64 size)
 {
-    alc_error_t err = ALC_ERROR_NONE;
-    auto        ap  = static_cast<MACALGORITHM*>(hmac);
-    err             = ap->copyHash(buff, size);
-    return err;
+    auto ap = static_cast<MACALGORITHM*>(hmac);
+    return ap->copyHash(buff, size);
 }
 
 template<typename MACALGORITHM, typename DIGESTALGORITHM>
@@ -88,31 +83,28 @@ __hmac_wrapperFinish(void* hmac, void* digest)
 }
 
 template<typename MACALGORITHM, typename DIGESTALGORITHM>
-static alc_error_t
+static alcp::base::Status
 __hmac_wrapperReset(void* hmac, void* digest)
 {
-    alc_error_t err = ALC_ERROR_NONE;
-
     auto ap = static_cast<MACALGORITHM*>(hmac);
-    err     = ap->reset();
 
-    return err;
+    return ap->reset();
 }
 template<typename DIGESTALGORITHM, typename MACALGORITHM>
-static alc_error_t
+static alcp::base::Status
 __build_hmac(const alc_mac_info_t& macInfo, Context& ctx)
 {
-    auto err = ALC_ERROR_NONE;
+    alcp::base::Status status;
 
     auto digest = new DIGESTALGORITHM();
     if (digest == nullptr) {
-        err = ALC_ERROR_NO_MEMORY;
-        return err;
+        // TODO: Update proper Out of Memory Status
+        return status;
     }
     auto algo = new MACALGORITHM(macInfo, digest);
     if (algo == nullptr) {
-        err = ALC_ERROR_NO_MEMORY;
-        return err;
+        // TODO: Update proper Out of Memory Status
+        return status;
     }
     ctx.m_mac    = static_cast<void*>(algo);
     ctx.m_digest = static_cast<void*>(digest);
@@ -123,20 +115,24 @@ __build_hmac(const alc_mac_info_t& macInfo, Context& ctx)
     ctx.finish   = __hmac_wrapperFinish<MACALGORITHM, DIGESTALGORITHM>;
     ctx.reset    = __hmac_wrapperReset<MACALGORITHM, DIGESTALGORITHM>;
 
-    return err;
+    return status;
 }
 template<typename MACALGORITHM>
-static alc_error_t
+static alcp::base::Status
 __build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
 {
-    auto err = ALC_ERROR_NONE;
+    alcp::base::Status status;
 
     auto sha3 = new alcp::digest::Sha3(macInfo.mi_algoinfo.hmac.hmac_digest);
+    if (sha3 == nullptr) {
+        // TODO: Update proper Out of Memory Status
+        return status;
+    }
 
     auto algo = new MACALGORITHM(macInfo, sha3);
     if (algo == nullptr) {
-        err = ALC_ERROR_NO_MEMORY;
-        return err;
+        // TODO: Update proper Out of Memory Status
+        return status;
     }
     ctx.m_mac    = static_cast<void*>(algo);
     ctx.m_digest = static_cast<void*>(sha3);
@@ -147,35 +143,40 @@ __build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
     ctx.finish   = __hmac_wrapperFinish<MACALGORITHM, alcp::digest::Sha3>;
     ctx.reset    = __hmac_wrapperReset<MACALGORITHM, alcp::digest::Sha3>;
 
-    return err;
+    return status;
 }
-alc_error_t
+alcp::base::Status
 HmacBuilder::Build(const alc_mac_info_t& macInfo,
                    const alc_key_info_t& keyInfo,
                    Context&              ctx)
 {
-    alc_error_t err = ALC_ERROR_NONE;
+    alcp::base::Status status;
+
     switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_type) {
         case ALC_DIGEST_TYPE_SHA2: {
             switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2) {
                 case ALC_SHA2_256: {
-                    err = __build_hmac<alcp::digest::Sha256, alcp::mac::Hmac>(
-                        macInfo, ctx);
+                    status =
+                        __build_hmac<alcp::digest::Sha256, alcp::mac::Hmac>(
+                            macInfo, ctx);
                     break;
                 }
                 case ALC_SHA2_224: {
-                    err = __build_hmac<alcp::digest::Sha224, alcp::mac::Hmac>(
-                        macInfo, ctx);
+                    status =
+                        __build_hmac<alcp::digest::Sha224, alcp::mac::Hmac>(
+                            macInfo, ctx);
                     break;
                 }
                 case ALC_SHA2_384: {
-                    err = __build_hmac<alcp::digest::Sha384, alcp::mac::Hmac>(
-                        macInfo, ctx);
+                    status =
+                        __build_hmac<alcp::digest::Sha384, alcp::mac::Hmac>(
+                            macInfo, ctx);
                     break;
                 }
                 case ALC_SHA2_512: {
-                    err = __build_hmac<alcp::digest::Sha512, alcp::mac::Hmac>(
-                        macInfo, ctx);
+                    status =
+                        __build_hmac<alcp::digest::Sha512, alcp::mac::Hmac>(
+                            macInfo, ctx);
                     break;
                 }
             }
@@ -184,34 +185,36 @@ HmacBuilder::Build(const alc_mac_info_t& macInfo,
         case ALC_DIGEST_TYPE_SHA3: {
             switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3) {
                 case ALC_SHA3_224: {
-                    err = __build_hmac_sha3<alcp::mac::Hmac>(macInfo, ctx);
+                    status = __build_hmac_sha3<alcp::mac::Hmac>(macInfo, ctx);
                     break;
                 }
                 case ALC_SHA3_256: {
-                    err = __build_hmac_sha3<alcp::mac::Hmac>(macInfo, ctx);
+                    status = __build_hmac_sha3<alcp::mac::Hmac>(macInfo, ctx);
                     break;
                 }
                 case ALC_SHA3_384: {
-                    err = __build_hmac_sha3<alcp::mac::Hmac>(macInfo, ctx);
+                    status = __build_hmac_sha3<alcp::mac::Hmac>(macInfo, ctx);
                     break;
                 }
                 case ALC_SHA3_512: {
-                    err = __build_hmac_sha3<alcp::mac::Hmac>(macInfo, ctx);
+                    status = __build_hmac_sha3<alcp::mac::Hmac>(macInfo, ctx);
                     break;
                 }
                 default: {
-                    err = ALC_ERROR_NOT_SUPPORTED;
+                    // status = ALC_ERROR_NOT_SUPPORTED;
+                    // TODO: update status to not supported HMAC Digest
                     break;
                 }
             }
             break;
         }
         default: {
-            err = ALC_ERROR_NOT_SUPPORTED;
+            // err = ALC_ERROR_NOT_SUPPORTED;
+            // TODO: Update Status error coded to not supported
             break;
         }
     }
-    return err;
+    return status;
 }
 
 #endif /* _MAC_HMAC_BUILD_HH */

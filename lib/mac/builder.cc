@@ -26,31 +26,32 @@
  *
  */
 
-#include "capi/mac/builder.hh"
 #include "alcp/error.h"
 #include "alcp/mac.h"
+#include "capi/mac/builder.hh"
 #include "mac/hmac_build.hh"
 
 namespace alcp::mac {
 
 using Context = alcp::mac::Context;
 
-alc_error_t
+alcp::base::Status
 MacBuilder::Build(const alc_mac_info_t& macInfo, Context& ctx)
 {
-    alc_error_t err = ALC_ERROR_NONE;
+    alcp::base::Status status;
     switch (macInfo.mi_type) {
         case ALC_MAC_HMAC:
-            err = HmacBuilder::Build(macInfo, macInfo.mi_keyinfo, ctx);
+            status = HmacBuilder::Build(macInfo, macInfo.mi_keyinfo, ctx);
             break;
         case ALC_MAC_CMAC:
             // TODO: Implement CMAC
             // Process CMAC
             break;
         default:
+            // TODO: Set Status error code as not Supported
             break;
     }
-    return err;
+    return status;
 }
 
 } // namespace alcp::mac

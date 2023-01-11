@@ -34,6 +34,7 @@
 
 using alcp::utils::CpuId;
 namespace alcp::mac {
+using Status = alcp::base::Status;
 class Hmac::Impl
 {
   private:
@@ -106,22 +107,25 @@ class Hmac::Impl
     /// @param buff The chunk of the message to be updated
     /// @param size size of buff in bytes
     /// @return ALC_ERROR_NONE if no errors otherwise appropriate error
-    alc_error_t update(const Uint8* buff, Uint64 size)
+    Status update(const Uint8* buff, Uint64 size)
     {
-        alc_error_t err = ALC_ERROR_NONE;
+        Status status = Status();
         if (buff != nullptr && size != 0) {
-            err = calculate_hash(m_pDigest, buff, size);
+            status = calculate_hash(m_pDigest, buff, size);
         }
-        return err;
+        return status;
     }
 
-    /// @brief Last method to be called with any remaining chunks of the message
-    /// to calculate HMAC
+    /// @brief Last method to be called with any remaining chunks of the
+    /// message to calculate HMAC
     /// @param buff final chunk of the message. Can be nullptr
     /// @param size size of buff in bytes
     /// @return ALC_ERROR_NONE if no errors otherwise appropriate error
-    alc_error_t finalize(const Uint8* buff, Uint64 size)
+    Status finalize(const Uint8* buff, Uint64 size)
     {
+        Status status;
+        // TODO: For all the following calls to digest return the proper error
+        // and assign
         if (sizeof(buff) != 0 && size != 0) {
             m_pDigest->finalize(buff, size);
         } else {
@@ -136,7 +140,7 @@ class Hmac::Impl
         m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
         m_pDigest->reset();
 
-        return ALC_ERROR_NONE;
+        return status;
     }
 
     /// @brief copy the result of HMAC to buff. Should be Called only after
@@ -144,21 +148,23 @@ class Hmac::Impl
     /// @param buff Output Buffer where HMAC result should be copied to
     /// @param size Size of buff in bytes
     /// @return ALC_ERROR_NONE if no errors otherwise appropriate error
-    alc_error_t copyHash(Uint8* buff, Uint64 size)
+    Status copyHash(Uint8* buff, Uint64 size)
     {
-        alc_error_t err = ALC_ERROR_NONE;
-        copyData(buff, m_pTempHash, size);
-        return err;
+        Status status;
+        alcp::utils::CopyBytes(buff, m_pTempHash, size);
+        // TODO: Update status with proper error code.
+        return status;
     }
 
     void finish() {}
 
-    alc_error_t reset()
+    Status reset()
     {
-        alc_error_t err = ALC_ERROR_NONE;
+        Status status;
         m_pDigest->reset();
-        err = calculate_hash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
-        return err;
+        status =
+            calculate_hash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
+        return status;
     }
 
   private:
@@ -276,8 +282,9 @@ class Hmac::Impl
         }
     }
 
-    alc_error_t get_k0()
+    Status get_k0()
     {
+        Status status;
         if (m_input_block_length == m_keylen) {
             copyData(m_pK0, m_pKey, m_keylen);
         } else if (m_keylen < m_input_block_length) {
@@ -285,6 +292,8 @@ class Hmac::Impl
             std::memset(m_pK0 + m_keylen, 0x0, m_input_block_length - m_keylen);
         } else if (m_keylen > m_input_block_length) {
             // Optimization: Reusing p_digest for calculating
+            // TODO: For all the following digest calls check and update proper
+            // error status
             m_pDigest->reset();
             m_pDigest->finalize(m_pKey, m_keylen);
             m_pDigest->copyHash(m_pK0, m_output_hash_size);
@@ -293,16 +302,17 @@ class Hmac::Impl
                         0x0,
                         m_input_block_length - m_output_hash_size);
         }
-        return ALC_ERROR_NONE;
+        return status;
     }
 
-    alc_error_t calculate_hash(alcp::digest::Digest* p_digest,
-                               const Uint8*          input,
-                               Uint64                len)
+    Status calculate_hash(alcp::digest::Digest* p_digest,
+                          const Uint8*          input,
+                          Uint64                len)
     {
-        alc_error_t err;
-        err = p_digest->update(input, len);
-        return err;
+        Status status;
+        p_digest->update(input, len);
+        // TODO: Based on the output from update call update status code
+        return status;
     }
 };
 
@@ -312,20 +322,20 @@ Hmac::Hmac(const alc_mac_info_t mac_info, alcp::digest::Digest* p_digest)
 {}
 Hmac::~Hmac() {}
 
-alc_error_t
+Status
 Hmac::update(const Uint8* buff, Uint64 size)
 {
     return m_pImpl->update(buff, size);
 }
 
-alc_error_t
+Status
 Hmac::finalize(const Uint8* buff, Uint64 size)
 {
 
     return m_pImpl->finalize(buff, size);
 }
 
-alc_error_t
+Status
 Hmac::copyHash(Uint8* buff, Uint64 size) const
 {
     return m_pImpl->copyHash(buff, size);
@@ -343,7 +353,7 @@ Hmac::finish()
     m_pImpl->finish();
 }
 
-alc_error_t
+Status
 Hmac::reset()
 {
     return m_pImpl->reset();

@@ -25,6 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include "alcp/base.hh"
 #include "alcp/error.h"
 #include "alcp/types.h"
 #include <vector>
@@ -33,10 +34,10 @@ class Mac
 {
   public:
     Mac();
-    virtual alc_error_t update(const Uint8* pMsgBuf, Uint64 size)   = 0;
-    virtual void        finish()                                    = 0;
-    virtual alc_error_t reset()                                     = 0;
-    virtual alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) = 0;
+    virtual alcp::base::Status update(const Uint8* pMsgBuf, Uint64 size)   = 0;
+    virtual void               finish()                                    = 0;
+    virtual alcp::base::Status reset()                                     = 0;
+    virtual alcp::base::Status finalize(const Uint8* pMsgBuf, Uint64 size) = 0;
     virtual ~Mac();
 };
 } // namespace alcp::mac
