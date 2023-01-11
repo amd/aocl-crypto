@@ -43,9 +43,9 @@ using namespace alcp::testing;
 // #ifdef USE_IPP
 // #include "digest/ipp_base.hh"
 // #endif
-// #ifdef USE_OSSL
-// #include "digest/openssl_base.hh"
-// #endif
+#ifdef USE_OSSL
+#include "hmac/openssl_base.hh"
+#endif
 
 #define MAX_LOOP   160000
 #define INC_LOOP   16
@@ -71,11 +71,12 @@ Hmac_KAT(int HashSize, std::string HmacType, alc_mac_info_t info)
                                            + std::to_string(HashSize) + ".csv");
     DataSet     ds           = DataSet(TestDataFile);
 
-    // #ifdef USE_OSSL
-    //     OpenSSLDigestBase odb(info);
-    //     if (useossl == true)
-    //         db = &odb;
-    // #endif
+#ifdef USE_OSSL
+    useossl = true;
+    OpenSSLHmacBase ohb(info);
+    if (useossl == true)
+        hb = &ohb;
+#endif
     // #ifdef USE_IPP
     //     IPPDigestBase idb(info);
     //     if (useipp == true)

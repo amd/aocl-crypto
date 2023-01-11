@@ -28,6 +28,7 @@
 #pragma once
 
 #include "base.hh"
+#include "hmac/base.hh"
 #include <alcp/alcp.h>
 #include <iostream>
 #include <openssl/conf.h>
@@ -37,31 +38,28 @@
 #include <string.h>
 
 namespace alcp::testing {
-class OpenSSLDigestBase : public DigestBase
+class OpenSSLHmacBase : public HmacBase
 {
-    EVP_MD_CTX*       m_handle = nullptr;
-    alc_digest_info_t m_info;
-    Uint8*            m_message;
-    Uint8*            m_digest;
-    Int64             m_digest_len;
+    EVP_MD_CTX* m_handle = nullptr;
+    // alc_mac_handle_t* m_handle;
+    alc_mac_info_t m_info;
+    Uint8*         m_message;
+    Uint8*         m_key;
+    Uint8*         m_hmac;
+    Uint32         m_key_len;
 
   public:
-    // Class contructor and destructor
-    /**
-     * @brief Creates a digest base of type openssl with alcp_digest_info_t
-     * provided
-     *
-     * @param info Information of which digest to use and what length.
-     */
-    OpenSSLDigestBase(const alc_digest_info_t& info);
-    ~OpenSSLDigestBase();
+    OpenSSLHmacBase(const alc_mac_info_t& info);
 
-    // All inits
-    bool init(const alc_digest_info_t& info, Int64 digest_len);
+    bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
+
     bool init();
 
-    alc_error_t digest_function(const alcp_digest_data_t& data);
-    void        reset();
+    ~OpenSSLHmacBase();
+
+    alc_error_t Hmac_function(const alcp_hmac_data_t& data);
+    /* Resets the context back to initial condition, reuse context */
+    void reset();
 };
 
 } // namespace alcp::testing
