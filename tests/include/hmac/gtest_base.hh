@@ -33,7 +33,6 @@
 #include "gtest_common.hh"
 #include "hmac/alc_base.hh"
 #include "hmac/base.hh"
-//#include "hmac/gtest_base.hh"
 #include "rng_base.hh"
 #include <alcp/alcp.h>
 #include <iostream>
@@ -47,32 +46,33 @@ using namespace alcp::testing;
 #include "hmac/openssl_base.hh"
 #endif
 
-#define MAX_LOOP   160000
-#define INC_LOOP   16
-#define START_LOOP 16
+#define MAX_LOOP   55
+#define INC_LOOP   1
+#define START_LOOP 1
 
 void
-Hmac_KAT(int HashSize, std::string HmacType, alc_mac_info_t info)
+Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
 {
     alc_error_t        error;
     alcp_hmac_data_t   data;
-    std::vector<Uint8> hmac(HashSize / 8, 0);
+    std::vector<Uint8> hmac(HmacSize / 8, 0);
 
     /* Initialize info params based on test type */
     info.mi_type = ALC_MAC_HMAC;
     info.mi_algoinfo.hmac.hmac_digest.dt_len =
-        static_cast<enum _alc_digest_len>(HashSize);
+        static_cast<enum _alc_digest_len>(HmacSize);
 
     AlcpHmacBase ahb(info);
     HmacBase*    hb;
     hb = &ahb;
 
     std::string TestDataFile = std::string("dataset_HMAC_" + HmacType + "_"
-                                           + std::to_string(HashSize) + ".csv");
+                                           + std::to_string(HmacSize) + ".csv");
     DataSet     ds           = DataSet(TestDataFile);
 
 #ifdef USE_OSSL
-    useossl = true;
+    /*FIXME: this is not getting set for some reason*/
+    // useossl = true;
     OpenSSLHmacBase ohb(info);
     if (useossl == true)
         hb = &ohb;
@@ -111,97 +111,86 @@ Hmac_KAT(int HashSize, std::string HmacType, alc_mac_info_t info)
                         ds.getHmac(), // expected output, from the csv test data
                         ds,
                         std::string("HMAC_" + HmacType + "_"
-                                    + std::to_string(HashSize) + "_KAT")));
+                                    + std::to_string(HmacSize) + "_KAT")));
     }
 }
 
 /* Digest Cross tests */
-// void
-// Digest_Cross(int HashSize, alc_digest_info_t info)
-// {
-//     alc_error_t        error;
-//     std::vector<Uint8> data;
-//     alcp_digest_data_t test_data, test_data_ext;
-//     std::vector<Uint8> digestAlcp(HashSize / 8, 0);
-//     std::vector<Uint8> digestExt(HashSize / 8, 0);
-//     AlcpDigestBase     adb(info);
-//     RngBase            rng;
-//     DigestBase*        db;
-//     DigestBase*        extDb = nullptr;
-//     db                       = &adb;
-//     if (bbxreplay) {
-//         fr = new ExecRecPlay(
-//             GetDigestStr(info.dt_type) + "_" +
-//             std::to_string(HashSize), true);
-//         /* FIXME: we need a generic getsharecord */
-//         fr->fastForward(GetSHA3Record(HashSize));
-//     } else
-//         fr = new ExecRecPlay(
-//             GetDigestStr(info.dt_type) + "_" +
-//             std::to_string(HashSize), false);
+void
+Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
+{
+    alc_error_t        error;
+    std::vector<Uint8> data;
+    int                KeySize = 56;
+    std::vector<Uint8> HmacAlcp(HmacSize / 8, 0);
+    std::vector<Uint8> HmacExt(HmacSize / 8, 0);
 
-// #ifdef USE_OSSL
-//     OpenSSLDigestBase odb(info);
-//     if ((useossl == true) || (extDb == nullptr)) // Select
-//     OpenSSL by default
-//         extDb = &odb;
-// #endif
-// #ifdef USE_IPP
-//     IPPDigestBase idb(info);
-//     if (useipp == true)
-//         extDb = &idb;
-// #endif
-//     if (extDb == nullptr) {
-//         printErrors("No external lib selected!");
-//         exit(-1);
-//     }
+    /* Initialize info params based on test type */
+    info.mi_type = ALC_MAC_HMAC;
+    info.mi_algoinfo.hmac.hmac_digest.dt_len =
+        static_cast<enum _alc_digest_len>(HmacSize);
 
-//     for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
-//         if (!bbxreplay) {
-//             fr->startRecEvent();
-//             try {
-//                 data = rng.genRandomBytes(i);
-//                 /* FIXME: we need a generic getsharecord */
-//                 fr->setRecEvent(data, GetSHA2Record(HashSize));
-//             } catch (const char* error) {
-//                 printErrors(error);
-//                 exit(-1);
-//             }
-//         } else {
-//             fr->nextLog();
-//             fr->getValues(&data);
-//         }
+    AlcpHmacBase ahb(info);
+    RngBase      rb;
+    HmacBase*    hb;
+    HmacBase*    extHb = nullptr;
+    hb                 = &ahb;
 
-//         db->init(info, digestAlcp.size());
+#ifdef USE_OSSL
+    /*FIXME: this is not getting set properly even with -o option*/
+    // useossl = true;
+    OpenSSLHmacBase ohb(info);
+    if ((useossl == true) || (extHb == nullptr))
+        extHb = &ohb;
+#endif
+    // #ifdef USE_IPP
+    //     IPPDigestBase idb(info);
+    //     if (useipp == true)
+    //         extDb = &idb;
+    // #endif
+    if (extHb == nullptr) {
+        printErrors("No external lib selected!");
+        exit(-1);
+    }
 
-//         test_data.m_msg        = &(data[0]);
-//         test_data.m_digest     = &(digestAlcp[0]);
-//         test_data.m_digest_len = digestAlcp.size();
-//         test_data.m_msg_len    = data.size();
+    for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
+        alcp_hmac_data_t data_alc, data_ext;
 
-//         error = db->digest_function(test_data);
+        /* generate test data vectors */
+        std::vector<Uint8> msg(i, 0);
+        /* generate random key value */
+        std::vector<Uint8> key(KeySize, 0);
+        msg = rb.genRandomBytes(i);
+        key = rb.genRandomBytes(KeySize);
 
-//         extDb->init(info, digestExt.size());
+        /* load test data */
+        data_alc.m_msg      = &(msg[0]);
+        data_alc.m_msg_len  = msg.size();
+        data_alc.m_hmac     = &(HmacAlcp[0]);
+        data_alc.m_hmac_len = HmacAlcp.size();
+        data_alc.m_key      = &(key[0]);
+        data_alc.m_key_len  = key.size();
 
-//         test_data_ext.m_msg        = &(data[0]);
-//         test_data_ext.m_digest     = &(digestExt[0]);
-//         test_data_ext.m_digest_len = digestExt.size();
-//         test_data_ext.m_msg_len    = data.size();
+        /* load ext test data */
+        data_ext.m_msg      = &(msg[0]);
+        data_ext.m_msg_len  = msg.size();
+        data_ext.m_hmac     = &(HmacExt[0]);
+        data_ext.m_hmac_len = HmacExt.size();
+        data_ext.m_key      = &(key[0]);
+        data_ext.m_key_len  = key.size();
 
-//         error = extDb->digest_function(test_data_ext);
+        hb->init(info, key);
+        error = hb->Hmac_function(data_alc);
 
-//         if (alcp_is_error(error)) {
-//             printf("Error");
-//             return;
-//         }
-//         EXPECT_TRUE(ArraysMatch(digestAlcp, digestExt, i));
-//         // if (!bbxreplay) {
-//         //     fr->dumpBlackBox();
-//         //     fr->endRecEvent();
-//         //     fr->dumpLog();
-//         // }
-//     }
-//     delete fr;
-// }
+        extHb->init(info, key);
+        error = extHb->Hmac_function(data_ext);
+
+        if (alcp_is_error(error)) {
+            printf("Error");
+            return;
+        }
+        EXPECT_TRUE(ArraysMatch(HmacAlcp, HmacExt, i));
+    }
+}
 
 #endif

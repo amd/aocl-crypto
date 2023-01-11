@@ -25,22 +25,21 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "digest/alc_base.hh"
-#include "digest/base.hh"
-#include "digest/gtest_base.hh"
+#include "hmac/alc_base.hh"
+#include "hmac/base.hh"
+#include "hmac/gtest_base.hh"
 #include "rng_base.hh"
 #include <alcp/alcp.h>
 #include <iostream>
 #include <string.h>
 
-/* SHA3 SHAKE Cross */
-TEST(DIGEST_SHA3, CROSS_SHAKE128)
+/* Add tests here */
+TEST(HMAC_SHA2, CROSS_224)
 {
-    alc_digest_info_t info;
-    info.dt_mode.dm_sha3 = ALC_SHAKE_128;
-    info.dt_type         = ALC_DIGEST_TYPE_SHA3;
-    info.dt_len          = ALC_DIGEST_LEN_CUSTOM;
-    // Digest_Cross(128, info);
+    alc_mac_info_t info;
+    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2 = ALC_SHA2_224;
+    Hmac_Cross(224, "SHA2", info);
 }
 
 int
@@ -50,10 +49,10 @@ main(int argc, char** argv)
     testing::TestEventListeners& listeners =
         testing::UnitTest::GetInstance()->listeners();
     parseArgs(argc, argv);
-#ifndef USE_IPP
-    if (useipp)
-        printErrors("IPP is not avaiable");
-#endif
+// #ifndef USE_IPP
+//     if (useipp)
+//         printErrors("IPP is not avaiable");
+// #endif
 #ifndef USE_OSSL
     if (useossl)
         printErrors("OpenSSL is not avaiable");

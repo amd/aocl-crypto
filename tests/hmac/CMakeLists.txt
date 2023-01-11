@@ -118,17 +118,17 @@ TARGET_INCLUDE_DIRECTORIES(test_hmac PRIVATE
 TARGET_COMPILE_OPTIONS(test_hmac PUBLIC ${ALCP_WARNINGS})
 TARGET_LINK_LIBRARIES(test_hmac ${LIBS})
 
-#ADD_EXECUTABLE(test_hmac_cross test_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
+ADD_EXECUTABLE(test_hmac_cross test_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
-# TARGET_INCLUDE_DIRECTORIES(test_hmac_cross PRIVATE
-# 	"${CMAKE_SOURCE_DIR}/include"
-# 	"${CMAKE_SOURCE_DIR}/lib/include"
-#     "${CMAKE_CURRENT_SOURCE_DIR}/../include"
-#     "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
-#     ${EXTRA_INCLUDES})
+TARGET_INCLUDE_DIRECTORIES(test_hmac_cross PRIVATE
+	"${CMAKE_SOURCE_DIR}/include"
+	"${CMAKE_SOURCE_DIR}/lib/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+    ${EXTRA_INCLUDES})
 
-#TARGET_COMPILE_OPTIONS(test_hmac_cross PUBLIC ${ALCP_WARNINGS})
-#TARGET_LINK_LIBRARIES(test_hmac_cross ${LIBS})
+TARGET_COMPILE_OPTIONS(test_hmac_cross PUBLIC ${ALCP_WARNINGS})
+TARGET_LINK_LIBRARIES(test_hmac_cross ${LIBS})
 
 FUNCTION(TEST_DATA_LINK HMAC_ALG)
     # Link dataset to the root dir
@@ -151,6 +151,6 @@ TEST_DATA_LINK(HMAC_SHA3_512)
 
 gtest_add_tests(TARGET test_hmac)
 
-# IF(ENABLE_TESTS_OPENSSL_API)
-#     gtest_add_tests(TARGET test_hmac_cross)
-# ENDIF(ENABLE_TESTS_OPENSSL_API)
+IF(ENABLE_TESTS_OPENSSL_API)
+    gtest_add_tests(TARGET test_hmac_cross)
+ENDIF(ENABLE_TESTS_OPENSSL_API)
