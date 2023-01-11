@@ -57,9 +57,12 @@ AlcpHmacBase::init()
                                    .key  = m_key };
 
     dinfo.mi_keyinfo = kinfo;
-
-    m_handle             = new alc_mac_handle_t;
-    m_handle->ch_context = malloc(alcp_mac_context_size(&dinfo));
+    if (m_handle == nullptr) {
+        m_handle             = new alc_mac_handle_t;
+        m_handle->ch_context = malloc(alcp_mac_context_size(&dinfo));
+    } else if (m_handle->ch_context == nullptr) {
+        m_handle->ch_context = malloc(alcp_mac_context_size(&dinfo));
+    }
 
     err = alcp_mac_request(m_handle, &dinfo);
     if (alcp_is_error(err)) {
@@ -74,6 +77,7 @@ AlcpHmacBase::~AlcpHmacBase()
     if (m_handle != nullptr) {
         alcp_mac_finish(m_handle);
         delete m_handle;
+        m_handle = nullptr;
     }
 }
 
@@ -81,23 +85,28 @@ alc_error_t
 AlcpHmacBase::Hmac_function(const alcp_hmac_data_t& data)
 {
     alc_error_t err;
+
     err = alcp_mac_update(m_handle, data.m_msg, data.m_msg_len);
     if (alcp_is_error(err)) {
         printf("HMAC update failed: Err code: %d\n", err);
-        return err;
     }
 
     alcp_mac_finalize(m_handle, NULL, 0);
     if (alcp_is_error(err)) {
         printf("HMAC finalize failed: Error code: %d\n", err);
-        return err;
     }
 
     err = alcp_mac_copy(m_handle, data.m_hmac, data.m_hmac_len);
     if (alcp_is_error(err)) {
         printf("HMAC copy failed: Error code: %d\n", err);
-        return err;
     }
+
+    err = alcp_mac_finish(m_handle);
+    if (alcp_is_error(err)) {
+        printf("HMAC Finish failed: Error code: %d\n", err);
+    }
+    free(m_handle->ch_context);
+    m_handle->ch_context = nullptr;
     return err;
 }
 
