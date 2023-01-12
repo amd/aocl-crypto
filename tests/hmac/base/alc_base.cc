@@ -66,7 +66,7 @@ AlcpHmacBase::init()
 
     err = alcp_mac_request(m_handle, &dinfo);
     if (alcp_is_error(err)) {
-        printf("Error code in alcp_mac_request: %d\n", err);
+        printf("Error code in alcp_mac_request: %ld\n", err);
         return false;
     }
     return true;
@@ -88,22 +88,22 @@ AlcpHmacBase::Hmac_function(const alcp_hmac_data_t& data)
 
     err = alcp_mac_update(m_handle, data.m_msg, data.m_msg_len);
     if (alcp_is_error(err)) {
-        printf("HMAC update failed: Err code: %d\n", err);
+        printf("HMAC update failed: Err code: %ld\n", err);
     }
 
     alcp_mac_finalize(m_handle, NULL, 0);
     if (alcp_is_error(err)) {
-        printf("HMAC finalize failed: Error code: %d\n", err);
+        printf("HMAC finalize failed: Error code: %ld\n", err);
     }
 
     err = alcp_mac_copy(m_handle, data.m_hmac, data.m_hmac_len);
     if (alcp_is_error(err)) {
-        printf("HMAC copy failed: Error code: %d\n", err);
+        printf("HMAC copy failed: Error code: %ld\n", err);
     }
 
     err = alcp_mac_finish(m_handle);
     if (alcp_is_error(err)) {
-        printf("HMAC Finish failed: Error code: %d\n", err);
+        printf("HMAC Finish failed: Error code: %ld\n", err);
     }
     free(m_handle->ch_context);
     m_handle->ch_context = nullptr;

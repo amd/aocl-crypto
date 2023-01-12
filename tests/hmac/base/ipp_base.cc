@@ -26,16 +26,13 @@
  *
  */
 
-#include "digest/ipp_base.hh"
+#include "hmac/ipp_base.hh"
 
 namespace alcp::testing {
 
-IPPDigestBase::IPPDigestBase(const alc_digest_info_t& info)
-{
-    init(info, m_digest_len);
-}
+IPPHmacBase::IPPHmacBase(const alc_mac_info_t& info) {}
 
-IPPDigestBase::~IPPDigestBase()
+IPPHmacBase::~IPPHmacBase()
 {
     if (m_handle != nullptr) {
         delete[] reinterpret_cast<Uint8*>(m_handle);
@@ -43,55 +40,67 @@ IPPDigestBase::~IPPDigestBase()
 }
 
 bool
-IPPDigestBase::init(const alc_digest_info_t& info, Int64 digest_len)
+IPPHmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 {
-    m_info = info;
+    m_info    = info;
+    m_key     = &Key[0];
+    m_key_len = Key.size();
     return init();
 }
 
 bool
-IPPDigestBase::init()
+IPPHmacBase::init()
 {
     if (m_handle != nullptr) {
         delete[] reinterpret_cast<Uint8*>(m_handle);
         m_handle = nullptr;
     }
+
     int ctx_size;
-    ippsHashGetSize_rmf(&ctx_size);
-    m_handle = reinterpret_cast<IppsHashState_rmf*>(new Uint8[ctx_size]);
-    if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
-        switch (m_info.dt_mode.dm_sha2) {
-            case ALC_SHA2_224:
-                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA224());
+    ippsHMACGetSize_rmf(&ctx_size);
+    m_handle = reinterpret_cast<IppsHMACState_rmf*>(new Uint8[ctx_size]);
+
+    /* IPPCP Doesnt have HMAC SHA3 supported */
+    if (m_info.mi_algoinfo.hmac.hmac_digest.dt_type == ALC_DIGEST_TYPE_SHA3) {
+        printf("IPPCP doesnt have HMAC SHA3 support yet, skipping the test\n");
+        return true;
+    }
+    if (m_info.mi_algoinfo.hmac.hmac_digest.dt_type == ALC_DIGEST_TYPE_SHA2) {
+        /*FIXME: Add error checks for these */
+        switch (m_info.mi_algoinfo.hmac.hmac_digest.dt_len) {
+            case ALC_DIGEST_LEN_224:
+                ippsHMACInit_rmf(
+                    m_key, m_key_len, m_handle, ippsHashMethod_SHA224());
                 break;
-            case ALC_SHA2_256:
-                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA256());
+            case ALC_DIGEST_LEN_256:
+                ippsHMACInit_rmf(
+                    m_key, m_key_len, m_handle, ippsHashMethod_SHA256());
                 break;
-            case ALC_SHA2_384:
-                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA384());
+            case ALC_DIGEST_LEN_384:
+                ippsHMACInit_rmf(
+                    m_key, m_key_len, m_handle, ippsHashMethod_SHA384());
                 break;
-            case ALC_SHA2_512:
-                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512());
+            case ALC_DIGEST_LEN_512:
+                ippsHMACInit_rmf(
+                    m_key, m_key_len, m_handle, ippsHashMethod_SHA512());
                 break;
             default:
                 return false;
         }
-    } else {
-        return false;
     }
     return true;
 }
 
 alc_error_t
-IPPDigestBase::digest_function(const alcp_digest_data_t& data)
+IPPHmacBase::Hmac_function(const alcp_hmac_data_t& data)
 {
-    ippsHashUpdate_rmf(data.m_msg, data.m_msg_len, m_handle);
-    ippsHashFinal_rmf(data.m_digest, m_handle);
+    ippsHMACUpdate_rmf(data.m_msg, data.m_msg_len, m_handle);
+    ippsHMACFinal_rmf(data.m_hmac, data.m_hmac_len, m_handle);
     return ALC_ERROR_NONE;
 }
 
 void
-IPPDigestBase::reset()
+IPPHmacBase::reset()
 {}
 
 } // namespace alcp::testing

@@ -36,6 +36,8 @@
 /* All tests to be added here */
 TEST(HMAC_SHA3, KAT_224)
 {
+    if (useipp)
+        GTEST_SKIP();
     alc_mac_info_t info;
     info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
     info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_224;
@@ -43,6 +45,8 @@ TEST(HMAC_SHA3, KAT_224)
 }
 TEST(HMAC_SHA3, KAT_256)
 {
+    if (useipp)
+        GTEST_SKIP();
     alc_mac_info_t info;
     info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
     info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_256;
@@ -50,6 +54,8 @@ TEST(HMAC_SHA3, KAT_256)
 }
 TEST(HMAC_SHA3, KAT_384)
 {
+    if (useipp)
+        GTEST_SKIP();
     alc_mac_info_t info;
     info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
     info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_384;
@@ -57,6 +63,8 @@ TEST(HMAC_SHA3, KAT_384)
 }
 TEST(HMAC_SHA3, KAT_512)
 {
+    if (useipp)
+        GTEST_SKIP();
     alc_mac_info_t info;
     info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
     info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_512;

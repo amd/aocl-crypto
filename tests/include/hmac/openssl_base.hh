@@ -40,8 +40,7 @@
 namespace alcp::testing {
 class OpenSSLHmacBase : public HmacBase
 {
-    EVP_MD_CTX* m_handle = nullptr;
-    // alc_mac_handle_t* m_handle;
+    EVP_MD_CTX*    m_handle = nullptr;
     alc_mac_info_t m_info;
     Uint8*         m_message;
     Uint8*         m_key;

@@ -39,9 +39,9 @@
 #include <string.h>
 #include <vector>
 using namespace alcp::testing;
-// #ifdef USE_IPP
-// #include "digest/ipp_base.hh"
-// #endif
+#ifdef USE_IPP
+#include "hmac/ipp_base.hh"
+#endif
 #ifdef USE_OSSL
 #include "hmac/openssl_base.hh"
 #endif
@@ -72,16 +72,16 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
 
 #ifdef USE_OSSL
     /*FIXME: this is not getting set for some reason*/
-    // useossl = true;
     OpenSSLHmacBase ohb(info);
     if (useossl == true)
         hb = &ohb;
 #endif
-    // #ifdef USE_IPP
-    //     IPPDigestBase idb(info);
-    //     if (useipp == true)
-    //         db = &idb;
-    // #endif
+#ifdef USE_IPP
+    /*FIXME: this is not getting set for some reason*/
+    IPPHmacBase ihb(info);
+    if (useipp == true)
+        hb = &ihb;
+#endif
 
     while (ds.readMsgKeyHmac()) {
         auto msg = ds.getMessage();
@@ -143,11 +143,11 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
     if ((useossl == true) || (extHb == nullptr))
         extHb = &ohb;
 #endif
-    // #ifdef USE_IPP
-    //     IPPDigestBase idb(info);
-    //     if (useipp == true)
-    //         extDb = &idb;
-    // #endif
+#ifdef USE_IPP
+    IPPHmacBase ihb(info);
+    if (useipp == true)
+        extHb = &ihb;
+#endif
     if (extHb == nullptr) {
         printErrors("No external lib selected!");
         exit(-1);

@@ -35,23 +35,26 @@
 #include <string.h>
 
 namespace alcp::testing {
-class IPPDigestBase : public DigestBase
+class IPPHmacBase : public HmacBase
 {
-    IppsHashState_rmf* m_handle = nullptr;
-    alc_digest_info_t  m_info;
+    IppsHMACState_rmf* m_handle = nullptr;
+    alc_mac_info_t     m_info;
     Uint8*             m_message;
-    Uint8*             m_digest;
-    Int64              m_digest_len;
+    Uint8*             m_key;
+    Uint8*             m_hmac;
+    Uint32             m_key_len;
 
   public:
-    IPPDigestBase(const alc_digest_info_t& info);
-    ~IPPDigestBase();
+    IPPHmacBase(const alc_mac_info_t& info);
 
-    bool init(const alc_digest_info_t& info, Int64 digest_len);
+    bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
+
     bool init();
 
-    alc_error_t digest_function(const alcp_digest_data_t& data);
+    ~IPPHmacBase();
 
+    alc_error_t Hmac_function(const alcp_hmac_data_t& data);
+    /* Resets the context back to initial condition, reuse context */
     void reset();
 };
 
