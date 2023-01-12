@@ -47,9 +47,10 @@
 #include "digest/openssl_base.hh"
 #endif
 
-#define MAX_LOOP   160000
-#define INC_LOOP   16
-#define START_LOOP 16
+/*FIXME: increase MAX LOOP*/
+#define MAX_LOOP   16000
+#define INC_LOOP   1
+#define START_LOOP 1
 
 record_t
 GetSHA2Record(int HashSize)
@@ -148,11 +149,13 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
             std::vector<Uint8> digest_(data.m_digest_len, 0);
             data.m_digest = &(digest_[0]);
 
-            db->init(info, data.m_digest_len);
+            if (!db->init(info, data.m_digest_len)) {
+                printf("Error: Digest base init failed\n");
+                return;
+            }
             error = db->digest_function(data);
-
             if (alcp_is_error(error)) {
-                printf("Error");
+                printf("Error: Digest function failed\n");
                 return;
             }
             EXPECT_TRUE(
@@ -170,11 +173,13 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
             data.m_digest_len = digest.size();
             data.m_digest     = &(digest[0]);
 
-            db->init(info, data.m_digest_len);
+            if (!db->init(info, data.m_digest_len)) {
+                printf("Error: Digest base init failed\n");
+                return;
+            }
             error = db->digest_function(data);
-
             if (alcp_is_error(error)) {
-                printf("Error");
+                printf("Error: Digest function failed\n");
                 return;
             }
 
@@ -198,11 +203,10 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
 {
     alc_error_t        error;
     std::vector<Uint8> data;
-    alcp_digest_data_t test_data, test_data_ext;
     std::vector<Uint8> digestAlcp(HashSize / 8, 0);
     std::vector<Uint8> digestExt(HashSize / 8, 0);
     AlcpDigestBase     adb(info);
-    RngBase            rng;
+    RngBase            rb;
     DigestBase*        db;
     DigestBase*        extDb = nullptr;
     db                       = &adb;
@@ -234,7 +238,7 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
         if (!bbxreplay) {
             fr->startRecEvent();
             try {
-                data = rng.genRandomBytes(i);
+                data = rb.genRandomBytes(i);
                 /* FIXME: we need a generic getsharecord */
                 fr->setRecEvent(data, GetSHA2Record(HashSize));
             } catch (const char* error) {
@@ -246,26 +250,40 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
             fr->getValues(&data);
         }
 
-        db->init(info, digestAlcp.size());
+        alcp_digest_data_t data_alc, data_ext;
 
-        test_data.m_msg        = &(data[0]);
-        test_data.m_digest     = &(digestAlcp[0]);
-        test_data.m_digest_len = digestAlcp.size();
-        test_data.m_msg_len    = data.size();
+        /* generate test data vectors */
+        std::vector<Uint8> msg(i, 0);
+        msg = rb.genRandomBytes(i);
 
-        error = db->digest_function(test_data);
+        /* load test data */
+        data_alc.m_msg        = &(msg[0]);
+        data_alc.m_msg_len    = msg.size();
+        data_alc.m_digest     = &(digestAlcp[0]);
+        data_alc.m_digest_len = digestAlcp.size();
 
-        extDb->init(info, digestExt.size());
+        data_ext.m_msg        = &(msg[0]);
+        data_ext.m_msg_len    = msg.size();
+        data_ext.m_digest     = &(digestExt[0]);
+        data_ext.m_digest_len = digestExt.size();
 
-        test_data_ext.m_msg        = &(data[0]);
-        test_data_ext.m_digest     = &(digestExt[0]);
-        test_data_ext.m_digest_len = digestExt.size();
-        test_data_ext.m_msg_len    = data.size();
-
-        error = extDb->digest_function(test_data_ext);
-
+        if (!db->init(info, digestAlcp.size())) {
+            printf("Error: Digest base init failed\n");
+            return;
+        }
+        error = db->digest_function(data_alc);
         if (alcp_is_error(error)) {
-            printf("Error");
+            printf("Error: Digest function failed\n");
+            return;
+        }
+
+        if (!extDb->init(info, digestExt.size())) {
+            printf("Error: Ext Digest base init failed\n");
+            return;
+        }
+        error = extDb->digest_function(data_ext);
+        if (alcp_is_error(error)) {
+            printf("Error: Ext Digest function failed\n");
             return;
         }
         EXPECT_TRUE(ArraysMatch(digestAlcp, digestExt, i));

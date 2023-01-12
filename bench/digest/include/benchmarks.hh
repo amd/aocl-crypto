@@ -76,7 +76,11 @@ void inline Digest_Bench(benchmark::State& state,
 
     if (info.dt_mode.dm_sha3 == ALC_SHAKE_128
         || info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
-        db->init(info, info.dt_custom_len);
+
+        if (!db->init(info, info.dt_custom_len)) {
+            printf("Error: Digest base init failed\n");
+            return;
+        }
         /* override digest len for shake cases */
         data.m_digest_len = info.dt_custom_len;
     } else {
@@ -89,11 +93,11 @@ void inline Digest_Bench(benchmark::State& state,
 
     for (auto _ : state) {
         error = db->digest_function(data);
-        db->reset();
         if (alcp_is_error(error)) {
-            printf("Error code in running benchmark: %d\n", error);
+            printf("Error code in running digest benchmark: %d\n", error);
             return;
         }
+        db->reset();
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(
         state.iterations() * block_size, benchmark::Counter::kIsRate);
