@@ -34,7 +34,7 @@
 
 namespace alcp::utils {
 
-// FIXME: Memeory Allocations for static variables
+// FIXME: Memory Allocations for static variables
 std::unique_ptr<CpuId::Impl> CpuId::pImpl = std::make_unique<CpuId::Impl>();
 
 bool
