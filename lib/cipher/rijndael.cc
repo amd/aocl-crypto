@@ -896,8 +896,8 @@ Status
 Rijndael::setKey(const Uint8* pUserKey, Uint64 len)
 {
     if ((len < cMinKeySize) || (len > cMaxKeySize)) {
+        return InvalidArgumentError("Key length not acceptable");
     }
-    // InvalidArgumentException("Key length not acceptable");
 
     /* FIXME: we should make Impl::setKey to get this done */
     // pImpl()->expandKeys(pUserKey);
