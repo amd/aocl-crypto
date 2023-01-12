@@ -33,9 +33,11 @@
 #include <alcp/alcp.h>
 #include <iostream>
 
-/* SHAKE128/256 tests */
+/* SHAKE128/256 tests (IPP doesnt have these) */
 TEST(DIGEST_SHA3, KAT_SHAKE128)
 {
+    if (useipp)
+        GTEST_SKIP();
     alc_digest_info_t info;
     info.dt_mode.dm_sha3 = ALC_SHAKE_128;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
@@ -44,6 +46,8 @@ TEST(DIGEST_SHA3, KAT_SHAKE128)
 }
 TEST(DIGEST_SHA3, KAT_SHAKE256)
 {
+    if (useipp)
+        GTEST_SKIP();
     alc_digest_info_t info;
     info.dt_mode.dm_sha3 = ALC_SHAKE_256;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;

@@ -99,7 +99,7 @@ void inline Digest_Bench(benchmark::State& state,
     for (auto _ : state) {
         error = db->digest_function(data);
         if (alcp_is_error(error)) {
-            printf("Error code in running digest benchmark: %d\n", error);
+            printf("Error code in running digest benchmark: %ld\n", error);
             return;
         }
         db->reset();

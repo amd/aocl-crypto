@@ -135,16 +135,16 @@ OpenSSLHmacBase::reset()
 
     if (m_info.mi_algoinfo.hmac.hmac_digest.dt_type == ALC_DIGEST_TYPE_SHA2) {
         switch (m_info.mi_algoinfo.hmac.hmac_digest.dt_len) {
-            case ALC_SHA2_224:
+            case ALC_DIGEST_LEN_224:
                 EVP_DigestSignInit(m_handle, NULL, EVP_sha224(), NULL, evp_key);
                 break;
-            case ALC_SHA2_256:
+            case ALC_DIGEST_LEN_256:
                 EVP_DigestSignInit(m_handle, NULL, EVP_sha256(), NULL, evp_key);
                 break;
-            case ALC_SHA2_384:
+            case ALC_DIGEST_LEN_384:
                 EVP_DigestSignInit(m_handle, NULL, EVP_sha384(), NULL, evp_key);
                 break;
-            case ALC_SHA2_512:
+            case ALC_DIGEST_LEN_512:
                 EVP_DigestSignInit(m_handle, NULL, EVP_sha512(), NULL, evp_key);
                 break;
             default:
