@@ -47,12 +47,7 @@ using namespace alci;
 class CpuId
 {
   public:
-    CpuId()
-    {
-        if (pImpl.get() == nullptr) {
-            pImpl = make_unique<Impl>();
-        }
-    }
+    CpuId() {}
     ~CpuId() = default;
     // Genoa functions
     /**
@@ -168,7 +163,7 @@ class CpuId
       public:
         Impl()  = default;
         ~Impl() = default;
-        static Cpu m_cpu;
+        Cpu m_cpu;
 
       public:
         // Genoa functions

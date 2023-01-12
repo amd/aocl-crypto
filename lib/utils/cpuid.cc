@@ -35,8 +35,7 @@
 namespace alcp::utils {
 
 // FIXME: Memeory Allocations for static variables
-std::unique_ptr<CpuId::Impl> CpuId::pImpl;
-Cpu                          CpuId::Impl::m_cpu;
+std::unique_ptr<CpuId::Impl> CpuId::pImpl = std::make_unique<CpuId::Impl>();
 
 bool
 CpuId::Impl::cpuHasAvx512f()
