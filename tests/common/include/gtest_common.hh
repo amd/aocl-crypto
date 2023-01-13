@@ -251,33 +251,53 @@ parseArgs(int argc, char** argv)
 {
     std::string currentArg;
     std::string temp;
+
+    std::vector<std::string> verbosity_levels = { "0", "1", "2" };
+
     if (argc > 1) {
         for (int i = 1; i < argc; i++) {
             currentArg = std::string(argv[i]);
             if ((currentArg == std::string("--help"))
                 || (currentArg == std::string("-h"))) {
+
+                std::string verbosity_string = "(";
+                for (size_t j = 0; j < verbosity_levels.size() - 1; j++) {
+                    verbosity_string += j + "/";
+                }
+                verbosity_string +=
+                    verbosity_levels.at(verbosity_levels.size() - 1) + ")";
                 std::cout << std::endl
                           << "Additional help for microtests" << std::endl;
-                std::cout << "--verbose=<verbosity level(0/1/2)> or -v per "
-                             "line status."
+                std::cout << "--verbose or -v <space>  <verbosity level(0/1/2)>"
                           << std::endl;
                 std::cout << "--use-ipp or -i force IPP use in testing."
                           << std::endl;
                 std::cout << "--use-ossl or -o force OpenSSL use in testing"
                           << std::endl;
-                std::cout
-                    << "--replay-blackbox or -r replay blackbox with log file"
-                    << std::endl;
+                std::cout << "--replay-blackbox or -r replay blackbox with "
+                             "log file"
+                          << std::endl;
             } else if ((currentArg == std::string("--verbose"))
                        || (currentArg == std::string("-v"))) {
                 /* now extract the verbose level integer */
-                if (currentArg.find(std::string("--verbose"))
-                    != currentArg.npos) {
-                    temp    = currentArg.back();
-                    verbose = std::stoi(temp);
-                } else if (currentArg.find(std::string("-v"))
-                           != currentArg.npos) {
-                    verbose = 1;
+                if (((currentArg.find(std::string("--verbose"))
+                      != currentArg.npos)
+                     || (currentArg.find(std::string("-v")) != currentArg.npos))
+                    && (i + 1 < argc)) {
+                    std::string nextArg = std::string(argv[i + 1]);
+                    // Skip the next iteration
+                    i++;
+                    // check if the provided verbosity is supported
+                    auto it = std::find(verbosity_levels.begin(),
+                                        verbosity_levels.end(),
+                                        nextArg);
+                    if (it != verbosity_levels.end()) {
+                        verbose = std::stoi(nextArg);
+                    } else {
+                        std::cout << RED << "Invalid Verbosity Level \""
+                                  << nextArg << "\"" << RESET << std::endl;
+                        exit(-1);
+                    }
                 }
 
             } else if ((currentArg == std::string("--use-ipp"))
