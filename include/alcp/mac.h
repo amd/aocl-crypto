@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,6 +25,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
+#ifndef _ALCP_MAC_H_
+#define _ALCP_MAC_H_ 2
+
 #include "alcp/digest.h"
 #include "alcp/key.h"
 
@@ -60,3 +64,5 @@ typedef struct _alc_mac_info_t
     // any other common fields that are needed
     alc_key_info_t mi_keyinfo;
 } alc_mac_info_t, *alc_mac_info_p;
+
+#endif
