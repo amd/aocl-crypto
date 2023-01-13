@@ -1,4 +1,4 @@
- # Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -23,14 +23,23 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
  
+Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTests.cmake)
 
-FILE(GLOB RNG_SRCS "*.cc")
+# Enforcing File Name
+file(GLOB TEST_FILES "*_unit_test.cc")
+# You can rename files to another name and wont be included
 
-TARGET_SOURCES(alcp
-	PRIVATE
-		${RNG_SRCS}
-	)
-TARGET_INCLUDE_DIRECTORIES(alcp PRIVATE ${AOCL_INSTALL_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/include)
+alcp_module("Rng")
 
-ADD_SUBDIRECTORY(tests)
+#message(STATUS "Cipher Unit Tests Imported ${TEST_FILES}")
 
+foreach(testFile IN LISTS TEST_FILES)
+    get_filename_component(currentTestName ${testFile} NAME_WLE)
+    get_filename_component(currentTestFile ${testFile} NAME)
+    #message("Test-> " ${currentTestName} " file " ${currentTestFile} )
+    alcp_cc_test(${currentTestName}
+             DIRECTORY tests/
+             SOURCES   "${currentTestFile}"
+             DEPENDS   ${_module_lib}
+    )
+endforeach()
