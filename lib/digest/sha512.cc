@@ -148,21 +148,21 @@ Sha512::copyHash(Uint8* pHash, Uint64 size) const
         return err;
     }
 
-   if (size != m_digest_len_bytes) {
+    if (size != m_digest_len_bytes) {
         err = ALC_ERROR_INVALID_SIZE;
-   }
+    }
 
-   if (!err) {
-       utils::CopyBlockWith<Uint64>(
-               pHash, m_hash, m_digest_len_bytes, utils::ToBigEndian<Uint64>);
+    if (!err) {
+        utils::CopyBlockWith<Uint64>(
+            pHash, m_hash, m_digest_len_bytes, utils::ToBigEndian<Uint64>);
 
-       if (m_digest_len == ALC_DIGEST_LEN_224) {
-           // last 4 bytes can be copied after reversing the 64 bit since it is
-           // in little endian form
-           Uint64 hash = utils::ToBigEndian<Uint64>(m_hash[3]);
-           utils::CopyBytes(&pHash[24], &hash, 4);
-       }
-   }
+        if (m_digest_len == ALC_DIGEST_LEN_224) {
+            // last 4 bytes can be copied after reversing the 64 bit since it is
+            // in little endian form
+            Uint64 hash = utils::ToBigEndian<Uint64>(m_hash[3]);
+            utils::CopyBytes(&pHash[24], &hash, 4);
+        }
+    }
 
     return err;
 }
@@ -362,13 +362,13 @@ Sha512::finalize(const Uint8* pBuf, Uint64 size)
     }
 
     /*
-     * When the bytes left in the current chunk are less than 8, current chunk
+     * When the bytes left in the current chunk are less than 16, current chunk
      * can NOT accomodate the message length. The current chunk is processed and
      * the message length is placed in a new chunk and will be processed.
      */
     m_buffer[m_idx++] = 0x80;
 
-    Uint64 buf_len = m_idx < (cChunkSize - 16) ? cChunkSize : sizeof(m_buffer);
+    Uint64 buf_len = m_idx <= (cChunkSize - 16) ? cChunkSize : sizeof(m_buffer);
     // Uint64 bytes_left = buf_len - m_idx - utils::BytesInDWord<Uint64>;
     Uint64 bytes_left = buf_len - m_idx - 16;
 

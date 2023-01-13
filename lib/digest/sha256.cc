@@ -319,7 +319,7 @@ Sha256::Impl::finalize(const Uint8* pBuf, Uint64 size)
 
     local_buf[m_idx++] = 0x80;
 
-    Uint64 buf_len = m_idx < (cChunkSize - 8) ? cChunkSize : sizeof(local_buf);
+    Uint64 buf_len = m_idx <= (cChunkSize - 8) ? cChunkSize : sizeof(local_buf);
     Uint64 bytes_left = buf_len - m_idx - utils::BytesPerDWord;
 
     utils::PadBlock<Uint8>(&local_buf[m_idx], 0x0, bytes_left);
