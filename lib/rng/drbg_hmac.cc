@@ -247,4 +247,24 @@ namespace alcp::random_number { namespace drbg {
         // reseed_counter += 1;
     }
 
+    void HmacDrbg::Reseed(const std::vector<Uint8>& entropy_input,
+                          const std::vector<Uint8>& additional_input,
+                          std::vector<Uint8>&       p_K,
+                          std::vector<Uint8>&       p_V)
+    {
+        // seed_material = entropy_input || additional_input
+        concat_type_t<Uint8> concatVect(2);
+        std::vector<Uint8>   seed_material(entropy_input.size()
+                                         + additional_input.size());
+        concatVect.at(0) = &entropy_input;
+        concatVect.at(1) = &additional_input;
+        concat(concatVect, seed_material);
+
+        // (Key,V) = HMAC_DRBG_Update(seed_material,Key,V);
+        Update(seed_material, p_K, p_V);
+
+        // FIXME: Reseed counter not implemented yet
+        // reseed_counter = 1
+    }
+
 }} // namespace alcp::random_number::drbg

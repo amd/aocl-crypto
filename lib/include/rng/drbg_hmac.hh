@@ -62,7 +62,10 @@ namespace alcp::random_number { namespace drbg {
                              std::vector<Uint8>&       output,
                              std::vector<Uint8>&       p_K,
                              std::vector<Uint8>&       p_V);
-
+        static void Reseed(const std::vector<Uint8>& entropy_input,
+                           const std::vector<Uint8>& additional_input,
+                           std::vector<Uint8>&       K,
+                           std::vector<Uint8>&       V);
         HmacDrbg()  = default;
         ~HmacDrbg() = default;
 
