@@ -51,6 +51,7 @@ IPPHmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 bool
 IPPHmacBase::init()
 {
+    IppStatus status = ippStsNoErr;
     if (m_handle != nullptr) {
         delete[] reinterpret_cast<Uint8*>(m_handle);
         m_handle = nullptr;
@@ -66,27 +67,30 @@ IPPHmacBase::init()
         return true;
     }
     if (m_info.mi_algoinfo.hmac.hmac_digest.dt_type == ALC_DIGEST_TYPE_SHA2) {
-        /*FIXME: Add error checks for these */
         switch (m_info.mi_algoinfo.hmac.hmac_digest.dt_len) {
             case ALC_DIGEST_LEN_224:
-                ippsHMACInit_rmf(
+                status = ippsHMACInit_rmf(
                     m_key, m_key_len, m_handle, ippsHashMethod_SHA224());
                 break;
             case ALC_DIGEST_LEN_256:
-                ippsHMACInit_rmf(
+                status = ippsHMACInit_rmf(
                     m_key, m_key_len, m_handle, ippsHashMethod_SHA256());
                 break;
             case ALC_DIGEST_LEN_384:
-                ippsHMACInit_rmf(
+                status = ippsHMACInit_rmf(
                     m_key, m_key_len, m_handle, ippsHashMethod_SHA384());
                 break;
             case ALC_DIGEST_LEN_512:
-                ippsHMACInit_rmf(
+                status = ippsHMACInit_rmf(
                     m_key, m_key_len, m_handle, ippsHashMethod_SHA512());
                 break;
             default:
                 return false;
         }
+    }
+    if (status != ippStsNoErr) {
+        printf("ippsHMACInit_rmf failed with err code: %d\n", status);
+        return false;
     }
     return true;
 }

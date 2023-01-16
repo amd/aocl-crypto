@@ -51,6 +51,7 @@ OpenSSLHmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 bool
 OpenSSLHmacBase::init()
 {
+    int       ret_val = 0;
     EVP_PKEY* evp_key =
         EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, &(m_key[0]), m_key_len);
     if (m_handle != nullptr) {
@@ -64,19 +65,22 @@ OpenSSLHmacBase::init()
     }
 
     if (m_info.mi_algoinfo.hmac.hmac_digest.dt_type == ALC_DIGEST_TYPE_SHA2) {
-        /*FIXME: Add error checks for these */
         switch (m_info.mi_algoinfo.hmac.hmac_digest.dt_len) {
             case ALC_DIGEST_LEN_224:
-                EVP_DigestSignInit(m_handle, NULL, EVP_sha224(), NULL, evp_key);
+                ret_val = EVP_DigestSignInit(
+                    m_handle, NULL, EVP_sha224(), NULL, evp_key);
                 break;
             case ALC_DIGEST_LEN_256:
-                EVP_DigestSignInit(m_handle, NULL, EVP_sha256(), NULL, evp_key);
+                ret_val = EVP_DigestSignInit(
+                    m_handle, NULL, EVP_sha256(), NULL, evp_key);
                 break;
             case ALC_DIGEST_LEN_384:
-                EVP_DigestSignInit(m_handle, NULL, EVP_sha384(), NULL, evp_key);
+                ret_val = EVP_DigestSignInit(
+                    m_handle, NULL, EVP_sha384(), NULL, evp_key);
                 break;
             case ALC_DIGEST_LEN_512:
-                EVP_DigestSignInit(m_handle, NULL, EVP_sha512(), NULL, evp_key);
+                ret_val = EVP_DigestSignInit(
+                    m_handle, NULL, EVP_sha512(), NULL, evp_key);
                 break;
             default:
                 return false;
@@ -85,24 +89,28 @@ OpenSSLHmacBase::init()
                == ALC_DIGEST_TYPE_SHA3) {
         switch (m_info.mi_algoinfo.hmac.hmac_digest.dt_len) {
             case ALC_DIGEST_LEN_224:
-                EVP_DigestSignInit(
+                ret_val = EVP_DigestSignInit(
                     m_handle, NULL, EVP_sha3_224(), NULL, evp_key);
                 break;
             case ALC_DIGEST_LEN_256:
-                EVP_DigestSignInit(
+                ret_val = EVP_DigestSignInit(
                     m_handle, NULL, EVP_sha3_256(), NULL, evp_key);
                 break;
             case ALC_DIGEST_LEN_384:
-                EVP_DigestSignInit(
+                ret_val = EVP_DigestSignInit(
                     m_handle, NULL, EVP_sha3_384(), NULL, evp_key);
                 break;
             case ALC_DIGEST_LEN_512:
-                EVP_DigestSignInit(
+                ret_val = EVP_DigestSignInit(
                     m_handle, NULL, EVP_sha3_512(), NULL, evp_key);
                 break;
             default:
                 return false;
         }
+    }
+    if (ret_val != 1) {
+        printf("EVP_DigestSignInit failed with err code: %d\n", ret_val);
+        return false;
     }
     return true;
 }

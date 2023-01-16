@@ -46,7 +46,7 @@ using namespace alcp::testing;
 #include "hmac/openssl_base.hh"
 #endif
 
-#define MAX_LOOP   55
+#define MAX_LOOP   16000
 #define INC_LOOP   1
 #define START_LOOP 1
 
