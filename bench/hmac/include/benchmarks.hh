@@ -46,11 +46,11 @@
 
 using namespace alcp::testing;
 
-/*FIXME: what are the valid block sizes?*/
+/* Valid block sizes for performance comparison */
 std::vector<Int64> hmac_block_sizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
 
-/* FIXME: what are the valid key sizes ? */
-std::vector<Int64> hmac_key_sizes = { 50, 100 };
+/* Valid key sizes for performance comparison */
+std::vector<Int64> hmac_key_sizes = { 224, 256, 384, 512 };
 
 void inline Hmac_Bench(benchmark::State& state,
                        alc_mac_info_t    info,
@@ -142,7 +142,40 @@ BENCH_SHA2_512(benchmark::State& state)
     info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2 = ALC_SHA2_512;
     Hmac_Bench(state, info, state.range(0), state.range(1), 512);
 }
-/* FIXME: while adding SHA3, note that IPP doesnt support it */
+
+/* SHA3 benchmarks */
+static void
+BENCH_SHA3_224(benchmark::State& state)
+{
+    alc_mac_info_t info;
+    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
+    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_224;
+    Hmac_Bench(state, info, state.range(0), state.range(1), 224);
+}
+static void
+BENCH_SHA3_256(benchmark::State& state)
+{
+    alc_mac_info_t info;
+    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
+    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_256;
+    Hmac_Bench(state, info, state.range(0), state.range(1), 256);
+}
+static void
+BENCH_SHA3_384(benchmark::State& state)
+{
+    alc_mac_info_t info;
+    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
+    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_384;
+    Hmac_Bench(state, info, state.range(0), state.range(1), 384);
+}
+static void
+BENCH_SHA3_512(benchmark::State& state)
+{
+    alc_mac_info_t info;
+    info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
+    info.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3 = ALC_SHA3_512;
+    Hmac_Bench(state, info, state.range(0), state.range(1), 512);
+}
 
 /* add benchmarks */
 int
@@ -156,5 +189,17 @@ AddBenchmarks()
         ->ArgsProduct({ hmac_block_sizes, hmac_key_sizes });
     BENCHMARK(BENCH_SHA2_512)
         ->ArgsProduct({ hmac_block_sizes, hmac_key_sizes });
+
+    /* IPPCP Doesnt support HMAC SHA3 */
+    if (!useipp) {
+        BENCHMARK(BENCH_SHA3_224)
+            ->ArgsProduct({ hmac_block_sizes, hmac_key_sizes });
+        BENCHMARK(BENCH_SHA3_256)
+            ->ArgsProduct({ hmac_block_sizes, hmac_key_sizes });
+        BENCHMARK(BENCH_SHA3_384)
+            ->ArgsProduct({ hmac_block_sizes, hmac_key_sizes });
+        BENCHMARK(BENCH_SHA3_512)
+            ->ArgsProduct({ hmac_block_sizes, hmac_key_sizes });
+    }
     return 0;
 }
