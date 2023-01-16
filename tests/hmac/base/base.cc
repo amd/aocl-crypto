@@ -47,7 +47,8 @@ namespace alcp::testing {
 DataSet::DataSet(const std::string filename)
     : File(filename)
 {
-    line = readLine(); // Read header out
+    this->FileName = filename;
+    line           = readLine(); // Read header out
     return;
 }
 
@@ -61,7 +62,8 @@ DataSet::readMsgKeyHmac()
     int pos1 = line.find(","); // End of Msg
     int pos2 = line.find(",", pos1 + 1);
     if (pos1 == -1 || pos2 == -1) {
-        printf("Error in parsing csv\n");
+        std::cout << "Error in parsing csv file " << this->FileName
+                  << std::endl;
         return false;
     }
     Message = parseHexStrToBin(line.substr(0, pos1));

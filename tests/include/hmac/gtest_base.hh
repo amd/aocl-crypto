@@ -139,8 +139,6 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
     hb                 = &ahb;
 
 #ifdef USE_OSSL
-    /*FIXME: this is not getting set properly even with -o option*/
-    // useossl = true;
     OpenSSLHmacBase ohb(info);
     if ((useossl == true) || (extHb == nullptr))
         extHb = &ohb;
