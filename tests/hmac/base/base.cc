@@ -54,13 +54,7 @@ DataSet::DataSet(const std::string filename)
 bool
 DataSet::readMsgKeyHmac()
 {
-#if 1
     line = readLine();
-#else
-    // Reference slower implementation
-    line = readLineCharByChar();
-    // std::cout << line << std::endl;
-#endif
     if (line.empty() || line == "\n") {
         return false;
     }

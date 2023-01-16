@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -113,7 +113,6 @@ AlcpHmacBase::Hmac_function(const alcp_hmac_data_t& data)
 void
 AlcpHmacBase::reset()
 {
-    // alcp_mac_reset(m_handle);
     free(m_handle->ch_context);
 }
 
