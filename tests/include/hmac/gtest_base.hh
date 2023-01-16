@@ -95,11 +95,13 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
         data.m_hmac_len = hmac.size();
         data.m_key_len  = key.size();
 
-        hb->init(info, key);
+        if (!hb->init(info, key)) {
+            printf("Error in hmac init function\n");
+            return;
+        }
         error = hb->Hmac_function(data);
-
         if (alcp_is_error(error)) {
-            printf("Error");
+            printf("Error in Hmac function\n");
             return;
         }
 
@@ -121,6 +123,7 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
 {
     alc_error_t        error;
     std::vector<Uint8> data;
+    /*FIXME: key size needs to be parameterized?*/
     int                KeySize = 56;
     std::vector<Uint8> HmacAlcp(HmacSize / 8, 0);
     std::vector<Uint8> HmacExt(HmacSize / 8, 0);
@@ -179,14 +182,23 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
         data_ext.m_key      = &(key[0]);
         data_ext.m_key_len  = key.size();
 
-        hb->init(info, key);
+        if (!hb->init(info, key)) {
+            printf("Error in hmac init\n");
+            return;
+        }
         error = hb->Hmac_function(data_alc);
-
-        extHb->init(info, key);
-        error = extHb->Hmac_function(data_ext);
-
         if (alcp_is_error(error)) {
-            printf("Error");
+            printf("Error in hmac function\n");
+            return;
+        }
+
+        if (!extHb->init(info, key)) {
+            printf("Error in hmac ext init function\n");
+            return;
+        }
+        error = extHb->Hmac_function(data_ext);
+        if (alcp_is_error(error)) {
+            printf("Error in hmac (ext lib) function\n");
             return;
         }
         EXPECT_TRUE(ArraysMatch(HmacAlcp, HmacExt, i));
