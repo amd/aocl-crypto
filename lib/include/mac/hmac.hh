@@ -25,6 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#pragma once
+
 #include "alcp/key.h"
 #include "alcp/mac.h"
 #include "digest.hh"

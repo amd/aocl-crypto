@@ -25,15 +25,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#pragma once
 
 #include "alcp/error.h"
 #include "digest/sha2_384.hh"
 #include "digest/sha3.hh"
 #include "hmac.hh"
 #include <type_traits> /* for is_same_v<> */
-
-#ifndef _MAC_HMAC_BUILD_HH
-#define _MAC_HMAC_BUILD_HH 2
 
 using Context = alcp::mac::Context;
 
@@ -216,5 +214,3 @@ HmacBuilder::Build(const alc_mac_info_t& macInfo,
     }
     return status;
 }
-
-#endif /* _MAC_HMAC_BUILD_HH */

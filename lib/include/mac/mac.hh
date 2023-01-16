@@ -25,6 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#pragma once
+
 #include "alcp/base.hh"
 #include "alcp/error.h"
 #include "alcp/types.h"
