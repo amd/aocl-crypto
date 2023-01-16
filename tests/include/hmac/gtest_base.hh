@@ -117,14 +117,13 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
     }
 }
 
-/* Digest Cross tests */
+/* Hmac Cross tests */
 void
 Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
 {
     alc_error_t        error;
     std::vector<Uint8> data;
-    /*FIXME: key size needs to be parameterized?*/
-    int                KeySize = 56;
+    int                KeySize, KeyLenMin = START_LOOP, KeyLenMax = MAX_LOOP;
     std::vector<Uint8> HmacAlcp(HmacSize / 8, 0);
     std::vector<Uint8> HmacExt(HmacSize / 8, 0);
 
@@ -156,52 +155,55 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
         exit(-1);
     }
 
-    for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
-        alcp_hmac_data_t data_alc, data_ext;
+    for (int j = KeyLenMin; j < KeyLenMax; j++) {
+        for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
+            alcp_hmac_data_t data_alc, data_ext;
 
-        /* generate test data vectors */
-        std::vector<Uint8> msg(i, 0);
-        /* generate random key value */
-        std::vector<Uint8> key(KeySize, 0);
-        msg = rb.genRandomBytes(i);
-        key = rb.genRandomBytes(KeySize);
+            /* generate test data vectors */
+            std::vector<Uint8> msg(i, 0);
+            /* generate random key value */
+            KeySize = j;
+            std::vector<Uint8> key(KeySize, 0);
+            msg = rb.genRandomBytes(i);
+            key = rb.genRandomBytes(KeySize);
 
-        /* load test data */
-        data_alc.m_msg      = &(msg[0]);
-        data_alc.m_msg_len  = msg.size();
-        data_alc.m_hmac     = &(HmacAlcp[0]);
-        data_alc.m_hmac_len = HmacAlcp.size();
-        data_alc.m_key      = &(key[0]);
-        data_alc.m_key_len  = key.size();
+            /* load test data */
+            data_alc.m_msg      = &(msg[0]);
+            data_alc.m_msg_len  = msg.size();
+            data_alc.m_hmac     = &(HmacAlcp[0]);
+            data_alc.m_hmac_len = HmacAlcp.size();
+            data_alc.m_key      = &(key[0]);
+            data_alc.m_key_len  = key.size();
 
-        /* load ext test data */
-        data_ext.m_msg      = &(msg[0]);
-        data_ext.m_msg_len  = msg.size();
-        data_ext.m_hmac     = &(HmacExt[0]);
-        data_ext.m_hmac_len = HmacExt.size();
-        data_ext.m_key      = &(key[0]);
-        data_ext.m_key_len  = key.size();
+            /* load ext test data */
+            data_ext.m_msg      = &(msg[0]);
+            data_ext.m_msg_len  = msg.size();
+            data_ext.m_hmac     = &(HmacExt[0]);
+            data_ext.m_hmac_len = HmacExt.size();
+            data_ext.m_key      = &(key[0]);
+            data_ext.m_key_len  = key.size();
 
-        if (!hb->init(info, key)) {
-            printf("Error in hmac init\n");
-            return;
+            if (!hb->init(info, key)) {
+                printf("Error in hmac init\n");
+                return;
+            }
+            error = hb->Hmac_function(data_alc);
+            if (alcp_is_error(error)) {
+                printf("Error in hmac function\n");
+                return;
+            }
+
+            if (!extHb->init(info, key)) {
+                printf("Error in hmac ext init function\n");
+                return;
+            }
+            error = extHb->Hmac_function(data_ext);
+            if (alcp_is_error(error)) {
+                printf("Error in hmac (ext lib) function\n");
+                return;
+            }
+            EXPECT_TRUE(ArraysMatch(HmacAlcp, HmacExt, i));
         }
-        error = hb->Hmac_function(data_alc);
-        if (alcp_is_error(error)) {
-            printf("Error in hmac function\n");
-            return;
-        }
-
-        if (!extHb->init(info, key)) {
-            printf("Error in hmac ext init function\n");
-            return;
-        }
-        error = extHb->Hmac_function(data_ext);
-        if (alcp_is_error(error)) {
-            printf("Error in hmac (ext lib) function\n");
-            return;
-        }
-        EXPECT_TRUE(ArraysMatch(HmacAlcp, HmacExt, i));
     }
 }
 
