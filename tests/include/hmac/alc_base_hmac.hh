@@ -26,76 +26,37 @@
  *
  */
 
-#include "hmac/base.hh"
+#include "alcp/digest.h"
+#include "hmac/base_hmac.hh"
+#include <alcp/alcp.h>
 #include <iostream>
-#include <sstream>
-#ifdef __linux__
-#include <unistd.h>
-#else
-#include <direct.h>
-#include <io.h>
-#endif
+#include <malloc.h>
+#include <vector>
+
+#pragma once
 
 namespace alcp::testing {
-
-// Class DataSet
-/**
- * @brief Construct a new Data Set:: Data Set object
- *
- * @param filename
- */
-DataSet::DataSet(const std::string filename)
-    : File(filename)
+class AlcpHmacBase : public HmacBase
 {
-    this->FileName = filename;
-    line           = readLine(); // Read header out
-    return;
-}
+    alc_mac_handle_t* m_handle{};
+    alc_mac_info_t    m_info;
+    Uint8*            m_message{};
+    Uint8*            m_key{};
+    Uint8*            m_hmac{};
+    Uint32            m_key_len;
 
-bool
-DataSet::readMsgKeyHmac()
-{
-    line = readLine();
-    if (line.empty() || line == "\n") {
-        return false;
-    }
-    int pos1 = line.find(","); // End of Msg
-    int pos2 = line.find(",", pos1 + 1);
-    if (pos1 == -1 || pos2 == -1) {
-        std::cout << "Error in parsing csv file " << this->FileName
-                  << std::endl;
-        return false;
-    }
-    Message = parseHexStrToBin(line.substr(0, pos1));
-    Key     = parseHexStrToBin(line.substr(pos1 + 1, pos2 - pos1 - 1));
-    Hmac    = parseHexStrToBin(line.substr(pos2 + 1));
+  public:
+    AlcpHmacBase(const alc_mac_info_t& info);
 
-    lineno++;
-    return true;
-}
+    bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
 
-int
-DataSet::getLineNumber()
-{
-    return lineno;
-}
+    bool init();
 
-std::vector<Uint8>
-DataSet::getMessage()
-{
-    return Message;
-}
+    ~AlcpHmacBase();
 
-std::vector<Uint8>
-DataSet::getKey()
-{
-    return Key;
-}
-
-std::vector<Uint8>
-DataSet::getHmac()
-{
-    return Hmac;
-}
+    alc_error_t Hmac_function(const alcp_hmac_data_t& data);
+    /* Resets the context back to initial condition, reuse context */
+    void reset();
+};
 
 } // namespace alcp::testing

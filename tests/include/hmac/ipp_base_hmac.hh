@@ -25,34 +25,33 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
-#include "alcp/digest.h"
-#include "hmac/base.hh"
-#include <alcp/alcp.h>
-#include <iostream>
-#include <malloc.h>
-#include <vector>
-
 #pragma once
 
+#include "base_hmac.hh"
+#include <alcp/alcp.h>
+#include <iostream>
+#include <ippcp.h>
+#include <stdio.h>
+#include <string.h>
+
 namespace alcp::testing {
-class AlcpHmacBase : public HmacBase
+class IPPHmacBase : public HmacBase
 {
-    alc_mac_handle_t* m_handle{};
-    alc_mac_info_t    m_info;
-    Uint8*            m_message{};
-    Uint8*            m_key{};
-    Uint8*            m_hmac{};
-    Uint32            m_key_len;
+    IppsHMACState_rmf* m_handle = nullptr;
+    alc_mac_info_t     m_info;
+    Uint8*             m_message;
+    Uint8*             m_key;
+    Uint8*             m_hmac;
+    Uint32             m_key_len;
 
   public:
-    AlcpHmacBase(const alc_mac_info_t& info);
+    IPPHmacBase(const alc_mac_info_t& info);
 
     bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
 
     bool init();
 
-    ~AlcpHmacBase();
+    ~IPPHmacBase();
 
     alc_error_t Hmac_function(const alcp_hmac_data_t& data);
     /* Resets the context back to initial condition, reuse context */

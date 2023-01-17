@@ -27,8 +27,8 @@
  */
 #pragma once
 
-#include "base.hh"
-#include "hmac/base.hh"
+#include "base_hmac.hh"
+#include "hmac/base_hmac.hh"
 #include <alcp/alcp.h>
 #include <iostream>
 #include <openssl/conf.h>

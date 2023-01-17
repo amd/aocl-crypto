@@ -25,37 +25,77 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#pragma once
 
-#include "base.hh"
-#include <alcp/alcp.h>
+#include "hmac/base_hmac.hh"
 #include <iostream>
-#include <ippcp.h>
-#include <stdio.h>
-#include <string.h>
+#include <sstream>
+#ifdef __linux__
+#include <unistd.h>
+#else
+#include <direct.h>
+#include <io.h>
+#endif
 
 namespace alcp::testing {
-class IPPHmacBase : public HmacBase
+
+// Class DataSet
+/**
+ * @brief Construct a new Data Set:: Data Set object
+ *
+ * @param filename
+ */
+DataSet::DataSet(const std::string filename)
+    : File(filename)
 {
-    IppsHMACState_rmf* m_handle = nullptr;
-    alc_mac_info_t     m_info;
-    Uint8*             m_message;
-    Uint8*             m_key;
-    Uint8*             m_hmac;
-    Uint32             m_key_len;
+    this->FileName = filename;
+    line           = readLine(); // Read header out
+    return;
+}
 
-  public:
-    IPPHmacBase(const alc_mac_info_t& info);
+bool
+DataSet::readMsgKeyHmac()
+{
+    line = readLine();
+    if (line.empty() || line == "\n") {
+        return false;
+    }
+    int pos1 = line.find(","); // End of Msg
+    int pos2 = line.find(",", pos1 + 1);
+    if (pos1 == -1 || pos2 == -1) {
+        std::cout << "Error in parsing csv file " << this->FileName
+                  << std::endl;
+        return false;
+    }
+    Message = parseHexStrToBin(line.substr(0, pos1));
+    Key     = parseHexStrToBin(line.substr(pos1 + 1, pos2 - pos1 - 1));
+    Hmac    = parseHexStrToBin(line.substr(pos2 + 1));
 
-    bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
+    lineno++;
+    return true;
+}
 
-    bool init();
+int
+DataSet::getLineNumber()
+{
+    return lineno;
+}
 
-    ~IPPHmacBase();
+std::vector<Uint8>
+DataSet::getMessage()
+{
+    return Message;
+}
 
-    alc_error_t Hmac_function(const alcp_hmac_data_t& data);
-    /* Resets the context back to initial condition, reuse context */
-    void reset();
-};
+std::vector<Uint8>
+DataSet::getKey()
+{
+    return Key;
+}
+
+std::vector<Uint8>
+DataSet::getHmac()
+{
+    return Hmac;
+}
 
 } // namespace alcp::testing
