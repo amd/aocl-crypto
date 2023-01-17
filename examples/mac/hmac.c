@@ -607,6 +607,100 @@ demo_Hmac_Sha3_384()
                    sizeof(expectedMac));
 }
 
+void
+demo_Hmac_Sha3_384_Reset()
+{
+    uint8_t key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                      0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+                      0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+                      0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
+                      0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27,
+                      0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f };
+
+    uint8_t cipherText[] = { 0x53, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x20,
+                             0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
+                             0x20, 0x66, 0x6f, 0x72, 0x20, 0x6b, 0x65,
+                             0x79, 0x6c, 0x65, 0x6e, 0x3c, 0x62, 0x6c,
+                             0x6f, 0x63, 0x6b, 0x6c, 0x65, 0x6e };
+
+    uint8_t expectedMac[] = { 0xd5, 0x88, 0xa3, 0xc5, 0x1f, 0x3f, 0x2d, 0x90,
+                              0x6e, 0x82, 0x98, 0xc1, 0x19, 0x9a, 0xa8, 0xff,
+                              0x62, 0x96, 0x21, 0x81, 0x27, 0xf6, 0xb3, 0x8a,
+                              0x90, 0xb6, 0xaf, 0xe2, 0xc5, 0x61, 0x77, 0x25,
+                              0xbc, 0x99, 0x98, 0x7f, 0x79, 0xb2, 0x2a, 0x55,
+                              0x7b, 0x65, 0x20, 0xdb, 0x71, 0x0b, 0x7f, 0x42 };
+
+    const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
+                                   .fmt  = ALC_KEY_FMT_RAW,
+                                   .algo = ALC_KEY_ALG_MAC,
+                                   .len  = sizeof(key),
+                                   .key  = key };
+
+    alc_mac_info_t macinfo = {
+        .mi_type = ALC_MAC_HMAC,
+        .mi_algoinfo={
+            .hmac={
+                .hmac_digest = {
+                    .dt_type = ALC_DIGEST_TYPE_SHA3,
+                    .dt_len = ALC_DIGEST_LEN_384,
+                    .dt_mode = {.dm_sha2 = ALC_SHA3_384},
+                }
+            }
+        },
+        .mi_keyinfo = kinfo
+    };
+
+    uint64_t mac_size = ALC_DIGEST_LEN_384 / 8;
+    uint8_t  mac[mac_size];
+
+    handle.ch_context = malloc(alcp_mac_context_size(&macinfo));
+    alc_error_t err   = ALC_ERROR_NONE;
+    err               = alcp_mac_request(&handle, &macinfo);
+    if (alcp_is_error(err)) {
+        printf("Error Occurred on MAC Request");
+    }
+    // Update can be called multiple times with smaller chunks of the cipherText
+    err = alcp_mac_update(&handle, cipherText, sizeof(cipherText));
+    if (alcp_is_error(err)) {
+        printf("Error Occurred on MAC Update\n");
+    }
+
+    // At this point if we need to we can reset and reuse with the same key
+    err = alcp_mac_reset(&handle);
+    if (alcp_is_error(err)) {
+        printf("Error Occurred on MAC Reset\n");
+    }
+
+    // Update can be called multiple times with smaller chunks of the cipherText
+    err = alcp_mac_update(&handle, cipherText, sizeof(cipherText));
+    if (alcp_is_error(err)) {
+        printf("Error Occurred on MAC Update\n");
+    }
+
+    // In Finalize code, last remaining buffer can be provided if any exists
+    // with its size
+    err = alcp_mac_finalize(&handle, NULL, 0);
+    if (alcp_is_error(err)) {
+        printf("Error Occurred on MAC Finalize\n");
+    }
+    err = alcp_mac_copy(&handle, mac, mac_size);
+    if (alcp_is_error(err)) {
+        printf("Error Occurred while Copying MAC\n");
+    }
+    alcp_mac_finish(&handle);
+    free(handle.ch_context);
+
+    displayResults("Reset HMAC SHA3-384",
+                   key,
+                   sizeof(key),
+                   cipherText,
+                   sizeof(cipherText),
+                   mac,
+                   sizeof(mac),
+                   expectedMac,
+                   sizeof(expectedMac));
+}
+
 int
 main(int argc, char const* argv[])
 {
@@ -621,6 +715,9 @@ main(int argc, char const* argv[])
     demo_Hmac_Sha3_256();
     demo_Hmac_Sha3_384();
     demo_Hmac_Sha3_512();
+
+    // Reset Demo
+    demo_Hmac_Sha3_384_Reset();
 
     return 0;
 }

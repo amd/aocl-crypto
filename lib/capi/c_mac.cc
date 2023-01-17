@@ -122,4 +122,18 @@ alcp_mac_finish(alc_mac_handle_p pMacHandle)
     return err;
 }
 
+alc_error_t
+alcp_mac_reset(alc_mac_handle_p pMacHandle)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    ALCP_BAD_PTR_ERR_RET(pMacHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pMacHandle->ch_context, err);
+
+    auto   ctx    = static_cast<mac::Context*>(pMacHandle->ch_context);
+    Status status = ctx->reset(ctx->m_mac, ctx->m_digest);
+    // FIXME: This function is always returning no errors
+    return err;
+}
+
 EXTERN_C_END
