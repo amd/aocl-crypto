@@ -62,7 +62,8 @@ namespace alcp::random_number { namespace drbg {
     {}
 #endif
 
-    void HmacDrbg::concat(concat_type_t<Uint8>& in, std::vector<Uint8>& out)
+    void HmacDrbg::IHmacDrbg::concat(concat_type_t<Uint8>& in,
+                                     std::vector<Uint8>&   out)
     {
         int   pos  = 0;
         auto* pOut = &out[0];
@@ -73,10 +74,10 @@ namespace alcp::random_number { namespace drbg {
         }
     }
 
-    void HmacDrbg::HMAC_Wrapper(const std::vector<Uint8>& key,
-                                const std::vector<Uint8>& in,
-                                std::vector<Uint8>&       out,
-                                Digest*                   sha_obj)
+    void HmacDrbg::IHmacDrbg::HMAC_Wrapper(const std::vector<Uint8>& key,
+                                           const std::vector<Uint8>& in,
+                                           std::vector<Uint8>&       out,
+                                           Digest*                   sha_obj)
     {
         alc_digest_info_t hmac_digest = {
             ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256, {}, ALC_SHA2_256, {}
@@ -96,6 +97,7 @@ namespace alcp::random_number { namespace drbg {
         hmac_obj.update(&in[0], in.size());
         hmac_obj.finalize(nullptr, 0);
         hmac_obj.copyHash(&out[0], sha_obj->getHashSize());
+        // hmac_obj.reset();
         sha_obj->reset();
         // delete static_cast<Sha256*>(sha_obj);
         // hmac_obj.finish();
@@ -105,7 +107,7 @@ namespace alcp::random_number { namespace drbg {
         NIST SP 800-90A Rev 1 Page 44
         Section 10.1.2.2
     */
-    void HmacDrbg::Update(const std::vector<Uint8>& p_provided_data)
+    void HmacDrbg::IHmacDrbg::Update(const std::vector<Uint8>& p_provided_data)
     {
         int buffer_length           = m_v.size() + 1 + p_provided_data.size();
         std::vector<Uint8> zeroVect = std::vector<Uint8>{ 0x00 };
@@ -154,9 +156,10 @@ namespace alcp::random_number { namespace drbg {
         NIST SP 800-90A Rev 1 Page 45
         Section 10.1.2.3
     */
-    void HmacDrbg::Instantiate(const std::vector<Uint8>& entropy_input,
-                               const std::vector<Uint8>& nonce,
-                               const std::vector<Uint8>& personalization_string)
+    void HmacDrbg::IHmacDrbg::Instantiate(
+        const std::vector<Uint8>& entropy_input,
+        const std::vector<Uint8>& nonce,
+        const std::vector<Uint8>& personalization_string)
     {
         // Concat Vector for seed material
         concat_type_t<Uint8> concatVect(3);
@@ -193,8 +196,8 @@ namespace alcp::random_number { namespace drbg {
         NIST SP 800-90A Rev 1 Page 46
         Section 10.1.2.5
     */
-    void HmacDrbg::Generate(const std::vector<Uint8>& additional_input,
-                            std::vector<Uint8>&       output)
+    void HmacDrbg::IHmacDrbg::Generate(
+        const std::vector<Uint8>& additional_input, std::vector<Uint8>& output)
     {
         // FIXME: Implement below
         // if (reseed_counter > reseed_interval) {
@@ -232,8 +235,8 @@ namespace alcp::random_number { namespace drbg {
         NIST SP 800-90A Rev 1 Page 46
         Section 10.1.2.4
     */
-    void HmacDrbg::Reseed(const std::vector<Uint8>& entropy_input,
-                          const std::vector<Uint8>& additional_input)
+    void HmacDrbg::IHmacDrbg::Reseed(const std::vector<Uint8>& entropy_input,
+                                     const std::vector<Uint8>& additional_input)
     {
         // seed_material = entropy_input || additional_input
         concat_type_t<Uint8> concatVect(2);
@@ -250,7 +253,7 @@ namespace alcp::random_number { namespace drbg {
         // reseed_counter = 1
     }
 
-    HmacDrbg::HmacDrbg(int digestSize, Digest* digest_obj)
+    HmacDrbg::IHmacDrbg::IHmacDrbg(int digestSize, Digest* digest_obj)
         : m_digest{ digest_obj }
     {
         m_v   = std::vector<Uint8>(digestSize);

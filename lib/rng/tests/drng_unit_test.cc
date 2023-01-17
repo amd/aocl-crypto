@@ -38,97 +38,44 @@
 using namespace alcp::random_number::drbg;
 using namespace alcp::random_number;
 
-TEST(DRBGFrameWork, Concat)
+TEST(Instantiate, SHA256)
 {
-    const std::vector<Uint8> a = { static_cast<const Uint8>('H'),
-                                   static_cast<const Uint8>('E'),
-                                   static_cast<const Uint8>('L'),
-                                   static_cast<const Uint8>('L'),
-                                   static_cast<const Uint8>('O') };
-    const std::vector<Uint8> b = {
-        static_cast<const Uint8>(' '), static_cast<const Uint8>('W'),
-        static_cast<const Uint8>('O'), static_cast<const Uint8>('R'),
-        static_cast<const Uint8>('L'), static_cast<const Uint8>('D')
+    const std::vector<Uint8> EntropyInput = {
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A,
+        0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15,
+        0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20,
+        0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B,
+        0x2C, 0x2D, 0x2E, 0x2F, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36
     };
-    const std::vector<Uint8> c = { static_cast<Uint8>('!'),
-                                   static_cast<Uint8>('\n') };
-    concat_type_t<Uint8>     concatVect(3);
-    std::vector<Uint8>       output(13);
-    const std::vector<Uint8> expOutput = {
-        static_cast<const Uint8>('H'), static_cast<const Uint8>('E'),
-        static_cast<const Uint8>('L'), static_cast<const Uint8>('L'),
-        static_cast<const Uint8>('O'), static_cast<const Uint8>(' '),
-        static_cast<const Uint8>('W'), static_cast<const Uint8>('O'),
-        static_cast<const Uint8>('R'), static_cast<const Uint8>('L'),
-        static_cast<const Uint8>('D'), static_cast<const Uint8>('!'),
-        static_cast<const Uint8>('\n')
-    };
-    concatVect[0] = &a;
-    concatVect[1] = &b;
-    concatVect[2] = &c;
 
-    HmacDrbg::concat(concatVect, output);
+    const std::vector<Uint8> nonce = { 0x20, 0x21, 0x22, 0x23,
+                                       0x24, 0x25, 0x26, 0x27 };
 
-    EXPECT_EQ(output, expOutput);
-}
+    const std::vector<Uint8> PersonalizationString(0);
 
-TEST(DRBGFrameWork, ConcatRand)
-{
-    alc_rng_info_t rng_info = {};
-    HardwareRng    hrng     = HardwareRng(rng_info);
-    Uint8          randVal[4]; // Fixme 4 Due to stride
-    hrng.randomize(reinterpret_cast<Uint8*>(&randVal), 4);
-    const std::vector<Uint8> a(randVal[0]);
-    const std::vector<Uint8> b(randVal[1]);
-    const std::vector<Uint8> c(randVal[2]);
-    concat_type_t<Uint8>     concatVect(3);
-    std::vector<Uint8>       output(a.size() + b.size() + c.size());
-    std::vector<Uint8>       expOutput;
-
-    // Costly but reliable insertion method
-    expOutput.insert(expOutput.end(), a.begin(), a.end());
-    expOutput.insert(expOutput.end(), b.begin(), b.end());
-    expOutput.insert(expOutput.end(), c.begin(), c.end());
-
-    concatVect[0] = &a;
-    concatVect[1] = &b;
-    concatVect[2] = &c;
-
-    HmacDrbg::concat(concatVect, output);
-
-    EXPECT_EQ(output, expOutput);
-}
-
-TEST(DRBGFrameWork, Wrapper_Test)
-{
-    std::vector<Uint8> key = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                               0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-                               0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-                               0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
-                               0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27,
-                               0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
-                               0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,
-                               0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f };
-    std::vector<Uint8> in  = { 0x53, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x20,
-                              0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
-                              0x20, 0x66, 0x6f, 0x72, 0x20, 0x6b, 0x65,
-                              0x79, 0x6c, 0x65, 0x6e, 0x3d, 0x62, 0x6c,
-                              0x6f, 0x63, 0x6b, 0x6c, 0x65, 0x6e };
-    std::vector<Uint8> expMac = { 0x8b, 0xb9, 0xa1, 0xdb, 0x98, 0x06, 0xf2,
-                                  0x0d, 0xf7, 0xf7, 0x7b, 0x82, 0x13, 0x8c,
-                                  0x79, 0x14, 0xd1, 0x74, 0xd5, 0x9e, 0x13,
-                                  0xdc, 0x4d, 0x01, 0x69, 0xc9, 0x05, 0x7b,
-                                  0x13, 0x3e, 0x1d, 0x62 };
-    std::vector<Uint8> out(expMac.size());
+    const std::vector<Uint8> AdditionalInput(0);
 
     alcp::digest::Digest* sha_obj = new alcp::digest::Sha256();
-    HmacDrbg::HMAC_Wrapper(key, in, out, sha_obj);
-    delete static_cast<alcp::digest::Sha256*>(sha_obj);
 
-    EXPECT_EQ(out, expMac);
+    HmacDrbg hmacDrbg(32, sha_obj);
+
+    std::vector<Uint8> key_exp = { 0x3D, 0xDA, 0x54, 0x3E, 0x7E, 0xEF, 0x14,
+                                   0xF9, 0x36, 0x23, 0x7B, 0xE6, 0x5D, 0x09,
+                                   0x4B, 0x4D, 0xDC, 0x96, 0x9C, 0x0B, 0x2B,
+                                   0x5E, 0xAF, 0xB5, 0xD8, 0x05, 0xE8, 0x6C,
+                                   0xFA, 0x64, 0xD7, 0x41 };
+    std::vector<Uint8> v_exp   = {
+        0x2D, 0x02, 0xC2, 0xF8, 0x22, 0x51, 0x7D, 0x54, 0xB8, 0x17, 0x27,
+        0x9A, 0x59, 0x49, 0x1C, 0x41, 0xA1, 0x98, 0x9B, 0x3E, 0x38, 0x2D,
+        0xEB, 0xE8, 0x0D, 0x2C, 0x7F, 0x66, 0x0F, 0x44, 0x76, 0xC4
+    };
+
+    hmacDrbg.Instantiate(EntropyInput, nonce, PersonalizationString);
+
+    EXPECT_EQ(key_exp, hmacDrbg.GetKCopy());
+    EXPECT_EQ(v_exp, hmacDrbg.GetVCopy());
 }
 
-// From complete example code. Passing
 TEST(DRBGGeneration, SHA256_1)
 {
     const std::vector<Uint8> EntropyInput = {
@@ -167,7 +114,6 @@ TEST(DRBGGeneration, SHA256_1)
     delete static_cast<alcp::digest::Sha256*>(sha_obj);
 }
 
-/**
 TEST(DRBGGeneration, SHA256_NO_RESEED_0)
 {
     const std::vector<Uint8> EntropyInput = {
@@ -198,22 +144,24 @@ TEST(DRBGGeneration, SHA256_NO_RESEED_0)
         0xab, 0xa8, 0x06, 0xf4, 0x8b, 0xe9, 0xdc, 0xb8
     };
 
-    std::vector<Uint8> key(32);
-    std::vector<Uint8> v(32);
+    alcp::digest::Digest* sha_obj = new alcp::digest::Sha256();
 
-    HmacDrbg::Instantiate(EntropyInput, nonce, PersonalizationString, key, v);
+    HmacDrbg hmacDrbg(32, sha_obj);
 
-    DebugPrint(key, "Test Instantiate : key", __FILE__, __LINE__);
+    hmacDrbg.Instantiate(EntropyInput, nonce, PersonalizationString);
 
-    DebugPrint(v, "Test Instantiate : v", __FILE__, __LINE__);
+    DebugPrint(
+        hmacDrbg.GetKCopy(), "Test Instantiate : key", __FILE__, __LINE__);
+
+    DebugPrint(hmacDrbg.GetVCopy(), "Test Instantiate : v", __FILE__, __LINE__);
 
     std::vector<Uint8> output(expReturnedBits.size(), 0x01);
-    HmacDrbg::Generate(AdditionalInput, output, key, v);
-    HmacDrbg::Generate(AdditionalInput, output, key, v);
+    hmacDrbg.Generate(AdditionalInput, output);
+    hmacDrbg.Generate(AdditionalInput, output);
 
-    DebugPrint(key, "Test Generate : key", __FILE__, __LINE__);
+    DebugPrint(hmacDrbg.GetKCopy(), "Test Generate : key", __FILE__, __LINE__);
 
-    DebugPrint(v, "Test Generate : v", __FILE__, __LINE__);
+    DebugPrint(hmacDrbg.GetVCopy(), "Test Generate : v", __FILE__, __LINE__);
 
     EXPECT_EQ(expReturnedBits, output);
 
@@ -251,22 +199,24 @@ TEST(DRBGGeneration, SHA256_NO_RESEED_1)
         0xe9, 0x61, 0xe0, 0x6b, 0x5f, 0x1a, 0xca, 0x37
     };
 
-    std::vector<Uint8> key(32);
-    std::vector<Uint8> v(32);
+    alcp::digest::Digest* sha_obj = new alcp::digest::Sha256();
 
-    HmacDrbg::Instantiate(EntropyInput, nonce, PersonalizationString, key, v);
+    HmacDrbg hmacDrbg(32, sha_obj);
 
-    DebugPrint(key, "Test Instantiate : key", __FILE__, __LINE__);
+    hmacDrbg.Instantiate(EntropyInput, nonce, PersonalizationString);
 
-    DebugPrint(v, "Test Instantiate : v", __FILE__, __LINE__);
+    DebugPrint(
+        hmacDrbg.GetKCopy(), "Test Instantiate : key", __FILE__, __LINE__);
+
+    DebugPrint(hmacDrbg.GetVCopy(), "Test Instantiate : v", __FILE__, __LINE__);
 
     std::vector<Uint8> output(expReturnedBits.size(), 0x01);
-    HmacDrbg::Generate(AdditionalInput, output, key, v);
-    HmacDrbg::Generate(AdditionalInput, output, key, v);
+    hmacDrbg.Generate(AdditionalInput, output);
+    hmacDrbg.Generate(AdditionalInput, output);
 
-    DebugPrint(key, "Test Generate : key", __FILE__, __LINE__);
+    DebugPrint(hmacDrbg.GetKCopy(), "Test Generate : key", __FILE__, __LINE__);
 
-    DebugPrint(v, "Test Generate : v", __FILE__, __LINE__);
+    DebugPrint(hmacDrbg.GetVCopy(), "Test Generate : v", __FILE__, __LINE__);
 
     EXPECT_EQ(expReturnedBits, output);
 
@@ -312,78 +262,41 @@ TEST(DRBGGeneration, SHA256_RESEED_0)
         0x1e, 0x0f, 0x8f, 0x58, 0x85, 0x93, 0x51, 0x24
     };
 
-    std::vector<Uint8> key(32);
-    std::vector<Uint8> v(32);
+    alcp::digest::Digest* sha_obj = new alcp::digest::Sha256();
 
-    HmacDrbg::Instantiate(EntropyInput, nonce, PersonalizationString, key, v);
+    HmacDrbg hmacDrbg(32, sha_obj);
 
-    DebugPrint(key, "Test Instantiate : key", __FILE__, __LINE__);
+    hmacDrbg.Instantiate(EntropyInput, nonce, PersonalizationString);
 
-    DebugPrint(v, "Test Instantiate : v", __FILE__, __LINE__);
+    DebugPrint(
+        hmacDrbg.GetKCopy(), "Test Instantiate : key", __FILE__, __LINE__);
 
-    HmacDrbg::Reseed(EntropyInputReseed, AdditionalInputReseed, key, v);
+    DebugPrint(hmacDrbg.GetVCopy(), "Test Instantiate : v", __FILE__, __LINE__);
 
-    DebugPrint(key, "Test Reseed : key", __FILE__, __LINE__);
+    hmacDrbg.Reseed(EntropyInputReseed, AdditionalInputReseed);
 
-    DebugPrint(v, "Test Reseed : v", __FILE__, __LINE__);
+    DebugPrint(hmacDrbg.GetKCopy(), "Test Reseed : key", __FILE__, __LINE__);
+
+    DebugPrint(hmacDrbg.GetVCopy(), "Test Reseed : v", __FILE__, __LINE__);
 
     std::vector<Uint8> output(expReturnedBits.size(), 0x01);
-    HmacDrbg::Generate(AdditionalInput, output, key, v);
+    hmacDrbg.Generate(AdditionalInput, output);
 
-    DebugPrint(key, "Test Generate : key", __FILE__, __LINE__);
+    DebugPrint(hmacDrbg.GetKCopy(), "Test Generate : key", __FILE__, __LINE__);
 
-    DebugPrint(v, "Test Generate : v", __FILE__, __LINE__);
+    DebugPrint(hmacDrbg.GetVCopy(), "Test Generate : v", __FILE__, __LINE__);
 
-    HmacDrbg::Generate(AdditionalInput, output, key, v);
+    hmacDrbg.Generate(AdditionalInput, output);
 
-    DebugPrint(key, "Test Generate : key", __FILE__, __LINE__);
+    DebugPrint(hmacDrbg.GetKCopy(), "Test Generate : key", __FILE__, __LINE__);
 
-    DebugPrint(v, "Test Generate : v", __FILE__, __LINE__);
+    DebugPrint(hmacDrbg.GetVCopy(), "Test Generate : v", __FILE__, __LINE__);
 
     EXPECT_EQ(expReturnedBits, output);
 
     DebugPrint(expReturnedBits, "Expected Bits", __FILE__, __LINE__);
     DebugPrint(output, "Output Bits", __FILE__, __LINE__);
 }
-
-TEST(Instantiate, SHA256)
-{
-    const std::vector<Uint8> EntropyInput = {
-        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A,
-        0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15,
-        0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20,
-        0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B,
-        0x2C, 0x2D, 0x2E, 0x2F, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36
-    };
-
-    const std::vector<Uint8> nonce = { 0x20, 0x21, 0x22, 0x23,
-                                       0x24, 0x25, 0x26, 0x27 };
-
-    const std::vector<Uint8> PersonalizationString(0);
-
-    const std::vector<Uint8> AdditionalInput(0);
-
-    std::vector<Uint8> key(32);
-    std::vector<Uint8> v(32);
-
-    std::vector<Uint8> key_exp = { 0x3D, 0xDA, 0x54, 0x3E, 0x7E, 0xEF, 0x14,
-                                   0xF9, 0x36, 0x23, 0x7B, 0xE6, 0x5D, 0x09,
-                                   0x4B, 0x4D, 0xDC, 0x96, 0x9C, 0x0B, 0x2B,
-                                   0x5E, 0xAF, 0xB5, 0xD8, 0x05, 0xE8, 0x6C,
-                                   0xFA, 0x64, 0xD7, 0x41 };
-    std::vector<Uint8> v_exp   = {
-        0x2D, 0x02, 0xC2, 0xF8, 0x22, 0x51, 0x7D, 0x54, 0xB8, 0x17, 0x27,
-        0x9A, 0x59, 0x49, 0x1C, 0x41, 0xA1, 0x98, 0x9B, 0x3E, 0x38, 0x2D,
-        0xEB, 0xE8, 0x0D, 0x2C, 0x7F, 0x66, 0x0F, 0x44, 0x76, 0xC4
-    };
-
-    HmacDrbg::Instantiate(EntropyInput, nonce, PersonalizationString, key, v);
-
-    EXPECT_EQ(key_exp, key);
-    EXPECT_EQ(v_exp, v);
-}
-
-*/
 
 #if 0
 int

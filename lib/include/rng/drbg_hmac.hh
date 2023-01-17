@@ -25,21 +25,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
-#include "alcp/alcp.h"
-#include "alcp/base.hh"
 #include "alcp/mac.h"
-#include "alcp/types.h"
-
-// FIXME: Should be in alcp/base.hh
 #include "digest.hh"
 #include "digest/sha2.hh"
 #include "digest/sha3.hh"
-
 #include "mac/hmac.hh"
-#include "utils/copy.hh"
-#include <functional>
-#include <vector>
+#include "rng/drbg.hh"
 
 // Kernel debugging interface
 // #define DEBUG_MODE
@@ -54,42 +45,78 @@ namespace alcp::random_number { namespace drbg {
                     std::string               message,
                     std::string               file,
                     int                       line);
-    class HmacDrbg
+
+    class HmacDrbg final : public Drbg
     {
       private:
-        std::vector<Uint8>    m_key = {}, m_v = {};
-        alcp::digest::Digest* m_digest = {};
+        class IHmacDrbg
+        {
+          private:
+            std::vector<Uint8>    m_key = {}, m_v = {};
+            alcp::digest::Digest* m_digest = {};
+
+          public:
+            static void concat(std::vector<const std::vector<Uint8>*>& in,
+                               std::vector<Uint8>&                     out);
+            static void HMAC_Wrapper(const std::vector<Uint8>& key,
+                                     const std::vector<Uint8>& in,
+                                     std::vector<Uint8>&       out,
+                                     alcp::digest::Digest*     sha_obj);
+            void        Update(const std::vector<Uint8>& p_provided_data);
+
+            void Instantiate(const std::vector<Uint8>& entropy_input,
+                             const std::vector<Uint8>& nonce,
+                             const std::vector<Uint8>& personalization_string);
+
+            void Generate(const std::vector<Uint8>& additional_input,
+                          std::vector<Uint8>&       output);
+            void Reseed(const std::vector<Uint8>& entropy_input,
+                        const std::vector<Uint8>& additional_input);
+
+            std::vector<Uint8> GetKCopy() { return m_key; }
+            std::vector<Uint8> GetVCopy() { return m_v; }
+
+            IHmacDrbg() = default;
+            IHmacDrbg(int digestSize, alcp::digest::Digest* digest_obj);
+            ~IHmacDrbg() = default;
+        };
+
+        std::unique_ptr<IHmacDrbg> p_impl = {};
 
       public:
-        static void concat(std::vector<const std::vector<Uint8>*>& in,
-                           std::vector<Uint8>&                     out);
-        static void HMAC_Wrapper(const std::vector<Uint8>& key,
-                                 const std::vector<Uint8>& in,
-                                 std::vector<Uint8>&       out,
-                                 alcp::digest::Digest*     sha_obj);
-        void        Update(const std::vector<Uint8>& p_provided_data);
+        void Update(const std::vector<Uint8>& p_provided_data)
+        {
+            p_impl.get()->Update(p_provided_data);
+        }
 
         void Instantiate(const std::vector<Uint8>& entropy_input,
                          const std::vector<Uint8>& nonce,
-                         const std::vector<Uint8>& personalization_string);
+                         const std::vector<Uint8>& personalization_string)
+        {
+            p_impl.get()->Instantiate(
+                entropy_input, nonce, personalization_string);
+        }
 
         void Generate(const std::vector<Uint8>& additional_input,
-                      std::vector<Uint8>&       output);
+                      std::vector<Uint8>&       output)
+        {
+            p_impl.get()->Generate(additional_input, output);
+        }
         void Reseed(const std::vector<Uint8>& entropy_input,
-                    const std::vector<Uint8>& additional_input);
+                    const std::vector<Uint8>& additional_input)
+        {
+            p_impl.get()->Reseed(entropy_input, additional_input);
+        }
 
-        std::vector<Uint8> GetKCopy() { return m_key; }
-        std::vector<Uint8> GetVCopy() { return m_v; }
+        std::vector<Uint8> GetKCopy() { return p_impl.get()->GetKCopy(); }
+        std::vector<Uint8> GetVCopy() { return p_impl.get()->GetVCopy(); }
 
-        HmacDrbg() = default;
-        HmacDrbg(int digestSize, alcp::digest::Digest* digest_obj);
+        HmacDrbg() { p_impl = std::make_unique<IHmacDrbg>(); };
+        HmacDrbg(int digestSize, alcp::digest::Digest* digest_obj)
+        {
+            p_impl = std::make_unique<IHmacDrbg>(digestSize, digest_obj);
+        };
         ~HmacDrbg() = default;
-
-      private:
     };
-    // void concat(std::vector<const std::vector<Uint8>*>& in,
-    //             std::vector<Uint8>&                     out);
-    // void HMAC_Wrapper(const std::vector<Uint8>& key,
-    //                   const std::vector<Uint8>& in,
-    //                   std::vector<Uint8>&       out);
+
 }} // namespace alcp::random_number::drbg
