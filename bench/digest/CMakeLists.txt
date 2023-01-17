@@ -33,7 +33,7 @@ FetchContent_Declare(benchmark
     GIT_TAG v1.6.1)
 FetchContent_MakeAvailable(benchmark)
 
-SET(ALC_BASE_FILES ${ALC_BASE_FILES} ../../tests/common/base/base_common.cc ../../tests/digest/base/alc_base.cc ../../tests/digest/base/base.cc)
+SET(ALC_BASE_FILES ${ALC_BASE_FILES} ../../tests/common/base/base_common.cc ../../tests/digest/base/alc_base_digest.cc ../../tests/digest/base/base_digest.cc)
 SET(LIBS ${LIBS} benchmark alcp)
 if (ALCP_USE_ASAN)
     SET(LIBS ${LIBS} asan)
@@ -51,7 +51,7 @@ IF(ENABLE_TESTS_IPP_API)
     ENDIF(IPP_INSTALL_DIR)
 
     # If there is IPP, add IPP source and add IPP liberary
-    SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/digest/base/ipp_base.cc)
+    SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/digest/base/ipp_base_digest.cc)
 	IF(UNIX)
 		IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
 			SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
@@ -82,7 +82,7 @@ IF(ENABLE_TESTS_OPENSSL_API)
     ENDIF(OPENSSL_INSTALL_DIR)
 
     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
-    SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/digest/base/openssl_base.cc)
+    SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/digest/base/openssl_base_digest.cc)
 	IF(UNIX)
 		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
 			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)

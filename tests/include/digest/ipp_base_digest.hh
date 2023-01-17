@@ -25,73 +25,34 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#pragma once
 
-#include "digest/ipp_base.hh"
+#include "base_digest.hh"
+#include <alcp/alcp.h>
+#include <iostream>
+#include <ippcp.h>
+#include <stdio.h>
+#include <string.h>
 
 namespace alcp::testing {
-
-IPPDigestBase::IPPDigestBase(const alc_digest_info_t& info)
+class IPPDigestBase : public DigestBase
 {
-    init(info, m_digest_len);
-}
+    IppsHashState_rmf* m_handle = nullptr;
+    alc_digest_info_t  m_info;
+    Uint8*             m_message;
+    Uint8*             m_digest;
+    Int64              m_digest_len;
 
-IPPDigestBase::~IPPDigestBase()
-{
-    if (m_handle != nullptr) {
-        delete[] reinterpret_cast<Uint8*>(m_handle);
-    }
-}
+  public:
+    IPPDigestBase(const alc_digest_info_t& info);
+    ~IPPDigestBase();
 
-bool
-IPPDigestBase::init(const alc_digest_info_t& info, Int64 digest_len)
-{
-    m_info = info;
-    return init();
-}
+    bool init(const alc_digest_info_t& info, Int64 digest_len);
+    bool init();
 
-bool
-IPPDigestBase::init()
-{
-    if (m_handle != nullptr) {
-        delete[] reinterpret_cast<Uint8*>(m_handle);
-        m_handle = nullptr;
-    }
-    int ctx_size;
-    ippsHashGetSize_rmf(&ctx_size);
-    m_handle = reinterpret_cast<IppsHashState_rmf*>(new Uint8[ctx_size]);
-    if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
-        switch (m_info.dt_mode.dm_sha2) {
-            case ALC_SHA2_224:
-                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA224());
-                break;
-            case ALC_SHA2_256:
-                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA256());
-                break;
-            case ALC_SHA2_384:
-                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA384());
-                break;
-            case ALC_SHA2_512:
-                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512());
-                break;
-            default:
-                return false;
-        }
-    } else {
-        return false;
-    }
-    return true;
-}
+    alc_error_t digest_function(const alcp_digest_data_t& data);
 
-alc_error_t
-IPPDigestBase::digest_function(const alcp_digest_data_t& data)
-{
-    ippsHashUpdate_rmf(data.m_msg, data.m_msg_len, m_handle);
-    ippsHashFinal_rmf(data.m_digest, m_handle);
-    return ALC_ERROR_NONE;
-}
-
-void
-IPPDigestBase::reset()
-{}
+    void reset();
+};
 
 } // namespace alcp::testing

@@ -25,34 +25,73 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#pragma once
 
-#include "base.hh"
-#include <alcp/alcp.h>
-#include <iostream>
-#include <ippcp.h>
-#include <stdio.h>
-#include <string.h>
+#include "digest/ipp_base_digest.hh"
 
 namespace alcp::testing {
-class IPPDigestBase : public DigestBase
+
+IPPDigestBase::IPPDigestBase(const alc_digest_info_t& info)
 {
-    IppsHashState_rmf* m_handle = nullptr;
-    alc_digest_info_t  m_info;
-    Uint8*             m_message;
-    Uint8*             m_digest;
-    Int64              m_digest_len;
+    init(info, m_digest_len);
+}
 
-  public:
-    IPPDigestBase(const alc_digest_info_t& info);
-    ~IPPDigestBase();
+IPPDigestBase::~IPPDigestBase()
+{
+    if (m_handle != nullptr) {
+        delete[] reinterpret_cast<Uint8*>(m_handle);
+    }
+}
 
-    bool init(const alc_digest_info_t& info, Int64 digest_len);
-    bool init();
+bool
+IPPDigestBase::init(const alc_digest_info_t& info, Int64 digest_len)
+{
+    m_info = info;
+    return init();
+}
 
-    alc_error_t digest_function(const alcp_digest_data_t& data);
+bool
+IPPDigestBase::init()
+{
+    if (m_handle != nullptr) {
+        delete[] reinterpret_cast<Uint8*>(m_handle);
+        m_handle = nullptr;
+    }
+    int ctx_size;
+    ippsHashGetSize_rmf(&ctx_size);
+    m_handle = reinterpret_cast<IppsHashState_rmf*>(new Uint8[ctx_size]);
+    if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
+        switch (m_info.dt_mode.dm_sha2) {
+            case ALC_SHA2_224:
+                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA224());
+                break;
+            case ALC_SHA2_256:
+                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA256());
+                break;
+            case ALC_SHA2_384:
+                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA384());
+                break;
+            case ALC_SHA2_512:
+                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512());
+                break;
+            default:
+                return false;
+        }
+    } else {
+        return false;
+    }
+    return true;
+}
 
-    void reset();
-};
+alc_error_t
+IPPDigestBase::digest_function(const alcp_digest_data_t& data)
+{
+    ippsHashUpdate_rmf(data.m_msg, data.m_msg_len, m_handle);
+    ippsHashFinal_rmf(data.m_digest, m_handle);
+    return ALC_ERROR_NONE;
+}
+
+void
+IPPDigestBase::reset()
+{}
 
 } // namespace alcp::testing

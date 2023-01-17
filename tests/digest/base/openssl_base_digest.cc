@@ -26,7 +26,7 @@
  *
  */
 
-#include "digest/openssl_base.hh"
+#include "digest/openssl_base_digest.hh"
 
 namespace alcp::testing {
 

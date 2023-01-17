@@ -27,15 +27,15 @@
  */
 
 #pragma once
-#include "digest/alc_base.hh"
-#include "digest/base.hh"
+#include "digest/alc_base_digest.hh"
+#include "digest/base_digest.hh"
 
 #ifdef USE_IPP
-#include "digest/ipp_base.hh"
+#include "digest/ipp_base_digest.hh"
 #endif
 
 #ifdef USE_OSSL
-#include "digest/openssl_base.hh"
+#include "digest/openssl_base_digest.hh"
 #endif
 
 #include "gbench_base.hh"

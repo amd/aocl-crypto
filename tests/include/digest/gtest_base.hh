@@ -30,8 +30,8 @@
 #ifndef __GTEST_BASE_HH
 #define __GTEST_BASE_HH 2
 
-#include "digest/alc_base.hh"
-#include "digest/base.hh"
+#include "digest/alc_base_digest.hh"
+#include "digest/base_digest.hh"
 #include "digest/gtest_base.hh"
 #include "gtest_common.hh"
 #include "rng_base.hh"
@@ -41,13 +41,12 @@
 #include <vector>
 
 #ifdef USE_IPP
-#include "digest/ipp_base.hh"
+#include "digest/ipp_base_digest.hh"
 #endif
 #ifdef USE_OSSL
-#include "digest/openssl_base.hh"
+#include "digest/openssl_base_digest.hh"
 #endif
 
-/*FIXME: increase MAX LOOP*/
 #define MAX_LOOP   16000
 #define INC_LOOP   1
 #define START_LOOP 1

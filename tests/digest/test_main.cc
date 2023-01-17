@@ -26,8 +26,8 @@
  *
  */
 
-#include "digest/alc_base.hh"
-#include "digest/base.hh"
+#include "digest/alc_base_digest.hh"
+#include "digest/base_digest.hh"
 #include "digest/gtest_base.hh"
 #include "string.h"
 #include <alcp/alcp.h>

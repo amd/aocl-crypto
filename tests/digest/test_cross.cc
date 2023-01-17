@@ -25,8 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "digest/alc_base.hh"
-#include "digest/base.hh"
+#include "digest/alc_base_digest.hh"
+#include "digest/base_digest.hh"
 #include "digest/gtest_base.hh"
 #include "rng_base.hh"
 #include <alcp/alcp.h>
