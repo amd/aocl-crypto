@@ -27,6 +27,7 @@
  */
 
 #include "../../rng/include/hardware_rng.hh"
+#include "alcp/digest.h"
 #include "digest.hh"
 #include "digest/sha2.hh"
 #include "openssl/bio.h"
@@ -37,6 +38,168 @@
 // #include "types.h"
 using namespace alcp::random_number::drbg;
 using namespace alcp::random_number;
+using namespace alcp::digest;
+
+typedef std::tuple<alc_digest_type_t,  // Digest Class
+                   std::vector<Uint8>, // Entropy Input
+                   std::vector<Uint8>, // Reseed Entropy
+                   std::vector<Uint8>, // nonce
+                   std::vector<Uint8>  // Generated Bits
+                   >
+                                                      hmac_kat_tuple_t;
+typedef std::map<const std::string, hmac_kat_tuple_t> known_answer_map_t;
+
+/*
+    Example Encodings
+        E50B_R0B_N8B_G64B
+        E50B  -> Entropy 50 Bytes
+        R0B   -> Reseed Entropy 0 Bytes
+        N8B   -> Nonce 8 Bytes
+        G64B  -> Generated 64 Bytes
+
+    _CROSS is appended if cross test detected failure
+
+    Tuple order
+        {DigestClass,Entropy,ReseedEntropy,Nonce,GeneratedBits}
+*/
+// clang-format off
+known_answer_map_t KATDatasetSha256{
+    {
+         "E50B_R0B_N8B_G64B",
+         {
+            ALC_DIGEST_TYPE_SHA2,
+            {0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1A,0x1B,0x1C,0x1D,0x1E,0x1F,0x20,0x21,0x22,0x23,0x24,0x25,0x26,0x27,0x28,0x29,0x2A,0x2B,0x2C,0x2D,0x2E,0x2F,0x30,0x31,0x32,0x33,0x34,0x35,0x36},
+            {},
+            {0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27},
+            {0xD6,0x7B,0x8C,0x17,0x34,0xF4,0x6F,0xA3,0xF7,0x63,0xCF,0x57,0xC6,0xF9,0xF4,0xF2,0xDC,0x10,0x89,0xBD,0x8B,0xC1,0xF6,0xF0,0x23,0x95,0x0B,0xFC,0x56,0x17,0x63,0x52,0x08,0xC8,0x50,0x12,0x38,0xAD,0x7A,0x44,0x00,0xDE,0xFE,0xE4,0x6C,0x64,0x0B,0x61,0xAF,0x77,0xC2,0xD1,0xA3,0xBF,0xAA,0x90,0xED,0xE5,0xD2,0x07,0x40,0x6E,0x54,0x03},
+         }
+    } 
+};
+// clang-format on
+
+class HmacDrbgKat
+    : public testing::TestWithParam<
+          std::pair<const std::string, hmac_kat_tuple_t>>
+{
+  public:
+    std::unique_ptr<HmacDrbg> m_hmacDrbg;
+    Digest*                   p_shaObj;
+    alc_digest_type_t         m_digestClass;
+    std::vector<Uint8> m_entropy = {}, m_reseedEntropy = {}, m_nonce = {},
+                       m_generatedBits = {};
+};
+
+class HmacDrbgKatSha224 : public HmacDrbgKat
+{
+  public:
+    void SetUp() override
+    {
+        // Tuple order
+        // {DigestClass,Entropy,ReseedEntropy,Nonce,GeneratedBits}
+
+        const auto params   = GetParam();
+        const auto testName = params.first;
+        const auto [digestClass, entropy, reseedEntropy, nonce, generatedBits] =
+            params.second;
+
+        m_digestClass   = digestClass;
+        m_entropy       = entropy;
+        m_reseedEntropy = reseedEntropy;
+        m_nonce         = nonce;
+        m_generatedBits = generatedBits;
+
+        switch (m_digestClass) {
+            case ALC_DIGEST_TYPE_SHA2:
+                p_shaObj = new Sha224();
+            case ALC_DIGEST_TYPE_SHA3:
+                // TODO: Implement
+                break;
+            default:
+                // TODO: Raise an exeception
+                break;
+        }
+        m_hmacDrbg =
+            std::make_unique<HmacDrbg>(p_shaObj->getHashSize(), p_shaObj);
+    }
+    void TearDown() override
+    {
+        switch (m_digestClass) {
+            case ALC_DIGEST_TYPE_SHA2:
+                delete static_cast<Sha224*>(p_shaObj);
+            case ALC_DIGEST_TYPE_SHA3:
+                // TODO: Implement
+                break;
+            default:
+                // TODO: Raise an exeception
+                break;
+        }
+    }
+};
+
+class HmacDrbgKatSha256 : public HmacDrbgKat
+{
+  public:
+    void SetUp() override
+    {
+        // Tuple order
+        // {DigestClass,Entropy,ReseedEntropy,Nonce,GeneratedBits}
+
+        const auto params   = GetParam();
+        const auto testName = params.first;
+        const auto [digestClass, entropy, reseedEntropy, nonce, generatedBits] =
+            params.second;
+
+        m_digestClass   = digestClass;
+        m_entropy       = entropy;
+        m_reseedEntropy = reseedEntropy;
+        m_nonce         = nonce;
+        m_generatedBits = generatedBits;
+
+        switch (m_digestClass) {
+            case ALC_DIGEST_TYPE_SHA2:
+                p_shaObj = new Sha256();
+            case ALC_DIGEST_TYPE_SHA3:
+                // TODO: Implement
+                break;
+            default:
+                // TODO: Raise an exeception
+                break;
+        }
+        m_hmacDrbg =
+            std::make_unique<HmacDrbg>(p_shaObj->getHashSize(), p_shaObj);
+    }
+    void TearDown() override
+    {
+        switch (m_digestClass) {
+            case ALC_DIGEST_TYPE_SHA2:
+                delete static_cast<Sha256*>(p_shaObj);
+            case ALC_DIGEST_TYPE_SHA3:
+                // TODO: Implement
+                break;
+            default:
+                // TODO: Raise an exeception
+                break;
+        }
+    }
+};
+
+TEST_P(HmacDrbgKatSha256, SHA)
+{
+    std::vector<Uint8>       output(m_generatedBits.size());
+    const std::vector<Uint8> PersonalizationString(0);
+    const std::vector<Uint8> AdditionalInput(0);
+    m_hmacDrbg.get()->Instantiate(m_entropy, m_nonce, PersonalizationString);
+    m_hmacDrbg.get()->Generate(AdditionalInput, output);
+    EXPECT_EQ(m_generatedBits, output);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    KnownAnswerTest,
+    HmacDrbgKatSha256,
+    testing::ValuesIn(KATDatasetSha256),
+    [](const testing::TestParamInfo<HmacDrbgKatSha256::ParamType>& info) {
+        return info.param.first;
+    });
 
 TEST(Instantiate, SHA256)
 {
@@ -74,44 +237,6 @@ TEST(Instantiate, SHA256)
 
     EXPECT_EQ(key_exp, hmacDrbg.GetKCopy());
     EXPECT_EQ(v_exp, hmacDrbg.GetVCopy());
-}
-
-TEST(DRBGGeneration, SHA256_1)
-{
-    const std::vector<Uint8> EntropyInput = {
-        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A,
-        0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15,
-        0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20,
-        0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B,
-        0x2C, 0x2D, 0x2E, 0x2F, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36
-    };
-
-    const std::vector<Uint8> nonce = { 0x20, 0x21, 0x22, 0x23,
-                                       0x24, 0x25, 0x26, 0x27 };
-
-    const std::vector<Uint8> PersonalizationString(0);
-
-    const std::vector<Uint8> AdditionalInput(0);
-
-    const std::vector<Uint8> expReturnedBits = {
-        0xD6, 0x7B, 0x8C, 0x17, 0x34, 0xF4, 0x6F, 0xA3, 0xF7, 0x63, 0xCF,
-        0x57, 0xC6, 0xF9, 0xF4, 0xF2, 0xDC, 0x10, 0x89, 0xBD, 0x8B, 0xC1,
-        0xF6, 0xF0, 0x23, 0x95, 0x0B, 0xFC, 0x56, 0x17, 0x63, 0x52, 0x08,
-        0xC8, 0x50, 0x12, 0x38, 0xAD, 0x7A, 0x44, 0x00, 0xDE, 0xFE, 0xE4,
-        0x6C, 0x64, 0x0B, 0x61, 0xAF, 0x77, 0xC2, 0xD1, 0xA3, 0xBF, 0xAA,
-        0x90, 0xED, 0xE5, 0xD2, 0x07, 0x40, 0x6E, 0x54, 0x03
-    };
-
-    alcp::digest::Digest* sha_obj = new alcp::digest::Sha256();
-
-    HmacDrbg hmacDrbg(32, sha_obj);
-    hmacDrbg.Instantiate(EntropyInput, nonce, PersonalizationString);
-
-    std::vector<Uint8> output(expReturnedBits.size());
-    hmacDrbg.Generate(AdditionalInput, output);
-
-    EXPECT_EQ(expReturnedBits, output);
-    delete static_cast<alcp::digest::Sha256*>(sha_obj);
 }
 
 TEST(DRBGGeneration, SHA256_NO_RESEED_0)
