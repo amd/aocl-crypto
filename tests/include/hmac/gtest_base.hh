@@ -117,6 +117,11 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
             printf("Error in Hmac function\n");
             return;
         }
+        error = hb->reset();
+        if (alcp_is_error(error)) {
+            printf("Error in Hmac reset function\n");
+            return;
+        }
 
         /*conv m_digest into a vector */
         std::vector<uint8_t> hmac_vector(std::begin(hmac), std::end(hmac));

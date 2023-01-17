@@ -58,7 +58,7 @@ class OpenSSLHmacBase : public HmacBase
 
     alc_error_t Hmac_function(const alcp_hmac_data_t& data);
     /* Resets the context back to initial condition, reuse context */
-    void reset();
+    alc_error_t reset();
 };
 
 } // namespace alcp::testing

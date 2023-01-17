@@ -73,7 +73,7 @@ class HmacBase
     virtual bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key) = 0;
     virtual bool init()                                                    = 0;
     virtual alc_error_t Hmac_function(const alcp_hmac_data_t& data)        = 0;
-    virtual void        reset()                                            = 0;
+    virtual alc_error_t reset()                                            = 0;
 };
 
 } // namespace alcp::testing

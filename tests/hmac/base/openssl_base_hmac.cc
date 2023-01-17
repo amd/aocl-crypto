@@ -134,7 +134,7 @@ OpenSSLHmacBase::Hmac_function(const alcp_hmac_data_t& data)
     return ALC_ERROR_NONE;
 }
 
-void
+alc_error_t
 OpenSSLHmacBase::reset()
 {
     EVP_MD_CTX_reset(m_handle);
@@ -185,6 +185,7 @@ OpenSSLHmacBase::reset()
                 break;
         }
     }
+    return ALC_ERROR_NONE;
 }
 
 } // namespace alcp::testing

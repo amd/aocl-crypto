@@ -93,12 +93,19 @@ void inline Hmac_Bench(benchmark::State& state,
     data.m_key      = &(Key[0]);
     data.m_key_len  = Key.size();
 
-    hb->init(info, Key);
+    if (!hb->init(info, Key)) {
+        printf("Error in hmac init function\n");
+        return;
+    }
     for (auto _ : state) {
         error = hb->Hmac_function(data);
-        hb->reset();
         if (alcp_is_error(error)) {
             printf("Error code in running benchmark: %ld\n", error);
+            return;
+        }
+        error = hb->reset();
+        if (alcp_is_error(error)) {
+            printf("Error code in hmac reset: %ld\n", error);
             return;
         }
     }
