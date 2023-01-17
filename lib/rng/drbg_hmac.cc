@@ -27,37 +27,40 @@
  */
 
 #include "rng/drbg_hmac.hh"
-#include "openssl/bio.h"
-// FIXME: Remove after debugging
 #include "iostream"
 
 namespace alcp::random_number { namespace drbg {
+    using alcp::digest::Digest;
     using alcp::digest::Sha256;
     using alcp::mac::Hmac;
-    /*
-    Scrapped implementation
 
-    // void
-    // HMAC_wrapper(Uint8* key, Uint8* message, std::vector<Uint8> output)
-    // {
-    //     static auto hmac_obj = new HMAC(bla, blue);
-    //     create_HMAC_object(key);
-    //     update_HMAC_object(message);
-    //     finalize_HMAC_object();
-    //     copy_hash_HMAC_object(&output[0],output.size());
-    //     reset_HMAC_object();
-    //     return mac
-    // }
-    */
-
-    // void
-    // HMAC_wrapper(Uint8* key, Uint8* message)
-    // {
-    //     create_HMAC_object(key);
-    //     update_HMAC_object(message);
-    //     mac = finalize_HMAC_object();
-    //     return mac
-    // }
+/**
+ * @brief Print Value in a vector given vector, file and line where its
+ * called and message.
+ *
+ * @param in      - Vector to be print
+ * @param message - Debug message to print
+ * @param file    - Which file called this
+ * @param line    - Which line in source code is this
+ */
+#ifdef DEBUG_MODE
+    void DebugPrint(const std::vector<Uint8>& in,
+                    std::string               message,
+                    std::string               file,
+                    int                       line)
+    {
+        std::cout << "Debug Location " << file << ":" << line << std::endl;
+        std::cout << message << "=" << std::endl;
+        BIO_dump_fp(stdout, &in[0], in.size());
+        std::cout << std::endl;
+    }
+#else
+    void DebugPrint(const std::vector<Uint8>& in,
+                    std::string               message,
+                    std::string               file,
+                    int                       line)
+    {}
+#endif
 
     void HmacDrbg::concat(concat_type_t<Uint8>& in, std::vector<Uint8>& out)
     {
@@ -72,7 +75,8 @@ namespace alcp::random_number { namespace drbg {
 
     void HmacDrbg::HMAC_Wrapper(const std::vector<Uint8>& key,
                                 const std::vector<Uint8>& in,
-                                std::vector<Uint8>&       out)
+                                std::vector<Uint8>&       out,
+                                Digest*                   sha_obj)
     {
         alc_digest_info_t hmac_digest = {
             ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256, {}, ALC_SHA2_256, {}
@@ -87,11 +91,13 @@ namespace alcp::random_number { namespace drbg {
         alc_mac_info_t  mac_info  = { ALC_MAC_HMAC, hmac_info, key_info };
         // FIXME: Static is not a good idea, just doing for easy optimal
         // implementation
-        Sha256 sha_obj  = Sha256();
-        Hmac   hmac_obj = Hmac(mac_info, &sha_obj);
+        // Digest* sha_obj  = new Sha256();
+        Hmac hmac_obj = Hmac(mac_info, sha_obj);
         hmac_obj.update(&in[0], in.size());
         hmac_obj.finalize(nullptr, 0);
-        hmac_obj.copyHash(&out[0], sha_obj.getHashSize());
+        hmac_obj.copyHash(&out[0], sha_obj->getHashSize());
+        sha_obj->reset();
+        // delete static_cast<Sha256*>(sha_obj);
         // hmac_obj.finish();
     }
 
@@ -99,58 +105,49 @@ namespace alcp::random_number { namespace drbg {
         NIST SP 800-90A Rev 1 Page 44
         Section 10.1.2.2
     */
-    void HmacDrbg::Update(const std::vector<Uint8>& p_provided_data,
-                          std::vector<Uint8>&       p_K,
-                          std::vector<Uint8>&       p_V)
+    void HmacDrbg::Update(const std::vector<Uint8>& p_provided_data)
     {
-        int buffer_length           = p_V.size() + 1 + p_provided_data.size();
+        int buffer_length           = m_v.size() + 1 + p_provided_data.size();
         std::vector<Uint8> zeroVect = std::vector<Uint8>{ 0x00 };
         std::vector<Uint8> oneVect  = std::vector<Uint8>{ 0x01 };
         std::vector<Uint8> buff(buffer_length);
         std::vector<const std::vector<Uint8>*> concatVect(3);
 
         // K = HMAC(K, V || 0x00 || provided_data)
-        concatVect.at(0) = &p_V;
+        concatVect.at(0) = &m_v;
         concatVect.at(1) = &zeroVect;
         concatVect.at(2) = &p_provided_data;
         concat(concatVect, buff);
 
-        std::cout << "Update buff=" << std::endl;
-        BIO_dump_fp(stdout, &buff[0], buff.size());
-        std::cout << std::endl;
+        DebugPrint(buff, "Update buff", __FILE__, __LINE__);
 
-        HMAC_Wrapper(p_K, buff, p_K);
+        HMAC_Wrapper(m_key, buff, m_key, m_digest);
 
-        std::cout << "Update K=" << std::endl;
-        BIO_dump_fp(stdout, &p_K[0], p_K.size());
-        std::cout << std::endl;
+        DebugPrint(m_key, "Update K", __FILE__, __LINE__);
 
         // buff.clear();
 
         // V = HMAC(K,V)
-        HMAC_Wrapper(p_K, p_V, p_V);
+        HMAC_Wrapper(m_key, m_v, m_v, m_digest);
 
-        std::cout << "Update V=" << std::endl;
-        BIO_dump_fp(stdout, &p_V[0], p_V.size());
-        std::cout << std::endl;
+        DebugPrint(m_v, "Update V", __FILE__, __LINE__);
 
         if (p_provided_data.size() == 0) {
             return;
         }
 
         // K = HMAC(K,V || 0x01 || provided_data)
-        concatVect.at(0) = &p_V;
+        concatVect.at(0) = &m_v;
         concatVect.at(1) = &oneVect;
         concatVect.at(2) = &p_provided_data;
         concat(concatVect, buff);
-        std::cout << "Update buff=" << std::endl;
-        BIO_dump_fp(stdout, &buff[0], buff.size());
-        std::cout << std::endl;
-        HMAC_Wrapper(p_K, buff, p_K);
+        DebugPrint(buff, "Update buff", __FILE__, __LINE__);
+
+        HMAC_Wrapper(m_key, buff, m_key, m_digest);
         buff.clear();
 
         // V = HMAC(K,V)
-        HMAC_Wrapper(p_K, p_V, p_V);
+        HMAC_Wrapper(m_key, m_v, m_v, m_digest);
     }
 
     /*
@@ -159,9 +156,7 @@ namespace alcp::random_number { namespace drbg {
     */
     void HmacDrbg::Instantiate(const std::vector<Uint8>& entropy_input,
                                const std::vector<Uint8>& nonce,
-                               const std::vector<Uint8>& personalization_string,
-                               std::vector<Uint8>&       p_K,
-                               std::vector<Uint8>&       p_V)
+                               const std::vector<Uint8>& personalization_string)
     {
         // Concat Vector for seed material
         concat_type_t<Uint8> concatVect(3);
@@ -175,30 +170,20 @@ namespace alcp::random_number { namespace drbg {
         concat(concatVect, seed_material);
 
         // Initialize key with 0x00
-        std::fill(p_K.begin(), p_K.end(), 0);
+        std::fill(m_key.begin(), m_key.end(), 0);
         // Initialize v with 0x01
-        std::fill(p_V.begin(), p_V.end(), 1);
+        std::fill(m_v.begin(), m_v.end(), 1);
 
-        std::cout << "K=" << std::endl;
-        BIO_dump_fp(stdout, &p_K[0], p_K.size());
-        std::cout << std::endl;
-        std::cout << "V=" << std::endl;
-        BIO_dump_fp(stdout, &p_V[0], p_V.size());
-        std::cout << std::endl;
+        DebugPrint(m_key, "K", __FILE__, __LINE__);
+        DebugPrint(m_v, "V", __FILE__, __LINE__);
 
-        std::cout << "SeedMat=" << std::endl;
-        BIO_dump_fp(stdout, &seed_material[0], seed_material.size());
-        std::cout << std::endl;
+        DebugPrint(seed_material, "SeedMat", __FILE__, __LINE__);
 
         // (Key,V) = HMAC_DRBG_Update(seed_material,Key,V)
-        Update(seed_material, p_K, p_V);
+        Update(seed_material);
 
-        std::cout << "K=" << std::endl;
-        BIO_dump_fp(stdout, &p_K[0], p_K.size());
-        std::cout << std::endl;
-        std::cout << "V=" << std::endl;
-        BIO_dump_fp(stdout, &p_V[0], p_V.size());
-        std::cout << std::endl;
+        DebugPrint(m_key, "K", __FILE__, __LINE__);
+        DebugPrint(m_v, "V", __FILE__, __LINE__);
 
         // FIXME: Currently no reseed counter is there
         // reseed_counter = 1
@@ -209,48 +194,46 @@ namespace alcp::random_number { namespace drbg {
         Section 10.1.2.5
     */
     void HmacDrbg::Generate(const std::vector<Uint8>& additional_input,
-                            std::vector<Uint8>&       output,
-                            std::vector<Uint8>&       p_K,
-                            std::vector<Uint8>&       p_V)
+                            std::vector<Uint8>&       output)
     {
         // FIXME: Implement below
         // if (reseed_counter > reseed_interval) {
         //     return reseed_required
         // }
         if (additional_input.size() != 0) {
-            Update(additional_input, p_K, p_V);
+            Update(additional_input);
         }
 
-        // Treating size of p_V as digest size;
-        Uint64 blocks = output.size() / p_V.size();
+        // Treating size of m_v as digest size;
+        Uint64 blocks = output.size() / m_v.size();
 
         for (Uint64 i = 0; i < blocks; i++) {
-            HMAC_Wrapper(p_K, p_V, p_V);
+            HMAC_Wrapper(m_key, m_v, m_v, m_digest);
 
-            std::cout << "Generate: p_V=" << std::endl;
-            BIO_dump_fp(stdout, &p_V[0], p_V.size());
-            std::cout << std::endl;
+            DebugPrint(m_v, "Generate: m_v", __FILE__, __LINE__);
 
             utils::CopyBlock(
-                (&output[0]) + i * p_V.size(), &p_V[0], p_V.size());
+                (&output[0]) + i * m_v.size(), &m_v[0], m_v.size());
         }
 
-        if ((output.size() - (blocks * p_V.size())) != 0) {
-            HMAC_Wrapper(p_K, p_V, p_V);
-            utils::CopyBlock((&output[0]) + blocks * p_V.size(),
-                             &p_V[0],
-                             (output.size() - (blocks * p_V.size())));
+        if ((output.size() - (blocks * m_v.size())) != 0) {
+            HMAC_Wrapper(m_key, m_v, m_v, m_digest);
+            utils::CopyBlock((&output[0]) + blocks * m_v.size(),
+                             &m_v[0],
+                             (output.size() - (blocks * m_v.size())));
         }
 
-        Update(additional_input, p_K, p_V);
+        Update(additional_input);
         // FIXME: Reseed counter not implemented
         // reseed_counter += 1;
     }
 
+    /*
+        NIST SP 800-90A Rev 1 Page 46
+        Section 10.1.2.4
+    */
     void HmacDrbg::Reseed(const std::vector<Uint8>& entropy_input,
-                          const std::vector<Uint8>& additional_input,
-                          std::vector<Uint8>&       p_K,
-                          std::vector<Uint8>&       p_V)
+                          const std::vector<Uint8>& additional_input)
     {
         // seed_material = entropy_input || additional_input
         concat_type_t<Uint8> concatVect(2);
@@ -261,10 +244,17 @@ namespace alcp::random_number { namespace drbg {
         concat(concatVect, seed_material);
 
         // (Key,V) = HMAC_DRBG_Update(seed_material,Key,V);
-        Update(seed_material, p_K, p_V);
+        Update(seed_material);
 
         // FIXME: Reseed counter not implemented yet
         // reseed_counter = 1
+    }
+
+    HmacDrbg::HmacDrbg(int digestSize, Digest* digest_obj)
+        : m_digest{ digest_obj }
+    {
+        m_v   = std::vector<Uint8>(digestSize);
+        m_key = std::vector<Uint8>(digestSize);
     }
 
 }} // namespace alcp::random_number::drbg
