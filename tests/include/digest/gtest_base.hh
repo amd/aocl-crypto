@@ -51,6 +51,18 @@
 #define INC_LOOP   1
 #define START_LOOP 1
 
+/* print test data */
+inline void
+PrintDigestTestData(alcp_digest_data_t data, std::string mode)
+{
+    std::cout << "MSG: " << parseBytesToHexStr(data.m_msg, data.m_msg_len)
+              << " MsgLen: " << data.m_msg_len << std::endl;
+    std::cout << "Digest: "
+              << parseBytesToHexStr(data.m_digest, data.m_digest_len)
+              << " DigestLen(bytes): " << data.m_digest_len << std::endl;
+    return;
+}
+
 record_t
 GetSHA2Record(int HashSize)
 {
@@ -271,6 +283,8 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
             return;
         }
         error = db->digest_function(data_alc);
+        if (verbose > 1)
+            PrintDigestTestData(data_alc, GetDigestStr(info.dt_type));
         if (alcp_is_error(error)) {
             printf("Error: Digest function failed\n");
             return;
@@ -281,6 +295,8 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
             return;
         }
         error = extDb->digest_function(data_ext);
+        if (verbose > 1)
+            PrintDigestTestData(data_ext, GetDigestStr(info.dt_type));
         if (alcp_is_error(error)) {
             printf("Error: Ext Digest function failed\n");
             return;
