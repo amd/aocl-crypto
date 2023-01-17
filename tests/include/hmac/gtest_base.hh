@@ -50,6 +50,21 @@ using namespace alcp::testing;
 #define INC_LOOP   1
 #define START_LOOP 1
 
+/* print params verbosely */
+inline void
+PrintHmacTestData(std::vector<Uint8> key,
+                  alcp_hmac_data_t   data,
+                  std::string        mode)
+{
+    std::cout << "KEY: " << parseBytesToHexStr(&key[0], key.size())
+              << " KeyLen: " << key.size() << std::endl;
+    std::cout << "MSG: " << parseBytesToHexStr(data.m_msg, data.m_msg_len)
+              << " MsgLen: " << data.m_msg_len << std::endl;
+    std::cout << "HMAC: " << parseBytesToHexStr(data.m_hmac, data.m_hmac_len)
+              << " HmacLen(bytes): " << data.m_hmac_len << std::endl;
+    return;
+}
+
 void
 Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
 {
@@ -71,13 +86,11 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
     DataSet     ds           = DataSet(TestDataFile);
 
 #ifdef USE_OSSL
-    /*FIXME: this is not getting set for some reason*/
     OpenSSLHmacBase ohb(info);
     if (useossl == true)
         hb = &ohb;
 #endif
 #ifdef USE_IPP
-    /*FIXME: this is not getting set for some reason*/
     IPPHmacBase ihb(info);
     if (useipp == true)
         hb = &ihb;
@@ -186,6 +199,8 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
                 return;
             }
             error = hb->Hmac_function(data_alc);
+            if (verbose > 1)
+                PrintHmacTestData(key, data_alc, HmacType);
             if (alcp_is_error(error)) {
                 printf("Error in hmac function\n");
                 return;
@@ -196,6 +211,8 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
                 return;
             }
             error = extHb->Hmac_function(data_ext);
+            if (verbose > 1)
+                PrintHmacTestData(key, data_ext, HmacType);
             if (alcp_is_error(error)) {
                 printf("Error in hmac (ext lib) function\n");
                 return;
