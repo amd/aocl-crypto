@@ -118,7 +118,7 @@ void inline Hmac_Bench(benchmark::State& state,
 /* add all your new benchmarks here */
 /* SHA2 benchmarks */
 static void
-BENCH_SHA2_224(benchmark::State& state)
+BENCH_HMAC_SHA2_224(benchmark::State& state)
 {
     alc_mac_info_t info;
     info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA2;
@@ -126,7 +126,7 @@ BENCH_SHA2_224(benchmark::State& state)
     Hmac_Bench(state, info, state.range(0), state.range(1), 224);
 }
 static void
-BENCH_SHA2_256(benchmark::State& state)
+BENCH_HMAC_SHA2_256(benchmark::State& state)
 {
     alc_mac_info_t info;
     info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA2;
@@ -134,7 +134,7 @@ BENCH_SHA2_256(benchmark::State& state)
     Hmac_Bench(state, info, state.range(0), state.range(1), 256);
 }
 static void
-BENCH_SHA2_384(benchmark::State& state)
+BENCH_HMAC_SHA2_384(benchmark::State& state)
 {
     alc_mac_info_t info;
     info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA2;
@@ -142,7 +142,7 @@ BENCH_SHA2_384(benchmark::State& state)
     Hmac_Bench(state, info, state.range(0), state.range(1), 384);
 }
 static void
-BENCH_SHA2_512(benchmark::State& state)
+BENCH_HMAC_SHA2_512(benchmark::State& state)
 {
     alc_mac_info_t info;
     info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA2;
@@ -152,7 +152,7 @@ BENCH_SHA2_512(benchmark::State& state)
 
 /* SHA3 benchmarks */
 static void
-BENCH_SHA3_224(benchmark::State& state)
+BENCH_HMAC_SHA3_224(benchmark::State& state)
 {
     alc_mac_info_t info;
     info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
@@ -160,7 +160,7 @@ BENCH_SHA3_224(benchmark::State& state)
     Hmac_Bench(state, info, state.range(0), state.range(1), 224);
 }
 static void
-BENCH_SHA3_256(benchmark::State& state)
+BENCH_HMAC_SHA3_256(benchmark::State& state)
 {
     alc_mac_info_t info;
     info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
@@ -168,7 +168,7 @@ BENCH_SHA3_256(benchmark::State& state)
     Hmac_Bench(state, info, state.range(0), state.range(1), 256);
 }
 static void
-BENCH_SHA3_384(benchmark::State& state)
+BENCH_HMAC_SHA3_384(benchmark::State& state)
 {
     alc_mac_info_t info;
     info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
@@ -176,7 +176,7 @@ BENCH_SHA3_384(benchmark::State& state)
     Hmac_Bench(state, info, state.range(0), state.range(1), 384);
 }
 static void
-BENCH_SHA3_512(benchmark::State& state)
+BENCH_HMAC_SHA3_512(benchmark::State& state)
 {
     alc_mac_info_t info;
     info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
@@ -188,24 +188,24 @@ BENCH_SHA3_512(benchmark::State& state)
 int
 AddBenchmarks()
 {
-    BENCHMARK(BENCH_SHA2_224)
+    BENCHMARK(BENCH_HMAC_SHA2_224)
         ->ArgsProduct({ hmac_block_sizes, hmac_key_sizes });
-    BENCHMARK(BENCH_SHA2_256)
+    BENCHMARK(BENCH_HMAC_SHA2_256)
         ->ArgsProduct({ hmac_block_sizes, hmac_key_sizes });
-    BENCHMARK(BENCH_SHA2_384)
+    BENCHMARK(BENCH_HMAC_SHA2_384)
         ->ArgsProduct({ hmac_block_sizes, hmac_key_sizes });
-    BENCHMARK(BENCH_SHA2_512)
+    BENCHMARK(BENCH_HMAC_SHA2_512)
         ->ArgsProduct({ hmac_block_sizes, hmac_key_sizes });
 
     /* IPPCP Doesnt support HMAC SHA3 */
     if (!useipp) {
-        BENCHMARK(BENCH_SHA3_224)
+        BENCHMARK(BENCH_HMAC_SHA3_224)
             ->ArgsProduct({ hmac_block_sizes, hmac_key_sizes });
-        BENCHMARK(BENCH_SHA3_256)
+        BENCHMARK(BENCH_HMAC_SHA3_256)
             ->ArgsProduct({ hmac_block_sizes, hmac_key_sizes });
-        BENCHMARK(BENCH_SHA3_384)
+        BENCHMARK(BENCH_HMAC_SHA3_384)
             ->ArgsProduct({ hmac_block_sizes, hmac_key_sizes });
-        BENCHMARK(BENCH_SHA3_512)
+        BENCHMARK(BENCH_HMAC_SHA3_512)
             ->ArgsProduct({ hmac_block_sizes, hmac_key_sizes });
     }
     return 0;
