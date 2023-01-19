@@ -29,6 +29,7 @@
 #pragma once
 #include "digest/alc_digest.hh"
 #include "digest/digest.hh"
+#include "rng_base.hh"
 
 #ifdef USE_IPP
 #include "digest/ipp_digest.hh"
@@ -54,9 +55,10 @@ void inline Digest_Bench(benchmark::State& state,
                          alc_digest_info_t info,
                          uint64_t          block_size)
 {
+    RngBase            rb;
     alc_error_t        error;
-    Uint8              message[32768] = { 0 };
-    Uint8              digest[512]    = { 0 };
+    std::vector<Uint8> msg(block_size);
+    Uint8              digest[512] = { 0 };
     AlcpDigestBase     adb(info);
     DigestBase*        db = &adb;
     alcp_digest_data_t data;
@@ -87,7 +89,10 @@ void inline Digest_Bench(benchmark::State& state,
         data.m_digest_len = info.dt_len / 8;
     }
 
-    data.m_msg     = message;
+    /* generate random bytes */
+    msg = rb.genRandomBytes(block_size);
+
+    data.m_msg     = &(msg[0]);
     data.m_digest  = digest;
     data.m_msg_len = block_size;
 
