@@ -27,7 +27,7 @@
  */
 #pragma once
 
-#include "base_digest.hh"
+#include "digest.hh"
 #include <alcp/alcp.h>
 #include <iostream>
 #include <ippcp.h>

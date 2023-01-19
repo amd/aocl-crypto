@@ -25,37 +25,43 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
-#include "alcp/digest.h"
-#include "digest/base_digest.hh"
-#include <alcp/alcp.h>
-#include <iostream>
-#include <malloc.h>
-#include <vector>
-
 #pragma once
 
+#include "digest.hh"
+#include <alcp/alcp.h>
+#include <iostream>
+#include <openssl/conf.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <stdio.h>
+#include <string.h>
+
 namespace alcp::testing {
-class AlcpDigestBase : public DigestBase
+class OpenSSLDigestBase : public DigestBase
 {
-    alc_digest_handle_t* m_handle;
-    alc_digest_info_t    m_info;
-    Uint8*               m_message;
-    Uint8*               m_digest;
-    Int64                m_digest_len; /*SHAKE*/
+    EVP_MD_CTX*       m_handle = nullptr;
+    alc_digest_info_t m_info;
+    Uint8*            m_message;
+    Uint8*            m_digest;
+    Int64             m_digest_len;
 
   public:
-    AlcpDigestBase(const alc_digest_info_t& info);
+    // Class contructor and destructor
+    /**
+     * @brief Creates a digest base of type openssl with alcp_digest_info_t
+     * provided
+     *
+     * @param info Information of which digest to use and what length.
+     */
+    OpenSSLDigestBase(const alc_digest_info_t& info);
+    ~OpenSSLDigestBase();
 
+    // All inits
     bool init(const alc_digest_info_t& info, Int64 digest_len);
-
     bool init();
 
-    ~AlcpDigestBase();
-
     alc_error_t digest_function(const alcp_digest_data_t& data);
-    /* Resets the context back to initial condition, reuse context */
-    void reset();
+    void        reset();
 };
 
 } // namespace alcp::testing

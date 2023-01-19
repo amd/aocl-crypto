@@ -26,7 +26,7 @@
  *
  */
 
-#include "digest/base_digest.hh"
+#include "digest/digest.hh"
 #include <iostream>
 #include <sstream>
 #ifdef __linux__

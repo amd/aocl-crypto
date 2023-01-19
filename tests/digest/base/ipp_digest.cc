@@ -26,7 +26,7 @@
  *
  */
 
-#include "digest/ipp_base_digest.hh"
+#include "digest/ipp_digest.hh"
 
 namespace alcp::testing {
 
