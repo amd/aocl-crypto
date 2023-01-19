@@ -213,7 +213,6 @@ void
 Digest_Cross(int HashSize, alc_digest_info_t info)
 {
     alc_error_t        error;
-    std::vector<Uint8> data;
     std::vector<Uint8> digestAlcp(HashSize / 8, 0);
     std::vector<Uint8> digestExt(HashSize / 8, 0);
     AlcpDigestBase     adb(info);
@@ -249,16 +248,16 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
         if (!bbxreplay) {
             fr->startRecEvent();
             try {
-                data = rb.genRandomBytes(i);
-                /* FIXME: we need a generic getsharecord */
-                fr->setRecEvent(data, GetSHA2Record(HashSize));
+                /*FIXME: Fix bbxreplay*/
+                // data = rb.genRandomBytes(i);
+                // fr->setRecEvent(data, GetSHA2Record(HashSize));
             } catch (const char* error) {
                 printErrors(error);
                 exit(-1);
             }
         } else {
             fr->nextLog();
-            fr->getValues(&data);
+            // fr->getValues(&data);
         }
 
         alcp_digest_data_t data_alc, data_ext;
