@@ -108,6 +108,8 @@ namespace alcp::random_number { namespace drbg {
             p_impl.get()->Reseed(entropy_input, additional_input);
         }
 
+        // FIXME: This should not exist, its a key leakage, leaving it here for
+        // debugging sake
         std::vector<Uint8> GetKCopy() { return p_impl.get()->GetKCopy(); }
         std::vector<Uint8> GetVCopy() { return p_impl.get()->GetVCopy(); }
 
