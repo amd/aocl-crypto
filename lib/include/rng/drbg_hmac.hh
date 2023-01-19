@@ -56,8 +56,30 @@ namespace alcp::random_number { namespace drbg {
             alcp::digest::Digest* m_digest = {};
 
           public:
-            static void concat(std::vector<const std::vector<Uint8>*>& in,
-                               std::vector<Uint8>&                     out);
+            /**
+             * @brief Concatinate List of vectors into a single vector
+             *
+             * @param in - Set of Vectors concat_type_t
+             * @param out - Buffer to write to, Vector of bytes.
+             */
+            static void concat(concat_type_t<Uint8>& in,
+                               std::vector<Uint8>&   out);
+            /**
+             * @brief Given input (key,data,sha_object) will give out the HMAC
+             * directly. Input will all be treated same as if they are
+             * concatinated into single input.
+             * @param key     - Key used for HMAC
+             * @param key_len - Length of the HMAC Key
+             * @param in1     - First input
+             * @param in1_len - Length of the first input
+             * @param in2     - Second input
+             * @param in2_len - Length of the second input
+             * @param in3     - Third input
+             * @param in3_len - Length of the third input
+             * @param out     - Output buffer
+             * @param out_len - Allocated memory of output buffer
+             * @param sha_ob  - Pointer to the SHA object
+             */
             static void HMAC_Wrapper(const Uint8*          key,
                                      const Uint64          key_len,
                                      const Uint8*          in1,
@@ -69,6 +91,20 @@ namespace alcp::random_number { namespace drbg {
                                      Uint8*                out,
                                      const Uint64          out_len,
                                      alcp::digest::Digest* sha_ob);
+            /**
+             * @brief Given input (key,data,sha_object) will give out the HMAC
+             * directly. Input will all be treated same as if they are
+             * concatinated into single input.
+             * @param key     - Key used for HMAC
+             * @param key_len - Length of the HMAC Key
+             * @param in     - First input
+             * @param in_len - Length of the first input
+             * @param in1     - Second input
+             * @param in1_len - Length of the second input
+             * @param out     - Output buffer
+             * @param out_len - Allocated memory of output buffer
+             * @param sha_ob  - Pointer to the SHA object
+             */
             static void HMAC_Wrapper(const Uint8*          key,
                                      const Uint64          key_len,
                                      const Uint8*          in,
@@ -78,6 +114,17 @@ namespace alcp::random_number { namespace drbg {
                                      Uint8*                out,
                                      const Uint64          out_len,
                                      alcp::digest::Digest* sha_obj);
+            /**
+             * @brief Given input (key,data,sha_object) will give out the HMAC
+             * directly.
+             * @param key     - Key used for HMAC
+             * @param key_len - Length of the HMAC Key
+             * @param in     - First input
+             * @param in_len - Length of the first input
+             * @param out     - Output buffer
+             * @param out_len - Allocated memory of output buffer
+             * @param sha_ob  - Pointer to the SHA object
+             */
             static void HMAC_Wrapper(const Uint8*          key,
                                      const Uint64          key_len,
                                      const Uint8*          in,
@@ -85,36 +132,123 @@ namespace alcp::random_number { namespace drbg {
                                      Uint8*                out,
                                      const Uint64          out_len,
                                      alcp::digest::Digest* sha_obj);
+            /**
+             * @brief Given input (key,data,sha_object) will give out the HMAC
+             * directly.
+             *
+             * @param key     - Key used for HMAC vector<Uint8>
+             * @param in      - Input data vector<Uint8>
+             * @param out     - Output buffer vector<Uint8>
+             * @param sha_obj - Pointer to SHA object
+             */
             static void HMAC_Wrapper(const std::vector<Uint8>& key,
                                      const std::vector<Uint8>& in,
                                      std::vector<Uint8>&       out,
                                      alcp::digest::Digest*     sha_obj);
-            void        Update(const Uint8* p_provided_data,
-                               const Uint64 provided_data_len);
-            void        Update(const std::vector<Uint8>& p_provided_data);
-            void        Instantiate(const Uint8* entropy_input,
-                                    const Uint64 entropy_input_len,
-                                    const Uint8* nonce,
-                                    const Uint64 nonce_len,
-                                    const Uint8* personalization_string,
-                                    const Uint64 personalization_string_len);
-            void        Instantiate(const std::vector<Uint8>& entropy_input,
-                                    const std::vector<Uint8>& nonce,
-                                    const std::vector<Uint8>& personalization_string);
-            void        Generate(const Uint8* additional_input,
-                                 const Uint64 additional_input_len,
-                                 Uint8*       output,
-                                 const Uint64 output_len);
-            void        Generate(const std::vector<Uint8>& additional_input,
-                                 std::vector<Uint8>&       output);
-            void        Reseed(const Uint8* entropy_input,
-                               const Uint64 entropy_input_len,
-                               const Uint8* additional_input,
-                               const Uint64 additional_input_len);
-            void        Reseed(const std::vector<Uint8>& entropy_input,
-                               const std::vector<Uint8>& additional_input);
+            /**
+             * @brief Given Data and Length, updates key and value internally
+             *
+             * @param p_provided_data    - Uint8 of data
+             * @param provided_data_len  - Length of the data in bytes
+             */
+            void Update(const Uint8* p_provided_data,
+                        const Uint64 provided_data_len);
+            /**
+             * @brief Given Data and Length, updates key and value internally
+             *
+             * @param p_provided_data    - vector<Uint8> of data
+             */
+            void Update(const std::vector<Uint8>& p_provided_data);
+            /**
+             * @brief Insitantiate DRBG given Entropy, Nonce, Personal Data
+             *
+             * @param entropy_input               - Pointer to location where
+             * entropy is stored
+             * @param entropy_input_len           - Length of the entropy buffer
+             * @param nonce                       - Number used only once
+             * @param nonce_len                   - Length of the number buffer
+             * in bytes
+             * @param personalization_string      - Additional Entropy by user
+             * @param personalization_string_len  - Length of the
+             * personalization string
+             */
+            void Instantiate(const Uint8* entropy_input,
+                             const Uint64 entropy_input_len,
+                             const Uint8* nonce,
+                             const Uint64 nonce_len,
+                             const Uint8* personalization_string,
+                             const Uint64 personalization_string_len);
+            /**
+             * @brief Insitantiate DRBG given Entropy, Nonce, Personal Data
+             *
+             * @param entropy_input           - vector<Uint8> of entropy
+             * @param nonce                   - vector<Uint8> which has nonce
+             * value
+             * @param personalization_string  - vector<Uint8> given by user as
+             * additional entropy
+             */
+            void Instantiate(const std::vector<Uint8>& entropy_input,
+                             const std::vector<Uint8>& nonce,
+                             const std::vector<Uint8>& personalization_string);
+            /**
+             * @brief Generates the drbg random bits given additional data and
+             * buffer to output to
+             *
+             * @param additional_input     - Additional entropy buffer
+             * @param additional_input_len - Length of the additional entropy
+             * buffer
+             * @param output               - Output buffer
+             * @param output_len           - Length of the output buffer
+             */
+            void Generate(const Uint8* additional_input,
+                          const Uint64 additional_input_len,
+                          Uint8*       output,
+                          const Uint64 output_len);
+            /**
+             * @brief Generates the drbg random bits given additional data and
+             * buffer to output to
+             *
+             * @param additional_input     - Additional entropy buffer
+             * vector<Uint8>
+             * @param output               - Output buffer vector<Uint8>
+             */
+            void Generate(const std::vector<Uint8>& additional_input,
+                          std::vector<Uint8>&       output);
+            /**
+             * @brief Reseed the drbg internal state for unpredictability.
+             *
+             * @param entropy_input        - Buffer which has entropy
+             * @param entropy_input_len    - Length of the buffer which has
+             * entropy stored
+             * @param additional_input     - Additional Entropy from user
+             * @param additional_input_len - Length of the additional entropy
+             * buffer
+             */
+            void Reseed(const Uint8* entropy_input,
+                        const Uint64 entropy_input_len,
+                        const Uint8* additional_input,
+                        const Uint64 additional_input_len);
+            /**
+             * @brief Reseed the drbg internal state for unpredictability.
+             *
+             * @param entropy_input    - Buffer which has entropy vector<Uint8>
+             * @param additional_input - Additional Entropy from user
+             * vector<Uint8>
+             */
+            void Reseed(const std::vector<Uint8>& entropy_input,
+                        const std::vector<Uint8>& additional_input);
 
+            /**
+             * @brief Get a copy of internal Key
+             *
+             * @return std::vector<Uint8> Key vector
+             */
             std::vector<Uint8> GetKCopy() { return m_key; }
+            /**
+             * @brief Get a copy of internal Value
+             *
+             * @return std::vector<Uint8> Value vector
+             */
             std::vector<Uint8> GetVCopy() { return m_v; }
 
             IHmacDrbg() = default;
@@ -125,16 +259,39 @@ namespace alcp::random_number { namespace drbg {
         std::unique_ptr<IHmacDrbg> p_impl = {};
 
       public:
+        /**
+         * @brief Given Data and Length, updates key and value internally
+         *
+         * @param p_provided_data    - Uint8 of data
+         * @param provided_data_len  - Length of the data in bytes
+         */
         void Update(const Uint8* p_provided_data,
                     const Uint64 provided_data_len)
         {
             p_impl->Update(p_provided_data, provided_data_len);
         }
+        /**
+         * @brief Given Data and Length, updates key and value internally
+         *
+         * @param p_provided_data    - vector<Uint8> of data
+         */
         void Update(const std::vector<Uint8>& p_provided_data)
         {
             p_impl->Update(p_provided_data);
         }
-
+        /**
+         * @brief Insitantiate DRBG given Entropy, Nonce, Personal Data
+         *
+         * @param entropy_input               - Pointer to location where
+         * entropy is stored
+         * @param entropy_input_len           - Length of the entropy buffer
+         * @param nonce                       - Number used only once
+         * @param nonce_len                   - Length of the number buffer
+         * in bytes
+         * @param personalization_string      - Additional Entropy by user
+         * @param personalization_string_len  - Length of the
+         * personalization string
+         */
         void Instantiate(const Uint8* entropy_input,
                          const Uint64 entropy_input_len,
                          const Uint8* nonce,
@@ -149,13 +306,31 @@ namespace alcp::random_number { namespace drbg {
                                 personalization_string,
                                 personalization_string_len);
         }
+        /**
+         * @brief Insitantiate DRBG given Entropy, Nonce, Personal Data
+         *
+         * @param entropy_input           - vector<Uint8> of entropy
+         * @param nonce                   - vector<Uint8> which has nonce
+         * value
+         * @param personalization_string  - vector<Uint8> given by user as
+         * additional entropy
+         */
         void Instantiate(const std::vector<Uint8>& entropy_input,
                          const std::vector<Uint8>& nonce,
                          const std::vector<Uint8>& personalization_string)
         {
             p_impl->Instantiate(entropy_input, nonce, personalization_string);
         }
-
+        /**
+         * @brief Generates the drbg random bits given additional data and
+         * buffer to output to
+         *
+         * @param additional_input     - Additional entropy buffer
+         * @param additional_input_len - Length of the additional entropy
+         * buffer
+         * @param output               - Output buffer
+         * @param output_len           - Length of the output buffer
+         */
         void Generate(const Uint8* additional_input,
                       const Uint64 additional_input_len,
                       Uint8*       output,
@@ -164,12 +339,29 @@ namespace alcp::random_number { namespace drbg {
             p_impl->Generate(
                 additional_input, additional_input_len, output, output_len);
         }
+        /**
+         * @brief Generates the drbg random bits given additional data and
+         * buffer to output to
+         *
+         * @param additional_input     - Additional entropy buffer
+         * vector<Uint8>
+         * @param output               - Output buffer vector<Uint8>
+         */
         void Generate(const std::vector<Uint8>& additional_input,
                       std::vector<Uint8>&       output)
         {
             p_impl->Generate(additional_input, output);
         }
-
+        /**
+         * @brief Reseed the drbg internal state for unpredictability.
+         *
+         * @param entropy_input        - Buffer which has entropy
+         * @param entropy_input_len    - Length of the buffer which has
+         * entropy stored
+         * @param additional_input     - Additional Entropy from user
+         * @param additional_input_len - Length of the additional entropy
+         * buffer
+         */
         void Reseed(const Uint8* entropy_input,
                     const Uint64 entropy_input_len,
                     const Uint8* additional_input,
@@ -180,6 +372,13 @@ namespace alcp::random_number { namespace drbg {
                            additional_input,
                            additional_input_len);
         }
+        /**
+         * @brief Reseed the drbg internal state for unpredictability.
+         *
+         * @param entropy_input    - Buffer which has entropy vector<Uint8>
+         * @param additional_input - Additional Entropy from user
+         * vector<Uint8>
+         */
         void Reseed(const std::vector<Uint8>& entropy_input,
                     const std::vector<Uint8>& additional_input)
         {
@@ -188,7 +387,17 @@ namespace alcp::random_number { namespace drbg {
 
         // FIXME: This should not exist, its a key leakage, leaving it here
         // for debugging sake
+        /**
+         * @brief Get a copy of internal Key
+         *
+         * @return std::vector<Uint8> Key vector
+         */
         std::vector<Uint8> GetKCopy() { return p_impl.get()->GetKCopy(); }
+        /**
+         * @brief Get a copy of internal Value
+         *
+         * @return std::vector<Uint8> Value vector
+         */
         std::vector<Uint8> GetVCopy() { return p_impl.get()->GetVCopy(); }
 
         HmacDrbg() { p_impl = std::make_unique<IHmacDrbg>(); };
