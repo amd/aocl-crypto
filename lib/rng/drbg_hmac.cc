@@ -28,6 +28,7 @@
 
 #include "rng/drbg_hmac.hh"
 #include "iostream"
+#include "utils/copy.hh"
 
 namespace alcp::random_number { namespace drbg {
     using alcp::digest::Digest;
@@ -74,10 +75,17 @@ namespace alcp::random_number { namespace drbg {
         }
     }
 
-    void HmacDrbg::IHmacDrbg::HMAC_Wrapper(const std::vector<Uint8>& key,
-                                           const std::vector<Uint8>& in,
-                                           std::vector<Uint8>&       out,
-                                           Digest*                   sha_obj)
+    void HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8* key,
+                                           const Uint64 key_len,
+                                           const Uint8* in1,
+                                           const Uint64 in1_len,
+                                           const Uint8* in2,
+                                           const Uint64 in2_len,
+                                           const Uint8* in3,
+                                           const Uint64 in3_len,
+                                           Uint8*       out,
+                                           const Uint64 out_len,
+                                           Digest*      sha_obj)
     {
         alc_digest_info_t hmac_digest = {
             ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256, {}, ALC_SHA2_256, {}
@@ -87,69 +95,141 @@ namespace alcp::random_number { namespace drbg {
                                     ALC_KEY_FMT_RAW,
                                     ALC_KEY_ALG_MAC,
                                     {},
-                                    static_cast<Uint32>(key.size()),
-                                    &key[0] };
+                                    static_cast<Uint32>(key_len),
+                                    key };
         alc_mac_info_t  mac_info  = { ALC_MAC_HMAC, hmac_info, key_info };
         // FIXME: Static is not a good idea, just doing for easy optimal
         // implementation
-        // Digest* sha_obj  = new Sha256();
         Hmac hmac_obj = Hmac(mac_info, sha_obj);
-        hmac_obj.update(&in[0], in.size());
+        hmac_obj.update(in1, in1_len);
+        if (in2 != nullptr && in2_len != 0)
+            hmac_obj.update(in2, in2_len);
+        if (in3 != nullptr && in3_len != 0)
+            hmac_obj.update(in3, in3_len);
         hmac_obj.finalize(nullptr, 0);
-        hmac_obj.copyHash(&out[0], sha_obj->getHashSize());
+
+        // Assert that we have enough memory to write the output into
+        assert(out_len >= sha_obj->getHashSize());
+
+        hmac_obj.copyHash(out, sha_obj->getHashSize());
+
+        // FIXME: Might need a hard reset in hmac_obj
         // hmac_obj.reset();
         sha_obj->reset();
-        // delete static_cast<Sha256*>(sha_obj);
-        // hmac_obj.finish();
+    }
+
+    void HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8* key,
+                                           const Uint64 key_len,
+                                           const Uint8* in,
+                                           const Uint64 in_len,
+                                           const Uint8* in1,
+                                           const Uint64 in1_len,
+                                           Uint8*       out,
+                                           const Uint64 out_len,
+                                           Digest*      sha_obj)
+    {
+        HmacDrbg::IHmacDrbg::HMAC_Wrapper(key,
+                                          key_len,
+                                          in,
+                                          in_len,
+                                          in1,
+                                          in1_len,
+                                          nullptr,
+                                          static_cast<Uint64>(0),
+                                          out,
+                                          out_len,
+                                          sha_obj);
+    }
+
+    void HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8* key,
+                                           const Uint64 key_len,
+                                           const Uint8* in,
+                                           const Uint64 in_len,
+                                           Uint8*       out,
+                                           const Uint64 out_len,
+                                           Digest*      sha_obj)
+    {
+        HmacDrbg::IHmacDrbg::HMAC_Wrapper(key,
+                                          key_len,
+                                          in,
+                                          in_len,
+                                          nullptr,
+                                          static_cast<Uint64>(0),
+                                          nullptr,
+                                          static_cast<Uint64>(0),
+                                          out,
+                                          out_len,
+                                          sha_obj);
+    }
+
+    void HmacDrbg::IHmacDrbg::HMAC_Wrapper(const std::vector<Uint8>& key,
+                                           const std::vector<Uint8>& in,
+                                           std::vector<Uint8>&       out,
+                                           Digest*                   sha_obj)
+    {
+        // Call the real implementation
+        HMAC_Wrapper(&key[0],
+                     key.size(),
+                     &in[0],
+                     in.size(),
+                     &out[0],
+                     out.size(),
+                     sha_obj);
     }
 
     /*
         NIST SP 800-90A Rev 1 Page 44
         Section 10.1.2.2
     */
-    void HmacDrbg::IHmacDrbg::Update(const std::vector<Uint8>& p_provided_data)
+    void HmacDrbg::IHmacDrbg::Update(const Uint8* p_provided_data,
+                                     const Uint64 provided_data_len)
     {
-        int buffer_length           = m_v.size() + 1 + p_provided_data.size();
-        std::vector<Uint8> zeroVect = std::vector<Uint8>{ 0x00 };
-        std::vector<Uint8> oneVect  = std::vector<Uint8>{ 0x01 };
-        std::vector<Uint8> buff(buffer_length);
-        std::vector<const std::vector<Uint8>*> concatVect(3);
+        const std::vector<Uint8> zeroVect = std::vector<Uint8>{ 0x00 };
+        const std::vector<Uint8> oneVect  = std::vector<Uint8>{ 0x01 };
 
-        // K = HMAC(K, V || 0x00 || provided_data)
-        concatVect.at(0) = &m_v;
-        concatVect.at(1) = &zeroVect;
-        concatVect.at(2) = &p_provided_data;
-        concat(concatVect, buff);
-
-        DebugPrint(buff, "Update buff", __FILE__, __LINE__);
-
-        HMAC_Wrapper(m_key, buff, m_key, m_digest);
+        HMAC_Wrapper(&m_key[0],
+                     m_key.size(),
+                     &m_v[0],
+                     m_v.size(),
+                     &zeroVect[0],
+                     zeroVect.size(),
+                     p_provided_data,
+                     provided_data_len,
+                     &m_key[0],
+                     m_key.size(),
+                     m_digest);
 
         DebugPrint(m_key, "Update K", __FILE__, __LINE__);
-
-        // buff.clear();
 
         // V = HMAC(K,V)
         HMAC_Wrapper(m_key, m_v, m_v, m_digest);
 
         DebugPrint(m_v, "Update V", __FILE__, __LINE__);
 
-        if (p_provided_data.size() == 0) {
+        if (provided_data_len == 0) {
             return;
         }
 
         // K = HMAC(K,V || 0x01 || provided_data)
-        concatVect.at(0) = &m_v;
-        concatVect.at(1) = &oneVect;
-        concatVect.at(2) = &p_provided_data;
-        concat(concatVect, buff);
-        DebugPrint(buff, "Update buff", __FILE__, __LINE__);
-
-        HMAC_Wrapper(m_key, buff, m_key, m_digest);
-        buff.clear();
+        HMAC_Wrapper(&m_key[0],
+                     m_key.size(),
+                     &m_v[0],
+                     m_v.size(),
+                     &oneVect[0],
+                     oneVect.size(),
+                     p_provided_data,
+                     provided_data_len,
+                     &m_key[0],
+                     m_key.size(),
+                     m_digest);
 
         // V = HMAC(K,V)
         HMAC_Wrapper(m_key, m_v, m_v, m_digest);
+    }
+
+    void HmacDrbg::IHmacDrbg::Update(const std::vector<Uint8>& p_provided_data)
+    {
+        Update(&p_provided_data[0], p_provided_data.size());
     }
 
     /*
@@ -157,20 +237,27 @@ namespace alcp::random_number { namespace drbg {
         Section 10.1.2.3
     */
     void HmacDrbg::IHmacDrbg::Instantiate(
-        const std::vector<Uint8>& entropy_input,
-        const std::vector<Uint8>& nonce,
-        const std::vector<Uint8>& personalization_string)
+        const Uint8* entropy_input,
+        const Uint64 entropy_input_len,
+        const Uint8* nonce,
+        const Uint64 nonce_len,
+        const Uint8* personalization_string,
+        const Uint64 personalization_string_len)
     {
-        // Concat Vector for seed material
-        concat_type_t<Uint8> concatVect(3);
-        concatVect.at(0) = &entropy_input;
-        concatVect.at(1) = &nonce;
-        concatVect.at(2) = &personalization_string;
+        std::vector<Uint8> seed_material(entropy_input_len + nonce_len
+                                         + personalization_string_len);
 
-        // seed_material = entropy_input || nonce || personalization_string
-        std::vector<Uint8> seed_material(entropy_input.size() + nonce.size()
-                                         + personalization_string.size());
-        concat(concatVect, seed_material);
+        Uint8* seed_material_buff_p = &seed_material[0];
+
+        // Copy can't be avoided
+        utils::CopyBytes(
+            seed_material_buff_p, entropy_input, entropy_input_len);
+        utils::CopyBytes(
+            seed_material_buff_p + entropy_input_len, nonce, nonce_len);
+        utils::CopyBytes(seed_material_buff_p + entropy_input_len + nonce_len,
+                         personalization_string,
+                         personalization_string_len);
+        // concat(concatVect, seed_material);
 
         // Initialize key with 0x00
         std::fill(m_key.begin(), m_key.end(), 0);
@@ -180,10 +267,8 @@ namespace alcp::random_number { namespace drbg {
         DebugPrint(m_key, "K", __FILE__, __LINE__);
         DebugPrint(m_v, "V", __FILE__, __LINE__);
 
-        DebugPrint(seed_material, "SeedMat", __FILE__, __LINE__);
-
         // (Key,V) = HMAC_DRBG_Update(seed_material,Key,V)
-        Update(seed_material);
+        Update(seed_material_buff_p, seed_material.size());
 
         DebugPrint(m_key, "K", __FILE__, __LINE__);
         DebugPrint(m_v, "V", __FILE__, __LINE__);
@@ -192,65 +277,99 @@ namespace alcp::random_number { namespace drbg {
         // reseed_counter = 1
     }
 
+    void HmacDrbg::IHmacDrbg::Instantiate(
+        const std::vector<Uint8>& entropy_input,
+        const std::vector<Uint8>& nonce,
+        const std::vector<Uint8>& personalization_string)
+    {
+        Instantiate(&entropy_input[0],
+                    entropy_input.size(),
+                    &nonce[0],
+                    nonce.size(),
+                    &personalization_string[0],
+                    personalization_string.size());
+    }
+
     /*
         NIST SP 800-90A Rev 1 Page 46
         Section 10.1.2.5
     */
-    void HmacDrbg::IHmacDrbg::Generate(
-        const std::vector<Uint8>& additional_input, std::vector<Uint8>& output)
+    void HmacDrbg::IHmacDrbg::Generate(const Uint8* additional_input,
+                                       const Uint64 additional_input_len,
+                                       Uint8*       output,
+                                       const Uint64 output_len)
     {
         // FIXME: Implement below
         // if (reseed_counter > reseed_interval) {
         //     return reseed_required
         // }
-        if (additional_input.size() != 0) {
-            Update(additional_input);
+        if (additional_input_len != 0) {
+            Update(additional_input, additional_input_len);
         }
 
         // Treating size of m_v as digest size;
-        Uint64 blocks = output.size() / m_v.size();
+        Uint64 blocks = output_len / m_v.size();
 
         for (Uint64 i = 0; i < blocks; i++) {
             HMAC_Wrapper(m_key, m_v, m_v, m_digest);
 
             DebugPrint(m_v, "Generate: m_v", __FILE__, __LINE__);
 
-            utils::CopyBlock(
-                (&output[0]) + i * m_v.size(), &m_v[0], m_v.size());
+            utils::CopyBlock(output + i * m_v.size(), &m_v[0], m_v.size());
         }
 
-        if ((output.size() - (blocks * m_v.size())) != 0) {
+        if ((output_len - (blocks * m_v.size())) != 0) {
             HMAC_Wrapper(m_key, m_v, m_v, m_digest);
-            utils::CopyBlock((&output[0]) + blocks * m_v.size(),
+            utils::CopyBlock(output + blocks * m_v.size(),
                              &m_v[0],
-                             (output.size() - (blocks * m_v.size())));
+                             (output_len - (blocks * m_v.size())));
         }
 
-        Update(additional_input);
+        Update(additional_input, additional_input_len);
         // FIXME: Reseed counter not implemented
         // reseed_counter += 1;
+    }
+
+    void HmacDrbg::IHmacDrbg::Generate(
+        const std::vector<Uint8>& additional_input, std::vector<Uint8>& output)
+    {
+        Generate(&additional_input[0],
+                 additional_input.size(),
+                 &output[0],
+                 output.size());
     }
 
     /*
         NIST SP 800-90A Rev 1 Page 46
         Section 10.1.2.4
     */
-    void HmacDrbg::IHmacDrbg::Reseed(const std::vector<Uint8>& entropy_input,
-                                     const std::vector<Uint8>& additional_input)
+    void HmacDrbg::IHmacDrbg::Reseed(const Uint8* entropy_input,
+                                     const Uint64 entropy_input_len,
+                                     const Uint8* additional_input,
+                                     const Uint64 additional_input_len)
     {
-        // seed_material = entropy_input || additional_input
-        concat_type_t<Uint8> concatVect(2);
-        std::vector<Uint8>   seed_material(entropy_input.size()
-                                         + additional_input.size());
-        concatVect.at(0) = &entropy_input;
-        concatVect.at(1) = &additional_input;
-        concat(concatVect, seed_material);
+        std::vector<Uint8> seed_material(entropy_input_len
+                                         + additional_input_len);
+        Uint8*             seed_material_p = &seed_material[0];
 
-        // (Key,V) = HMAC_DRBG_Update(seed_material,Key,V);
+        utils::CopyBytes(seed_material_p, entropy_input, entropy_input_len);
+        utils::CopyBytes(seed_material_p + entropy_input_len,
+                         additional_input,
+                         additional_input_len);
+
         Update(seed_material);
 
         // FIXME: Reseed counter not implemented yet
         // reseed_counter = 1
+    }
+
+    void HmacDrbg::IHmacDrbg::Reseed(const std::vector<Uint8>& entropy_input,
+                                     const std::vector<Uint8>& additional_input)
+    {
+        Reseed(&entropy_input[0],
+               entropy_input.size(),
+               &additional_input[0],
+               additional_input.size());
     }
 
     HmacDrbg::IHmacDrbg::IHmacDrbg(int digestSize, Digest* digest_obj)
@@ -259,5 +378,4 @@ namespace alcp::random_number { namespace drbg {
         m_v   = std::vector<Uint8>(digestSize);
         m_key = std::vector<Uint8>(digestSize);
     }
-
 }} // namespace alcp::random_number::drbg

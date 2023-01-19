@@ -5,12 +5,12 @@
  * modification, are permitted provided that the following conditions are met:
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- * 3. Neither the name of the copyright holder nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -58,20 +58,61 @@ namespace alcp::random_number { namespace drbg {
           public:
             static void concat(std::vector<const std::vector<Uint8>*>& in,
                                std::vector<Uint8>&                     out);
+            static void HMAC_Wrapper(const Uint8*          key,
+                                     const Uint64          key_len,
+                                     const Uint8*          in1,
+                                     const Uint64          in1_len,
+                                     const Uint8*          in2,
+                                     const Uint64          in2_len,
+                                     const Uint8*          in3,
+                                     const Uint64          in3_len,
+                                     Uint8*                out,
+                                     const Uint64          out_len,
+                                     alcp::digest::Digest* sha_ob);
+            static void HMAC_Wrapper(const Uint8*          key,
+                                     const Uint64          key_len,
+                                     const Uint8*          in,
+                                     const Uint64          in_len,
+                                     const Uint8*          in1,
+                                     const Uint64          in1_len,
+                                     Uint8*                out,
+                                     const Uint64          out_len,
+                                     alcp::digest::Digest* sha_obj);
+            static void HMAC_Wrapper(const Uint8*          key,
+                                     const Uint64          key_len,
+                                     const Uint8*          in,
+                                     const Uint64          in_len,
+                                     Uint8*                out,
+                                     const Uint64          out_len,
+                                     alcp::digest::Digest* sha_obj);
             static void HMAC_Wrapper(const std::vector<Uint8>& key,
                                      const std::vector<Uint8>& in,
                                      std::vector<Uint8>&       out,
                                      alcp::digest::Digest*     sha_obj);
+            void        Update(const Uint8* p_provided_data,
+                               const Uint64 provided_data_len);
             void        Update(const std::vector<Uint8>& p_provided_data);
-
-            void Instantiate(const std::vector<Uint8>& entropy_input,
-                             const std::vector<Uint8>& nonce,
-                             const std::vector<Uint8>& personalization_string);
-
-            void Generate(const std::vector<Uint8>& additional_input,
-                          std::vector<Uint8>&       output);
-            void Reseed(const std::vector<Uint8>& entropy_input,
-                        const std::vector<Uint8>& additional_input);
+            void        Instantiate(const Uint8* entropy_input,
+                                    const Uint64 entropy_input_len,
+                                    const Uint8* nonce,
+                                    const Uint64 nonce_len,
+                                    const Uint8* personalization_string,
+                                    const Uint64 personalization_string_len);
+            void        Instantiate(const std::vector<Uint8>& entropy_input,
+                                    const std::vector<Uint8>& nonce,
+                                    const std::vector<Uint8>& personalization_string);
+            void        Generate(const Uint8* additional_input,
+                                 const Uint64 additional_input_len,
+                                 Uint8*       output,
+                                 const Uint64 output_len);
+            void        Generate(const std::vector<Uint8>& additional_input,
+                                 std::vector<Uint8>&       output);
+            void        Reseed(const Uint8* entropy_input,
+                               const Uint64 entropy_input_len,
+                               const Uint8* additional_input,
+                               const Uint64 additional_input_len);
+            void        Reseed(const std::vector<Uint8>& entropy_input,
+                               const std::vector<Uint8>& additional_input);
 
             std::vector<Uint8> GetKCopy() { return m_key; }
             std::vector<Uint8> GetVCopy() { return m_v; }
@@ -84,32 +125,69 @@ namespace alcp::random_number { namespace drbg {
         std::unique_ptr<IHmacDrbg> p_impl = {};
 
       public:
+        void Update(const Uint8* p_provided_data,
+                    const Uint64 provided_data_len)
+        {
+            p_impl->Update(p_provided_data, provided_data_len);
+        }
         void Update(const std::vector<Uint8>& p_provided_data)
         {
-            p_impl.get()->Update(p_provided_data);
+            p_impl->Update(p_provided_data);
         }
 
+        void Instantiate(const Uint8* entropy_input,
+                         const Uint64 entropy_input_len,
+                         const Uint8* nonce,
+                         const Uint64 nonce_len,
+                         const Uint8* personalization_string,
+                         const Uint64 personalization_string_len)
+        {
+            p_impl->Instantiate(entropy_input,
+                                entropy_input_len,
+                                nonce,
+                                nonce_len,
+                                personalization_string,
+                                personalization_string_len);
+        }
         void Instantiate(const std::vector<Uint8>& entropy_input,
                          const std::vector<Uint8>& nonce,
                          const std::vector<Uint8>& personalization_string)
         {
-            p_impl.get()->Instantiate(
-                entropy_input, nonce, personalization_string);
+            p_impl->Instantiate(entropy_input, nonce, personalization_string);
         }
 
+        void Generate(const Uint8* additional_input,
+                      const Uint64 additional_input_len,
+                      Uint8*       output,
+                      const Uint64 output_len)
+        {
+            p_impl->Generate(
+                additional_input, additional_input_len, output, output_len);
+        }
         void Generate(const std::vector<Uint8>& additional_input,
                       std::vector<Uint8>&       output)
         {
-            p_impl.get()->Generate(additional_input, output);
+            p_impl->Generate(additional_input, output);
+        }
+
+        void Reseed(const Uint8* entropy_input,
+                    const Uint64 entropy_input_len,
+                    const Uint8* additional_input,
+                    const Uint64 additional_input_len)
+        {
+            p_impl->Reseed(entropy_input,
+                           entropy_input_len,
+                           additional_input,
+                           additional_input_len);
         }
         void Reseed(const std::vector<Uint8>& entropy_input,
                     const std::vector<Uint8>& additional_input)
         {
-            p_impl.get()->Reseed(entropy_input, additional_input);
+            p_impl->Reseed(entropy_input, additional_input);
         }
 
-        // FIXME: This should not exist, its a key leakage, leaving it here for
-        // debugging sake
+        // FIXME: This should not exist, its a key leakage, leaving it here
+        // for debugging sake
         std::vector<Uint8> GetKCopy() { return p_impl.get()->GetKCopy(); }
         std::vector<Uint8> GetVCopy() { return p_impl.get()->GetVCopy(); }
 
