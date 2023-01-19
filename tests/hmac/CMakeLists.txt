@@ -31,7 +31,7 @@ FetchContent_Declare(gtest
 FetchContent_MakeAvailable(gtest)
 
 # Basic sources and libs needed for ALCP
-SET(ALC_BASE_FILES ${ALC_BASE_FILES} ../common/base/rng_base.cc ../common/base/base_common.cc base/alc_base_hmac.cc base/base_hmac.cc)
+SET(ALC_BASE_FILES ${ALC_BASE_FILES} ../common/base/rng_base.cc ../common/base/base_common.cc base/alc_hmac.cc base/hmac.cc)
 SET(LIBS ${LIBS} gtest alcp)
 
 # add this if asan is used
@@ -52,7 +52,7 @@ IF(ENABLE_TESTS_IPP_API)
     ENDIF(IPP_INSTALL_DIR)
 
     # If there is IPP, add IPP source and add IPP liberary
-    SET(EXTRA_SOURCES ${EXTRA_SOURCES} base/ipp_base_hmac.cc)
+    SET(EXTRA_SOURCES ${EXTRA_SOURCES} base/ipp_hmac.cc)
 	IF(UNIX)
 		IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
 			SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
@@ -83,7 +83,7 @@ IF(ENABLE_TESTS_OPENSSL_API)
     ENDIF(OPENSSL_INSTALL_DIR)
 
     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
-    SET(EXTRA_SOURCES ${EXTRA_SOURCES} base/openssl_base_hmac.cc)
+    SET(EXTRA_SOURCES ${EXTRA_SOURCES} base/openssl_hmac.cc)
 	IF(UNIX)
 		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
 			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)

@@ -31,8 +31,8 @@
 #define __GTEST_BASE_HH 2
 
 #include "gtest_common.hh"
-#include "hmac/alc_base_hmac.hh"
-#include "hmac/base_hmac.hh"
+#include "hmac/alc_hmac.hh"
+#include "hmac/hmac.hh"
 #include "rng_base.hh"
 #include <alcp/alcp.h>
 #include <iostream>
@@ -40,10 +40,10 @@
 #include <vector>
 using namespace alcp::testing;
 #ifdef USE_IPP
-#include "hmac/ipp_base_hmac.hh"
+#include "hmac/ipp_hmac.hh"
 #endif
 #ifdef USE_OSSL
-#include "hmac/openssl_base_hmac.hh"
+#include "hmac/openssl_hmac.hh"
 #endif
 
 #define MAX_LOOP   16000

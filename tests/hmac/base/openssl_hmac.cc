@@ -26,7 +26,7 @@
  *
  */
 
-#include "hmac/openssl_base_hmac.hh"
+#include "hmac/openssl_hmac.hh"
 
 namespace alcp::testing {
 

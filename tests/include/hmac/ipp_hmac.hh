@@ -27,7 +27,7 @@
  */
 #pragma once
 
-#include "base_hmac.hh"
+#include "hmac.hh"
 #include <alcp/alcp.h>
 #include <iostream>
 #include <ippcp.h>

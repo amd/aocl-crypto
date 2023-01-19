@@ -26,8 +26,8 @@
  *
  */
 
-#include "hmac/alc_base_hmac.hh"
-#include "hmac/base_hmac.hh"
+#include "hmac/alc_hmac.hh"
+#include "hmac/hmac.hh"
 
 namespace alcp::testing {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,40 +25,77 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#pragma once
 
-#include "base_hmac.hh"
-#include "hmac/base_hmac.hh"
-#include <alcp/alcp.h>
+#include "hmac/hmac.hh"
 #include <iostream>
-#include <openssl/conf.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
-#include <stdio.h>
-#include <string.h>
+#include <sstream>
+#ifdef __linux__
+#include <unistd.h>
+#else
+#include <direct.h>
+#include <io.h>
+#endif
 
 namespace alcp::testing {
-class OpenSSLHmacBase : public HmacBase
+
+// Class DataSet
+/**
+ * @brief Construct a new Data Set:: Data Set object
+ *
+ * @param filename
+ */
+DataSet::DataSet(const std::string filename)
+    : File(filename)
 {
-    EVP_MD_CTX*    m_handle = nullptr;
-    alc_mac_info_t m_info;
-    Uint8*         m_message;
-    Uint8*         m_key;
-    Uint8*         m_hmac;
-    Uint32         m_key_len;
+    this->FileName = filename;
+    line           = readLine(); // Read header out
+    return;
+}
 
-  public:
-    OpenSSLHmacBase(const alc_mac_info_t& info);
+bool
+DataSet::readMsgKeyHmac()
+{
+    line = readLine();
+    if (line.empty() || line == "\n") {
+        return false;
+    }
+    int pos1 = line.find(","); // End of Msg
+    int pos2 = line.find(",", pos1 + 1);
+    if (pos1 == -1 || pos2 == -1) {
+        std::cout << "Error in parsing csv file " << this->FileName
+                  << std::endl;
+        return false;
+    }
+    Message = parseHexStrToBin(line.substr(0, pos1));
+    Key     = parseHexStrToBin(line.substr(pos1 + 1, pos2 - pos1 - 1));
+    Hmac    = parseHexStrToBin(line.substr(pos2 + 1));
 
-    bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
+    lineno++;
+    return true;
+}
 
-    bool init();
+int
+DataSet::getLineNumber()
+{
+    return lineno;
+}
 
-    ~OpenSSLHmacBase();
+std::vector<Uint8>
+DataSet::getMessage()
+{
+    return Message;
+}
 
-    alc_error_t Hmac_function(const alcp_hmac_data_t& data);
-    /* Resets the context back to initial condition, reuse context */
-    alc_error_t reset();
-};
+std::vector<Uint8>
+DataSet::getKey()
+{
+    return Key;
+}
+
+std::vector<Uint8>
+DataSet::getHmac()
+{
+    return Hmac;
+}
 
 } // namespace alcp::testing

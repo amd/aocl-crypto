@@ -27,15 +27,15 @@
  */
 
 #pragma once
-#include "hmac/alc_base_hmac.hh"
-#include "hmac/base_hmac.hh"
+#include "hmac/alc_hmac.hh"
+#include "hmac/hmac.hh"
 
 #ifdef USE_IPP
-#include "hmac/ipp_base_hmac.hh"
+#include "hmac/ipp_hmac.hh"
 #endif
 
 #ifdef USE_OSSL
-#include "hmac/openssl_base_hmac.hh"
+#include "hmac/openssl_hmac.hh"
 #endif
 
 #include "gbench_base.hh"

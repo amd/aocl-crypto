@@ -27,7 +27,7 @@
  */
 
 #include "alcp/digest.h"
-#include "hmac/base_hmac.hh"
+#include "hmac/hmac.hh"
 #include <alcp/alcp.h>
 #include <iostream>
 #include <malloc.h>
