@@ -58,7 +58,6 @@ void inline Digest_Bench(benchmark::State& state,
     RngBase            rb;
     alc_error_t        error;
     std::vector<Uint8> msg(block_size);
-    Uint8              digest[512] = { 0 };
     AlcpDigestBase     adb(info);
     DigestBase*        db = &adb;
     alcp_digest_data_t data;
@@ -89,6 +88,7 @@ void inline Digest_Bench(benchmark::State& state,
         data.m_digest_len = info.dt_len / 8;
     }
 
+    Uint8 digest[data.m_digest_len] = { 0 };
     /* generate random bytes */
     msg = rb.genRandomBytes(block_size);
 
