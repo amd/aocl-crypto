@@ -40,6 +40,7 @@ class File
     bool         m_fileExists;
 
   public:
+    bool CheckFileExists();
     // Opens File as Bin/ASCII File with write support.
     File(std::string fileName, bool binary, bool write);
     // Opens File as ASCII Text File

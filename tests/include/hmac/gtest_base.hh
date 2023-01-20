@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -96,6 +96,8 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
         hb = &ihb;
 #endif
 
+    EXPECT_TRUE(ds.readMsgKeyHmac());
+
     while (ds.readMsgKeyHmac()) {
         auto msg = ds.getMessage();
         auto key = ds.getKey();
@@ -110,17 +112,17 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
 
         if (!hb->init(info, key)) {
             printf("Error in hmac init function\n");
-            return;
+            FAIL();
         }
         error = hb->Hmac_function(data);
         if (alcp_is_error(error)) {
             printf("Error in Hmac function\n");
-            return;
+            FAIL();
         }
         error = hb->reset();
         if (alcp_is_error(error)) {
             printf("Error in Hmac reset function\n");
-            return;
+            FAIL();
         }
 
         /*conv m_digest into a vector */
@@ -171,6 +173,8 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
         exit(-1);
     }
 
+    /* FIXME: generate a vector using getRandomBytes() once, split it and feed
+     * it into the loop. Avoid calling genRandomBytes() each time in the loop */
     for (int j = KeyLenMin; j < KeyLenMax; j++) {
         for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
             alcp_hmac_data_t data_alc, data_ext;
@@ -201,26 +205,26 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
 
             if (!hb->init(info, key)) {
                 printf("Error in hmac init\n");
-                return;
+                FAIL();
             }
             error = hb->Hmac_function(data_alc);
             if (verbose > 1)
                 PrintHmacTestData(key, data_alc, HmacType);
             if (alcp_is_error(error)) {
                 printf("Error in hmac function\n");
-                return;
+                FAIL();
             }
 
             if (!extHb->init(info, key)) {
                 printf("Error in hmac ext init function\n");
-                return;
+                FAIL();
             }
             error = extHb->Hmac_function(data_ext);
             if (verbose > 1)
                 PrintHmacTestData(key, data_ext, HmacType);
             if (alcp_is_error(error)) {
                 printf("Error in hmac (ext lib) function\n");
-                return;
+                FAIL();
             }
             EXPECT_TRUE(ArraysMatch(HmacAlcp, HmacExt, i));
         }

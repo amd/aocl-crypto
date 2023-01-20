@@ -55,6 +55,10 @@ DataSet::DataSet(const std::string filename)
 bool
 DataSet::readMsgKeyHmac()
 {
+    if (!CheckFileExists()) {
+        std::cout << "File doesnt exist: " << this->FileName << std::endl;
+        return false;
+    }
     line = readLine();
     if (line.empty() || line == "\n") {
         return false;
