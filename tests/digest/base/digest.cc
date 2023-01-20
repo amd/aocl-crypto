@@ -285,11 +285,9 @@ DataSet::readMsgDigest()
         printf("Error in parsing csv\n");
         return false;
     }
-    std::string        messageStr = line.substr(0, pos1);
-    std::vector<Uint8> messageVect(messageStr.c_str(),
-                                   (messageStr.c_str() + messageStr.size()));
-    Message = messageVect;
-    Digest  = parseHexStrToBin(line.substr(pos1 + 1));
+    std::string messageStr = line.substr(0, pos1);
+    Message                = parseHexStrToBin(messageStr);
+    Digest                 = parseHexStrToBin(line.substr(pos1 + 1));
     lineno++;
     return true;
 }
@@ -309,10 +307,8 @@ DataSet::readMsgDigestLen()
                                           // here as well?
         return false;
     }
-    std::string        messageStr = line.substr(0, pos1);
-    std::vector<Uint8> messageVect(messageStr.c_str(),
-                                   (messageStr.c_str() + messageStr.size()));
-    Message = messageVect;
+    std::string messageStr = line.substr(0, pos1);
+    Message                = parseHexStrToBin(messageStr);
 
     Digest = parseHexStrToBin(line.substr(pos1 + 1, pos2 - pos1 - 1));
     // DigestLen = parseHexStrToBin(line.substr(pos2 + 1));
