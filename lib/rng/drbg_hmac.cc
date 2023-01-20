@@ -75,17 +75,14 @@ namespace alcp::random_number { namespace drbg {
         }
     }
 
-    void HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8* key,
-                                           const Uint64 key_len,
-                                           const Uint8* in1,
+    void HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8* in1,
                                            const Uint64 in1_len,
                                            const Uint8* in2,
                                            const Uint64 in2_len,
                                            const Uint8* in3,
                                            const Uint64 in3_len,
                                            Uint8*       out,
-                                           const Uint64 out_len,
-                                           Digest*      sha_obj)
+                                           const Uint64 out_len)
     {
         alc_digest_info_t hmac_digest = {
             ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256, {}, ALC_SHA2_256, {}
@@ -95,12 +92,12 @@ namespace alcp::random_number { namespace drbg {
                                     ALC_KEY_FMT_RAW,
                                     ALC_KEY_ALG_MAC,
                                     {},
-                                    static_cast<Uint32>(key_len),
-                                    key };
+                                    static_cast<Uint32>(m_key.size()),
+                                    &m_key[0] };
         alc_mac_info_t  mac_info  = { ALC_MAC_HMAC, hmac_info, key_info };
         // FIXME: Static is not a good idea, just doing for easy optimal
         // implementation
-        Hmac hmac_obj = Hmac(mac_info, sha_obj);
+        Hmac hmac_obj = Hmac(mac_info, m_digest.get());
         hmac_obj.update(in1, in1_len);
         if (in2 != nullptr && in2_len != 0)
             hmac_obj.update(in2, in2_len);
@@ -109,72 +106,52 @@ namespace alcp::random_number { namespace drbg {
         hmac_obj.finalize(nullptr, 0);
 
         // Assert that we have enough memory to write the output into
-        assert(out_len >= sha_obj->getHashSize());
+        assert(out_len >= m_digest->getHashSize());
 
-        hmac_obj.copyHash(out, sha_obj->getHashSize());
+        hmac_obj.copyHash(out, m_digest->getHashSize());
 
         // FIXME: Might need a hard reset in hmac_obj
         // hmac_obj.reset();
-        sha_obj->reset();
+        m_digest->reset();
     }
 
-    void HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8* key,
-                                           const Uint64 key_len,
-                                           const Uint8* in,
+    void HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8* in,
                                            const Uint64 in_len,
                                            const Uint8* in1,
                                            const Uint64 in1_len,
                                            Uint8*       out,
-                                           const Uint64 out_len,
-                                           Digest*      sha_obj)
+                                           const Uint64 out_len)
     {
-        HmacDrbg::IHmacDrbg::HMAC_Wrapper(key,
-                                          key_len,
-                                          in,
+        HmacDrbg::IHmacDrbg::HMAC_Wrapper(in,
                                           in_len,
                                           in1,
                                           in1_len,
                                           nullptr,
                                           static_cast<Uint64>(0),
                                           out,
-                                          out_len,
-                                          sha_obj);
+                                          out_len);
     }
 
-    void HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8* key,
-                                           const Uint64 key_len,
-                                           const Uint8* in,
+    void HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8* in,
                                            const Uint64 in_len,
                                            Uint8*       out,
-                                           const Uint64 out_len,
-                                           Digest*      sha_obj)
+                                           const Uint64 out_len)
     {
-        HmacDrbg::IHmacDrbg::HMAC_Wrapper(key,
-                                          key_len,
-                                          in,
+        HmacDrbg::IHmacDrbg::HMAC_Wrapper(in,
                                           in_len,
                                           nullptr,
                                           static_cast<Uint64>(0),
                                           nullptr,
                                           static_cast<Uint64>(0),
                                           out,
-                                          out_len,
-                                          sha_obj);
+                                          out_len);
     }
 
-    void HmacDrbg::IHmacDrbg::HMAC_Wrapper(const std::vector<Uint8>& key,
-                                           const std::vector<Uint8>& in,
-                                           std::vector<Uint8>&       out,
-                                           Digest*                   sha_obj)
+    void HmacDrbg::IHmacDrbg::HMAC_Wrapper(const std::vector<Uint8>& in,
+                                           std::vector<Uint8>&       out)
     {
         // Call the real implementation
-        HMAC_Wrapper(&key[0],
-                     key.size(),
-                     &in[0],
-                     in.size(),
-                     &out[0],
-                     out.size(),
-                     sha_obj);
+        HMAC_Wrapper(&in[0], in.size(), &out[0], out.size());
     }
 
     /*
@@ -187,22 +164,19 @@ namespace alcp::random_number { namespace drbg {
         const std::vector<Uint8> zeroVect = std::vector<Uint8>{ 0x00 };
         const std::vector<Uint8> oneVect  = std::vector<Uint8>{ 0x01 };
 
-        HMAC_Wrapper(&m_key[0],
-                     m_key.size(),
-                     &m_v[0],
+        HMAC_Wrapper(&m_v[0],
                      m_v.size(),
                      &zeroVect[0],
                      zeroVect.size(),
                      p_provided_data,
                      provided_data_len,
                      &m_key[0],
-                     m_key.size(),
-                     m_digest);
+                     m_key.size());
 
         DebugPrint(m_key, "Update K", __FILE__, __LINE__);
 
         // V = HMAC(K,V)
-        HMAC_Wrapper(m_key, m_v, m_v, m_digest);
+        HMAC_Wrapper(m_v, m_v);
 
         DebugPrint(m_v, "Update V", __FILE__, __LINE__);
 
@@ -211,20 +185,17 @@ namespace alcp::random_number { namespace drbg {
         }
 
         // K = HMAC(K,V || 0x01 || provided_data)
-        HMAC_Wrapper(&m_key[0],
-                     m_key.size(),
-                     &m_v[0],
+        HMAC_Wrapper(&m_v[0],
                      m_v.size(),
                      &oneVect[0],
                      oneVect.size(),
                      p_provided_data,
                      provided_data_len,
                      &m_key[0],
-                     m_key.size(),
-                     m_digest);
+                     m_key.size());
 
         // V = HMAC(K,V)
-        HMAC_Wrapper(m_key, m_v, m_v, m_digest);
+        HMAC_Wrapper(m_v, m_v);
     }
 
     void HmacDrbg::IHmacDrbg::Update(const std::vector<Uint8>& p_provided_data)
@@ -311,7 +282,7 @@ namespace alcp::random_number { namespace drbg {
         Uint64 blocks = output_len / m_v.size();
 
         for (Uint64 i = 0; i < blocks; i++) {
-            HMAC_Wrapper(m_key, m_v, m_v, m_digest);
+            HMAC_Wrapper(m_v, m_v);
 
             DebugPrint(m_v, "Generate: m_v", __FILE__, __LINE__);
 
@@ -319,7 +290,7 @@ namespace alcp::random_number { namespace drbg {
         }
 
         if ((output_len - (blocks * m_v.size())) != 0) {
-            HMAC_Wrapper(m_key, m_v, m_v, m_digest);
+            HMAC_Wrapper(m_v, m_v);
             utils::CopyBlock(output + blocks * m_v.size(),
                              &m_v[0],
                              (output_len - (blocks * m_v.size())));
@@ -372,10 +343,10 @@ namespace alcp::random_number { namespace drbg {
                additional_input.size());
     }
 
-    HmacDrbg::IHmacDrbg::IHmacDrbg(int digestSize, Digest* digest_obj)
+    HmacDrbg::IHmacDrbg::IHmacDrbg(int                     digestSize,
+                                   std::shared_ptr<Digest> digest_obj)
         : m_digest{ digest_obj }
-    {
-        m_v   = std::vector<Uint8>(digestSize);
-        m_key = std::vector<Uint8>(digestSize);
-    }
+        , m_v{ std::vector<Uint8>(digestSize) }
+        , m_key{ std::vector<Uint8>(digestSize) }
+    {}
 }} // namespace alcp::random_number::drbg

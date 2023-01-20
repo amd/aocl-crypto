@@ -214,7 +214,7 @@ class HmacDrbgKat
 template<typename SHA_CLASS, alc_digest_len_t len>
 class HmacDrbgKatTemplate : public HmacDrbgKat
 {
-    std::unique_ptr<SHA_CLASS> p_shaObj;
+    std::shared_ptr<SHA_CLASS> p_shaObj;
 
   public:
     void SetUp() override
@@ -236,9 +236,9 @@ class HmacDrbgKatTemplate : public HmacDrbgKat
         };
         switch (m_digestClass) {
             case ALC_DIGEST_TYPE_SHA2:
-                p_shaObj = std::make_unique<SHA_CLASS>();
+                p_shaObj = std::make_shared<SHA_CLASS>();
             case ALC_DIGEST_TYPE_SHA3:
-                p_shaObj = std::make_unique<SHA_CLASS>(digest_info);
+                p_shaObj = std::make_shared<SHA_CLASS>(digest_info);
                 break;
             default:
                 // TODO: Raise an exeception
@@ -246,7 +246,7 @@ class HmacDrbgKatTemplate : public HmacDrbgKat
                 break;
         }
         m_hmacDrbg =
-            std::make_unique<HmacDrbg>(p_shaObj->getHashSize(), p_shaObj.get());
+            std::make_unique<HmacDrbg>(p_shaObj->getHashSize(), p_shaObj);
     }
 };
 
@@ -319,7 +319,8 @@ TEST(Instantiate, SHA256)
 
     const std::vector<Uint8> AdditionalInput(0);
 
-    alcp::digest::Digest* sha_obj = new alcp::digest::Sha256();
+    std::shared_ptr<alcp::digest::Digest> sha_obj =
+        std::make_shared<alcp::digest::Sha256>();
 
     HmacDrbg hmacDrbg(32, sha_obj);
 
@@ -437,7 +438,7 @@ TEST(SHA2, SHA224KAT1)
 
     std::vector<Uint8> output(ReturnedBits.size());
 
-    alcp::digest::Digest* sha_obj = new alcp::digest::Sha224();
+    auto sha_obj = std::make_shared<alcp::digest::Sha224>();
 
     HmacDrbg hmacDrbg(sha_obj->getHashSize(), sha_obj);
 
@@ -458,8 +459,6 @@ TEST(SHA2, SHA224KAT1)
     EXPECT_EQ(v_exp2, hmacDrbg.GetVCopy());
 
     EXPECT_EQ(ReturnedBits, output);
-
-    delete static_cast<alcp::digest::Sha224*>(sha_obj);
 }
 
 #if 0

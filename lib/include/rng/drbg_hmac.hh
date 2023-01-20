@@ -52,8 +52,8 @@ namespace alcp::random_number { namespace drbg {
         class IHmacDrbg
         {
           private:
-            std::vector<Uint8>    m_key = {}, m_v = {};
-            alcp::digest::Digest* m_digest = {};
+            std::shared_ptr<alcp::digest::Digest> m_digest;
+            std::vector<Uint8>                    m_v = {}, m_key = {};
 
           public:
             /**
@@ -80,17 +80,14 @@ namespace alcp::random_number { namespace drbg {
              * @param out_len - Allocated memory of output buffer
              * @param sha_ob  - Pointer to the SHA object
              */
-            static void HMAC_Wrapper(const Uint8*          key,
-                                     const Uint64          key_len,
-                                     const Uint8*          in1,
-                                     const Uint64          in1_len,
-                                     const Uint8*          in2,
-                                     const Uint64          in2_len,
-                                     const Uint8*          in3,
-                                     const Uint64          in3_len,
-                                     Uint8*                out,
-                                     const Uint64          out_len,
-                                     alcp::digest::Digest* sha_ob);
+            void HMAC_Wrapper(const Uint8* in1,
+                              const Uint64 in1_len,
+                              const Uint8* in2,
+                              const Uint64 in2_len,
+                              const Uint8* in3,
+                              const Uint64 in3_len,
+                              Uint8*       out,
+                              const Uint64 out_len);
             /**
              * @brief Given input (key,data,sha_object) will give out the HMAC
              * directly. Input will all be treated same as if they are
@@ -105,15 +102,12 @@ namespace alcp::random_number { namespace drbg {
              * @param out_len - Allocated memory of output buffer
              * @param sha_ob  - Pointer to the SHA object
              */
-            static void HMAC_Wrapper(const Uint8*          key,
-                                     const Uint64          key_len,
-                                     const Uint8*          in,
-                                     const Uint64          in_len,
-                                     const Uint8*          in1,
-                                     const Uint64          in1_len,
-                                     Uint8*                out,
-                                     const Uint64          out_len,
-                                     alcp::digest::Digest* sha_obj);
+            void HMAC_Wrapper(const Uint8* in,
+                              const Uint64 in_len,
+                              const Uint8* in1,
+                              const Uint64 in1_len,
+                              Uint8*       out,
+                              const Uint64 out_len);
             /**
              * @brief Given input (key,data,sha_object) will give out the HMAC
              * directly.
@@ -125,13 +119,10 @@ namespace alcp::random_number { namespace drbg {
              * @param out_len - Allocated memory of output buffer
              * @param sha_ob  - Pointer to the SHA object
              */
-            static void HMAC_Wrapper(const Uint8*          key,
-                                     const Uint64          key_len,
-                                     const Uint8*          in,
-                                     const Uint64          in_len,
-                                     Uint8*                out,
-                                     const Uint64          out_len,
-                                     alcp::digest::Digest* sha_obj);
+            void HMAC_Wrapper(const Uint8* in,
+                              const Uint64 in_len,
+                              Uint8*       out,
+                              const Uint64 out_len);
             /**
              * @brief Given input (key,data,sha_object) will give out the HMAC
              * directly.
@@ -141,10 +132,8 @@ namespace alcp::random_number { namespace drbg {
              * @param out     - Output buffer vector<Uint8>
              * @param sha_obj - Pointer to SHA object
              */
-            static void HMAC_Wrapper(const std::vector<Uint8>& key,
-                                     const std::vector<Uint8>& in,
-                                     std::vector<Uint8>&       out,
-                                     alcp::digest::Digest*     sha_obj);
+            void HMAC_Wrapper(const std::vector<Uint8>& in,
+                              std::vector<Uint8>&       out);
             /**
              * @brief Given Data and Length, updates key and value internally
              *
@@ -252,7 +241,8 @@ namespace alcp::random_number { namespace drbg {
             std::vector<Uint8> GetVCopy() { return m_v; }
 
             IHmacDrbg() = default;
-            IHmacDrbg(int digestSize, alcp::digest::Digest* digest_obj);
+            IHmacDrbg(int                                   digestSize,
+                      std::shared_ptr<alcp::digest::Digest> digest_obj);
             ~IHmacDrbg() = default;
         };
 
@@ -400,11 +390,13 @@ namespace alcp::random_number { namespace drbg {
          */
         std::vector<Uint8> GetVCopy() { return p_impl.get()->GetVCopy(); }
 
-        HmacDrbg() { p_impl = std::make_unique<IHmacDrbg>(); };
-        HmacDrbg(int digestSize, alcp::digest::Digest* digest_obj)
-        {
-            p_impl = std::make_unique<IHmacDrbg>(digestSize, digest_obj);
-        };
+        HmacDrbg()
+            : p_impl{ std::make_unique<IHmacDrbg>() }
+        {}
+        HmacDrbg(int                                   digestSize,
+                 std::shared_ptr<alcp::digest::Digest> digest_obj)
+            : p_impl{ std::make_unique<IHmacDrbg>(digestSize, digest_obj) }
+        {}
         ~HmacDrbg() = default;
     };
 
