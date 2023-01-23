@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,12 +33,24 @@
 
 using namespace alcp::testing;
 
+// Variables for Argument Parser
 static int  verbose     = 0;
 static bool useipp      = false;
 static bool useossl     = false;
 static bool bbxreplay   = false;
 static bool oa_override = false;
 
+/**
+ * @brief Check if 2 binary vectors are equal, print the current line as
+ * success or failure, print the failed vectors and index where it failed.
+ * Currently used for all KAT vectors
+ *
+ * @param actual    Output obtained from the algorithm.
+ * @param expected  Expected output given the algorithm is correct.
+ * @param ds        DataSet object to extract the line number.
+ * @param testName  Name of the test to display.
+ * @return ::testing::AssertionResult
+ */
 ::testing::AssertionResult
 ArraysMatch(std::vector<Uint8>      actual,
             std::vector<Uint8>      expected,
@@ -67,6 +79,15 @@ ArraysMatch(std::vector<Uint8>      actual,
     return ::testing::AssertionSuccess();
 }
 
+/**
+ * @brief Check if 2 binary vectors are equal, also print the size of the input.
+ * Currently Used for Digest/HMAC cross tests.
+ *
+ * @param actual    Output obtained from the algorithm.
+ * @param expected  Expected output given the algorithm is correct.
+ * @param len       Length of input to the algorithm
+ * @return ::testing::AssertionResult
+ */
 ::testing::AssertionResult
 ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected, size_t len)
 {
@@ -86,6 +107,14 @@ ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected, size_t len)
     return ::testing::AssertionSuccess();
 }
 
+/**
+ * @brief Check if 2 binary vectors are equal, also print the size of the
+ * expected vector. Currently used for Cipher cross tests.
+ *
+ * @param actual    Output obtained from the algorithm.
+ * @param expected  Expected output given the algorithm is correct.
+ * @return ::testing::AssertionResult
+ */
 ::testing::AssertionResult
 ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected)
 {
