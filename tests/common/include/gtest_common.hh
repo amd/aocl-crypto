@@ -80,7 +80,7 @@ ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected, size_t len)
                    << "Length:" << len << " Failure i:" << i << " !";
         }
     }
-    if (verbose > 1) {
+    if (verbose > 0) {
         std::cout << "Length:" << len << " Success" << std::endl;
     }
     return ::testing::AssertionSuccess();
