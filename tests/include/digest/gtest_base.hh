@@ -162,12 +162,12 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
 
             if (!db->init(info, data.m_digest_len)) {
                 printf("Error: Digest base init failed\n");
-                return;
+                FAIL();
             }
             error = db->digest_function(data);
             if (alcp_is_error(error)) {
                 printf("Error: Digest function failed\n");
-                return;
+                FAIL();
             }
             EXPECT_TRUE(
                 ArraysMatch(digest_,        // output
@@ -186,12 +186,12 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
 
             if (!db->init(info, data.m_digest_len)) {
                 printf("Error: Digest base init failed\n");
-                return;
+                FAIL();
             }
             error = db->digest_function(data);
             if (alcp_is_error(error)) {
                 printf("Error: Digest function failed\n");
-                return;
+                FAIL();
             }
 
             /*conv m_digest into a vector */
@@ -279,26 +279,26 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
 
         if (!db->init(info, digestAlcp.size())) {
             printf("Error: Digest base init failed\n");
-            return;
+            FAIL();
         }
         error = db->digest_function(data_alc);
         if (verbose > 1)
             PrintDigestTestData(data_alc, GetDigestStr(info.dt_type));
         if (alcp_is_error(error)) {
             printf("Error: Digest function failed\n");
-            return;
+            FAIL();
         }
 
         if (!extDb->init(info, digestExt.size())) {
             printf("Error: Ext Digest base init failed\n");
-            return;
+            FAIL();
         }
         error = extDb->digest_function(data_ext);
         if (verbose > 1)
             PrintDigestTestData(data_ext, GetDigestStr(info.dt_type));
         if (alcp_is_error(error)) {
             printf("Error: Ext Digest function failed\n");
-            return;
+            FAIL();
         }
         EXPECT_TRUE(ArraysMatch(digestAlcp, digestExt, i));
         if (!bbxreplay) {
