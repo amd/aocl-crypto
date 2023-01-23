@@ -45,7 +45,7 @@ class HmacBuilder
 
 template<typename MACALGORITHM>
 static alcp::base::Status
-__hmac_wrapperUpdate(void* hmac, Uint8* buff, Uint64 size)
+__hmac_wrapperUpdate(void* hmac, const Uint8* buff, Uint64 size)
 {
 
     auto ap = static_cast<MACALGORITHM*>(hmac);
@@ -54,7 +54,7 @@ __hmac_wrapperUpdate(void* hmac, Uint8* buff, Uint64 size)
 
 template<typename MACALGORITHM>
 static alcp::base::Status
-__hmac_wrapperFinalize(void* hmac, Uint8* buff, Uint64 size)
+__hmac_wrapperFinalize(void* hmac, const Uint8* buff, Uint64 size)
 {
     auto ap = static_cast<MACALGORITHM*>(hmac);
     return ap->finalize(buff, size);
