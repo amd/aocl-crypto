@@ -203,25 +203,28 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
             data_ext.m_key      = &(key[0]);
             data_ext.m_key_len  = key.size();
 
+            /* run test with main lib */
+            if (verbose > 1)
+                PrintHmacTestData(key, data_alc, HmacType);
             if (!hb->init(info, key)) {
                 printf("Error in hmac init\n");
                 FAIL();
             }
             error = hb->Hmac_function(data_alc);
-            if (verbose > 1)
-                PrintHmacTestData(key, data_alc, HmacType);
+
             if (alcp_is_error(error)) {
                 printf("Error in hmac function\n");
                 FAIL();
             }
 
+            /* run test with ext lib */
+            if (verbose > 1)
+                PrintHmacTestData(key, data_ext, HmacType);
             if (!extHb->init(info, key)) {
                 printf("Error in hmac ext init function\n");
                 FAIL();
             }
             error = extHb->Hmac_function(data_ext);
-            if (verbose > 1)
-                PrintHmacTestData(key, data_ext, HmacType);
             if (alcp_is_error(error)) {
                 printf("Error in hmac (ext lib) function\n");
                 FAIL();
