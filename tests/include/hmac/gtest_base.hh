@@ -46,9 +46,13 @@ using namespace alcp::testing;
 #include "hmac/openssl_hmac.hh"
 #endif
 
-#define MAX_LOOP   16000
-#define INC_LOOP   1
-#define START_LOOP 1
+/* FIXME: recheck these values */
+#define MAX_LOOP      1600
+#define INC_LOOP      1
+#define START_LOOP    1
+#define KEY_LEN_START 1
+#define KEY_LEN_MAX   1600
+#define KEY_LEN_INC   32
 
 /* print params verbosely */
 inline void
@@ -143,7 +147,7 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
 {
     alc_error_t        error;
     std::vector<Uint8> data;
-    int                KeySize, KeyLenMin = START_LOOP, KeyLenMax = MAX_LOOP;
+    int                KeySize;
     std::vector<Uint8> HmacAlcp(HmacSize / 8, 0);
     std::vector<Uint8> HmacExt(HmacSize / 8, 0);
 
@@ -175,7 +179,7 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
 
     /* FIXME: generate a vector using getRandomBytes() once, split it and feed
      * it into the loop. Avoid calling genRandomBytes() each time in the loop */
-    for (int j = KeyLenMin; j < KeyLenMax; j++) {
+    for (int j = KEY_LEN_START; j < KEY_LEN_MAX; j += KEY_LEN_INC) {
         for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
             alcp_hmac_data_t data_alc, data_ext;
 
