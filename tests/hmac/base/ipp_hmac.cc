@@ -98,8 +98,8 @@ IPPHmacBase::init()
 alc_error_t
 IPPHmacBase::Hmac_function(const alcp_hmac_data_t& data)
 {
-    ippsHMACUpdate_rmf(data.m_msg, data.m_msg_len, m_handle);
-    ippsHMACFinal_rmf(data.m_hmac, data.m_hmac_len, m_handle);
+    ippsHMACUpdate_rmf(data.in.m_msg, data.in.m_msg_len, m_handle);
+    ippsHMACFinal_rmf(data.out.m_hmac, data.out.m_hmac_len, m_handle);
     return ALC_ERROR_NONE;
 }
 

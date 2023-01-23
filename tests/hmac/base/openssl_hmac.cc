@@ -118,15 +118,15 @@ OpenSSLHmacBase::init()
 alc_error_t
 OpenSSLHmacBase::Hmac_function(const alcp_hmac_data_t& data)
 {
-    size_t outsize = data.m_hmac_len;
+    size_t outsize = data.out.m_hmac_len;
     int    retval  = 0;
 
-    retval = EVP_DigestSignUpdate(m_handle, data.m_msg, data.m_msg_len);
+    retval = EVP_DigestSignUpdate(m_handle, data.in.m_msg, data.in.m_msg_len);
     if (retval != 1) {
         printf("EVP_DigestSignUpdate failed, error 0x%lx\n", ERR_get_error());
         return retval;
     }
-    retval = EVP_DigestSignFinal(m_handle, data.m_hmac, &outsize);
+    retval = EVP_DigestSignFinal(m_handle, data.out.m_hmac, &outsize);
     if (retval != 1) {
         printf("EVP_DigestSignFinal failed, error 0x%lx\n", ERR_get_error());
         return retval;

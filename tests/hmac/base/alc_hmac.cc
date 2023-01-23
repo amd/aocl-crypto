@@ -86,7 +86,7 @@ AlcpHmacBase::Hmac_function(const alcp_hmac_data_t& data)
 {
     alc_error_t err;
 
-    err = alcp_mac_update(m_handle, data.m_msg, data.m_msg_len);
+    err = alcp_mac_update(m_handle, data.in.m_msg, data.in.m_msg_len);
     if (alcp_is_error(err)) {
         printf("HMAC update failed: Err code: %ld\n", err);
         return err;
@@ -98,7 +98,7 @@ AlcpHmacBase::Hmac_function(const alcp_hmac_data_t& data)
         return err;
     }
 
-    err = alcp_mac_copy(m_handle, data.m_hmac, data.m_hmac_len);
+    err = alcp_mac_copy(m_handle, data.out.m_hmac, data.out.m_hmac_len);
     if (alcp_is_error(err)) {
         printf("HMAC copy failed: Error code: %ld\n", err);
         return err;

@@ -62,10 +62,11 @@ PrintHmacTestData(std::vector<Uint8> key,
 {
     std::cout << "KEY: " << parseBytesToHexStr(&key[0], key.size())
               << " KeyLen: " << key.size() << std::endl;
-    std::cout << "MSG: " << parseBytesToHexStr(data.m_msg, data.m_msg_len)
-              << " MsgLen: " << data.m_msg_len << std::endl;
-    std::cout << "HMAC: " << parseBytesToHexStr(data.m_hmac, data.m_hmac_len)
-              << " HmacLen(bytes): " << data.m_hmac_len << std::endl;
+    std::cout << "MSG: " << parseBytesToHexStr(data.in.m_msg, data.in.m_msg_len)
+              << " MsgLen: " << data.in.m_msg_len << std::endl;
+    std::cout << "HMAC: "
+              << parseBytesToHexStr(data.out.m_hmac, data.out.m_hmac_len)
+              << " HmacLen(bytes): " << data.out.m_hmac_len << std::endl;
     return;
 }
 
@@ -106,13 +107,13 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
         auto msg = ds.getMessage();
         auto key = ds.getKey();
 
-        data.m_msg  = &(msg[0]);
-        data.m_key  = &(key[0]);
-        data.m_hmac = &(hmac[0]);
+        data.in.m_msg   = &(msg[0]);
+        data.in.m_key   = &(key[0]);
+        data.out.m_hmac = &(hmac[0]);
 
-        data.m_msg_len  = ds.getMessage().size();
-        data.m_hmac_len = hmac.size();
-        data.m_key_len  = key.size();
+        data.in.m_msg_len   = ds.getMessage().size();
+        data.out.m_hmac_len = hmac.size();
+        data.in.m_key_len   = key.size();
 
         if (!hb->init(info, key)) {
             printf("Error in hmac init function\n");
@@ -192,20 +193,17 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
             key = rb.genRandomBytes(KeySize);
 
             /* load test data */
-            data_alc.m_msg      = &(msg[0]);
-            data_alc.m_msg_len  = msg.size();
-            data_alc.m_hmac     = &(HmacAlcp[0]);
-            data_alc.m_hmac_len = HmacAlcp.size();
-            data_alc.m_key      = &(key[0]);
-            data_alc.m_key_len  = key.size();
+            data_alc.in.m_msg       = &(msg[0]);
+            data_alc.in.m_msg_len   = msg.size();
+            data_alc.out.m_hmac     = &(HmacAlcp[0]);
+            data_alc.out.m_hmac_len = HmacAlcp.size();
+            data_alc.in.m_key       = &(key[0]);
+            data_alc.in.m_key_len   = key.size();
 
             /* load ext test data */
-            data_ext.m_msg      = &(msg[0]);
-            data_ext.m_msg_len  = msg.size();
-            data_ext.m_hmac     = &(HmacExt[0]);
-            data_ext.m_hmac_len = HmacExt.size();
-            data_ext.m_key      = &(key[0]);
-            data_ext.m_key_len  = key.size();
+            data_ext.out.m_hmac     = &(HmacExt[0]);
+            data_ext.out.m_hmac_len = HmacExt.size();
+            data_ext.in             = data_alc.in;
 
             /* run test with main lib */
             if (verbose > 1)

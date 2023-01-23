@@ -34,14 +34,48 @@
 
 namespace alcp::testing {
 
+/**
+ *  HMAC data which are input to the algorithm
+ */
+struct alcp_hmac_data_in_t
+{
+    // Input message to generate authentication token on.
+    const Uint8* m_msg;
+    // Length of the input message
+    Uint64 m_msg_len;
+    // Key used to create the authentication token
+    const Uint8* m_key;
+    // Length of the Key
+    Uint64 m_key_len;
+};
+
+/**
+ *  HMAC data which are output to the algorithm
+ */
+struct alcp_hmac_data_out_t
+{
+    // Output authentication token.
+    Uint8* m_hmac;
+    // Length of the authentication token.
+    Uint64 m_hmac_len;
+};
+/**
+ *  Hmac test data.
+ *
+ *  in and out should be populated for KAT.
+ *  in should should only be populated for CrossTest.
+ */
 struct alcp_hmac_data_t
 {
-    Uint8* m_msg      = nullptr;
-    Uint64 m_msg_len  = 0;
-    Uint8* m_key      = nullptr;
-    Uint64 m_key_len  = 0;
-    Uint8* m_hmac     = nullptr;
-    Uint64 m_hmac_len = 0;
+    // Input Data into the algorithm.
+    alcp_hmac_data_in_t in;
+    // Output Data from the algorithm.
+    alcp_hmac_data_out_t out;
+
+    alcp_hmac_data_t() // Initialize in, out all values to null/0
+        : in{}
+        , out{}
+    {}
 };
 
 /* add mapping for HMAC mode and length */

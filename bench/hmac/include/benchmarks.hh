@@ -86,12 +86,12 @@ void inline Hmac_Bench(benchmark::State& state,
     }
 #endif
 
-    data.m_msg      = &(message[0]);
-    data.m_msg_len  = message.size();
-    data.m_hmac     = &(Hmac[0]);
-    data.m_hmac_len = Hmac.size();
-    data.m_key      = &(Key[0]);
-    data.m_key_len  = Key.size();
+    data.in.m_msg       = &(message[0]);
+    data.in.m_msg_len   = message.size();
+    data.out.m_hmac     = &(Hmac[0]);
+    data.out.m_hmac_len = Hmac.size();
+    data.in.m_key       = &(Key[0]);
+    data.in.m_key_len   = Key.size();
 
     if (!hb->init(info, Key)) {
         printf("Error in hmac init function\n");
