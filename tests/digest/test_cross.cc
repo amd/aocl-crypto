@@ -36,6 +36,8 @@
 /* SHA3 SHAKE Cross */
 TEST(DIGEST_SHA3, CROSS_SHAKE128)
 {
+    if (useipp)
+        GTEST_SKIP();
     alc_digest_info_t info;
     info.dt_mode.dm_sha3 = ALC_SHAKE_128;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
@@ -44,6 +46,8 @@ TEST(DIGEST_SHA3, CROSS_SHAKE128)
 }
 TEST(DIGEST_SHA3, CROSS_SHAKE256)
 {
+    if (useipp)
+        GTEST_SKIP();
     alc_digest_info_t info;
     info.dt_mode.dm_sha3 = ALC_SHAKE_256;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
@@ -83,6 +87,23 @@ TEST(DIGEST_SHA2, CROSS_512)
     info.dt_type         = ALC_DIGEST_TYPE_SHA2;
     info.dt_len          = ALC_DIGEST_LEN_512;
     Digest_Cross(512, info);
+}
+/* truncated sha512 variants */
+TEST(DIGEST_SHA2, CROSS_512_224)
+{
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_512;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len          = ALC_DIGEST_LEN_224;
+    Digest_Cross(224, info);
+}
+TEST(DIGEST_SHA2, CROSS_512_256)
+{
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_512;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len          = ALC_DIGEST_LEN_256;
+    Digest_Cross(256, info);
 }
 
 /* SHA3 cross tests */

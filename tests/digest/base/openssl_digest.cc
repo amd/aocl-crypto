@@ -72,7 +72,15 @@ OpenSSLDigestBase::init()
                 EVP_DigestInit(m_handle, EVP_sha384());
                 break;
             case ALC_DIGEST_LEN_512:
-                EVP_DigestInit(m_handle, EVP_sha512());
+                /* for truncated variants of sha512 */
+                if (m_info.dt_len == ALC_DIGEST_LEN_224) {
+                    EVP_DigestInit(m_handle, EVP_sha512_224());
+                } else if (m_info.dt_len == ALC_DIGEST_LEN_256) {
+                    EVP_DigestInit(m_handle, EVP_sha512_256());
+                } else {
+                    /* default, when len is 512 */
+                    EVP_DigestInit(m_handle, EVP_sha512());
+                }
                 break;
             default:
                 return false;
@@ -141,7 +149,15 @@ OpenSSLDigestBase::reset()
                 EVP_DigestInit(m_handle, EVP_sha384());
                 break;
             case ALC_SHA2_512:
-                EVP_DigestInit(m_handle, EVP_sha512());
+                /* for truncated variants of sha512 */
+                if (m_info.dt_len == ALC_DIGEST_LEN_224) {
+                    EVP_DigestInit(m_handle, EVP_sha512_224());
+                } else if (m_info.dt_len == ALC_DIGEST_LEN_256) {
+                    EVP_DigestInit(m_handle, EVP_sha512_256());
+                } else {
+                    /* default, when len is 512 */
+                    EVP_DigestInit(m_handle, EVP_sha512());
+                }
                 break;
             default:
                 std::cout << "Error: " << __FILE__ << ":" << __LINE__

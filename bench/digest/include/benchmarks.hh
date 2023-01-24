@@ -148,6 +148,26 @@ BENCH_SHA2_512(benchmark::State& state)
     info.dt_len          = ALC_DIGEST_LEN_512;
     Digest_Bench(state, info, state.range(0));
 }
+/* SHA 512 224 and 256 len*/
+static void
+BENCH_SHA2_512_224(benchmark::State& state)
+{
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_512;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len          = ALC_DIGEST_LEN_224;
+    Digest_Bench(state, info, state.range(0));
+}
+static void
+BENCH_SHA2_512_256(benchmark::State& state)
+{
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_512;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len          = ALC_DIGEST_LEN_256;
+    Digest_Bench(state, info, state.range(0));
+}
+
 /* SHA3 benchmarks */
 static void
 BENCH_SHA3_224(benchmark::State& state)
@@ -216,6 +236,8 @@ AddBenchmarks()
     BENCHMARK(BENCH_SHA2_256)->ArgsProduct({ digest_block_sizes });
     BENCHMARK(BENCH_SHA2_384)->ArgsProduct({ digest_block_sizes });
     BENCHMARK(BENCH_SHA2_512)->ArgsProduct({ digest_block_sizes });
+    BENCHMARK(BENCH_SHA2_512_224)->ArgsProduct({ digest_block_sizes });
+    BENCHMARK(BENCH_SHA2_512_256)->ArgsProduct({ digest_block_sizes });
 
     /* SHA3 is not supported for IPP */
     if (!useipp) {
