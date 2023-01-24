@@ -96,28 +96,28 @@ AlcpDigestBase::~AlcpDigestBase()
     }
 }
 
-alc_error_t
+bool
 AlcpDigestBase::digest_function(const alcp_digest_data_t& data)
 {
     alc_error_t err;
     err = alcp_digest_update(m_handle, data.m_msg, data.m_msg_len);
     if (alcp_is_error(err)) {
         printf("Digest update failed\n");
-        return err;
+        return false;
     }
 
-    alcp_digest_finalize(m_handle, NULL, 0);
+    err = alcp_digest_finalize(m_handle, NULL, 0);
     if (alcp_is_error(err)) {
         printf("Digest finalize failed\n");
-        return err;
+        return false;
     }
 
     err = alcp_digest_copy(m_handle, data.m_digest, data.m_digest_len);
     if (alcp_is_error(err)) {
         printf("Digest copy failed\n");
-        return err;
+        return false;
     }
-    return err;
+    return true;
 }
 
 void

@@ -164,8 +164,7 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
                 printf("Error: Digest base init failed\n");
                 FAIL();
             }
-            error = db->digest_function(data);
-            if (alcp_is_error(error)) {
+            if (!db->digest_function(data)) {
                 printf("Error: Digest function failed\n");
                 FAIL();
             }
@@ -188,8 +187,7 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
                 printf("Error: Digest base init failed\n");
                 FAIL();
             }
-            error = db->digest_function(data);
-            if (alcp_is_error(error)) {
+            if (!db->digest_function(data)) {
                 printf("Error: Digest function failed\n");
                 FAIL();
             }
@@ -281,10 +279,9 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
             printf("Error: Digest base init failed\n");
             FAIL();
         }
-        error = db->digest_function(data_alc);
         if (verbose > 1)
             PrintDigestTestData(data_alc, GetDigestStr(info.dt_type));
-        if (alcp_is_error(error)) {
+        if (!db->digest_function(data_alc)) {
             printf("Error: Digest function failed\n");
             FAIL();
         }
@@ -293,10 +290,9 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
             printf("Error: Ext Digest base init failed\n");
             FAIL();
         }
-        error = extDb->digest_function(data_ext);
         if (verbose > 1)
             PrintDigestTestData(data_ext, GetDigestStr(info.dt_type));
-        if (alcp_is_error(error)) {
+        if (!extDb->digest_function(data_ext)) {
             printf("Error: Ext Digest function failed\n");
             FAIL();
         }

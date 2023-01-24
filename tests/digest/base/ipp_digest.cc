@@ -52,6 +52,7 @@ IPPDigestBase::init(const alc_digest_info_t& info, Int64 digest_len)
 bool
 IPPDigestBase::init()
 {
+    IppStatus status = ippStsNoErr;
     if (m_handle != nullptr) {
         delete[] reinterpret_cast<Uint8*>(m_handle);
         m_handle = nullptr;
@@ -62,23 +63,26 @@ IPPDigestBase::init()
     if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
         switch (m_info.dt_mode.dm_sha2) {
             case ALC_SHA2_224:
-                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA224());
+                status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA224());
                 break;
             case ALC_SHA2_256:
-                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA256());
+                status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA256());
                 break;
             case ALC_SHA2_384:
-                ippsHashInit_rmf(m_handle, ippsHashMethod_SHA384());
+                status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA384());
                 break;
             case ALC_SHA2_512:
                 /* for truncated variants of sha512*/
                 if (m_info.dt_len == ALC_DIGEST_LEN_224) {
-                    ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512_224());
+                    status =
+                        ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512_224());
                 } else if (m_info.dt_len == ALC_DIGEST_LEN_256) {
-                    ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512_256());
+                    status =
+                        ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512_256());
                 } else {
                     /* if len is 512*/
-                    ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512());
+                    status =
+                        ippsHashInit_rmf(m_handle, ippsHashMethod_SHA512());
                 }
                 break;
             default:
@@ -87,15 +91,30 @@ IPPDigestBase::init()
     } else {
         return false;
     }
+    /* check error code */
+    if (status != ippStsNoErr) {
+        return false;
+    }
     return true;
 }
 
-alc_error_t
+bool
 IPPDigestBase::digest_function(const alcp_digest_data_t& data)
 {
-    ippsHashUpdate_rmf(data.m_msg, data.m_msg_len, m_handle);
-    ippsHashFinal_rmf(data.m_digest, m_handle);
-    return ALC_ERROR_NONE;
+    IppStatus status = ippStsNoErr;
+
+    status = ippsHashUpdate_rmf(data.m_msg, data.m_msg_len, m_handle);
+    if (status != ippStsNoErr) {
+        std::cout << "Error code in ippsHashUpdate_rmf: " << status
+                  << std::endl;
+        return false;
+    }
+    status = ippsHashFinal_rmf(data.m_digest, m_handle);
+    if (status != ippStsNoErr) {
+        std::cout << "Error code in ippsHashFinal_rmf: " << status << std::endl;
+        return false;
+    }
+    return true;
 }
 
 void

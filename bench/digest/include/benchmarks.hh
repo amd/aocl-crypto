@@ -97,8 +97,7 @@ void inline Digest_Bench(benchmark::State& state,
     data.m_msg_len = block_size;
 
     for (auto _ : state) {
-        error = db->digest_function(data);
-        if (alcp_is_error(error)) {
+        if (!db->digest_function(data)) {
             printf("Error code in running digest benchmark: %ld\n", error);
             return;
         }

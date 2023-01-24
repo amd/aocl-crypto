@@ -53,7 +53,7 @@ class AlcpDigestBase : public DigestBase
 
     ~AlcpDigestBase();
 
-    alc_error_t digest_function(const alcp_digest_data_t& data);
+    bool digest_function(const alcp_digest_data_t& data);
     /* Resets the context back to initial condition, reuse context */
     void reset();
 };

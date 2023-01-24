@@ -115,22 +115,37 @@ OpenSSLDigestBase::init()
     return true;
 }
 
-alc_error_t
+bool
 OpenSSLDigestBase::digest_function(const alcp_digest_data_t& data)
 {
     unsigned int outsize = 0;
     int          retval  = 0;
 
     retval = EVP_DigestUpdate(m_handle, data.m_msg, data.m_msg_len);
+    if (retval != 1) {
+        std::cout << "Error code in EVP_DigestUpdate: " << retval << std::endl;
+        return false;
+    }
 
     /* for extendable output functions */
-    if (m_info.dt_len == ALC_DIGEST_LEN_CUSTOM)
+    if (m_info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
         retval = EVP_DigestFinalXOF(m_handle, data.m_digest, data.m_digest_len);
-    else
-        retval = EVP_DigestFinal_ex(m_handle, data.m_digest, &outsize);
-    outsize = outsize;
+        if (retval != 1) {
+            std::cout << "Error code in EVP_DigestFinalXOF: " << retval
+                      << std::endl;
+            return false;
+        }
 
-    return ALC_ERROR_NONE;
+    } else {
+        retval = EVP_DigestFinal_ex(m_handle, data.m_digest, &outsize);
+        if (retval != 1) {
+            std::cout << "Error code in EVP_DigestFinal_ex: " << retval
+                      << std::endl;
+            return false;
+        }
+    }
+    outsize = outsize;
+    return true;
 }
 
 void
