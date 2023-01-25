@@ -1,4 +1,4 @@
-(C) 2008-2022 Advanced Micro Devices, Inc. All Rights Reserved.
+(C) 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
 
 AOCL Crypto - Release Notes - AOCL version 4.0.1
 ------------------------------------------------
@@ -17,4 +17,8 @@ This is the first release of the AOCL-Crypto library and supports the following 
     * SHA2 Digest routines for the following schemes:
           - SHA2_224, SHA2_256, SHA2_384, SHA2_512
     * SHA3 Digest routines for the following schemes:
-          - SHA3_224, SHA3_256, SHA3_384, SHA3_512, SHAKE128, SHAKE256
+          - SHA3_224, SHA3_256, SHA3_384, SHA3_512
+          - SHAKE128, SHAKE256
+    * HMAC routines for the following schemes:
+          - HMAC_SHA2_224, HMAC_SHA2_256, HMAC_SHA2_384, HMAC_SHA2_512
+          - HMAC_SHA3_224, HMAC_SHA3_256, HMAC_SHA3_384, HMAC_SHA3_512
