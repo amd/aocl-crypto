@@ -115,43 +115,40 @@ GetDigestStr(_alc_digest_type digest_type)
 
 ExecRecPlay* fr;
 void
-Digest_KAT(int HashSize, alc_digest_info_t info)
+Digest_KAT(alc_digest_info_t info)
 {
     alc_error_t        error;
     alcp_digest_data_t data;
-    std::vector<Uint8> digest(HashSize / 8, 0);
+    std::vector<Uint8> digest(info.dt_len / 8, 0);
     AlcpDigestBase     adb(info);
     DigestBase*        db;
     db = &adb;
 
     std::string TestDataFile = "";
 
-    /* for truncated sha512 (224, 256)*/
+    /* for truncated sha512 (224,256)*/
     if (info.dt_type == ALC_DIGEST_TYPE_SHA2
-        && info.dt_mode.dm_sha2 == ALC_SHA2_512) {
-        if (info.dt_len == ALC_DIGEST_LEN_224) {
-            TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_512_"
-                           + std::to_string(HashSize) + ".csv";
-        } else if (info.dt_len == ALC_DIGEST_LEN_256) {
-            TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_512_"
-                           + std::to_string(HashSize) + ".csv";
-        }
+        && info.dt_mode.dm_sha2 == ALC_SHA2_512
+        && info.dt_len != ALC_DIGEST_LEN_512) {
+        TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_512_"
+                       + std::to_string(info.dt_len) + ".csv";
     }
-    /* for SHA3 shake tests */
+    /* for SHA3 shake tests (128,256)*/
     else if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
         TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_SHAKE_"
-                       + std::to_string(HashSize) + ".csv";
+                       + std::to_string(info.dt_len) + ".csv";
     }
-    /* for normal SHA2, SHA3 */
+    /* for normal SHA2, SHA3 (224,256,384,512 bit) */
     else {
         TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_"
-                       + std::to_string(HashSize) + ".csv";
+                       + std::to_string(info.dt_len) + ".csv";
     }
 
     DataSet ds = DataSet(TestDataFile);
 
     if (useipp && (GetDigestStr(info.dt_type).compare("SHA3") == 0)) {
-        printf("IPPCP doesnt support SHA3 for now, skipping this test\n");
+        std::cout << "IPPCP doesnt support SHA3 for now, skipping this test"
+                  << std::endl;
         return;
     }
 
@@ -177,19 +174,19 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
             data.m_digest = &(digest_[0]);
 
             if (!db->init(info, data.m_digest_len)) {
-                printf("Error: Digest base init failed\n");
+                std::cout << "Error: Digest base init failed" << std::endl;
                 FAIL();
             }
             if (!db->digest_function(data)) {
-                printf("Error: Digest function failed\n");
+                std::cout << "Error: Digest function failed" << std::endl;
                 FAIL();
             }
-            EXPECT_TRUE(
-                ArraysMatch(digest_,        // output
-                            ds.getDigest(), // expected, from the KAT test data
-                            ds,
-                            std::string(GetDigestStr(info.dt_type) + "_"
-                                        + std::to_string(HashSize) + "_KAT")));
+            EXPECT_TRUE(ArraysMatch(
+                digest_,        // output
+                ds.getDigest(), // expected, from the KAT test data
+                ds,
+                std::string(GetDigestStr(info.dt_type) + "_"
+                            + std::to_string(info.dt_len) + "_KAT")));
         }
     } else {
         while (ds.readMsgDigest()) {
@@ -200,11 +197,11 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
             data.m_digest     = &(digest[0]);
 
             if (!db->init(info, data.m_digest_len)) {
-                printf("Error: Digest base init failed\n");
+                std::cout << "Error: Digest base init failed" << std::endl;
                 FAIL();
             }
             if (!db->digest_function(data)) {
-                printf("Error: Digest function failed\n");
+                std::cout << "Error: Digest function failed" << std::endl;
                 FAIL();
             }
 
@@ -212,12 +209,12 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
             std::vector<uint8_t> digest_vector(std::begin(digest),
                                                std::end(digest));
 
-            EXPECT_TRUE(
-                ArraysMatch(digest_vector,  // output
-                            ds.getDigest(), // expected, from the KAT test data
-                            ds,
-                            std::string(GetDigestStr(info.dt_type) + "_"
-                                        + std::to_string(HashSize) + "_KAT")));
+            EXPECT_TRUE(ArraysMatch(
+                digest_vector,  // output
+                ds.getDigest(), // expected, from the KAT test data
+                ds,
+                std::string(GetDigestStr(info.dt_type) + "_"
+                            + std::to_string(info.dt_len) + "_KAT")));
         }
     }
 }
@@ -292,24 +289,24 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
         data_ext.m_digest_len = digestExt.size();
 
         if (!db->init(info, digestAlcp.size())) {
-            printf("Error: Digest base init failed\n");
+            std::cout << "Error: Digest base init failed" << std::endl;
             FAIL();
         }
         if (verbose > 1)
             PrintDigestTestData(data_alc, GetDigestStr(info.dt_type));
         if (!db->digest_function(data_alc)) {
-            printf("Error: Digest function failed\n");
+            std::cout << "Error: Digest function failed" << std::endl;
             FAIL();
         }
 
         if (!extDb->init(info, digestExt.size())) {
-            printf("Error: Ext Digest base init failed\n");
+            std::cout << "Error: Ext Digest base init failed" << std::endl;
             FAIL();
         }
         if (verbose > 1)
             PrintDigestTestData(data_ext, GetDigestStr(info.dt_type));
         if (!extDb->digest_function(data_ext)) {
-            printf("Error: Ext Digest function failed\n");
+            std::cout << "Error: Ext Digest function failed" << std::endl;
             FAIL();
         }
         EXPECT_TRUE(ArraysMatch(digestAlcp, digestExt, i));

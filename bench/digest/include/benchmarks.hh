@@ -79,7 +79,7 @@ void inline Digest_Bench(benchmark::State& state,
         || info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
 
         if (!db->init(info, info.dt_custom_len)) {
-            printf("Error: Digest base init failed\n");
+            std::cout << "Error: Digest base init failed" << std::endl;
             return;
         }
         /* override digest len for shake cases */
@@ -98,7 +98,8 @@ void inline Digest_Bench(benchmark::State& state,
 
     for (auto _ : state) {
         if (!db->digest_function(data)) {
-            printf("Error code in running digest benchmark: %ld\n", error);
+            std::cout << "Error code in running digest benchmark:" << error
+                      << std::endl;
             return;
         }
         db->reset();

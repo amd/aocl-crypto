@@ -90,7 +90,7 @@ AlcpDigestBase::init()
 
     err = alcp_digest_request(&dinfo, m_handle);
     if (alcp_is_error(err)) {
-        printf("Error!\n");
+        std::cout << "Error code in alcp_digest_request:" << err << std::endl;
         return false;
     }
     return true;
@@ -110,19 +110,19 @@ AlcpDigestBase::digest_function(const alcp_digest_data_t& data)
     alc_error_t err;
     err = alcp_digest_update(m_handle, data.m_msg, data.m_msg_len);
     if (alcp_is_error(err)) {
-        printf("Digest update failed\n");
+        std::cout << "Error code in alcp_digest_update:" << err << std::endl;
         return false;
     }
 
     err = alcp_digest_finalize(m_handle, NULL, 0);
     if (alcp_is_error(err)) {
-        printf("Digest finalize failed\n");
+        std::cout << "Error code in alcp_digest_finalize:" << err << std::endl;
         return false;
     }
 
     err = alcp_digest_copy(m_handle, data.m_digest, data.m_digest_len);
     if (alcp_is_error(err)) {
-        printf("Digest copy failed\n");
+        std::cout << "Error code in alcp_digest_copy:" << err << std::endl;
         return false;
     }
     return true;
