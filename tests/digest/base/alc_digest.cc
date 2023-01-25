@@ -69,7 +69,15 @@ AlcpDigestBase::init()
     alc_digest_info_t dinfo = m_info;
 
     if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
-        dinfo.dt_mode.dm_sha2 = sha2_mode_len_map[m_info.dt_len];
+        /* for sha512-224/256 */
+        if (m_info.dt_mode.dm_sha2 == ALC_SHA2_512
+            && m_info.dt_len != ALC_DIGEST_LEN_512) {
+            dinfo.dt_mode.dm_sha2 = ALC_SHA2_512;
+            dinfo.dt_len          = m_info.dt_len;
+        }
+        /* for normal sha2 cases */
+        else
+            dinfo.dt_mode.dm_sha2 = sha2_mode_len_map[m_info.dt_len];
     } else if (m_info.dt_type == ALC_DIGEST_TYPE_SHA3) {
         if (m_info.dt_len == ALC_DIGEST_LEN_CUSTOM)
             dinfo.dt_custom_len = m_digest_len;

@@ -88,6 +88,23 @@ TEST(DIGEST_SHA2, KAT_512)
     info.dt_len          = ALC_DIGEST_LEN_512;
     Digest_KAT(512, info);
 }
+/* sha512 truncated variants- 224,256*/
+TEST(DIGEST_SHA2, KAT_512_224)
+{
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_512;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len          = ALC_DIGEST_LEN_224;
+    Digest_KAT(224, info);
+}
+TEST(DIGEST_SHA2, KAT_512_256)
+{
+    alc_digest_info_t info;
+    info.dt_mode.dm_sha2 = ALC_SHA2_512;
+    info.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    info.dt_len          = ALC_DIGEST_LEN_256;
+    Digest_KAT(256, info);
+}
 
 /* SHA3 tests */
 /* NOTE: SHA3 tests will be skipped for IPPCP

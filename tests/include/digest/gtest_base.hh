@@ -125,12 +125,28 @@ Digest_KAT(int HashSize, alc_digest_info_t info)
     db = &adb;
 
     std::string TestDataFile = "";
-    if (info.dt_len == ALC_DIGEST_LEN_CUSTOM)
+
+    /* for truncated sha512 (224, 256)*/
+    if (info.dt_type == ALC_DIGEST_TYPE_SHA2
+        && info.dt_mode.dm_sha2 == ALC_SHA2_512) {
+        if (info.dt_len == ALC_DIGEST_LEN_224) {
+            TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_512_"
+                           + std::to_string(HashSize) + ".csv";
+        } else if (info.dt_len == ALC_DIGEST_LEN_256) {
+            TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_512_"
+                           + std::to_string(HashSize) + ".csv";
+        }
+    }
+    /* for SHA3 shake tests */
+    else if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
         TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_SHAKE_"
                        + std::to_string(HashSize) + ".csv";
-    else
+    }
+    /* for normal SHA2, SHA3 */
+    else {
         TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_"
                        + std::to_string(HashSize) + ".csv";
+    }
 
     DataSet ds = DataSet(TestDataFile);
 

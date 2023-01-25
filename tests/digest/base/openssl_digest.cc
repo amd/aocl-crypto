@@ -63,24 +63,22 @@ OpenSSLDigestBase::init()
     if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
         switch (m_info.dt_len) {
             case ALC_DIGEST_LEN_224:
-                EVP_DigestInit(m_handle, EVP_sha224());
+                if (m_info.dt_mode.dm_sha2 == ALC_SHA2_512) {
+                    EVP_DigestInit(m_handle, EVP_sha512_224());
+                } else
+                    EVP_DigestInit(m_handle, EVP_sha224());
                 break;
             case ALC_DIGEST_LEN_256:
-                EVP_DigestInit(m_handle, EVP_sha256());
+                if (m_info.dt_mode.dm_sha2 == ALC_SHA2_512) {
+                    EVP_DigestInit(m_handle, EVP_sha512_256());
+                } else
+                    EVP_DigestInit(m_handle, EVP_sha256());
                 break;
             case ALC_DIGEST_LEN_384:
                 EVP_DigestInit(m_handle, EVP_sha384());
                 break;
             case ALC_DIGEST_LEN_512:
-                /* for truncated variants of sha512 */
-                if (m_info.dt_len == ALC_DIGEST_LEN_224) {
-                    EVP_DigestInit(m_handle, EVP_sha512_224());
-                } else if (m_info.dt_len == ALC_DIGEST_LEN_256) {
-                    EVP_DigestInit(m_handle, EVP_sha512_256());
-                } else {
-                    /* default, when len is 512 */
-                    EVP_DigestInit(m_handle, EVP_sha512());
-                }
+                EVP_DigestInit(m_handle, EVP_sha512());
                 break;
             default:
                 return false;
@@ -153,31 +151,28 @@ OpenSSLDigestBase::reset()
 {
     EVP_MD_CTX_reset(m_handle);
     if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
-        switch (m_info.dt_mode.dm_sha2) {
-            case ALC_SHA2_224:
-                EVP_DigestInit(m_handle, EVP_sha224());
+        switch (m_info.dt_len) {
+            case ALC_DIGEST_LEN_224:
+                if (m_info.dt_mode.dm_sha2 == ALC_SHA2_512) {
+                    EVP_DigestInit(m_handle, EVP_sha512_224());
+                } else
+                    EVP_DigestInit(m_handle, EVP_sha224());
                 break;
-            case ALC_SHA2_256:
-                EVP_DigestInit(m_handle, EVP_sha256());
+            case ALC_DIGEST_LEN_256:
+                if (m_info.dt_mode.dm_sha2 == ALC_SHA2_512) {
+                    EVP_DigestInit(m_handle, EVP_sha512_256());
+                } else
+                    EVP_DigestInit(m_handle, EVP_sha256());
                 break;
-            case ALC_SHA2_384:
+            case ALC_DIGEST_LEN_384:
                 EVP_DigestInit(m_handle, EVP_sha384());
                 break;
-            case ALC_SHA2_512:
-                /* for truncated variants of sha512 */
-                if (m_info.dt_len == ALC_DIGEST_LEN_224) {
-                    EVP_DigestInit(m_handle, EVP_sha512_224());
-                } else if (m_info.dt_len == ALC_DIGEST_LEN_256) {
-                    EVP_DigestInit(m_handle, EVP_sha512_256());
-                } else {
-                    /* default, when len is 512 */
-                    EVP_DigestInit(m_handle, EVP_sha512());
-                }
+            case ALC_DIGEST_LEN_512:
+                EVP_DigestInit(m_handle, EVP_sha512());
                 break;
             default:
                 std::cout << "Error: " << __FILE__ << ":" << __LINE__
                           << std::endl;
-                break;
         }
     } else if (m_info.dt_type == ALC_DIGEST_TYPE_SHA3) {
         switch (m_info.dt_len) {
