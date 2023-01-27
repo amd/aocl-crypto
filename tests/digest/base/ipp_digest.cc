@@ -93,6 +93,7 @@ IPPDigestBase::init()
     }
     /* check error code */
     if (status != ippStsNoErr) {
+        std::cout << "Error code in ippsHashInit_rmf: " << status << std::endl;
         return false;
     }
     return true;
