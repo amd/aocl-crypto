@@ -125,7 +125,7 @@ class ExecRecPlay
 class DataSet : private File
 {
   private:
-    std::string        line = "";
+    std::string        line = "", Filename = "";
     std::vector<Uint8> Digest, Message;
     /* for shake128/256 support */
     std::int64_t DigestLen;

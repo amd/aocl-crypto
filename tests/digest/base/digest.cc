@@ -263,7 +263,8 @@ ExecRecPlay::dumpLog()
 DataSet::DataSet(const std::string filename)
     : File(filename)
 {
-    line = readLine(); // Read header out
+    Filename = filename;
+    line     = readLine(); // Read header out
     return;
 }
 
@@ -282,7 +283,7 @@ DataSet::readMsgDigest()
     }
     int pos1 = line.find(","); // End of Msg
     if (pos1 == -1) {
-        std::cout << "Error in parsing csv" << std::endl;
+        std::cout << "Error in parsing csv: " << Filename << std::endl;
         return false;
     }
     std::string messageStr = line.substr(0, pos1);
@@ -303,9 +304,7 @@ DataSet::readMsgDigestLen()
     int pos1 = line.find(",");           // End of Msg
     int pos2 = line.find(",", pos1 + 1); // End of Msg digest
     if (pos1 == -1 || pos2 == -1) {
-        std::cout << "Error in parsing csv"
-                  << std::endl; // FIXME: Can we print the file name
-                                // here as well?
+        std::cout << "Error in parsing csv: " << Filename << std::endl;
         return false;
     }
     std::string messageStr = line.substr(0, pos1);
