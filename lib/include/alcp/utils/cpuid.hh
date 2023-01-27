@@ -28,7 +28,10 @@
 
 #pragma once
 
+#include "config.h"
+#ifdef ALCP_ENABLE_AOCL_CPUID
 #include <alci/alci.h>
+#endif
 #include <iostream>
 #include <memory>
 
@@ -43,7 +46,9 @@ typedef enum
 
 // using alci::Cpu;
 // using alci::Uarch;
+#ifdef ALCP_ENABLE_AOCL_CPUID
 using namespace alci;
+#endif
 class CpuId
 {
   public:
@@ -163,7 +168,9 @@ class CpuId
       public:
         Impl()  = default;
         ~Impl() = default;
+#ifdef ALCP_ENABLE_AOCL_CPUID
         Cpu m_cpu;
+#endif
 
       public:
         // Genoa functions
