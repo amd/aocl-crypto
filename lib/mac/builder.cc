@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,6 +29,7 @@
 #include "capi/mac/builder.hh"
 #include "alcp/error.h"
 #include "alcp/mac.h"
+#include "mac/cmac_build.hh"
 #include "mac/hmac_build.hh"
 
 namespace alcp::mac {
@@ -44,8 +45,7 @@ MacBuilder::Build(const alc_mac_info_t& macInfo, Context& ctx)
             status = HmacBuilder::Build(macInfo, macInfo.mi_keyinfo, ctx);
             break;
         case ALC_MAC_CMAC:
-            // TODO: Implement CMAC
-            // Process CMAC
+            status = CmacBuilder::Build(macInfo, macInfo.mi_keyinfo, ctx);
             break;
         default:
             // TODO: Set Status error code as not Supported

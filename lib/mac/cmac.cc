@@ -80,7 +80,7 @@ class Cmac::Impl : public alcp::cipher::Aes
         memset(temp_enc_result, 0, 16);
         memset(storage_buffer, 0, 16);
         storage_buffer_offset = 0;
-        return Status();
+        return StatusOk();
     };
 
     bool isSupported(const alc_cipher_info_t& cipherInfo) { return true; }
@@ -89,7 +89,7 @@ class Cmac::Impl : public alcp::cipher::Aes
     {
         // No need to Process anything for empty block
         if (plaintext_size == 0) {
-            return Status();
+            return StatusOk();
         }
 
         /*Combined Bytes to be Processed including any data remainining in
@@ -120,7 +120,7 @@ class Cmac::Impl : public alcp::cipher::Aes
                                    plaintext,
                                    plaintext_size);
             storage_buffer_offset = storage_buffer_offset + plaintext_size;
-            return Status();
+            return StatusOk();
         } else {
             // If total remaining bytes to be processed is less than or equal to
             // 128 bits, break and copy the remaining data into temporary
@@ -154,7 +154,7 @@ class Cmac::Impl : public alcp::cipher::Aes
                                plaintext + plaintext_bytes_processed_so_far,
                                bytes_left_to_process);
         storage_buffer_offset += bytes_left_to_process;
-        return Status();
+        return StatusOk();
     }
 
     alcp::base::Status finalize(const Uint8* plaintext, int plaintext_size)
@@ -199,7 +199,7 @@ class Cmac::Impl : public alcp::cipher::Aes
         }
         // Process the Final Block
         processChunk();
-        return Status();
+        return StatusOk();
     }
 
     alcp::base::Status copy(Uint8* buff, Uint32 size)
@@ -209,7 +209,7 @@ class Cmac::Impl : public alcp::cipher::Aes
         } else {
             alcp::utils::CopyBytes(buff, temp_enc_result, size);
         }
-        return Status();
+        return StatusOk();
     }
 
   private:
