@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,19 +26,87 @@
  *
  */
 
+#pragma once
 #include "alcp/alcp.h"
 #include "mac.hh"
+#include <immintrin.h>
+#include <memory>
+
+// Low overhead union which allows __m128i registers to be represented in
+// multiple formats to improve the debugging capability
+union reg_128
+{
+    __m128i  reg;
+    uint64_t u64[2];
+    uint32_t u32[4];
+    uint16_t u16[8];
+    uint8_t  u8[16];
+};
 
 namespace alcp::mac {
 class Cmac final : public Mac
 {
   public:
     Cmac();
-    Cmac(const alc_mac_info_t& rMacInfo, const alc_key_info_t& keyInfo);
+    /**
+     * @brief CMAC Constructor
+     *
+     * @param cinfo   Cipher Information about the cipher algorithm used in CMAC
+     * @param keyInfo CMAC Key Information
+     */
+    Cmac(const alc_cipher_info_t& cinfo, const alc_key_info_t& keyInfo);
     ~Cmac();
-    alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
-    void        finish() override;
-    void        reset() override;
-    alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) override;
+    /**
+     * @brief Update CMAC with plaintext Message
+     *
+     * @param pMsgBuf   Plaintext Message Buffer bytes to be updated
+     * @param size      Size of the Plaintext Message Buffer in bytes
+     */
+    alcp::base::Status update(const Uint8* pMsgBuf, Uint64 size) override;
+
+    /**
+     * @brief Finish CMAC. Other calls are not valid after finish
+     */
+    void finish() override;
+
+    /**
+     * @brief Reset CMAC. After resetting update can be called by the same key
+     */
+    alcp::base::Status reset() override;
+    /**
+     * @brief Finalize CMAC with any remaining data. After Finalize call Mac can
+     * be copied using copy function
+     *
+     * @param pMsgBuf   Plaintext Message Buffer bytes remaining to be updated
+     * @param size      Size of the Plaintext Message Buffer in bytes
+     */
+    alcp::base::Status finalize(const Uint8* pMsgBuf, Uint64 size) override;
+    /**
+     * @brief Copy MAC to memory pointer by buff . Should be called only after
+     * Mac has been Finalized.
+     *
+     * @param buff      Output Buffer to which Mac will be copied
+     * @param size      Size of the buffer in bytes. Should be greater than or
+     * equal to 16.
+     */
+    alcp::base::Status copy(Uint8* buff, Uint32 size);
+
+  private:
+    class Impl;
+    std::unique_ptr<Impl> m_pImpl;
+    const Impl*           pImpl() const { return m_pImpl.get(); }
+    Impl*                 pImpl() { return m_pImpl.get(); }
 };
+
+namespace avx2 {
+    void processChunk(Uint8*       temp_enc_result,
+                      Uint8*       storage_buffer,
+                      const Uint8* encrypt_keys,
+                      const int    n_rounds);
+
+    void get_subkeys(std::vector<Uint8>& k1,
+                     std::vector<Uint8>& k2,
+                     const Uint8*        encrypt_keys,
+                     const int           n_rounds);
+} // namespace avx2
 } // namespace alcp::mac
