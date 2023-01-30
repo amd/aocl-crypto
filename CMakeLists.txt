@@ -24,16 +24,25 @@
  # POSSIBILITY OF SUCH DAMAGE.
 
 include(TestBigEndian)
-include(${CMAKE_SOURCE_DIR}/cmake/utils.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/config.cmake)
-# OS Specific includes
-if(UNIX)
-include(${CMAKE_SOURCE_DIR}/cmake/CompilerLinux.cmake)
-elseif(WIN32)
-include(${CMAKE_SOURCE_DIR}/cmake/CompilerWin.cmake)
-endif(UNIX)
 
 CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
+
+SET(CMAKE_MODULE_PATH
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+  # Add default path
+  ${CMAKE_MODULE_PATH}
+  )
+
+INCLUDE(AlcpUtils)
+INCLUDE(AlcpConfig)
+
+# OS Specific includes
+IF(UNIX)
+  INCLUDE(CompilerLinux)
+ELSEIF(WIN32)
+  INCLUDE(CompilerWin.cmake)
+ENDIF(UNIX)
+
 PROJECT (ALCP)
 
 #FIXME: is this to be made common for win and lin?

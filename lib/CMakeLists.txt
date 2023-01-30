@@ -64,7 +64,7 @@ SET(ALCP_COMMON_SRCS
 #ENDFUNCTION()
 #]==]
 
-include(utils)
+INCLUDE(AlcpUtils)
 
 # Get Compiler Flags, defined in cmake/Compiler*.cmake
 alcp_get_cflags_warnings()
