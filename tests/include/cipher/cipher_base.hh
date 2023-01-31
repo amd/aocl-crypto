@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -161,7 +161,7 @@ class ExecRecPlay
 class DataSet : private File
 {
   private:
-    std::string        line = "";
+    std::string        line = "", FileName = "";
     std::vector<Uint8> m_pt, m_iv, m_key, m_ct, m_add, m_tag, m_tkey;
     // First line is skipped, linenum starts from 1
     int lineno = 1;

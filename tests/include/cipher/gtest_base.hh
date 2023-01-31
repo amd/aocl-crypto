@@ -523,7 +523,6 @@ AesCrosstest(int               keySize,
                 } else {
                     ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
                 }
-                /* FIXME : make verbose >1 to print these data */
                 if (verbose > 1) {
                     PrintTestData(key, data_alc, MODE_STR);
                     PrintTestData(key, data_ext, MODE_STR);
