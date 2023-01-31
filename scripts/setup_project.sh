@@ -50,6 +50,19 @@ ensure_return_value(){
     fi
 }
 
+ensure_linking(){
+    ensure_file_exists "$1"
+    check_file_exists  "$2"
+    if [ $? -eq 0 ]
+    then
+        echo "Creating a symbolic link between $1 $2"
+        ln -s "$1" "$2"
+        ensure_return_value 0
+    else
+        echo "$2 seems to exist, if its a copy, please ensure its upto date with $1"
+    fi
+}
+
 
 # GIT Functions
 check_git_dir(){
@@ -76,20 +89,15 @@ check_repo_is_alcp(){
 }
 
 ensure_clang_format(){
-    ensure_file_exists "$GIT_WORKING_DIR/docs/clang-format.in"
-    check_file_exists  "$GIT_WORKING_DIR/.clang-format"
-    if [ $? -eq 0 ]
-    then
-        echo "Creating a symbolic link between $GIT_WORKING_DIR/docs/clang-format.in $GIT_WORKING_DIR/.clang-format"
-        ln -s "$GIT_WORKING_DIR/docs/clang-format.in" "$GIT_WORKING_DIR/.clang-format"
-        ensure_return_value 0
-    else
-        echo "$GIT_WORKING_DIR/.clang-format seems to exist, if its a copy, please ensure its upto date with $GIT_WORKING_DIR/docs/clang-format.in"
-    fi
+    ensure_linking "$GIT_WORKING_DIR/docs/clang-format.in" "$GIT_WORKING_DIR/.clang-format"
+}
+
+ensure_git_precommit_hook(){
+    ensure_linking "$GIT_WORKING_DIR/scripts/git-hooks/pre-commit.sh" "$GIT_WORKING_DIR/.git/hooks/pre-commit"
 }
 
 ensure_git_hooks(){
-    # TODO: Implement
+    ensure_git_precommit_hook;
 }
 
 check_git_dir;
@@ -99,3 +107,4 @@ echo "Found Working Git Directory as $GIT_WORKING_DIR"
 
 check_repo_is_alcp;
 ensure_clang_format;
+ensure_git_hooks;
