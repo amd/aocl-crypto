@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,15 +30,15 @@
 #ifndef __GTEST_BASE_HH
 #define __GTEST_BASE_HH 2
 
-#include "alc_base.hh"
-#include "base.hh"
+#include "alc_cipher_base.hh"
+#include "cipher_base.hh"
 #include "gtest_common.hh"
 #include <vector>
 #ifdef USE_IPP
-#include "ipp_base.hh"
+#include "ipp_cipher_base.hh"
 #endif
 #ifdef USE_OSSL
-#include "openssl_base.hh"
+#include "openssl_cipher_base.hh"
 #endif
 #include "rng_base.hh"
 #include <algorithm>

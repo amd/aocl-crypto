@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,10 +26,10 @@
  *
  */
 
-#include "cipher/base.hh"
+#include "cipher/cipher_base.hh"
 #include <sstream>
 #ifdef USE_IPP
-#include "cipher/ipp_base.hh"
+#include "cipher/ipp_cipher_base.hh"
 #endif
 #ifdef WIN32
 #include <direct.h>
@@ -76,11 +76,11 @@ void
 ExecRecPlay::init(std::string str_mode, std::string dir_name, bool playback)
 {
     if (!isPathExist(dir_name)) {
-    #ifdef __linux__
+#ifdef __linux__
         mkdir(dir_name.c_str(), 0755);
-    #elif WIN32
+#elif WIN32
         _mkdir(dir_name.c_str());
-    #endif
+#endif
     }
     if (!playback) { // Record
         // Binary File, need to open binary

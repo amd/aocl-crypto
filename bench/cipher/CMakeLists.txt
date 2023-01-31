@@ -1,4 +1,4 @@
- # Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -33,7 +33,7 @@ FetchContent_Declare(benchmark
     GIT_TAG v1.6.1)
 FetchContent_MakeAvailable(benchmark)
 
-SET(ALC_BASE_FILES ${ALC_BASE_FILES} ../../tests/common/base/base_common.cc ../../tests/cipher/base/alc_base.cc ../../tests/cipher/base/base.cc)
+SET(ALC_BASE_FILES ${ALC_BASE_FILES} ../../tests/common/base/base_common.cc ../../tests/cipher/base/alc_cipher_base.cc ../../tests/cipher/base/cipher_base.cc)
 SET(LIBS ${LIBS} benchmark alcp)
 # add this if asan is used
 if (ALCP_USE_ASAN)
@@ -50,7 +50,7 @@ IF(ENABLE_TESTS_IPP_API)
         MESSAGE(STATUS "IPP_INSTALL_DIR not set, defaulting to external")
     ENDIF(IPP_INSTALL_DIR)
     # If there is IPP, add IPP source and add IPP liberary
-    SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cipher/base/ipp_base.cc)
+    SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cipher/base/ipp_cipher_base.cc)
 	IF(UNIX)
         IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
             SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
@@ -79,7 +79,7 @@ IF(ENABLE_TESTS_OPENSSL_API)
         MESSAGE(STATUS "OPENSSL_INSTALL_DIR not set, defaulting to external")
     ENDIF(OPENSSL_INSTALL_DIR)
     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
-    SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cipher/base/openssl_base.cc)
+    SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cipher/base/openssl_cipher_base.cc)
 	IF(UNIX)
 		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
 			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)

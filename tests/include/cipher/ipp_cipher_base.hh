@@ -26,7 +26,7 @@
  *
  */
 #pragma once
-#include "base.hh"
+#include "cipher_base.hh"
 #include <alcp/alcp.h>
 #include <alcp/types.h>
 #include <iostream>

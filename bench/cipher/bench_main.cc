@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,7 +27,7 @@
  */
 
 #include "benchmarks.hh"
-#include "cipher/base.hh"
+#include "cipher/cipher_base.hh"
 #include "gbench_base.hh"
 #include <memory>
 
@@ -44,7 +44,7 @@ CipherAes(benchmark::State& state,
     // Dynamic allocation better for larger sizes
     std::vector<Uint8>         vec_in(blockSize, 56);
     std::vector<Uint8>         vec_out(blockSize, 21);
-    std::unique_ptr<Uint8[]>     tagBuffer = std::make_unique<Uint8[]>(16);
+    std::unique_ptr<Uint8[]>   tagBuffer = std::make_unique<Uint8[]>(16);
     Uint8                      key[keylen / 8];
     Uint8                      iv[16];
     Uint8                      ad[16];

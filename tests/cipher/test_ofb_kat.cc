@@ -26,15 +26,14 @@
  *
  */
 
-#include "cipher/alc_base.hh"
-#include "cipher/base.hh"
+#include "cipher/alc_cipher_base.hh"
+#include "cipher/cipher_base.hh"
 #include "cipher/gtest_base.hh"
 
 using namespace alcp::testing;
 
 #define ALC_MODE ALC_AES_MODE_OFB
 
-// /* Testing Starts Here! */
 /* Testing Starts Here! */
 TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
 {
