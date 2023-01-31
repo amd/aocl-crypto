@@ -26,7 +26,7 @@
  *
  */
 
-#include "benchmarks.hh"
+#include "benchmarks_digest.hh"
 #include "colors.hh"
 #include "gbench_base.hh"
 
