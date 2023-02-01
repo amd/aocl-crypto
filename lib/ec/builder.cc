@@ -68,7 +68,6 @@ __ec_dtor(void* pEc)
 {
     alc_error_t e  = ALC_ERROR_NONE;
     auto        ap = static_cast<ECTYPE*>(pEc);
-    ap->finish();
     // FIXME: Not a good idea!
     ap->~ECTYPE();
     return e;

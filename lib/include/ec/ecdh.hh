@@ -42,18 +42,17 @@ alcpScalarMulX25519(Uint8*       mypublic,
 class EcX25519 : public Ec
 {
   public:
-    const Uint8* m_pPrivKey;
-    EcX25519(){};
-    ~EcX25519(){};
+    EcX25519();
+    ~EcX25519() = default;
 
     /**
      * @brief Function generates x25519 public key using input privateKey
      * generated public key is shared with the peer.
-     * @param pPublicKey - pointer to Output Publickey generated
-     * @param pPrivKey - pointer to Input privateKey used for generating
+     *
+     * @param  pPublicKey  pointer to Output Publickey generated
+     * @param  pPrivKey    pointer to Input privateKey used for generating
      * publicKey
-     * @return true
-     * @return false
+     * @return alc_error_t Error code
      */
     ALCP_API_EXPORT alc_error_t
     GeneratePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey) override;
@@ -62,41 +61,40 @@ class EcX25519 : public Ec
      * @brief Function computes x25519 secret key with publicKey from remotePeer
      * and local privatekey.
      *
-     * @param pSecretKey - pointer to output secretKey
-     * @param pPublicKey - pointer to Input privateKey used for generating
+     * @param  pSecretKey  pointer to output secretKey
+     * @param  pPublicKey  pointer to Input privateKey used for generating
      * publicKey
-     * @param pKeyLength - pointer to keyLength
-     * @return true
-     * @return false
+     * @param  pKeyLength  pointer to keyLength
+     * @return alc_error_t Error code
      */
     ALCP_API_EXPORT alc_error_t ComputeSecretKey(Uint8*       pSecretKey,
                                                  const Uint8* pPublicKey,
                                                  Uint64* pKeyLength) override;
 
     /**
-     * \brief   Cleans up any resource that was allocated
+     * @brief Function validates public key from remote peer
      *
-     * \notes   `finish()` to be called as a means to cleanup, no operation
-     *           permitted after this call.
-     *
-     * \return nothing
+     * @param  pPublicKey  pointer to public key publicKey
+     * @param  pKeyLength  pointer to keyLength
+     * @return alc_error_t Error code
      */
-    void finish() override;
-
+    virtual alc_error_t ValidatePublicKey(const Uint8* pPublicKey,
+                                          Uint64       pKeyLength) override;
     /**
-     * \brief    Resets the internal state.
+     * @brief Function resets the internal state
      *
-     * \notes   `reset()` to be called as a means to reset the internal state.
-     *           This enables the processing the new buffer.
-     *
-     * \return nothing
+     * @return nothing
      */
     void reset() override;
 
     /**
-     * @return The key size in bytes
+     * @brief  Returns the key size in bytes
+     * @return key size
      */
     Uint64 getKeySize() override;
+
+  private:
+    std::vector<Uint8> m_pPrivKey;
 };
 
 // x2519 apis

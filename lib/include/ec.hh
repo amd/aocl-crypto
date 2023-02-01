@@ -105,8 +105,10 @@ class IEc
                                          const Uint8* pPublicKey,
                                          Uint64*      pKeyLength) = 0;
 
-    virtual void finish() = 0;
-    virtual void reset()  = 0;
+    virtual alc_error_t ValidatePublicKey(const Uint8* pPublicKey,
+                                          Uint64       pKeyLength) = 0;
+
+    virtual void reset() = 0;
 
     /**
      * @return The key size in bytes

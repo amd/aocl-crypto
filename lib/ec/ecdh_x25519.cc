@@ -27,17 +27,23 @@
  */
 
 #include "ec/ecdh.hh"
+#include <string.h>
 
-static const Uint8 x25519_basepoint_9[32] = { 9 };
+static constexpr Uint32 MaxKeySize                     = 32;
+static const Uint8      x25519_basepoint_9[MaxKeySize] = { 9 };
+
+EcX25519::EcX25519()
+{
+    m_pPrivKey.resize(MaxKeySize);
+}
 
 alc_error_t
 EcX25519::GeneratePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
 {
     alc_error_t err = ALC_ERROR_NONE;
-
-    m_pPrivKey = pPrivKey;
+    std::copy(pPrivKey, pPrivKey + MaxKeySize, m_pPrivKey.begin());
 #if ALCP_X25519_ADDED
-    alcpScalarMulX25519(pPublicKey, m_pPrivKey, x25519_basepoint_9);
+    alcpScalarMulX25519(pPublicKey, pPrivKey, x25519_basepoint_9);
 #endif
     return err;
 }
@@ -49,6 +55,12 @@ EcX25519 ::ComputeSecretKey(Uint8*       pSecretKey,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
+    err = ValidatePublicKey(pPublicKey, MaxKeySize);
+
+    if (err != ALC_ERROR_NONE) {
+        return err;
+    }
+
 #if ALCP_X25519_ADDED
     alcpScalarMulX25519(pSecretKey, m_pPrivKey, pPublicKey);
 #endif
@@ -56,17 +68,27 @@ EcX25519 ::ComputeSecretKey(Uint8*       pSecretKey,
     return err;
 }
 
-void
-EcX25519 ::finish()
-{}
+alc_error_t
+EcX25519::ValidatePublicKey(const Uint8* pPublicKey, Uint64 pKeyLength)
+{
+    if (pKeyLength != MaxKeySize) {
+        return ALC_ERROR_INVALID_SIZE;
+    }
+
+    static const Uint8 all_zero[MaxKeySize] = { 0 };
+
+    return memcmp(all_zero, pPublicKey, MaxKeySize) ? ALC_ERROR_NONE
+                                                    : ALC_ERROR_NOT_PERMITTED;
+}
 
 void
 EcX25519 ::reset()
-{}
+{
+    std::fill(m_pPrivKey.begin(), m_pPrivKey.end(), 0);
+}
 
 Uint64
 EcX25519 ::getKeySize()
 {
-    // FIXME: add key size based on EC type
-    return 32;
+    return MaxKeySize;
 }
