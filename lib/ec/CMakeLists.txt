@@ -1,4 +1,4 @@
- # Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -24,22 +24,11 @@
  # POSSIBILITY OF SUCH DAMAGE.
 
 
-INCLUDE_DIRECTORIES(
-	"${CMAKE_SOURCE_DIR}/include"
-	"${CMAKE_SOURCE_DIR}/lib/include")
+FILE(GLOB EC_SRCS "*.cc")
 
-LINK_LIBRARIES(alcp)
+TARGET_SOURCES(alcp
+	PRIVATE
+		${EC_SRCS}
+	)
 
-ADD_SUBDIRECTORY(cipher)
-
-ADD_SUBDIRECTORY(digest)
-
-ADD_SUBDIRECTORY(ecdh)
-
-ADD_SUBDIRECTORY(rng)
-
-ADD_SUBDIRECTORY(mac)
-
-ADD_SUBDIRECTORY(misc)
-
-ADD_SUBDIRECTORY(version)
+ADD_SUBDIRECTORY(tests)

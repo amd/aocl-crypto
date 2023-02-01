@@ -34,7 +34,6 @@
 #include <cstring>
 #include <immintrin.h>
 
-#include "error.hh"
 #include "key.hh"
 #include "types.hh"
 #include "utils/copy.hh"

@@ -1,5 +1,5 @@
 ---
-title: AOCL Crypto 
+title: AOCL Crypto
 subtitle: Software Design Document
 author: Prem Mallappa <pmallapp@amd.com>
 subject: "markdown"
@@ -53,13 +53,13 @@ library has following components.
 
   1. Algorithm - Describes any algorithm that deals with one cryptographic function.
      For example, AES CBC Encode is an algorithm, supporting one mode.
-     
+
   2. Module - Module is a collection of algorithms grouped together (logically).
      For example, AES and DES will be under module "Symmetric Key"
-  
+
   3. Plugin - Is a loadable module, contains one or more algorithms, which
      registers itself with the library to extend its functionality.
-  
+
   4. Compatibility layer - Compatibility layer allows any application compiled
      linked against other libraries to work with AOCL Crypto without
      modifications. AOCL Crypto provides compatibility layer for IPP-CP and
@@ -72,8 +72,8 @@ Each algorithm would exist in at least 2 forms
 
   1. A Reference Implementation
   2. An Optimized Implementation.
-        - AVX  SIMD 
-        - AVX2 SIMD 
+        - AVX  SIMD
+        - AVX2 SIMD
         - AESNI accelerated instructions
         - Hardware off-load processing
 
@@ -178,17 +178,17 @@ To simplify the object access types, we introduce following notion
 
   1. Types - Each category (module) will have many types of schemes, this needs
      to be highlighted using one of the `type` mechanisms.
-  
+
   2. Attributes - All the above mentioned components have attributes, an
      attribute defines properties for a given object or a context, may it be an
      algorithm or a module.
-     
+
   2. Operations - The operations that can be performed using that object or on
      that object. For example an cipher algorithm provides encrypt()/decrypt()
      kind of operations, where as an hash algorithm provides hash() or digest()
      kind of operation. Modules provides load()/unload()/search()/init() and
      other operations and so on.
-     
+
   3. Parameters - Parameters are passed to Operations to perform the same
      operation slightly differently. Some cases the distinction between
      attributes and parameters vanishes, as the attribute itself defines the
@@ -236,8 +236,8 @@ Library Defines following types
 All types have prefix of `alc_` followed by type/module and end with `_t` , for example
   - Error type : `alc_error_t` and `alc_key_t` `alc_algorithm_t`
   - Operation type: `alc_cipher_ops_t` and `alc_hashing_ops_t`
-  - Attributes: `alc_key_info_t` `alc_module_info_t`, `alc_cipher_info_t` 
-  
+  - Attributes: `alc_key_info_t` `alc_module_info_t`, `alc_cipher_info_t`
+
 ### Directory Structure
 This section details the very initial directory structure layout, though heavily
 subjected to change, overall structure would be comparable to following
@@ -246,11 +246,11 @@ subjected to change, overall structure would be comparable to following
     library developers.
       - _docs/internal_ : AMD's internal documentation such as design /
         architecture etc.
-        
+
   - _examples/_ : sub-divided into its own directories to contain examples
     pertaining to a logical group of algorithms
       - _examples/symmetric/_ : symmetric key algorithm examples
-      - _examples/digest/_    : One way hash function examples 
+      - _examples/digest/_    : One way hash function examples
       - etc...
   - _include/_ : Contains all the headers
       - _include/external_ : API header, C99 based
@@ -288,7 +288,7 @@ typedef uint64_t alc_error_t;
 
 All modules in AOCL Crypto library has an assigned ID which is internal
 to the library. However detailed error message can be printed using the function
-`alc_error_str()`. 
+`alc_error_str()`.
 
 The function `alc_error_str_internal()` will perform the same action as
 `alc_error_str()`. Just that it prints the filename and line number where the
@@ -369,7 +369,7 @@ Some of the modules internally recognized at the time of writing are:
   - Padding (`ALC_MODULE_PAD`)
 
 Each module supports its own operation. For example, a Symmetric key module
-supports 
+supports
   - `alcp_cipher_encrypt()`
   - `alcp_cipher_decrypt()`
   - `alcp_cipher_available()`
@@ -391,6 +391,7 @@ typedef enum {
 
     ALC_MODULE_TYPE_DIGEST,
     ALC_MODULE_TYPE_MAC,
+    ALC_MODULE_TYPE_EC,
     ALC_MODULE_TYPE_CIPHER,
     ALC_MODULE_TYPE_KDF,
     ALC_MODULE_TYPE_RNG,
@@ -402,7 +403,7 @@ typedef enum {
 ```
 
 The `alc_module_info_t` describes the module. The simple signature is checked to see if
-the module belongs to aocl stack. 
+the module belongs to aocl stack.
 
 ```c
 typedef struct {
@@ -450,7 +451,7 @@ registers itself with the module manager. Once the registration is done, any
 request for a given algorithm will be returned with the already selected algorithm.
 
 The dynamic dispatcher will allow debug mode to override the selection of the
-function. 
+function.
 
 If a plugin is loaded, its implementation will overwrite all the algorithms that
 are currently selected by the dynamic dispatcher. Hence plugins to be loaded
@@ -465,7 +466,7 @@ the library, it will be treated as an extension and applications can request for
 the algorithms supported by the newly loaded plugin.
 
 
-<!-- 
+<!--
 Detailed Subsystem Design
         #include design/02-subsystem-design.md
 -->
@@ -478,7 +479,7 @@ Plugin system design
 
 
 <!--
-Device offloading 
+Device offloading
         #include design/devices.md
 -->
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,41 +27,66 @@
  */
 #pragma once
 
-#include "digest.hh"
-#include <alcp/alcp.h>
 #include <iostream>
-#include <openssl/conf.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
 #include <stdio.h>
 #include <string.h>
 
+#include <alcp/alcp.h>
+#include <alcp/ec.h>
+#include <alcp/ecdh.h>
+
+#include "ecdh.hh"
+
 namespace alcp::testing {
-class OpenSSLDigestBase : public DigestBase
+class alcpEcdh : public ecdh
 {
-    EVP_MD_CTX*       m_handle = nullptr;
-    alc_digest_info_t m_info;
-    Uint8*            m_message;
-    Uint8*            m_digest;
-    Int64             m_digest_len;
+    void*       m_handle = nullptr;
+    const char* m_name;
+    const char* m_pkeytype;
+
+    const Uint8* m_pPrivateKeyData;
+    Uint8*       m_pSecret = NULL;
+    Uint64       m_secretLength;
 
   public:
-    // Class contructor and destructor
+    Uint8  m_publicKeyData[MAX_SIZE_KEY_DATA];
+    Uint64 m_publicKey_len;
+
+    bool          m_isKAT;
+    alc_peer_id_t m_peerId;
+    std::string   m_peerName;
+
+  public:
+    // Create ecdh with EC type.
+    alcpEcdh(const char* pKeytype, alc_peer_id_t peerId);
+    ~alcpEcdh();
+
     /**
-     * @brief Creates a digest base of type openssl with alcp_digest_info_t
-     * provided
-     *
-     * @param info Information of which digest to use and what length.
+     * @brief Function generates public key using input privateKey generated
+     * public key is shared with the peer.
+     * @param pPublicKey - pointer to Output Publickey generated
+     * @param pPrivKey - pointer to Input privateKey used for generating
+     * publicKey
+     * @return true
+     * @return false
      */
-    OpenSSLDigestBase(const alc_digest_info_t& info);
-    ~OpenSSLDigestBase();
+    alc_error_t generate_public_key(Uint8* pPublicKey, const Uint8* pPrivKey);
 
-    // All inits
-    bool init(const alc_digest_info_t& info, Int64 digest_len);
-    bool init();
+    /**
+     * @brief Function compute secret key with publicKey from remotePeer and
+     * local privatekey.
+     *
+     * @param pSecretKey - pointer to output secretKey
+     * @param pPublicKey - pointer to Input privateKey used for generating
+     * publicKey
+     * @param pKeyLength - pointer to keyLength
+     * @return true
+     * @return false
+     */
+    alc_error_t compute_secret_key(Uint8*       pSecretKey,
+                                   const Uint8* pPublicKey,
+                                   Uint64*      pKeyLength);
 
-    bool digest_function(const alcp_digest_data_t& data);
     void reset();
 };
-
 } // namespace alcp::testing

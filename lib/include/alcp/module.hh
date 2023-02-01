@@ -44,6 +44,7 @@ typedef enum _alc_module_type
     ALC_MODULE_TYPE_DIGEST,
     ALC_MODULE_TYPE_RNG,
     ALC_MODULE_TYPE_MAC,
+    ALC_MODULE_TYPE_EC,
 
     ALC_MODULE_TYPE_MAX,
 } alc_module_type_t;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,41 +27,28 @@
  */
 #pragma once
 
-#include "digest.hh"
-#include <alcp/alcp.h>
-#include <iostream>
-#include <openssl/conf.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
-#include <stdio.h>
-#include <string.h>
+#include "alcp/ec.h"
 
-namespace alcp::testing {
-class OpenSSLDigestBase : public DigestBase
+#include "alcp/capi/defs.hh"
+#include "ec.hh"
+
+namespace alcp::ec {
+
+class Context
 {
-    EVP_MD_CTX*       m_handle = nullptr;
-    alc_digest_info_t m_info;
-    Uint8*            m_message;
-    Uint8*            m_digest;
-    Int64             m_digest_len;
-
   public:
-    // Class contructor and destructor
-    /**
-     * @brief Creates a digest base of type openssl with alcp_digest_info_t
-     * provided
-     *
-     * @param info Information of which digest to use and what length.
-     */
-    OpenSSLDigestBase(const alc_digest_info_t& info);
-    ~OpenSSLDigestBase();
+    void* m_ec;
 
-    // All inits
-    bool init(const alc_digest_info_t& info, Int64 digest_len);
-    bool init();
+    alc_error_t (*getPublicKey)(void*        pEc,
+                                Uint8*       pPublicKey,
+                                const Uint8* pPrivKey);
 
-    bool digest_function(const alcp_digest_data_t& data);
-    void reset();
+    alc_error_t (*getSecretKey)(void*        pEc,
+                                Uint8*       pSecretKey,
+                                const Uint8* pPublicKey,
+                                Uint64*      pKeyLength);
+
+    alc_error_t (*finish)(void*);
 };
 
-} // namespace alcp::testing
+} // namespace alcp::ec

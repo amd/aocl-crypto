@@ -77,6 +77,8 @@ ModuleManager::findModule(const alc_module_info_t* ainfo, alc_error_t& err)
 
             case ALC_MODULE_TYPE_MAC:
                 break;
+            case ALC_MODULE_TYPE_EC:
+                break;
             case ALC_MODULE_TYPE_RNG:
                 break;
             case ALC_MODULE_TYPE_DIGEST:

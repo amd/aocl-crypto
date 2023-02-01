@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,43 +25,48 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#pragma once
 
-#include "digest.hh"
-#include <alcp/alcp.h>
-#include <iostream>
-#include <openssl/conf.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
-#include <stdio.h>
-#include <string.h>
+#include "ec/ecdh.hh"
 
-namespace alcp::testing {
-class OpenSSLDigestBase : public DigestBase
+static const Uint8 x25519_basepoint_9[32] = { 9 };
+
+alc_error_t
+EcX25519::GeneratePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
 {
-    EVP_MD_CTX*       m_handle = nullptr;
-    alc_digest_info_t m_info;
-    Uint8*            m_message;
-    Uint8*            m_digest;
-    Int64             m_digest_len;
+    alc_error_t err = ALC_ERROR_NONE;
 
-  public:
-    // Class contructor and destructor
-    /**
-     * @brief Creates a digest base of type openssl with alcp_digest_info_t
-     * provided
-     *
-     * @param info Information of which digest to use and what length.
-     */
-    OpenSSLDigestBase(const alc_digest_info_t& info);
-    ~OpenSSLDigestBase();
+    m_pPrivKey = pPrivKey;
+#if ALCP_X25519_ADDED
+    alcpScalarMulX25519(pPublicKey, m_pPrivKey, x25519_basepoint_9);
+#endif
+    return err;
+}
 
-    // All inits
-    bool init(const alc_digest_info_t& info, Int64 digest_len);
-    bool init();
+alc_error_t
+EcX25519 ::ComputeSecretKey(Uint8*       pSecretKey,
+                            const Uint8* pPublicKey,
+                            Uint64*      pKeyLength)
+{
+    alc_error_t err = ALC_ERROR_NONE;
 
-    bool digest_function(const alcp_digest_data_t& data);
-    void reset();
-};
+#if ALCP_X25519_ADDED
+    alcpScalarMulX25519(pSecretKey, m_pPrivKey, pPublicKey);
+#endif
+    *pKeyLength = 32;
+    return err;
+}
 
-} // namespace alcp::testing
+void
+EcX25519 ::finish()
+{}
+
+void
+EcX25519 ::reset()
+{}
+
+Uint64
+EcX25519 ::getKeySize()
+{
+    // FIXME: add key size based on EC type
+    return 32;
+}
