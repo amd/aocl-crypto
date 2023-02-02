@@ -24,47 +24,10 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-
-VERBOSE_LEVEL = 1
-
-class Error:
-    @staticmethod
-    def print_error(frameinfo,error_str :str):
-        print(f"Error {frameinfo.filename}:{frameinfo.lineno}\t{error_str}")
-
-class Shell:
-    import subprocess as sp
-    @staticmethod
-    def run_cmd_read(cmd):
-        if(type(cmd) == str):
-            cmd = cmd.split()
-        process = Shell.sp.Popen(cmd,stdout=Shell.sp.PIPE,stderr=Shell.sp.PIPE,stdin=Shell.sp.PIPE)
-        process.wait()
-        stdout = process.stdout.read().decode()
-        stderr = process.stderr.read().decode()
-        return {"ret":process.returncode,"stdout":stdout,"stderr":stderr}
-
-class Git:
-    def __init__(self):
-        self.reset()
-    def enquire_unstaged_files(self):
-        staged_files_cmd = "git diff --name-only"
-        self.out = Shell.run_cmd_read(staged_files_cmd)
-    def enquire_staged_files(self):
-        staged_files_cmd = "git diff --name-only --cached"
-        self.out = Shell.run_cmd_read(staged_files_cmd)
-    def get_files_raw(self):
-        assert(type(self.out) == dict)
-        return self.out
-    def get_files_list(self):
-        assert(type(self.out) == dict)
-        return self.out["stdout"].strip().splitlines()
-    def get_status(self):
-        assert(type(self.out) == dict)
-        return self.out["ret"]
-    def reset(self):
-        self.out = None
-
+from error import Error
+from git import Git
+from shell import Shell
+from config import VERBOSE_LEVEL
 class Copyright:
     from pathlib import Path
     from datetime import datetime
@@ -79,18 +42,10 @@ class Copyright:
         return str(Copyright.datetime.now().date().year)
 
     def find_first_commit_year(self):
-        find_origin_log = "git log --reverse --format=%ad --date=format:%Y "+self.file_s
-        out = Shell.run_cmd_read(find_origin_log)
-        if(out["ret"]):
-            if(VERBOSE_LEVEL>=0):
-                frameinfo = Copyright.getframeinfo(Copyright.currentframe())
-                Error.print_error(frameinfo,"git command execution failure, CMDLINE:"+find_origin_log)
-            return None
-        out = out["stdout"].strip().splitlines()
-        if(len(out)>0):
-            out = out[0]
-        else:
-            out = None
+        git = Git()
+        if not git.enquire_first_commit_year(file_s=self.file_s):
+            return 0
+        out = git.get_str()
         return out
 
     def parse_source_file_start_end_year(self):
@@ -207,4 +162,12 @@ def ensure_staged_files_copyrights():
     if(problems_detected):
         exit(-1)
 
-ensure_staged_files_copyrights()
+try:
+    ensure_staged_files_copyrights()
+except Exception as e:
+    if(VERBOSE_LEVEL>1):
+        print("Raising captured exception")
+        raise e
+    else:
+        print("Execption occured, terminating")
+    exit(-1)
