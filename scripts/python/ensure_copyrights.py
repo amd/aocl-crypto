@@ -26,8 +26,10 @@
 
 from error import Error
 from git import Git
-from shell import Shell
 from config import VERBOSE_LEVEL
+from colors import Colors
+import sys
+from inspect import currentframe,getframeinfo
 class Copyright:
     from pathlib import Path
     from datetime import datetime
@@ -36,6 +38,12 @@ class Copyright:
     def __init__(self,filename :str):
         self.file_p = self.Path(filename)
         self.file_s = filename
+        self.extensions_supported = [".cc",".c",".inc",".hh",".h",".py",".cmake",".sh"]
+        if(not ((self.file_p.suffix in self.extensions_supported) or (self.file_p.stem + self.file_p.suffix).endswith("CMakeLists.txt"))):
+            if(VERBOSE_LEVEL>1):
+                frameinfo = Copyright.getframeinfo(Copyright.currentframe())
+                Error.print_error(frameinfo,"File extension not supported!")
+            raise(NotImplementedError(f"Extension {self.file_p.suffix} is not supported"))
 
     @staticmethod
     def get_current_year():
@@ -48,15 +56,22 @@ class Copyright:
         out = git.get_str()
         return out
 
+    def find_last_commit_year(self):
+        git = Git()
+        if not git.enquire_last_commit_year(file_s=self.file_s):
+            return 0
+        out = git.get_str()
+        return out
+
     def parse_source_file_start_end_year(self):
         file = open(self.file_s,"r")
-        data = file.read()
+        data = file.read(100)
         # Mangling the strings to Avoid detecting the below code as the fingerprint
         # While running precommit hook for this source file.
         index1 = data.find(", Advanced"+" "+"Micro Devices.")
         index2 = data.find("Copyright"+" "+"(C) ")
         if(index1 == -1 or index2 == -1):
-            if(VERBOSE_LEVEL>=0):
+            if(VERBOSE_LEVEL>=1):
                 frameinfo = Copyright.getframeinfo(Copyright.currentframe())
                 Error.print_error(frameinfo,"unable to find copyright fingerprint!")
             return None,None
@@ -88,24 +103,17 @@ class Copyright:
         ext = file.suffix
         start_year,end_year = None,None
         # Format type 1, source code.
-        if(ext == ".cc" or ext == ".c" or ext == ".inc" or ext == ".hh" or ext == ".h"):
-            start_year, end_year = self.parse_source_file_start_end_year()
-        # Format type 2, scripts
-        elif(ext == ".py" or ext == ".cmake" or ext == ".sh"):
-            start_year, end_year = self.parse_source_file_start_end_year() # Seems somehow we made a good generic parser accidentally
-        elif((file.stem + ext) == "CMakeLists.txt"):
-            start_year, end_year = self.parse_source_file_start_end_year() # Seems somehow we made a good generic parser accidentally
-        else:
-            if(VERBOSE_LEVEL>=0):
-                frameinfo = Copyright.getframeinfo(Copyright.currentframe())
-                Error.print_error(frameinfo,"Unknown File Extention")
-            return None
+        start_year, end_year = self.parse_source_file_start_end_year()
         return start_year,end_year
         # TODO: Exclude cmake from the above.
 
-    def ensure_copyright_years(self):
+    def ensure_copyright_years(self,end_year_is_current=True):
         exp_start_year = self.find_first_commit_year()
-        exp_end_year = self.get_current_year()
+        exp_end_year = None
+        if(end_year_is_current):
+            exp_end_year = self.get_current_year()
+        else:
+            exp_end_year = self.find_last_commit_year()
         if(not exp_start_year):
             # Sometimes the file might be a new file
             exp_start_year = exp_end_year
@@ -116,26 +124,40 @@ class Copyright:
 
         # Act -> Actual
         act = self.parse_file_start_end_year()
-        assert(sum([(type(i) == str) for i in act])==2)
+        if(sum([(type(i) == str) for i in act])!=2):
+            if(VERBOSE_LEVEL>=1):
+                frameinfo = Copyright.getframeinfo(Copyright.currentframe())
+                Error.print_error(frameinfo,"FAIL")
+            return False
         if((exp_start_year,exp_end_year) == act):
             if(VERBOSE_LEVEL>=2):
-                print("PASS")
+                frameinfo = Copyright.getframeinfo(Copyright.currentframe())
+                Error.print_ok(frameinfo,"PASS")
             return True
         else:
             act_start_year,act_end_year = act
             if(VERBOSE_LEVEL>=1):
                 if(exp_start_year == act_start_year):
                     if(VERBOSE_LEVEL>=2):
+                        Colors.set_foreground("BLUE")
                         print("Start year is correct")
+                        Colors.reset()
                 else:
+                    Colors.set_foreground("RED")
                     print(f"Expected start was {exp_start_year} but got {act_start_year}")
+                    Colors.reset()
                 if(exp_end_year == act_end_year):
                     if(VERBOSE_LEVEL>=2):
+                        Colors.set_foreground("BLUE")
                         print("End year is correct")
+                        Colors.reset()
                 else:
+                    Colors.set_foreground("RED")
                     print(f"Expected end was {exp_end_year} but got {act_end_year}")
+                    Colors.reset()
             if(VERBOSE_LEVEL>=1):
-                print("FAIL")
+                frameinfo = Copyright.getframeinfo(Copyright.currentframe())
+                Error.print_error(frameinfo,"FAIL")
             return False
 
 def ensure_staged_files_copyrights():
@@ -149,7 +171,7 @@ def ensure_staged_files_copyrights():
             print("Checking file:",i)
         copyright = Copyright(i)
         try:
-            if(not copyright.ensure_copyright_years()):
+            if(not copyright.ensure_copyright_years(end_year_is_current=True)):
                 problems_detected = True
                 if(VERBOSE_LEVEL>=1):
                     print("Above reported problem is for file:"+i+"\n")
@@ -162,6 +184,87 @@ def ensure_staged_files_copyrights():
     if(problems_detected):
         exit(-1)
 
+def get_all_files():
+    g = Git()
+    g.enquire_all_files()
+    return g.get_files_list()
+
+def copyright_check_all():
+    files = get_all_files()
+    if(not files):
+        frameinfo = getframeinfo(currentframe())
+        Error.print_error(frameinfo,"No files found")
+        return
+    for i in files:
+        if(VERBOSE_LEVEL>=1):
+            frameinfo = getframeinfo(currentframe())
+            Error.print_info(frameinfo,i)
+        try:
+            copyright = Copyright(i)
+            copyright.ensure_copyright_years(end_year_is_current=False)
+            del copyright
+        except NotImplementedError as e:
+            if(VERBOSE_LEVEL>1):
+                frameinfo = getframeinfo(currentframe())
+                Error.print_warn(frameinfo,"Skipping, Invalid File Extension")
+            continue
+        if(VERBOSE_LEVEL>=1):
+            print()
+
+def copyright_check_file(file):
+    if(VERBOSE_LEVEL>=1):
+        frameinfo = getframeinfo(currentframe())
+        Error.print_info(frameinfo,file)
+    try:
+        copyright = Copyright(file)
+        copyright.ensure_copyright_years(end_year_is_current=False)
+        del copyright
+    except NotImplementedError as e:
+        print("Skipping, Invalid File Extension")
+        return False
+    return True
+
+
+def help():
+    py_file = sys.argv[0]
+    for i in arguments:
+        print(i,arguments[i][2])
+
+arguments = {
+    "--help":[help,False," for help."],
+    "--all" :[copyright_check_all,False," check all files tracked by git recursively for copyright."],
+    "--file":[copyright_check_file,True," check the given file for copyright issues."]
+}
+
+def argument_parser():
+    if(len(sys.argv) == 1):
+        return
+    i = 1
+    while(i<len(sys.argv)):
+        curr = sys.argv[i].lower()
+        if(curr in arguments):
+            exec = arguments[curr][0]
+            if(arguments[curr][1]):
+                i+=1
+                if(i<len(sys.argv)):
+                    next_arg = sys.argv[i]
+                    exec(next_arg)
+                else:
+                    frameinfo = getframeinfo(currentframe())
+                    Error.print_error(frameinfo,"Was expecting a value for the argument!")
+                    exit(-1)
+            else:
+                exec()
+        else:
+            frameinfo = getframeinfo(currentframe())
+            Error.print_error(frameinfo,"Argument not understood "+curr)
+            exit(-1)
+        i+=1
+    exit(0)
+
+
+argument_parser()
+
 try:
     ensure_staged_files_copyrights()
 except Exception as e:
@@ -171,3 +274,4 @@ except Exception as e:
     else:
         print("Execption occured, terminating")
     exit(-1)
+

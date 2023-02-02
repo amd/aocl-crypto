@@ -37,28 +37,28 @@ class Colors:
         "RESET":0
     }
     @staticmethod
-    def reset_color():
-        Colors.set_fg_color("RESET")
+    def reset():
+        Colors.set_foreground("RESET")
 
     @staticmethod
-    def set_fg_color(color):
+    def set_foreground(color):
         if(color not in Colors.color_pool):
             if(VERBOSE_LEVEL>1):
-                Colors.set_fg_color("RED")
+                Colors.set_foreground("RED")
                 print(f"Color : {color} not supported")
-                Colors.reset_color()
+                Colors.reset()
         else:
             print(f"\033[;{Colors.color_pool[color]}m",end="\r")
 
 
 if __name__=="__main__":
     for i in Colors.color_pool:
-        Colors.set_fg_color(i)
+        Colors.set_foreground(i)
         print("Hello World")
-        Colors.reset_color()
+        Colors.reset()
         print("Reset Successful")
 
-    Colors.set_fg_color("HELLO")
+    Colors.set_foreground("HELLO")
     print("Colors Tested Successfully")
 
     

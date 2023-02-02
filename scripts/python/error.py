@@ -24,7 +24,22 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from colors import Colors
 class Error:
     @staticmethod
-    def print_error(frameinfo,error_str :str):
-        print(f"Error {frameinfo.filename}:{frameinfo.lineno}\t{error_str}")
+    def print_warn(frameinfo,message :str):
+        Colors.set_foreground("YELLOW")
+        print(f"Warning {frameinfo.filename}:{frameinfo.lineno}\t{message}")
+        Colors.reset()
+    def print_info(frameinfo,message :str):
+        Colors.set_foreground("CYAN")
+        print(f"Info {frameinfo.filename}:{frameinfo.lineno}\t{message}")
+        Colors.reset()
+    def print_ok(frameinfo,message :str):
+        Colors.set_foreground("GREEN")
+        print(f"{frameinfo.filename}:{frameinfo.lineno}\t{message}")
+        Colors.reset()
+    def print_error(frameinfo,message :str):
+        Colors.set_foreground("RED")
+        print(f"Error {frameinfo.filename}:{frameinfo.lineno}\t{message}")
+        Colors.reset()

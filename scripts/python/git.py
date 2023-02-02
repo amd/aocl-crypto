@@ -37,6 +37,7 @@ class Git:
     def enquire_staged_files(self):
         staged_files_cmd = "git diff --name-only --cached"
         self.out = Shell.run_cmd_read(staged_files_cmd)
+    # TODO: Revisit this below function.
     def enquire_first_commit_year(self,file_s):
         find_origin_log = "git log --reverse --format=%ad --date=format:%Y "+file_s
         out = Shell.run_cmd_read(find_origin_log)
@@ -52,6 +53,34 @@ class Git:
         else:
             self.out = None
             return False
+    def enquire_last_commit_year(self,file_s):
+        find_origin_log = "git log --format=%ad --date=format:%Y "+file_s
+        out = Shell.run_cmd_read(find_origin_log)
+        if(out["ret"]):
+            if(VERBOSE_LEVEL>=0):
+                frameinfo = Git.getframeinfo(Git.currentframe())
+                Error.print_error(frameinfo,"git command execution failure, CMDLINE:"+find_origin_log)
+            return None
+        out = out["stdout"].strip().splitlines()
+        if(len(out)>0):
+            self.out = out[0]
+            return True
+        else:
+            self.out = None
+            return False
+    def enquire_all_files(self):
+        command = "git ls-tree -r HEAD --name-only"
+        self.out = Shell.run_cmd_read(command)
+        return True
+    def exec(self,cmd):
+        if(type(cmd) == str):
+            command = "git "+cmd
+        elif(type(cmd) == list):
+            command = ["git"]+cmd
+        else:
+            return False
+        self.out = Shell.run_cmd_read(command)
+        return True
     def get_files_raw(self):
         assert(type(self.out) == dict)
         return self.out
