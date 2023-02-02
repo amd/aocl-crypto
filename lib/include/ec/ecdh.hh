@@ -28,6 +28,7 @@
 
 #pragma once
 
+#include "alcp/macros.h"
 #include "ec.hh"
 
 #define ALCP_X25519_ADDED 0
@@ -38,6 +39,7 @@ alcpScalarMulX25519(Uint8*       mypublic,
                     const Uint8* secret,
                     const Uint8* basepoint);
 #endif
+namespace alcp::ec {
 
 class EcX25519 : public Ec
 {
@@ -52,10 +54,10 @@ class EcX25519 : public Ec
      * @param  pPublicKey  pointer to Output Publickey generated
      * @param  pPrivKey    pointer to Input privateKey used for generating
      * publicKey
-     * @return alc_error_t Error code
+     * @return Status Error code
      */
-    ALCP_API_EXPORT alc_error_t
-    GeneratePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey) override;
+    ALCP_API_EXPORT Status GeneratePublicKey(Uint8*       pPublicKey,
+                                             const Uint8* pPrivKey) override;
 
     /**
      * @brief Function computes x25519 secret key with publicKey from remotePeer
@@ -65,21 +67,21 @@ class EcX25519 : public Ec
      * @param  pPublicKey  pointer to Input privateKey used for generating
      * publicKey
      * @param  pKeyLength  pointer to keyLength
-     * @return alc_error_t Error code
+     * @return Status Error code
      */
-    ALCP_API_EXPORT alc_error_t ComputeSecretKey(Uint8*       pSecretKey,
-                                                 const Uint8* pPublicKey,
-                                                 Uint64* pKeyLength) override;
+    ALCP_API_EXPORT Status ComputeSecretKey(Uint8*       pSecretKey,
+                                            const Uint8* pPublicKey,
+                                            Uint64*      pKeyLength) override;
 
     /**
      * @brief Function validates public key from remote peer
      *
      * @param  pPublicKey  pointer to public key publicKey
      * @param  pKeyLength  pointer to keyLength
-     * @return alc_error_t Error code
+     * @return Status Error code
      */
-    virtual alc_error_t ValidatePublicKey(const Uint8* pPublicKey,
-                                          Uint64       pKeyLength) override;
+    virtual Status ValidatePublicKey(const Uint8* pPublicKey,
+                                     Uint64       pKeyLength) override;
     /**
      * @brief Function resets the internal state
      *
@@ -96,6 +98,8 @@ class EcX25519 : public Ec
   private:
     std::vector<Uint8> m_pPrivKey;
 };
+
+} // namespace alcp::ec
 
 // x2519 apis
 

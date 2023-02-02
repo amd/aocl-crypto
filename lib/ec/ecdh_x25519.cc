@@ -29,56 +29,56 @@
 #include "ec/ecdh.hh"
 #include <string.h>
 
-static constexpr Uint32 MaxKeySize                     = 32;
-static const Uint8      x25519_basepoint_9[MaxKeySize] = { 9 };
+namespace alcp::ec {
+
+static constexpr Uint32 KeySize                     = 32;
+static const Uint8      x25519_basepoint_9[KeySize] = { 9 };
 
 EcX25519::EcX25519()
 {
-    m_pPrivKey.resize(MaxKeySize);
+    m_pPrivKey.resize(KeySize);
 }
 
-alc_error_t
+Status
 EcX25519::GeneratePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
 {
-    alc_error_t err = ALC_ERROR_NONE;
-    std::copy(pPrivKey, pPrivKey + MaxKeySize, m_pPrivKey.begin());
+    std::copy(pPrivKey, pPrivKey + KeySize, m_pPrivKey.begin());
 #if ALCP_X25519_ADDED
     alcpScalarMulX25519(pPublicKey, pPrivKey, x25519_basepoint_9);
 #endif
-    return err;
+    return StatusOk();
 }
 
-alc_error_t
+Status
 EcX25519 ::ComputeSecretKey(Uint8*       pSecretKey,
                             const Uint8* pPublicKey,
                             Uint64*      pKeyLength)
 {
-    alc_error_t err = ALC_ERROR_NONE;
 
-    err = ValidatePublicKey(pPublicKey, MaxKeySize);
-
-    if (err != ALC_ERROR_NONE) {
-        return err;
+    Status status = ValidatePublicKey(pPublicKey, KeySize);
+    if (!status.ok()) {
+        return status;
     }
 
 #if ALCP_X25519_ADDED
-    alcpScalarMulX25519(pSecretKey, m_pPrivKey, pPublicKey);
+    status = alcpScalarMulX25519(pSecretKey, m_pPrivKey, pPublicKey);
 #endif
     *pKeyLength = 32;
-    return err;
+    return status;
 }
 
-alc_error_t
+Status
 EcX25519::ValidatePublicKey(const Uint8* pPublicKey, Uint64 pKeyLength)
 {
-    if (pKeyLength != MaxKeySize) {
-        return ALC_ERROR_INVALID_SIZE;
+    if (pKeyLength != KeySize) {
+        return Status(GenericError(ErrorCode::eInvalidArgument));
     }
 
-    static const Uint8 all_zero[MaxKeySize] = { 0 };
+    static const Uint8 all_zero[KeySize] = { 0 };
 
-    return memcmp(all_zero, pPublicKey, MaxKeySize) ? ALC_ERROR_NONE
-                                                    : ALC_ERROR_NOT_PERMITTED;
+    return memcmp(all_zero, pPublicKey, KeySize)
+               ? StatusOk()
+               : Status(GenericError(ErrorCode::eInvalidArgument));
 }
 
 void
@@ -90,5 +90,7 @@ EcX25519 ::reset()
 Uint64
 EcX25519 ::getKeySize()
 {
-    return MaxKeySize;
+    return KeySize;
 }
+
+} // namespace alcp::ec

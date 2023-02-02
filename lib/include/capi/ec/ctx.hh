@@ -26,11 +26,7 @@
  *
  */
 #pragma once
-
-#include "alcp/ec.h"
-
-#include "alcp/capi/defs.hh"
-#include "ec.hh"
+#include "alcp/base.hh"
 
 namespace alcp::ec {
 
@@ -39,16 +35,16 @@ class Context
   public:
     void* m_ec;
 
-    alc_error_t (*getPublicKey)(void*        pEc,
-                                Uint8*       pPublicKey,
-                                const Uint8* pPrivKey);
+    Status (*getPublicKey)(void* pEc, Uint8* pPublicKey, const Uint8* pPrivKey);
 
-    alc_error_t (*getSecretKey)(void*        pEc,
-                                Uint8*       pSecretKey,
-                                const Uint8* pPublicKey,
-                                Uint64*      pKeyLength);
+    Status (*getSecretKey)(void*        pEc,
+                           Uint8*       pSecretKey,
+                           const Uint8* pPublicKey,
+                           Uint64*      pKeyLength);
 
-    alc_error_t (*finish)(void*);
+    Status (*finish)(void*);
+
+    Status (*reset)(void*);
 };
 
 } // namespace alcp::ec

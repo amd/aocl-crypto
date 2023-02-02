@@ -37,56 +37,57 @@ namespace alcp::ec {
 using Context = alcp::ec::Context;
 
 template<typename ECTYPE>
-static alc_error_t
+static Status
 __ec_getPublicKey_wrapper(void* pEc, Uint8* pPublicKey, const Uint8* pPrivKey)
 {
-    alc_error_t e  = ALC_ERROR_NONE;
-    auto        ap = static_cast<ECTYPE*>(pEc);
-    e              = ap->GeneratePublicKey(pPublicKey, pPrivKey);
-
-    return e;
+    auto ap = static_cast<ECTYPE*>(pEc);
+    return ap->GeneratePublicKey(pPublicKey, pPrivKey);
 }
 
 template<typename ECTYPE>
-static alc_error_t
+static Status
 __ec_getSecretKey_wrapper(void*        pEc,
                           Uint8*       pSecretKey,
                           const Uint8* pPublicKey,
                           Uint64*      pKeyLength)
 {
-    alc_error_t e = ALC_ERROR_NONE;
-
     auto ap = static_cast<ECTYPE*>(pEc);
-    e       = ap->ComputeSecretKey(pSecretKey, pPublicKey, pKeyLength);
-
-    return e;
+    return ap->ComputeSecretKey(pSecretKey, pPublicKey, pKeyLength);
 }
 
 template<typename ECTYPE>
-static alc_error_t
+static Status
 __ec_dtor(void* pEc)
 {
-    alc_error_t e  = ALC_ERROR_NONE;
-    auto        ap = static_cast<ECTYPE*>(pEc);
+    auto ap = static_cast<ECTYPE*>(pEc);
     // FIXME: Not a good idea!
     ap->~ECTYPE();
-    return e;
+    return StatusOk();
+}
+
+template<typename ECTYPE>
+static Status
+__ec_reset_wrapper(void* pEc)
+{
+    auto ap = static_cast<ECTYPE*>(pEc);
+    // FIXME: Not a good idea!
+    ap->reset();
+    return StatusOk();
 }
 
 class x25519Builder
 {
   public:
-    static alc_error_t Build(const alc_ec_info_t& rEcInfo, Context& rCtx)
+    static Status Build(const alc_ec_info_t& rEcInfo, Context& rCtx)
     {
-        alc_error_t err   = ALC_ERROR_NONE;
-        auto        addr  = reinterpret_cast<Uint8*>(&rCtx) + sizeof(rCtx);
-        auto        algo  = new (addr) EcX25519();
+        auto addr         = reinterpret_cast<Uint8*>(&rCtx) + sizeof(rCtx);
+        auto algo         = new (addr) EcX25519();
         rCtx.m_ec         = static_cast<void*>(algo);
         rCtx.getPublicKey = __ec_getPublicKey_wrapper<EcX25519>;
         rCtx.getSecretKey = __ec_getSecretKey_wrapper<EcX25519>;
         rCtx.finish       = __ec_dtor<EcX25519>;
-        // rCtx.reset       = __sha_reset_wrapper<x25519>;
-        return err;
+        rCtx.reset        = __ec_reset_wrapper<EcX25519>;
+        return StatusOk();
     }
 };
 
@@ -107,25 +108,25 @@ EcBuilder::getSize(const alc_ec_info_t& rEcInfo)
 }
 #endif
 
-alc_error_t
+Status
 EcBuilder::Build(const alc_ec_info_t& rEcInfo, Context& rCtx)
 {
-    alc_error_t err = ALC_ERROR_NONE;
 
+    Status status;
     switch (rEcInfo.ecCurveId) {
         case ALCP_EC_CURVE25519:
-            err = x25519Builder::Build(rEcInfo, rCtx);
+            status = x25519Builder::Build(rEcInfo, rCtx);
             break;
         case ALCP_EC_SECP256R1:
-            // err = p256Builder::Build(rEcInfo, rCtx);
+            // status = p256Builder::Build(rEcInfo, rCtx);
             break;
 
         default:
-            err = ALC_ERROR_NOT_SUPPORTED;
+            status = Status(GenericError(ErrorCode::eNotImplemented));
             break;
     }
 
-    return err;
+    return status;
 }
 
 } // namespace alcp::ec

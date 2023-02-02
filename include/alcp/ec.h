@@ -35,9 +35,6 @@
 
 EXTERN_C_BEGIN
 
-// FIXME: modifty the macro a equation based.
-#define ALC_MAX_EC_PRECISION_IN_64BITS 9
-
 typedef enum
 {
     ALCP_EC_CURVE25519 = 0,

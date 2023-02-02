@@ -55,6 +55,20 @@ class Status final
         : m_err_message{ msg }
     {}
 
+    Status(IError& ie)
+        : Status{}
+    {
+        m_message = makeMessage(ie.message(), "");
+        m_code    = ie.code();
+    }
+
+    Status(IError&& ie)
+        : Status{}
+    {
+        m_message = makeMessage(ie.message(), "");
+        m_code    = ie.code();
+    }
+
     Status(IError& ie, const String& msg)
         : Status{}
     {

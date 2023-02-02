@@ -37,7 +37,7 @@ namespace alcp::ec {
 class EcBuilder
 {
   public:
-    static alc_error_t Build(const alc_ec_info_t& ecInfo, ec::Context& ctx);
+    static Status Build(const alc_ec_info_t& ecInfo, ec::Context& ctx);
 };
 
 } // namespace alcp::ec
