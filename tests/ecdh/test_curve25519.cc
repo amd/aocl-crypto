@@ -212,7 +212,7 @@ TEST(EC_X25519, opensslSpeedCheck)
 
     EXPECT_EQ(ALC_ERROR_NONE, ret);
 }
-
+#ifdef USE_IPP
 TEST(EC_X25519, ippcpVerifySecretKey)
 {
     alc_error_t   ret = ALC_ERROR_NONE;
@@ -314,7 +314,7 @@ TEST(EC_X25519, ippcpCheckSpeed)
 
     EXPECT_EQ(ALC_ERROR_NONE, ret);
 }
-
+#endif
 int
 main(int argc, char** argv)
 {
