@@ -34,10 +34,12 @@
 #include <string.h>
 
 /* Add tests here */
-TEST(CMAC_SHA2, CROSS_224)
+TEST(CMAC_AES, CROSS_128)
 {
     alc_mac_info_t info;
-    Cmac_Cross(224, "SHA2", info);
+    info.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
+    info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode = ALC_AES_MODE_NONE;
+    Cmac_Cross(128, "AES", info);
 }
 
 int

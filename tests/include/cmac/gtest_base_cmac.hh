@@ -46,12 +46,9 @@ using namespace alcp::testing;
 #include "cmac/openssl_cmac_base.hh"
 #endif
 
-#define MAX_LOOP      1600
-#define INC_LOOP      1
-#define START_LOOP    1
-#define KEY_LEN_START 1
-#define KEY_LEN_MAX   1600
-#define KEY_LEN_INC   32
+#define MAX_LOOP   16000
+#define INC_LOOP   1
+#define START_LOOP 1
 
 /* print params verbosely */
 inline void
@@ -139,17 +136,19 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
 
 /* Cmac Cross tests */
 void
-Cmac_Cross(int CmacSize, std::string CmacType, alc_mac_info_t info)
+Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
 {
     alc_error_t        error;
     std::vector<Uint8> data;
-    int                KeySize;
+
+    /* FIXME, this should be based on AES type */
+    int                CmacSize = 128;
     std::vector<Uint8> CmacAlcp(CmacSize / 8, 0);
     std::vector<Uint8> CmacExt(CmacSize / 8, 0);
 
     /* Initialize info params based on test type */
-    info.mi_type                              = ALC_MAC_CMAC;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
+    info.mi_type                                         = ALC_MAC_CMAC;
+    info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_iv = NULL;
 
     AlcpCmacBase acb(info);
     RngBase      rb;
@@ -168,68 +167,63 @@ Cmac_Cross(int CmacSize, std::string CmacType, alc_mac_info_t info)
         extCb = &icb;
 #endif
     if (extCb == nullptr) {
-        printErrors("No external lib selected!");
+        std::cout << "No external lib selected!" << std::endl;
         exit(-1);
     }
 
+    /* generate random key value */
     /* FIXME: generate a vector using getRandomBytes() once, split it and feed
      * it into the loop. Avoid calling genRandomBytes() each time in the loop */
-    for (int j = KEY_LEN_START; j < KEY_LEN_MAX; j += KEY_LEN_INC) {
-        for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
-            alcp_cmac_data_t data_alc, data_ext;
+    for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
+        alcp_cmac_data_t data_alc, data_ext;
 
-            /* generate test data vectors */
-            std::vector<Uint8> msg(i, 0);
-            /* generate random key value */
-            KeySize = j;
-            std::vector<Uint8> key(KeySize, 0);
-            msg = rb.genRandomBytes(i);
-            key = rb.genRandomBytes(KeySize);
+        /* generate test data vectors */
+        std::vector<Uint8> msg(i, 0);
 
-            /* load test data */
-            data_alc.m_msg      = &(msg[0]);
-            data_alc.m_msg_len  = msg.size();
-            data_alc.m_cmac     = &(CmacAlcp[0]);
-            data_alc.m_cmac_len = CmacAlcp.size();
-            data_alc.m_key      = &(key[0]);
-            data_alc.m_key_len  = key.size();
+        std::vector<Uint8> key(KeySize / 8, 0);
+        msg = rb.genRandomBytes(i);
+        key = rb.genRandomBytes(KeySize / 8);
 
-            /* load ext test data */
-            data_ext.m_msg      = &(msg[0]);
-            data_ext.m_msg_len  = msg.size();
-            data_ext.m_cmac     = &(CmacExt[0]);
-            data_ext.m_cmac_len = CmacExt.size();
-            data_ext.m_key      = &(key[0]);
-            data_ext.m_key_len  = key.size();
+        /* load test data */
+        data_alc.m_msg      = &(msg[0]);
+        data_alc.m_msg_len  = msg.size();
+        data_alc.m_cmac     = &(CmacAlcp[0]);
+        data_alc.m_cmac_len = CmacAlcp.size();
+        data_alc.m_key      = &(key[0]);
+        data_alc.m_key_len  = key.size();
 
-            /* run test with main lib */
-            if (verbose > 1)
-                PrintCmacTestData(key, data_alc, CmacType);
-            if (!cb->init(info, key)) {
-                printf("Error in cmac init\n");
-                FAIL();
-            }
-            error = cb->Cmac_function(data_alc);
+        /* load ext test data */
+        data_ext.m_msg      = &(msg[0]);
+        data_ext.m_msg_len  = msg.size();
+        data_ext.m_cmac     = &(CmacExt[0]);
+        data_ext.m_cmac_len = CmacExt.size();
+        data_ext.m_key      = &(key[0]);
+        data_ext.m_key_len  = key.size();
 
-            if (alcp_is_error(error)) {
-                printf("Error in cmac function\n");
-                FAIL();
-            }
-
-            /* run test with ext lib */
-            if (verbose > 1)
-                PrintCmacTestData(key, data_ext, CmacType);
-            if (!extCb->init(info, key)) {
-                printf("Error in cmac ext init function\n");
-                FAIL();
-            }
-            error = extCb->Cmac_function(data_ext);
-            if (alcp_is_error(error)) {
-                printf("Error in cmac (ext lib) function\n");
-                FAIL();
-            }
-            EXPECT_TRUE(ArraysMatch(CmacAlcp, CmacExt, i));
+        /* run test with main lib */
+        if (verbose > 1)
+            PrintCmacTestData(key, data_alc, CmacType);
+        if (!cb->init(info, key)) {
+            std::cout << "Error in cmac init function" << std::endl;
+            FAIL();
         }
+        if (!cb->Cmac_function(data_alc)) {
+            std::cout << "Error in cmac function" << std::endl;
+            FAIL();
+        }
+
+        /* run test with ext lib */
+        if (verbose > 1)
+            PrintCmacTestData(key, data_ext, CmacType);
+        if (!extCb->init(info, key)) {
+            printf("Error in cmac ext init function\n");
+            FAIL();
+        }
+        if (!extCb->Cmac_function(data_ext)) {
+            std::cout << "Error in cmac function" << std::endl;
+            FAIL();
+        }
+        EXPECT_TRUE(ArraysMatch(CmacAlcp, CmacExt, i));
     }
 }
 
