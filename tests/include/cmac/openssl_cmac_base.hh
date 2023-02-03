@@ -25,53 +25,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#pragma once
 
-#include "cmac/alc_cmac_base.hh"
 #include "cmac/cmac_base.hh"
-#include "cmac/gtest_base_cmac.hh"
-#include "string.h"
+#include "cmac_base.hh"
 #include <alcp/alcp.h>
 #include <iostream>
+#include <openssl/conf.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <stdio.h>
+#include <string.h>
 
-/* All tests to be added here */
-TEST(CMAC_AES, KAT_128)
+namespace alcp::testing {
+class OpenSSLCmacBase : public CmacBase
 {
-    alc_mac_info_t info;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode = ALC_AES_MODE_NONE;
-    Cmac_KAT(128, "AES", info);
-}
+    EVP_MD_CTX*    m_handle = nullptr;
+    alc_mac_info_t m_info;
+    Uint8*         m_message;
+    Uint8*         m_key;
+    Uint8*         m_hmac;
+    Uint32         m_key_len;
 
-int
-main(int argc, char** argv)
-{
-    ::testing::InitGoogleTest(&argc, argv);
-    testing::TestEventListeners& listeners =
-        testing::UnitTest::GetInstance()->listeners();
-    parseArgs(argc, argv);
-#ifndef USE_IPP
-    if (useipp)
-        std::cout << RED << "IPP is not available, defaulting to ALCP" << RESET
-                  << std::endl;
-#endif
+  public:
+    OpenSSLCmacBase(const alc_mac_info_t& info);
 
-#ifndef USE_OSSL
-    if (useossl) {
-        std::cout << RED << "OpenSSL is not available, defaulting to ALCP"
-                  << RESET << std::endl;
-    }
-#endif
-    // auto default_printer =
-    //     listeners.Release(listeners.default_result_printer());
+    bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
 
-    // ConfigurableEventListener* listener =
-    //     new ConfigurableEventListener(default_printer);
+    bool init();
 
-    // listener->showEnvironment    = true;
-    // listener->showTestCases      = true;
-    // listener->showTestNames      = true;
-    // listener->showSuccesses      = true;
-    // listener->showInlineFailures = true;
-    // listeners.Append(listener);
-    return RUN_ALL_TESTS();
-}
+    ~OpenSSLCmacBase();
+
+    bool Cmac_function(const alcp_cmac_data_t& data);
+    /* Resets the context back to initial condition, reuse context */
+    bool reset();
+};
+
+} // namespace alcp::testing
