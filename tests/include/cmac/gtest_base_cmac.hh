@@ -40,10 +40,10 @@
 #include <vector>
 using namespace alcp::testing;
 #ifdef USE_IPP
-#include "cmac/ipp_cmac.hh"
+#include "cmac/ipp_cmac_base.hh"
 #endif
 #ifdef USE_OSSL
-#include "cmac/openssl_cmac.hh"
+#include "cmac/openssl_cmac_base.hh"
 #endif
 
 #define MAX_LOOP      1600
