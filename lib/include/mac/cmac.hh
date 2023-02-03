@@ -108,5 +108,7 @@ namespace avx2 {
                      std::vector<Uint8>& k2,
                      const Uint8*        encrypt_keys,
                      const int           n_rounds);
+    void load_and_left_shift_1(const Uint8* input, Uint8* output);
+
 } // namespace avx2
 } // namespace alcp::mac

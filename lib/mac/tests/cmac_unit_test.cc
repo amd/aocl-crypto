@@ -33,68 +33,71 @@
 #include "alcp/utils/cpuid.hh"
 
 using alcp::base::Status;
-
 using alcp::mac::Cmac;
+using alcp::utils::CpuId;
 
-// Fixme: Add unit testing for LeftShift but as avx2 specific
-/* TEST(LeftShift128, Test1)
-{
-    reg_128 reg1, reg2, expected;
-    reg1.reg = _mm_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0, 0, 0, 0, 0, 0, 0);
-    expected.reg =
-        _mm_set_epi8(0, 0, 0, 0, 0, 0, 0, 0x01, 0xfe, 0, 0, 0, 0, 0, 0, 0);
-    Cmac::left_shift_1(reg1, reg2);
-    EXPECT_EQ(memcmp(expected.u8, reg2.u8, 16), 0);
-}
-TEST(LeftShift128, Test2)
-{
-    reg_128 reg1, reg2, expected;
-    reg1.reg = _mm_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, 0x80, 0, 0, 0, 0, 0, 0, 0);
-    expected.reg =
-        _mm_set_epi8(0, 0, 0, 0, 0, 0, 0, 0x01, 0x0, 0, 0, 0, 0, 0, 0, 0);
-    Cmac::left_shift_1(reg1, reg2);
-    EXPECT_EQ(memcmp(expected.u8, reg2.u8, 16), 0);
-}
-TEST(LeftShift128, Test3)
-{
-    reg_128 reg1, reg2, expected;
-    reg1.reg     = _mm_set_epi8(0x7d,
-                            0xf7,
-                            0x6b,
-                            0x0c,
-                            0x1a,
-                            0xb8,
-                            0x99,
-                            0xb3,
-                            0x3e,
-                            0x42,
-                            0xf0,
-                            0x47,
-                            0xb9,
-                            0x1b,
-                            0x54,
-                            0x6f);
-    expected.reg = _mm_set_epi8(0xfb,
-                                0xee,
-                                0xd6,
-                                0x18,
-                                0x35,
-                                0x71,
-                                0x33,
-                                0x66,
-                                0x7c,
-                                0x85,
-                                0xe0,
-                                0x8f,
-                                0x72,
-                                0x36,
-                                0xa8,
-                                0xde);
-    Cmac::left_shift_1(reg1, reg2);
-    EXPECT_EQ(memcmp(expected.u8, reg2.u8, 16), 0);
-}
- */
+typedef std::tuple<std::vector<Uint8>, // 128 bit input
+                   std::vector<Uint8>  // 128 bit output
+                   >
+    left_shift_param_tuple;
 
+typedef std::map<const std::string, left_shift_param_tuple>
+    left_shift_known_answer_map_t;
+// clang-format off
+left_shift_known_answer_map_t KAT_LeftShiftDataset
+{
+    {
+        "TestCase1",
+        {
+            {0, 0, 0, 0, 0, 0, 0, 0x00, 0xff, 0, 0, 0, 0, 0, 0, 0 }, 
+            {0, 0, 0, 0, 0, 0, 0, 0x01, 0xfe, 0, 0, 0, 0, 0, 0, 0 }
+        }
+    },
+    {
+      "TestCase2",
+      {
+          {0, 0, 0, 0, 0, 0, 0, 0x00, 0x80, 0, 0, 0, 0, 0,0, 0},
+          {0, 0, 0, 0, 0, 0, 0, 0x01, 0x00, 0, 0, 0, 0, 0, 0,0}
+      }
+    },
+    {
+      "TestCase3",
+      {
+          { 0x7d,0xf7,0x6b,0x0c,0x1a,0xb8,0x99,0xb3,0x3e,0x42,0xf0,0x47,0xb9,0x1b,0x54,0x6f },
+          { 0xfb,0xee,0xd6,0x18,0x35,0x71,0x33,0x66,0x7c,0x85,0xe0,0x8f,0x72,0x36,0xa8,0xde }
+      }
+
+    }
+};
+
+// clang-format on
+class Avx2LeftShiftTest
+    : public ::testing::TestWithParam<
+          std::pair<const std::string, left_shift_param_tuple>>
+{
+  protected:
+    std::vector<Uint8> lshift_input, lshift_output;
+
+  protected:
+    void SetUp() override
+    {
+        if (!CpuId::cpuHasAvx2()) {
+            GTEST_SKIP() << "Avx2 is not Available";
+        }
+
+        const auto params       = GetParam();
+        auto       tuple_values = params.second;
+
+        tie(lshift_input, lshift_output) = tuple_values;
+    }
+};
+
+TEST_P(Avx2LeftShiftTest, LeftShift)
+{
+    std::vector<Uint8> output(lshift_output.size());
+    alcp::mac::avx2::load_and_left_shift_1(&lshift_input[0], &output[0]);
+    EXPECT_EQ(output, lshift_output);
+}
 typedef std::tuple<std::vector<Uint8>, // key
                    std::vector<Uint8>, // plaintext
                    std::vector<Uint8>  // mac
@@ -104,7 +107,7 @@ typedef std::tuple<std::vector<Uint8>, // key
 typedef std::map<const std::string, param_tuple> known_answer_map_t;
 
 // clang-format off
-known_answer_map_t KAT_ShaDataset{
+known_answer_map_t KAT_CmacDataset{
     { "TESTCASE1_AES_128_BLOCK_1_INCOMPLETE",
       { { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
           0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C 
@@ -301,7 +304,15 @@ TEST_P(CMACFuncionalityTest, CMAC_RESET)
 INSTANTIATE_TEST_SUITE_P(
     CMACTest,
     CMACFuncionalityTest,
-    testing::ValuesIn(KAT_ShaDataset),
+    testing::ValuesIn(KAT_CmacDataset),
     [](const testing::TestParamInfo<CMACFuncionalityTest::ParamType>& info) {
+        return info.param.first;
+    });
+
+INSTANTIATE_TEST_SUITE_P(
+    LeftShiftTest,
+    Avx2LeftShiftTest,
+    testing::ValuesIn(KAT_LeftShiftDataset),
+    [](const testing::TestParamInfo<Avx2LeftShiftTest::ParamType>& info) {
         return info.param.first;
     });
