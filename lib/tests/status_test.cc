@@ -39,7 +39,7 @@ returnOkStatus()
 
 TEST(StatusTest, Equality)
 {
-    Status s;
+    Status s = StatusOk();
 
     Status q = returnOkStatus();
 

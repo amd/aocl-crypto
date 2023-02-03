@@ -26,8 +26,8 @@
  *
  */
 
-#include "alcp/utils/cpuid.hh"
 #include "mac/hmac.hh"
+#include "alcp/utils/cpuid.hh"
 #include "utils/copy.hh"
 #include <cstring> // for std::memset
 #include <immintrin.h>
@@ -109,7 +109,7 @@ class Hmac::Impl
     /// @return ALC_ERROR_NONE if no errors otherwise appropriate error
     Status update(const Uint8* buff, Uint64 size)
     {
-        Status status = Status();
+        Status status = StatusOk();
         if (buff != nullptr && size != 0) {
             status = calculate_hash(m_pDigest, buff, size);
         }
@@ -123,7 +123,7 @@ class Hmac::Impl
     /// @return ALC_ERROR_NONE if no errors otherwise appropriate error
     Status finalize(const Uint8* buff, Uint64 size)
     {
-        Status status;
+        Status status = StatusOk();
         // TODO: For all the following calls to digest return the proper error
         // and assign
         if (sizeof(buff) != 0 && size != 0) {
@@ -150,7 +150,7 @@ class Hmac::Impl
     /// @return ALC_ERROR_NONE if no errors otherwise appropriate error
     Status copyHash(Uint8* buff, Uint64 size)
     {
-        Status status;
+        Status status = StatusOk();
         alcp::utils::CopyBytes(buff, m_pTempHash, size);
         // TODO: Update status with proper error code.
         return status;
@@ -160,7 +160,7 @@ class Hmac::Impl
 
     Status reset()
     {
-        Status status;
+        Status status = StatusOk();
         m_pDigest->reset();
         status =
             calculate_hash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
@@ -284,7 +284,7 @@ class Hmac::Impl
 
     Status get_k0()
     {
-        Status status;
+        Status status = StatusOk();
         if (m_input_block_length == m_keylen) {
             copyData(m_pK0, m_pKey, m_keylen);
         } else if (m_keylen < m_input_block_length) {
@@ -309,7 +309,7 @@ class Hmac::Impl
                           const Uint8*          input,
                           Uint64                len)
     {
-        Status status;
+        Status status = StatusOk();
         p_digest->update(input, len);
         // TODO: Based on the output from update call update status code
         return status;

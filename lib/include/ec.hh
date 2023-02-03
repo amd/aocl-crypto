@@ -93,14 +93,14 @@ class IEc
     IEc() {}
 
   public:
-    virtual Status GeneratePublicKey(Uint8*       pPublicKey,
+    virtual Status generatePublicKey(Uint8*       pPublicKey,
                                      const Uint8* pPrivKey) = 0;
 
-    virtual Status ComputeSecretKey(Uint8*       pSecretKey,
+    virtual Status computeSecretKey(Uint8*       pSecretKey,
                                     const Uint8* pPublicKey,
                                     Uint64*      pKeyLength) = 0;
 
-    virtual Status ValidatePublicKey(const Uint8* pPublicKey,
+    virtual Status validatePublicKey(const Uint8* pPublicKey,
                                      Uint64       pKeyLength) = 0;
 
     virtual void reset() = 0;

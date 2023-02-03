@@ -41,11 +41,11 @@ alcpScalarMulX25519(Uint8*       mypublic,
 #endif
 namespace alcp::ec {
 
-class EcX25519 : public Ec
+class X25519 : public Ec
 {
   public:
-    EcX25519();
-    ~EcX25519() = default;
+    X25519();
+    ~X25519() = default;
 
     /**
      * @brief Function generates x25519 public key using input privateKey
@@ -56,7 +56,7 @@ class EcX25519 : public Ec
      * publicKey
      * @return Status Error code
      */
-    ALCP_API_EXPORT Status GeneratePublicKey(Uint8*       pPublicKey,
+    ALCP_API_EXPORT Status generatePublicKey(Uint8*       pPublicKey,
                                              const Uint8* pPrivKey) override;
 
     /**
@@ -69,7 +69,7 @@ class EcX25519 : public Ec
      * @param  pKeyLength  pointer to keyLength
      * @return Status Error code
      */
-    ALCP_API_EXPORT Status ComputeSecretKey(Uint8*       pSecretKey,
+    ALCP_API_EXPORT Status computeSecretKey(Uint8*       pSecretKey,
                                             const Uint8* pPublicKey,
                                             Uint64*      pKeyLength) override;
 
@@ -80,7 +80,7 @@ class EcX25519 : public Ec
      * @param  pKeyLength  pointer to keyLength
      * @return Status Error code
      */
-    virtual Status ValidatePublicKey(const Uint8* pPublicKey,
+    virtual Status validatePublicKey(const Uint8* pPublicKey,
                                      Uint64       pKeyLength) override;
     /**
      * @brief Function resets the internal state

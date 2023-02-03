@@ -41,7 +41,7 @@ static Status
 __ec_getPublicKey_wrapper(void* pEc, Uint8* pPublicKey, const Uint8* pPrivKey)
 {
     auto ap = static_cast<ECTYPE*>(pEc);
-    return ap->GeneratePublicKey(pPublicKey, pPrivKey);
+    return ap->generatePublicKey(pPublicKey, pPrivKey);
 }
 
 template<typename ECTYPE>
@@ -52,7 +52,7 @@ __ec_getSecretKey_wrapper(void*        pEc,
                           Uint64*      pKeyLength)
 {
     auto ap = static_cast<ECTYPE*>(pEc);
-    return ap->ComputeSecretKey(pSecretKey, pPublicKey, pKeyLength);
+    return ap->computeSecretKey(pSecretKey, pPublicKey, pKeyLength);
 }
 
 template<typename ECTYPE>
@@ -81,12 +81,12 @@ class x25519Builder
     static Status Build(const alc_ec_info_t& rEcInfo, Context& rCtx)
     {
         auto addr         = reinterpret_cast<Uint8*>(&rCtx) + sizeof(rCtx);
-        auto algo         = new (addr) EcX25519();
+        auto algo         = new (addr) X25519();
         rCtx.m_ec         = static_cast<void*>(algo);
-        rCtx.getPublicKey = __ec_getPublicKey_wrapper<EcX25519>;
-        rCtx.getSecretKey = __ec_getSecretKey_wrapper<EcX25519>;
-        rCtx.finish       = __ec_dtor<EcX25519>;
-        rCtx.reset        = __ec_reset_wrapper<EcX25519>;
+        rCtx.getPublicKey = __ec_getPublicKey_wrapper<X25519>;
+        rCtx.getSecretKey = __ec_getSecretKey_wrapper<X25519>;
+        rCtx.finish       = __ec_dtor<X25519>;
+        rCtx.reset        = __ec_reset_wrapper<X25519>;
         return StatusOk();
     }
 };
@@ -112,7 +112,7 @@ Status
 EcBuilder::Build(const alc_ec_info_t& rEcInfo, Context& rCtx)
 {
 
-    Status status;
+    Status status = StatusOk();
     switch (rEcInfo.ecCurveId) {
         case ALCP_EC_CURVE25519:
             status = x25519Builder::Build(rEcInfo, rCtx);
@@ -122,7 +122,8 @@ EcBuilder::Build(const alc_ec_info_t& rEcInfo, Context& rCtx)
             break;
 
         default:
-            status = Status(GenericError(ErrorCode::eNotImplemented));
+            status = Status(GenericError(ErrorCode::eNotImplemented),
+                            "Curve not implemented");
             break;
     }
 

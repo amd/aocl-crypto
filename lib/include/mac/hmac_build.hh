@@ -92,7 +92,7 @@ template<typename DIGESTALGORITHM, typename MACALGORITHM>
 static alcp::base::Status
 __build_hmac(const alc_mac_info_t& macInfo, Context& ctx)
 {
-    alcp::base::Status status;
+    alcp::base::Status status = alcp::base::StatusOk();
 
     auto digest = new DIGESTALGORITHM();
     if (digest == nullptr) {
@@ -119,7 +119,7 @@ template<typename MACALGORITHM>
 static alcp::base::Status
 __build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
 {
-    alcp::base::Status status;
+    alcp::base::Status status = alcp::base::StatusOk();
 
     auto sha3 = new alcp::digest::Sha3(macInfo.mi_algoinfo.hmac.hmac_digest);
     if (sha3 == nullptr) {
@@ -148,7 +148,7 @@ HmacBuilder::Build(const alc_mac_info_t& macInfo,
                    const alc_key_info_t& keyInfo,
                    Context&              ctx)
 {
-    alcp::base::Status status;
+    alcp::base::Status status = alcp::base::StatusOk();
 
     switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_type) {
         case ALC_DIGEST_TYPE_SHA2: {

@@ -34,13 +34,13 @@ namespace alcp::ec {
 static constexpr Uint32 KeySize                     = 32;
 static const Uint8      x25519_basepoint_9[KeySize] = { 9 };
 
-EcX25519::EcX25519()
+X25519::X25519()
 {
     m_pPrivKey.resize(KeySize);
 }
 
 Status
-EcX25519::GeneratePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
+X25519::generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
 {
     std::copy(pPrivKey, pPrivKey + KeySize, m_pPrivKey.begin());
 #if ALCP_X25519_ADDED
@@ -50,12 +50,12 @@ EcX25519::GeneratePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
 }
 
 Status
-EcX25519 ::ComputeSecretKey(Uint8*       pSecretKey,
-                            const Uint8* pPublicKey,
-                            Uint64*      pKeyLength)
+X25519::computeSecretKey(Uint8*       pSecretKey,
+                         const Uint8* pPublicKey,
+                         Uint64*      pKeyLength)
 {
 
-    Status status = ValidatePublicKey(pPublicKey, KeySize);
+    Status status = validatePublicKey(pPublicKey, KeySize);
     if (!status.ok()) {
         return status;
     }
@@ -68,27 +68,29 @@ EcX25519 ::ComputeSecretKey(Uint8*       pSecretKey,
 }
 
 Status
-EcX25519::ValidatePublicKey(const Uint8* pPublicKey, Uint64 pKeyLength)
+X25519::validatePublicKey(const Uint8* pPublicKey, Uint64 pKeyLength)
 {
     if (pKeyLength != KeySize) {
-        return Status(GenericError(ErrorCode::eInvalidArgument));
+        return Status(GenericError(ErrorCode::eInvalidArgument),
+                      "Key validation failed");
     }
 
     static const Uint8 all_zero[KeySize] = { 0 };
 
     return memcmp(all_zero, pPublicKey, KeySize)
                ? StatusOk()
-               : Status(GenericError(ErrorCode::eInvalidArgument));
+               : Status(GenericError(ErrorCode::eInvalidArgument),
+                        "Key validation failed");
 }
 
 void
-EcX25519 ::reset()
+X25519::reset()
 {
     std::fill(m_pPrivKey.begin(), m_pPrivKey.end(), 0);
 }
 
 Uint64
-EcX25519 ::getKeySize()
+X25519::getKeySize()
 {
     return KeySize;
 }

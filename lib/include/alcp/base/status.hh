@@ -47,37 +47,23 @@ class Status final
 {
   public:
     // Should initialize with an OK status
-    Status()
-        : m_code{ 0 }
+    explicit Status(Uint64 code)
+        : m_code{ code }
     {}
-
-    Status(StringView msg)
-        : m_err_message{ msg }
-    {}
-
-    Status(IError& ie)
-        : Status{}
-    {
-        m_message = makeMessage(ie.message(), "");
-        m_code    = ie.code();
-    }
-
-    Status(IError&& ie)
-        : Status{}
-    {
-        m_message = makeMessage(ie.message(), "");
-        m_code    = ie.code();
-    }
 
     Status(IError& ie, const String& msg)
-        : Status{}
     {
         m_message = makeMessage(ie.message(), msg);
         m_code    = ie.code();
     }
 
     Status(IError& ie, const StringView msg)
-        : Status{}
+    {
+        m_message = makeMessage(ie.message(), msg);
+        m_code    = ie.code();
+    }
+
+    Status(IError&& ie, const StringView msg)
     {
         m_message = makeMessage(ie.message(), msg);
         m_code    = ie.code();
@@ -189,7 +175,7 @@ Status::ok() const
 inline Status
 StatusOk()
 {
-    return Status();
+    return Status(ErrorCode::eOk);
 }
 
 // clang-format off
