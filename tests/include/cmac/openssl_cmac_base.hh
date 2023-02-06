@@ -29,18 +29,18 @@
 
 #include "cmac/cmac_base.hh"
 #include "cmac_base.hh"
+#include "openssl/conf.h"
+#include "openssl/err.h"
+#include "openssl/evp.h"
 #include <alcp/alcp.h>
 #include <iostream>
-#include <openssl/conf.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
 #include <stdio.h>
 #include <string.h>
 
 namespace alcp::testing {
 class OpenSSLCmacBase : public CmacBase
 {
-    EVP_MD_CTX*    m_handle = nullptr;
+    EVP_MAC_CTX*   m_handle = nullptr;
     alc_mac_info_t m_info;
     Uint8*         m_message;
     Uint8*         m_key;

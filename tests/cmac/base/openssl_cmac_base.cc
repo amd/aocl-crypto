@@ -35,7 +35,7 @@ OpenSSLCmacBase::OpenSSLCmacBase(const alc_mac_info_t& info) {}
 OpenSSLCmacBase::~OpenSSLCmacBase()
 {
     if (m_handle != nullptr) {
-        EVP_MD_CTX_free(m_handle);
+        EVP_MAC_CTX_free(m_handle);
     }
 }
 
@@ -51,24 +51,17 @@ OpenSSLCmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 bool
 OpenSSLCmacBase::init()
 {
-    int       ret_val = 0;
-    EVP_PKEY* evp_key =
-        EVP_PKEY_new_mac_key(EVP_PKEY_CMAC, NULL, &(m_key[0]), m_key_len);
-    if (m_handle != nullptr) {
-        EVP_MD_CTX_free(m_handle);
-        m_handle = nullptr;
-    }
+    int        ret_val = 0;
+    OSSL_PARAM params[3];
+    size_t     params_n = 0;
+    EVP_MAC*   mac      = EVP_MAC_fetch(NULL, "CMAC", NULL);
+    m_handle            = EVP_MAC_CTX_new(mac);
+    const char* cipher  = "aes-128-cbc";
 
-    m_handle = EVP_MD_CTX_new();
-    if (m_handle == NULL) {
-        printf("EVP_MD_CTX_create failed, error 0x%lx\n", ERR_get_error());
-        return false;
-    }
-
-    if (ret_val != 1) {
-        printf("EVP_DigestSignInit failed with err code: %d\n", ret_val);
-        return false;
-    }
+    if (cipher != NULL)
+        params[params_n++] =
+            OSSL_PARAM_construct_utf8_string("cipher", (char*)cipher, 0);
+    EVP_MAC_init(m_handle, m_key, m_key_len, params);
     return true;
 }
 
@@ -78,25 +71,16 @@ OpenSSLCmacBase::Cmac_function(const alcp_cmac_data_t& data)
     size_t outsize = data.m_cmac_len;
     int    retval  = 0;
 
-    retval = EVP_DigestSignUpdate(m_handle, data.m_msg, data.m_msg_len);
-    if (retval != 1) {
-        printf("EVP_DigestSignUpdate failed, error 0x%lx\n", ERR_get_error());
-        return retval;
-    }
-    retval = EVP_DigestSignFinal(m_handle, data.m_cmac, &outsize);
-    if (retval != 1) {
-        printf("EVP_DigestSignFinal failed, error 0x%lx\n", ERR_get_error());
-        return retval;
-    }
-    return ALC_ERROR_NONE;
+    EVP_MAC_update(m_handle, data.m_msg, data.m_msg_len);
+    EVP_MAC_final(m_handle, data.m_cmac, &outsize, data.m_cmac_len);
+
+    return true;
 }
 
 bool
 OpenSSLCmacBase::reset()
 {
-    EVP_MD_CTX_reset(m_handle);
-    EVP_PKEY* evp_key =
-        EVP_PKEY_new_mac_key(EVP_PKEY_CMAC, NULL, &(m_key[0]), m_key_len);
+    EVP_MAC_CTX_free(m_handle);
     return true;
 }
 
