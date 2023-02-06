@@ -37,6 +37,9 @@ OpenSSLCmacBase::~OpenSSLCmacBase()
     if (m_handle != nullptr) {
         EVP_MAC_CTX_free(m_handle);
     }
+    if (m_mac != nullptr) {
+        EVP_MAC_free(m_mac);
+    }
 }
 
 bool
@@ -54,14 +57,33 @@ OpenSSLCmacBase::init()
     int        ret_val = 0;
     OSSL_PARAM params[3];
     size_t     params_n = 0;
-    EVP_MAC*   mac      = EVP_MAC_fetch(NULL, "CMAC", NULL);
-    m_handle            = EVP_MAC_CTX_new(mac);
-    const char* cipher  = "aes-128-cbc";
+
+    /* FIXME: should be constructed based on the cmac scheme and keysize */
+    const char* cipher = "aes-128-cbc";
+
+    m_mac = EVP_MAC_fetch(NULL, "CMAC", NULL);
+    if (m_mac == NULL) {
+        std::cout << "EVP_MAC_fetch failed, error: " << ERR_get_error()
+                  << std::endl;
+    }
 
     if (cipher != NULL)
         params[params_n++] =
             OSSL_PARAM_construct_utf8_string("cipher", (char*)cipher, 0);
-    EVP_MAC_init(m_handle, m_key, m_key_len, params);
+
+    params[params_n] = OSSL_PARAM_construct_end();
+
+    m_handle = EVP_MAC_CTX_new(m_mac);
+    if (m_handle == NULL) {
+        std::cout << "EVP_MAC_CTX_new failed, error: " << ERR_get_error()
+                  << std::endl;
+    }
+    ret_val = EVP_MAC_init(m_handle, m_key, m_key_len, params);
+    if (ret_val != 1) {
+        std::cout << "EVP_MAC_init failed, error code : " << ret_val
+                  << std::endl;
+        return false;
+    }
     return true;
 }
 
@@ -71,16 +93,25 @@ OpenSSLCmacBase::Cmac_function(const alcp_cmac_data_t& data)
     size_t outsize = data.m_cmac_len;
     int    retval  = 0;
 
-    EVP_MAC_update(m_handle, data.m_msg, data.m_msg_len);
-    EVP_MAC_final(m_handle, data.m_cmac, &outsize, data.m_cmac_len);
-
+    retval = EVP_MAC_update(m_handle, data.m_msg, data.m_msg_len);
+    if (retval != 1) {
+        std::cout << "EVP_MAC_update failed, error code : " << retval
+                  << std::endl;
+        return false;
+    }
+    retval = EVP_MAC_final(m_handle, data.m_cmac, &outsize, data.m_cmac_len);
+    if (retval != 1) {
+        std::cout << "EVP_MAC_final failed, error code : " << retval
+                  << std::endl;
+        return false;
+    }
     return true;
 }
 
 bool
 OpenSSLCmacBase::reset()
 {
-    EVP_MAC_CTX_free(m_handle);
+    /* there is no reset calls for evp mac */
     return true;
 }
 

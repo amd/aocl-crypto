@@ -41,6 +41,7 @@ namespace alcp::testing {
 class OpenSSLCmacBase : public CmacBase
 {
     EVP_MAC_CTX*   m_handle = nullptr;
+    EVP_MAC*       m_mac    = nullptr;
     alc_mac_info_t m_info;
     Uint8*         m_message;
     Uint8*         m_key;
