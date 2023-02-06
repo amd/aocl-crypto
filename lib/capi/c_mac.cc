@@ -60,6 +60,11 @@ alcp_mac_request(alc_mac_handle_p pMacHandle, const alc_mac_info_p pMacInfo)
 
     Status status = mac::MacBuilder::Build(*pMacInfo, *ctx);
     // TODO: Convert status to proper alc_error_t code and return
+    if (!status.ok()) {
+        err = ALC_ERROR_EXISTS;
+    } else {
+        err = ALC_ERROR_NONE;
+    }
     return err;
 }
 
@@ -72,8 +77,13 @@ alcp_mac_update(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size)
 
     auto ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
 
-    Status status = StatusOk();
-    status        = ctx->update(ctx->m_mac, buff, size);
+    Status status = ctx->update(ctx->m_mac, buff, size);
+    // TODO: Convert status to proper alc_error_t code and return
+    if (!status.ok()) {
+        err = ALC_ERROR_EXISTS;
+    } else {
+        err = ALC_ERROR_NONE;
+    }
     return err;
 }
 
@@ -88,7 +98,12 @@ alcp_mac_finalize(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size)
     auto               ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
     alcp::base::Status status = ctx->finalize(ctx->m_mac, buff, size);
 
-    // TODO: Convert status to alc_error_t to return
+    // TODO: Convert status to proper alc_error_t code and return
+    if (!status.ok()) {
+        err = ALC_ERROR_EXISTS;
+    } else {
+        err = ALC_ERROR_NONE;
+    }
     return err;
 }
 
@@ -104,7 +119,13 @@ alcp_mac_copy(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size)
     auto   ctx    = static_cast<mac::Context*>(pMacHandle->ch_context);
     Status status = ctx->copy(ctx->m_mac, buff, size);
 
-    // TODO: Convert status to alc_error_t code to return
+    // TODO: Convert status to proper alc_error_t code and return
+    if (!status.ok()) {
+        err = ALC_ERROR_EXISTS;
+    } else {
+        err = ALC_ERROR_NONE;
+    }
+
     return err;
 }
 
@@ -132,6 +153,12 @@ alcp_mac_reset(alc_mac_handle_p pMacHandle)
 
     auto   ctx    = static_cast<mac::Context*>(pMacHandle->ch_context);
     Status status = ctx->reset(ctx->m_mac, ctx->m_digest);
+    // TODO: Convert status to proper alc_error_t code and return
+    if (!status.ok()) {
+        err = ALC_ERROR_EXISTS;
+    } else {
+        err = ALC_ERROR_NONE;
+    }
     // FIXME: This function is always returning no errors
     return err;
 }
