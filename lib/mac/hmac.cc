@@ -76,14 +76,14 @@ class Hmac::Impl
     Uint8* m_pK0 = m_pMemory_block + 288;
 
   public:
-    Impl(const alc_mac_info_t& mac_info, alcp::digest::Digest* p_digest)
-        : m_pDigest{ p_digest }
+    Impl(const Uint8& key, Uint32 keylen, alcp::digest::Digest& p_digest)
+        : m_pDigest{ &p_digest }
     {
         // Constructor argument validations
-        m_input_block_length = p_digest->getInputBlockSize();
-        m_output_hash_size   = p_digest->getHashSize();
-        m_pKey               = mac_info.mi_keyinfo.key;
-        m_keylen             = mac_info.mi_keyinfo.len;
+        m_input_block_length = m_pDigest->getInputBlockSize();
+        m_output_hash_size   = m_pDigest->getHashSize();
+        m_pKey               = &key;
+        m_keylen             = keylen;
 
         // For HMAC, we require k0 to be same length as input block length of
         // the used hash
@@ -96,7 +96,7 @@ class Hmac::Impl
         get_k0_xor_pad();
 
         // start the hash calculation
-        calculate_hash(p_digest, m_pK0_xor_ipad, m_input_block_length);
+        calculate_hash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
     }
 
   public:
@@ -295,9 +295,8 @@ class Hmac::Impl
     }
 };
 
-Hmac::Hmac(const alc_mac_info_t mac_info, alcp::digest::Digest* p_digest)
-    : m_pDigest{ p_digest }
-    , m_pImpl{ std::make_unique<Hmac::Impl>(mac_info, p_digest) }
+Hmac::Hmac(const Uint8& key, Uint32 keylen, alcp::digest::Digest& p_digest)
+    : m_pImpl{ std::make_unique<Hmac::Impl>(key, keylen, p_digest) }
 {}
 Hmac::~Hmac() {}
 

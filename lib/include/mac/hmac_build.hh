@@ -27,6 +27,7 @@
  */
 #pragma once
 
+#include "alcp/base.hh"
 #include "alcp/error.h"
 #include "digest/sha2_384.hh"
 #include "digest/sha3.hh"
@@ -34,7 +35,38 @@
 #include <type_traits> /* for is_same_v<> */
 
 using Context = alcp::mac::Context;
-
+alcp::base::Status
+validate_keys(const alc_key_info_t& rKeyInfo)
+{
+    alcp::base::Status status = alcp::base::StatusOk();
+    // For RAW assignments
+    switch (rKeyInfo.fmt) {
+        case ALC_KEY_FMT_RAW:
+            if (rKeyInfo.len == 0) {
+                return alcp::base::InvalidArgumentError(
+                    "HMAC: Key Size Cannot be Zero");
+            }
+            if (rKeyInfo.key == nullptr) {
+                return alcp::base::InvalidArgumentError(
+                    "HMAC: Key cannot be NULL");
+            }
+            break;
+        case ALC_KEY_FMT_BASE64:
+            // TODO: For base64 conversions
+            return alcp::base::InvalidArgumentError(
+                "HMAC: Base64 Key Format not supported yet"); // remove this
+                                                              // return when
+                                                              // above todo is
+                                                              // resolved.
+            break;
+        // TODO: Subsequest switch cases for other formats
+        default:
+            return alcp::base::InvalidArgumentError(
+                "HMAC: Key Format not supported ");
+            break;
+    }
+    return status;
+}
 class HmacBuilder
 {
   public:
@@ -94,12 +126,18 @@ __build_hmac(const alc_mac_info_t& macInfo, Context& ctx)
 {
     alcp::base::Status status = alcp::base::StatusOk();
 
+    status = validate_keys(macInfo.mi_keyinfo);
+    if (!status.ok()) {
+        return status;
+    }
     auto digest = new DIGESTALGORITHM();
     if (digest == nullptr) {
         // TODO: Update proper Out of Memory Status
         return status;
     }
-    auto algo = new MACALGORITHM(macInfo, digest);
+    auto key    = macInfo.mi_keyinfo.key;
+    auto keylen = macInfo.mi_keyinfo.len;
+    auto algo   = new MACALGORITHM(*key, keylen, *digest);
     if (algo == nullptr) {
         // TODO: Update proper Out of Memory Status
         return status;
@@ -121,13 +159,19 @@ __build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
 {
     alcp::base::Status status = alcp::base::StatusOk();
 
+    status = validate_keys(macInfo.mi_keyinfo);
+    if (!status.ok()) {
+        return status;
+    }
+
     auto sha3 = new alcp::digest::Sha3(macInfo.mi_algoinfo.hmac.hmac_digest);
     if (sha3 == nullptr) {
         // TODO: Update proper Out of Memory Status
         return status;
     }
-
-    auto algo = new MACALGORITHM(macInfo, sha3);
+    auto key    = macInfo.mi_keyinfo.key;
+    auto keylen = macInfo.mi_keyinfo.len;
+    auto algo   = new MACALGORITHM(*key, keylen, *sha3);
     if (algo == nullptr) {
         // TODO: Update proper Out of Memory Status
         return status;

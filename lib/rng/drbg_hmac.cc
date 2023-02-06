@@ -302,20 +302,7 @@ HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8  cIn1[],
                                   Uint8        out[],
                                   const Uint64 cOutLen)
 {
-    alc_digest_info_t hmac_digest = {
-        ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256, {}, ALC_SHA2_256, {}
-    };
-    alc_hmac_info_t hmac_info = { hmac_digest };
-    alc_key_info_t  key_info  = { ALC_KEY_TYPE_SYMMETRIC,
-                                ALC_KEY_FMT_RAW,
-                                ALC_KEY_ALG_MAC,
-                                {},
-                                static_cast<Uint32>(m_key.size()),
-                                &m_key[0] };
-    alc_mac_info_t  mac_info  = { ALC_MAC_HMAC, hmac_info, key_info };
-    // FIXME: Static is not a good idea, just doing for easy optimal
-    // implementation
-    Hmac hmac_obj = Hmac(mac_info, m_digest.get());
+    Hmac hmac_obj = Hmac(m_key[0], m_key.size(), *m_digest);
     hmac_obj.update(cIn1, cIn1Len);
     if (cIn2 != nullptr && cIn2Len != 0)
         hmac_obj.update(cIn2, cIn2Len);
@@ -324,7 +311,7 @@ HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8  cIn1[],
     hmac_obj.finalize(nullptr, 0);
 
     // Assert that we have enough memory to write the output into
-    assert(cOutLen >= m_digest->getHashSize());
+    assert(out_len >= m_digest->getHashSize());
 
     hmac_obj.copyHash(out, m_digest->getHashSize());
 

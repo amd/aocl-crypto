@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -57,7 +57,7 @@ class ALCP_API_EXPORT Hmac final : public Mac
     Impl*                 pImpl() { return m_pImpl.get(); }
 
   public:
-    Hmac(const alc_mac_info_t mac_info, alcp::digest::Digest* p_digest);
+    Hmac(const Uint8& key, Uint32 m_keylen, alcp::digest::Digest& p_digest);
     /**
      * @brief Can be called continously to update message on small chunks
      * @param buff: message array block to update HMAC

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -366,20 +366,20 @@ class HmacTestFixture
         if (sha_type == "SHA2") {
             if (hash_name == "256") {
                 p_sha256 = std::make_unique<alcp::digest::Sha256>();
-                p_hmac =
-                    std::make_unique<alcp::mac::Hmac>(mac_info, p_sha256.get());
+                p_hmac   = std::make_unique<alcp::mac::Hmac>(
+                    key.front(), key.size(), *p_sha256);
             } else if (hash_name == "224") {
                 p_sha224 = std::make_unique<alcp::digest::Sha224>();
-                p_hmac =
-                    std::make_unique<alcp::mac::Hmac>(mac_info, p_sha224.get());
+                p_hmac   = std::make_unique<alcp::mac::Hmac>(
+                    key.front(), key.size(), *p_sha224);
             } else if (hash_name == "384") {
                 p_sha384 = std::make_unique<alcp::digest::Sha384>();
-                p_hmac =
-                    std::make_unique<alcp::mac::Hmac>(mac_info, p_sha384.get());
+                p_hmac   = std::make_unique<alcp::mac::Hmac>(
+                    key.front(), key.size(), *p_sha384);
             } else if (hash_name == "512") {
                 p_sha512 = std::make_unique<alcp::digest::Sha512>();
-                p_hmac =
-                    std::make_unique<alcp::mac::Hmac>(mac_info, p_sha512.get());
+                p_hmac   = std::make_unique<alcp::mac::Hmac>(
+                    key.front(), key.size(), *p_sha512);
             }
         } else if (sha_type == "SHA3") {
             mac_info.mi_algoinfo.hmac.hmac_digest.dt_type =
@@ -407,7 +407,8 @@ class HmacTestFixture
             }
             p_sha3 = std::make_unique<alcp::digest::Sha3>(
                 mac_info.mi_algoinfo.hmac.hmac_digest);
-            p_hmac = std::make_unique<alcp::mac::Hmac>(mac_info, p_sha3.get());
+            p_hmac =
+                std::make_unique<alcp::mac::Hmac>(key[0], key.size(), *p_sha3);
         }
     }
     void TearDown() override
@@ -418,63 +419,6 @@ class HmacTestFixture
     }
 };
 
-// Remove these tests once moved as a part of integration tests
-// TEST(HmacReliabilityTest, NullKeyNonNullKeyLength)
-// {
-
-//     const alc_key_info_t kinfo = { .type     = ALC_KEY_TYPE_SYMMETRIC,
-//                                    .fmt      = ALC_KEY_FMT_RAW,
-//                                    .algo     = ALC_KEY_ALG_MAC,
-//                                    .len_type = ALC_KEY_LEN_128,
-//                                    .len      = 32,   // Key Size is not zero
-//                                    but .key      = nullptr }; // Key is null
-//     const alc_mac_info_t  mac_info = {
-//         .mi_type = ALC_MAC_HMAC,
-//         .mi_algoinfo={
-//             .hmac={
-//                 .hmac_digest = {
-//                     .dt_type = ALC_DIGEST_TYPE_SHA2,
-//                     .dt_len = ALC_DIGEST_LEN_256,
-//                     .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
-//                 }
-//             }
-//         },
-//         .mi_keyinfo = kinfo
-//     };
-//     alcp::digest::Sha256 sha256;
-//     alcp::mac::Hmac      hmac{ mac_info, &sha256 };
-//     ASSERT_EQ(hmac.getState(), INVALID);
-//     hmac.finish();
-// }
-
-// TEST(HmacReliabilityTest, NonNullKeyNullKeyLength)
-// {
-//     auto key = std::vector<Uint8>(20, 0);
-//     const alc_key_info_t kinfo = { .type     = ALC_KEY_TYPE_SYMMETRIC,
-//                                    .fmt      = ALC_KEY_FMT_RAW,
-//                                    .algo     = ALC_KEY_ALG_MAC,
-//                                    .len_type = ALC_KEY_LEN_128,
-//                                    .len      = 0, // Key Size is not zero but
-//                                    .key      = &(key[0]) }; // Key is null
-//     const alc_mac_info_t  mac_info = {
-//         .mi_type = ALC_MAC_HMAC,
-//         .mi_algoinfo={
-//             .hmac={
-//                 .hmac_digest = {
-//                     .dt_type = ALC_DIGEST_TYPE_SHA2,
-//                     .dt_len = ALC_DIGEST_LEN_256,
-//                     .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
-//                 }
-//             }
-//         },
-//         .mi_keyinfo = kinfo
-//     };
-//     alcp::digest::Sha256 sha256;
-//     alcp::mac::Hmac      hmac(mac_info, &sha256);
-//     ASSERT_EQ(hmac.getState(), INVALID);
-//     hmac.finish();
-// }
-
 TEST(HmacReliabilityTest, NullUpdate)
 {
     auto        pos  = KAT_ShaDataset.find("SHA2_256_KEYLEN_EQ_B");
@@ -484,28 +428,8 @@ TEST(HmacReliabilityTest, NullUpdate)
     auto cipher_text = parseHexStrToBin(std::get<1>(data));
     auto output_mac  = parseHexStrToBin(std::get<2>(data));
 
-    const alc_key_info_t kinfo = { .type     = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt      = ALC_KEY_FMT_RAW,
-                                   .algo     = ALC_KEY_ALG_MAC,
-                                   .len_type = ALC_KEY_LEN_128,
-                                   .len      = static_cast<Uint32>(
-                                       key.size()), // Key Size is not zero but
-                                   .key = &(key[0]) }; // Key is null
-    const alc_mac_info_t  mac_info = {
-        .mi_type = ALC_MAC_HMAC,
-        .mi_algoinfo={
-            .hmac={
-                .hmac_digest = {
-                    .dt_type = ALC_DIGEST_TYPE_SHA2,
-                    .dt_len = ALC_DIGEST_LEN_256,
-                    .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
-                }
-            }
-        },
-        .mi_keyinfo = kinfo
-    };
     alcp::digest::Sha256 sha256;
-    alcp::mac::Hmac      hmac(mac_info, &sha256);
+    alcp::mac::Hmac      hmac(key.front(), key.size(), sha256);
 
     auto err = hmac.update(nullptr, 0);
     // EXPECT_EQ(err, ALC_ERROR_NONE);
@@ -572,28 +496,8 @@ TEST(HmacReliabilityTest, Reset)
     auto cipher_text = parseHexStrToBin(std::get<1>(data));
     auto output_mac  = parseHexStrToBin(std::get<2>(data));
 
-    const alc_key_info_t kinfo = { .type     = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt      = ALC_KEY_FMT_RAW,
-                                   .algo     = ALC_KEY_ALG_MAC,
-                                   .len_type = ALC_KEY_LEN_128,
-                                   .len      = static_cast<Uint32>(
-                                       key.size()), // Key Size is not zero but
-                                   .key = &(key[0]) }; // Key is null
-    const alc_mac_info_t  mac_info = {
-        .mi_type = ALC_MAC_HMAC,
-        .mi_algoinfo={
-            .hmac={
-                .hmac_digest = {
-                    .dt_type = ALC_DIGEST_TYPE_SHA2,
-                    .dt_len = ALC_DIGEST_LEN_256,
-                    .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
-                }
-            }
-        },
-        .mi_keyinfo = kinfo
-    };
     alcp::digest::Sha256 sha256;
-    alcp::mac::Hmac      hmac(mac_info, &sha256);
+    alcp::mac::Hmac      hmac(key.front(), key.size(), sha256);
     hmac.update(&cipher_text[0], cipher_text.size());
 
     hmac.reset();
@@ -615,27 +519,6 @@ TEST(HmacReliabilityTest, UpdateFinalizeReset)
     auto cipher_text = parseHexStrToBin(std::get<1>(data));
     auto output_mac  = parseHexStrToBin(std::get<2>(data));
 
-    const alc_key_info_t kinfo = { .type     = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt      = ALC_KEY_FMT_RAW,
-                                   .algo     = ALC_KEY_ALG_MAC,
-                                   .len_type = ALC_KEY_LEN_128,
-                                   .len      = static_cast<Uint32>(
-                                       key.size()), // Key Size is not zero but
-                                   .key = &(key[0]) }; // Key is null
-    const alc_mac_info_t  mac_info = {
-        .mi_type = ALC_MAC_HMAC,
-        .mi_algoinfo={
-            .hmac={
-                .hmac_digest = {
-                    .dt_type = ALC_DIGEST_TYPE_SHA2,
-                    .dt_len = ALC_DIGEST_LEN_256,
-                    .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
-                }
-            }
-        },
-        .mi_keyinfo = kinfo
-    };
-
     auto block1 = std::vector<Uint8>(
         cipher_text.begin(), cipher_text.begin() + cipher_text.size() / 2);
 
@@ -643,7 +526,7 @@ TEST(HmacReliabilityTest, UpdateFinalizeReset)
         cipher_text.begin() + cipher_text.size() / 2, cipher_text.end());
 
     alcp::digest::Sha256 sha256;
-    alcp::mac::Hmac      hmac(mac_info, &sha256);
+    alcp::mac::Hmac      hmac(key.front(), key.size(), sha256);
     hmac.update(&cipher_text.at(0), cipher_text.size());
     hmac.finalize(nullptr, 0);
     hmac.reset();
