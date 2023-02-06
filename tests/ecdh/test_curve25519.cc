@@ -88,6 +88,7 @@ static const Uint8 expected_result[32] = {
     0x43, 0x11, 0x94, 0x3b, 0x01, 0x45, 0xca, 0x19, 0xfe, 0x09
 };
 
+#ifdef USE_OSSL
 TEST(EC_X25519, opensslVerifySecretKey)
 {
     alc_error_t ret = ALC_ERROR_NONE;
@@ -212,6 +213,8 @@ TEST(EC_X25519, opensslSpeedCheck)
 
     EXPECT_EQ(ALC_ERROR_NONE, ret);
 }
+#endif
+
 #ifdef USE_IPP
 TEST(EC_X25519, ippcpVerifySecretKey)
 {
