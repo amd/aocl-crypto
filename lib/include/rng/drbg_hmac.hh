@@ -375,6 +375,8 @@ namespace alcp::random_number { namespace drbg {
             p_impl->Reseed(entropy_input, additional_input);
         }
 
+        std::string name() const { return "HMAC-DRBG"; }
+
         // FIXME: This should not exist, its a key leakage, leaving it here
         // for debugging sake
         /**
@@ -396,6 +398,12 @@ namespace alcp::random_number { namespace drbg {
         HmacDrbg(int                                   digestSize,
                  std::shared_ptr<alcp::digest::Digest> digest_obj)
             : p_impl{ std::make_unique<IHmacDrbg>(digestSize, digest_obj) }
+        {}
+        HmacDrbg(int                                   digestSize,
+                 std::shared_ptr<alcp::digest::Digest> digest_obj,
+                 std::shared_ptr<IRng>                 m_entropy_in)
+            : Drbg::Drbg(m_entropy_in)
+            , p_impl{ std::make_unique<IHmacDrbg>(digestSize, digest_obj) }
         {}
         ~HmacDrbg() = default;
     };

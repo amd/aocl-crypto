@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,55 +25,3 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
-#pragma once
-
-#include <memory>
-#include <string>
-
-#include "alcp/base.hh"
-#include "alcp/interface/Irng.hh"
-#include "config.h"
-
-namespace alcp::rng {
-
-class Rng : public IRng
-{
-  protected:
-    Rng()          = default;
-    virtual ~Rng() = default;
-
-    virtual void finish() = 0;
-
-  private:
-    // FIXME: Unused Variable
-#if 0
-bool m_initialized = false;
-#endif
-};
-
-class OsRng final : public Rng
-{
-  public:
-    OsRng() {}
-    // explicit OsRng(ISeeder);
-    ~OsRng() {}
-
-  public:
-    Status readRandom(Uint8* pBuf, Uint64 size) override;
-    Status readUrandom(Uint8* buffer, Uint64 size);
-    void   finish() override;
-};
-
-class ArchRng final : public Rng
-{
-  public:
-    ArchRng() {}
-    // explicit ArchRng(const alc_rng_info_t& rRnginfo);
-    ~ArchRng() {}
-
-    Status readRandom(Uint8* pBuf, Uint64 size) override;
-    void   finish() override;
-};
-
-} // namespace alcp::rng
