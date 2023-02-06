@@ -27,6 +27,7 @@
  */
 
 #include "mac/hmac.hh"
+#include "alcp/base.hh"
 #include "alcp/utils/cpuid.hh"
 #include "utils/copy.hh"
 #include <cstring> // for std::memset
@@ -123,21 +124,42 @@ class Hmac::Impl
     /// @return ALC_ERROR_NONE if no errors otherwise appropriate error
     Status finalize(const Uint8* buff, Uint64 size)
     {
-        Status status = StatusOk();
+        Status      status = StatusOk();
+        alc_error_t err    = ALC_ERROR_NONE;
         // TODO: For all the following calls to digest return the proper error
         // and assign
         if (sizeof(buff) != 0 && size != 0) {
-            m_pDigest->finalize(buff, size);
+            err    = m_pDigest->finalize(buff, size);
+            status = validate_error_status(err);
         } else {
-            m_pDigest->finalize(nullptr, 0);
+            err    = m_pDigest->finalize(nullptr, 0);
+            status = validate_error_status(err);
         }
-        m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
+        if (!status.ok()) {
+            return status;
+        }
+        err    = m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
+        status = validate_error_status(err);
+        if (!status.ok()) {
+            return status;
+        }
         m_pDigest->reset();
 
-        calculate_hash(m_pDigest, m_pK0_xor_opad, m_k0_length);
-        m_pDigest->finalize(m_pTempHash, m_output_hash_size);
+        status = calculate_hash(m_pDigest, m_pK0_xor_opad, m_k0_length);
+        if (!status.ok()) {
+            return status;
+        }
+        err    = m_pDigest->finalize(m_pTempHash, m_output_hash_size);
+        status = validate_error_status(err);
+        if (!status.ok()) {
+            return status;
+        }
 
-        m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
+        err    = m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
+        status = validate_error_status(err);
+        if (!status.ok()) {
+            return status;
+        }
         m_pDigest->reset();
 
         return status;
@@ -150,9 +172,15 @@ class Hmac::Impl
     /// @return ALC_ERROR_NONE if no errors otherwise appropriate error
     Status copyHash(Uint8* buff, Uint64 size)
     {
-        Status status = StatusOk();
-        alcp::utils::CopyBytes(buff, m_pTempHash, size);
         // TODO: Update status with proper error code.
+        Status status = StatusOk();
+        if (size >= m_output_hash_size) {
+            alcp::utils::CopyBytes(buff, m_pTempHash, size);
+        } else {
+            status =
+                InvalidArgumentError("HMAC: Copy Buffer Size should be greater "
+                                     "than or equal to SHA output size");
+        }
         return status;
     }
 
@@ -223,9 +251,18 @@ class Hmac::Impl
             // Optimization: Reusing p_digest for calculating
             // TODO: For all the following digest calls check and update proper
             // error status
+            alc_error_t err = ALC_ERROR_NONE;
             m_pDigest->reset();
-            m_pDigest->finalize(m_pKey, m_keylen);
+            err    = m_pDigest->finalize(m_pKey, m_keylen);
+            status = validate_error_status(err);
+            if (!status.ok()) {
+                return status;
+            }
             m_pDigest->copyHash(m_pK0, m_output_hash_size);
+            status = validate_error_status(err);
+            if (!status.ok()) {
+                return status;
+            }
             m_pDigest->reset();
             std::memset(m_pK0 + m_output_hash_size,
                         0x0,
@@ -238,10 +275,23 @@ class Hmac::Impl
                           const Uint8*          input,
                           Uint64                len)
     {
-        Status status = StatusOk();
-        p_digest->update(input, len);
+        alc_error_t err = p_digest->update(input, len);
         // TODO: Based on the output from update call update status code
+        Status status = validate_error_status(err);
         return status;
+    }
+
+    Status validate_error_status(alc_error_t err)
+    {
+        /* TODO: This function is temporary to support Digest classes
+           which still uses alc_error_t. This will return any failures to CAPI,
+           but not proper error codes. Replace it with Specific HMAC errors once
+           Digest classes are supported. */
+        if (alcp_is_error(err)) {
+            return InternalError("HMAC: InternalError");
+        } else {
+            return StatusOk();
+        }
     }
 };
 
