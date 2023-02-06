@@ -132,8 +132,8 @@ namespace alcp::cipher { namespace aesni {
 
     /* keys256 is equivalent to 2x128 */
     Status ExpandKeys256(const uint8_t* pUserKey,
-                              uint8_t*       pEncKey,
-                              uint8_t*       pDecKey)
+                         uint8_t*       pEncKey,
+                         uint8_t*       pDecKey)
     {
         __m128i  tmp[3];
         __m128i* p_round_key = reinterpret_cast<__m128i*>(pEncKey);
@@ -202,9 +202,7 @@ namespace alcp::cipher { namespace aesni {
      *
      * \return   alc_error_t
      */
-    Status ExpandKeys192(const Uint8* pUserKey,
-                              Uint8*       pEncKey,
-                              Uint8*       pDecKey)
+    Status ExpandKeys192(const Uint8* pUserKey, Uint8* pEncKey, Uint8* pDecKey)
     {
 
         __m128i  tmp[3];
@@ -282,8 +280,8 @@ namespace alcp::cipher { namespace aesni {
      * \return   alc_error_t
      */
     Status ExpandKeys128(const uint8_t* pUserKey,
-                              uint8_t*       pEncKey,
-                              uint8_t*       pDecKey)
+                         uint8_t*       pEncKey,
+                         uint8_t*       pDecKey)
     {
         __m128i* p_round_key = reinterpret_cast<__m128i*>(pEncKey);
 
@@ -329,7 +327,7 @@ namespace alcp::cipher { namespace aesni {
                            uint8_t*       pDecKey,
                            int            nRounds)
     {
-        Status sts;
+        Status sts = StatusOk();
 
         switch (nRounds) {
             case 14:
@@ -353,7 +351,7 @@ namespace alcp::cipher { namespace aesni {
                                 uint8_t*       pTweakKey,
                                 int            nRounds)
     {
-        Status sts;
+        Status sts = StatusOk();
 
         switch (nRounds) {
             case 14:

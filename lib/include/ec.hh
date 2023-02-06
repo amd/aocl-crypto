@@ -28,28 +28,28 @@
 
 #pragma once
 
+/* C++ headers */
+#include "alcp/base.hh"
+
 #include <array>
 #include <cstdint>
 #include <functional>
 #include <iostream>
 
-/* C-API headers */
-#include "alcp/ec.h"
-#include <alcp/macros.h>
+namespace alcp::ec {
 
-/* C++ headers */
-#include "types.hh"
-
-typedef struct alcp_ec_point
+// FIXME: modifty the macro a equation based.
+constexpr Uint8 ALC_MAX_EC_PRECISION_IN_64BITS = 9;
+struct AlcpEcPoint
 {
     Uint64 x[ALC_MAX_EC_PRECISION_IN_64BITS]; // Mont curves only x co-ordinate
                                               // in ec point
     Uint64 y[ALC_MAX_EC_PRECISION_IN_64BITS];
     Uint64 z[ALC_MAX_EC_PRECISION_IN_64BITS];
-} alcp_ec_point_t;
+};
 
-// FIXME: alcp_ec_param may not be exposed right now.
-typedef struct alcp_ec_param
+// FIXME: AlcpEcParam may not be exposed right now.
+struct AlcpEcParam
 {
     Uint64 prime[ALC_MAX_EC_PRECISION_IN_64BITS];
     Uint64 a[ALC_MAX_EC_PRECISION_IN_64BITS];
@@ -57,40 +57,35 @@ typedef struct alcp_ec_param
 
     // distinguished point in an elliptic curve group that generates a subgroup
     // of prime order n
-    alcp_ec_point G;
-    Uint64        n_order[ALC_MAX_EC_PRECISION_IN_64BITS];
-    Uint64        h_cofactor[ALC_MAX_EC_PRECISION_IN_64BITS];
-
-    alc_ec_point_format_id pointFormat;
-    alc_ec_curve_id        namedCurveId;
+    AlcpEcPoint G;
+    Uint64      n_order[ALC_MAX_EC_PRECISION_IN_64BITS];
+    Uint64      h_cofactor[ALC_MAX_EC_PRECISION_IN_64BITS];
 
     int q;
 
     Uint8*       seed;
     unsigned int seedLen;
-
-} alcp_ec_param_t;
+};
 
 // FIXME: alc_key_info may not be exposed right now.
-typedef struct alc_key_param
+struct alc_key_param
 {
-    alcp_ec_param_t ecParam;
+    AlcpEcParam ecParam;
 
     // private keys
     Uint64 de[ALC_MAX_EC_PRECISION_IN_64BITS]; // ephermeral
     Uint64 ds[ALC_MAX_EC_PRECISION_IN_64BITS]; // static
 
     // public keys
-    alcp_ec_point_t Qe; // ephermeral
-    alcp_ec_point_t Qs; // static
+    AlcpEcPoint Qe; // ephermeral
+    AlcpEcPoint Qs; // static
 
     // public key Peer
-    alcp_ec_point_t QeP; // ephermeral
-    alcp_ec_point_t QsP; // static
+    AlcpEcPoint QeP; // ephermeral
+    AlcpEcPoint QsP; // static
 
     Uint64 z[ALC_MAX_EC_PRECISION_IN_64BITS]; // shared secret key
-
-} alc_key_param_t;
+};
 
 class IEc
 {
@@ -98,15 +93,17 @@ class IEc
     IEc() {}
 
   public:
-    virtual alc_error_t GeneratePublicKey(Uint8*       pPublicKey,
-                                          const Uint8* pPrivKey) = 0;
+    virtual Status generatePublicKey(Uint8*       pPublicKey,
+                                     const Uint8* pPrivKey) = 0;
 
-    virtual alc_error_t ComputeSecretKey(Uint8*       pSecretKey,
-                                         const Uint8* pPublicKey,
-                                         Uint64*      pKeyLength) = 0;
+    virtual Status computeSecretKey(Uint8*       pSecretKey,
+                                    const Uint8* pPublicKey,
+                                    Uint64*      pKeyLength) = 0;
 
-    virtual void finish() = 0;
-    virtual void reset()  = 0;
+    virtual Status validatePublicKey(const Uint8* pPublicKey,
+                                     Uint64       pKeyLength) = 0;
+
+    virtual void reset() = 0;
 
     /**
      * @return The key size in bytes
@@ -122,9 +119,11 @@ class Ec : public IEc
   protected:
     Uint64 m_secretkey_len_bytes;
     // FIXME needs to modified after NIST curves implementation.
-    alcp_ec_point m_data;
+    AlcpEcPoint m_data;
 
   protected:
     Ec()          = default;
     virtual ~Ec() = default;
 };
+
+} // namespace alcp::ec

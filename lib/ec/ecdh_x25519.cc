@@ -27,46 +27,72 @@
  */
 
 #include "ec/ecdh.hh"
+#include <string.h>
 
-static const Uint8 x25519_basepoint_9[32] = { 9 };
+namespace alcp::ec {
 
-alc_error_t
-EcX25519::GeneratePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
+static constexpr Uint32 KeySize                     = 32;
+static const Uint8      x25519_basepoint_9[KeySize] = { 9 };
+
+X25519::X25519()
 {
-    alc_error_t err = ALC_ERROR_NONE;
-
-    m_pPrivKey = pPrivKey;
-#if ALCP_X25519_ADDED
-    alcpScalarMulX25519(pPublicKey, m_pPrivKey, x25519_basepoint_9);
-#endif
-    return err;
+    m_pPrivKey.resize(KeySize);
 }
 
-alc_error_t
-EcX25519 ::ComputeSecretKey(Uint8*       pSecretKey,
-                            const Uint8* pPublicKey,
-                            Uint64*      pKeyLength)
+Status
+X25519::generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
 {
-    alc_error_t err = ALC_ERROR_NONE;
+    std::copy(pPrivKey, pPrivKey + KeySize, m_pPrivKey.begin());
+#if ALCP_X25519_ADDED
+    alcpScalarMulX25519(pPublicKey, pPrivKey, x25519_basepoint_9);
+#endif
+    return StatusOk();
+}
+
+Status
+X25519::computeSecretKey(Uint8*       pSecretKey,
+                         const Uint8* pPublicKey,
+                         Uint64*      pKeyLength)
+{
+
+    Status status = validatePublicKey(pPublicKey, KeySize);
+    if (!status.ok()) {
+        return status;
+    }
 
 #if ALCP_X25519_ADDED
-    alcpScalarMulX25519(pSecretKey, m_pPrivKey, pPublicKey);
+    status = alcpScalarMulX25519(pSecretKey, m_pPrivKey, pPublicKey);
 #endif
     *pKeyLength = 32;
-    return err;
+    return status;
+}
+
+Status
+X25519::validatePublicKey(const Uint8* pPublicKey, Uint64 pKeyLength)
+{
+    if (pKeyLength != KeySize) {
+        return Status(GenericError(ErrorCode::eInvalidArgument),
+                      "Key validation failed");
+    }
+
+    static const Uint8 all_zero[KeySize] = { 0 };
+
+    return memcmp(all_zero, pPublicKey, KeySize)
+               ? StatusOk()
+               : Status(GenericError(ErrorCode::eInvalidArgument),
+                        "Key validation failed");
 }
 
 void
-EcX25519 ::finish()
-{}
-
-void
-EcX25519 ::reset()
-{}
+X25519::reset()
+{
+    std::fill(m_pPrivKey.begin(), m_pPrivKey.end(), 0);
+}
 
 Uint64
-EcX25519 ::getKeySize()
+X25519::getKeySize()
 {
-    // FIXME: add key size based on EC type
-    return 32;
+    return KeySize;
 }
+
+} // namespace alcp::ec

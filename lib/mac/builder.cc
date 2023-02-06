@@ -26,9 +26,9 @@
  *
  */
 
+#include "capi/mac/builder.hh"
 #include "alcp/error.h"
 #include "alcp/mac.h"
-#include "capi/mac/builder.hh"
 #include "mac/hmac_build.hh"
 
 namespace alcp::mac {
@@ -38,7 +38,7 @@ using Context = alcp::mac::Context;
 alcp::base::Status
 MacBuilder::Build(const alc_mac_info_t& macInfo, Context& ctx)
 {
-    alcp::base::Status status;
+    alcp::base::Status status = alcp::base::StatusOk();
     switch (macInfo.mi_type) {
         case ALC_MAC_HMAC:
             status = HmacBuilder::Build(macInfo, macInfo.mi_keyinfo, ctx);

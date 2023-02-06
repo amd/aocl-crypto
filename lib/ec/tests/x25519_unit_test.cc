@@ -30,6 +30,7 @@
 #include <iostream>
 #include <string.h>
 
+#include "alcp/base.hh"
 #include "ec/ecdh.hh"
 
 #include <sys/time.h>
@@ -79,7 +80,10 @@ double totalTimeElapsed;
         printf(" %2.2f ms ", elapsed * 1000);                                  \
     }
 
+namespace {
+
 using namespace std;
+using namespace alcp;
 
 // clang-format off
 typedef std::tuple<std::vector<Uint8>, // peer1_private_key
@@ -247,10 +251,4 @@ TEST_P(x25519Test, performanceTest)
 
 #endif // ALCP_X25519_ADDED
 
-int
-main(int argc, char** argv)
-{
-    ::testing::InitGoogleTest(&argc, argv);
-
-    return RUN_ALL_TESTS();
-}
+} // namespace

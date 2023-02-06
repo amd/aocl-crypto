@@ -181,7 +181,7 @@ AesBuilder::Build(const alc_cipher_algo_info_t& aesInfo,
                   const alc_key_info_t&         keyInfo,
                   Context&                      ctx)
 {
-    Status sts;
+    Status sts = StatusOk();
 
     switch (aesInfo.ai_mode) {
         case ALC_AES_MODE_CFB:

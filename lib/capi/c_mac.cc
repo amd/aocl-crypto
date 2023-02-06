@@ -72,8 +72,8 @@ alcp_mac_update(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size)
 
     auto ctx = static_cast<mac::Context*>(pMacHandle->ch_context);
 
-    Status status;
-    status = ctx->update(ctx->m_mac, buff, size);
+    Status status = StatusOk();
+    status        = ctx->update(ctx->m_mac, buff, size);
     return err;
 }
 

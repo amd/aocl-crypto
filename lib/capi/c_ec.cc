@@ -29,6 +29,7 @@
 #include "alcp/ec.h"
 #include "alcp/macros.h"
 
+#include "alcp/capi/defs.hh"
 #include "capi/ec/builder.hh"
 #include "capi/ec/ctx.hh"
 
@@ -39,9 +40,9 @@ EXTERN_C_BEGIN
 uint64_t
 alcp_ec_context_size(const alc_ec_info_p pEcInfo)
 {
-    //uint64_t size =
-      //  sizeof(ec::Context) + ec::EcBuilder::getSize(*pEcInfo);
-    //return size;
+    // uint64_t size =
+    //  sizeof(ec::Context) + ec::EcBuilder::getSize(*pEcInfo);
+    // return size;
 
     Uint64 size = sizeof(ec::Context);
     return size;
@@ -56,8 +57,7 @@ alcp_ec_supported(const alc_ec_info_p pEcInfo)
 }
 
 alc_error_t
-alcp_ec_request(const alc_ec_info_p pEcInfo,
-                alc_ec_handle_p     pEcHandle)
+alcp_ec_request(const alc_ec_info_p pEcInfo, alc_ec_handle_p pEcHandle)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -67,34 +67,36 @@ alcp_ec_request(const alc_ec_info_p pEcInfo,
 
     auto ctx = static_cast<ec::Context*>(pEcHandle->context);
 
-    err = ec::EcBuilder::Build(*pEcInfo, *ctx);
+    Status status = ec::EcBuilder::Build(*pEcInfo, *ctx);
 
-    return err;
+    return status.ok() ? err : ALC_ERROR_GENERIC;
 }
-
 
 alc_error_t
 alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
-                      Uint8* pPublicKey, const Uint8* pPrivKey)
+                      Uint8*                pPublicKey,
+                      const Uint8*          pPrivKey)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pEcHandle, err);
     ALCP_BAD_PTR_ERR_RET(pEcHandle->context, err);
     ALCP_BAD_PTR_ERR_RET(pPublicKey, err);
-    ALCP_BAD_PTR_ERR_RET(pPrivKey, err);//privateKey can be internal generated after adding DRBG and key managment function.
+    ALCP_BAD_PTR_ERR_RET(pPrivKey,
+                         err); // privateKey can be internal generated after
+                               // adding DRBG and key managment function.
 
     auto ctx = static_cast<ec::Context*>(pEcHandle->context);
 
-    err = ctx->getPublicKey(ctx->m_ec, pPublicKey, pPrivKey);
+    Status status = ctx->getPublicKey(ctx->m_ec, pPublicKey, pPrivKey);
 
-    return err;
+    return status.ok() ? err : ALC_ERROR_GENERIC;
 }
 
 alc_error_t
 alcp_ec_get_secretkey(const alc_ec_handle_p pEcHandle,
-                      Uint8*       pSecretKey,
-                      const Uint8* pPublicKey,
-                      Uint64*      pKeyLength)
+                      Uint8*                pSecretKey,
+                      const Uint8*          pPublicKey,
+                      Uint64*               pKeyLength)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pEcHandle, err);
@@ -105,9 +107,10 @@ alcp_ec_get_secretkey(const alc_ec_handle_p pEcHandle,
 
     auto ctx = static_cast<ec::Context*>(pEcHandle->context);
 
-    err = ctx->getSecretKey(ctx->m_ec, pSecretKey, pPublicKey, pKeyLength);
+    Status status =
+        ctx->getSecretKey(ctx->m_ec, pSecretKey, pPublicKey, pKeyLength);
 
-    return err;
+    return status.ok() ? err : ALC_ERROR_GENERIC;
 }
 
 void
@@ -122,10 +125,8 @@ alcp_ec_finish(const alc_ec_handle_p pEcHandle)
 void
 alcp_ec_reset(const alc_ec_handle_p pEcHandle)
 {
-    //auto ctx = static_cast<ec::Context*>(pEcHandle->context);
-
-    /* TODO: fix the argument */
-    //ctx->reset(ctx->m_ec);
+    auto ctx = static_cast<ec::Context*>(pEcHandle->context);
+    ctx->reset(ctx->m_ec);
 }
 
 EXTERN_C_END
