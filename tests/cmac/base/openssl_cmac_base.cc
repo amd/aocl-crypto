@@ -78,6 +78,7 @@ OpenSSLCmacBase::init()
         std::cout << "EVP_MAC_CTX_new failed, error: " << ERR_get_error()
                   << std::endl;
     }
+
     ret_val = EVP_MAC_init(m_handle, m_key, m_key_len, params);
     if (ret_val != 1) {
         std::cout << "EVP_MAC_init failed, error code : " << ret_val

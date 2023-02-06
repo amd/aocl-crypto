@@ -50,7 +50,7 @@ using namespace alcp::testing;
 std::vector<Int64> cmac_block_sizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
 
 /* Valid key sizes for performance comparison */
-std::vector<Int64> cmac_key_sizes = { 16, 24 };
+std::vector<Int64> cmac_key_sizes = { 16 };
 
 void inline Cmac_Bench(benchmark::State& state,
                        alc_mac_info_t    info,
@@ -93,16 +93,16 @@ void inline Cmac_Bench(benchmark::State& state,
     data.m_key_len  = Key.size();
 
     if (!cb->init(info, Key)) {
-        printf("Error in cmac init\n");
+        std::cout << "Error in cmac init" << std::endl;
         return;
     }
     for (auto _ : state) {
         if (!cb->Cmac_function(data)) {
-            printf("Error in running cmac benchmark\n");
+            std::cout << "Error in cmac function" << std::endl;
             return;
         }
         if (!cb->reset()) {
-            printf("Error in cmac reset\n");
+            std::cout << "Error in cmac reset" << std::endl;
             return;
         }
     }
@@ -113,7 +113,7 @@ void inline Cmac_Bench(benchmark::State& state,
 }
 
 /* add all your new benchmarks here */
-/* SHA2 benchmarks */
+/* CMAC AES benchmarks */
 static void
 BENCH_CMAC_AES_128(benchmark::State& state)
 {
