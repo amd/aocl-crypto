@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -131,6 +131,7 @@ function(alcp_cc_test testName)
 
   target_link_libraries(${_target_name}
     gtest_main
+    gmock_main
     alcp
     ${${testPrefix}_DEPENDS}
   )
