@@ -4,6 +4,7 @@
 *~
 *.orig
 **/build
+**/__pycache__
 
 # Nested build directory
 /build
