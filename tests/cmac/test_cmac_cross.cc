@@ -51,23 +51,11 @@ main(int argc, char** argv)
     parseArgs(argc, argv);
 #ifndef USE_IPP
     if (useipp)
-        printErrors("IPP is not avaiable");
+        printErrors("IPP is not available");
 #endif
 #ifndef USE_OSSL
     if (useossl)
-        printErrors("OpenSSL is not avaiable");
+        printErrors("OpenSSL is not available");
 #endif
-    // auto default_printer =
-    //     listeners.Release(listeners.default_result_printer());
-
-    // ConfigurableEventListener* listener =
-    //     new ConfigurableEventListener(default_printer);
-
-    // listener->showEnvironment    = true;
-    // listener->showTestCases      = true;
-    // listener->showTestNames      = true;
-    // listener->showSuccesses      = true;
-    // listener->showInlineFailures = true;
-    // listeners.Append(listener);
     return RUN_ALL_TESTS();
 }

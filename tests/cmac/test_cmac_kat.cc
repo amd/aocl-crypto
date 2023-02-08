@@ -61,17 +61,5 @@ main(int argc, char** argv)
                   << RESET << std::endl;
     }
 #endif
-    // auto default_printer =
-    //     listeners.Release(listeners.default_result_printer());
-
-    // ConfigurableEventListener* listener =
-    //     new ConfigurableEventListener(default_printer);
-
-    // listener->showEnvironment    = true;
-    // listener->showTestCases      = true;
-    // listener->showTestNames      = true;
-    // listener->showSuccesses      = true;
-    // listener->showInlineFailures = true;
-    // listeners.Append(listener);
     return RUN_ALL_TESTS();
 }
