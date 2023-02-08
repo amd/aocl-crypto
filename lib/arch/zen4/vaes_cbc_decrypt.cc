@@ -25,6 +25,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
+#include "alcp/base.hh"
+
 #include <cstdint>
 #include <immintrin.h>
 
@@ -34,8 +37,6 @@
 #include "vaes_avx512.hh"
 #include "vaes_avx512_core.hh"
 
-#include "alcp/base.hh"
-#include "key.hh"
 
 namespace alcp::cipher::vaes512 {
 
