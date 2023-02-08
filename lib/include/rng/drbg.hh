@@ -71,32 +71,33 @@ namespace alcp { namespace rng {
 
         size_t reseed() { return 0; }
 
-        virtual void Instantiate(const Uint8* entropy_input,
+        virtual void instantiate(const Uint8* entropy_input,
                                  const Uint64 entropy_input_len,
                                  const Uint8* nonce,
                                  const Uint64 nonce_len,
                                  const Uint8* personalization_string,
                                  const Uint64 personalization_string_len) = 0;
 
-        virtual void Instantiate(
+        virtual void instantiate(
             const std::vector<Uint8>& entropy_input,
             const std::vector<Uint8>& nonce,
             const std::vector<Uint8>& personalization_string) = 0;
 
-        virtual void Generate(const Uint8* additional_input,
+        virtual void generate(const Uint8* additional_input,
                               const Uint64 additional_input_len,
                               Uint8*       output,
                               const Uint64 output_len) = 0;
 
-        virtual void Generate(const std::vector<Uint8>& additional_input,
+        virtual void generate(const std::vector<Uint8>& additional_input,
                               std::vector<Uint8>&       output) = 0;
 
-        virtual void Reseed(const Uint8* entropy_input,
-                            const Uint64 entropy_input_len,
-                            const Uint8* additional_input,
-                            const Uint64 additional_input_len) = 0;
+        virtual void internalReseed(const Uint8* entropy_input,
+                                    const Uint64 entropy_input_len,
+                                    const Uint8* additional_input,
+                                    const Uint64 additional_input_len) = 0;
 
-        virtual void Reseed(const std::vector<Uint8>& entropy_input,
-                            const std::vector<Uint8>& additional_input) = 0;
+        virtual void internalReseed(
+            const std::vector<Uint8>& entropy_input,
+            const std::vector<Uint8>& additional_input) = 0;
     };
 }} // namespace alcp::rng

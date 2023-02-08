@@ -161,7 +161,7 @@ namespace alcp::rng { namespace drbg {
              * @param personalization_string_len  - Length of the
              * personalization string
              */
-            void Instantiate(const Uint8* entropy_input,
+            void instantiate(const Uint8* entropy_input,
                              const Uint64 entropy_input_len,
                              const Uint8* nonce,
                              const Uint64 nonce_len,
@@ -176,7 +176,7 @@ namespace alcp::rng { namespace drbg {
              * @param personalization_string  - vector<Uint8> given by user as
              * additional entropy
              */
-            void Instantiate(const std::vector<Uint8>& entropy_input,
+            void instantiate(const std::vector<Uint8>& entropy_input,
                              const std::vector<Uint8>& nonce,
                              const std::vector<Uint8>& personalization_string);
             /**
@@ -189,7 +189,7 @@ namespace alcp::rng { namespace drbg {
              * @param output               - Output buffer
              * @param output_len           - Length of the output buffer
              */
-            void Generate(const Uint8* additional_input,
+            void generate(const Uint8* additional_input,
                           const Uint64 additional_input_len,
                           Uint8*       output,
                           const Uint64 output_len);
@@ -201,7 +201,7 @@ namespace alcp::rng { namespace drbg {
              * vector<Uint8>
              * @param output               - Output buffer vector<Uint8>
              */
-            void Generate(const std::vector<Uint8>& additional_input,
+            void generate(const std::vector<Uint8>& additional_input,
                           std::vector<Uint8>&       output);
             /**
              * @brief Reseed the drbg internal state for unpredictability.
@@ -213,10 +213,10 @@ namespace alcp::rng { namespace drbg {
              * @param additional_input_len - Length of the additional entropy
              * buffer
              */
-            void Reseed(const Uint8* entropy_input,
-                        const Uint64 entropy_input_len,
-                        const Uint8* additional_input,
-                        const Uint64 additional_input_len);
+            void internalReseed(const Uint8* entropy_input,
+                                const Uint64 entropy_input_len,
+                                const Uint8* additional_input,
+                                const Uint64 additional_input_len);
             /**
              * @brief Reseed the drbg internal state for unpredictability.
              *
@@ -224,8 +224,8 @@ namespace alcp::rng { namespace drbg {
              * @param additional_input - Additional Entropy from user
              * vector<Uint8>
              */
-            void Reseed(const std::vector<Uint8>& entropy_input,
-                        const std::vector<Uint8>& additional_input);
+            void internalReseed(const std::vector<Uint8>& entropy_input,
+                                const std::vector<Uint8>& additional_input);
 
             /**
              * @brief Get a copy of internal Key
@@ -282,14 +282,14 @@ namespace alcp::rng { namespace drbg {
          * @param personalization_string_len  - Length of the
          * personalization string
          */
-        void Instantiate(const Uint8* entropy_input,
+        void instantiate(const Uint8* entropy_input,
                          const Uint64 entropy_input_len,
                          const Uint8* nonce,
                          const Uint64 nonce_len,
                          const Uint8* personalization_string,
                          const Uint64 personalization_string_len)
         {
-            p_impl->Instantiate(entropy_input,
+            p_impl->instantiate(entropy_input,
                                 entropy_input_len,
                                 nonce,
                                 nonce_len,
@@ -305,11 +305,11 @@ namespace alcp::rng { namespace drbg {
          * @param personalization_string  - vector<Uint8> given by user as
          * additional entropy
          */
-        void Instantiate(const std::vector<Uint8>& entropy_input,
+        void instantiate(const std::vector<Uint8>& entropy_input,
                          const std::vector<Uint8>& nonce,
                          const std::vector<Uint8>& personalization_string)
         {
-            p_impl->Instantiate(entropy_input, nonce, personalization_string);
+            p_impl->instantiate(entropy_input, nonce, personalization_string);
         }
         /**
          * @brief Generates the drbg random bits given additional data and
@@ -321,12 +321,12 @@ namespace alcp::rng { namespace drbg {
          * @param output               - Output buffer
          * @param output_len           - Length of the output buffer
          */
-        void Generate(const Uint8* additional_input,
+        void generate(const Uint8* additional_input,
                       const Uint64 additional_input_len,
                       Uint8*       output,
                       const Uint64 output_len)
         {
-            p_impl->Generate(
+            p_impl->generate(
                 additional_input, additional_input_len, output, output_len);
         }
         /**
@@ -337,10 +337,10 @@ namespace alcp::rng { namespace drbg {
          * vector<Uint8>
          * @param output               - Output buffer vector<Uint8>
          */
-        void Generate(const std::vector<Uint8>& additional_input,
+        void generate(const std::vector<Uint8>& additional_input,
                       std::vector<Uint8>&       output)
         {
-            p_impl->Generate(additional_input, output);
+            p_impl->generate(additional_input, output);
         }
         /**
          * @brief Reseed the drbg internal state for unpredictability.
@@ -352,15 +352,15 @@ namespace alcp::rng { namespace drbg {
          * @param additional_input_len - Length of the additional entropy
          * buffer
          */
-        void Reseed(const Uint8* entropy_input,
-                    const Uint64 entropy_input_len,
-                    const Uint8* additional_input,
-                    const Uint64 additional_input_len)
+        void internalReseed(const Uint8* entropy_input,
+                            const Uint64 entropy_input_len,
+                            const Uint8* additional_input,
+                            const Uint64 additional_input_len)
         {
-            p_impl->Reseed(entropy_input,
-                           entropy_input_len,
-                           additional_input,
-                           additional_input_len);
+            p_impl->internalReseed(entropy_input,
+                                   entropy_input_len,
+                                   additional_input,
+                                   additional_input_len);
         }
         /**
          * @brief Reseed the drbg internal state for unpredictability.
@@ -369,10 +369,10 @@ namespace alcp::rng { namespace drbg {
          * @param additional_input - Additional Entropy from user
          * vector<Uint8>
          */
-        void Reseed(const std::vector<Uint8>& entropy_input,
-                    const std::vector<Uint8>& additional_input)
+        void internalReseed(const std::vector<Uint8>& entropy_input,
+                            const std::vector<Uint8>& additional_input)
         {
-            p_impl->Reseed(entropy_input, additional_input);
+            p_impl->internalReseed(entropy_input, additional_input);
         }
 
         std::string name() const { return "HMAC-DRBG"; }

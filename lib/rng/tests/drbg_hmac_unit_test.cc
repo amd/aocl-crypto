@@ -40,7 +40,7 @@ using namespace alcp::rng::drbg;
 using namespace alcp::rng;
 using namespace alcp::digest;
 
-typedef std::tuple<int,                // Number of Generate Calls
+typedef std::tuple<int,                // Number of generate Calls
                    alc_digest_type_t,  // Digest Class
                    std::vector<Uint8>, // Entropy Input
                    std::vector<Uint8>, // Reseed Entropy
@@ -261,13 +261,13 @@ class HmacDrbgKatSHA2_224
 TEST_P(HmacDrbgKatSHA2_256, SHA2)
 {
     std::vector<Uint8> output(m_generatedBits.size());
-    m_hmacDrbg->Instantiate(m_entropy, m_nonce, m_pstr);
+    m_hmacDrbg->instantiate(m_entropy, m_nonce, m_pstr);
     if (m_reseedEntropy.size()) {
-        m_hmacDrbg->Reseed(m_reseedEntropy, m_add_reseed);
+        m_hmacDrbg->internalReseed(m_reseedEntropy, m_add_reseed);
     }
-    m_hmacDrbg->Generate(m_add1, output);
+    m_hmacDrbg->generate(m_add1, output);
     if (m_genCount > 1) {
-        m_hmacDrbg->Generate(m_add2, output);
+        m_hmacDrbg->generate(m_add2, output);
     }
     EXPECT_EQ(m_generatedBits, output);
 }
@@ -275,13 +275,13 @@ TEST_P(HmacDrbgKatSHA2_256, SHA2)
 TEST_P(HmacDrbgKatSHA2_224, SHA2)
 {
     std::vector<Uint8> output(m_generatedBits.size());
-    m_hmacDrbg->Instantiate(m_entropy, m_nonce, m_pstr);
+    m_hmacDrbg->instantiate(m_entropy, m_nonce, m_pstr);
     if (m_reseedEntropy.size()) {
-        m_hmacDrbg->Reseed(m_reseedEntropy, m_add_reseed);
+        m_hmacDrbg->internalReseed(m_reseedEntropy, m_add_reseed);
     }
-    m_hmacDrbg->Generate(m_add1, output);
+    m_hmacDrbg->generate(m_add1, output);
     if (m_genCount > 1) {
-        m_hmacDrbg->Generate(m_add2, output);
+        m_hmacDrbg->generate(m_add2, output);
     }
     EXPECT_EQ(m_generatedBits, output);
 }
@@ -335,7 +335,7 @@ TEST(Instantiate, SHA256)
         0xEB, 0xE8, 0x0D, 0x2C, 0x7F, 0x66, 0x0F, 0x44, 0x76, 0xC4
     };
 
-    hmacDrbg.Instantiate(EntropyInput, nonce, PersonalizationString);
+    hmacDrbg.instantiate(EntropyInput, nonce, PersonalizationString);
 
     EXPECT_EQ(key_exp, hmacDrbg.GetKCopy());
     EXPECT_EQ(v_exp, hmacDrbg.GetVCopy());
@@ -442,19 +442,19 @@ TEST(SHA2, SHA224KAT1)
 
     HmacDrbg hmacDrbg(sha_obj->getHashSize(), sha_obj);
 
-    hmacDrbg.Instantiate(EntropyInput, nonce, PersonalizationString);
+    hmacDrbg.instantiate(EntropyInput, nonce, PersonalizationString);
     EXPECT_EQ(key_init_exp, hmacDrbg.GetKCopy());
     EXPECT_EQ(v_init_exp, hmacDrbg.GetVCopy());
 
-    hmacDrbg.Reseed(EntropyInputReseed, AdditionalInputReseed);
+    hmacDrbg.internalReseed(EntropyInputReseed, AdditionalInputReseed);
     EXPECT_EQ(key_reseed_exp, hmacDrbg.GetKCopy());
     EXPECT_EQ(v_reseed_exp, hmacDrbg.GetVCopy());
 
-    hmacDrbg.Generate(AdditionalInput1, output);
+    hmacDrbg.generate(AdditionalInput1, output);
     EXPECT_EQ(key_exp1, hmacDrbg.GetKCopy());
     EXPECT_EQ(v_exp1, hmacDrbg.GetVCopy());
 
-    hmacDrbg.Generate(AdditionalInput2, output);
+    hmacDrbg.generate(AdditionalInput2, output);
     EXPECT_EQ(key_exp2, hmacDrbg.GetKCopy());
     EXPECT_EQ(v_exp2, hmacDrbg.GetVCopy());
 

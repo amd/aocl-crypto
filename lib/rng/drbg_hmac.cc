@@ -207,7 +207,7 @@ namespace alcp::rng { namespace drbg {
         NIST SP 800-90A Rev 1 Page 45
         Section 10.1.2.3
     */
-    void HmacDrbg::IHmacDrbg::Instantiate(
+    void HmacDrbg::IHmacDrbg::instantiate(
         const Uint8* entropy_input,
         const Uint64 entropy_input_len,
         const Uint8* nonce,
@@ -248,12 +248,12 @@ namespace alcp::rng { namespace drbg {
         // reseed_counter = 1
     }
 
-    void HmacDrbg::IHmacDrbg::Instantiate(
+    void HmacDrbg::IHmacDrbg::instantiate(
         const std::vector<Uint8>& entropy_input,
         const std::vector<Uint8>& nonce,
         const std::vector<Uint8>& personalization_string)
     {
-        Instantiate(&entropy_input[0],
+        instantiate(&entropy_input[0],
                     entropy_input.size(),
                     &nonce[0],
                     nonce.size(),
@@ -265,7 +265,7 @@ namespace alcp::rng { namespace drbg {
         NIST SP 800-90A Rev 1 Page 46
         Section 10.1.2.5
     */
-    void HmacDrbg::IHmacDrbg::Generate(const Uint8* additional_input,
+    void HmacDrbg::IHmacDrbg::generate(const Uint8* additional_input,
                                        const Uint64 additional_input_len,
                                        Uint8*       output,
                                        const Uint64 output_len)
@@ -284,7 +284,7 @@ namespace alcp::rng { namespace drbg {
         for (Uint64 i = 0; i < blocks; i++) {
             HMAC_Wrapper(m_v, m_v);
 
-            DebugPrint(m_v, "Generate: m_v", __FILE__, __LINE__);
+            DebugPrint(m_v, "generate: m_v", __FILE__, __LINE__);
 
             utils::CopyBlock(output + i * m_v.size(), &m_v[0], m_v.size());
         }
@@ -301,10 +301,10 @@ namespace alcp::rng { namespace drbg {
         // reseed_counter += 1;
     }
 
-    void HmacDrbg::IHmacDrbg::Generate(
+    void HmacDrbg::IHmacDrbg::generate(
         const std::vector<Uint8>& additional_input, std::vector<Uint8>& output)
     {
-        Generate(&additional_input[0],
+        generate(&additional_input[0],
                  additional_input.size(),
                  &output[0],
                  output.size());
@@ -314,10 +314,10 @@ namespace alcp::rng { namespace drbg {
         NIST SP 800-90A Rev 1 Page 46
         Section 10.1.2.4
     */
-    void HmacDrbg::IHmacDrbg::Reseed(const Uint8* entropy_input,
-                                     const Uint64 entropy_input_len,
-                                     const Uint8* additional_input,
-                                     const Uint64 additional_input_len)
+    void HmacDrbg::IHmacDrbg::internalReseed(const Uint8* entropy_input,
+                                             const Uint64 entropy_input_len,
+                                             const Uint8* additional_input,
+                                             const Uint64 additional_input_len)
     {
         std::vector<Uint8> seed_material(entropy_input_len
                                          + additional_input_len);
@@ -334,13 +334,14 @@ namespace alcp::rng { namespace drbg {
         // reseed_counter = 1
     }
 
-    void HmacDrbg::IHmacDrbg::Reseed(const std::vector<Uint8>& entropy_input,
-                                     const std::vector<Uint8>& additional_input)
+    void HmacDrbg::IHmacDrbg::internalReseed(
+        const std::vector<Uint8>& entropy_input,
+        const std::vector<Uint8>& additional_input)
     {
-        Reseed(&entropy_input[0],
-               entropy_input.size(),
-               &additional_input[0],
-               additional_input.size());
+        internalReseed(&entropy_input[0],
+                       entropy_input.size(),
+                       &additional_input[0],
+                       additional_input.size());
     }
 
     HmacDrbg::IHmacDrbg::IHmacDrbg(int                     digestSize,

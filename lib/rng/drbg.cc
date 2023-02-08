@@ -66,7 +66,7 @@ namespace alcp { namespace rng {
             return s;
         }
 
-        Instantiate(entropy_input, nonce, personalization_string);
+        instantiate(entropy_input, nonce, personalization_string);
         return s;
     }
 
@@ -115,7 +115,7 @@ namespace alcp { namespace rng {
             // FIXME: Handle Predicition Resistance Request
             // FIXME: Handle reseed required flag
 #endif
-        Generate(&additional_input[0], additional_input.size(), output, length);
+        generate(&additional_input[0], additional_input.size(), output, length);
         return s;
     }
 
