@@ -367,6 +367,15 @@ AesCrosstest(int               keySize,
         size = (1048576 / 2);
     }
 
+    /* generate these only once and use it in the loop below, chunk by chunk */
+    std::vector<Uint8> msg_full  = rb.genRandomBytes(MAX_LOOP * size);
+    std::vector<Uint8> key_full  = rb.genRandomBytes(MAX_LOOP * key_size);
+    std::vector<Uint8> iv_full   = rb.genRandomBytes(IVL_MAX);
+    std::vector<Uint8> add_full  = rb.genRandomBytes(ADL_MAX);
+    std::vector<Uint8> tkey_full = rb.genRandomBytes(MAX_LOOP * key_size);
+
+    std::vector<Uint8>::const_iterator pos1, pos2;
+
     if (extTC != nullptr) {
         for (int i = LOOP_START; i < MAX_LOOP; i += INC_LOOP) {
             if (!bbxreplay)
@@ -376,23 +385,35 @@ AesCrosstest(int               keySize,
             ivl = IVL_START + (std::rand() % (IVL_START - IVL_MAX + 1));
             adl = ADL_START + (std::rand() % (ADL_MAX - ADL_START + 1));
 
-            alcp_data_ex_t     data_alc, data_ext;
-            std::vector<Uint8> pt(i * size, 0), ct(i * size, 0),
-                key(key_size / 8, 0), iv(ivl, 0), tkey(key_size / 8, 0),
-                add(adl, 0), tag_alc(tagLength, 0), tag_ext(tagLength, 0),
-                out_ct_alc(i * size, 0), out_ct_ext(i * size, 0),
-                out_pt(i * size, 0);
+            alcp_data_ex_t data_alc, data_ext;
+
+            std::vector<Uint8> ct(i * size, 0), tag_alc(tagLength, 0),
+                tag_ext(tagLength, 0), out_ct_alc(i * size, 0),
+                out_ct_ext(i * size, 0), out_pt(i * size, 0);
 
             auto tagBuff = std::make_unique<Uint8[]>(tagLength);
 
-            if (!bbxreplay) {
-                pt   = rb.genRandomBytes(i * size);
-                ct   = rb.genRandomBytes(i * size);
-                key  = rb.genRandomBytes(key_size / 8);
-                iv   = rb.genRandomBytes(ivl);
-                add  = rb.genRandomBytes(adl);
-                tkey = rb.genRandomBytes(key_size / 8);
+            pos1 = msg_full.begin();
+            pos2 = msg_full.begin() + (i * size);
+            std::vector<Uint8> pt(pos1, pos2);
 
+            pos1 = key_full.begin();
+            pos2 = key_full.begin() + (key_size / 8);
+            std::vector<Uint8> key(pos1, pos2);
+
+            pos1 = iv_full.begin();
+            pos2 = iv_full.begin() + (ivl);
+            std::vector<Uint8> iv(pos1, pos2);
+
+            pos1 = add_full.begin();
+            pos2 = add_full.begin() + (adl);
+            std::vector<Uint8> add(pos1, pos2);
+
+            pos1 = tkey_full.begin();
+            pos2 = tkey_full.begin() + (key_size / 8);
+            std::vector<Uint8> tkey(pos1, pos2);
+
+            if (!bbxreplay) {
                 // ALC/Main Lib Data
                 data_alc.m_in   = &(pt[0]);
                 data_alc.m_inl  = pt.size();
@@ -459,7 +480,6 @@ AesCrosstest(int               keySize,
                 if (isgcm || isccm) {
                     EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
                 }
-                /* FIXME : make verbose >1 to print these data */
                 if (verbose > 1) {
                     PrintTestData(key, data_alc, MODE_STR);
                     PrintTestData(key, data_ext, MODE_STR);

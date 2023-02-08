@@ -146,7 +146,6 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
 {
     alc_error_t        error;
     std::vector<Uint8> data;
-    int                KeySize;
     std::vector<Uint8> HmacAlcp(HmacSize / 8, 0);
     std::vector<Uint8> HmacExt(HmacSize / 8, 0);
 
@@ -176,19 +175,25 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
         exit(-1);
     }
 
-    /* FIXME: generate a vector using getRandomBytes() once, split it and feed
-     * it into the loop. Avoid calling genRandomBytes() each time in the loop */
+    /* generate message key data, use it chunk by chunk in the loop */
+    std::vector<Uint8> msg_full = rb.genRandomBytes(MAX_LOOP);
+    std::vector<Uint8> key_full = rb.genRandomBytes(KEY_LEN_MAX);
+
+    std::vector<Uint8>::const_iterator pos1, pos2;
+
     for (int j = KEY_LEN_START; j < KEY_LEN_MAX; j += KEY_LEN_INC) {
         for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
             alcp_hmac_data_t data_alc, data_ext;
 
-            /* generate test data vectors */
-            std::vector<Uint8> msg(i, 0);
-            /* generate random key value */
-            KeySize = j;
-            std::vector<Uint8> key(KeySize, 0);
-            msg = rb.genRandomBytes(i);
-            key = rb.genRandomBytes(KeySize);
+            /* generate msg data from msg_full */
+            pos1 = msg_full.begin();
+            pos2 = msg_full.begin() + i;
+            std::vector<Uint8> msg(pos1, pos2);
+
+            /* generate random key value*/
+            pos1 = key_full.begin();
+            pos2 = key_full.begin() + j;
+            std::vector<Uint8> key(pos1, pos2);
 
             /* load test data */
             data_alc.in.m_msg       = &(msg[0]);

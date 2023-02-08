@@ -255,6 +255,9 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
         exit(-1);
     }
 
+    /* generate test data vector, and use it chunk by chunk in the loop */
+    std::vector<Uint8> msg_full = rb.genRandomBytes(MAX_LOOP);
+
     for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
         if (!bbxreplay) {
             fr->startRecEvent();
@@ -273,9 +276,9 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
 
         alcp_digest_data_t data_alc, data_ext;
 
-        /* generate test data vectors */
-        std::vector<Uint8> msg(i, 0);
-        msg = rb.genRandomBytes(i);
+        std::vector<Uint8>::const_iterator pos1 = msg_full.begin();
+        std::vector<Uint8>::const_iterator pos2 = msg_full.begin() + i;
+        std::vector<Uint8>                 msg(pos1, pos2);
 
         /* load test data */
         data_alc.m_msg        = &(msg[0]);
