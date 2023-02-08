@@ -44,9 +44,9 @@
  *        Attribute to mandate use of return values.
  */
 #if defined(_MSC_VER)
-#define ALCP_DEFS_MUST_USE_RETURN
+#define ALCP_DEFS_NO_DISCARD
 #else
-#define ALCP_DEFS_MUST_USE_RETURN [[nodiscard]]
+#define ALCP_DEFS_NO_DISCARD      [[nodiscard]]
 #endif
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2020-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,14 +28,12 @@
 
 #pragma once
 
-#include <string>
-#include <type_traits>
 
+#include "alcp/base.hh"
 #include "rng.hh"
 
-#include <immintrin.h>
 
-namespace alcp { namespace random_number {
+namespace alcp::rng {
 
     /**
      * RNG provided by hardware
@@ -44,12 +42,13 @@ namespace alcp { namespace random_number {
     {
       private:
       public:
-        explicit HardwareRng(const alc_rng_info_t& rRngInfo);
-        alc_error_t randomize(Uint8 output[], size_t length) override;
-        std::string name() const override { return "HwRNG"; }
+        HardwareRng();
+        Status      randomize(Uint8 output[], size_t length) override;
+	Status      readRandom(Uint8* pBuf, Uint64 size) override;
+        String      name() const override { return "HwRNG"; }
         Uint8       nextByte();
         bool        isSeeded() const override;
         size_t      reseed() override;
     };
 
-}} // namespace alcp::random_number
+} // namespace alcp::rng

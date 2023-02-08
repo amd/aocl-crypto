@@ -76,7 +76,7 @@ class Status final
 
     // Status::ok()
     // All is Well !!! if m_error is eOk or eNone
-    ALCP_DEFS_MUST_USE_RETURN bool ok() const;
+    ALCP_DEFS_NO_DISCARD bool ok() const;
     std::string_view               message() const { return m_message; }
 
     /**
@@ -182,14 +182,14 @@ StatusOk()
 /*
  * Easy to use chekers
  */
-ALCP_DEFS_MUST_USE_RETURN bool IsAborted(const Status& status);
-ALCP_DEFS_MUST_USE_RETURN bool IsAlreadyExists(const Status& status);
-ALCP_DEFS_MUST_USE_RETURN bool IsInternalError(const Status& status);
-ALCP_DEFS_MUST_USE_RETURN bool IsInvalidArgument(const Status& status);
-ALCP_DEFS_MUST_USE_RETURN bool IsNotFound(const Status& status);
-ALCP_DEFS_MUST_USE_RETURN bool IsNotAvailable(const Status& status);
-ALCP_DEFS_MUST_USE_RETURN bool IsNotImplemented(const Status& status);
-ALCP_DEFS_MUST_USE_RETURN bool IsUnknown(const Status& status);
+ALCP_DEFS_NO_DISCARD bool IsAborted(const Status& status);
+ALCP_DEFS_NO_DISCARD bool IsAlreadyExists(const Status& status);
+ALCP_DEFS_NO_DISCARD bool IsInternalError(const Status& status);
+ALCP_DEFS_NO_DISCARD bool IsInvalidArgument(const Status& status);
+ALCP_DEFS_NO_DISCARD bool IsNotFound(const Status& status);
+ALCP_DEFS_NO_DISCARD bool IsNotAvailable(const Status& status);
+ALCP_DEFS_NO_DISCARD bool IsNotImplemented(const Status& status);
+ALCP_DEFS_NO_DISCARD bool IsUnknown(const Status& status);
 
 /*
  * Handy creators that return Status

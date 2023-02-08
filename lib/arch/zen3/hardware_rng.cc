@@ -26,9 +26,14 @@
  *
  */
 
+#include "alcp/base.hh"
+/* TODO: move this to alcp/rng/ */
+#include "rng/rngerror.hh"
 #include "../../rng/include/hardware_rng.hh"
 
-namespace alcp { namespace random_number {
+#include <immintrin.h>
+
+namespace alcp::rng {
 
 #define ATTRIBUTE_RAND __attribute__((__target__("rdrnd")))
     //
@@ -86,16 +91,22 @@ namespace alcp { namespace random_number {
     }
 #endif
 
-    HardwareRng::HardwareRng(const alc_rng_info_t& rRngInfo)
+    HardwareRng::HardwareRng()
     //: m_pimpl{ std::make_unique<HardwareRng::Impl>() }
     {
         // UNUSED(rRngInfo);
     }
 
-    alc_error_t HardwareRng::randomize(Uint8 output[], size_t length)
+    Status HardwareRng::readRandom(Uint8 *buf, size_t length)
+    {
+	return randomize(buf, length);
+    }
+
+    Status HardwareRng::randomize(Uint8 output[], size_t length)
     {
         const int stride     = 2;
         size_t    new_length = length / stride;
+	Status    sts        = StatusOk();
         Uint16*   ptr        = reinterpret_cast<Uint16*>(&output[0]);
 
         while (new_length--) {
@@ -104,18 +115,20 @@ namespace alcp { namespace random_number {
 
             is_success = read_rdrand<Uint16>(ptr);
             if (!is_success) { /* THROW HERE */
-                return ALC_ERROR_NO_ENTROPY;
+		auto rer = RngError{rng::ErrorCode::eNoEntropy};
+		sts.update(rer, rer.message());
+		return sts;
             }
 
             ptr++;
         }
 
         /* TODO: check if length is odd */
-        return ALC_ERROR_NONE;
+        return sts;
     }
 
     bool HardwareRng::isSeeded() const { return true; }
 
     size_t HardwareRng::reseed() { return 0; }
 
-}} // namespace alcp::random_number
+} // namespace alcp::rng

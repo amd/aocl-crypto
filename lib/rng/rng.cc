@@ -28,23 +28,21 @@
 
 #include "rng.hh"
 
-namespace alcp { namespace random_number {
-    // forward declaration
-    class IRng;
+namespace alcp::rng {
 
-    class ISeeder
-    {
-      public:
-        virtual ~ISeeder();
-        virtual std::string name() const                         = 0;
-        virtual size_t      poll(alcp::random_number::IRng& rng) = 0;
-    };
+class ISeeder
+{
+  public:
+    virtual ~ISeeder();
+    virtual std::string name() const                         = 0;
+    virtual size_t      poll(alcp::IRng& rng) = 0;
+};
 
-    class rdseed : public ISeeder
-    {
-      public:
-        std::string name() const override { return "rdseed"; }
-        size_t      poll(alcp::random_number::IRng& rng) override;
-    };
+class rdseed : public ISeeder
+{
+  public:
+    std::string name() const override { return "rdseed"; }
+    size_t      poll(alcp::IRng& rng) override;
+};
 
-}} // namespace alcp::random_number
+} // namespace alcp::rng

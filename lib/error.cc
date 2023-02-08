@@ -29,5 +29,11 @@
 
 namespace alcp {
 
+
+	namespace rng {
+
+	}
+
+
 }
 

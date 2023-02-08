@@ -33,8 +33,6 @@
 
 namespace alcp::rng {
 
-using namespace random_number;
-
 template<typename RNGTYPE>
 static alc_error_t
 __read_random_wrapper(void* pRng, uint8_t* buffer, int size)
@@ -63,22 +61,21 @@ __finish_wrapper(void* pRng)
 }
 
 template<typename SOURCENAME>
-static alc_error_t
+static Status
 __build_rng(const alc_rng_info_t& rRngInfo, Context& rCtx)
 {
-    alc_error_t e      = ALC_ERROR_NONE;
-    auto        source = new SOURCENAME(rRngInfo);
-    rCtx.m_rng         = static_cast<void*>(source);
-    rCtx.read_random   = __read_random_wrapper<SOURCENAME>;
-    rCtx.finish        = __finish_wrapper<SOURCENAME>;
+    auto source      = new SOURCENAME();
+    rCtx.m_rng       = static_cast<void*>(source);
+    rCtx.read_random = __read_random_wrapper<SOURCENAME>;
+    rCtx.finish      = __finish_wrapper<SOURCENAME>;
 
-    return e;
+    return StatusOk();
 }
 
 alc_error_t
 RngBuilder::Build(const alc_rng_info_t& rRngInfo, Context& rCtx)
 {
-    alc_error_t e = ALC_ERROR_NONE;
+    Status sts = StatusOk();
 #if 0
         rCtx->rng_info.ri_distrib = rRngInfo.ri_distrib;
         rCtx->rng_info.ri_type    = rRngInfo.ri_type;
@@ -87,18 +84,17 @@ RngBuilder::Build(const alc_rng_info_t& rRngInfo, Context& rCtx)
 #endif
     switch (rRngInfo.ri_source) {
         case ALC_RNG_SOURCE_OS:
-            //__build_rng<OsRng>(rRngInfo, rCtx);
-            __build_rng<SystemRng>(rRngInfo, rCtx);
+            sts.update(__build_rng<SystemRng>(rRngInfo, rCtx));
             break;
         case ALC_RNG_SOURCE_ARCH:
-            //__build_rng<ArchRng>(rRngInfo, rCtx);
-            __build_rng<HardwareRng>(rRngInfo, rCtx);
+            sts.update(__build_rng<HardwareRng>(rRngInfo, rCtx));
             break;
         default:
-            e = ALC_ERROR_NOT_SUPPORTED;
+            sts.update(InvalidArgumentError("RNG type specified is unknown"));
             break;
     }
-    return e;
+    
+    return sts.code();
 }
 
 } // namespace alcp::rng

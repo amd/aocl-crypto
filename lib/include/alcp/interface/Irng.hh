@@ -1,6 +1,5 @@
-
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,34 +28,48 @@
 
 #pragma once
 
-#include "alcp/base.hh"
-#include "rng.hh"
+#include "alcp/base/status.hh"
 
-namespace alcp ::rng {
+namespace alcp {
 
-/**
- * RNG provided by the operating system
- *
- */
-class SystemRng : public IRng
+class IRng
 {
   public:
-    SystemRng();
-    class ISeeder;
-    SystemRng(ISeeder& iss);
-    Status      randomize(Uint8 output[], size_t length) override;
-    Status      readRandom(Uint8* pBuf, Uint64 size) override;
-    std::string name() const override { return "OsRng"; }
-    bool        isSeeded() const override;
-    size_t      reseed() override;
+    /**
+     * TODO: Delete this in favour of randomize
+     */
+    virtual Status readRandom(Uint8* pBuf, Uint64 size) = 0;
 
-  private:
-    // FIXME: Unused Variable
-#if 0
-        Uint32 m_fd;
-#endif
-    // class Impl;
-    // std::unique_ptr<Impl> m_pimpl;
+    /**
+     * Randomize a buffer array (byte-wise)
+     *
+     * May block if RNG is not initialized or not enough entropy available.
+     * \param        output          Array of bytes
+     * \param        length          length of output
+     * \throws       RngNotSeeded    exception (if available)
+     */
+    virtual Status randomize(Uint8 output[], size_t length) = 0;
+
+    /**
+     * \return  Name of the RNG
+     */
+    virtual std::string name() const = 0;
+
+    /**
+     * Check if the RNG is seeded
+     * \return  true if RNG is already seeded, false otherwise
+     */
+
+    virtual bool isSeeded() const = 0;
+
+    /**
+     * Helps to reseed the IRng
+     * \return Bytes used to reseed
+     */
+    virtual size_t reseed() = 0;
+
+  public:
+    virtual ~IRng() = default;
 };
 
-} // namespace alcp::rng
+} // namespace alcp

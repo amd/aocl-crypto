@@ -36,6 +36,7 @@
 #include "rng.hh"
 
 namespace alcp::rng {
+
 class RngBuilder
 {
   public:

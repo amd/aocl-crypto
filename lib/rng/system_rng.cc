@@ -29,10 +29,11 @@
 #include <cstdlib>
 
 #include "system_rng.hh"
+#include "rng/rngerror.hh"
 // Enable debug for debugging the code
 // #define DEBUG
 
-namespace alcp::random_number {
+namespace alcp::rng {
 
 #if defined(__linux__)
 #include <fcntl.h>
@@ -57,18 +58,20 @@ class SystemRngImpl
 
     ~SystemRngImpl() {}
 
-    static alc_error_t randomize(Uint8 output[], size_t length)
+    static Status randomize(Uint8 output[], size_t length)
     {
 #ifdef DEBUG
         printf("Engine system_randomize_devrandom\n");
 #endif
+        Status     sts  = StatusOk();
         static int m_fd = -1;
         size_t     out  = 0;
 
         if (m_fd < 0) {
             m_fd = open("/dev/urandom", O_RDONLY | O_NOCTTY);
             if (m_fd < 0) {
-                return ALC_ERROR_NOT_PERMITTED;
+                auto rngerr = RngError(rng::ErrorCode::eNotPermitted);
+                sts.update(rngerr, rngerr.message());
             }
         }
 
@@ -80,9 +83,11 @@ class SystemRngImpl
                 break;
             }
         }
-        if (out != length) // not enough entropy , throw here,
-            return ALC_ERROR_NO_ENTROPY;
-        return ALC_ERROR_NONE;
+        if (out != length) { // not enough entropy , throw here,
+            auto rngerr = RngError{ rng::ErrorCode::eNoEntropy };
+            sts.update(rngerr, rngerr.message());
+        }
+        return StatusOk();
     }
 };
 
@@ -91,8 +96,9 @@ class SystemRngImpl
 class SystemRngImpl
 {
   public:
-    static alc_error_t randomize(Uint8 output[], size_t length)
+    static Status randomize(Uint8 output[], size_t length)
     {
+        Status sts = StatusOk();
 #ifdef DEBUG
         printf("Engine system_randomize_getrandom\n");
 #endif
@@ -109,29 +115,43 @@ class SystemRngImpl
             }
         }
 
-        if (out != length) // not enough entropy , throw here,
-            return ALC_ERROR_NO_ENTROPY;
+        if (out != length) { // not enough entropy , throw here,
+            sts.update(RngError{ rng::ErrorCode::eNoEntropy });
+            return sts;
+        }
 #else
         srand(time(NULL));
-        int* pBuf_int = reinterpret_cast<int*> (output);
-        for (int i = 0; i < (length / sizeof(int)); i++)
-        {
+        int* pBuf_int = reinterpret_cast<int*>(output);
+        for (int i = 0; i < (length / sizeof(int)); i++) {
             *(pBuf_int + i) = rand();
         }
 #endif
-        return ALC_ERROR_NONE;
+        return sts;
     }
 };
 
 #endif
+class ISeeder;
 
-SystemRng::SystemRng(const alc_rng_info_t& rRngInfo)
+SystemRng::SystemRng()
 //: m_pimpl{ std::make_unique<SystemRng::Impl>() }
 {
     // UNUSED(rRngInfo);
 }
 
-alc_error_t
+SystemRng::SystemRng(ISeeder& iss)
+//: m_pimpl{ std::make_unique<SystemRng::Impl>() }
+{
+    // UNUSED(rRngInfo);
+}
+
+Status
+SystemRng::readRandom(Uint8 *buf, size_t length)
+{
+    return SystemRngImpl::randomize(buf, length);
+}
+
+Status
 SystemRng::randomize(Uint8 output[], size_t length)
 {
     return SystemRngImpl::randomize(output, length);
@@ -149,4 +169,4 @@ SystemRng::reseed()
     return 0;
 }
 
-} // namespace alcp::random_number
+} // namespace alcp::rng
