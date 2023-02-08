@@ -32,7 +32,7 @@
 #include <functional>
 #include <vector>
 
-namespace alcp { namespace random_number {
+namespace alcp { namespace rng {
 
     class Drbg : public IRng
     {
@@ -99,4 +99,4 @@ namespace alcp { namespace random_number {
         virtual void Reseed(const std::vector<Uint8>& entropy_input,
                             const std::vector<Uint8>& additional_input) = 0;
     };
-}} // namespace alcp::random_number
+}} // namespace alcp::rng

@@ -36,8 +36,8 @@
 #include <iostream>
 
 // #include "types.h"
-using namespace alcp::random_number::drbg;
-using namespace alcp::random_number;
+using namespace alcp::rng::drbg;
+using namespace alcp::rng;
 using namespace alcp::digest;
 
 typedef std::tuple<int,                // Number of Generate Calls

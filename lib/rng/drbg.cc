@@ -31,7 +31,7 @@
 #include "rng.hh"
 #include <memory>
 
-namespace alcp { namespace random_number {
+namespace alcp { namespace rng {
 
     // FIXME: Predicition resistance is to be added
     Status Drbg::initialize(int                 security_strength,
@@ -81,20 +81,20 @@ namespace alcp { namespace random_number {
             // TODO: Enable after implementing
             /*
                 FIXME: Implement Max Generate Bits
-                get_max_generatable_bits() -> Implemented in HMAC_Drbg
+                getMaxAllowedBits() -> Implemented in HMAC_Drbg
                 Calling the above function returns the current security strength.
             */
-            if (length > get_max_generatable_bits()) {
+            if (length > getMaxAllowedBits()) {
                 s = InternalError(
                     "ERROR: Impossible amount of bits to generate per call");
                 return s;
             }
             /*
                 FIXME: Implement Security Strength
-                get_curr_security_strength() -> Implemented in HMAC_Drbg
+                getCurrSecurityStrength() -> Implemented in HMAC_Drbg
                 Calling the above function returns the current security strength.
             */
-            if (security_strength >= get_curr_security_strength()) {
+            if (security_strength >= getCurrSecurityStrength()) {
                 // Bail out
                 // Return error here
                 s = alcp::base::InternalError(
@@ -104,10 +104,10 @@ namespace alcp { namespace random_number {
             }
             /*
                 FIXME: Implement Max Additional Input Length
-                get_max_generatable_bits() -> Implemented in HMAC_Drbg
+                getMaxGeneratableBits() -> Implemented in HMAC_Drbg
                 Calling the above function returns the current security strength.
             */
-            if(additional_input.size()> get_max_add_input_length()){
+            if(additional_input.size()> getMaxAddInputLength()){
                 s = InternalError(
                     "ERROR: Additional Input too large");
                 return s;
@@ -125,4 +125,4 @@ namespace alcp { namespace random_number {
         return randomize(output, length, 512, add);
     }
 
-}} // namespace alcp::random_number
+}} // namespace alcp::rng

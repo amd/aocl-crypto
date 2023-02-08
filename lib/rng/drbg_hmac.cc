@@ -30,7 +30,7 @@
 #include "iostream"
 #include "utils/copy.hh"
 
-namespace alcp::random_number { namespace drbg {
+namespace alcp::rng { namespace drbg {
     using alcp::digest::Digest;
     using alcp::digest::Sha256;
     using alcp::mac::Hmac;
@@ -349,4 +349,4 @@ namespace alcp::random_number { namespace drbg {
         , m_v{ std::vector<Uint8>(digestSize) }
         , m_key{ std::vector<Uint8>(digestSize) }
     {}
-}} // namespace alcp::random_number::drbg
+}} // namespace alcp::rng::drbg

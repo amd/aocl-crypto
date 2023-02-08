@@ -28,19 +28,20 @@
 
 #include "../../rng/include/hardware_rng.hh"
 #include "../../rng/include/system_rng.hh"
-#include "alcp/digest.h"
+#include "alcp/base.hh"
+#include "alcp/interface/Irng.hh"
 #include "digest.hh"
 #include "digest/sha2.hh"
-#include "openssl/bio.h"
 #include "rng/drbg_hmac.hh"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <iostream>
 
 // #include "types.h"
-using namespace alcp::random_number::drbg;
-using namespace alcp::random_number;
+using namespace alcp::rng::drbg;
+using namespace alcp::rng;
 using namespace alcp::digest;
+using namespace alcp;
 
 // #define DEBUG
 
@@ -67,15 +68,18 @@ DebugPrintPretty(std::vector<Uint8>& output)
 {}
 #endif
 
-class DummyGenerator : public IRng
+class NullGenerator : public IRng
 {
   public:
-    DummyGenerator(alc_rng_info_t& rng_info){};
+    NullGenerator() = default;
 
-    alc_error_t randomize(Uint8 output[], size_t length) override
+    Status readRandom(Uint8* pBuf, Uint64 size) override { return StatusOk(); }
+
+    Status randomize(Uint8 output[], size_t length) override
     {
+        Status s = StatusOk();
         memset(output, 0, length);
-        return ALC_ERROR_NONE;
+        return s;
     }
 
     std::string name() const { return "Dummy DRBG"; }
@@ -92,13 +96,12 @@ class DummyGenerator : public IRng
 class MockGenerator : public IRng
 {
   public:
-    MockGenerator(alc_rng_info_t& rng_info){};
+    MockGenerator() = default;
+
+    Status readRandom(Uint8* pBuf, Uint64 size) override { return StatusOk(); }
 
     // FIXME: Side effect needed
-    MOCK_METHOD(alc_error_t,
-                randomize,
-                (Uint8 output[], size_t length),
-                (override));
+    MOCK_METHOD(Status, randomize, (Uint8 output[], size_t length), (override));
 
     std::string name() const { return "Mock DRBG"; }
 
@@ -109,17 +112,15 @@ class MockGenerator : public IRng
 
 TEST(DRBG_HMAC, Instantiation)
 {
-    alc_rng_info_t rng_info;
-    auto           sha_obj = std::make_shared<alcp::digest::Sha224>();
-    auto sys_rng = std::make_shared<alcp::random_number::SystemRng>(rng_info);
+    auto     sha_obj = std::make_shared<alcp::digest::Sha224>();
+    auto     sys_rng = std::make_shared<alcp::rng::SystemRng>();
     HmacDrbg hmacDrbg(sha_obj->getHashSize(), sha_obj, sys_rng);
 }
 
 TEST(DRBG_HMAC, Generate)
 {
-    alc_rng_info_t rng_info;
-    auto           sha_obj = std::make_shared<alcp::digest::Sha224>();
-    auto sys_rng = std::make_shared<alcp::random_number::SystemRng>(rng_info);
+    auto               sha_obj = std::make_shared<alcp::digest::Sha224>();
+    auto               sys_rng = std::make_shared<alcp::rng::SystemRng>();
     HmacDrbg           hmacDrbg(sha_obj->getHashSize(), sha_obj, sys_rng);
     std::vector<Uint8> output(200, 0);
     std::vector<Uint8> untouchedOutput(200, 0);
@@ -133,11 +134,10 @@ TEST(DRBG_HMAC, Generate)
     EXPECT_NE(output, untouchedOutput);
 }
 
-TEST(DRBG_HMAC, GenerateDummy)
+TEST(DRBG_HMAC, GenerateNull)
 {
-    alc_rng_info_t     rng_info;
     auto               sha_obj = std::make_shared<alcp::digest::Sha224>();
-    auto               sys_rng = std::make_shared<DummyGenerator>(rng_info);
+    auto               sys_rng = std::make_shared<NullGenerator>();
     HmacDrbg           hmacDrbg(sha_obj->getHashSize(), sha_obj, sys_rng);
     std::vector<Uint8> output(200, 0);
     std::vector<Uint8> untouchedOutput = {
@@ -171,9 +171,8 @@ TEST(DRBG_HMAC, GenerateDummy)
 
 TEST(DRBG_HMAC, MutiGenerate)
 {
-    alc_rng_info_t rng_info;
-    auto           sha_obj = std::make_shared<alcp::digest::Sha224>();
-    auto sys_rng = std::make_shared<alcp::random_number::SystemRng>(rng_info);
+    auto               sha_obj = std::make_shared<alcp::digest::Sha224>();
+    auto               sys_rng = std::make_shared<alcp::rng::SystemRng>();
     HmacDrbg           hmacDrbg(sha_obj->getHashSize(), sha_obj, sys_rng);
     std::vector<Uint8> output(1, 0);
     std::vector<Uint8> untouchedOutput(1, 0);
@@ -199,9 +198,8 @@ TEST(DRBG_HMAC, MutiGenerate)
  */
 TEST(DRBG_HMAC, GenerateMock)
 {
-    alc_rng_info_t     rng_info;
     auto               sha_obj = std::make_shared<alcp::digest::Sha224>();
-    auto               sys_rng = std::make_shared<MockGenerator>(rng_info);
+    auto               sys_rng = std::make_shared<MockGenerator>();
     HmacDrbg           hmacDrbg(sha_obj->getHashSize(), sha_obj, sys_rng);
     std::vector<Uint8> output(200, 0);
     std::vector<Uint8> untouchedOutput = {
@@ -225,8 +223,10 @@ TEST(DRBG_HMAC, GenerateMock)
     };
 
     std::vector<Uint8> personalization_string(0);
-
-    EXPECT_CALL(*(sys_rng.get()), randomize).Times(2);
+    // const auto         s = testing::Action<Status>(StatusOk());
+    EXPECT_CALL(*(sys_rng.get()), randomize)
+        .Times(2)
+        .WillRepeatedly(testing::Return(StatusOk()));
 
     hmacDrbg.initialize(128, personalization_string);
     hmacDrbg.randomize(&output[0], output.size());

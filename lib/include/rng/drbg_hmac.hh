@@ -38,7 +38,7 @@
 #include "openssl/bio.h"
 #endif
 
-namespace alcp::random_number { namespace drbg {
+namespace alcp::rng { namespace drbg {
     template<typename VectType>
     using concat_type_t = std::vector<const std::vector<VectType>*>;
     void DebugPrint(const std::vector<Uint8>& in,
@@ -408,4 +408,4 @@ namespace alcp::random_number { namespace drbg {
         ~HmacDrbg() = default;
     };
 
-}} // namespace alcp::random_number::drbg
+}} // namespace alcp::rng::drbg
