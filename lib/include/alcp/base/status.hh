@@ -51,23 +51,30 @@ class Status final
         : m_code{ code }
     {}
 
+    explicit Status(IError&& ie)
+        : m_code{ ie.code() }
+        , m_message{ ie.message() }
+    {}
+
+    explicit Status(IError& ie)
+        : m_code{ ie.code() }
+        , m_message{ ie.message() }
+    {}
+
     Status(IError& ie, const String& msg)
-    {
-        m_message = makeMessage(ie.message(), msg);
-        m_code    = ie.code();
-    }
+        : m_code{ ie.code() }
+        , m_message{ makeMessage(ie.message(), msg) }
+    {}
 
     Status(IError& ie, const StringView msg)
-    {
-        m_message = makeMessage(ie.message(), msg);
-        m_code    = ie.code();
-    }
+        : m_code{ ie.code() }
+        , m_message{ makeMessage(ie.message(), msg) }
+    {}
 
     Status(IError&& ie, const StringView msg)
-    {
-        m_message = makeMessage(ie.message(), msg);
-        m_code    = ie.code();
-    }
+        : m_code{ ie.code() }
+        , m_message{ makeMessage(ie.message(), msg) }
+    {}
 
     ALCP_DEFS_DEFAULT_COPY_AND_ASSIGNMENT(Status);
 
