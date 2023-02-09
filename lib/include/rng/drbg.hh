@@ -34,7 +34,20 @@
 
 namespace alcp::rng {
 
-class Drbg : public IRng
+class IDrbg : public IRng
+{
+  public:
+    virtual Status initialize(int                 security_strength,
+                              std::vector<Uint8>& p_cPersonalizationString) = 0;
+    virtual Status randomize(Uint8               p_Output[],
+                             size_t              length,
+                             int                 security_strength,
+                             std::vector<Uint8>& p_cAdditionalInput)        = 0;
+
+    virtual Status randomize(Uint8 p_Output[], size_t length) = 0;
+};
+
+class Drbg : public IDrbg
 {
     // Way to take entropy (IRng class object)
     // Way to select type of DRBG (HMAC,CTR)
