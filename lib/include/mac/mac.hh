@@ -32,14 +32,20 @@
 #include "alcp/types.h"
 #include <vector>
 namespace alcp::mac {
-class Mac
+
+class IMac
 {
   public:
-    Mac();
     virtual alcp::base::Status update(const Uint8* pMsgBuf, Uint64 size)   = 0;
     virtual void               finish()                                    = 0;
     virtual alcp::base::Status reset()                                     = 0;
     virtual alcp::base::Status finalize(const Uint8* pMsgBuf, Uint64 size) = 0;
-    virtual ~Mac();
+};
+
+class Mac : public IMac
+{
+  public:
+    Mac();
+    ~Mac();
 };
 } // namespace alcp::mac
