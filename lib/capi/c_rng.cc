@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,6 +28,7 @@
 
 #include "alcp/base.hh"
 
+#include "alcp/capi/defs.hh"
 #include "alcp/utils/cpuid.hh"
 #include "capi/rng/builder.hh"
 #include "rng.hh"
@@ -48,8 +49,8 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo)
 {
     alc_error_t error = ALC_ERROR_NONE;
 
-    bool         rd_rand_available = CpuId::cpuHasRdRand();
-    bool         rd_seed_available = CpuId::cpuHasRdSeed();
+    bool rd_rand_available = CpuId::cpuHasRdRand();
+    bool rd_seed_available = CpuId::cpuHasRdSeed();
 
     switch (pRngInfo->ri_type) {
         case ALC_RNG_TYPE_DESCRETE:
@@ -115,13 +116,26 @@ alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
                     uint64_t         size /* output buffer size */
 )
 {
-    if (buf == nullptr) {
-        return ALC_ERROR_INVALID_ARG;
+    alc_error_t err = ALC_ERROR_NONE;
+
+    if (size == 0) {
+        return err;
     }
+
+    ALCP_BAD_PTR_ERR_RET(buf, err);
 
     alcp::rng::Context* ctx = (alcp::rng::Context*)pRngHandle->rh_context;
 
     return ctx->read_random(ctx->m_rng, buf, size);
+}
+
+alc_error_t
+alcp_rng_reseed(alc_rng_handle_p pRngHandle)
+{
+
+    alcp::rng::Context* ctx = (alcp::rng::Context*)pRngHandle->rh_context;
+
+    return ctx->reseed(ctx->m_rng);
 }
 
 alc_error_t

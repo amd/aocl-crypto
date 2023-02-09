@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,15 +33,26 @@
 
 namespace alcp::rng {
 
-template<typename RNGTYPE>
 static alc_error_t
 __read_random_wrapper(void* pRng, uint8_t* buffer, int size)
 {
     alc_error_t e  = ALC_ERROR_NONE;
-    auto        ap = static_cast<RNGTYPE*>(pRng);
+    auto        ap = static_cast<IRng*>(pRng);
 
     // e = ap->readRandom(buffer, size);
     ap->randomize(buffer, size);
+
+    return e;
+}
+
+static alc_error_t
+__reseed_wrapper(void* pRng)
+{
+    alc_error_t e  = ALC_ERROR_NONE;
+    auto        ap = static_cast<IRng*>(pRng);
+
+    // e = ap->readRandom(buffer, size);
+    ap->reseed();
 
     return e;
 }
@@ -66,10 +77,31 @@ __build_rng(const alc_rng_info_t& rRngInfo, Context& rCtx)
 {
     auto source      = new SOURCENAME();
     rCtx.m_rng       = static_cast<void*>(source);
-    rCtx.read_random = __read_random_wrapper<SOURCENAME>;
+    rCtx.read_random = __read_random_wrapper;
+    rCtx.reseed      = __reseed_wrapper;
     rCtx.finish      = __finish_wrapper<SOURCENAME>;
 
     return StatusOk();
+}
+
+static Status
+__buld_rng_class(const alc_rng_info_t& rRngInfo, void*& placed_memory)
+{
+    Status sts = StatusOk();
+    switch (rRngInfo.ri_source) {
+        case ALC_RNG_SOURCE_OS:
+            new (placed_memory) SystemRng();
+            break;
+
+        case ALC_RNG_SOURCE_ARCH:
+            new (placed_memory) HardwareRng();
+            break;
+
+        default:
+            sts.update(InvalidArgumentError("RNG type specified is unknown"));
+            break;
+    }
+    return sts;
 }
 
 alc_error_t
@@ -93,7 +125,7 @@ RngBuilder::Build(const alc_rng_info_t& rRngInfo, Context& rCtx)
             sts.update(InvalidArgumentError("RNG type specified is unknown"));
             break;
     }
-    
+
     return sts.code();
 }
 
