@@ -100,7 +100,6 @@ class MockGenerator : public IRng
 
     Status readRandom(Uint8* pBuf, Uint64 size) override { return StatusOk(); }
 
-    // FIXME: Side effect needed
     MOCK_METHOD(Status, randomize, (Uint8 output[], size_t length), (override));
 
     std::string name() const { return "Mock DRBG"; }
@@ -224,9 +223,12 @@ TEST(DRBG_HMAC, GenerateMock)
 
     std::vector<Uint8> personalization_string(0);
     // const auto         s = testing::Action<Status>(StatusOk());
-    EXPECT_CALL(*(sys_rng.get()), randomize)
+    EXPECT_CALL(*(sys_rng.get()), randomize(::testing::_, ::testing::_))
         .Times(2)
-        .WillRepeatedly(testing::Return(StatusOk()));
+        .WillRepeatedly([](Uint8 output[], size_t length) {
+            memset(output, 0, length);
+            return StatusOk();
+        });
 
     hmacDrbg.initialize(128, personalization_string);
     hmacDrbg.randomize(&output[0], output.size());
