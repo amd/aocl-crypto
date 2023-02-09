@@ -69,24 +69,24 @@ DebugPrint(const std::vector<Uint8>& in,
 void
 HmacDrbg::IHmacDrbg::concat(concat_type_t<Uint8>& in, std::vector<Uint8>& out)
 {
-    int   pos  = 0;
-    auto* pOut = &out[0];
+    int   pos   = 0;
+    auto* p_out = &out[0];
     for (Uint64 i = 0; i < in.size(); i++) {
         auto current = *(in.at(i));
-        utils::CopyBytes(pOut + pos, &(current[0]), current.size());
+        utils::CopyBytes(p_out + pos, &(current[0]), current.size());
         pos += current.size();
     }
 }
 
 void
-HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8* in1,
-                                  const Uint64 in1_len,
+HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8* cIn1,
+                                  const Uint64 cIn1Len,
                                   const Uint8* in2,
-                                  const Uint64 in2_len,
+                                  const Uint64 cIn2Len,
                                   const Uint8* in3,
-                                  const Uint64 in3_len,
+                                  const Uint64 cIn3Len,
                                   Uint8*       out,
-                                  const Uint64 out_len)
+                                  const Uint64 cOutLen)
 {
     alc_digest_info_t hmac_digest = {
         ALC_DIGEST_TYPE_SHA2, ALC_DIGEST_LEN_256, {}, ALC_SHA2_256, {}
@@ -102,15 +102,15 @@ HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8* in1,
     // FIXME: Static is not a good idea, just doing for easy optimal
     // implementation
     Hmac hmac_obj = Hmac(mac_info, m_digest.get());
-    hmac_obj.update(in1, in1_len);
-    if (in2 != nullptr && in2_len != 0)
-        hmac_obj.update(in2, in2_len);
-    if (in3 != nullptr && in3_len != 0)
-        hmac_obj.update(in3, in3_len);
+    hmac_obj.update(cIn1, cIn1Len);
+    if (in2 != nullptr && cIn2Len != 0)
+        hmac_obj.update(in2, cIn2Len);
+    if (in3 != nullptr && cIn3Len != 0)
+        hmac_obj.update(in3, cIn3Len);
     hmac_obj.finalize(nullptr, 0);
 
     // Assert that we have enough memory to write the output into
-    assert(out_len >= m_digest->getHashSize());
+    assert(cOutLen >= m_digest->getHashSize());
 
     hmac_obj.copyHash(out, m_digest->getHashSize());
 
@@ -120,45 +120,45 @@ HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8* in1,
 }
 
 void
-HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8* in,
-                                  const Uint64 in_len,
-                                  const Uint8* in1,
-                                  const Uint64 in1_len,
+HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8* cIn,
+                                  const Uint64 cInLen,
+                                  const Uint8* cIn1,
+                                  const Uint64 cIn1Len,
                                   Uint8*       out,
-                                  const Uint64 out_len)
+                                  const Uint64 cOutLen)
 {
-    HmacDrbg::IHmacDrbg::HMAC_Wrapper(in,
-                                      in_len,
-                                      in1,
-                                      in1_len,
+    HmacDrbg::IHmacDrbg::HMAC_Wrapper(cIn,
+                                      cInLen,
+                                      cIn1,
+                                      cIn1Len,
                                       nullptr,
                                       static_cast<Uint64>(0),
                                       out,
-                                      out_len);
+                                      cOutLen);
 }
 
 void
-HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8* in,
-                                  const Uint64 in_len,
+HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8* cIn,
+                                  const Uint64 cInLen,
                                   Uint8*       out,
-                                  const Uint64 out_len)
+                                  const Uint64 cOutLen)
 {
-    HmacDrbg::IHmacDrbg::HMAC_Wrapper(in,
-                                      in_len,
+    HmacDrbg::IHmacDrbg::HMAC_Wrapper(cIn,
+                                      cInLen,
                                       nullptr,
                                       static_cast<Uint64>(0),
                                       nullptr,
                                       static_cast<Uint64>(0),
                                       out,
-                                      out_len);
+                                      cOutLen);
 }
 
 void
-HmacDrbg::IHmacDrbg::HMAC_Wrapper(const std::vector<Uint8>& in,
+HmacDrbg::IHmacDrbg::HMAC_Wrapper(const std::vector<Uint8>& cIn,
                                   std::vector<Uint8>&       out)
 {
     // Call the real implementation
-    HMAC_Wrapper(&in[0], in.size(), &out[0], out.size());
+    HMAC_Wrapper(&cIn[0], cIn.size(), &out[0], out.size());
 }
 
 /*
@@ -167,17 +167,17 @@ HmacDrbg::IHmacDrbg::HMAC_Wrapper(const std::vector<Uint8>& in,
 */
 void
 HmacDrbg::IHmacDrbg::Update(const Uint8* p_provided_data,
-                            const Uint64 provided_data_len)
+                            const Uint64 cProvidedDataLen)
 {
-    const std::vector<Uint8> zeroVect = std::vector<Uint8>{ 0x00 };
-    const std::vector<Uint8> oneVect  = std::vector<Uint8>{ 0x01 };
+    const std::vector<Uint8> cZeroVect = std::vector<Uint8>{ 0x00 };
+    const std::vector<Uint8> cOneVect  = std::vector<Uint8>{ 0x01 };
 
     HMAC_Wrapper(&m_v[0],
                  m_v.size(),
-                 &zeroVect[0],
-                 zeroVect.size(),
+                 &cZeroVect[0],
+                 cZeroVect.size(),
                  p_provided_data,
-                 provided_data_len,
+                 cProvidedDataLen,
                  &m_key[0],
                  m_key.size());
 
@@ -188,17 +188,17 @@ HmacDrbg::IHmacDrbg::Update(const Uint8* p_provided_data,
 
     DebugPrint(m_v, "Update V", __FILE__, __LINE__);
 
-    if (provided_data_len == 0) {
+    if (cProvidedDataLen == 0) {
         return;
     }
 
     // K = HMAC(K,V || 0x01 || provided_data)
     HMAC_Wrapper(&m_v[0],
                  m_v.size(),
-                 &oneVect[0],
-                 oneVect.size(),
+                 &cOneVect[0],
+                 cOneVect.size(),
                  p_provided_data,
-                 provided_data_len,
+                 cProvidedDataLen,
                  &m_key[0],
                  m_key.size());
 
@@ -217,25 +217,25 @@ HmacDrbg::IHmacDrbg::Update(const std::vector<Uint8>& p_provided_data)
     Section 10.1.2.3
 */
 void
-HmacDrbg::IHmacDrbg::instantiate(const Uint8* entropy_input,
-                                 const Uint64 entropy_input_len,
-                                 const Uint8* nonce,
-                                 const Uint64 nonce_len,
-                                 const Uint8* personalization_string,
-                                 const Uint64 personalization_string_len)
+HmacDrbg::IHmacDrbg::instantiate(const Uint8* cEntropyInput,
+                                 const Uint64 cEntropyInputLen,
+                                 const Uint8* cNonce,
+                                 const Uint64 cNonceLen,
+                                 const Uint8* cPersonalizationString,
+                                 const Uint64 cPersonalizationStringLen)
 {
-    std::vector<Uint8> seed_material(entropy_input_len + nonce_len
-                                     + personalization_string_len);
+    std::vector<Uint8> seed_material(cEntropyInputLen + cNonceLen
+                                     + cPersonalizationStringLen);
 
-    Uint8* seed_material_buff_p = &seed_material[0];
+    Uint8* p_seed_material_buff = &seed_material[0];
 
     // Copy can't be avoided
-    utils::CopyBytes(seed_material_buff_p, entropy_input, entropy_input_len);
+    utils::CopyBytes(p_seed_material_buff, cEntropyInput, cEntropyInputLen);
     utils::CopyBytes(
-        seed_material_buff_p + entropy_input_len, nonce, nonce_len);
-    utils::CopyBytes(seed_material_buff_p + entropy_input_len + nonce_len,
-                     personalization_string,
-                     personalization_string_len);
+        p_seed_material_buff + cEntropyInputLen, cNonce, cNonceLen);
+    utils::CopyBytes(p_seed_material_buff + cEntropyInputLen + cNonceLen,
+                     cPersonalizationString,
+                     cPersonalizationStringLen);
     // concat(concatVect, seed_material);
 
     // Initialize key with 0x00
@@ -247,7 +247,7 @@ HmacDrbg::IHmacDrbg::instantiate(const Uint8* entropy_input,
     DebugPrint(m_v, "V", __FILE__, __LINE__);
 
     // (Key,V) = HMAC_DRBG_Update(seed_material,Key,V)
-    Update(seed_material_buff_p, seed_material.size());
+    Update(p_seed_material_buff, seed_material.size());
 
     DebugPrint(m_key, "K", __FILE__, __LINE__);
     DebugPrint(m_v, "V", __FILE__, __LINE__);
@@ -258,16 +258,16 @@ HmacDrbg::IHmacDrbg::instantiate(const Uint8* entropy_input,
 
 void
 HmacDrbg::IHmacDrbg::instantiate(
-    const std::vector<Uint8>& entropy_input,
-    const std::vector<Uint8>& nonce,
-    const std::vector<Uint8>& personalization_string)
+    const std::vector<Uint8>& cEntropyInput,
+    const std::vector<Uint8>& cNonce,
+    const std::vector<Uint8>& cPersonalizationString)
 {
-    instantiate(&entropy_input[0],
-                entropy_input.size(),
-                &nonce[0],
-                nonce.size(),
-                &personalization_string[0],
-                personalization_string.size());
+    instantiate(&cEntropyInput[0],
+                cEntropyInput.size(),
+                &cNonce[0],
+                cNonce.size(),
+                &cPersonalizationString[0],
+                cPersonalizationString.size());
 }
 
 /*
@@ -275,21 +275,21 @@ HmacDrbg::IHmacDrbg::instantiate(
     Section 10.1.2.5
 */
 void
-HmacDrbg::IHmacDrbg::generate(const Uint8* additional_input,
-                              const Uint64 additional_input_len,
+HmacDrbg::IHmacDrbg::generate(const Uint8* cAdditionalInput,
+                              const Uint64 cAdditionalInputLen,
                               Uint8*       output,
-                              const Uint64 output_len)
+                              const Uint64 cOutputLen)
 {
     // FIXME: Implement below
     // if (reseed_counter > reseed_interval) {
     //     return reseed_required
     // }
-    if (additional_input_len != 0) {
-        Update(additional_input, additional_input_len);
+    if (cAdditionalInputLen != 0) {
+        Update(cAdditionalInput, cAdditionalInputLen);
     }
 
     // Treating size of m_v as digest size;
-    Uint64 blocks = output_len / m_v.size();
+    Uint64 blocks = cOutputLen / m_v.size();
 
     for (Uint64 i = 0; i < blocks; i++) {
         HMAC_Wrapper(m_v, m_v);
@@ -299,24 +299,24 @@ HmacDrbg::IHmacDrbg::generate(const Uint8* additional_input,
         utils::CopyBlock(output + i * m_v.size(), &m_v[0], m_v.size());
     }
 
-    if ((output_len - (blocks * m_v.size())) != 0) {
+    if ((cOutputLen - (blocks * m_v.size())) != 0) {
         HMAC_Wrapper(m_v, m_v);
         utils::CopyBlock(output + blocks * m_v.size(),
                          &m_v[0],
-                         (output_len - (blocks * m_v.size())));
+                         (cOutputLen - (blocks * m_v.size())));
     }
 
-    Update(additional_input, additional_input_len);
+    Update(cAdditionalInput, cAdditionalInputLen);
     // FIXME: Reseed counter not implemented
     // reseed_counter += 1;
 }
 
 void
-HmacDrbg::IHmacDrbg::generate(const std::vector<Uint8>& additional_input,
+HmacDrbg::IHmacDrbg::generate(const std::vector<Uint8>& cAdditionalInput,
                               std::vector<Uint8>&       output)
 {
-    generate(&additional_input[0],
-             additional_input.size(),
+    generate(&cAdditionalInput[0],
+             cAdditionalInput.size(),
              &output[0],
              output.size());
 }
@@ -326,18 +326,18 @@ HmacDrbg::IHmacDrbg::generate(const std::vector<Uint8>& additional_input,
     Section 10.1.2.4
 */
 void
-HmacDrbg::IHmacDrbg::internalReseed(const Uint8* entropy_input,
-                                    const Uint64 entropy_input_len,
-                                    const Uint8* additional_input,
-                                    const Uint64 additional_input_len)
+HmacDrbg::IHmacDrbg::internalReseed(const Uint8* cEntropyInput,
+                                    const Uint64 cEntropyInputLen,
+                                    const Uint8* cAdditionalInput,
+                                    const Uint64 cAdditionalInputLen)
 {
-    std::vector<Uint8> seed_material(entropy_input_len + additional_input_len);
-    Uint8*             seed_material_p = &seed_material[0];
+    std::vector<Uint8> seed_material(cEntropyInputLen + cAdditionalInputLen);
+    Uint8*             p_seed_material = &seed_material[0];
 
-    utils::CopyBytes(seed_material_p, entropy_input, entropy_input_len);
-    utils::CopyBytes(seed_material_p + entropy_input_len,
-                     additional_input,
-                     additional_input_len);
+    utils::CopyBytes(p_seed_material, cEntropyInput, cEntropyInputLen);
+    utils::CopyBytes(p_seed_material + cEntropyInputLen,
+                     cAdditionalInput,
+                     cAdditionalInputLen);
 
     Update(seed_material);
 
@@ -346,13 +346,13 @@ HmacDrbg::IHmacDrbg::internalReseed(const Uint8* entropy_input,
 }
 
 void
-HmacDrbg::IHmacDrbg::internalReseed(const std::vector<Uint8>& entropy_input,
-                                    const std::vector<Uint8>& additional_input)
+HmacDrbg::IHmacDrbg::internalReseed(const std::vector<Uint8>& cEntropyInput,
+                                    const std::vector<Uint8>& cAdditionalInput)
 {
-    internalReseed(&entropy_input[0],
-                   entropy_input.size(),
-                   &additional_input[0],
-                   additional_input.size());
+    internalReseed(&cEntropyInput[0],
+                   cEntropyInput.size(),
+                   &cAdditionalInput[0],
+                   cAdditionalInput.size());
 }
 
 HmacDrbg::IHmacDrbg::IHmacDrbg(int                     digestSize,

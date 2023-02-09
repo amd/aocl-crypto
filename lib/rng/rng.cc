@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,11 +34,11 @@ class ISeeder
 {
   public:
     virtual ~ISeeder();
-    virtual std::string name() const                         = 0;
+    virtual std::string name() const          = 0;
     virtual size_t      poll(alcp::IRng& rng) = 0;
 };
 
-class rdseed : public ISeeder
+class Rdseed : public ISeeder
 {
   public:
     std::string name() const override { return "rdseed"; }

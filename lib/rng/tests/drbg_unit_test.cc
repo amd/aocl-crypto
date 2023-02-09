@@ -113,33 +113,33 @@ TEST(DRBG_HMAC, Instantiation)
 {
     auto     sha_obj = std::make_shared<alcp::digest::Sha224>();
     auto     sys_rng = std::make_shared<alcp::rng::SystemRng>();
-    HmacDrbg hmacDrbg(sha_obj->getHashSize(), sha_obj, sys_rng);
+    HmacDrbg hmac_drbg(sha_obj->getHashSize(), sha_obj, sys_rng);
 }
 
 TEST(DRBG_HMAC, Generate)
 {
     auto               sha_obj = std::make_shared<alcp::digest::Sha224>();
     auto               sys_rng = std::make_shared<alcp::rng::SystemRng>();
-    HmacDrbg           hmacDrbg(sha_obj->getHashSize(), sha_obj, sys_rng);
+    HmacDrbg           hmac_drbg(sha_obj->getHashSize(), sha_obj, sys_rng);
     std::vector<Uint8> output(200, 0);
-    std::vector<Uint8> untouchedOutput(200, 0);
+    std::vector<Uint8> untouched_output(200, 0);
     std::vector<Uint8> personalization_string(0);
 
-    hmacDrbg.initialize(128, personalization_string);
-    hmacDrbg.randomize(&output[0], output.size());
+    hmac_drbg.initialize(128, personalization_string);
+    hmac_drbg.randomize(&output[0], output.size());
 
     DebugPrintPretty(output);
 
-    EXPECT_NE(output, untouchedOutput);
+    EXPECT_NE(output, untouched_output);
 }
 
 TEST(DRBG_HMAC, GenerateNull)
 {
     auto               sha_obj = std::make_shared<alcp::digest::Sha224>();
     auto               sys_rng = std::make_shared<NullGenerator>();
-    HmacDrbg           hmacDrbg(sha_obj->getHashSize(), sha_obj, sys_rng);
+    HmacDrbg           hmac_drbg(sha_obj->getHashSize(), sha_obj, sys_rng);
     std::vector<Uint8> output(200, 0);
-    std::vector<Uint8> untouchedOutput = {
+    std::vector<Uint8> untouched_output = {
         0x3a, 0x01, 0x46, 0xa7, 0xa8, 0x99, 0x3b, 0x7e, 0xd6, 0xb2, 0x87, 0x77,
         0xb3, 0xcf, 0xee, 0x18, 0x17, 0x13, 0x21, 0xc3, 0x61, 0x85, 0x43, 0x90,
         0x77, 0xf7, 0xf0, 0x59, 0x04, 0x15, 0x37, 0x58, 0x18, 0x33, 0xb5, 0x71,
@@ -160,34 +160,36 @@ TEST(DRBG_HMAC, GenerateNull)
     };
     std::vector<Uint8> personalization_string(0);
 
-    hmacDrbg.initialize(128, personalization_string);
-    hmacDrbg.randomize(&output[0], output.size());
+    hmac_drbg.initialize(128, personalization_string);
+    hmac_drbg.randomize(&output[0], output.size());
 
     DebugPrintPretty(output);
 
-    EXPECT_EQ(output, untouchedOutput);
+    EXPECT_EQ(output, untouched_output);
 }
 
 TEST(DRBG_HMAC, MutiGenerate)
 {
     auto               sha_obj = std::make_shared<alcp::digest::Sha224>();
     auto               sys_rng = std::make_shared<alcp::rng::SystemRng>();
-    HmacDrbg           hmacDrbg(sha_obj->getHashSize(), sha_obj, sys_rng);
-    std::vector<Uint8> output(1, 0);
-    std::vector<Uint8> untouchedOutput(1, 0);
+    HmacDrbg           hmac_drbg(sha_obj->getHashSize(), sha_obj, sys_rng);
+    std::vector<Uint8> output_1(10, 0);
+    std::vector<Uint8> output_2(10, 0);
     std::vector<Uint8> personalization_string(0);
 
-    hmacDrbg.initialize(128, personalization_string);
-    hmacDrbg.randomize(&output[0], output.size());
+    hmac_drbg.initialize(128, personalization_string);
+    hmac_drbg.randomize(&output_1[0], output_1.size());
+    hmac_drbg.randomize(&output_2[0], output_1.size());
 
-    DebugPrintPretty(output);
+    DebugPrintPretty(output_1);
 
-    EXPECT_NE(output, untouchedOutput);
+    EXPECT_NE(output_1, output_2);
 
     for (int i = 0; i < 10; i++) {
-        untouchedOutput = output;
-        hmacDrbg.randomize(&output[0], output.size());
-        EXPECT_NE(output, untouchedOutput);
+        output_2 = output_1;
+        hmac_drbg.randomize(&output_1[0], output_1.size());
+        hmac_drbg.randomize(&output_2[0], output_1.size());
+        EXPECT_NE(output_1, output_2);
     }
 }
 
@@ -199,9 +201,9 @@ TEST(DRBG_HMAC, GenerateMock)
 {
     auto               sha_obj = std::make_shared<alcp::digest::Sha224>();
     auto               sys_rng = std::make_shared<MockGenerator>();
-    HmacDrbg           hmacDrbg(sha_obj->getHashSize(), sha_obj, sys_rng);
+    HmacDrbg           hmac_drbg(sha_obj->getHashSize(), sha_obj, sys_rng);
     std::vector<Uint8> output(200, 0);
-    std::vector<Uint8> untouchedOutput = {
+    std::vector<Uint8> untouched_output = {
         0x3a, 0x01, 0x46, 0xa7, 0xa8, 0x99, 0x3b, 0x7e, 0xd6, 0xb2, 0x87, 0x77,
         0xb3, 0xcf, 0xee, 0x18, 0x17, 0x13, 0x21, 0xc3, 0x61, 0x85, 0x43, 0x90,
         0x77, 0xf7, 0xf0, 0x59, 0x04, 0x15, 0x37, 0x58, 0x18, 0x33, 0xb5, 0x71,
@@ -230,10 +232,10 @@ TEST(DRBG_HMAC, GenerateMock)
             return StatusOk();
         });
 
-    hmacDrbg.initialize(128, personalization_string);
-    hmacDrbg.randomize(&output[0], output.size());
+    hmac_drbg.initialize(128, personalization_string);
+    hmac_drbg.randomize(&output[0], output.size());
 
     DebugPrintPretty(output);
 
-    EXPECT_EQ(output, untouchedOutput);
+    EXPECT_EQ(output, untouched_output);
 }

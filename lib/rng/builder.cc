@@ -36,11 +36,11 @@ namespace alcp::rng {
 static alc_error_t
 __read_random_wrapper(void* pRng, uint8_t* buffer, int size)
 {
-    alc_error_t e  = ALC_ERROR_NONE;
-    auto        ap = static_cast<IRng*>(pRng);
+    alc_error_t e    = ALC_ERROR_NONE;
+    auto        p_ap = static_cast<IRng*>(pRng);
 
     // e = ap->readRandom(buffer, size);
-    ap->randomize(buffer, size);
+    p_ap->randomize(buffer, size);
 
     return e;
 }
@@ -48,11 +48,11 @@ __read_random_wrapper(void* pRng, uint8_t* buffer, int size)
 static alc_error_t
 __reseed_wrapper(void* pRng)
 {
-    alc_error_t e  = ALC_ERROR_NONE;
-    auto        ap = static_cast<IRng*>(pRng);
+    alc_error_t e    = ALC_ERROR_NONE;
+    auto        p_ap = static_cast<IRng*>(pRng);
 
     // e = ap->readRandom(buffer, size);
-    ap->reseed();
+    p_ap->reseed();
 
     return e;
 }
@@ -61,12 +61,12 @@ template<typename RNGTYPE>
 static alc_error_t
 __finish_wrapper(void* pRng)
 {
-    alc_error_t e  = ALC_ERROR_NONE;
-    auto        ap = static_cast<RNGTYPE*>(pRng);
+    alc_error_t e    = ALC_ERROR_NONE;
+    auto        p_ap = static_cast<RNGTYPE*>(pRng);
 
     // ap->finish();
 
-    delete (ap);
+    delete (p_ap);
 
     return e;
 }
@@ -75,8 +75,8 @@ template<typename SOURCENAME>
 static Status
 __build_rng(const alc_rng_info_t& rRngInfo, Context& rCtx)
 {
-    auto source      = new SOURCENAME();
-    rCtx.m_rng       = static_cast<void*>(source);
+    auto p_source    = new SOURCENAME();
+    rCtx.m_rng       = static_cast<void*>(p_source);
     rCtx.read_random = __read_random_wrapper;
     rCtx.reseed      = __reseed_wrapper;
     rCtx.finish      = __finish_wrapper<SOURCENAME>;

@@ -50,15 +50,15 @@ class Drbg : public IRng
     {}
 
     Status initialize(int                 security_strength,
-                      std::vector<Uint8>& personalization_string);
+                      std::vector<Uint8>& p_cPersonalizationString);
 
     // FIXME: Predicition resistance is to be added
-    Status randomize(Uint8               output[],
+    Status randomize(Uint8               p_Output[],
                      size_t              length,
                      int                 security_strength,
-                     std::vector<Uint8>& additional_input);
+                     std::vector<Uint8>& p_cAdditionalInput);
 
-    Status randomize(Uint8 output[], size_t length);
+    Status randomize(Uint8 p_Output[], size_t length);
 
     Status readRandom(Uint8* pBuf, Uint64 size)
     {
@@ -71,33 +71,33 @@ class Drbg : public IRng
 
     size_t reseed() { return 0; }
 
-    virtual void instantiate(const Uint8* entropy_input,
-                             const Uint64 entropy_input_len,
-                             const Uint8* nonce,
-                             const Uint64 nonce_len,
-                             const Uint8* personalization_string,
-                             const Uint64 personalization_string_len) = 0;
+    virtual void instantiate(const Uint8* p_cEntropyInput,
+                             const Uint64 cEntropyInputLen,
+                             const Uint8* p_cNonce,
+                             const Uint64 cNonceLen,
+                             const Uint8* p_cPersonalizationString,
+                             const Uint64 cPersonalizationStringLen) = 0;
 
     virtual void instantiate(
-        const std::vector<Uint8>& entropy_input,
-        const std::vector<Uint8>& nonce,
-        const std::vector<Uint8>& personalization_string) = 0;
+        const std::vector<Uint8>& cEntropyInput,
+        const std::vector<Uint8>& cNonce,
+        const std::vector<Uint8>& cPersonalizationString) = 0;
 
-    virtual void generate(const Uint8* additional_input,
-                          const Uint64 additional_input_len,
-                          Uint8*       output,
-                          const Uint64 output_len) = 0;
+    virtual void generate(const Uint8* p_cAdditionalInput,
+                          const Uint64 cAdditionalInputLen,
+                          Uint8*       p_Output,
+                          const Uint64 cOutputLen) = 0;
 
-    virtual void generate(const std::vector<Uint8>& additional_input,
+    virtual void generate(const std::vector<Uint8>& p_cAdditionalInput,
                           std::vector<Uint8>&       output) = 0;
 
   protected:
-    virtual void internalReseed(const Uint8* entropy_input,
-                                const Uint64 entropy_input_len,
-                                const Uint8* additional_input,
-                                const Uint64 additional_input_len) = 0;
+    virtual void internalReseed(const Uint8* p_cEntropyInput,
+                                const Uint64 cEntropyInputLen,
+                                const Uint8* p_cAdditionalInput,
+                                const Uint64 cAdditionalInputLen) = 0;
 
-    virtual void internalReseed(const std::vector<Uint8>& entropy_input,
-                                const std::vector<Uint8>& additional_input) = 0;
+    virtual void internalReseed(const std::vector<Uint8>& cEntropyInput,
+                                const std::vector<Uint8>& cAdditionalInput) = 0;
 };
 } // namespace alcp::rng
