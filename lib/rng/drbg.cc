@@ -31,13 +31,14 @@
 #include "rng.hh"
 #include <memory>
 
-namespace alcp { namespace rng {
+namespace alcp::rng {
 
-    // FIXME: Predicition resistance is to be added
-    Status Drbg::initialize(int                 security_strength,
-                            std::vector<Uint8>& personalization_string)
-    {
-        Status s = StatusOk();
+// FIXME: Predicition resistance is to be added
+Status
+Drbg::initialize(int                 security_strength,
+                 std::vector<Uint8>& personalization_string)
+{
+    Status s = StatusOk();
 #if 0
             /*
                 FIXME: Implement Security Strength
@@ -53,30 +54,31 @@ namespace alcp { namespace rng {
                 return s;
             }
 #endif
-        std::vector<Uint8> entropy_input(128);
-        std::vector<Uint8> nonce(128);
+    std::vector<Uint8> entropy_input(128);
+    std::vector<Uint8> nonce(128);
 
-        s = m_entropy_in->randomize(&entropy_input[0], entropy_input.size());
-        if (!s.ok()) {
-            return s;
-        }
-
-        s = m_entropy_in->randomize(&nonce[0], nonce.size());
-        if (!s.ok()) {
-            return s;
-        }
-
-        instantiate(entropy_input, nonce, personalization_string);
+    s = m_entropy_in->randomize(&entropy_input[0], entropy_input.size());
+    if (!s.ok()) {
         return s;
     }
 
-    // FIXME: Predicition resistance is to be added
-    Status Drbg::randomize(Uint8               output[],
-                           size_t              length,
-                           int                 security_strength,
-                           std::vector<Uint8>& additional_input)
-    {
-        Status s = StatusOk();
+    s = m_entropy_in->randomize(&nonce[0], nonce.size());
+    if (!s.ok()) {
+        return s;
+    }
+
+    instantiate(entropy_input, nonce, personalization_string);
+    return s;
+}
+
+// FIXME: Predicition resistance is to be added
+Status
+Drbg::randomize(Uint8               output[],
+                size_t              length,
+                int                 security_strength,
+                std::vector<Uint8>& additional_input)
+{
+    Status s = StatusOk();
 #if 0
             // TODO: Enable after implementing
             /*
@@ -115,14 +117,15 @@ namespace alcp { namespace rng {
             // FIXME: Handle Predicition Resistance Request
             // FIXME: Handle reseed required flag
 #endif
-        generate(&additional_input[0], additional_input.size(), output, length);
-        return s;
-    }
+    generate(&additional_input[0], additional_input.size(), output, length);
+    return s;
+}
 
-    Status Drbg::randomize(Uint8 output[], size_t length)
-    {
-        std::vector<Uint8> add = std::vector<Uint8>(0);
-        return randomize(output, length, 512, add);
-    }
+Status
+Drbg::randomize(Uint8 output[], size_t length)
+{
+    std::vector<Uint8> add = std::vector<Uint8>(0);
+    return randomize(output, length, 512, add);
+}
 
-}} // namespace alcp::rng
+} // namespace alcp::rng

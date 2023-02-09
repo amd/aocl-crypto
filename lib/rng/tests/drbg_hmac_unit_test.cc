@@ -75,6 +75,29 @@ typedef std::map<const std::string, hmac_kat_tuple_t> known_answer_map_t;
             PersonalizationStr,AdditionalInpt,GeneratedBits
         }
 */
+
+class TestingHmacDrbg : public HmacDrbg
+{
+  public:
+    using HmacDrbg::HmacDrbg;
+
+    void reseed(const std::vector<Uint8>& entropy_input,
+                const std::vector<Uint8>& additional_input)
+    {
+        internalReseed(entropy_input, additional_input);
+    }
+    void reseed(const Uint8* entropy_input,
+                const Uint64 entropy_input_len,
+                const Uint8* additional_input,
+                const Uint64 additional_input_len)
+    {
+        internalReseed(entropy_input,
+                       entropy_input_len,
+                       additional_input,
+                       additional_input_len);
+    }
+};
+
 // clang-format off
 known_answer_map_t KATDatasetSha256{
     {
@@ -178,9 +201,9 @@ class HmacDrbgKat
           std::pair<const std::string, hmac_kat_tuple_t>>
 {
   public:
-    std::unique_ptr<HmacDrbg> m_hmacDrbg;
-    alc_digest_type_t         m_digestClass;
-    int                       m_genCount = {};
+    std::unique_ptr<TestingHmacDrbg> m_hmacDrbg;
+    alc_digest_type_t                m_digestClass;
+    int                              m_genCount = {};
     std::vector<Uint8> m_entropy = {}, m_reseedEntropy = {}, m_nonce = {},
                        m_pstr = {}, m_add_reseed = {}, m_add1 = {}, m_add2 = {},
                        m_generatedBits = {};
@@ -245,8 +268,8 @@ class HmacDrbgKatTemplate : public HmacDrbgKat
                 ASSERT_TRUE(false);
                 break;
         }
-        m_hmacDrbg =
-            std::make_unique<HmacDrbg>(p_shaObj->getHashSize(), p_shaObj);
+        m_hmacDrbg = std::make_unique<TestingHmacDrbg>(p_shaObj->getHashSize(),
+                                                       p_shaObj);
     }
 };
 
@@ -263,7 +286,7 @@ TEST_P(HmacDrbgKatSHA2_256, SHA2)
     std::vector<Uint8> output(m_generatedBits.size());
     m_hmacDrbg->instantiate(m_entropy, m_nonce, m_pstr);
     if (m_reseedEntropy.size()) {
-        m_hmacDrbg->internalReseed(m_reseedEntropy, m_add_reseed);
+        m_hmacDrbg->reseed(m_reseedEntropy, m_add_reseed);
     }
     m_hmacDrbg->generate(m_add1, output);
     if (m_genCount > 1) {
@@ -277,7 +300,7 @@ TEST_P(HmacDrbgKatSHA2_224, SHA2)
     std::vector<Uint8> output(m_generatedBits.size());
     m_hmacDrbg->instantiate(m_entropy, m_nonce, m_pstr);
     if (m_reseedEntropy.size()) {
-        m_hmacDrbg->internalReseed(m_reseedEntropy, m_add_reseed);
+        m_hmacDrbg->reseed(m_reseedEntropy, m_add_reseed);
     }
     m_hmacDrbg->generate(m_add1, output);
     if (m_genCount > 1) {
@@ -440,13 +463,13 @@ TEST(SHA2, SHA224KAT1)
 
     auto sha_obj = std::make_shared<alcp::digest::Sha224>();
 
-    HmacDrbg hmacDrbg(sha_obj->getHashSize(), sha_obj);
+    TestingHmacDrbg hmacDrbg(sha_obj->getHashSize(), sha_obj);
 
     hmacDrbg.instantiate(EntropyInput, nonce, PersonalizationString);
     EXPECT_EQ(key_init_exp, hmacDrbg.GetKCopy());
     EXPECT_EQ(v_init_exp, hmacDrbg.GetVCopy());
 
-    hmacDrbg.internalReseed(EntropyInputReseed, AdditionalInputReseed);
+    hmacDrbg.reseed(EntropyInputReseed, AdditionalInputReseed);
     EXPECT_EQ(key_reseed_exp, hmacDrbg.GetKCopy());
     EXPECT_EQ(v_reseed_exp, hmacDrbg.GetVCopy());
 
