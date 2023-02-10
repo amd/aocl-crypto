@@ -49,9 +49,6 @@ class IDrbg : public IRng
 
 class Drbg : public IDrbg
 {
-    // Way to take entropy (IRng class object)
-    // Way to select type of DRBG (HMAC,CTR)
-    // Set Reseed interval?
   private:
     std::shared_ptr<IRng> m_entropy_in = {};
 
@@ -62,27 +59,25 @@ class Drbg : public IDrbg
         : m_entropy_in{ entropy_in }
     {}
 
+    Status randomize(Uint8 p_Output[], size_t length);
+
+    Status readRandom(Uint8* pBuf, Uint64 size);
+
+    bool isSeeded() const { return true; }
+
+    size_t reseed() { return 0; }
+
     Status initialize(int                 security_strength,
                       std::vector<Uint8>& p_cPersonalizationString);
 
+    virtual std::string name() const = 0;
+
+  protected:
     // FIXME: Predicition resistance is to be added
     Status randomize(Uint8               p_Output[],
                      size_t              length,
                      int                 security_strength,
                      std::vector<Uint8>& p_cAdditionalInput);
-
-    Status randomize(Uint8 p_Output[], size_t length);
-
-    Status readRandom(Uint8* pBuf, Uint64 size)
-    {
-        return randomize(pBuf, size);
-    }
-
-    virtual std::string name() const = 0;
-
-    bool isSeeded() const { return true; }
-
-    size_t reseed() { return 0; }
 
     virtual void instantiate(const Uint8* p_cEntropyInput,
                              const Uint64 cEntropyInputLen,

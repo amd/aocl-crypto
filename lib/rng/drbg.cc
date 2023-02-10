@@ -128,4 +128,10 @@ Drbg::randomize(Uint8 output[], size_t length)
     return randomize(output, length, 512, add);
 }
 
+Status
+Drbg::readRandom(Uint8* pBuf, Uint64 size)
+{
+    return randomize(pBuf, size);
+}
+
 } // namespace alcp::rng

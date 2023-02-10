@@ -81,21 +81,74 @@ class TestingHmacDrbg : public HmacDrbg
   public:
     using HmacDrbg::HmacDrbg;
 
-    void reseed(const std::vector<Uint8>& entropy_input,
-                const std::vector<Uint8>& additional_input)
+    void testingReseed(const std::vector<Uint8>& cEntropyInput,
+                       const std::vector<Uint8>& cAdditionalInput)
     {
-        internalReseed(entropy_input, additional_input);
+        internalReseed(cEntropyInput, cAdditionalInput);
     }
-    void reseed(const Uint8* entropy_input,
-                const Uint64 entropy_input_len,
-                const Uint8* additional_input,
-                const Uint64 additional_input_len)
+
+    void testingReseed(const Uint8* p_cEntropyInput,
+                       const Uint64 cEntropyInputLen,
+                       const Uint8* p_cAdditionalInput,
+                       const Uint64 cAdditionalInputLen)
     {
-        internalReseed(entropy_input,
-                       entropy_input_len,
-                       additional_input,
-                       additional_input_len);
+        internalReseed(p_cEntropyInput,
+                       cEntropyInputLen,
+                       p_cAdditionalInput,
+                       cAdditionalInputLen);
     }
+
+    void testingUpdate(const Uint8* p_cProvidedData,
+                       const Uint64 cProvidedDataLen)
+    {
+        update(p_cProvidedData, cProvidedDataLen);
+    }
+
+    void testingUpdate(const std::vector<Uint8>& cProvidedData)
+    {
+        update(cProvidedData);
+    }
+
+    void testingInstantiate(const Uint8* p_cEntropyInput,
+                            const Uint64 cEntropyInputLen,
+                            const Uint8* p_cNonce,
+                            const Uint64 cNonceLen,
+                            const Uint8* p_cPersonalizationString,
+                            const Uint64 p_cPersonalizationStringLen)
+    {
+        instantiate(p_cEntropyInput,
+                    cEntropyInputLen,
+                    p_cNonce,
+                    cNonceLen,
+                    p_cPersonalizationString,
+                    p_cPersonalizationStringLen);
+    }
+
+    void testingInstantiate(const std::vector<Uint8>& cEntropyInput,
+                            const std::vector<Uint8>& cNonce,
+                            const std::vector<Uint8>& cPersonalizationString)
+    {
+        instantiate(cEntropyInput, cNonce, cPersonalizationString);
+    }
+
+    void testingGenerate(const Uint8* p_cAdditionalInput,
+                         const Uint64 cAdditionalInputLen,
+                         Uint8*       p_cOutput,
+                         const Uint64 cOutputLen)
+    {
+        generate(
+            p_cAdditionalInput, cAdditionalInputLen, p_cOutput, cOutputLen);
+    }
+
+    void testingGenerate(const std::vector<Uint8>& cAdditionalInput,
+                         std::vector<Uint8>&       cOutput)
+    {
+        generate(cAdditionalInput, cOutput);
+    }
+
+    std::vector<Uint8> testingGetKCopy() { return getKCopy(); }
+
+    std::vector<Uint8> testingGetVCopy() { return getVCopy(); }
 };
 
 // clang-format off
@@ -284,13 +337,13 @@ class HmacDrbgKatSHA2_224
 TEST_P(HmacDrbgKatSHA2_256, SHA2)
 {
     std::vector<Uint8> output(m_generatedBits.size());
-    m_hmacDrbg->instantiate(m_entropy, m_nonce, m_pstr);
+    m_hmacDrbg->testingInstantiate(m_entropy, m_nonce, m_pstr);
     if (m_reseedEntropy.size()) {
-        m_hmacDrbg->reseed(m_reseedEntropy, m_add_reseed);
+        m_hmacDrbg->testingReseed(m_reseedEntropy, m_add_reseed);
     }
-    m_hmacDrbg->generate(m_add1, output);
+    m_hmacDrbg->testingGenerate(m_add1, output);
     if (m_genCount > 1) {
-        m_hmacDrbg->generate(m_add2, output);
+        m_hmacDrbg->testingGenerate(m_add2, output);
     }
     EXPECT_EQ(m_generatedBits, output);
 }
@@ -298,13 +351,13 @@ TEST_P(HmacDrbgKatSHA2_256, SHA2)
 TEST_P(HmacDrbgKatSHA2_224, SHA2)
 {
     std::vector<Uint8> output(m_generatedBits.size());
-    m_hmacDrbg->instantiate(m_entropy, m_nonce, m_pstr);
+    m_hmacDrbg->testingInstantiate(m_entropy, m_nonce, m_pstr);
     if (m_reseedEntropy.size()) {
-        m_hmacDrbg->reseed(m_reseedEntropy, m_add_reseed);
+        m_hmacDrbg->testingReseed(m_reseedEntropy, m_add_reseed);
     }
-    m_hmacDrbg->generate(m_add1, output);
+    m_hmacDrbg->testingGenerate(m_add1, output);
     if (m_genCount > 1) {
-        m_hmacDrbg->generate(m_add2, output);
+        m_hmacDrbg->testingGenerate(m_add2, output);
     }
     EXPECT_EQ(m_generatedBits, output);
 }
@@ -345,7 +398,7 @@ TEST(Instantiate, SHA256)
     std::shared_ptr<alcp::digest::Digest> sha_obj =
         std::make_shared<alcp::digest::Sha256>();
 
-    HmacDrbg hmacDrbg(32, sha_obj);
+    TestingHmacDrbg hmacDrbg(32, sha_obj);
 
     std::vector<Uint8> key_exp = { 0x3D, 0xDA, 0x54, 0x3E, 0x7E, 0xEF, 0x14,
                                    0xF9, 0x36, 0x23, 0x7B, 0xE6, 0x5D, 0x09,
@@ -358,10 +411,10 @@ TEST(Instantiate, SHA256)
         0xEB, 0xE8, 0x0D, 0x2C, 0x7F, 0x66, 0x0F, 0x44, 0x76, 0xC4
     };
 
-    hmacDrbg.instantiate(EntropyInput, nonce, PersonalizationString);
+    hmacDrbg.testingInstantiate(EntropyInput, nonce, PersonalizationString);
 
-    EXPECT_EQ(key_exp, hmacDrbg.GetKCopy());
-    EXPECT_EQ(v_exp, hmacDrbg.GetVCopy());
+    EXPECT_EQ(key_exp, hmacDrbg.testingGetKCopy());
+    EXPECT_EQ(v_exp, hmacDrbg.testingGetVCopy());
 }
 
 TEST(SHA2, SHA224KAT1)
@@ -465,21 +518,21 @@ TEST(SHA2, SHA224KAT1)
 
     TestingHmacDrbg hmacDrbg(sha_obj->getHashSize(), sha_obj);
 
-    hmacDrbg.instantiate(EntropyInput, nonce, PersonalizationString);
-    EXPECT_EQ(key_init_exp, hmacDrbg.GetKCopy());
-    EXPECT_EQ(v_init_exp, hmacDrbg.GetVCopy());
+    hmacDrbg.testingInstantiate(EntropyInput, nonce, PersonalizationString);
+    EXPECT_EQ(key_init_exp, hmacDrbg.testingGetKCopy());
+    EXPECT_EQ(v_init_exp, hmacDrbg.testingGetVCopy());
 
-    hmacDrbg.reseed(EntropyInputReseed, AdditionalInputReseed);
-    EXPECT_EQ(key_reseed_exp, hmacDrbg.GetKCopy());
-    EXPECT_EQ(v_reseed_exp, hmacDrbg.GetVCopy());
+    hmacDrbg.testingReseed(EntropyInputReseed, AdditionalInputReseed);
+    EXPECT_EQ(key_reseed_exp, hmacDrbg.testingGetKCopy());
+    EXPECT_EQ(v_reseed_exp, hmacDrbg.testingGetVCopy());
 
-    hmacDrbg.generate(AdditionalInput1, output);
-    EXPECT_EQ(key_exp1, hmacDrbg.GetKCopy());
-    EXPECT_EQ(v_exp1, hmacDrbg.GetVCopy());
+    hmacDrbg.testingGenerate(AdditionalInput1, output);
+    EXPECT_EQ(key_exp1, hmacDrbg.testingGetKCopy());
+    EXPECT_EQ(v_exp1, hmacDrbg.testingGetVCopy());
 
-    hmacDrbg.generate(AdditionalInput2, output);
-    EXPECT_EQ(key_exp2, hmacDrbg.GetKCopy());
-    EXPECT_EQ(v_exp2, hmacDrbg.GetVCopy());
+    hmacDrbg.testingGenerate(AdditionalInput2, output);
+    EXPECT_EQ(key_exp2, hmacDrbg.testingGetKCopy());
+    EXPECT_EQ(v_exp2, hmacDrbg.testingGetVCopy());
 
     EXPECT_EQ(ReturnedBits, output);
 }

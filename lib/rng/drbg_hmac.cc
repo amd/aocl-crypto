@@ -66,6 +66,199 @@ DebugPrint(const std::vector<Uint8>& in,
 {}
 #endif
 
+class HmacDrbg::IHmacDrbg
+{
+  private:
+    std::shared_ptr<alcp::digest::Digest> m_digest;
+    std::vector<Uint8>                    m_v = {}, m_key = {};
+
+  public:
+    /**
+     * @brief Concatinate List of vectors into a single vector
+     *
+     * @param p_cIn - Set of Vectors concat_type_t
+     * @param p_out - Buffer to write to, Vector of bytes.
+     */
+    static void concat(concat_type_t<Uint8>& p_cIn, std::vector<Uint8>& out);
+    /**
+     * @brief Given input (key,data,sha_object) will give p_out the HMAC
+     * directly. Input will all be treated same as if they are
+     * concatinated into single input.
+     * @param key     - Key used for HMAC
+     * @param key_len - Length of the HMAC Key
+     * @param p_cIn1     - First input
+     * @param cIn1Len - Length of the first input
+     * @param p_cIn2     - Second input
+     * @param cIn2Len - Length of the second input
+     * @param p_cIn3     - Third input
+     * @param cIn3Len - Length of the third input
+     * @param p_out     - Output buffer
+     * @param cOutLen - Allocated memory of p_cOutput buffer
+     * @param sha_ob  - Pointer to the SHA object
+     */
+    void HMAC_Wrapper(const Uint8* p_cIn1,
+                      const Uint64 cIn1Len,
+                      const Uint8* p_cIn2,
+                      const Uint64 cIn2Len,
+                      const Uint8* p_cIn3,
+                      const Uint64 cIn3Len,
+                      Uint8*       p_out,
+                      const Uint64 cOutLen);
+    /**
+     * @brief Given input (key,data,sha_object) will give p_out the HMAC
+     * directly. Input will all be treated same as if they are
+     * concatinated into single input.
+     * @param key     - Key used for HMAC
+     * @param key_len - Length of the HMAC Key
+     * @param p_cIn     - First input
+     * @param cInLen - Length of the first input
+     * @param p_cIn1     - Second input
+     * @param cIn1Len - Length of the second input
+     * @param p_out     - Output buffer
+     * @param cOutLen - Allocated memory of p_cOutput buffer
+     * @param sha_ob  - Pointer to the SHA object
+     */
+    void HMAC_Wrapper(const Uint8* p_cIn,
+                      const Uint64 cInLen,
+                      const Uint8* p_cIn1,
+                      const Uint64 cIn1Len,
+                      Uint8*       p_out,
+                      const Uint64 cOutLen);
+    /**
+     * @brief Given input (key,data,sha_object) will give p_out the HMAC
+     * directly.
+     * @param key     - Key used for HMAC
+     * @param key_len - Length of the HMAC Key
+     * @param p_cIn     - First input
+     * @param cInLen - Length of the first input
+     * @param p_out     - Output buffer
+     * @param cOutLen - Allocated memory of p_cOutput buffer
+     * @param sha_ob  - Pointer to the SHA object
+     */
+    void HMAC_Wrapper(const Uint8* p_cIn,
+                      const Uint64 cInLen,
+                      Uint8*       p_out,
+                      const Uint64 cOutLen);
+    /**
+     * @brief Given input (key,data,sha_object) will give p_out the HMAC
+     * directly.
+     *
+     * @param key     - Key used for HMAC vector<Uint8>
+     * @param p_cIn      - Input data vector<Uint8>
+     * @param p_out     - Output buffer vector<Uint8>
+     * @param sha_obj - Pointer to SHA object
+     */
+    void HMAC_Wrapper(const std::vector<Uint8>& cIn, std::vector<Uint8>& out);
+    /**
+     * @brief Given Data and Length, updates key and value internally
+     *
+     * @param p_cProvidedData    - Uint8 of data
+     * @param cProvidedDataLen  - Length of the data p_cIn bytes
+     */
+    void update(const Uint8* p_cProvidedData, const Uint64 cProvidedDataLen);
+    /**
+     * @brief Given Data and Length, updates key and value internally
+     *
+     * @param p_cProvidedData    - vector<Uint8> of data
+     */
+    void update(const std::vector<Uint8>& cProvidedData);
+    /**
+     * @brief Insitantiate DRBG given Entropy, Nonce, Personal Data
+     *
+     * @param p_cEntropyInput               - Pointer to location where
+     * entropy is stored
+     * @param cEntropyInputLen           - Length of the entropy buffer
+     * @param p_cNonce                       - Number used only once
+     * @param cNonceLen                   - Length of the number buffer
+     * p_cIn bytes
+     * @param p_cPersonalizationString      - Additional Entropy by user
+     * @param cPersonalizationStringLen  - Length of the
+     * personalization string
+     */
+    void instantiate(const Uint8* p_cEntropyInput,
+                     const Uint64 cEntropyInputLen,
+                     const Uint8* p_cNonce,
+                     const Uint64 cNonceLen,
+                     const Uint8* p_cPersonalizationString,
+                     const Uint64 cPersonalizationStringLen);
+    /**
+     * @brief Insitantiate DRBG given Entropy, Nonce, Personal Data
+     *
+     * @param p_cEntropyInput           - vector<Uint8> of entropy
+     * @param p_cNonce                   - vector<Uint8> which has p_cNonce
+     * value
+     * @param p_cPersonalizationString  - vector<Uint8> given by user as
+     * additional entropy
+     */
+    void instantiate(const std::vector<Uint8>& cEntropyInput,
+                     const std::vector<Uint8>& cNonce,
+                     const std::vector<Uint8>& cPersonalizationString);
+    /**
+     * @brief Generates the drbg random bits given additional data and
+     * buffer to p_cOutput to
+     *
+     * @param p_cAdditionalInput     - Additional entropy buffer
+     * @param cAdditionalInputLen - Length of the additional entropy
+     * buffer
+     * @param p_cOutput               - Output buffer
+     * @param cOutputLen           - Length of the p_cOutput buffer
+     */
+    void generate(const Uint8* p_cAdditionalInput,
+                  const Uint64 cAdditionalInputLen,
+                  Uint8*       p_cOutput,
+                  const Uint64 cOutputLen);
+    /**
+     * @brief Generates the drbg random bits given additional data and
+     * buffer to p_cOutput to
+     *
+     * @param p_cAdditionalInput     - Additional entropy buffer
+     * vector<Uint8>
+     * @param p_cOutput               - Output buffer vector<Uint8>
+     */
+    void generate(const std::vector<Uint8>& cAdditionalInput,
+                  std::vector<Uint8>&       cOutput);
+    /**
+     * @brief Reseed the drbg internal state for unpredictability.
+     *
+     * @param p_cEntropyInput        - Buffer which has entropy
+     * @param cEntropyInputLen    - Length of the buffer which has
+     * entropy stored
+     * @param p_cAdditionalInput     - Additional Entropy from user
+     * @param cAdditionalInputLen - Length of the additional entropy
+     * buffer
+     */
+    void internalReseed(const Uint8* p_cEntropyInput,
+                        const Uint64 cEntropyInputLen,
+                        const Uint8* p_cAdditionalInput,
+                        const Uint64 cAdditionalInputLen);
+    /**
+     * @brief Reseed the drbg internal state for unpredictability.
+     *
+     * @param p_cEntropyInput    - Buffer which has entropy vector<Uint8>
+     * @param p_cAdditionalInput - Additional Entropy from user
+     * vector<Uint8>
+     */
+    void internalReseed(const std::vector<Uint8>& cEntropyInput,
+                        const std::vector<Uint8>& cAdditionalInput);
+
+    /**
+     * @brief Get a copy of internal Key
+     *
+     * @return std::vector<Uint8> Key vector
+     */
+    std::vector<Uint8> getKCopy() { return m_key; }
+    /**
+     * @brief Get a copy of internal Value
+     *
+     * @return std::vector<Uint8> Value vector
+     */
+    std::vector<Uint8> getVCopy() { return m_v; }
+
+    IHmacDrbg() = default;
+    IHmacDrbg(int digestSize, std::shared_ptr<alcp::digest::Digest> digestObj);
+    ~IHmacDrbg() = default;
+};
+
 void
 HmacDrbg::IHmacDrbg::concat(concat_type_t<Uint8>& in, std::vector<Uint8>& out)
 {
@@ -166,7 +359,7 @@ HmacDrbg::IHmacDrbg::HMAC_Wrapper(const std::vector<Uint8>& cIn,
     Section 10.1.2.2
 */
 void
-HmacDrbg::IHmacDrbg::Update(const Uint8* p_provided_data,
+HmacDrbg::IHmacDrbg::update(const Uint8* p_provided_data,
                             const Uint64 cProvidedDataLen)
 {
     const std::vector<Uint8> cZeroVect = std::vector<Uint8>{ 0x00 };
@@ -207,9 +400,9 @@ HmacDrbg::IHmacDrbg::Update(const Uint8* p_provided_data,
 }
 
 void
-HmacDrbg::IHmacDrbg::Update(const std::vector<Uint8>& p_provided_data)
+HmacDrbg::IHmacDrbg::update(const std::vector<Uint8>& p_provided_data)
 {
-    Update(&p_provided_data[0], p_provided_data.size());
+    update(&p_provided_data[0], p_provided_data.size());
 }
 
 /*
@@ -247,7 +440,7 @@ HmacDrbg::IHmacDrbg::instantiate(const Uint8* cEntropyInput,
     DebugPrint(m_v, "V", __FILE__, __LINE__);
 
     // (Key,V) = HMAC_DRBG_Update(seed_material,Key,V)
-    Update(p_seed_material_buff, seed_material.size());
+    update(p_seed_material_buff, seed_material.size());
 
     DebugPrint(m_key, "K", __FILE__, __LINE__);
     DebugPrint(m_v, "V", __FILE__, __LINE__);
@@ -285,7 +478,7 @@ HmacDrbg::IHmacDrbg::generate(const Uint8* cAdditionalInput,
     //     return reseed_required
     // }
     if (cAdditionalInputLen != 0) {
-        Update(cAdditionalInput, cAdditionalInputLen);
+        update(cAdditionalInput, cAdditionalInputLen);
     }
 
     // Treating size of m_v as digest size;
@@ -306,7 +499,7 @@ HmacDrbg::IHmacDrbg::generate(const Uint8* cAdditionalInput,
                          (cOutputLen - (blocks * m_v.size())));
     }
 
-    Update(cAdditionalInput, cAdditionalInputLen);
+    update(cAdditionalInput, cAdditionalInputLen);
     // FIXME: Reseed counter not implemented
     // reseed_counter += 1;
 }
@@ -339,7 +532,7 @@ HmacDrbg::IHmacDrbg::internalReseed(const Uint8* cEntropyInput,
                      cAdditionalInput,
                      cAdditionalInputLen);
 
-    Update(seed_material);
+    update(seed_material);
 
     // FIXME: Reseed counter not implemented yet
     // reseed_counter = 1
@@ -361,4 +554,112 @@ HmacDrbg::IHmacDrbg::IHmacDrbg(int                     digestSize,
     , m_v{ std::vector<Uint8>(digestSize) }
     , m_key{ std::vector<Uint8>(digestSize) }
 {}
+
+void
+HmacDrbg::update(const Uint8* p_cProvidedData, const Uint64 cProvidedDataLen)
+{
+    p_impl->update(p_cProvidedData, cProvidedDataLen);
+}
+
+void
+HmacDrbg::update(const std::vector<Uint8>& p_cProvidedData)
+{
+    p_impl->update(p_cProvidedData);
+}
+
+void
+HmacDrbg::instantiate(const Uint8* p_cEntropyInput,
+                      const Uint64 cEntropyInputLen,
+                      const Uint8* p_cNonce,
+                      const Uint64 cNonceLen,
+                      const Uint8* p_cPersonalizationString,
+                      const Uint64 cPersonalizationStringLen)
+{
+    p_impl->instantiate(p_cEntropyInput,
+                        cEntropyInputLen,
+                        p_cNonce,
+                        cNonceLen,
+                        p_cPersonalizationString,
+                        cPersonalizationStringLen);
+}
+
+void
+HmacDrbg::instantiate(const std::vector<Uint8>& cEntropyInput,
+                      const std::vector<Uint8>& cNonce,
+                      const std::vector<Uint8>& cPersonalizationString)
+{
+    p_impl->instantiate(cEntropyInput, cNonce, cPersonalizationString);
+}
+
+void
+HmacDrbg::generate(const Uint8* p_cAdditionalInput,
+                   const Uint64 cAdditionalInputLen,
+                   Uint8*       p_cOutput,
+                   const Uint64 cOutputLen)
+{
+    p_impl->generate(
+        p_cAdditionalInput, cAdditionalInputLen, p_cOutput, cOutputLen);
+}
+
+void
+HmacDrbg::generate(const std::vector<Uint8>& cAdditionalInput,
+                   std::vector<Uint8>&       cOutput)
+{
+    p_impl->generate(cAdditionalInput, cOutput);
+}
+
+void
+HmacDrbg::internalReseed(const Uint8* p_cEntropyInput,
+                         const Uint64 cEntropyInputLen,
+                         const Uint8* p_cAdditionalInput,
+                         const Uint64 cAdditionalInputLen)
+{
+    p_impl->internalReseed(p_cEntropyInput,
+                           cEntropyInputLen,
+                           p_cAdditionalInput,
+                           cAdditionalInputLen);
+}
+
+void
+HmacDrbg::internalReseed(const std::vector<Uint8>& cEntropyInput,
+                         const std::vector<Uint8>& cAdditionalInput)
+{
+    p_impl->internalReseed(cEntropyInput, cAdditionalInput);
+}
+
+std::string
+HmacDrbg::name() const
+{
+    return "HMAC-DRBG";
+}
+
+std::vector<Uint8>
+HmacDrbg::getKCopy()
+{
+    return p_impl.get()->getKCopy();
+}
+
+std::vector<Uint8>
+HmacDrbg::getVCopy()
+{
+    return p_impl.get()->getVCopy();
+}
+
+HmacDrbg::HmacDrbg()
+    : p_impl{ std::make_unique<IHmacDrbg>() }
+{}
+
+HmacDrbg::HmacDrbg(int                                   digestSize,
+                   std::shared_ptr<alcp::digest::Digest> digestObj)
+    : p_impl{ std::make_unique<IHmacDrbg>(digestSize, digestObj) }
+{}
+
+HmacDrbg::HmacDrbg(int                                   digestSize,
+                   std::shared_ptr<alcp::digest::Digest> digestObj,
+                   std::shared_ptr<IRng>                 pEntropyIn)
+    : Drbg::Drbg(pEntropyIn)
+    , p_impl{ std::make_unique<IHmacDrbg>(digestSize, digestObj) }
+{}
+
+HmacDrbg::~HmacDrbg() = default;
 } // namespace alcp::rng::drbg
