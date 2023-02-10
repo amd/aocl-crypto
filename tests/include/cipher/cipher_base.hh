@@ -219,7 +219,7 @@ class CipherBase
                       const Uint64 block_size)                = 0;
     virtual bool encrypt(alcp_data_ex_t data)                 = 0;
     virtual bool decrypt(alcp_data_ex_t data)                 = 0;
-    virtual void reset()                                      = 0;
+    virtual bool reset()                                      = 0;
     virtual ~CipherBase(){};
 };
 

@@ -41,12 +41,12 @@ class IPPCipherBase : public CipherBase
 {
   private:
     alc_cipher_mode_t m_mode;
-    IppsAESSpec*      m_ctx     = 0;
-    IppsAES_XTSSpec*  m_ctx_xts = 0;
-    IppsAES_GCMState* m_ctx_gcm = 0;
-    IppsAES_GCMState* pState    = NULL;
-    IppsAES_CCMState* m_ctx_ccm = 0;
-    IppsAES_CCMState* pStateCCM = NULL;
+    IppsAESSpec*      m_ctx       = 0;
+    IppsAES_XTSSpec*  m_ctx_xts   = 0;
+    IppsAES_GCMState* m_ctx_gcm   = 0;
+    IppsAES_GCMState* m_pStateGCM = NULL;
+    IppsAES_CCMState* m_ctx_ccm   = 0;
+    IppsAES_CCMState* m_pStateCCM = NULL;
 
     const Uint8* m_iv;
     const Uint8* m_key;
@@ -117,7 +117,7 @@ class IPPCipherBase : public CipherBase
     bool encrypt(alcp_data_ex_t data);
     bool decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt);
     bool decrypt(alcp_data_ex_t data);
-    void reset();
+    bool reset();
 };
 } // namespace alcp::testing
 #endif

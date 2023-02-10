@@ -109,6 +109,6 @@ class OpenSSLCipherBase : public CipherBase
     bool encrypt(alcp_data_ex_t data);
     bool decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt);
     bool decrypt(alcp_data_ex_t data);
-    void reset();
+    bool reset();
 };
 } // namespace alcp::testing

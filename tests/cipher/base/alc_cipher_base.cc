@@ -322,8 +322,10 @@ dec_out:
     return false;
 }
 
-void
+bool
 AlcpCipherBase::reset()
-{}
+{
+    return true;
+}
 
 } // namespace alcp::testing

@@ -625,7 +625,7 @@ RunTest(TestingCore& testingCore,
             data.m_tkeyl      = tkey.size();
             data.m_block_size = ct.size();
         }
-        bool ret = testingCore.getCipherHandler()->testingDecrypt(
+        ret = testingCore.getCipherHandler()->testingDecrypt(
             data, testingCore.getDs()->getKey());
 
         if (isgcm && data.m_tagl == 0) {

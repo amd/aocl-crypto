@@ -111,7 +111,7 @@ class AlcpCipherBase : public CipherBase
     bool init(const Uint8* key, const Uint32 key_len);
     bool encrypt(alcp_data_ex_t data);
     bool decrypt(alcp_data_ex_t data);
-    void reset();
+    bool reset();
 };
 
 } // namespace alcp::testing
