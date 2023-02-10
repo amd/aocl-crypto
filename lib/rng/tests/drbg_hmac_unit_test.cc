@@ -37,8 +37,8 @@
 
 // #include "types.h"
 using namespace alcp::rng::drbg;
-using namespace alcp::rng;
 using namespace alcp::digest;
+using alcp::base::Status;
 
 typedef std::tuple<int,                // Number of generate Calls
                    alc_digest_type_t,  // Digest Class
@@ -111,14 +111,14 @@ class TestingHmacDrbg : public HmacDrbg
 
     void testingInstantiate(const Uint8* p_cEntropyInput,
                             const Uint64 cEntropyInputLen,
-                            const Uint8* p_cNonce,
+                            const Uint8* cNonce,
                             const Uint64 cNonceLen,
                             const Uint8* p_cPersonalizationString,
                             const Uint64 p_cPersonalizationStringLen)
     {
         instantiate(p_cEntropyInput,
                     cEntropyInputLen,
-                    p_cNonce,
+                    cNonce,
                     cNonceLen,
                     p_cPersonalizationString,
                     p_cPersonalizationStringLen);
@@ -144,6 +144,11 @@ class TestingHmacDrbg : public HmacDrbg
                          std::vector<Uint8>&       cOutput)
     {
         generate(cAdditionalInput, cOutput);
+    }
+
+    Status testingSetDigest(std::shared_ptr<Digest> digestObj)
+    {
+        return setDigest(digestObj);
     }
 
     std::vector<Uint8> testingGetKCopy() { return getKCopy(); }
@@ -321,8 +326,8 @@ class HmacDrbgKatTemplate : public HmacDrbgKat
                 ASSERT_TRUE(false);
                 break;
         }
-        m_hmacDrbg = std::make_unique<TestingHmacDrbg>(p_shaObj->getHashSize(),
-                                                       p_shaObj);
+        m_hmacDrbg = std::make_unique<TestingHmacDrbg>();
+        m_hmacDrbg->testingSetDigest(p_shaObj);
     }
 };
 
@@ -398,7 +403,9 @@ TEST(Instantiate, SHA256)
     std::shared_ptr<alcp::digest::Digest> sha_obj =
         std::make_shared<alcp::digest::Sha256>();
 
-    TestingHmacDrbg hmacDrbg(32, sha_obj);
+    TestingHmacDrbg hmacDrbg;
+
+    hmacDrbg.testingSetDigest(sha_obj);
 
     std::vector<Uint8> key_exp = { 0x3D, 0xDA, 0x54, 0x3E, 0x7E, 0xEF, 0x14,
                                    0xF9, 0x36, 0x23, 0x7B, 0xE6, 0x5D, 0x09,
@@ -516,7 +523,9 @@ TEST(SHA2, SHA224KAT1)
 
     auto sha_obj = std::make_shared<alcp::digest::Sha224>();
 
-    TestingHmacDrbg hmacDrbg(sha_obj->getHashSize(), sha_obj);
+    TestingHmacDrbg hmacDrbg;
+
+    hmacDrbg.testingSetDigest(sha_obj);
 
     hmacDrbg.testingInstantiate(EntropyInput, nonce, PersonalizationString);
     EXPECT_EQ(key_init_exp, hmacDrbg.testingGetKCopy());

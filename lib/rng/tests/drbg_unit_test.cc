@@ -113,14 +113,18 @@ TEST(DRBG_HMAC, Instantiation)
 {
     auto     sha_obj = std::make_shared<alcp::digest::Sha224>();
     auto     sys_rng = std::make_shared<alcp::rng::SystemRng>();
-    HmacDrbg hmac_drbg(sha_obj->getHashSize(), sha_obj, sys_rng);
+    HmacDrbg hmac_drbg;
+    hmac_drbg.setRng(sys_rng);
+    hmac_drbg.setDigest(sha_obj);
 }
 
 TEST(DRBG_HMAC, Generate)
 {
-    auto               sha_obj = std::make_shared<alcp::digest::Sha224>();
-    auto               sys_rng = std::make_shared<alcp::rng::SystemRng>();
-    HmacDrbg           hmac_drbg(sha_obj->getHashSize(), sha_obj, sys_rng);
+    auto     sha_obj = std::make_shared<alcp::digest::Sha224>();
+    auto     sys_rng = std::make_shared<alcp::rng::SystemRng>();
+    HmacDrbg hmac_drbg;
+    hmac_drbg.setRng(sys_rng);
+    hmac_drbg.setDigest(sha_obj);
     std::vector<Uint8> output(200, 0);
     std::vector<Uint8> untouched_output(200, 0);
     std::vector<Uint8> personalization_string(0);
@@ -135,9 +139,11 @@ TEST(DRBG_HMAC, Generate)
 
 TEST(DRBG_HMAC, GenerateNull)
 {
-    auto               sha_obj = std::make_shared<alcp::digest::Sha224>();
-    auto               sys_rng = std::make_shared<NullGenerator>();
-    HmacDrbg           hmac_drbg(sha_obj->getHashSize(), sha_obj, sys_rng);
+    auto     sha_obj = std::make_shared<alcp::digest::Sha224>();
+    auto     sys_rng = std::make_shared<NullGenerator>();
+    HmacDrbg hmac_drbg;
+    hmac_drbg.setRng(sys_rng);
+    hmac_drbg.setDigest(sha_obj);
     std::vector<Uint8> output(200, 0);
     std::vector<Uint8> untouched_output = {
         0x3a, 0x01, 0x46, 0xa7, 0xa8, 0x99, 0x3b, 0x7e, 0xd6, 0xb2, 0x87, 0x77,
@@ -170,9 +176,11 @@ TEST(DRBG_HMAC, GenerateNull)
 
 TEST(DRBG_HMAC, MutiGenerate)
 {
-    auto               sha_obj = std::make_shared<alcp::digest::Sha224>();
-    auto               sys_rng = std::make_shared<alcp::rng::SystemRng>();
-    HmacDrbg           hmac_drbg(sha_obj->getHashSize(), sha_obj, sys_rng);
+    auto     sha_obj = std::make_shared<alcp::digest::Sha224>();
+    auto     sys_rng = std::make_shared<alcp::rng::SystemRng>();
+    HmacDrbg hmac_drbg;
+    hmac_drbg.setRng(sys_rng);
+    hmac_drbg.setDigest(sha_obj);
     std::vector<Uint8> output_1(10, 0);
     std::vector<Uint8> output_2(10, 0);
     std::vector<Uint8> personalization_string(0);
@@ -199,9 +207,11 @@ TEST(DRBG_HMAC, MutiGenerate)
  */
 TEST(DRBG_HMAC, GenerateMock)
 {
-    auto               sha_obj = std::make_shared<alcp::digest::Sha224>();
-    auto               sys_rng = std::make_shared<MockGenerator>();
-    HmacDrbg           hmac_drbg(sha_obj->getHashSize(), sha_obj, sys_rng);
+    auto     sha_obj = std::make_shared<alcp::digest::Sha224>();
+    auto     sys_rng = std::make_shared<MockGenerator>();
+    HmacDrbg hmac_drbg;
+    hmac_drbg.setRng(sys_rng);
+    hmac_drbg.setDigest(sha_obj);
     std::vector<Uint8> output(200, 0);
     std::vector<Uint8> untouched_output = {
         0x3a, 0x01, 0x46, 0xa7, 0xa8, 0x99, 0x3b, 0x7e, 0xd6, 0xb2, 0x87, 0x77,

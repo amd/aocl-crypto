@@ -55,9 +55,7 @@ class Drbg : public IDrbg
   public:
     Drbg() {}
 
-    Drbg(std::shared_ptr<IRng> entropy_in)
-        : m_entropy_in{ entropy_in }
-    {}
+    Status setRng(std::shared_ptr<IRng> entropyIn);
 
     Status randomize(Uint8 p_Output[], size_t length);
 

@@ -129,9 +129,17 @@ Drbg::randomize(Uint8 output[], size_t length)
 }
 
 Status
-Drbg::readRandom(Uint8* pBuf, Uint64 size)
+Drbg::readRandom(Uint8 buf[], Uint64 size)
 {
-    return randomize(pBuf, size);
+    return randomize(buf, size);
+}
+
+Status
+Drbg::setRng(std::shared_ptr<IRng> entropyIn)
+{
+    Status s     = StatusOk();
+    m_entropy_in = entropyIn;
+    return s;
 }
 
 } // namespace alcp::rng

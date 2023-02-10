@@ -58,20 +58,26 @@ class HmacDrbg : public Drbg
     std::string name() const;
 
     HmacDrbg();
-    HmacDrbg(int digestSize, std::shared_ptr<alcp::digest::Digest> digestObj);
-    HmacDrbg(int                                   digestSize,
-             std::shared_ptr<alcp::digest::Digest> digestObj,
-             std::shared_ptr<IRng>                 pEntropyIn);
     ~HmacDrbg();
 
+    /**
+     * @brief Set the Digest object
+     *
+     * @param digestObject - Object of Digest class.
+     * @return Status
+     */
+    Status setDigest(std::shared_ptr<alcp::digest::Digest> digestObject);
+
   protected:
+    // FIXME: Change alcp::digest::Digest to alcp::digest::IDigest
+
     /**
      * @brief Given Data and Length, updates key and value internally
      *
      * @param p_cProvidedData    - Uint8 of data
      * @param cProvidedDataLen  - Length of the data p_cIn bytes
      */
-    void update(const Uint8* p_cProvidedData, const Uint64 cProvidedDataLen);
+    void update(const Uint8 p_cProvidedData[], const Uint64 cProvidedDataLen);
 
     /**
      * @brief Given Data and Length, updates key and value internally
@@ -83,28 +89,28 @@ class HmacDrbg : public Drbg
     /**
      * @brief Insitantiate DRBG given Entropy, Nonce, Personal Data
      *
-     * @param p_cEntropyInput               - Pointer to location where
+     * @param cEntropyInput               - Pointer to location where
      * entropy is stored
      * @param cEntropyInputLen           - Length of the entropy buffer
-     * @param p_cNonce                       - Number used only once
+     * @param cNonce                       - Number used only once
      * @param cNonceLen                   - Length of the number buffer
      * p_cIn bytes
-     * @param p_cPersonalizationString      - Additional Entropy by user
-     * @param p_cPersonalizationStringLen  - Length of the
+     * @param cPersonalizationString      - Additional Entropy by user
+     * @param cPersonalizationStringLen  - Length of the
      * personalization string
      */
-    void instantiate(const Uint8* p_cEntropyInput,
+    void instantiate(const Uint8  cEntropyInput[],
                      const Uint64 cEntropyInputLen,
-                     const Uint8* p_cNonce,
+                     const Uint8  cNonce[],
                      const Uint64 cNonceLen,
-                     const Uint8* p_cPersonalizationString,
-                     const Uint64 p_cPersonalizationStringLen);
+                     const Uint8  cPersonalizationString[],
+                     const Uint64 cPersonalizationStringLen);
 
     /**
      * @brief Insitantiate DRBG given Entropy, Nonce, Personal Data
      *
      * @param p_cEntropyInput           - vector<Uint8> of entropy
-     * @param p_cNonce                   - vector<Uint8> which has p_cNonce
+     * @param cNonce                   - vector<Uint8> which has p_cNonce
      * value
      * @param p_cPersonalizationString  - vector<Uint8> given by user as
      * additional entropy
@@ -123,9 +129,9 @@ class HmacDrbg : public Drbg
      * @param p_cOutput               - Output buffer
      * @param cOutputLen           - Length of the p_cOutput buffer
      */
-    void generate(const Uint8* p_cAdditionalInput,
+    void generate(const Uint8  p_cAdditionalInput[],
                   const Uint64 cAdditionalInputLen,
-                  Uint8*       p_cOutput,
+                  Uint8        p_cOutput[],
                   const Uint64 cOutputLen);
 
     /**
@@ -149,9 +155,9 @@ class HmacDrbg : public Drbg
      * @param cAdditionalInputLen - Length of the additional entropy
      * buffer
      */
-    void internalReseed(const Uint8* p_cEntropyInput,
+    void internalReseed(const Uint8  p_cEntropyInput[],
                         const Uint64 cEntropyInputLen,
-                        const Uint8* p_cAdditionalInput,
+                        const Uint8  p_cAdditionalInput[],
                         const Uint64 cAdditionalInputLen);
     /**
      * @brief Reseed the drbg internal state for unpredictability.
