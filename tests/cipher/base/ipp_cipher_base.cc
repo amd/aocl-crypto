@@ -497,27 +497,27 @@ IPPCipherBase::decrypt(alcp_data_ex_t data)
 bool
 IPPCipherBase::reset()
 {
-    IppStatus status = ippStsNoErr;
+    // IppStatus status = ippStsNoErr;
 
-    if (m_mode == ALC_AES_MODE_GCM) {
-        status = ippsAES_GCMReset(m_pStateGCM);
-        if (status != 0) {
-            PrintErrors(status);
-            return false;
-        }
-        status = ippsAES_GCMInit(m_key, m_key_len / 8, m_ctx_gcm, m_ctxSize);
-        if (status != 0) {
-            PrintErrors(status);
-            return false;
-        }
-    }
-    if (m_mode == ALC_AES_MODE_CCM) {
-        status = ippsAES_CCMInit(m_key, m_key_len / 8, m_ctx_ccm, m_ctxSize);
-        if (status != 0) {
-            PrintErrors(status);
-            return false;
-        }
-    }
+    // if (m_mode == ALC_AES_MODE_GCM) {
+    //     status = ippsAES_GCMReset(m_ctx_gcm);
+    //     if (status != 0) {
+    //         PrintErrors(status);
+    //         return false;
+    //     }
+    //     status = ippsAES_GCMInit(m_key, m_key_len / 8, m_ctx_gcm, m_ctxSize);
+    //     if (status != 0) {
+    //         PrintErrors(status);
+    //         return false;
+    //     }
+    // }
+    // if (m_mode == ALC_AES_MODE_CCM) {
+    //     status = ippsAES_CCMInit(m_key, m_key_len / 8, m_ctx_ccm, m_ctxSize);
+    //     if (status != 0) {
+    //         PrintErrors(status);
+    //         return false;
+    //     }
+    // }
     return true;
 }
 

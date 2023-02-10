@@ -41,11 +41,11 @@ class IPPCipherBase : public CipherBase
 {
   private:
     alc_cipher_mode_t m_mode;
-    IppsAESSpec*      m_ctx       = 0;
-    IppsAES_XTSSpec*  m_ctx_xts   = 0;
-    IppsAES_GCMState* m_ctx_gcm   = 0;
+    IppsAESSpec*      m_ctx       = NULL;
+    IppsAES_XTSSpec*  m_ctx_xts   = NULL;
+    IppsAES_GCMState* m_ctx_gcm   = NULL;
     IppsAES_GCMState* m_pStateGCM = NULL;
-    IppsAES_CCMState* m_ctx_ccm   = 0;
+    IppsAES_CCMState* m_ctx_ccm   = NULL;
     IppsAES_CCMState* m_pStateCCM = NULL;
 
     const Uint8* m_iv;

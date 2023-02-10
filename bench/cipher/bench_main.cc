@@ -92,7 +92,7 @@ CipherAes(benchmark::State& state,
         data.m_in  = &(vec_out[0]);
         data.m_out = &(vec_in[0]);
         if (alcpMode == ALC_AES_MODE_GCM || alcpMode == ALC_AES_MODE_CCM) {
-            if (!cb->reset()) {
+            if (!cb->init(key, keylen)) {
                 std::cout << "BENCH_RESET_FAILURE" << std::endl;
                 exit(-1);
             }
@@ -113,7 +113,7 @@ CipherAes(benchmark::State& state,
             }
         }
         if (alcpMode == ALC_AES_MODE_GCM || alcpMode == ALC_AES_MODE_CCM) {
-            if (!cb->reset()) {
+            if (!cb->init(key, keylen)) {
                 std::cout << "BENCH_RESET_FAILURE" << std::endl;
                 exit(-1);
             }
