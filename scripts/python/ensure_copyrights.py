@@ -107,7 +107,7 @@ class Copyright:
         return start_year,end_year
         # TODO: Exclude cmake from the above.
 
-    def ensure_copyright_years(self,end_year_is_current=True):
+    def ensure_copyright_years(self,end_year_is_current=True,warn_start_year=True):
         exp_start_year = self.find_first_commit_year()
         exp_end_year = None
         if(end_year_is_current):
@@ -124,6 +124,7 @@ class Copyright:
 
         # Act -> Actual
         act = self.parse_file_start_end_year()
+        act_start_year,act_end_year = act
         if(sum([(type(i) == str) for i in act])!=2):
             if(VERBOSE_LEVEL>=1):
                 frameinfo = Copyright.getframeinfo(Copyright.currentframe())
@@ -134,8 +135,13 @@ class Copyright:
                 frameinfo = Copyright.getframeinfo(Copyright.currentframe())
                 Error.print_ok(frameinfo,"PASS")
             return True
+        elif(exp_end_year == act[1]):
+            if((exp_start_year != act_start_year) and warn_start_year):
+                Colors.set_foreground("YELLOW")
+                print(f"Expected start was {exp_start_year} but got {act_start_year}")
+                Colors.reset()
+            return True
         else:
-            act_start_year,act_end_year = act
             if(VERBOSE_LEVEL>=1):
                 if(exp_start_year == act_start_year):
                     if(VERBOSE_LEVEL>=2):
@@ -168,16 +174,16 @@ def ensure_staged_files_copyrights():
     problems_detected = False
     for i in files:
         if VERBOSE_LEVEL>1:
-            print("Checking file:",i)
+            print("Checking file: ",i)
         copyright = Copyright(i)
         try:
             if(not copyright.ensure_copyright_years(end_year_is_current=True)):
                 problems_detected = True
                 if(VERBOSE_LEVEL>=1):
-                    print("Above reported problem is for file:"+i+"\n")
+                    print("Above reported problem is for file: "+i+"\n")
         except AssertionError as e:
             print(e)
-            print("Problem detected while parsing for Copyright for file:"+i)
+            print("Problem detected while parsing for Copyright for file: "+i)
             # raise e
             problems_detected = True
         del copyright
