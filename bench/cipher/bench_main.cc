@@ -83,17 +83,17 @@ CipherAes(benchmark::State& state,
     data.m_tkey    = tkey;
     data.m_tagBuff = tagBuffer.get();
     data.m_tkeyl   = 16;
-    if (enc == false
+    if (!enc
         && (alcpMode == ALC_AES_MODE_GCM || alcpMode == ALC_AES_MODE_CCM)) {
         if (!cb->encrypt(data)) {
-            std::cout << "BENCH_ENC_FAILURE" << std::endl;
+            std::cout << "GCM/CCM: BENCH_ENC_FAILURE" << std::endl;
             exit(-1);
         }
         data.m_in  = &(vec_out[0]);
         data.m_out = &(vec_in[0]);
-        if (alcpMode == ALC_AES_MODE_GCM || alcpMode == ALC_AES_MODE_CCM) {
+        if (alcpMode == ALC_AES_MODE_GCM) {
             if (!cb->init(key, keylen)) {
-                std::cout << "BENCH_RESET_FAILURE" << std::endl;
+                std::cout << "GCM: BENCH_INIT_FAILURE" << std::endl;
                 exit(-1);
             }
         }
@@ -105,16 +105,14 @@ CipherAes(benchmark::State& state,
                 exit(-1);
             }
         } else {
-            if (useossl)
-                cb->init(key, keylen);
             if (!cb->decrypt(data)) {
                 std::cout << "BENCH_DEC_FAILURE" << std::endl;
                 exit(-1);
             }
         }
-        if (alcpMode == ALC_AES_MODE_GCM || alcpMode == ALC_AES_MODE_CCM) {
+        if (alcpMode == ALC_AES_MODE_GCM) {
             if (!cb->init(key, keylen)) {
-                std::cout << "BENCH_RESET_FAILURE" << std::endl;
+                std::cout << "GCM: BENCH_RESET_FAILURE" << std::endl;
                 exit(-1);
             }
         }
