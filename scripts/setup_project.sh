@@ -24,9 +24,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Include the capability for colors
-source colors.sh
-
 
 # Framework functions
 check_file_exists(){
@@ -117,7 +114,7 @@ ensure_clang_format(){
 }
 
 ensure_git_precommit_hook(){
-    ensure_linking "$GIT_WORKING_DIR/scripts/git-hooks/pre-commit.sh" "$GIT_WORKING_DIR/.git/hooks/pre-commit"
+    ensure_linking "$GIT_WORKING_DIR/scripts/git-hooks/pre-commit.sh" "$GIT_HOOKS_DIR/pre-commit"
 }
 
 ensure_git_hooks(){
@@ -131,7 +128,7 @@ clean(){
         set_fg_color $YELLOW
         echo "Removing ""$GIT_WORKING_DIR/.git/hooks/pre-commit"
         reset_color
-        rm "$GIT_WORKING_DIR/.git/hooks/pre-commit" 2>&1 > /dev/null
+        rm "$GIT_HOOKS_DIR/pre-commit" 2>&1 > /dev/null
         warn_return_value 0
         set_fg_color $YELLOW
         echo "Removing ""$GIT_WORKING_DIR/.clang-format"
@@ -149,8 +146,14 @@ clean(){
 check_git_dir;
 
 GIT_WORKING_DIR=$(git rev-parse --show-toplevel 2>&1)
+GIT_HOOKS_DIR=$(git rev-parse --git-path hooks 2>&1)
+
+# Include the capability for colors
+source $GIT_WORKING_DIR/scripts/colors.sh
+
 set_fg_color $YELLOW
 echo "Found Working Git Directory as $GIT_WORKING_DIR"
+echo "Found Working Git Hooks Directory as $GIT_HOOKS_DIR"
 reset_color
 
 clean $@;
