@@ -29,7 +29,7 @@ Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTests.cmake)
 set(TEST_FILES 
 
   bignum_test.cc
-
+  array_view_test.cc
   )
 
 alcp_module("Utils")
@@ -39,7 +39,7 @@ alcp_module("Utils")
 foreach(testFile IN LISTS TEST_FILES)
     get_filename_component(currentTestName ${testFile} NAME_WLE)
     get_filename_component(currentTestFile ${testFile} NAME)
-    #message("Test-> " ${currentTestName} " file " ${currentTestFile} )
+    message("Test-> " ${currentTestName} " file " ${currentTestFile} )
     alcp_cc_test(${currentTestName}
              DIRECTORY tests/
              SOURCES   "${currentTestFile}"

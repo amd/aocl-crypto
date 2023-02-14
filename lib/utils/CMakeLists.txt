@@ -24,7 +24,7 @@
  # POSSIBILITY OF SUCH DAMAGE.
  
 
-set(UTILS_SRCS
+SET(UTILS_SRCS
   bignum.cc
   logger.cc
   #mempool.cc
@@ -32,13 +32,15 @@ set(UTILS_SRCS
   cpuid.cc
   )
 
-add_subdirectory(tests)
+IF (ALCP_ENABLE_TESTS)
+  ADD_SUBDIRECTORY(tests)
+ENDIF()
 
-target_sources(alcp
+TARGET_SOURCES(alcp
 	PRIVATE
 		${UTILS_SRCS}
 	)
 
 IF(UNIX)
-target_link_libraries(alcp PUBLIC libcrypto.so)
+  TARGET_LINK_LIBRARIES(alcp PUBLIC libcrypto.so)
 ENDIF()
