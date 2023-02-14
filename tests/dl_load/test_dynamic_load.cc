@@ -27,42 +27,43 @@
  */
 
 #include "dl_load/dl_load.hh"
-#include <cstdint>
 
-int
-main(int argc, char* argv[])
+/*FIXME: is this test name good to go? */
+TEST(ALCP, DL_LOAD)
 {
     void* handle;
-    char* alcp_lib_path = NULL;
 
-    printf("Running dynamic loading test\n");
+    /*FIXME: need tweak for windows */
+    const char* alcp_lib_path = "./libalcp.so";
 
-    if (argc <= 1) {
-        printf("Error! Provide .so file path as argument\n");
-        return 1;
-    }
-
-    alcp_lib_path = argv[1];
+    std::cout << "Running dynamic loading test" << std::endl;
 
     handle = dlopen(alcp_lib_path, RTLD_LAZY);
     if (!handle) {
-        printf("Error! %s\n", dlerror());
-        return 1;
+        std::cout << "Error!" << dlerror() << std::endl;
+        FAIL();
     }
 
-    /* now just try to load these symbols and call them dont bother about the
-     * outputs */
+    /* now just try to load these symbols and call them */
     /* store these in fn pointers */
     func_print_version f_version =
         (func_print_version)dlsym(handle, "alcp_get_version");
 
     if (f_version == NULL) {
-        printf("Error, null func ptr\n");
-        return 1;
+        std::cout << "Error, null func ptr" << std::endl;
+        FAIL();
     }
 
     /* now call these */
-    printf("ALCP_VERSION_IS: %s\n", (*f_version)());
+    std::cout << "ALCP_VERSION_IS: " << (*f_version)() << std::endl;
     dlclose(handle);
-    return 0;
+
+    EXPECT_TRUE(true);
+}
+
+int
+main(int argc, char** argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

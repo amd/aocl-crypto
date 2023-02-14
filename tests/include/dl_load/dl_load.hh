@@ -26,8 +26,13 @@
  *
  */
 
+#pragma once
+
 #include <cstddef>
+#include <cstdint>
 #include <dlfcn.h>
+#include <gtest/gtest.h>
+#include <memory>
 #include <stdio.h>
 
 typedef char* (*func_print_version)();

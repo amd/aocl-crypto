@@ -35,7 +35,10 @@ if (ALCP_USE_ASAN)
     SET(LIBS ${LIBS} asan)
 endif()
 
+# link to -lgtest -alcp -dl for dynamic loading
+SET(LIBS ${LIBS} gtest alcp)
 SET(LIBS_DL ${LIBS} dl)
+
 ADD_EXECUTABLE(test_dynamic_load test_dynamic_load.cc)
 
 TARGET_INCLUDE_DIRECTORIES(test_dynamic_load PRIVATE
