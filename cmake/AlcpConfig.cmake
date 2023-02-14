@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2023-2023, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -50,6 +50,15 @@ FUNCTION(GEN_CONF)
     ELSEIF (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         SET(COMPILER_IS_MSVC ON)
     ENDIF()
+
+    # Set lib name
+    IF(ALCP_BUILD_OS_LINUX)
+        SET(ALCP_LIB_OUTPUT_FILE_NAME_STRING "${ALCP_BINARY_DIR}/libalcp.so")
+    ENDIF(ALCP_BUILD_OS_LINUX)
+    # FIXME (Need to find a way to get the bin name from cmake)
+    IF(ALCP_BUILD_OS_WINDOWS)
+        SET(ALCP_LIB_OUTPUT_FILE_NAME_STRING "${ALCP_BINARY_DIR}/libalcp.dll")
+    ENDIF(ALCP_BUILD_OS_WINDOWS)
 
     # CONFIGURE A HEADER FILE TO PASS SOME OF THE CMAKE SETTINGS
     # TO THE SOURCE CODE

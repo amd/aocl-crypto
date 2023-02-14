@@ -33,8 +33,7 @@ TEST(ALCP, DL_LOAD)
 {
     void* handle;
 
-    /*FIXME: need tweak for windows */
-    const char* alcp_lib_path = "./libalcp.so";
+    const char* alcp_lib_path = ALCP_LIB_OUTPUT_FILE_NAME_STRING;
 
     std::cout << "Running dynamic loading test" << std::endl;
 
