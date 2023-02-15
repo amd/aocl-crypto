@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -256,7 +256,9 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
     }
 
     /* generate test data vector, and use it chunk by chunk in the loop */
-    std::vector<Uint8> msg_full = rb.genRandomBytes(MAX_LOOP);
+    std::vector<Uint8>                 msg_full = rb.genRandomBytes(MAX_LOOP);
+    std::vector<Uint8>::const_iterator pos1, pos2;
+    auto                               rng = std::default_random_engine{};
 
     for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
         if (!bbxreplay) {
@@ -276,9 +278,10 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
 
         alcp_digest_data_t data_alc, data_ext;
 
-        std::vector<Uint8>::const_iterator pos1 = msg_full.begin();
-        std::vector<Uint8>::const_iterator pos2 = msg_full.begin() + i;
-        std::vector<Uint8>                 msg(pos1, pos2);
+        msg_full = ShuffleVector(msg_full, rng);
+        pos1     = msg_full.end() - i;
+        pos2     = msg_full.end();
+        std::vector<Uint8> msg(pos1, pos2);
 
         /* load test data */
         data_alc.m_msg        = &(msg[0]);

@@ -30,6 +30,7 @@
 #include "colors.hh"
 #include <gtest/gtest.h>
 #include <memory>
+#include <random>
 
 using namespace alcp::testing;
 
@@ -144,6 +145,14 @@ typedef enum
     IPP,
     ALCP,
 } lib_t;
+
+/* shuffle vector */
+inline std::vector<Uint8>
+ShuffleVector(std::vector<Uint8> InputVec, std::default_random_engine rng)
+{
+    std::shuffle(std::begin(InputVec), std::end(InputVec), rng);
+    return InputVec;
+}
 
 void
 parseArgs(int argc, char** argv)

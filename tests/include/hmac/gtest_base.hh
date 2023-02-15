@@ -180,19 +180,22 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
     std::vector<Uint8> key_full = rb.genRandomBytes(KEY_LEN_MAX);
 
     std::vector<Uint8>::const_iterator pos1, pos2;
+    auto                               rng = std::default_random_engine{};
 
     for (int j = KEY_LEN_START; j < KEY_LEN_MAX; j += KEY_LEN_INC) {
         for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
             alcp_hmac_data_t data_alc, data_ext;
 
             /* generate msg data from msg_full */
-            pos1 = msg_full.begin();
-            pos2 = msg_full.begin() + i;
+            msg_full = ShuffleVector(msg_full, rng);
+            pos1     = msg_full.end() - i;
+            pos2     = msg_full.end();
             std::vector<Uint8> msg(pos1, pos2);
 
             /* generate random key value*/
-            pos1 = key_full.begin();
-            pos2 = key_full.begin() + j;
+            key_full = ShuffleVector(key_full, rng);
+            pos1     = key_full.end() - j;
+            pos2     = key_full.end();
             std::vector<Uint8> key(pos1, pos2);
 
             /* load test data */

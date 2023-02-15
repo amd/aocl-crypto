@@ -369,12 +369,14 @@ AesCrosstest(int               keySize,
 
     /* generate these only once and use it in the loop below, chunk by chunk */
     std::vector<Uint8> msg_full  = rb.genRandomBytes(MAX_LOOP * size);
-    std::vector<Uint8> key_full  = rb.genRandomBytes(MAX_LOOP * key_size);
+    std::vector<Uint8> key_full  = rb.genRandomBytes(key_size);
     std::vector<Uint8> iv_full   = rb.genRandomBytes(IVL_MAX);
     std::vector<Uint8> add_full  = rb.genRandomBytes(ADL_MAX);
-    std::vector<Uint8> tkey_full = rb.genRandomBytes(MAX_LOOP * key_size);
+    std::vector<Uint8> tkey_full = rb.genRandomBytes(key_size);
 
     std::vector<Uint8>::const_iterator pos1, pos2;
+
+    auto rng = std::default_random_engine{};
 
     if (extTC != nullptr) {
         for (int i = LOOP_START; i < MAX_LOOP; i += INC_LOOP) {
@@ -393,12 +395,13 @@ AesCrosstest(int               keySize,
 
             auto tagBuff = std::make_unique<Uint8[]>(tagLength);
 
-            pos1 = msg_full.begin();
-            pos2 = msg_full.begin() + (i * size);
+            pos1 = msg_full.end() - i * size;
+            pos2 = msg_full.end();
             std::vector<Uint8> pt(pos1, pos2);
 
-            pos1 = key_full.begin();
-            pos2 = key_full.begin() + (key_size / 8);
+            key_full = ShuffleVector(key_full, rng);
+            pos1     = key_full.begin();
+            pos2     = key_full.begin() + (key_size / 8);
             std::vector<Uint8> key(pos1, pos2);
 
             pos1 = iv_full.begin();
@@ -409,8 +412,9 @@ AesCrosstest(int               keySize,
             pos2 = add_full.begin() + (adl);
             std::vector<Uint8> add(pos1, pos2);
 
-            pos1 = tkey_full.begin();
-            pos2 = tkey_full.begin() + (key_size / 8);
+            tkey_full = ShuffleVector(tkey_full, rng);
+            pos1      = tkey_full.begin();
+            pos2      = tkey_full.begin() + (key_size / 8);
             std::vector<Uint8> tkey(pos1, pos2);
 
             if (!bbxreplay) {
