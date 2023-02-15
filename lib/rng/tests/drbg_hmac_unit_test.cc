@@ -26,8 +26,9 @@
  *
  */
 
+#include "alcp/base.hh"
+
 #include "../../rng/include/hardware_rng.hh"
-#include "alcp/digest.h"
 #include "digest.hh"
 #include "digest/sha2.hh"
 #include "openssl/bio.h"
@@ -35,7 +36,6 @@
 #include "gtest/gtest.h"
 #include <iostream>
 
-// #include "types.h"
 using namespace alcp::rng::drbg;
 using namespace alcp::digest;
 using alcp::base::Status;

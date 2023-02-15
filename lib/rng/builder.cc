@@ -84,6 +84,7 @@ __build_rng(const alc_rng_info_t& rRngInfo, Context& rCtx)
     return StatusOk();
 }
 
+#if 0
 static Status
 __buld_rng_class(const alc_rng_info_t& rRngInfo, void*& placed_memory)
 {
@@ -103,6 +104,7 @@ __buld_rng_class(const alc_rng_info_t& rRngInfo, void*& placed_memory)
     }
     return sts;
 }
+#endif
 
 alc_error_t
 RngBuilder::Build(const alc_rng_info_t& rRngInfo, Context& rCtx)

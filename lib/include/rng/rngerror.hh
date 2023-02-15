@@ -44,6 +44,9 @@ enum ErrorCode : Uint16
 
     /* ErrorCode:eNotPermitted */
     eNotPermitted = 7,
+
+    /* ErrorCode:eNoEntropySource */
+    eNoEntropySource = 9,
 };
 
 class RngError final : public ErrorBase
@@ -100,6 +103,7 @@ class RngError final : public ErrorBase
             { ec::eOk, "All is Well !!" },
             { ec::eNoEntropy, "Not Enough Entropy" },
             { ec::eNotPermitted, "Not Permitted" },
+            { ec::eNoEntropySource, "Entropy source not defined"},
         };
 
         RngErrorMapT::const_iterator it =

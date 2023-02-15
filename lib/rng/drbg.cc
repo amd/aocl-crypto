@@ -26,33 +26,34 @@
  *
  */
 
-#include "rng/drbg.hh"
 #include "alcp/base.hh"
+
 #include "rng.hh"
+#include "rng/drbg.hh"
+#include "rng/rngerror.hh"
 #include <memory>
 
 namespace alcp::rng {
 
-// FIXME: Predicition resistance is to be added
 Status
-Drbg::initialize(int                 security_strength,
+Drbg::initialize(int                 cSecurityStrength,
                  std::vector<Uint8>& personalization_string)
 {
     Status s = StatusOk();
 #if 0
-            /*
-                FIXME: Implement Security Strength
-                getCurrMinSecurity() -> Implemented in HMAC_Drbg
-                Calling the above function returns the min security strength.
-            */
-            if (security_strength < get_curr_min_security()) {
-                // Bail out
-                // Return error here
-                s = alcp::base::InternalError(
-                    "ERROR: Requested algorithm does not meet min requirements "
-                    "for security level specified.");
-                return s;
-            }
+        /*
+            FIXME: Implement Security Strength
+            getCurrMinSecurity() -> Implemented in HMAC_Drbg
+            Calling the above function returns the min security strength.
+        */
+        if (cSecurityStrength < get_curr_min_security()) {
+            // Bail out
+            // Return error here
+            s = alcp::base::InternalError(
+                "ERROR: Requested algorithm does not meet min requirements "
+                "for security level specified.");
+            return s;
+        }
 #endif
     std::vector<Uint8> entropy_input(128);
     std::vector<Uint8> nonce(128);
@@ -71,12 +72,12 @@ Drbg::initialize(int                 security_strength,
     return s;
 }
 
-// FIXME: Predicition resistance is to be added
 Status
-Drbg::randomize(Uint8               output[],
-                size_t              length,
-                int                 security_strength,
-                std::vector<Uint8>& additional_input)
+Drbg::randomize(Uint8        p_Output[],
+                const size_t cOutputLength,
+                int          cSecurityStrength,
+                const Uint8  cAdditionalInput[],
+                const size_t cAdditionalInputLength)
 {
     Status s = StatusOk();
 #if 0
@@ -96,7 +97,7 @@ Drbg::randomize(Uint8               output[],
                 getCurrSecurityStrength() -> Implemented in HMAC_Drbg
                 Calling the above function returns the current security strength.
             */
-            if (security_strength >= getCurrSecurityStrength()) {
+            if (cSecurityStrength >= getCurrSecurityStrength()) {
                 // Bail out
                 // Return error here
                 s = alcp::base::InternalError(
@@ -117,8 +118,33 @@ Drbg::randomize(Uint8               output[],
             // FIXME: Handle Predicition Resistance Request
             // FIXME: Handle reseed required flag
 #endif
-    generate(&additional_input[0], additional_input.size(), output, length);
+    if (m_prediction_resistance) {
+        // If prediction resistance then reseed before generating the random
+        // bits.
+        std::vector<Uint8> entropy_input(128);
+        s = m_entropy_in->randomize(&entropy_input[0], entropy_input.size());
+        if (!s.ok()) {
+            return s;
+        }
+        internalReseed(&entropy_input[0],
+                       entropy_input.size(),
+                       &cAdditionalInput[0],
+                       cAdditionalInputLength);
+    }
+    generate(cAdditionalInput, cAdditionalInputLength, p_Output, cOutputLength);
     return s;
+}
+Status
+Drbg::randomize(Uint8               p_Output[],
+                const size_t        cOutputLength,
+                const int           cSecurityStrength,
+                std::vector<Uint8>& additional_input)
+{
+    return randomize(p_Output,
+                     cOutputLength,
+                     cSecurityStrength,
+                     &additional_input[0],
+                     additional_input.size());
 }
 
 Status
@@ -139,6 +165,19 @@ Drbg::setRng(std::shared_ptr<IRng> entropyIn)
 {
     Status s     = StatusOk();
     m_entropy_in = entropyIn;
+    return s;
+}
+
+Status
+Drbg::setPredictionResistance(bool value)
+{
+    Status s                = StatusOk();
+    m_prediction_resistance = value;
+    if (m_entropy_in) {
+        m_entropy_in->setPredictionResistance(value);
+    } else {
+        s = Status(RngError{ rng::ErrorCode::eNoEntropySource });
+    }
     return s;
 }
 

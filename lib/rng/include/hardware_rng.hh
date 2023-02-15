@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,27 +28,28 @@
 
 #pragma once
 
-
 #include "alcp/base.hh"
 #include "rng.hh"
 
-
 namespace alcp::rng {
 
-    /**
-     * RNG provided by hardware
-     */
-    class HardwareRng : public IRng
-    {
-      private:
-      public:
-        HardwareRng();
-        Status      randomize(Uint8 output[], size_t length) override;
-	Status      readRandom(Uint8* pBuf, Uint64 size) override;
-        String      name() const override { return "HwRNG"; }
-        Uint8       nextByte();
-        bool        isSeeded() const override;
-        size_t      reseed() override;
-    };
+/**
+ * RNG provided by hardware
+ */
+class HardwareRng : public IRng
+{
+  private:
+    bool m_prediction_resistance = false;
+
+  public:
+    HardwareRng();
+    Status randomize(Uint8 output[], size_t length) override;
+    Status readRandom(Uint8* pBuf, Uint64 size) override;
+    String name() const override { return "HwRNG"; }
+    Uint8  nextByte();
+    bool   isSeeded() const override;
+    size_t reseed() override;
+    Status setPredictionResistance(bool value) override;
+};
 
 } // namespace alcp::rng

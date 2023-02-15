@@ -37,11 +37,11 @@ namespace alcp::rng {
 class IDrbg : public IRng
 {
   public:
-    virtual Status initialize(int                 security_strength,
+    virtual Status initialize(int                 securityStrength,
                               std::vector<Uint8>& p_cPersonalizationString) = 0;
     virtual Status randomize(Uint8               p_Output[],
                              size_t              length,
-                             int                 security_strength,
+                             int                 securityStrength,
                              std::vector<Uint8>& p_cAdditionalInput)        = 0;
 
     virtual Status randomize(Uint8 p_Output[], size_t length) = 0;
@@ -50,7 +50,8 @@ class IDrbg : public IRng
 class Drbg : public IDrbg
 {
   private:
-    std::shared_ptr<IRng> m_entropy_in = {};
+    std::shared_ptr<IRng> m_entropy_in            = {};
+    bool                  m_prediction_resistance = false;
 
   public:
     Drbg() {}
@@ -59,24 +60,32 @@ class Drbg : public IDrbg
 
     Status randomize(Uint8 p_Output[], size_t length);
 
+    // FIXME: Predicition resistance is to be added
+    Status randomize(Uint8        p_Output[],
+                     const size_t cOutputLength,
+                     int          securityStrength,
+                     const Uint8  cAdditionalInput[],
+                     const size_t cAdditionalInputLength);
+
+    Status randomize(Uint8               p_Output[],
+                     const size_t        cOutputLength,
+                     const int           cSecurityStrength,
+                     std::vector<Uint8>& additional_input);
+
     Status readRandom(Uint8* pBuf, Uint64 size);
 
     bool isSeeded() const { return true; }
 
     size_t reseed() { return 0; }
 
-    Status initialize(int                 security_strength,
+    Status setPredictionResistance(bool value);
+
+    Status initialize(int                 securityStrength,
                       std::vector<Uint8>& p_cPersonalizationString);
 
     virtual std::string name() const = 0;
 
   protected:
-    // FIXME: Predicition resistance is to be added
-    Status randomize(Uint8               p_Output[],
-                     size_t              length,
-                     int                 security_strength,
-                     std::vector<Uint8>& p_cAdditionalInput);
-
     virtual void instantiate(const Uint8* p_cEntropyInput,
                              const Uint64 cEntropyInputLen,
                              const Uint8* p_cNonce,
@@ -97,7 +106,6 @@ class Drbg : public IDrbg
     virtual void generate(const std::vector<Uint8>& p_cAdditionalInput,
                           std::vector<Uint8>&       output) = 0;
 
-  protected:
     virtual void internalReseed(const Uint8* p_cEntropyInput,
                                 const Uint64 cEntropyInputLen,
                                 const Uint8* p_cAdditionalInput,

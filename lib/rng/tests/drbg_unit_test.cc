@@ -87,6 +87,12 @@ class NullGenerator : public IRng
     bool isSeeded() const { return true; }
 
     size_t reseed() { return 0; }
+
+    Status setPredictionResistance(bool value)
+    {
+        Status s = StatusOk();
+        return s;
+    }
 };
 
 /**
@@ -107,6 +113,12 @@ class MockGenerator : public IRng
     bool isSeeded() const { return true; }
 
     size_t reseed() { return 0; }
+
+    Status setPredictionResistance(bool value)
+    {
+        Status s = StatusOk();
+        return s;
+    }
 };
 
 TEST(DRBG_HMAC, Instantiation)

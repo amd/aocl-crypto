@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,8 +28,8 @@
 
 #include <cstdlib>
 
-#include "system_rng.hh"
 #include "rng/rngerror.hh"
+#include "system_rng.hh"
 // Enable debug for debugging the code
 // #define DEBUG
 
@@ -146,7 +146,7 @@ SystemRng::SystemRng(ISeeder& iss)
 }
 
 Status
-SystemRng::readRandom(Uint8 *buf, size_t length)
+SystemRng::readRandom(Uint8* buf, size_t length)
 {
     return SystemRngImpl::randomize(buf, length);
 }
@@ -167,6 +167,14 @@ size_t
 SystemRng::reseed()
 {
     return 0;
+}
+
+Status
+SystemRng::setPredictionResistance(bool value)
+{
+    Status s                = StatusOk();
+    m_prediction_resistance = value;
+    return s;
 }
 
 } // namespace alcp::rng
