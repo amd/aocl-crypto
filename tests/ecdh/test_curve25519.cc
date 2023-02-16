@@ -42,10 +42,9 @@
 #include "ecdh/ippcp_ecdh.hh"
 #endif
 
-
 #ifdef WIN32
 #include "utils/time.hh"
-#elif
+#else
 #include <sys/time.h>
 #endif
 
