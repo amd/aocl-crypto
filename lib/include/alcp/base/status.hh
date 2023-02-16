@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include "alcp/base/error.hh"
+//#include "alcp/base/error.hh"
 #include "alcp/interface/Ierror.hh"
 #include "alcp/types.hh"
 
@@ -46,35 +46,35 @@ namespace alcp::base {
 class Status final
 {
   public:
-    // Should initialize with an OK status
-    explicit Status(Uint64 code)
-        : m_code{ code }
-    {}
-
     explicit Status(IError&& ie)
         : m_code{ ie.code() }
         , m_message{ ie.message() }
-    {}
+    {
+    }
 
     explicit Status(IError& ie)
         : m_code{ ie.code() }
         , m_message{ ie.message() }
-    {}
+    {
+    }
 
     Status(IError& ie, const String& msg)
         : m_code{ ie.code() }
         , m_message{ makeMessage(ie.message(), msg) }
-    {}
+    {
+    }
 
     Status(IError& ie, const StringView msg)
         : m_code{ ie.code() }
         , m_message{ makeMessage(ie.message(), msg) }
-    {}
+    {
+    }
 
     Status(IError&& ie, const StringView msg)
         : m_code{ ie.code() }
         , m_message{ makeMessage(ie.message(), msg) }
-    {}
+    {
+    }
 
     ALCP_DEFS_DEFAULT_COPY_AND_ASSIGNMENT(Status);
 
@@ -84,7 +84,7 @@ class Status final
     // Status::ok()
     // All is Well !!! if m_error is eOk or eNone
     ALCP_DEFS_NO_DISCARD bool ok() const;
-    std::string_view               message() const { return m_message; }
+    std::string_view          message() const { return m_message; }
 
     /**
      * @name code()
@@ -133,6 +133,14 @@ class Status final
     }
 
   private:
+    // Should initialize with an OK status
+    explicit Status(Uint64 code)
+        : m_code{ code }
+    {
+    }
+
+    friend Status StatusOk();
+
     String& makeMessage(const String& module_error, const String& details)
     {
         m_message = module_error + String(" ") + details;
@@ -179,11 +187,8 @@ Status::ok() const
  * @return
  * Status with message and a code.
  */
-inline Status
-StatusOk()
-{
-    return Status(ErrorCode::eOk);
-}
+Status
+StatusOk();
 
 // clang-format off
 /*
@@ -197,19 +202,20 @@ ALCP_DEFS_NO_DISCARD bool IsNotFound(const Status& status);
 ALCP_DEFS_NO_DISCARD bool IsNotAvailable(const Status& status);
 ALCP_DEFS_NO_DISCARD bool IsNotImplemented(const Status& status);
 ALCP_DEFS_NO_DISCARD bool IsUnknown(const Status& status);
+// clang-format on
 
 /*
  * Handy creators that return Status
  */
-Status AbortedError(std::string_view msg);
-Status AlreadyExistsError(std::string_view msg);
-Status InternalError(std::string_view msg);
-Status InvalidArgumentError(std::string_view msg);
-Status NotFoundError(std::string_view msg);
-Status NotAvailableError(std::string_view msg);
-Status NotImplementedError(std::string_view msg);
-Status UnknownError(std::string_view msg);
-
-// clang-format on
+namespace status {
+    Status Aborted(StringView msg);
+    Status AlreadyExists(StringView msg);
+    Status InternalError(StringView msg);
+    Status InvalidArgument(StringView msg);
+    Status NotFound(StringView msg);
+    Status NotAvailable(StringView msg);
+    Status NotImplemented(StringView msg);
+    Status Unknown(StringView msg);
+} // namespace status
 
 } // namespace alcp::base

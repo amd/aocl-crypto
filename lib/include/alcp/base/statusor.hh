@@ -38,8 +38,8 @@ template<typename T>
 class StatusOr
 {
   public:
-    //using value_type = T;
-    //using type       = T;
+    // using value_type = T;
+    // using type       = T;
 
   public:
     inline StatusOr();
@@ -69,6 +69,30 @@ class StatusOr
     inline const Status& status() const { return m_status; }
     inline bool          ok() const { return m_status.ok(); }
 
+    T value() const {}
+
+    /**
+     * @brief  Returns reference to underlaying object
+     * @other  Requires this->ok() to be true, otherwise behaviour is undefined
+     *
+     * @details Use this->ok() to make sure there is an object 'T'.
+     *          When in doubt use the StatusOr<T>::value() API to ensure
+     *          appropriate safe behaviour
+     */
+    T&        operator*() &;
+    T&&       operator*() &&;
+    const T&  operator*() const&;
+    const T&& operator*() const&&;
+
+    /**
+     * @brief Returns pointer to current value
+     *
+     * @details Use this->ok() to make sure there was no error and object
+     *          of type 'T' is valid
+     */
+    const T* operator->() const;
+    T*       operator->();
+
   private:
     std::optional<T> m_value;
     Status           m_status;
@@ -83,8 +107,9 @@ class StatusOr
 
 template<typename T>
 inline StatusOr<T>::StatusOr()
-		: m_status{ }
-{}
+    : m_status{}
+{
+}
 
 template<typename T>
 inline StatusOr<T>::StatusOr(Status& sts)
@@ -96,11 +121,13 @@ inline StatusOr<T>::StatusOr(Status& sts)
 template<typename T>
 inline StatusOr<T>::StatusOr(const T& value)
     : m_value{ value }
-{}
+{
+}
 
 template<typename T>
 inline StatusOr<T>::StatusOr(T&& value)
     : m_value{ std::move(value) }
-{}
+{
+}
 
-} // namespace alcp
+} // namespace alcp::base
