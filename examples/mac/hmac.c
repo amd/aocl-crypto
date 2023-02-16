@@ -28,6 +28,7 @@
 
 #include "alcp/alcp.h"
 #include <malloc.h>
+#include <stdio.h>
 
 void
 printHashAsHexString(Uint8* hash, int length)

@@ -76,25 +76,25 @@ typedef struct alc_mac_handle
     alc_mac_context_p ch_context;
 } alc_mac_handle_t, *alc_mac_handle_p, AlcMacHandle;
 
-Uint64
+ALCP_API_EXPORT Uint64
 alcp_mac_context_size(const alc_mac_info_p pMacInfo);
 
-alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_mac_request(alc_mac_handle_p pMacHandle, const alc_mac_info_p pMacInfo);
 
-alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_mac_update(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size);
 
-alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_mac_finalize(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size);
 
-alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_mac_copy(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size);
 
-alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_mac_finish(alc_mac_handle_p pMacHandle);
 
-alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_mac_reset(alc_mac_handle_p pMacHandle);
 
 EXTERN_C_END

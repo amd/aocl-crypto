@@ -32,6 +32,7 @@
 #ifdef ALCP_ENABLE_AOCL_CPUID
 #include <alci/alci.h>
 #endif
+#include "alcp/macros.h"
 #include <iostream>
 #include <memory>
 
@@ -49,7 +50,7 @@ typedef enum
 #ifdef ALCP_ENABLE_AOCL_CPUID
 using namespace alci;
 #endif
-class CpuId
+class ALCP_API_EXPORT CpuId
 {
   public:
     CpuId() {}

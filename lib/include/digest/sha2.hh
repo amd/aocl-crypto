@@ -86,7 +86,7 @@ class Sha256 final : public Sha2
 
   public:
     ALCP_API_EXPORT Sha256();
-    Sha256(const alc_digest_info_t& rDigestInfo);
+    ALCP_API_EXPORT Sha256(const alc_digest_info_t& rDigestInfo);
     virtual ALCP_API_EXPORT ~Sha256();
 
     /**
