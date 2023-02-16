@@ -42,9 +42,11 @@
 #include "ecdh/ippcp_ecdh.hh"
 #endif
 
-#include <sys/time.h>
+
 #ifdef WIN32
-#include <Windows.h>
+#include "utils/time.hh"
+#elif
+#include <sys/time.h>
 #endif
 
 // to do: these macro is better to be moved to common header.

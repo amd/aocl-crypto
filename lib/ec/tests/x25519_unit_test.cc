@@ -33,9 +33,10 @@
 #include "alcp/base.hh"
 #include "ec/ecdh.hh"
 
-#include <sys/time.h>
 #ifdef WIN32
-#include <Windows.h>
+#include "utils/time.hh"
+#elif
+#include <sys/time.h>
 #endif
 
 #define MAX_SIZE_KEY_DATA 64

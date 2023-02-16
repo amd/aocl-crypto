@@ -36,8 +36,7 @@
 #ifdef __linux__
 #include <sys/time.h>
 #elif WIN32
-#include <Windows.h>
-#include <time.h>
+#include "utils/time.hh"
 #endif
 
 #include <immintrin.h>
@@ -81,28 +80,6 @@ double elapsed;
 double totalTimeElapsed;
 
 #define ALCP_CRYPT_TIMER_START gettimeofday(&begin, 0);
-
-#ifdef WIN32
-//Windows equivalent for gettimeofday
-int gettimeofday(struct timeval* tv, struct timeval* tv1)
-{
-    FILETIME    f_time;
-    uint64_t    time;
-    SYSTEMTIME  s_time;
-
-    //define UNIX EPOCH time for windows
-    static const uint64_t EPOCH = ((uint64_t)116444736000000000ULL);
-
-    GetSystemTimeAsFileTime(&f_time);
-    FileTimeToSystemTime(&f_time, &s_time);
-    time = ((uint64_t)f_time.dwLowDateTime);
-    time += ((uint64_t)f_time.dwHighDateTime) << 32;
-
-    tv->tv_sec = (long)((time - EPOCH) / 10000000L);
-    tv->tv_usec = (long)(s_time.wMilliseconds * 1000);
-    return 0;
-}
-#endif
 
 //ALCP_CRYPT_GET_TIME defined as static inline function instead of macro.
 static inline void  ALCP_CRYPT_GET_TIME(int X, char *Y)

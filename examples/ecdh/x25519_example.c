@@ -35,8 +35,7 @@
 #ifdef __linux__
 #include <sys/time.h>
 #elif WIN32
-#include <Windows.h>
-#include <time.h>
+#include "utils/time.hh"
 #endif
 
 #include "alcp/ec.h"
