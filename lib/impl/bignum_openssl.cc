@@ -254,12 +254,13 @@ class BigNum::Impl
 
     Status fromUint64(const Uint64 val)
     {
+	Status sts = StatusOk();
         bool res = BN_set_word(raw(), val);
         ALCP_ASSERT(res == true, "fromInt64: BN_set_word failed");
         if (!res)
-            return InternalError("BN_set_word");
+            sts.update(status::InternalError("BN_set_word"));
 
-        return StatusOk();
+        return sts;
     }
 
     Status fromInt64(const Int64 val)
@@ -277,7 +278,7 @@ class BigNum::Impl
                 BN_free(b);
                 BN_set_negative(raw(), true);
             }
-            sts.update(InternalError("BN_bin2bn"));
+            sts.update(status::InternalError("BN_bin2bn"));
         } else {
             sts = fromUint64(val);
         }
@@ -292,7 +293,7 @@ class BigNum::Impl
         bool ret = BN_set_word(raw(), val);
         ALCP_ASSERT(ret == 0, "fromInt32: BN_set_word failed");
         if (ret)
-            sts = InternalError("fromInt32: BN_set_word failed");
+            sts.update(status::InternalError("fromInt32: BN_set_word failed"));
 
         return sts;
     }
@@ -318,7 +319,7 @@ class BigNum::Impl
             bool ret = BN_set_word(raw(), val);
             ALCP_ASSERT(ret == true, "fromInt32: BN_set_word failed");
             if (ret)
-                sts = InternalError("fromInt32: BN_set_word failed");
+                sts.update(status::InternalError("fromInt32: BN_set_word failed"));
         }
 
         return sts;
@@ -368,10 +369,10 @@ class BigNum::Impl
                 auto bn  = raw();
                 int  ret = BN_dec2bn(&bn, str.c_str());
                 if (ret)
-                    sts = InternalError("BN_dec2bn");
+                    sts.update(status::InternalError("BN_dec2bn"));
             } break;
             default:
-                sts = InvalidArgumentError("Invalid Argument");
+                sts = status::InvalidArgument("Invalid Argument");
                 break;
         }
 

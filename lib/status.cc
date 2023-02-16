@@ -26,57 +26,58 @@
  */
 
 #include "alcp/base/status.hh"
+#include "alcp/base/error.hh"
 
 namespace alcp::base {
 
 Status
-AlreadyExistsError(const StringView msg)
+StatusOk()
 {
-    auto e = GenericError{ErrorCode::eExists};
-    return Status(e, msg);
+    return Status(ErrorCode::eOk);
 }
 
-Status
-InvalidArgumentError(const StringView msg)
-{
-    auto e = GenericError { ErrorCode::eInvalidArgument };
-    return Status(e, msg);
-}
+namespace status {
+    Status AlreadyExists(const StringView msg)
+    {
+        auto e = GenericError{ ErrorCode::eExists };
+        return Status(e, msg);
+    }
 
-Status
-NotFoundError(const StringView msg)
-{
-    auto e = GenericError { ErrorCode::eNotFound};
-    return Status(e, msg);
-}
+    Status InvalidArgument(const StringView msg)
+    {
+        auto e = GenericError{ ErrorCode::eInvalidArgument };
+        return Status(e, msg);
+    }
 
-Status
-NotAvailableError(const StringView msg)
-{
-    auto e = GenericError { ErrorCode::eNotAvailable};
-    return Status(e, msg);
-}
+    Status NotFoundError(const StringView msg)
+    {
+        auto e = GenericError{ ErrorCode::eNotFound };
+        return Status(e, msg);
+    }
 
-Status
-NotImplementedError(const StringView msg)
-{
-    auto e = GenericError { ErrorCode::eNotImplemented};
-    return Status(e, msg);
-}
+    Status NotAvailable(const StringView msg)
+    {
+        auto e = GenericError{ ErrorCode::eNotAvailable };
+        return Status(e, msg);
+    }
 
-Status
-UnknownError(const StringView msg)
-{
-    auto e = GenericError { ErrorCode::eUnknown};
-    return Status(e, msg);
-}
+    Status NotImplemented(const StringView msg)
+    {
+        auto e = GenericError{ ErrorCode::eNotImplemented };
+        return Status(e, msg);
+    }
 
-Status
-InternalError(const StringView sv)
-{
-    auto e = GenericError { ErrorCode::eInternal};
-    return Status(e,  sv);
-}
+    Status UnknownError(const StringView msg)
+    {
+        auto e = GenericError{ ErrorCode::eUnknown };
+        return Status(e, msg);
+    }
 
-} // namespace alcp
- 
+    Status InternalError(const StringView sv)
+    {
+        auto e = GenericError{ ErrorCode::eInternal };
+        return Status(e, sv);
+    }
+} // namespace status
+
+} // namespace alcp::base

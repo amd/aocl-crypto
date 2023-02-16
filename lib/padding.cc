@@ -37,7 +37,7 @@ IPadder::padBits(MessageBlock& blk, Uint64 valueBits)
 {
     NotImplementedException(ALCP_SOURCE_LOCATION());
 
-    return NotImplementedError("Abstract class");
+    return status::NotImplemented("Abstract class");
 }
 
 Status
@@ -45,7 +45,7 @@ IPadder::padBytes(MessageBlock& blk, Uint64 valueByte)
 {
     NotImplementedException(ALCP_SOURCE_LOCATION());
 
-    return NotImplementedError("Abstract class");
+    return status::NotImplemented("Abstract class");
 }
 
 Status
@@ -53,7 +53,7 @@ IPadder::padZero(MessageBlock& blk, Uint64 count)
 {
     NotImplementedException(ALCP_SOURCE_LOCATION());
 
-    return NotImplementedError("Abstract class");
+    return status::NotImplemented("Abstract class");
 }
 
 } // namespace alcp
