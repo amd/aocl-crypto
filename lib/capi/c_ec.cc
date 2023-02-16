@@ -27,6 +27,7 @@
  */
 
 #include "alcp/ec.h"
+#include "alcp/ecdh.h"
 #include "alcp/macros.h"
 
 #include "alcp/capi/defs.hh"

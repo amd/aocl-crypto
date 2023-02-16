@@ -88,7 +88,8 @@ void inline Digest_Bench(benchmark::State& state,
         data.m_digest_len = info.dt_len / 8;
     }
 
-    Uint8 digest[data.m_digest_len] = { 0 };
+    Uint8 digest[data.m_digest_len];
+    memset(digest, 0, data.m_digest_len * sizeof(Uint8));
     /* generate random bytes */
     msg = rb.genRandomBytes(block_size);
 
