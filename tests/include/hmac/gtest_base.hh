@@ -116,17 +116,15 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
         data.in.m_key_len   = key.size();
 
         if (!hb->init(info, key)) {
-            printf("Error in hmac init function\n");
+            std::cout << "Error in hmac init function" << std::endl;
             FAIL();
         }
-        error = hb->Hmac_function(data);
-        if (alcp_is_error(error)) {
-            printf("Error in Hmac function\n");
+        if (!hb->Hmac_function(data)) {
+            std::cout << "Error in Hmac function" << std::endl;
             FAIL();
         }
-        error = hb->reset();
-        if (alcp_is_error(error)) {
-            printf("Error in Hmac reset function\n");
+        if (!hb->reset()) {
+            std::cout << "Error in Hmac reset function" << std::endl;
             FAIL();
         }
 
@@ -174,7 +172,7 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
         extHb = &ihb;
 #endif
     if (extHb == nullptr) {
-        printErrors("No external lib selected!");
+        std::cout << "No external lib selected!" << std::endl;
         exit(-1);
     }
 
@@ -212,10 +210,8 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
                 printf("Error in hmac init\n");
                 FAIL();
             }
-            error = hb->Hmac_function(data_alc);
-
-            if (alcp_is_error(error)) {
-                printf("Error in hmac function\n");
+            if (!hb->Hmac_function(data_alc)) {
+                std::cout << "Error in hmac function" << std::endl;
                 FAIL();
             }
 
@@ -226,9 +222,8 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
                 printf("Error in hmac ext init function\n");
                 FAIL();
             }
-            error = extHb->Hmac_function(data_ext);
-            if (alcp_is_error(error)) {
-                printf("Error in hmac (ext lib) function\n");
+            if (!extHb->Hmac_function(data_ext)) {
+                std::cout << "Error in hmac (ext lib) function" << std::endl;
                 FAIL();
             }
             EXPECT_TRUE(ArraysMatch(HmacAlcp, HmacExt, i));

@@ -63,7 +63,8 @@ IPPHmacBase::init()
 
     /* IPPCP Doesnt have HMAC SHA3 supported */
     if (m_info.mi_algoinfo.hmac.hmac_digest.dt_type == ALC_DIGEST_TYPE_SHA3) {
-        printf("IPPCP doesnt have HMAC SHA3 support yet, skipping the test\n");
+        std::cout << "IPPCP doesnt have HMAC-SHA3 support yet,skipping the test"
+                  << std::endl;
         return true;
     }
     if (m_info.mi_algoinfo.hmac.hmac_digest.dt_type == ALC_DIGEST_TYPE_SHA2) {
@@ -89,24 +90,37 @@ IPPHmacBase::init()
         }
     }
     if (status != ippStsNoErr) {
-        printf("ippsHMACInit_rmf failed with err code: %d\n", status);
+        std::cout << "ippsHMACInit_rmf failed with err code: " << status
+                  << std::endl;
         return false;
     }
     return true;
 }
 
-alc_error_t
+bool
 IPPHmacBase::Hmac_function(const alcp_hmac_data_t& data)
 {
-    ippsHMACUpdate_rmf(data.in.m_msg, data.in.m_msg_len, m_handle);
-    ippsHMACFinal_rmf(data.out.m_hmac, data.out.m_hmac_len, m_handle);
-    return ALC_ERROR_NONE;
+    IppStatus status = ippStsNoErr;
+
+    status = ippsHMACUpdate_rmf(data.in.m_msg, data.in.m_msg_len, m_handle);
+    if (status != ippStsNoErr) {
+        std::cout << "ippsHMACUpdate_rmf failed, err code: " << status
+                  << std::endl;
+        return false;
+    }
+    status = ippsHMACFinal_rmf(data.out.m_hmac, data.out.m_hmac_len, m_handle);
+    if (status != ippStsNoErr) {
+        std::cout << "ippsHMACFinal_rmf failed, err code: " << status
+                  << std::endl;
+        return false;
+    }
+    return true;
 }
 
-alc_error_t
+bool
 IPPHmacBase::reset()
 {
-    return ALC_ERROR_NONE;
+    return true;
 }
 
 } // namespace alcp::testing

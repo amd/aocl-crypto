@@ -81,41 +81,41 @@ AlcpHmacBase::~AlcpHmacBase()
     }
 }
 
-alc_error_t
+bool
 AlcpHmacBase::Hmac_function(const alcp_hmac_data_t& data)
 {
     alc_error_t err;
 
     err = alcp_mac_update(m_handle, data.in.m_msg, data.in.m_msg_len);
     if (alcp_is_error(err)) {
-        printf("HMAC update failed: Err code: %ld\n", err);
-        return err;
+        std::cout << "alcp_mac_update failed: Err code: " << err << std::endl;
+        return false;
     }
 
     err = alcp_mac_finalize(m_handle, NULL, 0);
     if (alcp_is_error(err)) {
-        printf("HMAC finalize failed: Error code: %ld\n", err);
-        return err;
+        std::cout << "alcp_mac_finalize failed: Err code: " << err << std::endl;
+        return false;
     }
 
     err = alcp_mac_copy(m_handle, data.out.m_hmac, data.out.m_hmac_len);
     if (alcp_is_error(err)) {
-        printf("HMAC copy failed: Error code: %ld\n", err);
-        return err;
+        std::cout << "alcp_mac_copy failed: Err code: " << err << std::endl;
+        return false;
     }
-    return err;
+    return true;
 }
 
-alc_error_t
+bool
 AlcpHmacBase::reset()
 {
     alc_error_t err;
     err = alcp_mac_reset(m_handle);
     if (alcp_is_error(err)) {
-        printf("HMAC reset failed: Error code: %ld\n", err);
-        return err;
+        std::cout << "alcp_mac_reset failed: Err code: " << err << std::endl;
+        return false;
     }
-    return ALC_ERROR_NONE;
+    return true;
 }
 
 } // namespace alcp::testing

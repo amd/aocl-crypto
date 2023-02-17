@@ -53,9 +53,9 @@ class IPPHmacBase : public HmacBase
 
     ~IPPHmacBase();
 
-    alc_error_t Hmac_function(const alcp_hmac_data_t& data);
+    bool Hmac_function(const alcp_hmac_data_t& data);
     /* Resets the context back to initial condition, reuse context */
-    alc_error_t reset();
+    bool reset();
 };
 
 } // namespace alcp::testing
