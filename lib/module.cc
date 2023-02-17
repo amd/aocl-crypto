@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2021, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,8 +32,8 @@
 
 #include "alcp/cipher.h"
 
-#include "cipher.hh"
 #include "alcp/module.hh"
+#include "cipher.hh"
 
 namespace alcp {
 
@@ -47,8 +47,6 @@ class Module::Impl
     typedef std::unordered_map<const alc_digest_type_t, module_list_t>
     DigestMap;
 #endif
-    bool isCipherSupported(const alc_cipher_info_p pCipherInfo,
-                           alc_error_t&            err) const;
     bool isType(alc_module_type_t t) const { return t == m_type; }
 
   private:
@@ -59,33 +57,10 @@ class Module::Impl
     std::vector<Algorithm> m_algo;
 };
 
-bool
-Module::Impl::isCipherSupported(const alc_cipher_info_p pCipherInfo,
-                                alc_error_t&            err) const
-{
-    CipherModuleList mlist = m_cipher_map.at(pCipherInfo->ci_type);
-
-    /* TODO: investigate if we need to take a 'rwlock' before reading */
-    for (auto& m : mlist) {
-        if (m->isSupported(*pCipherInfo))
-            return true;
-    }
-
-    return false;
-}
-
-bool
-Module::isSupported(const alc_cipher_info_p pCipherInfo, alc_error_t& err) const
-{
-    if (impl->isCipherSupported(pCipherInfo, err))
-        return true;
-
-    return false;
-}
-
 alc_module_type_t
 Module::getType()
 {
+    // FIXME: Horror ahead
     return ALC_MODULE_TYPE_CIPHER;
 }
 

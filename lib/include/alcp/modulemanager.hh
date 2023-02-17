@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,8 +27,6 @@
  */
 #pragma once
 
-#include "alcp/alcp.h"
-
 #include "alcp/base.hh"
 #include "alcp/module.hh"
 
@@ -39,17 +37,13 @@ namespace alcp {
 
 class ModuleManager
 {
-  using Status = alcp::base::Status;
+    using Status = alcp::base::Status;
+
   public:
     static ModuleManager& getInstance();
 
-    Status addModule(alc_module_info_t* minfo);
-    Status deleteModule(alc_module_info_t* minfo);
-
-    Module* findModule(const alc_module_info_t* ctx, alc_error_t& err);
-
   public:
-    ModuleManager(ModuleManager const&) = delete;
+    ModuleManager(ModuleManager const&)  = delete;
     void operator=(ModuleManager const&) = delete;
 
   private:

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2021, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -40,7 +40,7 @@ namespace alcp {
 class ModuleManager::Impl
 {
   public:
-    std::unordered_map<alc_module_type_t, std::vector<Module*>> m_modules;
+    // std::unordered_map<alc_module_type_t, std::vector<Module*>> m_modules;
 };
 
 ModuleManager::ModuleManager()
@@ -59,34 +59,4 @@ ModuleManager::getInstance()
 
 ModuleManager::~ModuleManager() {}
 
-Module*
-ModuleManager::findModule(const alc_module_info_t* ainfo, alc_error_t& err)
-{
-
-    std::vector<Module*> loc = impl->m_modules.at(ainfo->type);
-
-    for (auto& m : loc) {
-        switch (m->getType()) {
-
-            case ALC_MODULE_TYPE_CIPHER: {
-                //Status st = m->isSupported(ainfo->data.cipher);
-                //if (!st.ok())
-                //    if (Error::isError(e))
-                //        return m;
-            } break;
-
-            case ALC_MODULE_TYPE_MAC:
-                break;
-            case ALC_MODULE_TYPE_EC:
-                break;
-            case ALC_MODULE_TYPE_RNG:
-                break;
-            case ALC_MODULE_TYPE_DIGEST:
-                break;
-            default:
-                break;
-        }
-    }
-    return nullptr;
-}
 } // namespace alcp

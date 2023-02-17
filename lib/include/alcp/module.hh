@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,7 +29,8 @@
 
 #include <string>
 
-#include "alcp/cipher.h"
+// #include "alcp/cipher.h"
+#include "alcp/base.hh"
 
 #include "alcp/module.hh"
 #include "algorithm.hh"
@@ -49,38 +50,18 @@ typedef enum _alc_module_type
     ALC_MODULE_TYPE_MAX,
 } alc_module_type_t;
 
-typedef struct _alc_module_info
-{
-    alc_module_type_t type;
-    union
-    {
-        const alc_cipher_info_p cipher;
-        // const alc_digest_info_p digest;
-        // const alc_mac_info_p mac;
-        // const alc_aead_info_p aead;
-        // const alc_rng_info_p rng;
-    } data;
-} alc_module_info_t;
-
-typedef struct _alc_module_data
-{
-
-} alc_module_data_t;
-
 class Module
 {
   public:
-    Module(alc_module_info_t* minfo);
+    ALCP_DEFS_DEFAULT_CTOR_AND_DTOR(Module);
+
     std::string       getName();
     alc_module_type_t getType();
-    bool isSupported(const alc_cipher_info_p c, alc_error_t& e) const;
+    // bool isSupported(const alc_cipher_info_p c, alc_error_t& e) const;
 
   private:
-    alc_module_info_t m_info;
-
     class Impl;
     std::unique_ptr<Impl> impl;
 };
 
 } // namespace alcp
-
