@@ -273,8 +273,8 @@ AesCrosstest(int               keySize,
     std::string enc_dec_str, big_small_str;
     std::string MODE_STR = GetModeSTR(mode);
     Int32       ivl, adl, tkeyl = 16;
-
-    Int32 IVL_START = 0, IVL_MAX = 0, ADL_START = 0, ADL_MAX = 0;
+    bool        ret       = false;
+    Int32       IVL_START = 0, IVL_MAX = 0, ADL_START = 0, ADL_MAX = 0;
     // FIXME: Tag Length should not be hard coded
     const Uint64 tagLength = 16;
 
@@ -477,8 +477,16 @@ AesCrosstest(int               keySize,
             }
 
             if (enc_dec == ENCRYPT) {
-                alcpTC->getCipherHandler()->testingEncrypt(data_alc, key);
-                extTC->getCipherHandler()->testingEncrypt(data_ext, key);
+                ret = alcpTC->getCipherHandler()->testingEncrypt(data_alc, key);
+                if (!ret) {
+                    std::cout << "ERROR: Enc: Main lib" << std::endl;
+                    FAIL();
+                }
+                ret = extTC->getCipherHandler()->testingEncrypt(data_ext, key);
+                if (!ret) {
+                    std::cout << "ERROR: Enc: ext lib" << std::endl;
+                    FAIL();
+                }
                 ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
                 /* for gcm*/
                 if (isgcm || isccm) {
@@ -489,8 +497,38 @@ AesCrosstest(int               keySize,
                     PrintTestData(key, data_ext, MODE_STR);
                 }
             } else {
-                alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
-                extTC->getCipherHandler()->testingDecrypt(data_ext, key);
+                if (isgcm || isccm) {
+                    ret = alcpTC->getCipherHandler()->testingEncrypt(data_alc,
+                                                                     key);
+                    if (!ret) {
+                        std::cout << "ERROR: enc: main lib" << std::endl;
+                        FAIL();
+                    }
+                    data_alc.m_in  = &(out_ct_alc[0]);
+                    data_alc.m_out = &(pt[0]);
+                }
+                ret = alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
+                if (!ret) {
+                    std::cout << "ERROR: Dec: main lib" << std::endl;
+                    FAIL();
+                }
+
+                /*ext lib decrypt */
+                if (isgcm || isccm) {
+                    ret = alcpTC->getCipherHandler()->testingEncrypt(data_ext,
+                                                                     key);
+                    if (!ret) {
+                        std::cout << "ERROR: enc: ext lib" << std::endl;
+                        FAIL();
+                    }
+                    data_ext.m_in  = &(out_ct_ext[0]);
+                    data_ext.m_out = &(pt[0]);
+                }
+                ret = extTC->getCipherHandler()->testingDecrypt(data_ext, key);
+                if (!ret) {
+                    std::cout << "ERROR: Dec: ext lib" << std::endl;
+                    FAIL();
+                }
                 data_ext.m_isTagValid = /* check if Tag is valid */
                     (std::find(tag_ext.begin(), tag_ext.end(), true)
                      == tag_ext.end());
@@ -524,13 +562,13 @@ AesCrosstest(int               keySize,
 }
 
 bool
-RunTest(TestingCore& testingCore,
-        enc_dec_t    enc_dec,
-        std::string  enc_dec_str,
-        std::string  MODE_STR,
-        int          keySize,
-        bool         isxts,
-        bool         isgcm)
+RunCipherKATTest(TestingCore& testingCore,
+                 enc_dec_t    enc_dec,
+                 std::string  enc_dec_str,
+                 std::string  MODE_STR,
+                 int          keySize,
+                 bool         isxts,
+                 bool         isgcm)
 {
     bool               ret = false;
     alcp_data_ex_t     data;
@@ -576,6 +614,10 @@ RunTest(TestingCore& testingCore,
         }
         ret = testingCore.getCipherHandler()->testingEncrypt(
             data, testingCore.getDs()->getKey());
+        if (!ret) {
+            std::cout << "ERROR: Enc" << std::endl;
+            EXPECT_TRUE(ret);
+        }
         EXPECT_TRUE(
             ArraysMatch(outct,
                         testingCore.getDs()->getCt(),
@@ -613,6 +655,10 @@ RunTest(TestingCore& testingCore,
 
         if (isgcm && data.m_tagl == 0) {
             ret = true; // Skip tag test
+        }
+        if (!ret) {
+            std::cout << "ERROR: Dec" << std::endl;
+            EXPECT_TRUE(ret);
         }
         EXPECT_TRUE(
             ArraysMatch(outpt,
@@ -652,32 +698,32 @@ AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode)
 
     if (isxts) {
         while (testingCore.getDs()->readPtIvKeyCtTKey(key_size))
-            RunTest(testingCore,
-                    enc_dec,
-                    enc_dec_str,
-                    MODE_STR,
-                    keySize,
-                    true,
-                    false);
+            RunCipherKATTest(testingCore,
+                             enc_dec,
+                             enc_dec_str,
+                             MODE_STR,
+                             keySize,
+                             true,
+                             false);
     } else if (isgcm || isccm) {
         while (testingCore.getDs()->readPtIvKeyCtAddTag(key_size)) {
-            RunTest(testingCore,
-                    enc_dec,
-                    enc_dec_str,
-                    MODE_STR,
-                    keySize,
-                    false,
-                    true);
+            RunCipherKATTest(testingCore,
+                             enc_dec,
+                             enc_dec_str,
+                             MODE_STR,
+                             keySize,
+                             false,
+                             true);
         }
     } else {
         while (testingCore.getDs()->readPtIvKeyCt(key_size))
-            RunTest(testingCore,
-                    enc_dec,
-                    enc_dec_str,
-                    MODE_STR,
-                    keySize,
-                    false,
-                    false);
+            RunCipherKATTest(testingCore,
+                             enc_dec,
+                             enc_dec_str,
+                             MODE_STR,
+                             keySize,
+                             false,
+                             false);
     }
 }
 
