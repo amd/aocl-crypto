@@ -321,6 +321,10 @@ DataSet::readPtIvKeyCt(size_t keybits)
 bool
 DataSet::readPtIvKeyCt()
 {
+    if (!CheckFileExists()) {
+        std::cout << "File doesnt exist: " << this->FileName << std::endl;
+        return false;
+    }
     line = readLine();
     if (line.empty() || line == "\n") {
         return false;
@@ -354,6 +358,10 @@ DataSet::readPtIvKeyCtAddTag(size_t keybits)
 bool
 DataSet::readPtIvKeyCtAddTag()
 {
+    if (!CheckFileExists()) {
+        std::cout << "File doesnt exist: " << this->FileName << std::endl;
+        return false;
+    }
     line = readLine();
     if (line.empty() || line == "\n") {
         return false;
@@ -393,6 +401,10 @@ DataSet::readPtIvKeyCtTKey(size_t keybits)
 bool
 DataSet::readPtIvKeyCtTKey()
 {
+    if (!CheckFileExists()) {
+        std::cout << "File doesnt exist: " << this->FileName << std::endl;
+        return false;
+    }
     line = readLine();
     if (line.empty() || line == "\n") {
         return false;

@@ -696,34 +696,39 @@ AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode)
 
     TestingCore testingCore = TestingCore(MODE_STR, mode);
 
+    bool retval = false;
     if (isxts) {
         while (testingCore.getDs()->readPtIvKeyCtTKey(key_size))
-            RunCipherKATTest(testingCore,
-                             enc_dec,
-                             enc_dec_str,
-                             MODE_STR,
-                             keySize,
-                             true,
-                             false);
+            retval = RunCipherKATTest(testingCore,
+                                      enc_dec,
+                                      enc_dec_str,
+                                      MODE_STR,
+                                      keySize,
+                                      true,
+                                      false);
     } else if (isgcm || isccm) {
         while (testingCore.getDs()->readPtIvKeyCtAddTag(key_size)) {
-            RunCipherKATTest(testingCore,
-                             enc_dec,
-                             enc_dec_str,
-                             MODE_STR,
-                             keySize,
-                             false,
-                             true);
+            retval = RunCipherKATTest(testingCore,
+                                      enc_dec,
+                                      enc_dec_str,
+                                      MODE_STR,
+                                      keySize,
+                                      false,
+                                      true);
         }
     } else {
         while (testingCore.getDs()->readPtIvKeyCt(key_size))
-            RunCipherKATTest(testingCore,
-                             enc_dec,
-                             enc_dec_str,
-                             MODE_STR,
-                             keySize,
-                             false,
-                             false);
+            retval = RunCipherKATTest(testingCore,
+                                      enc_dec,
+                                      enc_dec_str,
+                                      MODE_STR,
+                                      keySize,
+                                      false,
+                                      false);
+    }
+    /* check ret val */
+    if (!retval) {
+        FAIL();
     }
 }
 
