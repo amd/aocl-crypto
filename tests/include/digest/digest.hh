@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -125,7 +125,7 @@ class ExecRecPlay
 class DataSet : private File
 {
   private:
-    std::string        line = "", Filename = "";
+    std::string        line = "", FileName = "";
     std::vector<Uint8> Digest, Message;
     /* for shake128/256 support */
     std::int64_t DigestLen;

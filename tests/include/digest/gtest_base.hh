@@ -124,8 +124,8 @@ Digest_KAT(alc_digest_info_t info)
     DigestBase*        db;
     db = &adb;
 
-    std::string TestDataFile = "";
-
+    std::string TestDataFile       = "";
+    std::string SHA3_SHAKE_Len_Str = "";
     /* for truncated sha512 (224,256)*/
     if (info.dt_type == ALC_DIGEST_TYPE_SHA2
         && info.dt_mode.dm_sha2 == ALC_SHA2_512
@@ -135,8 +135,13 @@ Digest_KAT(alc_digest_info_t info)
     }
     /* for SHA3 shake tests (128,256)*/
     else if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
+        if (info.dt_mode.dm_sha3 == ALC_SHAKE_128) {
+            SHA3_SHAKE_Len_Str = "128";
+        } else if (info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
+            SHA3_SHAKE_Len_Str = "256";
+        }
         TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_SHAKE_"
-                       + std::to_string(info.dt_len) + ".csv";
+                       + SHA3_SHAKE_Len_Str + ".csv";
     }
     /* for normal SHA2, SHA3 (224,256,384,512 bit) */
     else {
@@ -162,9 +167,9 @@ Digest_KAT(alc_digest_info_t info)
     if (useipp == true)
         db = &idb;
 #endif
-
     /* for SHAKE variant */
     if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
+        EXPECT_TRUE(ds.readMsgDigestLen());
         while (ds.readMsgDigestLen()) {
             auto msg          = ds.getMessage();
             data.m_msg        = &(msg[0]);
@@ -181,14 +186,15 @@ Digest_KAT(alc_digest_info_t info)
                 std::cout << "Error: Digest function failed" << std::endl;
                 FAIL();
             }
-            EXPECT_TRUE(ArraysMatch(
-                digest_,        // output
-                ds.getDigest(), // expected, from the KAT test data
-                ds,
-                std::string(GetDigestStr(info.dt_type) + "_"
-                            + std::to_string(info.dt_len) + "_KAT")));
+            EXPECT_TRUE(
+                ArraysMatch(digest_,        // output
+                            ds.getDigest(), // expected, from the KAT test data
+                            ds,
+                            std::string(GetDigestStr(info.dt_type) + "_"
+                                        + SHA3_SHAKE_Len_Str + "_KAT")));
         }
     } else {
+        EXPECT_TRUE(ds.readMsgDigest());
         while (ds.readMsgDigest()) {
             auto msg          = ds.getMessage();
             data.m_msg        = &(msg[0]);
