@@ -120,10 +120,16 @@ class BigNum::Impl
         }
     }
 
+    inline BigNum minus(BigNum const& self)
+    {
+        BigNum result{ self };
+
+        BN_set_negative(result.pImpl()->raw(), 1);
+        return result;
+    }
+
     inline void operator=(const BigNum& rhs)
     {
-        // BN_init(raw());
-
         if (!BN_copy(raw(), rhs.pImpl()->raw())) {
             BN_clear(raw());
         }
@@ -254,8 +260,8 @@ class BigNum::Impl
 
     Status fromUint64(const Uint64 val)
     {
-	Status sts = StatusOk();
-        bool res = BN_set_word(raw(), val);
+        Status sts = StatusOk();
+        bool   res = BN_set_word(raw(), val);
         ALCP_ASSERT(res == true, "fromInt64: BN_set_word failed");
         if (!res)
             sts.update(status::InternalError("BN_set_word"));
@@ -319,7 +325,8 @@ class BigNum::Impl
             bool ret = BN_set_word(raw(), val);
             ALCP_ASSERT(ret == true, "fromInt32: BN_set_word failed");
             if (ret)
-                sts.update(status::InternalError("fromInt32: BN_set_word failed"));
+                sts.update(
+                    status::InternalError("fromInt32: BN_set_word failed"));
         }
 
         return sts;
@@ -343,7 +350,7 @@ class BigNum::Impl
         return res;
     }
 
-    const String toString(BigNum::Format fmt = BigNum::Format::eDecimal) const
+    const String toString(BigNum::Format fmt) const
     {
         String s;
         switch (fmt) {
@@ -378,6 +385,19 @@ class BigNum::Impl
 
         return sts;
     }
+
+    /**
+     * @brief Return underlaying pointer
+     * @details In Openssl, it wont provide pointer to underlaying storage
+     *            Any modyfyable data() will get nullpointer, but we still
+     *            allow immutable BIGNUM*
+     * @param     none
+     * @returns   nullptr if the access is read-write
+     *            pointer to openssl::BIGNUM otherwise
+     */
+    void*       data() { return nullptr; }
+    const void* data() const { return raw(); }
+    std::size_t size() const { return BN_num_bytes(m_pbn.get()); }
 
   private:
     unique_bn_ptr_t m_pbn;

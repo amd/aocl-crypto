@@ -46,6 +46,9 @@ class ALCP_API_EXPORT BigNum final
     BigNum& operator=(const BigNum& rhs);
 
   public:
+    /* Unary -(minus) operator */
+    BigNum operator-();
+
     /* Arithmetic operation */
     BigNum operator+(const BigNum& rhs);
     BigNum operator-(const BigNum& rhs);
@@ -102,7 +105,11 @@ class ALCP_API_EXPORT BigNum final
      * @param format    Format of the string, Binary,Decimal,Hex
      */
     Status       fromString(const String& str, Format f = Format::eDecimal);
-    const String toString() const;
+    const String toString(Format f = Format::eDecimal) const;
+
+    const void* data() const;
+    std::size_t size() const;
+    std::size_t size_bits() const;
 
   private:
     class Impl;

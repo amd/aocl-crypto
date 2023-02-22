@@ -28,9 +28,6 @@
 
 #include "alcp/utils/bignum.hh"
 
-/* FIXME: remove this once we have ALCP's own BigNum */
-#define ALCP_BIGNUM_USE_OPENSSL 1
-
 #if defined(ALCP_BIGNUM_USE_OPENSSL)
 #include "../impl/bignum_openssl.cc"
 #elif defined(ALCP_BIGNUM_USE_IPP)
@@ -43,18 +40,21 @@ namespace alcp {
 
 BigNum::BigNum()
     : m_pimpl{ std::make_unique<BigNum::Impl>() }
-{}
+{
+}
 
 BigNum::~BigNum() {}
 
 BigNum::BigNum(const BigNum& b)
+    : BigNum{}
 {
-    // throw NotImplementedException(ALCP_SOURCE_LOCATION());
+    *this = b;
 }
 
 BigNum::BigNum(const BigNum&& b)
+    : BigNum{}
 {
-    // throw NotImplementedException(ALCP_SOURCE_LOCATION());
+    *this = b;
 }
 
 Int64
@@ -94,9 +94,9 @@ BigNum::fromString(const String& str, Format f)
 }
 
 const String
-BigNum::toString() const
+BigNum::toString(Format f) const
 {
-    return pImpl()->toString();
+    return pImpl()->toString(f);
 }
 
 BigNum&
@@ -106,8 +106,18 @@ BigNum::operator=(const BigNum& rhs)
     if (this == &rhs)
         return *this;
 
-    pImpl()->operator=(rhs);
+    pImpl()->operator=(*rhs.pImpl());
     return *this;
+}
+
+BigNum
+BigNum::operator-()
+{
+    BigNum res{ *this };
+
+    res.pImpl()->minus(*this);
+
+    return res;
 }
 
 BigNum
@@ -220,6 +230,24 @@ void
 BigNum::operator<<=(int shifts)
 {
     *this = *this << shifts;
+}
+
+const void*
+BigNum::data() const
+{
+    return pImpl()->data();
+}
+
+std::size_t
+BigNum::size() const
+{
+    return pImpl()->size();
+}
+
+std::size_t
+BigNum::size_bits() const
+{
+    return pImpl()->size() * 8;
 }
 
 } // namespace alcp
