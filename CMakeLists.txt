@@ -110,6 +110,11 @@ if(ALCP_USE_TSAN)
     alcp_add_tsan_flags()
 endif()
 
+OPTION(ALCP_USE_UBSAN "COMPILE WITH UB Sanitizer SUPPORT TO DETECT undefined behavior" OFF)
+if(ALCP_USE_UBSAN)
+    alcp_add_ubsan_flags()
+endif()
+
 IF (NOT DEFINED ALCP_BIGNUM_USE_OPENSSL)
 	SET (ALCP_BIGNUM_USE_OPENSSL ON)
 ENDIF()

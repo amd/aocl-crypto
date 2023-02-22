@@ -149,6 +149,15 @@ function(alcp_add_tsan_flags)
 	    add_compile_options(${ALCP_CFLAGS_TSAN})
 endfunction(alcp_add_tsan_flags)
 
+function(alcp_add_ubsan_flags)
+    set(ALCP_CFLAGS_UBSAN
+            -fsanitize=undefined
+            CACHE INTERNAL ""
+        )
+	    link_libraries(ubsan)
+	    add_compile_options(${ALCP_CFLAGS_UBSAN})
+endfunction(alcp_add_ubsan_flags)
+
 # coverage
 function(alcp_add_coverage_flags)
     set(ALCP_CFLAGS_COV
