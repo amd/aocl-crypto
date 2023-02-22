@@ -129,6 +129,10 @@ function(alcp_get_arch_cflags_zen4)
 endfunction(alcp_get_arch_cflags_zen4)
 
 # misc options
+# TO DO: 
+# these sanitizer options are currently defined for gcc
+# Maybe different for clang!!
+
 # if address sanitizer used
 function(alcp_add_asan_flags)
     set(ALCP_CFLAGS_ASAN
@@ -140,6 +144,7 @@ function(alcp_add_asan_flags)
 	    add_compile_options(${ALCP_CFLAGS_ASAN})
 endfunction(alcp_add_asan_flags)
 
+# thread sanitizer usage
 function(alcp_add_tsan_flags)
     set(ALCP_CFLAGS_TSAN
             -fsanitize=thread
@@ -149,9 +154,34 @@ function(alcp_add_tsan_flags)
 	    add_compile_options(${ALCP_CFLAGS_TSAN})
 endfunction(alcp_add_tsan_flags)
 
+# Asan leak sanitizer usage (cannot be combined with -tsan/asan, so making it seperate option)
+function(alcp_add_lsan_flags)
+    set(ALCP_CFLAGS_LSAN
+            -fsanitize=leak
+            CACHE INTERNAL ""
+        )
+	    link_libraries(lsan)
+	    add_compile_options(${ALCP_CFLAGS_LSAN})
+endfunction(alcp_add_lsan_flags)
+
+# undefined behavior sanitizer usage
 function(alcp_add_ubsan_flags)
     set(ALCP_CFLAGS_UBSAN
             -fsanitize=undefined
+            -fsanitize=null
+            -fsanitize=return
+            -fsanitize=integer-divide-by-zero
+            -fsanitize=unreachable
+            -fsanitize=vla-bound
+            -fsanitize=bounds
+            -fsanitize=bounds-strict
+            -fsanitize=object-size
+            -fsanitize=nonnull-attribute
+            -fsanitize=returns-nonnull-attribute
+            -fsanitize=bool
+            -fsanitize=enum
+            -fsanitize=vptr
+            -fsanitize=pointer-overflow
             CACHE INTERNAL ""
         )
 	    link_libraries(ubsan)

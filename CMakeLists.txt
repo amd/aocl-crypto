@@ -110,6 +110,11 @@ if(ALCP_USE_TSAN)
     alcp_add_tsan_flags()
 endif()
 
+OPTION(ALCP_CFLAGS_LSAN "COMPILE WITH Leak Sanitizer SUPPORT TO DETECT Memory leaks" OFF)
+if(ALCP_CFLAGS_LSAN)
+    alcp_add_lsan_flags()
+endif()
+
 OPTION(ALCP_USE_UBSAN "COMPILE WITH UB Sanitizer SUPPORT TO DETECT undefined behavior" OFF)
 if(ALCP_USE_UBSAN)
     alcp_add_ubsan_flags()
