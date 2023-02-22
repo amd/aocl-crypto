@@ -698,7 +698,8 @@ AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode)
 
     bool retval = false;
     if (isxts) {
-        while (testingCore.getDs()->readPtIvKeyCtTKey(key_size))
+        EXPECT_TRUE(testingCore.getDs()->readPtIvKeyCtTKey(key_size));
+        while (testingCore.getDs()->readPtIvKeyCtTKey(key_size)) {
             retval = RunCipherKATTest(testingCore,
                                       enc_dec,
                                       enc_dec_str,
@@ -706,7 +707,10 @@ AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode)
                                       keySize,
                                       true,
                                       false);
+            EXPECT_TRUE(retval);
+        }
     } else if (isgcm || isccm) {
+        EXPECT_TRUE(testingCore.getDs()->readPtIvKeyCtAddTag(key_size));
         while (testingCore.getDs()->readPtIvKeyCtAddTag(key_size)) {
             retval = RunCipherKATTest(testingCore,
                                       enc_dec,
@@ -715,9 +719,11 @@ AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode)
                                       keySize,
                                       false,
                                       true);
+            EXPECT_TRUE(retval);
         }
     } else {
-        while (testingCore.getDs()->readPtIvKeyCt(key_size))
+        EXPECT_TRUE(testingCore.getDs()->readPtIvKeyCt(key_size));
+        while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
             retval = RunCipherKATTest(testingCore,
                                       enc_dec,
                                       enc_dec_str,
@@ -725,10 +731,8 @@ AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode)
                                       keySize,
                                       false,
                                       false);
-    }
-    /* check ret val */
-    if (!retval) {
-        FAIL();
+            EXPECT_TRUE(retval);
+        }
     }
 }
 
