@@ -1,4 +1,4 @@
- # Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -100,9 +100,14 @@ set(OPENSSL_INSTALL_DIR "" CACHE STRING "OPENSSL INSTALLED DIRECTORY FOR TESTING
 set(IPP_INSTALL_DIR "" CACHE STRING "IPPCP INSTALLED DIRECTORY FOR TESTING AND BENCHMARKING")
 
 # misc options
-OPTION(ALCP_USE_ASAN "COMPILE WITH ASAN TOOL SUPPORT TO DETECT MEMORY ERRORS" OFF)
+OPTION(ALCP_USE_ASAN "COMPILE WITH address sanitizer SUPPORT TO DETECT MEMORY ERRORS" OFF)
 if(ALCP_USE_ASAN)
     alcp_add_asan_flags()
+endif()
+
+OPTION(ALCP_USE_TSAN "COMPILE WITH Thread Sanitizer SUPPORT TO DETECT DATA RACE ERRORS" OFF)
+if(ALCP_USE_TSAN)
+    alcp_add_tsan_flags()
 endif()
 
 IF (NOT DEFINED ALCP_BIGNUM_USE_OPENSSL)
