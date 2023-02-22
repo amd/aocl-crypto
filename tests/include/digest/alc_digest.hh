@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,11 +38,12 @@
 namespace alcp::testing {
 class AlcpDigestBase : public DigestBase
 {
-    alc_digest_handle_t* m_handle;
-    alc_digest_info_t    m_info;
-    Uint8*               m_message;
-    Uint8*               m_digest;
-    Int64                m_digest_len; /*SHAKE*/
+    alc_digest_handle_t* m_handle     = {};
+    alc_digest_info_t    m_info       = {};
+    Uint8*               m_message    = {};
+    Uint8*               m_digest     = {};
+    Int64                m_digest_len = {}; /*SHAKE*/
+    void*                m_context    = {};
 
   public:
     AlcpDigestBase(const alc_digest_info_t& info);

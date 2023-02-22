@@ -31,8 +31,6 @@
 
 namespace alcp::testing {
 
-static Uint8 size_[4096] = { 0 };
-
 /* Mapping between ALC sha mode and digest len. Update for upcoming ALC digest
  * types here*/
 std::map<alc_digest_len_t, alc_sha2_mode_t> sha2_mode_len_map = {
@@ -85,8 +83,17 @@ AlcpDigestBase::init()
             dinfo.dt_mode.dm_sha3 = sha3_mode_len_map[m_info.dt_len];
     }
 
+    if (m_handle != nullptr) {
+        delete (m_handle);
+        m_handle = nullptr;
+    }
+    size_t size = alcp_digest_context_size(&dinfo);
+    if (m_context == nullptr) {
+        // FIXME: Introduce Unique Ptr Here.
+        m_context = new char[size * 2]; // Allocating 2 times memory to be safe
+    }
     m_handle          = new alc_digest_handle_t;
-    m_handle->context = &size_[0];
+    m_handle->context = m_context;
 
     err = alcp_digest_request(&dinfo, m_handle);
     if (alcp_is_error(err)) {
@@ -101,6 +108,10 @@ AlcpDigestBase::~AlcpDigestBase()
     if (m_handle != nullptr) {
         alcp_digest_finish(m_handle);
         delete m_handle;
+    }
+    if (m_context != nullptr) {
+        delete[] reinterpret_cast<char*>(m_context);
+        m_context = nullptr;
     }
 }
 
