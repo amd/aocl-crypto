@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -88,8 +88,9 @@ class ALCP_API_EXPORT Rijndael
     const Uint8* getDecryptKeys() const;
 
     virtual Status setKey(const Uint8* pUserKey, Uint64 len);
-    virtual void   setEncryptKey(const Uint8* pEncKey, Uint64 len);
-    virtual void   setDecryptKey(const Uint8* pDecKey, Uint64 len);
+
+    virtual void setEncryptKey(const Uint8* pEncKey, Uint64 len);
+    virtual void setDecryptKey(const Uint8* pDecKey, Uint64 len);
 
     virtual alc_error_t encrypt(const Uint8* pSrc,
                                 Uint8*       pDst,

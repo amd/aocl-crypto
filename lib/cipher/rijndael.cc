@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -227,7 +227,11 @@ class alignas(16) Rijndael::Impl
 
     void setUp(const alc_key_info_t& rKeyInfo)
     {
-        int len           = rKeyInfo.len;
+        setKey(rKeyInfo.key, rKeyInfo.len);
+    }
+
+    void setKey(const uint8_t* key, int len)
+    {
         m_block_size      = BitsToBlockSize(len);
         const Params& prm = ParamsMap.at(m_block_size);
         m_nrounds         = prm.Nr;
@@ -238,7 +242,7 @@ class alignas(16) Rijndael::Impl
         /* +2 as the actual key is also stored  */
         m_dec_key = m_enc_key + ((m_nrounds + 2) * m_key_size);
 
-        expandKeys(rKeyInfo.key);
+        expandKeys(key);
     }
 };
 
@@ -744,12 +748,10 @@ Rijndael::getDecryptKeys() const
 Status
 Rijndael::setKey(const Uint8* pUserKey, Uint64 len)
 {
-    if ((len < cMinKeySize) || (len > cMaxKeySize)) {
+    if ((len < cMinKeySizeBits) || (len > cMaxKeySizeBits)) {
         return InvalidArgumentError("Key length not acceptable");
     }
-
-    /* FIXME: we should make Impl::setKey to get this done */
-    // pImpl()->expandKeys(pUserKey);
+    pImpl()->setKey(pUserKey, len);
     return StatusOk();
 }
 
