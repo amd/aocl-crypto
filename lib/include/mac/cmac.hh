@@ -36,11 +36,11 @@
 // multiple formats to improve the debugging capability
 union reg_128
 {
-    __m128i  reg;
-    uint64_t u64[2];
-    uint32_t u32[4];
-    uint16_t u16[8];
-    uint8_t  u8[16];
+    __m128i reg;
+    Uint64  u64[2];
+    Uint32  u32[4];
+    Uint16  u16[8];
+    Uint8   u8[16];
 };
 
 namespace alcp::mac {
@@ -48,13 +48,6 @@ class Cmac final : public Mac
 {
   public:
     Cmac();
-    /**
-     * @brief CMAC Constructor
-     *
-     * @param cinfo   Cipher Information about the cipher algorithm used in CMAC
-     * @param keyInfo CMAC Key Information
-     */
-    Cmac(const alc_cipher_info_t& cinfo, const alc_key_info_t& keyInfo);
     ~Cmac();
     /**
      * @brief Update CMAC with plaintext Message
@@ -63,6 +56,14 @@ class Cmac final : public Mac
      * @param size      Size of the Plaintext Message Buffer in bytes
      */
     alcp::base::Status update(const Uint8* pMsgBuf, Uint64 size) override;
+
+    /**
+     * @brief Update CMAC Key
+     *
+     * @param key   pointer to CMAC Key to be used
+     * @param len   Length of the key in bits
+     */
+    alcp::base::Status setKey(const Uint8* key, Uint64 len);
 
     /**
      * @brief Finish CMAC. Other calls are not valid after finish

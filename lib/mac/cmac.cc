@@ -34,6 +34,8 @@
 using alcp::base::Status;
 using alcp::utils::CpuId;
 
+// TODO: Currently CMAC is AES-CMAC, Once IEncrypter is complete, revisit the
+// class design
 namespace alcp::mac {
 class Cmac::Impl : public alcp::cipher::Aes
 {
@@ -57,16 +59,21 @@ class Cmac::Impl : public alcp::cipher::Aes
     // Temporary Buffer to storage Encryption Result
     Uint8 temp_enc_result[16]{};
 
-    // FIXME: without noexcept below line throws an error.
-    ~Impl() noexcept {};
-
-    Impl(const alc_cipher_info_t& cinfo, const alc_key_info_t& keyInfo)
-        : Aes(cinfo.ci_algo_info, keyInfo)
+    Impl()
+        : Aes()
     {
-        key          = keyInfo.key;
-        this->keylen = keyInfo.len;
+        setMode(ALC_AES_MODE_NONE);
+        // setKey(cinfo.ci_key_info.key, cinfo.ci_key_info.len);
+    }
+
+    Status setKey(const Uint8* key, Uint64 len)
+    {
+        this->key    = key;
+        this->keylen = len;
+        Aes::setKey(key, keylen);
         encrypt_keys = getEncryptKeys();
         get_subkeys();
+        return StatusOk();
     }
     void finish()
     {
@@ -235,8 +242,8 @@ class Cmac::Impl : public alcp::cipher::Aes
     }
 };
 
-Cmac::Cmac(const alc_cipher_info_t& cinfo, const alc_key_info_t& keyInfo)
-    : m_pImpl{ std::make_unique<Cmac::Impl>(cinfo, keyInfo) }
+Cmac::Cmac()
+    : m_pImpl{ std::make_unique<Cmac::Impl>() }
 {}
 
 alcp::base::Status
@@ -268,6 +275,12 @@ Cmac::copy(Uint8* buff, Uint32 size)
 {
     return m_pImpl->copy(buff, size);
 }
-Cmac::Cmac()  = default;
+
+alcp::base::Status
+Cmac::setKey(const Uint8* key, Uint64 len)
+{
+    return m_pImpl->setKey(key, len);
+}
+
 Cmac::~Cmac() = default;
 } // namespace alcp::mac

@@ -84,9 +84,13 @@ __build_cmac(const alc_cipher_info_t& cipherInfo,
              Context&                 ctx)
 {
     alcp::base::Status status = alcp::base::StatusOk();
-    auto               algo   = new alcp::mac::Cmac(cipherInfo, kinfo);
+    auto               algo   = new alcp::mac::Cmac();
+
+    auto key = kinfo.key;
+    auto len = kinfo.len;
+    algo->setKey(key, len);
     if (algo == nullptr) {
-        // TODO: Update proper Out of Memory Status
+        // FIXME: Update proper Out of Memory Status
         return status;
     }
     ctx.m_mac = static_cast<void*>(algo);

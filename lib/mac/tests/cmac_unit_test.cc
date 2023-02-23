@@ -221,21 +221,9 @@ class CMACFuncionalityTest
         auto       tuple_values = params.second;
 
         tie(key, plain_text, expected_mac) = tuple_values;
-
-        kinfo = {
-            .type = ALC_KEY_TYPE_SYMMETRIC,
-            .fmt  = ALC_KEY_FMT_RAW,
-            .len  = static_cast<Uint32>(key.size()) * 8,
-            .key  = &key[0],
-        };
-
-        cinfo = {
-            .ci_type      = ALC_CIPHER_TYPE_AES,
-            .ci_key_info  = kinfo,
-            .ci_algo_info = { .ai_mode = ALC_AES_MODE_NONE, .ai_iv = nullptr },
-        };
-        cmac = std::make_unique<alcp::mac::Cmac>(cinfo, kinfo);
-        mac  = std::vector<Uint8>(expected_mac.size());
+        cmac = std::make_unique<alcp::mac::Cmac>();
+        cmac->setKey(&key[0], static_cast<Uint64>(key.size()) * 8);
+        mac = std::vector<Uint8>(expected_mac.size());
     }
 
     void splitToEqualHalves(std::vector<Uint8>& singleblock,
