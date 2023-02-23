@@ -36,6 +36,9 @@
 using alcp::utils::CpuId;
 namespace alcp::mac {
 using Status = alcp::base::Status;
+
+// FIXME: Remove alcp_is_error to return the error status returned by Digest
+// once digest class supports Status class
 class Hmac::Impl
 {
   private:
@@ -129,19 +132,19 @@ class Hmac::Impl
         // TODO: For all the following calls to digest return the proper error
         // and assign
         if (sizeof(buff) != 0 && size != 0) {
-            err    = m_pDigest->finalize(buff, size);
-            status = validate_error_status(err);
+            err = m_pDigest->finalize(buff, size);
+            if (alcp_is_error(err)) {
+                return InternalError("HMAC: InternalError");
+            }
         } else {
-            err    = m_pDigest->finalize(nullptr, 0);
-            status = validate_error_status(err);
+            err = m_pDigest->finalize(nullptr, 0);
+            if (alcp_is_error(err)) {
+                return InternalError("HMAC: InternalError");
+            }
         }
-        if (!status.ok()) {
-            return status;
-        }
-        err    = m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
-        status = validate_error_status(err);
-        if (!status.ok()) {
-            return status;
+        err = m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
+        if (alcp_is_error(err)) {
+            return InternalError("HMAC: InternalError");
         }
         m_pDigest->reset();
 
@@ -149,16 +152,14 @@ class Hmac::Impl
         if (!status.ok()) {
             return status;
         }
-        err    = m_pDigest->finalize(m_pTempHash, m_output_hash_size);
-        status = validate_error_status(err);
-        if (!status.ok()) {
-            return status;
+        err = m_pDigest->finalize(m_pTempHash, m_output_hash_size);
+        if (alcp_is_error(err)) {
+            return InternalError("HMAC: InternalError");
         }
 
-        err    = m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
-        status = validate_error_status(err);
-        if (!status.ok()) {
-            return status;
+        err = m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
+        if (alcp_is_error(err)) {
+            return InternalError("HMAC: InternalError");
         }
         m_pDigest->reset();
 
@@ -253,15 +254,13 @@ class Hmac::Impl
             // error status
             alc_error_t err = ALC_ERROR_NONE;
             m_pDigest->reset();
-            err    = m_pDigest->finalize(m_pKey, m_keylen);
-            status = validate_error_status(err);
-            if (!status.ok()) {
-                return status;
+            err = m_pDigest->finalize(m_pKey, m_keylen);
+            if (alcp_is_error(err)) {
+                return InternalError("HMAC: InternalError");
             }
             m_pDigest->copyHash(m_pK0, m_output_hash_size);
-            status = validate_error_status(err);
-            if (!status.ok()) {
-                return status;
+            if (alcp_is_error(err)) {
+                return InternalError("HMAC: InternalError");
             }
             m_pDigest->reset();
             std::memset(m_pK0 + m_output_hash_size,
@@ -276,22 +275,10 @@ class Hmac::Impl
                           Uint64                len)
     {
         alc_error_t err = p_digest->update(input, len);
-        // TODO: Based on the output from update call update status code
-        Status status = validate_error_status(err);
-        return status;
-    }
-
-    Status validate_error_status(alc_error_t err)
-    {
-        /* TODO: This function is temporary to support Digest classes
-           which still uses alc_error_t. This will return any failures to CAPI,
-           but not proper error codes. Replace it with Specific HMAC errors once
-           Digest classes are supported. */
         if (alcp_is_error(err)) {
             return InternalError("HMAC: InternalError");
-        } else {
-            return StatusOk();
         }
+        return StatusOk();
     }
 };
 
