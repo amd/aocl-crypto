@@ -29,10 +29,11 @@
 #pragma once
 
 #include "alcp/base/status.hh"
+#include "alcp/macros.h"
 
 namespace alcp {
 
-class IRng
+class ALCP_API_EXPORT IRng
 {
   public:
     /**

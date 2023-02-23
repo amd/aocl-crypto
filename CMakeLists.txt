@@ -40,7 +40,7 @@ INCLUDE(AlcpConfig)
 IF(UNIX)
   INCLUDE(CompilerLinux)
 ELSEIF(WIN32)
-  INCLUDE(CompilerWin.cmake)
+  INCLUDE(CompilerWin)
 ENDIF(UNIX)
 
 PROJECT (ALCP)

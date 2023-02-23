@@ -32,6 +32,9 @@ file(GLOB TEST_FILES "*_unit_test.cc")
 alcp_module("Rng")
 
 #message(STATUS "Cipher Unit Tests Imported ${TEST_FILES}")
+IF(WIN32)
+add_compile_definitions(GTEST_LINKED_AS_SHARED_LIBRARY=1)
+ENDIF()
 
 foreach(testFile IN LISTS TEST_FILES)
     get_filename_component(currentTestName ${testFile} NAME_WLE)

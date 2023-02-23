@@ -47,10 +47,10 @@ DebugPrint(const std::vector<Uint8>& p_cIn,
            std::string               file,
            int                       line);
 
-class HmacDrbg : public Drbg
+class ALCP_API_EXPORT HmacDrbg : public Drbg
 {
   private:
-    class ALCP_API_EXPORT IHmacDrbg;
+    class IHmacDrbg;
 
     std::unique_ptr<IHmacDrbg> p_impl;
 

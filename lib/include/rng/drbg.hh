@@ -47,7 +47,7 @@ class IDrbg : public IRng
     virtual Status randomize(Uint8 p_Output[], size_t length) = 0;
 };
 
-class Drbg : public IDrbg
+class ALCP_API_EXPORT Drbg : public IDrbg
 {
   private:
     std::shared_ptr<IRng> m_entropy_in            = {};
