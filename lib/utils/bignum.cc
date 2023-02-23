@@ -40,8 +40,7 @@ namespace alcp {
 
 BigNum::BigNum()
     : m_pimpl{ std::make_unique<BigNum::Impl>() }
-{
-}
+{}
 
 BigNum::~BigNum() {}
 
@@ -141,13 +140,27 @@ BigNum::operator*(const BigNum& rhs)
 BigNum
 BigNum::operator/(const BigNum& rhs)
 {
-    return pImpl()->div(rhs);
+    BigNum result;
+    try {
+        result = pImpl()->div(rhs);
+    } catch (Status s) {
+        std::cout << "TRIED DIVIDING BY NULL OR 0 : " << s.message() << "\n";
+        throw s;
+    }
+    return result;
 }
 
 BigNum
 BigNum::operator%(const BigNum& rhs)
 {
-    return pImpl()->mod(rhs);
+    BigNum result;
+    try {
+        result = pImpl()->mod(rhs);
+    } catch (Status s) {
+        std::cout << "TRIED DIVIDING BY NULL OR 0 : " << s.message() << "\n";
+        throw s;
+    }
+    return result;
 }
 
 BigNum

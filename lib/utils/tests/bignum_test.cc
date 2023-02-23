@@ -341,6 +341,8 @@ TEST(BigNumTest, Div)
 
     BigNum x = d / e;
     EXPECT_EQ("7CE174", x.toString(BigNum::Format::eHex));
+    b.fromUint64(0);
+    ASSERT_THROW((x / b), base::Status);
 }
 
 TEST(BigNumTest, DivAssign)
@@ -368,6 +370,8 @@ TEST(BigNumTest, Mod)
     EXPECT_EQ(0, c.toInt64());
     BigNum x = d % e;
     EXPECT_EQ("2F31841D820B2112", x.toString(BigNum::Format::eHex));
+    b.fromUint64(0);
+    ASSERT_THROW((x % b), base::Status);
 }
 
 TEST(BigNumTest, ModAssign)
@@ -404,13 +408,17 @@ TEST(BigNumTest, NotEqual)
 
 TEST(BigNumTest, LeftShift)
 {
-    BigNum a, b, c, d, g;
+    BigNum a, b, c, d, e, g;
 
     a.fromInt64(1);
     d.fromInt64(5);
+    e.fromInt64(0);
     a <<= 1;
     b.fromString("2BD33E7F190894F0773D574A430", BigNum::Format::eHex);
     c.fromString("2BD33E7F190894F0773D574A430", BigNum::Format::eHex);
+    e <<= 100;
+    EXPECT_EQ(0, e.toInt64());
+
     b <<= 1;
     c <<= 2;
     EXPECT_EQ(2, a.toInt64());
@@ -452,10 +460,13 @@ TEST(BigNumTest, LeftShift)
 
 TEST(BigNumTest, RightShift)
 {
-    BigNum a, b, c, d, g;
+    BigNum a, b, c, d, e, g;
 
     a.fromInt64(std::numeric_limits<alcp::Int64>::max());
     d.fromString("500000000000000000000", BigNum::Format::eHex);
+    e.fromInt64(0);
+    e >>= 100;
+    EXPECT_EQ(0, e.toInt64());
     a >>= 1;
     EXPECT_EQ(std::numeric_limits<alcp::Int64>::max() >> 1, a.toInt64());
 
