@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -69,7 +69,9 @@ class Aes : public Rijndael
     Aes() { m_this = this; }
     virtual ~Aes() {}
 
-    ALCP_API_EXPORT virtual Status setKey(const Uint8* pUserKey, Uint64 len) override;
+    ALCP_API_EXPORT virtual Status setKey(const Uint8* pUserKey,
+                                          Uint64       len) override;
+    ALCP_API_EXPORT virtual Status setMode(alc_cipher_mode_t mode);
 
   protected:
     alc_cipher_mode_t m_mode;
@@ -693,8 +695,7 @@ class ALCP_API_EXPORT Xts final : public Aes
     virtual void expandTweakKeys(const Uint8* pUserKey, int len);
 
   private:
-    Xts() {
-        p_tweak_key = &m_tweak_round_key[0]; };
+    Xts() { p_tweak_key = &m_tweak_round_key[0]; };
 
   private:
     Uint8  m_tweak_round_key[(RIJ_SIZE_ALIGNED(32) * (16))];
