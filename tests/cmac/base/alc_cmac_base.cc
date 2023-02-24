@@ -66,7 +66,7 @@ AlcpCmacBase::init()
 
     err = alcp_mac_request(m_handle, &dinfo);
     if (alcp_is_error(err)) {
-        printf("Error code in alcp_mac_request: %ld\n", err);
+        std::cout << "Error code in alcp_mac_request:" << err << std::endl;
         return false;
     }
     return true;
@@ -92,19 +92,19 @@ AlcpCmacBase::Cmac_function(const alcp_cmac_data_t& data)
 
     err = alcp_mac_update(m_handle, data.m_msg, data.m_msg_len);
     if (alcp_is_error(err)) {
-        printf("alcp_mac_update failed: Err code: %ld\n", err);
+        std::cout << "alcp_mac_update failed: Err code: " << err << std::endl;
         return false;
     }
 
     err = alcp_mac_finalize(m_handle, NULL, 0);
     if (alcp_is_error(err)) {
-        printf("alcp_mac_finalize failed: Error code: %ld\n", err);
+        std::cout << "alcp_mac_finalize failed: Err code: " << err << std::endl;
         return false;
     }
 
     err = alcp_mac_copy(m_handle, data.m_cmac, data.m_cmac_len);
     if (alcp_is_error(err)) {
-        printf("alcp_mac_copy failed: Error code: %ld\n", err);
+        std::cout << "alcp_mac_copy failed: Err code: " << err << std::endl;
         return false;
     }
     return true;
@@ -116,7 +116,7 @@ AlcpCmacBase::reset()
     alc_error_t err;
     err = alcp_mac_reset(m_handle);
     if (alcp_is_error(err)) {
-        printf("alcp_mac_reset failed: Error code: %ld\n", err);
+        std::cout << "alcp_mac_reset failed: Err code: " << err << std::endl;
         return false;
     }
     return true;

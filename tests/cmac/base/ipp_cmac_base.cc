@@ -36,6 +36,7 @@ IPPCmacBase::~IPPCmacBase()
 {
     if (m_handle != nullptr) {
         delete[] reinterpret_cast<Uint8*>(m_handle);
+        m_handle = nullptr;
     }
 }
 
@@ -58,11 +59,15 @@ IPPCmacBase::init()
     }
 
     int ctx_size;
-    ippsAES_CMACGetSize(&ctx_size);
+    status = ippsAES_CMACGetSize(&ctx_size);
+    if (status != ippStsNoErr) {
+        std::cout << "ippsAES_CMACGetSize failed with err code" << status
+                  << std::endl;
+        return false;
+    }
     m_handle = reinterpret_cast<IppsAES_CMACState*>(new Uint8[ctx_size]);
 
     status = ippsAES_CMACInit(m_key, m_key_len, m_handle, ctx_size);
-
     if (status != ippStsNoErr) {
         std::cout << "ippsAES_CMACInit failed with err code" << status
                   << std::endl;

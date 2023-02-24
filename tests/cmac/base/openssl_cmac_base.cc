@@ -65,6 +65,7 @@ OpenSSLCmacBase::init()
     if (m_mac == NULL) {
         std::cout << "EVP_MAC_fetch failed, error: " << ERR_get_error()
                   << std::endl;
+        return false;
     }
 
     if (cipher != NULL)
@@ -77,6 +78,7 @@ OpenSSLCmacBase::init()
     if (m_handle == NULL) {
         std::cout << "EVP_MAC_CTX_new failed, error: " << ERR_get_error()
                   << std::endl;
+        return false;
     }
 
     ret_val = EVP_MAC_init(m_handle, m_key, m_key_len, params);
