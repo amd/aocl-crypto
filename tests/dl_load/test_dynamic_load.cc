@@ -27,6 +27,7 @@
  */
 
 #include "dl_load/dl_load.hh"
+#include <cstddef>
 
 /*FIXME: is this test name good to go? */
 TEST(ALCP, DL_LOAD)
@@ -37,7 +38,12 @@ TEST(ALCP, DL_LOAD)
 
     std::cout << "Running dynamic loading test" << std::endl;
 
-    handle = dlopen(alcp_lib_path, RTLD_LAZY);
+#if defined(_WIN64) || defined(_WIN32)
+    handle = LoadLibrary(alcp_lib_path);
+#else
+    handle    = dlopen(alcp_lib_path, RTLD_LAZY);
+#endif
+
     if (!handle) {
         std::cout << "Error!" << dlerror() << std::endl;
         FAIL();
@@ -45,9 +51,12 @@ TEST(ALCP, DL_LOAD)
 
     /* now just try to load these symbols and call them */
     /* store these in fn pointers */
-    func_print_version f_version =
-        (func_print_version)dlsym(handle, "alcp_get_version");
-
+    func_print_version f_version = NULL;
+#if defined(_WIN64) || defined(_WIN32)
+    f_version = (func_print_version)GetProcAddress(handle, "alcp_get_version");
+#else
+    f_version = (func_print_version)dlsym(handle, "alcp_get_version");
+#endif
     if (f_version == NULL) {
         std::cout << "Error, null func ptr" << std::endl;
         FAIL();
