@@ -47,8 +47,8 @@ namespace alcp::testing {
 DataSet::DataSet(const std::string filename)
     : File(filename)
 {
-    this->FileName = filename;
-    line           = readLine(); // Read header out
+    m_filename = filename;
+    line       = readLine(); // Read header out
     return;
 }
 
@@ -56,7 +56,7 @@ bool
 DataSet::readMsgKeyHmac()
 {
     if (!CheckFileExists()) {
-        std::cout << "File doesnt exist: " << this->FileName << std::endl;
+        std::cout << "File doesnt exist: " << m_filename << std::endl;
         return false;
     }
     line = readLine();
@@ -66,8 +66,7 @@ DataSet::readMsgKeyHmac()
     int pos1 = line.find(","); // End of Msg
     int pos2 = line.find(",", pos1 + 1);
     if (pos1 == -1 || pos2 == -1) {
-        std::cout << "Error in parsing csv file " << this->FileName
-                  << std::endl;
+        std::cout << "Error in parsing csv file " << m_filename << std::endl;
         return false;
     }
     Message = parseHexStrToBin(line.substr(0, pos1));

@@ -302,8 +302,8 @@ ExecRecPlay::dumpLog()
 DataSet::DataSet(const std::string filename)
     : File(filename)
 {
-    FileName = filename;
-    line     = readLine(); // Read header out
+    m_filename = filename;
+    line       = readLine(); // Read header out
     return;
 }
 
@@ -322,7 +322,7 @@ bool
 DataSet::readPtIvKeyCt()
 {
     if (!CheckFileExists()) {
-        std::cout << "File doesnt exist: " << this->FileName << std::endl;
+        std::cout << "File doesnt exist: " << m_filename << std::endl;
         return false;
     }
     line = readLine();
@@ -333,7 +333,7 @@ DataSet::readPtIvKeyCt()
     int pos2 = line.find(",", pos1 + 1); // End of IV
     int pos3 = line.find(",", pos2 + 1); // End of Key
     if ((pos1 == -1) || (pos2 == -1) || (pos3 == -1)) {
-        std::cout << "Error in parsing csv: " << FileName << std::endl;
+        std::cout << "Error in parsing csv: " << m_filename << std::endl;
         return false;
     }
     m_pt  = parseHexStrToBin(line.substr(0, pos1));
@@ -359,7 +359,7 @@ bool
 DataSet::readPtIvKeyCtAddTag()
 {
     if (!CheckFileExists()) {
-        std::cout << "File doesnt exist: " << this->FileName << std::endl;
+        std::cout << "File doesnt exist: " << m_filename << std::endl;
         return false;
     }
     line = readLine();
@@ -372,7 +372,7 @@ DataSet::readPtIvKeyCtAddTag()
     int pos4 = line.find(",", pos3 + 1); // End of CT
     int pos5 = line.find(",", pos4 + 1); // End of additional data
     if ((pos1 == -1) || (pos2 == -1) || (pos3 == -1)) {
-        std::cout << "Error in parsing csv: " << FileName << std::endl;
+        std::cout << "Error in parsing csv: " << m_filename << std::endl;
         return false;
     }
 
@@ -402,7 +402,7 @@ bool
 DataSet::readPtIvKeyCtTKey()
 {
     if (!CheckFileExists()) {
-        std::cout << "File doesnt exist: " << this->FileName << std::endl;
+        std::cout << "File doesnt exist: " << m_filename << std::endl;
         return false;
     }
     line = readLine();
@@ -414,7 +414,7 @@ DataSet::readPtIvKeyCtTKey()
     int pos3 = line.find(",", pos2 + 1); // End of Key
     int pos4 = line.find(",", pos3 + 1); // End of CT
     if ((pos1 == -1) || (pos2 == -1) || (pos3 == -1) || (pos4 == -1)) {
-        std::cout << "Error in parsing csv: " << FileName << std::endl;
+        std::cout << "Error in parsing csv: " << m_filename << std::endl;
         return false;
     }
 

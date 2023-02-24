@@ -263,8 +263,8 @@ ExecRecPlay::dumpLog()
 DataSet::DataSet(const std::string filename)
     : File(filename)
 {
-    this->FileName = filename;
-    line           = readLine(); // Read header out
+    m_filename = filename;
+    line       = readLine(); // Read header out
     return;
 }
 
@@ -272,7 +272,7 @@ bool
 DataSet::readMsgDigest()
 {
     if (!CheckFileExists()) {
-        std::cout << "File doesnt exist: " << this->FileName << std::endl;
+        std::cout << "File doesnt exist: " << m_filename << std::endl;
         return false;
     }
     line = readLine();
@@ -281,7 +281,7 @@ DataSet::readMsgDigest()
     }
     int pos1 = line.find(","); // End of Msg
     if (pos1 == -1) {
-        std::cout << "Error in parsing csv: " << FileName << std::endl;
+        std::cout << "Error in parsing csv: " << m_filename << std::endl;
         return false;
     }
     std::string messageStr = line.substr(0, pos1);
@@ -296,7 +296,7 @@ bool
 DataSet::readMsgDigestLen()
 {
     if (!CheckFileExists()) {
-        std::cout << "File doesnt exist: " << this->FileName << std::endl;
+        std::cout << "File doesnt exist: " << m_filename << std::endl;
         return false;
     }
     line = readLine();
@@ -306,7 +306,7 @@ DataSet::readMsgDigestLen()
     int pos1 = line.find(",");           // End of Msg
     int pos2 = line.find(",", pos1 + 1); // End of Msg digest
     if (pos1 == -1 || pos2 == -1) {
-        std::cout << "Error in parsing csv: " << FileName << std::endl;
+        std::cout << "Error in parsing csv: " << m_filename << std::endl;
         return false;
     }
     std::string messageStr = line.substr(0, pos1);

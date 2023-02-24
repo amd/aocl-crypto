@@ -161,7 +161,7 @@ class ExecRecPlay
 class DataSet : private File
 {
   private:
-    std::string        line = "", FileName = "";
+    std::string        line = "", m_filename = "";
     std::vector<Uint8> m_pt, m_iv, m_key, m_ct, m_add, m_tag, m_tkey;
     // First line is skipped, linenum starts from 1
     int lineno = 1;

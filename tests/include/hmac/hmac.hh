@@ -84,7 +84,7 @@ extern std::map<alc_digest_len_t, alc_sha2_mode_t> sha2_mode_len_map;
 class DataSet : private File
 {
   private:
-    std::string        line = "", FileName = "";
+    std::string        line = "", m_filename = "";
     std::vector<Uint8> Message, Key, Hmac;
     // First line is skipped, linenum starts from 1
     int lineno = 1;
