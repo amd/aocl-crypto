@@ -28,5 +28,14 @@ ADD_SUBDIRECTORY(digest)
 ADD_SUBDIRECTORY(hmac)
 ADD_SUBDIRECTORY(ecdh)
 ADD_SUBDIRECTORY(cmac)
+<<<<<<< HEAD
 ADD_SUBDIRECTORY(examples)
 ADD_SUBDIRECTORY(rsa)
+=======
+
+# FIXME: Enable this once this test is up and running on windows
+IF(UNIX)
+    ADD_SUBDIRECTORY(dl_load)
+ENDIF(UNIX)
+
+>>>>>>> 85742002 (Crypto: Dynamic load: Enabled only for linux as of now)
