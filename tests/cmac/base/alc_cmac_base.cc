@@ -76,6 +76,10 @@ AlcpCmacBase::~AlcpCmacBase()
 {
     if (m_handle != nullptr) {
         alcp_mac_finish(m_handle);
+        if (m_handle->ch_context != nullptr) {
+            free(m_handle->ch_context);
+            m_handle->ch_context = nullptr;
+        }
         delete m_handle;
         m_handle = nullptr;
     }
