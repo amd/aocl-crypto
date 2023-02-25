@@ -38,6 +38,11 @@
 #define p_data(x) (x.pImpl()->m_data)
 #define p_neg(x)  (x.pImpl()->m_is_negative)
 
+#define l_shift(x, shift)           (x << (shift))
+#define l_shift_minus_one(x, shift) ((x << (shift)) - 1)
+#define r_shift(x, shift)           (x >> (shift))
+#define r_shift_minus_one(x, shift) ((x >> (shift)) - 1)
+
 namespace alcp {
 
 class BigNum::Impl
@@ -388,10 +393,10 @@ BigNum::Impl::internal_div(const BigNum& b, BigNum* rem)
 {
     BigNum result;
     result.fromUint64(0UL);
+
     if (p_data(b).size() == 0 || (p_data(b).size() == 1 && p_data(b)[0] == 0)) {
-        Status s =
-            Status{ alcp::bn::BigNumError{ bn::ErrorCode::eFloatingPoint } };
-        throw s;
+
+        throw Status{ alcp::bn::BigNumError{ bn::ErrorCode::eFloatingPoint } };
     }
 
     // getting total no of bits to compare a and b
@@ -403,8 +408,8 @@ BigNum::Impl::internal_div(const BigNum& b, BigNum* rem)
 
     if (!compare_ge(m_data, p_data(b))) {
         if (rem != NULL) {
-            rem->pImpl()->m_data        = m_data;
-            rem->pImpl()->m_is_negative = m_is_negative;
+            p_data((*rem)) = m_data;
+            p_neg((*rem))  = m_is_negative;
         }
         return result;
     }
@@ -429,13 +434,14 @@ BigNum::Impl::internal_div(const BigNum& b, BigNum* rem)
         d >>= 1;
 
         if (compare_ge(p_data(lh), p_data(rh))) {
+
             lh -= rh;
             result += d;
         }
     }
     if (rem != NULL) {
-        rem->pImpl()->m_data        = lh.pImpl()->m_data;
-        rem->pImpl()->m_is_negative = lh.pImpl()->m_is_negative;
+        p_data((*rem)) = p_data(lh);
+        p_neg((*rem))  = p_neg(lh);
     }
     return result;
 }
@@ -446,7 +452,6 @@ BigNum::Impl::div(const BigNum& rhs)
     BigNum result;
     try {
         result = internal_div(rhs, NULL);
-        ALCP_ASSERT(p_data(result) == NULL, "BN_div failed");
     } catch (Status e) {
         throw e;
     }
@@ -459,7 +464,6 @@ BigNum::Impl::mod(const BigNum& rhs)
     BigNum result = BigNum();
     try {
         internal_div(rhs, &result);
-        ALCP_ASSERT(p_data(result) == NULL, "BN_div failed");
     } catch (Status e) {
         throw e;
     }
@@ -473,21 +477,19 @@ __rshift(std::vector<Uint64>& r, std::vector<Uint64> a, int shifts)
 
     uint64_t carry = 0;
     int      j     = rlen - 1;
+    shifts %= 64;
 
     for (int k = alen - 1; j >= 0; k--) {
 
-        // (taking last x bits of carry and appending to front of result) +
-        // (taking first 64-x bits of data and shifting by x and storing in
-        // result)
-
-        r[j] = (((carry << (64 - (shifts % 64)))
-                 & (ULLONG_MAX - ((1UL << (64 - shifts % 64)) - 1)))
-                | ((a[k] >> (shifts % 64))
-                   & ((ULLONG_MAX - ((1UL << (shifts % 64)) - 1))
-                      >> (shifts % 64))));
+        // taking last x bits of carry and appending to front of result +
+        // taking first 64-x bits of data and appending to back of result
+        r[j] =
+            ((l_shift(carry, 64 - shifts)
+              & (ULLONG_MAX - l_shift_minus_one(1UL, shifts)))
+             | (r_shift(a[k], shifts) & l_shift_minus_one(1UL, 64 - shifts)));
 
         // storing carry for next round
-        carry = ((a[k]) & (((1UL << (shifts % 64)) - 1)));
+        carry = a[k] & l_shift_minus_one(1UL, shifts);
 
         j--;
     }
@@ -506,25 +508,22 @@ __lshift(std::vector<Uint64>& r, std::vector<Uint64> a, int shifts)
     int    alen  = a.size();
     Uint64 carry = 0;
     int    j     = (shifts / 64);
-
+    shifts %= 64;
     for (int k = 0; k < j; k++) {
         r[k] = 0;
     }
 
     for (int k = 0; k < alen; k++) {
 
-        // (taking first x bits of carry and appending to end of result) +
-        // (taking last 64-x bits of data and shifting to left by x and
-        // storing in result)
-
-        r[j] = (((carry) & ((1UL << (shifts % 64)) - 1))
-                | ((a[k] << (shifts % 64))
-                   & (ULLONG_MAX - ((1UL << (shifts % 64)) - 1))));
+        // taking first x bits of carry and appending to end of result +
+        // taking last 64-x bits of data and appending to the front of result
+        r[j] = (carry & l_shift_minus_one(1UL, shifts))
+               | (l_shift(a[k], shifts)
+                  & (ULLONG_MAX - l_shift_minus_one(1UL, shifts)));
 
         // storing carry for next round
+        carry = r_shift(a[k], 64 - shifts) & l_shift_minus_one(1UL, shifts);
 
-        carry =
-            ((a[k] >> (64 - (shifts % 64))) & (((1UL << (shifts % 64)) - 1)));
         j++;
     }
     if (carry > 0) {
@@ -565,15 +564,11 @@ const String
 BigNum::Impl::toString(Format f) const
 {
     std::stringstream ss;
-    // BigNum::Impl      bn{ *this };
-    string bignumstr;
+    string            bignumstr;
 
     if (m_is_negative) {
         ss << "-";
-        // bn.invert();
     }
-
-    // std::reverse(bn.m_data.begin(), bn.m_data.end());
 
     switch (f) {
         case BigNum::Format::eBinary: {
@@ -754,7 +749,9 @@ BigNum::Impl::fromString(const String& str, BigNum::Format f)
 const void*
 BigNum::Impl::data() const
 {
-    return nullptr;
+    if (m_data.size() == 0)
+        return nullptr;
+    return &m_data;
 }
 
 std::size_t
