@@ -199,6 +199,20 @@ known_answer_map_t KAT_CmacDataset{
         }
       }
       }
+      ,
+        {
+        "TESTCASE7_AES_128_BLOCK_2_COMPLETE",
+      {
+        { 0x3c,0x1b,0xaf,0x0d,0x91,0x5e,0x5a,0xec,0x92,0xbb,0x62,0xba,0xba,0xd0,0xba,0x2c
+        },
+        {
+         0xf8,0xf2,0x42,0x4c,0x2d,0xc0,0xd0,0xf3,0x82,0x1a,0xf7,0x24,0x40,0x38,0xda,0x08,0x32,0xc5,0x47,0xbe,0x4f,0xf0,0x85,0x0b,0x98,0xc0,0x4d,0x4d,0x44,0xa7,0x16,0xb1   
+        },
+        {
+          0xe1,0x7e,0xa6,0x86,0x21,0x29,0xd6,0xb9
+        }
+      }
+      }
 
     
     
@@ -236,6 +250,8 @@ class CMACFuncionalityTest
                                     singleblock.begin() + block1_size);
         block2 = std::vector<Uint8>(singleblock.begin() + block1_size,
                                     singleblock.end());
+
+        assert(block1.size() + block2.size() == singleblock.size());
     }
 };
 
@@ -244,6 +260,14 @@ TEST_P(CMACFuncionalityTest, CMAC_SINGLE_UPDATE)
 
     cmac->update(&plain_text[0], plain_text.size());
     cmac->finalize(nullptr, 0);
+
+    /**
+        FIXME: Testcase Failing in status.hh makeMessage
+        String concatentation
+    */
+    ASSERT_EXIT((cmac->copy(&mac[0], mac.size()), exit(0)),
+                ::testing::ExitedWithCode(0),
+                "");
     cmac->copy(&mac[0], mac.size());
     EXPECT_EQ(mac, expected_mac);
 }
@@ -251,6 +275,13 @@ TEST_P(CMACFuncionalityTest, CMAC_SINGLE_UPDATE)
 TEST_P(CMACFuncionalityTest, CMAC_SINGLE_FINALIZE)
 {
     cmac->finalize(&plain_text[0], plain_text.size());
+    /**
+        FIXME: Testcase Failing in status.hh makeMessage
+        String concatentation
+    */
+    ASSERT_EXIT((cmac->copy(&mac[0], mac.size()), exit(0)),
+                ::testing::ExitedWithCode(0),
+                "");
     cmac->copy(&mac[0], mac.size());
     EXPECT_EQ(mac, expected_mac);
 }
@@ -258,6 +289,13 @@ TEST_P(CMACFuncionalityTest, CMAC_SINGLE_FINALIZE)
 TEST_P(CMACFuncionalityTest, CMAC_UPDATE_FINALIZE)
 {
     cmac->finalize(&plain_text[0], plain_text.size());
+    /**
+        FIXME: Testcase Failing in status.hh makeMessage
+        String concatentation
+    */
+    ASSERT_EXIT((cmac->copy(&mac[0], mac.size()), exit(0)),
+                ::testing::ExitedWithCode(0),
+                "");
     cmac->copy(&mac[0], mac.size());
     EXPECT_EQ(mac, expected_mac);
 }
@@ -274,6 +312,15 @@ TEST_P(CMACFuncionalityTest, CMAC_MULTIPLE_UPDATE)
     cmac->update(&block1[0], block1.size());
     cmac->update(&block2[0], block2.size());
     cmac->finalize(nullptr, 0);
+
+    /**
+        FIXME: Testcase Failing in status.hh makeMessage
+        String concatentation
+    */
+    ASSERT_EXIT((cmac->copy(&mac[0], mac.size()), exit(0)),
+                ::testing::ExitedWithCode(0),
+                "");
+
     cmac->copy(&mac[0], mac.size());
     EXPECT_EQ(mac, expected_mac);
 }
@@ -284,9 +331,36 @@ TEST_P(CMACFuncionalityTest, CMAC_RESET)
     cmac->reset();
     cmac->update(&plain_text[0], plain_text.size());
     cmac->finalize(nullptr, 0);
-    cmac->copy(&mac[0], mac.size());
 
+    /**
+      FIXME: Testcase Failing in status.hh makeMessage
+      String concatentation
+    */
+    ASSERT_EXIT((cmac->copy(&mac[0], mac.size()), exit(0)),
+                ::testing::ExitedWithCode(0),
+                "");
+
+    cmac->copy(&mac[0], mac.size());
     EXPECT_EQ(mac, expected_mac);
+}
+
+TEST(CMACRobustnessTest, CMAC_CreateObject)
+{
+    alcp::mac::Cmac cmac2;
+}
+
+TEST(CMACRobustnessTest, CMAC_callUpdateOnNullKey)
+{
+    alcp::mac::Cmac cmac2;
+    Uint8           data[20];
+
+    /**
+      FIXME: Testcase Failing in status.hh makeMessage
+      String concatentation
+    */
+    ASSERT_EXIT((cmac2.update(data, sizeof(data)), exit(0)),
+                ::testing::ExitedWithCode(0),
+                "");
 }
 
 INSTANTIATE_TEST_SUITE_P(
