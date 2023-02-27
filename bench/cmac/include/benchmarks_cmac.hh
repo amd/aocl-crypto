@@ -55,12 +55,12 @@ std::vector<Int64> cmac_key_sizes = { 16 };
 void inline Cmac_Bench(benchmark::State& state,
                        alc_mac_info_t    info,
                        uint64_t          block_size,
-                       uint64_t          KeySize,
-                       int               CmacSize)
+                       uint64_t          KeySize)
 {
     alc_error_t error;
 
-    std::vector<Uint8> Cmac(CmacSize / 8, 0);
+    /* MAX len of cmac would be 128 bits */
+    std::vector<Uint8> Cmac(128 / 8, 0);
     std::vector<Uint8> message(block_size, 0);
     std::vector<Uint8> Key(KeySize, 0);
 
@@ -120,7 +120,7 @@ BENCH_CMAC_AES_128(benchmark::State& state)
     alc_mac_info_t info;
     info.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
     info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode = ALC_AES_MODE_NONE;
-    Cmac_Bench(state, info, state.range(0), state.range(1), 128);
+    Cmac_Bench(state, info, state.range(0), state.range(1));
 }
 
 /* add benchmarks */
