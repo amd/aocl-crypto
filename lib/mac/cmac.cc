@@ -59,11 +59,12 @@ class Cmac::Impl : public alcp::cipher::Aes
     // Temporary Buffer to storage Encryption Result
     Uint8 temp_enc_result[16]{};
 
+    bool m_finalized = false;
+
     Impl()
         : Aes()
     {
         setMode(ALC_AES_MODE_NONE);
-        // setKey(cinfo.ci_key_info.key, cinfo.ci_key_info.len);
     }
 
     Status setKey(const Uint8* key, Uint64 len)
@@ -73,6 +74,7 @@ class Cmac::Impl : public alcp::cipher::Aes
         Aes::setKey(key, keylen);
         encrypt_keys = getEncryptKeys();
         get_subkeys();
+        reset();
         return StatusOk();
     }
     void finish()
@@ -87,6 +89,7 @@ class Cmac::Impl : public alcp::cipher::Aes
         memset(temp_enc_result, 0, 16);
         memset(storage_buffer, 0, 16);
         storage_buffer_offset = 0;
+        m_finalized           = false;
         return StatusOk();
     };
 
@@ -94,6 +97,10 @@ class Cmac::Impl : public alcp::cipher::Aes
 
     alcp::base::Status update(const Uint8* plaintext, int plaintext_size)
     {
+        Status status{ StatusOk() };
+        if (key == nullptr || keylen == 0) {
+            return InvalidArgumentError("Key is Empty");
+        }
         // No need to Process anything for empty block
         if (plaintext_size == 0) {
             return StatusOk();
@@ -166,6 +173,10 @@ class Cmac::Impl : public alcp::cipher::Aes
 
     alcp::base::Status finalize(const Uint8* plaintext, int plaintext_size)
     {
+
+        if (key == nullptr || keylen == 0) {
+            return InvalidArgumentError("Key is Empty");
+        }
         if (plaintext_size != 0) {
             update(plaintext, plaintext_size);
         }
@@ -206,13 +217,19 @@ class Cmac::Impl : public alcp::cipher::Aes
         }
         // Process the Final Block
         processChunk();
+        m_finalized = true;
         return StatusOk();
     }
 
     alcp::base::Status copy(Uint8* buff, Uint32 size)
     {
+        if (!m_finalized) {
+            return InternalError("Cannot Copy CMAC without finalizing");
+        }
+        // TODO Consider if size validation is required
         if (size < 16) {
-            // TODO: return error;
+            return InvalidArgumentError(
+                "CMAC output size has to be atleast 128 bits");
         } else {
             alcp::utils::CopyBytes(buff, temp_enc_result, size);
         }
@@ -282,5 +299,5 @@ Cmac::setKey(const Uint8* key, Uint64 len)
     return m_pImpl->setKey(key, len);
 }
 
-Cmac::~Cmac() = default;
+Cmac::~Cmac(){};
 } // namespace alcp::mac
