@@ -47,15 +47,15 @@ namespace alcp::mac {
 class Cmac final : public Mac
 {
   public:
-    Cmac();
-    ~Cmac();
+    ALCP_API_EXPORT Cmac();
+    ALCP_API_EXPORT ~Cmac();
     /**
      * @brief Update CMAC with plaintext Message
      *
      * @param pMsgBuf   Plaintext Message Buffer bytes to be updated
      * @param size      Size of the Plaintext Message Buffer in bytes
      */
-    alcp::base::Status update(const Uint8* pMsgBuf, Uint64 size) override;
+    ALCP_API_EXPORT alcp::base::Status update(const Uint8* pMsgBuf, Uint64 size) override;
 
     /**
      * @brief Update CMAC Key
@@ -63,7 +63,7 @@ class Cmac final : public Mac
      * @param key   pointer to CMAC Key to be used
      * @param len   Length of the key in bits
      */
-    alcp::base::Status setKey(const Uint8* key, Uint64 len);
+    ALCP_API_EXPORT alcp::base::Status setKey(const Uint8* key, Uint64 len);
 
     /**
      * @brief Finish CMAC. Other calls are not valid after finish
@@ -73,7 +73,7 @@ class Cmac final : public Mac
     /**
      * @brief Reset CMAC. After resetting update can be called by the same key
      */
-    alcp::base::Status reset() override;
+    ALCP_API_EXPORT alcp::base::Status reset() override;
     /**
      * @brief Finalize CMAC with any remaining data. After Finalize call Mac can
      * be copied using copy function
@@ -81,7 +81,7 @@ class Cmac final : public Mac
      * @param pMsgBuf   Plaintext Message Buffer bytes remaining to be updated
      * @param size      Size of the Plaintext Message Buffer in bytes
      */
-    alcp::base::Status finalize(const Uint8* pMsgBuf, Uint64 size) override;
+    ALCP_API_EXPORT alcp::base::Status finalize(const Uint8* pMsgBuf, Uint64 size) override;
     /**
      * @brief Copy MAC to memory pointer by buff . Should be called only after
      * Mac has been Finalized.
@@ -90,7 +90,7 @@ class Cmac final : public Mac
      * @param size      Size of the buffer in bytes. Should be greater than or
      * equal to 16.
      */
-    alcp::base::Status copy(Uint8* buff, Uint32 size);
+    ALCP_API_EXPORT alcp::base::Status copy(Uint8* buff, Uint32 size);
 
   private:
     class Impl;
@@ -100,16 +100,16 @@ class Cmac final : public Mac
 };
 
 namespace avx2 {
-    void processChunk(Uint8*       temp_enc_result,
+    ALCP_API_EXPORT void processChunk(Uint8*       temp_enc_result,
                       Uint8*       storage_buffer,
                       const Uint8* encrypt_keys,
                       const int    n_rounds);
 
-    void get_subkeys(std::vector<Uint8>& k1,
+    ALCP_API_EXPORT void get_subkeys(std::vector<Uint8>& k1,
                      std::vector<Uint8>& k2,
                      const Uint8*        encrypt_keys,
                      const int           n_rounds);
-    void load_and_left_shift_1(const Uint8* input, Uint8* output);
+    ALCP_API_EXPORT void load_and_left_shift_1(const Uint8* input, Uint8* output);
 
 } // namespace avx2
 } // namespace alcp::mac
