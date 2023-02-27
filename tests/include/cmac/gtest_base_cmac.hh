@@ -27,6 +27,7 @@
  */
 
 #pragma once
+#include <iterator>
 #ifndef __GTEST_BASE_HH
 #define __GTEST_BASE_HH 2
 
@@ -70,6 +71,7 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
 {
     alc_error_t      error;
     alcp_cmac_data_t data;
+    int              CmacSize = 0;
 
     info.mi_type                                         = ALC_MAC_CMAC;
     info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_iv = NULL;
@@ -94,7 +96,12 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
 #endif
 
     while (ds.readMsgKeyCmac()) {
-        std::vector<Uint8> cmac(ds.getCmac().size(), 0);
+        /* cmac size returned by alcp and openssl is of 128 bits */
+        CmacSize = 128;
+        if (useipp) {
+            CmacSize = ds.getCmac().size();
+        }
+        std::vector<Uint8> cmac(CmacSize, 0);
 
         auto msg = ds.getMessage();
         auto key = ds.getKey();
@@ -122,8 +129,10 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
             FAIL();
         }
 
-        /*conv m_digest into a vector */
-        std::vector<uint8_t> cmac_vector(std::begin(cmac), std::end(cmac));
+        /*conv cmac output into a vector */
+        /* we need only the no of bytes needed, from the output */
+        std::vector<uint8_t> cmac_vector(
+            std::begin(cmac), std::begin(cmac) + ds.getCmac().size());
 
         EXPECT_TRUE(
             ArraysMatch(cmac_vector,  // Actual output
