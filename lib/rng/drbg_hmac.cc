@@ -311,7 +311,7 @@ HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8  cIn1[],
     hmac_obj.finalize(nullptr, 0);
 
     // Assert that we have enough memory to write the output into
-    assert(out_len >= m_digest->getHashSize());
+    assert(cOutLen >= m_digest->getHashSize());
 
     hmac_obj.copyHash(out, m_digest->getHashSize());
 
