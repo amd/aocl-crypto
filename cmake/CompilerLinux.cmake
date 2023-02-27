@@ -134,59 +134,18 @@ endfunction(alcp_get_arch_cflags_zen4)
 # Maybe different for clang!!
 
 # if address sanitizer used
-function(alcp_add_asan_flags)
-    set(ALCP_CFLAGS_ASAN
-            -static-libasan
-            -fsanitize=address
+function(alcp_add_sanitize_flags)
+    set(ALCP_OPTIONS_SANITIZE
+            -fsanitize=address 
+            -fsanitize=undefined 
+            -fsanitize=pointer-subtract 
+            -fsanitize=pointer-compare 
             CACHE INTERNAL ""
         )
-	    link_libraries(asan)
-	    add_compile_options(${ALCP_CFLAGS_ASAN})
-endfunction(alcp_add_asan_flags)
-
-# thread sanitizer usage
-function(alcp_add_tsan_flags)
-    set(ALCP_CFLAGS_TSAN
-            -fsanitize=thread
-            CACHE INTERNAL ""
-        )
-	    link_libraries(tsan)
-	    add_compile_options(${ALCP_CFLAGS_TSAN})
-endfunction(alcp_add_tsan_flags)
-
-# Asan leak sanitizer usage (cannot be combined with -tsan/asan, so making it seperate option)
-function(alcp_add_lsan_flags)
-    set(ALCP_CFLAGS_LSAN
-            -fsanitize=leak
-            CACHE INTERNAL ""
-        )
-	    link_libraries(lsan)
-	    add_compile_options(${ALCP_CFLAGS_LSAN})
-endfunction(alcp_add_lsan_flags)
-
-# undefined behavior sanitizer usage
-function(alcp_add_ubsan_flags)
-    set(ALCP_CFLAGS_UBSAN
-            -fsanitize=undefined
-            -fsanitize=null
-            -fsanitize=return
-            -fsanitize=integer-divide-by-zero
-            -fsanitize=unreachable
-            -fsanitize=vla-bound
-            -fsanitize=bounds
-            -fsanitize=bounds-strict
-            -fsanitize=object-size
-            -fsanitize=nonnull-attribute
-            -fsanitize=returns-nonnull-attribute
-            -fsanitize=bool
-            -fsanitize=enum
-            -fsanitize=vptr
-            -fsanitize=pointer-overflow
-            CACHE INTERNAL ""
-        )
-	    link_libraries(ubsan)
-	    add_compile_options(${ALCP_CFLAGS_UBSAN})
-endfunction(alcp_add_ubsan_flags)
+    link_libraries(asan)
+    add_compile_options(${ALCP_OPTIONS_SANITIZE})
+    add_link_options(${ALCP_OPTIONS_SANITIZE})
+endfunction(alcp_add_sanitize_flags)
 
 # coverage
 function(alcp_add_coverage_flags)
