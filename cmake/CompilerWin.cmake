@@ -112,3 +112,15 @@ function(alcp_get_arch_cflags_zen4)
         )
     set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
 endfunction(alcp_get_arch_cflags_zen4)
+
+# if address sanitizer used
+function(alcp_add_sanitize_flags)
+    set(ALCP_OPTIONS_SANITIZE
+            /fsanitize=address
+            /fsanitize-address-use-after-return
+            CACHE INTERNAL ""
+        )
+    link_libraries(asan)
+    add_compile_options(${ALCP_OPTIONS_SANITIZE})
+    add_link_options(${ALCP_OPTIONS_SANITIZE})
+endfunction(alcp_add_sanitize_flags)
