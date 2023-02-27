@@ -47,9 +47,10 @@ using namespace alcp::testing;
 #include "cmac/openssl_cmac_base.hh"
 #endif
 
-#define MAX_LOOP   16000
-#define INC_LOOP   1
-#define START_LOOP 1
+#define MAX_LOOP    1600
+#define KEY_LEN_MAX 1600
+#define INC_LOOP    1
+#define START_LOOP  1
 
 /* print params verbosely */
 inline void
@@ -96,7 +97,9 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
 #endif
 
     while (ds.readMsgKeyCmac()) {
-        /* cmac size returned by alcp and openssl is of 128 bits */
+        /* cmac size returned by alcp and openssl is of 128 bits
+         TODO: IPP returns success only when cmac len is specified. Need to
+         revisit */
         CmacSize = 128;
         if (useipp) {
             CmacSize = ds.getCmac().size();
@@ -180,18 +183,26 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
         exit(-1);
     }
 
-    /* generate random key value */
-    /* FIXME: generate a vector using getRandomBytes() once, split it and feed
-     * it into the loop. Avoid calling genRandomBytes() each time in the loop */
+    /* generate random msg,key value */
+    std::vector<Uint8>                 msg_full = rb.genRandomBytes(MAX_LOOP);
+    std::vector<Uint8>                 key_full = rb.genRandomBytes(KeySize);
+    std::vector<Uint8>::const_iterator pos1, pos2;
+    auto                               rng = std::default_random_engine{};
+
     for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
         alcp_cmac_data_t data_alc, data_ext;
 
-        /* generate test data vectors */
-        std::vector<Uint8> msg(i, 0);
+        /* generate msg data from msg_full */
+        msg_full = ShuffleVector(msg_full, rng);
+        pos1     = msg_full.end() - i;
+        pos2     = msg_full.end();
+        std::vector<Uint8> msg(pos1, pos2);
 
-        std::vector<Uint8> key(KeySize / 8, 0);
-        msg = rb.genRandomBytes(i);
-        key = rb.genRandomBytes(KeySize / 8);
+        /* generate random key value*/
+        key_full = ShuffleVector(key_full, rng);
+        pos1     = key_full.begin();
+        pos2     = key_full.begin() + (KeySize / 8);
+        std::vector<Uint8> key(pos1, pos2);
 
         /* load test data */
         data_alc.m_msg      = &(msg[0]);
