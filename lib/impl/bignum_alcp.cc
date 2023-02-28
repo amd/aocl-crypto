@@ -31,17 +31,11 @@
 #include <algorithm>
 #include <bitset>
 #include <climits>
+#include <cmath>
 #include <iomanip>
 #include <type_traits>
 
 #include <iostream>
-#define p_data(x) (x.pImpl()->m_data)
-#define p_neg(x)  (x.pImpl()->m_is_negative)
-
-#define l_shift(x, shift)           (x << (shift))
-#define l_shift_minus_one(x, shift) ((x << (shift)) - 1)
-#define r_shift(x, shift)           (x >> (shift))
-#define r_shift_minus_one(x, shift) ((x >> (shift)) - 1)
 
 namespace alcp {
 
@@ -61,7 +55,6 @@ class BigNum::Impl
 
     BigNum add(Uint64 val);
     BigNum sub(const BigNum& rhs);
-    BigNum internal_div(const BigNum& b, BigNum* rem);
     BigNum mul(const BigNum& rhs);
     BigNum div(const BigNum& rhs);
     BigNum mod(const BigNum& rhs);
@@ -96,8 +89,33 @@ class BigNum::Impl
     void               clear();
 
   private:
-    void invert();
+    void   invert();
+    BigNum __div(const BigNum& b, BigNum& rem);
 };
+
+static inline Uint64
+leftShift(Uint64 x, int shift)
+{
+    return (x << (shift));
+}
+
+static inline Uint64
+leftShiftMinusOne(Uint64 x, int shift)
+{
+    return ((x << (shift)) - 1);
+}
+
+static inline Uint64
+rightShift(Uint64 x, int shift)
+{
+    return (x >> (shift));
+}
+
+static inline Uint64
+rightShiftMinusOne(Uint64 x, int shift)
+{
+    return ((x >> (shift)) - 1);
+}
 
 BigNum::Impl::Impl()
     : m_is_negative{ false }
@@ -106,8 +124,8 @@ BigNum::Impl::Impl()
 void
 BigNum::Impl::operator=(const BigNum& rhs)
 {
-    this->m_data        = p_data(rhs);
-    this->m_is_negative = p_neg(rhs);
+    this->m_data        = rhs.pImpl()->m_data;
+    this->m_is_negative = rhs.pImpl()->m_is_negative;
 }
 
 void
@@ -346,42 +364,50 @@ BigNum::Impl::sub(const BigNum& rhs)
     auto rimpl   = rhs.pImpl();
     auto resimpl = result.pImpl();
 
-    // auto carry_occured = 0UL;
     auto is_neg = (int)m_is_negative ^ (int)rimpl->m_is_negative;
 
     if (is_neg) {
 
         __add(m_data, rimpl->m_data, resimpl->m_data);
-        p_neg(result) = m_is_negative;
+        result.pImpl()->m_is_negative = m_is_negative;
     } else {
         if (compare_ge(m_data, rimpl->m_data)) {
 
             __sub(m_data, rimpl->m_data, resimpl->m_data);
-            p_neg(result) = m_is_negative;
+            result.pImpl()->m_is_negative = m_is_negative;
         } else {
             __sub(rimpl->m_data, m_data, resimpl->m_data);
-            p_neg(result) = 1 ^ rimpl->m_is_negative;
+            result.pImpl()->m_is_negative = 1 ^ rimpl->m_is_negative;
         }
     }
 
     return result;
-    /* FIXME: re-do this */
 }
 
 BigNum
 BigNum::Impl::mul(const BigNum& rhs)
 {
     // fast exponentation for multiplication
+
+    // TODO : Will need to implement other Algo to remove risk of exposing data
+
     BigNum result, tmp;
     result.fromUint64(0ULL);
     auto data           = rhs.pImpl()->m_data;
     tmp.pImpl()->m_data = m_data;
     for (auto&& val : data) {
         while (val > 0) {
-            if (val & 1)
+            while (val & 1) {
                 result += tmp;
-            tmp <<= 1;
-            val >>= 1;
+                tmp = tmp << 1;
+                val >>= 1;
+            }
+            int k = 0;
+            while (k < 63 && !(val & (1 << k))) {
+                k++;
+            }
+            tmp = tmp << k;
+            val >>= k;
         }
     }
 
@@ -389,12 +415,13 @@ BigNum::Impl::mul(const BigNum& rhs)
 }
 
 BigNum
-BigNum::Impl::internal_div(const BigNum& b, BigNum* rem)
+BigNum::Impl::__div(const BigNum& b, BigNum& rem)
 {
     BigNum result;
     result.fromUint64(0UL);
 
-    if (p_data(b).size() == 0 || (p_data(b).size() == 1 && p_data(b)[0] == 0)) {
+    if (b.pImpl()->m_data.size() == 0
+        || (b.pImpl()->m_data.size() == 1 && b.pImpl()->m_data[0] == 0)) {
 
         throw Status{ alcp::bn::BigNumError{ bn::ErrorCode::eFloatingPoint } };
     }
@@ -406,11 +433,11 @@ BigNum::Impl::internal_div(const BigNum& b, BigNum* rem)
 
     // return 0 if divisor is greater than dividend
 
-    if (!compare_ge(m_data, p_data(b))) {
-        if (rem != NULL) {
-            p_data((*rem)) = m_data;
-            p_neg((*rem))  = m_is_negative;
-        }
+    if (!compare_ge(m_data, b.pImpl()->m_data)) {
+        // if (rem != NULL) {
+        rem.pImpl()->m_data        = m_data;
+        rem.pImpl()->m_is_negative = m_is_negative;
+        // }
         return result;
     }
 
@@ -419,39 +446,39 @@ BigNum::Impl::internal_div(const BigNum& b, BigNum* rem)
 
     BigNum rh = b, lh, d;
 
-    p_data(lh) = m_data;
-    p_neg(lh)  = m_is_negative;
+    lh.pImpl()->m_data        = m_data;
+    lh.pImpl()->m_is_negative = m_is_negative;
     d.fromUint64(1UL);
 
     rh <<= (x - y + 1);
     d <<= (x - y + 1);
 
-    // dividing lh till it become lower than b when rh == b than lh can't be
-    // divided more
+    // recursively subtracting different ((2^x) * divisor) from dividend till x
+    // becomes 0 so that we can get remainder and divident in one go
 
     while (rh != b) {
         rh >>= 1;
         d >>= 1;
 
-        if (compare_ge(p_data(lh), p_data(rh))) {
+        if (compare_ge(lh.pImpl()->m_data, rh.pImpl()->m_data)) {
 
             lh -= rh;
             result += d;
         }
     }
-    if (rem != NULL) {
-        p_data((*rem)) = p_data(lh);
-        p_neg((*rem))  = p_neg(lh);
-    }
+    // if (rem != NULL) {
+    rem.pImpl()->m_data        = lh.pImpl()->m_data;
+    rem.pImpl()->m_is_negative = lh.pImpl()->m_is_negative;
+    // }
     return result;
 }
 
 BigNum
 BigNum::Impl::div(const BigNum& rhs)
 {
-    BigNum result;
+    BigNum result, rem;
     try {
-        result = internal_div(rhs, NULL);
+        result = __div(rhs, rem);
     } catch (Status e) {
         throw e;
     }
@@ -463,7 +490,7 @@ BigNum::Impl::mod(const BigNum& rhs)
 {
     BigNum result = BigNum();
     try {
-        internal_div(rhs, &result);
+        __div(rhs, result);
     } catch (Status e) {
         throw e;
     }
@@ -481,15 +508,14 @@ __rshift(std::vector<Uint64>& r, std::vector<Uint64> a, int shifts)
 
     for (int k = alen - 1; j >= 0; k--) {
 
-        // taking last x bits of carry and appending to front of result +
-        // taking first 64-x bits of data and appending to back of result
-        r[j] =
-            ((l_shift(carry, 64 - shifts)
-              & (ULLONG_MAX - l_shift_minus_one(1UL, shifts)))
-             | (r_shift(a[k], shifts) & l_shift_minus_one(1UL, 64 - shifts)));
+        // using overflow data of previous index present in carry
+        r[j] = ((leftShift(carry, 64 - shifts)
+                 & (ULLONG_MAX - leftShiftMinusOne(1UL, shifts)))
+                | (rightShift(a[k], shifts)
+                   & leftShiftMinusOne(1UL, 64 - shifts)));
 
-        // storing carry for next round
-        carry = a[k] & l_shift_minus_one(1UL, shifts);
+        // storing overflow data in carry to used for next index
+        carry = a[k] & leftShiftMinusOne(1UL, shifts);
 
         j--;
     }
@@ -515,14 +541,13 @@ __lshift(std::vector<Uint64>& r, std::vector<Uint64> a, int shifts)
 
     for (int k = 0; k < alen; k++) {
 
-        // taking first x bits of carry and appending to end of result +
-        // taking last 64-x bits of data and appending to the front of result
-        r[j] = (carry & l_shift_minus_one(1UL, shifts))
-               | (l_shift(a[k], shifts)
-                  & (ULLONG_MAX - l_shift_minus_one(1UL, shifts)));
+        // using overflow data of previous index present in carry
+        r[j] = (carry & leftShiftMinusOne(1UL, shifts))
+               | (leftShift(a[k], shifts)
+                  & (ULLONG_MAX - leftShiftMinusOne(1UL, shifts)));
 
-        // storing carry for next round
-        carry = r_shift(a[k], 64 - shifts) & l_shift_minus_one(1UL, shifts);
+        // storing overflow data in carry to used for next index
+        carry = rightShift(a[k], 64 - shifts) & leftShiftMinusOne(1UL, shifts);
 
         j++;
     }
@@ -590,17 +615,18 @@ BigNum::Impl::toString(Format f) const
         case Format::eDecimal: {
 
             BigNum temp, mul;
-            p_data(temp) = m_data;
+            temp.pImpl()->m_data = m_data;
             mul.fromUint64(10000000000000000000UL);
 
-            while (p_data(temp).size() > 0 && p_data(temp)[0] > 0) {
+            while (temp.pImpl()->m_data.size() > 0
+                   && temp.pImpl()->m_data[0] > 0) {
                 std::stringstream sss;
 
                 BigNum res;
 
-                temp = temp.pImpl()->internal_div(mul, &res);
+                temp = temp.pImpl()->__div(mul, res);
 
-                sss << std::dec << p_data(res)[0];
+                sss << std::dec << res.pImpl()->m_data[0];
 
                 bignumstr = sss.str() + bignumstr;
             }
@@ -630,11 +656,15 @@ BigNum::Impl::toString(Format f) const
 Status
 BigNum::Impl::fromString(const String& str, BigNum::Format f)
 {
+
     string dstr = str;
     transform(dstr.begin(), dstr.end(), dstr.begin(), ::tolower);
 
+    // Resetting the data already present to accomodate new data
+    clear();
+
     if (str[0] == '-') {
-        m_is_negative = 1;
+        m_is_negative = true;
         dstr          = str.substr(1);
     }
     if (dstr.length() > 1
@@ -645,100 +675,68 @@ BigNum::Impl::fromString(const String& str, BigNum::Format f)
     switch (f) {
         case BigNum::Format::eBinary: {
 
-            m_data.resize((dstr.length() / 512) + (dstr.length() % 512 != 0));
-
-            Uint64 x = 0, j = 0, k = 0;
-
-            for (int i = dstr.length() - 1; i >= 0; i--) {
-
-                if (dstr[i] != '0' && dstr[i] != '1') {
-                    Status s = Status{ alcp::bn::BigNumError{
-                        ErrorCode::eInvalidArgument } };
-                    return s;
-                }
-                x += (dstr[i] == '1') ? (1 << j) : 0;
-                j++;
-
-                if (j == 64) {
-                    m_data[k] = x;
-                    j         = 0;
-                    x         = 0;
-                    k++;
-                }
+            if (strspn(dstr.c_str(), "01") != dstr.length()) {
+                Status s = Status{ alcp::bn::BigNumError{
+                    ErrorCode::eInvalidArgument } };
+                return s;
             }
-            if (x > 0)
-                m_data[k] = x;
+            Uint64 k = (dstr.length() % 64);
+            if (k == 0)
+                k = 64;
+            for (Uint64 j = 0; j < dstr.length(); j += k, k = 64) {
+
+                Uint64 x = strtoull(dstr.substr(j, k).c_str(), nullptr, 2);
+                m_data.push_back(x);
+            }
+            reverse(m_data.begin(), m_data.end());
+
         } break;
         case BigNum::Format::eDecimal: {
+
+            if (strspn(dstr.c_str(), "0123456789") != dstr.length()) {
+                Status s = Status{ alcp::bn::BigNumError{
+                    ErrorCode::eInvalidArgument } };
+                return s;
+            }
+
             BigNum r, m;
             r.fromUint64(0);
             m.fromUint64(10000000000000000000UL);
+            Uint64 k = (dstr.length() % 19);
+            if (k == 0)
+                k = 19;
+            for (Uint64 j = 0; j < dstr.length(); j += k, k = 19) {
+                Uint64 x = strtoull(dstr.substr(j, k).c_str(), nullptr, 10);
 
-            Uint64 x = 0, k = (19 - (dstr.length() % 19)) % 19;
-            for (Uint64 i = 0; i < dstr.length(); i++) {
+                BigNum a;
+                a.fromUint64(x);
 
-                if (!(dstr[i] >= '0' && dstr[i] <= '9')) {
-                    Status s = Status{ alcp::bn::BigNumError{
-                        ErrorCode::eInvalidArgument } };
-                    return s;
-                    return InvalidArgumentError(
-                        " decimal string has invalid value ! " + str);
-                }
-                x *= 10;
-                x += (dstr[i] - '0');
-                k++;
-
-                if (k == 19) {
-                    BigNum a;
-                    a.fromUint64(x);
-
-                    r *= m;
-                    r += a;
-
-                    x = 0;
-                    k = 0;
-                }
+                r *= m;
+                r += a;
             }
 
-            if (m_is_negative == 1)
-                p_neg(r) = 1;
-            m_data = p_data(r);
+            if (m_is_negative)
+                r.pImpl()->m_is_negative = true;
+            m_data = r.pImpl()->m_data;
         } break;
         default: {
 
-            m_data.resize((dstr.length() / 16) + (dstr.length() % 16 > 0));
-
-            Uint64 x = 0, k = 0, bits = 0, mul = 1;
-
-            for (int i = dstr.length() - 1; i >= 0; i--) {
-
-                if (!isxdigit(dstr[i])) {
-                    Status s = Status{ alcp::bn::BigNumError{
-                        ErrorCode::eInvalidArgument } };
-                    return s;
-                    return InvalidArgumentError(
-                        " hex string has invalid value ! " + str);
-                }
-
-                x += ((dstr[i] >= '0' && dstr[i] <= '9') ? dstr[i] - '0'
-                                                         : (dstr[i] - 'a') + 10)
-                     * mul;
-
-                mul *= 16;
-                bits += 4;
-
-                if (bits == 64) {
-
-                    m_data[k++] = x;
-                    x           = 0;
-                    bits        = 0;
-                    mul         = 1;
-                }
+            if (strspn(dstr.c_str(), "0123456789abcdef") != dstr.length()) {
+                Status s = Status{ alcp::bn::BigNumError{
+                    ErrorCode::eInvalidArgument } };
+                return s;
             }
-            if (x > 0) {
 
-                m_data[k] = x;
+            Uint64 k = (dstr.length() % 16);
+
+            if (k == 0)
+                k = 16;
+            for (Uint64 j = 0; j < dstr.length(); j += k, k = 16) {
+
+                Uint64 x = strtoull(dstr.substr(j, k).c_str(), nullptr, 16);
+                m_data.push_back(x);
             }
+            reverse(m_data.begin(), m_data.end());
         }
     }
     ALCP_ASSERT(data[0] == val, "fromInt64: BIGNUM struct constructor failed");
@@ -758,6 +756,13 @@ std::size_t
 BigNum::Impl::size() const
 {
     return m_data.size() * sizeof(typeT);
+}
+
+void
+BigNum::Impl::clear()
+{
+    m_data.clear();
+    m_is_negative = false;
 }
 
 } // namespace alcp
