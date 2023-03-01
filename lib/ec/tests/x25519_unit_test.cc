@@ -31,7 +31,11 @@
 #include <string.h>
 
 #include "alcp/base.hh"
+#include "alcp/types.hh"
 #include "ec/ecdh.hh"
+
+
+#include "alcp/error.h"
 
 #ifdef WIN32
 #include "utils/time.hh"
@@ -111,11 +115,9 @@ known_answer_map_t KATDataset{
     }
 
 };
-
 // clang-format on
 
-#if ALCP_X25519_ADDED
-
+using namespace ec;
 class x25519Test
     : public testing::TestWithParam<std::pair<const std::string, param_tuple>>
 {
@@ -125,10 +127,10 @@ class x25519Test
     std::string m_test_name;
     alc_error_t m_err;
 
-    EcX25519* m_px25519obj1 = nullptr;
-    EcX25519* m_px25519obj2 = nullptr;
-    Uint8     m_publicKeyData1[32];
-    Uint8     m_publicKeyData2[32];
+    X25519* m_px25519obj1 = nullptr;
+    X25519* m_px25519obj2 = nullptr;
+    Uint8   m_publicKeyData1[32]={};
+    Uint8   m_publicKeyData2[32]={};
 
     void SetUp() override
     {
@@ -146,8 +148,8 @@ class x25519Test
 
         m_test_name = test_name;
 
-        m_px25519obj1 = new EcX25519;
-        m_px25519obj2 = new EcX25519;
+        m_px25519obj1 = new X25519;
+        m_px25519obj2 = new X25519;
     }
 
     void TearDown() override
@@ -171,29 +173,26 @@ TEST_P(x25519Test, PublicAndSharedKeyTest)
 
     /* Peer 1 */
     const Uint8* pPrivKey_input_data1 = &(m_peer1_private_key.at(0));
-    m_px25519obj1->GeneratePublicKey(m_publicKeyData1, pPrivKey_input_data1);
+    m_px25519obj1->generatePublicKey(m_publicKeyData1, pPrivKey_input_data1);
     ALCP_PRINT_TEXT(pPrivKey_input_data1, 32, "PrivKey_input_peer1      ")
     ALCP_PRINT_TEXT(m_publicKeyData1, 32, "publicKeyData1      ")
 
     /* Peer 2 */
     const Uint8* pPrivKey_input_data2 = &(m_peer2_private_key.at(0));
-    m_px25519obj2->GeneratePublicKey(m_publicKeyData2, pPrivKey_input_data2);
-    EXPECT_EQ(ALC_ERROR_NONE, ret);
+    m_px25519obj2->generatePublicKey(m_publicKeyData2, pPrivKey_input_data2);
     ALCP_PRINT_TEXT(pPrivKey_input_data2, 32, "PrivKey_input_peer2      ")
     ALCP_PRINT_TEXT(m_publicKeyData2, 32, "publicKeyData2      ")
 
     // compute shared secret key of both peers
     Uint8* pSecret_key1 = new Uint8[MAX_SIZE_KEY_DATA];
     Uint64 keyLength1;
-    ret = m_px25519obj1->ComputeSecretKey(
+    m_px25519obj1->computeSecretKey(
         pSecret_key1, m_publicKeyData2, &keyLength1);
-    EXPECT_EQ(ALC_ERROR_NONE, ret);
 
     Uint8* pSecret_key2 = new Uint8[MAX_SIZE_KEY_DATA];
     Uint64 keyLength2;
-    ret = m_px25519obj2->ComputeSecretKey(
+    m_px25519obj2->computeSecretKey(
         pSecret_key2, m_publicKeyData1, &keyLength2);
-    EXPECT_EQ(ALC_ERROR_NONE, ret);
 
     ALCP_PRINT_TEXT(pSecret_key1, 32, " shared Secret_key1      ")
     ALCP_PRINT_TEXT(pSecret_key2, 32, " shared Secret_key2      ")
@@ -209,8 +208,6 @@ TEST_P(x25519Test, PublicAndSharedKeyTest)
 
 TEST_P(x25519Test, performanceTest)
 {
-    alc_error_t ret = ALC_ERROR_NONE;
-
     /* Peer 1 */
     const Uint8* pPrivKey_input_data1 = &(m_peer1_private_key.at(0));
 
@@ -218,7 +215,7 @@ TEST_P(x25519Test, performanceTest)
     totalTimeElapsed = 0.0;
     for (int k = 0; k < 100000000; k++) {
         ALCP_CRYPT_TIMER_START
-        m_px25519obj1->GeneratePublicKey(m_publicKeyData1,
+        m_px25519obj1->generatePublicKey(m_publicKeyData1,
                                          pPrivKey_input_data1);
 
         ALCP_CRYPT_GET_TIME(0, "key generation time")
@@ -227,7 +224,6 @@ TEST_P(x25519Test, performanceTest)
             break;
         }
     }
-    // ALCP_PRINT_TEXT(m_publicKeyData2, 32, "m_publicKeyData2      ")
 
     Uint8* pSecret_key = new Uint8[MAX_SIZE_KEY_DATA];
     totalTimeElapsed   = 0.0;
@@ -236,7 +232,7 @@ TEST_P(x25519Test, performanceTest)
         ALCP_CRYPT_TIMER_START
 
         Uint64 keyLength;
-        ret = m_px25519obj1->ComputeSecretKey(
+        m_px25519obj1->computeSecretKey(
             pSecret_key, m_publicKeyData1, &keyLength);
         ALCP_CRYPT_GET_TIME(0, "key generation time")
 
@@ -245,11 +241,6 @@ TEST_P(x25519Test, performanceTest)
             break;
         }
     }
-    // ALCP_PRINT_TEXT(pSecret_key, 32, "pSecret_key      ")
-
-    EXPECT_EQ(ALC_ERROR_NONE, ret);
 }
-
-#endif // ALCP_X25519_ADDED
 
 } // namespace

@@ -54,6 +54,18 @@ alcp_ec_supported(const alc_ec_info_p pEcInfo)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
+    if (pEcInfo->ecCurveId != ALCP_EC_CURVE25519) {
+        return ALC_ERROR_NOT_SUPPORTED;
+    }
+
+    if (pEcInfo->ecCurveType != ALCP_EC_CURVE_TYPE_MONTGOMERY) {
+        return ALC_ERROR_NOT_SUPPORTED;
+    }
+
+    if (pEcInfo->ecPointFormat != ALCP_EC_POINT_FORMAT_UNCOMPRESSED) {
+        return ALC_ERROR_NOT_SUPPORTED;
+    }
+
     return err;
 }
 

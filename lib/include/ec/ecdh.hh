@@ -31,21 +31,18 @@
 #include "alcp/macros.h"
 #include "ec.hh"
 
-#define ALCP_X25519_ADDED 0
+namespace alcp::ec {
 
-#if ALCP_X25519_ADDED
 void
 alcpScalarMulX25519(Uint8*       mypublic,
                     const Uint8* secret,
                     const Uint8* basepoint);
-#endif
-namespace alcp::ec {
 
 class X25519 : public Ec
 {
   public:
     X25519();
-    ~X25519() = default;
+    ~X25519();
 
     /**
      * @brief Function generates x25519 public key using input privateKey
@@ -96,7 +93,7 @@ class X25519 : public Ec
     Uint64 getKeySize() override;
 
   private:
-    std::vector<Uint8> m_pPrivKey;
+    Uint8 m_PrivKey[32] = {};
 };
 
 } // namespace alcp::ec

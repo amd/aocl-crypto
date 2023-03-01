@@ -27,6 +27,7 @@
  */
 
 #include "ec/ecdh.hh"
+#include "utils/copy.hh"
 #include <string.h>
 
 namespace alcp::ec {
@@ -34,18 +35,23 @@ namespace alcp::ec {
 static constexpr Uint32 KeySize                     = 32;
 static const Uint8      x25519_basepoint_9[KeySize] = { 9 };
 
-X25519::X25519()
+X25519::X25519() = default;
+
+X25519::~X25519()
 {
-    m_pPrivKey.resize(KeySize);
+    reset();
 }
 
 Status
 X25519::generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
 {
-    std::copy(pPrivKey, pPrivKey + KeySize, m_pPrivKey.begin());
-#if ALCP_X25519_ADDED
-    alcpScalarMulX25519(pPublicKey, pPrivKey, x25519_basepoint_9);
-#endif
+    // store private key for secret key generation
+    alcp::utils::CopyBytes(m_PrivKey, pPrivKey, KeySize);
+
+    // to be replaced with precomputed table based implementation, since
+    // basepoint is constant.
+    alcpScalarMulX25519(pPublicKey, m_PrivKey, x25519_basepoint_9);
+
     return StatusOk();
 }
 
@@ -55,21 +61,24 @@ X25519::computeSecretKey(Uint8*       pSecretKey,
                          Uint64*      pKeyLength)
 {
 
+    // FIXME: validation should be done to check if public key is a valid point
+    // the curve.
     Status status = validatePublicKey(pPublicKey, KeySize);
     if (!status.ok()) {
         return status;
     }
 
-#if ALCP_X25519_ADDED
-    status = alcpScalarMulX25519(pSecretKey, m_pPrivKey, pPublicKey);
-#endif
-    *pKeyLength = 32;
+    alcpScalarMulX25519(pSecretKey, m_PrivKey, pPublicKey);
+
+    *pKeyLength = KeySize;
     return status;
 }
 
 Status
 X25519::validatePublicKey(const Uint8* pPublicKey, Uint64 pKeyLength)
 {
+    // FIXME: validation should be done to check if public key is a valid point
+    // the curve.
     if (pKeyLength != KeySize) {
         return Status(GenericError(ErrorCode::eInvalidArgument),
                       "Key validation failed");
@@ -86,7 +95,8 @@ X25519::validatePublicKey(const Uint8* pPublicKey, Uint64 pKeyLength)
 void
 X25519::reset()
 {
-    std::fill(m_pPrivKey.begin(), m_pPrivKey.end(), 0);
+    // clear private key with zeros
+    alcp::utils::PadBytes(m_PrivKey, 0, KeySize);
 }
 
 Uint64
