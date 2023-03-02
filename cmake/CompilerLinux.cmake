@@ -29,6 +29,11 @@ function(alcp_check_compiler_version)
     set (CLANG_MIN_REQ "12.0.0")
     # if gcc
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        
+        set(CMAKE_COMPILER_IS_GCC ON PARENT_SCOPE)
+        string(SUBSTRING ${CMAKE_CXX_COMPILER_VERSION} 0 2 CMAKE_COMPILER_GCC_VERSION)
+        set(CMAKE_COMPILER_GCC_VERSION ${CMAKE_COMPILER_GCC_VERSION} PARENT_SCOPE)
+        
         if(${CMAKE_C_COMPILER_VERSION} VERSION_LESS ${GCC_MIN_REQ})
             message(FATAL_ERROR "Using c compiler version ${CMAKE_C_COMPILER_VERSION}, min. reqd version is ${GCC_MIN_REQ}!")
         endif()
@@ -37,6 +42,7 @@ function(alcp_check_compiler_version)
         endif()
     # if aocc/clang
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set(CMAKE_COMPILER_IS_GCC OFF PARENT_SCOPE)
         if(${CMAKE_C_COMPILER_VERSION} VERSION_LESS ${CLANG_MIN_REQ})
             message(FATAL_ERROR "Using c compiler version ${CMAKE_C_COMPILER_VERSION}, min. reqd version is ${CLANG_MIN_REQ}!")
         endif()
