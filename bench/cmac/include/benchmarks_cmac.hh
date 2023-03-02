@@ -62,7 +62,7 @@ void inline Cmac_Bench(benchmark::State& state,
     /* MAX len of cmac would be 128 bits */
     std::vector<Uint8> Cmac(128 / 8, 0);
     std::vector<Uint8> message(block_size, 0);
-    std::vector<Uint8> Key(KeySize, 0);
+    std::vector<Uint8> Key(KeySize / 8, 0);
 
     /* Initialize info params based on cmac type */
     info.mi_type                                         = ALC_MAC_CMAC;
@@ -116,14 +116,33 @@ BENCH_CMAC_AES_128(benchmark::State& state)
     alc_mac_info_t info;
     info.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
     info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode = ALC_AES_MODE_NONE;
-    Cmac_Bench(state, info, state.range(0), state.range(1));
+    Cmac_Bench(state, info, state.range(0), 128);
+}
+
+static void
+BENCH_CMAC_AES_192(benchmark::State& state)
+{
+    alc_mac_info_t info;
+    info.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
+    info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode = ALC_AES_MODE_NONE;
+    Cmac_Bench(state, info, state.range(0), 192);
+}
+
+static void
+BENCH_CMAC_AES_256(benchmark::State& state)
+{
+    alc_mac_info_t info;
+    info.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
+    info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode = ALC_AES_MODE_NONE;
+    Cmac_Bench(state, info, state.range(0), 256);
 }
 
 /* add benchmarks */
 int
-AddBenchmarks()
+AddBenchmarks_Cmac()
 {
-    BENCHMARK(BENCH_CMAC_AES_128)
-        ->ArgsProduct({ cmac_block_sizes, cmac_key_sizes });
+    BENCHMARK(BENCH_CMAC_AES_128)->ArgsProduct({ cmac_block_sizes });
+    BENCHMARK(BENCH_CMAC_AES_192)->ArgsProduct({ cmac_block_sizes });
+    BENCHMARK(BENCH_CMAC_AES_256)->ArgsProduct({ cmac_block_sizes });
     return 0;
 }

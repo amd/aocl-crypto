@@ -27,6 +27,7 @@
  */
 
 #include "cmac/openssl_cmac_base.hh"
+#include <cstddef>
 
 namespace alcp::testing {
 
@@ -58,8 +59,21 @@ OpenSSLCmacBase::init()
     OSSL_PARAM params[3];
     size_t     params_n = 0;
 
-    /* FIXME: should be constructed based on the cmac scheme and keysize */
-    const char* cipher = "aes-128-cbc";
+    const char* cipher = NULL;
+    switch (m_key_len * 8) {
+        case 128:
+            cipher = "aes-128-cbc";
+            break;
+        case 192:
+            cipher = "aes-192-cbc";
+            break;
+        case 256:
+            cipher = "aes-256-cbc";
+            break;
+        default:
+            std::cout << "Error! invalid/unsupported keysize" << std::endl;
+            break;
+    }
 
     m_mac = EVP_MAC_fetch(NULL, "CMAC", NULL);
     if (m_mac == NULL) {
