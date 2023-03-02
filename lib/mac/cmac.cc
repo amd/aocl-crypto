@@ -225,11 +225,6 @@ class Cmac::Impl : public alcp::cipher::Aes
     {
         if (!m_finalized) {
             return InternalError("Cannot Copy CMAC without finalizing");
-        }
-        // TODO Consider if size validation is required
-        if (size < 16) {
-            return InvalidArgumentError(
-                "CMAC output size has to be atleast 128 bits");
         } else {
             alcp::utils::CopyBytes(buff, temp_enc_result, size);
         }
