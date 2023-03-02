@@ -96,6 +96,7 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
         cb = &icb;
 #endif
 
+    EXPECT_TRUE(ds.readMsgKeyCmac());
     while (ds.readMsgKeyCmac()) {
         /* cmac size returned by alcp and openssl is of 128 bits
          TODO: IPP returns success only when cmac len is specified. Need to
