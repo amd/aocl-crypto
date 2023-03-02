@@ -63,10 +63,10 @@ IPPDigestBase::init()
     if (m_info.dt_type == ALC_DIGEST_TYPE_SHA2) {
         switch (m_info.dt_mode.dm_sha2) {
             case ALC_SHA2_224:
-                status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA224());
+                status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA224_TT());
                 break;
             case ALC_SHA2_256:
-                status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA256());
+                status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA256_TT());
                 break;
             case ALC_SHA2_384:
                 status = ippsHashInit_rmf(m_handle, ippsHashMethod_SHA384());

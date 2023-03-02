@@ -71,11 +71,11 @@ IPPHmacBase::init()
         switch (m_info.mi_algoinfo.hmac.hmac_digest.dt_len) {
             case ALC_DIGEST_LEN_224:
                 status = ippsHMACInit_rmf(
-                    m_key, m_key_len, m_handle, ippsHashMethod_SHA224());
+                    m_key, m_key_len, m_handle, ippsHashMethod_SHA224_TT());
                 break;
             case ALC_DIGEST_LEN_256:
                 status = ippsHMACInit_rmf(
-                    m_key, m_key_len, m_handle, ippsHashMethod_SHA256());
+                    m_key, m_key_len, m_handle, ippsHashMethod_SHA256_TT());
                 break;
             case ALC_DIGEST_LEN_384:
                 status = ippsHMACInit_rmf(
