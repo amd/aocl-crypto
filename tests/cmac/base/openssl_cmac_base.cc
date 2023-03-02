@@ -83,7 +83,7 @@ OpenSSLCmacBase::init()
 
     ret_val = EVP_MAC_init(m_handle, m_key, m_key_len, params);
     if (ret_val != 1) {
-        std::cout << "EVP_MAC_init failed, error code : " << ret_val
+        std::cout << "EVP_MAC_init failed, error : " << ERR_get_error()
                   << std::endl;
         return false;
     }
@@ -98,13 +98,13 @@ OpenSSLCmacBase::Cmac_function(const alcp_cmac_data_t& data)
 
     retval = EVP_MAC_update(m_handle, data.m_msg, data.m_msg_len);
     if (retval != 1) {
-        std::cout << "EVP_MAC_update failed, error code : " << retval
+        std::cout << "EVP_MAC_update failed, error : " << ERR_get_error()
                   << std::endl;
         return false;
     }
     retval = EVP_MAC_final(m_handle, data.m_cmac, &outsize, data.m_cmac_len);
     if (retval != 1) {
-        std::cout << "EVP_MAC_final failed, error code : " << retval
+        std::cout << "EVP_MAC_final failed, error : " << ERR_get_error()
                   << std::endl;
         return false;
     }
