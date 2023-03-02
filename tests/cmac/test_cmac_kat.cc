@@ -42,6 +42,22 @@ TEST(CMAC_AES, KAT_128)
     Cmac_KAT(128, "AES", info);
 }
 
+TEST(CMAC_AES, KAT_192)
+{
+    alc_mac_info_t info;
+    info.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
+    info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode = ALC_AES_MODE_NONE;
+    Cmac_KAT(192, "AES", info);
+}
+
+TEST(CMAC_AES, KAT_256)
+{
+    alc_mac_info_t info;
+    info.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
+    info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode = ALC_AES_MODE_NONE;
+    Cmac_KAT(256, "AES", info);
+}
+
 int
 main(int argc, char** argv)
 {

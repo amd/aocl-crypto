@@ -153,7 +153,6 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
     alc_error_t        error;
     std::vector<Uint8> data;
 
-    /* FIXME, this should be based on AES type */
     int                CmacSize = 128;
     std::vector<Uint8> CmacAlcp(CmacSize / 8, 0);
     std::vector<Uint8> CmacExt(CmacSize / 8, 0);
