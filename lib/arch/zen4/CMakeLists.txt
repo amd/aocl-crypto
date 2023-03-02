@@ -1,4 +1,4 @@
- # Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -39,6 +39,12 @@ ADD_LIBRARY(arch_zen4
 	STATIC
 	${ZEN4_SRCS})
 
-
+# BUG in GCC-12
+if(CMAKE_COMPILER_IS_GCC)
+if(CMAKE_COMPILER_GCC_VERSION MATCHES "12")
+ 	MESSAGE(WARNING "GCC12 AVX512 Bug: Using -Wno-maybe-uninitialized -Wno-uninitialized for ZEN4")
+	TARGET_COMPILE_OPTIONS(arch_zen4 PRIVATE "-Wno-maybe-uninitialized" "-Wno-uninitialized")
+endif(CMAKE_COMPILER_GCC_VERSION MATCHES "12")
+endif(CMAKE_COMPILER_IS_GCC)
 TARGET_LINK_LIBRARIES(alcp PRIVATE arch_zen4)
 
