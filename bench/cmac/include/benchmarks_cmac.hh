@@ -101,10 +101,6 @@ void inline Cmac_Bench(benchmark::State& state,
             std::cout << "Error in cmac function" << std::endl;
             return;
         }
-        if (!cb->reset()) {
-            std::cout << "Error in cmac reset" << std::endl;
-            return;
-        }
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(
         state.iterations() * block_size, benchmark::Counter::kIsRate);
