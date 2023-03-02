@@ -54,10 +54,10 @@ std::vector<Int64> cmac_key_sizes = { 16 };
 
 void inline Cmac_Bench(benchmark::State& state,
                        alc_mac_info_t    info,
-                       uint64_t          block_size,
-                       uint64_t          KeySize)
+                       Uint64            block_size,
+                       Uint64            KeySize)
 {
-    alc_error_t error;
+    alc_error_t error = {};
 
     /* MAX len of cmac would be 128 bits */
     std::vector<Uint8> Cmac(128 / 8, 0);
@@ -97,7 +97,7 @@ void inline Cmac_Bench(benchmark::State& state,
         return;
     }
     for (auto _ : state) {
-        if (!cb->Cmac_function(data)) {
+        if (!cb->cmacFunction(data)) {
             std::cout << "Error in cmac function" << std::endl;
             return;
         }

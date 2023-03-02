@@ -77,7 +77,7 @@ IPPCmacBase::init()
 }
 
 bool
-IPPCmacBase::Cmac_function(const alcp_cmac_data_t& data)
+IPPCmacBase::cmacFunction(const alcp_cmac_data_t& data)
 {
     IppStatus status = ippStsNoErr;
     status           = ippsAES_CMACUpdate(data.m_msg, data.m_msg_len, m_handle);

@@ -70,8 +70,8 @@ PrintCmacTestData(std::vector<Uint8> key,
 void
 Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
 {
-    alc_error_t      error;
-    alcp_cmac_data_t data;
+    alc_error_t      error    = {};
+    alcp_cmac_data_t data     = {};
     int              CmacSize = 0;
 
     info.mi_type                                         = ALC_MAC_CMAC;
@@ -122,7 +122,7 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
             FAIL();
         }
 
-        if (!cb->Cmac_function(data)) {
+        if (!cb->cmacFunction(data)) {
             std::cout << "Error in cmac function" << std::endl;
             FAIL();
         }
@@ -150,8 +150,8 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
 void
 Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
 {
-    alc_error_t        error;
-    std::vector<Uint8> data;
+    alc_error_t        error = {};
+    std::vector<Uint8> data  = {};
 
     int                CmacSize = 128;
     std::vector<Uint8> CmacAlcp(CmacSize / 8, 0);
@@ -226,7 +226,7 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
             std::cout << "Error in cmac init function" << std::endl;
             FAIL();
         }
-        if (!cb->Cmac_function(data_alc)) {
+        if (!cb->cmacFunction(data_alc)) {
             std::cout << "Error in cmac function" << std::endl;
             FAIL();
         }
@@ -238,7 +238,7 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
             printf("Error in cmac ext init function\n");
             FAIL();
         }
-        if (!extCb->Cmac_function(data_ext)) {
+        if (!extCb->cmacFunction(data_ext)) {
             std::cout << "Error in cmac function" << std::endl;
             FAIL();
         }

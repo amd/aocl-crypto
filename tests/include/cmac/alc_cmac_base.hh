@@ -40,9 +40,9 @@ class AlcpCmacBase : public CmacBase
 {
     alc_mac_handle_t* m_handle{};
     alc_mac_info_t    m_info;
-    Uint8*            m_message{};
-    Uint8*            m_key{};
-    Uint8*            m_cmac{};
+    Uint8*            m_message = {};
+    Uint8*            m_key     = {};
+    Uint8*            m_cmac    = {};
     Uint32            m_key_len;
 
   public:
@@ -54,7 +54,7 @@ class AlcpCmacBase : public CmacBase
 
     ~AlcpCmacBase();
 
-    bool Cmac_function(const alcp_cmac_data_t& data);
+    bool cmacFunction(const alcp_cmac_data_t& data);
     /* Resets the context back to initial condition, reuse context */
     bool reset();
 };

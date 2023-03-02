@@ -43,9 +43,8 @@ class OpenSSLCmacBase : public CmacBase
     EVP_MAC_CTX*   m_handle = nullptr;
     EVP_MAC*       m_mac    = nullptr;
     alc_mac_info_t m_info;
-    Uint8*         m_message;
-    Uint8*         m_key;
-    Uint8*         m_hmac;
+    Uint8*         m_message = {};
+    Uint8*         m_key     = {};
     Uint32         m_key_len;
 
   public:
@@ -57,7 +56,7 @@ class OpenSSLCmacBase : public CmacBase
 
     ~OpenSSLCmacBase();
 
-    bool Cmac_function(const alcp_cmac_data_t& data);
+    bool cmacFunction(const alcp_cmac_data_t& data);
     /* Resets the context back to initial condition, reuse context */
     bool reset();
 };

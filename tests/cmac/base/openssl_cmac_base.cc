@@ -55,9 +55,9 @@ OpenSSLCmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 bool
 OpenSSLCmacBase::init()
 {
-    int        ret_val = 0;
-    OSSL_PARAM params[3];
-    size_t     params_n = 0;
+    int        ret_val   = 0;
+    OSSL_PARAM params[3] = {};
+    size_t     params_n  = 0;
 
     const char* cipher = NULL;
     switch (m_key_len * 8) {
@@ -105,7 +105,7 @@ OpenSSLCmacBase::init()
 }
 
 bool
-OpenSSLCmacBase::Cmac_function(const alcp_cmac_data_t& data)
+OpenSSLCmacBase::cmacFunction(const alcp_cmac_data_t& data)
 {
     size_t outsize = data.m_cmac_len;
     int    retval  = 0;

@@ -39,10 +39,10 @@ class IPPCmacBase : public CmacBase
 {
     IppsAES_CMACState* m_handle = nullptr;
     alc_mac_info_t     m_info;
-    Uint8*             m_message;
-    Uint8*             m_key;
-    Uint8*             m_cmac;
-    Uint32             m_key_len;
+    Uint8*             m_message = {};
+    Uint8*             m_key     = {};
+    Uint8*             m_cmac    = {};
+    Uint32             m_key_len = {};
 
   public:
     IPPCmacBase(const alc_mac_info_t& info);
@@ -53,7 +53,7 @@ class IPPCmacBase : public CmacBase
 
     ~IPPCmacBase();
 
-    bool Cmac_function(const alcp_cmac_data_t& data);
+    bool cmacFunction(const alcp_cmac_data_t& data);
     /* Resets the context back to initial condition, reuse context */
     bool reset();
 };

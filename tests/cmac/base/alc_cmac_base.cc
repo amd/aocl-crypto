@@ -86,7 +86,7 @@ AlcpCmacBase::~AlcpCmacBase()
 }
 
 bool
-AlcpCmacBase::Cmac_function(const alcp_cmac_data_t& data)
+AlcpCmacBase::cmacFunction(const alcp_cmac_data_t& data)
 {
     alc_error_t err;
 
