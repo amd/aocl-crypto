@@ -49,7 +49,7 @@ CipherAes(benchmark::State& state,
     Uint8                      iv[16];
     Uint8                      ad[16];
     Uint8                      tag[16];
-    Uint8                      tkey[16];
+    Uint8                      tkey[keylen / 8];
     alcp::testing::CipherBase* cb;
 
     alcp::testing::AlcpCipherBase acb = alcp::testing::AlcpCipherBase(
