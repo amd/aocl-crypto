@@ -39,13 +39,28 @@
 namespace alcp::ec {
 
 // FIXME: modifty the macro a equation based.
-constexpr Uint8 ALC_MAX_EC_PRECISION_IN_64BITS = 9;
+constexpr Uint8 ALC_MAX_EC_PRECISION_IN_64BITS = 4;
 struct AlcpEcPoint
 {
     Uint64 x[ALC_MAX_EC_PRECISION_IN_64BITS]; // Mont curves only x co-ordinate
                                               // in ec point
     Uint64 y[ALC_MAX_EC_PRECISION_IN_64BITS];
     Uint64 z[ALC_MAX_EC_PRECISION_IN_64BITS];
+};
+
+struct AlcpEcPointExtended
+{
+    AlcpEcPointExtended()
+    {
+        y[0] = 1;
+        z[0] = 1;
+    }
+
+    Uint64 x[ALC_MAX_EC_PRECISION_IN_64BITS]{}; // Mont curves only x
+                                                // co-ordinate in ec point
+    Uint64 y[ALC_MAX_EC_PRECISION_IN_64BITS]{};
+    Uint64 z[ALC_MAX_EC_PRECISION_IN_64BITS]{};
+    Uint64 t[ALC_MAX_EC_PRECISION_IN_64BITS]{};
 };
 
 // FIXME: AlcpEcParam may not be exposed right now.

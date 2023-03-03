@@ -68,13 +68,13 @@ ApplyRadix51bitMask(Uint128 a)
     return ((Uint64)a & MaskRadix51bit);
 }
 
-static void
-RadixExpand(__m512i* output_512, const Uint8* in)
+static inline void
+BytesToRadix(__m512i* output_512, const Uint8* in)
 {
     __m128i* pOutput_128 = (__m128i*)output_512;
 
     // mask to be moved to init time.
-    Int64 mask    = MaskRadix51bit;
+    Int64   mask    = MaskRadix51bit;
     __m128i maskAND = _mm_set1_epi64((__m64)mask);
 
     __m128i a0 = _mm_loadu_si64(in);
@@ -102,8 +102,8 @@ RadixExpand(__m512i* output_512, const Uint8* in)
     _mm_store_epi64(pOutput_128 + 2, a4);
 }
 
-static void
-RadixContract(Uint8* output, const Uint64* a)
+static inline void
+RadixToBytes(Uint8* output, const Uint64* a)
 {
     Uint64* out = (Uint64*)output;
     Uint64  a0  = a[0];
@@ -135,17 +135,6 @@ RadixContract(Uint8* output, const Uint64* a)
     out[1] = (a1 >> 13) | (a2 << 38);
     out[2] = (a2 >> 26) | (a3 << 25);
     out[3] = (a3 >> 39) | (a4 << 12);
-}
-
-static inline void
-ConditionalSwap(__m512i& a_512, __m512i& b_512, const __m512i swap_512)
-{
-    __m512i temp_512;
-
-    temp_512 = _mm512_xor_epi64(a_512, b_512);
-    temp_512 = _mm512_and_epi64(swap_512, temp_512);
-    a_512   = _mm512_xor_epi64(a_512, temp_512);
-    b_512   = _mm512_xor_epi64(b_512, temp_512);
 }
 
 /* Add two inputs and reduce to radix 51 format
@@ -280,7 +269,7 @@ static inline void
 SubX25519(__m512i& out, const __m512i a, const __m512i b, const __m512i add_512)
 {
     __m512i temp = _mm512_add_epi64(a, add_512);
-    out         = _mm512_sub_epi64(temp, b);
+    out          = _mm512_sub_epi64(temp, b);
 }
 
 inline void
@@ -324,8 +313,8 @@ Mul512LowHigh(__m512i& lo_512,
               int      print)
 {
     lo_512 = hi_512 = _mm512_setzero_si512();
-    lo_512           = _mm512_madd52lo_epu64(zmm_zero, a, b);
-    hi_512           = _mm512_madd52hi_epu64(zmm_zero, a, b);
+    lo_512          = _mm512_madd52lo_epu64(zmm_zero, a, b);
+    hi_512          = _mm512_madd52hi_epu64(zmm_zero, a, b);
     // CombineLowHigh52bits(lo_512, hi_512);
 }
 
@@ -442,14 +431,13 @@ Uint128 inline Mul128(Uint128 x, Uint64 scalar)
     return (x * scalar);
 }
 
-void inline ScalarMulX25519(Uint64*       output,
-                            const Uint64* in,
-                            const Uint64  scalar)
+void inline ScalarMulX25519(Uint64* output, const Uint64* in)
 {
     Uint128 a;
 
-    a         = Mul128(in[0], scalar);
-    output[0] = ApplyRadix51bitMask(a);
+    const Uint64 scalar = 121665;
+    a                   = Mul128(in[0], scalar);
+    output[0]           = ApplyRadix51bitMask(a);
 
     a         = Mul128(in[1], scalar) + GetRadix51bitCarry(a);
     output[1] = ApplyRadix51bitMask(a);

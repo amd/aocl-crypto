@@ -26,6 +26,7 @@
  *
  */
 
+#include "config.h"
 #include "ec/ecdh.hh"
 #include "utils/copy.hh"
 #include <string.h>
@@ -48,10 +49,44 @@ X25519::generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
     // store private key for secret key generation
     alcp::utils::CopyBytes(m_PrivKey, pPrivKey, KeySize);
 
-    // to be replaced with precomputed table based implementation, since
-    // basepoint is constant.
-    alcpScalarMulX25519(pPublicKey, m_PrivKey, x25519_basepoint_9);
+    m_PrivKey[0] &= 248;
+    m_PrivKey[31] &= 127;
+    m_PrivKey[31] |= 64;
 
+    Int8 priv_key_radix32[52];
+
+    Uint16 j = 0;
+    // clang-format off
+    UNROLL_30
+    for (Uint16 i = 0; i < 30; i += 5) {
+        priv_key_radix32[j] = m_PrivKey[i] & 0x1f; // lower 5 bits
+        priv_key_radix32[j + 1] = ((m_PrivKey[i + 1] & 0x3) << 3) | (m_PrivKey[i] >> 5);
+        priv_key_radix32[j + 2] = (m_PrivKey[i + 1] >> 2) & 0x1f;
+        priv_key_radix32[j + 3] = ((m_PrivKey[i + 2] & 0xf) << 1) | (m_PrivKey[i + 1] >> 7);
+        priv_key_radix32[j + 4] = (m_PrivKey[i + 2] >> 4) | ((m_PrivKey[i + 3] & 0x1) << 4);
+        priv_key_radix32[j + 5] = (m_PrivKey[i + 3] >> 1) & 0x1f;
+        priv_key_radix32[j + 6] = (m_PrivKey[i + 3] >> 6) | ((m_PrivKey[i + 4] & 0x7) << 2);
+        priv_key_radix32[j + 7] = m_PrivKey[i + 4] >> 3;
+        j += 8;
+    }
+    priv_key_radix32[j] = m_PrivKey[30] & 0x1f;
+    priv_key_radix32[j+1] = (m_PrivKey[30] >> 5) | ((m_PrivKey[31] & 0x3) << 3);
+    priv_key_radix32[j+2] = m_PrivKey[31] >> 2;
+    // clang-format on
+
+    // all numbers between -16 to +16
+    Int8 carry = 0;
+    UNROLL_51
+    for (Uint8 i = 0; i < 51; ++i) {
+        priv_key_radix32[i] += carry;
+        carry = priv_key_radix32[i] + 16;
+        carry >>= 5;
+        priv_key_radix32[i] -= carry << 5;
+    }
+
+    priv_key_radix32[51] = carry;
+
+    AlcpScalarPubX25519(priv_key_radix32, pPublicKey);
     return StatusOk();
 }
 
