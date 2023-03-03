@@ -120,8 +120,8 @@ class GenericError final : public ErrorBase
     {}
 
     GenericError(ErrorCode ecode)
+	    :ErrorBase{static_cast<Uint64>(ecode)}
     {
-        ErrorBase::setModuleError(static_cast<Uint16>(ecode));
     }
 
     virtual ~GenericError(){};

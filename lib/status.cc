@@ -49,7 +49,7 @@ namespace status {
         return Status(e, msg);
     }
 
-    Status NotFoundError(const StringView msg)
+    Status NotFound(const StringView msg)
     {
         auto e = GenericError{ ErrorCode::eNotFound };
         return Status(e, msg);
@@ -67,7 +67,7 @@ namespace status {
         return Status(e, msg);
     }
 
-    Status UnknownError(const StringView msg)
+    Status Unknown(const StringView msg)
     {
         auto e = GenericError{ ErrorCode::eUnknown };
         return Status(e, msg);

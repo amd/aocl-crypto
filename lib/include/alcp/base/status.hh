@@ -32,6 +32,8 @@
 #include "alcp/interface/Ierror.hh"
 #include "alcp/types.hh"
 
+#include <sstream>
+
 namespace alcp::base {
 
 /*
@@ -141,17 +143,21 @@ class Status final
 
     friend Status StatusOk();
 
-    String& makeMessage(const String& module_error, const String& details)
+    String makeMessage(String const& module_error, String const& details)
     {
-        m_message = module_error + String(" ") + details;
-        return m_message;
+        std::ostringstream ss{ module_error, std::ios_base::ate };
+        ss << module_error << " " << details;
+        // m_message = module_error + String(" ") + details;
+        // return m_message;
+        return ss.str();
     }
 
-    String& makeMessage(const StringView& module_error,
-                        const StringView& details)
+    String makeMessage(const StringView& module_error,
+                       const StringView& details)
     {
-        m_message = String(module_error) + String(" ") + String(details);
-        return m_message;
+        std::ostringstream ss{ "", std::ios_base::ate };
+        ss << module_error << " " << details;
+        return ss.str();
     }
 
     Uint64 m_code;

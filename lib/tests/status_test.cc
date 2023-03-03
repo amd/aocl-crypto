@@ -29,7 +29,11 @@
 
 #include "gtest/gtest.h"
 
+
+namespace {
+using namespace alcp;
 using namespace alcp::base;
+using namespace alcp::base::status;
 
 static Status
 returnOkStatus()
@@ -46,11 +50,90 @@ TEST(StatusTest, Equality)
     EXPECT_EQ(s, q);
 }
 
-TEST(StatusTest, GenericInternalErrorTest)
+TEST(StatusTest, OkStatus)
 {
     Status s = StatusOk();
-    s.update(InternalError(
-        "Some Internal Error has occurred in while Testing this code"));
+
+    EXPECT_TRUE(s.ok());
+}
+
+TEST(StatusTest, InternalError)
+{
+    String str {"Testing Internal Error"};
+    Status s = InternalError(str); 
 
     EXPECT_FALSE(s.ok());
+    EXPECT_EQ(s.code(), ErrorCode::eInternal);
+
+    auto n = s.message().find(str);
+    EXPECT_TRUE(n != std::string::npos);
 }
+
+TEST(StatusTest, UnknownError)
+{
+    String str {"Testing Unknown Error"};
+    Status s = status::Unknown(str); 
+
+    EXPECT_FALSE(s.ok());
+    EXPECT_EQ(s.code(), ErrorCode::eUnknown);
+
+    auto n = s.message().find(str);
+    EXPECT_TRUE(n != std::string::npos);
+}
+
+
+TEST(StatusTest, InvalidArgument)
+{
+    String str {"Testing Invalid Arugument Error"};
+    Status s = status::InvalidArgument(str); 
+
+    EXPECT_FALSE(s.ok());
+    EXPECT_EQ(s.code(), ErrorCode::eInvalidArgument);
+
+    auto n = s.message().find(str);
+    EXPECT_TRUE(n != std::string::npos);
+}
+
+
+TEST(StatusTest, AlreadyExists)
+{
+    String str {"Testing Already Exists"};
+    Status s = status::AlreadyExists(str); 
+
+    EXPECT_FALSE(s.ok());
+    EXPECT_EQ(s.code(), ErrorCode::eExists);
+
+    auto n = s.message().find(str);
+    EXPECT_TRUE(n != std::string::npos);
+}
+
+
+TEST(StatusTest, NotFound)
+{
+    String str {"Testing Not Found"};
+    Status s = status::NotFound(str); 
+
+    EXPECT_FALSE(s.ok());
+    EXPECT_EQ(s.code(), ErrorCode::eNotFound);
+
+    auto n = s.message().find(str);
+    EXPECT_TRUE(n != std::string::npos);
+}
+
+
+TEST(StatusTest, NotAvailable)
+{
+    String str {"Testing Not Available Error"};
+    Status s = status::NotAvailable(str); 
+
+    EXPECT_FALSE(s.ok());
+    EXPECT_EQ(s.code(), ErrorCode::eNotAvailable);
+
+    auto n = s.message().find(str);
+    EXPECT_TRUE(n != std::string::npos);
+}
+
+
+
+}
+
