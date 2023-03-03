@@ -71,11 +71,15 @@ class Cmac::Impl : public alcp::cipher::Aes
     {
         this->key    = key;
         this->keylen = len;
-        Aes::setKey(key, keylen);
+        Status s{ StatusOk() };
+        s = Aes::setKey(key, keylen);
+        if (!s.ok()) {
+            return s;
+        }
         encrypt_keys = getEncryptKeys();
         get_subkeys();
-        reset();
-        return StatusOk();
+        s = reset();
+        return s;
     }
     void finish()
     {
