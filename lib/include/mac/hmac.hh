@@ -57,7 +57,7 @@ class ALCP_API_EXPORT Hmac final : public Mac
     Impl*                 pImpl() { return m_pImpl.get(); }
 
   public:
-    Hmac(const Uint8& key, Uint32 m_keylen, alcp::digest::Digest& p_digest);
+    Hmac();
     /**
      * @brief Can be called continously to update message on small chunks
      * @param buff: message array block to update HMAC
@@ -83,6 +83,10 @@ class ALCP_API_EXPORT Hmac final : public Mac
      * @returns the output hash size of HMAC
      */
     Uint64 getHashSize();
+
+    Status setDigest(alcp::digest::Digest& p_digest);
+
+    Status setKey(const Uint8 key[], Uint32 keylen);
 
     void finish();
 

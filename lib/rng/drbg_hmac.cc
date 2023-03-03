@@ -71,6 +71,7 @@ class HmacDrbg::IHmacDrbg
   private:
     std::shared_ptr<alcp::digest::Digest> m_digest;
     std::vector<Uint8>                    m_v = {}, m_key = {};
+    Hmac                                  m_hmac_obj;
 
   public:
     /**
@@ -302,22 +303,20 @@ HmacDrbg::IHmacDrbg::HMAC_Wrapper(const Uint8  cIn1[],
                                   Uint8        out[],
                                   const Uint64 cOutLen)
 {
-    Hmac hmac_obj = Hmac(m_key[0], m_key.size(), *m_digest);
-    hmac_obj.update(cIn1, cIn1Len);
+
+    m_hmac_obj.setDigest(*m_digest);
+    m_hmac_obj.setKey(&m_key[0], m_key.size());
+    m_hmac_obj.update(cIn1, cIn1Len);
     if (cIn2 != nullptr && cIn2Len != 0)
-        hmac_obj.update(cIn2, cIn2Len);
+        m_hmac_obj.update(cIn2, cIn2Len);
     if (cIn3 != nullptr && cIn3Len != 0)
-        hmac_obj.update(cIn3, cIn3Len);
-    hmac_obj.finalize(nullptr, 0);
+        m_hmac_obj.update(cIn3, cIn3Len);
+    m_hmac_obj.finalize(nullptr, 0);
 
     // Assert that we have enough memory to write the output into
     assert(cOutLen >= m_digest->getHashSize());
 
-    hmac_obj.copyHash(out, m_digest->getHashSize());
-
-    // FIXME: Might need a hard reset in hmac_obj
-    // hmac_obj.reset();
-    m_digest->reset();
+    m_hmac_obj.copyHash(out, m_digest->getHashSize());
 }
 
 void

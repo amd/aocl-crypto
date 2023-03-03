@@ -44,11 +44,11 @@ class Hmac::Impl
 {
   private:
     // Input Key to HMAC
-    const Uint8* m_pKey;
+    const Uint8* m_pKey{};
     // Length of the input key must be >0 to be valid
-    Uint32 m_keylen;
+    Uint32 m_keylen{};
     // Length of the preprocessed Key
-    Uint32 m_k0_length;
+    Uint32 m_k0_length{};
     // Input Block Length or B of the digest used by HMAC
     Uint32 m_input_block_length{};
     // Size of the message digest
@@ -56,7 +56,7 @@ class Hmac::Impl
     // Placeholder variable to hold intermediate hash and the the mac value
     // after finalize has been called
     // Optimization: Max Size of 1024 bits for any SHA
-    Uint8 m_pTempHash[64];
+    Uint8 m_pTempHash[64]{};
 
     // TODO: Consider Shared pointer for this implementation
     /**
@@ -64,12 +64,12 @@ class Hmac::Impl
      * object of Digest which supports HMAC
      *
      */
-    alcp::digest::Digest* m_pDigest;
+    alcp::digest::Digest* m_pDigest{};
 
     // Single Memory Block to hold  m_pK0_xor_ipad,m_pK0_xor_opad,m_pK0.
     // 3*input_block_length (with SHA input block length max size 144 bytes for
     // SHA3-224)
-    alignas(16) Uint8 m_pMemory_block[432];
+    alignas(16) Uint8 m_pMemory_block[432]{};
     Uint8* m_pK0_xor_opad = m_pMemory_block;
     Uint8* m_pK0_xor_ipad = m_pMemory_block + 144;
 
@@ -80,28 +80,7 @@ class Hmac::Impl
     Uint8* m_pK0 = m_pMemory_block + 288;
 
   public:
-    Impl(const Uint8& key, Uint32 keylen, alcp::digest::Digest& p_digest)
-        : m_pDigest{ &p_digest }
-    {
-        // Constructor argument validations
-        m_input_block_length = m_pDigest->getInputBlockSize();
-        m_output_hash_size   = m_pDigest->getHashSize();
-        m_pKey               = &key;
-        m_keylen             = keylen;
-
-        // For HMAC, we require k0 to be same length as input block length of
-        // the used hash
-        m_k0_length = m_input_block_length;
-
-        // Preprocess key to obtain K0
-        get_k0();
-
-        // obtain k0_xor_ipad and k0_xor_opad
-        get_k0_xor_pad();
-
-        // start the hash calculation
-        calculate_hash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
-    }
+    Impl() = default;
 
   public:
     /// @brief Get hash size in bytes of the digest used for HMAC
@@ -114,6 +93,15 @@ class Hmac::Impl
     /// @return ALC_ERROR_NONE if no errors otherwise appropriate error
     Status update(const Uint8* buff, Uint64 size)
     {
+        if (m_pKey == nullptr) {
+            return InternalError("HMAC: Key cannot be null. Use SetKey to set "
+                                 "Key before calling update");
+        }
+        if (m_pDigest == nullptr) {
+            return InternalError(
+                "HMAC: Digest cannot be null. Use setDigest to set "
+                "digest before calling update");
+        }
         Status status = StatusOk();
         if (buff != nullptr && size != 0) {
             status = calculate_hash(m_pDigest, buff, size);
@@ -194,6 +182,53 @@ class Hmac::Impl
         m_pDigest->reset();
         status =
             calculate_hash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
+        return status;
+    }
+
+    Status setKey(const Uint8 key[], Uint32 keylen)
+    {
+        Status status = StatusOk();
+
+        if (m_pDigest == nullptr) {
+            return InternalError(
+                "HMAC: Digest Should be Set before Setting the key");
+        }
+
+        memset(m_pMemory_block, 0, 432);
+        memset(m_pTempHash, 0, 64);
+
+        m_pK0_xor_opad = m_pMemory_block;
+        m_pK0_xor_ipad = m_pMemory_block + 144;
+        m_pK0          = m_pMemory_block + 288;
+
+        m_pKey   = key;
+        m_keylen = keylen;
+
+        m_k0_length = m_input_block_length;
+
+        status = get_k0();
+        if (!status.ok()) {
+            return status;
+        }
+        get_k0_xor_pad();
+        status =
+            calculate_hash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
+        if (!status.ok()) {
+            return status;
+        }
+        return status;
+    }
+
+    Status setDigest(alcp::digest::Digest& p_digest)
+    {
+        Status status = StatusOk();
+        m_pDigest     = &p_digest;
+        m_pDigest->reset();
+
+        // Constructor argument validations
+        m_input_block_length = m_pDigest->getInputBlockSize();
+        m_output_hash_size   = m_pDigest->getHashSize();
+
         return status;
     }
 
@@ -283,8 +318,8 @@ class Hmac::Impl
     }
 };
 
-Hmac::Hmac(const Uint8& key, Uint32 keylen, alcp::digest::Digest& p_digest)
-    : m_pImpl{ std::make_unique<Hmac::Impl>(key, keylen, p_digest) }
+Hmac::Hmac()
+    : m_pImpl{ std::make_unique<Hmac::Impl>() }
 {}
 Hmac::~Hmac() {}
 
@@ -324,4 +359,17 @@ Hmac::reset()
 {
     return m_pImpl->reset();
 }
+
+Status
+Hmac::setDigest(alcp::digest::Digest& p_digest)
+{
+    return m_pImpl->setDigest(p_digest);
+}
+
+Status
+Hmac::setKey(const Uint8 key[], Uint32 keylen)
+{
+    return m_pImpl->setKey(key, keylen);
+}
+
 } // namespace alcp::mac

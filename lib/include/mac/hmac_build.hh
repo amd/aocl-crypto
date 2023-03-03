@@ -37,6 +37,7 @@
 namespace alcp::mac {
 
 using Context = alcp::mac::Context;
+using namespace status;
 Status
 validate_keys(const alc_key_info_t& rKeyInfo)
 {
@@ -49,12 +50,10 @@ validate_keys(const alc_key_info_t& rKeyInfo)
     switch (rKeyInfo.fmt) {
         case ALC_KEY_FMT_RAW:
             if (rKeyInfo.len == 0) {
-                return InvalidArgument(
-                    "HMAC: Key Size Cannot be Zero");
+                return InvalidArgument("HMAC: Key Size Cannot be Zero");
             }
             if (rKeyInfo.key == nullptr) {
-                return InvalidArgument(
-                    "HMAC: Key cannot be NULL");
+                return InvalidArgument("HMAC: Key cannot be NULL");
             }
             break;
         case ALC_KEY_FMT_BASE64:
@@ -67,8 +66,7 @@ validate_keys(const alc_key_info_t& rKeyInfo)
             break;
         // TODO: Subsequest switch cases for other formats
         default:
-            return InvalidArgument(
-                "HMAC: Key Format not supported ");
+            return InvalidArgument("HMAC: Key Format not supported ");
             break;
     }
     return status;
@@ -77,8 +75,8 @@ class HmacBuilder
 {
   public:
     static Status Build(const alc_mac_info_t& macInfo,
-                                    const alc_key_info_t& keyInfo,
-                                    Context&              ctx);
+                        const alc_key_info_t& keyInfo,
+                        Context&              ctx);
 };
 
 template<typename MACALGORITHM>
@@ -143,7 +141,9 @@ __build_hmac(const alc_mac_info_t& macInfo, Context& ctx)
     }
     auto key    = macInfo.mi_keyinfo.key;
     auto keylen = macInfo.mi_keyinfo.len;
-    auto algo   = new MACALGORITHM(*key, keylen, *digest);
+    auto algo   = new MACALGORITHM();
+    algo->setDigest(*digest);
+    algo->setKey(key, keylen);
     if (algo == nullptr) {
         // TODO: Update proper Out of Memory Status
         return status;
@@ -169,18 +169,19 @@ __build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
     if (!status.ok()) {
         return status;
     }
-
+    // FIXME: Use Placement New Operator for memory allocation
     auto sha3 = new alcp::digest::Sha3(macInfo.mi_algoinfo.hmac.hmac_digest);
     if (sha3 == nullptr) {
-        // TODO: Update proper Out of Memory Status
-        return status;
+        return InternalError("Unable To Allocate Memory for Digest Object");
     }
     auto key    = macInfo.mi_keyinfo.key;
     auto keylen = macInfo.mi_keyinfo.len;
-    auto algo   = new MACALGORITHM(*key, keylen, *sha3);
+    // FIXME: Use placement new operator for memory allocation
+    auto algo = new MACALGORITHM();
+    algo->setDigest(*sha3);
+    algo->setKey(key, keylen);
     if (algo == nullptr) {
-        // TODO: Update proper Out of Memory Status
-        return status;
+        return InternalError("Unable to Allocate Memory for MAC Object");
     }
     ctx.m_mac    = static_cast<void*>(algo);
     ctx.m_digest = static_cast<void*>(sha3);
@@ -227,6 +228,10 @@ HmacBuilder::Build(const alc_mac_info_t& macInfo,
                             macInfo, ctx);
                     break;
                 }
+                default: {
+                    status.update(
+                        InternalError("Sha2 Algorithm provided unknown"));
+                }
             }
             break;
         }
@@ -249,20 +254,17 @@ HmacBuilder::Build(const alc_mac_info_t& macInfo,
                     break;
                 }
                 default: {
-                    // status = ALC_ERROR_NOT_SUPPORTED;
-                    // TODO: update status to not supported HMAC Digest
+                    status.update(InternalError("SHA3 Algorithm unknown"));
                     break;
                 }
             }
             break;
         }
         default: {
-            // err = ALC_ERROR_NOT_SUPPORTED;
-            // TODO: Update Status error coded to not supported
+            status.update(InternalError("Digest algorithm Unknown"));
             break;
         }
     }
     return status;
 }
-}
-
+} // namespace alcp::mac

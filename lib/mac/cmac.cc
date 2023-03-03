@@ -37,6 +37,7 @@ using alcp::utils::CpuId;
 // TODO: Currently CMAC is AES-CMAC, Once IEncrypter is complete, revisit the
 // class design
 namespace alcp::mac {
+using namespace status;
 class Cmac::Impl : public alcp::cipher::Aes
 {
     // Implementation as per NIST Special Publication 800-38B: The CMAC Mode for
@@ -103,7 +104,7 @@ class Cmac::Impl : public alcp::cipher::Aes
     {
         Status status{ StatusOk() };
         if (key == nullptr || keylen == 0) {
-            return InvalidArgumentError("Key is Empty");
+            return InvalidArgument("Key is Empty");
         }
         // No need to Process anything for empty block
         if (plaintext_size == 0) {
@@ -179,7 +180,7 @@ class Cmac::Impl : public alcp::cipher::Aes
     {
 
         if (key == nullptr || keylen == 0) {
-            return InvalidArgumentError("Key is Empty");
+            return InvalidArgument("Key is Empty");
         }
         if (plaintext_size != 0) {
             update(plaintext, plaintext_size);
