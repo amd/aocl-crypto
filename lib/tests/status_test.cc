@@ -45,3 +45,12 @@ TEST(StatusTest, Equality)
 
     EXPECT_EQ(s, q);
 }
+
+TEST(StatusTest, GenericInternalErrorTest)
+{
+    Status s = StatusOk();
+    s.update(InternalError(
+        "Some Internal Error has occurred in while Testing this code"));
+
+    EXPECT_FALSE(s.ok());
+}
