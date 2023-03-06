@@ -36,6 +36,7 @@
 using alcp::utils::CpuId;
 namespace alcp::mac {
 using Status = alcp::base::Status;
+using namespace alcp::base::status;
 
 // FIXME: Remove alcp_is_error to return the error status returned by Digest
 // once digest class supports Status class
@@ -179,7 +180,7 @@ class Hmac::Impl
             alcp::utils::CopyBytes(buff, m_pTempHash, size);
         } else {
             status =
-                InvalidArgumentError("HMAC: Copy Buffer Size should be greater "
+                InvalidArgument("HMAC: Copy Buffer Size should be greater "
                                      "than or equal to SHA output size");
         }
         return status;

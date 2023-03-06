@@ -34,26 +34,32 @@
 #include "hmac.hh"
 #include <type_traits> /* for is_same_v<> */
 
+namespace alcp::mac {
+
 using Context = alcp::mac::Context;
-alcp::base::Status
+Status
 validate_keys(const alc_key_info_t& rKeyInfo)
 {
-    alcp::base::Status status = alcp::base::StatusOk();
+    using namespace alcp::base;
+    using namespace alcp::base::status;
+
+    Status status = StatusOk();
+
     // For RAW assignments
     switch (rKeyInfo.fmt) {
         case ALC_KEY_FMT_RAW:
             if (rKeyInfo.len == 0) {
-                return alcp::base::InvalidArgumentError(
+                return InvalidArgument(
                     "HMAC: Key Size Cannot be Zero");
             }
             if (rKeyInfo.key == nullptr) {
-                return alcp::base::InvalidArgumentError(
+                return InvalidArgument(
                     "HMAC: Key cannot be NULL");
             }
             break;
         case ALC_KEY_FMT_BASE64:
             // TODO: For base64 conversions
-            return alcp::base::InvalidArgumentError(
+            return InvalidArgument(
                 "HMAC: Base64 Key Format not supported yet"); // remove this
                                                               // return when
                                                               // above todo is
@@ -61,7 +67,7 @@ validate_keys(const alc_key_info_t& rKeyInfo)
             break;
         // TODO: Subsequest switch cases for other formats
         default:
-            return alcp::base::InvalidArgumentError(
+            return InvalidArgument(
                 "HMAC: Key Format not supported ");
             break;
     }
@@ -70,13 +76,13 @@ validate_keys(const alc_key_info_t& rKeyInfo)
 class HmacBuilder
 {
   public:
-    static alcp::base::Status Build(const alc_mac_info_t& macInfo,
+    static Status Build(const alc_mac_info_t& macInfo,
                                     const alc_key_info_t& keyInfo,
                                     Context&              ctx);
 };
 
 template<typename MACALGORITHM>
-static alcp::base::Status
+static Status
 __hmac_wrapperUpdate(void* hmac, const Uint8* buff, Uint64 size)
 {
 
@@ -85,7 +91,7 @@ __hmac_wrapperUpdate(void* hmac, const Uint8* buff, Uint64 size)
 }
 
 template<typename MACALGORITHM>
-static alcp::base::Status
+static Status
 __hmac_wrapperFinalize(void* hmac, const Uint8* buff, Uint64 size)
 {
     auto ap = static_cast<MACALGORITHM*>(hmac);
@@ -93,7 +99,7 @@ __hmac_wrapperFinalize(void* hmac, const Uint8* buff, Uint64 size)
 }
 
 template<typename MACALGORITHM>
-static alcp::base::Status
+static Status
 __hmac_wrapperCopy(void* hmac, Uint8* buff, Uint64 size)
 {
     auto ap = static_cast<MACALGORITHM*>(hmac);
@@ -113,7 +119,7 @@ __hmac_wrapperFinish(void* hmac, void* digest)
 }
 
 template<typename MACALGORITHM, typename DIGESTALGORITHM>
-static alcp::base::Status
+static Status
 __hmac_wrapperReset(void* hmac, void* digest)
 {
     auto ap = static_cast<MACALGORITHM*>(hmac);
@@ -121,10 +127,10 @@ __hmac_wrapperReset(void* hmac, void* digest)
     return ap->reset();
 }
 template<typename DIGESTALGORITHM, typename MACALGORITHM>
-static alcp::base::Status
+static Status
 __build_hmac(const alc_mac_info_t& macInfo, Context& ctx)
 {
-    alcp::base::Status status = alcp::base::StatusOk();
+    Status status = StatusOk();
 
     status = validate_keys(macInfo.mi_keyinfo);
     if (!status.ok()) {
@@ -154,10 +160,10 @@ __build_hmac(const alc_mac_info_t& macInfo, Context& ctx)
     return status;
 }
 template<typename MACALGORITHM>
-static alcp::base::Status
+static Status
 __build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
 {
-    alcp::base::Status status = alcp::base::StatusOk();
+    Status status = StatusOk();
 
     status = validate_keys(macInfo.mi_keyinfo);
     if (!status.ok()) {
@@ -187,12 +193,12 @@ __build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
 
     return status;
 }
-alcp::base::Status
+Status
 HmacBuilder::Build(const alc_mac_info_t& macInfo,
                    const alc_key_info_t& keyInfo,
                    Context&              ctx)
 {
-    alcp::base::Status status = alcp::base::StatusOk();
+    Status status = StatusOk();
 
     switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_type) {
         case ALC_DIGEST_TYPE_SHA2: {
@@ -258,3 +264,5 @@ HmacBuilder::Build(const alc_mac_info_t& macInfo,
     }
     return status;
 }
+}
+
