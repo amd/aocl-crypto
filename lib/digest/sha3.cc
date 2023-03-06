@@ -321,7 +321,6 @@ Sha3::Impl::update(const Uint8* pSrc, Uint64 inputSize)
     if (to_process < m_chunk_size) {
         /* copy them to internal buffer and return */
         std::memcpy(&m_buffer[m_idx], pSrc, inputSize);
-        // utils::CopyBlock(&m_buffer[m_idx], pSrc, inputSize);
         m_idx += inputSize;
         return err;
     }
