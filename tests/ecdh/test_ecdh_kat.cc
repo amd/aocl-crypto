@@ -26,57 +26,41 @@
  *
  */
 
-#include <cstring>
+#include "ecdh/alc_ecdh_base.hh"
+#include "ecdh/ecdh_base.hh"
+#include "ecdh/gtest_base_ecdh.hh"
+#include "string.h"
+#include <alcp/alcp.h>
+#include <iostream>
 
-#include "ecdh/alcp_ecdh.hh"
-#include "ecdh/ecdh.hh"
-
-#include "alcp/ec.h"
-#include "alcp/ecdh.h"
-
-namespace alcp::testing {
-
-using namespace std;
-
-AlcpEcdh::AlcpEcdh(const char* pKeytype, alc_peer_id_t peerId)
+/* All tests to be added here */
+TEST(ecdh, KAT_x25519)
 {
-
-    string st  = "peer" + to_string((int)peerId);
-    m_name     = st.c_str();
-    m_pkeytype = pKeytype;
-    m_peerId   = peerId;
+    alc_ec_info_t info;
+    info.ecCurveId     = ALCP_EC_CURVE25519;
+    info.ecCurveType   = ALCP_EC_CURVE_TYPE_MONTGOMERY;
+    info.ecPointFormat = ALCP_EC_POINT_FORMAT_UNCOMPRESSED;
+    ecdh_KAT(info);
 }
 
-AlcpEcdh::~AlcpEcdh() {}
-
-alc_error_t
-AlcpEcdh::generate_public_key(Uint8* pPublicKeyData, const Uint8* pPrivKey)
+int
+main(int argc, char** argv)
 {
+    ::testing::InitGoogleTest(&argc, argv);
+    testing::TestEventListeners& listeners =
+        testing::UnitTest::GetInstance()->listeners();
+    parseArgs(argc, argv);
+#ifndef USE_IPP
+    if (useipp)
+        std::cout << RED << "IPP is not available, defaulting to ALCP" << RESET
+                  << std::endl;
+#endif
 
-    if (pPrivKey == NULL) {
-        return ALC_ERROR_INVALID_DATA;
+#ifndef USE_OSSL
+    if (useossl) {
+        std::cout << RED << "OpenSSL is not available, defaulting to ALCP"
+                  << RESET << std::endl;
     }
-
-    // GeneratePublicKey(pPublicKeyData, pPrivKey);
-    memcpy(m_publicKeyData, pPublicKeyData, 32);
-
-    return ALC_ERROR_NONE;
+#endif
+    return RUN_ALL_TESTS();
 }
-
-alc_error_t
-AlcpEcdh::compute_secret_key(Uint8*       pSecret_key,
-                             const Uint8* pPublicKeyDataRemote,
-                             Uint64*      pKeyLength)
-{
-
-    // ComputeSecretKey(pSecret_key, pPublicKeyDataRemote, pKeyLength);
-
-    return ALC_ERROR_NONE;
-}
-
-void
-AlcpEcdh::reset()
-{
-}
-
-} // namespace alcp::testing
