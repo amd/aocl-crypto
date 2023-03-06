@@ -66,77 +66,6 @@ ConditionalSwap(__m512i& a_512, __m512i& b_512, const __m512i swap_512)
  * 2^255 - 21 = 2^5 * (2^250-1) + 11
  */
 
-static void
-InverseX25519(__m512i* inverseZ, const __m512i* z)
-{
-    __m512i a, b, c, d;
-    Uint64 *pa, *pb, *pc, *pd, *pz;
-
-    pa = (Uint64*)&a;
-    pb = (Uint64*)&b;
-    pc = (Uint64*)&c;
-    pd = (Uint64*)&d;
-    pz = (Uint64*)z;
-
-    // square and Multiply algorithm to compute z ^ (2^5 * (2^250-1) + 11)
-
-    SquareX25519Count(pa, pz, 1); // a = z^2
-    SquareX25519Count(pd, pa, 2); // d = z^8
-    MulX25519(pb, pd, pz);        // b = z^8*z     = z^9
-    MulX25519(pa, pb, pa);        // a = z^9*z^2   = z^11
-    SquareX25519Count(pd, pa, 1); // d = sqr(z^11) = z^22
-
-    /*
-     * b  = z^22 * z^9
-     *    = z^31 = z ^(32-1)
-     *    = z^ (2^5 - 1)
-     */
-    MulX25519(pb, pd, pb);
-
-    /*
-     * d = sqr5times(z^ (2^5 - 1))
-     *   = z ^ (2^10 - 2^5)
-     */
-    SquareX25519Count(pd, pb, 5);
-
-    /*
-     * b = z ^ (2^10 - 2^5) * z^ (2^5 - 1)
-     *   = z ^ (2^10 - 2^5 + 2^5 - 1)
-     *   = z ^ (2 ^10 - 1 )
-     *   = z ^ (2 ^10 - 2^0 )
-     */
-    MulX25519(pb, pd, pb);
-
-    /*
-     * d = sqr10times(  z ^ (2^10 - 2^5) )
-     *   = z ^ (2^20 - 2^10)
-     */
-    SquareX25519Count(pd, pb, 10);
-
-    /*
-     * c = z ^ (2^20 - 2^10) *  z ^ (2 ^10 - 2^0 )
-     *   = z ^ (2^20 - 2^0)
-     */
-    MulX25519(pc, pd, pb);
-
-    /*
-     *  c = sqr20times( z ^ (2^20 - 2^10) )
-     *    = z ^ (2^40 - 2^20)
-     */
-    SquareX25519Count(pd, pc, 20);
-    MulX25519(pd, pd, pc);                /* d = z ^ (2^40 - 2^0)   */
-    SquareX25519Count(pd, pd, 10);        /* d = z ^ (2^50 - 2^10)  */
-    MulX25519(pb, pd, pb);                /* b = z ^ (2^50 - 2^0)   */
-    SquareX25519Count(pd, pb, 50);        /* d = z ^ (2^100 - 2^50) */
-    MulX25519(pc, pd, pb);                /* c = z ^ (2^100 - 2^0)  */
-    SquareX25519Count(pd, pc, 100);       /* d = z ^ (2^200 - 2^100)*/
-    MulX25519(pd, pd, pc);                /* d = z ^ (2^200 - 2^0)  */
-    SquareX25519Count(pd, pd, 50);        /* d = z ^ (2^250 - 2^50) */
-    MulX25519(pd, pd, pb);                /* d = z ^ (2^250 - 2^0)  */
-    SquareX25519Count(pd, pd, 5);         /* d = z ^ (2^255 - 2^5)  */
-    MulX25519((Uint64*)inverseZ, pd, pa); /* Inverse(z) = z ^ (2^255 - 21)   */
-}
-
 static inline void
 InverseX25519(Uint64 out[4], const Uint64 in[4])
 {
@@ -341,7 +270,7 @@ alcpScalarMulX25519(Uint8*       mypublic,
 
     MontLadder(&x_512, &z_512, clippedScalar, bp_512);
 
-    InverseX25519(&zInverse_512, &z_512);
+    InverseX25519((Uint64*)&zInverse_512, (Uint64*)&z_512);
     MulX25519((Uint64*)&z_512, (Uint64*)&x_512, (Uint64*)&zInverse_512);
 
     RadixToBytes((Uint64*)&out_512, (Uint64*)&z_512);
@@ -360,14 +289,12 @@ alcp_load_conditional(__m256i& a_256, __m256i& b_256, Uint64 iswap)
 }
 
 void
-AlcpLoadPrecomputed(PrecomputedPoint& result,
-                    const Uint64      point[3][4],
-                    Uint64            iswap)
+AlcpLoadPrecomputed(__m256i&     x_256,
+                    __m256i&     y_256,
+                    __m256i&     z_256,
+                    const Uint64 point[3][4],
+                    Uint64       iswap)
 {
-
-    __m256i x_256 = _mm256_lddqu_si256(reinterpret_cast<__m256i*>(result.m_x));
-    __m256i y_256 = _mm256_lddqu_si256(reinterpret_cast<__m256i*>(result.m_y));
-    __m256i z_256 = _mm256_lddqu_si256(reinterpret_cast<__m256i*>(result.m_z));
 
     __m256i pt_x_256 =
         _mm256_lddqu_si256(reinterpret_cast<const __m256i*>(point[0]));
@@ -379,40 +306,40 @@ AlcpLoadPrecomputed(PrecomputedPoint& result,
     alcp_load_conditional(x_256, pt_x_256, iswap);
     alcp_load_conditional(y_256, pt_y_256, iswap);
     alcp_load_conditional(z_256, pt_z_256, iswap);
-    _mm256_storeu_si256(reinterpret_cast<__m256i*>(result.m_x), x_256);
-    _mm256_storeu_si256(reinterpret_cast<__m256i*>(result.m_y), y_256);
-    _mm256_storeu_si256(reinterpret_cast<__m256i*>(result.m_z), z_256);
 }
 
 static inline void
 FetchIntermediateMul(Int8 i, Int8 j, PrecomputedPoint& point)
 {
 
-    PrecomputedPoint negative_point;
-    point.init();
-    int abs_j = abs(j);
+    __m256i negative_point_x_256, negative_point_y_256, negative_point_z_256;
+
+    __m256i x_256 = { 1, 0, 0, 0 };
+    __m256i y_256 = { 1, 0, 0, 0 };
+    __m256i z_256 = { 0 };
+
+    const int abs_j = abs(j);
+
     UNROLL_16
     for (Uint8 z = 0; z < 16; z++) {
-        AlcpLoadPrecomputed(point, &cPrecomputedTable[i][z][0], abs_j == z + 1);
+        AlcpLoadPrecomputed(
+            x_256, y_256, z_256, &cPrecomputedTable[i][z][0], abs_j == z + 1);
     }
 
-    // can be done together using load on 256 bit reg
-    negative_point.m_x[0] = point.m_y[0];
-    negative_point.m_x[1] = point.m_y[1];
-    negative_point.m_x[2] = point.m_y[2];
-    negative_point.m_x[3] = point.m_y[3];
-
-    negative_point.m_y[0] = point.m_x[0];
-    negative_point.m_y[1] = point.m_x[1];
-    negative_point.m_y[2] = point.m_x[2];
-    negative_point.m_y[3] = point.m_x[3];
+    negative_point_x_256 = y_256;
+    negative_point_y_256 = x_256;
 
     Uint64 temp[4] = { 0 };
-    SubX25519(negative_point.m_z, temp, point.m_z);
+    SubX25519((Uint64*)&negative_point_z_256, temp, (Uint64*)&z_256);
 
-    AlcpLoadPrecomputed(point,
-                        reinterpret_cast<Uint64(*)[4]>(negative_point.m_x),
-                        ((Uint8)j >> 7));
+    Uint64 iswap = ((Uint8)j >> 7);
+    alcp_load_conditional(x_256, negative_point_x_256, iswap);
+    alcp_load_conditional(y_256, negative_point_y_256, iswap);
+    alcp_load_conditional(z_256, negative_point_z_256, iswap);
+
+    _mm256_storeu_si256(reinterpret_cast<__m256i*>(point.m_x), x_256);
+    _mm256_storeu_si256(reinterpret_cast<__m256i*>(point.m_y), y_256);
+    _mm256_storeu_si256(reinterpret_cast<__m256i*>(point.m_z), z_256);
 }
 
 static inline void
