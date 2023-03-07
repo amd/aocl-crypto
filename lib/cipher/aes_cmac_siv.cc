@@ -27,9 +27,10 @@
  */
 
 #include "cipher/aes_cmac_siv.hh"
-#include "mac/cmac.hh"
 
 namespace alcp::cipher {
+
+using alcp::base::status::InternalError;
 
 inline std::string
 parseBytesToHexStr(const Uint8* bytes, const int length)
@@ -128,77 +129,79 @@ dbl(const Uint8 in[], const Uint8 rb[], Uint8 out[])
     }
 }
 
-using Cmac = alcp::mac::Cmac;
-
 Status
-cmacWrapper(const Uint8 key[],
-            Uint64      keySize,
-            const Uint8 data[],
-            Uint64      size,
-            Uint8       mac[],
-            Uint64      macSize)
+CmacSiv::Impl::cmacWrapper(const Uint8 key[],
+                           Uint64      keySize,
+                           const Uint8 data[],
+                           Uint64      size,
+                           Uint8       mac[],
+                           Uint64      macSize)
 {
-    Cmac   cmac;
     Status s{ StatusOk() };
-    s = cmac.setKey(key, keySize);
+    s = m_cmac.setKey(key, keySize);
     if (!s.ok()) {
         return s;
     }
-    s = cmac.finalize(data, size);
+    s = m_cmac.finalize(data, size);
     if (!s.ok()) {
         return s;
     }
-    s = cmac.copy(mac, macSize);
+    s = m_cmac.copy(mac, macSize);
+    if (!s.ok()) {
+        return s;
+    }
+    s = m_cmac.reset();
+    if (!s.ok()) {
+        return s;
+    }
     return s;
 }
 
 Status
-cmacWrapperMultiData(const Uint8 key[],
-                     Uint64      keySize,
-                     const Uint8 data1[],
-                     Uint64      size1,
-                     const Uint8 data2[],
-                     Uint64      size2,
-                     Uint8       mac[],
-                     Uint64      macSize)
+CmacSiv::Impl::cmacWrapperMultiData(const Uint8 key[],
+                                    Uint64      keySize,
+                                    const Uint8 data1[],
+                                    Uint64      size1,
+                                    const Uint8 data2[],
+                                    Uint64      size2,
+                                    Uint8       mac[],
+                                    Uint64      macSize)
 {
-    Cmac   cmac;
     Status s{ StatusOk() };
-    s = cmac.setKey(key, keySize);
+    s = m_cmac.setKey(key, keySize);
     if (!s.ok()) {
         return s;
     }
-    s = cmac.update(data1, size1);
+    s = m_cmac.update(data1, size1);
     if (!s.ok()) {
         return s;
     }
-    s = cmac.finalize(data2, size2);
+    s = m_cmac.finalize(data2, size2);
     if (!s.ok()) {
         return s;
     }
-    s = cmac.copy(mac, macSize);
+    s = m_cmac.copy(mac, macSize);
     return s;
 }
 
 Status
-ctrWrapper(const Uint8 key[],
-           Uint64      keySize,
-           const Uint8 in[],
-           Uint8       out[],
-           Uint64      size,
-           Uint8       iv[],
-           bool        enc)
+CmacSiv::Impl::ctrWrapper(const Uint8 key[],
+                          Uint64      keySize,
+                          const Uint8 in[],
+                          Uint8       out[],
+                          Uint64      size,
+                          Uint8       iv[],
+                          bool        enc)
 {
     Status s = StatusOk();
-    Ctr    ctr;
-    ctr.setKey(key, keySize);
+    m_ctr.setKey(key, keySize);
 
     // FIXME: To be removed once we move everything to Status
     alc_error_t err = ALC_ERROR_NONE;
     if (enc)
-        err = ctr.encrypt(in, out, size, iv);
+        err = m_ctr.encrypt(in, out, size, iv);
     else
-        err = ctr.decrypt(in, out, size, iv);
+        err = m_ctr.decrypt(in, out, size, iv);
     if (alcp_is_error(err)) {
         s.update(InternalError("An error occured"));
     }
@@ -462,21 +465,6 @@ CmacSiv::setPaddingLen(Uint64 len)
     return pImpl->setPaddingLen(len);
 }
 
-Status
-CmacSiv::encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len)
-{
-    return pImpl->encrypt(plainText, cipherText, len);
-}
-
-Status
-CmacSiv::decrypt(const Uint8  cipherText[],
-                 Uint8        plainText[],
-                 Uint64       len,
-                 const Uint8* iv)
-{
-    return pImpl->decrypt(cipherText, plainText, len, iv);
-}
-
 alc_error_t
 CmacSiv::encrypt(const Uint8* pPlainText,
                  Uint8*       pCipherText,
@@ -484,10 +472,12 @@ CmacSiv::encrypt(const Uint8* pPlainText,
                  const Uint8* pIv) const
 {
     alc_error_t err = ALC_ERROR_NONE;
-    // Status      s   = encrypt(pPlainText, pCipherText, len);
-    // if (!s.ok()) {
-    //     err = ALC_ERROR_GENERIC;
-    // }
+
+    Status s = pImpl->encrypt(pPlainText, pCipherText, len);
+    if (!s.ok()) {
+        err = ALC_ERROR_GENERIC;
+    }
+
     return err;
 }
 
@@ -498,7 +488,12 @@ CmacSiv::decrypt(const Uint8* pCipherText,
                  const Uint8* pIv) const
 
 {
-    return ALC_ERROR_NONE;
+    alc_error_t err = ALC_ERROR_NONE;
+    Status      s   = pImpl->decrypt(pCipherText, pPlainText, len, pIv);
+    if (!s.ok()) {
+        err = ALC_ERROR_GENERIC;
+    }
+    return err;
 }
 
 bool

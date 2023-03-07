@@ -28,10 +28,14 @@
 
 #pragma once
 
+#include "alcp/base.hh"
 #include "cipher/aes.hh"
 
+#include "mac/cmac.hh"
 #include "utils/copy.hh"
 #include <vector>
+
+using Cmac = alcp::mac::Cmac;
 
 namespace alcp::cipher {
 // RFC5297
@@ -58,17 +62,10 @@ class ALCP_API_EXPORT CmacSiv : public Aes
                         Uint64       len,
                         const Uint8* pIv) const;
 
-    Status encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len);
-
     alc_error_t decrypt(const Uint8* pCipherText,
                         Uint8*       pPlainText,
                         Uint64       len,
                         const Uint8* pIv) const;
-
-    Status decrypt(const Uint8  cipherText[],
-                   Uint8        plainText[],
-                   Uint64       len,
-                   const Uint8* iv);
 
     Status getTag(Uint8 out[]);
 
@@ -87,6 +84,8 @@ class CmacSiv::Impl
     const Uint64       m_sizeCmac                    = 128 / 8;
     Uint64             m_padLen                      = {};
     std::vector<Uint8> m_cmacTemp = std::vector<Uint8>(m_sizeCmac);
+    Cmac               m_cmac;
+    Ctr                m_ctr;
 
   public:
     Impl(){};
@@ -100,6 +99,27 @@ class CmacSiv::Impl
                    Uint64       len,
                    const Uint8* iv);
     Status getTag(Uint8 out[]);
+    Status cmacWrapper(const Uint8 key[],
+                       Uint64      keySize,
+                       const Uint8 data[],
+                       Uint64      size,
+                       Uint8       mac[],
+                       Uint64      macSize);
+    Status ctrWrapper(const Uint8 key[],
+                      Uint64      keySize,
+                      const Uint8 in[],
+                      Uint8       out[],
+                      Uint64      size,
+                      Uint8       iv[],
+                      bool        enc);
+    Status cmacWrapperMultiData(const Uint8 key[],
+                                Uint64      keySize,
+                                const Uint8 data1[],
+                                Uint64      size1,
+                                const Uint8 data2[],
+                                Uint64      size2,
+                                Uint8       mac[],
+                                Uint64      macSize);
 };
 
 } // namespace alcp::cipher
