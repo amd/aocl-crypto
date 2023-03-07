@@ -31,7 +31,7 @@
 
 #include "alcp/cipher.h"
 
-//#include "algorithm.hh"
+// #include "algorithm.hh"
 #include "alcp/base.hh"
 #include "cipher.hh"
 #include "cipher/rijndael.hh"
@@ -63,14 +63,22 @@ class Aes : public Rijndael
                  const alc_key_info_t&         keyInfo)
         : Rijndael{ keyInfo }
         , m_mode{ aesInfo.ai_mode }
-    {}
+    {
+    }
 
   protected:
-    Aes() { m_this = this; }
     virtual ~Aes() {}
+
+    // FIXME:
+    // Without CMAC-SIV extending AES, we cannot access it with protected,
+    // Please change to protected if needed in future
+  public:
+    Aes() { m_this = this; }
 
     ALCP_API_EXPORT virtual Status setKey(const Uint8* pUserKey,
                                           Uint64       len) override;
+
+  protected:
     ALCP_API_EXPORT virtual Status setMode(alc_cipher_mode_t mode);
 
   protected:
@@ -88,7 +96,8 @@ class ALCP_API_EXPORT Cbc final : public Aes
     explicit Cbc(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {}
+    {
+    }
 
     ~Cbc() {}
 
@@ -161,7 +170,8 @@ class ALCP_API_EXPORT Ofb final : public Aes
     explicit Ofb(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {}
+    {
+    }
 
     ~Ofb() {}
 
@@ -231,10 +241,12 @@ class ALCP_API_EXPORT Ofb final : public Aes
 class ALCP_API_EXPORT Ctr final : public Aes
 {
   public:
+    Ctr() { Aes::setMode(ALC_AES_MODE_CTR); };
     explicit Ctr(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {}
+    {
+    }
 
     ~Ctr() {}
 
@@ -290,9 +302,6 @@ class ALCP_API_EXPORT Ctr final : public Aes
                                 Uint8*       pPlainText,
                                 Uint64       len,
                                 const Uint8* pIv) const final;
-
-  private:
-    Ctr(){};
 
   private:
 };
@@ -515,7 +524,8 @@ class ALCP_API_EXPORT Ccm final
     explicit Ccm(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {}
+    {
+    }
 
     ~Ccm() {}
 

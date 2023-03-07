@@ -74,7 +74,10 @@ class ALCP_API_EXPORT CmacSiv : public Aes
                         Uint64       len,
                         const Uint8* pIv) const;
 
-    Status encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len);
+    Status encrypt(const Uint8 plainText[],
+                   Uint8       cipherText[],
+                   Uint64      len,
+                   Uint64      padLen);
 
     alc_error_t decrypt(const Uint8* pCipherText,
                         Uint8*       pPlainText,
@@ -84,6 +87,7 @@ class ALCP_API_EXPORT CmacSiv : public Aes
     Status decrypt(const Uint8  cipherText[],
                    Uint8        plainText[],
                    Uint64       len,
+                   Uint64       padlen,
                    const Uint8* iv);
 
     Status getTag(Uint8 out[]);

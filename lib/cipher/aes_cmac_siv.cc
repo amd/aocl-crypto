@@ -189,6 +189,31 @@ cmacWrapperMultiData(const Uint8 key[],
 }
 
 Status
+ctrWrapper(const Uint8 key[],
+           Uint64      keySize,
+           const Uint8 in[],
+           Uint8       out[],
+           Uint64      size,
+           Uint8       iv[],
+           bool        enc)
+{
+    Status s = StatusOk();
+    Ctr    ctr;
+    ctr.setKey(key, keySize);
+
+    // FIXME: To be removed once we move everything to Status
+    alc_error_t err = ALC_ERROR_NONE;
+    if (enc)
+        err = ctr.encrypt(in, out, size, iv);
+    else
+        err = ctr.decrypt(in, out, size, iv);
+    if (alcp_is_error(err)) {
+        s.update(InternalError("An error occured"));
+    }
+    return s;
+}
+
+Status
 CmacSiv::s2v(const Uint8 plainText[], Uint64 size)
 {
     // Assume plaintest to be 128 bit multiples.
@@ -236,10 +261,10 @@ CmacSiv::s2v(const Uint8 plainText[], Uint64 size)
     // TODO: Implement CMAC function.
     if (size >= m_sizeCmac) {
         // Take out last block
-        xor_a_b(reinterpret_cast<const Uint64*>(plainText + size - m_sizeCmac),
-                p_cmacTemp64,
-                p_cmacTemp64,
-                m_sizeCmac / 8);
+        xor_a_b((plainText + size - m_sizeCmac),
+                &(m_cmacTemp.at(0)),
+                &(m_cmacTemp.at(0)),
+                m_sizeCmac);
 
         s = cmacWrapperMultiData(m_key1,
                                  m_keyLength,
@@ -338,13 +363,23 @@ CmacSiv::encrypt(const Uint8* pPlainText,
                  Uint64       len,
                  const Uint8* pIv) const
 {
-    return ALC_ERROR_NONE;
+    alc_error_t err = ALC_ERROR_NONE;
+    // Status      s   = encrypt(pPlainText, pCipherText, len);
+    // if (!s.ok()) {
+    //     err = ALC_ERROR_GENERIC;
+    // }
+    return err;
 }
 
 Status
-CmacSiv::encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len)
+CmacSiv::encrypt(const Uint8 plainText[],
+                 Uint8       cipherText[],
+                 Uint64      len,
+                 Uint64      padlen)
 {
-    Status s = StatusOk();
+    Status s     = StatusOk();
+    Uint8  q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                     0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
 
     s = s2v(plainText, len);
 
@@ -352,10 +387,12 @@ CmacSiv::encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len)
         return s;
     }
 
-    // TODO: Implement CtrEnc function.
-    //         PT      L       CT          IV         key      keyL
-    // s = CtrEnc(
-    //     plainText, len, cipherText, &(m_cmacTemp[0]), m_key2, m_keyLength);
+    for (int i = 0; i < m_sizeCmac; i++) {
+        q[i] = m_cmacTemp[i] & q[i];
+    }
+
+    s = ctrWrapper(
+        m_key2, m_keyLength, plainText, cipherText, len + padlen, q, true);
 
     if (!s.ok()) {
         return s;
@@ -377,13 +414,22 @@ Status
 CmacSiv::decrypt(const Uint8  cipherText[],
                  Uint8        plainText[],
                  Uint64       len,
+                 Uint64       padlen,
                  const Uint8* iv)
 {
-    Status s = StatusOk();
+    Status s     = StatusOk();
+    Uint8  q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                     0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
+
+    for (int i = 0; i < m_sizeCmac; i++) {
+        q[i] = iv[i] & q[i];
+    }
 
     // TODO: Implement CtrDec function.
     //              CT      L       PT        IV     key      keyL
     // s = CtrDec(cipherText, len, plainText, iv, m_key2, m_keyLength);
+    s = ctrWrapper(
+        m_key2, m_keyLength, cipherText, plainText, len + padlen, q, false);
 
     if (!s.ok()) {
         return s;
