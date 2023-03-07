@@ -41,29 +41,10 @@ class ALCP_API_EXPORT CmacSiv : public Aes
   private:
     class Impl;
     std::unique_ptr<Impl> pImpl;
-    /*
-      m_additionalDataProcessedProcessed keeps the vector of additional
-      data processed with CMAC m_additionalDataProcessedProcessedLen keeps
-      the vector of the length of corrosponding memory in m_additionalData
-      m_additionalDataProcessedProcessedSize current actual size of the
-      vector, for reducing allocs.
-
-      m_additionalDataSize is allocated as a pool of 10 values, this
-      reduces the number of allocations needed to keep all additional data.
-    */
-    std::vector<std::vector<Uint8>> m_additionalDataProcessed =
-        std::vector<std::vector<Uint8>>(10);
-    Uint64       m_additionalDataProcessedSize = {};
-    Uint8*       m_key1                        = {};
-    Uint8*       m_key2                        = {};
-    Uint64       m_keyLength                   = {};
-    const Uint64 m_sizeCmac                    = 128 / 8;
-    Uint64       m_padLen                      = {};
 
     // FIXME: Need to be private or need some friend function thing
   protected:
-    Status             s2v(const Uint8 plainText[], Uint64 size);
-    std::vector<Uint8> m_cmacTemp = std::vector<Uint8>(m_sizeCmac);
+    Status s2v(const Uint8 plainText[], Uint64 size);
 
   public:
     CmacSiv();
@@ -99,25 +80,26 @@ class CmacSiv::Impl
   private:
     std::vector<std::vector<Uint8>> m_additionalDataProcessed =
         std::vector<std::vector<Uint8>>(10);
-    Uint64       m_additionalDataProcessedSize = {};
-    Uint8*       m_key1                        = {};
-    Uint8*       m_key2                        = {};
-    Uint64       m_keyLength                   = {};
-    const Uint64 m_sizeCmac                    = 128 / 8;
-    Uint64       m_padLen                      = {};
+    Uint64             m_additionalDataProcessedSize = {};
+    Uint8*             m_key1                        = {};
+    Uint8*             m_key2                        = {};
+    Uint64             m_keyLength                   = {};
+    const Uint64       m_sizeCmac                    = 128 / 8;
+    Uint64             m_padLen                      = {};
+    std::vector<Uint8> m_cmacTemp = std::vector<Uint8>(m_sizeCmac);
 
   public:
     Impl(){};
-    // Status s2v(const Uint8 plainText[], Uint64 size);
-    // Status setKeys(Uint8 key1[], Uint8 key2[], Uint64 length);
-    // Status addAdditionalInput(const Uint8 memory[], Uint64 length);
-    // Status setPaddingLen(Uint64 len);
-    // Status encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len);
-    // Status decrypt(const Uint8  cipherText[],
-    //                Uint8        plainText[],
-    //                Uint64       len,
-    //                const Uint8* iv);
-    // Status getTag(Uint8 out[]);
+    Status s2v(const Uint8 plainText[], Uint64 size);
+    Status setKeys(Uint8 key1[], Uint8 key2[], Uint64 length);
+    Status addAdditionalInput(const Uint8 memory[], Uint64 length);
+    Status setPaddingLen(Uint64 len);
+    Status encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len);
+    Status decrypt(const Uint8  cipherText[],
+                   Uint8        plainText[],
+                   Uint64       len,
+                   const Uint8* iv);
+    Status getTag(Uint8 out[]);
 };
 
 } // namespace alcp::cipher

@@ -128,19 +128,6 @@ dbl(const Uint8 in[], const Uint8 rb[], Uint8 out[])
     }
 }
 
-CmacSiv::CmacSiv()
-    : pImpl{ std::make_unique<Impl>() }
-{
-}
-
-Status
-CmacSiv::setPaddingLen(Uint64 len)
-{
-    Status s = StatusOk();
-    m_padLen = len;
-    return s;
-}
-
 using Cmac = alcp::mac::Cmac;
 
 Status
@@ -218,8 +205,21 @@ ctrWrapper(const Uint8 key[],
     return s;
 }
 
+CmacSiv::CmacSiv()
+    : pImpl{ std::make_unique<Impl>() }
+{
+}
+
 Status
-CmacSiv::s2v(const Uint8 plainText[], Uint64 size)
+CmacSiv::Impl::setPaddingLen(Uint64 len)
+{
+    Status s = StatusOk();
+    m_padLen = len;
+    return s;
+}
+
+Status
+CmacSiv::Impl::s2v(const Uint8 plainText[], Uint64 size)
 {
     // Assume plaintest to be 128 bit multiples.
     Status             s         = StatusOk();
@@ -308,7 +308,7 @@ CmacSiv::s2v(const Uint8 plainText[], Uint64 size)
 }
 
 Status
-CmacSiv::setKeys(Uint8 key1[], Uint8 key2[], Uint64 length)
+CmacSiv::Impl::setKeys(Uint8 key1[], Uint8 key2[], Uint64 length)
 {
     Status s    = StatusOk();
     m_keyLength = length;
@@ -328,7 +328,7 @@ CmacSiv::setKeys(Uint8 key1[], Uint8 key2[], Uint64 length)
 }
 // Section 2.4 in RFC
 Status
-CmacSiv::addAdditionalInput(const Uint8 memory[], Uint64 length)
+CmacSiv::Impl::addAdditionalInput(const Uint8 memory[], Uint64 length)
 {
     // Check if there is an overflow
     Status s = StatusOk();
@@ -363,22 +363,8 @@ CmacSiv::addAdditionalInput(const Uint8 memory[], Uint64 length)
     return s;
 }
 
-alc_error_t
-CmacSiv::encrypt(const Uint8* pPlainText,
-                 Uint8*       pCipherText,
-                 Uint64       len,
-                 const Uint8* pIv) const
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    // Status      s   = encrypt(pPlainText, pCipherText, len);
-    // if (!s.ok()) {
-    //     err = ALC_ERROR_GENERIC;
-    // }
-    return err;
-}
-
 Status
-CmacSiv::encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len)
+CmacSiv::Impl::encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len)
 {
     Status s     = StatusOk();
     Uint8  q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -403,21 +389,11 @@ CmacSiv::encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len)
     return s;
 }
 
-alc_error_t
-CmacSiv::decrypt(const Uint8* pCipherText,
-                 Uint8*       pPlainText,
-                 Uint64       len,
-                 const Uint8* pIv) const
-
-{
-    return ALC_ERROR_NONE;
-}
-
 Status
-CmacSiv::decrypt(const Uint8  cipherText[],
-                 Uint8        plainText[],
-                 Uint64       len,
-                 const Uint8* iv)
+CmacSiv::Impl::decrypt(const Uint8  cipherText[],
+                       Uint8        plainText[],
+                       Uint64       len,
+                       const Uint8* iv)
 {
     Status s     = StatusOk();
     Uint8  q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -449,11 +425,80 @@ CmacSiv::decrypt(const Uint8  cipherText[],
 }
 
 Status
-CmacSiv::getTag(Uint8 out[])
+CmacSiv::Impl::getTag(Uint8 out[])
 {
     Status s = StatusOk();
     utils::CopyBytes(out, &m_cmacTemp[0], m_sizeCmac);
     return s;
+}
+
+Status
+CmacSiv::s2v(const Uint8 plainText[], Uint64 size)
+{
+    return pImpl->s2v(plainText, size);
+}
+
+Status
+CmacSiv::getTag(Uint8 out[])
+{
+    return pImpl->getTag(out);
+}
+
+Status
+CmacSiv::setKeys(Uint8 key1[], Uint8 key2[], Uint64 length)
+{
+    return pImpl->setKeys(key1, key2, length);
+}
+
+Status
+CmacSiv::addAdditionalInput(const Uint8 memory[], Uint64 length)
+{
+    return pImpl->addAdditionalInput(memory, length);
+}
+
+Status
+CmacSiv::setPaddingLen(Uint64 len)
+{
+    return pImpl->setPaddingLen(len);
+}
+
+Status
+CmacSiv::encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len)
+{
+    return pImpl->encrypt(plainText, cipherText, len);
+}
+
+Status
+CmacSiv::decrypt(const Uint8  cipherText[],
+                 Uint8        plainText[],
+                 Uint64       len,
+                 const Uint8* iv)
+{
+    return pImpl->decrypt(cipherText, plainText, len, iv);
+}
+
+alc_error_t
+CmacSiv::encrypt(const Uint8* pPlainText,
+                 Uint8*       pCipherText,
+                 Uint64       len,
+                 const Uint8* pIv) const
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    // Status      s   = encrypt(pPlainText, pCipherText, len);
+    // if (!s.ok()) {
+    //     err = ALC_ERROR_GENERIC;
+    // }
+    return err;
+}
+
+alc_error_t
+CmacSiv::decrypt(const Uint8* pCipherText,
+                 Uint8*       pPlainText,
+                 Uint64       len,
+                 const Uint8* pIv) const
+
+{
+    return ALC_ERROR_NONE;
 }
 
 bool
