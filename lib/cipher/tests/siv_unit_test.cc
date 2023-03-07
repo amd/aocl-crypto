@@ -192,8 +192,12 @@ TEST(CMACSIV, encTest1)
     s = siv_obj.addAdditionalInput(aad, cAadSize);
     EXPECT_TRUE(s.ok());
 
-    s = siv_obj.encrypt(pt, &ct_act[0], cPtSize, padLen);
+    s = siv_obj.setPaddingLen(padLen);
+    EXPECT_TRUE(s.ok());
+
+    s = siv_obj.encrypt(pt, &ct_act[0], cPtSize);
     std::vector<Uint8> cmp_act(&ct_act.at(0), &ct_act.at(cPtSize));
+    EXPECT_TRUE(s.ok());
     EXPECT_EQ(ct_exp, cmp_act);
 
     s = siv_obj.getTag(&v_act[0]);
@@ -254,7 +258,10 @@ TEST(CMACSIV, encTest2)
     s = siv_obj.addAdditionalInput(nonce, sizeof(nonce));
     EXPECT_TRUE(s.ok());
 
-    s = siv_obj.encrypt(pt, &ct_act[0], sizeof(pt) - 1, 1);
+    s = siv_obj.setPaddingLen(1);
+    EXPECT_TRUE(s.ok());
+
+    s = siv_obj.encrypt(pt, &ct_act[0], sizeof(pt) - 1);
     std::vector<Uint8> cmp_act(&ct_act.at(0), &ct_act.at(cPtSize));
     EXPECT_EQ(ct_exp, cmp_act);
 
@@ -292,7 +299,10 @@ TEST(CMACSIV, decTest1)
     s = siv_obj.addAdditionalInput(aad, cAadSize);
     EXPECT_TRUE(s.ok());
 
-    s = siv_obj.decrypt(&ct[0], &pt_act[0], cPtSize, padLen, &v_exp[0]);
+    s = siv_obj.setPaddingLen(padLen);
+    EXPECT_TRUE(s.ok());
+
+    s = siv_obj.decrypt(&ct[0], &pt_act[0], cPtSize, &v_exp[0]);
     std::vector<Uint8> cmp_act(&pt_act.at(0), &pt_act.at(cPtSize));
     EXPECT_EQ(pt_exp, cmp_act);
 
@@ -355,7 +365,10 @@ TEST(CMACSIV, decTest2)
     s = siv_obj.addAdditionalInput(nonce, sizeof(nonce));
     EXPECT_TRUE(s.ok());
 
-    s = siv_obj.decrypt(&ct[0], &pt_act[0], cPtSize, 1, &v_exp[0]);
+    s = siv_obj.setPaddingLen(1);
+    EXPECT_TRUE(s.ok());
+
+    s = siv_obj.decrypt(&ct[0], &pt_act[0], cPtSize, &v_exp[0]);
     std::vector<Uint8> cmp_act(&pt_act.at(0), &pt_act.at(cPtSize));
     EXPECT_EQ(pt_exp, cmp_act);
 

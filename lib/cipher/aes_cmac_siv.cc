@@ -128,11 +128,16 @@ dbl(const Uint8 in[], const Uint8 rb[], Uint8 out[])
     }
 }
 
+CmacSiv::CmacSiv()
+    : pImpl{ std::make_unique<Impl>() }
+{
+}
+
 Status
-CmacSiv::dbl(std::vector<Uint8>& in)
+CmacSiv::setPaddingLen(Uint64 len)
 {
     Status s = StatusOk();
-    // Double the in vector
+    m_padLen = len;
     return s;
 }
 
@@ -248,7 +253,8 @@ CmacSiv::s2v(const Uint8 plainText[], Uint64 size)
 
         std::cout << "dbl:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
 
-        // xor_a_b(p_cmacTemp64, add_temp_uint64, p_cmacTemp64, m_sizeCmac / 8);
+        // xor_a_b(p_cmacTemp64, add_temp_uint64, p_cmacTemp64, m_sizeCmac /
+        // 8);
         xor_a_b(&m_cmacTemp[0],
                 &m_additionalDataProcessed.at(i).at(0),
                 &m_cmacTemp[0],
@@ -372,10 +378,7 @@ CmacSiv::encrypt(const Uint8* pPlainText,
 }
 
 Status
-CmacSiv::encrypt(const Uint8 plainText[],
-                 Uint8       cipherText[],
-                 Uint64      len,
-                 Uint64      padlen)
+CmacSiv::encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len)
 {
     Status s     = StatusOk();
     Uint8  q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -392,7 +395,7 @@ CmacSiv::encrypt(const Uint8 plainText[],
     }
 
     s = ctrWrapper(
-        m_key2, m_keyLength, plainText, cipherText, len + padlen, q, true);
+        m_key2, m_keyLength, plainText, cipherText, len + m_padLen, q, true);
 
     if (!s.ok()) {
         return s;
@@ -414,7 +417,6 @@ Status
 CmacSiv::decrypt(const Uint8  cipherText[],
                  Uint8        plainText[],
                  Uint64       len,
-                 Uint64       padlen,
                  const Uint8* iv)
 {
     Status s     = StatusOk();
@@ -429,7 +431,7 @@ CmacSiv::decrypt(const Uint8  cipherText[],
     //              CT      L       PT        IV     key      keyL
     // s = CtrDec(cipherText, len, plainText, iv, m_key2, m_keyLength);
     s = ctrWrapper(
-        m_key2, m_keyLength, cipherText, plainText, len + padlen, q, false);
+        m_key2, m_keyLength, cipherText, plainText, len + m_padLen, q, false);
 
     if (!s.ok()) {
         return s;
