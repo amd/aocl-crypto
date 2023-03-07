@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -70,6 +70,8 @@ struct Context
     alc_error_t (*getTag)(void* rCipher, Uint8* pTag, Uint64 len);
 
     alc_error_t (*setTagLength)(void* rCipher, Uint64 len);
+
+    alc_error_t (*setPadLength)(void* rCipher, Uint64 len);
 
     alc_error_t (*finish)(const void*);
 };

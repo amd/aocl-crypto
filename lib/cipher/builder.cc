@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,6 +28,7 @@
 #include "cipher/aes.hh"
 #include "cipher/aes_build.hh"
 #include "cipher/aes_cfb.hh"
+#include "cipher/aes_cmac_siv.hh"
 
 #if 0
 #include "cipher/aes_ccm.hh"
@@ -94,6 +95,19 @@ __aes_wrapperSetIv(void* rCipher, Uint64 len, const Uint8* pIv)
     e = ap->setIv(len, pIv);
 
     return e;
+}
+
+template<typename CIPHERMODE>
+static alc_error_t
+__aes_wrapperSetPadLen(void* rCipher, Uint64 len)
+{
+    Status e = StatusOk();
+
+    auto ap = static_cast<CIPHERMODE*>(rCipher);
+
+    e = ap->setPaddingLen(len);
+
+    return e.code();
 }
 
 template<typename CIPHERMODE>
@@ -170,6 +184,9 @@ __build_aes(const alc_cipher_algo_info_t& aesInfo,
         ctx.setTagLength  = __aes_wrapperSetTagLength<Ccm>;
     } else if constexpr (std::is_same_v<CIPHERMODE, Xts>) {
         ctx.setIv = __aes_wrapperSetIv<Xts>;
+    } else if constexpr (std::is_same_v<CIPHERMODE, CmacSiv>) {
+        ctx.setPadLength = __aes_wrapperSetPadLen<CmacSiv>;
+        ctx.getTag       = __aes_wrapperGetTag<CmacSiv>;
     }
     ctx.finish = __aes_dtor<CIPHERMODE>;
 
@@ -217,6 +234,9 @@ AesBuilder::Build(const alc_cipher_algo_info_t& aesInfo,
         case ALC_AES_MODE_CCM:
             if (Ccm::isSupported(aesInfo, keyInfo))
                 sts = __build_aes<Ccm>(aesInfo, keyInfo, ctx);
+            break;
+        case ALC_AES_MODE_SIV:
+            sts = __build_aes<CmacSiv>(aesInfo, keyInfo, ctx);
             break;
 
         default:

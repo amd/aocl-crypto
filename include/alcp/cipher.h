@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -59,6 +59,7 @@ typedef enum _alc_cipher_mode
     ALC_AES_MODE_XTS,
     ALC_AES_MODE_GCM,
     ALC_AES_MODE_CCM,
+    ALC_AES_MODE_SIV,
 
     ALC_AES_MODE_MAX,
 } alc_cipher_mode_t;
@@ -94,6 +95,11 @@ typedef struct _alc_cipher_mode_gcm_info
     char dummy;
 } alc_cipher_mode_gcm_info_t, *alc_cipher_mode_gcm_info_p;
 
+typedef struct _alc_cipher_mode_siv_info
+{
+    const alc_key_info_t* xi_ctr_key;
+} alc_cipher_mode_siv_info_t, alc_cipher_mode_siv_info_p;
+
 /**
  * \brief  Algorithm specific info,
  *
@@ -107,6 +113,7 @@ typedef struct _alc_cipher_algo_info
     {
         alc_cipher_mode_xts_info_t ai_xts;
         alc_cipher_mode_gcm_info_t ai_gcm;
+        alc_cipher_mode_siv_info_t ai_siv;
     };
 
 } alc_cipher_algo_info_t, *alc_cpher_algo_info_p;
@@ -148,7 +155,7 @@ typedef struct _alc_cipher_handle
  *                     as described by alc_cipher_info_t
  * \return              alc_error_t
  */
- ALCP_API_EXPORT alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_cipher_supported(const alc_cipher_info_p pCipherInfo);
 
 /**
@@ -254,6 +261,15 @@ ALCP_API_EXPORT alc_error_t
 alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
                    Uint64                    len,
                    const Uint8*              pIv);
+
+/**
+ * @brief Allows caller to set padded bytes in the input.
+ * @param pCipherHandle Session handle for encrypt/decrypt operation
+ * @param len           Length of bytes which are padded
+ * @return
+ */
+alc_error_t
+alcp_cipher_set_pad_length(const alc_cipher_handle_p pCipherHandle, Uint64 len);
 
 /**
  * \brief Allows caller to set the Additonal Data for Tag Generation
