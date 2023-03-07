@@ -65,15 +65,17 @@ TEST(AES, setKeyEquivalencyTest)
     aes.setKey(&key[0], key.size() * 8);
     aes.setMode(ALC_AES_MODE_NONE);
 
-    const alc_key_info_t   kinfo   = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt  = ALC_KEY_FMT_RAW,
-                                   .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key) * 8,
-                                   .key  = &key[0] };
-    alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_NONE,
-                                       .ai_iv   = NULL };
-    auto                   aes2    = TestCipherMode(aesInfo, kinfo);
+    const alc_key_info_t   cKeyInfo = { ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW,
+                                      ALC_KEY_ALG_MAC,        ALC_KEY_LEN_128,
+                                      sizeof(key) * 8,        &key[0] };
+    alc_cipher_algo_info_t aes_info = { ALC_AES_MODE_NONE, NULL };
+    auto                   aes2     = TestCipherMode(aes_info, cKeyInfo);
 
     ASSERT_FALSE(
         memcmp(aes2.getEncryptKeys(), aes.getEncryptKeys(), aes.getRounds()));
+
+    ASSERT_FALSE(
+        memcmp(aes2.getDecryptKeys(), aes.getDecryptKeys(), aes.getRounds()));
+
+    ASSERT_EQ(aes2.getKeySize(), aes.getKeySize());
 }
