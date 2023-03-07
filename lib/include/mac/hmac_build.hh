@@ -28,22 +28,16 @@
 #pragma once
 
 #include "alcp/base.hh"
-#include "alcp/error.h"
 #include "digest/sha2_384.hh"
 #include "digest/sha3.hh"
 #include "hmac.hh"
-#include <type_traits> /* for is_same_v<> */
 
 namespace alcp::mac {
-
-using Context = alcp::mac::Context;
-using namespace status;
 Status
 validate_keys(const alc_key_info_t& rKeyInfo)
 {
-    using namespace alcp::base;
-    using namespace alcp::base::status;
 
+    using namespace status;
     Status status = StatusOk();
 
     // For RAW assignments
@@ -58,11 +52,7 @@ validate_keys(const alc_key_info_t& rKeyInfo)
             break;
         case ALC_KEY_FMT_BASE64:
             // TODO: For base64 conversions
-            return InvalidArgument(
-                "HMAC: Base64 Key Format not supported yet"); // remove this
-                                                              // return when
-                                                              // above todo is
-                                                              // resolved.
+            return InvalidArgument("HMAC: Base64 Key Format not supported yet");
             break;
         // TODO: Subsequest switch cases for other formats
         default:
@@ -163,6 +153,7 @@ template<typename MACALGORITHM>
 static Status
 __build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
 {
+    using namespace status;
     Status status = StatusOk();
 
     status = validate_keys(macInfo.mi_keyinfo);
@@ -170,7 +161,7 @@ __build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
         return status;
     }
     // FIXME: Use Placement New Operator for memory allocation
-    auto sha3 = new alcp::digest::Sha3(macInfo.mi_algoinfo.hmac.hmac_digest);
+    auto sha3 = new digest::Sha3(macInfo.mi_algoinfo.hmac.hmac_digest);
     if (sha3 == nullptr) {
         return InternalError("Unable To Allocate Memory for Digest Object");
     }
@@ -189,8 +180,8 @@ __build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
     ctx.update   = __hmac_wrapperUpdate<MACALGORITHM>;
     ctx.finalize = __hmac_wrapperFinalize<MACALGORITHM>;
     ctx.copy     = __hmac_wrapperCopy<MACALGORITHM>;
-    ctx.finish   = __hmac_wrapperFinish<MACALGORITHM, alcp::digest::Sha3>;
-    ctx.reset    = __hmac_wrapperReset<MACALGORITHM, alcp::digest::Sha3>;
+    ctx.finish   = __hmac_wrapperFinish<MACALGORITHM, digest::Sha3>;
+    ctx.reset    = __hmac_wrapperReset<MACALGORITHM, digest::Sha3>;
 
     return status;
 }
@@ -199,33 +190,26 @@ HmacBuilder::Build(const alc_mac_info_t& macInfo,
                    const alc_key_info_t& keyInfo,
                    Context&              ctx)
 {
+    using namespace status;
     Status status = StatusOk();
 
     switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_type) {
         case ALC_DIGEST_TYPE_SHA2: {
             switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2) {
                 case ALC_SHA2_256: {
-                    status =
-                        __build_hmac<alcp::digest::Sha256, alcp::mac::Hmac>(
-                            macInfo, ctx);
+                    status = __build_hmac<digest::Sha256, Hmac>(macInfo, ctx);
                     break;
                 }
                 case ALC_SHA2_224: {
-                    status =
-                        __build_hmac<alcp::digest::Sha224, alcp::mac::Hmac>(
-                            macInfo, ctx);
+                    status = __build_hmac<digest::Sha224, Hmac>(macInfo, ctx);
                     break;
                 }
                 case ALC_SHA2_384: {
-                    status =
-                        __build_hmac<alcp::digest::Sha384, alcp::mac::Hmac>(
-                            macInfo, ctx);
+                    status = __build_hmac<digest::Sha384, Hmac>(macInfo, ctx);
                     break;
                 }
                 case ALC_SHA2_512: {
-                    status =
-                        __build_hmac<alcp::digest::Sha512, alcp::mac::Hmac>(
-                            macInfo, ctx);
+                    status = __build_hmac<digest::Sha512, Hmac>(macInfo, ctx);
                     break;
                 }
                 default: {
@@ -238,19 +222,19 @@ HmacBuilder::Build(const alc_mac_info_t& macInfo,
         case ALC_DIGEST_TYPE_SHA3: {
             switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3) {
                 case ALC_SHA3_224: {
-                    status = __build_hmac_sha3<alcp::mac::Hmac>(macInfo, ctx);
+                    status = __build_hmac_sha3<Hmac>(macInfo, ctx);
                     break;
                 }
                 case ALC_SHA3_256: {
-                    status = __build_hmac_sha3<alcp::mac::Hmac>(macInfo, ctx);
+                    status = __build_hmac_sha3<Hmac>(macInfo, ctx);
                     break;
                 }
                 case ALC_SHA3_384: {
-                    status = __build_hmac_sha3<alcp::mac::Hmac>(macInfo, ctx);
+                    status = __build_hmac_sha3<Hmac>(macInfo, ctx);
                     break;
                 }
                 case ALC_SHA3_512: {
-                    status = __build_hmac_sha3<alcp::mac::Hmac>(macInfo, ctx);
+                    status = __build_hmac_sha3<Hmac>(macInfo, ctx);
                     break;
                 }
                 default: {

@@ -34,7 +34,10 @@
 #include "mac/hmac.hh"
 #include "gtest/gtest.h"
 
-using namespace alcp;
+// using namespace alcp;
+using alcp::mac::Hmac;
+using namespace alcp::digest;
+using namespace alcp::base;
 
 // TODO: Remove DEBUG Once capi is complete
 // #define DEBUG 1
@@ -315,18 +318,17 @@ class HmacTestFixture
     : public ::testing::TestWithParam<std::pair<const std::string, param_tuple>>
 {
   public:
-    alc_digest_info_t                digest_info;
-    std::vector<Uint8>               cipher_text;
-    std::vector<Uint8>               expected_mac;
-    std::vector<Uint8>               key;
-    std::unique_ptr<alcp::mac::Hmac> p_hmac =
-        std::make_unique<alcp::mac::Hmac>();
+    alc_digest_info_t     digest_info;
+    std::vector<Uint8>    cipher_text;
+    std::vector<Uint8>    expected_mac;
+    std::vector<Uint8>    key;
+    std::unique_ptr<Hmac> p_hmac = std::make_unique<Hmac>();
 
-    std::unique_ptr<alcp::digest::Sha256> p_sha256;
-    std::unique_ptr<alcp::digest::Sha224> p_sha224;
-    std::unique_ptr<alcp::digest::Sha384> p_sha384;
-    std::unique_ptr<alcp::digest::Sha512> p_sha512;
-    std::unique_ptr<alcp::digest::Sha3>   p_sha3;
+    std::unique_ptr<Sha256> p_sha256;
+    std::unique_ptr<Sha224> p_sha224;
+    std::unique_ptr<Sha384> p_sha384;
+    std::unique_ptr<Sha512> p_sha512;
+    std::unique_ptr<Sha3>   p_sha3;
 
   public:
     void setUp(const ParamType& params)
@@ -350,16 +352,16 @@ class HmacTestFixture
 
         if (sha_type == "SHA2") {
             if (hash_name == "256") {
-                p_sha256 = std::make_unique<alcp::digest::Sha256>();
+                p_sha256 = std::make_unique<Sha256>();
                 p_hmac->setDigest(*p_sha256);
             } else if (hash_name == "224") {
-                p_sha224 = std::make_unique<alcp::digest::Sha224>();
+                p_sha224 = std::make_unique<Sha224>();
                 p_hmac->setDigest(*p_sha224);
             } else if (hash_name == "384") {
-                p_sha384 = std::make_unique<alcp::digest::Sha384>();
+                p_sha384 = std::make_unique<Sha384>();
                 p_hmac->setDigest(*p_sha384);
             } else if (hash_name == "512") {
-                p_sha512 = std::make_unique<alcp::digest::Sha512>();
+                p_sha512 = std::make_unique<Sha512>();
                 p_hmac->setDigest(*p_sha512);
             }
 
@@ -378,7 +380,7 @@ class HmacTestFixture
                 digest_info.dt_len          = ALC_DIGEST_LEN_512;
                 digest_info.dt_mode.dm_sha3 = ALC_SHA3_512;
             }
-            p_sha3 = std::make_unique<alcp::digest::Sha3>(digest_info);
+            p_sha3 = std::make_unique<Sha3>(digest_info);
             p_hmac->setDigest(*p_sha3);
         }
         p_hmac->setKey(&key[0], key.size());
@@ -400,9 +402,9 @@ TEST(HmacReliabilityTest, NullUpdate)
     auto cipher_text = parseHexStrToBin(std::get<1>(data));
     auto output_mac  = parseHexStrToBin(std::get<2>(data));
 
-    alcp::digest::Sha256 sha256;
-    alcp::mac::Hmac      hmac;
-    Status               status = StatusOk();
+    Sha256 sha256;
+    Hmac   hmac;
+    Status status = StatusOk();
     hmac.setDigest(sha256);
     status = hmac.setKey(&key[0], key.size());
     ASSERT_EQ(status, StatusOk());
@@ -477,8 +479,8 @@ TEST(HmacTest, Reset)
     auto cipher_text = parseHexStrToBin(std::get<1>(data));
     auto output_mac  = parseHexStrToBin(std::get<2>(data));
 
-    alcp::digest::Sha256 sha256;
-    alcp::mac::Hmac      hmac;
+    Sha256 sha256;
+    Hmac   hmac;
     hmac.setDigest(sha256);
     hmac.setKey(&key[0], key.size());
     hmac.update(&cipher_text[0], cipher_text.size());
@@ -508,8 +510,8 @@ TEST(HmacTest, UpdateFinalizeReset)
     auto block2 = std::vector<Uint8>(
         cipher_text.begin() + cipher_text.size() / 2, cipher_text.end());
 
-    alcp::digest::Sha256 sha256;
-    alcp::mac::Hmac      hmac;
+    Sha256 sha256;
+    Hmac   hmac;
 
     hmac.setDigest(sha256);
     hmac.setKey(&key[0], key.size());
@@ -541,8 +543,8 @@ TEST(HmacTest, setKeyAfterFinalize)
     auto block2 = std::vector<Uint8>(
         cipher_text.begin() + cipher_text.size() / 2, cipher_text.end());
 
-    alcp::digest::Sha256 sha256;
-    alcp::mac::Hmac      hmac;
+    Sha256 sha256;
+    Hmac   hmac;
 
     hmac.setDigest(sha256);
     hmac.setKey(&key[0], key.size());
@@ -579,8 +581,7 @@ TEST(HmacTest, setKeyAfterFinalize)
 TEST(HmacRobustnessTest, callUpdateWithNullKeyNullDigest)
 {
 
-    alcp::mac::Hmac hmac;
-
+    Hmac   hmac;
     Status s = hmac.update(nullptr, 0);
     EXPECT_FALSE(s.ok());
 }
@@ -588,8 +589,8 @@ TEST(HmacRobustnessTest, callUpdateWithNullKeyNullDigest)
 TEST(HmacRobustnessTest, callUpdateWithNullKey)
 {
 
-    alcp::mac::Hmac      hmac;
-    alcp::digest::Sha256 sha256;
+    Hmac   hmac;
+    Sha256 sha256;
 
     hmac.setDigest(sha256);
     Status s = hmac.update(nullptr, 0);
@@ -599,8 +600,8 @@ TEST(HmacRobustnessTest, callUpdateWithNullKey)
 TEST(HmacRobustnessTest, callUpdateWithNullDigest)
 {
 
-    alcp::mac::Hmac hmac;
-    Uint8           key[16]{};
+    Hmac  hmac;
+    Uint8 key[16]{};
     hmac.setKey(key, sizeof(key));
     Status s = hmac.update(nullptr, 0);
     EXPECT_FALSE(s.ok());
@@ -609,8 +610,8 @@ TEST(HmacRobustnessTest, callUpdateWithNullDigest)
 TEST(HmacRobustnessTest, callSetKeyWithoutSetDigest)
 {
 
-    alcp::mac::Hmac      hmac;
-    alcp::digest::Sha256 sha256;
+    Hmac   hmac;
+    Sha256 sha256;
 
     Uint8  key[16]{};
     Status s = hmac.setKey(key, sizeof(key));
@@ -620,8 +621,8 @@ TEST(HmacRobustnessTest, callSetKeyWithoutSetDigest)
 TEST(HmacRobustnessTest, callCopyWithoutFinalize)
 {
 
-    alcp::mac::Hmac      hmac;
-    alcp::digest::Sha256 sha256;
+    Hmac   hmac;
+    Sha256 sha256;
 
     Uint8 key[16]{};
     hmac.setDigest(sha256);

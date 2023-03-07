@@ -31,60 +31,60 @@
 #include "cmac.hh"
 #include <type_traits> /* for is_same_v<> */
 
-using Context = alcp::mac::Context;
+namespace alcp::mac {
 
 class CmacBuilder
 {
   public:
-    static alcp::base::Status Build(const alc_mac_info_t& macInfo,
-                                    const alc_key_info_t& keyInfo,
-                                    Context&              ctx);
+    static Status Build(const alc_mac_info_t& macInfo,
+                        const alc_key_info_t& keyInfo,
+                        Context&              ctx);
 };
 
-static alcp::base::Status
+static Status
 __cmac_wrapperUpdate(void* cmac, const Uint8* buff, Uint64 size)
 {
 
-    auto ap = static_cast<alcp::mac::Cmac*>(cmac);
+    auto ap = static_cast<Cmac*>(cmac);
     return ap->update(buff, size);
 }
 
-static alcp::base::Status
+static Status
 __cmac_wrapperFinalize(void* cmac, const Uint8* buff, Uint64 size)
 {
-    auto ap = static_cast<alcp::mac::Cmac*>(cmac);
+    auto ap = static_cast<Cmac*>(cmac);
     return ap->finalize(buff, size);
 }
 
-static alcp::base::Status
+static Status
 __cmac_wrapperCopy(void* cmac, Uint8* buff, Uint64 size)
 {
-    auto ap = static_cast<alcp::mac::Cmac*>(cmac);
+    auto ap = static_cast<Cmac*>(cmac);
     return ap->copy(buff, size);
 }
 
 static void
 __cmac_wrapperFinish(void* cmac, void* digest)
 {
-    auto ap = static_cast<alcp::mac::Cmac*>(cmac);
+    auto ap = static_cast<Cmac*>(cmac);
     ap->finish();
     delete ap;
 }
 
-static alcp::base::Status
+static Status
 __cmac_wrapperReset(void* cmac, void* digest)
 {
-    auto ap = static_cast<alcp::mac::Cmac*>(cmac);
+    auto ap = static_cast<Cmac*>(cmac);
     return ap->reset();
 }
 
-static alcp::base::Status
+static Status
 __build_cmac(const alc_cipher_info_t& cipherInfo,
              const alc_key_info_t     kinfo,
              Context&                 ctx)
 {
-    alcp::base::Status status = alcp::base::StatusOk();
-    auto               algo   = new alcp::mac::Cmac();
+    Status status = StatusOk();
+    auto   algo   = new Cmac();
 
     auto key = kinfo.key;
     auto len = kinfo.len;
@@ -103,10 +103,11 @@ __build_cmac(const alc_cipher_info_t& cipherInfo,
 
     return status;
 }
-alcp::base::Status
+Status
 CmacBuilder::Build(const alc_mac_info_t& macInfo,
                    const alc_key_info_t& keyInfo,
                    Context&              ctx)
 {
     return __build_cmac(macInfo.mi_algoinfo.cmac.cmac_cipher, keyInfo, ctx);
 }
+} // namespace alcp::mac

@@ -48,7 +48,7 @@ class ALCP_API_EXPORT Hmac final : public Mac
 {
 
   public:
-    alcp::digest::Digest* m_pDigest;
+    digest::Digest* m_pDigest;
 
   private:
     class Impl;
@@ -64,42 +64,50 @@ class ALCP_API_EXPORT Hmac final : public Mac
      * @param size: Size of the message array
      * @returns Error Status
      */
-    alcp::base::Status update(const Uint8* buff, Uint64 size) override;
+    Status update(const Uint8* buff, Uint64 size) override;
     /**
      * @brief Can be called only once to update the final message chunk
      * @param size: Size of the final message chunk
      * @returns Error Status
      */
-    alcp::base::Status finalize(const Uint8* buff, Uint64 size) override;
+    Status finalize(const Uint8* buff, Uint64 size) override;
     /**
      * @brief Can be called only once to update the final message chunk
      * @param buff: Pointer to the array to copy the message hash to
      * @param size: Message digest Size
      * @returns Error Status
      */
-    alcp::base::Status copyHash(Uint8* buff, Uint64 size) const;
+    Status copyHash(Uint8* buff, Uint64 size) const;
     /**
      * @brief get the output hash size to allocate the output array on
      * @returns the output hash size of HMAC
      */
     Uint64 getHashSize();
 
-    Status setDigest(alcp::digest::Digest& p_digest);
+    /**
+     * @brief set the Digest to be used by HMAC
+     * @param digest: Digest class to be used by HMAC. Should be called before
+     * setting the Key
+     * @returns Status
+     */
+    Status setDigest(digest::Digest& digest);
 
     Status setKey(const Uint8 key[], Uint32 keylen);
 
     void finish();
 
-    alcp::base::Status reset();
+    Status reset();
 
     ~Hmac();
 };
 
 namespace avx2 {
-    void get_k0_xor_opad(Uint32 m_input_block_length,
-                         Uint8* m_pK0,
-                         Uint8* m_pK0_xor_ipad,
-                         Uint8* m_pK0_xor_opad);
-    void copyData(Uint8* destination, const Uint8* source, int len);
+    ALCP_API_EXPORT void get_k0_xor_opad(Uint32 m_input_block_length,
+                                         Uint8* m_pK0,
+                                         Uint8* m_pK0_xor_ipad,
+                                         Uint8* m_pK0_xor_opad);
+    ALCP_API_EXPORT void copyData(Uint8*       destination,
+                                  const Uint8* source,
+                                  int          len);
 } // namespace avx2
 } // namespace alcp::mac

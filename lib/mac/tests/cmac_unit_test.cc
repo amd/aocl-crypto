@@ -224,10 +224,10 @@ class CMACFuncionalityTest
     : public ::testing::TestWithParam<std::pair<const std::string, param_tuple>>
 {
   public:
-    alc_key_info_t                   kinfo;
-    alc_cipher_info_t                cinfo;
-    std::unique_ptr<alcp::mac::Cmac> cmac;
-    std::vector<Uint8>               key, plain_text, expected_mac, mac;
+    alc_key_info_t        kinfo;
+    alc_cipher_info_t     cinfo;
+    std::unique_ptr<Cmac> cmac;
+    std::vector<Uint8>    key, plain_text, expected_mac, mac;
 
     void SetUp() override
     {
@@ -235,7 +235,7 @@ class CMACFuncionalityTest
         auto       tuple_values = params.second;
 
         tie(key, plain_text, expected_mac) = tuple_values;
-        cmac = std::make_unique<alcp::mac::Cmac>();
+        cmac                               = std::make_unique<Cmac>();
         cmac->setKey(&key[0], static_cast<Uint64>(key.size()) * 8);
         mac = std::vector<Uint8>(expected_mac.size());
     }
@@ -324,13 +324,13 @@ TEST_P(CMACFuncionalityTest, CMAC_RESET)
 
 TEST(CMACRobustnessTest, CMAC_CreateObject)
 {
-    alcp::mac::Cmac cmac2;
+    Cmac cmac2;
 }
 
 TEST(CMACRobustnessTest, CMAC_callUpdateOnNullKey)
 {
-    alcp::mac::Cmac cmac2;
-    Uint8           data[20];
+    Cmac  cmac2;
+    Uint8 data[20];
 
     /**
       FIXME: Testcase Failing in status.hh makeMessage
@@ -343,8 +343,8 @@ TEST(CMACRobustnessTest, CMAC_callUpdateOnNullKey)
 
 TEST(CMACRobustnessTest, CMAC_callFinalizeOnNullKey)
 {
-    alcp::mac::Cmac cmac2;
-    Uint8           data[20];
+    Cmac  cmac2;
+    Uint8 data[20];
 
     /**
       FIXME: Testcase Failing in status.hh makeMessage
@@ -357,8 +357,8 @@ TEST(CMACRobustnessTest, CMAC_callFinalizeOnNullKey)
 
 TEST(CMACRobustnessTest, CMAC_callCopyOnNullKey)
 {
-    alcp::mac::Cmac cmac2;
-    Uint8           mac[16];
+    Cmac  cmac2;
+    Uint8 mac[16];
 
     /**
       FIXME: Testcase Failing in status.hh makeMessage
@@ -371,9 +371,9 @@ TEST(CMACRobustnessTest, CMAC_callCopyOnNullKey)
 
 TEST(CMACRobustnessTest, CMAC_callCopyWithouFinalize)
 {
-    alcp::mac::Cmac cmac2;
-    Uint8           key[16]{};
-    Uint8           mac[16];
+    Cmac  cmac2;
+    Uint8 key[16]{};
+    Uint8 mac[16];
 
     cmac2.setKey(key, sizeof(key) * 8);
 
@@ -388,8 +388,8 @@ TEST(CMACRobustnessTest, CMAC_callCopyWithouFinalize)
 
 TEST(CMACRobustnessTest, CMAC_wrongKeySize)
 {
-    alcp::mac::Cmac cmac2;
-    Uint8           key[30]{};
+    Cmac  cmac2;
+    Uint8 key[30]{};
 
     /**
       FIXME: Testcase Failing in status.hh makeMessage

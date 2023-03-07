@@ -27,19 +27,16 @@
  */
 
 #include "capi/mac/builder.hh"
-#include "alcp/error.h"
-#include "alcp/mac.h"
 #include "mac/cmac_build.hh"
 #include "mac/hmac_build.hh"
 
 namespace alcp::mac {
 
-using Context = alcp::mac::Context;
-
-alcp::base::Status
+Status
 MacBuilder::Build(const alc_mac_info_t& macInfo, Context& ctx)
 {
-    alcp::base::Status status = alcp::base::StatusOk();
+    using namespace status;
+    Status status = StatusOk();
     switch (macInfo.mi_type) {
         case ALC_MAC_HMAC:
             status = HmacBuilder::Build(macInfo, macInfo.mi_keyinfo, ctx);
@@ -48,7 +45,7 @@ MacBuilder::Build(const alc_mac_info_t& macInfo, Context& ctx)
             status = CmacBuilder::Build(macInfo, macInfo.mi_keyinfo, ctx);
             break;
         default:
-            // TODO: Set Status error code as not Supported
+            status.update(InvalidArgument("Unknown MAC Type"));
             break;
     }
     return status;

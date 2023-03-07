@@ -33,10 +33,10 @@
 #include <cstring> // for std::memset
 #include <immintrin.h>
 
-using alcp::utils::CpuId;
 namespace alcp::mac {
-using Status = alcp::base::Status;
-using namespace alcp::base::status;
+using utils::CpuId;
+using Status = base::Status;
+using namespace base::status;
 
 // FIXME: Remove alcp_is_error to return the error status returned by Digest
 // once digest class supports Status class
@@ -67,7 +67,7 @@ class Hmac::Impl
      * object of Digest which supports HMAC
      *
      */
-    alcp::digest::Digest* m_pDigest{};
+    digest::Digest* m_pDigest{};
 
     // Single Memory Block to hold  m_pK0_xor_ipad,m_pK0_xor_opad,m_pK0.
     // 3*input_block_length (with SHA input block length max size 144 bytes for
@@ -234,7 +234,7 @@ class Hmac::Impl
         return status;
     }
 
-    Status setDigest(alcp::digest::Digest& p_digest)
+    Status setDigest(digest::Digest& p_digest)
     {
         Status status = StatusOk();
         m_pDigest     = &p_digest;
@@ -321,9 +321,9 @@ class Hmac::Impl
         return status;
     }
 
-    Status calculate_hash(alcp::digest::Digest* p_digest,
-                          const Uint8*          input,
-                          Uint64                len)
+    Status calculate_hash(digest::Digest* p_digest,
+                          const Uint8*    input,
+                          Uint64          len)
     {
         alc_error_t err = p_digest->update(input, len);
         if (alcp_is_error(err)) {
@@ -376,7 +376,7 @@ Hmac::reset()
 }
 
 Status
-Hmac::setDigest(alcp::digest::Digest& p_digest)
+Hmac::setDigest(digest::Digest& p_digest)
 {
     return m_pImpl->setDigest(p_digest);
 }

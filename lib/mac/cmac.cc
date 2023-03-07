@@ -31,14 +31,12 @@
 #include "cipher/aes.hh"
 #include "utils/copy.hh"
 
-using alcp::base::Status;
-using alcp::utils::CpuId;
-
 // TODO: Currently CMAC is AES-CMAC, Once IEncrypter is complete, revisit the
 // class design
 namespace alcp::mac {
+using utils::CpuId;
 using namespace status;
-class Cmac::Impl : public alcp::cipher::Aes
+class Cmac::Impl : public cipher::Aes
 {
     // Implementation as per NIST Special Publication 800-38B: The CMAC Mode for
     // Authentication
@@ -100,7 +98,7 @@ class Cmac::Impl : public alcp::cipher::Aes
 
     bool isSupported(const alc_cipher_info_t& cipherInfo) { return true; }
 
-    alcp::base::Status update(const Uint8* plaintext, int plaintext_size)
+    Status update(const Uint8* plaintext, int plaintext_size)
     {
         Status status{ StatusOk() };
         if (key == nullptr || keylen == 0) {
@@ -135,9 +133,9 @@ class Cmac::Impl : public alcp::cipher::Aes
          */
         if (total_bytes_to_be_processed <= 16) {
             assert(plaintext_size <= 16);
-            alcp::utils::CopyBytes(storage_buffer + storage_buffer_offset,
-                                   plaintext,
-                                   plaintext_size);
+            utils::CopyBytes(storage_buffer + storage_buffer_offset,
+                             plaintext,
+                             plaintext_size);
             storage_buffer_offset = storage_buffer_offset + plaintext_size;
             return StatusOk();
         } else {
@@ -151,10 +149,10 @@ class Cmac::Impl : public alcp::cipher::Aes
                 // buffer but only enough to perform one Cipher Operation, ie.
                 // 128 bits
                 if (bytes_to_be_copied > 0) {
-                    alcp::utils::CopyBytes(
-                        storage_buffer + storage_buffer_offset,
-                        plaintext + plaintext_bytes_processed_so_far,
-                        bytes_to_be_copied);
+                    utils::CopyBytes(storage_buffer + storage_buffer_offset,
+                                     plaintext
+                                         + plaintext_bytes_processed_so_far,
+                                     bytes_to_be_copied);
                     plaintext_bytes_processed_so_far += bytes_to_be_copied;
                     storage_buffer_offset += bytes_to_be_copied;
                 }
@@ -169,14 +167,14 @@ class Cmac::Impl : public alcp::cipher::Aes
                     total_bytes_to_be_processed - total_bytes_processed_so_far;
             }
         }
-        alcp::utils::CopyBytes(storage_buffer + storage_buffer_offset,
-                               plaintext + plaintext_bytes_processed_so_far,
-                               bytes_left_to_process);
+        utils::CopyBytes(storage_buffer + storage_buffer_offset,
+                         plaintext + plaintext_bytes_processed_so_far,
+                         bytes_left_to_process);
         storage_buffer_offset += bytes_left_to_process;
         return StatusOk();
     }
 
-    alcp::base::Status finalize(const Uint8* plaintext, int plaintext_size)
+    Status finalize(const Uint8* plaintext, int plaintext_size)
     {
 
         if (key == nullptr || keylen == 0) {
@@ -226,12 +224,12 @@ class Cmac::Impl : public alcp::cipher::Aes
         return StatusOk();
     }
 
-    alcp::base::Status copy(Uint8* buff, Uint32 size)
+    Status copy(Uint8* buff, Uint32 size)
     {
         if (!m_finalized) {
             return InternalError("Cannot Copy CMAC without finalizing");
         } else {
-            alcp::utils::CopyBytes(buff, temp_enc_result, size);
+            utils::CopyBytes(buff, temp_enc_result, size);
         }
         return StatusOk();
     }
@@ -263,7 +261,7 @@ Cmac::Cmac()
     : m_pImpl{ std::make_unique<Cmac::Impl>() }
 {}
 
-alcp::base::Status
+Status
 Cmac::update(const Uint8* pMsgBuf, Uint64 size)
 {
     return m_pImpl->update(pMsgBuf, size);
@@ -275,25 +273,25 @@ Cmac::finish()
     m_pImpl->finish();
 }
 
-alcp::base::Status
+Status
 Cmac::reset()
 {
     return m_pImpl->reset();
 }
 
-alcp::base::Status
+Status
 Cmac::finalize(const Uint8* pMsgBuf, Uint64 size)
 {
     return m_pImpl->finalize(pMsgBuf, size);
 }
 
-alcp::base::Status
+Status
 Cmac::copy(Uint8* buff, Uint32 size)
 {
     return m_pImpl->copy(buff, size);
 }
 
-alcp::base::Status
+Status
 Cmac::setKey(const Uint8* key, Uint64 len)
 {
     return m_pImpl->setKey(key, len);
