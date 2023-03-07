@@ -468,7 +468,7 @@ TEST_P(HmacTestFixture, HMAC_UPDATE_FINALISE)
     EXPECT_EQ(mac, expected_mac);
 }
 
-TEST(HmacReliabilityTest, Reset)
+TEST(HmacTest, Reset)
 {
     auto        pos  = KAT_ShaDataset.find("SHA2_256_KEYLEN_EQ_B");
     param_tuple data = pos->second;
@@ -493,7 +493,7 @@ TEST(HmacReliabilityTest, Reset)
     hmac.finish();
 }
 
-TEST(HmacReliabilityTest, UpdateFinalizeReset)
+TEST(HmacTest, UpdateFinalizeReset)
 {
     auto        pos  = KAT_ShaDataset.find("SHA2_256_KEYLEN_EQ_B");
     param_tuple data = pos->second;
@@ -526,7 +526,7 @@ TEST(HmacReliabilityTest, UpdateFinalizeReset)
     hmac.finish();
 }
 
-TEST(HmacReliabilityTest, UpdateFinalizeHardReset)
+TEST(HmacTest, setKeyAfterFinalize)
 {
     auto        pos  = KAT_ShaDataset.find("SHA2_256_KEYLEN_EQ_B");
     param_tuple data = pos->second;
@@ -566,7 +566,7 @@ TEST(HmacReliabilityTest, UpdateFinalizeHardReset)
     block2 = std::vector<Uint8>(cipher_text.begin() + cipher_text.size() / 2,
                                 cipher_text.end());
 
-    // Hard Reset with different Key
+    // Reset with different Key
     hmac.setKey(&key[0], key.size());
 
     hmac.update(&block1[0], block1.size());
@@ -574,6 +574,60 @@ TEST(HmacReliabilityTest, UpdateFinalizeHardReset)
     hmac.copyHash(&mac.at(0), mac.size());
     EXPECT_EQ(mac, output_mac);
     hmac.finish();
+}
+
+TEST(HmacRobustnessTest, callUpdateWithNullKeyNullDigest)
+{
+
+    alcp::mac::Hmac hmac;
+
+    Status s = hmac.update(nullptr, 0);
+    EXPECT_FALSE(s.ok());
+}
+
+TEST(HmacRobustnessTest, callUpdateWithNullKey)
+{
+
+    alcp::mac::Hmac      hmac;
+    alcp::digest::Sha256 sha256;
+
+    hmac.setDigest(sha256);
+    Status s = hmac.update(nullptr, 0);
+    EXPECT_FALSE(s.ok());
+}
+
+TEST(HmacRobustnessTest, callUpdateWithNullDigest)
+{
+
+    alcp::mac::Hmac hmac;
+    Uint8           key[16]{};
+    hmac.setKey(key, sizeof(key));
+    Status s = hmac.update(nullptr, 0);
+    EXPECT_FALSE(s.ok());
+}
+
+TEST(HmacRobustnessTest, callSetKeyWithoutSetDigest)
+{
+
+    alcp::mac::Hmac      hmac;
+    alcp::digest::Sha256 sha256;
+
+    Uint8  key[16]{};
+    Status s = hmac.setKey(key, sizeof(key));
+    ASSERT_FALSE(s.ok());
+}
+
+TEST(HmacRobustnessTest, callCopyWithoutFinalize)
+{
+
+    alcp::mac::Hmac      hmac;
+    alcp::digest::Sha256 sha256;
+
+    Uint8 key[16]{};
+    hmac.setDigest(sha256);
+    hmac.setKey(key, sizeof(key));
+    Status s = hmac.copyHash(nullptr, 0);
+    EXPECT_FALSE(s.ok());
 }
 
 INSTANTIATE_TEST_SUITE_P(
