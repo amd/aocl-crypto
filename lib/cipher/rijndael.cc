@@ -194,15 +194,15 @@ class alignas(16) Rijndael::Impl
 #define RIJ_ALIGN           (16)
 
   private:
-    Uint8 m_round_key[RIJ_SIZE_ALIGNED(cMaxKeySize) * (cMaxRounds + 2)];
+    Uint8 m_round_key[RIJ_SIZE_ALIGNED(cMaxKeySize) * (cMaxRounds + 2)] = {};
 
-    Uint8* m_enc_key; /* encryption key: points to offset in 'm_key' */
-    Uint8* m_dec_key; /* decryption key: points to offset in 'm_key' */
+    Uint8* m_enc_key = {}; /* encryption key: points to offset in 'm_key' */
+    Uint8* m_dec_key = {}; /* decryption key: points to offset in 'm_key' */
 
-    Uint32    m_nrounds;  /* no of rounds */
-    Uint32    m_ncolumns; /* no of columns in matrix */
-    Uint32    m_key_size; /* key size in bytes */
-    BlockSize m_block_size;
+    Uint32    m_nrounds    = {}; /* no of rounds */
+    Uint32    m_ncolumns   = {}; /* no of columns in matrix */
+    Uint32    m_key_size   = {}; /* key size in bytes */
+    BlockSize m_block_size = {};
 
   public:
     ~Impl() = default;
@@ -721,7 +721,8 @@ Rijndael::Impl::expandKeys(const Uint8* pUserKey) noexcept
 
 Rijndael::Rijndael()
     : m_pimpl{ std::make_unique<Rijndael::Impl>() }
-{}
+{
+}
 
 Rijndael::Rijndael(const alc_key_info_t& rKeyInfo)
     : Rijndael{}
@@ -844,7 +845,8 @@ Rijndael::encrypt(const Uint8* pPlaintxt,
     return ALC_ERROR_NONE;
 }
 
-void Rijndael::encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const
+void
+Rijndael::encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const
 {
     pImpl()->encryptBlock(blk0, blk0, pkey, nr);
 }

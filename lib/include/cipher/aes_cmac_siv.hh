@@ -35,7 +35,7 @@
 
 namespace alcp::cipher {
 // RFC5297
-class ALCP_API_EXPORT CmacSiv final : public Aes
+class ALCP_API_EXPORT CmacSiv : public Aes
 {
   private:
     /*
@@ -50,20 +50,21 @@ class ALCP_API_EXPORT CmacSiv final : public Aes
     */
     std::vector<std::vector<Uint8>> m_additionalDataProcessed =
         std::vector<std::vector<Uint8>>(10);
-    Uint64             m_additionalDataProcessedSize = {};
-    Uint8*             m_key1                        = {};
-    Uint8*             m_key2                        = {};
-    Uint64             m_keyLength                   = {};
-    const Uint64       m_sizeCmac                    = 128 / 8;
-    std::vector<Uint8> m_cmacTemp = std::vector<Uint8>(m_sizeCmac);
-    // std::vector<Uint64>  m_additionalDataProcessedLen  =
-    // std::vector<Uint64>(10);
+    Uint64       m_additionalDataProcessedSize = {};
+    Uint8*       m_key1                        = {};
+    Uint8*       m_key2                        = {};
+    Uint64       m_keyLength                   = {};
+    const Uint64 m_sizeCmac                    = 128 / 8;
 
     Status dbl(std::vector<Uint8>& in);
 
-    Status s2v(const Uint8 plainText[], Uint64 size);
+    // FIXME: Need to be private or need some friend function thing
+  protected:
+    Status             s2v(const Uint8 plainText[], Uint64 size);
+    std::vector<Uint8> m_cmacTemp = std::vector<Uint8>(m_sizeCmac);
 
   public:
+    CmacSiv() = default;
     Status setKeys(Uint8 key1[], Uint8 key2[], Uint64 length);
     // Section 2.4 in RFC
     Status addAdditionalInput(const Uint8 memory[], Uint64 length);
@@ -86,5 +87,7 @@ class ALCP_API_EXPORT CmacSiv final : public Aes
                    const Uint8* iv);
 
     Status getTag(Uint8 out[]);
+
+    bool isSupported(const alc_cipher_info_t& cipherInfo);
 };
 } // namespace alcp::cipher
