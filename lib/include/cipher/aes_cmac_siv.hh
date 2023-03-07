@@ -52,7 +52,9 @@ class ALCP_API_EXPORT CmacSiv : public Aes
 
   public:
     CmacSiv();
-    Status setKeys(Uint8 key1[], Uint8 key2[], Uint64 length);
+    CmacSiv(const alc_cipher_algo_info_t& aesInfo,
+            const alc_key_info_t& keyInfo); // Depriciated, implemented for CAPI
+    Status setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length);
     Status setPaddingLen(Uint64 len);
     // Section 2.4 in RFC
     Status addAdditionalInput(const Uint8 memory[], Uint64 length);
@@ -66,10 +68,12 @@ class ALCP_API_EXPORT CmacSiv : public Aes
                         Uint8*       pPlainText,
                         Uint64       len,
                         const Uint8* pIv) const;
-
-    Status getTag(Uint8 out[]);
-
+    // FIXME: Needs to be removed from Cipher as a whole
+    // Cipher support should end in capi
     bool isSupported(const alc_cipher_info_t& cipherInfo);
+
+    Status      getTag(Uint8 out[]);
+    alc_error_t getTag(Uint8 out[], Uint64 len); // Depriciated
 };
 
 class CmacSiv::Impl
@@ -78,19 +82,19 @@ class CmacSiv::Impl
     std::vector<std::vector<Uint8>> m_additionalDataProcessed =
         std::vector<std::vector<Uint8>>(10);
     Uint64             m_additionalDataProcessedSize = {};
-    Uint8*             m_key1                        = {};
-    Uint8*             m_key2                        = {};
+    const Uint8*       m_key1                        = {};
+    const Uint8*       m_key2                        = {};
     Uint64             m_keyLength                   = {};
     const Uint64       m_sizeCmac                    = 128 / 8;
     Uint64             m_padLen                      = {};
-    std::vector<Uint8> m_cmacTemp = std::vector<Uint8>(m_sizeCmac);
+    std::vector<Uint8> m_cmacTemp = std::vector<Uint8>(m_sizeCmac, 0);
     Cmac               m_cmac;
     Ctr                m_ctr;
 
   public:
     Impl(){};
     Status s2v(const Uint8 plainText[], Uint64 size);
-    Status setKeys(Uint8 key1[], Uint8 key2[], Uint64 length);
+    Status setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length);
     Status addAdditionalInput(const Uint8 memory[], Uint64 length);
     Status setPaddingLen(Uint64 len);
     Status encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len);

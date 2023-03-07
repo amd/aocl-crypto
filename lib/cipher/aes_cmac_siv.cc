@@ -208,11 +208,6 @@ CmacSiv::Impl::ctrWrapper(const Uint8 key[],
     return s;
 }
 
-CmacSiv::CmacSiv()
-    : pImpl{ std::make_unique<Impl>() }
-{
-}
-
 Status
 CmacSiv::Impl::setPaddingLen(Uint64 len)
 {
@@ -311,7 +306,7 @@ CmacSiv::Impl::s2v(const Uint8 plainText[], Uint64 size)
 }
 
 Status
-CmacSiv::Impl::setKeys(Uint8 key1[], Uint8 key2[], Uint64 length)
+CmacSiv::Impl::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
 {
     Status s    = StatusOk();
     m_keyLength = length;
@@ -421,10 +416,24 @@ CmacSiv::Impl::decrypt(const Uint8  cipherText[],
 
     // Verify tag, which just got generated
     if (memcmp(&(m_cmacTemp[0]), iv, m_sizeCmac) != 0) {
+        // FIXME: Initiate Wipedown!
         s = InternalError("Verification Failure!");
         return s;
     }
     return s;
+}
+
+CmacSiv::CmacSiv()
+    : pImpl{ std::make_unique<Impl>() }
+{
+}
+
+CmacSiv::CmacSiv(const alc_cipher_algo_info_t& aesInfo,
+                 const alc_key_info_t&         keyInfo)
+    : pImpl{ std::make_unique<Impl>() }
+{
+    assert(aesInfo.ai_siv.xi_ctr_key->len == keyInfo.len);
+    setKeys(keyInfo.key, aesInfo.ai_siv.xi_ctr_key->key, keyInfo.len);
 }
 
 Status
@@ -432,6 +441,7 @@ CmacSiv::Impl::getTag(Uint8 out[])
 {
     Status s = StatusOk();
     utils::CopyBytes(out, &m_cmacTemp[0], m_sizeCmac);
+    memset(&m_cmacTemp[0], 0, 16);
     return s;
 }
 
@@ -447,8 +457,22 @@ CmacSiv::getTag(Uint8 out[])
     return pImpl->getTag(out);
 }
 
+alc_error_t
+CmacSiv::getTag(Uint8 out[], Uint64 len)
+{
+    if (len != 16) {
+        return ALC_ERROR_INVALID_SIZE;
+    }
+    Status s = getTag(out);
+    if (s.ok()) {
+        return ALC_ERROR_NONE;
+    } else {
+        return ALC_ERROR_GENERIC;
+    }
+}
+
 Status
-CmacSiv::setKeys(Uint8 key1[], Uint8 key2[], Uint64 length)
+CmacSiv::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
 {
     return pImpl->setKeys(key1, key2, length);
 }
@@ -492,6 +516,7 @@ CmacSiv::decrypt(const Uint8* pCipherText,
     Status      s   = pImpl->decrypt(pCipherText, pPlainText, len, pIv);
     if (!s.ok()) {
         err = ALC_ERROR_GENERIC;
+        std::cout << "IV Verify Failed!" << std::endl;
     }
     return err;
 }
@@ -499,6 +524,8 @@ CmacSiv::decrypt(const Uint8* pCipherText,
 bool
 CmacSiv::isSupported(const alc_cipher_info_t& cipherInfo)
 {
+    // Northing much to do here, need to be removed.
     return true;
 }
+
 } // namespace alcp::cipher
