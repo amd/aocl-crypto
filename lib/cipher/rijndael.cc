@@ -748,13 +748,12 @@ Rijndael::getDecryptKeys() const
 Status
 Rijndael::setKey(const Uint8* pUserKey, Uint64 len)
 {
-   Status sts = StatusOk();
+    Status sts = StatusOk();
     if ((len < cMinKeySize) || (len > cMaxKeySize)) {
         sts.update(status::InvalidArgument("Key length not acceptable"));
     }
 
-    /* FIXME: we should make Impl::setKey to get this done */
-    // pImpl()->expandKeys(pUserKey);
+    pImpl()->setKey(pUserKey, len);
     return sts;
 }
 
