@@ -27,14 +27,12 @@
  */
 
 #include "alcp/utils/bignum.hh"
-// #include "bignum/bignumerror.hh"
 #include <algorithm>
 #include <bitset>
 #include <climits>
 #include <cmath>
 #include <iomanip>
 #include <limits>
-#include <type_traits>
 
 #include <iostream>
 
@@ -423,9 +421,8 @@ BigNum::Impl::__div(const BigNum& b, BigNum& rem)
 
     if (b.pImpl()->m_data.size() == 0
         || (b.pImpl()->m_data.size() == 1 && b.pImpl()->m_data[0] == 0)) {
-        throw InvalidArgumentError("Floating Point Error : divide by 0 !");
-        // throw Status{ alcp::bn::BigNumError{ bn::ErrorCode::eFloatingPoint }
-        // };
+
+        throw status::InvalidArgument("Floating Point Error : divide by 0 !");
     }
 
     // getting total no of bits to compare a and b
@@ -692,10 +689,7 @@ BigNum::Impl::fromString(const String& str, BigNum::Format f)
             if (strspn(dstr.c_str(), "01") != dstr.length()) {
 
                 Status s =
-                    InvalidArgumentError("binary string has invalid value");
-
-                // Status{ alcp::bn::BigNumError{ ErrorCode::eInvalidArgument }
-                // };
+                    status::InvalidArgument("binary string has invalid value");
                 return s;
             }
             Uint64 k = (dstr.length() % 64);
@@ -712,10 +706,9 @@ BigNum::Impl::fromString(const String& str, BigNum::Format f)
         case BigNum::Format::eDecimal: {
 
             if (strspn(dstr.c_str(), "0123456789") != dstr.length()) {
-                // Status s = Status{ alcp::bn::BigNumError{
-                //     ErrorCode::eInvalidArgument } };
+
                 Status s =
-                    InvalidArgumentError("decimal string has invalid value");
+                    status::InvalidArgument("decimal string has invalid value");
                 return s;
             }
             BigNum r, m;
@@ -741,9 +734,8 @@ BigNum::Impl::fromString(const String& str, BigNum::Format f)
         default: {
 
             if (strspn(dstr.c_str(), "0123456789abcdef") != dstr.length()) {
-                // Status s = Status{ alcp::bn::BigNumError{
-                //     ErrorCode::eInvalidArgument } };
-                Status s = InvalidArgumentError(
+
+                Status s = status::InvalidArgument(
                     "hexadecimal string has invalid value");
                 return s;
             }
