@@ -58,6 +58,9 @@ class Hmac::Impl
     // Optimization: Max Size of 1024 bits for any SHA
     Uint8 m_pTempHash[64]{};
 
+    // Variable to track whether finalize has been called
+    bool m_finalized = false;
+
     // TODO: Consider Shared pointer for this implementation
     /**
      * Pointer to the Base class Digest, holds the address of the derived class
@@ -152,6 +155,7 @@ class Hmac::Impl
         }
         m_pDigest->reset();
 
+        m_finalized = true;
         return status;
     }
 
@@ -162,13 +166,15 @@ class Hmac::Impl
     /// @return ALC_ERROR_NONE if no errors otherwise appropriate error
     Status copyHash(Uint8* buff, Uint64 size)
     {
+        if (!m_finalized) {
+            return InternalError("HMAC: Cannot copy Hash without Finalizing");
+        }
         // TODO: Update status with proper error code.
         Status status = StatusOk();
         if (size >= m_output_hash_size) {
             alcp::utils::CopyBytes(buff, m_pTempHash, size);
         } else {
-            status =
-                InvalidArgument("HMAC: Copy Buffer Size should be greater "
+            status = InvalidArgument("HMAC: Copy Buffer Size should be greater "
                                      "than or equal to SHA output size");
         }
         return status;
@@ -182,6 +188,8 @@ class Hmac::Impl
         m_pDigest->reset();
         status =
             calculate_hash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
+
+        m_finalized = false;
         return status;
     }
 
@@ -194,8 +202,13 @@ class Hmac::Impl
                 "HMAC: Digest Should be Set before Setting the key");
         }
 
-        memset(m_pMemory_block, 0, 432);
+        // Clear all the buffers as with changed, continued update is not
+        // possible
+        memset(m_pK0_xor_opad, 0, 144);
+        memset(m_pK0_xor_ipad, 0, 144);
+        memset(m_pK0, 0, 144);
         memset(m_pTempHash, 0, 64);
+        m_finalized = false;
 
         m_pK0_xor_opad = m_pMemory_block;
         m_pK0_xor_ipad = m_pMemory_block + 144;
@@ -204,6 +217,8 @@ class Hmac::Impl
         m_pKey   = key;
         m_keylen = keylen;
 
+        // get_k0 function will process the key in such a way that processed key
+        // size will be the same as the internal block length of the digest used
         m_k0_length = m_input_block_length;
 
         status = get_k0();
