@@ -219,6 +219,7 @@ CmacSiv::Impl::s2v(const Uint8 plainText[], Uint64 size)
     Status             s    = StatusOk();
     std::vector<Uint8> zero = std::vector<Uint8>(m_sizeCmac, 0);
 
+    // Do a cmac of Zero Vector, first additonal data.
     s = cmacWrapper(
         &(zero.at(0)), zero.size(), &(m_cmacTemp.at(0)), m_sizeCmac);
 
@@ -226,14 +227,17 @@ CmacSiv::Impl::s2v(const Uint8 plainText[], Uint64 size)
         return s;
     }
 
-    std::cout << "ZERO_VECT:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
+    // std::cout << "ZERO_VECT:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
 
     Uint8 rb[16] = {};
     rb[15]       = 0x87;
+
+    // For each user provided additional data do the dbl and xor to complete
+    // processing
     for (Uint64 i = 0; i < m_additionalDataProcessedSize; i++) {
         alcp::cipher::dbl(&(m_cmacTemp[0]), rb, &(m_cmacTemp[0]));
 
-        std::cout << "dbl:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
+        // std::cout << "dbl:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
 
         xor_a_b(&m_cmacTemp[0],
                 &m_additionalDataProcessed.at(i).at(0),
@@ -241,6 +245,7 @@ CmacSiv::Impl::s2v(const Uint8 plainText[], Uint64 size)
                 m_sizeCmac);
     }
 
+    // If the size of plaintext is lower there is special case
     if (size >= m_sizeCmac) {
 
         // Take out last block
@@ -257,16 +262,20 @@ CmacSiv::Impl::s2v(const Uint8 plainText[], Uint64 size)
                                  m_sizeCmac);
     } else {
         Uint8 temp_bytes[16] = {};
-        temp_bytes[0]        = 0x80;
+        // Padding Hack
+        temp_bytes[0] = 0x80;
+        // Speical case size lower for plain text need to do double and padding
         alcp::cipher::dbl(&(m_cmacTemp[0]), rb, &(m_cmacTemp[0]));
-        std::cout << "dbl:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
+        // std::cout << "dbl:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
 
         xor_a_b(plainText, &(m_cmacTemp.at(0)), &(m_cmacTemp.at(0)), size);
+        // Padding
         xor_a_b(temp_bytes,
                 &(m_cmacTemp.at(0)) + size,
                 &(m_cmacTemp.at(0)) + size,
                 (m_sizeCmac)-size);
-        std::cout << "xor:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
+
+        // std::cout << "xor:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
 
         s = cmacWrapper(
             &(m_cmacTemp.at(0)), m_sizeCmac, &(m_cmacTemp.at(0)), m_sizeCmac);
@@ -274,7 +283,8 @@ CmacSiv::Impl::s2v(const Uint8 plainText[], Uint64 size)
     if (!s.ok()) {
         return s;
     }
-    std::cout << "V:  " << parseBytesToHexStr(m_cmacTemp) << std::endl;
+    // std::cout << "V:  " << parseBytesToHexStr(m_cmacTemp) << std::endl;
+    // Now m_cmacTemp is the offical SIV
     return s;
 }
 
@@ -283,6 +293,8 @@ CmacSiv::Impl::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
 {
     Status s    = StatusOk();
     m_keyLength = length;
+
+    // Block all unknown keysizes
     switch (length) {
         case 128:
         case 192:
@@ -293,13 +305,16 @@ CmacSiv::Impl::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
             s.update(cer, cer.message());
             return s;
     }
+
     m_key1 = key1;
     m_key2 = key2;
-    s      = m_cmac.setKey(m_key1, m_keyLength);
+
+    s = m_cmac.setKey(m_key1, m_keyLength);
     if (!s.ok()) {
         return s;
     }
-    m_ctr.setKey(m_key2, m_keyLength);
+
+    s = m_ctr.setKey(m_key2, m_keyLength);
     return s;
 }
 
@@ -307,22 +322,30 @@ CmacSiv::Impl::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
 Status
 CmacSiv::Impl::addAdditionalInput(const Uint8 memory[], Uint64 length)
 {
-    // Check if there is an overflow
+
     Status s = StatusOk();
 
+    // FIXME: Allocate m_sizeCmac for 10 vectors on intialization to be more
+    // optimal.
+
+    // Extend size of additonalDataProcessed Vector in case of overflow
     if ((m_additionalDataProcessedSize + 1)
         == m_additionalDataProcessed.size()) {
         m_additionalDataProcessed.resize(m_additionalDataProcessed.size() + 10);
     }
+
+    // Block Null Keys or non set Keys.
     if (m_key1 == nullptr || m_key2 == nullptr) {
         auto cer = cipher::AesError(cipher::ErrorCode::eInvaidValue);
         s.update(cer, cer.message());
         return s;
     }
 
+    // Allocate memory for additonal data processed vector
     m_additionalDataProcessed.at(m_additionalDataProcessedSize) =
         std::vector<Uint8>(m_sizeCmac);
 
+    // Do cmac for additional data and set it to the proceed data.
     s = cmacWrapper(
         memory,
         length,
@@ -333,6 +356,7 @@ CmacSiv::Impl::addAdditionalInput(const Uint8 memory[], Uint64 length)
         return s;
     }
 
+    // Increment the size of Data Processed if no errors
     m_additionalDataProcessedSize += 1;
     return s;
 }
@@ -340,9 +364,11 @@ CmacSiv::Impl::addAdditionalInput(const Uint8 memory[], Uint64 length)
 Status
 CmacSiv::Impl::encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len)
 {
-    Status s     = StatusOk();
-    Uint8  q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                     0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
+    Status s = StatusOk();
+
+    // Mask Vector for disabling 2 bits in the counter
+    Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                    0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
 
     s = s2v(plainText, len);
 
@@ -350,10 +376,12 @@ CmacSiv::Impl::encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len)
         return s;
     }
 
+    // Apply the mask and make q the IV
     for (Uint64 i = 0; i < m_sizeCmac; i++) {
         q[i] = m_cmacTemp[i] & q[i];
     }
 
+    // Do the CTR
     s = ctrWrapper(plainText, cipherText, len + m_padLen, q, true);
 
     if (!s.ok()) {
@@ -368,14 +396,18 @@ CmacSiv::Impl::decrypt(const Uint8  cipherText[],
                        Uint64       len,
                        const Uint8* iv)
 {
-    Status s     = StatusOk();
-    Uint8  q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                     0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
+    Status s = StatusOk();
 
+    // Mask Vector for disabling 2 bits in the counter
+    Uint8 q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                    0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
+
+    // Apply the mask and make q the IV
     for (Uint64 i = 0; i < m_sizeCmac; i++) {
         q[i] = iv[i] & q[i];
     }
 
+    // Do the CTR
     s = ctrWrapper(cipherText, plainText, len + m_padLen, q, false);
 
     if (!s.ok()) {
@@ -499,7 +531,7 @@ CmacSiv::decrypt(const Uint8* pCipherText,
     Status      s   = pImpl->decrypt(pCipherText, pPlainText, len, pIv);
     if (!s.ok()) {
         err = ALC_ERROR_GENERIC;
-        std::cout << "IV Verify Failed!" << std::endl;
+        // std::cout << "IV Verify Failed!" << std::endl;
     }
     return err;
 }

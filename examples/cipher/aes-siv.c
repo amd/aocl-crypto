@@ -107,7 +107,7 @@ encrypt_demo(const Uint8* plaintxt,
              const Uint32 len, /*  for both 'plaintxt' and 'ciphertxt' */
              Uint8*       ciphertxt,
              Uint8*       iv,
-             Uint8*       aad,
+             const Uint8* aad,
              Uint64       aad_len)
 {
     alc_error_t err;
