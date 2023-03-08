@@ -68,11 +68,14 @@ class ALCP_API_EXPORT CmacSiv : public Aes
                         Uint8*       pPlainText,
                         Uint64       len,
                         const Uint8* pIv) const;
+
+    Status getTag(Uint8 out[]);
+
+    /* Depriciated Functions */
     // FIXME: Needs to be removed from Cipher as a whole
     // Cipher support should end in capi
-    bool isSupported(const alc_cipher_info_t& cipherInfo);
-
-    Status      getTag(Uint8 out[]);
+    bool        isSupported(const alc_cipher_info_t& cipherInfo);
+    alc_error_t setAad(const Uint8 memory[], Uint64 length);
     alc_error_t getTag(Uint8 out[], Uint64 len); // Depriciated
 };
 

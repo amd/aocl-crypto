@@ -477,6 +477,17 @@ CmacSiv::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
     return pImpl->setKeys(key1, key2, length);
 }
 
+alc_error_t
+CmacSiv::setAad(const Uint8 memory[], Uint64 length)
+{
+    Status s = pImpl->addAdditionalInput(memory, length);
+    if (s.ok()) {
+        return ALC_ERROR_NONE;
+    } else {
+        return ALC_ERROR_INVALID_DATA;
+    }
+}
+
 Status
 CmacSiv::addAdditionalInput(const Uint8 memory[], Uint64 length)
 {
