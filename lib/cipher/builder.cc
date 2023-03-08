@@ -186,6 +186,7 @@ __build_aes(const alc_cipher_algo_info_t& aesInfo,
         ctx.setIv = __aes_wrapperSetIv<Xts>;
     } else if constexpr (std::is_same_v<CIPHERMODE, CmacSiv>) {
         ctx.setPadLength = __aes_wrapperSetPadLen<CmacSiv>;
+        ctx.setAad       = __aes_wrapperSetAad<CmacSiv>;
         ctx.getTag       = __aes_wrapperGetTag<CmacSiv>;
     }
     ctx.finish = __aes_dtor<CIPHERMODE>;
