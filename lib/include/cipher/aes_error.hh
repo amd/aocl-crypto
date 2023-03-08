@@ -60,6 +60,9 @@ enum ErrorCode : Uint16
     /* ErrorCode:eDecryptFailed */
     eDecryptFailed = 17,
 
+    /* ErrorCode:eEncryptFailed */
+    eEncryptFailed = 19,
+
     // TODO: Need to extend this as time goes
 };
 
@@ -125,6 +128,8 @@ class AesError final : public ErrorBase
             { ec::eInavlidMode, "Hardware reported error/failed state!" },
             { ec::eDecryptFailed,
               "Decryption algorithm reported unexpected failure!" },
+            { ec::eEncryptFailed,
+              "Encryption algorithm reported unexpected failure!" },
         };
 
         // FIXME: An AES namespace might be needed in future.

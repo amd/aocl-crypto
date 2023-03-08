@@ -197,14 +197,20 @@ CmacSiv::Impl::ctrWrapper(const Uint8 key[],
 
     // FIXME: To be removed once we move everything to Status
     alc_error_t err = ALC_ERROR_NONE;
-    if (enc)
+    if (enc) {
         err = m_ctr.encrypt(in, out, size, iv);
-    else
+        if (alcp_is_error(err)) {
+            auto cer = cipher::AesError(cipher::ErrorCode::eEncryptFailed);
+            s.update(cer, cer.message());
+            return s;
+        }
+    } else {
         err = m_ctr.decrypt(in, out, size, iv);
-    if (alcp_is_error(err)) {
-        auto cer = cipher::AesError(cipher::ErrorCode::eDecryptFailed);
-        s.update(cer, cer.message());
-        return s;
+        if (alcp_is_error(err)) {
+            auto cer = cipher::AesError(cipher::ErrorCode::eDecryptFailed);
+            s.update(cer, cer.message());
+            return s;
+        }
     }
     return s;
 }
@@ -221,10 +227,8 @@ Status
 CmacSiv::Impl::s2v(const Uint8 plainText[], Uint64 size)
 {
     // Assume plaintest to be 128 bit multiples.
-    Status             s         = StatusOk();
-    std::vector<Uint8> zero      = std::vector<Uint8>(m_sizeCmac, 0);
-    const Uint64* p_cPlainText64 = reinterpret_cast<const Uint64*>(plainText);
-    Uint64*       p_cmacTemp64 = reinterpret_cast<Uint64*>(&(m_cmacTemp.at(0)));
+    Status             s    = StatusOk();
+    std::vector<Uint8> zero = std::vector<Uint8>(m_sizeCmac, 0);
 
     s = cmacWrapper(m_key1,
                     m_keyLength,
@@ -239,32 +243,21 @@ CmacSiv::Impl::s2v(const Uint8 plainText[], Uint64 size)
 
     std::cout << "ZERO_VECT:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
 
-    // Erase the contents of the memory
-    // memset(p_cmacTemp64, 0, m_sizeCmac);
-
     Uint8 rb[16] = {};
     rb[15]       = 0x87;
     for (Uint64 i = 0; i < m_additionalDataProcessedSize; i++) {
-        Uint64* add_temp_uint64 =
-            reinterpret_cast<Uint64*>(&(m_additionalDataProcessed.at(i).at(0)));
-        // TODO: Remove TODO // TODO: Implement dbl function.
         alcp::cipher::dbl(&(m_cmacTemp[0]), rb, &(m_cmacTemp[0]));
 
         std::cout << "dbl:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
 
-        // xor_a_b(p_cmacTemp64, add_temp_uint64, p_cmacTemp64, m_sizeCmac /
-        // 8);
         xor_a_b(&m_cmacTemp[0],
                 &m_additionalDataProcessed.at(i).at(0),
                 &m_cmacTemp[0],
                 m_sizeCmac);
     }
-    // alcp::cipher::dbl(&(m_cmacTemp[0]), rb, &(m_cmacTemp[0]));
-    // std::cout << "dbl:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
-    // xor_a_b(&m_cmacTemp[0], plainText, &m_cmacTemp[0], m_sizeCmac);
 
-    // TODO: Implement CMAC function.
     if (size >= m_sizeCmac) {
+
         // Take out last block
         xor_a_b((plainText + size - m_sizeCmac),
                 &(m_cmacTemp.at(0)),
@@ -317,7 +310,6 @@ CmacSiv::Impl::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
         case 256:
             break;
         default:
-            // FIXME: Implement CMAC-SIV Error class.
             auto cer = cipher::AesError(cipher::ErrorCode::eInvaidValue);
             s.update(cer, cer.message());
             return s;
@@ -326,6 +318,7 @@ CmacSiv::Impl::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
     m_key2 = key2;
     return s;
 }
+
 // Section 2.4 in RFC
 Status
 CmacSiv::Impl::addAdditionalInput(const Uint8 memory[], Uint64 length)
@@ -338,7 +331,6 @@ CmacSiv::Impl::addAdditionalInput(const Uint8 memory[], Uint64 length)
         m_additionalDataProcessed.resize(m_additionalDataProcessed.size() + 10);
     }
     if (m_key1 == nullptr || m_key2 == nullptr) {
-        // FIXME: Implement Error class for CMAC SIV
         auto cer = cipher::AesError(cipher::ErrorCode::eInvaidValue);
         s.update(cer, cer.message());
         return s;
@@ -347,7 +339,6 @@ CmacSiv::Impl::addAdditionalInput(const Uint8 memory[], Uint64 length)
     m_additionalDataProcessed.at(m_additionalDataProcessedSize) =
         std::vector<Uint8>(m_sizeCmac);
 
-    // TODO: Implement CMAC function.
     s = cmacWrapper(
         m_key1,
         m_keyLength,
@@ -377,7 +368,7 @@ CmacSiv::Impl::encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len)
         return s;
     }
 
-    for (int i = 0; i < m_sizeCmac; i++) {
+    for (Uint64 i = 0; i < m_sizeCmac; i++) {
         q[i] = m_cmacTemp[i] & q[i];
     }
 
@@ -400,13 +391,10 @@ CmacSiv::Impl::decrypt(const Uint8  cipherText[],
     Uint8  q[16] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                      0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
 
-    for (int i = 0; i < m_sizeCmac; i++) {
+    for (Uint64 i = 0; i < m_sizeCmac; i++) {
         q[i] = iv[i] & q[i];
     }
 
-    // TODO: Implement CtrDec function.
-    //              CT      L       PT        IV     key      keyL
-    // s = CtrDec(cipherText, len, plainText, iv, m_key2, m_keyLength);
     s = ctrWrapper(
         m_key2, m_keyLength, cipherText, plainText, len + m_padLen, q, false);
 
