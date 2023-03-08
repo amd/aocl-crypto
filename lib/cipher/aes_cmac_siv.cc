@@ -27,10 +27,9 @@
  */
 
 #include "cipher/aes_cmac_siv.hh"
+#include "cipher/aes_error.hh"
 
 namespace alcp::cipher {
-
-using alcp::base::status::InternalError;
 
 inline std::string
 parseBytesToHexStr(const Uint8* bytes, const int length)
@@ -203,7 +202,9 @@ CmacSiv::Impl::ctrWrapper(const Uint8 key[],
     else
         err = m_ctr.decrypt(in, out, size, iv);
     if (alcp_is_error(err)) {
-        s.update(InternalError("An error occured"));
+        auto cer = cipher::AesError(cipher::ErrorCode::eDecryptFailed);
+        s.update(cer, cer.message());
+        return s;
     }
     return s;
 }
@@ -317,7 +318,8 @@ CmacSiv::Impl::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
             break;
         default:
             // FIXME: Implement CMAC-SIV Error class.
-            s = InternalError("Length is unsupported!");
+            auto cer = cipher::AesError(cipher::ErrorCode::eInvaidValue);
+            s.update(cer, cer.message());
             return s;
     }
     m_key1 = key1;
@@ -337,7 +339,8 @@ CmacSiv::Impl::addAdditionalInput(const Uint8 memory[], Uint64 length)
     }
     if (m_key1 == nullptr || m_key2 == nullptr) {
         // FIXME: Implement Error class for CMAC SIV
-        s = InternalError("Key Not Found");
+        auto cer = cipher::AesError(cipher::ErrorCode::eInvaidValue);
+        s.update(cer, cer.message());
         return s;
     }
 
@@ -417,7 +420,8 @@ CmacSiv::Impl::decrypt(const Uint8  cipherText[],
     // Verify tag, which just got generated
     if (memcmp(&(m_cmacTemp[0]), iv, m_sizeCmac) != 0) {
         // FIXME: Initiate Wipedown!
-        s = InternalError("Verification Failure!");
+        auto cer = cipher::AesError(cipher::ErrorCode::eAuthenticationFailure);
+        s.update(cer, cer.message());
         return s;
     }
     return s;
