@@ -29,7 +29,6 @@
 #include "dl_load/dl_load.hh"
 #include <cstddef>
 
-/*FIXME: is this test name good to go? */
 TEST(ALCP, DL_LOAD)
 {
     void* handle;
@@ -51,13 +50,13 @@ TEST(ALCP, DL_LOAD)
 
     /* now just try to load these symbols and call them */
     /* store these in fn pointers */
-    func_print_version f_version = NULL;
+    func_print_version f_version = nullptr;
 #if defined(_WIN64) || defined(_WIN32)
     f_version = (func_print_version)GetProcAddress(handle, "alcp_get_version");
 #else
     f_version = (func_print_version)dlsym(handle, "alcp_get_version");
 #endif
-    if (f_version == NULL) {
+    if (f_version == nullptr) {
         std::cout << "Error, null func ptr" << std::endl;
         FAIL();
     }

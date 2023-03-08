@@ -30,11 +30,6 @@ FetchContent_Declare(gtest
     GIT_TAG release-1.12.1)
 FetchContent_MakeAvailable(gtest)
 
-# add this if asan is used
-if (ALCP_USE_ASAN)
-    SET(LIBS ${LIBS} asan)
-endif()
-
 # link to -lgtest -alcp -dl for dynamic loading
 SET(LIBS ${LIBS} gtest alcp)
 SET(LIBS_DL ${LIBS} dl)

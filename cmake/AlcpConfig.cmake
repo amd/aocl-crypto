@@ -52,12 +52,20 @@ FUNCTION(GEN_CONF)
     ENDIF()
 
     # Set lib name
+    # TODO (Need to find a way to get the bin name from cmake)
     IF(ALCP_BUILD_OS_LINUX)
-        SET(ALCP_LIB_OUTPUT_FILE_NAME_STRING "${ALCP_BINARY_DIR}/libalcp.so")
+        IF(CMAKE_BUILD_TYPE STREQUAL "Debug" OR "DEBUG")
+            SET(ALCP_LIB_OUTPUT_FILE_NAME_STRING "${ALCP_BINARY_DIR}/libalcp_DEBUG.so")
+        ELSE()
+            SET(ALCP_LIB_OUTPUT_FILE_NAME_STRING "${ALCP_BINARY_DIR}/libalcp.so")
+        ENDIF()
     ENDIF(ALCP_BUILD_OS_LINUX)
-    # FIXME (Need to find a way to get the bin name from cmake)
     IF(ALCP_BUILD_OS_WINDOWS)
-        SET(ALCP_LIB_OUTPUT_FILE_NAME_STRING "${ALCP_BINARY_DIR}/libalcp.dll")
+        IF(CMAKE_BUILD_TYPE STREQUAL "Debug" OR "DEBUG")
+            SET(ALCP_LIB_OUTPUT_FILE_NAME_STRING "${ALCP_BINARY_DIR}/libalcp_DEBUG.dll")
+        ELSE()
+            SET(ALCP_LIB_OUTPUT_FILE_NAME_STRING "${ALCP_BINARY_DIR}/libalcp.dll")
+        ENDIF()
     ENDIF(ALCP_BUILD_OS_WINDOWS)
 
     # CONFIGURE A HEADER FILE TO PASS SOME OF THE CMAKE SETTINGS
