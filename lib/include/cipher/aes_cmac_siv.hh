@@ -230,25 +230,18 @@ class CmacSiv::Impl
   private:
     /**
      * @brief Do Cmac implementation
-     * @param key  Cmac Key
-     * @param keySize Size of Cmac Key
      * @param data Pointer to data to do cmac on
      * @param size Size of the data
      * @param mac OutputMac memory
      * @param macSize Size of Mac
+     * @param enc Encrypt (True) or Decrypt (False)
      * @return Status
      */
-    Status cmacWrapper(const Uint8 key[],
-                       Uint64      keySize,
-                       const Uint8 data[],
-                       Uint64      size,
-                       Uint8       mac[],
-                       Uint64      macSize);
+    Status ctrWrapper(
+        const Uint8 in[], Uint8 out[], Uint64 size, Uint8 mac[], bool enc);
 
     /**
      * @brief Do Cmac implementation
-     * @param key  Cmac Key
-     * @param keySize Size of Cmac Key
      * @param data1 Pointer to data1 to do cmac on
      * @param size1 Size of the data1
      * @param data2 Pointer to data2 to do cmac on
@@ -257,9 +250,7 @@ class CmacSiv::Impl
      * @param macSize Size of Mac
      * @return Status
      */
-    Status cmacWrapperMultiData(const Uint8 key[],
-                                Uint64      keySize,
-                                const Uint8 data1[],
+    Status cmacWrapperMultiData(const Uint8 data1[],
                                 Uint64      size1,
                                 const Uint8 data2[],
                                 Uint64      size2,
@@ -268,8 +259,6 @@ class CmacSiv::Impl
 
     /**
      * @brief Do CTR Encryption/Decryption
-     * @param key CTR Key
-     * @param keySize Size of CTR Key
      * @param in Pointer to input memory to do CTR on
      * @param out Pointer to output memory
      * @param size Size of the in
@@ -277,13 +266,10 @@ class CmacSiv::Impl
      * @param enc If True will be encrypt otherwise Decrypt
      * @return Status
      */
-    Status ctrWrapper(const Uint8 key[],
-                      Uint64      keySize,
-                      const Uint8 in[],
-                      Uint8       out[],
-                      Uint64      size,
-                      Uint8       iv[],
-                      bool        enc);
+    Status cmacWrapper(const Uint8 data[],
+                       Uint64      size,
+                       Uint8       mac[],
+                       Uint64      macSize);
 };
 
 } // namespace alcp::cipher

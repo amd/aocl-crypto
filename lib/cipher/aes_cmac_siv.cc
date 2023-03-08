@@ -129,18 +129,12 @@ dbl(const Uint8 in[], const Uint8 rb[], Uint8 out[])
 }
 
 Status
-CmacSiv::Impl::cmacWrapper(const Uint8 key[],
-                           Uint64      keySize,
-                           const Uint8 data[],
+CmacSiv::Impl::cmacWrapper(const Uint8 data[],
                            Uint64      size,
                            Uint8       mac[],
                            Uint64      macSize)
 {
     Status s{ StatusOk() };
-    s = m_cmac.setKey(key, keySize);
-    if (!s.ok()) {
-        return s;
-    }
     s = m_cmac.finalize(data, size);
     if (!s.ok()) {
         return s;
@@ -157,9 +151,7 @@ CmacSiv::Impl::cmacWrapper(const Uint8 key[],
 }
 
 Status
-CmacSiv::Impl::cmacWrapperMultiData(const Uint8 key[],
-                                    Uint64      keySize,
-                                    const Uint8 data1[],
+CmacSiv::Impl::cmacWrapperMultiData(const Uint8 data1[],
                                     Uint64      size1,
                                     const Uint8 data2[],
                                     Uint64      size2,
@@ -167,10 +159,6 @@ CmacSiv::Impl::cmacWrapperMultiData(const Uint8 key[],
                                     Uint64      macSize)
 {
     Status s{ StatusOk() };
-    s = m_cmac.setKey(key, keySize);
-    if (!s.ok()) {
-        return s;
-    }
     s = m_cmac.update(data1, size1);
     if (!s.ok()) {
         return s;
@@ -180,32 +168,33 @@ CmacSiv::Impl::cmacWrapperMultiData(const Uint8 key[],
         return s;
     }
     s = m_cmac.copy(mac, macSize);
+    if (!s.ok()) {
+        return s;
+    }
+    s = m_cmac.reset();
+    if (!s.ok()) {
+        return s;
+    }
     return s;
 }
 
 Status
-CmacSiv::Impl::ctrWrapper(const Uint8 key[],
-                          Uint64      keySize,
-                          const Uint8 in[],
-                          Uint8       out[],
-                          Uint64      size,
-                          Uint8       iv[],
-                          bool        enc)
+CmacSiv::Impl::ctrWrapper(
+    const Uint8 in[], Uint8 out[], Uint64 size, Uint8 mac[], bool enc)
 {
     Status s = StatusOk();
-    m_ctr.setKey(key, keySize);
 
     // FIXME: To be removed once we move everything to Status
     alc_error_t err = ALC_ERROR_NONE;
     if (enc) {
-        err = m_ctr.encrypt(in, out, size, iv);
+        err = m_ctr.encrypt(in, out, size, mac);
         if (alcp_is_error(err)) {
             auto cer = cipher::AesError(cipher::ErrorCode::eEncryptFailed);
             s.update(cer, cer.message());
             return s;
         }
     } else {
-        err = m_ctr.decrypt(in, out, size, iv);
+        err = m_ctr.decrypt(in, out, size, mac);
         if (alcp_is_error(err)) {
             auto cer = cipher::AesError(cipher::ErrorCode::eDecryptFailed);
             s.update(cer, cer.message());
@@ -230,12 +219,8 @@ CmacSiv::Impl::s2v(const Uint8 plainText[], Uint64 size)
     Status             s    = StatusOk();
     std::vector<Uint8> zero = std::vector<Uint8>(m_sizeCmac, 0);
 
-    s = cmacWrapper(m_key1,
-                    m_keyLength,
-                    &(zero.at(0)),
-                    zero.size(),
-                    &(m_cmacTemp.at(0)),
-                    m_sizeCmac);
+    s = cmacWrapper(
+        &(zero.at(0)), zero.size(), &(m_cmacTemp.at(0)), m_sizeCmac);
 
     if (!s.ok()) {
         return s;
@@ -264,9 +249,7 @@ CmacSiv::Impl::s2v(const Uint8 plainText[], Uint64 size)
                 &(m_cmacTemp.at(0)),
                 m_sizeCmac);
 
-        s = cmacWrapperMultiData(m_key1,
-                                 m_keyLength,
-                                 plainText,
+        s = cmacWrapperMultiData(plainText,
                                  (size - m_sizeCmac),
                                  &(m_cmacTemp.at(0)),
                                  m_sizeCmac,
@@ -285,12 +268,8 @@ CmacSiv::Impl::s2v(const Uint8 plainText[], Uint64 size)
                 (m_sizeCmac)-size);
         std::cout << "xor:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
 
-        s = cmacWrapper(m_key1,
-                        m_keyLength,
-                        &(m_cmacTemp.at(0)),
-                        m_sizeCmac,
-                        &(m_cmacTemp.at(0)),
-                        m_sizeCmac);
+        s = cmacWrapper(
+            &(m_cmacTemp.at(0)), m_sizeCmac, &(m_cmacTemp.at(0)), m_sizeCmac);
     }
     if (!s.ok()) {
         return s;
@@ -316,6 +295,11 @@ CmacSiv::Impl::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
     }
     m_key1 = key1;
     m_key2 = key2;
+    s      = m_cmac.setKey(m_key1, m_keyLength);
+    if (!s.ok()) {
+        return s;
+    }
+    m_ctr.setKey(m_key2, m_keyLength);
     return s;
 }
 
@@ -340,8 +324,6 @@ CmacSiv::Impl::addAdditionalInput(const Uint8 memory[], Uint64 length)
         std::vector<Uint8>(m_sizeCmac);
 
     s = cmacWrapper(
-        m_key1,
-        m_keyLength,
         memory,
         length,
         &((m_additionalDataProcessed.at(m_additionalDataProcessedSize)).at(0)),
@@ -372,8 +354,7 @@ CmacSiv::Impl::encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len)
         q[i] = m_cmacTemp[i] & q[i];
     }
 
-    s = ctrWrapper(
-        m_key2, m_keyLength, plainText, cipherText, len + m_padLen, q, true);
+    s = ctrWrapper(plainText, cipherText, len + m_padLen, q, true);
 
     if (!s.ok()) {
         return s;
@@ -395,8 +376,7 @@ CmacSiv::Impl::decrypt(const Uint8  cipherText[],
         q[i] = iv[i] & q[i];
     }
 
-    s = ctrWrapper(
-        m_key2, m_keyLength, cipherText, plainText, len + m_padLen, q, false);
+    s = ctrWrapper(cipherText, plainText, len + m_padLen, q, false);
 
     if (!s.ok()) {
         return s;
