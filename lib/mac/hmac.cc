@@ -69,18 +69,14 @@ class Hmac::Impl
      */
     digest::Digest* m_pDigest{};
 
-    // Single Memory Block to hold  m_pK0_xor_ipad,m_pK0_xor_opad,m_pK0.
-    // 3*input_block_length (with SHA input block length max size 144 bytes for
-    // SHA3-224)
-    alignas(16) Uint8 m_pMemory_block[432]{};
-    Uint8* m_pK0_xor_opad = m_pMemory_block;
-    Uint8* m_pK0_xor_ipad = m_pMemory_block + 144;
+    alignas(16) Uint8 m_pK0_xor_opad[144]{};
+    alignas(16) Uint8 m_pK0_xor_ipad[144]{};
 
     /**
      * Preprocessed Key to match the input block length input_block_length
      * get_k0 function performs the preprocessing
      * */
-    Uint8* m_pK0 = m_pMemory_block + 288;
+    alignas(16) Uint8 m_pK0[144]{};
 
   public:
     Impl() = default;
@@ -209,10 +205,6 @@ class Hmac::Impl
         memset(m_pK0, 0, 144);
         memset(m_pTempHash, 0, 64);
         m_finalized = false;
-
-        m_pK0_xor_opad = m_pMemory_block;
-        m_pK0_xor_ipad = m_pMemory_block + 144;
-        m_pK0          = m_pMemory_block + 288;
 
         m_pKey   = key;
         m_keylen = keylen;
