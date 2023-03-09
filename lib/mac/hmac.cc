@@ -53,8 +53,8 @@ class Hmac::Impl
     Uint32 m_input_block_length{};
     // Size of the message digest
     Uint32 m_output_hash_size{};
-    // Placeholder variable to hold intermediate hash and the the mac value
-    // after finalize has been called
+    /* Placeholder variable to hold intermediate hash and the the mac value
+    after finalize has been called */
     // Optimization: Max Size of 1024 bits for any SHA
     Uint8 m_pTempHash[64]{};
 
@@ -82,14 +82,8 @@ class Hmac::Impl
     Impl() = default;
 
   public:
-    /// @brief Get hash size in bytes of the digest used for HMAC
-    /// @return hash size in bytes of the HMAC digest
     Uint64 getHashSize() { return m_output_hash_size; }
 
-    /// @brief Update HMAC with the given buffer chunk
-    /// @param buff The chunk of the message to be updated
-    /// @param size size of buff in bytes
-    /// @return ALC_ERROR_NONE if no errors otherwise appropriate error
     Status update(const Uint8* buff, Uint64 size)
     {
         if (m_pKey == nullptr) {
@@ -108,17 +102,12 @@ class Hmac::Impl
         return status;
     }
 
-    /// @brief Last method to be called with any remaining chunks of the
-    /// message to calculate HMAC
-    /// @param buff final chunk of the message. Can be nullptr
-    /// @param size size of buff in bytes
-    /// @return ALC_ERROR_NONE if no errors otherwise appropriate error
     Status finalize(const Uint8* buff, Uint64 size)
     {
         Status      status = StatusOk();
         alc_error_t err    = ALC_ERROR_NONE;
-        // TODO: For all the following calls to digest return the proper error
-        // and assign
+        /* TODO: For all the following calls to digest return the proper error
+        and assign */
         if (sizeof(buff) != 0 && size != 0) {
             err = m_pDigest->finalize(buff, size);
             if (alcp_is_error(err)) {
@@ -155,11 +144,6 @@ class Hmac::Impl
         return status;
     }
 
-    /// @brief copy the result of HMAC to buff. Should be Called only after
-    /// Finalize
-    /// @param buff Output Buffer where HMAC result should be copied to
-    /// @param size Size of buff in bytes
-    /// @return ALC_ERROR_NONE if no errors otherwise appropriate error
     Status copyHash(Uint8* buff, Uint64 size)
     {
         if (!m_finalized) {
@@ -198,8 +182,8 @@ class Hmac::Impl
                 "HMAC: Digest Should be Set before Setting the key");
         }
 
-        // Clear all the buffers as with changed, continued update is not
-        // possible
+        /* Clear all the buffers as with changed, continued update is not
+        possible */
         memset(m_pK0_xor_opad, 0, 144);
         memset(m_pK0_xor_ipad, 0, 144);
         memset(m_pK0, 0, 144);
@@ -209,8 +193,8 @@ class Hmac::Impl
         m_pKey   = key;
         m_keylen = keylen;
 
-        // get_k0 function will process the key in such a way that processed key
-        // size will be the same as the internal block length of the digest used
+        /* get_k0 function will process the key in such a way that processed key
+        size will be the same as the internal block length of the digest used */
         m_k0_length = m_input_block_length;
 
         status = get_k0();
@@ -232,7 +216,6 @@ class Hmac::Impl
         m_pDigest     = &p_digest;
         m_pDigest->reset();
 
-        // Constructor argument validations
         m_input_block_length = m_pDigest->getInputBlockSize();
         m_output_hash_size   = m_pDigest->getHashSize();
 
@@ -250,9 +233,11 @@ class Hmac::Impl
 
         /* Reference Algorithm for calculating K0_xor_opad and k0_xor_ipad */
 
-        // cIpad,cOpad: Fixed values from the specification
-        // cIpad,cOpad Little Endian and BigEndian representation is same. So no
-        // need for reinterpret_cast
+        /*
+        cIpad,cOpad: Fixed values from the specification
+        cIpad,cOpad Little Endian and BigEndian representation is same. So no
+        need for reinterpret_cast
+        */
         constexpr Uint64 cIpad = 0x3636363636363636L;
         constexpr Uint64 cOpad = 0x5c5c5c5c5c5c5c5cL;
 
@@ -293,8 +278,8 @@ class Hmac::Impl
             std::memset(m_pK0 + m_keylen, 0x0, m_input_block_length - m_keylen);
         } else if (m_keylen > m_input_block_length) {
             // Optimization: Reusing p_digest for calculating
-            // TODO: For all the following digest calls check and update proper
-            // error status
+            /*TODO: For all the following digest calls check and update proper
+            error status */
             alc_error_t err = ALC_ERROR_NONE;
             m_pDigest->reset();
             err = m_pDigest->finalize(m_pKey, m_keylen);

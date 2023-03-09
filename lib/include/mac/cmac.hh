@@ -56,7 +56,8 @@ class Cmac final : public Mac
      * @param pMsgBuf   Plaintext Message Buffer bytes to be updated
      * @param size      Size of the Plaintext Message Buffer in bytes
      */
-    ALCP_API_EXPORT Status update(const Uint8* pMsgBuf, Uint64 size) override;
+    ALCP_API_EXPORT alcp::base::Status update(const Uint8* pMsgBuf,
+                                              Uint64       size) override;
 
     /**
      * @brief Update CMAC Key
@@ -88,8 +89,7 @@ class Cmac final : public Mac
      * Mac has been Finalized.
      *
      * @param buff      Output Buffer to which Mac will be copied
-     * @param size      Size of the buffer in bytes. Should be greater than or
-     * equal to 16.
+     * @param size      Size of the buffer in bytes.
      */
     ALCP_API_EXPORT Status copy(Uint8* buff, Uint32 size);
 
