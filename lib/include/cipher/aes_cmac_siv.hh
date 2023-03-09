@@ -30,14 +30,17 @@
 
 #include "alcp/base.hh"
 #include "cipher/aes.hh"
+#include "cipher/aes_cmac_siv_arch.hh"
 
 #include "mac/cmac.hh"
 #include "utils/copy.hh"
+#include <new>
 #include <vector>
 
 using Cmac = alcp::mac::Cmac;
-
+#define SIZE_CMAC 128 / 8
 namespace alcp::cipher {
+
 // RFC5297
 
 class ALCP_API_EXPORT CmacSiv : public Aes
@@ -149,17 +152,18 @@ class CmacSiv::Impl
        can be given by user but most of the time it will be less than 10. So a
        default size of 10 is allocated.
     */
+    // std::vector<std::vector<Uint8>> m_additionalDataProcessed =
+    //     std::vector<std::vector<Uint8>>(10);
     std::vector<std::vector<Uint8>> m_additionalDataProcessed =
         std::vector<std::vector<Uint8>>(10);
-    Uint64             m_additionalDataProcessedSize = {};
-    const Uint8*       m_key1                        = {};
-    const Uint8*       m_key2                        = {};
-    Uint64             m_keyLength                   = {};
-    const Uint64       m_sizeCmac                    = 128 / 8;
-    Uint64             m_padLen                      = {};
-    std::vector<Uint8> m_cmacTemp = std::vector<Uint8>(m_sizeCmac, 0);
-    Cmac               m_cmac;
-    Ctr                m_ctr;
+    Uint64       m_additionalDataProcessedSize = {};
+    const Uint8* m_key1                        = {};
+    const Uint8* m_key2                        = {};
+    Uint64       m_keyLength                   = {};
+    Uint64       m_padLen                      = {};
+    alignas(16) Uint8 m_cmacTemp[SIZE_CMAC]    = {};
+    Cmac m_cmac;
+    Ctr  m_ctr;
 
   public:
     Impl(){};

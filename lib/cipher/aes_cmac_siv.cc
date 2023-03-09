@@ -27,7 +27,10 @@
  */
 
 #include "cipher/aes_cmac_siv.hh"
+#include "alcp/utils/cpuid.hh"
 #include "cipher/aes_error.hh"
+
+using alcp::utils::CpuId;
 
 namespace alcp::cipher {
 
@@ -102,16 +105,17 @@ xor_a_b(const T a[], const T b[], T c[], size_t len)
         c[j] = b[j] ^ a[j];
     }
 }
+
 inline void
 left_shift(const Uint8 in[], Uint8 out[])
 {
     int i = 0;
     for (i = 0; i < 15; i++) {
-        out[i] = in[i] << 1;
-        out[i] |= (in[i + 1] >> 7);
+        out[i] = (in[i] << 1) | ((in[i + 1] >> 7));
     }
     out[i] = in[i] << 1;
 }
+
 void
 dbl(const Uint8 in[], const Uint8 rb[], Uint8 out[])
 {
@@ -217,11 +221,10 @@ CmacSiv::Impl::s2v(const Uint8 plainText[], Uint64 size)
 {
     // Assume plaintest to be 128 bit multiples.
     Status             s    = StatusOk();
-    std::vector<Uint8> zero = std::vector<Uint8>(m_sizeCmac, 0);
+    std::vector<Uint8> zero = std::vector<Uint8>(SIZE_CMAC, 0);
 
     // Do a cmac of Zero Vector, first additonal data.
-    s = cmacWrapper(
-        &(zero.at(0)), zero.size(), &(m_cmacTemp.at(0)), m_sizeCmac);
+    s = cmacWrapper(&(zero.at(0)), zero.size(), m_cmacTemp, SIZE_CMAC);
 
     if (!s.ok()) {
         return s;
@@ -234,51 +237,66 @@ CmacSiv::Impl::s2v(const Uint8 plainText[], Uint64 size)
 
     // For each user provided additional data do the dbl and xor to complete
     // processing
-    for (Uint64 i = 0; i < m_additionalDataProcessedSize; i++) {
-        alcp::cipher::dbl(&(m_cmacTemp[0]), rb, &(m_cmacTemp[0]));
+    if (CpuId::cpuHasAvx2()) {
+        avx2::processAad(m_cmacTemp,
+                         m_additionalDataProcessed,
+                         m_additionalDataProcessedSize);
+    } else {
+        for (Uint64 i = 0; i < m_additionalDataProcessedSize; i++) {
 
-        // std::cout << "dbl:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
+            alcp::cipher::dbl(&(m_cmacTemp[0]), rb, &(m_cmacTemp[0]));
 
-        xor_a_b(&m_cmacTemp[0],
-                &m_additionalDataProcessed.at(i).at(0),
-                &m_cmacTemp[0],
-                m_sizeCmac);
+            // std::cout << "dbl:" << parseBytesToHexStr(m_cmacTemp) <<
+            // std::endl;
+
+            alcp::cipher::xor_a_b(&m_cmacTemp[0],
+                                  &(m_additionalDataProcessed.at(i).at(0)),
+                                  &m_cmacTemp[0],
+                                  SIZE_CMAC);
+        }
     }
 
     // If the size of plaintext is lower there is special case
-    if (size >= m_sizeCmac) {
+    if (size >= SIZE_CMAC) {
 
         // Take out last block
-        xor_a_b((plainText + size - m_sizeCmac),
-                &(m_cmacTemp.at(0)),
-                &(m_cmacTemp.at(0)),
-                m_sizeCmac);
+        if (CpuId::cpuIsZen3()) {
+            zen3::xor_a_b((plainText + size - SIZE_CMAC),
+                          m_cmacTemp,
+                          m_cmacTemp,
+                          SIZE_CMAC);
+        } else {
+            xor_a_b((plainText + size - SIZE_CMAC),
+                    m_cmacTemp,
+                    m_cmacTemp,
+                    SIZE_CMAC);
+        }
 
         s = cmacWrapperMultiData(plainText,
-                                 (size - m_sizeCmac),
-                                 &(m_cmacTemp.at(0)),
-                                 m_sizeCmac,
-                                 &(m_cmacTemp.at(0)),
-                                 m_sizeCmac);
+                                 (size - SIZE_CMAC),
+                                 m_cmacTemp,
+                                 SIZE_CMAC,
+                                 m_cmacTemp,
+                                 SIZE_CMAC);
     } else {
         Uint8 temp_bytes[16] = {};
         // Padding Hack
         temp_bytes[0] = 0x80;
         // Speical case size lower for plain text need to do double and padding
-        alcp::cipher::dbl(&(m_cmacTemp[0]), rb, &(m_cmacTemp[0]));
+        if (CpuId::cpuHasAvx2()) {
+            avx2::dbl(&(m_cmacTemp[0]));
+        }
+        // alcp::cipher::dbl(&(m_cmacTemp[0]), rb, &(m_cmacTemp[0]));
         // std::cout << "dbl:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
 
-        xor_a_b(plainText, &(m_cmacTemp.at(0)), &(m_cmacTemp.at(0)), size);
+        xor_a_b(plainText, m_cmacTemp, m_cmacTemp, size);
         // Padding
-        xor_a_b(temp_bytes,
-                &(m_cmacTemp.at(0)) + size,
-                &(m_cmacTemp.at(0)) + size,
-                (m_sizeCmac)-size);
+        xor_a_b(
+            temp_bytes, m_cmacTemp + size, m_cmacTemp + size, (SIZE_CMAC)-size);
 
         // std::cout << "xor:" << parseBytesToHexStr(m_cmacTemp) << std::endl;
 
-        s = cmacWrapper(
-            &(m_cmacTemp.at(0)), m_sizeCmac, &(m_cmacTemp.at(0)), m_sizeCmac);
+        s = cmacWrapper(m_cmacTemp, SIZE_CMAC, m_cmacTemp, SIZE_CMAC);
     }
     if (!s.ok()) {
         return s;
@@ -325,7 +343,7 @@ CmacSiv::Impl::addAdditionalInput(const Uint8 memory[], Uint64 length)
 
     Status s = StatusOk();
 
-    // FIXME: Allocate m_sizeCmac for 10 vectors on intialization to be more
+    // FIXME: Allocate SIZE_CMAC for 10 vectors on intialization to be more
     // optimal.
 
     // Extend size of additonalDataProcessed Vector in case of overflow
@@ -343,14 +361,14 @@ CmacSiv::Impl::addAdditionalInput(const Uint8 memory[], Uint64 length)
 
     // Allocate memory for additonal data processed vector
     m_additionalDataProcessed.at(m_additionalDataProcessedSize) =
-        std::vector<Uint8>(m_sizeCmac);
+        std::vector<Uint8>(SIZE_CMAC);
 
     // Do cmac for additional data and set it to the proceed data.
     s = cmacWrapper(
         memory,
         length,
         &((m_additionalDataProcessed.at(m_additionalDataProcessedSize)).at(0)),
-        m_sizeCmac);
+        SIZE_CMAC);
 
     if (!s.ok()) {
         return s;
@@ -377,7 +395,7 @@ CmacSiv::Impl::encrypt(const Uint8 plainText[], Uint8 cipherText[], Uint64 len)
     }
 
     // Apply the mask and make q the IV
-    for (Uint64 i = 0; i < m_sizeCmac; i++) {
+    for (Uint64 i = 0; i < SIZE_CMAC; i++) {
         q[i] = m_cmacTemp[i] & q[i];
     }
 
@@ -403,7 +421,7 @@ CmacSiv::Impl::decrypt(const Uint8  cipherText[],
                     0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff };
 
     // Apply the mask and make q the IV
-    for (Uint64 i = 0; i < m_sizeCmac; i++) {
+    for (Uint64 i = 0; i < SIZE_CMAC; i++) {
         q[i] = iv[i] & q[i];
     }
 
@@ -418,7 +436,7 @@ CmacSiv::Impl::decrypt(const Uint8  cipherText[],
     s = s2v(plainText, len);
 
     // Verify tag, which just got generated
-    if (memcmp(&(m_cmacTemp[0]), iv, m_sizeCmac) != 0) {
+    if (memcmp(&(m_cmacTemp[0]), iv, SIZE_CMAC) != 0) {
         // FIXME: Initiate Wipedown!
         auto cer = cipher::AesError(cipher::ErrorCode::eAuthenticationFailure);
         s.update(cer, cer.message());
@@ -444,7 +462,7 @@ Status
 CmacSiv::Impl::getTag(Uint8 out[])
 {
     Status s = StatusOk();
-    utils::CopyBytes(out, &m_cmacTemp[0], m_sizeCmac);
+    utils::CopyBytes(out, &m_cmacTemp[0], SIZE_CMAC);
     memset(&m_cmacTemp[0], 0, 16);
     return s;
 }
