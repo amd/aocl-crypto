@@ -205,21 +205,10 @@ static const Uint8 aad[] = {
     0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8,
 };
 
-Uint8 iv_buff[16];
-
-#if 0
-/*
- * Encrypted text of "Hello World from AOCL Crypto !!!"
- * with key = {00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 0a, 0b, 0c, 0d, 0e, 0f};
- * with iv = {00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 0a, 0b, 0c, 0d, 0e, 0f};
- */
-
-static Uint8 cipher = {68,cc,95,fe,db,6c,0c,87,76,73,98,fc,0a,dc,f6,07,9e,33,17,75,ad,0a,eb,27,66,29,f3,9e,b6,8d,1f,05};
-#else
+Uint8        iv_buff[16];
 static Uint8 sample_ciphertxt[512] = {
     0,
 };
-#endif
 
 #define BITS_PER_BYTE 8
 
@@ -236,9 +225,6 @@ main(void)
 
     encrypt_demo(
         sample_plaintxt, size, sample_ciphertxt, iv_buff, aad, sizeof(aad));
-    char* o = bytesToHexString(sample_ciphertxt, size);
-    printf("CT:%s\n", o);
-    free(o);
 
     create_demo_session(
         sample_key_cmac, sample_key2_ctr, sizeof(sample_key_cmac) * 8);
@@ -252,72 +238,4 @@ main(void)
      */
 
     return 0;
-}
-
-char*
-bytesToHexString(unsigned char* bytes, int length)
-{
-    char* outputHexString = malloc(sizeof(char) * ((length * 2) + 1));
-    for (int i = 0; i < length; i++) {
-        char chararray[2];
-        chararray[0] = (bytes[i] & 0xf0) >> 4;
-        chararray[1] = bytes[i] & 0x0f;
-        for (int j = 0; j < 2; j++) {
-            switch (chararray[j]) {
-                case 0x0:
-                    chararray[j] = '0';
-                    break;
-                case 0x1:
-                    chararray[j] = '1';
-                    break;
-                case 0x2:
-                    chararray[j] = '2';
-                    break;
-                case 0x3:
-                    chararray[j] = '3';
-                    break;
-                case 0x4:
-                    chararray[j] = '4';
-                    break;
-                case 0x5:
-                    chararray[j] = '5';
-                    break;
-                case 0x6:
-                    chararray[j] = '6';
-                    break;
-                case 0x7:
-                    chararray[j] = '7';
-                    break;
-                case 0x8:
-                    chararray[j] = '8';
-                    break;
-                case 0x9:
-                    chararray[j] = '9';
-                    break;
-                case 0xa:
-                    chararray[j] = 'a';
-                    break;
-                case 0xb:
-                    chararray[j] = 'b';
-                    break;
-                case 0xc:
-                    chararray[j] = 'c';
-                    break;
-                case 0xd:
-                    chararray[j] = 'd';
-                    break;
-                case 0xe:
-                    chararray[j] = 'e';
-                    break;
-                case 0xf:
-                    chararray[j] = 'f';
-                    break;
-                default:
-                    printf("%x %d\n", chararray[j], j);
-            }
-            outputHexString[i * 2 + j] = chararray[j];
-        }
-    }
-    outputHexString[length * 2] = 0x0;
-    return outputHexString;
 }
