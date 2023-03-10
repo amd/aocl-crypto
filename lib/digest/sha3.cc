@@ -82,10 +82,10 @@ class Sha3::Impl
     Uint32       m_idx        = 0;
 
     // buffer size to hold the chunk size to be processed
-    __attribute__((aligned(64))) Uint8 m_buffer[MaxDigestBlockSizeBits / 8];
+    alignas(64) Uint8 m_buffer[MaxDigestBlockSizeBits / 8];
     // state matrix to represent the keccak 1600 bits representation of
     // intermediate hash
-    __attribute__((aligned(64))) Uint64 m_state[cDim][cDim];
+    alignas(64) Uint64 m_state[cDim][cDim];
     // flat representation of the state, used in absorbing the user message.
     Uint64* m_state_flat = &m_state[0][0];
     // buffer to copy intermediate hash value
