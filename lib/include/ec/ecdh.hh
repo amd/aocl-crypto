@@ -31,12 +31,54 @@
 #include "alcp/macros.h"
 #include "ec.hh"
 
+#ifdef COMPILER_IS_GCC
+#define UNROLL_16 _Pragma("GCC unroll 16")
+#define UNROLL_30 _Pragma("GCC unroll 30")
+#define UNROLL_51 _Pragma("GCC unroll 51")
+#define UNROLL_52 _Pragma("GCC unroll 52")
+#else
+#define UNROLL_16
+#define UNROLL_30
+#define UNROLL_51
+#define UNROLL_52
+#endif
+
 namespace alcp::ec {
 
 void
 alcpScalarMulX25519(Uint8*       mypublic,
                     const Uint8* secret,
                     const Uint8* basepoint);
+
+void
+AlcpScalarPubX25519(Int8* privKeyRadix32, Uint8* pPublicKey);
+
+struct PrecomputedPoint
+{
+    Uint64 m_x[4]{};
+    Uint64 m_y[4]{};
+    Uint64 m_z[4]{};
+    PrecomputedPoint()
+    {
+        m_x[0] = 1;
+        m_y[0] = 1;
+    }
+    void init()
+    {
+        m_x[0] = 1;
+        m_y[0] = 1;
+        m_x[1] = 0;
+        m_y[1] = 0;
+        m_x[2] = 0;
+        m_y[2] = 0;
+        m_x[3] = 0;
+        m_y[3] = 0;
+        m_z[0] = 0;
+        m_z[1] = 0;
+        m_z[2] = 0;
+        m_z[3] = 0;
+    }
+};
 
 class X25519 : public Ec
 {

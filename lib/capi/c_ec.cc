@@ -41,11 +41,7 @@ EXTERN_C_BEGIN
 uint64_t
 alcp_ec_context_size(const alc_ec_info_p pEcInfo)
 {
-    // uint64_t size =
-    //  sizeof(ec::Context) + ec::EcBuilder::getSize(*pEcInfo);
-    // return size;
-
-    Uint64 size = sizeof(ec::Context);
+    uint64_t size = sizeof(ec::Context) + ec::EcBuilder::getSize(*pEcInfo);
     return size;
 }
 

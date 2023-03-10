@@ -38,6 +38,7 @@ class EcBuilder
 {
   public:
     static Status Build(const alc_ec_info_t& ecInfo, ec::Context& ctx);
+    static Uint32 getSize(const alc_ec_info_t& rEcInfo);
 };
 
 } // namespace alcp::ec

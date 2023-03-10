@@ -91,22 +91,20 @@ class x25519Builder
     }
 };
 
-#if 0
 Uint32
 EcBuilder::getSize(const alc_ec_info_t& rEcInfo)
 {
     switch (rEcInfo.ecCurveId) {
         case ALCP_EC_CURVE25519:
-            return sizeof(EcX25519);
+            return sizeof(X25519);
             break;
         case ALCP_EC_SECP256R1:
-            return 0;//return sizeof(Sha3);
+            return 0; // return sizeof(Sha3);
             break;
         default:
             return 0;
     }
 }
-#endif
 
 Status
 EcBuilder::Build(const alc_ec_info_t& rEcInfo, Context& rCtx)

@@ -33,15 +33,28 @@
 #include <wmmintrin.h>
 
 #include "ec/ecdh.hh"
+#include "ec/ed_25519_table.hh"
 #include "utils/copy.hh"
 #include "x25519_radix51bit.hh"
+#include "x25519_radix64bit.hh"
 
 namespace alcp::ec {
 
+using namespace radix64bit;
 /*
  * Current version supports radix51bit arithmetic kernels.
  * when radix64bit support is added, its sufficient to change the namespace. */
-using namespace radix51bit;
+
+static inline void
+ConditionalSwap(__m512i& a_512, __m512i& b_512, const __m512i swap_512)
+{
+    __m512i temp_512;
+
+    temp_512 = _mm512_xor_epi64(a_512, b_512);
+    temp_512 = _mm512_and_epi64(swap_512, temp_512);
+    a_512    = _mm512_xor_epi64(a_512, temp_512);
+    b_512    = _mm512_xor_epi64(b_512, temp_512);
+}
 
 /* Note: wrapper is with avx512 registers, when all arithmetic kernels are
  * added to avx512 typecast to Uint64* will be avoided. */
@@ -53,38 +66,32 @@ using namespace radix51bit;
  * 2^255 - 21 = 2^5 * (2^250-1) + 11
  */
 
-static void
-InverseX25519(__m512i* inverseZ, const __m512i* z)
+static inline void
+InverseX25519(Uint64 out[4], const Uint64 in[4])
 {
-    __m512i a, b, c, d;
-    Uint64 *pa, *pb, *pc, *pd, *pz;
 
-    pa = (Uint64*)&a;
-    pb = (Uint64*)&b;
-    pc = (Uint64*)&c;
-    pd = (Uint64*)&d;
-    pz = (Uint64*)z;
+    Uint64 a[4], b[4], c[4], d[4];
 
     // square and Multiply algorithm to compute z ^ (2^5 * (2^250-1) + 11)
 
-    SquareX25519Count(pa, pz, 1); // a = z^2
-    SquareX25519Count(pd, pa, 2); // d = z^8
-    MulX25519(pb, pd, pz);        // b = z^8*z     = z^9
-    MulX25519(pa, pb, pa);        // a = z^9*z^2   = z^11
-    SquareX25519Count(pd, pa, 1); // d = sqr(z^11) = z^22
+    SquareX25519Count(a, in, 1); // a = z^2
+    SquareX25519Count(d, a, 2);  // d = z^8
+    MulX25519(b, d, in);         // b = z^8*z     = z^9
+    MulX25519(a, b, a);          // a = z^9*z^2   = z^11
+    SquareX25519Count(d, a, 1);  // d = sqr(z^11) = z^22
 
     /*
      * b  = z^22 * z^9
      *    = z^31 = z ^(32-1)
      *    = z^ (2^5 - 1)
      */
-    MulX25519(pb, pd, pb);
+    MulX25519(b, d, b);
 
     /*
      * d = sqr5times(z^ (2^5 - 1))
      *   = z ^ (2^10 - 2^5)
      */
-    SquareX25519Count(pd, pb, 5);
+    SquareX25519Count(d, b, 5);
 
     /*
      * b = z ^ (2^10 - 2^5) * z^ (2^5 - 1)
@@ -92,36 +99,36 @@ InverseX25519(__m512i* inverseZ, const __m512i* z)
      *   = z ^ (2 ^10 - 1 )
      *   = z ^ (2 ^10 - 2^0 )
      */
-    MulX25519(pb, pd, pb);
+    MulX25519(b, d, b);
 
     /*
      * d = sqr10times(  z ^ (2^10 - 2^5) )
      *   = z ^ (2^20 - 2^10)
      */
-    SquareX25519Count(pd, pb, 10);
+    SquareX25519Count(d, b, 10);
 
     /*
      * c = z ^ (2^20 - 2^10) *  z ^ (2 ^10 - 2^0 )
      *   = z ^ (2^20 - 2^0)
      */
-    MulX25519(pc, pd, pb);
+    MulX25519(c, d, b);
 
     /*
      *  c = sqr20times( z ^ (2^20 - 2^10) )
      *    = z ^ (2^40 - 2^20)
      */
-    SquareX25519Count(pd, pc, 20);
-    MulX25519(pd, pd, pc);                /* d = z ^ (2^40 - 2^0)   */
-    SquareX25519Count(pd, pd, 10);        /* d = z ^ (2^50 - 2^10)  */
-    MulX25519(pb, pd, pb);                /* b = z ^ (2^50 - 2^0)   */
-    SquareX25519Count(pd, pb, 50);        /* d = z ^ (2^100 - 2^50) */
-    MulX25519(pc, pd, pb);                /* c = z ^ (2^100 - 2^0)  */
-    SquareX25519Count(pd, pc, 100);       /* d = z ^ (2^200 - 2^100)*/
-    MulX25519(pd, pd, pc);                /* d = z ^ (2^200 - 2^0)  */
-    SquareX25519Count(pd, pd, 50);        /* d = z ^ (2^250 - 2^50) */
-    MulX25519(pd, pd, pb);                /* d = z ^ (2^250 - 2^0)  */
-    SquareX25519Count(pd, pd, 5);         /* d = z ^ (2^255 - 2^5)  */
-    MulX25519((Uint64*)inverseZ, pd, pa); /* Inverse(z) = z ^ (2^255 - 21)   */
+    SquareX25519Count(d, c, 20);
+    MulX25519(d, d, c);            /* d = z ^ (2^40 - 2^0)   */
+    SquareX25519Count(d, d, 10);   /* d = z ^ (2^50 - 2^10)  */
+    MulX25519(b, d, b);            /* b = z ^ (2^50 - 2^0)   */
+    SquareX25519Count(d, b, 50);   /* d = z ^ (2^100 - 2^50) */
+    MulX25519(c, d, b);            /* c = z ^ (2^100 - 2^0)  */
+    SquareX25519Count(d, c, 100);  /* d = z ^ (2^200 - 2^100)*/
+    MulX25519(d, d, c);            /* d = z ^ (2^200 - 2^0)  */
+    SquareX25519Count(d, d, 50);   /* d = z ^ (2^250 - 2^50) */
+    MulX25519(d, d, b);            /* d = z ^ (2^250 - 2^0)  */
+    SquareX25519Count(d, d, 5);    /* d = z ^ (2^255 - 2^5)  */
+    MulX25519((Uint64*)out, d, a); /* Inverse(z) = z ^ (2^255 - 21)   */
 }
 
 static void
@@ -164,7 +171,7 @@ MontCore(__m512i*      x2, // output x2
     MulX25519((Uint64*)x2, (Uint64*)&a2, (Uint64*)&c2);
     SubX25519((Uint64*)&c2, (Uint64*)&a2, (Uint64*)&c2);
 
-    ScalarMulX25519((Uint64*)&t, (Uint64*)&c2, 121665);
+    ScalarMulX25519((Uint64*)&t, (Uint64*)&c2);
 
     SumX25519((Uint64*)&t, (Uint64*)&t, (Uint64*)&a2);
     MulX25519((Uint64*)z2, (Uint64*)&c2, (Uint64*)&t);
@@ -251,7 +258,7 @@ alcpScalarMulX25519(Uint8*       mypublic,
                     const Uint8* basepoint)
 {
     __m512i bp_512, x_512, z_512, zInverse_512, out_512;
-    RadixExpand(&bp_512, basepoint);
+    BytesToRadix((Uint64*)&bp_512, (Uint64*)basepoint);
 
     Uint8 clippedScalar[32];
 
@@ -263,11 +270,129 @@ alcpScalarMulX25519(Uint8*       mypublic,
 
     MontLadder(&x_512, &z_512, clippedScalar, bp_512);
 
-    InverseX25519(&zInverse_512, &z_512);
+    InverseX25519((Uint64*)&zInverse_512, (Uint64*)&z_512);
     MulX25519((Uint64*)&z_512, (Uint64*)&x_512, (Uint64*)&zInverse_512);
 
-    RadixContract((Uint8*)&out_512, (Uint64*)&z_512);
+    RadixToBytes((Uint64*)&out_512, (Uint64*)&z_512);
     alcp::utils::CopyBytes(mypublic, (const void*)&out_512, 32);
+}
+
+static inline void
+alcp_load_conditional(__m256i& a_256, __m256i& b_256, Uint64 iswap)
+{
+    const __m256i swap_256 = _mm256_set1_epi64x(-iswap);
+    __m256i       x_256;
+
+    x_256 = _mm256_xor_epi64(a_256, b_256);
+    x_256 = _mm256_and_si256(swap_256, x_256);
+    a_256 = _mm256_xor_epi64(a_256, x_256);
+}
+
+void
+AlcpLoadPrecomputed(__m256i&     x_256,
+                    __m256i&     y_256,
+                    __m256i&     z_256,
+                    const Uint64 point[3][4],
+                    Uint64       iswap)
+{
+
+    __m256i pt_x_256 =
+        _mm256_lddqu_si256(reinterpret_cast<const __m256i*>(point[0]));
+    __m256i pt_y_256 =
+        _mm256_lddqu_si256(reinterpret_cast<const __m256i*>(point[1]));
+    __m256i pt_z_256 =
+        _mm256_lddqu_si256(reinterpret_cast<const __m256i*>(point[2]));
+
+    alcp_load_conditional(x_256, pt_x_256, iswap);
+    alcp_load_conditional(y_256, pt_y_256, iswap);
+    alcp_load_conditional(z_256, pt_z_256, iswap);
+}
+
+static inline void
+FetchIntermediateMul(Int8 i, Int8 j, PrecomputedPoint& point)
+{
+
+    __m256i negative_point_x_256, negative_point_y_256, negative_point_z_256;
+
+    __m256i x_256 = { 1, 0, 0, 0 };
+    __m256i y_256 = { 1, 0, 0, 0 };
+    __m256i z_256 = { 0 };
+
+    const int abs_j = abs(j);
+
+    UNROLL_16
+    for (Uint8 z = 0; z < 16; z++) {
+        AlcpLoadPrecomputed(
+            x_256, y_256, z_256, &cPrecomputedTable[i][z][0], abs_j == z + 1);
+    }
+
+    negative_point_x_256 = y_256;
+    negative_point_y_256 = x_256;
+
+    Uint64 temp[4] = { 0 };
+    SubX25519((Uint64*)&negative_point_z_256, temp, (Uint64*)&z_256);
+
+    Uint64 iswap = ((Uint8)j >> 7);
+    alcp_load_conditional(x_256, negative_point_x_256, iswap);
+    alcp_load_conditional(y_256, negative_point_y_256, iswap);
+    alcp_load_conditional(z_256, negative_point_z_256, iswap);
+
+    _mm256_storeu_si256(reinterpret_cast<__m256i*>(point.m_x), x_256);
+    _mm256_storeu_si256(reinterpret_cast<__m256i*>(point.m_y), y_256);
+    _mm256_storeu_si256(reinterpret_cast<__m256i*>(point.m_z), z_256);
+}
+
+static inline void
+PointAddInEdward(AlcpEcPointExtended& result, const PrecomputedPoint& point)
+{
+    // a ← (y1 − x1) · (y2 − x2), b ← (y1 + x1) · (y2 + x2), c ← k t1 · t2,
+    // k <-2dconst, d ← 2z1 · z2, e ← b − a, f ← d − c, g ← d + c, h ← b + a, x3
+    // ← e · f, y3 ← g · h, t3 ← e · h, z3 ← f · g
+
+    Uint64 a[4], b[4], c[4], d[4], e[4], f[4], g[4];
+    SubX25519(a, result.y, result.x);
+    MulX25519(a, a, point.m_y);
+    SumX25519(b, result.y, result.x);
+    MulX25519(b, b, point.m_x);
+    MulX25519(c, result.t, point.m_z);
+    SumX25519(d, result.z, result.z);
+    SubX25519(e, b, a);
+    SumX25519(b, b, a);
+
+    SubX25519(f, d, c);
+    SumX25519(g, d, c);
+
+    MulX25519(result.x, e, f);
+    MulX25519(result.y, g, b);
+    MulX25519(result.z, f, g);
+    MulX25519(result.t, e, b);
+}
+
+static inline void
+CovertEdwardToMont(const AlcpEcPointExtended& result, Uint8* pPublicKey)
+{
+    Uint64 numerator[4], denominator[4], inverse_denominator[4];
+
+    SumX25519(numerator, result.z, result.y);
+    SubX25519(denominator, result.z, result.y);
+    InverseX25519(inverse_denominator, denominator);
+    MulX25519(numerator, numerator, inverse_denominator);
+    RadixToBytes(reinterpret_cast<Uint64*>(pPublicKey), numerator);
+}
+
+void
+AlcpScalarPubX25519(Int8* privKeyRadix32, Uint8* pPublicKey)
+{
+
+    AlcpEcPointExtended result;
+
+    PrecomputedPoint point;
+    UNROLL_52
+    for (int i = 51; i >= 0; i--) {
+        FetchIntermediateMul(i, privKeyRadix32[i], point);
+        PointAddInEdward(result, point);
+    }
+    CovertEdwardToMont(result, pPublicKey);
 }
 
 #if 0
