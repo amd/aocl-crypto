@@ -263,15 +263,6 @@ alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
                    const Uint8*              pIv);
 
 /**
- * @brief Allows caller to set padded bytes in the input.
- * @param pCipherHandle Session handle for encrypt/decrypt operation
- * @param len           Length of bytes which are padded
- * @return
- */
-alc_error_t
-alcp_cipher_set_pad_length(const alc_cipher_handle_p pCipherHandle, Uint64 len);
-
-/**
  * \brief Allows caller to set the Additonal Data for Tag Generation
  *
  * \param pCipherHandle Session handle for encrypt/decrypt operation

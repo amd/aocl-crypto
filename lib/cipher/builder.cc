@@ -99,19 +99,6 @@ __aes_wrapperSetIv(void* rCipher, Uint64 len, const Uint8* pIv)
 
 template<typename CIPHERMODE>
 static alc_error_t
-__aes_wrapperSetPadLen(void* rCipher, Uint64 len)
-{
-    Status e = StatusOk();
-
-    auto ap = static_cast<CIPHERMODE*>(rCipher);
-
-    e = ap->setPaddingLen(len);
-
-    return e.code();
-}
-
-template<typename CIPHERMODE>
-static alc_error_t
 __aes_wrapperGetTag(void* rCipher, Uint8* pTag, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
@@ -185,9 +172,8 @@ __build_aes(const alc_cipher_algo_info_t& aesInfo,
     } else if constexpr (std::is_same_v<CIPHERMODE, Xts>) {
         ctx.setIv = __aes_wrapperSetIv<Xts>;
     } else if constexpr (std::is_same_v<CIPHERMODE, CmacSiv>) {
-        ctx.setPadLength = __aes_wrapperSetPadLen<CmacSiv>;
-        ctx.setAad       = __aes_wrapperSetAad<CmacSiv>;
-        ctx.getTag       = __aes_wrapperGetTag<CmacSiv>;
+        ctx.setAad = __aes_wrapperSetAad<CmacSiv>;
+        ctx.getTag = __aes_wrapperGetTag<CmacSiv>;
     }
     ctx.finish = __aes_dtor<CIPHERMODE>;
 

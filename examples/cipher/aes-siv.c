@@ -43,7 +43,7 @@ alc_key_info_t             kinfo = {
 char*
 bytesToHexString(unsigned char* bytes, int length);
 
-void
+bool
 create_demo_session(const Uint8* key_cmac,
                     const Uint8* key_ctr,
                     const Uint32 key_len)
@@ -82,7 +82,7 @@ create_demo_session(const Uint8* key_cmac,
     if (alcp_is_error(err)) {
         printf("Error: not supported \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return false;
     }
     printf("supported succeeded\n");
     /*
@@ -97,12 +97,14 @@ create_demo_session(const Uint8* key_cmac,
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        free(handle.ch_context);
+        return false;
     }
     printf("request succeeded\n");
+    return true;
 }
 
-void
+bool
 encrypt_demo(const Uint8* plaintxt,
              const Uint32 len, /*  for both 'plaintxt' and 'ciphertxt' */
              Uint8*       ciphertxt,
@@ -118,28 +120,22 @@ encrypt_demo(const Uint8* plaintxt,
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
-    }
-    // IV is not needed for encrypt, but still should not be NullPtr
-    err = alcp_cipher_set_pad_length(&handle, 0);
-    if (alcp_is_error(err)) {
-        printf("Error: unable to encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        return;
+        return false;
     }
 
+    // IV is not needed for encrypt, but still should not be NullPtr
     err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return false;
     }
 
     err = alcp_cipher_get_tag(&handle, iv, 16);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return false;
     }
 
     alcp_cipher_finish(&handle);
@@ -147,9 +143,11 @@ encrypt_demo(const Uint8* plaintxt,
     free(handle.ch_context);
 
     printf("encrypt succeeded\n");
+
+    return true;
 }
 
-void
+bool
 decrypt_demo(const Uint8* ciphertxt,
              const Uint32 len, /* for both 'plaintxt' and 'ciphertxt' */
              Uint8*       plaintxt,
@@ -165,21 +163,14 @@ decrypt_demo(const Uint8* ciphertxt,
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
-    }
-
-    err = alcp_cipher_set_pad_length(&handle, 0);
-    if (alcp_is_error(err)) {
-        printf("Error: unable to encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        return;
+        return false;
     }
 
     err = alcp_cipher_decrypt(&handle, ciphertxt, plaintxt, len, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return false;
     }
 
     alcp_cipher_finish(&handle);
@@ -187,6 +178,8 @@ decrypt_demo(const Uint8* ciphertxt,
     free(handle.ch_context);
 
     printf("decrypt succeeded\n");
+
+    return true;
 }
 
 // static char* sample_plaintxt = "Hello World from AOCL Crypto !!!";
@@ -220,17 +213,29 @@ main(void)
 
     assert(sizeof(sample_plaintxt) < sizeof(sample_output));
 
-    create_demo_session(
-        sample_key_cmac, sample_key2_ctr, sizeof(sample_key_cmac) * 8);
+    if (!create_demo_session(
+            sample_key_cmac, sample_key2_ctr, sizeof(sample_key_cmac) * 8)) {
+        return -1; // Error condtion
+    }
 
-    encrypt_demo(
-        sample_plaintxt, size, sample_ciphertxt, iv_buff, aad, sizeof(aad));
+    if (!encrypt_demo(sample_plaintxt,
+                      size,
+                      sample_ciphertxt,
+                      iv_buff,
+                      aad,
+                      sizeof(aad))) {
+        return -1;
+    }
 
-    create_demo_session(
-        sample_key_cmac, sample_key2_ctr, sizeof(sample_key_cmac) * 8);
+    if (!create_demo_session(
+            sample_key_cmac, sample_key2_ctr, sizeof(sample_key_cmac) * 8)) {
+        return -1;
+    }
 
-    decrypt_demo(
-        sample_ciphertxt, size, sample_output, iv_buff, aad, sizeof(aad));
+    if (!decrypt_demo(
+            sample_ciphertxt, size, sample_output, iv_buff, aad, sizeof(aad))) {
+        return -1;
+    }
 
     printf("sample_output: %s\n", sample_output);
     /*

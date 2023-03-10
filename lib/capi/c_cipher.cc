@@ -218,20 +218,6 @@ alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
 }
 
 alc_error_t
-alcp_cipher_set_pad_length(const alc_cipher_handle_p pCipherHandle, Uint64 len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
-
-    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
-
-    err = ctx->setPadLength(ctx->m_cipher, len);
-
-    return err;
-}
-
-alc_error_t
 alcp_cipher_set_aad(const alc_cipher_handle_p pCipherHandle,
                     const Uint8*              pInput,
                     Uint64                    len)
