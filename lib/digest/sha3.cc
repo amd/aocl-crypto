@@ -82,10 +82,10 @@ class Sha3::Impl
     Uint32       m_idx        = 0;
 
     // buffer size to hold the chunk size to be processed
-    Uint8 m_buffer[MaxDigestBlockSizeBits / 8];
+    alignas(64) Uint8 m_buffer[MaxDigestBlockSizeBits / 8];
     // state matrix to represent the keccak 1600 bits representation of
     // intermediate hash
-    __attribute__((aligned(64))) Uint64 m_state[cDim][cDim];
+    alignas(64) Uint64 m_state[cDim][cDim];
     // flat representation of the state, used in absorbing the user message.
     Uint64* m_state_flat = &m_state[0][0];
     // buffer to copy intermediate hash value
@@ -162,7 +162,7 @@ Sha3::Impl::absorbChunk(Uint64* pMsgBuffer64)
 void
 Sha3::Impl::squeezeChunk()
 {
-    Uint64       hash_copied = 0;
+    Uint64 hash_copied = 0;
 
     static bool zen1_available = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
     static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
@@ -284,8 +284,8 @@ Sha3::Impl::copyHash(Uint8* pHash, Uint64 size) const
 alc_error_t
 Sha3::Impl::processChunk(const Uint8* pSrc, Uint64 len)
 {
-    Uint64       msg_size       = len;
-    Uint64*      p_msg_buffer64 = (Uint64*)pSrc;
+    Uint64  msg_size       = len;
+    Uint64* p_msg_buffer64 = (Uint64*)pSrc;
 
     // FIXME: Suggestion, in Zen1 this algorithm works and gives better
     // performance. I guess having similar code in avx2 arch will be better.
@@ -320,7 +320,7 @@ Sha3::Impl::update(const Uint8* pSrc, Uint64 inputSize)
     Uint64 to_process = std::min((inputSize + m_idx), m_chunk_size);
     if (to_process < m_chunk_size) {
         /* copy them to internal buffer and return */
-        utils::CopyBlock(&m_buffer[m_idx], pSrc, inputSize);
+        utils::CopyBytes(&m_buffer[m_idx], pSrc, inputSize);
         m_idx += inputSize;
         return err;
     }
@@ -334,7 +334,7 @@ Sha3::Impl::update(const Uint8* pSrc, Uint64 inputSize)
          * the remaining bytes of a chunk.
          */
         to_process = std::min(inputSize, m_chunk_size - idx);
-        utils::CopyBlock(&m_buffer[idx], pSrc, to_process);
+        utils::CopyBytes(&m_buffer[idx], pSrc, to_process);
 
         pSrc += to_process;
         inputSize -= to_process;
