@@ -112,6 +112,9 @@ namespace avx2 {
                                      const int           n_rounds);
     ALCP_API_EXPORT void load_and_left_shift_1(const Uint8* input,
                                                Uint8*       output);
+  
+     ALCP_API_EXPORT void update(const Uint8* plaintext, int plaintext_size,Uint8 storage_buffer[],
+                int &storage_buffer_offset,const Uint8 encrypt_keys[],Uint8 temp_enc_result[],Uint32 rounds);
 
 } // namespace avx2
 } // namespace alcp::mac

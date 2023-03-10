@@ -131,4 +131,94 @@ namespace alcp::mac { namespace avx2 {
         reg_128 k2_reg;
         subkey_derive_singlestep(k1_reg, rb, k2_reg, k2);
     }
+
+    void update(const Uint8* plaintext, int plaintext_size,Uint8 storage_buffer[],
+                int &storage_buffer_offset,const Uint8 encrypt_keys[],Uint8 temp_enc_result[],Uint32 rounds){
+          /*Combined Bytes to be Processed including any data remainining in
+         * storage buffer and data user has provided in the current update
+         * function call */
+        int total_bytes_to_be_processed =
+            storage_buffer_offset + plaintext_size;
+
+        /* To keep track of the total processed bytes combining data from
+         * storage buffer and current update function call */
+        int total_bytes_processed_so_far = 0;
+
+        // To keep track of the remaining number of total bytes to be
+        // processed combining storage buffer and plaintext buffer
+        int bytes_left_to_process =
+            total_bytes_to_be_processed - total_bytes_processed_so_far;
+
+        // To keep track of only the plaintext bytes processed so far
+        int plaintext_bytes_processed_so_far = 0;
+
+        /* Buffer contains data only for single processing. This block is copied
+           to temporary storage buffer so it can be processed either in finalize
+           or subsequent updates
+         */
+        if (total_bytes_to_be_processed <= 16) {
+            assert(plaintext_size <= 16);
+            utils::CopyBytes(storage_buffer + storage_buffer_offset,
+                             plaintext,
+                             plaintext_size);
+            storage_buffer_offset = storage_buffer_offset + plaintext_size;
+            return;
+        } 
+        // If total remaining bytes to be processed is less than or equal to
+        // 128 bits, break and copy the remaining data into temporary
+        // storage buffer
+        reg_128 temp_enc_result_reg;
+        temp_enc_result_reg.reg = _mm_setzero_si128();
+         int bytes_to_be_copied = 16 - storage_buffer_offset ;
+        while (bytes_left_to_process > 16) {
+            assert(bytes_to_be_copied >= 0);
+            // Copy some data from plaintext buffer into temporary storage
+            // buffer but only enough to perform one Cipher Operation, ie.
+            // 128 bits
+            if (bytes_to_be_copied > 0) {
+                utils::CopyBytes(storage_buffer + storage_buffer_offset,
+                                    plaintext
+                                        + plaintext_bytes_processed_so_far,
+                                    bytes_to_be_copied);
+                plaintext_bytes_processed_so_far += bytes_to_be_copied;
+                storage_buffer_offset += bytes_to_be_copied;
+                bytes_to_be_copied =0;
+
+            }
+            if(bytes_left_to_process==total_bytes_to_be_processed){
+                            temp_enc_result_reg.reg =
+            _mm_xor_si128(_mm_loadu_si128((__m128i*)temp_enc_result),
+                          _mm_loadu_si128((__m128i*)storage_buffer));
+            }
+            else{
+                 temp_enc_result_reg.reg =
+                _mm_xor_si128( temp_enc_result_reg.reg,
+                          _mm_loadu_si128((__m128i*)(plaintext
+                                        + plaintext_bytes_processed_so_far)));
+                plaintext_bytes_processed_so_far += 16;
+            }
+        // Temporary storage buffer is full. Process it.
+        alcp::cipher::aesni::AesEncrypt(
+            &temp_enc_result_reg.reg, (const __m128i*)encrypt_keys, rounds);
+
+
+
+            storage_buffer_offset = 0;
+
+            // 128 bits was processed
+            total_bytes_processed_so_far += 16;
+            // combined bytes still left to process
+            bytes_left_to_process =
+                total_bytes_to_be_processed - total_bytes_processed_so_far;
+
+
+
+        }
+    
+        utils::CopyBytes(storage_buffer + storage_buffer_offset,
+                         plaintext + plaintext_bytes_processed_so_far,
+                         bytes_left_to_process);
+        _mm_storeu_si128((__m128i*)temp_enc_result, temp_enc_result_reg.reg);
+        storage_buffer_offset += bytes_left_to_process;
+    }
 }} // namespace alcp::mac::avx2

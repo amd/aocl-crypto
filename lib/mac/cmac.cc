@@ -98,7 +98,7 @@ class Cmac::Impl : public cipher::Aes
 
     bool isSupported(const alc_cipher_info_t& cipherInfo) { return true; }
 
-    Status update(const Uint8* plaintext, int plaintext_size)
+    Status update(const Uint8 plaintext[], int plaintext_size)
     {
         Status status{ StatusOk() };
         if (key == nullptr || keylen == 0) {
@@ -108,69 +108,11 @@ class Cmac::Impl : public cipher::Aes
         if (plaintext_size == 0) {
             return StatusOk();
         }
+        avx2::update(plaintext,  plaintext_size, storage_buffer,
+               storage_buffer_offset, encrypt_keys,temp_enc_result,getRounds());
 
-        /*Combined Bytes to be Processed including any data remainining in
-         * storage buffer and data user has provided in the current update
-         * function call */
-        int total_bytes_to_be_processed =
-            storage_buffer_offset + plaintext_size;
 
-        /* To keep track of the total processed bytes combining data from
-         * storage buffer and current update function call */
-        int total_bytes_processed_so_far = 0;
-
-        // To keep track of the remaining number of total bytes to be
-        // processed combining storage buffer and plaintext buffer
-        int bytes_left_to_process =
-            total_bytes_to_be_processed - total_bytes_processed_so_far;
-
-        // To keep track of only the plaintext bytes processed so far
-        int plaintext_bytes_processed_so_far = 0;
-
-        /* Buffer contains data only for single processing. This block is copied
-           to temporary storage buffer so it can be processed either in finalize
-           or subsequent updates
-         */
-        if (total_bytes_to_be_processed <= 16) {
-            assert(plaintext_size <= 16);
-            utils::CopyBytes(storage_buffer + storage_buffer_offset,
-                             plaintext,
-                             plaintext_size);
-            storage_buffer_offset = storage_buffer_offset + plaintext_size;
-            return StatusOk();
-        } else {
-            // If total remaining bytes to be processed is less than or equal to
-            // 128 bits, break and copy the remaining data into temporary
-            // storage buffer
-            while (bytes_left_to_process > 16) {
-                int bytes_to_be_copied = 16 - storage_buffer_offset;
-                assert(bytes_to_be_copied >= 0);
-                // Copy some data from plaintext buffer into temporary storage
-                // buffer but only enough to perform one Cipher Operation, ie.
-                // 128 bits
-                if (bytes_to_be_copied > 0) {
-                    utils::CopyBytes(storage_buffer + storage_buffer_offset,
-                                     plaintext
-                                         + plaintext_bytes_processed_so_far,
-                                     bytes_to_be_copied);
-                    plaintext_bytes_processed_so_far += bytes_to_be_copied;
-                    storage_buffer_offset += bytes_to_be_copied;
-                }
-
-                // Temporary storage buffer is full. Process it.
-                processChunk();
-
-                // 128 bits was processed
-                total_bytes_processed_so_far += 16;
-                // combined bytes still left to process
-                bytes_left_to_process =
-                    total_bytes_to_be_processed - total_bytes_processed_so_far;
-            }
-        }
-        utils::CopyBytes(storage_buffer + storage_buffer_offset,
-                         plaintext + plaintext_bytes_processed_so_far,
-                         bytes_left_to_process);
-        storage_buffer_offset += bytes_left_to_process;
+      
         return StatusOk();
     }
 
