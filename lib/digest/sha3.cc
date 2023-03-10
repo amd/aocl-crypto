@@ -320,7 +320,7 @@ Sha3::Impl::update(const Uint8* pSrc, Uint64 inputSize)
     Uint64 to_process = std::min((inputSize + m_idx), m_chunk_size);
     if (to_process < m_chunk_size) {
         /* copy them to internal buffer and return */
-        std::memcpy(&m_buffer[m_idx], pSrc, inputSize);
+        utils::CopyBytes(&m_buffer[m_idx], pSrc, inputSize);
         m_idx += inputSize;
         return err;
     }
@@ -334,7 +334,7 @@ Sha3::Impl::update(const Uint8* pSrc, Uint64 inputSize)
          * the remaining bytes of a chunk.
          */
         to_process = std::min(inputSize, m_chunk_size - idx);
-        utils::CopyBlock(&m_buffer[idx], pSrc, to_process);
+        utils::CopyBytes(&m_buffer[idx], pSrc, to_process);
 
         pSrc += to_process;
         inputSize -= to_process;
