@@ -199,10 +199,10 @@ class alignas(16) Rijndael::Impl
     Uint8* m_enc_key = {}; /* encryption key: points to offset in 'm_key' */
     Uint8* m_dec_key = {}; /* decryption key: points to offset in 'm_key' */
 
-    Uint32    m_nrounds    = {}; /* no of rounds */
-    Uint32    m_ncolumns   = {}; /* no of columns in matrix */
-    Uint32    m_key_size   = {}; /* key size in bytes */
-    BlockSize m_block_size = {};
+    Uint32    m_nrounds    = 0; /* no of rounds */
+    Uint32    m_ncolumns   = 0; /* no of columns in matrix */
+    Uint32    m_key_size   = 0; /* key size in bytes */
+    BlockSize m_block_size = eBits0;
 
   public:
     ~Impl() = default;
