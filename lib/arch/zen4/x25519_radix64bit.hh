@@ -340,42 +340,42 @@ MulX25519(Uint64* c, const Uint64* a, const Uint64* b)
 }
 
 static inline void
-ScalarMulX25519(uint64_t* output, const uint64_t* in)
+ScalarMulX25519(Uint64* output, const Uint64* in)
 {
-    uint64_t rdx = 121665, rcx, rax;
-    uint64_t acc0, acc1, acc2, acc3;
-    acc0 = _mulx_u64(in[0], rdx, (unsigned long long*)&rcx);
-    acc1 = _mulx_u64(in[1], rdx, (unsigned long long*)&rax);
+    Uint64 mult = 121665, c, adder;
+    Uint64 a0, a1, a2, a3;
+    a0 = _mulx_u64(in[0], mult, (unsigned long long*)&c);
+    a1 = _mulx_u64(in[1], mult, (unsigned long long*)&adder);
 
-    uint8_t carry = _addcarry_u64(0, rcx, acc1, (unsigned long long*)&acc1);
+    Uint8 carry = _addcarry_u64(0, c, a1, (unsigned long long*)&a1);
 
-    acc2 = _mulx_u64(in[2], rdx, (unsigned long long*)&rcx);
+    a2 = _mulx_u64(in[2], mult, (unsigned long long*)&c);
 
-    carry = _addcarry_u64(carry, rax, acc2, (unsigned long long*)&acc2);
+    carry = _addcarry_u64(carry, adder, a2, (unsigned long long*)&a2);
 
-    acc3 = _mulx_u64(in[3], rdx, (unsigned long long*)&rax);
+    a3 = _mulx_u64(in[3], mult, (unsigned long long*)&adder);
 
-    carry = _addcarry_u64(carry, rcx, acc3, (unsigned long long*)&acc3);
+    carry = _addcarry_u64(carry, c, a3, (unsigned long long*)&a3);
 
-    rax += carry;
+    adder += carry;
 
-    rax = _mulx_u64(38, rax, (unsigned long long*)&rcx);
+    adder = _mulx_u64(38, adder, (unsigned long long*)&c);
 
-    carry = _addcarry_u64(0, rax, acc0, (unsigned long long*)&acc0);
-    carry = _addcarry_u64(carry, 0, acc1, (unsigned long long*)&acc1);
-    carry = _addcarry_u64(carry, 0, acc2, (unsigned long long*)&acc2);
-    carry = _addcarry_u64(carry, 0, acc3, (unsigned long long*)&acc3);
+    carry = _addcarry_u64(0, adder, a0, (unsigned long long*)&a0);
+    carry = _addcarry_u64(carry, 0, a1, (unsigned long long*)&a1);
+    carry = _addcarry_u64(carry, 0, a2, (unsigned long long*)&a2);
+    carry = _addcarry_u64(carry, 0, a3, (unsigned long long*)&a3);
 
-    rax = -carry;
+    adder = -carry;
 
-    rax = rax & 38;
+    adder = adder & 38;
 
-    acc0 += rax;
+    a0 += adder;
 
-    output[0] = acc0;
-    output[1] = acc1;
-    output[2] = acc2;
-    output[3] = acc3;
+    output[0] = a0;
+    output[1] = a1;
+    output[2] = a2;
+    output[3] = a3;
 }
 
 } // namespace radix64bit
