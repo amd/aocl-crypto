@@ -318,28 +318,28 @@ class HmacTestFixture
     : public ::testing::TestWithParam<std::pair<const std::string, param_tuple>>
 {
   public:
-    alc_digest_info_t     digest_info;
-    std::vector<Uint8>    cipher_text;
-    std::vector<Uint8>    expected_mac;
-    std::vector<Uint8>    key;
-    std::unique_ptr<Hmac> p_hmac = std::make_unique<Hmac>();
+    alc_digest_info_t     m_digest_info;
+    std::vector<Uint8>    m_cipher_text;
+    std::vector<Uint8>    m_expected_mac;
+    std::vector<Uint8>    m_key;
+    std::unique_ptr<Hmac> m_p_hmac = std::make_unique<Hmac>();
 
-    std::unique_ptr<Sha256> p_sha256;
-    std::unique_ptr<Sha224> p_sha224;
-    std::unique_ptr<Sha384> p_sha384;
-    std::unique_ptr<Sha512> p_sha512;
-    std::unique_ptr<Sha3>   p_sha3;
+    std::unique_ptr<Sha256> m_p_sha256;
+    std::unique_ptr<Sha224> m_p_sha224;
+    std::unique_ptr<Sha384> m_p_sha384;
+    std::unique_ptr<Sha512> m_p_sha512;
+    std::unique_ptr<Sha3>   m_p_sha3;
 
   public:
     void setUp(const ParamType& params)
     {
         auto tuple_values = params.second;
-        key               = parseHexStrToBin(std::get<0>(tuple_values));
-        cipher_text       = parseHexStrToBin(std::get<1>(tuple_values));
-        expected_mac      = parseHexStrToBin(std::get<2>(tuple_values));
+        m_key               = parseHexStrToBin(std::get<0>(tuple_values));
+        m_cipher_text       = parseHexStrToBin(std::get<1>(tuple_values));
+        m_expected_mac      = parseHexStrToBin(std::get<2>(tuple_values));
 #ifdef DEBUG
         std::cout << "Key Size is " << key.size() << std::endl;
-        std::cout << "CipherText size is " << cipher_text.size() << std::endl;
+        std::cout << "CipherText size is " << m_cipher_text.size() << std::endl;
 #endif
     }
     void setUpHash(std::string test_name)
@@ -352,43 +352,43 @@ class HmacTestFixture
 
         if (sha_type == "SHA2") {
             if (hash_name == "256") {
-                p_sha256 = std::make_unique<Sha256>();
-                p_hmac->setDigest(*p_sha256);
+                m_p_sha256 = std::make_unique<Sha256>();
+                m_p_hmac->setDigest(*m_p_sha256);
             } else if (hash_name == "224") {
-                p_sha224 = std::make_unique<Sha224>();
-                p_hmac->setDigest(*p_sha224);
+                m_p_sha224 = std::make_unique<Sha224>();
+                m_p_hmac->setDigest(*m_p_sha224);
             } else if (hash_name == "384") {
-                p_sha384 = std::make_unique<Sha384>();
-                p_hmac->setDigest(*p_sha384);
+                m_p_sha384 = std::make_unique<Sha384>();
+                m_p_hmac->setDigest(*m_p_sha384);
             } else if (hash_name == "512") {
-                p_sha512 = std::make_unique<Sha512>();
-                p_hmac->setDigest(*p_sha512);
+                m_p_sha512 = std::make_unique<Sha512>();
+                m_p_hmac->setDigest(*m_p_sha512);
             }
 
         } else if (sha_type == "SHA3") {
-            digest_info.dt_type = ALC_DIGEST_TYPE_SHA3;
+            m_digest_info.dt_type = ALC_DIGEST_TYPE_SHA3;
             if (hash_name == "224") {
-                digest_info.dt_len          = ALC_DIGEST_LEN_224;
-                digest_info.dt_mode.dm_sha3 = ALC_SHA3_224;
+                m_digest_info.dt_len          = ALC_DIGEST_LEN_224;
+                m_digest_info.dt_mode.dm_sha3 = ALC_SHA3_224;
             } else if (hash_name == "256") {
-                digest_info.dt_len          = ALC_DIGEST_LEN_256;
-                digest_info.dt_mode.dm_sha3 = ALC_SHA3_256;
+                m_digest_info.dt_len          = ALC_DIGEST_LEN_256;
+                m_digest_info.dt_mode.dm_sha3 = ALC_SHA3_256;
             } else if (hash_name == "384") {
-                digest_info.dt_len          = ALC_DIGEST_LEN_384;
-                digest_info.dt_mode.dm_sha3 = ALC_SHA3_384;
+                m_digest_info.dt_len          = ALC_DIGEST_LEN_384;
+                m_digest_info.dt_mode.dm_sha3 = ALC_SHA3_384;
             } else if (hash_name == "512") {
-                digest_info.dt_len          = ALC_DIGEST_LEN_512;
-                digest_info.dt_mode.dm_sha3 = ALC_SHA3_512;
+                m_digest_info.dt_len          = ALC_DIGEST_LEN_512;
+                m_digest_info.dt_mode.dm_sha3 = ALC_SHA3_512;
             }
-            p_sha3 = std::make_unique<Sha3>(digest_info);
-            p_hmac->setDigest(*p_sha3);
+            m_p_sha3 = std::make_unique<Sha3>(m_digest_info);
+            m_p_hmac->setDigest(*m_p_sha3);
         }
-        p_hmac->setKey(&key[0], key.size());
+        m_p_hmac->setKey(&m_key[0], m_key.size());
     }
     void TearDown() override
     {
-        if (p_hmac) {
-            p_hmac->finish();
+        if (m_p_hmac) {
+            m_p_hmac->finish();
         }
     }
 };
@@ -426,32 +426,32 @@ TEST(HmacReliabilityTest, NullUpdate)
 
 TEST_P(HmacTestFixture, HMAC_UPDATE)
 {
-    const auto params = GetParam();
-    setUp(params);
-    setUpHash(params.first);
+    const auto cParams = GetParam();
+    setUp(cParams);
+    setUpHash(cParams.first);
 
-    p_hmac->update(&cipher_text[0], cipher_text.size());
+    m_p_hmac->update(&m_cipher_text[0], m_cipher_text.size());
 
-    p_hmac->finalize(nullptr, 0);
+    m_p_hmac->finalize(nullptr, 0);
 
-    std::vector<Uint8> mac = std::vector<Uint8>(p_hmac->getHashSize(), 0);
-    p_hmac->copyHash(&mac.at(0), mac.size());
+    std::vector<Uint8> mac = std::vector<Uint8>(m_p_hmac->getHashSize(), 0);
+    m_p_hmac->copyHash(&mac.at(0), mac.size());
 
-    EXPECT_EQ(mac, expected_mac);
+    EXPECT_EQ(mac, m_expected_mac);
 }
 
 TEST_P(HmacTestFixture, HMAC_UPDATE_FINALISE)
 {
-    const auto params = GetParam();
+    const auto cParams = GetParam();
 
-    setUp(params);
-    setUpHash(params.first);
+    setUp(cParams);
+    setUpHash(cParams.first);
 
     auto block1 = std::vector<Uint8>(
-        cipher_text.begin(), cipher_text.begin() + cipher_text.size() / 2);
+        m_cipher_text.begin(), m_cipher_text.begin() + m_cipher_text.size() / 2);
 
     auto block2 = std::vector<Uint8>(
-        cipher_text.begin() + cipher_text.size() / 2, cipher_text.end());
+        m_cipher_text.begin() + m_cipher_text.size() / 2, m_cipher_text.end());
 
 #ifdef DEBUG
     std::cout << "block1                " << parseBytesToHexStr(block1)
@@ -460,14 +460,14 @@ TEST_P(HmacTestFixture, HMAC_UPDATE_FINALISE)
               << std::endl;
 #endif
 
-    p_hmac->update(&block1[0], block1.size());
-    p_hmac->update(&block2[0], block2.size());
-    p_hmac->finalize(nullptr, 0);
+    m_p_hmac->update(&block1[0], block1.size());
+    m_p_hmac->update(&block2[0], block2.size());
+    m_p_hmac->finalize(nullptr, 0);
 
-    std::vector<Uint8> mac = std::vector<Uint8>(p_hmac->getHashSize(), 0);
-    p_hmac->copyHash(&mac.at(0), mac.size());
+    std::vector<Uint8> mac = std::vector<Uint8>(m_p_hmac->getHashSize(), 0);
+    m_p_hmac->copyHash(&mac.at(0), mac.size());
 
-    EXPECT_EQ(mac, expected_mac);
+    EXPECT_EQ(mac, m_expected_mac);
 }
 
 TEST(HmacTest, Reset)

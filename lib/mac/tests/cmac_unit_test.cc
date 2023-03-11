@@ -85,8 +85,8 @@ class Avx2LeftShiftTest
             GTEST_SKIP() << "Avx2 is not Available";
         }
 
-        const auto params       = GetParam();
-        auto       tuple_values = params.second;
+        const auto cParams      = GetParam();
+        auto       tuple_values = cParams.second;
 
         tie(lshift_input, lshift_output) = tuple_values;
     }
@@ -224,20 +224,18 @@ class CMACFuncionalityTest
     : public ::testing::TestWithParam<std::pair<const std::string, param_tuple>>
 {
   public:
-    alc_key_info_t        kinfo;
-    alc_cipher_info_t     cinfo;
-    std::unique_ptr<Cmac> cmac;
-    std::vector<Uint8>    key, plain_text, expected_mac, mac;
+    std::unique_ptr<Cmac> m_cmac;
+    std::vector<Uint8>    m_key, m_plain_text, m_expected_mac, m_mac;
 
     void SetUp() override
     {
-        const auto params       = GetParam();
-        auto       tuple_values = params.second;
+        const auto cParams      = GetParam();
+        auto       tuple_values = cParams.second;
 
-        tie(key, plain_text, expected_mac) = tuple_values;
-        cmac                               = std::make_unique<Cmac>();
-        cmac->setKey(&key[0], static_cast<Uint64>(key.size()) * 8);
-        mac = std::vector<Uint8>(expected_mac.size());
+        tie(m_key, m_plain_text, m_expected_mac) = tuple_values;
+        m_cmac                               = std::make_unique<Cmac>();
+        m_cmac->setKey(&m_key[0], static_cast<Uint64>(m_key.size()) * 8);
+        m_mac = std::vector<Uint8>(m_expected_mac.size());
     }
 
     void splitToEqualHalves(std::vector<Uint8>& singleblock,
@@ -259,67 +257,67 @@ TEST_P(CMACFuncionalityTest, CMAC_SINGLE_UPDATE)
 {
 
     Status s{ StatusOk() };
-    s = cmac->update(&plain_text[0], plain_text.size());
+    s = m_cmac->update(&m_plain_text[0], m_plain_text.size());
     ASSERT_TRUE(s.ok());
-    s = cmac->finalize(nullptr, 0);
+    s = m_cmac->finalize(nullptr, 0);
     ASSERT_TRUE(s.ok());
 
-    s = cmac->copy(&mac[0], mac.size());
+    s = m_cmac->copy(&m_mac[0], m_mac.size());
     ASSERT_TRUE(s.ok());
-    EXPECT_EQ(mac, expected_mac);
+    EXPECT_EQ(m_mac, m_expected_mac);
 }
 
 TEST_P(CMACFuncionalityTest, CMAC_SINGLE_FINALIZE)
 {
     Status s{ StatusOk() };
-    s = cmac->finalize(&plain_text[0], plain_text.size());
+    s = m_cmac->finalize(&m_plain_text[0], m_plain_text.size());
     ASSERT_TRUE(s.ok());
-    s = cmac->copy(&mac[0], mac.size());
+    s = m_cmac->copy(&m_mac[0], m_mac.size());
     ASSERT_TRUE(s.ok());
-    EXPECT_EQ(mac, expected_mac);
+    EXPECT_EQ(m_mac, m_expected_mac);
 }
 
 TEST_P(CMACFuncionalityTest, CMAC_UPDATE_FINALIZE)
 {
 
     Status s{ StatusOk() };
-    s = cmac->finalize(&plain_text[0], plain_text.size());
+    s = m_cmac->finalize(&m_plain_text[0], m_plain_text.size());
     ASSERT_TRUE(s.ok());
-    s = cmac->copy(&mac[0], mac.size());
+    s = m_cmac->copy(&m_mac[0], m_mac.size());
     ASSERT_TRUE(s.ok());
-    EXPECT_EQ(mac, expected_mac);
+    EXPECT_EQ(m_mac, m_expected_mac);
 }
 
 TEST_P(CMACFuncionalityTest, CMAC_MULTIPLE_UPDATE)
 {
 
     std::vector<Uint8> block1, block2;
-    splitToEqualHalves(plain_text, block1, block2);
+    splitToEqualHalves(m_plain_text, block1, block2);
 
-    assert(block1.size() <= plain_text.size());
-    assert(block2.size() <= plain_text.size());
+    assert(block1.size() <= m_plain_text.size());
+    assert(block2.size() <= m_plain_text.size());
 
     Status s{ StatusOk() };
-    s = cmac->update(&block1[0], block1.size());
+    s = m_cmac->update(&block1[0], block1.size());
     ASSERT_TRUE(s.ok());
-    s = cmac->update(&block2[0], block2.size());
+    s = m_cmac->update(&block2[0], block2.size());
     ASSERT_TRUE(s.ok());
-    s = cmac->finalize(nullptr, 0);
+    s = m_cmac->finalize(nullptr, 0);
     ASSERT_TRUE(s.ok());
 
-    cmac->copy(&mac[0], mac.size());
-    EXPECT_EQ(mac, expected_mac);
+    m_cmac->copy(&m_mac[0], m_mac.size());
+    EXPECT_EQ(m_mac, m_expected_mac);
 }
 
 TEST_P(CMACFuncionalityTest, CMAC_RESET)
 {
-    cmac->update(&plain_text[0], plain_text.size());
-    cmac->reset();
-    cmac->update(&plain_text[0], plain_text.size());
-    cmac->finalize(nullptr, 0);
+    m_cmac->update(&m_plain_text[0], m_plain_text.size());
+    m_cmac->reset();
+    m_cmac->update(&m_plain_text[0], m_plain_text.size());
+    m_cmac->finalize(nullptr, 0);
 
-    cmac->copy(&mac[0], mac.size());
-    EXPECT_EQ(mac, expected_mac);
+    m_cmac->copy(&m_mac[0], m_mac.size());
+    EXPECT_EQ(m_mac, m_expected_mac);
 }
 
 TEST(CMACRobustnessTest, CMAC_CreateObject)

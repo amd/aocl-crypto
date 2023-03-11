@@ -41,22 +41,22 @@ class Cmac::Impl : public cipher::Aes
     // Implementation as per NIST Special Publication 800-38B: The CMAC Mode for
     // Authentication
   public:
-    std::vector<Uint8> k1 = std::vector<Uint8>(16);
-    std::vector<Uint8> k2 = std::vector<Uint8>(16);
+    Uint8 m_k1[16]{};
+    Uint8 m_k2[16]{};
 
     // Pointer to user supplied key
-    const Uint8* key    = nullptr;
-    Uint32       keylen = 0;
+    const Uint8* m_key    = nullptr;
+    Uint32       m_keylen = 0;
 
     // Pointer to expanded keys
-    const Uint8* encrypt_keys = nullptr;
+    const Uint8* m_encrypt_keys = nullptr;
 
     // Temporary Storage Buffer to keep the plaintext data for processing
-    Uint8 storage_buffer[16]{};
-    int   storage_buffer_offset = 0;
+    Uint8 m_storage_buffer[16]{};
+    int   m_storage_buffer_offset = 0;
 
     // Temporary Buffer to storage Encryption Result
-    Uint8 temp_enc_result[16]{};
+    Uint8 m_temp_enc_result[16]{};
 
     bool m_finalized = false;
 
@@ -66,33 +66,33 @@ class Cmac::Impl : public cipher::Aes
         setMode(ALC_AES_MODE_NONE);
     }
 
-    Status setKey(const Uint8* key, Uint64 len)
+    Status setKey(const Uint8 key[], Uint64 len)
     {
-        this->key    = key;
-        this->keylen = len;
+        this->m_key    = key;
+        this->m_keylen = len;
         Status s{ StatusOk() };
-        s = Aes::setKey(key, keylen);
+        s = Aes::setKey(key, m_keylen);
         if (!s.ok()) {
             return s;
         }
-        encrypt_keys = getEncryptKeys();
-        get_subkeys();
+        m_encrypt_keys = getEncryptKeys();
+        getSubkeys();
         s = reset();
         return s;
     }
     void finish()
     {
-        key          = nullptr;
-        this->keylen = 0;
-        encrypt_keys = nullptr;
+        m_key          = nullptr;
+        this->m_keylen = 0;
+        m_encrypt_keys = nullptr;
         reset();
     }
     Status reset()
     {
-        memset(temp_enc_result, 0, 16);
-        memset(storage_buffer, 0, 16);
-        storage_buffer_offset = 0;
-        m_finalized           = false;
+        memset(m_temp_enc_result, 0, 16);
+        memset(m_storage_buffer, 0, 16);
+        m_storage_buffer_offset = 0;
+        m_finalized             = false;
         return StatusOk();
     };
 
@@ -101,42 +101,45 @@ class Cmac::Impl : public cipher::Aes
     Status update(const Uint8 plaintext[], int plaintext_size)
     {
         Status status{ StatusOk() };
-        if (key == nullptr || keylen == 0) {
+        if (m_key == nullptr || m_keylen == 0) {
             return InvalidArgument("Key is Empty");
         }
         // No need to Process anything for empty block
         if (plaintext_size == 0) {
             return StatusOk();
         }
-        avx2::update(plaintext,  plaintext_size, storage_buffer,
-               storage_buffer_offset, encrypt_keys,temp_enc_result,getRounds());
+        avx2::update(plaintext,
+                     plaintext_size,
+                     m_storage_buffer,
+                     m_storage_buffer_offset,
+                     m_encrypt_keys,
+                     m_temp_enc_result,
+                     getRounds());
 
-
-      
         return StatusOk();
     }
 
-    Status finalize(const Uint8* plaintext, int plaintext_size)
+    Status finalize(const Uint8 plaintext[], int plaintext_size)
     {
 
-        if (key == nullptr || keylen == 0) {
+        if (m_key == nullptr || m_keylen == 0) {
             return InvalidArgument("Key is Empty");
         }
         if (plaintext_size != 0) {
             update(plaintext, plaintext_size);
         }
-        assert(storage_buffer_offset <= 16);
+        assert(m_storage_buffer_offset <= 16);
         reg_128 xor_result;
 
         // Check if storage_buffer is complete ie, 128 bits
-        if (storage_buffer_offset == 16) {
+        if (m_storage_buffer_offset == 16) {
             // Since the final block was complete, ie 128 bit len, xor storage
             // buffer with k1 before final block processing
             xor_result.reg =
-                _mm_xor_si128(_mm_loadu_si128((__m128i*)&k1[0]),
-                              _mm_loadu_si128((__m128i*)storage_buffer));
+                _mm_xor_si128(_mm_loadu_si128((__m128i*)&m_k1[0]),
+                              _mm_loadu_si128((__m128i*)m_storage_buffer));
 
-            _mm_storeu_si128((__m128i*)this->storage_buffer, xor_result.reg);
+            _mm_storeu_si128((__m128i*)this->m_storage_buffer, xor_result.reg);
         }
         // else: storage buffer is not complete. Pad it with 100000... to make
         // it complete
@@ -145,20 +148,20 @@ class Cmac::Impl : public cipher::Aes
              * Set the first bit of the first byte of the unfilled bytes in
              * storage buffer as 1 and the remaining as zero
              */
-            memset(storage_buffer + storage_buffer_offset, 0x80, 1);
-            storage_buffer_offset += 1;
-            memset(storage_buffer + storage_buffer_offset,
+            memset(m_storage_buffer + m_storage_buffer_offset, 0x80, 1);
+            m_storage_buffer_offset += 1;
+            memset(m_storage_buffer + m_storage_buffer_offset,
                    0x00,
-                   16 - storage_buffer_offset);
+                   16 - m_storage_buffer_offset);
 
             // Storage Buffer is filled with all 16 bytes
-            storage_buffer_offset = 16;
+            m_storage_buffer_offset = 16;
             // Since the Final Block was Incomplete xor the already padded
             // storage buffer with k2 before final block processing.
             xor_result.reg =
-                _mm_xor_si128(_mm_loadu_si128((__m128i*)&k2[0]),
-                              _mm_loadu_si128((__m128i*)storage_buffer));
-            _mm_storeu_si128((__m128i*)this->storage_buffer, xor_result.reg);
+                _mm_xor_si128(_mm_loadu_si128((__m128i*)&m_k2[0]),
+                              _mm_loadu_si128((__m128i*)m_storage_buffer));
+            _mm_storeu_si128((__m128i*)this->m_storage_buffer, xor_result.reg);
         }
         // Process the Final Block
         processChunk();
@@ -166,21 +169,21 @@ class Cmac::Impl : public cipher::Aes
         return StatusOk();
     }
 
-    Status copy(Uint8* buff, Uint32 size)
+    Status copy(Uint8 buff[], Uint32 size)
     {
         if (!m_finalized) {
             return InternalError("Cannot Copy CMAC without finalizing");
         } else {
-            utils::CopyBytes(buff, temp_enc_result, size);
+            utils::CopyBytes(buff, m_temp_enc_result, size);
         }
         return StatusOk();
     }
 
   private:
-    void get_subkeys()
+    void getSubkeys()
     {
         if (CpuId::cpuHasAvx2()) {
-            avx2::get_subkeys(k1, k2, encrypt_keys, getRounds());
+            avx2::get_subkeys(m_k1, m_k2, m_encrypt_keys, getRounds());
         }
     }
 
@@ -188,12 +191,14 @@ class Cmac::Impl : public cipher::Aes
     {
         //  Act like storage buffer is filled with 16 bytes and Perform
         //  operation
-        assert(storage_buffer_offset == 16);
+        assert(m_storage_buffer_offset == 16);
 
         if (CpuId::cpuHasAvx2()) {
-            avx2::processChunk(
-                temp_enc_result, storage_buffer, encrypt_keys, getRounds());
-            storage_buffer_offset = 0;
+            avx2::processChunk(m_temp_enc_result,
+                               m_storage_buffer,
+                               m_encrypt_keys,
+                               getRounds());
+            m_storage_buffer_offset = 0;
             return;
         }
     }
@@ -204,7 +209,7 @@ Cmac::Cmac()
 {}
 
 Status
-Cmac::update(const Uint8* pMsgBuf, Uint64 size)
+Cmac::update(const Uint8 pMsgBuf[], Uint64 size)
 {
     return m_pImpl->update(pMsgBuf, size);
 }
@@ -222,19 +227,19 @@ Cmac::reset()
 }
 
 Status
-Cmac::finalize(const Uint8* pMsgBuf, Uint64 size)
+Cmac::finalize(const Uint8 pMsgBuf[], Uint64 size)
 {
     return m_pImpl->finalize(pMsgBuf, size);
 }
 
 Status
-Cmac::copy(Uint8* buff, Uint32 size)
+Cmac::copy(Uint8 buff[], Uint32 size)
 {
     return m_pImpl->copy(buff, size);
 }
 
 Status
-Cmac::setKey(const Uint8* key, Uint64 len)
+Cmac::setKey(const Uint8 key[], Uint64 len)
 {
     return m_pImpl->setKey(key, len);
 }

@@ -97,7 +97,7 @@ class Hmac::Impl
         }
         Status status = StatusOk();
         if (buff != nullptr && size != 0) {
-            status = calculate_hash(m_pDigest, buff, size);
+            status = calculateHash(m_pDigest, buff, size);
         }
         return status;
     }
@@ -125,7 +125,7 @@ class Hmac::Impl
         }
         m_pDigest->reset();
 
-        status = calculate_hash(m_pDigest, m_pK0_xor_opad, m_k0_length);
+        status = calculateHash(m_pDigest, m_pK0_xor_opad, m_k0_length);
         if (!status.ok()) {
             return status;
         }
@@ -167,7 +167,7 @@ class Hmac::Impl
         Status status = StatusOk();
         m_pDigest->reset();
         status =
-            calculate_hash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
+            calculateHash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
 
         m_finalized = false;
         return status;
@@ -201,9 +201,9 @@ class Hmac::Impl
         if (!status.ok()) {
             return status;
         }
-        get_k0_xor_pad();
+        getK0XorPad();
         status =
-            calculate_hash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
+            calculateHash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
         if (!status.ok()) {
             return status;
         }
@@ -223,7 +223,7 @@ class Hmac::Impl
     }
 
   private:
-    void get_k0_xor_pad()
+    void getK0XorPad()
     {
         if (CpuId::cpuHasAvx2()) {
             avx2::get_k0_xor_opad(
@@ -298,7 +298,7 @@ class Hmac::Impl
         return status;
     }
 
-    Status calculate_hash(digest::Digest* p_digest,
+    Status calculateHash(digest::Digest* p_digest,
                           const Uint8*    input,
                           Uint64          len)
     {

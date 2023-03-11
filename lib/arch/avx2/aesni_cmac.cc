@@ -67,7 +67,7 @@ namespace alcp::mac { namespace avx2 {
     void processChunk(Uint8*       temp_enc_result,
                       Uint8*       storage_buffer,
                       const Uint8* encrypt_keys,
-                      const int    n_rounds)
+                      const int    cNRounds)
     {
 
         reg_128 temp_enc_result_reg;
@@ -75,14 +75,14 @@ namespace alcp::mac { namespace avx2 {
             _mm_xor_si128(_mm_loadu_si128((__m128i*)temp_enc_result),
                           _mm_loadu_si128((__m128i*)storage_buffer));
         alcp::cipher::aesni::AesEncrypt(
-            &temp_enc_result_reg.reg, (const __m128i*)encrypt_keys, n_rounds);
+            &temp_enc_result_reg.reg, (const __m128i*)encrypt_keys, cNRounds);
         _mm_storeu_si128((__m128i*)temp_enc_result, temp_enc_result_reg.reg);
     }
 
-    inline void subkey_derive_singlestep(reg_128&            test_reg,
-                                         reg_128&            rb,
-                                         reg_128&            key_reg,
-                                         std::vector<Uint8>& key)
+    inline void subkey_derive_singlestep(reg_128& test_reg,
+                                         reg_128& rb,
+                                         reg_128& key_reg,
+                                         Uint8    key[])
     {
         reg_128 left_shift_reg;
         left_shift_1(test_reg, left_shift_reg);
@@ -101,10 +101,10 @@ namespace alcp::mac { namespace avx2 {
                          temp_storage_reg.reg);
     }
 
-    void get_subkeys(std::vector<Uint8>& k1,
-                     std::vector<Uint8>& k2,
-                     const Uint8*        encrypt_keys,
-                     const int           n_rounds)
+    void get_subkeys(Uint8        k1[],
+                     Uint8        k2[],
+                     const Uint8* encrypt_keys,
+                     const int    cNRounds)
     {
 
         /*Subkey Derivation Algorithm
@@ -115,26 +115,32 @@ namespace alcp::mac { namespace avx2 {
         reg_128 rb;
         rb.reg = _mm_set_epi16(0, 0, 0, 0, 0, 0, 0, 0x87);
 
-        reg_128 L_reg;
-        L_reg.reg =
+        reg_128 l_reg;
+        l_reg.reg =
             _mm_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
         // Let L = CIPHK(0b)
         alcp::cipher::aesni::AesEncrypt(
-            &L_reg.reg, (const __m128i*)encrypt_keys, n_rounds);
+            &l_reg.reg, (const __m128i*)encrypt_keys, cNRounds);
 
         // Shuffling is necessary since _mm_slli_epi64 left shifts data as word
         // size integers
-        shuffle_for_shifting(L_reg, L_reg);
+        shuffle_for_shifting(l_reg, l_reg);
         reg_128 k1_reg;
-        subkey_derive_singlestep(L_reg, rb, k1_reg, k1);
+        subkey_derive_singlestep(l_reg, rb, k1_reg, k1);
         reg_128 k2_reg;
         subkey_derive_singlestep(k1_reg, rb, k2_reg, k2);
     }
 
-    void update(const Uint8* plaintext, int plaintext_size,Uint8 storage_buffer[],
-                int &storage_buffer_offset,const Uint8 encrypt_keys[],Uint8 temp_enc_result[],Uint32 rounds){
-          /*Combined Bytes to be Processed including any data remainining in
+    void update(const Uint8 plaintext[],
+                int         plaintext_size,
+                Uint8       storage_buffer[],
+                int&        storage_buffer_offset,
+                const Uint8 encrypt_keys[],
+                Uint8       temp_enc_result[],
+                Uint32      rounds)
+    {
+        /*Combined Bytes to be Processed including any data remainining in
          * storage buffer and data user has provided in the current update
          * function call */
         int total_bytes_to_be_processed =
@@ -163,13 +169,13 @@ namespace alcp::mac { namespace avx2 {
                              plaintext_size);
             storage_buffer_offset = storage_buffer_offset + plaintext_size;
             return;
-        } 
+        }
         // If total remaining bytes to be processed is less than or equal to
         // 128 bits, break and copy the remaining data into temporary
         // storage buffer
         reg_128 temp_enc_result_reg;
         temp_enc_result_reg.reg = _mm_setzero_si128();
-         int bytes_to_be_copied = 16 - storage_buffer_offset ;
+        int bytes_to_be_copied  = 16 - storage_buffer_offset;
         while (bytes_left_to_process > 16) {
             assert(bytes_to_be_copied >= 0);
             // Copy some data from plaintext buffer into temporary storage
@@ -177,31 +183,27 @@ namespace alcp::mac { namespace avx2 {
             // 128 bits
             if (bytes_to_be_copied > 0) {
                 utils::CopyBytes(storage_buffer + storage_buffer_offset,
-                                    plaintext
-                                        + plaintext_bytes_processed_so_far,
-                                    bytes_to_be_copied);
+                                 plaintext + plaintext_bytes_processed_so_far,
+                                 bytes_to_be_copied);
                 plaintext_bytes_processed_so_far += bytes_to_be_copied;
                 storage_buffer_offset += bytes_to_be_copied;
-                bytes_to_be_copied =0;
-
+                bytes_to_be_copied = 0;
             }
-            if(bytes_left_to_process==total_bytes_to_be_processed){
-                            temp_enc_result_reg.reg =
-            _mm_xor_si128(_mm_loadu_si128((__m128i*)temp_enc_result),
-                          _mm_loadu_si128((__m128i*)storage_buffer));
-            }
-            else{
-                 temp_enc_result_reg.reg =
-                _mm_xor_si128( temp_enc_result_reg.reg,
-                          _mm_loadu_si128((__m128i*)(plaintext
-                                        + plaintext_bytes_processed_so_far)));
+            if (bytes_left_to_process == total_bytes_to_be_processed) {
+                temp_enc_result_reg.reg =
+                    _mm_xor_si128(_mm_loadu_si128((__m128i*)temp_enc_result),
+                                  _mm_loadu_si128((__m128i*)storage_buffer));
+            } else {
+                temp_enc_result_reg.reg = _mm_xor_si128(
+                    temp_enc_result_reg.reg,
+                    _mm_loadu_si128(
+                        (__m128i*)(plaintext
+                                   + plaintext_bytes_processed_so_far)));
                 plaintext_bytes_processed_so_far += 16;
             }
-        // Temporary storage buffer is full. Process it.
-        alcp::cipher::aesni::AesEncrypt(
-            &temp_enc_result_reg.reg, (const __m128i*)encrypt_keys, rounds);
-
-
+            // Temporary storage buffer is full. Process it.
+            alcp::cipher::aesni::AesEncrypt(
+                &temp_enc_result_reg.reg, (const __m128i*)encrypt_keys, rounds);
 
             storage_buffer_offset = 0;
 
@@ -210,11 +212,8 @@ namespace alcp::mac { namespace avx2 {
             // combined bytes still left to process
             bytes_left_to_process =
                 total_bytes_to_be_processed - total_bytes_processed_so_far;
-
-
-
         }
-    
+
         utils::CopyBytes(storage_buffer + storage_buffer_offset,
                          plaintext + plaintext_bytes_processed_so_far,
                          bytes_left_to_process);

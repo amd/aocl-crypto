@@ -36,7 +36,7 @@ namespace alcp::mac {
 class CmacBuilder
 {
   public:
-    static Status Build(const alc_mac_info_t& macInfo,
+    static Status build(const alc_mac_info_t& macInfo,
                         const alc_key_info_t& keyInfo,
                         Context&              ctx);
 };
@@ -45,55 +45,55 @@ static Status
 __cmac_wrapperUpdate(void* cmac, const Uint8* buff, Uint64 size)
 {
 
-    auto ap = static_cast<Cmac*>(cmac);
-    return ap->update(buff, size);
+    auto p_cmac = static_cast<Cmac*>(cmac);
+    return p_cmac->update(buff, size);
 }
 
 static Status
 __cmac_wrapperFinalize(void* cmac, const Uint8* buff, Uint64 size)
 {
-    auto ap = static_cast<Cmac*>(cmac);
-    return ap->finalize(buff, size);
+    auto p_cmac = static_cast<Cmac*>(cmac);
+    return p_cmac->finalize(buff, size);
 }
 
 static Status
 __cmac_wrapperCopy(void* cmac, Uint8* buff, Uint64 size)
 {
-    auto ap = static_cast<Cmac*>(cmac);
-    return ap->copy(buff, size);
+    auto p_cmac = static_cast<Cmac*>(cmac);
+    return p_cmac->copy(buff, size);
 }
 
 static void
 __cmac_wrapperFinish(void* cmac, void* digest)
 {
-    auto ap = static_cast<Cmac*>(cmac);
-    ap->finish();
-    delete ap;
+    auto p_cmac = static_cast<Cmac*>(cmac);
+    p_cmac->finish();
+    delete p_cmac;
 }
 
 static Status
 __cmac_wrapperReset(void* cmac, void* digest)
 {
-    auto ap = static_cast<Cmac*>(cmac);
-    return ap->reset();
+    auto p_cmac = static_cast<Cmac*>(cmac);
+    return p_cmac->reset();
 }
 
 static Status
 __build_cmac(const alc_cipher_info_t& cipherInfo,
-             const alc_key_info_t     kinfo,
+             const alc_key_info_t     cKinfo,
              Context&                 ctx)
 {
     Status status = StatusOk();
-    auto   algo   = new Cmac();
+    auto   p_algo = new Cmac();
 
-    auto key = kinfo.key;
-    auto len = kinfo.len;
-    algo->setKey(key, len);
-    if (algo == nullptr) {
+    auto p_key = cKinfo.key;
+    auto len = cKinfo.len;
+    p_algo->setKey(p_key, len);
+    if (p_algo == nullptr) {
         // FIXME: Update proper Out of Memory Status
         return status;
     }
-    ctx.m_mac = static_cast<void*>(algo);
+    ctx.m_mac = static_cast<void*>(p_algo);
 
     ctx.update   = __cmac_wrapperUpdate;
     ctx.finalize = __cmac_wrapperFinalize;
@@ -104,7 +104,7 @@ __build_cmac(const alc_cipher_info_t& cipherInfo,
     return status;
 }
 Status
-CmacBuilder::Build(const alc_mac_info_t& macInfo,
+CmacBuilder::build(const alc_mac_info_t& macInfo,
                    const alc_key_info_t& keyInfo,
                    Context&              ctx)
 {

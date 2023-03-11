@@ -33,16 +33,16 @@
 namespace alcp::mac {
 
 Status
-MacBuilder::Build(const alc_mac_info_t& macInfo, Context& ctx)
+MacBuilder::build(const alc_mac_info_t& macInfo, Context& ctx)
 {
     using namespace status;
     Status status = StatusOk();
     switch (macInfo.mi_type) {
         case ALC_MAC_HMAC:
-            status = HmacBuilder::Build(macInfo, macInfo.mi_keyinfo, ctx);
+            status = HmacBuilder::build(macInfo, macInfo.mi_keyinfo, ctx);
             break;
         case ALC_MAC_CMAC:
-            status = CmacBuilder::Build(macInfo, macInfo.mi_keyinfo, ctx);
+            status = CmacBuilder::build(macInfo, macInfo.mi_keyinfo, ctx);
             break;
         default:
             status.update(InvalidArgument("Unknown MAC Type"));

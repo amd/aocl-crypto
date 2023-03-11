@@ -64,7 +64,7 @@ validate_keys(const alc_key_info_t& rKeyInfo)
 class HmacBuilder
 {
   public:
-    static Status Build(const alc_mac_info_t& macInfo,
+    static Status build(const alc_mac_info_t& macInfo,
                         const alc_key_info_t& keyInfo,
                         Context&              ctx);
 };
@@ -129,11 +129,11 @@ __build_hmac(const alc_mac_info_t& macInfo, Context& ctx)
         // TODO: Update proper Out of Memory Status
         return status;
     }
-    auto key    = macInfo.mi_keyinfo.key;
+    auto p_key  = macInfo.mi_keyinfo.key;
     auto keylen = macInfo.mi_keyinfo.len;
     auto algo   = new MACALGORITHM();
     algo->setDigest(*digest);
-    algo->setKey(key, keylen);
+    algo->setKey(p_key, keylen);
     if (algo == nullptr) {
         // TODO: Update proper Out of Memory Status
         return status;
@@ -161,21 +161,21 @@ __build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
         return status;
     }
     // FIXME: Use Placement New Operator for memory allocation
-    auto sha3 = new digest::Sha3(macInfo.mi_algoinfo.hmac.hmac_digest);
-    if (sha3 == nullptr) {
+    auto p_sha3 = new digest::Sha3(macInfo.mi_algoinfo.hmac.hmac_digest);
+    if (p_sha3 == nullptr) {
         return InternalError("Unable To Allocate Memory for Digest Object");
     }
-    auto key    = macInfo.mi_keyinfo.key;
+    auto p_key  = macInfo.mi_keyinfo.key;
     auto keylen = macInfo.mi_keyinfo.len;
     // FIXME: Use placement new operator for memory allocation
     auto algo = new MACALGORITHM();
-    algo->setDigest(*sha3);
-    algo->setKey(key, keylen);
+    algo->setDigest(*p_sha3);
+    algo->setKey(p_key, keylen);
     if (algo == nullptr) {
         return InternalError("Unable to Allocate Memory for MAC Object");
     }
     ctx.m_mac    = static_cast<void*>(algo);
-    ctx.m_digest = static_cast<void*>(sha3);
+    ctx.m_digest = static_cast<void*>(p_sha3);
 
     ctx.update   = __hmac_wrapperUpdate<MACALGORITHM>;
     ctx.finalize = __hmac_wrapperFinalize<MACALGORITHM>;
@@ -186,7 +186,7 @@ __build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
     return status;
 }
 Status
-HmacBuilder::Build(const alc_mac_info_t& macInfo,
+HmacBuilder::build(const alc_mac_info_t& macInfo,
                    const alc_key_info_t& keyInfo,
                    Context&              ctx)
 {

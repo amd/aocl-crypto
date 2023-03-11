@@ -56,8 +56,8 @@ class Cmac final : public Mac
      * @param pMsgBuf   Plaintext Message Buffer bytes to be updated
      * @param size      Size of the Plaintext Message Buffer in bytes
      */
-    ALCP_API_EXPORT alcp::base::Status update(const Uint8* pMsgBuf,
-                                              Uint64       size) override;
+    ALCP_API_EXPORT Status update(const Uint8 pMsgBuf[],
+                                              Uint64      size) override;
 
     /**
      * @brief Update CMAC Key
@@ -65,7 +65,7 @@ class Cmac final : public Mac
      * @param key   pointer to CMAC Key to be used
      * @param len   Length of the key in bits
      */
-    ALCP_API_EXPORT Status setKey(const Uint8* key, Uint64 len);
+    ALCP_API_EXPORT Status setKey(const Uint8 key[], Uint64 len);
 
     /**
      * @brief Finish CMAC. Other calls are not valid after finish
@@ -83,7 +83,8 @@ class Cmac final : public Mac
      * @param pMsgBuf   Plaintext Message Buffer bytes remaining to be updated
      * @param size      Size of the Plaintext Message Buffer in bytes
      */
-    ALCP_API_EXPORT Status finalize(const Uint8* pMsgBuf, Uint64 size) override;
+    ALCP_API_EXPORT Status finalize(const Uint8 pMsgBuf[],
+                                    Uint64      size) override;
     /**
      * @brief Copy MAC to memory pointer by buff . Should be called only after
      * Mac has been Finalized.
@@ -91,7 +92,7 @@ class Cmac final : public Mac
      * @param buff      Output Buffer to which Mac will be copied
      * @param size      Size of the buffer in bytes.
      */
-    ALCP_API_EXPORT Status copy(Uint8* buff, Uint32 size);
+    ALCP_API_EXPORT Status copy(Uint8 buff[], Uint32 size);
 
   private:
     class Impl;
@@ -101,20 +102,25 @@ class Cmac final : public Mac
 };
 
 namespace avx2 {
-    ALCP_API_EXPORT void processChunk(Uint8*       temp_enc_result,
-                                      Uint8*       storage_buffer,
-                                      const Uint8* encrypt_keys,
-                                      const int    n_rounds);
+    ALCP_API_EXPORT void processChunk(Uint8       temp_enc_result[],
+                                      Uint8       storage_buffer[],
+                                      const Uint8 encrypt_keys[],
+                                      const int   cNRounds);
 
-    ALCP_API_EXPORT void get_subkeys(std::vector<Uint8>& k1,
-                                     std::vector<Uint8>& k2,
-                                     const Uint8*        encrypt_keys,
-                                     const int           n_rounds);
-    ALCP_API_EXPORT void load_and_left_shift_1(const Uint8* input,
-                                               Uint8*       output);
-  
-     ALCP_API_EXPORT void update(const Uint8* plaintext, int plaintext_size,Uint8 storage_buffer[],
-                int &storage_buffer_offset,const Uint8 encrypt_keys[],Uint8 temp_enc_result[],Uint32 rounds);
+    ALCP_API_EXPORT void get_subkeys(Uint8       k1[],
+                                     Uint8       k2[],
+                                     const Uint8 encrypt_keys[],
+                                     const int   cNRounds);
+    ALCP_API_EXPORT void load_and_left_shift_1(const Uint8 input[],
+                                               Uint8       output[]);
+
+    ALCP_API_EXPORT void update(const Uint8 plaintext[],
+                                int         plaintext_size,
+                                Uint8       storage_buffer[],
+                                int&        storage_buffer_offset,
+                                const Uint8 encrypt_keys[],
+                                Uint8       temp_enc_result[],
+                                Uint32      rounds);
 
 } // namespace avx2
 } // namespace alcp::mac

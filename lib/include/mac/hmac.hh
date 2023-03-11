@@ -35,13 +35,6 @@
 
 #include <immintrin.h>
 #include <memory>
-// To store the class validity status to be used as gatekeeper for HMAC
-// functions
-enum hmac_state_t
-{
-    VALID,
-    INVALID
-};
 
 namespace alcp::mac {
 class ALCP_API_EXPORT Hmac final : public Mac
