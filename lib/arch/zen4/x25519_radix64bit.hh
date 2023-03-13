@@ -31,6 +31,7 @@
 #include <immintrin.h>
 
 #include "alcp/types.hh"
+#include "config.h"
 
 namespace radix64bit {
 using namespace alcp;
@@ -149,6 +150,132 @@ SubX25519(Uint64* c, const Uint64* a, const Uint64* b)
     c[3] = a3;
 }
 
+#if !ALCP_DISABLE_ASSEMBLY
+// convert to a ->in1 and b - > in2
+static inline void
+SquareX25519Count(Uint64 out[4], const Uint64 a[4], Uint64 count)
+{
+
+    Uint64 temp[4];
+    temp[0] = a[0];
+    temp[1] = a[1];
+    temp[2] = a[2];
+    temp[3] = a[3];
+
+    for (Uint64 i = 0; i < count; i++) {
+        asm("push   %%rax;"
+            "push   %%rbx;"
+            "push   %%rcx;"
+            "push   %%rdx;"
+            "push   %%rsi;"
+            "push   %%rdi;"
+            "push   %%rbp;"
+            "push	%%r8;"
+            "push	%%r9;"
+            "push	%%r10;"
+            "push	%%r11;"
+            "push	%%r12;"
+            "push	%%r13;"
+            "push	%%r14;"
+            "push	%%r15;"
+
+            "xor	%%rdi,%%rdi;"
+            "lea	-8*2(%%rsp),%%rsp;"
+            "mov	8*0(%%rax),%%rdx;"
+            "mov	8*1(%%rax),%%rcx;"
+            "mov	8*2(%%rax),%%rbp;"
+            "mov	8*3(%%rax),%%rax;"
+            "mulx	%%rdx,%%r8,%%r15;"
+            "mulx	%%rcx,%%r9,%%rsi;"
+            "mulx	%%rbp,%%r10,%%rbx;"
+            "adcx	%%rsi,%%r10;"
+            "mulx	%%rax,%%r11,%%r12;"
+            "mov	%%rcx,%%rdx;"
+            "adcx	%%rbx,%%r11;"
+            "adcx	%%rdi,%%r12;"
+            "mulx	%%rbp,%%rsi,%%rbx;"
+            "adox	%%rsi,%%r11;"
+            "adcx	%%rbx,%%r12;"
+            "mulx	%%rax,%%rsi,%%r13;"
+            "mov	%%rbp,%%rdx;"
+            "adox	%%rsi,%%r12;"
+            "adcx	%%rdi,%%r13;"
+            "mulx	%%rax,%%rsi,%%r14;"
+            "mov	%%rcx,%%rdx;"
+            "adox	%%rsi,%%r13;"
+            "adcx	%%rdi,%%r14;"
+            "adox	%%rdi,%%r14;"
+            "adcx	%%r9,%%r9;"
+            "adox	%%r15,%%r9;"
+            "adcx	%%r10,%%r10;"
+            "mulx	%%rdx,%%rsi,%%rbx;"
+            "mov	%%rbp,%%rdx;"
+            "adcx	%%r11,%%r11;"
+            "adox	%%rsi,%%r10;"
+            "adcx	%%r12,%%r12;"
+            "adox	%%rbx,%%r11;"
+            "mulx	%%rdx,%%rsi,%%rbx;"
+            "mov	%%rax,%%rdx;"
+            "adcx	%%r13,%%r13;"
+            "adox	%%rsi,%%r12;"
+            "adcx	%%r14,%%r14;"
+            "adox	%%rbx,%%r13;"
+            "mulx	%%rdx,%%rsi,%%r15;"
+            "mov	$38,%%edx;"
+            "adox	%%rsi,%%r14;"
+            "adcx	%%rdi,%%r15;"
+            "adox	%%rdi,%%r15;"
+            "mulx	%%r12,%%rsi,%%rbx;"
+            "adcx	%%rsi,%%r8;"
+            "adox	%%rbx,%%r9;"
+            "mulx	%%r13,%%rsi,%%rbx;"
+            "adcx	%%rsi,%%r9;"
+            "adox	%%rbx,%%r10;"
+            "mulx	%%r14,%%rsi,%%rbx;"
+            "adcx	%%rsi,%%r10;"
+            "adox	%%rbx,%%r11;"
+            "mulx	%%r15,%%rsi,%%r12;"
+            "adcx	%%rsi,%%r11;"
+            "adox	%%rdi,%%r12;"
+            "adcx	%%rdi,%%r12;"
+            "mov	8*10(%%rsp),%%rbp;"
+            "mov	8*15(%%rsp),%%rbx;"
+            "imulq	%%rdx,%%r12;"
+            "add	%%r12,%%r8;"
+            "adc	$0,%%r9;"
+            "adc	$0,%%r10;"
+            "adc	$0,%%r11;"
+            "sbb	%%rsi,%%rsi;"
+            "and	$38,%%rsi;"
+            "add	%%rsi,%%r8;"
+            "mov	%%r8,8*0(%1);"
+            "mov	%%r9,8*1(%1);"
+            "mov	%%r10,8*2(%1);"
+            "mov	%%r11,8*3(%1);"
+            "mov	8*2(%%rsp),%%r15;"
+            "mov	8*3(%%rsp),%%r14;"
+            "mov	8*4(%%rsp),%%r13;"
+            "mov	8*5(%%rsp),%%r12;"
+            "mov	8*6(%%rsp),%%r11;"
+            "mov	8*7(%%rsp),%%r10;"
+            "mov	8*8(%%rsp),%%r9;"
+            "mov	8*9(%%rsp),%%r8;"
+            "mov	8*11(%%rsp),%%rdi;"
+            "mov	8*12(%%rsp),%%rsi;"
+            "mov	8*13(%%rsp),%%rdx;"
+            "mov	8*14(%%rsp),%%rcx;"
+            "mov	8*16(%%rsp),%%rax;"
+            "lea    8*17(%%rsp),%%rsp;"
+            :
+            : "a"(temp), "b"(out)
+            : "memory");
+        temp[0] = out[0];
+        temp[1] = out[1];
+        temp[2] = out[2];
+        temp[3] = out[3];
+    }
+}
+#else
 inline void
 SquareX25519Count(Uint64* output, const Uint64* a, Uint64 count)
 {
@@ -230,7 +357,135 @@ SquareX25519Count(Uint64* output, const Uint64* a, Uint64 count)
     output[2] = r2;
     output[3] = r3;
 }
+#endif
 
+#if !ALCP_DISABLE_ASSEMBLY
+static void // convert to a ->in1 and b - > in2
+MulX25519(Uint64 out[4], const Uint64 a[4], const Uint64 b[4])
+{
+    asm("push   %%rax;"
+        "push   %%rbx;"
+        "push   %%rcx;"
+        "push   %%rdx;"
+        "push   %%rsi;"
+        "push   %%rdi;"
+        "push   %%rbp;"
+        "push	%%r8;"
+        "push	%%r9;"
+        "push	%%r10;"
+        "push	%%r11;"
+        "push	%%r12;"
+        "push	%%r13;"
+        "push	%%r14;"
+        "push	%%r15;"
+
+        "xor	%%rdi,%%rdi;"
+        "lea	-8*2(%%rsp),%%rsp;"
+        "mov	8*0(%%rbx),%%rbp;"
+        "mov	8*1(%%rbx),%%rcx;"
+        "mov	8*2(%%rbx),%%r14;"
+        "mov	8*3(%%rbx),%%r15;"
+        "mov	8*0(%%rax),%%rdx;"
+        "mulx	%%rbp,%%r8,%%rsi;"
+        "mulx	%%rcx,%%r9,%%rbx;"
+        "adcx	%%rsi,%%r9;"
+        "mulx	%%r14,%%r10,%%rsi;"
+        "adcx	%%rbx,%%r10;"
+        "mulx	%%r15,%%r11,%%r12;"
+        "mov	8*1(%%rax),%%rdx;"
+        "adcx	%%rsi,%%r11;"
+        "mov	%%r14,(%%rsp);"
+        "adcx	%%rdi,%%r12;"
+        "mulx	%%rbp,%%rsi,%%rbx;"
+        "adox	%%rsi,%%r9;"
+        "adcx	%%rbx,%%r10;"
+        "mulx	%%rcx,%%rsi,%%rbx;"
+        "adox	%%rsi,%%r10;"
+        "adcx	%%rbx,%%r11;"
+        "mulx	%%r14,%%rsi,%%rbx;"
+        "adox	%%rsi,%%r11;"
+        "adcx	%%rbx,%%r12;"
+        "mulx	%%r15,%%rsi,%%r13;"
+        "mov	8*2(%%rax),%%rdx;"
+        "adox	%%rsi,%%r12;"
+        "adcx	%%rdi,%%r13;"
+        "adox	%%rdi,%%r13;"
+        "mulx	%%rbp,%%rsi,%%rbx;"
+        "adcx	%%rsi,%%r10;"
+        "adox	%%rbx,%%r11;"
+        "mulx	%%rcx,%%rsi,%%rbx;"
+        "adcx	%%rsi,%%r11;"
+        "adox	%%rbx,%%r12;"
+        "mulx	%%r14,%%rsi,%%rbx;"
+        "adcx	%%rsi,%%r12;"
+        "adox	%%rbx,%%r13;"
+        "mulx	%%r15,%%rsi,%%r14;"
+        "mov	8*3(%%rax),%%rdx;"
+        "adcx	%%rsi,%%r13;"
+        "adox	%%rdi,%%r14;"
+        "adcx	%%rdi,%%r14;"
+        "mulx	%%rbp,%%rsi,%%rbx;"
+        "adox	%%rsi,%%r11;"
+        "adcx	%%rbx,%%r12;"
+        "mulx	%%rcx,%%rsi,%%rbx;"
+        "adox	%%rsi,%%r12;"
+        "adcx	%%rbx,%%r13;"
+        "mulx	(%%rsp),%%rsi,%%rbx;"
+        "adox	%%rsi,%%r13;"
+        "adcx	%%rbx,%%r14;"
+        "mulx	%%r15,%%rsi,%%r15;"
+        "mov	$38,%%edx;"
+        "adox	%%rsi,%%r14;"
+        "adcx	%%rdi,%%r15;"
+        "adox	%%rdi,%%r15;"
+        "mulx	%%r12,%%rsi,%%rbx;"
+        "adcx	%%rsi,%%r8;"
+        "adox	%%rbx,%%r9;"
+        "mulx	%%r13,%%rsi,%%rbx;"
+        "adcx	%%rsi,%%r9;"
+        "adox	%%rbx,%%r10;"
+        "mulx	%%r14,%%rsi,%%rbx;"
+        "adcx	%%rsi,%%r10;"
+        "adox	%%rbx,%%r11;"
+        "mulx	%%r15,%%rsi,%%r12;"
+        "adcx	%%rsi,%%r11;"
+        "adox	%%rdi,%%r12;"
+        "adcx	%%rdi,%%r12;"
+        "mov	8*10(%%rsp),%%rbp;"
+        "mov	8*14(%%rsp),%%rcx;"
+        "imulq	%%rdx,%%r12;"
+        "add	%%r12,%%r8;"
+        "adc	$0,%%r9;"
+        "adc	$0,%%r10;"
+        "adc	$0,%%r11;"
+        "sbb	%%rsi,%%rsi;"
+        "and	$38,%%rsi;"
+        "add	%%rsi,%%r8;"
+        "mov	%%r9,8*1(%2);"
+        "mov	%%r10,8*2(%2);"
+        "mov	%%r11,8*3(%2);"
+        "mov	%%r8,8*0(%2);"
+
+        "mov	8*2(%%rsp),%%r15;"
+        "mov	8*3(%%rsp),%%r14;"
+        "mov	8*4(%%rsp),%%r13;"
+        "mov	8*5(%%rsp),%%r12;"
+        "mov	8*6(%%rsp),%%r11;"
+        "mov	8*7(%%rsp),%%r10;"
+        "mov	8*8(%%rsp),%%r9;"
+        "mov	8*9(%%rsp),%%r8;"
+        "mov	8*11(%%rsp),%%rdi;"
+        "mov	8*12(%%rsp),%%rsi;"
+        "mov	8*13(%%rsp),%%rdx;"
+        "mov	8*15(%%rsp),%%rbx;"
+        "mov	8*16(%%rsp),%%rax;"
+        "lea    8*17(%%rsp),%%rsp;"
+        :
+        : "a"(a), "b"(b), "c"(out)
+        : "memory");
+}
+
+#else
 static inline void
 MulX25519(Uint64* c, const Uint64* a, const Uint64* b)
 {
@@ -338,6 +593,7 @@ MulX25519(Uint64* c, const Uint64* a, const Uint64* b)
     c[2] = c2;
     c[3] = c3;
 }
+#endif
 
 static inline void
 ScalarMulX25519(Uint64* output, const Uint64* in)
