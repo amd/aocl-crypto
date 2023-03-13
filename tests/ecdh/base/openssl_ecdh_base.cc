@@ -37,19 +37,6 @@ namespace alcp::testing {
 
 OpenSSLEcdhBase::OpenSSLEcdhBase(const alc_ec_info_t& info) {}
 
-bool
-OpenSSLEcdhBase::init(const alc_ec_info_t& info)
-{
-    m_info = info;
-    return init();
-}
-
-bool
-OpenSSLEcdhBase::init()
-{
-    return true;
-}
-
 OpenSSLEcdhBase::~OpenSSLEcdhBase()
 {
     if (m_ec_handle1 != nullptr) {
@@ -61,11 +48,9 @@ OpenSSLEcdhBase::~OpenSSLEcdhBase()
 }
 
 bool
-OpenSSLEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
+OpenSSLEcdhBase::init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data)
 {
-    Uint64 keyLength1, keyLength2;
-
-    /* this should go in init */
+    m_info = info;
     /*Initialize handle, generate or load KAT private key*/
     m_pPrivateKeyData1 =
         EVP_PKEY_new_raw_private_key_ex(m_ec_handle1,
@@ -87,7 +72,13 @@ OpenSSLEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
         printf("EVP_PKEY_new_raw_private_key_ex returned null");
         return false;
     }
-    /* this should go in init END*/
+    return true;
+}
+
+bool
+OpenSSLEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
+{
+    Uint64 keyLength1, keyLength2;
 
     /* Get public key corresponding to the private key */
     if (1

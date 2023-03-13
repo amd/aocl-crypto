@@ -116,7 +116,7 @@ ecdh_KAT(alc_ec_info_t info)
         data.m_Peer1_SecretKeyLen = ds.getPeer1SecretKey().size();
         data.m_Peer2_SecretKeyLen = ds.getPeer2SecretKey().size();
 
-        if (!eb->init(info)) {
+        if (!eb->init(info, data)) {
             std::cout << "Error in ECDH init" << std::endl;
             FAIL();
         }

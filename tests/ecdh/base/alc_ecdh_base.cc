@@ -37,14 +37,7 @@ namespace alcp::testing {
 AlcpEcdhBase::AlcpEcdhBase(const alc_ec_info_t& info) {}
 
 bool
-AlcpEcdhBase::init(const alc_ec_info_t& info)
-{
-    m_info = info;
-    return init();
-}
-
-bool
-AlcpEcdhBase::init()
+AlcpEcdhBase::init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data)
 {
     alc_error_t   err;
     alc_ec_info_t dinfo = m_info;

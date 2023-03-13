@@ -50,8 +50,7 @@ class AlcpEcdhBase : public EcdhBase
     AlcpEcdhBase(const alc_ec_info_t& info);
     ~AlcpEcdhBase();
 
-    bool init();
-    bool init(const alc_ec_info_t& info);
+    bool init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data);
     bool reset();
 
     bool GeneratePublicKey(const alcp_ecdh_data_t& data);

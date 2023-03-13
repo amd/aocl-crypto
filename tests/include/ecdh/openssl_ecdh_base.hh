@@ -64,8 +64,7 @@ class OpenSSLEcdhBase : public EcdhBase
     OpenSSLEcdhBase(const alc_ec_info_t& info);
     ~OpenSSLEcdhBase();
 
-    bool init();
-    bool init(const alc_ec_info_t& info);
+    bool init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data);
     bool reset();
 
     bool GeneratePublicKey(const alcp_ecdh_data_t& data);
