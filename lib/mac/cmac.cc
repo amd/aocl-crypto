@@ -40,9 +40,10 @@ class Cmac::Impl : public cipher::Aes
 {
     // Implementation as per NIST Special Publication 800-38B: The CMAC Mode for
     // Authentication
-  public:
-    alignas(16) Uint8 m_k1[16]{};
-    alignas(16) Uint8 m_k2[16]{};
+  private:
+    static constexpr unsigned int cAESBlockSize = 16;
+    alignas(16) Uint8 m_k1[cAESBlockSize]{};
+    alignas(16) Uint8 m_k2[cAESBlockSize]{};
 
     // Pointer to user supplied key
     const Uint8* m_key    = nullptr;
@@ -52,14 +53,15 @@ class Cmac::Impl : public cipher::Aes
     const Uint8* m_encrypt_keys = nullptr;
 
     // Temporary Storage Buffer to keep the plaintext data for processing
-    alignas(16) Uint8 m_storage_buffer[16]{};
+    alignas(16) Uint8 m_storage_buffer[cAESBlockSize]{};
     int m_storage_buffer_offset = 0;
 
     // Temporary Buffer to storage Encryption Result
-    alignas(16) Uint8 m_temp_enc_result[16]{};
+    alignas(16) Uint8 m_temp_enc_result[cAESBlockSize]{};
 
     bool m_finalized = false;
 
+  public:
     Impl()
         : Aes()
     {
@@ -80,6 +82,7 @@ class Cmac::Impl : public cipher::Aes
         s = reset();
         return s;
     }
+
     void finish()
     {
         m_key          = nullptr;
@@ -89,14 +92,12 @@ class Cmac::Impl : public cipher::Aes
     }
     Status reset()
     {
-        memset(m_temp_enc_result, 0, 16);
-        memset(m_storage_buffer, 0, 16);
+        memset(m_temp_enc_result, 0, cAESBlockSize);
+        memset(m_storage_buffer, 0, cAESBlockSize);
         m_storage_buffer_offset = 0;
         m_finalized             = false;
         return StatusOk();
     };
-
-    bool isSupported(const alc_cipher_info_t& cipherInfo) { return true; }
 
     Status update(const Uint8 plaintext[], int plaintext_size)
     {
@@ -114,7 +115,8 @@ class Cmac::Impl : public cipher::Aes
                      m_storage_buffer_offset,
                      m_encrypt_keys,
                      m_temp_enc_result,
-                     getRounds());
+                     getRounds(),
+                     cAESBlockSize);
 
         return StatusOk();
     }
@@ -128,11 +130,11 @@ class Cmac::Impl : public cipher::Aes
         if (plaintext_size != 0) {
             update(plaintext, plaintext_size);
         }
-        assert(m_storage_buffer_offset <= 16);
+        assert(m_storage_buffer_offset <= cAESBlockSize);
         reg_128 xor_result;
 
         // Check if storage_buffer is complete ie, 128 bits
-        if (m_storage_buffer_offset == 16) {
+        if (m_storage_buffer_offset == cAESBlockSize) {
             // Since the final block was complete, ie 128 bit len, xor storage
             // buffer with k1 before final block processing
             xor_result.reg =
@@ -152,10 +154,10 @@ class Cmac::Impl : public cipher::Aes
             m_storage_buffer_offset += 1;
             memset(m_storage_buffer + m_storage_buffer_offset,
                    0x00,
-                   16 - m_storage_buffer_offset);
+                   cAESBlockSize - m_storage_buffer_offset);
 
             // Storage Buffer is filled with all 16 bytes
-            m_storage_buffer_offset = 16;
+            m_storage_buffer_offset = cAESBlockSize;
             // Since the Final Block was Incomplete xor the already padded
             // storage buffer with k2 before final block processing.
             xor_result.reg =
@@ -180,6 +182,7 @@ class Cmac::Impl : public cipher::Aes
     }
 
   private:
+    bool isSupported(const alc_cipher_info_t& cipherInfo) { return true; }
     void getSubkeys()
     {
         if (CpuId::cpuHasAvx2()) {
@@ -191,7 +194,7 @@ class Cmac::Impl : public cipher::Aes
     {
         //  Act like storage buffer is filled with 16 bytes and Perform
         //  operation
-        assert(m_storage_buffer_offset == 16);
+        assert(m_storage_buffer_offset == cAESBlockSize);
 
         if (CpuId::cpuHasAvx2()) {
             avx2::processChunk(m_temp_enc_result,

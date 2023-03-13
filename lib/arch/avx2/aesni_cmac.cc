@@ -54,20 +54,20 @@ namespace alcp::mac { namespace avx2 {
         reg_output.reg = _mm_shuffle_epi8(reg_input.reg, shuffle_mask.reg);
     }
 
-    void load_and_left_shift_1(const Uint8* input, Uint8* output)
+    void load_and_left_shift_1(const Uint8 cInput[], Uint8 cOutput[])
     {
         reg_128 reg1, reg2;
-        reg1.reg = _mm_loadu_si128((__m128i*)&input[0]);
+        reg1.reg = _mm_loadu_si128((__m128i*)&cInput[0]);
         shuffle_for_shifting(reg1, reg1);
         left_shift_1(reg1, reg2);
         shuffle_for_shifting(reg2, reg2);
-        _mm_storeu_si128(reinterpret_cast<__m128i*>(output), reg2.reg);
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(cOutput), reg2.reg);
     }
 
-    void processChunk(Uint8*       temp_enc_result,
-                      Uint8*       storage_buffer,
-                      const Uint8* encrypt_keys,
-                      const int    cNRounds)
+    void processChunk(Uint8       temp_enc_result[],
+                      Uint8       storage_buffer[],
+                      const Uint8 cEncryptKeys[],
+                      const int   cNRounds)
     {
 
         reg_128 temp_enc_result_reg;
@@ -75,7 +75,7 @@ namespace alcp::mac { namespace avx2 {
             _mm_xor_si128(_mm_loadu_si128((__m128i*)temp_enc_result),
                           _mm_loadu_si128((__m128i*)storage_buffer));
         alcp::cipher::aesni::AesEncrypt(
-            &temp_enc_result_reg.reg, (const __m128i*)encrypt_keys, cNRounds);
+            &temp_enc_result_reg.reg, (const __m128i*)cEncryptKeys, cNRounds);
         _mm_storeu_si128((__m128i*)temp_enc_result, temp_enc_result_reg.reg);
     }
 
@@ -103,7 +103,7 @@ namespace alcp::mac { namespace avx2 {
 
     void get_subkeys(Uint8        k1[],
                      Uint8        k2[],
-                     const Uint8* encrypt_keys,
+                     const Uint8* cEncryptKeys,
                      const int    cNRounds)
     {
 
@@ -121,7 +121,7 @@ namespace alcp::mac { namespace avx2 {
 
         // Let L = CIPHK(0b)
         alcp::cipher::aesni::AesEncrypt(
-            &l_reg.reg, (const __m128i*)encrypt_keys, cNRounds);
+            &l_reg.reg, (const __m128i*)cEncryptKeys, cNRounds);
 
         // Shuffling is necessary since _mm_slli_epi64 left shifts data as word
         // size integers
@@ -136,12 +136,11 @@ namespace alcp::mac { namespace avx2 {
                 int         plaintext_size,
                 Uint8       storage_buffer[],
                 int&        storage_buffer_offset,
-                const Uint8 encrypt_keys[],
+                const Uint8 cEncryptKeys[],
                 Uint8       temp_enc_result[],
-                Uint32      rounds)
+                Uint32      rounds,
+                const int   cBlockSize)
     {
-        // FIXME: Should be an argument
-        const int cBlockSize = 16;
         if ((storage_buffer_offset + plaintext_size) <= cBlockSize) {
             utils::CopyBlock<Uint64>(storage_buffer + storage_buffer_offset,
                                      plaintext,
@@ -168,7 +167,7 @@ namespace alcp::mac { namespace avx2 {
         }
         auto p_plaintext = reinterpret_cast<const __m128i*>(plaintext);
         auto p_buff      = reinterpret_cast<const __m128i*>(storage_buffer);
-        auto p_key       = reinterpret_cast<const __m128i*>(encrypt_keys);
+        auto p_key       = reinterpret_cast<const __m128i*>(cEncryptKeys);
         auto p_temp_enc  = reinterpret_cast<__m128i*>(temp_enc_result);
         // Load and process the buffer
         __m128i reg_plaintext = _mm_load_si128(p_buff);

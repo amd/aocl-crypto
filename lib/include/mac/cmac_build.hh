@@ -80,14 +80,14 @@ __cmac_wrapperReset(void* cmac, void* digest)
 
 static Status
 __build_cmac(const alc_cipher_info_t& cipherInfo,
-             const alc_key_info_t     cKinfo,
+             const alc_key_info_t&    cKinfo,
              Context&                 ctx)
 {
     Status status = StatusOk();
     auto   p_algo = new Cmac();
 
     auto p_key = cKinfo.key;
-    auto len = cKinfo.len;
+    auto len   = cKinfo.len;
     p_algo->setKey(p_key, len);
     if (p_algo == nullptr) {
         // FIXME: Update proper Out of Memory Status

@@ -56,8 +56,7 @@ class Cmac final : public Mac
      * @param pMsgBuf   Plaintext Message Buffer bytes to be updated
      * @param size      Size of the Plaintext Message Buffer in bytes
      */
-    ALCP_API_EXPORT Status update(const Uint8 pMsgBuf[],
-                                              Uint64      size) override;
+    ALCP_API_EXPORT Status update(const Uint8 pMsgBuf[], Uint64 size) override;
 
     /**
      * @brief Update CMAC Key
@@ -120,7 +119,8 @@ namespace avx2 {
                                 int&        storage_buffer_offset,
                                 const Uint8 encrypt_keys[],
                                 Uint8       temp_enc_result[],
-                                Uint32      rounds);
+                                Uint32      rounds,
+                                const int   cBlockSize);
 
 } // namespace avx2
 } // namespace alcp::mac

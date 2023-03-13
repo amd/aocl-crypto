@@ -53,10 +53,13 @@ class Hmac::Impl
     Uint32 m_input_block_length{};
     // Size of the message digest
     Uint32 m_output_hash_size{};
+    // Optimization: Maximum output size of 64 bytes and Maximum Internal Block
+    // Length of 144 bytes
+    static constexpr int cMaxHashSize            = 64;
+    static constexpr int cMaxInternalBlockLength = 144;
     /* Placeholder variable to hold intermediate hash and the the mac value
     after finalize has been called */
-    // Optimization: Max Size of 1024 bits for any SHA
-    Uint8 m_pTempHash[64]{};
+    alignas(16) Uint8 m_pTempHash[cMaxHashSize]{};
 
     // Variable to track whether finalize has been called
     bool m_finalized = false;
@@ -69,14 +72,14 @@ class Hmac::Impl
      */
     digest::Digest* m_pDigest{};
 
-    alignas(16) Uint8 m_pK0_xor_opad[144]{};
-    alignas(16) Uint8 m_pK0_xor_ipad[144]{};
+    alignas(16) Uint8 m_pK0_xor_opad[cMaxInternalBlockLength]{};
+    alignas(16) Uint8 m_pK0_xor_ipad[cMaxInternalBlockLength]{};
 
     /**
      * Preprocessed Key to match the input block length input_block_length
      * get_k0 function performs the preprocessing
      * */
-    alignas(16) Uint8 m_pK0[144]{};
+    alignas(16) Uint8 m_pK0[cMaxInternalBlockLength]{};
 
   public:
     Impl() = default;
@@ -166,8 +169,7 @@ class Hmac::Impl
     {
         Status status = StatusOk();
         m_pDigest->reset();
-        status =
-            calculateHash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
+        status = calculateHash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
 
         m_finalized = false;
         return status;
@@ -184,10 +186,10 @@ class Hmac::Impl
 
         /* Clear all the buffers as with changed, continued update is not
         possible */
-        memset(m_pK0_xor_opad, 0, 144);
-        memset(m_pK0_xor_ipad, 0, 144);
-        memset(m_pK0, 0, 144);
-        memset(m_pTempHash, 0, 64);
+        memset(m_pK0_xor_opad, 0, cMaxInternalBlockLength);
+        memset(m_pK0_xor_ipad, 0, cMaxInternalBlockLength);
+        memset(m_pK0, 0, cMaxInternalBlockLength);
+        memset(m_pTempHash, 0, cMaxHashSize);
         m_finalized = false;
 
         m_pKey   = key;
@@ -197,13 +199,12 @@ class Hmac::Impl
         size will be the same as the internal block length of the digest used */
         m_k0_length = m_input_block_length;
 
-        status = get_k0();
+        status = getK0();
         if (!status.ok()) {
             return status;
         }
         getK0XorPad();
-        status =
-            calculateHash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
+        status = calculateHash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
         if (!status.ok()) {
             return status;
         }
@@ -268,7 +269,7 @@ class Hmac::Impl
         }
     }
 
-    Status get_k0()
+    Status getK0()
     {
         Status status = StatusOk();
         if (m_input_block_length == m_keylen) {
@@ -299,8 +300,8 @@ class Hmac::Impl
     }
 
     Status calculateHash(digest::Digest* p_digest,
-                          const Uint8*    input,
-                          Uint64          len)
+                         const Uint8*    input,
+                         Uint64          len)
     {
         alc_error_t err = p_digest->update(input, len);
         if (alcp_is_error(err)) {
@@ -312,7 +313,8 @@ class Hmac::Impl
 
 Hmac::Hmac()
     : m_pImpl{ std::make_unique<Hmac::Impl>() }
-{}
+{
+}
 Hmac::~Hmac() {}
 
 Status
