@@ -41,8 +41,8 @@ class Cmac::Impl : public cipher::Aes
     // Implementation as per NIST Special Publication 800-38B: The CMAC Mode for
     // Authentication
   public:
-    Uint8 m_k1[16]{};
-    Uint8 m_k2[16]{};
+    alignas(16) Uint8 m_k1[16]{};
+    alignas(16) Uint8 m_k2[16]{};
 
     // Pointer to user supplied key
     const Uint8* m_key    = nullptr;
@@ -52,11 +52,11 @@ class Cmac::Impl : public cipher::Aes
     const Uint8* m_encrypt_keys = nullptr;
 
     // Temporary Storage Buffer to keep the plaintext data for processing
-    Uint8 m_storage_buffer[16]{};
-    int   m_storage_buffer_offset = 0;
+    alignas(16) Uint8 m_storage_buffer[16]{};
+    int m_storage_buffer_offset = 0;
 
     // Temporary Buffer to storage Encryption Result
-    Uint8 m_temp_enc_result[16]{};
+    alignas(16) Uint8 m_temp_enc_result[16]{};
 
     bool m_finalized = false;
 
@@ -206,7 +206,8 @@ class Cmac::Impl : public cipher::Aes
 
 Cmac::Cmac()
     : m_pImpl{ std::make_unique<Cmac::Impl>() }
-{}
+{
+}
 
 Status
 Cmac::update(const Uint8 pMsgBuf[], Uint64 size)
