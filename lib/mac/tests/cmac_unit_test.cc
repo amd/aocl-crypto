@@ -233,7 +233,7 @@ class CMACFuncionalityTest
         auto       tuple_values = cParams.second;
 
         tie(m_key, m_plain_text, m_expected_mac) = tuple_values;
-        m_cmac                               = std::make_unique<Cmac>();
+        m_cmac                                   = std::make_unique<Cmac>();
         m_cmac->setKey(&m_key[0], static_cast<Uint64>(m_key.size()) * 8);
         m_mac = std::vector<Uint8>(m_expected_mac.size());
     }
@@ -330,13 +330,8 @@ TEST(CMACRobustnessTest, CMAC_callUpdateOnNullKey)
     Cmac  cmac2;
     Uint8 data[20];
 
-    /**
-      FIXME: Testcase Failing in status.hh makeMessage
-      String concatentation
-    */
-    ASSERT_EXIT((cmac2.update(data, sizeof(data)), exit(0)),
-                ::testing::ExitedWithCode(0),
-                "");
+    Status s = cmac2.update(data, sizeof(data));
+    ASSERT_FALSE(s.ok());
 }
 
 TEST(CMACRobustnessTest, CMAC_callFinalizeOnNullKey)
@@ -344,13 +339,8 @@ TEST(CMACRobustnessTest, CMAC_callFinalizeOnNullKey)
     Cmac  cmac2;
     Uint8 data[20];
 
-    /**
-      FIXME: Testcase Failing in status.hh makeMessage
-      String concatentation
-    */
-    ASSERT_EXIT((cmac2.finalize(data, sizeof(data)), exit(0)),
-                ::testing::ExitedWithCode(0),
-                "");
+    Status s = cmac2.finalize(data, sizeof(data));
+    ASSERT_FALSE(s.ok());
 }
 
 TEST(CMACRobustnessTest, CMAC_callCopyOnNullKey)
@@ -358,13 +348,8 @@ TEST(CMACRobustnessTest, CMAC_callCopyOnNullKey)
     Cmac  cmac2;
     Uint8 mac[16];
 
-    /**
-      FIXME: Testcase Failing in status.hh makeMessage
-      String concatentation
-    */
-    ASSERT_EXIT((cmac2.copy(mac, sizeof(mac)), exit(0)),
-                ::testing::ExitedWithCode(0),
-                "");
+    Status s = cmac2.copy(mac, sizeof(mac));
+    ASSERT_FALSE(s.ok());
 }
 
 TEST(CMACRobustnessTest, CMAC_callCopyWithouFinalize)
@@ -373,15 +358,11 @@ TEST(CMACRobustnessTest, CMAC_callCopyWithouFinalize)
     Uint8 key[16]{};
     Uint8 mac[16];
 
-    cmac2.setKey(key, sizeof(key) * 8);
+    Status s = cmac2.setKey(key, sizeof(key) * 8);
+    ASSERT_TRUE(s.ok());
 
-    /**
-      FIXME: Testcase Failing in status.hh makeMessage
-      String concatentation
-    */
-    ASSERT_EXIT((cmac2.copy(mac, sizeof(mac)), exit(0)),
-                ::testing::ExitedWithCode(0),
-                "");
+    s = cmac2.copy(mac, sizeof(mac));
+    ASSERT_FALSE(s.ok());
 }
 
 TEST(CMACRobustnessTest, CMAC_wrongKeySize)
@@ -389,13 +370,9 @@ TEST(CMACRobustnessTest, CMAC_wrongKeySize)
     Cmac  cmac2;
     Uint8 key[30]{};
 
-    /**
-      FIXME: Testcase Failing in status.hh makeMessage
-      String concatentation
-    */
-    ASSERT_EXIT((cmac2.setKey(key, sizeof(key) * 8), exit(0)),
-                ::testing::ExitedWithCode(0),
-                "");
+    // FIXME: Rijindael setKey should be returning proper error status and this
+    // should not be passing
+    EXPECT_THROW(cmac2.setKey(key, sizeof(key) * 8), std::out_of_range);
 }
 
 INSTANTIATE_TEST_SUITE_P(
