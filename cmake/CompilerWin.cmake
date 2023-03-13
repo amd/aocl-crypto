@@ -107,7 +107,7 @@ endfunction(alcp_get_arch_cflags_zen3)
 # lib/arch/zen4 Compile Flags
 function(alcp_get_arch_cflags_zen4)
     set(ARCH_COMPILE_FLAGS 
-        -mavx -mavx2 -maes -mvaes -mpclmul -mvpclmulqdq -DUSE_AVX512 /arch:AVX512
+        -mavx -mavx2 -maes -mvaes -mpclmul -mvpclmulqdq -mavx512ifma -DUSE_AVX512 /arch:AVX512
         CACHE INTERNAL ""
         )
     set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
