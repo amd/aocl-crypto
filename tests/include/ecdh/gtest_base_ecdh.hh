@@ -124,21 +124,28 @@ ecdh_KAT(alc_ec_info_t info)
             std::cout << "Error in ECDH Generate public key" << std::endl;
             FAIL();
         }
-        /*TODO: x25519 pub key lens should always be 32 bytes !*/
+
+        /*TODO: x25519 pub key len should always be 32 bytes !*/
         EXPECT_TRUE(
             ArraysMatch(Peer1_PubKey, Peer2_PubKey, ds, std::string("ECDH")));
+        EXPECT_TRUE(data.m_Peer1_PubKeyLen == 32);
+        EXPECT_TRUE(data.m_Peer2_PubKeyLen == 32);
 
         if (!eb->ComputeSecretKey(data)) {
             std::cout << "Error in ECDH Compute Secret key" << std::endl;
             FAIL();
         }
 
-        if (verbose > 1)
-            PrintEcdhTestData(data);
-
         /* now check both Peers' secret keys match or not */
         EXPECT_TRUE(ArraysMatch(
             Peer1_SecretKey, Peer2_SecretKey, ds, std::string("ECDH")));
+
+        /*TODO: x25519 shared secret key len should always be 32 bytes !*/
+        EXPECT_TRUE(data.m_Peer1_SecretKeyLen == 32);
+        EXPECT_TRUE(data.m_Peer2_SecretKeyLen == 32);
+
+        if (verbose > 1)
+            PrintEcdhTestData(data);
     }
 }
 
