@@ -30,10 +30,8 @@
 #include <string>
 
 // #include "alcp/cipher.h"
-#include "alcp/base.hh"
-
-#include "alcp/module.hh"
 #include "algorithm.hh"
+#include <map>
 
 namespace alcp {
 
@@ -55,13 +53,17 @@ class Module
   public:
     ALCP_DEFS_DEFAULT_CTOR_AND_DTOR(Module);
 
-    std::string       getName();
-    alc_module_type_t getType();
+    static const std::map<alc_module_type_t, std::string> typeNameMap;
+
+    virtual std::string       getName() = 0;
+    virtual alc_module_type_t getType() = 0;
     // bool isSupported(const alc_cipher_info_p c, alc_error_t& e) const;
 
   private:
+#if 0
     class Impl;
     std::unique_ptr<Impl> impl;
+#endif
 };
 
 } // namespace alcp

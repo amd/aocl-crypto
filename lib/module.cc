@@ -37,6 +37,24 @@
 
 namespace alcp {
 
+alc_module_type_t
+Module::getType()
+{
+    // FIXME: Horror ahead
+    return ALC_MODULE_TYPE_CIPHER;
+}
+
+const std::map<alc_module_type_t, std::string> Module::typeNameMap =
+    std::map<alc_module_type_t, std::string>{
+        { ALC_MODULE_TYPE_CIPHER, "CIPHER" },
+        { ALC_MODULE_TYPE_DIGEST, "DIGEST" },
+        { ALC_MODULE_TYPE_RNG, "RNG" },
+        { ALC_MODULE_TYPE_MAC, "MAC" },
+        { ALC_MODULE_TYPE_EC, "EC" },
+    };
+
+// Disabled because Prem asked.
+#if 0
 class Module::Impl
 {
   public:
@@ -56,12 +74,6 @@ class Module::Impl
     // DigestMap   m_digest_map
     std::vector<Algorithm> m_algo;
 };
-
-alc_module_type_t
-Module::getType()
-{
-    // FIXME: Horror ahead
-    return ALC_MODULE_TYPE_CIPHER;
-}
+#endif
 
 } // namespace alcp

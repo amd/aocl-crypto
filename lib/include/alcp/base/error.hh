@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -113,14 +113,16 @@ class GenericError final : public ErrorBase
   public:
     GenericError()
         : ErrorBase{ ErrorCode::eOk }
-    {}
+    {
+    }
 
     GenericError(Uint64 ecode)
         : ErrorBase{ ecode }
-    {}
+    {
+    }
 
     GenericError(ErrorCode ecode)
-	    :ErrorBase{static_cast<Uint64>(ecode)}
+        : ErrorBase{ static_cast<Uint64>(ecode) }
     {
     }
 

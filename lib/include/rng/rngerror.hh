@@ -62,28 +62,21 @@ class RngError final : public ErrorBase
 
   public:
     RngError()
-        : ErrorBase{ ErrorCode::eOk }
+        : ErrorBase{ ALC_MODULE_TYPE_RNG, ErrorCode::eOk }
     {
-        setModuleError(ErrorCode::eOk);
     }
 
     RngError(Uint64 ecode)
-        : ErrorBase{ ecode }
+        : ErrorBase{ ALC_MODULE_TYPE_RNG, RngError::toUint16(ecode) }
     {
     }
 
     RngError(rng::ErrorCode ecode)
-        : ErrorBase{ ErrorCode::eOk }
+        : ErrorBase{ ALC_MODULE_TYPE_RNG, ecode }
     {
-        if (ecode != eOk) {
-            ErrorBase::setModuleError(toUint16(ecode));
-        }
     }
 
-    static Uint16 toUint16(rng::ErrorCode ecode)
-    {
-        return static_cast<Uint16>(ecode);
-    }
+    static Uint16 toUint16(Uint64 ecode) { return static_cast<Uint16>(ecode); }
 
     virtual ~RngError() {}
 
@@ -103,7 +96,7 @@ class RngError final : public ErrorBase
             { ec::eOk, "All is Well !!" },
             { ec::eNoEntropy, "Not Enough Entropy" },
             { ec::eNotPermitted, "Not Permitted" },
-            { ec::eNoEntropySource, "Entropy source not defined"},
+            { ec::eNoEntropySource, "Entropy source not defined" },
         };
 
         RngErrorMapT::const_iterator it =

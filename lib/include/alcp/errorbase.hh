@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,9 +29,9 @@
 #pragma once
 
 #include "alcp/interface/Ierror.hh"
+#include "alcp/module.hh"
 
 #include <string>
-#include <string_view>
 #include <unordered_map>
 
 namespace alcp::base {
@@ -43,7 +43,9 @@ namespace alcp::base {
  * The errors are extendable to support dynamic module loading (plugin system).
  *
  */
-class ErrorBase : public IError
+class ErrorBase
+    : public IError
+    , public Module
 {
 
   public:
@@ -51,15 +53,18 @@ class ErrorBase : public IError
 
     ErrorBase()
         : m_error{ 0 }
-    {}
+    {
+    }
 
     ErrorBase(Uint16 code)
         : m_error{ code }
-    {}
+    {
+    }
 
     ErrorBase(Uint64 code)
         : m_error{ code }
-    {}
+    {
+    }
 
     /**
      * @brief     Overriden function to return code as 64-bit integer
@@ -77,6 +82,23 @@ class ErrorBase : public IError
      * @return  boolean Status of whether the registration was success
      */
     static bool registerModuleError(ModuleType mt, IError& ie);
+
+    // Gets the module name
+    virtual String getName() override
+    {
+        auto it = Module::typeNameMap.find(
+            static_cast<alcp::alc_module_type_t>(m_error.field.module_id));
+        if (it != typeNameMap.end()) {
+            return it->second;
+        }
+        return "Unknwn Module";
+    }
+
+    virtual alc_module_type_t getType() override
+    {
+        // FIXME: Implement me
+        return ALC_MODULE_TYPE_NONE;
+    }
 
   protected:
     ErrorBase(Uint16 module_id, Uint16 module_error)
@@ -99,14 +121,14 @@ class ErrorBase : public IError
   protected:
     union
     {
-        Uint64 val;
+        Uint64 val; // 8 Bytes
 
         struct
         {
-            Uint64 base_error   : 16;
-            Uint64 module_error : 16;
-            Uint64 module_id    : 16;
-            Uint64 __reserved   : 16;
+            Uint64 base_error   : 16; // 2 Byte
+            Uint64 module_error : 16; // 2 Byte
+            Uint64 module_id    : 16; // 2 Byte
+            Uint64 __reserved   : 16; // 2 Byte
         } field;
     } m_error;
 

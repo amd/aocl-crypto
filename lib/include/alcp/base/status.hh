@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,7 +28,7 @@
 
 #pragma once
 
-//#include "alcp/base/error.hh"
+#include "alcp/errorbase.hh"
 #include "alcp/interface/Ierror.hh"
 #include "alcp/macros.h"
 #include "alcp/types.hh"
@@ -48,6 +48,9 @@ namespace alcp::base {
 
 class Status final
 {
+  private:
+    static constexpr StringView cAlcpErrorPrefix = "ALCP ERROR";
+
   public:
     explicit Status(IError&& ie)
         : m_code{ ie.code() }
@@ -123,6 +126,16 @@ class Status final
         return true;
     }
 
+    bool update(ErrorBase& eb, const String& msg)
+    {
+        if (m_code)
+            return false;
+
+        m_code    = eb.code();
+        m_message = makeMessage(eb, msg);
+        return true;
+    }
+
     bool update(const Status& s)
     {
         if (m_code)
@@ -143,11 +156,22 @@ class Status final
     }
 
     friend Status StatusOk();
+    String        makeMessage(ErrorBase& eb, const String& details)
+    {
+        std::ostringstream ss{ "", std::ios_base::ate };
 
+        ss << cAlcpErrorPrefix << ":" << eb.getName() << ":" << eb.message()
+           << ":" << details;
+        // m_message = module_error + String(" ") + details;
+        // return m_message;
+        return ss.str();
+    }
+
+    // FIXME: Remove this function if not needed
     String makeMessage(String const& module_error, String const& details)
     {
-        std::ostringstream ss{ module_error, std::ios_base::ate };
-        ss << module_error << " " << details;
+        std::ostringstream ss{ "", std::ios_base::ate };
+        ss << module_error << ":" << details;
         // m_message = module_error + String(" ") + details;
         // return m_message;
         return ss.str();
