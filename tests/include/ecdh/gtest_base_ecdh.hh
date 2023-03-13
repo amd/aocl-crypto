@@ -43,7 +43,7 @@ using namespace alcp::testing;
 #include "ecdh/ipp_ecdh.hh"
 #endif
 #ifdef USE_OSSL
-#include "ecdh/openssl_ecdh.hh"
+#include "ecdh/openssl_ecdh_base.hh"
 #endif
 
 /* print params verbosely */
@@ -85,6 +85,11 @@ ecdh_KAT(alc_ec_info_t info)
 
     eb = &aeb;
     /* TODO , initialize classes for OpenSSL, IPP here */
+#ifdef USE_OSSL
+    OpenSSLEcdhBase oeb(info);
+    if (useossl == true)
+        eb = &oeb;
+#endif
 
     std::string TestDataFile = std::string("dataset_ECDH.csv");
     DataSet     ds           = DataSet(TestDataFile);
@@ -119,6 +124,7 @@ ecdh_KAT(alc_ec_info_t info)
             std::cout << "Error in ECDH Generate public key" << std::endl;
             FAIL();
         }
+        /*TODO: x25519 pub key lens should always be 32 bytes !*/
         EXPECT_TRUE(
             ArraysMatch(Peer1_PubKey, Peer2_PubKey, ds, std::string("ECDH")));
 
