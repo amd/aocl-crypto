@@ -52,7 +52,7 @@ AlcpEcdhBase::init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data)
 
     err = alcp_ec_request(&dinfo, m_ec_handle1);
     if (alcp_is_error(err)) {
-        std::cout << "Error in alcp_ec_request: " << err << std::endl;
+        std::cout << "Error in alcp_ec_request:Peer1 " << err << std::endl;
         return false;
     }
 
@@ -66,7 +66,7 @@ AlcpEcdhBase::init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data)
 
     err = alcp_ec_request(&dinfo, m_ec_handle2);
     if (alcp_is_error(err)) {
-        std::cout << "Error in alcp_ec_request: " << err << std::endl;
+        std::cout << "Error in alcp_ec_request:Peer2: " << err << std::endl;
         return false;
     }
     return true;
