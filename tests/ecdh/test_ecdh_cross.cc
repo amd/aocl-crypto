@@ -34,13 +34,13 @@
 #include <iostream>
 
 /* All tests to be added here */
-TEST(ECDH, KAT_x25519)
+TEST(ECDH, CROSS_x25519)
 {
     alc_ec_info_t info;
     info.ecCurveId     = ALCP_EC_CURVE25519;
     info.ecCurveType   = ALCP_EC_CURVE_TYPE_MONTGOMERY;
     info.ecPointFormat = ALCP_EC_POINT_FORMAT_UNCOMPRESSED;
-    ecdh_KAT(info);
+    ecdh_Cross(info);
 }
 
 int
@@ -52,15 +52,11 @@ main(int argc, char** argv)
     parseArgs(argc, argv);
 #ifndef USE_IPP
     if (useipp)
-        std::cout << RED << "IPP is not available, defaulting to ALCP" << RESET
-                  << std::endl;
+        printErrors("IPP is not available");
 #endif
-
 #ifndef USE_OSSL
-    if (useossl) {
-        std::cout << RED << "OpenSSL is not available, defaulting to ALCP"
-                  << RESET << std::endl;
-    }
+    if (useossl)
+        printErrors("OpenSSL is not available");
 #endif
     return RUN_ALL_TESTS();
 }

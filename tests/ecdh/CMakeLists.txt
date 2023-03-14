@@ -118,17 +118,17 @@ TARGET_INCLUDE_DIRECTORIES(test_ecdh PRIVATE
 TARGET_COMPILE_OPTIONS(test_ecdh PUBLIC ${ALCP_WARNINGS})
 TARGET_LINK_LIBRARIES(test_ecdh ${LIBS})
 
-# ADD_EXECUTABLE(test_digest_cross test_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
+ADD_EXECUTABLE(test_ecdh_cross test_ecdh_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
-# TARGET_INCLUDE_DIRECTORIES(test_digest_cross PRIVATE
-# 	"${CMAKE_SOURCE_DIR}/include"
-# 	"${CMAKE_SOURCE_DIR}/lib/include"
-#     "${CMAKE_CURRENT_SOURCE_DIR}/../include"
-#     "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
-#     ${EXTRA_INCLUDES})
+TARGET_INCLUDE_DIRECTORIES(test_ecdh_cross PRIVATE
+	"${CMAKE_SOURCE_DIR}/include"
+	"${CMAKE_SOURCE_DIR}/lib/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+    ${EXTRA_INCLUDES})
 
-# TARGET_COMPILE_OPTIONS(test_digest_cross PUBLIC ${ALCP_WARNINGS})
-# TARGET_LINK_LIBRARIES(test_digest_cross ${LIBS})
+TARGET_COMPILE_OPTIONS(test_ecdh_cross PUBLIC ${ALCP_WARNINGS})
+TARGET_LINK_LIBRARIES(test_ecdh_cross ${LIBS})
 
 FUNCTION(TEST_DATA_LINK SHA_ALG)
     # Link dataset to the root dir
@@ -143,6 +143,6 @@ TEST_DATA_LINK(ECDH)
 
 gtest_add_tests(TARGET test_ecdh)
 
-# IF(ENABLE_TESTS_OPENSSL_API)
-#     gtest_add_tests(TARGET test_digest_cross)
-# ENDIF(ENABLE_TESTS_OPENSSL_API)
+IF(ENABLE_TESTS_OPENSSL_API)
+    gtest_add_tests(TARGET test_ecdh_cross)
+ENDIF(ENABLE_TESTS_OPENSSL_API)
