@@ -50,9 +50,9 @@ DebugPrint(const std::vector<Uint8>& p_cIn,
 class ALCP_API_EXPORT HmacDrbg : public Drbg
 {
   private:
-    class IHmacDrbg;
+    class Impl;
 
-    std::unique_ptr<IHmacDrbg> p_impl;
+    std::unique_ptr<Impl> p_impl;
 
   public:
     std::string name() const;
