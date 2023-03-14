@@ -26,38 +26,15 @@
  *
  */
 
-#include "alcp/error.h"
+#pragma once
 
-#include "alcp/alcp.hh"
-#include "alcp/base/error.hh"
-#include "alcp/types.hh"
-
-#include <cstring>
-
-EXTERN_C_BEGIN
-
-using namespace alcp::base;
-
-void
-alc_error_str_internal(
-    alc_error_t err, Uint8* buf, Uint64 size, const char* file, Uint64 line)
-{
-}
-
-void
-alcp_error_str(alc_error_t err, Uint8* buf, Uint64 size)
-{
-    auto e   = GenericError{ err };
-    auto str = e.message();
-    size     = std::min(str.size(), size);
-
-    snprintf((char*)buf, size, "%s", str.c_str());
-}
-
-bool
-alcp_is_error(alc_error_t err)
-{
-    return err != 0;
-}
-
-EXTERN_C_END
+/**
+ * dllexport helps to explicitly export symbols on Windows.
+ * Therefore, any new API's must first be declared with ALCP_API_EXPORT to load
+ * on Windows.
+ */
+#ifdef WIN32
+#define ALCP_API_EXPORT __declspec(dllexport)
+#else
+#define ALCP_API_EXPORT
+#endif

@@ -32,7 +32,7 @@
 #ifdef ALCP_ENABLE_AOCL_CPUID
 #include <alci/alci.h>
 #endif
-#include "alcp/macros.h"
+#include "alcp/alcp.hh"
 #include <iostream>
 #include <memory>
 

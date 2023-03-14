@@ -28,8 +28,8 @@
 
 #pragma once
 
+#include "alcp/alcp.hh"
 #include "alcp/base/status.hh"
-#include "alcp/macros.h"
 
 namespace alcp {
 

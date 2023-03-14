@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include "alcp/macros.h"
+#include "alcp/alcp.hh"
 #include "ec.hh"
 
 #ifdef COMPILER_IS_GCC
@@ -83,7 +83,7 @@ struct PrecomputedPoint
 class X25519 : public Ec
 {
   public:
-     ALCP_API_EXPORT X25519();
+    ALCP_API_EXPORT X25519();
     ~X25519();
 
     /**

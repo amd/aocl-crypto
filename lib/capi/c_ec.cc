@@ -28,8 +28,8 @@
 
 #include "alcp/ec.h"
 #include "alcp/ecdh.h"
-#include "alcp/macros.h"
 
+#include "alcp/alcp.hh"
 #include "alcp/capi/defs.hh"
 #include "capi/ec/builder.hh"
 #include "capi/ec/ctx.hh"

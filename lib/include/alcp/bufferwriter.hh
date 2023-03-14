@@ -28,9 +28,9 @@
 
 #pragma once
 
+#include "alcp/alcp.hh"
 #include "alcp/base.hh"
 #include "alcp/interface/Iwriter.hh"
-#include "alcp/macros.h"
 #include "alcp/pattern/noncopyable.hh"
 #include <algorithm>
 
@@ -68,7 +68,8 @@ class ALCP_API_EXPORT BufferWriter
     explicit BufferWriter(void* const pointer, size_t length)
         : m_ptr{ pointer }
         , m_length{ length }
-    {}
+    {
+    }
 
     virtual size_t write(void const* const buffer,
                          size_t            len) const noexcept override;

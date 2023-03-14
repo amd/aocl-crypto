@@ -28,8 +28,8 @@
 
 #include <iostream> /* TODO: remove after debug messages */
 
+#include "alcp/alcp.hh"
 #include "alcp/cipher.h"
-#include "alcp/macros.h"
 
 #include "alcp/capi/defs.hh"
 #include "capi/cipher/builder.hh"

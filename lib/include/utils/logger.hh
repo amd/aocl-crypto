@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,6 +30,7 @@
 
 #include "types.hh"
 
+#include "alcp/alcp.hh"
 #include <chrono>
 #include <iostream>
 #include <map>
@@ -61,7 +62,8 @@ class Priority
 
     Priority(const Level c)
         : m_level{ c }
-    {}
+    {
+    }
 
     inline static const std::string& name(const Level& c)
     {
@@ -144,15 +146,18 @@ class Message
 
     Message(const std::string s)
         : Message{ Priority::Level::eInfo, s }
-    {}
+    {
+    }
 
     Message(const std::string& s)
         : Message{ Priority::Level::eInfo, s }
-    {}
+    {
+    }
 
     Message(const std::string&& s)
         : Message{ Priority::Level::eInfo, s }
-    {}
+    {
+    }
 
     /**
      * \brief    Construct Message with default priority
@@ -215,16 +220,19 @@ class Logger : public ILogger
     Logger(const std::string& name)
         : m_name{ name }
         , m_allowed_priority{ Priority::eWarning }
-    {}
+    {
+    }
 
     Logger(const std::string&& name)
         : m_name{ name }
         , m_allowed_priority{ Priority::eWarning }
-    {}
+    {
+    }
 
     Logger(const char* name)
         : Logger(std::string(name))
-    {}
+    {
+    }
 
     ~Logger() {}
 
@@ -232,8 +240,8 @@ class Logger : public ILogger
     void setThreshold(Uint32 t);
 
     ALCP_API_EXPORT static ILogger* getDefaultLogger();
-    static ILogger* getLogger(const std::string& name);
-    Priority        getPriority() { return m_allowed_priority; }
+    static ILogger*                 getLogger(const std::string& name);
+    Priority                        getPriority() { return m_allowed_priority; }
 
   public:
     class Stream
@@ -278,7 +286,8 @@ class DummyLogger final : public Logger
   public:
     DummyLogger()
         : Logger("dummy")
-    {}
+    {
+    }
     ~DummyLogger() {}
 
   public:
@@ -317,8 +326,6 @@ class FileLogger : public Logger
 {};
 
 } // namespace alcp::utils
-
-#include "alcp/macros.h"
 
 EXTERN_C_BEGIN
 
