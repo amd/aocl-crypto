@@ -29,7 +29,7 @@
 #include "cipher/aes_cmac_siv.hh"
 #include "alcp/utils/cpuid.hh"
 #include "cipher/aes_error.hh"
-
+#include "cipher/common.hh"
 using alcp::utils::CpuId;
 
 namespace alcp::cipher {
@@ -88,48 +88,6 @@ parseHexStrToBin(const std::string in)
         ind += 2;
     }
     return vector;
-}
-
-/**
-    @brief Does an XOR operation on two array of Uint8 a and b store it to c
-    @param a Input a (first input)
-    @param b Input b (second input)
-    @param c Output c (output of xor operation)
-    @param len Entities to XOR
-*/
-template<typename T>
-inline void
-xor_a_b(const T a[], const T b[], T c[], size_t len)
-{
-    for (size_t j = 0; j < len; j++) {
-        c[j] = b[j] ^ a[j];
-    }
-}
-
-inline void
-left_shift(const Uint8 in[], Uint8 out[])
-{
-    int i = 0;
-    for (i = 0; i < 15; i++) {
-        out[i] = (in[i] << 1) | ((in[i + 1] >> 7));
-    }
-    out[i] = in[i] << 1;
-}
-
-void
-dbl(const Uint8 in[], const Uint8 rb[], Uint8 out[])
-{
-
-    Uint8 in_leftshift[16]{};
-    left_shift(in, in_leftshift);
-    // Uint8 rb[16]{};
-    // rb[15] = 0x87;
-    if (in[0] & 0x80) {
-        out[15] = in_leftshift[15] ^ rb[15];
-        utils::CopyBytes(out, in_leftshift, 15);
-    } else {
-        utils::CopyBytes(out, in_leftshift, 16);
-    }
 }
 
 Status
