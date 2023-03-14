@@ -40,8 +40,11 @@ namespace alcp::rng {
 #include <unistd.h>
 #define ALCP_CONFIG_OS_HAS_DEVRANDOM 1
 #elif defined(_WIN32)
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <windows.h>
+#include <wincrypt.h>
 #define ALCP_CONFIG_OS_HAS_GETRANDOM 1
 #else
 #include <sys/random.h>
@@ -120,11 +123,33 @@ class SystemRngImpl
             return sts;
         }
 #else
-        srand(time(NULL));
-        int* pBuf_int = reinterpret_cast<int*>(output);
-        for (int i = 0; i < (length / sizeof(int)); i++) {
-            *(pBuf_int + i) = rand();
-        }
+/*
+CryptGenRandom function in windows generate cryptographically secure RNG using Software & hardware
+based sources of entropy(Cpu's hardware RNG,disk activity, input timing, system clock, process ID etc).
+This type of entropies used to seed the Cryptographic RNG, to generate
+secure random buffer of bytes.
+*/
+
+    HCRYPTPROV hCryptSProv;
+    if(!CryptAcquireContext(&hCryptSProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
+    {
+        printf("CSP context not acquired. \n");
+        sts.update(Status(GenericError(alcp::base::ErrorCode::eNotAvailable)));
+        return sts;
+    }
+    if (CryptGenRandom(hCryptSProv,length,reinterpret_cast<BYTE*>(output)))
+    {
+        printf("Cryptographically Secure Random sequence generated. \n");
+    }
+    else
+    {   
+        sts.update(Status(RngError(rng::ErrorCode::eNoEntropySource)));
+        return sts;
+    }
+
+    if (hCryptSProv)
+        CryptReleaseContext(hCryptSProv, 0);
+
 #endif
         return sts;
     }

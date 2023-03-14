@@ -83,7 +83,7 @@ struct PrecomputedPoint
 class X25519 : public Ec
 {
   public:
-    X25519();
+     ALCP_API_EXPORT X25519();
     ~X25519();
 
     /**
