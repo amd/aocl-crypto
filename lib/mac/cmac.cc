@@ -29,6 +29,7 @@
 #include "mac/cmac.hh"
 #include "alcp/utils/cpuid.hh"
 #include "cipher/aes.hh"
+#include "cipher/common.hh"
 #include "utils/copy.hh"
 
 // TODO: Currently CMAC is AES-CMAC, Once IEncrypter is complete, revisit the
@@ -41,7 +42,7 @@ class Cmac::Impl : public cipher::Aes
     // Implementation as per NIST Special Publication 800-38B: The CMAC Mode for
     // Authentication
   private:
-    static constexpr unsigned int cAESBlockSize = 16;
+    static constexpr int cAESBlockSize = 16;
     alignas(16) Uint8 m_k1[cAESBlockSize]{};
     alignas(16) Uint8 m_k2[cAESBlockSize]{};
 
@@ -57,7 +58,8 @@ class Cmac::Impl : public cipher::Aes
     int m_storage_buffer_offset = 0;
 
     // Temporary Buffer to storage Encryption Result
-    alignas(16) Uint8 m_temp_enc_result[cAESBlockSize]{};
+    alignas(16) Uint32 m_temp_enc_result_32[cAESBlockSize / 4]{};
+    Uint8* m_temp_enc_result_8 = reinterpret_cast<Uint8*>(m_temp_enc_result_32);
 
     bool m_finalized = false;
 
@@ -92,7 +94,7 @@ class Cmac::Impl : public cipher::Aes
     }
     Status reset()
     {
-        memset(m_temp_enc_result, 0, cAESBlockSize);
+        memset(m_temp_enc_result_8, 0, cAESBlockSize);
         memset(m_storage_buffer, 0, cAESBlockSize);
         m_storage_buffer_offset = 0;
         m_finalized             = false;
@@ -109,15 +111,58 @@ class Cmac::Impl : public cipher::Aes
         if (plaintext_size == 0) {
             return StatusOk();
         }
-        avx2::update(plaintext,
-                     plaintext_size,
-                     m_storage_buffer,
-                     m_storage_buffer_offset,
-                     m_encrypt_keys,
-                     m_temp_enc_result,
-                     getRounds(),
-                     cAESBlockSize);
+        if (CpuId::cpuHasAvx2()) {
+            avx2::update(plaintext,
+                         plaintext_size,
+                         m_storage_buffer,
+                         m_storage_buffer_offset,
+                         m_encrypt_keys,
+                         m_temp_enc_result_8,
+                         getRounds(),
+                         cAESBlockSize);
+            return status;
+        }
 
+        if ((m_storage_buffer_offset + plaintext_size) <= cAESBlockSize) {
+            utils::CopyBlock<Uint64>(m_storage_buffer + m_storage_buffer_offset,
+                                     plaintext,
+                                     plaintext_size);
+            m_storage_buffer_offset += plaintext_size;
+            return status;
+        }
+
+        int n_blocks      = 0;
+        int bytes_to_copy = 0;
+        if (m_storage_buffer_offset <= cAESBlockSize) {
+            int b = cAESBlockSize - (m_storage_buffer_offset);
+            utils::CopyBlock<Uint64>(
+                m_storage_buffer + m_storage_buffer_offset, plaintext, b);
+            m_storage_buffer_offset = cAESBlockSize;
+            plaintext += b;
+            int ptxt_bytes_rem = plaintext_size - b;
+            n_blocks           = ((ptxt_bytes_rem) / cAESBlockSize);
+            bytes_to_copy      = ((ptxt_bytes_rem)-cAESBlockSize * (n_blocks));
+            if (bytes_to_copy == 0) {
+                n_blocks      = n_blocks - 1;
+                bytes_to_copy = cAESBlockSize;
+            }
+        }
+
+        alcp::cipher::xor_a_b(m_temp_enc_result_8,
+                              m_storage_buffer,
+                              m_temp_enc_result_8,
+                              cAESBlockSize);
+        encryptBlock(m_temp_enc_result_32, m_encrypt_keys, getRounds());
+        for (int i = 0; i < n_blocks; i++) {
+            alcp::cipher::xor_a_b(m_temp_enc_result_8,
+                                  plaintext,
+                                  m_temp_enc_result_8,
+                                  cAESBlockSize);
+            encryptBlock(m_temp_enc_result_32, m_encrypt_keys, getRounds());
+            plaintext += 16;
+        }
+        utils::CopyBlock<Uint64>(m_storage_buffer, plaintext, bytes_to_copy);
+        m_storage_buffer_offset = bytes_to_copy;
         return StatusOk();
     }
 
@@ -176,7 +221,7 @@ class Cmac::Impl : public cipher::Aes
         if (!m_finalized) {
             return InternalError("Cannot Copy CMAC without finalizing");
         } else {
-            utils::CopyBytes(buff, m_temp_enc_result, size);
+            utils::CopyBytes(buff, m_temp_enc_result_8, size);
         }
         return StatusOk();
     }
@@ -187,7 +232,17 @@ class Cmac::Impl : public cipher::Aes
     {
         if (CpuId::cpuHasAvx2()) {
             avx2::get_subkeys(m_k1, m_k2, m_encrypt_keys, getRounds());
+            return;
         }
+
+        Uint32 temp[4]{};
+        encryptBlock(temp, m_encrypt_keys, getRounds());
+        Uint8 rb[16]{};
+        rb[15] = 0x87;
+
+        Uint8* p_temp_8 = reinterpret_cast<Uint8*>(temp);
+        cipher::dbl(p_temp_8, rb, m_k1);
+        cipher::dbl(m_k1, rb, m_k2);
     }
 
     void processChunk()
@@ -197,7 +252,7 @@ class Cmac::Impl : public cipher::Aes
         assert(m_storage_buffer_offset == cAESBlockSize);
 
         if (CpuId::cpuHasAvx2()) {
-            avx2::processChunk(m_temp_enc_result,
+            avx2::processChunk(m_temp_enc_result_8,
                                m_storage_buffer,
                                m_encrypt_keys,
                                getRounds());
