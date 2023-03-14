@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -23,35 +23,30 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
  */
 
-#pragma once
+#include "rng/rngerror.hh"
 
-#include "alcp/defs.hh"
-#include "alcp/types.hh"
-
-namespace alcp::base {
-
-/**
- * @detail
- * IError is an interface class for all errors, to be used with
- * ErrorBase class which defines few necessary methods.
- */
-
-class IError
+namespace alcp::rng::status {
+Status
+NoEntropy(String msg)
 {
-  protected:
-    ALCP_DEFS_DEFAULT_CTOR_AND_EMPTY_VIRTUAL_DTOR(IError);
-
-  public:
-    virtual const String message() const = 0;
-    virtual Uint64       code() const    = 0;
-
-    bool operator==(const IError& other) { return isEq(*this, other); }
-
-  protected:
-    virtual bool isEq(IError const& lhs, IError const& rhs) const = 0;
-};
-
-} // namespace alcp::base
+    auto e = RngError(ErrorCode::eNoEntropy);
+    e.setGenericError(alcp::base::eInternal);
+    return Status(e, msg);
+}
+Status
+NotPermitted(String msg)
+{
+    auto e = RngError(ErrorCode::eNotPermitted);
+    e.setGenericError(alcp::base::eInvalidArgument);
+    return Status(e, msg);
+}
+Status
+NoEntropySource(String msg)
+{
+    auto e = RngError(ErrorCode::eNoEntropySource);
+    e.setGenericError(alcp::base::eNotAvailable);
+    return Status(e, msg);
+}
+} // namespace alcp::rng::status

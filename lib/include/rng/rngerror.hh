@@ -80,11 +80,9 @@ class RngError final : public ErrorBase
 
     virtual ~RngError() {}
 
-    // virtual Uint64 code() const override { return ErrorBase::code(); }
-
     virtual const String message() const override
     {
-        return __toStr(ErrorBase::getModuleError());
+        return __toStr(getModuleError());
     };
 
   private:
@@ -109,5 +107,11 @@ class RngError final : public ErrorBase
         }
     }
 };
+
+namespace status {
+    Status NoEntropy(String msg);
+    Status NotPermitted(String msg);
+    Status NoEntropySource(String msg);
+} // namespace status
 
 } // namespace alcp::rng

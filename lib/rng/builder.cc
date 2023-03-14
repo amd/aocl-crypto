@@ -124,7 +124,7 @@ RngBuilder::Build(const alc_rng_info_t& rRngInfo, Context& rCtx)
             sts.update(__build_rng<HardwareRng>(rRngInfo, rCtx));
             break;
         default:
-            sts.update(status::InvalidArgument("RNG type specified is unknown"));
+            sts.update(status::NotPermitted("RNG type specified is unknown"));
             break;
     }
 

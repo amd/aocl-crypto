@@ -143,7 +143,7 @@ class GenericError final : public ErrorBase
      */
     virtual const String message() const override
     {
-        return __toStr(ErrorBase::getModuleError());
+        return __toStr(ErrorBase::getGenericError());
     }
 
   private:

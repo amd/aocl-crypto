@@ -30,7 +30,6 @@
 
 #include "alcp/interface/Ierror.hh"
 #include "alcp/module.hh"
-
 #include <string>
 #include <unordered_map>
 
@@ -99,6 +98,9 @@ class ErrorBase
         // FIXME: Implement me
         return ALC_MODULE_TYPE_NONE;
     }
+
+    void   setGenericError(Uint16 err) { m_error.field.base_error = err; }
+    Uint16 getGenericError() const { return m_error.field.base_error; }
 
   protected:
     ErrorBase(Uint16 module_id, Uint16 module_error)

@@ -28,10 +28,10 @@
 
 #pragma once
 
-#include "alcp/errorbase.hh"
 #include "alcp/interface/Ierror.hh"
 #include "alcp/macros.h"
 #include "alcp/types.hh"
+#include "error.hh"
 
 #include <sstream>
 
@@ -73,6 +73,12 @@ class Status final
     Status(IError& ie, const StringView msg)
         : m_code{ ie.code() }
         , m_message{ makeMessage(ie.message(), msg) }
+    {
+    }
+
+    Status(ErrorBase& eb, const String msg)
+        : m_code{ eb.code() }
+        , m_message{ makeMessage(eb, msg) }
     {
     }
 
@@ -143,6 +149,7 @@ class Status final
 
         m_code        = s.code();
         m_err_message = s.message();
+        m_message     = s.m_message;
         // m_err_specifics = msg;
 
         return true;
@@ -153,15 +160,17 @@ class Status final
     explicit Status(Uint64 code)
         : m_code{ code }
     {
+        // FIXME m_message has to be set somehow
     }
 
     friend Status StatusOk();
     String        makeMessage(ErrorBase& eb, const String& details)
     {
         std::ostringstream ss{ "", std::ios_base::ate };
-
-        ss << cAlcpErrorPrefix << ":" << eb.getName() << ":" << eb.message()
-           << ":" << details;
+        String             genericErrorMessage =
+            GenericError(eb.getGenericError()).message();
+        ss << cAlcpErrorPrefix << ":" << genericErrorMessage << ":"
+           << eb.getName() << ":" << eb.message() << ":" << details;
         // m_message = module_error + String(" ") + details;
         // return m_message;
         return ss.str();

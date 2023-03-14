@@ -30,7 +30,6 @@
 
 #include "rng.hh"
 #include "rng/drbg.hh"
-#include "rng/rngerror.hh"
 #include <memory>
 
 namespace alcp::rng {
