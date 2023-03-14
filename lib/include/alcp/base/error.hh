@@ -128,6 +128,14 @@ class GenericError final : public ErrorBase
 
     virtual ~GenericError(){};
 
+    // Gets the module name
+    virtual String getName() override { return mapModuleName(moduleId()); }
+
+    virtual alc_module_type_t getType() override
+    {
+        return static_cast<alc_module_type_t>(moduleId());
+    }
+
     /**
      * @brief
      *

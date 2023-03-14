@@ -111,6 +111,14 @@ class AesError final : public ErrorBase
         return __toStr(ErrorBase::getModuleError());
     };
 
+    // Gets the module name
+    virtual String getName() override { return mapModuleName(moduleId()); }
+
+    virtual alc_module_type_t getType() override
+    {
+        return static_cast<alc_module_type_t>(moduleId());
+    }
+
   private:
     static const String __toStr(Uint16 mod_err)
     {

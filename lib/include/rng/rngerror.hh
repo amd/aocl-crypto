@@ -62,17 +62,17 @@ class RngError final : public ErrorBase
 
   public:
     RngError()
-        : ErrorBase{ ALC_MODULE_TYPE_RNG, ErrorCode::eOk }
+        : ErrorBase{ ErrorCode::eOk }
     {
     }
 
     RngError(Uint64 ecode)
-        : ErrorBase{ ALC_MODULE_TYPE_RNG, RngError::toUint16(ecode) }
+        : ErrorBase{ RngError::toUint16(ecode) }
     {
     }
 
     RngError(rng::ErrorCode ecode)
-        : ErrorBase{ ALC_MODULE_TYPE_RNG, ecode }
+        : ErrorBase{ ecode }
     {
     }
 
@@ -84,6 +84,14 @@ class RngError final : public ErrorBase
     {
         return __toStr(getModuleError());
     };
+
+    // Gets the module name
+    virtual String getName() override { return mapModuleName(moduleId()); }
+
+    virtual alc_module_type_t getType() override
+    {
+        return static_cast<alc_module_type_t>(moduleId());
+    }
 
   private:
     static const String __toStr(Uint16 mod_err)

@@ -55,10 +55,7 @@ class ErrorBase
     {
     }
 
-    ErrorBase(Uint16 code)
-        : m_error{ code }
-    {
-    }
+    ErrorBase(Uint16 module_error) { setModuleError(module_error); }
 
     ErrorBase(Uint64 code)
         : m_error{ code }
@@ -82,32 +79,19 @@ class ErrorBase
      */
     static bool registerModuleError(ModuleType mt, IError& ie);
 
-    // Gets the module name
-    virtual String getName() override
-    {
-        auto it = Module::typeNameMap.find(
-            static_cast<alcp::alc_module_type_t>(m_error.field.module_id));
-        if (it != typeNameMap.end()) {
-            return it->second;
-        }
-        return "Unknwn Module";
-    }
-
-    virtual alc_module_type_t getType() override
-    {
-        // FIXME: Implement me
-        return ALC_MODULE_TYPE_NONE;
-    }
-
     void   setGenericError(Uint16 err) { m_error.field.base_error = err; }
     Uint16 getGenericError() const { return m_error.field.base_error; }
 
   protected:
-    ErrorBase(Uint16 module_id, Uint16 module_error)
-        : ErrorBase{}
+    // Common Function to map module id to module name
+    static String mapModuleName(Uint16 module_id)
     {
-        m_error.field.module_id    = module_id;
-        m_error.field.module_error = module_error;
+        auto it = Module::typeNameMap.find(
+            static_cast<alcp::alc_module_type_t>(module_id));
+        if (it != typeNameMap.end()) {
+            return it->second;
+        }
+        return "Unknwn Module";
     }
 
     void   setModuleError(Uint16 error) { m_error.field.module_error = error; }
@@ -131,7 +115,7 @@ class ErrorBase
             Uint64 module_error : 16; // 2 Byte
             Uint64 module_id    : 16; // 2 Byte
             Uint64 __reserved   : 16; // 2 Byte
-        } field;
+        } field = {};
     } m_error;
 
     //   static std::unordered_map<Uint16, IError> m_dispatcher_map;
