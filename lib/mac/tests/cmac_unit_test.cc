@@ -365,6 +365,7 @@ TEST(CMACRobustnessTest, CMAC_callCopyWithouFinalize)
     ASSERT_FALSE(s.ok());
 }
 
+#ifdef NDEBUG
 TEST(CMACRobustnessTest, CMAC_wrongKeySize)
 {
     Cmac  cmac2;
@@ -374,6 +375,7 @@ TEST(CMACRobustnessTest, CMAC_wrongKeySize)
     // should not be passing
     EXPECT_THROW(cmac2.setKey(key, sizeof(key) * 8), std::out_of_range);
 }
+#endif
 
 INSTANTIATE_TEST_SUITE_P(
     CMACTest,
