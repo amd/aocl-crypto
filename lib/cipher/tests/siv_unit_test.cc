@@ -47,15 +47,6 @@ class ALCP_API_EXPORT CmacSivTest final : public CmacSiv
 TEST(CMACSIV, Initiantiation)
 {
     CmacSiv siv_obj;
-#if 0
-    // clang-format on
-    EXPECT_EQ(siv_obj.getRounds(), 10);
-    // FIXME: Linking Error
-    // EXPECT_EQ(siv_obj.getKeySize(),128);
-    EXPECT_EQ(siv_obj.getNr(), 10);
-    // FIXME: Below test is not working
-    // EXPECT_EQ(siv_obj.getNk(),16);
-#endif
 }
 
 TEST(CMACSIV, setKeys)

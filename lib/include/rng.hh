@@ -47,10 +47,6 @@ class Rng : public IRng
     virtual void finish() = 0;
 
   private:
-    // FIXME: Unused Variable
-#if 0
-bool m_initialized = false;
-#endif
 };
 
 class OsRng final : public Rng

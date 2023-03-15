@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -47,14 +47,6 @@ static constexpr Uint64 /* define word size */
     /* chunks to proces */ cChunkSize       = cChunkSizeBits / 8,
     /* same in bits */ cHashSizeBits        = 384,
     /* Hash size in bytes */ cHashSize      = cHashSizeBits / 8;
-// FIXME: Unused Variables
-#if 0
-    cWordSize                               = 64,
-    /* num rounds in sha512 */ cNumRounds   = 80,
-    /*  */ cChunkSizeMask                   = cChunkSize - 1,
-    /* same in words */ cChunkSizeWords     = cChunkSizeBits / cWordSize,
-    cHashSizeWords                          = cHashSizeBits / cWordSize;
-#endif
 // clang-format on
 
 Sha384::Sha384(const alc_digest_info_t& rDInfo)

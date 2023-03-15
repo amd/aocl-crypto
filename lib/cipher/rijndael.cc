@@ -385,19 +385,6 @@ MixColumnsx8(Uint8* inp)
     mix_column_exchange(states, inp);
 }
 
-// FIXME: Unused Function
-#if 0
-static inline Uint32
-SubBytes(const Uint32& val)
-{
-    using namespace utils;
-    return MakeWord(GetSbox(GetByte(val, 0)),
-                    GetSbox(GetByte(val, 1)),
-                    GetSbox(GetByte(val, 2)),
-                    GetSbox(GetByte(val, 3)));
-}
-#endif
-
 static inline void
 SubBytes(Uint8* inp)
 {

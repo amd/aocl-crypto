@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -41,11 +41,6 @@ static const Uint8 DigestSize = 48;
 // Input Block size in bytes
 static constexpr Uint8 InputBlockSize = 128;
 // IV array size where every element is 8 bytes
-// FIXME: Unused Variables
-#if 0
-static const Uint8 IvArraySize   = 8;
-static const Uint8 IvElementSize = 8;
-#endif
 
 // clang-format off
 static const KnownAnswerMap message_digest = {

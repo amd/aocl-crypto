@@ -53,10 +53,6 @@ class ALCP_API_EXPORT SystemRng : public IRng
 
   private:
     bool m_prediction_resistance = false;
-    // FIXME: Unused Variable
-#if 0
-        Uint32 m_fd;
-#endif
     // class Impl;
     // std::unique_ptr<Impl> m_pimpl;
 };
