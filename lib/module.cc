@@ -33,47 +33,21 @@
 #include "alcp/cipher.h"
 
 #include "alcp/module.hh"
-#include "cipher.hh"
+#include "alcp/modulemanager.hh"
 
 namespace alcp {
 
-alc_module_type_t
-Module::getType()
-{
-    // FIXME: Horror ahead
-    return ALC_MODULE_TYPE_CIPHER;
-}
+using namespace alcp::base;
 
-const std::map<alc_module_type_t, std::string> Module::typeNameMap =
-    std::map<alc_module_type_t, std::string>{
-        { ALC_MODULE_TYPE_CIPHER, "CIPHER" },
-        { ALC_MODULE_TYPE_DIGEST, "DIGEST" },
-        { ALC_MODULE_TYPE_RNG, "RNG" },
-        { ALC_MODULE_TYPE_MAC, "MAC" },
-        { ALC_MODULE_TYPE_EC, "EC" },
-    };
-
-// Disabled because Prem asked.
-#if 0
-class Module::Impl
+class RngModule : public IModule
 {
   public:
-    using CipherModuleList = std::list<Cipher*>;
-    using CipherMap = std::unordered_map<alc_cipher_type_t, CipherModuleList>;
-#if 0
-    typedef std::unordered_map<const alc_rng_type_t, module_list_t> RngMap;
-    typedef std::unordered_map<const alc_digest_type_t, module_list_t>
-    DigestMap;
-#endif
-    bool isType(alc_module_type_t t) const { return t == m_type; }
+    virtual String moduleName() const { return "Rng"; }
 
-  private:
-    std::string       m_name;
-    alc_module_type_t m_type;
-    CipherMap         m_cipher_map;
-    // DigestMap   m_digest_map
-    std::vector<Algorithm> m_algo;
+    virtual Uint16 moduleId() const
+    {
+        return static_cast<Uint16>(alcp::module::ALC_MODULE_TYPE_RNG);
+    }
 };
-#endif
 
 } // namespace alcp

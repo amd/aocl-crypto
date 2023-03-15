@@ -27,14 +27,31 @@
  */
 #pragma once
 
+#include "alcp/interface/Ierror.hh"
+#include "alcp/interface/Imodule.hh"
+#include "alcp/types.hh"
+#include "rng/rngerror.hh"
+
+#include <map>
 #include <string>
 
-// #include "alcp/cipher.h"
-#include "algorithm.hh"
-#include <map>
+namespace alcp::module {
 
-namespace alcp {
+enum Type : Uint16
+{
+    eModuleNone = 0,
+    eModuleBase = eModuleNone,
 
+    eModuleCipher,
+    eModuleDigest,
+    eModuleRng,
+    eModuleMac,
+    eModuleEc,
+
+    eModuleMax, /* should be last entry */
+};
+
+/* FIXME: following must be removed in favour of alcp::module::Type */
 typedef enum _alc_module_type
 {
     ALC_MODULE_TYPE_NONE = 0,
@@ -48,22 +65,37 @@ typedef enum _alc_module_type
     ALC_MODULE_TYPE_MAX,
 } alc_module_type_t;
 
-class Module
+class ModuleBase : public IModule
 {
   public:
-    ALCP_DEFS_DEFAULT_CTOR_AND_DTOR(Module);
+    ALCP_DEFS_DEFAULT_CTOR_AND_DTOR(ModuleBase);
 
-    static const std::map<alc_module_type_t, std::string> typeNameMap;
-
-    virtual std::string       getName() = 0;
-    virtual alc_module_type_t getType() = 0;
-    // bool isSupported(const alc_cipher_info_p c, alc_error_t& e) const;
-
-  private:
-#if 0
-    class Impl;
-    std::unique_ptr<Impl> impl;
-#endif
+    virtual String moduleName() const override { return "Base"; }
+    virtual Uint16 moduleId() const override
+    {
+        return static_cast<Uint16>(eModuleBase);
+    };
 };
 
-} // namespace alcp
+} // namespace alcp::module
+
+// FIXME: contents below should end up in lib/rng/rng_module.cc
+namespace alcp::rng {
+class RngModule final : public alcp::module::ModuleBase
+{
+  public:
+    virtual String moduleName() const override { return "Rng"; }
+
+    virtual Uint16 moduleId() const override
+    {
+        return static_cast<Uint16>(alcp::module::eModuleRng);
+    };
+
+    virtual const IError& getModuleError(Uint64 code) const override
+    {
+        auto aa = new RngError(code);
+        return *aa;
+    }
+};
+
+} // namespace alcp::rng

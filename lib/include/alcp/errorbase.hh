@@ -29,7 +29,6 @@
 #pragma once
 
 #include "alcp/interface/Ierror.hh"
-#include "alcp/module.hh"
 #include <string>
 #include <unordered_map>
 
@@ -42,9 +41,7 @@ namespace alcp::base {
  * The errors are extendable to support dynamic module loading (plugin system).
  *
  */
-class ErrorBase
-    : public IError
-    , public Module
+class ErrorBase : public IError
 {
 
   public:
@@ -69,31 +66,16 @@ class ErrorBase
      */
     virtual Uint64 code() const override { return m_error.val; }
 
-    /**
-     * @brief   Register a module specific error handler
-     *
-     * @param[in]       mt      Module type
-     * @param[in]       ie      Error Interface to the module error handler
-     *
-     * @return  boolean Status of whether the registration was success
-     */
-    static bool registerModuleError(ModuleType mt, IError& ie);
+    virtual const String message() const override final;
 
-    void   setGenericError(Uint16 err) { m_error.field.base_error = err; }
-    Uint16 getGenericError() const { return m_error.field.base_error; }
+    virtual const String detailedError() const = 0;
 
   protected:
-    // Common Function to map module id to module name
-    static String mapModuleName(Uint16 module_id)
-    {
-        auto it = Module::typeNameMap.find(
-            static_cast<alcp::alc_module_type_t>(module_id));
-        if (it != typeNameMap.end()) {
-            return it->second;
-        }
-        return "Unknwn Module";
-    }
+    // Getter and Setter for generic error code
+    void   setBaseError(Uint16 err) { m_error.field.base_error = err; }
+    Uint16 getBaseError() const { return m_error.field.base_error; }
 
+    // Getter and Setter for module specific error code
     void   setModuleError(Uint16 error) { m_error.field.module_error = error; }
     Uint16 getModuleError() const { return m_error.field.module_error; }
 
@@ -105,6 +87,8 @@ class ErrorBase
     virtual Uint16 moduleId() const = 0;
 
   protected:
+    Uint16 getModuleId() const { return m_error.field.module_id; }
+
     union
     {
         Uint64 val; // 8 Bytes

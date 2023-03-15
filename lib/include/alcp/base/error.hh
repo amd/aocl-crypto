@@ -96,7 +96,6 @@ enum ErrorCode : Uint16
 
 class GenericError final : public ErrorBase
 {
-
   protected:
     virtual bool isEq(IError const& lhs, IError const& rhs) const override final
     {
@@ -106,9 +105,6 @@ class GenericError final : public ErrorBase
         return l.moduleId() == r.moduleId()
                && l.getModuleError() == r.getModuleError();
     }
-
-    /* Module ID for Generic errors is 0 */
-    virtual Uint16 moduleId() const override { return 0; }
 
   public:
     GenericError()
@@ -128,20 +124,13 @@ class GenericError final : public ErrorBase
 
     virtual ~GenericError(){};
 
-    // Gets the module name
-    virtual String getName() override { return mapModuleName(moduleId()); }
-
-    virtual alc_module_type_t getType() override
-    {
-        return static_cast<alc_module_type_t>(moduleId());
-    }
-
-    /**
+   /**
      * @brief
      *
      * @return Uint64   A combined error code,
      */
     virtual Uint64 code() const override { return ErrorBase::code(); }
+    virtual Uint16 moduleId() const { return 0; }
 
     /**
      * @detail
@@ -149,9 +138,9 @@ class GenericError final : public ErrorBase
      * @param
      * @return  String containing message description of the error
      */
-    virtual const String message() const override
+    virtual const String detailedError() const override
     {
-        return __toStr(ErrorBase::getGenericError());
+        return __toStr(ErrorBase::getBaseError());
     }
 
   private:

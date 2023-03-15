@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,42 +27,22 @@
  */
 #pragma once
 
-#include "alcp/base.hh"
 #include "alcp/defs.hh"
-#include "alcp/module.hh"
+#include "alcp/interface/Ierror.hh"
+#include "alcp/types.hh"
 
-#include "alcp/pattern/singleton.hh"
+namespace alcp::base {
 
-#include <memory> /* for std::unique_ptr */
-#include <vector>
-
-namespace alcp {
-
-class ModuleManager : public Singleton<ModuleManager>
+class IModule
 {
   public:
-    bool           addModule(IModule const& im);
-    IModule const& getModule(Uint16 id) const;
-    /**
-     * @brief   Register a module specific error handler
-     *
-     * @param[in]       mt      Module type
-     * @param[in]       ie      Error Interface to the module error handler
-     *
-     * @return  boolean Status of whether the registration was success
-     */
-    static bool addModuleError(Uint16 moduleId, IError const& ie);
+    ALCP_DEFS_DEFAULT_CTOR_AND_EMPTY_VIRTUAL_DTOR(IModule);
 
   public:
-    ModuleManager()  = default;
-    ~ModuleManager() = default;
+    virtual String moduleName() const = 0;
+    virtual Uint16 moduleId() const   = 0;
 
-    ModuleManager(ModuleManager const&)  = delete;
-    void operator=(ModuleManager const&) = delete;
-
-  private:
-    // class Impl;
-    // std::unique_ptr<Impl> impl;
+    virtual const IError& getModuleError(Uint64 code) const = 0;
 };
 
-} // namespace alcp
+} // namespace alcp::base

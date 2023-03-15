@@ -29,7 +29,6 @@
 
 #include "alcp/base.hh"
 #include "alcp/errorbase.hh"
-#include "alcp/module.hh"
 
 namespace alcp::cipher {
 
@@ -75,7 +74,9 @@ class AesError final : public ErrorBase
         return false;
     }
 
+#if 0
     virtual Uint16 moduleId() const override { return ALC_MODULE_TYPE_RNG; }
+#endif
 
   public:
     AesError()
@@ -106,11 +107,14 @@ class AesError final : public ErrorBase
 
     // virtual Uint64 code() const override { return ErrorBase::code(); }
 
-    virtual const String message() const override
+    virtual const String detailedError() const override
     {
         return __toStr(ErrorBase::getModuleError());
     };
+    /* FIXME: remove this function */
+    virtual Uint16 moduleId() const { return 0;}
 
+#if 0
     // Gets the module name
     virtual String getName() override { return mapModuleName(moduleId()); }
 
@@ -118,6 +122,7 @@ class AesError final : public ErrorBase
     {
         return static_cast<alc_module_type_t>(moduleId());
     }
+#endif
 
   private:
     static const String __toStr(Uint16 mod_err)

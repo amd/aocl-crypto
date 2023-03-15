@@ -28,25 +28,25 @@
 #include "rng/rngerror.hh"
 
 namespace alcp::rng::status {
+
 Status
 NoEntropy(String msg)
 {
-    auto e = RngError(ErrorCode::eNoEntropy);
-    e.setGenericError(alcp::base::eInternal);
+    auto e = RngError(alcp::base::eInternal, ErrorCode::eNoEntropy);
     return Status(e, msg);
 }
+
 Status
 NotPermitted(String msg)
 {
-    auto e = RngError(ErrorCode::eNotPermitted);
-    e.setGenericError(alcp::base::eInvalidArgument);
+    auto e = RngError(alcp::base::eInvalidArgument, ErrorCode::eNotPermitted);
     return Status(e, msg);
 }
+
 Status
 NoEntropySource(String msg)
 {
-    auto e = RngError(ErrorCode::eNoEntropySource);
-    e.setGenericError(alcp::base::eNotAvailable);
+    auto e = RngError(alcp::base::eNotAvailable, ErrorCode::eNoEntropySource);
     return Status(e, msg);
 }
 } // namespace alcp::rng::status

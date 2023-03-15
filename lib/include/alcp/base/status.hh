@@ -76,12 +76,6 @@ class Status final
     {
     }
 
-    Status(ErrorBase& eb, const String msg)
-        : m_code{ eb.code() }
-        , m_message{ makeMessage(eb, msg) }
-    {
-    }
-
     Status(IError&& ie, const StringView msg)
         : m_code{ ie.code() }
         , m_message{ makeMessage(ie.message(), msg) }
@@ -96,7 +90,7 @@ class Status final
     // Status::ok()
     // All is Well !!! if m_error is eOk or eNone
     ALCP_DEFS_NO_DISCARD bool ok() const;
-    std::string_view          message() const { return m_message; }
+    StringView                message() const { return m_message; }
 
     /**
      * @name code()
@@ -132,6 +126,7 @@ class Status final
         return true;
     }
 
+#if 0
     bool update(ErrorBase& eb, const String& msg)
     {
         if (m_code)
@@ -141,16 +136,14 @@ class Status final
         m_message = makeMessage(eb, msg);
         return true;
     }
-
+#endif
     bool update(const Status& s)
     {
         if (m_code)
             return false;
 
-        m_code        = s.code();
-        m_err_message = s.message();
-        m_message     = s.m_message;
-        // m_err_specifics = msg;
+        m_code    = s.code();
+        m_message = s.message();
 
         return true;
     }
@@ -164,40 +157,19 @@ class Status final
     }
 
     friend Status StatusOk();
-    String        makeMessage(ErrorBase& eb, const String& details)
-    {
-        std::ostringstream ss{ "", std::ios_base::ate };
-        String             genericErrorMessage =
-            GenericError(eb.getGenericError()).message();
-        ss << cAlcpErrorPrefix << ":" << genericErrorMessage << ":"
-           << eb.getName() << ":" << eb.message() << ":" << details;
-        // m_message = module_error + String(" ") + details;
-        // return m_message;
-        return ss.str();
-    }
-
-    // FIXME: Remove this function if not needed
-    String makeMessage(String const& module_error, String const& details)
-    {
-        std::ostringstream ss{ "", std::ios_base::ate };
-        ss << module_error << ":" << details;
-        // m_message = module_error + String(" ") + details;
-        // return m_message;
-        return ss.str();
-    }
 
     String makeMessage(const StringView& module_error,
                        const StringView& details)
     {
         std::ostringstream ss{ "", std::ios_base::ate };
-        ss << module_error << " " << details;
+        ss << module_error << " : " << details;
         return ss.str();
     }
 
     Uint64 m_code;
     String m_message;
 
-    StringView m_err_message, m_err_specifics;
+    // StringView m_err_message, m_err_specifics;
 };
 
 inline bool

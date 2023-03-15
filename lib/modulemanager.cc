@@ -32,31 +32,96 @@
 #include <vector>
 
 #include "alcp/error.h"
-
+#include "alcp/module.hh"
 #include "alcp/modulemanager.hh"
 
 namespace alcp {
+using namespace alcp::module;
 
+using errorMapT = std::unordered_map<Uint16, IModule&>;
+static errorMapT m_module_error_map;
+
+#if 0
 class ModuleManager::Impl
 {
+  private:
+    using errorMapT = std::unordered_map<Uint16, IError&>;
+    errorMapT m_module_error_map;
+
   public:
-    // std::unordered_map<alc_module_type_t, std::vector<Module*>> m_modules;
+    bool addModuleError(Uint16 moduleId, IError const& ie);
+};
+#endif
+
+// ModuleManager::ModuleManager()
+//: impl{ new Impl }
+//{
+// std::cout << "Size is : " << sizeof(ModuleManager)
+//           << "  and pimpl: " << sizeof(Impl) << std::endl;
+//}
+
+class DefaultModule : public ModuleBase
+{
+  public:
+    virtual const IError& getModuleError(Uint64 code) const override
+    {
+        auto aa = new GenericError{ code };
+        return *aa;
+    }
 };
 
-ModuleManager::ModuleManager()
-    : impl{ new Impl }
+class NullError : public IError
 {
-    std::cout << "Size is : " << sizeof(ModuleManager)
-              << "  and pimpl: " << sizeof(Impl) << std::endl;
-}
+  public:
+    virtual const String message() const override { return "NullErrorModule"; }
+    virtual Uint64 code() const override { return static_cast<Uint16>(-1); }
 
-ModuleManager&
-ModuleManager::getInstance()
+    bool operator==(const IError& other) { return isEq(*this, other); }
+
+  protected:
+    virtual bool isEq(IError const& lhs, IError const& rhs) const override
+    {
+        return false;
+    }
+};
+
+#if 1
+const IModule&
+ModuleManager::getModule(Uint16 mid) const
 {
-    static ModuleManager mm;
-    return mm;
+    errorMapT::const_iterator it = m_module_error_map.find(mid);
+
+    if (it != m_module_error_map.end()) {
+        return it->second;
+    }
+
+    auto aa = new DefaultModule{};
+    return *aa;
 }
+#endif
 
-ModuleManager::~ModuleManager() {}
+bool
+ModuleManager::addModuleError(Uint16 moduleId, IError const& ie)
+{
+    errorMapT::const_iterator it = m_module_error_map.find(moduleId);
 
+    if (it != m_module_error_map.end()) {
+        // return it->setModuleError();
+    }
+
+    return true;
+}
+#if 0
+IError const&
+ModuleManager::getModuleError(Uint16 moduleId)
+{
+    errorMapT::const_iterator it = m_module_error_map.find(moduleId);
+
+    if (it != m_module_error_map.end()) {
+        return it->second;
+    }
+
+    return NullError{};
+}
+#endif
 } // namespace alcp

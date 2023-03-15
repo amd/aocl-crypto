@@ -28,8 +28,8 @@
 
 #include "alcp/base.hh"
 /* TODO: move this to alcp/rng/ */
-#include "../../rng/include/hardware_rng.hh"
 #include "rng/rngerror.hh"
+#include "../../rng/include/hardware_rng.hh"
 
 #include <immintrin.h>
 

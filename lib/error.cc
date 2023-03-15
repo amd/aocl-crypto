@@ -26,14 +26,28 @@
  */
 
 #include "alcp/base/error.hh"
+#include "alcp/interface/Ierror.hh"
+#include "alcp/module.hh"
+#include "alcp/modulemanager.hh"
 
-namespace alcp {
+#include <sstream>
+#include <type_traits>
 
+namespace alcp::base {
 
-	namespace rng {
+const String
+ErrorBase::message() const
+{
+    GenericError _ge{ getBaseError() };
+    const auto&  _mm = ModuleManager::getInstance().getModule(getModuleId());
 
-	}
+    const auto&       _me = _mm.getModuleError(getModuleError());
+    std::stringstream ss;
 
+    ss << "ALCP ERROR : " << _ge.detailedError() << ": " << _mm.moduleName()
+       << " : " << _me.message() << "\n";
 
+    return ss.str();
 }
 
+} // namespace alcp::base

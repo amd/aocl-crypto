@@ -29,7 +29,6 @@
 
 #include "alcp/base.hh"
 #include "alcp/errorbase.hh"
-#include "alcp/module.hh"
 
 namespace alcp::rng {
 
@@ -58,7 +57,8 @@ class RngError final : public ErrorBase
         return false;
     }
 
-    virtual Uint16 moduleId() const override { return ALC_MODULE_TYPE_RNG; }
+    /* FIXME: this needs to be removed */
+    virtual Uint16 moduleId() const override { return 0;}
 
   public:
     RngError()
@@ -76,22 +76,20 @@ class RngError final : public ErrorBase
     {
     }
 
+    RngError(base::ErrorCode bcode, rng::ErrorCode ecode)
+        : ErrorBase{ ecode }
+    {
+        setBaseError(static_cast<Uint16>(bcode));
+    }
+
     static Uint16 toUint16(Uint64 ecode) { return static_cast<Uint16>(ecode); }
 
     virtual ~RngError() {}
 
-    virtual const String message() const override
+    virtual const String detailedError() const override
     {
         return __toStr(getModuleError());
     };
-
-    // Gets the module name
-    virtual String getName() override { return mapModuleName(moduleId()); }
-
-    virtual alc_module_type_t getType() override
-    {
-        return static_cast<alc_module_type_t>(moduleId());
-    }
 
   private:
     static const String __toStr(Uint16 mod_err)
