@@ -36,13 +36,6 @@ function(alcp_check_compiler_version)
 	endif()
 endfunction(alcp_check_compiler_version)
 
-function(alcp_check_cmake_version)
-    set(CMAKE_MIN_REQ "3.1.0")
-    if(${CMAKE_VERSION} VERSION_LESS ${CMAKE_MIN_REQ})
-        message(FATAL_ERROR "CMake version detected: ${CMAKE_VERSION}, min. reqd. version is ${CMAKE_MIN_REQ}!")
-    endif()
-endfunction(alcp_check_cmake_version)
-
 # Generic Warnings
 function(alcp_get_cflags_warnings)
     set(ALCP_CFLAGS_WARNINGS  "/W4" CACHE INTERNAL "")

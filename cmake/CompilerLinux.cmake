@@ -52,14 +52,6 @@ function(alcp_check_compiler_version)
     endif()
 endfunction(alcp_check_compiler_version)
 
-# check min required cmake version
-#FIXME: should this be same for windows as well?
-function(alcp_check_cmake_version)
-    set(CMAKE_MIN_REQ "3.1.0")
-    if(${CMAKE_VERSION} VERSION_LESS ${CMAKE_MIN_REQ})
-        message(FATAL_ERROR "CMake version detected: ${CMAKE_VERSION}, min. reqd. version is ${CMAKE_MIN_REQ}!")
-    endif()
-endfunction(alcp_check_cmake_version)
 
 # Generic Warnings
 function(alcp_get_cflags_warnings)

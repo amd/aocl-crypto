@@ -45,9 +45,6 @@ ENDIF(UNIX)
 
 PROJECT (ALCP)
 
-#FIXME: is this to be made common for win and lin?
-alcp_check_cmake_version()
-
 # check for compiler version
 alcp_check_compiler_version()
 
