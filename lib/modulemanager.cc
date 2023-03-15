@@ -31,7 +31,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "alcp/error.h"
+#include "alcp/base/error.hh"
 #include "alcp/module.hh"
 #include "alcp/modulemanager.hh"
 
@@ -60,21 +60,20 @@ class ModuleManager::Impl
 //           << "  and pimpl: " << sizeof(Impl) << std::endl;
 //}
 
-class DefaultModule : public ModuleBase
+class NullError : public ErrorBase
 {
   public:
-    virtual const IError& getModuleError(Uint64 code) const override
-    {
-        auto aa = new GenericError{ code };
-        return *aa;
-    }
-};
+    ALCP_DEFS_DEFAULT_CTOR_AND_DTOR(NullError);
 
-class NullError : public IError
-{
-  public:
-    virtual const String message() const override { return "NullErrorModule"; }
-    virtual Uint64 code() const override { return static_cast<Uint16>(-1); }
+    NullError(Uint64 code)
+        : ErrorBase(code)
+    {
+    }
+
+    virtual const String detailedError() const override
+    {
+        return "NullErrorModule";
+    }
 
     bool operator==(const IError& other) { return isEq(*this, other); }
 
@@ -85,20 +84,33 @@ class NullError : public IError
     }
 };
 
-#if 1
+class DefaultModule : public ModuleBase
+{
+
+  public:
+    ALCP_DEFS_DEFAULT_CTOR_AND_DTOR(DefaultModule);
+
+    DefaultModule(Uint16 mid) {}
+
+    virtual const IError& getModuleError(Uint64 code) const override
+    {
+        static NullError ne;
+        return ne;
+    }
+};
+
 const IModule&
-ModuleManager::getModule(Uint16 mid) const
+ModuleManager::getModule(Uint16 mid)
 {
     errorMapT::const_iterator it = m_module_error_map.find(mid);
+    static DefaultModule      dm;
 
     if (it != m_module_error_map.end()) {
         return it->second;
     }
 
-    auto aa = new DefaultModule{};
-    return *aa;
+    return dm;
 }
-#endif
 
 bool
 ModuleManager::addModuleError(Uint16 moduleId, IError const& ie)
@@ -111,6 +123,7 @@ ModuleManager::addModuleError(Uint16 moduleId, IError const& ie)
 
     return true;
 }
+
 #if 0
 IError const&
 ModuleManager::getModuleError(Uint16 moduleId)
@@ -124,4 +137,5 @@ ModuleManager::getModuleError(Uint16 moduleId)
     return NullError{};
 }
 #endif
+
 } // namespace alcp

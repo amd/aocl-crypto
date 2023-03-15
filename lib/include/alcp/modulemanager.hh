@@ -41,8 +41,8 @@ namespace alcp {
 class ModuleManager : public Singleton<ModuleManager>
 {
   public:
-    bool           addModule(IModule const& im);
-    IModule const& getModule(Uint16 id) const;
+    static bool           addModule(IModule const& im);
+    static IModule const& getModule(Uint16 id);
     /**
      * @brief   Register a module specific error handler
      *

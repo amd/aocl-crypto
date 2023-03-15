@@ -102,7 +102,7 @@ class GenericError final : public ErrorBase
         auto l = dynamic_cast<const GenericError&>(lhs);
         auto r = dynamic_cast<const GenericError&>(rhs);
 
-        return l.moduleId() == r.moduleId()
+        return l.getModuleId() == r.getModuleId()
                && l.getModuleError() == r.getModuleError();
     }
 
@@ -112,25 +112,13 @@ class GenericError final : public ErrorBase
     {
     }
 
-    GenericError(Uint64 ecode)
-        : ErrorBase{ ecode }
-    {
-    }
-
     GenericError(ErrorCode ecode)
-        : ErrorBase{ static_cast<Uint64>(ecode) }
+        : GenericError{}
     {
+        ErrorBase::setBaseError(static_cast<Uint16>(ecode));
     }
 
     virtual ~GenericError(){};
-
-   /**
-     * @brief
-     *
-     * @return Uint64   A combined error code,
-     */
-    virtual Uint64 code() const override { return ErrorBase::code(); }
-    virtual Uint16 moduleId() const { return 0; }
 
     /**
      * @detail

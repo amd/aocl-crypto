@@ -57,9 +57,6 @@ class RngError final : public ErrorBase
         return false;
     }
 
-    /* FIXME: this needs to be removed */
-    virtual Uint16 moduleId() const override { return 0;}
-
   public:
     RngError()
         : ErrorBase{ ErrorCode::eOk }

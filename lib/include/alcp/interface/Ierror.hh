@@ -48,6 +48,7 @@ class IError
     virtual const String message() const = 0;
     virtual Uint64       code() const    = 0;
 
+    virtual const String detailedError() const = 0;
     bool operator==(const IError& other) { return isEq(*this, other); }
 
   protected:

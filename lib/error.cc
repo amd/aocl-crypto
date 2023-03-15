@@ -38,14 +38,11 @@ namespace alcp::base {
 const String
 ErrorBase::message() const
 {
-    GenericError _ge{ getBaseError() };
     const auto&  _mm = ModuleManager::getInstance().getModule(getModuleId());
-
     const auto&       _me = _mm.getModuleError(getModuleError());
     std::stringstream ss;
 
-    ss << "ALCP ERROR : " << _ge.detailedError() << ": " << _mm.moduleName()
-       << " : " << _me.message() << "\n";
+    ss << "ALCP ERROR : " << _mm.moduleName()  << ": " << _me.detailedError();
 
     return ss.str();
 }

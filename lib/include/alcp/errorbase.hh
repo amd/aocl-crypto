@@ -68,7 +68,11 @@ class ErrorBase : public IError
 
     virtual const String message() const override final;
 
-    virtual const String detailedError() const = 0;
+    static Uint16 codeToModuleId(Uint64 code)
+    {
+        uPackedT tmp = { code };
+        return tmp.field.module_id;
+    }
 
   protected:
     // Getter and Setter for generic error code
@@ -80,16 +84,15 @@ class ErrorBase : public IError
     Uint16 getModuleError() const { return m_error.field.module_error; }
 
     /**
-     * @brief   virtual function to get derived class's module id
+     * @brief   Getter function for module_id
      *
      * @return  an Uint16 compatible with module_id
      */
-    virtual Uint16 moduleId() const = 0;
+    Uint16 getModuleId() const { return m_error.field.module_id; }
+    void   setModuleId(Uint16 mid) { m_error.field.module_id = mid; }
 
   protected:
-    Uint16 getModuleId() const { return m_error.field.module_id; }
-
-    union
+    typedef union
     {
         Uint64 val; // 8 Bytes
 
@@ -100,7 +103,8 @@ class ErrorBase : public IError
             Uint64 module_id    : 16; // 2 Byte
             Uint64 __reserved   : 16; // 2 Byte
         } field = {};
-    } m_error;
+    } uPackedT;
+    uPackedT m_error;
 
     //   static std::unordered_map<Uint16, IError> m_dispatcher_map;
 };
