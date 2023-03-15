@@ -164,7 +164,7 @@ ecdh_Cross(alc_ec_info_t info)
     std::string        LibStrMain = "", LibStrExt = "";
 
     /*TODO, Keysize in bytes. might change for other curves */
-    int                KeySize = 32;
+    int                KeySize = ECDH_KEYSIZE;
     std::vector<Uint8> AlcpPeer1PubKey(KeySize, 0), AlcpPeer2PubKey(KeySize, 0),
         AlcpPeer1SharedSecretKey(KeySize, 0),
         AlcpPeer2SharedSecretKey(KeySize, 0);

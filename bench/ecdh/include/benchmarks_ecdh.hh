@@ -29,6 +29,7 @@
 #pragma once
 #include "ecdh/alc_ecdh_base.hh"
 #include "ecdh/ecdh_base.hh"
+#include <string>
 
 // #ifdef USE_IPP
 // #include "ecdh/ipp_ecdh_base.hh"
@@ -100,31 +101,25 @@ void inline ecdh_Bench(benchmark::State& state,
 
     /* init wont be benchmarked */
     if (!Eb->init(info, data)) {
-        std::cout << "Error in ECDH init: " << LibStr << std::endl;
-        return;
+        state.SkipWithError("Error in ECDH init");
     }
 
     /* Just benchmark Gen public key */
     if (opt == ECDH_BENCH_GEN_PUB_KEY) {
         for (auto _ : state) {
             if (!Eb->GeneratePublicKey(data)) {
-                std::cout << "Error in GeneratePublicKey:" << LibStr
-                          << std::endl;
-                return;
+                state.SkipWithError("Error in ECDH GeneratePublicKey");
             }
         }
     } else if (opt == ECDH_BENCH_GEN_SECRET_KEY) {
         /* this step is needed for computing secret key */
         if (!Eb->GeneratePublicKey(data)) {
-            std::cout << "Error in GeneratePublicKey:" << LibStr << std::endl;
-            return;
+            state.SkipWithError("Error in ECDH GeneratePublicKey");
         }
-        /* benchmark only Computing secret key */
+        /* to benchmark only Computing secret key */
         for (auto _ : state) {
             if (!Eb->ComputeSecretKey(data)) {
-                std::cout << "Error in ComputeSecretKey:" << LibStr
-                          << std::endl;
-                return;
+                state.SkipWithError("Error in ECDH ComputeSecretKey");
             }
         }
     }
