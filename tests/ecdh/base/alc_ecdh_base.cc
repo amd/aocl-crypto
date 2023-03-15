@@ -39,15 +39,16 @@ AlcpEcdhBase::AlcpEcdhBase(const alc_ec_info_t& info) {}
 bool
 AlcpEcdhBase::init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data)
 {
-    alc_error_t   err;
+    alc_error_t err;
+    m_info              = info;
     alc_ec_info_t dinfo = m_info;
-
+    Uint64        size  = alcp_ec_context_size(&dinfo);
     /* for peer1 */
     if (m_ec_handle1 == nullptr) {
         m_ec_handle1          = new alc_ec_handle_t;
-        m_ec_handle1->context = malloc(alcp_ec_context_size(&dinfo) * 2);
+        m_ec_handle1->context = malloc(size);
     } else if (m_ec_handle1->context == nullptr) {
-        m_ec_handle1->context = malloc(alcp_ec_context_size(&dinfo) * 2);
+        m_ec_handle1->context = malloc(size);
     }
 
     err = alcp_ec_request(&dinfo, m_ec_handle1);
@@ -59,9 +60,9 @@ AlcpEcdhBase::init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data)
     /* for peer2 */
     if (m_ec_handle2 == nullptr) {
         m_ec_handle2          = new alc_ec_handle_t;
-        m_ec_handle2->context = malloc(alcp_ec_context_size(&dinfo) * 2);
+        m_ec_handle2->context = malloc(size);
     } else if (m_ec_handle2->context == nullptr) {
-        m_ec_handle2->context = malloc(alcp_ec_context_size(&dinfo) * 2);
+        m_ec_handle2->context = malloc(size);
     }
 
     err = alcp_ec_request(&dinfo, m_ec_handle2);
