@@ -28,6 +28,7 @@
 
 #pragma once
 
+#include "alcp/alcp.hh"
 #include "alcp/interface/Ierror.hh"
 #include "alcp/types.hh"
 #include "error.hh"
