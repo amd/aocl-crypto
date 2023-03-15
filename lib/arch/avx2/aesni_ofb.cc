@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -39,19 +39,19 @@ namespace alcp::cipher::aesni {
  *   We re-use cryptOfb() for both
  */
 alc_error_t
-__crypt_ofb(const uint8_t* pInputText,  // ptr to inputText
-            uint8_t*       pOutputText, // ptr to outputtext
-            uint64_t       len,         // message length in bytes
-            const uint8_t* pKey,        // ptr to Key
+__crypt_ofb(const Uint8* pInputText,  // ptr to inputText
+            Uint8*       pOutputText, // ptr to outputtext
+            Uint64       len,         // message length in bytes
+            const Uint8* pKey,        // ptr to Key
             int            nRounds,     // No. of rounds
-            const uint8_t* pIv          // ptr to Initialization Vector
+            const Uint8* pIv          // ptr to Initialization Vector
 )
 {
     alc_error_t err    = ALC_ERROR_NONE;
-    uint64_t    blocks = len / Rijndael::cBlockSize;
+    Uint64    blocks = len / Rijndael::cBlockSize;
     __m128i     a1; // plaintext data
 
-    uint64_t i         = 0;
+    Uint64 i         = 0;
     auto     p_in_128  = reinterpret_cast<const __m128i*>(pInputText);
     auto     p_out_128 = reinterpret_cast<__m128i*>(pOutputText);
     auto     pkey128   = reinterpret_cast<const __m128i*>(pKey);
@@ -155,12 +155,12 @@ __crypt_ofb(const uint8_t* pInputText,  // ptr to inputText
 
 // multiple keyload code path: currently under experiments.
 namespace experimental {
-    alc_error_t cryptOfb(const uint8_t* pInputText,  // ptr to inputText
-                         uint8_t*       pOutputText, // ptr to outputtext
-                         uint64_t       len,         // message length in bytes
-                         const uint8_t* pKey,        // ptr to Key
+    alc_error_t cryptOfb(const Uint8* pInputText,  // ptr to inputText
+                         Uint8*       pOutputText, // ptr to outputtext
+                         Uint64       len,         // message length in bytes
+                         const Uint8* pKey,        // ptr to Key
                          int            nRounds,     // No. of rounds
-                         const uint8_t* pIv // ptr to Initialization Vector
+                         const Uint8* pIv // ptr to Initialization Vector
     )
     {
         alc_error_t err = ALC_ERROR_NONE;
@@ -176,8 +176,8 @@ namespace experimental {
          * OFB has dependency on previous output.
          */
 
-        uint64_t blocks = len / Rijndael::cBlockSize;
-        for (uint64_t i = 0; i < blocks; i++) {
+        Uint64 blocks = len / Rijndael::cBlockSize;
+        for (Uint64 i = 0; i < blocks; i++) {
             __m128i a1 = _mm_loadu_si128(p_in_128); // plaintext
 
             // 10 rounds
@@ -202,12 +202,12 @@ namespace experimental {
 //#define USE_EXPERIMENTAL 1
 
 alc_error_t
-EncryptOfb(const uint8_t* pPlainText,  // ptr to plaintext
-           uint8_t*       pCipherText, // ptr to ciphertext
-           uint64_t       len,         // message length in bytes
-           const uint8_t* pKey,        // ptr to Key
+EncryptOfb(const Uint8* pPlainText,  // ptr to plaintext
+           Uint8*       pCipherText, // ptr to ciphertext
+           Uint64       len,         // message length in bytes
+           const Uint8* pKey,        // ptr to Key
            int            nRounds,     // No. of rounds
-           const uint8_t* pIv          // ptr to Initialization Vector
+           const Uint8* pIv          // ptr to Initialization Vector
 )
 {
     alc_error_t err = ALC_ERROR_NONE;
@@ -230,12 +230,12 @@ EncryptOfb(const uint8_t* pPlainText,  // ptr to plaintext
 }
 
 alc_error_t
-DecryptOfb(const uint8_t* pCipherText, // ptr to ciphertext
-           uint8_t*       pPlainText,  // ptr to plaintext
-           uint64_t       len,         // message length in bytes
-           const uint8_t* pKey,        // ptr to Key
+DecryptOfb(const Uint8* pCipherText, // ptr to ciphertext
+           Uint8*       pPlainText,  // ptr to plaintext
+           Uint64       len,         // message length in bytes
+           const Uint8* pKey,        // ptr to Key
            int            nRounds,     // No. of rounds
-           const uint8_t* pIv          // ptr to Initialization Vector
+           const Uint8* pIv          // ptr to Initialization Vector
 )
 {
     alc_error_t err = ALC_ERROR_NONE;

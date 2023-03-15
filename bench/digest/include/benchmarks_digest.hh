@@ -53,7 +53,7 @@ std::vector<Int64> digest_block_sizes = {
 
 void inline Digest_Bench(benchmark::State& state,
                          alc_digest_info_t info,
-                         uint64_t          block_size)
+                         Uint64          block_size)
 {
     RngBase            rb;
     alc_error_t        error;

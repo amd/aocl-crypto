@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,9 +28,9 @@
 #include "avx512.hh"
 #include "vaes_avx512.hh"
 
+#include "alcp/types.hh"
 #include "cipher/aes.hh"
 #include "cipher/aes_xts.hh"
-#include "alcp/types.hh"
 #include "utils/copy.hh"
 
 #include <immintrin.h>
@@ -38,24 +38,24 @@
 namespace alcp::cipher::vaes512 {
 
 alc_error_t
-EncryptXtsAvx512(const uint8_t* pSrc,
-                 uint8_t*       pDest,
-                 uint64_t       len,
-                 const uint8_t* pKey,
-                 const uint8_t* pTweakKey,
-                 int            nRounds,
-                 const uint8_t* pIv)
+EncryptXtsAvx512(const Uint8* pSrc,
+                 Uint8*       pDest,
+                 Uint64       len,
+                 const Uint8* pKey,
+                 const Uint8* pTweakKey,
+                 int          nRounds,
+                 const Uint8* pIv)
 {
 
     auto p_key128       = reinterpret_cast<const __m128i*>(pKey);
     auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
     auto p_src512       = reinterpret_cast<const __m512i*>(pSrc);
     auto p_dest512      = reinterpret_cast<__m512i*>(pDest);
-    auto p_iv64         = reinterpret_cast<const uint64_t*>(pIv);
+    auto p_iv64         = reinterpret_cast<const Uint64*>(pIv);
 
-    uint64_t blocks                       = len / Rijndael::cBlockSize;
-    uint64_t extra_bytes_in_message_block = len % Rijndael::cBlockSize;
-    uint64_t chunk                        = 8 * 4;
+    Uint64 blocks                       = len / Rijndael::cBlockSize;
+    Uint64 extra_bytes_in_message_block = len % Rijndael::cBlockSize;
+    Uint64 chunk                        = 8 * 4;
 
     // iv encryption using tweak key to get alpha
     __m512i extendedIV =
@@ -293,15 +293,15 @@ EncryptXtsAvx512(const uint8_t* pSrc,
         blocks -= chunk;
     }
 
-    __m512i  lastTweak    = tweakx8[tweak_idx];
-    uint8_t* p_lastTweak8 = reinterpret_cast<uint8_t*>(&lastTweak);
-    uint8_t* p_dest8      = reinterpret_cast<uint8_t*>(p_dest512);
-    auto     p_src8       = reinterpret_cast<const uint8_t*>(p_src512);
+    __m512i lastTweak    = tweakx8[tweak_idx];
+    Uint8*  p_lastTweak8 = reinterpret_cast<Uint8*>(&lastTweak);
+    Uint8*  p_dest8      = reinterpret_cast<Uint8*>(p_dest512);
+    auto    p_src8       = reinterpret_cast<const Uint8*>(p_src512);
 
     if (blocks) {
-        uint8_t  k           = ((1 << (blocks + blocks)) - 1);
-        __m512i  src_text_1  = _mm512_maskz_loadu_epi64(k, p_src512);
-        uint8_t* p_src_text8 = reinterpret_cast<uint8_t*>(&src_text_1);
+        Uint8   k           = ((1 << (blocks + blocks)) - 1);
+        __m512i src_text_1  = _mm512_maskz_loadu_epi64(k, p_src512);
+        Uint8*  p_src_text8 = reinterpret_cast<Uint8*>(&src_text_1);
 
         src_text_1 = (lastTweak ^ src_text_1);
 
@@ -320,9 +320,9 @@ EncryptXtsAvx512(const uint8_t* pSrc,
     }
 
     if (extra_bytes_in_message_block) {
-        __m512i  stealed_text, temp_tweak;
-        uint8_t* p_stealed_text = reinterpret_cast<uint8_t*>(&stealed_text);
-        uint8_t* p_temp_tweak   = reinterpret_cast<uint8_t*>(&temp_tweak);
+        __m512i stealed_text, temp_tweak;
+        Uint8*  p_stealed_text = reinterpret_cast<Uint8*>(&stealed_text);
+        Uint8*  p_temp_tweak   = reinterpret_cast<Uint8*>(&temp_tweak);
 
         utils::CopyBytes(p_temp_tweak, p_lastTweak8 + ((16 * (blocks))), (16));
 
@@ -345,23 +345,23 @@ EncryptXtsAvx512(const uint8_t* pSrc,
 }
 
 alc_error_t
-DecryptXtsAvx512(const uint8_t* pSrc,
-                 uint8_t*       pDest,
-                 uint64_t       len,
-                 const uint8_t* pKey,
-                 const uint8_t* pTweakKey,
-                 int            nRounds,
-                 const uint8_t* pIv)
+DecryptXtsAvx512(const Uint8* pSrc,
+                 Uint8*       pDest,
+                 Uint64       len,
+                 const Uint8* pKey,
+                 const Uint8* pTweakKey,
+                 int          nRounds,
+                 const Uint8* pIv)
 {
     auto p_key128       = reinterpret_cast<const __m128i*>(pKey);
     auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
     auto p_src512       = reinterpret_cast<const __m512i*>(pSrc);
     auto p_dest512      = reinterpret_cast<__m512i*>(pDest);
-    auto p_iv64         = reinterpret_cast<const uint64_t*>(pIv);
+    auto p_iv64         = reinterpret_cast<const Uint64*>(pIv);
 
-    uint64_t blocks                       = len / Rijndael::cBlockSize;
-    uint64_t extra_bytes_in_message_block = len % Rijndael::cBlockSize;
-    uint64_t chunk                        = 8 * 4;
+    Uint64 blocks                       = len / Rijndael::cBlockSize;
+    Uint64 extra_bytes_in_message_block = len % Rijndael::cBlockSize;
+    Uint64 chunk                        = 8 * 4;
 
     // iv encryption using tweak key to get alpha
     __m512i extendedIV =
@@ -627,14 +627,14 @@ DecryptXtsAvx512(const uint8_t* pSrc,
 
     __m512i  lastTweak    = tweakx8[tweak_idx];
     __m128i* p_lastTweak  = reinterpret_cast<__m128i*>(&lastTweak);
-    uint8_t* p_lastTweak8 = reinterpret_cast<uint8_t*>(&lastTweak);
-    uint8_t* p_dest8      = reinterpret_cast<uint8_t*>(p_dest512);
-    auto     p_src8       = reinterpret_cast<const uint8_t*>(p_src512);
+    Uint8*   p_lastTweak8 = reinterpret_cast<Uint8*>(&lastTweak);
+    Uint8*   p_dest8      = reinterpret_cast<Uint8*>(p_dest512);
+    auto     p_src8       = reinterpret_cast<const Uint8*>(p_src512);
 
     if (blocks) {
-        uint8_t  k           = (uint8_t)((1 << (blocks + blocks)) - 1);
-        __m512i  src_text_1  = _mm512_maskz_loadu_epi64(k, p_src512);
-        uint8_t* p_src_text8 = reinterpret_cast<uint8_t*>(&src_text_1);
+        Uint8   k           = (Uint8)((1 << (blocks + blocks)) - 1);
+        __m512i src_text_1  = _mm512_maskz_loadu_epi64(k, p_src512);
+        Uint8*  p_src_text8 = reinterpret_cast<Uint8*>(&src_text_1);
 
         if (extra_bytes_in_message_block) {
 
@@ -657,9 +657,9 @@ DecryptXtsAvx512(const uint8_t* pSrc,
                          p_dest8 + (16 * (blocks - 1)),
                          extra_bytes_in_message_block);
 
-        __m512i  stealed_text, tweak_1;
-        uint8_t* p_stealed_text = reinterpret_cast<uint8_t*>(&stealed_text);
-        uint8_t* p_tweak_1      = reinterpret_cast<uint8_t*>(&tweak_1);
+        __m512i stealed_text, tweak_1;
+        Uint8*  p_stealed_text = reinterpret_cast<Uint8*>(&stealed_text);
+        Uint8*  p_tweak_1      = reinterpret_cast<Uint8*>(&tweak_1);
 
         utils::CopyBytes(p_tweak_1, p_lastTweak8 + ((16 * (blocks))), (16));
 

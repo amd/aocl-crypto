@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,19 +36,19 @@ using alcp::utils::CpuId;
 namespace alcp::cipher {
 
 alc_error_t
-cryptCtr(const uint8_t* pInputText, // ptr to plaintext for encrypt
+cryptCtr(const Uint8* pInputText, // ptr to plaintext for encrypt
                                     // and ciphertext for decrypt
-         uint8_t* pOutputText,      // ptr to ciphertext for encrypt and
+         Uint8* pOutputText,      // ptr to ciphertext for encrypt and
                                     // plaintext for decrypt
-         uint64_t       len,        // message length in bytes
-         const uint8_t* pKey,       // ptr to Key
+         Uint64       len,        // message length in bytes
+         const Uint8* pKey,       // ptr to Key
          int            nRounds,    // No. of rounds
-         const uint8_t* pIv,        // ptr to Initialization Vector
+         const Uint8* pIv,        // ptr to Initialization Vector
          bool           isVaes,
          bool           isAvx512Cap)
 {
     alc_error_t err     = ALC_ERROR_NONE;
-    uint64_t    blocks  = len / Rijndael::cBlockSize;
+    Uint64    blocks  = len / Rijndael::cBlockSize;
     auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
 
     if (isVaes && isAvx512Cap) {
@@ -68,10 +68,10 @@ cryptCtr(const uint8_t* pInputText, // ptr to plaintext for encrypt
 }
 
 alc_error_t
-Ctr::decrypt(const uint8_t* pCipherText,
-             uint8_t*       pPlainText,
-             uint64_t       len,
-             const uint8_t* pIv) const
+Ctr::decrypt(const Uint8* pCipherText,
+             Uint8*       pPlainText,
+             Uint64       len,
+             const Uint8* pIv) const
 {
     alc_error_t  err = ALC_ERROR_NONE;
     bool         isVaes      = false;
@@ -98,10 +98,10 @@ Ctr::decrypt(const uint8_t* pCipherText,
 }
 
 alc_error_t
-Ctr::encrypt(const uint8_t* pPlainText,
-             uint8_t*       pCipherText,
-             uint64_t       len,
-             const uint8_t* pIv) const
+Ctr::encrypt(const Uint8* pPlainText,
+             Uint8*       pCipherText,
+             Uint64       len,
+             const Uint8* pIv) const
 {
     alc_error_t  err = ALC_ERROR_NONE;
     bool         isVaes      = false;

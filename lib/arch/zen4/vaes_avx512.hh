@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,14 +35,14 @@
 
 namespace alcp::cipher { namespace vaes512 {
 
-    alc_error_t ExpandKeys(const uint8_t* pUserKey,
-                           uint8_t*       pEncKey,
-                           uint8_t*       pDecKey,
+    alc_error_t ExpandKeys(const Uint8* pUserKey,
+                           Uint8*       pEncKey,
+                           Uint8*       pDecKey,
                            int            nRounds);
 
     // ctr APIs for vaes
     void ctrInit(__m512i*       c1,
-                 const uint8_t* pIv,
+                 const Uint8* pIv,
                  __m512i*       onelo,
                  __m512i*       one_x,
                  __m512i*       two_x,

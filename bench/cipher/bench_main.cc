@@ -32,11 +32,11 @@
 #include <memory>
 
 // Test blocksizes, append more if needed, size is in bytes
-std::vector<int64_t> blocksizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
+std::vector<Int64> blocksizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
 
 int
 CipherAes(benchmark::State& state,
-          uint64_t          blockSize,
+          Uint64          blockSize,
           encrypt_t         enc,
           alc_cipher_mode_t alcpMode,
           size_t            keylen)

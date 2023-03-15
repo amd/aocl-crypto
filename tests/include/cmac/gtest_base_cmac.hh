@@ -135,7 +135,7 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
 
         /*conv cmac output into a vector */
         /* we need only the no of bytes needed, from the output */
-        std::vector<uint8_t> cmac_vector(
+        std::vector<Uint8> cmac_vector(
             std::begin(cmac), std::begin(cmac) + ds.getCmac().size());
 
         EXPECT_TRUE(

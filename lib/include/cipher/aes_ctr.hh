@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -40,13 +40,13 @@ namespace alcp::cipher { namespace aes {
     using namespace vaes;
 
     template<typename T>
-    uint64_t ctrBlk(const T*       p_in_x,
-                    T*             p_out_x,
-                    uint64_t       blocks,
-                    const __m128i* pkey128,
-                    const uint8_t* pIv,
-                    int            nRounds,
-                    uint8_t        factor)
+    Uint64 ctrBlk(const T*       p_in_x,
+                  T*             p_out_x,
+                  Uint64         blocks,
+                  const __m128i* pkey128,
+                  const Uint8*   pIv,
+                  int            nRounds,
+                  Uint8          factor)
     {
         T a1, a2, a3, a4;
         T b1, b2, b3, b4;
@@ -63,9 +63,9 @@ namespace alcp::cipher { namespace aes {
                 &eight_x,
                 &swap_ctr);
 
-        uint64_t blockCount4 = 4 * factor;
-        uint64_t blockCount2 = 2 * factor;
-        uint64_t blockCount1 = factor;
+        Uint64 blockCount4 = 4 * factor;
+        Uint64 blockCount2 = 2 * factor;
+        Uint64 blockCount1 = factor;
 
         for (; blocks >= blockCount4; blocks -= blockCount4) {
 
@@ -165,4 +165,3 @@ namespace alcp::cipher { namespace aes {
     }
 
 }} // namespace alcp::cipher::aes
-

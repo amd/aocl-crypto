@@ -36,7 +36,7 @@ struct Context
 {
     void* m_rng;
 
-    alc_error_t (*read_random)(void* pRng, uint8_t* buffer, int size);
+    alc_error_t (*read_random)(void* pRng, Uint8* buffer, int size);
     alc_error_t (*reseed)(void* pRng);
     alc_error_t (*finish)(void* pRng);
 };

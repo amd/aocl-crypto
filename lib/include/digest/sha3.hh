@@ -70,7 +70,7 @@ class ALCP_API_EXPORT Sha3 : public Digest
      * \param    size    should be valid size > 0
      *
      */
-    alc_error_t update(const uint8_t* pMsgBuf, Uint64 size);
+    alc_error_t update(const Uint8* pMsgBuf, Uint64 size);
 
     /**
      * \brief   Cleans up any resource that was allocated
@@ -107,7 +107,7 @@ class ALCP_API_EXPORT Sha3 : public Digest
      * \param    size    Either valid size or 0, if \buf is nullptr, size
      *                   is assumed to be zero
      */
-    alc_error_t finalize(const uint8_t* pMsgBuf, Uint64 size);
+    alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size);
 
     /**
      * \brief  Copies the has from object to supplied buffer
@@ -120,7 +120,7 @@ class ALCP_API_EXPORT Sha3 : public Digest
      *
      * \param    size    hash size to be copied from the object
      */
-    alc_error_t copyHash(uint8_t* pHash, Uint64 size) const;
+    alc_error_t copyHash(Uint8* pHash, Uint64 size) const;
 
     /**
      * @return The input block size to the hash function in bytes

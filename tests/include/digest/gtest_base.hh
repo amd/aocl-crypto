@@ -212,7 +212,7 @@ Digest_KAT(alc_digest_info_t info)
             }
 
             /*conv m_digest into a vector */
-            std::vector<uint8_t> digest_vector(std::begin(digest),
+            std::vector<Uint8> digest_vector(std::begin(digest),
                                                std::end(digest));
 
             EXPECT_TRUE(ArraysMatch(

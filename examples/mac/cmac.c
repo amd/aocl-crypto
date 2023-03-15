@@ -157,8 +157,8 @@ void demo_cmac()
         .mi_keyinfo = kinfo
     };
 
-    uint64_t mac_size = 16;
-    uint8_t  mac[mac_size];
+    Uint64 mac_size = 16;
+    Uint8  mac[mac_size];
     run_cmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
     displayResults("CMAC",
                    key,

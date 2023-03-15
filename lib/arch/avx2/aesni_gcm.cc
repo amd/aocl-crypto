@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,14 +37,14 @@
 namespace alcp::cipher::aesni {
 
 alc_error_t
-InitGcm(const uint8_t* pKey,
-        int            nRounds,
-        const uint8_t* pIv,
-        uint64_t       ivBytes,
-        __m128i*       pHsubKey_128,
-        __m128i*       ptag_128,
-        __m128i*       piv_128,
-        __m128i        reverse_mask_128)
+InitGcm(const Uint8* pKey,
+        int          nRounds,
+        const Uint8* pIv,
+        Uint64       ivBytes,
+        __m128i*     pHsubKey_128,
+        __m128i*     ptag_128,
+        __m128i*     piv_128,
+        __m128i      reverse_mask_128)
 {
     alc_error_t err     = ALC_ERROR_NONE;
     auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
@@ -85,9 +85,9 @@ InitGcm(const uint8_t* pKey,
             pIv128++;
         }
         if (remBytes) {
-            a128                 = _mm_setzero_si128();
-            const uint8_t* p_in  = reinterpret_cast<const uint8_t*>(pIv128);
-            uint8_t*       p_out = reinterpret_cast<uint8_t*>(&a128);
+            a128               = _mm_setzero_si128();
+            const Uint8* p_in  = reinterpret_cast<const Uint8*>(pIv128);
+            Uint8*       p_out = reinterpret_cast<Uint8*>(&a128);
             for (int i = 0; i < remBytes; i++) {
                 p_out[i] = p_in[i];
             }
@@ -145,14 +145,14 @@ gcmCryptInit(__m128i* c1,
     *c1 = iv_128;
 }
 
-static uint64_t
+static Uint64
 gcmBlk(const __m128i* p_in_x,
        __m128i*       p_out_x,
-       uint64_t       blocks,
+       Uint64         blocks,
        const __m128i* pkey128,
-       const uint8_t* pIv,
+       const Uint8*   pIv,
        int            nRounds,
-       uint8_t        factor,
+       Uint8          factor,
        // gcm specific params
        __m128i* pgHash_128,
        __m128i  Hsubkey_128,
@@ -184,9 +184,9 @@ gcmBlk(const __m128i* p_in_x,
         gMul(Hsubkey_128_3, Hsubkey_128, &Hsubkey_128_4);
     }
 
-    uint64_t blockCount4 = 4 * factor;
-    uint64_t blockCount2 = 2 * factor;
-    uint64_t blockCount1 = factor;
+    Uint64 blockCount4 = 4 * factor;
+    Uint64 blockCount2 = 2 * factor;
+    Uint64 blockCount1 = factor;
 
     for (; blocks >= blockCount4; blocks -= blockCount4) {
 
@@ -344,8 +344,8 @@ gcmBlk(const __m128i* p_in_x,
         b1 = alcp_shuffle_epi8(c1, swap_ctr);
         AesEncrypt(&b1, pkey128, nRounds);
 
-        const uint8_t* p_in  = reinterpret_cast<const uint8_t*>(p_in_x);
-        uint8_t*       p_out = reinterpret_cast<uint8_t*>(&a1);
+        const Uint8* p_in  = reinterpret_cast<const Uint8*>(p_in_x);
+        Uint8*       p_out = reinterpret_cast<Uint8*>(&a1);
 
         int i = 0;
         for (; i < remBytes; i++) {
@@ -364,7 +364,7 @@ gcmBlk(const __m128i* p_in_x,
             p_out[i] = 0;
         }
 
-        uint8_t* p_store = reinterpret_cast<uint8_t*>(p_out_x);
+        Uint8* p_store = reinterpret_cast<Uint8*>(p_out_x);
         for (i = 0; i < remBytes; i++) {
             p_store[i] = p_out[i];
         }
@@ -377,20 +377,20 @@ gcmBlk(const __m128i* p_in_x,
 }
 
 alc_error_t
-CryptGcm(const uint8_t* pInputText,  // ptr to inputText
-         uint8_t*       pOutputText, // ptr to outputtext
-         uint64_t       len,         // message length in bytes
-         const uint8_t* pKey,        // ptr to Key
-         int            nRounds,     // No. of rounds
-         const uint8_t* pIv,         // ptr to Initialization Vector
-         __m128i*       pgHash_128,
-         __m128i        Hsubkey_128,
-         __m128i        iv_128,
-         __m128i        reverse_mask_128,
-         bool           isEncrypt)
+CryptGcm(const Uint8* pInputText,  // ptr to inputText
+         Uint8*       pOutputText, // ptr to outputtext
+         Uint64       len,         // message length in bytes
+         const Uint8* pKey,        // ptr to Key
+         int          nRounds,     // No. of rounds
+         const Uint8* pIv,         // ptr to Initialization Vector
+         __m128i*     pgHash_128,
+         __m128i      Hsubkey_128,
+         __m128i      iv_128,
+         __m128i      reverse_mask_128,
+         bool         isEncrypt)
 {
     alc_error_t err      = ALC_ERROR_NONE;
-    uint64_t    blocks   = len / Rijndael::cBlockSize;
+    Uint64      blocks   = len / Rijndael::cBlockSize;
     int         remBytes = len - (blocks * Rijndael::cBlockSize);
 
     auto p_in_128  = reinterpret_cast<const __m128i*>(pInputText);
@@ -416,11 +416,11 @@ CryptGcm(const uint8_t* pInputText,  // ptr to inputText
 }
 
 alc_error_t
-processAdditionalDataGcm(const uint8_t* pAdditionalData,
-                         uint64_t       additionalDataLen,
-                         __m128i*       pgHash_128,
-                         __m128i        hash_subKey_128,
-                         __m128i        reverse_mask_128)
+processAdditionalDataGcm(const Uint8* pAdditionalData,
+                         Uint64       additionalDataLen,
+                         __m128i*     pgHash_128,
+                         __m128i      hash_subKey_128,
+                         __m128i      reverse_mask_128)
 {
     alc_error_t err = ALC_ERROR_NONE;
     if (additionalDataLen == 0) {
@@ -441,9 +441,9 @@ processAdditionalDataGcm(const uint8_t* pAdditionalData,
     }
 
     if (ad_remBytes) {
-        const uint8_t* p_in  = reinterpret_cast<const uint8_t*>(pAd128);
-        uint8_t*       p_out = reinterpret_cast<uint8_t*>(&ad1);
-        int            i     = 0;
+        const Uint8* p_in  = reinterpret_cast<const Uint8*>(pAd128);
+        Uint8*       p_out = reinterpret_cast<Uint8*>(&ad1);
+        int          i     = 0;
 
         for (; i < ad_remBytes; i++) {
             p_out[i] = p_in[i];
@@ -458,14 +458,14 @@ processAdditionalDataGcm(const uint8_t* pAdditionalData,
 }
 
 alc_error_t
-GetTagGcm(uint64_t tagLen,
-          uint64_t plaintextLen,
-          uint64_t adLength,
+GetTagGcm(Uint64   tagLen,
+          Uint64   plaintextLen,
+          Uint64   adLength,
           __m128i* pgHash_128,
           __m128i* ptag128,
           __m128i  Hsubkey_128,
           __m128i  reverse_mask_128,
-          uint8_t* tag)
+          Uint8*   tag)
 {
     alc_error_t err       = ALC_ERROR_NONE;
     auto        p_tag_128 = reinterpret_cast<__m128i*>(tag);
@@ -483,9 +483,9 @@ GetTagGcm(uint64_t tagLen,
     if (tagLen == 16) {
         _mm_storeu_si128(p_tag_128, *ptag128);
     } else {
-        uint64_t       i     = 0;
-        const uint8_t* p_in  = reinterpret_cast<const uint8_t*>(ptag128);
-        uint8_t*       p_out = reinterpret_cast<uint8_t*>(tag);
+        Uint64       i     = 0;
+        const Uint8* p_in  = reinterpret_cast<const Uint8*>(ptag128);
+        Uint8*       p_out = reinterpret_cast<Uint8*>(tag);
         for (; i < tagLen; i++) {
             p_out[i] = p_in[i];
         }

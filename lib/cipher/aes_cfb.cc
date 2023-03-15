@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,10 +35,10 @@ using alcp::utils::CpuId;
 
 namespace alcp::cipher {
 alc_error_t
-Cfb::decrypt(const uint8_t* pCipherText,
-             uint8_t*       pPlainText,
-             uint64_t       len,
-             const uint8_t* pIv) const
+Cfb::decrypt(const Uint8* pCipherText,
+             Uint8*       pPlainText,
+             Uint64       len,
+             const Uint8* pIv) const
 {
     alc_error_t  err = ALC_ERROR_NONE;
     if (CpuId::cpuHasAvx512(utils::AVX512_F)
@@ -67,10 +67,10 @@ Cfb::decrypt(const uint8_t* pCipherText,
 }
 
 alc_error_t
-Cfb::encrypt(const uint8_t* pPlainText,
-             uint8_t*       pCipherText,
-             uint64_t       len,
-             const uint8_t* pIv) const
+Cfb::encrypt(const Uint8* pPlainText,
+             Uint8*       pCipherText,
+             Uint64       len,
+             const Uint8* pIv) const
 {
     alc_error_t  err = ALC_ERROR_NONE;
 

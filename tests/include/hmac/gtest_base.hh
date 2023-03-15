@@ -129,7 +129,7 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
         }
 
         /*conv m_digest into a vector */
-        std::vector<uint8_t> hmac_vector(std::begin(hmac), std::end(hmac));
+        std::vector<Uint8> hmac_vector(std::begin(hmac), std::end(hmac));
 
         EXPECT_TRUE(
             ArraysMatch(hmac_vector,  // Actual output

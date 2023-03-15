@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,6 +28,7 @@
 
 #pragma once
 
+#include "alcp/base.hh"
 #include <immintrin.h>
 #include <stdint.h>
 
@@ -61,13 +62,13 @@ namespace alcp::cipher { namespace vaes512 {
     static inline __m512i alcp_loadu_128(__m512i* ad)
     {
         __m512i ret = _mm512_setr_epi64(
-            ((uint64_t*)ad)[0], ((uint64_t*)ad)[1], 0, 0, 0, 0, 0, 0);
+            ((Uint64*)ad)[0], ((Uint64*)ad)[1], 0, 0, 0, 0, 0, 0);
         return ret;
     }
     static inline __m512i alcp_loadu_128(const __m512i* ad)
     {
         __m512i ret = _mm512_setr_epi64(
-            ((uint64_t*)ad)[0], ((uint64_t*)ad)[1], 0, 0, 0, 0, 0, 0);
+            ((Uint64*)ad)[0], ((Uint64*)ad)[1], 0, 0, 0, 0, 0, 0);
         return ret;
     }
 
@@ -156,8 +157,8 @@ namespace alcp::cipher { namespace vaes512 {
 
     static inline void alcp_storeu_128(__m512i* ad, __m512i x)
     {
-        ((uint64_t*)ad)[0] = x[0];
-        ((uint64_t*)ad)[1] = x[1];
+        ((Uint64*)ad)[0] = x[0];
+        ((Uint64*)ad)[1] = x[1];
     }
 
 }} // namespace alcp::cipher::vaes512

@@ -49,7 +49,7 @@ namespace alcp {
  *  void writeKey(void * const key, int length)
  *  {
  *  #define SIZE 1024
- *      uint8_t *buf = new uint8_t[SIZE];
+ *      Uint8 *buf = new Uint8[SIZE];
  *      BufferWriter bw(buf, SIZE);
  *      assert(bw.write(key, length), length);
  *  }

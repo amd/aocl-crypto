@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -91,10 +91,10 @@ static const known_answer_int_map_t bignum_int_known_answers = {
     { "negative_one_test", { -1, "-1" } },  //
     { "five_test", { 5, "5" } },            //
     { "negative_five_test", { -5, "-5" } }, //
-    { "min_int32_test",
+    { "min_Int32est",
       { std::numeric_limits<alcp::Int32>::min(), "-2147483648" } },
 
-    { "max_int32_test",
+    { "max_Int32est",
       { std::numeric_limits<alcp::Int32>::max(), "2147483647" } },
     { "min_int_test",
       { std::numeric_limits<alcp::Int64>::min(), "-9223372036854775808" } },

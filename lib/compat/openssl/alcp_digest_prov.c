@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -221,7 +221,7 @@ ALCP_prov_digest_init(void* vctx, const OSSL_PARAM params[])
     ENTER();
     // printf("Provider: Pointer->%p\n", cctx);
     alc_digest_info_p dinfo = &cctx->pc_digest_info;
-    uint64_t          size  = alcp_digest_context_size(dinfo);
+    Uint64          size  = alcp_digest_context_size(dinfo);
     cctx->handle.context    = OPENSSL_malloc(size);
     err                     = alcp_digest_request(dinfo, &(cctx->handle));
     if (alcp_is_error(err)) {
@@ -256,7 +256,7 @@ ALCP_prov_digest_final(void*          vctx,
     alc_prov_digest_ctx_p dctx = vctx;
     ENTER();
     alcp_digest_finalize(&(dctx->handle), NULL, 0);
-    alcp_digest_copy(&(dctx->handle), out, (uint64_t)outl);
+    alcp_digest_copy(&(dctx->handle), out, (Uint64)outl);
     // Northing to do!
     *outl = outsize;
     OPENSSL_free(dctx->handle.context);

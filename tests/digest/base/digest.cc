@@ -337,7 +337,7 @@ DataSet::getDigest()
     return Digest;
 }
 
-std::int64_t
+Int64
 DataSet::getDigestLen()
 {
     return DigestLen;

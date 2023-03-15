@@ -230,7 +230,7 @@ class alignas(16) Rijndael::Impl
         setKey(rKeyInfo.key, rKeyInfo.len);
     }
 
-    void setKey(const uint8_t* key, int len)
+    void setKey(const Uint8* key, int len)
     {
         m_block_size      = BitsToBlockSize(len);
         const Params& prm = ParamsMap.at(m_block_size);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,12 +37,12 @@
 
 namespace alcp::cipher { namespace vaes512 {
 
-    alc_error_t DecryptCfbAvx512(const uint8_t* pSrc,
-                                 uint8_t*       pDest,
-                                 uint64_t       len,
-                                 const uint8_t* pKey,
+    alc_error_t DecryptCfbAvx512(const Uint8* pSrc,
+                                 Uint8*       pDest,
+                                 Uint64       len,
+                                 const Uint8* pKey,
                                  int            nRounds,
-                                 const uint8_t* pIv)
+                                 const Uint8* pIv)
     {
         alc_error_t err       = ALC_ERROR_NONE;
         auto        pkey128   = reinterpret_cast<const __m128i*>(pKey);
@@ -53,7 +53,7 @@ namespace alcp::cipher { namespace vaes512 {
         __m512i b1, b2, b3, b4;
         __m512i _a1;
 
-        uint64_t blocks = len / Rijndael::cBlockSize;
+        Uint64 blocks = len / Rijndael::cBlockSize;
 
         __m512i key_512_0, key_512_1, key_512_2, key_512_3, key_512_4,
             key_512_5, key_512_6, key_512_7, key_512_8, key_512_9, key_512_10,

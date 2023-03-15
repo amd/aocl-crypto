@@ -63,10 +63,10 @@ alcp_cipher_context_size(const alc_cipher_info_p pCipherInfo)
 }
 
 bool
-validateKeys(const uint8_t* tweakKey, const uint8_t* encKey, uint32_t len)
+validateKeys(const Uint8* tweakKey, const Uint8* encKey, Uint32 len)
 {
 
-    for (uint32_t i = 0; i < len / 8; i++) {
+    for (Uint32 i = 0; i < len / 8; i++) {
         if (tweakKey[i] != encKey[i]) {
             return false;
         }

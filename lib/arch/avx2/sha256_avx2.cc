@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -46,12 +46,12 @@ namespace alcp::digest { namespace avx2 {
 
     // Loads data into the 128 bit registers
     inline void load_data(__m128i        x[SHA256_CHUNK_NUM_VECT_AVX],
-                          const uint8_t* data)
+                          const Uint8* data)
     {
         const __m128i shuf_mask =
             _mm_set_epi64x(0x0c0d0e0f08090a0bULL, 0x0405060700010203ULL);
 
-        for (uint32_t i = 0; i < SHA256_CHUNK_NUM_VECT_AVX; i++) {
+        for (Uint32 i = 0; i < SHA256_CHUNK_NUM_VECT_AVX; i++) {
             x[i] =
                 _mm_loadu_si128((const __m128i*)(&data[sizeof(__m128i) * i]));
             x[i] = _mm_shuffle_epi8(x[i], shuf_mask);
@@ -60,7 +60,7 @@ namespace alcp::digest { namespace avx2 {
 
     // Loads data into the 256 bit registers
     inline void load_data(__m256i        x[2 * SHA256_CHUNK_NUM_VECT_AVX2],
-                          const uint8_t* data)
+                          const Uint8* data)
     {
         const __m256i mask = _mm256_setr_epi32(0x00010203,
                                                0x04050607,
@@ -72,8 +72,8 @@ namespace alcp::digest { namespace avx2 {
                                                0x0c0d0e0f);
 
         for (size_t i = 0; i < SHA256_CHUNK_NUM_VECT_AVX2 * 2; i++) {
-            const uint32_t pos0 = (sizeof(__m256i) / 2) * i;
-            const uint32_t pos1 = pos0 + 64;
+            const Uint32 pos0 = (sizeof(__m256i) / 2) * i;
+            const Uint32 pos1 = pos0 + 64;
 
             x[i] = _mm256_insertf128_si256(
                 x[i], _mm_loadu_si128((__m128i*)&data[pos1]), 1);
@@ -87,18 +87,18 @@ namespace alcp::digest { namespace avx2 {
     // The processing has been done using 128 bit registers.
     // One block is processed at a time.
     inline void extend_msg(__m128i   x[SHA256_CHUNK_NUM_VECT_AVX],
-                           uint32_t* msg_sch_array)
+                           Uint32* msg_sch_array)
     {
         const __m128i lo_mask = _mm_setr_epi32(0x03020100, 0x0b0a0908, -1, -1);
         const __m128i hi_mask = _mm_setr_epi32(-1, -1, 0x03020100, 0x0b0a0908);
 
         __m128i temp[5];
 
-        for (uint32_t i = 0; i < 4; i++) {
+        for (Uint32 i = 0; i < 4; i++) {
             _mm_store_si128((__m128i*)&(msg_sch_array[i * 4]), x[i]);
         }
 
-        for (uint32_t j = 0; j < SHA256_MSG_SCH_NUM_VECT_AVX - 4; j++) {
+        for (Uint32 j = 0; j < SHA256_MSG_SCH_NUM_VECT_AVX - 4; j++) {
             // Calculation of s0
             size_t index = j;
             temp[0] =
@@ -160,8 +160,8 @@ namespace alcp::digest { namespace avx2 {
     // The processing has been done using 256 bit registers.
     // Two blocks are processed at a time.
     inline void extend_msg(__m256i   x[SHA256_CHUNK_NUM_VECT_AVX2 * 2],
-                           uint32_t* msg_sch_array1,
-                           uint32_t* msg_sch_array2)
+                           Uint32* msg_sch_array1,
+                           Uint32* msg_sch_array2)
     {
         const __m256i lo_mask = _mm256_setr_epi32(
             0x03020100, 0x0b0a0908, -1, -1, 0x03020100, 0x0b0a0908, -1, -1);
@@ -170,7 +170,7 @@ namespace alcp::digest { namespace avx2 {
 
         __m256i temp[5];
 
-        for (uint32_t i = 0; i < 4; i++) {
+        for (Uint32 i = 0; i < 4; i++) {
             //_mm_store_si128((__m128i*)&(msg_sch_array[i * 4]), x[i]);
             _mm_store_si128((__m128i*)&(msg_sch_array2[i * 4]),
                             _mm256_extracti128_si256(x[i], 1));
@@ -178,8 +178,8 @@ namespace alcp::digest { namespace avx2 {
                             _mm256_extracti128_si256(x[i], 0));
         }
 
-        for (uint32_t j = 0; j < 2 * SHA256_MSG_SCH_NUM_VECT_AVX2 - 4; j++) {
-            uint32_t index = j;
+        for (Uint32 j = 0; j < 2 * SHA256_MSG_SCH_NUM_VECT_AVX2 - 4; j++) {
+            Uint32 index = j;
             // Calculation of s0
             temp[0] =
                 _mm256_alignr_epi8(x[(index + 1) % 4], x[(index + 0) % 4], 4);
@@ -240,18 +240,18 @@ namespace alcp::digest { namespace avx2 {
         }
     }
 
-    alc_error_t ShaUpdate256(uint32_t*       pHash,
-                             const uint8_t*  pSrc,
-                             uint64_t        src_len,
-                             const uint32_t* pHashConstants)
+    alc_error_t ShaUpdate256(Uint32*       pHash,
+                             const Uint8*  pSrc,
+                             Uint64        src_len,
+                             const Uint32* pHashConstants)
     {
-        uint32_t num_blocks = src_len / 64;
+        Uint32 num_blocks = src_len / 64;
         // if num of blocks are odd, then need to process
         // a block with 128 bit registers. The rest can be
         // processed using 256 bit registers
         if (num_blocks & 1) {
             __m128i  chunk_vect[SHA256_CHUNK_NUM_VECT_AVX];
-            uint32_t msg_sch_array[64];
+            Uint32 msg_sch_array[64];
             load_data(chunk_vect, pSrc);
             extend_msg(chunk_vect, msg_sch_array);
             CompressMsg(msg_sch_array, pHash, pHashConstants);
@@ -260,8 +260,8 @@ namespace alcp::digest { namespace avx2 {
         }
         while (src_len >= 128) {
             __m256i  chunk_vect[SHA256_CHUNK_NUM_VECT_AVX2 * 2];
-            uint32_t msg_sch_array_1[64];
-            uint32_t msg_sch_array_2[64];
+            Uint32 msg_sch_array_1[64];
+            Uint32 msg_sch_array_2[64];
             load_data(chunk_vect, pSrc);
             extend_msg(chunk_vect, msg_sch_array_1, msg_sch_array_2);
             CompressMsg(msg_sch_array_1, pHash, pHashConstants);

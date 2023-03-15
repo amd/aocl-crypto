@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,28 +38,28 @@ using alcp::utils::CpuId;
 namespace alcp::cipher {
 
 alc_error_t
-Gcm::decrypt(const uint8_t* pInput,
-             uint8_t*       pOutput,
-             uint64_t       len,
-             const uint8_t* pIv) const
+Gcm::decrypt(const Uint8* pInput,
+             Uint8*       pOutput,
+             Uint64       len,
+             const Uint8* pIv) const
 {
     return ALC_ERROR_NONE;
 }
 
 alc_error_t
-Gcm::encrypt(const uint8_t* pInput,
-             uint8_t*       pOutput,
-             uint64_t       len,
-             const uint8_t* pIv) const
+Gcm::encrypt(const Uint8* pInput,
+             Uint8*       pOutput,
+             Uint64       len,
+             const Uint8* pIv) const
 {
     return ALC_ERROR_NONE;
 }
 
 alc_error_t
-Gcm::cryptUpdate(const uint8_t* pInput,
-                 uint8_t*       pOutput,
-                 uint64_t       len,
-                 const uint8_t* pIv,
+Gcm::cryptUpdate(const Uint8* pInput,
+                 Uint8*       pOutput,
+                 Uint64       len,
+                 const Uint8* pIv,
                  bool           isEncrypt)
 {
     alc_error_t  err = ALC_ERROR_NONE;
@@ -111,10 +111,10 @@ Gcm::cryptUpdate(const uint8_t* pInput,
 }
 
 alc_error_t
-Gcm::decryptUpdate(const uint8_t* pInput,
-                   uint8_t*       pOutput,
-                   uint64_t       len,
-                   const uint8_t* pIv)
+Gcm::decryptUpdate(const Uint8* pInput,
+                   Uint8*       pOutput,
+                   Uint64       len,
+                   const Uint8* pIv)
 {
     alc_error_t err = ALC_ERROR_NONE;
     err             = cryptUpdate(pInput, pOutput, len, pIv, false);
@@ -122,10 +122,10 @@ Gcm::decryptUpdate(const uint8_t* pInput,
 }
 
 alc_error_t
-Gcm::encryptUpdate(const uint8_t* pInput,
-                   uint8_t*       pOutput,
-                   uint64_t       len,
-                   const uint8_t* pIv)
+Gcm::encryptUpdate(const Uint8* pInput,
+                   Uint8*       pOutput,
+                   Uint64       len,
+                   const Uint8* pIv)
 {
     alc_error_t err = ALC_ERROR_NONE;
     err             = cryptUpdate(pInput, pOutput, len, pIv, true);
@@ -178,7 +178,7 @@ Gcm::setAad(const Uint8* pInput, Uint64 len)
     }
     // additional data processing, when input is additional data &
     // output is NULL
-    const uint8_t* pAdditionalData = pInput;
+    const Uint8* pAdditionalData = pInput;
     m_additionalDataLen            = len;
 
     // Additional data call
@@ -201,7 +201,7 @@ Gcm::getTag(Uint8* pOutput, Uint64 len)
         err = ALC_ERROR_INVALID_SIZE;
         return err;
     }
-    uint8_t* ptag = pOutput;
+    Uint8* ptag = pOutput;
     err           = aesni::GetTagGcm(len,
                            m_len,
                            m_additionalDataLen,

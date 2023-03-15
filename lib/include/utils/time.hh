@@ -36,16 +36,16 @@
 int gettimeofday(struct timeval* tv, struct timeval* tv1)
 {
     FILETIME    f_time;
-    uint64_t    time;
+    Uint64    time;
     SYSTEMTIME  s_time;
 
     //define UNIX EPOCH time for windows
-    static const uint64_t EPOCH = ((uint64_t)116444736000000000ULL);
+    static const Uint64 EPOCH = ((Uint64)116444736000000000ULL);
 
     GetSystemTimeAsFileTime(&f_time);
     FileTimeToSystemTime(&f_time, &s_time);
-    time = ((uint64_t)f_time.dwLowDateTime);
-    time += ((uint64_t)f_time.dwHighDateTime) << 32;
+    time = ((Uint64)f_time.dwLowDateTime);
+    time += ((Uint64)f_time.dwHighDateTime) << 32;
 
     tv->tv_sec = (long)((time - EPOCH) / 10000000L);
     tv->tv_usec = (long)(s_time.wMilliseconds * 1000);

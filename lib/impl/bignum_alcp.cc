@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -118,7 +118,8 @@ rightShiftMinusOne(Uint64 x, int shift)
 
 BigNum::Impl::Impl()
     : m_is_negative{ false }
-{}
+{
+}
 
 void
 BigNum::Impl::operator=(const BigNum& rhs)
@@ -501,8 +502,8 @@ __rshift(std::vector<Uint64>& r, std::vector<Uint64> a, int shifts)
 {
     int rlen = r.size(), alen = a.size();
 
-    uint64_t carry = 0;
-    int      j     = rlen - 1;
+    Uint64 carry = 0;
+    int    j     = rlen - 1;
     shifts %= 64;
 
     for (int k = alen - 1; j >= 0; k--) {

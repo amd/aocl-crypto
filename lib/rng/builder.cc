@@ -34,7 +34,7 @@
 namespace alcp::rng {
 
 static alc_error_t
-__read_random_wrapper(void* pRng, uint8_t* buffer, int size)
+__read_random_wrapper(void* pRng, Uint8* buffer, int size)
 {
     alc_error_t e    = ALC_ERROR_NONE;
     auto        p_ap = static_cast<IRng*>(pRng);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,8 +28,8 @@
 
 #pragma once
 
-#include "alcp/types.hh"
 #include "alcp/defs.hh"
+#include "alcp/types.hh"
 
 #include <cstdint>
 #include <memory>
@@ -37,7 +37,7 @@
 
 namespace alcp {
 
-enum class AlgorithmType : uint32_t
+enum class AlgorithmType : Uint32
 {
     eUnknown,
     eDigest,
@@ -56,4 +56,3 @@ class Algorithm
     ALCP_DEFS_DEFAULT_CTOR_AND_DTOR(Algorithm);
 };
 } // namespace alcp
-

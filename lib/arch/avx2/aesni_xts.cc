@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,13 +35,13 @@
 
 namespace alcp::cipher { namespace aesni {
 
-    alc_error_t EncryptXts(const uint8_t* pSrc,
-                           uint8_t*       pDest,
-                           uint64_t       len,
-                           const uint8_t* pKey,
-                           const uint8_t* pTweakKey,
+    alc_error_t EncryptXts(const Uint8* pSrc,
+                           Uint8*       pDest,
+                           Uint64       len,
+                           const Uint8* pKey,
+                           const Uint8* pTweakKey,
                            int            nRounds,
-                           const uint8_t* pIv)
+                           const Uint8* pIv)
     {
         auto p_key128       = reinterpret_cast<const __m128i*>(pKey);
         auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
@@ -49,7 +49,7 @@ namespace alcp::cipher { namespace aesni {
         auto p_dest128      = reinterpret_cast<__m128i*>(pDest);
         auto p_iv128        = reinterpret_cast<const __m128i*>(pIv);
 
-        uint64_t blocks          = len / Rijndael::cBlockSize;
+        Uint64 blocks          = len / Rijndael::cBlockSize;
         int      last_Round_Byte = len % Rijndael::cBlockSize;
 
         // iv encryption using tweak key to get alpha
@@ -151,8 +151,8 @@ namespace alcp::cipher { namespace aesni {
             blocks--;
         }
 
-        auto p_dest8 = reinterpret_cast<uint8_t*>(p_dest128);
-        auto p_src8  = reinterpret_cast<const uint8_t*>(p_src128);
+        auto p_dest8 = reinterpret_cast<Uint8*>(p_dest128);
+        auto p_src8  = reinterpret_cast<const Uint8*>(p_src128);
 
         if (last_Round_Byte) {
             // stealing bytes for (m-1)th chiper message and storing it at mth
@@ -160,7 +160,7 @@ namespace alcp::cipher { namespace aesni {
             // to be encrypted
             __m128i last_messgae_block;
             auto    p_last_messgae_block =
-                reinterpret_cast<uint8_t*>(&last_messgae_block);
+                reinterpret_cast<Uint8*>(&last_messgae_block);
 
             utils::CopyBytes(p_last_messgae_block + last_Round_Byte,
                              p_dest8 - 16 + last_Round_Byte,
@@ -178,13 +178,13 @@ namespace alcp::cipher { namespace aesni {
         return ALC_ERROR_NONE;
     }
 
-    alc_error_t DecryptXts(const uint8_t* pSrc,
-                           uint8_t*       pDest,
-                           uint64_t       len,
-                           const uint8_t* pKey,
-                           const uint8_t* pTweakKey,
+    alc_error_t DecryptXts(const Uint8* pSrc,
+                           Uint8*       pDest,
+                           Uint64       len,
+                           const Uint8* pKey,
+                           const Uint8* pTweakKey,
                            int            nRounds,
-                           const uint8_t* pIv)
+                           const Uint8* pIv)
     {
         auto p_key128       = reinterpret_cast<const __m128i*>(pKey);
         auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
@@ -192,7 +192,7 @@ namespace alcp::cipher { namespace aesni {
         auto p_dest128      = reinterpret_cast<__m128i*>(pDest);
         auto p_iv128        = reinterpret_cast<const __m128i*>(pIv);
 
-        uint64_t blocks          = len / Rijndael::cBlockSize;
+        Uint64 blocks          = len / Rijndael::cBlockSize;
         int      last_Round_Byte = len % Rijndael::cBlockSize;
 
         // iv encryption using tweak key to get alpha
@@ -304,14 +304,14 @@ namespace alcp::cipher { namespace aesni {
             blocks--;
         }
 
-        auto p_dest8 = reinterpret_cast<uint8_t*>(p_dest128);
-        auto p_src8  = reinterpret_cast<const uint8_t*>(p_src128);
+        auto p_dest8 = reinterpret_cast<Uint8*>(p_dest128);
+        auto p_src8  = reinterpret_cast<const Uint8*>(p_src128);
         if (last_Round_Byte) {
             // stealing bytes from (m-1)th message block and storing it at mth
             // destinatIon on last line of code and getting last message block
             // to encrypt
             __m128i last_src_text;
-            auto p_last_src_text = reinterpret_cast<uint8_t*>(&last_src_text);
+            auto p_last_src_text = reinterpret_cast<Uint8*>(&last_src_text);
 
             utils::CopyBytes(p_dest8, p_dest8 - 16, last_Round_Byte);
             utils::CopyBytes(p_last_src_text + last_Round_Byte,

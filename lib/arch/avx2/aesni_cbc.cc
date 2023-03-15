@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,9 +26,9 @@
  *
  */
 
+#include "alcp/types.hh"
 #include "cipher/aes.hh"
 #include "cipher/aesni.hh"
-#include "alcp/types.hh"
 
 #include <cstdint>
 #include <immintrin.h>
@@ -37,16 +37,16 @@
 namespace alcp::cipher::aesni {
 
 alc_error_t
-EncryptCbc(const uint8_t* pPlainText,  // ptr to plaintext
-           uint8_t*       pCipherText, // ptr to ciphertext
-           uint64_t       len,         // message length in bytes
-           const uint8_t* pKey,        // ptr to Key
-           int            nRounds,     // No. of rounds
-           const uint8_t* pIv          // ptr to Initialization Vector
+EncryptCbc(const Uint8* pPlainText,  // ptr to plaintext
+           Uint8*       pCipherText, // ptr to ciphertext
+           Uint64       len,         // message length in bytes
+           const Uint8* pKey,        // ptr to Key
+           int          nRounds,     // No. of rounds
+           const Uint8* pIv          // ptr to Initialization Vector
 )
 {
     alc_error_t err    = ALC_ERROR_NONE;
-    uint64_t    blocks = len / Rijndael::cBlockSize;
+    Uint64      blocks = len / Rijndael::cBlockSize;
     __m128i     a1; // plaintext data
     __m128i     b1;
 
@@ -71,15 +71,15 @@ EncryptCbc(const uint8_t* pPlainText,  // ptr to plaintext
 }
 
 alc_error_t
-DecryptCbc(const uint8_t* pCipherText, // ptr to ciphertext
-           uint8_t*       pPlainText,  // ptr to plaintext
-           uint64_t       len,         // message length in bytes
-           const uint8_t* pKey,        // ptr to Key
-           int            nRounds,     // No. of rounds
-           const uint8_t* pIv          // ptr to Initialization Vector
+DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
+           Uint8*       pPlainText,  // ptr to plaintext
+           Uint64       len,         // message length in bytes
+           const Uint8* pKey,        // ptr to Key
+           int          nRounds,     // No. of rounds
+           const Uint8* pIv          // ptr to Initialization Vector
 )
 {
-    uint64_t    blocks = len / Rijndael::cBlockSize;
+    Uint64      blocks = len / Rijndael::cBlockSize;
     alc_error_t err    = ALC_ERROR_NONE;
 
     auto p_in_128  = reinterpret_cast<const __m128i*>(pCipherText);

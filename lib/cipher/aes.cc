@@ -36,7 +36,7 @@ namespace alcp::cipher {
 using namespace alcp::base;
 
 Status
-Aes::setKey(const uint8_t* pUserKey, uint64_t len)
+Aes::setKey(const Uint8* pUserKey, Uint64 len)
 {
     // Already Expanded in Rijndael class, we just need to transpose
     Rijndael::setKey(pUserKey, len);

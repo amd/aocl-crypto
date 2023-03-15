@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,24 +29,24 @@
 #include "avx256.hh"
 #include "vaes.hh"
 
+#include "alcp/types.hh"
 #include "cipher/aes.hh"
 #include "cipher/aes_ctr.hh"
-#include "alcp/types.hh"
 
 #include <immintrin.h>
 
 namespace alcp::cipher::vaes {
 
 void
-ctrInit(__m256i*       c1,
+ctrInit(__m256i*     c1,
         const Uint8* pIv,
-        __m256i*       onelo,
-        __m256i*       one_x,
-        __m256i*       two_x,
-        __m256i*       three_x,
-        __m256i*       four_x,
-        __m256i*       eight_x,
-        __m256i*       swap_ctr)
+        __m256i*     onelo,
+        __m256i*     one_x,
+        __m256i*     two_x,
+        __m256i*     three_x,
+        __m256i*     four_x,
+        __m256i*     eight_x,
+        __m256i*     swap_ctr)
 {
 
     *onelo   = alcp_set_epi32(0, 0, 0, 0, 1, 0, 0, 0);
@@ -77,12 +77,12 @@ ctrInit(__m256i*       c1,
     *c1           = alcp_add_epi32(*c1, onehi);
 }
 
-uint64_t
+Uint64
 ctrProcessAvx256(const Uint8*   p_in_x,
                  Uint8*         p_out_x,
-                 Uint64       blocks,
+                 Uint64         blocks,
                  const __m128i* pkey128,
-                 const Uint8* pIv,
+                 const Uint8*   pIv,
                  int            nRounds)
 {
     auto p_in_256  = reinterpret_cast<const __m256i*>(p_in_x);

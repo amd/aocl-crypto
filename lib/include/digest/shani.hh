@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,12 +28,12 @@
 
 #pragma once
 
-#include "alcp/error.h"  // for alc_error_t
+#include "alcp/error.h" // for alc_error_t
 
 namespace alcp::digest { namespace shani {
 
-    alc_error_t ShaUpdate256(uint32_t*       pHash,
-                             const uint8_t*  pSrc,
-                             uint64_t        src_len,
-                             const uint32_t* pHashConstants);
+    alc_error_t ShaUpdate256(Uint32*       pHash,
+                             const Uint8*  pSrc,
+                             Uint64        src_len,
+                             const Uint32* pHashConstants);
 }} // namespace alcp::digest::shani

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -43,7 +43,7 @@
 namespace alcp::digest { namespace shani {
 
     inline static void load_data(__m128i        x[SHA256_CHUNK_NUM_VECT],
-                                 const uint8_t* data)
+                                 const Uint8* data)
     {
         const __m128i shuf_mask =
             _mm_set_epi64x(0x0c0d0e0f08090a0bULL, 0x0405060700010203ULL);
@@ -56,7 +56,7 @@ namespace alcp::digest { namespace shani {
         }
     }
 
-    inline static void load_state(uint32_t* pHash,
+    inline static void load_state(Uint32* pHash,
                                   __m128i*  pState0,
                                   __m128i*  pState1)
     {
@@ -70,10 +70,10 @@ namespace alcp::digest { namespace shani {
         *pState1 = _mm_blend_epi16(*pState1, tmp, 0xF0);
     }
 
-    alc_error_t ShaUpdate256(uint32_t*       pHash,
-                             const uint8_t*  pSrc,
-                             uint64_t        src_len,
-                             const uint32_t* pHashConstants)
+    alc_error_t ShaUpdate256(Uint32*       pHash,
+                             const Uint8*  pSrc,
+                             Uint64        src_len,
+                             const Uint32* pHashConstants)
     {
         __m128i chunk_vect[SHA256_CHUNK_NUM_VECT
                            * 4]; // Array of vectors big enough to accomdate the
@@ -90,7 +90,7 @@ namespace alcp::digest { namespace shani {
             prev_state_abef = state0;
             prev_state_cdgh = state1;
             // Calculate the rounds for the first 16 words
-            UNROLL_4 for (uint32_t i = 0; i < 4; i++)
+            UNROLL_4 for (Uint32 i = 0; i < 4; i++)
             {
                 msg    = _mm_add_epi32(chunk_vect[i],
                                     _mm_set_epi32(pHashConstants[4 * i + 3],
@@ -103,7 +103,7 @@ namespace alcp::digest { namespace shani {
             }
             // Extend the message to 64 words and calcute the rounds on the
             // extended message.
-            UNROLL_12 for (uint32_t i = 4; i < 16; i++)
+            UNROLL_12 for (Uint32 i = 4; i < 16; i++)
             {
                 msg0 =
                     _mm_sha256msg1_epu32(chunk_vect[i - 4], chunk_vect[i - 3]);

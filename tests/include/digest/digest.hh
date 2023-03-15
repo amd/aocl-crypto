@@ -128,7 +128,7 @@ class DataSet : private File
     std::string        line = "", m_filename = "";
     std::vector<Uint8> Digest, Message;
     /* for shake128/256 support */
-    std::int64_t DigestLen;
+    Int64 DigestLen;
     // First line is skipped, linenum starts from 1
     int lineno = 1;
 
@@ -144,7 +144,7 @@ class DataSet : private File
     /* fetch Message / Digest */
     std::vector<Uint8> getMessage();
     std::vector<Uint8> getDigest();
-    std::int64_t       getDigestLen();
+    Int64              getDigestLen();
 };
 class DigestBase
 {

@@ -36,10 +36,10 @@ using namespace alcp;
 
 EXTERN_C_BEGIN
 
-uint64_t
+Uint64
 alcp_digest_context_size(const alc_digest_info_p pDigestInfo)
 {
-    uint64_t size =
+    Uint64 size =
         sizeof(digest::Context) + digest::DigestBuilder::getSize(*pDigestInfo);
     return size;
 }
@@ -71,8 +71,8 @@ alcp_digest_request(const alc_digest_info_p pDigestInfo,
 
 alc_error_t
 alcp_digest_update(const alc_digest_handle_p pDigestHandle,
-                   const uint8_t*            pMsgBuf,
-                   uint64_t                  size)
+                   const Uint8*            pMsgBuf,
+                   Uint64                  size)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pDigestHandle, err);
@@ -88,8 +88,8 @@ alcp_digest_update(const alc_digest_handle_p pDigestHandle,
 
 alc_error_t
 alcp_digest_finalize(const alc_digest_handle_p pDigestHandle,
-                     const uint8_t*            pMsgBuf,
-                     uint64_t                  size)
+                     const Uint8*            pMsgBuf,
+                     Uint64                  size)
 {
     alc_error_t err;
 
@@ -123,8 +123,8 @@ alcp_digest_reset(const alc_digest_handle_p pDigestHandle)
 
 alc_error_t
 alcp_digest_copy(const alc_digest_handle_p pDigestHandle,
-                 uint8_t*                  pBuf,
-                 uint64_t                  size)
+                 Uint8*                  pBuf,
+                 Uint64                  size)
 {
     auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
     return ctx->copy(ctx->m_digest, pBuf, size);

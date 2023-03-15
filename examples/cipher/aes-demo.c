@@ -96,26 +96,26 @@ static inline void  ALCP_CRYPT_GET_TIME(int X, char *Y)
 }
 
 void
-getinput(uint8_t* output, int inputLen, int seed)
+getinput(Uint8* output, int inputLen, int seed)
 {
     // generate same random input based on seed value.
     srand(seed);
     for (int i = 0; i < inputLen; i++) {
-        *output = (uint8_t)rand();
+        *output = (Uint8)rand();
         output++;
     }
 }
 
 void
-create_aes_session(uint8_t*             key,
-                   uint8_t*             iv,
-                   const uint32_t       key_len,
+create_aes_session(Uint8*             key,
+                   Uint8*             iv,
+                   const Uint32       key_len,
                    const alc_cipher_mode_t mode)
 {
     alc_error_t err;
     const int   err_size = 256;
-    uint8_t     err_buf[err_size];
-    uint8_t tweakKey[16] = {
+    Uint8     err_buf[err_size];
+    Uint8 tweakKey[16] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
     0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xf, 0xf,
     };
@@ -177,14 +177,14 @@ create_aes_session(uint8_t*             key,
 /* AES modes: Encryption Demo */
 void
 aclp_aes_encrypt_demo(
-    const uint8_t* plaintxt,
-    const uint32_t len, /* Describes both 'plaintxt' and 'ciphertxt' */
-    uint8_t*       ciphertxt,
-    uint8_t*       iv)
+    const Uint8* plaintxt,
+    const Uint32 len, /* Describes both 'plaintxt' and 'ciphertxt' */
+    Uint8*       ciphertxt,
+    Uint8*       iv)
 {
     alc_error_t err;
     const int   err_size = 256;
-    uint8_t     err_buf[err_size];
+    Uint8     err_buf[err_size];
 
     err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len, iv);
     if (alcp_is_error(err)) {
@@ -197,19 +197,19 @@ aclp_aes_encrypt_demo(
 /* GCM: Authenticated Encryption demo */
 void
 aclp_aes_gcm_encrypt_demo(
-    const uint8_t* plaintxt,
-    const uint32_t len, /* Describes both 'plaintxt' and 'ciphertxt' */
-    uint8_t*       ciphertxt,
-    uint8_t*       iv,
-    const uint32_t ivLen,
-    uint8_t*       ad,
-    const uint32_t adLen,
-    uint8_t*       tag,
-    const uint32_t tagLen)
+    const Uint8* plaintxt,
+    const Uint32 len, /* Describes both 'plaintxt' and 'ciphertxt' */
+    Uint8*       ciphertxt,
+    Uint8*       iv,
+    const Uint32 ivLen,
+    Uint8*       ad,
+    const Uint32 adLen,
+    Uint8*       tag,
+    const Uint32 tagLen)
 {
     alc_error_t err;
     const int   err_size = 256;
-    uint8_t     err_buf[err_size];
+    Uint8     err_buf[err_size];
 
     // GCM init
     err = alcp_cipher_set_iv(&handle, ivLen, iv);
@@ -246,14 +246,14 @@ aclp_aes_gcm_encrypt_demo(
 
 void
 aclp_aes_decrypt_demo(
-    const uint8_t* ciphertxt,
-    const uint32_t len, /* Describes both 'plaintxt' and 'ciphertxt' */
-    uint8_t*       plaintxt,
-    uint8_t*       iv)
+    const Uint8* ciphertxt,
+    const Uint32 len, /* Describes both 'plaintxt' and 'ciphertxt' */
+    Uint8*       plaintxt,
+    Uint8*       iv)
 {
     alc_error_t err;
     const int   err_size = 256;
-    uint8_t     err_buf[err_size];
+    Uint8     err_buf[err_size];
 
     err = alcp_cipher_decrypt(&handle, ciphertxt, plaintxt, len, iv);
     if (alcp_is_error(err)) {
@@ -265,20 +265,20 @@ aclp_aes_decrypt_demo(
 
 /* GCM: Authenticated Decryption demo */
 void
-aclp_aes_gcm_decrypt_demo(const uint8_t* ciphertxt,
-                          const uint32_t len,
-                          uint8_t*       plaintxt,
-                          uint8_t*       iv,
-                          const uint32_t ivLen,
-                          uint8_t*       ad,
-                          const uint32_t adLen,
-                          uint8_t*       tag,
-                          const uint32_t tagLen)
+aclp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
+                          const Uint32 len,
+                          Uint8*       plaintxt,
+                          Uint8*       iv,
+                          const Uint32 ivLen,
+                          Uint8*       ad,
+                          const Uint32 adLen,
+                          Uint8*       tag,
+                          const Uint32 tagLen)
 {
     alc_error_t err;
     const int   err_size = 256;
-    uint8_t     err_buf[err_size];
-    uint8_t     tagDecrypt[16];
+    Uint8     err_buf[err_size];
+    Uint8     tagDecrypt[16];
 
     // GCM init
     err = alcp_cipher_set_iv(&handle, ivLen, iv);
@@ -471,7 +471,7 @@ static int test_ad_len[TEST_VECTOR_COUNT]  = { 0, 16, 48, 16, 20, 20, 16, 16, 32
 static int test_tag_len[TEST_VECTOR_COUNT] = {14, 15, 4,  13, 16, 8 , 15, 13, 16};
 
 
-static uint8_t test_key[TEST_VECTOR_COUNT][16] = {
+static Uint8 test_key[TEST_VECTOR_COUNT][16] = {
                                                   {0xc7, 0x51, 0x16, 0xc1, 0x9f, 0x5e, 0xa4, 0xed, 0x1b, 0x10, 0xbf, 0x0e, 0xaa, 0xeb, 0xe5, 0xa1 },
                                                   {0xda, 0x0b, 0x61, 0x56, 0x56, 0x13, 0x51, 0x94, 0xba, 0x6d, 0x3c, 0x85, 0x10, 0x99, 0xbc, 0x48 },
                                                   {0x99, 0xe8, 0xe1, 0x86, 0x1e, 0x55, 0xcf, 0x4e, 0x85, 0x3a, 0x91, 0x0c, 0x70, 0x90, 0x1f, 0x2d },
@@ -483,7 +483,7 @@ static uint8_t test_key[TEST_VECTOR_COUNT][16] = {
                                                   {0xfe, 0xc7, 0x2f, 0xee, 0x8f, 0xc3, 0x88, 0x33, 0xe0, 0xdb, 0x47, 0xd2, 0x0d, 0x69, 0x22, 0x36 }
                                                   };
 
-static uint8_t test_iv[TEST_VECTOR_COUNT][128]  = {{0x48, 0xa5, 0x3f, 0xc1, 0x7d, 0x43, 0x00, 0xf4, 0xa2, 0x3a, 0x5a, 0x39 },
+static Uint8 test_iv[TEST_VECTOR_COUNT][128]  = {{0x48, 0xa5, 0x3f, 0xc1, 0x7d, 0x43, 0x00, 0xf4, 0xa2, 0x3a, 0x5a, 0x39 },
                                                   {0xd3, 0x9d, 0x4b, 0x4d, 0x3c, 0xc9, 0x27, 0x88, 0x50, 0x90, 0xe6, 0xc3 },
                                                   {0x43, 0x7b, 0x73, 0xe6, 0x24, 0x90, 0x66, 0x52, 0x95, 0x6b, 0xd2, 0xfb },
                                                   {0xe5, 0x0b, 0x6b, 0xbe, 0x4a, 0xc7, 0x30, 0x7f, 0x75, 0x42, 0x1a, 0x71 },
@@ -505,7 +505,7 @@ static uint8_t test_iv[TEST_VECTOR_COUNT][128]  = {{0x48, 0xa5, 0x3f, 0xc1, 0x7d
                                                    0x31, 0x99, 0x74, 0x82, 0x2c, 0x7e, 0x17}
                                                   };
 
-static uint8_t test_pt[TEST_VECTOR_COUNT][60]  = {{0x45, 0x69, 0x94, 0x4f, 0xcd, 0xe5, 0xb3,
+static Uint8 test_pt[TEST_VECTOR_COUNT][60]  = {{0x45, 0x69, 0x94, 0x4f, 0xcd, 0xe5, 0xb3,
                                                    0xf4, 0xae, 0x4d, 0x50, 0xeb, 0x7a, 0x0e,
                                                    0x3e, 0xf8, 0x8d, 0xab, 0x44, 0xb6, 0x84,
                                                    0xc7, 0x37, 0xb9, 0x0a, 0xa8, 0x8c, 0xf5,
@@ -526,7 +526,7 @@ static uint8_t test_pt[TEST_VECTOR_COUNT][60]  = {{0x45, 0x69, 0x94, 0x4f, 0xcd,
                                                    0xb4, 0xa1, 0xbd, 0x07, 0xb5, 0xee, 0xbf, 0x30, 0xc0, 0x0f, 0xb0, 0xa3, 0xb5, 0x87, 0x9d, 0x85 }
                                                   };
 
-static uint8_t test_ad[TEST_VECTOR_COUNT][48] = {{0xe7, 0xe5, 0xe6, 0xf8, 0xda, 0xc9, 0x13, 0x03, 0x6c, 0xb2, 0xff, 0x29, 0xe8, 0x62, 0x5e, 0x0e },
+static Uint8 test_ad[TEST_VECTOR_COUNT][48] = {{0xe7, 0xe5, 0xe6, 0xf8, 0xda, 0xc9, 0x13, 0x03, 0x6c, 0xb2, 0xff, 0x29, 0xe8, 0x62, 0x5e, 0x0e },
                                                  {0xe7, 0xe5, 0xe6, 0xf8, 0xda, 0xc9, 0x13, 0x03, 0x6c, 0xb2, 0xff, 0x29, 0xe8, 0x62, 0x5e, 0x0e },
                                                  {0x41, 0xe3, 0x28, 0x80, 0x8d, 0x08, 0x1b, 0x67, 0x7d, 0x8f, 0x51, 0xbd, 0xae, 0xdf, 0x0a, 0xa7,
                                                   0xb4, 0x2e, 0x4d, 0xe8, 0x8c, 0x1a, 0x90, 0x04, 0x19, 0x6d, 0x7c, 0xa5, 0xe0, 0xe4, 0xf9, 0xaa,
@@ -550,34 +550,34 @@ static uint8_t test_ad[TEST_VECTOR_COUNT][48] = {{0xe7, 0xe5, 0xe6, 0xf8, 0xda, 
 
 */
 int
-encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
-                     uint32_t       inputLen,   // input length
-                     uint8_t*       cipherText, // ciphertext output
+encrypt_decrypt_demo(Uint8*       inputText,  // plaintext
+                     Uint32       inputLen,   // input length
+                     Uint8*       cipherText, // ciphertext output
                      alc_cipher_mode_t m)
 {
     unsigned int keybits;
-    uint8_t      key[32];
+    Uint8      key[32];
     int          ret = 0;
 
     memset(key, 0, 32);
 
-    uint8_t* outputText;
+    Uint8* outputText;
     outputText = malloc(inputLen);
 
-    uint8_t* iv;
+    Uint8* iv;
     iv = malloc(128 * 4);
     memset(iv, 10, 128 * 4);
 
-    uint8_t* ref;
+    Uint8* ref;
     ref = malloc(inputLen);
-    uint32_t ivLen  = 16;
+    Uint32 ivLen  = 16;
 
     /* additional data, tag used in GCM */
-    uint32_t adLen  = test_ad_len[VERIFY_GCM_TEST_VECTOR_NUM];
-    uint32_t tagLen = test_tag_len[VERIFY_GCM_TEST_VECTOR_NUM];
+    Uint32 adLen  = test_ad_len[VERIFY_GCM_TEST_VECTOR_NUM];
+    Uint32 tagLen = test_tag_len[VERIFY_GCM_TEST_VECTOR_NUM];
 
-    uint8_t* ad     = malloc(adLen);
-    uint8_t  tag[16];
+    Uint8* ad     = malloc(adLen);
+    Uint8  tag[16];
     if (adLen) {
         memset(ad, 33, adLen);
     }
@@ -733,8 +733,8 @@ encrypt_decrypt_demo(uint8_t*       inputText,  // plaintext
 int
 main(void)
 {
-    uint8_t* inputText;
-    uint8_t* cipherText;
+    Uint8* inputText;
+    Uint8* cipherText;
 
     /*
      * Demo application validates complete encrypt and decrypt path

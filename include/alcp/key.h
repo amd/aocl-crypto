@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,6 +29,7 @@
 #ifndef _ALCP_KEY_H_
 #define _ALCP_KEY_H_ 2
 
+#include "alcp/types.h"
 #include <stdint.h>
 
 typedef enum
@@ -87,8 +88,8 @@ typedef struct _alc_key_info
     alc_key_fmt_t  fmt;
     alc_key_alg_t  algo;
     alc_key_len_t  len_type;
-    uint32_t       len; /* Key length in bits */
-    const uint8_t* key; /* Key follows the rest of the structure */
+    Uint32         len; /* Key length in bits */
+    const Uint8*   key; /* Key follows the rest of the structure */
 
 } alc_key_info_t, *alc_key_info_p;
 

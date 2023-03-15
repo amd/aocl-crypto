@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,8 +33,8 @@
 
 #include "alcp/error.h"
 
-#include "cipher/aes.hh"
 #include "alcp/base/error.hh"
+#include "cipher/aes.hh"
 
 namespace alcp::cipher {
 
@@ -45,15 +45,17 @@ namespace alcp::cipher {
 class ALCP_API_EXPORT Cfb final : public Aes
 {
   public:
-    explicit Cfb(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    explicit Cfb(const alc_cipher_algo_info_t& aesInfo,
+                 const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {}
+    {
+    }
 
     ~Cfb() {}
 
   public:
     static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                            const alc_key_info_t& keyInfo)
+                            const alc_key_info_t&         keyInfo)
     {
         return true;
     }
@@ -85,10 +87,10 @@ class ALCP_API_EXPORT Cfb final : public Aes
      * \param   pIv             Pointer to Initialization Vector
      * \return  alc_error_t     Error code
      */
-    virtual alc_error_t encrypt(const uint8_t* pPlainText,
-                                uint8_t*       pCipherText,
-                                uint64_t       len,
-                                const uint8_t* pIv) const final;
+    virtual alc_error_t encrypt(const Uint8* pPlainText,
+                                Uint8*       pCipherText,
+                                Uint64       len,
+                                const Uint8* pIv) const final;
 
     /**
      * \brief   CFB Decrypt Operation
@@ -99,10 +101,10 @@ class ALCP_API_EXPORT Cfb final : public Aes
      * \param   pIv             Pointer to Initialization Vector
      * \return  alc_error_t     Error code
      */
-    virtual alc_error_t decrypt(const uint8_t* pCipherText,
-                                uint8_t*       pPlainText,
-                                uint64_t       len,
-                                const uint8_t* pIv) const final;
+    virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const final;
 
   private:
     Cfb(){};

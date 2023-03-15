@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -54,9 +54,9 @@ namespace alcp::cipher { namespace aesni {
         return tmp;
     }
 
-    static inline void ExpandDecryptKeys(uint8_t*       pDecKey,
-                                         const uint8_t* pEncKey,
-                                         int            nr)
+    static inline void ExpandDecryptKeys(Uint8*       pDecKey,
+                                         const Uint8* pEncKey,
+                                         int          nr)
     {
         auto p_dec128 = reinterpret_cast<__m128i*>(pDecKey);
         auto p_enc128 = reinterpret_cast<const __m128i*>(pEncKey);
@@ -131,9 +131,7 @@ namespace alcp::cipher { namespace aesni {
     }
 
     /* keys256 is equivalent to 2x128 */
-    Status ExpandKeys256(const uint8_t* pUserKey,
-                         uint8_t*       pEncKey,
-                         uint8_t*       pDecKey)
+    Status ExpandKeys256(const Uint8* pUserKey, Uint8* pEncKey, Uint8* pDecKey)
     {
         __m128i  tmp[3];
         __m128i* p_round_key = reinterpret_cast<__m128i*>(pEncKey);
@@ -279,9 +277,7 @@ namespace alcp::cipher { namespace aesni {
      *
      * \return   alc_error_t
      */
-    Status ExpandKeys128(const uint8_t* pUserKey,
-                         uint8_t*       pEncKey,
-                         uint8_t*       pDecKey)
+    Status ExpandKeys128(const Uint8* pUserKey, Uint8* pEncKey, Uint8* pDecKey)
     {
         __m128i* p_round_key = reinterpret_cast<__m128i*>(pEncKey);
 
@@ -322,10 +318,10 @@ namespace alcp::cipher { namespace aesni {
         return StatusOk();
     }
 
-    alc_error_t ExpandKeys(const uint8_t* pUserKey,
-                           uint8_t*       pEncKey,
-                           uint8_t*       pDecKey,
-                           int            nRounds)
+    alc_error_t ExpandKeys(const Uint8* pUserKey,
+                           Uint8*       pEncKey,
+                           Uint8*       pDecKey,
+                           int          nRounds)
     {
         Status sts = StatusOk();
 
@@ -347,9 +343,9 @@ namespace alcp::cipher { namespace aesni {
         return (alc_error_t)sts.code();
     }
 
-    alc_error_t ExpandTweakKeys(const uint8_t* pUserKey,
-                                uint8_t*       pTweakKey,
-                                int            nRounds)
+    alc_error_t ExpandTweakKeys(const Uint8* pUserKey,
+                                Uint8*       pTweakKey,
+                                int          nRounds)
     {
         Status sts = StatusOk();
 

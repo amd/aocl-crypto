@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,12 +25,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "vaes.hh"
 #include "avx256.hh"
+#include "vaes.hh"
 
+#include "alcp/types.hh"
 #include "cipher/aes.hh"
 #include "cipher/aes_xts.hh"
-#include "alcp/types.hh"
 #include "utils/copy.hh"
 
 #include <immintrin.h>
@@ -38,24 +38,24 @@
 namespace alcp::cipher::vaes {
 
 alc_error_t
-EncryptXts(const uint8_t* pSrc,
-           uint8_t*       pDest,
-           uint64_t       len,
-           const uint8_t* pKey,
-           const uint8_t* pTweakKey,
-           int            nRounds,
-           const uint8_t* pIv)
+EncryptXts(const Uint8* pSrc,
+           Uint8*       pDest,
+           Uint64       len,
+           const Uint8* pKey,
+           const Uint8* pTweakKey,
+           int          nRounds,
+           const Uint8* pIv)
 {
 
     auto p_key128       = reinterpret_cast<const __m128i*>(pKey);
     auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
     auto p_src256       = reinterpret_cast<const __m256i*>(pSrc);
     auto p_dest256      = reinterpret_cast<__m256i*>(pDest);
-    auto p_iv64         = reinterpret_cast<const uint64_t*>(pIv);
+    auto p_iv64         = reinterpret_cast<const Uint64*>(pIv);
 
-    uint64_t blocks                       = len / Rijndael::cBlockSize;
-    uint64_t extra_bytes_in_message_block = len % Rijndael::cBlockSize;
-    uint64_t chunk                        = 2 * 8;
+    Uint64 blocks                       = len / Rijndael::cBlockSize;
+    Uint64 extra_bytes_in_message_block = len % Rijndael::cBlockSize;
+    Uint64 chunk                        = 2 * 8;
 
     // iv encryption using tweak key to get alpha
     __m256i extendedIV = _mm256_setr_epi64x(p_iv64[0], p_iv64[1], 0, 0);
@@ -290,14 +290,14 @@ EncryptXts(const uint8_t* pSrc,
     }
 
     __m256i lastTweak    = tweakx8[tweak_idx];
-    auto    p_lastTweak8 = reinterpret_cast<uint8_t*>(&lastTweak);
-    auto    p_dest8      = reinterpret_cast<uint8_t*>(p_dest256);
-    auto    p_src8       = reinterpret_cast<const uint8_t*>(p_src256);
+    auto    p_lastTweak8 = reinterpret_cast<Uint8*>(&lastTweak);
+    auto    p_dest8      = reinterpret_cast<Uint8*>(p_dest256);
+    auto    p_src8       = reinterpret_cast<const Uint8*>(p_src256);
 
     if (blocks) {
 
         __m256i src_text_1   = alcp_loadu_128(p_src256);
-        auto    p_src_text_1 = reinterpret_cast<uint8_t*>(&src_text_1);
+        auto    p_src_text_1 = reinterpret_cast<Uint8*>(&src_text_1);
 
         src_text_1 = lastTweak ^ src_text_1;
 
@@ -313,8 +313,8 @@ EncryptXts(const uint8_t* pSrc,
                          p_dest8 + (16 * (blocks - 1)),
                          extra_bytes_in_message_block);
         __m256i stealed_text, tweak_1;
-        auto    p_stealed_text8 = reinterpret_cast<uint8_t*>(&stealed_text);
-        auto    p_tweak_8       = reinterpret_cast<uint8_t*>(&tweak_1);
+        auto    p_stealed_text8 = reinterpret_cast<Uint8*>(&stealed_text);
+        auto    p_tweak_8       = reinterpret_cast<Uint8*>(&tweak_1);
 
         utils::CopyBytes(p_tweak_8, p_lastTweak8 + (16 * blocks), 16);
 
@@ -337,23 +337,23 @@ EncryptXts(const uint8_t* pSrc,
 }
 
 alc_error_t
-DecryptXts(const uint8_t* pSrc,
-           uint8_t*       pDest,
-           uint64_t       len,
-           const uint8_t* pKey,
-           const uint8_t* pTweakKey,
-           int            nRounds,
-           const uint8_t* pIv)
+DecryptXts(const Uint8* pSrc,
+           Uint8*       pDest,
+           Uint64       len,
+           const Uint8* pKey,
+           const Uint8* pTweakKey,
+           int          nRounds,
+           const Uint8* pIv)
 {
     auto p_key128       = reinterpret_cast<const __m128i*>(pKey);
     auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
     auto p_src256       = reinterpret_cast<const __m256i*>(pSrc);
     auto p_dest256      = reinterpret_cast<__m256i*>(pDest);
-    auto p_iv64         = reinterpret_cast<const uint64_t*>(pIv);
+    auto p_iv64         = reinterpret_cast<const Uint64*>(pIv);
 
-    uint64_t blocks                       = len / Rijndael::cBlockSize;
-    uint64_t extra_bytes_in_message_block = len % Rijndael::cBlockSize;
-    uint64_t chunk                        = 8 * 2;
+    Uint64 blocks                       = len / Rijndael::cBlockSize;
+    Uint64 extra_bytes_in_message_block = len % Rijndael::cBlockSize;
+    Uint64 chunk                        = 8 * 2;
 
     // iv encryption using tweak key to get alpha
     __m256i extendedIV = _mm256_setr_epi64x(p_iv64[0], p_iv64[1], 0, 0);
@@ -620,14 +620,14 @@ DecryptXts(const uint8_t* pSrc,
 
     __m256i  lastTweak    = tweakx8[tweak_idx];
     __m128i* p_lastTweak  = reinterpret_cast<__m128i*>(&lastTweak);
-    uint8_t* p_lastTweak8 = reinterpret_cast<uint8_t*>(&lastTweak);
-    uint8_t* p_dest8      = reinterpret_cast<uint8_t*>(p_dest256);
-    auto     p_src8       = reinterpret_cast<const uint8_t*>(p_src256);
+    Uint8*   p_lastTweak8 = reinterpret_cast<Uint8*>(&lastTweak);
+    Uint8*   p_dest8      = reinterpret_cast<Uint8*>(p_dest256);
+    auto     p_src8       = reinterpret_cast<const Uint8*>(p_src256);
 
     if (blocks) {
 
-        __m256i  src_text_1  = alcp_loadu_128(p_src256);
-        uint8_t* p_src_text8 = reinterpret_cast<uint8_t*>(&src_text_1);
+        __m256i src_text_1  = alcp_loadu_128(p_src256);
+        Uint8*  p_src_text8 = reinterpret_cast<Uint8*>(&src_text_1);
 
         if (extra_bytes_in_message_block) {
 
@@ -649,9 +649,9 @@ DecryptXts(const uint8_t* pSrc,
         utils::CopyBytes(p_dest8 + (16 * blocks),
                          p_dest8 + (16 * (blocks - 1)),
                          extra_bytes_in_message_block);
-        __m256i  stealed_text, tweak_1;
-        uint8_t* p_stealed_text = reinterpret_cast<uint8_t*>(&stealed_text);
-        uint8_t* p_tweak_1      = reinterpret_cast<uint8_t*>(&tweak_1);
+        __m256i stealed_text, tweak_1;
+        Uint8*  p_stealed_text = reinterpret_cast<Uint8*>(&stealed_text);
+        Uint8*  p_tweak_1      = reinterpret_cast<Uint8*>(&tweak_1);
 
         utils::CopyBytes(p_tweak_1, p_lastTweak8 + ((16 * (blocks))), (16));
 

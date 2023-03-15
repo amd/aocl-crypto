@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -49,7 +49,7 @@ GetDefaultDigestPool()
 
 template<typename DIGESTTYPE>
 static alc_error_t
-__sha_update_wrapper(void* pDigest, const uint8_t* pSrc, uint64_t len)
+__sha_update_wrapper(void* pDigest, const Uint8* pSrc, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
@@ -61,7 +61,7 @@ __sha_update_wrapper(void* pDigest, const uint8_t* pSrc, uint64_t len)
 
 template<typename DIGESTTYPE>
 static alc_error_t
-__sha_finalize_wrapper(void* pDigest, const uint8_t* pBuf, uint64_t len)
+__sha_finalize_wrapper(void* pDigest, const Uint8* pBuf, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
@@ -73,7 +73,7 @@ __sha_finalize_wrapper(void* pDigest, const uint8_t* pBuf, uint64_t len)
 
 template<typename DIGESTTYPE>
 static alc_error_t
-__sha_copy_wrapper(const void* pDigest, uint8_t* pBuf, uint64_t len)
+__sha_copy_wrapper(const void* pDigest, Uint8* pBuf, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
@@ -97,9 +97,9 @@ __sha_reset_wrapper(void* pDigest)
 
 #if 0
 template<typename DIGESTTYPE,
-         alc_error_t (DIGESTTYPE::*func)(void*, const uint8_t*, uint64_t)>
+         alc_error_t (DIGESTTYPE::*func)(void*, const Uint8*, Uint64)>
 static alc_error_t
-__digest_func_wrapper(void* pDigest, const uint8_t* pBuf, uint64_t len)
+__digest_func_wrapper(void* pDigest, const Uint8* pBuf, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
 

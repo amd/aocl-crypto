@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -41,15 +41,15 @@
 namespace alcp::cipher::vaes512 {
 
 alc_error_t
-DecryptCbcAvx512(const uint8_t* pCipherText, // ptr to ciphertext
-                 uint8_t*       pPlainText,  // ptr to plaintext
-                 uint64_t       len,         // message length in bytes
-                 const uint8_t* pKey,        // ptr to Key
+DecryptCbcAvx512(const Uint8* pCipherText, // ptr to ciphertext
+                 Uint8*       pPlainText,  // ptr to plaintext
+                 Uint64       len,         // message length in bytes
+                 const Uint8* pKey,        // ptr to Key
                  int            nRounds,     // No. of rounds
-                 const uint8_t* pIv          // ptr to Initialization Vector
+                 const Uint8* pIv          // ptr to Initialization Vector
 )
 {
-    uint64_t    blocks = len / Rijndael::cBlockSize;
+    Uint64    blocks = len / Rijndael::cBlockSize;
     alc_error_t err    = ALC_ERROR_NONE;
 
     auto p_in_128  = reinterpret_cast<const __m128i*>(pCipherText);

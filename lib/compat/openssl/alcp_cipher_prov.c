@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -266,7 +266,7 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
     alc_key_info_p        kinfo_tweak_key = &cctx->kinfo_tweak_key;
     alc_error_t           err;
     // const int             err_size = 256;
-    // uint8_t               err_buf[err_size];
+    // Uint8               err_buf[err_size];
     ENTER();
 
     assert(cinfo->ci_type == ALC_CIPHER_TYPE_AES);
@@ -323,7 +323,7 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
 #endif
     // For AES XTS Mode, get the tweak key
     if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
-        const uint8_t* tweak_key     = NULL;
+        const Uint8* tweak_key     = NULL;
         int            tweak_key_len = 128;
         if (!key) {
             // For handling when openssl speed probes the code with null key
@@ -418,7 +418,7 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
     alc_cipher_info_p     cinfo           = &cctx->pc_cipher_info;
     alc_error_t           err;
     // const int             err_size = 256;
-    // uint8_t               err_buf[err_size];
+    // Uint8               err_buf[err_size];
     ENTER();
     assert(cinfo->ci_type == ALC_CIPHER_TYPE_AES);
     switch (cinfo->ci_algo_info.ai_mode) {
@@ -479,7 +479,7 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
             // For handling when openssl speed probes the code with null key
             return 1;
         }
-        const uint8_t* tweak_key     = NULL;
+        const Uint8* tweak_key     = NULL;
         int            tweak_key_len = 128;
         if (keylen == 128) {
             tweak_key     = key + 16;
@@ -565,7 +565,7 @@ ALCP_prov_cipher_update(void*                vctx,
     alc_error_t           err;
     alc_cipher_info_p     cinfo    = &cctx->pc_cipher_info;
     const int             err_size = 256;
-    uint8_t               err_buf[err_size];
+    Uint8               err_buf[err_size];
     ENTER();
 
     if (inl == 0) {

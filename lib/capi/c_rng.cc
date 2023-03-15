@@ -37,10 +37,10 @@ EXTERN_C_BEGIN
 
 using namespace alcp::utils;
 
-uint64_t
+Uint64
 alcp_rng_context_size(const alc_rng_info_p pRngInfo)
 {
-    uint64_t size = sizeof(alcp::rng::Context);
+    Uint64 size = sizeof(alcp::rng::Context);
     return size;
 }
 
@@ -112,8 +112,8 @@ alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pHandle)
 
 alc_error_t
 alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
-                    uint8_t*         buf, /* RNG output buffer */
-                    uint64_t         size /* output buffer size */
+                    Uint8*         buf, /* RNG output buffer */
+                    Uint64         size /* output buffer size */
 )
 {
     alc_error_t err = ALC_ERROR_NONE;

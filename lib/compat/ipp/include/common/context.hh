@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -49,8 +49,8 @@ typedef struct
     ipp_wrp_aes_ctx encrypt_ctx;
     ipp_wrp_aes_ctx decrypt_ctx;
     alc_key_info_t  tweak_key;
-    uint8_t         tkey[32];
-    uint8_t         key[32];
+    Uint8         tkey[32];
+    Uint8         key[32];
 } ipp_wrp_aes_xts_ctx;
 
 typedef struct
