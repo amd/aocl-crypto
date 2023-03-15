@@ -103,6 +103,9 @@ class Cmac::Impl : public cipher::Aes
 
     Status update(const Uint8 plaintext[], int plaintext_size)
     {
+        static bool has_avx2_aesni =
+            CpuId::cpuHasAvx2() && CpuId::cpuHasAesni();
+
         Status status{ StatusOk() };
         if (m_key == nullptr || m_keylen == 0) {
             return InvalidArgument("Key is Empty");
@@ -111,7 +114,7 @@ class Cmac::Impl : public cipher::Aes
         if (plaintext_size == 0) {
             return StatusOk();
         }
-        if (CpuId::cpuHasAvx2()) {
+        if (has_avx2_aesni) {
             avx2::update(plaintext,
                          plaintext_size,
                          m_storage_buffer,
@@ -123,6 +126,11 @@ class Cmac::Impl : public cipher::Aes
             return status;
         }
 
+        // Reference Algorithm for AES CMAC
+
+        /* Internal Storage buffer and Plaintext combined should be greater than
+        block size to process it. Otherwise copy plaintext also to internal
+        buffer for later processing */
         if ((m_storage_buffer_offset + plaintext_size) <= cAESBlockSize) {
             utils::CopyBlock<Uint64>(m_storage_buffer + m_storage_buffer_offset,
                                      plaintext,
@@ -131,19 +139,33 @@ class Cmac::Impl : public cipher::Aes
             return status;
         }
 
-        int n_blocks      = 0;
+        int n_blocks = 0;
+        // Variable to keep track of the number of bytes not processed in this
+        // update which needs to be copied to the internal buffer
         int bytes_to_copy = 0;
+        /* For processing, it is assumed storage buffer is always complete. So
+        copy data from plaintext buffer to internal storage buffer until it
+        is complete */
         if (m_storage_buffer_offset <= cAESBlockSize) {
             int b = cAESBlockSize - (m_storage_buffer_offset);
             utils::CopyBlock<Uint64>(
                 m_storage_buffer + m_storage_buffer_offset, plaintext, b);
             m_storage_buffer_offset = cAESBlockSize;
             plaintext += b;
+
+            /* Calculations to check if internal storage buffer and plaintext
+            bytes combined is divisible by Cipher block size or not. If
+            bytes_to_copy is zero it is divisible*/
             int ptxt_bytes_rem = plaintext_size - b;
             n_blocks           = ((ptxt_bytes_rem) / cAESBlockSize);
             bytes_to_copy      = ((ptxt_bytes_rem)-cAESBlockSize * (n_blocks));
+
             if (bytes_to_copy == 0) {
-                n_blocks      = n_blocks - 1;
+                // If the total number of blocks are a multiple of Cipher Block
+                // Size then don't process the last block size
+                n_blocks = n_blocks - 1;
+                // Assigning this will cause one unprocessed block to be copied
+                // back to the buffer after update is complete
                 bytes_to_copy = cAESBlockSize;
             }
         }
@@ -161,6 +183,7 @@ class Cmac::Impl : public cipher::Aes
             encryptBlock(m_temp_enc_result_32, m_encrypt_keys, getRounds());
             plaintext += 16;
         }
+        // Copy the unprocessed plaintext bytes to the internal buffer
         utils::CopyBlock<Uint64>(m_storage_buffer, plaintext, bytes_to_copy);
         m_storage_buffer_offset = bytes_to_copy;
         return StatusOk();
