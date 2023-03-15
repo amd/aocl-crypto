@@ -34,6 +34,7 @@
 #include "cipher/aes_build.hh"
 #include "cipher/gtest_base.hh"
 #include "gtest/gtest.h"
+#include <memory>
 
 using namespace alcp::testing;
 using namespace alcp::cipher;
@@ -185,10 +186,8 @@ TEST(XTS, initiantiation_with_valid_input)
     Xts xts_obj = Xts(aesInfo, keyInfo);
 
     EXPECT_EQ(xts_obj.getRounds(), 10);
-    // FIXME: Linking Error
     EXPECT_EQ(xts_obj.getKeySize(), 16);
     EXPECT_EQ(xts_obj.getNr(), 10);
-    // FIXME: Below test is not working
     EXPECT_EQ(xts_obj.getNk(), 4);
 }
 
@@ -220,10 +219,8 @@ TEST(XTS, initiantiation_with_invalid_iv)
     Xts xts_obj = Xts(aesInfo, keyInfo);
 
     EXPECT_EQ(xts_obj.setIv(sizeof(iv), iv), ALC_ERROR_INVALID_SIZE);
-    // FIXME: Linking Error
     EXPECT_EQ(xts_obj.getKeySize(), 32);
     EXPECT_EQ(xts_obj.getNr(), 14);
-    // FIXME: Below test is not working
     EXPECT_EQ(xts_obj.getNk(), 8);
 }
 
@@ -261,13 +258,14 @@ TEST(XTS, valid_all_sizes_encrypt_decrypt_test)
         std::vector<Uint8> plainText(i, 0);
         plainText      = rb.genRandomBytes(i);
         Uint64 ct_size = i;
-        Uint8* dest    = (Uint8*)malloc(i);
+        auto   dest    = std::make_unique<Uint8[]>(i);
 
-        alc_error_t err = xts_obj.encrypt(&(plainText[0]), dest, ct_size, iv);
+        alc_error_t err =
+            xts_obj.encrypt(&(plainText[0]), dest.get(), ct_size, iv);
 
         std::vector<Uint8> pt(i, 0);
 
-        err = xts_obj.decrypt(dest, &(pt[0]), ct_size, iv);
+        err = xts_obj.decrypt(dest.get(), &(pt[0]), ct_size, iv);
 
         EXPECT_TRUE(err == ALC_ERROR_NONE);
         ArraysMatch(plainText, pt);
@@ -302,18 +300,16 @@ TEST(XTS, invalid_len_encrypt_decrypt_test)
     Xts                xts_obj = Xts(aesInfo, keyInfo);
     std::vector<Uint8> plainText(4, 0);
     Uint64             ct_size = 4;
-    Uint8*             dest    = (Uint8*)malloc(4);
+    auto               dest    = std::make_unique<Uint8[]>(4);
 
-    alc_error_t err = xts_obj.encrypt(&(plainText[0]), dest, ct_size, iv);
+    alc_error_t err = xts_obj.encrypt(&(plainText[0]), dest.get(), ct_size, iv);
 
     EXPECT_TRUE(err == ALC_ERROR_INVALID_DATA);
 
     std::vector<Uint8> cipherText(4, 0);
 
-    err = xts_obj.decrypt(&(cipherText[0]), dest, ct_size, iv);
+    err = xts_obj.decrypt(&(cipherText[0]), dest.get(), ct_size, iv);
     EXPECT_TRUE(err == ALC_ERROR_INVALID_DATA);
-
-    // FIXME: Dellocate ctx variable
 }
 
 using namespace alcp::cipher;
@@ -321,10 +317,10 @@ class XTS_KAT
     : public testing::TestWithParam<std::pair<const std::string, param_tuple>>
 {
   public:
-    Xts*               pXtsObj = nullptr;
-    std::vector<Uint8> m_key, m_tweak, _key, m_iv, m_plaintext, m_ciphertext;
-    std::string        m_test_name;
-    alc_error_t        m_err;
+    std::unique_ptr<Xts> pXtsObj;
+    std::vector<Uint8>   m_key, m_tweak, _key, m_iv, m_plaintext, m_ciphertext;
+    std::string          m_test_name;
+    alc_error_t          m_err;
     // Setup Test for Encrypt/Decrypt
     void SetUp() override
     {
@@ -360,9 +356,9 @@ class XTS_KAT
                                          &(key.at(0)) };
 
         // Setup XTS Object
-        pXtsObj = new Xts(aesInfo, keyInfo);
+        pXtsObj = std::make_unique<Xts>(aesInfo, keyInfo);
     }
-    void TearDown() override { delete pXtsObj; }
+    void TearDown() override {}
 };
 
 INSTANTIATE_TEST_SUITE_P(
@@ -382,7 +378,6 @@ TEST_P(XTS_KAT, valid_encrypt_request)
         &(m_plaintext.at(0)), &(out.at(0)), m_plaintext.size(), &(m_iv.at(0)));
     EXPECT_EQ(err, ALC_ERROR_NONE);
     ArraysMatch(out, m_ciphertext);
-    // FIXME: Dellocate ctx variable
 }
 
 TEST_P(XTS_KAT, valid_decrypt_request)
@@ -394,7 +389,6 @@ TEST_P(XTS_KAT, valid_decrypt_request)
         &(m_ciphertext.at(0)), &(out.at(0)), m_plaintext.size(), &(m_iv.at(0)));
     EXPECT_EQ(err, ALC_ERROR_NONE);
     ArraysMatch(out, m_plaintext);
-    // FIXME: Dellocate ctx variable
 }
 
 TEST_P(XTS_KAT, valid_encrypt_decrypt_test)
@@ -409,7 +403,6 @@ TEST_P(XTS_KAT, valid_encrypt_decrypt_test)
     err             = pXtsObj->decrypt(
         &(outct.at(0)), &(outpt.at(0)), m_plaintext.size(), &(m_iv.at(0)));
 
-    // FIXME: Dellocate ctx variable
     EXPECT_TRUE(err == ALC_ERROR_NONE);
     ArraysMatch(m_plaintext, outpt);
 }
