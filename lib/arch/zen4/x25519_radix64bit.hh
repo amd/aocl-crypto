@@ -363,6 +363,7 @@ SquareX25519Count(Uint64* output, const Uint64* a, Uint64 count)
 static void // convert to a ->in1 and b - > in2
 MulX25519(Uint64 out[4], const Uint64 a[4], const Uint64 b[4])
 {
+    // Storing the CPU registers on stack to be restored later
     asm("push   %%rax;"
         "push   %%rbx;"
         "push   %%rcx;"
@@ -379,107 +380,139 @@ MulX25519(Uint64 out[4], const Uint64 a[4], const Uint64 b[4])
         "push	%%r14;"
         "push	%%r15;"
 
-        "xor	%%rdi,%%rdi;"
-        "lea	-8*2(%%rsp),%%rsp;"
-        "mov	8*0(%%rbx),%%rbp;"
-        "mov	8*1(%%rbx),%%rcx;"
-        "mov	8*2(%%rbx),%%r14;"
-        "mov	8*3(%%rbx),%%r15;"
-        "mov	8*0(%%rax),%%rdx;"
-        "mulx	%%rbp,%%r8,%%rsi;"
-        "mulx	%%rcx,%%r9,%%rbx;"
-        "adcx	%%rsi,%%r9;"
-        "mulx	%%r14,%%r10,%%rsi;"
-        "adcx	%%rbx,%%r10;"
-        "mulx	%%r15,%%r11,%%r12;"
-        "mov	8*1(%%rax),%%rdx;"
-        "adcx	%%rsi,%%r11;"
-        "mov	%%r14,(%%rsp);"
-        "adcx	%%rdi,%%r12;"
-        "mulx	%%rbp,%%rsi,%%rbx;"
-        "adox	%%rsi,%%r9;"
-        "adcx	%%rbx,%%r10;"
-        "mulx	%%rcx,%%rsi,%%rbx;"
-        "adox	%%rsi,%%r10;"
-        "adcx	%%rbx,%%r11;"
-        "mulx	%%r14,%%rsi,%%rbx;"
-        "adox	%%rsi,%%r11;"
-        "adcx	%%rbx,%%r12;"
-        "mulx	%%r15,%%rsi,%%r13;"
-        "mov	8*2(%%rax),%%rdx;"
-        "adox	%%rsi,%%r12;"
-        "adcx	%%rdi,%%r13;"
-        "adox	%%rdi,%%r13;"
-        "mulx	%%rbp,%%rsi,%%rbx;"
-        "adcx	%%rsi,%%r10;"
-        "adox	%%rbx,%%r11;"
-        "mulx	%%rcx,%%rsi,%%rbx;"
-        "adcx	%%rsi,%%r11;"
-        "adox	%%rbx,%%r12;"
-        "mulx	%%r14,%%rsi,%%rbx;"
-        "adcx	%%rsi,%%r12;"
-        "adox	%%rbx,%%r13;"
-        "mulx	%%r15,%%rsi,%%r14;"
-        "mov	8*3(%%rax),%%rdx;"
-        "adcx	%%rsi,%%r13;"
-        "adox	%%rdi,%%r14;"
-        "adcx	%%rdi,%%r14;"
-        "mulx	%%rbp,%%rsi,%%rbx;"
-        "adox	%%rsi,%%r11;"
-        "adcx	%%rbx,%%r12;"
-        "mulx	%%rcx,%%rsi,%%rbx;"
-        "adox	%%rsi,%%r12;"
-        "adcx	%%rbx,%%r13;"
-        "mulx	(%%rsp),%%rsi,%%rbx;"
-        "adox	%%rsi,%%r13;"
-        "adcx	%%rbx,%%r14;"
-        "mulx	%%r15,%%rsi,%%r15;"
-        "mov	$38,%%edx;"
-        "adox	%%rsi,%%r14;"
-        "adcx	%%rdi,%%r15;"
-        "adox	%%rdi,%%r15;"
-        "mulx	%%r12,%%rsi,%%rbx;"
-        "adcx	%%rsi,%%r8;"
-        "adox	%%rbx,%%r9;"
-        "mulx	%%r13,%%rsi,%%rbx;"
-        "adcx	%%rsi,%%r9;"
-        "adox	%%rbx,%%r10;"
-        "mulx	%%r14,%%rsi,%%rbx;"
-        "adcx	%%rsi,%%r10;"
-        "adox	%%rbx,%%r11;"
-        "mulx	%%r15,%%rsi,%%r12;"
-        "adcx	%%rsi,%%r11;"
-        "adox	%%rdi,%%r12;"
-        "adcx	%%rdi,%%r12;"
-        "mov	8*10(%%rsp),%%rbp;"
-        "mov	8*14(%%rsp),%%rcx;"
-        "imulq	%%rdx,%%r12;"
-        "add	%%r12,%%r8;"
-        "adc	$0,%%r9;"
-        "adc	$0,%%r10;"
-        "adc	$0,%%r11;"
-        "sbb	%%rsi,%%rsi;"
+        "lea	-8*1(%%rsp),%%rsp;"
+        "mov	8*0(%%rbx),%%r12;" // b[0]
+        "mov	8*1(%%rbx),%%r13;" // b[1]
+        "mov	8*2(%%rbx),%%r14;" // b[2]
+        "mov	8*3(%%rbx),%%r15;" // b[3]
+        "mov	8*0(%%rax),%%rdx;" // a[0]
+
+        // Applying school book multiplication
+
+        // b3_b2_b1_b0 * a0
+        "mulx	%%r12,%%r8,%%rsi;" // a0 * b0
+        "mulx	%%r13,%%r9,%%rbx;" // a0 * b1
+
+        "xor	%%rdi,%%rdi;" // clearing off the cf / of flag to be used
+                              // in adcx / adox instuction
+        "adcx	%%rsi,%%r9;"  // carry(a0 * b0) + (a0 * b1) carry will go in cf
+        "mulx	%%r14,%%r10,%%rsi;" // a0 * b2
+        "adcx	%%rbx,%%r10;"       // a0 * b2 + carry(a0 * b1)
+        "mulx	%%r15,%%r11,%%rbp;" // a0 * b3
+        "adcx	%%rsi,%%r11;"       // carry(a0 * b2) + (a0 * b3)
+        "adcx	%%rdi,%%rbp;"       // carry(a0 * b3) + 0 + cf
+
+        // b3_b2_b1_b0 * a1
+        "mov	8*1(%%rax),%%rdx;"  // a1
+        "mulx	%%r12,%%rsi,%%rbx;" // a1 * b0
+        "adox	%%rsi,%%r9;"        // (a1 * b0) + result_prev_row
+        "adcx	%%rbx,%%r10;"       // carry(a1 * b0) + result_prev_row
+        "mulx	%%r13,%%rsi,%%rbx;" // a1 * b1
+        "adox	%%rsi,%%r10;" // carry(a1 * b0) + result_prev_row + a1 * b1
+        "adcx	%%rbx,%%r11;" // carry(a1 * b1) + result_prev_row
+        "mulx	%%r14,%%rsi,%%rbx;" // (b2 * a1)
+        "adox	%%rsi,%%r11;" // carry(a1 * b1) + result_prev_row + (b2 * a1)
+        "adcx	%%rbx,%%rbp;" // carry(a1 * b2) + result_prev_row
+        "mulx	%%r15,%%rsi,%%rcx;" // (b3 * a1)
+        "adox	%%rsi,%%rbp;" // (b3 * a1) + carry(a1 * b2) + result_prev_row
+        "adcx	%%rdi,%%rcx;" // carry(b3 * a1) + 0 + cf
+        "adox	%%rdi,%%rcx;" // carry(b3 * a1) + of + cf + 0
+
+        // b3_b2_b1_b0 * a2
+        "mov	%%r14,(%%rsp);"     // b2 -> rsp
+        "mov	8*2(%%rax),%%rdx;"  // a2
+        "mulx	%%r12,%%rsi,%%rbx;" // b0 * a2
+        "adcx	%%rsi,%%r10;"       // (a2 * b0) + result_prev_row
+        "adox	%%rbx,%%r11;"       // carry(a2 * b0) + result_prev_row
+        "mulx	%%r13,%%rsi,%%rbx;" // a2 * b1
+        "adcx	%%rsi,%%r11;" // carry(a2 * b0) + result_prev_row + a2 * b1
+        "adox	%%rbx,%%rbp;" // carry(a2 * b1) + result_prev_row
+        "mulx	%%r14,%%rsi,%%rbx;" // a2 * b2
+        "adcx	%%rsi,%%rbp;" // carry(a2 * b1) + result_prev_row + a2 * b2
+        "adox	%%rbx,%%rcx;" // carry (a2 * b2) + result+_prev_row
+        "mulx	%%r15,%%rsi,%%r14;" // a2 * b3
+        "adcx	%%rsi,%%rcx;" // a2 * b3 + carry (a2 * b2) + result+_prev_row
+        "adox	%%rdi,%%r14;" // carry(a2 * b3) + 0 + of
+        "adcx	%%rdi,%%r14;" // carry(a2 * b3) + 0 + of + cf
+
+        // b3_b2_b1_b0 * a3
+        "mov	8*3(%%rax),%%rdx;"  // a3
+        "mulx	%%r12,%%rsi,%%rbx;" // a3 * b0
+        "adox	%%rsi,%%r11;"       // a3 * b0 + result_prev_row
+        "adcx	%%rbx,%%rbp;"       // carry(a3 * b0) + result_prev_row
+        "mulx	%%r13,%%rsi,%%rbx;" // a3 * b1
+        "adox	%%rsi,%%rbp;" // carry(a3 * b0) + result_prev_row + a3 * b1
+        "adcx	%%rbx,%%rcx;" // carry(a3 * b1) + result_prev_row
+        "mulx	(%%rsp),%%rsi,%%rbx;" // a3 * b2
+        "adox	%%rsi,%%rcx;" // carry(a3 * b1) + result_prev_row + a3 * b2
+        "adcx	%%rbx,%%r14;" // carry(a3 * b2) + result_prev_row
+        "mulx	%%r15,%%rsi,%%r15;" // a3 * b3
+        "adox	%%rsi,%%r14;" // carry(a3 * b2) + result_prev_row + a3 * b3
+        "adcx	%%rdi,%%r15;" // carry(a3 * b3) + 0 + cf
+        "adox	%%rdi,%%r15;" // carry(a3 * b3) + of + cf
+
+        //clang-format off
+
+        /*
+            modulo 2^255 - 19 -> p = 2^255 - 19 -> 2p + 38 = 2^256
+            all the power greater than or equal to 2^256 can we written as
+            product of (2p + 38) * (2^64)^i , i ranges from 0 to 3 modulo the
+            higher index will result in multiplication by 38 as 2p will be
+            reduced to 0 the number formed will be a modulo p t0 -> a0b0, t1 ->
+            a0b1 + a1b0 + carry(t0), t2 -> a0b2 + a1b1 + a2b0 + carry(t1), t3 ->
+            a0b3 + a1b2 + a2b1 + a3b0 + carry(t2), t4 -> a1b3 + a2b2 + a3b1 +
+            carry(t3), t5 -> a2b3 + a3b2 + carry(t4), t6 -> a3b3 + carry(t5), t7
+           -> carry(t6)
+        */
+        // clang-format on
+
+        "mov	$38,%%rdx;"         // 38
+        "mulx	%%rbp,%%rsi,%%rbx;" // 38 * t4
+        "adcx	%%rsi,%%r8;"        // 38 * t4 + t0
+        "adox	%%rbx,%%r9;"        // carry(38 * t4) + t1
+        "mulx	%%rcx,%%rsi,%%rbx;" // 38 * t5
+        "adcx	%%rsi,%%r9;"        // carry(38 * t4) + t1 + 38 * t5
+
+        "adox	%%rbx,%%r10;"       // carry(38 *t5) + t2
+        "mulx	%%r14,%%rsi,%%rbx;" // 38 * t6
+        "adcx	%%rsi,%%r10;"       // 38 * t6 + carry(38 *t5) + t2
+        "adox	%%rbx,%%r11;"       // carry(38 * t6) + t3
+        "mulx	%%r15,%%rsi,%%rbp;" // 38 * t7
+        "adcx	%%rsi,%%r11;"       // 38 * t7 + carry(38 * t6) + t3
+        "adox	%%rdi,%%rbp;"       // carry(38 * t7) + of + 0
+        "adcx	%%rdi,%%rbp;"       // carry(38 * t7) + of + cf
+        "imulq	%%rdx,%%rbp;"       // 38 * (carry(38 * t7) + of + cf)
+        "add	%%rbp,%%r8;"  // 38 * (carry(38 * t7) + of + cf) + 38 * t4 + t0
+        "adc	$0,%%r9;"     // carry(38 * t4) + t1 + 38 * t5 + prevcarry
+        "adc	$0,%%r10;"    // 38 * t6 + carry(38 *t5) + t2 + prevcarry
+        "adc	$0,%%r11;"    // 38 * t7 + carry(38 * t6) + t3 + prevcarry
+        "sbb	%%rsi,%%rsi;" // rsi = all 1 if there is a carry else 0
         "and	$38,%%rsi;"
-        "add	%%rsi,%%r8;"
+        "add	%%rsi,%%r8;" // add 38 to t0 if the carry was 1
+
+        // moving the 256 bit result to out array
+        "mov	8*13(%%rsp),%%rcx;"
+        "mov	%%r8,8*0(%2);"
         "mov	%%r9,8*1(%2);"
         "mov	%%r10,8*2(%2);"
         "mov	%%r11,8*3(%2);"
-        "mov	%%r8,8*0(%2);"
 
-        "mov	8*2(%%rsp),%%r15;"
-        "mov	8*3(%%rsp),%%r14;"
-        "mov	8*4(%%rsp),%%r13;"
-        "mov	8*5(%%rsp),%%r12;"
-        "mov	8*6(%%rsp),%%r11;"
-        "mov	8*7(%%rsp),%%r10;"
-        "mov	8*8(%%rsp),%%r9;"
-        "mov	8*9(%%rsp),%%r8;"
-        "mov	8*11(%%rsp),%%rdi;"
-        "mov	8*12(%%rsp),%%rsi;"
-        "mov	8*13(%%rsp),%%rdx;"
-        "mov	8*15(%%rsp),%%rbx;"
-        "mov	8*16(%%rsp),%%rax;"
-        "lea    8*17(%%rsp),%%rsp;"
+        // restoring the CPU registers
+        "mov	8*1(%%rsp),%%r15;"
+        "mov	8*2(%%rsp),%%r14;"
+        "mov	8*3(%%rsp),%%r13;"
+        "mov	8*4(%%rsp),%%r12;"
+        "mov	8*5(%%rsp),%%r11;"
+        "mov	8*6(%%rsp),%%r10;"
+        "mov	8*7(%%rsp),%%r9;"
+        "mov	8*8(%%rsp),%%r8;"
+        "mov	8*9(%%rsp),%%rbp;"
+        "mov	8*10(%%rsp),%%rdi;"
+        "mov	8*11(%%rsp),%%rsi;"
+        "mov	8*12(%%rsp),%%rdx;"
+        "mov	8*14(%%rsp),%%rbx;"
+        "mov	8*15(%%rsp),%%rax;"
+        "lea    8*16(%%rsp),%%rsp;"
         :
         : "a"(a), "b"(b), "c"(out)
         : "memory");
@@ -584,8 +617,7 @@ MulX25519(Uint64* c, const Uint64* a, const Uint64* b)
     carry = _addcarry_u64(carry, c2, 0, &c2);
     carry = _addcarry_u64(carry, c3, 0, &c3);
 
-    _subborrow_u64(carry, lo, lo, &lo);
-    lo = lo & 38;
+    lo = -carry & 38;
     c0 = c0 + lo;
 
     c[0] = c0;
