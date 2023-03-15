@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -64,7 +64,7 @@ Ccm::cryptUpdate(const Uint8* pInput,
                  const Uint8* pIv,
                  bool         isEncrypt)
 {
-    alc_error_t  err = ALC_ERROR_NONE;
+    alc_error_t err = ALC_ERROR_NONE;
     if ((pInput != NULL) && (pOutput != NULL)) {
 
         m_len = len;
@@ -102,8 +102,6 @@ Ccm::cryptUpdate(const Uint8* pInput,
             if (!err_ret) {
                 err = ALC_ERROR_BAD_STATE;
                 // Burn everything
-                // FIXME: Need to clear key when errors
-                // memset(reinterpret_cast<void*>(m_ccm_data.key), 0, 224);
                 memset(m_ccm_data.nonce, 0, 16);
                 memset(m_ccm_data.cmac, 0, 16);
                 memset(pOutput, 0, len);

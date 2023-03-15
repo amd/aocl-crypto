@@ -228,7 +228,6 @@ CpuId::Impl::cpuHasShani()
 #ifdef ALCP_ENABLE_AOCL_CPUID
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_SHA_NI);
 #else
-    // FIXME: Settig SHANI as available by default
     static bool state = false;
 #endif
     return state;

@@ -287,8 +287,6 @@ Sha3::Impl::processChunk(const Uint8* pSrc, Uint64 len)
     Uint64  msg_size       = len;
     Uint64* p_msg_buffer64 = (Uint64*)pSrc;
 
-    // FIXME: Suggestion, in Zen1 this algorithm works and gives better
-    // performance. I guess having similar code in avx2 arch will be better.
     static bool zen1_available = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
     static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
 
@@ -404,7 +402,8 @@ Sha3::Impl::finalize(const Uint8* pBuf, Uint64 size)
 Sha3::Sha3(const alc_digest_info_t& rDigestInfo)
     : m_pimpl{ std::make_unique<Sha3::Impl>(rDigestInfo) }
     , m_finished{ false }
-{}
+{
+}
 
 Sha3::~Sha3() {}
 

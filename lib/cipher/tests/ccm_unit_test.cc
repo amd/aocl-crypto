@@ -352,11 +352,7 @@ TEST(CCM, Initiantiation)
     Ccm                  ccm_obj = Ccm(aesInfo, keyInfo);
     // clang-format on
     EXPECT_EQ(ccm_obj.getRounds(), 10);
-    // FIXME: Linking Error
-    // EXPECT_EQ(ccm_obj.getKeySize(),128);
     EXPECT_EQ(ccm_obj.getNr(), 10);
-    // FIXME: Below test is not working
-    // EXPECT_EQ(ccm_obj.getNk(),16);
 }
 
 // Test disabled as ZeroLength checks moved to C_API

@@ -80,7 +80,6 @@ GetSHA2Record(int HashSize)
     }
 }
 
-/* FIXME: duplicate? */
 record_t
 GetSHA3Record(int HashSize)
 {
