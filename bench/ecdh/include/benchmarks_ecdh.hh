@@ -47,7 +47,15 @@
 
 using namespace alcp::testing;
 
-void inline ecdh_Bench(benchmark::State& state, alc_ec_info_t info)
+typedef enum
+{
+    ECDH_BENCH_GEN_PUB_KEY    = 0,
+    ECDH_BENCH_GEN_SECRET_KEY = 1
+} ecdh_bench_opt;
+
+void inline ecdh_Bench(benchmark::State& state,
+                       alc_ec_info_t     info,
+                       ecdh_bench_opt    opt)
 {
     alc_error_t error  = {};
     std::string LibStr = "";
@@ -90,43 +98,65 @@ void inline ecdh_Bench(benchmark::State& state, alc_ec_info_t info)
     data.m_Peer1_SecretKey = &(Peer1SharedSecretKey[0]);
     data.m_Peer2_SecretKey = &(Peer2SharedSecretKey[0]);
 
+    /* init wont be benchmarked */
     if (!Eb->init(info, data)) {
         std::cout << "Error in ECDH init: " << LibStr << std::endl;
         return;
     }
-    for (auto _ : state) {
+
+    /* Just benchmark Gen public key */
+    if (opt == ECDH_BENCH_GEN_PUB_KEY) {
+        for (auto _ : state) {
+            if (!Eb->GeneratePublicKey(data)) {
+                std::cout << "Error in GeneratePublicKey:" << LibStr
+                          << std::endl;
+                return;
+            }
+        }
+    } else if (opt == ECDH_BENCH_GEN_SECRET_KEY) {
+        /* this step is needed for computing secret key */
         if (!Eb->GeneratePublicKey(data)) {
-            std::cout << "Error in ECDH Generate public key: " << LibStr
-                      << std::endl;
+            std::cout << "Error in GeneratePublicKey:" << LibStr << std::endl;
             return;
         }
+        /* benchmark only Computing secret key */
+        for (auto _ : state) {
+            if (!Eb->ComputeSecretKey(data)) {
+                std::cout << "Error in ComputeSecretKey:" << LibStr
+                          << std::endl;
+                return;
+            }
+        }
     }
-    if (!Eb->ComputeSecretKey(data)) {
-        std::cout << "Error in ECDH Compute Secret key: " << LibStr
-                  << std::endl;
-        return;
-    }
-    state.counters["PublicKeysGenPerSecond"] =
+    state.counters["KeysGen/Sec"] =
         benchmark::Counter(state.iterations(), benchmark::Counter::kIsRate);
     return;
 }
 
-/* add all your new benchmarks here */
-/* ecdh benchmarks */
 static void
-BENCH_ECDH_x25519(benchmark::State& state)
+BENCH_ECDH_x25519_GenPubKey(benchmark::State& state)
 {
     alc_ec_info_t info;
     info.ecCurveId     = ALCP_EC_CURVE25519;
     info.ecCurveType   = ALCP_EC_CURVE_TYPE_MONTGOMERY;
     info.ecPointFormat = ALCP_EC_POINT_FORMAT_UNCOMPRESSED;
-    ecdh_Bench(state, info);
+    ecdh_Bench(state, info, ECDH_BENCH_GEN_PUB_KEY);
+}
+static void
+BENCH_ECDH_x25519_GenSecretKey(benchmark::State& state)
+{
+    alc_ec_info_t info;
+    info.ecCurveId     = ALCP_EC_CURVE25519;
+    info.ecCurveType   = ALCP_EC_CURVE_TYPE_MONTGOMERY;
+    info.ecPointFormat = ALCP_EC_POINT_FORMAT_UNCOMPRESSED;
+    ecdh_Bench(state, info, ECDH_BENCH_GEN_SECRET_KEY);
 }
 
-/* add benchmarks */
+/* add new benchmarks here */
 int
 AddBenchmarks_ecdh()
 {
-    BENCHMARK(BENCH_ECDH_x25519);
+    BENCHMARK(BENCH_ECDH_x25519_GenPubKey);
+    BENCHMARK(BENCH_ECDH_x25519_GenSecretKey);
     return 0;
 }
