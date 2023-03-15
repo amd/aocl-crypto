@@ -80,18 +80,13 @@ class AesError final : public ErrorBase
 
   public:
     AesError()
-        : ErrorBase{ ErrorCode::eOk }
+        : ErrorBase{ }
     {
         setModuleError(ErrorCode::eOk);
     }
 
-    AesError(Uint64 ecode)
-        : ErrorBase{ ecode }
-    {
-    }
-
     AesError(cipher::ErrorCode ecode)
-        : ErrorBase{ ErrorCode::eOk }
+        : AesError{}
     {
         if (ecode != eOk) {
             ErrorBase::setModuleError(toUint16(ecode));
