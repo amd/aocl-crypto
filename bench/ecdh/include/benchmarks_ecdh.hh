@@ -75,8 +75,6 @@ void inline ecdh_Bench(benchmark::State& state, alc_ec_info_t info)
 #endif
     /* TODO , initialize classes for IPP here */
 
-    /* generate random bytes, use it in the loop */
-    /* TODO: how do we generate the pvt key pair ??*/
     std::vector<Uint8> Peer1PvtKey = rb.genRandomBytes(KeySize);
     std::vector<Uint8> Peer2PvtKey = rb.genRandomBytes(KeySize);
 
@@ -103,9 +101,13 @@ void inline ecdh_Bench(benchmark::State& state, alc_ec_info_t info)
             return;
         }
     }
-    state.counters["Speed(Bytes/s)"] = benchmark::Counter(
-        state.iterations() * KeySize, benchmark::Counter::kIsRate);
-    state.counters["KeySize(Bytes)"] = KeySize;
+    if (!Eb->ComputeSecretKey(data)) {
+        std::cout << "Error in ECDH Compute Secret key: " << LibStr
+                  << std::endl;
+        return;
+    }
+    state.counters["PublicKeysGenPerSecond"] =
+        benchmark::Counter(state.iterations(), benchmark::Counter::kIsRate);
     return;
 }
 
