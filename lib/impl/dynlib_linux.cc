@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,7 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "dynlib.hh"
+#include "alcp/dynlib.hh"
 
 #include <dlfcn.h>
 
@@ -37,10 +37,12 @@ class DynamicLibrary::Impl
   public:
     Impl(const std::string& path)
         : m_path{ path }
-    {}
+    {
+    }
     Impl(const std::string& path, int flags)
         : m_path{ path }
-    {}
+    {
+    }
     ~Impl();
 
     void               load(const std::string& path, int flags);

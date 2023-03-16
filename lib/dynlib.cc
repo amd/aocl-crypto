@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,7 +26,7 @@
  *
  */
 
-#include "dynlib.hh"
+#include "alcp/dynlib.hh"
 #include "types.hh"
 
 enum DynLoadError : alcp::Uint32
@@ -49,11 +49,13 @@ namespace alcp {
 
 DynamicLibrary::DynamicLibrary(const std::string& path)
     : m_pimpl{ std::make_unique<DynamicLibrary::Impl>(path) }
-{}
+{
+}
 
 DynamicLibrary::DynamicLibrary(const std::string& path, int flags)
     : m_pimpl{ std::make_unique<DynamicLibrary::Impl>(path, flags) }
-{}
+{
+}
 
 bool
 DynamicLibrary::isLoaded() const
@@ -73,8 +75,6 @@ DynamicLibrary::load(const std::string& path, int flags)
     m_pimpl->load(path, flags);
 }
 
-DynamicLibrary::~DynamicLibrary()
-{
-}
+DynamicLibrary::~DynamicLibrary() {}
 
 } // namespace alcp

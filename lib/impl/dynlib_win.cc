@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,70 +25,67 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "dynlib.hh"
+#include "alcp/dynlib.hh"
 
 #include <mutex>
 
 /**
-* This file is defined only for the Windows call-stack.
-*/
+ * This file is defined only for the Windows call-stack.
+ */
 namespace alcp {
-    class DynamicLibrary::Impl
+class DynamicLibrary::Impl
+{
+  public:
+    Impl(const std::string& path)
+        : m_path{ path }
     {
-    public:
-        Impl(const std::string& path)
-            : m_path{ path }
-        {}
-        Impl(const std::string& path, int flags)
-            : m_path{ path }
-        {}
-        ~Impl();
-
-        void               load(const std::string& path, int flags);
-        void               unload();
-        bool               isLoaded() const;
-        void* getSymbol(const std::string& name);
-        static std::string suffix();
-
-    private:
-        std::string m_path;
-        void* m_handle;
-        std::mutex  m_mutex;
-    };
-
-    DynamicLibrary::Impl::~Impl()
-    {
-
     }
-
-    void
-        DynamicLibrary::Impl::load(const std::string& path, int flags)
+    Impl(const std::string& path, int flags)
+        : m_path{ path }
     {
-        
     }
+    ~Impl();
 
-    void
-        DynamicLibrary::Impl::unload()
-    {
-        
-    }
+    void               load(const std::string& path, int flags);
+    void               unload();
+    bool               isLoaded() const;
+    void*              getSymbol(const std::string& name);
+    static std::string suffix();
 
-    bool
-        DynamicLibrary::Impl::isLoaded() const
-    {
-        return false;
-    }
+  private:
+    std::string m_path;
+    void*       m_handle;
+    std::mutex  m_mutex;
+};
 
-    void*
-        DynamicLibrary::Impl::getSymbol(const std::string& name)
-    {
-        return nullptr;
-    }
+DynamicLibrary::Impl::~Impl() {}
 
-    std::string
-        DynamicLibrary::Impl::suffix()
-    {
+void
+DynamicLibrary::Impl::load(const std::string& path, int flags)
+{
+}
 
-        return nullptr;
-    }
+void
+DynamicLibrary::Impl::unload()
+{
+}
+
+bool
+DynamicLibrary::Impl::isLoaded() const
+{
+    return false;
+}
+
+void*
+DynamicLibrary::Impl::getSymbol(const std::string& name)
+{
+    return nullptr;
+}
+
+std::string
+DynamicLibrary::Impl::suffix()
+{
+
+    return nullptr;
+}
 } // namespace alcp
