@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -47,6 +47,8 @@ using StringView = ::std::string_view;
 
 } // namespace alcp
 
+#include "alcp/macros.h"
+#include "alcp/types.h"
 namespace alcp {
 
 typedef char          Schar;
@@ -74,17 +76,16 @@ typedef uint32_t Uint32;
 typedef uint64_t Uint64;
 
 /* Pointers */
-typedef void*     pVoid;
+typedef void* pVoid;
 
-typedef int8_t*   pInt8;
-typedef int16_t*  pInt16;
-typedef int32_t*  pInt32;
-typedef int64_t*  pInt64;
+typedef int8_t*  pInt8;
+typedef int16_t* pInt16;
+typedef int32_t* pInt32;
+typedef int64_t* pInt64;
 
 typedef uint8_t*  pUint8;
 typedef uint16_t* pUint16;
 typedef uint32_t* pUint32;
 typedef uint64_t* pUint64;
-
 
 } // namespace alcp

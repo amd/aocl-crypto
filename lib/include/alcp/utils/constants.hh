@@ -27,7 +27,7 @@
  */
 
 #include "bits.hh"
-#include "types.hh"
+#include "alcp/types.hh"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

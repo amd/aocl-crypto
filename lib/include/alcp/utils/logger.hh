@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include "types.hh"
+#include "alcp/types.hh"
 
 #include "alcp/alcp.hh"
 #include <chrono>
@@ -106,7 +106,7 @@ class Priority
     Level m_level;
 };
 
-#include "types.hh"
+#include "alcp/types.hh"
 class Time
 {
     using clock = std::chrono::system_clock;

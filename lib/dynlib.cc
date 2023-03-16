@@ -27,7 +27,7 @@
  */
 
 #include "alcp/dynlib.hh"
-#include "types.hh"
+#include "alcp/types.hh"
 
 enum DynLoadError : alcp::Uint32
 {

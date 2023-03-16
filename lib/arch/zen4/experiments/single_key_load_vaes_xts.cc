@@ -34,9 +34,9 @@
 #include <cstring>
 #include <immintrin.h>
 
+#include "alcp/types.hh"
 #include "alcp/utils/copy.hh"
 #include "key.hh"
-#include "types.hh"
 
 #define ENABLE_SINGLE_KEY_LOAD 1
 

@@ -28,8 +28,8 @@
 
 #pragma once
 
+#include "alcp/types.hh"
 #include "config.h"
-#include "types.hh"
 
 namespace alcp::utils {
 

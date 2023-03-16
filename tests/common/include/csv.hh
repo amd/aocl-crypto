@@ -34,7 +34,7 @@
 #include <vector>
 
 /* ALCP Headers */
-#include "../../../lib/include/types.hh"
+#include "../../../lib/include/alcp/types.hh"
 #include "file.hh"
 #include "utils.hh"
 

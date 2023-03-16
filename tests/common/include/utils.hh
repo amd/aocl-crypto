@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include "../../../lib/include/types.hh"
+#include "../../../lib/include/alcp/types.hh"
 #include "colors.hh"
 #include <iostream>
 #include <sstream>

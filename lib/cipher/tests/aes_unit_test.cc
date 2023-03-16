@@ -28,7 +28,7 @@
 
 #include "alcp/base.hh"
 #include "alcp/cipher/aes.hh"
-#include "types.hh"
+#include "alcp/types.hh"
 #include "gtest/gtest.h"
 using namespace alcp::cipher;
 using namespace alcp::base;
