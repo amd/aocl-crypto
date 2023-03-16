@@ -26,9 +26,9 @@
  *
  */
 
-#include "cipher/aes.hh"
-#include "cipher/aesni.hh"
-#include "cipher/aesni_core.hh"
+#include "alcp/cipher/aes.hh"
+#include "alcp/cipher/aesni.hh"
+#include "alcp/cipher/aesni_core.hh"
 
 #include <immintrin.h>
 
@@ -43,18 +43,18 @@ __crypt_ofb(const Uint8* pInputText,  // ptr to inputText
             Uint8*       pOutputText, // ptr to outputtext
             Uint64       len,         // message length in bytes
             const Uint8* pKey,        // ptr to Key
-            int            nRounds,     // No. of rounds
+            int          nRounds,     // No. of rounds
             const Uint8* pIv          // ptr to Initialization Vector
 )
 {
     alc_error_t err    = ALC_ERROR_NONE;
-    Uint64    blocks = len / Rijndael::cBlockSize;
+    Uint64      blocks = len / Rijndael::cBlockSize;
     __m128i     a1; // plaintext data
 
     Uint64 i         = 0;
-    auto     p_in_128  = reinterpret_cast<const __m128i*>(pInputText);
-    auto     p_out_128 = reinterpret_cast<__m128i*>(pOutputText);
-    auto     pkey128   = reinterpret_cast<const __m128i*>(pKey);
+    auto   p_in_128  = reinterpret_cast<const __m128i*>(pInputText);
+    auto   p_out_128 = reinterpret_cast<__m128i*>(pOutputText);
+    auto   pkey128   = reinterpret_cast<const __m128i*>(pKey);
 
     /*
      * load first all keys one-time in xmm registers
@@ -159,7 +159,7 @@ namespace experimental {
                          Uint8*       pOutputText, // ptr to outputtext
                          Uint64       len,         // message length in bytes
                          const Uint8* pKey,        // ptr to Key
-                         int            nRounds,     // No. of rounds
+                         int          nRounds,     // No. of rounds
                          const Uint8* pIv // ptr to Initialization Vector
     )
     {
@@ -199,14 +199,14 @@ namespace experimental {
  * have lower performance on a single-copy run.
  * TODO: confirm this claim in multi-copy run as well
  */
-//#define USE_EXPERIMENTAL 1
+// #define USE_EXPERIMENTAL 1
 
 alc_error_t
 EncryptOfb(const Uint8* pPlainText,  // ptr to plaintext
            Uint8*       pCipherText, // ptr to ciphertext
            Uint64       len,         // message length in bytes
            const Uint8* pKey,        // ptr to Key
-           int            nRounds,     // No. of rounds
+           int          nRounds,     // No. of rounds
            const Uint8* pIv          // ptr to Initialization Vector
 )
 {
@@ -234,7 +234,7 @@ DecryptOfb(const Uint8* pCipherText, // ptr to ciphertext
            Uint8*       pPlainText,  // ptr to plaintext
            Uint64       len,         // message length in bytes
            const Uint8* pKey,        // ptr to Key
-           int            nRounds,     // No. of rounds
+           int          nRounds,     // No. of rounds
            const Uint8* pIv          // ptr to Initialization Vector
 )
 {

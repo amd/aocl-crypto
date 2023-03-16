@@ -30,7 +30,7 @@
 #ifndef __GTEST_BASE_HH
 #define __GTEST_BASE_HH 2
 
-#include "../../../lib/include/types.hh"
+#include "../../../lib/include/alcp/types.hh"
 #include "alc_cipher_base.hh"
 #include "cipher_base.hh"
 #include "csv.hh"

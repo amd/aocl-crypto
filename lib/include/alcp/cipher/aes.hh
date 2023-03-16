@@ -33,8 +33,8 @@
 
 // #include "algorithm.hh"
 #include "alcp/base.hh"
-#include "cipher.hh"
-#include "cipher/rijndael.hh"
+#include "alcp/cipher.hh"
+#include "alcp/cipher/rijndael.hh"
 #include "utils/bits.hh"
 
 #include <immintrin.h>

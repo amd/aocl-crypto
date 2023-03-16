@@ -32,6 +32,7 @@
 
 #include "alcp/cipher.h"
 
+#include "alcp/cipher.hh"
 #include "alcp/module.hh"
 #include "alcp/modulemanager.hh"
 

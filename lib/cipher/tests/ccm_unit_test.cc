@@ -26,10 +26,10 @@
  *
  */
 
-#include "cipher.hh"
-#include "cipher/aes_build.hh"
+#include "alcp/cipher.hh"
+#include "alcp/cipher/aes_build.hh"
 
-#include "cipher/aes_ccm.hh"
+#include "alcp/cipher/aes_ccm.hh"
 
 // FIXME: Remove all the includes from gtest_base related to capi
 #include "cipher/gtest_base.hh"

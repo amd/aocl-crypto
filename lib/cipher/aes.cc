@@ -28,8 +28,8 @@
 
 #include "alcp/error.h"
 
-#include "cipher/aes.hh"
-#include "cipher/aesni.hh"
+#include "alcp/cipher/aes.hh"
+#include "alcp/cipher/aesni.hh"
 
 namespace alcp::cipher {
 

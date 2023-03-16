@@ -26,9 +26,8 @@
  *
  */
 
-
-#include "cipher/aes_xts.hh"
-#include "cipher/aesni.hh"
+#include "alcp/cipher/aes_xts.hh"
+#include "alcp/cipher/aesni.hh"
 #include "utils/copy.hh"
 
 #include <immintrin.h>
@@ -40,7 +39,7 @@ namespace alcp::cipher { namespace aesni {
                            Uint64       len,
                            const Uint8* pKey,
                            const Uint8* pTweakKey,
-                           int            nRounds,
+                           int          nRounds,
                            const Uint8* pIv)
     {
         auto p_key128       = reinterpret_cast<const __m128i*>(pKey);
@@ -50,7 +49,7 @@ namespace alcp::cipher { namespace aesni {
         auto p_iv128        = reinterpret_cast<const __m128i*>(pIv);
 
         Uint64 blocks          = len / Rijndael::cBlockSize;
-        int      last_Round_Byte = len % Rijndael::cBlockSize;
+        int    last_Round_Byte = len % Rijndael::cBlockSize;
 
         // iv encryption using tweak key to get alpha
         __m128i current_alpha =
@@ -183,7 +182,7 @@ namespace alcp::cipher { namespace aesni {
                            Uint64       len,
                            const Uint8* pKey,
                            const Uint8* pTweakKey,
-                           int            nRounds,
+                           int          nRounds,
                            const Uint8* pIv)
     {
         auto p_key128       = reinterpret_cast<const __m128i*>(pKey);
@@ -193,7 +192,7 @@ namespace alcp::cipher { namespace aesni {
         auto p_iv128        = reinterpret_cast<const __m128i*>(pIv);
 
         Uint64 blocks          = len / Rijndael::cBlockSize;
-        int      last_Round_Byte = len % Rijndael::cBlockSize;
+        int    last_Round_Byte = len % Rijndael::cBlockSize;
 
         // iv encryption using tweak key to get alpha
         __m128i current_alpha = _mm_loadu_si128(p_iv128),
@@ -311,7 +310,7 @@ namespace alcp::cipher { namespace aesni {
             // destinatIon on last line of code and getting last message block
             // to encrypt
             __m128i last_src_text;
-            auto p_last_src_text = reinterpret_cast<Uint8*>(&last_src_text);
+            auto    p_last_src_text = reinterpret_cast<Uint8*>(&last_src_text);
 
             utils::CopyBytes(p_dest8, p_dest8 - 16, last_Round_Byte);
             utils::CopyBytes(p_last_src_text + last_Round_Byte,

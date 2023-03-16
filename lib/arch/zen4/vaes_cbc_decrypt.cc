@@ -31,12 +31,11 @@
 #include <cstdint>
 #include <immintrin.h>
 
+#include "alcp/cipher/aes.hh"
 #include "avx512.hh"
-#include "cipher/aes.hh"
 
 #include "vaes_avx512.hh"
 #include "vaes_avx512_core.hh"
-
 
 namespace alcp::cipher::vaes512 {
 
@@ -45,11 +44,11 @@ DecryptCbcAvx512(const Uint8* pCipherText, // ptr to ciphertext
                  Uint8*       pPlainText,  // ptr to plaintext
                  Uint64       len,         // message length in bytes
                  const Uint8* pKey,        // ptr to Key
-                 int            nRounds,     // No. of rounds
+                 int          nRounds,     // No. of rounds
                  const Uint8* pIv          // ptr to Initialization Vector
 )
 {
-    Uint64    blocks = len / Rijndael::cBlockSize;
+    Uint64      blocks = len / Rijndael::cBlockSize;
     alc_error_t err    = ALC_ERROR_NONE;
 
     auto p_in_128  = reinterpret_cast<const __m128i*>(pCipherText);

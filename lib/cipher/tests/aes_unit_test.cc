@@ -27,7 +27,7 @@
  */
 
 #include "alcp/base.hh"
-#include "cipher/aes.hh"
+#include "alcp/cipher/aes.hh"
 #include "types.hh"
 #include "gtest/gtest.h"
 using namespace alcp::cipher;
@@ -66,8 +66,8 @@ TEST(AES, setKeyEquivalencyTest)
     aes.setMode(ALC_AES_MODE_NONE);
 
     const alc_key_info_t   cKeyInfo = { ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW,
-                                      ALC_KEY_ALG_MAC,        ALC_KEY_LEN_128,
-                                      sizeof(key) * 8,        &key[0] };
+                                        ALC_KEY_ALG_MAC,        ALC_KEY_LEN_128,
+                                        sizeof(key) * 8,        &key[0] };
     alc_cipher_algo_info_t aes_info = { ALC_AES_MODE_NONE, NULL };
     auto                   aes2     = TestCipherMode(aes_info, cKeyInfo);
 

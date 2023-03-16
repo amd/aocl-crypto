@@ -28,7 +28,7 @@
 
 #include "vaes.hh"
 
-#include "cipher/aes.hh"
+#include "alcp/cipher/aes.hh"
 #include "alcp/types.hh"
 
 #include <immintrin.h>
@@ -40,11 +40,11 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
            Uint8*       pPlainText,  // ptr to plaintext
            Uint64       len,         // message length in bytes
            const Uint8* pKey,        // ptr to Key
-           int            nRounds,     // No. of rounds
+           int          nRounds,     // No. of rounds
            const Uint8* pIv          // ptr to Initialization Vector
 )
 {
-    Uint64    blocks = len / Rijndael::cBlockSize;
+    Uint64      blocks = len / Rijndael::cBlockSize;
     alc_error_t err    = ALC_ERROR_NONE;
 
     auto p_in_128  = reinterpret_cast<const __m128i*>(pCipherText);
@@ -52,7 +52,10 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
     auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
 
     // Mask for loading and storing half register
-    __m256i mask_lo = _mm256_set_epi64x(0, 0, static_cast<long long>(1UL) << 63, static_cast<long long>(1UL) << 63);
+    __m256i mask_lo = _mm256_set_epi64x(0,
+                                        0,
+                                        static_cast<long long>(1UL) << 63,
+                                        static_cast<long long>(1UL) << 63);
 
     __m256i input_128_a1;
 

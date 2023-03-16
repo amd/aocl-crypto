@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,10 +29,10 @@
 #ifndef _CIPHER_AES_CTR_HH_
 #define _CIPHER_AES_CTR_HH_ 2
 
+#include <avx2intrin.h>
 #include <cstdint>
 #include <immintrin.h>
 #include <vpclmulqdqintrin.h>
-#include <avx2intrin.h>
 
 #define GF_POLYNOMIAL 0x87
 

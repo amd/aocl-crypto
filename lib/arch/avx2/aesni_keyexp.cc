@@ -27,7 +27,7 @@
  */
 
 #include "alcp/base.hh"
-#include "cipher/aesni.hh"
+#include "alcp/cipher/aesni.hh"
 
 #include <immintrin.h>
 

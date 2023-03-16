@@ -26,9 +26,9 @@
  *
  */
 
+#include "alcp/cipher/aes.hh"
+#include "alcp/cipher/cipher_wrapper.hh"
 #include "alcp/utils/cpuid.hh"
-#include "cipher/aes.hh"
-#include "cipher/cipher_wrapper.hh"
 
 #include <immintrin.h>
 #include <wmmintrin.h>
@@ -60,9 +60,9 @@ Gcm::cryptUpdate(const Uint8* pInput,
                  Uint8*       pOutput,
                  Uint64       len,
                  const Uint8* pIv,
-                 bool           isEncrypt)
+                 bool         isEncrypt)
 {
-    alc_error_t  err = ALC_ERROR_NONE;
+    alc_error_t err = ALC_ERROR_NONE;
 
     if ((pInput != NULL) && (pOutput != NULL)) {
         // CTR encrypt and Hash
@@ -179,7 +179,7 @@ Gcm::setAad(const Uint8* pInput, Uint64 len)
     // additional data processing, when input is additional data &
     // output is NULL
     const Uint8* pAdditionalData = pInput;
-    m_additionalDataLen            = len;
+    m_additionalDataLen          = len;
 
     // Additional data call
     err = aesni::processAdditionalDataGcm(pAdditionalData,
@@ -202,7 +202,7 @@ Gcm::getTag(Uint8* pOutput, Uint64 len)
         return err;
     }
     Uint8* ptag = pOutput;
-    err           = aesni::GetTagGcm(len,
+    err         = aesni::GetTagGcm(len,
                            m_len,
                            m_additionalDataLen,
                            &m_gHash_128,

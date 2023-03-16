@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,20 +27,10 @@
  */
 #pragma once
 
-#include "alcp/cipher.h"
+#include "alcp/cipher/cipher_wrapper.hh"
 
-#include "alcp/base.hh"
-#include "capi/cipher/builder.hh"
-#include "cipher.hh"
+#include <cstdint>
+#include <immintrin.h>
 
-namespace alcp::cipher {
-
-class AesBuilder
-{
-  public:
-    static alc_error_t Build(const alc_cipher_algo_info_t& aesInfo,
-                             const alc_key_info_t&         keyInfo,
-                             Context&                      ctx);
-};
-
-} // namespace alcp::cipher
+namespace alcp::cipher { namespace aes {
+}} // namespace alcp::cipher::aes

@@ -29,9 +29,9 @@
 // #include "cipher/alc_base.hh"
 // #include "cipher/base.hh"
 
+#include "alcp/cipher/aes.hh"
+#include "alcp/cipher/aes_build.hh"
 #include "capi/cipher/ctx.hh"
-#include "cipher/aes.hh"
-#include "cipher/aes_build.hh"
 #include "cipher/gtest_base.hh"
 #include "gtest/gtest.h"
 #include <memory>

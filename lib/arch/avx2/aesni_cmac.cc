@@ -26,7 +26,7 @@
  *
  */
 
-#include "cipher/aesni.hh"
+#include "alcp/cipher/aesni.hh"
 #include "mac/cmac.hh"
 #include <immintrin.h>
 #include <iostream>

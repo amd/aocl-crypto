@@ -27,10 +27,10 @@
  */
 #include "avx2.hh"
 
-#include "cipher/aes.hh"
-#include "cipher/aes_gcm.hh"
-#include "cipher/aesni.hh"
-#include "cipher/gmul.hh"
+#include "alcp/cipher/aes.hh"
+#include "alcp/cipher/aes_gcm.hh"
+#include "alcp/cipher/aesni.hh"
+#include "alcp/cipher/gmul.hh"
 
 #include <immintrin.h>
 

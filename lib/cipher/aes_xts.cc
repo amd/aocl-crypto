@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,9 +26,9 @@
  *
  */
 
+#include "alcp/cipher/aes.hh"
+#include "alcp/cipher/cipher_wrapper.hh"
 #include "alcp/utils/cpuid.hh"
-#include "cipher/aes.hh"
-#include "cipher/cipher_wrapper.hh"
 #include "utils/constants.hh"
 #include "utils/copy.hh"
 
@@ -120,7 +120,7 @@ Xts::encrypt(const Uint8* pPlainText,
              Uint64       len,
              const Uint8* pIv) const
 {
-    alc_error_t  err = ALC_ERROR_NONE;
+    alc_error_t err = ALC_ERROR_NONE;
 
     // Data should never be less than a block or greater than 2^20 blocks
     if (len < 16 || len > (1 << 21)) {
@@ -240,7 +240,7 @@ Xts::decrypt(const Uint8* pCipherText,
              Uint64       len,
              const Uint8* pIv) const
 {
-    alc_error_t  err = ALC_ERROR_NONE;
+    alc_error_t err = ALC_ERROR_NONE;
 
     // Data should never be less than a block or greater than 2^20 blocks
     if (len < 16 || len > (1 << 21)) {

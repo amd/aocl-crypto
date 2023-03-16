@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,8 +26,7 @@
  *
  */
 
-
-#include "cipher/aesni.hh"
+#include "alcp/cipher/aesni.hh"
 
 #include <cstdint>
 #include <immintrin.h>
@@ -38,7 +37,7 @@ namespace alcp::cipher { namespace aesni {
                            Uint8*       pDest,
                            Uint64       len,
                            const Uint8* pKey,
-                           int            nRounds,
+                           int          nRounds,
                            const Uint8* pIv)
     {
         alc_error_t err       = ALC_ERROR_NONE;
@@ -115,15 +114,15 @@ namespace alcp::cipher { namespace aesni {
                            Uint8*       pDest,
                            Uint64       len,
                            const Uint8* pKey,
-                           int            nRounds,
+                           int          nRounds,
                            const Uint8* pIv)
     {
         auto p_key128  = reinterpret_cast<const __m128i*>(pKey);
         auto p_src128  = reinterpret_cast<const __m128i*>(pSrc);
         auto p_dest128 = reinterpret_cast<__m128i*>(pDest);
 
-        __m128i  iv128  = _mm_loadu_si128((const __m128i*)pIv);
-        Uint64 blocks = len / Rijndael::cBlockSize;
+        __m128i iv128  = _mm_loadu_si128((const __m128i*)pIv);
+        Uint64  blocks = len / Rijndael::cBlockSize;
 
         while (blocks >= 4) {
             __m128i tmpblk = iv128;

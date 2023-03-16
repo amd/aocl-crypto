@@ -31,7 +31,7 @@
 #include "alcp/cipher.h"
 
 #include "alcp/base.hh"
-#include "cipher.hh"
+#include "alcp/cipher.hh"
 #include "utils/bits.hh"
 
 #include <memory>

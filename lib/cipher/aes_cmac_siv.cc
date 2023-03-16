@@ -26,10 +26,10 @@
  *
  */
 
-#include "cipher/aes_cmac_siv.hh"
+#include "alcp/cipher/aes_cmac_siv.hh"
+#include "alcp/cipher/aes_error.hh"
+#include "alcp/cipher/common.hh"
 #include "alcp/utils/cpuid.hh"
-#include "cipher/aes_error.hh"
-#include "cipher/common.hh"
 using alcp::utils::CpuId;
 
 namespace alcp::cipher {

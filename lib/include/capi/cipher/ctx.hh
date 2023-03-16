@@ -29,7 +29,7 @@
 
 #include "alcp/cipher.h"
 
-#include "cipher.hh"
+#include "alcp/cipher.hh"
 
 #include <functional>
 

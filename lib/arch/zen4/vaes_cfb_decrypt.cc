@@ -30,8 +30,8 @@
 
 #include <immintrin.h>
 
+#include "alcp/cipher/aesni.hh"
 #include "avx512.hh"
-#include "cipher/aesni.hh"
 #include "vaes_avx512.hh"
 #include "vaes_avx512_core.hh"
 
@@ -41,7 +41,7 @@ namespace alcp::cipher { namespace vaes512 {
                                  Uint8*       pDest,
                                  Uint64       len,
                                  const Uint8* pKey,
-                                 int            nRounds,
+                                 int          nRounds,
                                  const Uint8* pIv)
     {
         alc_error_t err       = ALC_ERROR_NONE;

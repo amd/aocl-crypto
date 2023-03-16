@@ -27,7 +27,7 @@
  */
 #pragma once
 
-#include "../../../lib/include/types.hh"
+#include "../../../lib/include/alcp/types.hh"
 #include <alcp/types.h>
 #include <fstream>
 #include <iostream>

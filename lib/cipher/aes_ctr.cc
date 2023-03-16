@@ -26,8 +26,8 @@
  *
  */
 
-#include "cipher/aes.hh"
-#include "cipher/cipher_wrapper.hh"
+#include "alcp/cipher/aes.hh"
+#include "alcp/cipher/cipher_wrapper.hh"
 
 #include "alcp/utils/cpuid.hh"
 
@@ -37,18 +37,18 @@ namespace alcp::cipher {
 
 alc_error_t
 cryptCtr(const Uint8* pInputText, // ptr to plaintext for encrypt
-                                    // and ciphertext for decrypt
+                                  // and ciphertext for decrypt
          Uint8* pOutputText,      // ptr to ciphertext for encrypt and
-                                    // plaintext for decrypt
+                                  // plaintext for decrypt
          Uint64       len,        // message length in bytes
          const Uint8* pKey,       // ptr to Key
-         int            nRounds,    // No. of rounds
+         int          nRounds,    // No. of rounds
          const Uint8* pIv,        // ptr to Initialization Vector
-         bool           isVaes,
-         bool           isAvx512Cap)
+         bool         isVaes,
+         bool         isAvx512Cap)
 {
     alc_error_t err     = ALC_ERROR_NONE;
-    Uint64    blocks  = len / Rijndael::cBlockSize;
+    Uint64      blocks  = len / Rijndael::cBlockSize;
     auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
 
     if (isVaes && isAvx512Cap) {
@@ -73,9 +73,9 @@ Ctr::decrypt(const Uint8* pCipherText,
              Uint64       len,
              const Uint8* pIv) const
 {
-    alc_error_t  err = ALC_ERROR_NONE;
-    bool         isVaes      = false;
-    bool         isAvx512Cap = false;
+    alc_error_t err         = ALC_ERROR_NONE;
+    bool        isVaes      = false;
+    bool        isAvx512Cap = false;
     if (CpuId::cpuHasVaes()) {
         isVaes = true;
         if (CpuId::cpuHasAvx512(utils::AVX512_F)
@@ -103,9 +103,9 @@ Ctr::encrypt(const Uint8* pPlainText,
              Uint64       len,
              const Uint8* pIv) const
 {
-    alc_error_t  err = ALC_ERROR_NONE;
-    bool         isVaes      = false;
-    bool         isAvx512Cap = false;
+    alc_error_t err         = ALC_ERROR_NONE;
+    bool        isVaes      = false;
+    bool        isAvx512Cap = false;
     if (CpuId::cpuHasVaes()) {
         isVaes = true;
         if (CpuId::cpuHasAvx512(utils::AVX512_F)

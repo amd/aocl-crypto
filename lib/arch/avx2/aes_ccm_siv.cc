@@ -27,7 +27,7 @@
  */
 
 #include "alcp/base.hh"
-#include "cipher/aes_cmac_siv_arch.hh"
+#include "alcp/cipher/aes_cmac_siv_arch.hh"
 #include "immintrin.h"
 #include "utils/copy.hh"
 

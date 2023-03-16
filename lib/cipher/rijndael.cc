@@ -29,9 +29,9 @@
 #include "alcp/error.h"
 
 #include "alcp/base.hh"
+#include "alcp/cipher/aes.hh"
+#include "alcp/cipher/cipher_wrapper.hh"
 #include "alcp/utils/cpuid.hh"
-#include "cipher/aes.hh"
-#include "cipher/cipher_wrapper.hh"
 #include "utils/bits.hh"
 #include "utils/constants.hh"
 #include "utils/copy.hh"

@@ -25,10 +25,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "cipher/aes.hh"
-#include "cipher/aes_build.hh"
-#include "cipher/aes_cfb.hh"
-#include "cipher/aes_cmac_siv.hh"
+#include "alcp/cipher/aes.hh"
+#include "alcp/cipher/aes_build.hh"
+#include "alcp/cipher/aes_cfb.hh"
+#include "alcp/cipher/aes_cmac_siv.hh"
 
 #if 0
 #include "cipher/aes_ccm.hh"

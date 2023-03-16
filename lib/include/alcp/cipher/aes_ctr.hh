@@ -29,7 +29,7 @@
 
 #include "alcp/error.h"
 
-#include "cipher/cipher_wrapper.hh"
+#include "alcp/cipher/cipher_wrapper.hh"
 
 #include <cstdint>
 #include <immintrin.h>

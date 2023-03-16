@@ -26,7 +26,7 @@
  *
  */
 
-#include "cipher/aes_cmac_siv.hh"
+#include "alcp/cipher/aes_cmac_siv.hh"
 
 // FIXME: Remove all the includes from gtest_base related to capi
 #include "cipher/gtest_base.hh"

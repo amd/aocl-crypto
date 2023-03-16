@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -18,7 +18,7 @@
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS!
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
@@ -26,14 +26,46 @@
  *
  */
 
-#pragma once
+#include "alcp/types.h"
+#include "alcp/utils/copy.hh"
+namespace alcp::cipher {
 
-#include "alcp/error.h"
+/**
+    @brief Does an XOR operation on two array of Uint8 a and b store it to c
+    @param a Input a (first input)
+    @param b Input b (second input)
+    @param c Output c (output of xor operation)
+    @param len Entities to XOR
+*/
+template<typename T>
+inline void
+xor_a_b(const T a[], const T b[], T c[], Uint64 len)
+{
+    for (Uint64 j = 0; j < len; j++) {
+        c[j] = b[j] ^ a[j];
+    }
+}
 
-#include <cstdint>
-#include <immintrin.h>
+inline void
+left_shift(const Uint8 in[], Uint8 out[])
+{
+    int i = 0;
+    for (i = 0; i < 15; i++) {
+        out[i] = (in[i] << 1) | ((in[i + 1] >> 7));
+    }
+    out[i] = in[i] << 1;
+}
 
-namespace alcp::cipher { namespace aes {
+void inline dbl(const Uint8 in[], const Uint8 rb[], Uint8 out[])
+{
 
-}} // namespace alcp::cipher::aes
-
+    Uint8 in_leftshift[16]{};
+    left_shift(in, in_leftshift);
+    // Uint8 rb[16]{};
+    // rb[15] = 0x87;
+    utils::CopyBlock(out, in_leftshift, 16);
+    if (in[0] & 0x80) {
+        out[15] = in_leftshift[15] ^ rb[15];
+    }
+}
+} // namespace alcp::cipher

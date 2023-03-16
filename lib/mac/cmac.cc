@@ -27,9 +27,10 @@
  */
 
 #include "mac/cmac.hh"
+#include "alcp/cipher/aes.hh"
+#include "alcp/cipher/common.hh"
+#include "alcp/utils/copy.hh"
 #include "alcp/utils/cpuid.hh"
-#include "cipher/aes.hh"
-#include "cipher/common.hh"
 #include "utils/copy.hh"
 
 // TODO: Currently CMAC is AES-CMAC, Once IEncrypter is complete, revisit the
@@ -285,7 +286,8 @@ class Cmac::Impl : public cipher::Aes
 
 Cmac::Cmac()
     : m_pImpl{ std::make_unique<Cmac::Impl>() }
-{}
+{
+}
 
 Status
 Cmac::update(const Uint8 pMsgBuf[], Uint64 size)

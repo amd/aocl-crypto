@@ -34,7 +34,7 @@
 #include "alcp/error.h"
 
 #include "alcp/base/error.hh"
-#include "cipher/aes.hh"
+#include "alcp/cipher/aes.hh"
 
 namespace alcp::cipher {
 

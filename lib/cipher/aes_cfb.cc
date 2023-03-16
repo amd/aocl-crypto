@@ -26,8 +26,8 @@
  *
  */
 
-#include "cipher/aes_cfb.hh"
-#include "cipher/cipher_wrapper.hh"
+#include "alcp/cipher/aes_cfb.hh"
+#include "alcp/cipher/cipher_wrapper.hh"
 
 #include "alcp/utils/cpuid.hh"
 
@@ -40,7 +40,7 @@ Cfb::decrypt(const Uint8* pCipherText,
              Uint64       len,
              const Uint8* pIv) const
 {
-    alc_error_t  err = ALC_ERROR_NONE;
+    alc_error_t err = ALC_ERROR_NONE;
     if (CpuId::cpuHasAvx512(utils::AVX512_F)
         && CpuId::cpuHasAvx512(utils::AVX512_DQ)
         && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
@@ -72,7 +72,7 @@ Cfb::encrypt(const Uint8* pPlainText,
              Uint64       len,
              const Uint8* pIv) const
 {
-    alc_error_t  err = ALC_ERROR_NONE;
+    alc_error_t err = ALC_ERROR_NONE;
 
     if (CpuId::cpuHasAesni()) {
         err = aesni::EncryptCfb(

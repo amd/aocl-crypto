@@ -29,8 +29,8 @@
 #pragma once
 
 #include "alcp/base.hh"
-#include "cipher/aes.hh"
-#include "cipher/aes_cmac_siv_arch.hh"
+#include "alcp/cipher/aes.hh"
+#include "alcp/cipher/aes_cmac_siv_arch.hh"
 
 #include "mac/cmac.hh"
 #include "utils/copy.hh"
