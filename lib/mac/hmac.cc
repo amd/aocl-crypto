@@ -26,7 +26,7 @@
  *
  */
 
-#include "mac/hmac.hh"
+#include "alcp/mac/hmac.hh"
 #include "alcp/base.hh"
 #include "alcp/utils/cpuid.hh"
 #include "utils/copy.hh"

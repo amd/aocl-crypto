@@ -27,8 +27,8 @@
  */
 
 #include "capi/mac/builder.hh"
-#include "mac/cmac_build.hh"
-#include "mac/hmac_build.hh"
+#include "alcp/mac/cmac_build.hh"
+#include "alcp/mac/hmac_build.hh"
 
 namespace alcp::mac {
 

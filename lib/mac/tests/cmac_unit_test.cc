@@ -25,7 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "mac/cmac.hh"
+#include "alcp/mac/cmac.hh"
 #include "utils/copy.hh"
 #include "gtest/gtest.h"
 #include <tuple>

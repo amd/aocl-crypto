@@ -26,7 +26,7 @@
  *
  */
 
-#include "mac/cmac.hh"
+#include "alcp/mac/cmac.hh"
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/common.hh"
 #include "alcp/utils/copy.hh"

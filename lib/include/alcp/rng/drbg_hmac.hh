@@ -29,8 +29,8 @@
 #include "alcp/digest/sha2.hh"
 #include "alcp/digest/sha3.hh"
 #include "alcp/mac.h"
+#include "alcp/mac/hmac.hh"
 #include "alcp/rng/drbg.hh"
-#include "mac/hmac.hh"
 
 // Kernel debugging interface
 // #define DEBUG_MODE

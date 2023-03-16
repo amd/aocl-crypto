@@ -30,8 +30,8 @@
 #include "alcp/base.hh"
 #include "alcp/digest/sha2_384.hh"
 #include "alcp/digest/sha3.hh"
+#include "alcp/mac/hmac.hh"
 #include "alcp/types.h"
-#include "mac/hmac.hh"
 #include "gtest/gtest.h"
 
 // using namespace alcp;
