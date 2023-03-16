@@ -107,6 +107,8 @@ AlcpCmacBase::cmacFunction(const alcp_cmac_data_t& data)
         std::cout << "alcp_mac_copy failed: Err code: " << err << std::endl;
         return false;
     }
+    // Without reseting it is not possible to reuse m_handle after finalizing
+    reset();
     return true;
 }
 
