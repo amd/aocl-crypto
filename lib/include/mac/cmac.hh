@@ -101,10 +101,6 @@ class Cmac final : public Mac
 };
 
 namespace avx2 {
-    ALCP_API_EXPORT void processChunk(Uint8       temp_enc_result[],
-                                      Uint8       storage_buffer[],
-                                      const Uint8 encrypt_keys[],
-                                      const int   cNRounds);
 
     ALCP_API_EXPORT void get_subkeys(Uint8       k1[],
                                      Uint8       k2[],
@@ -113,12 +109,21 @@ namespace avx2 {
     ALCP_API_EXPORT void load_and_left_shift_1(const Uint8 input[],
                                                Uint8       output[]);
 
-    ALCP_API_EXPORT void update(const Uint8 plaintext[],
-                                Uint8       storage_buffer[],
-                                const Uint8 encrypt_keys[],
-                                Uint8       temp_enc_result[],
-                                Uint32      rounds,
-                                int         n_blocks);
+    ALCP_API_EXPORT void update(const Uint8  plaintext[],
+                                Uint8        storage_buffer[],
+                                const Uint8  cEncryptKeys[],
+                                Uint8        temp_enc_result[],
+                                Uint32       rounds,
+                                const Uint32 cNBlocks);
+
+    ALCP_API_EXPORT void finalize(Uint8              m_storage_buffer[],
+                                  unsigned int       m_storage_buffer_offset,
+                                  const unsigned int cBlockSize,
+                                  const Uint8        cSubKey1[],
+                                  const Uint8        cSubKey2[],
+                                  const Uint32       cRounds,
+                                  Uint8              m_temp_enc_result[],
+                                  const Uint8        cEncryptKeys[]);
 
 } // namespace avx2
 } // namespace alcp::mac

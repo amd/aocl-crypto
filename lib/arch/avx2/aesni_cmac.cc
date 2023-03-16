@@ -64,21 +64,6 @@ namespace alcp::mac { namespace avx2 {
         _mm_storeu_si128(reinterpret_cast<__m128i*>(cOutput), reg2.reg);
     }
 
-    void processChunk(Uint8       temp_enc_result[],
-                      Uint8       storage_buffer[],
-                      const Uint8 cEncryptKeys[],
-                      const int   cNRounds)
-    {
-
-        reg_128 temp_enc_result_reg;
-        temp_enc_result_reg.reg =
-            _mm_xor_si128(_mm_loadu_si128((__m128i*)temp_enc_result),
-                          _mm_loadu_si128((__m128i*)storage_buffer));
-        alcp::cipher::aesni::AesEncrypt(
-            &temp_enc_result_reg.reg, (const __m128i*)cEncryptKeys, cNRounds);
-        _mm_storeu_si128((__m128i*)temp_enc_result, temp_enc_result_reg.reg);
-    }
-
     inline void subkey_derive_singlestep(reg_128& test_reg,
                                          reg_128& rb,
                                          reg_128& key_reg,
@@ -132,12 +117,12 @@ namespace alcp::mac { namespace avx2 {
         subkey_derive_singlestep(k1_reg, rb, k2_reg, k2);
     }
 
-    void update(const Uint8 plaintext[],
-                Uint8       storage_buffer[],
-                const Uint8 cEncryptKeys[],
-                Uint8       temp_enc_result[],
-                Uint32      rounds,
-                int         n_blocks)
+    void update(const Uint8  plaintext[],
+                Uint8        storage_buffer[],
+                const Uint8  cEncryptKeys[],
+                Uint8        temp_enc_result[],
+                Uint32       rounds,
+                const Uint32 cNBlocks)
     {
         auto p_plaintext = reinterpret_cast<const __m128i*>(plaintext);
         auto p_buff      = reinterpret_cast<const __m128i*>(storage_buffer);
@@ -148,13 +133,63 @@ namespace alcp::mac { namespace avx2 {
         __m128i reg_enc       = _mm_load_si128(p_temp_enc);
         reg_enc               = _mm_xor_si128(reg_enc, reg_plaintext);
         cipher::aesni::AesEncrypt(&reg_enc, p_key, rounds);
-        for (int i = 0; i < n_blocks; i++) {
+        for (Uint32 i = 0; i < cNBlocks; i++) {
             reg_plaintext = _mm_loadu_si128(p_plaintext);
             reg_enc       = _mm_xor_si128(reg_enc, reg_plaintext);
             cipher::aesni::AesEncrypt(&reg_enc, p_key, rounds);
             p_plaintext++;
         }
         _mm_store_si128(p_temp_enc, reg_enc);
+    }
+
+    void finalize(Uint8              m_storage_buffer[],
+                  unsigned int       m_storage_buffer_offset,
+                  const unsigned int cBlockSize,
+                  const Uint8        cSubKey1[],
+                  const Uint8        cSubKey2[],
+                  const Uint32       cRounds,
+                  Uint8              m_temp_enc_result[],
+                  const Uint8        cEncryptKeys[])
+    {
+        __m128i reg_xor_result;
+        auto    p_storage_buffer = reinterpret_cast<__m128i*>(m_storage_buffer);
+        auto    p_enc_result = reinterpret_cast<__m128i*>(m_temp_enc_result);
+
+        __m128i reg_buff;
+        // Check if storage_buffer is complete ie, Cipher Block Size bits
+        if (m_storage_buffer_offset == cBlockSize) {
+            reg_buff    = _mm_load_si128(p_storage_buffer);
+            auto reg_k1 = _mm_load_si128((__m128i*)cSubKey1);
+            // Since the final block was complete, ie Cipher Block Size bit len,
+            // xor storage buffer with k1 before final block processing
+            reg_xor_result = _mm_xor_si128(reg_k1, reg_buff);
+        }
+        // else: storage buffer is not complete. Pad it with 100000... to make
+        // it complete
+        else {
+            /**
+             * Set the first bit of the first byte of the unfilled bytes in
+             * storage buffer as 1 and the remaining as zero
+             */
+            m_storage_buffer[m_storage_buffer_offset] = 0x80;
+            m_storage_buffer_offset += 1;
+            memset(m_storage_buffer + m_storage_buffer_offset,
+                   0x00,
+                   cBlockSize - m_storage_buffer_offset);
+
+            // Storage Buffer is filled with all 16 bytes
+            __m128i reg_key2 = _mm_load_si128((__m128i*)cSubKey2);
+            // Since the Final Block was Incomplete xor the already padded
+            // storage buffer with k2 before final block processing.
+            reg_buff       = _mm_load_si128(p_storage_buffer);
+            reg_xor_result = _mm_xor_si128(reg_key2, reg_buff);
+        }
+        // Process the Final Block
+        __m128i reg_result = _mm_load_si128((p_enc_result));
+        reg_result         = _mm_xor_si128(reg_result, reg_xor_result);
+        alcp::cipher::aesni::AesEncrypt(
+            &reg_result, (const __m128i*)cEncryptKeys, cRounds);
+        _mm_store_si128(p_enc_result, reg_result);
     }
 
 }} // namespace alcp::mac::avx2

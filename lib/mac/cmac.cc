@@ -194,6 +194,9 @@ class Cmac::Impl : public cipher::Aes
 
     Status finalize(const Uint8 plaintext[], int plaintext_size)
     {
+        static bool has_avx2_aesni =
+            CpuId::cpuHasAvx2() && CpuId::cpuHasAesni();
+
         Status s{ StatusOk() };
         if (m_key == nullptr || m_keylen == 0) {
             return InvalidArgument("Key is Empty");
@@ -201,47 +204,50 @@ class Cmac::Impl : public cipher::Aes
         if (plaintext_size != 0) {
             update(plaintext, plaintext_size);
         }
-        assert(m_storage_buffer_offset <= cAESBlockSize);
-        reg_128 xor_result;
-
-        // Check if storage_buffer is complete ie, 128 bits
-        if (m_storage_buffer_offset == cAESBlockSize) {
-            // Since the final block was complete, ie 128 bit len, xor storage
-            // buffer with k1 before final block processing
-            xor_result.reg =
-                _mm_xor_si128(_mm_loadu_si128((__m128i*)&m_k1[0]),
-                              _mm_loadu_si128((__m128i*)m_storage_buffer));
-
-            _mm_storeu_si128((__m128i*)this->m_storage_buffer, xor_result.reg);
+        if (has_avx2_aesni) {
+            avx2::finalize(m_storage_buffer,
+                           m_storage_buffer_offset,
+                           cAESBlockSize,
+                           m_k1,
+                           m_k2,
+                           n_rounds,
+                           m_temp_enc_result_8,
+                           m_encrypt_keys);
+            m_finalized = true;
+            return s;
         }
-        // else: storage buffer is not complete. Pad it with 100000... to make
-        // it complete
-        else {
-            /**
-             * Set the first bit of the first byte of the unfilled bytes in
-             * storage buffer as 1 and the remaining as zero
-             */
-            memset(m_storage_buffer + m_storage_buffer_offset, 0x80, 1);
+        // Check if storage_buffer is complete ie, Cipher Block Size bits
+        if (m_storage_buffer_offset == cAESBlockSize) {
+            // XOR Subkey1 with plaintext bytes in storage buffer and store it
+            // back to storage bufffer
+            cipher::xor_a_b(
+                m_k1, m_storage_buffer, m_storage_buffer, cAESBlockSize);
+        } else {
+            // Storage buffer is not complete. Pad it with 1000... to make it
+            // complete
+            m_storage_buffer[m_storage_buffer_offset] = 0x80;
             m_storage_buffer_offset += 1;
             memset(m_storage_buffer + m_storage_buffer_offset,
                    0x00,
                    cAESBlockSize - m_storage_buffer_offset);
-
-            // Storage Buffer is filled with all 16 bytes
-            m_storage_buffer_offset = cAESBlockSize;
-            // Since the Final Block was Incomplete xor the already padded
-            // storage buffer with k2 before final block processing.
-            xor_result.reg =
-                _mm_xor_si128(_mm_loadu_si128((__m128i*)&m_k2[0]),
-                              _mm_loadu_si128((__m128i*)m_storage_buffer));
-            _mm_storeu_si128((__m128i*)this->m_storage_buffer, xor_result.reg);
+            // XOR Subkey2 with plaintext bytes in storage buffer and store it
+            // back to storage bufffer
+            cipher::xor_a_b(
+                m_k2, m_storage_buffer, m_storage_buffer, cAESBlockSize);
         }
-        // Process the Final Block
-        processChunk();
+        // Xor the output from previous block (m_temp_enc_result_8) with
+        // temporary storage buffer and store it back to storage_buffer
+        cipher::xor_a_b(m_temp_enc_result_8,
+                        m_storage_buffer,
+                        m_temp_enc_result_8,
+                        cAESBlockSize);
+        // Encrypt the data from temp_enc_result and store it back to
+        // temp_enc_result
+        encryptBlock(m_temp_enc_result_32, m_encrypt_keys, n_rounds);
+
         m_finalized = true;
         return s;
     }
-
     Status copy(Uint8 buff[], Uint32 size)
     {
         if (!m_finalized) {
@@ -261,6 +267,7 @@ class Cmac::Impl : public cipher::Aes
             return;
         }
 
+        // Reference algorithm for Subkey Derivation
         Uint32 temp[4]{};
         encryptBlock(temp, m_encrypt_keys, n_rounds);
         Uint8 rb[16]{};
@@ -270,28 +277,11 @@ class Cmac::Impl : public cipher::Aes
         cipher::dbl(p_temp_8, rb, m_k1);
         cipher::dbl(m_k1, rb, m_k2);
     }
-
-    void processChunk()
-    {
-        //  Act like storage buffer is filled with 16 bytes and Perform
-        //  operation
-        assert(m_storage_buffer_offset == cAESBlockSize);
-
-        if (CpuId::cpuHasAvx2()) {
-            avx2::processChunk(m_temp_enc_result_8,
-                               m_storage_buffer,
-                               m_encrypt_keys,
-                               getRounds());
-            m_storage_buffer_offset = 0;
-            return;
-        }
-    }
 };
 
 Cmac::Cmac()
     : m_pImpl{ std::make_unique<Cmac::Impl>() }
-{
-}
+{}
 
 Status
 Cmac::update(const Uint8 pMsgBuf[], Uint64 size)
