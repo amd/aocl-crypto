@@ -31,9 +31,8 @@
 #include <string.h>
 
 #include "alcp/base.hh"
+#include "alcp/ec/ecdh.hh"
 #include "alcp/types.hh"
-#include "ec/ecdh.hh"
-
 
 #include "alcp/error.h"
 
@@ -127,10 +126,10 @@ class x25519Test
     std::string m_test_name;
     alc_error_t m_err;
 
-    X25519* m_px25519obj1 = nullptr;
-    X25519* m_px25519obj2 = nullptr;
-    Uint8   m_publicKeyData1[32]={};
-    Uint8   m_publicKeyData2[32]={};
+    X25519* m_px25519obj1        = nullptr;
+    X25519* m_px25519obj2        = nullptr;
+    Uint8   m_publicKeyData1[32] = {};
+    Uint8   m_publicKeyData2[32] = {};
 
     void SetUp() override
     {

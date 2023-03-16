@@ -28,10 +28,10 @@
 
 #pragma once
 
-#include "alcp/ec.h"
 #include "alcp/capi/ec/ctx.hh"
+#include "alcp/ec.h"
 
-#include "ec.hh"
+#include "alcp/ec.hh"
 
 namespace alcp::ec {
 class EcBuilder

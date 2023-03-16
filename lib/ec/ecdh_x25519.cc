@@ -26,9 +26,9 @@
  *
  */
 
+#include "alcp/ec/ecdh.hh"
 #include "alcp/utils/copy.hh"
 #include "config.h"
-#include "ec/ecdh.hh"
 #include <string.h>
 
 namespace alcp::ec {

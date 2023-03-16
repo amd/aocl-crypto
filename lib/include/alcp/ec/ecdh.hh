@@ -29,7 +29,7 @@
 #pragma once
 
 #include "alcp/alcp.hh"
-#include "ec.hh"
+#include "alcp/ec.hh"
 
 #ifdef COMPILER_IS_GCC
 #define UNROLL_16 _Pragma("GCC unroll 16")

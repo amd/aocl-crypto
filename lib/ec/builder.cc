@@ -29,8 +29,8 @@
 #include "alcp/capi/ec/builder.hh"
 #include "alcp/capi/ec/ctx.hh"
 
-#include "ec.hh"
-#include "ec/ecdh.hh"
+#include "alcp/ec.hh"
+#include "alcp/ec/ecdh.hh"
 
 namespace alcp::ec {
 
