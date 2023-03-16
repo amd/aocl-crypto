@@ -40,7 +40,7 @@
 #include <vector>
 using namespace alcp::testing;
 #ifdef USE_IPP
-#include "ecdh/ipp_ecdh.hh"
+#include "ecdh/ipp_ecdh_base.hh"
 #endif
 #ifdef USE_OSSL
 #include "ecdh/openssl_ecdh_base.hh"
@@ -90,11 +90,17 @@ ecdh_KAT(alc_ec_info_t info)
     EcdhBase*    eb;
 
     eb = &aeb;
-    /* TODO , initialize classes for IPP here */
+
 #ifdef USE_OSSL
     OpenSSLEcdhBase oeb(info);
     if (useossl == true)
         eb = &oeb;
+#endif
+
+#ifdef USE_IPP
+    IPPEcdhBase ieb(info);
+    if (useipp == true)
+        eb = &ieb;
 #endif
 
     std::string TestDataFile = std::string("dataset_ECDH.csv");
@@ -181,6 +187,14 @@ ecdh_Cross(alc_ec_info_t info)
 
     Eb         = &aeb;
     LibStrMain = "ALCP";
+
+#ifdef USE_IPP
+    IPPEcdhBase ieb(info);
+    if (useipp == true) {
+        Eb        = &ieb;
+        LibStrExt = "IPP";
+    }
+#endif
 
 #ifdef USE_OSSL
     OpenSSLEcdhBase oeb(info);

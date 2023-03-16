@@ -31,6 +31,7 @@
 #include "alcp/ecdh.h"
 #include "ecdh/ecdh_base.hh"
 #include <alcp/alcp.h>
+#include <crypto_mb/x25519.h>
 #include <iostream>
 #include <ippcp.h>
 #include <malloc.h>
@@ -39,17 +40,6 @@
 namespace alcp::testing {
 class IPPEcdhBase : public EcdhBase
 {
-    OSSL_LIB_CTX* m_ec_handle1{};
-    OSSL_LIB_CTX* m_ec_handle2{};
-    EVP_PKEY*     m_pPrivateKeyData1;
-    EVP_PKEY*     m_pPrivateKeyData2;
-    EVP_PKEY*     m_pPublicKeyData1;
-    EVP_PKEY*     m_pPublicKeyData2;
-
-    std::string st = "X25519"; //"prime256v1"; // P-256
-
-    /*FIXME*/
-    const char*   m_pkeytype = st.c_str();
     alc_ec_info_t m_info;
 
     Uint8* m_pvt_key1 = {};
