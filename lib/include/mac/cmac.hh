@@ -91,7 +91,7 @@ class Cmac final : public Mac
      * @param buff      Output Buffer to which Mac will be copied
      * @param size      Size of the buffer in bytes.
      */
-    ALCP_API_EXPORT Status copy(Uint8 buff[], Uint32 size);
+    ALCP_API_EXPORT Status copy(Uint8 buff[], Uint64 size);
 
   private:
     class Impl;

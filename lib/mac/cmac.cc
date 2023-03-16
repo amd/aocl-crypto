@@ -46,24 +46,22 @@ class Cmac::Impl : public cipher::Aes
     alignas(16) Uint8 m_k1[cAESBlockSize]{};
     alignas(16) Uint8 m_k2[cAESBlockSize]{};
 
-    // Pointer to user supplied key
-    const Uint8* m_key    = nullptr;
-    Uint32       m_keylen = 0;
-
     // Pointer to expanded keys
     const Uint8* m_encrypt_keys = nullptr;
+    // Number of Aes Rounds based set based on the key
+    int m_rounds{ 0 };
 
     // Temporary Storage Buffer to keep the plaintext data for processing
     alignas(16) Uint8 m_storage_buffer[cAESBlockSize]{};
-    int m_storage_buffer_offset = 0;
+    // No. of bytes of valid data currently stored in n_storage_buffer
+    int m_storage_buffer_offset{ 0 };
 
     // Temporary Buffer to storage Encryption Result
     alignas(16) Uint32 m_temp_enc_result_32[cAESBlockSize / 4]{};
     Uint8* m_temp_enc_result_8 = reinterpret_cast<Uint8*>(m_temp_enc_result_32);
 
+    // Variable to keep track of whether CMAC has been finalized or not
     bool m_finalized = false;
-
-    int n_rounds{};
 
   public:
     Impl()
@@ -74,15 +72,13 @@ class Cmac::Impl : public cipher::Aes
 
     Status setKey(const Uint8 key[], Uint64 len)
     {
-        this->m_key    = key;
-        this->m_keylen = len;
         Status s{ StatusOk() };
-        s = Aes::setKey(key, m_keylen);
+        s = Aes::setKey(key, len);
         if (!s.ok()) {
             return s;
         }
         m_encrypt_keys = getEncryptKeys();
-        n_rounds       = getRounds();
+        m_rounds       = getRounds();
         getSubkeys();
         s = reset();
         return s;
@@ -90,8 +86,6 @@ class Cmac::Impl : public cipher::Aes
 
     void finish()
     {
-        m_key          = nullptr;
-        this->m_keylen = 0;
         m_encrypt_keys = nullptr;
         reset();
     }
@@ -104,13 +98,13 @@ class Cmac::Impl : public cipher::Aes
         return StatusOk();
     };
 
-    Status update(const Uint8 plaintext[], int plaintext_size)
+    Status update(const Uint8 plaintext[], Uint64 plaintext_size)
     {
         static bool has_avx2_aesni =
             CpuId::cpuHasAvx2() && CpuId::cpuHasAesni();
 
         Status status{ StatusOk() };
-        if (m_key == nullptr || m_keylen == 0) {
+        if (m_encrypt_keys == nullptr) {
             return InvalidArgument("Key is Empty");
         }
         // No need to Process anything for empty block
@@ -165,7 +159,7 @@ class Cmac::Impl : public cipher::Aes
                          m_storage_buffer,
                          m_encrypt_keys,
                          m_temp_enc_result_8,
-                         n_rounds,
+                         m_rounds,
                          n_blocks);
         } else {
             // Reference Algorithm for AES CMAC block processing
@@ -173,13 +167,13 @@ class Cmac::Impl : public cipher::Aes
                                   m_storage_buffer,
                                   m_temp_enc_result_8,
                                   cAESBlockSize);
-            encryptBlock(m_temp_enc_result_32, m_encrypt_keys, n_rounds);
+            encryptBlock(m_temp_enc_result_32, m_encrypt_keys, m_rounds);
             for (int i = 0; i < n_blocks; i++) {
                 alcp::cipher::xor_a_b(m_temp_enc_result_8,
                                       plaintext,
                                       m_temp_enc_result_8,
                                       cAESBlockSize);
-                encryptBlock(m_temp_enc_result_32, m_encrypt_keys, n_rounds);
+                encryptBlock(m_temp_enc_result_32, m_encrypt_keys, m_rounds);
                 plaintext += cAESBlockSize;
             }
         }
@@ -192,13 +186,13 @@ class Cmac::Impl : public cipher::Aes
         return status;
     }
 
-    Status finalize(const Uint8 plaintext[], int plaintext_size)
+    Status finalize(const Uint8 plaintext[], Uint64 plaintext_size)
     {
         static bool has_avx2_aesni =
             CpuId::cpuHasAvx2() && CpuId::cpuHasAesni();
 
         Status s{ StatusOk() };
-        if (m_key == nullptr || m_keylen == 0) {
+        if (m_encrypt_keys == nullptr) {
             return InvalidArgument("Key is Empty");
         }
         if (plaintext_size != 0) {
@@ -210,7 +204,7 @@ class Cmac::Impl : public cipher::Aes
                            cAESBlockSize,
                            m_k1,
                            m_k2,
-                           n_rounds,
+                           m_rounds,
                            m_temp_enc_result_8,
                            m_encrypt_keys);
             m_finalized = true;
@@ -243,12 +237,12 @@ class Cmac::Impl : public cipher::Aes
                         cAESBlockSize);
         // Encrypt the data from temp_enc_result and store it back to
         // temp_enc_result
-        encryptBlock(m_temp_enc_result_32, m_encrypt_keys, n_rounds);
+        encryptBlock(m_temp_enc_result_32, m_encrypt_keys, m_rounds);
 
         m_finalized = true;
         return s;
     }
-    Status copy(Uint8 buff[], Uint32 size)
+    Status copy(Uint8 buff[], Uint64 size)
     {
         if (!m_finalized) {
             return InternalError("Cannot Copy CMAC without finalizing");
@@ -263,18 +257,17 @@ class Cmac::Impl : public cipher::Aes
     void getSubkeys()
     {
         if (CpuId::cpuHasAvx2()) {
-            avx2::get_subkeys(m_k1, m_k2, m_encrypt_keys, n_rounds);
+            avx2::get_subkeys(m_k1, m_k2, m_encrypt_keys, m_rounds);
             return;
         }
 
         // Reference algorithm for Subkey Derivation
         Uint32 temp[4]{};
-        encryptBlock(temp, m_encrypt_keys, n_rounds);
+        encryptBlock(temp, m_encrypt_keys, m_rounds);
         Uint8 rb[16]{};
         rb[15] = 0x87;
 
-        Uint8* p_temp_8 = reinterpret_cast<Uint8*>(temp);
-        cipher::dbl(p_temp_8, rb, m_k1);
+        cipher::dbl(reinterpret_cast<Uint8*>(temp), rb, m_k1);
         cipher::dbl(m_k1, rb, m_k2);
     }
 };
@@ -308,7 +301,7 @@ Cmac::finalize(const Uint8 pMsgBuf[], Uint64 size)
 }
 
 Status
-Cmac::copy(Uint8 buff[], Uint32 size)
+Cmac::copy(Uint8 buff[], Uint64 size)
 {
     return m_pImpl->copy(buff, size);
 }
