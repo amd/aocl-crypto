@@ -156,22 +156,9 @@ SquareX25519Count(Uint64 out[4], const Uint64 a[4], Uint64 count)
 {
 
     // Storing the CPU registers on stack to be restored later
-    asm("push   %%rax;"
-        "push   %%rbx;"
-        "push   %%rcx;"
-        "push   %%rdx;"
-        "push   %%rsi;"
-        "push   %%rdi;"
-        "push   %%rbp;"
-        "push	%%r8;"
-        "push	%%r9;"
-        "push	%%r10;"
-        "push	%%r11;"
-        "push	%%r12;"
-        "push	%%r13;"
-        "push	%%r14;"
-        "push	%%r15;"
-        "lea	-8*1(%%rsp),%%rsp;"
+    asm("push %%rbp;"
+        "push %%rbx;"
+        "push %%rcx;"
 
         "mov	8*0(%%rax),%%rdx;" // a0
         "mov	8*1(%%rax),%%rcx;" // a1
@@ -272,36 +259,35 @@ SquareX25519Count(Uint64 out[4], const Uint64 a[4], Uint64 count)
         "mov	%%r10,%%rbx;" // a2
         "mov	%%r11,%%rax;" // a3
 
-        "decq 8*13(%%rsp);" // looping for the count times
-        "cmpq $1,8*13(%%rsp);"
+        "decq (%%rsp);" // looping for the count times
+        "cmpq $1,(%%rsp);"
         "jge loop;"
 
         // moving the 256 bit result to out array
-        "mov	8*14(%%rsp),%%rbx;"
+        "mov	8*1(%%rsp),%%rbx;"
         "mov	%%r8,8*0(%1);"
         "mov	%%r9,8*1(%1);"
         "mov	%%r10,8*2(%1);"
         "mov	%%r11,8*3(%1);"
 
+        "mov	8*2(%%rsp),%%rbp;"
         // restoring the CPU registers
-        "mov	8*1(%%rsp),%%r15;"
-        "mov	8*2(%%rsp),%%r14;"
-        "mov	8*3(%%rsp),%%r13;"
-        "mov	8*4(%%rsp),%%r12;"
-        "mov	8*5(%%rsp),%%r11;"
-        "mov	8*6(%%rsp),%%r10;"
-        "mov	8*7(%%rsp),%%r9;"
-        "mov	8*8(%%rsp),%%r8;"
-        "mov	8*9(%%rsp),%%rbp;"
-        "mov	8*10(%%rsp),%%rdi;"
-        "mov	8*11(%%rsp),%%rsi;"
-        "mov	8*12(%%rsp),%%rdx;"
-        "mov	8*13(%%rsp),%%rcx;"
-        "mov	8*15(%%rsp),%%rax;"
-        "lea    8*16(%%rsp),%%rsp;"
+        "lea    8*3(%%rsp),%%rsp;"
         :
         : "a"(a), "b"(out), "c"(count)
-        : "memory");
+        : "memory",
+          "r15",
+          "cc",
+          "r8",
+          "r9",
+          "r10",
+          "r11",
+          "r12",
+          "r13",
+          "r14",
+          "rdx",
+          "rdi",
+          "rsi");
 }
 #else
 inline void
@@ -392,22 +378,8 @@ static void // convert to a ->in1 and b - > in2
 MulX25519(Uint64 out[4], const Uint64 a[4], const Uint64 b[4])
 {
     // Storing the CPU registers on stack to be restored later
-    asm("push   %%rax;"
-        "push   %%rbx;"
+    asm("push %%rbp;"
         "push   %%rcx;"
-        "push   %%rdx;"
-        "push   %%rsi;"
-        "push   %%rdi;"
-        "push   %%rbp;"
-        "push	%%r8;"
-        "push	%%r9;"
-        "push	%%r10;"
-        "push	%%r11;"
-        "push	%%r12;"
-        "push	%%r13;"
-        "push	%%r14;"
-        "push	%%r15;"
-
         "lea	-8*1(%%rsp),%%rsp;"
         "mov	8*0(%%rbx),%%r12;" // b[0]
         "mov	8*1(%%rbx),%%r13;" // b[1]
@@ -519,31 +491,29 @@ MulX25519(Uint64 out[4], const Uint64 a[4], const Uint64 b[4])
         "add	%%r12,%%r8;" // add 38 to t0 if the carry was 1
 
         // moving the 256 bit result to out array
-        "mov	8*13(%%rsp),%%rcx;"
+        "mov	8*1(%%rsp),%%rcx;"
         "mov	%%r8,8*0(%2);"
         "mov	%%r9,8*1(%2);"
         "mov	%%r10,8*2(%2);"
         "mov	%%r11,8*3(%2);"
 
-        // restoring the CPU registers
-        "mov	8*1(%%rsp),%%r15;"
-        "mov	8*2(%%rsp),%%r14;"
-        "mov	8*3(%%rsp),%%r13;"
-        "mov	8*4(%%rsp),%%r12;"
-        "mov	8*5(%%rsp),%%r11;"
-        "mov	8*6(%%rsp),%%r10;"
-        "mov	8*7(%%rsp),%%r9;"
-        "mov	8*8(%%rsp),%%r8;"
-        "mov	8*9(%%rsp),%%rbp;"
-        "mov	8*10(%%rsp),%%rdi;"
-        "mov	8*11(%%rsp),%%rsi;"
-        "mov	8*12(%%rsp),%%rdx;"
-        "mov	8*14(%%rsp),%%rbx;"
-        "mov	8*15(%%rsp),%%rax;"
-        "lea    8*16(%%rsp),%%rsp;"
+        "mov	8*2(%%rsp),%%rbp;"
+        "lea    8*3(%%rsp),%%rsp;"
         :
         : "a"(a), "b"(b), "c"(out)
-        : "memory");
+        : "memory",
+          "r15",
+          "cc",
+          "r8",
+          "r9",
+          "r10",
+          "r11",
+          "r12",
+          "r13",
+          "r14",
+          "rdx",
+          "rdi",
+          "rsi");
 }
 
 #else
