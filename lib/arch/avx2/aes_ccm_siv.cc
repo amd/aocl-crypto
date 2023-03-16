@@ -28,8 +28,8 @@
 
 #include "alcp/base.hh"
 #include "alcp/cipher/aes_cmac_siv_arch.hh"
+#include "alcp/utils/copy.hh"
 #include "immintrin.h"
-#include "utils/copy.hh"
 
 namespace alcp::cipher::avx2 {
 

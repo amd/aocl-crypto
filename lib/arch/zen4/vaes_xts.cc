@@ -31,7 +31,7 @@
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/aes_xts.hh"
 #include "alcp/types.hh"
-#include "utils/copy.hh"
+#include "alcp/utils/copy.hh"
 
 #include <immintrin.h>
 

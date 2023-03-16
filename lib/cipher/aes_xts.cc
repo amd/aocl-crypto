@@ -28,9 +28,9 @@
 
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/cipher_wrapper.hh"
+#include "alcp/utils/constants.hh"
+#include "alcp/utils/copy.hh"
 #include "alcp/utils/cpuid.hh"
-#include "utils/constants.hh"
-#include "utils/copy.hh"
 
 #define GF_POLYNOMIAL 0x87
 

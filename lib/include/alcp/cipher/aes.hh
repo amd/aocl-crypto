@@ -35,7 +35,7 @@
 #include "alcp/base.hh"
 #include "alcp/cipher.hh"
 #include "alcp/cipher/rijndael.hh"
-#include "utils/bits.hh"
+#include "alcp/utils/bits.hh"
 
 #include <immintrin.h>
 #include <wmmintrin.h>

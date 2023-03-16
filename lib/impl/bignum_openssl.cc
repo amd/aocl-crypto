@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,7 +29,7 @@
 #pragma once
 
 #include "alcp/utils/bignum.hh"
-#include "utils/endian.hh"
+#include "alcp/utils/endian.hh"
 
 #include <memory>
 #include <stdexcept>
@@ -58,7 +58,8 @@ class BigNumError : public std::runtime_error
   public:
     explicit BigNumError(const std::string& str)
         : std::runtime_error(str)
-    {}
+    {
+    }
 };
 
 class BigNumCtx

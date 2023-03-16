@@ -32,7 +32,7 @@
 
 #include "alcp/base.hh"
 #include "alcp/cipher.hh"
-#include "utils/bits.hh"
+#include "alcp/utils/bits.hh"
 
 #include <memory>
 

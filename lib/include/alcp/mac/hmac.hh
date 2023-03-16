@@ -30,8 +30,8 @@
 #include "alcp/digest.hh"
 #include "alcp/key.h"
 #include "alcp/mac.h"
+#include "alcp/utils/copy.hh"
 #include "mac.hh"
-#include "utils/copy.hh"
 
 #include <immintrin.h>
 #include <memory>

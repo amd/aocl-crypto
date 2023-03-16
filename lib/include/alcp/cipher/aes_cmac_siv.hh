@@ -33,7 +33,7 @@
 #include "alcp/cipher/aes_cmac_siv_arch.hh"
 
 #include "alcp/mac/cmac.hh"
-#include "utils/copy.hh"
+#include "alcp/utils/copy.hh"
 #include <new>
 #include <vector>
 

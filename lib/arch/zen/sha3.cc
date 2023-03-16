@@ -28,7 +28,7 @@
 
 #include "alcp/digest/sha3.hh"
 #include "alcp/digest.hh"
-#include "utils/copy.hh"
+#include "alcp/utils/copy.hh"
 
 namespace alcp::digest { namespace zen {
 #include "../../digest/sha3_inplace.cc.inc"

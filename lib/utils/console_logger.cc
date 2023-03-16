@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,7 +26,7 @@
  *
  */
 
-#include "utils/logger.hh"
+#include "alcp/utils/logger.hh"
 
 namespace alcp::utils {
 
@@ -227,11 +227,13 @@ ConsoleLogger::Impl::trace(const Message& msg)
 
 ConsoleLogger::ConsoleLogger()
     : Logger{ std::string("Default Logger") }
-{}
+{
+}
 
 ConsoleLogger::ConsoleLogger(const std::string& name)
     : Logger{ std::string(name) }
-{}
+{
+}
 
 ConsoleLogger::ConsoleLogger(const std::string& name, Priority::Level lvl)
     : Logger{ std::string(name) }

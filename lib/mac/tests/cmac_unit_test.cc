@@ -26,7 +26,7 @@
  *
  */
 #include "alcp/mac/cmac.hh"
-#include "utils/copy.hh"
+#include "alcp/utils/copy.hh"
 #include "gtest/gtest.h"
 #include <tuple>
 

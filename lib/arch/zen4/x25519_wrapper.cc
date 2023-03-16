@@ -32,9 +32,9 @@
 #include <string.h>
 #include <wmmintrin.h>
 
+#include "alcp/utils/copy.hh"
 #include "ec/ecdh.hh"
 #include "ec/ed_25519_table.hh"
-#include "utils/copy.hh"
 #include "x25519_radix51bit.hh"
 #include "x25519_radix64bit.hh"
 

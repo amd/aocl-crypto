@@ -31,7 +31,6 @@
 #include "alcp/cipher/common.hh"
 #include "alcp/utils/copy.hh"
 #include "alcp/utils/cpuid.hh"
-#include "utils/copy.hh"
 
 // TODO: Currently CMAC is AES-CMAC, Once IEncrypter is complete, revisit the
 // class design

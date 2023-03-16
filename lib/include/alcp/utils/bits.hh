@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,99 +28,93 @@
 
 #pragma once
 
-#include "config.h"
-#include "types.hh"
+#include "alcp/base/exception.hh"
+#include "alcp/types.hh"
+
+#include <type_traits>
 
 namespace alcp::utils {
 
-template<typename T>
-constexpr inline T
-ToBigEndian(T value);
+constexpr Uint32 BitsPerByte   = 8;
+constexpr Uint32 BytesPerWord  = 4;
+constexpr Uint32 BytesPerDWord = 8;
 
 template<typename T>
-constexpr inline T
-ToLittleEndian(T value);
-
-template<typename T>
-constexpr inline T
-ReverseBytes(T value);
-
-template<>
-constexpr inline Uint64
-ReverseBytes(Uint64 value)
+T
+BytesPer()
 {
-    value = ((value & 0xFF00FF00FF00FF00ULL) >> 8U)
-            | ((value & 0x00FF00FF00FF00FFULL) << 8U);
-    value = ((value & 0xFFFF0000FFFF0000ULL) >> 16U)
-            | ((value & 0x0000FFFF0000FFFFULL) << 16U);
-    value = (value >> 32U) | (value << 32U);
-
-    return value;
+    return sizeof(T);
 }
-
-template<>
-constexpr inline Uint32
-ReverseBytes(Uint32 value)
-{
-    value = ((value & 0xFF00FF00U) >> 8U) | ((value & 0x00FF00FFU) << 8U);
-    value = (value >> 16U) | (value << 16U);
-
-    return value;
-}
-
-template<>
-constexpr inline Uint16
-ReverseBytes(Uint16 value)
-{
-    value = ((value & 0xFF00U) >> 8U) | ((value & 0x00FFU) << 8U);
-
-    return value;
-}
-#ifdef __SIZEOF_INT128__
-template<>
-constexpr inline __uint128_t
-ReverseBytes(__uint128_t value)
-{
-    Uint64 high = (Uint64)(value >> 64);
-    Uint64 low  = (Uint64)value;
-    high        = ReverseBytes(high);
-    low         = ReverseBytes(low);
-    value       = ((__uint128_t)low) << 64 | ((__uint128_t)high);
-    return value;
-}
-#endif
-
-#if defined(ALCP_CONFIG_LITTLE_ENDIAN)
-template<typename T>
-constexpr T
-ToLittleEndian(T value)
-{
-    return value;
-}
-
-template<typename T>
-constexpr inline T
-ToBigEndian(T value)
-{
-    return ReverseBytes<T>(value);
-}
-
-#else
 
 template<typename T>
 constexpr T
-ToBigEndian(T value)
+BitsInBytes(T x)
 {
-    return value;
+    return x / 8;
 }
 
 template<typename T>
-constexpr inline T
-ToLittleEndian(T value)
+constexpr T
+BitSizeOf(T x)
 {
-    return ReverseBytes<T>(value);
+    return x / BitsPerByte;
 }
 
-#endif
+template<typename T>
+constexpr T
+ByteSizeOf(T x)
+{
+    return x * BytesPer<T>();
+}
+
+template<typename T>
+constexpr T
+GetByte(T val, int idx)
+{
+    Uint32 offset = idx * 8;
+
+    return (val & (0xff << offset)) >> offset;
+}
+
+template<typename T, std::enable_if_t<std::is_unsigned_v<T>, int> = 0>
+constexpr Uint32
+BytesToWord(T byte0, T byte1, T byte2, T byte3)
+{
+    return ((Uint32)byte3 << 24) | ((Uint32)byte2 << 16) | ((Uint32)byte1 << 8)
+           | (byte0);
+}
+
+template<typename T,
+         int size                                = sizeof(T) * 8,
+         std::enable_if_t<std::is_integral_v<T>> = 0>
+class Bits
+{
+  public:
+    explicit Bits(T t)
+        : m_val{ t }
+    {
+    }
+
+    T extract(int start, int end) const
+    {
+        assert(end >= start);
+        int nbits = end - start;
+        T   mask  = ~(1UL << nbits);
+
+        return (T)(m_val >> start) & mask;
+    }
+
+    void set(int start, int end) { NotImplementedException(); }
+    void reset(int start, int end) { NotImplementedException(); }
+    void replace(int start, int end) { NotImplementedException(); }
+
+  private:
+    Bits() {}
+    Bits(const Bits&) {}
+    Bits& operator=(const Bits&) {}
+
+  private:
+    T m_val;
+};
 
 } // namespace alcp::utils

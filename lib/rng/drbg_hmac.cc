@@ -27,8 +27,8 @@
  */
 
 #include "alcp/rng/drbg_hmac.hh"
+#include "alcp/utils/copy.hh"
 #include "iostream"
-#include "utils/copy.hh"
 
 namespace alcp::rng::drbg {
 

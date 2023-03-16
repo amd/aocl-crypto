@@ -35,7 +35,7 @@
 
 #include "aes.hh"
 
-#include "utils/copy.hh"
+#include "alcp/utils/copy.hh"
 
 #include <alcp/types.h>
 

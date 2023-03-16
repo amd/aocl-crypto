@@ -26,7 +26,7 @@
  *
  */
 #include "alcp/types.h"
-#include "utils/copy.hh"
+#include "alcp/utils/copy.hh"
 #include <immintrin.h>
 namespace alcp::mac { namespace avx2 {
 

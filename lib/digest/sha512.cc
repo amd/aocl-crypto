@@ -36,10 +36,10 @@
 #include "alcp/digest/sha_avx2.hh"
 #include "alcp/digest/sha_avx256.hh"
 
+#include "alcp/utils/bits.hh"
+#include "alcp/utils/copy.hh"
 #include "alcp/utils/cpuid.hh"
-#include "utils/bits.hh"
-#include "utils/copy.hh"
-#include "utils/endian.hh"
+#include "alcp/utils/endian.hh"
 
 namespace utils = alcp::utils;
 
