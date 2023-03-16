@@ -63,6 +63,8 @@ class Cmac::Impl : public cipher::Aes
 
     bool m_finalized = false;
 
+    int n_rounds{};
+
   public:
     Impl()
         : Aes()
@@ -80,6 +82,7 @@ class Cmac::Impl : public cipher::Aes
             return s;
         }
         m_encrypt_keys = getEncryptKeys();
+        n_rounds       = getRounds();
         getSubkeys();
         s = reset();
         return s;
@@ -112,21 +115,8 @@ class Cmac::Impl : public cipher::Aes
         }
         // No need to Process anything for empty block
         if (plaintext_size == 0) {
-            return StatusOk();
-        }
-        if (has_avx2_aesni) {
-            avx2::update(plaintext,
-                         plaintext_size,
-                         m_storage_buffer,
-                         m_storage_buffer_offset,
-                         m_encrypt_keys,
-                         m_temp_enc_result_8,
-                         getRounds(),
-                         cAESBlockSize);
             return status;
         }
-
-        // Reference Algorithm for AES CMAC
 
         /* Internal Storage buffer and Plaintext combined should be greater than
         block size to process it. Otherwise copy plaintext also to internal
@@ -170,28 +160,41 @@ class Cmac::Impl : public cipher::Aes
             }
         }
 
-        alcp::cipher::xor_a_b(m_temp_enc_result_8,
-                              m_storage_buffer,
-                              m_temp_enc_result_8,
-                              cAESBlockSize);
-        encryptBlock(m_temp_enc_result_32, m_encrypt_keys, getRounds());
-        for (int i = 0; i < n_blocks; i++) {
+        if (has_avx2_aesni) {
+            avx2::update(plaintext,
+                         m_storage_buffer,
+                         m_encrypt_keys,
+                         m_temp_enc_result_8,
+                         n_rounds,
+                         n_blocks);
+        } else {
+            // Reference Algorithm for AES CMAC block processing
             alcp::cipher::xor_a_b(m_temp_enc_result_8,
-                                  plaintext,
+                                  m_storage_buffer,
                                   m_temp_enc_result_8,
                                   cAESBlockSize);
-            encryptBlock(m_temp_enc_result_32, m_encrypt_keys, getRounds());
-            plaintext += 16;
+            encryptBlock(m_temp_enc_result_32, m_encrypt_keys, n_rounds);
+            for (int i = 0; i < n_blocks; i++) {
+                alcp::cipher::xor_a_b(m_temp_enc_result_8,
+                                      plaintext,
+                                      m_temp_enc_result_8,
+                                      cAESBlockSize);
+                encryptBlock(m_temp_enc_result_32, m_encrypt_keys, n_rounds);
+                plaintext += cAESBlockSize;
+            }
         }
         // Copy the unprocessed plaintext bytes to the internal buffer
-        utils::CopyBlock<Uint64>(m_storage_buffer, plaintext, bytes_to_copy);
+        utils::CopyBlock<Uint64>(m_storage_buffer,
+                                 plaintext + cAESBlockSize * n_blocks,
+                                 bytes_to_copy);
         m_storage_buffer_offset = bytes_to_copy;
-        return StatusOk();
+
+        return status;
     }
 
     Status finalize(const Uint8 plaintext[], int plaintext_size)
     {
-
+        Status s{ StatusOk() };
         if (m_key == nullptr || m_keylen == 0) {
             return InvalidArgument("Key is Empty");
         }
@@ -236,7 +239,7 @@ class Cmac::Impl : public cipher::Aes
         // Process the Final Block
         processChunk();
         m_finalized = true;
-        return StatusOk();
+        return s;
     }
 
     Status copy(Uint8 buff[], Uint32 size)
@@ -254,12 +257,12 @@ class Cmac::Impl : public cipher::Aes
     void getSubkeys()
     {
         if (CpuId::cpuHasAvx2()) {
-            avx2::get_subkeys(m_k1, m_k2, m_encrypt_keys, getRounds());
+            avx2::get_subkeys(m_k1, m_k2, m_encrypt_keys, n_rounds);
             return;
         }
 
         Uint32 temp[4]{};
-        encryptBlock(temp, m_encrypt_keys, getRounds());
+        encryptBlock(temp, m_encrypt_keys, n_rounds);
         Uint8 rb[16]{};
         rb[15] = 0x87;
 

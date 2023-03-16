@@ -133,38 +133,12 @@ namespace alcp::mac { namespace avx2 {
     }
 
     void update(const Uint8 plaintext[],
-                int         plaintext_size,
                 Uint8       storage_buffer[],
-                int&        storage_buffer_offset,
                 const Uint8 cEncryptKeys[],
                 Uint8       temp_enc_result[],
                 Uint32      rounds,
-                const int   cBlockSize)
+                int         n_blocks)
     {
-        if ((storage_buffer_offset + plaintext_size) <= cBlockSize) {
-            utils::CopyBlock<Uint64>(storage_buffer + storage_buffer_offset,
-                                     plaintext,
-                                     plaintext_size);
-            storage_buffer_offset += plaintext_size;
-            return;
-        }
-
-        int n_blocks      = 0;
-        int bytes_to_copy = 0;
-        if (storage_buffer_offset <= cBlockSize) {
-            int b = cBlockSize - (storage_buffer_offset);
-            utils::CopyBlock<Uint64>(
-                storage_buffer + storage_buffer_offset, plaintext, b);
-            storage_buffer_offset = cBlockSize;
-            plaintext += b;
-            int ptxt_bytes_rem = plaintext_size - b;
-            n_blocks           = ((ptxt_bytes_rem) / cBlockSize);
-            bytes_to_copy      = ((ptxt_bytes_rem)-cBlockSize * (n_blocks));
-            if (bytes_to_copy == 0) {
-                n_blocks      = n_blocks - 1;
-                bytes_to_copy = cBlockSize;
-            }
-        }
         auto p_plaintext = reinterpret_cast<const __m128i*>(plaintext);
         auto p_buff      = reinterpret_cast<const __m128i*>(storage_buffer);
         auto p_key       = reinterpret_cast<const __m128i*>(cEncryptKeys);
@@ -181,8 +155,6 @@ namespace alcp::mac { namespace avx2 {
             p_plaintext++;
         }
         _mm_store_si128(p_temp_enc, reg_enc);
-        utils::CopyBlock<Uint64>(storage_buffer, p_plaintext, bytes_to_copy);
-        storage_buffer_offset = bytes_to_copy;
     }
 
 }} // namespace alcp::mac::avx2
