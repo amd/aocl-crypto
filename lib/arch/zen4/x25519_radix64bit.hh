@@ -272,8 +272,8 @@ SquareX25519Count(Uint64 out[4], const Uint64 a[4], Uint64 count)
         "mov	%%r10,%%rbx;" // a2
         "mov	%%r11,%%rax;" // a3
 
-        "dec 8*13(%%rsp);" // looping for the count times
-        "cmp $1,8*13(%%rsp);"
+        "decq 8*13(%%rsp);" // looping for the count times
+        "cmpq $1,8*13(%%rsp);"
         "jge loop;"
 
         // moving the 256 bit result to out array
