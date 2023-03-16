@@ -26,7 +26,7 @@
  *
  */
 
-#include "rng.hh"
+#include "alcp/rng.hh"
 
 namespace alcp::rng {
 

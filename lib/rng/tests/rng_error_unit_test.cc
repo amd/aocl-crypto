@@ -26,7 +26,7 @@
  */
 
 #include "alcp/base.hh"
-#include "rng.hh"
+#include "alcp/rng.hh"
 #include "gtest/gtest.h"
 #include <iostream>
 

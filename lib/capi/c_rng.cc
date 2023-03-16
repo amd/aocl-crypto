@@ -29,9 +29,9 @@
 #include "alcp/base.hh"
 
 #include "alcp/capi/defs.hh"
+#include "alcp/rng.hh"
 #include "alcp/utils/cpuid.hh"
 #include "capi/rng/builder.hh"
-#include "rng.hh"
 
 EXTERN_C_BEGIN
 
@@ -112,8 +112,8 @@ alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pHandle)
 
 alc_error_t
 alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
-                    Uint8*         buf, /* RNG output buffer */
-                    Uint64         size /* output buffer size */
+                    Uint8*           buf, /* RNG output buffer */
+                    Uint64           size /* output buffer size */
 )
 {
     alc_error_t err = ALC_ERROR_NONE;

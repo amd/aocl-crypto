@@ -27,7 +27,7 @@
  */
 
 #include "alcp/base.hh"
-#include "rng.hh"
+#include "alcp/rng.hh"
 #include "utils/copy.hh"
 #include <functional>
 #include <vector>

@@ -26,11 +26,11 @@
  *
  */
 #include "alcp/mac.h"
+#include "alcp/rng/drbg.hh"
 #include "digest.hh"
 #include "digest/sha2.hh"
 #include "digest/sha3.hh"
 #include "mac/hmac.hh"
-#include "rng/drbg.hh"
 
 // Kernel debugging interface
 // #define DEBUG_MODE

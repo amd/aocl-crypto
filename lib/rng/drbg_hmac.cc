@@ -26,7 +26,7 @@
  *
  */
 
-#include "rng/drbg_hmac.hh"
+#include "alcp/rng/drbg_hmac.hh"
 #include "iostream"
 #include "utils/copy.hh"
 

@@ -25,8 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 #include "alcp/module.hh"
+#include "alcp/rng/rngerror.hh"
 #include "alcp/types.h"
-#include "rng/rngerror.hh"
 
 namespace alcp::rng {
 class RngModule final : public alcp::module::ModuleBase

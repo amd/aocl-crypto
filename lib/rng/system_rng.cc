@@ -28,7 +28,7 @@
 
 #include <cstdlib>
 
-#include "rng/rngerror.hh"
+#include "alcp/rng/rngerror.hh"
 #include "system_rng.hh"
 // Enable debug for debugging the code
 // #define DEBUG
@@ -43,8 +43,8 @@ namespace alcp::rng {
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <windows.h>
 #include <wincrypt.h>
+#include <windows.h>
 #define ALCP_CONFIG_OS_HAS_GETRANDOM 1
 #else
 #include <sys/random.h>
@@ -123,32 +123,32 @@ class SystemRngImpl
             return sts;
         }
 #else
-/*
-CryptGenRandom function in windows generate cryptographically secure RNG using Software & hardware
-based sources of entropy(Cpu's hardware RNG,disk activity, input timing, system clock, process ID etc).
-This type of entropies used to seed the Cryptographic RNG, to generate
-secure random buffer of bytes.
-*/
+        /*
+        CryptGenRandom function in windows generate cryptographically secure RNG
+        using Software & hardware based sources of entropy(Cpu's hardware
+        RNG,disk activity, input timing, system clock, process ID etc). This
+        type of entropies used to seed the Cryptographic RNG, to generate secure
+        random buffer of bytes.
+        */
 
-    HCRYPTPROV hCryptSProv;
-    if(!CryptAcquireContext(&hCryptSProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
-    {
-        printf("CSP context not acquired. \n");
-        sts.update(Status(GenericError(alcp::base::ErrorCode::eNotAvailable)));
-        return sts;
-    }
-    if (CryptGenRandom(hCryptSProv,length,reinterpret_cast<BYTE*>(output)))
-    {
-        printf("Cryptographically Secure Random sequence generated. \n");
-    }
-    else
-    {   
-        sts.update(Status(RngError(rng::ErrorCode::eNoEntropySource)));
-        return sts;
-    }
+        HCRYPTPROV hCryptSProv;
+        if (!CryptAcquireContext(
+                &hCryptSProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
+            printf("CSP context not acquired. \n");
+            sts.update(
+                Status(GenericError(alcp::base::ErrorCode::eNotAvailable)));
+            return sts;
+        }
+        if (CryptGenRandom(
+                hCryptSProv, length, reinterpret_cast<BYTE*>(output))) {
+            printf("Cryptographically Secure Random sequence generated. \n");
+        } else {
+            sts.update(Status(RngError(rng::ErrorCode::eNoEntropySource)));
+            return sts;
+        }
 
-    if (hCryptSProv)
-        CryptReleaseContext(hCryptSProv, 0);
+        if (hCryptSProv)
+            CryptReleaseContext(hCryptSProv, 0);
 
 #endif
         return sts;

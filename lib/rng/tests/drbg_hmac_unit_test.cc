@@ -29,10 +29,10 @@
 #include "alcp/base.hh"
 
 #include "../../rng/include/hardware_rng.hh"
+#include "alcp/rng/drbg_hmac.hh"
 #include "digest.hh"
 #include "digest/sha2.hh"
 #include "openssl/bio.h"
-#include "rng/drbg_hmac.hh"
 #include "gtest/gtest.h"
 #include <iostream>
 

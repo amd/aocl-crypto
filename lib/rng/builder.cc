@@ -27,8 +27,8 @@
  */
 
 #include "capi/rng/builder.hh"
+#include "alcp/rng.hh"
 #include "hardware_rng.hh"
-#include "rng.hh"
 #include "system_rng.hh"
 
 namespace alcp::rng {

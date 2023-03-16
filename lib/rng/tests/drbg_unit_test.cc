@@ -30,9 +30,9 @@
 #include "../../rng/include/system_rng.hh"
 #include "alcp/base.hh"
 #include "alcp/interface/Irng.hh"
+#include "alcp/rng/drbg_hmac.hh"
 #include "digest.hh"
 #include "digest/sha2.hh"
-#include "rng/drbg_hmac.hh"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <iostream>
@@ -65,7 +65,8 @@ DebugPrintPretty(std::vector<Uint8>& output)
 #else
 void
 DebugPrintPretty(std::vector<Uint8>& output)
-{}
+{
+}
 #endif
 
 class NullGenerator : public IRng

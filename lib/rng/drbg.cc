@@ -28,8 +28,8 @@
 
 #include "alcp/base.hh"
 
-#include "rng.hh"
-#include "rng/drbg.hh"
+#include "alcp/rng.hh"
+#include "alcp/rng/drbg.hh"
 #include <memory>
 
 namespace alcp::rng {

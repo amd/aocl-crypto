@@ -25,7 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "rng/rngerror.hh"
+#include "alcp/rng/rngerror.hh"
 
 namespace alcp::rng::status {
 
