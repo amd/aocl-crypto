@@ -29,10 +29,10 @@
 #include "alcp/base.hh"
 #include "alcp/base/error.hh"
 #include "alcp/capi/defs.hh"
+#include "alcp/capi/mac/builder.hh"
+#include "alcp/capi/mac/ctx.hh"
 #include "alcp/mac.h"
 #include "alcp/mac/mac.hh"
-#include "capi/mac/builder.hh"
-#include "capi/mac/ctx.hh"
 
 using namespace alcp;
 

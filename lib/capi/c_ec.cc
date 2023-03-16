@@ -31,8 +31,8 @@
 
 #include "alcp/alcp.hh"
 #include "alcp/capi/defs.hh"
-#include "capi/ec/builder.hh"
-#include "capi/ec/ctx.hh"
+#include "alcp/capi/ec/builder.hh"
+#include "alcp/capi/ec/ctx.hh"
 
 using namespace alcp;
 

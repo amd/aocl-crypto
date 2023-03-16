@@ -29,9 +29,9 @@
 #include "alcp/base.hh"
 
 #include "alcp/capi/defs.hh"
+#include "alcp/capi/rng/builder.hh"
 #include "alcp/rng.hh"
 #include "alcp/utils/cpuid.hh"
-#include "capi/rng/builder.hh"
 
 EXTERN_C_BEGIN
 

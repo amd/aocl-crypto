@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,17 +27,18 @@
  */
 #pragma once
 
-#include "alcp/mac.h"
+#include "alcp/cipher.h"
 
-#include "capi/mac/ctx.hh"
+#include "alcp/capi/cipher/ctx.hh"
+#include "alcp/cipher.hh"
 
-namespace alcp::mac {
+namespace alcp::cipher {
 
-class MacBuilder
+class CipherBuilder
 {
   public:
-    static alcp::base::Status build(const alc_mac_info_t& cipherInfo,
-                                    alcp::mac::Context&   ctx);
+    static alc_error_t Build(const alc_cipher_info_t& cipherInfo,
+                             alcp::cipher::Context&   ctx);
 };
 
-} // namespace alcp::mac
+} // namespace alcp::cipher

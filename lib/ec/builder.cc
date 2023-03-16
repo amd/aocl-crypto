@@ -26,8 +26,8 @@
  *
  */
 
-#include "capi/ec/builder.hh"
-#include "capi/ec/ctx.hh"
+#include "alcp/capi/ec/builder.hh"
+#include "alcp/capi/ec/ctx.hh"
 
 #include "ec.hh"
 #include "ec/ecdh.hh"

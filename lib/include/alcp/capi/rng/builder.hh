@@ -28,19 +28,19 @@
 
 #pragma once
 
-#include "alcp/digest.h"
-#include "capi/digest/ctx.hh"
+#include "alcp/error.h"
+#include "alcp/rng.h"
 
-#include "alcp/digest.hh"
+#include "alcp/capi/rng/ctx.hh"
 
-namespace alcp::digest {
-class DigestBuilder
+#include "alcp/rng.hh"
+
+namespace alcp::rng {
+
+class RngBuilder
 {
   public:
-    static Uint32 getSize(const alc_digest_info_t& digestInfo);
-
-    static alc_error_t Build(const alc_digest_info_t& digestInfo,
-                             digest::Context&         ctx);
+    static alc_error_t Build(const alc_rng_info_t& rRngInfo, Context& ctx);
 };
 
-} // namespace alcp::digest
+} // namespace alcp::rng

@@ -29,8 +29,8 @@
 #include "alcp/digest.h"
 
 #include "alcp/alcp.hh"
-#include "capi/digest/builder.hh"
-#include "capi/digest/ctx.hh"
+#include "alcp/capi/digest/builder.hh"
+#include "alcp/capi/digest/ctx.hh"
 
 using namespace alcp;
 
@@ -71,8 +71,8 @@ alcp_digest_request(const alc_digest_info_p pDigestInfo,
 
 alc_error_t
 alcp_digest_update(const alc_digest_handle_p pDigestHandle,
-                   const Uint8*            pMsgBuf,
-                   Uint64                  size)
+                   const Uint8*              pMsgBuf,
+                   Uint64                    size)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pDigestHandle, err);
@@ -88,8 +88,8 @@ alcp_digest_update(const alc_digest_handle_p pDigestHandle,
 
 alc_error_t
 alcp_digest_finalize(const alc_digest_handle_p pDigestHandle,
-                     const Uint8*            pMsgBuf,
-                     Uint64                  size)
+                     const Uint8*              pMsgBuf,
+                     Uint64                    size)
 {
     alc_error_t err;
 
@@ -123,8 +123,8 @@ alcp_digest_reset(const alc_digest_handle_p pDigestHandle)
 
 alc_error_t
 alcp_digest_copy(const alc_digest_handle_p pDigestHandle,
-                 Uint8*                  pBuf,
-                 Uint64                  size)
+                 Uint8*                    pBuf,
+                 Uint64                    size)
 {
     auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
     return ctx->copy(ctx->m_digest, pBuf, size);

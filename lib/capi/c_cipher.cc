@@ -31,9 +31,9 @@
 #include "alcp/alcp.hh"
 #include "alcp/cipher.h"
 
+#include "alcp/capi/cipher/builder.hh"
 #include "alcp/capi/defs.hh"
 #include "alcp/cipher.hh"
-#include "capi/cipher/builder.hh"
 
 using namespace alcp;
 

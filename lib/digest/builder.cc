@@ -26,8 +26,8 @@
  *
  */
 
-#include "capi/digest/builder.hh"
-#include "capi/digest/ctx.hh"
+#include "alcp/capi/digest/builder.hh"
+#include "alcp/capi/digest/ctx.hh"
 
 #include "alcp/digest.hh"
 #include "alcp/digest/sha2.hh"

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,20 +25,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
 #pragma once
 
-#include "alcp/cipher.h"
+#include "alcp/ec.h"
+#include "alcp/capi/ec/ctx.hh"
 
-#include "alcp/cipher.hh"
-#include "capi/cipher/ctx.hh"
+#include "ec.hh"
 
-namespace alcp::cipher {
-
-class CipherBuilder
+namespace alcp::ec {
+class EcBuilder
 {
   public:
-    static alc_error_t Build(const alc_cipher_info_t& cipherInfo,
-                             alcp::cipher::Context&   ctx);
+    static Status Build(const alc_ec_info_t& ecInfo, ec::Context& ctx);
+    static Uint32 getSize(const alc_ec_info_t& rEcInfo);
 };
 
-} // namespace alcp::cipher
+} // namespace alcp::ec

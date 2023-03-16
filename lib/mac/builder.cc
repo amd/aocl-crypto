@@ -26,7 +26,7 @@
  *
  */
 
-#include "capi/mac/builder.hh"
+#include "alcp/capi/mac/builder.hh"
 #include "alcp/mac/cmac_build.hh"
 #include "alcp/mac/hmac_build.hh"
 
