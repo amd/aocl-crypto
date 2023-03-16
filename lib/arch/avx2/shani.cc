@@ -26,7 +26,7 @@
  *
  */
 
-#include "digest/shani.hh"
+#include "alcp/digest/shani.hh"
 #include "config.h"
 #include <x86intrin.h>
 
@@ -42,7 +42,7 @@
 #endif
 namespace alcp::digest { namespace shani {
 
-    inline static void load_data(__m128i        x[SHA256_CHUNK_NUM_VECT],
+    inline static void load_data(__m128i      x[SHA256_CHUNK_NUM_VECT],
                                  const Uint8* data)
     {
         const __m128i shuf_mask =
@@ -56,9 +56,9 @@ namespace alcp::digest { namespace shani {
         }
     }
 
-    inline static void load_state(Uint32* pHash,
-                                  __m128i*  pState0,
-                                  __m128i*  pState1)
+    inline static void load_state(Uint32*  pHash,
+                                  __m128i* pState0,
+                                  __m128i* pState1)
     {
         /* Load initial values */
         __m128i tmp = _mm_loadu_si128((const __m128i*)&pHash[0]);

@@ -26,8 +26,8 @@
  *
  */
 
-#include "digest.hh"
-#include "digest/sha2.hh"
+#include "alcp/digest.hh"
+#include "alcp/digest/sha2.hh"
 
 #include <x86intrin.h>
 
@@ -45,7 +45,7 @@
 namespace alcp::digest { namespace avx2 {
 
     // Loads data into the 128 bit registers
-    inline void load_data(__m128i        x[SHA256_CHUNK_NUM_VECT_AVX],
+    inline void load_data(__m128i      x[SHA256_CHUNK_NUM_VECT_AVX],
                           const Uint8* data)
     {
         const __m128i shuf_mask =
@@ -59,7 +59,7 @@ namespace alcp::digest { namespace avx2 {
     }
 
     // Loads data into the 256 bit registers
-    inline void load_data(__m256i        x[2 * SHA256_CHUNK_NUM_VECT_AVX2],
+    inline void load_data(__m256i      x[2 * SHA256_CHUNK_NUM_VECT_AVX2],
                           const Uint8* data)
     {
         const __m256i mask = _mm256_setr_epi32(0x00010203,
@@ -86,7 +86,7 @@ namespace alcp::digest { namespace avx2 {
     // Extends the 16 word message into 64 word message.
     // The processing has been done using 128 bit registers.
     // One block is processed at a time.
-    inline void extend_msg(__m128i   x[SHA256_CHUNK_NUM_VECT_AVX],
+    inline void extend_msg(__m128i x[SHA256_CHUNK_NUM_VECT_AVX],
                            Uint32* msg_sch_array)
     {
         const __m128i lo_mask = _mm_setr_epi32(0x03020100, 0x0b0a0908, -1, -1);
@@ -159,7 +159,7 @@ namespace alcp::digest { namespace avx2 {
     // Extends the 16 word message into 64 word message.
     // The processing has been done using 256 bit registers.
     // Two blocks are processed at a time.
-    inline void extend_msg(__m256i   x[SHA256_CHUNK_NUM_VECT_AVX2 * 2],
+    inline void extend_msg(__m256i x[SHA256_CHUNK_NUM_VECT_AVX2 * 2],
                            Uint32* msg_sch_array1,
                            Uint32* msg_sch_array2)
     {
@@ -250,8 +250,8 @@ namespace alcp::digest { namespace avx2 {
         // a block with 128 bit registers. The rest can be
         // processed using 256 bit registers
         if (num_blocks & 1) {
-            __m128i  chunk_vect[SHA256_CHUNK_NUM_VECT_AVX];
-            Uint32 msg_sch_array[64];
+            __m128i chunk_vect[SHA256_CHUNK_NUM_VECT_AVX];
+            Uint32  msg_sch_array[64];
             load_data(chunk_vect, pSrc);
             extend_msg(chunk_vect, msg_sch_array);
             CompressMsg(msg_sch_array, pHash, pHashConstants);
@@ -259,9 +259,9 @@ namespace alcp::digest { namespace avx2 {
             src_len -= 64;
         }
         while (src_len >= 128) {
-            __m256i  chunk_vect[SHA256_CHUNK_NUM_VECT_AVX2 * 2];
-            Uint32 msg_sch_array_1[64];
-            Uint32 msg_sch_array_2[64];
+            __m256i chunk_vect[SHA256_CHUNK_NUM_VECT_AVX2 * 2];
+            Uint32  msg_sch_array_1[64];
+            Uint32  msg_sch_array_2[64];
             load_data(chunk_vect, pSrc);
             extend_msg(chunk_vect, msg_sch_array_1, msg_sch_array_2);
             CompressMsg(msg_sch_array_1, pHash, pHashConstants);

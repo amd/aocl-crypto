@@ -27,9 +27,9 @@
  */
 #pragma once
 
+#include "alcp/digest.hh"
 #include "alcp/key.h"
 #include "alcp/mac.h"
-#include "digest.hh"
 #include "mac.hh"
 #include "utils/copy.hh"
 

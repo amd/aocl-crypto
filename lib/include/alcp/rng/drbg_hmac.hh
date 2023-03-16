@@ -25,11 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include "alcp/digest.hh"
+#include "alcp/digest/sha2.hh"
+#include "alcp/digest/sha3.hh"
 #include "alcp/mac.h"
 #include "alcp/rng/drbg.hh"
-#include "digest.hh"
-#include "digest/sha2.hh"
-#include "digest/sha3.hh"
 #include "mac/hmac.hh"
 
 // Kernel debugging interface

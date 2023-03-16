@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,9 +28,9 @@
 
 #pragma once
 
-#include "digest.hh"
+#include "alcp/digest.hh"
 
-#include <memory>  // for unique_ptr
+#include <memory> // for unique_ptr
 
 namespace alcp::digest {
 
@@ -40,11 +40,13 @@ class Sha2 : public Digest
     Sha2(const std::string& name)
         : m_name{ name }
         , m_msg_len{ 0 }
-    {}
+    {
+    }
 
     Sha2(const char* name)
         : Sha2(std::string(name))
-    {}
+    {
+    }
 
     // TODO : Removing Return here causes an error
     /**
@@ -111,7 +113,8 @@ class Sha256 final : public Sha2
      *
      * \param    size    should be valid size > 0
      */
-    ALCP_API_EXPORT alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
+    ALCP_API_EXPORT alc_error_t update(const Uint8* pMsgBuf,
+                                       Uint64       size) override;
 
     /**
      * \brief   Cleans up any resource that was allocated
@@ -149,7 +152,8 @@ class Sha256 final : public Sha2
      * \param    size    Either valid size or 0, if \buf is nullptr, size
      *                   is assumed to be zero
      */
-    ALCP_API_EXPORT alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) override;
+    ALCP_API_EXPORT alc_error_t finalize(const Uint8* pMsgBuf,
+                                         Uint64       size) override;
 
     /**
      * \brief  Copies the has from context to supplied buffer
@@ -166,7 +170,8 @@ class Sha256 final : public Sha2
      * \param    size    Either valid size or 0, if \buf is nullptr, size is
      *                   assumed to be zero
      */
-    ALCP_API_EXPORT alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const override;
+    ALCP_API_EXPORT alc_error_t copyHash(Uint8* pHashBuf,
+                                         Uint64 size) const override;
 
   public:
     ALCP_API_EXPORT alc_error_t setIv(const void* pIv, Uint64 size);

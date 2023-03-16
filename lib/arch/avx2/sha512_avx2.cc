@@ -26,8 +26,8 @@
  *
  */
 
-#include "digest.hh"
-#include "digest/sha2_512.hh"
+#include "alcp/digest.hh"
+#include "alcp/digest/sha2_512.hh"
 
 #include <string.h>
 #include <x86intrin.h>

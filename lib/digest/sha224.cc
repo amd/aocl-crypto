@@ -26,7 +26,7 @@
  *
  */
 
-#include "digest/sha2.hh"
+#include "alcp/digest/sha2.hh"
 
 #include "utils/copy.hh"
 

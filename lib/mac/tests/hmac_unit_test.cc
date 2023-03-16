@@ -28,9 +28,9 @@
 
 #include "alcp/alcp.h"
 #include "alcp/base.hh"
+#include "alcp/digest/sha2_384.hh"
+#include "alcp/digest/sha3.hh"
 #include "alcp/types.h"
-#include "digest/sha2_384.hh"
-#include "digest/sha3.hh"
 #include "mac/hmac.hh"
 #include "gtest/gtest.h"
 
@@ -334,9 +334,9 @@ class HmacTestFixture
     void setUp(const ParamType& params)
     {
         auto tuple_values = params.second;
-        m_key               = parseHexStrToBin(std::get<0>(tuple_values));
-        m_cipher_text       = parseHexStrToBin(std::get<1>(tuple_values));
-        m_expected_mac      = parseHexStrToBin(std::get<2>(tuple_values));
+        m_key             = parseHexStrToBin(std::get<0>(tuple_values));
+        m_cipher_text     = parseHexStrToBin(std::get<1>(tuple_values));
+        m_expected_mac    = parseHexStrToBin(std::get<2>(tuple_values));
 #ifdef DEBUG
         std::cout << "Key Size is " << key.size() << std::endl;
         std::cout << "CipherText size is " << m_cipher_text.size() << std::endl;
@@ -447,8 +447,9 @@ TEST_P(HmacTestFixture, HMAC_UPDATE_FINALISE)
     setUp(cParams);
     setUpHash(cParams.first);
 
-    auto block1 = std::vector<Uint8>(
-        m_cipher_text.begin(), m_cipher_text.begin() + m_cipher_text.size() / 2);
+    auto block1 =
+        std::vector<Uint8>(m_cipher_text.begin(),
+                           m_cipher_text.begin() + m_cipher_text.size() / 2);
 
     auto block2 = std::vector<Uint8>(
         m_cipher_text.begin() + m_cipher_text.size() / 2, m_cipher_text.end());

@@ -29,7 +29,6 @@
 #ifndef _CIPHER_AES_CTR_HH_
 #define _CIPHER_AES_CTR_HH_ 2
 
-#include <avx2intrin.h>
 #include <cstdint>
 #include <immintrin.h>
 #include <vpclmulqdqintrin.h>

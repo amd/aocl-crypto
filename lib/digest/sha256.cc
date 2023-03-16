@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,9 +30,9 @@
 #include <functional>
 #include <string>
 
-#include "digest/sha2.hh"
-#include "digest/sha_avx2.hh"
-#include "digest/shani.hh"
+#include "alcp/digest/sha2.hh"
+#include "alcp/digest/sha_avx2.hh"
+#include "alcp/digest/shani.hh"
 
 #include "alcp/utils/cpuid.hh"
 #include "utils/bits.hh"
@@ -175,7 +175,7 @@ Sha256::Impl::compressMsg(Uint32 w[])
 alc_error_t
 Sha256::Impl::processChunk(const Uint8* pSrc, Uint64 len)
 {
-    static bool  shani_available = CpuId::cpuHasShani();
+    static bool shani_available = CpuId::cpuHasShani();
     // FIXME: AVX2 is deliberately disabled due to poor performance
 #if 0
     static bool avx2_available  = utils::CpuId::cpuHasAvx2();
@@ -352,7 +352,8 @@ Sha256::Sha256()
 
 Sha256::Sha256(const alc_digest_info_t& rDigestInfo)
     : Sha256()
-{}
+{
+}
 
 Sha256::~Sha256() = default;
 

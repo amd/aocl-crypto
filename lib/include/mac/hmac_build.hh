@@ -28,8 +28,8 @@
 #pragma once
 
 #include "alcp/base.hh"
-#include "digest/sha2_384.hh"
-#include "digest/sha3.hh"
+#include "alcp/digest/sha2_384.hh"
+#include "alcp/digest/sha3.hh"
 #include "hmac.hh"
 
 namespace alcp::mac {

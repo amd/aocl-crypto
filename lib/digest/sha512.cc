@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,10 +31,10 @@
 #include <functional>
 #include <string>
 
-#include "digest/sha2_512.hh"
+#include "alcp/digest/sha2_512.hh"
 
-#include "digest/sha_avx2.hh"
-#include "digest/sha_avx256.hh"
+#include "alcp/digest/sha_avx2.hh"
+#include "alcp/digest/sha_avx256.hh"
 
 #include "alcp/utils/cpuid.hh"
 #include "utils/bits.hh"
@@ -103,7 +103,8 @@ Sha512::Sha512(alc_digest_len_t digest_len)
 
 Sha512::Sha512(const alc_digest_info_t& rDigestInfo)
     : Sha512(rDigestInfo.dt_len)
-{}
+{
+}
 
 Sha512::~Sha512() = default;
 
@@ -228,7 +229,7 @@ Sha512::compressMsg(Uint64 w[])
 alc_error_t
 Sha512::processChunk(const Uint8* pSrc, Uint64 len)
 {
-    static bool  cpu_is_zen3 = (CpuId::cpuIsZen3() || CpuId::cpuIsZen4());
+    static bool cpu_is_zen3 = (CpuId::cpuIsZen3() || CpuId::cpuIsZen4());
 
     /* we need len to be multiple of cChunkSize */
     assert((len & Sha512::cChunkSizeMask) == 0);

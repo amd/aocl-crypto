@@ -28,8 +28,8 @@
 
 #pragma once
 
+#include "alcp/digest.hh"
 #include "config.h"
-#include "digest.hh"
 
 #include <memory>
 

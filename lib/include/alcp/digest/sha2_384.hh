@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include "digest.hh"
+#include "alcp/digest.hh"
 #include "sha2_512.hh"
 
 #include <memory>
