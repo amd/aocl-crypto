@@ -100,13 +100,19 @@ class Cmac::Impl : public cipher::Aes
 
     Status update(const Uint8 plaintext[], Uint64 plaintext_size)
     {
-        static bool has_avx2_aesni =
-            CpuId::cpuHasAvx2() && CpuId::cpuHasAesni();
-
-        Status status{ StatusOk() };
+        if (m_finalized) {
+            return InternalError(
+                "CMAC: Cannot Call Update After Finalize without reseting");
+        }
         if (m_encrypt_keys == nullptr) {
             return InvalidArgument("Key is Empty");
         }
+
+        Status status{ StatusOk() };
+
+        static bool has_avx2_aesni =
+            CpuId::cpuHasAvx2() && CpuId::cpuHasAesni();
+
         // No need to Process anything for empty block
         if (plaintext_size == 0) {
             return status;
@@ -188,13 +194,18 @@ class Cmac::Impl : public cipher::Aes
 
     Status finalize(const Uint8 plaintext[], Uint64 plaintext_size)
     {
+        if (m_finalized) {
+            return InternalError("CMAC: Already Finalized. Call Reset before "
+                                 "updating or Finalizing Again");
+        }
+        if (m_encrypt_keys == nullptr) {
+            return InvalidArgument("Key is Empty");
+        }
+
         static bool has_avx2_aesni =
             CpuId::cpuHasAvx2() && CpuId::cpuHasAesni();
 
         Status s{ StatusOk() };
-        if (m_encrypt_keys == nullptr) {
-            return InvalidArgument("Key is Empty");
-        }
         if (plaintext_size != 0) {
             update(plaintext, plaintext_size);
         }

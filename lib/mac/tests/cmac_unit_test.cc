@@ -352,7 +352,7 @@ TEST(CMACRobustnessTest, CMAC_callCopyOnNullKey)
     ASSERT_FALSE(s.ok());
 }
 
-TEST(CMACRobustnessTest, CMAC_callCopyWithouFinalize)
+TEST(CMACRobustnessTest, CMAC_callCopyWithoutFinalize)
 {
     Cmac  cmac2;
     Uint8 key[16]{};
@@ -360,8 +360,36 @@ TEST(CMACRobustnessTest, CMAC_callCopyWithouFinalize)
 
     Status s = cmac2.setKey(key, sizeof(key) * 8);
     ASSERT_TRUE(s.ok());
-
     s = cmac2.copy(mac, sizeof(mac));
+    ASSERT_FALSE(s.ok());
+}
+
+TEST(CMACRobustnessTest, CMAC_callUpdateAfterFinalize)
+{
+    Cmac  cmac2;
+    Uint8 key[16]{};
+
+    Status s = cmac2.setKey(key, sizeof(key) * 8);
+    ASSERT_TRUE(s.ok());
+
+    s = cmac2.finalize(nullptr, 0);
+    ASSERT_TRUE(s.ok());
+    s = cmac2.update(nullptr, 0);
+    ASSERT_FALSE(s.ok());
+}
+
+TEST(CMACRobustnessTest, CMAC_callFinalizeTwice)
+{
+    Cmac  cmac2;
+    Uint8 key[16]{};
+
+    Status s = cmac2.setKey(key, sizeof(key) * 8);
+    ASSERT_TRUE(s.ok());
+
+    s = cmac2.finalize(nullptr, 0);
+    ASSERT_TRUE(s.ok());
+
+    s = cmac2.finalize(nullptr, 0);
     ASSERT_FALSE(s.ok());
 }
 
