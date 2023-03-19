@@ -44,21 +44,18 @@ RadixToBytes(Uint64 out[4], const Uint64 a[4])
     a2 = a[2];
     a3 = a[3];
 
-    Uint64 b0 = 2 * a3;
-    a3        = -(a3 >> 63);
-    b0        = b0 >> 1;
-    a3        = a3 & 19;
-    a3 += 19;
+    Uint64 b0 = a3 & 0x7fffffffffffffff;
+
+    a3 = 19 + (a3 >> 63) * 19;
 
     Uint64 cf = _addcarryx_u64(0, a3, a0, (unsigned long long*)&a0);
     cf        = _addcarryx_u64(cf, 0, a1, (unsigned long long*)&a1);
     cf        = _addcarryx_u64(cf, 0, a2, (unsigned long long*)&a2);
     b0 += cf;
-    a3 = 2 * b0;
-    b0 = -(b0 >> 63);
-    a3 = a3 >> 1;
-    b0 = ~b0;
-    b0 = b0 & 19;
+
+    a3 = b0 & 0x7fffffffffffffff;
+
+    b0 = !(b0 >> 63) * 19;
 
     cf = _subborrow_u64(0, a0, b0, (unsigned long long*)&a0);
     cf = _subborrow_u64(cf, a1, 0, (unsigned long long*)&a1);
@@ -89,24 +86,19 @@ SumX25519(Uint64* c, const Uint64* a, const Uint64* b)
     a2 = a[2];
     a3 = a[3];
 
-    unsigned char carry = 0;
-    carry = _addcarryx_u64(carry, b[0], a0, (unsigned long long*)&a0);
+    unsigned char carry = _addcarryx_u64(0, b[0], a0, (unsigned long long*)&a0);
     carry = _addcarryx_u64(carry, b[1], a1, (unsigned long long*)&a1);
     carry = _addcarryx_u64(carry, b[2], a2, (unsigned long long*)&a2);
     carry = _addcarryx_u64(carry, b[3], a3, (unsigned long long*)&a3);
 
-    _subborrow_u64(carry, x, x, (unsigned long long*)&x);
-    x = x & 38;
+    x = carry * 38;
 
-    carry = 0;
-    carry = _addcarryx_u64(carry, x, a0, (unsigned long long*)&a0);
+    carry = _addcarryx_u64(0, x, a0, (unsigned long long*)&a0);
     carry = _addcarryx_u64(carry, 0, a1, (unsigned long long*)&a1);
     carry = _addcarryx_u64(carry, 0, a2, (unsigned long long*)&a2);
     carry = _addcarryx_u64(carry, 0, a3, (unsigned long long*)&a3);
 
-    _subborrow_u64(carry, x, x, (unsigned long long*)&x);
-    x  = x & 38;
-    a0 = a0 + x;
+    a0 += (carry * 38);
 
     c[0] = a0;
     c[1] = a1;
@@ -123,26 +115,19 @@ SubX25519(Uint64* c, const Uint64* a, const Uint64* b)
     a2 = a[2];
     a3 = a[3];
 
-    unsigned char carry = 0;
+    unsigned char carry = _subborrow_u64(0, a0, b[0], (unsigned long long*)&a0);
+    carry = _subborrow_u64(carry, a1, b[1], (unsigned long long*)&a1);
+    carry = _subborrow_u64(carry, a2, b[2], (unsigned long long*)&a2);
+    carry = _subborrow_u64(carry, a3, b[3], (unsigned long long*)&a3);
 
-    carry = _subborrow_u64(carry, b[0], a0, (unsigned long long*)&a0);
-    carry = _subborrow_u64(carry, b[1], a1, (unsigned long long*)&a1);
-    carry = _subborrow_u64(carry, b[2], a2, (unsigned long long*)&a2);
-    carry = _subborrow_u64(carry, b[3], a3, (unsigned long long*)&a3);
+    x = (carry * 38);
 
-    _subborrow_u64(carry, x, x, (unsigned long long*)&x);
-    x = x & 38;
+    carry = _subborrow_u64(0, a0, x, (unsigned long long*)&a0);
+    carry = _subborrow_u64(carry, a1, 0, (unsigned long long*)&a1);
+    carry = _subborrow_u64(carry, a2, 0, (unsigned long long*)&a2);
+    carry = _subborrow_u64(carry, a3, 0, (unsigned long long*)&a3);
 
-    carry = 0;
-    carry = _subborrow_u64(carry, x, a0, (unsigned long long*)&a0);
-    carry = _subborrow_u64(carry, 0, a1, (unsigned long long*)&a1);
-    carry = _subborrow_u64(carry, 0, a2, (unsigned long long*)&a2);
-    carry = _subborrow_u64(carry, 0, a3, (unsigned long long*)&a3);
-
-    _subborrow_u64(carry, x, x, (unsigned long long*)&x);
-    x = x & 38;
-
-    a0 = a0 - x;
+    a0 -= (carry * 38);
 
     c[0] = a0;
     c[1] = a1;
