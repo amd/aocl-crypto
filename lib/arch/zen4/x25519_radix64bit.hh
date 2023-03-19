@@ -177,7 +177,7 @@ SquareX25519Count(Uint64 out[4], const Uint64 a[4], Uint64 count)
         "adcx	%%rdi,%%r14;"       // carry (a2 *a3) + cf
         "adox	%%rdi,%%r14;"       // carry (a2 *a3) + cf + of
 
-        // sequence of a0a1
+        // sequence of a0a0
         "adcx	%%r9,%%r9;"   // 2 * a0 * a1
         "adox	%%r15,%%r9;"  // carry (a0 * a0) + 2 * a0 * a1
         "adcx	%%r10,%%r10;" // 2 * (carry(a0 *a1) + a0 *a2)
