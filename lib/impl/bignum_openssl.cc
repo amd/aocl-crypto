@@ -134,6 +134,12 @@ class BigNum::Impl
             BN_clear(raw());
         }
     }
+    inline void operator=(const Impl& rhs)
+    {
+        if (!BN_copy(raw(), rhs.raw())) {
+            BN_clear(raw());
+        }
+    }
 
     inline BigNum add(const BigNum& rhs)
     {
@@ -414,10 +420,25 @@ class BigNum::Impl
                 s = res.get();
                 break;
             }
+            case BigNum::Format::eHex: {
+                std::shared_ptr<char> res(BN_bn2hex(raw()), _OpenSSLDeleter());
+                s = res.get();
+                if (s.length() > 1 && (s[0] == '0'))
+                    s = s.substr(1);
+                if ((BN_is_negative(raw()) && s[1] == '0')) {
+                    s = "-" + s.substr(2);
+                }
+                break;
+            }
+            case BigNum::Format::eBinary: {
+                BN_bn2bin(raw(), (unsigned char*)&(s[0]));
+                // std::shared_ptr<char> res(BN_bn2bin(raw(),res),
+                // _OpenSSLDeleter()); s = res.get();
+                break;
+            }
             default:
-                s = String("");
+                s = String("0");
         }
-
         return s;
     }
 
@@ -432,12 +453,75 @@ class BigNum::Impl
                 if (ret)
                     sts.update(status::InternalError("BN_dec2bn"));
             } break;
+            case BigNum::Format::eHex: {
+                auto bn  = raw();
+                int  ret = BN_hex2bn(&bn, str.c_str());
+                if (ret)
+                    sts.update(status::InternalError("BN_hex2bn"));
+            } break;
+            // case BigNum::Format::eBinary: {
+            //     auto bn = raw();
+            //     m_pbn =
+            //         BN_bin2bn((unsigned char*)str.c_str(), str.length(),
+            //         raw());
+            //     // if (ret)
+            //     //     sts.update(status::InternalError("BN_bin2bn"));
+            // } break;
             default:
                 sts = status::InvalidArgument("Invalid Argument");
                 break;
         }
 
         return sts;
+    }
+
+    inline int randomGenerateEx(int          bits,
+                                int          top,
+                                int          bottom,
+                                unsigned int strength)
+    {
+        BigNumCtx ctx;
+        return BN_rand_ex(raw(), bits, top, bottom, strength, ctx.raw());
+    }
+    inline int randomGenerate(int bits, int top, int bottom)
+    {
+        BigNumCtx ctx;
+        return BN_rand(raw(), bits, top, bottom);
+    }
+    inline int privateRandomEx(int          bits,
+                               int          top,
+                               int          bottom,
+                               unsigned int strength)
+    {
+        BigNumCtx ctx;
+        return BN_priv_rand_ex(raw(), bits, top, bottom, strength, ctx.raw());
+    }
+    inline int privateRandom(int bits, int top, int bottom)
+    {
+        BigNumCtx ctx;
+        return BN_priv_rand(raw(), bits, top, bottom);
+    }
+    inline int randomRangeEx(const BigNum* range, unsigned int strength)
+    {
+        BigNumCtx ctx;
+        return BN_rand_range_ex(
+            raw(), range->pImpl()->raw(), strength, ctx.raw());
+    }
+    inline int randomRange(const BigNum* range)
+    {
+        BigNumCtx ctx;
+        return BN_rand_range(raw(), range->pImpl()->raw());
+    }
+    inline int privateRandomRangeEx(const BigNum* range, unsigned int strength)
+    {
+        BigNumCtx ctx;
+        return BN_priv_rand_range_ex(
+            raw(), range->pImpl()->raw(), strength, ctx.raw());
+    }
+    inline int privateRandomRange(const BigNum* range)
+    {
+        BigNumCtx ctx;
+        return BN_priv_rand_range(raw(), range->pImpl()->raw());
     }
 
     /**

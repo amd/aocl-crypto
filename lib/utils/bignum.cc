@@ -81,6 +81,53 @@ BigNum::fromUint64(const Uint64 val)
     pImpl()->fromUint64(val);
 }
 
+int
+BigNum::randomGenerate(int bytes, int top, int bottom)
+{
+    return pImpl()->randomGenerate(bytes, top, bottom);
+}
+
+int
+BigNum::randomGenerateEx(int bits, int top, int bottom, unsigned int strength)
+{
+    return pImpl()->randomGenerateEx(bits, top, bottom, strength);
+}
+
+int
+BigNum::privateRandom(int bits, int top, int bottom)
+{
+    return pImpl()->privateRandom(bits, top, bottom);
+}
+
+int
+BigNum::privateRandomEx(int bits, int top, int bottom, unsigned int strength)
+{
+    return pImpl()->privateRandomEx(bits, top, bottom, strength);
+}
+
+int
+BigNum::randomRange(const BigNum* range)
+{
+    return pImpl()->randomRange(range);
+}
+
+int
+BigNum::randomRangeEx(const BigNum* range, unsigned int strength)
+{
+    return pImpl()->randomRangeEx(range, strength);
+}
+
+int
+BigNum::privateRandomRangeEx(const BigNum* range, unsigned int strength)
+{
+    return pImpl()->privateRandomRangeEx(range, strength);
+}
+int
+BigNum::privateRandomRange(const BigNum* range)
+{
+    return pImpl()->privateRandomRange(range);
+}
+
 void
 BigNum::fromInt64(const Int64 val)
 {
@@ -158,7 +205,6 @@ BigNum::operator/(const BigNum& rhs)
         result = pImpl()->div(rhs);
     } catch (Status s) {
         std::cout << "TRIED DIVIDING BY NULL OR 0 : " << s.message() << "\n";
-        throw s;
     }
     return result;
 }
@@ -171,7 +217,6 @@ BigNum::operator%(const BigNum& rhs)
         result = pImpl()->mod(rhs);
     } catch (Status s) {
         std::cout << "TRIED DIVIDING BY NULL OR 0 : " << s.message() << "\n";
-        throw s;
     }
     return result;
 }

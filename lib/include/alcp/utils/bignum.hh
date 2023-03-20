@@ -30,6 +30,8 @@
 
 #include "alcp/alcp.hh"
 #include "alcp/base.hh"
+#include "alcp/macros.h"
+#include "alcp/rng.h"
 
 namespace alcp {
 
@@ -95,8 +97,16 @@ class ALCP_API_EXPORT BigNum final
 
     void fromUint64(const Uint64 val);
     void fromUint32(const Uint32 val);
-
     void fromBinary(const Uint8* buf, Uint64 size);
+
+    int randomGenerateEx(int bits, int top, int bottom, unsigned int strength);
+    int randomGenerate(int bytes, int top, int bottom);
+    int privateRandomEx(int bits, int top, int bottom, unsigned int strength);
+    int privateRandom(int bits, int top, int bottom);
+    int randomRangeEx(const BigNum* range, unsigned int strength);
+    int randomRange(const BigNum* range);
+    int privateRandomRangeEx(const BigNum* range, unsigned int strength);
+    int privateRandomRange(const BigNum* range);
 
     enum class Format
     {
