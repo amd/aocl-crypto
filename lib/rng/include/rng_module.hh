@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -23,36 +23,21 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
  */
+#include "alcp/module.hh"
+#include "alcp/types.h"
+#include "rng/rngerror.hh"
 
-#pragma once
-
-#include "alcp/defs.hh"
-#include "alcp/types.hh"
-
-namespace alcp::base {
-
-/**
- * @detail
- * IError is an interface class for all errors, to be used with
- * ErrorBase class which defines few necessary methods.
- */
-
-class IError
+namespace alcp::rng {
+class RngModule final : public alcp::module::ModuleBase
 {
   public:
-    ALCP_DEFS_DEFAULT_CTOR_AND_EMPTY_VIRTUAL_DTOR(IError);
+    virtual String moduleName() const override;
 
-  public:
-    virtual const String message() const = 0;
-    virtual Uint64       code() const    = 0;
+    virtual Uint16 moduleId() const override;
 
-    virtual const String detailedError() const = 0;
-    bool operator==(const IError& other) { return isEq(*this, other); }
-
-  protected:
-    virtual bool isEq(IError const& lhs, IError const& rhs) const = 0;
+    virtual const std::unique_ptr<IError> getModuleError(
+        Uint64 code) const override;
 };
 
-} // namespace alcp::base
+} // namespace alcp::rng

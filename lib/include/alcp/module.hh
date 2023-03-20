@@ -30,7 +30,6 @@
 #include "alcp/interface/Ierror.hh"
 #include "alcp/interface/Imodule.hh"
 #include "alcp/types.hh"
-#include "rng/rngerror.hh"
 
 #include <map>
 #include <string>
@@ -41,7 +40,7 @@ enum Type : Uint16
 {
     eModuleNone = 0,
     eModuleBase = eModuleNone,
-
+    eModuleGeneric,
     eModuleCipher,
     eModuleDigest,
     eModuleRng,
@@ -65,7 +64,7 @@ typedef enum _alc_module_type
     ALC_MODULE_TYPE_MAX,
 } alc_module_type_t;
 
-class ModuleBase : public IModule
+class ModuleBase : public alcp::base::IModule
 {
   public:
     ALCP_DEFS_DEFAULT_CTOR_AND_DTOR(ModuleBase);
@@ -78,24 +77,3 @@ class ModuleBase : public IModule
 };
 
 } // namespace alcp::module
-
-// FIXME: contents below should end up in lib/rng/rng_module.cc
-namespace alcp::rng {
-class RngModule final : public alcp::module::ModuleBase
-{
-  public:
-    virtual String moduleName() const override { return "Rng"; }
-
-    virtual Uint16 moduleId() const override
-    {
-        return static_cast<Uint16>(alcp::module::eModuleRng);
-    };
-
-    virtual const IError& getModuleError(Uint64 code) const override
-    {
-        auto aa = new RngError(code);
-        return *aa;
-    }
-};
-
-} // namespace alcp::rng

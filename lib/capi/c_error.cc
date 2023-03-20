@@ -28,9 +28,9 @@
 
 #include "alcp/error.h"
 
-#include "alcp/alcp.hh"
 #include "alcp/base/error.hh"
 #include "alcp/modulemanager.hh"
+#include "alcp/types.hh"
 
 #include <cstring>
 
@@ -52,7 +52,7 @@ alcp_error_str(alc_error_t err, Uint8* buf, Uint64 size)
     auto& m     = ModuleManager::getModule(_code);
     auto& e     = m.getModuleError(_code);
 
-    auto str = e.message();
+    auto str = e->message();
     size     = std::min(str.size(), size);
 
     snprintf((char*)buf, size, "%s", str.c_str());

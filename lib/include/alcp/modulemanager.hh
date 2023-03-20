@@ -54,10 +54,10 @@ class ModuleManager : public Singleton<ModuleManager>
     static bool addModuleError(Uint16 moduleId, IError const& ie);
 
   public:
-    ModuleManager()  = default;
+    ModuleManager();
     ~ModuleManager() = default;
 
-    ModuleManager(ModuleManager const&)  = delete;
+    ModuleManager(ModuleManager const&) = delete;
     void operator=(ModuleManager const&) = delete;
 
   private:

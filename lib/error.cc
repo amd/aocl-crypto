@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,11 +38,16 @@ namespace alcp::base {
 const String
 ErrorBase::message() const
 {
-    const auto&  _mm = ModuleManager::getInstance().getModule(getModuleId());
-    const auto&       _me = _mm.getModuleError(getModuleError());
+    const auto& _mm = ModuleManager::getInstance().getModule(getModuleId());
+    const auto& _me = _mm.getModuleError(getModuleError());
     std::stringstream ss;
 
-    ss << "ALCP ERROR : " << _mm.moduleName()  << ": " << _me.detailedError();
+    static const auto& gm =
+        ModuleManager::getInstance().getModule(alcp::module::eModuleGeneric);
+    const auto& ge = gm.getModuleError(getBaseError());
+
+    ss << "ALCP ERROR : " << ge->detailedError() << " : " << _mm.moduleName()
+       << " : " << _me->detailedError();
 
     return ss.str();
 }

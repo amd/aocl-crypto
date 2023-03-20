@@ -30,7 +30,7 @@
 #include "alcp/defs.hh"
 #include "alcp/interface/Ierror.hh"
 #include "alcp/types.hh"
-
+#include <memory>
 namespace alcp::base {
 
 class IModule
@@ -42,7 +42,7 @@ class IModule
     virtual String moduleName() const = 0;
     virtual Uint16 moduleId() const   = 0;
 
-    virtual const IError& getModuleError(Uint64 code) const = 0;
+    virtual const std::unique_ptr<IError> getModuleError(Uint64 code) const = 0;
 };
 
 } // namespace alcp::base

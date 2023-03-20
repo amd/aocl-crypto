@@ -34,6 +34,7 @@
 #include "alcp/base/error.hh"
 #include "alcp/module.hh"
 #include "alcp/modulemanager.hh"
+#include "rng/include/rng_module.hh"
 
 namespace alcp {
 using namespace alcp::module;
@@ -67,8 +68,7 @@ class NullError : public ErrorBase
 
     NullError(Uint64 code)
         : ErrorBase(code)
-    {
-    }
+    {}
 
     virtual const String detailedError() const override
     {
@@ -92,10 +92,27 @@ class DefaultModule : public ModuleBase
 
     DefaultModule(Uint16 mid) {}
 
-    virtual const IError& getModuleError(Uint64 code) const override
+    virtual const std::unique_ptr<IError> getModuleError(
+        Uint64 code) const override
     {
-        static NullError ne;
+        auto ne = std::make_unique<NullError>();
         return ne;
+    }
+};
+
+class GenericModule : public ModuleBase
+{
+
+  public:
+    ALCP_DEFS_DEFAULT_CTOR_AND_DTOR(GenericModule);
+
+    GenericModule(Uint16 mid) {}
+
+    virtual const std::unique_ptr<IError> getModuleError(
+        Uint64 code) const override
+    {
+        auto ge = std::make_unique<GenericError>(code);
+        return ge;
     }
 };
 
@@ -122,6 +139,26 @@ ModuleManager::addModuleError(Uint16 moduleId, IError const& ie)
     }
 
     return true;
+}
+
+template<typename Module>
+void
+registerModule(Uint16 moduleType)
+{
+    static Module  modulename;
+    static Module& ref_module = modulename;
+    m_module_error_map.insert({ moduleType, ref_module });
+}
+
+static void
+registerModules()
+{
+    registerModule<alcp::rng::RngModule>(alcp::module::eModuleRng);
+    registerModule<GenericModule>(alcp::module::eModuleGeneric);
+}
+ModuleManager::ModuleManager()
+{
+    registerModules();
 }
 
 #if 0

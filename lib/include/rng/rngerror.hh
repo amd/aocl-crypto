@@ -29,6 +29,7 @@
 
 #include "alcp/base.hh"
 #include "alcp/errorbase.hh"
+#include "alcp/module.hh"
 
 namespace alcp::rng {
 
@@ -60,23 +61,21 @@ class RngError final : public ErrorBase
   public:
     RngError()
         : ErrorBase{ ErrorCode::eOk }
-    {
-    }
+    {}
 
     RngError(Uint64 ecode)
         : ErrorBase{ RngError::toUint16(ecode) }
-    {
-    }
+    {}
 
     RngError(rng::ErrorCode ecode)
         : ErrorBase{ ecode }
-    {
-    }
+    {}
 
     RngError(base::ErrorCode bcode, rng::ErrorCode ecode)
         : ErrorBase{ ecode }
     {
         setBaseError(static_cast<Uint16>(bcode));
+        setModuleId(static_cast<Uint16>(alcp::module::Type::eModuleRng));
     }
 
     static Uint16 toUint16(Uint64 ecode) { return static_cast<Uint16>(ecode); }

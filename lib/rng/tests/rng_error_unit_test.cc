@@ -35,11 +35,35 @@ using namespace rng;
 
 TEST(ErrorTestRng, NoEntropy)
 {
-    String expected_message = "ALCP ERROR:Internal Error:RNG:Not Enough "
-                              "Entropy:Specific Error Message";
+    String expected_message = "ALCP ERROR : Internal Error : Rng : Not Enough "
+                              "Entropy : Specific Error Message";
 
     Status s   = StatusOk();
     auto   sts = rng::status::NoEntropy("Specific Error Message");
+    EXPECT_EQ(expected_message, sts.message());
+    s.update(sts);
+    EXPECT_EQ(expected_message, s.message());
+}
+
+TEST(ErrorTestRng, NotPermitted)
+{
+    String expected_message = "ALCP ERROR : Invalid Argument : Rng : Not "
+                              "Permitted : Specific Error Message";
+
+    Status s   = StatusOk();
+    auto   sts = rng::status::NotPermitted("Specific Error Message");
+    EXPECT_EQ(expected_message, sts.message());
+    s.update(sts);
+    EXPECT_EQ(expected_message, s.message());
+}
+
+TEST(ErrorTestRng, NoEntropySource)
+{
+    String expected_message = "ALCP ERROR : Not Available : Rng : Entropy "
+                              "source not defined : Specific Error Message";
+
+    Status s   = StatusOk();
+    auto   sts = rng::status::NoEntropySource("Specific Error Message");
     EXPECT_EQ(expected_message, sts.message());
     s.update(sts);
     EXPECT_EQ(expected_message, s.message());

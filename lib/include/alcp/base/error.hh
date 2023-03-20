@@ -109,10 +109,9 @@ class GenericError final : public ErrorBase
   public:
     GenericError()
         : ErrorBase{ ErrorCode::eOk }
-    {
-    }
+    {}
 
-    GenericError(ErrorCode ecode)
+    GenericError(Uint64 ecode)
         : GenericError{}
     {
         ErrorBase::setBaseError(static_cast<Uint16>(ecode));
