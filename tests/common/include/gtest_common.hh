@@ -28,11 +28,14 @@
 
 #pragma once
 #include "colors.hh"
+#include "csv.hh"
 #include <gtest/gtest.h>
 #include <memory>
 #include <random>
 
 using namespace alcp::testing;
+using utils::parseBytesToHexStr;
+using utils::printErrors;
 
 // Variables for Argument Parser
 static int  verbose     = 0;
@@ -40,6 +43,45 @@ static bool useipp      = false;
 static bool useossl     = false;
 static bool bbxreplay   = false;
 static bool oa_override = false;
+
+/**
+ * @brief Check if 2 binary vectors are equal, print the current line as
+ * success or failure, print the failed vectors and index where it failed.
+ * Currently used for all KAT vectors
+ *
+ * @param actual    Output obtained from the algorithm.
+ * @param expected  Expected output given the algorithm is correct.
+ * @param ds        DataSet object to extract the line number.
+ * @param testName  Name of the test to display.
+ * @return ::testing::AssertionResult
+ */
+::testing::AssertionResult
+ArraysMatch(std::vector<Uint8>  actual,
+            std::vector<Uint8>  expected,
+            alcp::testing::Csv& ds,
+            std::string         testName)
+{
+    if (actual.size() != expected.size()) {
+        return ::testing::AssertionFailure() << "Size mismatch!";
+    }
+    for (size_t i = 0; i < actual.size(); i++) {
+        if (expected[i] != actual[i]) {
+            std::string actual_error   = parseBytesToHexStr(&actual[i], 1);
+            std::string expected_error = parseBytesToHexStr(&expected[i], 1);
+            return ::testing::AssertionFailure()
+                   << "array[" << i << "] ("
+                   << "0x" << actual_error << ") != expected[" << i << "]("
+                   << "0x" << expected_error << ")"
+                   << "Test: " << testName << " line: " << ds.getLineNumber()
+                   << " Failed";
+        }
+    }
+    if (verbose > 0) {
+        std::cout << "Test: " << testName << " line: " << ds.getLineNumber()
+                  << " Success" << std::endl;
+    }
+    return ::testing::AssertionSuccess();
+}
 
 /**
  * @brief Check if 2 binary vectors are equal, print the current line as

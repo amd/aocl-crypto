@@ -27,8 +27,9 @@
  */
 
 #pragma once
-#include "base_common.hh"
-#include <alcp/alcp.h>
+#include "alcp/alcp.h"
+#include "file.hh"
+#include "utils.hh"
 #include <map>
 #include <vector>
 
@@ -75,7 +76,8 @@ struct alcp_hmac_data_t
     alcp_hmac_data_t() // Initialize in, out all values to null/0
         : in{}
         , out{}
-    {}
+    {
+    }
 };
 
 /* add mapping for HMAC mode and length */

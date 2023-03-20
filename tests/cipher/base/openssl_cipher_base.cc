@@ -34,6 +34,7 @@ EXTERN_C_END
 #endif
 
 namespace alcp::testing {
+using alcp::utils::CopyBytes;
 void
 OpenSSLCipherBase::handleErrors()
 {
@@ -112,7 +113,8 @@ OpenSSLCipherBase::OpenSSLCipherBase(const alc_cipher_mode_t mode,
                                      const Uint8*            iv)
     : m_mode{ mode }
     , m_iv{ iv }
-{}
+{
+}
 OpenSSLCipherBase::OpenSSLCipherBase(const alc_cipher_mode_t mode,
                                      const Uint8*            iv,
                                      const Uint32            iv_len,
@@ -222,8 +224,8 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 key_len)
     /* xts */
     if (m_mode == ALC_AES_MODE_XTS) {
         /* add key with tkey for xts */
-        utils::CopyBytes(m_key_final, m_key, key_len / 8);
-        utils::CopyBytes(m_key_final + key_len / 8, m_tkey, key_len / 8);
+        CopyBytes(m_key_final, m_key, key_len / 8);
+        CopyBytes(m_key_final + key_len / 8, m_tkey, key_len / 8);
         m_key = m_key_final;
     }
 

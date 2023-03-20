@@ -25,56 +25,50 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 #pragma once
-#include "alcp/alcp.h"
-#include "file.hh"
-#include "utils.hh"
-#include <map>
+
+#include "../../../lib/include/types.hh"
+#include <alcp/types.h>
+#include <fstream>
+#include <iostream>
+#include <sys/stat.h>
 #include <vector>
 
 namespace alcp::testing {
 
-struct alcp_cmac_data_t
-{
-    Uint8* m_msg      = nullptr;
-    Uint64 m_msg_len  = 0;
-    Uint8* m_key      = nullptr;
-    Uint64 m_key_len  = 0;
-    Uint8* m_cmac     = nullptr;
-    Uint64 m_cmac_len = 0;
-};
-
-/* add mapping for HMAC mode and length */
-extern std::map<alc_digest_len_t, alc_sha2_mode_t> sha2_mode_len_map;
-
-class DataSet : private File
+class File
 {
   private:
-    std::string        line = "", m_filename = "";
-    std::vector<Uint8> Message, Key, Cmac;
-    // First line is skipped, linenum starts from 1
-    int lineno = 1;
+    std::fstream m_file;
+    bool         m_fileExists;
 
   public:
-    // Treats file as CSV, skips first line
-    DataSet(const std::string filename);
-    // Read without condition
-    bool readMsgKeyCmac();
-    // To print which line in dataset failed
-    int getLineNumber();
-    /* fetch Message / Digest */
-    std::vector<Uint8> getMessage();
-    std::vector<Uint8> getKey();
-    std::vector<Uint8> getCmac();
+    bool CheckFileExists();
+    // Opens File as Bin/ASCII File with write support.
+    File(std::string fileName, bool binary, bool write);
+    // Opens File as ASCII Text File
+    File(std::string fileName);
+    ~File();
+    // Read file word by word excludes newlines and spaces
+    std::string readWord();
+    // Read file line by line
+    std::string readLine();
+    // Write a line to the file
+    bool writeLine(std::string buff);
+    // Reads a line by reading char by char
+    std::string readLineCharByChar();
+    // Read file n bytes from a file
+    char* readChar(size_t n);
+    // Reads a set of bytes
+    bool readBytes(size_t n, Uint8* buffer);
+    // Writes a set of bytes
+    bool writeBytes(size_t n, const Uint8* buffer);
+    // Rewind file to initial position
+    void rewind();
+    // seekG
+    void seek(long pos);
+    // tell
+    long tell();
+    void flush();
 };
-class CmacBase
-{
-  public:
-    virtual bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key) = 0;
-    virtual bool init()                                                    = 0;
-    virtual bool cmacFunction(const alcp_cmac_data_t& data)                = 0;
-    virtual bool reset()                                                   = 0;
-};
-
 } // namespace alcp::testing

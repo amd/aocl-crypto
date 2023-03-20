@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -23,9 +23,19 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
-ADD_SUBDIRECTORY(cipher)
-ADD_SUBDIRECTORY(digest)
-ADD_SUBDIRECTORY(hmac)
-ADD_SUBDIRECTORY(ecdh)
-ADD_SUBDIRECTORY(cmac)
-ADD_SUBDIRECTORY(examples)
+FILE(GLOB ALC_COMMON_SRC ../../tests/common/base/*.cc)
+
+FUNCTION(EXAMPLE CLASS_NAME)
+
+    ADD_EXECUTABLE(${CLASS_NAME} ${CLASS_NAME}_example.cc  ${ALC_COMMON_SRC})
+    TARGET_INCLUDE_DIRECTORIES(${CLASS_NAME} PRIVATE
+        "${CMAKE_SOURCE_DIR}/include"
+        "${CMAKE_SOURCE_DIR}/lib/include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+        ${EXTRA_INCLUDES})
+    TARGET_LINK_LIBRARIES(${CLASS_NAME} alcp)
+
+ENDFUNCTION()
+
+EXAMPLE(csv)

@@ -38,6 +38,10 @@
 
 namespace alcp::testing {
 
+using utils::isPathExist;
+using utils::parseBytesToHexStr;
+using utils::parseHexStrToBin;
+
 // Class ExecRecPlay - FlightRecorder/FlightReplay
 ExecRecPlay::ExecRecPlay()
 {

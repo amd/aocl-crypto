@@ -37,7 +37,8 @@
 #endif
 
 namespace alcp::testing {
-
+using utils::parseBytesToHexStr;
+using utils::parseHexStrToBin;
 // Class DataSet
 /**
  * @brief Construct a new Data Set:: Data Set object

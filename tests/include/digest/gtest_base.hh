@@ -148,7 +148,7 @@ Digest_KAT(alc_digest_info_t info)
                        + std::to_string(info.dt_len) + ".csv";
     }
 
-    DataSet ds = DataSet(TestDataFile);
+    Csv csv(TestDataFile);
 
     if (useipp && (GetDigestStr(info.dt_type).compare("SHA3") == 0)) {
         std::cout << "IPPCP doesnt support SHA3 for now, skipping this test"
@@ -168,12 +168,11 @@ Digest_KAT(alc_digest_info_t info)
 #endif
     /* for SHAKE variant */
     if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
-        EXPECT_TRUE(ds.readMsgDigestLen());
-        while (ds.readMsgDigestLen()) {
-            auto msg          = ds.getMessage();
+        while (csv.readNext()) {
+            auto msg          = csv.getVect("MESSAGE");
             data.m_msg        = &(msg[0]);
-            data.m_msg_len    = ds.getMessage().size();
-            data.m_digest_len = ds.getDigestLen();
+            data.m_msg_len    = csv.getVect("MESSAGE").size();
+            data.m_digest_len = csv.getVect("DIGEST").size();
             std::vector<Uint8> digest_(data.m_digest_len, 0);
             data.m_digest = &(digest_[0]);
 
@@ -185,20 +184,19 @@ Digest_KAT(alc_digest_info_t info)
                 std::cout << "Error: Digest function failed" << std::endl;
                 FAIL();
             }
-            EXPECT_TRUE(
-                ArraysMatch(digest_,        // output
-                            ds.getDigest(), // expected, from the KAT test data
-                            ds,
-                            std::string(GetDigestStr(info.dt_type) + "_"
-                                        + SHA3_SHAKE_Len_Str + "_KAT")));
+            EXPECT_TRUE(ArraysMatch(
+                digest_,               // output
+                csv.getVect("DIGEST"), // expected, from the KAT test data
+                csv,
+                std::string(GetDigestStr(info.dt_type) + "_"
+                            + SHA3_SHAKE_Len_Str + "_KAT")));
         }
     } else {
-        EXPECT_TRUE(ds.readMsgDigest());
-        while (ds.readMsgDigest()) {
-            auto msg          = ds.getMessage();
+        while (csv.readNext()) {
+            auto msg          = csv.getVect("MESSAGE");
             data.m_msg        = &(msg[0]);
-            data.m_msg_len    = ds.getMessage().size();
-            data.m_digest_len = digest.size();
+            data.m_msg_len    = csv.getVect("MESSAGE").size();
+            data.m_digest_len = csv.getVect("DIGEST").size();
             data.m_digest     = &(digest[0]);
 
             if (!db->init(info, data.m_digest_len)) {
@@ -212,12 +210,12 @@ Digest_KAT(alc_digest_info_t info)
 
             /*conv m_digest into a vector */
             std::vector<Uint8> digest_vector(std::begin(digest),
-                                               std::end(digest));
+                                             std::end(digest));
 
             EXPECT_TRUE(ArraysMatch(
-                digest_vector,  // output
-                ds.getDigest(), // expected, from the KAT test data
-                ds,
+                digest_vector,         // output
+                csv.getVect("DIGEST"), // expected, from the KAT test data
+                csv,
                 std::string(GetDigestStr(info.dt_type) + "_"
                             + std::to_string(info.dt_len) + "_KAT")));
         }

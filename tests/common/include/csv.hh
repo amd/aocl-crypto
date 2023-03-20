@@ -25,56 +25,52 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 #pragma once
-#include "alcp/alcp.h"
+
+#include "../../../lib/include/types.hh"
 #include "file.hh"
 #include "utils.hh"
-#include <map>
+#include <string>
+#include <string_view>
+#include <tuple>
 #include <vector>
 
 namespace alcp::testing {
+using utils::parseHexStrToBin;
 
-struct alcp_cmac_data_t
-{
-    Uint8* m_msg      = nullptr;
-    Uint64 m_msg_len  = 0;
-    Uint8* m_key      = nullptr;
-    Uint64 m_key_len  = 0;
-    Uint8* m_cmac     = nullptr;
-    Uint64 m_cmac_len = 0;
-};
+typedef std::tuple<String, String> data_elm_t;
+typedef std::vector<data_elm_t>    data_vect_t;
 
-/* add mapping for HMAC mode and length */
-extern std::map<alc_digest_len_t, alc_sha2_mode_t> sha2_mode_len_map;
-
-class DataSet : private File
+// Better version of DataSet, which is generic so that we can remove duplicate
+// code
+class Csv final : private File
 {
   private:
-    std::string        line = "", m_filename = "";
-    std::vector<Uint8> Message, Key, Cmac;
+    String              m_filename  = {};
+    String              m_line      = {};
+    std::vector<String> m_names     = {};
+    data_vect_t         m_data_vect = {};
     // First line is skipped, linenum starts from 1
-    int lineno = 1;
+    int m_lineno = 1;
+
+    std::vector<String> parseCsv() const;
+
+    bool genericParse();
 
   public:
-    // Treats file as CSV, skips first line
-    DataSet(const std::string filename);
-    // Read without condition
-    bool readMsgKeyCmac();
-    // To print which line in dataset failed
+    // FIXME: Names can be captured from Header of CSV itself (Future
+    // Improvement)
+    Csv(String filename);
+
+    bool readNext();
+
+    String getStr(const String cName);
+
+    // Be very careful with this, as if its not a hexstring, it will return
+    // zeros.
+    std::vector<Uint8> getVect(const String cName);
+
     int getLineNumber();
-    /* fetch Message / Digest */
-    std::vector<Uint8> getMessage();
-    std::vector<Uint8> getKey();
-    std::vector<Uint8> getCmac();
-};
-class CmacBase
-{
-  public:
-    virtual bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key) = 0;
-    virtual bool init()                                                    = 0;
-    virtual bool cmacFunction(const alcp_cmac_data_t& data)                = 0;
-    virtual bool reset()                                                   = 0;
 };
 
 } // namespace alcp::testing

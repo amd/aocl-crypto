@@ -30,8 +30,10 @@
 #ifndef __GTEST_BASE_HH
 #define __GTEST_BASE_HH 2
 
+#include "../../../lib/include/types.hh"
 #include "alc_cipher_base.hh"
 #include "cipher_base.hh"
+#include "csv.hh"
 #include "gtest_common.hh"
 #include <vector>
 #ifdef USE_IPP
@@ -42,6 +44,9 @@
 #endif
 #include "rng_base.hh"
 #include <algorithm>
+
+using alcp::String;
+
 typedef enum
 {
     DECRYPT = 0,
@@ -85,9 +90,10 @@ GetModeSTR(alc_cipher_mode_t mode)
 class TestingCore
 {
   private:
-    DataSet*          m_ds            = nullptr;
-    CipherTesting*    m_cipherHandler = nullptr;
-    AlcpCipherBase*   m_acb           = nullptr;
+    std::shared_ptr<Csv> m_csv;
+    // FIXME: Change these to unique_ptr
+    CipherTesting*    m_cipherHandler = {};
+    AlcpCipherBase*   m_acb           = {};
     lib_t             m_lib;
     alc_cipher_mode_t m_alcpMode;
 #ifdef USE_IPP
@@ -135,8 +141,8 @@ class TestingCore
     {
         std::transform(
             modeStr.begin(), modeStr.end(), modeStr.begin(), ::tolower);
-        m_ds = new DataSet(std::string("dataset_") + modeStr
-                           + std::string(".csv"));
+        m_csv = std::make_shared<Csv>(std::string("dataset_") + modeStr
+                                      + std::string(".csv"));
 
         // Initialize cipher testing classes
         m_cipherHandler = new CipherTesting();
@@ -168,8 +174,6 @@ class TestingCore
     }
     ~TestingCore()
     {
-        if (m_ds != nullptr)
-            delete m_ds;
         if (m_cipherHandler != nullptr)
             delete m_cipherHandler;
         if (m_acb != nullptr)
@@ -183,8 +187,8 @@ class TestingCore
             delete ocb;
 #endif
     }
-    DataSet*       getDs() { return m_ds; }
-    CipherTesting* getCipherHandler() { return m_cipherHandler; }
+    std::shared_ptr<Csv> getCsv() { return m_csv; }
+    CipherTesting*       getCipherHandler() { return m_cipherHandler; }
 };
 
 /**
@@ -570,17 +574,18 @@ RunCipherKATTest(TestingCore& testingCore,
                  bool         isxts,
                  bool         isgcm)
 {
-    bool               ret = false;
-    alcp_data_ex_t     data;
-    std::vector<Uint8> outpt(testingCore.getDs()->getCt().size(), 0);
-    std::vector<Uint8> outct(testingCore.getDs()->getPt().size(), 0);
-    std::vector<Uint8> pt      = testingCore.getDs()->getPt();
-    std::vector<Uint8> ct      = testingCore.getDs()->getCt();
-    std::vector<Uint8> iv      = testingCore.getDs()->getIv();
-    std::vector<Uint8> tkey    = testingCore.getDs()->getTKey();
-    std::vector<Uint8> outtag  = testingCore.getDs()->getTag();
-    std::vector<Uint8> ad      = testingCore.getDs()->getAdd();
-    std::vector<Uint8> tagBuff = std::vector<Uint8>(outtag.size());
+    bool                 ret = false;
+    alcp_data_ex_t       data;
+    std::shared_ptr<Csv> csv = testingCore.getCsv();
+    std::vector<Uint8>   outpt(csv->getVect("PLAINTEXT").size(), 0);
+    std::vector<Uint8>   outct(csv->getVect("CIPHERTEXT").size(), 0);
+    std::vector<Uint8>   pt      = csv->getVect("PLAINTEXT");
+    std::vector<Uint8>   ct      = csv->getVect("CIPHERTEXT");
+    std::vector<Uint8>   iv      = csv->getVect("INITVECT");
+    std::vector<Uint8>   tkey    = csv->getVect("TWEAK_KEY");
+    std::vector<Uint8>   outtag  = csv->getVect("TAG");
+    std::vector<Uint8>   ad      = csv->getVect("ADDITONAL_DATA");
+    std::vector<Uint8>   tagBuff = std::vector<Uint8>(outtag.size());
 
     // Common Initialization
     data.m_tkeyl = 0;
@@ -613,22 +618,22 @@ RunCipherKATTest(TestingCore& testingCore,
             data.m_block_size = pt.size();
         }
         ret = testingCore.getCipherHandler()->testingEncrypt(
-            data, testingCore.getDs()->getKey());
+            data, csv->getVect("KEY"));
         if (!ret) {
             std::cout << "ERROR: Enc" << std::endl;
             EXPECT_TRUE(ret);
         }
         EXPECT_TRUE(
             ArraysMatch(outct,
-                        testingCore.getDs()->getCt(),
-                        *(testingCore.getDs()),
+                        csv->getVect("CIPHERTEXT"),
+                        *(csv.get()),
                         std::string("AES_" + MODE_STR + "_"
                                     + std::to_string(keySize) + enc_dec_str)));
 
         if (isgcm) {
             EXPECT_TRUE(ArraysMatch(outtag,
-                                    testingCore.getDs()->getTag(),
-                                    *(testingCore.getDs()),
+                                    csv->getVect("TAG"),
+                                    *(csv.get()),
                                     std::string("AES_" + MODE_STR + "_"
                                                 + std::to_string(keySize)
                                                 + enc_dec_str + "_TAG")));
@@ -651,7 +656,7 @@ RunCipherKATTest(TestingCore& testingCore,
             data.m_block_size = ct.size();
         }
         ret = testingCore.getCipherHandler()->testingDecrypt(
-            data, testingCore.getDs()->getKey());
+            data, csv->getVect("KEY"));
 
         if (isgcm && data.m_tagl == 0) {
             ret = true; // Skip tag test
@@ -662,8 +667,8 @@ RunCipherKATTest(TestingCore& testingCore,
         }
         EXPECT_TRUE(
             ArraysMatch(outpt,
-                        testingCore.getDs()->getPt(),
-                        *(testingCore.getDs()),
+                        csv->getVect("PLAINTEXT"),
+                        *(testingCore.getCsv()),
                         std::string("AES_" + MODE_STR + "_"
                                     + std::to_string(keySize) + enc_dec_str)));
         // Enforce that no errors are reported from lib side.
@@ -673,7 +678,7 @@ RunCipherKATTest(TestingCore& testingCore,
 }
 
 /**
- * @brief function to run KAT for AES Schemes CTR,CFB,OFB,CBC,XTS
+ * @brief Function to run KAT for AES Schemes CTR,CFB,OFB,CBC,XTS
  *
  * @param keySize keysize in bits(128,192,256)
  * @param enc_dec enum for encryption or decryption
@@ -682,58 +687,40 @@ RunCipherKATTest(TestingCore& testingCore,
 void
 AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode)
 {
-    int         key_size = keySize;
-    std::string MODE_STR = GetModeSTR(mode);
-    std::string enc_dec_str;
-    bool        isxts = (MODE_STR.compare("XTS") == 0);
-    bool        isgcm = (MODE_STR.compare("GCM") == 0);
-    bool        isccm = (MODE_STR.compare("CCM") == 0);
+    size_t            key_size = keySize;
+    const std::string cModeStr = GetModeSTR(mode);
+    std::string       enc_dec_str;
+    bool              isxts = (cModeStr.compare("XTS") == 0);
+    bool              isgcm = (cModeStr.compare("GCM") == 0);
+    bool              isccm = (cModeStr.compare("CCM") == 0);
 
     if (enc_dec == ENCRYPT)
         enc_dec_str = "_ENC";
     else
         enc_dec_str = "_DEC";
 
-    TestingCore testingCore = TestingCore(MODE_STR, mode);
+    TestingCore testing_core = TestingCore(cModeStr, mode);
 
     bool retval = false;
-    if (isxts) {
-        EXPECT_TRUE(testingCore.getDs()->readPtIvKeyCtTKey(key_size));
-        while (testingCore.getDs()->readPtIvKeyCtTKey(key_size)) {
-            retval = RunCipherKATTest(testingCore,
-                                      enc_dec,
-                                      enc_dec_str,
-                                      MODE_STR,
-                                      keySize,
-                                      true,
-                                      false);
-            EXPECT_TRUE(retval);
+
+    while (testing_core.getCsv()->readNext()) {
+        if ((testing_core.getCsv()->getVect("KEY").size() * 8) != key_size) {
+            // std::cout << testing_core.getCsv()->getStr("KEY") << " "
+            //           << testing_core.getCsv()->getStr("PLAINTEXT") << " "
+            //           << testing_core.getCsv()->getVect("KEY").size() * 8
+            //           << " ";
+            continue;
         }
-    } else if (isgcm || isccm) {
-        EXPECT_TRUE(testingCore.getDs()->readPtIvKeyCtAddTag(key_size));
-        while (testingCore.getDs()->readPtIvKeyCtAddTag(key_size)) {
-            retval = RunCipherKATTest(testingCore,
-                                      enc_dec,
-                                      enc_dec_str,
-                                      MODE_STR,
-                                      keySize,
-                                      false,
-                                      true);
-            EXPECT_TRUE(retval);
-        }
-    } else {
-        EXPECT_TRUE(testingCore.getDs()->readPtIvKeyCt(key_size));
-        while (testingCore.getDs()->readPtIvKeyCt(key_size)) {
-            retval = RunCipherKATTest(testingCore,
-                                      enc_dec,
-                                      enc_dec_str,
-                                      MODE_STR,
-                                      keySize,
-                                      false,
-                                      false);
-            EXPECT_TRUE(retval);
-        }
+        // std::cout << std::endl;
+        retval = RunCipherKATTest(testing_core,
+                                  enc_dec,
+                                  enc_dec_str,
+                                  cModeStr,
+                                  keySize,
+                                  isxts,
+                                  isgcm || isccm);
+        EXPECT_TRUE(retval);
+        // printf("MEOW\n");
     }
 }
-
 #endif

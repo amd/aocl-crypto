@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,51 +25,22 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
 #pragma once
-#include <alcp/types.h>
-#include <fstream>
+
+#include "../../../lib/include/types.hh"
+#include "colors.hh"
 #include <iostream>
+#include <sstream>
+#ifdef __linux__
+#include <unistd.h>
+#else
+#include <io.h>
+#endif
 #include <sys/stat.h>
-#include <vector>
 
-namespace alcp::testing {
-class File
-{
-  private:
-    std::fstream m_file;
-    bool         m_fileExists;
-
-  public:
-    bool CheckFileExists();
-    // Opens File as Bin/ASCII File with write support.
-    File(std::string fileName, bool binary, bool write);
-    // Opens File as ASCII Text File
-    File(std::string fileName);
-    ~File();
-    // Read file word by word excludes newlines and spaces
-    std::string readWord();
-    // Read file line by line
-    std::string readLine();
-    // Write a line to the file
-    bool writeLine(std::string buff);
-    // Reads a line by reading char by char
-    std::string readLineCharByChar();
-    // Read file n bytes from a file
-    char* readChar(size_t n);
-    // Reads a set of bytes
-    bool readBytes(size_t n, Uint8* buffer);
-    // Writes a set of bytes
-    bool writeBytes(size_t n, const Uint8* buffer);
-    // Rewind file to initial position
-    void rewind();
-    // seekG
-    void seek(long pos);
-    // tell
-    long tell();
-    void flush();
-};
-
-/* Some functions which don't belong to any class but is common */
+namespace alcp::testing::utils {
+// Some important functions which don't belong to a class
 void
 printErrors(std::string in);
 std::vector<Uint8>
@@ -80,4 +51,7 @@ Uint8
 parseHexToNum(const unsigned char c);
 bool
 isPathExist(const std::string dir);
-} // namespace alcp::testing
+void
+Hash_to_string(char* output_string, const Uint8* hash, int sha_len);
+
+} // namespace alcp::testing::utils

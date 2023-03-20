@@ -26,55 +26,33 @@
  *
  */
 
-#pragma once
-#include "alcp/alcp.h"
-#include "file.hh"
-#include "utils.hh"
-#include <map>
-#include <vector>
+#include "csv.hh"
 
-namespace alcp::testing {
+using namespace alcp::testing::utils;
+using namespace alcp::testing;
+using namespace alcp;
 
-struct alcp_cmac_data_t
+int
+main(int argc, char const* argv[])
 {
-    Uint8* m_msg      = nullptr;
-    Uint64 m_msg_len  = 0;
-    Uint8* m_key      = nullptr;
-    Uint64 m_key_len  = 0;
-    Uint8* m_cmac     = nullptr;
-    Uint64 m_cmac_len = 0;
-};
+    // Create a Csv object, needs a valid csv file
+    Csv csv("dataset_cbc.csv");
+    int lineno = 0;
 
-/* add mapping for HMAC mode and length */
-extern std::map<alc_digest_len_t, alc_sha2_mode_t> sha2_mode_len_map;
+    // We expect this values to be in the header
+    std::vector<String> names = {
+        "PLAINTEXT", "INITVECT", "KEY", "CIPHERTEXT"
+    };
 
-class DataSet : private File
-{
-  private:
-    std::string        line = "", m_filename = "";
-    std::vector<Uint8> Message, Key, Cmac;
-    // First line is skipped, linenum starts from 1
-    int lineno = 1;
+    // Read the next line and parse it
+    csv.readNext();
 
-  public:
-    // Treats file as CSV, skips first line
-    DataSet(const std::string filename);
-    // Read without condition
-    bool readMsgKeyCmac();
-    // To print which line in dataset failed
-    int getLineNumber();
-    /* fetch Message / Digest */
-    std::vector<Uint8> getMessage();
-    std::vector<Uint8> getKey();
-    std::vector<Uint8> getCmac();
-};
-class CmacBase
-{
-  public:
-    virtual bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key) = 0;
-    virtual bool init()                                                    = 0;
-    virtual bool cmacFunction(const alcp_cmac_data_t& data)                = 0;
-    virtual bool reset()                                                   = 0;
-};
+    // Current line number can be read with getLineNumber function
+    lineno = csv.getLineNumber();
 
-} // namespace alcp::testing
+    std::cout << "Parsed Line Number -> " << lineno << std::endl;
+    for (int i = 0; i < names.size(); i++) {
+        std::cout << csv.getStr(names[i]) << "<-" << names[i] << std::endl;
+    }
+    return 0;
+}

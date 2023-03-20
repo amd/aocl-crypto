@@ -27,12 +27,15 @@
  */
 #pragma once
 #include "alcp/alcp.h"
-#include "base_common.hh"
+#include "file.hh"
+#include "utils.hh"
 #include <cstring>
 #include <iostream>
 #include <vector>
 
 namespace alcp::testing {
+using alcp::testing::utils::isPathExist;
+using alcp::testing::utils::parseHexStrToBin;
 
 struct alcp_data_ex_t
 {
