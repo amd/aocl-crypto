@@ -31,9 +31,9 @@
 #include "ecdh/ecdh_base.hh"
 #include <string>
 
-// #ifdef USE_IPP
-// #include "ecdh/ipp_ecdh_base.hh"
-// #endif
+#ifdef USE_IPP
+#include "ecdh/ipp_ecdh_base.hh"
+#endif
 
 #ifdef USE_OSSL
 #include "ecdh/openssl_ecdh_base.hh"
@@ -82,7 +82,13 @@ void inline ecdh_Bench(benchmark::State& state,
         LibStr = "OpenSSL";
     }
 #endif
-    /* TODO , initialize classes for IPP here */
+#ifdef USE_IPP
+    IPPEcdhBase ieb(info);
+    if (useipp == true) {
+        Eb     = &ieb;
+        LibStr = "IPP";
+    }
+#endif
 
     std::vector<Uint8> Peer1PvtKey = rb.genRandomBytes(KeySize);
     std::vector<Uint8> Peer2PvtKey = rb.genRandomBytes(KeySize);

@@ -205,7 +205,6 @@ ecdh_Cross(alc_ec_info_t info)
         LibStrExt = "OpenSSL";
     }
 #endif
-    /* TODO , initialize classes for IPP here */
     if (ExtEb == nullptr) {
         std::cout << "No external lib selected!" << std::endl;
         exit(-1);
