@@ -38,7 +38,7 @@ namespace alcp::testing {
 
 using namespace std;
 
-alcpEcdh::alcpEcdh(const char* pKeytype, alc_peer_id_t peerId)
+AlcpEcdh::AlcpEcdh(const char* pKeytype, alc_peer_id_t peerId)
 {
 
     string st  = "peer" + to_string((int)peerId);
@@ -47,10 +47,10 @@ alcpEcdh::alcpEcdh(const char* pKeytype, alc_peer_id_t peerId)
     m_peerId   = peerId;
 }
 
-alcpEcdh::~alcpEcdh() {}
+AlcpEcdh::~AlcpEcdh() {}
 
 alc_error_t
-alcpEcdh::generate_public_key(Uint8* pPublicKeyData, const Uint8* pPrivKey)
+AlcpEcdh::generate_public_key(Uint8* pPublicKeyData, const Uint8* pPrivKey)
 {
 
     if (pPrivKey == NULL) {
@@ -64,7 +64,7 @@ alcpEcdh::generate_public_key(Uint8* pPublicKeyData, const Uint8* pPrivKey)
 }
 
 alc_error_t
-alcpEcdh::compute_secret_key(Uint8*       pSecret_key,
+AlcpEcdh::compute_secret_key(Uint8*       pSecret_key,
                              const Uint8* pPublicKeyDataRemote,
                              Uint64*      pKeyLength)
 {
@@ -75,7 +75,8 @@ alcpEcdh::compute_secret_key(Uint8*       pSecret_key,
 }
 
 void
-alcpEcdh::reset()
-{}
+AlcpEcdh::reset()
+{
+}
 
 } // namespace alcp::testing

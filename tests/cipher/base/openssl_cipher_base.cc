@@ -26,12 +26,15 @@
  *
  */
 
-#include "cipher/openssl_cipher_base.hh"
+/* C/C++ Headers */
 #ifdef WIN32
 EXTERN_C_BEGIN
 #include <openssl/applink.c>
 EXTERN_C_END
 #endif
+
+/* ALCP Headers */
+#include "cipher/openssl_cipher_base.hh"
 
 namespace alcp::testing {
 using alcp::utils::CopyBytes;

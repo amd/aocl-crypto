@@ -27,15 +27,18 @@
  */
 #pragma once
 
+/* C/C++ Headers */
+#include <iostream>
+#include <stdio.h>
+#include <string.h>
+
+/* ALCP Headers */
+#include "alcp/alcp.h"
 #include "cmac/cmac_base.hh"
 #include "cmac_base.hh"
 #include "openssl/conf.h"
 #include "openssl/err.h"
 #include "openssl/evp.h"
-#include <alcp/alcp.h>
-#include <iostream>
-#include <stdio.h>
-#include <string.h>
 
 namespace alcp::testing {
 class OpenSSLCmacBase : public CmacBase

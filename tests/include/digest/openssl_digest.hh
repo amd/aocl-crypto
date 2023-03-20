@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,14 +27,18 @@
  */
 #pragma once
 
-#include "digest.hh"
-#include <alcp/alcp.h>
+/* C/C++ Headers */
 #include <iostream>
+#include <stdio.h>
+#include <string.h>
+// OpenSSL headers
 #include <openssl/conf.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
-#include <stdio.h>
-#include <string.h>
+
+/* ALCP Headers */
+#include "alcp/alcp.h"
+#include "digest.hh"
 
 namespace alcp::testing {
 class OpenSSLDigestBase : public DigestBase

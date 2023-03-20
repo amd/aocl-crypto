@@ -27,18 +27,19 @@
  */
 #pragma once
 
+/* C/C++ Headers */
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
 
-#include <alcp/alcp.h>
-#include <alcp/ec.h>
-#include <alcp/ecdh.h>
-
+/* ALCP Headers */
+#include "alcp/alcp.h"
+#include "alcp/ec.h"
+#include "alcp/ecdh.h"
 #include "ecdh.hh"
 
 namespace alcp::testing {
-class alcpEcdh : public ecdh
+class AlcpEcdh : public ecdh
 {
     void*       m_handle = nullptr;
     const char* m_name;
@@ -58,8 +59,8 @@ class alcpEcdh : public ecdh
 
   public:
     // Create ecdh with EC type.
-    alcpEcdh(const char* pKeytype, alc_peer_id_t peerId);
-    ~alcpEcdh();
+    AlcpEcdh(const char* pKeytype, alc_peer_id_t peerId);
+    ~AlcpEcdh();
 
     /**
      * @brief Function generates public key using input privateKey generated

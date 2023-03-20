@@ -37,8 +37,8 @@
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 
+#include "alcp/alcp.h"
 #include "ecdh.hh"
-#include <alcp/alcp.h>
 
 namespace alcp::testing {
 class OpenSSLEcdh : public ecdh

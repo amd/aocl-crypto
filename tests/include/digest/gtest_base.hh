@@ -30,16 +30,18 @@
 #ifndef __GTEST_BASE_HH
 #define __GTEST_BASE_HH 2
 
+/* C/C++ Headers */
+#include <iostream>
+#include <string.h>
+#include <vector>
+
+/* ALCP Headers */
+#include "alcp/alcp.h"
 #include "digest/alc_digest.hh"
 #include "digest/digest.hh"
 #include "digest/gtest_base.hh"
 #include "gtest_common.hh"
 #include "rng_base.hh"
-#include <alcp/alcp.h>
-#include <iostream>
-#include <string.h>
-#include <vector>
-
 #ifdef USE_IPP
 #include "digest/ipp_digest.hh"
 #endif

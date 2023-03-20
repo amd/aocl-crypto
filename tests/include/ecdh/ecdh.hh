@@ -35,7 +35,7 @@
 #include <string.h>
 #include <string>
 
-#include <alcp/alcp.h>
+#include "alcp/alcp.h"
 
 typedef enum
 {

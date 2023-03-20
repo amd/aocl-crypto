@@ -25,21 +25,22 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 #pragma once
-#include <iterator>
-#ifndef __GTEST_BASE_HH
-#define __GTEST_BASE_HH 2
 
+/* C/C++ Headers */
+#include <iostream>
+#include <iterator>
+#include <string.h>
+#include <vector>
+
+/* ALCP Headers */
+#include "alcp/alcp.h"
 #include "cmac/alc_cmac_base.hh"
 #include "cmac/cmac_base.hh"
 #include "csv.hh"
 #include "gtest_common.hh"
 #include "rng_base.hh"
-#include <alcp/alcp.h>
-#include <iostream>
-#include <string.h>
-#include <vector>
+
 using namespace alcp::testing;
 #ifdef USE_IPP
 #include "cmac/ipp_cmac_base.hh"
@@ -135,8 +136,8 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
 
         /*conv cmac output into a vector */
         /* we need only the no of bytes needed, from the output */
-        std::vector<Uint8> cmac_vector(std::begin(cmac),
-                                       std::begin(cmac) + CmacSize);
+        std::vector<Uint8> cmac_vector(
+            std::begin(cmac), std::begin(cmac) + csv.getVect("CMAC").size());
 
         EXPECT_TRUE(ArraysMatch(
             cmac_vector,         // Actual output
@@ -246,5 +247,3 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
         EXPECT_TRUE(ArraysMatch(CmacAlcp, CmacExt, i));
     }
 }
-
-#endif

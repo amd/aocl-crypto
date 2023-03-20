@@ -28,7 +28,7 @@
 
 #include "alcp/digest.h"
 #include "digest/digest.hh"
-#include <alcp/alcp.h>
+#include "alcp/alcp.h"
 #include <iostream>
 #include <malloc.h>
 #include <vector>

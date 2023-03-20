@@ -26,12 +26,15 @@
  *
  */
 
+/* C/C++ Headers */
+#include <iostream>
+#include <string.h>
+
+/* ALCP Headers */
+#include "alcp/alcp.h"
 #include "digest/alc_digest.hh"
 #include "digest/digest.hh"
 #include "digest/gtest_base.hh"
-#include "string.h"
-#include <alcp/alcp.h>
-#include <iostream>
 
 /* SHAKE128/256 tests (IPP doesnt have these) */
 TEST(DIGEST_SHA3, KAT_SHAKE128)

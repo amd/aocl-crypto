@@ -27,12 +27,15 @@
  */
 #pragma once
 
-#include "cmac_base.hh"
-#include <alcp/alcp.h>
+/* C/C++ Headers */
 #include <iostream>
 #include <ippcp.h>
 #include <stdio.h>
 #include <string.h>
+
+/* C/C++ Headers */
+#include "alcp/alcp.h"
+#include "cmac_base.hh"
 
 namespace alcp::testing {
 class IPPCmacBase : public CmacBase

@@ -26,7 +26,7 @@
  *
  */
 
-#include "digest/digest.hh"
+/* C/C++ Headers */
 #include <iostream>
 #include <sstream>
 #ifdef __linux__
@@ -35,6 +35,9 @@
 #include <direct.h>
 #include <io.h>
 #endif
+
+/* ALCP Headers */
+#include "digest/digest.hh"
 
 namespace alcp::testing {
 

@@ -31,7 +31,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <alcp/alcp.h>
+#include "alcp/alcp.h"
 
 #include "ecdh.hh"
 #include <ippcp.h>

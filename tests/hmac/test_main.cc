@@ -26,12 +26,15 @@
  *
  */
 
+/* C/C++ Headers */
+#include <iostream>
+#include <string.h>
+
+/* ALCP Headers */
+#include "alcp/alcp.h"
 #include "hmac/alc_hmac.hh"
 #include "hmac/gtest_base.hh"
 #include "hmac/hmac.hh"
-#include "string.h"
-#include <alcp/alcp.h>
-#include <iostream>
 
 /* All tests to be added here */
 TEST(HMAC_SHA3, KAT_224)

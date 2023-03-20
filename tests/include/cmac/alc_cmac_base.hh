@@ -25,15 +25,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#pragma once
 
-#include "alcp/digest.h"
-#include "cmac/cmac_base.hh"
-#include <alcp/alcp.h>
+/* C/C++ Headers */
 #include <iostream>
 #include <malloc.h>
 #include <vector>
 
-#pragma once
+/* ALCP Headers */
+#include "alcp/alcp.h"
+#include "alcp/digest.h"
+#include "cmac/cmac_base.hh"
 
 namespace alcp::testing {
 class AlcpCmacBase : public CmacBase

@@ -27,17 +27,18 @@
  */
 
 #pragma once
-#ifndef __GTEST_BASE_HH
-#define __GTEST_BASE_HH 2
 
+/* C/C++ Headers */
+#include <iostream>
+#include <string.h>
+#include <vector>
+
+/* ALCP Headers */
+#include "alcp/alcp.h"
 #include "gtest_common.hh"
 #include "hmac/alc_hmac.hh"
 #include "hmac/hmac.hh"
 #include "rng_base.hh"
-#include <alcp/alcp.h>
-#include <iostream>
-#include <string.h>
-#include <vector>
 using namespace alcp::testing;
 #ifdef USE_IPP
 #include "hmac/ipp_hmac.hh"
@@ -236,5 +237,3 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
         }
     }
 }
-
-#endif

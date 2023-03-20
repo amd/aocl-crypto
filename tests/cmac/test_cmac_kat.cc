@@ -26,12 +26,15 @@
  *
  */
 
+/* C/C++ Headers */
+#include <iostream>
+#include <string.h>
+
+/* ALCP Headers */
+#include "alcp/alcp.h"
 #include "cmac/alc_cmac_base.hh"
 #include "cmac/cmac_base.hh"
 #include "cmac/gtest_base_cmac.hh"
-#include "string.h"
-#include <alcp/alcp.h>
-#include <iostream>
 
 /* All tests to be added here */
 TEST(CMAC_AES, KAT_128)
