@@ -33,7 +33,7 @@ FetchContent_Declare(benchmark
     GIT_TAG v1.6.1)
 FetchContent_MakeAvailable(benchmark)
 
-FILE(GLOB ALC_COMMON_SRC ../../tests/common/base/*.cc)
+FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ../../tests/hmac/base/alc_hmac.cc ../../tests/hmac/base/hmac.cc)
 SET(LIBS ${LIBS} benchmark alcp)
 if (ALCP_USE_ASAN)

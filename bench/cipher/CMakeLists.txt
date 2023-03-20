@@ -33,8 +33,8 @@ FetchContent_Declare(benchmark
     GIT_TAG v1.6.1)
 FetchContent_MakeAvailable(benchmark)
 
-FILE(GLOB ALC_COMMON_SRC ../../tests/common/base/*.cc)
-SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ../../tests/cipher/base/alc_cipher_base.cc ../../tests/cipher/base/cipher_base.cc)
+FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
+SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher_base.cc ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher_base.cc)
 SET(LIBS ${LIBS} benchmark alcp)
 # add this if asan is used
 if (ALCP_USE_ASAN)

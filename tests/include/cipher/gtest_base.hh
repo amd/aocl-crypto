@@ -584,7 +584,7 @@ RunCipherKATTest(TestingCore& testingCore,
     std::vector<Uint8>   iv      = csv->getVect("INITVECT");
     std::vector<Uint8>   tkey    = csv->getVect("TWEAK_KEY");
     std::vector<Uint8>   outtag  = csv->getVect("TAG");
-    std::vector<Uint8>   ad      = csv->getVect("ADDITONAL_DATA");
+    std::vector<Uint8>   ad      = csv->getVect("ADDITIONAL_DATA");
     std::vector<Uint8>   tagBuff = std::vector<Uint8>(outtag.size());
 
     // Common Initialization

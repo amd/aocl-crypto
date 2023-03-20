@@ -88,7 +88,7 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
 
     std::string TestDataFile = std::string("dataset_HMAC_" + HmacType + "_"
                                            + std::to_string(HmacSize) + ".csv");
-    DataSet     ds           = DataSet(TestDataFile);
+    Csv         csv          = Csv(TestDataFile);
 
 #ifdef USE_OSSL
     OpenSSLHmacBase ohb(info);
@@ -101,17 +101,15 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
         hb = &ihb;
 #endif
 
-    EXPECT_TRUE(ds.readMsgKeyHmac());
-
-    while (ds.readMsgKeyHmac()) {
-        auto msg = ds.getMessage();
-        auto key = ds.getKey();
+    while (csv.readNext()) {
+        auto msg = csv.getVect("CIPHERTEXT");
+        auto key = csv.getVect("KEY");
 
         data.in.m_msg   = &(msg[0]);
         data.in.m_key   = &(key[0]);
         data.out.m_hmac = &(hmac[0]);
 
-        data.in.m_msg_len   = ds.getMessage().size();
+        data.in.m_msg_len   = csv.getVect("CIPHERTEXT").size();
         data.out.m_hmac_len = hmac.size();
         data.in.m_key_len   = key.size();
 
@@ -131,12 +129,12 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
         /*conv m_digest into a vector */
         std::vector<Uint8> hmac_vector(std::begin(hmac), std::end(hmac));
 
-        EXPECT_TRUE(
-            ArraysMatch(hmac_vector,  // Actual output
-                        ds.getHmac(), // expected output, from the csv test data
-                        ds,
-                        std::string("HMAC_" + HmacType + "_"
-                                    + std::to_string(HmacSize) + "_KAT")));
+        EXPECT_TRUE(ArraysMatch(
+            hmac_vector,         // Actual output
+            csv.getVect("HMAC"), // expected output, from the csv test data
+            csv,
+            std::string("HMAC_" + HmacType + "_" + std::to_string(HmacSize)
+                        + "_KAT")));
     }
 }
 

@@ -33,6 +33,7 @@
 
 #include "cmac/alc_cmac_base.hh"
 #include "cmac/cmac_base.hh"
+#include "csv.hh"
 #include "gtest_common.hh"
 #include "rng_base.hh"
 #include <alcp/alcp.h>
@@ -83,7 +84,7 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
 
     std::string TestDataFile = std::string("dataset_CMAC_" + CmacType + "_"
                                            + std::to_string(KeySize) + ".csv");
-    DataSet     ds           = DataSet(TestDataFile);
+    Csv         csv          = Csv(TestDataFile);
 
 #ifdef USE_OSSL
     OpenSSLCmacBase ocb(info);
@@ -96,25 +97,24 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
         cb = &icb;
 #endif
 
-    EXPECT_TRUE(ds.readMsgKeyCmac());
-    while (ds.readMsgKeyCmac()) {
+    while (csv.readNext()) {
         /* cmac size returned by alcp and openssl is of 128 bits
          TODO: IPP returns success only when cmac len is specified. Need to
          revisit */
-        CmacSize = 128;
-        if (useipp) {
-            CmacSize = ds.getCmac().size();
+        CmacSize = csv.getVect("CMAC").size();
+        if (useossl) {
+            CmacSize = 128;
         }
         std::vector<Uint8> cmac(CmacSize, 0);
 
-        auto msg = ds.getMessage();
-        auto key = ds.getKey();
+        auto msg = csv.getVect("MESSAGE");
+        auto key = csv.getVect("KEY");
 
         data.m_msg  = &(msg[0]);
         data.m_key  = &(key[0]);
         data.m_cmac = &(cmac[0]);
 
-        data.m_msg_len  = ds.getMessage().size();
+        data.m_msg_len  = msg.size();
         data.m_cmac_len = cmac.size();
         data.m_key_len  = key.size();
 
@@ -135,15 +135,15 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
 
         /*conv cmac output into a vector */
         /* we need only the no of bytes needed, from the output */
-        std::vector<Uint8> cmac_vector(
-            std::begin(cmac), std::begin(cmac) + ds.getCmac().size());
+        std::vector<Uint8> cmac_vector(std::begin(cmac),
+                                       std::begin(cmac) + CmacSize);
 
-        EXPECT_TRUE(
-            ArraysMatch(cmac_vector,  // Actual output
-                        ds.getCmac(), // expected output, from the csv test data
-                        ds,
-                        std::string("CMAC_" + CmacType + "_"
-                                    + std::to_string(KeySize) + "_KAT")));
+        EXPECT_TRUE(ArraysMatch(
+            cmac_vector,         // Actual output
+            csv.getVect("CMAC"), // expected output, from the csv test data
+            csv,
+            std::string("CMAC_" + CmacType + "_" + std::to_string(KeySize)
+                        + "_KAT")));
     }
 }
 

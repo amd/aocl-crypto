@@ -31,7 +31,7 @@ FetchContent_Declare(gtest
 FetchContent_MakeAvailable(gtest)
 
 # Basic sources and libs needed for ALCP
-FILE(GLOB ALC_COMMON_SRC ../../tests/common/base/*.cc)
+FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ../../tests/digest/base/alc_digest.cc ../../tests/digest/base/digest.cc)
 SET(LIBS ${LIBS} gtest alcp)
 
