@@ -47,6 +47,21 @@ class IPPEcdhBase : public EcdhBase
     Uint8* m_pub_key1 = {};
     Uint8* m_pub_key2 = {};
 
+    Uint8 m_publicKeyData1[8][32];
+    Uint8 m_publicKeyData2[8][32];
+
+    Uint8 m_SecretKeyData1[8][32];
+    Uint8 m_SecretKeyData2[8][32];
+
+    int8u* m_pPublicKeyData1_mb[8];
+    int8u* m_pPublicKeyData2_mb[8];
+
+    const int8u* m_pPrivKey1_mb[8];
+    const int8u* m_pPrivKey2_mb[8];
+
+    int8u* m_pSecretKey1_mb[8];
+    int8u* m_pSecretKey2_mb[8];
+
     std::string m_name, m_keytype;
 
   public:
