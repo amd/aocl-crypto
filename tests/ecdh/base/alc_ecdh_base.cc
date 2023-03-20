@@ -123,14 +123,14 @@ AlcpEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data)
     alc_error_t err;
     Uint64      keyLength1, keyLength2;
     err = alcp_ec_get_secretkey(
-        m_ec_handle1, data.m_Peer1_SecretKey, data.m_Peer1_PubKey, &keyLength1);
+        m_ec_handle1, data.m_Peer1_SecretKey, data.m_Peer2_PubKey, &keyLength1);
     if (alcp_is_error(err)) {
         std::cout << "Error in alcp_ec_get_secretkey peer1: " << err
                   << std::endl;
         return false;
     }
     err = alcp_ec_get_secretkey(
-        m_ec_handle2, data.m_Peer2_SecretKey, data.m_Peer2_PubKey, &keyLength2);
+        m_ec_handle2, data.m_Peer2_SecretKey, data.m_Peer1_PubKey, &keyLength2);
     if (alcp_is_error(err)) {
         std::cout << "Error in alcp_ec_get_secretkey peer2: " << err
                   << std::endl;

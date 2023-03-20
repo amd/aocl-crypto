@@ -163,12 +163,12 @@ OpenSSLEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data)
     }
 
     /* Configure each peer with the other peer's public key. */
-    if (1 != EVP_PKEY_derive_set_peer(ctx1, m_pPublicKeyData1)) {
+    if (1 != EVP_PKEY_derive_set_peer(ctx1, m_pPublicKeyData2)) {
         std::cout << "EVP_PKEY_derive_set_peer : Error:" << ERR_get_error()
                   << std::endl;
         return false;
     }
-    if (1 != EVP_PKEY_derive_set_peer(ctx2, m_pPublicKeyData2)) {
+    if (1 != EVP_PKEY_derive_set_peer(ctx2, m_pPublicKeyData1)) {
         std::cout << "EVP_PKEY_derive_set_peer : Error:" << ERR_get_error()
                   << std::endl;
         return false;

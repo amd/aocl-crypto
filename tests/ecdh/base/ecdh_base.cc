@@ -62,7 +62,7 @@ DataSet::readEcdhTestData()
     int pos3 = line.find(",", pos2 + 1);
     int pos4 = line.find(",", pos3 + 1);
     int pos5 = line.find(",", pos4 + 1);
-    if ((pos1 == -1) || (pos2 == -1) || (pos3 == -1)) {
+    if ((pos1 == -1) || (pos2 == -1) || (pos3 == -1) || (pos4 == -1)) {
         std::cout << "Error in parsing csv: " << m_filename << std::endl;
         return false;
     }

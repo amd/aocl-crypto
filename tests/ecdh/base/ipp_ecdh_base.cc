@@ -101,10 +101,19 @@ IPPEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data)
 
     /* compute secret key */
     status =
-        mbx_x25519_mb8(m_pSecretKey1_mb, m_pPrivKey1_mb, m_pPublicKeyData1_mb);
+        mbx_x25519_mb8(m_pSecretKey1_mb, m_pPrivKey1_mb, m_pPublicKeyData2_mb);
+    if (status != 0) {
+        std::cout << "mbx_x25519_mb8 failed with err code: " << status
+                  << std::endl;
+        return false;
+    }
     status =
-        mbx_x25519_mb8(m_pSecretKey2_mb, m_pPrivKey2_mb, m_pPublicKeyData2_mb);
-
+        mbx_x25519_mb8(m_pSecretKey2_mb, m_pPrivKey2_mb, m_pPublicKeyData1_mb);
+    if (status != 0) {
+        std::cout << "mbx_x25519_mb8 failed with err code: " << status
+                  << std::endl;
+        return false;
+    }
     return true;
 }
 

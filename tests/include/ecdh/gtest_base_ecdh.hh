@@ -107,26 +107,29 @@ ecdh_KAT(alc_ec_info_t info)
     DataSet     ds           = DataSet(TestDataFile);
 
     while (ds.readEcdhTestData()) {
-        std::vector<Uint8> Peer1_PubKey(ds.getPeer1PubKey().size(), 0);
-        std::vector<Uint8> Peer2_PubKey(ds.getPeer2PubKey().size(), 0);
-        std::vector<Uint8> Peer1_SecretKey(ds.getPeer1SecretKey().size(), 0);
-        std::vector<Uint8> Peer2_SecretKey(ds.getPeer2SecretKey().size(), 0);
+        std::vector<Uint8> Peer1_PubKey(32, 0);
+        std::vector<Uint8> Peer2_PubKey(32, 0);
+        std::vector<Uint8> Peer1_SecretKey(32, 0);
+        std::vector<Uint8> Peer2_SecretKey(32, 0);
 
         /* input data to be loaded */
-        data.m_Peer1_PvtKey    = &(ds.getPeer1PvtKey()[0]);
-        data.m_Peer2_PvtKey    = &(ds.getPeer2PvtKey()[0]);
+        std::vector<Uint8> _Peer1PvtKeyData = ds.getPeer1PvtKey();
+        std::vector<Uint8> _Peer2PvtKeyData = ds.getPeer2PvtKey();
+
+        data.m_Peer1_PvtKey    = &(_Peer1PvtKeyData[0]);
+        data.m_Peer2_PvtKey    = &(_Peer2PvtKeyData[0]);
         data.m_Peer1_PvtKeyLen = ds.getPeer1PvtKey().size();
         data.m_Peer2_PvtKeyLen = ds.getPeer2PvtKey().size();
 
         data.m_Peer1_PubKey    = &(Peer1_PubKey[0]);
         data.m_Peer2_PubKey    = &(Peer2_PubKey[0]);
-        data.m_Peer1_PubKeyLen = ds.getPeer1PubKey().size();
-        data.m_Peer2_PubKeyLen = ds.getPeer2PubKey().size();
+        data.m_Peer1_PubKeyLen = 32;
+        data.m_Peer2_PubKeyLen = 32;
 
         data.m_Peer1_SecretKey    = &(Peer1_SecretKey[0]);
         data.m_Peer2_SecretKey    = &(Peer2_SecretKey[0]);
-        data.m_Peer1_SecretKeyLen = ds.getPeer1SecretKey().size();
-        data.m_Peer2_SecretKeyLen = ds.getPeer2SecretKey().size();
+        data.m_Peer1_SecretKeyLen = 32;
+        data.m_Peer2_SecretKeyLen = 32;
 
         if (!eb->init(info, data)) {
             std::cout << "Error in ECDH init" << std::endl;
@@ -138,8 +141,6 @@ ecdh_KAT(alc_ec_info_t info)
         }
 
         /*TODO: x25519 pub key len should always be 32 bytes !*/
-        EXPECT_TRUE(
-            ArraysMatch(Peer1_PubKey, Peer2_PubKey, ds, std::string("ECDH")));
         EXPECT_TRUE(data.m_Peer1_PubKeyLen == ECDH_KEYSIZE);
         EXPECT_TRUE(data.m_Peer2_PubKeyLen == ECDH_KEYSIZE);
 
@@ -191,7 +192,7 @@ ecdh_Cross(alc_ec_info_t info)
 #ifdef USE_IPP
     IPPEcdhBase ieb(info);
     if (useipp == true) {
-        Eb        = &ieb;
+        ExtEb     = &ieb;
         LibStrExt = "IPP";
     }
 #endif
@@ -211,7 +212,6 @@ ecdh_Cross(alc_ec_info_t info)
     }
 
     /* generate random bytes, use it in the loop */
-    /* TODO: how do we generate the pvt key pair ??*/
     std::vector<Uint8> peer1_pvtkey_full = rb.genRandomBytes(KeySize);
     std::vector<Uint8> peer2_pvtkey_full = rb.genRandomBytes(KeySize);
 
@@ -231,27 +231,31 @@ ecdh_Cross(alc_ec_info_t info)
         std::vector<Uint8> Peer2PvtKey(pos1, pos2);
 
         /* now load this pvtkey pair into both alc, ext data */
-        data_alc.m_Peer1_PvtKey    = &(Peer1PvtKey[0]);
-        data_alc.m_Peer2_PvtKey    = &(Peer2PvtKey[0]);
-        data_alc.m_Peer1_PvtKeyLen = KeySize;
-        data_alc.m_Peer2_PvtKeyLen = KeySize;
-        data_alc.m_Peer1_PubKey    = &(AlcpPeer1PubKey[0]);
-        data_alc.m_Peer2_PubKey    = &(AlcpPeer2PubKey[0]);
-        data_alc.m_Peer1_PubKeyLen = KeySize;
-        data_alc.m_Peer2_PubKeyLen = KeySize;
-        data_alc.m_Peer1_SecretKey = &(AlcpPeer1SharedSecretKey[0]);
-        data_alc.m_Peer2_SecretKey = &(AlcpPeer2SharedSecretKey[0]);
+        data_alc.m_Peer1_PvtKey       = &(Peer1PvtKey[0]);
+        data_alc.m_Peer2_PvtKey       = &(Peer2PvtKey[0]);
+        data_alc.m_Peer1_PvtKeyLen    = KeySize;
+        data_alc.m_Peer2_PvtKeyLen    = KeySize;
+        data_alc.m_Peer1_PubKey       = &(AlcpPeer1PubKey[0]);
+        data_alc.m_Peer2_PubKey       = &(AlcpPeer2PubKey[0]);
+        data_alc.m_Peer1_PubKeyLen    = KeySize;
+        data_alc.m_Peer2_PubKeyLen    = KeySize;
+        data_alc.m_Peer1_SecretKey    = &(AlcpPeer1SharedSecretKey[0]);
+        data_alc.m_Peer2_SecretKey    = &(AlcpPeer2SharedSecretKey[0]);
+        data_alc.m_Peer1_SecretKeyLen = 32;
+        data_alc.m_Peer2_SecretKeyLen = 32;
 
-        data_ext.m_Peer1_PvtKey    = &(Peer1PvtKey[0]);
-        data_ext.m_Peer2_PvtKey    = &(Peer2PvtKey[0]);
-        data_ext.m_Peer1_PvtKeyLen = KeySize;
-        data_ext.m_Peer2_PvtKeyLen = KeySize;
-        data_ext.m_Peer1_PubKey    = &(ExtPeer1PubKey[0]);
-        data_ext.m_Peer2_PubKey    = &(ExtPeer2PubKey[0]);
-        data_ext.m_Peer1_PubKeyLen = KeySize;
-        data_ext.m_Peer2_PubKeyLen = KeySize;
-        data_ext.m_Peer1_SecretKey = &(ExtPeer1SharedSecretKey[0]);
-        data_ext.m_Peer2_SecretKey = &(ExtPeer2SharedSecretKey[0]);
+        data_ext.m_Peer1_PvtKey       = &(Peer1PvtKey[0]);
+        data_ext.m_Peer2_PvtKey       = &(Peer2PvtKey[0]);
+        data_ext.m_Peer1_PvtKeyLen    = KeySize;
+        data_ext.m_Peer2_PvtKeyLen    = KeySize;
+        data_ext.m_Peer1_PubKey       = &(ExtPeer1PubKey[0]);
+        data_ext.m_Peer2_PubKey       = &(ExtPeer2PubKey[0]);
+        data_ext.m_Peer1_PubKeyLen    = KeySize;
+        data_ext.m_Peer2_PubKeyLen    = KeySize;
+        data_ext.m_Peer1_SecretKey    = &(ExtPeer1SharedSecretKey[0]);
+        data_ext.m_Peer2_SecretKey    = &(ExtPeer2SharedSecretKey[0]);
+        data_ext.m_Peer1_SecretKeyLen = 32;
+        data_ext.m_Peer2_SecretKeyLen = 32;
 
         /* for main lib */
         if (!Eb->init(info, data_alc)) {
@@ -268,6 +272,9 @@ ecdh_Cross(alc_ec_info_t info)
                       << std::endl;
             FAIL();
         }
+        /* compare peer secret keys */
+        EXPECT_TRUE(
+            ArraysMatch(AlcpPeer1SharedSecretKey, AlcpPeer2SharedSecretKey));
 
         /* for ext lib */
         if (!ExtEb->init(info, data_ext)) {
@@ -285,7 +292,13 @@ ecdh_Cross(alc_ec_info_t info)
                       << std::endl;
             FAIL();
         }
+        /* compare peer secret keys */
+        EXPECT_TRUE(
+            ArraysMatch(ExtPeer1SharedSecretKey, ExtPeer2SharedSecretKey));
+
         /*TODO: x25519 pub key len should always be 32 bytes !*/
+
+        /* cross compare the keys between main and ext libs */
         EXPECT_TRUE(ArraysMatch(AlcpPeer1PubKey, ExtPeer1PubKey));
         EXPECT_TRUE(ArraysMatch(AlcpPeer2PubKey, ExtPeer2PubKey));
         EXPECT_TRUE(
