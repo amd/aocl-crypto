@@ -123,30 +123,6 @@ class ExecRecPlay
     // Write to event log, csv file about the event
     void dumpLog();
 };
-class DataSet : private File
-{
-  private:
-    std::string        line = "", m_filename = "";
-    std::vector<Uint8> Digest, Message;
-    /* for shake128/256 support */
-    Int64 DigestLen;
-    // First line is skipped, linenum starts from 1
-    int lineno = 1;
-
-  public:
-    // Treats file as CSV, skips first line
-    DataSet(const std::string filename);
-    // Read without condition
-    bool readMsgDigest();
-    // for shake128/256 support
-    bool readMsgDigestLen();
-    // To print which line in dataset failed
-    int getLineNumber();
-    /* fetch Message / Digest */
-    std::vector<Uint8> getMessage();
-    std::vector<Uint8> getDigest();
-    Int64              getDigestLen();
-};
 class DigestBase
 {
   public:

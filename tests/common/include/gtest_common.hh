@@ -51,14 +51,14 @@ static bool oa_override = false;
  *
  * @param actual    Output obtained from the algorithm.
  * @param expected  Expected output given the algorithm is correct.
- * @param ds        DataSet object to extract the line number.
+ * @param csv        Csv object to extract the line number.
  * @param testName  Name of the test to display.
  * @return ::testing::AssertionResult
  */
 ::testing::AssertionResult
 ArraysMatch(std::vector<Uint8>  actual,
             std::vector<Uint8>  expected,
-            alcp::testing::Csv& ds,
+            alcp::testing::Csv& csv,
             std::string         testName)
 {
     if (actual.size() != expected.size()) {
@@ -72,12 +72,12 @@ ArraysMatch(std::vector<Uint8>  actual,
                    << "array[" << i << "] ("
                    << "0x" << actual_error << ") != expected[" << i << "]("
                    << "0x" << expected_error << ")"
-                   << "Test: " << testName << " line: " << ds.getLineNumber()
+                   << "Test: " << testName << " line: " << csv.getLineNumber()
                    << " Failed";
         }
     }
     if (verbose > 0) {
-        std::cout << "Test: " << testName << " line: " << ds.getLineNumber()
+        std::cout << "Test: " << testName << " line: " << csv.getLineNumber()
                   << " Success" << std::endl;
     }
     return ::testing::AssertionSuccess();

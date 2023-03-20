@@ -161,44 +161,6 @@ class ExecRecPlay
     void dumpLog();
 };
 
-class DataSet : private File
-{
-  private:
-    std::string        line = "", m_filename = "";
-    std::vector<Uint8> m_pt, m_iv, m_key, m_ct, m_add, m_tag, m_tkey;
-    // First line is skipped, linenum starts from 1
-    int lineno = 1;
-
-  public:
-    // Treats file as CSV, skips first line
-    DataSet(const std::string filename);
-    // Read without condition
-    bool readPtIvKeyCt();
-    bool readPtIvKeyCtAddTag();
-    bool readPtIvKeyCtTKey();
-
-    // Read only specified key size
-    bool readPtIvKeyCt(size_t keybits);
-    bool readPtIvKeyCtAddTag(size_t keybits);
-    bool readPtIvKeyCtTKey(size_t keybits);
-    // To print which line in dataset failed
-    int getLineNumber();
-    // Return private data plain text
-    std::vector<Uint8> getPt();
-    // Return private data initialization vector
-    std::vector<Uint8> getIv();
-    // Return private data key
-    std::vector<Uint8> getKey();
-    // Return private data cipher text
-    std::vector<Uint8> getCt();
-    // Return private data additional data
-    std::vector<Uint8> getAdd();
-    // Return private data tag
-    std::vector<Uint8> getTag();
-    // return tweak key
-    std::vector<Uint8> getTKey();
-};
-
 /**
  * @brief CipherBase is a wrapper for which library to use
  *
