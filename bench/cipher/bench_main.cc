@@ -36,7 +36,7 @@ std::vector<Int64> blocksizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
 
 int
 CipherAes(benchmark::State& state,
-          Uint64          blockSize,
+          Uint64            blockSize,
           encrypt_t         enc,
           alc_cipher_mode_t alcpMode,
           size_t            keylen)
@@ -91,7 +91,7 @@ CipherAes(benchmark::State& state,
         }
         data.m_in  = &(vec_out[0]);
         data.m_out = &(vec_in[0]);
-        if (alcpMode == ALC_AES_MODE_GCM) {
+        if (useossl && (alcpMode == ALC_AES_MODE_GCM)) {
             if (!cb->init(key, keylen)) {
                 std::cout << "GCM: BENCH_INIT_FAILURE" << std::endl;
                 exit(-1);
@@ -110,7 +110,7 @@ CipherAes(benchmark::State& state,
                 exit(-1);
             }
         }
-        if (alcpMode == ALC_AES_MODE_GCM) {
+        if (useossl && (alcpMode == ALC_AES_MODE_GCM)) {
             if (!cb->init(key, keylen)) {
                 std::cout << "GCM: BENCH_RESET_FAILURE" << std::endl;
                 exit(-1);
