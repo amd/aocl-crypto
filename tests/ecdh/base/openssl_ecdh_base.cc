@@ -78,7 +78,7 @@ OpenSSLEcdhBase::init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data)
 }
 
 bool
-OpenSSLEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
+OpenSSLEcdhBase::GeneratePublicKeys(const alcp_ecdh_data_t& data)
 {
     Uint64 keyLength1, keyLength2;
 
@@ -109,7 +109,7 @@ OpenSSLEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
 }
 
 bool
-OpenSSLEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data)
+OpenSSLEcdhBase::ComputeSecretKeys(const alcp_ecdh_data_t& data)
 {
     EVP_PKEY_CTX *ctx1 = NULL, *ctx2 = NULL;
     Uint64        SecretkeyLength1, SecretkeyLength2;

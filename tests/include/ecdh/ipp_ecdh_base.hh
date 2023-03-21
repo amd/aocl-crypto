@@ -71,8 +71,8 @@ class IPPEcdhBase : public EcdhBase
     bool init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data);
     bool reset();
 
-    bool GeneratePublicKey(const alcp_ecdh_data_t& data);
-    bool ComputeSecretKey(const alcp_ecdh_data_t& data);
+    bool GeneratePublicKeys(const alcp_ecdh_data_t& data);
+    bool ComputeSecretKeys(const alcp_ecdh_data_t& data);
 };
 
 } // namespace alcp::testing

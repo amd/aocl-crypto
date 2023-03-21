@@ -112,24 +112,25 @@ void inline ecdh_Bench(benchmark::State& state,
     /* Just benchmark Gen public key */
     if (opt == ECDH_BENCH_GEN_PUB_KEY) {
         for (auto _ : state) {
-            if (!Eb->GeneratePublicKey(data)) {
+            if (!Eb->GeneratePublicKeys(data)) {
                 state.SkipWithError("Error in ECDH GeneratePublicKey");
             }
         }
     } else if (opt == ECDH_BENCH_GEN_SECRET_KEY) {
         /* this step is needed for computing secret key */
-        if (!Eb->GeneratePublicKey(data)) {
+        if (!Eb->GeneratePublicKeys(data)) {
             state.SkipWithError("Error in ECDH GeneratePublicKey");
         }
         /* to benchmark only Computing secret key */
         for (auto _ : state) {
-            if (!Eb->ComputeSecretKey(data)) {
+            if (!Eb->ComputeSecretKeys(data)) {
                 state.SkipWithError("Error in ECDH ComputeSecretKey");
             }
         }
     }
+    /* iter * 2 here as we are running each function for 2 peers*/
     state.counters["KeysGen/Sec"] =
-        benchmark::Counter(state.iterations(), benchmark::Counter::kIsRate);
+        benchmark::Counter(state.iterations() * 2, benchmark::Counter::kIsRate);
     return;
 }
 

@@ -138,7 +138,7 @@ ecdh_KAT(alc_ec_info_t info)
             std::cout << "Error in ECDH init" << std::endl;
             FAIL();
         }
-        if (!eb->GeneratePublicKey(data)) {
+        if (!eb->GeneratePublicKeys(data)) {
             std::cout << "Error in ECDH Generate public key" << std::endl;
             FAIL();
         }
@@ -147,7 +147,7 @@ ecdh_KAT(alc_ec_info_t info)
         EXPECT_TRUE(data.m_Peer1_PubKeyLen == ECDH_KEYSIZE);
         EXPECT_TRUE(data.m_Peer2_PubKeyLen == ECDH_KEYSIZE);
 
-        if (!eb->ComputeSecretKey(data)) {
+        if (!eb->ComputeSecretKeys(data)) {
             std::cout << "Error in ECDH Compute Secret key" << std::endl;
             FAIL();
         }
@@ -261,12 +261,12 @@ ecdh_Cross(alc_ec_info_t info)
             std::cout << "Error in ECDH init: " << LibStrMain << std::endl;
             FAIL();
         }
-        if (!Eb->GeneratePublicKey(data_alc)) {
+        if (!Eb->GeneratePublicKeys(data_alc)) {
             std::cout << "Error in ECDH Generate public key: " << LibStrMain
                       << std::endl;
             FAIL();
         }
-        if (!Eb->ComputeSecretKey(data_alc)) {
+        if (!Eb->ComputeSecretKeys(data_alc)) {
             std::cout << "Error in ECDH Compute Secret key: " << LibStrMain
                       << std::endl;
             FAIL();
@@ -281,12 +281,12 @@ ecdh_Cross(alc_ec_info_t info)
                       << std::endl;
             FAIL();
         }
-        if (!ExtEb->GeneratePublicKey(data_ext)) {
+        if (!ExtEb->GeneratePublicKeys(data_ext)) {
             std::cout << "Error in ECDH Generate public key:" << LibStrExt
                       << std::endl;
             FAIL();
         }
-        if (!ExtEb->ComputeSecretKey(data_ext)) {
+        if (!ExtEb->ComputeSecretKeys(data_ext)) {
             std::cout << "Error in ECDH Compute Secret key:" << LibStrExt
                       << std::endl;
             FAIL();

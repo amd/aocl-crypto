@@ -45,7 +45,7 @@ IPPEcdhBase::init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data)
 }
 
 bool
-IPPEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
+IPPEcdhBase::GeneratePublicKeys(const alcp_ecdh_data_t& data)
 {
     mbx_status status = 0;
     /* FIXME: this is because we are calling 8 elem buffer variant of ipp */
@@ -82,7 +82,7 @@ IPPEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
 }
 
 bool
-IPPEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data)
+IPPEcdhBase::ComputeSecretKeys(const alcp_ecdh_data_t& data)
 {
     mbx_status status = 0;
     /* FIXME: this is because we are calling 8 elem buffer variant of ipp */

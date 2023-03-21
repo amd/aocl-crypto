@@ -94,7 +94,7 @@ AlcpEcdhBase::~AlcpEcdhBase()
 }
 
 bool
-AlcpEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
+AlcpEcdhBase::GeneratePublicKeys(const alcp_ecdh_data_t& data)
 {
     alc_error_t err;
 
@@ -116,7 +116,7 @@ AlcpEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
 }
 
 bool
-AlcpEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data)
+AlcpEcdhBase::ComputeSecretKeys(const alcp_ecdh_data_t& data)
 {
     alc_error_t err;
     Uint64      keyLength1, keyLength2;
