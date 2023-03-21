@@ -48,9 +48,11 @@
 #include "version.h"
 
 /**
+ * @brief
  * Version to be printed as : AOCL Crypto   1.0 (0xabcdef)
  *                           `-----------' `-'-'----------'
  *                              Name        M m  git ver
+ * @struct alc_version_t
  */
 typedef struct _alc_version
 {

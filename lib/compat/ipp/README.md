@@ -1,6 +1,6 @@
 # Instructions to Build/Use ippcp plugin
 
-<font color="red">Warning : This document is still under construction, please read the details below carefully as it might be little ambiguous.</font>
+<span style="color:red">Warning : This document is still under construction, please read the details below carefully as it might be little ambiguous.</span>
 
 ## Building
 

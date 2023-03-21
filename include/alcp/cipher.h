@@ -34,6 +34,22 @@
 
 EXTERN_C_BEGIN
 
+/**
+ * @defgroup cipher Cipher API
+ * @brief
+ * Cipher is a cryptographic technique used to
+ * secure information by transforming it into a code that can only be read by
+ * those with the key to decode it.
+ *  @{
+ */
+
+/**
+ *
+ * @brief used to Specify which cipher type to be used for encrypt and decrypt
+ *
+ * @typedef enum alc_cipher_type_t
+ *
+ */
 typedef enum _alc_cipher_type
 {
     ALC_CIPHER_TYPE_NONE = 0,
@@ -47,6 +63,11 @@ typedef enum _alc_cipher_type
     ALC_CIPHER_TYPE_MAX,
 } alc_cipher_type_t;
 
+/**
+ * @brief used to Specify which Mode of AES to be used for encrypt and decrypt
+ *
+ * @typedef enum  alc_cipher_mode_t
+ */
 typedef enum _alc_cipher_mode
 {
     ALC_AES_MODE_NONE = 0,
@@ -64,6 +85,14 @@ typedef enum _alc_cipher_mode
     ALC_AES_MODE_MAX,
 } alc_cipher_mode_t;
 
+/**
+ *
+ * @brief used to control different of AES
+ *
+ * @typedef enum  alc_aes_ctrl_t
+ *
+ * @note Currently not in use
+ */
 typedef enum _alc_aes_ctrl
 {
     ALC_AES_CTRL_NONE = 0,
@@ -79,16 +108,24 @@ typedef enum _alc_aes_ctrl
 } alc_aes_ctrl_t;
 
 /**
- * \brief  Mode specific inforamtion, for XTS it is the secondary key
- *         for GCM it is nounce etc.
+ * @brief  Stores info for XTS Mode of AES Specifically
  *
- * \notes
+ * @param xi_tweak_key   holds the info about secondary key for xts
+ *
+ * @struct alc_cipher_mode_xts_info_t
  */
-typedef union _alc_cipher_mode_xts_info
+typedef struct _alc_cipher_mode_xts_info
 {
     alc_key_info_t* xi_tweak_key;
 } alc_cipher_mode_xts_info_t, *alc_cipher_mode_xts_info_p;
 
+/**
+ * @brief   Stores info for GCM Mode of AES Specifically
+ *
+ * @note Currently not in use
+ *
+ * @struct alc_cipher_mode_gcm_info_t
+ */
 typedef struct _alc_cipher_mode_gcm_info
 {
     // FIXME: C do not support empty structures, populate with actual ones
@@ -101,9 +138,12 @@ typedef struct _alc_cipher_mode_siv_info
 } alc_cipher_mode_siv_info_t, alc_cipher_mode_siv_info_p;
 
 /**
- * \brief  Algorithm specific info,
  *
- * \notes
+ * @brief  Algorithm specific info for cipher,
+ * @param ai_mode Specific which Mode of AES to be used @ref alcp_cipher_mode_t
+ * @param ai_iv Initialization Vector
+ * @param ai_xts,  ai_gcm optional param for Some Specific Mode of AES
+ * @struct  alc_cipher_algo_info_t
  */
 typedef struct _alc_cipher_algo_info
 {
@@ -119,28 +159,39 @@ typedef struct _alc_cipher_algo_info
 } alc_cipher_algo_info_t, *alc_cpher_algo_info_p;
 
 /**
- * \brief  The opaque type of a cipher context, comes from the library
  *
- * \notes
+ * @brief  The opaque type of a cipher context, comes from the library
+ *
+ * @param ci_type   Specify which cipher type to be used for encrypt and decrypt
+ * @param ci_key_info  store the info related to key
+ * @param ci_algo_info Algorithm specific info is stored
+ *
+ * @struct  alc_cipher_info_t
+ *
  */
 typedef struct _alc_cipher_info
 {
-    alc_cipher_type_t      ci_type; /* Type: ALC_CIPHER_AES etc */
+    alc_cipher_type_t      ci_type; /*! Type: ALC_CIPHER_AES etc */
     alc_key_info_t         ci_key_info;
-    alc_cipher_algo_info_t ci_algo_info; /* mode specific data */
+    alc_cipher_algo_info_t ci_algo_info; /*! mode specific data */
 } alc_cipher_info_t, *alc_cipher_info_p;
 
 /**
- * \brief  The opaque type of a cipher context, comes from the library
+ * @brief  The opaque type of a cipher context, comes from the library
  *
- * \notes
+ * @typedef void alc_cipher_context_t
  */
 typedef void                  alc_cipher_context_t;
 typedef alc_cipher_context_t* alc_cipher_context_p;
 
 /**
- * \brief
- * \notes
+ *
+ * @brief Handler used for cipher context handling
+ *
+ * @param alc_cipher_context_p pointer to the context of the cipher
+ *
+ * @struct alc_cipher_handle_t
+ *
  */
 typedef struct _alc_cipher_handle
 {
@@ -148,57 +199,80 @@ typedef struct _alc_cipher_handle
 } alc_cipher_handle_t, *alc_cipher_handle_p, AlcCipherHandle;
 
 /**
- * \brief       Allows to check if a given algorithm is supported
- * \notes       This API is provided to allow application to make decision on
+ *
+ * @brief       Allows to check if a given algorithm is supported
+ *
+ * @parblock <br> &nbsp;
+ * <b>This API needs to be called before any other API is called to
+ * know if cipher that is being request is supported or not </b>
+ * @endparblock
+ *
+ * @note       This API is provided to allow application to make decision on
  *              fallback mechanism
- * \params pCipherInfo The information about the cipher algorithm and modes
+ * @param [in] pCipherInfo  The information about the cipher algorithm and modes
  *                     as described by alc_cipher_info_t
- * \return              alc_error_t
+ * @return              ALC_ERROR_NONE
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_supported(const alc_cipher_info_p pCipherInfo);
 
 /**
- * \brief       Gets the size of the context for a session described by
+ * @brief       Gets the size of the context for a session described by
  *              pCipherInfo
- * \notes       alcp_cipher_supported() should be called first to
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_cipher_request only otherwise
+ * Context will be empty </b>
+ * @endparblock
+ * @note       alcp_cipher_supported() should be called first to
  *              know if the given cipher/key length configuration is valid.
  *
- * \param pCipherInfo Description of the requested cipher session
- * \return      size > 0 if valid session is found, size otherwise
+ * @param [in] pCipherInfo Description of the requested cipher session
+ * @return      Size of Context
  */
 ALCP_API_EXPORT Uint64
 alcp_cipher_context_size(const alc_cipher_info_p pCipherInfo);
 
 /**
- * \brief    Allows caller to request for a cipher as described by
+ * @brief    Allows caller to request for a cipher as described by
  *           pCipherInfo
- * \notes    Error needs to be checked for each call,
- *           only upon returned is ALC_ERROR_NONE, ctx to be considered
- *           valid.
- * \param    pCipherInfo    Description of the cipher session
- * \param    pCipherHandle  Session handle for future encrypt decrypt
+ *
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_cipher_supported is called </b>
+ * @endparblock
+ * @note     Error needs to be checked for each call,
+ *           valid only if @ref alcp_is_error (ret) is false, ctx
+ * to be considered valid.
+ * @param [in]   pCipherInfo    Description of the cipher session
+ * @param [in]   pCipherHandle  Session handle for future encrypt decrypt
  *                          operation
- * \return   Error described by alc_error_t
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
                     alc_cipher_handle_p     pCipherHandle);
 
 /**
- * \brief    Allows caller to request for a cipher as described by
+ * @brief    Allows caller to request for a cipher as described by
  *           pCipherInfo
- * \notes    Error needs to be checked for each call,
- *           only upon returned is ALC_ERROR_NONE, ctx to be considered
- *           valid.
- * \param    pCipherHandle Session handle for future encrypt decrypt
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_cipher_request is called and at the
+ * end of session call @ref alcp_cipher_finish</b>
+ * @endparblock
+ * @note    Error needs to be checked for each call,
+ *           valid only if @ref alcp_is_error (ret) is false, ctx to be
+ * considered valid.
+ * @param [in]   pCipherHandle Session handle for future encrypt decrypt
  *                         operation
- * \param[in]    pPlainText    Pointer to Plain Text
- * \param[out]   pCipherText   Pointer to Cipher Text
- * \param[in]    pKey          Pointer to Key
- * \param[in]    pIv           Pointer to Initialization Vector
- * \param[in]    len           Length of cipher/plain text
- * \return   Error described by alc_error_t
+ * @param[in]    pPlainText    Pointer to Plain Text
+ * @param[out]   pCipherText   Pointer to Cipher Text
+ * @param[in]    pKey          Pointer to Key
+ * @param[in]    pIv           Pointer to Initialization Vector
+ * @param[in]    len           Length of cipher/plain text
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
@@ -208,18 +282,24 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
                     const Uint8*              pIv);
 
 /**
- * \brief    Allows caller to request for a cipher as described by
+ * @brief    Allows caller to request for a cipher as described by
  *           pCipherInfo
- * \notes    Error needs to be checked for each call,
- *           only upon returned is ALC_ERROR_NONE, ctx to be considered
- *           valid.
- * \param    pCipherHandle Session handle for future encrypt decrypt
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_cipher_request is called  and at
+ * the end of session call @ref alcp_cipher_finish</b>
+ * @endparblock
+ * @note    Error needs to be checked for each call,
+ *           valid only if @ref alcp_is_error (ret) is false, ctx to be
+ * considered valid.
+ * @param [in]   pCipherHandle Session handle for future encrypt decrypt
  *                         operation
- * \param[in]    pInput    Pointer to Input data (plainText or additional data)
- * \param[out]   pOutput   Pointer to output data (cipherText or Tag)
- * \param[in]    len       Length of input or output data
- * \param[in]    pIv       Pointer to Initialization Vector
- * \return   Error described by alc_error_t
+ * @param[in]    pInput    Pointer to Input data (plainText or additional data)
+ * @param[out]   pOutput   Pointer to output data (cipherText or Tag)
+ * @param[in]    len       Length of input or output data
+ * @param[in]    pIv       Pointer to Initialization Vector
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
@@ -229,18 +309,24 @@ alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
                            const Uint8*              pIv);
 
 /**
- * \brief    Allows caller to request for a cipher as described by
+ * @brief    Allows caller to request for a cipher as described by
  *           pCipherInfo
- * \notes    Error needs to be checked for each call,
- *           only upon returned is ALC_ERROR_NONE, ctx to be considered
- *           valid.
- * \param    pCipherHandle Session handle for future encrypt decrypt
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_cipher_request is called  and at
+ * the end of session call @ref alcp_cipher_finish</b>
+ * @endparblock
+ * @note    Error needs to be checked for each call,
+ *           valid only if @ref alcp_is_error (ret) is false, ctx to be
+ *          considered valid.
+ * @param [in]   pCipherHandle Session handle for future encrypt decrypt
  *                         operation
- * \param[in]    pInput    Pointer to Input data (CipherText or additional data)
- * \param[out]   pOutput   Pointer to output data (PlainText or Tag)
- * \param[in]    len       Length of input or output data
- * \param[in]    pIv       Pointer to Initialization Vector
- * \return   Error described by alc_error_t
+ * @param[in]    pInput    Pointer to Input data (CipherText or additional data)
+ * @param[out]   pOutput   Pointer to output data (PlainText or Tag)
+ * @param[in]    len       Length of input or output data
+ * @param[in]    pIv       Pointer to Initialization Vector
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_decrypt_update(const alc_cipher_handle_p pCipherHandle,
@@ -250,12 +336,17 @@ alcp_cipher_decrypt_update(const alc_cipher_handle_p pCipherHandle,
                            const Uint8*              pIv);
 
 /**
- * \brief Allows caller to set the IV/Nonce
- *
- * \param pCipherHandle Session handle for encrypt/decrypt operation
- * \param[in] len  Length in bytes of IV/Nonce
- * \param[in] pIv  IV/Nonce
- * \return Error described by alc_error_t
+ * @brief Allows caller to set the IV/Nonce
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_cipher_request is called  and at
+ * the end of session call @ref alcp_cipher_finish</b>
+ * @endparblock
+ * @param [in] pCipherHandle Session handle for encrypt/decrypt operation
+ * @param[in] len  Length in bytes of IV/Nonce
+ * @param[in] pIv  IV/Nonce
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
@@ -263,12 +354,17 @@ alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
                    const Uint8*              pIv);
 
 /**
- * \brief Allows caller to set the Additonal Data for Tag Generation
- *
- * \param pCipherHandle Session handle for encrypt/decrypt operation
- * \param[in] pInput    Additonal Data in Bytes
- * \param[in] len       Length in bytes of Additional Data
- * \return Error described by alc_error_t
+ * @brief Allows caller to set the Additonal Data for Tag Generation
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_cipher_request is called  and at
+ * the end of session call @ref alcp_cipher_finish</b>
+ * @endparblock
+ * @param[in] pCipherHandle Session handle for encrypt/decrypt operation
+ * @param[in] pInput    Additonal Data in Bytes
+ * @param[in] len       Length in bytes of Additional Data
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_set_aad(const alc_cipher_handle_p pCipherHandle,
@@ -276,12 +372,17 @@ alcp_cipher_set_aad(const alc_cipher_handle_p pCipherHandle,
                     Uint64                    len);
 
 /**
- * \brief Allows caller to set the get a copy of Tag
- *
- * \param pCipherHandle Session handle for encrypt/decrypt operation
- * \param[out] pOutput  Byte addressible memory to write tag into
- * \param[in] len       Length in bytes of Tag in bytes
- * \return Error described by alc_error_t
+ * @brief Allows caller to set the get a copy of Tag
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_cipher_request is called  and at
+ * the end of session call @ref alcp_cipher_finish </b>
+ * @endparblock
+ * @param[in] pCipherHandle Session handle for encrypt/decrypt operation
+ * @param[out] pOutput  Byte addressible memory to write tag into
+ * @param[in] len       Length in bytes of Tag in bytes
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_get_tag(const alc_cipher_handle_p pCipherHandle,
@@ -289,29 +390,40 @@ alcp_cipher_get_tag(const alc_cipher_handle_p pCipherHandle,
                     Uint64                    len);
 
 /**
- * \brief Allows caller to set the set tag size
- *
- * \param pCipherHandle Session handle for encrypt/decrypt operation
- * \param[in] len       Length in bytes of Tag in bytes
- * \return Error described by alc_error_t
+ * @brief Allows caller to set the set tag size
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_cipher_request is called  and at
+ * the end of session call @ref alcp_cipher_finish</b>
+ * @endparblock
+ * @param[in] pCipherHandle Session handle for encrypt/decrypt operation
+ * @param[in] len       Length in bytes of Tag in bytes
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_set_tag_length(const alc_cipher_handle_p pCipherHandle, Uint64 len);
 
 /**
- * \brief    Allows caller to request for a cipher as described by
+ * @brief    Allows caller to request for a cipher as described by
  *           pCipherInfo
- * \notes    Error needs to be checked for each call,
- *           only upon returned is ALC_ERROR_NONE, pCipherHandle
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_cipher_request is called and at the
+ * end of session call @ref alcp_cipher_finish </b>
+ * @endparblock
+ * @note    Error needs to be checked for each call,
+ *           valid only if @ref alcp_is_error (ret) is false, pCipherHandle
  *           is valid.
- * \param[in]    pCipherHandle    Session handle for future encrypt decrypt
+ * @param[in]    pCipherHandle    Session handle for future encrypt decrypt
  *                         operation
- * \param[in]    pPlainText    Pointer to Plain Text
- * \param[out]   pCipherText   Pointer to Cipher Text
- * \param[in]    pKey          Pointer to Key
- * \param[in]    pIv           Pointer to Initialization Vector
- * \param[in]    len           Length of cipher/plain text
- * \return   Error described by alc_error_t
+ * @param[in]    pPlainText    Pointer to Plain Text
+ * @param[out]   pCipherText   Pointer to Cipher Text
+ * @param[in]    pKey          Pointer to Key
+ * @param[in]    pIv           Pointer to Initialization Vector
+ * @param[in]    len           Length of cipher/plain text
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
@@ -321,13 +433,18 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
                     const Uint8*              pIv);
 
 /**
- * \brief       Free resources that was allotted by alcp_cipher_request
- * \notes       alcp_cipher_request() should be called first to know if the
+ * FIXME: Need to fix return type of API
+ * @brief       Free resources that was allotted by alcp_cipher_request
+ * @parblock <br> &nbsp;
+ * <b>This API is called to free resources so should be called to free the
+ * session</b>
+ * @endparblock
+ * @note       alcp_cipher_request() should be called first to know if the
  *              given cipher/key length configuration is valid.
  *
- * \param[in]    pCipherHandle    Session handle for future encrypt decrypt
+ * @param[in]    pCipherHandle    Session handle for future encrypt decrypt
  *                         operation
- * \return            None
+ * @return            None
  */
 ALCP_API_EXPORT void
 alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle);
@@ -335,3 +452,7 @@ alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle);
 EXTERN_C_END
 
 #endif /* _ALCP_CIPHER_H_ */
+
+/**
+ * @}
+ */

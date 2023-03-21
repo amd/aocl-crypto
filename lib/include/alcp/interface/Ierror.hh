@@ -34,7 +34,7 @@
 namespace alcp::base {
 
 /**
- * @detail
+ * @brief
  * IError is an interface class for all errors, to be used with
  * ErrorBase class which defines few necessary methods.
  */

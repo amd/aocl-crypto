@@ -26,6 +26,7 @@
  *
  */
 
+#include "../include/alcp/base/status.hh"
 #include "alcp/utils/bignum.hh"
 #include <algorithm>
 #include <bitset>
@@ -37,7 +38,6 @@
 #include <iostream>
 
 namespace alcp {
-
 class BigNum::Impl
 {
     using typeT = Uint64;

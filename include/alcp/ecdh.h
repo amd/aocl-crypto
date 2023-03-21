@@ -34,13 +34,23 @@
 EXTERN_C_BEGIN
 
 /**
+ * @addtogroup ec
+ * @{
+ */
+
+/**
  * @brief Function generates public key using input privateKey generated
  * public key is shared with the peer.
- * @param pPublicKey - pointer to Output Publickey generated
- * @param pPrivKey - pointer to Input privateKey used for generating
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_ec_request and at the
+ * end of session call @ref alcp_ec_finish</b>
+ * @endparblock
+ * @param [in] pEcHandle - Handler of the Context for the session
+ * @param [out] pPublicKey - pointer to Output Publickey generated
+ * @param [in] pPrivKey - pointer to Input privateKey used for generating
  * publicKey
- * @return true
- * @return false
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
@@ -50,13 +60,17 @@ alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
 /**
  * @brief Function compute secret key with publicKey from remotePeer and
  * local privatekey.
- *
- * @param pSecretKey - pointer to output secretKey
- * @param pPublicKey - pointer to Input privateKey used for generating
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_ec_request and at the
+ * end of session call @ref alcp_ec_finish</b>
+ * @endparblock
+ * @param [in] pEcHandle - Handler of the Context for the session
+ * @param [out] pSecretKey - pointer to output secretKey
+ * @param [in] pPublicKey - pointer to Input privateKey used for generating
  * publicKey
- * @param pKeyLength - pointer to keyLength
- * @return true
- * @return false
+ * @param [in] pKeyLength - pointer to keyLength
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_ec_get_secretkey(const alc_ec_handle_p pEcHandle,
@@ -65,15 +79,20 @@ alcp_ec_get_secretkey(const alc_ec_handle_p pEcHandle,
                       Uint64*               pKeyLength);
 
 /**
- * \brief       Performs any cleanup actions
+ * @brief       Performs any cleanup actions
  *
- * \notes       Must be called to ensure memory allotted (if any) is cleaned.
+ * @parblock <br> &nbsp;
+ * <b>This API is called to free resources so should be called to free the
+ * session</b>
+ * @endparblock
  *
- * \param  pEcHandle The handle that was returned as part of call
+ * @note       Must be called to ensure memory allotted (if any) is cleaned.
+ *
+ * @param [in] pEcHandle The handle that was returned as part of call
  *                       together alcp_ec_request(), once this function
  *                       is called. The handle will not be valid for future
  *
- * \return      None
+ * @return      None
  */
 ALCP_API_EXPORT void
 alcp_ec_finish(const alc_ec_handle_p pEcHandle);
@@ -81,3 +100,6 @@ alcp_ec_finish(const alc_ec_handle_p pEcHandle);
 EXTERN_C_END
 
 #endif /* _ALCP_ECDH_H_ */
+       /**
+        * @}
+        */

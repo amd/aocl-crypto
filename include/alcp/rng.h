@@ -33,8 +33,22 @@
 #include <alcp/macros.h>
 #include <stdint.h>
 
+/**
+ * @defgroup rng RNG API
+ * @brief
+ * Random number generation is a crucial component of cryptography, used to
+ * create keys and prevent attackers from predicting or replicating patterns in
+ * data. It is typically implemented using specialized algorithms or hardware.
+ * @{
+ */
+
 EXTERN_C_BEGIN
 
+/**
+ * @brief Store info about type of RNG used
+ *
+ * @typedef enum alc_rng_type_t
+ */
 typedef enum
 {
     ALC_RNG_TYPE_INVALID = 0,
@@ -45,6 +59,11 @@ typedef enum
     ALC_RNG_TYPE_MAX,
 } alc_rng_type_t;
 
+/**
+ * @brief Store info about source of RNG used
+ *
+ * @typedef enum alc_rng_source_t
+ */
 typedef enum
 {
     ALC_RNG_SOURCE_ALGO = 0, /* Default: select software CRNG/PRNG */
@@ -54,6 +73,11 @@ typedef enum
     ALC_RNG_SOURCE_MAX,
 } alc_rng_source_t;
 
+/**
+ * @brief Store info about distribution used for RNG
+ *
+ * @typedef enum alc_rng_distrib_t
+ */
 typedef enum
 {
     ALC_RNG_DISTRIB_UNKNOWN = 0,
@@ -89,11 +113,26 @@ typedef enum
     ALC_RNG_DISTRIB_MAX,
 } alc_rng_distrib_t;
 
+/**
+ * @brief Store info about algorithm used for RNG
+ *
+ * @typedef enum alc_rng_algo_flags_t
+ */
 typedef enum _alc_rng_algo_flags
 {
     ALC_RNG_FLAG_DUMMY,
 } alc_rng_algo_flags_t;
 
+/**
+ * @brief Store info about RNG
+ *
+ * @param ri_type Store info about type of RNG used
+ * @param ri_source Store info about source of RNG used
+ * @param ri_distrib Store info about distribution used for RNG
+ * @param ri_flagsStore info about algorithm used for RNG
+ *
+ * @struct alc_rng_info_t
+ */
 typedef struct _alc_rng_info
 {
     alc_rng_type_t       ri_type;
@@ -102,57 +141,85 @@ typedef struct _alc_rng_info
     alc_rng_algo_flags_t ri_flags;
 } alc_rng_info_t, *alc_rng_info_p;
 
+/**
+ *
+ * @brief Handler used for rng context handling
+ *
+ * @param rh_context pointer to the context of the rng
+ *
+ * @struct alc_rng_handle_t
+ *
+ */
 typedef struct
 {
     void* rh_context;
 } alc_rng_handle_t, *alc_rng_handle_p, AlcRngHandle, *AlcRngHandleP;
 
 /**
- * \brief   Query Library if the given configuration is supported
- * \notes
+ * @brief   Query Library if the given configuration is supported
+ * @parblock <br> &nbsp;
+ * <b>This API needs to be called before any other API is called to
+ * know if RNG that is being request is supported or not </b>
+ * @endparblock
+ * @param [in]  pRngInfo      Pointer to alc_rng_info_t structure
  *
- * \param   pRngInfo      Pointer to alc_rng_info_t structure
- *
- * \return  alc_error_t     Error code
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_supported(const alc_rng_info_p pRngInfo);
 
 /**
- * \brief   Get the context/session size
- *
- * \notes       User is expected to allocate for the session
+ * @brief   Get the context/session size
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rng_request only otherwise
+ * Context will be empty </b>
+ * @endparblock
+ * @note       User is expected to allocate for the session
  *               this function returns size to be allocated
  *
- * \param   pRngInfo    Pointer to RNG configuration
+ * @param [in]  pRngInfo    Pointer to RNG configuration
  *
- * \return  Uint64      Size of Rng Context
+ * @return  Uint64      Size of Rng Context
  */
 ALCP_API_EXPORT Uint64
 alcp_rng_context_size(const alc_rng_info_p pRngInfo);
 
 /**
- * \brief       Request an handle for given RNG configuration
- * \notes       Requested algorithm may be first checked using
- *              alcp_rng_context_size() and pHandle as allocated by user.
+ * @brief       Request an handle for given RNG configuration
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rng_supported is called and at the
+ * end of session call @ref alcp_rng_finish</b>
+ * @endparblock
+ * @note       Requested algorithm may be first checked using
+ *             @ref alcp_rng_context_size and pHandle as allocated by user.
  *
- * \param       pRngInfo        Pointer to RNG configuration
- * \param       pRngHandle      Pointer to user allocated session
- * \return      alc_error_t     Error code
+ * @param [in]      pRngInfo        Pointer to RNG configuration
+ * @param [in]      pRngHandle      Pointer to user allocated session
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pRngHandle);
 
 /**
- * \brief   Generate and fill buffer with random numbers
- * \notes
+ * @brief   Generate and fill buffer with random numbers
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rng_request and @ref alcp_rng_init
+ * if hardware RNG requires it and at the end of session call @ref
+ * alcp_rng_finish</b>
+ * @endparblock
  *
- * \param   pRngHandle  Pointer to Handle
- * \param   pBuf        Pointer buffer that needs to be filled with random
+ * @param [in]  pRngHandle  Pointer to Handle
+ * @param [out]  pBuf        Pointer buffer that needs to be filled with random
  *                      numbers
- * \param   size        size of pBuf
+ * @param [in]  size        size of pBuf
  *
- * \return  alc_error_t     Error code
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
@@ -161,39 +228,58 @@ alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
 );
 
 /**
- * \brief       Initialize a random number generator
+ * @brief       Initialize a random number generator
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rng_request and at the end of
+ * session call @ref alcp_rng_finish</b>
+ * @endparblock
+ * @note       Some hardware RNGs require initialization
  *
- * \notes       Some hardware RNGs require initialization
- *
- * \param   rng_handle      Pointer to handle returned in alcp_rng_request()
- * \return  alc_error_t     Error code
+ * @param [in]  pRngHandle      Pointer to handle returned in alcp_rng_request()
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  *
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_init(alc_rng_handle_p pRngHandle);
 
 /**
- * \brief   Seed a PRNG or other if supported
+ * @brief   Seed a PRNG or other if supported
  *
- * \notes
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rng_request and @ref alcp_rng_init
+ * if hardware RNG requires it  * <b>This API is called to reset data so should
+ * be called after @ref alcp_digest_request and at the end of session call @ref
+ * alcp_rng_finish</b>
+ * @endparblock</b>
+ * @endparblock
  *
- * \param   rng_handle     Pointer to user allocated handle
- * \param   seed           Pointer to seed
- * \param   size           Length of seed in bytes
+ * @param [in]  pRngHandle     Pointer to user allocated handle
+ * @param [in]  seed           Pointer to seed
+ * @param [in]  size           Length of seed in bytes
  *
- * \return  alc_error_t     Error code, usually ALC_ERROR_NONE
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_seed(alc_rng_handle_p pRngHandle, const Uint8* seed, Uint64 size);
 
 /**
- * \brief   Complete a session
- *
- * \notes   Completes the session which was previously requested using
+ * @brief   Complete a session
+ * @parblock <br> &nbsp;
+ * @parblock <br> &nbsp;
+ * <b>This API is called to free resources so should be called to free the
+ * session</b>
+ * @endparblock
+ * @note   Completes the session which was previously requested using
  *              alcp_rng_request()
  *
- * \param   rng_handle      Pointer to handle
- * \return  alc_error_t     Error code
+ * @param [in]  pRngHandle      Pointer to handle
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_finish(alc_rng_handle_p pRngHandle);
@@ -201,3 +287,6 @@ alcp_rng_finish(alc_rng_handle_p pRngHandle);
 EXTERN_C_END
 
 #endif
+/**
+ * @}
+ */

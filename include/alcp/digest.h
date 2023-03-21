@@ -36,6 +36,20 @@
 
 EXTERN_C_BEGIN
 
+/**
+ * @defgroup digest Digest API
+ * @brief
+ * A digest is a cryptographic technique that creates a fixed-length output from
+ * a variable-length input. It is often used for data integrity checks and
+ * password storage.
+ * @{
+ */
+
+/**
+ * @brief Stores info about type of digest used
+ *
+ * @typedef enum alc_digest_type_t
+ */
 typedef enum _alc_digest_type
 {
     ALC_DIGEST_TYPE_MD2,
@@ -46,6 +60,11 @@ typedef enum _alc_digest_type
     ALC_DIGEST_TYPE_SHA3,
 } alc_digest_type_t;
 
+/**
+ * @brief Stores info about mode of sha2 digest used
+ *
+ * @typedef enum alc_sha2_mode_t
+ */
 typedef enum _alc_sha2_mode
 {
     ALC_SHA2_224,
@@ -54,6 +73,11 @@ typedef enum _alc_sha2_mode
     ALC_SHA2_512,
 } alc_sha2_mode_t;
 
+/**
+ * @brief Stores info about mode of sha3 digest used
+ *
+ * @typedef enum alc_sha3_mode_t
+ */
 typedef enum _alc_sha3_mode
 {
     ALC_SHA3_224,
@@ -64,6 +88,11 @@ typedef enum _alc_sha3_mode
     ALC_SHAKE_256,
 } alc_sha3_mode_t;
 
+/**
+ * @brief Stores info about digest length used for digest
+ *
+ * @typedef enum alc_digest_len_t
+ */
 typedef enum _alc_digest_len
 {
     ALC_DIGEST_LEN_128 = 128, /* for MD2,MD4,MD5 */
@@ -77,6 +106,13 @@ typedef enum _alc_digest_len
     ALC_DIGEST_LEN_CUSTOM = 17, /* anything not covered by above */
 } alc_digest_len_t;
 
+/**
+ * @brief Stores info about digest mode to be used
+ *
+ * @param dm_sha2, dm_sha3 used to store info of mode
+ *
+ * @union alc_digest_mode_t
+ */
 typedef union _alc_digest_mode
 {
     alc_sha2_mode_t dm_sha2;
@@ -84,11 +120,30 @@ typedef union _alc_digest_mode
 
 } alc_digest_mode_t, *alc_diget_mode_p;
 
+/**
+ * @brief Stores info about digest data
+ *
+ * @param dd_ptr used to store digest data
+ *
+ * @struct alc_digest_data_t
+ */
 typedef struct _alc_digest_data
 {
     void* dd_ptr;
 } alc_digest_data_t;
 
+/**
+ * @brief Stores all info about digest
+ *
+ * @param dt_type Stores info about type of digest used
+ * @param dt_len  Stores info about digest lenght used for digest
+ * @param dt_custom_len Stores digest length valid when dgst_len ==
+ * ALC_DIGEST_LEN_CUSTOM
+ * @param dt_mode Stores info about digest mode to be used
+ * @param dt_data Stores info about digest data
+ *
+ * @struct alc_digest_info_t
+ */
 typedef struct _alc_digest_info
 {
     alc_digest_type_t dt_type;
@@ -100,16 +155,18 @@ typedef struct _alc_digest_info
 } alc_digest_info_t, *alc_digest_info_p;
 
 /**
- * \brief
+ * @brief Store Context for the future operation of digest
  *
- * \notes
  */
 typedef void                  alc_digest_context_t;
 typedef alc_digest_context_t* alc_digest_context_p;
 
 /**
- * \brief
- * \notes
+ * @brief Handler used for digest context handling
+ *
+ * @param context pointer to the context of the digest
+ *
+ * @struct alc_digest_handle_t
  */
 typedef struct _alc_digest_handle
 {
@@ -117,59 +174,87 @@ typedef struct _alc_digest_handle
 } alc_digest_handle_t, *alc_digest_handle_p, AlcDigestHandle, *AlcDigestHandleP;
 
 /**
- * \brief       Returns the context size of the interaction
+ * @brief       Returns the context size of the interaction
  *
- * \notes       alcp_cipher_supported() should be called first to
- *              know if the given cipher/key length configuration is valid.
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_digest_request only otherwise
+ * Context will be empty </b>
+ * @endparblock
  *
- * \param       p_digest_info   Description of the requested cipher session
+ * @note       alcp_cipher_supported() should be called first to
+ *              know if the given configuration is valid.
  *
- * \return      size > 0        if valid session is found, size otherwise
+ * @param [in]       p_digest_info   Description of the requested cipher session
+ *
+ * @return      Size of Context
  */
 ALCP_API_EXPORT Uint64
 alcp_digest_context_size(const alc_digest_info_p p_digest_info);
 
 /**
- * \brief       TODO: fix this comment
+ * @brief  Allows to check if a given algorithm is supported or not
  *
- * \notes       alcp_cipher_supported() should be called first to
+ * @parblock <br> &nbsp;
+ * <b>This API needs to be called before any other API is called to
+ * know if digest that is being request is supported or not </b>
+ * @endparblock
+ *
+ * @note        alcp_cipher_supported() is called first to
  *              know if the given cipher/key length configuration is valid.
  *
- * \param       p_digest_info Description of the requested cipher session
+ * @param [in]      p_digest_info Description of the requested cipher session
  *
- * \return      size > 0 if valid session is found, size otherwise
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_digest_supported(const alc_digest_info_p p_digest_info);
 
 /**
- * \brief       Request a handle for digest  for a configuration
+ * @brief       Request a handle for digest  for a configuration
  *              as pointed by p_digest_info_p
- * \notes       alcp_cipher_supported() should be called first to
+ *
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_digest_supported is called and at
+ * the end of session call @ref alcp_digest_finish </b>
+ * @endparblock
+ *
+ * @note       alcp_cipher_supported() should be called first to
  *              know if the given type/digest length configuration is valid.
  *
- * \param       p_digest_info   Description of the requested digest session
+ * @param [in]      p_digest_info   Description of the requested digest session
  *
- * \param        p_digest_handle The handle returned by the Library
+ * @param [in]      p_digest_handle The handle returned by the Library
  *
- * \return      size > 0        if valid session is found, size otherwise
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_digest_request(const alc_digest_info_p p_digest_info,
                     alc_digest_handle_p     p_digest_handle);
 
 /**
- * \brief       Computes digest for the buffer pointed by buf for size as
+ * @brief       Computes digest for the buffer pointed by buf for size as
  *              as mentioned by size.
- * \notes       repeated calls to this is allowed and the handle will
+ *
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_digest_request and at the end of
+ * session call @ref alcp_digest_finish</b>
+ * @endparblock
+ *
+ * @note       repeated calls to this is allowed and the handle will
  *               contain the latest digest.
- * \param  p_digest_handle The handle that was returned as part of call together
- *                         alcp_digest_request()
- * \param buf              Destination buffer to which digest will be copied
- * \param size             Destination buffer size, should be big enough
+ * @param [in] p_digest_handle The handle that was returned as part of call
+ * together alcp_digest_request()
+ * @param [in] buf              Destination buffer to which digest will be
+ * copied
+ * @param [in] size             Destination buffer size, should be big enough
  *                         to hold the digest
- * \return      ALC_ERROR_NONE if buffer is big enough and handle is valid;
- *              otherwise corresponding error is returned.
+ * @return   &nbsp; Error Code for the API called. if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_digest_update(const alc_digest_handle_p p_digest_handle,
@@ -177,19 +262,24 @@ alcp_digest_update(const alc_digest_handle_p p_digest_handle,
                    Uint64                    size);
 
 /**
- * \brief       Digest is kept as part of p_digest_handle, this API allows
+ * @brief       Digest is kept as part of p_digest_handle, this API allows
  *              it to be copied to specified buffer
- * \notes
  *
- * \param  p_digest_handle The handle that was returned as part of
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_digest_request and at the end of
+ * session call @ref alcp_digest_finish</b>
+ * @endparblock
+ *
+ * @param [in] p_digest_handle The handle that was returned as part of
  *                         call together alcp_digest_request()
- * \param       buf     Destination buffer to which digest will be copied
+ * @param [out]       buf     Destination buffer to which digest will be copied
  *
- * \param       size    Destination buffer size, should be big enough
+ * @param [in]       size    Destination buffer size, should be big enough
  *                      to hold the digest
  *
- * \return      ALC_ERROR_NONE  if buffer is big enough and handle is valid;
- *                      otherwise corresponding error is returned.
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_digest_copy(const alc_digest_handle_p p_digest_handle,
@@ -197,20 +287,27 @@ alcp_digest_copy(const alc_digest_handle_p p_digest_handle,
                  Uint64                    size);
 
 /**
- * \brief       Final buffer call
+ * @brief       Final buffer call
  *
- * \notes       It is expected that application calls alcp_digest_copy() before
- *              calling this functions as the contents of the session is not
- *              guaranteed to persist after alcp_digest_finish()
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_digest_request  and at the end of
+ * session call @ref alcp_digest_finish</b>
+ * @endparblock
  *
- * \param       p_digest_handle The handle that was returned as part of call
+ * @note       It is expected that application calls @ref alcp_digest_copy()
+ * after calling this functions as the contents of the session is not guaranteed
+ * to persist after @ref alcp_digest_finish()
+ *
+ * @param [in]      p_digest_handle The handle that was returned as part of call
  *                              together alcp_digest_request(),
  *
- * \param       p_msg_buf       pointer to message buffer or NULL
+ * @param[out]      p_msg_buf       pointer to message buffer or NULL
  *
- * \param       size            Size of message buffer or 0
+ * @param[in]      size            Size of message buffer or 0
  *
- * \return      ALC_ERROR_NONE if no error occurs
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_digest_finalize(const alc_digest_handle_p p_digest_handle,
@@ -218,30 +315,45 @@ alcp_digest_finalize(const alc_digest_handle_p p_digest_handle,
                      Uint64                    size);
 
 /**
- * \brief       Performs any cleanup actions
  *
- * \notes       Must be called to ensure memory allotted (if any) is cleaned.
+ * FIXME: Need to fix return type of API
+ * @brief       Performs any cleanup actions
  *
- * \param  p_digest_handle The handle that was returned as part of call
+ * @parblock <br> &nbsp;
+ * <b>This API is called to free resources so should be called to free the
+ * session</b>
+ * @endparblock
+ *
+ * @note       Must be called to ensure memory allotted (if any) is cleaned.
+ *
+ * @param [in] p_digest_handle The handle that was returned as part of call
  *                       together alcp_digest_request(), once this function
  *                       is called. the handle is will not be valid for future
  *
- * \return      None
+ * @return      None
  */
 ALCP_API_EXPORT void
 alcp_digest_finish(const alc_digest_handle_p p_digest_handle);
 
 /**
- * \brief       resets the internal state of the digest handle
  *
- * \notes       Must be called to restart the digest operation on an already
+ * FIXME: Need to fix return type of API
+ * @brief       resets the internal state of the digest handle
+ *
+ * @parblock <br> &nbsp;
+ * <b>This API is called to reset data so should be called after @ref
+ * alcp_digest_request and at the end of
+ * session call @ref alcp_digest_finish</b>
+ * @endparblock
+ *
+ * @note       Must be called to restart the digest operation on an already
  * existing handle.
  *
- * \param  p_digest_handle The handle that was returned as part of call
+ * @param [in] p_digest_handle The handle that was returned as part of call
  *                       together alcp_digest_request(), once this function
  *                       is called. the handle is will not be valid for future
  *
- * \return      None
+ * @return      None
  */
 ALCP_API_EXPORT void
 alcp_digest_reset(const alc_digest_handle_p p_digest_handle);
@@ -249,3 +361,6 @@ alcp_digest_reset(const alc_digest_handle_p p_digest_handle);
 EXTERN_C_END
 
 #endif /* _ALCP_DIGEST_H */
+       /**
+        * @}
+        */

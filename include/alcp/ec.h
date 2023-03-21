@@ -35,6 +35,20 @@
 
 EXTERN_C_BEGIN
 
+/**
+ * @defgroup ec EC API
+ * @brief
+ * Elliptic curve cryptography (ECC) is a type of public key cryptography that
+ * uses the mathematics of elliptic curves to secure information and protect
+ * sensitive data.
+ * @{
+ */
+
+/**
+ * @brief Store info about curve id used for EC
+ *
+ * @typedef enum alc_ec_curve_id
+ */
 typedef enum
 {
     ALCP_EC_CURVE25519 = 0,
@@ -42,6 +56,11 @@ typedef enum
     ALCP_EC_MAX,
 } alc_ec_curve_id;
 
+/**
+ * @brief Store info about curve type used for EC
+ *
+ * @typedef enum alc_ec_curve_type
+ */
 typedef enum
 {
     ALCP_EC_CURVE_TYPE_SHORT_WEIERSTRASS = 0,
@@ -49,12 +68,26 @@ typedef enum
     ALCP_EC_CURVE_TYPE_MAX
 } alc_ec_curve_type;
 
+/**
+ * @brief Store info about point format id used for EC
+ *
+ * @typedef enum alc_ec_point_format_id
+ */
 typedef enum
 {
     ALCP_EC_POINT_FORMAT_UNCOMPRESSED = 0,
     ALCP_EC_POINT_FORMAT_COMPRESSED,
 } alc_ec_point_format_id;
 
+/**
+ * @brief Store info about EC
+ *
+ * @param ecCurveId     Store info about curve id used for EC
+ * @param ecCurveType   Store info about curve type used for EC
+ * @param ecPointFormat Store info about point format id used for EC
+ *
+ * @struct alc_ec_info_t
+ */
 typedef struct alc_ec_info
 {
     alc_ec_curve_id        ecCurveId;
@@ -64,16 +97,18 @@ typedef struct alc_ec_info
 } alc_ec_info_t, *alc_ec_info_p;
 
 /**
- * \brief
+ * @brief Store Context for the future operation of EC
  *
- * \notes
  */
 typedef void              alc_ec_context_t;
 typedef alc_ec_context_t* alc_ec_context_p;
 
 /**
- * \brief
- * \notes
+ * @brief Handler used for EC context handling
+ *
+ * @param context pointer to the context of the EC
+ *
+ * @struct alc_ec_handle_t
  */
 typedef struct _alc_ec_handle
 {
@@ -81,42 +116,62 @@ typedef struct _alc_ec_handle
 } alc_ec_handle_t, *alc_ec_handle_p, AlcEcHandle, *AlcEcHandleP;
 
 /**
- * \brief       Returns the context size of the interaction
+ * @brief       Returns the context size of the interaction
  *
- * \notes       alcp_ec_supported() should be called first to
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_ec_request only otherwise
+ * Context will be empty </b>
+ * @endparblock
+ *
+ * @note        @ref alcp_ec_supported() should be called first to
  *              know if the given curveType is valid.
  *
- * \param       p_ec_info   Description of the requested ec session
+ * @param [in]      p_ec_info   Description of the requested ec session
  *
- * \return      size > 0    if valid session is found, size otherwise
+ * @return      Size of Context
  */
 ALCP_API_EXPORT Uint64
 alcp_ec_context_size(const alc_ec_info_p p_ec_info);
 
 /**
- * \brief       Allows to check if a given algorithm is supported
+ * @brief       Allows to check if a given algorithm is supported
  *
- * \notes       alcp_ec_supported() should be called
+ * @parblock <br> &nbsp;
+ * <b>This API needs to be called before any other API is called to
+ * know if EC that is being request is supported or not </b>
+ * @endparblock
+ *
+ * @note        alcp_ec_supported() should be called
  *              know if the given curveType and configuration is valid.
  *
- * \param       pEcInfo Description of the requested ec session
+ * @param [in]      pEcInfo Description of the requested ec session
  *
- * \return      size > 0 if valid session is found, size otherwise
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_ec_supported(const alc_ec_info_p pEcInfo);
 
 /**
- * \brief       Request a handle for ec  for a configuration
+ * @brief       Request a handle for ec  for a configuration
  *              as pointed by p_ec_info_p
- * \notes       alcp_ec_supported() should be called first to
+ *
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_ec_supported is called and at the
+ * end of session call @ref alcp_ec_finish</b>
+ * @endparblock
+ *
+ * @note        alcp_ec_supported() should be called first to
  *              know if the given curveType is valid.
  *
- * \param       pEcInfo   Description of the requested ec session
+ * @param [in]      pEcInfo   Description of the requested ec session
  *
- * \param       pEcHandle The handle returned by the Library
+ * @param [in]      pEcHandle The handle returned by the Library
  *
- * \return      size > 0        if valid session is found, size otherwise
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_ec_request(const alc_ec_info_p pEcInfo, alc_ec_handle_p pEcHandle);
@@ -124,3 +179,6 @@ alcp_ec_request(const alc_ec_info_p pEcInfo, alc_ec_handle_p pEcHandle);
 EXTERN_C_END
 
 #endif /* _ALCP_EC_H_ */
+       /**
+        * @}
+        */

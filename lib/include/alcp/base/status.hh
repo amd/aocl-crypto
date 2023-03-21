@@ -95,11 +95,8 @@ class Status final
     /**
      * @name code()
      *
-     * @detail
+     * @brief
      * Returns encoded error code
-     *
-     * @params
-     * n/a
      *
      * @result          Uint64          encoded error code
      */
@@ -108,7 +105,7 @@ class Status final
     /**
      * @name update()
      *
-     * @detail
+     * @brief
      * Update the error code and message only if there was no error earlier;
      * this is done to presever the very first error that happens
      *

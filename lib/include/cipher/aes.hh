@@ -47,9 +47,9 @@ namespace alcp::cipher {
 using Status = alcp::base::Status;
 
 /*
- * \brief       AES (Advanced Encryption Standard)
+ * @brief       AES (Advanced Encryption Standard)
  *
- * \notes       AES is currently same as Rijndael, This may be renamed to
+ * @note       AES is currently same as Rijndael, This may be renamed to
  *              other as well in the future.
  *
  * TODO: We need to move the exception to an init() function. as the constructor
@@ -63,8 +63,7 @@ class Aes : public Rijndael
                  const alc_key_info_t&         keyInfo)
         : Rijndael{ keyInfo }
         , m_mode{ aesInfo.ai_mode }
-    {
-    }
+    {}
 
   protected:
     virtual ~Aes() {}
@@ -87,8 +86,8 @@ class Aes : public Rijndael
 };
 
 /*
- * \brief        AES Encryption in CBC(Cipher block chaining)
- * \notes        TODO: Move this to a aes_cbc.hh or other
+ * @brief        AES Encryption in CBC(Cipher block chaining)
+ * @note        TODO: Move this to a aes_cbc.hh or other
  */
 class ALCP_API_EXPORT Cbc final : public Aes
 {
@@ -96,8 +95,7 @@ class ALCP_API_EXPORT Cbc final : public Aes
     explicit Cbc(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {
-    }
+    {}
 
     ~Cbc() {}
 
@@ -108,12 +106,6 @@ class ALCP_API_EXPORT Cbc final : public Aes
         return true;
     }
 
-    /**
-     * \brief
-     * \notes
-     * \param
-     * \return
-     */
     virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
     {
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
@@ -127,13 +119,13 @@ class ALCP_API_EXPORT Cbc final : public Aes
     }
 
     /**
-     * \brief   CBC Encrypt Operation
-     * \notes
-     * \param   pPlainText      Pointer to output buffer
-     * \param   pCipherText     Pointer to encrypted buffer
-     * \param   len             Len of plain and encrypted text
-     * \param   pIv             Pointer to Initialization Vector
-     * \return  alc_error_t     Error code
+     * @brief   CBC Encrypt Operation
+     * @note
+     * @param   pPlainText      Pointer to output buffer
+     * @param   pCipherText     Pointer to encrypted buffer
+     * @param   len             Len of plain and encrypted text
+     * @param   pIv             Pointer to Initialization Vector
+     * @return  alc_error_t     Error code
      */
     virtual alc_error_t encrypt(const Uint8* pPlainText,
                                 Uint8*       pCipherText,
@@ -141,13 +133,13 @@ class ALCP_API_EXPORT Cbc final : public Aes
                                 const Uint8* pIv) const final;
 
     /**
-     * \brief   CBC Decrypt Operation
-     * \notes
-     * \param   pCipherText     Pointer to encrypted buffer
-     * \param   pPlainText      Pointer to output buffer
-     * \param   len             Len of plain and encrypted text
-     * \param   pIv             Pointer to Initialization Vector
-     * \return  alc_error_t     Error code
+     * @brief   CBC Decrypt Operation
+     * @note
+     * @param   pCipherText     Pointer to encrypted buffer
+     * @param   pPlainText      Pointer to output buffer
+     * @param   len             Len of plain and encrypted text
+     * @param   pIv             Pointer to Initialization Vector
+     * @return  alc_error_t     Error code
      */
     virtual alc_error_t decrypt(const Uint8* pCipherText,
                                 Uint8*       pPlainText,
@@ -161,8 +153,8 @@ class ALCP_API_EXPORT Cbc final : public Aes
 };
 
 /*
- * \brief        AES Encryption in OFB(Output Feedback)
- * \notes        TODO: Move this to a aes_ofb.hh or other
+ * @brief        AES Encryption in OFB(Output Feedback)
+ * @note        TODO: Move this to a aes_ofb.hh or other
  */
 class ALCP_API_EXPORT Ofb final : public Aes
 {
@@ -170,8 +162,7 @@ class ALCP_API_EXPORT Ofb final : public Aes
     explicit Ofb(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {
-    }
+    {}
 
     ~Ofb() {}
 
@@ -182,12 +173,6 @@ class ALCP_API_EXPORT Ofb final : public Aes
         return true;
     }
 
-    /**
-     * \brief
-     * \notes
-     * \param
-     * \return
-     */
     virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
     {
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
@@ -201,13 +186,13 @@ class ALCP_API_EXPORT Ofb final : public Aes
     }
 
     /**
-     * \brief   OFB Encrypt Operation
-     * \notes
-     * \param   pPlainText      Pointer to output buffer
-     * \param   pCipherText     Pointer to encrypted buffer
-     * \param   len             Len of plain and encrypted text
-     * \param   pIv             Pointer to Initialization Vector
-     * \return  alc_error_t     Error code
+     * @brief   OFB Encrypt Operation
+     * @note
+     * @param   pPlainText      Pointer to output buffer
+     * @param   pCipherText     Pointer to encrypted buffer
+     * @param   len             Len of plain and encrypted text
+     * @param   pIv             Pointer to Initialization Vector
+     * @return  alc_error_t     Error code
      */
     virtual alc_error_t encrypt(const Uint8* pPlainText,
                                 Uint8*       pCipherText,
@@ -215,13 +200,13 @@ class ALCP_API_EXPORT Ofb final : public Aes
                                 const Uint8* pIv) const final;
 
     /**
-     * \brief   OFB Decrypt Operation
-     * \notes
-     * \param   pCipherText     Pointer to encrypted buffer
-     * \param   pPlainText      Pointer to output buffer
-     * \param   len             Len of plain and encrypted text
-     * \param   pIv             Pointer to Initialization Vector
-     * \return  alc_error_t     Error code
+     * @brief   OFB Decrypt Operation
+     * @note
+     * @param   pCipherText     Pointer to encrypted buffer
+     * @param   pPlainText      Pointer to output buffer
+     * @param   len             Len of plain and encrypted text
+     * @param   pIv             Pointer to Initialization Vector
+     * @return  alc_error_t     Error code
      */
     virtual alc_error_t decrypt(const Uint8* pCipherText,
                                 Uint8*       pPlainText,
@@ -235,8 +220,8 @@ class ALCP_API_EXPORT Ofb final : public Aes
 };
 
 /*
- * \brief        AES Encryption in Ctr(Counter mode)
- * \notes        TODO: Move this to a aes_Ctr.hh or other
+ * @brief        AES Encryption in Ctr(Counter mode)
+ * @note        TODO: Move this to a aes_Ctr.hh or other
  */
 class ALCP_API_EXPORT Ctr final : public Aes
 {
@@ -245,8 +230,7 @@ class ALCP_API_EXPORT Ctr final : public Aes
     explicit Ctr(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {
-    }
+    {}
 
     ~Ctr() {}
 
@@ -257,12 +241,6 @@ class ALCP_API_EXPORT Ctr final : public Aes
         return true;
     }
 
-    /**
-     * \brief
-     * \notes
-     * \param
-     * \return
-     */
     virtual bool isSupported(const alc_cipher_info_t& cipherInfo)
     {
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
@@ -276,13 +254,13 @@ class ALCP_API_EXPORT Ctr final : public Aes
     }
 
     /**
-     * \brief   CTR Encrypt Operation
-     * \notes
-     * \param   pPlainText      Pointer to output buffer
-     * \param   pCipherText     Pointer to encrypted buffer
-     * \param   len             Len of plain and encrypted text
-     * \param   pIv             Pointer to Initialization Vector
-     * \return  alc_error_t     Error code
+     * @brief   CTR Encrypt Operation
+     * @note
+     * @param   pPlainText      Pointer to output buffer
+     * @param   pCipherText     Pointer to encrypted buffer
+     * @param   len             Len of plain and encrypted text
+     * @param   pIv             Pointer to Initialization Vector
+     * @return  alc_error_t     Error code
      */
     virtual alc_error_t encrypt(const Uint8* pPlainText,
                                 Uint8*       pCipherText,
@@ -290,13 +268,13 @@ class ALCP_API_EXPORT Ctr final : public Aes
                                 const Uint8* pIv) const final;
 
     /**
-     * \brief   CTR Decrypt Operation
-     * \notes
-     * \param   pCipherText     Pointer to encrypted buffer
-     * \param   pPlainText      Pointer to output buffer
-     * \param   len             Len of plain and encrypted text
-     * \param   pIv             Pointer to Initialization Vector
-     * \return  alc_error_t     Error code
+     * @brief   CTR Decrypt Operation
+     * @note
+     * @param   pCipherText     Pointer to encrypted buffer
+     * @param   pPlainText      Pointer to output buffer
+     * @param   len             Len of plain and encrypted text
+     * @param   pIv             Pointer to Initialization Vector
+     * @return  alc_error_t     Error code
      */
     virtual alc_error_t decrypt(const Uint8* pCipherText,
                                 Uint8*       pPlainText,
@@ -307,8 +285,8 @@ class ALCP_API_EXPORT Ctr final : public Aes
 };
 
 /*
- * \brief        AES Encryption in GCM(Galois Counter mode)
- * \notes        TODO: Move this to a aes_Gcm.hh or other
+ * @brief        AES Encryption in GCM(Galois Counter mode)
+ * @note        TODO: Move this to a aes_Gcm.hh or other
  */
 class ALCP_API_EXPORT Gcm final
     : public Aes
@@ -363,12 +341,6 @@ class ALCP_API_EXPORT Gcm final
         return true;
     }
 
-    /**
-     * \brief
-     * \notes
-     * \param
-     * \return
-     */
     virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
     {
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
@@ -409,15 +381,15 @@ class ALCP_API_EXPORT Gcm final
     virtual alc_error_t setAad(const Uint8* pInput, Uint64 len);
 
     /**
-     * \brief  GCM Invalid Encrypt Operartion
-     * \notes  Use encryptUpdate instead
-     * \param   pInput      Pointer to input buffer
+     * @brief  GCM Invalid Encrypt Operartion
+     * @note  Use encryptUpdate instead
+     * @param   pInput      Pointer to input buffer
      *                          (plainText or Additional data)
-     * \param   pOuput          Pointer to encrypted buffer
+     * @param   pOuput          Pointer to encrypted buffer
      *                          when pointer NULL, input is additional data
-     * \param   len             Len of input buffer
+     * @param   len             Len of input buffer
      *                          (plainText or Additional data)
-     * \param   pIv             Pointer to Initialization Vector \return
+     * @param   pIv             Pointer to Initialization Vector @return
      * alc_error_t     Error code
      */
     virtual alc_error_t encrypt(const Uint8* pInput,
@@ -434,7 +406,7 @@ class ALCP_API_EXPORT Gcm final
      *                          when pointer NULL, input is additional data
      * @param   len             Len of input buffer
      *                          (plainText or Additional data)
-     * @param   pIv             Pointer to Initialization Vector \return
+     * @param   pIv             Pointer to Initialization Vector @return
      * @return alc_error_t
      */
     virtual alc_error_t encryptUpdate(const Uint8* pInput,
@@ -443,13 +415,13 @@ class ALCP_API_EXPORT Gcm final
                                       const Uint8* pIv) override;
 
     /**
-     * \brief   GCM Invalid Decrypt Operation
-     * \notes   Use decryptUpdate instead
-     * \param   pCipherText     Pointer to encrypted buffer
-     * \param   pPlainText      Pointer to output buffer
-     * \param   len             Len of plain and encrypted text
-     * \param   pIv             Pointer to Initialization Vector
-     * \return  alc_error_t     Error code
+     * @brief   GCM Invalid Decrypt Operation
+     * @note   Use decryptUpdate instead
+     * @param   pCipherText     Pointer to encrypted buffer
+     * @param   pPlainText      Pointer to output buffer
+     * @param   len             Len of plain and encrypted text
+     * @param   pIv             Pointer to Initialization Vector
+     * @return  alc_error_t     Error code
      */
     virtual alc_error_t decrypt(const Uint8* pCipherText,
                                 Uint8*       pPlainText,
@@ -494,6 +466,7 @@ class ALCP_API_EXPORT Gcm final
  * @brief CCM mode (Copy of GCM class)
  * Uses encryptUpdate and decryptUpdate instead of
  * encrypt and decrypt.
+ * @struct ccm_data_t
  */
 
 struct _ccm_data_t
@@ -524,8 +497,7 @@ class ALCP_API_EXPORT Ccm final
     explicit Ccm(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {
-    }
+    {}
 
     ~Ccm() {}
 
@@ -535,12 +507,6 @@ class ALCP_API_EXPORT Ccm final
         return true;
     }
 
-    /**
-     * \brief
-     * \notes
-     * \param
-     * \return
-     */
     virtual bool isSupported(const alc_cipher_info_t& cipherInfo)
     {
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
@@ -574,15 +540,15 @@ class ALCP_API_EXPORT Ccm final
                    size_t       len);
 
     /**
-     * \brief   CCM Encrypt Operation
-     * \notes
-     * \param   pInput      Pointer to input buffer
+     * @brief   CCM Encrypt Operation
+     * @note
+     * @param   pInput      Pointer to input buffer
      *                          (plainText or Additional data)
-     * \param   pOuput          Pointer to encrypted buffer
+     * @param   pOuput          Pointer to encrypted buffer
      *                          when pointer NULL, input is additional data
-     * \param   len             Len of input buffer
+     * @param   len             Len of input buffer
      *                          (plainText or Additional data)
-     * \param   pIv             Pointer to Initialization Vector \return
+     * @param   pIv             Pointer to Initialization Vector @return
      * alc_error_t     Error code
      */
     virtual alc_error_t encrypt(const Uint8* pInput,
@@ -596,13 +562,13 @@ class ALCP_API_EXPORT Ccm final
                                       const Uint8* pIv) override;
 
     /**
-     * \brief   CCM Decrypt Operation
-     * \notes
-     * \param   pCipherText     Pointer to encrypted buffer
-     * \param   pPlainText      Pointer to output buffer
-     * \param   len             Len of plain and encrypted text
-     * \param   pIv             Pointer to Initialization Vector
-     * \return  alc_error_t     Error code
+     * @brief   CCM Decrypt Operation
+     * @note
+     * @param   pCipherText     Pointer to encrypted buffer
+     * @param   pPlainText      Pointer to output buffer
+     * @param   len             Len of plain and encrypted text
+     * @param   pIv             Pointer to Initialization Vector
+     * @return  alc_error_t     Error code
      */
     virtual alc_error_t decrypt(const Uint8* pCipherText,
                                 Uint8*       pPlainText,
@@ -630,7 +596,7 @@ class ALCP_API_EXPORT Ccm final
 };
 
 /*
- * \brief        AES Encryption in XTS(XEX Tweakable Block Ciphertext
+ * @brief        AES Encryption in XTS(XEX Tweakable Block Ciphertext
  * Stealing Mode)
  */
 class ALCP_API_EXPORT Xts final : public Aes
@@ -657,12 +623,6 @@ class ALCP_API_EXPORT Xts final : public Aes
         return true;
     }
 
-    /**
-     * \brief
-     * \notes
-     * \param
-     * \return
-     */
     virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
     {
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
@@ -675,13 +635,13 @@ class ALCP_API_EXPORT Xts final : public Aes
     }
 
     /**
-     * \brief   XTS Encrypt Operation
-     * \notes
-     * \param   pPlainText      Pointer to output buffer
-     * \param   pCipherText     Pointer to encrypted buffer
-     * \param   len             Len of plain and encrypted text
-     * \param   pIv             Pointer to Initialization Vector
-     * \return  alc_error_t     Error code
+     * @brief   XTS Encrypt Operation
+     * @note
+     * @param   pPlainText      Pointer to output buffer
+     * @param   pCipherText     Pointer to encrypted buffer
+     * @param   len             Len of plain and encrypted text
+     * @param   pIv             Pointer to Initialization Vector
+     * @return  alc_error_t     Error code
      */
     virtual alc_error_t encrypt(const Uint8* pPlainText,
                                 Uint8*       pCipherText,
@@ -689,13 +649,13 @@ class ALCP_API_EXPORT Xts final : public Aes
                                 const Uint8* pIv) const final;
 
     /**
-     * \brief   XTS Decrypt Operation
-     * \notes
-     * \param   pCipherText     Pointer to encrypted buffer
-     * \param   pPlainText      Pointer to output buffer
-     * \param   len             Len of plain and encrypted text
-     * \param   pIv             Pointer to Initialization Vector
-     * \return  alc_error_t     Error code
+     * @brief   XTS Decrypt Operation
+     * @note
+     * @param   pCipherText     Pointer to encrypted buffer
+     * @param   pPlainText      Pointer to output buffer
+     * @param   len             Len of plain and encrypted text
+     * @param   pIv             Pointer to Initialization Vector
+     * @return  alc_error_t     Error code
      */
     virtual alc_error_t decrypt(const Uint8* pCipherText,
                                 Uint8*       pPlainText,

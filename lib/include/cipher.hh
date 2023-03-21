@@ -144,11 +144,11 @@ class Cipher
     virtual ~Cipher() {}
 
     /**
-     * \brief           Checks if a given algorithm is supported
-     * \notes           Function  checks for algorithm and its
+     * @brief           Checks if a given algorithm is supported
+     * @note           Function  checks for algorithm and its
      *                  configuration for supported options
-     * \param   pCipherInfo  Pointer to Cipher information
-     * \return          'true' if the given configuration/cipher is
+     * @param   pCipherInfo  Pointer to Cipher information
+     * @return          'true' if the given configuration/cipher is
      * supported 'false' otherwise
      */
     virtual bool isSupported(const alc_cipher_info_t& cipherInfo) = 0;
@@ -174,7 +174,7 @@ class ICipher
 /**
  * @brief ICypherUpdater  - Class useful when stride of data is not
  *                    aligned to natural size of the algorithm
- * @notes
+ * @note
  */
 class ICipherUpdater
     : public cipher::IDecryptUpdater

@@ -33,8 +33,20 @@
 #include "alcp/macros.h"
 #include "alcp/types.h"
 
+/**
+ * @defgroup error Error API
+ * @brief
+ * Error API are used to know the Failure Issues caused by any other API used
+ * @{
+ *
+ */
+
 EXTERN_C_BEGIN
 
+/**
+ * @brief Provide the Error Code for the error occured if any
+ * @typedef enum alc_error_generic_t
+ */
 typedef enum _alc_error_generic
 {
     /*
@@ -120,36 +132,54 @@ typedef enum _alc_error_generic
 
 } alc_error_generic_t;
 
+/**
+ * @brief Used to Provide the Error Code for the error occured if any
+ * @typedef Uint64 alc_error_t
+ */
 typedef Uint64 alc_error_t;
 
 /**
- * \brief        Converts AOCL Crypto errors to human readable form
- * \notes        This is internal usage only, prints Filename and line number
  *
- * \param err    Actual Error
- * \param buf    Buffer to write the Error message to
- * \param size   Size of the buffer @buf
+ * @brief        Converts AOCL Crypto errors to human readable form
+ * @parblock <br> &nbsp;
+ * <b>This API should be called only if any error occured while executing other
+ * API</b>
+ * @endparblock
+ *
+ * @note         API mentions Filename and line number on which error occurred
+ * along with error info
+ *
+ * @param [in] err    Actual Error
+ * @param [out] buf    Buffer to write the Error message to
+ * @param [in] size   Size of the buffer @ref buf. Size of buf should be atleast
+ * 1024
  */
-
 ALCP_API_EXPORT void
 alcp_error_str(alc_error_t err, Uint8* buf, Uint64 size);
 
 /**
- * \brief        Returns true if an error has occurred
- * \notes        This is the only way to check if an error has occurred in the
+ * @brief        Returns true if an error has occurred
+ * @parblock <br> &nbsp;
+ * <b>This API should be called to check if error has occurred or not</b>
+ * @endparblock
+ * @note        This is the only way to check if an error has occurred in the
  *               previous call.
  *
- * \param err    Actual Error
+ * @param [in] err    Actual Error
  */
 ALCP_API_EXPORT bool
 alcp_is_error(alc_error_t err);
 
 /**
- * \brief        Clears the error and releases any resources
- * \notes        At the end of using the error variable, alcp_error_clear()
+ * @brief        Clears the error and releases any resources
+ * @parblock <br> &nbsp;
+ * <b>This API should be called to Clears the error and releases any resources
+ * </b>
+ * @endparblock
+ * @note        At the end of using the error variable, alcp_error_clear()
  * must be called, memory leak would occur otherwise.
  *
- * \param err    Actual Error
+ * @param [in] err    Actual Error
  */
 ALCP_API_EXPORT void
 alcp_error_clear(alc_error_t err);

@@ -110,13 +110,12 @@ namespace alcp::cipher { namespace aesni {
     }
 
     /**
-     * \brief
-     * \notes
-     * \param    pBlk0   pointer to input block
-     * \param    pKey    pointer to Key
+     * @brief
+     * @param    pBlk0   pointer to input block
+     * @param    pKey    pointer to Key
      *                   Actual key is in pKey[0], and
      *                   Round keys are in pKey[1] onwards
-     * \param    nRounds number of rounds to perform
+     * @param    nRounds number of rounds to perform
      */
     static inline void AesEncrypt(__m128i*       pBlk0,
                                   const __m128i* pKey,
@@ -268,13 +267,12 @@ namespace alcp::cipher { namespace aesni {
     }
 
     /**
-     * \brief
-     * \notes
-     * \param    pBlk0   pointer to input block
-     * \param    pKey    pointer to Key
+     * @brief
+     * @param    pBlk0   pointer to input block
+     * @param    pKey    pointer to Key
      *                   Actual key is in pKey[0], and
      *                   Round keys are in pKey[1] onwards
-     * \param    nRounds number of rounds to perform
+     * @param    nRounds number of rounds to perform
      */
     static inline void AesDecrypt(__m128i*       pBlk0,
                                   const __m128i* pKey,

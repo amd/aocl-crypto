@@ -32,6 +32,18 @@
 #include "alcp/types.h"
 #include <stdint.h>
 
+/**
+ * @defgroup key Key API
+ * @brief
+ * Key API are used to know details about the algorithm and type of key used
+ * @{
+ */
+
+/**
+ * @brief Stores Type of Key being used for Cipher
+ *
+ * @typedef enum alc_key_type_t
+ */
 typedef enum
 {
     ALC_KEY_TYPE_UNKNOWN = 0,
@@ -46,6 +58,11 @@ typedef enum
     ALC_KEY_TYPE_MAX,
 } alc_key_type_t;
 
+/**
+ * @brief Stores Algorithm for key
+ *
+ * @typedef enum   alc_key_alg_t
+ */
 typedef enum
 {
     ALC_KEY_ALG_WILDCARD,
@@ -60,6 +77,11 @@ typedef enum
     ALC_KEY_ALG_MAX,
 } alc_key_alg_t;
 
+/**
+ * @brief Stores length of key
+ *
+ * @typedef enum   alc_key_len_t
+ */
 typedef enum
 {
     ALC_KEY_LEN_128 = 128,
@@ -76,12 +98,22 @@ typedef enum
     ALC_KEY_LEN_DEFAULT = ALC_KEY_LEN_128,
 } alc_key_len_t;
 
+/**
+ * @brief Stores Format of key
+ *
+ * @typedef enum   alc_key_fmt_t
+ */
 typedef enum
 {
     ALC_KEY_FMT_RAW,    /* Default should be fine */
     ALC_KEY_FMT_BASE64, /* Base64 encoding */
 } alc_key_fmt_t;
 
+/**
+ * @brief used to store the info related to key
+ *
+ * @struct alc_key_info_t
+ */
 typedef struct _alc_key_info
 {
     alc_key_type_t type;
@@ -93,10 +125,27 @@ typedef struct _alc_key_info
 
 } alc_key_info_t, *alc_key_info_p;
 
+/**
+ * @brief    Allows caller to get Algorithm used in key
+ * @note    currently not in use.
+ * @param [in]   kinfo Stores info regarding key
+ *
+ * @return  alc_key_alg_t Enum which stores algorithm used for key
+ */
 alc_key_alg_t
 alcp_key_get_algo(alc_key_info_t* kinfo);
 
+/**
+ * @brief    Allows caller to get Algorithm used in key
+ * @note    currently not in use.
+ * @param [in]   kinfo Stores info regarding key
+ *
+ * @return  alc_key_type_t Enum which stores type of key used
+ */
 alc_key_type_t
 alcp_key_get_type(alc_key_info_t* kinfo);
 
 #endif /* _ALCP_KEY_H_ */
+       /**
+        * @}
+        */

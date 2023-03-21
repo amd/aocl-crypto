@@ -1,8 +1,8 @@
-# ALCP Micro Benchmarks
+# ALCP Micro Benchmarks 
 
 ## Building
 
-Skip to [Executing Benches](##Executing Benches) if already installed
+Skip to [Executing Benches](#Executing_Benches) if already installed
 
 ### Building ALCP with Testing framework
 
@@ -15,6 +15,8 @@ Skip to [Executing Benches](##Executing Benches) if already installed
 <font color="red"> Note - To include OpenSSL, please define <code>-DOPENSSL_INSTALL_DIR=/path/to/openssl_prefix</code> in step 3.</font>
 
 ## AES
+
+<a name = "Executing_Benches"></a>
 
 ### Executing Benches
 

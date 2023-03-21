@@ -1,4 +1,4 @@
-# Build and run Crypto Examples from the AOCL Crypto release package
+# Build and Run Crypto Examples from the AOCL Crypto release package
 
 ## Build
 Download the tar package from [amd-crypto](https://developer.amd.com/amd-aocl/aocl-cryptography/) (under the downloads section).

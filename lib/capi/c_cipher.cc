@@ -271,9 +271,6 @@ alcp_cipher_set_tag_length(const alc_cipher_handle_p pCipherHandle, Uint64 len)
     return err;
 }
 
-/**
- * \notes pCipherHandle will be freed by the application
- */
 void
 alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle)
 {

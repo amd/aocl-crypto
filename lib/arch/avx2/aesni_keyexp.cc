@@ -190,15 +190,15 @@ namespace alcp::cipher { namespace aesni {
     }
 
     /*
-     * \brief    Key Expansion for 192-bit keys, h/w assisted
+     * @brief    Key Expansion for 192-bit keys, h/w assisted
      *
-     * \notes    keys192 is equivalent to 2x128, [256:192] are ignored
+     * @notes    keys192 is equivalent to 2x128, [256:192] are ignored
      *
-     * \param    pUserKey        Pointer to user supplied key
-     * \param    pEncKey         Pointer to Round-key for encryption
-     * \param    pDecKey         Pointer to Round-key for decryption
+     * @param    pUserKey        Pointer to user supplied key
+     * @param    pEncKey         Pointer to Round-key for encryption
+     * @param    pDecKey         Pointer to Round-key for decryption
      *
-     * \return   alc_error_t
+     * @return   Status
      */
     Status ExpandKeys192(const Uint8* pUserKey, Uint8* pEncKey, Uint8* pDecKey)
     {
@@ -267,15 +267,15 @@ namespace alcp::cipher { namespace aesni {
     }
 
     /*
-     * \brief    Key Expansion for 128-bit keys, h/w assisted
+     * @brief    Key Expansion for 128-bit keys, h/w assisted
      *
-     * \notes
+     * @notes
      *
-     * \param    pUserKey        Pointer to user supplied key
-     * \param    pEncKey         Pointer to Round-key for encryption
-     * \param    pDecKey         Pointer to Round-key for decryption
+     * @param    pUserKey        Pointer to user supplied key
+     * @param    pEncKey         Pointer to Round-key for encryption
+     * @param    pDecKey         Pointer to Round-key for decryption
      *
-     * \return   alc_error_t
+     * @return   Status
      */
     Status ExpandKeys128(const Uint8* pUserKey, Uint8* pEncKey, Uint8* pDecKey)
     {

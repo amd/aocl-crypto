@@ -160,12 +160,12 @@ class Message
     }
 
     /**
-     * \brief    Construct Message with default priority
-     * \notes     A Logger uses operates on message
+     * @brief    Construct Message with default priority
+     * @note     A Logger uses operates on message
      *
-     * \param   rSrc    Message source such as subsystem, thread etc
-     * \param   pText   Actual message
-     * \param   level   Message priority
+     * @param   rSrc    Message source such as subsystem, thread etc
+     * @param   pText   Actual message
+     * @param   level   Message priority
      */
     Message(const std::string& rSrc,
             const std::string& rText,

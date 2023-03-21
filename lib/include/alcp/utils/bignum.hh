@@ -35,7 +35,6 @@ namespace alcp {
 
 class ALCP_API_EXPORT BigNum final
 {
-    using Status = alcp::base::Status;
 
   public:
     BigNum();

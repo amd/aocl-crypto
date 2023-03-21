@@ -116,69 +116,71 @@ class ALCP_API_EXPORT Sha512 final : public Sha2
 
   public:
     /**
-     * \brief   Updates hash for given buffer
+     * @brief   Updates hash for given buffer
      *
-     * \notes    Can be called repeatedly, if the hashsize is smaller
+     * @note    Can be called repeatedly, if the hashsize is smaller
      *           it will be cached for future use. and hash is only updated
      *           after finalize() is called.
      *
-     * \param    pBuf    Pointer to message buffer
+     * @param    pBuf    Pointer to message buffer
      *
-     * \param    size    should be valid size > 0
+     * @param    size    should be valid size > 0
      */
     alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
 
     /**
-     * \brief   Cleans up any resource that was allocated
+     * @brief   Cleans up any resource that was allocated
      *
-     * \notes   `finish()` to be called as a means to cleanup, no operation
+     * @note   `finish()` to be called as a means to cleanup, no operation
      *           permitted after this call. The context will be unusable.
      *
-     * \return nothing
+     * @return nothing
      */
     void finish() override;
 
     /**
-     * \brief    Resets the internal state.
+     * @brief    Resets the internal state.
      *
-     * \notes   `reset()` to be called as a means to reset the internal
+     * @note   `reset()` to be called as a means to reset the internal
      * state. This enables the processing the new buffer.
      *
-     * \return nothing
+     * @return nothing
      */
     void reset() override;
 
     /**
-     * \brief    Call for the final chunk
+     * @brief    Call for the final chunk
      *
-     * \notes   `finish()` to be called as a means to cleanup, necessary
-     *           actions. Application can also call finalize() with
+     * @note
+     *           - \ref finish() to be called as a means to cleanup, necessary
+     *           actions.
+     *           - Application can also call finalize() with
      *           empty/null args application must call copyHash before
      *           calling finish()
      *
-     * \param    buf     Either valid pointer to last chunk or nullptr,
+     * @param    buf     Either valid pointer to last chunk or nullptr,
      *                   if nullptr then has is not modified, once
-     * finalize() is called, only operation that can be performed is
-     * copyHash()
+     *                  finalize() is called, only operation that can be
+     *                  performed is copyHash()
      *
-     * \param    size    Either valid size or 0, if \buf is nullptr, size
+     * @param    size    Either valid size or 0, if pMsgBuf is nullptr, size
      *                   is assumed to be zero
      */
     alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) override;
 
     /**
-     * \brief  Copies the has from context to supplied buffer
+     * @brief  Copies the has from context to supplied buffer
      *
-     * \notes `finalize()` to be called with last chunks that should
+     * @note     \ref finalize() to be called with last chunks that should
      *           perform all the necessary actions, can be called with
      *           NULL argument.
      *
-     * \param    buf     Either valid pointer to last chunk or nullptr,
+     * @param    buf     Either valid pointer to last chunk or nullptr,
      *                   if nullptr then has is not modified, once
-     * finalize() is called, only operation that can  be performed is
-     * copyHash()
+     *                  finalize() is called, only operation that can be
+     *                  performed is copyHash()
      *
-     * \param    size    Either valid size or 0, if \buf is nullptr, size is
+     * @param    size    Either valid size or 0, if @buf is nullptr, size is
      *                   assumed to be zero
      */
     alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const override;

@@ -1,4 +1,4 @@
-# AES Encryption
+# AES Encryption Demo Example
 ## CBC Mode
 
 Following code demonstrate an usage of AOCL Crypto APIs to perform AES
@@ -12,27 +12,22 @@ encrypt_demo(const uint8_t *plaintxt,
              const uint8_t *key,
              const uint32_t key_len)
 {
-    alcp_error_t             err;
+    alc_error_t             err;
     alc_cipher_context_t   *ctx;
 
-    /*
+    
     const alc_key_info_t kinfo = {
         .type    = ALC_KEY_TYPE_SYMMETRIC,
         .fmt     = ALC_KEY_FMT_RAW,
         .key     = key,
         .len     = (key_len == 128)? ALC_KEY_LEN_128 : ALC_KEY_LEN_256,
     };
-    */
+
     const alc_cipher_info_t cinfo = {
         .algo    = ALC_CIPHER_ALGO_AES,
         .mode    = ALC_CIPHER_MODE_CBC,
         .pad     = ALC_CIPHER_PADDING_NONE,  /* No padding */
-        .keyinfo = {
-            .type    = ALC_KEY_TYPE_SYMMETRIC,
-            .fmt     = ALC_KEY_FMT_RAW,
-            .key     = key,
-            .len     = (key_len == 128)? ALC_KEY_LEN_128 : ALC_KEY_LEN_256,
-        },
+        .keyinfo = kinfo,
     };
 
     /*
