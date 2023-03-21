@@ -117,17 +117,16 @@ X25519::computeSecretKey(Uint8*       pSecretKey,
         return status;
     }
 
-    // static bool zen1_available = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
-    // static bool zen3_available = CpuId::cpuIsZen3();
-    // static bool zen4_available = CpuId::cpuIsZen4();
+    static bool zen2_available = CpuId::cpuIsZen2();
+    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
 
-    // if (zen3_available) {
-    //     return zen3::alcpScalarMulX25519(priv_key_radix32, pPublicKey);
-    // }
-
-    // if (zen1_available) {
-    //     return zen::alcpScalarMulX25519(priv_key_radix32, pPublicKey);
-    // }
+    if (zen3_available) {
+        zen3::alcpScalarMulX25519(priv_key_radix32, pPublicKey);
+    } else if (zen2_available) {
+        avx2::alcpScalarMulX25519(priv_key_radix32, pPublicKey);
+    } else {
+        zen::alcpScalarMulX25519(priv_key_radix32, pPublicKey);
+    }
 
     *pKeyLength = KeySize;
     return status;
