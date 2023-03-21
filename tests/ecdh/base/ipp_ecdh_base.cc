@@ -41,6 +41,7 @@ IPPEcdhBase::~IPPEcdhBase() {}
 bool
 IPPEcdhBase::init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data)
 {
+    m_info = info;
     return true;
 }
 

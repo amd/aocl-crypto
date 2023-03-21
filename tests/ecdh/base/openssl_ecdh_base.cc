@@ -51,6 +51,14 @@ bool
 OpenSSLEcdhBase::init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data)
 {
     m_info = info;
+    return true;
+}
+
+bool
+OpenSSLEcdhBase::GeneratePublicKeys(const alcp_ecdh_data_t& data)
+{
+    Uint64 keyLength1, keyLength2;
+
     /*Initialize handle, generate or load KAT private key*/
     m_pPrivateKeyData1 =
         EVP_PKEY_new_raw_private_key_ex(m_ec_handle1,
@@ -74,13 +82,6 @@ OpenSSLEcdhBase::init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data)
                   << ERR_get_error() << std::endl;
         return false;
     }
-    return true;
-}
-
-bool
-OpenSSLEcdhBase::GeneratePublicKeys(const alcp_ecdh_data_t& data)
-{
-    Uint64 keyLength1, keyLength2;
 
     /* Get public key corresponding to the private key */
     if (1
