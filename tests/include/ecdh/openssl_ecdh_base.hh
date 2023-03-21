@@ -25,13 +25,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include "alcp/alcp.h"
 #include "alcp/ec.h"
 #include "alcp/ecdh.h"
 #include "ecdh/ecdh_base.hh"
 #include "openssl/conf.h"
 #include "openssl/err.h"
 #include "openssl/evp.h"
-#include <alcp/alcp.h>
 #include <iostream>
 #include <malloc.h>
 #include <vector>
@@ -49,7 +49,6 @@ class OpenSSLEcdhBase : public EcdhBase
 
     std::string st = "X25519"; //"prime256v1"; // P-256
 
-    /*FIXME*/
     const char*   m_pkeytype = st.c_str();
     alc_ec_info_t m_info;
 

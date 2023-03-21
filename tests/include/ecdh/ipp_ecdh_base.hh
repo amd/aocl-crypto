@@ -27,10 +27,10 @@
  */
 #pragma once
 
+#include "alcp/alcp.h"
 #include "alcp/ec.h"
 #include "alcp/ecdh.h"
 #include "ecdh/ecdh_base.hh"
-#include <alcp/alcp.h>
 #include <crypto_mb/x25519.h>
 #include <iostream>
 #include <ippcp.h>

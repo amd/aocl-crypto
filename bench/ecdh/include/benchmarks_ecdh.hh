@@ -27,8 +27,14 @@
  */
 
 #pragma once
+
+#include "alcp/alcp.h"
 #include "ecdh/alc_ecdh_base.hh"
 #include "ecdh/ecdh_base.hh"
+#include "gbench_base.hh"
+#include "rng_base.hh"
+#include <benchmark/benchmark.h>
+#include <iostream>
 #include <string>
 
 #ifdef USE_IPP
@@ -38,13 +44,6 @@
 #ifdef USE_OSSL
 #include "ecdh/openssl_ecdh_base.hh"
 #endif
-
-#include "gbench_base.hh"
-#include "rng_base.hh"
-#include <alcp/alcp.h>
-#include <benchmark/benchmark.h>
-#include <iostream>
-#include <string.h>
 
 using namespace alcp::testing;
 
@@ -63,8 +62,8 @@ void inline ecdh_Bench(benchmark::State& state,
 
     /*TODO, Keysize in bytes. might change for other curves */
     int                KeySize = 32;
-    std::vector<Uint8> Peer1PubKey(KeySize, 0), Peer2PubKey(KeySize, 0),
-        Peer1SharedSecretKey(KeySize, 0), Peer2SharedSecretKey(KeySize, 0);
+    std::vector<Uint8> Peer1PubKey(KeySize), Peer2PubKey(KeySize),
+        Peer1SharedSecretKey(KeySize), Peer2SharedSecretKey(KeySize);
 
     alcp_ecdh_data_t data;
 

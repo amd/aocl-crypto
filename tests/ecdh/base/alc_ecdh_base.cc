@@ -82,7 +82,6 @@ AlcpEcdhBase::~AlcpEcdhBase()
             m_ec_handle1->context = nullptr;
         }
         delete m_ec_handle1;
-        m_ec_handle1 = nullptr;
     }
     if (m_ec_handle2 != nullptr) {
         alcp_ec_finish(m_ec_handle2);
@@ -91,7 +90,6 @@ AlcpEcdhBase::~AlcpEcdhBase()
             m_ec_handle2->context = nullptr;
         }
         delete m_ec_handle2;
-        m_ec_handle2 = nullptr;
     }
 }
 

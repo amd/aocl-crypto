@@ -26,11 +26,11 @@
  *
  */
 
+#include "alcp/alcp.h"
 #include "ecdh/alc_ecdh_base.hh"
 #include "ecdh/ecdh_base.hh"
 #include "ecdh/gtest_base_ecdh.hh"
 #include "string.h"
-#include <alcp/alcp.h>
 #include <iostream>
 
 /* All tests to be added here */

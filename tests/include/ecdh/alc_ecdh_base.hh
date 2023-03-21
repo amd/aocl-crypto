@@ -25,10 +25,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include "alcp/alcp.h"
 #include "alcp/ec.h"
 #include "alcp/ecdh.h"
 #include "ecdh/ecdh_base.hh"
-#include <alcp/alcp.h>
 #include <iostream>
 #include <malloc.h>
 #include <vector>

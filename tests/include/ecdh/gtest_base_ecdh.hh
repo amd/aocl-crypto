@@ -30,11 +30,11 @@
 #ifndef __GTEST_BASE_HH
 #define __GTEST_BASE_HH 2
 
+#include "alcp/alcp.h"
 #include "ecdh/alc_ecdh_base.hh"
 #include "ecdh/ecdh_base.hh"
 #include "gtest_common.hh"
 #include "rng_base.hh"
-#include <alcp/alcp.h>
 #include <iostream>
 #include <string.h>
 #include <vector>
@@ -131,6 +131,9 @@ ecdh_KAT(alc_ec_info_t info)
         data.m_Peer1_SecretKeyLen = 32;
         data.m_Peer2_SecretKeyLen = 32;
 
+        if (verbose > 1)
+            PrintEcdhTestData(data);
+
         if (!eb->init(info, data)) {
             std::cout << "Error in ECDH init" << std::endl;
             FAIL();
@@ -156,9 +159,6 @@ ecdh_KAT(alc_ec_info_t info)
         /*TODO: x25519 shared secret key len should always be 32 bytes !*/
         EXPECT_TRUE(data.m_Peer1_SecretKeyLen == ECDH_KEYSIZE);
         EXPECT_TRUE(data.m_Peer2_SecretKeyLen == ECDH_KEYSIZE);
-
-        if (verbose > 1)
-            PrintEcdhTestData(data);
     }
 }
 
