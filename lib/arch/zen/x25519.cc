@@ -101,4 +101,61 @@ namespace alcp::ec { namespace zen {
         utils::CopyQWord(point.m_z, z, 32);
     }
 
+    static inline void ConditionalSwap(Uint64* a, Uint64* b, const Uint64 swap)
+    {
+        Uint64 temp;
+
+        for (int i = 0; i < 4; i++) {
+            temp = a[i] ^ b[i];
+            temp = swap & temp;
+            a[i] = a[i] ^ temp;
+            b[i] = b[i] ^ temp;
+        }
+    }
+
+    static inline void MontLadder(Uint64       resultx[4],
+                                  Uint64       resultz[4],
+                                  const Uint8* pScalar,
+                                  const Uint64 basePoint[4])
+    {
+        Uint64 a[4] = { 1, 0, 0, 0 };
+        Uint64 b[4] = { 0 };
+        Uint64 c[4] = { 0 };
+        Uint64 d[4] = { 1, 0, 0, 0 };
+
+        Uint64 g[4];
+        Uint64 h[4];
+        Uint64 e[4];
+        Uint64 f[4];
+
+        utils::CopyQWord(c, basePoint, 32);
+
+        unsigned i, j;
+
+        for (i = 0; i < 32; ++i) {
+            Uint8 byte = pScalar[31 - i];
+            for (j = 0; j < 8; ++j) {
+                const Uint64 bit = byte >> 7;
+
+                const Uint64 swap = -bit;
+
+                ConditionalSwap(a, c, swap);
+                ConditionalSwap(b, d, swap);
+
+                MontCore(e, f, g, h, a, b, c, d, basePoint);
+
+                ConditionalSwap(e, g, swap);
+                ConditionalSwap(f, h, swap);
+
+                utils::CopyQWord(a, e, 32);
+                utils::CopyQWord(b, f, 32);
+                utils::CopyQWord(c, g, 32);
+                utils::CopyQWord(d, h, 32);
+                byte <<= 1;
+            }
+        }
+        utils::CopyQWord(resultx, a, 32);
+        utils::CopyQWord(resultz, b, 32);
+    }
+
 }} // namespace alcp::ec::zen

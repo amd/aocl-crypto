@@ -30,9 +30,9 @@
 
 namespace alcp::ec { namespace avx2 {
 
-    void alcpScalarMulX25519(Uint8*       mypublic,
-                             const Uint8* secret,
-                             const Uint8* basepoint);
+    void alcpScalarMulX25519(Uint8*       secret,
+                             const Uint8* privKeyRadix32,
+                             const Uint8* pPublicKey);
 
     void AlcpScalarPubX25519(Int8* privKeyRadix32, Uint8* pPublicKey);
 }} // namespace alcp::ec::avx2

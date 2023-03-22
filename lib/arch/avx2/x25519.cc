@@ -44,6 +44,17 @@ namespace alcp::ec { namespace avx2 {
         a_128 = _mm_xor_si128(a_128, x_128);
     }
 
+    static inline void ConditionalSwap(__m128i&      a_128,
+                                       __m128i&      b_128,
+                                       const __m128i swap)
+    {
+        __m128i temp;
+        temp  = _mm_xor_si128(a_128, b_128);
+        temp  = _mm_and_si128(swap, temp);
+        a_128 = _mm_xor_si128(a_128, temp);
+        b_128 = _mm_xor_si128(b_128, temp);
+    }
+
     static inline void AlcpLoadPrecomputed(__m128i&     x_128_0,
                                            __m128i&     x_128_1,
                                            __m128i&     y_128_0,
@@ -130,6 +141,71 @@ namespace alcp::ec { namespace avx2 {
 
         _mm_storeu_si128(reinterpret_cast<__m128i*>(point.m_z), z_128[0]);
         _mm_storeu_si128(reinterpret_cast<__m128i*>(point.m_z) + 1, z_128[1]);
+    }
+
+    static inline void MontLadder(Uint64       resultx[4],
+                                  Uint64       resultz[4],
+                                  const Uint8* pScalar,
+                                  const Uint64 basePoint[4])
+    {
+        __m128i a[2] = { 1, 0, 0, 0 };
+        __m128i b[2] = { 0 };
+        __m128i c[2] = { 0 };
+        __m128i d[2] = { 1, 0, 0, 0 };
+
+        __m128i g[2] = { 0 };
+        __m128i h[2] = { 1, 0, 0, 0 };
+        __m128i e[2] = { 0 };
+        __m128i f[2] = { 1, 0, 0, 0 };
+
+        c[0] = _mm_lddqu_si128(reinterpret_cast<const __m128i*>(basePoint));
+        c[1] = _mm_lddqu_si128(reinterpret_cast<const __m128i*>(basePoint) + 1);
+
+        unsigned i, j;
+
+        for (i = 0; i < 32; ++i) {
+            Uint8 byte = pScalar[31 - i];
+            for (j = 0; j < 8; ++j) {
+                const Uint64 bit = byte >> 7;
+
+                const __m128i swap = _mm_set1_epi64x(-bit);
+
+                ConditionalSwap(a[0], c[0], swap);
+                ConditionalSwap(a[1], c[1], swap);
+                ConditionalSwap(b[0], d[0], swap);
+                ConditionalSwap(b[1], d[1], swap);
+
+                MontCore((Uint64*)e,
+                         (Uint64*)f,
+                         (Uint64*)g,
+                         (Uint64*)h,
+                         (Uint64*)a,
+                         (Uint64*)b,
+                         (Uint64*)c,
+                         (Uint64*)d,
+                         basePoint);
+
+                ConditionalSwap(e[0], g[0], swap);
+                ConditionalSwap(e[1], g[1], swap);
+                ConditionalSwap(f[0], h[0], swap);
+                ConditionalSwap(f[1], h[1], swap);
+
+                a[0] = e[0];
+                a[1] = e[1];
+                b[0] = f[0];
+                b[1] = f[1];
+                c[0] = g[0];
+                c[1] = g[1];
+                d[0] = h[0];
+                d[1] = h[1];
+                byte <<= 1;
+            }
+        }
+
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(resultx), a[0]);
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(resultx) + 1, a[1]);
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(resultz), b[0]);
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(resultz) + 1, b[1]);
     }
 
 }} // namespace alcp::ec::avx2

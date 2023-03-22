@@ -40,6 +40,12 @@ static inline void
 FetchIntermediateMul(Int8 i, Int8 j, PrecomputedPoint& point);
 
 static inline void
+MontLadder(Uint64       resultx[4],
+           Uint64       resultz[4],
+           const Uint8* pScalar,
+           const Uint64 basePoint[4]);
+
+static inline void
 InverseX25519(Uint64 out[4], const Uint64 in[4])
 {
 
@@ -142,6 +148,51 @@ CovertEdwardToMont(const AlcpEcPointExtended& result, Uint8* pPublicKey)
     RadixToBytes(reinterpret_cast<Uint64*>(pPublicKey), numerator);
 }
 
+#ifndef MONT_CORE_AVX512
+static void
+MontCore(Uint64*       x2, // output x2
+         Uint64*       z2, // output z2
+         Uint64*       x3, // output x3
+         Uint64*       z3, // output z3
+         Uint64*       a,  // input x
+         Uint64*       b,  // input z
+         Uint64*       c,  // input xp
+         Uint64*       d,  // input zp
+         const Uint64* basePoint)
+{
+    Uint64 t1[4], t2[4], t3[4], t[4], a2[4], c2[4], m[4], n[4], p[4];
+
+    SumX25519(t1, a, b);
+    SubX25519(b, a, b);
+
+    SumX25519(t2, c, d);
+    SubX25519(d, c, d);
+
+    // to do: parallel mul once r*19 is reducted to 52 bits
+    MulX25519(m, t2, b);
+    MulX25519(n, t1, d);
+
+    SumX25519(t3, m, n);
+    SubX25519(n, m, n);
+
+    // to do, parallel square
+    SquareX25519Count(x3, t3, 1);
+    SquareX25519Count(p, n, 1);
+    SquareX25519Count(a2, t1, 1);
+    SquareX25519Count(c2, b, 1);
+
+    MulX25519(z3, p, basePoint);
+
+    MulX25519(x2, a2, c2);
+    SubX25519(c2, a2, c2);
+
+    ScalarMulX25519(t, c2);
+
+    SumX25519(t, t, a2);
+    MulX25519(z2, c2, t);
+}
+#endif
+
 void
 AlcpScalarPubX25519(Int8* privKeyRadix32, Uint8* pPublicKey)
 {
@@ -155,4 +206,19 @@ AlcpScalarPubX25519(Int8* privKeyRadix32, Uint8* pPublicKey)
         PointAddInEdward(result, point);
     }
     CovertEdwardToMont(result, pPublicKey);
+}
+
+void
+alcpScalarMulX25519(Uint8* secret, const Uint8* scalar, const Uint8* basepoint)
+{
+    Uint64 bp[4], x[4] = { 0 }, z[4] = { 0 }, zInverse[4];
+
+    BytesToRadix(bp, (Uint64*)basepoint);
+
+    MontLadder(x, z, scalar, bp);
+
+    InverseX25519(zInverse, z);
+    MulX25519(z, x, zInverse);
+
+    RadixToBytes((Uint64*)secret, z);
 }

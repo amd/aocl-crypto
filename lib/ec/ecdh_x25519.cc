@@ -121,11 +121,11 @@ X25519::computeSecretKey(Uint8*       pSecretKey,
     static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
 
     if (zen3_available) {
-        zen3::alcpScalarMulX25519(priv_key_radix32, pPublicKey);
+        zen4::alcpScalarMulX25519(pSecretKey, m_PrivKey, pPublicKey);
     } else if (zen2_available) {
-        avx2::alcpScalarMulX25519(priv_key_radix32, pPublicKey);
+        avx2::alcpScalarMulX25519(pSecretKey, m_PrivKey, pPublicKey);
     } else {
-        zen::alcpScalarMulX25519(priv_key_radix32, pPublicKey);
+        zen::alcpScalarMulX25519(pSecretKey, m_PrivKey, pPublicKey);
     }
 
     *pKeyLength = KeySize;

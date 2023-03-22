@@ -68,14 +68,14 @@ RadixToBytes(Uint64 out[4], const Uint64 a[4])
     out[3] = a3;
 }
 
-// static void
-// BytesToRadix(Uint64 out[4], const Uint64 a[4])
-// {
-//     out[0] = a[0];
-//     out[1] = a[1];
-//     out[2] = a[2];
-//     out[3] = a[3];
-// }
+static void
+BytesToRadix(Uint64 out[4], const Uint64 a[4])
+{
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    out[3] = a[3];
+}
 
 static inline void
 SumX25519(Uint64* c, const Uint64* a, const Uint64* b)

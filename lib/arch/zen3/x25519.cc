@@ -45,6 +45,18 @@ namespace alcp::ec { namespace zen3 {
         a_256 = _mm256_xor_si256(a_256, x_256);
     }
 
+    static inline void ConditionalSwap(__m256i&      a_256,
+                                       __m256i&      b_256,
+                                       const __m256i swap_256)
+    {
+        __m256i temp_256;
+
+        temp_256 = _mm256_xor_si256(a_256, b_256);
+        temp_256 = _mm256_and_si256(swap_256, temp_256);
+        a_256    = _mm256_xor_si256(a_256, temp_256);
+        b_256    = _mm256_xor_si256(b_256, temp_256);
+    }
+
     static inline void AlcpLoadPrecomputed(__m256i&     x_256,
                                            __m256i&     y_256,
                                            __m256i&     z_256,
@@ -101,6 +113,60 @@ namespace alcp::ec { namespace zen3 {
         _mm256_storeu_si256(reinterpret_cast<__m256i*>(point.m_x), x_256);
         _mm256_storeu_si256(reinterpret_cast<__m256i*>(point.m_y), y_256);
         _mm256_storeu_si256(reinterpret_cast<__m256i*>(point.m_z), z_256);
+    }
+
+    static inline void MontLadder(Uint64       resultx[4],
+                                  Uint64       resultz[4],
+                                  const Uint8* pScalar,
+                                  const Uint64 basePoint[4])
+    {
+        __m256i a = { 1, 0, 0, 0 };
+
+        __m256i b = { 0 };
+        __m256i c = { 0 };
+        __m256i d = { 1, 0, 0, 0 };
+
+        __m256i g;
+        __m256i h;
+        __m256i e;
+        __m256i f;
+
+        c = _mm256_lddqu_si256(reinterpret_cast<const __m256i*>(basePoint));
+
+        unsigned i, j;
+
+        for (i = 0; i < 32; ++i) {
+            Uint8 byte = pScalar[31 - i];
+            for (j = 0; j < 8; ++j) {
+                const Uint64 bit = byte >> 7;
+
+                const __m256i swap = _mm256_set1_epi64x(-bit);
+                ConditionalSwap(a, c, swap);
+                ConditionalSwap(b, d, swap);
+
+                MontCore((Uint64*)&e,
+                         (Uint64*)&f,
+                         (Uint64*)&g,
+                         (Uint64*)&h,
+                         (Uint64*)&a,
+                         (Uint64*)&b,
+                         (Uint64*)&c,
+                         (Uint64*)&d,
+                         basePoint);
+
+                ConditionalSwap(e, g, swap);
+                ConditionalSwap(f, h, swap);
+
+                a = e;
+                b = f;
+                c = g;
+                d = h;
+                byte <<= 1;
+            }
+        }
+
+        _mm256_storeu_si256(reinterpret_cast<__m256i*>(resultx), a);
+        _mm256_storeu_si256(reinterpret_cast<__m256i*>(resultz), b);
     }
 
 }} // namespace alcp::ec::zen3
