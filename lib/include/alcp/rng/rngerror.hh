@@ -111,9 +111,9 @@ class RngError final : public ErrorBase
 };
 
 namespace status {
-    Status NoEntropy(String msg);
-    Status NotPermitted(String msg);
-    Status NoEntropySource(String msg);
+    ALCP_API_EXPORT Status NoEntropy(String msg);
+    ALCP_API_EXPORT Status NotPermitted(String msg);
+    ALCP_API_EXPORT Status NoEntropySource(String msg);
 } // namespace status
 
 } // namespace alcp::rng

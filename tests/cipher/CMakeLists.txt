@@ -46,7 +46,7 @@ endif()
 
 IF(WIN32)
 target_link_libraries(gmock PUBLIC gtest)
-target_link_libraries(gmock_main PUBLIC gmock)
+target_link_libraries(gmock_main PUBLIC gtest_main)
 ENDIF()
 
 SET(EXTRA_INCLUDES "")
