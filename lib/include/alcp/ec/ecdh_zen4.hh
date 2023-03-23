@@ -30,10 +30,8 @@
 
 namespace alcp::ec { namespace zen4 {
 
-    void alcpScalarMulX25519(Uint8*       secret,
-                             const Uint8* privKeyRadix32,
-                             const Uint8* pPublicKey);
-
-    void AlcpScalarPubX25519(Int8* privKeyRadix32, Uint8* pPublicKey);
+    void alcpScalarMulX25519Radix51Bit(Uint8*       secret,
+                                       const Uint8* privKeyRadix32,
+                                       const Uint8* pPublicKey);
 
 }} // namespace alcp::ec::zen4

@@ -28,12 +28,11 @@
 
 #include "ec.hh"
 #include "ec/ecdh.hh"
+#include "utils/copy.hh"
 #include "x25519_radix51bit.hh"
 #include <immintrin.h>
 
 namespace alcp::ec { namespace zen4 {
-#define MONT_CORE_AVX512
-#include "../../ec/x25519.cc.inc"
 
     using namespace radix51bit;
     static inline void ConditionalSwap(__m512i&      a,
@@ -46,6 +45,78 @@ namespace alcp::ec { namespace zen4 {
         temp = _mm512_and_epi64(swap, temp);
         a    = _mm512_xor_epi64(a, temp);
         b    = _mm512_xor_epi64(b, temp);
+    }
+
+    static inline void InverseX25519(__m512i* inverseZ, const __m512i* z)
+    {
+
+        __m512i a, b, c, d;
+        Uint64 *pa, *pb, *pc, *pd, *pz;
+
+        pa = (Uint64*)&a;
+        pb = (Uint64*)&b;
+        pc = (Uint64*)&c;
+        pd = (Uint64*)&d;
+        pz = (Uint64*)z;
+
+        // square and Multiply algorithm to compute z ^ (2^5 * (2^250-1) + 11)
+
+        SquareX25519Count(pa, pz, 1); // a = z^2
+        SquareX25519Count(pd, pa, 2); // d = z^8
+        MulX25519(pb, pd, pz);        // b = z^8*z     = z^9
+        MulX25519(pa, pb, pa);        // a = z^9*z^2   = z^11
+        SquareX25519Count(pd, pa, 1); // d = sqr(z^11) = z^22
+
+        /*
+         * b  = z^22 * z^9
+         *    = z^31 = z ^(32-1)
+         *    = z^ (2^5 - 1)
+         */
+        MulX25519(pb, pd, pb);
+
+        /*
+         * d = sqr5times(z^ (2^5 - 1))
+         *   = z ^ (2^10 - 2^5)
+         */
+        SquareX25519Count(pd, pb, 5);
+
+        /*
+         * b = z ^ (2^10 - 2^5) * z^ (2^5 - 1)
+         *   = z ^ (2^10 - 2^5 + 2^5 - 1)
+         *   = z ^ (2 ^10 - 1 )
+         *   = z ^ (2 ^10 - 2^0 )
+         */
+        MulX25519(pb, pd, pb);
+
+        /*
+         * d = sqr10times(  z ^ (2^10 - 2^5) )
+         *   = z ^ (2^20 - 2^10)
+         */
+        SquareX25519Count(pd, pb, 10);
+
+        /*
+         * c = z ^ (2^20 - 2^10) *  z ^ (2 ^10 - 2^0 )
+         *   = z ^ (2^20 - 2^0)
+         */
+        MulX25519(pc, pd, pb);
+
+        /*
+         *  c = sqr20times( z ^ (2^20 - 2^10) )
+         *    = z ^ (2^40 - 2^20)
+         */
+        SquareX25519Count(pd, pc, 20);
+        MulX25519(pd, pd, pc);          /* d = z ^ (2^40 - 2^0)   */
+        SquareX25519Count(pd, pd, 10);  /* d = z ^ (2^50 - 2^10)  */
+        MulX25519(pb, pd, pb);          /* b = z ^ (2^50 - 2^0)   */
+        SquareX25519Count(pd, pb, 50);  /* d = z ^ (2^100 - 2^50) */
+        MulX25519(pc, pd, pb);          /* c = z ^ (2^100 - 2^0)  */
+        SquareX25519Count(pd, pc, 100); /* d = z ^ (2^200 - 2^100)*/
+        MulX25519(pd, pd, pc);          /* d = z ^ (2^200 - 2^0)  */
+        SquareX25519Count(pd, pd, 50);  /* d = z ^ (2^250 - 2^50) */
+        MulX25519(pd, pd, pb);          /* d = z ^ (2^250 - 2^0)  */
+        SquareX25519Count(pd, pd, 5);   /* d = z ^ (2^255 - 2^5)  */
+        MulX25519(
+            (Uint64*)inverseZ, pd, pa); /* Inverse(z) = z ^ (2^255 - 21)   */
     }
 
     static inline void MontCore(__m512i* x2, // output x2
@@ -92,10 +163,10 @@ namespace alcp::ec { namespace zen4 {
         MulX25519((Uint64*)z2, (Uint64*)&c2, (Uint64*)&t);
     }
 
-    static inline void MontLadder(Uint64       resultx[4],
-                                  Uint64       resultz[4],
-                                  const Uint8* pScalar,
-                                  const Uint64 basePoint[4])
+    static inline void MontLadder(__m512i*      resultx,
+                                  __m512i*      resultz,
+                                  const Uint8*  pScalar,
+                                  const __m512i basePoint512)
     {
         __m512i a = { 1, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -103,13 +174,12 @@ namespace alcp::ec { namespace zen4 {
         __m512i c = { 0 };
         __m512i d = { 1, 0, 0, 0, 0, 0, 0, 0 };
 
-        __m512i g;
-        __m512i h;
-        __m512i e;
-        __m512i f;
+        __m512i g = b;
+        __m512i h = a;
+        __m512i e = b;
+        __m512i f = a;
 
-        c = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(basePoint));
-        __m512i  basePoint512 = c;
+        c = basePoint512;
         unsigned i, j;
 
         for (i = 0; i < 32; ++i) {
@@ -133,16 +203,30 @@ namespace alcp::ec { namespace zen4 {
                 byte <<= 1;
             }
         }
-
-        _mm512_storeu_si512(reinterpret_cast<__m512i*>(resultx), a);
-        _mm512_storeu_si512(reinterpret_cast<__m512i*>(resultz), b);
+        *resultx = a;
+        *resultz = b;
     }
 
-    // Todo remove this. This is dummy to prevent compilation warning
-    static inline void FetchIntermediateMul(Int8              i,
-                                            Int8              j,
-                                            PrecomputedPoint& point)
-    {}
+    void alcpScalarMulX25519Radix51Bit(Uint8*       secret,
+                                       const Uint8* scalar,
+                                       const Uint8* basepoint)
+    {
+        __m512i bp_512, x_512, z_512, zInverse_512, out_512;
+        BytesToRadix(&bp_512, basepoint);
+
+        Uint8 clippedScalar[32];
+
+        alcp::utils::CopyBytes(clippedScalar, scalar, 32);
+
+        MontLadder(&x_512, &z_512, clippedScalar, bp_512);
+
+        InverseX25519(&zInverse_512, &z_512);
+        MulX25519((Uint64*)&z_512, (Uint64*)&x_512, (Uint64*)&zInverse_512);
+
+        RadixToBytes((Uint8*)&out_512, (Uint64*)&z_512);
+        alcp::utils::CopyBytes(secret, (const void*)&out_512, 32);
+    }
+
 #if 0
     namespace experimentalParallel {
         static void MontCore(__m512i*      x2,
@@ -191,6 +275,4 @@ namespace alcp::ec { namespace zen4 {
         }
     } // namespace experimentalParallel
 #endif
-#undef MONT_CORE_AVX512
-
 }} // namespace alcp::ec::zen4

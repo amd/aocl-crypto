@@ -148,7 +148,6 @@ CovertEdwardToMont(const AlcpEcPointExtended& result, Uint8* pPublicKey)
     RadixToBytes(reinterpret_cast<Uint64*>(pPublicKey), numerator);
 }
 
-#ifndef MONT_CORE_AVX512
 static void
 MontCore(Uint64*       x2, // output x2
          Uint64*       z2, // output z2
@@ -191,7 +190,6 @@ MontCore(Uint64*       x2, // output x2
     SumX25519(t, t, a2);
     MulX25519(z2, c2, t);
 }
-#endif
 
 void
 AlcpScalarPubX25519(Int8* privKeyRadix32, Uint8* pPublicKey)
