@@ -42,27 +42,7 @@
 #include <sys/time.h>
 #endif
 
-#define MAX_SIZE_KEY_DATA 64
-
-#define DEBUG_P /* Enable for debugging only */
-/*
-    debug prints to be print input, cipher, iv and decrypted output
-*/
-#ifdef DEBUG_P
-#define ALCP_PRINT_TEXT(I, L, S)                                               \
-    printf("\n %s ", S);                                                       \
-    for (int x = 0; x < L; x++) {                                              \
-        if ((x % (16 * 4) == 0)) {                                             \
-            printf("\n");                                                      \
-        }                                                                      \
-        if (x % 16 == 0) {                                                     \
-            printf("   ");                                                     \
-        }                                                                      \
-        printf(" %2x", *(I + x));                                              \
-    }
-#else // DEBUG_P
-#define ALCP_PRINT_TEXT(I, L, S)
-#endif // DEBUG_P
+#define MAX_SIZE_KEY_DATA 32
 
 // to do: these macro is better to be moved to common header.
 #define ALCP_CRYPT_TIMER_INIT struct timeval begin, end;
@@ -173,14 +153,10 @@ TEST_P(x25519Test, PublicAndSharedKeyTest)
     /* Peer 1 */
     const Uint8* pPrivKey_input_data1 = &(m_peer1_private_key.at(0));
     m_px25519obj1->generatePublicKey(m_publicKeyData1, pPrivKey_input_data1);
-    ALCP_PRINT_TEXT(pPrivKey_input_data1, 32, "PrivKey_input_peer1      ")
-    ALCP_PRINT_TEXT(m_publicKeyData1, 32, "publicKeyData1      ")
 
     /* Peer 2 */
     const Uint8* pPrivKey_input_data2 = &(m_peer2_private_key.at(0));
     m_px25519obj2->generatePublicKey(m_publicKeyData2, pPrivKey_input_data2);
-    ALCP_PRINT_TEXT(pPrivKey_input_data2, 32, "PrivKey_input_peer2      ")
-    ALCP_PRINT_TEXT(m_publicKeyData2, 32, "publicKeyData2      ")
 
     // compute shared secret key of both peers
     Uint8* pSecret_key1 = new Uint8[MAX_SIZE_KEY_DATA];
@@ -193,19 +169,13 @@ TEST_P(x25519Test, PublicAndSharedKeyTest)
     m_px25519obj2->computeSecretKey(
         pSecret_key2, m_publicKeyData1, &keyLength2);
 
-    ALCP_PRINT_TEXT(pSecret_key1, 32, " shared Secret_key1      ")
-    ALCP_PRINT_TEXT(pSecret_key2, 32, " shared Secret_key2      ")
-    printf("\n");
-
     ret = memcmp(pSecret_key1, pSecret_key2, keyLength1);
     EXPECT_EQ(ret, 0);
     ret = memcmp(&(m_expected_shared_key.at(0)), pSecret_key2, keyLength1);
     EXPECT_EQ(ret, 0);
-
-    // EXPECT_EQ(ALC_ERROR_NONE, ret);
 }
 
-TEST_P(x25519Test, performanceTest)
+TEST_P(x25519Test, PerformanceTest)
 {
     /* Peer 1 */
     const Uint8* pPrivKey_input_data1 = &(m_peer1_private_key.at(0));
@@ -240,6 +210,32 @@ TEST_P(x25519Test, performanceTest)
             break;
         }
     }
+}
+
+TEST_P(x25519Test, GetKeySizeTest)
+{
+    EXPECT_EQ(m_px25519obj1->getKeySize(), MAX_SIZE_KEY_DATA);
+}
+
+TEST_P(x25519Test, ValidatePublicKeyTest)
+{
+    const Uint8* pPrivKey_input_data1 = &(m_peer1_private_key.at(0));
+
+    m_px25519obj1->generatePublicKey(m_publicKeyData1, pPrivKey_input_data1);
+    EXPECT_EQ(
+        m_px25519obj1->validatePublicKey(m_publicKeyData1, MAX_SIZE_KEY_DATA),
+        StatusOk());
+}
+
+TEST_P(x25519Test, InvalidPublicKeyTest)
+{
+    Status status = m_px25519obj1->validatePublicKey(m_publicKeyData1,
+                                                     MAX_SIZE_KEY_DATA - 1);
+    EXPECT_NE(status.code(), ErrorCode::eOk);
+
+    const Uint8 all_zero[MAX_SIZE_KEY_DATA] = { 0 };
+    status = m_px25519obj1->validatePublicKey(all_zero, MAX_SIZE_KEY_DATA);
+    EXPECT_NE(status.code(), ErrorCode::eOk);
 }
 
 } // namespace
