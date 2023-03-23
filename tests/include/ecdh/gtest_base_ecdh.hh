@@ -31,6 +31,7 @@
 #define __GTEST_BASE_HH 2
 
 #include "alcp/alcp.h"
+#include "csv.hh"
 #include "ecdh/alc_ecdh_base.hh"
 #include "ecdh/ecdh_base.hh"
 #include "gtest_common.hh"
@@ -104,22 +105,22 @@ ecdh_KAT(alc_ec_info_t info)
 #endif
 
     std::string TestDataFile = std::string("dataset_ECDH.csv");
-    DataSet     ds           = DataSet(TestDataFile);
+    Csv         csv          = Csv(TestDataFile);
 
-    while (ds.readEcdhTestData()) {
+    while (csv.readNext()) {
         std::vector<Uint8> Peer1_PubKey(32, 0);
         std::vector<Uint8> Peer2_PubKey(32, 0);
         std::vector<Uint8> Peer1_SecretKey(32, 0);
         std::vector<Uint8> Peer2_SecretKey(32, 0);
 
         /* input data to be loaded */
-        std::vector<Uint8> _Peer1PvtKeyData = ds.getPeer1PvtKey();
-        std::vector<Uint8> _Peer2PvtKeyData = ds.getPeer2PvtKey();
+        std::vector<Uint8> _Peer1PvtKeyData = csv.getVect("PEER1_PVT_KEY");
+        std::vector<Uint8> _Peer2PvtKeyData = csv.getVect("PEER2_PVT_KEY");
 
         data.m_Peer1_PvtKey    = &(_Peer1PvtKeyData[0]);
         data.m_Peer2_PvtKey    = &(_Peer2PvtKeyData[0]);
-        data.m_Peer1_PvtKeyLen = ds.getPeer1PvtKey().size();
-        data.m_Peer2_PvtKeyLen = ds.getPeer2PvtKey().size();
+        data.m_Peer1_PvtKeyLen = csv.getVect("PEER1_PVT_KEY").size();
+        data.m_Peer2_PvtKeyLen = csv.getVect("PEER2_PVT_KEY").size();
 
         data.m_Peer1_PubKey    = &(Peer1_PubKey[0]);
         data.m_Peer2_PubKey    = &(Peer2_PubKey[0]);
@@ -154,7 +155,7 @@ ecdh_KAT(alc_ec_info_t info)
 
         /* now check both Peers' secret keys match or not */
         EXPECT_TRUE(ArraysMatch(
-            Peer1_SecretKey, Peer2_SecretKey, ds, std::string("ECDH")));
+            Peer1_SecretKey, Peer2_SecretKey, csv, std::string("ECDH")));
 
         /*TODO: x25519 shared secret key len should always be 32 bytes !*/
         EXPECT_TRUE(data.m_Peer1_SecretKeyLen == ECDH_KEYSIZE);

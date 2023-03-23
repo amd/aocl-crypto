@@ -33,7 +33,8 @@ FetchContent_Declare(benchmark
     GIT_TAG v1.6.1)
 FetchContent_MakeAvailable(benchmark)
 
-SET(ALC_BASE_FILES ${ALC_BASE_FILES} ../../tests/common/base/rng_base.cc ../../tests/common/base/base_common.cc ../../tests/ecdh/base/alc_ecdh_base.cc ../../tests/ecdh/base/ecdh_base.cc)
+FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
+SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ../../tests/ecdh/base/alc_ecdh_base.cc ../../tests/ecdh/base/ecdh_base.cc)
 SET(LIBS ${LIBS} benchmark alcp)
 if (ALCP_USE_ASAN)
     SET(LIBS ${LIBS} asan)

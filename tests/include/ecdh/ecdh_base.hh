@@ -27,7 +27,8 @@
  */
 #pragma once
 #include "alcp/alcp.h"
-#include "base_common.hh"
+#include "file.hh"
+#include "utils.hh"
 #include <alcp/ec.h>
 #include <alcp/ecdh.h>
 #include <iostream>
@@ -52,33 +53,6 @@ struct alcp_ecdh_data_t
     Uint8* m_Peer2_SecretKey    = nullptr;
     Uint64 m_Peer1_SecretKeyLen = 0;
     Uint64 m_Peer2_SecretKeyLen = 0;
-};
-
-class DataSet : private File
-{
-  private:
-    std::string        line = "", m_filename = "";
-    std::vector<Uint8> m_Peer1_PvtKey, m_Peer2_PvtKey, m_Peer2_PubKey,
-        m_Peer1_PubKey, m_Peer1_SecretKey, m_Peer2_SecretKey;
-    int m_Peer1_PvtKeyLen, m_Peer2_PvtKeyLen, m_Peer1_PubKeyLen,
-        m_Peer2_PubKeyLen, m_Peer1_SecretKeyLen, m_Peer2_SecretKeyLen;
-    // First line is skipped, linenum starts from 1
-    int lineno = 1;
-
-  public:
-    // Treats file as CSV, skips first line
-    DataSet(const std::string filename);
-    // Read without condition
-    bool readEcdhTestData();
-    // To print which line in dataset failed
-    int getLineNumber();
-    /* fetch peer keys */
-    std::vector<Uint8> getPeer1PvtKey();
-    std::vector<Uint8> getPeer2PvtKey();
-    std::vector<Uint8> getPeer1PubKey();
-    std::vector<Uint8> getPeer2PubKey();
-    std::vector<Uint8> getPeer1SecretKey();
-    std::vector<Uint8> getPeer2SecretKey();
 };
 
 class EcdhBase

@@ -31,7 +31,8 @@ FetchContent_Declare(gtest
 FetchContent_MakeAvailable(gtest)
 
 # Basic sources and libs needed for ALCP
-SET(ALC_BASE_FILES ${ALC_BASE_FILES} ../common/base/rng_base.cc ../common/base/base_common.cc base/alc_ecdh_base.cc base/ecdh_base.cc)
+FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
+SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} base/alc_ecdh_base.cc base/ecdh_base.cc)
 SET(LIBS ${LIBS} gtest alcp)
 
 # add this if asan is used
