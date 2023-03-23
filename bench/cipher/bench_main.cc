@@ -86,34 +86,29 @@ CipherAes(benchmark::State& state,
     if (!enc
         && (alcpMode == ALC_AES_MODE_GCM || alcpMode == ALC_AES_MODE_CCM)) {
         if (!cb->encrypt(data)) {
-            std::cout << "GCM/CCM: BENCH_ENC_FAILURE" << std::endl;
-            exit(-1);
+            state.SkipWithError("GCM / CCM : BENCH_ENC_FAILURE");
         }
         data.m_in  = &(vec_out[0]);
         data.m_out = &(vec_in[0]);
         if (useossl && (alcpMode == ALC_AES_MODE_GCM)) {
             if (!cb->init(key, keylen)) {
-                std::cout << "GCM: BENCH_INIT_FAILURE" << std::endl;
-                exit(-1);
+                state.SkipWithError("GCM: BENCH_INIT_FAILURE");
             }
         }
     }
     for (auto _ : state) {
         if (enc) {
             if (!cb->encrypt(data)) {
-                std::cout << "BENCH_ENC_FAILURE" << std::endl;
-                exit(-1);
+                state.SkipWithError("BENCH_ENC_FAILURE");
             }
         } else {
             if (!cb->decrypt(data)) {
-                std::cout << "BENCH_DEC_FAILURE" << std::endl;
-                exit(-1);
+                state.SkipWithError("BENCH_DEC_FAILURE");
             }
         }
         if (useossl && (alcpMode == ALC_AES_MODE_GCM)) {
             if (!cb->init(key, keylen)) {
-                std::cout << "GCM: BENCH_RESET_FAILURE" << std::endl;
-                exit(-1);
+                state.SkipWithError("GCM: BENCH_RESET_FAILURE");
             }
         }
     }

@@ -93,13 +93,11 @@ void inline Cmac_Bench(benchmark::State& state,
     data.m_key_len  = Key.size();
 
     if (!cb->init(info, Key)) {
-        std::cout << "Error in cmac init" << std::endl;
-        return;
+        state.SkipWithError("Error in cmac init function");
     }
     for (auto _ : state) {
         if (!cb->cmacFunction(data)) {
-            std::cout << "Error in cmac function" << std::endl;
-            return;
+            state.SkipWithError("Error in cmac bench function");
         }
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(

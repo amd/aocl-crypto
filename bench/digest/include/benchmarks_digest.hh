@@ -53,7 +53,7 @@ std::vector<Int64> digest_block_sizes = {
 
 void inline Digest_Bench(benchmark::State& state,
                          alc_digest_info_t info,
-                         Uint64          block_size)
+                         Uint64            block_size)
 {
     RngBase            rb;
     alc_error_t        error;
@@ -79,8 +79,7 @@ void inline Digest_Bench(benchmark::State& state,
         || info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
 
         if (!db->init(info, info.dt_custom_len)) {
-            std::cout << "Error: Digest base init failed" << std::endl;
-            return;
+            state.SkipWithError("Error: Digest base init failed");
         }
         /* override digest len for shake cases */
         data.m_digest_len = info.dt_custom_len;
@@ -99,9 +98,7 @@ void inline Digest_Bench(benchmark::State& state,
 
     for (auto _ : state) {
         if (!db->digest_function(data)) {
-            std::cout << "Error code in running digest benchmark:" << error
-                      << std::endl;
-            return;
+            state.SkipWithError("Error in running digest benchmark:");
         }
         db->reset();
     }

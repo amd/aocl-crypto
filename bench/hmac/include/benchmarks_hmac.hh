@@ -93,13 +93,11 @@ void inline Hmac_Bench(benchmark::State& state,
     data.in.m_key_len   = Key.size();
 
     if (!hb->init(info, Key)) {
-        std::cout << "Error in hmac init function" << std::endl;
-        return;
+        state.SkipWithError("Error in hmac init function");
     }
     for (auto _ : state) {
         if (!hb->Hmac_function(data)) {
-            std::cout << "Error in hmac benchmark function" << std::endl;
-            return;
+            state.SkipWithError("Error in hmac benchmark function");
         }
         if (!hb->reset()) {
             std::cout << "Error in hmac Reset function" << std::endl;
