@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include "alcp/types.h"
+
 #include <Windows.h>
 #include <time.h>
 

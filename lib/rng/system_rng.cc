@@ -43,8 +43,8 @@ namespace alcp::rng {
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <wincrypt.h>
 #include <windows.h>
+#include <wincrypt.h>
 #define ALCP_CONFIG_OS_HAS_GETRANDOM 1
 #else
 #include <sys/random.h>

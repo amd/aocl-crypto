@@ -28,9 +28,7 @@
 
 /* C/C++ Headers */
 #ifdef WIN32
-EXTERN_C_BEGIN
 #include <openssl/applink.c>
-EXTERN_C_END
 #endif
 
 /* ALCP Headers */
