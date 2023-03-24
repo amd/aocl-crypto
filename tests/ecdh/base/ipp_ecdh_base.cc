@@ -39,41 +39,32 @@ IPPEcdhBase::IPPEcdhBase(const alc_ec_info_t& info) {}
 IPPEcdhBase::~IPPEcdhBase() {}
 
 bool
-IPPEcdhBase::init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data)
+IPPEcdhBase::init(const alc_ec_info_t& info)
 {
     m_info = info;
     return true;
 }
 
 bool
-IPPEcdhBase::GeneratePublicKeys(const alcp_ecdh_data_t& data)
+IPPEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
 {
     mbx_status status = 0;
     /* FIXME: this is because we are calling 8 elem buffer variant of ipp */
     int elem = 8;
-    if (data.m_Peer1_PvtKey == NULL || data.m_Peer2_PvtKey == NULL) {
+    if (data.m_Peer_PvtKey == NULL) {
         std::cout << "Pvt key data is null" << std::endl;
         return false;
     }
 
     /* load keys */
     for (int i = 0; i < elem; i++) {
-        m_pPublicKeyData1_mb[i] = data.m_Peer1_PubKey;
-        m_pPrivKey1_mb[i]       = data.m_Peer1_PvtKey;
+        m_pPublicKeyData_mb[i] = data.m_Peer_PubKey;
+        m_pPrivKey_mb[i]       = data.m_Peer_PvtKey;
     }
-    for (int i = 0; i < elem; i++) {
-        m_pPublicKeyData2_mb[i] = data.m_Peer2_PubKey;
-        m_pPrivKey2_mb[i]       = data.m_Peer2_PvtKey;
-    }
+
     /* generate public key */
     /*TODO : get error status using MBX_GET_STS() call */
-    status = mbx_x25519_public_key_mb8(m_pPublicKeyData1_mb, m_pPrivKey1_mb);
-    if (status != 0) {
-        std::cout << "mbx_x25519_public_key_mb8 failed with err code: "
-                  << status << std::endl;
-        return false;
-    }
-    status = mbx_x25519_public_key_mb8(m_pPublicKeyData2_mb, m_pPrivKey2_mb);
+    status = mbx_x25519_public_key_mb8(m_pPublicKeyData_mb, m_pPrivKey_mb);
     if (status != 0) {
         std::cout << "mbx_x25519_public_key_mb8 failed with err code: "
                   << status << std::endl;
@@ -83,33 +74,26 @@ IPPEcdhBase::GeneratePublicKeys(const alcp_ecdh_data_t& data)
 }
 
 bool
-IPPEcdhBase::ComputeSecretKeys(const alcp_ecdh_data_t& data)
+IPPEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
+                              const alcp_ecdh_data_t& data_peer2)
 {
     mbx_status status = 0;
     /* FIXME: this is because we are calling 8 elem buffer variant of ipp */
     int elem = 8;
-    if (data.m_Peer1_PubKey == NULL || data.m_Peer2_PubKey == NULL) {
+    if (data_peer1.m_Peer_PubKey == NULL || data_peer2.m_Peer_PubKey == NULL) {
         std::cout << "Pub key data is null" << std::endl;
         return false;
     }
     /* load keys */
     for (int i = 0; i < elem; i++) {
-        m_pSecretKey1_mb[i] = data.m_Peer1_SecretKey;
-    }
-    for (int i = 0; i < elem; i++) {
-        m_pSecretKey2_mb[i] = data.m_Peer2_SecretKey;
+        m_pSecretKey_mb[i]     = data_peer1.m_Peer_SecretKey;
+        m_pPublicKeyData_mb[i] = data_peer2.m_Peer_PubKey;
+        // same public key is set for all 8 paths.
     }
 
-    /* compute secret key */
+    /* compute secret key using pub key of the other peer */
     status =
-        mbx_x25519_mb8(m_pSecretKey1_mb, m_pPrivKey1_mb, m_pPublicKeyData2_mb);
-    if (status != 0) {
-        std::cout << "mbx_x25519_mb8 failed with err code: " << status
-                  << std::endl;
-        return false;
-    }
-    status =
-        mbx_x25519_mb8(m_pSecretKey2_mb, m_pPrivKey2_mb, m_pPublicKeyData1_mb);
+        mbx_x25519_mb8(m_pSecretKey_mb, m_pPrivKey_mb, m_pPublicKeyData_mb);
     if (status != 0) {
         std::cout << "mbx_x25519_mb8 failed with err code: " << status
                   << std::endl;

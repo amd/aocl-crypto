@@ -39,69 +39,41 @@ OpenSSLEcdhBase::OpenSSLEcdhBase(const alc_ec_info_t& info) {}
 
 OpenSSLEcdhBase::~OpenSSLEcdhBase()
 {
-    if (m_ec_handle1 != nullptr) {
-        OSSL_LIB_CTX_free(m_ec_handle1);
-    }
-    if (m_ec_handle2 != nullptr) {
-        OSSL_LIB_CTX_free(m_ec_handle2);
+    if (m_ec_handle != nullptr) {
+        OSSL_LIB_CTX_free(m_ec_handle);
     }
 }
 
 bool
-OpenSSLEcdhBase::init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data)
+OpenSSLEcdhBase::init(const alc_ec_info_t& info)
 {
     m_info = info;
     return true;
 }
 
 bool
-OpenSSLEcdhBase::GeneratePublicKeys(const alcp_ecdh_data_t& data)
+OpenSSLEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
 {
-    Uint64 keyLength1, keyLength2;
-
+    Uint64 keyLength;
     /*Initialize handle, generate or load KAT private key*/
-    m_pPrivateKeyData1 =
-        EVP_PKEY_new_raw_private_key_ex(m_ec_handle1,
-                                        m_pkeytype,
-                                        NULL,
-                                        data.m_Peer1_PvtKey,
-                                        data.m_Peer1_PvtKeyLen);
-    if (m_pPrivateKeyData1 == nullptr) {
+    m_pPrivateKeyData = EVP_PKEY_new_raw_private_key_ex(m_ec_handle,
+                                                        m_pkeytype,
+                                                        NULL,
+                                                        data.m_Peer_PvtKey,
+                                                        data.m_Peer_PvtKeyLen);
+    if (m_pPrivateKeyData == nullptr) {
         std::cout << "EVP_PKEY_new_raw_private_key_ex returned null: Error:"
                   << ERR_get_error() << std::endl;
         return false;
     }
-    m_pPrivateKeyData2 =
-        EVP_PKEY_new_raw_private_key_ex(m_ec_handle2,
-                                        m_pkeytype,
-                                        NULL,
-                                        data.m_Peer2_PvtKey,
-                                        data.m_Peer2_PvtKeyLen);
-    if (m_pPrivateKeyData1 == nullptr) {
-        std::cout << "EVP_PKEY_new_raw_private_key_ex returned null: Error:"
-                  << ERR_get_error() << std::endl;
-        return false;
-    }
-
     /* Get public key corresponding to the private key */
     if (1
         != EVP_PKEY_get_octet_string_param(
-            m_pPrivateKeyData1,
+            m_pPrivateKeyData,
             "pub",
-            data.m_Peer1_PubKey,
-            data.m_Peer1_PubKeyLen, // sizeof(m_publicKeyData),
-            &keyLength1)) {
-        std::cout << "EVP_PKEY_get_octet_string_param: Error:"
-                  << ERR_get_error() << std::endl;
-        return false;
-    }
-    if (1
-        != EVP_PKEY_get_octet_string_param(
-            m_pPrivateKeyData2,
-            "pub",
-            data.m_Peer2_PubKey,
-            data.m_Peer2_PubKeyLen, // sizeof(m_publicKeyData),
-            &keyLength2)) {
+            data.m_Peer_PubKey,
+            data.m_Peer_PubKeyLen, // sizeof(m_publicKeyData),
+            &keyLength)) {
         std::cout << "EVP_PKEY_get_octet_string_param: Error:"
                   << ERR_get_error() << std::endl;
         return false;
@@ -110,89 +82,58 @@ OpenSSLEcdhBase::GeneratePublicKeys(const alcp_ecdh_data_t& data)
 }
 
 bool
-OpenSSLEcdhBase::ComputeSecretKeys(const alcp_ecdh_data_t& data)
+OpenSSLEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
+                                  const alcp_ecdh_data_t& data_peer2)
 {
-    EVP_PKEY_CTX *ctx1 = NULL, *ctx2 = NULL;
-    Uint64        SecretkeyLength1, SecretkeyLength2;
+    EVP_PKEY_CTX* ctx       = NULL;
+    EVP_PKEY*     peer_pubk = NULL;
+    Uint64        SecretkeyLength;
 
-    /* Load public key for remote peer. */
-    m_pPublicKeyData1 = EVP_PKEY_new_raw_public_key_ex(m_ec_handle1,
-                                                       m_pkeytype,
-                                                       NULL,
-                                                       data.m_Peer1_PubKey,
-                                                       data.m_Peer1_PubKeyLen);
-    if (m_pPublicKeyData1 == nullptr) {
+    /* Load public key for other peer. */
+    peer_pubk = EVP_PKEY_new_raw_public_key_ex(m_ec_handle,
+                                               m_pkeytype,
+                                               NULL,
+                                               data_peer2.m_Peer_PubKey,
+                                               data_peer1.m_Peer_PubKeyLen);
+    if (peer_pubk == nullptr) {
         std::cout << "EVP_PKEY_new_raw_public_key_ex returned null: Error:"
                   << ERR_get_error() << std::endl;
         return false;
     }
-    m_pPublicKeyData2 = EVP_PKEY_new_raw_public_key_ex(m_ec_handle2,
-                                                       m_pkeytype,
-                                                       NULL,
-                                                       data.m_Peer2_PubKey,
-                                                       data.m_Peer2_PubKeyLen);
-    if (m_pPublicKeyData2 == nullptr) {
-        std::cout << "EVP_PKEY_new_raw_public_key_ex returned null: Error:"
-                  << ERR_get_error() << std::endl;
-        return false;
-    }
-
     /* Create key exchange context. */
-    ctx1 = EVP_PKEY_CTX_new_from_pkey(m_ec_handle1, m_pPrivateKeyData1, NULL);
-    if (ctx1 == NULL) {
-        std::cout << "EVP_PKEY_CTX_new_from_pkey returned null: Error:"
-                  << ERR_get_error() << std::endl;
-        return false;
-    }
-    ctx2 = EVP_PKEY_CTX_new_from_pkey(m_ec_handle2, m_pPrivateKeyData2, NULL);
-    if (ctx2 == NULL) {
+    ctx = EVP_PKEY_CTX_new_from_pkey(m_ec_handle, m_pPrivateKeyData, NULL);
+    if (ctx == NULL) {
         std::cout << "EVP_PKEY_CTX_new_from_pkey returned null: Error:"
                   << ERR_get_error() << std::endl;
         return false;
     }
 
     /* Initialize derivation process. */
-    if (1 != EVP_PKEY_derive_init(ctx1)) {
-        std::cout << "EVP_PKEY_derive_init : Error:" << ERR_get_error()
-                  << std::endl;
-        return false;
-    }
-    if (1 != EVP_PKEY_derive_init(ctx2)) {
+    if (1 != EVP_PKEY_derive_init(ctx)) {
         std::cout << "EVP_PKEY_derive_init : Error:" << ERR_get_error()
                   << std::endl;
         return false;
     }
 
     /* Configure each peer with the other peer's public key. */
-    if (1 != EVP_PKEY_derive_set_peer(ctx1, m_pPublicKeyData2)) {
-        std::cout << "EVP_PKEY_derive_set_peer : Error:" << ERR_get_error()
-                  << std::endl;
-        return false;
-    }
-    if (1 != EVP_PKEY_derive_set_peer(ctx2, m_pPublicKeyData1)) {
+    /*FIXME, this to be done with other's peer*/
+    if (1 != EVP_PKEY_derive_set_peer(ctx, peer_pubk)) {
         std::cout << "EVP_PKEY_derive_set_peer : Error:" << ERR_get_error()
                   << std::endl;
         return false;
     }
 
     /* Determine the secret length. */
-    if (1 != EVP_PKEY_derive(ctx1, NULL, &SecretkeyLength1)) {
+    if (1 != EVP_PKEY_derive(ctx, NULL, &SecretkeyLength)) {
         std::cout << "EVP_PKEY_derive secret len: Error:" << ERR_get_error()
-                  << std::endl;
-        return false;
-    }
-    if (1 != EVP_PKEY_derive(ctx2, NULL, &SecretkeyLength2)) {
-        std::cout << "EVP_PKEY_derive  secret len: Error:" << ERR_get_error()
                   << std::endl;
         return false;
     }
 
     /* derive the shared secret key */
-    if (1 != EVP_PKEY_derive(ctx1, data.m_Peer1_SecretKey, &SecretkeyLength1)) {
-        std::cout << "EVP_PKEY_derive : Error:" << ERR_get_error() << std::endl;
-        return false;
-    }
-    if (1 != EVP_PKEY_derive(ctx2, data.m_Peer2_SecretKey, &SecretkeyLength2)) {
+    if (1
+        != EVP_PKEY_derive(
+            ctx, data_peer1.m_Peer_SecretKey, &SecretkeyLength)) {
         std::cout << "EVP_PKEY_derive : Error:" << ERR_get_error() << std::endl;
         return false;
     }

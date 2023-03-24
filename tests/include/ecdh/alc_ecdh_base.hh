@@ -37,24 +37,22 @@
 namespace alcp::testing {
 class AlcpEcdhBase : public EcdhBase
 {
-    alc_ec_handle_t* m_ec_handle1{};
-    alc_ec_handle_t* m_ec_handle2{};
+    alc_ec_handle_t* m_ec_handle{};
     alc_ec_info_t    m_info;
 
-    Uint8* m_pvt_key1 = {};
-    Uint8* m_pvt_key2 = {};
-    Uint8* m_pub_key1 = {};
-    Uint8* m_pub_key2 = {};
+    Uint8* m_pvt_key = {};
+    Uint8* m_pub_key = {};
 
   public:
     AlcpEcdhBase(const alc_ec_info_t& info);
     ~AlcpEcdhBase();
 
-    bool init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data);
+    bool init(const alc_ec_info_t& info);
     bool reset();
 
-    bool GeneratePublicKeys(const alcp_ecdh_data_t& data);
-    bool ComputeSecretKeys(const alcp_ecdh_data_t& data);
+    bool GeneratePublicKey(const alcp_ecdh_data_t& data);
+    bool ComputeSecretKey(const alcp_ecdh_data_t& data1,
+                          const alcp_ecdh_data_t& data2);
 };
 
 } // namespace alcp::testing

@@ -39,29 +39,32 @@
 
 namespace alcp::testing {
 
-struct alcp_ecdh_data_t
+#define ECDH_KEYSIZE 32
+
+typedef enum
 {
-    Uint8* m_Peer1_PvtKey       = nullptr;
-    Uint8* m_Peer2_PvtKey       = nullptr;
-    Uint64 m_Peer1_PvtKeyLen    = 0;
-    Uint64 m_Peer2_PvtKeyLen    = 0;
-    Uint8* m_Peer1_PubKey       = nullptr;
-    Uint8* m_Peer2_PubKey       = nullptr;
-    Uint64 m_Peer1_PubKeyLen    = 0;
-    Uint64 m_Peer2_PubKeyLen    = 0;
-    Uint8* m_Peer1_SecretKey    = nullptr;
-    Uint8* m_Peer2_SecretKey    = nullptr;
-    Uint64 m_Peer1_SecretKeyLen = 0;
-    Uint64 m_Peer2_SecretKeyLen = 0;
-};
+    ALC_PEER_ONE = 0,
+    ALC_PEER_TWO = 1,
+    ALC_PEER_MAX,
+} alc_peer_id_t;
+
+typedef struct
+{
+    Uint8* m_Peer_PvtKey       = nullptr;
+    Uint64 m_Peer_PvtKeyLen    = 0;
+    Uint8* m_Peer_PubKey       = nullptr;
+    Uint64 m_Peer_PubKeyLen    = 0;
+    Uint8* m_Peer_SecretKey    = nullptr;
+    Uint64 m_Peer_SecretKeyLen = 0;
+} alcp_ecdh_data_t;
 
 class EcdhBase
 {
   public:
-    virtual bool init(const alc_ec_info_t&    info,
-                      const alcp_ecdh_data_t& data)               = 0;
-    virtual bool GeneratePublicKeys(const alcp_ecdh_data_t& data) = 0;
-    virtual bool ComputeSecretKeys(const alcp_ecdh_data_t& data)  = 0;
-    virtual bool reset()                                          = 0;
+    virtual bool init(const alc_ec_info_t& info)                      = 0;
+    virtual bool GeneratePublicKey(const alcp_ecdh_data_t& data)      = 0;
+    virtual bool ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
+                                  const alcp_ecdh_data_t& data_peer2) = 0;
+    virtual bool reset()                                              = 0;
 };
 } // namespace alcp::testing

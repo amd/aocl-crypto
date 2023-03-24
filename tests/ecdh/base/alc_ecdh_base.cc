@@ -37,37 +37,24 @@ namespace alcp::testing {
 AlcpEcdhBase::AlcpEcdhBase(const alc_ec_info_t& info) {}
 
 bool
-AlcpEcdhBase::init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data)
+AlcpEcdhBase::init(const alc_ec_info_t& info)
 {
     alc_error_t err;
     m_info              = info;
     alc_ec_info_t dinfo = m_info;
     Uint64        size  = alcp_ec_context_size(&dinfo);
     /* for peer1 */
-    if (m_ec_handle1 == nullptr) {
-        m_ec_handle1          = new alc_ec_handle_t;
-        m_ec_handle1->context = malloc(size);
-    } else if (m_ec_handle1->context == nullptr) {
-        m_ec_handle1->context = malloc(size);
+    if (m_ec_handle == nullptr) {
+        m_ec_handle          = new alc_ec_handle_t;
+        m_ec_handle->context = malloc(size);
+    } else if (m_ec_handle->context == nullptr) {
+        m_ec_handle->context = malloc(size);
     }
 
-    err = alcp_ec_request(&dinfo, m_ec_handle1);
+    err = alcp_ec_request(&dinfo, m_ec_handle);
     if (alcp_is_error(err)) {
+        /*FIXME: get a peerID to indicate which peer*/
         std::cout << "Error in alcp_ec_request:Peer1 " << err << std::endl;
-        return false;
-    }
-
-    /* for peer2 */
-    if (m_ec_handle2 == nullptr) {
-        m_ec_handle2          = new alc_ec_handle_t;
-        m_ec_handle2->context = malloc(size);
-    } else if (m_ec_handle2->context == nullptr) {
-        m_ec_handle2->context = malloc(size);
-    }
-
-    err = alcp_ec_request(&dinfo, m_ec_handle2);
-    if (alcp_is_error(err)) {
-        std::cout << "Error in alcp_ec_request:Peer2: " << err << std::endl;
         return false;
     }
     return true;
@@ -75,40 +62,25 @@ AlcpEcdhBase::init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data)
 
 AlcpEcdhBase::~AlcpEcdhBase()
 {
-    if (m_ec_handle1 != nullptr) {
-        alcp_ec_finish(m_ec_handle1);
-        if (m_ec_handle1->context != nullptr) {
-            free(m_ec_handle1->context);
-            m_ec_handle1->context = nullptr;
+    if (m_ec_handle != nullptr) {
+        alcp_ec_finish(m_ec_handle);
+        if (m_ec_handle->context != nullptr) {
+            free(m_ec_handle->context);
+            m_ec_handle->context = nullptr;
         }
-        delete m_ec_handle1;
-    }
-    if (m_ec_handle2 != nullptr) {
-        alcp_ec_finish(m_ec_handle2);
-        if (m_ec_handle2->context != nullptr) {
-            free(m_ec_handle2->context);
-            m_ec_handle2->context = nullptr;
-        }
-        delete m_ec_handle2;
+        delete m_ec_handle;
     }
 }
 
 bool
-AlcpEcdhBase::GeneratePublicKeys(const alcp_ecdh_data_t& data)
+AlcpEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
 {
     alc_error_t err;
 
     err = alcp_ec_get_publickey(
-        m_ec_handle1, data.m_Peer1_PubKey, data.m_Peer1_PvtKey);
+        m_ec_handle, data.m_Peer_PubKey, data.m_Peer_PvtKey);
     if (alcp_is_error(err)) {
-        std::cout << "Error in alcp_ec_get_publickey peer1: " << err
-                  << std::endl;
-        return false;
-    }
-    err = alcp_ec_get_publickey(
-        m_ec_handle2, data.m_Peer2_PubKey, data.m_Peer2_PvtKey);
-    if (alcp_is_error(err)) {
-        std::cout << "Error in alcp_ec_get_publickey peer2: " << err
+        std::cout << "Error in alcp_ec_get_publickey peer: " << err
                   << std::endl;
         return false;
     }
@@ -116,21 +88,17 @@ AlcpEcdhBase::GeneratePublicKeys(const alcp_ecdh_data_t& data)
 }
 
 bool
-AlcpEcdhBase::ComputeSecretKeys(const alcp_ecdh_data_t& data)
+AlcpEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
+                               const alcp_ecdh_data_t& data_peer2)
 {
     alc_error_t err;
-    Uint64      keyLength1, keyLength2;
-    err = alcp_ec_get_secretkey(
-        m_ec_handle1, data.m_Peer1_SecretKey, data.m_Peer2_PubKey, &keyLength1);
+    Uint64      keyLength;
+    err = alcp_ec_get_secretkey(m_ec_handle,
+                                data_peer1.m_Peer_SecretKey,
+                                data_peer2.m_Peer_PubKey,
+                                &keyLength);
     if (alcp_is_error(err)) {
-        std::cout << "Error in alcp_ec_get_secretkey peer1: " << err
-                  << std::endl;
-        return false;
-    }
-    err = alcp_ec_get_secretkey(
-        m_ec_handle2, data.m_Peer2_SecretKey, data.m_Peer1_PubKey, &keyLength2);
-    if (alcp_is_error(err)) {
-        std::cout << "Error in alcp_ec_get_secretkey peer2: " << err
+        std::cout << "Error in alcp_ec_get_secretkey peer: " << err
                   << std::endl;
         return false;
     }

@@ -46,7 +46,7 @@ main(int argc, char** argv)
                   << RESET << std::endl;
     }
 #endif
-    AddBenchmarks_ecdh();
+    AddBenchmarks_Ecdh();
     ::benchmark::Initialize(&argc, argv);
     if (::benchmark::ReportUnrecognizedArguments(argc, argv))
         return 1;

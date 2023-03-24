@@ -61,31 +61,39 @@ void inline ecdh_Bench(benchmark::State& state,
     std::string LibStr = "";
 
     /*TODO, Keysize in bytes. might change for other curves */
-    int                KeySize = 32;
+    int                KeySize = ECDH_KEYSIZE;
     std::vector<Uint8> Peer1PubKey(KeySize), Peer2PubKey(KeySize),
         Peer1SharedSecretKey(KeySize), Peer2SharedSecretKey(KeySize);
 
-    alcp_ecdh_data_t data;
+    alcp_ecdh_data_t data_peer1, data_peer2;
 
-    AlcpEcdhBase aeb(info);
-    EcdhBase*    Eb;
-    RngBase      rb;
-    Eb     = &aeb;
+    AlcpEcdhBase aeb_peer1(info);
+    AlcpEcdhBase aeb_peer2(info);
+
+    EcdhBase *Eb_peer1, *Eb_peer2;
+    RngBase   rb;
+    Eb_peer1 = &aeb_peer1;
+    Eb_peer2 = &aeb_peer2;
+
     LibStr = "ALCP";
 
 #ifdef USE_OSSL
-    OpenSSLEcdhBase oeb(info);
+    OpenSSLEcdhBase oeb_peer1(info);
+    OpenSSLEcdhBase oeb_peer2(info);
     /* Select by default openssl for cross testing if nothing provided*/
     if ((useossl == true)) {
-        Eb     = &oeb;
-        LibStr = "OpenSSL";
+        Eb_peer1 = &oeb_peer1;
+        Eb_peer2 = &oeb_peer2;
+        LibStr   = "OpenSSL";
     }
 #endif
 #ifdef USE_IPP
-    IPPEcdhBase ieb(info);
+    IPPEcdhBase ieb_peer1(info);
+    IPPEcdhBase ieb_peer2(info);
     if (useipp == true) {
-        Eb     = &ieb;
-        LibStr = "IPP";
+        Eb_peer1 = &ieb_peer1;
+        Eb_peer2 = &ieb_peer2;
+        LibStr   = "IPP";
     }
 #endif
 
@@ -93,44 +101,49 @@ void inline ecdh_Bench(benchmark::State& state,
     std::vector<Uint8> Peer2PvtKey = rb.genRandomBytes(KeySize);
 
     /* now load this pvtkey pair into both alc, ext data */
-    data.m_Peer1_PvtKey    = &(Peer1PvtKey[0]);
-    data.m_Peer2_PvtKey    = &(Peer2PvtKey[0]);
-    data.m_Peer1_PvtKeyLen = KeySize;
-    data.m_Peer2_PvtKeyLen = KeySize;
-    data.m_Peer1_PubKey    = &(Peer1PubKey[0]);
-    data.m_Peer2_PubKey    = &(Peer2PubKey[0]);
-    data.m_Peer1_PubKeyLen = KeySize;
-    data.m_Peer2_PubKeyLen = KeySize;
-    data.m_Peer1_SecretKey = &(Peer1SharedSecretKey[0]);
-    data.m_Peer2_SecretKey = &(Peer2SharedSecretKey[0]);
+    data_peer1.m_Peer_PvtKey    = &(Peer1PvtKey[0]);
+    data_peer2.m_Peer_PvtKey    = &(Peer2PvtKey[0]);
+    data_peer1.m_Peer_PvtKeyLen = KeySize;
+    data_peer2.m_Peer_PvtKeyLen = KeySize;
+    data_peer1.m_Peer_PubKey    = &(Peer1PubKey[0]);
+    data_peer2.m_Peer_PubKey    = &(Peer2PubKey[0]);
+    data_peer1.m_Peer_PubKeyLen = KeySize;
+    data_peer2.m_Peer_PubKeyLen = KeySize;
+    data_peer1.m_Peer_SecretKey = &(Peer1SharedSecretKey[0]);
+    data_peer2.m_Peer_SecretKey = &(Peer2SharedSecretKey[0]);
 
     /* init wont be benchmarked */
-    if (!Eb->init(info, data)) {
+    if (!Eb_peer1->init(info)) {
+        state.SkipWithError("Error in ECDH init");
+    }
+    if (!Eb_peer2->init(info)) {
         state.SkipWithError("Error in ECDH init");
     }
 
     /* Just benchmark Gen public key */
     if (opt == ECDH_BENCH_GEN_PUB_KEY) {
         for (auto _ : state) {
-            if (!Eb->GeneratePublicKeys(data)) {
+            if (!Eb_peer1->GeneratePublicKey(data_peer1)) {
                 state.SkipWithError("Error in ECDH GeneratePublicKey");
             }
         }
     } else if (opt == ECDH_BENCH_GEN_SECRET_KEY) {
         /* this step is needed for computing secret key */
-        if (!Eb->GeneratePublicKeys(data)) {
+        if (!Eb_peer1->GeneratePublicKey(data_peer1)) {
+            state.SkipWithError("Error in ECDH GeneratePublicKey");
+        }
+        if (!Eb_peer2->GeneratePublicKey(data_peer2)) {
             state.SkipWithError("Error in ECDH GeneratePublicKey");
         }
         /* to benchmark only Computing secret key */
         for (auto _ : state) {
-            if (!Eb->ComputeSecretKeys(data)) {
+            if (!Eb_peer1->ComputeSecretKey(data_peer1, data_peer2)) {
                 state.SkipWithError("Error in ECDH ComputeSecretKey");
             }
         }
     }
-    /* iter * 2 here as we are running each function for 2 peers*/
     state.counters["KeysGen/Sec"] =
-        benchmark::Counter(state.iterations() * 2, benchmark::Counter::kIsRate);
+        benchmark::Counter(state.iterations(), benchmark::Counter::kIsRate);
     return;
 }
 
@@ -155,7 +168,7 @@ BENCH_ECDH_x25519_GenSecretKey(benchmark::State& state)
 
 /* add new benchmarks here */
 int
-AddBenchmarks_ecdh()
+AddBenchmarks_Ecdh()
 {
     BENCHMARK(BENCH_ECDH_x25519_GenPubKey);
     BENCHMARK(BENCH_ECDH_x25519_GenSecretKey);

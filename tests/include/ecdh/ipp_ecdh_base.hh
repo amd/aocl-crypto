@@ -42,37 +42,25 @@ class IPPEcdhBase : public EcdhBase
 {
     alc_ec_info_t m_info;
 
-    Uint8* m_pvt_key1 = {};
-    Uint8* m_pvt_key2 = {};
-    Uint8* m_pub_key1 = {};
-    Uint8* m_pub_key2 = {};
-
-    Uint8 m_publicKeyData1[8][32];
-    Uint8 m_publicKeyData2[8][32];
-
-    Uint8 m_SecretKeyData1[8][32];
-    Uint8 m_SecretKeyData2[8][32];
-
-    int8u* m_pPublicKeyData1_mb[8];
-    int8u* m_pPublicKeyData2_mb[8];
-
-    const int8u* m_pPrivKey1_mb[8];
-    const int8u* m_pPrivKey2_mb[8];
-
-    int8u* m_pSecretKey1_mb[8];
-    int8u* m_pSecretKey2_mb[8];
-
-    std::string m_name, m_keytype;
+    Uint8*       m_pvt_key = {};
+    Uint8*       m_pub_key = {};
+    Uint8        m_publicKeyData[8][ECDH_KEYSIZE];
+    Uint8        m_SecretKeyData[8][ECDH_KEYSIZE];
+    int8u*       m_pPublicKeyData_mb[8];
+    const int8u* m_pPrivKey_mb[8];
+    int8u*       m_pSecretKey_mb[8];
+    std::string  m_name, m_keytype;
 
   public:
     IPPEcdhBase(const alc_ec_info_t& info);
     ~IPPEcdhBase();
 
-    bool init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data);
+    bool init(const alc_ec_info_t& info);
     bool reset();
 
-    bool GeneratePublicKeys(const alcp_ecdh_data_t& data);
-    bool ComputeSecretKeys(const alcp_ecdh_data_t& data);
+    bool GeneratePublicKey(const alcp_ecdh_data_t& data);
+    bool ComputeSecretKey(const alcp_ecdh_data_t& data1,
+                          const alcp_ecdh_data_t& data2);
 };
 
 } // namespace alcp::testing

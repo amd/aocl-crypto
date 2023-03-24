@@ -40,22 +40,17 @@
 namespace alcp::testing {
 class OpenSSLEcdhBase : public EcdhBase
 {
-    OSSL_LIB_CTX* m_ec_handle1{};
-    OSSL_LIB_CTX* m_ec_handle2{};
-    EVP_PKEY*     m_pPrivateKeyData1;
-    EVP_PKEY*     m_pPrivateKeyData2;
-    EVP_PKEY*     m_pPublicKeyData1;
-    EVP_PKEY*     m_pPublicKeyData2;
+    OSSL_LIB_CTX* m_ec_handle{};
+    EVP_PKEY*     m_pPrivateKeyData;
+    EVP_PKEY*     m_pPublicKeyData;
 
     std::string st = "X25519"; //"prime256v1"; // P-256
 
     const char*   m_pkeytype = st.c_str();
     alc_ec_info_t m_info;
 
-    Uint8* m_pvt_key1 = {};
-    Uint8* m_pvt_key2 = {};
-    Uint8* m_pub_key1 = {};
-    Uint8* m_pub_key2 = {};
+    Uint8* m_pvt_key = {};
+    Uint8* m_pub_key = {};
 
     std::string m_name, m_keytype;
 
@@ -63,11 +58,12 @@ class OpenSSLEcdhBase : public EcdhBase
     OpenSSLEcdhBase(const alc_ec_info_t& info);
     ~OpenSSLEcdhBase();
 
-    bool init(const alc_ec_info_t& info, const alcp_ecdh_data_t& data);
+    bool init(const alc_ec_info_t& info);
     bool reset();
 
-    bool GeneratePublicKeys(const alcp_ecdh_data_t& data);
-    bool ComputeSecretKeys(const alcp_ecdh_data_t& data);
+    bool GeneratePublicKey(const alcp_ecdh_data_t& data);
+    bool ComputeSecretKey(const alcp_ecdh_data_t& data1,
+                          const alcp_ecdh_data_t& data2);
 };
 
 } // namespace alcp::testing

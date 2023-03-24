@@ -47,37 +47,25 @@ using namespace alcp::testing;
 #include "ecdh/openssl_ecdh_base.hh"
 #endif
 
-#define ECDH_KEYSIZE 32
-#define MAX_LOOP     1600
-#define KEY_LEN_MAX  1600
-#define INC_LOOP     1
-#define START_LOOP   1
+#define MAX_LOOP    1600
+#define KEY_LEN_MAX 1600
+#define INC_LOOP    1
+#define START_LOOP  1
 
 /* print params verbosely */
 inline void
 PrintEcdhTestData(alcp_ecdh_data_t data)
 {
-    std::cout << "Peer1 PvtKey: "
-              << parseBytesToHexStr(data.m_Peer1_PvtKey, data.m_Peer1_PvtKeyLen)
-              << " Len : " << data.m_Peer1_PvtKeyLen << std::endl;
-    std::cout << "Peer2 PvtKey: "
-              << parseBytesToHexStr(data.m_Peer2_PvtKey, data.m_Peer2_PvtKeyLen)
-              << " Len : " << data.m_Peer2_PvtKeyLen << std::endl;
-    std::cout << "Peer1 PubKey: "
-              << parseBytesToHexStr(data.m_Peer1_PubKey, data.m_Peer1_PubKeyLen)
-              << " Len : " << data.m_Peer1_PubKeyLen << std::endl;
-    std::cout << "Peer2 PubKey: "
-              << parseBytesToHexStr(data.m_Peer2_PubKey, data.m_Peer2_PubKeyLen)
-              << " Len : " << data.m_Peer2_PubKeyLen << std::endl;
-    std::cout << "Peer1 SecretKey: "
-              << parseBytesToHexStr(data.m_Peer1_SecretKey,
-                                    data.m_Peer1_SecretKeyLen)
-              << " Len : " << data.m_Peer1_SecretKeyLen << std::endl;
-    std::cout << "Peer2 SecretKey: "
-              << parseBytesToHexStr(data.m_Peer2_SecretKey,
-                                    data.m_Peer2_SecretKeyLen)
-              << " Len : " << data.m_Peer2_SecretKeyLen << std::endl;
-
+    std::cout << "Peer PvtKey: "
+              << parseBytesToHexStr(data.m_Peer_PvtKey, data.m_Peer_PvtKeyLen)
+              << " Len : " << data.m_Peer_PvtKeyLen << std::endl;
+    std::cout << "Peer PubKey: "
+              << parseBytesToHexStr(data.m_Peer_PubKey, data.m_Peer_PubKeyLen)
+              << " Len : " << data.m_Peer_PubKeyLen << std::endl;
+    std::cout << "Peer SecretKey: "
+              << parseBytesToHexStr(data.m_Peer_SecretKey,
+                                    data.m_Peer_SecretKeyLen)
+              << " Len : " << data.m_Peer_SecretKeyLen << std::endl;
     return;
 }
 
@@ -85,81 +73,105 @@ void
 ecdh_KAT(alc_ec_info_t info)
 {
     alc_error_t      error;
-    alcp_ecdh_data_t data;
+    alcp_ecdh_data_t data_peer1, data_peer2;
 
-    AlcpEcdhBase aeb(info);
-    EcdhBase*    eb;
+    AlcpEcdhBase aeb_peer1(info);
+    AlcpEcdhBase aeb_peer2(info);
 
-    eb = &aeb;
+    EcdhBase *eb_peer1, *eb_peer2;
+
+    eb_peer1 = &aeb_peer1;
+    eb_peer2 = &aeb_peer2;
+
+    int KeySize = ECDH_KEYSIZE;
 
 #ifdef USE_OSSL
-    OpenSSLEcdhBase oeb(info);
-    if (useossl == true)
-        eb = &oeb;
+    OpenSSLEcdhBase oeb_peer1(info);
+    OpenSSLEcdhBase oeb_peer2(info);
+    if (useossl == true) {
+        eb_peer1 = &oeb_peer1;
+        eb_peer2 = &oeb_peer2;
+    }
 #endif
 
 #ifdef USE_IPP
-    IPPEcdhBase ieb(info);
-    if (useipp == true)
-        eb = &ieb;
+    IPPEcdhBase ieb_peer1(info);
+    IPPEcdhBase ieb_peer2(info);
+    if (useipp == true) {
+        eb_peer1 = &ieb_peer1;
+        eb_peer2 = &ieb_peer2;
+    }
 #endif
 
     std::string TestDataFile = std::string("dataset_ECDH.csv");
     Csv         csv          = Csv(TestDataFile);
 
     while (csv.readNext()) {
-        std::vector<Uint8> Peer1_PubKey(32, 0);
-        std::vector<Uint8> Peer2_PubKey(32, 0);
-        std::vector<Uint8> Peer1_SecretKey(32, 0);
-        std::vector<Uint8> Peer2_SecretKey(32, 0);
+        std::vector<Uint8> Peer1_PubKey(KeySize, 0);
+        std::vector<Uint8> Peer2_PubKey(KeySize, 0);
+        std::vector<Uint8> Peer1_SecretKey(KeySize);
+        std::vector<Uint8> Peer2_SecretKey(KeySize);
 
         /* input data to be loaded */
         std::vector<Uint8> _Peer1PvtKeyData = csv.getVect("PEER1_PVT_KEY");
         std::vector<Uint8> _Peer2PvtKeyData = csv.getVect("PEER2_PVT_KEY");
 
-        data.m_Peer1_PvtKey    = &(_Peer1PvtKeyData[0]);
-        data.m_Peer2_PvtKey    = &(_Peer2PvtKeyData[0]);
-        data.m_Peer1_PvtKeyLen = csv.getVect("PEER1_PVT_KEY").size();
-        data.m_Peer2_PvtKeyLen = csv.getVect("PEER2_PVT_KEY").size();
+        data_peer1.m_Peer_PvtKey    = &(_Peer1PvtKeyData[0]);
+        data_peer2.m_Peer_PvtKey    = &(_Peer2PvtKeyData[0]);
+        data_peer1.m_Peer_PvtKeyLen = csv.getVect("PEER1_PVT_KEY").size();
+        data_peer2.m_Peer_PvtKeyLen = csv.getVect("PEER2_PVT_KEY").size();
 
-        data.m_Peer1_PubKey    = &(Peer1_PubKey[0]);
-        data.m_Peer2_PubKey    = &(Peer2_PubKey[0]);
-        data.m_Peer1_PubKeyLen = 32;
-        data.m_Peer2_PubKeyLen = 32;
+        data_peer1.m_Peer_PubKey    = &(Peer1_PubKey[0]);
+        data_peer2.m_Peer_PubKey    = &(Peer2_PubKey[0]);
+        data_peer1.m_Peer_PubKeyLen = KeySize;
+        data_peer2.m_Peer_PubKeyLen = KeySize;
 
-        data.m_Peer1_SecretKey    = &(Peer1_SecretKey[0]);
-        data.m_Peer2_SecretKey    = &(Peer2_SecretKey[0]);
-        data.m_Peer1_SecretKeyLen = 32;
-        data.m_Peer2_SecretKeyLen = 32;
+        data_peer1.m_Peer_SecretKey    = &(Peer1_SecretKey[0]);
+        data_peer2.m_Peer_SecretKey    = &(Peer2_SecretKey[0]);
+        data_peer1.m_Peer_SecretKeyLen = KeySize;
+        data_peer2.m_Peer_SecretKeyLen = KeySize;
 
-        if (verbose > 1)
-            PrintEcdhTestData(data);
-
-        if (!eb->init(info, data)) {
+        if (!eb_peer1->init(info)) {
             std::cout << "Error in ECDH init" << std::endl;
             FAIL();
         }
-        if (!eb->GeneratePublicKeys(data)) {
+        if (!eb_peer2->init(info)) {
+            std::cout << "Error in ECDH init" << std::endl;
+            FAIL();
+        }
+        if (!eb_peer1->GeneratePublicKey(data_peer1)) {
+            std::cout << "Error in ECDH Generate public key" << std::endl;
+            FAIL();
+        }
+        if (!eb_peer2->GeneratePublicKey(data_peer2)) {
             std::cout << "Error in ECDH Generate public key" << std::endl;
             FAIL();
         }
 
         /*TODO: x25519 pub key len should always be 32 bytes !*/
-        EXPECT_TRUE(data.m_Peer1_PubKeyLen == ECDH_KEYSIZE);
-        EXPECT_TRUE(data.m_Peer2_PubKeyLen == ECDH_KEYSIZE);
+        EXPECT_TRUE(data_peer1.m_Peer_PubKeyLen == KeySize);
+        EXPECT_TRUE(data_peer2.m_Peer_PubKeyLen == KeySize);
 
-        if (!eb->ComputeSecretKeys(data)) {
+        if (!eb_peer1->ComputeSecretKey(data_peer1, data_peer2)) {
             std::cout << "Error in ECDH Compute Secret key" << std::endl;
             FAIL();
         }
-
+        if (!eb_peer2->ComputeSecretKey(data_peer2, data_peer1)) {
+            std::cout << "Error in ECDH Compute Secret key" << std::endl;
+            FAIL();
+        }
         /* now check both Peers' secret keys match or not */
         EXPECT_TRUE(ArraysMatch(
             Peer1_SecretKey, Peer2_SecretKey, csv, std::string("ECDH")));
 
         /*TODO: x25519 shared secret key len should always be 32 bytes !*/
-        EXPECT_TRUE(data.m_Peer1_SecretKeyLen == ECDH_KEYSIZE);
-        EXPECT_TRUE(data.m_Peer2_SecretKeyLen == ECDH_KEYSIZE);
+        EXPECT_TRUE(data_peer1.m_Peer_SecretKeyLen == KeySize);
+        EXPECT_TRUE(data_peer2.m_Peer_SecretKeyLen == KeySize);
+
+        if (verbose > 1) {
+            PrintEcdhTestData(data_peer1);
+            PrintEcdhTestData(data_peer2);
+        }
     }
 }
 
@@ -181,32 +193,44 @@ ecdh_Cross(alc_ec_info_t info)
         ExtPeer1SharedSecretKey(KeySize, 0),
         ExtPeer2SharedSecretKey(KeySize, 0);
 
-    alcp_ecdh_data_t data_alc, data_ext;
+    alcp_ecdh_data_t data_alc_peer1, data_alc_peer2, data_ext_peer1,
+        data_ext_peer2;
 
-    AlcpEcdhBase aeb(info);
-    EcdhBase *   Eb, *ExtEb = nullptr;
-    RngBase      rb;
+    AlcpEcdhBase aeb_peer1(info);
+    AlcpEcdhBase aeb_peer2(info);
 
-    Eb         = &aeb;
+    EcdhBase *Eb_peer1, *Eb_peer2, *ExtEb_peer1 = nullptr,
+                                   *ExtEb_peer2 = nullptr;
+    RngBase rb;
+
+    Eb_peer1 = &aeb_peer1;
+    Eb_peer2 = &aeb_peer2;
+
     LibStrMain = "ALCP";
 
 #ifdef USE_IPP
-    IPPEcdhBase ieb(info);
+    IPPEcdhBase ieb_peer1(info);
+    IPPEcdhBase ieb_peer2(info);
     if (useipp == true) {
-        ExtEb     = &ieb;
-        LibStrExt = "IPP";
+        ExtEb_peer1 = &ieb_peer1;
+        ExtEb_peer2 = &ieb_peer2;
+        LibStrExt   = "IPP";
     }
 #endif
 
 #ifdef USE_OSSL
-    OpenSSLEcdhBase oeb(info);
+    OpenSSLEcdhBase oeb_peer1(info);
+    OpenSSLEcdhBase oeb_peer2(info);
+
     /* Select by default openssl for cross testing if nothing provided*/
-    if ((useossl == true) || (ExtEb == nullptr)) {
-        ExtEb     = &oeb;
-        LibStrExt = "OpenSSL";
+    if ((useossl == true)
+        || (ExtEb_peer1 == nullptr || ExtEb_peer1 == nullptr)) {
+        ExtEb_peer1 = &oeb_peer1;
+        ExtEb_peer2 = &oeb_peer2;
+        LibStrExt   = "OpenSSL";
     }
 #endif
-    if (ExtEb == nullptr) {
+    if (ExtEb_peer1 == nullptr || ExtEb_peer2 == nullptr) {
         std::cout << "No external lib selected!" << std::endl;
         exit(-1);
     }
@@ -231,43 +255,57 @@ ecdh_Cross(alc_ec_info_t info)
         std::vector<Uint8> Peer2PvtKey(pos1, pos2);
 
         /* now load this pvtkey pair into both alc, ext data */
-        data_alc.m_Peer1_PvtKey       = &(Peer1PvtKey[0]);
-        data_alc.m_Peer2_PvtKey       = &(Peer2PvtKey[0]);
-        data_alc.m_Peer1_PvtKeyLen    = KeySize;
-        data_alc.m_Peer2_PvtKeyLen    = KeySize;
-        data_alc.m_Peer1_PubKey       = &(AlcpPeer1PubKey[0]);
-        data_alc.m_Peer2_PubKey       = &(AlcpPeer2PubKey[0]);
-        data_alc.m_Peer1_PubKeyLen    = KeySize;
-        data_alc.m_Peer2_PubKeyLen    = KeySize;
-        data_alc.m_Peer1_SecretKey    = &(AlcpPeer1SharedSecretKey[0]);
-        data_alc.m_Peer2_SecretKey    = &(AlcpPeer2SharedSecretKey[0]);
-        data_alc.m_Peer1_SecretKeyLen = 32;
-        data_alc.m_Peer2_SecretKeyLen = 32;
+        data_alc_peer1.m_Peer_PvtKey       = &(Peer1PvtKey[0]);
+        data_alc_peer2.m_Peer_PvtKey       = &(Peer2PvtKey[0]);
+        data_alc_peer1.m_Peer_PvtKeyLen    = KeySize;
+        data_alc_peer2.m_Peer_PvtKeyLen    = KeySize;
+        data_alc_peer1.m_Peer_PubKey       = &(AlcpPeer1PubKey[0]);
+        data_alc_peer2.m_Peer_PubKey       = &(AlcpPeer2PubKey[0]);
+        data_alc_peer1.m_Peer_PubKeyLen    = KeySize;
+        data_alc_peer2.m_Peer_PubKeyLen    = KeySize;
+        data_alc_peer1.m_Peer_SecretKey    = &(AlcpPeer1SharedSecretKey[0]);
+        data_alc_peer2.m_Peer_SecretKey    = &(AlcpPeer2SharedSecretKey[0]);
+        data_alc_peer1.m_Peer_SecretKeyLen = KeySize;
+        data_alc_peer2.m_Peer_SecretKeyLen = KeySize;
 
-        data_ext.m_Peer1_PvtKey       = &(Peer1PvtKey[0]);
-        data_ext.m_Peer2_PvtKey       = &(Peer2PvtKey[0]);
-        data_ext.m_Peer1_PvtKeyLen    = KeySize;
-        data_ext.m_Peer2_PvtKeyLen    = KeySize;
-        data_ext.m_Peer1_PubKey       = &(ExtPeer1PubKey[0]);
-        data_ext.m_Peer2_PubKey       = &(ExtPeer2PubKey[0]);
-        data_ext.m_Peer1_PubKeyLen    = KeySize;
-        data_ext.m_Peer2_PubKeyLen    = KeySize;
-        data_ext.m_Peer1_SecretKey    = &(ExtPeer1SharedSecretKey[0]);
-        data_ext.m_Peer2_SecretKey    = &(ExtPeer2SharedSecretKey[0]);
-        data_ext.m_Peer1_SecretKeyLen = 32;
-        data_ext.m_Peer2_SecretKeyLen = 32;
+        data_ext_peer1.m_Peer_PvtKey       = &(Peer1PvtKey[0]);
+        data_ext_peer2.m_Peer_PvtKey       = &(Peer2PvtKey[0]);
+        data_ext_peer1.m_Peer_PvtKeyLen    = KeySize;
+        data_ext_peer2.m_Peer_PvtKeyLen    = KeySize;
+        data_ext_peer1.m_Peer_PubKey       = &(ExtPeer1PubKey[0]);
+        data_ext_peer2.m_Peer_PubKey       = &(ExtPeer2PubKey[0]);
+        data_ext_peer1.m_Peer_PubKeyLen    = KeySize;
+        data_ext_peer2.m_Peer_PubKeyLen    = KeySize;
+        data_ext_peer1.m_Peer_SecretKey    = &(ExtPeer1SharedSecretKey[0]);
+        data_ext_peer2.m_Peer_SecretKey    = &(ExtPeer2SharedSecretKey[0]);
+        data_ext_peer1.m_Peer_SecretKeyLen = KeySize;
+        data_ext_peer2.m_Peer_SecretKeyLen = KeySize;
 
         /* for main lib */
-        if (!Eb->init(info, data_alc)) {
+        if (!Eb_peer1->init(info)) {
             std::cout << "Error in ECDH init: " << LibStrMain << std::endl;
             FAIL();
         }
-        if (!Eb->GeneratePublicKeys(data_alc)) {
+        if (!Eb_peer2->init(info)) {
+            std::cout << "Error in ECDH init: " << LibStrMain << std::endl;
+            FAIL();
+        }
+        if (!Eb_peer1->GeneratePublicKey(data_alc_peer1)) {
             std::cout << "Error in ECDH Generate public key: " << LibStrMain
                       << std::endl;
             FAIL();
         }
-        if (!Eb->ComputeSecretKeys(data_alc)) {
+        if (!Eb_peer2->GeneratePublicKey(data_alc_peer2)) {
+            std::cout << "Error in ECDH Generate public key: " << LibStrMain
+                      << std::endl;
+            FAIL();
+        }
+        if (!Eb_peer1->ComputeSecretKey(data_alc_peer1, data_alc_peer2)) {
+            std::cout << "Error in ECDH Compute Secret key: " << LibStrMain
+                      << std::endl;
+            FAIL();
+        }
+        if (!Eb_peer2->ComputeSecretKey(data_alc_peer2, data_alc_peer1)) {
             std::cout << "Error in ECDH Compute Secret key: " << LibStrMain
                       << std::endl;
             FAIL();
@@ -277,17 +315,32 @@ ecdh_Cross(alc_ec_info_t info)
             ArraysMatch(AlcpPeer1SharedSecretKey, AlcpPeer2SharedSecretKey));
 
         /* for ext lib */
-        if (!ExtEb->init(info, data_ext)) {
+        if (!ExtEb_peer1->init(info)) {
             std::cout << "Error in ECDH init: Ext lib:" << LibStrExt
                       << std::endl;
             FAIL();
         }
-        if (!ExtEb->GeneratePublicKeys(data_ext)) {
+        if (!ExtEb_peer2->init(info)) {
+            std::cout << "Error in ECDH init: Ext lib:" << LibStrExt
+                      << std::endl;
+            FAIL();
+        }
+        if (!ExtEb_peer1->GeneratePublicKey(data_ext_peer1)) {
             std::cout << "Error in ECDH Generate public key:" << LibStrExt
                       << std::endl;
             FAIL();
         }
-        if (!ExtEb->ComputeSecretKeys(data_ext)) {
+        if (!ExtEb_peer2->GeneratePublicKey(data_ext_peer2)) {
+            std::cout << "Error in ECDH Generate public key:" << LibStrExt
+                      << std::endl;
+            FAIL();
+        }
+        if (!ExtEb_peer1->ComputeSecretKey(data_ext_peer1, data_ext_peer2)) {
+            std::cout << "Error in ECDH Compute Secret key:" << LibStrExt
+                      << std::endl;
+            FAIL();
+        }
+        if (!ExtEb_peer2->ComputeSecretKey(data_ext_peer2, data_ext_peer1)) {
             std::cout << "Error in ECDH Compute Secret key:" << LibStrExt
                       << std::endl;
             FAIL();
@@ -308,9 +361,11 @@ ecdh_Cross(alc_ec_info_t info)
 
         if (verbose > 1) {
             std::cout << "ALC Test data" << std::endl;
-            PrintEcdhTestData(data_alc);
+            PrintEcdhTestData(data_alc_peer1);
+            PrintEcdhTestData(data_alc_peer2);
             std::cout << "Ext Test data" << std::endl;
-            PrintEcdhTestData(data_ext);
+            PrintEcdhTestData(data_ext_peer1);
+            PrintEcdhTestData(data_ext_peer2);
         }
     }
 
