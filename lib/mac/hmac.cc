@@ -70,7 +70,7 @@ class Hmac::Impl
      * object of Digest which supports HMAC
      *
      */
-    digest::Digest* m_pDigest{};
+    digest::IDigest* m_pDigest{};
 
     alignas(16) Uint8 m_pK0_xor_opad[cMaxInternalBlockLength]{};
     alignas(16) Uint8 m_pK0_xor_ipad[cMaxInternalBlockLength]{};
@@ -319,9 +319,9 @@ class Hmac::Impl
         return status;
     }
 
-    Status calculateHash(digest::Digest* p_digest,
-                         const Uint8*    input,
-                         Uint64          len)
+    Status calculateHash(digest::IDigest* p_digest,
+                         const Uint8*     input,
+                         Uint64           len)
     {
         alc_error_t err = p_digest->update(input, len);
         if (alcp_is_error(err)) {
