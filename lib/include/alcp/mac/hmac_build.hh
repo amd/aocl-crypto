@@ -28,6 +28,7 @@
 #pragma once
 
 #include "alcp/base.hh"
+#include "alcp/capi/digest/builder.hh"
 #include "alcp/digest/sha2_384.hh"
 #include "alcp/digest/sha3.hh"
 #include "hmac.hh"
@@ -67,6 +68,8 @@ class HmacBuilder
     static Status build(const alc_mac_info_t& macInfo,
                         const alc_key_info_t& keyInfo,
                         Context&              ctx);
+
+    static Uint64 getSize(const alc_mac_info_t& macInfo);
 };
 
 template<typename MACALGORITHM>
@@ -102,8 +105,10 @@ __hmac_wrapperFinish(void* hmac, void* digest)
     auto digest_p = static_cast<DIGESTALGORITHM*>(digest);
     ap->finish();
     digest_p->finish();
-    delete ap;
-    delete digest_p;
+    ap->~MACALGORITHM();
+    digest_p->~DIGESTALGORITHM();
+
+    // Not Deleting the memory as it is allocated by application
 }
 
 template<typename MACALGORITHM, typename DIGESTALGORITHM>
@@ -118,24 +123,28 @@ template<typename DIGESTALGORITHM, typename MACALGORITHM>
 static Status
 __build_hmac(const alc_mac_info_t& macInfo, Context& ctx)
 {
+    using namespace status;
     Status status = StatusOk();
 
     status = validate_keys(macInfo.mi_keyinfo);
     if (!status.ok()) {
         return status;
     }
-    auto digest = new DIGESTALGORITHM();
+    auto addr = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
+
+    auto digest = new (addr) DIGESTALGORITHM();
     if (digest == nullptr) {
-        // TODO: Update proper Out of Memory Status
+        status.update(InternalError("Out of Memory"));
         return status;
     }
     auto p_key  = macInfo.mi_keyinfo.key;
     auto keylen = macInfo.mi_keyinfo.len;
-    auto algo   = new MACALGORITHM();
+
+    auto algo = new (addr + sizeof(*digest)) MACALGORITHM();
     algo->setDigest(*digest);
     algo->setKey(p_key, keylen);
     if (algo == nullptr) {
-        // TODO: Update proper Out of Memory Status
+        status.update(InternalError("Out of Memory"));
         return status;
     }
     ctx.m_mac    = static_cast<void*>(algo);
@@ -160,19 +169,21 @@ __build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
     if (!status.ok()) {
         return status;
     }
-    // FIXME: Use Placement New Operator for memory allocation
-    auto p_sha3 = new digest::Sha3(macInfo.mi_algoinfo.hmac.hmac_digest);
+
+    auto addr = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
+
+    auto p_sha3 = new (addr) digest::Sha3(macInfo.mi_algoinfo.hmac.hmac_digest);
     if (p_sha3 == nullptr) {
         return InternalError("Unable To Allocate Memory for Digest Object");
     }
     auto p_key  = macInfo.mi_keyinfo.key;
     auto keylen = macInfo.mi_keyinfo.len;
-    // FIXME: Use placement new operator for memory allocation
-    auto algo = new MACALGORITHM();
+
+    auto algo = new (addr + sizeof(*p_sha3)) MACALGORITHM();
     algo->setDigest(*p_sha3);
     algo->setKey(p_key, keylen);
     if (algo == nullptr) {
-        return InternalError("Unable to Allocate Memory for MAC Object");
+        return InternalError("Unable to Allocate Memory for HMAC Object");
     }
     ctx.m_mac    = static_cast<void*>(algo);
     ctx.m_digest = static_cast<void*>(p_sha3);
@@ -214,7 +225,7 @@ HmacBuilder::build(const alc_mac_info_t& macInfo,
                 }
                 default: {
                     status.update(
-                        InternalError("Sha2 Algorithm provided unknown"));
+                        InternalError("Unsupported HMAC Sha2 Algorithm"));
                 }
             }
             break;
@@ -238,7 +249,8 @@ HmacBuilder::build(const alc_mac_info_t& macInfo,
                     break;
                 }
                 default: {
-                    status.update(InternalError("SHA3 Algorithm unknown"));
+                    status.update(
+                        InternalError("Unsupported HMAC SHA3 Algorithm"));
                     break;
                 }
             }
@@ -250,5 +262,13 @@ HmacBuilder::build(const alc_mac_info_t& macInfo,
         }
     }
     return status;
+}
+
+Uint64
+HmacBuilder::getSize(const alc_mac_info_t& macInfo)
+{
+    return sizeof(Hmac)
+           + alcp::digest::DigestBuilder::getSize(
+               macInfo.mi_algoinfo.hmac.hmac_digest);
 }
 } // namespace alcp::mac

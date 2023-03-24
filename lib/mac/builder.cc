@@ -51,4 +51,21 @@ MacBuilder::build(const alc_mac_info_t& macInfo, Context& ctx)
     return status;
 }
 
+Uint64
+MacBuilder::getSize(const alc_mac_info_t& macInfo)
+{
+    Uint64 size = 0;
+    switch (macInfo.mi_type) {
+        case ALC_MAC_CMAC:
+            size = CmacBuilder::getSize(macInfo);
+            break;
+        case ALC_MAC_HMAC:
+            size = HmacBuilder::getSize(macInfo);
+            break;
+        default:
+            size = 0;
+    }
+    return size;
+}
+
 } // namespace alcp::mac

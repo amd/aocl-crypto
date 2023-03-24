@@ -43,7 +43,7 @@ using alcp::base::Status;
 Uint64
 alcp_mac_context_size(const alc_mac_info_p pcMacInfo)
 {
-    Uint64 size = sizeof(mac::Context);
+    Uint64 size = sizeof(mac::Context) + mac::MacBuilder::getSize(*pcMacInfo);
     return size;
 }
 
