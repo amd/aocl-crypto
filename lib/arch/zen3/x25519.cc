@@ -33,9 +33,9 @@
 namespace alcp::ec { namespace zen3 {
 #include "../../ec/x25519.cc.inc"
 
-    static inline void alcp_load_conditional(__m256i& a_256,
-                                             __m256i& b_256,
-                                             Uint64   iswap)
+    static inline void LoadConditional(__m256i& a_256,
+                                       __m256i& b_256,
+                                       Uint64   iswap)
     {
         const __m256i swap_256 = _mm256_set1_epi64x(-iswap);
         __m256i       x_256;
@@ -57,11 +57,11 @@ namespace alcp::ec { namespace zen3 {
         b_256    = _mm256_xor_si256(b_256, temp_256);
     }
 
-    static inline void AlcpLoadPrecomputed(__m256i&     x_256,
-                                           __m256i&     y_256,
-                                           __m256i&     z_256,
-                                           const Uint64 point[3][4],
-                                           Uint64       iswap)
+    static inline void LoadPrecomputed(__m256i&     x_256,
+                                       __m256i&     y_256,
+                                       __m256i&     z_256,
+                                       const Uint64 point[3][4],
+                                       Uint64       iswap)
     {
 
         __m256i pt_x_256 =
@@ -71,9 +71,9 @@ namespace alcp::ec { namespace zen3 {
         __m256i pt_z_256 =
             _mm256_lddqu_si256(reinterpret_cast<const __m256i*>(point[2]));
 
-        alcp_load_conditional(x_256, pt_x_256, iswap);
-        alcp_load_conditional(y_256, pt_y_256, iswap);
-        alcp_load_conditional(z_256, pt_z_256, iswap);
+        LoadConditional(x_256, pt_x_256, iswap);
+        LoadConditional(y_256, pt_y_256, iswap);
+        LoadConditional(z_256, pt_z_256, iswap);
     }
 
     static inline void FetchIntermediateMul(Int8              i,
@@ -92,11 +92,11 @@ namespace alcp::ec { namespace zen3 {
 
         UNROLL_16
         for (Uint8 z = 0; z < 16; z++) {
-            AlcpLoadPrecomputed(x_256,
-                                y_256,
-                                z_256,
-                                &alcp::ec::cPrecomputedTable[i][z][0],
-                                abs_j == z + 1);
+            LoadPrecomputed(x_256,
+                            y_256,
+                            z_256,
+                            &alcp::ec::cPrecomputedTable[i][z][0],
+                            abs_j == z + 1);
         }
 
         negative_point_x_256 = y_256;
@@ -106,9 +106,9 @@ namespace alcp::ec { namespace zen3 {
         SubX25519((Uint64*)&negative_point_z_256, temp, (Uint64*)&z_256);
 
         Uint64 iswap = ((Uint8)j >> 7);
-        alcp_load_conditional(x_256, negative_point_x_256, iswap);
-        alcp_load_conditional(y_256, negative_point_y_256, iswap);
-        alcp_load_conditional(z_256, negative_point_z_256, iswap);
+        LoadConditional(x_256, negative_point_x_256, iswap);
+        LoadConditional(y_256, negative_point_y_256, iswap);
+        LoadConditional(z_256, negative_point_z_256, iswap);
 
         _mm256_storeu_si256(reinterpret_cast<__m256i*>(point.m_x), x_256);
         _mm256_storeu_si256(reinterpret_cast<__m256i*>(point.m_y), y_256);

@@ -31,7 +31,7 @@
 
 namespace alcp::ec { namespace zen {
 #include "../../ec/x25519.cc.inc"
-    static inline void alcp_load_conditional(Uint64* a, Uint64* b, Uint64 iswap)
+    static inline void LoadConditional(Uint64* a, Uint64* b, Uint64 iswap)
     {
         const Uint64 swap_64 = -iswap;
         Uint64       x;
@@ -41,11 +41,11 @@ namespace alcp::ec { namespace zen {
         *a = *a ^ x;
     }
 
-    static inline void AlcpLoadPrecomputed(Uint64       x[4],
-                                           Uint64       y[4],
-                                           Uint64       z[4],
-                                           const Uint64 point[3][4],
-                                           Uint64       iswap)
+    static inline void LoadPrecomputed(Uint64       x[4],
+                                       Uint64       y[4],
+                                       Uint64       z[4],
+                                       const Uint64 point[3][4],
+                                       Uint64       iswap)
     {
 
         Uint64 pt_x[4], pt_y[4], pt_z[4];
@@ -57,9 +57,9 @@ namespace alcp::ec { namespace zen {
         UNROLL_4
         for (int i = 0; i < 4; i++) {
 
-            alcp_load_conditional(&x[i], &pt_x[i], iswap);
-            alcp_load_conditional(&y[i], &pt_y[i], iswap);
-            alcp_load_conditional(&z[i], &pt_z[i], iswap);
+            LoadConditional(&x[i], &pt_x[i], iswap);
+            LoadConditional(&y[i], &pt_y[i], iswap);
+            LoadConditional(&z[i], &pt_z[i], iswap);
         }
     }
 
@@ -78,7 +78,7 @@ namespace alcp::ec { namespace zen {
 
         UNROLL_16
         for (Uint8 k = 0; k < 16; k++) {
-            AlcpLoadPrecomputed(
+            LoadPrecomputed(
                 x, y, z, &alcp::ec::cPrecomputedTable[i][k][0], abs_j == k + 1);
         }
         utils::CopyQWord(negative_point_x, y, 32);
@@ -91,9 +91,9 @@ namespace alcp::ec { namespace zen {
 
         UNROLL_4
         for (int i = 0; i < 4; i++) {
-            alcp_load_conditional(&x[i], &negative_point_x[i], iswap);
-            alcp_load_conditional(&y[i], &negative_point_y[i], iswap);
-            alcp_load_conditional(&z[i], &negative_point_z[i], iswap);
+            LoadConditional(&x[i], &negative_point_x[i], iswap);
+            LoadConditional(&y[i], &negative_point_y[i], iswap);
+            LoadConditional(&z[i], &negative_point_z[i], iswap);
         }
 
         utils::CopyQWord(point.m_x, x, 32);

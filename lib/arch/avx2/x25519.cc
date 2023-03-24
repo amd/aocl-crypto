@@ -32,9 +32,9 @@
 
 namespace alcp::ec { namespace avx2 {
 #include "../../ec/x25519.cc.inc"
-    static inline void alcp_load_conditional(__m128i& a_128,
-                                             __m128i& b_128,
-                                             Uint64   iswap)
+    static inline void LoadConditional(__m128i& a_128,
+                                       __m128i& b_128,
+                                       Uint64   iswap)
     {
         const __m128i swap_128 = _mm_set1_epi64x(-iswap);
         __m128i       x_128;
@@ -55,14 +55,14 @@ namespace alcp::ec { namespace avx2 {
         b_128 = _mm_xor_si128(b_128, temp);
     }
 
-    static inline void AlcpLoadPrecomputed(__m128i&     x_128_0,
-                                           __m128i&     x_128_1,
-                                           __m128i&     y_128_0,
-                                           __m128i&     y_128_1,
-                                           __m128i&     z_128_0,
-                                           __m128i&     z_128_1,
-                                           const Uint64 point[3][4],
-                                           Uint64       iswap)
+    static inline void LoadPrecomputed(__m128i&     x_128_0,
+                                       __m128i&     x_128_1,
+                                       __m128i&     y_128_0,
+                                       __m128i&     y_128_1,
+                                       __m128i&     z_128_0,
+                                       __m128i&     z_128_1,
+                                       const Uint64 point[3][4],
+                                       Uint64       iswap)
     {
 
         __m128i pt_x_128_0 =
@@ -82,12 +82,12 @@ namespace alcp::ec { namespace avx2 {
         __m128i pt_z_128_1 =
             _mm_lddqu_si128(reinterpret_cast<const __m128i*>(point[2]) + 1);
 
-        alcp_load_conditional(x_128_0, pt_x_128_0, iswap);
-        alcp_load_conditional(x_128_1, pt_x_128_1, iswap);
-        alcp_load_conditional(y_128_0, pt_y_128_0, iswap);
-        alcp_load_conditional(y_128_1, pt_y_128_1, iswap);
-        alcp_load_conditional(z_128_0, pt_z_128_0, iswap);
-        alcp_load_conditional(z_128_1, pt_z_128_1, iswap);
+        LoadConditional(x_128_0, pt_x_128_0, iswap);
+        LoadConditional(x_128_1, pt_x_128_1, iswap);
+        LoadConditional(y_128_0, pt_y_128_0, iswap);
+        LoadConditional(y_128_1, pt_y_128_1, iswap);
+        LoadConditional(z_128_0, pt_z_128_0, iswap);
+        LoadConditional(z_128_1, pt_z_128_1, iswap);
     }
 
     static inline void FetchIntermediateMul(Int8              i,
@@ -107,14 +107,14 @@ namespace alcp::ec { namespace avx2 {
 
         UNROLL_16
         for (Uint8 z = 0; z < 16; z++) {
-            AlcpLoadPrecomputed(x_128[0],
-                                x_128[1],
-                                y_128[0],
-                                y_128[1],
-                                z_128[0],
-                                z_128[1],
-                                &alcp::ec::cPrecomputedTable[i][z][0],
-                                abs_j == z + 1);
+            LoadPrecomputed(x_128[0],
+                            x_128[1],
+                            y_128[0],
+                            y_128[1],
+                            z_128[0],
+                            z_128[1],
+                            &alcp::ec::cPrecomputedTable[i][z][0],
+                            abs_j == z + 1);
         }
 
         negative_point_x_128[0] = x_128[0];
@@ -126,12 +126,12 @@ namespace alcp::ec { namespace avx2 {
         SubX25519((Uint64*)&negative_point_z_128, temp, (Uint64*)&z_128);
 
         Uint64 iswap = ((Uint8)j >> 7);
-        alcp_load_conditional(x_128[0], negative_point_x_128[0], iswap);
-        alcp_load_conditional(x_128[1], negative_point_x_128[1], iswap);
-        alcp_load_conditional(y_128[0], negative_point_y_128[0], iswap);
-        alcp_load_conditional(y_128[1], negative_point_y_128[1], iswap);
-        alcp_load_conditional(z_128[0], negative_point_z_128[0], iswap);
-        alcp_load_conditional(z_128[1], negative_point_z_128[1], iswap);
+        LoadConditional(x_128[0], negative_point_x_128[0], iswap);
+        LoadConditional(x_128[1], negative_point_x_128[1], iswap);
+        LoadConditional(y_128[0], negative_point_y_128[0], iswap);
+        LoadConditional(y_128[1], negative_point_y_128[1], iswap);
+        LoadConditional(z_128[0], negative_point_z_128[0], iswap);
+        LoadConditional(z_128[1], negative_point_z_128[1], iswap);
 
         _mm_storeu_si128(reinterpret_cast<__m128i*>(point.m_x), x_128[0]);
         _mm_storeu_si128(reinterpret_cast<__m128i*>(point.m_x) + 1, x_128[1]);
