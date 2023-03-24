@@ -25,14 +25,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 #include "alcp/ec/ecdh.hh"
+#include "alcp/ec/ecdh_avx2.hh"
+#include "alcp/ec/ecdh_zen.hh"
+#include "alcp/ec/ecdh_zen3.hh"
 #include "alcp/utils/copy.hh"
+#include "alcp/utils/cpuid.hh"
 #include "config.h"
 #include <string.h>
 
 namespace alcp::ec {
 
+using alcp::utils::CpuId;
 static constexpr Uint32 KeySize                     = 32;
 static const Uint8      x25519_basepoint_9[KeySize] = { 9 };
 
@@ -86,7 +90,17 @@ X25519::generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
 
     priv_key_radix32[51] = carry;
 
-    AlcpScalarPubX25519(priv_key_radix32, pPublicKey);
+    static bool zen2_available = CpuId::cpuIsZen2();
+    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
+
+    if (zen3_available) {
+        zen3::AlcpScalarPubX25519(priv_key_radix32, pPublicKey);
+    } else if (zen2_available) {
+        avx2::AlcpScalarPubX25519(priv_key_radix32, pPublicKey);
+    } else {
+        zen::AlcpScalarPubX25519(priv_key_radix32, pPublicKey);
+    }
+
     return StatusOk();
 }
 
@@ -103,7 +117,16 @@ X25519::computeSecretKey(Uint8*       pSecretKey,
         return status;
     }
 
-    alcpScalarMulX25519(pSecretKey, m_PrivKey, pPublicKey);
+    static bool zen2_available = CpuId::cpuIsZen2();
+    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
+
+    if (zen3_available) {
+        zen3::alcpScalarMulX25519(pSecretKey, m_PrivKey, pPublicKey);
+    } else if (zen2_available) {
+        avx2::alcpScalarMulX25519(pSecretKey, m_PrivKey, pPublicKey);
+    } else {
+        zen::alcpScalarMulX25519(pSecretKey, m_PrivKey, pPublicKey);
+    }
 
     *pKeyLength = KeySize;
     return status;

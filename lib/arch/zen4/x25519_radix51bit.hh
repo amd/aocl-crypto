@@ -38,7 +38,6 @@ typedef unsigned Uint128 __attribute__((mode(TI)));
     (((d) << 0) | ((c) << 2) | ((b) << 4) | ((a) << 6))
 
 namespace alcp::ec::radix51bit {
-
 #define RADIX_51 51
 
 //(1 << RADIX_51) - 1
