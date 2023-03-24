@@ -29,10 +29,10 @@
 #include <immintrin.h>
 #include <string.h>
 
-#include "ec/ecdh.hh"
-#include "ec/ed_25519_table.hh"
-#include "ec/x25519_radix64bit.hh"
-#include "utils/copy.hh"
+#include "alcp/ec/ecdh.hh"
+#include "alcp/ec/ed_25519_table.hh"
+#include "alcp/ec/x25519_radix64bit.hh"
+#include "alcp/utils/copy.hh"
 
 using namespace radix64bit;
 

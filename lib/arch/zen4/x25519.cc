@@ -26,9 +26,9 @@
  *
  */
 
-#include "ec.hh"
-#include "ec/ecdh.hh"
-#include "utils/copy.hh"
+#include "alcp/ec.hh"
+#include "alcp/ec/ecdh.hh"
+#include "alcp/utils/copy.hh"
 #include "x25519_radix51bit.hh"
 #include <immintrin.h>
 

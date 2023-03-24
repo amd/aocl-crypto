@@ -26,8 +26,8 @@
  *
  */
 
-#include "ec.hh"
-#include "ec/ecdh.hh"
+#include "alcp/ec.hh"
+#include "alcp/ec/ecdh.hh"
 
 namespace alcp::ec { namespace zen {
 #include "../../ec/x25519.cc.inc"

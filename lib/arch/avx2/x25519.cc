@@ -26,8 +26,8 @@
  *
  */
 
-#include "ec.hh"
-#include "ec/ecdh.hh"
+#include "alcp/ec.hh"
+#include "alcp/ec/ecdh.hh"
 #include <immintrin.h>
 
 namespace alcp::ec { namespace avx2 {
