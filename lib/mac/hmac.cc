@@ -89,6 +89,10 @@ class Hmac::Impl
 
     Status update(const Uint8* buff, Uint64 size)
     {
+        if (m_finalized) {
+            return InternalError(
+                "HMAC: After Finalizing cannot call update without Reseting");
+        }
         if (m_pKey == nullptr) {
             return InternalError("HMAC: Key cannot be null. Use SetKey to set "
                                  "Key before calling update");
@@ -107,8 +111,24 @@ class Hmac::Impl
 
     Status finalize(const Uint8* buff, Uint64 size)
     {
+        if (m_finalized) {
+            return InternalError("HMAC: Already Finalized. Call Reset before "
+                                 "updating or Finalizing Again");
+        }
+
         Status      status = StatusOk();
         alc_error_t err    = ALC_ERROR_NONE;
+
+        if (m_pKey == nullptr) {
+            return InternalError("HMAC: Key cannot be null. Use SetKey to set "
+                                 "Key before calling Finalize");
+        }
+        if (m_pDigest == nullptr) {
+            return InternalError(
+                "HMAC: Digest cannot be null. Use setDigest to set "
+                "digest before calling Finalize");
+        }
+
         /* TODO: For all the following calls to digest return the proper error
         and assign */
         if (sizeof(buff) != 0 && size != 0) {

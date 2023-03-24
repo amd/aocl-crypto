@@ -471,7 +471,7 @@ TEST_P(HmacTestFixture, HMAC_UPDATE_FINALISE)
     EXPECT_EQ(mac, m_expected_mac);
 }
 
-TEST(HmacTest, Reset)
+TEST(HmacTest, UpdateReset)
 {
     auto        pos  = KAT_ShaDataset.find("SHA2_256_KEYLEN_EQ_B");
     param_tuple data = pos->second;
@@ -485,6 +485,31 @@ TEST(HmacTest, Reset)
     hmac.setDigest(sha256);
     hmac.setKey(&key[0], key.size());
     hmac.update(&cipher_text[0], cipher_text.size());
+
+    hmac.reset();
+
+    hmac.update(&cipher_text[0], cipher_text.size());
+    hmac.finalize(nullptr, 0);
+    auto mac = std::vector<Uint8>(hmac.getHashSize(), 0);
+    hmac.copyHash(&mac.at(0), mac.size());
+    EXPECT_EQ(mac, output_mac);
+    hmac.finish();
+}
+
+TEST(HmacTest, FinalizeReset)
+{
+    auto        pos  = KAT_ShaDataset.find("SHA2_256_KEYLEN_EQ_B");
+    param_tuple data = pos->second;
+
+    auto key         = parseHexStrToBin(std::get<0>(data));
+    auto cipher_text = parseHexStrToBin(std::get<1>(data));
+    auto output_mac  = parseHexStrToBin(std::get<2>(data));
+
+    Sha256 sha256;
+    Hmac   hmac;
+    hmac.setDigest(sha256);
+    hmac.setKey(&key[0], key.size());
+    hmac.finalize(&cipher_text[0], cipher_text.size());
 
     hmac.reset();
 
@@ -605,6 +630,71 @@ TEST(HmacRobustnessTest, callUpdateWithNullDigest)
     Uint8 key[16]{};
     hmac.setKey(key, sizeof(key));
     Status s = hmac.update(nullptr, 0);
+    EXPECT_FALSE(s.ok());
+}
+
+TEST(HmacRobustnessTest, callFinalizeWithNullKeyNullDigest)
+{
+
+    Hmac   hmac;
+    Status s = hmac.finalize(nullptr, 0);
+    EXPECT_FALSE(s.ok());
+}
+
+TEST(HmacRobustnessTest, callFinalizeWithNullKey)
+{
+
+    Hmac   hmac;
+    Sha256 sha256;
+
+    hmac.setDigest(sha256);
+    Status s = hmac.finalize(nullptr, 0);
+    EXPECT_FALSE(s.ok());
+}
+
+TEST(HmacRobustnessTest, callFinalizeWithNullDigest)
+{
+
+    Hmac  hmac;
+    Uint8 key[16]{};
+    hmac.setKey(key, sizeof(key));
+    Status s = hmac.finalize(nullptr, 0);
+    EXPECT_FALSE(s.ok());
+}
+
+TEST(HmacRobustnessTest, callUpdateAfterFinalize)
+{
+
+    Hmac   hmac;
+    Uint8  key[16]{};
+    Uint8  data[32]{};
+    Sha256 sha256;
+    Status s{ StatusOk() };
+    s = hmac.setDigest(sha256);
+    ASSERT_TRUE(s.ok());
+    s = hmac.setKey(key, sizeof(key));
+    ASSERT_TRUE(s.ok());
+    s = hmac.finalize(data, sizeof(data));
+    ASSERT_TRUE(s.ok());
+    s = hmac.update(data, sizeof(data));
+    EXPECT_FALSE(s.ok());
+}
+
+TEST(HmacRobustnessTest, callFinalizeTwice)
+{
+
+    Hmac   hmac;
+    Uint8  key[16]{};
+    Uint8  data[32]{};
+    Sha256 sha256;
+    Status s{ StatusOk() };
+    s = hmac.setDigest(sha256);
+    ASSERT_TRUE(s.ok());
+    s = hmac.setKey(key, sizeof(key));
+    ASSERT_TRUE(s.ok());
+    s = hmac.finalize(data, sizeof(data));
+    ASSERT_TRUE(s.ok());
+    s = hmac.finalize(data, sizeof(data));
     EXPECT_FALSE(s.ok());
 }
 

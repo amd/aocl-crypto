@@ -101,6 +101,10 @@ void inline Hmac_Bench(benchmark::State& state,
             std::cout << "Error in hmac benchmark function" << std::endl;
             return;
         }
+        if (!hb->reset()) {
+            std::cout << "Error in hmac Reset function" << std::endl;
+            return;
+        }
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(
         state.iterations() * block_size, benchmark::Counter::kIsRate);
