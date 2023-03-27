@@ -26,7 +26,7 @@
  *
  */
 
-#include "cipher/cipher_base.hh"
+#include "cipher/cipher.hh"
 #include <sstream>
 #ifdef USE_IPP
 #include "cipher/ipp_cipher_base.hh"

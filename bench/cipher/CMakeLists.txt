@@ -34,7 +34,7 @@ FetchContent_Declare(benchmark
 FetchContent_MakeAvailable(benchmark)
 
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
-SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher_base.cc ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher_base.cc)
+SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher.cc ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher.cc)
 SET(LIBS ${LIBS} benchmark alcp)
 # add this if asan is used
 if (ALCP_SANITIZE)
@@ -51,7 +51,7 @@ IF(ENABLE_TESTS_IPP_API)
         MESSAGE(STATUS "IPP_INSTALL_DIR not set, defaulting to external")
     ENDIF(IPP_INSTALL_DIR)
     # If there is IPP, add IPP source and add IPP liberary
-    SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cipher/base/ipp_cipher_base.cc)
+    SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cipher/base/ipp_cipher.cc)
 	IF(UNIX)
         IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
             SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
@@ -80,7 +80,7 @@ IF(ENABLE_TESTS_OPENSSL_API)
         MESSAGE(STATUS "OPENSSL_INSTALL_DIR not set, defaulting to external")
     ENDIF(OPENSSL_INSTALL_DIR)
     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
-    SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cipher/base/openssl_cipher_base.cc)
+    SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cipher/base/openssl_cipher.cc)
 	IF(UNIX)
 		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
 			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)

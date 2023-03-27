@@ -124,7 +124,8 @@ OpenSSLCipherBase::OpenSSLCipherBase(const alc_cipher_mode_t mode,
                                      const Uint8*            iv)
     : m_mode{ mode }
     , m_iv{ iv }
-{}
+{
+}
 OpenSSLCipherBase::OpenSSLCipherBase(const alc_cipher_mode_t mode,
                                      const Uint8*            iv,
                                      const Uint32            iv_len,
@@ -303,11 +304,13 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 key_len)
             handleErrors();
             return false;
         }
+
+        if (m_ctx_dec != nullptr) {
+            EVP_CIPHER_CTX_free(m_ctx_dec);
+        }
     }
 
-    if (m_ctx_dec != nullptr) {
-        EVP_CIPHER_CTX_free(m_ctx_dec);
-    }
+    // Create context for decryption and initalize
     m_ctx_dec = EVP_CIPHER_CTX_new();
     if (m_ctx_dec == NULL) {
         m_ctx_dec = nullptr;

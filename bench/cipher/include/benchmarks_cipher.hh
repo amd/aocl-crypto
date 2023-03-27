@@ -27,8 +27,8 @@
  */
 #pragma once
 
-#include "cipher/alc_cipher_base.hh"
-#include "cipher/cipher_base.hh"
+#include "cipher/alc_cipher.hh"
+#include "cipher/cipher.hh"
 #include <alcp/alcp.h>
 #include <benchmark/benchmark.h>
 #include <iostream>
@@ -39,7 +39,7 @@
 #endif
 
 #ifdef USE_OSSL
-#include "cipher/openssl_cipher_base.hh"
+#include "cipher/openssl_cipher.hh"
 #endif
 
 typedef enum

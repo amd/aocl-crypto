@@ -45,7 +45,7 @@
 #include "alcp/alcp.h"
 #include "alcp/base.hh"
 #include "alcp/utils/copy.hh"
-#include "cipher_base.hh"
+#include "cipher.hh"
 #include <openssl/conf.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>

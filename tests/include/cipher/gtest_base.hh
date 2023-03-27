@@ -31,8 +31,8 @@
 #define __GTEST_BASE_HH 2
 
 #include "../../../lib/include/alcp/types.hh"
-#include "alc_cipher_base.hh"
-#include "cipher_base.hh"
+#include "alc_cipher.hh"
+#include "cipher.hh"
 #include "csv.hh"
 #include "gtest_common.hh"
 #include <vector>
@@ -40,7 +40,7 @@
 #include "ipp_cipher_base.hh"
 #endif
 #ifdef USE_OSSL
-#include "openssl_cipher_base.hh"
+#include "openssl_cipher.hh"
 #endif
 #include "rng_base.hh"
 #include <algorithm>

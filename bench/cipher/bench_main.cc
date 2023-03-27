@@ -27,7 +27,7 @@
  */
 
 #include "benchmarks_cipher.hh"
-#include "cipher/cipher_base.hh"
+#include "cipher/cipher.hh"
 #include "gbench_base.hh"
 #include <memory>
 

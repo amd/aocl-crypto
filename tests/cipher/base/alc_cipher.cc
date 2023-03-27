@@ -26,7 +26,7 @@
  *
  */
 
-#include "cipher/alc_cipher_base.hh"
+#include "cipher/alc_cipher.hh"
 
 namespace alcp::testing {
 
