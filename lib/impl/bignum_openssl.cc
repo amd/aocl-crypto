@@ -433,11 +433,12 @@ class BigNum::Impl
                 break;
             }
             case BigNum::Format::eBinary: {
-                unsigned char p_s[BN_num_bytes(raw())];
+                int           len = BN_num_bytes(raw());
+                unsigned char p_s[len];
 
                 std::stringstream ss;
                 BN_bn2bin(raw(), p_s);
-                for (int i = 0; i < BN_num_bytes(raw()); i++) {
+                for (int i = 0; i < len; i++) {
                     std::bitset<8> b(p_s[i]);
                     if (i != 0)
                         ss << b.to_string();
