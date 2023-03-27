@@ -106,6 +106,16 @@ OpenSSLCipherBase::alcpModeKeyLenToCipher(alc_cipher_mode_t mode, size_t keylen)
                 case 256:
                     return EVP_aes_256_xts();
             }
+        case ALC_AES_MODE_SIV:
+            switch (keylen) {
+                case 128:
+                    // FIXME: Change it
+                    return EVP_aes_128_xts();
+                case 192:
+                    return EVP_aes_128_xts();
+                case 256:
+                    return EVP_aes_128_xts();
+            }
         default:
             return nullptr;
     }

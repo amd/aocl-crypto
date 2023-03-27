@@ -81,6 +81,8 @@ GetModeSTR(alc_cipher_mode_t mode)
             return "GCM";
         case ALC_AES_MODE_CCM:
             return "CCM";
+        case ALC_AES_MODE_SIV:
+            return "SIV";
         default:
             return "NULL";
     }
@@ -586,6 +588,7 @@ RunCipherKATTest(TestingCore& testingCore,
     std::vector<Uint8>   outtag  = csv->getVect("TAG");
     std::vector<Uint8>   ad      = csv->getVect("ADDITIONAL_DATA");
     std::vector<Uint8>   tagBuff = std::vector<Uint8>(outtag.size());
+    std::vector<Uint8>   ctrkey  = csv->getVect("CTR_KEY");
 
     // Common Initialization
     data.m_tkeyl = 0;
@@ -605,6 +608,10 @@ RunCipherKATTest(TestingCore& testingCore,
             data.m_adl = ad.size();
         }
     }
+    if (isxts && isgcm) {
+        iv = csv->getVect("TAG"); // Let tag be IV (which is techically true
+                                  // but not good idea)
+    }
     if (enc_dec == ENCRYPT) {
         if (pt.size()) {
             data.m_in  = &(pt[0]);
@@ -615,7 +622,10 @@ RunCipherKATTest(TestingCore& testingCore,
         if (outct.size())
             data.m_out = &(outct[0]);
         data.m_outl = data.m_inl;
-        if (isxts) {
+        if (isxts && isgcm) {
+            data.m_tkey  = &(ctrkey[0]);
+            data.m_tkeyl = tkey.size();
+        } else if (isxts) {
             data.m_tkey       = &(tkey[0]);
             data.m_tkeyl      = tkey.size();
             data.m_block_size = pt.size();
@@ -633,7 +643,7 @@ RunCipherKATTest(TestingCore& testingCore,
                         std::string("AES_" + MODE_STR + "_"
                                     + std::to_string(keySize) + enc_dec_str)));
 
-        if (isgcm) {
+        if (isgcm || (isgcm && isxts)) {
             EXPECT_TRUE(ArraysMatch(outtag,
                                     csv->getVect("TAG"),
                                     *(csv.get()),
@@ -653,7 +663,10 @@ RunCipherKATTest(TestingCore& testingCore,
         if (outpt.size())
             data.m_out = &(outpt[0]);
         data.m_outl = data.m_inl;
-        if (isxts) {
+        if (isxts && isgcm) {
+            data.m_tkey  = &(ctrkey[0]);
+            data.m_tkeyl = tkey.size();
+        } else if (isxts) {
             data.m_tkey       = &(tkey[0]);
             data.m_tkeyl      = tkey.size();
             data.m_block_size = ct.size();
@@ -696,6 +709,7 @@ AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode)
     bool              isxts = (cModeStr.compare("XTS") == 0);
     bool              isgcm = (cModeStr.compare("GCM") == 0);
     bool              isccm = (cModeStr.compare("CCM") == 0);
+    bool              issiv = (cModeStr.compare("SIV") == 0);
 
     if (enc_dec == ENCRYPT)
         enc_dec_str = "_ENC";
@@ -720,8 +734,8 @@ AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode)
                                   enc_dec_str,
                                   cModeStr,
                                   keySize,
-                                  isxts,
-                                  isgcm || isccm);
+                                  isxts || issiv,
+                                  isgcm || isccm || issiv);
         EXPECT_TRUE(retval);
         // printf("MEOW\n");
     }

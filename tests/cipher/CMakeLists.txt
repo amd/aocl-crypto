@@ -164,6 +164,7 @@ KAT_AES(ofb)
 KAT_AES(gcm)
 KAT_AES(xts)
 KAT_AES(ccm)
+KAT_AES(siv)
 
 CROSS_AES(cbc)
 CROSS_AES(cfb)
