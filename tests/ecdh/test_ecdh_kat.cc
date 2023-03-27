@@ -27,8 +27,8 @@
  */
 
 #include "alcp/alcp.h"
-#include "ecdh/alc_ecdh_base.hh"
-#include "ecdh/ecdh_base.hh"
+#include "ecdh/alc_ecdh.hh"
+#include "ecdh/ecdh.hh"
 #include "ecdh/gtest_base_ecdh.hh"
 #include "string.h"
 #include <iostream>

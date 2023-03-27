@@ -28,8 +28,8 @@
 
 #include "alcp/ec.h"
 #include "alcp/ecdh.h"
-#include "ecdh/alc_ecdh_base.hh"
-#include "ecdh/ecdh_base.hh"
+#include "ecdh/alc_ecdh.hh"
+#include "ecdh/ecdh.hh"
 #include <cstring>
 
 namespace alcp::testing {

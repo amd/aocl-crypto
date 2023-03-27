@@ -26,7 +26,7 @@
  *
  */
 
-#include "ecdh/ipp_ecdh_base.hh"
+#include "ecdh/ipp_ecdh.hh"
 #include <cstddef>
 #include <cstring>
 #include <iostream>

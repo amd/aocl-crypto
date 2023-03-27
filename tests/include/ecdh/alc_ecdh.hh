@@ -25,33 +25,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#pragma once
-
 #include "alcp/alcp.h"
 #include "alcp/ec.h"
 #include "alcp/ecdh.h"
-#include "ecdh/ecdh_base.hh"
-#include <crypto_mb/x25519.h>
+#include "ecdh/ecdh.hh"
 #include <iostream>
-#include <ippcp.h>
 #include <malloc.h>
 #include <vector>
 
+#pragma once
 namespace alcp::testing {
-class IPPEcdhBase : public EcdhBase
+class AlcpEcdhBase : public EcdhBase
 {
-    alc_ec_info_t m_info;
+    alc_ec_handle_t* m_ec_handle{};
+    alc_ec_info_t    m_info;
 
-    Uint8*       m_pvt_key = {};
-    Uint8*       m_pub_key = {};
-    int8u*       m_pPublicKeyData_mb[8];
-    const int8u* m_pPrivKey_mb[8];
-    int8u*       m_pSecretKey_mb[8];
-    std::string  m_name, m_keytype;
+    Uint8* m_pvt_key = {};
+    Uint8* m_pub_key = {};
 
   public:
-    IPPEcdhBase(const alc_ec_info_t& info);
-    ~IPPEcdhBase();
+    AlcpEcdhBase(const alc_ec_info_t& info);
+    ~AlcpEcdhBase();
 
     bool init(const alc_ec_info_t& info);
     bool reset();

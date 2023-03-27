@@ -29,8 +29,8 @@
 #pragma once
 
 #include "alcp/alcp.h"
-#include "ecdh/alc_ecdh_base.hh"
-#include "ecdh/ecdh_base.hh"
+#include "ecdh/alc_ecdh.hh"
+#include "ecdh/ecdh.hh"
 #include "gbench_base.hh"
 #include "rng_base.hh"
 #include <benchmark/benchmark.h>
@@ -38,11 +38,11 @@
 #include <string>
 
 #ifdef USE_IPP
-#include "ecdh/ipp_ecdh_base.hh"
+#include "ecdh/ipp_ecdh.hh"
 #endif
 
 #ifdef USE_OSSL
-#include "ecdh/openssl_ecdh_base.hh"
+#include "ecdh/openssl_ecdh.hh"
 #endif
 
 using namespace alcp::testing;

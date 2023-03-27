@@ -28,24 +28,35 @@
 #include "alcp/alcp.h"
 #include "alcp/ec.h"
 #include "alcp/ecdh.h"
-#include "ecdh/ecdh_base.hh"
+#include "ecdh/ecdh.hh"
+#include "openssl/conf.h"
+#include "openssl/err.h"
+#include "openssl/evp.h"
 #include <iostream>
 #include <malloc.h>
 #include <vector>
 
 #pragma once
 namespace alcp::testing {
-class AlcpEcdhBase : public EcdhBase
+class OpenSSLEcdhBase : public EcdhBase
 {
-    alc_ec_handle_t* m_ec_handle{};
-    alc_ec_info_t    m_info;
+    OSSL_LIB_CTX* m_ec_handle{};
+    EVP_PKEY*     m_pPrivateKeyData;
+    EVP_PKEY*     m_pPublicKeyData;
+
+    std::string st = "X25519"; //"prime256v1"; // P-256
+
+    const char*   m_pkeytype = st.c_str();
+    alc_ec_info_t m_info;
 
     Uint8* m_pvt_key = {};
     Uint8* m_pub_key = {};
 
+    std::string m_name, m_keytype;
+
   public:
-    AlcpEcdhBase(const alc_ec_info_t& info);
-    ~AlcpEcdhBase();
+    OpenSSLEcdhBase(const alc_ec_info_t& info);
+    ~OpenSSLEcdhBase();
 
     bool init(const alc_ec_info_t& info);
     bool reset();

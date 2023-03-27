@@ -26,7 +26,7 @@
  *
  */
 
-#include "ecdh/openssl_ecdh_base.hh"
+#include "ecdh/openssl_ecdh.hh"
 #include <cstddef>
 #include <cstring>
 #include <openssl/ec.h>

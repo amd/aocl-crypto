@@ -26,7 +26,7 @@
  *
  */
 
-#include "ecdh/ecdh_base.hh"
+#include "ecdh/ecdh.hh"
 #include <iostream>
 #include <sstream>
 #ifdef __linux__
