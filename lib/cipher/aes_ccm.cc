@@ -388,6 +388,7 @@ Ccm::Impl::getTag(ccm_data_t* ctx, Uint8 ptag[], size_t len)
         return s;
     }
     utils::CopyBytes(ptag, ctx->cmac, t);
+    memset(ctx->cmac, 0, len);
     // EXITG();
     return s;
 }

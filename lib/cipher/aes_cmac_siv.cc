@@ -423,6 +423,7 @@ CmacSiv::Impl::getTag(Uint8 out[])
     Status s = StatusOk();
     utils::CopyBytes(out, &m_cmacTemp[0], SIZE_CMAC);
     memset(&m_cmacTemp[0], 0, 16);
+    m_additionalDataProcessedSize = 0;
     return s;
 }
 
