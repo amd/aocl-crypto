@@ -63,6 +63,7 @@ class IPPCipherBase : public CipherBase
     bool alcpModeToFuncCall(const Uint8* in, Uint8* out, size_t len, bool enc);
     bool alcpGCMModeToFuncCall(alcp_data_ex_t data, bool enc);
     bool alcpCCMModeToFuncCall(alcp_data_ex_t data, bool enc);
+    bool alcpSIVModeToFuncCall(alcp_data_ex_t data, bool enc);
 
   public:
     /**

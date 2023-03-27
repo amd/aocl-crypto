@@ -39,7 +39,8 @@ IPPCipherBase::PrintErrors(IppStatus status)
 IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t mode, const Uint8* iv)
     : m_mode{ mode }
     , m_iv{ iv }
-{}
+{
+}
 
 IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t mode,
                              const Uint8*            iv,
@@ -101,6 +102,8 @@ IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t mode,
                 PrintErrors(status);
             }
             break;
+        case ALC_AES_MODE_SIV:
+            break;
         default:
             status = ippsAESGetSize(&m_ctxSize);
             if (status != 0) {
@@ -118,16 +121,16 @@ IPPCipherBase::IPPCipherBase(const alc_cipher_mode_t mode,
 IPPCipherBase::~IPPCipherBase()
 {
     if (m_ctx != nullptr) {
-        delete[](Ipp8u*) m_ctx;
+        delete[] (Ipp8u*)m_ctx;
     }
     if (m_ctx_gcm != nullptr) {
-        delete[](Ipp8u*) m_ctx_gcm;
+        delete[] (Ipp8u*)m_ctx_gcm;
     }
     if (m_ctx_ccm != nullptr) {
-        delete[](Ipp8u*) m_ctx_ccm;
+        delete[] (Ipp8u*)m_ctx_ccm;
     }
     if (m_ctx_xts != nullptr) {
-        delete[](Ipp8u*) m_ctx_xts;
+        delete[] (Ipp8u*)m_ctx_xts;
     }
 }
 
@@ -168,6 +171,7 @@ IPPCipherBase::init(const Uint8* key, const Uint32 key_len)
 {
     IppStatus status = ippStsNoErr;
     m_key            = key;
+    m_key_len        = key_len;
     switch (m_mode) {
         case ALC_AES_MODE_GCM:
             status = ippsAES_GCMGetSize(&m_ctxSize);
@@ -176,7 +180,7 @@ IPPCipherBase::init(const Uint8* key, const Uint32 key_len)
                 return false;
             }
             if (m_ctx_gcm != nullptr) {
-                delete[](Ipp8u*) m_ctx_gcm;
+                delete[] (Ipp8u*)m_ctx_gcm;
             }
             m_ctx_gcm = (IppsAES_GCMState*)(new Ipp8u[m_ctxSize]);
             status    = ippsAES_GCMInit(key, key_len / 8, m_ctx_gcm, m_ctxSize);
@@ -192,7 +196,7 @@ IPPCipherBase::init(const Uint8* key, const Uint32 key_len)
                 return false;
             }
             if (m_ctx_ccm != nullptr) {
-                delete[](Ipp8u*) m_ctx_ccm;
+                delete[] (Ipp8u*)m_ctx_ccm;
             }
             m_ctx_ccm = (IppsAES_CCMState*)(new Ipp8u[m_ctxSize]);
             status    = ippsAES_CCMInit(key, key_len / 8, m_ctx_ccm, m_ctxSize);
@@ -213,7 +217,7 @@ IPPCipherBase::init(const Uint8* key, const Uint32 key_len)
                 return false;
             }
             if (m_ctx_xts != nullptr) {
-                delete[](Ipp8u*) m_ctx_xts;
+                delete[] (Ipp8u*)m_ctx_xts;
             }
             m_ctx_xts = (IppsAES_XTSSpec*)(new Ipp8u[m_ctxSize]);
 
@@ -229,6 +233,9 @@ IPPCipherBase::init(const Uint8* key, const Uint32 key_len)
             }
             break;
 
+        case ALC_AES_MODE_SIV:
+            break;
+
         default:
             status = ippsAESGetSize(&m_ctxSize);
             if (status != 0) {
@@ -236,7 +243,7 @@ IPPCipherBase::init(const Uint8* key, const Uint32 key_len)
                 return false;
             }
             if (m_ctx != nullptr) {
-                delete[](Ipp8u*) m_ctx;
+                delete[] (Ipp8u*)m_ctx;
             }
             m_ctx  = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
             status = ippsAESInit(key, key_len / 8, m_ctx, m_ctxSize);
@@ -444,6 +451,113 @@ IPPCipherBase::alcpCCMModeToFuncCall(alcp_data_ex_t data, bool enc)
 }
 
 bool
+IPPCipherBase::alcpSIVModeToFuncCall(alcp_data_ex_t data, bool enc)
+{
+    Ipp8u* ad_ptr_list[]  = { (Ipp8u*)data.m_ad, (Ipp8u*)data.m_in };
+    int    ad_size_list[] = { (int)data.m_adl, (int)data.m_inl };
+    if (enc) {
+        int ret = ippsAES_S2V_CMAC(m_key,
+                                   m_key_len / 8,
+                                   (const Ipp8u**)ad_ptr_list,
+                                   ad_size_list,
+                                   sizeof(ad_ptr_list) / sizeof(void*),
+                                   data.m_tag);
+        switch (ret) {
+            case ippStsNoErr:
+                // utils::printErrors("No error", __FILE__, __LINE__);
+                break;
+            case ippStsNullPtrErr:
+                utils::printErrors("Null PTR", __FILE__, __LINE__);
+                return false;
+            case ippStsLengthErr:
+                utils::printErrors("Length Error", __FILE__, __LINE__);
+                return false;
+            default:
+                utils::printErrors("Unknown Error", __FILE__, __LINE__);
+                return false;
+        }
+        ret = ippsAES_SIVEncrypt(data.m_in,
+                                 data.m_out,
+                                 data.m_inl,
+                                 data.m_tag,
+                                 m_key,
+                                 data.m_tkey,
+                                 m_key_len / 8,
+                                 (const Ipp8u**)ad_ptr_list,
+                                 ad_size_list,
+                                 (sizeof(ad_ptr_list) / sizeof(void*) - 1));
+        switch (ret) {
+            case ippStsNoErr:
+                // utils::printErrors("No error", __FILE__, __LINE__);
+                break;
+            case ippStsNullPtrErr:
+                utils::printErrors("Null PTR", __FILE__, __LINE__);
+                return false;
+            case ippStsLengthErr:
+                utils::printErrors("Length Error", __FILE__, __LINE__);
+                return false;
+            default:
+                utils::printErrors("Unknown Error", __FILE__, __LINE__);
+                return false;
+        }
+        return true;
+    } else {
+        int    authRes           = 0xaa;
+        Ipp8u* ad_ptr_list_dec[] = { (Ipp8u*)data.m_ad, (Ipp8u*)data.m_in };
+        Ipp8u* ad_ptr_list_s2v[] = { (Ipp8u*)data.m_ad, (Ipp8u*)data.m_out };
+        int    ad_size_list[]    = { (int)data.m_adl, (int)data.m_inl };
+        int    ret               = ippsAES_SIVDecrypt(data.m_in,
+                                     data.m_out,
+                                     data.m_inl,
+                                     &authRes,
+                                     m_key,
+                                     data.m_tkey,
+                                     m_key_len / 8,
+                                     (const Ipp8u**)ad_ptr_list_dec,
+                                     ad_size_list,
+                                     (sizeof(ad_ptr_list) / sizeof(void*) - 1),
+                                     data.m_tag);
+        switch (ret) {
+            case ippStsNoErr:
+                // utils::printErrors("No error", __FILE__, __LINE__);
+                break;
+            case ippStsNullPtrErr:
+                utils::printErrors("Null PTR", __FILE__, __LINE__);
+                return false;
+            case ippStsLengthErr:
+                utils::printErrors("Length Error", __FILE__, __LINE__);
+                return false;
+            default:
+                utils::printErrors("Unknown Error", __FILE__, __LINE__);
+                return false;
+        }
+        ret = ippsAES_S2V_CMAC(m_key,
+                               m_key_len / 8,
+                               (const Ipp8u**)ad_ptr_list_s2v,
+                               ad_size_list,
+                               sizeof(ad_ptr_list) / sizeof(void*),
+                               data.m_tagBuff);
+        switch (ret) {
+            case ippStsNoErr:
+                // utils::printErrors("No error", __FILE__, __LINE__);
+                break;
+            case ippStsNullPtrErr:
+                utils::printErrors("Null PTR", __FILE__, __LINE__);
+                return false;
+            case ippStsLengthErr:
+                utils::printErrors("Length Error", __FILE__, __LINE__);
+                return false;
+            default:
+                utils::printErrors("Unknown Error", __FILE__, __LINE__);
+                return false;
+        }
+        if (memcmp(data.m_tagBuff, data.m_tag, data.m_tagl))
+            return false;
+        return true;
+    }
+}
+
+bool
 IPPCipherBase::encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt)
 {
     return alcpModeToFuncCall(plaintxt, ciphertxt, len, true);
@@ -459,6 +573,9 @@ IPPCipherBase::encrypt(alcp_data_ex_t data)
             break;
         case ALC_AES_MODE_CCM:
             retval = alcpCCMModeToFuncCall(data, true);
+            break;
+        case ALC_AES_MODE_SIV:
+            retval = alcpSIVModeToFuncCall(data, true);
             break;
         default:
             retval =
@@ -484,6 +601,9 @@ IPPCipherBase::decrypt(alcp_data_ex_t data)
             break;
         case ALC_AES_MODE_CCM:
             retval = alcpCCMModeToFuncCall(data, false);
+            break;
+        case ALC_AES_MODE_SIV:
+            retval = alcpSIVModeToFuncCall(data, false);
             break;
         default:
             retval =
