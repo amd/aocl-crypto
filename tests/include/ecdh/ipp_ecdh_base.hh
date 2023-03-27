@@ -44,8 +44,6 @@ class IPPEcdhBase : public EcdhBase
 
     Uint8*       m_pvt_key = {};
     Uint8*       m_pub_key = {};
-    Uint8        m_publicKeyData[8][ECDH_KEYSIZE];
-    Uint8        m_SecretKeyData[8][ECDH_KEYSIZE];
     int8u*       m_pPublicKeyData_mb[8];
     const int8u* m_pPrivKey_mb[8];
     int8u*       m_pSecretKey_mb[8];
