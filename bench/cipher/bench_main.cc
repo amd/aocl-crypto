@@ -42,12 +42,12 @@ CipherAes(benchmark::State& state,
           size_t            keylen)
 {
     // Dynamic allocation better for larger sizes
-    std::vector<Uint8>         vec_in(blockSize, 56);
-    std::vector<Uint8>         vec_out(blockSize, 21);
+    std::vector<Uint8>         vec_in(blockSize, 0x01);
+    std::vector<Uint8>         vec_out(blockSize, 0x21);
     std::unique_ptr<Uint8[]>   tagBuffer = std::make_unique<Uint8[]>(16);
     Uint8                      key[keylen / 8];
     Uint8                      iv[16];
-    Uint8                      ad[16];
+    Uint8                      ad[16] = {};
     Uint8                      tag[16];
     Uint8                      tkey[keylen / 8];
     alcp::testing::CipherBase* cb;
@@ -74,6 +74,7 @@ CipherAes(benchmark::State& state,
     data.m_in      = &(vec_in[0]);
     data.m_inl     = blockSize;
     data.m_out     = &(vec_out[0]);
+    data.m_outl    = blockSize;
     data.m_iv      = iv;
     data.m_ivl     = 12;
     data.m_ad      = ad;
@@ -84,19 +85,24 @@ CipherAes(benchmark::State& state,
     data.m_tagBuff = tagBuffer.get();
     data.m_tkeyl   = 16;
     if (!enc
-        && (alcpMode == ALC_AES_MODE_GCM || alcpMode == ALC_AES_MODE_CCM)) {
+        && (alcpMode == ALC_AES_MODE_GCM || alcpMode == ALC_AES_MODE_CCM
+            || alcpMode == ALC_AES_MODE_SIV)) {
         if (!cb->encrypt(data)) {
             state.SkipWithError("GCM / CCM : BENCH_ENC_FAILURE");
         }
         data.m_in  = &(vec_out[0]);
         data.m_out = &(vec_in[0]);
-        if (useossl && (alcpMode == ALC_AES_MODE_GCM)) {
-            if (!cb->init(key, keylen)) {
-                state.SkipWithError("GCM: BENCH_INIT_FAILURE");
-            }
-        }
+        // TAG is the IV
+        // cb->init(key, keylen);
+        if (alcpMode == ALC_AES_MODE_SIV)
+            memcpy(iv, data.m_tag, 16);
     }
     for (auto _ : state) {
+        if ((useossl && (alcpMode == ALC_AES_MODE_GCM))) {
+            if (!cb->init(key, keylen)) {
+                state.SkipWithError("GCM: BENCH_RESET_FAILURE");
+            }
+        }
         if (enc) {
             if (!cb->encrypt(data)) {
                 state.SkipWithError("BENCH_ENC_FAILURE");
@@ -104,11 +110,6 @@ CipherAes(benchmark::State& state,
         } else {
             if (!cb->decrypt(data)) {
                 state.SkipWithError("BENCH_DEC_FAILURE");
-            }
-        }
-        if (useossl && (alcpMode == ALC_AES_MODE_GCM)) {
-            if (!cb->init(key, keylen)) {
-                state.SkipWithError("GCM: BENCH_RESET_FAILURE");
             }
         }
     }
@@ -176,6 +177,13 @@ BENCH_AES_ENCRYPT_XTS_128(benchmark::State& state)
         CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_XTS, 128));
 }
 
+static void
+BENCH_AES_ENCRYPT_SIV_128(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_SIV, 128));
+}
+
 /**
  * @brief Decrypt
  *
@@ -230,6 +238,13 @@ BENCH_AES_DECRYPT_CCM_128(benchmark::State& state)
     benchmark::DoNotOptimize(
         CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_CCM, 128));
 }
+
+static void
+BENCH_AES_DECRYPT_SIV_128(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_SIV, 128));
+}
 // END 128 bit key size
 
 // 192 bit key size
@@ -282,6 +297,13 @@ BENCH_AES_ENCRYPT_CCM_192(benchmark::State& state)
         CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_CCM, 192));
 }
 
+static void
+BENCH_AES_ENCRYPT_SIV_192(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_SIV, 192));
+}
+
 /**
  * @brief Decrypt
  *
@@ -328,6 +350,13 @@ BENCH_AES_DECRYPT_CCM_192(benchmark::State& state)
 {
     benchmark::DoNotOptimize(
         CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_CCM, 192));
+}
+
+static void
+BENCH_AES_DECRYPT_SIV_192(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_SIV, 192));
 }
 
 // END 192 bit keysize
@@ -389,6 +418,13 @@ BENCH_AES_ENCRYPT_XTS_256(benchmark::State& state)
         CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_XTS, 256));
 }
 
+static void
+BENCH_AES_ENCRYPT_SIV_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_SIV, 256));
+}
+
 /**
  * @brief Decrypt
  *
@@ -443,6 +479,13 @@ BENCH_AES_DECRYPT_CCM_256(benchmark::State& state)
     benchmark::DoNotOptimize(
         CipherAes(state, state.range(0), DECRYPT, ALC_AES_MODE_CCM, 256));
 }
+
+static void
+BENCH_AES_DECRYPT_SIV_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        CipherAes(state, state.range(0), ENCRYPT, ALC_AES_MODE_SIV, 256));
+}
 // END 256 bit keysize
 
 int
@@ -453,31 +496,42 @@ AddBenchmarks()
     BENCHMARK(BENCH_AES_ENCRYPT_OFB_128)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_CFB_128)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_GCM_128)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_ENCRYPT_SIV_128)->ArgsProduct({ blocksizes });
+
     BENCHMARK(BENCH_AES_DECRYPT_CBC_128)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_CTR_128)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_OFB_128)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_CFB_128)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_GCM_128)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_SIV_128)->ArgsProduct({ blocksizes });
+
     BENCHMARK(BENCH_AES_ENCRYPT_CBC_192)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_CTR_192)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_OFB_192)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_CFB_192)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_GCM_192)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_ENCRYPT_SIV_192)->ArgsProduct({ blocksizes });
+
     BENCHMARK(BENCH_AES_DECRYPT_CBC_192)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_CTR_192)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_OFB_192)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_CFB_192)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_GCM_192)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_SIV_192)->ArgsProduct({ blocksizes });
+
     BENCHMARK(BENCH_AES_ENCRYPT_CBC_256)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_CTR_256)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_OFB_256)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_CFB_256)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_GCM_256)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_ENCRYPT_SIV_256)->ArgsProduct({ blocksizes });
+
     BENCHMARK(BENCH_AES_DECRYPT_CBC_256)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_CTR_256)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_OFB_256)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_CFB_256)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_GCM_256)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_SIV_256)->ArgsProduct({ blocksizes });
 
     BENCHMARK(BENCH_AES_ENCRYPT_XTS_128)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_XTS_128)->ArgsProduct({ blocksizes });
