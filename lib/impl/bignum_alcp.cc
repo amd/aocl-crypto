@@ -383,7 +383,6 @@ BigNum::Impl::privateRandomRange(const BigNum* range)
     long long mask = (1ULL << extra_bits) - 1;
     m_data         = data;
     m_data[m_data.size() - 1] &= mask;
-    std::cout << toString(BigNum::Format::eHex) << " " << bits << "\n";
     while (compare_gt(m_data, range->pImpl()->m_data)) {
         *this = sub(*range);
     }

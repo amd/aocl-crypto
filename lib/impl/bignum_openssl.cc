@@ -28,9 +28,11 @@
 
 #pragma once
 
+#include "../include/alcp/utils/copy.hh"
 #include "alcp/utils/bignum.hh"
 #include "alcp/utils/endian.hh"
 
+#include <bitset>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -431,9 +433,23 @@ class BigNum::Impl
                 break;
             }
             case BigNum::Format::eBinary: {
-                BN_bn2bin(raw(), (unsigned char*)&(s[0]));
-                // std::shared_ptr<char> res(BN_bn2bin(raw(),res),
-                // _OpenSSLDeleter()); s = res.get();
+                unsigned char p_s[BN_num_bytes(raw())];
+
+                std::stringstream ss;
+                BN_bn2bin(raw(), p_s);
+                for (int i = 0; i < BN_num_bytes(raw()); i++) {
+                    std::bitset<8> b(p_s[i]);
+                    if (i != 0)
+                        ss << b.to_string();
+                    else {
+                        string x = b.to_string();
+                        x.erase(
+                            0,
+                            std::min(x.find_first_not_of('0'), x.length() - 1));
+                        ss << x;
+                    }
+                }
+                s = ss.str();
                 break;
             }
             default:
@@ -459,19 +475,24 @@ class BigNum::Impl
                 if (ret)
                     sts.update(status::InternalError("BN_hex2bn"));
             } break;
-            // case BigNum::Format::eBinary: {
-            //     auto bn = raw();
-            //     m_pbn =
-            //         BN_bin2bn((unsigned char*)str.c_str(), str.length(),
-            //         raw());
-            //     // if (ret)
-            //     //     sts.update(status::InternalError("BN_bin2bn"));
-            // } break;
+            case BigNum::Format::eBinary: {
+                int           s_len = (str.length() + 7) / 8;
+                unsigned char p_s[s_len];
+                int           k = str.length() % 8;
+                int           i = 0;
+                for (Uint64 j = 0; j < str.length(); j += k, k = 8) {
+                    Uint8 x  = strtoull(str.substr(j, k).c_str(), nullptr, 2);
+                    p_s[i++] = x;
+                }
+
+                BN_bin2bn(p_s, s_len, raw());
+                // if (ret)
+                //     sts.update(status::InternalError("BN_bin2bn"));
+            } break;
             default:
                 sts = status::InvalidArgument("Invalid Argument");
                 break;
         }
-
         return sts;
     }
 
