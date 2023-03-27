@@ -43,6 +43,8 @@ namespace alcp::testing::utils {
 // Some important functions which don't belong to a class
 void
 printErrors(std::string in);
+void
+printErrors(std::string in, std::string file, int lineno);
 std::vector<Uint8>
 parseHexStrToBin(const std::string in);
 std::string

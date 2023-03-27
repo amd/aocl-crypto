@@ -43,6 +43,19 @@ printErrors(std::string in)
         std::cerr << in << std::endl;
     }
 }
+void
+printErrors(std::string in, std::string file, int lineno)
+{
+    if (isatty(fileno(stderr))) {
+        // stdout is a real terminal, safe to output color
+        std::cerr << RED_BOLD << file << ":" << lineno << ":" << in << RESET
+                  << std::endl;
+
+    } else {
+        // stdout is a pseudo terminal, unsafe to output color
+        std::cerr << in << std::endl;
+    }
+}
 std::vector<Uint8>
 parseHexStrToBin(const std::string in)
 {
