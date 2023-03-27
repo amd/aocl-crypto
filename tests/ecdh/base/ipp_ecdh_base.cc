@@ -63,9 +63,8 @@ IPPEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
     }
 
     /* generate public key */
-    /*TODO : get error status using MBX_GET_STS() call */
     status = mbx_x25519_public_key_mb8(m_pPublicKeyData_mb, m_pPrivKey_mb);
-    if (status != 0) {
+    if (MBX_STATUS_OK != MBX_GET_STS(status, 0)) {
         std::cout << "mbx_x25519_public_key_mb8 failed with err code: "
                   << status << std::endl;
         return false;
@@ -94,7 +93,7 @@ IPPEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
     /* compute secret key using pub key of the other peer */
     status =
         mbx_x25519_mb8(m_pSecretKey_mb, m_pPrivKey_mb, m_pPublicKeyData_mb);
-    if (status != 0) {
+    if (MBX_STATUS_OK != MBX_GET_STS(status, 0)) {
         std::cout << "mbx_x25519_mb8 failed with err code: " << status
                   << std::endl;
         return false;
