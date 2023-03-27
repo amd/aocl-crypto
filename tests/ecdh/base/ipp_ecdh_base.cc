@@ -57,9 +57,14 @@ IPPEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
     }
 
     /* load keys */
-    for (int i = 0; i < elem; i++) {
-        m_pPublicKeyData_mb[i] = data.m_Peer_PubKey;
+    /* TODO: when there is alcp multi-buffer implementation available, modify
+     * this*/
+    Uint8 m_pPublicKeyData_mb_temp_buff[7][ECDH_KEYSIZE];
+    m_pPublicKeyData_mb[0] = data.m_Peer_PubKey;
+    m_pPrivKey_mb[0]       = data.m_Peer_PvtKey;
+    for (int i = 1; i < elem; i++) {
         m_pPrivKey_mb[i]       = data.m_Peer_PvtKey;
+        m_pPublicKeyData_mb[i] = m_pPublicKeyData_mb_temp_buff[i - 1];
     }
 
     /* generate public key */
