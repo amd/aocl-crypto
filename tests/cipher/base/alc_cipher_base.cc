@@ -157,6 +157,14 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 key_len)
         m_cinfo.ci_algo_info.ai_xts.xi_tweak_key->len  = key_len;
         m_cinfo.ci_algo_info.ai_xts.xi_tweak_key->algo = ALC_KEY_ALG_SYMMETRIC;
         m_cinfo.ci_algo_info.ai_xts.xi_tweak_key->fmt  = ALC_KEY_FMT_RAW;
+    } else if (m_mode == ALC_AES_MODE_SIV) {
+        alc_key_info_t* p_kinfo =
+            (alc_key_info_p)malloc(sizeof(alc_key_info_t));
+        p_kinfo->key  = m_tkey; // Using tkey as CTR key for SIV
+        p_kinfo->len  = key_len;
+        p_kinfo->algo = ALC_KEY_ALG_SYMMETRIC;
+        p_kinfo->fmt  = ALC_KEY_FMT_RAW;
+        m_cinfo.ci_algo_info.ai_siv.xi_ctr_key = p_kinfo;
     }
 
     /* Check support */
@@ -196,7 +204,8 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
     Uint8       err_buff[err_size];
 
     /* for gcm / ccm */
-    if ((m_mode == ALC_AES_MODE_GCM) || (m_mode == ALC_AES_MODE_CCM)) {
+    if ((m_mode == ALC_AES_MODE_GCM) || (m_mode == ALC_AES_MODE_CCM)
+        || (m_mode == ALC_AES_MODE_SIV)) {
 
         // GCM/CCM init
         if (m_mode == ALC_AES_MODE_CCM) {
@@ -207,31 +216,41 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
                 goto enc_out;
             }
         }
-        err = alcp_cipher_set_iv(m_handle, data.m_ivl, m_iv);
-        if (alcp_is_error(err)) {
-            printf("Err:Setting iv\n");
-            goto enc_out;
+
+        // SIV generates IV synthetically.
+        if (m_mode != ALC_AES_MODE_SIV) {
+            err = alcp_cipher_set_iv(m_handle, data.m_ivl, m_iv);
+            if (alcp_is_error(err)) {
+                printf("Err:Setting iv\n");
+                goto enc_out;
+            }
         }
 
         if (data.m_adl > 0) {
             err = alcp_cipher_set_aad(m_handle, data.m_ad, data.m_adl);
 
             if (alcp_is_error(err)) {
-                printf("Err:Setadl");
+                printf("Err:Setadl\n");
                 goto enc_out;
             }
         }
 
         // GCM/CCM Encrypt
         if (data.m_inl) {
-            err = alcp_cipher_encrypt_update(
-                m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
+            if (m_mode == ALC_AES_MODE_SIV) {
+                err = alcp_cipher_encrypt(
+                    m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
+            } else {
+                err = alcp_cipher_encrypt_update(
+                    m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
+            }
         } else {
             // Call encrypt update with a valid memory if no plaintext
             Uint8 a;
             err = alcp_cipher_encrypt_update(m_handle, &a, &a, 0, m_iv);
         }
         if (alcp_is_error(err)) {
+            printf("Encrypt Error\n");
             goto enc_out;
         }
 
@@ -239,6 +258,7 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
         if (data.m_tagl > 0) {
             err = alcp_cipher_get_tag(m_handle, data.m_tag, data.m_tagl);
             if (alcp_is_error(err)) {
+                printf("TAG Error\n");
                 goto enc_out;
             }
         }
@@ -265,7 +285,8 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
     const int   err_size = 256;
     Uint8       err_buff[err_size];
 
-    if ((m_mode == ALC_AES_MODE_GCM) || (m_mode == ALC_AES_MODE_CCM)) {
+    if ((m_mode == ALC_AES_MODE_GCM) || (m_mode == ALC_AES_MODE_CCM)
+        || (m_mode == ALC_AES_MODE_SIV)) {
         /* only for ccm */
         if (m_mode == ALC_AES_MODE_CCM) {
             err = alcp_cipher_set_tag_length(m_handle, data.m_tagl);
@@ -273,9 +294,12 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
                 goto dec_out;
             }
         }
-        err = alcp_cipher_set_iv(m_handle, data.m_ivl, m_iv);
-        if (alcp_is_error(err)) {
-            goto dec_out;
+
+        if (m_mode != ALC_AES_MODE_SIV) {
+            err = alcp_cipher_set_iv(m_handle, data.m_ivl, m_iv);
+            if (alcp_is_error(err)) {
+                goto dec_out;
+            }
         }
 
         if (data.m_adl > 0) {
@@ -287,19 +311,31 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
 
         // GCM/CCM Decrypt
         if (data.m_inl) {
-            err = alcp_cipher_decrypt_update(
-                m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
+            if (m_mode == ALC_AES_MODE_SIV) {
+                err = alcp_cipher_decrypt(
+                    m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
+            } else {
+                err = alcp_cipher_decrypt_update(
+                    m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
+            }
         } else {
             Uint8 a;
-            err = alcp_cipher_decrypt_update(m_handle, &a, &a, 0, m_iv);
+            if (m_mode == ALC_AES_MODE_SIV) {
+                err = alcp_cipher_decrypt(
+                    m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
+            } else {
+                err = alcp_cipher_decrypt_update(m_handle, &a, &a, 0, m_iv);
+            }
         }
         if (alcp_is_error(err)) {
+            printf("Decrypt Error\n");
             goto dec_out;
         }
 
         if (data.m_tagl > 0) {
             err = alcp_cipher_get_tag(m_handle, data.m_tagBuff, data.m_tagl);
             if (alcp_is_error(err)) {
+                printf("Tag Error\n");
                 goto dec_out;
             }
             // Tag verification
