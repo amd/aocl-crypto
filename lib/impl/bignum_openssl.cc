@@ -433,11 +433,11 @@ class BigNum::Impl
                 break;
             }
             case BigNum::Format::eBinary: {
-                int           len = BN_num_bytes(raw());
-                unsigned char p_s[len];
+                int                   len = BN_num_bytes(raw());
+                vector<unsigned char> p_s = vector<unsigned char>(len, 0);
 
                 std::stringstream ss;
-                BN_bn2bin(raw(), p_s);
+                BN_bn2bin(raw(), &p_s[0]);
                 for (int i = 0; i < len; i++) {
                     std::bitset<8> b(p_s[i]);
                     if (i != 0)
@@ -477,16 +477,16 @@ class BigNum::Impl
                     sts.update(status::InternalError("BN_hex2bn"));
             } break;
             case BigNum::Format::eBinary: {
-                int           s_len = (str.length() + 7) / 8;
-                unsigned char p_s[s_len];
-                int           k = str.length() % 8;
-                int           i = 0;
+                int                   s_len = (str.length() + 7) / 8;
+                vector<unsigned char> p_s   = vector<unsigned char>(s_len, 0);
+                int                   k     = str.length() % 8;
+                int                   i     = 0;
                 for (Uint64 j = 0; j < str.length(); j += k, k = 8) {
                     Uint8 x  = strtoull(str.substr(j, k).c_str(), nullptr, 2);
                     p_s[i++] = x;
                 }
 
-                BN_bin2bn(p_s, s_len, raw());
+                BN_bin2bn(&p_s[0], s_len, raw());
                 // if (ret)
                 //     sts.update(status::InternalError("BN_bin2bn"));
             } break;
