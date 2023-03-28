@@ -26,7 +26,7 @@
  *
  */
 
-#include "cmac/ipp_cmac_base.hh"
+#include "cmac/ipp_cmac.hh"
 
 namespace alcp::testing {
 

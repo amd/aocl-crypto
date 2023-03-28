@@ -29,35 +29,32 @@
 
 /* C/C++ Headers */
 #include <iostream>
-#include <stdio.h>
-#include <string.h>
+#include <malloc.h>
+#include <vector>
 
 /* ALCP Headers */
 #include "alcp/alcp.h"
-#include "cmac/cmac_base.hh"
-#include "cmac_base.hh"
-#include "openssl/conf.h"
-#include "openssl/err.h"
-#include "openssl/evp.h"
+#include "alcp/digest.h"
+#include "cmac/cmac.hh"
 
 namespace alcp::testing {
-class OpenSSLCmacBase : public CmacBase
+class AlcpCmacBase : public CmacBase
 {
-    EVP_MAC_CTX*   m_handle = nullptr;
-    EVP_MAC*       m_mac    = nullptr;
-    alc_mac_info_t m_info;
-    Uint8*         m_message = {};
-    Uint8*         m_key     = {};
-    Uint32         m_key_len;
+    alc_mac_handle_t* m_handle{};
+    alc_mac_info_t    m_info;
+    Uint8*            m_message = {};
+    Uint8*            m_key     = {};
+    Uint8*            m_cmac    = {};
+    Uint32            m_key_len;
 
   public:
-    OpenSSLCmacBase(const alc_mac_info_t& info);
+    AlcpCmacBase(const alc_mac_info_t& info);
 
     bool init(const alc_mac_info_t& info, std::vector<Uint8>& Key);
 
     bool init();
 
-    ~OpenSSLCmacBase();
+    ~AlcpCmacBase();
 
     bool cmacFunction(const alcp_cmac_data_t& data);
     /* Resets the context back to initial condition, reuse context */

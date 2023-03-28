@@ -26,7 +26,7 @@
  *
  */
 
-#include "cmac/cmac_base.hh"
+#include "cmac/cmac.hh"
 #include <iostream>
 #include <sstream>
 #ifdef __linux__

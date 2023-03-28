@@ -35,18 +35,18 @@
 
 /* ALCP Headers */
 #include "alcp/alcp.h"
-#include "cmac/alc_cmac_base.hh"
-#include "cmac/cmac_base.hh"
+#include "cmac/alc_cmac.hh"
+#include "cmac/cmac.hh"
 #include "csv.hh"
 #include "gtest_common.hh"
 #include "rng_base.hh"
 
 using namespace alcp::testing;
 #ifdef USE_IPP
-#include "cmac/ipp_cmac_base.hh"
+#include "cmac/ipp_cmac.hh"
 #endif
 #ifdef USE_OSSL
-#include "cmac/openssl_cmac_base.hh"
+#include "cmac/openssl_cmac.hh"
 #endif
 
 #define MAX_LOOP    1600

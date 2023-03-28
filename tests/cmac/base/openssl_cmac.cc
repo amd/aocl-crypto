@@ -26,7 +26,7 @@
  *
  */
 
-#include "cmac/openssl_cmac_base.hh"
+#include "cmac/openssl_cmac.hh"
 #include <cstddef>
 
 namespace alcp::testing {

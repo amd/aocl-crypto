@@ -35,7 +35,7 @@
 
 /* C/C++ Headers */
 #include "alcp/alcp.h"
-#include "cmac_base.hh"
+#include "cmac.hh"
 
 namespace alcp::testing {
 class IPPCmacBase : public CmacBase

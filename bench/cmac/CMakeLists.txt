@@ -34,7 +34,7 @@ FetchContent_Declare(benchmark
 FetchContent_MakeAvailable(benchmark)
 
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
-SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ../../tests/cmac/base/alc_cmac_base.cc ../../tests/cmac/base/cmac_base.cc)
+SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ../../tests/cmac/base/alc_cmac.cc ../../tests/cmac/base/cmac.cc)
 SET(LIBS ${LIBS} benchmark alcp)
 if (ALCP_USE_ASAN)
     SET(LIBS ${LIBS} asan)
@@ -52,7 +52,7 @@ IF(ENABLE_TESTS_IPP_API)
     ENDIF(IPP_INSTALL_DIR)
 
     # If there is IPP, add IPP source and add IPP library
-    SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cmac/base/ipp_cmac_base.cc)
+    SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cmac/base/ipp_cmac.cc)
 	IF(UNIX)
 		IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
 			SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
@@ -83,7 +83,7 @@ IF(ENABLE_TESTS_OPENSSL_API)
     ENDIF(OPENSSL_INSTALL_DIR)
 
     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
-    SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cmac/base/openssl_cmac_base.cc)
+    SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cmac/base/openssl_cmac.cc)
 	IF(UNIX)
 		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
 			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)

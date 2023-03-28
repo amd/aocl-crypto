@@ -32,8 +32,8 @@
 
 /* ALCP Headers */
 #include "alcp/alcp.h"
-#include "cmac/alc_cmac_base.hh"
-#include "cmac/cmac_base.hh"
+#include "cmac/alc_cmac.hh"
+#include "cmac/cmac.hh"
 #include "cmac/gtest_base_cmac.hh"
 
 /* All tests to be added here */
