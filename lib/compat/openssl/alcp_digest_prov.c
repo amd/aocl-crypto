@@ -221,7 +221,7 @@ ALCP_prov_digest_init(void* vctx, const OSSL_PARAM params[])
     ENTER();
     // printf("Provider: Pointer->%p\n", cctx);
     alc_digest_info_p dinfo = &cctx->pc_digest_info;
-    Uint64          size  = alcp_digest_context_size(dinfo);
+    Uint64            size  = alcp_digest_context_size(dinfo);
     cctx->handle.context    = OPENSSL_malloc(size);
     err                     = alcp_digest_request(dinfo, &(cctx->handle));
     if (alcp_is_error(err)) {
@@ -253,12 +253,29 @@ ALCP_prov_digest_final(void*          vctx,
                        size_t*        outl,
                        size_t         outsize)
 {
+    alc_error_t           err  = ALC_ERROR_NONE;
     alc_prov_digest_ctx_p dctx = vctx;
     ENTER();
-    alcp_digest_finalize(&(dctx->handle), NULL, 0);
-    alcp_digest_copy(&(dctx->handle), out, (Uint64)outl);
-    // Northing to do!
-    *outl = outsize;
+
+    /**
+     * FIXME: EVP_MD_get_size provider need to implemented. Currently it is
+     * returning zero in OpenSSL which caused outsize passed as argument to this
+     * function to be zero
+     * */
+
+    // FIXME: Once EVP_MD_get_size provider is implemented calculate *outl
+    // directly from outsize. Below is a temporary fix to get digest size
+    *outl = dctx->pc_digest_info.dt_len / 8;
+    err   = alcp_digest_finalize(&(dctx->handle), NULL, 0);
+    if (alcp_is_error(err)) {
+        printf("Provider: Failed to Finalize\n");
+        return 0;
+    }
+    err = alcp_digest_copy(&(dctx->handle), out, (Uint64)*outl);
+    if (alcp_is_error(err)) {
+        printf("Provider: Failed to copy Hash\n");
+        return 0;
+    }
     OPENSSL_free(dctx->handle.context);
     return 1;
 }
