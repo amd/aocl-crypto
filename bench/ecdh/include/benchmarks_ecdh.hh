@@ -57,7 +57,6 @@ void inline ecdh_Bench(benchmark::State& state,
                        alc_ec_info_t     info,
                        ecdh_bench_opt    opt)
 {
-    alc_error_t error  = {};
     std::string LibStr = "";
 
     /*TODO, Keysize in bytes. might change for other curves */

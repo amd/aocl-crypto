@@ -54,7 +54,6 @@ void inline Hmac_Bench(benchmark::State& state,
                        Uint64            block_size,
                        int               HmacSize)
 {
-    alc_error_t error;
     // In ALCP code, any key size greater than the internal block length of the
     // SHA used is the hottest path for alcp request. So Using KeySize above
     // 1024.

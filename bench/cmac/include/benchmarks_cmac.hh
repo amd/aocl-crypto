@@ -57,7 +57,6 @@ void inline Cmac_Bench(benchmark::State& state,
                        Uint64            block_size,
                        Uint64            KeySize)
 {
-    alc_error_t error = {};
 
     /* MAX len of cmac would be 128 bits */
     std::vector<Uint8> Cmac(128 / 8, 0);

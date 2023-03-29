@@ -56,7 +56,6 @@ void inline Digest_Bench(benchmark::State& state,
                          Uint64            block_size)
 {
     RngBase            rb;
-    alc_error_t        error;
     std::vector<Uint8> msg(block_size);
     AlcpDigestBase     adb(info);
     DigestBase*        db = &adb;
