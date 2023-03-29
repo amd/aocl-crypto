@@ -439,7 +439,7 @@ BigNum::Impl::fromInt64(const Int64 val)
     m_is_negative = val < 0 ? true : false;
 
     m_data.resize(1);
-    m_data[0] = m_is_negative ? -1 * val : val;
+    m_data[0] = m_is_negative ? -1ULL * val : val;
     ALCP_ASSERT(toInt64() == val,
                 "fromInt64: BIGNUM struct constructor failed");
 }
@@ -460,7 +460,7 @@ BigNum::Impl::total_bits() const
     int ans = 0;
     if (m_data.size() > 1)
         ans = (m_data.size() - 1) * 64;
-    ans += 64 - __builtin_clzll(m_data.back());
+    ans += (m_data.back() == 0 ? 64 : 64 - (__builtin_clzll(m_data.back())));
     return ans;
 }
 
@@ -639,7 +639,7 @@ BigNum::Impl::mul(const BigNum& rhs)
                 val >>= 1;
             }
             int k = 0;
-            while (k < 63 && !(val & (1 << k))) {
+            while (k < 63 && !(val & (1ULL << k))) {
                 k++;
             }
             tmp = tmp << k;
@@ -797,7 +797,9 @@ BigNum::Impl::lshift(int shifts)
 {
     BigNum result;
     int    len = m_data.size() + (shifts / 64)
-              + (((shifts % 64) > __builtin_clzll(m_data.back())));
+              + (m_data.back() == 0
+                     ? 0
+                     : (((shifts % 64) > __builtin_clzll(m_data.back()))));
 
     result.pImpl()->m_data.resize(len);
 
@@ -810,8 +812,11 @@ BigNum
 BigNum::Impl::rshift(int shifts)
 {
     BigNum result;
-    int    len = m_data.size() - (shifts / 64)
-              - (((shifts % 64) > (64 - __builtin_clzll(m_data.back()))));
+    int    len =
+        m_data.size() - (shifts / 64)
+        - (((shifts % 64)
+            > (64
+               - (m_data.back() != 0 ? __builtin_clzll(m_data.back()) : 64))));
     if (len <= 0)
         return result;
     result.pImpl()->m_data.resize(len);

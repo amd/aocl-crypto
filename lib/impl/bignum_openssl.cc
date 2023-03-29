@@ -319,7 +319,7 @@ class BigNum::Impl
         Status sts = StatusOk();
         if (val < 0) {
             /* create a 2's complement */
-            Uint64  new_val = utils::ReverseBytes<Uint64>(~val + 1);
+            Uint64  new_val = utils::ReverseBytes<Uint64>(~val + 1ULL);
             BIGNUM* b = BN_bin2bn(reinterpret_cast<const Uint8*>(&new_val),
                                   sizeof(new_val),
                                   nullptr);

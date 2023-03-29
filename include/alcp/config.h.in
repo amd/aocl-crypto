@@ -47,6 +47,9 @@
 #cmakedefine ALCP_BUILD_OS_LINUX
 #cmakedefine ALCP_BUILD_OS_WINDOWS
 
+// OpenSSL Overrides
+#cmakedefine01 ALCP_BIGNUM_USE_OPENSSL
+
 // CPU Identification
 #cmakedefine01 ALCP_DISABLE_ASSEMBLY
 
