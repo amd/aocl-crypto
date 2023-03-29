@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -55,6 +55,8 @@ struct _alc_prov_cipher_ctx
     EVP_CIPHER_CTX*   pc_evp_cipher_ctx;
     const OSSL_PARAM* pc_params;
     Uint64            ivlen;
+    int               taglen;
+    Uint8*            tagbuff;
 
     alc_cipher_info_t pc_cipher_info;
     int               pc_ctx_size;

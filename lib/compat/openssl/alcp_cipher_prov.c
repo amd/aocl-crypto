@@ -206,6 +206,7 @@ ALCP_prov_cipher_get_ctx_params(void* vctx, OSSL_PARAM params[])
         printf("Provider: Size is %ld and tag is %p\n", used_length, tag);
 #endif
 
+        cctx->taglen = used_length;
         alcp_cipher_encrypt_update(&(cctx->handle),
                                    NULL,
                                    (Uint8*)tag,
@@ -324,7 +325,7 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
     // For AES XTS Mode, get the tweak key
     if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
         const Uint8* tweak_key     = NULL;
-        int            tweak_key_len = 128;
+        int          tweak_key_len = 128;
         if (!key) {
             // For handling when openssl speed probes the code with null key
             return 1;
@@ -383,16 +384,14 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
 
     if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
 #ifdef DEBUG
-        printf("Provider: cctx->ivlen : %llu\n", cctx->ivlen);
+        printf("Provider: cctx->ivlen : %lu\n", cctx->ivlen);
 #endif
         if (key != NULL && iv != NULL) {
             if (cctx->ivlen != -1) {
-                err = alcp_cipher_encrypt_update(
-                    &(cctx->handle),
-                    NULL,
-                    NULL,
-                    cctx->ivlen,
-                    cctx->pc_cipher_info.ci_algo_info.ai_iv);
+                err =
+                    alcp_cipher_set_iv(&(cctx->handle),
+                                       cctx->ivlen,
+                                       cctx->pc_cipher_info.ci_algo_info.ai_iv);
                 if (alcp_is_error(err)) {
                     printf("Provider: Error While Setting the IVLength\n");
                 }
@@ -480,7 +479,7 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
             return 1;
         }
         const Uint8* tweak_key     = NULL;
-        int            tweak_key_len = 128;
+        int          tweak_key_len = 128;
         if (keylen == 128) {
             tweak_key     = key + 16;
             tweak_key_len = 128;
@@ -535,12 +534,10 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
     if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
         if (key != NULL && iv != NULL) {
             if (ivlen != -1) {
-                err = alcp_cipher_decrypt_update(
-                    &(cctx->handle),
-                    NULL,
-                    NULL,
-                    cctx->ivlen,
-                    cctx->pc_cipher_info.ci_algo_info.ai_iv);
+                err =
+                    alcp_cipher_set_iv(&(cctx->handle),
+                                       cctx->ivlen,
+                                       cctx->pc_cipher_info.ci_algo_info.ai_iv);
                 if (alcp_is_error(err)) {
                     printf("Provider: Error While Setting the IVLength\n");
                 }
@@ -565,7 +562,7 @@ ALCP_prov_cipher_update(void*                vctx,
     alc_error_t           err;
     alc_cipher_info_p     cinfo    = &cctx->pc_cipher_info;
     const int             err_size = 256;
-    Uint8               err_buf[err_size];
+    Uint8                 err_buf[err_size];
     ENTER();
 
     if (inl == 0) {
@@ -575,12 +572,16 @@ ALCP_prov_cipher_update(void*                vctx,
 
     if (cctx->enc_flag) {
         if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
-            err = alcp_cipher_encrypt_update(
-                &(cctx->handle),
-                in,
-                out,
-                inl,
-                cctx->pc_cipher_info.ci_algo_info.ai_iv);
+            if (out == NULL) {
+                err = alcp_cipher_set_aad(&(cctx->handle), in, inl);
+            } else {
+                err = alcp_cipher_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_info.ci_algo_info.ai_iv);
+            }
         } else {
             err = alcp_cipher_encrypt(&(cctx->handle),
                                       in,
@@ -590,13 +591,16 @@ ALCP_prov_cipher_update(void*                vctx,
         }
     } else {
         if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
-
-            err = alcp_cipher_decrypt_update(
-                &(cctx->handle),
-                in,
-                out,
-                inl,
-                cctx->pc_cipher_info.ci_algo_info.ai_iv);
+            if (out == NULL) {
+                err = alcp_cipher_set_aad(&(cctx->handle), in, inl);
+            } else {
+                err = alcp_cipher_decrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_info.ci_algo_info.ai_iv);
+            }
         } else {
             err = alcp_cipher_decrypt(&(cctx->handle),
                                       in,
