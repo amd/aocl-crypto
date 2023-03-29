@@ -72,7 +72,6 @@ PrintCmacTestData(std::vector<Uint8> key,
 void
 Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
 {
-    alc_error_t      error    = {};
     alcp_cmac_data_t data     = {};
     int              CmacSize = 0;
 
@@ -152,7 +151,6 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
 void
 Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
 {
-    alc_error_t        error = {};
     std::vector<Uint8> data  = {};
 
     int                CmacSize = 128;

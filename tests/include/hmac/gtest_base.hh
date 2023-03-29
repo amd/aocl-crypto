@@ -74,7 +74,6 @@ PrintHmacTestData(std::vector<Uint8> key,
 void
 Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
 {
-    alc_error_t        error;
     alcp_hmac_data_t   data;
     std::vector<Uint8> hmac(HmacSize / 8, 0);
 
@@ -143,7 +142,6 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
 void
 Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
 {
-    alc_error_t        error;
     std::vector<Uint8> data;
     std::vector<Uint8> HmacAlcp(HmacSize / 8, 0);
     std::vector<Uint8> HmacExt(HmacSize / 8, 0);

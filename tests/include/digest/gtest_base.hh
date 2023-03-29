@@ -118,7 +118,6 @@ ExecRecPlay* fr;
 void
 Digest_KAT(alc_digest_info_t info)
 {
-    alc_error_t        error;
     alcp_digest_data_t data;
     std::vector<Uint8> digest(info.dt_len / 8, 0);
     AlcpDigestBase     adb(info);
@@ -228,7 +227,6 @@ Digest_KAT(alc_digest_info_t info)
 void
 Digest_Cross(int HashSize, alc_digest_info_t info)
 {
-    alc_error_t        error;
     std::vector<Uint8> digestAlcp(HashSize / 8, 0);
     std::vector<Uint8> digestExt(HashSize / 8, 0);
     AlcpDigestBase     adb(info);

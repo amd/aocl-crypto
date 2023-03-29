@@ -72,7 +72,6 @@ PrintEcdhTestData(alcp_ecdh_data_t data)
 void
 ecdh_KAT(alc_ec_info_t info)
 {
-    alc_error_t      error;
     alcp_ecdh_data_t data_peer1, data_peer2;
 
     AlcpEcdhBase aeb_peer1(info);
@@ -149,8 +148,8 @@ ecdh_KAT(alc_ec_info_t info)
         }
 
         /*TODO: x25519 pub key len should always be 32 bytes !*/
-        EXPECT_TRUE(data_peer1.m_Peer_PubKeyLen == KeySize);
-        EXPECT_TRUE(data_peer2.m_Peer_PubKeyLen == KeySize);
+        EXPECT_TRUE(static_cast<int>(data_peer1.m_Peer_PubKeyLen) == KeySize);
+        EXPECT_TRUE(static_cast<int>(data_peer2.m_Peer_PubKeyLen) == KeySize);
 
         if (!eb_peer1->ComputeSecretKey(data_peer1, data_peer2)) {
             std::cout << "Error in ECDH Compute Secret key" << std::endl;
@@ -165,8 +164,8 @@ ecdh_KAT(alc_ec_info_t info)
             Peer1_SecretKey, Peer2_SecretKey, csv, std::string("ECDH")));
 
         /*TODO: x25519 shared secret key len should always be 32 bytes !*/
-        EXPECT_TRUE(data_peer1.m_Peer_SecretKeyLen == KeySize);
-        EXPECT_TRUE(data_peer2.m_Peer_SecretKeyLen == KeySize);
+        EXPECT_TRUE(static_cast<int>(data_peer1.m_Peer_SecretKeyLen) == KeySize);
+        EXPECT_TRUE(static_cast<int>(data_peer2.m_Peer_SecretKeyLen) == KeySize);
 
         if (verbose > 1) {
             PrintEcdhTestData(data_peer1);
@@ -179,7 +178,6 @@ ecdh_KAT(alc_ec_info_t info)
 void
 ecdh_Cross(alc_ec_info_t info)
 {
-    alc_error_t        error      = {};
     std::vector<Uint8> data       = {};
     std::string        LibStrMain = "", LibStrExt = "";
 

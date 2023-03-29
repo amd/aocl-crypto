@@ -31,7 +31,6 @@
 
 namespace alcp::testing {
 
-static Uint8 size_[4096] = { 0 };
 
 AlcpHmacBase::AlcpHmacBase(const alc_mac_info_t& info) {}
 

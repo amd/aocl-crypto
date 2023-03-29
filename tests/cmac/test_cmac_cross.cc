@@ -62,8 +62,6 @@ int
 main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
-    testing::TestEventListeners& listeners =
-        testing::UnitTest::GetInstance()->listeners();
     parseArgs(argc, argv);
 #ifndef USE_IPP
     if (useipp)
