@@ -49,28 +49,4 @@ class Rng : public IRng
   private:
 };
 
-class OsRng final : public Rng
-{
-  public:
-    OsRng() {}
-    // explicit OsRng(ISeeder);
-    ~OsRng() {}
-
-  public:
-    Status readRandom(Uint8* pBuf, Uint64 size) override;
-    Status readUrandom(Uint8* buffer, Uint64 size);
-    void   finish() override;
-};
-
-class ArchRng final : public Rng
-{
-  public:
-    ArchRng() {}
-    // explicit ArchRng(const alc_rng_info_t& rRnginfo);
-    ~ArchRng() {}
-
-    Status readRandom(Uint8* pBuf, Uint64 size) override;
-    void   finish() override;
-};
-
 } // namespace alcp::rng

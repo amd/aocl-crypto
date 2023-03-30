@@ -104,9 +104,18 @@ class Bits
         return (T)(m_val >> start) & mask;
     }
 
-    void set(int start, int end) { NotImplementedException(); }
-    void reset(int start, int end) { NotImplementedException(); }
-    void replace(int start, int end) { NotImplementedException(); }
+    void set(int start, int end)
+    {
+        NotImplementedException(SourceLocation(__FILE__, __LINE__, "set"));
+    }
+    void reset(int start, int end)
+    {
+        NotImplementedException(SourceLocation(__FILE__, __LINE__, "reset"));
+    }
+    void replace(int start, int end)
+    {
+        NotImplementedException(SourceLocation(__FILE__, __LINE__, "replace"));
+    }
 
   private:
     Bits() {}

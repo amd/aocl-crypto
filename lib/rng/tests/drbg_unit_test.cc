@@ -83,13 +83,13 @@ class NullGenerator : public IRng
         return s;
     }
 
-    std::string name() const { return "Dummy DRBG"; }
+    std::string name() const override { return "Dummy DRBG"; }
 
-    bool isSeeded() const { return true; }
+    bool isSeeded() const override { return true; }
 
-    size_t reseed() { return 0; }
+    size_t reseed() override { return 0; }
 
-    Status setPredictionResistance(bool value)
+    Status setPredictionResistance(bool value) override
     {
         Status s = StatusOk();
         return s;
@@ -109,13 +109,13 @@ class MockGenerator : public IRng
 
     MOCK_METHOD(Status, randomize, (Uint8 output[], size_t length), (override));
 
-    std::string name() const { return "Mock DRBG"; }
+    std::string name() const override { return "Mock DRBG"; }
 
-    bool isSeeded() const { return true; }
+    bool isSeeded() const override { return true; }
 
-    size_t reseed() { return 0; }
+    size_t reseed() override { return 0; }
 
-    Status setPredictionResistance(bool value)
+    Status setPredictionResistance(bool value) override
     {
         Status s = StatusOk();
         return s;

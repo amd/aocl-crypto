@@ -63,7 +63,8 @@ class Aes : public Rijndael
                  const alc_key_info_t&         keyInfo)
         : Rijndael{ keyInfo }
         , m_mode{ aesInfo.ai_mode }
-    {}
+    {
+    }
 
   protected:
     virtual ~Aes() {}
@@ -95,7 +96,8 @@ class ALCP_API_EXPORT Cbc final : public Aes
     explicit Cbc(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {}
+    {
+    }
 
     ~Cbc() {}
 
@@ -162,7 +164,8 @@ class ALCP_API_EXPORT Ofb final : public Aes
     explicit Ofb(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {}
+    {
+    }
 
     ~Ofb() {}
 
@@ -230,7 +233,8 @@ class ALCP_API_EXPORT Ctr final : public Aes
     explicit Ctr(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {}
+    {
+    }
 
     ~Ctr() {}
 
@@ -497,7 +501,8 @@ class ALCP_API_EXPORT Ccm final
     explicit Ccm(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {}
+    {
+    }
 
     ~Ccm() {}
 
@@ -507,7 +512,7 @@ class ALCP_API_EXPORT Ccm final
         return true;
     }
 
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo)
+    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
     {
         if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
             auto aip = &cipherInfo.ci_algo_info;

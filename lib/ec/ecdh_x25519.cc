@@ -37,8 +37,7 @@
 namespace alcp::ec {
 
 using alcp::utils::CpuId;
-static constexpr Uint32 KeySize                     = 32;
-static const Uint8      x25519_basepoint_9[KeySize] = { 9 };
+static constexpr Uint32 KeySize = 32;
 
 X25519::X25519() = default;
 

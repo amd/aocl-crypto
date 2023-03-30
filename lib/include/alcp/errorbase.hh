@@ -92,11 +92,11 @@ class ErrorBase : public IError
     void   setModuleId(Uint16 mid) { m_error.field.module_id = mid; }
 
   protected:
-    typedef union
+    typedef union _uPacked
     {
         Uint64 val; // 8 Bytes
 
-        struct
+        struct _field
         {
             Uint64 base_error   : 16; // 2 Byte
             Uint64 module_error : 16; // 2 Byte

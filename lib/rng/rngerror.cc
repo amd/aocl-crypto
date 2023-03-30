@@ -49,4 +49,11 @@ NoEntropySource(String msg)
     auto e = RngError(alcp::base::eNotAvailable, ErrorCode::eNoEntropySource);
     return Status(e, msg);
 }
+
+Status
+Unavailable(String msg)
+{
+    auto e = RngError(alcp::base::eNotAvailable, ErrorCode::eUnavailable);
+    return Status(e, msg);
+}
 } // namespace alcp::rng::status

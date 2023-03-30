@@ -46,7 +46,7 @@ class ALCP_API_EXPORT SystemRng : public IRng
     SystemRng(ISeeder& iss);
     Status      randomize(Uint8 output[], size_t length) override;
     Status      readRandom(Uint8* pBuf, Uint64 size) override;
-    Status      setPredictionResistance(bool value);
+    Status      setPredictionResistance(bool value) override;
     std::string name() const override { return "OsRng"; }
     bool        isSeeded() const override;
     size_t      reseed() override;

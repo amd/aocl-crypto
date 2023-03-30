@@ -97,13 +97,13 @@ class ALCP_API_EXPORT Hmac final : public Mac
     /**
      * @brief finish HMAC.
      */
-    void finish();
+    void finish() override;
     /**
      * @brief Reset the internal buffers of the HMAC. Can call update again with
      * the same digest and same key.
      * @returns Status
      */
-    Status reset();
+    Status reset() override;
 
     ~Hmac();
 };

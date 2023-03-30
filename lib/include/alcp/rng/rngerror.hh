@@ -47,6 +47,8 @@ enum ErrorCode : Uint16
 
     /* ErrorCode:eNoEntropySource */
     eNoEntropySource = 9,
+
+    eUnavailable = 11,
 };
 
 class RngError final : public ErrorBase
@@ -61,15 +63,18 @@ class RngError final : public ErrorBase
   public:
     RngError()
         : ErrorBase{ ErrorCode::eOk }
-    {}
+    {
+    }
 
     RngError(Uint64 ecode)
         : ErrorBase{ RngError::toUint16(ecode) }
-    {}
+    {
+    }
 
     RngError(rng::ErrorCode ecode)
         : ErrorBase{ ecode }
-    {}
+    {
+    }
 
     RngError(base::ErrorCode bcode, rng::ErrorCode ecode)
         : ErrorBase{ ecode }
@@ -97,6 +102,8 @@ class RngError final : public ErrorBase
             { ec::eNoEntropy, "Not Enough Entropy" },
             { ec::eNotPermitted, "Not Permitted" },
             { ec::eNoEntropySource, "Entropy source not defined" },
+            { ec::eUnavailable,
+              "Functionality is not Implemented or not Capable" },
         };
 
         RngErrorMapT::const_iterator it =
@@ -114,6 +121,7 @@ namespace status {
     ALCP_API_EXPORT Status NoEntropy(String msg);
     ALCP_API_EXPORT Status NotPermitted(String msg);
     ALCP_API_EXPORT Status NoEntropySource(String msg);
+    ALCP_API_EXPORT Status Unavailable(String msg);
 } // namespace status
 
 } // namespace alcp::rng
