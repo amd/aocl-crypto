@@ -80,7 +80,7 @@ void inline ecdh_Bench(benchmark::State& state,
     OpenSSLEcdhBase oeb_peer1(info);
     OpenSSLEcdhBase oeb_peer2(info);
     /* Select by default openssl for cross testing if nothing provided*/
-    if ((useossl == true)) {
+    if (useossl == true) {
         Eb_peer1 = &oeb_peer1;
         Eb_peer2 = &oeb_peer2;
         LibStr   = "OpenSSL";
