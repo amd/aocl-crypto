@@ -435,6 +435,100 @@ TEST_P(CCM_KAT, Encrypt)
     }
 }
 
+TEST_P(CCM_KAT, Encrypt_Double)
+{
+    {
+        // 0x02 and 0x01 will be our signature for testing if algorithm never
+        // touched the memory, during debugging
+        std::vector<Uint8> out_tag(m_tag.size(), 0x02),
+            out_ciphertext(m_plaintext.size(), 0x01);
+
+        alc_error_t err;
+        /* Encryption begins here */
+        if (!m_tag.empty()) {
+            err = pCcmObj->setTagLength(m_tag.size());
+        }
+
+        // Nonce
+        err = pCcmObj->setIv(m_nonce.size(), &(m_nonce.at(0)));
+        EXPECT_EQ(err, ALC_ERROR_NONE);
+
+        // Additional Data
+        if (!m_aad.empty()) {
+            err = pCcmObj->setAad(&(m_aad.at(0)), m_aad.size());
+            EXPECT_EQ(err, ALC_ERROR_NONE);
+        }
+
+        // Encrypt the plaintext into ciphertext.
+        if (!m_plaintext.empty()) {
+            err = pCcmObj->encryptUpdate(&(m_plaintext.at(0)),
+                                         &(out_ciphertext.at(0)),
+                                         m_plaintext.size(),
+                                         &(m_nonce.at(0)));
+            EXPECT_TRUE(ArraysMatch(out_ciphertext, m_ciphertext));
+        } else {
+            // Call encrypt update with a valid memory if no plaintext
+            Uint8 a;
+            err = pCcmObj->encryptUpdate(&a, &a, 0, &(m_nonce.at(0)));
+        }
+        EXPECT_EQ(err, ALC_ERROR_NONE);
+
+        // If there is tag, try to get the tag.
+        if (!m_tag.empty()) {
+            err = pCcmObj->getTag(&(out_tag.at(0)), m_tag.size());
+            if (m_test_name.at(0) == 'P')
+                EXPECT_TRUE(ArraysMatch(out_tag, m_tag));
+            else
+                EXPECT_FALSE(ArraysMatch(out_tag, m_tag));
+            EXPECT_EQ(err, ALC_ERROR_NONE);
+        }
+    }
+    {
+        std::vector<Uint8> out_tag(m_tag.size(), 0),
+            out_ciphertext(m_plaintext.size(), 0);
+
+        alc_error_t err;
+        /* Encryption begins here */
+        if (!m_tag.empty()) {
+            err = pCcmObj->setTagLength(m_tag.size());
+        }
+
+        // Nonce
+        err = pCcmObj->setIv(m_nonce.size(), &(m_nonce.at(0)));
+        EXPECT_EQ(err, ALC_ERROR_NONE);
+
+        // Additional Data
+        if (!m_aad.empty()) {
+            err = pCcmObj->setAad(&(m_aad.at(0)), m_aad.size());
+            EXPECT_EQ(err, ALC_ERROR_NONE);
+        }
+
+        // Encrypt the plaintext into ciphertext.
+        if (!m_plaintext.empty()) {
+            err = pCcmObj->encryptUpdate(&(m_plaintext.at(0)),
+                                         &(out_ciphertext.at(0)),
+                                         m_plaintext.size(),
+                                         &(m_nonce.at(0)));
+            EXPECT_TRUE(ArraysMatch(out_ciphertext, m_ciphertext));
+        } else {
+            // Call encrypt update with a valid memory if no plaintext
+            Uint8 a;
+            err = pCcmObj->encryptUpdate(&a, &a, 0, &(m_nonce.at(0)));
+        }
+        EXPECT_EQ(err, ALC_ERROR_NONE);
+
+        // If there is tag, try to get the tag.
+        if (!m_tag.empty()) {
+            err = pCcmObj->getTag(&(out_tag.at(0)), m_tag.size());
+            if (m_test_name.at(0) == 'P')
+                EXPECT_TRUE(ArraysMatch(out_tag, m_tag));
+            else
+                EXPECT_FALSE(ArraysMatch(out_tag, m_tag));
+            EXPECT_EQ(err, ALC_ERROR_NONE);
+        }
+    }
+}
+
 TEST_P(CCM_KAT, Decrypt)
 {
     std::vector<Uint8> out_tag(m_tag.size(), 0),
@@ -479,6 +573,99 @@ TEST_P(CCM_KAT, Decrypt)
         else
             EXPECT_FALSE(ArraysMatch(out_tag, m_tag));
         EXPECT_EQ(err, ALC_ERROR_NONE);
+    }
+}
+TEST_P(CCM_KAT, Decrypt_Double)
+{
+    {
+        std::vector<Uint8> out_tag(m_tag.size(), 0),
+            out_plaintext(m_ciphertext.size(), 0);
+
+        alc_error_t err;
+
+        /* Decryption begins here*/
+        if (!m_tag.empty()) {
+            err = pCcmObj->setTagLength(m_tag.size());
+        }
+
+        // Nonce
+        err = pCcmObj->setIv(m_nonce.size(), &(m_nonce.at(0)));
+        EXPECT_EQ(err, ALC_ERROR_NONE);
+
+        // Additional Data
+        if (!m_aad.empty()) {
+            err = pCcmObj->setAad(&(m_aad.at(0)), m_aad.size());
+            EXPECT_EQ(err, ALC_ERROR_NONE);
+        }
+
+        // Decrypt the ciphertext into plaintext
+        if (!m_ciphertext.empty()) {
+            err = pCcmObj->decryptUpdate(&(m_ciphertext.at(0)),
+                                         &(out_plaintext.at(0)),
+                                         m_ciphertext.size(),
+                                         &(m_nonce.at(0)));
+            EXPECT_TRUE(ArraysMatch(out_plaintext, m_plaintext));
+        } else {
+            // Call decrypt update with a valid memory if no plaintext
+            Uint8 a;
+            err = pCcmObj->decryptUpdate(&a, &a, 0, &(m_nonce.at(0)));
+        }
+        EXPECT_EQ(err, ALC_ERROR_NONE);
+
+        // If there is tag, try to get the tag.
+        if (!m_tag.empty()) {
+            err = pCcmObj->getTag(&(out_tag.at(0)), m_tag.size());
+            if (m_test_name.at(0) == 'P')
+                EXPECT_TRUE(ArraysMatch(out_tag, m_tag));
+            else
+                EXPECT_FALSE(ArraysMatch(out_tag, m_tag));
+            EXPECT_EQ(err, ALC_ERROR_NONE);
+        }
+    }
+    {
+        std::vector<Uint8> out_tag(m_tag.size(), 0),
+            out_plaintext(m_ciphertext.size(), 0);
+
+        alc_error_t err;
+
+        /* Decryption begins here*/
+        if (!m_tag.empty()) {
+            err = pCcmObj->setTagLength(m_tag.size());
+        }
+
+        // Nonce
+        err = pCcmObj->setIv(m_nonce.size(), &(m_nonce.at(0)));
+        EXPECT_EQ(err, ALC_ERROR_NONE);
+
+        // Additional Data
+        if (!m_aad.empty()) {
+            err = pCcmObj->setAad(&(m_aad.at(0)), m_aad.size());
+            EXPECT_EQ(err, ALC_ERROR_NONE);
+        }
+
+        // Decrypt the ciphertext into plaintext
+        if (!m_ciphertext.empty()) {
+            err = pCcmObj->decryptUpdate(&(m_ciphertext.at(0)),
+                                         &(out_plaintext.at(0)),
+                                         m_ciphertext.size(),
+                                         &(m_nonce.at(0)));
+            EXPECT_TRUE(ArraysMatch(out_plaintext, m_plaintext));
+        } else {
+            // Call decrypt update with a valid memory if no plaintext
+            Uint8 a;
+            err = pCcmObj->decryptUpdate(&a, &a, 0, &(m_nonce.at(0)));
+        }
+        EXPECT_EQ(err, ALC_ERROR_NONE);
+
+        // If there is tag, try to get the tag.
+        if (!m_tag.empty()) {
+            err = pCcmObj->getTag(&(out_tag.at(0)), m_tag.size());
+            if (m_test_name.at(0) == 'P')
+                EXPECT_TRUE(ArraysMatch(out_tag, m_tag));
+            else
+                EXPECT_FALSE(ArraysMatch(out_tag, m_tag));
+            EXPECT_EQ(err, ALC_ERROR_NONE);
+        }
     }
 }
 
