@@ -499,12 +499,13 @@ main(int argc, char** argv)
     parseArgs(&argc, argv);
 #ifndef USE_IPP
     if (useipp) {
-        alcp::testing::printErrors("Error IPP not found defaulting to ALCP");
+        alcp::testing::utils::printErrors(
+            "Error IPP not found defaulting to ALCP");
     }
 #endif
 #ifndef USE_OSSL
     if (useossl) {
-        alcp::testing::printErrors(
+        alcp::testing::utils::printErrors(
             "Error OpenSSL not found defaulting to ALCP");
     }
 #endif
