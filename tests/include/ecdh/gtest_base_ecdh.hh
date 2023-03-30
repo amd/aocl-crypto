@@ -164,8 +164,10 @@ ecdh_KAT(alc_ec_info_t info)
             Peer1_SecretKey, Peer2_SecretKey, csv, std::string("ECDH")));
 
         /*TODO: x25519 shared secret key len should always be 32 bytes !*/
-        EXPECT_TRUE(static_cast<int>(data_peer1.m_Peer_SecretKeyLen) == KeySize);
-        EXPECT_TRUE(static_cast<int>(data_peer2.m_Peer_SecretKeyLen) == KeySize);
+        EXPECT_TRUE(static_cast<int>(data_peer1.m_Peer_SecretKeyLen)
+                    == KeySize);
+        EXPECT_TRUE(static_cast<int>(data_peer2.m_Peer_SecretKeyLen)
+                    == KeySize);
 
         if (verbose > 1) {
             PrintEcdhTestData(data_peer1);

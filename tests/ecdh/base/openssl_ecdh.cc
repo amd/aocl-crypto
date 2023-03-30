@@ -39,9 +39,8 @@ OpenSSLEcdhBase::OpenSSLEcdhBase(const alc_ec_info_t& info) {}
 
 OpenSSLEcdhBase::~OpenSSLEcdhBase()
 {
-    if (m_ec_handle != nullptr) {
-        OSSL_LIB_CTX_free(m_ec_handle);
-    }
+    OSSL_LIB_CTX_free(m_ec_handle);
+    EVP_PKEY_free(m_pPrivateKeyData);
 }
 
 bool
@@ -55,6 +54,9 @@ bool
 OpenSSLEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
 {
     Uint64 keyLength;
+
+    EVP_PKEY_free(m_pPrivateKeyData);
+
     /*Initialize handle, generate or load KAT private key*/
     m_pPrivateKeyData = EVP_PKEY_new_raw_private_key_ex(m_ec_handle,
                                                         m_pkeytype,
@@ -68,12 +70,11 @@ OpenSSLEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
     }
     /* Get public key corresponding to the private key */
     if (1
-        != EVP_PKEY_get_octet_string_param(
-            m_pPrivateKeyData,
-            "pub",
-            data.m_Peer_PubKey,
-            data.m_Peer_PubKeyLen, // sizeof(m_publicKeyData),
-            &keyLength)) {
+        != EVP_PKEY_get_octet_string_param(m_pPrivateKeyData,
+                                           "pub",
+                                           data.m_Peer_PubKey,
+                                           data.m_Peer_PubKeyLen,
+                                           &keyLength)) {
         std::cout << "EVP_PKEY_get_octet_string_param: Error:"
                   << ERR_get_error() << std::endl;
         return false;
@@ -85,46 +86,50 @@ bool
 OpenSSLEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
                                   const alcp_ecdh_data_t& data_peer2)
 {
-    EVP_PKEY_CTX* ctx       = NULL;
-    EVP_PKEY*     peer_pubk = NULL;
     Uint64        SecretkeyLength;
+    EVP_PKEY*     peerPublicKeyData = nullptr;
+    EVP_PKEY_CTX* KeyExchangeCtx    = nullptr;
+
+    EVP_PKEY_free(peerPublicKeyData);
+    EVP_PKEY_CTX_free(KeyExchangeCtx);
 
     /* Load public key for other peer. */
-    peer_pubk = EVP_PKEY_new_raw_public_key_ex(m_ec_handle,
-                                               m_pkeytype,
-                                               NULL,
-                                               data_peer2.m_Peer_PubKey,
-                                               data_peer1.m_Peer_PubKeyLen);
-    if (peer_pubk == nullptr) {
+    peerPublicKeyData =
+        EVP_PKEY_new_raw_public_key_ex(m_ec_handle,
+                                       m_pkeytype,
+                                       NULL,
+                                       data_peer2.m_Peer_PubKey,
+                                       data_peer1.m_Peer_PubKeyLen);
+    if (peerPublicKeyData == nullptr) {
         std::cout << "EVP_PKEY_new_raw_public_key_ex returned null: Error:"
                   << ERR_get_error() << std::endl;
         return false;
     }
     /* Create key exchange context. */
-    ctx = EVP_PKEY_CTX_new_from_pkey(m_ec_handle, m_pPrivateKeyData, NULL);
-    if (ctx == NULL) {
+    KeyExchangeCtx =
+        EVP_PKEY_CTX_new_from_pkey(m_ec_handle, m_pPrivateKeyData, NULL);
+    if (KeyExchangeCtx == NULL) {
         std::cout << "EVP_PKEY_CTX_new_from_pkey returned null: Error:"
                   << ERR_get_error() << std::endl;
         return false;
     }
 
     /* Initialize derivation process. */
-    if (1 != EVP_PKEY_derive_init(ctx)) {
+    if (1 != EVP_PKEY_derive_init(KeyExchangeCtx)) {
         std::cout << "EVP_PKEY_derive_init : Error:" << ERR_get_error()
                   << std::endl;
         return false;
     }
 
     /* Configure each peer with the other peer's public key. */
-    /*FIXME, this to be done with other's peer*/
-    if (1 != EVP_PKEY_derive_set_peer(ctx, peer_pubk)) {
+    if (1 != EVP_PKEY_derive_set_peer(KeyExchangeCtx, peerPublicKeyData)) {
         std::cout << "EVP_PKEY_derive_set_peer : Error:" << ERR_get_error()
                   << std::endl;
         return false;
     }
 
     /* Determine the secret length. */
-    if (1 != EVP_PKEY_derive(ctx, NULL, &SecretkeyLength)) {
+    if (1 != EVP_PKEY_derive(KeyExchangeCtx, NULL, &SecretkeyLength)) {
         std::cout << "EVP_PKEY_derive secret len: Error:" << ERR_get_error()
                   << std::endl;
         return false;
@@ -133,10 +138,15 @@ OpenSSLEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
     /* derive the shared secret key */
     if (1
         != EVP_PKEY_derive(
-            ctx, data_peer1.m_Peer_SecretKey, &SecretkeyLength)) {
+            KeyExchangeCtx, data_peer1.m_Peer_SecretKey, &SecretkeyLength)) {
         std::cout << "EVP_PKEY_derive : Error:" << ERR_get_error() << std::endl;
         return false;
     }
+
+    /* dealloc peer pubkey data and context */
+    EVP_PKEY_free(peerPublicKeyData);
+    EVP_PKEY_CTX_free(KeyExchangeCtx);
+
     return true;
 }
 

@@ -40,19 +40,13 @@
 namespace alcp::testing {
 class OpenSSLEcdhBase : public EcdhBase
 {
-    OSSL_LIB_CTX* m_ec_handle{};
-    EVP_PKEY*     m_pPrivateKeyData;
-    EVP_PKEY*     m_pPublicKeyData;
+    OSSL_LIB_CTX* m_ec_handle       = nullptr;
+    EVP_PKEY*     m_pPrivateKeyData = nullptr;
 
     std::string st = "X25519"; //"prime256v1"; // P-256
 
     const char*   m_pkeytype = st.c_str();
     alc_ec_info_t m_info;
-
-    Uint8* m_pvt_key = {};
-    Uint8* m_pub_key = {};
-
-    std::string m_name, m_keytype;
 
   public:
     OpenSSLEcdhBase(const alc_ec_info_t& info);

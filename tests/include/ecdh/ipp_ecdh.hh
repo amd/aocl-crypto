@@ -42,12 +42,9 @@ class IPPEcdhBase : public EcdhBase
 {
     alc_ec_info_t m_info;
 
-    Uint8*       m_pvt_key = {};
-    Uint8*       m_pub_key = {};
     int8u*       m_pPublicKeyData_mb[8];
     const int8u* m_pPrivKey_mb[8];
     int8u*       m_pSecretKey_mb[8];
-    std::string  m_name, m_keytype;
 
   public:
     IPPEcdhBase(const alc_ec_info_t& info);
