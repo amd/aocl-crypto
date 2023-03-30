@@ -45,7 +45,6 @@ Csv::Csv(String filename)
 std::vector<String>
 Csv::parseCsv() const
 {
-    Uint64              count    = 0;
     int                 curr_pos = 0;
     std::vector<String> out      = {};
     while (true) {
@@ -62,7 +61,6 @@ Csv::parseCsv() const
         if (cPos == -1) {
             break; // Terminating condition.. Line end
         }
-        count++;
         curr_pos = cPos + 1;
     }
     return out;

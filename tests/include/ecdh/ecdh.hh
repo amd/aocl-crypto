@@ -48,7 +48,7 @@ typedef enum
     ALC_PEER_MAX,
 } alc_peer_id_t;
 
-typedef struct
+typedef struct _alcp_ecdh_data
 {
     Uint8* m_Peer_PvtKey       = nullptr;
     Uint64 m_Peer_PvtKeyLen    = 0;

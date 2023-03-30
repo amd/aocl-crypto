@@ -173,7 +173,7 @@ parseArgs(int argc, char** argv)
 
                 std::string verbosity_string = "(";
                 for (size_t j = 0; j < verbosity_levels.size() - 1; j++) {
-                    verbosity_string += j + "/";
+                    verbosity_string += static_cast<char>(j) + '/';
                 }
                 verbosity_string +=
                     verbosity_levels.at(verbosity_levels.size() - 1) + ")";
