@@ -34,7 +34,8 @@ namespace alcp::testing {
 AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode, const Uint8* iv)
     : m_mode{ mode }
     , m_iv{ iv }
-{}
+{
+}
 
 AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode,
                                const Uint8*            iv,
@@ -303,6 +304,7 @@ AlcpCipherBase::decrypt(alcp_data_ex_t data)
             }
             // Tag verification
             if (std::memcmp(data.m_tagBuff, data.m_tag, data.m_tagl) != 0) {
+                std::cout << "Error: Tag Verification Failed!" << std::endl;
                 return false;
             }
         }

@@ -593,6 +593,9 @@ RunCipherKATTest(TestingCore& testingCore,
     data.m_tagl  = 0;
     if (isgcm) {
         if (outtag.size()) {
+            if (enc_dec == ENCRYPT) {
+                std::fill(outtag.begin(), outtag.end(), 0);
+            }
             data.m_tag     = &(outtag[0]);
             data.m_tagl    = outtag.size();
             data.m_tagBuff = &tagBuff[0];
