@@ -27,9 +27,9 @@
  */
 
 #include "alcp/alcp.h"
+#include "string.h"
 #include <malloc.h>
 #include <stdio.h>
-#include "string.h"
 void
 printHashAsHexString(Uint8* hash, int length)
 {
@@ -40,21 +40,24 @@ printHashAsHexString(Uint8* hash, int length)
 }
 
 int
-compareArray(Uint8* a1, long unsigned int a1_len, Uint8* a2, long unsigned int a2_len)
+compareArray(Uint8*            a1,
+             long unsigned int a1_len,
+             Uint8*            a2,
+             long unsigned int a2_len)
 {
     if (a1_len != a2_len) {
         return 1;
     }
-    return memcmp(a1,a2,a1_len);
+    return memcmp(a1, a2, a1_len);
 }
 
 static alc_mac_handle_t handle;
 
 alc_error_t
 run_cmac(const alc_mac_info_p macInfo,
-         char*                cipherText,
+         Uint8*               cipherText,
          Uint32               cipherTextLen,
-         char*                mac,
+         Uint8*               mac,
          Uint32               mac_size)
 {
 
@@ -85,6 +88,7 @@ run_cmac(const alc_mac_info_p macInfo,
     }
     alcp_mac_finish(&handle);
     free(handle.ch_context);
+    return err;
 }
 
 void
@@ -123,38 +127,37 @@ displayResults(char*  hmac_string,
     printf("\n");
 }
 
-
-void demo_cmac()
+void
+demo_cmac()
 {
 
     alc_error_t err;
-    Uint8 key[] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
-          0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C 
-        };
-    Uint8 cipherText[] = {0x6B, 0xC1, 0xBE, 0xE2, 0x2E, 0x40, 0x9F, 0x96,
-          0xE9, 0x3D, 0x7E, 0x11, 0x73, 0x93, 0x17, 0x2A,};
+    Uint8       key[]        = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
+                                 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
+    Uint8       cipherText[] = {
+        0x6B, 0xC1, 0xBE, 0xE2, 0x2E, 0x40, 0x9F, 0x96,
+        0xE9, 0x3D, 0x7E, 0x11, 0x73, 0x93, 0x17, 0x2A,
+    };
 
-    Uint8 expectedMac[] = {0x07, 0x0A, 0x16, 0xB4, 0x6B, 0x4D,0x41, 0x44, 
-          0xF7, 0x9B, 0xDD, 0x9D,0xD0, 0x4A, 0x28, 0x7C };
+    Uint8 expectedMac[] = { 0x07, 0x0A, 0x16, 0xB4, 0x6B, 0x4D, 0x41, 0x44,
+                            0xF7, 0x9B, 0xDD, 0x9D, 0xD0, 0x4A, 0x28, 0x7C };
 
     const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
                                    .fmt  = ALC_KEY_FMT_RAW,
                                    .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key)*8,
+                                   .len  = sizeof(key) * 8,
                                    .key  = key };
 
     alc_mac_info_t macinfo = {
-        .mi_type = ALC_MAC_CMAC,
-        .mi_algoinfo={
-            .cmac ={
-                .cmac_cipher = {
-                    .ci_type = ALC_CIPHER_TYPE_AES,
-                    .ci_key_info = kinfo,
-                    .ci_algo_info = {.ai_mode = ALC_AES_MODE_NONE,.ai_iv=NULL}
-                }
-            }
-        },
-        .mi_keyinfo = kinfo
+        .mi_type     = ALC_MAC_CMAC,
+        .mi_algoinfo = { .cmac = { .cmac_cipher = { .ci_type =
+                                                        ALC_CIPHER_TYPE_AES,
+                                                    .ci_key_info  = kinfo,
+                                                    .ci_algo_info = { .ai_mode =
+                                                                          ALC_AES_MODE_NONE,
+                                                                      .ai_iv =
+                                                                          NULL } } } },
+        .mi_keyinfo  = kinfo
     };
 
     Uint64 mac_size = 16;
