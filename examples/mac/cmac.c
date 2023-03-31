@@ -27,9 +27,9 @@
  */
 
 #include "alcp/alcp.h"
-#include "string.h"
 #include <malloc.h>
 #include <stdio.h>
+#include <string.h>
 void
 printHashAsHexString(Uint8* hash, int length)
 {
@@ -40,10 +40,7 @@ printHashAsHexString(Uint8* hash, int length)
 }
 
 int
-compareArray(Uint8*            a1,
-             long unsigned int a1_len,
-             Uint8*            a2,
-             long unsigned int a2_len)
+compareArray(Uint8* a1, Uint64 a1_len, Uint8* a2, Uint64 a2_len)
 {
     if (a1_len != a2_len) {
         return 1;
