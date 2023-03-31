@@ -57,6 +57,9 @@ struct _alc_prov_cipher_ctx
     Uint64            ivlen;
     int               taglen;
     Uint8*            tagbuff;
+    const Uint8*      aad;
+    int               aadlen;
+    bool              add_inititalized;
 
     alc_cipher_info_t pc_cipher_info;
     int               pc_ctx_size;

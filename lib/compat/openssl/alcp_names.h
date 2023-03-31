@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -69,6 +69,14 @@
     "AES-192-GCM:id-aes192-GCM:2.16.840.1.101.3.4.1.26"
 #define ALCP_PROV_NAMES_AES_128_GCM                                            \
     "AES-128-GCM:id-aes128-GCM:2.16.840.1.101.3.4.1.6"
+
+// CCM
+#define ALCP_PROV_NAMES_AES_256_CCM                                            \
+    "AES-256-CCM:id-aes256-CCM:2.16.840.1.101.3.4.1.47"
+#define ALCP_PROV_NAMES_AES_192_CCM                                            \
+    "AES-192-CCM:id-aes192-CCM:2.16.840.1.101.3.4.1.27"
+#define ALCP_PROV_NAMES_AES_128_CCM                                            \
+    "AES-128-CCM:id-aes128-CCM:2.16.840.1.101.3.4.1.7"
 
 // DIGEST SHA2
 #define ALCP_PROV_NAMES_SHA2_224                                               \

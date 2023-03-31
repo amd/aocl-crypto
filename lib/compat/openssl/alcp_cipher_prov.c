@@ -205,13 +205,25 @@ ALCP_prov_cipher_get_ctx_params(void* vctx, OSSL_PARAM params[])
 #ifdef DEBUG
         printf("Provider: Size is %ld and tag is %p\n", used_length, tag);
 #endif
-
         cctx->taglen = used_length;
-        alcp_cipher_encrypt_update(&(cctx->handle),
-                                   NULL,
-                                   (Uint8*)tag,
-                                   used_length,
-                                   cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        if (!cctx->add_inititalized
+            && (cctx->pc_cipher_info.ci_algo_info.ai_mode
+                == ALC_AES_MODE_CCM)) {
+            Uint8 a;
+            alcp_cipher_set_tag_length(&(cctx->handle), cctx->taglen);
+            alcp_cipher_set_iv(&(cctx->handle),
+                               cctx->ivlen,
+                               cctx->pc_cipher_info.ci_algo_info.ai_iv);
+            if (cctx->aadlen != 0)
+                alcp_cipher_set_aad(&(cctx->handle), cctx->aad, cctx->aadlen);
+            cctx->add_inititalized = true;
+            alcp_cipher_encrypt_update(&(cctx->handle),
+                                       &a,
+                                       &a,
+                                       0,
+                                       cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
+        alcp_cipher_get_tag(&(cctx->handle), (Uint8*)tag, used_length);
     }
 
     EXIT();
@@ -249,6 +261,18 @@ ALCP_prov_cipher_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 #endif
         cctx->ivlen = ivlen;
     }
+    p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_AEAD_TAG);
+    if (p != NULL) {
+        if (p->data_type != OSSL_PARAM_OCTET_STRING) {
+            printf("Provider: TAG is in wrong format!\n");
+            return 0;
+        }
+        cctx->tagbuff = p->data;
+        cctx->taglen  = p->data_size;
+    }
+#ifdef DEBUG
+    printf("Provider: Got tag with size:%d\n", cctx->taglen);
+#endif
 
     EXIT();
     return 1;
@@ -262,6 +286,7 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
                               size_t               ivlen,
                               const OSSL_PARAM     params[])
 {
+    const OSSL_PARAM*     p;
     alc_prov_cipher_ctx_p cctx            = vctx;
     alc_cipher_info_p     cinfo           = &cctx->pc_cipher_info;
     alc_key_info_p        kinfo_tweak_key = &cctx->kinfo_tweak_key;
@@ -269,6 +294,35 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
     // const int             err_size = 256;
     // Uint8               err_buf[err_size];
     ENTER();
+
+    // Locate TAG
+    if (params) {
+        p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_AEAD_TAG);
+        if (p != NULL) {
+            if (p->data_type != OSSL_PARAM_OCTET_STRING) {
+                printf("Provider: TAG is in wrong format!\n");
+                return 0;
+            }
+            cctx->tagbuff = p->data;
+            cctx->taglen  = p->data_size;
+#ifdef DEBUG
+            printf("Provider: Got tag with size:%d\n", cctx->taglen);
+#endif
+        }
+        // Locate IV
+        p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_IVLEN);
+        if (p != NULL) {
+            if (p->data_type != OSSL_PARAM_UNSIGNED_INTEGER) {
+                printf("Provider: TAG is in wrong format!\n");
+                return 0;
+            }
+            cctx->ivlen = *((int*)(p->data));
+#ifdef DEBUG
+            printf("Provider: Got IVLen as :%ld bytes\n", cctx->ivlen);
+#endif
+        }
+        return 1;
+    }
 
     assert(cinfo->ci_type == ALC_CIPHER_TYPE_AES);
 
@@ -293,6 +347,9 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
             break;
         case ALC_AES_MODE_GCM:
             PRINT("Provider: GCM\n");
+            break;
+        case ALC_AES_MODE_CCM:
+            PRINT("Provider: CCM\n");
             break;
         default:
             return 0;
@@ -400,7 +457,12 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
             }
         }
     }
+#ifdef DEBUG
+    printf("Provider: cctx->taglen: %d\n", cctx->taglen);
+#endif
+    cctx->add_inititalized = false;
     EXIT();
+
     return 1;
 }
 
@@ -412,6 +474,7 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
                               size_t               ivlen,
                               const OSSL_PARAM     params[])
 {
+    const OSSL_PARAM*     p;
     alc_prov_cipher_ctx_p cctx            = vctx;
     alc_key_info_p        kinfo_tweak_key = &cctx->kinfo_tweak_key;
     alc_cipher_info_p     cinfo           = &cctx->pc_cipher_info;
@@ -419,6 +482,36 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
     // const int             err_size = 256;
     // Uint8               err_buf[err_size];
     ENTER();
+
+    // Locate TAG
+    if (params) {
+        p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_AEAD_TAG);
+        if (p != NULL) {
+            if (p->data_type != OSSL_PARAM_OCTET_STRING) {
+                printf("Provider: TAG is in wrong format!\n");
+                return 0;
+            }
+            cctx->tagbuff = p->data;
+            cctx->taglen  = p->data_size;
+#ifdef DEBUG
+            printf("Provider: Got tag with size:%d\n", cctx->taglen);
+#endif
+        }
+        // Locate IV
+        p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_IVLEN);
+        if (p != NULL) {
+            if (p->data_type != OSSL_PARAM_UNSIGNED_INTEGER) {
+                printf("Provider: TAG is in wrong format!\n");
+                return 0;
+            }
+            cctx->ivlen = *((int*)(p->data));
+#ifdef DEBUG
+            printf("Provider: Got IVLen as :%ld bytes\n", cctx->ivlen);
+#endif
+        }
+        return 1;
+    }
+
     assert(cinfo->ci_type == ALC_CIPHER_TYPE_AES);
     switch (cinfo->ci_algo_info.ai_mode) {
         case ALC_AES_MODE_CFB:
@@ -441,6 +534,9 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
             break;
         case ALC_AES_MODE_GCM:
             PRINT("Provider: GCM\n");
+            break;
+        case ALC_AES_MODE_CCM:
+            PRINT("Provider: CCM\n");
             break;
         default:
             return 0;
@@ -546,6 +642,7 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
             }
         }
     }
+    cctx->add_inititalized = false;
     EXIT();
     return 1;
 }
@@ -558,8 +655,8 @@ ALCP_prov_cipher_update(void*                vctx,
                         const unsigned char* in,
                         size_t               inl)
 {
-    alc_prov_cipher_ctx_p cctx = vctx;
-    alc_error_t           err;
+    alc_prov_cipher_ctx_p cctx     = vctx;
+    alc_error_t           err      = ALC_ERROR_NONE;
     alc_cipher_info_p     cinfo    = &cctx->pc_cipher_info;
     const int             err_size = 256;
     Uint8                 err_buf[err_size];
@@ -571,7 +668,36 @@ ALCP_prov_cipher_update(void*                vctx,
     }
 
     if (cctx->enc_flag) {
-        if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+        if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_CCM) {
+            if (out == NULL && outl != NULL && in != NULL) { // AAD call
+                cctx->aadlen = inl;
+                cctx->aad    = in;
+            } else if (out != NULL && outl != NULL
+                       && in != NULL) { // Encrypt Call
+                err = alcp_cipher_set_tag_length(&(cctx->handle), cctx->taglen);
+                if (alcp_is_error(err))
+                    goto out;
+                err =
+                    alcp_cipher_set_iv(&(cctx->handle),
+                                       cctx->ivlen,
+                                       cctx->pc_cipher_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err))
+                    goto out;
+                if (cctx->aadlen != 0) {
+                    err = alcp_cipher_set_aad(
+                        &(cctx->handle), cctx->aad, cctx->aadlen);
+                    if (alcp_is_error(err))
+                        goto out;
+                }
+                cctx->add_inititalized = true;
+                err                    = alcp_cipher_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_info.ci_algo_info.ai_iv);
+            }
+        } else if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
             if (out == NULL) {
                 err = alcp_cipher_set_aad(&(cctx->handle), in, inl);
             } else {
@@ -590,7 +716,36 @@ ALCP_prov_cipher_update(void*                vctx,
                                       cctx->pc_cipher_info.ci_algo_info.ai_iv);
         }
     } else {
-        if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+        if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_CCM) {
+            if (out == NULL && outl != NULL && in != NULL) { // AAD call
+                cctx->aadlen = inl;
+                cctx->aad    = in;
+            } else if (out != NULL && outl != NULL
+                       && in != NULL) { // Encrypt Call
+                err = alcp_cipher_set_tag_length(&(cctx->handle), cctx->taglen);
+                if (alcp_is_error(err))
+                    goto out;
+                err =
+                    alcp_cipher_set_iv(&(cctx->handle),
+                                       cctx->ivlen,
+                                       cctx->pc_cipher_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err))
+                    goto out;
+                if (cctx->aadlen != 0) {
+                    err = alcp_cipher_set_aad(
+                        &(cctx->handle), cctx->aad, cctx->aadlen);
+                    if (alcp_is_error(err))
+                        goto out;
+                }
+                cctx->add_inititalized = true;
+                err                    = alcp_cipher_decrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_info.ci_algo_info.ai_iv);
+            }
+        } else if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
             if (out == NULL) {
                 err = alcp_cipher_set_aad(&(cctx->handle), in, inl);
             } else {
@@ -609,8 +764,8 @@ ALCP_prov_cipher_update(void*                vctx,
                                       cctx->pc_cipher_info.ci_algo_info.ai_iv);
         }
     }
-    // printf("%d\n", cctx->pc_cipher_info.mode_data.aes.mode ==
-    // ALC_AES_MODE_CFB);
+
+out:
     if (alcp_is_error(err)) {
         alcp_error_str(err, err_buf, err_size);
         printf("Provider: Encyption/Decryption Failure! ALCP:%s\n", err_buf);
@@ -663,6 +818,9 @@ extern const OSSL_DISPATCH xts_functions_256[];
 extern const OSSL_DISPATCH gcm_functions_128[];
 extern const OSSL_DISPATCH gcm_functions_192[];
 extern const OSSL_DISPATCH gcm_functions_256[];
+extern const OSSL_DISPATCH ccm_functions_128[];
+extern const OSSL_DISPATCH ccm_functions_192[];
+extern const OSSL_DISPATCH ccm_functions_256[];
 const OSSL_ALGORITHM       ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_256_CFB, CIPHER_DEF_PROP, cfb_functions_256 },
     { ALCP_PROV_NAMES_AES_192_CFB, CIPHER_DEF_PROP, cfb_functions_192 },
@@ -690,6 +848,9 @@ const OSSL_ALGORITHM       ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_128_GCM, CIPHER_DEF_PROP, gcm_functions_128 },
     { ALCP_PROV_NAMES_AES_192_GCM, CIPHER_DEF_PROP, gcm_functions_192 },
     { ALCP_PROV_NAMES_AES_256_GCM, CIPHER_DEF_PROP, gcm_functions_256 },
+    { ALCP_PROV_NAMES_AES_128_CCM, CIPHER_DEF_PROP, ccm_functions_128 },
+    { ALCP_PROV_NAMES_AES_192_CCM, CIPHER_DEF_PROP, ccm_functions_192 },
+    { ALCP_PROV_NAMES_AES_256_CCM, CIPHER_DEF_PROP, ccm_functions_256 },
     { NULL, NULL, NULL },
 };
 

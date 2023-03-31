@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,6 +35,7 @@ CIPHER_CONTEXT(ecb, ALC_AES_MODE_ECB);
 CIPHER_CONTEXT(ctr, ALC_AES_MODE_CTR);
 CIPHER_CONTEXT(xts, ALC_AES_MODE_XTS);
 CIPHER_CONTEXT(gcm, ALC_AES_MODE_GCM);
+CIPHER_CONTEXT(ccm, ALC_AES_MODE_CCM);
 
 int
 ALCP_prov_aes_get_ctx_params(void* vctx, OSSL_PARAM params[])
@@ -97,3 +98,6 @@ CREATE_CIPHER_DISPATCHERS(xts, aes, EVP_CIPH_XTS_MODE, 256);
 CREATE_CIPHER_DISPATCHERS(gcm, aes, EVP_CIPH_GCM_MODE, 128);
 CREATE_CIPHER_DISPATCHERS(gcm, aes, EVP_CIPH_GCM_MODE, 192);
 CREATE_CIPHER_DISPATCHERS(gcm, aes, EVP_CIPH_GCM_MODE, 256);
+CREATE_CIPHER_DISPATCHERS(ccm, aes, EVP_CIPH_CCM_MODE, 128);
+CREATE_CIPHER_DISPATCHERS(ccm, aes, EVP_CIPH_CCM_MODE, 192);
+CREATE_CIPHER_DISPATCHERS(ccm, aes, EVP_CIPH_CCM_MODE, 256);
