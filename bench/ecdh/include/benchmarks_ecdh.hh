@@ -53,9 +53,8 @@ typedef enum
     ECDH_BENCH_GEN_SECRET_KEY = 1
 } ecdh_bench_opt;
 
-void inline ecdh_Bench(benchmark::State& state,
-                       alc_ec_info_t     info,
-                       ecdh_bench_opt    opt)
+inline int
+ecdh_Bench(benchmark::State& state, alc_ec_info_t info, ecdh_bench_opt opt)
 {
     std::string LibStr = "";
 
@@ -143,7 +142,7 @@ void inline ecdh_Bench(benchmark::State& state,
     }
     state.counters["KeysGen/Sec"] =
         benchmark::Counter(state.iterations(), benchmark::Counter::kIsRate);
-    return;
+    return 0;
 }
 
 static void
@@ -153,7 +152,7 @@ BENCH_ECDH_x25519_GenPubKey(benchmark::State& state)
     info.ecCurveId     = ALCP_EC_CURVE25519;
     info.ecCurveType   = ALCP_EC_CURVE_TYPE_MONTGOMERY;
     info.ecPointFormat = ALCP_EC_POINT_FORMAT_UNCOMPRESSED;
-    ecdh_Bench(state, info, ECDH_BENCH_GEN_PUB_KEY);
+    benchmark::DoNotOptimize(ecdh_Bench(state, info, ECDH_BENCH_GEN_PUB_KEY));
 }
 static void
 BENCH_ECDH_x25519_GenSecretKey(benchmark::State& state)
@@ -162,7 +161,8 @@ BENCH_ECDH_x25519_GenSecretKey(benchmark::State& state)
     info.ecCurveId     = ALCP_EC_CURVE25519;
     info.ecCurveType   = ALCP_EC_CURVE_TYPE_MONTGOMERY;
     info.ecPointFormat = ALCP_EC_POINT_FORMAT_UNCOMPRESSED;
-    ecdh_Bench(state, info, ECDH_BENCH_GEN_SECRET_KEY);
+    benchmark::DoNotOptimize(
+        ecdh_Bench(state, info, ECDH_BENCH_GEN_SECRET_KEY));
 }
 
 /* add new benchmarks here */
