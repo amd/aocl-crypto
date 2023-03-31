@@ -62,6 +62,8 @@ AlcpCmacBase::init()
         m_handle->ch_context = malloc(alcp_mac_context_size(&dinfo));
     } else if (m_handle->ch_context == nullptr) {
         m_handle->ch_context = malloc(alcp_mac_context_size(&dinfo));
+    } else {
+        alcp_mac_finish(m_handle);
     }
 
     err = alcp_mac_request(m_handle, &dinfo);
