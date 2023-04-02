@@ -55,29 +55,11 @@ struct _ccm_data_t
 typedef _ccm_data_t *ccm_data_p, ccm_data_t;
 
 namespace aesni::ccm {
-    /**
-     * @brief Initializes CCM
-     *
-     * @param ctx - Context
-     * @param t - Tag Length
-     * @param q - Length required to store length of Plain text
-     * @param key - Key used for encryption
-     * @param block
-     */
+    void setAad(ccm_data_p ctx, const Uint8 aad[], size_t alen);
 
-    void CcmInit(ccm_data_p ctx, unsigned int t, unsigned int q);
+    int encrypt(ccm_data_p ctx, const Uint8 inp[], Uint8 out[], size_t len);
 
-    int CcmSetIv(ccm_data_p ctx, const Uint8* nonce, size_t nlen, size_t mlen);
-
-    void setAad(ccm_data_p ctx, const Uint8* aad, size_t alen);
-
-    int encrypt(ccm_data_p ctx, const Uint8* inp, Uint8* out, size_t len);
-
-    int decrypt(ccm_data_p ctx, const Uint8* inp, Uint8* out, size_t len);
-
-    void ctr64_add(Uint8* counter, size_t inc);
-
-    size_t CcmGetTag(ccm_data_p ctx, Uint8* tag, size_t len);
+    int decrypt(ccm_data_p ctx, const Uint8 inp[], Uint8 out[], size_t len);
 } // namespace aesni::ccm
 
 class ALCP_API_EXPORT Ccm final

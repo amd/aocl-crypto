@@ -45,13 +45,13 @@
 #endif
 namespace alcp::cipher::aesni { namespace ccm {
 
-    void setAad(ccm_data_p ccm_data, const Uint8* paad, size_t alen)
+    void setAad(ccm_data_p ccm_data, const Uint8 paad[], size_t alen)
     {
         ENTER();
-        __m128i pBlk0   = { 0 };
-        __m128i aad_128 = { 0 };
-        Uint8*  pBlk0_8 = reinterpret_cast<Uint8*>(&pBlk0);
-        Uint64  i       = 0;
+        __m128i p_blk0   = { 0 };
+        __m128i aad_128  = { 0 };
+        Uint8*  p_blk0_8 = reinterpret_cast<Uint8*>(&p_blk0);
+        Uint64  i        = 0;
 
         if (alen == 0) {
             EXITB();
@@ -60,50 +60,50 @@ namespace alcp::cipher::aesni { namespace ccm {
 
         ccm_data->nonce[0] |= 0x40; /* set Adata flag */
 
-        pBlk0 =
+        p_blk0 =
             _mm_loadu_si128(reinterpret_cast<const __m128i*>(ccm_data->nonce));
 
-        // ccm_data->cmac should be inside pBlk0
-        AesEncrypt(&pBlk0,
+        // ccm_data->cmac should be inside p_blk0
+        AesEncrypt(&p_blk0,
                    reinterpret_cast<const __m128i*>(ccm_data->key),
                    ccm_data->rounds);
         ccm_data->blocks++;
 
         if (alen < (0x10000 - 0x100)) {
             // alen < (2^16 - 2^8)
-            *(pBlk0_8 + 0) ^= static_cast<Uint8>(alen >> 8);
-            *(pBlk0_8 + 1) ^= static_cast<Uint8>(alen);
+            *(p_blk0_8 + 0) ^= static_cast<Uint8>(alen >> 8);
+            *(p_blk0_8 + 1) ^= static_cast<Uint8>(alen);
             i = 2;
         } else if (sizeof(alen) == 8 && alen >= ((size_t)1 << 32)) {
             // alen > what 32 bits can hold.
-            *(pBlk0_8 + 0) ^= 0xFF;
-            *(pBlk0_8 + 1) ^= 0xFF;
-            *(pBlk0_8 + 2) ^= static_cast<Uint8>(alen >> 56);
-            *(pBlk0_8 + 3) ^= static_cast<Uint8>(alen >> 48);
-            *(pBlk0_8 + 4) ^= static_cast<Uint8>(alen >> 40);
-            *(pBlk0_8 + 5) ^= static_cast<Uint8>(alen >> 32);
-            *(pBlk0_8 + 6) ^= static_cast<Uint8>(alen >> 24);
-            *(pBlk0_8 + 7) ^= static_cast<Uint8>(alen >> 16);
-            *(pBlk0_8 + 8) ^= static_cast<Uint8>(alen >> 8);
-            *(pBlk0_8 + 9) ^= static_cast<Uint8>(alen);
+            *(p_blk0_8 + 0) ^= 0xFF;
+            *(p_blk0_8 + 1) ^= 0xFF;
+            *(p_blk0_8 + 2) ^= static_cast<Uint8>(alen >> 56);
+            *(p_blk0_8 + 3) ^= static_cast<Uint8>(alen >> 48);
+            *(p_blk0_8 + 4) ^= static_cast<Uint8>(alen >> 40);
+            *(p_blk0_8 + 5) ^= static_cast<Uint8>(alen >> 32);
+            *(p_blk0_8 + 6) ^= static_cast<Uint8>(alen >> 24);
+            *(p_blk0_8 + 7) ^= static_cast<Uint8>(alen >> 16);
+            *(p_blk0_8 + 8) ^= static_cast<Uint8>(alen >> 8);
+            *(p_blk0_8 + 9) ^= static_cast<Uint8>(alen);
             i = 10;
         } else {
             // alen is represented by 32 bits but larger than
             // what 16 bits can hold
-            *(pBlk0_8 + 0) ^= 0xFF;
-            *(pBlk0_8 + 1) ^= 0xFE;
-            *(pBlk0_8 + 2) ^= static_cast<Uint8>(alen >> 24);
-            *(pBlk0_8 + 3) ^= static_cast<Uint8>(alen >> 16);
-            *(pBlk0_8 + 4) ^= static_cast<Uint8>(alen >> 8);
-            *(pBlk0_8 + 5) ^= static_cast<Uint8>(alen);
+            *(p_blk0_8 + 0) ^= 0xFF;
+            *(p_blk0_8 + 1) ^= 0xFE;
+            *(p_blk0_8 + 2) ^= static_cast<Uint8>(alen >> 24);
+            *(p_blk0_8 + 3) ^= static_cast<Uint8>(alen >> 16);
+            *(p_blk0_8 + 4) ^= static_cast<Uint8>(alen >> 8);
+            *(p_blk0_8 + 5) ^= static_cast<Uint8>(alen);
             i = 6;
         }
 
         // i=2,6,10 to i=16 do the CBC operation
         for (; i < 16 && alen; ++i, ++paad, --alen)
-            *(pBlk0_8 + i) ^= *paad;
+            *(p_blk0_8 + i) ^= *paad;
 
-        AesEncrypt(&pBlk0,
+        AesEncrypt(&p_blk0,
                    reinterpret_cast<const __m128i*>(ccm_data->key),
                    ccm_data->rounds);
         ccm_data->blocks++;
@@ -112,9 +112,9 @@ namespace alcp::cipher::aesni { namespace ccm {
         for (Uint64 j = 0; j < alen_16; j++) {
             aad_128 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(paad));
             // CBC XOR operation
-            pBlk0 = _mm_xor_si128(pBlk0, aad_128);
+            p_blk0 = _mm_xor_si128(p_blk0, aad_128);
             // CBC Encrypt operation
-            AesEncrypt(&pBlk0,
+            AesEncrypt(&p_blk0,
                        reinterpret_cast<const __m128i*>(ccm_data->key),
                        ccm_data->rounds);
             ccm_data->blocks++;
@@ -127,17 +127,17 @@ namespace alcp::cipher::aesni { namespace ccm {
         if (alen != 0) {
             // Process the rest in default way
             for (i = 0; i < 16 && alen; i++, paad++, alen--)
-                *(pBlk0_8 + i) ^= *paad;
+                *(p_blk0_8 + i) ^= *paad;
 
             // CBC Encrypt last block
-            AesEncrypt(&pBlk0,
+            AesEncrypt(&p_blk0,
                        reinterpret_cast<const __m128i*>(ccm_data->key),
                        ccm_data->rounds);
             ccm_data->blocks++;
         }
 
         // Store generated partial tag (cmac)
-        _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), pBlk0);
+        _mm_store_si128(reinterpret_cast<__m128i*>(ccm_data->cmac), p_blk0);
 
         EXIT();
     }
@@ -154,7 +154,10 @@ namespace alcp::cipher::aesni { namespace ccm {
         EXITG();
     }
 
-    int encrypt(ccm_data_p ccm_data, const Uint8* pinp, Uint8* pout, size_t len)
+    int encrypt(ccm_data_p  ccm_data,
+                const Uint8 pinp[],
+                Uint8       pout[],
+                size_t      len)
     {
         // Implementation block diagram
         // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_encryption.png
@@ -278,7 +281,10 @@ namespace alcp::cipher::aesni { namespace ccm {
         return 0;
     }
 
-    int decrypt(ccm_data_p ccm_data, const Uint8* pinp, Uint8* pout, size_t len)
+    int decrypt(ccm_data_p  ccm_data,
+                const Uint8 pinp[],
+                Uint8       pout[],
+                size_t      len)
     {
         // Implementation block diagram
         // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_decryption.png
@@ -286,8 +292,8 @@ namespace alcp::cipher::aesni { namespace ccm {
         size_t        n;
         unsigned int  i, q;
         unsigned char flags0 = ccm_data->nonce[0];
-        const Uint8*  pkey   = ccm_data->key;
-        __m128i       cmac, nonce, inReg, temp_reg;
+        const Uint8*  p_key  = ccm_data->key;
+        __m128i       cmac, nonce, in_reg, temp_reg;
         Uint8*        p_cmac_8  = reinterpret_cast<Uint8*>(&cmac);
         Uint8*        p_nonce_8 = reinterpret_cast<Uint8*>(&nonce);
         Uint8*        p_temp_8  = reinterpret_cast<Uint8*>(&temp_reg);
@@ -299,7 +305,7 @@ namespace alcp::cipher::aesni { namespace ccm {
         if (!(flags0 & 0x40)) {
             cmac = nonce;
             AesEncrypt(&cmac,
-                       reinterpret_cast<const __m128i*>(pkey),
+                       reinterpret_cast<const __m128i*>(p_key),
                        ccm_data->rounds);
             ccm_data->blocks++;
         } else {
@@ -336,10 +342,10 @@ namespace alcp::cipher::aesni { namespace ccm {
                        ccm_data->rounds);
             ctrInc(&nonce);
 
-            inReg = _mm_loadu_si128(
+            in_reg = _mm_loadu_si128(
                 reinterpret_cast<const __m128i*>(pinp)); // Load CipherText
             temp_reg = _mm_xor_si128(
-                inReg, temp_reg); // Generate PlainText (Complete CTR)
+                in_reg, temp_reg); // Generate PlainText (Complete CTR)
 
             /* CBC */
             cmac = _mm_xor_si128(cmac, temp_reg); // Generate Partial result
