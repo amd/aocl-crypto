@@ -29,6 +29,7 @@
 
 #include "alcp/base.hh"
 #include "alcp/errorbase.hh"
+#include "alcp/module.hh"
 
 namespace alcp::cipher {
 
@@ -50,8 +51,8 @@ enum ErrorCode : Uint16
     /* ErrorCode:eInavlidCipher */
     eInavlidCipher = 11,
 
-    /* ErrorCode:eInavlidMode */
-    eInavlidMode = 13,
+    /* ErrorCode:eInvalidMode */
+    eInvalidMode = 13,
 
     /* ErrorCode:eHardwareFailed */
     eHardwareFailed = 15,
@@ -85,6 +86,11 @@ class CipherError final : public ErrorBase
         setModuleError(ErrorCode::eOk);
     }
 
+    CipherError(Uint64 ecode)
+        : ErrorBase{ CipherError::toUint16(ecode) }
+    {
+    }
+
     CipherError(cipher::ErrorCode ecode)
         : CipherError{}
     {
@@ -93,10 +99,14 @@ class CipherError final : public ErrorBase
         }
     }
 
-    static Uint16 toUint16(cipher::ErrorCode ecode)
+    CipherError(base::ErrorCode bcode, cipher::ErrorCode ecode)
+        : ErrorBase{ ecode }
     {
-        return static_cast<Uint16>(ecode);
+        setBaseError(static_cast<Uint16>(bcode));
+        setModuleId(static_cast<Uint16>(alcp::module::Type::eModuleCipher));
     }
+
+    static Uint16 toUint16(Uint64 ecode) { return static_cast<Uint16>(ecode); }
 
     virtual ~CipherError() {}
 
@@ -106,18 +116,6 @@ class CipherError final : public ErrorBase
     {
         return __toStr(ErrorBase::getModuleError());
     };
-    /* FIXME: remove this function */
-    virtual Uint16 moduleId() const { return 0; }
-
-#if 0
-    // Gets the module name
-    virtual String getName() override { return mapModuleName(moduleId()); }
-
-    virtual alc_module_type_t getType() override
-    {
-        return static_cast<alc_module_type_t>(moduleId());
-    }
-#endif
 
   private:
     static const String __toStr(Uint16 mod_err)
@@ -131,9 +129,9 @@ class CipherError final : public ErrorBase
               "Authenticty/Integrity check failed!" },
             { ec::eInavlidCipher,
               "Cannot find implementation for requested Cipher!" },
-            { ec::eInavlidMode,
+            { ec::eInvalidMode,
               "Cannot find implementation for requested mode!" },
-            { ec::eInavlidMode, "Hardware reported error/failed state!" },
+            { ec::eHardwareFailed, "Hardware reported error/failed state!" },
             { ec::eDecryptFailed,
               "Decryption algorithm reported unexpected failure!" },
             { ec::eEncryptFailed,
@@ -151,5 +149,15 @@ class CipherError final : public ErrorBase
         }
     }
 };
+
+namespace status {
+    ALCP_API_EXPORT Status InvaidValue(String msg);
+    ALCP_API_EXPORT Status AuthenticationFailure(String msg);
+    ALCP_API_EXPORT Status InavlidCipher(String msg);
+    ALCP_API_EXPORT Status InvalidMode(String msg);
+    ALCP_API_EXPORT Status HardwareFailed(String msg);
+    ALCP_API_EXPORT Status DecryptFailed(String msg);
+    ALCP_API_EXPORT Status EncryptFailed(String msg);
+} // namespace status
 
 } // namespace alcp::cipher
