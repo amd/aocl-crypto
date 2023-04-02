@@ -151,14 +151,14 @@ CmacSiv::Impl::ctrWrapper(
     if (enc) {
         err = m_ctr.encrypt(in, out, size, mac);
         if (alcp_is_error(err)) {
-            auto cer = cipher::AesError(cipher::ErrorCode::eEncryptFailed);
+            auto cer = cipher::CipherError(cipher::ErrorCode::eEncryptFailed);
             s.update(cer, cer.message());
             return s;
         }
     } else {
         err = m_ctr.decrypt(in, out, size, mac);
         if (alcp_is_error(err)) {
-            auto cer = cipher::AesError(cipher::ErrorCode::eDecryptFailed);
+            auto cer = cipher::CipherError(cipher::ErrorCode::eDecryptFailed);
             s.update(cer, cer.message());
             return s;
         }
@@ -277,7 +277,7 @@ CmacSiv::Impl::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
         case 256:
             break;
         default:
-            auto cer = cipher::AesError(cipher::ErrorCode::eInvaidValue);
+            auto cer = cipher::CipherError(cipher::ErrorCode::eInvaidValue);
             s.update(cer, cer.message());
             return s;
     }
@@ -312,7 +312,7 @@ CmacSiv::Impl::addAdditionalInput(const Uint8 memory[], Uint64 length)
 
     // Block Null Keys or non set Keys.
     if (m_key1 == nullptr || m_key2 == nullptr) {
-        auto cer = cipher::AesError(cipher::ErrorCode::eInvaidValue);
+        auto cer = cipher::CipherError(cipher::ErrorCode::eInvaidValue);
         s.update(cer, cer.message());
         return s;
     }
@@ -396,7 +396,8 @@ CmacSiv::Impl::decrypt(const Uint8  cipherText[],
     // Verify tag, which just got generated
     if (memcmp(&(m_cmacTemp[0]), iv, SIZE_CMAC) != 0) {
         // FIXME: Initiate Wipedown!
-        auto cer = cipher::AesError(cipher::ErrorCode::eAuthenticationFailure);
+        auto cer =
+            cipher::CipherError(cipher::ErrorCode::eAuthenticationFailure);
         s.update(cer, cer.message());
         return s;
     }

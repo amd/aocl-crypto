@@ -65,7 +65,7 @@ enum ErrorCode : Uint16
     // TODO: Need to extend this as time goes
 };
 
-class AesError final : public ErrorBase
+class CipherError final : public ErrorBase
 {
 
   protected:
@@ -79,14 +79,14 @@ class AesError final : public ErrorBase
 #endif
 
   public:
-    AesError()
-        : ErrorBase{ }
+    CipherError()
+        : ErrorBase{}
     {
         setModuleError(ErrorCode::eOk);
     }
 
-    AesError(cipher::ErrorCode ecode)
-        : AesError{}
+    CipherError(cipher::ErrorCode ecode)
+        : CipherError{}
     {
         if (ecode != eOk) {
             ErrorBase::setModuleError(toUint16(ecode));
@@ -98,7 +98,7 @@ class AesError final : public ErrorBase
         return static_cast<Uint16>(ecode);
     }
 
-    virtual ~AesError() {}
+    virtual ~CipherError() {}
 
     // virtual Uint64 code() const override { return ErrorBase::code(); }
 
@@ -107,7 +107,7 @@ class AesError final : public ErrorBase
         return __toStr(ErrorBase::getModuleError());
     };
     /* FIXME: remove this function */
-    virtual Uint16 moduleId() const { return 0;}
+    virtual Uint16 moduleId() const { return 0; }
 
 #if 0
     // Gets the module name
