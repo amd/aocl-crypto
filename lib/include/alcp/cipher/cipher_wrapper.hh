@@ -34,6 +34,7 @@
 #include "alcp/error.h"
 
 #include "aes.hh"
+#include "aes_ccm.hh"
 
 #include "alcp/utils/copy.hh"
 
@@ -139,29 +140,6 @@ namespace aesni {
                         __m128i*     ptag_128,
                         __m128i*     piv_128,
                         __m128i      reverse_mask_128);
-    /**
-     * @brief Initializes CCM
-     *
-     * @param ctx - Context
-     * @param t - Tag Length
-     * @param q - Length required to store length of Plain text
-     * @param key - Key used for encryption
-     * @param block
-     */
-
-    void CcmInit(ccm_data_p ctx, unsigned int t, unsigned int q);
-
-    int CcmSetIv(ccm_data_p ctx, const Uint8* nonce, size_t nlen, size_t mlen);
-
-    void CcmSetAad(ccm_data_p ctx, const Uint8* aad, size_t alen);
-
-    int CcmEncrypt(ccm_data_p ctx, const Uint8* inp, Uint8* out, size_t len);
-
-    int CcmDecrypt(ccm_data_p ctx, const Uint8* inp, Uint8* out, size_t len);
-
-    void ctr64_add(Uint8* counter, size_t inc);
-
-    size_t CcmGetTag(ccm_data_p ctx, Uint8* tag, size_t len);
 
     alc_error_t processAdditionalDataGcm(const Uint8* pAdditionalData,
                                          Uint64       additionalDataLen,

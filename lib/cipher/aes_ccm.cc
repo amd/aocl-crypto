@@ -26,10 +26,7 @@
  *
  */
 
-#include "alcp/cipher/aes.hh"
-#include "alcp/cipher/cipher_wrapper.hh"
-
-#include "alcp/utils/cpuid.hh"
+#include "alcp/cipher/aes_ccm.hh"
 
 #include <immintrin.h>
 #include <sstream>
@@ -38,6 +35,134 @@
 
 using alcp::utils::CpuId;
 namespace alcp::cipher {
+class Ccm::Impl
+{
+  private:
+    Uint64       m_len               = 0;
+    Uint64       m_message_len       = 0;
+    Uint64       m_ivLen             = 0;
+    Uint64       m_tagLen            = 0;
+    Uint64       m_additionalDataLen = 0;
+    const Uint8* m_additionalData;
+    Rijndael*    m_ccm_obj;
+
+    ccm_data_t m_ccm_data;
+
+  public:
+    Impl(Rijndael* ccm_obj);
+    /**
+     * @brief Get CCM Tag
+     * @param ctx Intermediate Data
+     * @param ptag tag memory
+     * @param len Length of the tag
+     * @return
+     */
+    size_t ccmGetTag(ccm_data_p ctx, Uint8* ptag, size_t len);
+
+    /**
+     * @brief Set Additional Data.
+     * @param pccm_data Intermediate Data
+     * @param paad Additional Data Pointer
+     * @param alen Length of additional data
+     */
+    void ccmSetAad(ccm_data_p pccm_data, const Uint8* paad, size_t alen);
+
+    /**
+     * @brief Set IV(nonce)
+     * @param ccm_data Intermediate Data
+     * @param pnonce Nonce Pointer
+     * @param nlen Length of Nonce
+     * @param mlen Message length
+     * @return
+     */
+    int ccmSetIv(ccm_data_p   ccm_data,
+                 const Uint8* pnonce,
+                 size_t       nlen,
+                 size_t       mlen);
+
+    /**
+     * @brief Initialize CCM with tag length and Length of (Length of message).
+     * @param ccm_data Intermediate Data
+     * @param t Length Required to store tag.
+     * @param q Length Required to store message.
+     */
+    void ccmInit(ccm_data_p ccm_data, unsigned int t, unsigned int q);
+
+    /**
+     * @brief Do CCM Encryption/Decryption.
+     * @param pInput Input PlainText/CipherText.
+     * @param pOutput Output CipherText/PlainText.
+     * @param len Length of message.
+     * @param pIv Nonce(IV) pointer.
+     * @param isEncrypt If true will be encrypt mode otherwise decrypt.
+     * @return
+     */
+    alc_error_t cryptUpdate(const Uint8* pInput,
+                            Uint8*       pOutput,
+                            Uint64       len,
+                            const Uint8* pIv,
+                            bool         isEncrypt);
+
+    /**
+     * @brief Get the computed tag
+     * @param pOutput Output Buffer for Tag
+     * @param len Length of Tag
+     * @return
+     */
+    alc_error_t getTag(Uint8* pOutput, Uint64 len);
+
+    /**
+     * @brief Set Nonce (IV)
+     * @param len Length of the IV
+     * @param pIv Pointer to the IV
+     * @return
+     */
+    alc_error_t setIv(Uint64 len, const Uint8* pIv);
+
+    /**
+     * @brief Set additional data to be processed
+     * @param pInput Additional Data Input Pointer
+     * @param len Length of the additional data
+     * @return
+     */
+    alc_error_t setAad(const Uint8* pInput, Uint64 len);
+
+    /**
+     * @brief Set the tag length
+     * @param len Length of the tag
+     * @return
+     */
+    alc_error_t setTagLength(Uint64 len);
+
+    /**
+     * @brief Encrypt the Given Data
+     * @param pInput Input Buffer
+     * @param pOutput  Output Buffer
+     * @param len Length of the Buffers
+     * @return
+     */
+    int encrypt(ccm_data_p   ccm_data,
+                const Uint8* pInput,
+                Uint8*       pOutput,
+                Uint64       len);
+
+    /**
+     * @brief Decrypt the Given Data
+     * @param pInput Input Buffer
+     * @param pOutput Output Buffer
+     * @param len Length of the Buffers
+     * @return
+     */
+    int decrypt(ccm_data_p   ccm_data,
+                const Uint8* pInput,
+                Uint8*       pOutput,
+                Uint64       len);
+};
+
+Ccm::Impl::Impl(Rijndael* ccm_obj)
+{
+    m_ccm_obj = ccm_obj;
+}
 
 alc_error_t
 Ccm::decrypt(const Uint8* pInput,
@@ -58,11 +183,11 @@ Ccm::encrypt(const Uint8* pInput,
 }
 
 alc_error_t
-Ccm::cryptUpdate(const Uint8* pInput,
-                 Uint8*       pOutput,
-                 Uint64       len,
-                 const Uint8* pIv,
-                 bool         isEncrypt)
+Ccm::Impl::cryptUpdate(const Uint8* pInput,
+                       Uint8*       pOutput,
+                       Uint64       len,
+                       const Uint8* pIv,
+                       bool         isEncrypt)
 {
     alc_error_t err = ALC_ERROR_NONE;
     if ((pInput != NULL) && (pOutput != NULL)) {
@@ -80,13 +205,13 @@ Ccm::cryptUpdate(const Uint8* pInput,
         }
 #endif
 
-        const Uint8* keys   = getEncryptKeys();
-        const Uint32 rounds = getRounds();
+        const Uint8* keys   = m_ccm_obj->getEncryptKeys();
+        const Uint32 rounds = m_ccm_obj->getRounds();
         m_ccm_data.key      = keys;
         m_ccm_data.rounds   = rounds;
 
         // Below Operations has to be done in order
-        bool err_ret = (CcmSetIv(&m_ccm_data, pIv, m_ivLen, len) == 0);
+        bool err_ret = (ccmSetIv(&m_ccm_data, pIv, m_ivLen, len) == 0);
 
         // Accelerate with AESNI
         if (CpuId::cpuHasAesni()) {
@@ -112,11 +237,11 @@ Ccm::cryptUpdate(const Uint8* pInput,
         }
 
         // Fallback to reference
-        CcmSetAad(&m_ccm_data, m_additionalData, m_additionalDataLen);
+        ccmSetAad(&m_ccm_data, m_additionalData, m_additionalDataLen);
         if (isEncrypt) {
-            err_ret &= (CcmEncrypt(&m_ccm_data, pInput, pOutput, len) == 0);
+            err_ret &= (encrypt(&m_ccm_data, pInput, pOutput, len) == 0);
         } else {
-            err_ret &= (CcmDecrypt(&m_ccm_data, pInput, pOutput, len) == 0);
+            err_ret &= (decrypt(&m_ccm_data, pInput, pOutput, len) == 0);
         }
         if (!err_ret) {
             err = ALC_ERROR_BAD_STATE;
@@ -135,29 +260,7 @@ Ccm::cryptUpdate(const Uint8* pInput,
 }
 
 alc_error_t
-Ccm::decryptUpdate(const Uint8* pInput,
-                   Uint8*       pOutput,
-                   Uint64       len,
-                   const Uint8* pIv)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    err             = cryptUpdate(pInput, pOutput, len, pIv, false);
-    return err;
-}
-
-alc_error_t
-Ccm::encryptUpdate(const Uint8* pInput,
-                   Uint8*       pOutput,
-                   Uint64       len,
-                   const Uint8* pIv)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    err             = cryptUpdate(pInput, pOutput, len, pIv, true);
-    return err;
-}
-
-alc_error_t
-Ccm::setIv(Uint64 len, const Uint8* pIv)
+Ccm::Impl::setIv(Uint64 len, const Uint8* pIv)
 {
     alc_error_t err = ALC_ERROR_NONE;
     if (len < 7 || len > 13) {
@@ -177,12 +280,12 @@ Ccm::setIv(Uint64 len, const Uint8* pIv)
     // size in bytes of size in bytes of plaintext. Basically size of the
     // variable which can store size of plaintext. This size can be fixed to a
     // max of q = 15 - n.
-    CcmInit(&m_ccm_data, m_tagLen, 15 - len);
+    ccmInit(&m_ccm_data, m_tagLen, 15 - len);
     return err;
 }
 
 alc_error_t
-Ccm::setAad(const Uint8* pInput, Uint64 len)
+Ccm::Impl::setAad(const Uint8* pInput, Uint64 len)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -192,7 +295,7 @@ Ccm::setAad(const Uint8* pInput, Uint64 len)
 }
 
 alc_error_t
-Ccm::getTag(Uint8* pOutput, Uint64 len)
+Ccm::Impl::getTag(Uint8* pOutput, Uint64 len)
 {
     alc_error_t err = ALC_ERROR_NONE;
     if (len < 4 || len > 16 || len == 0) {
@@ -204,7 +307,7 @@ Ccm::getTag(Uint8* pOutput, Uint64 len)
         err = ALC_ERROR_BAD_STATE;
         return err;
     } else {
-        bool ret = CcmGetTag(&m_ccm_data, pOutput, len);
+        bool ret = ccmGetTag(&m_ccm_data, pOutput, len);
 
         if (ret == 0) {
             err = ALC_ERROR_BAD_STATE;
@@ -215,7 +318,7 @@ Ccm::getTag(Uint8* pOutput, Uint64 len)
 }
 
 alc_error_t
-Ccm::setTagLength(Uint64 len)
+Ccm::Impl::setTagLength(Uint64 len)
 {
     alc_error_t err = ALC_ERROR_NONE;
     if (len < 4 || len > 16 || len == 0) {
@@ -228,7 +331,7 @@ Ccm::setTagLength(Uint64 len)
 }
 
 void
-Ccm::CcmInit(ccm_data_p ccm_data, unsigned int t, unsigned int q)
+Ccm::Impl::ccmInit(ccm_data_p ccm_data, unsigned int t, unsigned int q)
 {
     // ENTER();
     memset(ccm_data->nonce, 0, sizeof(ccm_data->nonce));
@@ -239,10 +342,10 @@ Ccm::CcmInit(ccm_data_p ccm_data, unsigned int t, unsigned int q)
 }
 
 int
-Ccm::CcmSetIv(ccm_data_p   ccm_data,
-              const Uint8* pnonce,
-              size_t       nlen,
-              size_t       mlen)
+Ccm::Impl::ccmSetIv(ccm_data_p   ccm_data,
+                    const Uint8* pnonce,
+                    size_t       nlen,
+                    size_t       mlen)
 {
     // ENTER();
     unsigned int q = ccm_data->nonce[0] & 7; /* the L parameter */
@@ -272,7 +375,7 @@ Ccm::CcmSetIv(ccm_data_p   ccm_data,
 }
 
 size_t
-Ccm::CcmGetTag(ccm_data_p ctx, Uint8* ptag, size_t len)
+Ccm::Impl::ccmGetTag(ccm_data_p ctx, Uint8* ptag, size_t len)
 {
     // ENTER();
     // Retrieve the tag length
@@ -290,7 +393,7 @@ Ccm::CcmGetTag(ccm_data_p ctx, Uint8* ptag, size_t len)
 }
 
 void
-Ccm::CcmSetAad(ccm_data_p pccm_data, const Uint8* paad, size_t alen)
+Ccm::Impl::ccmSetAad(ccm_data_p pccm_data, const Uint8* paad, size_t alen)
 {
     Uint32 pBlk0[4]  = {};
     Uint32 aad_32[4] = {};
@@ -306,7 +409,7 @@ Ccm::CcmSetAad(ccm_data_p pccm_data, const Uint8* paad, size_t alen)
 
     utils::CopyBytes(pBlk0, pccm_data->nonce, 16);
 
-    Rijndael::encryptBlock(pBlk0, pccm_data->key, pccm_data->rounds);
+    m_ccm_obj->encryptBlock(pBlk0, pccm_data->key, pccm_data->rounds);
 
     pccm_data->blocks++;
 
@@ -344,7 +447,7 @@ Ccm::CcmSetAad(ccm_data_p pccm_data, const Uint8* paad, size_t alen)
     for (; i < 16 && alen; ++i, ++paad, --alen)
         *(pBlk0_8 + i) ^= *paad;
 
-    Rijndael::encryptBlock(pBlk0, pccm_data->key, pccm_data->rounds);
+    m_ccm_obj->encryptBlock(pBlk0, pccm_data->key, pccm_data->rounds);
     pccm_data->blocks++;
 
     Uint64 alen_16 = alen / 16;
@@ -355,7 +458,7 @@ Ccm::CcmSetAad(ccm_data_p pccm_data, const Uint8* paad, size_t alen)
             pBlk0[i] ^= aad_32[i];
         }
         // CBC Encrypt Operation
-        Rijndael::encryptBlock(pBlk0, pccm_data->key, pccm_data->rounds);
+        m_ccm_obj->encryptBlock(pBlk0, pccm_data->key, pccm_data->rounds);
         pccm_data->blocks++;
         paad += 16;
     }
@@ -370,7 +473,7 @@ Ccm::CcmSetAad(ccm_data_p pccm_data, const Uint8* paad, size_t alen)
         }
 
         // CBC Encrypt last block
-        Rijndael::encryptBlock(pBlk0, pccm_data->key, pccm_data->rounds);
+        m_ccm_obj->encryptBlock(pBlk0, pccm_data->key, pccm_data->rounds);
         pccm_data->blocks++;
     }
 
@@ -393,10 +496,10 @@ CcmCtrInc(Uint8* ctr)
 }
 
 int
-Ccm::CcmEncrypt(ccm_data_p   pccm_data,
-                const Uint8* pinp,
-                Uint8*       pout,
-                size_t       len)
+Ccm::Impl::encrypt(ccm_data_p   pccm_data,
+                   const Uint8* pinp,
+                   Uint8*       pout,
+                   size_t       len)
 {
     // Implementation block diagram
     // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_encryption.png
@@ -413,7 +516,7 @@ Ccm::CcmEncrypt(ccm_data_p   pccm_data,
 
     if (!(flags0 & 0x40)) {
         utils::CopyBytes(cmac, nonce, 16);
-        Rijndael::encryptBlock(cmac, pkey, pccm_data->rounds);
+        m_ccm_obj->encryptBlock(cmac, pkey, pccm_data->rounds);
         pccm_data->blocks++;
     } else {
         // Additional data exists so load the cmac (already done in encrypt
@@ -457,12 +560,12 @@ Ccm::CcmEncrypt(ccm_data_p   pccm_data,
         for (int i = 0; i < 4; i++) {
             cmac[i] ^= inReg[i];
         }
-        Rijndael::encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
+        m_ccm_obj->encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
 
         /* CTR */
         // Generate ciphetext given plain text by using ctr algitrithm
         utils::CopyBytes(tempReg, nonce, 16);
-        Rijndael::encryptBlock(tempReg, pccm_data->key, pccm_data->rounds);
+        m_ccm_obj->encryptBlock(tempReg, pccm_data->key, pccm_data->rounds);
         CcmCtrInc(reinterpret_cast<Uint8*>(nonce)); // Increment counter
         for (int i = 0; i < 4; i++) {
             tempReg[i] ^= inReg[i];
@@ -481,11 +584,11 @@ Ccm::CcmEncrypt(ccm_data_p   pccm_data,
         for (i = 0; i < len; i++) {
             pcmac_8[i] ^= pinp[i];
         }
-        Rijndael::encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
+        m_ccm_obj->encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
 
         /* CTR */
         utils::CopyBytes(tempReg, nonce, 16);
-        Rijndael::encryptBlock(tempReg, pccm_data->key, pccm_data->rounds);
+        m_ccm_obj->encryptBlock(tempReg, pccm_data->key, pccm_data->rounds);
         for (i = 0; i < len; ++i)
             pout[i] = ptemp_8[i] ^ pinp[i];
     }
@@ -496,7 +599,7 @@ Ccm::CcmEncrypt(ccm_data_p   pccm_data,
     // CTR encrypt first counter and XOR with the partial tag to generate
     // the real tag
     utils::CopyBytes(tempReg, nonce, 16);
-    Rijndael::encryptBlock(tempReg, pccm_data->key, pccm_data->rounds);
+    m_ccm_obj->encryptBlock(tempReg, pccm_data->key, pccm_data->rounds);
 
     for (int i = 0; i < 4; i++) {
         cmac[i] ^= tempReg[i];
@@ -513,10 +616,10 @@ Ccm::CcmEncrypt(ccm_data_p   pccm_data,
 }
 
 int
-Ccm::CcmDecrypt(ccm_data_p   pccm_data,
-                const Uint8* pinp,
-                Uint8*       pout,
-                size_t       len)
+Ccm::Impl::decrypt(ccm_data_p   pccm_data,
+                   const Uint8* pinp,
+                   Uint8*       pout,
+                   size_t       len)
 {
     // Implementation block diagram
     // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_decryption.png
@@ -533,7 +636,7 @@ Ccm::CcmDecrypt(ccm_data_p   pccm_data,
 
     if (!(flags0 & 0x40)) {
         utils::CopyBytes(cmac, nonce, 16);
-        Rijndael::encryptBlock(cmac, pkey, pccm_data->rounds);
+        m_ccm_obj->encryptBlock(cmac, pkey, pccm_data->rounds);
         pccm_data->blocks++;
     } else {
         // Additional data exists so load the cmac (already done in encrypt
@@ -564,7 +667,7 @@ Ccm::CcmDecrypt(ccm_data_p   pccm_data,
 
         /* CTR */
         utils::CopyBytes(tempReg, nonce, 16);
-        Rijndael::encryptBlock(tempReg, pccm_data->key, pccm_data->rounds);
+        m_ccm_obj->encryptBlock(tempReg, pccm_data->key, pccm_data->rounds);
         CcmCtrInc(reinterpret_cast<Uint8*>(nonce)); // Increment counter
 
         utils::CopyBytes(inReg, pinp, 16); // Load CipherText
@@ -582,7 +685,7 @@ Ccm::CcmDecrypt(ccm_data_p   pccm_data,
         utils::CopyBytes(pout, tempReg, 16); // Store plaintext.
 
         // Generate the partial tag, Xor of CBC is above
-        Rijndael::encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
+        m_ccm_obj->encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
 
         pinp += 16;
         pout += 16;
@@ -592,7 +695,7 @@ Ccm::CcmDecrypt(ccm_data_p   pccm_data,
     if (len) {
         /* CTR */
         utils::CopyBytes(tempReg, nonce, 16); // Copy Counter
-        Rijndael::encryptBlock(tempReg, pccm_data->key, pccm_data->rounds);
+        m_ccm_obj->encryptBlock(tempReg, pccm_data->key, pccm_data->rounds);
 
         for (i = 0; i < len; ++i) {
             // CTR XOR operation to generate plaintext
@@ -604,7 +707,7 @@ Ccm::CcmDecrypt(ccm_data_p   pccm_data,
         /* CBC */
         // CBC Xor is above, Encrypt the partial result to create partial
         // tag
-        Rijndael::encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
+        m_ccm_obj->encryptBlock(cmac, pccm_data->key, pccm_data->rounds);
     }
 
     // Zero out counter part
@@ -614,7 +717,7 @@ Ccm::CcmDecrypt(ccm_data_p   pccm_data,
     // CTR encrypt first counter and XOR with the partial tag to generate
     // the real tag
     utils::CopyBytes(tempReg, nonce, 16);
-    Rijndael::encryptBlock(tempReg, pccm_data->key, pccm_data->rounds);
+    m_ccm_obj->encryptBlock(tempReg, pccm_data->key, pccm_data->rounds);
 
     for (int i = 0; i < 4; i++) {
         cmac[i] ^= tempReg[i];
@@ -629,5 +732,59 @@ Ccm::CcmDecrypt(ccm_data_p   pccm_data,
 
     return 0;
 }
+
+Ccm::Ccm(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
+    : Aes(aesInfo, keyInfo)
+    , pImpl{ std::make_unique<Impl>(this) }
+{
+}
+
+alc_error_t
+Ccm::decryptUpdate(const Uint8* pInput,
+                   Uint8*       pOutput,
+                   Uint64       len,
+                   const Uint8* pIv)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    err             = pImpl->cryptUpdate(pInput, pOutput, len, pIv, false);
+    return err;
+}
+
+alc_error_t
+Ccm::encryptUpdate(const Uint8* pInput,
+                   Uint8*       pOutput,
+                   Uint64       len,
+                   const Uint8* pIv)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    err             = pImpl->cryptUpdate(pInput, pOutput, len, pIv, true);
+    return err;
+}
+
+alc_error_t
+Ccm::getTag(Uint8* pOutput, Uint64 len)
+{
+    return pImpl->getTag(pOutput, len);
+}
+
+alc_error_t
+Ccm::setIv(Uint64 len, const Uint8* pIv)
+{
+    return pImpl->setIv(len, pIv);
+}
+
+alc_error_t
+Ccm::setTagLength(Uint64 len)
+{
+    return pImpl->setTagLength(len);
+}
+
+alc_error_t
+Ccm::setAad(const Uint8* pInput, Uint64 len)
+{
+    return pImpl->setAad(pInput, len);
+}
+
+Ccm::~Ccm() {}
 
 } // namespace alcp::cipher

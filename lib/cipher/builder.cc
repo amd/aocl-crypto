@@ -27,6 +27,7 @@
  */
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/aes_build.hh"
+#include "alcp/cipher/aes_ccm.hh"
 #include "alcp/cipher/aes_cfb.hh"
 #include "alcp/cipher/aes_cmac_siv.hh"
 
