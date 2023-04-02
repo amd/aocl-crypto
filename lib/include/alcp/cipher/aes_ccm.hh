@@ -54,7 +54,7 @@ struct _ccm_data_t
 };
 typedef _ccm_data_t *ccm_data_p, ccm_data_t;
 
-namespace aesni {
+namespace aesni::ccm {
     /**
      * @brief Initializes CCM
      *
@@ -69,16 +69,16 @@ namespace aesni {
 
     int CcmSetIv(ccm_data_p ctx, const Uint8* nonce, size_t nlen, size_t mlen);
 
-    void CcmSetAad(ccm_data_p ctx, const Uint8* aad, size_t alen);
+    void setAad(ccm_data_p ctx, const Uint8* aad, size_t alen);
 
-    int CcmEncrypt(ccm_data_p ctx, const Uint8* inp, Uint8* out, size_t len);
+    int encrypt(ccm_data_p ctx, const Uint8* inp, Uint8* out, size_t len);
 
-    int CcmDecrypt(ccm_data_p ctx, const Uint8* inp, Uint8* out, size_t len);
+    int decrypt(ccm_data_p ctx, const Uint8* inp, Uint8* out, size_t len);
 
     void ctr64_add(Uint8* counter, size_t inc);
 
     size_t CcmGetTag(ccm_data_p ctx, Uint8* tag, size_t len);
-} // namespace aesni
+} // namespace aesni::ccm
 
 class ALCP_API_EXPORT Ccm final
     : public Aes
@@ -127,7 +127,7 @@ class ALCP_API_EXPORT Ccm final
 
     virtual alc_error_t setTagLength(Uint64 len);
 
-    void CcmSetAad(ccm_data_p pccm_data, const Uint8* paad, size_t alen);
+    void setAad(ccm_data_p pccm_data, const Uint8* paad, size_t alen);
 
     int CcmEncrypt(ccm_data_p   ccm_data,
                    const Uint8* pinp,
