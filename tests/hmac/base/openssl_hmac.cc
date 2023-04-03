@@ -108,6 +108,10 @@ OpenSSLHmacBase::init()
                 return false;
         }
     }
+
+    /* free key after use */
+    EVP_PKEY_free(evp_key);
+
     if (ret_val != 1) {
         printf("EVP_DigestSignInit failed with err code: %d\n", ret_val);
         return false;
