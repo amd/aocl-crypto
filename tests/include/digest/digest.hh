@@ -37,11 +37,10 @@ namespace alcp::testing {
 
 struct alcp_digest_data_t
 {
-    const Uint8* m_msg               = nullptr;
-    Uint64       m_msg_len           = 0;
-    Uint8*       m_digest            = nullptr;
-    Uint64       m_digest_len        = 0;
-    Uint64       m_digest_custom_len = 0;
+    const Uint8* m_msg        = nullptr;
+    Uint64       m_msg_len    = 0;
+    Uint8*       m_digest     = nullptr;
+    Uint64       m_digest_len = 0;
 };
 
 /* add mapping for SHA mode and length */

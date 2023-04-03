@@ -65,40 +65,6 @@ PrintDigestTestData(alcp_digest_data_t data, std::string mode)
     return;
 }
 
-record_t
-GetSHA2Record(int HashSize)
-{
-    switch (HashSize) {
-        case 224:
-            return SHA2_224;
-        case 256:
-            return SHA2_256;
-        case 384:
-            return SHA2_384;
-        case 512:
-            return SHA2_512;
-        default:
-            return SHA2_224;
-    }
-}
-
-record_t
-GetSHA3Record(int HashSize)
-{
-    switch (HashSize) {
-        case 224:
-            return SHA3_224;
-        case 256:
-            return SHA3_256;
-        case 384:
-            return SHA3_384;
-        case 512:
-            return SHA3_512;
-        default:
-            return SHA3_224;
-    }
-}
-
 /* to read csv file */
 std::string
 GetDigestStr(_alc_digest_type digest_type)
@@ -114,7 +80,6 @@ GetDigestStr(_alc_digest_type digest_type)
     }
 }
 
-ExecRecPlay* fr;
 void
 Digest_KAT(alc_digest_info_t info)
 {
@@ -234,14 +199,6 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
     DigestBase*        db;
     DigestBase*        extDb = nullptr;
     db                       = &adb;
-    if (bbxreplay) {
-        fr = new ExecRecPlay(
-            GetDigestStr(info.dt_type) + "_" + std::to_string(HashSize), true);
-        /* FIXME: we need a generic getsharecord */
-        fr->fastForward(GetSHA3Record(HashSize));
-    } else
-        fr = new ExecRecPlay(
-            GetDigestStr(info.dt_type) + "_" + std::to_string(HashSize), false);
 
 #ifdef USE_OSSL
     OpenSSLDigestBase odb(info);
@@ -264,21 +221,6 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
     auto                               rng = std::default_random_engine{};
 
     for (int i = START_LOOP; i < MAX_LOOP; i += INC_LOOP) {
-        if (!bbxreplay) {
-            fr->startRecEvent();
-            try {
-                /*FIXME: Fix bbxreplay*/
-                // data = rb.genRandomBytes(i);
-                // fr->setRecEvent(data, GetSHA2Record(HashSize));
-            } catch (const char* error) {
-                printErrors(error);
-                exit(-1);
-            }
-        } else {
-            fr->nextLog();
-            // fr->getValues(&data);
-        }
-
         alcp_digest_data_t data_alc, data_ext;
 
         msg_full = ShuffleVector(msg_full, rng);
@@ -319,13 +261,7 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
             FAIL();
         }
         EXPECT_TRUE(ArraysMatch(digestAlcp, digestExt, i));
-        if (!bbxreplay) {
-            fr->dumpBlackBox();
-            fr->endRecEvent();
-            fr->dumpLog();
-        }
     }
-    delete fr;
 }
 
 #endif
