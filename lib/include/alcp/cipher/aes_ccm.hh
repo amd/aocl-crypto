@@ -44,7 +44,7 @@ namespace alcp::cipher {
  * @struct ccm_data_t
  */
 
-struct _ccm_data_t
+struct ccm_data_t
 {
     alignas(16) Uint8 nonce[16];
     alignas(16) Uint8 cmac[16];
@@ -52,14 +52,26 @@ struct _ccm_data_t
     Uint64       blocks = 0;
     Uint32       rounds = 0;
 };
-typedef _ccm_data_t *ccm_data_p, ccm_data_t;
+
+enum CCM_ERROR
+{
+    NO_ERROR      = 0,
+    LEN_MISMATCH  = -1,
+    DATA_OVERFLOW = -2,
+};
 
 namespace aesni::ccm {
-    void setAad(ccm_data_p ctx, const Uint8 aad[], size_t alen);
+    void SetAad(ccm_data_t* ctx, const Uint8 aad[], size_t alen);
 
-    int encrypt(ccm_data_p ctx, const Uint8 inp[], Uint8 out[], size_t len);
+    CCM_ERROR Encrypt(ccm_data_t* ctx,
+                      const Uint8 inp[],
+                      Uint8       out[],
+                      size_t      len);
 
-    int decrypt(ccm_data_p ctx, const Uint8 inp[], Uint8 out[], size_t len);
+    CCM_ERROR Decrypt(ccm_data_t* ctx,
+                      const Uint8 inp[],
+                      Uint8       out[],
+                      size_t      len);
 } // namespace aesni::ccm
 
 class ALCP_API_EXPORT Ccm final
@@ -109,14 +121,14 @@ class ALCP_API_EXPORT Ccm final
 
     virtual alc_error_t setTagLength(Uint64 len);
 
-    void setAad(ccm_data_p pccm_data, const Uint8* paad, size_t alen);
+    void setAad(ccm_data_t* pccm_data, const Uint8* paad, size_t alen);
 
-    int CcmEncrypt(ccm_data_p   ccm_data,
+    int CcmEncrypt(ccm_data_t*  ccm_data,
                    const Uint8* pinp,
                    Uint8*       pout,
                    size_t       len);
 
-    int CcmDecrypt(ccm_data_p   ccm_data,
+    int CcmDecrypt(ccm_data_t*  ccm_data,
                    const Uint8* pinp,
                    Uint8*       pout,
                    size_t       len);

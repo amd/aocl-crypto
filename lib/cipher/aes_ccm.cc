@@ -56,7 +56,7 @@ class Ccm::Impl
      * @brief Initialize Impl with Ccm class object.
      * @param ccm_obj Object of Ccm class
      */
-    Impl(Rijndael& ccm_obj);
+    Impl(Rijndael* ccm_obj);
     /**
      * @brief Get CCM Tag
      * @param ctx Intermediate Data
@@ -64,7 +64,7 @@ class Ccm::Impl
      * @param len Length of the tag
      * @return
      */
-    Status getTag(ccm_data_p ctx, Uint8 ptag[], size_t len);
+    Status getTag(ccm_data_t* ctx, Uint8 ptag[], size_t len);
 
     /**
      * @brief Set Additional Data.
@@ -72,7 +72,7 @@ class Ccm::Impl
      * @param paad Additional Data Pointer
      * @param alen Length of additional data
      */
-    Status setAad(ccm_data_p pccm_data, const Uint8 paad[], size_t alen);
+    Status setAad(ccm_data_t* pccm_data, const Uint8 paad[], size_t alen);
 
     /**
      * @brief Set IV(nonce)
@@ -82,7 +82,7 @@ class Ccm::Impl
      * @param mlen Message length
      * @return
      */
-    Status setIv(ccm_data_p  ccm_data,
+    Status setIv(ccm_data_t* ccm_data,
                  const Uint8 pnonce[],
                  size_t      nlen,
                  size_t      mlen);
@@ -93,7 +93,7 @@ class Ccm::Impl
      * @param t Length Required to store tag.
      * @param q Length Required to store message.
      */
-    void init(ccm_data_p ccm_data, unsigned int t, unsigned int q);
+    void init(ccm_data_t* ccm_data, unsigned int t, unsigned int q);
 
     /**
      * @brief Do CCM Encryption/Decryption.
@@ -148,7 +148,7 @@ class Ccm::Impl
      * @param len Length of the Buffers
      * @return
      */
-    Status encrypt(ccm_data_p  ccm_data,
+    Status encrypt(ccm_data_t* ccm_data,
                    const Uint8 pInput[],
                    Uint8       pOutput[],
                    Uint64      len);
@@ -160,16 +160,16 @@ class Ccm::Impl
      * @param len Length of the Buffers
      * @return
      */
-    Status decrypt(ccm_data_p  ccm_data,
+    Status decrypt(ccm_data_t* ccm_data,
                    const Uint8 pInput[],
                    Uint8       pOutput[],
                    Uint64      len);
 };
 
 // Impl Functions
-Ccm::Impl::Impl(Rijndael& ccm_obj)
+Ccm::Impl::Impl(Rijndael* ccm_obj)
 {
-    m_ccm_obj = &ccm_obj;
+    m_ccm_obj = ccm_obj;
 }
 
 Status
@@ -194,26 +194,26 @@ Ccm::Impl::cryptUpdate(const Uint8 pInput[],
 
         // Accelerate with AESNI
         if (CpuId::cpuHasAesni()) {
-            aesni::ccm::setAad(
+            aesni::ccm::SetAad(
                 &m_ccm_data, m_additionalData, m_additionalDataLen);
             if (isEncrypt) {
                 int err =
-                    aesni::ccm::encrypt(&m_ccm_data, pInput, pOutput, len);
+                    aesni::ccm::Encrypt(&m_ccm_data, pInput, pOutput, len);
                 switch (err) {
-                    case -1:
+                    case LEN_MISMATCH:
                         s = status::EncryptFailed(
                             "Length of plainText mismatch!");
                         break;
-                    case -2:
+                    case DATA_OVERFLOW:
                         s = status::EncryptFailed(
                             "Overload of plaintext. Please reduce it!");
                         break;
                 }
             } else {
                 int err =
-                    aesni::ccm::decrypt(&m_ccm_data, pInput, pOutput, len);
+                    aesni::ccm::Decrypt(&m_ccm_data, pInput, pOutput, len);
                 switch (err) {
-                    case -1:
+                    case LEN_MISMATCH:
                         s = status::DecryptFailed(
                             "Length of plainText mismatch!");
                         break;
@@ -322,7 +322,7 @@ Ccm::Impl::setTagLength(Uint64 len)
 }
 
 void
-Ccm::Impl::init(ccm_data_p ccm_data, unsigned int t, unsigned int q)
+Ccm::Impl::init(ccm_data_t* ccm_data, unsigned int t, unsigned int q)
 {
     // ENTER();
     memset(ccm_data->nonce, 0, sizeof(ccm_data->nonce));
@@ -333,7 +333,7 @@ Ccm::Impl::init(ccm_data_p ccm_data, unsigned int t, unsigned int q)
 }
 
 Status
-Ccm::Impl::setIv(ccm_data_p  ccm_data,
+Ccm::Impl::setIv(ccm_data_t* ccm_data,
                  const Uint8 pnonce[],
                  size_t      nlen,
                  size_t      mlen)
@@ -368,7 +368,7 @@ Ccm::Impl::setIv(ccm_data_p  ccm_data,
 }
 
 Status
-Ccm::Impl::getTag(ccm_data_p ctx, Uint8 ptag[], size_t len)
+Ccm::Impl::getTag(ccm_data_t* ctx, Uint8 ptag[], size_t len)
 {
     // ENTER();
     // Retrieve the tag length
@@ -389,7 +389,7 @@ Ccm::Impl::getTag(ccm_data_p ctx, Uint8 ptag[], size_t len)
 }
 
 Status
-Ccm::Impl::setAad(ccm_data_p pccm_data, const Uint8 paad[], size_t alen)
+Ccm::Impl::setAad(ccm_data_t* pccm_data, const Uint8 paad[], size_t alen)
 {
     Status s         = StatusOk();
     Uint32 p_blk0[4] = {};
@@ -494,7 +494,7 @@ ctrInc(Uint8 ctr[])
 }
 
 Status
-Ccm::Impl::encrypt(ccm_data_p  pccm_data,
+Ccm::Impl::encrypt(ccm_data_t* pccm_data,
                    const Uint8 pinp[],
                    Uint8       pout[],
                    size_t      len)
@@ -619,7 +619,7 @@ Ccm::Impl::encrypt(ccm_data_p  pccm_data,
 }
 
 Status
-Ccm::Impl::decrypt(ccm_data_p  pccm_data,
+Ccm::Impl::decrypt(ccm_data_t* pccm_data,
                    const Uint8 pinp[],
                    Uint8       pout[],
                    size_t      len)
@@ -742,7 +742,7 @@ Ccm::Impl::decrypt(ccm_data_p  pccm_data,
 
 Ccm::Ccm(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
     : Aes(aesInfo, keyInfo)
-    , pImpl{ std::make_unique<Impl>(*this) }
+    , pImpl{ std::make_unique<Impl>(this) }
 {
 }
 

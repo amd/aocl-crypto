@@ -45,7 +45,7 @@
 #endif
 namespace alcp::cipher::aesni { namespace ccm {
 
-    void setAad(ccm_data_p ccm_data, const Uint8 paad[], size_t alen)
+    void SetAad(ccm_data_t* ccm_data, const Uint8 paad[], size_t alen)
     {
         ENTER();
         __m128i p_blk0   = { 0 };
@@ -142,7 +142,7 @@ namespace alcp::cipher::aesni { namespace ccm {
         EXIT();
     }
 
-    inline void ctrInc(__m128i* ctr)
+    inline void CtrInc(__m128i* ctr)
     {
         ENTER();
         __m128i one = _mm_set_epi32(1, 0, 0, 0);
@@ -154,10 +154,10 @@ namespace alcp::cipher::aesni { namespace ccm {
         EXITG();
     }
 
-    int encrypt(ccm_data_p  ccm_data,
-                const Uint8 pinp[],
-                Uint8       pout[],
-                size_t      len)
+    CCM_ERROR Encrypt(ccm_data_t* ccm_data,
+                      const Uint8 pinp[],
+                      Uint8       pout[],
+                      size_t      len)
     {
         // Implementation block diagram
         // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_encryption.png
@@ -203,7 +203,7 @@ namespace alcp::cipher::aesni { namespace ccm {
         // Check if input length matches the intialized length
         if (n != len) {
             EXITB();
-            return -1; /* length mismatch */
+            return LEN_MISMATCH; /* length mismatch */
         }
 
         // Check with everything combined we won't have too many blocks to
@@ -211,7 +211,7 @@ namespace alcp::cipher::aesni { namespace ccm {
         ccm_data->blocks += ((len + 15) >> 3) | 1;
         if (ccm_data->blocks > (Uint64(1) << 61)) {
             EXITB();
-            return -2; /* too much data */
+            return DATA_OVERFLOW; /* too much data */
         }
         while (len >= 16) {
             // Load the PlainText
@@ -228,7 +228,7 @@ namespace alcp::cipher::aesni { namespace ccm {
                        reinterpret_cast<const __m128i*>(ccm_data->key),
                        ccm_data->rounds);
             // AES-CTR conter inc and xor.
-            ctrInc(&nonce); // Increment counter
+            CtrInc(&nonce); // Increment counter
             temp_reg = _mm_xor_si128(temp_reg, in_reg);
 
             // Store CipherText
@@ -278,13 +278,13 @@ namespace alcp::cipher::aesni { namespace ccm {
 
         // Encryption cannot proceed after this.
         EXITG();
-        return 0;
+        return NO_ERROR;
     }
 
-    int decrypt(ccm_data_p  ccm_data,
-                const Uint8 pinp[],
-                Uint8       pout[],
-                size_t      len)
+    CCM_ERROR Decrypt(ccm_data_t* ccm_data,
+                      const Uint8 pinp[],
+                      Uint8       pout[],
+                      size_t      len)
     {
         // Implementation block diagram
         // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_decryption.png
@@ -330,7 +330,7 @@ namespace alcp::cipher::aesni { namespace ccm {
         // Check if input length matches the intialized length
         if (n != len) {
             EXITB();
-            return -1; /* length mismatch */
+            return LEN_MISMATCH; /* length mismatch */
         }
 
         while (len >= 16) {
@@ -340,7 +340,7 @@ namespace alcp::cipher::aesni { namespace ccm {
             AesEncrypt(&temp_reg,
                        reinterpret_cast<const __m128i*>(ccm_data->key),
                        ccm_data->rounds);
-            ctrInc(&nonce);
+            CtrInc(&nonce);
 
             in_reg = _mm_loadu_si128(
                 reinterpret_cast<const __m128i*>(pinp)); // Load CipherText
