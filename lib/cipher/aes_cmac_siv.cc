@@ -27,7 +27,7 @@
  */
 
 #include "alcp/cipher/aes_cmac_siv.hh"
-#include "alcp/cipher/aes_error.hh"
+#include "alcp/cipher/cipher_error.hh"
 #include "alcp/cipher/common.hh"
 #include "alcp/utils/cpuid.hh"
 using alcp::utils::CpuId;
@@ -151,15 +151,15 @@ CmacSiv::Impl::ctrWrapper(
     if (enc) {
         err = m_ctr.encrypt(in, out, size, mac);
         if (alcp_is_error(err)) {
-            auto cer = cipher::CipherError(cipher::ErrorCode::eEncryptFailed);
-            s.update(cer, cer.message());
+            auto cer = status::EncryptFailed("Encryption Kernel Failed!");
+            s.update(cer);
             return s;
         }
     } else {
         err = m_ctr.decrypt(in, out, size, mac);
         if (alcp_is_error(err)) {
-            auto cer = cipher::CipherError(cipher::ErrorCode::eDecryptFailed);
-            s.update(cer, cer.message());
+            auto cer = status::DecryptFailed("Decryption Kernel Failed!");
+            s.update(cer);
             return s;
         }
     }

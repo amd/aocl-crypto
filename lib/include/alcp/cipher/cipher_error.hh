@@ -48,8 +48,8 @@ enum ErrorCode : Uint16
     /* ErrorCode:eAuthenticationFailure */
     eAuthenticationFailure = 9,
 
-    /* ErrorCode:eInavlidCipher */
-    eInavlidCipher = 11,
+    /* ErrorCode:eInvalidCipher */
+    eInvalidCipher = 11,
 
     /* ErrorCode:eInvalidMode */
     eInvalidMode = 13,
@@ -127,7 +127,7 @@ class CipherError final : public ErrorBase
             { ec::eInvaidValue, "Invalid Value for Argument" },
             { ec::eAuthenticationFailure,
               "Authenticty/Integrity check failed!" },
-            { ec::eInavlidCipher,
+            { ec::eInvalidCipher,
               "Cannot find implementation for requested Cipher!" },
             { ec::eInvalidMode,
               "Cannot find implementation for requested mode!" },
@@ -153,7 +153,7 @@ class CipherError final : public ErrorBase
 namespace status {
     ALCP_API_EXPORT Status InvaidValue(String msg);
     ALCP_API_EXPORT Status AuthenticationFailure(String msg);
-    ALCP_API_EXPORT Status InavlidCipher(String msg);
+    ALCP_API_EXPORT Status InvalidCipher(String msg);
     ALCP_API_EXPORT Status InvalidMode(String msg);
     ALCP_API_EXPORT Status HardwareFailed(String msg);
     ALCP_API_EXPORT Status DecryptFailed(String msg);
