@@ -40,3 +40,4 @@ cscope.out
 # Generated files
 #------------------------------------#
 include/config.h
+docker/.bash_history
