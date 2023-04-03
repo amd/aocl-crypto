@@ -55,11 +55,11 @@ OpenSSLCmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 bool
 OpenSSLCmacBase::init()
 {
-    int        ret_val   = 0;
-    OSSL_PARAM params[3] = {};
-    size_t     params_n  = 0;
+    int         ret_val   = 0;
+    OSSL_PARAM  params[3] = {};
+    size_t      params_n  = 0;
+    const char* cipher    = NULL;
 
-    const char* cipher = NULL;
     switch (m_key_len * 8) {
         case 128:
             cipher = "aes-128-cbc";
@@ -75,6 +75,9 @@ OpenSSLCmacBase::init()
             break;
     }
 
+    if (m_mac != nullptr) {
+        EVP_MAC_free(m_mac);
+    }
     m_mac = EVP_MAC_fetch(NULL, "CMAC", NULL);
     if (m_mac == NULL) {
         std::cout << "EVP_MAC_fetch failed, error: " << ERR_get_error()
@@ -88,6 +91,9 @@ OpenSSLCmacBase::init()
 
     params[params_n] = OSSL_PARAM_construct_end();
 
+    if (m_handle != nullptr) {
+        EVP_MAC_CTX_free(m_handle);
+    }
     m_handle = EVP_MAC_CTX_new(m_mac);
     if (m_handle == NULL) {
         std::cout << "EVP_MAC_CTX_new failed, error: " << ERR_get_error()
