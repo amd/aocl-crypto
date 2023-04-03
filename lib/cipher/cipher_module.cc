@@ -25,57 +25,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "alcp/cipher/cipher_error.hh"
+#include "alcp/cipher/cipher_module.hh"
 
-namespace alcp::cipher::status {
-// In future we can use just a template to represent all the below function
-template<ErrorCode code>
-inline Status
-CipherErrorCode(String msg)
+namespace alcp::cipher {
+
+String
+CipherModule::moduleName() const
 {
-    auto e = CipherError(alcp::base::eInternal, code);
-    return Status(e, msg);
+    return "Cipher";
 }
 
-// Functions for each error code
-Status
-InvalidValue(String msg)
+Uint16
+CipherModule::moduleId() const
 {
-    return CipherErrorCode<ErrorCode::eInvaidValue>(msg);
-}
-Status
-NotPermitted(String msg)
+    return static_cast<Uint16>(alcp::module::eModuleCipher);
+};
+
+const std::unique_ptr<IError>
+CipherModule::getModuleError(Uint64 code) const
 {
-    return CipherErrorCode<ErrorCode::eNotPermitted>(msg);
+    auto aa = std::make_unique<CipherError>(code);
+    return aa;
 }
-Status
-AuthenticationFailure(String msg)
-{
-    return CipherErrorCode<ErrorCode::eAuthenticationFailure>(msg);
-}
-Status
-InvalidCipher(String msg)
-{
-    return CipherErrorCode<ErrorCode::eInvalidCipher>(msg);
-}
-Status
-InvalidMode(String msg)
-{
-    return CipherErrorCode<ErrorCode::eInvalidMode>(msg);
-}
-Status
-HardwareFailed(String msg)
-{
-    return CipherErrorCode<ErrorCode::eHardwareFailed>(msg);
-}
-Status
-DecryptFailed(String msg)
-{
-    return CipherErrorCode<ErrorCode::eDecryptFailed>(msg);
-}
-Status
-EncryptFailed(String msg)
-{
-    return CipherErrorCode<ErrorCode::eEncryptFailed>(msg);
-}
-} // namespace alcp::cipher::status
+
+} // namespace alcp::cipher

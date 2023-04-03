@@ -32,6 +32,7 @@
 #include <vector>
 
 #include "alcp/base/error.hh"
+#include "alcp/cipher/cipher_module.hh"
 #include "alcp/module.hh"
 #include "alcp/modulemanager.hh"
 #include "rng/include/rng_module.hh"
@@ -68,7 +69,8 @@ class NullError : public ErrorBase
 
     NullError(Uint64 code)
         : ErrorBase(code)
-    {}
+    {
+    }
 
     virtual const String detailedError() const override
     {
@@ -153,6 +155,7 @@ registerModule(Uint16 moduleType)
 static void
 registerModules()
 {
+    registerModule<alcp::cipher::CipherModule>(alcp::module::eModuleCipher);
     registerModule<alcp::rng::RngModule>(alcp::module::eModuleRng);
     registerModule<GenericModule>(alcp::module::eModuleGeneric);
 }

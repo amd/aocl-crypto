@@ -30,6 +30,7 @@
 #include "alcp/cipher/aes_build.hh"
 
 #include "alcp/cipher/aes_ccm.hh"
+#include "alcp/cipher/cipher_error.hh"
 
 // FIXME: Remove all the includes from gtest_base related to capi
 #include "cipher/gtest_base.hh"
@@ -508,7 +509,11 @@ TEST(CCM, InvalidTagLen)
     // TODO: Create a parametrized test
     err = ccm_obj.setTagLength(
             17);
-    EXPECT_EQ(err,ALC_ERROR_INVALID_SIZE);
+
+    auto s = status::InvalidValue("Length of tag should be 4 < len < 16 ");
+
+
+    EXPECT_EQ(err,s.code());
 
 }
 
@@ -536,11 +541,18 @@ TEST(CCM, InvalidNonceLen)
     err = ccm_obj.setTagLength(
             out_tag.size());
     
-    EXPECT_EQ(err,ALC_ERROR_NONE);
+
+    Status s = alcp::base::StatusOk();
+
+    
+    EXPECT_EQ(err,s.code());
 
     // Nonce
     err = ccm_obj.setIv(nonce.size(), &(nonce.at(0)));
-    EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
+
+    s = status::InvalidValue(
+            "IV length needs to be between 7 and 13 both not included!");
+    EXPECT_EQ(err, s.code());
 }
 
 #if 0

@@ -27,6 +27,7 @@
  */
 
 #include "alcp/cipher/aes_ccm.hh"
+#include "alcp/cipher/cipher_error.hh"
 
 #include <immintrin.h>
 #include <sstream>
@@ -63,7 +64,7 @@ class Ccm::Impl
      * @param len Length of the tag
      * @return
      */
-    size_t getTag(ccm_data_p ctx, Uint8 ptag[], size_t len);
+    Status getTag(ccm_data_p ctx, Uint8 ptag[], size_t len);
 
     /**
      * @brief Set Additional Data.
@@ -71,7 +72,7 @@ class Ccm::Impl
      * @param paad Additional Data Pointer
      * @param alen Length of additional data
      */
-    void setAad(ccm_data_p pccm_data, const Uint8 paad[], size_t alen);
+    Status setAad(ccm_data_p pccm_data, const Uint8 paad[], size_t alen);
 
     /**
      * @brief Set IV(nonce)
@@ -81,10 +82,10 @@ class Ccm::Impl
      * @param mlen Message length
      * @return
      */
-    int setIv(ccm_data_p  ccm_data,
-              const Uint8 pnonce[],
-              size_t      nlen,
-              size_t      mlen);
+    Status setIv(ccm_data_p  ccm_data,
+                 const Uint8 pnonce[],
+                 size_t      nlen,
+                 size_t      mlen);
 
     /**
      * @brief Initialize CCM with tag length and Length of (Length of message).
@@ -103,11 +104,11 @@ class Ccm::Impl
      * @param isEncrypt If true will be encrypt mode otherwise decrypt.
      * @return
      */
-    alc_error_t cryptUpdate(const Uint8 pInput[],
-                            Uint8       pOutput[],
-                            Uint64      len,
-                            const Uint8 pIv[],
-                            bool        isEncrypt);
+    Status cryptUpdate(const Uint8 pInput[],
+                       Uint8       pOutput[],
+                       Uint64      len,
+                       const Uint8 pIv[],
+                       bool        isEncrypt);
 
     /**
      * @brief Get the computed tag
@@ -115,7 +116,7 @@ class Ccm::Impl
      * @param len Length of Tag
      * @return
      */
-    alc_error_t getTag(Uint8 pOutput[], Uint64 len);
+    Status getTag(Uint8 pOutput[], Uint64 len);
 
     /**
      * @brief Set Nonce (IV)
@@ -123,7 +124,7 @@ class Ccm::Impl
      * @param pIv Pointer to the IV
      * @return
      */
-    alc_error_t setIv(Uint64 len, const Uint8 pIv[]);
+    Status setIv(Uint64 len, const Uint8 pIv[]);
 
     /**
      * @brief Set additional data to be processed
@@ -131,14 +132,14 @@ class Ccm::Impl
      * @param len Length of the additional data
      * @return
      */
-    alc_error_t setAad(const Uint8 pInput[], Uint64 len);
+    Status setAad(const Uint8 pInput[], Uint64 len);
 
     /**
      * @brief Set the tag length
      * @param len Length of the tag
      * @return
      */
-    alc_error_t setTagLength(Uint64 len);
+    Status setTagLength(Uint64 len);
 
     /**
      * @brief Encrypt the Given Data
@@ -147,10 +148,10 @@ class Ccm::Impl
      * @param len Length of the Buffers
      * @return
      */
-    int encrypt(ccm_data_p  ccm_data,
-                const Uint8 pInput[],
-                Uint8       pOutput[],
-                Uint64      len);
+    Status encrypt(ccm_data_p  ccm_data,
+                   const Uint8 pInput[],
+                   Uint8       pOutput[],
+                   Uint64      len);
 
     /**
      * @brief Decrypt the Given Data
@@ -159,10 +160,10 @@ class Ccm::Impl
      * @param len Length of the Buffers
      * @return
      */
-    int decrypt(ccm_data_p  ccm_data,
-                const Uint8 pInput[],
-                Uint8       pOutput[],
-                Uint64      len);
+    Status decrypt(ccm_data_p  ccm_data,
+                   const Uint8 pInput[],
+                   Uint8       pOutput[],
+                   Uint64      len);
 };
 
 // Impl Functions
@@ -171,14 +172,14 @@ Ccm::Impl::Impl(Rijndael& ccm_obj)
     m_ccm_obj = &ccm_obj;
 }
 
-alc_error_t
+Status
 Ccm::Impl::cryptUpdate(const Uint8 pInput[],
                        Uint8       pOutput[],
                        Uint64      len,
                        const Uint8 pIv[],
                        bool        isEncrypt)
 {
-    alc_error_t err = ALC_ERROR_NONE;
+    Status s = StatusOk();
     if ((pInput != NULL) && (pOutput != NULL)) {
 
         m_len = len;
@@ -189,63 +190,75 @@ Ccm::Impl::cryptUpdate(const Uint8 pInput[],
         m_ccm_data.rounds    = cRounds;
 
         // Below Operations has to be done in order
-        bool err_ret = (setIv(&m_ccm_data, pIv, m_ivLen, len) == 0);
+        s.update(setIv(&m_ccm_data, pIv, m_ivLen, len));
 
         // Accelerate with AESNI
         if (CpuId::cpuHasAesni()) {
             aesni::ccm::setAad(
                 &m_ccm_data, m_additionalData, m_additionalDataLen);
             if (isEncrypt) {
-                err_ret &=
-                    (aesni::ccm::encrypt(&m_ccm_data, pInput, pOutput, len)
-                     == 0);
+                int err =
+                    aesni::ccm::encrypt(&m_ccm_data, pInput, pOutput, len);
+                switch (err) {
+                    case -1:
+                        s = status::EncryptFailed(
+                            "Length of plainText mismatch!");
+                        break;
+                    case -2:
+                        s = status::EncryptFailed(
+                            "Overload of plaintext. Please reduce it!");
+                        break;
+                }
             } else {
-                err_ret &=
-                    (aesni::ccm::decrypt(&m_ccm_data, pInput, pOutput, len)
-                     == 0);
+                int err =
+                    aesni::ccm::decrypt(&m_ccm_data, pInput, pOutput, len);
+                switch (err) {
+                    case -1:
+                        s = status::DecryptFailed(
+                            "Length of plainText mismatch!");
+                        break;
+                }
             }
-            if (!err_ret) {
-                err = ALC_ERROR_BAD_STATE;
+            if (s.ok() != true) {
                 // Burn everything
                 memset(m_ccm_data.nonce, 0, 16);
                 memset(m_ccm_data.cmac, 0, 16);
                 memset(pOutput, 0, len);
-                return err;
+                return s;
             }
-            err = ALC_ERROR_NONE;
-            return err;
+            return s;
         }
 
         // Fallback to reference
         setAad(&m_ccm_data, m_additionalData, m_additionalDataLen);
         if (isEncrypt) {
-            err_ret &= (encrypt(&m_ccm_data, pInput, pOutput, len) == 0);
+            s.update(encrypt(&m_ccm_data, pInput, pOutput, len));
         } else {
-            err_ret &= (decrypt(&m_ccm_data, pInput, pOutput, len) == 0);
+            s.update(decrypt(&m_ccm_data, pInput, pOutput, len));
         }
-        if (!err_ret) {
-            err = ALC_ERROR_BAD_STATE;
+        if (s.ok() != true) {
             // Burn everything
             // FIXME: Need to clear key when errors
             // memset(reinterpret_cast<void*>(m_ccm_data.key), 0, 224);
             memset(m_ccm_data.nonce, 0, 16);
             memset(m_ccm_data.cmac, 0, 16);
             memset(pOutput, 0, len);
-            return err;
+            return s;
         }
     } else {
-        err = ALC_ERROR_INVALID_ARG;
+        s = status::InvalidValue("Input or Output Null Pointer!");
     }
-    return err;
+    return s;
 }
 
-alc_error_t
+Status
 Ccm::Impl::setIv(Uint64 len, const Uint8 pIv[])
 {
-    alc_error_t err = ALC_ERROR_NONE;
+    Status s = StatusOk();
     if (len < 7 || len > 13) {
-        err = ALC_ERROR_INVALID_SIZE;
-        return err;
+        s = status::InvalidValue(
+            "IV length needs to be between 7 and 13 both not included!");
+        return s;
     }
 
     m_ivLen = len;
@@ -261,53 +274,51 @@ Ccm::Impl::setIv(Uint64 len, const Uint8 pIv[])
     // variable which can store size of plaintext. This size can be fixed to a
     // max of q = 15 - n.
     init(&m_ccm_data, m_tagLen, 15 - len);
-    return err;
+    return s;
 }
 
-alc_error_t
+Status
 Ccm::Impl::setAad(const Uint8 pInput[], Uint64 len)
 {
-    alc_error_t err = ALC_ERROR_NONE;
+    Status s = StatusOk();
 
     m_additionalData    = pInput;
     m_additionalDataLen = len;
-    return err;
+    return s;
 }
 
-alc_error_t
+// FIXME: To Change this from alc_error_t to Status, it will require a
+// parse of whole cipher.
+Status
 Ccm::Impl::getTag(Uint8 pOutput[], Uint64 len)
 {
-    alc_error_t err = ALC_ERROR_NONE;
+    Status s = StatusOk();
     if (len < 4 || len > 16 || len == 0) {
-        err = ALC_ERROR_INVALID_SIZE;
-        return err;
+        s = status::InvalidValue(
+            "Tag length is not what we agreed upon during start!");
+        return s;
     }
     // If tagLen is 0 that means something seriously went south
     if (m_tagLen == 0) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
+        s = status::InvalidValue(
+            "Tag length is unknown!, need to agree on tag before hand!");
     } else {
-        bool ret = getTag(&m_ccm_data, pOutput, len);
-
-        if (ret == 0) {
-            err = ALC_ERROR_BAD_STATE;
-            return err;
-        }
+        s.update(getTag(&m_ccm_data, pOutput, len));
     }
-    return err;
+    return s;
 }
 
-alc_error_t
+Status
 Ccm::Impl::setTagLength(Uint64 len)
 {
-    alc_error_t err = ALC_ERROR_NONE;
-    if (len < 4 || len > 16 || len == 0) {
-        err = ALC_ERROR_INVALID_SIZE;
-        return err;
+    Status s = StatusOk();
+    if (len < 4 || len > 16) {
+        s = status::InvalidValue("Length of tag should be 4 < len < 16 ");
+        return s;
     }
     m_tagLen = len;
 
-    return err;
+    return s;
 }
 
 void
@@ -321,18 +332,20 @@ Ccm::Impl::init(ccm_data_p ccm_data, unsigned int t, unsigned int q)
     // EXIT();
 }
 
-int
+Status
 Ccm::Impl::setIv(ccm_data_p  ccm_data,
                  const Uint8 pnonce[],
                  size_t      nlen,
                  size_t      mlen)
 {
     // ENTER();
-    unsigned int q = ccm_data->nonce[0] & 7; /* the L parameter */
+    Status       s = StatusOk();
+    unsigned int q = ccm_data->nonce[0] & 7;
 
     if (nlen < (14 - q)) {
         // EXITB();
-        return -1; /* nonce is too short */
+        s = status::InvalidValue("Length of nonce is too small!");
+        return s;
     }
     if (sizeof(mlen) == 8 && q >= 3) {
         ccm_data->nonce[8]  = static_cast<Uint8>(mlen >> 56);
@@ -351,37 +364,41 @@ Ccm::Impl::setIv(ccm_data_p  ccm_data,
     ccm_data->nonce[0] &= ~0x40; /* clear Adata flag */
     utils::CopyBytes(&ccm_data->nonce[1], pnonce, 14 - q);
     // EXITG();
-    return 0;
+    return s;
 }
 
-size_t
+Status
 Ccm::Impl::getTag(ccm_data_p ctx, Uint8 ptag[], size_t len)
 {
     // ENTER();
     // Retrieve the tag length
+    Status       s = StatusOk();
     unsigned int t = (ctx->nonce[0] >> 3) & 7;
 
     t *= 2;
     t += 2;
     if (len != t) {
         // EXITB();
-        return 0;
+        s = status::InvalidValue(
+            "Tag length is not what we agreed upon during start!");
+        return s;
     }
     utils::CopyBytes(ptag, ctx->cmac, t);
     // EXITG();
-    return t;
+    return s;
 }
 
-void
+Status
 Ccm::Impl::setAad(ccm_data_p pccm_data, const Uint8 paad[], size_t alen)
 {
+    Status s         = StatusOk();
     Uint32 p_blk0[4] = {};
     Uint32 aad_32[4] = {};
     Uint8* p_blk0_8  = reinterpret_cast<Uint8*>(&p_blk0);
     Uint64 i         = {};
 
     if (alen == 0) {
-        return;
+        return s; // Nothing to be done
     }
 
     // Set Adata Available Flag
@@ -459,6 +476,7 @@ Ccm::Impl::setAad(ccm_data_p pccm_data, const Uint8 paad[], size_t alen)
 
     // Store generated partial tag (cmac)
     utils::CopyBlock(pccm_data->cmac, p_blk0_8, 16);
+    return s;
 }
 
 inline void
@@ -475,7 +493,7 @@ ctrInc(Uint8 ctr[])
     }
 }
 
-int
+Status
 Ccm::Impl::encrypt(ccm_data_p  pccm_data,
                    const Uint8 pinp[],
                    Uint8       pout[],
@@ -483,6 +501,7 @@ Ccm::Impl::encrypt(ccm_data_p  pccm_data,
 {
     // Implementation block diagram
     // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_encryption.png
+    Status        s = StatusOk();
     size_t        n;
     unsigned int  i, q;
     unsigned char flags0 = pccm_data->nonce[0];
@@ -522,7 +541,8 @@ Ccm::Impl::encrypt(ccm_data_p  pccm_data,
     // Check if input length matches the intialized length
     if (n != len) {
         // EXITB();
-        return -1; /* length mismatch */
+        s = status::EncryptFailed("Length of plainText mismatch!");
+        return s;
     }
 
     // Check with everything combined we won't have too many blocks to
@@ -530,7 +550,8 @@ Ccm::Impl::encrypt(ccm_data_p  pccm_data,
     pccm_data->blocks += ((len + 15) >> 3) | 1;
     if (pccm_data->blocks > (Uint64(1) << 61)) {
         // EXITB();
-        return -2; /* too much data */
+        s = status::EncryptFailed("Overload of plaintext. Please reduce it!");
+        return s;
     }
 
     while (len >= 16) {
@@ -594,10 +615,10 @@ Ccm::Impl::encrypt(ccm_data_p  pccm_data,
     utils::CopyBytes(pccm_data->cmac, cmac, 16);
     utils::CopyBytes(pccm_data->nonce, nonce, 16);
 
-    return 0;
+    return s;
 }
 
-int
+Status
 Ccm::Impl::decrypt(ccm_data_p  pccm_data,
                    const Uint8 pinp[],
                    Uint8       pout[],
@@ -605,6 +626,7 @@ Ccm::Impl::decrypt(ccm_data_p  pccm_data,
 {
     // Implementation block diagram
     // https://xilinx.github.io/Vitis_Libraries/security/2019.2/_images/CCM_decryption.png
+    Status        s = StatusOk();
     size_t        n;
     unsigned int  i, q;
     unsigned char flags0 = pccm_data->nonce[0];
@@ -642,7 +664,8 @@ Ccm::Impl::decrypt(ccm_data_p  pccm_data,
     // Check if input length matches the intialized length
     if (n != len) {
         // EXITB();
-        return -1; /* length mismatch */
+        s = status::DecryptFailed("Length of plainText mismatch!");
+        return s;
     }
 
     while (len >= 16) {
@@ -712,7 +735,7 @@ Ccm::Impl::decrypt(ccm_data_p  pccm_data,
     utils::CopyBlock(pccm_data->cmac, cmac, 16);
     utils::CopyBlock(pccm_data->nonce, nonce, 16);
 
-    return 0;
+    return s;
 }
 
 // Ccm Functions
@@ -729,9 +752,9 @@ Ccm::decrypt(const Uint8 pInput[],
              Uint64      len,
              const Uint8 pIv[]) const
 {
-    alc_error_t err = ALC_ERROR_NONE;
-    err             = pImpl->cryptUpdate(pInput, pOutput, len, pIv, false);
-    return err;
+    Status s = StatusOk();
+    s        = pImpl->cryptUpdate(pInput, pOutput, len, pIv, false);
+    return s.code();
 }
 
 alc_error_t
@@ -740,9 +763,9 @@ Ccm::encrypt(const Uint8 pInput[],
              Uint64      len,
              const Uint8 pIv[]) const
 {
-    alc_error_t err = ALC_ERROR_NONE;
-    err             = pImpl->cryptUpdate(pInput, pOutput, len, pIv, true);
-    return err;
+    Status s = StatusOk();
+    s        = pImpl->cryptUpdate(pInput, pOutput, len, pIv, true);
+    return s.code();
 }
 
 alc_error_t
@@ -751,9 +774,9 @@ Ccm::decryptUpdate(const Uint8 pInput[],
                    Uint64      len,
                    const Uint8 pIv[])
 {
-    alc_error_t err = ALC_ERROR_NONE;
-    err             = pImpl->cryptUpdate(pInput, pOutput, len, pIv, false);
-    return err;
+    Status s = StatusOk();
+    s        = pImpl->cryptUpdate(pInput, pOutput, len, pIv, false);
+    return s.code();
 }
 
 alc_error_t
@@ -762,33 +785,41 @@ Ccm::encryptUpdate(const Uint8 pInput[],
                    Uint64      len,
                    const Uint8 pIv[])
 {
-    alc_error_t err = ALC_ERROR_NONE;
-    err             = pImpl->cryptUpdate(pInput, pOutput, len, pIv, true);
-    return err;
+    Status s = StatusOk();
+    s        = pImpl->cryptUpdate(pInput, pOutput, len, pIv, true);
+    return s.code();
 }
 
 alc_error_t
 Ccm::getTag(Uint8 pOutput[], Uint64 len)
 {
-    return pImpl->getTag(pOutput, len);
+    Status s = StatusOk();
+    s        = pImpl->getTag(pOutput, len);
+    return s.code();
 }
 
 alc_error_t
 Ccm::setIv(Uint64 len, const Uint8 pIv[])
 {
-    return pImpl->setIv(len, pIv);
+    Status s = StatusOk();
+    s        = pImpl->setIv(len, pIv);
+    return s.code();
 }
 
 alc_error_t
 Ccm::setTagLength(Uint64 len)
 {
-    return pImpl->setTagLength(len);
+    Status s = StatusOk();
+    s        = pImpl->setTagLength(len);
+    return s.code();
 }
 
 alc_error_t
 Ccm::setAad(const Uint8 pInput[], Uint64 len)
 {
-    return pImpl->setAad(pInput, len);
+    Status s = StatusOk();
+    s        = pImpl->setAad(pInput, len);
+    return s.code();
 }
 
 Ccm::~Ccm() {}

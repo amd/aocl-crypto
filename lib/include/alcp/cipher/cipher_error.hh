@@ -81,9 +81,8 @@ class CipherError final : public ErrorBase
 
   public:
     CipherError()
-        : ErrorBase{}
+        : ErrorBase{ ErrorCode::eOk }
     {
-        setModuleError(ErrorCode::eOk);
     }
 
     CipherError(Uint64 ecode)
@@ -92,11 +91,8 @@ class CipherError final : public ErrorBase
     }
 
     CipherError(cipher::ErrorCode ecode)
-        : CipherError{}
+        : ErrorBase{ ecode }
     {
-        if (ecode != eOk) {
-            ErrorBase::setModuleError(toUint16(ecode));
-        }
     }
 
     CipherError(base::ErrorCode bcode, cipher::ErrorCode ecode)
@@ -114,7 +110,7 @@ class CipherError final : public ErrorBase
 
     virtual const String detailedError() const override
     {
-        return __toStr(ErrorBase::getModuleError());
+        return __toStr(getModuleError());
     };
 
   private:
@@ -145,13 +141,13 @@ class CipherError final : public ErrorBase
         if (it != err_to_str_map.end()) {
             return it->second;
         } else {
-            return "Rng: Unknown Error Occured";
+            return "Cipher: Unknown Error Occured";
         }
     }
 };
 
 namespace status {
-    ALCP_API_EXPORT Status InvaidValue(String msg);
+    ALCP_API_EXPORT Status InvalidValue(String msg);
     ALCP_API_EXPORT Status AuthenticationFailure(String msg);
     ALCP_API_EXPORT Status InvalidCipher(String msg);
     ALCP_API_EXPORT Status InvalidMode(String msg);

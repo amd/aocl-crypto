@@ -24,58 +24,20 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
 #include "alcp/cipher/cipher_error.hh"
+#include "alcp/module.hh"
+#include "alcp/types.h"
 
-namespace alcp::cipher::status {
-// In future we can use just a template to represent all the below function
-template<ErrorCode code>
-inline Status
-CipherErrorCode(String msg)
+namespace alcp::cipher {
+class CipherModule final : public alcp::module::ModuleBase
 {
-    auto e = CipherError(alcp::base::eInternal, code);
-    return Status(e, msg);
-}
+  public:
+    virtual String moduleName() const override;
 
-// Functions for each error code
-Status
-InvalidValue(String msg)
-{
-    return CipherErrorCode<ErrorCode::eInvaidValue>(msg);
-}
-Status
-NotPermitted(String msg)
-{
-    return CipherErrorCode<ErrorCode::eNotPermitted>(msg);
-}
-Status
-AuthenticationFailure(String msg)
-{
-    return CipherErrorCode<ErrorCode::eAuthenticationFailure>(msg);
-}
-Status
-InvalidCipher(String msg)
-{
-    return CipherErrorCode<ErrorCode::eInvalidCipher>(msg);
-}
-Status
-InvalidMode(String msg)
-{
-    return CipherErrorCode<ErrorCode::eInvalidMode>(msg);
-}
-Status
-HardwareFailed(String msg)
-{
-    return CipherErrorCode<ErrorCode::eHardwareFailed>(msg);
-}
-Status
-DecryptFailed(String msg)
-{
-    return CipherErrorCode<ErrorCode::eDecryptFailed>(msg);
-}
-Status
-EncryptFailed(String msg)
-{
-    return CipherErrorCode<ErrorCode::eEncryptFailed>(msg);
-}
-} // namespace alcp::cipher::status
+    virtual Uint16 moduleId() const override;
+
+    virtual const std::unique_ptr<IError> getModuleError(
+        Uint64 code) const override;
+};
+
+} // namespace alcp::cipher
