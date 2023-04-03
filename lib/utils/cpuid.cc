@@ -27,8 +27,14 @@
  */
 
 #include "alcp/utils/cpuid.hh"
+#ifdef ALCP_ENABLE_AOCL_CPUID
+#include <alci/alci.h>
+#endif
 
 namespace alcp::utils {
+#ifdef ALCP_ENABLE_AOCL_CPUID
+using namespace alci;
+#endif
 
 // FIXME: Memory Allocations for static variables
 std::unique_ptr<CpuId::Impl> CpuId::pImpl = std::make_unique<CpuId::Impl>();

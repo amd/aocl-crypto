@@ -53,7 +53,7 @@ struct ccm_data_t
     Uint32       rounds = 0;
 };
 
-enum CCM_ERROR
+enum class CCM_ERROR
 {
     NO_ERROR      = 0,
     LEN_MISMATCH  = -1,

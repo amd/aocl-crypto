@@ -197,25 +197,29 @@ Ccm::Impl::cryptUpdate(const Uint8 pInput[],
             aesni::ccm::SetAad(
                 &m_ccm_data, m_additionalData, m_additionalDataLen);
             if (isEncrypt) {
-                int err =
+                CCM_ERROR err =
                     aesni::ccm::Encrypt(&m_ccm_data, pInput, pOutput, len);
                 switch (err) {
-                    case LEN_MISMATCH:
+                    case CCM_ERROR::LEN_MISMATCH:
                         s = status::EncryptFailed(
                             "Length of plainText mismatch!");
                         break;
-                    case DATA_OVERFLOW:
+                    case CCM_ERROR::DATA_OVERFLOW:
                         s = status::EncryptFailed(
                             "Overload of plaintext. Please reduce it!");
                         break;
+                    default:
+                        break;
                 }
             } else {
-                int err =
+                CCM_ERROR err =
                     aesni::ccm::Decrypt(&m_ccm_data, pInput, pOutput, len);
                 switch (err) {
-                    case LEN_MISMATCH:
+                    case CCM_ERROR::LEN_MISMATCH:
                         s = status::DecryptFailed(
                             "Length of plainText mismatch!");
+                        break;
+                    default:
                         break;
                 }
             }

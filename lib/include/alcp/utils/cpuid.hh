@@ -28,11 +28,8 @@
 
 #pragma once
 
-#include "config.h"
-#ifdef ALCP_ENABLE_AOCL_CPUID
-#include <alci/alci.h>
-#endif
 #include "alcp/alcp.hh"
+#include "config.h"
 #include <iostream>
 #include <memory>
 
@@ -47,9 +44,7 @@ typedef enum
 
 // using alci::Cpu;
 // using alci::Uarch;
-#ifdef ALCP_ENABLE_AOCL_CPUID
-using namespace alci;
-#endif
+
 class ALCP_API_EXPORT CpuId
 {
   public:

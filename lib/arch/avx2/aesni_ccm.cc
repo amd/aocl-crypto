@@ -203,7 +203,7 @@ namespace alcp::cipher::aesni { namespace ccm {
         // Check if input length matches the intialized length
         if (n != len) {
             EXITB();
-            return LEN_MISMATCH; /* length mismatch */
+            return CCM_ERROR::LEN_MISMATCH; /* length mismatch */
         }
 
         // Check with everything combined we won't have too many blocks to
@@ -211,7 +211,7 @@ namespace alcp::cipher::aesni { namespace ccm {
         ccm_data->blocks += ((len + 15) >> 3) | 1;
         if (ccm_data->blocks > (Uint64(1) << 61)) {
             EXITB();
-            return DATA_OVERFLOW; /* too much data */
+            return CCM_ERROR::DATA_OVERFLOW; /* too much data */
         }
         while (len >= 16) {
             // Load the PlainText
@@ -278,7 +278,7 @@ namespace alcp::cipher::aesni { namespace ccm {
 
         // Encryption cannot proceed after this.
         EXITG();
-        return NO_ERROR;
+        return CCM_ERROR::NO_ERROR;
     }
 
     CCM_ERROR Decrypt(ccm_data_t* ccm_data,
@@ -330,7 +330,7 @@ namespace alcp::cipher::aesni { namespace ccm {
         // Check if input length matches the intialized length
         if (n != len) {
             EXITB();
-            return LEN_MISMATCH; /* length mismatch */
+            return CCM_ERROR::LEN_MISMATCH; /* length mismatch */
         }
 
         while (len >= 16) {
@@ -406,7 +406,7 @@ namespace alcp::cipher::aesni { namespace ccm {
         _mm_storeu_si128(reinterpret_cast<__m128i*>(ccm_data->nonce), nonce);
 
         EXITG();
-        return 0;
+        return CCM_ERROR::NO_ERROR;
     }
 
 }} // namespace alcp::cipher::aesni::ccm
