@@ -484,8 +484,10 @@ TEST_P(CCM_KAT, Encrypt_Double)
         }
     }
     {
-        std::vector<Uint8> out_tag(m_tag.size(), 0),
-            out_ciphertext(m_plaintext.size(), 0);
+        // 0x02 and 0x01 will be our signature for testing if algorithm never
+        // touched the memory, during debugging
+        std::vector<Uint8> out_tag(m_tag.size(), 0x02),
+            out_ciphertext(m_plaintext.size(), 0x01);
 
         alc_error_t err;
         /* Encryption begins here */
@@ -531,8 +533,10 @@ TEST_P(CCM_KAT, Encrypt_Double)
 
 TEST_P(CCM_KAT, Decrypt)
 {
-    std::vector<Uint8> out_tag(m_tag.size(), 0),
-        out_plaintext(m_ciphertext.size(), 0);
+    // 0x02 and 0x01 will be our signature for testing if algorithm never
+    // touched the memory, during debugging
+    std::vector<Uint8> out_tag(m_tag.size(), 0x02),
+        out_plaintext(m_ciphertext.size(), 0x01);
 
     alc_error_t err;
 
@@ -578,8 +582,10 @@ TEST_P(CCM_KAT, Decrypt)
 TEST_P(CCM_KAT, Decrypt_Double)
 {
     {
-        std::vector<Uint8> out_tag(m_tag.size(), 0),
-            out_plaintext(m_ciphertext.size(), 0);
+        // 0x02 and 0x01 will be our signature for testing if algorithm never
+        // touched the memory, during debugging
+        std::vector<Uint8> out_tag(m_tag.size(), 0x02),
+            out_plaintext(m_ciphertext.size(), 0x01);
 
         alc_error_t err;
 
@@ -623,8 +629,10 @@ TEST_P(CCM_KAT, Decrypt_Double)
         }
     }
     {
-        std::vector<Uint8> out_tag(m_tag.size(), 0),
-            out_plaintext(m_ciphertext.size(), 0);
+        // 0x02 and 0x01 will be our signature for testing if algorithm never
+        // touched the memory, during debugging
+        std::vector<Uint8> out_tag(m_tag.size(), 0x02),
+            out_plaintext(m_ciphertext.size(), 0x01);
 
         alc_error_t err;
 
