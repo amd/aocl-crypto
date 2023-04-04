@@ -88,21 +88,21 @@ BigNum::randomGenerate(int bytes, int top, int bottom)
 }
 
 int
-BigNum::randomGenerateEx(int bits, int top, int bottom, unsigned int strength)
+BigNum::randomGenerate(int bits, int top, int bottom, unsigned int strength)
 {
-    return pImpl()->randomGenerateEx(bits, top, bottom, strength);
+    return pImpl()->randomGenerate(bits, top, bottom, strength);
 }
 
 int
 BigNum::privateRandom(int bits, int top, int bottom)
 {
-    return pImpl()->privateRandom(bits, top, bottom);
+    return pImpl()->randomGenerate(bits, top, bottom);
 }
 
 int
-BigNum::privateRandomEx(int bits, int top, int bottom, unsigned int strength)
+BigNum::privateRandom(int bits, int top, int bottom, unsigned int strength)
 {
-    return pImpl()->privateRandomEx(bits, top, bottom, strength);
+    return pImpl()->randomGenerate(bits, top, bottom, strength);
 }
 
 int
@@ -112,20 +112,20 @@ BigNum::randomRange(const BigNum* range)
 }
 
 int
-BigNum::randomRangeEx(const BigNum* range, unsigned int strength)
+BigNum::randomRange(const BigNum* range, unsigned int strength)
 {
-    return pImpl()->randomRangeEx(range, strength);
+    return pImpl()->randomRange(range, strength);
 }
 
 int
-BigNum::privateRandomRangeEx(const BigNum* range, unsigned int strength)
+BigNum::privateRandomRange(const BigNum* range, unsigned int strength)
 {
-    return pImpl()->privateRandomRangeEx(range, strength);
+    return pImpl()->randomRange(range, strength);
 }
 int
 BigNum::privateRandomRange(const BigNum* range)
 {
-    return pImpl()->privateRandomRange(range);
+    return pImpl()->randomRange(range);
 }
 
 void

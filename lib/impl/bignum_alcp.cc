@@ -101,21 +101,14 @@ class BigNum::Impl
     Status       fromString(const String& str, Format f);
     const String toString(Format f) const;
 
-    alc_error_t randomGenerateEx(int          bits,
-                                 int          top,
-                                 int          bottom,
-                                 unsigned int strength);
+    alc_error_t randomGenerate(int          bits,
+                               int          top,
+                               int          bottom,
+                               unsigned int strength);
     alc_error_t randomGenerate(int bits, int top, int bottom);
-    alc_error_t privateRandomEx(int          bits,
-                                int          top,
-                                int          bottom,
-                                unsigned int strength);
-    alc_error_t privateRandom(int bits, int top, int bottom);
-    alc_error_t randomRangeEx(const BigNum* range, unsigned int strength);
+
+    alc_error_t randomRange(const BigNum* range, unsigned int strength);
     alc_error_t randomRange(const BigNum* range);
-    alc_error_t privateRandomRangeEx(const BigNum* range,
-                                     unsigned int  strength);
-    alc_error_t privateRandomRange(const BigNum* range);
 
     const void* data() const;
     std::size_t size() const;
@@ -127,6 +120,13 @@ class BigNum::Impl
     // static bool        isDrbgInit;
 
   private:
+    alc_error_t privateRandom(int          bits,
+                              int          top,
+                              int          bottom,
+                              unsigned int strength);
+    alc_error_t privateRandom(int bits, int top, int bottom);
+    alc_error_t privateRandomRange(const BigNum* range, unsigned int strength);
+    alc_error_t privateRandomRange(const BigNum* range);
     void        invert();
     BigNum      __div(const BigNum& b, BigNum& rem);
     static void init()
@@ -263,28 +263,16 @@ BigNum::Impl::randomGenerate(int bits, int top, int bottom)
     return ALC_ERROR_NONE;
 }
 alc_error_t
-BigNum::Impl::randomGenerateEx(int          bits,
-                               int          top,
-                               int          bottom,
-                               unsigned int strength)
+BigNum::Impl::randomGenerate(int          bits,
+                             int          top,
+                             int          bottom,
+                             unsigned int strength)
 {
     if (bits == 0 && (top || bottom))
         return ALC_ERROR_INVALID_SIZE;
     vector<Uint8> personalizeString;
     m_drbg.initialize(strength, personalizeString);
-    int            max_bytes  = (bits + 63) / 64;
-    int            extra_bits = bits % 64;
-    vector<Uint64> data(max_bytes, 0);
-    Uint8*         p_data_8 = reinterpret_cast<Uint8*>(&(data[0]));
-    m_drbg.randomize(p_data_8, max_bytes * 8);
-    m_drbg.reseed();
-    long long mask = (1ULL << extra_bits) - 1;
-    m_data         = data;
-    m_data[m_data.size() - 1] &= mask;
-    m_data[0] |= bottom;
-    if (top)
-        m_data[m_data.size() - 1] |= ((mask + 1) >> 1);
-    return ALC_ERROR_NONE;
+    return randomGenerate(bits, top, bottom);
 }
 alc_error_t
 BigNum::Impl::randomRange(const BigNum* range)
@@ -305,108 +293,37 @@ BigNum::Impl::randomRange(const BigNum* range)
     return ALC_ERROR_NONE;
 }
 alc_error_t
-BigNum::Impl::randomRangeEx(const BigNum* range, unsigned int strength)
+BigNum::Impl::randomRange(const BigNum* range, unsigned int strength)
 {
 
     vector<Uint8> personalizeString;
     m_drbg.initialize(strength, personalizeString);
-    int            bits       = range->pImpl()->total_bits();
-    int            max_bytes  = (bits + 63) / 64;
-    int            extra_bits = bits % 64;
-    vector<Uint64> data(max_bytes, 0);
-    Uint8*         p_data_8 = reinterpret_cast<Uint8*>(&(data[0]));
-    m_drbg.randomize(p_data_8, max_bytes * 8);
-    m_drbg.reseed();
-    long long mask = (1ULL << extra_bits) - 1;
-    m_data         = data;
-    m_data[m_data.size() - 1] &= mask;
-    while (compare_gt(m_data, range->pImpl()->m_data)) {
-        *this = sub(*range);
-    }
-    return ALC_ERROR_NONE;
+    return randomRange(range);
 }
 
 alc_error_t
 BigNum::Impl::privateRandom(int bits, int top, int bottom)
 {
-    if (bits == 0 && (top || bottom))
-        return ALC_ERROR_INVALID_SIZE;
-    int            max_bytes  = (bits + 63) / 64;
-    int            extra_bits = bits % 64;
-    vector<Uint64> data(max_bytes, 0);
-    Uint8*         p_data_8 = reinterpret_cast<Uint8*>(&(data[0]));
-    m_drbg.randomize(p_data_8, max_bytes * 8);
-    m_drbg.reseed();
-    long long mask = (1ULL << extra_bits) - 1;
-    m_data         = data;
-    m_data[m_data.size() - 1] &= mask;
-    m_data[0] |= bottom;
-    if (top)
-        m_data[m_data.size() - 1] |= ((mask + 1) >> 1);
-    return ALC_ERROR_NONE;
+    return randomGenerate(bits, top, bottom);
 }
 alc_error_t
-BigNum::Impl::privateRandomEx(int          bits,
-                              int          top,
-                              int          bottom,
-                              unsigned int strength)
+BigNum::Impl::privateRandom(int          bits,
+                            int          top,
+                            int          bottom,
+                            unsigned int strength)
 {
-    if (bits == 0 && (top || bottom))
-        return ALC_ERROR_INVALID_SIZE;
-    vector<Uint8> personalizeString;
-    m_drbg.initialize(strength, personalizeString);
-    int            max_bytes  = (bits + 63) / 64;
-    int            extra_bits = bits % 64;
-    vector<Uint64> data(max_bytes, 0);
-    Uint8*         p_data_8 = reinterpret_cast<Uint8*>(&(data[0]));
-    m_drbg.randomize(p_data_8, max_bytes * 8);
-    m_drbg.reseed();
-    long long mask = (1ULL << extra_bits) - 1;
-    m_data         = data;
-    m_data[m_data.size() - 1] &= mask;
-    m_data[0] |= bottom;
-    if (top)
-        m_data[m_data.size() - 1] |= ((mask + 1) >> 1);
-    return ALC_ERROR_NONE;
+    return randomGenerate(bits, top, bottom, strength);
 }
 alc_error_t
 BigNum::Impl::privateRandomRange(const BigNum* range)
 {
 
-    int            bits       = range->pImpl()->total_bits();
-    int            max_bytes  = (bits + 63) / 64;
-    int            extra_bits = bits % 64;
-    vector<Uint64> data(max_bytes, 0);
-    Uint8*         p_data_8 = reinterpret_cast<Uint8*>(&(data[0]));
-    m_drbg.randomize(p_data_8, max_bytes * 8);
-    m_drbg.reseed();
-    long long mask = (1ULL << extra_bits) - 1;
-    m_data         = data;
-    m_data[m_data.size() - 1] &= mask;
-    while (compare_gt(m_data, range->pImpl()->m_data)) {
-        *this = sub(*range);
-    }
-    return ALC_ERROR_NONE;
+    return randomRange(range);
 }
 alc_error_t
-BigNum::Impl::privateRandomRangeEx(const BigNum* range, unsigned int strength)
+BigNum::Impl::privateRandomRange(const BigNum* range, unsigned int strength)
 {
-    vector<Uint8> personalizeString;
-    m_drbg.initialize(strength, personalizeString);
-    int            bits       = range->pImpl()->total_bits();
-    int            max_bytes  = (bits + 63) / 64;
-    int            extra_bits = bits % 64;
-    vector<Uint64> data(max_bytes, 0);
-    Uint8*         p_data_8 = reinterpret_cast<Uint8*>(&(data[0]));
-    m_drbg.randomize(p_data_8, max_bytes * 8);
-    m_drbg.reseed();
-    long long mask = (1ULL << extra_bits) - 1;
-    m_data         = data;
-    m_data[m_data.size() - 1] &= mask;
-    while (compare_gt(m_data, range->pImpl()->m_data)) {
-        *this = sub(*range);
-    }
-    return ALC_ERROR_NONE;
+    return randomRange(range, strength);
 }
 
 Int64

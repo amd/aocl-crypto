@@ -136,7 +136,7 @@ TEST(BigNumTest, RandomEx)
 {
     BigNum n, two;
     two.fromUint64(2UL);
-    n.randomGenerateEx(209, 1, 1, 256);
+    n.randomGenerate(209, 1, 1, 256);
     EXPECT_EQ((n % two).toInt64(), 1);
 }
 
@@ -152,7 +152,7 @@ TEST(BigNumTest, PrivateRandomEx)
 {
     BigNum n, two;
     two.fromUint64(2UL);
-    n.privateRandomEx(209, 1, 1, 256);
+    n.privateRandom(209, 1, 1, 256);
     EXPECT_EQ((n % two).toInt64(), 1);
 }
 
@@ -168,7 +168,7 @@ TEST(BigNumTest, RandomRangeEx)
 {
     BigNum n, range;
     range.fromString("865543534639846283569456923649829");
-    n.randomRangeEx(&range, 256);
+    n.randomRange(&range, 256);
     EXPECT_EQ((n % range).toString(), n.toString());
 }
 
@@ -184,7 +184,7 @@ TEST(BigNumTest, PrivateRangeRandomEx)
 {
     BigNum n, range;
     range.fromString("1456923649829");
-    n.privateRandomRangeEx(&range, 512);
+    n.privateRandomRange(&range, 512);
     EXPECT_EQ((n % range).toString(), n.toString());
 }
 

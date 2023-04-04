@@ -33,6 +33,7 @@
 #include "alcp/utils/endian.hh"
 
 #include <bitset>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -497,10 +498,10 @@ class BigNum::Impl
         return sts;
     }
 
-    inline int randomGenerateEx(int          bits,
-                                int          top,
-                                int          bottom,
-                                unsigned int strength)
+    inline int randomGenerate(int          bits,
+                              int          top,
+                              int          bottom,
+                              unsigned int strength)
     {
         BigNumCtx ctx;
         return BN_rand_ex(raw(), bits, top, bottom, strength, ctx.raw());
@@ -510,10 +511,10 @@ class BigNum::Impl
         BigNumCtx ctx;
         return BN_rand(raw(), bits, top, bottom);
     }
-    inline int privateRandomEx(int          bits,
-                               int          top,
-                               int          bottom,
-                               unsigned int strength)
+    inline int privateRandom(int          bits,
+                             int          top,
+                             int          bottom,
+                             unsigned int strength)
     {
         BigNumCtx ctx;
         return BN_priv_rand_ex(raw(), bits, top, bottom, strength, ctx.raw());
@@ -523,7 +524,7 @@ class BigNum::Impl
         BigNumCtx ctx;
         return BN_priv_rand(raw(), bits, top, bottom);
     }
-    inline int randomRangeEx(const BigNum* range, unsigned int strength)
+    inline int randomRange(const BigNum* range, unsigned int strength)
     {
         BigNumCtx ctx;
         return BN_rand_range_ex(
@@ -534,7 +535,7 @@ class BigNum::Impl
         BigNumCtx ctx;
         return BN_rand_range(raw(), range->pImpl()->raw());
     }
-    inline int privateRandomRangeEx(const BigNum* range, unsigned int strength)
+    inline int privateRandomRange(const BigNum* range, unsigned int strength)
     {
         BigNumCtx ctx;
         return BN_priv_rand_range_ex(
