@@ -329,8 +329,8 @@ void
 Ccm::Impl::init(ccm_data_t* ccm_data, unsigned int t, unsigned int q)
 {
     // ENTER();
-    memset(ccm_data->nonce, 0, sizeof(ccm_data->nonce));
-    memset(ccm_data->cmac, 0, sizeof(ccm_data->cmac));
+    std::fill(ccm_data->nonce, ccm_data->nonce + sizeof(ccm_data->nonce), 0);
+    std::fill(ccm_data->cmac, ccm_data->cmac + sizeof(ccm_data->cmac), 0);
     ccm_data->nonce[0] = (static_cast<Uint8>(q - 1) & 7)
                          | static_cast<Uint8>(((t - 2) / 2) & 7) << 3;
     ccm_data->blocks = 0;
