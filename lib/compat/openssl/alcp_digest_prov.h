@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -112,9 +112,10 @@ extern OSSL_FUNC_digest_final_fn          ALCP_prov_digest_final;
     static void*                      ALCP_prov_##name##_newctx(void* provctx) \
     {                                                                          \
         ENTER();                                                               \
-        return ALCP_prov_digest_newctx(provctx, &s_digest_##name##_info);      \
+        return ALCP_prov_digest_newctx(provctx,                                \
+                                       &s_digest_##name##_##grp##_info);       \
     }                                                                          \
-    const OSSL_DISPATCH name##_functions[] = {                                 \
+    const OSSL_DISPATCH name##_##grp##_functions[] = {                         \
         { OSSL_FUNC_DIGEST_GET_PARAMS,                                         \
           (fptr_t)ALCP_prov_##name##_get_params },                             \
         { OSSL_FUNC_DIGEST_NEWCTX, (fptr_t)ALCP_prov_##name##_newctx },        \

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,36 +26,19 @@
  *
  */
 
-#include "alcp_digest_sha2.h"
+#ifndef _OPENSSL_ALCP_DIGEST_SHA3_H
+#define _OPENSSL_ALCP_DIGEST_SHA3_H 2
 
-DEFINE_SHA2_CONTEXT(sha2, sha512, ALC_DIGEST_LEN_512, ALC_SHA2_512);
-DEFINE_SHA2_CONTEXT(sha2, sha384, ALC_DIGEST_LEN_384, ALC_SHA2_384);
-DEFINE_SHA2_CONTEXT(sha2, sha256, ALC_DIGEST_LEN_256, ALC_SHA2_256);
-DEFINE_SHA2_CONTEXT(sha2, sha224, ALC_DIGEST_LEN_224, ALC_SHA2_224);
+#include "alcp_digest_prov.h"
+#include "debug.h"
 
-int
-ALCP_prov_sha2_get_ctx_params(void* vctx, OSSL_PARAM params[])
-{
-    EXIT();
-    return ALCP_prov_digest_get_ctx_params(vctx, params);
+#define DEFINE_SHA3_CONTEXT(grp, mode, len, alcp_mode)                         \
+    alc_digest_info_t s_digest_##mode##_##grp##_info = {                               \
+        .dt_type = ALC_DIGEST_TYPE_SHA3,                                       \
+        .dt_len = len,                                                         \
+        .dt_mode = {                                                           \
+            .dm_sha2 = alcp_mode,                                              \
+        },                                                                     \
 }
 
-int
-ALCP_prov_sha2_set_ctx_params(void* vctx, const OSSL_PARAM params[])
-{
-    EXIT();
-    return ALCP_prov_digest_set_ctx_params(vctx, params);
-}
-
-void
-ALCP_prov_sha2_ctxfree(alc_prov_digest_ctx_p dig_ctx)
-{
-    EXIT();
-    ALCP_prov_digest_freectx(dig_ctx);
-}
-
-/* Sha2 dispatchers */
-CREATE_DIGEST_DISPATCHERS(sha512, sha2, 0);
-CREATE_DIGEST_DISPATCHERS(sha384, sha2, 0);
-CREATE_DIGEST_DISPATCHERS(sha256, sha2, 0);
-CREATE_DIGEST_DISPATCHERS(sha224, sha2, 0);
+#endif /* _OPENSSL_ALCP_DIGEST_SHA3_H */

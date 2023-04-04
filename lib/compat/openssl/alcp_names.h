@@ -88,6 +88,12 @@
 #define ALCP_PROV_NAMES_SHA2_512                                               \
     "SHA2-512:SHA-512:SHA512:2.16.840.1.101.3.4.2.3"
 
+// Truncated Versions of Digest
+#define ALCP_PROV_NAMES_SHA2_512_224                                           \
+    "SHA2-512/224:SHA-512/224:SHA512-224:2.16.840.1.101.3.4.2.5"
+#define ALCP_PROV_NAMES_SHA2_512_256                                           \
+    "SHA2-512/256:SHA-512/256:SHA512-256:2.16.840.1.101.3.4.2.6"
+
 // FIXME: Support needs to be added
 // DIGEST SHA3
 #define ALCP_PROV_NAMES_SHA3_224 "SHA3-224:2.16.840.1.101.3.4.2.7"

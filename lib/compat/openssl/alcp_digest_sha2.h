@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,15 +32,13 @@
 #include "alcp_digest_prov.h"
 #include "debug.h"
 
-#define DEFINE_SHA2_CONTEXT(mode, len, alcp_mode)                              \
-    alc_digest_info_t s_digest_##mode##_info = {                               \
+#define DEFINE_SHA2_CONTEXT(grp, mode, len, alcp_mode)                         \
+    alc_digest_info_t s_digest_##mode##_##grp##_info = {                               \
         .dt_type = ALC_DIGEST_TYPE_SHA2,                                       \
         .dt_len = len,                                                         \
         .dt_mode = {                                                           \
             .dm_sha2 = alcp_mode,                                              \
         },                                                                     \
 }
-
-extern const OSSL_DISPATCH cfb_functions[];
 
 #endif /* _OPENSSL_ALCP_DIGEST_SHA2_H */

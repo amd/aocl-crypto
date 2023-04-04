@@ -282,16 +282,27 @@ ALCP_prov_digest_final(void*          vctx,
 
 static const char DIGEST_DEF_PROP[] = "provider=alcp,fips=no";
 
-extern const OSSL_DISPATCH sha224_functions[];
-extern const OSSL_DISPATCH sha256_functions[];
-extern const OSSL_DISPATCH sha384_functions[];
-extern const OSSL_DISPATCH sha512_functions[];
+extern const OSSL_DISPATCH sha224_sha2_functions[];
+extern const OSSL_DISPATCH sha256_sha2_functions[];
+extern const OSSL_DISPATCH sha384_sha2_functions[];
+extern const OSSL_DISPATCH sha512_sha2_functions[];
+extern const OSSL_DISPATCH sha224_sha3_functions[];
+extern const OSSL_DISPATCH sha256_sha3_functions[];
+extern const OSSL_DISPATCH sha384_sha3_functions[];
+extern const OSSL_DISPATCH sha512_sha3_functions[];
 
 const OSSL_ALGORITHM ALC_prov_digests[] = {
-    { ALCP_PROV_NAMES_SHA2_512, DIGEST_DEF_PROP, sha512_functions },
-    { ALCP_PROV_NAMES_SHA2_384, DIGEST_DEF_PROP, sha384_functions },
-    { ALCP_PROV_NAMES_SHA2_256, DIGEST_DEF_PROP, sha256_functions },
-    { ALCP_PROV_NAMES_SHA2_224, DIGEST_DEF_PROP, sha224_functions },
+    { ALCP_PROV_NAMES_SHA2_224, DIGEST_DEF_PROP, sha224_sha2_functions },
+    { ALCP_PROV_NAMES_SHA2_256, DIGEST_DEF_PROP, sha256_sha2_functions },
+    { ALCP_PROV_NAMES_SHA2_384, DIGEST_DEF_PROP, sha384_sha2_functions },
+    { ALCP_PROV_NAMES_SHA2_512, DIGEST_DEF_PROP, sha512_sha2_functions },
+    // { ALCP_PROV_NAMES_SHA2_512_224, DIGEST_DEF_PROP, sha512_sha2_functions },
+    // { ALCP_PROV_NAMES_SHA2_512_256, DIGEST_DEF_PROP, sha512_sha2_functions },
+    { ALCP_PROV_NAMES_SHA3_512, DIGEST_DEF_PROP, sha512_sha3_functions },
+    { ALCP_PROV_NAMES_SHA3_384, DIGEST_DEF_PROP, sha384_sha3_functions },
+    { ALCP_PROV_NAMES_SHA3_256, DIGEST_DEF_PROP, sha256_sha3_functions },
+    { ALCP_PROV_NAMES_SHA3_224, DIGEST_DEF_PROP, sha224_sha3_functions },
+
     { NULL, NULL, NULL },
 };
 
