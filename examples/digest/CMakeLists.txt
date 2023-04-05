@@ -1,4 +1,4 @@
- # Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -23,12 +23,12 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
  
-ADD_EXECUTABLE(sha256_example sha2_256_example.c)
-ADD_EXECUTABLE(sha224_example sha2_224_example.c)
-ADD_EXECUTABLE(sha512_example sha2_512_example.c)
-ADD_EXECUTABLE(sha384_example sha2_384_example.c)
-ADD_EXECUTABLE(sha512_224_example sha2_512_224_example.c)
-ADD_EXECUTABLE(sha512_256_example sha2_512_256_example.c)
+ADD_EXECUTABLE(sha2_256_example sha2_256_example.c)
+ADD_EXECUTABLE(sha2_224_example sha2_224_example.c)
+ADD_EXECUTABLE(sha2_512_example sha2_512_example.c)
+ADD_EXECUTABLE(sha2_384_example sha2_384_example.c)
+ADD_EXECUTABLE(sha2_512_224_example sha2_512_224_example.c)
+ADD_EXECUTABLE(sha2_512_256_example sha2_512_256_example.c)
 ADD_EXECUTABLE(sha3_224_example sha3_224_example.c)
 ADD_EXECUTABLE(sha3_256_example sha3_256_example.c)
 ADD_EXECUTABLE(sha3_384_example sha3_384_example.c)

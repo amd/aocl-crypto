@@ -178,35 +178,65 @@ INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/include/alcp
 		)
 
 IF (ALCP_ENABLE_EXAMPLES)
+	# examples which should be part of release package
 	FILE(GLOB EXAMPLES_FILES_CIPHER
-			${CMAKE_CURRENT_SOURCE_DIR}/examples/cipher/*.c
-	#		${CMAKE_CURRENT_SOURCE_DIR}/examples/cipher/*.cc
-			)
+			${CMAKE_CURRENT_SOURCE_DIR}/examples/cipher/*.c)
 	FILE(GLOB EXAMPLES_FILES_DIGEST
-			${CMAKE_CURRENT_SOURCE_DIR}/examples/digest/*.c
-			)
+			${CMAKE_CURRENT_SOURCE_DIR}/examples/digest/*.c)
+	FILE(GLOB EXAMPLES_FILES_MAC
+			${CMAKE_CURRENT_SOURCE_DIR}/examples/mac/*.c)
+	FILE(GLOB EXAMPLES_FILES_ECDH
+			${CMAKE_CURRENT_SOURCE_DIR}/examples/ecdh/*.c)
 	FILE(GLOB EXAMPLES_FILES_RNG
-			${CMAKE_CURRENT_SOURCE_DIR}/examples/rng/*.c
-			)
+			${CMAKE_CURRENT_SOURCE_DIR}/examples/rng/*.c)
+	FILE(GLOB EXAMPLES_FILES_VERSION
+			${CMAKE_CURRENT_SOURCE_DIR}/examples/version/*.c)
 	FILE(GLOB EXAMPLES_FILES_MISC
-			${CMAKE_CURRENT_SOURCE_DIR}/examples/misc/*.c
-			)
+			${CMAKE_CURRENT_SOURCE_DIR}/examples/misc/*.c)
+    FILE(GLOB EXAMPLES_README
+			${CMAKE_CURRENT_SOURCE_DIR}/examples/BUILD_Examples.md)
 
+	# install
 	INSTALL(FILES ${EXAMPLES_FILES_CIPHER}
-			DESTINATION examples/cipher
-			)
+			DESTINATION examples/cipher)
 	INSTALL(FILES ${EXAMPLES_FILES_DIGEST}
-			DESTINATION examples/digest
-			)
+			DESTINATION examples/digest)
+	INSTALL(FILES ${EXAMPLES_FILES_MAC}
+			DESTINATION examples/mac)
+	INSTALL(FILES ${EXAMPLES_FILES_ECDH}
+			DESTINATION examples/ecdh)
+	INSTALL(FILES ${EXAMPLES_FILES_VERSION}
+			DESTINATION examples/version)
 	INSTALL(FILES ${EXAMPLES_FILES_RNG}
-			DESTINATION examples/rng
-			)
-	INSTALL(FILES ${EXAMPLES_FILES_MISC} 
-			DESTINATION examples/misc
-			)
+			DESTINATION examples/rng)
+	#TODO: do we need to cover this under install?
+	# INSTALL(FILES ${EXAMPLES_FILES_MISC}
+	# 		DESTINATION examples/misc)
 	INSTALL(FILES examples/Makefile
 			DESTINATION .)
+	INSTALL(FILES ${EXAMPLES_README}
+			DESTINATION .)
 ENDIF (ALCP_ENABLE_EXAMPLES)
+
+# docs, etc which should be part of the package
+FILE(GLOB INSTALL_DOCS_REL_NOTES
+			${CMAKE_CURRENT_SOURCE_DIR}/docs/ReleaseNotes.txt)
+FILE(GLOB INSTALL_DOCS_COMPAT
+			${CMAKE_CURRENT_SOURCE_DIR}/docs/compat/*.pdf)
+FILE(GLOB INSTALL_DOCS_LICENSE
+			${CMAKE_CURRENT_SOURCE_DIR}/LICENSE)
+FILE(GLOB INSTALL_DOCS_README
+			${CMAKE_CURRENT_SOURCE_DIR}/README.md)
+
+# install docs
+INSTALL(FILES ${INSTALL_DOCS_REL_NOTES}
+		DESTINATION .)
+INSTALL(FILES ${INSTALL_DOCS_COMPAT}
+		DESTINATION docs)
+INSTALL(FILES ${INSTALL_DOCS_README}
+		DESTINATION docs)
+INSTALL(FILES ${INSTALL_DOCS_LICENSE}
+		DESTINATION .)
 
 # print configure summary
 MESSAGE(STATUS "\n--------------------Configure Summary--------------------\n")
