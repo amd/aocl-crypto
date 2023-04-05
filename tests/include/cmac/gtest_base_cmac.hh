@@ -151,7 +151,7 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
 void
 Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
 {
-    std::vector<Uint8> data  = {};
+    std::vector<Uint8> data = {};
 
     int                CmacSize = 128;
     std::vector<Uint8> CmacAlcp(CmacSize / 8, 0);
@@ -177,6 +177,15 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
     if (useipp == true)
         extCb = &icb;
 #endif
+
+    /* do cross tests between ipp and openssl */
+    if (oa_override) {
+        extCb = &ocb;
+        cb    = &icb;
+        std::cout << "Setting IPP as main Lib and OpenSSL as ext lib"
+                  << std::endl;
+    }
+
     if (extCb == nullptr) {
         std::cout << "No external lib selected!" << std::endl;
         exit(-1);

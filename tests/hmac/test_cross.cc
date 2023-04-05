@@ -64,7 +64,7 @@ TEST(HMAC_SHA2, CROSS_512)
 }
 TEST(HMAC_SHA3, CROSS_224)
 {
-    if (useipp)
+    if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_mac_info_t info;
     info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
@@ -73,7 +73,7 @@ TEST(HMAC_SHA3, CROSS_224)
 }
 TEST(HMAC_SHA3, CROSS_256)
 {
-    if (useipp)
+    if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_mac_info_t info;
     info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
@@ -82,7 +82,7 @@ TEST(HMAC_SHA3, CROSS_256)
 }
 TEST(HMAC_SHA3, CROSS_384)
 {
-    if (useipp)
+    if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_mac_info_t info;
     info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;
@@ -91,7 +91,7 @@ TEST(HMAC_SHA3, CROSS_384)
 }
 TEST(HMAC_SHA3, CROSS_512)
 {
-    if (useipp)
+    if (useipp || oa_override)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_mac_info_t info;
     info.mi_algoinfo.hmac.hmac_digest.dt_type         = ALC_DIGEST_TYPE_SHA3;

@@ -167,6 +167,14 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
     if (useipp == true)
         extHb = &ihb;
 #endif
+
+    /* do cross tests between ipp and openssl */
+    if (oa_override) {
+        extHb = &ohb;
+        hb    = &ihb;
+        std::cout << "Setting IPP as main Lib and OpenSSL as ext lib"
+                  << std::endl;
+    }
     if (extHb == nullptr) {
         std::cout << "No external lib selected!" << std::endl;
         exit(-1);

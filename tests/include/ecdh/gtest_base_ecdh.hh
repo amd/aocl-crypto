@@ -230,6 +230,19 @@ ecdh_Cross(alc_ec_info_t info)
         LibStrExt   = "OpenSSL";
     }
 #endif
+
+    /* do cross tests between ipp and openssl */
+    if (oa_override) {
+        ExtEb_peer1 = &oeb_peer1;
+        ExtEb_peer2 = &oeb_peer2;
+        LibStrExt   = "OpenSSL";
+        Eb_peer1    = &ieb_peer1;
+        Eb_peer2    = &ieb_peer2;
+        LibStrMain  = "IPP";
+        std::cout << "Setting IPP as main Lib and OpenSSL as ext lib"
+                  << std::endl;
+    }
+
     if (ExtEb_peer1 == nullptr || ExtEb_peer2 == nullptr) {
         std::cout << "No external lib selected!" << std::endl;
         exit(-1);
