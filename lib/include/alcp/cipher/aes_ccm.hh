@@ -82,7 +82,6 @@ class ALCP_API_EXPORT Ccm final
 
   public:
     Uint64       m_len               = 0;
-    Uint64       m_message_len       = 0;
     Uint64       m_ivLen             = 0;
     Uint64       m_tagLen            = 0;
     Uint64       m_additionalDataLen = 0;

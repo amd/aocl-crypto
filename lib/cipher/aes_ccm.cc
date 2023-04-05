@@ -42,7 +42,6 @@ class Ccm::Impl
 {
   private:
     Uint64       m_len               = 0;
-    Uint64       m_message_len       = 0;
     Uint64       m_ivLen             = 0;
     Uint64       m_tagLen            = 0;
     Uint64       m_additionalDataLen = 0;
@@ -748,8 +747,7 @@ Ccm::Impl::decrypt(ccm_data_t* pccm_data,
 Ccm::Ccm(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
     : Aes(aesInfo, keyInfo)
     , pImpl{ std::make_unique<Impl>(this) }
-{
-}
+{}
 
 alc_error_t
 Ccm::decrypt(const Uint8 pInput[],
