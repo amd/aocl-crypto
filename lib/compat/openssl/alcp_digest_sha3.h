@@ -37,7 +37,7 @@
         .dt_type = ALC_DIGEST_TYPE_SHA3,                                       \
         .dt_len = len,                                                         \
         .dt_mode = {                                                           \
-            .dm_sha2 = alcp_mode,                                              \
+            .dm_sha3 = alcp_mode,                                              \
         },                                                                     \
 }
 
