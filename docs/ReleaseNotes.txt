@@ -7,7 +7,11 @@ AOCL Crypto Contents
 --------------------
 AOCL-Crypto is a library consisting of basic cryptographic functions
 optimized for AMD Zen microarchitecture. This library has multiple
-implementations of different AES cryptographic encryption / decryption and SHA2, SHA3 Digest routines.
+implementations of different: 
+-- AES cryptographic encryption / decryption routines
+-- SHA2, SHA3 Digest routines.
+-- MAC (Cipher and Hash based) routines
+-- ECDH x25519 Key exchange functions
 
 Hightlights of AOCL Crypto version 4.0.1
 ----------------------------------------
@@ -22,3 +26,9 @@ This is the first release of the AOCL-Crypto library and supports the following 
     * HMAC routines for the following schemes:
           - HMAC_SHA2_224, HMAC_SHA2_256, HMAC_SHA2_384, HMAC_SHA2_512
           - HMAC_SHA3_224, HMAC_SHA3_256, HMAC_SHA3_384, HMAC_SHA3_512
+    * CMAC routines for the following schemes:
+          - CMAC_AES_128, CMAC_AES_192, CMAC_AES_256
+    * AES - SIV
+    * ECDH x25519 key exchange functions:
+          - Generate Public Key
+          - Compute Secret Key
