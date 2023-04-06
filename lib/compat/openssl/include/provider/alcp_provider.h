@@ -40,6 +40,7 @@
 
 extern const OSSL_ALGORITHM ALC_prov_ciphers[];
 extern const OSSL_ALGORITHM ALC_prov_digests[];
+extern const OSSL_ALGORITHM ALC_prov_macs[];
 extern const OSSL_ALGORITHM ALC_prov_rng[];
 
 struct _alc_prov_ctx

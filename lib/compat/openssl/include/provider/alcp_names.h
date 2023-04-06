@@ -111,3 +111,10 @@
 #define ALCP_PROV_NAMES_HMAC_DRBG "HMAC-DRBG"
 #define ALCP_PROV_NAMES_TEST_RAND "TEST-RAND"
 #define ALCP_PROV_NAMES_SEED_SRC  "SEED-SRC"
+
+// MAC
+#define ALCP_PROV_NAMES_HMAC "HMAC"
+#define ALCP_PROV_NAMES_CMAC "CMAC"
+// FIXME: Add provider for below
+// #define ALCP_PROV_DESCS_HMAC_SIGN "OpenSSL HMAC via EVP_PKEY implementation"
+// #define ALCP_PROV_DESCS_CMAC_SIGN "OpenSSL CMAC via EVP_PKEY implementation"

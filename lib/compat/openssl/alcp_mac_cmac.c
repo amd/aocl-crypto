@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,25 +26,15 @@
  *
  */
 
-#ifndef _OPENSSL_DEBUG_H
-#define _OPENSSL_DEBUG_H 2
-#define DEBUG
-#ifdef DEBUG
-#define DBG_PRINT(prfx, fmt, ...) printf(prfx##fmt, __VA_ARGS__)
+#include "alcp_mac_cmac.h"
+DEFINE_CMAC_CONTEXT("CBC");
 
-#define ENTRY()    DBG_PRINT("Entry: ", "%s\n", __func__)
-#define ENTER()    printf("Enter : %s\n", __func__)
-#define HERE()     printf("Here : %s:%d\n", __func__, __LINE__)
-#define EXIT()     printf("Exit : %s:%d\n", __func__, __LINE__)
-#define PRINT(MSG) printf(MSG)
+ALCP_prov_CMAC_get_ctx_params() {}
+ALCP_prov_CMAC_set_ctx_params() {}
 
-#else
-#define ENTRY()
-#define ENTER()
-#define HERE()
-#define EXIT()
-#define PRINT(MSG)
-
-#endif
-
-#endif /* _OPENSSL_DEBUG_H */
+/* MAC dispatchers */
+// CREATE_MAC_DISPATCHERS(HMAC, SHA2, 0);
+CREATE_MAC_DISPATCHERS(CMAC, CBC, 0);
+// CREATE_MAC_DISPATCHERS(sha384, sha2, 0);
+// CREATE_MAC_DISPATCHERS(sha256, sha2, 0);
+// CREATE_MAC_DISPATCHERS(sha224, sha2, 0);

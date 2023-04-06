@@ -65,6 +65,7 @@ void*
 ALCP_prov_digest_dupctx(void* vctx)
 {
     ENTER();
+    // FIXME: Implementation Pending for context copy
     alc_prov_digest_ctx_p csrc = vctx;
     EXIT();
     return csrc;
@@ -176,7 +177,7 @@ ALCP_prov_digest_update(void* vctx, const unsigned char* in, size_t inl)
     ENTER();
     err = alcp_digest_update(&(cctx->handle), in, inl);
     if (alcp_is_error(err)) {
-        printf("Provider: Unable to compute SHA2 hash\n");
+        printf("Provider: Unable to Update Digest\n");
         return 0;
     }
     EXIT();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,25 +26,23 @@
  *
  */
 
-#ifndef _OPENSSL_DEBUG_H
-#define _OPENSSL_DEBUG_H 2
-#define DEBUG
-#ifdef DEBUG
-#define DBG_PRINT(prfx, fmt, ...) printf(prfx##fmt, __VA_ARGS__)
+#ifndef _OPENSSL_ALCP_MAC_CMAC
+#define _OPENSSL_ALCP_MAC_CMAC 2
 
-#define ENTRY()    DBG_PRINT("Entry: ", "%s\n", __func__)
-#define ENTER()    printf("Enter : %s\n", __func__)
-#define HERE()     printf("Here : %s:%d\n", __func__, __LINE__)
-#define EXIT()     printf("Exit : %s:%d\n", __func__, __LINE__)
-#define PRINT(MSG) printf(MSG)
+#include "alcp/alcp.h"
+#include "alcp_mac_prov.h"
+#include "debug.h"
 
-#else
-#define ENTRY()
-#define ENTER()
-#define HERE()
-#define EXIT()
-#define PRINT(MSG)
+#define DEFINE_CMAC_CONTEXT(subtype)
+alc_mac_info_t
+    s_mac_CMAC_CBC_info = { .mi_type     = ALC_MAC_CMAC,
+                            .mi_algoinfo = {
+                                .cmac = { .cmac_cipher = {
+                                              .ci_type = ALC_CIPHER_TYPE_AES,
+                                              .ci_algo_info = {
+                                                  .ai_mode = ALC_AES_MODE_NONE,
+                                                  .ai_iv   = NULL } } } } };
 
-#endif
+// extern const OSSL_DISPATCH cfb_functions[];
 
-#endif /* _OPENSSL_DEBUG_H */
+#endif /* _OPENSSL_ALCP_MAC_CMAC */
