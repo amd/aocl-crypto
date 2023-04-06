@@ -178,13 +178,15 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
         extCb = &icb;
 #endif
 
-    /* do cross tests between ipp and openssl */
+        /* do cross tests between ipp and openssl */
+#if defined(USE_IPP) && defined(USE_OSSL)
     if (oa_override) {
         extCb = &ocb;
         cb    = &icb;
         std::cout << "Setting IPP as main Lib and OpenSSL as ext lib"
                   << std::endl;
     }
+#endif
 
     if (extCb == nullptr) {
         std::cout << "No external lib selected!" << std::endl;

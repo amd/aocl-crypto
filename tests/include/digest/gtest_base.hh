@@ -210,13 +210,16 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
     if (useipp == true)
         extDb = &idb;
 #endif
-    /* do cross tests between ipp and openssl */
+        /* do cross tests between ipp and openssl */
+#if defined(USE_IPP) && defined(USE_OSSL)
     if (oa_override) {
         extDb = &odb;
         db    = &idb;
         std::cout << "Setting IPP as main Lib and OpenSSL as ext lib"
                   << std::endl;
     }
+#endif
+
     if (extDb == nullptr) {
         printErrors("No external lib selected!");
         exit(-1);
