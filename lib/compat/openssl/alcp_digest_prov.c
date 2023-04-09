@@ -74,12 +74,13 @@ ALCP_prov_digest_newctx(void* vprovctx, const alc_digest_info_p dinfo)
 void*
 ALCP_prov_digest_dupctx(void* vctx)
 {
-    alc_prov_digest_ctx_p csrc = vctx;
     ENTER();
+    alc_prov_digest_ctx_p csrc = vctx;
 #if 0
     alc_prov_digest_ctx_p cdst = ALCP_prov_digest_newctx(
         csrc->pc_evp_digest_ctx, csrc->pc_digest_info, csrc->pc_params);
 #endif
+    EXIT();
     return csrc;
 }
 
@@ -104,6 +105,7 @@ static const OSSL_PARAM digest_known_gettable_params[] = {
 const OSSL_PARAM*
 ALCP_prov_digest_gettable_params(void* provctx)
 {
+    ENTER();
     EXIT();
     return digest_known_gettable_params;
 }
@@ -151,6 +153,8 @@ ALCP_prov_digest_get_params(OSSL_PARAM params[], int mode)
 const OSSL_PARAM*
 ALCP_prov_digest_gettable_ctx_params(void* cctx, void* provctx)
 {
+    ENTER();
+    EXIT();
     return digest_known_gettable_params;
 }
 
@@ -158,6 +162,7 @@ ALCP_prov_digest_gettable_ctx_params(void* cctx, void* provctx)
 const OSSL_PARAM*
 ALCP_prov_digest_settable_ctx_params(void* cctx, void* provctx)
 {
+    ENTER();
     static const OSSL_PARAM table[] = {
         // OSSL_PARAM_size_t(OSSL_DIGEST_PARAM_KEYLEN, NULL),
         OSSL_PARAM_END,
@@ -170,17 +175,17 @@ int
 ALCP_prov_digest_set_params(const OSSL_PARAM params[])
 {
     ENTER();
+    EXIT();
     return 1;
 }
 
 int
 ALCP_prov_digest_get_ctx_params(void* vctx, OSSL_PARAM params[])
 {
+    ENTER();
     // OSSL_PARAM* p;
     // alc_prov_digest_ctx_p cctx = (alc_prov_digest_ctx_p)vctx;
     // size_t                keylen = cctx->pc_digest_info.key_info.len;
-
-    ENTER();
 
     // if (keylen > 0
     //     && (p = OSSL_PARAM_locate(params, OSSL_DIGEST_PARAM_KEYLEN)) != NULL
@@ -194,9 +199,9 @@ ALCP_prov_digest_get_ctx_params(void* vctx, OSSL_PARAM params[])
 int
 ALCP_prov_digest_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 {
+    ENTER();
     // const OSSL_PARAM*     p;
     // alc_prov_digest_ctx_p cctx = (alc_prov_digest_ctx_p)vctx;
-    ENTER();
 
     // p = OSSL_PARAM_locate_const(params, OSSL_DIGEST_PARAM_KEYLEN);
     // if (p != NULL) {
@@ -216,9 +221,9 @@ ALCP_prov_digest_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 int
 ALCP_prov_digest_init(void* vctx, const OSSL_PARAM params[])
 {
+    ENTER();
     alc_prov_digest_ctx_p cctx = vctx;
     alc_error_t           err;
-    ENTER();
     // printf("Provider: Pointer->%p\n", cctx);
     alc_digest_info_p dinfo = &cctx->pc_digest_info;
     Uint64            size  = alcp_digest_context_size(dinfo);
@@ -235,6 +240,7 @@ ALCP_prov_digest_init(void* vctx, const OSSL_PARAM params[])
 int
 ALCP_prov_digest_update(void* vctx, const unsigned char* in, size_t inl)
 {
+    ENTER();
     alc_error_t           err;
     alc_prov_digest_ctx_p cctx = vctx;
     ENTER();
@@ -253,9 +259,9 @@ ALCP_prov_digest_final(void*          vctx,
                        size_t*        outl,
                        size_t         outsize)
 {
+    ENTER();
     alc_error_t           err  = ALC_ERROR_NONE;
     alc_prov_digest_ctx_p dctx = vctx;
-    ENTER();
 
     /**
      * FIXME: EVP_MD_get_size provider need to implemented. Currently it is
@@ -277,6 +283,7 @@ ALCP_prov_digest_final(void*          vctx,
         return 0;
     }
     OPENSSL_free(dctx->handle.context);
+    EXIT();
     return 1;
 }
 
