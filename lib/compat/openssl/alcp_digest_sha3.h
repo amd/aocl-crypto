@@ -33,7 +33,7 @@
 #include "debug.h"
 
 #define DEFINE_SHA3_CONTEXT(grp, mode, len, alcp_mode)                         \
-    alc_digest_info_t s_digest_##mode##_##grp##_info = {                               \
+    alc_digest_info_t s_digest_##mode##_##grp##_##len##_info = {                               \
         .dt_type = ALC_DIGEST_TYPE_SHA3,                                       \
         .dt_len = len,                                                         \
         .dt_mode = {                                                           \

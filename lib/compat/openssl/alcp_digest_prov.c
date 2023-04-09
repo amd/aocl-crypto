@@ -113,36 +113,22 @@ ALCP_prov_digest_gettable_params(void* provctx)
 int
 ALCP_prov_digest_get_params(OSSL_PARAM params[], int mode)
 {
-    OSSL_PARAM* p;
-    int         blkbits = 128;
-
     ENTER();
+    // OSSL_PARAM* p;
+    // int         blkbits = 128;
 
-    // p = OSSL_PARAM_locate(params, OSSL_DIGEST_PARAM_MODE);
-    // if (p != NULL && !OSSL_PARAM_set_uint(p, mode)) {
+    // FIXME: Below is dead code, remove if not needed for anything
+    // p = OSSL_PARAM_locate(params, OSSL_DIGEST_PARAM_BLOCK_SIZE);
+    // if (p != NULL && !OSSL_PARAM_set_size_t(p, blkbits / 8)) {
     //     ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
     //     EXIT();
     //     return 0;
     // }
 
-    // p = OSSL_PARAM_locate(params, OSSL_DIGEST_PARAM_KEYLEN);
-    // if (p != NULL && !OSSL_PARAM_set_size_t(p, kbits / 8)) {
-    //     ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
-    //     EXIT();
-    //     return 0;
-    // }
-
-    p = OSSL_PARAM_locate(params, OSSL_DIGEST_PARAM_BLOCK_SIZE);
-    if (p != NULL && !OSSL_PARAM_set_size_t(p, blkbits / 8)) {
-        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
-        EXIT();
-        return 0;
-    }
-
-    // p = OSSL_PARAM_locate(params, OSSL_DIGEST_PARAM_IVLEN);
-    // if (p != NULL && !OSSL_PARAM_set_size_t(p, ivbits / 8)) {
-    //     ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
-    //     EXIT();
+    // SHAKE PARAM
+    // p = OSSL_PARAM_locate_const(params, OSSL_DIGEST_PARAM_XOFLEN);
+    // if (p != NULL && !OSSL_PARAM_get_size_t(p, &ctx->md_size)) {
+    //     ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_GET_PARAMETER);
     //     return 0;
     // }
 
@@ -293,6 +279,8 @@ extern const OSSL_DISPATCH sha224_sha2_functions[];
 extern const OSSL_DISPATCH sha256_sha2_functions[];
 extern const OSSL_DISPATCH sha384_sha2_functions[];
 extern const OSSL_DISPATCH sha512_sha2_functions[];
+extern const OSSL_DISPATCH sha512_224_sha2_functions[];
+extern const OSSL_DISPATCH sha512_256_sha2_functions[];
 extern const OSSL_DISPATCH sha224_sha3_functions[];
 extern const OSSL_DISPATCH sha256_sha3_functions[];
 extern const OSSL_DISPATCH sha384_sha3_functions[];
@@ -303,8 +291,12 @@ const OSSL_ALGORITHM ALC_prov_digests[] = {
     { ALCP_PROV_NAMES_SHA2_256, DIGEST_DEF_PROP, sha256_sha2_functions },
     { ALCP_PROV_NAMES_SHA2_384, DIGEST_DEF_PROP, sha384_sha2_functions },
     { ALCP_PROV_NAMES_SHA2_512, DIGEST_DEF_PROP, sha512_sha2_functions },
-    // { ALCP_PROV_NAMES_SHA2_512_224, DIGEST_DEF_PROP, sha512_sha2_functions },
-    // { ALCP_PROV_NAMES_SHA2_512_256, DIGEST_DEF_PROP, sha512_sha2_functions },
+    { ALCP_PROV_NAMES_SHA2_512_224,
+      DIGEST_DEF_PROP,
+      sha512_224_sha2_functions },
+    { ALCP_PROV_NAMES_SHA2_512_256,
+      DIGEST_DEF_PROP,
+      sha512_256_sha2_functions },
     { ALCP_PROV_NAMES_SHA3_512, DIGEST_DEF_PROP, sha512_sha3_functions },
     { ALCP_PROV_NAMES_SHA3_384, DIGEST_DEF_PROP, sha384_sha3_functions },
     { ALCP_PROV_NAMES_SHA3_256, DIGEST_DEF_PROP, sha256_sha3_functions },

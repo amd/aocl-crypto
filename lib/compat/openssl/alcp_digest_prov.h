@@ -100,20 +100,20 @@ extern OSSL_FUNC_digest_set_ctx_params_fn ALCP_prov_digest_set_ctx_params;
 extern OSSL_FUNC_digest_update_fn         ALCP_prov_digest_update;
 extern OSSL_FUNC_digest_final_fn          ALCP_prov_digest_final;
 
-#define CREATE_DIGEST_DISPATCHERS(name, grp, mode)                             \
+#define CREATE_DIGEST_DISPATCHERS(name, grp, len)                              \
     static OSSL_FUNC_digest_get_params_fn ALCP_prov_##name##_get_params;       \
     static int ALCP_prov_##name##_get_params(OSSL_PARAM* params)               \
     {                                                                          \
         ENTER();                                                               \
-        return ALCP_prov_digest_get_params(params, mode);                      \
+        return ALCP_prov_digest_get_params(params, len);                       \
     }                                                                          \
                                                                                \
     static OSSL_FUNC_digest_newctx_fn ALCP_prov_##name##_newctx;               \
     static void*                      ALCP_prov_##name##_newctx(void* provctx) \
     {                                                                          \
         ENTER();                                                               \
-        return ALCP_prov_digest_newctx(provctx,                                \
-                                       &s_digest_##name##_##grp##_info);       \
+        return ALCP_prov_digest_newctx(                                        \
+            provctx, &s_digest_##name##_##grp##_##len##_info);                 \
     }                                                                          \
     const OSSL_DISPATCH name##_##grp##_functions[] = {                         \
         { OSSL_FUNC_DIGEST_GET_PARAMS,                                         \
