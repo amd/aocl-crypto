@@ -200,6 +200,7 @@ BigNum::operator*(const BigNum& rhs)
 BigNum
 BigNum::operator/(const BigNum& rhs)
 {
+    // FIXME: remove the try/catch
     BigNum result;
     try {
         result = pImpl()->div(rhs);
@@ -212,6 +213,7 @@ BigNum::operator/(const BigNum& rhs)
 BigNum
 BigNum::operator%(const BigNum& rhs)
 {
+    // FIXME: remove the try/catch
     BigNum result;
     try {
         result = pImpl()->mod(rhs);
