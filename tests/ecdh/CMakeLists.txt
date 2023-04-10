@@ -36,7 +36,7 @@ SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} base/alc_ecdh.cc base/ecd
 SET(LIBS ${LIBS} gtest alcp)
 
 # add this if asan is used
-if (ALCP_USE_ASAN)
+if (ALCP_SANITIZE)
     SET(LIBS ${LIBS} asan)
 endif()
 

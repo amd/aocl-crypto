@@ -72,19 +72,6 @@ alcp_get_cflags()
 alcp_get_cflags_debug()
 alcp_get_cflags_arch()
 
-# add these cflags if ASAN is used
-if (ALCP_USE_ASAN)
-	if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    	SET(ALCP_CFLAGS ${ALCP_CFLAGS}
-		-static-libasan -fsanitize=address
-		CACHE INTERNAL "")
-	elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
-		SET(ALCP_CFLAGS_DEBUG ${ALCP_CFLAGS_DEBUG}
-		-static-libasan -fsanitize=address
-		CACHE INTERNAL "")
-	endif()
-endif()
-
 IF (MSVC AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 	ADD_COMPILE_OPTIONS(/W3 /WX)
 ELSEIF (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

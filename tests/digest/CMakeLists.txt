@@ -36,7 +36,7 @@ SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ../../tests/digest/base/a
 SET(LIBS ${LIBS} gtest alcp)
 
 # add this if asan is used
-if (ALCP_USE_ASAN)
+if (ALCP_SANITIZE)
     SET(LIBS ${LIBS} asan)
 endif()
 

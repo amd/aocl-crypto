@@ -37,7 +37,7 @@ FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher_base.cc ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher_base.cc)
 SET(LIBS ${LIBS} benchmark alcp)
 # add this if asan is used
-if (ALCP_USE_ASAN)
+if (ALCP_SANITIZE)
     SET(LIBS ${LIBS} asan)
 endif()
 SET(EXTRA_INCLUDES "")
