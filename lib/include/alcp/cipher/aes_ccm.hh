@@ -92,6 +92,7 @@ class ALCP_API_EXPORT Ccm final
     explicit Ccm(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo);
 
+     Ccm();
     ~Ccm();
 
     static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
@@ -172,7 +173,6 @@ class ALCP_API_EXPORT Ccm final
                                       Uint8*       pPlainText,
                                       Uint64       len,
                                       const Uint8* pIv) override;
-    Ccm() = default;
 
   private:
     class Impl;
