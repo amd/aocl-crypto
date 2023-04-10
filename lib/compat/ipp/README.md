@@ -1,6 +1,5 @@
-# Instructions to Build/Use ippcp plugin
+# Instructions to Build/Use IPP-CP plugin
 
-<span style="color:red">Warning : This document is still under construction, please read the details below carefully as it might be little ambiguous.</span>
 
 ## Building
 
