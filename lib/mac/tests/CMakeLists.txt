@@ -26,7 +26,7 @@
 Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTests.cmake)
 
 # Bump up C++ standard
-SET(CMAKE_CXX_STANDARD 20)
+SET(CMAKE_CXX_STANDARD 17)
 
 
 function(UnitTest TEST_NAME)
