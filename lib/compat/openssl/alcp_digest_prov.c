@@ -111,7 +111,7 @@ ALCP_prov_digest_gettable_params(void* provctx)
 }
 
 int
-ALCP_prov_digest_get_params(OSSL_PARAM params[], int mode)
+ALCP_prov_digest_get_params(OSSL_PARAM params[])
 {
     ENTER();
     // OSSL_PARAM* p;

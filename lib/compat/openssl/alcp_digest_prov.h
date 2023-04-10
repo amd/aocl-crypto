@@ -89,7 +89,7 @@ ALCP_prov_digest_settable_ctx_params(void* cctx, void* provctx);
 const OSSL_PARAM*
 ALCP_prov_digest_gettable_params(void* provctx);
 int
-ALCP_prov_digest_get_params(OSSL_PARAM params[], int mode);
+ALCP_prov_digest_get_params(OSSL_PARAM params[]);
 int
 ALCP_prov_digest_set_params(const OSSL_PARAM params[]);
 
@@ -99,14 +99,9 @@ extern OSSL_FUNC_digest_get_ctx_params_fn ALCP_prov_digest_get_ctx_params;
 extern OSSL_FUNC_digest_set_ctx_params_fn ALCP_prov_digest_set_ctx_params;
 extern OSSL_FUNC_digest_update_fn         ALCP_prov_digest_update;
 extern OSSL_FUNC_digest_final_fn          ALCP_prov_digest_final;
+extern OSSL_FUNC_digest_get_params_fn     ALCP_prov_digest_get_params;
 
 #define CREATE_DIGEST_DISPATCHERS(name, grp, len)                              \
-    static OSSL_FUNC_digest_get_params_fn ALCP_prov_##name##_get_params;       \
-    static int ALCP_prov_##name##_get_params(OSSL_PARAM* params)               \
-    {                                                                          \
-        ENTER();                                                               \
-        return ALCP_prov_digest_get_params(params, len);                       \
-    }                                                                          \
                                                                                \
     static OSSL_FUNC_digest_newctx_fn ALCP_prov_##name##_newctx;               \
     static void*                      ALCP_prov_##name##_newctx(void* provctx) \
@@ -116,8 +111,7 @@ extern OSSL_FUNC_digest_final_fn          ALCP_prov_digest_final;
             provctx, &s_digest_##name##_##grp##_##len##_info);                 \
     }                                                                          \
     const OSSL_DISPATCH name##_##grp##_functions[] = {                         \
-        { OSSL_FUNC_DIGEST_GET_PARAMS,                                         \
-          (fptr_t)ALCP_prov_##name##_get_params },                             \
+        { OSSL_FUNC_DIGEST_GET_PARAMS, (fptr_t)ALCP_prov_digest_get_params },  \
         { OSSL_FUNC_DIGEST_NEWCTX, (fptr_t)ALCP_prov_##name##_newctx },        \
         { OSSL_FUNC_DIGEST_DUPCTX, (fptr_t)ALCP_prov_digest_dupctx },          \
         { OSSL_FUNC_DIGEST_FREECTX, (fptr_t)ALCP_prov_digest_freectx },        \
