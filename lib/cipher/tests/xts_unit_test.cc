@@ -183,13 +183,16 @@ TEST(XTS, initiantiation_with_valid_input)
     const alc_key_info_t keyInfo = {
         ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 128, key
     };
-    Xts xts_obj = Xts(aesInfo, keyInfo);
 
-    EXPECT_EQ(xts_obj.getRounds(), 10);
-    EXPECT_EQ(xts_obj.getKeySize(), 16);
-    EXPECT_EQ(xts_obj.getNr(), 10);
-    EXPECT_EQ(xts_obj.getNk(), 4);
-}
+    Xts* xts_obj = new Xts(aesInfo, keyInfo);
+
+    EXPECT_EQ(xts_obj->getRounds(), 10);
+    EXPECT_EQ(xts_obj->getKeySize(), 16);
+    EXPECT_EQ(xts_obj->getNr(), 10);
+    EXPECT_EQ(xts_obj->getNk(), 4);
+
+    delete xts_obj;
+}   
 
 TEST(XTS, initiantiation_with_invalid_iv)
 {
@@ -216,12 +219,14 @@ TEST(XTS, initiantiation_with_invalid_iv)
         ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 256, key
     };
 
-    Xts xts_obj = Xts(aesInfo, keyInfo);
+    Xts* xts_obj = new Xts(aesInfo, keyInfo);
 
-    EXPECT_EQ(xts_obj.setIv(sizeof(iv), iv), ALC_ERROR_INVALID_SIZE);
-    EXPECT_EQ(xts_obj.getKeySize(), 32);
-    EXPECT_EQ(xts_obj.getNr(), 14);
-    EXPECT_EQ(xts_obj.getNk(), 8);
+    EXPECT_EQ(xts_obj->setIv(sizeof(iv), iv), ALC_ERROR_INVALID_SIZE);
+    EXPECT_EQ(xts_obj->getKeySize(), 32);
+    EXPECT_EQ(xts_obj->getNr(), 14);
+    EXPECT_EQ(xts_obj->getNk(), 8);
+
+    delete xts_obj;
 }
 
 TEST(XTS, valid_all_sizes_encrypt_decrypt_test)
@@ -249,7 +254,7 @@ TEST(XTS, valid_all_sizes_encrypt_decrypt_test)
         ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 256, key
     };
 
-    Xts xts_obj = Xts(aesInfo, keyInfo);
+    Xts* xts_obj = new Xts(aesInfo, keyInfo);
 
     for (int i = 16; i < 512 * 20; i++) {
 
@@ -261,15 +266,16 @@ TEST(XTS, valid_all_sizes_encrypt_decrypt_test)
         auto   dest    = std::make_unique<Uint8[]>(i);
 
         alc_error_t err =
-            xts_obj.encrypt(&(plainText[0]), dest.get(), ct_size, iv);
+            xts_obj->encrypt(&(plainText[0]), dest.get(), ct_size, iv);
 
         std::vector<Uint8> pt(i, 0);
 
-        err = xts_obj.decrypt(dest.get(), &(pt[0]), ct_size, iv);
+        err = xts_obj->decrypt(dest.get(), &(pt[0]), ct_size, iv);
 
         EXPECT_TRUE(err == ALC_ERROR_NONE);
         ArraysMatch(plainText, pt);
     }
+    delete xts_obj;
 }
 
 TEST(XTS, invalid_len_encrypt_decrypt_test)
@@ -297,19 +303,20 @@ TEST(XTS, invalid_len_encrypt_decrypt_test)
         ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 256, key
     };
 
-    Xts                xts_obj = Xts(aesInfo, keyInfo);
+    Xts*               xts_obj = new Xts(aesInfo, keyInfo);
     std::vector<Uint8> plainText(4, 0);
     Uint64             ct_size = 4;
     auto               dest    = std::make_unique<Uint8[]>(4);
 
-    alc_error_t err = xts_obj.encrypt(&(plainText[0]), dest.get(), ct_size, iv);
+    alc_error_t err = xts_obj->encrypt(&(plainText[0]), dest.get(), ct_size, iv);
 
     EXPECT_TRUE(err == ALC_ERROR_INVALID_DATA);
 
     std::vector<Uint8> cipherText(4, 0);
 
-    err = xts_obj.decrypt(&(cipherText[0]), dest.get(), ct_size, iv);
+    err = xts_obj->decrypt(&(cipherText[0]), dest.get(), ct_size, iv);
     EXPECT_TRUE(err == ALC_ERROR_INVALID_DATA);
+    delete xts_obj;
 }
 
 using namespace alcp::cipher;
