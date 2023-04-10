@@ -5,7 +5,10 @@
 For more information please take a look at [this](https://www.openssl.org/docs/manmaster/man5/config.html). Modify or replace openssl.cnf with this.
 
 ```sh
-openssl_conf = provider_sect
+openssl_conf = openssl_init
+
+[openssl_init]
+providers = provider_sect
 
 [provider_sect]
 default = default_sect
