@@ -11,7 +11,7 @@ cmake -DAOCL_COMPAT_LIBS=openssl ../
 cmake --build .
 ```
 
-After running all the above commands you should see a `build/libopenssl-compat.so` in build directory.
+After running all the above commands you should see a `libopenssl-compat.so` in build directory.
 
 ## Usage Instructions
 
