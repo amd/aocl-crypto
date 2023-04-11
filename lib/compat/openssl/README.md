@@ -7,7 +7,7 @@
 git clone <repo url> aocl-crypto
 mkdir aocl-crypto/build
 cd aocl-crypto/build
-cmake -DAOCL_COMPAT_LIBS=ipp ../
+cmake -DAOCL_COMPAT_LIBS=openssl ../
 cmake --build .
 ```
 
