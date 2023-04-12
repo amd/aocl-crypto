@@ -133,6 +133,7 @@ OpenSSLDigestBase::digest_function(const alcp_digest_data_t& data)
 
     /* for extendable output functions */
     if (m_info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
+        std::cout << "ALCP: INITIATING XOF" << std::endl;
         retval = EVP_DigestFinalXOF(m_handle, data.m_digest, data.m_digest_len);
         if (retval != 1) {
             std::cout << "Error code in EVP_DigestFinalXOF: " << retval

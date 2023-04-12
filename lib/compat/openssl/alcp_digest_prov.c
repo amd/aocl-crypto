@@ -186,7 +186,7 @@ int
 ALCP_prov_digest_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 {
     ENTER();
-    // const OSSL_PARAM*     p;
+    const OSSL_PARAM* p;
     // alc_prov_digest_ctx_p cctx = (alc_prov_digest_ctx_p)vctx;
 
     // p = OSSL_PARAM_locate_const(params, OSSL_DIGEST_PARAM_KEYLEN);
@@ -199,6 +199,14 @@ ALCP_prov_digest_set_ctx_params(void* vctx, const OSSL_PARAM params[])
     //     }
     //     cctx->pc_digest_info.key_info.len = keylen;
     // }
+
+    alc_prov_digest_ctx_p pctx = (alc_prov_digest_ctx_p)vctx;
+
+    p = OSSL_PARAM_locate_const(params, OSSL_DIGEST_PARAM_XOFLEN);
+    if (p != NULL && !OSSL_PARAM_get_size_t(p, &pctx->shake_digest_size)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_GET_PARAMETER);
+        return 0;
+    }
 
     EXIT();
     return 1;
@@ -257,12 +265,19 @@ ALCP_prov_digest_final(void*          vctx,
 
     // FIXME: Once EVP_MD_get_size provider is implemented calculate *outl
     // directly from outsize. Below is a temporary fix to get digest size
-    *outl = dctx->pc_digest_info.dt_len / 8;
-    err   = alcp_digest_finalize(&(dctx->handle), NULL, 0);
+
+    if (dctx->pc_digest_info.dt_mode.dm_sha3 == ALC_SHAKE_256
+        || dctx->pc_digest_info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
+        *outl = outsize;
+    } else {
+        *outl = dctx->pc_digest_info.dt_len / 8;
+    }
+    err = alcp_digest_finalize(&(dctx->handle), NULL, 0);
     if (alcp_is_error(err)) {
         printf("Provider: Failed to Finalize\n");
         return 0;
     }
+    printf("Provider: Out: %p, OutLen:%ld, OutSize:%ld\n", out, *outl, outsize);
     err = alcp_digest_copy(&(dctx->handle), out, (Uint64)*outl);
     if (alcp_is_error(err)) {
         printf("Provider: Failed to copy Hash\n");
@@ -285,6 +300,8 @@ extern const OSSL_DISPATCH sha224_sha3_functions[];
 extern const OSSL_DISPATCH sha256_sha3_functions[];
 extern const OSSL_DISPATCH sha384_sha3_functions[];
 extern const OSSL_DISPATCH sha512_sha3_functions[];
+extern const OSSL_DISPATCH shake128_sha3_functions[];
+extern const OSSL_DISPATCH shake256_sha3_functions[];
 
 const OSSL_ALGORITHM ALC_prov_digests[] = {
     { ALCP_PROV_NAMES_SHA2_224, DIGEST_DEF_PROP, sha224_sha2_functions },
@@ -301,6 +318,9 @@ const OSSL_ALGORITHM ALC_prov_digests[] = {
     { ALCP_PROV_NAMES_SHA3_384, DIGEST_DEF_PROP, sha384_sha3_functions },
     { ALCP_PROV_NAMES_SHA3_256, DIGEST_DEF_PROP, sha256_sha3_functions },
     { ALCP_PROV_NAMES_SHA3_224, DIGEST_DEF_PROP, sha224_sha3_functions },
+
+    { ALCP_PROV_NAMES_SHAKE_128, DIGEST_DEF_PROP, shake128_sha3_functions },
+    { ALCP_PROV_NAMES_SHAKE_256, DIGEST_DEF_PROP, shake256_sha3_functions },
 
     { NULL, NULL, NULL },
 };

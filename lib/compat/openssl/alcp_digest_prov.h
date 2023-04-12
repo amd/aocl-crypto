@@ -47,7 +47,7 @@ struct _alc_prov_digest_ctx
     /* Must be first */
     alc_prov_ctx_t*     pc_prov_ctx;
     alc_digest_handle_t handle;
-    int                 enc_flag;
+    size_t              shake_digest_size;
 
     int               pc_nid;
     EVP_MD*           pc_evp_digest;

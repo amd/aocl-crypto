@@ -32,10 +32,13 @@ DEFINE_SHA3_CONTEXT(sha3, sha512, ALC_DIGEST_LEN_512, ALC_SHA2_512);
 DEFINE_SHA3_CONTEXT(sha3, sha384, ALC_DIGEST_LEN_384, ALC_SHA2_384);
 DEFINE_SHA3_CONTEXT(sha3, sha256, ALC_DIGEST_LEN_256, ALC_SHA2_256);
 DEFINE_SHA3_CONTEXT(sha3, sha224, ALC_DIGEST_LEN_224, ALC_SHA2_224);
+DEFINE_SHA3_CONTEXT(sha3, shake128, ALC_DIGEST_LEN_CUSTOM, ALC_SHAKE_128);
+DEFINE_SHA3_CONTEXT(sha3, shake256, ALC_DIGEST_LEN_CUSTOM, ALC_SHAKE_256);
 
 int
 ALCP_prov_sha3_get_ctx_params(void* vctx, OSSL_PARAM params[])
 {
+    ENTER();
     EXIT();
     return ALCP_prov_digest_get_ctx_params(vctx, params);
 }
@@ -43,6 +46,7 @@ ALCP_prov_sha3_get_ctx_params(void* vctx, OSSL_PARAM params[])
 int
 ALCP_prov_sha3_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 {
+    ENTER();
     EXIT();
     return ALCP_prov_digest_set_ctx_params(vctx, params);
 }
@@ -50,6 +54,7 @@ ALCP_prov_sha3_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 void
 ALCP_prov_sha3_ctxfree(alc_prov_digest_ctx_p dig_ctx)
 {
+    ENTER();
     EXIT();
     ALCP_prov_digest_freectx(dig_ctx);
 }
@@ -59,3 +64,5 @@ CREATE_DIGEST_DISPATCHERS(sha512, sha3, ALC_DIGEST_LEN_512);
 CREATE_DIGEST_DISPATCHERS(sha384, sha3, ALC_DIGEST_LEN_384);
 CREATE_DIGEST_DISPATCHERS(sha256, sha3, ALC_DIGEST_LEN_256);
 CREATE_DIGEST_DISPATCHERS(sha224, sha3, ALC_DIGEST_LEN_224);
+CREATE_DIGEST_DISPATCHERS(shake128, sha3, ALC_DIGEST_LEN_CUSTOM);
+CREATE_DIGEST_DISPATCHERS(shake256, sha3, ALC_DIGEST_LEN_CUSTOM);
