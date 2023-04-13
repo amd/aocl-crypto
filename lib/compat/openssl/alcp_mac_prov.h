@@ -41,11 +41,9 @@
 // #include <openssl/proverr.h>
 
 // #include <alcp/key.h>
-#include <alcp/mac.h>
-
 #include "alcp_provider.h"
-
 #include "debug.h"
+#include <alcp/mac.h>
 
 struct _alc_prov_mac_ctx
 {
@@ -121,8 +119,8 @@ extern OSSL_FUNC_mac_final_fn          ALCP_prov_mac_final;
     static void*                   ALCP_prov_##mactype##_newctx(void* provctx) \
     {                                                                          \
         ENTER();                                                               \
-        int ret = ALCP_prov_mac_newctx(provctx,                                \
-                                       &s_mac_##mactype##_##subtype##_info);   \
+        void* ret = ALCP_prov_mac_newctx(provctx,                              \
+                                         &s_mac_##mactype##_##subtype##_info); \
         EXIT();                                                                \
         return ret;                                                            \
     }                                                                          \
