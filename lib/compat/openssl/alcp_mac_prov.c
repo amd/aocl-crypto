@@ -138,6 +138,65 @@ ALCP_prov_mac_set_ctx_params(void* vctx, const OSSL_PARAM params[])
     return 0;
 }
 
+int HMAC_init(char *digest,alc_mac_info_p macinfo){
+
+    if(digest==NULL){
+        return 0;
+    }
+    // FIXME: Key does not need to be in bytes
+    macinfo->mi_keyinfo.len=macinfo->mi_keyinfo.len/=8;
+    
+    alc_digest_info_t digestinfo ;
+    alc_digest_type_t digest_type;
+    alc_digest_len_t digest_len;
+    alc_digest_mode_t digest_mode;
+
+    if(!strcmp(digest,"sha256")){
+        digest_type = ALC_DIGEST_TYPE_SHA2;
+        digest_len = ALC_DIGEST_LEN_256;
+        digest_mode.dm_sha2 = ALC_SHA2_256;
+
+    }
+    else if(!strcmp(digest,"sha224")){
+        digest_type = ALC_DIGEST_TYPE_SHA2;
+        digest_len = ALC_DIGEST_LEN_224;
+        digest_mode.dm_sha2 = ALC_SHA2_224;
+    }
+    else if(!strcmp(digest,"sha384")){
+        digest_type = ALC_DIGEST_TYPE_SHA2;
+        digest_len = ALC_DIGEST_LEN_384;
+        digest_mode.dm_sha2 = ALC_SHA2_384;
+    }
+    else if(!strcmp(digest,"sha512")){
+        digest_type = ALC_DIGEST_TYPE_SHA2;
+        digest_len = ALC_DIGEST_LEN_512;
+        digest_mode.dm_sha2 = ALC_SHA2_512;
+    }
+    else if(!strcmp(digest,"sha3-224")){
+        digest_type = ALC_DIGEST_TYPE_SHA3;
+        digest_len = ALC_DIGEST_LEN_224;
+        digest_mode.dm_sha3 = ALC_SHA2_224;
+    }
+    else if(!strcmp(digest,"sha3-256")){
+        digest_type = ALC_DIGEST_TYPE_SHA3;
+        digest_len = ALC_DIGEST_LEN_256;
+        digest_mode.dm_sha3 = ALC_SHA2_256;
+    }
+    else if(!strcmp(digest,"sha3-384")){
+        digest_type = ALC_DIGEST_TYPE_SHA3;
+        digest_len = ALC_DIGEST_LEN_384;
+        digest_mode.dm_sha3 = ALC_SHA2_384;
+    }
+    else if(!strcmp(digest,"sha3-512")){
+        digest_type = ALC_DIGEST_TYPE_SHA3;
+        digest_len = ALC_DIGEST_LEN_512;
+        digest_mode.dm_sha3 = ALC_SHA2_512;
+    }
+    digestinfo.dt_type = digest_type;
+    digestinfo.dt_len = digest_len;
+    digestinfo.dt_mode = digest_mode;
+    macinfo->mi_algoinfo.hmac.hmac_digest = digestinfo;
+}
 int
 ALCP_prov_mac_init(void*                vctx,
                    const unsigned char* key,
@@ -169,17 +228,11 @@ ALCP_prov_mac_init(void*                vctx,
     alc_mac_info_p     macinfo = &cctx->pc_mac_info;
     macinfo->mi_keyinfo        = kinfo;
 
-    alc_digest_info_t digestinfo = {
-                .dt_type = ALC_DIGEST_TYPE_SHA2,
-                .dt_len = ALC_DIGEST_LEN_256,
-                .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
-            };
+
     if(digest!=NULL){
-        if(!strcmp(digest,"sha256")){
-            printf("sha256 successful\n");
-            macinfo->mi_algoinfo.hmac.hmac_digest = digestinfo;
-        }
+        HMAC_init(digest,macinfo);
     }
+
 
 
     Uint64 size                = alcp_mac_context_size(macinfo);
