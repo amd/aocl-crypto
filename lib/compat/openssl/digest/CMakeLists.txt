@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -23,24 +23,6 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
  
-# Added aocl-compat as a seperate liberary
-ADD_SUBDIRECTORY(cipher)
-ADD_SUBDIRECTORY(digest)
-ADD_SUBDIRECTORY(rng)
-ADD_SUBDIRECTORY(provider)
+FILE(GLOB DIGEST_SRCS "*.c")
 
-# MESSAGE(STATUS "PROVIDER_SOURCES:${PROVIDER_SRC}")
-
-ADD_LIBRARY(openssl-compat 
-	${PROVIDER_SRC}
-	)
-
-# Include ALCP header files
-TARGET_INCLUDE_DIRECTORIES(openssl-compat PRIVATE ${PROJECT_SOURCE_DIR}/include)
-TARGET_INCLUDE_DIRECTORIES(openssl-compat PRIVATE include)
-
-# Link to ALCP shared object file
-TARGET_LINK_LIBRARIES(openssl-compat PUBLIC alcp)
-
-
-
+SET(PROVIDER_SRC ${PROVIDER_SRC} ${DIGEST_SRCS} PARENT_SCOPE)

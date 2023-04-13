@@ -26,8 +26,8 @@
  *
  */
 
-#include "alcp_cipher_prov.h"
-#include "alcp_names.h"
+#include "cipher/alcp_cipher_prov.h"
+#include "provider/alcp_names.h"
 
 void
 ALCP_prov_cipher_freectx(void* vctx)

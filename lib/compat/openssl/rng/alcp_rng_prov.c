@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,8 +26,8 @@
  *
  */
 
-#include "alcp_rng_prov.h"
-#include "alcp_names.h"
+#include "rng/alcp_rng_prov.h"
+#include "provider/alcp_names.h"
 
 static const char CIPHER_DEF_PROP[] = "provider=alcp,fips=no";
 

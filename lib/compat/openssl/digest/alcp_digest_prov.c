@@ -26,8 +26,8 @@
  *
  */
 
-#include "alcp_digest_prov.h"
-#include "alcp_names.h"
+#include "digest/alcp_digest_prov.h"
+#include "provider/alcp_names.h"
 
 void
 ALCP_prov_digest_freectx(void* vctx)
@@ -277,7 +277,6 @@ ALCP_prov_digest_final(void*          vctx,
         printf("Provider: Failed to Finalize\n");
         return 0;
     }
-    printf("Provider: Out: %p, OutLen:%ld, OutSize:%ld\n", out, *outl, outsize);
     err = alcp_digest_copy(&(dctx->handle), out, (Uint64)*outl);
     if (alcp_is_error(err)) {
         printf("Provider: Failed to copy Hash\n");

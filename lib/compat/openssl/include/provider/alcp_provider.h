@@ -26,40 +26,27 @@
  *
  */
 
-#include "alcp_digest_sha2.h"
+#ifndef _OPENSSL_ALCP_PROVIDER_H
+#define _OPENSSL_ALCP_PROVIDER_H 2
 
-DEFINE_SHA2_CONTEXT(sha2, sha512_256, ALC_DIGEST_LEN_256, ALC_SHA2_512);
-DEFINE_SHA2_CONTEXT(sha2, sha512_224, ALC_DIGEST_LEN_224, ALC_SHA2_512);
-DEFINE_SHA2_CONTEXT(sha2, sha512, ALC_DIGEST_LEN_512, ALC_SHA2_512);
-DEFINE_SHA2_CONTEXT(sha2, sha384, ALC_DIGEST_LEN_384, ALC_SHA2_384);
-DEFINE_SHA2_CONTEXT(sha2, sha256, ALC_DIGEST_LEN_256, ALC_SHA2_256);
-DEFINE_SHA2_CONTEXT(sha2, sha224, ALC_DIGEST_LEN_224, ALC_SHA2_224);
+#include <openssl/core.h>
+#include <openssl/evp.h>
 
-int
-ALCP_prov_sha2_get_ctx_params(void* vctx, OSSL_PARAM params[])
+#include <alcp/alcp.h>
+#include <alcp/cipher.h>
+#include <alcp/digest.h>
+
+#include "debug.h"
+
+extern const OSSL_ALGORITHM ALC_prov_ciphers[];
+extern const OSSL_ALGORITHM ALC_prov_digests[];
+extern const OSSL_ALGORITHM ALC_prov_rng[];
+
+struct _alc_prov_ctx
 {
-    EXIT();
-    return ALCP_prov_digest_get_ctx_params(vctx, params);
-}
+    OSSL_LIB_CTX*           ap_libctx;
+    const OSSL_CORE_HANDLE* ap_core_handle;
+};
+typedef struct _alc_prov_ctx alc_prov_ctx_t, *alc_prov_ctx_p;
 
-int
-ALCP_prov_sha2_set_ctx_params(void* vctx, const OSSL_PARAM params[])
-{
-    EXIT();
-    return ALCP_prov_digest_set_ctx_params(vctx, params);
-}
-
-void
-ALCP_prov_sha2_ctxfree(alc_prov_digest_ctx_p dig_ctx)
-{
-    EXIT();
-    ALCP_prov_digest_freectx(dig_ctx);
-}
-
-/* Sha2 dispatchers */
-CREATE_DIGEST_DISPATCHERS(sha512_256, sha2, ALC_DIGEST_LEN_256);
-CREATE_DIGEST_DISPATCHERS(sha512_224, sha2, ALC_DIGEST_LEN_224);
-CREATE_DIGEST_DISPATCHERS(sha512, sha2, ALC_DIGEST_LEN_512);
-CREATE_DIGEST_DISPATCHERS(sha384, sha2, ALC_DIGEST_LEN_384);
-CREATE_DIGEST_DISPATCHERS(sha256, sha2, ALC_DIGEST_LEN_256);
-CREATE_DIGEST_DISPATCHERS(sha224, sha2, ALC_DIGEST_LEN_224);
+#endif /* _OPENSSL_ALCP_PROV_H */

@@ -38,7 +38,7 @@
 #include <alcp/digest.h>
 #include <alcp/key.h>
 
-#include "alcp_provider.h"
+#include "provider/alcp_provider.h"
 
 #include "debug.h"
 

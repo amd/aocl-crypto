@@ -26,7 +26,7 @@
  *
  */
 
-#include "alcp_cipher_aes.h"
+#include "cipher/alcp_cipher_aes.h"
 
 CIPHER_CONTEXT(cfb, ALC_AES_MODE_CFB);
 CIPHER_CONTEXT(cbc, ALC_AES_MODE_CBC);
