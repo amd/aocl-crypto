@@ -144,19 +144,23 @@ ALCP_prov_mac_init(void*                vctx,
                    const OSSL_PARAM     params[])
 {
     ENTER();
-    // FIXME: Get the proper key and set it
-    const alc_key_info_t kinfo   = { .type = ALC_KEY_TYPE_SYMMETRIC,
+    alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
                                    .fmt  = ALC_KEY_FMT_RAW,
                                    .algo = ALC_KEY_ALG_MAC,
                                    .len  = keylen * 8,
                                    .key  = key };
-    alc_prov_mac_ctx_p   cctx    = vctx;
-    alc_error_t          err     = ALC_ERROR_NONE;
-    alc_mac_info_p       macinfo = &cctx->pc_mac_info;
-    macinfo->mi_keyinfo          = kinfo;
-    Uint64 size                  = alcp_mac_context_size(macinfo);
-    cctx->handle.ch_context      = OPENSSL_malloc(size);
-    err                          = alcp_mac_request(&(cctx->handle), macinfo);
+    // Handling OpenSSL Speed Initial Init Request
+    if (keylen == 0 && key == NULL) {
+        kinfo.key = OPENSSL_malloc(128);
+        kinfo.len = 128;
+    }
+    alc_prov_mac_ctx_p cctx    = vctx;
+    alc_error_t        err     = ALC_ERROR_NONE;
+    alc_mac_info_p     macinfo = &cctx->pc_mac_info;
+    macinfo->mi_keyinfo        = kinfo;
+    Uint64 size                = alcp_mac_context_size(macinfo);
+    cctx->handle.ch_context    = OPENSSL_malloc(size);
+    err                        = alcp_mac_request(&(cctx->handle), macinfo);
     if (alcp_is_error(err)) {
         printf("Provider: MAC Request Failed\n");
         return 0;
@@ -171,10 +175,10 @@ ALCP_prov_mac_update(void* vctx, const unsigned char* in, size_t inl)
     ENTER();
     alc_error_t        err;
     alc_prov_mac_ctx_p cctx = vctx;
-    ENTER();
-    err = alcp_mac_update(&(cctx->handle), in, inl);
+    err                     = alcp_mac_update(&(cctx->handle), in, inl);
     if (alcp_is_error(err)) {
         printf("Provider: MAC Update Failed\n");
+        EXIT();
         return 0;
     }
     EXIT();
