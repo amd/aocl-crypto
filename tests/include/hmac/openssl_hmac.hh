@@ -27,9 +27,9 @@
  */
 #pragma once
 
+#include "alcp/alcp.h"
 #include "hmac.hh"
 #include "hmac/hmac.hh"
-#include "alcp/alcp.h"
 #include <iostream>
 #include <openssl/conf.h>
 #include <openssl/err.h>
@@ -40,11 +40,12 @@
 namespace alcp::testing {
 class OpenSSLHmacBase : public HmacBase
 {
-    EVP_MD_CTX*    m_handle = nullptr;
+    EVP_MAC_CTX*   m_handle = nullptr;
     alc_mac_info_t m_info;
     Uint8*         m_message;
     Uint8*         m_key;
     Uint8*         m_hmac;
+    EVP_MAC*       m_mac = nullptr;
     Uint32         m_key_len;
 
   public:

@@ -35,7 +35,7 @@ OpenSSLHmacBase::OpenSSLHmacBase(const alc_mac_info_t& info) {}
 OpenSSLHmacBase::~OpenSSLHmacBase()
 {
     if (m_handle != nullptr) {
-        EVP_MD_CTX_free(m_handle);
+        EVP_MAC_CTX_free(m_handle);
     }
 }
 
@@ -51,36 +51,24 @@ OpenSSLHmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 bool
 OpenSSLHmacBase::init()
 {
-    int       ret_val = 0;
-    EVP_PKEY* evp_key =
-        EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, &(m_key[0]), m_key_len);
-    if (m_handle != nullptr) {
-        EVP_MD_CTX_free(m_handle);
-        m_handle = nullptr;
-    }
-
-    m_handle = EVP_MD_CTX_new();
-    if (m_handle == NULL) {
-        printf("EVP_MD_CTX_create failed, error 0x%lx\n", ERR_get_error());
-    }
+    int         ret_val   = 0;
+    OSSL_PARAM  params[3] = {};
+    size_t      params_n  = 0;
+    const char* digest    = NULL;
 
     if (m_info.mi_algoinfo.hmac.hmac_digest.dt_type == ALC_DIGEST_TYPE_SHA2) {
         switch (m_info.mi_algoinfo.hmac.hmac_digest.dt_len) {
             case ALC_DIGEST_LEN_224:
-                ret_val = EVP_DigestSignInit(
-                    m_handle, NULL, EVP_sha224(), NULL, evp_key);
+                digest = "sha224";
                 break;
             case ALC_DIGEST_LEN_256:
-                ret_val = EVP_DigestSignInit(
-                    m_handle, NULL, EVP_sha256(), NULL, evp_key);
+                digest = "sha256";
                 break;
             case ALC_DIGEST_LEN_384:
-                ret_val = EVP_DigestSignInit(
-                    m_handle, NULL, EVP_sha384(), NULL, evp_key);
+                digest = "sha384";
                 break;
             case ALC_DIGEST_LEN_512:
-                ret_val = EVP_DigestSignInit(
-                    m_handle, NULL, EVP_sha512(), NULL, evp_key);
+                digest = "sha512";
                 break;
             default:
                 return false;
@@ -89,31 +77,51 @@ OpenSSLHmacBase::init()
                == ALC_DIGEST_TYPE_SHA3) {
         switch (m_info.mi_algoinfo.hmac.hmac_digest.dt_len) {
             case ALC_DIGEST_LEN_224:
-                ret_val = EVP_DigestSignInit(
-                    m_handle, NULL, EVP_sha3_224(), NULL, evp_key);
+                digest = "sha3-224";
                 break;
             case ALC_DIGEST_LEN_256:
-                ret_val = EVP_DigestSignInit(
-                    m_handle, NULL, EVP_sha3_256(), NULL, evp_key);
+                digest = "sha3-256";
                 break;
             case ALC_DIGEST_LEN_384:
-                ret_val = EVP_DigestSignInit(
-                    m_handle, NULL, EVP_sha3_384(), NULL, evp_key);
+                digest = "sha3-384";
                 break;
             case ALC_DIGEST_LEN_512:
-                ret_val = EVP_DigestSignInit(
-                    m_handle, NULL, EVP_sha3_512(), NULL, evp_key);
+                digest = "sha3-512";
                 break;
             default:
                 return false;
         }
     }
 
-    /* free key after use */
-    EVP_PKEY_free(evp_key);
+    if (m_mac != nullptr) {
+        EVP_MAC_free(m_mac);
+    }
+    m_mac = EVP_MAC_fetch(NULL, "HMAC", NULL);
+    if (m_mac == NULL) {
+        std::cout << "EVP_MAC_fetch failed, error: " << ERR_get_error()
+                  << std::endl;
+        return false;
+    }
 
+    if (digest != NULL)
+        params[params_n++] =
+            OSSL_PARAM_construct_utf8_string("digest", (char*)digest, 0);
+    params[params_n] = OSSL_PARAM_construct_end();
+
+    if (m_handle != nullptr) {
+        EVP_MAC_CTX_free(m_handle);
+    }
+    m_handle = EVP_MAC_CTX_new(m_mac);
+    if (m_handle == NULL) {
+        std::cout << "EVP_MAC_CTX_new failed, error: " << ERR_get_error()
+                  << std::endl;
+        return false;
+    }
+
+    ret_val = EVP_MAC_init(m_handle, m_key, m_key_len, params);
     if (ret_val != 1) {
-        printf("EVP_DigestSignInit failed with err code: %d\n", ret_val);
+        std::cout << "EVP_MAC_init failed, error : " << ERR_get_error()
+                  << std::endl;
         return false;
     }
     return true;
@@ -123,14 +131,18 @@ bool
 OpenSSLHmacBase::Hmac_function(const alcp_hmac_data_t& data)
 {
     size_t outsize = data.out.m_hmac_len;
+    int    retval  = 0;
 
-    if (1 != EVP_DigestSignUpdate(m_handle, data.in.m_msg, data.in.m_msg_len)) {
-        std::cout << "EVP_DigestSignUpdate failed, error 0x" << ERR_get_error()
+    retval = EVP_MAC_update(m_handle, data.in.m_msg, data.in.m_msg_len);
+    if (retval != 1) {
+        std::cout << "EVP_MAC_update failed, error : " << ERR_get_error()
                   << std::endl;
         return false;
     }
-    if (1 != EVP_DigestSignFinal(m_handle, data.out.m_hmac, &outsize)) {
-        std::cout << "EVP_DigestSignFinal failed, error 0x" << ERR_get_error()
+    retval =
+        EVP_MAC_final(m_handle, data.out.m_hmac, &outsize, data.out.m_hmac_len);
+    if (retval != 1) {
+        std::cout << "EVP_MAC_final failed, error : " << ERR_get_error()
                   << std::endl;
         return false;
     }
