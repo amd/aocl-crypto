@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,12 +26,23 @@
  *
  */
 
-#ifndef _OPENSSL_ALCP_DIGEST_SHA3_H
-#define _OPENSSL_ALCP_DIGEST_SHA3_H 2
+#ifndef _OPENSSL_ALCP_DIGEST_SHA2_H
+#define _OPENSSL_ALCP_DIGEST_SHA2_H 2
 
 #include "alcp_digest_prov.h"
 #include "debug.h"
 
+// SHA2 Context
+#define DEFINE_SHA2_CONTEXT(grp, mode, len, alcp_mode)                         \
+    alc_digest_info_t s_digest_##mode##_##grp##_##len##_info = {                               \
+        .dt_type = ALC_DIGEST_TYPE_SHA2,                                       \
+        .dt_len = len,                                                         \
+        .dt_mode = {                                                           \
+            .dm_sha2 = alcp_mode,                                              \
+        },                                                                     \
+}
+
+// SHA3 Context
 #define DEFINE_SHA3_CONTEXT(grp, mode, len, alcp_mode)                         \
     alc_digest_info_t s_digest_##mode##_##grp##_##len##_info = {                               \
         .dt_type = ALC_DIGEST_TYPE_SHA3,                                       \
@@ -41,4 +52,4 @@
         },                                                                     \
 }
 
-#endif /* _OPENSSL_ALCP_DIGEST_SHA3_H */
+#endif /* _OPENSSL_ALCP_DIGEST_SHA2_H */

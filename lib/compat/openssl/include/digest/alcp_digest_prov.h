@@ -93,18 +93,18 @@ ALCP_prov_digest_get_params(OSSL_PARAM params[]);
 int
 ALCP_prov_digest_set_params(const OSSL_PARAM params[]);
 
-extern OSSL_FUNC_digest_dupctx_fn         ALCP_prov_digest_dupctx;
-extern OSSL_FUNC_digest_freectx_fn        ALCP_prov_digest_freectx;
-extern OSSL_FUNC_digest_get_ctx_params_fn ALCP_prov_digest_get_ctx_params;
-extern OSSL_FUNC_digest_set_ctx_params_fn ALCP_prov_digest_set_ctx_params;
-extern OSSL_FUNC_digest_update_fn         ALCP_prov_digest_update;
-extern OSSL_FUNC_digest_final_fn          ALCP_prov_digest_final;
-extern OSSL_FUNC_digest_get_params_fn     ALCP_prov_digest_get_params;
+OSSL_FUNC_digest_dupctx_fn         ALCP_prov_digest_dupctx;
+OSSL_FUNC_digest_freectx_fn        ALCP_prov_digest_freectx;
+OSSL_FUNC_digest_get_ctx_params_fn ALCP_prov_digest_get_ctx_params;
+OSSL_FUNC_digest_set_ctx_params_fn ALCP_prov_digest_set_ctx_params;
+OSSL_FUNC_digest_update_fn         ALCP_prov_digest_update;
+OSSL_FUNC_digest_final_fn          ALCP_prov_digest_final;
+OSSL_FUNC_digest_get_params_fn     ALCP_prov_digest_get_params;
 
 #define CREATE_DIGEST_DISPATCHERS(name, grp, len)                              \
                                                                                \
-    static OSSL_FUNC_digest_newctx_fn ALCP_prov_##name##_newctx;               \
-    static void*                      ALCP_prov_##name##_newctx(void* provctx) \
+    static OSSL_FUNC_digest_newctx_fn ALCP_prov_##name##_##grp##_newctx;       \
+    static void* ALCP_prov_##name##_##grp##_newctx(void* provctx)              \
     {                                                                          \
         ENTER();                                                               \
         return ALCP_prov_digest_newctx(                                        \
@@ -112,7 +112,8 @@ extern OSSL_FUNC_digest_get_params_fn     ALCP_prov_digest_get_params;
     }                                                                          \
     const OSSL_DISPATCH name##_##grp##_functions[] = {                         \
         { OSSL_FUNC_DIGEST_GET_PARAMS, (fptr_t)ALCP_prov_digest_get_params },  \
-        { OSSL_FUNC_DIGEST_NEWCTX, (fptr_t)ALCP_prov_##name##_newctx },        \
+        { OSSL_FUNC_DIGEST_NEWCTX,                                             \
+          (fptr_t)ALCP_prov_##name##_##grp##_newctx },                         \
         { OSSL_FUNC_DIGEST_DUPCTX, (fptr_t)ALCP_prov_digest_dupctx },          \
         { OSSL_FUNC_DIGEST_FREECTX, (fptr_t)ALCP_prov_digest_freectx },        \
         { OSSL_FUNC_DIGEST_GETTABLE_PARAMS,                                    \
@@ -129,5 +130,21 @@ extern OSSL_FUNC_digest_get_params_fn     ALCP_prov_digest_get_params;
         { OSSL_FUNC_DIGEST_UPDATE, (fptr_t)ALCP_prov_digest_update },          \
         { OSSL_FUNC_DIGEST_FINAL, (fptr_t)ALCP_prov_digest_final },            \
     }
+
+/*
+ * Dispatchers are created by alcp_digest_sha.c using macro defined above
+ */
+extern const OSSL_DISPATCH sha224_sha2_functions[];
+extern const OSSL_DISPATCH sha256_sha2_functions[];
+extern const OSSL_DISPATCH sha384_sha2_functions[];
+extern const OSSL_DISPATCH sha512_sha2_functions[];
+extern const OSSL_DISPATCH sha512_224_sha2_functions[];
+extern const OSSL_DISPATCH sha512_256_sha2_functions[];
+extern const OSSL_DISPATCH sha224_sha3_functions[];
+extern const OSSL_DISPATCH sha256_sha3_functions[];
+extern const OSSL_DISPATCH sha384_sha3_functions[];
+extern const OSSL_DISPATCH sha512_sha3_functions[];
+extern const OSSL_DISPATCH shake128_sha3_functions[];
+extern const OSSL_DISPATCH shake256_sha3_functions[];
 
 #endif /* _OPENSSL_ALCP_prov_DIGEST_PROV_H */

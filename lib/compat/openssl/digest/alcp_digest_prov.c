@@ -53,19 +53,9 @@ ALCP_prov_digest_newctx(void* vprovctx, const alc_digest_info_p dinfo)
 
     dig_ctx = OPENSSL_zalloc(sizeof(*dig_ctx));
     if (dig_ctx != NULL) {
-        dig_ctx->pc_prov_ctx = pctx;
-        // dig_ctx->pc_params         = pparams;
+        dig_ctx->pc_prov_ctx    = pctx;
         dig_ctx->pc_libctx      = pctx->ap_libctx;
         dig_ctx->pc_digest_info = *dinfo;
-#if 0
-        dig_ctx->pc_evp_digest_ctx = EVP_MD_CTX_new();
-        if (!dig_ctx->pc_evp_digest_ctx || !dig_ctx->pc_prov_ctx) {
-            ALCP_prov_digest_freectx(dig_ctx);
-            dig_ctx = NULL;
-        }
-        // dig_ctx->descriptor = descriptor;
-        // dig_ctx->digest     = ALCP_prov_digest_init(descriptor);
-#endif
     }
 
     return dig_ctx;
@@ -76,10 +66,6 @@ ALCP_prov_digest_dupctx(void* vctx)
 {
     ENTER();
     alc_prov_digest_ctx_p csrc = vctx;
-#if 0
-    alc_prov_digest_ctx_p cdst = ALCP_prov_digest_newctx(
-        csrc->pc_evp_digest_ctx, csrc->pc_digest_info, csrc->pc_params);
-#endif
     EXIT();
     return csrc;
 }
@@ -88,18 +74,7 @@ ALCP_prov_digest_dupctx(void* vctx)
  * Generic digest functions for OSSL_PARAM gettables and settables
  */
 static const OSSL_PARAM digest_known_gettable_params[] = {
-    // OSSL_PARAM_uint(OSSL_DIGEST_PARAM_MODE, NULL),
-    // OSSL_PARAM_size_t(OSSL_DIGEST_PARAM_KEYLEN, NULL),
-    // OSSL_PARAM_size_t(OSSL_DIGEST_PARAM_IVLEN, NULL),
-    OSSL_PARAM_size_t(OSSL_DIGEST_PARAM_BLOCK_SIZE, NULL),
-#if 0
-    OSSL_PARAM_int(OSSL_DIGEST_PARAM_AEAD, NULL),
-    OSSL_PARAM_int(OSSL_DIGEST_PARAM_CUSTOM_IV, NULL),
-    OSSL_PARAM_int(OSSL_DIGEST_PARAM_CTS, NULL),
-    OSSL_PARAM_int(OSSL_DIGEST_PARAM_TLS1_MULTIBLOCK, NULL),
-    OSSL_PARAM_int(OSSL_DIGEST_PARAM_HAS_RAND_KEY, NULL),
-#endif
-    OSSL_PARAM_END
+    OSSL_PARAM_size_t(OSSL_DIGEST_PARAM_BLOCK_SIZE, NULL), OSSL_PARAM_END
 };
 
 const OSSL_PARAM*
@@ -114,24 +89,6 @@ int
 ALCP_prov_digest_get_params(OSSL_PARAM params[])
 {
     ENTER();
-    // OSSL_PARAM* p;
-    // int         blkbits = 128;
-
-    // FIXME: Below is dead code, remove if not needed for anything
-    // p = OSSL_PARAM_locate(params, OSSL_DIGEST_PARAM_BLOCK_SIZE);
-    // if (p != NULL && !OSSL_PARAM_set_size_t(p, blkbits / 8)) {
-    //     ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
-    //     EXIT();
-    //     return 0;
-    // }
-
-    // SHAKE PARAM
-    // p = OSSL_PARAM_locate_const(params, OSSL_DIGEST_PARAM_XOFLEN);
-    // if (p != NULL && !OSSL_PARAM_get_size_t(p, &ctx->md_size)) {
-    //     ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_GET_PARAMETER);
-    //     return 0;
-    // }
-
     EXIT();
     return 1;
 }
@@ -169,15 +126,6 @@ int
 ALCP_prov_digest_get_ctx_params(void* vctx, OSSL_PARAM params[])
 {
     ENTER();
-    // OSSL_PARAM* p;
-    // alc_prov_digest_ctx_p cctx = (alc_prov_digest_ctx_p)vctx;
-    // size_t                keylen = cctx->pc_digest_info.key_info.len;
-
-    // if (keylen > 0
-    //     && (p = OSSL_PARAM_locate(params, OSSL_DIGEST_PARAM_KEYLEN)) != NULL
-    //     && !OSSL_PARAM_set_size_t(p, keylen))
-    //     return 0;
-
     EXIT();
     return 1;
 }
@@ -186,22 +134,10 @@ int
 ALCP_prov_digest_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 {
     ENTER();
-    const OSSL_PARAM* p;
-    // alc_prov_digest_ctx_p cctx = (alc_prov_digest_ctx_p)vctx;
-
-    // p = OSSL_PARAM_locate_const(params, OSSL_DIGEST_PARAM_KEYLEN);
-    // if (p != NULL) {
-    //     size_t keylen;
-    //     if (!OSSL_PARAM_get_size_t(p, &keylen)) {
-    //         ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_GET_PARAMETER);
-    //         HERE();
-    //         return 0;
-    //     }
-    //     cctx->pc_digest_info.key_info.len = keylen;
-    // }
-
+    const OSSL_PARAM*     p;
     alc_prov_digest_ctx_p pctx = (alc_prov_digest_ctx_p)vctx;
 
+    // SHAKE DIGEST SIZE PARAM
     p = OSSL_PARAM_locate_const(params, OSSL_DIGEST_PARAM_XOFLEN);
     if (p != NULL && !OSSL_PARAM_get_size_t(p, &pctx->shake_digest_size)) {
         ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_GET_PARAMETER);
@@ -218,7 +154,7 @@ ALCP_prov_digest_init(void* vctx, const OSSL_PARAM params[])
     ENTER();
     alc_prov_digest_ctx_p cctx = vctx;
     alc_error_t           err;
-    // printf("Provider: Pointer->%p\n", cctx);
+
     alc_digest_info_p dinfo = &cctx->pc_digest_info;
     Uint64            size  = alcp_digest_context_size(dinfo);
     cctx->handle.context    = OPENSSL_malloc(size);
@@ -289,19 +225,6 @@ ALCP_prov_digest_final(void*          vctx,
 
 static const char DIGEST_DEF_PROP[] = "provider=alcp,fips=no";
 
-extern const OSSL_DISPATCH sha224_sha2_functions[];
-extern const OSSL_DISPATCH sha256_sha2_functions[];
-extern const OSSL_DISPATCH sha384_sha2_functions[];
-extern const OSSL_DISPATCH sha512_sha2_functions[];
-extern const OSSL_DISPATCH sha512_224_sha2_functions[];
-extern const OSSL_DISPATCH sha512_256_sha2_functions[];
-extern const OSSL_DISPATCH sha224_sha3_functions[];
-extern const OSSL_DISPATCH sha256_sha3_functions[];
-extern const OSSL_DISPATCH sha384_sha3_functions[];
-extern const OSSL_DISPATCH sha512_sha3_functions[];
-extern const OSSL_DISPATCH shake128_sha3_functions[];
-extern const OSSL_DISPATCH shake256_sha3_functions[];
-
 const OSSL_ALGORITHM ALC_prov_digests[] = {
     { ALCP_PROV_NAMES_SHA2_224, DIGEST_DEF_PROP, sha224_sha2_functions },
     { ALCP_PROV_NAMES_SHA2_256, DIGEST_DEF_PROP, sha256_sha2_functions },
@@ -323,48 +246,3 @@ const OSSL_ALGORITHM ALC_prov_digests[] = {
 
     { NULL, NULL, NULL },
 };
-
-// EVP_CIPHER*
-// ALCP_prov_digest_init(alc_prov_ctx_p cc)
-// {
-//     /* FIXME: this could be wrong */
-//     alc_prov_digest_ctx_p c = (alc_prov_digest_ctx_p)cc;
-
-//     ENTER();
-//     if (c->pc_evp_digest)
-//         return c->pc_evp_digest;
-
-//     /* Some sanity checking. */
-//     int flags = c->pc_flags;
-//     switch (flags & EVP_CIPH_MODE) {
-//         case EVP_CIPH_CTR_MODE:
-//         case EVP_CIPH_CFB_MODE:
-//         case EVP_CIPH_OFB_MODE:
-//             break;
-//         default:
-//             break;
-//     }
-
-//     EVP_CIPHER* tmp = NULL;
-// #if 0
-//     tmp = EVP_CIPHER_meth_new(c->pc_nid, 128 / 8, c->pc_key_info->len);
-
-//     int res = 0;
-//     res |= EVP_CIPHER_meth_set_iv_length(tmp, iv_len);
-//     res != EVP_CIPHER_meth_set_flags(tmp, flags);
-//     res != EVP_CIPHER_meth_set_init(tmp, init);
-//     res != EVP_CIPHER_meth_set_do_tmp(tmp, do_tmp);
-//     res != EVP_CIPHER_meth_set_cleanup(tmp, cleanup);
-//     res != EVP_CIPHER_meth_set_impl_ctx_size(tmp, ctx_size);
-//     res != EVP_CIPHER_meth_set_set_asn1_params(tmp, set_asn1_parameters);
-//     res != EVP_CIPHER_meth_set_get_asn1_params(tmp, get_asn1_parameters);
-//     res != EVP_CIPHER_meth_set_ctrl(tmp, ctrl);
-//     if (res) {
-//         EVP_CIPHER_meth_free(tmp);
-//         tmp = NULL;
-//     }
-
-//     c->pc_evp_digest = tmp;
-// #endif
-//     return tmp;
-// }

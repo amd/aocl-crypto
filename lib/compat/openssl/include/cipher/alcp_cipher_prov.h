@@ -29,18 +29,20 @@
 #ifndef _OPENSSL_ALCP_CIPHER_PROV_H
 #define _OPENSSL_ALCP_CIPHER_PROV_H 2
 
+/* OpenSSL Headers */
 #include <openssl/core.h>
 #include <openssl/core_names.h>
 #include <openssl/engine.h>
 #include <openssl/evp.h>
 #include <openssl/proverr.h>
 
+/* ALCP Headers */
 #include <alcp/cipher.h>
 #include <alcp/key.h>
 
-#include "provider/alcp_provider.h"
-
+/* Provider Internal Headers */
 #include "debug.h"
+#include "provider/alcp_provider.h"
 
 struct _alc_prov_cipher_ctx
 {
@@ -78,7 +80,7 @@ extern const OSSL_ALGORITHM ALC_prov_ciphers[];
 /* TODO: ugly hack for openssl table */
 typedef void (*fptr_t)(void);
 
-extern void*
+void*
 ALCP_prov_cipher_newctx(void* vprovctx, const alc_cipher_info_p cinfo);
 void
 ALCP_prov_cipher_freectx(void* vctx);
@@ -98,15 +100,16 @@ ALCP_prov_cipher_get_params(OSSL_PARAM params[], int mode, int key_size);
 int
 ALCP_prov_cipher_set_params(const OSSL_PARAM params[]);
 
-extern OSSL_FUNC_cipher_dupctx_fn         ALCP_prov_cipher_dupctx;
-extern OSSL_FUNC_cipher_freectx_fn        ALCP_prov_cipher_freectx;
-extern OSSL_FUNC_cipher_get_ctx_params_fn ALCP_prov_cipher_get_ctx_params;
-extern OSSL_FUNC_cipher_set_ctx_params_fn ALCP_prov_cipher_set_ctx_params;
-extern OSSL_FUNC_cipher_encrypt_init_fn   ALCP_prov_cipher_encrypt_init;
-extern OSSL_FUNC_cipher_decrypt_init_fn   ALCP_prov_cipher_decrypt_init;
-extern OSSL_FUNC_cipher_update_fn         ALCP_prov_cipher_update;
-extern OSSL_FUNC_cipher_final_fn          ALCP_prov_cipher_final;
+OSSL_FUNC_cipher_dupctx_fn         ALCP_prov_cipher_dupctx;
+OSSL_FUNC_cipher_freectx_fn        ALCP_prov_cipher_freectx;
+OSSL_FUNC_cipher_get_ctx_params_fn ALCP_prov_cipher_get_ctx_params;
+OSSL_FUNC_cipher_set_ctx_params_fn ALCP_prov_cipher_set_ctx_params;
+OSSL_FUNC_cipher_encrypt_init_fn   ALCP_prov_cipher_encrypt_init;
+OSSL_FUNC_cipher_decrypt_init_fn   ALCP_prov_cipher_decrypt_init;
+OSSL_FUNC_cipher_update_fn         ALCP_prov_cipher_update;
+OSSL_FUNC_cipher_final_fn          ALCP_prov_cipher_final;
 
+// Macro for Context Creation
 #define CIPHER_CONTEXT(mode, alcp_mode)                                        \
     static alc_cipher_info_t s_cipher_##mode##_info = {                        \
         .ci_type = ALC_CIPHER_TYPE_AES,                                        \
@@ -122,6 +125,7 @@ extern OSSL_FUNC_cipher_final_fn          ALCP_prov_cipher_final;
             },                                                             \
     }
 
+// Macro for OpenSSL Dispatcher Creation
 #define CREATE_CIPHER_DISPATCHERS(name, grp, mode, key_size)                   \
     static OSSL_FUNC_cipher_get_params_fn                                      \
                ALCP_prov_##name##_get_params_##key_size;                       \
@@ -187,5 +191,32 @@ extern OSSL_FUNC_cipher_final_fn          ALCP_prov_cipher_final;
         { OSSL_FUNC_CIPHER_UPDATE, (fptr_t)ALCP_prov_cipher_update },          \
         { OSSL_FUNC_CIPHER_FINAL, (fptr_t)ALCP_prov_cipher_final },            \
     }
+
+/*
+ * Dispatchers are created by alcp_cipher_aes.c using macro defined above
+ */
+extern const OSSL_DISPATCH cfb_functions_128[];
+extern const OSSL_DISPATCH cfb_functions_192[];
+extern const OSSL_DISPATCH cfb_functions_256[];
+extern const OSSL_DISPATCH cbc_functions_128[];
+extern const OSSL_DISPATCH cbc_functions_192[];
+extern const OSSL_DISPATCH cbc_functions_256[];
+extern const OSSL_DISPATCH ofb_functions_128[];
+extern const OSSL_DISPATCH ofb_functions_192[];
+extern const OSSL_DISPATCH ofb_functions_256[];
+extern const OSSL_DISPATCH ctr_functions_128[];
+extern const OSSL_DISPATCH ctr_functions_192[];
+extern const OSSL_DISPATCH ctr_functions_256[];
+extern const OSSL_DISPATCH ecb_functions_128[];
+extern const OSSL_DISPATCH ecb_functions_192[];
+extern const OSSL_DISPATCH ecb_functions_256[];
+extern const OSSL_DISPATCH xts_functions_128[];
+extern const OSSL_DISPATCH xts_functions_256[];
+extern const OSSL_DISPATCH gcm_functions_128[];
+extern const OSSL_DISPATCH gcm_functions_192[];
+extern const OSSL_DISPATCH gcm_functions_256[];
+extern const OSSL_DISPATCH ccm_functions_128[];
+extern const OSSL_DISPATCH ccm_functions_192[];
+extern const OSSL_DISPATCH ccm_functions_256[];
 
 #endif /* _OPENSSL_ALCP_prov_CIPHER_PROV_H */

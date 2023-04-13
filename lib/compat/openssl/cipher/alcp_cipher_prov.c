@@ -69,10 +69,6 @@ ALCP_prov_cipher_newctx(void* vprovctx, const alc_cipher_info_p cinfo)
             ALCP_prov_cipher_freectx(ciph_ctx);
             ciph_ctx = NULL;
         }
-#if 0
-        // ciph_ctx->descriptor = descriptor;
-        // ciph_ctx->cipher     = ALCP_prov_cipher_init(descriptor);
-#endif
     }
 
     return ciph_ctx;
@@ -81,12 +77,10 @@ ALCP_prov_cipher_newctx(void* vprovctx, const alc_cipher_info_p cinfo)
 void*
 ALCP_prov_cipher_dupctx(void* vctx)
 {
-    alc_prov_cipher_ctx_p csrc = vctx;
     ENTER();
-#if 0
-    alc_prov_cipher_ctx_p cdst = ALCP_prov_cipher_newctx(
-        csrc->pc_evp_cipher_ctx, csrc->pc_cipher_info, csrc->pc_params);
-#endif
+    // FIXME: Implement
+    alc_prov_cipher_ctx_p csrc = vctx;
+    EXIT();
     return csrc;
 }
 
@@ -98,13 +92,6 @@ static const OSSL_PARAM cipher_known_gettable_params[] = {
     OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_KEYLEN, NULL),
     OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_IVLEN, NULL),
     OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_BLOCK_SIZE, NULL),
-#if 0
-    OSSL_PARAM_int(OSSL_CIPHER_PARAM_AEAD, NULL),
-    OSSL_PARAM_int(OSSL_CIPHER_PARAM_CUSTOM_IV, NULL),
-    OSSL_PARAM_int(OSSL_CIPHER_PARAM_CTS, NULL),
-    OSSL_PARAM_int(OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK, NULL),
-    OSSL_PARAM_int(OSSL_CIPHER_PARAM_HAS_RAND_KEY, NULL),
-#endif
     OSSL_PARAM_END
 };
 
@@ -286,14 +273,12 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
                               size_t               ivlen,
                               const OSSL_PARAM     params[])
 {
+    ENTER();
     const OSSL_PARAM*     p;
     alc_prov_cipher_ctx_p cctx            = vctx;
     alc_cipher_info_p     cinfo           = &cctx->pc_cipher_info;
     alc_key_info_p        kinfo_tweak_key = &cctx->kinfo_tweak_key;
     alc_error_t           err;
-    // const int             err_size = 256;
-    // Uint8               err_buf[err_size];
-    ENTER();
 
     // Locate TAG
     if (params) {
@@ -358,8 +343,6 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
     // Mode Already set
     if (iv != NULL) {
         cctx->pc_cipher_info.ci_algo_info.ai_iv = iv;
-    } else {
-        // iv = OPENSSL_malloc(128); // Don't make sense
     }
     cctx->pc_cipher_info.ci_key_info.key  = key;
     cctx->pc_cipher_info.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
@@ -797,31 +780,9 @@ ALCP_prov_cipher_final(void*          vctx,
     return 1;
 }
 
-static const char          CIPHER_DEF_PROP[] = "provider=alcp,fips=no";
-extern const OSSL_DISPATCH cfb_functions_128[];
-extern const OSSL_DISPATCH cfb_functions_192[];
-extern const OSSL_DISPATCH cfb_functions_256[];
-extern const OSSL_DISPATCH cbc_functions_128[];
-extern const OSSL_DISPATCH cbc_functions_192[];
-extern const OSSL_DISPATCH cbc_functions_256[];
-extern const OSSL_DISPATCH ofb_functions_128[];
-extern const OSSL_DISPATCH ofb_functions_192[];
-extern const OSSL_DISPATCH ofb_functions_256[];
-extern const OSSL_DISPATCH ctr_functions_128[];
-extern const OSSL_DISPATCH ctr_functions_192[];
-extern const OSSL_DISPATCH ctr_functions_256[];
-extern const OSSL_DISPATCH ecb_functions_128[];
-extern const OSSL_DISPATCH ecb_functions_192[];
-extern const OSSL_DISPATCH ecb_functions_256[];
-extern const OSSL_DISPATCH xts_functions_128[];
-extern const OSSL_DISPATCH xts_functions_256[];
-extern const OSSL_DISPATCH gcm_functions_128[];
-extern const OSSL_DISPATCH gcm_functions_192[];
-extern const OSSL_DISPATCH gcm_functions_256[];
-extern const OSSL_DISPATCH ccm_functions_128[];
-extern const OSSL_DISPATCH ccm_functions_192[];
-extern const OSSL_DISPATCH ccm_functions_256[];
-const OSSL_ALGORITHM       ALC_prov_ciphers[] = {
+static const char    CIPHER_DEF_PROP[]  = "provider=alcp,fips=no";
+const OSSL_ALGORITHM ALC_prov_ciphers[] = {
+    // CFB
     { ALCP_PROV_NAMES_AES_256_CFB, CIPHER_DEF_PROP, cfb_functions_256 },
     { ALCP_PROV_NAMES_AES_192_CFB, CIPHER_DEF_PROP, cfb_functions_192 },
     { ALCP_PROV_NAMES_AES_128_CFB, CIPHER_DEF_PROP, cfb_functions_128 },
@@ -831,29 +792,38 @@ const OSSL_ALGORITHM       ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_256_CFB8, CIPHER_DEF_PROP, cfb_functions_256 },
     { ALCP_PROV_NAMES_AES_192_CFB8, CIPHER_DEF_PROP, cfb_functions_192 },
     { ALCP_PROV_NAMES_AES_128_CFB8, CIPHER_DEF_PROP, cfb_functions_128 },
+    // CBC
     { ALCP_PROV_NAMES_AES_256_CBC, CIPHER_DEF_PROP, cbc_functions_256 },
     { ALCP_PROV_NAMES_AES_192_CBC, CIPHER_DEF_PROP, cbc_functions_192 },
     { ALCP_PROV_NAMES_AES_128_CBC, CIPHER_DEF_PROP, cbc_functions_128 },
+    // OFB
     { ALCP_PROV_NAMES_AES_256_OFB, CIPHER_DEF_PROP, ofb_functions_256 },
     { ALCP_PROV_NAMES_AES_192_OFB, CIPHER_DEF_PROP, ofb_functions_192 },
     { ALCP_PROV_NAMES_AES_128_OFB, CIPHER_DEF_PROP, ofb_functions_128 },
+    // CTR
     { ALCP_PROV_NAMES_AES_256_CTR, CIPHER_DEF_PROP, ctr_functions_256 },
     { ALCP_PROV_NAMES_AES_192_CTR, CIPHER_DEF_PROP, ctr_functions_192 },
     { ALCP_PROV_NAMES_AES_128_CTR, CIPHER_DEF_PROP, ctr_functions_128 },
+    // ECB
     { ALCP_PROV_NAMES_AES_256_ECB, CIPHER_DEF_PROP, ecb_functions_256 },
     { ALCP_PROV_NAMES_AES_192_ECB, CIPHER_DEF_PROP, ecb_functions_192 },
     { ALCP_PROV_NAMES_AES_128_ECB, CIPHER_DEF_PROP, ecb_functions_128 },
+    // XTS
     { ALCP_PROV_NAMES_AES_256_XTS, CIPHER_DEF_PROP, xts_functions_256 },
     { ALCP_PROV_NAMES_AES_128_XTS, CIPHER_DEF_PROP, xts_functions_128 },
+    // GCM
     { ALCP_PROV_NAMES_AES_128_GCM, CIPHER_DEF_PROP, gcm_functions_128 },
     { ALCP_PROV_NAMES_AES_192_GCM, CIPHER_DEF_PROP, gcm_functions_192 },
     { ALCP_PROV_NAMES_AES_256_GCM, CIPHER_DEF_PROP, gcm_functions_256 },
+    // CCM
     { ALCP_PROV_NAMES_AES_128_CCM, CIPHER_DEF_PROP, ccm_functions_128 },
     { ALCP_PROV_NAMES_AES_192_CCM, CIPHER_DEF_PROP, ccm_functions_192 },
     { ALCP_PROV_NAMES_AES_256_CCM, CIPHER_DEF_PROP, ccm_functions_256 },
+    // Terminate OpenSSL Algorithm list with Null Pointer.
     { NULL, NULL, NULL },
 };
 
+// FIXME: Refactor, offload some functionality to this function
 EVP_CIPHER*
 ALCP_prov_cipher_init(alc_prov_ctx_p cc)
 {
@@ -876,25 +846,5 @@ ALCP_prov_cipher_init(alc_prov_ctx_p cc)
     }
 
     EVP_CIPHER* tmp = NULL;
-#if 0
-    tmp = EVP_CIPHER_meth_new(c->pc_nid, 128 / 8, c->pc_key_info->len);
-
-    int res = 0;
-    res |= EVP_CIPHER_meth_set_iv_length(tmp, iv_len);
-    res != EVP_CIPHER_meth_set_flags(tmp, flags);
-    res != EVP_CIPHER_meth_set_init(tmp, init);
-    res != EVP_CIPHER_meth_set_do_tmp(tmp, do_tmp);
-    res != EVP_CIPHER_meth_set_cleanup(tmp, cleanup);
-    res != EVP_CIPHER_meth_set_impl_ctx_size(tmp, ctx_size);
-    res != EVP_CIPHER_meth_set_set_asn1_params(tmp, set_asn1_parameters);
-    res != EVP_CIPHER_meth_set_get_asn1_params(tmp, get_asn1_parameters);
-    res != EVP_CIPHER_meth_set_ctrl(tmp, ctrl);
-    if (res) {
-        EVP_CIPHER_meth_free(tmp);
-        tmp = NULL;
-    }
-
-    c->pc_evp_cipher = tmp;
-#endif
     return tmp;
 }
