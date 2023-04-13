@@ -26,12 +26,11 @@
  *
  */
 
-#include "alcp_mac_cmac.h"
-DEFINE_CMAC_CONTEXT("CBC");
+#include "alcp_mac_hmac.h"
+DEFINE_HMAC_CONTEXT(SHA2);
 
-ALCP_prov_CMAC_get_ctx_params() {}
-ALCP_prov_CMAC_set_ctx_params() {}
+ALCP_prov_HMAC_get_ctx_params() {}
+ALCP_prov_HMAC_set_ctx_params() {}
 
 /* MAC dispatchers */
-CREATE_MAC_DISPATCHERS(CMAC, CBC, 0);
-
+CREATE_MAC_DISPATCHERS(HMAC, SHA2, 0);

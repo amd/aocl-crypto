@@ -33,6 +33,7 @@
 
 #include "alcp_mac_prov.h"
 #include "alcp_names.h"
+#include <string.h>
 
 void
 ALCP_prov_mac_freectx(void* vctx)
@@ -144,6 +145,15 @@ ALCP_prov_mac_init(void*                vctx,
                    const OSSL_PARAM     params[])
 {
     ENTER();
+    OSSL_PARAM *p = OSSL_PARAM_locate(params, "digest");
+    char * digest = NULL;
+    if(p!=NULL){
+        printf("Redirect to HMAC Provider");
+        digest = (char*)p->data;
+        printf("MAC Provider: Digest is %s\n",digest);
+    }
+
+
     alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
                                    .fmt  = ALC_KEY_FMT_RAW,
                                    .algo = ALC_KEY_ALG_MAC,
@@ -158,6 +168,20 @@ ALCP_prov_mac_init(void*                vctx,
     alc_error_t        err     = ALC_ERROR_NONE;
     alc_mac_info_p     macinfo = &cctx->pc_mac_info;
     macinfo->mi_keyinfo        = kinfo;
+
+    alc_digest_info_t digestinfo = {
+                .dt_type = ALC_DIGEST_TYPE_SHA2,
+                .dt_len = ALC_DIGEST_LEN_256,
+                .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
+            };
+    if(digest!=NULL){
+        if(!strcmp(digest,"sha256")){
+            printf("sha256 successful\n");
+            macinfo->mi_algoinfo.hmac.hmac_digest = digestinfo;
+        }
+    }
+
+
     Uint64 size                = alcp_mac_context_size(macinfo);
     cctx->handle.ch_context    = OPENSSL_malloc(size);
     err                        = alcp_mac_request(&(cctx->handle), macinfo);
@@ -214,10 +238,10 @@ ALCP_prov_mac_final(void*          vctx,
 static const char MAC_DEF_PROP[] = "provider=alcp,fips=no";
 
 extern const OSSL_DISPATCH mac_CMAC_functions[];
-// extern const OSSL_DISPATCH mac_hmac_functions[];
+extern const OSSL_DISPATCH mac_HMAC_functions[];
 
 const OSSL_ALGORITHM ALC_prov_macs[] = {
     { ALCP_PROV_NAMES_CMAC, MAC_DEF_PROP, mac_CMAC_functions },
+    { ALCP_PROV_NAMES_HMAC, MAC_DEF_PROP, mac_HMAC_functions },
     { NULL, NULL, NULL },
-    // { ALCP_PROV_NAMES_HMAC, MAC_DEF_PROP, mac_hmac_functions },
 };

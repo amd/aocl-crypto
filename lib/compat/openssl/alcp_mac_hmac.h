@@ -26,12 +26,14 @@
  *
  */
 
-#include "alcp_mac_cmac.h"
-DEFINE_CMAC_CONTEXT("CBC");
+#ifndef _OPENSSL_ALCP_MAC_HMAC
+#define _OPENSSL_ALCP_MAC_HMAC 2
 
-ALCP_prov_CMAC_get_ctx_params() {}
-ALCP_prov_CMAC_set_ctx_params() {}
+#include "alcp/alcp.h"
+#include "alcp_mac_prov.h"
+#include "debug.h"
 
-/* MAC dispatchers */
-CREATE_MAC_DISPATCHERS(CMAC, CBC, 0);
+#define DEFINE_HMAC_CONTEXT(subtype) \
+alc_mac_info_t s_mac_HMAC_##subtype##_info = { .mi_type = ALC_MAC_HMAC }
 
+#endif /* _OPENSSL_ALCP_MAC_HMAC */
