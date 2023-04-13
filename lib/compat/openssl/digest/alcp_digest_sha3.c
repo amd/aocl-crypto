@@ -39,24 +39,26 @@ int
 ALCP_prov_sha3_get_ctx_params(void* vctx, OSSL_PARAM params[])
 {
     ENTER();
+    int ret =  ALCP_prov_digest_get_ctx_params(vctx, params);
     EXIT();
-    return ALCP_prov_digest_get_ctx_params(vctx, params);
+    return ret;
 }
 
 int
 ALCP_prov_sha3_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 {
     ENTER();
+    int ret = ALCP_prov_digest_set_ctx_params(vctx, params);
     EXIT();
-    return ALCP_prov_digest_set_ctx_params(vctx, params);
+    return ret;
 }
 
 void
 ALCP_prov_sha3_ctxfree(alc_prov_digest_ctx_p dig_ctx)
 {
     ENTER();
-    EXIT();
-    ALCP_prov_digest_freectx(dig_ctx);
+   ALCP_prov_digest_freectx(dig_ctx);
+   EXIT();
 }
 
 /* Sha3 dispatchers */
