@@ -58,14 +58,23 @@ left_shift(const Uint8 in[], Uint8 out[])
 
 void inline dbl(const Uint8 in[], const Uint8 rb[], Uint8 out[])
 {
-
     Uint8 in_leftshift[16]{};
     left_shift(in, in_leftshift);
-    // Uint8 rb[16]{};
-    // rb[15] = 0x87;
     utils::CopyBlock(out, in_leftshift, 16);
     if (in[0] & 0x80) {
         out[15] = in_leftshift[15] ^ rb[15];
+    }
+}
+
+// dbl inplace
+void inline dbl(Uint8 mem[], const Uint8 rb[])
+{
+    Uint8 msb = mem[0];
+    Uint8 in_leftshift[16]{};
+    left_shift(mem, in_leftshift);
+    utils::CopyBlock(mem, in_leftshift, 16);
+    if (msb & 0x80) {
+        mem[15] = in_leftshift[15] ^ rb[15];
     }
 }
 } // namespace alcp::cipher

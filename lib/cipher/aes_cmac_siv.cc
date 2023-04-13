@@ -202,7 +202,7 @@ CmacSiv::Impl::s2v(const Uint8 plainText[], Uint64 size)
     } else {
         for (Uint64 i = 0; i < m_additionalDataProcessedSize; i++) {
 
-            alcp::cipher::dbl(&(m_cmacTemp[0]), rb, &(m_cmacTemp[0]));
+            alcp::cipher::dbl(&(m_cmacTemp[0]), rb);
 
             // std::cout << "dbl:" << parseBytesToHexStr(m_cmacTemp) <<
             // std::endl;
