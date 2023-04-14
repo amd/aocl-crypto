@@ -84,6 +84,9 @@ class ALCP_API_EXPORT BigNum final
     void operator++();
     void operator--();
 
+    /* Exponent */
+    BigNum exp(unsigned int pow);
+
     bool isZero() const;
     bool isOne() const;
     bool isNegative() const;

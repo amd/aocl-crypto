@@ -94,6 +94,7 @@ class BigNum::Impl
     Int32 toInt32() const;
     void  toBinary(Uint8* buf, Uint64 size);
     void  fromUint64(const Uint64 val);
+    void  fromUint32(const Uint32 val);
     void  fromInt64(const Int64 val);
     void  fromInt32(const Int32 val);
     void  fromBinary(const Uint8* buf, Uint64 size);
@@ -357,6 +358,15 @@ BigNum::Impl::fromUint64(const Uint64 val)
 }
 
 void
+BigNum::Impl::fromUint32(const Uint32 val)
+{
+    m_data.resize(1);
+    m_data[0] = val;
+    ALCP_ASSERT(toString() == val,
+                "fromUint32: BIGNUM struct constructor failed");
+}
+
+void
 BigNum::Impl::fromInt64(const Int64 val)
 {
     m_is_negative = val < 0 ? true : false;
@@ -417,7 +427,7 @@ __add(const std::vector<Uint64>& l,
     while (lstart != lend) {
         auto sum = *lstart + carry;
         res.push_back(sum);
-        carry = (sum == 0) ? 1 : 0;
+        carry = ((*lstart > sum)) ? 1 : 0;
         lstart++;
     }
 
@@ -555,19 +565,23 @@ BigNum::Impl::mul(const BigNum& rhs)
     auto data           = rhs.pImpl()->m_data;
     tmp.pImpl()->m_data = m_data;
     for (auto&& val : data) {
+        int tb = 64;
         while (val > 0) {
             while (val & 1) {
                 result += tmp;
                 tmp = tmp << 1;
                 val >>= 1;
+                tb--;
             }
             int k = 0;
-            while (k < 63 && !(val & (1ULL << k))) {
+            while (k < 63 && val && !(val & (1ULL << k))) {
                 k++;
             }
             tmp = tmp << k;
             val >>= k;
+            tb -= k;
         }
+        tmp = tmp << tb;
     }
 
     return result;
@@ -664,6 +678,12 @@ __rshift(std::vector<Uint64>& r, std::vector<Uint64> a, int shifts)
     Uint64 carry = 0;
     int    j     = rlen - 1;
     shifts %= 64;
+    if (shifts == 0) {
+        for (int k = alen - 1; j >= 0; k--) {
+            r[j--] = a[k];
+        }
+        return;
+    }
 
     for (int k = alen - 1; j >= 0; k--) {
 
@@ -697,7 +717,12 @@ __lshift(std::vector<Uint64>& r, std::vector<Uint64> a, int shifts)
     for (int k = 0; k < j; k++) {
         r[k] = 0;
     }
-
+    if (shifts == 0) {
+        for (int k = 0; k < alen; k++) {
+            r[j++] = a[k];
+        }
+        return;
+    }
     for (int k = 0; k < alen; k++) {
 
         // using overflow data of previous index present in carry
@@ -760,7 +785,6 @@ BigNum::Impl::exp_mod(const BigNum& num, const BigNum& exp, const BigNum& mod)
  *
  * @note Default Format is for toString is hexadecimal
  */
-
 const String
 BigNum::Impl::toString(Format f) const
 {
@@ -794,8 +818,9 @@ BigNum::Impl::toString(Format f) const
             temp.pImpl()->m_data = m_data;
             mul.fromUint64(10000000000000000000UL);
 
-            while (temp.pImpl()->m_data.size() > 0
-                   && temp.pImpl()->m_data[0] > 0) {
+            while (temp.pImpl()->m_data.size() > 1
+                   || (temp.pImpl()->m_data.size() == 1
+                       && temp.pImpl()->m_data[0] > 0)) {
                 std::stringstream sss;
 
                 BigNum res;

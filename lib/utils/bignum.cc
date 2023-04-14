@@ -81,6 +81,24 @@ BigNum::fromUint64(const Uint64 val)
     pImpl()->fromUint64(val);
 }
 
+void
+BigNum::fromInt64(const Int64 val)
+{
+    pImpl()->fromInt64(val);
+}
+
+void
+BigNum::fromUint32(const Uint32 val)
+{
+    pImpl()->fromUint32(val);
+}
+
+void
+BigNum::fromInt32(const Int32 val)
+{
+    pImpl()->fromInt32(val);
+}
+
 int
 BigNum::randomGenerate(int bytes, int top, int bottom)
 {
