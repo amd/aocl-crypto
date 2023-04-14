@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,14 +26,30 @@
  *
  */
 
-#ifndef _OPENSSL_ALCP_MAC_HMAC
-#define _OPENSSL_ALCP_MAC_HMAC 2
+#include "alcp_mac_cmac.h"
+DEFINE_CMAC_CONTEXT("CBC")
 
-#include "alcp/alcp.h"
-#include "alcp_mac_prov.h"
-#include "debug.h"
+int ALCP_prov_CMAC_get_ctx_params(void* vctx, OSSL_PARAM params[]) {
+    ENTER();
+    int ret =  ALCP_prov_mac_get_ctx_params(vctx, params);
+    EXIT();
+    return ret;
+}
+int ALCP_prov_CMAC_set_ctx_params(void* vctx, const OSSL_PARAM params[]) {
+    ENTER();
+    int ret =  ALCP_prov_mac_set_ctx_params(vctx, params);
+    EXIT();
+    return ret;
+}
 
-#define DEFINE_HMAC_CONTEXT(subtype) \
-alc_mac_info_t s_mac_HMAC_##subtype##_info = { .mi_type = ALC_MAC_HMAC }
+void
+ALCP_prov_CMAC_ctxfree(alc_prov_mac_ctx_p mac_ctx)
+{
+    ENTER();
+    ALCP_prov_mac_freectx(mac_ctx);
+    EXIT();
+}
 
-#endif /* _OPENSSL_ALCP_MAC_HMAC */
+/* MAC dispatchers */
+CREATE_MAC_DISPATCHERS(CMAC, CBC, 0);
+

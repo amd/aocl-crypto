@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -32,7 +32,7 @@
  */
 
 #include "alcp_mac_prov.h"
-#include "alcp_names.h"
+#include "provider/alcp_names.h"
 #include <string.h>
 
 int HMAC_init(char *digest,alc_mac_info_p macinfo);

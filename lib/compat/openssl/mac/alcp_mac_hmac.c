@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,16 +26,21 @@
  *
  */
 
-#include "alcp_mac_cmac.h"
-DEFINE_CMAC_CONTEXT("CBC")
+#include "alcp_mac_hmac.h"
+DEFINE_HMAC_CONTEXT(SHA2);
 
-int ALCP_prov_CMAC_get_ctx_params(void* vctx, OSSL_PARAM params[]) {
+int
+ALCP_prov_HMAC_get_ctx_params(void* vctx, OSSL_PARAM params[])
+{
     ENTER();
     int ret =  ALCP_prov_mac_get_ctx_params(vctx, params);
     EXIT();
     return ret;
 }
-int ALCP_prov_CMAC_set_ctx_params(void* vctx, const OSSL_PARAM params[]) {
+
+int
+ALCP_prov_HMAC_set_ctx_params(void* vctx, const OSSL_PARAM params[])
+{
     ENTER();
     int ret =  ALCP_prov_mac_set_ctx_params(vctx, params);
     EXIT();
@@ -43,7 +48,7 @@ int ALCP_prov_CMAC_set_ctx_params(void* vctx, const OSSL_PARAM params[]) {
 }
 
 void
-ALCP_prov_CMAC_ctxfree(alc_prov_mac_ctx_p mac_ctx)
+ALCP_prov_HMAC_ctxfree(alc_prov_mac_ctx_p mac_ctx)
 {
     ENTER();
     ALCP_prov_mac_freectx(mac_ctx);
@@ -51,5 +56,4 @@ ALCP_prov_CMAC_ctxfree(alc_prov_mac_ctx_p mac_ctx)
 }
 
 /* MAC dispatchers */
-CREATE_MAC_DISPATCHERS(CMAC, CBC, 0);
-
+CREATE_MAC_DISPATCHERS(HMAC, SHA2, 0);
