@@ -44,6 +44,7 @@
 #include "alcp_provider.h"
 #include "debug.h"
 #include <alcp/mac.h>
+#include <openssl/core_names.h>
 
 struct _alc_prov_mac_ctx
 {

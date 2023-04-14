@@ -35,12 +35,15 @@
 #include "alcp_names.h"
 #include <string.h>
 
+int HMAC_init(char *digest,alc_mac_info_p macinfo);
+
 void
 ALCP_prov_mac_freectx(void* vctx)
 {
     ENTER();
-    alc_prov_mac_ctx_p pdctx = vctx;
-    EVP_MAC_CTX_free(pdctx->pc_evp_mac_ctx);
+    alc_prov_mac_ctx_p mctx = vctx;
+    OPENSSL_free(mctx->handle.ch_context);
+    EVP_MAC_CTX_free(mctx->pc_evp_mac_ctx);
 
     EXIT();
 }
@@ -79,7 +82,11 @@ ALCP_prov_mac_dupctx(void* vctx)
 /*-
  * Generic mac functions for OSSL_PARAM gettables and settables
  */
-static const OSSL_PARAM mac_known_gettable_params[] = {};
+static const OSSL_PARAM mac_known_gettable_params[] = {
+    OSSL_PARAM_size_t(OSSL_MAC_PARAM_DIGEST, NULL),
+    OSSL_PARAM_size_t(OSSL_MAC_PARAM_CIPHER, NULL),
+    OSSL_PARAM_END
+};
 
 const OSSL_PARAM*
 ALCP_prov_mac_gettable_params(void* provctx)
@@ -87,6 +94,7 @@ ALCP_prov_mac_gettable_params(void* provctx)
     ENTER();
 
     EXIT();
+    return mac_known_gettable_params;
 }
 
 int
@@ -134,8 +142,27 @@ int
 ALCP_prov_mac_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 {
     ENTER();
+    int ret = 0;
+    const OSSL_PARAM *p_digest = OSSL_PARAM_locate_const(params, "digest");
+    if(p_digest!=NULL){
+        char *digest =  p_digest->data;
+        ret = HMAC_init(digest, &(((alc_prov_mac_ctx_p)vctx)->pc_mac_info));
+        return ret;
+    }
+    const OSSL_PARAM *p_cipher = OSSL_PARAM_locate_const(params, "cipher");
+    if(p_cipher!=NULL){
+        char *cipher =  p_cipher->data;
+        if(!strcmp(cipher,"aes128") || !strcmp(cipher,"aes192") || !strcmp(cipher,"aes256") || 
+           !strcmp(cipher,"aes-128-cbc") || !strcmp(cipher,"aes-192-cbc")|| !strcmp(cipher,"aes-256-cbc")){
+            return 1;
+        }
+        else{
+            printf("CMAC Provider: Cipher '%s' not supported\n",cipher);
+        }
+    }
+
     EXIT();
-    return 0;
+    return ret;
 }
 
 int HMAC_init(char *digest,alc_mac_info_p macinfo){
@@ -144,18 +171,19 @@ int HMAC_init(char *digest,alc_mac_info_p macinfo){
         return 0;
     }
     // FIXME: Key does not need to be in bytes
-    macinfo->mi_keyinfo.len=macinfo->mi_keyinfo.len/=8;
+    macinfo->mi_keyinfo.len/=8;
     
     alc_digest_info_t digestinfo ;
     alc_digest_type_t digest_type;
     alc_digest_len_t digest_len;
     alc_digest_mode_t digest_mode;
 
+    int ret =1;
+
     if(!strcmp(digest,"sha256")){
         digest_type = ALC_DIGEST_TYPE_SHA2;
         digest_len = ALC_DIGEST_LEN_256;
         digest_mode.dm_sha2 = ALC_SHA2_256;
-
     }
     else if(!strcmp(digest,"sha224")){
         digest_type = ALC_DIGEST_TYPE_SHA2;
@@ -192,10 +220,16 @@ int HMAC_init(char *digest,alc_mac_info_p macinfo){
         digest_len = ALC_DIGEST_LEN_512;
         digest_mode.dm_sha3 = ALC_SHA2_512;
     }
+    else{
+        printf("HMAC Provider: Digest '%s' Not Supported",digest);
+        return 0;
+    }
     digestinfo.dt_type = digest_type;
     digestinfo.dt_len = digest_len;
     digestinfo.dt_mode = digest_mode;
     macinfo->mi_algoinfo.hmac.hmac_digest = digestinfo;
+
+    return ret;
 }
 int
 ALCP_prov_mac_init(void*                vctx,
@@ -204,12 +238,14 @@ ALCP_prov_mac_init(void*                vctx,
                    const OSSL_PARAM     params[])
 {
     ENTER();
-    OSSL_PARAM *p = OSSL_PARAM_locate(params, "digest");
     char * digest = NULL;
-    if(p!=NULL){
-        printf("Redirect to HMAC Provider");
-        digest = (char*)p->data;
-        printf("MAC Provider: Digest is %s\n",digest);
+    if(params!=NULL){
+        const OSSL_PARAM *p = OSSL_PARAM_locate_const(params, "digest");
+        if(p!=NULL){
+            printf("Redirect to HMAC Provider");
+            digest = (char*)p->data;
+            printf("MAC Provider: Digest is %s\n",digest);
+        }
     }
 
 
@@ -282,8 +318,9 @@ ALCP_prov_mac_final(void*          vctx,
         return 0;
     }
 
+    alcp_mac_reset(&(mctx->handle));
+
     *outl = outsize;
-    OPENSSL_free(mctx->handle.ch_context);
     EXIT();
     return 1;
 }

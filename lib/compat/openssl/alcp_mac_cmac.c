@@ -27,10 +27,28 @@
  */
 
 #include "alcp_mac_cmac.h"
-DEFINE_CMAC_CONTEXT("CBC");
+DEFINE_CMAC_CONTEXT("CBC")
 
-ALCP_prov_CMAC_get_ctx_params() {}
-ALCP_prov_CMAC_set_ctx_params() {}
+int ALCP_prov_CMAC_get_ctx_params(void* vctx, OSSL_PARAM params[]) {
+    ENTER();
+    int ret =  ALCP_prov_mac_get_ctx_params(vctx, params);
+    EXIT();
+    return ret;
+}
+int ALCP_prov_CMAC_set_ctx_params(void* vctx, const OSSL_PARAM params[]) {
+    ENTER();
+    int ret =  ALCP_prov_mac_set_ctx_params(vctx, params);
+    EXIT();
+    return ret;
+}
+
+void
+ALCP_prov_CMAC_ctxfree(alc_prov_mac_ctx_p mac_ctx)
+{
+    ENTER();
+    ALCP_prov_mac_freectx(mac_ctx);
+    EXIT();
+}
 
 /* MAC dispatchers */
 CREATE_MAC_DISPATCHERS(CMAC, CBC, 0);
