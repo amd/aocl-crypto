@@ -33,16 +33,21 @@
 #include "alcp_mac_prov.h"
 #include "debug.h"
 
-#define DEFINE_CMAC_CONTEXT(subtype)
-alc_mac_info_t
-    s_mac_CMAC_CBC_info = { .mi_type     = ALC_MAC_CMAC,
-                            .mi_algoinfo = {
-                                .cmac = { .cmac_cipher = {
-                                              .ci_type = ALC_CIPHER_TYPE_AES,
-                                              .ci_algo_info = {
-                                                  .ai_mode = ALC_AES_MODE_NONE,
-                                                  .ai_iv   = NULL } } } } };
+// clang-format off
+#define DEFINE_CMAC_CONTEXT(subtype)                \
+alc_mac_info_t                                      \
+    s_mac_CMAC_CBC_info =                           \
+    { .mi_type     = ALC_MAC_CMAC,                  \
+        .mi_algoinfo = {                            \
+            .cmac = {                               \
+                .cmac_cipher =                      \
+                {                                   \
+                    .ci_type = ALC_CIPHER_TYPE_AES, \
+                    .ci_algo_info = {               \
+                    .ai_mode = ALC_AES_MODE_NONE,   \
+                    .ai_iv   = NULL                 \
+                        } } } } };
 
-// extern const OSSL_DISPATCH cfb_functions[];
+// clang-format on
 
 #endif /* _OPENSSL_ALCP_MAC_CMAC */

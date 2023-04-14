@@ -28,7 +28,6 @@
 
 #ifndef _OPENSSL_DEBUG_H
 #define _OPENSSL_DEBUG_H 2
-#define DEBUG
 #ifdef DEBUG
 #define DBG_PRINT(prfx, fmt, ...) printf(prfx##fmt, __VA_ARGS__)
 

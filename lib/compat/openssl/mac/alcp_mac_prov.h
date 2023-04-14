@@ -34,15 +34,8 @@
 #ifndef _OPENSSL_ALCP_MAC_PROV_H
 #define _OPENSSL_ALCP_MAC_PROV_H 2
 
-// #include <openssl/core.h>
-// #include <openssl/core_names.h>
-// #include <openssl/engine.h>
-// #include <openssl/evp.h>
-// #include <openssl/proverr.h>
-
-// #include <alcp/key.h>
-#include "provider/alcp_provider.h"
 #include "debug.h"
+#include "provider/alcp_provider.h"
 #include <alcp/mac.h>
 #include <openssl/core_names.h>
 
@@ -95,7 +88,7 @@ ALCP_prov_mac_settable_ctx_params(void* cctx, void* provctx);
 const OSSL_PARAM*
 ALCP_prov_mac_gettable_params(void* provctx);
 int
-ALCP_prov_mac_get_params(OSSL_PARAM params[], int mode);
+ALCP_prov_mac_get_params(OSSL_PARAM params[]);
 int
 ALCP_prov_mac_set_params(const OSSL_PARAM params[]);
 
@@ -106,12 +99,12 @@ extern OSSL_FUNC_mac_set_ctx_params_fn ALCP_prov_mac_set_ctx_params;
 extern OSSL_FUNC_mac_update_fn         ALCP_prov_mac_update;
 extern OSSL_FUNC_mac_final_fn          ALCP_prov_mac_final;
 
-#define CREATE_MAC_DISPATCHERS(mactype, subtype, mode)                         \
+#define CREATE_MAC_DISPATCHERS(mactype, subtype)                               \
     static OSSL_FUNC_mac_get_params_fn ALCP_prov_##mactype##_get_params;       \
     static int ALCP_prov_##mactype##_get_params(OSSL_PARAM* params)            \
     {                                                                          \
         ENTER();                                                               \
-        int ret = ALCP_prov_mac_get_params(params, mode);                      \
+        int ret = ALCP_prov_mac_get_params(params);                            \
         EXIT();                                                                \
         return ret;                                                            \
     }                                                                          \

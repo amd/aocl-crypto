@@ -23,7 +23,7 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
  
-# Added aocl-compat as a seperate liberary
+# Added aocl-compat as a seperate library
 ADD_SUBDIRECTORY(cipher)
 ADD_SUBDIRECTORY(digest)
 ADD_SUBDIRECTORY(rng)
