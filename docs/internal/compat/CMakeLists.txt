@@ -1,4 +1,4 @@
- # Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -23,10 +23,8 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
- ADD_SUBDIRECTORY(compat)
-
 # Index/Main files to read from
-SET(ALCP_DESIGN_DOC design.md CodingStyle.md)
+SET(ALCP_DESIGN_DOC openssl.md)
 
 # Combine one or more Index/Main doc files into an array for
 # generating each pdf
@@ -69,7 +67,7 @@ IF( PDFLATEX AND PANDOC )
     ENDFOREACH()
     # Create a target named docs and add "Index/Main" file name 
     # with pdf extension as a dependancy
-    ADD_CUSTOM_TARGET(docs_pdf ALL DEPENDS ${DOC_PDFS})
+    ADD_CUSTOM_TARGET(compat_docs_pdf ALL DEPENDS ${DOC_PDFS})
 ENDIF()
 
 #ADD_CUSTOM_TARGET(docs ALL DEPENDS ${PDFDESIGN})
