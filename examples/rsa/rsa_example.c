@@ -34,27 +34,6 @@
 
 #include "alcp/rsa.h"
 
-#define SIZE_KEY_X25519 32
-
-#define ALCP_PRINT_TEXT(I, L, S)                                               \
-    printf("%s\n", S);                                                         \
-    for (int x = 0; x < L; x++) {                                              \
-        printf(" %02x", *(I + x));                                             \
-    }                                                                          \
-    printf("\n");
-
-static const Uint8 peer1_privk_data[SIZE_KEY_X25519] = {
-    0x80, 0x5b, 0x30, 0x20, 0x25, 0x4a, 0x70, 0x2c, 0xad, 0xa9, 0x8d,
-    0x7d, 0x47, 0xf8, 0x1b, 0x20, 0x89, 0xd2, 0xf9, 0x14, 0xac, 0x92,
-    0x27, 0xf2, 0x10, 0x7e, 0xdb, 0x21, 0xbd, 0x73, 0x73, 0x5d
-};
-
-static const Uint8 peer2_privk_data[SIZE_KEY_X25519] = {
-    0xf8, 0x84, 0x19, 0x69, 0x79, 0x13, 0x0d, 0xbd, 0xb1, 0x76, 0xd7,
-    0x0e, 0x7e, 0x0f, 0xb6, 0xf4, 0x8c, 0x4a, 0x8c, 0x5f, 0xd8, 0x15,
-    0x09, 0x0a, 0x71, 0x78, 0x74, 0x92, 0x0f, 0x85, 0xc8, 0x43
-};
-
 static alc_error_t
 create_demo_session(alc_rsa_handle_t* s_rsa_handle)
 {
@@ -69,63 +48,147 @@ create_demo_session(alc_rsa_handle_t* s_rsa_handle)
 }
 
 static alc_error_t
-Rsa_demo(alc_rsa_handle_t* ps_ec_handle_peer1,
-         alc_rsa_handle_t* ps_ec_handle_peer2)
+Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
+         alc_rsa_handle_t* ps_rsa_handle_peer2)
 {
     alc_error_t err;
 
-    // /* Peer 1 */
-    // Uint8        publicKeyData1[SIZE_KEY_X25519];
-    // const Uint8* pPrivKey_input_data1 = peer1_privk_data;
-    // err                               = alcp_ec_get_publickey(
-    //     ps_ec_handle_peer1, publicKeyData1, peer1_privk_data);
-    // if (err != ALC_ERROR_NONE) {
-    //     printf("\n peer1 publickey generation failed");
-    //     return err;
-    // }
-    // ALCP_PRINT_TEXT(peer1_privk_data, SIZE_KEY_X25519, "pPrivKey_peer1")
-    // ALCP_PRINT_TEXT(publicKeyData1, SIZE_KEY_X25519, "publicKey_peer1")
+    /* Peer 1 */
 
-    // /* Peer 2 */
-    // Uint8 publicKeyData2[SIZE_KEY_X25519];
-    // err = alcp_ec_get_publickey(
-    //     ps_ec_handle_peer2, publicKeyData2, peer2_privk_data);
-    // if (err != ALC_ERROR_NONE) {
-    //     printf("\n peer2 publickey generation failed");
-    //     return err;
-    // }
-    // ALCP_PRINT_TEXT(peer2_privk_data, SIZE_KEY_X25519, "pPrivKey_peer2")
-    // ALCP_PRINT_TEXT(publicKeyData2, SIZE_KEY_X25519, "publicKey_peer2")
-    // printf("\n");
+    Uint64 size_key_peer_1 = alcp_rsa_get_key_size(ps_rsa_handle_peer1);
 
-    // // compute shared secret key of both peers
-    // Uint8  pSecret_key1[SIZE_KEY_X25519];
-    // Uint64 keyLength1;
-    // err = alcp_ec_get_secretkey(
-    //     ps_ec_handle_peer1, pSecret_key1, publicKeyData2, &keyLength1);
-    // if (err != ALC_ERROR_NONE) {
-    //     printf("\n peer1 secretkey computation failed");
-    //     return err;
-    // }
+    if (size_key_peer_1 == 0) {
+        printf("\n peer1 key size fetch failed");
+        return ALC_ERROR_INVALID_SIZE;
+    }
 
-    // Uint8  pSecret_key2[SIZE_KEY_X25519];
-    // Uint64 keyLength2;
-    // err = alcp_ec_get_secretkey(
-    //     ps_ec_handle_peer2, pSecret_key2, publicKeyData1, &keyLength2);
-    // if (err != ALC_ERROR_NONE) {
-    //     printf("\n peer2 secretkey computation failed");
-    //     return err;
-    // }
+    Uint8* text_peer_1 = malloc(sizeof(Uint8) * size_key_peer_1);
+    memset(text_peer_1, 0, sizeof(Uint8) * size_key_peer_1);
 
-    // ALCP_PRINT_TEXT(pSecret_key1, SIZE_KEY_X25519, "peer1 common Secretkey")
-    // ALCP_PRINT_TEXT(pSecret_key2, SIZE_KEY_X25519, "peer2 common Secretkey")
-    // printf("\n");
+    Uint8* pub_key_mod_peer_1 = malloc(sizeof(Uint8) * size_key_peer_1);
+    memset(pub_key_mod_peer_1, 0, sizeof(Uint8) * size_key_peer_1);
 
-    // if (memcmp(pSecret_key1, pSecret_key2, keyLength1) == 0) {
-    //     err = ALC_ERROR_NONE;
-    // } else {
-    //     printf("\n mismatch in secret key computation");
-    // }
+    Uint64 public_exponent_peer_1;
+
+    err = alcp_rsa_get_publickey(ps_rsa_handle_peer1,
+                                 &public_exponent_peer_1,
+                                 pub_key_mod_peer_1,
+                                 size_key_peer_1);
+
+    if (err != ALC_ERROR_NONE) {
+        printf("\n peer1 publickey fetch failed");
+        goto out;
+    }
+
+    /* Peer 2 */
+    Uint64 size_key_peer_2 = alcp_rsa_get_key_size(ps_rsa_handle_peer2);
+
+    if (size_key_peer_2 == 0) {
+        printf("\n peer2 key size fetch failed");
+        err = ALC_ERROR_INVALID_SIZE;
+        goto out;
+    }
+
+    Uint8* text_peer_2 = malloc(sizeof(Uint8) * size_key_peer_2);
+    memset(text_peer_2, 0, sizeof(Uint8) * size_key_peer_2);
+
+    Uint8* pub_key_mod_peer_2 = malloc(sizeof(Uint8) * size_key_peer_2);
+    memset(pub_key_mod_peer_2, 0, sizeof(Uint8) * size_key_peer_2);
+
+    Uint64 public_exponent_peer_2;
+    err = alcp_rsa_get_publickey(ps_rsa_handle_peer2,
+                                 &public_exponent_peer_2,
+                                 pub_key_mod_peer_2,
+                                 size_key_peer_2);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n peer2 publickey fetch failed");
+        goto out;
+    }
+
+    // Encrypt text by peer1 using public key of peer 2
+    Uint8* encr_text_peer_1 = malloc(sizeof(Uint8) * size_key_peer_2);
+    memset(encr_text_peer_1, 0, sizeof(Uint8) * size_key_peer_2);
+
+    err = alcp_rsa_publickey_encrypt(ps_rsa_handle_peer1,
+                                     ALCP_RSA_PADDING_NONE,
+                                     pub_key_mod_peer_2,
+                                     size_key_peer_2,
+                                     public_exponent_peer_2,
+                                     text_peer_1,
+                                     sizeof(text_peer_1),
+                                     encr_text_peer_1);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n peer1 publc key encrypt failed");
+        goto out;
+    }
+
+    // Decrypt by peer2
+    Uint8* decr_text_peer2 = malloc(sizeof(Uint8) * size_key_peer_2);
+    memset(encr_text_peer_1, 0, sizeof(Uint8) * size_key_peer_2);
+
+    err = alcp_rsa_privatekey_decrypt(ps_rsa_handle_peer2,
+                                      ALCP_RSA_PADDING_NONE,
+                                      encr_text_peer_1,
+                                      size_key_peer_2,
+                                      decr_text_peer2);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n peer2 private key decryption failed");
+        goto out;
+    }
+
+    if (memcmp(decr_text_peer2, text_peer_1, size_key_peer_2) == 0) {
+        err = ALC_ERROR_NONE;
+    } else {
+        printf("\n decrypted text not matching the original text");
+        goto out;
+    }
+
+    // Encrypt text by peer2 using public key of peer 1
+    Uint8* encr_text_peer_2 = malloc(sizeof(Uint8) * size_key_peer_1);
+    memset(encr_text_peer_2, 0, sizeof(Uint8) * size_key_peer_1);
+
+    err = alcp_rsa_publickey_encrypt(ps_rsa_handle_peer2,
+                                     ALCP_RSA_PADDING_NONE,
+                                     pub_key_mod_peer_1,
+                                     size_key_peer_1,
+                                     public_exponent_peer_1,
+                                     text_peer_2,
+                                     sizeof(text_peer_2),
+                                     encr_text_peer_2);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n peer2 publc key encrypt failed");
+        goto out;
+    }
+
+    // Decrypt by peer1
+    Uint8* decr_text_peer1 = malloc(sizeof(Uint8) * size_key_peer_1);
+    memset(decr_text_peer1, 0, sizeof(Uint8) * size_key_peer_1);
+
+    err = alcp_rsa_privatekey_decrypt(ps_rsa_handle_peer1,
+                                      ALCP_RSA_PADDING_NONE,
+                                      encr_text_peer_2,
+                                      size_key_peer_1,
+                                      decr_text_peer1);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n peer1 private key decryption failed");
+        goto out;
+    }
+
+    if (memcmp(decr_text_peer1, text_peer_2, size_key_peer_1) == 0) {
+        err = ALC_ERROR_NONE;
+    } else {
+        printf("\n decrypted text not matching the original text");
+    }
+
+out:
+    free(text_peer_1);
+    free(text_peer_2);
+    free(pub_key_mod_peer_1);
+    free(pub_key_mod_peer_2);
+    free(encr_text_peer_1);
+    free(encr_text_peer_2);
+    free(decr_text_peer1);
+    free(decr_text_peer2);
     return err;
 }
 

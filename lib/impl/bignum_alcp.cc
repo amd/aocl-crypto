@@ -59,7 +59,10 @@ class BigNum::Impl
     BigNum mod(const BigNum& rhs);
     BigNum lshift(int shifts);
     BigNum rshift(int shifts);
-    int    total_bits() const;
+
+    BigNum exp_mod(const BigNum& num, const BigNum& exp, const BigNum& mod);
+
+    int total_bits() const;
     /* Cant compare BigNum at the moment */
     inline bool neq(const BigNum& rhs) { return m_is_negative; }
 
@@ -72,9 +75,11 @@ class BigNum::Impl
 
     Int64 toInt64() const;
     Int32 toInt32() const;
+    void  toUint8Ptr(Uint8* buf, Uint64 size);
     void  fromUint64(const Uint64 val);
     void  fromInt64(const Int64 val);
     void  fromInt32(const Int32 val);
+    void  fromUint8Ptr(const Uint8* buf, Uint64 size);
 
     Status       fromString(const String& str, Format f);
     const String toString(Format f) const;
@@ -118,8 +123,7 @@ rightShiftMinusOne(Uint64 x, int shift)
 
 BigNum::Impl::Impl()
     : m_is_negative{ false }
-{
-}
+{}
 
 void
 BigNum::Impl::operator=(const BigNum& rhs)
@@ -585,6 +589,13 @@ BigNum::Impl::rshift(int shifts)
     return result;
 }
 
+BigNum
+BigNum::Impl::exp_mod(const BigNum& num, const BigNum& exp, const BigNum& mod)
+{
+    std::cout << "Not Implemented";
+    return BigNum();
+}
+
 /**
  * Converts BigNum to string with binary, decimal or hexadecimal Format
  *
@@ -756,6 +767,18 @@ BigNum::Impl::fromString(const String& str, BigNum::Format f)
     ALCP_ASSERT(data[0] == val, "fromInt64: BIGNUM struct constructor failed");
 
     return StatusOk();
+}
+
+void
+BigNum::Impl::fromUint8Ptr(const Uint8* buf, Uint64 size)
+{
+    std::cout << "Not Implemented";
+}
+
+void
+BigNum::Impl::toUint8Ptr(Uint8* buf, Uint64 size)
+{
+    std::cout << "Not Implemented";
 }
 
 const void*

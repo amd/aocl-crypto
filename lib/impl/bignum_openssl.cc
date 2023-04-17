@@ -58,8 +58,7 @@ class BigNumError : public std::runtime_error
   public:
     explicit BigNumError(const std::string& str)
         : std::runtime_error(str)
-    {
-    }
+    {}
 };
 
 class BigNumCtx
@@ -238,6 +237,24 @@ class BigNum::Impl
         return result;
     }
 
+    inline BigNum exp_mod(BigNum&       result,
+                          const BigNum& num,
+                          const BigNum& exp,
+                          const BigNum& mod)
+    {
+        BigNumCtx ctx;
+        int       ret = BN_mod_exp_simple(result.pImpl()->raw(),
+                                    num.pImpl()->raw(),
+                                    exp.pImpl()->raw(),
+                                    mod.pImpl()->raw(),
+                                    ctx.raw());
+
+        if (!ret)
+            result.fromInt64(0);
+
+        return result;
+    }
+
     inline bool isZero(const BigNum& num) const
     {
         return BN_is_zero(num.pImpl()->raw());
@@ -333,6 +350,14 @@ class BigNum::Impl
         return sts;
     }
 
+    Status fromUint8Ptr(const Uint8* buf, Uint64 size)
+    {
+        if (BN_bin2bn(buf, size, raw()) == NULL) {
+            return Status(GenericError(ErrorCode::eInternal));
+        }
+        return StatusOk();
+    }
+
     bool  isNegative() const { return BN_is_negative(raw()); }
     Int64 toInt64() const
     {
@@ -349,6 +374,15 @@ class BigNum::Impl
         if (isNegative())
             res = -res;
         return res;
+    }
+
+    Status toUint8Ptr(const Uint8* buf, Uint64 size)
+    {
+        if (BN_bn2binpad(raw(), buf, size) == 0) {
+            return Status(GenericError(ErrorCode::eInternal));
+        }
+
+        return StatusOk();
     }
 
     const String toString(BigNum::Format fmt) const

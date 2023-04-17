@@ -70,21 +70,30 @@ alcp_rsa_request(alc_rsa_handle_p pRsaHandle)
 alc_error_t
 alcp_rsa_publickey_encrypt(const alc_rsa_handle_p   pRsaHandle,
                            alc_rsa_encr_dcr_padding pad,
-                           const Uint8*             pPublicKey,
+                           const Uint8*             pPublicKeyMod,
+                           Uint64                   pPublicKeyModSize,
+                           Uint64                   publicKeyExp,
                            const Uint8*             pText,
+                           Uint64                   textSize,
                            Uint8*                   pEncText)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
     ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
-    ALCP_BAD_PTR_ERR_RET(pPublicKey, err);
+    ALCP_BAD_PTR_ERR_RET(pPublicKeyMod, err);
     ALCP_BAD_PTR_ERR_RET(pText, err);
     ALCP_BAD_PTR_ERR_RET(pEncText, err);
 
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
 
-    Status status =
-        ctx->getEncrBufWithPub(ctx->m_rsa, pad, pPublicKey, pText, pEncText);
+    // Todo : Remove the const cast.
+    // This is needed to pack the const variable in a const structure
+    const rsa::RsaPublicKey pub_key = { publicKeyExp,
+                                        const_cast<Uint8*>(pPublicKeyMod),
+                                        pPublicKeyModSize };
+
+    Status status = ctx->encrBufWithPub(
+        ctx->m_rsa, pad, pub_key, pText, textSize, pEncText);
 
     return status.ok() ? err : ALC_ERROR_GENERIC;
 }
@@ -93,6 +102,7 @@ alc_error_t
 alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p   pRsaHandle,
                             alc_rsa_encr_dcr_padding pad,
                             const Uint8*             pEncText,
+                            Uint64                   encSize,
                             Uint8*                   pText)
 {
     alc_error_t err = ALC_ERROR_NONE;
@@ -103,7 +113,40 @@ alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p   pRsaHandle,
 
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
 
-    Status status = ctx->getDecrBufWithPriv(ctx->m_rsa, pad, pEncText, pText);
+    Status status =
+        ctx->decrBufWithPriv(ctx->m_rsa, pad, pEncText, encSize, pText);
+
+    return status.ok() ? err : ALC_ERROR_GENERIC;
+}
+
+Uint64
+alcp_rsa_get_key_size(const alc_rsa_handle_p pRsaHandle)
+{
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
+    auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
+    return ctx->getKeySize(ctx->m_rsa);
+}
+
+alc_error_t
+alcp_rsa_get_publickey(const alc_rsa_handle_p pRsaHandle,
+                       Uint64*                publicKey,
+                       Uint8*                 pModulus,
+                       Uint64                 keySize)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
+    ALCP_BAD_PTR_ERR_RET(pModulus, err);
+
+    auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
+
+    rsa::RsaPublicKey pub_key;
+    pub_key.modulus = pModulus;
+    pub_key.size    = keySize;
+
+    Status status = ctx->getPublickey(ctx->m_rsa, pub_key);
+
+    *publicKey = pub_key.public_exponent;
 
     return status.ok() ? err : ALC_ERROR_GENERIC;
 }

@@ -38,22 +38,41 @@ using Context = alcp::rsa::Context;
 static Status
 __rsa_getEncrBufWithPub_wrapper(void*                    pRsaHandle,
                                 alc_rsa_encr_dcr_padding pad,
-                                const Uint8*             pPublicKey,
+                                const RsaPublicKey&      publicKey,
                                 const Uint8*             pText,
+                                Uint64                   textSize,
                                 Uint8*                   pEncText)
 {
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    return ap->getEncrBufWithPub(pad, pPublicKey, pText, pEncText);
+    return ap->encrBufWithPub(pad, publicKey, pText, textSize, pEncText);
 }
 
 static Status
 __rsa_getDecrBufWithPriv_wrapper(void*                    pRsaHandle,
                                  alc_rsa_encr_dcr_padding pad,
                                  const Uint8*             pEncText,
+                                 Uint64                   encSize,
                                  Uint8*                   pText)
 {
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    return ap->getDecrBufWithPriv(pad, pEncText, pText);
+    return ap->decrBufWithPriv(pad, pEncText, encSize, pText);
+}
+
+static Uint64
+__rsa_getKeySize_wrapper(void* pRsaHandle)
+{
+    auto ap = static_cast<Rsa*>(pRsaHandle);
+
+    return ap->getKeySize();
+}
+
+static Status
+__rsa_getPublicKey_wrapper(void* pRsaHandle, RsaPublicKey& publicKey)
+{
+    auto ap = static_cast<Rsa*>(pRsaHandle);
+
+    Status status = ap->getPublickey(publicKey);
+    return status;
 }
 
 static Status
@@ -84,14 +103,16 @@ Status
 RsaBuilder::Build(Context& rCtx)
 {
 
-    Status status           = StatusOk();
-    auto   addr             = reinterpret_cast<Uint8*>(&rCtx) + sizeof(rCtx);
-    auto   algo             = new (addr) Rsa();
-    rCtx.m_rsa              = static_cast<void*>(algo);
-    rCtx.getEncrBufWithPub  = __rsa_getEncrBufWithPub_wrapper;
-    rCtx.getDecrBufWithPriv = __rsa_getDecrBufWithPriv_wrapper;
-    rCtx.finish             = __rsa_dtor;
-    rCtx.reset              = __rsa_reset_wrapper;
+    Status status        = StatusOk();
+    auto   addr          = reinterpret_cast<Uint8*>(&rCtx) + sizeof(rCtx);
+    auto   algo          = new (addr) Rsa();
+    rCtx.m_rsa           = static_cast<void*>(algo);
+    rCtx.encrBufWithPub  = __rsa_getEncrBufWithPub_wrapper;
+    rCtx.decrBufWithPriv = __rsa_getDecrBufWithPriv_wrapper;
+    rCtx.getKeySize      = __rsa_getKeySize_wrapper;
+    rCtx.getPublickey    = __rsa_getPublicKey_wrapper;
+    rCtx.finish          = __rsa_dtor;
+    rCtx.reset           = __rsa_reset_wrapper;
 
     return status;
 }

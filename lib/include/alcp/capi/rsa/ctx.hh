@@ -29,6 +29,7 @@
 
 #include "alcp/base.hh"
 #include "alcp/rsa.h"
+#include "alcp/rsa.hh"
 
 namespace alcp::rsa {
 
@@ -37,16 +38,22 @@ class Context
   public:
     void* m_rsa;
 
-    Status (*getEncrBufWithPub)(void*                    pRsaHandle,
-                                alc_rsa_encr_dcr_padding pad,
-                                const Uint8*             pPublicKey,
-                                const Uint8*             pText,
-                                Uint8*                   pEncText);
+    Status (*encrBufWithPub)(void*                    pRsaHandle,
+                             alc_rsa_encr_dcr_padding pad,
+                             const RsaPublicKey&      publicKey,
+                             const Uint8*             pText,
+                             Uint64                   textSize,
+                             Uint8*                   pEncText);
 
-    Status (*getDecrBufWithPriv)(void*                    pRsaHandle,
-                                 alc_rsa_encr_dcr_padding pad,
-                                 const Uint8*             pEncText,
-                                 Uint8*                   pText);
+    Status (*decrBufWithPriv)(void*                    pRsaHandle,
+                              alc_rsa_encr_dcr_padding pad,
+                              const Uint8*             pEncText,
+                              Uint64                   encSize,
+                              Uint8*                   pText);
+
+    Uint64 (*getKeySize)(void* pRsaHandle);
+
+    Status (*getPublickey)(void* pRsaHandle, RsaPublicKey& publicKey);
 
     Status (*finish)(void*);
 

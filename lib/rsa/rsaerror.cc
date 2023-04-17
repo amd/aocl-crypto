@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -23,59 +23,23 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
  */
-#pragma once
 
-#include "alcp/interface/Ierror.hh"
-#include "alcp/interface/Imodule.hh"
-#include "alcp/types.hh"
+#include "alcp/rsa/rsaerror.hh"
 
-#include <map>
-#include <string>
+namespace alcp::rsa::status {
 
-namespace alcp::module {
-
-enum Type : Uint16
+Status
+NotPermitted(StringView msg)
 {
-    eModuleNone = 0,
-    eModuleBase = eModuleNone,
-    eModuleGeneric,
-    eModuleCipher,
-    eModuleDigest,
-    eModuleRng,
-    eModuleMac,
-    eModuleEc,
-    eModuleRsa,
+    auto e = RsaError(alcp::base::eInvalidArgument, ErrorCode::eNotPermitted);
+    return Status(e, msg);
+}
 
-    eModuleMax, /* should be last entry */
-};
-
-/* FIXME: following must be removed in favour of alcp::module::Type */
-typedef enum _alc_module_type
+Status
+Unavailable(StringView msg)
 {
-    ALC_MODULE_TYPE_NONE = 0,
-
-    ALC_MODULE_TYPE_CIPHER,
-    ALC_MODULE_TYPE_DIGEST,
-    ALC_MODULE_TYPE_RNG,
-    ALC_MODULE_TYPE_MAC,
-    ALC_MODULE_TYPE_EC,
-    ALC_MODULE_TYPE_RSA,
-
-    ALC_MODULE_TYPE_MAX,
-} alc_module_type_t;
-
-class ModuleBase : public alcp::base::IModule
-{
-  public:
-    ALCP_DEFS_DEFAULT_CTOR_AND_DTOR(ModuleBase);
-
-    virtual String moduleName() const override { return "Base"; }
-    virtual Uint16 moduleId() const override
-    {
-        return static_cast<Uint16>(eModuleBase);
-    };
-};
-
-} // namespace alcp::module
+    auto e = RsaError(alcp::base::eNotAvailable, ErrorCode::eUnavailable);
+    return Status(e, msg);
+}
+} // namespace alcp::rsa::status

@@ -69,6 +69,12 @@ BigNum::toInt32() const
 }
 
 void
+BigNum::toUint8Ptr(Uint8* buf, Uint64 size)
+{
+    pImpl()->toUint8Ptr(buf, size);
+}
+
+void
 BigNum::fromUint64(const Uint64 val)
 {
     pImpl()->fromUint64(val);
@@ -84,6 +90,12 @@ void
 BigNum::fromInt32(const Int32 val)
 {
     pImpl()->fromInt32(val);
+}
+
+void
+BigNum::fromUint8Ptr(const Uint8* buf, Uint64 size)
+{
+    pImpl()->fromUint8Ptr(buf, size);
 }
 
 Status
@@ -173,6 +185,12 @@ BigNum
 BigNum::operator<<(int shifts)
 {
     return pImpl()->lshift(shifts);
+}
+
+BigNum
+BigNum::exp_mod(const BigNum& num, const BigNum& exp, const BigNum& mod)
+{
+    return pImpl()->exp_mod(num, exp, mod);
 }
 
 bool

@@ -121,7 +121,7 @@ alcp_rsa_supported();
  *              know if the RSA algorithm is supported.
  *
  *
- * @param [in]      pRsaHandle The handle returned by the Library
+ * @param [in] pRsaHandle The handle returned by the Library
  *
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_error_str needs to be called to know about error
@@ -135,11 +135,14 @@ alcp_rsa_request(alc_rsa_handle_p pRsaHandle);
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_rsa_request
  * @endparblock
- * @param [in] pPublicKey - pointer to Input public Key used for encrypting raw
- * @param [in] pad - padding scheme to be used for rsa encryption
- * @param [in] pRsaHandle - Handler of the Context for the session
- * @param [in] pText - pointer to raw bytes
- * @param [out] pEncText - pointer to encrypted bytes
+ * @param [in]  pRsaHandle         - Handler of the Context for the session
+ * @param [in]  pad                - padding scheme for rsa encryption
+ * @param [in]  pPublicKeyMod      - public key modulus
+ * @param [in]  pPublicKeyModSize  - public key modulus size
+ * @param [in]  publicKeyExp       - public key exponent
+ * @param [in]  pText              - pointer to raw bytes
+ * @param [in]  textSize           - size of raw bytes
+ * @param [out] pEncText           - pointer to encrypted bytes
  * bytes
 
  * @return Error Code for the API called . if alc_error_t is not zero then
@@ -148,8 +151,11 @@ alcp_rsa_request(alc_rsa_handle_p pRsaHandle);
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_encrypt(const alc_rsa_handle_p   pRsaHandle,
                            alc_rsa_encr_dcr_padding pad,
-                           const Uint8*             pPublicKey,
+                           const Uint8*             pPublicKeyMod,
+                           Uint64                   pPublicKeyModSize,
+                           Uint64                   publicKeyExp,
                            const Uint8*             pText,
+                           Uint64                   textSize,
                            Uint8*                   pEncText);
 
 /**
@@ -159,10 +165,11 @@ alcp_rsa_publickey_encrypt(const alc_rsa_handle_p   pRsaHandle,
  * <b>This API can be called after @ref alcp_rsa_request and the
  * before the session call @ref alcp_rsa_finish</b>
  * @endparblock
- * @param [in] pRsaHandle - Handler of the Context for the session
- * @param [in] pad - padding scheme to be used for rsa decrytion
- * @param [in] pEncText - pointer to encrypted bytes
- * @param [out] pText - pointer to decrypted bytes
+ * @param [in]  pRsaHandle - Handler of the Context for the session
+ * @param [in]  pad        - padding scheme to be used for rsa decrytion
+ * @param [in]  pEncText   - pointer to encrypted bytes
+ * @param [in]  encSize    - pointer to encrypted bytes
+ * @param [out] pText      - pointer to decrypted bytes
  * @return Error Code for the API called . if alc_error_t is not zero then
  * alcp_error_str needs to be called to know about error occured
  */
@@ -170,7 +177,45 @@ ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p   pRsaHandle,
                             alc_rsa_encr_dcr_padding pad,
                             const Uint8*             pEncText,
+                            Uint64                   encSize,
                             Uint8*                   pText);
+
+/**
+ * @brief Function fetches public key from handle
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request
+ * @endparblock
+ * @param [in]    pRsaHandle - Handler of the Context for the session
+ * @param [out]   pPublicKey - pointer to public exponent
+ * @param [out]   pModulus   - pointer to modulus
+ * @param [out]   keySize    - size of modulus
+
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occured
+ */
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_get_publickey(const alc_rsa_handle_p pRsaHandle,
+                       Uint64*                publicKey,
+                       Uint8*                 pModulus,
+                       Uint64                 keySize);
+
+/**
+ * @brief       Fetches key size
+ * @parblock <br> &nbsp;
+ * <b>This API is called fetch the key size
+ * session</b>
+ * @endparblock
+ *
+ * @note       This size is used to allocate the modulus to be then used in
+ * alcp_rsa_get_publickey
+ *
+ * @param [in] pRsaHandle - Handler of the Context for the session
+ *
+ * @return      modulus/private_key size
+ */
+ALCP_API_EXPORT Uint64
+alcp_rsa_get_key_size(const alc_rsa_handle_p pRsaHandle);
 
 /**
  * @brief       Performs any cleanup actions
