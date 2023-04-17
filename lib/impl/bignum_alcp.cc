@@ -199,7 +199,8 @@ static inline int
 ceil_64(int bits)
 {
     // used to get ceil value when divided by 64
-    return (bits + 63) / 64;
+    constexpr int extra_bits_for_ceil = 63, bits_in_Uint64 = 64;
+    return (bits + extra_bits_for_ceil) / bits_in_Uint64;
 }
 
 BigNum::Impl::Impl()
@@ -255,12 +256,14 @@ BigNum::Impl::randomGenerate(int bits, int top, int bottom)
     Uint8*         p_data_8 = reinterpret_cast<Uint8*>(&(data[0]));
     m_drbg.randomize(p_data_8, max_bytes * 8);
     m_drbg.reseed();
-    long long mask = (1ULL << extra_bits) - 1;
+    long long mask = leftShiftMinusOne(1ULL, extra_bits);
     m_data         = data;
     m_data.back() &= mask;
     m_data[0] |= bottom;
     if (top)
         m_data.back() |= ((mask + 1) >> 1);
+    else
+        m_data.back() &= ((mask) >> 1);
     return ALC_ERROR_NONE;
 }
 
@@ -287,7 +290,7 @@ BigNum::Impl::randomRange(const BigNum* range)
     Uint8*         p_data_8 = reinterpret_cast<Uint8*>(&(data[0]));
     m_drbg.randomize(p_data_8, max_bytes * 8);
     m_drbg.reseed();
-    long long mask = (1ULL << extra_bits) - 1;
+    long long mask = leftShiftMinusOne(1ULL, extra_bits);
     m_data         = data;
     m_data.back() &= mask;
     while (compare_gt(m_data, range->pImpl()->m_data)) {
@@ -765,8 +768,11 @@ BigNum::Impl::rshift(int shifts)
         - (((shifts % 64)
             > (64
                - (m_data.back() != 0 ? __builtin_clzll(m_data.back()) : 64))));
-    if (len <= 0)
+    if (len <= 0) {
+        result.fromInt32(0);
         return result;
+    }
+
     result.pImpl()->m_data.resize(len);
 
     __rshift(result.pImpl()->m_data, m_data, shifts);
