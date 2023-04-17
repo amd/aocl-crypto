@@ -237,12 +237,12 @@ class BigNum::Impl
         return result;
     }
 
-    inline BigNum exp_mod(BigNum&       result,
-                          const BigNum& num,
+    inline BigNum exp_mod(const BigNum& num,
                           const BigNum& exp,
                           const BigNum& mod)
     {
         BigNumCtx ctx;
+        BigNum    result;
         int       ret = BN_mod_exp_simple(result.pImpl()->raw(),
                                     num.pImpl()->raw(),
                                     exp.pImpl()->raw(),
@@ -376,7 +376,7 @@ class BigNum::Impl
         return res;
     }
 
-    Status toUint8Ptr(const Uint8* buf, Uint64 size)
+    Status toUint8Ptr(Uint8* buf, Uint64 size)
     {
         if (BN_bn2binpad(raw(), buf, size) == 0) {
             return Status(GenericError(ErrorCode::eInternal));

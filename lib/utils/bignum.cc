@@ -27,14 +27,15 @@
  */
 
 #include "alcp/utils/bignum.hh"
-
-#if defined(ALCP_BIGNUM_USE_OPENSSL)
+#include "config.h"
+#if ALCP_BIGNUM_USE_OPENSSL
 #include "../impl/bignum_openssl.cc"
-#elif defined(ALCP_BIGNUM_USE_IPP)
+#elif ALCP_BIGNUM_USE_IPP
 #include "../impl/bignum_openssl.cc"
 #else
 #include "../impl/bignum_alcp.cc"
 #endif
+#include <iostream>
 
 namespace alcp {
 
@@ -117,7 +118,7 @@ BigNum::operator=(const BigNum& rhs)
     if (this == &rhs)
         return *this;
 
-    pImpl()->operator=(*rhs.pImpl());
+    pImpl()->operator=(rhs);
     return *this;
 }
 

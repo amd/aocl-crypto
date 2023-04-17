@@ -52,6 +52,13 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
          alc_rsa_handle_t* ps_rsa_handle_peer2)
 {
     alc_error_t err;
+    Uint8*      text_peer_1        = NULL;
+    Uint8*      text_peer_2        = NULL;
+    Uint8*      pub_key_mod_peer_2 = NULL;
+    Uint8*      encr_text_peer_1   = NULL;
+    Uint8*      decr_text_peer2    = NULL;
+    Uint8*      encr_text_peer_2   = NULL;
+    Uint8*      decr_text_peer1    = NULL;
 
     /* Peer 1 */
 
@@ -62,8 +69,8 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
         return ALC_ERROR_INVALID_SIZE;
     }
 
-    Uint8* text_peer_1 = malloc(sizeof(Uint8) * size_key_peer_1);
-    memset(text_peer_1, 0, sizeof(Uint8) * size_key_peer_1);
+    text_peer_1 = malloc(sizeof(Uint8) * size_key_peer_1);
+    memset(text_peer_1, 0x1, sizeof(Uint8) * size_key_peer_1);
 
     Uint8* pub_key_mod_peer_1 = malloc(sizeof(Uint8) * size_key_peer_1);
     memset(pub_key_mod_peer_1, 0, sizeof(Uint8) * size_key_peer_1);
@@ -89,10 +96,10 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
         goto out;
     }
 
-    Uint8* text_peer_2 = malloc(sizeof(Uint8) * size_key_peer_2);
-    memset(text_peer_2, 0, sizeof(Uint8) * size_key_peer_2);
+    text_peer_2 = malloc(sizeof(Uint8) * size_key_peer_2);
+    memset(text_peer_2, 0x1, sizeof(Uint8) * size_key_peer_2);
 
-    Uint8* pub_key_mod_peer_2 = malloc(sizeof(Uint8) * size_key_peer_2);
+    pub_key_mod_peer_2 = malloc(sizeof(Uint8) * size_key_peer_2);
     memset(pub_key_mod_peer_2, 0, sizeof(Uint8) * size_key_peer_2);
 
     Uint64 public_exponent_peer_2;
@@ -106,7 +113,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
     }
 
     // Encrypt text by peer1 using public key of peer 2
-    Uint8* encr_text_peer_1 = malloc(sizeof(Uint8) * size_key_peer_2);
+    encr_text_peer_1 = malloc(sizeof(Uint8) * size_key_peer_2);
     memset(encr_text_peer_1, 0, sizeof(Uint8) * size_key_peer_2);
 
     err = alcp_rsa_publickey_encrypt(ps_rsa_handle_peer1,
@@ -115,7 +122,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
                                      size_key_peer_2,
                                      public_exponent_peer_2,
                                      text_peer_1,
-                                     sizeof(text_peer_1),
+                                     size_key_peer_1,
                                      encr_text_peer_1);
     if (err != ALC_ERROR_NONE) {
         printf("\n peer1 publc key encrypt failed");
@@ -123,7 +130,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
     }
 
     // Decrypt by peer2
-    Uint8* decr_text_peer2 = malloc(sizeof(Uint8) * size_key_peer_2);
+    decr_text_peer2 = malloc(sizeof(Uint8) * size_key_peer_2);
     memset(encr_text_peer_1, 0, sizeof(Uint8) * size_key_peer_2);
 
     err = alcp_rsa_privatekey_decrypt(ps_rsa_handle_peer2,
@@ -144,7 +151,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
     }
 
     // Encrypt text by peer2 using public key of peer 1
-    Uint8* encr_text_peer_2 = malloc(sizeof(Uint8) * size_key_peer_1);
+    encr_text_peer_2 = malloc(sizeof(Uint8) * size_key_peer_1);
     memset(encr_text_peer_2, 0, sizeof(Uint8) * size_key_peer_1);
 
     err = alcp_rsa_publickey_encrypt(ps_rsa_handle_peer2,
@@ -153,7 +160,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
                                      size_key_peer_1,
                                      public_exponent_peer_1,
                                      text_peer_2,
-                                     sizeof(text_peer_2),
+                                     size_key_peer_2,
                                      encr_text_peer_2);
     if (err != ALC_ERROR_NONE) {
         printf("\n peer2 publc key encrypt failed");
@@ -161,7 +168,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
     }
 
     // Decrypt by peer1
-    Uint8* decr_text_peer1 = malloc(sizeof(Uint8) * size_key_peer_1);
+    decr_text_peer1 = malloc(sizeof(Uint8) * size_key_peer_1);
     memset(decr_text_peer1, 0, sizeof(Uint8) * size_key_peer_1);
 
     err = alcp_rsa_privatekey_decrypt(ps_rsa_handle_peer1,
