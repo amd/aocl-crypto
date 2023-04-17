@@ -33,9 +33,8 @@
 #include <stdint.h>
 
 /**
- * @defgroup key Key API
- * @brief
- * Key API are used to know details about the algorithm and type of key used
+ * @addtogroup cipher
+ *
  * @{
  */
 

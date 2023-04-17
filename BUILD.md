@@ -1,7 +1,6 @@
-
 # AOCL Crypto Library Build
 
-## Building
+### Build Release Configuration
 
 ```shell
 $ mkdir build
@@ -9,77 +8,90 @@ $ cd build
 $ cmake ../
 ```
 
-### Extra steps for making STATIC library work
+#### Extra steps for making STATIC library work
  To generate a single .a file from all the .a files
 ```shell
 ar crsT libnew.a libalcp.a libarch_zen3.a libarch_avx2.a
 mv libnew.a libalcp.a
 ```
 
-## Enabling features of AOCL-Crypto
+#### Enabling Features of AOCL-Crypto
 
-1. [Enable Examples - To compile example/demo code.](##Enable Examples append)
-2. [Enable CPUID - To dispatch correct kernel with CPU identification.](##To enable CPUID append this)
+1. [Enable Examples - To compile example/demo code.](#example)
+2. [Enable CPUID - To dispatch correct kernel with CPU identification.](#cpuid)
+3. [Enable DEBUG Build - To compile code in Debug Mode.](#debug)
+4. [Enable Address Sanitizer Support ](#asan)
+5. [Enable Bench - To compile bench code.](#bench)
+6. [Enable Tests - To compile test code](#tests)
 
-### Enable Examples append
+<div id = "example"> </div>
 
+#### Enable Examples
+
+To enable examples, append `-DALCP_ENABLE_EXAMPLES=ON` to the cmake configuration command.
 ```sh
-$ cmake -DALCP_ENABLE_EXAMPLES=1 ../
+$ cmake -DALCP_ENABLE_EXAMPLES=ON ../
 ```
 
-### Enable CPUID append
+<div id = "cpuid"> </div>
 
+#### Enable CPUID
+
+To enable cpuid, append `-DAOCL_CPUID_INSTALL_DIR=path/to/aocl/cpuid/source` and `-DENABLE_AOCL_CPUID=ON` to the cmake configuration command.
 ```bash
-$ cmake -DAOCL_CPUID_INSTALL_DIR=path/to/aocl/cpuid/source ../
+$ cmake -DENABLE_AOCL_CPUID=ON -DAOCL_CPUID_INSTALL_DIR=path/to/aocl/cpuid/source ../
 ```
 
-## For Debug build
+<div id = "debug"> </div>
 
+#### Build Debug Configuration
+
+To build in debug mode, append `-DCMAKE_BUILD_TYPE=DEBUG` to the cmake configuration command.
 ```sh
 $ cmake -DCMAKE_BUILD_TYPE=DEBUG ../
 ```
+<div id = "asan"> </div>
 
-## For compiling with Address Sanitizer support
+#### For Compiling with Address Sanitizer Support
 
+To enable sanitizers (asan, tsan etc), append `-DALCP_SANITIZE=ON` to the cmake configuration command.
 ```sh
-$ Add argument -DALCP_SANITIZE=ON
+$ cmake -DALCP_SANITIZE=ON ../
 ```
+<div id = "bench"> </div>
 
-## To build test bench
+#### Build Benches
 
+To build benchmarking support with alcp library, append `-DALCP_ENABLE_BENCH=ON` to the cmake configuration command.
 ```sh
-$ Append the argument -DALCP_ENABLE_BENCH=1
-  This will create bench executable:
-  ./bench/digest/
+$ cmake -DALCP_ENABLE_BENCH=ON ../
+```
+Benchmarks will be built into `bench/{algorithm_type}/`
 
- ## To Run:
-$ ./bench/digest/bench_digest
+Please look into **[ README.md ](md_bench_README.html)** from bench.
 
-## Arguments can be provided as:
+#### Execute Benchmarks
+```
+$ ./bench/{algorithm_type}/bench_{algorithm_type}
+```
+#### Arguments can be provided in above bench as
+```
 $ ./bench/digest/bench_digest --benchmark_filter=SHA2_<SHA SCHEME>_<Block Size>
 $ ./bench/digest/bench_digest --benchmark_filter=SHA2_512_16 (runs SHA256 schemes for 16 block size)
 $ ./bench/digest/bench_digest --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
 ```
+<div id = "tests"> </div>
 
-## To build tests (using KAT vectors)
-$ Append the argument '-DALCP_ENABLE_TESTS=1'
- This will create test executable:
- ./tests/digest/
+#### Build Tests (using KAT vectors)
+To enable sanitizers (asan, tsan etc), append `-DALCP_ENABLE_TESTS=ON` to the cmake configuration command.
+```sh
+$ cmake -DALCP_ENABLE_TESTS=ON ../
+```
+Test executables can be found inside `tests/{algorithm_type}` directory 
 
-For more details see [README.md](tests/README.md) from tests.
+For more details see **[README.md](md_tests_README.html)** from tests.
 
-## Building (Micro)Benchmarks
-
-Please look into [README.md](bench/README.md) from bench.
-
- ## To run:
+#### Execute Tests
  ```  shell
- $ ./tests/digest/test_digest
- $ ./tests/cipher/test_cipher
+ $ ./tests/{algorithm_type}/test_{algorithm_type}
  ```
-
-
-## To build examples
-Append any other necessary configuration needed for build such as 
-`ALCP_ENABLE_EXAMPLES=1` for building examples
-

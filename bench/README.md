@@ -11,16 +11,15 @@ Skip to [Executing Benches](#Executing_Benches) if already installed
 3. $<code>cmake -B build -DALCP_ENABLE_EXAMPLES=ON -DALCP_ENABLE_BENCH=ON  -DCMAKE_BUILD_TYPE=Release</code>
 4. $<code>cmake --build build</code>
 
-<font color="red">Note - To include IPP, please define <code>-DENABLE_TESTS_IPP_API=ON -DIPP_INSTALL_DIR=/path/to/ipp_prefix</code> in step 3.</font><br>
-<font color="red"> Note - To include OpenSSL, please define <code>-DOPENSSL_INSTALL_DIR=/path/to/openssl_prefix</code> in step 3.</font>
+> <span style="color:red"> __Note:__</span> To include IPP, please define <code>-DENABLE_TESTS_IPP_API=ON -DIPP_INSTALL_DIR=/path/to/ipp_prefix</code> in step 3. <br>
+> <span style="color:red"> __Note:__</span> To include OpenSSL, please define <code>-DOPENSSL_INSTALL_DIR=/path/to/openssl_prefix</code> in step 3.
 
-## AES
 
 <a name = "Executing_Benches"></a>
 
 ### Executing Benches
 
-After building ALCP, there should be binary files with name bench_cipher in bench/cipher and bench_digest in bench/digest
+After building ALCP, there should be binary files of each cryptographic algorithm with respective name in base_path = ./bench/{Respective cryptographic algorithm}
 
 To run tests with verbose mode (prints also success)
 
@@ -40,22 +39,51 @@ Example for selecting only "SHA256" benchmarks
 
 Always you can use <code>--help</code> to know all the command line arguments which can be given to the executable.
 
-##### Supported Benchmarks
+#### Supported Benchmarks
 
-###### Cipher
+##### Cipher
 
-1. AES-CBC (128,192,256)
-2. AES-CTR (128,192,256)
-3. AES-CFB (128,192,256)
-4. AES-OFB (128,192,256)
-5. AES-GCM (128,192,256)
+1. AES_CBC (128,192,256)
+2. AES_CTR (128,192,256)
+3. AES_CFB (128,192,256)
+4. AES_OFB (128,192,256)
+5. AES_GCM (128,192,256)
+6. AES_XTS (128,256)
+7. AES_CCM (128,192,256)
 
-###### Digest
+##### Digest
 
-1. SHA2-224
-2. SHA2-256
-3. SHA2-384
-4. SHA2-512
+1.  SHA2_224
+2.  SHA2_256
+3.  SHA2_384
+4.  SHA2_512
+5.  SHA2_512_224
+6.  SHA2_512_256
+7.  SHA3_224
+8.  SHA3_256
+9.  SHA3_384
+10. SHA3_512
+11. SHAKE_128
+12. SHAKE_256
+
+##### MAC
+
+1.  CMAC_AES_128
+2.  CMAC_AES_192
+3.  CMAC_AES_256
+4.  HMAC_SHA2_224
+5.  HMAC_SHA2_256
+6.  HMAC_SHA2_384
+7.  HMAC_SHA2_512
+8.  HMAC_SHA3_224
+9.  HMAC_SHA3_256
+10. HMAC_SHA3_384
+11. HMAC_SHA3_512
+
+##### EC
+
+1. ECDH_x25519_GenPubKey
+2. ECDH_x25519_GenSecretKey
 
 #### Using IPP
 

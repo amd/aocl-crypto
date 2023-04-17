@@ -845,6 +845,17 @@ div.contents p, div.contents li {
     line-height: var(--content-line-height);
 }
 
+.contents p a {
+    display:none
+}
+
+.contents p b a {
+    display:contents;
+    vertical-align: bottom
+}
+
+
+
 div.contents div.dyncontent {
     margin: var(--spacing-medium) 0;
 }
@@ -888,6 +899,7 @@ blockquote p {
 .paramname {
     font-weight: 600;
     color: var(--primary-dark-color);
+    padding: 0 20px 0 0;
 }
 
 .glow {

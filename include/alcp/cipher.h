@@ -132,6 +132,13 @@ typedef struct _alc_cipher_mode_gcm_info
     char dummy;
 } alc_cipher_mode_gcm_info_t, *alc_cipher_mode_gcm_info_p;
 
+/**
+ * @brief   Stores info for SIV Mode of AES Specifically
+ *
+ * @param xi_ctr_key   holds the info about secondary key for SIV
+ *
+ * @struct alc_cipher_mode_siv_info_t
+ */
 typedef struct _alc_cipher_mode_siv_info
 {
     const alc_key_info_t* xi_ctr_key;
@@ -139,10 +146,11 @@ typedef struct _alc_cipher_mode_siv_info
 
 /**
  *
- * @brief  Algorithm specific info for cipher,
+ * @brief  Algorithm specific info for cipher
  * @param ai_mode Specific which Mode of AES to be used @ref alcp_cipher_mode_t
  * @param ai_iv Initialization Vector
- * @param ai_xts,  ai_gcm optional param for Some Specific Mode of AES
+ * @param ai_xts,      ai_gcm,      ai_siv optional param for Some Specific Mode
+ *              of AES only one param can be present at a time
  * @struct  alc_cipher_algo_info_t
  */
 typedef struct _alc_cipher_algo_info
@@ -254,8 +262,8 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
                     alc_cipher_handle_p     pCipherHandle);
 
 /**
- * @brief    Allows caller to request for a cipher as described by
- *           pCipherInfo
+ * @brief    Allows caller to encrypt plain text to a cipher text as per
+ *           requested
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_cipher_request is called and at the
  * end of session call @ref alcp_cipher_finish</b>
@@ -282,8 +290,8 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
                     const Uint8*              pIv);
 
 /**
- * @brief    Allows caller to request for a cipher as described by
- *           pCipherInfo
+ * @brief    Allows caller to update encryption of plain text to a cipher text
+ * as per requested
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_cipher_request is called  and at
  * the end of session call @ref alcp_cipher_finish</b>
@@ -309,8 +317,8 @@ alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
                            const Uint8*              pIv);
 
 /**
- * @brief    Allows caller to request for a cipher as described by
- *           pCipherInfo
+ * @brief    Allows caller to update decryption of cipher text to plain text
+ * as per requested
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_cipher_request is called  and at
  * the end of session call @ref alcp_cipher_finish</b>
@@ -405,8 +413,8 @@ ALCP_API_EXPORT alc_error_t
 alcp_cipher_set_tag_length(const alc_cipher_handle_p pCipherHandle, Uint64 len);
 
 /**
- * @brief    Allows caller to request for a cipher as described by
- *           pCipherInfo
+ * @brief    Allows caller to decryption cipher text to plain text
+ * as per requested
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_cipher_request is called and at the
  * end of session call @ref alcp_cipher_finish </b>

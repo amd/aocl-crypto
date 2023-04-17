@@ -27,8 +27,9 @@
 <doxygenlayout version="1.0">
  <navindex>
     <tab type="mainpage" visible="yes" title="Home"/>    
-    <tab type="pages" visible="yes" title="Pages" intro=""/>
+    <tab type="user" visible="yes" url = "md_docs_resources_Related_Pages.html" title="Related Pages" intro=""/>
     <tab type="modules" visible="yes" title="APIs" intro=""/>
-    <tab type="user" url="md_Combine_build.html" visible="yes" title="Documentation"/>
+    <!-- Not needed Currently uncomment if we need documentation tab in future -->
+    <!-- <tab type="user" url="md_Combine_build.html" visible="no" title="Documentation"/> -->
 </navindex>
 </doxygenlayout>

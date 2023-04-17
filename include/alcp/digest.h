@@ -181,10 +181,10 @@ typedef struct _alc_digest_handle
  * Context will be empty </b>
  * @endparblock
  *
- * @note       alcp_cipher_supported() should be called first to
+ * @note       alcp_digest_supported() should be called first to
  *              know if the given configuration is valid.
  *
- * @param [in]       p_digest_info   Description of the requested cipher session
+ * @param [in]       p_digest_info   Description of the requested digest session
  *
  * @return      Size of Context
  */
@@ -199,10 +199,10 @@ alcp_digest_context_size(const alc_digest_info_p p_digest_info);
  * know if digest that is being request is supported or not </b>
  * @endparblock
  *
- * @note        alcp_cipher_supported() is called first to
- *              know if the given cipher/key length configuration is valid.
+ * @note        alcp_digest_supported() is called first to
+ *              know if the given configuration is valid.
  *
- * @param [in]      p_digest_info Description of the requested cipher session
+ * @param [in]      p_digest_info Description of the requested digest session
  *
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_error_str needs to be called to know about error
@@ -220,7 +220,7 @@ alcp_digest_supported(const alc_digest_info_p p_digest_info);
  * the end of session call @ref alcp_digest_finish </b>
  * @endparblock
  *
- * @note       alcp_cipher_supported() should be called first to
+ * @note       alcp_digest_supported() should be called first to
  *              know if the given type/digest length configuration is valid.
  *
  * @param [in]      p_digest_info   Description of the requested digest session

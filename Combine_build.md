@@ -1,12 +1,13 @@
 # Build and Installation
 
 To Build AOCL-Crypto for Different Platform Please refer to Document Related your Platform
-    - [ Notes for Unix-related Platform  ](#md_BUILD)
-    - [ Notes for Windows Platform  ](#md_BUILD_Windows)
+    - [ Linux ](#md_BUILD)
+    - [ Windows ](#md_BUILD_Windows)
 
-<a name="md_BUILD"></a>
+<div  style="padding: 10px 0 0px 0" id="md_BUILD"></div>
+<div id="md_BUILD"></div>
 
-## Build Instrucrion for Unix-Related Platform
+## Build Instruction for Linux Platform
 
 ### Building
 
@@ -23,77 +24,90 @@ ar crsT libnew.a libalcp.a libarch_zen3.a libarch_avx2.a
 mv libnew.a libalcp.a
 ```
 
-### Enabling features of AOCL-Crypto
+#### Enabling Features of AOCL-Crypto
 
-1. [Enable Examples - To compile example/demo code.](##Enable Examples append)
-2. [Enable CPUID - To dispatch correct kernel with CPU identification.](##To enable CPUID append this)
+1. [Enable Examples - To compile example/demo code.](#example)
+2. [Enable CPUID - To dispatch correct kernel with CPU identification.](#cpuid)
+3. [Enable DEBUG Build - To compile code in Debug Mode.](#debug)
+4. [Enable Address Sanitizer Support ](#asan)
+5. [Enable Bench - To compile bench code.](#bench)
+6. [Enable Tests - To compile test code](#tests)
 
-#### Enable Examples append
+<div id = "example"> </div>
 
+#### Enable Examples
+
+To enable examples, append `-DALCP_ENABLE_EXAMPLES=ON` to the cmake configuration command.
 ```sh
-$ cmake -DALCP_ENABLE_EXAMPLES=1 ../
+$ cmake -DALCP_ENABLE_EXAMPLES=ON ../
 ```
 
-#### Enable CPUID append
+<div id = "cpuid"> </div>
 
+#### Enable CPUID
+
+To enable cpuid, append `-DAOCL_CPUID_INSTALL_DIR=path/to/aocl/cpuid/source` and `-DENABLE_AOCL_CPUID=ON` to the cmake configuration command.
 ```bash
-$ cmake -DAOCL_CPUID_INSTALL_DIR=path/to/aocl/cpuid/source ../
+$ cmake -DENABLE_AOCL_CPUID=ON -DAOCL_CPUID_INSTALL_DIR=path/to/aocl/cpuid/source ../
 ```
 
-### For Debug build
+<div id = "debug"> </div>
 
+#### Build Debug Configuration
+
+To build in debug mode, append `-DCMAKE_BUILD_TYPE=DEBUG` to the cmake configuration command.
 ```sh
 $ cmake -DCMAKE_BUILD_TYPE=DEBUG ../
 ```
+<div id = "asan"> </div>
 
-### For compiling with Address Sanitizer support
+#### For Compiling with Address Sanitizer Support
 
+To enable sanitizers (asan, tsan etc), append `-DALCP_SANITIZE=ON` to the cmake configuration command.
 ```sh
-$ Add argument -DALCP_SANITIZE=ON
+$ cmake -DALCP_SANITIZE=ON ../
 ```
+<div id = "bench"> </div>
 
-### To build test bench
+#### Build Benches
 
+To build benchmarking support with alcp library, append `-DALCP_ENABLE_BENCH=ON` to the cmake configuration command.
 ```sh
-$ Append the argument -DALCP_ENABLE_BENCH=1
-  This will create bench executable:
-  ./bench/digest/
+$ cmake -DALCP_ENABLE_BENCH=ON ../
 ```
-## To Run:
+Benchmarks will be built into `bench/{algorithm_type}/`
+
+Please look into **[ README.md ](md_bench_README.html)** from bench.
+
+#### Execute Benchmarks
 ```
-$ ./bench/digest/bench_digest
+$ ./bench/{algorithm_type}/bench_{algorithm_type}
 ```
-## Arguments can be provided as:
+#### Arguments can be provided in above bench as
 ```
 $ ./bench/digest/bench_digest --benchmark_filter=SHA2_<SHA SCHEME>_<Block Size>
 $ ./bench/digest/bench_digest --benchmark_filter=SHA2_512_16 (runs SHA256 schemes for 16 block size)
 $ ./bench/digest/bench_digest --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
 ```
+<div id = "tests"> </div>
 
-### To build tests (using KAT vectors)
+#### Build Tests (using KAT vectors)
+To enable sanitizers (asan, tsan etc), append `-DALCP_ENABLE_TESTS=ON` to the cmake configuration command.
+```sh
+$ cmake -DALCP_ENABLE_TESTS=ON ../
 ```
-$ Append the argument '-DALCP_ENABLE_TESTS=1'
- This will create test executable:
- ./tests/digest/
-```
-For more details see [README.md](tests/README.md) from tests.
+Test executables can be found inside `tests/{algorithm_type}` directory 
 
-## Building (Micro)Benchmarks
+For more details see **[README.md](md_tests_README.html)** from tests.
 
-Please look into [README.md](bench/README.md) from bench.
-
- ### To run:
+#### Execute Tests
  ```  shell
- $ ./tests/digest/test_digest
- $ ./tests/cipher/test_cipher
+ $ ./tests/{algorithm_type}/test_{algorithm_type}
  ```
 
 
-### To build examples
-Append any other necessary configuration needed for build such as 
-`ALCP_ENABLE_EXAMPLES=1` for building examples
-
-<a name="md_BUILD_Windows"></a>
+<br>
+<div  style="padding: 10px 0 10px 0" id="md_BUILD_Windows"></div>
 
 ## Build Instrucrion for Windows Platform
 
@@ -110,7 +124,7 @@ Append any other necessary configuration needed for build such as
 2. Open the powershell.exe as administrator.
 3. cd to current working directory/cmake_source_directory
 
-#### Building
+### Building
 
 `you can enable EXAMPLES, TESTS & BENCH & generate the Project Files. Here you are specify cmake generator, by default 'Visual Studio': platform: 'x64' (by default): and for toolset current configuration use 'ClangCl'
 
@@ -133,7 +147,7 @@ Append any other necessary configuration needed for build such as
 > cmake --build build/ --config=release
 ```
 
-#### Extra steps to found dll's by setting an environment variable
+### Extra steps to found dll's by setting an environment variable
 `Try to Run the tests, if alcp & gtests dll's are not found, run the batch file, this batch file set the environment path for tests & bench.
 
 > Set_Env_Path.bat
@@ -149,65 +163,78 @@ And restart the powershell & set the path to current cmake source directory.
 .\bench\cipher\release\bench_cipher
 ```
 
-#### Important Notes: ASAN is not configured for Windows yet. #### 
+> **Important Notes: ASAN is not configured for Windows yet.**  
 
 
 ### Enabling features of AOCL-Crypto
 
-1. [Enable Examples - To compile example/demo code.](##Enable Examples append)
-2. [Enable CPUID - To dispatch correct kernel with CPU identification.](##To enable CPUID append this)
+1. [Enable Examples - To compile example/demo code.](#win-ex)
+2. [Enable CPUID - To dispatch correct kernel with CPU identification.](#win-cpu)
+3. [Enable DEBUG Build - To compile code in Debug Mode.](#win-debug)
+4. [Enable Address Sanitizer Support ](#win-asan)
+5. [Enable Bench - To compile bench code.](#win-bench)
+6. [Enable Tests - To compile test code](#win-tests)
 
-#### Enable Examples append
+<div id = "win-ex"></div>
+
+#### Enable Examples Append
 
 ```
 $ cmake -DALCP_ENABLE_EXAMPLES=ON -B build
 ```
+<div id = "win-cpu"></div>
 
-#### Enable CPUID append
+#### Enable CPUID Append
 
 ```
 $ cmake -DAOCL_CPUID_INSTALL_DIR=path/to/aocl/cpuid/source ../
 ```
+<div id = "win-debug"></div>
 
-### For Debug build
+#### For Debug Build
 
 ```
 $ cmake -DCMAKE_BUILD_TYPE=DEBUG -B build
 ```
+<div id = "win-asan"></div>
 
-### For compiling with Address Sanitizer support
-```ASAN is not configured for windows yet````
-
-### To build tests (using KAT vectors)
+#### For Compiling with Address Sanitizer Support
 ```
-$ Append the argument '-DALCP_ENABLE_TESTS=ON'
- This will create test executable:
- .\tests\digest\release
+ASAN is not configured for windows yet
 ```
+<div id = "win-bench"></div>
 
-### To run:
- ```  PS
- $ .\tests\digest\release\test_digest
- $ .\tests\cipher\release\test_cipher
- ```
+#### Build Benchmarks
 
-### Building (Micro)Benchmarks
-
-### To build  bench
-
+##### To Build Bench
 ```
 $ Append the argument -DALCP_ENABLE_BENCH=ON
   This will create bench executable:
-  .\bench\digest\ -B build
+  .\bench\{alogrithm_type}\ -B build
 ```
- ### To Run:
+##### To Run Bench:
 ```
-$ .\bench\digest\release\bench_digest
+$ .\bench\{alogrithm_type}\release\bench_{alogrithm_type}
 ```
-### Arguments can be provided as:
+##### Arguments can be provided as:
 
 ``` PS
-$ .\bench\digest\release\bench_digest --benchmark_filter=SHA2_<SHA SCHEME>_<Block Size>
-$ .\bench\digest\release\bench_digest --benchmark_filter=SHA2_512 (runs SHA512 schemes for all block size)
-$ .\bench\digest\release\bench_digest --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
+$ .\bench\{alogrithm_type}\release\bench_{alogrithm_type} --benchmark_filter=SHA2_<SHA SCHEME>_<Block Size>
+$ .\bench\{alogrithm_type}\release\bench_{alogrithm_type} --benchmark_filter=SHA2_512 (runs SHA512 schemes for all block size)
+$ .\bench\{alogrithm_type}\release\bench_{alogrithm_type} --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
 ```
+<div id = "win-tests"></div>
+
+#### To Build Tests (using KAT vectors)
+```
+$ Append the argument '-DALCP_ENABLE_TESTS=ON'
+ This will create test executable:
+ .\tests\{alogrithm_type}\release
+```
+
+#### To Run Tests:
+ ```  PS
+ $ .\tests\{alogrithm_type}\release\test_{alogrithm_type}
+ ```
+
+

@@ -1,6 +1,5 @@
 # About AOCL Crypto
 
-<b>AOCL-Crypto</b> is a library consisting of basic cryptographic functions optimized  tuned and for AMD Zen™ based microarchitecture. This library provides a unified solution for Cryptographic Alogrithm and has multiple implementations of different AES cryptographic encryption / decryption and SHA2, SHA3 Digest routines and Message Authentication Code.
-
+**AOCL-Crypto** is a library consisting of basic cryptographic functions optimized and tuned for AMD Zen™ based microarchitecture. This library provides a unified solution for Cryptographic routines such as AES Cipher (CFB, CTR, CBC, CCM, GCM, OFB, SIV, XTS), SHA Digest (SHA2, SHA3, SHAKE), Message Authentication Code (CMAC, HMAC) etc.. 
 - For building, please refer to [Build.md](./BUILD.md)
 

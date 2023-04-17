@@ -1,13 +1,13 @@
 # AOCL Crypto Build for Windows
 
-## Following software should be installed prior to build AOCL-CRYPTO 
+### Following software should be installed prior to build AOCL-CRYPTO 
 
 => MS Visual Studio (2019 or greater)
 => Git
 => Python 3.7 or greater
 => Cmake
 
-## AOCL Crypto Library in Windows
+### AOCL Crypto Library in Windows
 
 1. After git checkout the latest Crypto_Lib for windows.
 2. Open the powershell.exe as administrator.
@@ -28,7 +28,7 @@
  
 
 ```
-##Build after enabling compat libs, CPUID
+### Build after enabling compat libs, CPUID
 ```Enabling openSSL, IPP-Crypto
 
 > cmake -A x64 -B build -DCMAKE_BUILD_TYPE=RELEASE -DALCP_ENABLE_EXAMPLES=ON -DALCP_ENABLE_TESTS=ON -DALCP_ENABLE_BENCH=ON -DENABLE_AOCL_CPUID=ON -DAOCL_CPUID_INSTALL_DIR=path/to/libcpuid 
@@ -42,74 +42,88 @@
 > Set_Env_Path.bat
 And restart the powershell & set the path to current cmake source directory.
 
-##For run the Cipher & Digest Tests
+### For run the Cipher & Digest Tests
 > cd build
 > ctest -C release
 
-##For run the Cipher & Digest bench
+### For run the Cipher & Digest bench
 ``` For running the benchmarking for cipher & digests, you can run the following batch files
 .\bench\digest\release\bench_digest
 .\bench\cipher\release\bench_cipher
 ```
 
-#### Important Notes: ASAN is not configured for Windows yet. #### 
+> **Important Notes: ASAN is not configured for Windows yet.**  
 
 
 ### Enabling features of AOCL-Crypto
 
-1. [Enable Examples - To compile example/demo code.](##Enable Examples append)
-2. [Enable CPUID - To dispatch correct kernel with CPU identification.](##To enable CPUID append this)
+1. [Enable Examples - To compile example/demo code.](#win-ex)
+2. [Enable CPUID - To dispatch correct kernel with CPU identification.](#win-cpu)
+3. [Enable DEBUG Build - To compile code in Debug Mode.](#win-debug)
+4. [Enable Address Sanitizer Support ](#win-asan)
+5. [Enable Bench - To compile bench code.](#win-bench)
+6. [Enable Tests - To compile test code](#win-tests)
 
-#### Enable Examples append
+<div id = "win-ex"></div>
+
+#### Enable Examples Append
 
 ```
 $ cmake -DALCP_ENABLE_EXAMPLES=ON -B build
 ```
+<div id = "win-cpu"></div>
 
-#### Enable CPUID append
+#### Enable CPUID Append
 
 ```
 $ cmake -DAOCL_CPUID_INSTALL_DIR=path/to/aocl/cpuid/source ../
 ```
+<div id = "win-debug"></div>
 
-### For Debug build
+#### For Debug Build
 
 ```
 $ cmake -DCMAKE_BUILD_TYPE=DEBUG -B build
 ```
+<div id = "win-asan"></div>
 
-### For compiling with Address Sanitizer support
-```ASAN is not configured for windows yet````
-
-### To build tests (using KAT vectors)
+#### For Compiling with Address Sanitizer Support
 ```
-$ Append the argument '-DALCP_ENABLE_TESTS=ON'
- This will create test executable:
- .\tests\digest\release
+ASAN is not configured for windows yet
 ```
+<div id = "win-bench"></div>
 
-### To run:
- ```  PS
- $ .\tests\digest\release\test_digest
- $ .\tests\cipher\release\test_cipher
- ```
+#### Build Benchmarks
 
-### Building (Micro)Benchmarks
-
-### To build  bench
-
+##### To Build Bench
 ```
 $ Append the argument -DALCP_ENABLE_BENCH=ON
   This will create bench executable:
-  .\bench\digest\ -B build
+  .\bench\{alogrithm_type}\ -B build
 ```
- ### To Run:
-$ .\bench\digest\release\bench_digest
-
-### Arguments can be provided as:
+##### To Run Bench:
+```
+$ .\bench\{alogrithm_type}\release\bench_{alogrithm_type}
+```
+##### Arguments can be provided as:
 
 ``` PS
-$ .\bench\digest\release\bench_digest --benchmark_filter=SHA2_<SHA SCHEME>_<Block Size>
-$ .\bench\digest\release\bench_digest --benchmark_filter=SHA2_512 (runs SHA512 schemes for all block size)
-$ .\bench\digest\release\bench_digest --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
+$ .\bench\{alogrithm_type}\release\bench_{alogrithm_type} --benchmark_filter=SHA2_<SHA SCHEME>_<Block Size>
+$ .\bench\{alogrithm_type}\release\bench_{alogrithm_type} --benchmark_filter=SHA2_512 (runs SHA512 schemes for all block size)
+$ .\bench\{alogrithm_type}\release\bench_{alogrithm_type} --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
 ```
+<div id = "win-tests"></div>
+
+#### To Build Tests (using KAT vectors)
+```
+$ Append the argument '-DALCP_ENABLE_TESTS=ON'
+ This will create test executable:
+ .\tests\{alogrithm_type}\release
+```
+
+#### To Run Tests:
+ ```  PS
+ $ .\tests\{alogrithm_type}\release\test_{alogrithm_type}
+ ```
+
+

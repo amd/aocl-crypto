@@ -1,18 +1,18 @@
 
 # Welcome to AOCL-Crypto
 
-<b>AOCL-Crypto</b> is a library consisting of basic cryptographic functions optimized  tuned and for AMD Zen™ based microarchitecture. This library provides a unified solution for Cryptographic Alogrithm and has multiple implementations of different AES cryptographic encryption / decryption and SHA2, SHA3 Digest routines and Message Authentication Code.
+<b>AOCL-Crypto</b> is a library consisting of basic cryptographic functions optimized  tuned and for AMD Zen™ based microarchitecture. This library provides a unified solution for Cryptographic Alogrithm and has multiple implementations of different AES cryptographic encryption / decryption and SHA2, SHA3 Digest routines, Elliptic curve routines and Message Authentication Code.
 
 ---
 
 ## Table of Content
-    - [Introduction](#Introduction)
-    - [Build and Installation](#Build)
-    - [Examples](#Example)
-    - [Contact Us](#Contact)
+    * [Introduction](#Introduction)
+    * [Build and Installation](#Build)
+    * [Examples](#Example)
+    * [Contact Us](#Contact)
 
 
-<a name = "Introduction"></a>
+<div id="Introduction" name="Introduction"></div>
 
 ## Introduction
 
@@ -26,7 +26,7 @@ AOCL Crypto framework is developed in C / C++ for Unix and Windows based systems
 AES 
     
     AES Encrypt / Decrypt routines which will support the following cipher schemes:
-        -  CBC, CFB, OFB, CTR, GCM, XTS, CCM.
+        -  CBC, CFB, OFB, CTR, GCM, XTS, CCM, SIV.
 ```
 -   click to know about more about [AOCL - AES API](group__cipher.html)
 
@@ -37,15 +37,29 @@ AES
 SHA2
 
     Digest routines for the following schemes:
-        - SHA2_224, SHA2_256, SHA2_384, SHA2_512
+        - SHA2_224, SHA2_256, SHA2_384, SHA2_512, SHA2_512_224, SHA2_512_256
 
 SHA3
 
     Digest routines for the following schemes:
-        - SHA3_224, SHA3_256, SHA3_384, SHA3_512    
+        - SHA3_224, SHA3_256, SHA3_384, SHA3_512, SHAKE_128, SHAKE_256    
 ```
 
 - Click to know more about [AOCL DIGEST API](group__digest.html)
+
+
+### Elliptic curve
+
+```
+
+EC 
+
+    EC routines for the following schemes:
+        - SHORT_WEIERSTRASS , MONTGOMERY
+
+```
+
+- Click to know more about [AOCL EC API](group__ec.html)
 
 
 ### Message Authentication Code
@@ -57,19 +71,24 @@ HMAC
     MAC routines for the following schemes:
         - HMAC_SHA2_224, HMAC_SHA2_256, HMAC_SHA2_384, HMAC_SHA2_512
         - HMAC_SHA3_224, HMAC_SHA3_256, HMAC_SHA3_384, HMAC_SHA3_512
+
+CMAC 
+
+    MAC routines for the following schemes:
+        - CMAC - AES (for key size 128,192 and 256)
 ```
 
 - Click to know more about [AOCL MAC API](group__mac.html)
 
-<a name = "Build"></a>
+<div id = "Build" name="Build"></div>
 
 ## Build and Installation
 
 To Build AOCL-Crypto for Different Platform Please refer to Document Related your Platform
-    - [ Notes for Unix-related Platform  ](md_BUILD.html)
-    - [ Notes for Windows Platform  ](md_BUILD_Windows.html)
+    - [ Linux ](md_Combine_build.html#md_BUILD)
+    - [ Windows  ](md_Combine_build.html#md_BUILD_Windows)
 
-<a name = "Example"></a>
+<div id = "Example"></div>
 
 ## Example
 
@@ -150,8 +169,8 @@ encrypt_demo(const uint8_t *plaintxt,
 
 ```
 
-<a name = "Contact"></a>
+<div id = "Contact"></div>
 
 ## CONTACTS
 
-AOCL Crypto is developed and maintained by AMD. You can contact us on the email-id aoclsupport@amd.com.
+AOCL Crypto is developed and maintained by AMD. You can contact us on the email-id <b>[aoclsupport@amd.com](mailto:aoclsupport@amd.com)</b>
