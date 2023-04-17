@@ -188,10 +188,10 @@ BigNum::operator<<(int shifts)
     return pImpl()->lshift(shifts);
 }
 
-BigNum
+void
 BigNum::exp_mod(const BigNum& num, const BigNum& exp, const BigNum& mod)
 {
-    return pImpl()->exp_mod(num, exp, mod);
+    pImpl()->exp_mod(num, exp, mod);
 }
 
 bool

@@ -60,7 +60,7 @@ class BigNum::Impl
     BigNum lshift(int shifts);
     BigNum rshift(int shifts);
 
-    BigNum exp_mod(const BigNum& num, const BigNum& exp, const BigNum& mod);
+    void exp_mod(const BigNum& num, const BigNum& exp, const BigNum& mod);
 
     int total_bits() const;
     /* Cant compare BigNum at the moment */
@@ -589,7 +589,7 @@ BigNum::Impl::rshift(int shifts)
     return result;
 }
 
-BigNum
+void
 BigNum::Impl::exp_mod(const BigNum& num, const BigNum& exp, const BigNum& mod)
 {
     std::cout << "Not Implemented";

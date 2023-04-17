@@ -118,7 +118,7 @@ Rsa::decrBufWithPriv(alc_rsa_encr_dcr_padding pad,
     }
 
     BigNum raw_buff;
-    raw_buff.fromUint8Ptr(pText, encSize);
+    raw_buff.fromUint8Ptr(pEncText, encSize);
 
     BigNum res;
     res.exp_mod(raw_buff, m_priv_key, m_mod);

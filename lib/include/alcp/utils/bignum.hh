@@ -62,7 +62,7 @@ class ALCP_API_EXPORT BigNum final
     BigNum operator>>(int shifts);
     BigNum operator<<(int shifts);
 
-    BigNum exp_mod(const BigNum& num, const BigNum& exp, const BigNum& mod);
+    void exp_mod(const BigNum& num, const BigNum& exp, const BigNum& mod);
 
     /* Arithmetic + Assignment */
     void operator+=(const BigNum& rhs);

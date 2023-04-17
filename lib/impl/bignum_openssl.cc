@@ -237,22 +237,20 @@ class BigNum::Impl
         return result;
     }
 
-    inline BigNum exp_mod(const BigNum& num,
-                          const BigNum& exp,
-                          const BigNum& mod)
+    inline void exp_mod(const BigNum& num, const BigNum& exp, const BigNum& mod)
     {
         BigNumCtx ctx;
-        BigNum    result;
-        int       ret = BN_mod_exp_simple(result.pImpl()->raw(),
+        // BigNum    result;
+        int ret = BN_mod_exp_simple(raw(),
                                     num.pImpl()->raw(),
                                     exp.pImpl()->raw(),
                                     mod.pImpl()->raw(),
                                     ctx.raw());
 
-        if (!ret)
-            result.fromInt64(0);
+        // if (!ret)
+        //     this.fromInt64(0);
 
-        return result;
+        // return result;
     }
 
     inline bool isZero(const BigNum& num) const
@@ -279,7 +277,9 @@ class BigNum::Impl
     Status fromUint64(const Uint64 val)
     {
         Status sts = StatusOk();
-        bool   res = BN_set_word(raw(), val);
+        // to remove
+        BIGNUM* debug = raw();
+        bool    res   = BN_set_word(raw(), val);
         ALCP_ASSERT(res == true, "fromInt64: BN_set_word failed");
         if (!res)
             sts.update(status::InternalError("BN_set_word"));
