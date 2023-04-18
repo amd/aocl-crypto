@@ -58,11 +58,11 @@ class Rsa
      * publicKey
      * @return Status Error code
      */
-    ALCP_API_EXPORT Status encrBufWithPub(alc_rsa_encr_dcr_padding pad,
-                                          const RsaPublicKey&      pubKey,
-                                          const Uint8*             pText,
-                                          Uint64                   textSize,
-                                          Uint8*                   pEncText);
+    ALCP_API_EXPORT Status encryptPublic(alc_rsa_padding     pad,
+                                         const RsaPublicKey& pubKey,
+                                         const Uint8*        pText,
+                                         Uint64              textSize,
+                                         Uint8*              pEncText);
 
     /**
      * @brief Function decrypt the buffer
@@ -74,10 +74,10 @@ class Rsa
      * publicKey
      * @return Status Error code
      */
-    ALCP_API_EXPORT Status decrBufWithPriv(alc_rsa_encr_dcr_padding pad,
-                                           const Uint8*             pEncText,
-                                           Uint64                   encSize,
-                                           Uint8*                   pText);
+    ALCP_API_EXPORT Status decryptPrivate(alc_rsa_padding pad,
+                                          const Uint8*    pEncText,
+                                          Uint64          encSize,
+                                          Uint8*          pText);
 
     /**
      * @brief Function fetches the public key

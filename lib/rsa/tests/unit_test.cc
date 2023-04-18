@@ -60,10 +60,10 @@ TEST(RsaTest, PublicEncryptPrivateDecryptTest)
     pub_key.size    = key_size;
     Status status   = rsa_obj.getPublickey(pub_key);
 
-    rsa_obj.encrBufWithPub(
+    rsa_obj.encryptPublic(
         ALCP_RSA_PADDING_NONE, pub_key, p_text.get(), key_size, p_enc.get());
 
-    rsa_obj.decrBufWithPriv(
+    rsa_obj.decryptPrivate(
         ALCP_RSA_PADDING_NONE, p_enc.get(), key_size, p_dec.get());
 
     EXPECT_EQ(memcmp(p_dec.get(), p_text.get(), key_size), 0);
@@ -81,18 +81,18 @@ TEST(RsaTest, PubKeyEncryptPaddingTest)
 
     pub_key.modulus = p_mod.get();
 
-    Status status = rsa_obj.encrBufWithPub(ALCP_RSA_PADDING_NONE,
-                                           pub_key,
-                                           p_text.get(),
-                                           pub_key.size,
-                                           p_enc.get());
+    Status status = rsa_obj.encryptPublic(ALCP_RSA_PADDING_NONE,
+                                          pub_key,
+                                          p_text.get(),
+                                          pub_key.size,
+                                          p_enc.get());
     EXPECT_EQ(status.code(), ErrorCode::eOk);
 
-    status = rsa_obj.encrBufWithPub(
+    status = rsa_obj.encryptPublic(
         ALCP_RSA_PKCS1_PADDING, pub_key, nullptr, pub_key.size, nullptr);
     EXPECT_NE(status.code(), ErrorCode::eOk);
 
-    status = rsa_obj.encrBufWithPub(
+    status = rsa_obj.encryptPublic(
         ALCP_RSA_PKCS1_OAEP_PADDING, pub_key, nullptr, pub_key.size, nullptr);
     EXPECT_NE(status.code(), ErrorCode::eOk);
 }
@@ -109,11 +109,11 @@ TEST(RsaTest, PubKeyEncryptValidSizeTest)
 
     pub_key.modulus = p_mod.get();
 
-    Status status = rsa_obj.encrBufWithPub(ALCP_RSA_PADDING_NONE,
-                                           pub_key,
-                                           p_text.get(),
-                                           pub_key.size,
-                                           p_enc.get());
+    Status status = rsa_obj.encryptPublic(ALCP_RSA_PADDING_NONE,
+                                          pub_key,
+                                          p_text.get(),
+                                          pub_key.size,
+                                          p_enc.get());
     EXPECT_EQ(status.code(), ErrorCode::eOk);
 }
 
@@ -129,11 +129,11 @@ TEST(RsaTest, PubKeyEncryptInValidSizeTest)
 
     pub_key.modulus = p_mod.get();
 
-    Status status = rsa_obj.encrBufWithPub(ALCP_RSA_PADDING_NONE,
-                                           pub_key,
-                                           p_text.get(),
-                                           pub_key.size + 1,
-                                           p_enc.get());
+    Status status = rsa_obj.encryptPublic(ALCP_RSA_PADDING_NONE,
+                                          pub_key,
+                                          p_text.get(),
+                                          pub_key.size + 1,
+                                          p_enc.get());
     EXPECT_NE(status.code(), ErrorCode::eOk);
 }
 
@@ -150,11 +150,11 @@ TEST(RsaTest, PubKeyEncryptValidBuffTest)
     pub_key.modulus = p_modulus.get();
     pub_key.size    = key_size;
 
-    Status status = rsa_obj.encrBufWithPub(ALCP_RSA_PADDING_NONE,
-                                           pub_key,
-                                           p_buff.get(),
-                                           pub_key.size,
-                                           p_buff_enc.get());
+    Status status = rsa_obj.encryptPublic(ALCP_RSA_PADDING_NONE,
+                                          pub_key,
+                                          p_buff.get(),
+                                          pub_key.size,
+                                          p_buff_enc.get());
     EXPECT_EQ(status.code(), ErrorCode::eOk);
 }
 
@@ -165,7 +165,7 @@ TEST(RsaTest, PubKeyEncryptInValidBuffTest)
     pub_key.size    = rsa_obj.getKeySize();
     pub_key.modulus = nullptr;
 
-    Status status = rsa_obj.encrBufWithPub(
+    Status status = rsa_obj.encryptPublic(
         ALCP_RSA_PADDING_NONE, pub_key, nullptr, pub_key.size, nullptr);
     EXPECT_NE(status.code(), ErrorCode::eOk);
 }
@@ -178,15 +178,15 @@ TEST(RsaTest, PrivKeyDecryptPaddingTest)
     auto p_buff_enc = std::make_unique<Uint8[]>(enc_size);
     auto p_buff_dec = std::make_unique<Uint8[]>(enc_size);
 
-    Status status = rsa_obj.decrBufWithPriv(
+    Status status = rsa_obj.decryptPrivate(
         ALCP_RSA_PADDING_NONE, p_buff_enc.get(), enc_size, p_buff_dec.get());
     EXPECT_EQ(status.code(), ErrorCode::eOk);
 
-    status = rsa_obj.decrBufWithPriv(
+    status = rsa_obj.decryptPrivate(
         ALCP_RSA_PKCS1_PADDING, nullptr, enc_size, nullptr);
     EXPECT_NE(status.code(), ErrorCode::eOk);
 
-    status = rsa_obj.decrBufWithPriv(
+    status = rsa_obj.decryptPrivate(
         ALCP_RSA_PKCS1_OAEP_PADDING, nullptr, enc_size, nullptr);
     EXPECT_NE(status.code(), ErrorCode::eOk);
 }
@@ -199,7 +199,7 @@ TEST(RsaTest, PrivKeyDecryptValidSizeTest)
     auto p_buff_enc = std::make_unique<Uint8[]>(enc_size);
     auto p_buff_dec = std::make_unique<Uint8[]>(enc_size);
 
-    Status status = rsa_obj.decrBufWithPriv(
+    Status status = rsa_obj.decryptPrivate(
         ALCP_RSA_PADDING_NONE, p_buff_enc.get(), enc_size, p_buff_dec.get());
 
     EXPECT_EQ(status.code(), ErrorCode::eOk);
@@ -210,7 +210,7 @@ TEST(RsaTest, PrivKeyDecryptInvalidSizeTest)
     Rsa    rsa_obj;
     Uint64 enc_size = rsa_obj.getKeySize() + 1;
 
-    Status status = rsa_obj.decrBufWithPriv(
+    Status status = rsa_obj.decryptPrivate(
         ALCP_RSA_PADDING_NONE, nullptr, enc_size, nullptr);
     EXPECT_NE(status.code(), ErrorCode::eOk);
 }
@@ -222,7 +222,7 @@ TEST(RsaTest, PrivKeyDecryptValidBuffTest)
     auto   p_buff_enc = std::make_unique<Uint8[]>(enc_size);
     auto   p_buff_dec = std::make_unique<Uint8[]>(enc_size);
 
-    Status status = rsa_obj.decrBufWithPriv(
+    Status status = rsa_obj.decryptPrivate(
         ALCP_RSA_PADDING_NONE, p_buff_enc.get(), enc_size, p_buff_dec.get());
     EXPECT_EQ(status.code(), ErrorCode::eOk);
 }
@@ -232,7 +232,7 @@ TEST(RsaTest, PrivKeyDecryptInValidBuffTest)
     Rsa    rsa_obj;
     Uint64 enc_size = rsa_obj.getKeySize();
 
-    Status status = rsa_obj.decrBufWithPriv(
+    Status status = rsa_obj.decryptPrivate(
         ALCP_RSA_PADDING_NONE, nullptr, enc_size, nullptr);
     EXPECT_NE(status.code(), ErrorCode::eOk);
 }

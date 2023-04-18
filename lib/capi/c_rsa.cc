@@ -68,14 +68,14 @@ alcp_rsa_request(alc_rsa_handle_p pRsaHandle)
 }
 
 alc_error_t
-alcp_rsa_publickey_encrypt(const alc_rsa_handle_p   pRsaHandle,
-                           alc_rsa_encr_dcr_padding pad,
-                           const Uint8*             pPublicKeyMod,
-                           Uint64                   pPublicKeyModSize,
-                           Uint64                   publicKeyExp,
-                           const Uint8*             pText,
-                           Uint64                   textSize,
-                           Uint8*                   pEncText)
+alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
+                           alc_rsa_padding        pad,
+                           const Uint8*           pPublicKeyMod,
+                           Uint64                 pPublicKeyModSize,
+                           Uint64                 publicKeyExp,
+                           const Uint8*           pText,
+                           Uint64                 textSize,
+                           Uint8*                 pEncText)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
@@ -92,18 +92,18 @@ alcp_rsa_publickey_encrypt(const alc_rsa_handle_p   pRsaHandle,
                                         const_cast<Uint8*>(pPublicKeyMod),
                                         pPublicKeyModSize };
 
-    Status status = ctx->encrBufWithPub(
+    Status status = ctx->encryptPublicFn(
         ctx->m_rsa, pad, pub_key, pText, textSize, pEncText);
 
     return status.ok() ? err : ALC_ERROR_GENERIC;
 }
 
 alc_error_t
-alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p   pRsaHandle,
-                            alc_rsa_encr_dcr_padding pad,
-                            const Uint8*             pEncText,
-                            Uint64                   encSize,
-                            Uint8*                   pText)
+alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p pRsaHandle,
+                            alc_rsa_padding        pad,
+                            const Uint8*           pEncText,
+                            Uint64                 encSize,
+                            Uint8*                 pText)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
@@ -114,7 +114,7 @@ alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p   pRsaHandle,
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
 
     Status status =
-        ctx->decrBufWithPriv(ctx->m_rsa, pad, pEncText, encSize, pText);
+        ctx->decryptPrivateFn(ctx->m_rsa, pad, pEncText, encSize, pText);
 
     return status.ok() ? err : ALC_ERROR_GENERIC;
 }

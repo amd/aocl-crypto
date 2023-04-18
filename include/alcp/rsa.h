@@ -52,7 +52,7 @@ typedef enum
     ALCP_RSA_PKCS1_PADDING,
     ALCP_RSA_PKCS1_OAEP_PADDING,
     ALCP_RSA_PADDING_NONE
-} alc_rsa_encr_dcr_padding;
+} alc_rsa_padding;
 
 /**
  * @brief Store Context for the future operation of RSA
@@ -149,14 +149,14 @@ alcp_rsa_request(alc_rsa_handle_p pRsaHandle);
  * alcp_error_str needs to be called to know about error occured
  */
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_publickey_encrypt(const alc_rsa_handle_p   pRsaHandle,
-                           alc_rsa_encr_dcr_padding pad,
-                           const Uint8*             pPublicKeyMod,
-                           Uint64                   pPublicKeyModSize,
-                           Uint64                   publicKeyExp,
-                           const Uint8*             pText,
-                           Uint64                   textSize,
-                           Uint8*                   pEncText);
+alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
+                           alc_rsa_padding        pad,
+                           const Uint8*           pPublicKeyMod,
+                           Uint64                 pPublicKeyModSize,
+                           Uint64                 publicKeyExp,
+                           const Uint8*           pText,
+                           Uint64                 textSize,
+                           Uint8*                 pEncText);
 
 /**
  * @brief Function compute secret key with publicKey from remotePeer and
@@ -174,11 +174,11 @@ alcp_rsa_publickey_encrypt(const alc_rsa_handle_p   pRsaHandle,
  * alcp_error_str needs to be called to know about error occured
  */
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p   pRsaHandle,
-                            alc_rsa_encr_dcr_padding pad,
-                            const Uint8*             pEncText,
-                            Uint64                   encSize,
-                            Uint8*                   pText);
+alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p pRsaHandle,
+                            alc_rsa_padding        pad,
+                            const Uint8*           pEncText,
+                            Uint64                 encSize,
+                            Uint8*                 pText);
 
 /**
  * @brief Function fetches public key from handle

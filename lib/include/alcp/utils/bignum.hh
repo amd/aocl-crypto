@@ -85,7 +85,7 @@ class ALCP_API_EXPORT BigNum final
 
     Int64 toInt64() const;
     Int32 toInt32() const;
-    void  toUint8Ptr(Uint8* buf, Uint64 size);
+    void  toBinary(Uint8* buf, Uint64 size);
 
     void fromInt64(const Int64 val);
     void fromInt32(const Int32 val);
@@ -93,7 +93,7 @@ class ALCP_API_EXPORT BigNum final
     void fromUint64(const Uint64 val);
     void fromUint32(const Uint32 val);
 
-    void fromUint8Ptr(const Uint8* buf, Uint64 size);
+    void fromBinary(const Uint8* buf, Uint64 size);
 
     enum class Format
     {

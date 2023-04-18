@@ -70,9 +70,9 @@ BigNum::toInt32() const
 }
 
 void
-BigNum::toUint8Ptr(Uint8* buf, Uint64 size)
+BigNum::toBinary(Uint8* buf, Uint64 size)
 {
-    pImpl()->toUint8Ptr(buf, size);
+    pImpl()->toBinary(buf, size);
 }
 
 void
@@ -94,9 +94,9 @@ BigNum::fromInt32(const Int32 val)
 }
 
 void
-BigNum::fromUint8Ptr(const Uint8* buf, Uint64 size)
+BigNum::fromBinary(const Uint8* buf, Uint64 size)
 {
-    pImpl()->fromUint8Ptr(buf, size);
+    pImpl()->fromBinary(buf, size);
 }
 
 Status

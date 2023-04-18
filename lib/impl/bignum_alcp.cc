@@ -75,11 +75,11 @@ class BigNum::Impl
 
     Int64 toInt64() const;
     Int32 toInt32() const;
-    void  toUint8Ptr(Uint8* buf, Uint64 size);
+    void  toBinary(Uint8* buf, Uint64 size);
     void  fromUint64(const Uint64 val);
     void  fromInt64(const Int64 val);
     void  fromInt32(const Int32 val);
-    void  fromUint8Ptr(const Uint8* buf, Uint64 size);
+    void  fromBinary(const Uint8* buf, Uint64 size);
 
     Status       fromString(const String& str, Format f);
     const String toString(Format f) const;
@@ -592,8 +592,7 @@ BigNum::Impl::rshift(int shifts)
 void
 BigNum::Impl::exp_mod(const BigNum& num, const BigNum& exp, const BigNum& mod)
 {
-    std::cout << "Not Implemented";
-    return BigNum();
+    ALCP_ASSERT(false, "Not Implemented");
 }
 
 /**
@@ -770,15 +769,15 @@ BigNum::Impl::fromString(const String& str, BigNum::Format f)
 }
 
 void
-BigNum::Impl::fromUint8Ptr(const Uint8* buf, Uint64 size)
+BigNum::Impl::fromBinary(const Uint8* buf, Uint64 size)
 {
-    std::cout << "Not Implemented";
+    ALCP_ASSERT(false, "Not Implemented");
 }
 
 void
-BigNum::Impl::toUint8Ptr(Uint8* buf, Uint64 size)
+BigNum::Impl::toBinary(Uint8* buf, Uint64 size)
 {
-    std::cout << "Not Implemented";
+    ALCP_ASSERT(false, "Not Implemented");
 }
 
 const void*

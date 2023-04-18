@@ -66,8 +66,8 @@ static const Uint64 PublicKeyExponent = 65537;
 Rsa::Rsa()
 {
     m_pub_key.fromUint64(PublicKeyExponent);
-    m_mod.fromUint8Ptr(Modulus, sizeof(Modulus));
-    m_priv_key.fromUint8Ptr(PrivateKeyExponent, sizeof(PrivateKeyExponent));
+    m_mod.fromBinary(Modulus, sizeof(Modulus));
+    m_priv_key.fromBinary(PrivateKeyExponent, sizeof(PrivateKeyExponent));
     m_key_size = sizeof(PrivateKeyExponent);
 }
 
@@ -77,11 +77,11 @@ Rsa::~Rsa()
 }
 
 Status
-Rsa::encrBufWithPub(alc_rsa_encr_dcr_padding pad,
-                    const RsaPublicKey&      pubKey,
-                    const Uint8*             pText,
-                    Uint64                   textSize,
-                    Uint8*                   pEncText)
+Rsa::encryptPublic(alc_rsa_padding     pad,
+                   const RsaPublicKey& pubKey,
+                   const Uint8*        pText,
+                   Uint64              textSize,
+                   Uint8*              pEncText)
 {
     // For non padded output
     if (textSize != pubKey.size) {
@@ -98,27 +98,27 @@ Rsa::encrBufWithPub(alc_rsa_encr_dcr_padding pad,
     }
 
     BigNum raw_buff;
-    raw_buff.fromUint8Ptr(pText, textSize);
+    raw_buff.fromBinary(pText, textSize);
 
     BigNum pub_key_exponent;
     pub_key_exponent.fromUint64(pubKey.public_exponent);
 
     BigNum pub_key_modulus;
-    pub_key_modulus.fromUint8Ptr(pubKey.modulus, pubKey.size);
+    pub_key_modulus.fromBinary(pubKey.modulus, pubKey.size);
 
     BigNum res;
     res.exp_mod(raw_buff, pub_key_exponent, pub_key_modulus);
 
-    res.toUint8Ptr(pEncText, textSize);
+    res.toBinary(pEncText, textSize);
 
     return StatusOk();
 }
 
 Status
-Rsa::decrBufWithPriv(alc_rsa_encr_dcr_padding pad,
-                     const Uint8*             pEncText,
-                     Uint64                   encSize,
-                     Uint8*                   pText)
+Rsa::decryptPrivate(alc_rsa_padding pad,
+                    const Uint8*    pEncText,
+                    Uint64          encSize,
+                    Uint8*          pText)
 {
 
     // For non padded output
@@ -136,12 +136,12 @@ Rsa::decrBufWithPriv(alc_rsa_encr_dcr_padding pad,
     }
 
     BigNum raw_buff;
-    raw_buff.fromUint8Ptr(pEncText, encSize);
+    raw_buff.fromBinary(pEncText, encSize);
 
     BigNum res;
     res.exp_mod(raw_buff, m_priv_key, m_mod);
 
-    res.toUint8Ptr(pText, encSize);
+    res.toBinary(pText, encSize);
 
     return StatusOk();
 }
@@ -160,7 +160,7 @@ Rsa::getPublickey(RsaPublicKey& pPublicKey)
 
     pPublicKey.public_exponent = PublicKeyExponent;
 
-    m_mod.toUint8Ptr(pPublicKey.modulus, pPublicKey.size);
+    m_mod.toBinary(pPublicKey.modulus, pPublicKey.size);
 
     return StatusOk();
 }

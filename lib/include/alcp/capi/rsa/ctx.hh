@@ -38,18 +38,18 @@ class Context
   public:
     void* m_rsa;
 
-    Status (*encrBufWithPub)(void*                    pRsaHandle,
-                             alc_rsa_encr_dcr_padding pad,
-                             const RsaPublicKey&      publicKey,
-                             const Uint8*             pText,
-                             Uint64                   textSize,
-                             Uint8*                   pEncText);
+    Status (*encryptPublicFn)(void*               pRsaHandle,
+                              alc_rsa_padding     pad,
+                              const RsaPublicKey& publicKey,
+                              const Uint8*        pText,
+                              Uint64              textSize,
+                              Uint8*              pEncText);
 
-    Status (*decrBufWithPriv)(void*                    pRsaHandle,
-                              alc_rsa_encr_dcr_padding pad,
-                              const Uint8*             pEncText,
-                              Uint64                   encSize,
-                              Uint8*                   pText);
+    Status (*decryptPrivateFn)(void*           pRsaHandle,
+                               alc_rsa_padding pad,
+                               const Uint8*    pEncText,
+                               Uint64          encSize,
+                               Uint8*          pText);
 
     Uint64 (*getKeySize)(void* pRsaHandle);
 

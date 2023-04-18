@@ -347,7 +347,7 @@ class BigNum::Impl
         return sts;
     }
 
-    Status fromUint8Ptr(const Uint8* buf, Uint64 size)
+    Status fromBinary(const Uint8* buf, Uint64 size)
     {
         if (BN_bin2bn(buf, size, raw()) == NULL) {
             return Status(GenericError(ErrorCode::eInternal));
@@ -373,7 +373,7 @@ class BigNum::Impl
         return res;
     }
 
-    Status toUint8Ptr(Uint8* buf, Uint64 size)
+    Status toBinary(Uint8* buf, Uint64 size)
     {
         if (BN_bn2binpad(raw(), buf, size) == 0) {
             return Status(GenericError(ErrorCode::eInternal));
