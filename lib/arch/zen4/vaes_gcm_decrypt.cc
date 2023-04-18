@@ -110,7 +110,7 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
                  &eight_x,
                  &swap_ctr);
 
-    _mm_prefetch((void*)pkey128, _MM_HINT_T1);
+    _mm_prefetch(cast_to(pkey128), _MM_HINT_T1);
 
     sKeys keys{};
     alcp_load_key_zmm(pkey128, keys, nRounds);
@@ -189,8 +189,8 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
             __m512i  z0_512_t, z1_512_t, z2_512_t;
             int      n            = 12;
             __m512i* pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch((void*)pHsubkey_512, _MM_HINT_T0);
-            _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             alcp_loadu_4values(pHsubkey_512,
                                Hsubkey_512_0,
@@ -230,8 +230,8 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
             // 2nd iteration
             n            = PARALLEL_512_BLKS_4 * 2;
             pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch((void*)pHsubkey_512, _MM_HINT_T0);
-            _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             c2 = alcp_add_epi32(c1, one_x);
             c3 = alcp_add_epi32(c1, two_x);
@@ -286,8 +286,8 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
             // 3rd
             n            = PARALLEL_512_BLKS_4 * 1;
             pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch((void*)pHsubkey_512, _MM_HINT_T0);
-            _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             c2 = alcp_add_epi32(c1, one_x);
             c3 = alcp_add_epi32(c1, two_x);
@@ -345,8 +345,8 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
             // 4th
             n            = 0;
             pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch((void*)pHsubkey_512, _MM_HINT_T0);
-            _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             c2 = alcp_add_epi32(c1, one_x);
             c3 = alcp_add_epi32(c1, two_x);
@@ -434,8 +434,8 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
 
             int      n            = 4; // numParallel_512blks * k;
             __m512i* pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch((void*)pHsubkey_512, _MM_HINT_T0);
-            _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             alcp_loadu_4values(pHsubkey_512, // address
                                Hsubkey_512_0,
@@ -475,8 +475,8 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
             // 2nd
             n            = 0;
             pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch((void*)pHsubkey_512, _MM_HINT_T0);
-            _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             c2 = alcp_add_epi32(c1, one_x);
             c3 = alcp_add_epi32(c1, two_x);
@@ -556,7 +556,7 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
 
     // if (do_one_parallel) {
     for (; blocks >= blockCount_4x512; blocks -= blockCount_4x512) {
-        _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+        _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
         Hsubkey_512_1 = Hsubkey_512[1];
         Hsubkey_512_2 = Hsubkey_512[2];
@@ -598,7 +598,7 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
     //}
 
     for (; blocks >= blockCount_2x512; blocks -= blockCount_2x512) {
-        _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+        _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
         c2 = alcp_add_epi32(c1, one_x);
         // printf("\n blockCount_2x512");
         a1 = alcp_loadu(p_in_x);
@@ -629,7 +629,7 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
     }
 
     for (; blocks >= blockCount_1x512; blocks -= blockCount_1x512) {
-        _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+        _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
         a1 = alcp_loadu(p_in_x);
         // printf("\n blockCount_1x512");
         gMulR(
@@ -756,7 +756,7 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
                  &eight_x,
                  &swap_ctr);
 
-    _mm_prefetch((void*)pkey128, _MM_HINT_T1);
+    _mm_prefetch(cast_to(pkey128), _MM_HINT_T1);
 
     sKeys keys{};
     alcp_load_key_zmm(pkey128, keys, nRounds);
@@ -814,8 +814,8 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
             __m512i  z0_512_t, z1_512_t, z2_512_t;
             int      n            = 12;
             __m512i* pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch((void*)pHsubkey_512, _MM_HINT_T0);
-            _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             alcp_loadu_4values(pHsubkey_512,
                                Hsubkey_512_0,
@@ -855,8 +855,8 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
             // 2nd iteration
             n            = PARALLEL_512_BLKS_4 * 2;
             pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch((void*)pHsubkey_512, _MM_HINT_T0);
-            _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             c2 = alcp_add_epi32(c1, one_x);
             c3 = alcp_add_epi32(c1, two_x);
@@ -911,8 +911,8 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
             // 3rd
             n            = PARALLEL_512_BLKS_4 * 1;
             pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch((void*)pHsubkey_512, _MM_HINT_T0);
-            _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             c2 = alcp_add_epi32(c1, one_x);
             c3 = alcp_add_epi32(c1, two_x);
@@ -970,8 +970,8 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
             // 4th
             n            = 0;
             pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch((void*)pHsubkey_512, _MM_HINT_T0);
-            _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             c2 = alcp_add_epi32(c1, one_x);
             c3 = alcp_add_epi32(c1, two_x);
@@ -1059,8 +1059,8 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
 
             int      n            = 4; // numParallel_512blks * k;
             __m512i* pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch((void*)pHsubkey_512, _MM_HINT_T0);
-            _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             alcp_loadu_4values(pHsubkey_512, // address
                                Hsubkey_512_0,
@@ -1100,8 +1100,8 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
             // 2nd
             n            = 0;
             pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch((void*)pHsubkey_512, _MM_HINT_T0);
-            _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             c2 = alcp_add_epi32(c1, one_x);
             c3 = alcp_add_epi32(c1, two_x);
@@ -1181,7 +1181,7 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
 
     // if (do_one_parallel) {
     for (; blocks >= blockCount_4x512; blocks -= blockCount_4x512) {
-        _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+        _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
         Hsubkey_512_1 = Hsubkey_512[1];
         Hsubkey_512_2 = Hsubkey_512[2];
@@ -1223,7 +1223,7 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
     //}
 
     for (; blocks >= blockCount_2x512; blocks -= blockCount_2x512) {
-        _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+        _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
         c2 = alcp_add_epi32(c1, one_x);
         // printf("\n blockCount_2x512");
         a1 = alcp_loadu(p_in_x);
@@ -1254,7 +1254,7 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
     }
 
     for (; blocks >= blockCount_1x512; blocks -= blockCount_1x512) {
-        _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+        _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
         a1 = alcp_loadu(p_in_x);
         // printf("\n blockCount_1x512");
         gMulR(
@@ -1381,7 +1381,7 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
                  &eight_x,
                  &swap_ctr);
 
-    _mm_prefetch((void*)pkey128, _MM_HINT_T1);
+    _mm_prefetch(cast_to(pkey128), _MM_HINT_T1);
 
     sKeys keys{};
     alcp_load_key_zmm(pkey128, keys, nRounds);
@@ -1439,8 +1439,8 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
             __m512i  z0_512_t, z1_512_t, z2_512_t;
             int      n            = 12;
             __m512i* pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch((void*)pHsubkey_512, _MM_HINT_T0);
-            _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             alcp_loadu_4values(pHsubkey_512,
                                Hsubkey_512_0,
@@ -1480,8 +1480,8 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
             // 2nd iteration
             n            = PARALLEL_512_BLKS_4 * 2;
             pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch((void*)pHsubkey_512, _MM_HINT_T0);
-            _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             c2 = alcp_add_epi32(c1, one_x);
             c3 = alcp_add_epi32(c1, two_x);
@@ -1536,8 +1536,8 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
             // 3rd
             n            = PARALLEL_512_BLKS_4 * 1;
             pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch((void*)pHsubkey_512, _MM_HINT_T0);
-            _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             c2 = alcp_add_epi32(c1, one_x);
             c3 = alcp_add_epi32(c1, two_x);
@@ -1595,8 +1595,8 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
             // 4th
             n            = 0;
             pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch((void*)pHsubkey_512, _MM_HINT_T0);
-            _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             c2 = alcp_add_epi32(c1, one_x);
             c3 = alcp_add_epi32(c1, two_x);
@@ -1684,8 +1684,8 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
 
             int      n            = 4; // numParallel_512blks * k;
             __m512i* pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch((void*)pHsubkey_512, _MM_HINT_T0);
-            _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             alcp_loadu_4values(pHsubkey_512, // address
                                Hsubkey_512_0,
@@ -1725,8 +1725,8 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
             // 2nd
             n            = 0;
             pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch((void*)pHsubkey_512, _MM_HINT_T0);
-            _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             c2 = alcp_add_epi32(c1, one_x);
             c3 = alcp_add_epi32(c1, two_x);
@@ -1806,7 +1806,7 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
 
     // if (do_one_parallel) {
     for (; blocks >= blockCount_4x512; blocks -= blockCount_4x512) {
-        _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+        _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
         Hsubkey_512_1 = Hsubkey_512[1];
         Hsubkey_512_2 = Hsubkey_512[2];
@@ -1848,7 +1848,7 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
     //}
 
     for (; blocks >= blockCount_2x512; blocks -= blockCount_2x512) {
-        _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+        _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
         c2 = alcp_add_epi32(c1, one_x);
         // printf("\n blockCount_2x512");
         a1 = alcp_loadu(p_in_x);
@@ -1879,7 +1879,7 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
     }
 
     for (; blocks >= blockCount_1x512; blocks -= blockCount_1x512) {
-        _mm_prefetch((void*)p_in_x, _MM_HINT_T0);
+        _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
         a1 = alcp_loadu(p_in_x);
         // printf("\n blockCount_1x512");
         gMulR(

@@ -35,6 +35,14 @@
 #define PARALLEL_512_BLKS_4 4
 #define MAX_NUM_512_BLKS    16 // 24
 
+ /*_mm_prefetch accepts const void*` arguments for GCC / ICC 
+whereas MSVC still expects `const char* ` */
+#ifdef WIN32  
+#define cast_to(ptr) ((const char*)ptr)
+#else
+#define cast_to(ptr) ((void*)ptr)
+#endif
+
 namespace alcp::cipher::vaes512 {
 
 void inline gcmCryptInit(__m512i* c1,
