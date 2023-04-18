@@ -456,27 +456,7 @@ IPPCipherBase::alcpSIVModeToFuncCall(alcp_data_ex_t data, bool enc)
     Ipp8u* ad_ptr_list[]  = { (Ipp8u*)data.m_ad, (Ipp8u*)data.m_in };
     int    ad_size_list[] = { (int)data.m_adl, (int)data.m_inl };
     if (enc) {
-        int ret = ippsAES_S2V_CMAC(m_key,
-                                   m_key_len / 8,
-                                   (const Ipp8u**)ad_ptr_list,
-                                   ad_size_list,
-                                   sizeof(ad_ptr_list) / sizeof(void*),
-                                   data.m_tag);
-        switch (ret) {
-            case ippStsNoErr:
-                // utils::printErrors("No error", __FILE__, __LINE__);
-                break;
-            case ippStsNullPtrErr:
-                utils::printErrors("Null PTR", __FILE__, __LINE__);
-                return false;
-            case ippStsLengthErr:
-                utils::printErrors("Length Error", __FILE__, __LINE__);
-                return false;
-            default:
-                utils::printErrors("Unknown Error", __FILE__, __LINE__);
-                return false;
-        }
-        ret = ippsAES_SIVEncrypt(data.m_in,
+        int ret = ippsAES_SIVEncrypt(data.m_in,
                                  data.m_out,
                                  data.m_inl,
                                  data.m_tag,
@@ -502,7 +482,7 @@ IPPCipherBase::alcpSIVModeToFuncCall(alcp_data_ex_t data, bool enc)
         }
         return true;
     } else {
-        int    authRes           = 0xaa;
+        int    authRes           = 0;
         Ipp8u* ad_ptr_list_dec[] = { (Ipp8u*)data.m_ad, (Ipp8u*)data.m_in };
         Ipp8u* ad_ptr_list_s2v[] = { (Ipp8u*)data.m_ad, (Ipp8u*)data.m_out };
         int    ad_size_list[]    = { (int)data.m_adl, (int)data.m_inl };
@@ -531,29 +511,7 @@ IPPCipherBase::alcpSIVModeToFuncCall(alcp_data_ex_t data, bool enc)
                 utils::printErrors("Unknown Error", __FILE__, __LINE__);
                 return false;
         }
-        ret = ippsAES_S2V_CMAC(m_key,
-                               m_key_len / 8,
-                               (const Ipp8u**)ad_ptr_list_s2v,
-                               ad_size_list,
-                               sizeof(ad_ptr_list) / sizeof(void*),
-                               data.m_tagBuff);
-        switch (ret) {
-            case ippStsNoErr:
-                // utils::printErrors("No error", __FILE__, __LINE__);
-                break;
-            case ippStsNullPtrErr:
-                utils::printErrors("Null PTR", __FILE__, __LINE__);
-                return false;
-            case ippStsLengthErr:
-                utils::printErrors("Length Error", __FILE__, __LINE__);
-                return false;
-            default:
-                utils::printErrors("Unknown Error", __FILE__, __LINE__);
-                return false;
-        }
-        if (memcmp(data.m_tagBuff, data.m_tag, data.m_tagl))
-            return false;
-        return true;
+        return authRes;
     }
 }
 
