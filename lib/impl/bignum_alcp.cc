@@ -133,7 +133,9 @@ class BigNum::Impl
             std::make_shared<digest::Sha256>();
         m_drbg.setDigest(digest256);
         m_drbg.setRng(std::make_shared<alcp::rng::SystemRng>());
-        m_drbg.initialize(256, data);
+
+        if (!m_drbg.initialize(256, data).ok())
+            std::cout << "Error While init od drbg for bignum";
         isDrbg = true;
     };
 };
@@ -254,7 +256,9 @@ BigNum::Impl::randomGenerate(int bits, int top, int bottom)
     int            extra_bits = bits % 64;
     vector<Uint64> data(max_bytes, 0);
     Uint8*         p_data_8 = reinterpret_cast<Uint8*>(&(data[0]));
-    m_drbg.randomize(p_data_8, max_bytes * 8);
+    if (!m_drbg.randomize(p_data_8, max_bytes * 8).ok()) {
+        return ALC_ERROR_BAD_STATE;
+    }
     m_drbg.reseed();
     long long mask = leftShiftMinusOne(1ULL, extra_bits);
     m_data         = data;
@@ -276,7 +280,8 @@ BigNum::Impl::randomGenerate(int          bits,
     if (bits == 0 && (top || bottom))
         return ALC_ERROR_INVALID_SIZE;
     vector<Uint8> personalizeString;
-    m_drbg.initialize(strength, personalizeString);
+    if (!m_drbg.initialize(strength, personalizeString).ok())
+        return ALC_ERROR_BAD_STATE;
     return randomGenerate(bits, top, bottom);
 }
 
@@ -288,7 +293,9 @@ BigNum::Impl::randomRange(const BigNum* range)
     int            extra_bits = bits % 64;
     vector<Uint64> data(max_bytes, 0);
     Uint8*         p_data_8 = reinterpret_cast<Uint8*>(&(data[0]));
-    m_drbg.randomize(p_data_8, max_bytes * 8);
+    if (!m_drbg.randomize(p_data_8, max_bytes * 8).ok()) {
+        return ALC_ERROR_BAD_STATE;
+    }
     m_drbg.reseed();
     long long mask = leftShiftMinusOne(1ULL, extra_bits);
     m_data         = data;
@@ -304,7 +311,8 @@ BigNum::Impl::randomRange(const BigNum* range, unsigned int strength)
 {
 
     vector<Uint8> personalizeString;
-    m_drbg.initialize(strength, personalizeString);
+    if (!m_drbg.initialize(strength, personalizeString).ok())
+        return ALC_ERROR_BAD_STATE;
     return randomRange(range);
 }
 
