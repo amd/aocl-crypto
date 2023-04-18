@@ -23,4 +23,7 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
- ADD_EXECUTABLE(rsa_example rsa_example.c)
+ ADD_EXECUTABLE(rsa_peer rsa_peer.c)
+ ADD_EXECUTABLE(rsa_encrypt rsa_encrypt.c)
+ ADD_EXECUTABLE(rsa_decrypt rsa_decrypt.c)
+
