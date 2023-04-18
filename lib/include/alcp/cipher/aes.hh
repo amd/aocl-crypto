@@ -288,6 +288,8 @@ class ALCP_API_EXPORT Ctr final : public Aes
   private:
 };
 
+#define MAX_NUM_512_BLKS 16
+#define LOCAL_TABLE      1
 /*
  * @brief        AES Encryption in GCM(Galois Counter mode)
  * @note        TODO: Move this to a aes_Gcm.hh or other
@@ -313,6 +315,13 @@ class ALCP_API_EXPORT Gcm final
 
     __m128i m_iv_128;
 
+#if LOCAL_TABLE
+    /* precomputed hash table memory when located locally in encrypt or decrypt
+    modules gives better performance for larger block sizes (>8192 bytes )*/
+    __attribute__((aligned(64))) Uint64 m_hashSubkeyTable[8];
+#else
+    __attribute__((aligned(64))) Uint64 m_hashSubkeyTable[MAX_NUM_512_BLKS * 8];
+#endif
     const Uint8* m_iv = nullptr;
 
     Uint64 m_len;

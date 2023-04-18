@@ -167,7 +167,8 @@ namespace aesni {
                          __m128i      Hsubkey_128,
                          __m128i      iv_128,
                          __m128i      reverse_mask_128,
-                         bool         isEncrypt);
+                         bool         isEncrypt,
+                         Uint64*      pHashSubkeyTable);
 
     alc_error_t GetTagGcm(Uint64   tagLen,
                           Uint64   plaintextLen,
@@ -245,7 +246,32 @@ namespace vaes512 {
                          __m128i      Hsubkey_128,
                          __m128i      iv_128,
                          __m128i      reverse_mask_128,
-                         bool         isEncrypt);
+                         bool         isEncrypt,
+                         Uint64*      pHashSubkeyTable);
+
+    alc_error_t processAdditionalDataGcm(const Uint8* pAdditionalData,
+                                         Uint64       additionalDataLen,
+                                         __m128i*     pgHash_128,
+                                         __m128i      hash_subKey_128,
+                                         __m128i      reverse_mask_128);
+
+    alc_error_t GetTagGcm(Uint64   tagLen,
+                          Uint64   plaintextLen,
+                          Uint64   adLength,
+                          __m128i* pgHash_128,
+                          __m128i* ptag128,
+                          __m128i  Hsubkey_128,
+                          __m128i  reverse_mask_128,
+                          Uint8*   tag);
+
+    alc_error_t InitGcm(const Uint8* pKey,
+                        int          nRounds,
+                        const Uint8* pIv,
+                        Uint64       ivBytes,
+                        __m128i*     pHsubKey_128,
+                        __m128i*     ptag_128,
+                        __m128i*     piv_128,
+                        __m128i      reverse_mask_128);
 
 } // namespace vaes512
 

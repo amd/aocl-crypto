@@ -29,11 +29,11 @@ function(alcp_check_compiler_version)
     set (CLANG_MIN_REQ "12.0.0")
     # if gcc
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        
+
         set(CMAKE_COMPILER_IS_GCC ON PARENT_SCOPE)
         string(SUBSTRING ${CMAKE_CXX_COMPILER_VERSION} 0 2 CMAKE_COMPILER_GCC_VERSION)
         set(CMAKE_COMPILER_GCC_VERSION ${CMAKE_COMPILER_GCC_VERSION} PARENT_SCOPE)
-        
+
         if(${CMAKE_C_COMPILER_VERSION} VERSION_LESS ${GCC_MIN_REQ})
             message(FATAL_ERROR "Using c compiler version ${CMAKE_C_COMPILER_VERSION}, min. reqd version is ${GCC_MIN_REQ}!")
         endif()
@@ -90,7 +90,7 @@ endfunction(alcp_get_cflags_arch)
 
 # lib/arch/avx2 Compile Flags
 function(alcp_get_arch_cflags_avx2)
-    set(ARCH_COMPILE_FLAGS 
+    set(ARCH_COMPILE_FLAGS
         -fPIC -msse2 -maes -mavx2 -msha -mno-vaes -mpclmul -mbmi2 -madx
         CACHE INTERNAL ""
         )
@@ -99,7 +99,7 @@ endfunction(alcp_get_arch_cflags_avx2)
 
 # lib/arch/zen Compile Flags
 function(alcp_get_arch_cflags_zen)
-    set(ARCH_COMPILE_FLAGS 
+    set(ARCH_COMPILE_FLAGS
         -fPIC -march=znver1 -msse2 -maes -mavx2 -msha -mno-vaes -mpclmul
         CACHE INTERNAL ""
         )
@@ -108,7 +108,7 @@ endfunction(alcp_get_arch_cflags_zen)
 
 # lib/arch/zen3 Compile Flags
 function(alcp_get_arch_cflags_zen3)
-    set(ARCH_COMPILE_FLAGS 
+    set(ARCH_COMPILE_FLAGS
         -fPIC -march=znver3 -mavx -mavx2 -maes -mvaes -mpclmul -mvpclmulqdq
         CACHE INTERNAL ""
         )
@@ -117,9 +117,9 @@ endfunction(alcp_get_arch_cflags_zen3)
 
 # lib/arch/zen4 Compile Flags
 function(alcp_get_arch_cflags_zen4)
-    set(ARCH_COMPILE_FLAGS 
-        -fPIC -march=znver3 -mavx -mavx2 -maes -mvaes -mpclmul -mavx512f -mavx512dq -mavx512ifma 
-        -mavx512cd -mavx512bw -mavx512vl -mavx512vbmi -mavx512vbmi2 -mavx512vnni -mavx512bitalg 
+    set(ARCH_COMPILE_FLAGS
+        -O3 -fPIC -march=znver3 -mavx -mavx2 -maes -mvaes -mpclmul -mavx512f -mavx512dq -mavx512ifma
+        -mavx512cd -mavx512bw -mavx512vl -mavx512vbmi -mavx512vbmi2 -mavx512vnni -mavx512bitalg
         -mavx512vpopcntdq -mvpclmulqdq -DUSE_AVX512
         CACHE INTERNAL ""
         )
@@ -127,17 +127,17 @@ function(alcp_get_arch_cflags_zen4)
 endfunction(alcp_get_arch_cflags_zen4)
 
 # misc options
-# TO DO: 
+# TO DO:
 # these sanitizer options are currently defined for gcc
 # Maybe different for clang!!
 
 # if address sanitizer used
 function(alcp_add_sanitize_flags)
     set(ALCP_OPTIONS_SANITIZE
-            -fsanitize=address 
-            -fsanitize=undefined 
-            -fsanitize=pointer-subtract 
-            -fsanitize=pointer-compare 
+            -fsanitize=address
+            -fsanitize=undefined
+            -fsanitize=pointer-subtract
+            -fsanitize=pointer-compare
             CACHE INTERNAL ""
         )
     link_libraries(asan)

@@ -77,7 +77,7 @@ Gcm::cryptUpdate(const Uint8* pInput,
             }
         }
 
-        if (CpuId::cpuHasVaes() && isAvx512Cap) {
+        if (isAvx512Cap) {
             // Encrypt/Decrypt call
             err = vaes512::CryptGcm(pInput,
                                     pOutput,
@@ -89,7 +89,8 @@ Gcm::cryptUpdate(const Uint8* pInput,
                                     m_hash_subKey_128,
                                     m_iv_128,
                                     m_reverse_mask_128,
-                                    isEncrypt);
+                                    isEncrypt,
+                                    m_hashSubkeyTable);
         } else {
             // Encrypt/Decrypt call
             err = aesni::CryptGcm(pInput,
@@ -102,7 +103,8 @@ Gcm::cryptUpdate(const Uint8* pInput,
                                   m_hash_subKey_128,
                                   m_iv_128,
                                   m_reverse_mask_128,
-                                  isEncrypt);
+                                  isEncrypt,
+                                  m_hashSubkeyTable);
         }
     } else {
         err = ALC_ERROR_INVALID_ARG;
@@ -154,14 +156,35 @@ Gcm::setIv(Uint64 len, const Uint8* pIv)
     m_ivLen             = 12; // default 12 bytes or 96bits
 
     m_ivLen = len;
-    err     = aesni::InitGcm(getEncryptKeys(),
-                         getRounds(),
-                         pIv,
-                         m_ivLen,
-                         &m_hash_subKey_128,
-                         &m_tag_128,
-                         &m_iv_128,
-                         m_reverse_mask_128);
+
+    bool isAvx512Cap = false;
+    if (CpuId::cpuHasVaes()) {
+        if (CpuId::cpuHasAvx512(utils::AVX512_F)
+            && CpuId::cpuHasAvx512(utils::AVX512_DQ)
+            && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
+            isAvx512Cap = true;
+        }
+    }
+
+    if (isAvx512Cap) {
+        err = vaes512::InitGcm(getEncryptKeys(),
+                               getRounds(),
+                               pIv,
+                               m_ivLen,
+                               &m_hash_subKey_128,
+                               &m_tag_128,
+                               &m_iv_128,
+                               m_reverse_mask_128);
+    } else {
+        err = aesni::InitGcm(getEncryptKeys(),
+                             getRounds(),
+                             pIv,
+                             m_ivLen,
+                             &m_hash_subKey_128,
+                             &m_tag_128,
+                             &m_iv_128,
+                             m_reverse_mask_128);
+    }
     return err;
 }
 
@@ -181,12 +204,28 @@ Gcm::setAad(const Uint8* pInput, Uint64 len)
     const Uint8* pAdditionalData = pInput;
     m_additionalDataLen          = len;
 
-    // Additional data call
-    err = aesni::processAdditionalDataGcm(pAdditionalData,
-                                          m_additionalDataLen,
-                                          &m_gHash_128,
-                                          m_hash_subKey_128,
-                                          m_reverse_mask_128);
+    bool isAvx512Cap = false;
+    if (CpuId::cpuHasVaes()) {
+        if (CpuId::cpuHasAvx512(utils::AVX512_F)
+            && CpuId::cpuHasAvx512(utils::AVX512_DQ)
+            && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
+            isAvx512Cap = true;
+        }
+    }
+
+    if (isAvx512Cap) {
+        err = vaes512::processAdditionalDataGcm(pAdditionalData,
+                                                m_additionalDataLen,
+                                                &m_gHash_128,
+                                                m_hash_subKey_128,
+                                                m_reverse_mask_128);
+    } else {
+        err = aesni::processAdditionalDataGcm(pAdditionalData,
+                                              m_additionalDataLen,
+                                              &m_gHash_128,
+                                              m_hash_subKey_128,
+                                              m_reverse_mask_128);
+    }
     return err;
 }
 
@@ -201,18 +240,48 @@ Gcm::getTag(Uint8* pOutput, Uint64 len)
         err = ALC_ERROR_INVALID_SIZE;
         return err;
     }
-    Uint8* ptag = pOutput;
-    err         = aesni::GetTagGcm(len,
-                           m_len,
-                           m_additionalDataLen,
-                           &m_gHash_128,
-                           &m_tag_128,
-                           m_hash_subKey_128,
-                           m_reverse_mask_128,
-                           ptag);
-    if (alcp_is_error(err)) {
-        printf("Error Occured\n");
+    // else if (len > 16 || len < 12) {
+    //     err = ALC_ERROR_INVALID_SIZE;
+    //     return err;
+    // }
+
+    bool   isAvx512Cap = false;
+    Uint8* ptag        = pOutput;
+
+    if (CpuId::cpuHasVaes()) {
+        if (CpuId::cpuHasAvx512(utils::AVX512_F)
+            && CpuId::cpuHasAvx512(utils::AVX512_DQ)
+            && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
+            isAvx512Cap = true;
+        }
     }
+
+    if (isAvx512Cap) {
+        err = vaes512::GetTagGcm(len,
+                                 m_len,
+                                 m_additionalDataLen,
+                                 &m_gHash_128,
+                                 &m_tag_128,
+                                 m_hash_subKey_128,
+                                 m_reverse_mask_128,
+                                 ptag);
+        if (alcp_is_error(err)) {
+            printf("Error Occured\n");
+        }
+    } else {
+        err = aesni::GetTagGcm(len,
+                               m_len,
+                               m_additionalDataLen,
+                               &m_gHash_128,
+                               &m_tag_128,
+                               m_hash_subKey_128,
+                               m_reverse_mask_128,
+                               ptag);
+        if (alcp_is_error(err)) {
+            printf("Error Occured\n");
+        }
+    }
+
     return err;
 }
 

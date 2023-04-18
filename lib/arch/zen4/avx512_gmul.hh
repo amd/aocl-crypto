@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,19 +36,14 @@
  *
  * Galois Multiplicaiton we use below algorithms from "Intel carry-less
  * multiplication instruction in gcm mode"
+ * https://www.intel.cn/content/dam/www/public/us/en/documents/white-papers/carry-less-multiplication-instruction-in-gcm-mode-paper.pdf
  *     1. Aggregated Reduction and
  *     2. ModuloReduction algorithms
- * https://www.intel.cn/content/dam/www/public/us/en/documents/white-papers/carry-less-multiplication-instruction-in-gcm-mode-paper.pdf
+ *     3. Avoiding bit-reflection by modifying precomputed HashKey table as per
+ * below paper
+ *          Vinodh Gopal et. al. Optimized Galois-Counter-Mode Implementation
+ * on Intel® Architecture Processors. Intel White Paper, August 2010.
  *
- *
- *     24 blocks (6*512bit) Aggregated reduction seems to perform better than
- * 16 blocks (4*512bit) Aggregated reduction in our experiments for larger
- *
- *     Inorder to reduce number of ModuloReduction operation, we parallelize 96
- * blocks and do one ModuloReduction at the end. This results in one
- * ModuloReduction for 96 blocks. But this results in performance penalty in
- * precomputing 95 HashSubkeys. So we use threshold to choose sizes above
- * which parallel 96blocks galoisMul can be used.
  *
  */
 
@@ -65,66 +60,53 @@ namespace alcp::cipher { namespace vaes512 {
 
 #define SWIZZLE(a, b, c, d) (((a) << 0) | ((b) << 2) | ((c) << 4) | ((d) << 6))
 
-    static const Uint64 const_factor[] = {
-        0x0, 0xC200000000000000, 0x0, 0xC200000000000000
-    };
+    static const Uint64 const_factor[] = { 0x1, 0xC200000000000000,
+                                           0x1, 0xC200000000000000,
+                                           0x1, 0xC200000000000000,
+                                           0x1, 0xC200000000000000 };
 
-    static inline void montgomeryReduction(__m256i input_256, __m128i* result)
+    static inline void montgomeryReduction(__m256i       input_256,
+                                           __m128i*      result,
+                                           const __m256i const_factor_256)
     {
-        __m256i        mul, rev, high_256;
-        const __m256i* const_factor_256 =
-            reinterpret_cast<const __m256i*>(const_factor);
+        __m256i       mul, rev, high_256;
+        constexpr int cSwizzle = SWIZZLE(2, 3, 0, 1);
 
-        high_256 = _mm256_permute4x64_epi64(
-            input_256, SWIZZLE(2, 3, 0, 1)); // move hi to low.
+        high_256 =
+            _mm256_permute4x64_epi64(input_256, cSwizzle); // move hi to low.
 
         // A1:A0
-        mul = _mm256_clmulepi64_epi128(input_256, *const_factor_256, 0x10);
+        mul = _mm256_clmulepi64_epi128(input_256, const_factor_256, 0x10);
 
         // X0:X1
-        rev = _mm256_shuffle_epi32(input_256, SWIZZLE(2, 3, 0, 1));
+        rev = _mm256_shuffle_epi32(input_256, cSwizzle);
         // rev = _mm256_permute4x64_epi64(low_256, SWIZZLE(1, 0, 3, 2));
 
         // B1:B0
         input_256 = _mm256_xor_si256(mul, rev);
 
-        mul = _mm256_clmulepi64_epi128(input_256, *const_factor_256, 0x10);
-        rev = _mm256_shuffle_epi32(input_256, SWIZZLE(2, 3, 0, 1));
+        mul       = _mm256_clmulepi64_epi128(input_256, const_factor_256, 0x10);
+        rev       = _mm256_shuffle_epi32(input_256, cSwizzle);
         input_256 = _mm256_xor_si256(mul, rev);
 
         mul     = _mm256_xor_si256(high_256, input_256);
         *result = _mm256_castsi256_si128(mul);
     }
 
-    static inline void modReduction(__m256i x_256, __m128i* res)
-    {
-
-        /*
-         * bit reflect by 1
-         * ----------------
-         * (x3<<1)  : (x2<<1)  : (x1<<1)  : (x0<<1)
-         *   XOR    :  XOR     :  XOR     :  XOR
-         * (x2<<63) : (x1<<63) : (x0<<63) : (x3<<63)
-         */
-        __m256i x_256_1  = _mm256_slli_epi64(x_256, 1);
-        __m256i x_256_63 = _mm256_srli_epi64(x_256, 63);
-        x_256_63 = _mm256_permute4x64_epi64(x_256_63, SWIZZLE(3, 0, 1, 2));
-        x_256    = _mm256_xor_si256(x_256_63, x_256_1);
-
-        montgomeryReduction(x_256, res);
-    }
-
     static inline __m128i amd512_horizontal_sum128(__m512i x_512)
     {
-        __m128i a_128, b_128, c_128, d_128;
-        a_128 = _mm512_extracti64x2_epi64(x_512, 0);
-        b_128 = _mm512_extracti64x2_epi64(x_512, 1);
-        c_128 = _mm512_extracti64x2_epi64(x_512, 2);
-        d_128 = _mm512_extracti64x2_epi64(x_512, 3);
+        __m256i a_256, b_256;
+        __m128i a_128, b_128;
+
+        a_256 = _mm512_extracti64x4_epi64(x_512, 0);
+        b_256 = _mm512_extracti64x4_epi64(x_512, 1);
+
+        a_256 = _mm256_xor_si256(a_256, b_256);
+
+        a_128 = _mm256_extracti32x4_epi32(a_256, 1);
+        b_128 = _mm256_extracti32x4_epi32(a_256, 0);
 
         a_128 = _mm_xor_si128(a_128, b_128);
-        a_128 = _mm_xor_si128(a_128, c_128);
-        a_128 = _mm_xor_si128(a_128, d_128);
 
         return a_128;
     }
@@ -137,10 +119,16 @@ namespace alcp::cipher { namespace vaes512 {
         return _mm512_mask_xor_epi64(a, 3, a, b_512);
     }
 
-    static inline void computeKaratsuba_Z0_Z2(__m512i  H_512,
-                                              __m512i  abcd_512,
-                                              __m512i* z0_512,
-                                              __m512i* z2_512)
+    static inline __m512i amd512xorLast128bit(__m512i a, __m512i b)
+    {
+        // a3:a2:a1:(a0 xor b)
+        return _mm512_mask_xor_epi64(a, 3, a, b);
+    }
+
+    static inline void computeKaratsuba_Z0_Z2(const __m512i H_512,
+                                              const __m512i abcd_512,
+                                              __m512i*      z0_512,
+                                              __m512i*      z2_512)
     {
         // compute x0y0
         // (Xi • H1) :  (Xi-1 • H2) : (Xi-2 • H3) : (Xi-3+Yi-4) •H4
@@ -150,9 +138,9 @@ namespace alcp::cipher { namespace vaes512 {
         *z2_512 = _mm512_clmulepi64_epi128(H_512, abcd_512, 0x11);
     }
 
-    static inline void computeKaratsuba_Z1(__m512i  H_512,
-                                           __m512i  abcd_512,
-                                           __m512i* pz1_512)
+    static inline void computeKaratsuba_Z1(const __m512i H_512,
+                                           const __m512i abcd_512,
+                                           __m512i*      pz1_512)
     {
         __m512i H_512_high, abcd_512_high;
         H_512_high    = _mm512_bsrli_epi128(H_512, 8);
@@ -202,11 +190,11 @@ namespace alcp::cipher { namespace vaes512 {
     }
 
     /* Aggregated reduction method + Karatsuba algorithm */
-    static inline void computeKaratsubaComponents(__m512i  H_512,
-                                                  __m512i  abcd_512,
-                                                  __m512i* pz0_512,
-                                                  __m512i* pz1_512,
-                                                  __m512i* pz2_512)
+    static inline void computeKaratsubaComponents(const __m512i H_512,
+                                                  const __m512i abcd_512,
+                                                  __m512i*      pz0_512,
+                                                  __m512i*      pz1_512,
+                                                  __m512i*      pz2_512)
     {
         /*
          *  Karatsuba algorithm to multiply two elements x,y
@@ -228,7 +216,8 @@ namespace alcp::cipher { namespace vaes512 {
          */
         computeKaratsuba_Z0_Z2(H_512, abcd_512, pz0_512, pz2_512);
 
-        /* compute: z1 = (x1+x0) (y1+y0) - z2 - z0 */
+        /* To compute: z1 = (x1+x0) (y1+y0) - z2 - z0
+         * compute (x1+x0) (y1+y0) part in below function */
         computeKaratsuba_Z1(H_512, abcd_512, pz1_512);
     }
 
@@ -259,7 +248,8 @@ namespace alcp::cipher { namespace vaes512 {
          */
         computeKaratsuba_Z0_Z2_acc(H_512, abcd_512, pz0_512, pz2_512);
 
-        /* compute: z1 = (x1+x0) (y1+y0) - z2 - z0 */
+        /* To compute: z1 = (x1+x0) (y1+y0) - z2 - z0
+         * compute (x1+x0) (y1+y0) part in below function */
         computeKaratsuba_Z1_acc(H_512, abcd_512, pz1_512);
     }
 
@@ -277,8 +267,12 @@ namespace alcp::cipher { namespace vaes512 {
     {
         __m128i a1;
         *res = _mm256_set_m128i(z2, z0);
+        /*
+         * compute:    z1 = (x1+x0) (y1+y0) - z2 - z0
+         *
+         * inputParam: z1 = (x1+x0) (y1+y0) */
 
-        // z1 - zo -z2 = z1 xor z0 xor z2
+        // (x1+x0) (y1+y0) - zo -z2 = (x1+x0) (y1+y0) xor z0 xor z2
         z1 = _mm_xor_si128(z1, z0);
         z1 = _mm_xor_si128(z1, z2);
 
@@ -289,10 +283,11 @@ namespace alcp::cipher { namespace vaes512 {
         *res         = _mm256_xor_si256(temp, *res);
     }
 
-    static inline void gMulR(__m512i  H_512,
-                             __m512i  abcd_512,
-                             __m512i  reverse_mask_512,
-                             __m128i* res)
+    static inline void gMulR(__m512i       H_512,
+                             __m512i       abcd_512,
+                             __m512i       reverse_mask_512,
+                             __m128i*      res,
+                             const __m256i const_factor_256)
     {
         __m512i z0_512, z1_512, z2_512;
         __m128i z0, z1, z2;
@@ -315,7 +310,62 @@ namespace alcp::cipher { namespace vaes512 {
 
         __m256i res_256;
         computeKaratsubaMul(z0, z1, z2, &res_256);
-        modReduction(res_256, res);
+        montgomeryReduction(res_256, res, const_factor_256);
+    }
+
+    static inline void gMulParallel4(__m512i*      res,
+                                     __m512i       H4321_512,
+                                     __m512i       H4444_512,
+                                     const __m512i const_factor_512)
+    {
+        __m512i z0_512, z1_512, z1L_512, z2_512;
+
+        computeKaratsubaComponents(
+            H4321_512, H4444_512, &z0_512, &z1_512, &z2_512);
+
+        /* compute: z0 = x0y0
+         *        z0 component of below equation:
+         *        [(Xi • H1) + (Xi-1 • H2) + (Xi-2 • H3) + (Xi-3+Yi-4) •H4]
+         *
+         *  compute: z2 = x1y1
+         *        z2 component of below equation:
+         *        [(Xi • H1) + (Xi-1 • H2) + (Xi-2 • H3) + (Xi-3+Yi-4) •H4]
+         */
+
+        // z1 - zo -z2 = z1 xor z0 xor z2
+        z1_512 = _mm512_xor_si512(z1_512, z0_512);
+        z1_512 = _mm512_xor_si512(z1_512, z2_512);
+
+        // z1Low64bit
+        z1L_512 = _mm512_bslli_epi128(z1_512, 8);
+        // z1High64bit
+        z1_512 = _mm512_bsrli_epi128(z1_512, 8);
+
+        // low 128bit CLMul result for 4 GHASH
+        z0_512 = _mm512_xor_si512(z0_512, z1L_512);
+        // high 128bit CLMul result for 4 GHASH
+        z2_512 = _mm512_xor_si512(z2_512, z1_512);
+
+        /* Modulo reduction of (high 128bit: low 128bit)  components to 128bit
+         * Fast modulo reduction  Algorithm 4 in
+         * https://crypto.stanford.edu/RealWorldCrypto/slides/gueron.pdf
+         *
+         */
+        // A1:A0 = X0 *  0xc200000000000000
+        z1_512 = _mm512_clmulepi64_epi128(z0_512, const_factor_512, 0x10);
+        // shuffle to X0:X1
+        z0_512 = _mm512_shuffle_epi32(z0_512, _MM_PERM_BADC);
+        // B1:B0 = X0 + A1: X1 + A0
+        z1_512 = _mm512_xor_epi64(z1_512, z0_512);
+        // C1:C0 = B0 *  0xc200000000000000
+        z0_512 = _mm512_clmulepi64_epi128(z1_512, const_factor_512, 0x10);
+        // shuffle to B0:B1
+        z1_512 = _mm512_shuffle_epi32(z1_512, _MM_PERM_BADC);
+
+        // D1:D0 = B0 + C1: B1 + C0
+        z0_512 = _mm512_xor_epi64(z1_512, z0_512);
+        // D1 + X3: D0 + X2
+        *res = _mm512_xor_epi64(z2_512, z0_512);
     }
 
     static inline __m512i amd512_xor_all(__m512i x0,
@@ -332,16 +382,17 @@ namespace alcp::cipher { namespace vaes512 {
      * Galois field Multiplication of 16 blocks followed by one modulo
      * Reducation
      */
-    static inline void gMulR(__m512i  H1,
-                             __m512i  H2,
-                             __m512i  H3,
-                             __m512i  H4,
-                             __m512i  a,
-                             __m512i  b,
-                             __m512i  c,
-                             __m512i  d,
-                             __m512i  reverse_mask_512,
-                             __m128i* res)
+    static inline void gMulR(__m512i       H1,
+                             __m512i       H2,
+                             __m512i       H3,
+                             __m512i       H4,
+                             __m512i       a,
+                             __m512i       b,
+                             __m512i       c,
+                             __m512i       d,
+                             __m512i       reverse_mask_512,
+                             __m128i*      res,
+                             const __m256i const_factor_256)
     {
 
         __m128i z0, z1, z2;
@@ -354,59 +405,6 @@ namespace alcp::cipher { namespace vaes512 {
         d = _mm512_shuffle_epi8(d, reverse_mask_512);
 
         a = amd512xorLast128bit(a, *res);
-#if 0 // unroll version to be used in fused kernel in next step.
-        __m512i H4_temp, H3_temp, H2_temp, H1_temp;
-        __m512i a_temp, b_temp, c_temp, d_temp;
-
-        H4_temp = _mm512_bsrli_epi128(H4, 8);
-        H3_temp = _mm512_bsrli_epi128(H3, 8);
-        H2_temp = _mm512_bsrli_epi128(H2, 8);
-        H1_temp = _mm512_bsrli_epi128(H1, 8);
-
-        a_temp = _mm512_bsrli_epi128(a, 8);
-        b_temp = _mm512_bsrli_epi128(b, 8);
-        c_temp = _mm512_bsrli_epi128(c, 8);
-        d_temp = _mm512_bsrli_epi128(d, 8);
-
-        H4_temp = _mm512_xor_si512(H4_temp, H4);
-        H3_temp = _mm512_xor_si512(H3_temp, H3);
-        H2_temp = _mm512_xor_si512(H2_temp, H2);
-        H1_temp = _mm512_xor_si512(H1_temp, H1);
-
-        a_temp = _mm512_xor_si512(a_temp, a);
-        b_temp = _mm512_xor_si512(b_temp, b);
-        c_temp = _mm512_xor_si512(c_temp, c);
-        d_temp = _mm512_xor_si512(d_temp, d);
-
-        z0_512 = _mm512_clmulepi64_epi128(H4, a, 0x00); // compute x0y0
-        z2_512 = _mm512_clmulepi64_epi128(H4, a, 0x11); // compute x1y1
-        z1_512 = _mm512_clmulepi64_epi128(H4_temp, a_temp, 0x00);
-
-        z0_512 =
-            _mm512_xor_si512(z0_512, _mm512_clmulepi64_epi128(H3, b, 0x00));
-        z2_512 =
-            _mm512_xor_si512(z2_512, _mm512_clmulepi64_epi128(H3, b, 0x11));
-        z1_512 = _mm512_xor_si512(
-            z1_512, _mm512_clmulepi64_epi128(H3_temp, b_temp, 0x00));
-
-        z0_512 =
-            _mm512_xor_si512(z0_512, _mm512_clmulepi64_epi128(H2, c, 0x00));
-        z2_512 =
-            _mm512_xor_si512(z2_512, _mm512_clmulepi64_epi128(H2, c, 0x11));
-        z1_512 = _mm512_xor_si512(
-            z1_512, _mm512_clmulepi64_epi128(H2_temp, c_temp, 0x00));
-
-        z0_512 =
-            _mm512_xor_si512(z0_512, _mm512_clmulepi64_epi128(H1, d, 0x00));
-        z2_512 =
-            _mm512_xor_si512(z2_512, _mm512_clmulepi64_epi128(H1, d, 0x11));
-        z1_512 = _mm512_xor_si512(
-            z1_512, _mm512_clmulepi64_epi128(H1_temp, d_temp, 0x00));
-
-        z0 = amd512_horizontal_sum128(z0_512);
-        z1 = amd512_horizontal_sum128(z1_512);
-        z2 = amd512_horizontal_sum128(z2_512);
-#else
 
         computeKaratsubaComponents(H4, a, &z0_512, &z1_512, &z2_512);
 
@@ -422,11 +420,10 @@ namespace alcp::cipher { namespace vaes512 {
         z0 = amd512_horizontal_sum128(z0_512);
         z1 = amd512_horizontal_sum128(z1_512);
         z2 = amd512_horizontal_sum128(z2_512);
-#endif
 
         __m256i res_256;
         computeKaratsubaMul(z0, z1, z2, &res_256);
-        modReduction(res_256, res);
+        montgomeryReduction(res_256, res, const_factor_256);
     }
 
     /*
@@ -460,52 +457,6 @@ namespace alcp::cipher { namespace vaes512 {
         c = _mm512_shuffle_epi8(c, reverse_mask_512);
         d = _mm512_shuffle_epi8(d, reverse_mask_512);
 
-#if 0 // unroll version to be used in fused kernel in next step.
-        /* Compute Karatsuba components z0, z1 and z2
-         * for 4 sets. H4*a, H3*b, H2*c, H1*d
-         */
-        __m512i z0_512, z1_512, z2_512;
-        __m512i H4_temp, H3_temp, H2_temp, H1_temp;
-        __m512i a_temp, b_temp, c_temp, d_temp;
-
-        H4_temp   = _mm512_bsrli_epi128(H4, 8);
-        H3_temp   = _mm512_bsrli_epi128(H3, 8);
-        H2_temp   = _mm512_bsrli_epi128(H2, 8);
-        H1_temp   = _mm512_bsrli_epi128(H1, 8);
-
-        a_temp   = _mm512_bsrli_epi128(a, 8);
-        b_temp   = _mm512_bsrli_epi128(b, 8);
-        c_temp   = _mm512_bsrli_epi128(c, 8);
-        d_temp   = _mm512_bsrli_epi128(d, 8);
-
-        H4_temp   = _mm512_xor_si512(H4_temp, H4);
-        H3_temp   = _mm512_xor_si512(H3_temp, H3);
-        H2_temp   = _mm512_xor_si512(H2_temp, H2);
-        H1_temp   = _mm512_xor_si512(H1_temp, H1);
-
-        a_temp   = _mm512_xor_si512(a_temp, a);
-        b_temp   = _mm512_xor_si512(b_temp, b);
-        c_temp   = _mm512_xor_si512(c_temp, c);
-        d_temp   = _mm512_xor_si512(d_temp, d);
-
-        z0_512 = _mm512_clmulepi64_epi128(H4, a, 0x00);// compute x0y0
-        z2_512 = _mm512_clmulepi64_epi128(H4, a, 0x11);// compute x1y1
-        z1_512 = _mm512_clmulepi64_epi128(H4_temp, a_temp, 0x00);
-
-
-        z0_512 = _mm512_xor_si512(z0_512, _mm512_clmulepi64_epi128(H3, b, 0x00));
-        z2_512 =  _mm512_xor_si512(z2_512, _mm512_clmulepi64_epi128(H3, b, 0x11));
-        z1_512 =  _mm512_xor_si512(z1_512, _mm512_clmulepi64_epi128(H3_temp, b_temp, 0x00));
-
-        z0_512 = _mm512_xor_si512(z0_512, _mm512_clmulepi64_epi128(H2, c, 0x00));
-        z2_512 =  _mm512_xor_si512(z2_512, _mm512_clmulepi64_epi128(H2, c, 0x11));
-        z1_512 =  _mm512_xor_si512(z1_512, _mm512_clmulepi64_epi128(H2_temp, c_temp, 0x00));
-
-        *pz0_512 = _mm512_xor_si512(z0_512, _mm512_clmulepi64_epi128(H1, d, 0x00));
-        *pz2_512 =  _mm512_xor_si512(z2_512, _mm512_clmulepi64_epi128(H1, d, 0x11));
-        *pz1_512 =  _mm512_xor_si512(z1_512, _mm512_clmulepi64_epi128(H1_temp, d_temp, 0x00));
-#else
-
         __m512i z0_512_a, z1_512_a, z2_512_a;
         __m512i z0_512_b, z1_512_b, z2_512_b;
         __m512i z0_512_c, z1_512_c, z2_512_c;
@@ -520,13 +471,13 @@ namespace alcp::cipher { namespace vaes512 {
         *pz0_512 = amd512_xor_all(z0_512_a, z0_512_b, z0_512_c, z0_512_d);
         *pz1_512 = amd512_xor_all(z1_512_a, z1_512_b, z1_512_c, z1_512_d);
         *pz2_512 = amd512_xor_all(z2_512_a, z2_512_b, z2_512_c, z2_512_d);
-#endif
     }
 
-    static inline void getGhash(__m512i  z0_512,
-                                __m512i  z1_512,
-                                __m512i  z2_512,
-                                __m128i* res)
+    static inline void getGhash(__m512i       z0_512,
+                                __m512i       z1_512,
+                                __m512i       z2_512,
+                                __m128i*      res,
+                                const __m256i const_factor_256)
     {
 
         __m128i z0 = amd512_horizontal_sum128(z0_512);
@@ -535,7 +486,7 @@ namespace alcp::cipher { namespace vaes512 {
 
         __m256i res_256;
         computeKaratsubaMul(z0, z1, z2, &res_256);
-        modReduction(res_256, res);
+        montgomeryReduction(res_256, res, const_factor_256);
     }
 
     /* 128 bit gMul with montogomery reduction */
@@ -562,12 +513,30 @@ namespace alcp::cipher { namespace vaes512 {
         *d = _mm_xor_si128(*d, e); // D1:D0+(E1+F1)
     }
 
-    static inline void gMul(__m128i a, __m128i b, __m128i* res)
+    static inline void gMul(__m128i       a,
+                            __m128i       b,
+                            __m128i*      res,
+                            const __m256i const_factor_256)
     {
         __m128i c, d;
         carrylessMul(a, b, &c, &d);
         __m256i cd = _mm256_set_m128i(d, c);
-        modReduction(cd, res);
+        montgomeryReduction(cd, res, const_factor_256);
+    }
+
+    static inline void gMulR(__m128i       a,
+                             __m128i       b,
+                             __m128i       reverse_mask_128,
+                             __m128i*      res,
+                             const __m256i const_factor_256)
+    {
+        a    = _mm_shuffle_epi8(a, reverse_mask_128);
+        *res = _mm_xor_si128(a, *res);
+
+        __m128i c, d;
+        carrylessMul(*res, b, &c, &d);
+        __m256i cd = _mm256_set_m128i(d, c);
+        montgomeryReduction(cd, res, const_factor_256);
     }
 
 }} // namespace alcp::cipher::vaes512

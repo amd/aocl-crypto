@@ -36,7 +36,7 @@
 #ifdef __linux__
 #include <sys/time.h>
 #elif WIN32
-#include "alcp/utils/time.hh"
+#include <windows.h>
 #endif
 
 #include <immintrin.h>
@@ -78,6 +78,24 @@ long   seconds;
 long   microseconds;
 double elapsed;
 double totalTimeElapsed;
+
+#if WIN32
+int gettimeofday(struct timeval* tv, struct timeval* tv1)
+{
+    FILETIME    f_time;
+    Uint64    time;
+    SYSTEMTIME  s_time;
+    //define UNIX EPOCH time for windows
+    static const Uint64 EPOCH = ((Uint64)116444736000000000ULL);
+    GetSystemTimeAsFileTime(&f_time);
+    FileTimeToSystemTime(&f_time, &s_time);
+    time = ((Uint64)f_time.dwLowDateTime);
+    time += ((Uint64)f_time.dwHighDateTime) << 32;
+    tv->tv_sec = (long)((time - EPOCH) / 10000000L);
+    tv->tv_usec = (long)(s_time.wMilliseconds * 1000);
+    return 0;
+}
+#endif
 
 #define ALCP_CRYPT_TIMER_START gettimeofday(&begin, 0);
 
@@ -553,7 +571,8 @@ int
 encrypt_decrypt_demo(Uint8*       inputText,  // plaintext
                      Uint32       inputLen,   // input length
                      Uint8*       cipherText, // ciphertext output
-                     alc_cipher_mode_t m)
+                     alc_cipher_mode_t m,
+                     int i)
 {
     unsigned int keybits;
     Uint8      key[32];
@@ -583,8 +602,7 @@ encrypt_decrypt_demo(Uint8*       inputText,  // plaintext
     }
     memset(tag, 0, tagLen);
 
-    for (int i = 0; i < 1; i++) { // limit the test to 128bit.
-        // for (int i = 0; i < 3; i++) {
+    {
         int u   = i;
         keybits = 128 + u * 64;
         printf(" keybits %d ", keybits);
@@ -743,7 +761,7 @@ main(void)
 
     printf("\n AOCL-CRYPTO: AES Demo application ");
 
-    for (alc_cipher_mode_t m = ALC_AES_MODE_ECB; m < ALC_AES_MODE_MAX; m++) {
+    for (alc_cipher_mode_t m = ALC_AES_MODE_CBC; m < ALC_AES_MODE_MAX; m++) {
 
         if (m == ALC_AES_MODE_ECB) {
             printf("\n\nAES-ECB not implemented");
@@ -769,41 +787,48 @@ main(void)
         int testblkSizes[7] = {16, 64, 256, 1024, 8192, 16384, 32768};
         #define MAX_TEST_CASE 7
 
-        for (int i =0; i < MAX_TEST_CASE; i++) {
-            int inputLen = testblkSizes[i];
-            printf(" \n");
-#if SPEED_CHECK
-#else
-            printf(" input length %5d x_blks", inputLen/16/4);
-#endif
-
-            // allocate inputText and cipherText memory
-            inputText = malloc(inputLen);
-            if (inputText == NULL) {
-                return -1;
+        for(int keySizeItr = 0; keySizeItr < 3; keySizeItr++) {
+            if((m == ALC_AES_MODE_XTS) &&(keySizeItr>0)) {
+                continue;
             }
-            cipherText = malloc(inputLen);
-            if (cipherText == NULL) {
+            for (int i =0; i < MAX_TEST_CASE; i++) {
+                int inputLen = testblkSizes[i];
+                printf(" \n");
+    #if SPEED_CHECK
+    #else
+                printf(" input length %5d x_blks", inputLen/16/4);
+    #endif
+
+                // allocate inputText and cipherText memory
+                inputText = malloc(inputLen);
+                if (inputText == NULL) {
+                    return -1;
+                }
+                cipherText = malloc(inputLen);
+                if (cipherText == NULL) {
+                    if (inputText) {
+                        free(inputText);
+                    }
+                    return -1;
+                }
+
+                // run full path demo for specific aes mode
+                encrypt_decrypt_demo(
+                    inputText,
+                    inputLen, /* len of both 'plaintxt' and 'ciphertxt' */
+                    cipherText,
+                    m,
+                    keySizeItr);
+
+                // its time to free!
                 if (inputText) {
                     free(inputText);
                 }
-                return -1;
+                if (cipherText) {
+                    free(cipherText);
+                }
             }
-
-            // run full path demo for specific aes mode
-            encrypt_decrypt_demo(
-                inputText,
-                inputLen, /* len of both 'plaintxt' and 'ciphertxt' */
-                cipherText,
-                m);
-
-            // its time to free!
-            if (inputText) {
-                free(inputText);
-            }
-            if (cipherText) {
-                free(cipherText);
-            }
+            printf(" \n");
         }
     }
 

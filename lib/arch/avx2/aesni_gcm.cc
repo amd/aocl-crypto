@@ -387,7 +387,8 @@ CryptGcm(const Uint8* pInputText,  // ptr to inputText
          __m128i      Hsubkey_128,
          __m128i      iv_128,
          __m128i      reverse_mask_128,
-         bool         isEncrypt)
+         bool         isEncrypt,
+         Uint64*      pHashSubkeyTable)
 {
     alc_error_t err      = ALC_ERROR_NONE;
     Uint64      blocks   = len / Rijndael::cBlockSize;
@@ -430,7 +431,7 @@ processAdditionalDataGcm(const Uint8* pAdditionalData,
 
     // additional data hash.
     __m128i ad1;
-    int     adBlocks = additionalDataLen / Rijndael::cBlockSize;
+    Uint64  adBlocks = additionalDataLen / Rijndael::cBlockSize;
 
     int ad_remBytes = additionalDataLen - (adBlocks * Rijndael::cBlockSize);
 

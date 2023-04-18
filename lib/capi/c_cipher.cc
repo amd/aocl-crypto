@@ -227,7 +227,7 @@ alcp_cipher_set_aad(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
     ALCP_BAD_PTR_ERR_RET(pInput, err);
 
-    ALCP_ZERO_LEN_ERR_RET(len, err);
+    // ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
