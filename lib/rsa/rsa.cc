@@ -84,8 +84,17 @@ Rsa::encrBufWithPub(alc_rsa_encr_dcr_padding pad,
                     Uint8*                   pEncText)
 {
     // For non padded output
-    if (textSize > pubKey.size) {
+    if (textSize != pubKey.size) {
         return status::NotPermitted("Text size should be equal to modulus");
+    }
+
+    // Todo : Remove this check when padding modes are supported
+    if (pad != ALCP_RSA_PADDING_NONE) {
+        return status::Unavailable("Padding is not supported currently");
+    }
+
+    if (pubKey.modulus == nullptr || pText == nullptr || pEncText == nullptr) {
+        return status::NotPermitted("Buffer should be non null");
     }
 
     BigNum raw_buff;
@@ -113,8 +122,17 @@ Rsa::decrBufWithPriv(alc_rsa_encr_dcr_padding pad,
 {
 
     // For non padded output
-    if (encSize > m_mod.size()) {
+    if (encSize != m_mod.size()) {
         return status::NotPermitted("Text size should be equal modulous");
+    }
+
+    // Todo : Remove this check when padding modes are supported
+    if (pad != ALCP_RSA_PADDING_NONE) {
+        return status::Unavailable("Padding is not supported currently");
+    }
+
+    if (pEncText == nullptr || pText == nullptr) {
+        return status::NotPermitted("Buffer should be non null");
     }
 
     BigNum raw_buff;
@@ -134,6 +152,10 @@ Rsa::getPublickey(RsaPublicKey& pPublicKey)
 
     if (pPublicKey.size != m_key_size) {
         return status::NotPermitted("keyize should match");
+    }
+
+    if (pPublicKey.modulus == nullptr) {
+        return status::NotPermitted("Modulus cannot be empty");
     }
 
     pPublicKey.public_exponent = PublicKeyExponent;

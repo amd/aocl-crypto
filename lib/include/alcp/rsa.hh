@@ -37,9 +37,9 @@ namespace alcp::rsa {
 
 struct RsaPublicKey
 {
-    Uint64 public_exponent;
-    Uint8* modulus;
-    Uint64 size;
+    Uint64 public_exponent = 0;
+    Uint8* modulus         = nullptr;
+    Uint64 size            = 0;
 };
 
 class Rsa
