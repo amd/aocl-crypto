@@ -109,11 +109,11 @@ endfunction(alcp_get_arch_cflags_zen4)
 # if address sanitizer used
 function(alcp_add_sanitize_flags)
     set(ALCP_OPTIONS_SANITIZE
-            /fsanitize=address
-            /fsanitize-address-use-after-return
+            -fsanitize=address
+            -fsanitize=undefined
             CACHE INTERNAL ""
         )
-    link_libraries(asan)
-    add_compile_options(${ALCP_OPTIONS_SANITIZE})
-    add_link_options(${ALCP_OPTIONS_SANITIZE})
+    add_compile_options(${ALCP_OPTIONS_SANITIZE} -fno-sanitize=address)
+    link_libraries(clang_rt.asan_dynamic-x86_64 clang_rt.asan_dynamic_runtime_thunk-x86_64)
+    add_link_options(/wholearchive:clang_rt.asan_dynamic_runtime_thunk-x86_64.lib)
 endfunction(alcp_add_sanitize_flags)

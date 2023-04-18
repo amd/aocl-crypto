@@ -35,11 +35,6 @@ FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ../../tests/hmac/base/alc_hmac.cc ../../tests/hmac/base/hmac.cc)
 SET(LIBS ${LIBS} gtest alcp)
 
-# add this if asan is used
-if (ALCP_SANITIZE)
-    SET(LIBS ${LIBS} asan)
-endif()
-
 SET(EXTRA_INCLUDES "")
 
 IF(ENABLE_TESTS_IPP_API)

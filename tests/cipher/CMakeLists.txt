@@ -39,11 +39,6 @@ FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher.cc ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher.cc)
 SET(LIBS ${LIBS} gtest alcp)
 
-# add this if asan is used
-if (ALCP_SANITIZE)
-    SET(LIBS ${LIBS} asan)
-endif()
-
 IF(WIN32)
 target_link_libraries(gmock PUBLIC gtest)
 target_link_libraries(gmock_main PUBLIC gtest_main)
