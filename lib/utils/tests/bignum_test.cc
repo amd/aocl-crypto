@@ -495,6 +495,21 @@ TEST(BigNumTest, Exp)
               "39092490901302182994384699044001");
 }
 
+TEST(BigNumTest, Exp_Mod)
+{
+    BigNum a, b, c;
+
+    a.fromUint64(7);
+    b.fromInt64(5453120345132134564);
+    c.fromUint32(3);
+    EXPECT_EQ(a.exp_mod(50, b).toString(BigNum::Format::eDecimal),
+              "1945313002533191473");
+    EXPECT_EQ(a.exp_mod(150, b).toString(BigNum::Format::eDecimal),
+              "2941664302897615685");
+    EXPECT_EQ(c.exp_mod(200, b).toString(BigNum::Format::eDecimal),
+              "2722700081851075073");
+}
+
 TEST(BigNumTest, Equal)
 {
     BigNum a, b;

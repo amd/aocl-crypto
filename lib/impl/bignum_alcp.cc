@@ -794,6 +794,13 @@ BigNum::Impl::exp_mod(const BigNum& num, const BigNum& exp, const BigNum& mod)
     ALCP_ASSERT(false, "Not Implemented");
 }
 
+BigNum
+BigNum::Impl::exp_mod(unsigned int pow, BigNum mod)
+{
+    BigNum result = exp(pow) % mod;
+    return result;
+}
+
 /**
  * Converts BigNum to string with binary, decimal or hexadecimal Format
  *
