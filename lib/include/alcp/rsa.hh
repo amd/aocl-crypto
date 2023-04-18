@@ -42,10 +42,10 @@ struct RsaPublicKey
     Uint64 size            = 0;
 };
 
-class Rsa
+class ALCP_API_EXPORT Rsa
 {
   public:
-    ALCP_API_EXPORT Rsa();
+    Rsa();
     ~Rsa();
     /**
      * @brief Function encrypt the buffer
@@ -58,11 +58,11 @@ class Rsa
      * publicKey
      * @return Status Error code
      */
-    ALCP_API_EXPORT Status encryptPublic(alc_rsa_padding     pad,
-                                         const RsaPublicKey& pubKey,
-                                         const Uint8*        pText,
-                                         Uint64              textSize,
-                                         Uint8*              pEncText);
+    Status encryptPublic(alc_rsa_padding     pad,
+                         const RsaPublicKey& pubKey,
+                         const Uint8*        pText,
+                         Uint64              textSize,
+                         Uint8*              pEncText);
 
     /**
      * @brief Function decrypt the buffer
@@ -74,10 +74,10 @@ class Rsa
      * publicKey
      * @return Status Error code
      */
-    ALCP_API_EXPORT Status decryptPrivate(alc_rsa_padding pad,
-                                          const Uint8*    pEncText,
-                                          Uint64          encSize,
-                                          Uint8*          pText);
+    Status decryptPrivate(alc_rsa_padding pad,
+                          const Uint8*    pEncText,
+                          Uint64          encSize,
+                          Uint8*          pText);
 
     /**
      * @brief Function fetches the public key
@@ -87,7 +87,7 @@ class Rsa
      * @return Status Error code
      */
 
-    ALCP_API_EXPORT Status getPublickey(RsaPublicKey& pPublicKey);
+    Status getPublickey(RsaPublicKey& pPublicKey);
 
     /**
      * @brief Function returns the private key size
