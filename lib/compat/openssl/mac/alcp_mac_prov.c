@@ -43,9 +43,15 @@ ALCP_prov_mac_freectx(void* vctx)
 {
     ENTER();
     alc_prov_mac_ctx_p mctx = vctx;
+    alc_error_t        err  = alcp_mac_finish(&(mctx->handle));
+    if (alcp_is_error(err)) {
+        printf("MAC Provider: Error in MAC Finish\n");
+    }
     OPENSSL_free(mctx->handle.ch_context);
+    mctx->handle.ch_context = NULL;
     EVP_MAC_CTX_free(mctx->pc_evp_mac_ctx);
-
+    OPENSSL_free(vctx);
+    vctx = NULL;
     EXIT();
 }
 
@@ -56,8 +62,7 @@ ALCP_prov_mac_newctx(void* vprovctx, const alc_mac_info_p macinfo)
 
     alc_prov_mac_ctx_p mac_ctx;
     alc_prov_ctx_p     pctx = (alc_prov_ctx_p)vprovctx;
-
-    mac_ctx = OPENSSL_zalloc(sizeof(*mac_ctx));
+    mac_ctx                 = OPENSSL_zalloc(sizeof(*mac_ctx));
 
     if (mac_ctx != NULL) {
         mac_ctx->pc_prov_ctx = pctx;
@@ -265,7 +270,7 @@ ALCP_prov_mac_init(void*                vctx,
     cctx->handle.ch_context = OPENSSL_malloc(size);
     err                     = alcp_mac_request(&(cctx->handle), macinfo);
     if (alcp_is_error(err)) {
-        printf("Provider: MAC Request Failed\n");
+        printf("MAC Provider: Request Failed\n");
         return 0;
     }
     EXIT();
@@ -281,7 +286,7 @@ ALCP_prov_mac_update(void* vctx, const unsigned char* in, size_t inl)
     alc_prov_mac_ctx_p cctx = vctx;
     err                     = alcp_mac_update(&(cctx->handle), in, inl);
     if (alcp_is_error(err)) {
-        printf("Provider: MAC Update Failed\n");
+        printf("MAC Provider: Update Failed\n");
         EXIT();
         return 0;
     }
@@ -300,12 +305,16 @@ ALCP_prov_mac_final(void*          vctx,
     alc_prov_mac_ctx_p mctx = vctx;
     err                     = alcp_mac_finalize(&(mctx->handle), NULL, 0);
     if (alcp_is_error(err)) {
-        printf("Provider: Failed to Finalize\n");
+        printf("MAC Provider: Failed to Finalize\n");
         return 0;
+    }
+    alc_mac_info_p macinfo = &((alc_prov_mac_ctx_p)vctx)->pc_mac_info;
+    if (macinfo->mi_type == ALC_MAC_CMAC) {
+        outsize = outsize / 8;
     }
     err = alcp_mac_copy(&(mctx->handle), out, (Uint64)outsize);
     if (alcp_is_error(err)) {
-        printf("Provider: Failed to copy Hash\n");
+        printf("MAC Provider: Failed to copy Hash\n");
         return 0;
     }
 
