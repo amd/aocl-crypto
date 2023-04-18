@@ -35,9 +35,6 @@
 #include "provider/alcp_names.h"
 #include <string.h>
 
-int
-HMAC_init(char* digest, alc_mac_info_p macinfo);
-
 void
 ALCP_prov_mac_freectx(void* vctx)
 {
@@ -145,37 +142,9 @@ ALCP_prov_mac_get_ctx_params(void* vctx, OSSL_PARAM params[])
 }
 
 int
-ALCP_prov_mac_set_ctx_params(void* vctx, const OSSL_PARAM params[])
-{
-    ENTER();
-    int               ret      = 0;
-    const OSSL_PARAM* p_digest = OSSL_PARAM_locate_const(params, "digest");
-    if (p_digest != NULL) {
-        char* digest = p_digest->data;
-        ret = HMAC_init(digest, &(((alc_prov_mac_ctx_p)vctx)->pc_mac_info));
-        return ret;
-    }
-    const OSSL_PARAM* p_cipher = OSSL_PARAM_locate_const(params, "cipher");
-    if (p_cipher != NULL) {
-        char* cipher = p_cipher->data;
-        if (!strcmp(cipher, "aes128") || !strcmp(cipher, "aes192")
-            || !strcmp(cipher, "aes256") || !strcmp(cipher, "aes-128-cbc")
-            || !strcmp(cipher, "aes-192-cbc")
-            || !strcmp(cipher, "aes-256-cbc")) {
-            return 1;
-        } else {
-            printf("CMAC Provider: Cipher '%s' not supported\n", cipher);
-        }
-    }
-
-    EXIT();
-    return ret;
-}
-
-int
 HMAC_init(char* digest, alc_mac_info_p macinfo)
 {
-
+    ENTER();
     if (digest == NULL) {
         return 0;
     }
@@ -187,49 +156,79 @@ HMAC_init(char* digest, alc_mac_info_p macinfo)
     alc_digest_len_t  digest_len;
     alc_digest_mode_t digest_mode;
 
-    int ret = 1;
-
-    if (!strcmp(digest, "sha256")) {
+    if (!strcasecmp(digest, "sha256")) {
         digest_type         = ALC_DIGEST_TYPE_SHA2;
         digest_len          = ALC_DIGEST_LEN_256;
         digest_mode.dm_sha2 = ALC_SHA2_256;
-    } else if (!strcmp(digest, "sha224")) {
+    } else if (!strcasecmp(digest, "sha224")) {
         digest_type         = ALC_DIGEST_TYPE_SHA2;
         digest_len          = ALC_DIGEST_LEN_224;
         digest_mode.dm_sha2 = ALC_SHA2_224;
-    } else if (!strcmp(digest, "sha384")) {
+    } else if (!strcasecmp(digest, "sha384")) {
         digest_type         = ALC_DIGEST_TYPE_SHA2;
         digest_len          = ALC_DIGEST_LEN_384;
         digest_mode.dm_sha2 = ALC_SHA2_384;
-    } else if (!strcmp(digest, "sha512")) {
+    } else if (!strcasecmp(digest, "sha512")) {
         digest_type         = ALC_DIGEST_TYPE_SHA2;
         digest_len          = ALC_DIGEST_LEN_512;
         digest_mode.dm_sha2 = ALC_SHA2_512;
-    } else if (!strcmp(digest, "sha3-224")) {
+    } else if (!strcasecmp(digest, "sha3-224")) {
         digest_type         = ALC_DIGEST_TYPE_SHA3;
         digest_len          = ALC_DIGEST_LEN_224;
         digest_mode.dm_sha3 = ALC_SHA2_224;
-    } else if (!strcmp(digest, "sha3-256")) {
+    } else if (!strcasecmp(digest, "sha3-256")) {
         digest_type         = ALC_DIGEST_TYPE_SHA3;
         digest_len          = ALC_DIGEST_LEN_256;
         digest_mode.dm_sha3 = ALC_SHA2_256;
-    } else if (!strcmp(digest, "sha3-384")) {
+    } else if (!strcasecmp(digest, "sha3-384")) {
         digest_type         = ALC_DIGEST_TYPE_SHA3;
         digest_len          = ALC_DIGEST_LEN_384;
         digest_mode.dm_sha3 = ALC_SHA2_384;
-    } else if (!strcmp(digest, "sha3-512")) {
+    } else if (!strcasecmp(digest, "sha3-512")) {
         digest_type         = ALC_DIGEST_TYPE_SHA3;
         digest_len          = ALC_DIGEST_LEN_512;
         digest_mode.dm_sha3 = ALC_SHA2_512;
     } else {
         printf("HMAC Provider: Digest '%s' Not Supported", digest);
+        EXIT();
         return 0;
     }
     digestinfo.dt_type                    = digest_type;
     digestinfo.dt_len                     = digest_len;
     digestinfo.dt_mode                    = digest_mode;
     macinfo->mi_algoinfo.hmac.hmac_digest = digestinfo;
+    EXIT();
+    return 1;
+}
 
+int
+ALCP_prov_mac_set_ctx_params(void* vctx, const OSSL_PARAM params[])
+{
+    ENTER();
+    int               ret = 0;
+    const OSSL_PARAM* p_digest =
+        OSSL_PARAM_locate_const(params, OSSL_ALG_PARAM_DIGEST);
+    if (p_digest != NULL) {
+        char* digest = p_digest->data;
+        ret = HMAC_init(digest, &(((alc_prov_mac_ctx_p)vctx)->pc_mac_info));
+        return ret;
+    }
+    const OSSL_PARAM* p_cipher =
+        OSSL_PARAM_locate_const(params, OSSL_ALG_PARAM_CIPHER);
+    if (p_cipher != NULL) {
+        char* cipher = p_cipher->data;
+        if (!strcasecmp(cipher, "aes128") || !strcasecmp(cipher, "aes192")
+            || !strcasecmp(cipher, "aes256")
+            || !strcasecmp(cipher, "aes-128-cbc")
+            || !strcasecmp(cipher, "aes-192-cbc")
+            || !strcasecmp(cipher, "aes-256-cbc")) {
+            return 1;
+        } else {
+            printf("CMAC Provider: Cipher '%s' not supported\n", cipher);
+        }
+    }
+
+    EXIT();
     return ret;
 }
 int
@@ -239,13 +238,6 @@ ALCP_prov_mac_init(void*                vctx,
                    const OSSL_PARAM     params[])
 {
     ENTER();
-    char* digest = NULL;
-    if (params != NULL) {
-        const OSSL_PARAM* p = OSSL_PARAM_locate_const(params, "digest");
-        if (p != NULL) {
-            digest = (char*)p->data;
-        }
-    }
 
     alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
                              .fmt  = ALC_KEY_FMT_RAW,
@@ -260,12 +252,21 @@ ALCP_prov_mac_init(void*                vctx,
     alc_prov_mac_ctx_p cctx    = vctx;
     alc_error_t        err     = ALC_ERROR_NONE;
     alc_mac_info_p     macinfo = &cctx->pc_mac_info;
-    macinfo->mi_keyinfo        = kinfo;
 
-    if (digest != NULL) {
-        HMAC_init(digest, macinfo);
+    macinfo->mi_keyinfo = kinfo;
+
+    if (params != NULL) {
+        const OSSL_PARAM* p =
+            OSSL_PARAM_locate_const(params, OSSL_ALG_PARAM_DIGEST);
+        if (p != NULL) {
+            char* digest = (char*)p->data;
+            if (digest != NULL) {
+                if (!HMAC_init(digest, macinfo)) {
+                    return 0;
+                };
+            }
+        }
     }
-
     Uint64 size             = alcp_mac_context_size(macinfo);
     cctx->handle.ch_context = OPENSSL_malloc(size);
     err                     = alcp_mac_request(&(cctx->handle), macinfo);
