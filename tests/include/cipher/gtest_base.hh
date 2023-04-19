@@ -287,12 +287,18 @@ AesCrosstest(int               keySize,
     bool isxts = (MODE_STR.compare("XTS") == 0);
     bool isgcm = (MODE_STR.compare("GCM") == 0);
     bool isccm = (MODE_STR.compare("CCM") == 0);
+    bool issiv = (MODE_STR.compare("SIV") == 0);
 
     /* IV, AD Length limits for different cases */
     if (isccm) {
         IVL_START = 7;
         IVL_MAX   = 13;
         ADL_START = 12;
+        ADL_MAX   = 16;
+    } else if (issiv) {
+        IVL_START = 16;
+        IVL_MAX   = 16;
+        ADL_START = 16;
         ADL_MAX   = 16;
     } else if (isgcm) {
         IVL_START = 12;
@@ -342,12 +348,24 @@ AesCrosstest(int               keySize,
     /* Set extTC based on which external testing core user asks*/
     try {
         if (useossl)
-            extTC = new TestingCore(OPENSSL, mode);
+            if (mode == ALC_AES_MODE_SIV) {
+                printErrors("OpenSSL is not available for SIV mode");
+                useipp = true;
+                extTC  = new TestingCore(IPP, mode);
+            } else {
+                extTC = new TestingCore(OPENSSL, mode);
+            }
         else if (useipp)
             extTC = new TestingCore(IPP, mode);
         else {
             printErrors("No Lib Specified!.. but trying OpenSSL");
-            extTC = new TestingCore(OPENSSL, mode);
+            if (mode == ALC_AES_MODE_SIV) {
+                printErrors("OpenSSL is not available for SIV mode");
+                useipp = true;
+                extTC  = new TestingCore(IPP, mode);
+            } else {
+                extTC = new TestingCore(OPENSSL, mode);
+            }
         }
     } catch (const char* exc) {
         std::cerr << exc << std::endl;
@@ -431,14 +449,14 @@ AesCrosstest(int               keySize,
                 data_alc.m_ivl  = iv.size();
                 data_alc.m_out  = &(out_ct_alc[0]);
                 data_alc.m_outl = data_alc.m_inl;
-                if (isgcm || isccm) {
+                if (isgcm || isccm || issiv) {
                     data_alc.m_ad      = &(add[0]);
                     data_alc.m_adl     = add.size();
                     data_alc.m_tag     = &(tag_alc[0]);
                     data_alc.m_tagl    = tag_alc.size();
                     data_alc.m_tagBuff = tagBuff.get();
                 }
-                if (isxts) {
+                if (isxts || issiv) {
                     data_alc.m_tkey  = &(tkey[0]);
                     data_alc.m_tkeyl = tkeyl;
                 }
@@ -450,14 +468,14 @@ AesCrosstest(int               keySize,
                 data_ext.m_ivl  = iv.size();
                 data_ext.m_out  = &(out_ct_ext[0]);
                 data_ext.m_outl = data_alc.m_inl;
-                if (isgcm || isccm) {
+                if (isgcm || isccm || issiv) {
                     data_ext.m_ad      = &(add[0]);
                     data_ext.m_adl     = add.size();
                     data_ext.m_tag     = &(tag_ext[0]);
                     data_ext.m_tagl    = tag_ext.size();
                     data_ext.m_tagBuff = tagBuff.get();
                 }
-                if (isxts) {
+                if (isxts || issiv) {
                     data_ext.m_tkey       = &(tkey[0]);
                     data_ext.m_tkeyl      = tkeyl;
                     data_ext.m_block_size = ct.size();
@@ -503,9 +521,13 @@ AesCrosstest(int               keySize,
                     PrintTestData(key, data_ext, MODE_STR);
                 }
             } else {
-                if (isgcm || isccm) {
+                if (isgcm || isccm || issiv) {
                     ret = alcpTC->getCipherHandler()->testingEncrypt(data_alc,
                                                                      key);
+                    // TAG is IV for decrypt in SIV mode.
+                    if (mode == ALC_AES_MODE_SIV) {
+                        memcpy(&iv[0], &tag_alc[0], data_alc.m_tagl);
+                    }
                     if (!ret) {
                         std::cout << "ERROR: enc: main lib" << std::endl;
                         FAIL();
@@ -520,9 +542,13 @@ AesCrosstest(int               keySize,
                 }
 
                 /*ext lib decrypt */
-                if (isgcm || isccm) {
+                if (isgcm || isccm || issiv) {
                     ret = alcpTC->getCipherHandler()->testingEncrypt(data_ext,
                                                                      key);
+                    // TAG is IV for decrypt in SIV mode.
+                    if (mode == ALC_AES_MODE_SIV) {
+                        memcpy(&iv[0], &tag_ext[0], data_alc.m_tagl);
+                    }
                     if (!ret) {
                         std::cout << "ERROR: enc: ext lib" << std::endl;
                         FAIL();
@@ -722,13 +748,8 @@ AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode)
 
     while (testing_core.getCsv()->readNext()) {
         if ((testing_core.getCsv()->getVect("KEY").size() * 8) != key_size) {
-            // std::cout << testing_core.getCsv()->getStr("KEY") << " "
-            //           << testing_core.getCsv()->getStr("PLAINTEXT") << " "
-            //           << testing_core.getCsv()->getVect("KEY").size() * 8
-            //           << " ";
             continue;
         }
-        // std::cout << std::endl;
         retval = RunCipherKATTest(testing_core,
                                   enc_dec,
                                   enc_dec_str,
@@ -737,7 +758,6 @@ AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode)
                                   isxts || issiv,
                                   isgcm || isccm || issiv);
         EXPECT_TRUE(retval);
-        // printf("MEOW\n");
     }
 }
 #endif
