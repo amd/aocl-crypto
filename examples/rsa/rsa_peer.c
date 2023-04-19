@@ -62,6 +62,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
     Uint8*      text_peer_1        = NULL;
     Uint8*      text_peer_2        = NULL;
     Uint8*      pub_key_mod_peer_2 = NULL;
+    Uint8*      pub_key_mod_peer_1 = NULL;
     Uint8*      enc_text_peer_1    = NULL;
     Uint8*      dec_text_peer_1    = NULL;
     Uint8*      dec_text_peer_2    = NULL;
@@ -83,7 +84,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
 
     printf("\n");
 
-    Uint8* pub_key_mod_peer_1 = malloc(sizeof(Uint8) * size_key_peer_1);
+    pub_key_mod_peer_1 = malloc(sizeof(Uint8) * size_key_peer_1);
     memset(pub_key_mod_peer_1, 0, sizeof(Uint8) * size_key_peer_1);
 
     Uint64 public_exponent_peer_1;
@@ -95,7 +96,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
 
     if (err != ALC_ERROR_NONE) {
         printf("\n peer1 publickey fetch failed");
-        goto out;
+        goto free_pub_mod_peer_1;
     }
 
     /* Peer 2 */
@@ -104,7 +105,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
     if (size_key_peer_2 == 0) {
         printf("\n peer2 key size fetch failed");
         err = ALC_ERROR_INVALID_SIZE;
-        goto out;
+        goto free_pub_mod_peer_1;
     }
 
     text_peer_2 = malloc(sizeof(Uint8) * size_key_peer_2);
@@ -120,7 +121,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
                                  size_key_peer_2);
     if (err != ALC_ERROR_NONE) {
         printf("\n peer2 publickey fetch failed");
-        goto out;
+        goto free_pub_mod_peer_2;
     }
 
     // Encrypt text by peer1 using public key of peer 2
@@ -137,7 +138,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
                                      enc_text_peer_1);
     if (err != ALC_ERROR_NONE) {
         printf("\n peer1 publc key encrypt failed");
-        goto out;
+        goto free_enc_text_peer_1;
     }
 
     ALCP_PRINT_TEXT(enc_text_peer_1, size_key_peer_1, "enc_text_peer_1")
@@ -154,14 +155,14 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
                                       dec_text_peer_2);
     if (err != ALC_ERROR_NONE) {
         printf("\n peer2 private key decryption failed");
-        goto out;
+        goto free_dec_text_peer_2;
     }
 
     if (memcmp(dec_text_peer_2, text_peer_1, size_key_peer_2) == 0) {
         err = ALC_ERROR_NONE;
     } else {
         printf("\n decrypted text not matching the original text");
-        goto out;
+        goto free_dec_text_peer_2;
     }
 
     ALCP_PRINT_TEXT(dec_text_peer_2, size_key_peer_2, "dec_text_peer_2")
@@ -187,7 +188,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
                                      enc_text_peer_2);
     if (err != ALC_ERROR_NONE) {
         printf("\n peer2 publc key encrypt failed");
-        goto out;
+        goto free_enc_text_peer_2;
     }
     ALCP_PRINT_TEXT(enc_text_peer_2, size_key_peer_2, "enc_text_peer_2")
     printf("\n");
@@ -202,7 +203,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
                                       dec_text_peer_1);
     if (err != ALC_ERROR_NONE) {
         printf("\n peer1 private key decryption failed");
-        goto out;
+        goto free_dec_text_peer_1;
     }
 
     ALCP_PRINT_TEXT(dec_text_peer_1, size_key_peer_1, "dec_text_peer_1")
@@ -213,15 +214,21 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
         printf("\n decrypted text not matching the original text");
     }
 
-out:
-    free(text_peer_1);
-    free(text_peer_2);
-    free(pub_key_mod_peer_1);
-    free(pub_key_mod_peer_2);
-    free(enc_text_peer_1);
-    free(enc_text_peer_2);
+free_dec_text_peer_1:
     free(dec_text_peer_1);
+free_enc_text_peer_2:
+    free(enc_text_peer_2);
+free_dec_text_peer_2:
     free(dec_text_peer_2);
+free_enc_text_peer_1:
+    free(enc_text_peer_1);
+free_pub_mod_peer_2:
+    free(pub_key_mod_peer_2);
+    free(text_peer_2);
+free_pub_mod_peer_1:
+    free(pub_key_mod_peer_1);
+    free(text_peer_1);
+
     return err;
 }
 

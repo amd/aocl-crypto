@@ -86,7 +86,7 @@ Rsa_encrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
 
     if (err != ALC_ERROR_NONE) {
         printf("\n peer1 publickey fetch failed");
-        goto out;
+        goto free_pub_key_mod;
     }
 
     // Encrypt text by using public key
@@ -103,16 +103,18 @@ Rsa_encrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
                                      enc_text);
     if (err != ALC_ERROR_NONE) {
         printf("\n peer1 publc key encrypt failed");
-        goto out;
+        goto free_enc_text;
     }
 
     ALCP_PRINT_TEXT(enc_text, size_key, "enc_text")
     printf("\n");
 
-out:
-    free(text);
-    free(pub_key_mod);
+free_enc_text:
     free(enc_text);
+free_pub_key_mod:
+    free(pub_key_mod);
+    free(text);
+
     return err;
 }
 
