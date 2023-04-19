@@ -55,11 +55,11 @@ create_demo_session(alc_rsa_handle_t* s_rsa_handle)
 }
 
 static alc_error_t
-Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
+Rsa_decrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
 {
     alc_error_t err;
-    Uint8*      encr_text = NULL;
-    Uint8*      decr_text = NULL;
+    Uint8*      enc_text = NULL;
+    Uint8*      dec_text = NULL;
 
     Uint64 size_key = alcp_rsa_get_key_size(ps_rsa_handle);
 
@@ -68,29 +68,29 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
         return ALC_ERROR_INVALID_SIZE;
     }
 
-    encr_text = malloc(sizeof(Uint8) * size_key);
-    memset(encr_text, 0x31, sizeof(Uint8) * size_key);
+    enc_text = malloc(sizeof(Uint8) * size_key);
+    memset(enc_text, 0x31, sizeof(Uint8) * size_key);
 
-    ALCP_PRINT_TEXT(encr_text, size_key, "encrypted text")
+    ALCP_PRINT_TEXT(enc_text, size_key, "encrypted text")
 
     printf("\n");
 
-    decr_text = malloc(sizeof(Uint8) * size_key);
-    memset(decr_text, 0, sizeof(Uint8) * size_key);
+    dec_text = malloc(sizeof(Uint8) * size_key);
+    memset(dec_text, 0, sizeof(Uint8) * size_key);
 
     err = alcp_rsa_privatekey_decrypt(
-        ps_rsa_handle, ALCP_RSA_PADDING_NONE, encr_text, size_key, decr_text);
+        ps_rsa_handle, ALCP_RSA_PADDING_NONE, enc_text, size_key, dec_text);
     if (err != ALC_ERROR_NONE) {
         printf("\n private key decryption failed");
         goto out;
     }
 
-    ALCP_PRINT_TEXT(decr_text, size_key, "decrypted text")
+    ALCP_PRINT_TEXT(dec_text, size_key, "decrypted text")
 
 out:
 
-    free(encr_text);
-    free(decr_text);
+    free(enc_text);
+    free(dec_text);
     return err;
 }
 
@@ -101,7 +101,7 @@ main(void)
     alc_error_t      err = create_demo_session(&s_rsa_handle);
 
     if (!alcp_is_error(err)) {
-        err = Rsa_demo(&s_rsa_handle);
+        err = Rsa_decrypt_demo(&s_rsa_handle);
     }
 
     alcp_rsa_finish(&s_rsa_handle);

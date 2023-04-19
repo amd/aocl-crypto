@@ -34,8 +34,6 @@
 #include "alcp/rsa.hh"
 #include "alcp/types.hh"
 
-#define MAX_SIZE_KEY_DATA 32
-
 namespace {
 
 using namespace std;

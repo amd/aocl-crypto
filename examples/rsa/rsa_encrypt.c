@@ -55,12 +55,12 @@ create_demo_session(alc_rsa_handle_t* s_rsa_handle)
 }
 
 static alc_error_t
-Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
+Rsa_encrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
 {
     alc_error_t err;
     Uint8*      text        = NULL;
     Uint8*      pub_key_mod = NULL;
-    Uint8*      encr_text   = NULL;
+    Uint8*      enc_text    = NULL;
 
     Uint64 size_key = alcp_rsa_get_key_size(ps_rsa_handle);
 
@@ -90,8 +90,8 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
     }
 
     // Encrypt text by using public key
-    encr_text = malloc(sizeof(Uint8) * size_key);
-    memset(encr_text, 0, sizeof(Uint8) * size_key);
+    enc_text = malloc(sizeof(Uint8) * size_key);
+    memset(enc_text, 0, sizeof(Uint8) * size_key);
 
     err = alcp_rsa_publickey_encrypt(ps_rsa_handle,
                                      ALCP_RSA_PADDING_NONE,
@@ -100,19 +100,19 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
                                      public_exponent,
                                      text,
                                      size_key,
-                                     encr_text);
+                                     enc_text);
     if (err != ALC_ERROR_NONE) {
         printf("\n peer1 publc key encrypt failed");
         goto out;
     }
 
-    ALCP_PRINT_TEXT(encr_text, size_key, "encr_text")
+    ALCP_PRINT_TEXT(enc_text, size_key, "enc_text")
     printf("\n");
 
 out:
     free(text);
     free(pub_key_mod);
-    free(encr_text);
+    free(enc_text);
     return err;
 }
 
@@ -123,7 +123,7 @@ main(void)
     alc_error_t      err = create_demo_session(&s_rsa_handle);
 
     if (!alcp_is_error(err)) {
-        err = Rsa_demo(&s_rsa_handle);
+        err = Rsa_encrypt_demo(&s_rsa_handle);
     }
 
     alcp_rsa_finish(&s_rsa_handle);
