@@ -99,6 +99,12 @@ BigNum::fromInt32(const Int32 val)
     pImpl()->fromInt32(val);
 }
 
+void
+BigNum::fromBinary(const Uint8* buf, Uint64 size)
+{
+    pImpl()->fromBinary(buf, size);
+}
+
 int
 BigNum::randomGenerate(int bytes, int top, int bottom)
 {
@@ -144,24 +150,6 @@ int
 BigNum::privateRandomRange(const BigNum* range)
 {
     return pImpl()->randomRange(range);
-}
-
-void
-BigNum::fromInt64(const Int64 val)
-{
-    pImpl()->fromInt64(val);
-}
-
-void
-BigNum::fromInt32(const Int32 val)
-{
-    pImpl()->fromInt32(val);
-}
-
-void
-BigNum::fromBinary(const Uint8* buf, Uint64 size)
-{
-    pImpl()->fromBinary(buf, size);
 }
 
 Status
