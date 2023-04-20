@@ -34,10 +34,13 @@ struct Context
 {
     void* m_mac;
     void* m_digest;
-    alcp::base::Status (*update)(void* mac, const Uint8* buff, Uint64 size);
-    alcp::base::Status (*finalize)(void* mac, const Uint8* buff, Uint64 size);
-    alcp::base::Status (*copy)(void* mac, Uint8* buff, Uint64 size);
+    Status (*update)(void* mac, const Uint8* buff, Uint64 size);
+    Status (*finalize)(void* mac, const Uint8* buff, Uint64 size);
+    Status (*copy)(void* mac, Uint8* buff, Uint64 size);
     void (*finish)(void* mac, void* digest);
-    alcp::base::Status (*reset)(void* mac, void* digest);
+    Status (*reset)(void* mac, void* digest);
+
+    alcp::base::Status status{ StatusOk() };
 };
+
 } // namespace alcp::mac

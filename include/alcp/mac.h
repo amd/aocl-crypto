@@ -256,6 +256,9 @@ alcp_mac_finish(alc_mac_handle_p pMacHandle);
 ALCP_API_EXPORT alc_error_t
 alcp_mac_reset(alc_mac_handle_p pMacHandle);
 
+ALCP_API_EXPORT alc_error_t
+alcp_mac_error(alc_mac_handle_p pMacHandle, Uint8* buf, Uint64 size);
+
 EXTERN_C_END
 
 #endif /* _ALCP_CIPHER_H_ */
