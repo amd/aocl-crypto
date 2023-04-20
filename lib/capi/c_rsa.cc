@@ -32,6 +32,7 @@
 #include "alcp/capi/rsa/ctx.hh"
 
 #include "alcp/rsa.h"
+#include "alcp/rsa/rsaerror.hh"
 
 using namespace alcp;
 
@@ -95,7 +96,15 @@ alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
     Status status = ctx->encryptPublicFn(
         ctx->m_rsa, pad, pub_key, pText, textSize, pEncText);
 
-    return status.ok() ? err : ALC_ERROR_GENERIC;
+    if (status.ok()) {
+        return err;
+    } else {
+        // fetching the module error
+        Uint16 module_error = (status.code() >> 16) & 0xff;
+        return (alcp::rsa::ErrorCode::eNotPermitted == module_error)
+                   ? ALC_ERROR_NOT_PERMITTED
+                   : ALC_ERROR_GENERIC;
+    }
 }
 
 alc_error_t
