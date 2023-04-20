@@ -27,7 +27,7 @@
  */
 
 #include "alcp/utils/bignum.hh"
-//#include "config.h"
+#include "config.h"
 #if ALCP_BIGNUM_USE_OPENSSL
 #include "../impl/bignum_openssl.cc"
 #elif ALCP_BIGNUM_USE_IPP

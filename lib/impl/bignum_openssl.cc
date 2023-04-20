@@ -274,7 +274,6 @@ class BigNum::Impl
 
     inline bool lt(const BigNum& rhs) const
     {
-
         int ret = BN_ucmp(raw(), rhs.pImpl()->raw());
 
         if (ret == -1) {
