@@ -105,7 +105,7 @@ Rsa_KAT()
 #endif
 
 #ifdef USE_IPP
-    IPPEcdhBase irb_peer(info);
+    IPPRsaBase irb_peer;
     if (useipp == true) {
         rb_peer = &irb_peer;
         LibStr  = "IPP";
@@ -190,7 +190,7 @@ Rsa_Cross()
 #endif
 
 #ifdef USE_IPP
-    IPPEcdhBase irb_peer(info);
+    IPPRsaBase irb_peer;
     if (useipp == true) {
         rb_peer_ext = &irb_peer;
         LibStrExt   = "IPP";

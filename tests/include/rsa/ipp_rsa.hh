@@ -28,9 +28,8 @@
 #pragma once
 
 #include "alcp/alcp.h"
-#include "alcp/ec.h"
-#include "alcp/ecdh.h"
-#include "ecdh/ecdh.hh"
+#include "alcp/rsa.h"
+#include "rsa/rsa.hh"
 #include <crypto_mb/x25519.h>
 #include <iostream>
 #include <ippcp.h>
@@ -38,24 +37,18 @@
 #include <vector>
 
 namespace alcp::testing {
-class IPPEcdhBase : public EcdhBase
+class IPPRsaBase : public RsaBase
 {
-    alc_ec_info_t m_info;
-
-    int8u*       m_pPublicKeyData_mb[8];
-    const int8u* m_pPrivKey_mb[8];
-    int8u*       m_pSecretKey_mb[8];
-
   public:
-    IPPEcdhBase(const alc_ec_info_t& info);
-    ~IPPEcdhBase();
+    IPPRsaBase();
+    ~IPPRsaBase();
 
-    bool init(const alc_ec_info_t& info);
+    bool init();
     bool reset();
 
-    bool GeneratePublicKey(const alcp_ecdh_data_t& data);
-    bool ComputeSecretKey(const alcp_ecdh_data_t& data1,
-                          const alcp_ecdh_data_t& data2);
+    bool GetPublicKey(const alcp_rsa_data_t& data);
+    int  EncryptPubKey(const alcp_rsa_data_t& data);
+    int  DecryptPvtKey(const alcp_rsa_data_t& data);
 };
 
 } // namespace alcp::testing

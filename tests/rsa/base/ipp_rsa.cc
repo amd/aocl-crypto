@@ -26,7 +26,7 @@
  *
  */
 
-#include "ecdh/ipp_ecdh.hh"
+#include "rsa/ipp_rsa.hh"
 #include <cstddef>
 #include <cstring>
 #include <iostream>
@@ -34,80 +34,36 @@
 
 namespace alcp::testing {
 
-IPPEcdhBase::IPPEcdhBase(const alc_ec_info_t& info) {}
+IPPRsaBase::IPPRsaBase() {}
 
-IPPEcdhBase::~IPPEcdhBase() {}
+IPPRsaBase::~IPPRsaBase() {}
 
 bool
-IPPEcdhBase::init(const alc_ec_info_t& info)
+IPPRsaBase::init()
 {
-    m_info = info;
+    return true;
+}
+
+int
+IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
+{
+    return 0;
+}
+
+int
+IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
+{
+    return 0;
+}
+
+bool
+IPPRsaBase::GetPublicKey(const alcp_rsa_data_t& data)
+{
     return true;
 }
 
 bool
-IPPEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
-{
-    mbx_status status = 0;
-    /* FIXME: this is because we are calling 8 elem buffer variant of ipp */
-    int elem = 8;
-    if (data.m_Peer_PvtKey == NULL) {
-        std::cout << "Pvt key data is null" << std::endl;
-        return false;
-    }
-
-    /* load keys */
-    /* TODO: when there is alcp multi-buffer implementation available, modify
-     * this*/
-    Uint8 m_pPublicKeyData_mb_temp_buff[7][ECDH_KEYSIZE];
-    m_pPublicKeyData_mb[0] = data.m_Peer_PubKey;
-    m_pPrivKey_mb[0]       = data.m_Peer_PvtKey;
-    for (int i = 1; i < elem; i++) {
-        m_pPrivKey_mb[i]       = data.m_Peer_PvtKey;
-        m_pPublicKeyData_mb[i] = m_pPublicKeyData_mb_temp_buff[i - 1];
-    }
-
-    /* generate public key */
-    status = mbx_x25519_public_key_mb8(m_pPublicKeyData_mb, m_pPrivKey_mb);
-    if (MBX_STATUS_OK != MBX_GET_STS(status, 0)) {
-        std::cout << "mbx_x25519_public_key_mb8 failed with err code: "
-                  << status << std::endl;
-        return false;
-    }
-    return true;
-}
-
-bool
-IPPEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
-                              const alcp_ecdh_data_t& data_peer2)
-{
-    mbx_status status = 0;
-    /* FIXME: this is because we are calling 8 elem buffer variant of ipp */
-    int elem = 8;
-    if (data_peer1.m_Peer_PubKey == NULL || data_peer2.m_Peer_PubKey == NULL) {
-        std::cout << "Pub key data is null" << std::endl;
-        return false;
-    }
-    /* load keys */
-    for (int i = 0; i < elem; i++) {
-        m_pSecretKey_mb[i]     = data_peer1.m_Peer_SecretKey;
-        m_pPublicKeyData_mb[i] = data_peer2.m_Peer_PubKey;
-        // same public key is set for all 8 paths.
-    }
-
-    /* compute secret key using pub key of the other peer */
-    status =
-        mbx_x25519_mb8(m_pSecretKey_mb, m_pPrivKey_mb, m_pPublicKeyData_mb);
-    if (MBX_STATUS_OK != MBX_GET_STS(status, 0)) {
-        std::cout << "mbx_x25519_mb8 failed with err code: " << status
-                  << std::endl;
-        return false;
-    }
-    return true;
-}
-
-bool
-IPPEcdhBase::reset()
+IPPRsaBase::reset()
 {
     return true;
 }
