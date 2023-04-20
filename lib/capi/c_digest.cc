@@ -47,6 +47,7 @@ alcp_digest_context_size(const alc_digest_info_p pDigestInfo)
 alc_error_t
 alcp_digest_supported(const alc_digest_info_p pDigestInfo)
 {
+    // FIXME: Implement Digest Support check
     alc_error_t err = ALC_ERROR_NONE;
 
     return err;
@@ -64,6 +65,9 @@ alcp_digest_request(const alc_digest_info_p pDigestInfo,
 
     auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
 
+    new (ctx) digest::Context;
+
+    // FIMXE: Change Build to return Status and assign it to ctx->status
     err = digest::DigestBuilder::Build(*pDigestInfo, *ctx);
 
     return err;
@@ -81,6 +85,7 @@ alcp_digest_update(const alc_digest_handle_p pDigestHandle,
 
     auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
 
+    // FIMXE: Change update to return Status and assign it to ctx->status
     err = ctx->update(ctx->m_digest, pMsgBuf, size);
 
     return err;
@@ -98,6 +103,7 @@ alcp_digest_finalize(const alc_digest_handle_p pDigestHandle,
 
     auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
 
+    // FIMXE: Modify finalize to return Status and assign it to ctx->status
     err = ctx->finalize(ctx->m_digest, pMsgBuf, size);
 
     return err;
@@ -110,6 +116,8 @@ alcp_digest_finish(const alc_digest_handle_p pDigestHandle)
 
     /* TODO: fix the argument */
     ctx->finish(ctx->m_digest);
+
+    ctx->~Context();
 }
 
 void
@@ -127,7 +135,25 @@ alcp_digest_copy(const alc_digest_handle_p pDigestHandle,
                  Uint64                    size)
 {
     auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
+    // FIMXE: Modify copy to return Status and assign it to ctx->status
     return ctx->copy(ctx->m_digest, pBuf, size);
+}
+
+alc_error_t
+alcp_digest_error(alc_digest_handle_p pDigestHandle, Uint8* buf, Uint64 size)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pDigestHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pDigestHandle->context, err);
+
+    auto p_ctx = static_cast<digest::Context*>(pDigestHandle->context);
+
+    String message = String(p_ctx->status.message());
+
+    int size_to_copy = size > message.size() ? message.size() : size;
+    snprintf((char*)buf, size_to_copy, "%s", message.c_str());
+
+    return err;
 }
 
 EXTERN_C_END

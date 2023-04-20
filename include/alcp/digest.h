@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -357,6 +357,9 @@ alcp_digest_finish(const alc_digest_handle_p p_digest_handle);
  */
 ALCP_API_EXPORT void
 alcp_digest_reset(const alc_digest_handle_p p_digest_handle);
+
+ALCP_API_EXPORT alc_error_t
+alcp_digest_error(alc_digest_handle_p pDigestHandle, Uint8* buf, Uint64 size);
 
 EXTERN_C_END
 
