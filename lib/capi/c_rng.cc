@@ -52,6 +52,8 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo)
     bool rd_rand_available = CpuId::cpuHasRdRand();
     bool rd_seed_available = CpuId::cpuHasRdSeed();
 
+    // FiXME: Status variable in context should be set with proper error message
+
     switch (pRngInfo->ri_type) {
         case ALC_RNG_TYPE_DESCRETE:
             switch (pRngInfo->ri_distrib) {
@@ -84,7 +86,12 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo)
 alc_error_t
 alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pHandle)
 {
+    // FiXME: Status variable in context should be set with Status returned from
+    // Build
     alc_error_t error = ALC_ERROR_NOT_SUPPORTED;
+    auto        ctx   = static_cast<alcp::rng::Context*>(pHandle->rh_context);
+
+    new (ctx) alcp::rng::Context;
     /*
      * TODO: Move this to builder, find a way to check support without redundant
      * code
@@ -93,8 +100,6 @@ alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pHandle)
         case ALC_RNG_TYPE_DESCRETE:
             switch (pRngInfo->ri_distrib) {
                 case ALC_RNG_DISTRIB_UNIFORM: {
-                    auto ctx =
-                        static_cast<alcp::rng::Context*>(pHandle->rh_context);
                     error = alcp::rng::RngBuilder::Build(*pRngInfo, *ctx);
                     break;
                 }
@@ -126,6 +131,7 @@ alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
 
     alcp::rng::Context* ctx = (alcp::rng::Context*)pRngHandle->rh_context;
 
+    // FiXME: Status variable in context should be set with Status returned
     return ctx->read_random(ctx->m_rng, buf, size);
 }
 
@@ -135,6 +141,7 @@ alcp_rng_reseed(alc_rng_handle_p pRngHandle)
 
     alcp::rng::Context* ctx = (alcp::rng::Context*)pRngHandle->rh_context;
 
+    // FiXME: Status variable in context should be set with Status returned
     return ctx->reseed(ctx->m_rng);
 }
 
@@ -143,9 +150,29 @@ alcp_rng_finish(alc_rng_handle_p pRngHandle)
 {
     alcp::rng::Context* ctx = (alcp::rng::Context*)pRngHandle->rh_context;
 
+    // FiXME: Status variable in context should be set with Status returned.
     ctx->finish(ctx->m_rng);
 
+    ctx->~Context();
+
     return ALC_ERROR_NONE;
+}
+
+alc_error_t
+alcp_rng_error(alc_rng_handle_p pRngHandle, Uint8* buf, Uint64 size)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pRngHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pRngHandle->rh_context, err);
+
+    auto p_ctx = static_cast<alcp::rng::Context*>(pRngHandle->rh_context);
+
+    alcp::String message = alcp::String(p_ctx->status.message());
+
+    int size_to_copy = size > message.size() ? message.size() : size;
+    snprintf((char*)buf, size_to_copy, "%s", message.c_str());
+
+    return err;
 }
 
 EXTERN_C_END
