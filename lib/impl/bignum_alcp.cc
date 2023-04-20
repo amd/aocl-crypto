@@ -73,6 +73,20 @@ class BigNum::Impl
                == rhs.pImpl()->toString(BigNum::Format::eHex);
     }
 
+    /* Cant compare BigNum at the moment */
+    inline bool lt(const BigNum& rhs)
+    {
+        return toString(BigNum::Format::eHex)
+               < rhs.pImpl()->toString(BigNum::Format::eHex);
+    }
+
+    /* Cant compare BigNum at the moment */
+    inline bool gt(const BigNum& rhs)
+    {
+        return toString(BigNum::Format::eHex)
+               > rhs.pImpl()->toString(BigNum::Format::eHex);
+    }
+
     Int64 toInt64() const;
     Int32 toInt32() const;
     void  toBinary(Uint8* buf, Uint64 size);

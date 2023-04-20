@@ -27,7 +27,7 @@
  */
 
 #include "alcp/utils/bignum.hh"
-#include "config.h"
+//#include "config.h"
 #if ALCP_BIGNUM_USE_OPENSSL
 #include "../impl/bignum_openssl.cc"
 #elif ALCP_BIGNUM_USE_IPP
@@ -204,6 +204,18 @@ bool
 BigNum::operator!=(const BigNum& rhs)
 {
     return !(pImpl()->eq(rhs));
+}
+
+bool
+BigNum::operator>(const BigNum& rhs)
+{
+    return pImpl()->gt(rhs);
+}
+
+bool
+BigNum::operator<(const BigNum& rhs)
+{
+    return pImpl()->lt(rhs);
 }
 
 void

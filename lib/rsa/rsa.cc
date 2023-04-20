@@ -106,6 +106,11 @@ Rsa::encryptPublic(alc_rsa_padding     pad,
     BigNum pub_key_modulus;
     pub_key_modulus.fromBinary(pubKey.modulus, pubKey.size);
 
+    if (!(raw_buff < pub_key_modulus)) {
+        return status::NotPermitted(
+            "text absolute value should be less than modulus");
+    }
+
     BigNum res;
     res.exp_mod(raw_buff, pub_key_exponent, pub_key_modulus);
 
@@ -137,6 +142,11 @@ Rsa::decryptPrivate(alc_rsa_padding pad,
 
     BigNum raw_buff;
     raw_buff.fromBinary(pEncText, encSize);
+
+    if (!(raw_buff < m_mod)) {
+        return status::NotPermitted(
+            "text absolute value should be less than modulus");
+    }
 
     BigNum res;
     res.exp_mod(raw_buff, m_priv_key, m_mod);
