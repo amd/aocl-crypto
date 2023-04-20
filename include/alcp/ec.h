@@ -176,6 +176,21 @@ alcp_ec_supported(const alc_ec_info_p pEcInfo);
 ALCP_API_EXPORT alc_error_t
 alcp_ec_request(const alc_ec_info_p pEcInfo, alc_ec_handle_p pEcHandle);
 
+/**
+ * @brief              Get the error string for errors occuring in EC
+ *                     operations
+ * @parblock <br> &nbsp;
+ * <b> This API is called to get the error string. It should be called after
+ * @ref alcp_ec_request and before @ref alcp_ec_finish </b>
+ * @param [in] pEcHandle Session handle for EC operation
+ * @param [out] pBuff  Destination Buffer to which Error String will be copied
+ * @param [in] size    Length of the Buffer.
+ *
+ * @return alc_error_t Error code to validate the Handle
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_ec_error(alc_ec_handle_p pEcHandle, Uint8* pBuff, Uint64 size);
+
 EXTERN_C_END
 
 #endif /* _ALCP_EC_H_ */

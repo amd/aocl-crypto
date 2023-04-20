@@ -177,8 +177,8 @@ typedef struct _alc_digest_handle
  * @brief       Returns the context size of the interaction
  *
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_digest_request only otherwise
- * Context will be empty </b>
+ * <b>This API should be called before @ref alcp_digest_request to identify the
+ * memory to be allocated for context </b>
  * @endparblock
  *
  * @note       alcp_digest_supported() should be called first to
@@ -358,8 +358,20 @@ alcp_digest_finish(const alc_digest_handle_p p_digest_handle);
 ALCP_API_EXPORT void
 alcp_digest_reset(const alc_digest_handle_p p_digest_handle);
 
+/**
+ * @brief              Get the error string for errors occuring in digest
+ *                     operations
+ * @parblock <br> &nbsp;
+ * <b> This API is called to get the error string. It should be called after
+ * @ref alcp_digest_request and before @ref alcp_digest_finish </b>
+ * @param [in] pDigestHandle Session handle for digest operation
+ * @param [out] pBuff  Destination Buffer to which Error String will be copied
+ * @param [in] size    Length of the Buffer.
+ *
+ * @return alc_error_t Error code to validate the Handle
+ */
 ALCP_API_EXPORT alc_error_t
-alcp_digest_error(alc_digest_handle_p pDigestHandle, Uint8* buf, Uint64 size);
+alcp_digest_error(alc_digest_handle_p pDigestHandle, Uint8* pBuff, Uint64 size);
 
 EXTERN_C_END
 

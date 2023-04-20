@@ -117,7 +117,7 @@ typedef alc_mac_context_t* alc_mac_context_p;
  *
  * @param ch_context pointer to the context of the mac
  *
- * @struct alc_rng_handle_t
+ * @struct alc_mac_handle_t
  *
  */
 typedef struct alc_mac_handle
@@ -130,8 +130,8 @@ typedef struct alc_mac_handle
  *              pMacInfo
  *
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_digest_request only otherwise
- * Context will be empty </b>
+ * <b>This API can be called before @ref alcp_mac_request to identify the memory
+ * to be allocated for context </b>
  * @endparblock
  *
  * @param [in] pMacInfo Description of the requested MAC session
@@ -144,25 +144,25 @@ alcp_mac_context_size(const alc_mac_info_p pMacInfo);
  * @brief    Allows caller to request for a MAC as described by
  *           pMacInfo
  * @parblock <br> &nbsp;
- * <b>This API can be called before making any other API call</b>
+ * <b>This API must be called before making any other API call</b>
  * @endparblock
- * @note     Error needs to be checked for each call,
+ * @note     Error needs to be checked after each call,
  *           valid only if @ref alcp_is_error (ret) is false
  * @param  [in]  pMacInfo    Description of the MAC session
  * @param [in]   pMacHandle  Session handle for future MAC
  *                          operation
  * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occured
+ * is not zero then @ref alcp_mac_error or @ref alcp_error_str needs to be
+ * called to know about error occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_request(alc_mac_handle_p pMacHandle, const alc_mac_info_p pMacInfo);
 
 /**
- * @brief    Allows caller to update MAC with chunk of data to be authenicated
- * <b>This API is called to reset data so should be called after @ref
- * alcp_digest_request  and at the
- * end of session call @ref alcp_mac_finish</b>
+ * @brief    Allows caller to update MAC with chunk of data to be authenticated
+ * <b>This API is called to update data to be authenticated. So should be called
+ * after @ref alcp_mac_request  and before the end of session call, @ref
+ * alcp_mac_finish</b>
  * @endparblock
  * @note     Error needs to be checked for each call,
  *           valid only if @ref alcp_is_error (ret) is false
@@ -171,8 +171,8 @@ alcp_mac_request(alc_mac_handle_p pMacHandle, const alc_mac_info_p pMacInfo);
  * @param [in]   buff       The chunk of the message to be updated
  * @param [in]   size       Length of input data
  * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occured
+ * is not zero then @ref alcp_mac_error or @ref alcp_error_str needs to be
+ * called to know about error occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_update(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size);
@@ -180,43 +180,41 @@ alcp_mac_update(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size);
 /**
  * @brief               Allows caller to finalize MAC with final chunk of data
  *                      to be authenicated
- * <b>This API is called to reset data so should be called after @ref
- * alcp_digest_request  and at the
- * end of session call @ref alcp_mac_finish</b>
+ * <b>This API is called to finalize mac so should be called after @ref
+ * alcp_mac_request and before @ref alcp_mac_finish</b>
  * @endparblock
  * @note
  *                      - Error needs to be checked for each call,
  *                        valid only if @ref alcp_is_error (ret) is false.
  *                      - It is expected that application calls
- *                        alcp_digest_copy() after calling this functions as the
+ *                        alcp_mac_copy() after calling this function as the
  *                        contents of the session is not guaranteed to persist
- *                        after alcp_digest_finish()
+ *                        after alcp_mac_finish()
  * @param [in]   pMacHandle  Session handle for future MAC
  *                       operation
  * @param [in]   buff        The last chunk of the message to be updated
  * @param [in]   size        Length of input data
  * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occured
+ * is not zero then @ref alcp_mac_error or @ref alcp_error_str needs to be
+ * called to know about error occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_finalize(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size);
 
 /**
  * @brief               Allows caller to copy MAC to the buffer
- * <b>This API is called to reset data so should be called after @ref
- * alcp_digest_request  and at the
- * end of session call @ref alcp_mac_finish</b>
+ * <b>This API is called to copy mac, so should be called after @ref
+ * alcp_mac_request and before @ref alcp_mac_finish </b>
  * @endparblock
  * @note                Error needs to be checked for each call,
  *                      valid only if @ref alcp_is_error (ret) is false
  * @param [in] pMacHandle    Session handle for future MAC
  *                      operation
- * @param[out]   buff   Destination buffer to which digest will be copied
+ * @param[out]   buff   Destination buffer to which mac will be copied
  * @param[in]    size   Length of output buffer
  * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occured
+ * is not zero then @ref alcp_mac_error or @ref alcp_error_str needs to be
+ * called to know about error occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_copy(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size);
@@ -232,10 +230,10 @@ alcp_mac_copy(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size);
  * @note                alcp_mac_request() should be called first to allocate
  *                      the Handler.
  *
- * @param [in]   pMacHandle Session handle for future MAC operation
+ * @param [in]   pMacHandle Session handle used for the MAC operations
  * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occured
+ * is not zero then @ref alcp_mac_error or @ref alcp_error_str needs to be
+ * called to know about error occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_finish(alc_mac_handle_p pMacHandle);
@@ -243,21 +241,33 @@ alcp_mac_finish(alc_mac_handle_p pMacHandle);
 /**
  *
  * @brief               resets the data given to it during @ref alcp_mac_update
+ * or @ref alcp_mac_finalize
  * @parblock <br> &nbsp;
  * <b>This API is called to reset data so should be called after @ref
- * alcp_digest_request  and at the
- * end of session call @ref alcp_mac_finish</b>
+ * alcp_mac_request  and before @ref alcp_mac_finish</b>
  * @endparblock
  * @param [in]   pMacHandle Session handle for future MAC operation
  * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occured
+ * is not zero then @ref alcp_mac_error or  @ref alcp_error_str needs to be
+ * called to know about error occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_reset(alc_mac_handle_p pMacHandle);
 
+/**
+ * @brief              Get the error string for errors occuring in MAC
+ *                     operations
+ * @parblock <br> &nbsp;
+ * <b> This API is called to get the error string. It should be called after
+ * @ref alcp_mac_request and before @ref alcp_mac_finish </b>
+ * @param [in] pMacHandle Session handle for MAC operation
+ * @param [out] pBuff  Destination Buffer to which Error String will be copied
+ * @param [in] size    Length of the Buffer.
+ *
+ * @return alc_error_t Error code to validate the Handle
+ */
 ALCP_API_EXPORT alc_error_t
-alcp_mac_error(alc_mac_handle_p pMacHandle, Uint8* buf, Uint64 size);
+alcp_mac_error(alc_mac_handle_p pMacHandle, Uint8* pBuff, Uint64 size);
 
 EXTERN_C_END
 

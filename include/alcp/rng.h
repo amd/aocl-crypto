@@ -164,8 +164,8 @@ typedef struct
  * @param [in]  pRngInfo      Pointer to alc_rng_info_t structure
  *
  * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occured
+ * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
+ * called to know about error occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_supported(const alc_rng_info_p pRngInfo);
@@ -173,8 +173,8 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo);
 /**
  * @brief   Get the context/session size
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rng_request only otherwise
- * Context will be empty </b>
+ * <b>This API should be called before @ref alcp_rng_request to identify the
+ * memory to be allocated for context </b>
  * @endparblock
  * @note       User is expected to allocate for the session
  *               this function returns size to be allocated
@@ -198,8 +198,8 @@ alcp_rng_context_size(const alc_rng_info_p pRngInfo);
  * @param [in]      pRngInfo        Pointer to RNG configuration
  * @param [in]      pRngHandle      Pointer to user allocated session
  * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occured
+ * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
+ * called to know about error occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pRngHandle);
@@ -218,8 +218,8 @@ alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pRngHandle);
  * @param [in]  size        size of pBuf
  *
  * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occured
+ * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
+ * called to know about error occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
@@ -237,8 +237,8 @@ alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
  *
  * @param [in]  pRngHandle      Pointer to handle returned in alcp_rng_request()
  * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occured
+ * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
+ * called to know about error occured
  *
  */
 ALCP_API_EXPORT alc_error_t
@@ -250,7 +250,7 @@ alcp_rng_init(alc_rng_handle_p pRngHandle);
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_rng_request and @ref alcp_rng_init
  * if hardware RNG requires it  * <b>This API is called to reset data so should
- * be called after @ref alcp_digest_request and at the end of session call @ref
+ * be called after @ref alcp_rng_request and at the end of session call @ref
  * alcp_rng_finish</b>
  * @endparblock</b>
  * @endparblock
@@ -260,8 +260,8 @@ alcp_rng_init(alc_rng_handle_p pRngHandle);
  * @param [in]  size           Length of seed in bytes
  *
  * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occured
+ * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
+ * called to know about error occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_seed(alc_rng_handle_p pRngHandle, const Uint8* seed, Uint64 size);
@@ -278,14 +278,26 @@ alcp_rng_seed(alc_rng_handle_p pRngHandle, const Uint8* seed, Uint64 size);
  *
  * @param [in]  pRngHandle      Pointer to handle
  * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occured
+ * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
+ * called to know about error occured
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_finish(alc_rng_handle_p pRngHandle);
 
+/**
+ * @brief              Get the error string for errors occuring in RNG
+ *                     operations
+ * @parblock <br> &nbsp;
+ * <b> This API is called to get the error string. It should be called after
+ * @ref alcp_rng_request and before @ref alcp_rng_finish </b>
+ * @param [in] pRngHandle Session handle for RNG operation
+ * @param [out] pBuff  Destination Buffer to which Error String will be copied
+ * @param [in] size    Length of the Buffer.
+ *
+ * @return alc_error_t Error code to validate the Handle
+ */
 ALCP_API_EXPORT alc_error_t
-alcp_rng_error(alc_rng_handle_p pRngHandle, Uint8* buf, Uint64 size);
+alcp_rng_error(alc_rng_handle_p pRngHandle, Uint8* pBuff, Uint64 size);
 
 EXTERN_C_END
 
