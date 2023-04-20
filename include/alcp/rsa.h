@@ -45,7 +45,7 @@ EXTERN_C_BEGIN
 /**
  * @brief Store info about paddign used for encryption / decryption
  *
- * @typedef enum alc_ec_curve_id
+ * @typedef enum alc_rsa_padding
  */
 typedef enum
 {
