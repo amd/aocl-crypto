@@ -75,7 +75,8 @@ template<typename SOURCENAME>
 static Status
 __build_rng(const alc_rng_info_t& rRngInfo, Context& rCtx)
 {
-    auto p_source = new ((reinterpret_cast<Uint8*>(&rCtx)) + sizeof(Context))
+    Uint8 *ctx_uint8 = reinterpret_cast<Uint8*>(&rCtx);
+    auto p_source = new ((ctx_uint8) + sizeof(Context))
         SOURCENAME();
     rCtx.m_rng       = static_cast<void*>(p_source);
     rCtx.read_random = __read_random_wrapper;
