@@ -100,6 +100,9 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
+    new (ctx) cipher::Context;
+
+    // FIXME: Modify Builder to return Status and assign to context status
     err = cipher::CipherBuilder::Build(*pCipherInfo, *ctx);
 
     return err;
@@ -122,7 +125,9 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
-    err      = ctx->encrypt(ctx->m_cipher, pPlainText, pCipherText, len, pIv);
+
+    // FIXME: Modify Encrypt to return Status and assign to context status
+    err = ctx->encrypt(ctx->m_cipher, pPlainText, pCipherText, len, pIv);
 
     return err;
 }
@@ -146,6 +151,7 @@ alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
+    // FIXME: Modify encryptUpdate to return Status and assign to context status
     err = ctx->encryptUpdate(ctx->m_cipher, pInput, pOutput, len, pIv);
 
     return err;
@@ -169,6 +175,7 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
+    // FIXME: Modify decrypt to return Status and assign to context status
     err = ctx->decrypt(ctx->m_cipher, pCipherText, pPlainText, len, pIv);
 
     return err;
@@ -193,6 +200,7 @@ alcp_cipher_decrypt_update(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
+    // FIXME: Modify decryptUpdate to return Status and assign to context status
     err = ctx->decryptUpdate(ctx->m_cipher, pInput, pOutput, len, pIv);
 
     return err;
@@ -212,6 +220,7 @@ alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
+    // FIXME: Modify setIv to return Status and assign to context status
     err = ctx->setIv(ctx->m_cipher, len, pIv);
 
     return err;
@@ -231,6 +240,7 @@ alcp_cipher_set_aad(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
+    // FIXME: Modify setAad to return Status and assign to context status
     err = ctx->setAad(ctx->m_cipher, pInput, len);
 
     return err;
@@ -250,6 +260,7 @@ alcp_cipher_get_tag(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
+    // FIXME: Modify getTag to return Status and assign to context status
     err = ctx->getTag(ctx->m_cipher, pOutput, len);
 
     return err;
@@ -266,6 +277,7 @@ alcp_cipher_set_tag_length(const alc_cipher_handle_p pCipherHandle, Uint64 len)
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
+    // FIXME: Modify setTagLength to return Status and assign to context status
     err = ctx->setTagLength(ctx->m_cipher, len);
 
     return err;
@@ -281,6 +293,25 @@ alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle)
         reinterpret_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     ctx->finish(ctx->m_cipher);
+
+    ctx->~Context();
+}
+
+alc_error_t
+alcp_cipher_error(alc_cipher_handle_p pCipherHandle, Uint8* buf, Uint64 size)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
+
+    auto p_ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
+
+    String message = String(p_ctx->status.message());
+
+    int size_to_copy = size > message.size() ? message.size() : size;
+    snprintf((char*)buf, size_to_copy, "%s", message.c_str());
+
+    return err;
 }
 
 EXTERN_C_END

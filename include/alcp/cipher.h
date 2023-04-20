@@ -457,6 +457,9 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
 ALCP_API_EXPORT void
 alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle);
 
+ALCP_API_EXPORT alc_error_t
+alcp_cipher_error(alc_cipher_handle_p pCipherHandle, Uint8* pBuff, Uint64 size);
+
 EXTERN_C_END
 
 #endif /* _ALCP_CIPHER_H_ */
