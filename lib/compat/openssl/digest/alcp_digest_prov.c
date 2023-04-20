@@ -140,9 +140,19 @@ ALCP_prov_digest_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 
     // SHAKE DIGEST SIZE PARAM
     p = OSSL_PARAM_locate_const(params, OSSL_DIGEST_PARAM_XOFLEN);
-    if (p != NULL && !OSSL_PARAM_get_size_t(p, &pctx->shake_digest_size)) {
-        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_GET_PARAMETER);
-        return 0;
+    if (p != NULL) {
+        if (OSSL_PARAM_get_size_t(p, &pctx->shake_digest_size)) {
+            alc_error_t err = alcp_digest_set_output_size(
+                &pctx->handle, pctx->shake_digest_size);
+            if (alcp_is_error(err)) {
+                printf("Provider: Failed to set SHAKE Digest Size\n");
+                ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+                return 0;
+            }
+        } else {
+            ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+            return 0;
+        }
     }
 
     EXIT();
@@ -202,10 +212,14 @@ ALCP_prov_digest_final(void*          vctx,
 
     // FIXME: Once EVP_MD_get_size provider is implemented calculate *outl
     // directly from outsize. Below is a temporary fix to get digest size
-
-    if (dctx->pc_digest_info.dt_mode.dm_sha3 == ALC_SHAKE_256
+    if (dctx->pc_digest_info.dt_mode.dm_sha3 == ALC_SHAKE_128
         || dctx->pc_digest_info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
         *outl = outsize;
+        err   = alcp_digest_set_output_size(&(dctx->handle), *outl);
+        if (alcp_is_error(err)) {
+            printf("Provider: Failed to set SHAKE Digest Length");
+            return 0;
+        }
     } else {
         *outl = dctx->pc_digest_info.dt_len / 8;
     }
