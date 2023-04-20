@@ -76,9 +76,11 @@ alcp_ec_request(const alc_ec_info_p pEcInfo, alc_ec_handle_p pEcHandle)
 
     auto ctx = static_cast<ec::Context*>(pEcHandle->context);
 
-    Status status = ec::EcBuilder::Build(*pEcInfo, *ctx);
+    new (ctx) ec::Context;
 
-    return status.ok() ? err : ALC_ERROR_GENERIC;
+    ctx->status = ec::EcBuilder::Build(*pEcInfo, *ctx);
+
+    return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
 }
 
 alc_error_t
@@ -96,9 +98,9 @@ alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
 
     auto ctx = static_cast<ec::Context*>(pEcHandle->context);
 
-    Status status = ctx->getPublicKey(ctx->m_ec, pPublicKey, pPrivKey);
+    ctx->status = ctx->getPublicKey(ctx->m_ec, pPublicKey, pPrivKey);
 
-    return status.ok() ? err : ALC_ERROR_GENERIC;
+    return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
 }
 
 alc_error_t
@@ -116,10 +118,10 @@ alcp_ec_get_secretkey(const alc_ec_handle_p pEcHandle,
 
     auto ctx = static_cast<ec::Context*>(pEcHandle->context);
 
-    Status status =
+    ctx->status =
         ctx->getSecretKey(ctx->m_ec, pSecretKey, pPublicKey, pKeyLength);
 
-    return status.ok() ? err : ALC_ERROR_GENERIC;
+    return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
 }
 
 void
@@ -128,14 +130,20 @@ alcp_ec_finish(const alc_ec_handle_p pEcHandle)
     auto ctx = static_cast<ec::Context*>(pEcHandle->context);
 
     /* TODO: fix the argument */
-    ctx->finish(ctx->m_ec);
+    ctx->status = ctx->finish(ctx->m_ec);
+
+    ctx->~Context();
+
+    // FIXME: Return error code if status is not ok
 }
 
 void
 alcp_ec_reset(const alc_ec_handle_p pEcHandle)
 {
-    auto ctx = static_cast<ec::Context*>(pEcHandle->context);
-    ctx->reset(ctx->m_ec);
+    auto ctx    = static_cast<ec::Context*>(pEcHandle->context);
+    ctx->status = ctx->reset(ctx->m_ec);
+
+    // FIXME: Return error code if status is not ok
 }
 
 EXTERN_C_END
