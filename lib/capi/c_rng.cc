@@ -36,11 +36,12 @@
 EXTERN_C_BEGIN
 
 using namespace alcp::utils;
+using alcp::rng::RngBuilder;
 
 Uint64
 alcp_rng_context_size(const alc_rng_info_p pRngInfo)
 {
-    Uint64 size = sizeof(alcp::rng::Context);
+    Uint64 size = sizeof(alcp::rng::Context) + RngBuilder::getSize(*pRngInfo);
     return size;
 }
 
@@ -96,11 +97,12 @@ alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pHandle)
      * TODO: Move this to builder, find a way to check support without redundant
      * code
      */
+
     switch (pRngInfo->ri_type) {
         case ALC_RNG_TYPE_DESCRETE:
             switch (pRngInfo->ri_distrib) {
                 case ALC_RNG_DISTRIB_UNIFORM: {
-                    error = alcp::rng::RngBuilder::Build(*pRngInfo, *ctx);
+                    error = alcp::rng::RngBuilder::build(*pRngInfo, *ctx);
                     break;
                 }
                 default:

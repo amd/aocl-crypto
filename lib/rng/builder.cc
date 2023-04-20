@@ -66,7 +66,7 @@ __finish_wrapper(void* pRng)
 
     // ap->finish();
 
-    delete (p_ap);
+    p_ap->~RNGTYPE();
 
     return e;
 }
@@ -75,7 +75,8 @@ template<typename SOURCENAME>
 static Status
 __build_rng(const alc_rng_info_t& rRngInfo, Context& rCtx)
 {
-    auto p_source    = new SOURCENAME();
+    auto p_source = new ((reinterpret_cast<Uint8*>(&rCtx)) + sizeof(Context))
+        SOURCENAME();
     rCtx.m_rng       = static_cast<void*>(p_source);
     rCtx.read_random = __read_random_wrapper;
     rCtx.reseed      = __reseed_wrapper;
@@ -107,7 +108,7 @@ __buld_rng_class(const alc_rng_info_t& rRngInfo, void*& placed_memory)
 #endif
 
 alc_error_t
-RngBuilder::Build(const alc_rng_info_t& rRngInfo, Context& rCtx)
+RngBuilder::build(const alc_rng_info_t& rRngInfo, Context& rCtx)
 {
     Status sts = StatusOk();
 #if 0
@@ -129,6 +130,21 @@ RngBuilder::Build(const alc_rng_info_t& rRngInfo, Context& rCtx)
     }
 
     return sts.code();
+}
+Uint64
+RngBuilder::getSize(const alc_rng_info_t& rRngInfo)
+{
+    switch (rRngInfo.ri_source) {
+        case ALC_RNG_SOURCE_OS:
+            return sizeof(SystemRng);
+        case ALC_RNG_SOURCE_ARCH:
+            return sizeof(HardwareRng);
+        case ALC_RNG_SOURCE_ALGO:
+        case ALC_RNG_SOURCE_DEV:
+        case ALC_RNG_SOURCE_MAX:
+        default:
+            return 0;
+    }
 }
 
 } // namespace alcp::rng

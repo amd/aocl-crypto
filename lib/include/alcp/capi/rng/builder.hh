@@ -40,7 +40,8 @@ namespace alcp::rng {
 class RngBuilder
 {
   public:
-    static alc_error_t Build(const alc_rng_info_t& rRngInfo, Context& ctx);
+    static alc_error_t build(const alc_rng_info_t& rRngInfo, Context& ctx);
+    static Uint64      getSize(const alc_rng_info_t& rRngInfo);
 };
 
 } // namespace alcp::rng
