@@ -102,7 +102,7 @@ Rsa_encrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
                                      size_key,
                                      enc_text);
     if (err != ALC_ERROR_NONE) {
-        printf("\n peer1 publc key encrypt failed");
+        printf("\n peer1 publc key encrypt failed\n");
         goto free_enc_text;
     }
 

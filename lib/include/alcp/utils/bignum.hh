@@ -75,6 +75,9 @@ class ALCP_API_EXPORT BigNum final
     void operator<<=(int shifts);
     bool operator==(const BigNum& rhs);
     bool operator!=(const BigNum& rhs);
+    bool operator>(const BigNum& rhs);
+    bool operator<(const BigNum& rhs);
+
     /* Increment/Decrement */
     void operator++();
     void operator--();

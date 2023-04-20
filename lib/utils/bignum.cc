@@ -206,6 +206,18 @@ BigNum::operator!=(const BigNum& rhs)
     return !(pImpl()->eq(rhs));
 }
 
+bool
+BigNum::operator>(const BigNum& rhs)
+{
+    return pImpl()->gt(rhs);
+}
+
+bool
+BigNum::operator<(const BigNum& rhs)
+{
+    return pImpl()->lt(rhs);
+}
+
 void
 BigNum::operator+=(const BigNum& rhs)
 {

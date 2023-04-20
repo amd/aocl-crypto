@@ -81,7 +81,7 @@ Rsa_decrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
     err = alcp_rsa_privatekey_decrypt(
         ps_rsa_handle, ALCP_RSA_PADDING_NONE, enc_text, size_key, dec_text);
     if (err != ALC_ERROR_NONE) {
-        printf("\n private key decryption failed");
+        printf("\n private key decryption failed\n");
         goto free_dec_text;
     }
 

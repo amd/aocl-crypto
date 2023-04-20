@@ -272,6 +272,28 @@ class BigNum::Impl
         }
     }
 
+    inline bool lt(const BigNum& rhs) const
+    {
+        int ret = BN_ucmp(raw(), rhs.pImpl()->raw());
+
+        if (ret == -1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    inline bool gt(const BigNum& rhs) const
+    {
+        int ret = BN_ucmp(raw(), rhs.pImpl()->raw());
+
+        if (ret == 1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     Status fromUint64(const Uint64 val)
     {
         Status sts = StatusOk();
