@@ -66,6 +66,8 @@ class Sha3::Impl
     Uint64 getInputBlockSize();
     Uint64 getHashSize();
 
+    alc_error_t setDigestSize(Uint64 size);
+
     void reset();
 
   private:
@@ -102,6 +104,16 @@ Uint64
 Sha3::Impl::getHashSize()
 {
     return m_hash_size;
+}
+
+alc_error_t
+Sha3::Impl::setDigestSize(Uint64 size)
+{
+
+    alc_error_t err = ALC_ERROR_NONE;
+    m_hash_size     = size;
+    m_hash.resize(m_hash_size);
+    return err;
 }
 
 Sha3::Impl::Impl(const alc_digest_info_t& rDigestInfo)
@@ -402,8 +414,7 @@ Sha3::Impl::finalize(const Uint8* pBuf, Uint64 size)
 Sha3::Sha3(const alc_digest_info_t& rDigestInfo)
     : m_pimpl{ std::make_unique<Sha3::Impl>(rDigestInfo) }
     , m_finished{ false }
-{
-}
+{}
 
 Sha3::~Sha3() {}
 
@@ -490,4 +501,12 @@ Sha3::getHashSize()
     return m_pimpl->getHashSize();
 }
 
+alc_error_t
+Sha3::setDigestSize(Uint64 digestSize)
+{
+    if (m_finished) {
+        return ALC_ERROR_NOT_PERMITTED;
+    }
+    return m_pimpl->setDigestSize(digestSize);
+}
 } // namespace alcp::digest

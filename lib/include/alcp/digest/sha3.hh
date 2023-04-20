@@ -132,6 +132,8 @@ class ALCP_API_EXPORT Sha3 : public Digest
      */
     Uint64 getHashSize();
 
+    alc_error_t setDigestSize(Uint64 digestSize);
+
   private:
     class Impl;
     std::unique_ptr<Impl> m_pimpl;
