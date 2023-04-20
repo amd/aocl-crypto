@@ -143,7 +143,7 @@ class BigNum::Impl
 rng::drbg::HmacDrbg BigNum::Impl::m_drbg;
 
 bool
-compare_ge(vector<Uint64> a, vector<Uint64> b)
+compare_ge(vector<Uint64>& a, vector<Uint64>& b)
 {
     if (a.size() > b.size())
         return true;
@@ -158,7 +158,7 @@ compare_ge(vector<Uint64> a, vector<Uint64> b)
     return true;
 }
 bool
-compare_gt(vector<Uint64> a, vector<Uint64> b)
+compare_gt(vector<Uint64>& a, vector<Uint64>& b)
 {
     if (a.size() > b.size())
         return true;
