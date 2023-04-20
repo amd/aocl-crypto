@@ -135,6 +135,12 @@ alcp_rsa_request(alc_rsa_handle_p pRsaHandle);
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_rsa_request
  * @endparblock
+ *
+ * @note  ALCP_RSA_PADDING_NONE is only supported as
+ *        padding scheme. This has following limitations
+ *         - textSize should equal to the modulus/private_key size
+ *         - pText absolute value should be less than modulus
+ *
  * @param [in]  pRsaHandle         - Handler of the Context for the session
  * @param [in]  pad                - padding scheme for rsa encryption
  * @param [in]  pPublicKeyMod      - public key modulus
@@ -165,6 +171,10 @@ alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
  * <b>This API can be called after @ref alcp_rsa_request and the
  * before the session call @ref alcp_rsa_finish</b>
  * @endparblock
+ *
+ * @note  ALCP_RSA_PADDING_NONE is only supported as
+ *        padding scheme
+ *
  * @param [in]  pRsaHandle - Handler of the Context for the session
  * @param [in]  pad        - padding scheme to be used for rsa decrytion
  * @param [in]  pEncText   - pointer to encrypted bytes
