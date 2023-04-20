@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,14 +27,15 @@
  */
 
 #include "alcp/utils/bignum.hh"
-
-#if defined(ALCP_BIGNUM_USE_OPENSSL)
+#include "config.h"
+#if ALCP_BIGNUM_USE_OPENSSL
 #include "../impl/bignum_openssl.cc"
-#elif defined(ALCP_BIGNUM_USE_IPP)
+#elif ALCP_BIGNUM_USE_IPP
 #include "../impl/bignum_openssl.cc"
 #else
 #include "../impl/bignum_alcp.cc"
 #endif
+#include <iostream>
 
 namespace alcp {
 
@@ -69,6 +70,12 @@ BigNum::toInt32() const
 }
 
 void
+BigNum::toBinary(Uint8* buf, Uint64 size)
+{
+    pImpl()->toBinary(buf, size);
+}
+
+void
 BigNum::fromUint64(const Uint64 val)
 {
     pImpl()->fromUint64(val);
@@ -84,6 +91,12 @@ void
 BigNum::fromInt32(const Int32 val)
 {
     pImpl()->fromInt32(val);
+}
+
+void
+BigNum::fromBinary(const Uint8* buf, Uint64 size)
+{
+    pImpl()->fromBinary(buf, size);
 }
 
 Status
@@ -105,7 +118,7 @@ BigNum::operator=(const BigNum& rhs)
     if (this == &rhs)
         return *this;
 
-    pImpl()->operator=(*rhs.pImpl());
+    pImpl()->operator=(rhs);
     return *this;
 }
 
@@ -173,6 +186,12 @@ BigNum
 BigNum::operator<<(int shifts)
 {
     return pImpl()->lshift(shifts);
+}
+
+void
+BigNum::exp_mod(const BigNum& num, const BigNum& exp, const BigNum& mod)
+{
+    pImpl()->exp_mod(num, exp, mod);
 }
 
 bool

@@ -62,6 +62,8 @@ class ALCP_API_EXPORT BigNum final
     BigNum operator>>(int shifts);
     BigNum operator<<(int shifts);
 
+    void exp_mod(const BigNum& num, const BigNum& exp, const BigNum& mod);
+
     /* Arithmetic + Assignment */
     void operator+=(const BigNum& rhs);
     void operator-=(const BigNum& rhs);
@@ -83,12 +85,15 @@ class ALCP_API_EXPORT BigNum final
 
     Int64 toInt64() const;
     Int32 toInt32() const;
+    void  toBinary(Uint8* buf, Uint64 size);
 
     void fromInt64(const Int64 val);
     void fromInt32(const Int32 val);
 
     void fromUint64(const Uint64 val);
     void fromUint32(const Uint32 val);
+
+    void fromBinary(const Uint8* buf, Uint64 size);
 
     enum class Format
     {
