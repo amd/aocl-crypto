@@ -97,6 +97,9 @@ alcp_ec_get_secretkey(const alc_ec_handle_p pEcHandle,
 ALCP_API_EXPORT void
 alcp_ec_finish(const alc_ec_handle_p pEcHandle);
 
+ALCP_API_EXPORT alc_error_t
+alcp_ec_error(alc_ec_handle_p pEcHandle, Uint8* pBuf, Uint64 size);
+
 EXTERN_C_END
 
 #endif /* _ALCP_ECDH_H_ */
