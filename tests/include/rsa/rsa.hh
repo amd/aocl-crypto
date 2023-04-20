@@ -53,7 +53,7 @@ class RsaBase
     virtual bool init()                                     = 0;
     virtual bool reset()                                    = 0;
     virtual bool GetPublicKey(const alcp_rsa_data_t& data)  = 0;
-    virtual bool EncryptPubKey(const alcp_rsa_data_t& data) = 0;
-    virtual bool DecryptPvtKey(const alcp_rsa_data_t& data) = 0;
+    virtual int  EncryptPubKey(const alcp_rsa_data_t& data) = 0;
+    virtual int  DecryptPvtKey(const alcp_rsa_data_t& data) = 0;
 };
 } // namespace alcp::testing

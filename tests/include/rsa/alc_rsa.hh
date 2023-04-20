@@ -47,8 +47,8 @@ class AlcpRsaBase : public RsaBase
     bool init();
     bool reset();
     bool GetPublicKey(const alcp_rsa_data_t& data);
-    bool EncryptPubKey(const alcp_rsa_data_t& data);
-    bool DecryptPvtKey(const alcp_rsa_data_t& data);
+    int  EncryptPubKey(const alcp_rsa_data_t& data);
+    int  DecryptPvtKey(const alcp_rsa_data_t& data);
 };
 
 } // namespace alcp::testing

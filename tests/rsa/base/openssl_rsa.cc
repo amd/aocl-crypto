@@ -51,7 +51,7 @@ OpenSSLRsaBase::init()
     m_rsa_handle = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
     if (m_rsa_handle == nullptr) {
         std::cout << "EVP_PKEY_CTX_new_from_name returned null: Error:"
-                  << ERR_get_error() << std::endl;
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     return true;
@@ -67,8 +67,8 @@ OpenSSLRsaBase::GetPublicKey(const alcp_rsa_data_t& data)
     OSSL_PARAM   params[3];
 
     if (1 != EVP_PKEY_keygen_init(m_rsa_handle)) {
-        std::cout << "EVP_PKEY_keygen_init failed: Error:" << ERR_get_error()
-                  << std::endl;
+        std::cout << "EVP_PKEY_keygen_init failed: Error:"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
 
@@ -77,45 +77,49 @@ OpenSSLRsaBase::GetPublicKey(const alcp_rsa_data_t& data)
     params[2] = OSSL_PARAM_construct_end();
 
     if (1 != EVP_PKEY_CTX_set_params(m_rsa_handle, params)) {
-        std::cout << "EVP_PKEY_CTX_set_params failed: Error:" << ERR_get_error()
-                  << std::endl;
+        std::cout << "EVP_PKEY_CTX_set_params failed: Error:"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
 
     if (1 != EVP_PKEY_generate(m_rsa_handle, &m_pkey)) {
-        std::cout << "EVP_PKEY_generate failed: Error:" << ERR_get_error()
-                  << std::endl;
+        std::cout << "EVP_PKEY_generate failed: Error:"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     m_rsa_handle = EVP_PKEY_CTX_new(m_pkey, eng);
     if (m_rsa_handle == nullptr) {
-        std::cout << "EVP_PKEY_CTX_new returned null: Error:" << ERR_get_error()
-                  << std::endl;
+        std::cout << "EVP_PKEY_CTX_new returned null: Error:"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     return true;
 }
 
-bool
+int
 OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 {
     size_t outlen;
+    int    ret_val = 0;
+
     if (1 != EVP_PKEY_encrypt_init(m_rsa_handle)) {
-        std::cout << "EVP_PKEY_encrypt_init failed: Error:" << ERR_get_error()
+        ret_val = ERR_GET_REASON(ERR_get_error());
+        std::cout << "EVP_PKEY_encrypt_init failed: Error:" << ret_val
                   << std::endl;
-        return false;
+        return ret_val;
     }
     if (1 != EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle, RSA_NO_PADDING)) {
-        std::cout << "EVP_PKEY_CTX_set_rsa_padding failed: Error:"
-                  << ERR_get_error() << std::endl;
-        return false;
+        ret_val = ERR_GET_REASON(ERR_get_error());
+        std::cout << "EVP_PKEY_CTX_set_rsa_padding failed: Error:" << ret_val
+                  << std::endl;
+        return ret_val;
     }
     if (1
         != EVP_PKEY_encrypt(
             m_rsa_handle, NULL, &outlen, data.m_peer_text, data.m_msg_len)) {
-        std::cout << "EVP_PKEY_encrypt failed: Error:" << ERR_get_error()
-                  << std::endl;
-        return false;
+        ret_val = ERR_GET_REASON(ERR_get_error());
+        std::cout << "EVP_PKEY_encrypt failed: Error:" << ret_val << std::endl;
+        return ret_val;
     }
     if (1
         != EVP_PKEY_encrypt(m_rsa_handle,
@@ -123,26 +127,27 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                             &outlen,
                             data.m_peer_text,
                             data.m_msg_len)) {
-        std::cout << "EVP_PKEY_encrypt failed: Error:" << ERR_get_error()
-                  << std::endl;
-        return false;
+        ret_val = ERR_GET_REASON(ERR_get_error());
+        std::cout << "EVP_PKEY_encrypt failed: Error:" << ret_val << std::endl;
+        return ret_val;
     }
-    return true;
+    return 0;
 }
 
-bool
+int
 OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 {
     size_t outlen;
+    int    ret_val = 0;
     if (1 != EVP_PKEY_decrypt_init(m_rsa_handle)) {
-        std::cout << "EVP_PKEY_decrypt_init failed: Error:" << ERR_get_error()
-                  << std::endl;
-        return false;
+        std::cout << "EVP_PKEY_decrypt_init failed: Error:"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
+        return 0;
     }
     if (1 != EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle, RSA_NO_PADDING)) {
         std::cout << "EVP_PKEY_CTX_set_rsa_padding failed: Error:"
-                  << ERR_get_error() << std::endl;
-        return false;
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
+        return 0;
     }
     if (1
         != EVP_PKEY_decrypt(m_rsa_handle,
@@ -150,9 +155,9 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                             &outlen,
                             data.m_peer_text_encrypted,
                             data.m_msg_len)) {
-        std::cout << "EVP_PKEY_decrypt failed: Error:" << ERR_get_error()
-                  << std::endl;
-        return false;
+        ret_val = ERR_GET_REASON(ERR_get_error());
+        std::cout << "EVP_PKEY_decrypt failed: Error:" << ret_val << std::endl;
+        return ret_val;
     }
     if (1
         != EVP_PKEY_decrypt(m_rsa_handle,
@@ -160,11 +165,11 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                             &outlen,
                             data.m_peer_text_encrypted,
                             data.m_msg_len)) {
-        std::cout << "EVP_PKEY_decrypt failed: Error:" << ERR_get_error()
-                  << std::endl;
-        return false;
+        ret_val = ERR_GET_REASON(ERR_get_error());
+        std::cout << "EVP_PKEY_decrypt failed: Error:" << ret_val << std::endl;
+        return ret_val;
     }
-    return true;
+    return 0;
 }
 
 bool

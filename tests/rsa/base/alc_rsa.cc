@@ -89,7 +89,7 @@ AlcpRsaBase::GetPublicKey(const alcp_rsa_data_t& data)
     return true;
 }
 
-bool
+int
 AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 {
     alc_error_t err;
@@ -103,12 +103,12 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                                      data.m_peer_text_encrypted);
     if (alcp_is_error(err)) {
         std::cout << "Error in alcp_rsa_publickey_encrypt " << err << std::endl;
-        return false;
+        return err;
     }
-    return true;
+    return 0;
 }
 
-bool
+int
 AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 {
     alc_error_t err;
@@ -120,9 +120,9 @@ AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
     if (alcp_is_error(err)) {
         std::cout << "Error in alcp_rsa_privatekey_decrypt " << err
                   << std::endl;
-        return false;
+        return err;
     }
-    return true;
+    return 0;
 }
 
 bool

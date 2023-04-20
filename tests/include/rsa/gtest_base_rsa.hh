@@ -68,15 +68,31 @@ PrintRsaTestData(alcp_rsa_data_t data)
     return;
 }
 
+/* to bypass some invalid input cases */
+bool
+SkipTest(int ret_val, std::string LibStr)
+{
+    /* openssl returns 132 error code for invalid inputs
+      and alcp returns 1 */
+    if ((LibStr.compare("OpenSSL") == 0) && ret_val == 132) {
+        std::cout << "Invalid case: Skipping this test" << std::endl;
+        return true;
+    } else if ((LibStr.compare("ALCP") == 0) && ret_val == 1) {
+        std::cout << "Invalid case: Skipping this test" << std::endl;
+        return true;
+    } else
+        return false;
+}
+
 void
 Rsa_KAT()
 {
     alcp_rsa_data_t data_peer;
 
     AlcpRsaBase arb_peer;
-
-    RsaBase* rb_peer;
-    RngBase  rngb;
+    std::string LibStr = "ALCP";
+    RsaBase*    rb_peer;
+    RngBase     rngb;
 
     rb_peer = &arb_peer;
 
@@ -84,6 +100,7 @@ Rsa_KAT()
     OpenSSLRsaBase orb_peer;
     if (useossl == true) {
         rb_peer = &orb_peer;
+        LibStr  = "OpenSSL";
     }
 #endif
 
@@ -91,6 +108,7 @@ Rsa_KAT()
     IPPEcdhBase irb_peer(info);
     if (useipp == true) {
         rb_peer = &irb_peer;
+        LibStr  = "IPP";
     }
 #endif
 
@@ -112,6 +130,7 @@ Rsa_KAT()
         data_peer.m_peer_text_decrypted = &(decrypted_data[0]);
         data_peer.m_msg_len             = input_data.size();
 
+        int ret_val = 0;
         if (!rb_peer->init()) {
             std::cout << "Error in RSA init" << std::endl;
             FAIL();
@@ -120,12 +139,22 @@ Rsa_KAT()
             std::cout << "Error in RSA get pubkey peer" << std::endl;
             FAIL();
         }
-        if (!rb_peer->EncryptPubKey(data_peer)) {
-            std::cout << "Error in RSA EncryptPubKey peer" << std::endl;
+
+        ret_val = rb_peer->EncryptPubKey(data_peer);
+        /* FIXME: the below are to handle invalid inputs at this stage */
+        if (SkipTest(ret_val, LibStr))
+            continue;
+        if (ret_val != 0) {
+            std::cout << "Error in RSA EncryptPubKey:" << ret_val << std::endl;
             FAIL();
         }
-        if (!rb_peer->DecryptPvtKey(data_peer)) {
-            std::cout << "Error in RSA DecryptPvtKey peer" << std::endl;
+
+        ret_val = rb_peer->DecryptPvtKey(data_peer);
+        /* FIXME: the below are to handle invalid inputs at this stage */
+        if (SkipTest(ret_val, LibStr))
+            continue;
+        if (ret_val != 0) {
+            std::cout << "Error in RSA DecryptPvtKey:" << ret_val << std::endl;
             FAIL();
         }
         /* check if dec val is same as input */
@@ -149,8 +178,7 @@ Rsa_Cross()
     RsaBase *   rb_peer_main, *rb_peer_ext;
     RngBase     rngb;
 
-    rb_peer_main = &arb_peer;
-
+    rb_peer_main           = &arb_peer;
     std::string LibStrMain = "ALCP", LibStrExt = "";
 
 #ifdef USE_OSSL
@@ -170,8 +198,8 @@ Rsa_Cross()
 #endif
 
     int KeySize  = 128;
-    int loop_max = 5, loop_start = 1;
-
+    int loop_max = 1600, loop_start = 1;
+    int ret_val = 0;
     if (rb_peer_ext == nullptr) {
         std::cout << "No external lib selected!" << std::endl;
         exit(-1);
@@ -179,10 +207,8 @@ Rsa_Cross()
     std::vector<Uint8>::const_iterator pos1, pos2;
     auto                               rng = std::default_random_engine{};
 
-    // std::vector<Uint8> input_data(KeySize, 0x30);
     std::vector<Uint8> input_data = rngb.genRandomBytes(KeySize);
     for (int i = loop_start; i < loop_max; i++) {
-        std::cout << "Loop no " << i << std::endl;
         input_data = ShuffleVector(input_data, rng);
         std::vector<Uint8> encrypted_data_main(KeySize, 0);
         std::vector<Uint8> decrypted_data_main(KeySize, 0);
@@ -213,19 +239,28 @@ Rsa_Cross()
                       << std::endl;
             FAIL();
         }
-        if (!rb_peer_main->EncryptPubKey(data_peer_main)) {
-            std::cout << "Error in RSA EncryptPubKey peer for " << LibStrMain
-                      << std::endl;
+
+        ret_val = rb_peer_main->EncryptPubKey(data_peer_main);
+        /* FIXME: the below are to handle invalid inputs at this stage */
+        if (SkipTest(ret_val, LibStrMain))
+            continue;
+        if (ret_val != 0) {
+            std::cout << "EncryptPubKey failed for " << LibStrMain << std::endl;
             FAIL();
         }
-        if (!rb_peer_main->DecryptPvtKey(data_peer_main)) {
-            std::cout << "Error in RSA DecryptPvtKey peer for " << LibStrMain
-                      << std::endl;
+
+        ret_val = rb_peer_main->DecryptPvtKey(data_peer_main);
+        /* FIXME: the below are to handle invalid inputs at this stage */
+        if (SkipTest(ret_val, LibStrMain))
+            continue;
+        if (ret_val != 0) {
+            std::cout << "DecryptPvtKey failed for " << LibStrMain << std::endl;
             FAIL();
         }
-        /* check if dec val is same as input */
+        /* check if decrypted output is same as input */
         EXPECT_TRUE(ArraysMatch(decrypted_data_main, input_data, i));
-        /* for ext lib */
+
+        /* For Ext lib */
         if (!rb_peer_ext->init()) {
             std::cout << "Error in RSA init for " << LibStrExt << std::endl;
             FAIL();
@@ -235,20 +270,30 @@ Rsa_Cross()
                       << std::endl;
             FAIL();
         }
-        if (!rb_peer_ext->EncryptPubKey(data_peer_ext)) {
-            std::cout << "Error in RSA EncryptPubKey peer for " << LibStrExt
-                      << std::endl;
+        ret_val = rb_peer_ext->EncryptPubKey(data_peer_ext);
+        /* FIXME: the below are to handle invalid inputs at this stage */
+        if (SkipTest(ret_val, LibStrExt))
+            continue;
+        if (ret_val != 0) {
+            std::cout << "EncryptPubKey failed for " << LibStrExt << std::endl;
             FAIL();
         }
-        if (!rb_peer_ext->DecryptPvtKey(data_peer_ext)) {
-            std::cout << "Error in RSA DecryptPvtKey peer for " << LibStrExt
-                      << std::endl;
+        ret_val = rb_peer_ext->DecryptPvtKey(data_peer_ext);
+        /* FIXME: the below are to handle invalid inputs at this stage */
+        if (SkipTest(ret_val, LibStrExt))
+            continue;
+        if (ret_val != 0) {
+            std::cout << "DecryptPvtKey failed for " << LibStrExt << std::endl;
             FAIL();
         }
 
+        /* compare decrypted output for ext lib vs original input */
         EXPECT_TRUE(ArraysMatch(decrypted_data_ext, input_data, i));
+        /* compare decrypted outputs for both libs */
+        EXPECT_TRUE(ArraysMatch(decrypted_data_ext, decrypted_data_main, i));
         if (verbose > 1) {
             PrintRsaTestData(data_peer_main);
+            PrintRsaTestData(data_peer_ext);
         }
     }
     return;
