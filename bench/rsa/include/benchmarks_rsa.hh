@@ -58,64 +58,64 @@ inline int
 Rsa_Bench(benchmark::State& state, rsa_bench_opt opt)
 {
     int             KeySize = 128;
-    alcp_rsa_data_t data_peer;
+    alcp_rsa_data_t data;
 
-    AlcpRsaBase arb_peer;
+    AlcpRsaBase arb;
     std::string LibStr = "ALCP";
-    RsaBase*    rb_peer;
+    RsaBase*    rb;
     RngBase     rngb;
 
-    rb_peer = &arb_peer;
+    rb = &arb;
 
 #ifdef USE_OSSL
-    OpenSSLRsaBase orb_peer;
+    OpenSSLRsaBase orb;
     if (useossl == true) {
-        rb_peer = &orb_peer;
-        LibStr  = "OpenSSL";
+        rb     = &orb;
+        LibStr = "OpenSSL";
     }
 #endif
 
 #ifdef USE_IPP
-    IPPRsaBase irb_peer;
+    IPPRsaBase irb;
     if (useipp == true) {
-        rb_peer = &irb_peer;
-        LibStr  = "IPP";
+        rb     = &irb;
+        LibStr = "IPP";
     }
 #endif
 
     /* keeping input const, a valid data for now */
     std::vector<Uint8> input_data(KeySize, 30);
-    std::vector<Uint8> encrypted_data(KeySize, 0);
-    std::vector<Uint8> decrypted_data(KeySize, 0);
-    std::vector<Uint8> Peer_PubKeyKeyMod(KeySize, 0);
+    std::vector<Uint8> encrypted_data(KeySize);
+    std::vector<Uint8> decrypted_data(KeySize);
+    std::vector<Uint8> PubKeyKeyMod(KeySize);
 
-    data_peer.m_peer_text           = &(input_data[0]);
-    data_peer.m_pub_key_mod         = &(Peer_PubKeyKeyMod[0]);
-    data_peer.m_peer_text_encrypted = &(encrypted_data[0]);
-    data_peer.m_peer_text_decrypted = &(decrypted_data[0]);
-    data_peer.m_msg_len             = input_data.size();
+    data.m_msg            = &(input_data[0]);
+    data.m_pub_key_mod    = &(PubKeyKeyMod[0]);
+    data.m_encrypted_data = &(encrypted_data[0]);
+    data.m_decrypted_data = &(decrypted_data[0]);
+    data.m_msg_len        = input_data.size();
 
-    if (!rb_peer->init()) {
+    if (!rb->init()) {
         state.SkipWithError("Error in RSA init");
     }
 
-    if (!rb_peer->GetPublicKey(data_peer)) {
+    if (!rb->GetPublicKey(data)) {
         state.SkipWithError("Error in RSA GetPublicKey");
     }
 
     if (opt == RSA_BENCH_ENC_PUB_KEY) {
         for (auto _ : state) {
-            if (0 != rb_peer->EncryptPubKey(data_peer)) {
+            if (0 != rb->EncryptPubKey(data)) {
                 state.SkipWithError("Error in RSA EncryptPubKey");
             }
         }
     } else if (opt == RSA_BENCH_DEC_PVT_KEY) {
         /* encrypt, then benchmark only dec pvt key */
-        if (0 != rb_peer->EncryptPubKey(data_peer)) {
+        if (0 != rb->EncryptPubKey(data)) {
             state.SkipWithError("Error in RSA EncryptPubKey");
         }
         for (auto _ : state) {
-            if (0 != rb_peer->DecryptPvtKey(data_peer)) {
+            if (0 != rb->DecryptPvtKey(data)) {
                 state.SkipWithError("Error in RSA DecryptPvtKey");
             }
         }

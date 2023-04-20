@@ -116,16 +116,16 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
     }
     if (1
         != EVP_PKEY_encrypt(
-            m_rsa_handle, NULL, &outlen, data.m_peer_text, data.m_msg_len)) {
+            m_rsa_handle, NULL, &outlen, data.m_msg, data.m_msg_len)) {
         ret_val = ERR_GET_REASON(ERR_get_error());
         std::cout << "EVP_PKEY_encrypt failed: Error:" << ret_val << std::endl;
         return ret_val;
     }
     if (1
         != EVP_PKEY_encrypt(m_rsa_handle,
-                            data.m_peer_text_encrypted,
+                            data.m_encrypted_data,
                             &outlen,
-                            data.m_peer_text,
+                            data.m_msg,
                             data.m_msg_len)) {
         ret_val = ERR_GET_REASON(ERR_get_error());
         std::cout << "EVP_PKEY_encrypt failed: Error:" << ret_val << std::endl;
@@ -153,7 +153,7 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
         != EVP_PKEY_decrypt(m_rsa_handle,
                             NULL,
                             &outlen,
-                            data.m_peer_text_encrypted,
+                            data.m_encrypted_data,
                             data.m_msg_len)) {
         ret_val = ERR_GET_REASON(ERR_get_error());
         std::cout << "EVP_PKEY_decrypt failed: Error:" << ret_val << std::endl;
@@ -161,9 +161,9 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
     }
     if (1
         != EVP_PKEY_decrypt(m_rsa_handle,
-                            data.m_peer_text_decrypted,
+                            data.m_decrypted_data,
                             &outlen,
-                            data.m_peer_text_encrypted,
+                            data.m_encrypted_data,
                             data.m_msg_len)) {
         ret_val = ERR_GET_REASON(ERR_get_error());
         std::cout << "EVP_PKEY_decrypt failed: Error:" << ret_val << std::endl;

@@ -56,14 +56,13 @@ using namespace alcp::testing;
 inline void
 PrintRsaTestData(alcp_rsa_data_t data)
 {
-    std::cout << "InputData: "
-              << parseBytesToHexStr(data.m_peer_text, data.m_msg_len)
+    std::cout << "InputData: " << parseBytesToHexStr(data.m_msg, data.m_msg_len)
               << " Len : " << data.m_msg_len << std::endl;
     std::cout << "EncryptedData: "
-              << parseBytesToHexStr(data.m_peer_text_encrypted, data.m_msg_len)
+              << parseBytesToHexStr(data.m_encrypted_data, data.m_msg_len)
               << " Len : " << data.m_msg_len << std::endl;
     std::cout << "DecryptedData: "
-              << parseBytesToHexStr(data.m_peer_text_decrypted, data.m_msg_len)
+              << parseBytesToHexStr(data.m_decrypted_data, data.m_msg_len)
               << " Len : " << data.m_msg_len << std::endl;
     return;
 }
@@ -77,7 +76,7 @@ SkipTest(int ret_val, std::string LibStr)
     if ((LibStr.compare("OpenSSL") == 0) && ret_val == 132) {
         std::cout << "Invalid case: Skipping this test" << std::endl;
         return true;
-    } else if ((LibStr.compare("ALCP") == 0) && ret_val == 1) {
+    } else if ((LibStr.compare("ALCP") == 0) && ret_val != 0) {
         std::cout << "Invalid case: Skipping this test" << std::endl;
         return true;
     } else
@@ -87,28 +86,28 @@ SkipTest(int ret_val, std::string LibStr)
 void
 Rsa_KAT()
 {
-    alcp_rsa_data_t data_peer;
+    alcp_rsa_data_t data;
 
-    AlcpRsaBase arb_peer;
+    AlcpRsaBase arb;
     std::string LibStr = "ALCP";
-    RsaBase*    rb_peer;
+    RsaBase*    rb;
     RngBase     rngb;
 
-    rb_peer = &arb_peer;
+    rb = &arb;
 
 #ifdef USE_OSSL
-    OpenSSLRsaBase orb_peer;
+    OpenSSLRsaBase orb;
     if (useossl == true) {
-        rb_peer = &orb_peer;
-        LibStr  = "OpenSSL";
+        rb     = &orb;
+        LibStr = "OpenSSL";
     }
 #endif
 
 #ifdef USE_IPP
-    IPPRsaBase irb_peer;
+    IPPRsaBase irb;
     if (useipp == true) {
-        rb_peer = &irb_peer;
-        LibStr  = "IPP";
+        rb     = &irb;
+        LibStr = "IPP";
     }
 #endif
 
@@ -120,27 +119,27 @@ Rsa_KAT()
     while (csv.readNext()) {
         /* input text to be loaded */
         std::vector<Uint8> input_data = csv.getVect("INPUT");
-        std::vector<Uint8> encrypted_data(KeySize, 0);
-        std::vector<Uint8> decrypted_data(KeySize, 0);
-        std::vector<Uint8> Peer_PubKeyKeyMod(KeySize, 0);
+        std::vector<Uint8> encrypted_data(KeySize);
+        std::vector<Uint8> decrypted_data(KeySize);
+        std::vector<Uint8> PubKeyKeyMod(KeySize);
 
-        data_peer.m_peer_text           = &(input_data[0]);
-        data_peer.m_pub_key_mod         = &(Peer_PubKeyKeyMod[0]);
-        data_peer.m_peer_text_encrypted = &(encrypted_data[0]);
-        data_peer.m_peer_text_decrypted = &(decrypted_data[0]);
-        data_peer.m_msg_len             = input_data.size();
+        data.m_msg            = &(input_data[0]);
+        data.m_pub_key_mod    = &(PubKeyKeyMod[0]);
+        data.m_encrypted_data = &(encrypted_data[0]);
+        data.m_decrypted_data = &(decrypted_data[0]);
+        data.m_msg_len        = input_data.size();
 
         int ret_val = 0;
-        if (!rb_peer->init()) {
+        if (!rb->init()) {
             std::cout << "Error in RSA init" << std::endl;
             FAIL();
         }
-        if (!rb_peer->GetPublicKey(data_peer)) {
-            std::cout << "Error in RSA get pubkey peer" << std::endl;
+        if (!rb->GetPublicKey(data)) {
+            std::cout << "Error in RSA get pubkey" << std::endl;
             FAIL();
         }
 
-        ret_val = rb_peer->EncryptPubKey(data_peer);
+        ret_val = rb->EncryptPubKey(data);
         /* FIXME: the below are to handle invalid inputs at this stage */
         if (SkipTest(ret_val, LibStr))
             continue;
@@ -149,7 +148,7 @@ Rsa_KAT()
             FAIL();
         }
 
-        ret_val = rb_peer->DecryptPvtKey(data_peer);
+        ret_val = rb->DecryptPvtKey(data);
         /* FIXME: the below are to handle invalid inputs at this stage */
         if (SkipTest(ret_val, LibStr))
             continue;
@@ -162,7 +161,7 @@ Rsa_KAT()
             ArraysMatch(decrypted_data, input_data, csv, std::string("RSA")));
 
         if (verbose > 1) {
-            PrintRsaTestData(data_peer);
+            PrintRsaTestData(data);
         }
     }
     return;
@@ -172,35 +171,35 @@ Rsa_KAT()
 void
 Rsa_Cross()
 {
-    alcp_rsa_data_t data_peer_main, data_peer_ext;
+    alcp_rsa_data_t data_main, data_ext;
 
-    AlcpRsaBase arb_peer;
-    RsaBase *   rb_peer_main, *rb_peer_ext;
+    AlcpRsaBase arb;
+    RsaBase *   rb_main, *rb_ext;
     RngBase     rngb;
 
-    rb_peer_main           = &arb_peer;
+    rb_main                = &arb;
     std::string LibStrMain = "ALCP", LibStrExt = "";
 
 #ifdef USE_OSSL
-    OpenSSLRsaBase orb_peer;
-    if (useossl == true || rb_peer_ext == nullptr) {
-        rb_peer_ext = &orb_peer;
-        LibStrExt   = "OpenSSL";
+    OpenSSLRsaBase orb;
+    if (useossl == true || rb_ext == nullptr) {
+        rb_ext    = &orb;
+        LibStrExt = "OpenSSL";
     }
 #endif
 
 #ifdef USE_IPP
-    IPPRsaBase irb_peer;
+    IPPRsaBase irb;
     if (useipp == true) {
-        rb_peer_ext = &irb_peer;
-        LibStrExt   = "IPP";
+        rb_ext    = &irb;
+        LibStrExt = "IPP";
     }
 #endif
 
     int KeySize  = 128;
     int loop_max = 1600, loop_start = 1;
     int ret_val = 0;
-    if (rb_peer_ext == nullptr) {
+    if (rb_ext == nullptr) {
         std::cout << "No external lib selected!" << std::endl;
         exit(-1);
     }
@@ -210,37 +209,37 @@ Rsa_Cross()
     std::vector<Uint8> input_data = rngb.genRandomBytes(KeySize);
     for (int i = loop_start; i < loop_max; i++) {
         input_data = ShuffleVector(input_data, rng);
-        std::vector<Uint8> encrypted_data_main(KeySize, 0);
-        std::vector<Uint8> decrypted_data_main(KeySize, 0);
-        std::vector<Uint8> Peer_PubKeyKeyMod_main(KeySize, 0);
+        std::vector<Uint8> encrypted_data_main(KeySize);
+        std::vector<Uint8> decrypted_data_main(KeySize);
+        std::vector<Uint8> PubKeyKeyMod_main(KeySize);
 
-        std::vector<Uint8> encrypted_data_ext(KeySize, 0);
-        std::vector<Uint8> decrypted_data_ext(KeySize, 0);
-        std::vector<Uint8> Peer_PubKeyKeyMod_ext(KeySize, 0);
+        std::vector<Uint8> encrypted_data_ext(KeySize);
+        std::vector<Uint8> decrypted_data_ext(KeySize);
+        std::vector<Uint8> PubKeyKeyMod_ext(KeySize);
 
-        data_peer_main.m_peer_text           = &(input_data[0]);
-        data_peer_main.m_pub_key_mod         = &(Peer_PubKeyKeyMod_main[0]);
-        data_peer_main.m_peer_text_encrypted = &(encrypted_data_main[0]);
-        data_peer_main.m_peer_text_decrypted = &(decrypted_data_main[0]);
-        data_peer_main.m_msg_len             = input_data.size();
+        data_main.m_msg            = &(input_data[0]);
+        data_main.m_pub_key_mod    = &(PubKeyKeyMod_main[0]);
+        data_main.m_encrypted_data = &(encrypted_data_main[0]);
+        data_main.m_decrypted_data = &(decrypted_data_main[0]);
+        data_main.m_msg_len        = input_data.size();
 
-        data_peer_ext.m_peer_text           = &(input_data[0]);
-        data_peer_ext.m_pub_key_mod         = &(Peer_PubKeyKeyMod_ext[0]);
-        data_peer_ext.m_peer_text_encrypted = &(encrypted_data_ext[0]);
-        data_peer_ext.m_peer_text_decrypted = &(decrypted_data_ext[0]);
-        data_peer_ext.m_msg_len             = input_data.size();
+        data_ext.m_msg            = &(input_data[0]);
+        data_ext.m_pub_key_mod    = &(PubKeyKeyMod_ext[0]);
+        data_ext.m_encrypted_data = &(encrypted_data_ext[0]);
+        data_ext.m_decrypted_data = &(decrypted_data_ext[0]);
+        data_ext.m_msg_len        = input_data.size();
 
-        if (!rb_peer_main->init()) {
+        if (!rb_main->init()) {
             std::cout << "Error in RSA init for " << LibStrMain << std::endl;
             FAIL();
         }
-        if (!rb_peer_main->GetPublicKey(data_peer_main)) {
-            std::cout << "Error in RSA get pubkey peer for " << LibStrMain
+        if (!rb_main->GetPublicKey(data_main)) {
+            std::cout << "Error in RSA get pubkey for " << LibStrMain
                       << std::endl;
             FAIL();
         }
 
-        ret_val = rb_peer_main->EncryptPubKey(data_peer_main);
+        ret_val = rb_main->EncryptPubKey(data_main);
         /* FIXME: the below are to handle invalid inputs at this stage */
         if (SkipTest(ret_val, LibStrMain))
             continue;
@@ -249,7 +248,7 @@ Rsa_Cross()
             FAIL();
         }
 
-        ret_val = rb_peer_main->DecryptPvtKey(data_peer_main);
+        ret_val = rb_main->DecryptPvtKey(data_main);
         /* FIXME: the below are to handle invalid inputs at this stage */
         if (SkipTest(ret_val, LibStrMain))
             continue;
@@ -261,16 +260,16 @@ Rsa_Cross()
         EXPECT_TRUE(ArraysMatch(decrypted_data_main, input_data, i));
 
         /* For Ext lib */
-        if (!rb_peer_ext->init()) {
+        if (!rb_ext->init()) {
             std::cout << "Error in RSA init for " << LibStrExt << std::endl;
             FAIL();
         }
-        if (!rb_peer_ext->GetPublicKey(data_peer_ext)) {
-            std::cout << "Error in RSA get pubkey peer for " << LibStrExt
+        if (!rb_ext->GetPublicKey(data_ext)) {
+            std::cout << "Error in RSA get pubkey for " << LibStrExt
                       << std::endl;
             FAIL();
         }
-        ret_val = rb_peer_ext->EncryptPubKey(data_peer_ext);
+        ret_val = rb_ext->EncryptPubKey(data_ext);
         /* FIXME: the below are to handle invalid inputs at this stage */
         if (SkipTest(ret_val, LibStrExt))
             continue;
@@ -278,7 +277,7 @@ Rsa_Cross()
             std::cout << "EncryptPubKey failed for " << LibStrExt << std::endl;
             FAIL();
         }
-        ret_val = rb_peer_ext->DecryptPvtKey(data_peer_ext);
+        ret_val = rb_ext->DecryptPvtKey(data_ext);
         /* FIXME: the below are to handle invalid inputs at this stage */
         if (SkipTest(ret_val, LibStrExt))
             continue;
@@ -292,8 +291,8 @@ Rsa_Cross()
         /* compare decrypted outputs for both libs */
         EXPECT_TRUE(ArraysMatch(decrypted_data_ext, decrypted_data_main, i));
         if (verbose > 1) {
-            PrintRsaTestData(data_peer_main);
-            PrintRsaTestData(data_peer_ext);
+            PrintRsaTestData(data_main);
+            PrintRsaTestData(data_ext);
         }
     }
     return;

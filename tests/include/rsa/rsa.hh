@@ -40,11 +40,11 @@ namespace alcp::testing {
 
 typedef struct _alcp_rsa_data
 {
-    Uint8* m_peer_text           = nullptr;
-    Uint64 m_msg_len             = 0;
-    Uint8* m_peer_text_encrypted = nullptr;
-    Uint8* m_peer_text_decrypted = nullptr;
-    Uint8* m_pub_key_mod         = {};
+    const Uint8* m_msg            = nullptr;
+    Uint64       m_msg_len        = 0;
+    Uint8*       m_encrypted_data = nullptr;
+    Uint8*       m_decrypted_data = nullptr;
+    Uint8*       m_pub_key_mod    = {};
 } alcp_rsa_data_t;
 
 class RsaBase

@@ -46,6 +46,8 @@ AlcpRsaBase::init()
         m_rsa_handle->context = malloc(size);
     } else if (m_rsa_handle->context == nullptr) {
         m_rsa_handle->context = malloc(size);
+    } else {
+        alcp_rsa_finish(m_rsa_handle);
     }
 
     err = alcp_rsa_request(m_rsa_handle);
@@ -98,9 +100,9 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                                      data.m_pub_key_mod,
                                      m_keysize,
                                      m_pub_key_exp,
-                                     data.m_peer_text,
+                                     data.m_msg,
                                      m_keysize,
-                                     data.m_peer_text_encrypted);
+                                     data.m_encrypted_data);
     if (alcp_is_error(err)) {
         std::cout << "Error in alcp_rsa_publickey_encrypt " << err << std::endl;
         return err;
@@ -114,9 +116,9 @@ AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
     alc_error_t err;
     err = alcp_rsa_privatekey_decrypt(m_rsa_handle,
                                       ALCP_RSA_PADDING_NONE,
-                                      data.m_peer_text_encrypted,
+                                      data.m_encrypted_data,
                                       m_keysize,
-                                      data.m_peer_text_decrypted);
+                                      data.m_decrypted_data);
     if (alcp_is_error(err)) {
         std::cout << "Error in alcp_rsa_privatekey_decrypt " << err
                   << std::endl;
