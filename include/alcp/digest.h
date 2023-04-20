@@ -374,8 +374,7 @@ ALCP_API_EXPORT alc_error_t
 alcp_digest_error(alc_digest_handle_p pDigestHandle, Uint8* pBuff, Uint64 size);
 
 /**
- * @brief       To Set the Digest Size. Currently only Supported for SHAKE128
- * and SHAKE256 algorithms.
+ * @brief       To Set custom length for SHAKE128 or SHAKE256
  *
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_digest_request  and before @ref
@@ -394,8 +393,8 @@ alcp_digest_error(alc_digest_handle_p pDigestHandle, Uint8* pBuff, Uint64 size);
  * occured
  */
 ALCP_API_EXPORT alc_error_t
-alcp_digest_set_output_size(const alc_digest_handle_p p_digest_handle,
-                            Uint64                    size);
+alcp_digest_set_shake_length(const alc_digest_handle_p p_digest_handle,
+                             Uint64                    size);
 
 EXTERN_C_END
 

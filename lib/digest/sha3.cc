@@ -66,7 +66,7 @@ class Sha3::Impl
     Uint64 getInputBlockSize();
     Uint64 getHashSize();
 
-    alc_error_t setDigestSize(Uint64 size);
+    alc_error_t setShakeLength(Uint64 size);
 
     void reset();
 
@@ -107,12 +107,15 @@ Sha3::Impl::getHashSize()
 }
 
 alc_error_t
-Sha3::Impl::setDigestSize(Uint64 size)
+Sha3::Impl::setShakeLength(Uint64 size)
 {
-
     alc_error_t err = ALC_ERROR_NONE;
-    m_hash_size     = size;
-    m_hash.resize(m_hash_size);
+    if (m_name == "SHA3-SHAKE-128" || m_name == "SHA3-SHAKE-256") {
+        m_hash_size = size;
+        m_hash.resize(m_hash_size);
+    } else {
+        err = ALC_ERROR_NOT_PERMITTED;
+    }
     return err;
 }
 
@@ -502,11 +505,11 @@ Sha3::getHashSize()
 }
 
 alc_error_t
-Sha3::setDigestSize(Uint64 digestSize)
+Sha3::setShakeLength(Uint64 shakeLength)
 {
     if (m_finished) {
         return ALC_ERROR_NOT_PERMITTED;
     }
-    return m_pimpl->setDigestSize(digestSize);
+    return m_pimpl->setShakeLength(shakeLength);
 }
 } // namespace alcp::digest

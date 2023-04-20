@@ -132,7 +132,13 @@ class ALCP_API_EXPORT Sha3 : public Digest
      */
     Uint64 getHashSize();
 
-    alc_error_t setDigestSize(Uint64 digestSize);
+    /**
+     * @brief To set the Digest Size for SHAKE128 or SHAKE256. Should be set
+     * before finalizing.
+     * @param shakeLength Custom Output Size
+     * @return
+     */
+    alc_error_t setShakeLength(Uint64 shakeLength);
 
   private:
     class Impl;

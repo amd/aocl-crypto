@@ -142,7 +142,7 @@ ALCP_prov_digest_set_ctx_params(void* vctx, const OSSL_PARAM params[])
     p = OSSL_PARAM_locate_const(params, OSSL_DIGEST_PARAM_XOFLEN);
     if (p != NULL) {
         if (OSSL_PARAM_get_size_t(p, &pctx->shake_digest_size)) {
-            alc_error_t err = alcp_digest_set_output_size(
+            alc_error_t err = alcp_digest_set_shake_length(
                 &pctx->handle, pctx->shake_digest_size);
             if (alcp_is_error(err)) {
                 printf("Provider: Failed to set SHAKE Digest Size\n");
@@ -215,7 +215,7 @@ ALCP_prov_digest_final(void*          vctx,
     if (dctx->pc_digest_info.dt_mode.dm_sha3 == ALC_SHAKE_128
         || dctx->pc_digest_info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
         *outl = outsize;
-        err   = alcp_digest_set_output_size(&(dctx->handle), *outl);
+        err   = alcp_digest_set_shake_length(&(dctx->handle), *outl);
         if (alcp_is_error(err)) {
             printf("Provider: Failed to set SHAKE Digest Length");
             return 0;

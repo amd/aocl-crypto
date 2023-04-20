@@ -49,7 +49,7 @@ class Context
     alc_error_t (*finalize)(void* pDigest, const Uint8* pBuf, Uint64 len);
     alc_error_t (*finish)(void* pDigest);
     alc_error_t (*reset)(void* pDigest);
-    alc_error_t (*setDigestSize)(void* pDigest, Uint64 digestSize);
+    alc_error_t (*setShakeLength)(void* pDigest, Uint64 digestSize);
 
     Status status{ StatusOk() };
 

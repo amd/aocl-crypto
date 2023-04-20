@@ -157,8 +157,8 @@ alcp_digest_error(alc_digest_handle_p pDigestHandle, Uint8* pBuff, Uint64 size)
 }
 
 alc_error_t
-alcp_digest_set_output_size(const alc_digest_handle_p pDigestHandle,
-                            Uint64                    digestSize)
+alcp_digest_set_shake_length(const alc_digest_handle_p pDigestHandle,
+                             Uint64                    digestSize)
 
 {
     alc_error_t err = ALC_ERROR_NONE;
@@ -168,11 +168,11 @@ alcp_digest_set_output_size(const alc_digest_handle_p pDigestHandle,
 
     auto ctx = static_cast<digest::Context*>(pDigestHandle->context);
 
-    if (ctx->setDigestSize == nullptr) {
+    if (ctx->setShakeLength == nullptr) {
         return ALC_ERROR_NOT_SUPPORTED;
     }
 
-    ctx->setDigestSize(ctx->m_digest, digestSize);
+    ctx->setShakeLength(ctx->m_digest, digestSize);
 
     return err;
 }
