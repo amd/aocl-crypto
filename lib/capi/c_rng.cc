@@ -41,6 +41,12 @@ using alcp::rng::RngBuilder;
 Uint64
 alcp_rng_context_size(const alc_rng_info_p pRngInfo)
 {
+    // Will be reported as error when debugging.
+    assert(pRngInfo != nullptr);
+    if(pRngInfo == nullptr){
+        return 0;
+    }
+
     Uint64 size = sizeof(alcp::rng::Context) + RngBuilder::getSize(*pRngInfo);
     return size;
 }
@@ -48,6 +54,7 @@ alcp_rng_context_size(const alc_rng_info_p pRngInfo)
 alc_error_t
 alcp_rng_supported(const alc_rng_info_p pRngInfo)
 {
+    ALCP_BAD_PTR_ERR_RET(pRngInfo, error);
     alc_error_t error = ALC_ERROR_NONE;
 
     bool rd_rand_available = CpuId::cpuHasRdRand();
@@ -98,6 +105,10 @@ alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pHandle)
      * code
      */
 
+    ALCP_BAD_PTR_ERR_RET(pRngInfo, error);
+    ALCP_BAD_PTR_ERR_RET(pHandle, error);
+    ALCP_BAD_PTR_ERR_RET(pHandle->rh_context, error);
+
     switch (pRngInfo->ri_type) {
         case ALC_RNG_TYPE_DESCRETE:
             switch (pRngInfo->ri_distrib) {
@@ -123,6 +134,9 @@ alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
                     Uint64           size /* output buffer size */
 )
 {
+    ALCP_BAD_PTR_ERR_RET(pRngHandle, error);
+    ALCP_BAD_PTR_ERR_RET(pRngHandle->rh_context, error);
+
     alc_error_t err = ALC_ERROR_NONE;
 
     if (size == 0) {
@@ -140,7 +154,8 @@ alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
 alc_error_t
 alcp_rng_reseed(alc_rng_handle_p pRngHandle)
 {
-
+    ALCP_BAD_PTR_ERR_RET(pRngHandle, error);
+    ALCP_BAD_PTR_ERR_RET(pRngHandle->rh_context, error);
     alcp::rng::Context* ctx = (alcp::rng::Context*)pRngHandle->rh_context;
 
     // FiXME: Status variable in context should be set with Status returned
@@ -150,6 +165,8 @@ alcp_rng_reseed(alc_rng_handle_p pRngHandle)
 alc_error_t
 alcp_rng_finish(alc_rng_handle_p pRngHandle)
 {
+    ALCP_BAD_PTR_ERR_RET(pRngHandle, error);
+    ALCP_BAD_PTR_ERR_RET(pRngHandle->rh_context, error);
     alcp::rng::Context* ctx = (alcp::rng::Context*)pRngHandle->rh_context;
 
     // FiXME: Status variable in context should be set with Status returned.
