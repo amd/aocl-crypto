@@ -70,6 +70,17 @@ __sha_finalize_wrapper(void* pDigest, const Uint8* pBuf, Uint64 len)
 
     return e;
 }
+template<typename DIGESTTYPE>
+static alc_error_t
+__sha_setDigestSize_wrapper(void* pDigest, Uint64 len)
+{
+    alc_error_t e = ALC_ERROR_NONE;
+
+    auto ap = static_cast<DIGESTTYPE*>(pDigest);
+    e       = ap->setDigestSize(len);
+
+    return e;
+}
 
 template<typename DIGESTTYPE>
 static alc_error_t
@@ -145,6 +156,9 @@ __build_sha(const alc_digest_info_t& sha2Info, Context& ctx)
     ctx.finish = __sha_dtor<ALGONAME>;
     ctx.reset  = __sha_reset_wrapper<ALGONAME>;
 
+    // setDigestSize is not implemented for SHA2
+    ctx.setDigestSize = nullptr;
+
     return err;
 }
 
@@ -204,6 +218,15 @@ class Sha3Builder
         rCtx.finalize    = __sha_finalize_wrapper<Sha3>;
         rCtx.finish      = __sha_dtor<Sha3>;
         rCtx.reset       = __sha_reset_wrapper<Sha3>;
+
+        // FIXME: Currently restricting setDigestSize to SHAKE128 or SHAKE256
+        if (rDigestInfo.dt_type == ALC_DIGEST_TYPE_SHA3
+            && (rDigestInfo.dt_mode.dm_sha3 == ALC_SHAKE_128
+                || rDigestInfo.dt_mode.dm_sha3 == ALC_SHAKE_256)) {
+            rCtx.setDigestSize = __sha_setDigestSize_wrapper<Sha3>;
+        } else {
+            rCtx.setDigestSize = nullptr;
+        }
         return err;
     }
 };
