@@ -695,7 +695,6 @@ __rshift(std::vector<Uint64>& r, std::vector<Uint64> a, int shifts)
         }
         return;
     }
-
     for (int k = alen - 1; j >= 0; k--) {
 
         // using overflow data of previous index present in carry
@@ -792,13 +791,6 @@ void
 BigNum::Impl::exp_mod(const BigNum& num, const BigNum& exp, const BigNum& mod)
 {
     ALCP_ASSERT(false, "Not Implemented");
-}
-
-BigNum
-BigNum::Impl::exp_mod(unsigned int pow, BigNum mod)
-{
-    BigNum result = exp(pow) % mod;
-    return result;
 }
 
 /**

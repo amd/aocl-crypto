@@ -259,12 +259,6 @@ BigNum::exp_mod(const BigNum& num, const BigNum& exp, const BigNum& mod)
     pImpl()->exp_mod(num, exp, mod);
 }
 
-BigNum
-BigNum::exp_mod(unsigned int pow, BigNum mod)
-{
-    return pImpl()->exp_mod(pow, mod);
-}
-
 bool
 BigNum::operator==(const BigNum& rhs)
 {

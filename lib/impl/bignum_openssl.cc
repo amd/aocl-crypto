@@ -260,24 +260,6 @@ class BigNum::Impl
             BN_zero(raw());
     }
 
-    inline BigNum exp_mod(unsigned int pow, BigNum mod)
-    {
-        BigNum    result, power;
-        BigNumCtx ctx;
-        int       ret = 0;
-        power.fromUint32(pow);
-
-        ret = BN_exp_mod(result.pImpl()->raw(),
-                         raw(),
-                         power.pImpl()->raw(),
-                         mod.pImpl()->raw(),
-                         ctx.raw());
-
-        ALCP_ASSERT(ret == 1, "BN_exp failed");
-
-        return result;
-    }
-
     inline bool isZero(const BigNum& num) const
     {
         return BN_is_zero(num.pImpl()->raw());
