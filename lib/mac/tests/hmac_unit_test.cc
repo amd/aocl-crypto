@@ -31,6 +31,7 @@
 #include "alcp/digest/sha2_384.hh"
 #include "alcp/digest/sha3.hh"
 #include "alcp/mac/hmac.hh"
+#include "alcp/mac/macerror.hh"
 #include "alcp/types.h"
 #include "gtest/gtest.h"
 
@@ -38,8 +39,8 @@
 using alcp::mac::Hmac;
 using namespace alcp::digest;
 using namespace alcp::base;
+using namespace alcp::mac::status;
 
-// TODO: Remove DEBUG Once capi is complete
 // #define DEBUG 1
 
 // TODO: Add these helper functions to a common utility file outside of
@@ -609,7 +610,7 @@ TEST(HmacRobustnessTest, callUpdateWithNullKeyNullDigest)
 
     Hmac   hmac;
     Status s = hmac.update(nullptr, 0);
-    EXPECT_FALSE(s.ok());
+    EXPECT_EQ(s, EmptyHMACDigestError(""));
 }
 
 TEST(HmacRobustnessTest, callUpdateWithNullKey)
@@ -620,7 +621,7 @@ TEST(HmacRobustnessTest, callUpdateWithNullKey)
 
     hmac.setDigest(sha256);
     Status s = hmac.update(nullptr, 0);
-    EXPECT_FALSE(s.ok());
+    EXPECT_EQ(s, EmptyKeyError(""));
 }
 
 TEST(HmacRobustnessTest, callUpdateWithNullDigest)
@@ -630,7 +631,7 @@ TEST(HmacRobustnessTest, callUpdateWithNullDigest)
     Uint8 key[16]{};
     hmac.setKey(key, sizeof(key));
     Status s = hmac.update(nullptr, 0);
-    EXPECT_FALSE(s.ok());
+    EXPECT_EQ(s, EmptyHMACDigestError(""));
 }
 
 TEST(HmacRobustnessTest, callFinalizeWithNullKeyNullDigest)
@@ -638,7 +639,7 @@ TEST(HmacRobustnessTest, callFinalizeWithNullKeyNullDigest)
 
     Hmac   hmac;
     Status s = hmac.finalize(nullptr, 0);
-    EXPECT_FALSE(s.ok());
+    EXPECT_EQ(s, EmptyHMACDigestError(""));
 }
 
 TEST(HmacRobustnessTest, callFinalizeWithNullKey)
@@ -649,7 +650,7 @@ TEST(HmacRobustnessTest, callFinalizeWithNullKey)
 
     hmac.setDigest(sha256);
     Status s = hmac.finalize(nullptr, 0);
-    EXPECT_FALSE(s.ok());
+    EXPECT_EQ(s, EmptyKeyError(""));
 }
 
 TEST(HmacRobustnessTest, callFinalizeWithNullDigest)
@@ -659,7 +660,7 @@ TEST(HmacRobustnessTest, callFinalizeWithNullDigest)
     Uint8 key[16]{};
     hmac.setKey(key, sizeof(key));
     Status s = hmac.finalize(nullptr, 0);
-    EXPECT_FALSE(s.ok());
+    EXPECT_EQ(s, EmptyHMACDigestError(""));
 }
 
 TEST(HmacRobustnessTest, callUpdateAfterFinalize)
@@ -677,7 +678,7 @@ TEST(HmacRobustnessTest, callUpdateAfterFinalize)
     s = hmac.finalize(data, sizeof(data));
     ASSERT_TRUE(s.ok());
     s = hmac.update(data, sizeof(data));
-    EXPECT_FALSE(s.ok());
+    EXPECT_EQ(s, UpdateAfterFinalzeError(""));
 }
 
 TEST(HmacRobustnessTest, callFinalizeTwice)
@@ -695,7 +696,7 @@ TEST(HmacRobustnessTest, callFinalizeTwice)
     s = hmac.finalize(data, sizeof(data));
     ASSERT_TRUE(s.ok());
     s = hmac.finalize(data, sizeof(data));
-    EXPECT_FALSE(s.ok());
+    ASSERT_EQ(s, AlreadyFinalizedError(""));
 }
 
 TEST(HmacRobustnessTest, callSetKeyWithoutSetDigest)
@@ -706,7 +707,7 @@ TEST(HmacRobustnessTest, callSetKeyWithoutSetDigest)
 
     Uint8  key[16]{};
     Status s = hmac.setKey(key, sizeof(key));
-    ASSERT_FALSE(s.ok());
+    ASSERT_EQ(s, EmptyHMACDigestError(""));
 }
 
 TEST(HmacRobustnessTest, callCopyWithoutFinalize)
@@ -719,7 +720,7 @@ TEST(HmacRobustnessTest, callCopyWithoutFinalize)
     hmac.setDigest(sha256);
     hmac.setKey(key, sizeof(key));
     Status s = hmac.copyHash(nullptr, 0);
-    EXPECT_FALSE(s.ok());
+    EXPECT_EQ(s, CopyWithoutFinalizeError(""));
 }
 
 INSTANTIATE_TEST_SUITE_P(

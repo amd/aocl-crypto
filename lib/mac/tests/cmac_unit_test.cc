@@ -30,11 +30,14 @@
 #include "gtest/gtest.h"
 #include <tuple>
 
+#include "alcp/mac/macerror.hh"
 #include "alcp/utils/cpuid.hh"
 
 using namespace alcp::base;
 using alcp::mac::Cmac;
 using alcp::utils::CpuId;
+
+using namespace alcp::mac::status;
 
 typedef std::tuple<std::vector<Uint8>, // 128 bit input
                    std::vector<Uint8>  // 128 bit output
@@ -331,7 +334,7 @@ TEST(CMACRobustnessTest, CMAC_callUpdateOnNullKey)
     Uint8 data[20];
 
     Status s = cmac2.update(data, sizeof(data));
-    ASSERT_FALSE(s.ok());
+    ASSERT_EQ(s, EmptyKeyError(""));
 }
 
 TEST(CMACRobustnessTest, CMAC_callFinalizeOnNullKey)
@@ -340,7 +343,7 @@ TEST(CMACRobustnessTest, CMAC_callFinalizeOnNullKey)
     Uint8 data[20];
 
     Status s = cmac2.finalize(data, sizeof(data));
-    ASSERT_FALSE(s.ok());
+    ASSERT_EQ(s, EmptyKeyError(""));
 }
 
 TEST(CMACRobustnessTest, CMAC_callCopyOnNullKey)
@@ -349,7 +352,7 @@ TEST(CMACRobustnessTest, CMAC_callCopyOnNullKey)
     Uint8 mac[16];
 
     Status s = cmac2.copy(mac, sizeof(mac));
-    ASSERT_FALSE(s.ok());
+    ASSERT_EQ(s, CopyWithoutFinalizeError(""));
 }
 
 TEST(CMACRobustnessTest, CMAC_callCopyWithoutFinalize)
@@ -361,7 +364,7 @@ TEST(CMACRobustnessTest, CMAC_callCopyWithoutFinalize)
     Status s = cmac2.setKey(key, sizeof(key) * 8);
     ASSERT_TRUE(s.ok());
     s = cmac2.copy(mac, sizeof(mac));
-    ASSERT_FALSE(s.ok());
+    ASSERT_EQ(s, CopyWithoutFinalizeError(""));
 }
 
 TEST(CMACRobustnessTest, CMAC_callUpdateAfterFinalize)
@@ -375,7 +378,7 @@ TEST(CMACRobustnessTest, CMAC_callUpdateAfterFinalize)
     s = cmac2.finalize(nullptr, 0);
     ASSERT_TRUE(s.ok());
     s = cmac2.update(nullptr, 0);
-    ASSERT_FALSE(s.ok());
+    ASSERT_EQ(s, UpdateAfterFinalzeError(""));
 }
 
 TEST(CMACRobustnessTest, CMAC_callFinalizeTwice)
@@ -390,7 +393,7 @@ TEST(CMACRobustnessTest, CMAC_callFinalizeTwice)
     ASSERT_TRUE(s.ok());
 
     s = cmac2.finalize(nullptr, 0);
-    ASSERT_FALSE(s.ok());
+    ASSERT_EQ(s, AlreadyFinalizedError(""));
 }
 
 #ifdef NDEBUG
