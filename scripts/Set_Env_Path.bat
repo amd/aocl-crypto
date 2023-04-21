@@ -1,0 +1,1 @@
+setx PATH ";%~dp0..\build\bin\Release;%~dp0..\build\lib\Release;%~dp0..\build\_deps\benchmark-build\src\Release;%~dp0..\build\bin\Debug;%~dp0..\build\lib\Debug;%~dp0..\build\_deps\benchmark-build\src\Debug;%PATH%"

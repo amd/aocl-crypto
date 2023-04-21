@@ -1,59 +1,48 @@
-# AOCL Crypto Build for Windows
+## AOCL Crypto Library Build for Windows(Clang)
 
 ### Following software should be installed prior to build AOCL-CRYPTO 
 
 => MS Visual Studio (2019 or greater)
-=> Git
+=> Clang 15.0 or above
 => Python 3.7 or greater
-=> Cmake
+=> Cmake 3.21 or greater
+=> Git
 
-### AOCL Crypto Library in Windows
+##Environment Setup:
 
-1. After git checkout the latest Crypto_Lib for windows.
-2. Open the powershell.exe as administrator.
-3. cd to current working directory/cmake_source_directory
-
-### Building
-
-`you can enable EXAMPLES, TESTS & BENCH & generate the Project Files. Here you are specify cmake generator, by default 'Visual Studio': platform: 'x64' (by default): and for toolset current configuration use 'ClangCl'
-
-```Powershell
-
-> cmake -A x64 -B build -DALCP_ENABLE_EXAMPLES=ON -DALCP_ENABLE_TESTS=ON -DALCP_ENABLE_BENCH=ON -DCMAKE_BUILD_TYPE=RELEASE -T ClangCl
+1. Install visual Studio with workload: *Desktop development with c++*
+	-Enable Clang/cl tools(required) & Address Santizer(if require)
+2. If using LLVM/Clang as external toolset:
+	-Install LLVM
+	-Install plugin: *llvm2019.vsix* :https://marketplace.visualstudio.com/items?itemName=MarekAniola.mangh-llvm2019
+	-Install VS19 version 16.10	
  
- ---Build binaries will be written to cmake_source_directory/build
- 
- To build the cmake projects->
-> cmake --build build/ --config=release
- 
+### Windows Build with LLVM/Clang:
+------------------
+using Powershell:
+------------------
+1. Checkout the latest code.
+2. Open the powershell.exe (as administrator)
+3. Set path to current working directory/cmake_source_directory
 
-```
-### Build after enabling compat libs, CPUID
-```Enabling openSSL, IPP-Crypto
+### Build
 
-> cmake -A x64 -B build -DCMAKE_BUILD_TYPE=RELEASE -DALCP_ENABLE_EXAMPLES=ON -DALCP_ENABLE_TESTS=ON -DALCP_ENABLE_BENCH=ON -DENABLE_AOCL_CPUID=ON -DAOCL_CPUID_INSTALL_DIR=path/to/libcpuid 
--DENABLE_TESTS_OPENSSL_API=ON -DOPENSSL_INSTALL_DIR=path/to/openssl -DENABLE_TESTS_IPP_API=ON -DIPP_INSTALL_DIR=path/to/ipp_crypto -T ClangCl
-> cmake --build build/ --config=release
-```
+`Run from source directory`
 
-### Extra steps to found dll's by setting an environment variable
-`Try to Run the tests, if alcp & gtests dll's are not found, run the batch file, this batch file set the environment path for tests & bench.
+**PS: cmake -A [platform: x86/x64] -B [build_directory] [Enable features] -DCMAKE_BUILD_TYPE=[RELEASE] -G "[generator: Visual Studio 17 2022]" -T [toolset:ClangCl/LLVM]
 
-> Set_Env_Path.bat
-And restart the powershell & set the path to current cmake source directory.
+```Default set values=> Generator:'Visual Studio Generator', platform: 'x64'
+if external LLVM toolset use: -T LLVM (otherwise,ClangCl)
+Available features: EXAMPLES, ADDRESS SANITIZER, TESTS, BENCH```
 
-### For run the Cipher & Digest Tests
-> cd build
-> ctest -C release
+`Powershell`
 
-### For run the Cipher & Digest bench
-``` For running the benchmarking for cipher & digests, you can run the following batch files
-.\bench\digest\release\bench_digest
-.\bench\cipher\release\bench_cipher
-```
+*1. cmake -A x64 -DCMAKE_BUILD_TYPE=RELEASE -B build -T ClangCl
+		`-Build binaries will be written to cmake_source_directory/build`
+*2. cmake --build .\build --config=release
 
-> **Important Notes: ASAN is not configured for Windows yet.**  
 
+> **Important Notes: ASAN in an experimental phase for Windows.**  
 
 ### Enabling features of AOCL-Crypto
 
@@ -61,36 +50,81 @@ And restart the powershell & set the path to current cmake source directory.
 2. [Enable CPUID - To dispatch correct kernel with CPU identification.](#win-cpu)
 3. [Enable DEBUG Build - To compile code in Debug Mode.](#win-debug)
 4. [Enable Address Sanitizer Support ](#win-asan)
-5. [Enable Bench - To compile bench code.](#win-bench)
-6. [Enable Tests - To compile test code](#win-tests)
+5. [Enable Tests - To compile test code](#win-tests)
+6. [Enable Bench - To compile bench code.](#win-bench)
+
+** Steps to found binaries/dll's by setting an environment variable*************
+
+After build,alcp & gtests dll's are not found by feature's *.exe.
+Run the batch file, this .bat file set the environment path required by examples,tests & bench.
+```
+PS> scripts\Set_Env_Path.bat
+-Restart the powershell & run any feature .exe from build directory or directly.
+```
+********************************************************************************
 
 <div id = "win-ex"></div>
 
 #### Enable Examples Append
 
 ```
-$ cmake -DALCP_ENABLE_EXAMPLES=ON -B build
+PS> cmake -DALCP_ENABLE_EXAMPLES=ON -B build 
+PS> cmake --build .\build --config=release
 ```
+## Run Examples
+Run from build directory after setting an environment path.
+```
+$ .\examples\{alogrithm_type}\release\{alogrithm_type}\*.exe
+```
+
 <div id = "win-cpu"></div>
 
 #### Enable CPUID Append
+```
+PS> cmake -DENABLE_AOCL_CPUID=ON -DAOCL_CPUID_INSTALL_DIR=path/to/aocl/cpuid/source -B build
+PS> cmake --build .\build --config=release
+```
 
-```
-$ cmake -DAOCL_CPUID_INSTALL_DIR=path/to/aocl/cpuid/source ../
-```
 <div id = "win-debug"></div>
 
 #### For Debug Build
 
 ```
-$ cmake -DCMAKE_BUILD_TYPE=DEBUG -B build
+PS> cmake -DCMAKE_BUILD_TYPE=DEBUG -B build
+PS> cmake --build .\build --config=debug
 ```
 <div id = "win-asan"></div>
 
 #### For Compiling with Address Sanitizer Support
+
+ASAN(Experimental)
 ```
-ASAN is not configured for windows yet
+PS> cmake -DALCP_SANITIZE=ON -B build
+PS> cmake --build .\build --config=release
 ```
+<div id = "win-tests"></div>
+
+`Running from build directory
+PS>cd build
+
+#### To Build Tests (using KAT vectors)
+```
+$ Append the argument '-DALCP_ENABLE_TESTS=ON'
+
+PS> cmake -DALCP_ENABLE_TESTS=ON ./
+PS> cmake --build . --config=release
+```
+ This will create test executable:
+ .\build\tests\{alogrithm_type}\release\*.exe
+
+#### To Run Tests:
+ ``` PS
+ $ .\tests\{alogrithm_type}\release\test_{alogrithm_type}
+ ```
+```For running all tests
+PS> ctest -C release
+```
+
 <div id = "win-bench"></div>
 
 #### Build Benchmarks
@@ -98,9 +132,12 @@ ASAN is not configured for windows yet
 ##### To Build Bench
 ```
 $ Append the argument -DALCP_ENABLE_BENCH=ON
-  This will create bench executable:
-  .\bench\{alogrithm_type}\ -B build
+PS> cmake -DALCP_ENABLE_BENCH=ON ./
+PS> cmake --build . --config=release
 ```
+  This will create bench executable into:
+  .\build\bench\{alogrithm_type}\{build_type}\*.exe
+
 ##### To Run Bench:
 ```
 $ .\bench\{alogrithm_type}\release\bench_{alogrithm_type}
@@ -112,18 +149,31 @@ $ .\bench\{alogrithm_type}\release\bench_{alogrithm_type} --benchmark_filter=SHA
 $ .\bench\{alogrithm_type}\release\bench_{alogrithm_type} --benchmark_filter=SHA2_512 (runs SHA512 schemes for all block size)
 $ .\bench\{alogrithm_type}\release\bench_{alogrithm_type} --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
 ```
-<div id = "win-tests"></div>
 
-#### To Build Tests (using KAT vectors)
+### Enabling compat libs
+
+1. [Enable OpenSSL - To compare performance .](#win-OSSL)
+2. [Enable IPPCP - To dcompare performance.](#win-IPPCP)
+
+### Build after enabling compat libs
+
+<div id = "OpenSSL"> </div>
+```Enabling openSSL
+
+PS> cmake -DENABLE_TESTS_OPENSSL_API=ON -DOPENSSL_INSTALL_DIR=path/to/openssl ./
+PS> cmake --build build/ --config=release
 ```
-$ Append the argument '-DALCP_ENABLE_TESTS=ON'
- This will create test executable:
- .\tests\{alogrithm_type}\release
-```
+<div id = "IPPCP"> </div>
 
-#### To Run Tests:
- ```  PS
- $ .\tests\{alogrithm_type}\release\test_{alogrithm_type}
- ```
+```Enabling IPP-Crypto
+PS> cmake -DENABLE_TESTS_IPP_API=ON -DIPP_INSTALL_DIR=path/to/ipp_crypto ./
+PS> cmake --build build/ --config=release
+``
 
-
+NOTES->
+-------
+1. Use '-o' for OpenSSL & '-i' for IPPCP to run tests & bench for them. And also set bin path of compat libs in PATH variable.
+2. Run *scripts\Set_Env_Path.bat* to set the path of binaries in environment variable.
+3. To Enable examples tests & bench:
+>cmake -A x64 -DALCP_ENABLE_EXAMPLES=ON -DALCP_ENABLE_TESTS=ON -DALCP_ENABLE_BENCH=ON -DCMAKE_BUILD_TYPE=RELEASE -B build -T ClangCl
+4. Few non-critical warnings are expected in Windows build with Clang while integrating other libs.
