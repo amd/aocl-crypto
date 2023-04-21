@@ -38,6 +38,7 @@ TARGETS := cipher/aes-cfb cipher/aes-demo cipher/aes-siv cipher/aes-xts cipher/a
 			rng/rng-demo \
 			mac/hmac mac/cmac \
 			ecdh/x25519_example \
+			rsa/rsa_peer rsa/rsa_encrypt rsa/rsa_decrypt
 			version/version-demo
 
 .PHONY: all
@@ -54,6 +55,7 @@ create:
 	@mkdir -p $(OBJ)/mac
 	@mkdir -p $(OBJ)/ecdh
 	@mkdir -p $(OBJ)/version
+	@mkdir -p $(OBJ)/rsa
 
 build: $(TARGETS)
 	@echo "Build Success"
