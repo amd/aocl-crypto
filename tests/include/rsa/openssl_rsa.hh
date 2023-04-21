@@ -30,6 +30,7 @@
 #include "openssl/conf.h"
 #include "openssl/err.h"
 #include "openssl/evp.h"
+#include "openssl/rsaerr.h"
 #include "rsa/rsa.hh"
 #include <iostream>
 #include <malloc.h>

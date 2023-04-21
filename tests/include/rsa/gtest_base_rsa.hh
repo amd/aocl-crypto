@@ -71,12 +71,15 @@ PrintRsaTestData(alcp_rsa_data_t data)
 bool
 SkipTest(int ret_val, std::string LibStr)
 {
-    /* openssl returns 132 error code for invalid inputs
-      and alcp returns 1 */
-    if ((LibStr.compare("OpenSSL") == 0) && ret_val == 132) {
+    /* for invalid
+      inputs, openssl returns RSA_R_DATA_TOO_LARGE_FOR_MODULUS and
+      alcp returns ALC_ERROR_NOT_PERMITTED */
+    if ((LibStr.compare("OpenSSL") == 0)
+        && ret_val == RSA_R_DATA_TOO_LARGE_FOR_MODULUS) {
         std::cout << "Invalid case: Skipping this test" << std::endl;
         return true;
-    } else if ((LibStr.compare("ALCP") == 0) && ret_val != 0) {
+    } else if ((LibStr.compare("ALCP") == 0)
+               && ret_val == ALC_ERROR_NOT_PERMITTED) {
         std::cout << "Invalid case: Skipping this test" << std::endl;
         return true;
     } else
