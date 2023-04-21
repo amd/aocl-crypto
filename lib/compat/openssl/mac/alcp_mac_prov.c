@@ -175,19 +175,19 @@ HMAC_init(char* digest, alc_mac_info_p macinfo)
     } else if (!strcasecmp(digest, "sha3-224")) {
         digest_type         = ALC_DIGEST_TYPE_SHA3;
         digest_len          = ALC_DIGEST_LEN_224;
-        digest_mode.dm_sha3 = ALC_SHA2_224;
+        digest_mode.dm_sha3 = ALC_SHA3_224;
     } else if (!strcasecmp(digest, "sha3-256")) {
         digest_type         = ALC_DIGEST_TYPE_SHA3;
         digest_len          = ALC_DIGEST_LEN_256;
-        digest_mode.dm_sha3 = ALC_SHA2_256;
+        digest_mode.dm_sha3 = ALC_SHA3_256;
     } else if (!strcasecmp(digest, "sha3-384")) {
         digest_type         = ALC_DIGEST_TYPE_SHA3;
         digest_len          = ALC_DIGEST_LEN_384;
-        digest_mode.dm_sha3 = ALC_SHA2_384;
+        digest_mode.dm_sha3 = ALC_SHA3_384;
     } else if (!strcasecmp(digest, "sha3-512")) {
         digest_type         = ALC_DIGEST_TYPE_SHA3;
         digest_len          = ALC_DIGEST_LEN_512;
-        digest_mode.dm_sha3 = ALC_SHA2_512;
+        digest_mode.dm_sha3 = ALC_SHA3_512;
     } else {
         printf("HMAC Provider: Digest '%s' Not Supported", digest);
         EXIT();

@@ -36,7 +36,7 @@
 #include "config.h"
 
 namespace alcp {
-#ifndef COMPILER_IS_GCC
+#ifndef ALCP_BUILD_OS_LINUX
 #pragma warning(disable : 4996)
 #endif
 /**
@@ -91,7 +91,7 @@ struct Exception : public std::exception
     int            m_errNo;
     SourceLocation m_where;
 };
-#ifndef COMPILER_IS_GCC
+#ifndef ALCP_BUILD_OS_LINUX
 #pragma warning(default : 4996)
 #endif
 /**
