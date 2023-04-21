@@ -25,6 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -295,7 +296,7 @@ main(void)
         // check if the outputs are matching
         hash_to_string(output_string, sample_output, hash_size);
         printf("Input : %s\n", sample_input);
-        printf("Input chunks : %llu\n", num_chunks);
+        printf("Input chunks : %10" PRId64 "\n", num_chunks);
         printf("output size : %u\n", hash_size);
         printf("output : %s\n", output_string);
         if (strcmp(expected_output, output_string)) {
