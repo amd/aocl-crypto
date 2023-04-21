@@ -89,7 +89,7 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
                        Uint64*  pHashSubkeyTable)
 {
     __m512i swap_ctr, c1;
-    __m512i one_lo, one_x, two_x, three_x, four_x, eight_x;
+    __m512i one_lo, one_x, two_x, three_x, four_x;
 
     void (*fAesEncryptNoLoad_4x512)(
         __m512i & a, __m512i & b, __m512i & c, __m512i & d, const sKeys keys);
@@ -100,15 +100,8 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
         _mm256_set_epi64x(0xC200000000000000, 0x1, 0xC200000000000000, 0x1);
 
     /* gcm init + Hash subkey init */
-    gcmCryptInit(&c1,
-                 iv_128,
-                 &one_lo,
-                 &one_x,
-                 &two_x,
-                 &three_x,
-                 &four_x,
-                 &eight_x,
-                 &swap_ctr);
+    gcmCryptInit(
+        &c1, iv_128, &one_lo, &one_x, &two_x, &three_x, &four_x, &swap_ctr);
 
     _mm_prefetch(cast_to(pkey128), _MM_HINT_T1);
 
@@ -735,7 +728,7 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
                        Uint64*  pHashSubkeyTable)
 {
     __m512i swap_ctr, c1;
-    __m512i one_lo, one_x, two_x, three_x, four_x, eight_x;
+    __m512i one_lo, one_x, two_x, three_x, four_x;
 
     void (*fAesEncryptNoLoad_4x512)(
         __m512i & a, __m512i & b, __m512i & c, __m512i & d, const sKeys keys);
@@ -746,15 +739,8 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
         _mm256_set_epi64x(0xC200000000000000, 0x1, 0xC200000000000000, 0x1);
 
     /* gcm init + Hash subkey init */
-    gcmCryptInit(&c1,
-                 iv_128,
-                 &one_lo,
-                 &one_x,
-                 &two_x,
-                 &three_x,
-                 &four_x,
-                 &eight_x,
-                 &swap_ctr);
+    gcmCryptInit(
+        &c1, iv_128, &one_lo, &one_x, &two_x, &three_x, &four_x, &swap_ctr);
 
     _mm_prefetch(cast_to(pkey128), _MM_HINT_T1);
 
@@ -1360,7 +1346,7 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
                        Uint64*  pHashSubkeyTable)
 {
     __m512i swap_ctr, c1;
-    __m512i one_lo, one_x, two_x, three_x, four_x, eight_x;
+    __m512i one_lo, one_x, two_x, three_x, four_x;
 
     void (*fAesEncryptNoLoad_4x512)(
         __m512i & a, __m512i & b, __m512i & c, __m512i & d, const sKeys keys);
@@ -1371,15 +1357,8 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
         _mm256_set_epi64x(0xC200000000000000, 0x1, 0xC200000000000000, 0x1);
 
     /* gcm init + Hash subkey init */
-    gcmCryptInit(&c1,
-                 iv_128,
-                 &one_lo,
-                 &one_x,
-                 &two_x,
-                 &three_x,
-                 &four_x,
-                 &eight_x,
-                 &swap_ctr);
+    gcmCryptInit(
+        &c1, iv_128, &one_lo, &one_x, &two_x, &three_x, &four_x, &swap_ctr);
 
     _mm_prefetch(cast_to(pkey128), _MM_HINT_T1);
 

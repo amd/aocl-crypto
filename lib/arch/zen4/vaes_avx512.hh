@@ -38,18 +38,17 @@ namespace alcp::cipher { namespace vaes512 {
     alc_error_t ExpandKeys(const Uint8* pUserKey,
                            Uint8*       pEncKey,
                            Uint8*       pDecKey,
-                           int            nRounds);
+                           int          nRounds);
 
     // ctr APIs for vaes
-    void ctrInit(__m512i*       c1,
+    void ctrInit(__m512i*     c1,
                  const Uint8* pIv,
-                 __m512i*       onelo,
-                 __m512i*       one_x,
-                 __m512i*       two_x,
-                 __m512i*       three_x,
-                 __m512i*       four_x,
-                 __m512i*       eight_x,
-                 __m512i*       swap_ctr);
+                 __m512i*     onelo,
+                 __m512i*     one_x,
+                 __m512i*     two_x,
+                 __m512i*     three_x,
+                 __m512i*     four_x,
+                 __m512i*     swap_ctr);
 
     // Encrypt Begins here
     /* 1 x 4 block at a time */

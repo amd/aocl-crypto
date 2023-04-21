@@ -51,17 +51,10 @@ namespace alcp::cipher { namespace aes {
         T a1, a2, a3, a4;
         T b1, b2, b3, b4;
         T c1, c2, c3, c4, swap_ctr;
-        T one_lo, one_x, two_x, three_x, four_x, eight_x;
+        T one_lo, one_x, two_x, three_x, four_x;
 
-        ctrInit(&c1,
-                pIv,
-                &one_lo,
-                &one_x,
-                &two_x,
-                &three_x,
-                &four_x,
-                &eight_x,
-                &swap_ctr);
+        ctrInit(
+            &c1, pIv, &one_lo, &one_x, &two_x, &three_x, &four_x, &swap_ctr);
 
         Uint64 blockCount4 = 4 * factor;
         Uint64 blockCount2 = 2 * factor;

@@ -121,7 +121,6 @@ gcmCryptInit(__m128i* c1,
              __m128i* two_x,
              __m128i* three_x,
              __m128i* four_x,
-             __m128i* eight_x,
              __m128i* swap_ctr)
 {
 
@@ -164,18 +163,11 @@ gcmBlk(const __m128i* p_in_x,
     __m128i a1, a2, a3, a4;
     __m128i b1, b2, b3, b4;
     __m128i c1, c2, c3, c4, swap_ctr;
-    __m128i one_lo, one_x, two_x, three_x, four_x, eight_x;
+    __m128i one_lo, one_x, two_x, three_x, four_x;
 
     /* gcm init + Hash subkey init */
-    gcmCryptInit(&c1,
-                 iv_128,
-                 &one_lo,
-                 &one_x,
-                 &two_x,
-                 &three_x,
-                 &four_x,
-                 &eight_x,
-                 &swap_ctr);
+    gcmCryptInit(
+        &c1, iv_128, &one_lo, &one_x, &two_x, &three_x, &four_x, &swap_ctr);
 
     __m128i Hsubkey_128_2, Hsubkey_128_3, Hsubkey_128_4;
     if (blocks >= 4) {

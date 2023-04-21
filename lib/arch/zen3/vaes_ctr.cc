@@ -45,7 +45,6 @@ ctrInit(__m256i*     c1,
         __m256i*     two_x,
         __m256i*     three_x,
         __m256i*     four_x,
-        __m256i*     eight_x,
         __m256i*     swap_ctr)
 {
 
@@ -54,7 +53,6 @@ ctrInit(__m256i*     c1,
     *two_x   = alcp_set_epi32(4, 0, 0, 0, 4, 0, 0, 0);
     *three_x = alcp_set_epi32(6, 0, 0, 0, 6, 0, 0, 0);
     *four_x  = alcp_set_epi32(8, 0, 0, 0, 8, 0, 0, 0);
-    *eight_x = alcp_set_epi32(16, 0, 0, 0, 16, 0, 0, 0);
 
     //
     // counterblock :: counter 4 bytes: IV 8 bytes : Nonce 4 bytes

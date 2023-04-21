@@ -52,7 +52,6 @@ void inline gcmCryptInit(__m512i* c1,
                          __m512i* two_x,
                          __m512i* three_x,
                          __m512i* four_x,
-                         __m512i* eight_x,
                          __m512i* swap_ctr)
 {
 
@@ -63,8 +62,6 @@ void inline gcmCryptInit(__m512i* c1,
         alcp_set_epi32(12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0);
     *four_x =
         alcp_set_epi32(16, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0);
-    *eight_x =
-        alcp_set_epi32(32, 0, 0, 0, 32, 0, 0, 0, 32, 0, 0, 0, 32, 0, 0, 0);
 
     //
     // counterblock :: counter 4 bytes: IV 8 bytes : Nonce 4 bytes

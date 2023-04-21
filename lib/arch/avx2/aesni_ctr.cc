@@ -47,7 +47,6 @@ ctrInit(__m128i*     c1,
         __m128i*     two_x,
         __m128i*     three_x,
         __m128i*     four_x,
-        __m128i*     eight_x,
         __m128i*     swap_ctr)
 {
 

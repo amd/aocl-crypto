@@ -154,7 +154,6 @@ namespace aesni {
                       __m128i* two_x,
                       __m128i* three_x,
                       __m128i* four_x,
-                      __m128i* eight_x,
                       __m128i* swap_ctr);
 
     alc_error_t CryptGcm(const Uint8* pPlainText,
@@ -187,7 +186,6 @@ namespace aesni {
                  __m128i*     two_x,
                  __m128i*     three_x,
                  __m128i*     four_x,
-                 __m128i*     eight_x,
                  __m128i*     swap_ctr);
 
     Uint64 ctrProcessAvx2(const Uint8*   p_in_x,
@@ -327,7 +325,6 @@ namespace vaes {
                  __m256i*     two_x,
                  __m256i*     three_x,
                  __m256i*     four_x,
-                 __m256i*     eight_x,
                  __m256i*     swap_ctr);
 
     Uint64 ctrProcessAvx256(const Uint8*   p_in_x,

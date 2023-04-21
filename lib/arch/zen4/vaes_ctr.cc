@@ -47,7 +47,6 @@ ctrInit(__m512i*     c1,
         __m512i*     two_x,
         __m512i*     three_x,
         __m512i*     four_x,
-        __m512i*     eight_x,
         __m512i*     swap_ctr)
 {
 
@@ -58,8 +57,6 @@ ctrInit(__m512i*     c1,
         alcp_set_epi32(12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0);
     *four_x =
         alcp_set_epi32(16, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0);
-    *eight_x =
-        alcp_set_epi32(32, 0, 0, 0, 32, 0, 0, 0, 32, 0, 0, 0, 32, 0, 0, 0);
 
     //
     // counterblock :: counter 4 bytes: IV 8 bytes : Nonce 4 bytes
@@ -105,17 +102,9 @@ ctrBlk(const __m512i* p_in_x,
     __m512i a1, a2, a3, a4;
     __m512i b1, b2, b3, b4;
     __m512i c1, c2, c3, c4, swap_ctr;
-    __m512i one_lo, one_x, two_x, three_x, four_x, eight_x;
+    __m512i one_lo, one_x, two_x, three_x, four_x;
 
-    ctrInit(&c1,
-            pIv,
-            &one_lo,
-            &one_x,
-            &two_x,
-            &three_x,
-            &four_x,
-            &eight_x,
-            &swap_ctr);
+    ctrInit(&c1, pIv, &one_lo, &one_x, &two_x, &three_x, &four_x, &swap_ctr);
 
     Uint64 blockCount4 = 4 * factor;
     Uint64 blockCount2 = 2 * factor;
