@@ -153,7 +153,7 @@ class Status final
         // FIXME m_message has to be set somehow
     }
 
-    friend Status StatusOk();
+    friend ALCP_API_EXPORT Status StatusOk();
 
     String makeMessage(const StringView& module_error,
                        const StringView& details)
@@ -196,7 +196,7 @@ Status::ok() const
  * @return
  * Status with message and a code.
  */
-ALCP_API_EXPORT Status
+Status
 StatusOk();
 
 // clang-format off

@@ -36,6 +36,8 @@
 #include <unistd.h>
 #else
 #include <io.h>
+#define isatty	_isatty
+#define fileno	_fileno
 #endif
 #include <sys/stat.h>
 

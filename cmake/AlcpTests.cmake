@@ -122,6 +122,9 @@ function(alcp_cc_test testName)
        )
   endif()
 
+  if(WIN32)
+  	add_compile_options(-Wno-missing-field-initializers)
+  endif()
 
   include_directories(${CMAKE_CURRENT_SOURCE_DIR})
   add_executable(${_target_name}

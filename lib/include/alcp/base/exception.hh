@@ -34,7 +34,7 @@
 #include <string>
 
 namespace alcp {
-
+#pragma warning(disable:4996)
 /**
  * The base class for all exceptions.
  */
@@ -82,7 +82,7 @@ struct Exception : public std::exception
     int            m_errNo;
     SourceLocation m_where;
 };
-
+#pragma warning(default:4996)
 /**
  * A fatal error that should exit the program.
  */
