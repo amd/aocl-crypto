@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,26 +33,34 @@
 #include <cstring>
 #include <string>
 
+#include "config.h"
+
 namespace alcp {
-#pragma warning(disable:4996)
+#ifndef COMPILER_IS_GCC
+#pragma warning(disable : 4996)
+#endif
 /**
  * The base class for all exceptions.
  */
 struct Exception : public std::exception
 {
+    // FIXME: strerror is depriciated in windows.
     Exception(const SourceLocation& where, string msg, int errNo)
         : m_message(msg + ": " + strerror(errNo))
         , m_errNo(errNo)
         , m_where(where)
-    {}
+    {
+    }
 
     explicit Exception(const SourceLocation& where)
         : Exception(where, "", 0)
-    {}
+    {
+    }
 
     Exception(const SourceLocation& where, std::string msg)
         : Exception(where, msg, 0)
-    {}
+    {
+    }
 
     Exception(const SourceLocation& where, int errNo)
         : Exception(where, "", errNo)
@@ -62,7 +70,8 @@ struct Exception : public std::exception
 
     Exception(const Exception& other)
         : Exception(other.m_where, other.m_message, other.m_errNo)
-    {}
+    {
+    }
 
     virtual ~Exception() throw() {}
 
@@ -82,7 +91,9 @@ struct Exception : public std::exception
     int            m_errNo;
     SourceLocation m_where;
 };
-#pragma warning(default:4996)
+#ifndef COMPILER_IS_GCC
+#pragma warning(default : 4996)
+#endif
 /**
  * A fatal error that should exit the program.
  */
@@ -90,64 +101,80 @@ struct FatalErrorException : public Exception
 {
     explicit FatalErrorException(const SourceLocation& where)
         : Exception(where)
-    {}
+    {
+    }
     FatalErrorException(const SourceLocation& where, std::string msg)
         : Exception(where, msg)
-    {}
+    {
+    }
     FatalErrorException(const SourceLocation& where, int errNo)
         : Exception(where, errNo)
-    {}
+    {
+    }
     FatalErrorException(const SourceLocation& where, string msg, int errNo)
         : Exception(where, msg, errNo)
-    {}
+    {
+    }
 };
 
 struct DataFormatException : public Exception
 {
     explicit DataFormatException(const SourceLocation& where)
         : DataFormatException(where, "", -1)
-    {}
+    {
+    }
     DataFormatException(const SourceLocation& where, std::string msg)
         : DataFormatException(where, msg, -1)
-    {}
+    {
+    }
     DataFormatException(const SourceLocation& where, int errNo)
         : DataFormatException(where, "", errNo)
-    {}
+    {
+    }
     DataFormatException(const SourceLocation& where, string msg, int errNo)
         : Exception(where, msg, errNo)
-    {}
+    {
+    }
 };
 
 struct NotReachedException : public Exception
 {
     explicit NotReachedException(const SourceLocation& where)
         : Exception(where)
-    {}
+    {
+    }
     NotReachedException(const SourceLocation& where, std::string msg)
         : NotReachedException(where, msg, -1)
-    {}
+    {
+    }
     NotReachedException(const SourceLocation& where, int errNo)
         : NotReachedException(where, "", errNo)
-    {}
+    {
+    }
     NotReachedException(const SourceLocation& where, string msg, int errNo)
         : Exception(where, msg, errNo)
-    {}
+    {
+    }
 };
 
 struct NotImplementedException : public Exception
 {
     explicit NotImplementedException(const SourceLocation& where)
         : Exception(where)
-    {}
+    {
+    }
     NotImplementedException(const SourceLocation& where, std::string msg)
         : NotImplementedException(where, msg, -1)
-    {}
+    {
+    }
     NotImplementedException(const SourceLocation& where, int errNo)
         : NotImplementedException(where, "", errNo)
-    {}
+    {
+    }
     NotImplementedException(const SourceLocation& where, string msg, int errNo)
         : Exception(where, msg, errNo)
-    {}
+    {
+    }
 };
 
 } // namespace alcp
