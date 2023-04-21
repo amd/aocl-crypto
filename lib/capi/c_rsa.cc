@@ -125,7 +125,15 @@ alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p pRsaHandle,
     Status status =
         ctx->decryptPrivateFn(ctx->m_rsa, pad, pEncText, encSize, pText);
 
-    return status.ok() ? err : ALC_ERROR_GENERIC;
+    if (status.ok()) {
+        return err;
+    } else {
+        // fetching the module error
+        Uint16 module_error = (status.code() >> 16) & 0xff;
+        return (alcp::rsa::ErrorCode::eNotPermitted == module_error)
+                   ? ALC_ERROR_NOT_PERMITTED
+                   : ALC_ERROR_GENERIC;
+    }
 }
 
 Uint64
