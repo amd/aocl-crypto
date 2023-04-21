@@ -70,13 +70,13 @@ __sha_finalize_wrapper(void* pDigest, const Uint8* pBuf, Uint64 len)
 
     return e;
 }
-template<typename DIGESTTYPE>
+
 static alc_error_t
-__sha_setDigestSize_wrapper(void* pDigest, Uint64 len)
+__sha_setShakeLength_wrapper(void* pDigest, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<DIGESTTYPE*>(pDigest);
+    auto ap = static_cast<Sha3*>(pDigest);
     e       = ap->setShakeLength(len);
 
     return e;
@@ -220,10 +220,9 @@ class Sha3Builder
         rCtx.reset       = __sha_reset_wrapper<Sha3>;
 
         //  Restricting setShakeLength to SHAKE128 or SHAKE256
-        if (rDigestInfo.dt_type == ALC_DIGEST_TYPE_SHA3
-            && (rDigestInfo.dt_mode.dm_sha3 == ALC_SHAKE_128
-                || rDigestInfo.dt_mode.dm_sha3 == ALC_SHAKE_256)) {
-            rCtx.setShakeLength = __sha_setDigestSize_wrapper<Sha3>;
+        if (rDigestInfo.dt_mode.dm_sha3 == ALC_SHAKE_128
+            || rDigestInfo.dt_mode.dm_sha3 == ALC_SHAKE_256) {
+            rCtx.setShakeLength = __sha_setShakeLength_wrapper;
         } else {
             rCtx.setShakeLength = nullptr;
         }
