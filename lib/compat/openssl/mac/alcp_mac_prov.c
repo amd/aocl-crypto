@@ -148,8 +148,6 @@ HMAC_init(char* digest, alc_mac_info_p macinfo)
     if (digest == NULL) {
         return 0;
     }
-    // FIXME: Key does not need to be in bytes
-    macinfo->mi_keyinfo.len /= 8;
 
     alc_digest_info_t digestinfo;
     alc_digest_type_t digest_type;
