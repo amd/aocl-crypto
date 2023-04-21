@@ -159,7 +159,7 @@ demo_Hmac_Sha256()
     const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
                                    .fmt  = ALC_KEY_FMT_RAW,
                                    .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key),
+                                   .len  = sizeof(key) * 8,
                                    .key  = key };
 
     alc_mac_info_t macinfo = {
@@ -181,7 +181,7 @@ demo_Hmac_Sha256()
     run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
     displayResults("HMAC SHA2-256",
                    key,
-                   sizeof(key),
+                   sizeof(key) * 8,
                    cipherText,
                    sizeof(cipherText),
                    mac,
@@ -224,7 +224,7 @@ demo_Hmac_Sha224()
     const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
                                    .fmt  = ALC_KEY_FMT_RAW,
                                    .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key),
+                                   .len  = sizeof(key) * 8,
                                    .key  = key };
 
     alc_mac_info_t macinfo = {
@@ -246,7 +246,7 @@ demo_Hmac_Sha224()
     run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
     displayResults("HMAC SHA2-224",
                    key,
-                   sizeof(key),
+                   sizeof(key) * 8,
                    cipherText,
                    sizeof(cipherText),
                    mac,
@@ -296,7 +296,7 @@ demo_Hmac_Sha512()
     const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
                                    .fmt  = ALC_KEY_FMT_RAW,
                                    .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key),
+                                   .len  = sizeof(key) * 8,
                                    .key  = key };
 
     alc_mac_info_t macinfo = {
@@ -318,7 +318,7 @@ demo_Hmac_Sha512()
     run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
     displayResults("HMAC SHA2-512",
                    key,
-                   sizeof(key),
+                   sizeof(key) * 8,
                    cipherText,
                    sizeof(cipherText),
                    mac,
@@ -346,7 +346,7 @@ demo_Hmac_Sha3_224()
     const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
                                    .fmt  = ALC_KEY_FMT_RAW,
                                    .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key),
+                                   .len  = sizeof(key) * 8,
                                    .key  = key };
 
     alc_mac_info_t macinfo = {
@@ -368,7 +368,7 @@ demo_Hmac_Sha3_224()
     run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
     displayResults("HMAC SHA3-224",
                    key,
-                   sizeof(key),
+                   sizeof(key) * 8,
                    cipherText,
                    sizeof(cipherText),
                    mac,
@@ -398,7 +398,7 @@ demo_Hmac_Sha3_256()
     const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
                                    .fmt  = ALC_KEY_FMT_RAW,
                                    .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key),
+                                   .len  = sizeof(key) * 8,
                                    .key  = key };
 
     alc_mac_info_t macinfo = {
@@ -420,7 +420,7 @@ demo_Hmac_Sha3_256()
     run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
     displayResults("HMAC SHA3-256",
                    key,
-                   sizeof(key),
+                   sizeof(key) * 8,
                    cipherText,
                    sizeof(cipherText),
                    mac,
@@ -456,7 +456,7 @@ demo_Hmac_Sha3_512()
     const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
                                    .fmt  = ALC_KEY_FMT_RAW,
                                    .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key),
+                                   .len  = sizeof(key) * 8,
                                    .key  = key };
 
     alc_mac_info_t macinfo = {
@@ -478,7 +478,7 @@ demo_Hmac_Sha3_512()
     run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
     displayResults("HMAC SHA3-512",
                    key,
-                   sizeof(key),
+                   sizeof(key) * 8,
                    cipherText,
                    sizeof(cipherText),
                    mac,
@@ -522,7 +522,7 @@ demo_Hmac_Sha384()
     const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
                                    .fmt  = ALC_KEY_FMT_RAW,
                                    .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key),
+                                   .len  = sizeof(key) * 8,
                                    .key  = key };
 
     alc_mac_info_t macinfo = {
@@ -544,7 +544,7 @@ demo_Hmac_Sha384()
     run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
     displayResults("HMAC SHA2-384",
                    key,
-                   sizeof(key),
+                   sizeof(key) * 8,
                    cipherText,
                    sizeof(cipherText),
                    mac,
@@ -577,7 +577,7 @@ demo_Hmac_Sha3_384()
     const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
                                    .fmt  = ALC_KEY_FMT_RAW,
                                    .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key),
+                                   .len  = sizeof(key) * 8,
                                    .key  = key };
 
     alc_mac_info_t macinfo = {
@@ -599,7 +599,7 @@ demo_Hmac_Sha3_384()
     run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
     displayResults("HMAC SHA3-384",
                    key,
-                   sizeof(key),
+                   sizeof(key) * 8,
                    cipherText,
                    sizeof(cipherText),
                    mac,
@@ -632,7 +632,7 @@ demo_Hmac_Sha3_384_Reset()
     const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
                                    .fmt  = ALC_KEY_FMT_RAW,
                                    .algo = ALC_KEY_ALG_MAC,
-                                   .len  = sizeof(key),
+                                   .len  = sizeof(key) * 8,
                                    .key  = key };
 
     alc_mac_info_t macinfo = {
@@ -691,7 +691,7 @@ demo_Hmac_Sha3_384_Reset()
 
     displayResults("Reset HMAC SHA3-384",
                    key,
-                   sizeof(key),
+                   sizeof(key) * 8,
                    cipherText,
                    sizeof(cipherText),
                    mac,

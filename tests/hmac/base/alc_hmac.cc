@@ -51,7 +51,7 @@ AlcpHmacBase::init()
     const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
                                    .fmt  = ALC_KEY_FMT_RAW,
                                    .algo = ALC_KEY_ALG_MAC,
-                                   .len  = m_key_len,
+                                   .len  = m_key_len * 8,
                                    .key  = m_key };
 
     dinfo.mi_keyinfo = kinfo;

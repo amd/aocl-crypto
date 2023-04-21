@@ -130,6 +130,7 @@ __build_hmac(const alc_mac_info_t& macInfo, Context& ctx)
     if (!status.ok()) {
         return status;
     }
+
     auto addr = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
 
     auto digest = new (addr) DIGESTALGORITHM();
@@ -137,24 +138,35 @@ __build_hmac(const alc_mac_info_t& macInfo, Context& ctx)
         status.update(InternalError("Out of Memory"));
         return status;
     }
-    auto p_key  = macInfo.mi_keyinfo.key;
-    auto keylen = macInfo.mi_keyinfo.len;
+    ctx.m_digest = static_cast<void*>(digest);
 
-    auto algo = new (addr + sizeof(*digest)) MACALGORITHM();
-    algo->setDigest(*digest);
-    algo->setKey(p_key, keylen);
-    if (algo == nullptr) {
+    auto hmac_algo = new (addr + sizeof(*digest)) MACALGORITHM();
+    if (hmac_algo == nullptr) {
         status.update(InternalError("Out of Memory"));
         return status;
     }
-    ctx.m_mac    = static_cast<void*>(algo);
-    ctx.m_digest = static_cast<void*>(digest);
+    ctx.m_mac = static_cast<void*>(hmac_algo);
 
     ctx.update   = __hmac_wrapperUpdate<MACALGORITHM>;
     ctx.finalize = __hmac_wrapperFinalize<MACALGORITHM>;
     ctx.copy     = __hmac_wrapperCopy<MACALGORITHM>;
     ctx.finish   = __hmac_wrapperFinish<MACALGORITHM, DIGESTALGORITHM>;
     ctx.reset    = __hmac_wrapperReset<MACALGORITHM, DIGESTALGORITHM>;
+
+    if (macInfo.mi_keyinfo.len % 8 != 0) {
+        return InternalError("HMAC: HMAC Key should be multiple of 8");
+    }
+
+    status = hmac_algo->setDigest(*digest);
+    if (!status.ok()) {
+        return status;
+    }
+    auto p_key  = macInfo.mi_keyinfo.key;
+    auto keylen = macInfo.mi_keyinfo.len / 8;
+    status      = hmac_algo->setKey(p_key, keylen);
+    if (!status.ok()) {
+        return status;
+    }
 
     return status;
 }
@@ -176,23 +188,34 @@ __build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
     if (p_sha3 == nullptr) {
         return InternalError("Unable To Allocate Memory for Digest Object");
     }
-    auto p_key  = macInfo.mi_keyinfo.key;
-    auto keylen = macInfo.mi_keyinfo.len;
-
-    auto algo = new (addr + sizeof(*p_sha3)) MACALGORITHM();
-    algo->setDigest(*p_sha3);
-    algo->setKey(p_key, keylen);
-    if (algo == nullptr) {
-        return InternalError("Unable to Allocate Memory for HMAC Object");
-    }
-    ctx.m_mac    = static_cast<void*>(algo);
     ctx.m_digest = static_cast<void*>(p_sha3);
 
+    auto hmac_algo = new (addr + sizeof(*p_sha3)) MACALGORITHM();
+    if (hmac_algo == nullptr) {
+        return InternalError("Unable to Allocate Memory for HMAC Object");
+    }
+    ctx.m_mac    = static_cast<void*>(hmac_algo);
     ctx.update   = __hmac_wrapperUpdate<MACALGORITHM>;
     ctx.finalize = __hmac_wrapperFinalize<MACALGORITHM>;
     ctx.copy     = __hmac_wrapperCopy<MACALGORITHM>;
     ctx.finish   = __hmac_wrapperFinish<MACALGORITHM, digest::Sha3>;
     ctx.reset    = __hmac_wrapperReset<MACALGORITHM, digest::Sha3>;
+
+    if (macInfo.mi_keyinfo.len % 8 != 0) {
+        return InternalError("HMAC: HMAC Key should be multiple of 8");
+    }
+
+    status = hmac_algo->setDigest(*p_sha3);
+    if (!status.ok()) {
+        return status;
+    }
+
+    auto p_key  = macInfo.mi_keyinfo.key;
+    auto keylen = macInfo.mi_keyinfo.len / 8;
+    status      = hmac_algo->setKey(p_key, keylen);
+    if (!status.ok()) {
+        return status;
+    }
 
     return status;
 }
