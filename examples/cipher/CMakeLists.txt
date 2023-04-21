@@ -22,7 +22,7 @@
  # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
- 
+
 #INCLUDE_DIRECTORIES(
 #	${CMAKE_SOURCE_DIR}/include
 #	${CMAKE_SOURCE_DIR}/lib/include
@@ -30,10 +30,14 @@
 
 ADD_EXECUTABLE(aes-cfb aes-cfb.c)
 
-ADD_EXECUTABLE(aes-demo aes-demo.c)
+ADD_EXECUTABLE(aes-gcm aes-gcm.c)
 
 ADD_EXECUTABLE(aes-xts aes-xts.c)
 
 ADD_EXECUTABLE(aes-ccm aes-ccm.c)
 
 ADD_EXECUTABLE(aes-siv aes-siv.c)
+
+ADD_EXECUTABLE(aes-speed-cipher aes-speed-cipher.c)
+
+ADD_EXECUTABLE(aes-speed-gcm aes-speed-gcm.c)

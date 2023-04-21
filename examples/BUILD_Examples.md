@@ -17,5 +17,5 @@ make -j;
 
 ## Run the Examples:
 <code>
-$PWD/bin/cipher/aes-demo;
+$PWD/bin/cipher/aes-speed-cipher;
 </code>

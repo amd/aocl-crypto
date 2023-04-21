@@ -30,7 +30,7 @@ CC := gcc
 INCLUDE := include
 CFLAGS := -Llib -I$(INCLUDE) -lalcp -laoclutils
 # Add more targets as they come.
-TARGETS := cipher/aes-cfb cipher/aes-demo cipher/aes-siv cipher/aes-xts cipher/aes-ccm \
+TARGETS := cipher/aes-cfb cipher/aes-speed-cipher cipher/aes-speed-gcm cipher/aes-siv cipher/aes-xts cipher/aes-ccm \
 			digest/sha2_224_example digest/sha2_256_example digest/sha2_384_example digest/sha2_512_example \
 			digest/sha2_512_224_example digest/sha2_512_256_example \
 			digest/sha3_224_example digest/sha3_256_example digest/sha3_384_example digest/sha3_512_example \
