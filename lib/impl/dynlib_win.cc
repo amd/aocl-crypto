@@ -40,7 +40,7 @@ class DynamicLibrary::Impl
         : m_path{ path }
     {
     }
-    Impl(const std::string& path, int flags)
+    Impl(const std::string& path, int /*flags*/)
         : m_path{ path }
     {
     }
@@ -54,7 +54,7 @@ class DynamicLibrary::Impl
 
   private:
     std::string m_path;
-    void*       m_handle;
+    //void*       m_handle;
     std::mutex  m_mutex;
 };
 

@@ -38,7 +38,7 @@ endfunction(alcp_check_compiler_version)
 
 # Generic Warnings
 function(alcp_get_cflags_warnings)
-    set(ALCP_CFLAGS_WARNINGS  "/W4" CACHE INTERNAL "")
+    set(ALCP_CFLAGS_WARNINGS /W4 -Wpedantic -Wno-unused-parameter CACHE INTERNAL "")
     set(ALCP_CFLAGS_WARNINGS ${ALCP_CFLAGS_WARNINGS} PARENT_SCOPE)
 endfunction(alcp_get_cflags_warnings)
 
@@ -47,7 +47,7 @@ function(alcp_get_cflags)
     set(ALCP_CFLAGS
         /O2
         /W4
-        /WX-
+        /WX
         CACHE INTERNAL ""
     )
     set(ALCP_CFLAGS ${ALCP_CFLAGS} PARENT_SCOPE)
@@ -100,7 +100,7 @@ endfunction(alcp_get_arch_cflags_zen3)
 # lib/arch/zen4 Compile Flags
 function(alcp_get_arch_cflags_zen4)
     set(ARCH_COMPILE_FLAGS
-        /O3 -mavx -mavx2 -maes -mvaes -mpclmul -mvpclmulqdq -mavx512ifma -DUSE_AVX512 /arch:AVX512
+        /Ox -mavx -mavx2 -maes -mvaes -mpclmul -mvpclmulqdq -mavx512ifma -DUSE_AVX512 /arch:AVX512
         CACHE INTERNAL ""
         )
     set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)

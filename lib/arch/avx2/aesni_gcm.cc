@@ -128,7 +128,7 @@ gcmCryptInit(__m128i* c1,
     *two_x   = alcp_set_epi32(2, 0, 0, 0);
     *three_x = alcp_set_epi32(3, 0, 0, 0);
     *four_x  = alcp_set_epi32(4, 0, 0, 0);
-    one_lo   = one_x;
+    *one_lo  = *one_x;
 
     //
     // counterblock :: counter 4 bytes: IV 8 bytes : Nonce 4 bytes

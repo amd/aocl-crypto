@@ -195,7 +195,7 @@ main(void)
         // check if the outputs are matching
         hash_to_string(output_string, sample_output);
         printf("Input : %s\n", sample_input);
-        printf("Input chunks : %lu\n", num_chunks);
+        printf("Input chunks : %llu\n", num_chunks);
         printf("output : %s\n", output_string);
         if (strcmp(expected_output, output_string)) {
             printf("=== FAILED ==== \n");
