@@ -29,6 +29,7 @@
 #include "alcp/mac/cmac.hh"
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/common.hh"
+#include "alcp/mac/macerror.hh"
 #include "alcp/utils/copy.hh"
 #include "alcp/utils/cpuid.hh"
 
@@ -101,11 +102,10 @@ class Cmac::Impl : public cipher::Aes
     Status update(const Uint8 plaintext[], Uint64 plaintext_size)
     {
         if (m_finalized) {
-            return InternalError(
-                "CMAC: Cannot Call Update After Finalize without reseting");
+            return UpdateAfterFinalzeError("");
         }
         if (m_encrypt_keys == nullptr) {
-            return InvalidArgument("Key is Empty");
+            return EmptyKeyError("");
         }
 
         Status status{ StatusOk() };
@@ -195,11 +195,10 @@ class Cmac::Impl : public cipher::Aes
     Status finalize(const Uint8 plaintext[], Uint64 plaintext_size)
     {
         if (m_finalized) {
-            return InternalError("CMAC: Already Finalized. Call Reset before "
-                                 "updating or Finalizing Again");
+            return AlreadyFinalizedError("");
         }
         if (m_encrypt_keys == nullptr) {
-            return InvalidArgument("Key is Empty");
+            return EmptyKeyError("");
         }
 
         static bool has_avx2_aesni =
@@ -256,7 +255,7 @@ class Cmac::Impl : public cipher::Aes
     Status copy(Uint8 buff[], Uint64 size)
     {
         if (!m_finalized) {
-            return InternalError("Cannot Copy CMAC without finalizing");
+            return CopyWithoutFinalizeError("");
         } else {
             utils::CopyBytes(buff, m_temp_enc_result_8, size);
         }
@@ -285,8 +284,7 @@ class Cmac::Impl : public cipher::Aes
 
 Cmac::Cmac()
     : m_pImpl{ std::make_unique<Cmac::Impl>() }
-{
-}
+{}
 
 Status
 Cmac::update(const Uint8 pMsgBuf[], Uint64 size)

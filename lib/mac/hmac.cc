@@ -28,16 +28,15 @@
 
 #include "alcp/mac/hmac.hh"
 #include "alcp/base.hh"
+#include "alcp/mac/macerror.hh"
 #include "alcp/utils/copy.hh"
 #include "alcp/utils/cpuid.hh"
 #include <cstring> // for std::memset
 #include <immintrin.h>
 
 namespace alcp::mac {
+using namespace alcp::mac::status;
 using utils::CpuId;
-using Status = base::Status;
-using namespace base::status;
-
 // FIXME: Remove alcp_is_error to return the error status returned by Digest
 // once digest class supports Status class
 class Hmac::Impl
@@ -90,21 +89,20 @@ class Hmac::Impl
     Status update(const Uint8* buff, Uint64 size)
     {
         if (m_finalized) {
-            return InternalError(
-                "HMAC: After Finalizing cannot call update without Reseting");
-        }
-        if (m_pKey == nullptr) {
-            return InternalError("HMAC: Key cannot be null. Use SetKey to set "
-                                 "Key before calling update");
+            return UpdateAfterFinalzeError("");
         }
         if (m_pDigest == nullptr) {
-            return InternalError(
-                "HMAC: Digest cannot be null. Use setDigest to set "
-                "digest before calling update");
+            return EmptyHMACDigestError("");
+        }
+        if (m_pKey == nullptr) {
+            return EmptyKeyError("");
         }
         Status status = StatusOk();
         if (buff != nullptr && size != 0) {
-            status = calculateHash(m_pDigest, buff, size);
+            alc_error_t err = m_pDigest->update(buff, size);
+            if (alcp_is_error(err)) {
+                return HMACDigestOperationError("");
+            }
         }
         return status;
     }
@@ -112,21 +110,17 @@ class Hmac::Impl
     Status finalize(const Uint8* buff, Uint64 size)
     {
         if (m_finalized) {
-            return InternalError("HMAC: Already Finalized. Call Reset before "
-                                 "updating or Finalizing Again");
+            return AlreadyFinalizedError("");
         }
 
         Status      status = StatusOk();
         alc_error_t err    = ALC_ERROR_NONE;
 
-        if (m_pKey == nullptr) {
-            return InternalError("HMAC: Key cannot be null. Use SetKey to set "
-                                 "Key before calling Finalize");
-        }
         if (m_pDigest == nullptr) {
-            return InternalError(
-                "HMAC: Digest cannot be null. Use setDigest to set "
-                "digest before calling Finalize");
+            return EmptyHMACDigestError("");
+        }
+        if (m_pKey == nullptr) {
+            return EmptyKeyError("");
         }
 
         /* TODO: For all the following calls to digest return the proper error
@@ -134,32 +128,32 @@ class Hmac::Impl
         if (sizeof(buff) != 0 && size != 0) {
             err = m_pDigest->finalize(buff, size);
             if (alcp_is_error(err)) {
-                return InternalError("HMAC: InternalError");
+                return HMACDigestOperationError("");
             }
         } else {
             err = m_pDigest->finalize(nullptr, 0);
             if (alcp_is_error(err)) {
-                return InternalError("HMAC: InternalError");
+                return HMACDigestOperationError("");
             }
         }
         err = m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
         if (alcp_is_error(err)) {
-            return InternalError("HMAC: InternalError");
+            return HMACDigestOperationError("");
         }
         m_pDigest->reset();
 
-        status = calculateHash(m_pDigest, m_pK0_xor_opad, m_k0_length);
-        if (!status.ok()) {
-            return status;
+        err = m_pDigest->update(m_pK0_xor_opad, m_k0_length);
+        if (alcp_is_error(err)) {
+            return HMACDigestOperationError("");
         }
         err = m_pDigest->finalize(m_pTempHash, m_output_hash_size);
         if (alcp_is_error(err)) {
-            return InternalError("HMAC: InternalError");
+            return HMACDigestOperationError("");
         }
 
         err = m_pDigest->copyHash(m_pTempHash, m_output_hash_size);
         if (alcp_is_error(err)) {
-            return InternalError("HMAC: InternalError");
+            return HMACDigestOperationError("");
         }
         m_pDigest->reset();
 
@@ -170,16 +164,13 @@ class Hmac::Impl
     Status copyHash(Uint8* buff, Uint64 size)
     {
         if (!m_finalized) {
-            return InternalError("HMAC: Cannot copy Hash without Finalizing");
+            return CopyWithoutFinalizeError("");
         }
-        // TODO: Update status with proper error code.
         Status status = StatusOk();
-        if (size >= m_output_hash_size) {
-            alcp::utils::CopyBytes(buff, m_pTempHash, size);
-        } else {
-            status = InvalidArgument("HMAC: Copy Buffer Size should be greater "
-                                     "than or equal to SHA output size");
-        }
+
+        auto size_to_copy = size <= m_output_hash_size ? size
+                                                       : m_output_hash_size;
+        alcp::utils::CopyBytes(buff, m_pTempHash, size_to_copy);
         return status;
     }
 
@@ -189,8 +180,11 @@ class Hmac::Impl
     {
         Status status = StatusOk();
         m_pDigest->reset();
-        status = calculateHash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
-
+        alc_error_t err =
+            m_pDigest->update(m_pK0_xor_ipad, m_input_block_length);
+        if (alcp_is_error(err)) {
+            return HMACDigestOperationError("");
+        }
         m_finalized = false;
         return status;
     }
@@ -200,8 +194,7 @@ class Hmac::Impl
         Status status = StatusOk();
 
         if (m_pDigest == nullptr) {
-            return InternalError(
-                "HMAC: Digest Should be Set before Setting the key");
+            return EmptyHMACDigestError("");
         }
 
         /* Clear all the buffers as with changed, continued update is not
@@ -224,7 +217,11 @@ class Hmac::Impl
             return status;
         }
         getK0XorPad();
-        status = calculateHash(m_pDigest, m_pK0_xor_ipad, m_input_block_length);
+        alc_error_t err =
+            m_pDigest->update(m_pK0_xor_ipad, m_input_block_length);
+        if (alcp_is_error(err)) {
+            return HMACDigestOperationError("");
+        }
         if (!status.ok()) {
             return status;
         }
@@ -305,11 +302,11 @@ class Hmac::Impl
             m_pDigest->reset();
             err = m_pDigest->finalize(m_pKey, m_keylen);
             if (alcp_is_error(err)) {
-                return InternalError("HMAC: InternalError");
+                return HMACDigestOperationError("");
             }
             m_pDigest->copyHash(m_pK0, m_output_hash_size);
             if (alcp_is_error(err)) {
-                return InternalError("HMAC: InternalError");
+                return HMACDigestOperationError("");
             }
             m_pDigest->reset();
             std::memset(m_pK0 + m_output_hash_size,
@@ -318,23 +315,11 @@ class Hmac::Impl
         }
         return status;
     }
-
-    Status calculateHash(digest::IDigest* p_digest,
-                         const Uint8*     input,
-                         Uint64           len)
-    {
-        alc_error_t err = p_digest->update(input, len);
-        if (alcp_is_error(err)) {
-            return InternalError("HMAC: InternalError");
-        }
-        return StatusOk();
-    }
 };
 
 Hmac::Hmac()
     : m_pImpl{ std::make_unique<Hmac::Impl>() }
-{
-}
+{}
 Hmac::~Hmac() {}
 
 Status
