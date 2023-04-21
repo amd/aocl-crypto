@@ -79,7 +79,7 @@ IF(ENABLE_TESTS_OPENSSL_API)
         MESSAGE(STATUS "OPENSSL_INSTALL_DIR not set, defaulting to external")
     ENDIF(OPENSSL_INSTALL_DIR)
 
-    # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
+    # If there is OpenSSL, add OpenSSL source and add OpenSSL library
     SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/hmac/base/openssl_hmac.cc)
 	IF(UNIX)
 		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
@@ -97,6 +97,7 @@ IF(ENABLE_TESTS_OPENSSL_API)
 			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib/libcrypto.lib)
 		ENDIF()
 	ENDIF(WIN32)
+    SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${OPENSSL_INSTALL_DIR}/include)
 ENDIF(ENABLE_TESTS_OPENSSL_API)
 
 ADD_EXECUTABLE(bench_hmac bench_main.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
