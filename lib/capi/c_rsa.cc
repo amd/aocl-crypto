@@ -63,9 +63,12 @@ alcp_rsa_request(alc_rsa_handle_p pRsaHandle)
 
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
 
-    Status status = rsa::RsaBuilder::Build(*ctx);
+    // To initialize all context members
+    new (ctx) rsa::Context;
 
-    return status.ok() ? err : ALC_ERROR_GENERIC;
+    ctx->status = rsa::RsaBuilder::Build(*ctx);
+
+    return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
 }
 
 alc_error_t
@@ -93,14 +96,14 @@ alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
                                         const_cast<Uint8*>(pPublicKeyMod),
                                         pPublicKeyModSize };
 
-    Status status = ctx->encryptPublicFn(
+    ctx->status = ctx->encryptPublicFn(
         ctx->m_rsa, pad, pub_key, pText, textSize, pEncText);
 
-    if (status.ok()) {
+    if (ctx->status.ok()) {
         return err;
     } else {
         // fetching the module error
-        Uint16 module_error = (status.code() >> 16) & 0xff;
+        Uint16 module_error = (ctx->status.code() >> 16) & 0xff;
         return (alcp::rsa::ErrorCode::eNotPermitted == module_error)
                    ? ALC_ERROR_NOT_PERMITTED
                    : ALC_ERROR_GENERIC;
@@ -122,14 +125,14 @@ alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p pRsaHandle,
 
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
 
-    Status status =
+    ctx->status =
         ctx->decryptPrivateFn(ctx->m_rsa, pad, pEncText, encSize, pText);
 
-    if (status.ok()) {
+    if (ctx->status.ok()) {
         return err;
     } else {
         // fetching the module error
-        Uint16 module_error = (status.code() >> 16) & 0xff;
+        Uint16 module_error = (ctx->status.code() >> 16) & 0xff;
         return (alcp::rsa::ErrorCode::eNotPermitted == module_error)
                    ? ALC_ERROR_NOT_PERMITTED
                    : ALC_ERROR_GENERIC;
@@ -139,7 +142,10 @@ alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p pRsaHandle,
 Uint64
 alcp_rsa_get_key_size(const alc_rsa_handle_p pRsaHandle)
 {
-    ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
+    assert(pRsaHandle != nullptr);
+    if (pRsaHandle == nullptr) {
+        return 0;
+    }
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
     return ctx->getKeySize(ctx->m_rsa);
 }
@@ -161,11 +167,11 @@ alcp_rsa_get_publickey(const alc_rsa_handle_p pRsaHandle,
     pub_key.modulus = pModulus;
     pub_key.size    = keySize;
 
-    Status status = ctx->getPublickey(ctx->m_rsa, pub_key);
+    ctx->status = ctx->getPublickey(ctx->m_rsa, pub_key);
 
     *publicKey = pub_key.public_exponent;
 
-    return status.ok() ? err : ALC_ERROR_GENERIC;
+    return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
 }
 
 void
@@ -173,6 +179,7 @@ alcp_rsa_finish(const alc_rsa_handle_p pRsaHandle)
 {
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
     ctx->finish(ctx->m_rsa);
+    ctx->~Context();
 }
 
 void
@@ -180,6 +187,23 @@ alcp_rsa_reset(const alc_rsa_handle_p pRsaHandle)
 {
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
     ctx->reset(ctx->m_rsa);
+}
+
+alc_error_t
+alcp_rsa_error(const alc_rsa_handle_p pRsaHandle, Uint8* buf, Uint64 size)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
+
+    auto p_ctx = static_cast<rsa::Context*>(pRsaHandle->context);
+
+    String message = String(p_ctx->status.message());
+
+    int size_to_copy = size > message.size() ? message.size() : size;
+    snprintf((char*)buf, size_to_copy, "%s", message.c_str());
+
+    return err;
 }
 
 EXTERN_C_END

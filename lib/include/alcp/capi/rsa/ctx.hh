@@ -58,6 +58,8 @@ class Context
     Status (*finish)(void*);
 
     Status (*reset)(void*);
+
+    Status status{ StatusOk() };
 };
 
 } // namespace alcp::rsa

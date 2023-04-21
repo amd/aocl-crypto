@@ -298,7 +298,7 @@ alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle)
 }
 
 alc_error_t
-alcp_cipher_error(alc_cipher_handle_p pCipherHandle, Uint8* buf, Uint64 size)
+alcp_cipher_error(alc_cipher_handle_p pCipherHandle, Uint8* pBuff, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
@@ -309,7 +309,7 @@ alcp_cipher_error(alc_cipher_handle_p pCipherHandle, Uint8* buf, Uint64 size)
     String message = String(p_ctx->status.message());
 
     int size_to_copy = size > message.size() ? message.size() : size;
-    snprintf((char*)buf, size_to_copy, "%s", message.c_str());
+    snprintf((char*)pBuff, size_to_copy, "%s", message.c_str());
 
     return err;
 }
