@@ -1,4 +1,4 @@
- # Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -42,5 +42,13 @@ TARGET_SOURCES(alcp
 	)
 
 IF(UNIX)
-  TARGET_LINK_LIBRARIES(alcp PUBLIC ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
-ENDIF()
+  IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
+    TARGET_LINK_LIBRARIES(alcp PUBLIC ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
+  ELSEIF(EXISTS ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
+    TARGET_LINK_LIBRARIES(alcp PUBLIC ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
+  ELSE()
+    TARGET_LINK_LIBRARIES(alcp PUBLIC ${OPENSSL_INSTALL_DIR}/x86_64-linux-gnu/libcrypto.so)
+  ENDIF()
+ENDIF(UNIX)
+
+
