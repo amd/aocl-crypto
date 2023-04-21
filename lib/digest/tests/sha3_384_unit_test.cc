@@ -153,4 +153,17 @@ TEST(Sha3_384, getHashSizeTest)
     EXPECT_EQ(sha3_384.getHashSize(), DigestSize);
 }
 
+TEST(Sha3_384, setShakeLengthTest)
+{
+    Sha3        sha3_384(DigestInfo);
+    alc_error_t err                       = ALC_ERROR_NONE;
+    err                                   = sha3_384.setShakeLength(384);
+    constexpr unsigned short cShakeLength = 100;
+
+    err = sha3_384.setShakeLength(cShakeLength);
+    EXPECT_EQ(err, ALC_ERROR_NOT_PERMITTED);
+    EXPECT_EQ(sha3_384.getHashSize(), DigestSize);
+    EXPECT_NE(sha3_384.getHashSize(), cShakeLength);
+}
+
 } // namespace

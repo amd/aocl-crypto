@@ -146,4 +146,19 @@ TEST(Sha3_512, getHashSizeTest)
     Sha3 sha3_512(DigestInfo);
     EXPECT_EQ(sha3_512.getHashSize(), DigestSize);
 }
+
+TEST(Sha3_512, setShakeLengthTest)
+{
+    Sha3        sha3_512(DigestInfo);
+    alc_error_t err = ALC_ERROR_NONE;
+    err             = sha3_512.setShakeLength(512);
+
+    constexpr unsigned short cShakeLength = 100;
+
+    err = sha3_512.setShakeLength(cShakeLength);
+    EXPECT_EQ(err, ALC_ERROR_NOT_PERMITTED);
+    EXPECT_EQ(sha3_512.getHashSize(), DigestSize);
+    EXPECT_NE(sha3_512.getHashSize(), cShakeLength);
+}
+
 } // namespace
