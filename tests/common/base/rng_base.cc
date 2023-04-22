@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,7 +34,7 @@ RngBase::RngBase()
     alc_rng_info_t rng_info;
     rng_info.ri_distrib =
         ALC_RNG_DISTRIB_UNIFORM; // Output should be uniform probablilty
-    rng_info.ri_source = ALC_RNG_SOURCE_ARCH;     // Use ARCH RNG
+    rng_info.ri_source = ALC_RNG_SOURCE_OS;     // Use OS RNG
     rng_info.ri_type   = ALC_RNG_TYPE_DESCRETE; // Discrete output (uint8)
     /* Check if RNG mode is supported with RNG info */
     if (alcp_rng_supported(&rng_info) != ALC_ERROR_NONE) {
@@ -59,7 +59,7 @@ std::vector<Uint8>
 RngBase::genRandomBytes(std::size_t l)
 {
     std::vector<Uint8> ret = {};
-    if(l == 0){
+    if (l == 0) {
         return ret;
     }
     ret = std::vector<Uint8>(l, 0);
