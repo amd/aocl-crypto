@@ -43,8 +43,8 @@ namespace alcp::rng {
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <windows.h>
 #include <wincrypt.h>
+#include <windows.h>
 #define ALCP_CONFIG_OS_HAS_GETRANDOM 1
 #else
 #include <sys/random.h>
@@ -141,7 +141,6 @@ class SystemRngImpl
         }
         if (CryptGenRandom(
                 hCryptSProv, length, reinterpret_cast<BYTE*>(output))) {
-            printf("Cryptographically Secure Random sequence generated. \n");
         } else {
             sts.update(Status(RngError(rng::ErrorCode::eNoEntropySource)));
             return sts;
