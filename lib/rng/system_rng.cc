@@ -40,11 +40,13 @@ namespace alcp::rng {
 #include <unistd.h>
 #define ALCP_CONFIG_OS_HAS_DEVRANDOM 1
 #elif defined(_WIN32)
+// Keep it above other headers
+#include <windows.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <wincrypt.h>
-#include <windows.h>
 #define ALCP_CONFIG_OS_HAS_GETRANDOM 1
 #else
 #include <sys/random.h>
