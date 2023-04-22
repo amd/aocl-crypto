@@ -29,7 +29,6 @@
 #include "rsa/openssl_rsa.hh"
 #include <cstddef>
 #include <cstring>
-#include <gtest/gtest-printers.h>
 #include <openssl/engine.h>
 #include <openssl/evp.h>
 #include <openssl/rsa.h>
