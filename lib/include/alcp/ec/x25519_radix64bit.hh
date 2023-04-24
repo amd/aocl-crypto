@@ -26,6 +26,18 @@
  *
  */
 
+/*
+ * Assembly implementation for radix 64 bit multipliation / square uses
+ * reference as mentioned
+ *
+ * New Instructions Supporting Large Integer Arithmetic on Intel Architecture
+ * Processors (Document number 327831 -001) // Intel, August 2012
+ * http://download.intel.com/embedded/processor/whitepaper/327831.pdf
+ *
+ * This supports two carry chain using the cf / of flag with adcx / adox
+ * instruction
+ */
+
 #pragma once
 
 #include <immintrin.h>
