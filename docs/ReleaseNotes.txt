@@ -12,11 +12,12 @@ implementations of different cryptographic algorithms which is given below:
 -- SHA2, SHA3 Digest routines.
 -- MAC (Cipher and Hash based) routines
 -- ECDH x25519 Key exchange functions
+-- RSA Encrypt/Decrypt functions.
 
 Highlights of AOCL Crypto version 4.1
 --------------------------------------
-This is the first release of the AOCL-Crypto library and supports the following functions.
-    * AES Encrypt / Decrypt routines which will support the following cipher schemes:
+AOCL-Crypto supports the following functions.
+    * AES Encrypt/Decrypt routines for the following cipher schemes:
           - CBC, CFB, OFB, CTR, GCM, XTS, CCM.
     * SHA2 Digest routines for the following schemes:
           - SHA2_224, SHA2_256, SHA2_384, SHA2_512
@@ -32,3 +33,7 @@ This is the first release of the AOCL-Crypto library and supports the following 
     * ECDH x25519 key exchange functions:
           - Generate Public Key
           - Compute Secret Key
+    * RSA
+          - Encrypt text with public key
+          - Decrypt text with private Key
+          (Note: Only non-padded mode is supported in 4.1 release)
