@@ -34,9 +34,8 @@ OpenSSLHmacBase::OpenSSLHmacBase(const alc_mac_info_t& info) {}
 
 OpenSSLHmacBase::~OpenSSLHmacBase()
 {
-    if (m_handle != nullptr) {
-        EVP_MAC_CTX_free(m_handle);
-    }
+    EVP_MAC_CTX_free(m_handle);
+    EVP_MAC_free(m_mac);
 }
 
 bool
