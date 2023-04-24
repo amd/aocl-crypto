@@ -81,18 +81,10 @@ class ALCP_API_EXPORT Ccm final
 {
 
   public:
-    Uint64       m_len               = 0;
-    Uint64       m_ivLen             = 0;
-    Uint64       m_tagLen            = 0;
-    Uint64       m_additionalDataLen = 0;
-    const Uint8* m_additionalData;
-
-    ccm_data_t m_ccm_data;
-
     explicit Ccm(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo);
 
-     Ccm();
+    Ccm();
     ~Ccm();
 
     static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
