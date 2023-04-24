@@ -276,7 +276,7 @@ class BigNum::Impl
     {
         int ret = BN_ucmp(raw(), rhs.pImpl()->raw());
 
-        if (ret == -1) {
+        if (ret < 0) {
             return true;
         } else {
             return false;
