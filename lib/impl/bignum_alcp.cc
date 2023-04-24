@@ -250,24 +250,30 @@ BigNum::Impl::minus(BigNum const& self)
 int
 BigNum::Impl::randomGenerate(int bits, int top, int bottom)
 {
-    if (bits == 0 && (top || bottom))
+    if (bits == 0 && (top == -1 || bottom))
         return ALC_ERROR_INVALID_SIZE;
     int            max_bytes  = ceil_64(bits);
-    int            extra_bits = bits % 64;
+    int            extra_bits = (bits - 1) % 64;
     vector<Uint64> data(max_bytes, 0);
     Uint8*         p_data_8 = reinterpret_cast<Uint8*>(&(data[0]));
     if (!m_drbg.randomize(p_data_8, max_bytes * 8).ok()) {
         return ALC_ERROR_BAD_STATE;
     }
     m_drbg.reseed();
-    long long mask = leftShiftMinusOne(1ULL, extra_bits);
-    m_data         = data;
-    m_data.back() &= mask;
+    unsigned long long mask = leftShiftMinusOne(1ULL, extra_bits);
+    m_data                  = data;
     m_data[0] |= bottom;
-    if (top)
-        m_data.back() |= ((mask + 1) >> 1);
-    else
-        m_data.back() &= ((mask) >> 1);
+    m_data.back() &= mask;
+    if (top > 0) {
+        if (extra_bits == 0) {
+            m_data.back() = 1;
+            m_data[m_data.size() - 2] |= 0x8000000000000000;
+        } else {
+            m_data.back() |= (3ULL << (extra_bits - 1));
+        }
+    } else if (top == 0)
+        m_data.back() |= (1ULL << extra_bits);
+
     return ALC_ERROR_NONE;
 }
 
@@ -277,7 +283,7 @@ BigNum::Impl::randomGenerate(int          bits,
                              int          bottom,
                              unsigned int strength)
 {
-    if (bits == 0 && (top || bottom))
+    if (bits == 0 && (top == -1 || bottom))
         return ALC_ERROR_INVALID_SIZE;
     vector<Uint8> personalizeString;
     if (!m_drbg.initialize(strength, personalizeString).ok())
@@ -290,7 +296,7 @@ BigNum::Impl::randomRange(const BigNum* range)
 {
     int            bits       = range->pImpl()->total_bits();
     int            max_bytes  = ceil_64(bits);
-    int            extra_bits = bits % 64;
+    int            extra_bits = (bits - 1) % 64;
     vector<Uint64> data(max_bytes, 0);
     Uint8*         p_data_8 = reinterpret_cast<Uint8*>(&(data[0]));
     if (!m_drbg.randomize(p_data_8, max_bytes * 8).ok()) {

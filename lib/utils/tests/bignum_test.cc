@@ -130,16 +130,18 @@ TEST(BigNumTest, Random)
     two.fromUint64(2ULL);
     n.randomGenerate(245, 1, 1);
     EXPECT_EQ((n % two).toInt64(), 1);
-    EXPECT_EQ((n >> 244).toInt64(), 1);
+    std::cout << n.toString(BigNum::Format::eBinary) << "\n";
+    EXPECT_EQ((n >> 243).toInt64(), 3);
 }
 
 TEST(BigNumTest, RandomEx)
 {
     BigNum n, two;
     two.fromUint64(2UL);
-    n.randomGenerate(209, 0, 1, 256);
+    n.randomGenerate(209, 1, 1, 256);
     EXPECT_EQ((n % two).toInt64(), 1);
-    EXPECT_EQ((n >> 208).toInt64(), 0);
+    std::cout << n.toString(BigNum::Format::eBinary) << "\n";
+    EXPECT_EQ(((n >> 207)).toInt64(), 3);
 }
 
 TEST(BigNumTest, PrivateRandom)
