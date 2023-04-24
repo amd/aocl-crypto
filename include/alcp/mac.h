@@ -126,6 +126,26 @@ typedef struct alc_mac_handle
 } alc_mac_handle_t, *alc_mac_handle_p, AlcMacHandle;
 
 /**
+ * @brief  Allows to check if a given algorithm is supported or not
+ *
+ * @parblock <br> &nbsp;
+ * <b>This API needs to be called before any other API is called to
+ * know if mac that is being request is supported or not </b>
+ * @endparblock
+ *
+ * @note        alcp_mac_supported() is called first to
+ *              know if the given configuration is valid.
+ *
+ * @param [in]      pcMacInfo Description of the requested mac session
+ *
+ * @return   &nbsp; Error Code for the API called . if alc_error_t
+ * is not zero then @ref alcp_error_str needs to be called to know about error
+ * occured
+ */
+alc_error_t
+alcp_mac_supported(const alc_mac_info_p pcMacInfo);
+
+/**
  * @brief       Gets the size of the context for a session described by
  *              pMacInfo
  *

@@ -32,6 +32,7 @@
 #include <type_traits> /* for is_same_v<> */
 
 namespace alcp::mac {
+using namespace alcp::base::status;
 
 class CmacBuilder
 {
@@ -40,6 +41,7 @@ class CmacBuilder
                         const alc_key_info_t& keyInfo,
                         Context&              ctx);
     static Uint64 getSize(const alc_mac_info_t& macInfo);
+    static Status isSupported(const alc_mac_info_t& macInfo);
 };
 
 static Status
@@ -119,5 +121,21 @@ Uint64
 CmacBuilder::getSize(const alc_mac_info_t& macInfo)
 {
     return sizeof(Cmac);
+}
+
+Status
+CmacBuilder::isSupported(const alc_mac_info_t& macInfo)
+{
+    Status status{ StatusOk() };
+    if (macInfo.mi_algoinfo.cmac.cmac_cipher.ci_type == ALC_CIPHER_TYPE_AES) {
+        if (macInfo.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode
+            != ALC_AES_MODE_NONE) {
+            return InvalidArgument("CMAC: Unsupported AES Cipher Mode");
+        }
+    } else {
+        return InvalidArgument(
+            "CMAC: Unsupported Cipher. Only AES is supported.");
+    }
+    return status;
 }
 } // namespace alcp::mac

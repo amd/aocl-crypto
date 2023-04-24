@@ -46,6 +46,25 @@ alcp_mac_context_size(const alc_mac_info_p pcMacInfo)
 }
 
 alc_error_t
+alcp_mac_supported(const alc_mac_info_p pcMacInfo)
+{
+
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pcMacInfo, err);
+    // FIXME: Implement Digest Support check
+    Status s = mac::MacBuilder::isSupported(*pcMacInfo);
+
+    // TODO: Convert status to proper alc_error_t code and return
+    if (!s.ok()) {
+        err = ALC_ERROR_EXISTS;
+    } else {
+        err = ALC_ERROR_NONE;
+    }
+
+    return err;
+}
+
+alc_error_t
 alcp_mac_request(alc_mac_handle_p pMacHandle, const alc_mac_info_p pcMacInfo)
 {
     alc_error_t err = ALC_ERROR_NONE;

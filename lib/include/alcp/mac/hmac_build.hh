@@ -34,11 +34,12 @@
 #include "hmac.hh"
 
 namespace alcp::mac {
+using namespace status;
+
 Status
 validate_keys(const alc_key_info_t& rKeyInfo)
 {
 
-    using namespace status;
     Status status = StatusOk();
 
     // For RAW assignments
@@ -70,6 +71,8 @@ class HmacBuilder
                         Context&              ctx);
 
     static Uint64 getSize(const alc_mac_info_t& macInfo);
+
+    static Status isSupported(const alc_mac_info_t& macInfo);
 };
 
 template<typename MACALGORITHM>
@@ -123,7 +126,6 @@ template<typename DIGESTALGORITHM, typename MACALGORITHM>
 static Status
 __build_hmac(const alc_mac_info_t& macInfo, Context& ctx)
 {
-    using namespace status;
     Status status = StatusOk();
 
     status = validate_keys(macInfo.mi_keyinfo);
@@ -174,7 +176,6 @@ template<typename MACALGORITHM>
 static Status
 __build_hmac_sha3(const alc_mac_info_t& macInfo, Context& ctx)
 {
-    using namespace status;
     Status status = StatusOk();
 
     status = validate_keys(macInfo.mi_keyinfo);
@@ -224,7 +225,6 @@ HmacBuilder::build(const alc_mac_info_t& macInfo,
                    const alc_key_info_t& keyInfo,
                    Context&              ctx)
 {
-    using namespace status;
     Status status = StatusOk();
 
     switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_type) {
@@ -294,4 +294,61 @@ HmacBuilder::getSize(const alc_mac_info_t& macInfo)
            + alcp::digest::DigestBuilder::getSize(
                macInfo.mi_algoinfo.hmac.hmac_digest);
 }
+
+Status
+HmacBuilder::isSupported(const alc_mac_info_t& macInfo)
+{
+    Status status{ StatusOk() };
+    switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_type) {
+        case ALC_DIGEST_TYPE_SHA2: {
+            switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2) {
+                case ALC_SHA2_256: {
+                    break;
+                }
+                case ALC_SHA2_224: {
+                    break;
+                }
+                case ALC_SHA2_384: {
+                    break;
+                }
+                case ALC_SHA2_512: {
+                    break;
+                }
+                default: {
+                    status.update(
+                        InvalidArgument("Unsupported HMAC Sha2 Algorithm"));
+                }
+            }
+            break;
+        }
+        case ALC_DIGEST_TYPE_SHA3: {
+            switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3) {
+                case ALC_SHA3_224: {
+                    break;
+                }
+                case ALC_SHA3_256: {
+                    break;
+                }
+                case ALC_SHA3_384: {
+                    break;
+                }
+                case ALC_SHA3_512: {
+                    break;
+                }
+                default: {
+                    status.update(
+                        InvalidArgument("Unsupported HMAC SHA3 Algorithm"));
+                    break;
+                }
+            }
+            break;
+        }
+        default: {
+            status.update(InvalidArgument("Digest algorithm Unknown"));
+            break;
+        }
+    }
+    return status;
+}
+
 } // namespace alcp::mac

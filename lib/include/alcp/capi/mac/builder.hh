@@ -38,6 +38,8 @@ class MacBuilder
   public:
     static Uint64 getSize(const alc_mac_info_t& macInfo);
 
+    static Status isSupported(const alc_mac_info_t& macInfo);
+
     static alcp::base::Status build(const alc_mac_info_t& cipherInfo,
                                     alcp::mac::Context&   ctx);
 };

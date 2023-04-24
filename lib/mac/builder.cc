@@ -68,4 +68,24 @@ MacBuilder::getSize(const alc_mac_info_t& macInfo)
     return size;
 }
 
+Status
+MacBuilder::isSupported(const alc_mac_info_t& macInfo)
+{
+    Status s{ StatusOk() };
+
+    switch (macInfo.mi_type) {
+        case ALC_MAC_CMAC:
+            s = CmacBuilder::isSupported(macInfo);
+            break;
+        case ALC_MAC_HMAC:
+            s = HmacBuilder::isSupported(macInfo);
+            break;
+        default:
+            return InvalidArgument("Invalid MAC Algorithm");
+            break;
+    }
+
+    return s;
+}
+
 } // namespace alcp::mac
