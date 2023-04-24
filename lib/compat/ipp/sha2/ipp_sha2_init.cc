@@ -104,7 +104,7 @@ alcp_SHA2Init(ipp_wrp_sha2_ctx* pState,
     dinfo.dt_len          = len;
     dinfo.dt_mode.dm_sha2 = mode;
 
-    Uint64 size           = alcp_digest_context_size(&dinfo);
+    Uint64 size             = alcp_digest_context_size(&dinfo);
     context->handle.context = malloc(size);
     context->dinfo          = dinfo;
 
@@ -194,6 +194,12 @@ ippsHashInit_rmf(IppsHashState_rmf* pState, const IppsHashMethod* pMethod)
         case ippHashAlg_SHA512:
             printMsg("SHA2-512");
             return alcp_SHA2Init(context, ALC_DIGEST_LEN_512, ALC_SHA2_512);
+        case ippHashAlg_SHA512_224:
+            printMsg("SHA2-512_224");
+            return alcp_SHA2Init(context, ALC_DIGEST_LEN_224, ALC_SHA2_512);
+        case ippHashAlg_SHA512_256:
+            printMsg("SHA2-512_256");
+            return alcp_SHA2Init(context, ALC_DIGEST_LEN_256, ALC_SHA2_512);
         default:
             return ippStsNotSupportedModeErr;
     }
