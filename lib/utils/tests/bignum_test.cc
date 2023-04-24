@@ -430,7 +430,6 @@ TEST(BigNumTest, Div)
     EXPECT_EQ("7CE174", x.toString(BigNum::Format::eHex));
     b.fromUint64(0);
     x /= b;
-    // ASSERT_THROW((x / b), base::Status);
 }
 
 TEST(BigNumTest, DivAssign)
