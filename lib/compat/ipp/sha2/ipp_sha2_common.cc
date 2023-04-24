@@ -62,6 +62,8 @@ alcp_DigestFinal(Ipp8u* pMD, ipp_wrp_sha2_ctx* pState)
         printErr("Unable to copy digest\n");
         return ippStsUnderRunErr;
     }
+
+    alcp_digest_reset(&(context->handle));
     // Messup digest to test wrapper
     // *(reinterpret_cast<Uint8*>(pMD)) = 0x00;
     return ippStsNoErr;
