@@ -55,7 +55,7 @@ compareArray(Uint8* a1, int a1_len, Uint8* a2, int a2_len)
 
 static alc_mac_handle_t handle;
 
-void
+alc_error_t
 run_hmac(const alc_mac_info_p macInfo,
          Uint8*               cipherText,
          Uint32               cipherTextLen,
@@ -63,11 +63,17 @@ run_hmac(const alc_mac_info_p macInfo,
          Uint32               mac_size)
 {
 
-    char error_message[1024] = "";
+    int err = ALC_ERROR_NONE;
+    err     = alcp_mac_supported(macInfo);
+    if (err == ALC_ERROR_NONE) {
+        handle.ch_context = malloc(alcp_mac_context_size(macInfo));
+    } else {
+        printf("HMAC Infomation is unsupported\n");
+        return err;
+    }
 
-    handle.ch_context = malloc(alcp_mac_context_size(macInfo));
-    int err           = ALC_ERROR_NONE;
-    err               = alcp_mac_request(&handle, macInfo);
+    char error_message[1024] = "";
+    err                      = alcp_mac_request(&handle, macInfo);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Request - %d\n", err);
         goto out;
@@ -96,6 +102,7 @@ out:
 
     alcp_mac_finish(&handle);
     free(handle.ch_context);
+    return err;
 }
 
 void
@@ -178,16 +185,22 @@ demo_Hmac_Sha256()
 
     Uint64 mac_size = 32;
     Uint8  mac[mac_size];
-    run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
-    displayResults("HMAC SHA2-256",
-                   key,
-                   sizeof(key) * 8,
-                   cipherText,
-                   sizeof(cipherText),
-                   mac,
-                   sizeof(mac),
-                   expectedMac,
-                   sizeof(expectedMac));
+    err = run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+    if (err != ALC_ERROR_NONE) {
+        printf("Error Occurred in HMAC SHA2-256\n");
+
+    } else {
+
+        displayResults("HMAC SHA2-256",
+                       key,
+                       sizeof(key),
+                       cipherText,
+                       sizeof(cipherText),
+                       mac,
+                       sizeof(mac),
+                       expectedMac,
+                       sizeof(expectedMac));
+    }
 }
 
 void
@@ -243,16 +256,22 @@ demo_Hmac_Sha224()
 
     Uint64 mac_size = ALC_DIGEST_LEN_224 / 8;
     Uint8  mac[mac_size];
-    run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
-    displayResults("HMAC SHA2-224",
-                   key,
-                   sizeof(key) * 8,
-                   cipherText,
-                   sizeof(cipherText),
-                   mac,
-                   sizeof(mac),
-                   expectedMac,
-                   sizeof(expectedMac));
+    err = run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+    if (err != ALC_ERROR_NONE) {
+        printf("Error Occurred in HMAC SHA2-224\n");
+
+    } else {
+
+        displayResults("HMAC SHA2-224",
+                       key,
+                       sizeof(key),
+                       cipherText,
+                       sizeof(cipherText),
+                       mac,
+                       sizeof(mac),
+                       expectedMac,
+                       sizeof(expectedMac));
+    }
 }
 
 void
@@ -315,16 +334,22 @@ demo_Hmac_Sha512()
 
     Uint64 mac_size = ALC_DIGEST_LEN_512 / 8;
     Uint8  mac[mac_size];
-    run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
-    displayResults("HMAC SHA2-512",
-                   key,
-                   sizeof(key) * 8,
-                   cipherText,
-                   sizeof(cipherText),
-                   mac,
-                   sizeof(mac),
-                   expectedMac,
-                   sizeof(expectedMac));
+    err = run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+    if (err != ALC_ERROR_NONE) {
+        printf("Error Occurred in HMAC SHA2-512\n");
+
+    } else {
+
+        displayResults("HMAC SHA2-512",
+                       key,
+                       sizeof(key),
+                       cipherText,
+                       sizeof(cipherText),
+                       mac,
+                       sizeof(mac),
+                       expectedMac,
+                       sizeof(expectedMac));
+    }
 }
 void
 demo_Hmac_Sha3_224()
@@ -365,16 +390,22 @@ demo_Hmac_Sha3_224()
 
     Uint64 mac_size = ALC_DIGEST_LEN_224 / 8;
     Uint8  mac[mac_size];
-    run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
-    displayResults("HMAC SHA3-224",
-                   key,
-                   sizeof(key) * 8,
-                   cipherText,
-                   sizeof(cipherText),
-                   mac,
-                   sizeof(mac),
-                   expectedMac,
-                   sizeof(expectedMac));
+    err = run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+    if (err != ALC_ERROR_NONE) {
+        printf("Error Occurred in HMAC SHA3-224\n");
+
+    } else {
+
+        displayResults("HMAC SHA3-224",
+                       key,
+                       sizeof(key),
+                       cipherText,
+                       sizeof(cipherText),
+                       mac,
+                       sizeof(mac),
+                       expectedMac,
+                       sizeof(expectedMac));
+    }
 }
 
 void
@@ -415,18 +446,25 @@ demo_Hmac_Sha3_256()
         .mi_keyinfo = kinfo
     };
 
-    Uint64 mac_size = ALC_DIGEST_LEN_256 / 8;
-    Uint8  mac[mac_size];
-    run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
-    displayResults("HMAC SHA3-256",
-                   key,
-                   sizeof(key) * 8,
-                   cipherText,
-                   sizeof(cipherText),
-                   mac,
-                   sizeof(mac),
-                   expectedMac,
-                   sizeof(expectedMac));
+    Uint64      mac_size = ALC_DIGEST_LEN_256 / 8;
+    Uint8       mac[mac_size];
+    alc_error_t err =
+        run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+    if (err != ALC_ERROR_NONE) {
+        printf("Error Occurred in HMAC SHA3-256\n");
+
+    } else {
+
+        displayResults("HMAC SHA3-256",
+                       key,
+                       sizeof(key),
+                       cipherText,
+                       sizeof(cipherText),
+                       mac,
+                       sizeof(mac),
+                       expectedMac,
+                       sizeof(expectedMac));
+    }
 }
 void
 demo_Hmac_Sha3_512()
@@ -473,18 +511,25 @@ demo_Hmac_Sha3_512()
         .mi_keyinfo = kinfo
     };
 
-    Uint64 mac_size = ALC_DIGEST_LEN_512 / 8;
-    Uint8  mac[mac_size];
-    run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
-    displayResults("HMAC SHA3-512",
-                   key,
-                   sizeof(key) * 8,
-                   cipherText,
-                   sizeof(cipherText),
-                   mac,
-                   sizeof(mac),
-                   expectedMac,
-                   sizeof(expectedMac));
+    Uint64      mac_size = ALC_DIGEST_LEN_512 / 8;
+    Uint8       mac[mac_size];
+    alc_error_t err =
+        run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+    if (err != ALC_ERROR_NONE) {
+        printf("Error Occurred in HMAC SHA3-512\n");
+
+    } else {
+
+        displayResults("HMAC SHA3-512",
+                       key,
+                       sizeof(key),
+                       cipherText,
+                       sizeof(cipherText),
+                       mac,
+                       sizeof(mac),
+                       expectedMac,
+                       sizeof(expectedMac));
+    }
 }
 
 void
@@ -539,18 +584,25 @@ demo_Hmac_Sha384()
         .mi_keyinfo = kinfo
     };
 
-    Uint64 mac_size = ALC_DIGEST_LEN_384 / 8;
-    Uint8  mac[mac_size];
-    run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
-    displayResults("HMAC SHA2-384",
-                   key,
-                   sizeof(key) * 8,
-                   cipherText,
-                   sizeof(cipherText),
-                   mac,
-                   sizeof(mac),
-                   expectedMac,
-                   sizeof(expectedMac));
+    Uint64      mac_size = ALC_DIGEST_LEN_384 / 8;
+    Uint8       mac[mac_size];
+    alc_error_t err =
+        run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+    if (err != ALC_ERROR_NONE) {
+        printf("Error Occurred in HMAC SHA2-384\n");
+
+    } else {
+
+        displayResults("HMAC SHA2-384",
+                       key,
+                       sizeof(key),
+                       cipherText,
+                       sizeof(cipherText),
+                       mac,
+                       sizeof(mac),
+                       expectedMac,
+                       sizeof(expectedMac));
+    }
 }
 
 void
@@ -594,18 +646,25 @@ demo_Hmac_Sha3_384()
         .mi_keyinfo = kinfo
     };
 
-    Uint64 mac_size = ALC_DIGEST_LEN_384 / 8;
-    Uint8  mac[mac_size];
-    run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
-    displayResults("HMAC SHA3-384",
-                   key,
-                   sizeof(key) * 8,
-                   cipherText,
-                   sizeof(cipherText),
-                   mac,
-                   sizeof(mac),
-                   expectedMac,
-                   sizeof(expectedMac));
+    Uint64      mac_size = ALC_DIGEST_LEN_384 / 8;
+    Uint8       mac[mac_size];
+    alc_error_t err =
+        run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
+    if (err != ALC_ERROR_NONE) {
+        printf("Error Occurred in HMAC SHA3-384\n");
+
+    } else {
+
+        displayResults("HMAC SHA3-384",
+                       key,
+                       sizeof(key),
+                       cipherText,
+                       sizeof(cipherText),
+                       mac,
+                       sizeof(mac),
+                       expectedMac,
+                       sizeof(expectedMac));
+    }
 }
 
 void
