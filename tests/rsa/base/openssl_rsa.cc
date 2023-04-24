@@ -127,7 +127,8 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                             data.m_msg,
                             data.m_msg_len)) {
         ret_val = ERR_GET_REASON(ERR_get_error());
-        std::cout << "EVP_PKEY_encrypt failed: Error:" << ret_val << std::endl;
+        // std::cout << "EVP_PKEY_encrypt failed2: Error:" << ret_val <<
+        // std::endl;
         return ret_val;
     }
     return 0;

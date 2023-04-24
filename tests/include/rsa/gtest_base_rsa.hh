@@ -76,11 +76,13 @@ SkipTest(int ret_val, std::string LibStr)
       alcp returns ALC_ERROR_NOT_PERMITTED */
     if ((LibStr.compare("OpenSSL") == 0)
         && ret_val == RSA_R_DATA_TOO_LARGE_FOR_MODULUS) {
-        std::cout << "Invalid case: Skipping this test" << std::endl;
+        if (verbose > 1)
+            std::cout << "Invalid case: Skipping this test" << std::endl;
         return true;
     } else if ((LibStr.compare("ALCP") == 0)
                && ret_val == ALC_ERROR_NOT_PERMITTED) {
-        std::cout << "Invalid case: Skipping this test" << std::endl;
+        if (verbose > 1)
+            std::cout << "Invalid case: Skipping this test" << std::endl;
         return true;
     } else
         return false;

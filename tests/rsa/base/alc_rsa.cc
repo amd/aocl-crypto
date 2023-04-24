@@ -104,7 +104,9 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                                      m_keysize,
                                      data.m_encrypted_data);
     if (alcp_is_error(err)) {
-        std::cout << "Error in alcp_rsa_publickey_encrypt " << err << std::endl;
+        /* FIXME: this has to be enabled back later */
+        // std::cout << "Error in alcp_rsa_publickey_encrypt " << err <<
+        // std::endl;
         return err;
     }
     return 0;
