@@ -28,7 +28,7 @@ AES
     AES Encrypt / Decrypt routines which will support the following cipher schemes:
         -  CBC, CFB, OFB, CTR, GCM, XTS, CCM, SIV.
 ```
--   click to know about more about [AOCL - AES API](group__cipher.html)
+-   Click to know about more about [AOCL - AES API](group__cipher.html)
 
 ### Digest
 

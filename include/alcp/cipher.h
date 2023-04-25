@@ -293,8 +293,8 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
  * @brief    Allows caller to update encryption of plain text to a cipher text
  * as per requested
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_cipher_request is called  and at
- * the end of session call @ref alcp_cipher_finish</b>
+ * <b>This AEAD API can be called after @ref alcp_cipher_request is called  and
+ * at the end of session call @ref alcp_cipher_finish</b>
  * @endparblock
  * @note    Error needs to be checked for each call,
  *           valid only if @ref alcp_is_error (ret) is false, ctx to be
@@ -320,8 +320,8 @@ alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
  * @brief    Allows caller to update decryption of cipher text to plain text
  * as per requested
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_cipher_request is called  and at
- * the end of session call @ref alcp_cipher_finish</b>
+ * <b>This AEAD API can be called after @ref alcp_cipher_request is called  and
+ * at the end of session call @ref alcp_cipher_finish</b>
  * @endparblock
  * @note    Error needs to be checked for each call,
  *           valid only if @ref alcp_is_error (ret) is false, ctx to be
@@ -346,8 +346,9 @@ alcp_cipher_decrypt_update(const alc_cipher_handle_p pCipherHandle,
 /**
  * @brief Allows caller to set the IV/Nonce
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_cipher_request is called  and at
- * the end of session call @ref alcp_cipher_finish</b>
+ * <b>This AEAD API can be called after @ref alcp_cipher_request is called. It
+ * should be called after @ref alcp_cipher_set_tag_length for CCM mode. For GCM
+ * mode should be called before @ref alcp_cipher_set_aad</b>
  * @endparblock
  * @param [in] pCipherHandle Session handle for encrypt/decrypt operation
  * @param[in] len  Length in bytes of IV/Nonce
@@ -364,8 +365,11 @@ alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
 /**
  * @brief Allows caller to set the Additonal Data for Tag Generation
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_cipher_request is called  and at
- * the end of session call @ref alcp_cipher_finish</b>
+ * <b>This AEAD API can be called after @ref alcp_cipher_request. For
+ * SIV there should only be one call to this API and for others like GCM
+ * and CCM mode, this has to be called after @ref alcp_cipher_set_iv. For
+ * SIV, this has to be called immediately after @ref alcp_cipher_request,
+ * also IV of SIV needs to be passed into this API as the last call.</b>
  * @endparblock
  * @param[in] pCipherHandle Session handle for encrypt/decrypt operation
  * @param[in] pInput    Additonal Data in Bytes
@@ -382,8 +386,8 @@ alcp_cipher_set_aad(const alc_cipher_handle_p pCipherHandle,
 /**
  * @brief Allows caller to set the get a copy of Tag
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_cipher_request is called  and at
- * the end of session call @ref alcp_cipher_finish </b>
+ * <b>This AEAD API can be called after @ref alcp_cipher_request is called  and
+ * at the end of session call, just before @ref alcp_cipher_finish </b>
  * @endparblock
  * @param[in] pCipherHandle Session handle for encrypt/decrypt operation
  * @param[out] pOutput  Byte addressible memory to write tag into
@@ -400,8 +404,8 @@ alcp_cipher_get_tag(const alc_cipher_handle_p pCipherHandle,
 /**
  * @brief Allows caller to set the set tag size
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_cipher_request is called  and at
- * the end of session call @ref alcp_cipher_finish</b>
+ * <b>This AEAD API can be called after @ref alcp_cipher_request is called. It's
+ * meant for CCM mode, should be called before @ref alcp_cipher_set_iv.</b>
  * @endparblock
  * @param[in] pCipherHandle Session handle for encrypt/decrypt operation
  * @param[in] len       Length in bytes of Tag in bytes
@@ -416,8 +420,9 @@ alcp_cipher_set_tag_length(const alc_cipher_handle_p pCipherHandle, Uint64 len);
  * @brief    Allows caller to decryption cipher text to plain text
  * as per requested
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_cipher_request is called and at the
- * end of session call @ref alcp_cipher_finish </b>
+ * <b>This AEAD API should be called only after @ref alcp_cipher_request. API is
+ * meant to be used with CCM mode, it needs to be called before @ref
+ * alcp_cipher_set_iv.</b>
  * @endparblock
  * @note    Error needs to be checked for each call,
  *           valid only if @ref alcp_is_error (ret) is false, pCipherHandle
@@ -447,8 +452,8 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
  * <b>This API is called to free resources so should be called to free the
  * session</b>
  * @endparblock
- * @note       alcp_cipher_request() should be called first to know if the
- *              given cipher/key length configuration is valid.
+ * @note       alcp_cipher_finish to be called at the end of the transaction,
+ * context will be unusable after this call.
  *
  * @param[in]    pCipherHandle    Session handle for future encrypt decrypt
  *                         operation
