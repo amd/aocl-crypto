@@ -142,7 +142,7 @@ typedef struct alc_mac_handle
  * is not zero then @ref alcp_error_str needs to be called to know about error
  * occured
  */
-alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_mac_supported(const alc_mac_info_p pcMacInfo);
 
 /**
