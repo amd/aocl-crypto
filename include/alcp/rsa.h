@@ -43,7 +43,7 @@ EXTERN_C_BEGIN
  */
 
 /**
- * @brief Store info about paddign used for encryption / decryption
+ * @brief Store info about padding used for encryption / decryption
  *
  * @typedef enum alc_rsa_padding
  */
@@ -103,7 +103,7 @@ alcp_rsa_context_size();
  *
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_error_str needs to be called to know about error
- * occured
+ * occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_supported();
@@ -125,7 +125,7 @@ alcp_rsa_supported();
  *
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_error_str needs to be called to know about error
- * occured
+ * occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_request(alc_rsa_handle_p pRsaHandle);
@@ -152,7 +152,7 @@ alcp_rsa_request(alc_rsa_handle_p pRsaHandle);
  * bytes
 
  * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occured
+ * alcp_error_str needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
@@ -181,7 +181,7 @@ alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
  * @param [in]  encSize    - pointer to encrypted bytes
  * @param [out] pText      - pointer to decrypted bytes
  * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occured
+ * alcp_error_str needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p pRsaHandle,
@@ -201,7 +201,7 @@ alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p pRsaHandle,
  * @param [out]   keySize    - size of modulus
 
  * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occured
+ * alcp_error_str needs to be called to know about error occurred
  */
 
 ALCP_API_EXPORT alc_error_t
@@ -247,7 +247,7 @@ ALCP_API_EXPORT void
 alcp_rsa_finish(const alc_rsa_handle_p pRsaHandle);
 
 /**
- * @brief              Get the error string for errors occuring in RSA
+ * @brief              Get the error string for errors occurring in RSA
  *                     operations
  * @parblock <br> &nbsp;
  * <b> This API is called to get the error string. It should be called after

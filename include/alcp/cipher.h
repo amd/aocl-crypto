@@ -255,7 +255,7 @@ alcp_cipher_context_size(const alc_cipher_info_p pCipherInfo);
  *                          operation
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_cipher_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
@@ -280,7 +280,7 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
  * @param[in]    len           Length of cipher/plain text
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_cipher_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
@@ -307,7 +307,7 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
  * @param[in]    pIv       Pointer to Initialization Vector
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_cipher_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
@@ -334,7 +334,7 @@ alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
  * @param[in]    pIv       Pointer to Initialization Vector
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_cipher_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_decrypt_update(const alc_cipher_handle_p pCipherHandle,
@@ -355,7 +355,7 @@ alcp_cipher_decrypt_update(const alc_cipher_handle_p pCipherHandle,
  * @param[in] pIv  IV/Nonce
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_cipher_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
@@ -363,7 +363,7 @@ alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
                    const Uint8*              pIv);
 
 /**
- * @brief Allows caller to set the Additonal Data for Tag Generation
+ * @brief Allows caller to set the Additional Data for Tag Generation
  * @parblock <br> &nbsp;
  * <b>This AEAD API can be called after @ref alcp_cipher_request. For
  * SIV there should only be one call to this API and for others like GCM
@@ -372,11 +372,11 @@ alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
  * also IV of SIV needs to be passed into this API as the last call.</b>
  * @endparblock
  * @param[in] pCipherHandle Session handle for encrypt/decrypt operation
- * @param[in] pInput    Additonal Data in Bytes
+ * @param[in] pInput    Additional Data in Bytes
  * @param[in] len       Length in bytes of Additional Data
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_cipher_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_set_aad(const alc_cipher_handle_p pCipherHandle,
@@ -390,11 +390,11 @@ alcp_cipher_set_aad(const alc_cipher_handle_p pCipherHandle,
  * at the end of session call, just before @ref alcp_cipher_finish </b>
  * @endparblock
  * @param[in] pCipherHandle Session handle for encrypt/decrypt operation
- * @param[out] pOutput  Byte addressible memory to write tag into
+ * @param[out] pOutput  Byte addressable memory to write tag into
  * @param[in] len       Length in bytes of Tag in bytes
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_cipher_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_get_tag(const alc_cipher_handle_p pCipherHandle,
@@ -411,7 +411,7 @@ alcp_cipher_get_tag(const alc_cipher_handle_p pCipherHandle,
  * @param[in] len       Length in bytes of Tag in bytes
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_cipher_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_set_tag_length(const alc_cipher_handle_p pCipherHandle, Uint64 len);
@@ -436,7 +436,7 @@ alcp_cipher_set_tag_length(const alc_cipher_handle_p pCipherHandle, Uint64 len);
  * @param[in]    len           Length of cipher/plain text
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_cipher_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
@@ -463,7 +463,7 @@ ALCP_API_EXPORT void
 alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle);
 
 /**
- * @brief              Get the error string for errors occuring in cipher
+ * @brief              Get the error string for errors occurring in cipher
  *                     operations
  * @parblock <br> &nbsp;
  * <b> This API is called to get the error string. It should be called after

@@ -148,7 +148,7 @@ alcp_ec_context_size(const alc_ec_info_p p_ec_info);
  *
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_error_str needs to be called to know about error
- * occured
+ * occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_ec_supported(const alc_ec_info_p pEcInfo);
@@ -171,13 +171,13 @@ alcp_ec_supported(const alc_ec_info_p pEcInfo);
  *
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_error_str needs to be called to know about error
- * occured
+ * occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_ec_request(const alc_ec_info_p pEcInfo, alc_ec_handle_p pEcHandle);
 
 /**
- * @brief              Get the error string for errors occuring in EC
+ * @brief              Get the error string for errors occurring in EC
  *                     operations
  * @parblock <br> &nbsp;
  * <b> This API is called to get the error string. It should be called after

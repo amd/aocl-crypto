@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -44,7 +44,7 @@
 EXTERN_C_BEGIN
 
 /**
- * @brief Provide the Error Code for the error occured if any
+ * @brief Provide the Error Code for the error occurred if any
  * @typedef enum alc_error_generic_t
  */
 typedef enum _alc_error_generic
@@ -133,7 +133,7 @@ typedef enum _alc_error_generic
 } alc_error_generic_t;
 
 /**
- * @brief Used to Provide the Error Code for the error occured if any
+ * @brief Used to Provide the Error Code for the error occurred if any
  * @typedef Uint64 alc_error_t
  */
 typedef Uint64 alc_error_t;
@@ -142,7 +142,7 @@ typedef Uint64 alc_error_t;
  *
  * @brief        Converts AOCL Crypto errors to human readable form
  * @parblock <br> &nbsp;
- * <b>This API should be called only if any error occured while executing other
+ * <b>This API should be called only if any error occurred while executing other
  * API</b>
  * @endparblock
  *
@@ -151,7 +151,7 @@ typedef Uint64 alc_error_t;
  *
  * @param [in] err    Actual Error
  * @param [out] buf    Buffer to write the Error message to
- * @param [in] size   Size of the buffer @ref buf. Size of buf should be atleast
+ * @param [in] size   Size of the buffer @ref buf. Size of buf should be at least
  * 1024
  */
 ALCP_API_EXPORT void

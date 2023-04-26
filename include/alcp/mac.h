@@ -140,7 +140,7 @@ typedef struct alc_mac_handle
  *
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_error_str needs to be called to know about error
- * occured
+ * occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_supported(const alc_mac_info_p pcMacInfo);
@@ -173,7 +173,7 @@ alcp_mac_context_size(const alc_mac_info_p pMacInfo);
  *                          operation
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_mac_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_request(alc_mac_handle_p pMacHandle, const alc_mac_info_p pMacInfo);
@@ -192,14 +192,14 @@ alcp_mac_request(alc_mac_handle_p pMacHandle, const alc_mac_info_p pMacInfo);
  * @param [in]   size       Length of input data
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_mac_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_update(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size);
 
 /**
  * @brief               Allows caller to finalize MAC with final chunk of data
- *                      to be authenicated
+ *                      to be authenticated
  * <b>This API is called to finalize mac so should be called after @ref
  * alcp_mac_request and before @ref alcp_mac_finish</b>
  * @endparblock
@@ -216,7 +216,7 @@ alcp_mac_update(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size);
  * @param [in]   size        Length of input data
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_mac_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_finalize(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size);
@@ -234,7 +234,7 @@ alcp_mac_finalize(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size);
  * @param[in]    size   Length of output buffer
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_mac_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_copy(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size);
@@ -253,7 +253,7 @@ alcp_mac_copy(alc_mac_handle_p pMacHandle, Uint8* buff, Uint64 size);
  * @param [in]   pMacHandle Session handle used for the MAC operations
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_mac_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_finish(alc_mac_handle_p pMacHandle);
@@ -269,13 +269,13 @@ alcp_mac_finish(alc_mac_handle_p pMacHandle);
  * @param [in]   pMacHandle Session handle for future MAC operation
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_mac_error or  @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_mac_reset(alc_mac_handle_p pMacHandle);
 
 /**
- * @brief              Get the error string for errors occuring in MAC
+ * @brief              Get the error string for errors occurring in MAC
  *                     operations
  * @parblock <br> &nbsp;
  * <b> This API is called to get the error string. It should be called after

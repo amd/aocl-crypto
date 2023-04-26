@@ -50,7 +50,7 @@ EXTERN_C_BEGIN
  * @param [in] pPrivKey - pointer to Input privateKey used for generating
  * publicKey
  * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occured
+ * alcp_error_str needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
@@ -70,7 +70,7 @@ alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
  * publicKey
  * @param [in] pKeyLength - pointer to keyLength
  * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occured
+ * alcp_error_str needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_ec_get_secretkey(const alc_ec_handle_p pEcHandle,
