@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,7 +28,6 @@
 #include "alcp/base.hh"
 
 #include "gtest/gtest.h"
-
 
 namespace {
 using namespace alcp;
@@ -59,8 +58,8 @@ TEST(StatusTest, OkStatus)
 
 TEST(StatusTest, InternalError)
 {
-    String str {"Testing Internal Error"};
-    Status s = InternalError(str); 
+    String str{ "Testing Internal Error" };
+    Status s = InternalError(str);
 
     EXPECT_FALSE(s.ok());
     EXPECT_EQ(s.code(), ErrorCode::eInternal);
@@ -71,8 +70,8 @@ TEST(StatusTest, InternalError)
 
 TEST(StatusTest, UnknownError)
 {
-    String str {"Testing Unknown Error"};
-    Status s = status::Unknown(str); 
+    String str{ "Testing Unknown Error" };
+    Status s = status::Unknown(str);
 
     EXPECT_FALSE(s.ok());
     EXPECT_EQ(s.code(), ErrorCode::eUnknown);
@@ -81,11 +80,10 @@ TEST(StatusTest, UnknownError)
     EXPECT_TRUE(n != std::string::npos);
 }
 
-
 TEST(StatusTest, InvalidArgument)
 {
-    String str {"Testing Invalid Arugument Error"};
-    Status s = status::InvalidArgument(str); 
+    String str{ "Testing Invalid Arugument Error" };
+    Status s = status::InvalidArgument(str);
 
     EXPECT_FALSE(s.ok());
     EXPECT_EQ(s.code(), ErrorCode::eInvalidArgument);
@@ -94,11 +92,10 @@ TEST(StatusTest, InvalidArgument)
     EXPECT_TRUE(n != std::string::npos);
 }
 
-
 TEST(StatusTest, AlreadyExists)
 {
-    String str {"Testing Already Exists"};
-    Status s = status::AlreadyExists(str); 
+    String str{ "Testing Already Exists" };
+    Status s = status::AlreadyExists(str);
 
     EXPECT_FALSE(s.ok());
     EXPECT_EQ(s.code(), ErrorCode::eExists);
@@ -107,11 +104,10 @@ TEST(StatusTest, AlreadyExists)
     EXPECT_TRUE(n != std::string::npos);
 }
 
-
 TEST(StatusTest, NotFound)
 {
-    String str {"Testing Not Found"};
-    Status s = status::NotFound(str); 
+    String str{ "Testing Not Found" };
+    Status s = status::NotFound(str);
 
     EXPECT_FALSE(s.ok());
     EXPECT_EQ(s.code(), ErrorCode::eNotFound);
@@ -120,11 +116,10 @@ TEST(StatusTest, NotFound)
     EXPECT_TRUE(n != std::string::npos);
 }
 
-
 TEST(StatusTest, NotAvailable)
 {
-    String str {"Testing Not Available Error"};
-    Status s = status::NotAvailable(str); 
+    String str{ "Testing Not Available Error" };
+    Status s = status::NotAvailable(str);
 
     EXPECT_FALSE(s.ok());
     EXPECT_EQ(s.code(), ErrorCode::eNotAvailable);
@@ -133,7 +128,4 @@ TEST(StatusTest, NotAvailable)
     EXPECT_TRUE(n != std::string::npos);
 }
 
-
-
-}
-
+} // namespace

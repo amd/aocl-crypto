@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -67,14 +67,14 @@ Assert(T&& assrt, std::string_view s, const SourceLocation& loc)
 
 #if defined(ALCP_USE_ASSERTIONS)
 
-#define ALCP_ASSERT(cond, msg)                                                      \
+#define ALCP_ASSERT(cond, msg)                                                 \
     alcp::Assert(cond, std::string_view(msg), ALCP_SOURCE_LOCATION())
 
 #else
 
-#define ALCP_ASSERT(cond, msg)              \
-    do {                                    \
-    } while(0)
+#define ALCP_ASSERT(cond, msg)                                                 \
+    do {                                                                       \
+    } while (0)
 
 #endif // if ALCP_USE_ASSERTIONS
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,9 +35,9 @@
 #define PARALLEL_512_BLKS_4 4
 #define MAX_NUM_512_BLKS    16 // 24
 
- /*_mm_prefetch accepts const void*` arguments for GCC / ICC 
+/*_mm_prefetch accepts const void*` arguments for GCC / ICC
 whereas MSVC still expects `const char* ` */
-#ifdef WIN32  
+#ifdef WIN32
 #define cast_to(ptr) ((const char*)ptr)
 #else
 #define cast_to(ptr) ((void*)ptr)

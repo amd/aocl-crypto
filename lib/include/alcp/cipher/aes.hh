@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -63,8 +63,7 @@ class Aes : public Rijndael
                  const alc_key_info_t&         keyInfo)
         : Rijndael{ keyInfo }
         , m_mode{ aesInfo.ai_mode }
-    {
-    }
+    {}
 
   protected:
     virtual ~Aes() {}
@@ -96,8 +95,7 @@ class ALCP_API_EXPORT Cbc final : public Aes
     explicit Cbc(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {
-    }
+    {}
 
     ~Cbc() {}
 
@@ -164,8 +162,7 @@ class ALCP_API_EXPORT Ofb final : public Aes
     explicit Ofb(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {
-    }
+    {}
 
     ~Ofb() {}
 
@@ -233,8 +230,7 @@ class ALCP_API_EXPORT Ctr final : public Aes
     explicit Ctr(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {
-    }
+    {}
 
     ~Ctr() {}
 

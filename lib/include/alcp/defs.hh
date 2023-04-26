@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -46,7 +46,7 @@
 #if defined(_MSC_VER)
 #define ALCP_DEFS_NO_DISCARD
 #else
-#define ALCP_DEFS_NO_DISCARD      [[nodiscard]]
+#define ALCP_DEFS_NO_DISCARD [[nodiscard]]
 #endif
 
 /**
@@ -76,37 +76,38 @@
  */
 
 #ifndef ALCP_DEFS_ALCP_DEFS_DISABLE_COPY_CTOR
-#define ALCP_DEFS_DISABLE_COPY_CTOR(CLASS_NAME)                                     \
+#define ALCP_DEFS_DISABLE_COPY_CTOR(CLASS_NAME)                                \
     CLASS_NAME(const CLASS_NAME&) = delete
 #endif
 
 #ifndef ALCP_DEFS_DISABLE_MOVE_CTOR
-#define ALCP_DEFS_DISABLE_MOVE_CTOR(CLASS_NAME) CLASS_NAME(CLASS_NAME \ &&) = delete
+#define ALCP_DEFS_DISABLE_MOVE_CTOR(CLASS_NAME)                                \
+    CLASS_NAME(CLASS_NAME \ &&) = delete
 #endif
 
 #ifndef ALCP_DEFS_DISABLE_MOVE_ASSIGNMENT
-#define ALCP_DEFS_DISABLE_MOVE_ASSIGNMENT(CLASS_NAME)                               \
+#define ALCP_DEFS_DISABLE_MOVE_ASSIGNMENT(CLASS_NAME)                          \
     CLASS_NAME& operator=(CLASS_NAME&&) = delete
 #endif
 
 #ifndef ALCP_DEFS_DISABLE_ASSIGNMENT
-#define ALCP_DEFS_DISABLE_ASSIGNMENT(CLASS_NAME)                                    \
+#define ALCP_DEFS_DISABLE_ASSIGNMENT(CLASS_NAME)                               \
     CLASS_NAME& operator=(const CLASS_NAME&) = delete
 #endif
 
 // Disable the copy constructor and assignment operator
 // Useful macro to simply do the necessary in a single line
 #ifndef ALCP_DEFS_DISABLE_COPY_AND_ASSIGNMENT
-#define ALCP_DEFS_DISABLE_COPY_AND_ASSIGNMENT(CLASS_NAME)                           \
-    ALCP_DEFS_DISABLE_COPY_CTOR(CLASS_NAME);                                        \
+#define ALCP_DEFS_DISABLE_COPY_AND_ASSIGNMENT(CLASS_NAME)                      \
+    ALCP_DEFS_DISABLE_COPY_CTOR(CLASS_NAME);                                   \
     ALCP_DEFS_DISABLE_ASSIGNMENT(CLASS_NAME)
 #endif
 
 // Disable the copy CTOR and assignment operator
 // Useful macro to simply do the necessary in a single line
 #ifndef ALCP_DEFS_DEFAULT_COPY_AND_ASSIGNMENT
-#define ALCP_DEFS_DEFAULT_COPY_AND_ASSIGNMENT(CLASS_NAME)                           \
-    CLASS_NAME(const CLASS_NAME&)            = default;                        \
+#define ALCP_DEFS_DEFAULT_COPY_AND_ASSIGNMENT(CLASS_NAME)                      \
+    CLASS_NAME(const CLASS_NAME&) = default;                                   \
     CLASS_NAME& operator=(const CLASS_NAME&) = default
 #endif
 
