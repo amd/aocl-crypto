@@ -121,7 +121,8 @@ alcp_rsa_supported();
  *              know if the RSA algorithm is supported.
  *
  *
- * @param [in] pRsaHandle The handle returned by the Library
+ * @param [out] pRsaHandle Library populated session handle for future
+ * rsa operations.
  *
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_error_str needs to be called to know about error

@@ -1,7 +1,7 @@
 
 # Welcome to AOCL-Crypto
 
-<b>AOCL-Crypto</b> is a library consisting of basic cryptographic functions optimized  tuned and for AMD Zen™ based microarchitecture. This library provides a unified solution for Cryptographic Algorithm and has multiple implementations of different AES cryptographic encryption / decryption and SHA2, SHA3 Digest routines, Elliptic curve routines and Message Authentication Code.
+**AOCL-Crypto** is a library consisting of basic cryptographic functions optimized and tuned for AMD Zen™ based microarchitecture. This library provides a unified solution for Cryptographic routines such as AES Cipher ( CFB, CTR, CBC, CCM, GCM, OFB, SIV, XTS ), SHA Digest ( SHA2, SHA3, SHAKE ), Message Authentication Code ( CMAC, HMAC ), Elliptical Curve ( ecdhx25519 ), Rivest-Shamir-Adleman ( Public key Encrypt, private key decrypt ) etc ...
 
 ---
 
@@ -79,6 +79,20 @@ CMAC
 ```
 
 - Click to know more about [AOCL MAC API](group__mac.html)
+
+### Rivest-Shamir-Adleman (RSA)
+
+```
+
+RSA
+
+    - Encrypt text with public key
+    - Decrypt text with private Key
+
+```
+
+- Click to know more about [AOCL RSA API](group__rsa.html)
+
 
 <div id = "Build" name="Build"></div>
 

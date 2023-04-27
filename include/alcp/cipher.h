@@ -253,8 +253,8 @@ alcp_cipher_context_size(const alc_cipher_info_p pCipherInfo);
  *           valid only if @ref alcp_is_error (ret) is false, ctx
  * to be considered valid.
  * @param [in]   pCipherInfo    Description of the cipher session
- * @param [in]   pCipherHandle  Session handle for future encrypt decrypt
- *                          operation
+ * @param [out]   pCipherHandle    Library populated session handle for future
+ * cipher operations.
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_cipher_error or @ref alcp_error_str needs to be
  * called to know about error occurred

@@ -169,8 +169,8 @@ alcp_mac_context_size(const alc_mac_info_p pMacInfo);
  * @note     Error needs to be checked after each call,
  *           valid only if @ref alcp_is_error (ret) is false
  * @param  [in]  pMacInfo    Description of the MAC session
- * @param [in]   pMacHandle  Session handle for future MAC
- *                          operation
+ * @param [out]   pMacHandle Library populated session handle for future
+ * mac operations.
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_mac_error or @ref alcp_error_str needs to be
  * called to know about error occurred

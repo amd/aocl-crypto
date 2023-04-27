@@ -196,7 +196,8 @@ alcp_rng_context_size(const alc_rng_info_p pRngInfo);
  *             @ref alcp_rng_context_size and pHandle as allocated by user.
  *
  * @param [in]      pRngInfo        Pointer to RNG configuration
- * @param [in]      pRngHandle      Pointer to user allocated session
+ * @param [out]      pRngHandle      Library populated session handle for future
+ * rng operations.
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
  * called to know about error occurred

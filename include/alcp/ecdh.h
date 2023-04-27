@@ -68,7 +68,7 @@ alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
  * @param [out] pSecretKey - pointer to output secretKey
  * @param [in] pPublicKey - pointer to Input privateKey used for generating
  * publicKey
- * @param [in] pKeyLength - pointer to keyLength
+ * @param [out] pKeyLength - pointer to keyLength
  * @return Error Code for the API called . if alc_error_t is not zero then
  * alcp_error_str needs to be called to know about error occurred
  */

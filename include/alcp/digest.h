@@ -225,7 +225,8 @@ alcp_digest_supported(const alc_digest_info_p p_digest_info);
  *
  * @param [in]      p_digest_info   Description of the requested digest session
  *
- * @param [in]      p_digest_handle The handle returned by the Library
+ * @param [out]      p_digest_handle Library populated session handle for future
+ * digest operations.
  *
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_error_str needs to be called to know about error

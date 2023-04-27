@@ -167,7 +167,8 @@ alcp_ec_supported(const alc_ec_info_p pEcInfo);
  *
  * @param [in]      pEcInfo   Description of the requested ec session
  *
- * @param [in]      pEcHandle The handle returned by the Library
+ * @param [out]      pEcHandle Library populated session handle for future
+ * EC operations.
  *
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_error_str needs to be called to know about error

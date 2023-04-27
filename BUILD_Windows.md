@@ -1,26 +1,26 @@
-## AOCL Crypto Library Build for Windows(Clang)
+## AOCL Crypto Library Build for Windows
 
 ### Following software should be installed prior to build AOCL-CRYPTO 
 
-=> MS Visual Studio (2019 or greater)
-=> Clang 15.0 or above
-=> Python 3.7 or greater
-=> Cmake 3.21 or greater
-=> Git
+- MS Visual Studio (2019 or greater)
+- Clang 15.0 or above
+- Python 3.7 or greater
+- Cmake 3.21 or greater
+- Git
 
-##Environment Setup:
+### Environment Setup:
 
 1. Install visual Studio with workload: *Desktop development with c++*
-	-Enable Clang/cl tools(required) & Address Santizer(if require)
+	- Enable Clang/cl tools(required) & Address Santizer(if require)
 2. If using LLVM/Clang as external toolset:
-	-Install LLVM
-	-Install plugin: *llvm2019.vsix* :https://marketplace.visualstudio.com/items?itemName=MarekAniola.mangh-llvm2019
-	-Install VS19 version 16.10	
- 
+	- Install LLVM
+	- Install plugin: *llvm2019.vsix* :https://marketplace.visualstudio.com/items?itemName=MarekAniola.mangh-llvm2019
+	- Install VS19 version 16.10	
+
 ### Windows Build with LLVM/Clang:
-------------------
-using Powershell:
-------------------
+
+Using Powershell:
+
 1. Checkout the latest code.
 2. Open the powershell.exe (as administrator)
 3. Set path to current working directory/cmake_source_directory
@@ -28,18 +28,19 @@ using Powershell:
 ### Build
 
 `Run from source directory`
-
-**PS: cmake -A [platform: x86/x64] -B [build_directory] [Enable features] -DCMAKE_BUILD_TYPE=[RELEASE] -G "[generator: Visual Studio 17 2022]" -T [toolset:ClangCl/LLVM]
-
-```Default set values=> Generator:'Visual Studio Generator', platform: 'x64'
-if external LLVM toolset use: -T LLVM (otherwise,ClangCl)
-Available features: EXAMPLES, ADDRESS SANITIZER, TESTS, BENCH```
+```
+PS > cmake -A [platform: x86/x64] -B [build_directory] [Enable features] -DCMAKE_BUILD_TYPE=[RELEASE] -G "[generator: Visual Studio 17 2022]" -T [toolset:ClangCl/LLVM]
+```
+Default set values: 
+- Generator:'Visual Studio Generator'
+- platform: 'x64' if external LLVM toolset use: -T LLVM (otherwise,ClangCl)
+- Available features: EXAMPLES, ADDRESS SANITIZER, TESTS, BENCH
 
 `Powershell`
 
-*1. cmake -A x64 -DCMAKE_BUILD_TYPE=RELEASE -B build -T ClangCl
+* 1. cmake -A x64 -DCMAKE_BUILD_TYPE=RELEASE -B build -T ClangCl
 		`-Build binaries will be written to cmake_source_directory/build`
-*2. cmake --build .\build --config=release
+* 2. cmake --build .\build --config=release
 
 
 > **Important Notes: ASAN in an experimental phase for Windows.**  
@@ -50,10 +51,11 @@ Available features: EXAMPLES, ADDRESS SANITIZER, TESTS, BENCH```
 2. [Enable CPUID - To dispatch correct kernel with CPU identification.](#win-cpu)
 3. [Enable DEBUG Build - To compile code in Debug Mode.](#win-debug)
 4. [Enable Address Sanitizer Support ](#win-asan)
-5. [Enable Tests - To compile test code](#win-tests)
-6. [Enable Bench - To compile bench code.](#win-bench)
+5. [Enable Bench - To compile bench code.](#win-bench)
+6. [Enable Tests - To compile test code](#win-tests)
 
-** Steps to found binaries/dll's by setting an environment variable*************
+
+#### Steps to found binaries/dll's by setting an environment variable
 
 After build,alcp & gtests dll's are not found by feature's *.exe.
 Run the batch file, this .bat file set the environment path required by examples,tests & bench.
@@ -61,7 +63,7 @@ Run the batch file, this .bat file set the environment path required by examples
 PS> scripts\Set_Env_Path.bat
 -Restart the powershell & run any feature .exe from build directory or directly.
 ```
-********************************************************************************
+
 
 <div id = "win-ex"></div>
 
@@ -71,21 +73,21 @@ PS> scripts\Set_Env_Path.bat
 PS> cmake -DALCP_ENABLE_EXAMPLES=ON -B build 
 PS> cmake --build .\build --config=release
 ```
-## Run Examples
+#### Run Examples
 Run from build directory after setting an environment path.
 ```
 $ .\examples\{algorithm_type}\release\{algorithm_type}\*.exe
 ```
-
 <div id = "win-cpu"></div>
+
 
 #### Enable CPUID Append
 ```
 PS> cmake -DENABLE_AOCL_CPUID=ON -DAOCL_CPUID_INSTALL_DIR=path/to/aocl/cpuid/source -B build
 PS> cmake --build .\build --config=release
 ```
-
 <div id = "win-debug"></div>
+
 
 #### For Debug Build
 
@@ -124,7 +126,6 @@ PS> cmake --build . --config=release
 ```For running all tests
 PS> ctest -C release
 ```
-
 <div id = "win-bench"></div>
 
 #### Build Benchmarks
@@ -157,21 +158,23 @@ $ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA
 
 ### Build after enabling compat libs
 
-<div id = "OpenSSL"> </div>
-```Enabling openSSL
+<div id = "win-OSSL"> </div>
+```
+Enabling openSSL
 
 PS> cmake -DENABLE_TESTS_OPENSSL_API=ON -DOPENSSL_INSTALL_DIR=path/to/openssl ./
 PS> cmake --build build/ --config=release
 ```
-<div id = "IPPCP"> </div>
+<div id = "win-IPPCP"> </div>
 
-```Enabling IPP-Crypto
+```
+Enabling IPP-Crypto
 PS> cmake -DENABLE_TESTS_IPP_API=ON -DIPP_INSTALL_DIR=path/to/ipp_crypto ./
 PS> cmake --build build/ --config=release
-``
+```
 
-NOTES->
--------
+#### NOTES:
+
 1. Use '-o' for OpenSSL & '-i' for IPPCP to run tests & bench for them. And also set bin path of compat libs in PATH variable.
 2. Run *scripts\Set_Env_Path.bat* to set the path of binaries in environment variable.
 3. To Enable examples tests & bench:
