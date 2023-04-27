@@ -302,8 +302,8 @@ error function was called. This is used only internally in the library.
 * \param err    Actual Error
 * \param buf    Buffer to write the Error message to
 * \param size   Size of the buffer @buf
-* \param file   Name of the file where error occured
-* \param line   Line number in @file where error occured
+* \param file   Name of the file where error occurred
+* \param line   Line number in @file where error occurred
 */
 
 void

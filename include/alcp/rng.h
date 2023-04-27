@@ -165,7 +165,7 @@ typedef struct
  *
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_supported(const alc_rng_info_p pRngInfo);
@@ -199,7 +199,7 @@ alcp_rng_context_size(const alc_rng_info_p pRngInfo);
  * @param [in]      pRngHandle      Pointer to user allocated session
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pRngHandle);
@@ -219,7 +219,7 @@ alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pRngHandle);
  *
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
@@ -238,7 +238,7 @@ alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
  * @param [in]  pRngHandle      Pointer to handle returned in alcp_rng_request()
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  *
  */
 ALCP_API_EXPORT alc_error_t
@@ -261,7 +261,7 @@ alcp_rng_init(alc_rng_handle_p pRngHandle);
  *
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_seed(alc_rng_handle_p pRngHandle, const Uint8* seed, Uint64 size);
@@ -279,13 +279,13 @@ alcp_rng_seed(alc_rng_handle_p pRngHandle, const Uint8* seed, Uint64 size);
  * @param [in]  pRngHandle      Pointer to handle
  * @return   &nbsp; Error Code for the API called . if alc_error_t
  * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
- * called to know about error occured
+ * called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_finish(alc_rng_handle_p pRngHandle);
 
 /**
- * @brief              Get the error string for errors occuring in RNG
+ * @brief              Get the error string for errors occurring in RNG
  *                     operations
  * @parblock <br> &nbsp;
  * <b> This API is called to get the error string. It should be called after
