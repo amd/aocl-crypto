@@ -37,7 +37,7 @@ Let's say for example you are preloading `lib1.so lib2.so` while loading `lib3.s
 
 `LD_LIBRARY_PATH=/some/path/lib1.so:/some/path/lib2.so ./someexecutable`
 
-If someexecutable is linked to lib3.so and lib4.so in order. Then the symbol lookup order will be
+If some executable is linked to lib3.so and lib4.so in order. Then the symbol lookup order will be
 
 1) `lib1.so`
 2) `lib2.so`

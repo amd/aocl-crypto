@@ -109,7 +109,7 @@ For more details see **[README.md](md_tests_README.html)** from tests.
 <br>
 <div  style="padding: 10px 0 10px 0" id="md_BUILD_Windows"></div>
 
-## Build Instrucrion for Windows Platform
+## Build Instruction for Windows Platform
 
 ### Following software should be installed prior to build AOCL-CRYPTO 
 
@@ -210,18 +210,18 @@ ASAN is not configured for windows yet
 ```
 $ Append the argument -DALCP_ENABLE_BENCH=ON
   This will create bench executable:
-  .\bench\{alogrithm_type}\ -B build
+  .\bench\{algorithm_type}\ -B build
 ```
 ##### To Run Bench:
 ```
-$ .\bench\{alogrithm_type}\release\bench_{alogrithm_type}
+$ .\bench\{algorithm_type}\release\bench_{algorithm_type}
 ```
 ##### Arguments can be provided as:
 
 ``` PS
-$ .\bench\{alogrithm_type}\release\bench_{alogrithm_type} --benchmark_filter=SHA2_<SHA SCHEME>_<Block Size>
-$ .\bench\{alogrithm_type}\release\bench_{alogrithm_type} --benchmark_filter=SHA2_512 (runs SHA512 schemes for all block size)
-$ .\bench\{alogrithm_type}\release\bench_{alogrithm_type} --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
+$ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA2_<SHA SCHEME>_<Block Size>
+$ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA2_512 (runs SHA512 schemes for all block size)
+$ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
 ```
 <div id = "win-tests"></div>
 
@@ -229,12 +229,12 @@ $ .\bench\{alogrithm_type}\release\bench_{alogrithm_type} --benchmark_filter=SHA
 ```
 $ Append the argument '-DALCP_ENABLE_TESTS=ON'
  This will create test executable:
- .\tests\{alogrithm_type}\release
+ .\tests\{algorithm_type}\release
 ```
 
 #### To Run Tests:
  ```  PS
- $ .\tests\{alogrithm_type}\release\test_{alogrithm_type}
+ $ .\tests\{algorithm_type}\release\test_{algorithm_type}
  ```
 
 

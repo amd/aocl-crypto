@@ -25,7 +25,7 @@ Skip to [Executing Tests](###Executing Tests) if already installed
 
 ##### Manual
 
-After building ALCP, there should be binary files with name aocl-crypto/build/tests/cipher/aes\_\<aes\_mode\>\_kat. These executables expect the csv files to be located in the present working directory. CMAKE is already configured to symlink csv files to root build directory and also tests/cipher. When running these tests, please ensure you do have appropriate csv fille in the present directory.
+After building ALCP, there should be binary files with name aocl-crypto/build/tests/cipher/aes\_\<aes\_mode\>\_kat. These executables expect the csv files to be located in the present working directory. CMAKE is already configured to symlink csv files to root build directory and also tests/cipher. When running these tests, please ensure you do have appropriate csv file in the present directory.
 
 To run tests with verbose mode (prints also success)
 

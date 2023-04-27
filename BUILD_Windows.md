@@ -74,7 +74,7 @@ PS> cmake --build .\build --config=release
 ## Run Examples
 Run from build directory after setting an environment path.
 ```
-$ .\examples\{alogrithm_type}\release\{alogrithm_type}\*.exe
+$ .\examples\{algorithm_type}\release\{algorithm_type}\*.exe
 ```
 
 <div id = "win-cpu"></div>
@@ -115,11 +115,11 @@ PS> cmake -DALCP_ENABLE_TESTS=ON ./
 PS> cmake --build . --config=release
 ```
  This will create test executable:
- .\build\tests\{alogrithm_type}\release\*.exe
+ .\build\tests\{algorithm_type}\release\*.exe
 
 #### To Run Tests:
  ``` PS
- $ .\tests\{alogrithm_type}\release\test_{alogrithm_type}
+ $ .\tests\{algorithm_type}\release\test_{algorithm_type}
  ```
 ```For running all tests
 PS> ctest -C release
@@ -136,18 +136,18 @@ PS> cmake -DALCP_ENABLE_BENCH=ON ./
 PS> cmake --build . --config=release
 ```
   This will create bench executable into:
-  .\build\bench\{alogrithm_type}\{build_type}\*.exe
+  .\build\bench\{algorithm_type}\{build_type}\*.exe
 
 ##### To Run Bench:
 ```
-$ .\bench\{alogrithm_type}\release\bench_{alogrithm_type}
+$ .\bench\{algorithm_type}\release\bench_{algorithm_type}
 ```
 ##### Arguments can be provided as:
 
 ``` PS
-$ .\bench\{alogrithm_type}\release\bench_{alogrithm_type} --benchmark_filter=SHA2_<SHA SCHEME>_<Block Size>
-$ .\bench\{alogrithm_type}\release\bench_{alogrithm_type} --benchmark_filter=SHA2_512 (runs SHA512 schemes for all block size)
-$ .\bench\{alogrithm_type}\release\bench_{alogrithm_type} --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
+$ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA2_<SHA SCHEME>_<Block Size>
+$ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA2_512 (runs SHA512 schemes for all block size)
+$ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
 ```
 
 ### Enabling compat libs
