@@ -12,7 +12,7 @@
 
 ##### Examples
 
-* [AES Encryption Demo Example](md_docs_examples_aes_cbc_nopadding.html)
+* [AES Encryption Demo Example](md_docs_examples_aes_cfb_nopadding.html)
 
 
 ##### Tests
