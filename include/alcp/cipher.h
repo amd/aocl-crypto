@@ -45,7 +45,7 @@ EXTERN_C_BEGIN
 
 /**
  *
- * @brief used to Specify which cipher type to be used for encrypt and decrypt
+ * @brief Specify which type of cipher to be used.
  *
  * @typedef enum alc_cipher_type_t
  *
@@ -64,7 +64,7 @@ typedef enum _alc_cipher_type
 } alc_cipher_type_t;
 
 /**
- * @brief used to Specify which Mode of AES to be used for encrypt and decrypt
+ * @brief Specify which Mode of AES to be used for encrypt and decrypt.
  *
  * @typedef enum  alc_cipher_mode_t
  */
@@ -85,9 +85,10 @@ typedef enum _alc_cipher_mode
     ALC_AES_MODE_MAX,
 } alc_cipher_mode_t;
 
+// FIXME: Below typedef is not used, need to remove or use it.
 /**
  *
- * @brief used to control different of AES
+ * @brief Set control flags supported by cipher algorithms.
  *
  * @typedef enum  alc_aes_ctrl_t
  *
@@ -108,7 +109,7 @@ typedef enum _alc_aes_ctrl
 } alc_aes_ctrl_t;
 
 /**
- * @brief  Stores info for XTS Mode of AES Specifically
+ * @brief  Stores special info needed for XTS mode.
  *
  * @param xi_tweak_key   holds the info about secondary key for xts
  *
@@ -120,7 +121,7 @@ typedef struct _alc_cipher_mode_xts_info
 } alc_cipher_mode_xts_info_t, *alc_cipher_mode_xts_info_p;
 
 /**
- * @brief   Stores info for GCM Mode of AES Specifically
+ * @brief  Stores special info needed for GCM mode.
  *
  * @note Currently not in use
  *
@@ -133,7 +134,7 @@ typedef struct _alc_cipher_mode_gcm_info
 } alc_cipher_mode_gcm_info_t, *alc_cipher_mode_gcm_info_p;
 
 /**
- * @brief   Stores info for SIV Mode of AES Specifically
+ * @brief  Stores special info needed for SIV mode.
  *
  * @param xi_ctr_key   holds the info about secondary key for SIV
  *
@@ -146,7 +147,7 @@ typedef struct _alc_cipher_mode_siv_info
 
 /**
  *
- * @brief  Algorithm specific info for cipher
+ * @brief  Stores algorithm specific info for cipher.
  * @param ai_mode Specific which Mode of AES to be used @ref alcp_cipher_mode_t
  * @param ai_iv Initialization Vector
  * @param ai_xts,      ai_gcm,      ai_siv optional param for Some Specific Mode
@@ -168,7 +169,7 @@ typedef struct _alc_cipher_algo_info
 
 /**
  *
- * @brief  The opaque type of a cipher context, comes from the library
+ * @brief  Opaque cipher context, populated from the library.
  *
  * @param ci_type   Specify which cipher type to be used for encrypt and decrypt
  * @param ci_key_info  store the info related to key
@@ -185,7 +186,7 @@ typedef struct _alc_cipher_info
 } alc_cipher_info_t, *alc_cipher_info_p;
 
 /**
- * @brief  The opaque type of a cipher context, comes from the library
+ * @brief  Opaque type of a cipher context, comes from the library.
  *
  * @typedef void alc_cipher_context_t
  */
@@ -194,9 +195,10 @@ typedef alc_cipher_context_t* alc_cipher_context_p;
 
 /**
  *
- * @brief Handler used for cipher context handling
+ * @brief Library handle for Cipher.
  *
- * @param alc_cipher_context_p pointer to the context of the cipher
+ * @param alc_cipher_context_p pointer to the user allocated context of the
+ * cipher
  *
  * @struct alc_cipher_handle_t
  *
@@ -208,7 +210,7 @@ typedef struct _alc_cipher_handle
 
 /**
  *
- * @brief       Allows to check if a given algorithm is supported
+ * @brief  Check if a given algorithm is supported.
  *
  * @parblock <br> &nbsp;
  * <b>This API needs to be called before any other API is called to
@@ -241,8 +243,8 @@ ALCP_API_EXPORT Uint64
 alcp_cipher_context_size(const alc_cipher_info_p pCipherInfo);
 
 /**
- * @brief    Allows caller to request for a cipher as described by
- *           pCipherInfo
+ * @brief    Request for populating handle with algorithm specified by
+ * pCipherInfo.
  *
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_cipher_supported is called </b>
@@ -262,8 +264,8 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
                     alc_cipher_handle_p     pCipherHandle);
 
 /**
- * @brief    Allows caller to encrypt plain text to a cipher text as per
- *           requested
+ * @brief    Encrypt plain text and write it to cipher text with provided
+ * handle.
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_cipher_request is called and at the
  * end of session call @ref alcp_cipher_finish</b>
@@ -290,8 +292,8 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
                     const Uint8*              pIv);
 
 /**
- * @brief    Allows caller to update encryption of plain text to a cipher text
- * as per requested
+ * @brief    AEAD encryption of plain text and write it to cipher text with
+ * provided handle.
  * @parblock <br> &nbsp;
  * <b>This AEAD API can be called after @ref alcp_cipher_request is called  and
  * at the end of session call @ref alcp_cipher_finish</b>
@@ -317,8 +319,8 @@ alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
                            const Uint8*              pIv);
 
 /**
- * @brief    Allows caller to update decryption of cipher text to plain text
- * as per requested
+ * @brief    AEAD decryption of cipher text and write it to plain text with
+ * provided handle.
  * @parblock <br> &nbsp;
  * <b>This AEAD API can be called after @ref alcp_cipher_request is called  and
  * at the end of session call @ref alcp_cipher_finish</b>
@@ -344,7 +346,7 @@ alcp_cipher_decrypt_update(const alc_cipher_handle_p pCipherHandle,
                            const Uint8*              pIv);
 
 /**
- * @brief Allows caller to set the IV/Nonce
+ * @brief AEAD set the IV/Nonce.
  * @parblock <br> &nbsp;
  * <b>This AEAD API can be called after @ref alcp_cipher_request is called. It
  * should be called after @ref alcp_cipher_set_tag_length for CCM mode. For GCM
@@ -363,7 +365,7 @@ alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
                    const Uint8*              pIv);
 
 /**
- * @brief Allows caller to set the Additional Data for Tag Generation
+ * @brief AEAD set Additonal Data for the Tag Generation.
  * @parblock <br> &nbsp;
  * <b>This AEAD API can be called after @ref alcp_cipher_request. For
  * SIV there should only be one call to this API and for others like GCM
@@ -384,7 +386,7 @@ alcp_cipher_set_aad(const alc_cipher_handle_p pCipherHandle,
                     Uint64                    len);
 
 /**
- * @brief Allows caller to set the get a copy of Tag
+ * @brief AEAD get a copy of Tag generated.
  * @parblock <br> &nbsp;
  * <b>This AEAD API can be called after @ref alcp_cipher_request is called  and
  * at the end of session call, just before @ref alcp_cipher_finish </b>
@@ -402,7 +404,7 @@ alcp_cipher_get_tag(const alc_cipher_handle_p pCipherHandle,
                     Uint64                    len);
 
 /**
- * @brief Allows caller to set the set tag size
+ * @brief AEAD set the tag length.
  * @parblock <br> &nbsp;
  * <b>This AEAD API can be called after @ref alcp_cipher_request is called. It's
  * meant for CCM mode, should be called before @ref alcp_cipher_set_iv.</b>
@@ -417,8 +419,8 @@ ALCP_API_EXPORT alc_error_t
 alcp_cipher_set_tag_length(const alc_cipher_handle_p pCipherHandle, Uint64 len);
 
 /**
- * @brief    Allows caller to decryption cipher text to plain text
- * as per requested
+ * @brief    Decryption of cipher text and write it to plain text with provided
+ * handle.
  * @parblock <br> &nbsp;
  * <b>This AEAD API should be called only after @ref alcp_cipher_request. API is
  * meant to be used with CCM mode, it needs to be called before @ref
@@ -447,7 +449,7 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
 
 /**
  * FIXME: Need to fix return type of API
- * @brief       Free resources that was allotted by alcp_cipher_request
+ * @brief       Release resources allocated by alcp_cipher_request.
  * @parblock <br> &nbsp;
  * <b>This API is called to free resources so should be called to free the
  * session</b>
@@ -463,8 +465,7 @@ ALCP_API_EXPORT void
 alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle);
 
 /**
- * @brief              Get the error string for errors occurring in cipher
- *                     operations
+ * @brief   Get a copy of the error string for cipher operations.
  * @parblock <br> &nbsp;
  * <b> This API is called to get the error string. It should be called after
  * @ref alcp_cipher_request and before @ref alcp_cipher_finish </b>

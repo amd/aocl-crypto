@@ -109,7 +109,7 @@ typedef enum
 } alc_key_fmt_t;
 
 /**
- * @brief used to store the info related to key
+ * @brief Store info related to key.
  *
  * @struct alc_key_info_t
  */
@@ -124,6 +124,8 @@ typedef struct _alc_key_info
 
 } alc_key_info_t, *alc_key_info_p;
 
+// FIXME: All functions below are not backed by any function definition, needs
+// to be removed
 /**
  * @brief    Allows caller to get Algorithm used in key
  * @note    currently not in use.
