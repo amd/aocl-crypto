@@ -28,7 +28,7 @@ AES
     AES Encrypt / Decrypt routines which will support the following cipher schemes:
         -  CBC, CFB, OFB, CTR, GCM, XTS, CCM, SIV.
 ```
--   Click to know about more about [AOCL - AES API](group__cipher.html)
+-   Click to know about more about [AOCL Cipher API](group__cipher.html)
 
 ### Digest
 
@@ -45,7 +45,7 @@ SHA3
         - SHA3_224, SHA3_256, SHA3_384, SHA3_512, SHAKE_128, SHAKE_256    
 ```
 
-- Click to know more about [AOCL DIGEST API](group__digest.html)
+- Click to know more about [AOCL Digest API](group__digest.html)
 
 
 ### Elliptic curve
@@ -92,6 +92,18 @@ RSA
 ```
 
 - Click to know more about [AOCL RSA API](group__rsa.html)
+
+### Random Number Generator (RNG)
+```
+
+RNG
+
+    - Generate random number
+    - Seed random number generator with random data
+
+```
+
+- Click to know more about [AOCL RNG API](group__rng.html)
 
 
 <div id = "Build" name="Build"></div>

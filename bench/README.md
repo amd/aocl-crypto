@@ -6,13 +6,13 @@ Skip to [Executing Benches](#Executing_Benches) if already installed
 
 ### Building ALCP with Testing framework
 
-1. $<code>git clone [alcp-crypto git url here]</code>
-2. $<code>cd alcp-crypto</code>
-3. $<code>cmake -B build -DALCP_ENABLE_EXAMPLES=ON -DALCP_ENABLE_BENCH=ON  -DCMAKE_BUILD_TYPE=Release</code>
-4. $<code>cmake --build build</code>
+1. `git clone [alcp-crypto git url here]`
+2. `cd alcp-crypto`
+3. `cmake -B build -DALCP_ENABLE_EXAMPLES=ON -DALCP_ENABLE_BENCH=ON  -DCMAKE_BUILD_TYPE=Release`
+4. `cmake --build build`
 
-> <span style="color:red"> __Note:__</span> To include IPP, please define <code>-DENABLE_TESTS_IPP_API=ON -DIPP_INSTALL_DIR=/path/to/ipp_prefix</code> in step 3. <br>
-> <span style="color:red"> __Note:__</span> To include OpenSSL, please define <code>-DOPENSSL_INSTALL_DIR=/path/to/openssl_prefix</code> in step 3.
+> <span style="color:red">__Note:__</span> To include IPP, please define `-DENABLE_TESTS_IPP_API=ON -DIPP_INSTALL_DIR=/path/to/ipp_prefix` in step 3. <br>
+> <span style="color:red"> __Note:__</span> To include OpenSSL, please define `-DOPENSSL_INSTALL_DIR=/path/to/openssl_prefix` in step 3.
 
 
 <a name = "Executing_Benches"></a>
@@ -23,21 +23,21 @@ After building ALCP, there should be binary files of each cryptographic algorith
 
 To run tests with verbose mode (prints also success)
 
-1. $<code>cd aocl-crypto/build</code>
-2. $<code>./bench/cipher/bench_cipher</code>
-3. $<code>./bench/digest/bench_digest</code>
+1. `$cd aocl-crypto/build`
+2. `$./bench/cipher/bench_cipher`
+3. `$./bench/digest/bench_digest`
 
 #### Selecting benchmarks
 
 Example for selecting only "CBC" benchmarks
 
-​	 $<code>./bench/cipher/bench_cipher --benchmark_filter="CBC"</code>
+​	`$./bench/cipher/bench_cipher --benchmark_filter="CBC"`
 
 Example for selecting only "SHA256" benchmarks
 
-​	$<code>./bench/digest/bench_digest --benchmark_filter="SHA2_256"</code>
+​	`$./bench/digest/bench_digest --benchmark_filter="SHA2_256"`
 
-Always you can use <code>--help</code> to know all the command line arguments which can be given to the executable.
+Always you can use `--help` to know all the command line arguments which can be given to the executable.
 
 #### Supported Benchmarks
 
@@ -85,11 +85,16 @@ Always you can use <code>--help</code> to know all the command line arguments wh
 1. ECDH_x25519_GenPubKey
 2. ECDH_x25519_GenSecretKey
 
+##### RSA
+
+1. RSA_EncryptPubKey
+2. RSA_DecryptPvtKey
+
 #### Using IPP
 
-For using IPP just specify <code>-i</code> command line argument.
+For using IPP just specify `-i` command line argument.
 
 #### Using OpenSSL
 
-For using OpenSSL just specify <code>-o</code> command line argument.
+For using OpenSSL just specify `-o` command line argument.
 

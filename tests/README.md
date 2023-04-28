@@ -1,18 +1,18 @@
 # ALCP Micro Tests
 
 ## Building
-
+<!--FIXME: link broken in doxygen -->
 Skip to [Executing Tests](###Executing Tests) if already installed
 
 ### Building ALCP with Testing framework
 
-1. $<code>git clone [alcp-crypto git url here]</code>
-2. $<code>cd alcp-crypto</code>
-3. $<code>cmake -B build -DALCP_ENABLE_EXAMPLES=ON -DALCP_ENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release</code>
-4. $<code>cmake --build build</code>
+1. `$ git clone [alcp-crypto git url here]`
+2. `$ cd alcp-crypto`
+3. `$ cmake -B build -DALCP_ENABLE_EXAMPLES=ON -DALCP_ENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release`
+4. `$ cmake --build build`
 
-<font color="red"> Note - To include IPP, please define <code>-DENABLE_TESTS_IPP_API=ON -DIPP_INSTALL_DIR=/path/to/ipp_prefix</code> in step 3.</font><br>
-<font color="red"> Note - To include OpenSSL, please define <code>-DOPENSSL_INSTALL_DIR=/path/to/openssl_prefix</code> in step 3.</font>
+<span style="color:red"> __Note__: </span> To include IPP, please define `-DENABLE_TESTS_IPP_API=ON -DIPP_INSTALL_DIR=/path/to/ipp_prefix` in step 3.<br>
+<span style="color:red"> __Note__: </span> To include OpenSSL, please define `-DOPENSSL_INSTALL_DIR=/path/to/openssl_prefix` in step 3.
 
 ## AES
 
@@ -20,8 +20,8 @@ Skip to [Executing Tests](###Executing Tests) if already installed
 
 ##### With Make
 
-1. $`cd aocl-crypto/build`
-2. $`make test` or faster $`CTEST_PARALLEL_LEVEL=$(nproc --all) make test`
+1. `$ cd aocl-crypto/build`
+2. `$ make test` or faster `$ CTEST_PARALLEL_LEVEL=$(nproc --all) make test`
 
 ##### Manual
 
@@ -29,25 +29,25 @@ After building ALCP, there should be binary files with name aocl-crypto/build/te
 
 To run tests with verbose mode (prints also success)
 
-1.   $<code>cd aocl-crypto/build</code>
-2.  $<code>./tests/cipher/aes_cbc_kat -v</code>
-3.  $<code>./tests/cipher/aes_cfb_kat -v</code>
-4.  $<code>./tests/cipher/aes_ctr_kat -v</code>
-5.  $<code>./tests/cipher/aes_ofb_kat -v</code>
-6.  $<code>./tests/digests/test_digest -v</code>
+1.   `$ cd aocl-crypto/build`
+2.  `$ ./tests/cipher/aes_cbc_kat -v`
+3.  `$ ./tests/cipher/aes_cfb_kat -v`
+4.  `$ ./tests/cipher/aes_ctr_kat -v`
+5.  `$ ./tests/cipher/aes_ofb_kat -v`
+6.  `$ ./tests/digests/test_digest -v`
 
 ##### Additional (Selecting OpenSSL)
 
-1. $<code>cd aocl-crypto/build</code>
+1. `$ cd aocl-crypto/build`
 
-2. $`./tests/cipher/aes_cbc_cross -o` 
+2. `$ ./tests/cipher/aes_cbc_cross -o` 
 
-3.  $`./tests/cipher/aes_cfb_cross -o`
+3.  `$ ./tests/cipher/aes_cfb_cross -o`
 
-4.  $`./tests/cipher/aes_ctr_cross -o`
+4.  `$ ./tests/cipher/aes_ctr_cross -o`
 
-5.  $`./tests/cipher/aes_ofb_cross -o`
-6. $`./tests/digest/test_digest_cross -o`
+5.  `$ ./tests/cipher/aes_ofb_cross -o`
+6. `$ ./tests/digest/test_digest_cross -o`
 
 #### Selecting tests
 
@@ -55,22 +55,22 @@ To select tests, you can always use --gtest_filter.
 
 Example filtering just 128 bit keysize tests.
 
-​	$<code>./tests/cipher/aes\_\<aes\_mode\>\_kat --gtest_filter="\*128.\*" -v</code>
+​	`$ ./tests/cipher/aes\_\<aes\_mode\>\_kat --gtest_filter="\*128.\*" -v`
 
 Example filtering just additional small tests.
 
-​    $`./tests/cipher/aes_<aes\_mode\>_cross --gtest_filter="\*SMALL" -o `
+​    `$ ./tests/cipher/aes_<aes\_mode\>_cross --gtest_filter="\*SMALL" -o `
 
-Always you can use <code>--help</code> to know all the command line arguments which can be given to the executable.
+Always you can use `--help` to know all the command line arguments which can be given to the executable.
 
 #### Using IPP
 
-For using IPP just specify <code>-i</code> command line argument.
+For using IPP just specify `-i` command line argument.
 
 #### Using OpenSSL
 
-For using OpenSSL just specify <code>-o</code> command line argument.
+For using OpenSSL just specify `-o` command line argument.
 
 ### Testing Datasets
 
-Datasets are located in directory <code>alcp-crypto/tests/cipher/dataset/</code>. File name should be dataset_\<aes\_mode\>.csv. Order of elements are mentioned in line number 1. Line number 1 is always ignored, please forbid form deleting that line.
+Datasets are located in directory `alcp-crypto/tests/cipher/dataset/`. File name should be dataset_\<aes\_mode\>.csv. Order of elements are mentioned in line number 1. Line number 1 is always ignored, please forbid form deleting that line.

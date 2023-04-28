@@ -264,7 +264,7 @@ $ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA
 ### Enabling compat libs
 
 1. [Enable OpenSSL - To compare performance .](#win-OSSL)
-2. [Enable IPPCP - To dcompare performance.](#win-IPPCP)
+2. [Enable IPPCP - To compare performance.](#win-IPPCP)
 
 ### Build after enabling compat libs
 

@@ -143,7 +143,7 @@ typedef struct _alc_rng_info
 
 /**
  *
- * @brief Handler used for rng context handling
+ * @brief Handle for maintaining session.
  *
  * @param rh_context pointer to the context of the rng
  *
@@ -163,9 +163,9 @@ typedef struct
  * @endparblock
  * @param [in]  pRngInfo      Pointer to alc_rng_info_t structure
  *
- * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
- * called to know about error occurred
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_rng_error or @ref alcp_error_str needs
+ * to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_supported(const alc_rng_info_p pRngInfo);
@@ -198,9 +198,9 @@ alcp_rng_context_size(const alc_rng_info_p pRngInfo);
  * @param [in]      pRngInfo        Pointer to RNG configuration
  * @param [out]      pRngHandle      Library populated session handle for future
  * rng operations.
- * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
- * called to know about error occurred
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_rng_error or @ref alcp_error_str needs
+ * to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pRngHandle);
@@ -218,9 +218,9 @@ alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pRngHandle);
  *                      numbers
  * @param [in]  size        size of pBuf
  *
- * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
- * called to know about error occurred
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_rng_error or @ref alcp_error_str needs
+ * to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
@@ -237,9 +237,9 @@ alcp_rng_gen_random(alc_rng_handle_p pRngHandle,
  * @note       Some hardware RNGs require initialization
  *
  * @param [in]  pRngHandle      Pointer to handle returned in alcp_rng_request()
- * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
- * called to know about error occurred
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_rng_error or @ref alcp_error_str needs
+ * to be called to know about error occurred
  *
  */
 ALCP_API_EXPORT alc_error_t
@@ -260,9 +260,9 @@ alcp_rng_init(alc_rng_handle_p pRngHandle);
  * @param [in]  seed           Pointer to seed
  * @param [in]  size           Length of seed in bytes
  *
- * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
- * called to know about error occurred
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_rng_error or @ref alcp_error_str needs
+ * to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_seed(alc_rng_handle_p pRngHandle, const Uint8* seed, Uint64 size);
@@ -278,9 +278,9 @@ alcp_rng_seed(alc_rng_handle_p pRngHandle, const Uint8* seed, Uint64 size);
  *              alcp_rng_request()
  *
  * @param [in]  pRngHandle      Pointer to handle
- * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_rng_error or @ref alcp_error_str needs to be
- * called to know about error occurred
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_rng_error or @ref alcp_error_str needs
+ * to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rng_finish(alc_rng_handle_p pRngHandle);

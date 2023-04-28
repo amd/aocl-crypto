@@ -38,7 +38,7 @@ EXTERN_C_BEGIN
 /**
  * @defgroup ec EC API
  * @brief
- * Elliptic curve cryptography (ECC) is a type of public key cryptography that
+ * Elliptic Curve Cryptography (ECC) is a type of public key cryptography that
  * uses the mathematics of elliptic curves to secure information and protect
  * sensitive data.
  * @{
@@ -104,7 +104,7 @@ typedef void              alc_ec_context_t;
 typedef alc_ec_context_t* alc_ec_context_p;
 
 /**
- * @brief Handler used for EC context handling
+ * @brief Handle for maintaining session.
  *
  * @param context pointer to the context of the EC
  *
@@ -146,9 +146,9 @@ alcp_ec_context_size(const alc_ec_info_p p_ec_info);
  *
  * @param [in]      pEcInfo Description of the requested ec session
  *
- * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occurred
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
+ * about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_ec_supported(const alc_ec_info_p pEcInfo);
@@ -170,9 +170,9 @@ alcp_ec_supported(const alc_ec_info_p pEcInfo);
  * @param [out]      pEcHandle Library populated session handle for future
  * EC operations.
  *
- * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occurred
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
+ * about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_ec_request(const alc_ec_info_p pEcInfo, alc_ec_handle_p pEcHandle);

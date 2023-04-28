@@ -62,7 +62,7 @@ typedef void               alc_rsa_context_t;
 typedef alc_rsa_context_t* alc_rsa_context_p;
 
 /**
- * @brief Handler used for RSA context handling
+ * @brief Handle for maintaining session.
  *
  * @param context pointer to the context of the RSA
  *
@@ -101,9 +101,9 @@ alcp_rsa_context_size();
  * @note        alcp_rsa_supported() should be called to
  *              know if the if RSA is supported.
  *
- * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occurred
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
+ * about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_supported();
@@ -124,9 +124,9 @@ alcp_rsa_supported();
  * @param [out] pRsaHandle Library populated session handle for future
  * rsa operations.
  *
- * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occurred
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
+ * about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_request(alc_rsa_handle_p pRsaHandle);

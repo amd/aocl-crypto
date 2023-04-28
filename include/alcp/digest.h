@@ -162,7 +162,7 @@ typedef void                  alc_digest_context_t;
 typedef alc_digest_context_t* alc_digest_context_p;
 
 /**
- * @brief Handler used for digest context handling
+ * @brief Handle for maintaining session.
  *
  * @param context pointer to the context of the digest
  *
@@ -204,9 +204,9 @@ alcp_digest_context_size(const alc_digest_info_p p_digest_info);
  *
  * @param [in]      p_digest_info Description of the requested digest session
  *
- * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occurred
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
+ * about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_digest_supported(const alc_digest_info_p p_digest_info);
@@ -228,9 +228,9 @@ alcp_digest_supported(const alc_digest_info_p p_digest_info);
  * @param [out]      p_digest_handle Library populated session handle for future
  * digest operations.
  *
- * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occurred
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
+ * about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_digest_request(const alc_digest_info_p p_digest_info,
@@ -238,7 +238,7 @@ alcp_digest_request(const alc_digest_info_p p_digest_info,
 
 /**
  * @brief       Computes digest for the buffer pointed by buf for size as
- *              as mentioned by size.
+ *              as mentioned by size in bytes.
  *
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_digest_request and at the end of
@@ -251,8 +251,8 @@ alcp_digest_request(const alc_digest_info_p p_digest_info,
  * together alcp_digest_request()
  * @param [in] buf              Destination buffer to which digest will be
  * copied
- * @param [in] size             Destination buffer size, should be big enough
- *                         to hold the digest
+ * @param [in] size             Destination buffer size in bytes, should be big
+ * enough to hold the digest
  * @return   &nbsp; Error Code for the API called. if alc_error_t
  * is not zero then @ref alcp_error_str needs to be called to know about error
  * occurred
@@ -275,12 +275,12 @@ alcp_digest_update(const alc_digest_handle_p p_digest_handle,
  *                         call together alcp_digest_request()
  * @param [out]       buf     Destination buffer to which digest will be copied
  *
- * @param [in]       size    Destination buffer size, should be big enough
- *                      to hold the digest
+ * @param [in]       size    Destination buffer size in bytes, should be big
+ * enough to hold the digest
  *
- * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occurred
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
+ * about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_digest_copy(const alc_digest_handle_p p_digest_handle,
@@ -288,7 +288,7 @@ alcp_digest_copy(const alc_digest_handle_p p_digest_handle,
                  Uint64                    size);
 
 /**
- * @brief       Final buffer call
+ * @brief       Finalize the digest with last buffer.
  *
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_digest_request  and at the end of
@@ -304,11 +304,11 @@ alcp_digest_copy(const alc_digest_handle_p p_digest_handle,
  *
  * @param[out]      p_msg_buf       pointer to message buffer or NULL
  *
- * @param[in]      size            Size of message buffer or 0
+ * @param[in]      size            Size of message buffer in bytes can be 0
  *
- * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occurred
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
+ * about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_digest_finalize(const alc_digest_handle_p p_digest_handle,
@@ -389,9 +389,9 @@ alcp_digest_error(alc_digest_handle_p pDigestHandle, Uint8* pBuff, Uint64 size);
  *
  * @param[in]      size            Size of the Digest to be set
  *
- * @return   &nbsp; Error Code for the API called . if alc_error_t
- * is not zero then @ref alcp_error_str needs to be called to know about error
- * occurred
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
+ * about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_digest_set_shake_length(const alc_digest_handle_p p_digest_handle,
