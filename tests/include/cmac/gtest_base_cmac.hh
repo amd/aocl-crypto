@@ -73,7 +73,7 @@ void
 Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
 {
     alcp_cmac_data_t data     = {};
-    int              CmacSize = 0;
+    const int        CmacSize = 16;
 
     info.mi_type                                         = ALC_MAC_CMAC;
     info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_iv = NULL;
@@ -98,13 +98,7 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
 #endif
 
     while (csv.readNext()) {
-        /* cmac size returned by alcp and openssl is of 128 bits
-         TODO: IPP returns success only when cmac len is specified. Need to
-         revisit */
-        CmacSize = csv.getVect("CMAC").size();
-        if (useossl) {
-            CmacSize = 128;
-        }
+
         std::vector<Uint8> cmac(CmacSize, 0);
 
         auto msg = csv.getVect("MESSAGE");

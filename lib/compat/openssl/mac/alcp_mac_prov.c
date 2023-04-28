@@ -307,10 +307,6 @@ ALCP_prov_mac_final(void*          vctx,
         printf("MAC Provider: Failed to Finalize\n");
         return 0;
     }
-    alc_mac_info_p macinfo = &((alc_prov_mac_ctx_p)vctx)->pc_mac_info;
-    if (macinfo->mi_type == ALC_MAC_CMAC) {
-        outsize = outsize / 8;
-    }
     err = alcp_mac_copy(&(mctx->handle), out, (Uint64)outsize);
     if (alcp_is_error(err)) {
         printf("MAC Provider: Failed to copy Hash\n");
