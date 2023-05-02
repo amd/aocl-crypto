@@ -668,6 +668,7 @@ runGCMAutoTest()
             free(cipherText);
         }
     }
+    return 0;
 }
 
 int

@@ -72,8 +72,8 @@ run_hmac(const alc_mac_info_p macInfo,
         return err;
     }
 
-    char error_message[1024] = "";
-    err                      = alcp_mac_request(&handle, macInfo);
+    Uint8 error_message[1024] = "";
+    err                       = alcp_mac_request(&handle, macInfo);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Request - %d\n", err);
         goto out;

@@ -483,6 +483,7 @@ runGCMSpeedTest()
         }
         printf(" \n");
     }
+    return 0;
 }
 
 int

@@ -71,7 +71,7 @@ run_cmac(const alc_mac_info_p macInfo,
 
     err = alcp_mac_request(&handle, macInfo);
     if (alcp_is_error(err)) {
-        printf("Error Occurred on MAC Request - %d\n", err);
+        printf("Error Occurred on MAC Request - %lu\n", err);
         return err;
     }
     // Update can be called multiple times with smaller chunks of the cipherText
