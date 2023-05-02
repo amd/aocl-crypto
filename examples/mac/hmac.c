@@ -63,7 +63,7 @@ run_hmac(const alc_mac_info_p macInfo,
          Uint32               mac_size)
 {
 
-    int err = ALC_ERROR_NONE;
+    alc_error_t err = ALC_ERROR_NONE;
     err     = alcp_mac_supported(macInfo);
     if (err == ALC_ERROR_NONE) {
         handle.ch_context = malloc(alcp_mac_context_size(macInfo));
@@ -75,7 +75,7 @@ run_hmac(const alc_mac_info_p macInfo,
     Uint8 error_message[1024] = "";
     err                       = alcp_mac_request(&handle, macInfo);
     if (alcp_is_error(err)) {
-        printf("Error Occurred on MAC Request - %d\n", err);
+        printf("Error Occurred on MAC Request - %lu\n", err);
         goto out;
     }
     // Update can be called multiple times with smaller chunks of the cipherText
@@ -97,7 +97,7 @@ run_hmac(const alc_mac_info_p macInfo,
 out:
     if (alcp_is_error(err)) {
         alcp_mac_error(&handle, error_message, sizeof(error_message));
-        printf("MAC Error Detail is: %s\n", error_message);
+        printf("MAC Error Detail is: %s\n", (char*)error_message);
     }
 
     alcp_mac_finish(&handle);
