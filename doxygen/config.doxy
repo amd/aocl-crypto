@@ -942,7 +942,22 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = .
+
+# Modify this for adding new files to AOCL doxygen documentation
+# FIXME: Move all README to docs directory so directory hierarchy is not 
+# shown in doxygen docs
+INPUT                  = BUILD.md \
+                         BUILD_Windows.md \
+                         Combine_build.md \
+                         docs/examples \
+                         lib/compat/ipp/README.md \
+                         lib/compat/openssl/README.md \
+                         docs/resources \
+                         tests/README.md \
+                         bench/README.md \
+                         examples/BUILD_Examples.md \
+                         include/alcp
+
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -1043,10 +1058,7 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = build \
-                        docs/compat \
-                        docs/internal \
-                        OVERVIEW.md 
+EXCLUDE                = 
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -1062,7 +1074,7 @@ EXCLUDE_SYMLINKS       = NO
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       =
+EXCLUDE_PATTERNS       =   
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -1255,7 +1267,7 @@ USE_HTAGS              = NO
 # See also: Section \class.
 # The default value is: YES.
 
-VERBATIM_HEADERS       = YES
+VERBATIM_HEADERS       = NO
 
 # If the CLANG_ASSISTED_PARSING tag is set to YES then doxygen will use the
 # clang parser (see:
