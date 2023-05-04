@@ -188,6 +188,7 @@ IPPCipherBase::init(const Uint8* key, const Uint32 key_len)
                 PrintErrors(status);
                 return false;
             }
+            break;
 
         case ALC_AES_MODE_CCM:
             status = ippsAES_CCMGetSize(&m_ctxSize);
@@ -457,15 +458,15 @@ IPPCipherBase::alcpSIVModeToFuncCall(alcp_data_ex_t data, bool enc)
     int    ad_size_list[] = { (int)data.m_adl, (int)data.m_inl };
     if (enc) {
         int ret = ippsAES_SIVEncrypt(data.m_in,
-                                 data.m_out,
-                                 data.m_inl,
-                                 data.m_tag,
-                                 m_key,
-                                 data.m_tkey,
-                                 m_key_len / 8,
-                                 (const Ipp8u**)ad_ptr_list,
-                                 ad_size_list,
-                                 (sizeof(ad_ptr_list) / sizeof(void*) - 1));
+                                     data.m_out,
+                                     data.m_inl,
+                                     data.m_tag,
+                                     m_key,
+                                     data.m_tkey,
+                                     m_key_len / 8,
+                                     (const Ipp8u**)ad_ptr_list,
+                                     ad_size_list,
+                                     (sizeof(ad_ptr_list) / sizeof(void*) - 1));
         switch (ret) {
             case ippStsNoErr:
                 // utils::printErrors("No error", __FILE__, __LINE__);
