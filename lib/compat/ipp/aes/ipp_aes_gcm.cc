@@ -100,8 +100,7 @@ ippsAES_GCMStart(const Ipp8u*      pIV,
     }
     // GCM Init
     /* Decrypt Init */
-    err = alcp_cipher_decrypt_update(
-        &(context_dec->handle), nullptr, nullptr, ivLen, (Uint8*)pIV);
+    err = alcp_cipher_set_iv(&(context_dec->handle), ivLen, (Uint8*)pIV);
     if (alcp_is_error(err)) {
         printErr("GCM decrypt init failure! code:11\n");
         alcp_error_str(err, err_buf, err_size);
@@ -114,19 +113,16 @@ ippsAES_GCMStart(const Ipp8u*      pIV,
         Uint8 a;
         aad = &a; // Some random value other than NULL
     }
-    err = alcp_cipher_decrypt_update(
-        &(context_dec->handle), aad, nullptr, aadLen, (Uint8*)pIV);
+    err = alcp_cipher_set_aad(&(context_dec->handle), aad, aadLen);
 
     /* Encrypt Init */
-    err = alcp_cipher_encrypt_update(
-        &(context_enc->handle), nullptr, nullptr, ivLen, (Uint8*)pIV);
+    err = alcp_cipher_set_iv(&(context_enc->handle), ivLen, (Uint8*)pIV);
     if (alcp_is_error(err)) {
         printf("Error: GCM encrypt init failure! code:11\n");
         alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }
-    err = alcp_cipher_encrypt_update(
-        &(context_enc->handle), aad, nullptr, aadLen, (Uint8*)pIV);
+    err = alcp_cipher_set_aad(&(context_enc->handle), aad, aadLen);
     if (alcp_is_error(err)) {
         return ippStsErr;
     }
@@ -201,17 +197,11 @@ ippsAES_GCMGetTag(Ipp8u* pDstTag, int tagLen, const IppsAES_GCMState* pState)
     ipp_wrp_aes_ctx* context_enc =
         &(((ipp_wrp_aes_aead_ctx*)(pState))->encrypt_ctx);
     if (((ipp_wrp_aes_aead_ctx*)(pState))->is_encrypt == true) {
-        err = alcp_cipher_encrypt_update(&(context_enc->handle),
-                                         nullptr,
-                                         (Uint8*)pDstTag,
-                                         tagLen,
-                                         context_dec->cinfo.ci_algo_info.ai_iv);
+        err = alcp_cipher_get_tag(
+            &(context_enc->handle), (Uint8*)pDstTag, tagLen);
     } else {
-        err = alcp_cipher_decrypt_update(&(context_dec->handle),
-                                         nullptr,
-                                         (Uint8*)pDstTag,
-                                         tagLen,
-                                         context_dec->cinfo.ci_algo_info.ai_iv);
+        err = alcp_cipher_get_tag(
+            &(context_dec->handle), (Uint8*)pDstTag, tagLen);
     }
     if (alcp_is_error(err)) {
         printf("GCM tag fetch failure! code:4\n");
