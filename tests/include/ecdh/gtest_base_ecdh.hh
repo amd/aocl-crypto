@@ -31,6 +31,7 @@
 #define __GTEST_BASE_HH 2
 
 #include "alcp/alcp.h"
+#include "alcp/utils/cpuid.hh"
 #include "csv.hh"
 #include "ecdh/alc_ecdh.hh"
 #include "ecdh/ecdh.hh"
@@ -40,6 +41,8 @@
 #include <string.h>
 #include <vector>
 using namespace alcp::testing;
+using alcp::utils::CpuId;
+
 #ifdef USE_IPP
 #include "ecdh/ipp_ecdh.hh"
 #endif
@@ -97,6 +100,15 @@ ecdh_KAT(alc_ec_info_t info)
     IPPEcdhBase ieb_peer1(info);
     IPPEcdhBase ieb_peer2(info);
     if (useipp == true) {
+        // FIXME : skip test if not running on avx512 architecture
+        if (!CpuId::cpuHasAvx512(alcp::utils::AVX512_F)) {
+            std::cout
+                << "IPP Ecdh multi-buffer implementations arent supported "
+                   "on non-avx512 supported arch,"
+                   "skipping the test!"
+                << std::endl;
+            GTEST_SKIP();
+        }
         eb_peer1 = &ieb_peer1;
         eb_peer2 = &ieb_peer2;
     }
@@ -212,6 +224,15 @@ ecdh_Cross(alc_ec_info_t info)
     IPPEcdhBase ieb_peer1(info);
     IPPEcdhBase ieb_peer2(info);
     if (useipp == true) {
+        // FIXME : skip test if not running on avx512 architecture
+        if (!CpuId::cpuHasAvx512(alcp::utils::AVX512_F)) {
+            std::cout
+                << "IPP Ecdh multi-buffer implementations arent supported "
+                   "on non-avx512 supported arch,"
+                   "skipping the test!"
+                << std::endl;
+            GTEST_SKIP();
+        }
         ExtEb_peer1 = &ieb_peer1;
         ExtEb_peer2 = &ieb_peer2;
         LibStrExt   = "IPP";

@@ -29,6 +29,7 @@
 #pragma once
 
 #include "alcp/alcp.h"
+#include "alcp/utils/cpuid.hh"
 #include "ecdh/alc_ecdh.hh"
 #include "ecdh/ecdh.hh"
 #include "gbench_base.hh"
@@ -46,6 +47,7 @@
 #endif
 
 using namespace alcp::testing;
+using alcp::utils::CpuId;
 
 typedef enum
 {
@@ -89,6 +91,14 @@ ecdh_Bench(benchmark::State& state, alc_ec_info_t info, ecdh_bench_opt opt)
     IPPEcdhBase ieb_peer1(info);
     IPPEcdhBase ieb_peer2(info);
     if (useipp == true) {
+        // FIXME : skip bench if not running on avx512 architecture
+        if (!CpuId::cpuHasAvx512(alcp::utils::AVX512_F)) {
+            state.SkipWithError(
+                "IPP Ecdh multi-buffer implementations arent supported "
+                "on non-avx512 supported arch,"
+                "skipping benchmarks!");
+            return 0;
+        }
         Eb_peer1 = &ieb_peer1;
         Eb_peer2 = &ieb_peer2;
         LibStr   = "IPP";
