@@ -70,3 +70,8 @@ typedef struct
     int          lenRepSize; // Length of processed message
     // There are more, for now they are useless.
 } ipp_sha2_rmf_algo_ctx;
+
+typedef struct
+{
+    alc_mac_handle handle;
+} ipp_wrp_mac_ctx;
