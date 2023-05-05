@@ -25,9 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "common/context.hh"
-#include "common/error.hh"
-#include <ippcp.h>
+#include "mac/ipp_mac_common.hh"
 
 IppStatus
 ippsAES_CMACGetSize(int* pSize)
@@ -99,48 +97,19 @@ IppStatus
 ippsAES_CMACUpdate(const Ipp8u* pSrc, int len, IppsAES_CMACState* pState)
 {
     printMsg("IPP Provider CMAC Update: ENTRY");
-    auto p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pState);
-    auto err       = alcp_mac_update(&p_mac_ctx->handle,
-                               static_cast<const Uint8*>(pSrc),
-                               static_cast<Uint64>(len));
-    if (alcp_is_error(err)) {
-        printErr("ALCP Provider: Error in updating");
-        return ippStsErr;
-    }
+    auto      p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pState);
+    IppStatus status    = alcp_MacUpdate(pSrc, len, p_mac_ctx);
     printMsg("IPP Provider CMAC Update: EXIT");
-
-    return ippStsNoErr;
+    return status;
 }
 IppStatus
 ippsAES_CMACFinal(Ipp8u* pMD, int mdLen, IppsAES_CMACState* pState)
 {
     printMsg("IPP Provider CMAC Final: ENTRY");
-    auto p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pState);
-
-    auto err = alcp_mac_finalize(&p_mac_ctx->handle, nullptr, 0);
-
-    if (alcp_is_error(err)) {
-        printErr("ALCP Provider: Error in Finalizing");
-        return ippStsErr;
-    }
-
-    err = alcp_mac_copy(&p_mac_ctx->handle,
-                        static_cast<Uint8*>(pMD),
-                        static_cast<Uint64>(mdLen));
-    if (alcp_is_error(err)) {
-        printErr("ALCP Provider: Error in Copying MAC");
-        return ippStsErr;
-    }
-    err = alcp_mac_finish(&p_mac_ctx->handle);
-    if (alcp_is_error(err)) {
-        printErr("ALCP Provider: Error in Finish");
-        return ippStsErr;
-    }
-    p_mac_ctx->~ipp_wrp_mac_ctx();
-
+    auto      p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pState);
+    IppStatus status    = alcp_MacFinalize(pMD, mdLen, p_mac_ctx);
     printMsg("IPP Provider CMAC Final: EXIT");
-
-    return ippStsNoErr;
+    return status;
 }
 IppStatus
 ippsAES_CMACGetTag(Ipp8u* pMD, int mdLen, const IppsAES_CMACState* pState)

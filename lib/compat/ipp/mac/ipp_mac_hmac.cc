@@ -26,9 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "common/context.hh"
-#include "common/error.hh"
-#include <ippcp.h>
+#include "mac/ipp_mac_common.hh"
 
 IppStatus
 ippsHMACGetSize_rmf(int* pSize)
@@ -127,6 +125,7 @@ ippsHMACInit_rmf(const Ipp8u*          pKey,
     if (err == ALC_ERROR_NONE) {
         p_mac_ctx->handle.ch_context = malloc(alcp_mac_context_size(&macinfo));
     } else {
+        p_mac_ctx->handle.ch_context = nullptr;
         printMsg(
             "ALCP MAC Provider: CMAC Information provided is unsupported\n");
         return ippStsNotSupportedModeErr;
@@ -170,46 +169,19 @@ IppStatus
 ippsHMACUpdate_rmf(const Ipp8u* pSrc, int len, IppsHMACState_rmf* pCtx)
 {
     printMsg("ALCP Provider  ippsHMACUpdate_rmf: ENTRY ");
-    auto p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pCtx);
-    auto err       = alcp_mac_update(&p_mac_ctx->handle,
-                               static_cast<const Uint8*>(pSrc),
-                               static_cast<Uint64>(len));
-    if (alcp_is_error(err)) {
-        printErr("ALCP Provider: Error in updating");
-        return ippStsErr;
-    }
+    auto      p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pCtx);
+    IppStatus status    = alcp_MacUpdate(pSrc, len, p_mac_ctx);
     printMsg("ALCP Provider  ippsHMACUpdate_rmf: EXIT ");
-    return ippStsNoErr;
+    return status;
 }
 IppStatus
 ippsHMACFinal_rmf(Ipp8u* pMD, int mdLen, IppsHMACState_rmf* pCtx)
 {
     printMsg("ALCP Provider  ippsHMACFinal_rmf: ENTRY ");
-    auto p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pCtx);
-
-    auto err = alcp_mac_finalize(&p_mac_ctx->handle, nullptr, 0);
-
-    if (alcp_is_error(err)) {
-        printErr("ALCP Provider: Error in Finalizing");
-        return ippStsErr;
-    }
-
-    err = alcp_mac_copy(&p_mac_ctx->handle,
-                        static_cast<Uint8*>(pMD),
-                        static_cast<Uint64>(mdLen));
-    if (alcp_is_error(err)) {
-        printErr("ALCP Provider: Error in Copying MAC");
-        return ippStsErr;
-    }
-    err = alcp_mac_finish(&p_mac_ctx->handle);
-    if (alcp_is_error(err)) {
-        printErr("ALCP Provider: Error in Finish");
-        return ippStsErr;
-    }
-    free(p_mac_ctx->handle.ch_context);
-
+    auto      p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pCtx);
+    IppStatus status    = alcp_MacFinalize(pMD, mdLen, p_mac_ctx);
     printMsg("ALCP Provider  ippsHMACFinal_rmf: EXIT ");
-    return ippStsNoErr;
+    return status;
 }
 IppStatus
 ippsHMACGetTag_rmf(Ipp8u* pMD, int mdLen, const IppsHMACState_rmf* pCtx)
