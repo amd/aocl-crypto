@@ -42,6 +42,9 @@ TARGET_SOURCES(alcp
 	)
 
 IF(UNIX)
+  IF (NOT IS_DIRECTORY ${OPENSSL_INSTALL_DIR})
+    MESSAGE(FATAL_ERROR "OpenSSL installation dir not found!")
+  ENDIF ()
   IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
     TARGET_LINK_LIBRARIES(alcp PUBLIC ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
   ELSEIF(EXISTS ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
