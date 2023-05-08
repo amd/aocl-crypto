@@ -74,6 +74,8 @@ class Csv final : private File
     std::vector<Uint8> getVect(const String cName);
 
     int getLineNumber();
+
+    bool m_file_exists = {};
 };
 
 } // namespace alcp::testing

@@ -35,9 +35,14 @@ namespace alcp::testing {
 Csv::Csv(String filename)
     : File(filename)
 {
-    m_filename = filename;
-    m_line     = readLine(); // Read header out
-    m_names    = parseCsv(); // Parse the header into items
+    m_filename    = filename;
+    m_file_exists = CheckFileExists();
+    if (!m_file_exists) {
+        utils::printErrors("File doesnt exist: " + m_filename);
+        return;
+    }
+    m_line  = readLine(); // Read header out
+    m_names = parseCsv(); // Parse the header into items
     return;
 }
 

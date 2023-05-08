@@ -746,6 +746,10 @@ AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode)
 
     bool retval = false;
 
+    /* check if file is valid */
+    if (!testing_core.getCsv()->m_file_exists) {
+        EXPECT_TRUE(retval);
+    }
     while (testing_core.getCsv()->readNext()) {
         if ((testing_core.getCsv()->getVect("KEY").size() * 8) != key_size) {
             continue;

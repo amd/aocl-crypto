@@ -90,6 +90,10 @@ Hmac_KAT(int HmacSize, std::string HmacType, alc_mac_info_t info)
                                            + std::to_string(HmacSize) + ".csv");
     Csv         csv          = Csv(TestDataFile);
 
+    /* check if file is valid */
+    if (!csv.m_file_exists) {
+        FAIL();
+    }
 #ifdef USE_OSSL
     OpenSSLHmacBase ohb(info);
     if (useossl == true)

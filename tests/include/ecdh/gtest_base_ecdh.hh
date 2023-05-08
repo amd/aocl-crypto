@@ -117,6 +117,10 @@ ecdh_KAT(alc_ec_info_t info)
     std::string TestDataFile = std::string("dataset_ECDH.csv");
     Csv         csv          = Csv(TestDataFile);
 
+    /* check if file is valid */
+    if (!csv.m_file_exists) {
+        FAIL();
+    }
     while (csv.readNext()) {
         std::vector<Uint8> Peer1_PubKey(KeySize, 0);
         std::vector<Uint8> Peer2_PubKey(KeySize, 0);

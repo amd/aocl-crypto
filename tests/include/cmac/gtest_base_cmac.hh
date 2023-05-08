@@ -86,6 +86,11 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
                                            + std::to_string(KeySize) + ".csv");
     Csv         csv          = Csv(TestDataFile);
 
+    /* check if file is valid */
+    if (!csv.m_file_exists) {
+        FAIL();
+    }
+
 #ifdef USE_OSSL
     OpenSSLCmacBase ocb(info);
     if (useossl == true)

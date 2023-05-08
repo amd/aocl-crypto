@@ -114,8 +114,11 @@ Digest_KAT(alc_digest_info_t info)
                        + std::to_string(info.dt_len) + ".csv";
     }
 
-    Csv csv(TestDataFile);
-
+    Csv csv = Csv(TestDataFile);
+    /* check if file is valid */
+    if (!csv.m_file_exists) {
+        FAIL();
+    }
     if (useipp && (GetDigestStr(info.dt_type).compare("SHA3") == 0)) {
         std::cout << "IPPCP doesnt support SHA3 for now, skipping this test"
                   << std::endl;
