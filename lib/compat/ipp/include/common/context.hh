@@ -28,6 +28,7 @@
 
 #include "alcp/alcp.h"
 #include "ippcp.h"
+#include <cstddef>
 #include <vector>
 #pragma once
 typedef struct
@@ -39,6 +40,8 @@ typedef struct
 typedef struct
 {
     bool            is_encrypt;
+    size_t          msg_len;
+    size_t          tag_len;
     ipp_wrp_aes_ctx encrypt_ctx;
     ipp_wrp_aes_ctx decrypt_ctx;
 } ipp_wrp_aes_aead_ctx;
@@ -49,8 +52,8 @@ typedef struct
     ipp_wrp_aes_ctx encrypt_ctx;
     ipp_wrp_aes_ctx decrypt_ctx;
     alc_key_info_t  tweak_key;
-    Uint8         tkey[32];
-    Uint8         key[32];
+    Uint8           tkey[32];
+    Uint8           key[32];
 } ipp_wrp_aes_xts_ctx;
 
 typedef struct
