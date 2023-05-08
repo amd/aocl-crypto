@@ -26,7 +26,7 @@
  *
  */
 #include "hmac/alc_hmac.hh"
-#include "hmac/gtest_base.hh"
+#include "hmac/gtest_base_hmac.hh"
 #include "hmac/hmac.hh"
 #include "rng_base.hh"
 #include <alcp/alcp.h>

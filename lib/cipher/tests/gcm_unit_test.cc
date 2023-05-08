@@ -32,7 +32,7 @@
 
 #include "alcp/cipher/aes.hh" // FIXME: change this to aes_gcm.hh when Gcm class is moved to aes_gcm.hh
 // FIXME: Remove all the includes from gtest_base related to capi
-#include "cipher/gtest_base.hh"
+#include "cipher/gtest_base_cipher.hh"
 #include "gtest/gtest.h"
 #include <math.h>
 // Linux Specific Header Files

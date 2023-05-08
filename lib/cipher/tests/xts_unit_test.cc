@@ -32,7 +32,7 @@
 #include "alcp/capi/cipher/ctx.hh"
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/aes_build.hh"
-#include "cipher/gtest_base.hh"
+#include "cipher/gtest_base_cipher.hh"
 #include "gtest/gtest.h"
 #include <memory>
 

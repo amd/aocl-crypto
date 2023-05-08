@@ -33,7 +33,7 @@
 /* ALCP Headers */
 #include "alcp/alcp.h"
 #include "hmac/alc_hmac.hh"
-#include "hmac/gtest_base.hh"
+#include "hmac/gtest_base_hmac.hh"
 #include "hmac/hmac.hh"
 
 /* All tests to be added here */

@@ -103,7 +103,7 @@ IF(UNIX)
 SET(LIBS ${LIBS} pthread)
 ENDIF()
 
-ADD_EXECUTABLE(test_digest test_main.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
+ADD_EXECUTABLE(test_digest test_digest_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
 TARGET_INCLUDE_DIRECTORIES(test_digest PRIVATE
 	"${CMAKE_SOURCE_DIR}/include" 
@@ -115,7 +115,7 @@ TARGET_INCLUDE_DIRECTORIES(test_digest PRIVATE
 TARGET_COMPILE_OPTIONS(test_digest PUBLIC ${ALCP_WARNINGS})
 TARGET_LINK_LIBRARIES(test_digest ${LIBS})
 
-ADD_EXECUTABLE(test_digest_cross test_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
+ADD_EXECUTABLE(test_digest_cross test_digest_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
 TARGET_INCLUDE_DIRECTORIES(test_digest_cross PRIVATE
 	"${CMAKE_SOURCE_DIR}/include"

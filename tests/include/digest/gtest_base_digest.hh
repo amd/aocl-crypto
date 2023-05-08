@@ -39,7 +39,7 @@
 #include "alcp/alcp.h"
 #include "digest/alc_digest.hh"
 #include "digest/digest.hh"
-#include "digest/gtest_base.hh"
+#include "digest/gtest_base_digest.hh"
 #include "gtest_common.hh"
 #include "rng_base.hh"
 #ifdef USE_IPP

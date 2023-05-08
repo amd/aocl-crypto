@@ -29,7 +29,7 @@
 #include "alcp/cipher/aes_cmac_siv.hh"
 
 // FIXME: Remove all the includes from gtest_base related to capi
-#include "cipher/gtest_base.hh"
+#include "cipher/gtest_base_cipher.hh"
 #include "gtest/gtest.h"
 
 using namespace alcp::cipher;

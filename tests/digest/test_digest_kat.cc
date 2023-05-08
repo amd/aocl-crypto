@@ -25,131 +25,132 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "digest/alc_digest.hh"
-#include "digest/digest.hh"
-#include "digest/gtest_base.hh"
-#include "rng_base.hh"
-#include <alcp/alcp.h>
+
+/* C/C++ Headers */
 #include <iostream>
 #include <string.h>
 
-/* SHA3 SHAKE Cross */
-TEST(DIGEST_SHA3, CROSS_SHAKE128)
+/* ALCP Headers */
+#include "alcp/alcp.h"
+#include "digest/alc_digest.hh"
+#include "digest/digest.hh"
+#include "digest/gtest_base_digest.hh"
+
+/* SHAKE128/256 tests (IPP doesnt have these) */
+TEST(DIGEST_SHA3, KAT_SHAKE128)
 {
-    if (useipp || oa_override)
+    if (useipp)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_digest_info_t info;
     info.dt_mode.dm_sha3 = ALC_SHAKE_128;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
     info.dt_len          = ALC_DIGEST_LEN_CUSTOM;
-    Digest_Cross(128, info);
+    Digest_KAT(info);
 }
-TEST(DIGEST_SHA3, CROSS_SHAKE256)
+TEST(DIGEST_SHA3, KAT_SHAKE256)
 {
-    if (useipp || oa_override)
+    if (useipp)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_digest_info_t info;
     info.dt_mode.dm_sha3 = ALC_SHAKE_256;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
     info.dt_len          = ALC_DIGEST_LEN_CUSTOM;
-    Digest_Cross(256, info);
+    Digest_KAT(info);
 }
 
-/* SHA2 cross tests */
-TEST(DIGEST_SHA2, CROSS_224)
+/* SHA2 tests */
+TEST(DIGEST_SHA2, KAT_224)
 {
     alc_digest_info_t info;
     info.dt_mode.dm_sha2 = ALC_SHA2_224;
     info.dt_type         = ALC_DIGEST_TYPE_SHA2;
     info.dt_len          = ALC_DIGEST_LEN_224;
-    Digest_Cross(224, info);
+    Digest_KAT(info);
 }
-TEST(DIGEST_SHA2, CROSS_256)
+TEST(DIGEST_SHA2, KAT_256)
 {
     alc_digest_info_t info;
     info.dt_mode.dm_sha2 = ALC_SHA2_256;
     info.dt_type         = ALC_DIGEST_TYPE_SHA2;
     info.dt_len          = ALC_DIGEST_LEN_256;
-    Digest_Cross(256, info);
+    Digest_KAT(info);
 }
-TEST(DIGEST_SHA2, CROSS_384)
+TEST(DIGEST_SHA2, KAT_384)
 {
     alc_digest_info_t info;
     info.dt_mode.dm_sha2 = ALC_SHA2_384;
     info.dt_type         = ALC_DIGEST_TYPE_SHA2;
     info.dt_len          = ALC_DIGEST_LEN_384;
-    Digest_Cross(384, info);
+    Digest_KAT(info);
 }
-TEST(DIGEST_SHA2, CROSS_512)
+TEST(DIGEST_SHA2, KAT_512)
 {
     alc_digest_info_t info;
     info.dt_mode.dm_sha2 = ALC_SHA2_512;
     info.dt_type         = ALC_DIGEST_TYPE_SHA2;
     info.dt_len          = ALC_DIGEST_LEN_512;
-    Digest_Cross(512, info);
+    Digest_KAT(info);
 }
-/* truncated sha512 variants */
-TEST(DIGEST_SHA2, CROSS_512_224)
+/* sha512 truncated variants- 224,256*/
+TEST(DIGEST_SHA2, KAT_512_224)
 {
     alc_digest_info_t info;
     info.dt_mode.dm_sha2 = ALC_SHA2_512;
     info.dt_type         = ALC_DIGEST_TYPE_SHA2;
     info.dt_len          = ALC_DIGEST_LEN_224;
-    Digest_Cross(224, info);
+    Digest_KAT(info);
 }
-TEST(DIGEST_SHA2, CROSS_512_256)
+TEST(DIGEST_SHA2, KAT_512_256)
 {
     alc_digest_info_t info;
     info.dt_mode.dm_sha2 = ALC_SHA2_512;
     info.dt_type         = ALC_DIGEST_TYPE_SHA2;
     info.dt_len          = ALC_DIGEST_LEN_256;
-    Digest_Cross(256, info);
+    Digest_KAT(info);
 }
 
-/* SHA3 cross tests */
-/* NOTE: IPPCP doesnt support SHA3 as of now,
- SHA3 tests will be skipped for IPPCP */
-TEST(DIGEST_SHA3, CROSS_224)
+/* SHA3 tests */
+/* NOTE: SHA3 tests will be skipped for IPPCP
+ IPPCP doesnt have SHA3 as of now */
+TEST(DIGEST_SHA3, KAT_224)
 {
-    if (useipp || oa_override)
+    if (useipp)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_digest_info_t info;
     info.dt_mode.dm_sha2 = ALC_SHA2_224;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
     info.dt_len          = ALC_DIGEST_LEN_224;
-    Digest_Cross(224, info);
+    Digest_KAT(info);
 }
-TEST(DIGEST_SHA3, CROSS_256)
+TEST(DIGEST_SHA3, KAT_256)
 {
-    if (useipp || oa_override)
+    if (useipp)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
     alc_digest_info_t info;
     info.dt_mode.dm_sha2 = ALC_SHA2_256;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
     info.dt_len          = ALC_DIGEST_LEN_256;
-    Digest_Cross(256, info);
+    Digest_KAT(info);
 }
-TEST(DIGEST_SHA3, CROSS_384)
+TEST(DIGEST_SHA3, KAT_384)
 {
-    if (useipp || oa_override)
+    if (useipp)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
-
     alc_digest_info_t info;
     info.dt_mode.dm_sha2 = ALC_SHA2_384;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
     info.dt_len          = ALC_DIGEST_LEN_384;
-    Digest_Cross(384, info);
+    Digest_KAT(info);
 }
-TEST(DIGEST_SHA3, CROSS_512)
+TEST(DIGEST_SHA3, KAT_512)
 {
-    if (useipp || oa_override)
+    if (useipp)
         GTEST_SKIP() << "IPP doesnt have SHA3 implemented yet";
-
     alc_digest_info_t info;
     info.dt_mode.dm_sha2 = ALC_SHA2_512;
     info.dt_type         = ALC_DIGEST_TYPE_SHA3;
     info.dt_len          = ALC_DIGEST_LEN_512;
-    Digest_Cross(512, info);
+    Digest_KAT(info);
 }
 
 int
@@ -159,11 +160,15 @@ main(int argc, char** argv)
     parseArgs(argc, argv);
 #ifndef USE_IPP
     if (useipp)
-        printErrors("IPP is not avaiable");
+        std::cout << RED << "IPP is not avaiable, defaulting to ALCP" << RESET
+                  << std::endl;
 #endif
 #ifndef USE_OSSL
-    if (useossl)
-        printErrors("OpenSSL is not avaiable");
+    if (useossl) {
+        std::cout << RED << "OpenSSL is not avaiable, defaulting to ALCP"
+                  << RESET << std::endl;
+    }
 #endif
+
     return RUN_ALL_TESTS();
 }
