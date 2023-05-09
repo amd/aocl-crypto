@@ -45,6 +45,8 @@
 
 #include "rng.h"
 
+#include "ecdh.h"
+
 #include "version.h"
 
 /**

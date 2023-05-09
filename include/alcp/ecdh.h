@@ -28,6 +28,7 @@
 #ifndef _ALCP_ECDH_H_
 #define _ALCP_ECDH_H_ 2
 
+#include "alcp/ec.h"
 #include "alcp/error.h"
 #include "alcp/macros.h"
 
