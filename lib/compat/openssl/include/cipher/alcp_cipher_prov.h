@@ -50,6 +50,9 @@ struct _alc_prov_cipher_ctx
     alc_prov_ctx_t*     pc_prov_ctx;
     alc_cipher_handle_t handle;
     alc_key_info_t      kinfo_tweak_key;
+    
+    // For storing CTR Key for AES-SIV 
+    alc_key_info_t      kinfo_siv_ctr_key;
     int                 enc_flag;
 
     int               pc_nid;
@@ -218,5 +221,8 @@ extern const OSSL_DISPATCH gcm_functions_256[];
 extern const OSSL_DISPATCH ccm_functions_128[];
 extern const OSSL_DISPATCH ccm_functions_192[];
 extern const OSSL_DISPATCH ccm_functions_256[];
+extern const OSSL_DISPATCH siv_functions_128[];
+extern const OSSL_DISPATCH siv_functions_192[];
+extern const OSSL_DISPATCH siv_functions_256[];
 
 #endif /* _OPENSSL_ALCP_prov_CIPHER_PROV_H */

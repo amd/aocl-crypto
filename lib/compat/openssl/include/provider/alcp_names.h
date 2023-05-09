@@ -78,6 +78,10 @@
 #define ALCP_PROV_NAMES_AES_128_CCM                                            \
     "AES-128-CCM:id-aes128-CCM:2.16.840.1.101.3.4.1.7"
 
+// AES SIV
+#define ALCP_PROV_NAMES_AES_128_SIV "AES-128-SIV"
+#define ALCP_PROV_NAMES_AES_192_SIV "AES-192-SIV"
+#define ALCP_PROV_NAMES_AES_256_SIV "AES-256-SIV"
 // DIGEST SHA2
 #define ALCP_PROV_NAMES_SHA2_224                                               \
     "SHA2-224:SHA-224:SHA224:2.16.840.1.101.3.4.2.4"

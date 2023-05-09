@@ -248,6 +248,8 @@ ALCP_prov_cipher_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 #endif
         cctx->ivlen = ivlen;
     }
+
+    // Getting the Tag for AEAD including SIV
     p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_AEAD_TAG);
     if (p != NULL) {
         if (p->data_type != OSSL_PARAM_OCTET_STRING) {
@@ -257,6 +259,7 @@ ALCP_prov_cipher_set_ctx_params(void* vctx, const OSSL_PARAM params[])
         cctx->tagbuff = p->data;
         cctx->taglen  = p->data_size;
     }
+
 #ifdef DEBUG
     printf("Provider: Got tag with size:%d\n", cctx->taglen);
 #endif
@@ -278,6 +281,7 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
     alc_prov_cipher_ctx_p cctx            = vctx;
     alc_cipher_info_p     cinfo           = &cctx->pc_cipher_info;
     alc_key_info_p        kinfo_tweak_key = &cctx->kinfo_tweak_key;
+    alc_key_info_p        kinfo_siv_ctr_key = &cctx->kinfo_siv_ctr_key;
     alc_error_t           err;
 
     // Locate TAG
@@ -335,6 +339,9 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
             break;
         case ALC_AES_MODE_CCM:
             PRINT("Provider: CCM\n");
+            break;
+        case ALC_AES_MODE_SIV:
+            PRINT("Provider: SIV\n");
             break;
         default:
             return 0;
@@ -405,8 +412,21 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
     }
 #endif
 
+
     // Manually allocate context
     (cctx->handle).ch_context = OPENSSL_malloc(alcp_cipher_context_size(cinfo));
+
+    if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+        if(keylen==128){
+            kinfo_siv_ctr_key->key = key;
+            kinfo_siv_ctr_key->len = 128;
+            cinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
+            // For SIV, Authentication Key assumed to be same length as Encryption Key
+            cinfo->ci_key_info.key = key+ 16;
+            cinfo->ci_key_info.len  = 128;
+        }
+
+     }
 
     // Request handle for the cipher
     err = alcp_cipher_request(cinfo, &(cctx->handle));
@@ -440,6 +460,7 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
             }
         }
     }
+
 #ifdef DEBUG
     printf("Provider: cctx->taglen: %d\n", cctx->taglen);
 #endif
@@ -521,6 +542,9 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
         case ALC_AES_MODE_CCM:
             PRINT("Provider: CCM\n");
             break;
+        case ALC_AES_MODE_SIV:
+            PRINT("Provider: SIV\n");
+            break;
         default:
             return 0;
     }
@@ -580,6 +604,20 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
         kinfo_tweak_key->len                    = tweak_key_len;
         cinfo->ci_algo_info.ai_xts.xi_tweak_key = kinfo_tweak_key;
     }
+
+    alc_key_info_p        kinfo_siv_ctr_key = &cctx->kinfo_siv_ctr_key;
+
+    if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+        if(keylen==128){
+            kinfo_siv_ctr_key->key = key;
+            kinfo_siv_ctr_key->len = 128;
+            cinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
+            // For SIV, Authentication Key assumed to be same length as Encryption Key
+            cinfo->ci_key_info.key = key+ 16;
+            cinfo->ci_key_info.len  = 128;
+        }
+
+     }
 
     // Check for support
     err = alcp_cipher_supported(cinfo);
@@ -691,6 +729,18 @@ ALCP_prov_cipher_update(void*                vctx,
                     inl,
                     cctx->pc_cipher_info.ci_algo_info.ai_iv);
             }
+        }  else if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+            if (out == NULL) {
+                err = alcp_cipher_set_aad(&(cctx->handle), in, inl);
+            } else {
+                uint8_t fake_iv[100];
+                err = alcp_cipher_encrypt(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    fake_iv);
+            }
         } else {
             err = alcp_cipher_encrypt(&(cctx->handle),
                                       in,
@@ -739,7 +789,20 @@ ALCP_prov_cipher_update(void*                vctx,
                     inl,
                     cctx->pc_cipher_info.ci_algo_info.ai_iv);
             }
-        } else {
+        } else if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+            if (out == NULL) {
+                err = alcp_cipher_set_aad(&(cctx->handle), in, inl);
+            } else {
+                // IV must be copied to cctx->tagbuff when application calls EVP_CIPHER_CTX_ctrl call 
+                // with EVP_CTRL_AEAD_SET_TAG. This is done in ALCP_prov_cipher_set_ctx_params call.
+                err = alcp_cipher_decrypt(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->tagbuff);
+            }
+         }else {
             err = alcp_cipher_decrypt(&(cctx->handle),
                                       in,
                                       out,
@@ -819,6 +882,10 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_128_CCM, CIPHER_DEF_PROP, ccm_functions_128 },
     { ALCP_PROV_NAMES_AES_192_CCM, CIPHER_DEF_PROP, ccm_functions_192 },
     { ALCP_PROV_NAMES_AES_256_CCM, CIPHER_DEF_PROP, ccm_functions_256 },
+    // SIV
+    { ALCP_PROV_NAMES_AES_128_SIV, CIPHER_DEF_PROP, siv_functions_128 },
+    // { ALCP_PROV_NAMES_AES_192_SIV, CIPHER_DEF_PROP, siv_functions_192 },
+    // { ALCP_PROV_NAMES_AES_256_SIV, CIPHER_DEF_PROP, siv_functions_256 },
     // Terminate OpenSSL Algorithm list with Null Pointer.
     { NULL, NULL, NULL },
 };
