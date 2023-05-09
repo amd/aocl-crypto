@@ -42,8 +42,8 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
 {
     static alc_cipher_handle_t handle;
     alc_key_info_t             kinfo = {
-                    .type = ALC_KEY_TYPE_SYMMETRIC,
-                    .fmt  = ALC_KEY_FMT_RAW,
+        ALC_KEY_TYPE_SYMMETRIC,
+        ALC_KEY_FMT_RAW,
     };
 
     alc_error_t err;
@@ -56,19 +56,22 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
     alc_cipher_mode_siv_info_t siv_info = { &kinfo };
 
     alc_cipher_info_t cinfo = {
-        .ci_type = ALC_CIPHER_TYPE_AES,
-        .ci_key_info     = {
-            .type    = ALC_KEY_TYPE_SYMMETRIC,
-            .fmt     = ALC_KEY_FMT_RAW,
-            .len     = ((Uint32)keyLen)*8,
-            .key     = pAuthKey,
+        ALC_CIPHER_TYPE_AES,
+        {
+            ALC_KEY_TYPE_SYMMETRIC,
+            ALC_KEY_FMT_RAW,
+            {},
+            {},
+            ((Uint32)keyLen) * 8,
+            pAuthKey,
         },
-        .ci_algo_info   = {
-           .ai_mode = ALC_AES_MODE_SIV,
-           .ai_iv   = NULL,
-           .ai_siv = siv_info,
+        {
+            ALC_AES_MODE_SIV,
+            NULL,
         },
     };
+
+    cinfo.ci_algo_info.ai_siv = siv_info;
 
     /*
      * Check if the current cipher is supported,
@@ -145,8 +148,8 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
 {
     static alc_cipher_handle_t handle;
     alc_key_info_t             kinfo = {
-                    .type = ALC_KEY_TYPE_SYMMETRIC,
-                    .fmt  = ALC_KEY_FMT_RAW,
+        ALC_KEY_TYPE_SYMMETRIC,
+        ALC_KEY_FMT_RAW,
     };
 
     alc_error_t err;
@@ -159,19 +162,22 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
     alc_cipher_mode_siv_info_t siv_info = { &kinfo };
 
     alc_cipher_info_t cinfo = {
-        .ci_type = ALC_CIPHER_TYPE_AES,
-        .ci_key_info     = {
-            .type    = ALC_KEY_TYPE_SYMMETRIC,
-            .fmt     = ALC_KEY_FMT_RAW,
-            .len     = ((Uint32)keyLen)*8,
-            .key     = pAuthKey,
+        ALC_CIPHER_TYPE_AES,
+        {
+            ALC_KEY_TYPE_SYMMETRIC,
+            ALC_KEY_FMT_RAW,
+            {},
+            {},
+            ((Uint32)keyLen) * 8,
+            pAuthKey,
         },
-        .ci_algo_info   = {
-           .ai_mode = ALC_AES_MODE_SIV,
-           .ai_iv   = NULL,
-           .ai_siv = siv_info,
+        {
+            ALC_AES_MODE_SIV,
+            NULL,
         },
     };
+
+    cinfo.ci_algo_info.ai_siv = siv_info;
 
     /*
      * Check if the current cipher is supported,
@@ -238,8 +244,8 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
 {
     static alc_cipher_handle_t handle;
     alc_key_info_t             kinfo = {
-                    .type = ALC_KEY_TYPE_SYMMETRIC,
-                    .fmt  = ALC_KEY_FMT_RAW,
+        ALC_KEY_TYPE_SYMMETRIC,
+        ALC_KEY_FMT_RAW,
     };
 
     alc_error_t err;
@@ -254,19 +260,21 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
     alc_cipher_mode_siv_info_t siv_info = { &kinfo };
 
     alc_cipher_info_t cinfo = {
-        .ci_type = ALC_CIPHER_TYPE_AES,
-        .ci_key_info     = {
-            .type    = ALC_KEY_TYPE_SYMMETRIC,
-            .fmt     = ALC_KEY_FMT_RAW,
-            .len     = ((Uint32)keyLen)*8,
-            .key     = pKey,
+        ALC_CIPHER_TYPE_AES,
+        {
+            ALC_KEY_TYPE_SYMMETRIC,
+            ALC_KEY_FMT_RAW,
+            {},
+            {},
+            ((Uint32)keyLen) * 8,
+            pKey,
         },
-        .ci_algo_info   = {
-           .ai_mode = ALC_AES_MODE_SIV,
-           .ai_iv   = NULL,
-           .ai_siv = siv_info,
+        {
+            ALC_AES_MODE_SIV,
+            NULL,
         },
     };
+    cinfo.ci_algo_info.ai_siv = siv_info;
 
     /*
      * Check if the current cipher is supported,

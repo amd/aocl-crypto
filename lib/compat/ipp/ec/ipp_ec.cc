@@ -49,9 +49,9 @@ mbx_x25519_public_key_mb8(int8u* const       pa_public_key[NUM_MB],
     alc_error_t     err;
 
     alc_ec_info_t ecinfo = {
-        .ecCurveId     = ALCP_EC_CURVE25519,
-        .ecCurveType   = ALCP_EC_CURVE_TYPE_MONTGOMERY,
-        .ecPointFormat = ALCP_EC_POINT_FORMAT_UNCOMPRESSED,
+        ALCP_EC_CURVE25519,
+        ALCP_EC_CURVE_TYPE_MONTGOMERY,
+        ALCP_EC_POINT_FORMAT_UNCOMPRESSED,
     };
 
     Uint64 size = alcp_ec_context_size(&ecinfo);
@@ -105,9 +105,9 @@ mbx_x25519_mb8(int8u* const       pa_shared_key[NUM_MB],
     alc_error_t     err;
 
     alc_ec_info_t ecinfo = {
-        .ecCurveId     = ALCP_EC_CURVE25519,
-        .ecCurveType   = ALCP_EC_CURVE_TYPE_MONTGOMERY,
-        .ecPointFormat = ALCP_EC_POINT_FORMAT_UNCOMPRESSED,
+        ALCP_EC_CURVE25519,
+        ALCP_EC_CURVE_TYPE_MONTGOMERY,
+        ALCP_EC_POINT_FORMAT_UNCOMPRESSED,
     };
 
     Uint64 size = alcp_ec_context_size(&ecinfo);
