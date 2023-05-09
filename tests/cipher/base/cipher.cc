@@ -311,6 +311,8 @@ CipherTesting::testingEncrypt(alcp_data_ex_t data, const std::vector<Uint8> key)
                      data.m_block_size)) {
             // For very large sizes, dynamic is better.
             return cb->encrypt(data);
+        } else {
+            std::cout << "Test: Cipher: Encrypt: Failure in Init" << std::endl;
         }
     } else {
         std::cout << "base.hh: CipherTesting: Implementation missing!"

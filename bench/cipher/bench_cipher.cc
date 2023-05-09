@@ -98,7 +98,11 @@ CipherAes(benchmark::State& state,
             memcpy(iv, data.m_tag, 16);
     }
     for (auto _ : state) {
-        if ((useossl && (alcpMode == ALC_AES_MODE_GCM))) {
+        // For OpenSSL GCM and SIV, Reset needs to be called again since tag
+        // needs to be generated each time
+        if ((useossl
+             && (alcpMode == ALC_AES_MODE_GCM
+                 || alcpMode == ALC_AES_MODE_SIV))) {
             if (!cb->init(key, keylen)) {
                 state.SkipWithError("GCM: BENCH_RESET_FAILURE");
             }
