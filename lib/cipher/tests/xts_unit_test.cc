@@ -186,10 +186,10 @@ TEST(XTS, initiantiation_with_valid_input)
 
     std::unique_ptr<Xts> xts_obj = std::make_unique<Xts>(aesInfo, keyInfo);
 
-    EXPECT_EQ(xts_obj->getRounds(), 10);
-    EXPECT_EQ(xts_obj->getKeySize(), 16);
-    EXPECT_EQ(xts_obj->getNr(), 10);
-    EXPECT_EQ(xts_obj->getNk(), 4);
+    EXPECT_EQ(xts_obj->getRounds(), 10U);
+    EXPECT_EQ(xts_obj->getKeySize(), 16U);
+    EXPECT_EQ(xts_obj->getNr(), 10U);
+    EXPECT_EQ(xts_obj->getNk(), 4U);
 }
 
 TEST(XTS, initiantiation_with_invalid_iv)
@@ -220,9 +220,9 @@ TEST(XTS, initiantiation_with_invalid_iv)
     std::unique_ptr<Xts> xts_obj = std::make_unique<Xts>(aesInfo, keyInfo);
 
     EXPECT_EQ(xts_obj->setIv(sizeof(iv), iv), ALC_ERROR_INVALID_SIZE);
-    EXPECT_EQ(xts_obj->getKeySize(), 32);
-    EXPECT_EQ(xts_obj->getNr(), 14);
-    EXPECT_EQ(xts_obj->getNk(), 8);
+    EXPECT_EQ(xts_obj->getKeySize(), 32U);
+    EXPECT_EQ(xts_obj->getNr(), 14U);
+    EXPECT_EQ(xts_obj->getNk(), 8U);
 
 }
 

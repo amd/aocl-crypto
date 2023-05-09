@@ -352,8 +352,8 @@ TEST(CCM, Initiantiation)
                                      key };
     Ccm                  ccm_obj = Ccm(aesInfo, keyInfo);
     // clang-format on
-    EXPECT_EQ(ccm_obj.getRounds(), 10);
-    EXPECT_EQ(ccm_obj.getNr(), 10);
+    EXPECT_EQ(ccm_obj.getRounds(), 10U);
+    EXPECT_EQ(ccm_obj.getNr(), 10U);
 }
 
 // Test disabled as ZeroLength checks moved to C_API

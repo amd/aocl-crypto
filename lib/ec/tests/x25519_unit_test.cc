@@ -42,7 +42,7 @@
 #include <sys/time.h>
 #endif
 
-#define MAX_SIZE_KEY_DATA 32
+#define MAX_SIZE_KEY_DATA 32U
 
 // to do: these macro is better to be moved to common header.
 #define ALCP_CRYPT_TIMER_INIT struct timeval begin, end;
@@ -170,9 +170,9 @@ TEST_P(x25519Test, PublicAndSharedKeyTest)
         pSecret_key2, m_publicKeyData1, &keyLength2);
 
     ret = memcmp(pSecret_key1, pSecret_key2, keyLength1);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, 0U);
     ret = memcmp(&(m_expected_shared_key.at(0)), pSecret_key2, keyLength1);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, 0U);
 }
 
 TEST_P(x25519Test, PerformanceTest)

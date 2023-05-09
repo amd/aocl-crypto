@@ -46,6 +46,8 @@ typedef std::map<const string, ParamTuple>        KnownAnswerMap;
 
 // Digest size in bytes
 static const Uint8 DigestSize = 64;
+// Input Block length in bytes
+static const unsigned int InputBlockLen = 1024;
 
 static const std::unordered_map<DigestSha512, tuple<alc_digest_len_t, Uint8>>
     DigestSizes = { { DIGEST_SHA_512_224, { ALC_DIGEST_LEN_224, 28 } },
@@ -188,36 +190,36 @@ TEST(Sha512Test, over_size_iv_test)
 TEST(Sha512Test, getInputBlockSizeTest)
 {
     Sha512 sha512;
-    EXPECT_EQ(sha512.getInputBlockSize() * 8, 1024);
+    EXPECT_EQ(sha512.getInputBlockSize() * 8, InputBlockLen);
 }
 TEST(Sha512Test, getHashSizeTest)
 {
     Sha512 sha512;
-    EXPECT_EQ(sha512.getHashSize() * 8, 512);
+    EXPECT_EQ(sha512.getHashSize() * 8, 512U);
 }
 
 TEST(Sha512Test, Sha512_224_getInputBlockLenTest)
 {
     Sha512 sha512(ALC_DIGEST_LEN_224);
-    EXPECT_EQ(sha512.getInputBlockSize() * 8, 1024);
+    EXPECT_EQ(sha512.getInputBlockSize() * 8, InputBlockLen);
 }
 
 TEST(Sha512Test, Sha512_224_getHashSizeTest)
 {
     Sha512 sha512(ALC_DIGEST_LEN_224);
-    EXPECT_EQ(sha512.getHashSize() * 8, 224);
+    EXPECT_EQ(sha512.getHashSize() * 8, 224U);
 }
 
 TEST(Sha512Test, Sha512_256_getInputBlockLenTest)
 {
     Sha512 sha512(ALC_DIGEST_LEN_256);
-    EXPECT_EQ(sha512.getInputBlockSize() * 8, 1024);
+    EXPECT_EQ(sha512.getInputBlockSize() * 8, InputBlockLen);
 }
 
 TEST(Sha512Test, Sha512_256_getHashSizeTest)
 {
     Sha512 sha512(ALC_DIGEST_LEN_256);
-    EXPECT_EQ(sha512.getHashSize() * 8, 256);
+    EXPECT_EQ(sha512.getHashSize() * 8, 256U);
 }
 
 } // namespace

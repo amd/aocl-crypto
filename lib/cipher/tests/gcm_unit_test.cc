@@ -248,20 +248,20 @@ TEST(GCM, Instantiation)
     keyInfo.len = 128;
     {
         Gcm pGcmObj = Gcm(aesInfo, keyInfo);
-        EXPECT_EQ(pGcmObj.getRounds(), 10);
-        EXPECT_EQ(pGcmObj.getNr(), 10);
+        EXPECT_EQ(pGcmObj.getRounds(), 10U);
+        EXPECT_EQ(pGcmObj.getNr(), 10U);
     }
     keyInfo.len = 192;
     {
         Gcm pGcmObj = Gcm(aesInfo, keyInfo);
-        EXPECT_EQ(pGcmObj.getRounds(), 12);
-        EXPECT_EQ(pGcmObj.getNr(), 12);
+        EXPECT_EQ(pGcmObj.getRounds(), 12U);
+        EXPECT_EQ(pGcmObj.getNr(), 12U);
     }
     keyInfo.len = 256;
     {
         Gcm pGcmObj = Gcm(aesInfo, keyInfo);
-        EXPECT_EQ(pGcmObj.getRounds(), 14);
-        EXPECT_EQ(pGcmObj.getNr(), 14);
+        EXPECT_EQ(pGcmObj.getRounds(), 14U);
+        EXPECT_EQ(pGcmObj.getNr(), 14U);
     }
 }
 
