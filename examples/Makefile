@@ -38,7 +38,7 @@ TARGETS := cipher/aes-cfb cipher/aes-speed-cipher cipher/aes-speed-gcm cipher/ae
 			rng/rng-demo \
 			mac/hmac mac/cmac \
 			ecdh/x25519_example \
-			rsa/rsa_peer rsa/rsa_encrypt rsa/rsa_decrypt
+			rsa/rsa_peer rsa/rsa_encrypt rsa/rsa_decrypt \
 			version/version-demo
 
 .PHONY: all
