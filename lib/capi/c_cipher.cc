@@ -33,7 +33,6 @@
 
 #include "alcp/capi/cipher/builder.hh"
 #include "alcp/capi/defs.hh"
-#include "alcp/cipher.hh"
 
 using namespace alcp;
 
@@ -102,8 +101,29 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
 
     new (ctx) cipher::Context;
 
-    // FIXME: Modify Builder to return Status and assign to context status
-    err = cipher::CipherBuilder::Build(*pCipherInfo, *ctx);
+    // FIXME: other AES Build() to be modified like CTR in other modes as well.
+    if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_CTR) {
+        err = cipher::CipherBuilder::Build(pCipherInfo->ci_type,
+                                           pCipherInfo->ci_algo_info.ai_mode,
+                                           pCipherInfo->ci_key_info.key,
+                                           pCipherInfo->ci_key_info.len,
+                                           *ctx);
+
+    }
+
+    // FIXME: GCM, XTS, CCM to be moved to AeadBuilder
+    else if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+        err = cipher::CipherBuilder::Build(pCipherInfo->ci_type,
+                                           pCipherInfo->ci_algo_info.ai_mode,
+                                           pCipherInfo->ci_key_info.key,
+                                           pCipherInfo->ci_key_info.len,
+                                           *ctx);
+    } else {
+
+        // FIXME: Modify Builder to return Status and assign to context
+        // status
+        err = cipher::CipherBuilder::Build(*pCipherInfo, *ctx);
+    }
 
     return err;
 }
@@ -151,7 +171,8 @@ alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    // FIXME: Modify encryptUpdate to return Status and assign to context status
+    // FIXME: Modify encryptUpdate to return Status and assign to context
+    // status
     err = ctx->encryptUpdate(ctx->m_cipher, pInput, pOutput, len, pIv);
 
     return err;
@@ -200,7 +221,8 @@ alcp_cipher_decrypt_update(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    // FIXME: Modify decryptUpdate to return Status and assign to context status
+    // FIXME: Modify decryptUpdate to return Status and assign to context
+    // status
     err = ctx->decryptUpdate(ctx->m_cipher, pInput, pOutput, len, pIv);
 
     return err;
@@ -277,7 +299,8 @@ alcp_cipher_set_tag_length(const alc_cipher_handle_p pCipherHandle, Uint64 len)
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    // FIXME: Modify setTagLength to return Status and assign to context status
+    // FIXME: Modify setTagLength to return Status and assign to context
+    // status
     err = ctx->setTagLength(ctx->m_cipher, len);
 
     return err;

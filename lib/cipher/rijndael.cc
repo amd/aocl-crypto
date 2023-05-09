@@ -199,13 +199,18 @@ class alignas(16) Rijndael::Impl
     Uint8* m_enc_key = {}; /* encryption key: points to offset in 'm_key' */
     Uint8* m_dec_key = {}; /* decryption key: points to offset in 'm_key' */
 
-    Uint32    m_nrounds    = 0; /* no of rounds */
-    Uint32    m_ncolumns   = 0; /* no of columns in matrix */
-    Uint32    m_key_size   = 0; /* key size in bytes */
-    BlockSize m_block_size = eBits0;
+    Uint32       m_nrounds    = 0; /* no of rounds */
+    Uint32       m_ncolumns   = 0; /* no of columns in matrix */
+    Uint32       m_key_size   = 0; /* key size in bytes */
+    BlockSize    m_block_size = eBits0;
+    const Uint8* m_pKey       = NULL; /* User input key*/
+    Uint32       m_keyLen     = 0;    /* key len*/
 
   public:
     ~Impl() = default;
+    void setKeyLen(Uint32 keyLen) { m_keyLen = keyLen; }
+    void setKey(const Uint8* pKey) { m_pKey = pKey; }
+
     Uint32       getRounds() const { return m_nrounds; }
     Uint32       getKeySize() const { return m_key_size; }
     const Uint8* getEncryptKeys() const { return m_enc_key; }
@@ -229,6 +234,8 @@ class alignas(16) Rijndael::Impl
     {
         setKey(rKeyInfo.key, rKeyInfo.len);
     }
+
+    void setUp() { setKey(m_pKey, m_keyLen); }
 
     void setKey(const Uint8* key, int len)
     {
@@ -710,10 +717,21 @@ Rijndael::Rijndael()
     : m_pimpl{ std::make_unique<Rijndael::Impl>() }
 {}
 
+// FIXME: to be removed from all AES modes.
 Rijndael::Rijndael(const alc_key_info_t& rKeyInfo)
     : Rijndael{}
 {
-    pImpl()->setUp(rKeyInfo);
+    pImpl()->setKeyLen(rKeyInfo.len);
+    pImpl()->setKey(rKeyInfo.key);
+    pImpl()->setUp();
+}
+
+Rijndael::Rijndael(const Uint8* pKey, const Uint32 keyLen)
+    : Rijndael{}
+{
+    pImpl()->setKeyLen(keyLen);
+    pImpl()->setKey(pKey);
+    pImpl()->setUp();
 }
 
 Rijndael::~Rijndael() {}

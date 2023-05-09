@@ -38,9 +38,15 @@ namespace alcp::cipher {
 class AesBuilder
 {
   public:
+    // FIXME: to be removed after cleanup in other AES modes
     static alc_error_t Build(const alc_cipher_algo_info_t& aesInfo,
                              const alc_key_info_t&         keyInfo,
                              Context&                      ctx);
+
+    static alc_error_t Build(const alc_cipher_mode_t cipherMode,
+                             const Uint8*            pKey,
+                             const Uint32            keyLen,
+                             Context&                ctx);
 };
 
 } // namespace alcp::cipher

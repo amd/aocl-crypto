@@ -62,9 +62,9 @@ namespace alcp::cipher::vaes512 {
 /**
  FIXME: gcm decrypt functions has been duplicated for all three rounds. Below
 three functions has same code expect for assigning different func ptrs.
- 1. gcmBlk_512_decRounds10
- 2. gcmBlk_512_decRounds12
- 3. gcmBlk_512_decRounds14
+ 1. gcmBlk_512_dec128
+ 2. gcmBlk_512_dec192
+ 3. gcmBlk_512_dec256
 
 Use of branching to assign funPtrs(fAesEncryptNoLoad_4x512,
 fAesEncryptNoLoad_2x512, fAesEncryptNoLoad_1x512) results in poor performance.
@@ -73,28 +73,23 @@ Use of lambdas also results in marginal loss in performance.
 
  */
 Uint64
-gcmBlk_512_decRounds10(const __m512i* p_in_x,
-                       __m512i*       p_out_x,
-                       Uint64         blocks,
-                       const __m128i* pkey128,
-                       const Uint8*   pIv,
-                       int            nRounds,
-                       Uint8          factor,
-                       // gcm specific params
-                       __m128i* pgHash_128,
-                       __m128i  Hsubkey_128,
-                       __m128i  iv_128,
-                       __m128i  reverse_mask_128,
-                       int      remBytes,
-                       Uint64*  pHashSubkeyTable)
+gcmBlk_512_dec128(const __m512i* p_in_x,
+                  __m512i*       p_out_x,
+                  Uint64         blocks,
+                  const __m128i* pkey128,
+                  const Uint8*   pIv,
+                  int            nRounds,
+                  Uint8          factor,
+                  // gcm specific params
+                  __m128i* pgHash_128,
+                  __m128i  Hsubkey_128,
+                  __m128i  iv_128,
+                  __m128i  reverse_mask_128,
+                  int      remBytes,
+                  Uint64*  pHashSubkeyTable)
 {
     __m512i swap_ctr, c1;
     __m512i one_lo, one_x, two_x, three_x, four_x;
-
-    void (*fAesEncryptNoLoad_4x512)(
-        __m512i & a, __m512i & b, __m512i & c, __m512i & d, const sKeys keys);
-    void (*fAesEncryptNoLoad_2x512)(__m512i & a, __m512i & b, const sKeys keys);
-    void (*fAesEncryptNoLoad_1x512)(__m512i & a, const sKeys keys);
 
     const __m256i const_factor_256 =
         _mm256_set_epi64x(0xC200000000000000, 0x1, 0xC200000000000000, 0x1);
@@ -106,32 +101,7 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
     _mm_prefetch(cast_to(pkey128), _MM_HINT_T1);
 
     sKeys keys{};
-    alcp_load_key_zmm(pkey128, keys, nRounds);
-
-/* FIXME: conditional branching to assign funPtrs results in performance drop.
-   Due to this problem code has been duplicated for all three rounds.
-
-   Code duplication needs to be fixed without performance degradation.
-
-*/
-#if 1
-    fAesEncryptNoLoad_4x512 = AesEncryptNoLoad_4x512Rounds10;
-    fAesEncryptNoLoad_2x512 = AesEncryptNoLoad_2x512Rounds10;
-    fAesEncryptNoLoad_1x512 = AesEncryptNoLoad_1x512Rounds10;
-#else
-    fAesEncryptNoLoad_4x512 = AesEncryptNoLoad_4x512Rounds10;
-    fAesEncryptNoLoad_2x512 = AesEncryptNoLoad_2x512Rounds10;
-    fAesEncryptNoLoad_1x512 = AesEncryptNoLoad_1x512Rounds10;
-    if (nRounds == 12) {
-        fAesEncryptNoLoad_4x512 = AesEncryptNoLoad_4x512Rounds12;
-        fAesEncryptNoLoad_2x512 = AesEncryptNoLoad_2x512Rounds12;
-        fAesEncryptNoLoad_1x512 = AesEncryptNoLoad_1x512Rounds12;
-    } else if (nRounds == 14) {
-        fAesEncryptNoLoad_4x512 = AesEncryptNoLoad_4x512Rounds14;
-        fAesEncryptNoLoad_2x512 = AesEncryptNoLoad_2x512Rounds14;
-        fAesEncryptNoLoad_1x512 = AesEncryptNoLoad_1x512Rounds14;
-    }
-#endif
+    alcp_load_key_zmm_10rounds(pkey128, keys);
 
     // clang-format off
     __m512i reverse_mask_512 =
@@ -197,7 +167,7 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+            AesEncryptNoLoad_4x512Rounds10(b1, b2, b3, b4, keys);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
             alcp_xor_4values(a1, // inputs A
@@ -233,7 +203,7 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+            AesEncryptNoLoad_4x512Rounds10(b1, b2, b3, b4, keys);
 
             get_aggregated_karatsuba_components(Hsubkey_512_0,
                                                 Hsubkey_512_1,
@@ -289,7 +259,7 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+            AesEncryptNoLoad_4x512Rounds10(b1, b2, b3, b4, keys);
 
             get_aggregated_karatsuba_components(Hsubkey_512_0,
                                                 Hsubkey_512_1,
@@ -348,7 +318,7 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+            AesEncryptNoLoad_4x512Rounds10(b1, b2, b3, b4, keys);
 
             get_aggregated_karatsuba_components(Hsubkey_512_0,
                                                 Hsubkey_512_1,
@@ -442,7 +412,7 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+            AesEncryptNoLoad_4x512Rounds10(b1, b2, b3, b4, keys);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
             alcp_xor_4values(a1, // inputs A
@@ -478,7 +448,7 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+            AesEncryptNoLoad_4x512Rounds10(b1, b2, b3, b4, keys);
 
             // first iteration gmul
             get_aggregated_karatsuba_components(Hsubkey_512_0,
@@ -576,7 +546,7 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
         // re-arrange as per spec
         alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-        (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+        AesEncryptNoLoad_4x512Rounds10(b1, b2, b3, b4, keys);
 
         alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4, a1, a2, a3, a4);
 
@@ -606,7 +576,7 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
         b1 = alcp_shuffle_epi8(c1, swap_ctr);
         b2 = alcp_shuffle_epi8(c2, swap_ctr);
 
-        (*fAesEncryptNoLoad_2x512)(b1, b2, keys);
+        AesEncryptNoLoad_2x512Rounds10(b1, b2, keys);
 
         a1 = alcp_xor(b1, a1);
         a2 = alcp_xor(b2, a2);
@@ -631,7 +601,7 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
         // re-arrange as per spec
         b1 = alcp_shuffle_epi8(c1, swap_ctr);
 
-        (*fAesEncryptNoLoad_1x512)(b1, keys);
+        AesEncryptNoLoad_1x512Rounds10(b1, keys);
 
         a1 = alcp_xor(b1, a1);
 
@@ -707,33 +677,28 @@ gcmBlk_512_decRounds10(const __m512i* p_in_x,
     }
 
     // clear all keys stored in registers.
-    alcp_clear_keys_zmm(keys, nRounds);
+    alcp_clear_keys_zmm_10rounds(keys);
     return blocks;
 }
 
 Uint64
-gcmBlk_512_decRounds12(const __m512i* p_in_x,
-                       __m512i*       p_out_x,
-                       Uint64         blocks,
-                       const __m128i* pkey128,
-                       const Uint8*   pIv,
-                       int            nRounds,
-                       Uint8          factor,
-                       // gcm specific params
-                       __m128i* pgHash_128,
-                       __m128i  Hsubkey_128,
-                       __m128i  iv_128,
-                       __m128i  reverse_mask_128,
-                       int      remBytes,
-                       Uint64*  pHashSubkeyTable)
+gcmBlk_512_dec192(const __m512i* p_in_x,
+                  __m512i*       p_out_x,
+                  Uint64         blocks,
+                  const __m128i* pkey128,
+                  const Uint8*   pIv,
+                  int            nRounds,
+                  Uint8          factor,
+                  // gcm specific params
+                  __m128i* pgHash_128,
+                  __m128i  Hsubkey_128,
+                  __m128i  iv_128,
+                  __m128i  reverse_mask_128,
+                  int      remBytes,
+                  Uint64*  pHashSubkeyTable)
 {
     __m512i swap_ctr, c1;
     __m512i one_lo, one_x, two_x, three_x, four_x;
-
-    void (*fAesEncryptNoLoad_4x512)(
-        __m512i & a, __m512i & b, __m512i & c, __m512i & d, const sKeys keys);
-    void (*fAesEncryptNoLoad_2x512)(__m512i & a, __m512i & b, const sKeys keys);
-    void (*fAesEncryptNoLoad_1x512)(__m512i & a, const sKeys keys);
 
     const __m256i const_factor_256 =
         _mm256_set_epi64x(0xC200000000000000, 0x1, 0xC200000000000000, 0x1);
@@ -745,11 +710,7 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
     _mm_prefetch(cast_to(pkey128), _MM_HINT_T1);
 
     sKeys keys{};
-    alcp_load_key_zmm(pkey128, keys, nRounds);
-
-    fAesEncryptNoLoad_4x512 = AesEncryptNoLoad_4x512Rounds12;
-    fAesEncryptNoLoad_2x512 = AesEncryptNoLoad_2x512Rounds12;
-    fAesEncryptNoLoad_1x512 = AesEncryptNoLoad_1x512Rounds12;
+    alcp_load_key_zmm_12rounds(pkey128, keys);
 
     // clang-format off
     __m512i reverse_mask_512 =
@@ -815,7 +776,7 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+            AesEncryptNoLoad_4x512Rounds12(b1, b2, b3, b4, keys);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
             alcp_xor_4values(a1, // inputs A
@@ -851,7 +812,7 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+            AesEncryptNoLoad_4x512Rounds12(b1, b2, b3, b4, keys);
 
             get_aggregated_karatsuba_components(Hsubkey_512_0,
                                                 Hsubkey_512_1,
@@ -907,7 +868,7 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+            AesEncryptNoLoad_4x512Rounds12(b1, b2, b3, b4, keys);
 
             get_aggregated_karatsuba_components(Hsubkey_512_0,
                                                 Hsubkey_512_1,
@@ -966,7 +927,7 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+            AesEncryptNoLoad_4x512Rounds12(b1, b2, b3, b4, keys);
 
             get_aggregated_karatsuba_components(Hsubkey_512_0,
                                                 Hsubkey_512_1,
@@ -1060,7 +1021,7 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+            AesEncryptNoLoad_4x512Rounds12(b1, b2, b3, b4, keys);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
             alcp_xor_4values(a1, // inputs A
@@ -1096,7 +1057,7 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+            AesEncryptNoLoad_4x512Rounds12(b1, b2, b3, b4, keys);
 
             // first iteration gmul
             get_aggregated_karatsuba_components(Hsubkey_512_0,
@@ -1194,7 +1155,7 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
         // re-arrange as per spec
         alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-        (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+        AesEncryptNoLoad_4x512Rounds12(b1, b2, b3, b4, keys);
 
         alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4, a1, a2, a3, a4);
 
@@ -1224,7 +1185,7 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
         b1 = alcp_shuffle_epi8(c1, swap_ctr);
         b2 = alcp_shuffle_epi8(c2, swap_ctr);
 
-        (*fAesEncryptNoLoad_2x512)(b1, b2, keys);
+        AesEncryptNoLoad_2x512Rounds12(b1, b2, keys);
 
         a1 = alcp_xor(b1, a1);
         a2 = alcp_xor(b2, a2);
@@ -1249,7 +1210,7 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
         // re-arrange as per spec
         b1 = alcp_shuffle_epi8(c1, swap_ctr);
 
-        (*fAesEncryptNoLoad_1x512)(b1, keys);
+        AesEncryptNoLoad_1x512Rounds12(b1, keys);
 
         a1 = alcp_xor(b1, a1);
 
@@ -1325,33 +1286,28 @@ gcmBlk_512_decRounds12(const __m512i* p_in_x,
     }
 
     // clear all keys stored in registers.
-    alcp_clear_keys_zmm(keys, nRounds);
+    alcp_clear_keys_zmm_12rounds(keys);
     return blocks;
 }
 
 Uint64
-gcmBlk_512_decRounds14(const __m512i* p_in_x,
-                       __m512i*       p_out_x,
-                       Uint64         blocks,
-                       const __m128i* pkey128,
-                       const Uint8*   pIv,
-                       int            nRounds,
-                       Uint8          factor,
-                       // gcm specific params
-                       __m128i* pgHash_128,
-                       __m128i  Hsubkey_128,
-                       __m128i  iv_128,
-                       __m128i  reverse_mask_128,
-                       int      remBytes,
-                       Uint64*  pHashSubkeyTable)
+gcmBlk_512_dec256(const __m512i* p_in_x,
+                  __m512i*       p_out_x,
+                  Uint64         blocks,
+                  const __m128i* pkey128,
+                  const Uint8*   pIv,
+                  int            nRounds,
+                  Uint8          factor,
+                  // gcm specific params
+                  __m128i* pgHash_128,
+                  __m128i  Hsubkey_128,
+                  __m128i  iv_128,
+                  __m128i  reverse_mask_128,
+                  int      remBytes,
+                  Uint64*  pHashSubkeyTable)
 {
     __m512i swap_ctr, c1;
     __m512i one_lo, one_x, two_x, three_x, four_x;
-
-    void (*fAesEncryptNoLoad_4x512)(
-        __m512i & a, __m512i & b, __m512i & c, __m512i & d, const sKeys keys);
-    void (*fAesEncryptNoLoad_2x512)(__m512i & a, __m512i & b, const sKeys keys);
-    void (*fAesEncryptNoLoad_1x512)(__m512i & a, const sKeys keys);
 
     const __m256i const_factor_256 =
         _mm256_set_epi64x(0xC200000000000000, 0x1, 0xC200000000000000, 0x1);
@@ -1363,11 +1319,7 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
     _mm_prefetch(cast_to(pkey128), _MM_HINT_T1);
 
     sKeys keys{};
-    alcp_load_key_zmm(pkey128, keys, nRounds);
-
-    fAesEncryptNoLoad_4x512 = AesEncryptNoLoad_4x512Rounds14;
-    fAesEncryptNoLoad_2x512 = AesEncryptNoLoad_2x512Rounds14;
-    fAesEncryptNoLoad_1x512 = AesEncryptNoLoad_1x512Rounds14;
+    alcp_load_key_zmm_14rounds(pkey128, keys);
 
     // clang-format off
     __m512i reverse_mask_512 =
@@ -1433,7 +1385,7 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+            AesEncryptNoLoad_4x512Rounds14(b1, b2, b3, b4, keys);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
             alcp_xor_4values(a1, // inputs A
@@ -1469,7 +1421,7 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+            AesEncryptNoLoad_4x512Rounds14(b1, b2, b3, b4, keys);
 
             get_aggregated_karatsuba_components(Hsubkey_512_0,
                                                 Hsubkey_512_1,
@@ -1525,7 +1477,7 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+            AesEncryptNoLoad_4x512Rounds14(b1, b2, b3, b4, keys);
 
             get_aggregated_karatsuba_components(Hsubkey_512_0,
                                                 Hsubkey_512_1,
@@ -1584,7 +1536,7 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+            AesEncryptNoLoad_4x512Rounds14(b1, b2, b3, b4, keys);
 
             get_aggregated_karatsuba_components(Hsubkey_512_0,
                                                 Hsubkey_512_1,
@@ -1678,7 +1630,7 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+            AesEncryptNoLoad_4x512Rounds14(b1, b2, b3, b4, keys);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
             alcp_xor_4values(a1, // inputs A
@@ -1714,7 +1666,7 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+            AesEncryptNoLoad_4x512Rounds14(b1, b2, b3, b4, keys);
 
             // first iteration gmul
             get_aggregated_karatsuba_components(Hsubkey_512_0,
@@ -1812,7 +1764,7 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
         // re-arrange as per spec
         alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-        (*fAesEncryptNoLoad_4x512)(b1, b2, b3, b4, keys);
+        AesEncryptNoLoad_4x512Rounds14(b1, b2, b3, b4, keys);
 
         alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4, a1, a2, a3, a4);
 
@@ -1842,7 +1794,7 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
         b1 = alcp_shuffle_epi8(c1, swap_ctr);
         b2 = alcp_shuffle_epi8(c2, swap_ctr);
 
-        (*fAesEncryptNoLoad_2x512)(b1, b2, keys);
+        AesEncryptNoLoad_2x512Rounds14(b1, b2, keys);
 
         a1 = alcp_xor(b1, a1);
         a2 = alcp_xor(b2, a2);
@@ -1867,7 +1819,7 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
         // re-arrange as per spec
         b1 = alcp_shuffle_epi8(c1, swap_ctr);
 
-        (*fAesEncryptNoLoad_1x512)(b1, keys);
+        AesEncryptNoLoad_1x512Rounds14(b1, keys);
 
         a1 = alcp_xor(b1, a1);
 
@@ -1943,7 +1895,7 @@ gcmBlk_512_decRounds14(const __m512i* p_in_x,
     }
 
     // clear all keys stored in registers.
-    alcp_clear_keys_zmm(keys, nRounds);
+    alcp_clear_keys_zmm_14rounds(keys);
     return blocks;
 }
 

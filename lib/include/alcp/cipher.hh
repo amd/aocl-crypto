@@ -53,12 +53,6 @@ namespace cipher {
                                     Uint64       len,
                                     const Uint8* pIv) const = 0;
 
-        /*
-        virtual alc_error_t encryptUpdate(const Uint8* pInput,
-        Uint64       inputLen,
-        Uint8*       pOutput,
-        Uint64*      pOutputLen) = 0;*/
-
       protected:
         virtual ~IEncrypter() {}
         IEncrypter() {}

@@ -30,6 +30,12 @@
 #include "alcp/cipher/aes_ccm.hh"
 #include "alcp/cipher/aes_cfb.hh"
 #include "alcp/cipher/aes_cmac_siv.hh"
+#include "alcp/cipher/aes_ctr.hh"
+#include "alcp/cipher/aes_gcm.hh"
+
+#include "alcp/utils/cpuid.hh"
+
+using alcp::utils::CpuId;
 
 #if 0
 #include "cipher/aes_ccm.hh"
@@ -41,6 +47,13 @@
 #include <type_traits> /* for is_same_v<> */
 
 namespace alcp::cipher {
+
+enum class CpuCipherFeatures
+{
+    eAesni,
+    eVaes256,
+    eVaes512,
+};
 
 using Context = alcp::cipher::Context;
 using namespace alcp::base;
@@ -147,23 +160,51 @@ __aes_dtor(const void* rCipher)
     return e;
 }
 
+CpuCipherFeatures
+getCpuCipherfeature()
+{
+    CpuCipherFeatures cpu_feature =
+        CpuCipherFeatures::eAesni; // default minimum arch feature
+                                   // considered to be present.
+
+    if (CpuId::cpuHasVaes()) {
+        cpu_feature = CpuCipherFeatures::eVaes256;
+
+        if (CpuId::cpuHasAvx512(utils::AVX512_F)
+            && CpuId::cpuHasAvx512(utils::AVX512_DQ)
+            && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
+            cpu_feature = CpuCipherFeatures::eVaes512;
+        }
+    }
+    return cpu_feature;
+}
+
+template<typename CIPHERMODE>
+void
+_build_aes_cipher(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
+{
+    auto algo    = new CIPHERMODE(pKey, keyLen);
+    ctx.m_cipher = static_cast<void*>(algo);
+
+    ctx.decrypt = __aes_wrapper<CIPHERMODE, false>;
+    ctx.encrypt = __aes_wrapper<CIPHERMODE, true>;
+
+    ctx.finish = __aes_dtor<CIPHERMODE>;
+}
+
 template<typename CIPHERMODE>
 static Status
 __build_aes(const alc_cipher_algo_info_t& aesInfo,
             const alc_key_info_t&         keyInfo,
             Context&                      ctx)
 {
+    Status sts = StatusOk();
+
     auto algo    = new CIPHERMODE(aesInfo, keyInfo);
     ctx.m_cipher = static_cast<void*>(algo);
     ctx.decrypt  = __aes_wrapper<CIPHERMODE, false>;
     ctx.encrypt  = __aes_wrapper<CIPHERMODE, true>;
-    if constexpr (std::is_same_v<CIPHERMODE, Gcm>) {
-        ctx.decryptUpdate = __aes_wrapperUpdate<Gcm, false>;
-        ctx.encryptUpdate = __aes_wrapperUpdate<Gcm, true>;
-        ctx.setAad        = __aes_wrapperSetAad<Gcm>;
-        ctx.setIv         = __aes_wrapperSetIv<Gcm>;
-        ctx.getTag        = __aes_wrapperGetTag<Gcm>;
-    } else if constexpr (std::is_same_v<CIPHERMODE, Ccm>) {
+    if constexpr (std::is_same_v<CIPHERMODE, Ccm>) {
         ctx.decryptUpdate = __aes_wrapperUpdate<Ccm, false>;
         ctx.encryptUpdate = __aes_wrapperUpdate<Ccm, true>;
         ctx.setAad        = __aes_wrapperSetAad<Ccm>;
@@ -178,9 +219,93 @@ __build_aes(const alc_cipher_algo_info_t& aesInfo,
     }
     ctx.finish = __aes_dtor<CIPHERMODE>;
 
-    return StatusOk();
+    return sts;
 }
 
+template<typename AEADMODE>
+void
+_build_aead(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
+{
+    auto algo         = new AEADMODE(pKey, keyLen);
+    ctx.m_cipher      = static_cast<void*>(algo);
+    ctx.decryptUpdate = __aes_wrapperUpdate<AEADMODE, false>;
+    ctx.encryptUpdate = __aes_wrapperUpdate<AEADMODE, true>;
+
+    ctx.setAad = __aes_wrapperSetAad<AEADMODE>;
+    ctx.setIv  = __aes_wrapperSetIv<AEADMODE>;
+    ctx.getTag = __aes_wrapperGetTag<AEADMODE>;
+
+    ctx.finish = __aes_dtor<AEADMODE>;
+}
+
+static Status
+__build_GcmAead(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
+{
+    Status sts = StatusOk();
+
+    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
+
+    if (cpu_feature == CpuCipherFeatures::eVaes512) {
+        /* FIXME: cipher request should fail invalid key length. At this
+         * level only valid key length is passed.*/
+        if (keyLen == ALC_KEY_LEN_128) {
+            _build_aead<vaes512::GcmAEAD128>(pKey, keyLen, ctx);
+        } else if (keyLen == ALC_KEY_LEN_192) {
+            _build_aead<vaes512::GcmAEAD192>(pKey, keyLen, ctx);
+        } else if (keyLen == ALC_KEY_LEN_256) {
+            _build_aead<vaes512::GcmAEAD256>(pKey, keyLen, ctx);
+        }
+    } else {
+
+        if (keyLen == ALC_KEY_LEN_128) {
+            _build_aead<aesni::GcmAEAD128>(pKey, keyLen, ctx);
+        } else if (keyLen == ALC_KEY_LEN_192) {
+            _build_aead<aesni::GcmAEAD192>(pKey, keyLen, ctx);
+        } else if (keyLen == ALC_KEY_LEN_256) {
+            _build_aead<aesni::GcmAEAD256>(pKey, keyLen, ctx);
+        }
+    }
+
+    return sts;
+}
+
+static Status
+__build_aesCtr(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
+{
+    Status sts = StatusOk();
+
+    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
+    if (cpu_feature == CpuCipherFeatures::eVaes512) {
+        if (keyLen == ALC_KEY_LEN_128) {
+            _build_aes_cipher<vaes512::Ctr128>(pKey, keyLen, ctx);
+        } else if (keyLen == ALC_KEY_LEN_192) {
+            _build_aes_cipher<vaes512::Ctr192>(pKey, keyLen, ctx);
+        } else if (keyLen == ALC_KEY_LEN_256) {
+            _build_aes_cipher<vaes512::Ctr256>(pKey, keyLen, ctx);
+        }
+    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
+        if (keyLen == ALC_KEY_LEN_128) {
+            _build_aes_cipher<vaes::Ctr128>(pKey, keyLen, ctx);
+        } else if (keyLen == ALC_KEY_LEN_192) {
+            _build_aes_cipher<vaes::Ctr192>(pKey, keyLen, ctx);
+        } else if (keyLen == ALC_KEY_LEN_256) {
+            _build_aes_cipher<vaes::Ctr256>(pKey, keyLen, ctx);
+        }
+    } else if (cpu_feature == CpuCipherFeatures::eAesni) {
+        if (keyLen == ALC_KEY_LEN_128) {
+            _build_aes_cipher<aesni::Ctr128>(pKey, keyLen, ctx);
+        } else if (keyLen == ALC_KEY_LEN_192) {
+            _build_aes_cipher<aesni::Ctr192>(pKey, keyLen, ctx);
+        } else if (keyLen == ALC_KEY_LEN_256) {
+            _build_aes_cipher<aesni::Ctr256>(pKey, keyLen, ctx);
+        }
+    }
+
+    return sts;
+}
+
+// FIXME: AesBuilder::Build  & CipherBuilder::Build to be modified similar to
+// CTR
 alc_error_t
 AesBuilder::Build(const alc_cipher_algo_info_t& aesInfo,
                   const alc_key_info_t&         keyInfo,
@@ -204,16 +329,6 @@ AesBuilder::Build(const alc_cipher_algo_info_t& aesInfo,
                 sts = __build_aes<Ofb>(aesInfo, keyInfo, ctx);
             break;
 
-        case ALC_AES_MODE_CTR:
-            if (Ctr::isSupported(aesInfo, keyInfo))
-                sts = __build_aes<Ctr>(aesInfo, keyInfo, ctx);
-            break;
-
-        case ALC_AES_MODE_GCM:
-            if (Gcm::isSupported(aesInfo, keyInfo))
-                sts = __build_aes<Gcm>(aesInfo, keyInfo, ctx);
-            break;
-
         case ALC_AES_MODE_XTS:
             if (Xts::isSupported(aesInfo, keyInfo))
                 sts = __build_aes<Xts>(aesInfo, keyInfo, ctx);
@@ -230,7 +345,6 @@ AesBuilder::Build(const alc_cipher_algo_info_t& aesInfo,
         default:
             break;
     }
-
     return (alc_error_t)sts.code();
 }
 
@@ -245,6 +359,52 @@ CipherBuilder::Build(const alc_cipher_info_t& cipherInfo, Context& ctx)
                 cipherInfo.ci_algo_info, cipherInfo.ci_key_info, ctx);
             break;
 
+        default:
+            err = ALC_ERROR_NOT_SUPPORTED;
+            break;
+    }
+
+    return err;
+}
+
+alc_error_t
+AesBuilder::Build(const alc_cipher_mode_t cipherMode,
+                  const Uint8*            pKey,
+                  const Uint32            keyLen,
+                  Context&                ctx)
+{
+    Status sts = StatusOk();
+
+    switch (cipherMode) {
+        case ALC_AES_MODE_CTR:
+            if (Ctr::isSupported(keyLen))
+                sts = __build_aesCtr(pKey, keyLen, ctx);
+            break;
+            // FIXME: GCM, XTS, CCM should be moved to AeadBuilder.
+        case ALC_AES_MODE_GCM:
+            if (Gcm::isSupported(keyLen))
+                sts = __build_GcmAead(pKey, keyLen, ctx);
+            break;
+
+        default:
+            break;
+    }
+    return (alc_error_t)sts.code();
+}
+
+alc_error_t
+CipherBuilder::Build(const alc_cipher_type_t cipherType,
+                     const alc_cipher_mode_t cipherMode,
+                     const Uint8*            pKey,
+                     const Uint32            keyLen,
+                     Context&                ctx)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    switch (cipherType) {
+        case ALC_CIPHER_TYPE_AES:
+            err = AesBuilder::Build(cipherMode, pKey, keyLen, ctx);
+            break;
         default:
             err = ALC_ERROR_NOT_SUPPORTED;
             break;

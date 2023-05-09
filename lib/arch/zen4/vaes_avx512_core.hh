@@ -96,63 +96,61 @@ namespace alcp::cipher { namespace vaes512 {
         int numRounds;
     };
 
-    static inline void alcp_load_key_zmm(const __m128i pkey128[],
-                                         sKeys&        keys,
-                                         const int     nRounds)
+    static inline void alcp_load_key_zmm_10rounds(const __m128i pkey128[],
+                                                  sKeys&        keys)
     {
-        keys.numRounds = nRounds;
-        if (nRounds == 10) {
-            keys.data.keys10.key_512_0 = _mm512_broadcast_i64x2(*pkey128);
-            keys.data.keys10.key_512_1 = _mm512_broadcast_i64x2(*(pkey128 + 1));
-            keys.data.keys10.key_512_2 = _mm512_broadcast_i64x2(*(pkey128 + 2));
-            keys.data.keys10.key_512_3 = _mm512_broadcast_i64x2(*(pkey128 + 3));
-            keys.data.keys10.key_512_4 = _mm512_broadcast_i64x2(*(pkey128 + 4));
-            keys.data.keys10.key_512_5 = _mm512_broadcast_i64x2(*(pkey128 + 5));
-            keys.data.keys10.key_512_6 = _mm512_broadcast_i64x2(*(pkey128 + 6));
-            keys.data.keys10.key_512_7 = _mm512_broadcast_i64x2(*(pkey128 + 7));
-            keys.data.keys10.key_512_8 = _mm512_broadcast_i64x2(*(pkey128 + 8));
-            keys.data.keys10.key_512_9 = _mm512_broadcast_i64x2(*(pkey128 + 9));
-            keys.data.keys10.key_512_10 =
-                _mm512_broadcast_i64x2(*(pkey128 + 10));
-        } else if (nRounds == 12) {
-            keys.data.keys12.key_512_0 = _mm512_broadcast_i64x2(*pkey128);
-            keys.data.keys12.key_512_1 = _mm512_broadcast_i64x2(*(pkey128 + 1));
-            keys.data.keys12.key_512_2 = _mm512_broadcast_i64x2(*(pkey128 + 2));
-            keys.data.keys12.key_512_3 = _mm512_broadcast_i64x2(*(pkey128 + 3));
-            keys.data.keys12.key_512_4 = _mm512_broadcast_i64x2(*(pkey128 + 4));
-            keys.data.keys12.key_512_5 = _mm512_broadcast_i64x2(*(pkey128 + 5));
-            keys.data.keys12.key_512_6 = _mm512_broadcast_i64x2(*(pkey128 + 6));
-            keys.data.keys12.key_512_7 = _mm512_broadcast_i64x2(*(pkey128 + 7));
-            keys.data.keys12.key_512_8 = _mm512_broadcast_i64x2(*(pkey128 + 8));
-            keys.data.keys12.key_512_9 = _mm512_broadcast_i64x2(*(pkey128 + 9));
-            keys.data.keys12.key_512_10 =
-                _mm512_broadcast_i64x2(*(pkey128 + 10));
-            keys.data.keys12.key_512_11 =
-                _mm512_broadcast_i64x2(*(pkey128 + 11));
-            keys.data.keys12.key_512_12 =
-                _mm512_broadcast_i64x2(*(pkey128 + 12));
-        } else {
-            keys.data.keys14.key_512_0 = _mm512_broadcast_i64x2(*pkey128);
-            keys.data.keys14.key_512_1 = _mm512_broadcast_i64x2(*(pkey128 + 1));
-            keys.data.keys14.key_512_2 = _mm512_broadcast_i64x2(*(pkey128 + 2));
-            keys.data.keys14.key_512_3 = _mm512_broadcast_i64x2(*(pkey128 + 3));
-            keys.data.keys14.key_512_4 = _mm512_broadcast_i64x2(*(pkey128 + 4));
-            keys.data.keys14.key_512_5 = _mm512_broadcast_i64x2(*(pkey128 + 5));
-            keys.data.keys14.key_512_6 = _mm512_broadcast_i64x2(*(pkey128 + 6));
-            keys.data.keys14.key_512_7 = _mm512_broadcast_i64x2(*(pkey128 + 7));
-            keys.data.keys14.key_512_8 = _mm512_broadcast_i64x2(*(pkey128 + 8));
-            keys.data.keys14.key_512_9 = _mm512_broadcast_i64x2(*(pkey128 + 9));
-            keys.data.keys14.key_512_10 =
-                _mm512_broadcast_i64x2(*(pkey128 + 10));
-            keys.data.keys14.key_512_11 =
-                _mm512_broadcast_i64x2(*(pkey128 + 11));
-            keys.data.keys14.key_512_12 =
-                _mm512_broadcast_i64x2(*(pkey128 + 12));
-            keys.data.keys14.key_512_13 =
-                _mm512_broadcast_i64x2(*(pkey128 + 13));
-            keys.data.keys14.key_512_14 =
-                _mm512_broadcast_i64x2(*(pkey128 + 14));
-        }
+
+        keys.data.keys10.key_512_0  = _mm512_broadcast_i64x2(*pkey128);
+        keys.data.keys10.key_512_1  = _mm512_broadcast_i64x2(*(pkey128 + 1));
+        keys.data.keys10.key_512_2  = _mm512_broadcast_i64x2(*(pkey128 + 2));
+        keys.data.keys10.key_512_3  = _mm512_broadcast_i64x2(*(pkey128 + 3));
+        keys.data.keys10.key_512_4  = _mm512_broadcast_i64x2(*(pkey128 + 4));
+        keys.data.keys10.key_512_5  = _mm512_broadcast_i64x2(*(pkey128 + 5));
+        keys.data.keys10.key_512_6  = _mm512_broadcast_i64x2(*(pkey128 + 6));
+        keys.data.keys10.key_512_7  = _mm512_broadcast_i64x2(*(pkey128 + 7));
+        keys.data.keys10.key_512_8  = _mm512_broadcast_i64x2(*(pkey128 + 8));
+        keys.data.keys10.key_512_9  = _mm512_broadcast_i64x2(*(pkey128 + 9));
+        keys.data.keys10.key_512_10 = _mm512_broadcast_i64x2(*(pkey128 + 10));
+    }
+
+    static inline void alcp_load_key_zmm_12rounds(const __m128i pkey128[],
+                                                  sKeys&        keys)
+    {
+
+        keys.data.keys12.key_512_0  = _mm512_broadcast_i64x2(*pkey128);
+        keys.data.keys12.key_512_1  = _mm512_broadcast_i64x2(*(pkey128 + 1));
+        keys.data.keys12.key_512_2  = _mm512_broadcast_i64x2(*(pkey128 + 2));
+        keys.data.keys12.key_512_3  = _mm512_broadcast_i64x2(*(pkey128 + 3));
+        keys.data.keys12.key_512_4  = _mm512_broadcast_i64x2(*(pkey128 + 4));
+        keys.data.keys12.key_512_5  = _mm512_broadcast_i64x2(*(pkey128 + 5));
+        keys.data.keys12.key_512_6  = _mm512_broadcast_i64x2(*(pkey128 + 6));
+        keys.data.keys12.key_512_7  = _mm512_broadcast_i64x2(*(pkey128 + 7));
+        keys.data.keys12.key_512_8  = _mm512_broadcast_i64x2(*(pkey128 + 8));
+        keys.data.keys12.key_512_9  = _mm512_broadcast_i64x2(*(pkey128 + 9));
+        keys.data.keys12.key_512_10 = _mm512_broadcast_i64x2(*(pkey128 + 10));
+        keys.data.keys12.key_512_11 = _mm512_broadcast_i64x2(*(pkey128 + 11));
+        keys.data.keys12.key_512_12 = _mm512_broadcast_i64x2(*(pkey128 + 12));
+    }
+
+    static inline void alcp_load_key_zmm_14rounds(const __m128i pkey128[],
+                                                  sKeys&        keys)
+    {
+
+        keys.data.keys14.key_512_0  = _mm512_broadcast_i64x2(*pkey128);
+        keys.data.keys14.key_512_1  = _mm512_broadcast_i64x2(*(pkey128 + 1));
+        keys.data.keys14.key_512_2  = _mm512_broadcast_i64x2(*(pkey128 + 2));
+        keys.data.keys14.key_512_3  = _mm512_broadcast_i64x2(*(pkey128 + 3));
+        keys.data.keys14.key_512_4  = _mm512_broadcast_i64x2(*(pkey128 + 4));
+        keys.data.keys14.key_512_5  = _mm512_broadcast_i64x2(*(pkey128 + 5));
+        keys.data.keys14.key_512_6  = _mm512_broadcast_i64x2(*(pkey128 + 6));
+        keys.data.keys14.key_512_7  = _mm512_broadcast_i64x2(*(pkey128 + 7));
+        keys.data.keys14.key_512_8  = _mm512_broadcast_i64x2(*(pkey128 + 8));
+        keys.data.keys14.key_512_9  = _mm512_broadcast_i64x2(*(pkey128 + 9));
+        keys.data.keys14.key_512_10 = _mm512_broadcast_i64x2(*(pkey128 + 10));
+        keys.data.keys14.key_512_11 = _mm512_broadcast_i64x2(*(pkey128 + 11));
+        keys.data.keys14.key_512_12 = _mm512_broadcast_i64x2(*(pkey128 + 12));
+        keys.data.keys14.key_512_13 = _mm512_broadcast_i64x2(*(pkey128 + 13));
+        keys.data.keys14.key_512_14 = _mm512_broadcast_i64x2(*(pkey128 + 14));
     }
 
     static inline void alcp_load_key_zmm(const __m128i pkey128[],
@@ -245,52 +243,55 @@ namespace alcp::cipher { namespace vaes512 {
         key_512_14 = _mm512_broadcast_i64x2(*(pkey128 + 14));
     }
 
-    static inline void alcp_clear_keys_zmm(sKeys& keys, const int nRounds)
+    static inline void alcp_clear_keys_zmm_10rounds(sKeys& keys)
     {
-        keys.numRounds = nRounds;
-        if (nRounds == 10) {
-            keys.data.keys10.key_512_0  = _mm512_setzero_si512();
-            keys.data.keys10.key_512_1  = _mm512_setzero_si512();
-            keys.data.keys10.key_512_2  = _mm512_setzero_si512();
-            keys.data.keys10.key_512_3  = _mm512_setzero_si512();
-            keys.data.keys10.key_512_4  = _mm512_setzero_si512();
-            keys.data.keys10.key_512_5  = _mm512_setzero_si512();
-            keys.data.keys10.key_512_6  = _mm512_setzero_si512();
-            keys.data.keys10.key_512_7  = _mm512_setzero_si512();
-            keys.data.keys10.key_512_8  = _mm512_setzero_si512();
-            keys.data.keys10.key_512_9  = _mm512_setzero_si512();
-            keys.data.keys10.key_512_10 = _mm512_setzero_si512();
-        } else if (nRounds == 12) {
-            keys.data.keys12.key_512_0  = _mm512_setzero_si512();
-            keys.data.keys12.key_512_1  = _mm512_setzero_si512();
-            keys.data.keys12.key_512_2  = _mm512_setzero_si512();
-            keys.data.keys12.key_512_3  = _mm512_setzero_si512();
-            keys.data.keys12.key_512_4  = _mm512_setzero_si512();
-            keys.data.keys12.key_512_5  = _mm512_setzero_si512();
-            keys.data.keys12.key_512_6  = _mm512_setzero_si512();
-            keys.data.keys12.key_512_7  = _mm512_setzero_si512();
-            keys.data.keys12.key_512_8  = _mm512_setzero_si512();
-            keys.data.keys12.key_512_9  = _mm512_setzero_si512();
-            keys.data.keys12.key_512_10 = _mm512_setzero_si512();
-            keys.data.keys12.key_512_11 = _mm512_setzero_si512();
-            keys.data.keys12.key_512_12 = _mm512_setzero_si512();
-        } else {
-            keys.data.keys14.key_512_0  = _mm512_setzero_si512();
-            keys.data.keys14.key_512_1  = _mm512_setzero_si512();
-            keys.data.keys14.key_512_2  = _mm512_setzero_si512();
-            keys.data.keys14.key_512_3  = _mm512_setzero_si512();
-            keys.data.keys14.key_512_4  = _mm512_setzero_si512();
-            keys.data.keys14.key_512_5  = _mm512_setzero_si512();
-            keys.data.keys14.key_512_6  = _mm512_setzero_si512();
-            keys.data.keys14.key_512_7  = _mm512_setzero_si512();
-            keys.data.keys14.key_512_8  = _mm512_setzero_si512();
-            keys.data.keys14.key_512_9  = _mm512_setzero_si512();
-            keys.data.keys14.key_512_10 = _mm512_setzero_si512();
-            keys.data.keys14.key_512_11 = _mm512_setzero_si512();
-            keys.data.keys14.key_512_12 = _mm512_setzero_si512();
-            keys.data.keys14.key_512_13 = _mm512_setzero_si512();
-            keys.data.keys14.key_512_14 = _mm512_setzero_si512();
-        }
+        keys.data.keys10.key_512_0  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_1  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_2  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_3  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_4  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_5  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_6  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_7  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_8  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_9  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_10 = _mm512_setzero_si512();
+    }
+
+    static inline void alcp_clear_keys_zmm_12rounds(sKeys& keys)
+    {
+        keys.data.keys10.key_512_0  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_1  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_2  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_3  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_4  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_5  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_6  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_7  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_8  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_9  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_10 = _mm512_setzero_si512();
+        keys.data.keys14.key_512_11 = _mm512_setzero_si512();
+        keys.data.keys14.key_512_12 = _mm512_setzero_si512();
+    }
+
+    static inline void alcp_clear_keys_zmm_14rounds(sKeys& keys)
+    {
+        keys.data.keys10.key_512_0  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_1  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_2  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_3  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_4  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_5  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_6  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_7  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_8  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_9  = _mm512_setzero_si512();
+        keys.data.keys10.key_512_10 = _mm512_setzero_si512();
+        keys.data.keys14.key_512_11 = _mm512_setzero_si512();
+        keys.data.keys14.key_512_12 = _mm512_setzero_si512();
+        keys.data.keys14.key_512_13 = _mm512_setzero_si512();
+        keys.data.keys14.key_512_14 = _mm512_setzero_si512();
     }
 
     /*

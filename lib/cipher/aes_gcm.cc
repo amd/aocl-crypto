@@ -27,6 +27,8 @@
  */
 
 #include "alcp/cipher/aes.hh"
+
+#include "alcp/cipher/aes_gcm.hh"
 #include "alcp/cipher/cipher_wrapper.hh"
 #include "alcp/utils/cpuid.hh"
 
@@ -37,226 +39,208 @@ using alcp::utils::CpuId;
 
 namespace alcp::cipher {
 
-alc_error_t
-Gcm::decrypt(const Uint8* pInput,
-             Uint8*       pOutput,
-             Uint64       len,
-             const Uint8* pIv) const
-{
-    return ALC_ERROR_NONE;
-}
+namespace vaes512 {
 
-alc_error_t
-Gcm::encrypt(const Uint8* pInput,
-             Uint8*       pOutput,
-             Uint64       len,
-             const Uint8* pIv) const
-{
-    return ALC_ERROR_NONE;
-}
-
-alc_error_t
-Gcm::cryptUpdate(const Uint8* pInput,
-                 Uint8*       pOutput,
-                 Uint64       len,
-                 const Uint8* pIv,
-                 bool         isEncrypt)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    if ((pInput != NULL) && (pOutput != NULL)) {
-        // CTR encrypt and Hash
-        m_len = len;
-
-        bool isAvx512Cap = false;
-        if (CpuId::cpuHasVaes()) {
-            if (CpuId::cpuHasAvx512(utils::AVX512_F)
-                && CpuId::cpuHasAvx512(utils::AVX512_DQ)
-                && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
-                isAvx512Cap = true;
-            }
-        }
-
-        if (isAvx512Cap) {
-            // Encrypt/Decrypt call
-            err = vaes512::CryptGcm(pInput,
-                                    pOutput,
-                                    m_len,
-                                    getEncryptKeys(),
-                                    getRounds(),
-                                    pIv,
-                                    &m_gHash_128,
-                                    m_hash_subKey_128,
-                                    m_iv_128,
-                                    m_reverse_mask_128,
-                                    isEncrypt,
-                                    m_hashSubkeyTable);
-        } else {
-            // Encrypt/Decrypt call
-            err = aesni::CryptGcm(pInput,
-                                  pOutput,
-                                  m_len,
-                                  getEncryptKeys(),
-                                  getRounds(),
-                                  pIv,
-                                  &m_gHash_128,
-                                  m_hash_subKey_128,
-                                  m_iv_128,
-                                  m_reverse_mask_128,
-                                  isEncrypt,
-                                  m_hashSubkeyTable);
-        }
-    } else {
-        err = ALC_ERROR_INVALID_ARG;
-    }
-    return err;
-}
-
-alc_error_t
-Gcm::decryptUpdate(const Uint8* pInput,
-                   Uint8*       pOutput,
-                   Uint64       len,
-                   const Uint8* pIv)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    err             = cryptUpdate(pInput, pOutput, len, pIv, false);
-    return err;
-}
-
-alc_error_t
-Gcm::encryptUpdate(const Uint8* pInput,
-                   Uint8*       pOutput,
-                   Uint64       len,
-                   const Uint8* pIv)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    err             = cryptUpdate(pInput, pOutput, len, pIv, true);
-    return err;
-}
-
-alc_error_t
-Gcm::setIv(Uint64 len, const Uint8* pIv)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    m_iv            = pIv;
-    // GCM init call
-    // len is used as ivlen
-    // In init call, we generate HashSubKey, partial tag data.
-
-    if (pIv == nullptr) {
-        // Len 0 is invalid so return error.
-        err = ALC_ERROR_INVALID_ARG;
+    alc_error_t GcmAEAD128::decryptUpdate(const Uint8* pInput,
+                                          Uint8*       pOutput,
+                                          Uint64       len,
+                                          const Uint8* pIv)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        m_len           = len;
+        err             = decryptGcm128(pInput,
+                            pOutput,
+                            len,
+                            m_enc_key,
+                            m_nrounds,
+                            pIv,
+                            &m_gHash_128,
+                            m_hash_subKey_128,
+                            m_iv_128,
+                            m_reverse_mask_128,
+                            m_hashSubkeyTable);
         return err;
     }
-    m_gHash_128         = _mm_setzero_si128();
-    m_hash_subKey_128   = _mm_setzero_si128();
-    m_len               = 0;
-    m_additionalDataLen = 0;
-    m_tagLen            = 0;
-    m_ivLen             = 12; // default 12 bytes or 96bits
 
-    m_ivLen = len;
-
-    bool isAvx512Cap = false;
-    if (CpuId::cpuHasVaes()) {
-        if (CpuId::cpuHasAvx512(utils::AVX512_F)
-            && CpuId::cpuHasAvx512(utils::AVX512_DQ)
-            && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
-            isAvx512Cap = true;
-        }
+    alc_error_t GcmAEAD192::decryptUpdate(const Uint8* pInput,
+                                          Uint8*       pOutput,
+                                          Uint64       len,
+                                          const Uint8* pIv)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        m_len           = len;
+        err             = decryptGcm192(pInput,
+                            pOutput,
+                            len,
+                            m_enc_key,
+                            m_nrounds,
+                            pIv,
+                            &m_gHash_128,
+                            m_hash_subKey_128,
+                            m_iv_128,
+                            m_reverse_mask_128,
+                            m_hashSubkeyTable);
+        return err;
     }
 
-    if (isAvx512Cap) {
-        err = vaes512::InitGcm(getEncryptKeys(),
-                               getRounds(),
+    alc_error_t GcmAEAD256::decryptUpdate(const Uint8* pInput,
+                                          Uint8*       pOutput,
+                                          Uint64       len,
+                                          const Uint8* pIv)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        m_len           = len;
+        err             = decryptGcm256(pInput,
+                            pOutput,
+                            len,
+                            m_enc_key,
+                            m_nrounds,
+                            pIv,
+                            &m_gHash_128,
+                            m_hash_subKey_128,
+                            m_iv_128,
+                            m_reverse_mask_128,
+                            m_hashSubkeyTable);
+        return err;
+    }
+
+    alc_error_t GcmAEAD128::encryptUpdate(const Uint8* pInput,
+                                          Uint8*       pOutput,
+                                          Uint64       len,
+                                          const Uint8* pIv)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        m_len           = len;
+        err             = encryptGcm128(pInput,
+                            pOutput,
+                            len,
+                            m_enc_key,
+                            m_nrounds,
+                            pIv,
+                            &m_gHash_128,
+                            m_hash_subKey_128,
+                            m_iv_128,
+                            m_reverse_mask_128,
+                            m_hashSubkeyTable);
+        return err;
+    }
+
+    alc_error_t GcmAEAD192::encryptUpdate(const Uint8* pInput,
+                                          Uint8*       pOutput,
+                                          Uint64       len,
+                                          const Uint8* pIv)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        m_len           = len;
+        err             = encryptGcm192(pInput,
+                            pOutput,
+                            len,
+                            m_enc_key,
+                            m_nrounds,
+                            pIv,
+                            &m_gHash_128,
+                            m_hash_subKey_128,
+                            m_iv_128,
+                            m_reverse_mask_128,
+                            m_hashSubkeyTable);
+        return err;
+    }
+
+    alc_error_t GcmAEAD256::encryptUpdate(const Uint8* pInput,
+                                          Uint8*       pOutput,
+                                          Uint64       len,
+                                          const Uint8* pIv)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        m_len           = len;
+        err             = encryptGcm256(pInput,
+                            pOutput,
+                            len,
+                            m_enc_key,
+                            m_nrounds,
+                            pIv,
+                            &m_gHash_128,
+                            m_hash_subKey_128,
+                            m_iv_128,
+                            m_reverse_mask_128,
+                            m_hashSubkeyTable);
+        return err;
+    }
+
+    alc_error_t GcmGhash::setIv(Uint64 len, const Uint8* pIv)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        m_iv            = pIv;
+        // GCM init call
+        // len is used as ivlen
+        // In init call, we generate HashSubKey, partial tag data.
+
+        if (pIv == nullptr) {
+            // Len 0 is invalid so return error.
+            err = ALC_ERROR_INVALID_ARG;
+            return err;
+        }
+        m_gHash_128         = _mm_setzero_si128();
+        m_hash_subKey_128   = _mm_setzero_si128();
+        m_len               = 0;
+        m_additionalDataLen = 0;
+        m_tagLen            = 0;
+        m_ivLen             = 12; // default 12 bytes or 96bits
+
+        m_ivLen = len;
+        err     = vaes512::InitGcm(m_enc_key,
+                               m_nrounds,
                                pIv,
                                m_ivLen,
                                &m_hash_subKey_128,
                                &m_tag_128,
                                &m_iv_128,
                                m_reverse_mask_128);
-    } else {
-        err = aesni::InitGcm(getEncryptKeys(),
-                             getRounds(),
-                             pIv,
-                             m_ivLen,
-                             &m_hash_subKey_128,
-                             &m_tag_128,
-                             &m_iv_128,
-                             m_reverse_mask_128);
-    }
-    return err;
-}
 
-alc_error_t
-Gcm::setAad(const Uint8* pInput, Uint64 len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    /* iv is not initialized means wrong order, we will return its a bad state
-     * to call setAad*/
-    if (m_iv == nullptr) {
-        err = ALC_ERROR_BAD_STATE;
         return err;
     }
-    // additional data processing, when input is additional data &
-    // output is NULL
-    const Uint8* pAdditionalData = pInput;
-    m_additionalDataLen          = len;
 
-    bool isAvx512Cap = false;
-    if (CpuId::cpuHasVaes()) {
-        if (CpuId::cpuHasAvx512(utils::AVX512_F)
-            && CpuId::cpuHasAvx512(utils::AVX512_DQ)
-            && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
-            isAvx512Cap = true;
+    alc_error_t GcmGhash::setAad(const Uint8* pInput, Uint64 len)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+
+        /* iv is not initialized means wrong order, we will return its a bad
+         * state to call setAad*/
+        if (m_iv == nullptr) {
+            err = ALC_ERROR_BAD_STATE;
+            return err;
         }
-    }
+        // additional data processing, when input is additional data &
+        // output is NULL
+        const Uint8* pAdditionalData = pInput;
+        m_additionalDataLen          = len;
 
-    if (isAvx512Cap) {
-        err = vaes512::processAdditionalDataGcm(pAdditionalData,
-                                                m_additionalDataLen,
-                                                &m_gHash_128,
-                                                m_hash_subKey_128,
-                                                m_reverse_mask_128);
-    } else {
-        err = aesni::processAdditionalDataGcm(pAdditionalData,
-                                              m_additionalDataLen,
-                                              &m_gHash_128,
-                                              m_hash_subKey_128,
-                                              m_reverse_mask_128);
-    }
-    return err;
-}
+        err = processAdditionalDataGcm(pAdditionalData,
+                                       m_additionalDataLen,
+                                       &m_gHash_128,
+                                       m_hash_subKey_128,
+                                       m_reverse_mask_128);
 
-alc_error_t
-Gcm::getTag(Uint8* pOutput, Uint64 len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    if (m_iv == nullptr) {
-        err = ALC_ERROR_BAD_STATE;
-        return err;
-    } else if (len > 16 || len == 0) {
-        err = ALC_ERROR_INVALID_SIZE;
         return err;
     }
-    // else if (len > 16 || len < 12) {
-    //     err = ALC_ERROR_INVALID_SIZE;
-    //     return err;
-    // }
 
-    bool   isAvx512Cap = false;
-    Uint8* ptag        = pOutput;
-
-    if (CpuId::cpuHasVaes()) {
-        if (CpuId::cpuHasAvx512(utils::AVX512_F)
-            && CpuId::cpuHasAvx512(utils::AVX512_DQ)
-            && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
-            isAvx512Cap = true;
+    alc_error_t GcmGhash::getTag(Uint8* pOutput, Uint64 len)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        if (m_iv == nullptr) {
+            err = ALC_ERROR_BAD_STATE;
+            return err;
+        } else if (len > 16 || len == 0) {
+            err = ALC_ERROR_INVALID_SIZE;
+            return err;
         }
-    }
+        // else if (len > 16 || len < 12) {
+        //     err = ALC_ERROR_INVALID_SIZE;
+        //     return err;
+        // }
 
-    if (isAvx512Cap) {
+        Uint8* ptag = pOutput;
+
         err = vaes512::GetTagGcm(len,
                                  m_len,
                                  m_additionalDataLen,
@@ -268,21 +252,238 @@ Gcm::getTag(Uint8* pOutput, Uint64 len)
         if (alcp_is_error(err)) {
             printf("Error Occured\n");
         }
-    } else {
-        err = aesni::GetTagGcm(len,
-                               m_len,
-                               m_additionalDataLen,
-                               &m_gHash_128,
-                               &m_tag_128,
-                               m_hash_subKey_128,
-                               m_reverse_mask_128,
-                               ptag);
+
+        return err;
+    }
+} // namespace vaes512
+
+namespace aesni {
+    alc_error_t GcmAEAD128::decryptUpdate(const Uint8* pInput,
+                                          Uint8*       pOutput,
+                                          Uint64       len,
+                                          const Uint8* pIv)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        m_len           = len;
+        // to be modified to decryptGcm128 function
+        err = CryptGcm(pInput,
+                       pOutput,
+                       len,
+                       m_enc_key,
+                       m_nrounds,
+                       pIv,
+                       &m_gHash_128,
+                       m_hash_subKey_128,
+                       m_iv_128,
+                       m_reverse_mask_128,
+                       false,
+                       m_hashSubkeyTable);
+        return err;
+    }
+
+    alc_error_t GcmAEAD192::decryptUpdate(const Uint8* pInput,
+                                          Uint8*       pOutput,
+                                          Uint64       len,
+                                          const Uint8* pIv)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        m_len           = len;
+        // to be modified to decryptGcm192 function
+        err = CryptGcm(pInput,
+                       pOutput,
+                       len,
+                       m_enc_key,
+                       m_nrounds,
+                       pIv,
+                       &m_gHash_128,
+                       m_hash_subKey_128,
+                       m_iv_128,
+                       m_reverse_mask_128,
+                       false,
+                       m_hashSubkeyTable);
+        return err;
+    }
+
+    alc_error_t GcmAEAD256::decryptUpdate(const Uint8* pInput,
+                                          Uint8*       pOutput,
+                                          Uint64       len,
+                                          const Uint8* pIv)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        m_len           = len;
+        // to be modified to decryptGcm256 function
+        err = CryptGcm(pInput,
+                       pOutput,
+                       len,
+                       m_enc_key,
+                       m_nrounds,
+                       pIv,
+                       &m_gHash_128,
+                       m_hash_subKey_128,
+                       m_iv_128,
+                       m_reverse_mask_128,
+                       false,
+                       m_hashSubkeyTable);
+        return err;
+    }
+
+    alc_error_t GcmAEAD128::encryptUpdate(const Uint8* pInput,
+                                          Uint8*       pOutput,
+                                          Uint64       len,
+                                          const Uint8* pIv)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        m_len           = len;
+        // to be modified to encryptGcm128 function
+        err = CryptGcm(pInput,
+                       pOutput,
+                       len,
+                       m_enc_key,
+                       m_nrounds,
+                       pIv,
+                       &m_gHash_128,
+                       m_hash_subKey_128,
+                       m_iv_128,
+                       m_reverse_mask_128,
+                       true,
+                       m_hashSubkeyTable);
+        return err;
+    }
+
+    alc_error_t GcmAEAD192::encryptUpdate(const Uint8* pInput,
+                                          Uint8*       pOutput,
+                                          Uint64       len,
+                                          const Uint8* pIv)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        m_len           = len;
+        // to be modified to encryptGcm192 function
+        err = CryptGcm(pInput,
+                       pOutput,
+                       len,
+                       m_enc_key,
+                       m_nrounds,
+                       pIv,
+                       &m_gHash_128,
+                       m_hash_subKey_128,
+                       m_iv_128,
+                       m_reverse_mask_128,
+                       false,
+                       m_hashSubkeyTable);
+        return err;
+    }
+
+    alc_error_t GcmAEAD256::encryptUpdate(const Uint8* pInput,
+                                          Uint8*       pOutput,
+                                          Uint64       len,
+                                          const Uint8* pIv)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        m_len           = len;
+        // to be modified to encryptGcm192 function
+        err = CryptGcm(pInput,
+                       pOutput,
+                       len,
+                       m_enc_key,
+                       m_nrounds,
+                       pIv,
+                       &m_gHash_128,
+                       m_hash_subKey_128,
+                       m_iv_128,
+                       m_reverse_mask_128,
+                       false,
+                       m_hashSubkeyTable);
+        return err;
+    }
+
+    alc_error_t GcmGhash::setIv(Uint64 len, const Uint8* pIv)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        m_iv            = pIv;
+        // GCM init call
+        // len is used as ivlen
+        // In init call, we generate HashSubKey, partial tag data.
+
+        if (pIv == nullptr) {
+            // Len 0 is invalid so return error.
+            err = ALC_ERROR_INVALID_ARG;
+            return err;
+        }
+        m_gHash_128         = _mm_setzero_si128();
+        m_hash_subKey_128   = _mm_setzero_si128();
+        m_len               = 0;
+        m_additionalDataLen = 0;
+        m_tagLen            = 0;
+        m_ivLen             = 12; // default 12 bytes or 96bits
+
+        m_ivLen = len;
+
+        err = InitGcm(getEncryptKeys(),
+                      getRounds(),
+                      pIv,
+                      m_ivLen,
+                      &m_hash_subKey_128,
+                      &m_tag_128,
+                      &m_iv_128,
+                      m_reverse_mask_128);
+
+        return err;
+    }
+
+    alc_error_t GcmGhash::setAad(const Uint8* pInput, Uint64 len)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+
+        /* iv is not initialized means wrong order, we will return its a bad
+         * state to call setAad*/
+        if (m_iv == nullptr) {
+            err = ALC_ERROR_BAD_STATE;
+            return err;
+        }
+        // additional data processing, when input is additional data &
+        // output is NULL
+        const Uint8* pAdditionalData = pInput;
+        m_additionalDataLen          = len;
+
+        err = processAdditionalDataGcm(pAdditionalData,
+                                       m_additionalDataLen,
+                                       &m_gHash_128,
+                                       m_hash_subKey_128,
+                                       m_reverse_mask_128);
+
+        return err;
+    }
+
+    alc_error_t GcmGhash::getTag(Uint8* pOutput, Uint64 len)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        if (m_iv == nullptr) {
+            err = ALC_ERROR_BAD_STATE;
+            return err;
+        } else if (len > 16 || len == 0) {
+            err = ALC_ERROR_INVALID_SIZE;
+            return err;
+        }
+        // else if (len > 16 || len < 12) {
+        //     err = ALC_ERROR_INVALID_SIZE;
+        //     return err;
+        // }
+
+        Uint8* ptag = pOutput;
+
+        err = GetTagGcm(len,
+                        m_len,
+                        m_additionalDataLen,
+                        &m_gHash_128,
+                        &m_tag_128,
+                        m_hash_subKey_128,
+                        m_reverse_mask_128,
+                        ptag);
         if (alcp_is_error(err)) {
             printf("Error Occured\n");
         }
+
+        return err;
     }
-
-    return err;
-}
-
+} // namespace aesni
 } // namespace alcp::cipher

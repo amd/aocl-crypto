@@ -111,6 +111,7 @@ class ALCP_API_EXPORT Rijndael
   protected:
     Rijndael();
     explicit Rijndael(const alc_key_info_t& rKeyInfo);
+    explicit Rijndael(const Uint8* pKey, const Uint32 keyLen);
     virtual ~Rijndael();
 
   private:

@@ -30,7 +30,8 @@
 #include "alcp/cipher.hh"
 #include "alcp/cipher/aes_build.hh"
 
-#include "alcp/cipher/aes.hh" // FIXME: change this to aes_gcm.hh when Gcm class is moved to aes_gcm.hh
+#include "alcp/cipher/aes.hh"
+#include "alcp/cipher/aes_gcm.hh"
 // FIXME: Remove all the includes from gtest_base related to capi
 #include "cipher/gtest_base_cipher.hh"
 #include "gtest/gtest.h"
@@ -56,7 +57,7 @@ typedef std::tuple<std::vector<Uint8>, // key
 typedef std::map<const std::string, param_tuple> known_answer_map_t;
 
 /* Example Encodings
-P_K128b_N7B_A0B_P0B_C0B_T4B 
+P_K128b_N7B_A0B_P0B_C0B_T4B
 P     -> Pass, F -> Fail
 K128b -> Key 128 bit
 N7B   -> Nonce 7 byte
@@ -171,13 +172,13 @@ known_answer_map_t KATDataset{
 };
 // clang-format on
 
-using namespace alcp::cipher;
+using namespace alcp::cipher::vaes512;
 class GCM_KAT
     : public testing::TestWithParam<std::pair<const std::string, param_tuple>>
 {
   public:
     // GCM_KAT() {}
-    Gcm*               pGcmObj = nullptr;
+    GcmAEAD128*        pGcmObj = nullptr;
     std::vector<Uint8> m_key, m_nonce, m_aad, m_plaintext, m_ciphertext, m_tag;
     std::string        m_test_name;
     alc_error_t        m_err;
@@ -203,8 +204,7 @@ class GCM_KAT
         m_test_name  = test_name;
 
         /* Initialization */
-        const alc_cipher_algo_info_t aesInfo = { ALC_AES_MODE_GCM,
-                                                 &(nonce.at(0)) };
+
         // clang-format off
         const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
                                          ALC_KEY_FMT_RAW,
@@ -215,7 +215,7 @@ class GCM_KAT
         // clang-format on
 
         // Setup GCM Object
-        pGcmObj = new Gcm(aesInfo, keyInfo);
+        pGcmObj = new GcmAEAD128(keyInfo.key, keyInfo.len);
 
         // Nonce
         m_err = pGcmObj->setIv(m_nonce.size(), &(m_nonce.at(0)));
@@ -235,31 +235,31 @@ class GCM_KAT
 using namespace alcp::cipher;
 TEST(GCM, Instantiation)
 {
-    Uint8 iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
+
     Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
                     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-    const alc_cipher_algo_info_t aesInfo = { ALC_AES_MODE_GCM, iv };
-    alc_key_info_t               keyInfo = {
+
+    alc_key_info_t keyInfo = {
         ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 128, key
     };
 
     keyInfo.len = 128;
     {
-        Gcm pGcmObj = Gcm(aesInfo, keyInfo);
+        GcmAEAD128 pGcmObj = GcmAEAD128(keyInfo.key, keyInfo.len);
         EXPECT_EQ(pGcmObj.getRounds(), 10U);
         EXPECT_EQ(pGcmObj.getNr(), 10U);
     }
     keyInfo.len = 192;
     {
-        Gcm pGcmObj = Gcm(aesInfo, keyInfo);
+        GcmAEAD192 pGcmObj = GcmAEAD192(keyInfo.key, keyInfo.len);
         EXPECT_EQ(pGcmObj.getRounds(), 12U);
         EXPECT_EQ(pGcmObj.getNr(), 12U);
     }
     keyInfo.len = 256;
     {
-        Gcm pGcmObj = Gcm(aesInfo, keyInfo);
+        GcmAEAD256 pGcmObj = GcmAEAD256(keyInfo.key, keyInfo.len);
         EXPECT_EQ(pGcmObj.getRounds(), 14U);
         EXPECT_EQ(pGcmObj.getNr(), 14U);
     }
@@ -379,11 +379,11 @@ TEST(GCM, InvalidTagLen)
     Uint8 pt[]  = "Hello World!";
     Uint8 tag[17];
     Uint8 cipherText[sizeof(pt)];
-    const alc_cipher_algo_info_t aesInfo = { ALC_AES_MODE_GCM, iv };
-    const alc_key_info_t         keyInfo = {
+
+    const alc_key_info_t keyInfo = {
         ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 128, key
     };
-    Gcm         pGcmObj = Gcm(aesInfo, keyInfo);
+    GcmAEAD128  pGcmObj = GcmAEAD128(keyInfo.key, keyInfo.len);
     alc_error_t err;
 
     pGcmObj.setIv(7, iv);

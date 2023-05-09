@@ -197,12 +197,27 @@ namespace aesni {
 } // namespace aesni
 
 namespace vaes512 {
-    Uint64 ctrProcessAvx512(const Uint8*   p_in_x,
-                            Uint8*         p_out_x,
-                            Uint64         blocks,
-                            const __m128i* pkey128,
-                            const Uint8*   pIv,
-                            int            nRounds);
+
+    Uint64 ctrProcessAvx512_128(const Uint8*   p_in_x,
+                                Uint8*         p_out_x,
+                                Uint64         blocks,
+                                const __m128i* pkey128,
+                                const Uint8*   pIv,
+                                int            nRounds);
+
+    Uint64 ctrProcessAvx512_192(const Uint8*   p_in_x,
+                                Uint8*         p_out_x,
+                                Uint64         blocks,
+                                const __m128i* pkey128,
+                                const Uint8*   pIv,
+                                int            nRounds);
+
+    Uint64 ctrProcessAvx512_256(const Uint8*   p_in_x,
+                                Uint8*         p_out_x,
+                                Uint64         blocks,
+                                const __m128i* pkey128,
+                                const Uint8*   pIv,
+                                int            nRounds);
 
     alc_error_t DecryptCbcAvx512(const Uint8* pCipherText,
                                  Uint8*       pPlainText,
@@ -234,18 +249,77 @@ namespace vaes512 {
                                  int          nRounds,
                                  const Uint8* pIv);
 
-    alc_error_t CryptGcm(const Uint8* pPlainText,
-                         Uint8*       pCipherText,
-                         Uint64       len,
-                         const Uint8* pKey,
-                         int          nRounds,
-                         const Uint8* pIv,
-                         __m128i*     pgHash,
-                         __m128i      Hsubkey_128,
-                         __m128i      iv_128,
-                         __m128i      reverse_mask_128,
-                         bool         isEncrypt,
-                         Uint64*      pHashSubkeyTable);
+    alc_error_t encryptGcm128(const Uint8* pPlainText,
+                              Uint8*       pCipherText,
+                              Uint64       len,
+                              const Uint8* pKey,
+                              int          nRounds,
+                              const Uint8* pIv,
+                              __m128i*     pgHash,
+                              __m128i      Hsubkey_128,
+                              __m128i      iv_128,
+                              __m128i      reverse_mask_128,
+                              Uint64*      pHashSubkeyTable);
+
+    alc_error_t encryptGcm192(const Uint8* pPlainText,
+                              Uint8*       pCipherText,
+                              Uint64       len,
+                              const Uint8* pKey,
+                              int          nRounds,
+                              const Uint8* pIv,
+                              __m128i*     pgHash,
+                              __m128i      Hsubkey_128,
+                              __m128i      iv_128,
+                              __m128i      reverse_mask_128,
+                              Uint64*      pHashSubkeyTable);
+
+    alc_error_t encryptGcm256(const Uint8* pPlainText,
+                              Uint8*       pCipherText,
+                              Uint64       len,
+                              const Uint8* pKey,
+                              int          nRounds,
+                              const Uint8* pIv,
+                              __m128i*     pgHash,
+                              __m128i      Hsubkey_128,
+                              __m128i      iv_128,
+                              __m128i      reverse_mask_128,
+                              Uint64*      pHashSubkeyTable);
+
+    alc_error_t decryptGcm128(const Uint8* pPlainText,
+                              Uint8*       pCipherText,
+                              Uint64       len,
+                              const Uint8* pKey,
+                              int          nRounds,
+                              const Uint8* pIv,
+                              __m128i*     pgHash,
+                              __m128i      Hsubkey_128,
+                              __m128i      iv_128,
+                              __m128i      reverse_mask_128,
+                              Uint64*      pHashSubkeyTable);
+
+    alc_error_t decryptGcm192(const Uint8* pPlainText,
+                              Uint8*       pCipherText,
+                              Uint64       len,
+                              const Uint8* pKey,
+                              int          nRounds,
+                              const Uint8* pIv,
+                              __m128i*     pgHash,
+                              __m128i      Hsubkey_128,
+                              __m128i      iv_128,
+                              __m128i      reverse_mask_128,
+                              Uint64*      pHashSubkeyTable);
+
+    alc_error_t decryptGcm256(const Uint8* pPlainText,
+                              Uint8*       pCipherText,
+                              Uint64       len,
+                              const Uint8* pKey,
+                              int          nRounds,
+                              const Uint8* pIv,
+                              __m128i*     pgHash,
+                              __m128i      Hsubkey_128,
+                              __m128i      iv_128,
+                              __m128i      reverse_mask_128,
+                              Uint64*      pHashSubkeyTable);
 
     alc_error_t processAdditionalDataGcm(const Uint8* pAdditionalData,
                                          Uint64       additionalDataLen,

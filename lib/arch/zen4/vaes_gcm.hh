@@ -95,100 +95,100 @@ void inline gcmCryptInit(__m512i* c1,
 }
 
 Uint64
-gcmBlk_512_decRounds10(const __m512i* p_in_x,
-                       __m512i*       p_out_x,
-                       Uint64         blocks,
-                       const __m128i* pkey128,
-                       const Uint8*   pIv,
-                       int            nRounds,
-                       Uint8          factor,
-                       // gcm specific params
-                       __m128i* pgHash_128,
-                       __m128i  Hsubkey_128,
-                       __m128i  iv_128,
-                       __m128i  reverse_mask_128,
-                       int      remBytes,
-                       Uint64*  pHashSubkeyTable);
+gcmBlk_512_dec128(const __m512i* p_in_x,
+                  __m512i*       p_out_x,
+                  Uint64         blocks,
+                  const __m128i* pkey128,
+                  const Uint8*   pIv,
+                  int            nRounds,
+                  Uint8          factor,
+                  // gcm specific params
+                  __m128i* pgHash_128,
+                  __m128i  Hsubkey_128,
+                  __m128i  iv_128,
+                  __m128i  reverse_mask_128,
+                  int      remBytes,
+                  Uint64*  pHashSubkeyTable);
 
 Uint64
-gcmBlk_512_decRounds12(const __m512i* p_in_x,
-                       __m512i*       p_out_x,
-                       Uint64         blocks,
-                       const __m128i* pkey128,
-                       const Uint8*   pIv,
-                       int            nRounds,
-                       Uint8          factor,
-                       // gcm specific params
-                       __m128i* pgHash_128,
-                       __m128i  Hsubkey_128,
-                       __m128i  iv_128,
-                       __m128i  reverse_mask_128,
-                       int      remBytes,
-                       Uint64*  pHashSubkeyTable);
+gcmBlk_512_dec192(const __m512i* p_in_x,
+                  __m512i*       p_out_x,
+                  Uint64         blocks,
+                  const __m128i* pkey128,
+                  const Uint8*   pIv,
+                  int            nRounds,
+                  Uint8          factor,
+                  // gcm specific params
+                  __m128i* pgHash_128,
+                  __m128i  Hsubkey_128,
+                  __m128i  iv_128,
+                  __m128i  reverse_mask_128,
+                  int      remBytes,
+                  Uint64*  pHashSubkeyTable);
 
 Uint64
-gcmBlk_512_decRounds14(const __m512i* p_in_x,
-                       __m512i*       p_out_x,
-                       Uint64         blocks,
-                       const __m128i* pkey128,
-                       const Uint8*   pIv,
-                       int            nRounds,
-                       Uint8          factor,
-                       // gcm specific params
-                       __m128i* pgHash_128,
-                       __m128i  Hsubkey_128,
-                       __m128i  iv_128,
-                       __m128i  reverse_mask_128,
-                       int      remBytes,
-                       Uint64*  pHashSubkeyTable);
+gcmBlk_512_dec256(const __m512i* p_in_x,
+                  __m512i*       p_out_x,
+                  Uint64         blocks,
+                  const __m128i* pkey128,
+                  const Uint8*   pIv,
+                  int            nRounds,
+                  Uint8          factor,
+                  // gcm specific params
+                  __m128i* pgHash_128,
+                  __m128i  Hsubkey_128,
+                  __m128i  iv_128,
+                  __m128i  reverse_mask_128,
+                  int      remBytes,
+                  Uint64*  pHashSubkeyTable);
 
 Uint64
-gcmBlk_512_encRounds10(const __m512i* p_in_x,
-                       __m512i*       p_out_x,
-                       Uint64         blocks,
-                       const __m128i* pkey128,
-                       const Uint8*   pIv,
-                       int            nRounds,
-                       Uint8          factor,
-                       // gcm specific params
-                       __m128i* pgHash_128,
-                       __m128i  Hsubkey_128,
-                       __m128i  iv_128,
-                       __m128i  reverse_mask_128,
-                       int      remBytes,
-                       Uint64*  pHashSubkeyTable);
+gcmBlk_512_enc128(const __m512i* p_in_x,
+                  __m512i*       p_out_x,
+                  Uint64         blocks,
+                  const __m128i* pkey128,
+                  const Uint8*   pIv,
+                  int            nRounds,
+                  Uint8          factor,
+                  // gcm specific params
+                  __m128i* pgHash_128,
+                  __m128i  Hsubkey_128,
+                  __m128i  iv_128,
+                  __m128i  reverse_mask_128,
+                  int      remBytes,
+                  Uint64*  pHashSubkeyTable);
 
 Uint64
-gcmBlk_512_encRounds12(const __m512i* p_in_x,
-                       __m512i*       p_out_x,
-                       Uint64         blocks,
-                       const __m128i* pkey128,
-                       const Uint8*   pIv,
-                       int            nRounds,
-                       Uint8          factor,
-                       // gcm specific params
-                       __m128i* pgHash_128,
-                       __m128i  Hsubkey_128,
-                       __m128i  iv_128,
-                       __m128i  reverse_mask_128,
-                       int      remBytes,
-                       Uint64*  pHashSubkeyTable);
+gcmBlk_512_enc192(const __m512i* p_in_x,
+                  __m512i*       p_out_x,
+                  Uint64         blocks,
+                  const __m128i* pkey128,
+                  const Uint8*   pIv,
+                  int            nRounds,
+                  Uint8          factor,
+                  // gcm specific params
+                  __m128i* pgHash_128,
+                  __m128i  Hsubkey_128,
+                  __m128i  iv_128,
+                  __m128i  reverse_mask_128,
+                  int      remBytes,
+                  Uint64*  pHashSubkeyTable);
 
 Uint64
-gcmBlk_512_encRounds14(const __m512i* p_in_x,
-                       __m512i*       p_out_x,
-                       Uint64         blocks,
-                       const __m128i* pkey128,
-                       const Uint8*   pIv,
-                       int            nRounds,
-                       Uint8          factor,
-                       // gcm specific params
-                       __m128i* pgHash_128,
-                       __m128i  Hsubkey_128,
-                       __m128i  iv_128,
-                       __m128i  reverse_mask_128,
-                       int      remBytes,
-                       Uint64*  pHashSubkeyTable);
+gcmBlk_512_enc256(const __m512i* p_in_x,
+                  __m512i*       p_out_x,
+                  Uint64         blocks,
+                  const __m128i* pkey128,
+                  const Uint8*   pIv,
+                  int            nRounds,
+                  Uint8          factor,
+                  // gcm specific params
+                  __m128i* pgHash_128,
+                  __m128i  Hsubkey_128,
+                  __m128i  iv_128,
+                  __m128i  reverse_mask_128,
+                  int      remBytes,
+                  Uint64*  pHashSubkeyTable);
 
 Uint64
 gcmBlk_512_enc(const __m512i* p_in_x,

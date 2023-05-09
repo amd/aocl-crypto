@@ -29,12 +29,441 @@
 
 #include "alcp/error.h"
 
+#include "alcp/cipher/aes.hh"
+
 #include "alcp/cipher/cipher_wrapper.hh"
 
 #include <cstdint>
 #include <immintrin.h>
+namespace alcp::cipher {
 
-namespace alcp::cipher { namespace aes {
+/*
+ * @brief        AES Encryption in Ctr(Counter mode)
+ * @note        TODO: Move this to a aes_Ctr.hh or other
+ */
+class ALCP_API_EXPORT Ctr : public Aes
+{
+  public:
+    const Uint8* m_enc_key = {};
+    const Uint8* m_dec_key = {};
+    Uint32       m_nrounds = 0;
+
+    Ctr() { Aes::setMode(ALC_AES_MODE_CTR); };
+
+    explicit Ctr(const Uint8* pKey, const Uint32 keyLen)
+        : Aes(pKey, keyLen)
+    {
+        m_enc_key = getEncryptKeys();
+        m_dec_key = getDecryptKeys();
+        m_nrounds = getRounds();
+    }
+
+    ~Ctr() {}
+
+  public:
+    static bool isSupported(const Uint32 keyLen)
+    {
+        if ((keyLen == ALC_KEY_LEN_128) || (keyLen == ALC_KEY_LEN_192)
+            || (keyLen == ALC_KEY_LEN_256)) {
+            return true;
+        }
+        return false;
+    }
+
+    virtual bool isSupported(const alc_cipher_info_t& cipherInfo)
+    {
+        // std::cout << "ctr B" << std::endl;
+        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
+            auto aip = &cipherInfo.ci_algo_info;
+            if (aip->ai_mode == ALC_AES_MODE_CTR) {
+                return true;
+            }
+        }
+        return false;
+    }
+};
+
+namespace vaes512 {
+    class ALCP_API_EXPORT Ctr128 : public Ctr
+    {
+      public:
+        Ctr128(){};
+
+        explicit Ctr128(const Uint8* pKey, const Uint32 keyLen)
+            : Ctr(pKey, keyLen)
+        {}
+
+        ~Ctr128(){};
+
+      public:
+        /**
+         * @brief   CTR Encrypt Operation
+         * @note
+         * @param   pPlainText      Pointer to output buffer
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t encrypt(const Uint8* pPlainText,
+                                    Uint8*       pCipherText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const final;
+
+        /**
+         * @brief   CTR Decrypt Operation
+         * @note
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   pPlainText      Pointer to output buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                    Uint8*       pPlainText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const final;
+    };
+
+    class ALCP_API_EXPORT Ctr192 : public Ctr
+    {
+      public:
+        Ctr192(){};
+
+        explicit Ctr192(const Uint8* pKey, const Uint32 keyLen)
+            : Ctr(pKey, keyLen)
+        {}
+
+        ~Ctr192(){};
+
+      public:
+        /**
+         * @brief   CTR Encrypt Operation
+         * @note
+         * @param   pPlainText      Pointer to output buffer
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t encrypt(const Uint8* pPlainText,
+                                    Uint8*       pCipherText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const final;
+
+        /**
+         * @brief   CTR Decrypt Operation
+         * @note
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   pPlainText      Pointer to output buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                    Uint8*       pPlainText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const final;
+    };
+
+    class ALCP_API_EXPORT Ctr256 : public Ctr
+    {
+      public:
+        Ctr256(){};
+
+        explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
+            : Ctr(pKey, keyLen)
+        {}
+
+        ~Ctr256(){};
+
+      public:
+        /**
+         * @brief   CTR Encrypt Operation
+         * @note
+         * @param   pPlainText      Pointer to output buffer
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t encrypt(const Uint8* pPlainText,
+                                    Uint8*       pCipherText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const final;
+
+        /**
+         * @brief   CTR Decrypt Operation
+         * @note
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   pPlainText      Pointer to output buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                    Uint8*       pPlainText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const final;
+    };
+
+} // namespace vaes512
+
+// duplicate of vaes512 namespace, to be removed
+namespace vaes {
+    class ALCP_API_EXPORT Ctr128 : public Ctr
+    {
+      public:
+        Ctr128(){};
+
+        explicit Ctr128(const Uint8* pKey, const Uint32 keyLen)
+            : Ctr(pKey, keyLen)
+        {}
+
+        ~Ctr128(){};
+
+      public:
+        /**
+         * @brief   CTR Encrypt Operation
+         * @note
+         * @param   pPlainText      Pointer to output buffer
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t encrypt(const Uint8* pPlainText,
+                                    Uint8*       pCipherText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const final;
+
+        /**
+         * @brief   CTR Decrypt Operation
+         * @note
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   pPlainText      Pointer to output buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                    Uint8*       pPlainText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const final;
+    };
+
+    class ALCP_API_EXPORT Ctr192 : public Ctr
+    {
+      public:
+        Ctr192(){};
+
+        explicit Ctr192(const Uint8* pKey, const Uint32 keyLen)
+            : Ctr(pKey, keyLen)
+        {}
+
+        ~Ctr192(){};
+
+      public:
+        /**
+         * @brief   CTR Encrypt Operation
+         * @note
+         * @param   pPlainText      Pointer to output buffer
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t encrypt(const Uint8* pPlainText,
+                                    Uint8*       pCipherText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const final;
+
+        /**
+         * @brief   CTR Decrypt Operation
+         * @note
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   pPlainText      Pointer to output buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                    Uint8*       pPlainText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const final;
+    };
+
+    class ALCP_API_EXPORT Ctr256 : public Ctr
+    {
+      public:
+        Ctr256(){};
+
+        explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
+            : Ctr(pKey, keyLen)
+        {}
+
+        ~Ctr256(){};
+
+      public:
+        /**
+         * @brief   CTR Encrypt Operation
+         * @note
+         * @param   pPlainText      Pointer to output buffer
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t encrypt(const Uint8* pPlainText,
+                                    Uint8*       pCipherText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const final;
+
+        /**
+         * @brief   CTR Decrypt Operation
+         * @note
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   pPlainText      Pointer to output buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                    Uint8*       pPlainText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const final;
+    };
+
+} // namespace vaes
+
+// duplicate of vaes512 namespace, to be removed
+namespace aesni {
+    class ALCP_API_EXPORT Ctr128 : public Ctr
+    {
+      public:
+        Ctr128(){};
+
+        explicit Ctr128(const Uint8* pKey, const Uint32 keyLen)
+            : Ctr(pKey, keyLen)
+        {}
+
+        ~Ctr128(){};
+
+      public:
+        /**
+         * @brief   CTR Encrypt Operation
+         * @note
+         * @param   pPlainText      Pointer to output buffer
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t encrypt(const Uint8* pPlainText,
+                                    Uint8*       pCipherText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const final;
+
+        /**
+         * @brief   CTR Decrypt Operation
+         * @note
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   pPlainText      Pointer to output buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                    Uint8*       pPlainText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const final;
+    };
+
+    class ALCP_API_EXPORT Ctr192 : public Ctr
+    {
+      public:
+        Ctr192(){};
+
+        explicit Ctr192(const Uint8* pKey, const Uint32 keyLen)
+            : Ctr(pKey, keyLen)
+        {}
+
+        ~Ctr192(){};
+
+      public:
+        /**
+         * @brief   CTR Encrypt Operation
+         * @note
+         * @param   pPlainText      Pointer to output buffer
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t encrypt(const Uint8* pPlainText,
+                                    Uint8*       pCipherText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const final;
+
+        /**
+         * @brief   CTR Decrypt Operation
+         * @note
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   pPlainText      Pointer to output buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                    Uint8*       pPlainText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const final;
+    };
+
+    class ALCP_API_EXPORT Ctr256 : public Ctr
+    {
+      public:
+        Ctr256(){};
+
+        explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
+            : Ctr(pKey, keyLen)
+        {}
+
+        ~Ctr256(){};
+
+      public:
+        /**
+         * @brief   CTR Encrypt Operation
+         * @note
+         * @param   pPlainText      Pointer to output buffer
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t encrypt(const Uint8* pPlainText,
+                                    Uint8*       pCipherText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const final;
+
+        /**
+         * @brief   CTR Decrypt Operation
+         * @note
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   pPlainText      Pointer to output buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                    Uint8*       pPlainText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const final;
+    };
+
+} // namespace aesni
+
+namespace aes {
 
     using namespace aesni;
     using namespace vaes;
@@ -157,4 +586,5 @@ namespace alcp::cipher { namespace aes {
         return blocks;
     }
 
-}} // namespace alcp::cipher::aes
+} // namespace aes
+} // namespace alcp::cipher

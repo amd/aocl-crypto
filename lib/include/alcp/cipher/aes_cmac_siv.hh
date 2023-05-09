@@ -30,6 +30,8 @@
 
 #include "alcp/base.hh"
 #include "alcp/cipher/aes.hh"
+#include "alcp/cipher/aes_ctr.hh"
+
 #include "alcp/cipher/aes_cmac_siv_arch.hh"
 
 #include "alcp/mac/cmac.hh"
@@ -162,8 +164,9 @@ class CmacSiv::Impl
     Uint64       m_keyLength                   = {};
     Uint64       m_padLen                      = {};
     alignas(16) Uint8 m_cmacTemp[SIZE_CMAC]    = {};
-    Cmac m_cmac;
-    Ctr  m_ctr;
+    Cmac            m_cmac;
+    vaes512::Ctr128 m_ctr; // FIXME: based on the key size appropriate Ctr class
+                           // to be choosen.
 
   public:
     Impl(){};
