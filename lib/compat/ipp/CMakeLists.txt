@@ -24,7 +24,7 @@
  # POSSIBILITY OF SUCH DAMAGE.
  
 # Added aocl-compat as a seperate liberary
-FILE(GLOB IPP_SRCS "*.cc" "aes/*.cc" "sha2/*.cc" "common/*.cc" )
+FILE(GLOB IPP_SRCS "*.cc" "aes/*.cc" "sha2/*.cc" "common/*.cc" "ec/*.cc")
 ADD_LIBRARY(ipp-compat 
 	${IPP_SRCS}
 	)
