@@ -117,10 +117,10 @@ namespace alcp::ec { namespace avx2 {
                             abs_j == z + 1);
         }
 
-        negative_point_x_128[0] = x_128[0];
-        negative_point_x_128[1] = x_128[1];
-        negative_point_y_128[0] = y_128[0];
-        negative_point_y_128[1] = y_128[1];
+        negative_point_x_128[0] = y_128[0];
+        negative_point_x_128[1] = y_128[1];
+        negative_point_y_128[0] = x_128[0];
+        negative_point_y_128[1] = x_128[1];
 
         Uint64 temp[4] = { 0 };
         SubX25519((Uint64*)&negative_point_z_128, temp, (Uint64*)&z_128);
