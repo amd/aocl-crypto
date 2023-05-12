@@ -418,12 +418,29 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
 
     if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
         if(keylen==128){
-            kinfo_siv_ctr_key->key = key;
+            kinfo_siv_ctr_key->key = key+16;
             kinfo_siv_ctr_key->len = 128;
             cinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
             // For SIV, Authentication Key assumed to be same length as Encryption Key
-            cinfo->ci_key_info.key = key+ 16;
+            cinfo->ci_key_info.key = key;
             cinfo->ci_key_info.len  = 128;
+        }
+        else if(keylen==192){
+            kinfo_siv_ctr_key->key = key+24;
+            kinfo_siv_ctr_key->len = 192;
+            cinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
+            // For SIV, Authentication Key assumed to be same length as Encryption Key
+            cinfo->ci_key_info.key = key;
+            cinfo->ci_key_info.len  = 192;
+        }
+        else if(keylen==256){
+            kinfo_siv_ctr_key->key = key+32;
+            kinfo_siv_ctr_key->len = 256;
+            cinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
+            // For SIV, Authentication Key assumed to be same length as Encryption Key
+            cinfo->ci_key_info.key = key;
+            cinfo->ci_key_info.len  = 256;
+
         }
 
      }
@@ -609,13 +626,30 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
 
     if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
         if(keylen==128){
-            kinfo_siv_ctr_key->key = key;
+            kinfo_siv_ctr_key->key = key+16;
             kinfo_siv_ctr_key->len = 128;
             cinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
             // For SIV, Authentication Key assumed to be same length as Encryption Key
-            cinfo->ci_key_info.key = key+ 16;
+            cinfo->ci_key_info.key = key;
             cinfo->ci_key_info.len  = 128;
+        } else if(keylen==192){
+            kinfo_siv_ctr_key->key = key+24;
+            kinfo_siv_ctr_key->len = 192;
+            cinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
+            // For SIV, Authentication Key assumed to be same length as Encryption Key
+            cinfo->ci_key_info.key = key;
+            cinfo->ci_key_info.len  = 192;
         }
+        else if(keylen==256){
+            kinfo_siv_ctr_key->key = key+32;
+            kinfo_siv_ctr_key->len = 256;
+            cinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
+            // For SIV, Authentication Key assumed to be same length as Encryption Key
+            cinfo->ci_key_info.key = key;
+            cinfo->ci_key_info.len  = 256;
+
+        }
+
 
      }
 
@@ -733,7 +767,7 @@ ALCP_prov_cipher_update(void*                vctx,
             if (out == NULL) {
                 err = alcp_cipher_set_aad(&(cctx->handle), in, inl);
             } else {
-                uint8_t fake_iv[100];
+                uint8_t fake_iv[100] = {0};
                 err = alcp_cipher_encrypt(
                     &(cctx->handle),
                     in,
@@ -884,8 +918,8 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_256_CCM, CIPHER_DEF_PROP, ccm_functions_256 },
     // SIV
     { ALCP_PROV_NAMES_AES_128_SIV, CIPHER_DEF_PROP, siv_functions_128 },
-    // { ALCP_PROV_NAMES_AES_192_SIV, CIPHER_DEF_PROP, siv_functions_192 },
-    // { ALCP_PROV_NAMES_AES_256_SIV, CIPHER_DEF_PROP, siv_functions_256 },
+    { ALCP_PROV_NAMES_AES_192_SIV, CIPHER_DEF_PROP, siv_functions_192 },
+    { ALCP_PROV_NAMES_AES_256_SIV, CIPHER_DEF_PROP, siv_functions_256 },
     // Terminate OpenSSL Algorithm list with Null Pointer.
     { NULL, NULL, NULL },
 };
