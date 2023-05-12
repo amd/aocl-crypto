@@ -122,6 +122,22 @@ class ALCP_API_EXPORT CpuId
      */
     static bool cpuHasRdRand();
     /**
+     * @brief Returns true if ADX is supported
+     * by CPU
+     *
+     * @return true
+     * @return false
+     */
+    static bool cpuHasAdx();
+    /**
+     * @brief Returns true if BMI2 is supported
+     * by CPU
+     *
+     * @return true
+     * @return false
+     */
+    static bool cpuHasBmi2();
+    /**
      * @brief Returns true if RDSEED, secure RNG seed generator is supported by
      * CPU
      *

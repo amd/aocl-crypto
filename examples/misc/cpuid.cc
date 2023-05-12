@@ -89,6 +89,20 @@ checkRandSupport()
 }
 
 void
+checkAdxSupport()
+{
+    std::cout << "======ADX FLAGS=======" << std::endl;
+    printBoolMsg("ADX", CpuId::cpuHasAdx());
+}
+
+void
+checkBmi2Support()
+{
+    std::cout << "======BMI FLAGS=======" << std::endl;
+    printBoolMsg("BMI2", CpuId::cpuHasBmi2());
+}
+
+void
 checkAMDSupport()
 {
     std::cout << "======AMD FLAGS=======" << std::endl;
@@ -107,6 +121,8 @@ main()
     checkRandSupport();
     checkAVX2Support();
     checkAVX512Support();
+    checkAdxSupport();
+    checkBmi2Support();
 
     return 0;
 }
