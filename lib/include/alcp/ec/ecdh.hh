@@ -81,6 +81,15 @@ class X25519 : public Ec
     ~X25519();
 
     /**
+     * @brief Function sets the privateKey
+     *
+     * @param  pPrivKey    pointer to Input privateKey
+     *
+     * @return Status Error code
+     */
+    ALCP_API_EXPORT Status setPrivateKey(const Uint8* pPrivKey) override;
+
+    /**
      * @brief Function generates x25519 public key using input privateKey
      * generated public key is shared with the peer.
      *
