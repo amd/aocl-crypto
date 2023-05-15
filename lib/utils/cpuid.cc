@@ -157,6 +157,22 @@ class CpuId::Impl
      * @return false
      */
     bool cpuIsZen4();
+
+    /**
+     * @brief Returns true if currently executing cpu has adcx/adox
+     *
+     * @return true
+     * @return false
+     */
+    bool cpuHasAdx();
+
+    /**
+     * @brief Returns true if currently executing cpu has bmi2
+     *
+     * @return true
+     * @return false
+     */
+    bool cpuHasBmi2();
 };
 
 bool
@@ -307,6 +323,28 @@ CpuId::Impl::cpuIsZen4()
 }
 
 bool
+CpuId::Impl::cpuHasAdx()
+{
+#ifdef ALCP_ENABLE_AOCL_CPUID
+    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_ADX);
+#else
+    static bool state = false;
+#endif
+    return state;
+}
+
+bool
+CpuId::Impl::cpuHasBmi2()
+{
+#ifdef ALCP_ENABLE_AOCL_CPUID
+    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_BMI2);
+#else
+    static bool state = false;
+#endif
+    return state;
+}
+
+bool
 CpuId::cpuHasAesni()
 {
     return pImpl.get()->cpuHasAesni();
@@ -388,6 +426,18 @@ bool
 CpuId::cpuIsZen4()
 {
     return pImpl.get()->cpuIsZen4();
+}
+
+bool
+CpuId::cpuHasAdx()
+{
+    return pImpl.get()->cpuHasAdx();
+}
+
+bool
+CpuId::cpuHasBmi2()
+{
+    return pImpl.get()->cpuHasBmi2();
 }
 
 } // namespace alcp::utils
