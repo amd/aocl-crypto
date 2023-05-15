@@ -174,21 +174,6 @@ class ALCP_API_EXPORT CpuId
      */
     static bool cpuIsZen4();
 
-    /**
-     * @brief Returns true if currently executing cpu has adx
-     *
-     * @return true
-     * @return false
-     */
-    static bool cpuHasAdx();
-    /**
-     * @brief Returns true if currently executing cpu is bmi2
-     *
-     * @return true
-     * @return false
-     */
-    static bool cpuHasBmi2();
-
   private:
     class Impl;
 
