@@ -82,10 +82,15 @@ x25519_demo(alc_ec_handle_t* ps_ec_handle_peer1,
     alc_error_t err;
 
     /* Peer 1 */
-    Uint8        publicKeyData1[SIZE_KEY_X25519];
-    const Uint8* pPrivKey_input_data1 = peer1_privk_data;
-    err                               = alcp_ec_get_publickey(
-        ps_ec_handle_peer1, publicKeyData1, peer1_privk_data);
+    Uint8 publicKeyData1[SIZE_KEY_X25519];
+
+    err = alcp_ec_set_privatekey(ps_ec_handle_peer1, peer1_privk_data);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n peer1 private key set failed");
+        return err;
+    }
+
+    alcp_ec_get_publickey(ps_ec_handle_peer1, publicKeyData1, peer1_privk_data);
     if (err != ALC_ERROR_NONE) {
         printf("\n peer1 publickey generation failed");
         return err;
@@ -95,6 +100,13 @@ x25519_demo(alc_ec_handle_t* ps_ec_handle_peer1,
 
     /* Peer 2 */
     Uint8 publicKeyData2[SIZE_KEY_X25519];
+
+    err = alcp_ec_set_privatekey(ps_ec_handle_peer2, peer2_privk_data);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n peer2 private key set failed");
+        return err;
+    }
+
     err = alcp_ec_get_publickey(
         ps_ec_handle_peer2, publicKeyData2, peer2_privk_data);
     if (err != ALC_ERROR_NONE) {

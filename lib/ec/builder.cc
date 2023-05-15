@@ -38,6 +38,14 @@ using Context = alcp::ec::Context;
 
 template<typename ECTYPE>
 static Status
+__ec_setPrivateKey_wrapper(void* pEc, const Uint8* pPrivKey)
+{
+    auto ap = static_cast<ECTYPE*>(pEc);
+    return ap->setPrivateKey(pPrivKey);
+}
+
+template<typename ECTYPE>
+static Status
 __ec_getPublicKey_wrapper(void* pEc, Uint8* pPublicKey, const Uint8* pPrivKey)
 {
     auto ap = static_cast<ECTYPE*>(pEc);
@@ -80,13 +88,15 @@ class x25519Builder
   public:
     static Status Build(const alc_ec_info_t& rEcInfo, Context& rCtx)
     {
-        auto addr         = reinterpret_cast<Uint8*>(&rCtx) + sizeof(rCtx);
-        auto algo         = new (addr) X25519();
-        rCtx.m_ec         = static_cast<void*>(algo);
-        rCtx.getPublicKey = __ec_getPublicKey_wrapper<X25519>;
-        rCtx.getSecretKey = __ec_getSecretKey_wrapper<X25519>;
-        rCtx.finish       = __ec_dtor<X25519>;
-        rCtx.reset        = __ec_reset_wrapper<X25519>;
+        auto addr = reinterpret_cast<Uint8*>(&rCtx) + sizeof(rCtx);
+        auto algo = new (addr) X25519();
+        rCtx.m_ec = static_cast<void*>(algo);
+
+        rCtx.setPrivateKey = __ec_setPrivateKey_wrapper<X25519>;
+        rCtx.getPublicKey  = __ec_getPublicKey_wrapper<X25519>;
+        rCtx.getSecretKey  = __ec_getSecretKey_wrapper<X25519>;
+        rCtx.finish        = __ec_dtor<X25519>;
+        rCtx.reset         = __ec_reset_wrapper<X25519>;
         return StatusOk();
     }
 };

@@ -108,6 +108,8 @@ class IEc
     IEc() {}
 
   public:
+    virtual Status setPrivateKey(const Uint8* pPrivKey) = 0;
+
     virtual Status generatePublicKey(Uint8*       pPublicKey,
                                      const Uint8* pPrivKey) = 0;
 

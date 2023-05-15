@@ -47,6 +47,14 @@ X25519::~X25519()
 }
 
 Status
+X25519::setPrivateKey(const Uint8* pPrivKey)
+{
+    // store private key for secret key generation
+    alcp::utils::CopyBytes(m_PrivKey, pPrivKey, KeySize);
+    return StatusOk();
+}
+
+Status
 X25519::generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
 {
     // store private key for secret key generation
@@ -108,9 +116,6 @@ X25519::computeSecretKey(Uint8*       pSecretKey,
                          const Uint8* pPublicKey,
                          Uint64*      pKeyLength)
 {
-
-    // FIXME: validation should be done to check if public key is a valid point
-    // the curve.
     Status status = validatePublicKey(pPublicKey, KeySize);
     if (!status.ok()) {
         return status;
@@ -134,8 +139,6 @@ X25519::computeSecretKey(Uint8*       pSecretKey,
 Status
 X25519::validatePublicKey(const Uint8* pPublicKey, Uint64 pKeyLength)
 {
-    // FIXME: validation should be done to check if public key is a valid point
-    // the curve.
     if (pKeyLength != KeySize) {
         return Status(GenericError(ErrorCode::eInvalidArgument),
                       "Key validation failed");

@@ -84,6 +84,23 @@ alcp_ec_request(const alc_ec_info_p pEcInfo, alc_ec_handle_p pEcHandle)
 }
 
 alc_error_t
+alcp_ec_set_privatekey(const alc_ec_handle_p pEcHandle,
+                       const Uint8*          pPrivateKey)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pEcHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pEcHandle->context, err);
+    ALCP_BAD_PTR_ERR_RET(pPrivateKey,
+                         err); // privateKey can be internal generated after
+                               // adding DRBG and key managment function.
+    auto ctx = static_cast<ec::Context*>(pEcHandle->context);
+
+    ctx->status = ctx->setPrivateKey(ctx->m_ec, pPrivateKey);
+
+    return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
+}
+
+alc_error_t
 alcp_ec_get_publickey(const alc_ec_handle_p pEcHandle,
                       Uint8*                pPublicKey,
                       const Uint8*          pPrivKey)
