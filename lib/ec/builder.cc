@@ -83,14 +83,6 @@ __ec_reset_wrapper(void* pEc)
     return StatusOk();
 }
 
-template<typename ECTYPE>
-Uint64
-__ec_getKeySize_wrapper(void* pEc)
-{
-    auto ap = static_cast<ECTYPE*>(pEc);
-    return ap->getKeySize();
-}
-
 class x25519Builder
 {
   public:
