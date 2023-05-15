@@ -415,34 +415,14 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
 
     // Manually allocate context
     (cctx->handle).ch_context = OPENSSL_malloc(alcp_cipher_context_size(cinfo));
-
+    // For SIV, Authentication Key assumed to be same length as Decryption Key
+    // Hence not modifying cinfo->ci_key_info.key or cinfo->ci_key_info.len
     if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
-        if(keylen==128){
-            kinfo_siv_ctr_key->key = key+16;
-            kinfo_siv_ctr_key->len = 128;
-            cinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
-            // For SIV, Authentication Key assumed to be same length as Encryption Key
-            cinfo->ci_key_info.key = key;
-            cinfo->ci_key_info.len  = 128;
-        }
-        else if(keylen==192){
-            kinfo_siv_ctr_key->key = key+24;
-            kinfo_siv_ctr_key->len = 192;
-            cinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
-            // For SIV, Authentication Key assumed to be same length as Encryption Key
-            cinfo->ci_key_info.key = key;
-            cinfo->ci_key_info.len  = 192;
-        }
-        else if(keylen==256){
-            kinfo_siv_ctr_key->key = key+32;
-            kinfo_siv_ctr_key->len = 256;
-            cinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
-            // For SIV, Authentication Key assumed to be same length as Encryption Key
-            cinfo->ci_key_info.key = key;
-            cinfo->ci_key_info.len  = 256;
-
-        }
-
+        // For openSSL SIV encryption and authentication key needs to be in continous memory location. 
+        // Second part of the key is authentication key
+        kinfo_siv_ctr_key->len = keylen;
+        kinfo_siv_ctr_key->key = key+(keylen/8);
+        cinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
      }
 
     // Request handle for the cipher
@@ -623,34 +603,16 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
     }
 
     alc_key_info_p        kinfo_siv_ctr_key = &cctx->kinfo_siv_ctr_key;
-
+    
+    
+    // For SIV, Authentication Key assumed to be same length as Encryption Key
+    // Hence not modifying cinfo->ci_key_info.key or cinfo->ci_key_info.len
     if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
-        if(keylen==128){
-            kinfo_siv_ctr_key->key = key+16;
-            kinfo_siv_ctr_key->len = 128;
-            cinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
-            // For SIV, Authentication Key assumed to be same length as Encryption Key
-            cinfo->ci_key_info.key = key;
-            cinfo->ci_key_info.len  = 128;
-        } else if(keylen==192){
-            kinfo_siv_ctr_key->key = key+24;
-            kinfo_siv_ctr_key->len = 192;
-            cinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
-            // For SIV, Authentication Key assumed to be same length as Encryption Key
-            cinfo->ci_key_info.key = key;
-            cinfo->ci_key_info.len  = 192;
-        }
-        else if(keylen==256){
-            kinfo_siv_ctr_key->key = key+32;
-            kinfo_siv_ctr_key->len = 256;
-            cinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
-            // For SIV, Authentication Key assumed to be same length as Encryption Key
-            cinfo->ci_key_info.key = key;
-            cinfo->ci_key_info.len  = 256;
-
-        }
-
-
+        // For openSSL SIV encryption and authentication key need to be in continous memory location. 
+        // Second part of the key is authentication key
+        kinfo_siv_ctr_key->len = keylen;
+        kinfo_siv_ctr_key->key = key+(keylen/8);
+        cinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
      }
 
     // Check for support
