@@ -39,16 +39,14 @@ ippsHMACGetSize_rmf(int* pSize)
     printMsg("ALCP Provider HMAC GETSIZE_rmf: EXIT ");
     return ippStsNoErr;
 }
-IppStatus
-ippsHMACInit_rmf(const Ipp8u*          pKey,
-                 int                   keyLen,
-                 IppsHMACState_rmf*    pCtx,
-                 const IppsHashMethod* pMethod)
-{
-    printMsg("ALCP Provider  ippsHMACInit_rmf_rmf: ENTRY ");
 
-    auto p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pCtx);
-    new (p_mac_ctx) ipp_wrp_mac_ctx;
+// Utility Function to seperate out formation of alc_mac_info
+IppStatus
+createHmacInfo(alc_mac_info_p        pMacInfo,
+               const Ipp8u*          pKey,
+               int                   keyLen,
+               const IppsHashMethod* pMethod)
+{
 
     const alc_key_info_t cKinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
                                     .fmt  = ALC_KEY_FMT_RAW,
@@ -63,42 +61,36 @@ ippsHMACInit_rmf(const Ipp8u*          pKey,
     IppHashAlgId           hashAlg      = p_method_ctx->algId;
     switch (hashAlg) {
         case ippHashAlg_SHA224: {
-
             printMsg("SHA2-224");
             sha_length = ALC_DIGEST_LEN_224;
             sha2_mode  = ALC_SHA2_224;
             break;
         }
         case ippHashAlg_SHA256: {
-
             printMsg("SHA2-256");
             sha_length = ALC_DIGEST_LEN_256;
             sha2_mode  = ALC_SHA2_256;
             break;
         }
         case ippHashAlg_SHA384: {
-
             printMsg("SHA2-384");
             sha_length = ALC_DIGEST_LEN_384;
             sha2_mode  = ALC_SHA2_384;
             break;
         }
         case ippHashAlg_SHA512: {
-
             printMsg("SHA2-512");
             sha_length = ALC_DIGEST_LEN_512;
             sha2_mode  = ALC_SHA2_512;
             break;
         }
         case ippHashAlg_SHA512_224: {
-
             printMsg("SHA2-512_224");
             sha_length = ALC_DIGEST_LEN_224;
             sha2_mode  = ALC_SHA2_512;
             break;
         }
         case ippHashAlg_SHA512_256: {
-
             printMsg("SHA2-512_256");
             sha_length = ALC_DIGEST_LEN_256;
             sha2_mode  = ALC_SHA2_512;
@@ -107,21 +99,35 @@ ippsHMACInit_rmf(const Ipp8u*          pKey,
         default:
             return ippStsNotSupportedModeErr;
     }
-    alc_mac_info_t macinfo = {
-        .mi_type = ALC_MAC_HMAC,
-        .mi_algoinfo={
-            .hmac={
-                .hmac_digest = {
+
+    pMacInfo->mi_type = ALC_MAC_HMAC;
+    pMacInfo->mi_algoinfo.hmac = {
+        .hmac_digest = {
                     .dt_type = ALC_DIGEST_TYPE_SHA2,
                     .dt_len = sha_length,
                     .dt_mode = {.dm_sha2 = sha2_mode,},
                 }
-            }
-        },
-        .mi_keyinfo = cKinfo
     };
+    pMacInfo->mi_keyinfo = cKinfo;
 
-    auto status = alcp_MacInit(&macinfo, p_mac_ctx);
+    return ippStsNoErr;
+}
+
+IppStatus
+ippsHMACInit_rmf(const Ipp8u*          pKey,
+                 int                   keyLen,
+                 IppsHMACState_rmf*    pCtx,
+                 const IppsHashMethod* pMethod)
+{
+    printMsg("ALCP Provider  ippsHMACInit_rmf_rmf: ENTRY ");
+    auto p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pCtx);
+    new (p_mac_ctx) ipp_wrp_mac_ctx;
+    alc_mac_info_t mac_info;
+    auto           status = createHmacInfo(&mac_info, pKey, keyLen, pMethod);
+    if (status != ippStsNoErr) {
+        return status;
+    }
+    status = alcp_MacInit(&mac_info, p_mac_ctx);
     printMsg("ALCP Provider  ippsHMACInit_rmf_rmf: EXIT ");
     return status;
 }
@@ -188,8 +194,23 @@ ippsHMACMessage_rmf(const Ipp8u*          pMsg,
                     int                   mdLen,
                     const IppsHashMethod* pMethod)
 {
+    // TODO: Add a test case for this function
     printMsg("ALCP Provider  ippsHMACMessage_rmf: ENTRY ");
-    // ippsHMACInit_rmf(pKey, KeyLen, )
+    int ctx_size = 0;
+    ippsHMACGetSize_rmf(&ctx_size);
+    auto* p_context = reinterpret_cast<IppsHMACState_rmf*>(new Uint8[ctx_size]);
+    auto  status    = ippsHMACInit_rmf(pKey, keyLen, p_context, pMethod);
+    if (status != ippStsNoErr) {
+        return status;
+    }
+    status = ippsHMACUpdate_rmf(pMsg, msgLen, p_context);
+    if (status != ippStsNoErr) {
+        return status;
+    }
+    status = ippsHMACFinal_rmf(pMD, mdLen, p_context);
+    if (status != ippStsNoErr) {
+        return status;
+    }
     printMsg("ALCP Provider  ippsHMACMessage_rmf: EXIT ");
     return ippStsNoErr;
 }
