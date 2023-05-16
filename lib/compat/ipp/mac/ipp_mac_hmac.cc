@@ -120,32 +120,17 @@ ippsHMACInit_rmf(const Ipp8u*          pKey,
         },
         .mi_keyinfo = cKinfo
     };
-    auto err = alcp_mac_supported(&macinfo);
 
-    if (err == ALC_ERROR_NONE) {
-        p_mac_ctx->handle.ch_context = malloc(alcp_mac_context_size(&macinfo));
-    } else {
-        p_mac_ctx->handle.ch_context = nullptr;
-        printMsg(
-            "ALCP MAC Provider: CMAC Information provided is unsupported\n");
-        return ippStsNotSupportedModeErr;
-    }
-
-    err = alcp_mac_request(&p_mac_ctx->handle, &macinfo);
-    if (err != ALC_ERROR_NONE) {
-        printMsg("ALCP MAC Provider: CMAC Request failed\n");
-        return ippStsErr;
-    }
-
+    auto status = alcp_MacInit(&macinfo, p_mac_ctx);
     printMsg("ALCP Provider  ippsHMACInit_rmf_rmf: EXIT ");
-    return ippStsNoErr;
+    return status;
 }
 
 IppStatus
 ippsHMACPack_rmf(const IppsHMACState_rmf* pCtx, Ipp8u* pBuffer, int bufSize)
 {
     printMsg("ALCP Provider  ippsHMACPack_rmf_rmf: ENTRY ");
-
+    // FIXME: ALCP Does not have an API to copy context
     printMsg("ALCP Provider  ippsHMACPack_rmf_rmf: EXIT ");
     return ippStsNoErr;
 }
@@ -153,6 +138,7 @@ IppStatus
 ippsHMACUnpack_rmf(const Ipp8u* pBuffer, IppsHMACState_rmf* pCtx)
 {
     printMsg("ALCP Provider  ippsHMACUnpack_rmf: ENTRY ");
+    // FIXME: ALCP Does not have an API to copy context
     printMsg("ALCP Provider  ippsHMACUnpack_rmf: EXIT ");
     return ippStsNoErr;
 }
@@ -161,6 +147,7 @@ ippsHMACDuplicate_rmf(const IppsHMACState_rmf* pSrcCtx,
                       IppsHMACState_rmf*       pDstCtx)
 {
     printMsg("ALCP Provider  ippsHMACDuplicate_rmf: ENTRY ");
+    // FIXME: ALCP Does not have an API to copy context
     printMsg("ALCP Provider  ippsHMACDuplicate_rmf: EXIT ");
     return ippStsNoErr;
 }
@@ -187,6 +174,8 @@ IppStatus
 ippsHMACGetTag_rmf(Ipp8u* pMD, int mdLen, const IppsHMACState_rmf* pCtx)
 {
     printMsg("ALCP Provider  ippsHMACGetTag_rmf: ENTRY ");
+    // FIXME: ALCP Does not have an API to copy context. Hence will need to
+    // implement a method to copy, save context and then restore it
     printMsg("ALCP Provider  ippsHMACGetTag_rmf: EXIT ");
     return ippStsNoErr;
 }
@@ -200,6 +189,7 @@ ippsHMACMessage_rmf(const Ipp8u*          pMsg,
                     const IppsHashMethod* pMethod)
 {
     printMsg("ALCP Provider  ippsHMACMessage_rmf: ENTRY ");
+    // ippsHMACInit_rmf(pKey, KeyLen, )
     printMsg("ALCP Provider  ippsHMACMessage_rmf: EXIT ");
     return ippStsNoErr;
 }

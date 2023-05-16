@@ -74,24 +74,9 @@ ippsAES_CMACInit(const Ipp8u*       pKey,
                                            } } } },
                                                    .mi_keyinfo  = cKinfo };
 
-    auto err = alcp_mac_supported(&macinfo);
-
-    if (err == ALC_ERROR_NONE) {
-        p_mac_ctx->handle.ch_context = p_mac_ctx + 1;
-    } else {
-        printMsg(
-            "ALCP MAC Provider: CMAC Information provided is unsupported\n");
-        return ippStsNotSupportedModeErr;
-    }
-
-    err = alcp_mac_request(&p_mac_ctx->handle, &macinfo);
-    if (err != ALC_ERROR_NONE) {
-        printMsg("ALCP MAC Provider: CMAC Request failed\n");
-        return ippStsErr;
-    }
-
-    printMsg("IPP Provider CMAC Init EXIT");
-    return ippStsNoErr;
+    auto status = alcp_MacInit(&macinfo, p_mac_ctx);
+    printMsg("ALCP Provider  ippsAES_CMACInit: EXIT ");
+    return status;
 }
 IppStatus
 ippsAES_CMACUpdate(const Ipp8u* pSrc, int len, IppsAES_CMACState* pState)
@@ -114,16 +99,9 @@ ippsAES_CMACFinal(Ipp8u* pMD, int mdLen, IppsAES_CMACState* pState)
 IppStatus
 ippsAES_CMACGetTag(Ipp8u* pMD, int mdLen, const IppsAES_CMACState* pState)
 {
-    printMsg("IPP Provider CMAC Get Tag: ENTRY");
     // FIXME: CMAC Get Tag. Duplicate context and restore context. Write
     // Testcase to test it.
-
-    // auto mac_ctx = reinterpret_cast < const
-    // ipp_wrp_mac_ctx*>(pState);
-
-    // alcp_mac_copy(
-    //     &mac_ctx->handle, static_cast<Uint8*>(pMD),
-    //     static_cast<Uint64>(mdLen));
+    printMsg("IPP Provider CMAC Get Tag: Not Implemented");
     printMsg("IPP Provider CMAC Get Tag: EXIT");
 
     return ippStsNoErr;

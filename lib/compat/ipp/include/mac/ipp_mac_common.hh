@@ -34,3 +34,6 @@ alcp_MacUpdate(const Ipp8u* pSrc, int len, ipp_wrp_mac_ctx* p_mac_ctx);
 
 IppStatus
 alcp_MacFinalize(Ipp8u* pMD, int len, ipp_wrp_mac_ctx* p_mac_ctx);
+
+IppStatus
+alcp_MacInit(const alc_mac_info_p pcMacInfo, ipp_wrp_mac_ctx* p_mac_ctx);

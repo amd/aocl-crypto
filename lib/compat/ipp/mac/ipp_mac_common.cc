@@ -29,6 +29,28 @@
 #include "mac/ipp_mac_common.hh"
 
 IppStatus
+alcp_MacInit(const alc_mac_info_p pcMacInfo, ipp_wrp_mac_ctx* p_mac_ctx)
+{
+    auto err = alcp_mac_supported(pcMacInfo);
+
+    if (err == ALC_ERROR_NONE) {
+        p_mac_ctx->handle.ch_context = malloc(alcp_mac_context_size(pcMacInfo));
+    } else {
+        p_mac_ctx->handle.ch_context = nullptr;
+        printErr("ALCP MAC Provider:  Information provided is unsupported\n");
+        return ippStsNotSupportedModeErr;
+    }
+
+    err = alcp_mac_request(&p_mac_ctx->handle, pcMacInfo);
+    if (err != ALC_ERROR_NONE) {
+        printErr("ALCP MAC Provider:  Request failed\n");
+        return ippStsErr;
+    }
+
+    return ippStsNoErr;
+}
+
+IppStatus
 alcp_MacUpdate(const Ipp8u* pSrc, int len, ipp_wrp_mac_ctx* p_mac_ctx)
 {
 
