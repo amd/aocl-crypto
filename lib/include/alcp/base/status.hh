@@ -207,8 +207,12 @@ Status::ok() const
  * @return
  * Status with message and a code.
  */
-Status
-StatusOk();
+inline Status
+StatusOk()
+{
+    static auto statusOk = Status(ErrorCode::eOk);
+    return statusOk;
+}
 
 // clang-format off
 /*

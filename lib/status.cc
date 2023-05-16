@@ -28,16 +28,7 @@
 #include "alcp/base/status.hh"
 #include "alcp/base/error.hh"
 
-namespace alcp::base {
-
-Status
-StatusOk()
-{
-    static auto statusOk = Status(ErrorCode::eOk);
-    return statusOk;
-}
-
-namespace status {
+namespace alcp::base { namespace status {
     Status AlreadyExists(const StringView msg)
     {
         auto e = GenericError{ ErrorCode::eExists };
@@ -79,6 +70,4 @@ namespace status {
         auto e = GenericError{ ErrorCode::eInternal };
         return Status(e, sv);
     }
-} // namespace status
-
-} // namespace alcp::base
+}} // namespace alcp::base::status
