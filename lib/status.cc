@@ -25,15 +25,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "alcp/base/error.hh"
 #include "alcp/base/status.hh"
+#include "alcp/base/error.hh"
 
 namespace alcp::base {
 
 Status
 StatusOk()
 {
-    return Status(ErrorCode::eOk);
+    static auto statusOk = Status(ErrorCode::eOk);
+    return statusOk;
 }
 
 namespace status {

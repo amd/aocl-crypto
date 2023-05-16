@@ -55,34 +55,45 @@ class Status final
     explicit Status(IError&& ie)
         : m_code{ ie.code() }
         , m_message{ ie.message() }
-    {
-    }
+    {}
 
     explicit Status(IError& ie)
         : m_code{ ie.code() }
         , m_message{ ie.message() }
-    {
-    }
+    {}
 
     Status(IError& ie, const String& msg)
         : m_code{ ie.code() }
         , m_message{ makeMessage(ie.message(), msg) }
-    {
-    }
+    {}
 
     Status(IError& ie, const StringView msg)
         : m_code{ ie.code() }
         , m_message{ makeMessage(ie.message(), msg) }
-    {
-    }
+    {}
 
     Status(IError&& ie, const StringView msg)
         : m_code{ ie.code() }
         , m_message{ makeMessage(ie.message(), msg) }
+    {}
+
+    Status(const Status& s)
     {
+        this->m_code = s.m_code;
+        if (s.m_code != 0)
+            this->m_message = s.m_message;
     }
 
-    ALCP_DEFS_DEFAULT_COPY_AND_ASSIGNMENT(Status);
+    Status& operator=(const Status& s)
+    {
+        this->m_code = s.m_code;
+        if (s.m_code != 0)
+            this->m_message = s.m_message;
+        // operator=(s);
+        return *this;
+    }
+
+    // ALCP_DEFS_DEFAULT_COPY_AND_ASSIGNMENT(Status);
 
     bool operator==(const Status& other) const;
     bool operator!=(const Status& other) const;
