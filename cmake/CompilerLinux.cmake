@@ -25,6 +25,7 @@
 
 # check compiler version
 function(alcp_check_compiler_version)
+    include(CheckCXXCompilerFlag)
     set(GCC_MIN_REQ "10.3.0")
     set (CLANG_MIN_REQ "12.0.0")
     # if gcc
@@ -124,6 +125,12 @@ function(alcp_get_arch_cflags_zen4)
         CACHE INTERNAL ""
         )
     set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
+    # check if compiler supports -march=znver4
+    CHECK_CXX_COMPILER_FLAG("-march=znver4" COMPILER_SUPPORTS_ZNVER4)
+    if(COMPILER_SUPPORTS_ZNVER4)
+      message(STATUS "Compiler Supports znver4")
+      set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} -march=znver4 PARENT_SCOPE)
+    endif()
 endfunction(alcp_get_arch_cflags_zen4)
 
 # misc options
