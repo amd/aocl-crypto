@@ -48,6 +48,32 @@ IPPHmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
     return init();
 }
 
+// A helper function to convert ALCP digestinfo to IPPHashMethod
+const IppsHashMethod*
+getIppHashMethod(alc_digest_info_p pDigestInfo)
+{
+    if (pDigestInfo->dt_type == ALC_DIGEST_TYPE_SHA2) {
+        switch (pDigestInfo->dt_len) {
+            case ALC_DIGEST_LEN_224:
+                return ippsHashMethod_SHA224_TT();
+                break;
+            case ALC_DIGEST_LEN_256:
+                return ippsHashMethod_SHA256_TT();
+                break;
+            case ALC_DIGEST_LEN_384:
+                return ippsHashMethod_SHA384();
+                break;
+            case ALC_DIGEST_LEN_512:
+                return ippsHashMethod_SHA512();
+                break;
+            default:
+                return nullptr;
+        }
+    }
+
+    return nullptr;
+}
+
 bool
 IPPHmacBase::init()
 {
@@ -67,28 +93,13 @@ IPPHmacBase::init()
                   << std::endl;
         return true;
     }
-    if (m_info.mi_algoinfo.hmac.hmac_digest.dt_type == ALC_DIGEST_TYPE_SHA2) {
-        switch (m_info.mi_algoinfo.hmac.hmac_digest.dt_len) {
-            case ALC_DIGEST_LEN_224:
-                status = ippsHMACInit_rmf(
-                    m_key, m_key_len, m_handle, ippsHashMethod_SHA224_TT());
-                break;
-            case ALC_DIGEST_LEN_256:
-                status = ippsHMACInit_rmf(
-                    m_key, m_key_len, m_handle, ippsHashMethod_SHA256_TT());
-                break;
-            case ALC_DIGEST_LEN_384:
-                status = ippsHMACInit_rmf(
-                    m_key, m_key_len, m_handle, ippsHashMethod_SHA384());
-                break;
-            case ALC_DIGEST_LEN_512:
-                status = ippsHMACInit_rmf(
-                    m_key, m_key_len, m_handle, ippsHashMethod_SHA512());
-                break;
-            default:
-                return false;
-        }
+    const IppsHashMethod* p_hash_method =
+        getIppHashMethod(&m_info.mi_algoinfo.hmac.hmac_digest);
+    if (p_hash_method == nullptr) {
+        std::cout << "IPPCP: Provided Digest Not Supported" << std::endl;
+        return false;
     }
+    status = ippsHMACInit_rmf(m_key, m_key_len, m_handle, p_hash_method);
     if (status != ippStsNoErr) {
         std::cout << "ippsHMACInit_rmf failed with err code: " << status
                   << std::endl;
@@ -115,6 +126,19 @@ IPPHmacBase::Hmac_function(const alcp_hmac_data_t& data)
         return false;
     }
     return true;
+
+    // clang-format off
+    // FIXME: Add the below code to provider testing when implemented
+    /* 
+    // code to calculate HMAC in a single run 
+    status = ippsHMACMessage_rmf(data.in.m_msg,
+                                    data.in.m_msg_len,
+                                    data.in.m_key,
+                                    data.in.m_key_len,
+                                    data.out.m_hmac,
+                                    data.out.m_hmac_len,
+                                    getIppHashMethod(&m_info.mi_algoinfo.hmac.hmac_digest)); */
+    // clang-format on
 }
 
 bool
