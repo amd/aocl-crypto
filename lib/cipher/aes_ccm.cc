@@ -744,7 +744,9 @@ Ccm::Impl::decrypt(ccm_data_t* pccm_data,
 }
 
 // Ccm Functions
-Ccm::Ccm() : pImpl{ std::make_unique<Impl>(this) } {}
+Ccm::Ccm()
+    : pImpl{ std::make_unique<Impl>(this) }
+{}
 
 Ccm::Ccm(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
     : Aes(aesInfo, keyInfo)

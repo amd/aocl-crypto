@@ -333,6 +333,54 @@ namespace alcp::cipher::aesni { namespace ccm {
             return CCM_ERROR::LEN_MISMATCH; /* length mismatch */
         }
 
+#if 1
+        while (len >= 32) {
+            /* CTR */
+            temp_reg = nonce; // Copy Counter
+            CtrInc(&nonce);
+            __m128i temp_reg_1 = nonce;
+            CtrInc(&nonce);
+            AesEncrypt(&temp_reg,
+                       &temp_reg_1,
+                       reinterpret_cast<const __m128i*>(ccm_data->key),
+                       ccm_data->rounds);
+
+            in_reg = _mm_loadu_si128(
+                reinterpret_cast<const __m128i*>(pinp)); // Load CipherText
+            temp_reg = _mm_xor_si128(
+                in_reg, temp_reg); // Generate PlainText (Complete CTR)
+            in_reg = _mm_loadu_si128(
+                reinterpret_cast<const __m128i*>(pinp + 16)); // Load CipherText
+            temp_reg_1 = _mm_xor_si128(
+                in_reg, temp_reg_1); // Generate PlainText (Complete CTR)
+
+            /* CBC */
+
+            _mm_storeu_si128(reinterpret_cast<__m128i*>(pout),
+                             temp_reg); // Store plaintext.
+            _mm_storeu_si128(reinterpret_cast<__m128i*>(pout + 16),
+                             temp_reg_1); // Store plaintext.
+
+            cmac = _mm_xor_si128(cmac, temp_reg); // Generate Partial result
+
+            // Generate the partial tag, Xor of CBC is above
+            AesEncrypt(&cmac,
+                       reinterpret_cast<const __m128i*>(ccm_data->key),
+                       ccm_data->rounds);
+
+            cmac = _mm_xor_si128(cmac, temp_reg_1); // Generate Partial result
+
+            // Generate the partial tag, Xor of CBC is above
+            AesEncrypt(&cmac,
+                       reinterpret_cast<const __m128i*>(ccm_data->key),
+                       ccm_data->rounds);
+
+            pinp += 32;
+            pout += 32;
+            len -= 32;
+        }
+#endif
+
         while (len >= 16) {
 
             /* CTR */
