@@ -130,6 +130,22 @@ class CpuId::Impl
      */
     bool cpuHasRdSeed();
     /**
+     * @brief Returns true if Adx is supported
+     * by CPU
+     *
+     * @return true
+     * @return false
+     */
+    bool cpuHasAdx();
+    /**
+     * @brief Returns true if BMI2 is supported
+     * by CPU
+     *
+     * @return true
+     * @return false
+     */
+    bool cpuHasBmi2();
+    /**
      * @brief Returns true if currently executing cpu is Zen1
      *
      * @return true
@@ -266,6 +282,26 @@ CpuId::Impl::cpuHasRdSeed()
     return state;
 }
 bool
+CpuId::Impl::cpuHasAdx()
+{
+#ifdef ALCP_ENABLE_AOCL_CPUID
+    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_ADX);
+#else
+    static bool state = true;
+#endif
+    return state;
+}
+bool
+CpuId::Impl::cpuHasBmi2()
+{
+#ifdef ALCP_ENABLE_AOCL_CPUID
+    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_BMI2);
+#else
+    static bool state = true;
+#endif
+    return state;
+}
+bool
 CpuId::Impl::cpuIsZen1()
 {
 #ifdef ALCP_ENABLE_AOCL_CPUID
@@ -358,6 +394,18 @@ bool
 CpuId::cpuHasRdRand()
 {
     return pImpl.get()->cpuHasRdRand();
+}
+
+bool
+CpuId::cpuHasBmi2()
+{
+    return pImpl.get()->cpuHasBmi2();
+}
+
+bool
+CpuId::cpuHasAdx()
+{
+    return pImpl.get()->cpuHasAdx();
 }
 
 bool
