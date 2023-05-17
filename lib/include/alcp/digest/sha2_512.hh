@@ -100,7 +100,7 @@ class ALCP_API_EXPORT Sha512 final : public Sha2
     static constexpr Uint64
         cWordSizeBits                     = 64,                             /* define word size */
         cNumRounds                        = 80,                             /* num rounds in sha512 */
-        cChunkSizeBits                    = 1024,                           /* chunk size in bits */
+        cChunkSizeBits                    = 1024,                           /* chunk size in bits for sha384,sha512,sha512/224,sha512/256*/
         cChunkSize                        = cChunkSizeBits / 8,             /* chunks to proces */
         cChunkSizeMask                    = cChunkSize - 1,                 /*  */
         cChunkSizeWords                   = cChunkSizeBits / cWordSizeBits, /* same in words */

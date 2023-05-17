@@ -31,20 +31,8 @@
 
 namespace alcp::digest {
 
-/*
- * first 64 bits of the fractional parts of the square roots
- * of the first 8 primes 2..19
- */
-
-static constexpr Uint64 cIv[] = { 0xcbbb9d5dc1059ed8, 0x629a292a367cd507,
-                                  0x9159015a3070dd17, 0x152fecd8f70e5939,
-                                  0x67332667ffc00b31, 0x8eb44a8768581511,
-                                  0xdb0c2e0d64f98fa7, 0x47b5481dbefa4fa4 };
-
 static constexpr Uint64 /* define word size */
     // clang-format off
-    /* chunk size in bits */ cChunkSizeBits = 1024,
-    /* chunks to proces */ cChunkSize       = cChunkSizeBits / 8,
     /* same in bits */ cHashSizeBits        = 384,
     /* Hash size in bytes */ cHashSize      = cHashSizeBits / 8;
 // clang-format on
@@ -53,7 +41,6 @@ Sha384::Sha384(const alc_digest_info_t& rDInfo)
     : Sha2{ "sha2-384" }
 {
     m_psha512 = std::make_shared<Sha512>(rDInfo);
-    m_psha512->setIv(cIv, sizeof(cIv));
 }
 
 Sha384::Sha384()
@@ -67,7 +54,6 @@ Sha384::Sha384()
     d_info.dt_data         = { 0 };
 
     m_psha512 = std::make_shared<Sha512>(d_info);
-    m_psha512->setIv(cIv, sizeof(cIv));
 }
 
 Sha384::~Sha384() = default;
@@ -88,7 +74,6 @@ void
 Sha384::reset()
 {
     m_psha512->reset();
-    m_psha512->setIv(cIv, sizeof(cIv));
     return;
 }
 
@@ -101,35 +86,14 @@ Sha384::finalize(const Uint8* pBuf, Uint64 size)
 alc_error_t
 Sha384::copyHash(Uint8* pHash, Uint64 size) const
 {
-    alc_error_t err = ALC_ERROR_NONE;
-
-    if (size != cHashSize) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_SIZE;
-        return err;
-    }
-
-    if (!pHash) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_ARG;
-        return err;
-    }
-
-    // We should set intrim_hash size as 512 bit as we are calling into SHA512
-    // algorithm. Later we should trim it to exact 384 bits
-    Uint8 intrim_hash[cHashSize];
-    err = m_psha512->copyHash(intrim_hash, sizeof(intrim_hash));
-
-    if (!err) {
-        utils::CopyBlock(pHash, intrim_hash, size);
-    }
-    return err;
+    return m_psha512->copyHash(pHash, size);
 }
 
 Uint64
 Sha384::getInputBlockSize()
 {
-    return cChunkSize;
+    // Input block size is same for sha384, sha512,sha512/224,sha512/256
+    return Sha512::cChunkSize;
 }
 
 Uint64
