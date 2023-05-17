@@ -39,21 +39,13 @@ static alc_cipher_handle_t handle;
 char*
 bytesToHexString(unsigned char* bytes, int length);
 
-void
+int
 create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
 {
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    /*
-    const alc_key_info_t kinfo = {
-        .type    = ALC_KEY_TYPE_SYMMETRIC,
-        .fmt     = ALC_KEY_FMT_RAW,
-        .key     = key,
-        .len     = key_len,
-    };
-    */
     alc_cipher_info_t cinfo = {
         .ci_type = ALC_CIPHER_TYPE_AES,
         .ci_algo_info   = {
@@ -81,27 +73,28 @@ create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
     if (alcp_is_error(err)) {
         printf("Error: not supported \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
     printf("supported succeeded\n");
     /*
      * Application is expected to allocate for context
      */
     handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
-    // if (!ctx)
-    //    return;
+    if (!handle.ch_context)
+        return -1;
 
     /* Request a context with cinfo */
     err = alcp_cipher_request(&cinfo, &handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
     printf("request succeeded\n");
+    return 0;
 }
 
-void
+int
 encrypt_demo(const Uint8* plaintxt,
              const Uint32 len, /*  for both 'plaintxt' and 'ciphertxt' */
              Uint8*       ciphertxt,
@@ -115,13 +108,14 @@ encrypt_demo(const Uint8* plaintxt,
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     printf("encrypt succeeded\n");
+    return 0;
 }
 
-void
+int
 decrypt_demo(const Uint8* ciphertxt,
              const Uint32 len, /* for both 'plaintxt' and 'ciphertxt' */
              Uint8*       plaintxt,
@@ -135,10 +129,11 @@ decrypt_demo(const Uint8* ciphertxt,
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     printf("decrypt succeeded\n");
+    return 0;
 }
 
 static Uint8* sample_plaintxt =
@@ -204,7 +199,7 @@ out:
 }
 
 /* CCM: Authenticated Encryption demo */
-void
+int
 aclp_aes_ccm_encrypt_demo(
     const Uint8* plaintxt,
     const Uint32 len, /* Describes both 'plaintxt' and 'ciphertxt' */
@@ -225,7 +220,7 @@ aclp_aes_ccm_encrypt_demo(
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     // CCM init
@@ -233,7 +228,7 @@ aclp_aes_ccm_encrypt_demo(
     if (alcp_is_error(err)) {
         printf("Error: unable ccm encrypt init \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     // Additional Data
@@ -241,7 +236,7 @@ aclp_aes_ccm_encrypt_demo(
     if (alcp_is_error(err)) {
         printf("Error: unable ccm add data processing \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     // CCM encrypt
@@ -249,7 +244,7 @@ aclp_aes_ccm_encrypt_demo(
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     // get tag
@@ -257,12 +252,13 @@ aclp_aes_ccm_encrypt_demo(
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
+    return 0;
 }
 
 /* CCM: Authenticated Decryption demo */
-void
+int
 aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
                           const Uint32 len,
                           Uint8*       plaintxt,
@@ -283,7 +279,7 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     // GCM init
@@ -291,7 +287,7 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     if (alcp_is_error(err)) {
         printf("Error: unable gcm decrypt init \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     // Additional Data
@@ -299,7 +295,7 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     if (alcp_is_error(err)) {
         printf("Error: unable gcm add data processing \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     // GCM decrypt
@@ -307,7 +303,7 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     // get tag
@@ -315,7 +311,7 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     char* hex_tagDecrypt = bytesToHexString(tagDecrypt, 14);
@@ -333,20 +329,24 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     if (isTagMatched == false) {
         printf("\n tag mismatched, input encrypted data is not trusthworthy ");
         memset(plaintxt, 0, len);
+        return -1;
     }
+    return 0;
 }
 
 int
 main(void)
 {
+    int   retval                = 0;
     Uint8 sample_output[512]    = { 0 };
     Uint8 sample_tag_output[17] = { 0 };
 
     assert(sizeof(sample_plaintxt) < sizeof(sample_output));
 
-    create_demo_session(sample_key, sample_iv, sizeof(sample_key) * 8);
-
-    aclp_aes_ccm_encrypt_demo(sample_plaintxt,
+    retval = create_demo_session(sample_key, sample_iv, sizeof(sample_key) * 8);
+    if (retval != 0)
+        goto out;
+    retval = aclp_aes_ccm_encrypt_demo(sample_plaintxt,
                               strlen((const char*)sample_plaintxt),
                               sample_ciphertxt,
                               sample_iv,
@@ -355,6 +355,8 @@ main(void)
                               strlen((const char*)sample_ad),
                               sample_tag_output,
                               14);
+    if (retval != 0)
+        goto out;
 
     int size = strlen((const char*)sample_plaintxt);
 
@@ -372,7 +374,7 @@ main(void)
     free(hex_sample_input);
     free(hex_sample_tag_output);
 
-    aclp_aes_ccm_decrypt_demo(sample_ciphertxt,
+    retval = aclp_aes_ccm_decrypt_demo(sample_ciphertxt,
                               size,
                               sample_output,
                               sample_iv,
@@ -381,7 +383,8 @@ main(void)
                               strlen((const char*)sample_ad),
                               sample_tag_output,
                               14);
-
+    if (retval != 0)
+        goto out;
     printf("sample_output: %s\n", sample_output);
 
     // /*
@@ -392,6 +395,9 @@ main(void)
     free(handle.ch_context);
 
     return 0;
+
+out:
+    return -1;
 }
 
 /*  LocalWords:  decrypt Crypto AOCL

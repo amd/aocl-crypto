@@ -322,7 +322,7 @@ static Uint8 test_ad[TEST_VECTOR_COUNT][48] = {{0xe7, 0xe5, 0xe6, 0xf8, 0xda, 0x
 
 // clang-format on
 
-void
+int
 create_aes_session(Uint8*                  key,
                    Uint8*                  iv,
                    const Uint32            key_len,
@@ -371,28 +371,29 @@ create_aes_session(Uint8*                  key,
     if (alcp_is_error(err)) {
         printf("Error: not supported \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     /*
      * Application is expected to allocate for context
      */
     handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
-    // if (!ctx)
-    //    return;
+    if (!handle.ch_context)
+        return -1;
 
     /* Request a context with cinfo */
     err = alcp_cipher_request(&cinfo, &handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
+    return 0;
 }
 
 /* GCM: Authenticated Encryption demo */
-void
-aclp_aes_gcm_encrypt_demo(
+int
+alcp_aes_gcm_encrypt_demo(
     const Uint8* plaintxt,
     const Uint32 len, /* Describes both 'plaintxt' and 'ciphertxt' */
     Uint8*       ciphertxt,
@@ -412,7 +413,7 @@ aclp_aes_gcm_encrypt_demo(
     if (alcp_is_error(err)) {
         printf("Error: unable gcm encrypt init \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     // Additional Data
@@ -420,7 +421,7 @@ aclp_aes_gcm_encrypt_demo(
     if (alcp_is_error(err)) {
         printf("Error: unable gcm add data processing \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     // GCM encrypt
@@ -428,7 +429,7 @@ aclp_aes_gcm_encrypt_demo(
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     // get tag
@@ -436,13 +437,14 @@ aclp_aes_gcm_encrypt_demo(
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
+    return 0;
 }
 
 /* GCM: Authenticated Decryption demo */
-void
-aclp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
+int
+alcp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
                           const Uint32 len,
                           Uint8*       plaintxt,
                           Uint8*       iv,
@@ -462,7 +464,7 @@ aclp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
     if (alcp_is_error(err)) {
         printf("Error: unable gcm encrypt init \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     // Additional Data
@@ -470,7 +472,7 @@ aclp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
     if (alcp_is_error(err)) {
         printf("Error: unable gcm add data processing \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     // GCM decrypt
@@ -478,7 +480,7 @@ aclp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     // get tag
@@ -486,7 +488,7 @@ aclp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     bool isTagMatched = true;
@@ -501,12 +503,14 @@ aclp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
         // printf("\n tag mismatched, input encrypted data is not trusthworthy
         // ");
         memset(plaintxt, 0, len);
+        return -1;
     }
+    return 0;
 }
 
 /* Function takes input data from standard test vector for specific test number
  * & validates tag generated.*/
-void
+int
 gcm_selftest(Uint8*            inputText,  // plaintext
              Uint32            inputLen,   // input length
              Uint8*            cipherText, // ciphertext output
@@ -514,6 +518,7 @@ gcm_selftest(Uint8*            inputText,  // plaintext
              int               i,
              Uint8             testNumber)
 {
+    int          retval = 0;
     unsigned int keybits;
     Uint8        key[32];
     int          ret = 0;
@@ -571,8 +576,10 @@ gcm_selftest(Uint8*            inputText,  // plaintext
     create_aes_session(key, iv, keybits, m);
 
     // Encrypt
-    aclp_aes_gcm_encrypt_demo(
+    retval = alcp_aes_gcm_encrypt_demo(
         inputText, inputLen, cipherText, iv, ivLen, ad, adLen, tag, tagLen);
+    if (retval != 0)
+        goto out;
 
     printf("\nGCM-Encrypt ");
     printText(cipherText, inputLen, "cipherTxt", verboseprint);
@@ -584,17 +591,21 @@ gcm_selftest(Uint8*            inputText,  // plaintext
     }
 
     // Decrypt
-    aclp_aes_gcm_decrypt_demo(
+    retval = alcp_aes_gcm_decrypt_demo(
         cipherText, inputLen, outputText, iv, ivLen, ad, adLen, tag, tagLen);
+    if (retval != 0)
+        goto out;
 
     printf("\nGCM-Decrypt ");
     printText(outputText, inputLen, "outputTxt", verboseprint);
     printText(tag, tagLen, "tagDec   ", verboseprint);
     if (memcmp(test_tag[testNumber], tag, (long unsigned int)tagLen) != 0) {
         printf("\n\t\t\t\t Encrypt Tag mismatch: Test FAILED \n");
+        goto out;
     }
     if (memcmp(inputText, outputText, (long unsigned int)inputLen) != 0) {
         printf("\n\t\t\t\t input->enc->dec->input FAILED \n");
+        goto out;
     } else {
         printf("\t test PASSED ");
     }
@@ -617,12 +628,17 @@ gcm_selftest(Uint8*            inputText,  // plaintext
     if (ad) {
         free(ad);
     }
+    return 0;
+
+out:
+    return -1;
 }
 
 // Demo of GCM with std testor vectors
 int
 runGCMAutoTest()
 {
+    int    retval = 0;
     Uint8* inputText;
     Uint8* cipherText;
 
@@ -653,12 +669,14 @@ runGCMAutoTest()
         }
 
         // run full path demo for specific aes mode
-        gcm_selftest(inputText,
+        retval = gcm_selftest(inputText,
                      inputLen, /* len of both 'plaintxt' and 'ciphertxt' */
                      cipherText,
                      ALC_AES_MODE_GCM,
                      keySizeItr,
                      testNumber);
+        if (retval != 0)
+            return retval;
 
         // its time to free!
         if (inputText) {

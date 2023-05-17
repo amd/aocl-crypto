@@ -98,11 +98,13 @@ main(void)
 {
     alc_rsa_handle_t s_rsa_handle;
     alc_error_t      err = create_demo_session(&s_rsa_handle);
-
-    if (!alcp_is_error(err)) {
-        err = Rsa_decrypt_demo(&s_rsa_handle);
+    if (alcp_is_error(err)) {
+        return -1;
     }
-
+    err = Rsa_decrypt_demo(&s_rsa_handle);
+    if (alcp_is_error(err)) {
+        return -1;
+    }
     alcp_rsa_finish(&s_rsa_handle);
     free(s_rsa_handle.context);
 

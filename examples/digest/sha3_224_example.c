@@ -90,6 +90,7 @@ hash_demo(const Uint8* src,
     err = alcp_digest_copy(&s_dg_handle, output, out_size);
     if (alcp_is_error(err)) {
         printf("Unable to copy digest\n");
+        goto out;
     }
 
 out:
@@ -238,13 +239,17 @@ main(void)
         num_chunks = STRING_VECTORS[i].num_chunks;
 
         alc_error_t err = create_demo_session();
+        if (alcp_is_error(err)) {
+            return -1;
+        }
 
-        if (!alcp_is_error(err)) {
-            err = hash_demo(sample_input,
+        err = hash_demo(sample_input,
                             strlen((const char*)sample_input),
                             sample_output,
                             sizeof(sample_output),
                             num_chunks);
+        if (alcp_is_error(err)) {
+            return -1;
         }
 
         // check if the outputs are matching
@@ -255,6 +260,7 @@ main(void)
         if (strcmp(expected_output, output_string)) {
             printf("=== FAILED ==== \n");
             printf("Expected output : %s\n", expected_output);
+            return -1;
         } else {
             printf("=== Passed ===\n");
         }

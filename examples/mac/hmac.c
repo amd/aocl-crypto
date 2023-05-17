@@ -141,7 +141,7 @@ displayResults(char*  hmac_string,
     printf("\n");
 }
 
-void
+int
 demo_Hmac_Sha256()
 {
 
@@ -188,7 +188,7 @@ demo_Hmac_Sha256()
     err = run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
     if (err != ALC_ERROR_NONE) {
         printf("Error Occurred in HMAC SHA2-256\n");
-
+        return -1;
     } else {
 
         displayResults("HMAC SHA2-256",
@@ -201,9 +201,10 @@ demo_Hmac_Sha256()
                        expectedMac,
                        sizeof(expectedMac));
     }
+    return 0;
 }
 
-void
+int
 demo_Hmac_Sha224()
 {
 
@@ -259,6 +260,7 @@ demo_Hmac_Sha224()
     err = run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
     if (err != ALC_ERROR_NONE) {
         printf("Error Occurred in HMAC SHA2-224\n");
+        return -1;
 
     } else {
 
@@ -272,9 +274,10 @@ demo_Hmac_Sha224()
                        expectedMac,
                        sizeof(expectedMac));
     }
+    return 0;
 }
 
-void
+int
 demo_Hmac_Sha512()
 {
     alc_error_t err;
@@ -337,6 +340,7 @@ demo_Hmac_Sha512()
     err = run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
     if (err != ALC_ERROR_NONE) {
         printf("Error Occurred in HMAC SHA2-512\n");
+        return -1;
 
     } else {
 
@@ -350,8 +354,9 @@ demo_Hmac_Sha512()
                        expectedMac,
                        sizeof(expectedMac));
     }
+    return 0;
 }
-void
+int
 demo_Hmac_Sha3_224()
 {
     alc_error_t err;
@@ -393,7 +398,7 @@ demo_Hmac_Sha3_224()
     err = run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
     if (err != ALC_ERROR_NONE) {
         printf("Error Occurred in HMAC SHA3-224\n");
-
+        return -1;
     } else {
 
         displayResults("HMAC SHA3-224",
@@ -406,9 +411,10 @@ demo_Hmac_Sha3_224()
                        expectedMac,
                        sizeof(expectedMac));
     }
+    return 0;
 }
 
-void
+int
 demo_Hmac_Sha3_256()
 {
     Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
@@ -452,7 +458,7 @@ demo_Hmac_Sha3_256()
         run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
     if (err != ALC_ERROR_NONE) {
         printf("Error Occurred in HMAC SHA3-256\n");
-
+        return -1;
     } else {
 
         displayResults("HMAC SHA3-256",
@@ -465,8 +471,9 @@ demo_Hmac_Sha3_256()
                        expectedMac,
                        sizeof(expectedMac));
     }
+    return 0;
 }
-void
+int
 demo_Hmac_Sha3_512()
 {
     Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
@@ -517,7 +524,7 @@ demo_Hmac_Sha3_512()
         run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
     if (err != ALC_ERROR_NONE) {
         printf("Error Occurred in HMAC SHA3-512\n");
-
+        return -1;
     } else {
 
         displayResults("HMAC SHA3-512",
@@ -530,9 +537,10 @@ demo_Hmac_Sha3_512()
                        expectedMac,
                        sizeof(expectedMac));
     }
+    return 0;
 }
 
-void
+int
 demo_Hmac_Sha384()
 {
     Uint8 key[] = { 0x5e, 0xab, 0x0d, 0xfa, 0x27, 0x31, 0x12, 0x60, 0xd7, 0xbd,
@@ -590,7 +598,7 @@ demo_Hmac_Sha384()
         run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
     if (err != ALC_ERROR_NONE) {
         printf("Error Occurred in HMAC SHA2-384\n");
-
+        return -1;
     } else {
 
         displayResults("HMAC SHA2-384",
@@ -603,9 +611,10 @@ demo_Hmac_Sha384()
                        expectedMac,
                        sizeof(expectedMac));
     }
+    return 0;
 }
 
-void
+int
 demo_Hmac_Sha3_384()
 {
     Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
@@ -652,7 +661,7 @@ demo_Hmac_Sha3_384()
         run_hmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
     if (err != ALC_ERROR_NONE) {
         printf("Error Occurred in HMAC SHA3-384\n");
-
+        return -1;
     } else {
 
         displayResults("HMAC SHA3-384",
@@ -665,9 +674,10 @@ demo_Hmac_Sha3_384()
                        expectedMac,
                        sizeof(expectedMac));
     }
+    return 0;
 }
 
-void
+int
 demo_Hmac_Sha3_384_Reset()
 {
     Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
@@ -716,23 +726,27 @@ demo_Hmac_Sha3_384_Reset()
     err               = alcp_mac_request(&handle, &macinfo);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Request");
+        return -1;
     }
     // Update can be called multiple times with smaller chunks of the cipherText
     err = alcp_mac_update(&handle, cipherText, sizeof(cipherText));
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Update\n");
+        return -1;
     }
 
     // At this point if we need to we can reset and reuse with the same key
     err = alcp_mac_reset(&handle);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Reset\n");
+        return -1;
     }
 
     // Update can be called multiple times with smaller chunks of the cipherText
     err = alcp_mac_update(&handle, cipherText, sizeof(cipherText));
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Update\n");
+        return -1;
     }
 
     // In Finalize code, last remaining buffer can be provided if any exists
@@ -740,10 +754,12 @@ demo_Hmac_Sha3_384_Reset()
     err = alcp_mac_finalize(&handle, NULL, 0);
     if (alcp_is_error(err)) {
         printf("Error Occurred on MAC Finalize\n");
+        return -1;
     }
     err = alcp_mac_copy(&handle, mac, mac_size);
     if (alcp_is_error(err)) {
         printf("Error Occurred while Copying MAC\n");
+        return -1;
     }
     alcp_mac_finish(&handle);
     free(handle.ch_context);
@@ -757,25 +773,33 @@ demo_Hmac_Sha3_384_Reset()
                    sizeof(mac),
                    expectedMac,
                    sizeof(expectedMac));
+    return 0;
 }
 
 int
 main(int argc, char const* argv[])
 {
     // SHA-2 Based HMAC
-    demo_Hmac_Sha224();
-    demo_Hmac_Sha256();
-    demo_Hmac_Sha384();
-    demo_Hmac_Sha512();
-
-    // SHA-3 BASED HMAC
-    demo_Hmac_Sha3_224();
-    demo_Hmac_Sha3_256();
-    demo_Hmac_Sha3_384();
-    demo_Hmac_Sha3_512();
-
-    // Reset Demo
-    demo_Hmac_Sha3_384_Reset();
+    if (demo_Hmac_Sha224() != 0)
+        goto out;
+    if (demo_Hmac_Sha256() != 0)
+        goto out;
+    if (demo_Hmac_Sha384() != 0)
+        goto out;
+    if (demo_Hmac_Sha512() != 0)
+        goto out;
+    if (demo_Hmac_Sha3_224() != 0)
+        goto out;
+    if (demo_Hmac_Sha3_256() != 0)
+        goto out;
+    if (demo_Hmac_Sha3_384() != 0)
+        goto out;
+    if (demo_Hmac_Sha3_512() != 0)
+        goto out;
+    if (demo_Hmac_Sha3_384_Reset() != 0)
+        goto out;
 
     return 0;
+out:
+    return -1;
 }

@@ -237,13 +237,18 @@ main(void)
 {
     alc_rsa_handle_t s_rsa_handle_peer1;
     alc_error_t      err = create_demo_session(&s_rsa_handle_peer1);
-
+    if (alcp_is_error(err)) {
+        return -1;
+    }
     alc_rsa_handle_t s_rsa_handle_peer2;
 
     err = create_demo_session(&s_rsa_handle_peer2);
-
-    if (!alcp_is_error(err)) {
-        err = Rsa_demo(&s_rsa_handle_peer1, &s_rsa_handle_peer2);
+    if (alcp_is_error(err)) {
+        return -1;
+    }
+    err = Rsa_demo(&s_rsa_handle_peer1, &s_rsa_handle_peer2);
+    if (alcp_is_error(err)) {
+        return -1;
     }
 
     alcp_rsa_finish(&s_rsa_handle_peer1);

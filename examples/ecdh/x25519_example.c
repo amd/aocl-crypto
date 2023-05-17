@@ -154,14 +154,17 @@ main(void)
 {
     alc_ec_handle_t s_ec_handle_peer1;
     alc_error_t     err = create_demo_session(&s_ec_handle_peer1);
+    if (alcp_is_error(err))
+        return -1;
 
     alc_ec_handle_t s_ec_handle_peer2;
     err = create_demo_session(&s_ec_handle_peer2);
+    if (alcp_is_error(err))
+        return -1;
 
-    if (!alcp_is_error(err)) {
-        err = x25519_demo(&s_ec_handle_peer1, &s_ec_handle_peer2);
-    }
-
+    err = x25519_demo(&s_ec_handle_peer1, &s_ec_handle_peer2);
+    if (alcp_is_error(err))
+        return -1;
     alcp_ec_finish(&s_ec_handle_peer1);
     free(s_ec_handle_peer1.context);
 
