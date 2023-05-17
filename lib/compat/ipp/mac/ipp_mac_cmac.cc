@@ -30,20 +30,16 @@
 IppStatus
 ippsAES_CMACGetSize(int* pSize)
 {
-    printMsg("IPP Provider CMAC GetSize ENTRY");
+    printMsg("ippsAES_CMACGetSize:  ENTRY");
 
-    alc_mac_info_t macinfo = { .mi_type     = ALC_MAC_CMAC,
-                               .mi_algoinfo = {
-                                   .cmac = {
-                                       .cmac_cipher = {
-                                           .ci_type      = ALC_CIPHER_TYPE_AES,
-                                           .ci_algo_info = {
-                                               .ai_mode = ALC_AES_MODE_NONE,
-                                           } } } } };
-
+    alc_mac_info_t macinfo;
+    macinfo.mi_type                              = ALC_MAC_CMAC;
+    macinfo.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
+    macinfo.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode =
+        ALC_AES_MODE_NONE;
     Uint64 context_size = alcp_mac_context_size(&macinfo);
     *pSize = sizeof(ipp_wrp_mac_ctx) + static_cast<int>(context_size);
-    printMsg("IPP Provider CMAC GetSize EXIT");
+    printMsg("ippsAES_CMACGetSize:  EXIT");
     return ippStsNoErr;
 }
 
@@ -53,47 +49,44 @@ ippsAES_CMACInit(const Ipp8u*       pKey,
                  IppsAES_CMACState* pState,
                  int                ctxSize)
 {
-    printMsg("IPP Provider CMAC Init: ENTRY");
+    printMsg("ippsAES_CMACInit: ENTRY");
 
     auto p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pState);
     new (p_mac_ctx) ipp_wrp_mac_ctx;
 
-    const alc_key_info_t cKinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                    .fmt  = ALC_KEY_FMT_RAW,
-                                    .algo = ALC_KEY_ALG_MAC,
-                                    .len  = static_cast<Uint32>(keyLen * 8),
-                                    .key  = static_cast<const Uint8*>(pKey) };
-
-    alc_mac_info_t macinfo = { .mi_type     = ALC_MAC_CMAC,
-                               .mi_algoinfo = {
-                                   .cmac = {
-                                       .cmac_cipher = {
-                                           .ci_type      = ALC_CIPHER_TYPE_AES,
-                                           .ci_algo_info = {
-                                               .ai_mode = ALC_AES_MODE_NONE,
-                                           } } } },
-                                                   .mi_keyinfo  = cKinfo };
+    const alc_key_info_t cKinfo = { ALC_KEY_TYPE_SYMMETRIC,
+                                    ALC_KEY_FMT_RAW,
+                                    ALC_KEY_ALG_MAC,
+                                    ALC_KEY_LEN_CUSTOM,
+                                    static_cast<Uint32>(keyLen * 8),
+                                    static_cast<const Uint8*>(pKey) };
+    alc_mac_info_t       macinfo;
+    macinfo.mi_type                              = ALC_MAC_CMAC;
+    macinfo.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
+    macinfo.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode =
+        ALC_AES_MODE_NONE;
+    macinfo.mi_keyinfo = cKinfo;
 
     auto status = alcp_MacInit(&macinfo, p_mac_ctx);
-    printMsg("ALCP Provider  ippsAES_CMACInit: EXIT ");
+    printMsg("ippsAES_CMACInit: EXIT ");
     return status;
 }
 IppStatus
 ippsAES_CMACUpdate(const Ipp8u* pSrc, int len, IppsAES_CMACState* pState)
 {
-    printMsg("IPP Provider CMAC Update: ENTRY");
+    printMsg("ippsAES_CMACUpdate: ENTRY");
     auto      p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pState);
     IppStatus status    = alcp_MacUpdate(pSrc, len, p_mac_ctx);
-    printMsg("IPP Provider CMAC Update: EXIT");
+    printMsg("ippsAES_CMACUpdate: EXIT");
     return status;
 }
 IppStatus
 ippsAES_CMACFinal(Ipp8u* pMD, int mdLen, IppsAES_CMACState* pState)
 {
-    printMsg("IPP Provider CMAC Final: ENTRY");
+    printMsg("ippsAES_CMACFinal: ENTRY");
     auto      p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pState);
     IppStatus status    = alcp_MacFinalize(pMD, mdLen, p_mac_ctx);
-    printMsg("IPP Provider CMAC Final: EXIT");
+    printMsg("ippsAES_CMACFinal: EXIT");
     return status;
 }
 IppStatus
@@ -101,8 +94,8 @@ ippsAES_CMACGetTag(Ipp8u* pMD, int mdLen, const IppsAES_CMACState* pState)
 {
     // FIXME: CMAC Get Tag. Duplicate context and restore context. Write
     // Testcase to test it.
-    printMsg("IPP Provider CMAC Get Tag: Not Implemented");
-    printMsg("IPP Provider CMAC Get Tag: EXIT");
+    printMsg("ippsAES_CMACGetTag: Not Implemented");
+    printMsg("ippsAES_CMACGetTag: EXIT");
 
     return ippStsNoErr;
 }

@@ -31,12 +31,12 @@
 IppStatus
 ippsHMACGetSize_rmf(int* pSize)
 {
-    printMsg("ALCP Provider HMAC GETSIZE_rmf: ENTRY ");
+    printMsg("ippsHMACGetSize_rmf: ENTRY");
 
     // FIXME: Should be using alcp_mac_context_size but macinfo needs to know
     // the type of digest which is not available in this call.
     *pSize = sizeof(ipp_wrp_mac_ctx);
-    printMsg("ALCP Provider HMAC GETSIZE_rmf: EXIT ");
+    printMsg("ippsHMACGetSize_rmf: EXIT");
     return ippStsNoErr;
 }
 
@@ -48,11 +48,12 @@ createHmacInfo(alc_mac_info_p        pMacInfo,
                const IppsHashMethod* pMethod)
 {
 
-    const alc_key_info_t cKinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                    .fmt  = ALC_KEY_FMT_RAW,
-                                    .algo = ALC_KEY_ALG_MAC,
-                                    .len  = static_cast<Uint32>(keyLen * 8),
-                                    .key  = static_cast<const Uint8*>(pKey) };
+    const alc_key_info_t cKinfo = { ALC_KEY_TYPE_SYMMETRIC,
+                                    ALC_KEY_FMT_RAW,
+                                    ALC_KEY_ALG_MAC,
+                                    ALC_KEY_LEN_CUSTOM,
+                                    static_cast<Uint32>(keyLen * 8),
+                                    static_cast<const Uint8*>(pKey) };
 
     alc_sha2_mode_t  sha2_mode;
     alc_digest_len_t sha_length;
@@ -100,14 +101,11 @@ createHmacInfo(alc_mac_info_p        pMacInfo,
             return ippStsNotSupportedModeErr;
     }
 
-    pMacInfo->mi_type = ALC_MAC_HMAC;
-    pMacInfo->mi_algoinfo.hmac = {
-        .hmac_digest = {
-                    .dt_type = ALC_DIGEST_TYPE_SHA2,
-                    .dt_len = sha_length,
-                    .dt_mode = {.dm_sha2 = sha2_mode,},
-                }
-    };
+    pMacInfo->mi_type                              = ALC_MAC_HMAC;
+    pMacInfo->mi_algoinfo.hmac.hmac_digest.dt_type = ALC_DIGEST_TYPE_SHA2;
+    pMacInfo->mi_algoinfo.hmac.hmac_digest.dt_len  = sha_length;
+    pMacInfo->mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2 = sha2_mode;
+
     pMacInfo->mi_keyinfo = cKinfo;
 
     return ippStsNoErr;
@@ -119,7 +117,7 @@ ippsHMACInit_rmf(const Ipp8u*          pKey,
                  IppsHMACState_rmf*    pCtx,
                  const IppsHashMethod* pMethod)
 {
-    printMsg("ALCP Provider  ippsHMACInit_rmf_rmf: ENTRY ");
+    printMsg("ippsHMACInit_rmf_rmf: ENTRY");
     auto p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pCtx);
     new (p_mac_ctx) ipp_wrp_mac_ctx;
     alc_mac_info_t mac_info;
@@ -128,61 +126,61 @@ ippsHMACInit_rmf(const Ipp8u*          pKey,
         return status;
     }
     status = alcp_MacInit(&mac_info, p_mac_ctx);
-    printMsg("ALCP Provider  ippsHMACInit_rmf_rmf: EXIT ");
+    printMsg("ippsHMACInit_rmf_rmf: EXIT");
     return status;
 }
 
 IppStatus
 ippsHMACPack_rmf(const IppsHMACState_rmf* pCtx, Ipp8u* pBuffer, int bufSize)
 {
-    printMsg("ALCP Provider  ippsHMACPack_rmf_rmf: ENTRY ");
+    printMsg("ippsHMACPack_rmf_rmf: ENTRY");
     // FIXME: ALCP Does not have an API to copy context
-    printMsg("ALCP Provider  ippsHMACPack_rmf_rmf: EXIT ");
+    printMsg("ippsHMACPack_rmf_rmf: EXIT");
     return ippStsNoErr;
 }
 IppStatus
 ippsHMACUnpack_rmf(const Ipp8u* pBuffer, IppsHMACState_rmf* pCtx)
 {
-    printMsg("ALCP Provider  ippsHMACUnpack_rmf: ENTRY ");
+    printMsg("ippsHMACUnpack_rmf: ENTRY");
     // FIXME: ALCP Does not have an API to copy context
-    printMsg("ALCP Provider  ippsHMACUnpack_rmf: EXIT ");
+    printMsg("ippsHMACUnpack_rmf: EXIT");
     return ippStsNoErr;
 }
 IppStatus
 ippsHMACDuplicate_rmf(const IppsHMACState_rmf* pSrcCtx,
                       IppsHMACState_rmf*       pDstCtx)
 {
-    printMsg("ALCP Provider  ippsHMACDuplicate_rmf: ENTRY ");
+    printMsg("ippsHMACDuplicate_rmf: ENTRY");
     // FIXME: ALCP Does not have an API to copy context
-    printMsg("ALCP Provider  ippsHMACDuplicate_rmf: EXIT ");
+    printMsg("ippsHMACDuplicate_rmf: EXIT");
     return ippStsNoErr;
 }
 
 IppStatus
 ippsHMACUpdate_rmf(const Ipp8u* pSrc, int len, IppsHMACState_rmf* pCtx)
 {
-    printMsg("ALCP Provider  ippsHMACUpdate_rmf: ENTRY ");
+    printMsg("ippsHMACUpdate_rmf: ENTRY");
     auto      p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pCtx);
     IppStatus status    = alcp_MacUpdate(pSrc, len, p_mac_ctx);
-    printMsg("ALCP Provider  ippsHMACUpdate_rmf: EXIT ");
+    printMsg("ippsHMACUpdate_rmf: EXIT");
     return status;
 }
 IppStatus
 ippsHMACFinal_rmf(Ipp8u* pMD, int mdLen, IppsHMACState_rmf* pCtx)
 {
-    printMsg("ALCP Provider  ippsHMACFinal_rmf: ENTRY ");
+    printMsg("ippsHMACFinal_rmf: ENTRY");
     auto      p_mac_ctx = reinterpret_cast<ipp_wrp_mac_ctx*>(pCtx);
     IppStatus status    = alcp_MacFinalize(pMD, mdLen, p_mac_ctx);
-    printMsg("ALCP Provider  ippsHMACFinal_rmf: EXIT ");
+    printMsg("ippsHMACFinal_rmf: EXIT");
     return status;
 }
 IppStatus
 ippsHMACGetTag_rmf(Ipp8u* pMD, int mdLen, const IppsHMACState_rmf* pCtx)
 {
-    printMsg("ALCP Provider  ippsHMACGetTag_rmf: ENTRY ");
+    printMsg("ippsHMACGetTag_rmf: ENTRY");
     // FIXME: ALCP Does not have an API to copy context. Hence will need to
     // implement a method to copy, save context and then restore it
-    printMsg("ALCP Provider  ippsHMACGetTag_rmf: EXIT ");
+    printMsg("ippsHMACGetTag_rmf: EXIT");
     return ippStsNoErr;
 }
 IppStatus
@@ -195,7 +193,7 @@ ippsHMACMessage_rmf(const Ipp8u*          pMsg,
                     const IppsHashMethod* pMethod)
 {
     // TODO: Add a test case for this function
-    printMsg("ALCP Provider  ippsHMACMessage_rmf: ENTRY ");
+    printMsg("ippsHMACMessage_rmf: ENTRY");
     int ctx_size = 0;
     ippsHMACGetSize_rmf(&ctx_size);
     auto* p_context = reinterpret_cast<IppsHMACState_rmf*>(new Uint8[ctx_size]);
@@ -211,6 +209,6 @@ ippsHMACMessage_rmf(const Ipp8u*          pMsg,
     if (status != ippStsNoErr) {
         return status;
     }
-    printMsg("ALCP Provider  ippsHMACMessage_rmf: EXIT ");
+    printMsg("ippsHMACMessage_rmf: EXIT");
     return ippStsNoErr;
 }
