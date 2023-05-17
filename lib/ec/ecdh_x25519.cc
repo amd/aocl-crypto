@@ -63,14 +63,16 @@ X25519::generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
 
     if (!has_adx) {
         // Todo : cerr will be removed when error module is properly implemented
-        std::cerr << "Not supported due to missing instruction set";
+        std::cerr << "Not supported due to missing instruction set"
+                  << std::endl;
         return status::NotAvailable(
             "Not supported due to missing instruction set");
     }
 
     if (!has_bmi2) {
         // Todo : cerr will be removed when error module is properly implemented
-        std::cerr << "Not supported due to missing instruction set";
+        std::cerr << "Not supported due to missing instruction set"
+                  << std::endl;
         return status::NotAvailable(
             "Not supported due to missing instruction set");
     }
@@ -140,13 +142,15 @@ X25519::computeSecretKey(Uint8*       pSecretKey,
 
     if (!has_adx) {
         // Todo : cerr will be removed when error module is properly implemented
-        std::cerr << "Not supported due to missing instruction set";
+        std::cerr << "Not supported due to missing instruction set"
+                  << std::endl;
         return status::NotAvailable("ADX instruction set not supported");
     }
 
     if (!has_bmi2) {
         // Todo : cerr will be removed when error module is properly implemented
-        std::cerr << "Not supported due to missing instruction set";
+        std::cerr << "Not supported due to missing instruction set"
+                  << std::endl;
         return status::NotAvailable("MULX instruction set not supported");
     }
     Status status = validatePublicKey(pPublicKey, KeySize);
