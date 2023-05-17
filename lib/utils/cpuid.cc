@@ -287,7 +287,7 @@ CpuId::Impl::cpuHasAdx()
 #ifdef ALCP_ENABLE_AOCL_CPUID
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_ADX);
 #else
-    static bool state = false;
+    static bool state = true;
 #endif
     return state;
 }
@@ -297,7 +297,7 @@ CpuId::Impl::cpuHasBmi2()
 #ifdef ALCP_ENABLE_AOCL_CPUID
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_BMI2);
 #else
-    static bool state = false;
+    static bool state = true;
 #endif
     return state;
 }
