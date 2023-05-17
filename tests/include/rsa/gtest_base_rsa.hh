@@ -124,9 +124,9 @@ Rsa_KAT()
     while (csv.readNext()) {
         /* input text to be loaded */
         std::vector<Uint8> input_data = csv.getVect("INPUT");
-        std::vector<Uint8> encrypted_data(KeySize);
-        std::vector<Uint8> decrypted_data(KeySize);
-        std::vector<Uint8> PubKeyKeyMod(KeySize);
+        std::vector<Uint8> encrypted_data(KeySize, 0);
+        std::vector<Uint8> decrypted_data(input_data.size(), 0);
+        std::vector<Uint8> PubKeyKeyMod(KeySize, 0);
 
         data.m_msg            = &(input_data[0]);
         data.m_pub_key_mod    = &(PubKeyKeyMod[0]);

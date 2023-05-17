@@ -29,6 +29,7 @@
 
 #include "alcp/alcp.h"
 #include "alcp/rsa.h"
+//#include "rsa/BigNumber.hh"
 #include "rsa/rsa.hh"
 #include <crypto_mb/x25519.h>
 #include <iostream>
@@ -39,6 +40,14 @@
 namespace alcp::testing {
 class IPPRsaBase : public RsaBase
 {
+    IppsRSAPublicKeyState*  m_pPub            = nullptr;
+    IppsRSAPrivateKeyState* m_pPrv            = nullptr;
+    int                     m_buffSizePublic  = 0;
+    int                     m_buffSizePrivate = 0;
+    Ipp8u*                  m_scratchBuffer   = NULL;
+    int                     m_buffSize        = 0;
+    int                     m_modulus_size    = 0;
+
   public:
     IPPRsaBase();
     ~IPPRsaBase();

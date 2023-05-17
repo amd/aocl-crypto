@@ -129,4 +129,17 @@ Hash_to_string(char* output_string, const Uint8* hash, int sha_len)
     output_string[(sha_len / 8) * 2 + 1] = '\0';
 }
 
+std::string
+bytes_to_hex(const std::string& bytes)
+{
+    std::ostringstream ss;
+    ss << std::hex;
+
+    for (const char& c : bytes) {
+        ss << std::setfill('0') << std::setw(2) << +(static_cast<uint8_t>(c));
+    }
+
+    return ss.str();
+}
+
 } // namespace alcp::testing::utils

@@ -30,14 +30,15 @@
 
 #include "../../../lib/include/alcp/types.hh"
 #include "colors.hh"
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #ifdef __linux__
 #include <unistd.h>
 #else
 #include <io.h>
-#define isatty	_isatty
-#define fileno	_fileno
+#define isatty _isatty
+#define fileno _fileno
 #endif
 #include <sys/stat.h>
 
@@ -59,5 +60,7 @@ bool
 isPathExist(const std::string dir);
 void
 Hash_to_string(char* output_string, const Uint8* hash, int sha_len);
+std::string
+bytes_to_hex(const std::string& bytes);
 
 } // namespace alcp::testing::utils
