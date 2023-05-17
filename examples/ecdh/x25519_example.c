@@ -90,7 +90,8 @@ x25519_demo(alc_ec_handle_t* ps_ec_handle_peer1,
         return err;
     }
 
-    alcp_ec_get_publickey(ps_ec_handle_peer1, publicKeyData1, peer1_privk_data);
+    err = alcp_ec_get_publickey(
+        ps_ec_handle_peer1, publicKeyData1, peer1_privk_data);
     if (err != ALC_ERROR_NONE) {
         printf("\n peer1 publickey generation failed");
         return err;

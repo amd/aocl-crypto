@@ -57,14 +57,18 @@ X25519::setPrivateKey(const Uint8* pPrivKey)
 Status
 X25519::generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
 {
-    if (!CpuId::cpuHasAdx()) {
+
+    static bool has_adx  = CpuId::cpuHasAdx();
+    static bool has_bmi2 = CpuId::cpuHasBmi2();
+
+    if (!has_adx) {
         // Todo : cerr will be removed when error module is properly implemented
         std::cerr << "Not supported due to missing instruction set";
         return status::NotAvailable(
             "Not supported due to missing instruction set");
     }
 
-    if (!CpuId::cpuHasBmi2()) {
+    if (!has_bmi2) {
         // Todo : cerr will be removed when error module is properly implemented
         std::cerr << "Not supported due to missing instruction set";
         return status::NotAvailable(
@@ -131,13 +135,16 @@ X25519::computeSecretKey(Uint8*       pSecretKey,
                          Uint64*      pKeyLength)
 {
 
-    if (!CpuId::cpuHasAdx()) {
+    static bool has_adx  = CpuId::cpuHasAdx();
+    static bool has_bmi2 = CpuId::cpuHasBmi2();
+
+    if (!has_adx) {
         // Todo : cerr will be removed when error module is properly implemented
         std::cerr << "Not supported due to missing instruction set";
         return status::NotAvailable("ADX instruction set not supported");
     }
 
-    if (!CpuId::cpuHasBmi2()) {
+    if (!has_bmi2) {
         // Todo : cerr will be removed when error module is properly implemented
         std::cerr << "Not supported due to missing instruction set";
         return status::NotAvailable("MULX instruction set not supported");
