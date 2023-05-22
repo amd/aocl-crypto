@@ -24,8 +24,6 @@
  # POSSIBILITY OF SUCH DAMAGE.
 
 
-#FILE(GLOB COMMON_SRCS "*.cc" )
-
 #
 # The Policy will throw error about TARGET_SOURCES makes the
 # relative paths as absolute
@@ -54,15 +52,6 @@ SET(ALCP_COMMON_SRCS
   bufferwriter.cc
   padding.cc
 	)
-
-#[==[
-# add_compile_options_config(<CONFIG> <option> ...)
-#FUNCTION(ADD_COMPILE_OPTIONS_CONFIG CONFIG)
-#    FOREACH(opt ${ARGN})
-#        ADD_COMPILE_OPTIONS("$<$<CONFIG:${CONFIG}>:${opt}>")
-#    ENDFOREACH()
-#ENDFUNCTION()
-#]==]
 
 INCLUDE(AlcpUtils)
 
@@ -127,10 +116,11 @@ ENDIF(ENABLE_AOCL_CPUID)
 
 IF(WIN32)
 	IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib/libcrypto.lib)
-		INCLUDE_DIRECTORIES(${OPENSSL_INSTALL_DIR}/include)
 		TARGET_LINK_LIBRARIES(alcp PUBLIC ${OPENSSL_INSTALL_DIR}/lib/libcrypto.lib)
 	ENDIF()
 ENDIF(WIN32)
+
+INCLUDE_DIRECTORIES(${OPENSSL_INSTALL_DIR}/include)
 
 TARGET_SOURCES(alcp
 	PRIVATE
