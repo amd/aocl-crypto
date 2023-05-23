@@ -77,6 +77,18 @@ class Status final
         , m_message{ makeMessage(ie.message(), msg) }
     {}
 
+    // Move contructor
+    Status(const Status&& s)
+        : m_code{ s.m_code }
+        , m_message{ std::move(s.m_message) }
+    {}
+
+    /*
+       Begin Optimization
+            There is no need to copy message in case of "Ok" status as message
+       will be any way empty, we can squeeze out a little bit of performance out
+       of Status copy (constructor) and assignment (pperator)
+    */
     Status(const Status& s)
     {
         this->m_code = s.m_code;
@@ -89,11 +101,11 @@ class Status final
         this->m_code = s.m_code;
         if (s.m_code != 0)
             this->m_message = s.m_message;
-        // operator=(s);
         return *this;
     }
-
-    // ALCP_DEFS_DEFAULT_COPY_AND_ASSIGNMENT(Status);
+    /*
+        End Optimization
+    */
 
     bool operator==(const Status& other) const;
     bool operator!=(const Status& other) const;
