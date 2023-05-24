@@ -43,5 +43,11 @@ TARGET_INCLUDE_DIRECTORIES(openssl-compat PRIVATE include)
 # Link to ALCP shared object file
 TARGET_LINK_LIBRARIES(openssl-compat PUBLIC alcp)
 
+# OPENSSL files
+IF(WIN32)
+	IF(OPENSSL_INSTALL_DIR)
+		TARGET_COMPILE_OPTIONS(openssl-compat PRIVATE -Wno-language-extension-token -Wno-missing-field-initializers)
+	ENDIF()
+ENDIF(WIN32)
 
 

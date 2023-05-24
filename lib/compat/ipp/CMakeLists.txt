@@ -36,3 +36,11 @@ TARGET_INCLUDE_DIRECTORIES(ipp-compat PRIVATE include)
 
 # Include ALCP header files
 TARGET_INCLUDE_DIRECTORIES(ipp-compat PRIVATE ${PROJECT_SOURCE_DIR}/include)
+
+# Include IPPCP files
+IF(WIN32)
+	IF(IPP_INSTALL_DIR)
+		TARGET_INCLUDE_DIRECTORIES(ipp-compat PRIVATE ${IPP_INSTALL_DIR}/include)
+		TARGET_COMPILE_OPTIONS(ipp-compat PRIVATE -Wno-language-extension-token -Wno-missing-field-initializers)
+	ENDIF()
+ENDIF(WIN32)

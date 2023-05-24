@@ -25,6 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include <inttypes.h>
 
 #include "cipher/alcp_cipher_prov.h"
 #include "provider/alcp_names.h"
@@ -444,7 +445,7 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
         printf("Provider: cctx->ivlen : %lu\n", cctx->ivlen);
 #endif
         if (key != NULL && iv != NULL) {
-            if (cctx->ivlen != -1) {
+            if (cctx->ivlen != -1U) {
                 err =
                     alcp_cipher_set_iv(&(cctx->handle),
                                        cctx->ivlen,
@@ -646,7 +647,7 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
 
     if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
         if (key != NULL && iv != NULL) {
-            if (ivlen != -1) {
+            if (ivlen != -1U) {
                 err =
                     alcp_cipher_set_iv(&(cctx->handle),
                                        cctx->ivlen,
@@ -811,7 +812,7 @@ out:
     if (alcp_is_error(err)) {
         alcp_error_str(err, err_buf, err_size);
         printf("Provider: Encyption/Decryption Failure! ALCP:%s\n", err_buf);
-        printf("%p,%ld,%p\n", (void*)in, inl, (void*)out);
+        printf("%p,%10"PRId64"%p\n", (void*)in, inl, (void*)out);
         printf("%d\n",
                cctx->pc_cipher_info.ci_algo_info.ai_mode == ALC_AES_MODE_CFB);
         printf("%p\n", (void*)cctx->pc_cipher_info.ci_algo_info.ai_iv);
