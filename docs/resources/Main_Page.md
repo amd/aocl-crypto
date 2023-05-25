@@ -1,8 +1,9 @@
 
 # Welcome to AOCL-Crypto
 
-**AOCL-Crypto** is a library consisting of basic cryptographic functions optimized and tuned for AMD Zen™ based microarchitecture. This library provides a unified solution for Cryptographic routines such as AES Cipher ( CFB, CTR, CBC, CCM, GCM, OFB, SIV, XTS ), SHA Digest ( SHA2, SHA3, SHAKE ), Message Authentication Code ( CMAC, HMAC ), Elliptical Curve ( ecdhx25519 ), Rivest-Shamir-Adleman ( Public key Encrypt, private key decrypt ) etc ...
+**AOCL-Crypto** is a library consisting of basic cryptographic functions optimized and tuned for AMD Zen™ based microarchitecture. This library provides a unified solution for Cryptographic routines such as AES (Advanced Encryption Standard) encryption/decryption routines (CFB, CTR, CBC, CCM, GCM, OFB, SIV, XTS), SHA (Secure Hash Algorithms) routines (SHA2, SHA3, SHAKE), Message Authentication Code (CMAC, HMAC), ECDH (Elliptic-curve Diffie–Hellman) and RSA (Rivest, Shamir, and Adleman) key generation functions, etc.
 
+- For building, please refer to [Build.md](./BUILD.md)
 ---
 
 ## Table of Content
@@ -126,4 +127,4 @@ Here is a Demo Code Example on how to use Cipher:
 
 ## CONTACTS
 
-AOCL Crypto is developed and maintained by AMD. You can contact us on the email-id <b>[aoclsupport@amd.com](mailto:aoclsupport@amd.com)</b>
+AOCL Crypto is developed and maintained by AMD. For support of these libraries and the other tools of AMD Zen Software Studio, see https://www.amd.com/en/developer/aocc/compiler-technical-support.html</b>
