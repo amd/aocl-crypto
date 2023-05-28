@@ -76,6 +76,33 @@ __rsa_getPublicKey_wrapper(void* pRsaHandle, RsaPublicKey& publicKey)
 }
 
 static Status
+__rsa_setDigest_wrapper(void* pRsaHandle, digest::IDigest* digest)
+{
+    auto ap = static_cast<Rsa*>(pRsaHandle);
+
+    ap->setDigestOaep(digest);
+    return StatusOk();
+}
+
+static Status
+__rsa_setDrbg_wrapper(void* pRsaHandle, rng::IDrbg* drbg)
+{
+    auto ap = static_cast<Rsa*>(pRsaHandle);
+
+    ap->setDrbgOaep(drbg);
+    return StatusOk();
+}
+
+static Status
+__rsa_setMgf_wrapper(void* pRsaHandle, digest::IDigest* digest)
+{
+    auto ap = static_cast<Rsa*>(pRsaHandle);
+
+    ap->setMgfOaep(digest);
+    return StatusOk();
+}
+
+static Status
 __rsa_dtor(void* pRsaHandle)
 {
     auto ap = static_cast<Rsa*>(pRsaHandle);
@@ -111,6 +138,9 @@ RsaBuilder::Build(Context& rCtx)
     rCtx.decryptPrivateFn = __rsa_getDecrBufWithPriv_wrapper;
     rCtx.getKeySize       = __rsa_getKeySize_wrapper;
     rCtx.getPublickey     = __rsa_getPublicKey_wrapper;
+    rCtx.setDigest        = __rsa_setDigest_wrapper;
+    rCtx.setDrbg          = __rsa_setDrbg_wrapper;
+    rCtx.setMgf           = __rsa_setMgf_wrapper;
     rCtx.finish           = __rsa_dtor;
     rCtx.reset            = __rsa_reset_wrapper;
 

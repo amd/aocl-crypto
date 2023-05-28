@@ -23,30 +23,11 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
  */
-
-#include "alcp/rsa/rsaerror.hh"
-
-namespace alcp::rsa::status {
-
-Status
-NotPermitted(StringView msg)
-{
-    auto e = RsaError(alcp::base::eInvalidArgument, ErrorCode::eNotPermitted);
-    return Status(e, msg);
-}
-
-Status
-Unavailable(StringView msg)
-{
-    auto e = RsaError(alcp::base::eNotAvailable, ErrorCode::eUnavailable);
-    return Status(e, msg);
-}
-
-Status
-Generic(StringView msg)
-{
-    auto e = RsaError(alcp::base::eInternal, ErrorCode::eInternal);
-    return Status(e, msg);
-}
-} // namespace alcp::rsa::status
+#include "alcp/rsa/rsa_internal.hh"
+#include "alcp/utils/copy.hh"
+#include <immintrin.h>
+namespace alcp::rsa { namespace zen3 {
+#include "../../rsa/rsa.cc.inc"
+}} // namespace alcp::rsa::zen3

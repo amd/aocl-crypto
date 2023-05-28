@@ -26,6 +26,8 @@
  *
  */
 
+#pragma once
+
 #include "alcp/base.hh"
 #include "alcp/rng.hh"
 #include "alcp/utils/copy.hh"

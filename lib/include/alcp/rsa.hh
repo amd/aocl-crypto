@@ -31,7 +31,9 @@
 /* C++ headers */
 #include "alcp/base.hh"
 #include "alcp/rsa.h"
-#include "alcp/utils/bignum.hh"
+#include "alcp/rsa/rsa_internal.hh"
+#include "digest.hh"
+#include "rng/drbg.hh"
 
 namespace alcp::rsa {
 
@@ -65,6 +67,45 @@ class ALCP_API_EXPORT Rsa
                          Uint8*              pEncText);
 
     /**
+     * @brief set the Digest to be used by OAEP encrytion
+     * @param digest: Digest class to be used by OAEP encrytion. Should be
+     * called before calling encryptPublicOaep
+     */
+    void setDigestOaep(digest::IDigest* digest);
+
+    /**
+     * @brief set the DRBG to be used by OAEP encrytion
+     * @param digest: Drbg class to be used by OAEP encrytion. Should be
+     * called before calling encryptPublicOaep
+     */
+    void setDrbgOaep(rng::IDrbg* drbg);
+
+    /**
+     * @brief set the MGF to be used by OAEP encrytion
+     * @param mgf: Digest class to be used by OAEP encrytion. Should be
+     * called before calling encryptPublicOaep
+     */
+    void setMgfOaep(digest::IDigest* mgf);
+
+    /**
+     * @brief Function encrypt the buffer
+     *
+     * @param [in]  pad            padding scheme used in RSA
+     * @param [in]  pubKey         Reference to public key structure
+     * @param [in]  pText          pointer to Input text
+     * @param [in]  textSize       Input text size
+     * @param [out] pEncText       pointer to encrypted text
+     * publicKey
+     * @return Status Error code
+     */
+    Status encryptPublicOaep(const RsaPublicKey& pubKey,
+                             const Uint8*        pText,
+                             Uint64              textSize,
+                             const Uint8*        label,
+                             Uint64              labelSize,
+                             Uint8*              pEncText);
+
+    /**
      * @brief Function decrypt the buffer
      *
      * @param [in]  pad         padding scheme used in RSA
@@ -79,6 +120,12 @@ class ALCP_API_EXPORT Rsa
                           Uint64          encSize,
                           Uint8*          pText);
 
+    Status decryptPrivateOaep(const Uint8* pEncText,
+                              Uint64       encSize,
+                              const Uint8* label,
+                              Uint64       labelSize,
+                              Uint8*       pText,
+                              Uint64&      textSize);
     /**
      * @brief Function fetches the public key
      *
@@ -88,6 +135,20 @@ class ALCP_API_EXPORT Rsa
      */
 
     Status getPublickey(RsaPublicKey& pPublicKey);
+
+    // todo : add documentation
+    Status setPublicKey(const Uint64 exponent,
+                        const Uint8* mod,
+                        const Uint64 size);
+
+    // todo : add documentation
+    Status setPrivateKey(const Uint8* dp,
+                         const Uint8* dq,
+                         const Uint8* p,
+                         const Uint8* q,
+                         const Uint8* qinv,
+                         const Uint8* mod,
+                         const Uint64 size);
 
     /**
      * @brief Function returns the private key size
@@ -102,10 +163,18 @@ class ALCP_API_EXPORT Rsa
     void reset();
 
   private:
-    Uint64 m_key_size;
-    BigNum m_pub_key;
-    BigNum m_priv_key;
-    BigNum m_mod;
+    Status maskGenFunct(Uint8*       mask,
+                        Uint64       maskSize,
+                        const Uint8* input,
+                        Uint64       inputLen);
+
+    Uint64              m_key_size;
+    RsaPrivateKeyBignum m_priv_key_type2;
+    RsaPublicKeyBignum  m_pub_key_2;
+    MontContextBignum   m_context_pub, m_context_p, m_context_q;
+    digest::IDigest*    m_digest = nullptr;
+    rng::IDrbg*         m_drbg   = nullptr;
+    digest::IDigest*    m_mgf    = nullptr;
 };
 
 } // namespace alcp::rsa

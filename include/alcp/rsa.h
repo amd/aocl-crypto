@@ -28,8 +28,10 @@
 #ifndef _ALCP_RSA_H_
 #define _ALCP_RSA_H_ 2
 
+#include "alcp/digest.h"
 #include "alcp/error.h"
 #include "alcp/macros.h"
+#include "alcp/rng.h"
 
 EXTERN_C_BEGIN
 /**
@@ -164,6 +166,63 @@ alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
                            const Uint8*           pText,
                            Uint64                 textSize,
                            Uint8*                 pEncText);
+
+/**
+ * @brief Function encrypts text using using public key
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request
+ * @endparblock
+ *
+ * @note  ALCP_RSA_PADDING_NONE is only supported as
+ *        padding scheme. This has following limitations
+ *         - textSize should equal to the modulus/private_key size
+ *         - pText absolute value should be less than modulus
+ *
+ * @param [in]  pRsaHandle         - Handler of the Context for the session
+ * @param [in]  pad                - padding scheme for rsa encryption
+ * @param [in]  pPublicKeyMod      - public key modulus
+ * @param [in]  pPublicKeyModSize  - public key modulus size
+ * @param [in]  publicKeyExp       - public key exponent
+ * @param [in]  pText              - pointer to raw bytes
+ * @param [in]  textSize           - size of raw bytes
+ * @param [out] pEncText           - pointer to encrypted bytes
+ * bytes
+
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_publickey_encrypt_oaep(const alc_rsa_handle_p pRsaHandle,
+                                const Uint8*           pPublicKeyMod,
+                                Uint64                 pPublicKeyModSize,
+                                Uint64                 publicKeyExp,
+                                const Uint8*           pText,
+                                Uint64                 textSize,
+                                const Uint8*           label,
+                                Uint64                 labelSize,
+                                Uint8*                 pEncText);
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_add_digest_oaep(const alc_rsa_handle_p pRsaHandle,
+                         alc_digest_info_t      digestInfo);
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_remove_digest_oaep(const alc_rsa_handle_p pRsaHandle);
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_add_drbg_oaep(const alc_rsa_handle_p pRsaHandle,
+                       alc_drbg_info_t        drbgInfo);
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_remove_drbg_oaep(const alc_rsa_handle_p pRsaHandle);
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_add_mgf_oaep(const alc_rsa_handle_p pRsaHandle,
+                      alc_digest_info_t      digestInfo);
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_remove_mgf_oaep(const alc_rsa_handle_p pRsaHandle,
+                         alc_digest_info_t      digestInfo);
 
 /**
  * @brief Function compute secret key with publicKey from remotePeer and

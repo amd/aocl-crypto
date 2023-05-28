@@ -23,30 +23,75 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
  */
+#include "alcp/types.hh"
 
-#include "alcp/rsa/rsaerror.hh"
-
-namespace alcp::rsa::status {
-
-Status
-NotPermitted(StringView msg)
+#pragma once
+Uint64
+MUL64(Uint64 a, Uint64 b, long long unsigned* rem)
 {
-    auto e = RsaError(alcp::base::eInvalidArgument, ErrorCode::eNotPermitted);
-    return Status(e, msg);
+    __uint128_t res = (__uint128_t)(a * b);
+    *rem            = (Uint64)(res >> 64);
+    return (Uint64)res;
+}
+#define _mulx_u64(x, y, z) MUL64(x, y, z);
+
+Uint8
+ADD64(Uint8 carry, Uint64 a, Uint64 b, long long unsigned* res)
+{
+    __uint128_t sum = a + b + carry;
+    *res            = (Uint64)(sum);
+    return (Uint8)(sum >> 64);
 }
 
-Status
-Unavailable(StringView msg)
+#define _addcarryx_u64(x, y, z, t) ADD64(x, y, z, t)
+
+Uint8
+SUB64(Uint8 carry, Uint64 a, Uint64 b, long long unsigned* res)
 {
-    auto e = RsaError(alcp::base::eNotAvailable, ErrorCode::eUnavailable);
-    return Status(e, msg);
+    __uint128_t sub = a - (b + carry);
+    *res            = (Uint64)(sub);
+    return (Uint8)(sub >> 64);
 }
 
-Status
-Generic(StringView msg)
+#define _subborrow_u64(x, y, z, t) SUB64(x, y, z, t)
+
+Uint64
+LEADZEROS(Uint64 a)
 {
-    auto e = RsaError(alcp::base::eInternal, ErrorCode::eInternal);
-    return Status(e, msg);
+    unsigned y;
+    int      n = 32;
+
+    y = a >> 32;
+    if (y != 0) {
+        n = n - 32;
+        a = y;
+    }
+    y = a >> 16;
+    if (y != 0) {
+        n = n - 16;
+        a = y;
+    }
+    y = a >> 8;
+    if (y != 0) {
+        n = n - 8;
+        a = y;
+    }
+    y = a >> 4;
+    if (y != 0) {
+        n = n - 4;
+        a = y;
+    }
+    y = a >> 2;
+    if (y != 0) {
+        n = n - 2;
+        a = y;
+    }
+    y = a >> 1;
+    if (y != 0)
+        return n - 2;
+    return n - a;
 }
-} // namespace alcp::rsa::status
+
+#define _lzcnt_u64(x) LEADZEROS(x)
