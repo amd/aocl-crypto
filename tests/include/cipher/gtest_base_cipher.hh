@@ -348,24 +348,12 @@ AesCrosstest(int               keySize,
     /* Set extTC based on which external testing core user asks*/
     try {
         if (useossl)
-            if (mode == ALC_AES_MODE_SIV) {
-                printErrors("OpenSSL is not available for SIV mode");
-                useipp = true;
-                extTC  = new TestingCore(IPP, mode);
-            } else {
-                extTC = new TestingCore(OPENSSL, mode);
-            }
+            extTC = new TestingCore(OPENSSL, mode);
         else if (useipp)
             extTC = new TestingCore(IPP, mode);
         else {
             printErrors("No Lib Specified!.. but trying OpenSSL");
-            if (mode == ALC_AES_MODE_SIV) {
-                printErrors("OpenSSL is not available for SIV mode");
-                useipp = true;
-                extTC  = new TestingCore(IPP, mode);
-            } else {
-                extTC = new TestingCore(OPENSSL, mode);
-            }
+            extTC = new TestingCore(OPENSSL, mode);
         }
     } catch (const char* exc) {
         std::cerr << exc << std::endl;
