@@ -16,24 +16,14 @@ implementations of different cryptographic algorithms which is given below:
 
 Highlights of AOCL Crypto version 4.1
 --------------------------------------
-AOCL-Crypto supports the following functions.
-    * AES Encrypt/Decrypt routines for the following cipher schemes:
-          - CBC, CFB, OFB, CTR, GCM, XTS, CCM.
-    * SHA2 Digest routines for the following schemes:
-          - SHA2_224, SHA2_256, SHA2_384, SHA2_512
-    * SHA3 Digest routines for the following schemes:
-          - SHA3_224, SHA3_256, SHA3_384, SHA3_512
-          - SHAKE128, SHAKE256
-    * HMAC routines for the following schemes:
-          - HMAC_SHA2_224, HMAC_SHA2_256, HMAC_SHA2_384, HMAC_SHA2_512
-          - HMAC_SHA3_224, HMAC_SHA3_256, HMAC_SHA3_384, HMAC_SHA3_512
-    * CMAC routines for the following schemes:
-          - CMAC_AES_128, CMAC_AES_192, CMAC_AES_256
-    * AES - SIV
-    * ECDH x25519 key exchange functions:
-          - Generate Public Key
-          - Compute Secret Key
-    * RSA
-          - Encrypt text with public key
-          - Decrypt text with private Key
-          (Note: Only non-padded mode is supported in 4.1 release)
+-- AES CCM encrypt/decrypt routines
+-- Improvements in AES-GCM encrypt/decrypt routines for zen architecture
+-- Improved SHA3 digest routines including SHAKE128 and 256 schemes
+-- HMAC SHA2 and SHA3 routines
+-- AES CMAC routines for key sizes (128, 192, and 256)
+-- AES SIV routines
+-- ECDH x25519 key exchange functions: Generate Public Key and Compute Secret Key
+-- RSA Functions: Encrypt Text with public key and Decrypt with private key
+    (Note: Only non-padded mode is supported in 4.1 release.)
+-- Dynamic dispatch on different architectures support (using AOCL-Utils library)
+-- Windows support
