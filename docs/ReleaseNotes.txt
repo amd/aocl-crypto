@@ -1,0 +1,34 @@
+(C) 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
+
+AOCL Crypto - Release Notes - AOCL version 4.1
+----------------------------------------------
+
+AOCL Crypto Contents
+--------------------
+AOCL-Crypto is a library consisting of basic cryptographic functions
+optimized for AMD Zen microarchitecture. This library has multiple
+implementations of different cryptographic algorithms which is given below:
+-- AES cryptographic encryption / decryption routines
+-- SHA2, SHA3 Digest routines.
+-- MAC (Cipher and Hash based) routines
+-- ECDH x25519 Key exchange functions
+-- RSA Encrypt/Decrypt functions.
+
+Highlights of AOCL Crypto version 4.1
+--------------------------------------
+-- Improvements in AES-GCM encrypt/decrypt routines for zen4 architecture
+-- Improved SHA3 digest routines including SHAKE128 and 256 schemes
+-- AES CCM encrypt/decrypt routines
+-- HMAC SHA2 and SHA3 routines
+-- AES CMAC routines for key sizes (128, 192, and 256)
+-- AES SIV routines
+-- ECDH x25519 key exchange functions: Generate Public Key and Compute Secret Key
+-- RSA Functions: Encrypt Text with public key and Decrypt with private key
+    (Note: Only non-padded mode is supported in 4.1 release)
+-- Dynamic dispatch on different architectures support (using AOCL-Utils 4.1 library)
+-- Windows support
+
+Known issues in 4.1:
+--------------------
+-- ECDH, Digest(SHA2) and HMAC(SHA2) functions are not stable on pre-avx2 architectures
+-- ALCP Compat libraries support compilation only with GCC
