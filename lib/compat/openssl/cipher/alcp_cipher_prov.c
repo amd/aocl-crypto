@@ -279,9 +279,9 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
 {
     ENTER();
     const OSSL_PARAM*     p;
-    alc_prov_cipher_ctx_p cctx            = vctx;
-    alc_cipher_info_p     cinfo           = &cctx->pc_cipher_info;
-    alc_key_info_p        kinfo_tweak_key = &cctx->kinfo_tweak_key;
+    alc_prov_cipher_ctx_p cctx              = vctx;
+    alc_cipher_info_p     cinfo             = &cctx->pc_cipher_info;
+    alc_key_info_p        kinfo_tweak_key   = &cctx->kinfo_tweak_key;
     alc_key_info_p        kinfo_siv_ctr_key = &cctx->kinfo_siv_ctr_key;
     alc_error_t           err;
 
@@ -413,18 +413,18 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
     }
 #endif
 
-
     // Manually allocate context
     (cctx->handle).ch_context = OPENSSL_malloc(alcp_cipher_context_size(cinfo));
     // For SIV, Authentication Key assumed to be same length as Decryption Key
     // Hence not modifying cinfo->ci_key_info.key or cinfo->ci_key_info.len
     if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
-        // For openSSL SIV encryption and authentication key needs to be in continous memory location. 
-        // Second part of the key is authentication key
-        kinfo_siv_ctr_key->len = keylen;
-        kinfo_siv_ctr_key->key = key+(keylen/8);
+        // For openSSL SIV encryption and authentication key needs to be in
+        // continous memory location. Second part of the key is authentication
+        // key
+        kinfo_siv_ctr_key->len                = keylen;
+        kinfo_siv_ctr_key->key                = key + (keylen / 8);
         cinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
-     }
+    }
 
     // Request handle for the cipher
     err = alcp_cipher_request(cinfo, &(cctx->handle));
@@ -445,7 +445,7 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
         printf("Provider: cctx->ivlen : %lu\n", cctx->ivlen);
 #endif
         if (key != NULL && iv != NULL) {
-            if (cctx->ivlen != -1U) {
+            if (cctx->ivlen != 0) {
                 err =
                     alcp_cipher_set_iv(&(cctx->handle),
                                        cctx->ivlen,
@@ -603,18 +603,18 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
         cinfo->ci_algo_info.ai_xts.xi_tweak_key = kinfo_tweak_key;
     }
 
-    alc_key_info_p        kinfo_siv_ctr_key = &cctx->kinfo_siv_ctr_key;
-    
-    
+    alc_key_info_p kinfo_siv_ctr_key = &cctx->kinfo_siv_ctr_key;
+
     // For SIV, Authentication Key assumed to be same length as Encryption Key
     // Hence not modifying cinfo->ci_key_info.key or cinfo->ci_key_info.len
     if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
-        // For openSSL SIV encryption and authentication key need to be in continous memory location. 
-        // Second part of the key is authentication key
-        kinfo_siv_ctr_key->len = keylen;
-        kinfo_siv_ctr_key->key = key+(keylen/8);
+        // For openSSL SIV encryption and authentication key need to be in
+        // continous memory location. Second part of the key is authentication
+        // key
+        kinfo_siv_ctr_key->len                = keylen;
+        kinfo_siv_ctr_key->key                = key + (keylen / 8);
         cinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
-     }
+    }
 
     // Check for support
     err = alcp_cipher_supported(cinfo);
@@ -647,7 +647,7 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
 
     if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
         if (key != NULL && iv != NULL) {
-            if (ivlen != -1U) {
+            if (ivlen != 0) {
                 err =
                     alcp_cipher_set_iv(&(cctx->handle),
                                        cctx->ivlen,
@@ -726,17 +726,13 @@ ALCP_prov_cipher_update(void*                vctx,
                     inl,
                     cctx->pc_cipher_info.ci_algo_info.ai_iv);
             }
-        }  else if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+        } else if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
             if (out == NULL) {
                 err = alcp_cipher_set_aad(&(cctx->handle), in, inl);
             } else {
-                uint8_t fake_iv[100] = {0};
-                err = alcp_cipher_encrypt(
-                    &(cctx->handle),
-                    in,
-                    out,
-                    inl,
-                    fake_iv);
+                Uint8 fake_iv[100] = { 0 };
+                err =
+                    alcp_cipher_encrypt(&(cctx->handle), in, out, inl, fake_iv);
             }
         } else {
             err = alcp_cipher_encrypt(&(cctx->handle),
@@ -790,16 +786,13 @@ ALCP_prov_cipher_update(void*                vctx,
             if (out == NULL) {
                 err = alcp_cipher_set_aad(&(cctx->handle), in, inl);
             } else {
-                // IV must be copied to cctx->tagbuff when application calls EVP_CIPHER_CTX_ctrl call 
-                // with EVP_CTRL_AEAD_SET_TAG. This is done in ALCP_prov_cipher_set_ctx_params call.
+                // IV must be copied to cctx->tagbuff when application calls
+                // EVP_CIPHER_CTX_ctrl call with EVP_CTRL_AEAD_SET_TAG. This is
+                // done in ALCP_prov_cipher_set_ctx_params call.
                 err = alcp_cipher_decrypt(
-                    &(cctx->handle),
-                    in,
-                    out,
-                    inl,
-                    cctx->tagbuff);
+                    &(cctx->handle), in, out, inl, cctx->tagbuff);
             }
-         }else {
+        } else {
             err = alcp_cipher_decrypt(&(cctx->handle),
                                       in,
                                       out,
@@ -812,7 +805,7 @@ out:
     if (alcp_is_error(err)) {
         alcp_error_str(err, err_buf, err_size);
         printf("Provider: Encyption/Decryption Failure! ALCP:%s\n", err_buf);
-        printf("%p,%10"PRId64"%p\n", (void*)in, inl, (void*)out);
+        printf("%p,%10" PRId64 "%p\n", (void*)in, inl, (void*)out);
         printf("%d\n",
                cctx->pc_cipher_info.ci_algo_info.ai_mode == ALC_AES_MODE_CFB);
         printf("%p\n", (void*)cctx->pc_cipher_info.ci_algo_info.ai_iv);

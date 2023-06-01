@@ -73,5 +73,5 @@ typedef struct
 
 typedef struct
 {
-    alc_mac_handle handle;
+    alc_mac_handle handle = {};
 } ipp_wrp_mac_ctx;
