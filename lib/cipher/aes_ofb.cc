@@ -68,4 +68,11 @@ Ofb::encrypt(const Uint8* pPlainText,
     return err;
 }
 
+bool
+Ofb::isSupported(const alc_cipher_algo_info_t& cipherInfo,
+                 const alc_key_info_t&         keyInfo)
+{
+    return true;
+}
+
 } // namespace alcp::cipher
