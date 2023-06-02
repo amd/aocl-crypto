@@ -257,8 +257,11 @@ CpuId::Impl::cpuHasShani()
 bool
 CpuId::Impl::cpuHasAvx2()
 {
-    // FIXME: CPUID does not support this.
-    static int state = true;
+#ifdef ALCP_ENABLE_AOCL_CPUID
+    static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AVX2);
+#else
+    static bool state = false;
+#endif
     return state;
 }
 bool
