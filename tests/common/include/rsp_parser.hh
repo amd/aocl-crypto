@@ -27,50 +27,56 @@
  */
 #pragma once
 
-#include "../../../lib/include/alcp/types.hh"
-#include <alcp/types.h>
-#include <fstream>
-#include <iostream>
-#include <sys/stat.h>
+/* C/C++ Headers */
+#include <string>
+#include <string_view>
+#include <tuple>
 #include <vector>
+#include <bits/stdc++.h>  // for istringstream and count
+
+/* ALCP Headers */
+#include "../../../lib/include/alcp/types.hh"
+#include "file.hh"
+#include "utils.hh"
 
 namespace alcp::testing {
+using utils::parseHexStrToBin;
 
-class File
+typedef std::tuple<String, String> data_elm_t;
+typedef std::vector<data_elm_t>    data_vect_t;
+
+// A Generic DataSet
+class CRspParser final : private File
 {
   private:
-    std::fstream m_file;
-    bool         m_fileExists;
+    String              m_input_rsp_file  = {};
+    String              m_lineBuf      = {};   // Buffer Ptr to a line
+    // FIX-ME: This could be required for debugging.
+    size_t              m_paramPerTC  = 0;  // Number of parameters per TC
+    std::vector<String> m_names     = {};   // Keys or CSV header items
+    data_vect_t         m_data_vect = {};   // Parameters stored as key-value pair
+    // Linenum starts from 0
+    int m_lineno = 0;   // Line Count
 
   public:
-    bool CheckFileExists();
-    // Opens File as Bin/ASCII File with write support.
-    File(std::string fileName, bool binary, bool write);
-    // Opens File as ASCII Text File
-    File(std::string fileName);
-    ~File();
-    // Read file word by word excludes newlines and spaces
-    std::string readWord();
-    // Read file line by line
-    std::string readLine();
-    // Write a line to the file
-    bool writeLine(std::string buff);
-    // Reads a line by reading char by char
-    std::string readLineCharByChar();
-    // Read file n bytes from a file
-    char* readChar(size_t n);
-    // Reads a set of bytes
-    bool readBytes(size_t n, Uint8* buffer);
-    // Writes a set of bytes
-    bool writeBytes(size_t n, const Uint8* buffer);
-    // Rewind file to initial position
-    void rewind();
-    // seekG
-    void seek(long pos);
-    // tell
-    long tell();
-    void flush();
-    bool m_fileEOF;
-    std::string readMyLine();
+    CRspParser(String filename);
+    //~CRspParser();
+
+    bool init(String filename);
+    int skipRSPHeader();
+    String FetchTCfromRSP();
+    String removeSpaces(String str);
+    bool readNextTC();
+    std::vector<String> vectorizeParams(String);
+    int vectorize(std::vector<String>);
+     std::pair<std::string, std::string> readParamKeyValue(const String cName);
+    static String stripWhiteSpaceChar(const char *str, size_t len);
+    int isSubstring(String deststr, String srcstr);
+
+    std::vector<Uint8> getVect(const String cName);
+    String getStr(const String cName);
+    String adjustKeyNames(String cName);
+    int getLineNumber();
 };
+
 } // namespace alcp::testing

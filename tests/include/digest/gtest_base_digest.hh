@@ -53,6 +53,8 @@
 #define INC_LOOP   1
 #define START_LOOP 1
 
+#define Enable_CSV 0
+
 /* print test data */
 inline void
 PrintDigestTestData(alcp_digest_data_t data, std::string mode)
@@ -114,12 +116,20 @@ Digest_KAT(alc_digest_info_t info)
         TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_"
                        + std::to_string(info.dt_len) + ".csv";
     }
-
+#if Enable_CSV
     Csv csv = Csv(TestDataFile);
-    /* check if file is valid */
+    // check if file is valid 
     if (!csv.m_file_exists) {
         FAIL();
     }
+#else
+    // NALINI - FIX-ME: RSP filename.
+    TestDataFile.replace(TestDataFile.find(".csv"), 4, ".rsp");
+    CRspParser CRspParser(TestDataFile);
+#endif
+
+    std::cout << TestDataFile << std::endl;
+
     if (useipp && (GetDigestStr(info.dt_type).compare("SHA3") == 0)) {
         std::cout << "IPPCP doesnt support SHA3 for now, skipping this test"
                   << std::endl;
@@ -136,6 +146,8 @@ Digest_KAT(alc_digest_info_t info)
     if (useipp == true)
         db = &idb;
 #endif
+
+#if Enable_CSV
     /* for SHAKE variant */
     if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
         while (csv.readNext()) {
@@ -212,6 +224,62 @@ Digest_KAT(alc_digest_info_t info)
                             + std::to_string(info.dt_len) + "_KAT")));
         }
     }
+#else
+    if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
+        while (CRspParser.readNextTC()) {
+            auto msg          = CRspParser.getVect("MESSAGE");
+            data.m_msg        = &(msg[0]);
+            data.m_msg_len    = CRspParser.getVect("MESSAGE").size();
+            data.m_digest_len = CRspParser.getVect("DIGEST").size();
+            std::vector<Uint8> digest_(data.m_digest_len, 0);
+            data.m_digest = &(digest_[0]);
+            
+            if (!db->init(info, data.m_digest_len)) {
+                std::cout << "Error: Digest base init failed" << std::endl;
+                FAIL();
+            }
+            if (!db->digest_function(data)) {
+                std::cout << "Error: Digest function failed" << std::endl;
+                FAIL();
+            }
+            EXPECT_TRUE(ArraysMatch(
+                digest_,               // output
+                CRspParser.getVect("DIGEST"), // expected, from the KAT test data
+                CRspParser,
+                std::string(GetDigestStr(info.dt_type) + "_"
+                            + SHA3_SHAKE_Len_Str + "_KAT")));
+        }
+    } else {
+        while (CRspParser.readNextTC()) {
+            auto msg          = CRspParser.getVect("MESSAGE");
+            data.m_msg        = &(msg[0]);
+            data.m_msg_len    = CRspParser.getVect("MESSAGE").size();
+            //std::cout << "data.m_msg_len:" << data.m_msg_len << std::endl;
+            data.m_digest_len = CRspParser.getVect("DIGEST").size();
+            data.m_digest     = &(digest[0]);
+            
+            if (!db->init(info, data.m_digest_len)) {
+                std::cout << "Error: Digest base init failed" << std::endl;
+                FAIL();
+            }
+            if (!db->digest_function(data)) {
+                std::cout << "Error: Digest function failed" << std::endl;
+                FAIL();
+            }
+
+            /*conv m_digest into a vector */
+            std::vector<Uint8> digest_vector(std::begin(digest),
+                                             std::end(digest));
+
+            EXPECT_TRUE(ArraysMatch(
+                digest_vector,         // output
+                CRspParser.getVect("DIGEST"), // expected, from the KAT test data
+                CRspParser,
+                std::string(GetDigestStr(info.dt_type) + "_"
+                            + std::to_string(info.dt_len) + "_KAT")));
+        }
+    }
+#endif
 }
 
 /* Digest Cross tests */

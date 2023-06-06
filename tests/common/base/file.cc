@@ -46,6 +46,7 @@ File::File(const std::string fileName, bool binary, bool write)
     } else {
         m_fileExists = false;
     }
+    m_fileEOF = false;
     return;
 }
 
@@ -57,6 +58,7 @@ File::File(const std::string fileName)
     } else {
         m_fileExists = false;
     }
+    m_fileEOF = false;
     return;
 }
 
@@ -86,6 +88,18 @@ File::readLine()
     std::string buff;
     std::getline(m_file, buff);
     return buff;
+}
+
+std::string
+File::readMyLine()
+{
+    std::string buff;
+    if(getline(m_file, buff)) return buff;
+    else {
+        m_fileEOF = true;
+        std::cout << "EOF Reached...." << std::endl;
+        return {};
+    }
 }
 
 bool
