@@ -108,8 +108,19 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
                                            pCipherInfo->ci_key_info.key,
                                            pCipherInfo->ci_key_info.len,
                                            *ctx);
-
     }
+// FIXME: As all are using same builder a switch case without break will
+// better.
+// FIXME: To be enabled in future.
+#if 0
+    else if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+        err = cipher::CipherBuilder::Build(pCipherInfo->ci_type,
+                                           pCipherInfo->ci_algo_info.ai_mode,
+                                           pCipherInfo->ci_key_info.key,
+                                           pCipherInfo->ci_key_info.len,
+                                           *ctx);
+    }
+#endif
 
     // FIXME: GCM, XTS, CCM to be moved to AeadBuilder
     else if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {

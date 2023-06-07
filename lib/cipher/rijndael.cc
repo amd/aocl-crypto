@@ -754,6 +754,7 @@ Status
 Rijndael::setKey(const Uint8* pUserKey, Uint64 len)
 {
     Status sts = StatusOk();
+    // FIXME: Something is wrong with this check
     if ((len < cMinKeySize) || (len > cMaxKeySize)) {
         sts.update(status::InvalidArgument("Key length not acceptable"));
     }

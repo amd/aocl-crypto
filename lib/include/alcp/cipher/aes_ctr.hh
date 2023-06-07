@@ -93,6 +93,8 @@ namespace vaes512 {
             : Ctr(pKey, keyLen)
         {}
 
+        Status setKey(const Uint8* pUserKey, Uint64 len) override;
+
         ~Ctr128(){};
 
       public:
@@ -134,6 +136,8 @@ namespace vaes512 {
             : Ctr(pKey, keyLen)
         {}
 
+        Status setKey(const Uint8* pUserKey, Uint64 len) override;
+
         ~Ctr192(){};
 
       public:
@@ -174,6 +178,8 @@ namespace vaes512 {
         explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
         {}
+
+        Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
         ~Ctr256(){};
 
@@ -220,6 +226,8 @@ namespace vaes {
             : Ctr(pKey, keyLen)
         {}
 
+        Status setKey(const Uint8* pUserKey, Uint64 len) override;
+
         ~Ctr128(){};
 
       public:
@@ -261,6 +269,8 @@ namespace vaes {
             : Ctr(pKey, keyLen)
         {}
 
+        Status setKey(const Uint8* pUserKey, Uint64 len) override;
+
         ~Ctr192(){};
 
       public:
@@ -301,6 +311,8 @@ namespace vaes {
         explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
         {}
+
+        Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
         ~Ctr256(){};
 
@@ -347,6 +359,8 @@ namespace aesni {
             : Ctr(pKey, keyLen)
         {}
 
+        Status setKey(const Uint8* pUserKey, Uint64 len) override;
+
         ~Ctr128(){};
 
       public:
@@ -388,6 +402,8 @@ namespace aesni {
             : Ctr(pKey, keyLen)
         {}
 
+        Status setKey(const Uint8* pUserKey, Uint64 len) override;
+
         ~Ctr192(){};
 
       public:
@@ -428,6 +444,8 @@ namespace aesni {
         explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
         {}
+
+        Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
         ~Ctr256(){};
 

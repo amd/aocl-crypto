@@ -213,9 +213,6 @@ __build_aes(const alc_cipher_algo_info_t& aesInfo,
         ctx.setTagLength  = __aes_wrapperSetTagLength<Ccm>;
     } else if constexpr (std::is_same_v<CIPHERMODE, Xts>) {
         ctx.setIv = __aes_wrapperSetIv<Xts>;
-    } else if constexpr (std::is_same_v<CIPHERMODE, CmacSiv>) {
-        ctx.setAad = __aes_wrapperSetAad<CmacSiv>;
-        ctx.getTag = __aes_wrapperGetTag<CmacSiv>;
     }
     ctx.finish = __aes_dtor<CIPHERMODE>;
 
@@ -303,6 +300,66 @@ __build_aesCtr(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 
     return sts;
 }
+// FIXME: Horror ahead, custom builder for SIV
+#if 1
+
+template<typename AEADMODE>
+void
+__build_aead_siv(const alc_cipher_algo_info_t& aesInfo,
+                 const alc_key_info_t&         keyInfo,
+                 Context&                      ctx)
+{
+    auto algo    = new AEADMODE(aesInfo, keyInfo);
+    ctx.m_cipher = static_cast<void*>(algo);
+    ctx.decrypt  = __aes_wrapper<AEADMODE, false>;
+    ctx.encrypt  = __aes_wrapper<AEADMODE, true>;
+
+    ctx.setAad = __aes_wrapperSetAad<AEADMODE>;
+    ctx.getTag = __aes_wrapperGetTag<AEADMODE>;
+
+    ctx.finish = __aes_dtor<AEADMODE>;
+}
+
+template<typename T1, typename T2, typename T3>
+void
+__build_aes(const alc_cipher_algo_info_t& aesInfo,
+            const alc_key_info_t&         keyInfo,
+            Context&                      ctx)
+{
+    if (keyInfo.len == ALC_KEY_LEN_128) {
+        __build_aead_siv<T1>(aesInfo, keyInfo, ctx);
+    } else if (keyInfo.len == ALC_KEY_LEN_192) {
+        __build_aead_siv<T2>(aesInfo, keyInfo, ctx);
+    } else if (keyInfo.len == ALC_KEY_LEN_256) {
+        __build_aead_siv<T3>(aesInfo, keyInfo, ctx);
+    }
+}
+
+static Status
+__build_aesSiv(const alc_cipher_algo_info_t& aesInfo,
+               const alc_key_info_t&         keyInfo,
+               Context&                      ctx)
+{
+    Status sts = StatusOk();
+
+    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
+    if (cpu_feature == CpuCipherFeatures::eVaes512) {
+        using namespace vaes512;
+        __build_aes<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
+            aesInfo, keyInfo, ctx);
+    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
+        using namespace vaes;
+        __build_aes<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
+            aesInfo, keyInfo, ctx);
+    } else if (cpu_feature == CpuCipherFeatures::eAesni) {
+        using namespace aesni;
+        __build_aes<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
+            aesInfo, keyInfo, ctx);
+    }
+    return sts;
+}
+
+#endif
 
 // FIXME: AesBuilder::Build  & CipherBuilder::Build to be modified similar to
 // CTR
@@ -338,8 +395,9 @@ AesBuilder::Build(const alc_cipher_algo_info_t& aesInfo,
             if (Ccm::isSupported(aesInfo, keyInfo))
                 sts = __build_aes<Ccm>(aesInfo, keyInfo, ctx);
             break;
+        // New builder has to come in place.
         case ALC_AES_MODE_SIV:
-            sts = __build_aes<CmacSiv>(aesInfo, keyInfo, ctx);
+            sts = __build_aesSiv(aesInfo, keyInfo, ctx);
             break;
 
         default:
