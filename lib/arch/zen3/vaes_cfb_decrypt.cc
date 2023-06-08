@@ -35,8 +35,17 @@
 
 namespace alcp::cipher::vaes {
 
+template<void AesEnc_1x256(__m256i* pBlk0, const __m128i* pKey, int nRounds),
+         void AesEnc_2x256(
+             __m256i* pBlk0, __m256i* pBlk1, const __m128i* pKey, int nRounds),
+         void AesEnc_4x256(__m256i*       pBlk0,
+                          __m256i*       pBlk1,
+                          __m256i*       pBlk2,
+                          __m256i*       pBlk3,
+                          const __m128i* pKey,
+                          int            nRounds)>
 alc_error_t
-DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
+inline DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
            Uint8*       pPlainText,  // ptr to plaintext
            Uint64       len,         // message length in bytes
            const Uint8* pKey,        // ptr to Key
@@ -72,7 +81,7 @@ DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
         /* y2 |= blk1; */
         /* y3 |= blk2; */
 
-        vaes::AesEncrypt(&y0, &y1, &y2, &y3, p_key128, nRounds);
+        AesEnc_4x256(&y0, &y1, &y2, &y3, p_key128, nRounds);
 
         // update iv256
         iv256 = _mm256_set_epi64x(0, 0, blk3[3], blk3[2]);
@@ -103,7 +112,7 @@ DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
         /* y0 |= iv256; */
         /* y1 |= blk0; */
 
-        vaes::AesEncrypt(&y0, &y1, p_key128, nRounds);
+        AesEnc_2x256(&y0, &y1, p_key128, nRounds);
 
         // update iv256
         iv256 = _mm256_set_epi64x(0, 0, blk1[3], blk1[2]);
@@ -130,7 +139,7 @@ DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
 
         y0 = (y0 | iv256);
 
-        vaes::AesEncrypt(&y0, p_key128, nRounds);
+        AesEnc_1x256(&y0, p_key128, nRounds);
 
         // update iv256
         iv256 = _mm256_set_epi64x(0, 0, blk0[3], blk0[2]);
@@ -156,7 +165,7 @@ DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
         __m256i y0   = (blk0 | iv256);
 
         __m256i tmpblk = _mm256_permute2x128_si256(blk0, blk0, 1);
-        vaes::AesEncrypt(&y0, p_key128, nRounds);
+        AesEnc_1x256(&y0, p_key128, nRounds);
 
         blk0 = _mm256_xor_si256(tmpblk, y0);
         _mm256_maskstore_epi64((long long*)p_pt256, mask_lo, blk0);
@@ -165,6 +174,42 @@ DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
     }
 
     return err;
+}
+
+alc_error_t
+DecryptCfb128(const Uint8* pSrc,
+              Uint8*       pDest,
+              Uint64       len,
+              const Uint8* pKey,
+              int          nRounds,
+              const Uint8* pIv)
+{
+    return DecryptCfb<vaes::AesEncrypt, vaes::AesEncrypt, vaes::AesEncrypt>(
+        pSrc, pDest, len, pKey, nRounds, pIv);
+}
+
+alc_error_t
+DecryptCfb192(const Uint8* pSrc,
+              Uint8*       pDest,
+              Uint64       len,
+              const Uint8* pKey,
+              int          nRounds,
+              const Uint8* pIv)
+{
+    return DecryptCfb<vaes::AesEncrypt, vaes::AesEncrypt, vaes::AesEncrypt>(
+        pSrc, pDest, len, pKey, nRounds, pIv);
+}
+
+alc_error_t
+DecryptCfb256(const Uint8* pSrc,
+              Uint8*       pDest,
+              Uint64       len,
+              const Uint8* pKey,
+              int          nRounds,
+              const Uint8* pIv)
+{
+    return DecryptCfb<vaes::AesEncrypt, vaes::AesEncrypt, vaes::AesEncrypt>(
+        pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
 } // namespace alcp::cipher::vaes
