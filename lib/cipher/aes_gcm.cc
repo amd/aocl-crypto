@@ -368,7 +368,7 @@ namespace aesni {
                        m_hash_subKey_128,
                        m_iv_128,
                        m_reverse_mask_128,
-                       false,
+                       true,
                        m_hashSubkeyTable);
         return err;
     }
@@ -391,7 +391,7 @@ namespace aesni {
                        m_hash_subKey_128,
                        m_iv_128,
                        m_reverse_mask_128,
-                       false,
+                       true,
                        m_hashSubkeyTable);
         return err;
     }
