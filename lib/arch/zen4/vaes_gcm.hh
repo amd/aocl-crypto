@@ -102,7 +102,7 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
                   int            nRounds,
                   Uint8          factor,
                   // gcm specific params
-                  __m128i* pgHash_128,
+                  __m128i& pgHash_128,
                   __m128i  Hsubkey_128,
                   __m128i  iv_128,
                   __m128i  reverse_mask_128,
@@ -188,22 +188,6 @@ gcmBlk_512_enc256(const __m512i* p_in_x,
                   __m128i  reverse_mask_128,
                   int      remBytes,
                   Uint64*  pHashSubkeyTable);
-
-Uint64
-gcmBlk_512_enc(const __m512i* p_in_x,
-               __m512i*       p_out_x,
-               Uint64         blocks,
-               const __m128i* pkey128,
-               const Uint8*   pIv,
-               int            nRounds,
-               Uint8          factor,
-               // gcm specific params
-               __m128i* pgHash_128,
-               __m128i  Hsubkey_128,
-               __m128i  iv_128,
-               __m128i  reverse_mask_128,
-               int      remBytes,
-               Uint64*  pHashSubkeyTable);
 
 // dynamic Unrolling
 int inline dynamicUnroll(Uint64 blocks, bool& do_4_unroll, bool& do_2_unroll)

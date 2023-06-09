@@ -59,34 +59,27 @@
 
 namespace alcp::cipher::vaes512 {
 
-/**
- FIXME: gcm decrypt functions has been duplicated for all three rounds. Below
-three functions has same code expect for assigning different func ptrs.
- 1. gcmBlk_512_dec128
- 2. gcmBlk_512_dec192
- 3. gcmBlk_512_dec256
-
-Use of branching to assign funPtrs(fAesEncryptNoLoad_4x512,
-fAesEncryptNoLoad_2x512, fAesEncryptNoLoad_1x512) results in poor performance.
-
-Use of lambdas also results in marginal loss in performance.
-
- */
+template<void AesEncNoLoad_4x512(
+             __m512i& a, __m512i& b, __m512i& c, __m512i& d, const sKeys keys),
+         void AesEncNoLoad_2x512(__m512i& a, __m512i& b, const sKeys keys),
+         void AesEncNoLoad_1x512(__m512i& a, const sKeys keys),
+         void alcp_load_key_zmm(const __m128i pkey128[], sKeys& keys),
+         void alcp_clear_keys_zmm(sKeys& keys)>
 Uint64
-gcmBlk_512_dec128(const __m512i* p_in_x,
-                  __m512i*       p_out_x,
-                  Uint64         blocks,
-                  const __m128i* pkey128,
-                  const Uint8*   pIv,
-                  int            nRounds,
-                  Uint8          factor,
-                  // gcm specific params
-                  __m128i* pgHash_128,
-                  __m128i  Hsubkey_128,
-                  __m128i  iv_128,
-                  __m128i  reverse_mask_128,
-                  int      remBytes,
-                  Uint64*  pHashSubkeyTable)
+gcmBlk_512_dec(const __m512i* p_in_x,
+               __m512i*       p_out_x,
+               Uint64         blocks,
+               const __m128i* pkey128,
+               const Uint8*   pIv,
+               int            nRounds,
+               Uint8          factor,
+               // gcm specific params
+               __m128i& gHash_128,
+               __m128i  Hsubkey_128,
+               __m128i  iv_128,
+               __m128i  reverse_mask_128,
+               int      remBytes,
+               Uint64*  pHashSubkeyTable)
 {
     __m512i swap_ctr, c1;
     __m512i one_lo, one_x, two_x, three_x, four_x;
@@ -100,7 +93,7 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
     _mm_prefetch(cast_to(pkey128), _MM_HINT_T1);
 
     sKeys keys{};
-    alcp_load_key_zmm_10rounds(pkey128, keys);
+    alcp_load_key_zmm(pkey128, keys);
 
     // clang-format off
     __m512i reverse_mask_512 =
@@ -166,7 +159,7 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            AesEncryptNoLoad_4x512Rounds10(b1, b2, b3, b4, keys);
+            AesEncNoLoad_4x512(b1, b2, b3, b4, keys);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
             alcp_xor_4values(a1, // inputs A
@@ -202,7 +195,7 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            AesEncryptNoLoad_4x512Rounds10(b1, b2, b3, b4, keys);
+            AesEncNoLoad_4x512(b1, b2, b3, b4, keys);
 
             get_aggregated_karatsuba_components(Hsubkey_512_0,
                                                 Hsubkey_512_1,
@@ -216,7 +209,7 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
                                                 &z0_512,
                                                 &z1_512,
                                                 &z2_512,
-                                                *pgHash_128,
+                                                gHash_128,
                                                 1);
 
             alcp_loadu_4values(pHsubkey_512,
@@ -258,7 +251,7 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            AesEncryptNoLoad_4x512Rounds10(b1, b2, b3, b4, keys);
+            AesEncNoLoad_4x512(b1, b2, b3, b4, keys);
 
             get_aggregated_karatsuba_components(Hsubkey_512_0,
                                                 Hsubkey_512_1,
@@ -272,7 +265,7 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
                                                 &z0_512_t,
                                                 &z1_512_t,
                                                 &z2_512_t,
-                                                *pgHash_128,
+                                                gHash_128,
                                                 0);
             z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
             z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
@@ -285,11 +278,11 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
                                Hsubkey_512_3);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, // inputs A
+            alcp_xor_4values(a1, /* inputs A */
                              a2,
                              a3,
                              a4,
-                             b1, // inputs B
+                             b1, /* inputs B */
                              b2,
                              b3,
                              b4,
@@ -317,7 +310,7 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
             // re-arrange as per spec
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            AesEncryptNoLoad_4x512Rounds10(b1, b2, b3, b4, keys);
+            AesEncNoLoad_4x512(b1, b2, b3, b4, keys);
 
             get_aggregated_karatsuba_components(Hsubkey_512_0,
                                                 Hsubkey_512_1,
@@ -331,7 +324,7 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
                                                 &z0_512_t,
                                                 &z1_512_t,
                                                 &z2_512_t,
-                                                *pgHash_128,
+                                                gHash_128,
                                                 0);
             z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
             z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
@@ -344,15 +337,15 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
                                Hsubkey_512_3);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, // inputs A
+            alcp_xor_4values(a1, /* inputs A */
                              a2,
                              a3,
                              a4,
-                             b1, // inputs B
+                             b1, /* inputs B */
                              b2,
                              b3,
                              b4,
-                             b1, // outputs B = A xor B
+                             b1, /* outputs B = A xor B */
                              b2,
                              b3,
                              b4);
@@ -371,7 +364,7 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
                                                 &z0_512_t,
                                                 &z1_512_t,
                                                 &z2_512_t,
-                                                *pgHash_128,
+                                                gHash_128,
                                                 0);
             z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
             z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
@@ -381,8 +374,7 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
             p_in_x += PARALLEL_512_BLKS_4;
             p_out_x += PARALLEL_512_BLKS_4;
 
-            // compute Ghash
-            getGhash(z0_512, z1_512, z2_512, pgHash_128, const_factor_256);
+            getGhash(z0_512, z1_512, z2_512, &gHash_128, const_factor_256);
         }
 
     } else if (do_2_unroll) {
@@ -394,12 +386,12 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
             __m512i z0_512, z1_512, z2_512;
             __m512i z0_512_t, z1_512_t, z2_512_t;
 
-            int      n            = 4; // numParallel_512blks * k;
+            int      n            = 4;
             __m512i* pHsubkey_512 = Hsubkey_512 + n;
             _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
             _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
-            alcp_loadu_4values(pHsubkey_512, // address
+            alcp_loadu_4values(pHsubkey_512,
                                Hsubkey_512_0,
                                Hsubkey_512_1,
                                Hsubkey_512_2,
@@ -408,25 +400,25 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
             c3 = alcp_add_epi32(c1, two_x);
             c4 = alcp_add_epi32(c1, three_x);
 
-            // re-arrange as per spec
+            /* re-arrange as per spec */
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            AesEncryptNoLoad_4x512Rounds10(b1, b2, b3, b4, keys);
+            AesEncNoLoad_4x512(b1, b2, b3, b4, keys);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, // inputs A
+            alcp_xor_4values(a1, /* inputs A */
                              a2,
                              a3,
                              a4,
-                             b1, // inputs B
+                             b1, /* inputs B */
                              b2,
                              b3,
                              b4,
-                             b1, // outputs B = A xor B
+                             b1, /* outputs B = A xor B */
                              b2,
                              b3,
                              b4);
-            // increment counter
+            /* increment counter */
             c1 = alcp_add_epi32(c1, four_x);
 
             alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
@@ -444,12 +436,12 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
             c3 = alcp_add_epi32(c1, two_x);
             c4 = alcp_add_epi32(c1, three_x);
 
-            // re-arrange as per spec
+            /* re-arrange as per spec */
             alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-            AesEncryptNoLoad_4x512Rounds10(b1, b2, b3, b4, keys);
+            AesEncNoLoad_4x512(b1, b2, b3, b4, keys);
 
-            // first iteration gmul
+            /* first iteration gmul */
             get_aggregated_karatsuba_components(Hsubkey_512_0,
                                                 Hsubkey_512_1,
                                                 Hsubkey_512_2,
@@ -462,7 +454,7 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
                                                 &z0_512,
                                                 &z1_512,
                                                 &z2_512,
-                                                *pgHash_128,
+                                                gHash_128,
                                                 1);
             alcp_loadu_4values(pHsubkey_512,
                                Hsubkey_512_0,
@@ -471,19 +463,19 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
                                Hsubkey_512_3);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, // inputs A
+            alcp_xor_4values(a1, /* inputs A */
                              a2,
                              a3,
                              a4,
-                             b1, // inputs B
+                             b1, /* inputs B */
                              b2,
                              b3,
                              b4,
-                             b1, // outputs B = A xor B
+                             b1, /* outputs B = A xor B  */
                              b2,
                              b3,
                              b4);
-            // increment counter
+            /* increment counter */
             c1 = alcp_add_epi32(c1, four_x);
 
             get_aggregated_karatsuba_components(Hsubkey_512_0,
@@ -498,7 +490,7 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
                                                 &z0_512_t,
                                                 &z1_512_t,
                                                 &z2_512_t,
-                                                *pgHash_128,
+                                                gHash_128,
                                                 0);
             z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
             z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
@@ -508,15 +500,13 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
             p_in_x += PARALLEL_512_BLKS_4;
             p_out_x += PARALLEL_512_BLKS_4;
 
-            // compute Ghash
-            getGhash(z0_512, z1_512, z2_512, pgHash_128, const_factor_256);
+            getGhash(z0_512, z1_512, z2_512, &gHash_128, const_factor_256);
         }
     }
 
     __m512i* pHsubkey_512 = Hsubkey_512;
     Hsubkey_512_0         = _mm512_loadu_si512(pHsubkey_512);
 
-    // if (do_one_parallel) {
     for (; blocks >= blockCount_4x512; blocks -= blockCount_4x512) {
         _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
@@ -539,17 +529,17 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
               a3,
               a4,
               reverse_mask_512,
-              pgHash_128,
+              &gHash_128,
               const_factor_256);
 
-        // re-arrange as per spec
+        /* re-arrange as per spec */
         alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
 
-        AesEncryptNoLoad_4x512Rounds10(b1, b2, b3, b4, keys);
+        AesEncNoLoad_4x512(b1, b2, b3, b4, keys);
 
         alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4, a1, a2, a3, a4);
 
-        // increment counter
+        /* increment counter */
         c1 = alcp_add_epi32(c1, four_x);
 
         alcp_storeu_4values(p_out_x, a1, a2, a3, a4);
@@ -557,30 +547,29 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
         p_in_x += 4;
         p_out_x += 4;
     }
-    //}
 
     for (; blocks >= blockCount_2x512; blocks -= blockCount_2x512) {
         _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
         c2 = alcp_add_epi32(c1, one_x);
-        // printf("\n blockCount_2x512");
+
         a1 = alcp_loadu(p_in_x);
         a2 = alcp_loadu(p_in_x + 1);
 
         gMulR(
-            Hsubkey_512_0, a1, reverse_mask_512, pgHash_128, const_factor_256);
+            Hsubkey_512_0, a1, reverse_mask_512, &gHash_128, const_factor_256);
         gMulR(
-            Hsubkey_512_0, a2, reverse_mask_512, pgHash_128, const_factor_256);
+            Hsubkey_512_0, a2, reverse_mask_512, &gHash_128, const_factor_256);
 
-        // re-arrange as per spec
+        /* re-arrange as per spec */
         b1 = alcp_shuffle_epi8(c1, swap_ctr);
         b2 = alcp_shuffle_epi8(c2, swap_ctr);
 
-        AesEncryptNoLoad_2x512Rounds10(b1, b2, keys);
+        AesEncNoLoad_2x512(b1, b2, keys);
 
         a1 = alcp_xor(b1, a1);
         a2 = alcp_xor(b2, a2);
 
-        // increment counter
+        /* increment counter */
         c1 = alcp_add_epi32(c1, two_x);
 
         alcp_storeu(p_out_x, a1);
@@ -593,18 +582,18 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
     for (; blocks >= blockCount_1x512; blocks -= blockCount_1x512) {
         _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
         a1 = alcp_loadu(p_in_x);
-        // printf("\n blockCount_1x512");
-        gMulR(
-            Hsubkey_512_0, a1, reverse_mask_512, pgHash_128, const_factor_256);
 
-        // re-arrange as per spec
+        gMulR(
+            Hsubkey_512_0, a1, reverse_mask_512, &gHash_128, const_factor_256);
+
+        /* re-arrange as per spec */
         b1 = alcp_shuffle_epi8(c1, swap_ctr);
 
-        AesEncryptNoLoad_1x512Rounds10(b1, keys);
+        AesEncNoLoad_1x512(b1, keys);
 
         a1 = alcp_xor(b1, a1);
 
-        // increment counter
+        /* increment counter */
         c1 = alcp_add_epi32(c1, one_x);
 
         alcp_storeu(p_out_x, a1);
@@ -613,26 +602,27 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
         p_out_x += 1;
     }
 
-    // residual block=1 when factor = 2, load and store only
-    // lower half.
+    /* residual block=1 when factor = 2, load and store only
+     lower half. */
     __m128i c1_128     = _mm512_castsi512_si128(c1);
     __m128i one_lo_128 = _mm_set_epi32(1, 0, 0, 0);
+    /* remaining bytes handled with 128bit */
     for (; blocks != 0; blocks--) {
-        __m128i a1; // remaining bytes handled with 128bit
+        __m128i a1;
         __m128i swap_ctr_128 = _mm512_castsi512_si128(swap_ctr);
 
         a1 = _mm_loadu_si128((__m128i*)p_in_x);
 
         __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
-        *pgHash_128 = _mm_xor_si128(ra1, *pgHash_128);
-        gMul(*pgHash_128, Hsubkey_128, pgHash_128, const_factor_256);
+        gHash_128   = _mm_xor_si128(ra1, gHash_128);
+        gMul(gHash_128, Hsubkey_128, &gHash_128, const_factor_256);
 
-        // re-arrange as per spec
+        /* re-arrange as per spec*/
         __m128i b1 = _mm_shuffle_epi8(c1_128, swap_ctr_128);
         alcp::cipher::aesni::AesEncrypt(&b1, pkey128, nRounds);
         a1 = _mm_xor_si128(b1, a1);
 
-        // increment counter
+        /* increment counter*/
         c1_128 = _mm_add_epi32(c1_128, one_lo_128);
 
         _mm_storeu_si128((__m128i*)p_out_x, a1);
@@ -640,12 +630,12 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
         p_out_x = (__m512i*)(((__uint128_t*)p_out_x) + 1);
     }
 
-    // remaining bytes
+    /* remaining bytes */
     if (remBytes) {
         __m128i a1; // remaining bytes handled with 128bit
         __m128i swap_ctr_128 = _mm512_castsi512_si128(swap_ctr);
 
-        // re-arrange as per spec
+        /* re-arrange as per spec */
         __m128i b1 = _mm_shuffle_epi8(c1_128, swap_ctr_128);
         alcp::cipher::aesni::AesEncrypt(&b1, pkey128, nRounds);
 
@@ -661,8 +651,8 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
         }
 
         __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
-        *pgHash_128 = _mm_xor_si128(ra1, *pgHash_128);
-        gMul(*pgHash_128, Hsubkey_128, pgHash_128, const_factor_256);
+        gHash_128   = _mm_xor_si128(ra1, gHash_128);
+        gMul(gHash_128, Hsubkey_128, &gHash_128, const_factor_256);
 
         a1 = _mm_xor_si128(b1, a1);
         for (i = remBytes; i < 16; i++) {
@@ -675,1225 +665,144 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
         }
     }
 
-    // clear all keys stored in registers.
-    alcp_clear_keys_zmm_10rounds(keys);
+    /* clear all keys stored in registers. */
+    alcp_clear_keys_zmm(keys);
     return blocks;
 }
 
-Uint64
-gcmBlk_512_dec192(const __m512i* p_in_x,
-                  __m512i*       p_out_x,
-                  Uint64         blocks,
-                  const __m128i* pkey128,
-                  const Uint8*   pIv,
-                  int            nRounds,
-                  Uint8          factor,
-                  // gcm specific params
-                  __m128i* pgHash_128,
-                  __m128i  Hsubkey_128,
-                  __m128i  iv_128,
-                  __m128i  reverse_mask_128,
-                  int      remBytes,
-                  Uint64*  pHashSubkeyTable)
+alc_error_t
+decryptGcm128(const Uint8* pInputText,  // ptr to inputText
+              Uint8*       pOutputText, // ptr to outputtext
+              Uint64       len,         // message length in bytes
+              const Uint8* pKey,        // ptr to Key
+              const int    nRounds,     // No. of rounds
+              const Uint8* pIv,         // ptr to Initialization Vector
+              __m128i&     gHash_128,
+              __m128i      Hsubkey_128,
+              __m128i      iv_128,
+              __m128i      reverse_mask_128,
+              Uint64*      pHashSubkeyTable)
 {
-    __m512i swap_ctr, c1;
-    __m512i one_lo, one_x, two_x, three_x, four_x;
-
-    const __m256i const_factor_256 =
-        _mm256_set_epi64x(0xC200000000000000, 0x1, 0xC200000000000000, 0x1);
-
-    /* gcm init + Hash subkey init */
-    gcmCryptInit(c1, iv_128, one_lo, one_x, two_x, three_x, four_x, swap_ctr);
-
-    _mm_prefetch(cast_to(pkey128), _MM_HINT_T1);
-
-    sKeys keys{};
-    alcp_load_key_zmm_12rounds(pkey128, keys);
-
-    // clang-format off
-    __m512i reverse_mask_512 =
-            _mm512_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-                            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-                            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-                            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-    // clang-format on
-
-    int  num_512_blks = 0;
-    bool do_4_unroll  = false;
-    bool do_2_unroll  = false;
-
-    num_512_blks = dynamicUnroll(blocks, do_4_unroll, do_2_unroll);
-
-#if LOCAL_TABLE // local table improves performance of large block size (>8192
-                // bytes)
-    __attribute__((aligned(64))) Uint64 hashSubkeyTable[MAX_NUM_512_BLKS * 8];
-    __m512i* Hsubkey_512 = (__m512i*)&hashSubkeyTable;
-#else
-    __m512i* Hsubkey_512 = (__m512i*)pHashSubkeyTable;
-#endif
-
-    if (num_512_blks) {
-        computeHashSubKeys(
-            num_512_blks, Hsubkey_128, Hsubkey_512, const_factor_256);
-    }
-
-    Uint64  blockCount_1x512 = factor;
-    __m512i a1, b1;
-
-    Uint64 blockCount_4x512 = 4 * factor;
-    Uint64 blockCount_2x512 = 2 * factor;
-
-    __m512i a2, a3, a4;
-    __m512i b2, b3, b4;
-    __m512i c2, c3, c4;
-
-    __m512i Hsubkey_512_0, Hsubkey_512_1, Hsubkey_512_2, Hsubkey_512_3;
-
-    if (do_4_unroll) {
-        Uint64 blockCount_4x512_4_unroll = 16 * 4;
-
-        for (; blocks >= blockCount_4x512_4_unroll;
-             blocks -= blockCount_4x512_4_unroll) {
-
-            __m512i  z0_512, z1_512, z2_512;
-            __m512i  z0_512_t, z1_512_t, z2_512_t;
-            int      n            = 12;
-            __m512i* pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
-            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
-
-            alcp_loadu_4values(pHsubkey_512,
-                               Hsubkey_512_0,
-                               Hsubkey_512_1,
-                               Hsubkey_512_2,
-                               Hsubkey_512_3);
-            c2 = alcp_add_epi32(c1, one_x);
-            c3 = alcp_add_epi32(c1, two_x);
-            c4 = alcp_add_epi32(c1, three_x);
-
-            // re-arrange as per spec
-            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
-
-            AesEncryptNoLoad_4x512Rounds12(b1, b2, b3, b4, keys);
-
-            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, // inputs A
-                             a2,
-                             a3,
-                             a4,
-                             b1, // inputs B
-                             b2,
-                             b3,
-                             b4,
-                             b1, // outputs B = A xor B
-                             b2,
-                             b3,
-                             b4);
-            // increment counter
-            c1 = alcp_add_epi32(c1, four_x);
-
-            alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
-
-            p_in_x += PARALLEL_512_BLKS_4;
-            p_out_x += PARALLEL_512_BLKS_4;
-
-            // 2nd iteration
-            n            = PARALLEL_512_BLKS_4 * 2;
-            pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
-            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
-
-            c2 = alcp_add_epi32(c1, one_x);
-            c3 = alcp_add_epi32(c1, two_x);
-            c4 = alcp_add_epi32(c1, three_x);
-
-            // re-arrange as per spec
-            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
-
-            AesEncryptNoLoad_4x512Rounds12(b1, b2, b3, b4, keys);
-
-            get_aggregated_karatsuba_components(Hsubkey_512_0,
-                                                Hsubkey_512_1,
-                                                Hsubkey_512_2,
-                                                Hsubkey_512_3,
-                                                a1,
-                                                a2,
-                                                a3,
-                                                a4,
-                                                reverse_mask_512,
-                                                &z0_512,
-                                                &z1_512,
-                                                &z2_512,
-                                                *pgHash_128,
-                                                1);
-
-            alcp_loadu_4values(pHsubkey_512,
-                               Hsubkey_512_0,
-                               Hsubkey_512_1,
-                               Hsubkey_512_2,
-                               Hsubkey_512_3);
-
-            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, // inputs A
-                             a2,
-                             a3,
-                             a4,
-                             b1, // inputs B
-                             b2,
-                             b3,
-                             b4,
-                             b1, // outputs B = A xor B
-                             b2,
-                             b3,
-                             b4);
-            // increment counter
-            c1 = alcp_add_epi32(c1, four_x);
-
-            alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
-            p_in_x += PARALLEL_512_BLKS_4;
-            p_out_x += PARALLEL_512_BLKS_4;
-
-            // 3rd
-            n            = PARALLEL_512_BLKS_4 * 1;
-            pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
-            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
-
-            c2 = alcp_add_epi32(c1, one_x);
-            c3 = alcp_add_epi32(c1, two_x);
-            c4 = alcp_add_epi32(c1, three_x);
-
-            // re-arrange as per spec
-            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
-
-            AesEncryptNoLoad_4x512Rounds12(b1, b2, b3, b4, keys);
-
-            get_aggregated_karatsuba_components(Hsubkey_512_0,
-                                                Hsubkey_512_1,
-                                                Hsubkey_512_2,
-                                                Hsubkey_512_3,
-                                                a1,
-                                                a2,
-                                                a3,
-                                                a4,
-                                                reverse_mask_512,
-                                                &z0_512_t,
-                                                &z1_512_t,
-                                                &z2_512_t,
-                                                *pgHash_128,
-                                                0);
-            z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
-            z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
-            z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
-
-            alcp_loadu_4values(pHsubkey_512,
-                               Hsubkey_512_0,
-                               Hsubkey_512_1,
-                               Hsubkey_512_2,
-                               Hsubkey_512_3);
-
-            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, // inputs A
-                             a2,
-                             a3,
-                             a4,
-                             b1, // inputs B
-                             b2,
-                             b3,
-                             b4,
-                             b1, // outputs B = A xor B
-                             b2,
-                             b3,
-                             b4);
-            // increment counter
-            c1 = alcp_add_epi32(c1, four_x);
-
-            alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
-            p_in_x += PARALLEL_512_BLKS_4;
-            p_out_x += PARALLEL_512_BLKS_4;
-
-            // 4th
-            n            = 0;
-            pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
-            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
-
-            c2 = alcp_add_epi32(c1, one_x);
-            c3 = alcp_add_epi32(c1, two_x);
-            c4 = alcp_add_epi32(c1, three_x);
-
-            // re-arrange as per spec
-            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
-
-            AesEncryptNoLoad_4x512Rounds12(b1, b2, b3, b4, keys);
-
-            get_aggregated_karatsuba_components(Hsubkey_512_0,
-                                                Hsubkey_512_1,
-                                                Hsubkey_512_2,
-                                                Hsubkey_512_3,
-                                                a1,
-                                                a2,
-                                                a3,
-                                                a4,
-                                                reverse_mask_512,
-                                                &z0_512_t,
-                                                &z1_512_t,
-                                                &z2_512_t,
-                                                *pgHash_128,
-                                                0);
-            z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
-            z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
-            z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
-
-            alcp_loadu_4values(pHsubkey_512,
-                               Hsubkey_512_0,
-                               Hsubkey_512_1,
-                               Hsubkey_512_2,
-                               Hsubkey_512_3);
-
-            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, // inputs A
-                             a2,
-                             a3,
-                             a4,
-                             b1, // inputs B
-                             b2,
-                             b3,
-                             b4,
-                             b1, // outputs B = A xor B
-                             b2,
-                             b3,
-                             b4);
-            // increment counter
-            c1 = alcp_add_epi32(c1, four_x);
-
-            get_aggregated_karatsuba_components(Hsubkey_512_0,
-                                                Hsubkey_512_1,
-                                                Hsubkey_512_2,
-                                                Hsubkey_512_3,
-                                                a1,
-                                                a2,
-                                                a3,
-                                                a4,
-                                                reverse_mask_512,
-                                                &z0_512_t,
-                                                &z1_512_t,
-                                                &z2_512_t,
-                                                *pgHash_128,
-                                                0);
-            z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
-            z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
-            z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
-
-            alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
-            p_in_x += PARALLEL_512_BLKS_4;
-            p_out_x += PARALLEL_512_BLKS_4;
-
-            // compute Ghash
-            getGhash(z0_512, z1_512, z2_512, pgHash_128, const_factor_256);
-        }
-
-    } else if (do_2_unroll) {
-        Uint64 blockCount_4x512_2_unroll = 16 * 2;
-
-        for (; blocks >= blockCount_4x512_2_unroll;
-             blocks -= blockCount_4x512_2_unroll) {
-
-            __m512i z0_512, z1_512, z2_512;
-            __m512i z0_512_t, z1_512_t, z2_512_t;
-
-            int      n            = 4; // numParallel_512blks * k;
-            __m512i* pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
-            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
-
-            alcp_loadu_4values(pHsubkey_512, // address
-                               Hsubkey_512_0,
-                               Hsubkey_512_1,
-                               Hsubkey_512_2,
-                               Hsubkey_512_3);
-            c2 = alcp_add_epi32(c1, one_x);
-            c3 = alcp_add_epi32(c1, two_x);
-            c4 = alcp_add_epi32(c1, three_x);
-
-            // re-arrange as per spec
-            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
-
-            AesEncryptNoLoad_4x512Rounds12(b1, b2, b3, b4, keys);
-
-            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, // inputs A
-                             a2,
-                             a3,
-                             a4,
-                             b1, // inputs B
-                             b2,
-                             b3,
-                             b4,
-                             b1, // outputs B = A xor B
-                             b2,
-                             b3,
-                             b4);
-            // increment counter
-            c1 = alcp_add_epi32(c1, four_x);
-
-            alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
-
-            p_in_x += PARALLEL_512_BLKS_4;
-            p_out_x += PARALLEL_512_BLKS_4;
-
-            // 2nd
-            n            = 0;
-            pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
-            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
-
-            c2 = alcp_add_epi32(c1, one_x);
-            c3 = alcp_add_epi32(c1, two_x);
-            c4 = alcp_add_epi32(c1, three_x);
-
-            // re-arrange as per spec
-            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
-
-            AesEncryptNoLoad_4x512Rounds12(b1, b2, b3, b4, keys);
-
-            // first iteration gmul
-            get_aggregated_karatsuba_components(Hsubkey_512_0,
-                                                Hsubkey_512_1,
-                                                Hsubkey_512_2,
-                                                Hsubkey_512_3,
-                                                a1,
-                                                a2,
-                                                a3,
-                                                a4,
-                                                reverse_mask_512,
-                                                &z0_512,
-                                                &z1_512,
-                                                &z2_512,
-                                                *pgHash_128,
-                                                1);
-            alcp_loadu_4values(pHsubkey_512,
-                               Hsubkey_512_0,
-                               Hsubkey_512_1,
-                               Hsubkey_512_2,
-                               Hsubkey_512_3);
-
-            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, // inputs A
-                             a2,
-                             a3,
-                             a4,
-                             b1, // inputs B
-                             b2,
-                             b3,
-                             b4,
-                             b1, // outputs B = A xor B
-                             b2,
-                             b3,
-                             b4);
-            // increment counter
-            c1 = alcp_add_epi32(c1, four_x);
-
-            get_aggregated_karatsuba_components(Hsubkey_512_0,
-                                                Hsubkey_512_1,
-                                                Hsubkey_512_2,
-                                                Hsubkey_512_3,
-                                                a1,
-                                                a2,
-                                                a3,
-                                                a4,
-                                                reverse_mask_512,
-                                                &z0_512_t,
-                                                &z1_512_t,
-                                                &z2_512_t,
-                                                *pgHash_128,
-                                                0);
-            z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
-            z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
-            z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
-
-            alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
-            p_in_x += PARALLEL_512_BLKS_4;
-            p_out_x += PARALLEL_512_BLKS_4;
-
-            // compute Ghash
-            getGhash(z0_512, z1_512, z2_512, pgHash_128, const_factor_256);
-        }
-    }
-
-    __m512i* pHsubkey_512 = Hsubkey_512;
-    Hsubkey_512_0         = _mm512_loadu_si512(pHsubkey_512);
-
-    // if (do_one_parallel) {
-    for (; blocks >= blockCount_4x512; blocks -= blockCount_4x512) {
-        _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
-
-        Hsubkey_512_1 = Hsubkey_512[1];
-        Hsubkey_512_2 = Hsubkey_512[2];
-        Hsubkey_512_3 = Hsubkey_512[3];
-
-        c2 = alcp_add_epi32(c1, one_x);
-        c3 = alcp_add_epi32(c1, two_x);
-        c4 = alcp_add_epi32(c1, three_x);
-
-        alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-
-        gMulR(Hsubkey_512_0,
-              Hsubkey_512_1,
-              Hsubkey_512_2,
-              Hsubkey_512_3,
-              a1,
-              a2,
-              a3,
-              a4,
-              reverse_mask_512,
-              pgHash_128,
-              const_factor_256);
-
-        // re-arrange as per spec
-        alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
-
-        AesEncryptNoLoad_4x512Rounds12(b1, b2, b3, b4, keys);
-
-        alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4, a1, a2, a3, a4);
-
-        // increment counter
-        c1 = alcp_add_epi32(c1, four_x);
-
-        alcp_storeu_4values(p_out_x, a1, a2, a3, a4);
-
-        p_in_x += 4;
-        p_out_x += 4;
-    }
-    //}
-
-    for (; blocks >= blockCount_2x512; blocks -= blockCount_2x512) {
-        _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
-        c2 = alcp_add_epi32(c1, one_x);
-        // printf("\n blockCount_2x512");
-        a1 = alcp_loadu(p_in_x);
-        a2 = alcp_loadu(p_in_x + 1);
-
-        gMulR(
-            Hsubkey_512_0, a1, reverse_mask_512, pgHash_128, const_factor_256);
-        gMulR(
-            Hsubkey_512_0, a2, reverse_mask_512, pgHash_128, const_factor_256);
-
-        // re-arrange as per spec
-        b1 = alcp_shuffle_epi8(c1, swap_ctr);
-        b2 = alcp_shuffle_epi8(c2, swap_ctr);
-
-        AesEncryptNoLoad_2x512Rounds12(b1, b2, keys);
-
-        a1 = alcp_xor(b1, a1);
-        a2 = alcp_xor(b2, a2);
-
-        // increment counter
-        c1 = alcp_add_epi32(c1, two_x);
-
-        alcp_storeu(p_out_x, a1);
-        alcp_storeu(p_out_x + 1, a2);
-
-        p_in_x += 2;
-        p_out_x += 2;
-    }
-
-    for (; blocks >= blockCount_1x512; blocks -= blockCount_1x512) {
-        _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
-        a1 = alcp_loadu(p_in_x);
-        // printf("\n blockCount_1x512");
-        gMulR(
-            Hsubkey_512_0, a1, reverse_mask_512, pgHash_128, const_factor_256);
-
-        // re-arrange as per spec
-        b1 = alcp_shuffle_epi8(c1, swap_ctr);
-
-        AesEncryptNoLoad_1x512Rounds12(b1, keys);
-
-        a1 = alcp_xor(b1, a1);
-
-        // increment counter
-        c1 = alcp_add_epi32(c1, one_x);
-
-        alcp_storeu(p_out_x, a1);
-
-        p_in_x += 1;
-        p_out_x += 1;
-    }
-
-    // residual block=1 when factor = 2, load and store only
-    // lower half.
-    __m128i c1_128     = _mm512_castsi512_si128(c1);
-    __m128i one_lo_128 = _mm_set_epi32(1, 0, 0, 0);
-    for (; blocks != 0; blocks--) {
-        __m128i a1; // remaining bytes handled with 128bit
-        __m128i swap_ctr_128 = _mm512_castsi512_si128(swap_ctr);
-
-        a1 = _mm_loadu_si128((__m128i*)p_in_x);
-
-        __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
-        *pgHash_128 = _mm_xor_si128(ra1, *pgHash_128);
-        gMul(*pgHash_128, Hsubkey_128, pgHash_128, const_factor_256);
-
-        // re-arrange as per spec
-        __m128i b1 = _mm_shuffle_epi8(c1_128, swap_ctr_128);
-        alcp::cipher::aesni::AesEncrypt(&b1, pkey128, nRounds);
-        a1 = _mm_xor_si128(b1, a1);
-
-        // increment counter
-        c1_128 = _mm_add_epi32(c1_128, one_lo_128);
-
-        _mm_storeu_si128((__m128i*)p_out_x, a1);
-        p_in_x  = (__m512i*)(((__uint128_t*)p_in_x) + 1);
-        p_out_x = (__m512i*)(((__uint128_t*)p_out_x) + 1);
-    }
-
-    // remaining bytes
-    if (remBytes) {
-        __m128i a1; // remaining bytes handled with 128bit
-        __m128i swap_ctr_128 = _mm512_castsi512_si128(swap_ctr);
-
-        // re-arrange as per spec
-        __m128i b1 = _mm_shuffle_epi8(c1_128, swap_ctr_128);
-        alcp::cipher::aesni::AesEncrypt(&b1, pkey128, nRounds);
-
-        const Uint8* p_in  = reinterpret_cast<const Uint8*>(p_in_x);
-        Uint8*       p_out = reinterpret_cast<Uint8*>(&a1);
-
-        int i = 0;
-        for (; i < remBytes; i++) {
-            p_out[i] = p_in[i];
-        }
-        for (; i < 16; i++) {
-            p_out[i] = 0;
-        }
-
-        __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
-        *pgHash_128 = _mm_xor_si128(ra1, *pgHash_128);
-        gMul(*pgHash_128, Hsubkey_128, pgHash_128, const_factor_256);
-
-        a1 = _mm_xor_si128(b1, a1);
-        for (i = remBytes; i < 16; i++) {
-            p_out[i] = 0;
-        }
-
-        Uint8* p_store = reinterpret_cast<Uint8*>(p_out_x);
-        for (i = 0; i < remBytes; i++) {
-            p_store[i] = p_out[i];
-        }
-    }
-
-    // clear all keys stored in registers.
-    alcp_clear_keys_zmm_12rounds(keys);
-    return blocks;
+    alc_error_t     err             = ALC_ERROR_NONE;
+    constexpr Uint8 numBlksIn512bit = 4;
+
+    Uint64 blocks   = len / Rijndael::cBlockSize;
+    int    remBytes = len - (blocks * Rijndael::cBlockSize);
+
+    auto p_in_512  = reinterpret_cast<const __m512i*>(pInputText);
+    auto p_out_512 = reinterpret_cast<__m512i*>(pOutputText);
+    auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
+
+    gcmBlk_512_dec<AesEncryptNoLoad_4x512Rounds10,
+                   AesEncryptNoLoad_2x512Rounds10,
+                   AesEncryptNoLoad_1x512Rounds10,
+                   alcp_load_key_zmm_14rounds,
+                   alcp_clear_keys_zmm_14rounds>(p_in_512,
+                                                 p_out_512,
+                                                 blocks,
+                                                 pkey128,
+                                                 pIv,
+                                                 nRounds,
+                                                 numBlksIn512bit,
+                                                 // gcm specific params
+                                                 gHash_128,
+                                                 Hsubkey_128,
+                                                 iv_128,
+                                                 reverse_mask_128,
+                                                 remBytes,
+                                                 pHashSubkeyTable);
+
+    return err;
 }
 
-Uint64
-gcmBlk_512_dec256(const __m512i* p_in_x,
-                  __m512i*       p_out_x,
-                  Uint64         blocks,
-                  const __m128i* pkey128,
-                  const Uint8*   pIv,
-                  int            nRounds,
-                  Uint8          factor,
-                  // gcm specific params
-                  __m128i* pgHash_128,
-                  __m128i  Hsubkey_128,
-                  __m128i  iv_128,
-                  __m128i  reverse_mask_128,
-                  int      remBytes,
-                  Uint64*  pHashSubkeyTable)
+alc_error_t
+decryptGcm192(const Uint8* pInputText,  // ptr to inputText
+              Uint8*       pOutputText, // ptr to outputtext
+              Uint64       len,         // message length in bytes
+              const Uint8* pKey,        // ptr to Key
+              const int    nRounds,     // No. of rounds
+              const Uint8* pIv,         // ptr to Initialization Vector
+              __m128i&     gHash_128,
+              __m128i      Hsubkey_128,
+              __m128i      iv_128,
+              __m128i      reverse_mask_128,
+              Uint64*      pHashSubkeyTable)
 {
-    __m512i swap_ctr, c1;
-    __m512i one_lo, one_x, two_x, three_x, four_x;
-
-    const __m256i const_factor_256 =
-        _mm256_set_epi64x(0xC200000000000000, 0x1, 0xC200000000000000, 0x1);
-
-    /* gcm init + Hash subkey init */
-    gcmCryptInit(c1, iv_128, one_lo, one_x, two_x, three_x, four_x, swap_ctr);
-
-    _mm_prefetch(cast_to(pkey128), _MM_HINT_T1);
-
-    sKeys keys{};
-    alcp_load_key_zmm_14rounds(pkey128, keys);
-
-    // clang-format off
-    __m512i reverse_mask_512 =
-            _mm512_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-                            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-                            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-                            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-    // clang-format on
-
-    int  num_512_blks = 0;
-    bool do_4_unroll  = false;
-    bool do_2_unroll  = false;
-
-    num_512_blks = dynamicUnroll(blocks, do_4_unroll, do_2_unroll);
-
-#if LOCAL_TABLE // local table improves performance of large block size (>8192
-                // bytes)
-    __attribute__((aligned(64))) Uint64 hashSubkeyTable[MAX_NUM_512_BLKS * 8];
-    __m512i* Hsubkey_512 = (__m512i*)&hashSubkeyTable;
-#else
-    __m512i* Hsubkey_512 = (__m512i*)pHashSubkeyTable;
-#endif
-
-    if (num_512_blks) {
-        computeHashSubKeys(
-            num_512_blks, Hsubkey_128, Hsubkey_512, const_factor_256);
-    }
-
-    Uint64  blockCount_1x512 = factor;
-    __m512i a1, b1;
-
-    Uint64 blockCount_4x512 = 4 * factor;
-    Uint64 blockCount_2x512 = 2 * factor;
-
-    __m512i a2, a3, a4;
-    __m512i b2, b3, b4;
-    __m512i c2, c3, c4;
-
-    __m512i Hsubkey_512_0, Hsubkey_512_1, Hsubkey_512_2, Hsubkey_512_3;
-
-    if (do_4_unroll) {
-        Uint64 blockCount_4x512_4_unroll = 16 * 4;
-
-        for (; blocks >= blockCount_4x512_4_unroll;
-             blocks -= blockCount_4x512_4_unroll) {
-
-            __m512i  z0_512, z1_512, z2_512;
-            __m512i  z0_512_t, z1_512_t, z2_512_t;
-            int      n            = 12;
-            __m512i* pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
-            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
-
-            alcp_loadu_4values(pHsubkey_512,
-                               Hsubkey_512_0,
-                               Hsubkey_512_1,
-                               Hsubkey_512_2,
-                               Hsubkey_512_3);
-            c2 = alcp_add_epi32(c1, one_x);
-            c3 = alcp_add_epi32(c1, two_x);
-            c4 = alcp_add_epi32(c1, three_x);
-
-            // re-arrange as per spec
-            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
-
-            AesEncryptNoLoad_4x512Rounds14(b1, b2, b3, b4, keys);
-
-            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, // inputs A
-                             a2,
-                             a3,
-                             a4,
-                             b1, // inputs B
-                             b2,
-                             b3,
-                             b4,
-                             b1, // outputs B = A xor B
-                             b2,
-                             b3,
-                             b4);
-            // increment counter
-            c1 = alcp_add_epi32(c1, four_x);
-
-            alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
-
-            p_in_x += PARALLEL_512_BLKS_4;
-            p_out_x += PARALLEL_512_BLKS_4;
-
-            // 2nd iteration
-            n            = PARALLEL_512_BLKS_4 * 2;
-            pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
-            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
-
-            c2 = alcp_add_epi32(c1, one_x);
-            c3 = alcp_add_epi32(c1, two_x);
-            c4 = alcp_add_epi32(c1, three_x);
-
-            // re-arrange as per spec
-            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
-
-            AesEncryptNoLoad_4x512Rounds14(b1, b2, b3, b4, keys);
-
-            get_aggregated_karatsuba_components(Hsubkey_512_0,
-                                                Hsubkey_512_1,
-                                                Hsubkey_512_2,
-                                                Hsubkey_512_3,
-                                                a1,
-                                                a2,
-                                                a3,
-                                                a4,
-                                                reverse_mask_512,
-                                                &z0_512,
-                                                &z1_512,
-                                                &z2_512,
-                                                *pgHash_128,
-                                                1);
-
-            alcp_loadu_4values(pHsubkey_512,
-                               Hsubkey_512_0,
-                               Hsubkey_512_1,
-                               Hsubkey_512_2,
-                               Hsubkey_512_3);
-
-            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, // inputs A
-                             a2,
-                             a3,
-                             a4,
-                             b1, // inputs B
-                             b2,
-                             b3,
-                             b4,
-                             b1, // outputs B = A xor B
-                             b2,
-                             b3,
-                             b4);
-            // increment counter
-            c1 = alcp_add_epi32(c1, four_x);
-
-            alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
-            p_in_x += PARALLEL_512_BLKS_4;
-            p_out_x += PARALLEL_512_BLKS_4;
-
-            // 3rd
-            n            = PARALLEL_512_BLKS_4 * 1;
-            pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
-            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
-
-            c2 = alcp_add_epi32(c1, one_x);
-            c3 = alcp_add_epi32(c1, two_x);
-            c4 = alcp_add_epi32(c1, three_x);
-
-            // re-arrange as per spec
-            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
-
-            AesEncryptNoLoad_4x512Rounds14(b1, b2, b3, b4, keys);
-
-            get_aggregated_karatsuba_components(Hsubkey_512_0,
-                                                Hsubkey_512_1,
-                                                Hsubkey_512_2,
-                                                Hsubkey_512_3,
-                                                a1,
-                                                a2,
-                                                a3,
-                                                a4,
-                                                reverse_mask_512,
-                                                &z0_512_t,
-                                                &z1_512_t,
-                                                &z2_512_t,
-                                                *pgHash_128,
-                                                0);
-            z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
-            z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
-            z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
-
-            alcp_loadu_4values(pHsubkey_512,
-                               Hsubkey_512_0,
-                               Hsubkey_512_1,
-                               Hsubkey_512_2,
-                               Hsubkey_512_3);
-
-            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, // inputs A
-                             a2,
-                             a3,
-                             a4,
-                             b1, // inputs B
-                             b2,
-                             b3,
-                             b4,
-                             b1, // outputs B = A xor B
-                             b2,
-                             b3,
-                             b4);
-            // increment counter
-            c1 = alcp_add_epi32(c1, four_x);
-
-            alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
-            p_in_x += PARALLEL_512_BLKS_4;
-            p_out_x += PARALLEL_512_BLKS_4;
-
-            // 4th
-            n            = 0;
-            pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
-            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
-
-            c2 = alcp_add_epi32(c1, one_x);
-            c3 = alcp_add_epi32(c1, two_x);
-            c4 = alcp_add_epi32(c1, three_x);
-
-            // re-arrange as per spec
-            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
-
-            AesEncryptNoLoad_4x512Rounds14(b1, b2, b3, b4, keys);
-
-            get_aggregated_karatsuba_components(Hsubkey_512_0,
-                                                Hsubkey_512_1,
-                                                Hsubkey_512_2,
-                                                Hsubkey_512_3,
-                                                a1,
-                                                a2,
-                                                a3,
-                                                a4,
-                                                reverse_mask_512,
-                                                &z0_512_t,
-                                                &z1_512_t,
-                                                &z2_512_t,
-                                                *pgHash_128,
-                                                0);
-            z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
-            z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
-            z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
-
-            alcp_loadu_4values(pHsubkey_512,
-                               Hsubkey_512_0,
-                               Hsubkey_512_1,
-                               Hsubkey_512_2,
-                               Hsubkey_512_3);
-
-            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, // inputs A
-                             a2,
-                             a3,
-                             a4,
-                             b1, // inputs B
-                             b2,
-                             b3,
-                             b4,
-                             b1, // outputs B = A xor B
-                             b2,
-                             b3,
-                             b4);
-            // increment counter
-            c1 = alcp_add_epi32(c1, four_x);
-
-            get_aggregated_karatsuba_components(Hsubkey_512_0,
-                                                Hsubkey_512_1,
-                                                Hsubkey_512_2,
-                                                Hsubkey_512_3,
-                                                a1,
-                                                a2,
-                                                a3,
-                                                a4,
-                                                reverse_mask_512,
-                                                &z0_512_t,
-                                                &z1_512_t,
-                                                &z2_512_t,
-                                                *pgHash_128,
-                                                0);
-            z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
-            z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
-            z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
-
-            alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
-            p_in_x += PARALLEL_512_BLKS_4;
-            p_out_x += PARALLEL_512_BLKS_4;
-
-            // compute Ghash
-            getGhash(z0_512, z1_512, z2_512, pgHash_128, const_factor_256);
-        }
-
-    } else if (do_2_unroll) {
-        Uint64 blockCount_4x512_2_unroll = 16 * 2;
-
-        for (; blocks >= blockCount_4x512_2_unroll;
-             blocks -= blockCount_4x512_2_unroll) {
-
-            __m512i z0_512, z1_512, z2_512;
-            __m512i z0_512_t, z1_512_t, z2_512_t;
-
-            int      n            = 4; // numParallel_512blks * k;
-            __m512i* pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
-            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
-
-            alcp_loadu_4values(pHsubkey_512, // address
-                               Hsubkey_512_0,
-                               Hsubkey_512_1,
-                               Hsubkey_512_2,
-                               Hsubkey_512_3);
-            c2 = alcp_add_epi32(c1, one_x);
-            c3 = alcp_add_epi32(c1, two_x);
-            c4 = alcp_add_epi32(c1, three_x);
-
-            // re-arrange as per spec
-            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
-
-            AesEncryptNoLoad_4x512Rounds14(b1, b2, b3, b4, keys);
-
-            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, // inputs A
-                             a2,
-                             a3,
-                             a4,
-                             b1, // inputs B
-                             b2,
-                             b3,
-                             b4,
-                             b1, // outputs B = A xor B
-                             b2,
-                             b3,
-                             b4);
-            // increment counter
-            c1 = alcp_add_epi32(c1, four_x);
-
-            alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
-
-            p_in_x += PARALLEL_512_BLKS_4;
-            p_out_x += PARALLEL_512_BLKS_4;
-
-            // 2nd
-            n            = 0;
-            pHsubkey_512 = Hsubkey_512 + n;
-            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
-            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
-
-            c2 = alcp_add_epi32(c1, one_x);
-            c3 = alcp_add_epi32(c1, two_x);
-            c4 = alcp_add_epi32(c1, three_x);
-
-            // re-arrange as per spec
-            alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
-
-            AesEncryptNoLoad_4x512Rounds14(b1, b2, b3, b4, keys);
-
-            // first iteration gmul
-            get_aggregated_karatsuba_components(Hsubkey_512_0,
-                                                Hsubkey_512_1,
-                                                Hsubkey_512_2,
-                                                Hsubkey_512_3,
-                                                a1,
-                                                a2,
-                                                a3,
-                                                a4,
-                                                reverse_mask_512,
-                                                &z0_512,
-                                                &z1_512,
-                                                &z2_512,
-                                                *pgHash_128,
-                                                1);
-            alcp_loadu_4values(pHsubkey_512,
-                               Hsubkey_512_0,
-                               Hsubkey_512_1,
-                               Hsubkey_512_2,
-                               Hsubkey_512_3);
-
-            alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, // inputs A
-                             a2,
-                             a3,
-                             a4,
-                             b1, // inputs B
-                             b2,
-                             b3,
-                             b4,
-                             b1, // outputs B = A xor B
-                             b2,
-                             b3,
-                             b4);
-            // increment counter
-            c1 = alcp_add_epi32(c1, four_x);
-
-            get_aggregated_karatsuba_components(Hsubkey_512_0,
-                                                Hsubkey_512_1,
-                                                Hsubkey_512_2,
-                                                Hsubkey_512_3,
-                                                a1,
-                                                a2,
-                                                a3,
-                                                a4,
-                                                reverse_mask_512,
-                                                &z0_512_t,
-                                                &z1_512_t,
-                                                &z2_512_t,
-                                                *pgHash_128,
-                                                0);
-            z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
-            z1_512 = _mm512_xor_si512(z1_512_t, z1_512);
-            z2_512 = _mm512_xor_si512(z2_512_t, z2_512);
-
-            alcp_storeu_4values(p_out_x, b1, b2, b3, b4);
-            p_in_x += PARALLEL_512_BLKS_4;
-            p_out_x += PARALLEL_512_BLKS_4;
-
-            // compute Ghash
-            getGhash(z0_512, z1_512, z2_512, pgHash_128, const_factor_256);
-        }
-    }
-
-    __m512i* pHsubkey_512 = Hsubkey_512;
-    Hsubkey_512_0         = _mm512_loadu_si512(pHsubkey_512);
-
-    // if (do_one_parallel) {
-    for (; blocks >= blockCount_4x512; blocks -= blockCount_4x512) {
-        _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
-
-        Hsubkey_512_1 = Hsubkey_512[1];
-        Hsubkey_512_2 = Hsubkey_512[2];
-        Hsubkey_512_3 = Hsubkey_512[3];
-
-        c2 = alcp_add_epi32(c1, one_x);
-        c3 = alcp_add_epi32(c1, two_x);
-        c4 = alcp_add_epi32(c1, three_x);
-
-        alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-
-        gMulR(Hsubkey_512_0,
-              Hsubkey_512_1,
-              Hsubkey_512_2,
-              Hsubkey_512_3,
-              a1,
-              a2,
-              a3,
-              a4,
-              reverse_mask_512,
-              pgHash_128,
-              const_factor_256);
-
-        // re-arrange as per spec
-        alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
-
-        AesEncryptNoLoad_4x512Rounds14(b1, b2, b3, b4, keys);
-
-        alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4, a1, a2, a3, a4);
-
-        // increment counter
-        c1 = alcp_add_epi32(c1, four_x);
-
-        alcp_storeu_4values(p_out_x, a1, a2, a3, a4);
-
-        p_in_x += 4;
-        p_out_x += 4;
-    }
-    //}
-
-    for (; blocks >= blockCount_2x512; blocks -= blockCount_2x512) {
-        _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
-        c2 = alcp_add_epi32(c1, one_x);
-        // printf("\n blockCount_2x512");
-        a1 = alcp_loadu(p_in_x);
-        a2 = alcp_loadu(p_in_x + 1);
-
-        gMulR(
-            Hsubkey_512_0, a1, reverse_mask_512, pgHash_128, const_factor_256);
-        gMulR(
-            Hsubkey_512_0, a2, reverse_mask_512, pgHash_128, const_factor_256);
-
-        // re-arrange as per spec
-        b1 = alcp_shuffle_epi8(c1, swap_ctr);
-        b2 = alcp_shuffle_epi8(c2, swap_ctr);
-
-        AesEncryptNoLoad_2x512Rounds14(b1, b2, keys);
-
-        a1 = alcp_xor(b1, a1);
-        a2 = alcp_xor(b2, a2);
-
-        // increment counter
-        c1 = alcp_add_epi32(c1, two_x);
-
-        alcp_storeu(p_out_x, a1);
-        alcp_storeu(p_out_x + 1, a2);
-
-        p_in_x += 2;
-        p_out_x += 2;
-    }
-
-    for (; blocks >= blockCount_1x512; blocks -= blockCount_1x512) {
-        _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
-        a1 = alcp_loadu(p_in_x);
-        // printf("\n blockCount_1x512");
-        gMulR(
-            Hsubkey_512_0, a1, reverse_mask_512, pgHash_128, const_factor_256);
-
-        // re-arrange as per spec
-        b1 = alcp_shuffle_epi8(c1, swap_ctr);
-
-        AesEncryptNoLoad_1x512Rounds14(b1, keys);
-
-        a1 = alcp_xor(b1, a1);
-
-        // increment counter
-        c1 = alcp_add_epi32(c1, one_x);
-
-        alcp_storeu(p_out_x, a1);
-
-        p_in_x += 1;
-        p_out_x += 1;
-    }
-
-    // residual block=1 when factor = 2, load and store only
-    // lower half.
-    __m128i c1_128     = _mm512_castsi512_si128(c1);
-    __m128i one_lo_128 = _mm_set_epi32(1, 0, 0, 0);
-    for (; blocks != 0; blocks--) {
-        __m128i a1; // remaining bytes handled with 128bit
-        __m128i swap_ctr_128 = _mm512_castsi512_si128(swap_ctr);
-
-        a1 = _mm_loadu_si128((__m128i*)p_in_x);
-
-        __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
-        *pgHash_128 = _mm_xor_si128(ra1, *pgHash_128);
-        gMul(*pgHash_128, Hsubkey_128, pgHash_128, const_factor_256);
-
-        // re-arrange as per spec
-        __m128i b1 = _mm_shuffle_epi8(c1_128, swap_ctr_128);
-        alcp::cipher::aesni::AesEncrypt(&b1, pkey128, nRounds);
-        a1 = _mm_xor_si128(b1, a1);
-
-        // increment counter
-        c1_128 = _mm_add_epi32(c1_128, one_lo_128);
-
-        _mm_storeu_si128((__m128i*)p_out_x, a1);
-        p_in_x  = (__m512i*)(((__uint128_t*)p_in_x) + 1);
-        p_out_x = (__m512i*)(((__uint128_t*)p_out_x) + 1);
-    }
-
-    // remaining bytes
-    if (remBytes) {
-        __m128i a1; // remaining bytes handled with 128bit
-        __m128i swap_ctr_128 = _mm512_castsi512_si128(swap_ctr);
-
-        // re-arrange as per spec
-        __m128i b1 = _mm_shuffle_epi8(c1_128, swap_ctr_128);
-        alcp::cipher::aesni::AesEncrypt(&b1, pkey128, nRounds);
-
-        const Uint8* p_in  = reinterpret_cast<const Uint8*>(p_in_x);
-        Uint8*       p_out = reinterpret_cast<Uint8*>(&a1);
-
-        int i = 0;
-        for (; i < remBytes; i++) {
-            p_out[i] = p_in[i];
-        }
-        for (; i < 16; i++) {
-            p_out[i] = 0;
-        }
-
-        __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
-        *pgHash_128 = _mm_xor_si128(ra1, *pgHash_128);
-        gMul(*pgHash_128, Hsubkey_128, pgHash_128, const_factor_256);
-
-        a1 = _mm_xor_si128(b1, a1);
-        for (i = remBytes; i < 16; i++) {
-            p_out[i] = 0;
-        }
-
-        Uint8* p_store = reinterpret_cast<Uint8*>(p_out_x);
-        for (i = 0; i < remBytes; i++) {
-            p_store[i] = p_out[i];
-        }
-    }
-
-    // clear all keys stored in registers.
-    alcp_clear_keys_zmm_14rounds(keys);
-    return blocks;
+    alc_error_t     err             = ALC_ERROR_NONE;
+    constexpr Uint8 numBlksIn512bit = 4;
+
+    Uint64 blocks   = len / Rijndael::cBlockSize;
+    int    remBytes = len - (blocks * Rijndael::cBlockSize);
+
+    auto p_in_512  = reinterpret_cast<const __m512i*>(pInputText);
+    auto p_out_512 = reinterpret_cast<__m512i*>(pOutputText);
+    auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
+
+    gcmBlk_512_dec<AesEncryptNoLoad_4x512Rounds12,
+                   AesEncryptNoLoad_2x512Rounds12,
+                   AesEncryptNoLoad_1x512Rounds12,
+                   alcp_load_key_zmm_12rounds,
+                   alcp_clear_keys_zmm_12rounds>(p_in_512,
+                                                 p_out_512,
+                                                 blocks,
+                                                 pkey128,
+                                                 pIv,
+                                                 nRounds,
+                                                 numBlksIn512bit,
+                                                 // gcm specific params
+                                                 gHash_128,
+                                                 Hsubkey_128,
+                                                 iv_128,
+                                                 reverse_mask_128,
+                                                 remBytes,
+                                                 pHashSubkeyTable);
+
+    return err;
+}
+
+alc_error_t
+decryptGcm256(const Uint8* pInputText,  // ptr to inputText
+              Uint8*       pOutputText, // ptr to outputtext
+              Uint64       len,         // message length in bytes
+              const Uint8* pKey,        // ptr to Key
+              const int    nRounds,     // No. of rounds
+              const Uint8* pIv,         // ptr to Initialization Vector
+              __m128i&     gHash_128,
+              __m128i      Hsubkey_128,
+              __m128i      iv_128,
+              __m128i      reverse_mask_128,
+              Uint64*      pHashSubkeyTable)
+{
+    alc_error_t     err             = ALC_ERROR_NONE;
+    constexpr Uint8 numBlksIn512bit = 4;
+
+    Uint64 blocks   = len / Rijndael::cBlockSize;
+    int    remBytes = len - (blocks * Rijndael::cBlockSize);
+
+    auto p_in_512  = reinterpret_cast<const __m512i*>(pInputText);
+    auto p_out_512 = reinterpret_cast<__m512i*>(pOutputText);
+    auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
+
+    gcmBlk_512_dec<AesEncryptNoLoad_4x512Rounds14,
+                   AesEncryptNoLoad_2x512Rounds14,
+                   AesEncryptNoLoad_1x512Rounds14,
+                   alcp_load_key_zmm_14rounds,
+                   alcp_clear_keys_zmm_14rounds>(p_in_512,
+                                                 p_out_512,
+                                                 blocks,
+                                                 pkey128,
+                                                 pIv,
+                                                 nRounds,
+                                                 numBlksIn512bit,
+                                                 // gcm specific params
+                                                 gHash_128,
+                                                 Hsubkey_128,
+                                                 iv_128,
+                                                 reverse_mask_128,
+                                                 remBytes,
+                                                 pHashSubkeyTable);
+
+    return err;
 }
 
 } // namespace alcp::cipher::vaes512
