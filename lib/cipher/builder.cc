@@ -332,7 +332,7 @@ __build_aesCfb(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
     Status sts = StatusOk();
 
     CpuCipherFeatures cpu_feature = getCpuCipherfeature();
-    cpu_feature                   = CpuCipherFeatures::eVaes256;
+    // cpu_feature                   = CpuCipherFeatures::eVaes256;
     if (cpu_feature == CpuCipherFeatures::eVaes512) {
         if (keyLen == ALC_KEY_LEN_128) {
             _build_aes_cipher<
@@ -512,7 +512,11 @@ AesBuilder::Build(const alc_cipher_mode_t cipherMode,
                 sts = __build_aesCtr(pKey, keyLen, ctx);
             break;
         case ALC_AES_MODE_CFB:
-            sts = __build_aesCfb(pKey, keyLen, ctx);
+            if (Cfb<aesni::EncryptCfb256, aesni::DecryptCfb256>::isSupported(
+                    keyLen)) {
+                sts = __build_aesCfb(pKey, keyLen, ctx);
+            }
+            break;
             // FIXME: GCM, XTS, CCM should be moved to AeadBuilder.
         case ALC_AES_MODE_GCM:
             if (Gcm::isSupported(keyLen))
