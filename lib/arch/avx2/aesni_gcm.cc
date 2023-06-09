@@ -114,21 +114,21 @@ InitGcm(const Uint8* pKey,
 }
 
 void
-gcmCryptInit(__m128i* c1,
+gcmCryptInit(__m128i& c1,
              __m128i  iv_128,
-             __m128i* one_lo,
-             __m128i* one_x,
-             __m128i* two_x,
-             __m128i* three_x,
-             __m128i* four_x,
-             __m128i* swap_ctr)
+             __m128i& one_lo,
+             __m128i& one_x,
+             __m128i& two_x,
+             __m128i& three_x,
+             __m128i& four_x,
+             __m128i& swap_ctr)
 {
 
-    *one_x   = alcp_set_epi32(1, 0, 0, 0);
-    *two_x   = alcp_set_epi32(2, 0, 0, 0);
-    *three_x = alcp_set_epi32(3, 0, 0, 0);
-    *four_x  = alcp_set_epi32(4, 0, 0, 0);
-    *one_lo  = *one_x;
+    one_x   = alcp_set_epi32(1, 0, 0, 0);
+    two_x   = alcp_set_epi32(2, 0, 0, 0);
+    three_x = alcp_set_epi32(3, 0, 0, 0);
+    four_x  = alcp_set_epi32(4, 0, 0, 0);
+    one_lo  = one_x;
 
     //
     // counterblock :: counter 4 bytes: IV 8 bytes : Nonce 4 bytes
@@ -137,11 +137,11 @@ gcmCryptInit(__m128i* c1,
 
     // counter 4 bytes are arranged in reverse order
     // for counter increment
-    *swap_ctr =
+    swap_ctr =
         _mm_setr_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 14, 13, 12);
 
     // nonce counter
-    *c1 = iv_128;
+    c1 = iv_128;
 }
 
 static Uint64
@@ -166,8 +166,7 @@ gcmBlk(const __m128i* p_in_x,
     __m128i one_lo, one_x, two_x, three_x, four_x;
 
     /* gcm init + Hash subkey init */
-    gcmCryptInit(
-        &c1, iv_128, &one_lo, &one_x, &two_x, &three_x, &four_x, &swap_ctr);
+    gcmCryptInit(c1, iv_128, one_lo, one_x, two_x, three_x, four_x, swap_ctr);
 
     __m128i Hsubkey_128_2, Hsubkey_128_3, Hsubkey_128_4;
     if (blocks >= 4) {

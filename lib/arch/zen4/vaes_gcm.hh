@@ -45,23 +45,22 @@ whereas MSVC still expects `const char* ` */
 
 namespace alcp::cipher::vaes512 {
 
-void inline gcmCryptInit(__m512i* c1,
+void inline gcmCryptInit(__m512i& c1,
                          __m128i  iv_128,
-                         __m512i* one_lo,
-                         __m512i* one_x,
-                         __m512i* two_x,
-                         __m512i* three_x,
-                         __m512i* four_x,
-                         __m512i* swap_ctr)
+                         __m512i& one_lo,
+                         __m512i& one_x,
+                         __m512i& two_x,
+                         __m512i& three_x,
+                         __m512i& four_x,
+                         __m512i& swap_ctr)
 {
 
-    *one_lo = alcp_set_epi32(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
-    *one_x  = alcp_set_epi32(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0);
-    *two_x  = alcp_set_epi32(8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0);
-    *three_x =
+    one_lo = alcp_set_epi32(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
+    one_x  = alcp_set_epi32(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0);
+    two_x  = alcp_set_epi32(8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0);
+    three_x =
         alcp_set_epi32(12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0);
-    *four_x =
-        alcp_set_epi32(16, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0);
+    four_x = alcp_set_epi32(16, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0);
 
     //
     // counterblock :: counter 4 bytes: IV 8 bytes : Nonce 4 bytes
@@ -70,28 +69,28 @@ void inline gcmCryptInit(__m512i* c1,
 
     // counter 4 bytes are arranged in reverse order
     // for counter increment
-    *swap_ctr = _mm512_set_epi32(0x0c0d0e0f,
-                                 0x0b0a0908,
-                                 0x07060504,
-                                 0x03020100,
-                                 0x0c0d0e0f, // Repeats here
-                                 0x0b0a0908,
-                                 0x07060504,
-                                 0x03020100,
-                                 0x0c0d0e0f, // Repeats here
-                                 0x0b0a0908,
-                                 0x07060504,
-                                 0x03020100,
-                                 0x0c0d0e0f, // Repeats here
-                                 0x0b0a0908,
-                                 0x07060504,
-                                 0x03020100);
+    swap_ctr = _mm512_set_epi32(0x0c0d0e0f,
+                                0x0b0a0908,
+                                0x07060504,
+                                0x03020100,
+                                0x0c0d0e0f, // Repeats here
+                                0x0b0a0908,
+                                0x07060504,
+                                0x03020100,
+                                0x0c0d0e0f, // Repeats here
+                                0x0b0a0908,
+                                0x07060504,
+                                0x03020100,
+                                0x0c0d0e0f, // Repeats here
+                                0x0b0a0908,
+                                0x07060504,
+                                0x03020100);
     // nonce counter
-    *c1 = _mm512_broadcast_i64x2(iv_128);
+    c1 = _mm512_broadcast_i64x2(iv_128);
 
     __m512i onehi =
         _mm512_setr_epi32(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3);
-    *c1 = alcp_add_epi32(*c1, onehi);
+    c1 = alcp_add_epi32(c1, onehi);
 }
 
 Uint64

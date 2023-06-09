@@ -95,8 +95,7 @@ gcmBlk_512_dec128(const __m512i* p_in_x,
         _mm256_set_epi64x(0xC200000000000000, 0x1, 0xC200000000000000, 0x1);
 
     /* gcm init + Hash subkey init */
-    gcmCryptInit(
-        &c1, iv_128, &one_lo, &one_x, &two_x, &three_x, &four_x, &swap_ctr);
+    gcmCryptInit(c1, iv_128, one_lo, one_x, two_x, three_x, four_x, swap_ctr);
 
     _mm_prefetch(cast_to(pkey128), _MM_HINT_T1);
 
@@ -704,8 +703,7 @@ gcmBlk_512_dec192(const __m512i* p_in_x,
         _mm256_set_epi64x(0xC200000000000000, 0x1, 0xC200000000000000, 0x1);
 
     /* gcm init + Hash subkey init */
-    gcmCryptInit(
-        &c1, iv_128, &one_lo, &one_x, &two_x, &three_x, &four_x, &swap_ctr);
+    gcmCryptInit(c1, iv_128, one_lo, one_x, two_x, three_x, four_x, swap_ctr);
 
     _mm_prefetch(cast_to(pkey128), _MM_HINT_T1);
 
@@ -1313,8 +1311,7 @@ gcmBlk_512_dec256(const __m512i* p_in_x,
         _mm256_set_epi64x(0xC200000000000000, 0x1, 0xC200000000000000, 0x1);
 
     /* gcm init + Hash subkey init */
-    gcmCryptInit(
-        &c1, iv_128, &one_lo, &one_x, &two_x, &three_x, &four_x, &swap_ctr);
+    gcmCryptInit(c1, iv_128, one_lo, one_x, two_x, three_x, four_x, swap_ctr);
 
     _mm_prefetch(cast_to(pkey128), _MM_HINT_T1);
 
