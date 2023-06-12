@@ -102,28 +102,16 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
     new (ctx) cipher::Context;
 
     // FIXME: other AES Build() to be modified like CTR in other modes as well.
-    if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_CTR) {
+    if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_CTR
+        || pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_CFB
+        || pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_CBC) {
         err = cipher::CipherBuilder::Build(pCipherInfo->ci_type,
                                            pCipherInfo->ci_algo_info.ai_mode,
                                            pCipherInfo->ci_key_info.key,
                                            pCipherInfo->ci_key_info.len,
                                            *ctx);
     }
-#if 1
-    else if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_CFB) {
-        err = cipher::CipherBuilder::Build(pCipherInfo->ci_type,
-                                           pCipherInfo->ci_algo_info.ai_mode,
-                                           pCipherInfo->ci_key_info.key,
-                                           pCipherInfo->ci_key_info.len,
-                                           *ctx);
-    } else if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_CBC) {
-        err = cipher::CipherBuilder::Build(pCipherInfo->ci_type,
-                                           pCipherInfo->ci_algo_info.ai_mode,
-                                           pCipherInfo->ci_key_info.key,
-                                           pCipherInfo->ci_key_info.len,
-                                           *ctx);
-    }
-#endif
+
 // FIXME: As all are using same builder a switch case without break will
 // better.
 // FIXME: To be enabled in future.

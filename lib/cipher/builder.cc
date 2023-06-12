@@ -27,6 +27,7 @@
  */
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/aes_build.hh"
+#include "alcp/cipher/aes_cbc.hh"
 #include "alcp/cipher/aes_ccm.hh"
 #include "alcp/cipher/aes_cfb.hh"
 #include "alcp/cipher/aes_cmac_siv.hh"
@@ -373,6 +374,55 @@ __build_aesCfb(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 
     return sts;
 }
+
+static Status
+__build_aesCbc(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
+{
+    Status sts = StatusOk();
+
+    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
+    // cpu_feature                   = CpuCipherFeatures::eVaes256;
+    if (cpu_feature == CpuCipherFeatures::eVaes512) {
+        if (keyLen == ALC_KEY_LEN_128) {
+            _build_aes_cipher<
+                Cbc<aesni::EncryptCbc128, vaes512::DecryptCbc128>>(
+                pKey, keyLen, ctx);
+        } else if (keyLen == ALC_KEY_LEN_192) {
+            _build_aes_cipher<
+                Cbc<aesni::EncryptCbc192, vaes512::DecryptCbc192>>(
+                pKey, keyLen, ctx);
+        } else if (keyLen == ALC_KEY_LEN_256) {
+            _build_aes_cipher<
+                Cbc<aesni::EncryptCbc256, vaes512::DecryptCbc256>>(
+                pKey, keyLen, ctx);
+        }
+    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
+        if (keyLen == ALC_KEY_LEN_128) {
+            _build_aes_cipher<Cbc<aesni::EncryptCbc128, vaes::DecryptCbc128>>(
+                pKey, keyLen, ctx);
+        } else if (keyLen == ALC_KEY_LEN_192) {
+            _build_aes_cipher<Cbc<aesni::EncryptCbc192, vaes::DecryptCbc192>>(
+                pKey, keyLen, ctx);
+        } else if (keyLen == ALC_KEY_LEN_256) {
+            _build_aes_cipher<Cbc<aesni::EncryptCbc256, vaes::DecryptCbc256>>(
+                pKey, keyLen, ctx);
+        }
+    } else if (cpu_feature == CpuCipherFeatures::eAesni) {
+        if (keyLen == ALC_KEY_LEN_128) {
+            _build_aes_cipher<Cbc<aesni::EncryptCbc128, aesni::DecryptCbc128>>(
+                pKey, keyLen, ctx);
+        } else if (keyLen == ALC_KEY_LEN_192) {
+            _build_aes_cipher<Cbc<aesni::EncryptCbc192, aesni::DecryptCbc192>>(
+                pKey, keyLen, ctx);
+        } else if (keyLen == ALC_KEY_LEN_256) {
+            _build_aes_cipher<Cbc<aesni::EncryptCbc256, aesni::DecryptCbc256>>(
+                pKey, keyLen, ctx);
+        }
+    }
+
+    return sts;
+}
+
 // FIXME: Horror ahead, custom builder for SIV
 #if 1
 
@@ -444,16 +494,6 @@ AesBuilder::Build(const alc_cipher_algo_info_t& aesInfo,
     Status sts = StatusOk();
 
     switch (aesInfo.ai_mode) {
-            // case ALC_AES_MODE_CFB:
-            //     if (Cfb::isSupported(aesInfo, keyInfo))
-            //         sts = __build_aes<Cfb>(aesInfo, keyInfo, ctx);
-            //     break;
-
-        case ALC_AES_MODE_CBC:
-            if (Cbc::isSupported(aesInfo, keyInfo))
-                sts = __build_aes<Cbc>(aesInfo, keyInfo, ctx);
-            break;
-
         case ALC_AES_MODE_OFB:
             if (Ofb::isSupported(aesInfo, keyInfo))
                 sts = __build_aes<Ofb>(aesInfo, keyInfo, ctx);
@@ -510,6 +550,11 @@ AesBuilder::Build(const alc_cipher_mode_t cipherMode,
         case ALC_AES_MODE_CTR:
             if (Ctr::isSupported(keyLen))
                 sts = __build_aesCtr(pKey, keyLen, ctx);
+            break;
+        case ALC_AES_MODE_CBC:
+            if (Cbc<aesni::EncryptCbc128, aesni::DecryptCbc128>::isSupported(
+                    keyLen))
+                sts = __build_aesCbc(pKey, keyLen, ctx);
             break;
         case ALC_AES_MODE_CFB:
             if (Cfb<aesni::EncryptCfb256, aesni::DecryptCfb256>::isSupported(
