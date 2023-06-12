@@ -36,6 +36,7 @@
 
 namespace alcp::cipher::aesni {
 
+template<void AesEnc_1x128(__m128i* pBlk0, const __m128i* pKey, int nRounds)>
 alc_error_t
 EncryptCbc(const Uint8* pPlainText,  // ptr to plaintext
            Uint8*       pCipherText, // ptr to ciphertext
@@ -60,7 +61,7 @@ EncryptCbc(const Uint8* pPlainText,  // ptr to plaintext
         a1 = _mm_loadu_si128(p_in_128);
         b1 = _mm_xor_si128(a1, b1);
 
-        aesni::AesEncrypt(&b1, pkey128, nRounds);
+        AesEnc_1x128(&b1, pkey128, nRounds);
 
         _mm_storeu_si128(p_out_128, b1);
         p_in_128++;
@@ -70,6 +71,25 @@ EncryptCbc(const Uint8* pPlainText,  // ptr to plaintext
     return err;
 }
 
+template<void AesDec_1x128(__m128i* pBlk0, const __m128i* pKey, int nRounds),
+         void AesDec_2x128(
+             __m128i* pBlk0, __m128i* pBlk1, const __m128i* pKey, int nRounds),
+         void AesDec_4x128(__m128i*       pBlk0,
+                           __m128i*       pBlk1,
+                           __m128i*       pBlk2,
+                           __m128i*       pBlk3,
+                           const __m128i* pKey,
+                           int            nRounds),
+         void AesDec_8x128(__m128i*       pBlk0,
+                           __m128i*       pBlk1,
+                           __m128i*       pBlk2,
+                           __m128i*       pBlk3,
+                           __m128i*       pBlk4,
+                           __m128i*       pBlk5,
+                           __m128i*       pBlk6,
+                           __m128i*       pBlk7,
+                           const __m128i* pKey,
+                           int            nRounds)>
 alc_error_t
 DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
            Uint8*       pPlainText,  // ptr to plaintext
@@ -103,8 +123,7 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         a7 = input_128_a7 = _mm_loadu_si128(p_in_128 + 6);
         a8 = input_128_a8 = _mm_loadu_si128(p_in_128 + 7);
 
-        aesni::AesDecrypt(
-            &a1, &a2, &a3, &a4, &a5, &a6, &a7, &a8, pkey128, nRounds);
+        AesDec_8x128(&a1, &a2, &a3, &a4, &a5, &a6, &a7, &a8, pkey128, nRounds);
 
         a1 = _mm_xor_si128(a1, b1);
         a2 = _mm_xor_si128(a2, input_128_a1);
@@ -135,7 +154,7 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         a3 = input_128_a3 = _mm_loadu_si128(p_in_128 + 2);
         a4 = input_128_a4 = _mm_loadu_si128(p_in_128 + 3);
 
-        aesni::AesDecrypt(&a1, &a2, &a3, &a4, pkey128, nRounds);
+        AesDec_4x128(&a1, &a2, &a3, &a4, pkey128, nRounds);
 
         a1 = _mm_xor_si128(a1, b1);
         a2 = _mm_xor_si128(a2, input_128_a1);
@@ -156,7 +175,7 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         a1 = input_128_a1 = _mm_loadu_si128(p_in_128);
         a2 = input_128_a2 = _mm_loadu_si128(p_in_128 + 1);
 
-        aesni::AesDecrypt(&a1, &a2, pkey128, nRounds);
+        AesDec_2x128(&a1, &a2, pkey128, nRounds);
 
         a1 = _mm_xor_si128(a1, b1);
         a2 = _mm_xor_si128(a2, input_128_a1);
@@ -172,7 +191,7 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
     for (; blocks >= 1; blocks -= 1) {
         a1 = input_128_a1 = _mm_loadu_si128(p_in_128);
 
-        aesni::AesDecrypt(&a1, pkey128, nRounds);
+        AesDec_1x128(&a1, pkey128, nRounds);
         a1 = _mm_xor_si128(a1, b1);
 
         _mm_storeu_si128(p_out_128, a1);
@@ -182,6 +201,88 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
     }
 
     return err;
+}
+
+alc_error_t
+EncryptCbc128(const Uint8* pSrc,    // ptr to ciphertext
+              Uint8*       pDest,   // ptr to plaintext
+              Uint64       len,     // message length in bytes
+              const Uint8* pKey,    // ptr to Key
+              int          nRounds, // No. of rounds
+              const Uint8* pIv      // ptr to Initialization Vector
+)
+{
+    return EncryptCbc<aesni::AesEncrypt>(pSrc, pDest, len, pKey, nRounds, pIv);
+}
+
+alc_error_t
+EncryptCbc192(const Uint8* pSrc,    // ptr to ciphertext
+              Uint8*       pDest,   // ptr to plaintext
+              Uint64       len,     // message length in bytes
+              const Uint8* pKey,    // ptr to Key
+              int          nRounds, // No. of rounds
+              const Uint8* pIv      // ptr to Initialization Vector
+)
+{
+    return EncryptCbc<aesni::AesEncrypt>(pSrc, pDest, len, pKey, nRounds, pIv);
+}
+
+alc_error_t
+EncryptCbc256(const Uint8* pSrc,    // ptr to ciphertext
+              Uint8*       pDest,   // ptr to plaintext
+              Uint64       len,     // message length in bytes
+              const Uint8* pKey,    // ptr to Key
+              int          nRounds, // No. of rounds
+              const Uint8* pIv      // ptr to Initialization Vector
+)
+{
+    return EncryptCbc<aesni::AesEncrypt>(pSrc, pDest, len, pKey, nRounds, pIv);
+}
+
+// Decrypt Functions
+alc_error_t
+DecryptCbc128(const Uint8* pSrc,    // ptr to ciphertext
+              Uint8*       pDest,   // ptr to plaintext
+              Uint64       len,     // message length in bytes
+              const Uint8* pKey,    // ptr to Key
+              int          nRounds, // No. of rounds
+              const Uint8* pIv      // ptr to Initialization Vector
+)
+{
+    return DecryptCbc<aesni::AesDecrypt,
+                      aesni::AesDecrypt,
+                      aesni::AesDecrypt,
+                      aesni::AesDecrypt>(pSrc, pDest, len, pKey, nRounds, pIv);
+}
+
+alc_error_t
+DecryptCbc192(const Uint8* pSrc,    // ptr to ciphertext
+              Uint8*       pDest,   // ptr to plaintext
+              Uint64       len,     // message length in bytes
+              const Uint8* pKey,    // ptr to Key
+              int          nRounds, // No. of rounds
+              const Uint8* pIv      // ptr to Initialization Vector
+)
+{
+    return DecryptCbc<aesni::AesDecrypt,
+                      aesni::AesDecrypt,
+                      aesni::AesDecrypt,
+                      aesni::AesDecrypt>(pSrc, pDest, len, pKey, nRounds, pIv);
+}
+
+alc_error_t
+DecryptCbc256(const Uint8* pSrc,    // ptr to ciphertext
+              Uint8*       pDest,   // ptr to plaintext
+              Uint64       len,     // message length in bytes
+              const Uint8* pKey,    // ptr to Key
+              int          nRounds, // No. of rounds
+              const Uint8* pIv      // ptr to Initialization Vector
+)
+{
+    return DecryptCbc<aesni::AesDecrypt,
+                      aesni::AesDecrypt,
+                      aesni::AesDecrypt,
+                      aesni::AesDecrypt>(pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
 } // namespace alcp::cipher::aesni
