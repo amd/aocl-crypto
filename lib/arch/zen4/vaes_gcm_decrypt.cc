@@ -135,7 +135,7 @@ gcmBlk_512_dec(const __m512i* p_in_x,
     __m512i Hsubkey_512_0, Hsubkey_512_1, Hsubkey_512_2, Hsubkey_512_3;
 
     if (do_4_unroll) {
-        Uint64 blockCount_4x512_4_unroll = 16 * 4;
+        constexpr Uint64 blockCount_4x512_4_unroll = 16 * 4;
 
         for (; blocks >= blockCount_4x512_4_unroll;
              blocks -= blockCount_4x512_4_unroll) {
@@ -206,9 +206,9 @@ gcmBlk_512_dec(const __m512i* p_in_x,
                                                 a3,
                                                 a4,
                                                 reverse_mask_512,
-                                                &z0_512,
-                                                &z1_512,
-                                                &z2_512,
+                                                z0_512,
+                                                z1_512,
+                                                z2_512,
                                                 gHash_128,
                                                 1);
 
@@ -262,9 +262,9 @@ gcmBlk_512_dec(const __m512i* p_in_x,
                                                 a3,
                                                 a4,
                                                 reverse_mask_512,
-                                                &z0_512_t,
-                                                &z1_512_t,
-                                                &z2_512_t,
+                                                z0_512_t,
+                                                z1_512_t,
+                                                z2_512_t,
                                                 gHash_128,
                                                 0);
             z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
@@ -321,9 +321,9 @@ gcmBlk_512_dec(const __m512i* p_in_x,
                                                 a3,
                                                 a4,
                                                 reverse_mask_512,
-                                                &z0_512_t,
-                                                &z1_512_t,
-                                                &z2_512_t,
+                                                z0_512_t,
+                                                z1_512_t,
+                                                z2_512_t,
                                                 gHash_128,
                                                 0);
             z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
@@ -361,9 +361,9 @@ gcmBlk_512_dec(const __m512i* p_in_x,
                                                 a3,
                                                 a4,
                                                 reverse_mask_512,
-                                                &z0_512_t,
-                                                &z1_512_t,
-                                                &z2_512_t,
+                                                z0_512_t,
+                                                z1_512_t,
+                                                z2_512_t,
                                                 gHash_128,
                                                 0);
             z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
@@ -374,11 +374,11 @@ gcmBlk_512_dec(const __m512i* p_in_x,
             p_in_x += PARALLEL_512_BLKS_4;
             p_out_x += PARALLEL_512_BLKS_4;
 
-            getGhash(z0_512, z1_512, z2_512, &gHash_128, const_factor_256);
+            getGhash(z0_512, z1_512, z2_512, gHash_128, const_factor_256);
         }
 
     } else if (do_2_unroll) {
-        Uint64 blockCount_4x512_2_unroll = 16 * 2;
+        constexpr Uint64 blockCount_4x512_2_unroll = 16 * 2;
 
         for (; blocks >= blockCount_4x512_2_unroll;
              blocks -= blockCount_4x512_2_unroll) {
@@ -451,9 +451,9 @@ gcmBlk_512_dec(const __m512i* p_in_x,
                                                 a3,
                                                 a4,
                                                 reverse_mask_512,
-                                                &z0_512,
-                                                &z1_512,
-                                                &z2_512,
+                                                z0_512,
+                                                z1_512,
+                                                z2_512,
                                                 gHash_128,
                                                 1);
             alcp_loadu_4values(pHsubkey_512,
@@ -487,9 +487,9 @@ gcmBlk_512_dec(const __m512i* p_in_x,
                                                 a3,
                                                 a4,
                                                 reverse_mask_512,
-                                                &z0_512_t,
-                                                &z1_512_t,
-                                                &z2_512_t,
+                                                z0_512_t,
+                                                z1_512_t,
+                                                z2_512_t,
                                                 gHash_128,
                                                 0);
             z0_512 = _mm512_xor_si512(z0_512_t, z0_512);
@@ -500,7 +500,7 @@ gcmBlk_512_dec(const __m512i* p_in_x,
             p_in_x += PARALLEL_512_BLKS_4;
             p_out_x += PARALLEL_512_BLKS_4;
 
-            getGhash(z0_512, z1_512, z2_512, &gHash_128, const_factor_256);
+            getGhash(z0_512, z1_512, z2_512, gHash_128, const_factor_256);
         }
     }
 
@@ -529,7 +529,7 @@ gcmBlk_512_dec(const __m512i* p_in_x,
               a3,
               a4,
               reverse_mask_512,
-              &gHash_128,
+              gHash_128,
               const_factor_256);
 
         /* re-arrange as per spec */
@@ -555,10 +555,8 @@ gcmBlk_512_dec(const __m512i* p_in_x,
         a1 = alcp_loadu(p_in_x);
         a2 = alcp_loadu(p_in_x + 1);
 
-        gMulR(
-            Hsubkey_512_0, a1, reverse_mask_512, &gHash_128, const_factor_256);
-        gMulR(
-            Hsubkey_512_0, a2, reverse_mask_512, &gHash_128, const_factor_256);
+        gMulR(Hsubkey_512_0, a1, reverse_mask_512, gHash_128, const_factor_256);
+        gMulR(Hsubkey_512_0, a2, reverse_mask_512, gHash_128, const_factor_256);
 
         /* re-arrange as per spec */
         b1 = alcp_shuffle_epi8(c1, swap_ctr);
@@ -583,8 +581,7 @@ gcmBlk_512_dec(const __m512i* p_in_x,
         _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
         a1 = alcp_loadu(p_in_x);
 
-        gMulR(
-            Hsubkey_512_0, a1, reverse_mask_512, &gHash_128, const_factor_256);
+        gMulR(Hsubkey_512_0, a1, reverse_mask_512, gHash_128, const_factor_256);
 
         /* re-arrange as per spec */
         b1 = alcp_shuffle_epi8(c1, swap_ctr);
@@ -615,7 +612,7 @@ gcmBlk_512_dec(const __m512i* p_in_x,
 
         __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
         gHash_128   = _mm_xor_si128(ra1, gHash_128);
-        gMul(gHash_128, Hsubkey_128, &gHash_128, const_factor_256);
+        gMul(gHash_128, Hsubkey_128, gHash_128, const_factor_256);
 
         /* re-arrange as per spec*/
         __m128i b1 = _mm_shuffle_epi8(c1_128, swap_ctr_128);
@@ -652,7 +649,7 @@ gcmBlk_512_dec(const __m512i* p_in_x,
 
         __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
         gHash_128   = _mm_xor_si128(ra1, gHash_128);
-        gMul(gHash_128, Hsubkey_128, &gHash_128, const_factor_256);
+        gMul(gHash_128, Hsubkey_128, gHash_128, const_factor_256);
 
         a1 = _mm_xor_si128(b1, a1);
         for (i = remBytes; i < 16; i++) {

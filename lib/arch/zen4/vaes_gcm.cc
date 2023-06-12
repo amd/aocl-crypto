@@ -81,7 +81,7 @@ __m128i inline HashSubKeyLeftByOne(__m128i hashSubkey)
 alc_error_t
 processAdditionalDataGcm(const Uint8* pAdditionalData,
                          Uint64       additionalDataLen,
-                         __m128i*     pgHash_128,
+                         __m128i&     gHash_128,
                          __m128i      hash_subKey_128,
                          __m128i      reverse_mask_128)
 {
@@ -105,7 +105,7 @@ processAdditionalDataGcm(const Uint8* pAdditionalData,
         gMulR(ad1,
               hash_subKey_128,
               reverse_mask_128,
-              pgHash_128,
+              gHash_128,
               const_factor_256);
         pAd128++;
     }
@@ -124,7 +124,7 @@ processAdditionalDataGcm(const Uint8* pAdditionalData,
         gMulR(ad1,
               hash_subKey_128,
               reverse_mask_128,
-              pgHash_128,
+              gHash_128,
               const_factor_256);
     }
 
@@ -135,8 +135,8 @@ alc_error_t
 GetTagGcm(Uint64   tagLen,
           Uint64   plaintextLen,
           Uint64   adLength,
-          __m128i* pgHash_128,
-          __m128i* ptag128,
+          __m128i& gHash_128,
+          __m128i& tag128,
           __m128i  Hsubkey_128,
           __m128i  reverse_mask_128,
           Uint8*   tag)
@@ -151,17 +151,17 @@ GetTagGcm(Uint64   tagLen,
     a1 = _mm_insert_epi64(a1, (plaintextLen << 3), 0);
     a1 = _mm_insert_epi64(a1, (adLength << 3), 1);
 
-    *pgHash_128 = _mm_xor_si128(a1, *pgHash_128);
-    gMul(*pgHash_128, Hsubkey_128, pgHash_128, const_factor_256);
+    gHash_128 = _mm_xor_si128(a1, gHash_128);
+    gMul(gHash_128, Hsubkey_128, gHash_128, const_factor_256);
 
-    *pgHash_128 = _mm_shuffle_epi8(*pgHash_128, reverse_mask_128);
-    *ptag128    = _mm_xor_si128(*pgHash_128, *ptag128);
+    gHash_128 = _mm_shuffle_epi8(gHash_128, reverse_mask_128);
+    tag128    = _mm_xor_si128(gHash_128, tag128);
 
     if (tagLen == 16) {
-        _mm_storeu_si128(p_tag_128, *ptag128);
+        _mm_storeu_si128(p_tag_128, tag128);
     } else {
         Uint64       i     = 0;
-        const Uint8* p_in  = reinterpret_cast<const Uint8*>(ptag128);
+        const Uint8* p_in  = reinterpret_cast<const Uint8*>(&tag128);
         Uint8*       p_out = reinterpret_cast<Uint8*>(tag);
         for (; i < tagLen; i++) {
             p_out[i] = p_in[i];
@@ -225,7 +225,7 @@ InitGcm(const Uint8* pKey,
             gMulR(a128,
                   *pHsubKey_128,
                   reverse_mask_128,
-                  ptag_128,
+                  *ptag_128,
                   const_factor_256);
             pIv128++;
         }
@@ -239,7 +239,7 @@ InitGcm(const Uint8* pKey,
             gMulR(a128,
                   *pHsubKey_128,
                   reverse_mask_128,
-                  ptag_128,
+                  *ptag_128,
                   const_factor_256);
         }
 
@@ -248,7 +248,7 @@ InitGcm(const Uint8* pKey,
         a128 = _mm_insert_epi64(a128, 0, 1);
 
         *ptag_128 = _mm_xor_si128(a128, *ptag_128);
-        gMul(*ptag_128, *pHsubKey_128, ptag_128, const_factor_256);
+        gMul(*ptag_128, *pHsubKey_128, *ptag_128, const_factor_256);
 
         *ptag_128 = _mm_shuffle_epi8(*ptag_128, reverse_mask_128);
         *piv_128  = *ptag_128;

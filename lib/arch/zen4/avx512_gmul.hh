@@ -66,7 +66,7 @@ namespace alcp::cipher { namespace vaes512 {
                                            0x1, 0xC200000000000000 };
 
     static inline void montgomeryReduction(__m256i       input_256,
-                                           __m128i*      result,
+                                           __m128i&      result,
                                            const __m256i const_factor_256)
     {
         __m256i       mul, rev, high_256;
@@ -89,8 +89,8 @@ namespace alcp::cipher { namespace vaes512 {
         rev       = _mm256_shuffle_epi32(input_256, cSwizzle);
         input_256 = _mm256_xor_si256(mul, rev);
 
-        mul     = _mm256_xor_si256(high_256, input_256);
-        *result = _mm256_castsi256_si128(mul);
+        mul    = _mm256_xor_si256(high_256, input_256);
+        result = _mm256_castsi256_si128(mul);
     }
 
     static inline __m128i amd512_horizontal_sum128(__m512i x_512)
@@ -127,20 +127,20 @@ namespace alcp::cipher { namespace vaes512 {
 
     static inline void computeKaratsuba_Z0_Z2(const __m512i H_512,
                                               const __m512i abcd_512,
-                                              __m512i*      z0_512,
-                                              __m512i*      z2_512)
+                                              __m512i&      z0_512,
+                                              __m512i&      z2_512)
     {
         // compute x0y0
         // (Xi • H1) :  (Xi-1 • H2) : (Xi-2 • H3) : (Xi-3+Yi-4) •H4
-        *z0_512 = _mm512_clmulepi64_epi128(H_512, abcd_512, 0x00);
+        z0_512 = _mm512_clmulepi64_epi128(H_512, abcd_512, 0x00);
 
         // compute x1y1
-        *z2_512 = _mm512_clmulepi64_epi128(H_512, abcd_512, 0x11);
+        z2_512 = _mm512_clmulepi64_epi128(H_512, abcd_512, 0x11);
     }
 
     static inline void computeKaratsuba_Z1(const __m512i H_512,
                                            const __m512i abcd_512,
-                                           __m512i*      pz1_512)
+                                           __m512i&      z1_512)
     {
         __m512i H_512_high, abcd_512_high;
         H_512_high    = _mm512_bsrli_epi128(H_512, 8);
@@ -149,13 +149,13 @@ namespace alcp::cipher { namespace vaes512 {
         H_512_high    = _mm512_xor_si512(H_512_high, H_512);
         abcd_512_high = _mm512_xor_si512(abcd_512_high, abcd_512);
 
-        *pz1_512 = _mm512_clmulepi64_epi128(H_512_high, abcd_512_high, 0x00);
+        z1_512 = _mm512_clmulepi64_epi128(H_512_high, abcd_512_high, 0x00);
     }
 
     static inline void computeKaratsuba_Z0_Z2_acc(__m512i  H_512,
                                                   __m512i  abcd_512,
-                                                  __m512i* pz0_512,
-                                                  __m512i* pz2_512)
+                                                  __m512i& z0_512,
+                                                  __m512i& z2_512)
     {
         __m512i z0_temp;
         // compute x0y0
@@ -166,15 +166,15 @@ namespace alcp::cipher { namespace vaes512 {
         H_512 = _mm512_clmulepi64_epi128(H_512, abcd_512, 0x11);
 
         // accumulate with verious z0
-        *pz0_512 = _mm512_xor_si512(z0_temp, *pz0_512);
+        z0_512 = _mm512_xor_si512(z0_temp, z0_512);
 
         // accumulate with verious z2
-        *pz2_512 = _mm512_xor_si512(H_512, *pz2_512);
+        z2_512 = _mm512_xor_si512(H_512, z2_512);
     }
 
     static inline void computeKaratsuba_Z1_acc(__m512i  H_512,
                                                __m512i  abcd_512,
-                                               __m512i* pz1_512)
+                                               __m512i& z1_512)
     {
         __m512i H_512_high, abcd_512_high;
         H_512_high    = _mm512_bsrli_epi128(H_512, 8);
@@ -186,15 +186,15 @@ namespace alcp::cipher { namespace vaes512 {
         H_512_high = _mm512_clmulepi64_epi128(H_512_high, abcd_512_high, 0x00);
 
         // accumulate with verious z1
-        *pz1_512 = _mm512_xor_si512(H_512_high, *pz1_512);
+        z1_512 = _mm512_xor_si512(H_512_high, z1_512);
     }
 
     /* Aggregated reduction method + Karatsuba algorithm */
     static inline void computeKaratsubaComponents(const __m512i H_512,
                                                   const __m512i abcd_512,
-                                                  __m512i*      pz0_512,
-                                                  __m512i*      pz1_512,
-                                                  __m512i*      pz2_512)
+                                                  __m512i&      z0_512,
+                                                  __m512i&      z1_512,
+                                                  __m512i&      z2_512)
     {
         /*
          *  Karatsuba algorithm to multiply two elements x,y
@@ -214,19 +214,19 @@ namespace alcp::cipher { namespace vaes512 {
          *  [(Xi • H1) + (Xi-1 • H2) + (Xi-2 • H3) + (Xi-3+Yi-4) •H4] modP
          *
          */
-        computeKaratsuba_Z0_Z2(H_512, abcd_512, pz0_512, pz2_512);
+        computeKaratsuba_Z0_Z2(H_512, abcd_512, z0_512, z2_512);
 
         /* To compute: z1 = (x1+x0) (y1+y0) - z2 - z0
          * compute (x1+x0) (y1+y0) part in below function */
-        computeKaratsuba_Z1(H_512, abcd_512, pz1_512);
+        computeKaratsuba_Z1(H_512, abcd_512, z1_512);
     }
 
     /* Aggregated reduction method + Karatsuba algorithm */
     static inline void computeKaratsubaComponentsAccumulate(__m512i  H_512,
                                                             __m512i  abcd_512,
-                                                            __m512i* pz0_512,
-                                                            __m512i* pz1_512,
-                                                            __m512i* pz2_512)
+                                                            __m512i& z0_512,
+                                                            __m512i& z1_512,
+                                                            __m512i& z2_512)
     {
         /*
          *  Karatsuba algorithm to multiply two elements x,y
@@ -246,11 +246,11 @@ namespace alcp::cipher { namespace vaes512 {
          *  [(Xi • H1) + (Xi-1 • H2) + (Xi-2 • H3) + (Xi-3+Yi-4) •H4] modP
          *
          */
-        computeKaratsuba_Z0_Z2_acc(H_512, abcd_512, pz0_512, pz2_512);
+        computeKaratsuba_Z0_Z2_acc(H_512, abcd_512, z0_512, z2_512);
 
         /* To compute: z1 = (x1+x0) (y1+y0) - z2 - z0
          * compute (x1+x0) (y1+y0) part in below function */
-        computeKaratsuba_Z1_acc(H_512, abcd_512, pz1_512);
+        computeKaratsuba_Z1_acc(H_512, abcd_512, z1_512);
     }
 
     static inline __m512i amd512_reverse512_xorLast128bit(
@@ -263,10 +263,10 @@ namespace alcp::cipher { namespace vaes512 {
     static inline void computeKaratsubaMul(__m128i  z0,
                                            __m128i  z1,
                                            __m128i  z2,
-                                           __m256i* res)
+                                           __m256i& res)
     {
         __m128i a1;
-        *res = _mm256_set_m128i(z2, z0);
+        res = _mm256_set_m128i(z2, z0);
         /*
          * compute:    z1 = (x1+x0) (y1+y0) - z2 - z0
          *
@@ -280,21 +280,21 @@ namespace alcp::cipher { namespace vaes512 {
         z1 = _mm_srli_si128(z1, 8);
 
         __m256i temp = _mm256_set_m128i(z1, a1);
-        *res         = _mm256_xor_si256(temp, *res);
+        res          = _mm256_xor_si256(temp, res);
     }
 
     static inline void gMulR(__m512i       H_512,
                              __m512i       abcd_512,
                              __m512i       reverse_mask_512,
-                             __m128i*      res,
+                             __m128i&      res,
                              const __m256i const_factor_256)
     {
         __m512i z0_512, z1_512, z2_512;
         __m128i z0, z1, z2;
 
         abcd_512 =
-            amd512_reverse512_xorLast128bit(abcd_512, reverse_mask_512, *res);
-        computeKaratsubaComponents(H_512, abcd_512, &z0_512, &z1_512, &z2_512);
+            amd512_reverse512_xorLast128bit(abcd_512, reverse_mask_512, res);
+        computeKaratsubaComponents(H_512, abcd_512, z0_512, z1_512, z2_512);
 
         /* compute: z0 = x0y0
          *        z0 component of below equation:
@@ -309,7 +309,7 @@ namespace alcp::cipher { namespace vaes512 {
         z1 = amd512_horizontal_sum128(z1_512);
 
         __m256i res_256;
-        computeKaratsubaMul(z0, z1, z2, &res_256);
+        computeKaratsubaMul(z0, z1, z2, res_256);
         montgomeryReduction(res_256, res, const_factor_256);
     }
 
@@ -321,7 +321,7 @@ namespace alcp::cipher { namespace vaes512 {
         __m512i z0_512, z1_512, z1L_512, z2_512;
 
         computeKaratsubaComponents(
-            H4321_512, H4444_512, &z0_512, &z1_512, &z2_512);
+            H4321_512, H4444_512, z0_512, z1_512, z2_512);
 
         /* compute: z0 = x0y0
          *        z0 component of below equation:
@@ -391,7 +391,7 @@ namespace alcp::cipher { namespace vaes512 {
                              __m512i       c,
                              __m512i       d,
                              __m512i       reverse_mask_512,
-                             __m128i*      res,
+                             __m128i&      res,
                              const __m256i const_factor_256)
     {
 
@@ -404,25 +404,25 @@ namespace alcp::cipher { namespace vaes512 {
         c = _mm512_shuffle_epi8(c, reverse_mask_512);
         d = _mm512_shuffle_epi8(d, reverse_mask_512);
 
-        a = amd512xorLast128bit(a, *res);
+        a = amd512xorLast128bit(a, res);
 
-        computeKaratsubaComponents(H4, a, &z0_512, &z1_512, &z2_512);
+        computeKaratsubaComponents(H4, a, z0_512, z1_512, z2_512);
 
         // b
-        computeKaratsubaComponentsAccumulate(H3, b, &z0_512, &z1_512, &z2_512);
+        computeKaratsubaComponentsAccumulate(H3, b, z0_512, z1_512, z2_512);
 
         // c
-        computeKaratsubaComponentsAccumulate(H2, c, &z0_512, &z1_512, &z2_512);
+        computeKaratsubaComponentsAccumulate(H2, c, z0_512, z1_512, z2_512);
 
         // d
-        computeKaratsubaComponentsAccumulate(H1, d, &z0_512, &z1_512, &z2_512);
+        computeKaratsubaComponentsAccumulate(H1, d, z0_512, z1_512, z2_512);
 
         z0 = amd512_horizontal_sum128(z0_512);
         z1 = amd512_horizontal_sum128(z1_512);
         z2 = amd512_horizontal_sum128(z2_512);
 
         __m256i res_256;
-        computeKaratsubaMul(z0, z1, z2, &res_256);
+        computeKaratsubaMul(z0, z1, z2, res_256);
         montgomeryReduction(res_256, res, const_factor_256);
     }
 
@@ -442,9 +442,9 @@ namespace alcp::cipher { namespace vaes512 {
         __m512i  c,
         __m512i  d,
         __m512i  reverse_mask_512,
-        __m512i* pz0_512,
-        __m512i* pz1_512,
-        __m512i* pz2_512,
+        __m512i& z0_512,
+        __m512i& z1_512,
+        __m512i& z2_512,
         __m128i  res,
         bool     isFirst)
     {
@@ -461,22 +461,22 @@ namespace alcp::cipher { namespace vaes512 {
         __m512i z0_512_b, z1_512_b, z2_512_b;
         __m512i z0_512_c, z1_512_c, z2_512_c;
         __m512i z0_512_d, z1_512_d, z2_512_d;
-        computeKaratsubaComponents(H4, a, &z0_512_a, &z1_512_a, &z2_512_a);
+        computeKaratsubaComponents(H4, a, z0_512_a, z1_512_a, z2_512_a);
         // b
-        computeKaratsubaComponents(H3, b, &z0_512_b, &z1_512_b, &z2_512_b);
+        computeKaratsubaComponents(H3, b, z0_512_b, z1_512_b, z2_512_b);
         // c
-        computeKaratsubaComponents(H2, c, &z0_512_c, &z1_512_c, &z2_512_c);
+        computeKaratsubaComponents(H2, c, z0_512_c, z1_512_c, z2_512_c);
         // d
-        computeKaratsubaComponents(H1, d, &z0_512_d, &z1_512_d, &z2_512_d);
-        *pz0_512 = amd512_xor_all(z0_512_a, z0_512_b, z0_512_c, z0_512_d);
-        *pz1_512 = amd512_xor_all(z1_512_a, z1_512_b, z1_512_c, z1_512_d);
-        *pz2_512 = amd512_xor_all(z2_512_a, z2_512_b, z2_512_c, z2_512_d);
+        computeKaratsubaComponents(H1, d, z0_512_d, z1_512_d, z2_512_d);
+        z0_512 = amd512_xor_all(z0_512_a, z0_512_b, z0_512_c, z0_512_d);
+        z1_512 = amd512_xor_all(z1_512_a, z1_512_b, z1_512_c, z1_512_d);
+        z2_512 = amd512_xor_all(z2_512_a, z2_512_b, z2_512_c, z2_512_d);
     }
 
     static inline void getGhash(__m512i       z0_512,
                                 __m512i       z1_512,
                                 __m512i       z2_512,
-                                __m128i*      res,
+                                __m128i&      res,
                                 const __m256i const_factor_256)
     {
 
@@ -485,7 +485,7 @@ namespace alcp::cipher { namespace vaes512 {
         __m128i z2 = amd512_horizontal_sum128(z2_512);
 
         __m256i res_256;
-        computeKaratsubaMul(z0, z1, z2, &res_256);
+        computeKaratsubaMul(z0, z1, z2, res_256);
         montgomeryReduction(res_256, res, const_factor_256);
     }
 
@@ -515,7 +515,7 @@ namespace alcp::cipher { namespace vaes512 {
 
     static inline void gMul(__m128i       a,
                             __m128i       b,
-                            __m128i*      res,
+                            __m128i&      res,
                             const __m256i const_factor_256)
     {
         __m128i c, d;
@@ -527,14 +527,14 @@ namespace alcp::cipher { namespace vaes512 {
     static inline void gMulR(__m128i       a,
                              __m128i       b,
                              __m128i       reverse_mask_128,
-                             __m128i*      res,
+                             __m128i&      res,
                              const __m256i const_factor_256)
     {
-        a    = _mm_shuffle_epi8(a, reverse_mask_128);
-        *res = _mm_xor_si128(a, *res);
+        a   = _mm_shuffle_epi8(a, reverse_mask_128);
+        res = _mm_xor_si128(a, res);
 
         __m128i c, d;
-        carrylessMul(*res, b, &c, &d);
+        carrylessMul(res, b, &c, &d);
         __m256i cd = _mm256_set_m128i(d, c);
         montgomeryReduction(cd, res, const_factor_256);
     }

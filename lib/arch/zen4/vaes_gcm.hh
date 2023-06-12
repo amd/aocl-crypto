@@ -242,9 +242,9 @@ void inline computeHashSubKeys(int           num_512_blks,
                                       0,        // 0
                                       0);       // 0
 
-    gMul(Hsubkey_128, Hsubkey_128, &pH_512_128[0][2], const_factor_256);
-    gMul(pH_512_128[0][2], Hsubkey_128, &pH_512_128[0][1], const_factor_256);
-    gMul(pH_512_128[0][1], Hsubkey_128, &pH_512_128[0][0], const_factor_256);
+    gMul(Hsubkey_128, Hsubkey_128, pH_512_128[0][2], const_factor_256);
+    gMul(pH_512_128[0][2], Hsubkey_128, pH_512_128[0][1], const_factor_256);
+    gMul(pH_512_128[0][1], Hsubkey_128, pH_512_128[0][0], const_factor_256);
 
     const Uint64* H4_64 = (const Uint64*)&pH_512_128[0][0];
 

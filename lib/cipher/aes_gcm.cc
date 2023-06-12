@@ -117,7 +117,7 @@ namespace vaes512 {
                             m_enc_key,
                             m_nrounds,
                             pIv,
-                            &m_gHash_128,
+                            m_gHash_128,
                             m_hash_subKey_128,
                             m_iv_128,
                             m_reverse_mask_128,
@@ -138,7 +138,7 @@ namespace vaes512 {
                             m_enc_key,
                             m_nrounds,
                             pIv,
-                            &m_gHash_128,
+                            m_gHash_128,
                             m_hash_subKey_128,
                             m_iv_128,
                             m_reverse_mask_128,
@@ -159,7 +159,7 @@ namespace vaes512 {
                             m_enc_key,
                             m_nrounds,
                             pIv,
-                            &m_gHash_128,
+                            m_gHash_128,
                             m_hash_subKey_128,
                             m_iv_128,
                             m_reverse_mask_128,
@@ -217,7 +217,7 @@ namespace vaes512 {
 
         err = processAdditionalDataGcm(pAdditionalData,
                                        m_additionalDataLen,
-                                       &m_gHash_128,
+                                       m_gHash_128,
                                        m_hash_subKey_128,
                                        m_reverse_mask_128);
 
@@ -244,8 +244,8 @@ namespace vaes512 {
         err = vaes512::GetTagGcm(len,
                                  m_len,
                                  m_additionalDataLen,
-                                 &m_gHash_128,
-                                 &m_tag_128,
+                                 m_gHash_128,
+                                 m_tag_128,
                                  m_hash_subKey_128,
                                  m_reverse_mask_128,
                                  ptag);
