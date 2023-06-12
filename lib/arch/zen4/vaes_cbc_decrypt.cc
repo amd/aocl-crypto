@@ -196,21 +196,12 @@ DecryptCbc128(const Uint8* pSrc,    // ptr to ciphertext
               const Uint8* pIv      // ptr to Initialization Vector
 )
 {
-#if 0
     return DecryptCbc<AesDecryptNoLoad_1x512Rounds10,
                       AesDecryptNoLoad_2x512Rounds10,
                       AesDecryptNoLoad_4x512Rounds10,
                       alcp_load_key_zmm_10rounds,
                       alcp_clear_keys_zmm_10rounds>(
         pSrc, pDest, len, pKey, nRounds, pIv);
-#else
-    return DecryptCbc<AesDecryptNoLoad_1x512RoundsAll<ROUNDS_T::ROUNDS_10>,
-                      AesDecryptNoLoad_2x512RoundsAll<ROUNDS_T::ROUNDS_10>,
-                      AesDecryptNoLoad_4x512RoundsAll<ROUNDS_T::ROUNDS_10>,
-                      alcp_load_key_zmm_10rounds,
-                      alcp_clear_keys_zmm_10rounds>(
-        pSrc, pDest, len, pKey, nRounds, pIv);
-#endif
 }
 
 alc_error_t
@@ -222,9 +213,9 @@ DecryptCbc192(const Uint8* pSrc,    // ptr to ciphertext
               const Uint8* pIv      // ptr to Initialization Vector
 )
 {
-    return DecryptCbc<AesDecryptNoLoad_1x512RoundsAll<ROUNDS_T::ROUNDS_12>,
-                      AesDecryptNoLoad_2x512RoundsAll<ROUNDS_T::ROUNDS_12>,
-                      AesDecryptNoLoad_4x512RoundsAll<ROUNDS_T::ROUNDS_12>,
+    return DecryptCbc<AesDecryptNoLoad_1x512Rounds12,
+                      AesDecryptNoLoad_2x512Rounds12,
+                      AesDecryptNoLoad_4x512Rounds12,
                       alcp_load_key_zmm_12rounds,
                       alcp_clear_keys_zmm_12rounds>(
         pSrc, pDest, len, pKey, nRounds, pIv);
@@ -239,9 +230,9 @@ DecryptCbc256(const Uint8* pSrc,    // ptr to ciphertext
               const Uint8* pIv      // ptr to Initialization Vector
 )
 {
-    return DecryptCbc<AesDecryptNoLoad_1x512RoundsAll<ROUNDS_T::ROUNDS_14>,
-                      AesDecryptNoLoad_2x512RoundsAll<ROUNDS_T::ROUNDS_14>,
-                      AesDecryptNoLoad_4x512RoundsAll<ROUNDS_T::ROUNDS_14>,
+    return DecryptCbc<AesDecryptNoLoad_1x512Rounds14,
+                      AesDecryptNoLoad_2x512Rounds14,
+                      AesDecryptNoLoad_4x512Rounds14,
                       alcp_load_key_zmm_14rounds,
                       alcp_clear_keys_zmm_14rounds>(
         pSrc, pDest, len, pKey, nRounds, pIv);
