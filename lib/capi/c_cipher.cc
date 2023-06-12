@@ -116,6 +116,12 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
                                            pCipherInfo->ci_key_info.key,
                                            pCipherInfo->ci_key_info.len,
                                            *ctx);
+    } else if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_CBC) {
+        err = cipher::CipherBuilder::Build(pCipherInfo->ci_type,
+                                           pCipherInfo->ci_algo_info.ai_mode,
+                                           pCipherInfo->ci_key_info.key,
+                                           pCipherInfo->ci_key_info.len,
+                                           *ctx);
     }
 #endif
 // FIXME: As all are using same builder a switch case without break will
