@@ -313,7 +313,7 @@ namespace alcp::cipher { namespace vaes512 {
         montgomeryReduction(res_256, res, const_factor_256);
     }
 
-    static inline void gMulParallel4(__m512i*      res,
+    static inline void gMulParallel4(__m512i&      res,
                                      __m512i       H4321_512,
                                      __m512i       H4444_512,
                                      const __m512i const_factor_512)
@@ -365,7 +365,7 @@ namespace alcp::cipher { namespace vaes512 {
         // D1:D0 = B0 + C1: B1 + C0
         z0_512 = _mm512_xor_epi64(z1_512, z0_512);
         // D1 + X3: D0 + X2
-        *res = _mm512_xor_epi64(z2_512, z0_512);
+        res = _mm512_xor_epi64(z2_512, z0_512);
     }
 
     static inline __m512i amd512_xor_all(__m512i x0,

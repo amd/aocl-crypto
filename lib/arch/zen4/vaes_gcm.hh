@@ -259,7 +259,7 @@ void inline computeHashSubKeys(int           num_512_blks,
 
     for (int i = 1; i < num_512_blks; i++) {
         gMulParallel4(
-            &Hsubkey_512[i], Hsubkey_512[i - 1], Hsubkey_4, const_factor_512);
+            Hsubkey_512[i], Hsubkey_512[i - 1], Hsubkey_4, const_factor_512);
     }
 }
 
