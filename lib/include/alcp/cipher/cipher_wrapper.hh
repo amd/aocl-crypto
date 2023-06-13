@@ -382,9 +382,9 @@ namespace vaes512 {
                         int          nRounds,
                         const Uint8* pIv,
                         Uint64       ivBytes,
-                        __m128i*     pHsubKey_128,
-                        __m128i*     ptag_128,
-                        __m128i*     piv_128,
+                        __m128i&     HsubKey_128,
+                        __m128i&     tag_128,
+                        __m128i&     iv_128,
                         __m128i      reverse_mask_128);
 
 } // namespace vaes512

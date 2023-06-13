@@ -97,6 +97,21 @@ namespace alcp::cipher { namespace vaes512 {
         c4 = _mm512_xor_si512(a4, b4);
     }
 
+    static inline void alcp_xor_4values(__m512i  a1, // inputs A
+                                        __m512i  a2,
+                                        __m512i  a3,
+                                        __m512i  a4,
+                                        __m512i& b1, // inputs B
+                                        __m512i& b2,
+                                        __m512i& b3,
+                                        __m512i& b4)
+    {
+        b1 = _mm512_xor_si512(a1, b1);
+        b2 = _mm512_xor_si512(a2, b2);
+        b3 = _mm512_xor_si512(a3, b3);
+        b4 = _mm512_xor_si512(a4, b4);
+    }
+
     // add functions.
     // clang-format off
     static inline __m512i alcp_set_epi32(
@@ -124,15 +139,15 @@ namespace alcp::cipher { namespace vaes512 {
         return _mm512_shuffle_epi8(a, b);
     }
 
-    static inline void alcp_shuffle_epi8(__m512i  in1, // inputs
-                                         __m512i  in2,
-                                         __m512i  in3,
-                                         __m512i  in4,
-                                         __m512i  swap_ctr, // swap control
-                                         __m512i& out1,     // outputs
-                                         __m512i& out2,
-                                         __m512i& out3,
-                                         __m512i& out4)
+    static inline void alcp_shuffle_epi8(const __m512i in1, // inputs
+                                         const __m512i in2,
+                                         const __m512i in3,
+                                         const __m512i in4,
+                                         const __m512i swap_ctr, // swap control
+                                         __m512i&      out1,     // outputs
+                                         __m512i&      out2,
+                                         __m512i&      out3,
+                                         __m512i&      out4)
     {
         out1 = _mm512_shuffle_epi8(in1, swap_ctr);
         out2 = _mm512_shuffle_epi8(in2, swap_ctr);

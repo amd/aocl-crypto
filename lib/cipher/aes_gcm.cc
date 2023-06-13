@@ -192,9 +192,9 @@ namespace vaes512 {
                                m_nrounds,
                                pIv,
                                m_ivLen,
-                               &m_hash_subKey_128,
-                               &m_tag_128,
-                               &m_iv_128,
+                               m_hash_subKey_128,
+                               m_tag_128,
+                               m_iv_128,
                                m_reverse_mask_128);
 
         return err;

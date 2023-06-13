@@ -492,15 +492,15 @@ namespace alcp::cipher { namespace vaes512 {
     /* 128 bit gMul with montogomery reduction */
     static inline void carrylessMul(__m128i  a,
                                     __m128i  b,
-                                    __m128i* c,
-                                    __m128i* d)
+                                    __m128i& c,
+                                    __m128i& d)
     {
         __m128i e, f;
         /* carryless multiplication of a1:a0 * b1:b0 */
-        *c = _mm_clmulepi64_si128(a, b, 0x00); // C1:C0 = a0*b0
-        *d = _mm_clmulepi64_si128(a, b, 0x11); // D1:D0 = a1*b1
-        e  = _mm_clmulepi64_si128(a, b, 0x10); // E1:E0 = a0*b1
-        f  = _mm_clmulepi64_si128(a, b, 0x01); // F1:F0 = a1*b0
+        c = _mm_clmulepi64_si128(a, b, 0x00); // C1:C0 = a0*b0
+        d = _mm_clmulepi64_si128(a, b, 0x11); // D1:D0 = a1*b1
+        e = _mm_clmulepi64_si128(a, b, 0x10); // E1:E0 = a0*b1
+        f = _mm_clmulepi64_si128(a, b, 0x01); // F1:F0 = a1*b0
         /*
          * compute D1  :  D0+E1+F1 : C1+E0+F0: C0
          */
@@ -509,8 +509,8 @@ namespace alcp::cipher { namespace vaes512 {
         e = _mm_srli_si128(e, 8); // 0:E1+F1
 
         /* d : c = D1 : D0+E1+F1 : C1+E0+F1 : C0 */
-        *c = _mm_xor_si128(*c, f); // C1+(E0+F1):C0
-        *d = _mm_xor_si128(*d, e); // D1:D0+(E1+F1)
+        c = _mm_xor_si128(c, f); // C1+(E0+F1):C0
+        d = _mm_xor_si128(d, e); // D1:D0+(E1+F1)
     }
 
     static inline void gMul(__m128i       a,
@@ -519,7 +519,7 @@ namespace alcp::cipher { namespace vaes512 {
                             const __m256i const_factor_256)
     {
         __m128i c, d;
-        carrylessMul(a, b, &c, &d);
+        carrylessMul(a, b, c, d);
         __m256i cd = _mm256_set_m128i(d, c);
         montgomeryReduction(cd, res, const_factor_256);
     }
@@ -534,7 +534,7 @@ namespace alcp::cipher { namespace vaes512 {
         res = _mm_xor_si128(a, res);
 
         __m128i c, d;
-        carrylessMul(res, b, &c, &d);
+        carrylessMul(res, b, c, d);
         __m256i cd = _mm256_set_m128i(d, c);
         montgomeryReduction(cd, res, const_factor_256);
     }

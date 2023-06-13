@@ -57,6 +57,8 @@
 
 #include "alcp/types.hh"
 
+#define UNROLL_8 _Pragma("GCC unroll 8")
+
 namespace alcp::cipher::vaes512 {
 
 template<void AesEncNoLoad_4x512(
@@ -137,12 +139,14 @@ gcmBlk_512_dec(const __m512i* p_in_x,
     if (do_4_unroll) {
         constexpr Uint64 blockCount_4x512_4_unroll = 16 * 4;
 
+        UNROLL_8
         for (; blocks >= blockCount_4x512_4_unroll;
              blocks -= blockCount_4x512_4_unroll) {
 
-            __m512i  z0_512, z1_512, z2_512;
-            __m512i  z0_512_t, z1_512_t, z2_512_t;
-            int      n            = 12;
+            __m512i z0_512, z1_512, z2_512;
+            __m512i z0_512_t, z1_512_t, z2_512_t;
+            int     n = 12;
+
             __m512i* pHsubkey_512 = Hsubkey_512 + n;
             _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
             _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
@@ -166,11 +170,7 @@ gcmBlk_512_dec(const __m512i* p_in_x,
                              a2,
                              a3,
                              a4,
-                             b1, // inputs B
-                             b2,
-                             b3,
-                             b4,
-                             b1, // outputs B = A xor B
+                             b1, // inputs B = A xor B
                              b2,
                              b3,
                              b4);
@@ -219,18 +219,7 @@ gcmBlk_512_dec(const __m512i* p_in_x,
                                Hsubkey_512_3);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, // inputs A
-                             a2,
-                             a3,
-                             a4,
-                             b1, // inputs B
-                             b2,
-                             b3,
-                             b4,
-                             b1, // outputs B = A xor B
-                             b2,
-                             b3,
-                             b4);
+            alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4);
             // increment counter
             c1 = alcp_add_epi32(c1, four_x);
 
@@ -278,18 +267,7 @@ gcmBlk_512_dec(const __m512i* p_in_x,
                                Hsubkey_512_3);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, /* inputs A */
-                             a2,
-                             a3,
-                             a4,
-                             b1, /* inputs B */
-                             b2,
-                             b3,
-                             b4,
-                             b1, // outputs B = A xor B
-                             b2,
-                             b3,
-                             b4);
+            alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4);
             // increment counter
             c1 = alcp_add_epi32(c1, four_x);
 
@@ -337,18 +315,7 @@ gcmBlk_512_dec(const __m512i* p_in_x,
                                Hsubkey_512_3);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, /* inputs A */
-                             a2,
-                             a3,
-                             a4,
-                             b1, /* inputs B */
-                             b2,
-                             b3,
-                             b4,
-                             b1, /* outputs B = A xor B */
-                             b2,
-                             b3,
-                             b4);
+            alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4);
             // increment counter
             c1 = alcp_add_epi32(c1, four_x);
 
@@ -374,12 +341,14 @@ gcmBlk_512_dec(const __m512i* p_in_x,
             p_in_x += PARALLEL_512_BLKS_4;
             p_out_x += PARALLEL_512_BLKS_4;
 
+            // compute Ghash
             getGhash(z0_512, z1_512, z2_512, gHash_128, const_factor_256);
         }
 
     } else if (do_2_unroll) {
         constexpr Uint64 blockCount_4x512_2_unroll = 16 * 2;
 
+        UNROLL_8
         for (; blocks >= blockCount_4x512_2_unroll;
              blocks -= blockCount_4x512_2_unroll) {
 
@@ -406,18 +375,7 @@ gcmBlk_512_dec(const __m512i* p_in_x,
             AesEncNoLoad_4x512(b1, b2, b3, b4, keys);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, /* inputs A */
-                             a2,
-                             a3,
-                             a4,
-                             b1, /* inputs B */
-                             b2,
-                             b3,
-                             b4,
-                             b1, /* outputs B = A xor B */
-                             b2,
-                             b3,
-                             b4);
+            alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4);
             /* increment counter */
             c1 = alcp_add_epi32(c1, four_x);
 
@@ -463,18 +421,7 @@ gcmBlk_512_dec(const __m512i* p_in_x,
                                Hsubkey_512_3);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, /* inputs A */
-                             a2,
-                             a3,
-                             a4,
-                             b1, /* inputs B */
-                             b2,
-                             b3,
-                             b4,
-                             b1, /* outputs B = A xor B  */
-                             b2,
-                             b3,
-                             b4);
+            alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4);
             /* increment counter */
             c1 = alcp_add_epi32(c1, four_x);
 
@@ -500,6 +447,7 @@ gcmBlk_512_dec(const __m512i* p_in_x,
             p_in_x += PARALLEL_512_BLKS_4;
             p_out_x += PARALLEL_512_BLKS_4;
 
+            // compute Ghash
             getGhash(z0_512, z1_512, z2_512, gHash_128, const_factor_256);
         }
     }
@@ -537,7 +485,7 @@ gcmBlk_512_dec(const __m512i* p_in_x,
 
         AesEncNoLoad_4x512(b1, b2, b3, b4, keys);
 
-        alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4, a1, a2, a3, a4);
+        alcp_xor_4values(b1, b2, b3, b4, a1, a2, a3, a4);
 
         /* increment counter */
         c1 = alcp_add_epi32(c1, four_x);

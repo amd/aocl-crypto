@@ -497,51 +497,58 @@ namespace alcp::cipher { namespace vaes512 {
 
     {
         a = _mm512_xor_si512(a, keys.data.keys10.key_512_0);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_1);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_2);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_3);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_4);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_5);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_6);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_7);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_8);
-        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_9);
-        a = _mm512_aesenclast_epi128(a, keys.data.keys10.key_512_10);
-
         b = _mm512_xor_si512(b, keys.data.keys10.key_512_0);
-        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_1);
-        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_2);
-        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_3);
-        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_4);
-        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_5);
-        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_6);
-        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_7);
-        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_8);
-        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_9);
-        b = _mm512_aesenclast_epi128(b, keys.data.keys10.key_512_10);
-
         c = _mm512_xor_si512(c, keys.data.keys10.key_512_0);
-        c = _mm512_aesenc_epi128(c, keys.data.keys10.key_512_1);
-        c = _mm512_aesenc_epi128(c, keys.data.keys10.key_512_2);
-        c = _mm512_aesenc_epi128(c, keys.data.keys10.key_512_3);
-        c = _mm512_aesenc_epi128(c, keys.data.keys10.key_512_4);
-        c = _mm512_aesenc_epi128(c, keys.data.keys10.key_512_5);
-        c = _mm512_aesenc_epi128(c, keys.data.keys10.key_512_6);
-        c = _mm512_aesenc_epi128(c, keys.data.keys10.key_512_7);
-        c = _mm512_aesenc_epi128(c, keys.data.keys10.key_512_8);
-        c = _mm512_aesenc_epi128(c, keys.data.keys10.key_512_9);
-        c = _mm512_aesenclast_epi128(c, keys.data.keys10.key_512_10);
-
         d = _mm512_xor_si512(d, keys.data.keys10.key_512_0);
+
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_1);
+        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_1);
+        c = _mm512_aesenc_epi128(c, keys.data.keys10.key_512_1);
         d = _mm512_aesenc_epi128(d, keys.data.keys10.key_512_1);
+
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_2);
+        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_2);
+        c = _mm512_aesenc_epi128(c, keys.data.keys10.key_512_2);
         d = _mm512_aesenc_epi128(d, keys.data.keys10.key_512_2);
+
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_3);
+        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_3);
+        c = _mm512_aesenc_epi128(c, keys.data.keys10.key_512_3);
         d = _mm512_aesenc_epi128(d, keys.data.keys10.key_512_3);
+
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_4);
+        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_4);
+        c = _mm512_aesenc_epi128(c, keys.data.keys10.key_512_4);
         d = _mm512_aesenc_epi128(d, keys.data.keys10.key_512_4);
+
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_5);
+        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_5);
+        c = _mm512_aesenc_epi128(c, keys.data.keys10.key_512_5);
         d = _mm512_aesenc_epi128(d, keys.data.keys10.key_512_5);
+
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_6);
+        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_6);
+        c = _mm512_aesenc_epi128(c, keys.data.keys10.key_512_6);
         d = _mm512_aesenc_epi128(d, keys.data.keys10.key_512_6);
+
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_7);
+        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_7);
+        c = _mm512_aesenc_epi128(c, keys.data.keys10.key_512_7);
         d = _mm512_aesenc_epi128(d, keys.data.keys10.key_512_7);
+
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_8);
+        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_8);
+        c = _mm512_aesenc_epi128(c, keys.data.keys10.key_512_8);
         d = _mm512_aesenc_epi128(d, keys.data.keys10.key_512_8);
+
+        a = _mm512_aesenc_epi128(a, keys.data.keys10.key_512_9);
+        b = _mm512_aesenc_epi128(b, keys.data.keys10.key_512_9);
+        c = _mm512_aesenc_epi128(c, keys.data.keys10.key_512_9);
         d = _mm512_aesenc_epi128(d, keys.data.keys10.key_512_9);
+
+        a = _mm512_aesenclast_epi128(a, keys.data.keys10.key_512_10);
+        b = _mm512_aesenclast_epi128(b, keys.data.keys10.key_512_10);
+        c = _mm512_aesenclast_epi128(c, keys.data.keys10.key_512_10);
         d = _mm512_aesenclast_epi128(d, keys.data.keys10.key_512_10);
     }
 

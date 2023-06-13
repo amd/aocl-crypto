@@ -57,6 +57,8 @@
 
 #include "alcp/types.hh"
 
+#define UNROLL_8 _Pragma("GCC unroll 8")
+
 namespace alcp::cipher::vaes512 {
 
 template<void AesEncNoLoad_4x512(
@@ -90,6 +92,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
     gcmCryptInit(c1, iv_128, one_lo, one_x, two_x, three_x, four_x, swap_ctr);
 
     _mm_prefetch(cast_to(pkey128), _MM_HINT_T1);
+
     sKeys keys{};
     alcp_load_key_zmm(pkey128, keys);
 
@@ -135,16 +138,15 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
     if (do_4_unroll) {
         constexpr Uint64 blockCount_4x512_4_unroll = 16 * 4;
 
+        UNROLL_8
         for (; blocks >= blockCount_4x512_4_unroll;
              blocks -= blockCount_4x512_4_unroll) {
-
+            // std::cout << "4unroll " << blocks << std::endl;
             __m512i z0_512, z1_512, z2_512;
             __m512i z0_512_t, z1_512_t, z2_512_t;
             int     n = 12;
 
-            __m512i* pHsubkey_512;
-
-            pHsubkey_512 = Hsubkey_512 + n;
+            __m512i* pHsubkey_512 = Hsubkey_512 + n;
             _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
             _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
@@ -163,15 +165,11 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
             AesEncNoLoad_4x512(b1, b2, b3, b4, keys);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, // inputs A
-                             a2,
-                             a3,
-                             a4,
-                             b1, // inputs B
+            alcp_xor_4values(b1, // inputs B
                              b2,
                              b3,
                              b4,
-                             a1, // outputs B = A xor B
+                             a1, // outputs A = A xor B
                              a2,
                              a3,
                              a4);
@@ -212,6 +210,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
                                                 z2_512,
                                                 gHash_128,
                                                 1);
+
             alcp_loadu_4values(pHsubkey_512,
                                Hsubkey_512_0,
                                Hsubkey_512_1,
@@ -219,7 +218,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
                                Hsubkey_512_3);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4, a1, a2, a3, a4);
+            alcp_xor_4values(b1, b2, b3, b4, a1, a2, a3, a4);
             // increment counter
             c1 = alcp_add_epi32(c1, four_x);
 
@@ -230,6 +229,8 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
             // 3rd
             n            = PARALLEL_512_BLKS_4 * 1;
             pHsubkey_512 = Hsubkey_512 + n;
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             c2 = alcp_add_epi32(c1, one_x);
             c3 = alcp_add_epi32(c1, two_x);
@@ -265,7 +266,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
                                Hsubkey_512_3);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4, a1, a2, a3, a4);
+            alcp_xor_4values(b1, b2, b3, b4, a1, a2, a3, a4);
             // increment counter
             c1 = alcp_add_epi32(c1, four_x);
 
@@ -313,7 +314,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
                                Hsubkey_512_3);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4, a1, a2, a3, a4);
+            alcp_xor_4values(b1, b2, b3, b4, a1, a2, a3, a4);
             // increment counter
             c1 = alcp_add_epi32(c1, four_x);
 
@@ -346,9 +347,10 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
     } else if (do_2_unroll) {
         constexpr Uint64 blockCount_4x512_2_unroll = 16 * 2;
 
+        UNROLL_8
         for (; blocks >= blockCount_4x512_2_unroll;
              blocks -= blockCount_4x512_2_unroll) {
-
+            // std::cout << "2unroll " << blocks << std::endl;
             __m512i z0_512, z1_512, z2_512;
             __m512i z0_512_t, z1_512_t, z2_512_t;
 
@@ -371,18 +373,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
             AesEncNoLoad_4x512(b1, b2, b3, b4, keys);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1,
-                             a2,
-                             a3,
-                             a4, // inputs A
-                             b1,
-                             b2,
-                             b3,
-                             b4, // inputs B
-                             a1,
-                             a2,
-                             a3,
-                             a4); // outputs A = A xor B
+            alcp_xor_4values(b1, b2, b3, b4, a1, a2, a3, a4);
             // increment counter
             c1 = alcp_add_epi32(c1, four_x);
 
@@ -394,6 +385,8 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
             // 2nd
             n            = 0;
             pHsubkey_512 = Hsubkey_512 + n;
+            _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
+            _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
 
             c2 = alcp_add_epi32(c1, one_x);
             c3 = alcp_add_epi32(c1, two_x);
@@ -426,7 +419,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
                                Hsubkey_512_3);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
-            alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4, a1, a2, a3, a4);
+            alcp_xor_4values(b1, b2, b3, b4, a1, a2, a3, a4);
             // increment counter
             c1 = alcp_add_epi32(c1, four_x);
 
@@ -464,7 +457,8 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
     bool isLoopHit = false;
 
     for (; blocks >= blockCount_4x512; blocks -= blockCount_4x512) {
-        // printf(" %d ", blocks);
+        _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
+
         Hsubkey_512_1 = Hsubkey_512[1];
         Hsubkey_512_2 = Hsubkey_512[2];
         Hsubkey_512_3 = Hsubkey_512[3];
@@ -496,7 +490,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
 
         AesEncNoLoad_4x512(b1, b2, b3, b4, keys);
 
-        alcp_xor_4values(a1, a2, a3, a4, b1, b2, b3, b4, a1, a2, a3, a4);
+        alcp_xor_4values(b1, b2, b3, b4, a1, a2, a3, a4);
 
         // increment counter
         c1 = alcp_add_epi32(c1, four_x);
@@ -520,6 +514,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
     }
 
     for (; blocks >= blockCount_2x512; blocks -= blockCount_2x512) {
+        _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
         c2 = alcp_add_epi32(c1, one_x);
 
         a1 = alcp_loadu(p_in_x);
@@ -548,6 +543,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
     }
 
     for (; blocks >= blockCount_1x512; blocks -= blockCount_1x512) {
+        _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
         a1 = alcp_loadu(p_in_x);
 
         // re-arrange as per spec
