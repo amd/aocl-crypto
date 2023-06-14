@@ -141,7 +141,6 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
         UNROLL_8
         for (; blocks >= blockCount_4x512_4_unroll;
              blocks -= blockCount_4x512_4_unroll) {
-            // std::cout << "4unroll " << blocks << std::endl;
             __m512i z0_512, z1_512, z2_512;
             __m512i z0_512_t, z1_512_t, z2_512_t;
             int     n = 12;
@@ -350,7 +349,6 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
         UNROLL_8
         for (; blocks >= blockCount_4x512_2_unroll;
              blocks -= blockCount_4x512_2_unroll) {
-            // std::cout << "2unroll " << blocks << std::endl;
             __m512i z0_512, z1_512, z2_512;
             __m512i z0_512_t, z1_512_t, z2_512_t;
 
