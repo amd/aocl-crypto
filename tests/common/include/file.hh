@@ -39,10 +39,14 @@ namespace alcp::testing {
 class File
 {
   private:
-    std::fstream m_file;
+    //std::fstream m_file;
     bool         m_fileExists;
 
   public:
+    std::fstream m_file;
+    bool m_fileEOF;
+    //std::string readMyLine();
+
     bool CheckFileExists();
     // Opens File as Bin/ASCII File with write support.
     File(std::string fileName, bool binary, bool write);
@@ -70,7 +74,6 @@ class File
     // tell
     long tell();
     void flush();
-    bool m_fileEOF;
-    std::string readMyLine();
+
 };
 } // namespace alcp::testing

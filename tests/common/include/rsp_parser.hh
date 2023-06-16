@@ -30,14 +30,16 @@
 /* C/C++ Headers */
 #include <string>
 #include <string_view>
+
 #include <tuple>
 #include <vector>
-#include <bits/stdc++.h>  // for istringstream and count
+#include <bits/stdc++.h>
 
 /* ALCP Headers */
 #include "../../../lib/include/alcp/types.hh"
 #include "file.hh"
 #include "utils.hh"
+
 
 namespace alcp::testing {
 using utils::parseHexStrToBin;
@@ -52,31 +54,28 @@ class CRspParser final : private File
     String              m_input_rsp_file  = {};
     String              m_lineBuf      = {};   // Buffer Ptr to a line
     // FIX-ME: This could be required for debugging.
-    size_t              m_paramPerTC  = 0;  // Number of parameters per TC
+    //size_t              m_paramPerTC  = 0;  // Number of parameters per TC
     std::vector<String> m_names     = {};   // Keys or CSV header items
     data_vect_t         m_data_vect = {};   // Parameters stored as key-value pair
     // Linenum starts from 0
-    int m_lineno = 0;   // Line Count
+    size_t m_lineno = 0;   // Line Count
 
   public:
-    CRspParser(String filename);
+    CRspParser(const String&);
     //~CRspParser();
 
-    bool init(String filename);
-    int skipRSPHeader();
+    bool init();
+    bool skipRSPHeader();
     String FetchTCfromRSP();
-    String removeSpaces(String str);
+    void removeSpaces(String& str);
     bool readNextTC();
-    std::vector<String> vectorizeParams(String);
-    int vectorize(std::vector<String>);
-     std::pair<std::string, std::string> readParamKeyValue(const String cName);
-    static String stripWhiteSpaceChar(const char *str, size_t len);
-    int isSubstring(String deststr, String srcstr);
+    void vectorizeTC(StringView);
+    int isSubstring(StringView deststr, StringView srcstr);
 
-    std::vector<Uint8> getVect(const String cName);
-    String getStr(const String cName);
+    std::vector<Uint8> getVect(const StringView cName);
+    String getStr(const StringView cName);
     String adjustKeyNames(String cName);
-    int getLineNumber();
+    Uint getLineNumber();
 };
 
 } // namespace alcp::testing

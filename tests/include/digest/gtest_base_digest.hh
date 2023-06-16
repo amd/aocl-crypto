@@ -123,12 +123,10 @@ Digest_KAT(alc_digest_info_t info)
         FAIL();
     }
 #else
-    // NALINI - FIX-ME: RSP filename.
+    // NALINI - FIX-ME: RSP filename for Short/Long/Monte/VariableOut
     TestDataFile.replace(TestDataFile.find(".csv"), 4, ".rsp");
     CRspParser CRspParser(TestDataFile);
 #endif
-
-    std::cout << TestDataFile << std::endl;
 
     if (useipp && (GetDigestStr(info.dt_type).compare("SHA3") == 0)) {
         std::cout << "IPPCP doesnt support SHA3 for now, skipping this test"
@@ -254,7 +252,6 @@ Digest_KAT(alc_digest_info_t info)
             auto msg          = CRspParser.getVect("MESSAGE");
             data.m_msg        = &(msg[0]);
             data.m_msg_len    = CRspParser.getVect("MESSAGE").size();
-            //std::cout << "data.m_msg_len:" << data.m_msg_len << std::endl;
             data.m_digest_len = CRspParser.getVect("DIGEST").size();
             data.m_digest     = &(digest[0]);
             

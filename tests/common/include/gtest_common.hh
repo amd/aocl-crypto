@@ -59,7 +59,7 @@ static bool oa_override = false;
 ::testing::AssertionResult
 ArraysMatch(std::vector<Uint8>  actual,
             std::vector<Uint8>  expected,
-            alcp::testing::CRspParser& CRspParser,
+            CRspParser& CRspParser,
             std::string         testName)
 {
     if (actual.size() != expected.size()) {

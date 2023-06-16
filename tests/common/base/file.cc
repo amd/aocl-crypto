@@ -90,6 +90,7 @@ File::readLine()
     return buff;
 }
 
+/*
 std::string
 File::readMyLine()
 {
@@ -101,6 +102,7 @@ File::readMyLine()
         return {};
     }
 }
+*/
 
 bool
 File::writeLine(std::string buff)

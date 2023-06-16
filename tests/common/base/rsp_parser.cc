@@ -30,25 +30,25 @@
 
 namespace alcp::testing {
 
-CRspParser::CRspParser(String filename)
-    : File(filename)
+CRspParser::CRspParser(const String& filename)
+   : File(filename) 
 {
     m_input_rsp_file = filename;
-    init(filename);
+    init();
 }
 
 bool
-CRspParser::init(String filename)
+CRspParser::init()
 {
     std::cout<< "m_input_rsp_file: " << m_input_rsp_file << std::endl;
-    int retVal = skipRSPHeader();
+    bool retVal = skipRSPHeader();
     if(m_fileEOF) {
         std::cout << "EOF Reached... No test cases found in " << m_input_rsp_file << std::endl;
-        std::exit(EXIT_FAILURE);     
+        return false;
     }
-    if(retVal) {
+    if(!retVal) {
         std::cout << "Parsing header failed for : " << m_input_rsp_file << std::endl;
-        std::exit(EXIT_FAILURE);
+        return false;
     }
     m_names.clear();
     m_data_vect.clear();
@@ -63,135 +63,94 @@ CRspParser::~CRspParser()
 
 // Function to get the index of deststr in srcstr
 int 
-CRspParser::isSubstring(String deststr, String srcstr) {
+CRspParser::isSubstring(StringView deststr, StringView srcstr) {
     // using find method to check if deststr is a substring of srcstr
     if (srcstr.find(deststr) != String::npos)
         return srcstr.find(deststr);
     return -1;
 }
 
-// Function to return a string containing up to |len| characters 
-// from |str| with leading and trailing whitespace removed.
-String 
-CRspParser::stripWhiteSpaceChar(const char *str, size_t len) {
-    // Remove Leading Space
-    while (len > 0 && isspace(*str))
-    {
-        str++;
-        len--;
-    }
-    // Remove Trailing Space
-    while (len > 0 && isspace(str[len-1]))
-    {
-        len--;
-    }
-    return String(str, len);
-}
-/* findDelimiter returns a pointer to the first '=' or ':' in a line
-// or nullptr if there is none.
-const char*
-CRspParser::findDelimiter(const char *str) {
-  while (*str) {
-    if (*str == ':' || *str == '=') {
-      return str;
-    }
-    str++;
-  }
-  return nullptr;
-}*/
 
-// Function to read Key and Value from a Parameter
-// Value is always the content next to the delmiter ("=")
-std::pair<std::string, std::string>  
-CRspParser::readParamKeyValue(String str)
+// Function to remove white space characters within a String
+// Whitespace chars: ‘ ‘, ‘\t’, ‘\n’, ‘\r’, ‘\v’, ‘\f’
+void
+CRspParser::removeSpaces(String& str)
 {
-    String key, value;
-    int pos = isSubstring("=", str);
-    
-    if (pos == -1)
-    {
-        key = str;
-        value = nullptr;
-    }
-    else
-    {
-        size_t const len = str.size()-pos+1;
-        key = str.substr(0,pos);
-        value = str.substr(pos+1, len);
-    }
-
-    return {adjustKeyNames(key),value};
+    str.erase(remove_if(str.begin(), str.end(), ::isspace), str.end());
 }
 
-// Function to remove spaces within a String
-String
-CRspParser::removeSpaces(String str)
-{
-    str.erase(remove(str.begin(), str.end(), ' '), str.end());
-    str = stripWhiteSpaceChar(str.data(), str.size());
-    return str;
-}
-
-// Vectorize a String based on comma seperated values
-// Used to read Params from a TC (line in .txt)
- std::vector<String>
- CRspParser::vectorizeParams(String myStr) {
-    const char delim = ',';
-    std::vector<String> myVec;
-
-    myVec.clear();  // NALINI - FIX-ME: Is this reqd? Scope of vector?
-    myVec.push_back("");
-            
-    for(size_t i=0; i<myStr.size(); i++)
-    {
-        int n=myVec.size();
-        //if comma is found push a new empty string to the vector
-        if(myStr[i]==delim)
-            myVec.push_back("");
-        //if no comma, keep pushing the char to the last string of the vector
-        else 
-            myVec[n-1].push_back(myStr[i]); 
-    }
-    // Remove any empty elements in the vector
-    myVec.erase( remove( myVec.begin(), myVec.end(), "" ), myVec.end() );
-    return myVec;
- }
-
+// Vectorize a String based on "," into params_vec
 // Vectorize each Parameter based on '='
 // Used to read key-value pair from a Param
- int
- CRspParser::vectorize(std::vector<String> params_vec) {
+void
+CRspParser::vectorizeTC(StringView myStr) {
     m_data_vect.clear();
-            
+
+    const char delim {','};
+    std::vector<String> params_vec;
+    
+    //Vectorize a TC based on comma seperated values
+    params_vec.push_back("");
+    for(size_t i=0; i<myStr.size(); i++) {
+        int n=params_vec.size();
+        //if comma is found push a new empty string to the vector
+        if(myStr[i]==delim)
+            params_vec.push_back("");
+        //if no comma, keep pushing the char to the last string of the vector
+        else 
+            params_vec[n-1].push_back(myStr[i]); 
+    }
+    // Remove any empty elements in the vector
+    //params_vec.erase( remove( params_vec.begin(), params_vec.end(), "" ), params_vec.end() );
+
+    //Vectorize each Parameter based on '='
     for(size_t i=0; i<params_vec.size(); i++) {
         // NALINI - FIX-ME: Ignore if only 1 parameter present. Eg: seed
         if (params_vec.size() < 2){
             continue;
         }
         m_data_vect.push_back(data_elm_t("", ""));
-        m_data_vect.at(i) = readParamKeyValue(params_vec[i]);
+        
+        String key {}, value {};
+        // Read the "Key" and "Value" from the parameter
+        int pos = isSubstring("=", params_vec[i]);
+        if (pos == -1) {
+            key = params_vec[i];
+            value = nullptr;
+        }
+        else {
+            size_t const len = params_vec[i].size()-pos+1;
+            key = params_vec[i].substr(0,pos);
+            value = params_vec[i].substr(pos+1, len);
+        }
+        String myKey = adjustKeyNames(key);
+
+        m_data_vect.at(i) = tie(myKey, value);
     }
-    // Remove any empty elements in the vector
-    //m_data_vect.erase( remove( m_data_vect.begin(), m_data_vect.end(), "" ), m_data_vect.end() );
     //for(auto& tuple: m_data_vect) 
         //std::cout << std::get<0>(tuple) << " " << std::get<1>(tuple) << std::endl;
-    return 0;
- }
+}
 
 // Thus function skips the header from the Input RSP File  
-int 
+bool 
 CRspParser::skipRSPHeader() 
 {
     if (!CheckFileExists()) {
         std::cout << "File doesnt exist: " << m_input_rsp_file << std::endl;
-        return -1;
+        return false;
     }
   
     //  To skip the header
-    bool search_lines = true;
+    bool search_lines {true};
     while (search_lines) {
-        m_lineBuf = readMyLine();
-        if (m_fileEOF) break;
+        /*m_lineBuf = readMyLine();
+        if (m_fileEOF) break;*/
+
+        if(!getline(m_file, m_lineBuf)) {
+            m_fileEOF = true;
+            std::cout << ".. EOF Reached...." << std::endl;
+            break;
+        }
 
         // Any way the line is read so increment
         m_lineno++;
@@ -204,7 +163,7 @@ CRspParser::skipRSPHeader()
     }
     //std::cout <<m_lineno<<":"<<m_lineBuf << std::endl;
     std::cout << "Header Parsed...." << std::endl;
-    return 0;
+    return true;
 }
 
 // Thus function gets all Paramaters of single TC from the 
@@ -215,13 +174,20 @@ CRspParser::FetchTCfromRSP()
     String myTestCase {};
     static size_t TC_Count {0};
     
-    bool newTC = false;
+    bool newTC {false};
     while (!newTC) {
-        m_lineBuf = readMyLine();
+        /*m_lineBuf = readMyLine();
         if (m_fileEOF) {
             TC_Count++;
             break; // EOF reached
+        }*/
+        if(!getline(m_file, m_lineBuf)) {
+            m_fileEOF = true;
+            TC_Count++;
+            std::cout << "... EOF Reached...." << std::endl;
+            break;
         }
+
         m_lineno++; // Line is read
         //std::cout <<m_lineno<<":"<<m_lineBuf << std::endl;
     
@@ -238,38 +204,37 @@ CRspParser::FetchTCfromRSP()
         }
         else {
             // Get an input test case
-            String myStr = removeSpaces(m_lineBuf);
-            myTestCase = myTestCase.append(myStr) + ",";
+            removeSpaces(m_lineBuf);
+            myTestCase = myTestCase.append(m_lineBuf) + ",";
         }
     }
-    //std::cout << TC_Count << ":myTestCase:" << myTestCase << std::endl;
+    // Remove the trailing comma
+    if (!myTestCase.empty()) myTestCase.pop_back();
+    // Print for test/debug purpose
+    std::cout << TC_Count << ":myTestCase:" << myTestCase << std::endl;
     return myTestCase;
 }
 
-// Parse Next Test Case from "m_output_text_file" and store in m_data_vect
+// Parse Next Test Case and store in m_data_vect
 bool
 CRspParser::readNextTC() {
     // All Parameters in each TC to be stored as a vector
     std::vector<String> params_vec;
-    static bool keysParsed = false;
+    static bool keysParsed {false};
+    String myTC {};
 
     // Get one TC in a one-lined String
-    m_lineBuf = FetchTCfromRSP();
-    if (m_fileEOF && m_lineBuf.empty()) return false;
-    //std::cout << m_lineno <<":readNextTC:"<<m_lineBuf << std::endl;
+    myTC = FetchTCfromRSP();
+    if (m_fileEOF && myTC.empty()) return false;
+    //std::cout << m_lineno <<":readNextTC:"<<myTC << std::endl;
 
     // Got a valid Line
-    m_paramPerTC = count(m_lineBuf.begin(), m_lineBuf.end(), ',');
-    // Get all Parameters in each TC stored as a vector
-    params_vec = vectorizeParams(m_lineBuf);
+    // m_paramPerTC = count(myTC.begin(), myTC.end(), ',');
     
     // Get all Key-Value pairs in each TC stored as a vector
-    int retVal = vectorize(params_vec);
-    if (retVal != 0) {
-        printf("Failed to vectorize Key-Value pairs at Line: %d\n", m_lineno);
-        return false;
-    }
-    // Vectorize m_names (Store Keys in a vector to align original imple)
+    vectorizeTC(myTC);
+
+    // Vectorize m_names (Store Keys in a vector to align "csv" imple)
     if (m_data_vect.size() > 0 && keysParsed == false ) {
         for (size_t i = 0; i < m_data_vect.size(); i++) {
             m_names.push_back("");
@@ -281,10 +246,8 @@ CRspParser::readNextTC() {
     return true;
 }
 
-// Be very careful with this, as if its not a hexstring, it will return
-// zeros.
 std::vector<Uint8>
-CRspParser::getVect(const String cName)
+CRspParser::getVect(const StringView cName)
 {
     String value = getStr(cName);
     //std::cout << value << std::endl;
@@ -293,7 +256,7 @@ CRspParser::getVect(const String cName)
 
 // Returns Value based on predefined "Key" from m_data_vect
 String
-CRspParser::getStr(const String cName)
+CRspParser::getStr(const StringView cName)
 {
     // Linear Search
     for (Uint64 i = 0; i < m_data_vect.size(); i++) {
@@ -309,20 +272,21 @@ CRspParser::getStr(const String cName)
 // Map the Key names with that of Algorithm Specific Parameter names
 String
 CRspParser::adjustKeyNames(String cName) {
-    String myKey = "";
+    String myKey {};
+
     if (cName == "Msg")
         myKey = "MESSAGE";
     else if (cName == "Output" || cName == "MD")
         myKey = "DIGEST";
     else if (cName == "Outputlen")
         myKey = "DIGESTLEN";
-    else if (cName == "COUNT")
-        myKey = "TestCount";
+    //else if (cName == "COUNT")
+    //    myKey = "TestCount";
     else myKey = cName;
     return myKey;
 }
 
-int
+Uint
 CRspParser::getLineNumber()
 {
     return m_lineno;
