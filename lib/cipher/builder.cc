@@ -39,9 +39,6 @@
 using alcp::utils::CpuId;
 
 #if 0
-#include "cipher/aes_ccm.hh"
-#include "cipher/aes_ctr.hh"
-#include "cipher/aes_gcm.hh"
 #include "cipher/aes_xts.hh"
 #endif
 
@@ -180,6 +177,16 @@ getCpuCipherfeature()
     return cpu_feature;
 }
 
+/* CIPHER CONTEXT INTERFACE BINDING */
+/**
+ * @brief CAPI Context Interface Binding for Generic Ciphers.
+ *
+ * Takes a cipher class and binds its functions to the Context
+ * @tparam CIPHERMODE
+ * @param pKey      Key for initializing cipher class
+ * @param keyLen    Length of the key
+ * @param ctx       Context for the cipher
+ */
 template<typename CIPHERMODE>
 void
 _build_aes_cipher(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
@@ -193,6 +200,41 @@ _build_aes_cipher(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
     ctx.finish = __aes_dtor<CIPHERMODE>;
 }
 
+// For XTS and Some modes
+template<typename T1, typename T2>
+void
+__build_aes_cipher(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
+{
+    if (keyLen == ALC_KEY_LEN_128) {
+        _build_aes_cipher<T1>(pKey, keyLen, ctx);
+    } else if (keyLen == ALC_KEY_LEN_256) {
+        _build_aes_cipher<T2>(pKey, keyLen, ctx);
+    }
+}
+
+template<typename T1, typename T2, typename T3>
+void
+__build_aes_cipher(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
+{
+    if (keyLen == ALC_KEY_LEN_128) {
+        _build_aes_cipher<T1>(pKey, keyLen, ctx);
+    } else if (keyLen == ALC_KEY_LEN_192) {
+        _build_aes_cipher<T2>(pKey, keyLen, ctx);
+    } else if (keyLen == ALC_KEY_LEN_256) {
+        _build_aes_cipher<T3>(pKey, keyLen, ctx);
+    }
+}
+
+/**
+ * @brief Legacy CAPI Context Interface Binding.
+ *
+ * Takes a cipher class and binds its functions to the Context
+ * @tparam CIPHERMODE
+ * @param aesInfo       AES information structure
+ * @param keyInfo       Key information structure
+ * @param ctx           Context for the cipher
+ * @return Status
+ */
 template<typename CIPHERMODE>
 static Status
 __build_aes(const alc_cipher_algo_info_t& aesInfo,
@@ -220,6 +262,16 @@ __build_aes(const alc_cipher_algo_info_t& aesInfo,
     return sts;
 }
 
+/* MODE SPECIFIC BUILDER */
+/**
+ * @brief CAPI Context Interface Binding for AEAD Ciphers.
+ *
+ * Takes a cipher class and binds its functions to the Context
+ * @tparam CIPHERMODE
+ * @param pKey      Key for initializing cipher class
+ * @param keyLen    Length of the key
+ * @param ctx       Context for the AEAD Cipher
+ */
 template<typename AEADMODE>
 void
 _build_aead(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
@@ -236,6 +288,15 @@ _build_aead(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
     ctx.finish = __aes_dtor<AEADMODE>;
 }
 
+/**
+ * @brief Builder specific to GCM AEAD Mode with Dispatcher
+ *
+ * Takes the params and builds the appropriate path given size info
+ * @param pKey      Key for initializing cipher class
+ * @param keyLen    Length of the key
+ * @param ctx       Context for the AEAD GCM Cipher
+ * @return Status
+ */
 static Status
 __build_GcmAead(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
@@ -267,31 +328,15 @@ __build_GcmAead(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
     return sts;
 }
 
-// For XTS and Some modes
-template<typename T1, typename T2>
-void
-__build_aes_cipher(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
-{
-    if (keyLen == ALC_KEY_LEN_128) {
-        _build_aes_cipher<T1>(pKey, keyLen, ctx);
-    } else if (keyLen == ALC_KEY_LEN_256) {
-        _build_aes_cipher<T2>(pKey, keyLen, ctx);
-    }
-}
-
-template<typename T1, typename T2, typename T3>
-void
-__build_aes_cipher(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
-{
-    if (keyLen == ALC_KEY_LEN_128) {
-        _build_aes_cipher<T1>(pKey, keyLen, ctx);
-    } else if (keyLen == ALC_KEY_LEN_192) {
-        _build_aes_cipher<T2>(pKey, keyLen, ctx);
-    } else if (keyLen == ALC_KEY_LEN_256) {
-        _build_aes_cipher<T3>(pKey, keyLen, ctx);
-    }
-}
-
+/**
+ * @brief Builder specific to CTR Generic Cipher Mode with Dispatcher
+ *
+ * Takes the params and builds the appropriate path given size info
+ * @param pKey      Key for initializing cipher class
+ * @param keyLen    Length of the key
+ * @param ctx       Context for the CTR Cipher Mode
+ * @return Status
+ */
 static Status
 __build_aesCtr(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
@@ -299,34 +344,28 @@ __build_aesCtr(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 
     CpuCipherFeatures cpu_feature = getCpuCipherfeature();
     if (cpu_feature == CpuCipherFeatures::eVaes512) {
-        if (keyLen == ALC_KEY_LEN_128) {
-            _build_aes_cipher<vaes512::Ctr128>(pKey, keyLen, ctx);
-        } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aes_cipher<vaes512::Ctr192>(pKey, keyLen, ctx);
-        } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aes_cipher<vaes512::Ctr256>(pKey, keyLen, ctx);
-        }
+        using namespace vaes512;
+        __build_aes_cipher<Ctr128, Ctr192, Ctr256>(pKey, keyLen, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
-        if (keyLen == ALC_KEY_LEN_128) {
-            _build_aes_cipher<vaes::Ctr128>(pKey, keyLen, ctx);
-        } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aes_cipher<vaes::Ctr192>(pKey, keyLen, ctx);
-        } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aes_cipher<vaes::Ctr256>(pKey, keyLen, ctx);
-        }
+        using namespace vaes;
+        __build_aes_cipher<Ctr128, Ctr192, Ctr256>(pKey, keyLen, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eAesni) {
-        if (keyLen == ALC_KEY_LEN_128) {
-            _build_aes_cipher<aesni::Ctr128>(pKey, keyLen, ctx);
-        } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aes_cipher<aesni::Ctr192>(pKey, keyLen, ctx);
-        } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aes_cipher<aesni::Ctr256>(pKey, keyLen, ctx);
-        }
+        using namespace aesni;
+        __build_aes_cipher<Ctr128, Ctr192, Ctr256>(pKey, keyLen, ctx);
     }
 
     return sts;
 }
 
+/**
+ * @brief Builder specific to CFB Generic Cipher Mode with Dispatcher
+ *
+ * Takes the params and builds the appropriate path given size info
+ * @param pKey      Key for initializing cipher class
+ * @param keyLen    Length of the key
+ * @param ctx       Context for the CFB Cipher Mode
+ * @return Status
+ */
 static Status
 __build_aesCfb(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
@@ -335,46 +374,37 @@ __build_aesCfb(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
     CpuCipherFeatures cpu_feature = getCpuCipherfeature();
     // cpu_feature                   = CpuCipherFeatures::eVaes256;
     if (cpu_feature == CpuCipherFeatures::eVaes512) {
-        if (keyLen == ALC_KEY_LEN_128) {
-            _build_aes_cipher<
-                Cfb<aesni::EncryptCfb128, vaes512::DecryptCfb128>>(
-                pKey, keyLen, ctx);
-        } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aes_cipher<
-                Cfb<aesni::EncryptCfb192, vaes512::DecryptCfb192>>(
-                pKey, keyLen, ctx);
-        } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aes_cipher<
-                Cfb<aesni::EncryptCfb256, vaes512::DecryptCfb256>>(
-                pKey, keyLen, ctx);
-        }
+        using namespace vaes512;
+        __build_aes_cipher<Cfb<aesni::EncryptCfb128, DecryptCfb128>,
+                           Cfb<aesni::EncryptCfb192, DecryptCfb192>,
+                           Cfb<aesni::EncryptCfb256, DecryptCfb256>>(
+            pKey, keyLen, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
-        if (keyLen == ALC_KEY_LEN_128) {
-            _build_aes_cipher<Cfb<aesni::EncryptCfb128, vaes::DecryptCfb128>>(
-                pKey, keyLen, ctx);
-        } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aes_cipher<Cfb<aesni::EncryptCfb192, vaes::DecryptCfb192>>(
-                pKey, keyLen, ctx);
-        } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aes_cipher<Cfb<aesni::EncryptCfb256, vaes::DecryptCfb256>>(
-                pKey, keyLen, ctx);
-        }
+        using namespace vaes;
+        __build_aes_cipher<Cfb<aesni::EncryptCfb128, DecryptCfb128>,
+                           Cfb<aesni::EncryptCfb192, DecryptCfb192>,
+                           Cfb<aesni::EncryptCfb256, DecryptCfb256>>(
+            pKey, keyLen, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eAesni) {
-        if (keyLen == ALC_KEY_LEN_128) {
-            _build_aes_cipher<Cfb<aesni::EncryptCfb128, aesni::DecryptCfb128>>(
-                pKey, keyLen, ctx);
-        } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aes_cipher<Cfb<aesni::EncryptCfb192, aesni::DecryptCfb192>>(
-                pKey, keyLen, ctx);
-        } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aes_cipher<Cfb<aesni::EncryptCfb256, aesni::DecryptCfb256>>(
-                pKey, keyLen, ctx);
-        }
+        using namespace aesni;
+        __build_aes_cipher<Cfb<EncryptCfb128, DecryptCfb128>,
+                           Cfb<EncryptCfb192, DecryptCfb192>,
+                           Cfb<EncryptCfb256, DecryptCfb256>>(
+            pKey, keyLen, ctx);
     }
 
     return sts;
 }
 
+/**
+ * @brief Builder specific to CBC Generic Cipher Mode
+ *
+ * Takes the params and builds the appropriate path given size info
+ * @param pKey      Key for initializing cipher class
+ * @param keyLen    Length of the key
+ * @param ctx       Context for the CBC Cipher Mode
+ * @return Status
+ */
 static Status
 __build_aesCbc(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
@@ -383,47 +413,30 @@ __build_aesCbc(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
     CpuCipherFeatures cpu_feature = getCpuCipherfeature();
     // cpu_feature                   = CpuCipherFeatures::eVaes256;
     if (cpu_feature == CpuCipherFeatures::eVaes512) {
-        if (keyLen == ALC_KEY_LEN_128) {
-            _build_aes_cipher<
-                Cbc<aesni::EncryptCbc128, vaes512::DecryptCbc128>>(
-                pKey, keyLen, ctx);
-        } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aes_cipher<
-                Cbc<aesni::EncryptCbc192, vaes512::DecryptCbc192>>(
-                pKey, keyLen, ctx);
-        } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aes_cipher<
-                Cbc<aesni::EncryptCbc256, vaes512::DecryptCbc256>>(
-                pKey, keyLen, ctx);
-        }
+        using namespace vaes512;
+        __build_aes_cipher<Cbc<aesni::EncryptCbc128, DecryptCbc128>,
+                           Cbc<aesni::EncryptCbc192, DecryptCbc192>,
+                           Cbc<aesni::EncryptCbc256, DecryptCbc256>>(
+            pKey, keyLen, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
-        if (keyLen == ALC_KEY_LEN_128) {
-            _build_aes_cipher<Cbc<aesni::EncryptCbc128, vaes::DecryptCbc128>>(
-                pKey, keyLen, ctx);
-        } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aes_cipher<Cbc<aesni::EncryptCbc192, vaes::DecryptCbc192>>(
-                pKey, keyLen, ctx);
-        } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aes_cipher<Cbc<aesni::EncryptCbc256, vaes::DecryptCbc256>>(
-                pKey, keyLen, ctx);
-        }
+        using namespace vaes;
+        __build_aes_cipher<Cbc<aesni::EncryptCbc128, DecryptCbc128>,
+                           Cbc<aesni::EncryptCbc192, DecryptCbc192>,
+                           Cbc<aesni::EncryptCbc256, DecryptCbc256>>(
+            pKey, keyLen, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eAesni) {
-        if (keyLen == ALC_KEY_LEN_128) {
-            _build_aes_cipher<Cbc<aesni::EncryptCbc128, aesni::DecryptCbc128>>(
-                pKey, keyLen, ctx);
-        } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aes_cipher<Cbc<aesni::EncryptCbc192, aesni::DecryptCbc192>>(
-                pKey, keyLen, ctx);
-        } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aes_cipher<Cbc<aesni::EncryptCbc256, aesni::DecryptCbc256>>(
-                pKey, keyLen, ctx);
-        }
+        using namespace aesni;
+        __build_aes_cipher<Cbc<EncryptCbc128, DecryptCbc128>,
+                           Cbc<EncryptCbc192, DecryptCbc192>,
+                           Cbc<EncryptCbc256, DecryptCbc256>>(
+            pKey, keyLen, ctx);
     }
 
     return sts;
 }
 
 // FIXME: Horror ahead, custom builder for SIV
+// FIXME: Bringup New AEAD builder with support for all AEAD
 #if 1
 
 template<typename AEADMODE>
@@ -484,8 +497,7 @@ __build_aesSiv(const alc_cipher_algo_info_t& aesInfo,
 
 #endif
 
-// FIXME: AesBuilder::Build  & CipherBuilder::Build to be modified similar
-// to CTR
+// DEPRICIATED AES BUILDER
 alc_error_t
 AesBuilder::Build(const alc_cipher_algo_info_t& aesInfo,
                   const alc_key_info_t&         keyInfo,
@@ -519,6 +531,7 @@ AesBuilder::Build(const alc_cipher_algo_info_t& aesInfo,
     return (alc_error_t)sts.code();
 }
 
+// DEPRICIATED CIPHER BUILDER
 alc_error_t
 CipherBuilder::Build(const alc_cipher_info_t& cipherInfo, Context& ctx)
 {
@@ -538,6 +551,7 @@ CipherBuilder::Build(const alc_cipher_info_t& cipherInfo, Context& ctx)
     return err;
 }
 
+// NEW AES BUILDER
 alc_error_t
 AesBuilder::Build(const alc_cipher_mode_t cipherMode,
                   const Uint8*            pKey,
@@ -574,6 +588,7 @@ AesBuilder::Build(const alc_cipher_mode_t cipherMode,
     return (alc_error_t)sts.code();
 }
 
+// NEW CIPHER BUILDER
 alc_error_t
 CipherBuilder::Build(const alc_cipher_type_t cipherType,
                      const alc_cipher_mode_t cipherMode,
