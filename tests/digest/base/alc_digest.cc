@@ -117,12 +117,14 @@ bool
 AlcpDigestBase::digest_function(const alcp_digest_data_t& data)
 {
     alc_error_t err;
-    err = alcp_digest_update(m_handle, data.m_msg, data.m_msg_len);
-    if (alcp_is_error(err)) {
-        std::cout << "Error code in alcp_digest_update:" << err << std::endl;
-        return false;
+    if (data.m_msg != nullptr && data.m_msg_len > 0) {
+        err = alcp_digest_update(m_handle, data.m_msg, data.m_msg_len);
+        if (alcp_is_error(err)) {
+            std::cout << "Error code in alcp_digest_update:" << err
+                      << std::endl;
+            return false;
+        }
     }
-
     err = alcp_digest_finalize(m_handle, NULL, 0);
     if (alcp_is_error(err)) {
         std::cout << "Error code in alcp_digest_finalize:" << err << std::endl;
