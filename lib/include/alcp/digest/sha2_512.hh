@@ -82,10 +82,10 @@ ShaRound(Uint64  a,
          Uint64  x)
 {
     Uint64 s0 = 0, s1 = 0, maj = 0, ch = 0;
+    maj      = (a & ((b ^ c))) + (b & c);
+    ch       = (e & f) + (~e & g);
     s0       = RotateRight(a, 28) ^ RotateRight(a, 34) ^ RotateRight(a, 39);
     s1       = RotateRight(e, 14) ^ RotateRight(e, 18) ^ RotateRight(e, 41);
-    maj      = (a & b) ^ (a & c) ^ (b & c);
-    ch       = (e & f) ^ (~e & g);
     Uint64 t = x + h + s1 + ch;
     h        = t + s0 + maj;
     d += t;
