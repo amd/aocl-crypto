@@ -103,8 +103,7 @@ Sha512::Sha512(alc_digest_len_t digest_len)
 
 Sha512::Sha512(const alc_digest_info_t& rDigestInfo)
     : Sha512(rDigestInfo.dt_len)
-{
-}
+{}
 
 Sha512::~Sha512() = default;
 
@@ -125,7 +124,7 @@ Sha512::setIv(const void* pIv, Uint64 size)
     }
 
     if (!err)
-        utils::CopyBytes(m_hash, pIv, size);
+        utils::CopyBlock(m_hash, pIv, size);
 
     return err;
 }
@@ -161,7 +160,7 @@ Sha512::copyHash(Uint8* pHash, Uint64 size) const
             // last 4 bytes can be copied after reversing the 64 bit since it is
             // in little endian form
             Uint64 hash = utils::ToBigEndian<Uint64>(m_hash[3]);
-            utils::CopyBytes(&pHash[24], &hash, 4);
+            utils::CopyBlock(&pHash[24], &hash, 4);
         }
     }
 
@@ -291,7 +290,7 @@ Sha512::update(const Uint8* pSrc, Uint64 input_size)
     Uint64 to_process = std::min((input_size + m_idx), cChunkSize);
     if (to_process < cChunkSize) {
         /* copy them to internal buffer and return */
-        utils::CopyBytes(&m_buffer[m_idx], pSrc, input_size);
+        utils::CopyBlock(&m_buffer[m_idx], pSrc, input_size);
         m_idx += input_size;
 
         return err;
@@ -306,7 +305,7 @@ Sha512::update(const Uint8* pSrc, Uint64 input_size)
          * the remaining bytes of a chunk.
          */
         to_process = std::min(input_size, cChunkSize - idx);
-        utils::CopyBytes(&m_buffer[idx], pSrc, to_process);
+        utils::CopyBlock(&m_buffer[idx], pSrc, to_process);
 
         pSrc += to_process;
         input_size -= to_process;
@@ -333,7 +332,7 @@ Sha512::update(const Uint8* pSrc, Uint64 input_size)
     if (input_size) {
         assert(input_size <= cChunkSize);
 
-        utils::CopyBytes(&m_buffer[idx], pSrc, input_size);
+        utils::CopyBlock(&m_buffer[idx], pSrc, input_size);
         idx += input_size;
     }
 
@@ -384,7 +383,7 @@ Sha512::finalize(const Uint8* pBuf, Uint64 size)
     /* TODO: Due to memory alignment, msg_len_ptr gets optimized in Windows.So,
      * using CopyBytes to copy every bits*/
     __uint128_t len_bits_copy = utils::ToBigEndian(len_in_bits);
-    utils::CopyBytes(&msg_len_ptr[0], &len_bits_copy, 16);
+    utils::CopyBlock(&msg_len_ptr[0], &len_bits_copy, 16);
     // msg_len_ptr[0] = utils::ToBigEndian(len_in_bits);
 #else
     Uint64 len_in_bits_high;
