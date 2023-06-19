@@ -35,6 +35,7 @@
 
 #include "alcp/digest/sha_avx2.hh"
 #include "alcp/digest/sha_avx256.hh"
+#include "alcp/digest/sha_avx512.hh"
 
 #include "alcp/utils/bits.hh"
 #include "alcp/utils/copy.hh"
@@ -228,12 +229,15 @@ Sha512::compressMsg(Uint64 w[])
 alc_error_t
 Sha512::processChunk(const Uint8* pSrc, Uint64 len)
 {
-    static bool cpu_is_zen3 = (CpuId::cpuIsZen3() || CpuId::cpuIsZen4());
+    static bool cpu_is_zen3 = CpuId::cpuIsZen3();
+    static bool cpu_is_zen4 = CpuId::cpuIsZen4();
 
     /* we need len to be multiple of cChunkSize */
     assert((len & Sha512::cChunkSizeMask) == 0);
 
-    if (cpu_is_zen3) {
+    if (cpu_is_zen4) {
+        return zen4::ShaUpdate512(m_hash, pSrc, len);
+    } else if (cpu_is_zen3) {
         return zen3::ShaUpdate512(m_hash, pSrc, len);
     } else if (CpuId::cpuHasAvx2()) {
         return avx2::ShaUpdate512(m_hash, pSrc, len);
