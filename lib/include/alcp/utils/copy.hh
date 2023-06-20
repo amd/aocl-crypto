@@ -130,9 +130,27 @@ template<typename copytype = Uint64, Uint64 stride = sizeof(copytype)>
 static inline void
 PadBlock(void* pDst, copytype val, Uint64 len)
 {
-    auto p_dst = reinterpret_cast<copytype*>(pDst);
+    auto   p_dst = reinterpret_cast<copytype*>(pDst);
+    Uint64 i     = 0;
+    for (i = 0; i < len / stride; i++) {
+        p_dst[i] = val;
+    }
 
-    for (Uint64 i = 0; i < len / stride; i++) {
+    Uint64 offset    = i * stride;
+    Uint64 remaining = len - offset;
+
+    if (remaining) {
+        PadBytes(static_cast<Uint8*>(pDst) + offset, val, remaining);
+    }
+}
+
+template<typename copytype = Uint64, Uint64 stride = sizeof(copytype)>
+static inline void
+PadCompleteBlock(void* pDst, copytype val, Uint64 len)
+{
+    auto   p_dst = reinterpret_cast<copytype*>(pDst);
+    Uint64 i     = 0;
+    for (i = 0; i < len / stride; i++) {
         p_dst[i] = val;
     }
 }
