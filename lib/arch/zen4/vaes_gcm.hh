@@ -37,7 +37,7 @@
 
 /*_mm_prefetch accepts const void*` arguments for GCC / ICC
 whereas MSVC still expects `const char* ` */
-#ifdef WIN32
+#ifdef _WIN32
 #define cast_to(ptr) ((const char*)ptr)
 #else
 #define cast_to(ptr) ((void*)ptr)

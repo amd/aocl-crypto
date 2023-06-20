@@ -41,7 +41,7 @@ namespace alcp::base {
  * The errors are extendable to support dynamic module loading (plugin system).
  *
  */
-class ErrorBase : public IError
+class ALCP_API_EXPORT ErrorBase : public IError
 {
 
   public:

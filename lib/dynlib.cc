@@ -41,7 +41,7 @@ enum DynLoadError : alcp::Uint32
 
 #if defined(__linux__)
 #include "impl/dynlib_linux.cc"
-#elif defined(WINDOWS) || defined(WIN32)
+#elif defined(_WINDOWS) || defined(_WIN32)
 #include "impl/dynlib_win.cc"
 #endif
 
