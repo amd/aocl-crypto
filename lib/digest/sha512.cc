@@ -376,7 +376,7 @@ Sha512::finalize(const Uint8* pBuf, Uint64 size)
     // Uint64 bytes_left = buf_len - m_idx - utils::BytesInDWord<Uint64>;
     Uint64 bytes_left = buf_len - m_idx - 16;
 
-    utils::PadBlock<Uint8>(&m_buffer[m_idx], 0x0, bytes_left);
+    utils::PadBlock<Uint64>(&m_buffer[m_idx], 0x0, bytes_left);
 
 #ifdef __SIZEOF_INT128__
     /* Store total length in the last 128-bit (16-bytes) */
