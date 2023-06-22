@@ -28,18 +28,11 @@
 #pragma once
 
 /* C/C++ Headers */
-#include <string>
-#include <string_view>
-
-#include <tuple>
-#include <vector>
 #include <bits/stdc++.h>
 
 /* ALCP Headers */
-#include "../../../lib/include/alcp/types.hh"
 #include "file.hh"
 #include "utils.hh"
-
 
 namespace alcp::testing {
 using utils::parseHexStrToBin;
@@ -52,17 +45,15 @@ class CRspParser final : private File
 {
   private:
     String              m_input_rsp_file  = {};
-    String              m_lineBuf      = {};   // Buffer Ptr to a line
-    // FIX-ME: This could be required for debugging.
-    //size_t              m_paramPerTC  = 0;  // Number of parameters per TC
-    std::vector<String> m_names     = {};   // Keys or CSV header items
+    String              m_lineBuf      = {};   // Buffer to a line in RSP file
+    size_t              m_paramPerTC  = 0;  // Number of parameters per TC
+    std::vector<String> m_names     = {};   // Keys (CSV header items)
     data_vect_t         m_data_vect = {};   // Parameters stored as key-value pair
     // Linenum starts from 0
-    size_t m_lineno = 0;   // Line Count
+    Uint m_lineno = 0;   // Line Count
 
   public:
     CRspParser(const String&);
-    //~CRspParser();
 
     bool init();
     bool skipRSPHeader();
@@ -72,8 +63,8 @@ class CRspParser final : private File
     void vectorizeTC(StringView);
     int isSubstring(StringView deststr, StringView srcstr);
 
-    std::vector<Uint8> getVect(const StringView cName);
-    String getStr(const StringView cName);
+    std::vector<Uint8> getVect(StringView cName);
+    String getStr(StringView cName);
     String adjustKeyNames(String cName);
     Uint getLineNumber();
 };

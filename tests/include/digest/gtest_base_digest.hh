@@ -232,6 +232,17 @@ Digest_KAT(alc_digest_info_t info)
             std::vector<Uint8> digest_(data.m_digest_len, 0);
             data.m_digest = &(digest_[0]);
             
+            /* FIXME: Hack when msg is NULL, this case is not currently handled
+             * in some of the digest apis */
+            bool isMsgEmpty = std::all_of(
+                msg.begin(), msg.end(), [](int i) { return i == 0; });
+            if (data.m_msg_len == 0) {
+                data.m_msg = &Temp;
+            }
+            if (isMsgEmpty) {
+                data.m_msg_len = 0;
+            }
+
             if (!db->init(info, data.m_digest_len)) {
                 std::cout << "Error: Digest base init failed" << std::endl;
                 FAIL();
@@ -255,6 +266,17 @@ Digest_KAT(alc_digest_info_t info)
             data.m_digest_len = CRspParser.getVect("DIGEST").size();
             data.m_digest     = &(digest[0]);
             
+            /* FIXME: Hack when msg is NULL, this case is not currently handled
+             * in some of the digest apis */
+            bool isMsgEmpty = std::all_of(
+                msg.begin(), msg.end(), [](int i) { return i == 0; });
+            if (data.m_msg_len == 0) {
+                data.m_msg = &Temp;
+            }
+            if (isMsgEmpty) {
+                data.m_msg_len = 0;
+            }
+
             if (!db->init(info, data.m_digest_len)) {
                 std::cout << "Error: Digest base init failed" << std::endl;
                 FAIL();
