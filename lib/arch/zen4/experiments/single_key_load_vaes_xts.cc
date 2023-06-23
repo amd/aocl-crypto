@@ -26,10 +26,11 @@
  *
  */
 #include "cipher/aes.hh"
-#include "cipher/aes_xts.hh"
 #include "cipher/avx512.hh"
 #include "cipher/vaes_avx512.hh"
 #include "cipher/vaes_avx512_core.hh"
+#include "cipher/zen4/aes_xts_zen4.hh"
+
 #include <cstdint>
 #include <cstring>
 #include <immintrin.h>

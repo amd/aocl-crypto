@@ -29,15 +29,27 @@
 #include "vaes_avx512.hh"
 
 #include "alcp/cipher/aes.hh"
-#include "alcp/cipher/aes_xts.hh"
 #include "alcp/types.hh"
 #include "alcp/utils/copy.hh"
+#include "cipher/avx2/aes_xts_avx2.hh"
+#include "cipher/zen4/aes_xts_zen4.hh"
 
 #include <immintrin.h>
 
 namespace alcp::cipher::vaes512 {
 
-alc_error_t
+template<
+    void AesEnc_1x512(__m512i* a, const __m128i* pKey, int nRounds),
+    void AesEnc_2x512(__m512i* a, __m512i* b, const __m128i* pKey, int nRounds),
+    void AesEnc_3x512(
+        __m512i* a, __m512i* b, __m512i* c, const __m128i* pKey, int nRounds),
+    void AesEnc_4x512(__m512i*       a,
+                      __m512i*       b,
+                      __m512i*       c,
+                      __m512i*       d,
+                      const __m128i* pKey,
+                      int            nRounds)>
+inline alc_error_t
 EncryptXtsAvx512(const Uint8* pSrc,
                  Uint8*       pDest,
                  Uint64       len,
@@ -61,7 +73,7 @@ EncryptXtsAvx512(const Uint8* pSrc,
     __m512i extendedIV =
         _mm512_setr_epi64(p_iv64[0], p_iv64[1], 0, 0, 0, 0, 0, 0);
 
-    AesEncrypt(&extendedIV, p_tweak_key128, nRounds);
+    AesEnc_1x512(&extendedIV, p_tweak_key128, nRounds);
 
     __m512i tweakx8[8]; // 8*4 Tweak values stored inside this
 
@@ -95,12 +107,12 @@ EncryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_3 = tweakx8[2] ^ src_text_3;
         __m512i tweaked_src_text_4 = tweakx8[3] ^ src_text_4;
 
-        AesEncrypt(&tweaked_src_text_1,
-                   &tweaked_src_text_2,
-                   &tweaked_src_text_3,
-                   &tweaked_src_text_4,
-                   p_key128,
-                   nRounds);
+        AesEnc_4x512(&tweaked_src_text_1,
+                     &tweaked_src_text_2,
+                     &tweaked_src_text_3,
+                     &tweaked_src_text_4,
+                     p_key128,
+                     nRounds);
 
         // getting Cipher Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweakx8[0] ^ tweaked_src_text_1;
@@ -125,12 +137,12 @@ EncryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_7 = tweakx8[6] ^ src_text_7;
         __m512i tweaked_src_text_8 = tweakx8[7] ^ src_text_8;
 
-        AesEncrypt(&tweaked_src_text_5,
-                   &tweaked_src_text_6,
-                   &tweaked_src_text_7,
-                   &tweaked_src_text_8,
-                   p_key128,
-                   nRounds);
+        AesEnc_4x512(&tweaked_src_text_5,
+                     &tweaked_src_text_6,
+                     &tweaked_src_text_7,
+                     &tweaked_src_text_8,
+                     p_key128,
+                     nRounds);
 
         // getting Cipher Text after xor of message and Alpha ^ j
         tweaked_src_text_5 = tweakx8[4] ^ tweaked_src_text_5;
@@ -172,12 +184,12 @@ EncryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_3 = tweakx8[2] ^ src_text_3;
         __m512i tweaked_src_text_4 = tweakx8[3] ^ src_text_4;
 
-        AesEncrypt(&tweaked_src_text_1,
-                   &tweaked_src_text_2,
-                   &tweaked_src_text_3,
-                   &tweaked_src_text_4,
-                   p_key128,
-                   nRounds);
+        AesEnc_4x512(&tweaked_src_text_1,
+                     &tweaked_src_text_2,
+                     &tweaked_src_text_3,
+                     &tweaked_src_text_4,
+                     p_key128,
+                     nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweakx8[0] ^ tweaked_src_text_1;
@@ -214,11 +226,11 @@ EncryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_2 = tweak_2 ^ src_text_2;
         __m512i tweaked_src_text_3 = tweak_3 ^ src_text_3;
 
-        AesEncrypt(&tweaked_src_text_1,
-                   &tweaked_src_text_2,
-                   &tweaked_src_text_3,
-                   p_key128,
-                   nRounds);
+        AesEnc_3x512(&tweaked_src_text_1,
+                     &tweaked_src_text_2,
+                     &tweaked_src_text_3,
+                     p_key128,
+                     nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweak_1 ^ tweaked_src_text_1;
@@ -251,7 +263,8 @@ EncryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_1 = tweak_1 ^ src_text_1;
         __m512i tweaked_src_text_2 = tweak_2 ^ src_text_2;
 
-        AesEncrypt(&tweaked_src_text_1, &tweaked_src_text_2, p_key128, nRounds);
+        AesEnc_2x512(
+            &tweaked_src_text_1, &tweaked_src_text_2, p_key128, nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweak_1 ^ tweaked_src_text_1;
@@ -279,7 +292,7 @@ EncryptXtsAvx512(const Uint8* pSrc,
         // getting Tweaked Text after xor of message and Alpha ^ j
         __m512i tweaked_src_text_1 = tweak_1 ^ src_text_1;
 
-        AesEncrypt(&tweaked_src_text_1, p_key128, nRounds);
+        AesEnc_1x512(&tweaked_src_text_1, p_key128, nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweak_1 ^ tweaked_src_text_1;
@@ -305,7 +318,7 @@ EncryptXtsAvx512(const Uint8* pSrc,
 
         src_text_1 = (lastTweak ^ src_text_1);
 
-        AesEncrypt(&src_text_1, p_key128, nRounds);
+        AesEnc_1x512(&src_text_1, p_key128, nRounds);
 
         src_text_1 = (lastTweak ^ src_text_1);
 
@@ -336,7 +349,7 @@ EncryptXtsAvx512(const Uint8* pSrc,
                          (extra_bytes_in_message_block));
 
         stealed_text = _mm512_xor_epi64(temp_tweak, stealed_text);
-        AesEncrypt(&stealed_text, p_key128, nRounds);
+        AesEnc_1x512(&stealed_text, p_key128, nRounds);
         stealed_text = _mm512_xor_epi64(temp_tweak, stealed_text);
 
         utils::CopyBytes(p_dest8 + (16 * (blocks - 1)), p_stealed_text, 16);
@@ -344,7 +357,19 @@ EncryptXtsAvx512(const Uint8* pSrc,
     return ALC_ERROR_NONE;
 }
 
-alc_error_t
+template<
+    void AesEnc_1x512(__m512i* a, const __m128i* pKey, int nRounds),
+    void AesDec_1x512(__m512i* a, const __m128i* pKey, int nRounds),
+    void AesDec_2x512(__m512i* a, __m512i* b, const __m128i* pKey, int nRounds),
+    void AesDec_3x512(
+        __m512i* a, __m512i* b, __m512i* c, const __m128i* pKey, int nRounds),
+    void AesDec_4x512(__m512i*       a,
+                      __m512i*       b,
+                      __m512i*       c,
+                      __m512i*       d,
+                      const __m128i* pKey,
+                      int            nRounds)>
+inline alc_error_t
 DecryptXtsAvx512(const Uint8* pSrc,
                  Uint8*       pDest,
                  Uint64       len,
@@ -367,7 +392,7 @@ DecryptXtsAvx512(const Uint8* pSrc,
     __m512i extendedIV =
         _mm512_setr_epi64(p_iv64[0], p_iv64[1], 0, 0, 0, 0, 0, 0);
 
-    AesEncrypt(&extendedIV, p_tweak_key128, nRounds);
+    AesEnc_1x512(&extendedIV, p_tweak_key128, nRounds);
 
     __m512i tweakx8[8]; // 8*4 Tweak values stored inside this
 
@@ -400,12 +425,12 @@ DecryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_3 = tweakx8[2] ^ src_text_3;
         __m512i tweaked_src_text_4 = tweakx8[3] ^ src_text_4;
 
-        AesDecrypt(&tweaked_src_text_1,
-                   &tweaked_src_text_2,
-                   &tweaked_src_text_3,
-                   &tweaked_src_text_4,
-                   p_key128,
-                   nRounds);
+        AesDec_4x512(&tweaked_src_text_1,
+                     &tweaked_src_text_2,
+                     &tweaked_src_text_3,
+                     &tweaked_src_text_4,
+                     p_key128,
+                     nRounds);
 
         // getting Cipher Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweakx8[0] ^ tweaked_src_text_1;
@@ -436,12 +461,12 @@ DecryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_7 = tweakx8[6] ^ src_text_7;
         __m512i tweaked_src_text_8 = tweakx8[7] ^ src_text_8;
 
-        AesDecrypt(&tweaked_src_text_5,
-                   &tweaked_src_text_6,
-                   &tweaked_src_text_7,
-                   &tweaked_src_text_8,
-                   p_key128,
-                   nRounds);
+        AesDec_4x512(&tweaked_src_text_5,
+                     &tweaked_src_text_6,
+                     &tweaked_src_text_7,
+                     &tweaked_src_text_8,
+                     p_key128,
+                     nRounds);
 
         // getting Cipher Text after xor of message and Alpha ^ j
         tweaked_src_text_5 = tweakx8[4] ^ tweaked_src_text_5;
@@ -489,12 +514,12 @@ DecryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_3 = tweakx8[2] ^ src_text_3;
         __m512i tweaked_src_text_4 = tweakx8[3] ^ src_text_4;
 
-        AesDecrypt(&tweaked_src_text_1,
-                   &tweaked_src_text_2,
-                   &tweaked_src_text_3,
-                   &tweaked_src_text_4,
-                   p_key128,
-                   nRounds);
+        AesDec_4x512(&tweaked_src_text_1,
+                     &tweaked_src_text_2,
+                     &tweaked_src_text_3,
+                     &tweaked_src_text_4,
+                     p_key128,
+                     nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweakx8[0] ^ tweaked_src_text_1;
@@ -537,11 +562,11 @@ DecryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_2 = tweak_2 ^ src_text_2;
         __m512i tweaked_src_text_3 = tweak_3 ^ src_text_3;
 
-        AesDecrypt(&tweaked_src_text_1,
-                   &tweaked_src_text_2,
-                   &tweaked_src_text_3,
-                   p_key128,
-                   nRounds);
+        AesDec_3x512(&tweaked_src_text_1,
+                     &tweaked_src_text_2,
+                     &tweaked_src_text_3,
+                     p_key128,
+                     nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweak_1 ^ tweaked_src_text_1;
@@ -578,7 +603,8 @@ DecryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_1 = tweak_1 ^ src_text_1;
         __m512i tweaked_src_text_2 = tweak_2 ^ src_text_2;
 
-        AesDecrypt(&tweaked_src_text_1, &tweaked_src_text_2, p_key128, nRounds);
+        AesDec_2x512(
+            &tweaked_src_text_1, &tweaked_src_text_2, p_key128, nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweak_1 ^ tweaked_src_text_1;
@@ -611,7 +637,7 @@ DecryptXtsAvx512(const Uint8* pSrc,
         // getting Tweaked Text after xor of message and Alpha ^ j
         __m512i tweaked_src_text_1 = tweak_1 ^ src_text_1;
 
-        AesDecrypt(&tweaked_src_text_1, p_key128, nRounds);
+        AesDec_1x512(&tweaked_src_text_1, p_key128, nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweak_1 ^ tweaked_src_text_1;
@@ -644,7 +670,7 @@ DecryptXtsAvx512(const Uint8* pSrc,
         }
         src_text_1 = _mm512_xor_epi64(lastTweak, src_text_1);
 
-        AesDecrypt(&src_text_1, p_key128, nRounds);
+        AesDec_1x512(&src_text_1, p_key128, nRounds);
 
         src_text_1 = _mm512_xor_epi64(lastTweak, src_text_1);
 
@@ -673,13 +699,106 @@ DecryptXtsAvx512(const Uint8* pSrc,
                          (extra_bytes_in_message_block));
 
         stealed_text = _mm512_xor_epi64(tweak_1, stealed_text);
-        AesDecrypt(&stealed_text, p_key128, nRounds);
+        AesDec_1x512(&stealed_text, p_key128, nRounds);
         stealed_text = _mm512_xor_epi64(tweak_1, stealed_text);
 
         utils::CopyBytes(p_dest8 + (16 * (blocks - 1)), p_stealed_text, 16);
     }
 
     return ALC_ERROR_NONE;
+}
+
+alc_error_t
+EncryptXts128(const Uint8* pSrc,
+              Uint8*       pDest,
+              Uint64       len,
+              const Uint8* pKey,
+              const Uint8* pTweakKey,
+              int          nRounds,
+              const Uint8* pIv)
+{
+    // AesEncrypt 1Block, 2Block, 3Block, 4Block
+    return EncryptXtsAvx512<AesEncrypt, AesEncrypt, AesEncrypt, AesEncrypt>(
+        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+}
+
+alc_error_t
+EncryptXts192(const Uint8* pSrc,
+              Uint8*       pDest,
+              Uint64       len,
+              const Uint8* pKey,
+              const Uint8* pTweakKey,
+              int          nRounds,
+              const Uint8* pIv)
+{
+    // AesEncrypt 1Block, 2Block, 3Block, 4Block
+    return EncryptXtsAvx512<AesEncrypt, AesEncrypt, AesEncrypt, AesEncrypt>(
+        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+}
+
+alc_error_t
+EncryptXts256(const Uint8* pSrc,
+              Uint8*       pDest,
+              Uint64       len,
+              const Uint8* pKey,
+              const Uint8* pTweakKey,
+              int          nRounds,
+              const Uint8* pIv)
+{
+    // AesEncrypt 1Block, 2Block, 3Block, 4Block
+    return EncryptXtsAvx512<AesEncrypt, AesEncrypt, AesEncrypt, AesEncrypt>(
+        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+}
+
+alc_error_t
+DecryptXts128(const Uint8* pSrc,
+              Uint8*       pDest,
+              Uint64       len,
+              const Uint8* pKey,
+              const Uint8* pTweakKey,
+              int          nRounds,
+              const Uint8* pIv)
+{
+    return DecryptXtsAvx512<AesEncrypt,
+                            AesDecrypt,
+                            AesDecrypt,
+                            AesDecrypt,
+                            AesDecrypt>(
+        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+}
+
+alc_error_t
+DecryptXts192(const Uint8* pSrc,
+              Uint8*       pDest,
+              Uint64       len,
+              const Uint8* pKey,
+              const Uint8* pTweakKey,
+              int          nRounds,
+              const Uint8* pIv)
+{
+    return DecryptXtsAvx512<AesEncrypt,
+                            AesDecrypt,
+                            AesDecrypt,
+                            AesDecrypt,
+                            AesDecrypt>(
+        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+}
+
+alc_error_t
+DecryptXts256(const Uint8* pSrc,
+              Uint8*       pDest,
+              Uint64       len,
+              const Uint8* pKey,
+              const Uint8* pTweakKey,
+              int          nRounds,
+              const Uint8* pIv)
+{
+    return DecryptXtsAvx512<AesEncrypt,
+                            AesDecrypt,
+                            AesDecrypt,
+                            AesDecrypt,
+                            AesDecrypt>(
+        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
 }
 
 } // namespace alcp::cipher::vaes512

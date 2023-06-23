@@ -280,7 +280,6 @@ namespace alcp::cipher { namespace aesni {
     Status ExpandKeys128(const Uint8* pUserKey, Uint8* pEncKey, Uint8* pDecKey)
     {
         __m128i* p_round_key = reinterpret_cast<__m128i*>(pEncKey);
-
         p_round_key[0] =
             _mm_loadu_si128(reinterpret_cast<const __m128i*>(pUserKey));
 
