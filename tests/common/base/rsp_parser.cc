@@ -51,7 +51,7 @@ CRspParser::init()
         return false;
     }
     m_names.clear();
-    m_data_vect.clear();
+    m_data_map.clear();
     return true;
 }
 
@@ -73,16 +73,17 @@ CRspParser::removeSpaces(String& str)
     str.erase(remove_if(str.begin(), str.end(), ::isspace), str.end());
 }
 
-/* Vectorize a String based on "," into params_vec
-// Vectorize each Parameter based on '='
-// Used to read key-value pair from a Param
+/* Vectorize a TC based on "," into params_vec 
+  Store each Parameter based on '=' in UMap
+  Used to read key-value pair from a Param
 */
 void
-CRspParser::vectorizeTC(StringView myStr) {
-    m_data_vect.clear();
+CRspParser::StoreTCinUMap(StringView myStr)
+{
+    m_data_map.clear();
 
     std::vector<String> params_vec;
-    String key {}, value {}, myKey {};
+    String key {}, value {};
     int pos {};
     
     // Vectorize a TC into params_vec based on
@@ -93,8 +94,7 @@ CRspParser::vectorizeTC(StringView myStr) {
         params_vec[i] = myStr.substr(0, pos);
         myStr = myStr.begin()+pos+1;
 
-        // Vectorize each param from params_vec into m_data_vect 
-        // based on "="
+        // Store each param from params_vec into m_data_map 
         pos = isSubstring("=", params_vec[i]);
         if (pos == -1) {
             key = params_vec[i];
@@ -105,10 +105,8 @@ CRspParser::vectorizeTC(StringView myStr) {
             key = params_vec[i].substr(0,pos);
             value = params_vec[i].substr(pos+1, len);
         }
-        myKey = adjustKeyNames(key);
-        
-        m_data_vect.push_back(data_elm_t("",""));
-        m_data_vect.at(i) = tie(myKey, value);
+        String myKey = adjustKeyNames(key);
+        m_data_map[myKey] = value;
     }
 }
 
@@ -121,7 +119,6 @@ CRspParser::skipRSPHeader()
         return false;
     }
   
-    //  To skip the header
     bool search_lines {true};
     while (search_lines) {
         if(!getline(m_file, m_lineBuf)) {
@@ -130,11 +127,11 @@ CRspParser::skipRSPHeader()
             break;
         }
 
-        // Any way the line is read so increment
+        // Any way the line is read, so increment
         m_lineno++;
         if(m_lineBuf[0] == '#' || m_lineBuf[0] == '[')
             continue;
-        else if ( m_lineBuf == "\r"){
+        else if ( m_lineBuf == "\r") {
             search_lines = false;
             break;
         }
@@ -145,7 +142,7 @@ CRspParser::skipRSPHeader()
 }
 
 /* Thus function gets all Paramaters of single TC from the 
-// RSP File into a comma seperated String
+   RSP File into a comma seperated String
 */
 String
 CRspParser::FetchTCfromRSP() 
@@ -163,13 +160,7 @@ CRspParser::FetchTCfromRSP()
         }
 
         m_lineno++; // Line is read
-        //std::cout <<m_lineno<<":"<<m_lineBuf << std::endl;
-    
         if(m_lineBuf[0] == '#' || m_lineBuf[0] == '[') continue;
-        else if (isSubstring("Seed", m_lineBuf) != -1) { 
-            //std::cout << "Seed string.." << std::endl;
-            continue;
-        }
         else if(m_lineBuf == "\r") {
             // New Section or New Test case is encountered.
             if(myTestCase.empty()) continue;
@@ -187,12 +178,10 @@ CRspParser::FetchTCfromRSP()
     return myTestCase;
 }
 
-/* Parse Next Test Case and store in m_data_vect    */
+/* Parse Next Test Case and store in m_data_map    */
 bool
 CRspParser::readNextTC()
 {
-    // All Parameters in each TC to be stored as a vector
-    std::vector<String> params_vec;
     static bool keysParsed {false};
     String myTC {};
 
@@ -202,43 +191,36 @@ CRspParser::readNextTC()
 
     m_paramPerTC = count(myTC.begin(), myTC.end(), ',');
     
-    // Get all Key-Value pairs in each TC stored as a vector
-    vectorizeTC(myTC);
+    // Store Key-Value pairs per TC in an unordered_map
+    StoreTCinUMap(myTC);
 
     // Vectorize m_names (Store Keys in a vector to align "csv" imple)
-    if (m_data_vect.size() > 0 && keysParsed == false ) {
-        for (size_t i = 0; i < m_data_vect.size(); i++) {
-            m_names.push_back("");
-            m_names.at(i) = std::get<0>(m_data_vect[i]);
-        }
+    if (m_data_map.size() > 0 && keysParsed == false ) {
+        m_names.reserve(m_data_map.size());
+        for(auto i : m_data_map) {
+            m_names.push_back(i.first);
+        } 
     keysParsed = true;
     }
     return true;
 }
 
+/* Returns "Uint8 Value" based on the "Key" from m_data_map */
 std::vector<Uint8>
 CRspParser::getVect(StringView cName)
 {
-    String value = getStr(cName);
+    String key {}, value {};
+    key = cName;
+    if (m_data_map.find(key)!= m_data_map.end())
+        value =  m_data_map[key];
+
     return parseHexStrToBin(value);
 }
 
-// Returns Value based on predefined "Key" from m_data_vect
-String
-CRspParser::getStr(StringView cName)
-{
-    // Linear Search
-    for (Uint64 i = 0; i < m_data_vect.size(); i++) {
-        String id, value;
-        std::tie(id, value) = m_data_vect.at(i);
-        if (id == cName) {
-            return value;
-        }
-    }
-    return String();
-}
-
-// Map the Key names with that of Algorithm Specific Parameter names
+    
+/*  Map the Key names with that of Algorithm Specific 
+    Parameter names
+ */
 String
 CRspParser::adjustKeyNames(String cName)
 {

@@ -37,8 +37,7 @@
 namespace alcp::testing {
 using utils::parseHexStrToBin;
 
-typedef std::tuple<String, String> data_elm_t;
-typedef std::vector<data_elm_t>    data_vect_t;
+typedef std::unordered_map<String, String> param_map_t;
 
 // A Generic DataSet
 class CRspParser final : private File
@@ -48,7 +47,7 @@ class CRspParser final : private File
     String              m_lineBuf      = {};   // Buffer to a line in RSP file
     size_t              m_paramPerTC  = 0;  // Number of parameters per TC
     std::vector<String> m_names     = {};   // Keys (CSV header items)
-    data_vect_t         m_data_vect = {};   // Parameters stored as key-value pair
+    param_map_t         m_data_map= {};   // Parameters stored as key-value pair
     // Linenum starts from 0
     Uint m_lineno = 0;   // Line Count
 
@@ -60,11 +59,10 @@ class CRspParser final : private File
     String FetchTCfromRSP();
     void removeSpaces(String& str);
     bool readNextTC();
-    void vectorizeTC(StringView);
+    void StoreTCinUMap(StringView);
     int isSubstring(StringView deststr, StringView srcstr);
 
     std::vector<Uint8> getVect(StringView cName);
-    String getStr(StringView cName);
     String adjustKeyNames(String cName);
     Uint getLineNumber();
 };
