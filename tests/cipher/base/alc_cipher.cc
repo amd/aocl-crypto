@@ -34,8 +34,7 @@ namespace alcp::testing {
 AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode, const Uint8* iv)
     : m_mode{ mode }
     , m_iv{ iv }
-{
-}
+{}
 
 AlcpCipherBase::AlcpCipherBase(const alc_cipher_mode_t mode,
                                const Uint8*            iv,
@@ -146,17 +145,12 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 key_len)
     m_cinfo.ci_algo_info.ai_mode = m_mode;
     m_cinfo.ci_algo_info.ai_iv   = m_iv;
 
-    m_cinfo.ci_type     = ALC_CIPHER_TYPE_AES;
-    m_cinfo.ci_key_info = m_keyinfo;
+    m_cinfo.ci_type = ALC_CIPHER_TYPE_AES;
     /* set these only for XTS */
     if (m_mode == ALC_AES_MODE_XTS) {
-        m_cinfo.ci_algo_info.ai_xts.xi_tweak_key =
-            (alc_key_info_p)malloc(sizeof(alc_key_info_t));
-        // m_cinfo.ci_algo_info.ai_xts.xi_tweak_key->tweak_key = m_tkey;
-        m_cinfo.ci_algo_info.ai_xts.xi_tweak_key->key  = m_tkey;
-        m_cinfo.ci_algo_info.ai_xts.xi_tweak_key->len  = key_len;
-        m_cinfo.ci_algo_info.ai_xts.xi_tweak_key->algo = ALC_KEY_ALG_SYMMETRIC;
-        m_cinfo.ci_algo_info.ai_xts.xi_tweak_key->fmt  = ALC_KEY_FMT_RAW;
+        memcpy(m_key, key, key_len / 8);
+        memcpy(m_key + (key_len / 8), m_tkey, key_len / 8);
+        m_keyinfo.key = m_key;
     } else if (m_mode == ALC_AES_MODE_SIV) {
         alc_key_info_t* p_kinfo =
             (alc_key_info_p)malloc(sizeof(alc_key_info_t));
@@ -166,6 +160,7 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 key_len)
         p_kinfo->fmt  = ALC_KEY_FMT_RAW;
         m_cinfo.ci_algo_info.ai_siv.xi_ctr_key = p_kinfo;
     }
+    m_cinfo.ci_key_info = m_keyinfo;
 
     /* Check support */
     err = alcp_cipher_supported(&m_cinfo);
@@ -264,7 +259,6 @@ AlcpCipherBase::encrypt(alcp_data_ex_t data)
         }
 
     } else {
-        // For non GCM/CCM mode
         err = alcp_cipher_encrypt(
             m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
         if (alcp_is_error(err)) {
