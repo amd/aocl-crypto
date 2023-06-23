@@ -48,7 +48,7 @@ function(alcp_get_cflags)
         /O2
         /W4
         /WX
-		/guard:cf
+        /guard:cf
         CACHE INTERNAL ""
     )
     set(ALCP_CFLAGS ${ALCP_CFLAGS} PARENT_SCOPE)
@@ -112,7 +112,7 @@ function(alcp_add_sanitize_flags)
     set(ALCP_OPTIONS_SANITIZE
             -fsanitize=address
             -fsanitize=undefined
-			-fsanitize=nullability
+            -fsanitize=nullability
             CACHE INTERNAL ""
         )
 	link_libraries(clang_rt.asan_dynamic-x86_64)

@@ -29,50 +29,35 @@
 #include "alcp/dynlib.hh"
 #include "alcp/types.hh"
 
-enum DynLoadError : alcp::Uint32
-{
-    Success = 0,
-    None    = Success,
+enum DynLoadError : alcp::Uint32 {
+  Success = 0,
+  None = Success,
 
-    LibNotFound,
-    SymNotFound,
-    Other,
+  LibNotFound,
+  SymNotFound,
+  Other,
 };
 
-#if defined(__linux__)
+#ifdef ALCP_BUILD_OS_LINUX
 #include "impl/dynlib_linux.cc"
-#elif defined(_WINDOWS) || defined(_WIN32)
+#else
 #include "impl/dynlib_win.cc"
 #endif
 
 namespace alcp {
 
-DynamicLibrary::DynamicLibrary(const std::string& path)
-    : m_pimpl{ std::make_unique<DynamicLibrary::Impl>(path) }
-{
-}
+DynamicLibrary::DynamicLibrary(const std::string &path)
+    : m_pimpl{std::make_unique<DynamicLibrary::Impl>(path)} {}
 
-DynamicLibrary::DynamicLibrary(const std::string& path, int flags)
-    : m_pimpl{ std::make_unique<DynamicLibrary::Impl>(path, flags) }
-{
-}
+DynamicLibrary::DynamicLibrary(const std::string &path, int flags)
+    : m_pimpl{std::make_unique<DynamicLibrary::Impl>(path, flags)} {}
 
-bool
-DynamicLibrary::isLoaded() const
-{
-    return m_pimpl->isLoaded();
-}
+bool DynamicLibrary::isLoaded() const { return m_pimpl->isLoaded(); }
 
-void
-DynamicLibrary::load(const std::string& path)
-{
-    m_pimpl->load(path, 0);
-}
+void DynamicLibrary::load(const std::string &path) { m_pimpl->load(path, 0); }
 
-void
-DynamicLibrary::load(const std::string& path, int flags)
-{
-    m_pimpl->load(path, flags);
+void DynamicLibrary::load(const std::string &path, int flags) {
+  m_pimpl->load(path, flags);
 }
 
 DynamicLibrary::~DynamicLibrary() {}
