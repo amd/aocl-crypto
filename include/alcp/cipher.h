@@ -109,7 +109,10 @@ typedef enum _alc_aes_ctrl
 } alc_aes_ctrl_t;
 
 /**
+ *
  * @brief  Stores special info needed for XTS mode.
+ *
+ * @deprecated To be removed in cleanup
  *
  * @param xi_tweak_key   holds the info about secondary key for xts
  *
@@ -322,15 +325,16 @@ alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
  * @brief    AEAD decryption of cipher text and write it to plain text with
  * provided handle.
  * @parblock <br> &nbsp;
- * <b>This AEAD API can be called after @ref alcp_cipher_request is called  and
- * at the end of session call @ref alcp_cipher_finish</b>
+ * <b>This AEAD API can be called after @ref alcp_cipher_request is called
+ * and at the end of session call @ref alcp_cipher_finish</b>
  * @endparblock
  * @note    Error needs to be checked for each call,
  *           valid only if @ref alcp_is_error (ret) is false, ctx to be
  *          considered valid.
  * @param [in]   pCipherHandle Session handle for future encrypt decrypt
  *                         operation
- * @param[in]    pInput    Pointer to Input data (CipherText or additional data)
+ * @param[in]    pInput    Pointer to Input data (CipherText or additional
+ * data)
  * @param[out]   pOutput   Pointer to output data (PlainText or Tag)
  * @param[in]    len       Length of input or output data
  * @param[in]    pIv       Pointer to Initialization Vector

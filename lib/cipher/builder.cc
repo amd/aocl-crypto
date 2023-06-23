@@ -25,6 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/aes_build.hh"
 #include "alcp/cipher/aes_cbc.hh"
@@ -33,14 +34,11 @@
 #include "alcp/cipher/aes_cmac_siv.hh"
 #include "alcp/cipher/aes_ctr.hh"
 #include "alcp/cipher/aes_gcm.hh"
+#include "alcp/cipher/aes_xts.hh"
 
 #include "alcp/utils/cpuid.hh"
 
 using alcp::utils::CpuId;
-
-#if 0
-#include "cipher/aes_xts.hh"
-#endif
 
 #include <type_traits> /* for is_same_v<> */
 
@@ -124,6 +122,19 @@ __aes_wrapperGetTag(void* rCipher, Uint8* pTag, Uint64 len)
 
 template<typename CIPHERMODE>
 static alc_error_t
+__aes_wrapperSetTKey(void* rCipher, const Uint8* pTag, Uint64 len)
+{
+    alc_error_t e = ALC_ERROR_NONE;
+
+    auto ap = static_cast<CIPHERMODE*>(rCipher);
+
+    ap->setTweakKey(pTag, len);
+
+    return e;
+}
+
+template<typename CIPHERMODE>
+static alc_error_t
 __aes_wrapperSetTagLength(void* rCipher, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
@@ -191,7 +202,8 @@ template<typename CIPHERMODE>
 void
 _build_aes_cipher(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
-    auto algo    = new CIPHERMODE(pKey, keyLen);
+    CIPHERMODE* algo = new CIPHERMODE(pKey, keyLen);
+
     ctx.m_cipher = static_cast<void*>(algo);
 
     ctx.decrypt = __aes_wrapper<CIPHERMODE, false>;
@@ -254,8 +266,8 @@ __build_aes(const alc_cipher_algo_info_t& aesInfo,
         ctx.setIv         = __aes_wrapperSetIv<Ccm>;
         ctx.getTag        = __aes_wrapperGetTag<Ccm>;
         ctx.setTagLength  = __aes_wrapperSetTagLength<Ccm>;
-    } else if constexpr (std::is_same_v<CIPHERMODE, Xts>) {
-        ctx.setIv = __aes_wrapperSetIv<Xts>;
+        // } else if constexpr (std::is_same_v<CIPHERMODE, Xts>) {
+        //     ctx.setIv = __aes_wrapperSetIv<Xts>;
     }
     ctx.finish = __aes_dtor<CIPHERMODE>;
 
@@ -435,6 +447,45 @@ __build_aesCbc(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
     return sts;
 }
 
+/**
+ * @brief Builder specific to XTS Generic Cipher Mode
+ *
+ * Takes the params and builds the appropriate path given size info
+ * @param pKey      Key for initializing cipher class
+ * @param keyLen    Length of the key
+ * @param ctx       Context for the XTS Cipher Mode
+ * @return Status
+ */
+static Status
+__build_aesXts(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
+{
+    Status sts = StatusOk();
+
+    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
+
+    if (cpu_feature == CpuCipherFeatures::eVaes512) {
+        using namespace vaes512;
+        __build_aes_cipher<Xts<EncryptXts128, DecryptXts128>,
+                           Xts<EncryptXts192, DecryptXts192>,
+                           Xts<EncryptXts256, DecryptXts256>>(
+            pKey, keyLen, ctx);
+    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
+        using namespace vaes;
+        __build_aes_cipher<Xts<EncryptXts128, DecryptXts128>,
+                           Xts<EncryptXts192, DecryptXts192>,
+                           Xts<EncryptXts256, DecryptXts256>>(
+            pKey, keyLen, ctx);
+    } else if (cpu_feature == CpuCipherFeatures::eAesni) {
+        using namespace aesni;
+        __build_aes_cipher<Xts<EncryptXts128, DecryptXts128>,
+                           Xts<EncryptXts192, DecryptXts192>,
+                           Xts<EncryptXts256, DecryptXts256>>(
+            pKey, keyLen, ctx);
+    }
+
+    return sts;
+}
+
 // FIXME: Horror ahead, custom builder for SIV
 // FIXME: Bringup New AEAD builder with support for all AEAD
 #if 1
@@ -511,11 +562,6 @@ AesBuilder::Build(const alc_cipher_algo_info_t& aesInfo,
                 sts = __build_aes<Ofb>(aesInfo, keyInfo, ctx);
             break;
 
-        case ALC_AES_MODE_XTS:
-            if (Xts::isSupported(aesInfo, keyInfo))
-                sts = __build_aes<Xts>(aesInfo, keyInfo, ctx);
-            break;
-
         case ALC_AES_MODE_CCM:
             if (Ccm::isSupported(aesInfo, keyInfo))
                 sts = __build_aes<Ccm>(aesInfo, keyInfo, ctx);
@@ -577,6 +623,12 @@ AesBuilder::Build(const alc_cipher_mode_t cipherMode,
             }
             break;
             // FIXME: GCM, XTS, CCM should be moved to AeadBuilder.
+        case ALC_AES_MODE_XTS:
+            if (Xts<aesni::EncryptXts128, aesni::DecryptXts128>::isSupported(
+                    keyLen)) {
+                sts = __build_aesXts(pKey, keyLen, ctx);
+            }
+            break;
         case ALC_AES_MODE_GCM:
             if (Gcm::isSupported(keyLen))
                 sts = __build_GcmAead(pKey, keyLen, ctx);

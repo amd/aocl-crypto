@@ -83,14 +83,16 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
     ALCP_BAD_PTR_ERR_RET(pCipherInfo, err);
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
 
+    // Tweak key is appended after encryption key.
     if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
-        auto tweak_key = pCipherInfo->ci_algo_info.ai_xts.xi_tweak_key;
+        auto tweak_key =
+            pCipherInfo->ci_key_info.key + pCipherInfo->ci_key_info.len / 8;
         if (tweak_key == nullptr
-            || (tweak_key->len != 128 && tweak_key->len != 256)
-            || (tweak_key->len != pCipherInfo->ci_key_info.len)) {
+            || (pCipherInfo->ci_key_info.len != 128
+                && pCipherInfo->ci_key_info.len != 256)) {
             return ALC_ERROR_INVALID_ARG;
         }
-        if (validateKeys(tweak_key->key,
+        if (validateKeys(tweak_key,
                          pCipherInfo->ci_key_info.key,
                          pCipherInfo->ci_key_info.len)) {
             return ALC_ERROR_DUPLICATE_KEY;
@@ -102,9 +104,12 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
     new (ctx) cipher::Context;
 
     // FIXME: other AES Build() to be modified like CTR in other modes as well.
+    // From here the algoinfo is lost hence we cannot use tweak key inside for
+    // XTS
     if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_CTR
         || pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_CFB
-        || pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_CBC) {
+        || pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_CBC
+        || pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
         err = cipher::CipherBuilder::Build(pCipherInfo->ci_type,
                                            pCipherInfo->ci_algo_info.ai_mode,
                                            pCipherInfo->ci_key_info.key,
