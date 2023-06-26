@@ -42,10 +42,6 @@ CRspParser::init()
 {
     std::cout<< "m_input_rsp_file: " << m_input_rsp_file << std::endl;
     bool retVal = skipRSPHeader();
-    if(m_fileEOF) {
-        std::cout << "EOF Reached... No test cases found in " << m_input_rsp_file << std::endl;
-        return false;
-    }
     if(!retVal) {
         std::cout << "Parsing header failed for : " << m_input_rsp_file << std::endl;
         return false;
@@ -213,10 +209,21 @@ CRspParser::getVect(StringView cName)
     key = cName;
     if (m_data_map.find(key)!= m_data_map.end())
         value =  m_data_map[key];
-
     return parseHexStrToBin(value);
 }
 
+/* Returns "Uint64 Value" in bytes based on the "Length" key from m_data_map */
+Uint64
+CRspParser::getLenBytes(StringView cName)
+{
+    String key {}, value {};
+    key = cName;
+    if (m_data_map.find(key)!= m_data_map.end())
+        value =  m_data_map[key];
+    
+    //return parseStrToUint64(value);
+    return (alcp::testing::utils::parseStrToUint64(value))/8;
+}
     
 /*  Map the Key names with that of Algorithm Specific 
     Parameter names
@@ -232,6 +239,8 @@ CRspParser::adjustKeyNames(String cName)
         myKey = "DIGEST";
     else if (cName == "Outputlen")
         myKey = "DIGESTLEN";
+    else if (cName == "Len")
+        myKey = "MESSAGELEN";
     else myKey = cName;
     return myKey;
 }

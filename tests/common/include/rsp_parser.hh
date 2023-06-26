@@ -63,6 +63,7 @@ class CRspParser final : private File
     int isSubstring(StringView deststr, StringView srcstr);
 
     std::vector<Uint8> getVect(StringView cName);
+    Uint64 getLenBytes(StringView cName);
     String adjustKeyNames(String cName);
     Uint getLineNumber();
 };

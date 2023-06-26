@@ -102,6 +102,14 @@ parseHexToNum(const unsigned char c)
 
     return 0;
 }
+
+Uint64
+parseStrToUint64(std::string str)
+{
+    //Uint64 value = std::stoull(str);
+    return std::stoull(str);
+}
+
 bool
 isPathExist(const std::string dir)
 {

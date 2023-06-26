@@ -53,7 +53,7 @@
 #define INC_LOOP   1
 #define START_LOOP 1
 
-#define Enable_CSV 0
+#define Enable_CSV 1
 
 /* print test data */
 inline void
@@ -227,22 +227,11 @@ Digest_KAT(alc_digest_info_t info)
         while (CRspParser.readNextTC()) {
             auto msg          = CRspParser.getVect("MESSAGE");
             data.m_msg        = &(msg[0]);
-            data.m_msg_len    = CRspParser.getVect("MESSAGE").size();
+            data.m_msg_len    = CRspParser.getLenBytes("MESSAGELEN");
             data.m_digest_len = CRspParser.getVect("DIGEST").size();
             std::vector<Uint8> digest_(data.m_digest_len, 0);
             data.m_digest = &(digest_[0]);
             
-            /* FIXME: Hack when msg is NULL, this case is not currently handled
-             * in some of the digest apis */
-            bool isMsgEmpty = std::all_of(
-                msg.begin(), msg.end(), [](int i) { return i == 0; });
-            if (data.m_msg_len == 0) {
-                data.m_msg = &Temp;
-            }
-            if (isMsgEmpty) {
-                data.m_msg_len = 0;
-            }
-
             if (!db->init(info, data.m_digest_len)) {
                 std::cout << "Error: Digest base init failed" << std::endl;
                 FAIL();
@@ -262,21 +251,10 @@ Digest_KAT(alc_digest_info_t info)
         while (CRspParser.readNextTC()) {
             auto msg          = CRspParser.getVect("MESSAGE");
             data.m_msg        = &(msg[0]);
-            data.m_msg_len    = CRspParser.getVect("MESSAGE").size();
+            data.m_msg_len    = CRspParser.getLenBytes("MESSAGELEN"); 
             data.m_digest_len = CRspParser.getVect("DIGEST").size();
             data.m_digest     = &(digest[0]);
             
-            /* FIXME: Hack when msg is NULL, this case is not currently handled
-             * in some of the digest apis */
-            bool isMsgEmpty = std::all_of(
-                msg.begin(), msg.end(), [](int i) { return i == 0; });
-            if (data.m_msg_len == 0) {
-                data.m_msg = &Temp;
-            }
-            if (isMsgEmpty) {
-                data.m_msg_len = 0;
-            }
-
             if (!db->init(info, data.m_digest_len)) {
                 std::cout << "Error: Digest base init failed" << std::endl;
                 FAIL();
@@ -286,7 +264,7 @@ Digest_KAT(alc_digest_info_t info)
                 FAIL();
             }
 
-            /*conv m_digest into a vector */
+            // conv m_digest into a vector 
             std::vector<Uint8> digest_vector(std::begin(digest),
                                              std::end(digest));
 

@@ -90,20 +90,6 @@ File::readLine()
     return buff;
 }
 
-/*
-std::string
-File::readMyLine()
-{
-    std::string buff;
-    if(getline(m_file, buff)) return buff;
-    else {
-        m_fileEOF = true;
-        std::cout << "EOF Reached...." << std::endl;
-        return {};
-    }
-}
-*/
-
 bool
 File::writeLine(std::string buff)
 {
