@@ -277,6 +277,12 @@ Xts<FEnc, FDec>::encrypt(const Uint8* pPlainText,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
+    // Data should never be less than a block or greater than 2^20 blocks
+    if (len < 16 || len > (1 << 21)) {
+        err = ALC_ERROR_INVALID_DATA;
+        return err;
+    }
+
     err = FEnc(pPlainText,
                pCipherText,
                len,
@@ -286,50 +292,7 @@ Xts<FEnc, FDec>::encrypt(const Uint8* pPlainText,
                pIv);
 
 #if 0
-    // Data should never be less than a block or greater than 2^20 blocks
-    if (len < 16 || len > (1 << 21)) {
-        err = ALC_ERROR_INVALID_DATA;
-        return err;
-    }
 
-    if (CpuId::cpuHasAvx512(utils::AVX512_F)
-        && CpuId::cpuHasAvx512(utils::AVX512_DQ)
-        && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
-        err = vaes512::EncryptXtsAvx512(pPlainText,
-                                        pCipherText,
-                                        len,
-                                        getEncryptKeys(),
-                                        p_tweak_key,
-                                        getRounds(),
-                                        pIv);
-        return err;
-    }
-
-    if (CpuId::cpuHasVaes()) {
-
-        err = vaes::EncryptXts(pPlainText,
-                               pCipherText,
-                               len,
-                               getEncryptKeys(),
-                               p_tweak_key,
-                               getRounds(),
-                               pIv);
-
-        return err;
-    }
-
-    if (CpuId::cpuHasAesni()) {
-
-        err = aesni::EncryptXts(pPlainText,
-                                pCipherText,
-                                len,
-                                getEncryptKeys(),
-                                p_tweak_key,
-                                getRounds(),
-                                pIv);
-
-        return err;
-    }
 
     auto p_key128       = reinterpret_cast<const Uint8*>(getEncryptKeys());
     auto p_tweak_key128 = reinterpret_cast<const Uint8*>(p_tweak_key);
@@ -422,6 +385,12 @@ Xts<FEnc, FDec>::decrypt(const Uint8* pCipherText,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
+    // Data should never be less than a block or greater than 2^20 blocks
+    if (len < 16 || len > (1 << 21)) {
+        err = ALC_ERROR_INVALID_DATA;
+        return err;
+    }
+
     err = FDec(pCipherText,
                pPlainText,
                len,
@@ -431,11 +400,6 @@ Xts<FEnc, FDec>::decrypt(const Uint8* pCipherText,
                pIv);
 
 #if 0
-    // Data should never be less than a block or greater than 2^20 blocks
-    if (len < 16 || len > (1 << 21)) {
-        err = ALC_ERROR_INVALID_DATA;
-        return err;
-    }
 
     if (CpuId::cpuHasAvx512(utils::AVX512_F)
         && CpuId::cpuHasAvx512(utils::AVX512_DQ)
