@@ -40,14 +40,23 @@ OpenSSLRsaBase::OpenSSLRsaBase() {}
 
 OpenSSLRsaBase::~OpenSSLRsaBase()
 {
-    EVP_PKEY_CTX_free(m_rsa_handle);
-    EVP_PKEY_free(m_pkey);
+    if (m_rsa_handle != nullptr) {
+        EVP_PKEY_CTX_free(m_rsa_handle);
+        m_rsa_handle = nullptr;
+    }
+    if (m_pkey != nullptr) {
+        EVP_PKEY_free(m_pkey);
+        m_pkey = nullptr;
+    }
 }
 
 bool
 OpenSSLRsaBase::init()
 {
-    EVP_PKEY_CTX_free(m_rsa_handle);
+    if (m_rsa_handle != nullptr) {
+        EVP_PKEY_CTX_free(m_rsa_handle);
+        m_rsa_handle = nullptr;
+    }
     m_rsa_handle = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
     if (m_rsa_handle == nullptr) {
         std::cout << "EVP_PKEY_CTX_new_from_name returned null: Error:"
@@ -85,6 +94,10 @@ OpenSSLRsaBase::GetPublicKey(const alcp_rsa_data_t& data)
         std::cout << "EVP_PKEY_generate failed: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
+    }
+    if (m_rsa_handle != nullptr) {
+        EVP_PKEY_CTX_free(m_rsa_handle);
+        m_rsa_handle = nullptr;
     }
     m_rsa_handle = EVP_PKEY_CTX_new(m_pkey, eng);
     if (m_rsa_handle == nullptr) {
