@@ -184,9 +184,9 @@ class Cmac::Impl : public cipher::Aes
             }
         }
         // Copy the unprocessed plaintext bytes to the internal buffer
-        utils::CopyBlock<Uint64>(m_storage_buffer,
-                                 plaintext + cAESBlockSize * n_blocks,
-                                 bytes_to_copy);
+        utils::CopyBytes(m_storage_buffer,
+                         plaintext + cAESBlockSize * n_blocks,
+                         bytes_to_copy);
         m_storage_buffer_offset = bytes_to_copy;
 
         return status;
