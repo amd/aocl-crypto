@@ -46,5 +46,9 @@ FOREACH(testFile IN LISTS TEST_FILES)
              SOURCES   "${currentTestFile}"
              DEPENDS   ${_module_lib}
     )
+
 ENDFOREACH()
+
+ADD_EXECUTABLE(static_link_test static_link_test.cc)
+TARGET_LINK_LIBRARIES(static_link_test alcp_static)
 
