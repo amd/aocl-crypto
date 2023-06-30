@@ -41,18 +41,27 @@ TARGET_SOURCES(alcp
 		${UTILS_SRCS}
 	)
 
+TARGET_SOURCES(alcp_static
+	PRIVATE
+		${UTILS_SRCS}
+	)
+
 IF(UNIX)
   IF (NOT IS_DIRECTORY ${OPENSSL_INSTALL_DIR})
     MESSAGE(FATAL_ERROR "OpenSSL installation dir not found!")
   ENDIF ()
   IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
     TARGET_LINK_LIBRARIES(alcp PUBLIC ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
+    TARGET_LINK_LIBRARIES(alcp_static PUBLIC ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.a)
   ELSEIF(EXISTS ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
     TARGET_LINK_LIBRARIES(alcp PUBLIC ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
+    TARGET_LINK_LIBRARIES(alcp_static PUBLIC ${OPENSSL_INSTALL_DIR}/lib/libcrypto.a)
   ELSEIF(EXISTS ${OPENSSL_INSTALL_DIR}/lib/x86_64-linux-gnu/libcrypto.so)
     TARGET_LINK_LIBRARIES(alcp PUBLIC ${OPENSSL_INSTALL_DIR}/lib/x86_64-linux-gnu/libcrypto.so)
+    TARGET_LINK_LIBRARIES(alcp_static PUBLIC ${OPENSSL_INSTALL_DIR}/lib/x86_64-linux-gnu/libcrypto.a)
   ELSE()
     TARGET_LINK_LIBRARIES(alcp PUBLIC ${OPENSSL_INSTALL_DIR}/x86_64-linux-gnu/libcrypto.so)
+    TARGET_LINK_LIBRARIES(alcp_static PUBLIC ${OPENSSL_INSTALL_DIR}/x86_64-linux-gnu/libcrypto.a)
   ENDIF()
 ENDIF(UNIX)
 

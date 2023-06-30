@@ -30,3 +30,8 @@ TARGET_SOURCES(alcp
 		${CAPI_SRCS}
 	)
 
+TARGET_SOURCES(alcp_static
+	PRIVATE
+		${CAPI_SRCS}
+)
+

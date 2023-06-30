@@ -31,4 +31,10 @@ TARGET_SOURCES(alcp
 		${CIPHER_SRCS}
 	)
 
+TARGET_SOURCES(alcp_static
+	PRIVATE
+		${CIPHER_SRCS}
+	)
+
+
 ADD_SUBDIRECTORY(tests)

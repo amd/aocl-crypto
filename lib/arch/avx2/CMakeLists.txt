@@ -41,4 +41,4 @@ ADD_LIBRARY(arch_avx2
 
 
 TARGET_LINK_LIBRARIES(alcp PRIVATE arch_avx2)
-
+TARGET_LINK_LIBRARIES(alcp_static PRIVATE arch_avx2)

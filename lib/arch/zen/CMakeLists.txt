@@ -41,4 +41,4 @@ ADD_LIBRARY(arch_zen
 
 
 TARGET_LINK_LIBRARIES(alcp PRIVATE arch_zen)
-
+TARGET_LINK_LIBRARIES(alcp_static PRIVATE arch_zen)

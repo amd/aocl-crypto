@@ -31,4 +31,9 @@ TARGET_SOURCES(alcp
 		${EC_SRCS}
 	)
 
+TARGET_SOURCES(alcp_static
+	PRIVATE
+		${EC_SRCS}
+	)
+
 ADD_SUBDIRECTORY(tests)

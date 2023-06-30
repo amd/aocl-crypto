@@ -42,6 +42,10 @@ TARGET_SOURCES(alcp
 	PRIVATE
 		${ARCH_SRCS}
 	)
+TARGET_SOURCES(alcp_static
+	PRIVATE
+		${ARCH_SRCS}
+	)
 ENDIF()
 
 IF (WIN32)
