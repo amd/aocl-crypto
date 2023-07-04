@@ -109,8 +109,8 @@ class Sha256::Impl
   private:
     Uint64 m_msg_len;
     /* Any unprocessed bytes from last call to update() */
-    Uint8  m_buffer[cChunkSize];
-    Uint32 m_hash[cHashSizeWords];
+    alignas(64) Uint8 m_buffer[cChunkSize];
+    alignas(64) Uint32 m_hash[cHashSizeWords];
     /* index to m_buffer of previously unprocessed bytes */
     Uint32 m_idx;
     bool   m_finished;
@@ -352,8 +352,7 @@ Sha256::Sha256()
 
 Sha256::Sha256(const alc_digest_info_t& rDigestInfo)
     : Sha256()
-{
-}
+{}
 
 Sha256::~Sha256() = default;
 
