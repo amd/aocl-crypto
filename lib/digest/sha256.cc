@@ -129,7 +129,7 @@ Sha256::Impl::Impl()
 alc_error_t
 Sha256::Impl::setIv(const void* pIv, Uint64 size)
 {
-    utils::CopyBytes(m_hash, pIv, size);
+    utils::CopyBlock(m_hash, pIv, size);
 
     return ALC_ERROR_NONE;
 }
@@ -238,7 +238,7 @@ Sha256::Impl::update(const Uint8* pSrc, Uint64 input_size)
     Uint64 to_process = std::min((input_size + m_idx), cChunkSize);
     if (to_process < cChunkSize) {
         /* copy them to internal buffer and return */
-        utils::CopyBytes(&m_buffer[m_idx], pSrc, input_size);
+        utils::CopyBlock(&m_buffer[m_idx], pSrc, input_size);
         m_idx += input_size;
         return err;
     }
@@ -252,7 +252,7 @@ Sha256::Impl::update(const Uint8* pSrc, Uint64 input_size)
          * remaining bytes of a chunk.
          */
         to_process = std::min(input_size, cChunkSize - idx);
-        utils::CopyBytes(&m_buffer[idx], pSrc, to_process);
+        utils::CopyBlock(&m_buffer[idx], pSrc, to_process);
 
         pSrc += to_process;
         input_size -= to_process;
@@ -280,7 +280,7 @@ Sha256::Impl::update(const Uint8* pSrc, Uint64 input_size)
      * We still have some leftover bytes, copy them to internal buffer
      */
     if (input_size) {
-        utils::CopyBytes(&m_buffer[idx], pSrc, input_size);
+        utils::CopyBlock(&m_buffer[idx], pSrc, input_size);
         idx += input_size;
     }
 
