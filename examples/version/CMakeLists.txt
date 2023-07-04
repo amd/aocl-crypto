@@ -28,4 +28,4 @@
 #	${CMAKE_SOURCE_DIR}/lib/include
 #	)
 
-ADD_EXECUTABLE(version-demo version-demo.c)
+ADD_EXAMPLE(version-demo version-demo.c)

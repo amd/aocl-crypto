@@ -28,5 +28,5 @@
 #	${CMAKE_SOURCE_DIR}/lib/include
 #	)
 
-ADD_EXECUTABLE(hmac hmac.c)
-ADD_EXECUTABLE(cmac cmac.c)
+ADD_EXAMPLE(hmac hmac.c)
+ADD_EXAMPLE(cmac cmac.c)
