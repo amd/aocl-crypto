@@ -29,6 +29,7 @@
 #include "alcp/utils/cpuid.hh"
 #ifdef ALCP_ENABLE_AOCL_CPUID
 #include <alci/alci.h>
+#include <alci/cxx/cpu.hh>
 #endif
 
 namespace alcp::utils {
