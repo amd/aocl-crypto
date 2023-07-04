@@ -41,3 +41,17 @@ ADD_EXECUTABLE(aes-siv aes-siv.c)
 ADD_EXECUTABLE(aes-speed-cipher aes-speed-cipher.c)
 
 ADD_EXECUTABLE(aes-speed-gcm aes-speed-gcm.c)
+
+# Test Link Static 
+
+ADD_EXECUTABLE(aes-cfb-static aes-cfb.c)
+
+## Remove alcp from linking
+get_target_property(aes-cfb-static_LIBS aes-cfb-static LINK_LIBRARIES)
+message("Libraries linked to aes-cfb-static: ${aes-cfb-static_LIBS}")
+list(REMOVE_ITEM aes-cfb-static_LIBS alcp)
+set_property(TARGET aes-cfb-static PROPERTY LINK_LIBRARIES ${aes-cfb-static_LIBS})
+
+## Link to alcp_static
+target_link_libraries(aes-cfb-static alcp_static)
+
