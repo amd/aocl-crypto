@@ -164,6 +164,25 @@ TARGET_INCLUDE_DIRECTORIES(alcp_static PRIVATE
 IF(UNIX)
 	TARGET_LINK_LIBRARIES(alcp PUBLIC dl)
 	TARGET_LINK_LIBRARIES(alcp_static PUBLIC dl)
+	
+	IF(CMAKE_BUILD_TYPE STREQUAL "debug")
+		ADD_CUSTOM_COMMAND(
+			TARGET alcp_static POST_BUILD
+			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+			COMMAND /bin/bash 
+			${CMAKE_SOURCE_DIR}/scripts/create_static.sh 
+			${AOCL_CPUID_INSTALL_DIR}/lib/libaoclutils.a
+			"DEBUG"
+		)
+ 	ELSE()
+		ADD_CUSTOM_COMMAND(
+			TARGET alcp_static POST_BUILD
+			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+			COMMAND /bin/bash ${CMAKE_SOURCE_DIR}/scripts/create_static.sh 
+			${AOCL_CPUID_INSTALL_DIR}/lib/libaoclutils.a
+			""
+		)
+	ENDIF(CMAKE_BUILD_TYPE STREQUAL "debug")
 ENDIF()
 
 # Need to build comapt libs after building the libalcp.so
