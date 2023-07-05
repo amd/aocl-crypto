@@ -178,8 +178,10 @@ INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/include/alcp
         TYPE INCLUDE
 		)
 
+IF(UNIX)
 # FIXME: SUFIX Debug will be ignored
 INSTALL(FILES ${CMAKE_BINARY_DIR}/libalcp_static.a DESTINATION lib RENAME libalcp.a)
+ENDIF()
 
 IF (ALCP_ENABLE_EXAMPLES)
 	# examples which should be part of release package
