@@ -25,10 +25,27 @@
 
 # Output directory
 OBJ := bin
+
 # Default compiler
 CC := gcc
-INCLUDE := include
-CFLAGS := -Llib -I$(INCLUDE) -lalcp -laoclutils
+
+# link to static or shared lib
+LIB_TYPE = dynamic #default value
+
+INCLUDE_DIR := include
+
+LIB_DIR := lib
+
+CFLAGS := -I$(INCLUDE_DIR)
+
+# if linking to shared lib
+LFLAGS := -L $(LIB_DIR) -lalcp -laoclutils
+
+# if linking to static lib
+ifeq ($(LIB_TYPE), static)
+    LFLAGS = -L$(LIB_DIR) -l:libalcp.a -lstdc++ -l:libcrypto.a
+endif
+
 # Add more targets as they come.
 TARGETS := cipher/aes-cfb cipher/aes-speed-cipher cipher/aes-speed-gcm cipher/aes-siv cipher/aes-xts cipher/aes-ccm \
 			digest/sha2_224_example digest/sha2_256_example digest/sha2_384_example digest/sha2_512_example \
@@ -61,7 +78,7 @@ build: $(TARGETS)
 	@echo "Build Success"
 
 $(TARGETS):
-	@$(CC) examples/$@.c -o $(OBJ)/$@ $(CFLAGS)
+	@$(CC) examples/$@.c -o $(OBJ)/$@ $(CFLAGS) $(LFLAGS)
 	@echo "Building "$@
 
 clean:
