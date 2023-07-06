@@ -43,7 +43,7 @@ LFLAGS := -L $(LIB_DIR) -lalcp -laoclutils
 
 # if linking to static lib
 ifeq ($(LIB_TYPE), static)
-    LFLAGS = -L$(LIB_DIR) -l:libalcp.a -lstdc++ -l:libcrypto.a
+    LFLAGS = -L$(LIB_DIR) -l:libalcp.a -lstdc++ -lcrypto
 endif
 
 # Add more targets as they come.
