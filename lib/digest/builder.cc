@@ -39,6 +39,8 @@ namespace alcp::digest {
 
 using Context = alcp::digest::Context;
 
+/* FIXME: Disabling temporarily to fix a compilation error while using AOCC */
+#if 0
 static std::pmr::synchronized_pool_resource s_digest_pool{};
 
 std::pmr::synchronized_pool_resource&
@@ -46,6 +48,7 @@ GetDefaultDigestPool()
 {
     return s_digest_pool;
 }
+#endif
 
 template<typename DIGESTTYPE>
 static alc_error_t

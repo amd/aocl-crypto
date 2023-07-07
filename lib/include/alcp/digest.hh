@@ -35,15 +35,21 @@
 #include "alcp/types.h"
 
 /* System headers */
+/* FIXME: Disabling temporarily to fix a compilation error while using AOCC */
+#if 0
 #include <memory_resource>
+#endif
 #include <string>
 
 namespace alcp::digest {
 
-// typedef std::pmr::synchronized_pool_resource DigestPool;
+/* FIXME: Disabling temporarily to fix a compilation error while using AOCC */
+#if 0
+typedef std::pmr::synchronized_pool_resource DigestPool;
 
 std::pmr::synchronized_pool_resource&
 GetDefaultDigestPool();
+#endif
 
 static inline Uint32
 RotateRight(Uint32 value, Uint32 count)
