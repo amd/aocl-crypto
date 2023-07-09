@@ -34,7 +34,7 @@
 
 using namespace alcp::cipher;
 
-#define CPU_FEATURE 1
+#define CPU_FEATURE 3
 
 #if CPU_FEATURE == 1
 using namespace vaes512;

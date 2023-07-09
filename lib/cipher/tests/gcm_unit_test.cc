@@ -44,6 +44,18 @@
 #include <sys/types.h>
 #endif
 
+using namespace alcp::cipher;
+
+#define CPU_FEATURE 3
+
+#if CPU_FEATURE == 1
+using namespace vaes512;
+#elif CPU_FEATURE == 2
+using namespace vaes;
+#elif CPU_FEATURE == 3
+using namespace aesni;
+#endif
+
 // KAT Data
 // clang-format off
 typedef std::tuple<std::vector<Uint8>, // key
@@ -172,7 +184,6 @@ known_answer_map_t KATDataset{
 };
 // clang-format on
 
-using namespace alcp::cipher::vaes512;
 class GCM_KAT
     : public testing::TestWithParam<std::pair<const std::string, param_tuple>>
 {
@@ -232,7 +243,6 @@ class GCM_KAT
     void TearDown() override { delete pGcmObj; }
 };
 
-using namespace alcp::cipher;
 TEST(GCM, Instantiation)
 {
 
