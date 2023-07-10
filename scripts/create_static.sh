@@ -105,6 +105,8 @@ for i in "${alcp_libs[@]}"; do
     fi
 
     # Handle Duplicates
+    which 7z
+    exit_err "7z not found in the system. Please install and re-run make\!"
     7z e -aou ../$LIB
     # ar -x ../$LIB
 
