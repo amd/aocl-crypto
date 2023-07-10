@@ -173,14 +173,6 @@ namespace aesni {
                               int          nRounds,
                               const Uint8* pIv);
 
-    alc_error_t EncryptXts192(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              const Uint8* pTweakKey,
-                              int          nRounds,
-                              const Uint8* pIv);
-
     alc_error_t EncryptXts256(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
@@ -190,14 +182,6 @@ namespace aesni {
                               const Uint8* pIv);
 
     alc_error_t DecryptXts128(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              const Uint8* pTweakKey,
-                              int          nRounds,
-                              const Uint8* pIv);
-
-    alc_error_t DecryptXts192(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
@@ -360,14 +344,6 @@ namespace vaes512 {
                               int          nRounds,
                               const Uint8* pIv);
 
-    alc_error_t EncryptXts192(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              const Uint8* pTweakKey,
-                              int          nRounds,
-                              const Uint8* pIv);
-
     alc_error_t EncryptXts256(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
@@ -377,14 +353,6 @@ namespace vaes512 {
                               const Uint8* pIv);
 
     alc_error_t DecryptXts128(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              const Uint8* pTweakKey,
-                              int          nRounds,
-                              const Uint8* pIv);
-
-    alc_error_t DecryptXts192(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
@@ -555,14 +523,6 @@ namespace vaes {
                               int          nRounds,
                               const Uint8* pIv);
 
-    alc_error_t EncryptXts192(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              const Uint8* pTweakKey,
-                              int          nRounds,
-                              const Uint8* pIv);
-
     alc_error_t EncryptXts256(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
@@ -572,14 +532,6 @@ namespace vaes {
                               const Uint8* pIv);
 
     alc_error_t DecryptXts128(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              const Uint8* pTweakKey,
-                              int          nRounds,
-                              const Uint8* pIv);
-
-    alc_error_t DecryptXts192(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,

@@ -466,19 +466,16 @@ __build_aesXts(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
     if (cpu_feature == CpuCipherFeatures::eVaes512) {
         using namespace vaes512;
         __build_aes_cipher<Xts<EncryptXts128, DecryptXts128>,
-                           Xts<EncryptXts192, DecryptXts192>,
                            Xts<EncryptXts256, DecryptXts256>>(
             pKey, keyLen, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
         using namespace vaes;
         __build_aes_cipher<Xts<EncryptXts128, DecryptXts128>,
-                           Xts<EncryptXts192, DecryptXts192>,
                            Xts<EncryptXts256, DecryptXts256>>(
             pKey, keyLen, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eAesni) {
         using namespace aesni;
         __build_aes_cipher<Xts<EncryptXts128, DecryptXts128>,
-                           Xts<EncryptXts192, DecryptXts192>,
                            Xts<EncryptXts256, DecryptXts256>>(
             pKey, keyLen, ctx);
     }

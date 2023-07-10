@@ -714,20 +714,6 @@ EncryptXts128(const Uint8* pSrc,
 }
 
 alc_error_t
-EncryptXts192(const Uint8* pSrc,
-              Uint8*       pDest,
-              Uint64       len,
-              const Uint8* pKey,
-              const Uint8* pTweakKey,
-              int          nRounds,
-              const Uint8* pIv)
-{
-    // AesEncrypt 1Block, 2Block, 3Block, 4Block
-    return EncryptXts<AesEncrypt, AesEncrypt, AesEncrypt, AesEncrypt>(
-        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
-}
-
-alc_error_t
 EncryptXts256(const Uint8* pSrc,
               Uint8*       pDest,
               Uint64       len,
@@ -743,23 +729,6 @@ EncryptXts256(const Uint8* pSrc,
 
 alc_error_t
 DecryptXts128(const Uint8* pSrc,
-              Uint8*       pDest,
-              Uint64       len,
-              const Uint8* pKey,
-              const Uint8* pTweakKey,
-              int          nRounds,
-              const Uint8* pIv)
-{
-    return DecryptXts<AesEncrypt,
-                      AesDecrypt,
-                      AesDecrypt,
-                      AesDecrypt,
-                      AesDecrypt>(
-        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
-}
-
-alc_error_t
-DecryptXts192(const Uint8* pSrc,
               Uint8*       pDest,
               Uint64       len,
               const Uint8* pKey,

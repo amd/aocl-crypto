@@ -397,18 +397,6 @@ namespace alcp::cipher { namespace aesni {
             pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
     }
 
-    alc_error_t DecryptXts192(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              const Uint8* pTweakKey,
-                              int          nRounds,
-                              const Uint8* pIv)
-    {
-        return DecryptXts<AesEncrypt, AesDecrypt, AesDecrypt, AesDecrypt>(
-            pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
-    }
-
     alc_error_t DecryptXts256(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
