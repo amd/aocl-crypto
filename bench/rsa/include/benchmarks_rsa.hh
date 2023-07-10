@@ -120,7 +120,12 @@ Rsa_Bench(benchmark::State& state, rsa_bench_opt opt)
             }
         }
     }
-    state.counters["KeysGen/Sec"] =
+
+    std::string sResultUnit = (opt == RSA_BENCH_ENC_PUB_KEY) ? "Encryptions/Sec"
+                              : (opt == RSA_BENCH_DEC_PVT_KEY)
+                                  ? "Decryptions/Sec"
+                                  : "";
+    state.counters[sResultUnit] =
         benchmark::Counter(state.iterations(), benchmark::Counter::kIsRate);
     return 0;
 }
