@@ -125,7 +125,7 @@ Digest_KAT(alc_digest_info_t info)
 #else
     // NALINI - FIX-ME: RSP filename for Short/Long/Monte/VariableOut
     TestDataFile.replace(TestDataFile.find(".csv"), 4, ".rsp");
-    CRspParser CRspParser(TestDataFile);
+    CRspParser rsp(TestDataFile);
 #endif
 
     if (useipp && (GetDigestStr(info.dt_type).compare("SHA3") == 0)) {
@@ -224,11 +224,11 @@ Digest_KAT(alc_digest_info_t info)
     }
 #else
     if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
-        while (CRspParser.readNextTC()) {
-            auto msg          = CRspParser.getVect("MESSAGE");
+        while (rsp.readNextTC()) {
+            auto msg          = rsp.getVect("MESSAGE");
             data.m_msg        = &(msg[0]);
-            data.m_msg_len    = CRspParser.getLenBytes("MESSAGELEN");
-            data.m_digest_len = CRspParser.getVect("DIGEST").size();
+            data.m_msg_len    = rsp.getLenBytes("MESSAGELEN");
+            data.m_digest_len = rsp.getVect("DIGEST").size();
             std::vector<Uint8> digest_(data.m_digest_len, 0);
             data.m_digest = &(digest_[0]);
             
@@ -242,17 +242,17 @@ Digest_KAT(alc_digest_info_t info)
             }
             EXPECT_TRUE(ArraysMatch(
                 digest_,               // output
-                CRspParser.getVect("DIGEST"), // expected, from the KAT test data
-                CRspParser,
+                rsp.getVect("DIGEST"), // expected, from the KAT test data
+                rsp,
                 std::string(GetDigestStr(info.dt_type) + "_"
                             + SHA3_SHAKE_Len_Str + "_KAT")));
         }
     } else {
-        while (CRspParser.readNextTC()) {
-            auto msg          = CRspParser.getVect("MESSAGE");
+        while (rsp.readNextTC()) {
+            auto msg          = rsp.getVect("MESSAGE");
             data.m_msg        = &(msg[0]);
-            data.m_msg_len    = CRspParser.getLenBytes("MESSAGELEN"); 
-            data.m_digest_len = CRspParser.getVect("DIGEST").size();
+            data.m_msg_len    = rsp.getLenBytes("MESSAGELEN"); 
+            data.m_digest_len = rsp.getVect("DIGEST").size();
             data.m_digest     = &(digest[0]);
             
             if (!db->init(info, data.m_digest_len)) {
@@ -270,8 +270,8 @@ Digest_KAT(alc_digest_info_t info)
 
             EXPECT_TRUE(ArraysMatch(
                 digest_vector,         // output
-                CRspParser.getVect("DIGEST"), // expected, from the KAT test data
-                CRspParser,
+                rsp.getVect("DIGEST"), // expected, from the KAT test data
+                rsp,
                 std::string(GetDigestStr(info.dt_type) + "_"
                             + std::to_string(info.dt_len) + "_KAT")));
         }

@@ -119,9 +119,12 @@ FUNCTION(KAT_AES MOD)
     # Depending on the person, they are gonna run from root dir or binary directory
     # Link dataset to the root dir
     FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.csv ${CMAKE_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.rsp ${CMAKE_BINARY_DIR}/dataset_${MOD}.rsp SYMBOLIC)
 
     # Link dataset to the actual place of test binary
     FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.rsp ${CMAKE_CURRENT_BINARY_DIR}/dataset_${MOD}.rsp SYMBOLIC)
+    
     TARGET_INCLUDE_DIRECTORIES(aes_${MOD}_kat PRIVATE
         "${CMAKE_SOURCE_DIR}/include"
         "${CMAKE_SOURCE_DIR}/lib/include"

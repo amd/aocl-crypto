@@ -34,16 +34,20 @@ CRspParser::CRspParser(const String& filename)
    : File(filename) 
 {
     m_input_rsp_file = filename;
+    m_file_exists = CheckFileExists();
+    if (!m_file_exists) {
+        utils::printErrors("File doesnt exist: " + m_input_rsp_file);
+        return;
+    }
     init();
 }
 
 bool
 CRspParser::init()
 {
-    std::cout<< "m_input_rsp_file: " << m_input_rsp_file << std::endl;
     bool retVal = skipRSPHeader();
     if(!retVal) {
-        std::cout << "Parsing header failed for : " << m_input_rsp_file << std::endl;
+        utils::printErrors("Parsing header failed for : " + m_input_rsp_file);
         return false;
     }
     m_names.clear();
@@ -242,6 +246,7 @@ CRspParser::adjustKeyNames(String cName)
     else if (cName == "Len")
         myKey = "MESSAGELEN";
     else myKey = cName;
+
     return myKey;
 }
 

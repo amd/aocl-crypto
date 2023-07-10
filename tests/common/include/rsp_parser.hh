@@ -66,6 +66,8 @@ class CRspParser final : private File
     Uint64 getLenBytes(StringView cName);
     String adjustKeyNames(String cName);
     Uint getLineNumber();
+
+    bool m_file_exists = {};
 };
 
 } // namespace alcp::testing
