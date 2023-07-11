@@ -31,13 +31,13 @@
 #include <cstddef>
 #include <vector>
 #pragma once
-typedef struct
+typedef struct _ipp_wrp_aes_ctx
 {
     alc_cipher_handle_t handle;
     alc_cipher_info_t   cinfo;
 
 } ipp_wrp_aes_ctx;
-typedef struct
+typedef struct _ipp_wrp_aes_aead_ctx
 {
     bool            is_encrypt;
     size_t          msg_len;
@@ -46,7 +46,7 @@ typedef struct
     ipp_wrp_aes_ctx decrypt_ctx;
 } ipp_wrp_aes_aead_ctx;
 
-typedef struct
+typedef struct _ipp_wrp_aes_xts_ctx
 {
     bool            is_encrypt;
     ipp_wrp_aes_ctx encrypt_ctx;
@@ -56,13 +56,13 @@ typedef struct
     Uint8           key[32];
 } ipp_wrp_aes_xts_ctx;
 
-typedef struct
+typedef struct _ipp_wrp_sha2_ctx
 {
     alc_digest_handle_t handle;
     alc_digest_info_t   dinfo;
 } ipp_wrp_sha2_ctx;
 
-typedef struct
+typedef struct _ipp_sha2_rmf_algo_ctx
 {
     IppHashAlgId algId;      // ID of the current algorithm
     int          len;        // Length of hash output in bytes
@@ -71,7 +71,7 @@ typedef struct
     // There are more, for now they are useless.
 } ipp_sha2_rmf_algo_ctx;
 
-typedef struct
+typedef struct _ipp_wrp_mac_ctx
 {
     alc_mac_handle handle = {};
 } ipp_wrp_mac_ctx;
