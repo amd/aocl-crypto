@@ -36,26 +36,23 @@ namespace alcp::rsa {
 using Context = alcp::rsa::Context;
 
 static Status
-__rsa_getEncrBufWithPub_wrapper(void*               pRsaHandle,
-                                alc_rsa_padding     pad,
-                                const RsaPublicKey& publicKey,
-                                const Uint8*        pText,
-                                Uint64              textSize,
-                                Uint8*              pEncText)
+__rsa_getEncrBufWithPub_wrapper(void*        pRsaHandle,
+                                const Uint8* pText,
+                                Uint64       textSize,
+                                Uint8*       pEncText)
 {
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    return ap->encryptPublic(pad, publicKey, pText, textSize, pEncText);
+    return ap->encryptPublic(pText, textSize, pEncText);
 }
 
 static Status
-__rsa_getDecrBufWithPriv_wrapper(void*           pRsaHandle,
-                                 alc_rsa_padding pad,
-                                 const Uint8*    pEncText,
-                                 Uint64          encSize,
-                                 Uint8*          pText)
+__rsa_getDecrBufWithPriv_wrapper(void*        pRsaHandle,
+                                 const Uint8* pEncText,
+                                 Uint64       encSize,
+                                 Uint8*       pText)
 {
     auto ap = static_cast<Rsa*>(pRsaHandle);
-    return ap->decryptPrivate(pad, pEncText, encSize, pText);
+    return ap->decryptPrivate(pEncText, encSize, pText);
 }
 
 static Uint64

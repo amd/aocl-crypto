@@ -40,26 +40,22 @@ class Context
     void* m_digest = nullptr;
     void* m_drbg   = nullptr;
     void* m_mgf    = nullptr;
-    Status (*encryptPublicFn)(void*               pRsaHandle,
-                              alc_rsa_padding     pad,
-                              const RsaPublicKey& publicKey,
-                              const Uint8*        pText,
-                              Uint64              textSize,
-                              Uint8*              pEncText);
+    Status (*encryptPublicFn)(void*        pRsaHandle,
+                              const Uint8* pText,
+                              Uint64       textSize,
+                              Uint8*       pEncText);
 
-    Status (*decryptPrivateFn)(void*           pRsaHandle,
-                               alc_rsa_padding pad,
-                               const Uint8*    pEncText,
-                               Uint64          encSize,
-                               Uint8*          pText);
+    Status (*decryptPrivateFn)(void*        pRsaHandle,
+                               const Uint8* pEncText,
+                               Uint64       encSize,
+                               Uint8*       pText);
 
-    Status (*encryptPublicOaepFn)(void*               pRsaHandle,
-                                  const RsaPublicKey& publicKey,
-                                  const Uint8*        pText,
-                                  Uint64              textSize,
-                                  Uint8*              pEncText,
-                                  const Uint8*        label,
-                                  Uint64              labelSize);
+    Status (*encryptPublicOaepFn)(void*        pRsaHandle,
+                                  const Uint8* pText,
+                                  Uint64       textSize,
+                                  Uint8*       pEncText,
+                                  const Uint8* label,
+                                  Uint64       labelSize);
 
     Uint64 (*getKeySize)(void* pRsaHandle);
 

@@ -52,19 +52,13 @@ class ALCP_API_EXPORT Rsa
     /**
      * @brief Function encrypt the buffer
      *
-     * @param [in]  pad            padding scheme used in RSA
-     * @param [in]  pubKey         Reference to public key structure
      * @param [in]  pText          pointer to Input text
      * @param [in]  textSize       Input text size
      * @param [out] pEncText       pointer to encrypted text
      * publicKey
      * @return Status Error code
      */
-    Status encryptPublic(alc_rsa_padding     pad,
-                         const RsaPublicKey& pubKey,
-                         const Uint8*        pText,
-                         Uint64              textSize,
-                         Uint8*              pEncText);
+    Status encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText);
 
     /**
      * @brief set the Digest to be used by OAEP encrytion
@@ -88,37 +82,30 @@ class ALCP_API_EXPORT Rsa
     void setMgfOaep(digest::IDigest* mgf);
 
     /**
-     * @brief Function encrypt the buffer
+     * @brief Function encrypt the buffer using oaep padding
      *
-     * @param [in]  pad            padding scheme used in RSA
-     * @param [in]  pubKey         Reference to public key structure
      * @param [in]  pText          pointer to Input text
      * @param [in]  textSize       Input text size
      * @param [out] pEncText       pointer to encrypted text
      * publicKey
      * @return Status Error code
      */
-    Status encryptPublicOaep(const RsaPublicKey& pubKey,
-                             const Uint8*        pText,
-                             Uint64              textSize,
-                             const Uint8*        label,
-                             Uint64              labelSize,
-                             Uint8*              pEncText);
+    Status encryptPublicOaep(const Uint8* pText,
+                             Uint64       textSize,
+                             const Uint8* label,
+                             Uint64       labelSize,
+                             Uint8*       pEncText);
 
     /**
      * @brief Function decrypt the buffer
      *
-     * @param [in]  pad         padding scheme used in RSA
      * @param [in]  pEncText    pointer to encrypted text
      * @param [in]  encSize     encrypted data size
      * @param [out] pText       pointer to decrypted text
      * publicKey
      * @return Status Error code
      */
-    Status decryptPrivate(alc_rsa_padding pad,
-                          const Uint8*    pEncText,
-                          Uint64          encSize,
-                          Uint8*          pText);
+    Status decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText);
 
     Status decryptPrivateOaep(const Uint8* pEncText,
                               Uint64       encSize,
@@ -169,8 +156,8 @@ class ALCP_API_EXPORT Rsa
                         Uint64       inputLen);
 
     Uint64              m_key_size;
-    RsaPrivateKeyBignum m_priv_key_type2;
-    RsaPublicKeyBignum  m_pub_key_2;
+    RsaPrivateKeyBignum m_priv_key;
+    RsaPublicKeyBignum  m_pub_key;
     MontContextBignum   m_context_pub, m_context_p, m_context_q;
     digest::IDigest*    m_digest = nullptr;
     rng::IDrbg*         m_drbg   = nullptr;

@@ -147,7 +147,6 @@ Select(Uint8 mask, Uint8 first, Uint8 second)
 
 Rsa::Rsa()
 {
-    m_key_size = sizeof(PrivateKeyExponent);
     // todo : this will be removed and will be called from outside
     // after testing is done
     Rsa::setPrivateKey(DP, DQ, P, Q, QINV, Modulus, sizeof(P));
@@ -221,20 +220,11 @@ Rsa::~Rsa()
 }
 
 Status
-Rsa::encryptPublic(alc_rsa_padding     pad,
-                   const RsaPublicKey& pubKey,
-                   const Uint8*        pText,
-                   Uint64              textSize,
-                   Uint8*              pEncText)
+Rsa::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
 {
     // For non padded output
-    if (textSize != m_pub_key_2.m_size * 8) {
+    if (textSize != m_key_size) {
         return status::NotPermitted("Text size should be equal to modulus");
-    }
-
-    // Todo : Remove this check when padding modes are supported
-    if (pad != ALCP_RSA_PADDING_NONE) {
-        return status::Unavailable("Padding is not supported currently");
     }
 
     if (pText == nullptr || pEncText == nullptr) {
@@ -242,10 +232,10 @@ Rsa::encryptPublic(alc_rsa_padding     pad,
     }
 
     std::unique_ptr<Uint64[]> bignum_text;
-    auto ptext_bignum = CreateBigNum(pText, m_pub_key_2.m_size * 8);
-    auto mod_bignum   = m_pub_key_2.m_mod.get();
+    auto                      ptext_bignum = CreateBigNum(pText, m_key_size);
+    auto                      mod_bignum   = m_pub_key.m_mod.get();
 
-    if (!IsLess(ptext_bignum, mod_bignum, m_pub_key_2.m_size)) {
+    if (!IsLess(ptext_bignum, mod_bignum, m_pub_key.m_size)) {
         return status::NotPermitted(
             "text absolute value should be less than modulus");
     }
@@ -258,38 +248,29 @@ Rsa::encryptPublic(alc_rsa_padding     pad,
 
     if (zen4_available) {
         zen4::archEncryptPublic(
-            pEncText, ptext_bignum, m_pub_key_2, m_context_pub);
+            pEncText, ptext_bignum, m_pub_key, m_context_pub);
         return StatusOk();
     } else if (zen3_available) {
         zen3::archEncryptPublic(
-            pEncText, ptext_bignum, m_pub_key_2, m_context_pub);
+            pEncText, ptext_bignum, m_pub_key, m_context_pub);
         return StatusOk();
     } else if (zen_available) {
         zen::archEncryptPublic(
-            pEncText, ptext_bignum, m_pub_key_2, m_context_pub);
+            pEncText, ptext_bignum, m_pub_key, m_context_pub);
         return StatusOk();
     }
 
-    archEncryptPublic(pEncText, ptext_bignum, m_pub_key_2, m_context_pub);
+    archEncryptPublic(pEncText, ptext_bignum, m_pub_key, m_context_pub);
 
     return StatusOk();
 }
 
 Status
-Rsa::decryptPrivate(alc_rsa_padding pad,
-                    const Uint8*    pEncText,
-                    Uint64          encSize,
-                    Uint8*          pText)
+Rsa::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
 {
-
     // For non padded output
-    if (encSize != m_priv_key_type2.m_size * 2 * 8) {
+    if (encSize != m_priv_key.m_size * 2 * 8) {
         return status::NotPermitted("Text size should be equal modulous");
-    }
-
-    // Todo : Remove this check when padding modes are supported
-    if (pad != ALCP_RSA_PADDING_NONE) {
-        return status::Unavailable("Padding is not supported currently");
     }
 
     if (pEncText == nullptr || pText == nullptr) {
@@ -297,10 +278,10 @@ Rsa::decryptPrivate(alc_rsa_padding pad,
     }
 
     std::unique_ptr<Uint64[]> bignum_text;
-    auto ptext_bignum = CreateBigNum(pEncText, m_priv_key_type2.m_size * 2 * 8);
-    auto mod_bignum   = m_priv_key_type2.m_mod.get();
+    auto ptext_bignum = CreateBigNum(pEncText, m_priv_key.m_size * 2 * 8);
+    auto mod_bignum   = m_priv_key.m_mod.get();
 
-    if (!IsLess(ptext_bignum, mod_bignum, m_priv_key_type2.m_size * 2)) {
+    if (!IsLess(ptext_bignum, mod_bignum, m_priv_key.m_size * 2)) {
         return status::NotPermitted(
             "text absolute value should be less than modulus");
     }
@@ -311,31 +292,30 @@ Rsa::decryptPrivate(alc_rsa_padding pad,
 
     if (zen4_available) {
         zen4::archDecryptPrivate(
-            pText, ptext_bignum, m_priv_key_type2, m_context_p, m_context_q);
+            pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
         return StatusOk();
     } else if (zen3_available) {
         zen3::archDecryptPrivate(
-            pText, ptext_bignum, m_priv_key_type2, m_context_p, m_context_q);
+            pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
         return StatusOk();
     } else if (zen_available) {
         zen::archDecryptPrivate(
-            pText, ptext_bignum, m_priv_key_type2, m_context_p, m_context_q);
+            pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
         return StatusOk();
     }
 
     archDecryptPrivate(
-        pText, ptext_bignum, m_priv_key_type2, m_context_p, m_context_q);
+        pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
 
     return StatusOk();
 }
 
 Status
-Rsa::encryptPublicOaep(const RsaPublicKey& pubKey,
-                       const Uint8*        pText,
-                       Uint64              textSize,
-                       const Uint8*        label,
-                       Uint64              labelSize,
-                       Uint8*              pEncText)
+Rsa::encryptPublicOaep(const Uint8* pText,
+                       Uint64       textSize,
+                       const Uint8* label,
+                       Uint64       labelSize,
+                       Uint8*       pEncText)
 {
     // clang-format off
             //                     +----------+------+--+-------+
@@ -359,7 +339,7 @@ Rsa::encryptPublicOaep(const RsaPublicKey& pubKey,
     // clang-format on
 
     Uint64 hash_len = m_digest->getHashSize();
-    Uint64 enc_size = pubKey.size;
+    Uint64 enc_size = m_pub_key.m_size;
     Uint8 *p_db, *p_seed;
 
     if (textSize > enc_size - 2 * hash_len - 2) {
@@ -406,8 +386,7 @@ Rsa::encryptPublicOaep(const RsaPublicKey& pubKey,
         p_seed[i] ^= p_seed_mask[i];
     }
 
-    return encryptPublic(
-        ALCP_RSA_PADDING_NONE, pubKey, p_mod_text, enc_size, pEncText);
+    return encryptPublic(p_mod_text, enc_size, pEncText);
 }
 
 Status
@@ -421,8 +400,7 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
 
     auto p_mod_text = std::make_unique<Uint8[]>(encSize);
 
-    Status status = decryptPrivate(
-        ALCP_RSA_PADDING_NONE, pEncText, encSize, p_mod_text.get());
+    Status status = decryptPrivate(pEncText, encSize, p_mod_text.get());
 
     if (!status.ok()) {
         return status;
@@ -511,6 +489,11 @@ Rsa::getPublickey(RsaPublicKey& pPublicKey)
 
     pPublicKey.public_exponent = PublicKeyExponent;
 
+    Uint8* mod_text = reinterpret_cast<Uint8*>(m_pub_key.m_mod.get());
+    for (Int64 i = m_key_size - 1, j = 0; i >= 0; --i, ++j) {
+        pPublicKey.modulus[j] = mod_text[i];
+    }
+
     return StatusOk();
 }
 
@@ -525,30 +508,30 @@ Rsa::setPublicKey(const Uint64 exponent, const Uint8* mod, const Uint64 size)
         return status::NotPermitted("Key sizes not supported currently");
     }
 
-    m_pub_key_2.m_public_exponent = exponent;
-    m_pub_key_2.m_mod.reset(CreateBigNum(mod, size));
-    m_pub_key_2.m_size = size / 8;
-
+    m_pub_key.m_public_exponent = exponent;
+    m_pub_key.m_mod.reset(CreateBigNum(mod, size));
+    m_pub_key.m_size           = size / 8;
+    m_key_size                 = size;
     static bool zen4_available = CpuId::cpuIsZen4();
     static bool zen3_available = CpuId::cpuIsZen3();
     static bool zen_available  = CpuId::cpuIsZen1();
 
     if (zen4_available) {
         zen4::archCreateContext(
-            m_context_pub, m_pub_key_2.m_mod.get(), m_pub_key_2.m_size);
+            m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
 
     } else if (zen3_available) {
         zen3::archCreateContext(
-            m_context_pub, m_pub_key_2.m_mod.get(), m_pub_key_2.m_size);
+            m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
 
     } else if (zen_available) {
         zen::archCreateContext(
-            m_context_pub, m_pub_key_2.m_mod.get(), m_pub_key_2.m_size);
+            m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
 
     } else {
 
         archCreateContext(
-            m_context_pub, m_pub_key_2.m_mod.get(), m_pub_key_2.m_size);
+            m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
     }
     return StatusOk();
 }
@@ -570,13 +553,15 @@ Rsa::setPrivateKey(const Uint8* dp,
         return status::NotPermitted("Key sizes not supported currently");
     }
 
-    m_priv_key_type2.m_dp.reset(CreateBigNum(dp, size));
-    m_priv_key_type2.m_dq.reset(CreateBigNum(dq, size));
-    m_priv_key_type2.m_p.reset(CreateBigNum(p, size));
-    m_priv_key_type2.m_q.reset(CreateBigNum(q, size));
-    m_priv_key_type2.m_qinv.reset(CreateBigNum(qinv, size));
-    m_priv_key_type2.m_mod.reset(CreateBigNum(mod, size * 2));
-    m_priv_key_type2.m_size = size / 8;
+    m_key_size = size;
+
+    m_priv_key.m_dp.reset(CreateBigNum(dp, size));
+    m_priv_key.m_dq.reset(CreateBigNum(dq, size));
+    m_priv_key.m_p.reset(CreateBigNum(p, size));
+    m_priv_key.m_q.reset(CreateBigNum(q, size));
+    m_priv_key.m_qinv.reset(CreateBigNum(qinv, size));
+    m_priv_key.m_mod.reset(CreateBigNum(mod, size * 2));
+    m_priv_key.m_size = size / 8;
 
     static bool zen4_available = CpuId::cpuIsZen4();
     static bool zen3_available = CpuId::cpuIsZen3();
@@ -584,25 +569,23 @@ Rsa::setPrivateKey(const Uint8* dp,
 
     if (zen4_available) {
         zen4::archCreateContext(
-            m_context_p, m_priv_key_type2.m_p.get(), m_priv_key_type2.m_size);
+            m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
         zen4::archCreateContext(
-            m_context_q, m_priv_key_type2.m_q.get(), m_priv_key_type2.m_size);
+            m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
     } else if (zen3_available) {
         zen3::archCreateContext(
-            m_context_p, m_priv_key_type2.m_p.get(), m_priv_key_type2.m_size);
+            m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
         zen3::archCreateContext(
-            m_context_q, m_priv_key_type2.m_q.get(), m_priv_key_type2.m_size);
+            m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
     } else if (zen_available) {
         zen::archCreateContext(
-            m_context_p, m_priv_key_type2.m_p.get(), m_priv_key_type2.m_size);
+            m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
         zen::archCreateContext(
-            m_context_q, m_priv_key_type2.m_q.get(), m_priv_key_type2.m_size);
+            m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
     } else {
 
-        archCreateContext(
-            m_context_p, m_priv_key_type2.m_p.get(), m_priv_key_type2.m_size);
-        archCreateContext(
-            m_context_q, m_priv_key_type2.m_q.get(), m_priv_key_type2.m_size);
+        archCreateContext(m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
+        archCreateContext(m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
     }
     return StatusOk();
 }

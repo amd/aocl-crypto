@@ -94,14 +94,7 @@ alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
 
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
 
-    // Todo : Remove the const cast.
-    // This is needed to pack the const variable in a const structure
-    const rsa::RsaPublicKey pub_key = { publicKeyExp,
-                                        const_cast<Uint8*>(pPublicKeyMod),
-                                        pPublicKeyModSize };
-
-    ctx->status = ctx->encryptPublicFn(
-        ctx->m_rsa, pad, pub_key, pText, textSize, pEncText);
+    ctx->status = ctx->encryptPublicFn(ctx->m_rsa, pText, textSize, pEncText);
 
     if (ctx->status.ok()) {
         return err;
@@ -129,8 +122,7 @@ alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p pRsaHandle,
 
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
 
-    ctx->status =
-        ctx->decryptPrivateFn(ctx->m_rsa, pad, pEncText, encSize, pText);
+    ctx->status = ctx->decryptPrivateFn(ctx->m_rsa, pEncText, encSize, pText);
 
     if (ctx->status.ok()) {
         return err;
@@ -331,12 +323,8 @@ alcp_rsa_publickey_encrypt_oaep(const alc_rsa_handle_p pRsaHandle,
     ALCP_BAD_PTR_ERR_RET(label, err);
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
 
-    const rsa::RsaPublicKey pub_key = { publicKeyExp,
-                                        const_cast<Uint8*>(pPublicKeyMod),
-                                        pPublicKeyModSize };
-
     ctx->status = ctx->encryptPublicOaepFn(
-        ctx->m_rsa, pub_key, pText, textSize, pEncText, label, labelSize);
+        ctx->m_rsa, pText, textSize, pEncText, label, labelSize);
 
     if (ctx->status.ok()) {
         return err;
