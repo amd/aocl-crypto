@@ -134,12 +134,17 @@ function(alcp_get_arch_cflags_zen4)
 endfunction(alcp_get_arch_cflags_zen4)
 
 # misc options
-# TO DO:
-# these sanitizer options are currently defined for gcc
-# Maybe different for clang!!
-
-# if address sanitizer used
+# sanitizer options
 function(alcp_add_sanitize_flags)
+    # memory sanitizer supported only by clang
+    set (ALCP_SANITIZE_OPTIONS_CLANG
+            -fsanitize=memory
+            -fsanitize-memory-track-origins
+            -fPIC
+            -fno-omit-frame-pointer
+            CACHE INTERNAL ""
+        )
+
     set(ALCP_OPTIONS_SANITIZE
             -fsanitize=address
             -fsanitize=undefined
@@ -147,9 +152,16 @@ function(alcp_add_sanitize_flags)
             -fsanitize=pointer-compare
             CACHE INTERNAL ""
         )
-    link_libraries(asan)
-    add_compile_options(${ALCP_OPTIONS_SANITIZE})
-    add_link_options(${ALCP_OPTIONS_SANITIZE})
+
+    # now check compiler and link to asan libs
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        link_libraries(asan)
+        add_compile_options(${ALCP_OPTIONS_SANITIZE})
+        add_link_options(${ALCP_OPTIONS_SANITIZE})
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        add_compile_options(${ALCP_SANITIZE_OPTIONS_CLANG})
+        add_link_options(${ALCP_SANITIZE_OPTIONS_CLANG})
+    endif()
 endfunction(alcp_add_sanitize_flags)
 
 # coverage
