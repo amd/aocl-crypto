@@ -197,9 +197,11 @@ CtrDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
 
     // Here buffer is created of length m_seedlength and not
     // cPersonalizationStringLen to avoid further padding of 0^(seedlen- temp)
-    Uint8 seed_material_copy[m_seedlength] = {};
-    utils::CopyBytes(
-        seed_material_copy, cPersonalizationString, cPersonalizationStringLen);
+    // Uint8 seed_material_copy[m_seedlength] = {};
+    std::vector<Uint8> seed_material_copy(m_seedlength, 0);
+    utils::CopyBytes(&seed_material_copy[0],
+                     cPersonalizationString,
+                     cPersonalizationStringLen);
 
     // seed_material = entropy_input ⊕ personalization_string.
     assert(cEntropyInputLen == m_seedlength);

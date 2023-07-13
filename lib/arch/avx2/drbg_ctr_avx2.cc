@@ -197,17 +197,22 @@ DrbgCtrGenerate(const Uint8  cAdditionalInput[],
     Uint64 seed_length = key_len + 16;
 
     // Fully create a zeroed out buffer of seed_length length
-    Uint8 additional_input_bits[seed_length] = {};
+    // Uint8 additional_input_bits[seed_length] = {};
+
+    std::vector<Uint8> additional_input_bits(seed_length, 0);
 
     // If (additional_input ≠ Null), then
     if (cAdditionalInput != nullptr && cAdditionalInputLen != 0) {
         // f (temp < seedlen), then  additional_input =
         // additional_input || 0 ^ (seedlen - temp)
         utils::CopyBytes(
-            additional_input_bits, cAdditionalInput, cAdditionalInputLen);
+            &additional_input_bits[0], cAdditionalInput, cAdditionalInputLen);
         // (Key, V) = CTR_DRBG_Update (additional_input, Key, V).
-        alcp::rng::drbg::avx2::ctrDrbgUpdate(
-            additional_input_bits, seed_length, &key[0], key_len, &value[0]);
+        alcp::rng::drbg::avx2::ctrDrbgUpdate(&additional_input_bits[0],
+                                             seed_length,
+                                             &key[0],
+                                             key_len,
+                                             &value[0]);
     }
 
     // temp = Null.
@@ -229,7 +234,7 @@ DrbgCtrGenerate(const Uint8  cAdditionalInput[],
     utils::CopyBytes(output, &temp[0], cOutputLen);
     // (Key, V) = CTR_DRBG_Update (additional_input, Key, V).
     alcp::rng::drbg::avx2::ctrDrbgUpdate(
-        additional_input_bits, seed_length, &key[0], key_len, &value[0]);
+        &additional_input_bits[0], seed_length, &key[0], key_len, &value[0]);
 }
 
 } // namespace alcp::rng::drbg::avx2
