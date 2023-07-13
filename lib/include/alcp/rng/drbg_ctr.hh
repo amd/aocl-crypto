@@ -29,15 +29,16 @@
 #include "iostream"
 #include <immintrin.h>
 
+// FIXME: Remove once debug ctr debug utilities are removed
 // #define DEBUG 0
 
 namespace alcp::rng::drbg {
 
 namespace avx2 {
     ALCP_API_EXPORT void encrypt_block(Uint8*       input,
-                                     const Uint8* key,
-                                     Uint64       key_size,
-                                     Uint8*       output);
+                                       const Uint8* key,
+                                       Uint64       key_size,
+                                       Uint8*       output);
     ALCP_API_EXPORT void ctrDrbgUpdate(const Uint8  p_provided_data[],
                                        const Uint64 cProvidedDataLen,
                                        Uint8*       key,
@@ -54,6 +55,8 @@ namespace avx2 {
                                          Uint64       value_len);
 } // namespace avx2
 
+// Data structures and functions for debugging. FIXME: Remove once API testing
+// is in place.
 typedef union _reg_128
 {
     __m128i  reg;
@@ -108,7 +111,6 @@ print(T reg, bool split_64 = false, bool split_bytes = false)
             std::cout << " ";
         }
     }
-    // std::cout << std::endl;
 }
 template<typename VectType>
 using concat_type_t = std::vector<const std::vector<VectType>*>;
@@ -117,6 +119,7 @@ DebugPrint(const std::vector<Uint8>& p_cIn,
            std::string               message,
            std::string               file,
            int                       line);
+// end of debugging structures and functions
 
 class ALCP_API_EXPORT CtrDrbg : public Drbg
 {
@@ -149,7 +152,7 @@ class ALCP_API_EXPORT CtrDrbg : public Drbg
     void update(const std::vector<Uint8>& cProvidedData);
 
     /**
-     * @brief Insitantiate DRBG given Entropy, Nonce, Personal Data
+     * @brief Instantiate DRBG given Entropy, Nonce, Personal Data
      *
      * @param cEntropyInput               - Pointer to location where
      * entropy is stored

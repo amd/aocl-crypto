@@ -25,6 +25,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
+// CTR DRBG is implemented as per NIST.SP.800-90Ar1 and the algorithm
+// steps are also shown as in the documentation as part of the code for future
+// matching and references
 #include "alcp/rng/drbg_ctr.hh"
 #include "alcp/cipher/aes.hh"
 #include "alcp/utils/copy.hh"
@@ -34,12 +38,10 @@ namespace alcp::rng::drbg {
 class CtrDrbg::Impl
 {
   private:
-    // std::shared_ptr<alcp::digest::Digest> m_digest;
     std::vector<Uint8> m_v = std::vector<Uint8>(16);
     std::vector<Uint8> m_key;
     Uint64             m_keySize    = 0;
     Uint64             m_seedlength = 0;
-    // Hmac               m_hmac_obj;
 
   public:
     void setKeySize(Uint64 keySize);
@@ -174,6 +176,7 @@ CtrDrbg::Impl::update(const std::vector<Uint8>& p_provided_data)
     update(&p_provided_data[0], p_provided_data.size());
 }
 
+// CTR_DRBG_Instantiate_algorithm
 void
 CtrDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
                            const Uint64 cEntropyInputLen,
@@ -185,41 +188,41 @@ CtrDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
 #ifdef DEBUG
     printf("Running CtrDrbg Instantiate\n");
 #endif
-    std::vector<Uint8> seed_material(cEntropyInputLen + cNonceLen
-                                     + cPersonalizationStringLen);
+    // From NIST documentation, temp = len (personalization_string). This does
+    // not mean temp is length. This means a temporary buffer temp of
+    // seed_length is created.
 
-    Uint8* p_seed_material_buff = &seed_material[0];
+    // ALGO: If (temp < seedlen), then personalization_string =
+    // personalization_string || 0^(seedlen- temp)
 
-    // Copy can't be avoided
-    utils::CopyBytes(p_seed_material_buff, cEntropyInput, cEntropyInputLen);
+    // Here buffer is created of length m_seedlength and not
+    // cPersonalizationStringLen to avoid further padding of 0^(seedlen- temp)
+    Uint8 seed_material_copy[m_seedlength] = {};
     utils::CopyBytes(
-        p_seed_material_buff + cEntropyInputLen, cNonce, cNonceLen);
-    utils::CopyBytes(p_seed_material_buff + cEntropyInputLen + cNonceLen,
-                     cPersonalizationString,
-                     cPersonalizationStringLen);
+        seed_material_copy, cPersonalizationString, cPersonalizationStringLen);
 
-    Uint8 new_seed_material[m_seedlength] = {};
-    utils::CopyBytes(
-        new_seed_material, cPersonalizationString, cPersonalizationStringLen);
+    // seed_material = entropy_input ⊕ personalization_string.
     assert(cEntropyInputLen == m_seedlength);
     for (Uint64 i = 0; i < cEntropyInputLen; i++) {
-        new_seed_material[i] = cEntropyInput[i] ^ new_seed_material[i];
+        seed_material_copy[i] = cEntropyInput[i] ^ seed_material_copy[i];
     }
 
-    // Initialize key with 0x00
+    // Key = 0^keylen
     std::fill(m_key.begin(), m_key.end(), 0);
-    // Initialize v with 0x00
+    // V = 0^blocklen
     std::fill(m_v.begin(), m_v.end(), 0);
 
     DebugPrint(m_key, "K", __FILE__, __LINE__);
     DebugPrint(m_v, "V", __FILE__, __LINE__);
 #ifdef DEBUG
-    std::cout << "&new_seed_material[0]: "
-              << parseBytesToHexStr(&new_seed_material[0], seed_material.size())
+    std::cout << "&seed_material_copy[0]: "
+              << parseBytesToHexStr(&seed_material_copy[0],
+                                    seed_material.size())
               << std::endl;
     std::cout << "Seed Material Length: " << seed_material.size() << std::endl;
 #endif
-    update(&new_seed_material[0], m_seedlength);
+    // (Key, V) = CTR_DRBG_Update (seed_material, Key, V).
+    update(&seed_material_copy[0], m_seedlength);
 
     DebugPrint(m_key, "K", __FILE__, __LINE__);
     DebugPrint(m_v, "V", __FILE__, __LINE__);
@@ -246,7 +249,10 @@ CtrDrbg::Impl::internalReseed(const Uint8  cEntropyInput[],
                               const Uint64 cEntropyInputLen,
                               const Uint8  cAdditionalInput[],
                               const Uint64 cAdditionalInputLen)
-{}
+{
+
+    // TODO: Reseed to be implemented
+}
 
 void
 CtrDrbg::Impl::internalReseed(const std::vector<Uint8>& cEntropyInput,
