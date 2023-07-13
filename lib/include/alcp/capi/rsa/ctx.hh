@@ -38,7 +38,6 @@ class Context
   public:
     void* m_rsa    = nullptr;
     void* m_digest = nullptr;
-    void* m_drbg   = nullptr;
     void* m_mgf    = nullptr;
     Status (*encryptPublicFn)(void*        pRsaHandle,
                               const Uint8* pText,
@@ -53,17 +52,39 @@ class Context
     Status (*encryptPublicOaepFn)(void*        pRsaHandle,
                                   const Uint8* pText,
                                   Uint64       textSize,
-                                  Uint8*       pEncText,
                                   const Uint8* label,
-                                  Uint64       labelSize);
+                                  Uint64       labelSize,
+                                  const Uint8* pSeed,
+                                  Uint8*       pEncText);
+
+    Status (*decryptPrivateOaepFn)(void*        pRsaHandle,
+                                   const Uint8* pEncText,
+                                   Uint64       encSize,
+                                   const Uint8* label,
+                                   Uint64       labelSize,
+                                   Uint8*       pText,
+                                   Uint64&      textSize);
 
     Uint64 (*getKeySize)(void* pRsaHandle);
 
     Status (*getPublickey)(void* pRsaHandle, RsaPublicKey& publicKey);
 
-    Status (*setDigest)(void* pRsaHandle, digest::IDigest* digest);
-    Status (*setDrbg)(void* pRsaHandle, rng::IDrbg* drbg);
-    Status (*setMgf)(void* pRsaHandle, digest::IDigest* digest);
+    Status (*setPublicKey)(void*        pRsaHandle,
+                           const Uint64 exponent,
+                           const Uint8* mod,
+                           const Uint64 size);
+
+    Status (*setPrivateKey)(void*        pRsaHandle,
+                            const Uint8* dp,
+                            const Uint8* dq,
+                            const Uint8* p,
+                            const Uint8* q,
+                            const Uint8* qinv,
+                            const Uint8* mod,
+                            const Uint64 size);
+
+    void (*setDigest)(void* pRsaHandle, digest::IDigest* digest);
+    void (*setMgf)(void* pRsaHandle, digest::IDigest* digest);
 
     Status (*finish)(void*);
 

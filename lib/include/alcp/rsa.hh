@@ -68,13 +68,6 @@ class ALCP_API_EXPORT Rsa
     void setDigestOaep(digest::IDigest* digest);
 
     /**
-     * @brief set the DRBG to be used by OAEP encrytion
-     * @param digest: Drbg class to be used by OAEP encrytion. Should be
-     * called before calling encryptPublicOaep
-     */
-    void setDrbgOaep(rng::IDrbg* drbg);
-
-    /**
      * @brief set the MGF to be used by OAEP encrytion
      * @param mgf: Digest class to be used by OAEP encrytion. Should be
      * called before calling encryptPublicOaep
@@ -86,14 +79,18 @@ class ALCP_API_EXPORT Rsa
      *
      * @param [in]  pText          pointer to Input text
      * @param [in]  textSize       Input text size
+     * @param [in]  plabel         pointer to initial label
+     * @param [in]  labelSize      label size
+     * @param [in]  pSeed          pointer to seed with hashlen
      * @param [out] pEncText       pointer to encrypted text
      * publicKey
      * @return Status Error code
      */
     Status encryptPublicOaep(const Uint8* pText,
                              Uint64       textSize,
-                             const Uint8* label,
+                             const Uint8* plabel,
                              Uint64       labelSize,
+                             const Uint8* pSeed,
                              Uint8*       pEncText);
 
     /**
@@ -156,6 +153,7 @@ class ALCP_API_EXPORT Rsa
                         Uint64       inputLen);
 
     Uint64              m_key_size;
+    Uint64              m_hash_len;
     RsaPrivateKeyBignum m_priv_key;
     RsaPublicKeyBignum  m_pub_key;
     MontContextBignum   m_context_pub, m_context_p, m_context_q;

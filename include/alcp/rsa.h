@@ -51,8 +51,7 @@ EXTERN_C_BEGIN
  */
 typedef enum
 {
-    ALCP_RSA_PKCS1_PADDING,
-    ALCP_RSA_PKCS1_OAEP_PADDING,
+    ALCP_RSA_PADDING_OAEP,
     ALCP_RSA_PADDING_NONE
 } alc_rsa_padding;
 
@@ -168,23 +167,17 @@ alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
                            Uint8*                 pEncText);
 
 /**
- * @brief Function encrypts text using using public key
+ * @brief Function encrypts text using using public kee and oaep padding
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_rsa_request
  * @endparblock
  *
- * @note  ALCP_RSA_PADDING_NONE is only supported as
- *        padding scheme. This has following limitations
- *         - textSize should equal to the modulus/private_key size
- *         - pText absolute value should be less than modulus
- *
  * @param [in]  pRsaHandle         - Handler of the Context for the session
- * @param [in]  pad                - padding scheme for rsa encryption
- * @param [in]  pPublicKeyMod      - public key modulus
- * @param [in]  pPublicKeyModSize  - public key modulus size
- * @param [in]  publicKeyExp       - public key exponent
  * @param [in]  pText              - pointer to raw bytes
  * @param [in]  textSize           - size of raw bytes
+ * @param [in]  label              - pointer to label
+ * @param [in]  labelSize          - size of label
+ * @param [in]  pSeed              - random seed of size hashlen
  * @param [out] pEncText           - pointer to encrypted bytes
  * bytes
 
@@ -193,13 +186,11 @@ alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
  */
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_encrypt_oaep(const alc_rsa_handle_p pRsaHandle,
-                                const Uint8*           pPublicKeyMod,
-                                Uint64                 pPublicKeyModSize,
-                                Uint64                 publicKeyExp,
                                 const Uint8*           pText,
                                 Uint64                 textSize,
                                 const Uint8*           label,
                                 Uint64                 labelSize,
+                                const Uint8*           pSeed,
                                 Uint8*                 pEncText);
 
 ALCP_API_EXPORT alc_error_t
@@ -207,26 +198,11 @@ alcp_rsa_add_digest_oaep(const alc_rsa_handle_p pRsaHandle,
                          alc_digest_info_t      digestInfo);
 
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_remove_digest_oaep(const alc_rsa_handle_p pRsaHandle);
-
-ALCP_API_EXPORT alc_error_t
-alcp_rsa_add_drbg_oaep(const alc_rsa_handle_p pRsaHandle,
-                       alc_drbg_info_t        drbgInfo);
-
-ALCP_API_EXPORT alc_error_t
-alcp_rsa_remove_drbg_oaep(const alc_rsa_handle_p pRsaHandle);
-
-ALCP_API_EXPORT alc_error_t
 alcp_rsa_add_mgf_oaep(const alc_rsa_handle_p pRsaHandle,
                       alc_digest_info_t      digestInfo);
 
-ALCP_API_EXPORT alc_error_t
-alcp_rsa_remove_mgf_oaep(const alc_rsa_handle_p pRsaHandle,
-                         alc_digest_info_t      digestInfo);
-
 /**
- * @brief Function compute secret key with publicKey from remotePeer and
- * local privatekey.
+ * @brief Function decrypts encrypted text using private key.
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_rsa_request and the
  * before the session call @ref alcp_rsa_finish</b>
@@ -251,6 +227,33 @@ alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p pRsaHandle,
                             Uint8*                 pText);
 
 /**
+ * @brief Function decrypts encrypted text using private key and OAEP padding
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request and the
+ * before the session call @ref alcp_rsa_finish</b>
+ * @endparblock
+ *
+ *
+ * @param [in]  pRsaHandle - Handler of the Context for the session
+ * @param [in]  pEncText   - pointer to encrypted bytes
+ * @param [in]  encSize    - pointer to encrypted bytes
+ * @param [in]  label      - pointer to label
+ * @param [in]  labelSize  - sizeof label
+ * @param [out] pText      - pointer to decrypted text
+ * @param [out] textSize   - pointer to size of decrypted text
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_privatekey_decrypt_oaep(const alc_rsa_handle_p pRsaHandle,
+                                 const Uint8*           pEncText,
+                                 Uint64                 encSize,
+                                 const Uint8*           label,
+                                 Uint64                 labelSize,
+                                 Uint8*                 pText,
+                                 Uint64*                textSize);
+
+/**
  * @brief Function fetches public key from handle
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_rsa_request
@@ -269,6 +272,53 @@ alcp_rsa_get_publickey(const alc_rsa_handle_p pRsaHandle,
                        Uint64*                publicKey,
                        Uint8*                 pModulus,
                        Uint64                 keySize);
+
+/**
+ * @brief Function sets the public key inside the handle
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request
+ * @endparblock
+ * @param [in]   pRsaHandle - Handler of the Context for the session
+ * @param [in]   exponent   - public key exponent
+ * @param [in]   pModulus   - pointer to modulus
+ * @param [in]   size       - size of modulus
+
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_set_publickey(const alc_rsa_handle_p pRsaHandle,
+                       Uint64                 exponent,
+                       const Uint8*           pModulus,
+                       Uint64                 size);
+
+/**
+ * @brief Function sets the private key inside the handle
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request
+ * @endparblock
+ * @param [in]   pRsaHandle - handler of the Context for the session
+ * @param [in]   dp         - pointer to first exponent
+ * @param [in]   dq         - pointer to second exponent
+ * @param [in]   p          - pointer to first modulus
+ * @param [in]   q          - pointer to second modulus
+ * @param [in]   qinv       - pointer to inverse of second modulus
+ * @param [in]   mod        - pointer to mult of first and second modulus
+ * @param [in]   size       - size of modulus
+ *
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
+alc_error_t
+alcp_rsa_set_privatekey(const alc_rsa_handle_p pRsaHandle,
+                        const Uint8*           dp,
+                        const Uint8*           dq,
+                        const Uint8*           p,
+                        const Uint8*           q,
+                        const Uint8*           qinv,
+                        const Uint8*           mod,
+                        Uint64                 size);
 
 /**
  * @brief       Fetches key size

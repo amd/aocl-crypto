@@ -36,23 +36,54 @@ namespace alcp::rsa {
 using Context = alcp::rsa::Context;
 
 static Status
-__rsa_getEncrBufWithPub_wrapper(void*        pRsaHandle,
-                                const Uint8* pText,
-                                Uint64       textSize,
-                                Uint8*       pEncText)
+__rsa_encrBufWithPub_wrapper(void*        pRsaHandle,
+                             const Uint8* pText,
+                             Uint64       textSize,
+                             Uint8*       pEncText)
 {
     auto ap = static_cast<Rsa*>(pRsaHandle);
     return ap->encryptPublic(pText, textSize, pEncText);
 }
 
 static Status
-__rsa_getDecrBufWithPriv_wrapper(void*        pRsaHandle,
-                                 const Uint8* pEncText,
-                                 Uint64       encSize,
-                                 Uint8*       pText)
+__rsa_decrBufWithPriv_wrapper(void*        pRsaHandle,
+                              const Uint8* pEncText,
+                              Uint64       encSize,
+                              Uint8*       pText)
 {
     auto ap = static_cast<Rsa*>(pRsaHandle);
     return ap->decryptPrivate(pEncText, encSize, pText);
+}
+
+static Status
+__rsa_oaepEncrBufWithPub_wrapper(void*        pRsaHandle,
+                                 const Uint8* pText,
+                                 Uint64       textSize,
+                                 const Uint8* label,
+                                 Uint64       labelSize,
+                                 const Uint8* pSeed,
+                                 Uint8*       pEncText)
+{
+
+    auto ap = static_cast<Rsa*>(pRsaHandle);
+    return ap->encryptPublicOaep(
+        pText, textSize, label, labelSize, pSeed, pEncText);
+}
+
+static Status
+__rsa_oaepDecrBufWithPriv_wrapper(void*        pRsaHandle,
+                                  const Uint8* pEncText,
+                                  Uint64       encSize,
+                                  const Uint8* label,
+                                  Uint64       labelSize,
+                                  Uint8*       pText,
+                                  Uint64&      textSize)
+
+{
+
+    auto ap = static_cast<Rsa*>(pRsaHandle);
+    return ap->decryptPrivateOaep(
+        pEncText, encSize, label, labelSize, pText, textSize);
 }
 
 static Uint64
@@ -73,30 +104,45 @@ __rsa_getPublicKey_wrapper(void* pRsaHandle, RsaPublicKey& publicKey)
 }
 
 static Status
+__rsa_setPublicKey_wrapper(void*        pRsaHandle,
+                           const Uint64 exponent,
+                           const Uint8* mod,
+                           const Uint64 size)
+{
+    auto ap = static_cast<Rsa*>(pRsaHandle);
+
+    return ap->setPublicKey(exponent, mod, size);
+}
+
+static Status
+__rsa_setPrivateKey_wrapper(void*        pRsaHandle,
+                            const Uint8* dp,
+                            const Uint8* dq,
+                            const Uint8* p,
+                            const Uint8* q,
+                            const Uint8* qinv,
+                            const Uint8* mod,
+                            const Uint64 size)
+{
+    auto ap = static_cast<Rsa*>(pRsaHandle);
+
+    return ap->setPrivateKey(dp, dq, p, q, qinv, mod, size);
+}
+
+static void
 __rsa_setDigest_wrapper(void* pRsaHandle, digest::IDigest* digest)
 {
     auto ap = static_cast<Rsa*>(pRsaHandle);
 
     ap->setDigestOaep(digest);
-    return StatusOk();
 }
 
-static Status
-__rsa_setDrbg_wrapper(void* pRsaHandle, rng::IDrbg* drbg)
-{
-    auto ap = static_cast<Rsa*>(pRsaHandle);
-
-    ap->setDrbgOaep(drbg);
-    return StatusOk();
-}
-
-static Status
+static void
 __rsa_setMgf_wrapper(void* pRsaHandle, digest::IDigest* digest)
 {
     auto ap = static_cast<Rsa*>(pRsaHandle);
 
     ap->setMgfOaep(digest);
-    return StatusOk();
 }
 
 static Status
@@ -127,19 +173,22 @@ Status
 RsaBuilder::Build(Context& rCtx)
 {
 
-    Status status         = StatusOk();
-    auto   addr           = reinterpret_cast<Uint8*>(&rCtx) + sizeof(rCtx);
-    auto   algo           = new (addr) Rsa();
-    rCtx.m_rsa            = static_cast<void*>(algo);
-    rCtx.encryptPublicFn  = __rsa_getEncrBufWithPub_wrapper;
-    rCtx.decryptPrivateFn = __rsa_getDecrBufWithPriv_wrapper;
-    rCtx.getKeySize       = __rsa_getKeySize_wrapper;
-    rCtx.getPublickey     = __rsa_getPublicKey_wrapper;
-    rCtx.setDigest        = __rsa_setDigest_wrapper;
-    rCtx.setDrbg          = __rsa_setDrbg_wrapper;
-    rCtx.setMgf           = __rsa_setMgf_wrapper;
-    rCtx.finish           = __rsa_dtor;
-    rCtx.reset            = __rsa_reset_wrapper;
+    Status status             = StatusOk();
+    auto   addr               = reinterpret_cast<Uint8*>(&rCtx) + sizeof(rCtx);
+    auto   algo               = new (addr) Rsa();
+    rCtx.m_rsa                = static_cast<void*>(algo);
+    rCtx.encryptPublicFn      = __rsa_encrBufWithPub_wrapper;
+    rCtx.decryptPrivateFn     = __rsa_decrBufWithPriv_wrapper;
+    rCtx.encryptPublicOaepFn  = __rsa_oaepEncrBufWithPub_wrapper;
+    rCtx.decryptPrivateOaepFn = __rsa_oaepDecrBufWithPriv_wrapper;
+    rCtx.getKeySize           = __rsa_getKeySize_wrapper;
+    rCtx.getPublickey         = __rsa_getPublicKey_wrapper;
+    rCtx.setPublicKey         = __rsa_setPublicKey_wrapper;
+    rCtx.setPrivateKey        = __rsa_setPrivateKey_wrapper;
+    rCtx.setDigest            = __rsa_setDigest_wrapper;
+    rCtx.setMgf               = __rsa_setMgf_wrapper;
+    rCtx.finish               = __rsa_dtor;
+    rCtx.reset                = __rsa_reset_wrapper;
 
     return status;
 }

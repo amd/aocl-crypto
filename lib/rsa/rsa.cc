@@ -156,13 +156,10 @@ Rsa::Rsa()
 void
 Rsa::setDigestOaep(digest::IDigest* digest)
 {
-    m_digest = digest;
-}
-
-void
-Rsa::setDrbgOaep(rng::IDrbg* drbg)
-{
-    m_drbg = drbg;
+    if (digest) {
+        m_digest   = digest;
+        m_hash_len = digest->getHashSize();
+    }
 }
 
 void
@@ -313,8 +310,9 @@ Rsa::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
 Status
 Rsa::encryptPublicOaep(const Uint8* pText,
                        Uint64       textSize,
-                       const Uint8* label,
+                       const Uint8* pLabel,
                        Uint64       labelSize,
+                       const Uint8* pSeed,
                        Uint8*       pEncText)
 {
     // clang-format off
@@ -338,61 +336,59 @@ Rsa::encryptPublicOaep(const Uint8* pText,
             //       +--+----------+----------------------------+
     // clang-format on
 
-    Uint64 hash_len = m_digest->getHashSize();
-    Uint64 enc_size = m_pub_key.m_size;
     Uint8 *p_db, *p_seed;
 
-    if (textSize > enc_size - 2 * hash_len - 2) {
+    if (textSize > m_key_size - 2 * m_hash_len - 2) {
         return status::NotPermitted("input text size is larger than supported");
     }
 
     // to do check if this needs to be removed in case of sha512 where digest
     // size is 512 bits
-    if (enc_size < 2 * hash_len + 2) {
-        return status::NotPermitted("enc  size is larger than supported");
+    if (m_key_size < 2 * m_hash_len + 2) {
+        return status::NotPermitted(
+            "input text size is smaller than supported");
     }
 
-    auto   mod_text   = std::make_unique<Uint8[]>(enc_size);
+    auto   mod_text   = std::make_unique<Uint8[]>(m_key_size);
     Uint8* p_mod_text = mod_text.get();
     p_mod_text[0]     = 0;
     p_seed            = p_mod_text + 1;
-    p_db              = p_seed + hash_len; // seed size equals hashsize
+    p_db              = p_seed + m_hash_len; // seed size equals hashsize
 
     // create db
-    m_digest->finalize(label, labelSize);
+    m_digest->finalize(pLabel, labelSize);
 
-    m_digest->copyHash(p_db, hash_len);
+    m_digest->copyHash(p_db, m_hash_len);
 
-    Uint64 p_db_size               = enc_size - 1 - hash_len;
+    Uint64 p_db_size               = m_key_size - 1 - m_hash_len;
     p_db[p_db_size - 1 - textSize] = 1;
     memcpy(&p_db[p_db_size - textSize], pText, textSize);
 
-    // generate seed
-    m_drbg->randomize(p_seed, hash_len);
+    utils::CopyBytes(p_seed, pSeed, m_hash_len);
 
     auto p_db_mask = std::make_unique<Uint8[]>(p_db_size);
 
-    maskGenFunct(p_db_mask.get(), p_db_size, p_seed, hash_len);
+    maskGenFunct(p_db_mask.get(), p_db_size, p_seed, m_hash_len);
 
     for (Uint16 i = 0; i < p_db_size; i++) {
         p_db[i] ^= p_db_mask[i];
     }
 
-    auto p_seed_mask = std::make_unique<Uint8[]>(hash_len);
+    auto p_seed_mask = std::make_unique<Uint8[]>(m_hash_len);
 
-    maskGenFunct(p_seed_mask.get(), hash_len, p_db, p_db_size);
+    maskGenFunct(p_seed_mask.get(), m_hash_len, p_db, p_db_size);
 
-    for (Uint16 i = 0; i < hash_len; i++) {
+    for (Uint16 i = 0; i < m_hash_len; i++) {
         p_seed[i] ^= p_seed_mask[i];
     }
 
-    return encryptPublic(p_mod_text, enc_size, pEncText);
+    return encryptPublic(p_mod_text, m_key_size, pEncText);
 }
 
 Status
 Rsa::decryptPrivateOaep(const Uint8* pEncText,
                         Uint64       encSize,
-                        const Uint8* label,
+                        const Uint8* pLabel,
                         Uint64       labelSize,
                         Uint8*       pText,
                         Uint64&      textSize)
@@ -409,12 +405,11 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
     // decode oaep padding
     Uint8  seed[64];       // max seed size is hashlen of sha512
     Uint8  hash_label[64]; // max hashlen is of sha512
-    Uint64 hash_len = m_digest->getHashSize();
-    Uint64 db_len   = encSize - 1 - hash_len;
+    Uint64 db_len = encSize - 1 - m_hash_len;
 
     auto p_db = std::make_unique<Uint8[]>(db_len * 2);
 
-    if (encSize < 2 * hash_len + 2) {
+    if (encSize < 2 * m_hash_len + 2) {
         return status::NotPermitted(
             "decrypted size less than the expected size");
     }
@@ -422,17 +417,17 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
     Uint8 success = IsZero(p_mod_text[0]);
 
     Uint8* p_masked_seed = p_mod_text.get() + 1;
-    Uint8* p_masked_db   = p_masked_seed + hash_len;
+    Uint8* p_masked_db   = p_masked_seed + m_hash_len;
 
-    status = maskGenFunct(seed, hash_len, p_masked_db, db_len);
+    status = maskGenFunct(seed, m_hash_len, p_masked_db, db_len);
     if (!status.ok()) {
         return status;
     }
-    for (Uint16 i = 0; i < hash_len; i++) {
+    for (Uint16 i = 0; i < m_hash_len; i++) {
         seed[i] ^= p_masked_seed[i];
     }
 
-    status = maskGenFunct(p_db.get(), db_len, seed, hash_len);
+    status = maskGenFunct(p_db.get(), db_len, seed, m_hash_len);
     if (!status.ok()) {
         return status;
     }
@@ -442,15 +437,15 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
 
     // create db
     m_digest->reset();
-    m_digest->finalize(label, labelSize);
+    m_digest->finalize(pLabel, labelSize);
 
-    m_digest->copyHash(hash_label, hash_len);
+    m_digest->copyHash(hash_label, m_hash_len);
 
-    success &= IsEqual(hash_label, p_db.get(), hash_len);
+    success &= IsEqual(hash_label, p_db.get(), m_hash_len);
 
     Uint32 one_index = 0;
     Uint8  found_one = 0;
-    for (Uint32 i = hash_len; i < db_len; i++) {
+    for (Uint32 i = m_hash_len; i < db_len; i++) {
         Uint8 is_one  = IsZero(p_db[i] ^ 1);
         Uint8 is_zero = IsZero(p_db[i]);
         one_index     = Select(~found_one & is_one, i, one_index);
@@ -462,7 +457,7 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
     Uint32 text_index = one_index + 1;
     Uint32 text_len   = db_len - text_index;
 
-    Uint64 max_msg_len = db_len - hash_len - 1;
+    Uint64 max_msg_len = db_len - m_hash_len - 1;
     for (Uint32 i = 0; i < max_msg_len; i++) {
         Uint8 mask = success & IsLess(i, text_len);
         pText[i]   = Select(mask, p_db[text_index + i], pText[i]);
@@ -472,6 +467,7 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
     memset(p_mod_text.get(), 0, encSize);
     memset(p_db.get(), 0, db_len * 2);
     Uint16 error_code = Select(success, eOk, eInternal);
+    // todo check how to add errorcode to status
     return StatusOk();
 }
 

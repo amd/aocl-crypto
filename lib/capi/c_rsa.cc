@@ -203,12 +203,8 @@ alcp_rsa_add_digest_oaep(const alc_rsa_handle_p pRsaHandle,
 
     ctx->m_digest = fetch_digest(digestInfo);
 
-    ctx->status = ctx->setDigest(pRsaHandle,
-                                 static_cast<digest::IDigest*>(ctx->m_digest));
+    ctx->setDigest(ctx->m_rsa, static_cast<digest::IDigest*>(ctx->m_digest));
 
-    if (!ctx->status.ok()) {
-        err = ALC_ERROR_GENERIC;
-    }
     return err;
 }
 
@@ -233,98 +229,76 @@ alcp_rsa_add_mgf_oaep(const alc_rsa_handle_p pRsaHandle,
         return ALC_ERROR_NOT_SUPPORTED;
     }
 
-    ctx->status =
-        ctx->setMgf(pRsaHandle, static_cast<digest::IDigest*>(ctx->m_mgf));
+    ctx->setMgf(ctx->m_rsa, static_cast<digest::IDigest*>(ctx->m_mgf));
 
-    if (!ctx->status.ok()) {
-        err = ALC_ERROR_GENERIC;
-    }
-    return err;
-}
-
-alc_error_t
-alcp_rsa_add_drbg_oaep(const alc_rsa_handle_p pRsaHandle,
-                       alc_drbg_info_t        drbgInfo)
-{
-    using alcp::rng::IDrbg;
-    using alcp::rng::drbg::HmacDrbg;
-
-    alc_error_t err = ALC_ERROR_NONE;
-    ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
-
-    auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
-
-    if (ctx->m_drbg) {
-        delete static_cast<const IDrbg*>(ctx->m_drbg);
-        ctx->m_drbg = nullptr;
-    }
-
-    switch (drbgInfo) {
-        case ALC_HMAC_DRBG:
-            ctx->m_drbg = new HmacDrbg;
-            break;
-
-        case ALC_CTR_DRBG:
-            // todo : enable ctr drbg
-            ctx->m_drbg = nullptr;
-            return ALC_ERROR_NOT_SUPPORTED;
-        default:
-            return ALC_ERROR_NOT_SUPPORTED;
-    }
-
-    ctx->status = ctx->setDrbg(pRsaHandle, static_cast<IDrbg*>(ctx->m_drbg));
-    return err;
-}
-
-alc_error_t
-alcp_rsa_remove_digest_oaep(const alc_rsa_handle_p pRsaHandle)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
-
-    auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
-    delete static_cast<const alcp::digest::IDigest*>(ctx->m_digest);
-    ctx->m_digest = nullptr;
-    return err;
-}
-
-alc_error_t
-alcp_rsa_remove_drbg_oaep(const alc_rsa_handle_p pRsaHandle)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-    ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
-
-    auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
-    delete static_cast<const alcp::rng::Drbg*>(ctx->m_drbg);
-    ctx->m_drbg = nullptr;
     return err;
 }
 
 alc_error_t
 alcp_rsa_publickey_encrypt_oaep(const alc_rsa_handle_p pRsaHandle,
-                                const Uint8*           pPublicKeyMod,
-                                Uint64                 pPublicKeyModSize,
-                                Uint64                 publicKeyExp,
                                 const Uint8*           pText,
                                 Uint64                 textSize,
                                 const Uint8*           label,
                                 Uint64                 labelSize,
+                                const Uint8*           pSeed,
                                 Uint8*                 pEncText)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
     ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
-    ALCP_BAD_PTR_ERR_RET(pPublicKeyMod, err);
     ALCP_BAD_PTR_ERR_RET(pText, err);
     ALCP_BAD_PTR_ERR_RET(pEncText, err);
     ALCP_BAD_PTR_ERR_RET(label, err);
+    ALCP_BAD_PTR_ERR_RET(pSeed, err);
+
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
 
+    if (!ctx->m_digest) {
+        ctx->m_digest = new alcp::digest::Sha256;
+        ctx->setDigest(ctx->m_rsa,
+                       static_cast<digest::IDigest*>(ctx->m_digest));
+    }
+
+    if (!ctx->m_mgf) {
+        ctx->m_mgf = new alcp::digest::Sha256;
+        ctx->setMgf(ctx->m_rsa, static_cast<digest::IDigest*>(ctx->m_mgf));
+    }
+
     ctx->status = ctx->encryptPublicOaepFn(
-        ctx->m_rsa, pText, textSize, pEncText, label, labelSize);
+        ctx->m_rsa, pText, textSize, label, labelSize, pSeed, pEncText);
+
+    if (ctx->status.ok()) {
+        return err;
+    } else {
+        // fetching the module error
+        Uint16 module_error = (ctx->status.code() >> 16) & 0xff;
+        return (alcp::rsa::ErrorCode::eNotPermitted == module_error)
+                   ? ALC_ERROR_NOT_PERMITTED
+                   : ALC_ERROR_GENERIC;
+    }
+}
+
+alc_error_t
+alcp_rsa_privatekey_decrypt_oaep(const alc_rsa_handle_p pRsaHandle,
+                                 const Uint8*           pEncText,
+                                 Uint64                 encSize,
+                                 const Uint8*           label,
+                                 Uint64                 labelSize,
+                                 Uint8*                 pText,
+                                 Uint64*                textSize)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
+    ALCP_BAD_PTR_ERR_RET(pEncText, err);
+    ALCP_BAD_PTR_ERR_RET(pText, err);
+    ALCP_BAD_PTR_ERR_RET(label, err);
+    ALCP_BAD_PTR_ERR_RET(textSize, err);
+
+    auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
+
+    ctx->status = ctx->decryptPrivateOaepFn(
+        ctx->m_rsa, pEncText, encSize, label, labelSize, pText, *textSize);
 
     if (ctx->status.ok()) {
         return err;
@@ -372,19 +346,64 @@ alcp_rsa_get_publickey(const alc_rsa_handle_p pRsaHandle,
     return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
 }
 
+alc_error_t
+alcp_rsa_set_publickey(const alc_rsa_handle_p pRsaHandle,
+                       Uint64                 exponent,
+                       const Uint8*           pModulus,
+                       Uint64                 keySize)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
+    ALCP_BAD_PTR_ERR_RET(pModulus, err);
+
+    auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
+
+    ctx->status = ctx->setPublicKey(ctx->m_rsa, exponent, pModulus, keySize);
+
+    return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
+}
+
+alc_error_t
+alcp_rsa_set_privatekey(const alc_rsa_handle_p pRsaHandle,
+                        const Uint8*           dp,
+                        const Uint8*           dq,
+                        const Uint8*           p,
+                        const Uint8*           q,
+                        const Uint8*           qinv,
+                        const Uint8*           mod,
+                        Uint64                 size)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
+    ALCP_BAD_PTR_ERR_RET(dp, err);
+    ALCP_BAD_PTR_ERR_RET(dq, err);
+    ALCP_BAD_PTR_ERR_RET(p, err);
+    ALCP_BAD_PTR_ERR_RET(q, err);
+    ALCP_BAD_PTR_ERR_RET(qinv, err);
+    ALCP_BAD_PTR_ERR_RET(mod, err);
+    ALCP_ZERO_LEN_ERR_RET(size, err);
+
+    auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
+
+    ctx->status = ctx->setPrivateKey(ctx->m_rsa, dp, dq, p, q, qinv, mod, size);
+
+    return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
+}
+
 void
 alcp_rsa_finish(const alc_rsa_handle_p pRsaHandle)
 {
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
     ctx->finish(ctx->m_rsa);
     ctx->~Context();
-}
 
-void
-alcp_rsa_reset(const alc_rsa_handle_p pRsaHandle)
-{
-    auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
-    ctx->reset(ctx->m_rsa);
+    delete static_cast<const alcp::digest::IDigest*>(ctx->m_digest);
+    ctx->m_digest = nullptr;
+
+    delete static_cast<const alcp::digest::IDigest*>(ctx->m_mgf);
+    ctx->m_mgf = nullptr;
 }
 
 alc_error_t
