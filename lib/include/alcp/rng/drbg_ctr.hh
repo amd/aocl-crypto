@@ -34,7 +34,7 @@
 namespace alcp::rng::drbg {
 
 namespace avx2 {
-    ALCP_API_EXPORT void encrypt_ecb(Uint8*       input,
+    ALCP_API_EXPORT void encrypt_block(Uint8*       input,
                                      const Uint8* key,
                                      Uint64       key_size,
                                      Uint8*       output);

@@ -72,7 +72,7 @@ increment_value(Uint8* value)
 }
 
 void
-encrypt_ecb(Uint8* input, const Uint8* key, Uint64 key_size, Uint8* output)
+encrypt_block(Uint8* input, const Uint8* key, Uint64 key_size, Uint8* output)
 {
     EncryptAes aes;
     aes.setKey(&key[0], key_size * 8);
@@ -120,7 +120,7 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
         std::cout << "Key Length : " << key_len << std::endl;
         std::cout << "Value : " << parseBytesToHexStr(value, 16) << std::endl;
 #endif
-        avx2::encrypt_ecb(&value[0], &key[0], key_len, &output_block[0]);
+        avx2::encrypt_block(&value[0], &key[0], key_len, &output_block[0]);
 #ifdef DEBUG
         std::cout << "Output_block : "
                   << parseBytesToHexStr(&output_block[0], 16) << std::endl;
@@ -193,7 +193,7 @@ DrbgCtrGenerate(const Uint8  cAdditionalInput[],
     std::vector<Uint8> output_block(16, 0);
     while (temp.size() < cOutputLen) {
         increment_value(value);
-        alcp::rng::drbg::avx2::encrypt_ecb(
+        alcp::rng::drbg::avx2::encrypt_block(
             &value[0], &key[0], key_len, &output_block[0]);
 
         temp.insert(temp.end(), output_block.begin(), output_block.end());
