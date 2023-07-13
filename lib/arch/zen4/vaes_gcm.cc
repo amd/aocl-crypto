@@ -56,7 +56,8 @@ namespace alcp::cipher::vaes512 {
  * 2010.
  */
 
-__m128i inline HashSubKeyLeftByOne(__m128i hashSubkey)
+inline void
+HashSubKeyLeftByOne(__m128i& hashSubkey)
 {
     __m128i res;
     /* Compute reflected hKey<<1 mod poly */
@@ -73,13 +74,8 @@ __m128i inline HashSubKeyLeftByOne(__m128i hashSubkey)
     cPoly = _mm_set_epi64(lo, hi);
     a     = _mm_and_si128(a, cPoly);
 
-    res = _mm_xor_epi64(res, a);
-
-    return res;
+    hashSubkey = _mm_xor_epi64(res, a);
 }
-
-static const __m256i const_factor_256 =
-    _mm256_set_epi64x(0xC200000000000000, 0x1, 0xC200000000000000, 0x1);
 
 alc_error_t
 processAdditionalDataGcm(const Uint8* pAdditionalData,
@@ -88,6 +84,8 @@ processAdditionalDataGcm(const Uint8* pAdditionalData,
                          __m128i      hash_subKey_128,
                          __m128i      reverse_mask_128)
 {
+    const __m128i const_factor_128 = _mm_set_epi64x(0xC200000000000000, 0x1);
+
     alc_error_t err = ALC_ERROR_NONE;
     if (additionalDataLen == 0) {
         return ALC_ERROR_NONE;
@@ -96,17 +94,17 @@ processAdditionalDataGcm(const Uint8* pAdditionalData,
 
     // additional data hash.
     __m128i ad1;
-    Uint64  adBlocks = additionalDataLen / Rijndael::cBlockSize;
+    Uint64  adBlocks = additionalDataLen >> 4; // / Rijndael::cBlockSize;
 
-    int ad_remBytes = additionalDataLen - (adBlocks * Rijndael::cBlockSize);
-
+    int ad_remBytes =
+        additionalDataLen - (adBlocks << 4); //* Rijndael::cBlockSize);
     for (; adBlocks >= 1; adBlocks--) {
         ad1 = _mm_loadu_si128(pAd128);
         gMulR(ad1,
               hash_subKey_128,
               reverse_mask_128,
               gHash_128,
-              const_factor_256);
+              const_factor_128);
         pAd128++;
     }
 
@@ -125,7 +123,7 @@ processAdditionalDataGcm(const Uint8* pAdditionalData,
               hash_subKey_128,
               reverse_mask_128,
               gHash_128,
-              const_factor_256);
+              const_factor_128);
     }
 
     return err;
@@ -141,15 +139,16 @@ GetTagGcm(Uint64   tagLen,
           __m128i  reverse_mask_128,
           Uint8*   tag)
 {
-    alc_error_t err       = ALC_ERROR_NONE;
-    auto        p_tag_128 = reinterpret_cast<__m128i*>(tag);
-    __m128i     a1        = _mm_set_epi32(0, 0, 0, 0);
+    alc_error_t   err              = ALC_ERROR_NONE;
+    auto          p_tag_128        = reinterpret_cast<__m128i*>(tag);
+    __m128i       a1               = _mm_set_epi32(0, 0, 0, 0);
+    const __m128i const_factor_128 = _mm_set_epi64x(0xC200000000000000, 0x1);
 
     a1 = _mm_insert_epi64(a1, (plaintextLen << 3), 0);
     a1 = _mm_insert_epi64(a1, (adLength << 3), 1);
 
     gHash_128 = _mm_xor_si128(a1, gHash_128);
-    gMul(gHash_128, Hsubkey_128, gHash_128, const_factor_256);
+    gMul(gHash_128, Hsubkey_128, gHash_128, const_factor_128);
 
     gHash_128 = _mm_shuffle_epi8(gHash_128, reverse_mask_128);
     tag128    = _mm_xor_si128(gHash_128, tag128);
@@ -181,14 +180,7 @@ InitGcm(const Uint8* pKey,
     auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
     auto        pIv128  = reinterpret_cast<const __m128i*>(pIv);
 
-    // pHsubKey_128 is already set to zero
-    // Hash subkey generation.
-    aesni::AesEncrypt(&HsubKey_128, pkey128, nRounds);
-    // Hash sub key reversed for gf multiplication.
-    HsubKey_128 = _mm_shuffle_epi8(HsubKey_128, reverse_mask_128);
-
-    // H<<1 mod p
-    HsubKey_128 = HashSubKeyLeftByOne(HsubKey_128);
+    const __m128i const_factor_128 = _mm_set_epi64x(0xC200000000000000, 0x1);
 
     // counter 4 bytes are arranged in reverse order
     // for counter increment
@@ -201,12 +193,32 @@ InitGcm(const Uint8* pKey,
         utils::CopyBytes((Uint8*)&iv_128, pIv, 12);
         // T= 96 bit iv : 32bit counter
         tag_128 = _mm_insert_epi32(iv_128, 0x1000000, 3);
-        aesni::AesEncrypt(&tag_128, pkey128, nRounds);
+        aesni::AesEncrypt(tag_128, HsubKey_128, pkey128, nRounds);
+
+        // Hash sub key reversed for gf multiplication.
+        HsubKey_128 = _mm_shuffle_epi8(HsubKey_128, reverse_mask_128);
+
+        // H<<1 mod p
+        HashSubKeyLeftByOne(HsubKey_128);
+
+        // printText((Uint32*)&iv_128, 4, "iv_128-1      ");
 
         // nonce counter
         iv_128 = _mm_insert_epi32(iv_128, 0x2000000, 3);
         iv_128 = _mm_shuffle_epi8(iv_128, swap_ctr);
+
+        // printText((Uint32*)&iv_128, 4, "iv_128-3    ");
     } else {
+
+        // pHsubKey_128 is already set to zero
+        // Hash subkey generation.
+        aesni::AesEncrypt(HsubKey_128, pkey128, nRounds);
+        // Hash sub key reversed for gf multiplication.
+        HsubKey_128 = _mm_shuffle_epi8(HsubKey_128, reverse_mask_128);
+
+        // H<<1 mod p
+        HashSubKeyLeftByOne(HsubKey_128);
+
         // gmul uses aesni method with hkey<<1 mod poly. to be verified
         int     ivBlocks = ivBytes / Rijndael::cBlockSize;
         int     remBytes = ivBytes - (ivBlocks * Rijndael::cBlockSize);
@@ -217,7 +229,7 @@ InitGcm(const Uint8* pKey,
         for (; ivBlocks >= 1; ivBlocks--) {
             a128 = _mm_loadu_si128(pIv128);
             gMulR(
-                a128, HsubKey_128, reverse_mask_128, tag_128, const_factor_256);
+                a128, HsubKey_128, reverse_mask_128, tag_128, const_factor_128);
             pIv128++;
         }
         if (remBytes) {
@@ -228,7 +240,7 @@ InitGcm(const Uint8* pKey,
                 p_out[i] = p_in[i];
             }
             gMulR(
-                a128, HsubKey_128, reverse_mask_128, tag_128, const_factor_256);
+                a128, HsubKey_128, reverse_mask_128, tag_128, const_factor_128);
         }
 
         a128 = _mm_setzero_si128();
@@ -236,7 +248,7 @@ InitGcm(const Uint8* pKey,
         a128 = _mm_insert_epi64(a128, 0, 1);
 
         tag_128 = _mm_xor_si128(a128, tag_128);
-        gMul(tag_128, HsubKey_128, tag_128, const_factor_256);
+        gMul(tag_128, HsubKey_128, tag_128, const_factor_128);
 
         tag_128 = _mm_shuffle_epi8(tag_128, reverse_mask_128);
         iv_128  = tag_128;
@@ -244,7 +256,7 @@ InitGcm(const Uint8* pKey,
         iv_128 = _mm_shuffle_epi8(iv_128, swap_ctr);
         iv_128 = _mm_add_epi32(iv_128, one_128);
 
-        aesni::AesEncrypt(&tag_128, pkey128, nRounds);
+        aesni::AesEncrypt(tag_128, pkey128, nRounds);
     }
 
     return err;

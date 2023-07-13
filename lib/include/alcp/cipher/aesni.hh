@@ -109,6 +109,36 @@ namespace alcp::cipher { namespace aesni {
         rkey = _mm_setzero_si128();
     }
 
+    static inline void AesEncrypt(__m128i&       Blk0,
+                                  __m128i&       Blk1,
+                                  const __m128i* pKey,
+                                  int            nRounds)
+    {
+        int     nr;
+        __m128i rkey = pKey[0];
+
+        __m128i b0 = _mm_xor_si128(Blk0, rkey);
+        __m128i b1 = _mm_xor_si128(Blk1, rkey);
+
+        pKey++;
+
+        for (nr = 1; nr < nRounds; nr++) {
+            rkey = pKey[0];
+
+            b0 = _mm_aesenc_si128(b0, rkey);
+            b1 = _mm_aesenc_si128(b1, rkey);
+
+            pKey++;
+        }
+
+        rkey = pKey[0];
+
+        Blk0 = _mm_aesenclast_si128(b0, rkey);
+        Blk1 = _mm_aesenclast_si128(b1, rkey);
+
+        rkey = _mm_setzero_si128();
+    }
+
     /**
      * @brief
      * @param    pBlk0   pointer to input block
@@ -136,6 +166,30 @@ namespace alcp::cipher { namespace aesni {
         /* last round, load last key */
         rkey0  = pKey[0];
         *pBlk0 = _mm_aesenclast_si128(b0, rkey0);
+
+        /* clear rkey0 */
+        rkey0 = _mm_setzero_si128();
+    }
+
+    static inline void AesEncrypt(__m128i&       Blk0,
+                                  const __m128i* pKey,
+                                  int            nRounds)
+    {
+        int     nr;
+        __m128i rkey0 = pKey[0];
+        __m128i b0    = _mm_xor_si128(Blk0, rkey0);
+
+        pKey++;
+        /* rounds 1-9 */
+        for (nr = 1; nr < nRounds; nr++) {
+            rkey0 = pKey[0];
+            b0    = _mm_aesenc_si128(b0, rkey0);
+            pKey++;
+        }
+
+        /* last round, load last key */
+        rkey0 = pKey[0];
+        Blk0  = _mm_aesenclast_si128(b0, rkey0);
 
         /* clear rkey0 */
         rkey0 = _mm_setzero_si128();
