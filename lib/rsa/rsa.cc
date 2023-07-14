@@ -394,12 +394,18 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
                         Uint64&      textSize)
 {
 
-    auto p_mod_text = std::make_unique<Uint8[]>(encSize);
+    auto mod_text   = std::make_unique<Uint8[]>(encSize);
+    auto p_mod_text = mod_text.get();
 
-    Status status = decryptPrivate(pEncText, encSize, p_mod_text.get());
+    Status status = decryptPrivate(pEncText, encSize, p_mod_text);
 
     if (!status.ok()) {
         return status;
+    }
+
+    if (m_key_size < 2 * m_hash_len + 2) {
+        return status::NotPermitted(
+            "decrypted size less than the expected size");
     }
 
     // decode oaep padding
@@ -407,16 +413,12 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
     Uint8  hash_label[Sha512Size]; // max hashlen is of sha512
     Uint64 db_len = encSize - 1 - m_hash_len;
 
-    auto p_db = std::make_unique<Uint8[]>(db_len * 2);
-
-    if (encSize < 2 * m_hash_len + 2) {
-        return status::NotPermitted(
-            "decrypted size less than the expected size");
-    }
+    auto db   = std::make_unique<Uint8[]>(db_len * 2);
+    auto p_db = db.get();
 
     Uint8 success = IsZero(p_mod_text[0]);
 
-    Uint8* p_masked_seed = p_mod_text.get() + 1;
+    Uint8* p_masked_seed = p_mod_text + 1;
     Uint8* p_masked_db   = p_masked_seed + m_hash_len;
 
     maskGenFunct(seed, m_hash_len, p_masked_db, db_len);
@@ -425,7 +427,7 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
         seed[i] ^= p_masked_seed[i];
     }
 
-    maskGenFunct(p_db.get(), db_len, seed, m_hash_len);
+    maskGenFunct(p_db, db_len, seed, m_hash_len);
 
     for (Uint32 i = 0; i < db_len; i++) {
         p_db[i] ^= p_masked_db[i];
@@ -436,7 +438,7 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
     m_digest->finalize(pLabel, labelSize);
     m_digest->copyHash(hash_label, m_hash_len);
 
-    success &= IsEqual(hash_label, p_db.get(), m_hash_len);
+    success &= IsEqual(hash_label, p_db, m_hash_len);
 
     Uint32 one_index = 0;
     Uint8  found_one = 0;
@@ -459,8 +461,8 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
     }
 
     textSize = Select(success, text_len, -1);
-    memset(p_mod_text.get(), 0, encSize);
-    memset(p_db.get(), 0, db_len * 2);
+    memset(p_mod_text, 0, encSize);
+    memset(p_db, 0, db_len * 2);
     Uint8 error_code = Select(success, eOk, eInternal);
     return (error_code == eOk) ? StatusOk() : status::Generic("Generic error");
 }
