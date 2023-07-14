@@ -547,7 +547,7 @@ Rsa::setPrivateKey(const Uint8* dp,
         return status::NotPermitted("Key sizes not supported currently");
     }
 
-    m_key_size = size;
+    m_key_size = size * 2; // keysize is twice the sizeof(p)
 
     m_priv_key.m_dp.reset(CreateBigNum(dp, size));
     m_priv_key.m_dq.reset(CreateBigNum(dq, size));
