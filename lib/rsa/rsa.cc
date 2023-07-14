@@ -335,17 +335,14 @@ Rsa::encryptPublicOaep(const Uint8* pText,
             //       +--+----------+----------------------------+
     // clang-format on
 
-    Uint8 *p_db, *p_seed;
+    Uint8 *p_masked_db, *p_masked_seed;
 
     if (textSize > m_key_size - 2 * m_hash_len - 2) {
         return status::NotPermitted("input text size is larger than supported");
     }
 
-    // to do check if this needs to be removed in case of sha512 where digest
-    // size is 512 bits
     if (m_key_size < 2 * m_hash_len + 2) {
-        return status::NotPermitted(
-            "input text size is smaller than supported");
+        return status::NotPermitted("key size is smaller than supported");
     }
 
     if (!m_mgf || !m_digest) {
@@ -356,34 +353,33 @@ Rsa::encryptPublicOaep(const Uint8* pText,
     auto   mod_text   = std::make_unique<Uint8[]>(m_key_size);
     Uint8* p_mod_text = mod_text.get();
     p_mod_text[0]     = 0;
-    p_seed            = p_mod_text + 1;
-    p_db              = p_seed + m_hash_len; // seed size equals hashsize
+    p_masked_seed     = p_mod_text + 1;
+    p_masked_db       = p_masked_seed + m_hash_len; // seed size equals hashsize
 
-    // create db
+    // generates masked db
     m_digest->finalize(pLabel, labelSize);
+    m_digest->copyHash(p_masked_db, m_hash_len);
 
-    m_digest->copyHash(p_db, m_hash_len);
+    Uint64 p_db_size                      = m_key_size - 1 - m_hash_len;
+    p_masked_db[p_db_size - 1 - textSize] = 1;
+    memcpy(&p_masked_db[p_db_size - textSize], pText, textSize);
 
-    Uint64 p_db_size               = m_key_size - 1 - m_hash_len;
-    p_db[p_db_size - 1 - textSize] = 1;
-    memcpy(&p_db[p_db_size - textSize], pText, textSize);
+    auto db_mask   = std::make_unique<Uint8[]>(p_db_size);
+    auto p_db_mask = db_mask.get();
 
-    utils::CopyBytes(p_seed, pSeed, m_hash_len);
-
-    auto p_db_mask = std::make_unique<Uint8[]>(p_db_size);
-
-    maskGenFunct(p_db_mask.get(), p_db_size, p_seed, m_hash_len);
+    maskGenFunct(p_db_mask, p_db_size, pSeed, m_hash_len);
 
     for (Uint16 i = 0; i < p_db_size; i++) {
-        p_db[i] ^= p_db_mask[i];
+        p_masked_db[i] ^= p_db_mask[i];
     }
 
-    auto p_seed_mask = std::make_unique<Uint8[]>(m_hash_len);
+    auto seed_mask   = std::make_unique<Uint8[]>(m_hash_len);
+    auto p_seed_mask = seed_mask.get();
 
-    maskGenFunct(p_seed_mask.get(), m_hash_len, p_db, p_db_size);
+    maskGenFunct(p_seed_mask, m_hash_len, p_masked_db, p_db_size);
 
     for (Uint16 i = 0; i < m_hash_len; i++) {
-        p_seed[i] ^= p_seed_mask[i];
+        p_masked_seed[i] = pSeed[i] ^ p_seed_mask[i];
     }
 
     return encryptPublic(p_mod_text, m_key_size, pEncText);
