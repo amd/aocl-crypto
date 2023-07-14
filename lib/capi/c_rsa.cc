@@ -248,8 +248,11 @@ alcp_rsa_publickey_encrypt_oaep(const alc_rsa_handle_p pRsaHandle,
     ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
     ALCP_BAD_PTR_ERR_RET(pText, err);
     ALCP_BAD_PTR_ERR_RET(pEncText, err);
-    ALCP_BAD_PTR_ERR_RET(label, err);
     ALCP_BAD_PTR_ERR_RET(pSeed, err);
+
+    if (label == nullptr && labelSize > 0) {
+        return ALC_ERROR_NOT_PERMITTED;
+    }
 
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
 
@@ -292,8 +295,11 @@ alcp_rsa_privatekey_decrypt_oaep(const alc_rsa_handle_p pRsaHandle,
     ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
     ALCP_BAD_PTR_ERR_RET(pEncText, err);
     ALCP_BAD_PTR_ERR_RET(pText, err);
-    ALCP_BAD_PTR_ERR_RET(label, err);
     ALCP_BAD_PTR_ERR_RET(textSize, err);
+
+    if (label == nullptr && labelSize > 0) {
+        return ALC_ERROR_NOT_PERMITTED;
+    }
 
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
 

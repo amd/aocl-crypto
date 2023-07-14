@@ -225,6 +225,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
 
     if (memcmp(dec_text, text, text_size) == 0) {
         err = ALC_ERROR_NONE;
+        ALCP_PRINT_TEXT(dec_text, text_size, "dec_text")
     } else {
         printf("\n decrypted text not matching the original text");
         err = ALC_ERROR_GENERIC;

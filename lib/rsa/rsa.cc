@@ -118,10 +118,12 @@ static const Uint8 QINV[] = { 0xad, 0xad, 0xc8, 0xfd, 0xd8, 0xc9, 0x60, 0x63,
 
 static const Uint64 PublicKeyExponent = 0x10001;
 
+static const Uint64 Sha512Size = 64;
+
 static inline Uint8
 IsZero(Uint8 num)
 {
-    return 0 - (~num & (num - 1) >> 7);
+    return (0 - (static_cast<Uint8>(~num & (num - 1)) >> 7));
 }
 
 static inline Uint8
@@ -136,7 +138,7 @@ IsEqual(const Uint8* first, const Uint8* second, Uint16 len)
 static inline Uint8
 IsLess(Uint8 first, Uint8 second)
 {
-    return 0 - ((first - second) >> 7);
+    return 0 - (static_cast<Uint8>(first - second) >> 7);
 }
 
 static inline Uint8
@@ -165,50 +167,47 @@ Rsa::setDigestOaep(digest::IDigest* digest)
 void
 Rsa::setMgfOaep(digest::IDigest* mgf)
 {
-    m_mgf = mgf;
+    if (mgf) {
+        m_mgf          = mgf;
+        m_mgf_hash_len = mgf->getHashSize();
+    }
 }
 
-Status
+void
 Rsa::maskGenFunct(Uint8*       mask,
                   Uint64       maskSize,
                   const Uint8* input,
                   Uint64       inputLen)
 {
-    if (!m_mgf) {
-        return status::Unavailable("Message generation function unavailable");
-    }
-    Uint64 mgf_digest_len = m_mgf->getHashSize();
-
     Uint64 out_len = 0;
     Uint32 count   = 0;
+    Uint8  count_array[4];
+    Uint8  hash[Sha512Size];
 
-    bool success = true;
     while (out_len < maskSize) {
 
         m_mgf->reset();
 
-        if (m_mgf->update(input, inputLen) != ALC_ERROR_NONE) {
-            success = false;
+        m_mgf->update(input, inputLen);
+        count_array[0] = (count >> 24) & 0xff;
+        count_array[1] = (count >> 16) & 0xff;
+        count_array[2] = (count >> 8) & 0xff;
+        count_array[3] = count & 0xff;
+
+        m_mgf->finalize(count_array, 4);
+
+        Uint64 copy_size = m_mgf_hash_len;
+        if (out_len + m_mgf_hash_len <= maskSize) {
+            m_mgf->copyHash(mask + out_len, m_mgf_hash_len);
+        } else {
+            m_mgf->copyHash(hash, m_mgf_hash_len);
+            utils::CopyBytes(mask + out_len, hash, maskSize - out_len);
             break;
         }
 
-        if (m_mgf->finalize(reinterpret_cast<const Uint8*>(&count), 4)
-            != ALC_ERROR_NONE) {
-            success = false;
-            break;
-        }
-
-        Uint64 copy_size = (out_len + mgf_digest_len <= maskSize)
-                               ? mgf_digest_len
-                               : maskSize - out_len;
-        if (m_mgf->copyHash(mask + out_len, copy_size) != ALC_ERROR_NONE) {
-            success = false;
-            break;
-        }
         ++count;
         out_len += copy_size;
     }
-    return success ? StatusOk() : status::Generic("Mask generation failed");
 }
 
 Rsa::~Rsa()
@@ -349,6 +348,11 @@ Rsa::encryptPublicOaep(const Uint8* pText,
             "input text size is smaller than supported");
     }
 
+    if (!m_mgf || !m_digest) {
+        return status::NotPermitted(
+            "digest and mask generation function should be non null");
+    }
+
     auto   mod_text   = std::make_unique<Uint8[]>(m_key_size);
     Uint8* p_mod_text = mod_text.get();
     p_mod_text[0]     = 0;
@@ -403,8 +407,8 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
     }
 
     // decode oaep padding
-    Uint8  seed[64];       // max seed size is hashlen of sha512
-    Uint8  hash_label[64]; // max hashlen is of sha512
+    Uint8  seed[Sha512Size];       // max seed size is hashlen of sha512
+    Uint8  hash_label[Sha512Size]; // max hashlen is of sha512
     Uint64 db_len = encSize - 1 - m_hash_len;
 
     auto p_db = std::make_unique<Uint8[]>(db_len * 2);
@@ -419,18 +423,14 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
     Uint8* p_masked_seed = p_mod_text.get() + 1;
     Uint8* p_masked_db   = p_masked_seed + m_hash_len;
 
-    status = maskGenFunct(seed, m_hash_len, p_masked_db, db_len);
-    if (!status.ok()) {
-        return status;
-    }
+    maskGenFunct(seed, m_hash_len, p_masked_db, db_len);
+
     for (Uint16 i = 0; i < m_hash_len; i++) {
         seed[i] ^= p_masked_seed[i];
     }
 
-    status = maskGenFunct(p_db.get(), db_len, seed, m_hash_len);
-    if (!status.ok()) {
-        return status;
-    }
+    maskGenFunct(p_db.get(), db_len, seed, m_hash_len);
+
     for (Uint32 i = 0; i < db_len; i++) {
         p_db[i] ^= p_masked_db[i];
     }
@@ -438,7 +438,6 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
     // create db
     m_digest->reset();
     m_digest->finalize(pLabel, labelSize);
-
     m_digest->copyHash(hash_label, m_hash_len);
 
     success &= IsEqual(hash_label, p_db.get(), m_hash_len);
@@ -466,9 +465,8 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
     textSize = Select(success, text_len, -1);
     memset(p_mod_text.get(), 0, encSize);
     memset(p_db.get(), 0, db_len * 2);
-    Uint16 error_code = Select(success, eOk, eInternal);
-    // todo check how to add errorcode to status
-    return StatusOk();
+    Uint8 error_code = Select(success, eOk, eInternal);
+    return (error_code == eOk) ? StatusOk() : status::Generic("Generic error");
 }
 
 Status

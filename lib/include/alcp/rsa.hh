@@ -147,16 +147,19 @@ class ALCP_API_EXPORT Rsa
     void reset();
 
   private:
-    Status maskGenFunct(Uint8*       mask,
-                        Uint64       maskSize,
-                        const Uint8* input,
-                        Uint64       inputLen);
+    void maskGenFunct(Uint8*       mask,
+                      Uint64       maskSize,
+                      const Uint8* input,
+                      Uint64       inputLen);
 
     Uint64              m_key_size;
     Uint64              m_hash_len;
+    Uint64              m_mgf_hash_len;
     RsaPrivateKeyBignum m_priv_key;
     RsaPublicKeyBignum  m_pub_key;
-    MontContextBignum   m_context_pub, m_context_p, m_context_q;
+    MontContextBignum   m_context_pub;
+    MontContextBignum   m_context_p;
+    MontContextBignum   m_context_q;
     digest::IDigest*    m_digest = nullptr;
     rng::IDrbg*         m_drbg   = nullptr;
     digest::IDigest*    m_mgf    = nullptr;
