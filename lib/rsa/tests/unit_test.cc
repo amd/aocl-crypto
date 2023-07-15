@@ -103,7 +103,7 @@ static const Uint64 PublicKeyExponent = 0x10001;
 
 TEST(RsaTest, PublicEncryptPrivateDecryptTest)
 {
-    Rsa rsa_obj;
+    Rsa<KEY_SIZE_1024> rsa_obj;
 
     Uint64 key_size = rsa_obj.getKeySize();
 
@@ -138,8 +138,8 @@ TEST(RsaTest, PublicEncryptPrivateDecryptTest)
 
 TEST(RsaTest, PubKeyEncryptValidSizeTest)
 {
-    Rsa    rsa_obj;
-    Uint64 size = rsa_obj.getKeySize();
+    Rsa<KEY_SIZE_1024> rsa_obj;
+    Uint64             size = rsa_obj.getKeySize();
 
     auto p_mod  = std::make_unique<Uint8[]>(size);
     auto p_text = std::make_unique<Uint8[]>(size);
@@ -155,11 +155,11 @@ TEST(RsaTest, PubKeyEncryptValidSizeTest)
 
 TEST(RsaTest, PubKeyEncryptInValidSizeTest)
 {
-    Rsa    rsa_obj;
-    Uint64 size   = rsa_obj.getKeySize();
-    auto   p_mod  = std::make_unique<Uint8[]>(size);
-    auto   p_text = std::make_unique<Uint8[]>(size);
-    auto   p_enc  = std::make_unique<Uint8[]>(size);
+    Rsa<KEY_SIZE_1024> rsa_obj;
+    Uint64             size   = rsa_obj.getKeySize();
+    auto               p_mod  = std::make_unique<Uint8[]>(size);
+    auto               p_text = std::make_unique<Uint8[]>(size);
+    auto               p_enc  = std::make_unique<Uint8[]>(size);
 
     Status status =
         rsa_obj.setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
@@ -171,10 +171,10 @@ TEST(RsaTest, PubKeyEncryptInValidSizeTest)
 
 TEST(RsaTest, PubKeyEncryptValidBuffTest)
 {
-    Rsa    rsa_obj;
-    Uint64 key_size   = rsa_obj.getKeySize();
-    auto   p_buff     = std::make_unique<Uint8[]>(key_size);
-    auto   p_buff_enc = std::make_unique<Uint8[]>(key_size);
+    Rsa<KEY_SIZE_1024> rsa_obj;
+    Uint64             key_size   = rsa_obj.getKeySize();
+    auto               p_buff     = std::make_unique<Uint8[]>(key_size);
+    auto               p_buff_enc = std::make_unique<Uint8[]>(key_size);
 
     auto p_modulus = std::make_unique<Uint8[]>(key_size);
 
@@ -188,7 +188,7 @@ TEST(RsaTest, PubKeyEncryptValidBuffTest)
 
 TEST(RsaTest, PubKeyEncryptInValidBuffTest)
 {
-    Rsa rsa_obj;
+    Rsa<KEY_SIZE_1024> rsa_obj;
 
     Status status =
         rsa_obj.setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
@@ -200,8 +200,8 @@ TEST(RsaTest, PubKeyEncryptInValidBuffTest)
 
 TEST(RsaTest, PrivKeyDecryptValidSizeTest)
 {
-    Rsa    rsa_obj;
-    Uint64 enc_size = rsa_obj.getKeySize();
+    Rsa<KEY_SIZE_1024> rsa_obj;
+    Uint64             enc_size = rsa_obj.getKeySize();
 
     auto p_buff_enc = std::make_unique<Uint8[]>(enc_size);
     auto p_buff_dec = std::make_unique<Uint8[]>(enc_size);
@@ -223,8 +223,8 @@ TEST(RsaTest, PrivKeyDecryptValidSizeTest)
 
 TEST(RsaTest, PrivKeyDecryptInvalidSizeTest)
 {
-    Rsa    rsa_obj;
-    Uint64 enc_size = rsa_obj.getKeySize() + 1;
+    Rsa<KEY_SIZE_1024> rsa_obj;
+    Uint64             enc_size = rsa_obj.getKeySize() + 1;
 
     Status status = rsa_obj.decryptPrivate(nullptr, enc_size, nullptr);
     EXPECT_NE(status.code(), ErrorCode::eOk);
@@ -232,10 +232,10 @@ TEST(RsaTest, PrivKeyDecryptInvalidSizeTest)
 
 TEST(RsaTest, PrivKeyDecryptValidBuffTest)
 {
-    Rsa    rsa_obj;
-    Uint64 enc_size   = rsa_obj.getKeySize();
-    auto   p_buff_enc = std::make_unique<Uint8[]>(enc_size);
-    auto   p_buff_dec = std::make_unique<Uint8[]>(enc_size);
+    Rsa<KEY_SIZE_1024> rsa_obj;
+    Uint64             enc_size   = rsa_obj.getKeySize();
+    auto               p_buff_enc = std::make_unique<Uint8[]>(enc_size);
+    auto               p_buff_dec = std::make_unique<Uint8[]>(enc_size);
 
     Status status =
         rsa_obj.decryptPrivate(p_buff_enc.get(), enc_size, p_buff_dec.get());
@@ -244,8 +244,8 @@ TEST(RsaTest, PrivKeyDecryptValidBuffTest)
 
 TEST(RsaTest, PrivKeyDecryptInValidBuffTest)
 {
-    Rsa    rsa_obj;
-    Uint64 enc_size = rsa_obj.getKeySize();
+    Rsa<KEY_SIZE_1024> rsa_obj;
+    Uint64             enc_size = rsa_obj.getKeySize();
 
     Status status = rsa_obj.decryptPrivate(nullptr, enc_size, nullptr);
     EXPECT_NE(status.code(), ErrorCode::eOk);
@@ -253,8 +253,8 @@ TEST(RsaTest, PrivKeyDecryptInValidBuffTest)
 
 TEST(RsaTest, PubKeyWithValidModulusTest)
 {
-    Rsa          rsa_obj;
-    RsaPublicKey pub_key;
+    Rsa<KEY_SIZE_1024> rsa_obj;
+    RsaPublicKey       pub_key;
     pub_key.size    = rsa_obj.getKeySize();
     auto p_buff     = std::make_unique<Uint8[]>(pub_key.size);
     pub_key.modulus = p_buff.get();
@@ -264,8 +264,8 @@ TEST(RsaTest, PubKeyWithValidModulusTest)
 
 TEST(RsaTest, PubKeyWithInValidModulusTest)
 {
-    Rsa          rsa_obj;
-    RsaPublicKey pub_key;
+    Rsa<KEY_SIZE_1024> rsa_obj;
+    RsaPublicKey       pub_key;
     pub_key.size    = rsa_obj.getKeySize();
     pub_key.modulus = nullptr;
     Status status   = rsa_obj.getPublickey(pub_key);
@@ -274,8 +274,8 @@ TEST(RsaTest, PubKeyWithInValidModulusTest)
 
 TEST(RsaTest, PubKeyWithInvalidSizeTest)
 {
-    Rsa          rsa_obj;
-    RsaPublicKey pub_key;
+    Rsa<KEY_SIZE_1024> rsa_obj;
+    RsaPublicKey       pub_key;
     pub_key.size  = rsa_obj.getKeySize() + 1;
     Status status = rsa_obj.getPublickey(pub_key);
     EXPECT_NE(status.code(), ErrorCode::eOk);
@@ -283,8 +283,8 @@ TEST(RsaTest, PubKeyWithInvalidSizeTest)
 
 TEST(RsaTest, PubKeyWithValidSizeTest)
 {
-    Rsa          rsa_obj;
-    RsaPublicKey pub_key;
+    Rsa<KEY_SIZE_1024> rsa_obj;
+    RsaPublicKey       pub_key;
 
     pub_key.size = rsa_obj.getKeySize();
     auto p_buff  = std::make_unique<Uint8[]>(pub_key.size);
@@ -296,7 +296,7 @@ TEST(RsaTest, PubKeyWithValidSizeTest)
 
 TEST(RsaTest, KeySizeTest)
 {
-    Rsa rsa_obj;
+    Rsa<KEY_SIZE_1024> rsa_obj;
     EXPECT_NE(rsa_obj.getKeySize(), 0UL);
 }
 
