@@ -50,6 +50,18 @@ CopyChunk(void* pDst, const void* pSrc, int len)
     }
 }
 
+template<typename copytype = Uint64>
+void
+CopyChunkExact(void* pDst, const void* pSrc, int len)
+{
+    auto p_src = reinterpret_cast<const copytype*>(pSrc);
+    auto p_dst = reinterpret_cast<copytype*>(pDst);
+
+    for (Uint64 i = 0; i < len; i++) {
+        p_dst[i] = p_src[i];
+    }
+}
+
 static inline void
 CopyDWord(Uint32* pDst, const Uint32* pSrc, int len)
 {

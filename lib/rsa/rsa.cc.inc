@@ -270,21 +270,20 @@ struct MontCompute
     // 	t[s - 1] := S
     // 	carry_last := C + C1
 
-    static inline void MontMult(Uint64*       res,
-                                const Uint64* first,
-                                const Uint64* second,
-                                const Uint64* mod,
-                                Uint64        k0,
-                                Uint64        size)
+    static inline void MontMult512(Uint64*       res,
+                                   const Uint64* first,
+                                   const Uint64* second,
+                                   const Uint64* mod,
+                                   Uint64        k0)
     {
         Uint64 carry = 0;
         Uint64 carry0, carry1;
         Uint64 carry_last = 0;
-        auto   temp       = std::make_unique<Uint64[]>(size);
-        auto   temp_ptr   = temp.get();
+
+        alignas(64) Uint64 temp_ptr[8] = {};
 
         Uint64 lo_t, hi_t, y, lo_t2, hi_t2;
-        for (Uint32 i = 0; i < size; i++) {
+        for (Uint32 i = 0; i < 8; i++) {
 
             Uint64 mult  = second[i];
             Uint64 rem_t = 0, rem_t2 = 0;
@@ -303,7 +302,7 @@ struct MontCompute
 
             rem_t2 += (carry + hi_t2);
 
-            for (Uint32 j = 1; j < size; j++) {
+            for (Uint32 j = 1; j < 8; j++) {
 
                 lo_t   = _mulx_u64(first[j], mult, (unsigned long long*)&hi_t);
                 carry0 = _addcarryx_u64(0,
@@ -332,16 +331,162 @@ struct MontCompute
                 0, rem_t, carry_last, (unsigned long long*)&lo_t);
 
             carry1 = _addcarryx_u64(
-                0, lo_t, rem_t2, (unsigned long long*)&temp_ptr[size - 1]);
+                0, lo_t, rem_t2, (unsigned long long*)&temp_ptr[8 - 1]);
 
             carry_last = carry0 + carry1;
         }
-        carry = SubBigNum(res, temp_ptr, mod, size);
+        carry = SubBigNum(res, temp_ptr, mod, 8);
 
         // carry_last will be either 0 or negative
         carry_last -= carry;
 
-        CopyConditional(res, temp_ptr, size, ~IsZero(carry_last));
+        CopyConditional(res, temp_ptr, 8, ~IsZero(carry_last));
+    }
+
+    static inline void MontMult1024(Uint64*       res,
+                                    const Uint64* first,
+                                    const Uint64* second,
+                                    const Uint64* mod,
+                                    Uint64        k0)
+    {
+        Uint64 carry = 0;
+        Uint64 carry0, carry1;
+        Uint64 carry_last = 0;
+
+        alignas(64) Uint64 temp_ptr[16] = {};
+
+        Uint64 lo_t, hi_t, y, lo_t2, hi_t2;
+        for (Uint32 i = 0; i < 16; i++) {
+
+            Uint64 mult  = second[i];
+            Uint64 rem_t = 0, rem_t2 = 0;
+            lo_t  = _mulx_u64(first[0], mult, (unsigned long long*)&hi_t);
+            carry = _addcarryx_u64(0,
+                                   (unsigned long long)temp_ptr[0],
+                                   lo_t,
+                                   (unsigned long long*)&lo_t);
+            rem_t += (carry + hi_t);
+
+            y = lo_t * k0;
+
+            lo_t2 = _mulx_u64(mod[0], y, (unsigned long long*)&hi_t2);
+
+            carry = _addcarryx_u64(0, lo_t2, lo_t, (unsigned long long*)&lo_t);
+
+            rem_t2 += (carry + hi_t2);
+
+            for (Uint32 j = 1; j < 16; j++) {
+
+                lo_t   = _mulx_u64(first[j], mult, (unsigned long long*)&hi_t);
+                carry0 = _addcarryx_u64(0,
+                                        (unsigned long long)temp_ptr[j],
+                                        lo_t,
+                                        (unsigned long long*)&lo_t);
+                carry1 =
+                    _addcarryx_u64(0, lo_t, rem_t, (unsigned long long*)&lo_t);
+
+                rem_t = (carry0 + carry1 + hi_t);
+
+                lo_t2 = _mulx_u64(mod[j], y, (unsigned long long*)&hi_t2);
+
+                carry0 =
+                    _addcarryx_u64(0, lo_t2, lo_t, (unsigned long long*)&lo_t);
+
+                carry1 =
+                    _addcarryx_u64(0, rem_t2, lo_t, (unsigned long long*)&lo_t);
+
+                rem_t2 = (carry0 + carry1 + hi_t2);
+
+                temp_ptr[j - 1] = lo_t;
+            }
+
+            carry0 = _addcarryx_u64(
+                0, rem_t, carry_last, (unsigned long long*)&lo_t);
+
+            carry1 = _addcarryx_u64(
+                0, lo_t, rem_t2, (unsigned long long*)&temp_ptr[16 - 1]);
+
+            carry_last = carry0 + carry1;
+        }
+        carry = SubBigNum(res, temp_ptr, mod, 16);
+
+        // carry_last will be either 0 or negative
+        carry_last -= carry;
+
+        CopyConditional(res, temp_ptr, 16, ~IsZero(carry_last));
+    }
+
+    static inline void MontMult2048(Uint64*       res,
+                                    const Uint64* first,
+                                    const Uint64* second,
+                                    const Uint64* mod,
+                                    Uint64        k0)
+    {
+        Uint64 carry = 0;
+        Uint64 carry0, carry1;
+        Uint64 carry_last = 0;
+
+        alignas(64) Uint64 temp_ptr[32] = {};
+
+        Uint64 lo_t, hi_t, y, lo_t2, hi_t2;
+        for (Uint32 i = 0; i < 32; i++) {
+
+            Uint64 mult  = second[i];
+            Uint64 rem_t = 0, rem_t2 = 0;
+            lo_t  = _mulx_u64(first[0], mult, (unsigned long long*)&hi_t);
+            carry = _addcarryx_u64(0,
+                                   (unsigned long long)temp_ptr[0],
+                                   lo_t,
+                                   (unsigned long long*)&lo_t);
+            rem_t += (carry + hi_t);
+
+            y = lo_t * k0;
+
+            lo_t2 = _mulx_u64(mod[0], y, (unsigned long long*)&hi_t2);
+
+            carry = _addcarryx_u64(0, lo_t2, lo_t, (unsigned long long*)&lo_t);
+
+            rem_t2 += (carry + hi_t2);
+
+            for (Uint32 j = 1; j < 32; j++) {
+
+                lo_t   = _mulx_u64(first[j], mult, (unsigned long long*)&hi_t);
+                carry0 = _addcarryx_u64(0,
+                                        (unsigned long long)temp_ptr[j],
+                                        lo_t,
+                                        (unsigned long long*)&lo_t);
+                carry1 =
+                    _addcarryx_u64(0, lo_t, rem_t, (unsigned long long*)&lo_t);
+
+                rem_t = (carry0 + carry1 + hi_t);
+
+                lo_t2 = _mulx_u64(mod[j], y, (unsigned long long*)&hi_t2);
+
+                carry0 =
+                    _addcarryx_u64(0, lo_t2, lo_t, (unsigned long long*)&lo_t);
+
+                carry1 =
+                    _addcarryx_u64(0, rem_t2, lo_t, (unsigned long long*)&lo_t);
+
+                rem_t2 = (carry0 + carry1 + hi_t2);
+
+                temp_ptr[j - 1] = lo_t;
+            }
+
+            carry0 = _addcarryx_u64(
+                0, rem_t, carry_last, (unsigned long long*)&lo_t);
+
+            carry1 = _addcarryx_u64(
+                0, lo_t, rem_t2, (unsigned long long*)&temp_ptr[32 - 1]);
+
+            carry_last = carry0 + carry1;
+        }
+        carry = SubBigNum(res, temp_ptr, mod, 32);
+
+        // carry_last will be either 0 or negative
+        carry_last -= carry;
+
+        CopyConditional(res, temp_ptr, 32, ~IsZero(carry_last));
     }
 
     static inline void MontReduce(
@@ -387,21 +532,143 @@ struct MontCompute
         CopyConditional(res, &inp[half_size], half_size, ~IsZero(carry_last));
     }
 
+    static inline void MontReduce512(Uint64* res,
+                                     Uint64* inp,
+                                     Uint64* mod,
+                                     Uint64  k0)
+    {
+        Uint64 carry_last = 0;
+
+        for (Uint64 i = 0; i < 8; i++) {
+            Uint64  carry = 0;
+            Uint64  y     = inp[i] * k0;
+            Uint64  lo = 0, hi = 0;
+            Uint8   c0 = 0, c1 = 0;
+            Uint64* inp_mod = inp + i;
+            for (Uint64 j = 0; j < 8; j++) {
+                lo = _mulx_u64(mod[j], y, (long long unsigned*)&hi);
+                c0 =
+                    _addcarryx_u64(0, lo, inp_mod[j], (long long unsigned*)&lo);
+                c1 = _addcarryx_u64(0, lo, carry, (long long unsigned*)&lo);
+                inp_mod[j] = lo;
+                carry      = hi + c0 + c1;
+            }
+
+            c0 = _addcarryx_u64(
+                0, inp_mod[8], carry, (long long unsigned*)&inp_mod[8]);
+
+            carry_last = _addcarryx_u64(
+                0, carry_last, inp_mod[8], (long long unsigned*)&inp_mod[8]);
+
+            carry_last += c0;
+        }
+
+        Uint64 carry = SubBigNum(res, &inp[8], mod, 8);
+
+        // carry_last will be either 0 or negative
+        carry_last -= carry;
+
+        CopyConditional(res, &inp[8], 8, ~IsZero(carry_last));
+    }
+
+    static inline void MontReduce1024(Uint64* res,
+                                      Uint64* inp,
+                                      Uint64* mod,
+                                      Uint64  k0)
+    {
+        Uint64 carry_last = 0;
+
+        for (Uint64 i = 0; i < 16; i++) {
+            Uint64 carry = 0;
+            Uint64 y     = inp[i] * k0;
+            Uint64 lo = 0, hi = 0;
+            Uint8  c0 = 0, c1 = 0;
+
+            Uint64 index = i;
+            for (Uint64 j = 0; j < 16; ++j, ++index) {
+                lo = _mulx_u64(mod[j], y, (long long unsigned*)&hi);
+                c0 =
+                    _addcarryx_u64(0, lo, inp[index], (long long unsigned*)&lo);
+                c1 = _addcarryx_u64(
+                    0, lo, carry, (long long unsigned*)&inp[index]);
+                carry = hi + c0 + c1;
+            }
+
+            c0 = _addcarryx_u64(
+                0, inp[index], carry, (long long unsigned*)&inp[index]);
+
+            carry_last = _addcarryx_u64(
+                0, carry_last, inp[index], (long long unsigned*)&inp[index]);
+
+            carry_last += c0;
+        }
+
+        Uint64 carry = SubBigNum(res, &inp[16], mod, 16);
+
+        // carry_last will be either 0 or negative
+        carry_last -= carry;
+
+        CopyConditional(res, &inp[16], 16, ~IsZero(carry_last));
+    }
+
+    static inline void MontReduce2048(Uint64* res,
+                                      Uint64* inp,
+                                      Uint64* mod,
+                                      Uint64  k0)
+    {
+        Uint64 carry_last = 0;
+
+        for (Uint64 i = 0; i < 32; i++) {
+            Uint64  carry = 0;
+            Uint64  y     = inp[i] * k0;
+            Uint64  lo = 0, hi = 0;
+            Uint8   c0 = 0, c1 = 0;
+            Uint64* inp_mod = inp + i;
+            for (Uint64 j = 0; j < 32; j++) {
+                lo = _mulx_u64(mod[j], y, (long long unsigned*)&hi);
+                c0 =
+                    _addcarryx_u64(0, lo, inp_mod[j], (long long unsigned*)&lo);
+                c1 = _addcarryx_u64(0, lo, carry, (long long unsigned*)&lo);
+                inp_mod[j] = lo;
+                carry      = hi + c0 + c1;
+            }
+
+            c0 = _addcarryx_u64(
+                0, inp_mod[32], carry, (long long unsigned*)&inp_mod[32]);
+
+            carry_last = _addcarryx_u64(
+                0, carry_last, inp_mod[32], (long long unsigned*)&inp_mod[32]);
+
+            carry_last += c0;
+        }
+
+        Uint64 carry = SubBigNum(res, &inp[32], mod, 32);
+
+        // carry_last will be either 0 or negative
+        carry_last -= carry;
+
+        CopyConditional(res, &inp[32], 32, ~IsZero(carry_last));
+    }
+
     static inline void CreateContext(MontContextBignum& context,
                                      Uint64*            mod,
                                      Uint64             size)
     {
         Uint64* r1 = new Uint64[size]{};
         Uint64* r2 = new Uint64[size]{};
-
+        Uint64* r3 = new Uint64[size]{};
         context.m_r1.reset(r1);
         context.m_r2.reset(r2);
+        context.m_r3.reset(r3);
+
         context.m_size = size;
         context.m_k0   = computeMontFactor(mod[0]);
 
         BigNum inp{ mod, size, size - 1 }, res{ r2, size, size - 1 };
 
         computeMontConverter(res, inp);
+
+        MontMultHalf(r3, r2, r2, mod, context.m_k0);
 
         auto param     = std::make_unique<Uint64[]>(size * 2);
         auto param_ptr = param.get();
@@ -637,23 +904,40 @@ struct MontCompute
                                   Uint64* mod,
                                   Uint64  k0);
 
-    static inline void MultAndSquare(Uint64* res,
-                                     Uint64* mult,
-                                     Uint64* mod,
-                                     Uint64  k0,
-                                     Uint64  size,
-                                     Uint64  val)
+    static inline void MontMult(Uint64*       res,
+                                const Uint64* first,
+                                const Uint64* second,
+                                const Uint64* mod,
+                                Uint64        k0);
+
+    static inline void MontMultHalf(Uint64*       res,
+                                    const Uint64* first,
+                                    const Uint64* second,
+                                    const Uint64* mod,
+                                    Uint64        k0);
+
+    static inline void MontReduce(Uint64* res,
+                                  Uint64* inp,
+                                  Uint64* mod,
+                                  Uint64  k0);
+
+    static inline void MontReduceHalf(Uint64* res,
+                                      Uint64* inp,
+                                      Uint64* mod,
+                                      Uint64  k0);
+
+    static inline void MultAndSquare(
+        Uint64* res, Uint64* mult, Uint64* mod, Uint64 k0, Uint64 val)
     {
         MontSq(res, res, mod, k0);
         if (val & one_msb) {
-            MontMult(res, res, mult, mod, k0, size);
+            MontMult(res, res, mult, mod, k0 /*, T / 64*/);
         }
     }
 
     static inline void PutInTable(
         Uint64* t, Uint64 index, Uint64* num, Uint64 size, Uint64 limit)
     {
-
         for (Uint64 i = 0; i < size; i++) {
             t[index] = num[i];
             index += limit;
@@ -686,25 +970,23 @@ struct MontCompute
                                                  Uint64  expSize,
                                                  Uint64* mod,
                                                  Uint64* r1,
-                                                 Uint64* r2,
                                                  Uint64  k0)
     {
-        __attribute__((aligned(64))) Uint64 t[16 * 16] = {};
+        alignas(64) Uint64 t[16 * 16] = {};
         // conversion to mont domain by multiplying with mont converter
-        MontMult(res, input, r2, mod, k0, inpSize);
+        // MontMultHalf(res, input, r2, mod, k0);
         // to do check which window size is correct
         Uint64 winSize    = 4;
         Uint64 valueLimit = 1 << 4;
         // putting one in mont form
         PutInTable(t, 0, r1, inpSize, valueLimit);
         PutInTable(t, 1, input, inpSize, valueLimit);
-        auto temp_buff_0 = std::make_unique<Uint64[]>(inpSize);
-        auto sq          = temp_buff_0.get();
-        auto temp_buff_1 = std::make_unique<Uint64[]>(inpSize);
-        auto mult        = temp_buff_1.get();
+
+        alignas(64) Uint64 sq[T / 16] = {};
+        Uint64*            mult       = sq + T / 32;
         alcp::utils::CopyChunk(mult, res, inpSize * 8);
         for (Uint64 i = 2; i < valueLimit; i++) {
-            MontMult(mult, mult, res, mod, k0, inpSize);
+            MontMultHalf(mult, mult, res, mod, k0);
             PutInTable(t, i, mult, inpSize, valueLimit);
         }
         const Uint8* exp_byte_ptr = reinterpret_cast<const Uint8*>(exp);
@@ -714,32 +996,27 @@ struct MontCompute
             MontSqHalf(sq, sq, mod, k0);
         }
         GetFromTable(t, index_value & 0xf, mult, inpSize, valueLimit);
-        MontMult(sq, sq, mult, mod, k0, inpSize);
+        MontMultHalf(sq, sq, mult, mod, k0);
         for (Int64 i = T / 16 - 2; i >= 0; --i) {
             for (Uint64 i = 0; i < winSize; i++) {
                 MontSqHalf(sq, sq, mod, k0);
             }
             index_value = exp_byte_ptr[i];
             GetFromTable(t, index_value >> 4, mult, inpSize, valueLimit);
-            MontMult(sq, mult, sq, mod, k0, inpSize);
+            MontMultHalf(sq, mult, sq, mod, k0);
             for (Uint64 i = 0; i < winSize; i++) {
                 MontSqHalf(sq, sq, mod, k0);
             }
             GetFromTable(t, index_value & 0xf, mult, inpSize, valueLimit);
-            MontMult(sq, mult, sq, mod, k0, inpSize);
+            MontMultHalf(sq, mult, sq, mod, k0);
         }
 
         // convert from mont domain to residue domain
-        auto param     = std::make_unique<Uint64[]>(inpSize * 2);
-        auto param_ptr = param.get();
-        alcp::utils::CopyChunk(param_ptr, sq, inpSize * 8);
-
-        MontReduce(res, param_ptr, mod, k0, inpSize * 2);
+        MontReduceHalf(res, sq, mod, k0);
     }
 
     static inline void MontgomeryExp(Uint64*       res,
                                      const Uint64* input,
-                                     Uint64        inpSize,
                                      Uint64*       exp,
                                      Uint64        expSize,
                                      Uint64*       mod,
@@ -747,7 +1024,7 @@ struct MontCompute
                                      Uint64        k0)
     {
         // conversion to mont domain by multiplying with mont converter
-        MontMult(res, input, r2, mod, k0, inpSize);
+        MontMult(res, input, r2, mod, k0);
 
         Uint64 val = exp[expSize - 1];
 
@@ -757,13 +1034,12 @@ struct MontCompute
 
         val = val << index;
 
-        auto temp_buff = std::make_unique<Uint64[]>(inpSize);
-        auto mult      = temp_buff.get();
+        Uint64* mult = res + T / 64;
 
-        alcp::utils::CopyChunk(mult, res, inpSize * 8);
+        alcp::utils::CopyChunkExact(mult, res, T / 64);
 
         while (index++ < 64) {
-            MultAndSquare(res, mult, mod, k0, inpSize, val);
+            MultAndSquare(res, mult, mod, k0, val);
             val <<= 1;
         }
 
@@ -771,17 +1047,16 @@ struct MontCompute
             val = exp[i];
             UNROLL_64
             for (Uint64 j = 0; j < 64; j++) {
-                MultAndSquare(res, mult, mod, k0, inpSize, val);
+                MultAndSquare(res, mult, mod, k0, val);
                 val <<= 1;
             }
         }
 
         // convert from mont domain to residue domain
-        auto param     = std::make_unique<Uint64[]>(inpSize * 2);
-        auto param_ptr = param.get();
-        alcp::utils::CopyChunk(param_ptr, res, inpSize * 8);
 
-        MontReduce(res, param_ptr, mod, k0, inpSize * 2);
+        alcp::utils::CopyChunkExact(mult, res, T / 64);
+
+        MontReduce(res, mult, mod, k0);
     }
 
     // currently it supports equal sizes of P and Q this is faster than the
@@ -793,44 +1068,44 @@ struct MontCompute
                                        MontContextBignum&   contextP,
                                        MontContextBignum&   contextQ)
     {
-        auto size        = contextP.m_size;
-        auto temp_buff   = std::make_unique<Uint64[]>(size * 2);
-        auto temp_buff_0 = std::make_unique<Uint64[]>(size);
-        auto temp_buff_1 = std::make_unique<Uint64[]>(size);
+        auto size = contextP.m_size;
 
-        auto buff_p   = temp_buff.get();
-        auto buff_0_p = temp_buff_0.get();
-        auto buff_1_p = temp_buff_1.get();
-        auto p_mod    = privKey.m_p.get();
-        auto p_exp    = privKey.m_dp.get();
-        auto q_mod    = privKey.m_q.get();
-        auto q_exp    = privKey.m_dq.get();
-        auto r1_p     = contextP.m_r1.get();
-        auto r2_p     = contextP.m_r2.get();
-        auto r1_q     = contextQ.m_r1.get();
-        auto r2_q     = contextQ.m_r2.get();
-        auto qinv     = privKey.m_qinv.get();
-        auto p_k0     = contextP.m_k0;
-        auto q_k0     = contextQ.m_k0;
+        alignas(64) Uint64 temp_buff[T / 32] = {};
+
+        Uint64* buff_p   = temp_buff;
+        Uint64* buff_0_p = temp_buff + T / 64;
+        Uint64* buff_1_p = buff_0_p + T / 128;
+        auto    p_mod    = privKey.m_p.get();
+        auto    p_exp    = privKey.m_dp.get();
+        auto    q_mod    = privKey.m_q.get();
+        auto    q_exp    = privKey.m_dq.get();
+        auto    r1_p     = contextP.m_r1.get();
+        auto    r2_p     = contextP.m_r2.get();
+        auto    r3_p     = contextP.m_r3.get();
+        auto    r1_q     = contextQ.m_r1.get();
+        auto    r3_q     = contextQ.m_r3.get();
+        auto    qinv     = privKey.m_qinv.get();
+        auto    p_k0     = contextP.m_k0;
+        auto    q_k0     = contextQ.m_k0;
 
         // P reduction - ap
-        alcp::utils::CopyChunk(buff_p, inp, size * 8 * 2);
-        MontReduce(buff_0_p, buff_p, p_mod, p_k0, size * 2);
+        alcp::utils::CopyChunkExact(buff_p, inp, T / 64);
+        MontReduceHalf(buff_0_p, buff_p, p_mod, p_k0);
 
-        MontMult(buff_0_p, buff_0_p, r2_p, p_mod, p_k0, size);
+        MontMultHalf(buff_0_p, buff_0_p, r3_p, p_mod, p_k0);
 
         // Q reduction - aq
-        alcp::utils::CopyChunk(buff_p, inp, size * 8 * 2);
-        MontReduce(buff_1_p, buff_p, q_mod, q_k0, size * 2);
-        MontMult(buff_1_p, buff_1_p, r2_q, q_mod, q_k0, size);
+        alcp::utils::CopyChunkExact(buff_p, inp, T / 64);
+        MontReduceHalf(buff_1_p, buff_p, q_mod, q_k0);
+        MontMultHalf(buff_1_p, buff_1_p, r3_q, q_mod, q_k0);
 
         // ap = ap ^ dp mod p
         MontgomeryExpConstantTime(
-            buff_0_p, buff_0_p, size, p_exp, size, p_mod, r1_p, r2_p, p_k0);
+            buff_0_p, buff_0_p, size, p_exp, size, p_mod, r1_p, p_k0);
 
         // aq = aq ^dq mod q
         MontgomeryExpConstantTime(
-            buff_1_p, buff_1_p, size, q_exp, size, q_mod, r1_q, r2_q, q_k0);
+            buff_1_p, buff_1_p, size, q_exp, size, q_mod, r1_q, q_k0);
 
         // convert aq to aq mod p
         MontSub(buff_1_p, buff_1_p, p_mod, p_mod, size);
@@ -838,24 +1113,63 @@ struct MontCompute
         // ap = (ap - aq) mod p
         MontSub(buff_0_p, buff_0_p, buff_1_p, p_mod, size);
 
-        // ap = ap*qInv mod P
-
         // convert qInv to qInv * r mod P
-        MontMult(res, qinv, r2_p, p_mod, p_k0, size);
+        MontMultHalf(res, qinv, r2_p, p_mod, p_k0);
 
         // qInv * r * ap * r^-1 mod P -> qInv * ap mod P
-        MontMult(buff_0_p, buff_0_p, res, p_mod, p_k0, size);
+        // h = qInv * ap mod P
+        MontMultHalf(buff_0_p, buff_0_p, res, p_mod, p_k0);
 
         alcp::utils::PadBlock(buff_p, 0, size * 8 * 2);
 
-        // ap * Q
+        // h * Q
         mul(buff_p, buff_0_p, size, q_mod, size);
 
-        // res = aq + ap*Q
+        // res = aq + h*Q
         AddBigNum(res, size * 2, buff_p, buff_1_p, size);
         return;
     }
 };
+
+template<>
+inline void
+MontCompute<KEY_SIZE_1024>::MontReduce(Uint64* res,
+                                       Uint64* inp,
+                                       Uint64* mod,
+                                       Uint64  k0)
+{
+    MontReduce1024(res, inp, mod, k0);
+}
+
+template<>
+inline void
+MontCompute<KEY_SIZE_2048>::MontReduce(Uint64* res,
+                                       Uint64* inp,
+                                       Uint64* mod,
+                                       Uint64  k0)
+{
+    MontReduce2048(res, inp, mod, k0);
+}
+
+template<>
+inline void
+MontCompute<KEY_SIZE_1024>::MontReduceHalf(Uint64* res,
+                                           Uint64* inp,
+                                           Uint64* mod,
+                                           Uint64  k0)
+{
+    MontReduce512(res, inp, mod, k0);
+}
+
+template<>
+inline void
+MontCompute<KEY_SIZE_2048>::MontReduceHalf(Uint64* res,
+                                           Uint64* inp,
+                                           Uint64* mod,
+                                           Uint64  k0)
+{
+    MontReduce1024(res, inp, mod, k0);
+}
 
 template<>
 inline void
@@ -864,9 +1178,9 @@ MontCompute<KEY_SIZE_1024>::MontSq(Uint64* res,
                                    Uint64* mod,
                                    Uint64  k0)
 {
-    Uint64 temp_res[32] = {};
+    alignas(64) Uint64 temp_res[32] = {};
     Sq1024(temp_res, inp);
-    MontReduce(res, temp_res, mod, k0, 32);
+    MontReduce(res, temp_res, mod, k0);
 }
 
 template<>
@@ -876,10 +1190,9 @@ MontCompute<KEY_SIZE_2048>::MontSq(Uint64* res,
                                    Uint64* mod,
                                    Uint64  k0)
 {
-    Uint64 temp_res[64] = {};
-
+    alignas(64) Uint64 temp_res[64] = {};
     Sq2048(temp_res, inp);
-    MontReduce(res, temp_res, mod, k0, 64);
+    MontReduce(res, temp_res, mod, k0);
 }
 
 template<>
@@ -889,9 +1202,9 @@ MontCompute<KEY_SIZE_1024>::MontSqHalf(Uint64* res,
                                        Uint64* mod,
                                        Uint64  k0)
 {
-    Uint64 temp_res[16] = {};
+    alignas(64) Uint64 temp_res[16] = {};
     Sq512(temp_res, inp);
-    MontReduce(res, temp_res, mod, k0, 16);
+    MontReduceHalf(res, temp_res, mod, k0);
 }
 
 template<>
@@ -901,9 +1214,53 @@ MontCompute<KEY_SIZE_2048>::MontSqHalf(Uint64* res,
                                        Uint64* mod,
                                        Uint64  k0)
 {
-    Uint64 temp_res[32] = {};
+    alignas(64) Uint64 temp_res[32] = {};
     Sq1024(temp_res, inp);
-    MontReduce(res, temp_res, mod, k0, 32);
+    MontReduceHalf(res, temp_res, mod, k0);
+}
+
+template<>
+inline void
+MontCompute<KEY_SIZE_1024>::MontMult(Uint64*       res,
+                                     const Uint64* first,
+                                     const Uint64* second,
+                                     const Uint64* mod,
+                                     Uint64        k0)
+{
+    MontMult1024(res, first, second, mod, k0);
+}
+
+template<>
+inline void
+MontCompute<KEY_SIZE_2048>::MontMult(Uint64*       res,
+                                     const Uint64* first,
+                                     const Uint64* second,
+                                     const Uint64* mod,
+                                     Uint64        k0)
+{
+    MontMult2048(res, first, second, mod, k0);
+}
+
+template<>
+inline void
+MontCompute<KEY_SIZE_1024>::MontMultHalf(Uint64*       res,
+                                         const Uint64* first,
+                                         const Uint64* second,
+                                         const Uint64* mod,
+                                         Uint64        k0)
+{
+    MontMult512(res, first, second, mod, k0);
+}
+
+template<>
+inline void
+MontCompute<KEY_SIZE_2048>::MontMultHalf(Uint64*       res,
+                                         const Uint64* first,
+                                         const Uint64* second,
+                                         const Uint64* mod,
+                                         Uint64        k0)
+{
+    MontMult1024(res, first, second, mod, k0);
 }
 
 } // namespace mont
@@ -915,23 +1272,20 @@ archEncryptPublic(Uint8*              pEncText,
                   RsaPublicKeyBignum& pubKey,
                   MontContextBignum&  context)
 {
-    auto size              = pubKey.m_size;
-    auto res_buffer_bignum = alcp::rsa::CreateBigNum(nullptr, size * 8);
 
     auto mod = pubKey.m_mod.get();
     auto r2  = context.m_r2.get();
     auto k0  = context.m_k0;
     auto exp = &pubKey.m_public_exponent;
 
+    alignas(64) Uint64 res_buffer_bignum[T / 64 * 3]{};
     mont::MontCompute<T>::MontgomeryExp(
-        res_buffer_bignum, pTextBignum, size, exp, 1, mod, r2, k0);
+        res_buffer_bignum, pTextBignum, exp, 1, mod, r2, k0);
 
     Uint8* enc_text = reinterpret_cast<Uint8*>(res_buffer_bignum);
-    for (Int64 i = pubKey.m_size * 8 - 1, j = 0; i >= 0; --i, ++j) {
+    for (Int64 i = T / 8 - 1, j = 0; i >= 0; --i, ++j) {
         pEncText[j] = enc_text[i];
     }
-
-    delete[] res_buffer_bignum;
 }
 
 template<alc_rsa_key_size T>
@@ -942,9 +1296,7 @@ archDecryptPrivate(Uint8*               pText,
                    MontContextBignum&   contextP,
                    MontContextBignum&   contextQ)
 {
-    auto res_buffer_bignum =
-        alcp::rsa::CreateBigNum(nullptr, privKey.m_size * 8 * 2);
-
+    alignas(64) Uint64 res_buffer_bignum[T / 64];
     mont::MontCompute<T>::decryptUsingCRT(
         res_buffer_bignum, pEncTextBigNum, privKey, contextP, contextQ);
 
@@ -953,8 +1305,6 @@ archDecryptPrivate(Uint8*               pText,
     for (Int64 i = privKey.m_size * 8 * 2 - 1, j = 0; i >= 0; --i, ++j) {
         pText[j] = dec_text[i];
     }
-
-    delete[] res_buffer_bignum;
 }
 
 template<alc_rsa_key_size T>
