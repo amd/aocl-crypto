@@ -568,25 +568,12 @@ struct MontCompute
         }
     }
 
-    static inline void MontSq1024(Uint64* res,
+    static inline void MontSq(Uint64* res, Uint64* inp, Uint64* mod, Uint64 k0);
+
+    static inline void MontSqHalf(Uint64* res,
                                   Uint64* inp,
                                   Uint64* mod,
-                                  Uint64  k0)
-    {
-        Uint64 temp_res[32] = {};
-        Sq1024(temp_res, inp);
-        MontReduce(res, temp_res, mod, k0, 32);
-    }
-
-    static inline void MontSq512(Uint64* res,
-                                 Uint64* inp,
-                                 Uint64* mod,
-                                 Uint64  k0)
-    {
-        Uint64 temp_res[16] = {};
-        Sq512(temp_res, inp);
-        MontReduce(res, temp_res, mod, k0, 16);
-    }
+                                  Uint64  k0);
 
     static inline void MultAndSquare(Uint64* res,
                                      Uint64* mult,
@@ -595,7 +582,7 @@ struct MontCompute
                                      Uint64  size,
                                      Uint64  val)
     {
-        MontSq1024(res, res, mod, k0);
+        MontSq(res, res, mod, k0);
         if (val & one_msb) {
             MontMult(res, res, mult, mod, k0, size);
         }
@@ -640,7 +627,7 @@ struct MontCompute
                                                  Uint64* r2,
                                                  Uint64  k0)
     {
-        __attribute__((aligned(64))) Uint64 t[16 * 8] = {};
+        __attribute__((aligned(64))) Uint64 t[16 * 16] = {};
         // conversion to mont domain by multiplying with mont converter
         MontMult(res, input, r2, mod, k0, inpSize);
         // to do check which window size is correct
@@ -662,19 +649,19 @@ struct MontCompute
         Uint8        index_value  = exp_byte_ptr[63];
         GetFromTable(t, index_value >> 4, sq, inpSize, valueLimit);
         for (Uint64 i = 0; i < winSize; i++) {
-            MontSq512(sq, sq, mod, k0);
+            MontSqHalf(sq, sq, mod, k0);
         }
         GetFromTable(t, index_value & 0xf, mult, inpSize, valueLimit);
         MontMult(sq, sq, mult, mod, k0, inpSize);
         for (Int64 i = 62; i >= 0; --i) {
             for (Uint64 i = 0; i < winSize; i++) {
-                MontSq512(sq, sq, mod, k0);
+                MontSqHalf(sq, sq, mod, k0);
             }
             index_value = exp_byte_ptr[i];
             GetFromTable(t, index_value >> 4, mult, inpSize, valueLimit);
             MontMult(sq, mult, sq, mod, k0, inpSize);
             for (Uint64 i = 0; i < winSize; i++) {
-                MontSq512(sq, sq, mod, k0);
+                MontSqHalf(sq, sq, mod, k0);
             }
             GetFromTable(t, index_value & 0xf, mult, inpSize, valueLimit);
             MontMult(sq, mult, sq, mod, k0, inpSize);
@@ -807,6 +794,56 @@ struct MontCompute
         return;
     }
 };
+
+template<>
+inline void
+MontCompute<KEY_SIZE_1024>::MontSq(Uint64* res,
+                                   Uint64* inp,
+                                   Uint64* mod,
+                                   Uint64  k0)
+{
+    Uint64 temp_res[32] = {};
+    Sq1024(temp_res, inp);
+    MontReduce(res, temp_res, mod, k0, 32);
+}
+
+template<>
+inline void
+MontCompute<KEY_SIZE_2048>::MontSq(Uint64* res,
+                                   Uint64* inp,
+                                   Uint64* mod,
+                                   Uint64  k0)
+{
+    Uint64 temp_res[64] = {};
+
+    mul(temp_res, inp, 32, inp, 32);
+    // Sq2048(temp_res, inp);
+    MontReduce(res, temp_res, mod, k0, 64);
+}
+
+template<>
+inline void
+MontCompute<KEY_SIZE_1024>::MontSqHalf(Uint64* res,
+                                       Uint64* inp,
+                                       Uint64* mod,
+                                       Uint64  k0)
+{
+    Uint64 temp_res[16] = {};
+    Sq512(temp_res, inp);
+    MontReduce(res, temp_res, mod, k0, 16);
+}
+
+template<>
+inline void
+MontCompute<KEY_SIZE_2048>::MontSqHalf(Uint64* res,
+                                       Uint64* inp,
+                                       Uint64* mod,
+                                       Uint64  k0)
+{
+    Uint64 temp_res[32] = {};
+    Sq1024(temp_res, inp);
+    MontReduce(res, temp_res, mod, k0, 32);
+}
 
 } // namespace mont
 
