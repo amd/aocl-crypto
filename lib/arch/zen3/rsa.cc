@@ -25,9 +25,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include "alcp/rsa.h"
 #include "alcp/rsa/rsa_internal.hh"
 #include "alcp/utils/copy.hh"
 #include <immintrin.h>
+
 namespace alcp::rsa { namespace zen3 {
 #include "../../rsa/rsa.cc.inc"
+    template void archEncryptPublic<KEY_SIZE_1024>(Uint8*        pEncText,
+                                                   const Uint64* pTextBignum,
+                                                   RsaPublicKeyBignum& pubKey,
+                                                   MontContextBignum&  context);
+    template void archEncryptPublic<KEY_SIZE_2048>(Uint8*        pEncText,
+                                                   const Uint64* pTextBignum,
+                                                   RsaPublicKeyBignum& pubKey,
+                                                   MontContextBignum&  context);
+
+    template void archDecryptPrivate<KEY_SIZE_1024>(
+        Uint8*               pText,
+        const Uint64*        pEncTextBigNum,
+        RsaPrivateKeyBignum& privKey,
+        MontContextBignum&   contextP,
+        MontContextBignum&   contextQ);
+
+    template void archDecryptPrivate<KEY_SIZE_2048>(
+        Uint8*               pText,
+        const Uint64*        pEncTextBigNum,
+        RsaPrivateKeyBignum& privKey,
+        MontContextBignum&   contextP,
+        MontContextBignum&   contextQ);
+
+    template void archCreateContext<KEY_SIZE_1024>(MontContextBignum& context,
+                                                   Uint64*            mod,
+                                                   Uint64             size);
+
+    template void archCreateContext<KEY_SIZE_2048>(MontContextBignum& context,
+                                                   Uint64*            mod,
+                                                   Uint64             size);
+
 }} // namespace alcp::rsa::zen3

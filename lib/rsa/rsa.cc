@@ -155,8 +155,8 @@ Rsa<T>::Rsa()
 {
     // todo : this will be removed and will be called from outside
     // after testing is done
-    setPrivateKey(DP, DQ, P, Q, QINV, Modulus, sizeof(P));
-    setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
+    // setPrivateKey(DP, DQ, P, Q, QINV, Modulus, sizeof(P));
+    // setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
 }
 
 template<alc_rsa_key_size T>
@@ -252,20 +252,20 @@ Rsa<T>::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
     static bool zen_available  = CpuId::cpuIsZen1();
 
     if (zen4_available) {
-        zen4::archEncryptPublic(
+        zen4::archEncryptPublic<T>(
             pEncText, ptext_bignum, m_pub_key, m_context_pub);
         return StatusOk();
     } else if (zen3_available) {
-        zen3::archEncryptPublic(
+        zen3::archEncryptPublic<T>(
             pEncText, ptext_bignum, m_pub_key, m_context_pub);
         return StatusOk();
     } else if (zen_available) {
-        zen::archEncryptPublic(
+        zen::archEncryptPublic<T>(
             pEncText, ptext_bignum, m_pub_key, m_context_pub);
         return StatusOk();
     }
 
-    archEncryptPublic(pEncText, ptext_bignum, m_pub_key, m_context_pub);
+    archEncryptPublic<T>(pEncText, ptext_bignum, m_pub_key, m_context_pub);
 
     return StatusOk();
 }
@@ -298,20 +298,20 @@ Rsa<T>::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
     static bool zen_available  = CpuId::cpuIsZen1();
 
     if (zen4_available) {
-        zen4::archDecryptPrivate(
+        zen4::archDecryptPrivate<T>(
             pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
         return StatusOk();
     } else if (zen3_available) {
-        zen3::archDecryptPrivate(
+        zen3::archDecryptPrivate<T>(
             pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
         return StatusOk();
     } else if (zen_available) {
-        zen::archDecryptPrivate(
+        zen::archDecryptPrivate<T>(
             pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
         return StatusOk();
     }
 
-    archDecryptPrivate(
+    archDecryptPrivate<T>(
         pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
 
     return StatusOk();
@@ -524,20 +524,20 @@ Rsa<T>::setPublicKey(const Uint64 exponent, const Uint8* mod, const Uint64 size)
     static bool zen_available  = CpuId::cpuIsZen1();
 
     if (zen4_available) {
-        zen4::archCreateContext(
+        zen4::archCreateContext<T>(
             m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
 
     } else if (zen3_available) {
-        zen3::archCreateContext(
+        zen3::archCreateContext<T>(
             m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
 
     } else if (zen_available) {
-        zen::archCreateContext(
+        zen::archCreateContext<T>(
             m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
 
     } else {
 
-        archCreateContext(
+        archCreateContext<T>(
             m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
     }
     return StatusOk();
@@ -576,24 +576,26 @@ Rsa<T>::setPrivateKey(const Uint8* dp,
     static bool zen_available  = CpuId::cpuIsZen1();
 
     if (zen4_available) {
-        zen4::archCreateContext(
+        zen4::archCreateContext<T>(
             m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
-        zen4::archCreateContext(
+        zen4::archCreateContext<T>(
             m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
     } else if (zen3_available) {
-        zen3::archCreateContext(
+        zen3::archCreateContext<T>(
             m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
-        zen3::archCreateContext(
+        zen3::archCreateContext<T>(
             m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
     } else if (zen_available) {
-        zen::archCreateContext(
+        zen::archCreateContext<T>(
             m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
-        zen::archCreateContext(
+        zen::archCreateContext<T>(
             m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
     } else {
 
-        archCreateContext(m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
-        archCreateContext(m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
+        archCreateContext<T>(
+            m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
+        archCreateContext<T>(
+            m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
     }
     return StatusOk();
 }
