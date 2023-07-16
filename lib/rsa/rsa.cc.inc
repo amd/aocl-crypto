@@ -646,14 +646,14 @@ struct MontCompute
             PutInTable(t, i, mult, inpSize, valueLimit);
         }
         const Uint8* exp_byte_ptr = reinterpret_cast<const Uint8*>(exp);
-        Uint8        index_value  = exp_byte_ptr[63];
+        Uint8        index_value  = exp_byte_ptr[T / 16 - 1];
         GetFromTable(t, index_value >> 4, sq, inpSize, valueLimit);
         for (Uint64 i = 0; i < winSize; i++) {
             MontSqHalf(sq, sq, mod, k0);
         }
         GetFromTable(t, index_value & 0xf, mult, inpSize, valueLimit);
         MontMult(sq, sq, mult, mod, k0, inpSize);
-        for (Int64 i = 62; i >= 0; --i) {
+        for (Int64 i = T / 16 - 2; i >= 0; --i) {
             for (Uint64 i = 0; i < winSize; i++) {
                 MontSqHalf(sq, sq, mod, k0);
             }
