@@ -35,6 +35,9 @@ namespace mont {
 #define UNROLL_14 _Pragma("GCC unroll 14")
 #define UNROLL_16 _Pragma("GCC unroll 16")
 #define UNROLL_30 _Pragma("GCC unroll 30")
+#define UNROLL_31 _Pragma("GCC unroll 31")
+#define UNROLL_32 _Pragma("GCC unroll 32")
+#define UNROLL_62 _Pragma("GCC unroll 62")
 #define UNROLL_64 _Pragma("GCC unroll 64")
 #else
 #define UNROLL_7
@@ -43,6 +46,9 @@ namespace mont {
 #define UNROLL_14
 #define UNROLL_16
 #define UNROLL_30
+#define UNROLL_31
+#define UNROLL_32
+#define UNROLL_62
 #define UNROLL_64
 #endif
 
@@ -551,6 +557,62 @@ struct MontCompute
 
         UNROLL_16
         for (Uint64 i = 0; i < 16; i++) {
+            Uint64 index      = 2 * i;
+            Uint64 next_index = 2 * i + 1;
+
+            lo = inp[i];
+            lo = _mulx_u64(lo, lo, (long long unsigned*)&hi);
+            c0 = _addcarryx_u64(
+                c0, lo, res[index], (long long unsigned*)&res[index]);
+            c1 = _addcarryx_u64(
+                c1, 0, res[index], (long long unsigned*)&res[index]);
+
+            c0 = _addcarryx_u64(
+                c0, hi, res[next_index], (long long unsigned*)&res[next_index]);
+            c1 = _addcarryx_u64(
+                c1, 0, res[next_index], (long long unsigned*)&res[next_index]);
+        }
+    }
+
+    static inline void Sq2048(Uint64* res, Uint64* inp)
+    {
+
+        Uint64 hi    = 0;
+        Uint64 lo    = 0;
+        Uint64 carry = 0;
+
+        UNROLL_31
+        for (Uint64 i = 0; i < 31; i++) {
+            for (Uint64 j = i + 1; j < 32; j++) {
+
+                lo = _mulx_u64(inp[i], inp[j], (long long unsigned*)&hi);
+                Uint8 c1 =
+                    _addcarryx_u64(0, lo, res[i + j], (long long unsigned*)&lo);
+                Uint8 c0 = _addcarryx_u64(
+                    0, lo, carry, (long long unsigned*)&res[i + j]);
+                carry = hi + c1 + c0;
+            }
+            res[i + 32] = carry;
+            carry       = 0;
+        }
+
+        Uint8 c1 = 0;
+        Uint8 c2 = 0;
+        UNROLL_62
+        for (Uint64 i = 1; i < 63; i++) {
+            lo = res[i];
+            c1 = _addcarryx_u64(c1, lo, lo, (long long unsigned*)&lo);
+
+            c2     = _addcarryx_u64(c2, lo, 0, (long long unsigned*)&lo);
+            res[i] = lo;
+        }
+        res[63] = c1 + c2;
+
+        Uint8 c0 = 0;
+        c1       = 0;
+
+        UNROLL_32
+        for (Uint64 i = 0; i < 32; i++) {
             Uint64 index      = 2 * i;
             Uint64 next_index = 2 * i + 1;
 
