@@ -878,8 +878,7 @@ MontCompute<KEY_SIZE_2048>::MontSq(Uint64* res,
 {
     Uint64 temp_res[64] = {};
 
-    mul(temp_res, inp, 32, inp, 32);
-    // Sq2048(temp_res, inp);
+    Sq2048(temp_res, inp);
     MontReduce(res, temp_res, mod, k0, 64);
 }
 
