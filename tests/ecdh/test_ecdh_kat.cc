@@ -43,6 +43,18 @@ TEST(ECDH, KAT_x25519)
     ecdh_KAT(info);
 }
 
+TEST(ECDH, KAT_p256)
+{
+    if (useipp || (useossl == false)) {
+        GTEST_SKIP() << "Test not implemented for ALCP and IPP";
+    }
+    alc_ec_info_t info;
+    info.ecCurveId     = ALCP_EC_SECP256R1;
+    info.ecCurveType   = ALCP_EC_CURVE_TYPE_SHORT_WEIERSTRASS;
+    info.ecPointFormat = ALCP_EC_POINT_FORMAT_UNCOMPRESSED;
+    ecdh_KAT_p256(info);
+}
+
 int
 main(int argc, char** argv)
 {

@@ -43,9 +43,9 @@ class OpenSSLEcdhBase : public EcdhBase
     OSSL_LIB_CTX* m_ec_handle       = nullptr;
     EVP_PKEY*     m_pPrivateKeyData = nullptr;
 
-    std::string st = "X25519"; //"prime256v1"; // P-256
+    std::string m_st = "X25519"; //"prime256v1"; // P-256
 
-    const char*   m_pkeytype = st.c_str();
+    const char*   m_pkeytype = m_st.c_str();
     alc_ec_info_t m_info;
 
   public:

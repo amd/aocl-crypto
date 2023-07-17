@@ -191,6 +191,111 @@ ecdh_KAT(alc_ec_info_t info)
         }
     }
 }
+// FIXME: Merge below function with above
+void
+ecdh_KAT_p256(alc_ec_info_t info)
+{
+    alcp_ecdh_data_t data_peer1, data_peer2;
+
+    AlcpEcdhBase aeb_peer1(info);
+    AlcpEcdhBase aeb_peer2(info);
+
+    EcdhBase *eb_peer1, *eb_peer2;
+
+    eb_peer1 = &aeb_peer1;
+    eb_peer2 = &aeb_peer2;
+
+    int KeySize = ECDH_KEYSIZE;
+
+#ifdef USE_OSSL
+    OpenSSLEcdhBase oeb_peer1(info);
+    OpenSSLEcdhBase oeb_peer2(info);
+    if (useossl == true) {
+        eb_peer1 = &oeb_peer1;
+        eb_peer2 = &oeb_peer2;
+    }
+#endif
+
+#ifdef USE_IPP
+    IPPEcdhBase ieb_peer1(info);
+    IPPEcdhBase ieb_peer2(info);
+    if (useipp == true) {
+        // FIXME : skip test if not running on avx512 architecture
+        if (!CpuId::cpuHasAvx512(alcp::utils::AVX512_F)) {
+            std::cout
+                << "IPP Ecdh multi-buffer implementations arent supported "
+                   "on non-avx512 supported arch,"
+                   "skipping the test!"
+                << std::endl;
+            GTEST_SKIP();
+        }
+        eb_peer1 = &ieb_peer1;
+        eb_peer2 = &ieb_peer2;
+    }
+#endif
+
+    std::string TestDataFile = std::string("dataset_ECDH_p256.csv");
+    Csv         csv          = Csv(TestDataFile);
+
+    /* check if file is valid */
+    if (!csv.m_file_exists) {
+        FAIL();
+    }
+    while (csv.readNext()) {
+        std::vector<Uint8> Peer1_SecretKey(KeySize);
+        std::vector<Uint8> Peer2_PubKey = csv.getVect("PEER2_PUB_KEY");
+
+        /* input data to be loaded */
+        std::vector<Uint8> _Peer1PvtKeyData = csv.getVect("PEER1_PVT_KEY");
+
+        data_peer1.m_Peer_PvtKey    = &(_Peer1PvtKeyData[0]);
+        data_peer2.m_Peer_PvtKey    = nullptr;
+        data_peer1.m_Peer_PvtKeyLen = _Peer1PvtKeyData.size();
+        data_peer2.m_Peer_PvtKeyLen = 0;
+
+        /*
+            For openssl we need to say type of the point
+            POINT_CONVERSION_UNCOMPRESSED = 4
+            FIXME: Find a better way to handle this
+         */
+        if (useossl && !useipp) {
+            Peer2_PubKey.insert(Peer2_PubKey.begin(), static_cast<Uint8>(4));
+        }
+        data_peer1.m_Peer_PubKey    = nullptr;
+        data_peer2.m_Peer_PubKey    = &(Peer2_PubKey[0]);
+        data_peer1.m_Peer_PubKeyLen = 0;
+        data_peer2.m_Peer_PubKeyLen = Peer2_PubKey.size();
+
+        data_peer1.m_Peer_SecretKey    = &(Peer1_SecretKey[0]);
+        data_peer2.m_Peer_SecretKey    = nullptr;
+        data_peer1.m_Peer_SecretKeyLen = Peer1_SecretKey.size();
+        data_peer2.m_Peer_SecretKeyLen = 0;
+
+        if (!eb_peer1->init(info)) {
+            std::cout << "Error in ECDH init" << std::endl;
+            FAIL();
+        }
+
+        if (!eb_peer1->ComputeSecretKey(data_peer1, data_peer2)) {
+            std::cout << "Error in ECDH Compute Secret key" << std::endl;
+            FAIL();
+        }
+
+        /* now check both Peers' secret keys match or not */
+        EXPECT_TRUE(ArraysMatch(Peer1_SecretKey,
+                                csv.getVect("SECRET_KEY"),
+                                csv,
+                                std::string("ECDH_P256")));
+
+        /*TODO: x25519 shared secret key len should always be 32 bytes !*/
+        EXPECT_TRUE(static_cast<int>(data_peer1.m_Peer_SecretKeyLen)
+                    == KeySize);
+        if (verbose > 1) {
+            PrintEcdhTestData(data_peer1);
+            PrintEcdhTestData(data_peer2);
+        }
+    }
+}
 
 /* ecdh Cross tests */
 void
