@@ -52,7 +52,8 @@ namespace avx2 {
                                          Uint8*       key,
                                          Uint64       key_len,
                                          Uint8*       value,
-                                         Uint64       value_len);
+                                         Uint64       value_len,
+                                         bool         use_df);
     ALCP_API_EXPORT void Block_Cipher_df(const Uint8* input_string,
                                          Uint64       input_string_length,
                                          Uint8*       requested_bits,

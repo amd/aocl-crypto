@@ -339,7 +339,8 @@ CtrDrbg::Impl::generate(const Uint8  cAdditionalInput[],
                                            &m_key[0],
                                            m_key.size(),
                                            &m_v[0],
-                                           m_v.size());
+                                           m_v.size(),
+                                           m_use_derivation_function);
 }
 
 void
