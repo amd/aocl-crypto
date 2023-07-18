@@ -24,3 +24,4 @@
  # POSSIBILITY OF SUCH DAMAGE.
 
  ADD_EXAMPLE(x25519_example x25519_example.c)
+ ADD_EXAMPLE(p256_example p256_example.c)
