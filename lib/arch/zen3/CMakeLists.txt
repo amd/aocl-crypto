@@ -33,6 +33,10 @@ alcp_get_arch_cflags_zen3()
 MESSAGE(STATUS "COMPILE_FLAGS:ZEN3:${ARCH_COMPILE_FLAGS}")
 ADD_COMPILE_OPTIONS(${ARCH_COMPILE_FLAGS})
 
+#Adding -funroll-loops only to Sha2_512.cc file in this arch since it improves performance for digest.
+# This flag may improve or decrease performance. But for current implementation in file, it improves performance. 
+set_source_files_properties(Sha2_512.cc PROPERTIES COMPILE_FLAGS "-funroll-loops")
+
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib/include)
 
 ADD_LIBRARY(arch_zen3
