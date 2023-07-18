@@ -101,6 +101,24 @@ class x25519Builder
     }
 };
 
+class p256Builder
+{
+  public:
+    static Status Build(const alc_ec_info_t& rEcInfo, Context& rCtx)
+    {
+        auto addr = reinterpret_cast<Uint8*>(&rCtx) + sizeof(rCtx);
+        auto algo = new (addr) P256(); // FIXME: Placement New is Depriciated
+        rCtx.m_ec = static_cast<void*>(algo);
+
+        rCtx.setPrivateKey = __ec_setPrivateKey_wrapper<P256>;
+        rCtx.getPublicKey  = __ec_getPublicKey_wrapper<P256>;
+        rCtx.getSecretKey  = __ec_getSecretKey_wrapper<P256>;
+        rCtx.finish        = __ec_dtor<P256>;
+        rCtx.reset         = __ec_reset_wrapper<P256>;
+        return StatusOk();
+    }
+};
+
 Uint32
 EcBuilder::getSize(const alc_ec_info_t& rEcInfo)
 {
@@ -109,7 +127,7 @@ EcBuilder::getSize(const alc_ec_info_t& rEcInfo)
             return sizeof(X25519);
             break;
         case ALCP_EC_SECP256R1:
-            return 0; // return sizeof(Sha3);
+            return sizeof(P256); // return sizeof(Sha3);
             break;
         default:
             return 0;
@@ -126,9 +144,8 @@ EcBuilder::Build(const alc_ec_info_t& rEcInfo, Context& rCtx)
             status = x25519Builder::Build(rEcInfo, rCtx);
             break;
         case ALCP_EC_SECP256R1:
-            // status = p256Builder::Build(rEcInfo, rCtx);
+            status = p256Builder::Build(rEcInfo, rCtx);
             break;
-
         default:
             status = Status(GenericError(ErrorCode::eNotImplemented),
                             "Curve not implemented");
