@@ -251,10 +251,6 @@ CtrDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
                          cPersonalizationString,
                          cPersonalizationStringLen);
 
-        // assert(seed_material_copy.size() == m_seedlength);
-        printf("Seed Material Copy Size is %d\n",
-               seed_material_copy.size() * 8);
-
         std::vector<Uint8> df_output(m_seedlength);
         alcp::rng::drbg::avx2::Block_Cipher_df(&seed_material_copy[0],
                                                seed_material_copy.size() * 8,
