@@ -53,6 +53,11 @@ namespace avx2 {
                                          Uint64       key_len,
                                          Uint8*       value,
                                          Uint64       value_len);
+    ALCP_API_EXPORT void Block_Cipher_df(const Uint8* input_string,
+                                         Uint64       input_string_length,
+                                         Uint8*       requested_bits,
+                                         Uint64       no_of_bits_to_return,
+                                         Uint64       keylen);
 } // namespace avx2
 
 // Data structures and functions for debugging. FIXME: Remove once API testing
@@ -134,6 +139,7 @@ class ALCP_API_EXPORT CtrDrbg : public Drbg
     ~CtrDrbg();
 
     void setKeySize(Uint64 keySize);
+    void setUseDerivationFunction(const bool use_derivation_function);
 
   protected:
     /**

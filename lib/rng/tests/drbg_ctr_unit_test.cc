@@ -149,6 +149,7 @@ known_answer_map_t KAT_CtrDrbgDataset{
     { "TESTCASE1_AES_128",
       { { "EntropyInput",
           "ce50f33da5d4c1d3d4004eb35244b7f2cd7f2e5076fbf6780a7ff634b249a5fc" },
+        { "useDerivationFunction", { "false" } },
         { "nonce", {} },
         { "PersonalizationString", {} },
         { "AdditionalInput1", {} },
@@ -169,6 +170,7 @@ known_answer_map_t KAT_CtrDrbgDataset{
       { { "EntropyInput",
           "f1ef7eb311c850e189be229df7e6d68f1795aa8e21d93504e75abe78f04139587354"
           "0386812a9a2a" },
+        { "useDerivationFunction", { "false" } },
         { "nonce", {} },
         { "PersonalizationString", {} },
         { "AdditionalInput1", {} },
@@ -189,6 +191,7 @@ known_answer_map_t KAT_CtrDrbgDataset{
       { { "EntropyInput",
           "df5d73faa468649edda33b5cca79b0b05600419ccb7a879ddfec9db32ee494e5531b"
           "51de16a30f769262474c73bec010" },
+        { "useDerivationFunction", { "false" } },
         { "nonce", {} },
         { "PersonalizationString", {} },
         { "AdditionalInput1", {} },
@@ -212,6 +215,7 @@ known_answer_map_t KAT_CtrDrbgDataset{
       { { "EntropyInput",
           "f45e9d040c1456f1c7f26e7f146469fbe3973007fe037239ad57623046e7ec52221b"
           "22eec208b22ac4cf4ca8d6253874" },
+        { "useDerivationFunction", { "false" } },
         { "nonce", {} },
         { "PersonalizationString", {} },
         { "AdditionalInput1",
@@ -239,6 +243,7 @@ known_answer_map_t KAT_CtrDrbgDataset{
       { { "EntropyInput",
           "22a89ee0e37b54ea636863d9fed10821f1952a428488d528eceb9d2ec69d573ec621"
           "6216fb3e8f72a148a5ada9d620b1" },
+        { "useDerivationFunction", { "false" } },
         { "nonce", {} },
         { "PersonalizationString",
           "953c10badcbcd45fb4e5475826477fc137ac96a49ad5005fb14bdaf6468ae7f46c5d"
@@ -259,7 +264,22 @@ known_answer_map_t KAT_CtrDrbgDataset{
         { "value3", "55f1f21c57581386cc681ba2253a4122" },
         { "generatedbits",
           "f7fab6a6fcf445f0a0434b2aa0c610bdef5489ecd95414634623add18a9f888bca6b"
-          "e151312d1b9e8f83bd0acad6234d3bccc11b63a40d6fbff448f67db0b91f" } } }
+          "e151312d1b9e8f83bd0acad6234d3bccc11b63a40d6fbff448f67db0b91f" } } },
+
+    { "TESTCASE5_AES_128_UseDf",
+      { { "EntropyInput", "890eb067acf7382eff80b0c73bc872c6" },
+        { "useDerivationFunction", { "true" } },
+        { "nonce", { "aad471ef3ef1d203" } },
+        { "PersonalizationString", {} },
+        { "AdditionalInput1", {} },
+        { "AdditionalInput2", {} },
+        { "key1", "75051a3f18bc432cd125186614c2755c" },
+        { "value1", "a60f46bd042a606816badff34464158b" },
+        { "key2", {} },
+        { "value2", {} },
+        { "key3", {} },
+        { "value3", {} },
+        { "generatedbits", {} } } }
 
 };
 
@@ -272,6 +292,7 @@ class CtrDrbgFuncionalityTest
         AdditionalInput1, AdditionalInput2, expected_key1, expected_key2,
         expected_key3, expected_value1, expected_value2, expected_value3,
         expected_generated_bits;
+    bool                            use_derivation_function = false;
     std::unique_ptr<TestingCtrDrbg> m_ctrDrbg;
 
     void SetUp() override
@@ -295,12 +316,16 @@ class CtrDrbgFuncionalityTest
         expected_generated_bits =
             parseHexStrToBin(tuple_values.at("generatedbits"));
 
+        use_derivation_function =
+            tuple_values.at("useDerivationFunction") == "true";
+
         m_ctrDrbg = std::make_unique<TestingCtrDrbg>();
         m_ctrDrbg->setKeySize(expected_key1.size());
+        m_ctrDrbg->setUseDerivationFunction(use_derivation_function);
     }
 };
 
-TEST_P(CtrDrbgFuncionalityTest, WithoutDf)
+TEST_P(CtrDrbgFuncionalityTest, KAT)
 {
 
     m_ctrDrbg->testingInstantiate(EntropyInput, nonce, PersonalizationString);

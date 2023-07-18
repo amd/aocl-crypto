@@ -31,6 +31,7 @@
 // matching and references
 #include "alcp/rng/drbg_ctr.hh"
 #include "alcp/cipher/aes.hh"
+#include "alcp/utils/bignum.hh"
 #include "alcp/utils/copy.hh"
 
 namespace alcp::rng::drbg {
@@ -40,11 +41,14 @@ class CtrDrbg::Impl
   private:
     std::vector<Uint8> m_v = std::vector<Uint8>(16);
     std::vector<Uint8> m_key;
-    Uint64             m_keySize    = 0;
-    Uint64             m_seedlength = 0;
+    Uint64             m_keySize                 = 0;
+    Uint64             m_seedlength              = 0;
+    bool               m_use_derivation_function = false;
 
   public:
     void setKeySize(Uint64 keySize);
+    void setUseDerivationFunction(const bool use_derivation_function);
+
     /**
      * @brief Given Data and Length, updates key and value internally
      *
@@ -198,39 +202,85 @@ CtrDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
     // Here buffer is created of length m_seedlength and not
     // cPersonalizationStringLen to avoid further padding of 0^(seedlen- temp)
     // Uint8 seed_material_copy[m_seedlength] = {};
-    std::vector<Uint8> seed_material_copy(m_seedlength, 0);
-    utils::CopyBytes(&seed_material_copy[0],
-                     cPersonalizationString,
-                     cPersonalizationStringLen);
-
-    // seed_material = entropy_input ⊕ personalization_string.
-    assert(cEntropyInputLen == m_seedlength);
-    for (Uint64 i = 0; i < cEntropyInputLen; i++) {
-        seed_material_copy[i] = cEntropyInput[i] ^ seed_material_copy[i];
-    }
 
     // Key = 0^keylen
     std::fill(m_key.begin(), m_key.end(), 0);
     // V = 0^blocklen
     std::fill(m_v.begin(), m_v.end(), 0);
 
-    DebugPrint(m_key, "K", __FILE__, __LINE__);
-    DebugPrint(m_v, "V", __FILE__, __LINE__);
+    std::vector<Uint8> seed_material_copy;
+    if (!m_use_derivation_function) {
+        seed_material_copy = std::vector<Uint8>(m_seedlength, 0);
+        utils::CopyBytes(&seed_material_copy[0],
+                         cPersonalizationString,
+                         cPersonalizationStringLen);
+
+        // seed_material = entropy_input ⊕ personalization_string.
+        assert(cEntropyInputLen == m_seedlength);
+        for (Uint64 i = 0; i < cEntropyInputLen; i++) {
+            seed_material_copy[i] = cEntropyInput[i] ^ seed_material_copy[i];
+        }
+
+        DebugPrint(m_key, "K", __FILE__, __LINE__);
+        DebugPrint(m_v, "V", __FILE__, __LINE__);
 #ifdef DEBUG
-    std::cout << "&seed_material_copy[0]: "
-              << parseBytesToHexStr(&seed_material_copy[0],
-                                    seed_material.size())
-              << std::endl;
-    std::cout << "Seed Material Length: " << seed_material.size() << std::endl;
+        std::cout << "&seed_material_copy[0]: "
+                  << parseBytesToHexStr(&seed_material_copy[0],
+                                        seed_material.size())
+                  << std::endl;
+        std::cout << "Seed Material Length: " << seed_material.size()
+                  << std::endl;
 #endif
-    // (Key, V) = CTR_DRBG_Update (seed_material, Key, V).
-    update(&seed_material_copy[0], m_seedlength);
+        // (Key, V) = CTR_DRBG_Update (seed_material, Key, V).
+        update(&seed_material_copy[0], seed_material_copy.size());
 
-    DebugPrint(m_key, "K", __FILE__, __LINE__);
-    DebugPrint(m_v, "V", __FILE__, __LINE__);
+        DebugPrint(m_key, "K", __FILE__, __LINE__);
+        DebugPrint(m_v, "V", __FILE__, __LINE__);
 
-    // FIXME: Currently no reseed counter is there
-    // reseed_counter = 1
+        // FIXME: Currently no reseed counter is there
+        // reseed_counter = 1
+    } else {
+        seed_material_copy = std::vector<Uint8>(
+            cEntropyInputLen + cNonceLen + cPersonalizationStringLen, 0);
+        // Copy can't be avoided
+        utils::CopyBytes(
+            &seed_material_copy[0], cEntropyInput, cEntropyInputLen);
+        utils::CopyBytes(
+            &seed_material_copy[0] + cEntropyInputLen, cNonce, cNonceLen);
+        utils::CopyBytes(&seed_material_copy[0] + cEntropyInputLen + cNonceLen,
+                         cPersonalizationString,
+                         cPersonalizationStringLen);
+
+        // assert(seed_material_copy.size() == m_seedlength);
+        printf("Seed Material Copy Size is %d\n",
+               seed_material_copy.size() * 8);
+
+        std::vector<Uint8> df_output(m_seedlength);
+        alcp::rng::drbg::avx2::Block_Cipher_df(&seed_material_copy[0],
+                                               seed_material_copy.size() * 8,
+                                               &df_output[0],
+                                               df_output.size() * 8,
+                                               m_key.size());
+
+        DebugPrint(m_key, "K", __FILE__, __LINE__);
+        DebugPrint(m_v, "V", __FILE__, __LINE__);
+#ifdef DEBUG
+        std::cout << "&seed_material_copy[0]: "
+                  << parseBytesToHexStr(&seed_material_copy[0],
+                                        seed_material.size())
+                  << std::endl;
+        std::cout << "Seed Material Length: " << seed_material.size()
+                  << std::endl;
+#endif
+        // (Key, V) = CTR_DRBG_Update (seed_material, Key, V).
+        update(&df_output[0], df_output.size());
+
+        DebugPrint(m_key, "K", __FILE__, __LINE__);
+        DebugPrint(m_v, "V", __FILE__, __LINE__);
+
+        // FIXME: Currently no reseed counter is there
+        // reseed_counter = 1
+    }
 }
 
 void
@@ -306,6 +356,13 @@ CtrDrbg::Impl::setKeySize(Uint64 keySize)
     std::cout << "Key length after setting " << m_keySize << std::endl;
 #endif
 }
+
+void
+CtrDrbg::Impl::setUseDerivationFunction(const bool use_derivation_function)
+{
+    m_use_derivation_function = use_derivation_function;
+}
+
 void
 CtrDrbg::generate(const Uint8* p_cAdditionalInput,
                   const Uint64 cAdditionalInputLen,
@@ -370,6 +427,12 @@ void
 CtrDrbg::setKeySize(Uint64 keySize)
 {
     p_impl->setKeySize(keySize);
+}
+
+void
+CtrDrbg::setUseDerivationFunction(const bool use_derivation_function)
+{
+    p_impl->setUseDerivationFunction(use_derivation_function);
 }
 
 std::string

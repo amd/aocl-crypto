@@ -157,6 +157,8 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
 #endif
 
     assert(seed_length == temp.size());
+    assert(cProvidedDataLen == temp.size());
+
     // temp = temp ⊕ provided_data
     for (Uint64 i = 0; i < cProvidedDataLen; i++) {
         temp[i] = temp[i] ^ p_provided_data[i];
@@ -237,4 +239,150 @@ DrbgCtrGenerate(const Uint8  cAdditionalInput[],
         &additional_input_bits[0], seed_length, &key[0], key_len, &value[0]);
 }
 
+void
+do_xor(const Uint8* input1, const Uint8* input2, Uint8* output, Uint64 n)
+{
+    for (Uint64 i = 0; i < n; i++) {
+        output[i] = input1[i] ^ input2[i];
+    }
+}
+
+// BCC (Key, data):
+void
+BCC(Uint8* key,
+    Uint64 key_length,
+    Uint8* data,
+    Uint64 data_length,
+    Uint8* output_block)
+{
+    std::cout << "Data to be BCCed is " << parseBytesToHexStr(data, data_length)
+              << std::endl;
+    // chaining_value = 0^outlen.
+    static constexpr int outlen = 16; // Block length in bytes
+    assert(data_length % outlen == 0);
+    Uint8 chaining_value[outlen] = {};
+    // n = len (data)/outlen.
+    auto n = data_length / outlen; // number of blocks
+
+    // Starting with the leftmost bits of data, split data into n blocks of
+    // outlen bits each, forming block1 to blockn. For i = 1 to n do
+    for (Uint64 i = 0; i < n; i++) {
+        // input_block = chaining_value ⊕ blocki.
+        Uint8 input_block[outlen] = {};
+        do_xor(chaining_value, data + i, input_block, 16);
+        // chaining_value = Block_Encrypt (Key, input_block)
+        encrypt_block(input_block, key, key_length, chaining_value);
+    }
+    // output_block = chaining_value.
+    utils::CopyBytes(output_block, chaining_value, outlen);
+}
+
+void
+Block_Cipher_df(const Uint8* input_string,
+                Uint64       input_string_length,
+                Uint8*       requested_bits,
+                Uint64       no_of_bits_to_return,
+                Uint64       keylen)
+{
+    // If (number_of_bits_to_return > max_number_of_bits), then return an
+    // ERROR_FLAG and a Null string.
+    constexpr int outlen = 16;
+    Int32         L = input_string_length / 8; // Input string length in bytes
+    Int32 N      = no_of_bits_to_return / 8;   // no. of bits to return in bytes
+    auto  s_size = sizeof(L) + sizeof(N) + input_string_length + 1;
+
+    const Uint64 no_of_bytes_to_return = no_of_bits_to_return / 8;
+
+    if (s_size % outlen != 0) {
+        s_size += (outlen - (s_size % outlen));
+    }
+
+    std::vector<Uint8> S(s_size, 0);
+
+    /*     // S[0] = (L << 32) | N;
+        memcpy((Uint8*)(S), &L, sizeof(L));
+        memcpy((Uint8*)(S) + sizeof(L), &N, sizeof(N));
+        memcpy((Uint8*)(S) + sizeof(L) + sizeof(N), input_string, L);
+        // S[2 + input_string_length + 1] = 0x80;
+        memset((Uint8*)(S) + sizeof(L) + sizeof(N) + L, 0x80, 1);
+     */
+
+    Uint8* s_8 = &S[0];
+    for (int i = 0; i < sizeof(Int32); i++) {
+        Uint8 t                    = (L & (0xff << i * 8)) >> (i * 8);
+        s_8[sizeof(Int32) - i - 1] = t;
+    }
+    printf("Integer value of L = %d\n", L);
+    std::cout << "S = " << parseBytesToHexStr(&S[0], 16) << std::endl;
+
+    s_8 = s_8 + sizeof(Int32);
+    for (int i = 0; i < sizeof(Int32); i++) {
+        Uint8 t                    = (N & (0xff << i * 8)) >> (i * 8);
+        s_8[sizeof(Int32) - i - 1] = t;
+    }
+
+    printf("Integer value of N = %d\n", N);
+    std::cout << "S = " << parseBytesToHexStr(&S[0], 16) << std::endl;
+
+    memcpy((&S[0]) + sizeof(L) + sizeof(N), input_string, L);
+    // S[2 + input_string_length + 1] = 0x80;
+    memset((&S[0]) + sizeof(L) + sizeof(N) + L, 0x80, 1);
+
+    // temp = the Null string.
+    std::vector<Uint8> temp;
+
+    // i = 0
+    Int32 i = 0;
+
+    // K = leftmost (0x00010203...1D1E1F, keylen).
+    Uint8 bigKey[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                       0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+                       0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+                       0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f };
+    Uint8 K[keylen];
+    utils::CopyBytes(K, bigKey, keylen);
+    // While len (temp) < keylen + outlen, do
+    while (temp.size() < (keylen + outlen)) {
+        // IV = i || 0^(outlen - len (i)); len(i) is fixed as 32 bits
+        std::vector<Uint8> IV(outlen, 0);
+        auto               iv_8 = &IV[0];
+        for (int j = 0; j < sizeof(Int32); j++) {
+            Uint8 t                     = (i & (0xff << j * 8)) >> (j * 8);
+            iv_8[sizeof(Int32) - j - 1] = t;
+        }
+
+        // temp = temp || BCC (K, (IV || S)).
+        /*   Uint64 s_concat_iv[iv_concat_s_size] = {};
+          utils::CopyBytes(s_concat_iv, IV, outlen / 64);
+          utils::CopyBytes(s_concat_iv, S, outlen / 64); */
+
+        Uint8 iv_concat_s[IV.size() + S.size()] = {};
+        memcpy(iv_concat_s, &IV[0], IV.size());
+        memcpy(iv_concat_s + IV.size(), &S[0], S.size());
+
+        std::vector<Uint8> output_block(outlen, 0);
+        BCC(K,
+            keylen,
+            iv_concat_s,
+            sizeof(iv_concat_s),
+            &output_block[0]); // BCC (K, (IV || S)).
+
+        temp.insert(temp.end(), output_block.begin(), output_block.end());
+        i++;
+    }
+    // K = leftmost (temp, keylen).
+    utils::CopyBytes(K, &temp[0], keylen);
+    // X = select (temp, keylen+1, keylen+outlen).
+    std::vector<Uint8> X(outlen, 0);
+    utils::CopyBytes(&X[0], &temp[0] + keylen, outlen);
+
+    temp.clear();
+    while (temp.size() < no_of_bytes_to_return) {
+        encrypt_block(&X[0], K, keylen, &X[0]);
+        temp.insert(temp.end(), X.begin(), X.end());
+    }
+    printf("No. of bytes to return is %d\n", no_of_bytes_to_return);
+    printf("Temp Size is %d\n", temp.size());
+    utils::CopyBytes(requested_bits, &temp[0], no_of_bytes_to_return);
+}
 } // namespace alcp::rng::drbg::avx2
