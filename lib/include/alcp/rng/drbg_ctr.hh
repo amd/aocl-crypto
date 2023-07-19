@@ -26,6 +26,7 @@
  *
  */
 #include "alcp/rng/drbg.hh"
+#include "alcp/types.h"
 #include "iostream"
 #include <immintrin.h>
 

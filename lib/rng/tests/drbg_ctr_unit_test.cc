@@ -64,7 +64,7 @@ double totalTimeElapsed;
 using namespace alcp::rng::drbg;
 using alcp::base::Status;
 Uint8
-parseHexToNum(const unsigned char c)
+parseHexToNum(const Uint8 c)
 {
     if (c >= 'a' && c <= 'f')
         return c - 'a' + 10;
