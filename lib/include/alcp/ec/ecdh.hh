@@ -142,7 +142,9 @@ class X25519 : public Ec
   private:
     Uint8 m_PrivKey[32] = {};
 };
+// x2519 apis
 
+// NIST curves
 class P256 : public Ec
 {
   public:
@@ -159,7 +161,7 @@ class P256 : public Ec
     ALCP_API_EXPORT Status setPrivateKey(const Uint8* pPrivKey) override;
 
     /**
-     * @brief Function generates x25519 public key using input privateKey
+     * @brief Function generates p256 public key using input privateKey
      * generated public key is shared with the peer.
      *
      * @param  pPublicKey  pointer to Output Publickey generated
@@ -171,7 +173,7 @@ class P256 : public Ec
                                              const Uint8* pPrivKey) override;
 
     /**
-     * @brief Function computes x25519 secret key with publicKey from remotePeer
+     * @brief Function computes p256 secret key with publicKey from remotePeer
      * and local privatekey.
      *
      * @param  pSecretKey  pointer to output secretKey
@@ -214,10 +216,6 @@ class P256 : public Ec
      */
     EVP_PKEY *m_pSelfKey = nullptr, *m_pPeerKey = nullptr;
 };
+// p-256 api
 
 } // namespace alcp::ec
-
-// x2519 apis
-
-// NIST curves
-// p-256 api
