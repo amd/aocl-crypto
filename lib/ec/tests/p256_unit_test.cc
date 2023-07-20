@@ -119,9 +119,6 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(p256Test, SecretKeyGen)
 {
-    alc_error_t ret = ALC_ERROR_NONE;
-
-    const Uint8* pPrivKey_input_data1 = &(m_peer1_private_key.at(0));
     m_p256obj->setPrivateKey(&m_peer1_private_key[0]);
 
     std::vector<Uint8> pSecret_key(m_p256obj->getKeySize());
