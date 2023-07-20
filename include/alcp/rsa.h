@@ -310,7 +310,7 @@ alcp_rsa_set_publickey(const alc_rsa_handle_p pRsaHandle,
  * @return Error Code for the API called . if alc_error_t is not zero then
  * alcp_error_str needs to be called to know about error occurred
  */
-alc_error_t
+ALCP_API_EXPORT alc_error_t
 alcp_rsa_set_privatekey(const alc_rsa_handle_p pRsaHandle,
                         const Uint8*           dp,
                         const Uint8*           dq,

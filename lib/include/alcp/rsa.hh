@@ -161,7 +161,6 @@ class ALCP_API_EXPORT Rsa
     MontContextBignum   m_context_p;
     MontContextBignum   m_context_q;
     digest::IDigest*    m_digest = nullptr;
-    rng::IDrbg*         m_drbg   = nullptr;
     digest::IDigest*    m_mgf    = nullptr;
 };
 

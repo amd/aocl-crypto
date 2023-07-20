@@ -31,7 +31,7 @@
 Uint64
 MUL64(Uint64 a, Uint64 b, long long unsigned* rem)
 {
-    __uint128_t res = (__uint128_t)(a * b);
+    __uint128_t res = (__uint128_t)a * b;
     *rem            = (Uint64)(res >> 64);
     return (Uint64)res;
 }
@@ -40,7 +40,7 @@ MUL64(Uint64 a, Uint64 b, long long unsigned* rem)
 Uint8
 ADD64(Uint8 carry, Uint64 a, Uint64 b, long long unsigned* res)
 {
-    __uint128_t sum = a + b + carry;
+    __uint128_t sum = (__uint128_t)a + b + carry;
     *res            = (Uint64)(sum);
     return (Uint8)(sum >> 64);
 }
@@ -50,9 +50,9 @@ ADD64(Uint8 carry, Uint64 a, Uint64 b, long long unsigned* res)
 Uint8
 SUB64(Uint8 carry, Uint64 a, Uint64 b, long long unsigned* res)
 {
-    __uint128_t sub = a - (b + carry);
+    __uint128_t sub = (__uint128_t)a - ((__uint128_t)b + carry);
     *res            = (Uint64)(sub);
-    return (Uint8)(sub >> 64);
+    return (Uint8) !!(sub >> 64);
 }
 
 #define _subborrow_u64(x, y, z, t) SUB64(x, y, z, t)
@@ -61,7 +61,7 @@ Uint64
 LEADZEROS(Uint64 a)
 {
     unsigned y;
-    int      n = 32;
+    int      n = 64;
 
     y = a >> 32;
     if (y != 0) {
