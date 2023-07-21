@@ -38,7 +38,7 @@
 typedef std::tuple<std::vector<Uint8>, // peer1_private_key
                    std::vector<Uint8>, // peer2_public_key
                    std::vector<Uint8>> // expected_shared_key
-                                                 param_tuple;
+    param_tuple;
 typedef std::map<const std::string, param_tuple> known_answer_map_t;
 
 using alcp::ec::P256;
@@ -74,57 +74,52 @@ known_answer_map_t KATDataset{
 };
 // clang-format on
 
-class p256Test
-    : public ::testing::TestWithParam<std::pair<const std::string, param_tuple>>
-{
-  public:
-    std::vector<Uint8> m_peer1_private_key;
-    std::vector<Uint8> m_peer2_public_key;
-    std::vector<Uint8> m_expected_shared_key;
-    std::string        m_test_name;
-    alc_error_t        m_err;
+class p256Test : public ::testing::TestWithParam<
+                     std::pair<const std::string, param_tuple>> {
+public:
+  std::vector<Uint8> m_peer1_private_key;
+  std::vector<Uint8> m_peer2_public_key;
+  std::vector<Uint8> m_expected_shared_key;
+  std::string m_test_name;
+  alc_error_t m_err;
 
-    P256* m_p256obj            = nullptr;
-    Uint8 m_publicKeyData1[32] = {};
+  P256 *m_p256obj = nullptr;
+  Uint8 m_publicKeyData1[32] = {};
 
-    void SetUp() override
-    {
-        // Tuple order
-        // {peer1_private_key, peer2_private_key,expected_shared_key}
-        const auto params = GetParam();
-        const auto [peer1_private_key, peer2_public_key, expected_shared_key] =
-            params.second;
-        const auto test_name = params.first;
+  void SetUp() override {
+    // Tuple order
+    // {peer1_private_key, peer2_private_key,expected_shared_key}
+    const auto params = GetParam();
+    const auto [peer1_private_key, peer2_public_key, expected_shared_key] =
+        params.second;
+    const auto test_name = params.first;
 
-        // Copy Values to class variables
-        m_peer1_private_key   = peer1_private_key;
-        m_peer2_public_key    = peer2_public_key;
-        m_expected_shared_key = expected_shared_key;
+    // Copy Values to class variables
+    m_peer1_private_key = peer1_private_key;
+    m_peer2_public_key = peer2_public_key;
+    m_expected_shared_key = expected_shared_key;
 
-        m_test_name = test_name;
+    m_test_name = test_name;
 
-        m_p256obj = new P256;
-    }
+    m_p256obj = new P256;
+  }
 
-    void TearDown() override { delete m_p256obj; }
+  void TearDown() override { delete m_p256obj; }
 };
 
 INSTANTIATE_TEST_SUITE_P(
-    KnownAnswerTest,
-    p256Test,
-    testing::ValuesIn(KATDataset),
-    [](const testing::TestParamInfo<p256Test::ParamType>& info) {
-        return info.param.first;
+    KnownAnswerTest, p256Test, testing::ValuesIn(KATDataset),
+    [](const testing::TestParamInfo<p256Test::ParamType> &info) {
+      return info.param.first;
     });
 
-TEST_P(p256Test, SecretKeyGen)
-{
-    m_p256obj->setPrivateKey(&m_peer1_private_key[0]);
+TEST_P(p256Test, SecretKeyGen) {
+  m_p256obj->setPrivateKey(&m_peer1_private_key[0]);
 
-    std::vector<Uint8> pSecret_key(m_p256obj->getKeySize());
-    Uint64             keyLength;
-    m_p256obj->computeSecretKey(
-        &pSecret_key[0], &m_peer2_public_key[0], &keyLength);
+  std::vector<Uint8> pSecret_key(m_p256obj->getKeySize());
+  Uint64 keyLength;
+  m_p256obj->computeSecretKey(&pSecret_key[0], &m_peer2_public_key[0],
+                              &keyLength);
 
-    EXPECT_EQ(m_expected_shared_key, pSecret_key);
+  EXPECT_EQ(m_expected_shared_key, pSecret_key);
 }

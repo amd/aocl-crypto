@@ -145,10 +145,10 @@ class X25519 : public Ec
 // x2519 apis
 
 // NIST curves
-class P256 : public Ec
+class ALCP_API_EXPORT P256 : public Ec
 {
   public:
-    ALCP_API_EXPORT P256() = default;
+     P256() = default;
     ~P256();
 
     /**
@@ -158,7 +158,7 @@ class P256 : public Ec
      *
      * @return Status Error code
      */
-    ALCP_API_EXPORT Status setPrivateKey(const Uint8* pPrivKey) override;
+    Status setPrivateKey(const Uint8* pPrivKey) override;
 
     /**
      * @brief Function generates p256 public key using input privateKey
@@ -169,7 +169,7 @@ class P256 : public Ec
      * publicKey
      * @return Status Error code
      */
-    ALCP_API_EXPORT Status generatePublicKey(Uint8*       pPublicKey,
+    Status generatePublicKey(Uint8*       pPublicKey,
                                              const Uint8* pPrivKey) override;
 
     /**
@@ -182,7 +182,7 @@ class P256 : public Ec
      * @param  pKeyLength  pointer to keyLength
      * @return Status Error code
      */
-    ALCP_API_EXPORT Status computeSecretKey(Uint8*       pSecretKey,
+    Status computeSecretKey(Uint8*       pSecretKey,
                                             const Uint8* pPublicKey,
                                             Uint64*      pKeyLength) override;
 

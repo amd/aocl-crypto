@@ -346,6 +346,7 @@ namespace alcp::cipher { namespace aesni {
         return ALC_ERROR_NONE;
     }
 
+    ALCP_API_EXPORT
     alc_error_t EncryptXts128(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
@@ -385,6 +386,7 @@ namespace alcp::cipher { namespace aesni {
             pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
     }
 
+    ALCP_API_EXPORT
     alc_error_t DecryptXts128(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,

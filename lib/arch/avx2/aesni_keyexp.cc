@@ -342,6 +342,7 @@ namespace alcp::cipher { namespace aesni {
         return (alc_error_t)sts.code();
     }
 
+    ALCP_API_EXPORT
     alc_error_t ExpandTweakKeys(const Uint8* pUserKey,
                                 Uint8*       pTweakKey,
                                 int          nRounds)
