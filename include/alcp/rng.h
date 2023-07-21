@@ -123,12 +123,6 @@ typedef enum _alc_rng_algo_flags
     ALC_RNG_FLAG_DUMMY,
 } alc_rng_algo_flags_t;
 
-typedef enum _alc_drbg_info
-{
-    ALC_HMAC_DRBG,
-    ALC_CTR_DRBG
-} alc_drbg_info_t;
-
 /**
  * @brief Store info about RNG
  *

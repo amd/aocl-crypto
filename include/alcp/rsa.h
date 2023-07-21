@@ -31,7 +31,6 @@
 #include "alcp/digest.h"
 #include "alcp/error.h"
 #include "alcp/macros.h"
-#include "alcp/rng.h"
 
 EXTERN_C_BEGIN
 /**
@@ -167,7 +166,7 @@ alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
                            Uint8*                 pEncText);
 
 /**
- * @brief Function encrypts text using using public kee and oaep padding
+ * @brief Function encrypts text using using public key and oaep padding
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_rsa_request
  * @endparblock
@@ -193,13 +192,37 @@ alcp_rsa_publickey_encrypt_oaep(const alc_rsa_handle_p pRsaHandle,
                                 const Uint8*           pSeed,
                                 Uint8*                 pEncText);
 
-ALCP_API_EXPORT alc_error_t
-alcp_rsa_add_digest_oaep(const alc_rsa_handle_p pRsaHandle,
-                         alc_digest_info_t      digestInfo);
+/**
+ * @brief Function adds the digest algorithm to be used in oaep padding
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request
+ * @endparblock
+ *
+ * @param [in]  pRsaHandle         - Handler of the Context for the session
+ * @param [in]  digestInfo         - Description of the digest
 
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_add_mgf_oaep(const alc_rsa_handle_p pRsaHandle,
-                      alc_digest_info_t      digestInfo);
+alcp_rsa_add_digest_oaep(const alc_rsa_handle_p  pRsaHandle,
+                         const alc_digest_info_p digestInfo);
+
+/**
+ * @brief Function adds the digest algorithm for mask generation in oaep padding
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request
+ * @endparblock
+ *
+ * @param [in]  pRsaHandle         - Handler of the Context for the session
+ * @param [in]  digestInfo         - Description of the digest
+
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_add_mgf_oaep(const alc_rsa_handle_p  pRsaHandle,
+                      const alc_digest_info_p digestInfo);
 
 /**
  * @brief Function decrypts encrypted text using private key.

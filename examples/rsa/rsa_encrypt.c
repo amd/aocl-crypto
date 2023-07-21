@@ -34,6 +34,7 @@
 
 #include "alcp/rsa.h"
 
+// RSA Public key
 static const Uint8 Modulus[] = {
     0xef, 0x4f, 0xa2, 0xcd, 0x00, 0xea, 0x99, 0xeb, 0x12, 0xa8, 0x3a, 0x1b,
     0xc5, 0x5d, 0x49, 0x04, 0x18, 0xcd, 0x96, 0x69, 0xc9, 0x28, 0x2c, 0x36,
@@ -55,7 +56,7 @@ static const Uint64 PublicKeyExponent = 0x10001;
     for (int x = 0; x < L; x++) {                                              \
         printf(" %02x", *(I + x));                                             \
     }                                                                          \
-    printf("\n");
+    printf("\n\n");
 
 static alc_error_t
 create_demo_session(alc_rsa_handle_t* s_rsa_handle)
@@ -99,8 +100,6 @@ Rsa_encrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
 
     ALCP_PRINT_TEXT(text, size_key, "text_peer")
 
-    printf("\n");
-
     pub_key_mod = malloc(sizeof(Uint8) * size_key);
     memset(pub_key_mod, 0, sizeof(Uint8) * size_key);
 
@@ -132,7 +131,6 @@ Rsa_encrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
     }
 
     ALCP_PRINT_TEXT(enc_text, size_key, "enc_text")
-    printf("\n");
 
 free_enc_text:
     free(enc_text);

@@ -34,6 +34,7 @@
 
 #include "alcp/rsa.h"
 
+// RSA Private key
 static const Uint8 Modulus[] = {
     0xef, 0x4f, 0xa2, 0xcd, 0x00, 0xea, 0x99, 0xeb, 0x12, 0xa8, 0x3a, 0x1b,
     0xc5, 0x5d, 0x49, 0x04, 0x18, 0xcd, 0x96, 0x69, 0xc9, 0x28, 0x2c, 0x36,
@@ -62,6 +63,7 @@ static const Uint8 PrivateKeyExponent[] = {
     0xec, 0x36, 0x51, 0x13, 0x95, 0x39, 0xd2, 0x91
 };
 
+// RSA private key in CRT(Chinese remainder form)
 static const Uint8 P_Modulus[] = {
     0xfa, 0x5e, 0xa7, 0x98, 0x7d, 0x19, 0x66, 0xdf, 0x91, 0xd7, 0xe7,
     0xf6, 0xbe, 0xb7, 0xdf, 0x51, 0x99, 0x61, 0xb8, 0x08, 0xff, 0xcd,
@@ -114,7 +116,7 @@ static const Uint8 Label[] = { 'h', 'e', 'l', 'l', 'o' };
     for (int x = 0; x < L; x++) {                                              \
         printf(" %02x", *(I + x));                                             \
     }                                                                          \
-    printf("\n");
+    printf("\n\n");
 
 static alc_error_t
 create_demo_session(alc_rsa_handle_t* s_rsa_handle)
@@ -160,8 +162,6 @@ Rsa_decrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
     memset(enc_text, 0x31, sizeof(Uint8) * size_key);
 
     ALCP_PRINT_TEXT(enc_text, size_key, "encrypted text")
-
-    printf("\n");
 
     dec_text = malloc(sizeof(Uint8) * size_key);
     memset(dec_text, 0, sizeof(Uint8) * size_key);
