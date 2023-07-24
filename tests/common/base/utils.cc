@@ -62,13 +62,16 @@ parseHexStrToBin(const std::string in)
     std::vector<Uint8> vector;
     int                len = in.size();
     int                ind = 0;
-
-    for (int i = 0; i < len; i += 2) {
-        Uint8 val =
-            parseHexToNum(in.at(ind)) << 4 | parseHexToNum(in.at(ind + 1));
-        vector.push_back(val);
-        ind += 2;
-    }
+    
+    if (in == "0")
+        vector.push_back(Uint8(0));
+    else 
+        for (int i = 0; i < len; i += 2) {
+            Uint8 val =
+                parseHexToNum(in.at(ind)) << 4 | parseHexToNum(in.at(ind + 1));
+            vector.push_back(val);
+            ind += 2;
+        }
     return vector;
 }
 std::string
@@ -104,9 +107,8 @@ parseHexToNum(const unsigned char c)
 }
 
 Uint64
-parseStrToUint64(std::string str)
+parseStrToUint64(const std::string str)
 {
-    //Uint64 value = std::stoull(str);
     return std::stoull(str);
 }
 

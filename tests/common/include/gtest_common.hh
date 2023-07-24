@@ -57,10 +57,10 @@ static bool oa_override = false;
  * @return ::testing::AssertionResult
  */
 ::testing::AssertionResult
-ArraysMatch(std::vector<Uint8>  actual,
-            std::vector<Uint8>  expected,
+ArraysMatch(const std::vector<Uint8>  actual,
+            const std::vector<Uint8>  expected,
             CRspParser& CRspParser,
-            std::string         testName)
+            std::string_view         testName)
 {
     if (actual.size() != expected.size()) {
         std::cout << actual.size() <<" vs "<<expected.size() << std::endl;

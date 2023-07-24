@@ -53,7 +53,7 @@ class CRspParser final : private File
 
   public:
     CRspParser(const String&);
-
+    bool m_file_exists = {};
     bool init();
     bool skipRSPHeader();
     String FetchTCfromRSP();
@@ -66,8 +66,6 @@ class CRspParser final : private File
     Uint64 getLenBytes(StringView cName);
     String adjustKeyNames(String cName);
     Uint getLineNumber();
-
-    bool m_file_exists = {};
 };
 
 } // namespace alcp::testing

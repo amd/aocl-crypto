@@ -31,11 +31,12 @@
 namespace alcp::testing {
 
 CRspParser::CRspParser(const String& filename)
-   : File(filename) 
+   : File(filename)
 {
     m_input_rsp_file = filename;
     m_file_exists = CheckFileExists();
     if (!m_file_exists) {
+        //std::cout << "File doesnt exist: " <<  m_input_rsp_file << std::endl;
         utils::printErrors("File doesnt exist: " + m_input_rsp_file);
         return;
     }
@@ -47,6 +48,7 @@ CRspParser::init()
 {
     bool retVal = skipRSPHeader();
     if(!retVal) {
+        //std::cout << "Parsing header failed for : " << m_input_rsp_file << std::endl;
         utils::printErrors("Parsing header failed for : " + m_input_rsp_file);
         return false;
     }
@@ -82,29 +84,29 @@ CRspParser::StoreTCinUMap(StringView myStr)
 {
     m_data_map.clear();
 
-    std::vector<String> params_vec;
-    String key {}, value {};
+    String key {}, value {}, myParam {};
     int pos {};
     
     // Vectorize a TC into params_vec based on
     // comma seperated values
     for (size_t i =0;i < m_paramPerTC; i++) {    
         pos = isSubstring(",", myStr);
-        params_vec.push_back("");
-        params_vec[i] = myStr.substr(0, pos);
+        myParam = myStr.substr(0, pos);
         myStr = myStr.begin()+pos+1;
 
         // Store each param from params_vec into m_data_map 
-        pos = isSubstring("=", params_vec[i]);
+        pos = isSubstring("=", myParam);
         if (pos == -1) {
-            key = params_vec[i];
-            value = nullptr;
+            key = myParam;
+            //value = nullptr;
+            value = myParam;    // GCM Seg Fault when "FAIL" in TC
         }
         else {
-            size_t len = params_vec[i].size()-pos+1;
-            key = params_vec[i].substr(0,pos);
-            value = params_vec[i].substr(pos+1, len);
+            size_t len = myParam.size()-pos+1;
+            key = myParam.substr(0,pos);
+            value = myParam.substr(pos+1, len);
         }
+        
         String myKey = adjustKeyNames(key);
         m_data_map[myKey] = value;
     }
@@ -114,16 +116,11 @@ CRspParser::StoreTCinUMap(StringView myStr)
 bool 
 CRspParser::skipRSPHeader() 
 {
-    if (!CheckFileExists()) {
-        std::cout << "File doesnt exist: " << m_input_rsp_file << std::endl;
-        return false;
-    }
-  
     bool search_lines {true};
     while (search_lines) {
         if(!getline(m_file, m_lineBuf)) {
             m_fileEOF = true;
-            std::cout << ".. EOF Reached...." << std::endl;
+            utils::printErrors(".. EOF Reached....");
             break;
         }
 
@@ -136,12 +133,12 @@ CRspParser::skipRSPHeader()
             break;
         }
     }
-    //std::cout <<m_lineno<<":"<<m_lineBuf << std::endl;
-    std::cout << "Header Parsed...." << std::endl;
+    //std::cout << "Header Parsed...." << std::endl;
+    utils::printErrors("Header Parsed....");
     return true;
 }
 
-/* Thus function gets all Paramaters of single TC from the 
+/* This function gets all Paramaters of single TC from the 
    RSP File into a comma seperated String
 */
 String
@@ -155,7 +152,7 @@ CRspParser::FetchTCfromRSP()
         if(!getline(m_file, m_lineBuf)) {
             m_fileEOF = true;
             TC_Count++;
-            std::cout << "... EOF Reached...." << std::endl;
+            utils::printErrors("... EOF Reached....");
             break;
         }
 
@@ -213,7 +210,12 @@ CRspParser::getVect(StringView cName)
     key = cName;
     if (m_data_map.find(key)!= m_data_map.end())
         value =  m_data_map[key];
-    return parseHexStrToBin(value);
+
+    // To create a byte for single digit numerals
+    if (value.size() % 2 ==0) 
+        return parseHexStrToBin(value);
+    else
+        return parseHexStrToBin("0" + value);
 }
 
 /* Returns "Uint64 Value" in bytes based on the "Length" key from m_data_map */
@@ -224,9 +226,8 @@ CRspParser::getLenBytes(StringView cName)
     key = cName;
     if (m_data_map.find(key)!= m_data_map.end())
         value =  m_data_map[key];
-    
-    //return parseStrToUint64(value);
-    return (alcp::testing::utils::parseStrToUint64(value))/8;
+
+    return (utils::parseStrToUint64(value))/8;
 }
     
 /*  Map the Key names with that of Algorithm Specific 
@@ -236,15 +237,18 @@ String
 CRspParser::adjustKeyNames(String cName)
 {
     String myKey {};
-
-    if (cName == "Msg")
-        myKey = "MESSAGE";
-    else if (cName == "Output" || cName == "MD")
-        myKey = "DIGEST";
-    else if (cName == "Outputlen")
-        myKey = "DIGESTLEN";
-    else if (cName == "Len")
-        myKey = "MESSAGELEN";
+    
+    // Unordered Map to store key names from different modes
+    param_map_t keyMap = {{"Msg", "MESSAGE"}, 
+    {"Len", "MESSAGELEN"}, {"MD", "DIGEST"}, 
+    {"Output", "DIGEST"}, {"Outputlen", "DIGESTLEN"}, 
+    {"PT", "PLAINTEXT"}, {"CT", "CIPHERTEXT"}, 
+    {"Key", "KEY"}, {"IV", "INITVECT"}, {"Nonce", "INITVECT"}, 
+    {"Tag", "TAG"}, {"AAD", "AD"}, {"TKey", "TWEAK_KEY"}, 
+    {"CKey", "CTR_KEY"}};
+    
+    if (keyMap.find(cName)!= keyMap.end())
+        myKey =  keyMap[cName];
     else myKey = cName;
 
     return myKey;

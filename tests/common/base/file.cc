@@ -46,7 +46,6 @@ File::File(const std::string fileName, bool binary, bool write)
     } else {
         m_fileExists = false;
     }
-    m_fileEOF = false;
     return;
 }
 
@@ -58,7 +57,6 @@ File::File(const std::string fileName)
     } else {
         m_fileExists = false;
     }
-    m_fileEOF = false;
     return;
 }
 

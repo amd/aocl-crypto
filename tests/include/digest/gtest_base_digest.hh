@@ -81,7 +81,7 @@ GetDigestStr(_alc_digest_type digest_type)
             return "";
     }
 }
-
+#if Enable_CSV
 void
 Digest_KAT(alc_digest_info_t info)
 {
@@ -116,17 +116,11 @@ Digest_KAT(alc_digest_info_t info)
         TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_"
                        + std::to_string(info.dt_len) + ".csv";
     }
-#if Enable_CSV
     Csv csv = Csv(TestDataFile);
     // check if file is valid 
     if (!csv.m_file_exists) {
         FAIL();
     }
-#else
-    // NALINI - FIX-ME: RSP filename for Short/Long/Monte/VariableOut
-    TestDataFile.replace(TestDataFile.find(".csv"), 4, ".rsp");
-    CRspParser rsp(TestDataFile);
-#endif
 
     if (useipp && (GetDigestStr(info.dt_type).compare("SHA3") == 0)) {
         std::cout << "IPPCP doesnt support SHA3 for now, skipping this test"
@@ -145,7 +139,6 @@ Digest_KAT(alc_digest_info_t info)
         db = &idb;
 #endif
 
-#if Enable_CSV
     /* for SHAKE variant */
     if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
         while (csv.readNext()) {
@@ -222,7 +215,64 @@ Digest_KAT(alc_digest_info_t info)
                             + std::to_string(info.dt_len) + "_KAT")));
         }
     }
+}
 #else
+void 
+Digest_KAT(alc_digest_info_t info)
+{
+    Uint8              Temp = 0;
+    alcp_digest_data_t data;
+    std::vector<Uint8> digest(info.dt_len / 8, 0);
+    AlcpDigestBase     adb(info);
+    DigestBase*        db;
+    db = &adb;
+
+    std::string TestDataFile       = "";
+    std::string SHA3_SHAKE_Len_Str = "";
+    /* for truncated sha512 (224,256)*/
+    if (info.dt_type == ALC_DIGEST_TYPE_SHA2
+        && info.dt_mode.dm_sha2 == ALC_SHA2_512
+        && info.dt_len != ALC_DIGEST_LEN_512) {
+        TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_512_"
+                       + std::to_string(info.dt_len) + ".csv";
+    }
+    /* for SHA3 shake tests (128,256)*/
+    else if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
+        if (info.dt_mode.dm_sha3 == ALC_SHAKE_128) {
+            SHA3_SHAKE_Len_Str = "128";
+        } else if (info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
+            SHA3_SHAKE_Len_Str = "256";
+        }
+        TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_SHAKE_"
+                       + SHA3_SHAKE_Len_Str + ".csv";
+    }
+    /* for normal SHA2, SHA3 (224,256,384,512 bit) */
+    else {
+        TestDataFile = "dataset_" + GetDigestStr(info.dt_type) + "_"
+                       + std::to_string(info.dt_len) + ".csv";
+    }
+
+    // NALINI - FIX-ME: RSP filename for Short/Long/Monte/VariableOut
+    TestDataFile.replace(TestDataFile.find(".csv"), 4, ".rsp");
+    CRspParser rsp(TestDataFile);
+
+    if (useipp && (GetDigestStr(info.dt_type).compare("SHA3") == 0)) {
+        std::cout << "IPPCP doesnt support SHA3 for now, skipping this test"
+                  << std::endl;
+        return;
+    }
+
+#ifdef USE_OSSL
+    OpenSSLDigestBase odb(info);
+    if (useossl == true)
+        db = &odb;
+#endif
+#ifdef USE_IPP
+    IPPDigestBase idb(info);
+    if (useipp == true)
+        db = &idb;
+#endif
+
     if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
         while (rsp.readNextTC()) {
             auto msg          = rsp.getVect("MESSAGE");
@@ -276,9 +326,8 @@ Digest_KAT(alc_digest_info_t info)
                             + std::to_string(info.dt_len) + "_KAT")));
         }
     }
-#endif
 }
-
+#endif
 /* Digest Cross tests */
 void
 Digest_Cross(int HashSize, alc_digest_info_t info)

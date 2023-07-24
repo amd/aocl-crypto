@@ -44,8 +44,7 @@ class File
 
   public:
     std::fstream m_file;
-    bool m_fileEOF;
-    //std::string readMyLine();
+    bool m_fileEOF = false;
 
     bool CheckFileExists();
     // Opens File as Bin/ASCII File with write support.
