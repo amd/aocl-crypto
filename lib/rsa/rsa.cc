@@ -155,8 +155,8 @@ Rsa<T>::Rsa()
 {
     // todo : this will be removed and will be called from outside
     // after testing is done
-    // setPrivateKey(DP, DQ, P, Q, QINV, Modulus, sizeof(P));
-    // setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
+    setPrivateKey(DP, DQ, P, Q, QINV, Modulus, sizeof(P));
+    setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
 }
 
 template<alc_rsa_key_size T>
