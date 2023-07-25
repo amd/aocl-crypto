@@ -46,6 +46,22 @@ namespace montgomery {
 #define UNROLL_64
 #endif
 
+/*
+ * Square of bignum is based on
+ *
+ * https://ieeexplore.ieee.org/document/6209072
+ * "Speeding Up Big-Numbers Squaring"
+ *
+ */
+
+/*
+ * MontMult is based on
+ *
+ * https://ieeexplore.ieee.org/document/502403
+ * Analyzing and comparing Montgomery multiplication algorithms
+ *
+ */
+
 constexpr Uint64 one_msb = 0x8000000000000000LLU;
 
 struct BigNum
