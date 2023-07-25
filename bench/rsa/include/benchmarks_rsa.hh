@@ -55,7 +55,7 @@ typedef enum
 
 /* bench function */
 inline int
-Rsa_Bench(benchmark::State& state, rsa_bench_opt opt)
+Rsa_Bench(benchmark::State& state, rsa_bench_opt opt, int padding_mode)
 {
     int             KeySize = 128;
     alcp_rsa_data_t data;
@@ -83,6 +83,11 @@ Rsa_Bench(benchmark::State& state, rsa_bench_opt opt)
     }
 #endif
 
+    /* for non padded mode, input len = keysize */
+    /* for padded mode, input len = 1024*/
+    if (padding_mode == 1)
+        KeySize = 1024 * 2;
+
     /* keeping input const, a valid data for now */
     std::vector<Uint8> input_data(KeySize, 30);
     std::vector<Uint8> encrypted_data(KeySize);
@@ -105,17 +110,17 @@ Rsa_Bench(benchmark::State& state, rsa_bench_opt opt)
 
     if (opt == RSA_BENCH_ENC_PUB_KEY) {
         for (auto _ : state) {
-            if (0 != rb->EncryptPubKey(data)) {
+            if (0 != rb->EncryptPubKey(data, padding_mode)) {
                 state.SkipWithError("Error in RSA EncryptPubKey");
             }
         }
     } else if (opt == RSA_BENCH_DEC_PVT_KEY) {
         /* encrypt, then benchmark only dec pvt key */
-        if (0 != rb->EncryptPubKey(data)) {
+        if (0 != rb->EncryptPubKey(data, padding_mode)) {
             state.SkipWithError("Error in RSA EncryptPubKey");
         }
         for (auto _ : state) {
-            if (0 != rb->DecryptPvtKey(data)) {
+            if (0 != rb->DecryptPvtKey(data, padding_mode)) {
                 state.SkipWithError("Error in RSA DecryptPvtKey");
             }
         }
@@ -131,21 +136,38 @@ Rsa_Bench(benchmark::State& state, rsa_bench_opt opt)
 }
 
 static void
-BENCH_RSA_EncryptPubKey(benchmark::State& state)
+BENCH_RSA_EncryptPubKey_Padding(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(Rsa_Bench(state, RSA_BENCH_ENC_PUB_KEY));
+    benchmark::DoNotOptimize(
+        Rsa_Bench(state, RSA_BENCH_ENC_PUB_KEY, ALCP_TEST_RSA_PADDING));
 }
 static void
-BENCH_RSA_DecryptPvtKey(benchmark::State& state)
+BENCH_RSA_DecryptPvtKey_Padding(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(Rsa_Bench(state, RSA_BENCH_DEC_PVT_KEY));
+    benchmark::DoNotOptimize(
+        Rsa_Bench(state, RSA_BENCH_DEC_PVT_KEY, ALCP_TEST_RSA_PADDING));
+}
+
+static void
+BENCH_RSA_EncryptPubKey_NoPadding(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        Rsa_Bench(state, RSA_BENCH_ENC_PUB_KEY, ALCP_TEST_RSA_NO_PADDING));
+}
+static void
+BENCH_RSA_DecryptPvtKey_NoPadding(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        Rsa_Bench(state, RSA_BENCH_DEC_PVT_KEY, ALCP_TEST_RSA_NO_PADDING));
 }
 
 /* add new benchmarks here */
 int
 AddBenchmarks_rsa()
 {
-    BENCHMARK(BENCH_RSA_EncryptPubKey);
-    BENCHMARK(BENCH_RSA_DecryptPvtKey);
+    BENCHMARK(BENCH_RSA_EncryptPubKey_Padding);
+    BENCHMARK(BENCH_RSA_DecryptPvtKey_Padding);
+    BENCHMARK(BENCH_RSA_EncryptPubKey_NoPadding);
+    BENCHMARK(BENCH_RSA_DecryptPvtKey_NoPadding);
     return 0;
 }

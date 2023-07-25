@@ -89,7 +89,7 @@ SkipTest(int ret_val, std::string LibStr)
 }
 
 void
-Rsa_KAT()
+Rsa_KAT(int padding_mode)
 {
     alcp_rsa_data_t data;
 
@@ -116,8 +116,13 @@ Rsa_KAT()
     }
 #endif
 
-    std::string TestDataFile = std::string("dataset_RSA.csv");
-    Csv         csv          = Csv(TestDataFile);
+    std::string TestDataFile = "";
+    if (padding_mode == 1) {
+        TestDataFile = std::string("dataset_RSA_padding.csv");
+    } else {
+        TestDataFile = std::string("dataset_RSA_no_padding.csv");
+    }
+    Csv csv = Csv(TestDataFile);
 
     int KeySize = 128;
 
@@ -144,19 +149,19 @@ Rsa_KAT()
             FAIL();
         }
 
-        ret_val = rb->EncryptPubKey(data);
+        ret_val = rb->EncryptPubKey(data, padding_mode);
         /* FIXME: the below are to handle invalid inputs at this stage */
-        if (SkipTest(ret_val, LibStr))
-            continue;
+        // if (SkipTest(ret_val, LibStr))
+        //     continue;
         if (ret_val != 0) {
             std::cout << "Error in RSA EncryptPubKey:" << ret_val << std::endl;
             FAIL();
         }
 
-        ret_val = rb->DecryptPvtKey(data);
+        ret_val = rb->DecryptPvtKey(data, padding_mode);
         /* FIXME: the below are to handle invalid inputs at this stage */
-        if (SkipTest(ret_val, LibStr))
-            continue;
+        // if (SkipTest(ret_val, LibStr))
+        //     continue;
         if (ret_val != 0) {
             std::cout << "Error in RSA DecryptPvtKey:" << ret_val << std::endl;
             FAIL();
@@ -174,7 +179,7 @@ Rsa_KAT()
 
 /* RSA Cross tests */
 void
-Rsa_Cross()
+Rsa_Cross(int padding_mode)
 {
     alcp_rsa_data_t data_main, data_ext;
 
@@ -201,6 +206,7 @@ Rsa_Cross()
     }
 #endif
 
+    // FIXME change this to 1024/2048
     int KeySize  = 128;
     int loop_max = 1600, loop_start = 1;
     int ret_val = 0;
@@ -244,7 +250,7 @@ Rsa_Cross()
             FAIL();
         }
 
-        ret_val = rb_main->EncryptPubKey(data_main);
+        ret_val = rb_main->EncryptPubKey(data_main, padding_mode);
         /* FIXME: the below are to handle invalid inputs at this stage */
         if (SkipTest(ret_val, LibStrMain))
             continue;
@@ -253,7 +259,7 @@ Rsa_Cross()
             FAIL();
         }
 
-        ret_val = rb_main->DecryptPvtKey(data_main);
+        ret_val = rb_main->DecryptPvtKey(data_main, padding_mode);
         /* FIXME: the below are to handle invalid inputs at this stage */
         if (SkipTest(ret_val, LibStrMain))
             continue;
@@ -274,7 +280,7 @@ Rsa_Cross()
                       << std::endl;
             FAIL();
         }
-        ret_val = rb_ext->EncryptPubKey(data_ext);
+        ret_val = rb_ext->EncryptPubKey(data_ext, padding_mode);
         /* FIXME: the below are to handle invalid inputs at this stage */
         if (SkipTest(ret_val, LibStrExt))
             continue;
@@ -282,7 +288,7 @@ Rsa_Cross()
             std::cout << "EncryptPubKey failed for " << LibStrExt << std::endl;
             FAIL();
         }
-        ret_val = rb_ext->DecryptPvtKey(data_ext);
+        ret_val = rb_ext->DecryptPvtKey(data_ext, padding_mode);
         /* FIXME: the below are to handle invalid inputs at this stage */
         if (SkipTest(ret_val, LibStrExt))
             continue;

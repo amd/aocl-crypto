@@ -70,14 +70,6 @@ IF(ENABLE_TESTS_IPP_API)
         ELSE(EXISTS ${IPP_INSTALL_DIR}/lib/ippcp.lib)
             SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/ippcp.lib)
         ENDIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/ippcp.lib)
-        # for ECC functions
-        # IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/crypto_mb.lib)
-        #     SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/crypto_mb.lib)
-        # ELSEIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel/crypto_mb.lib)
-        #     SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel/crypto_mb.lib)
-        # ELSE(EXISTS ${IPP_INSTALL_DIR}/lib/crypto_mb.lib)
-        #     SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/crypto_mb.lib)
-        # ENDIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/crypto_mb.lib)
     ENDIF(WIN32)
     SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${IPP_INSTALL_DIR}/include)
 ENDIF(ENABLE_TESTS_IPP_API)
@@ -143,10 +135,16 @@ TARGET_LINK_LIBRARIES(test_rsa_cross ${LIBS})
 
 FUNCTION(TEST_DATA_LINK RSA_ALG)
     # Link dataset to the root dir
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}.csv SYMBOLIC)
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_no_padding.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_no_padding.csv SYMBOLIC)
 
     # Link dataset to the actual place of test binary
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}.csv SYMBOLIC)
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_no_padding.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_no_padding.csv SYMBOLIC)
+
+    # Link dataset to the root dir
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_padding.csv SYMBOLIC)
+
+    # Link dataset to the actual place of test binary
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_padding.csv SYMBOLIC)
 ENDFUNCTION(TEST_DATA_LINK RSA_ALG)
 
 TEST_DATA_LINK(RSA)

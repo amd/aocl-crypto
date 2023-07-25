@@ -57,145 +57,151 @@ IPPRsaBase::init()
 }
 
 int
-IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
+IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data, int padding_mode)
 {
     IppStatus status = ippStsNoErr;
 
-#if 0
-    /*! Seed string of hash size */
-    /*FIXME: should this come from test data? */
-    static Ipp8u pSeed[] = "\xaa\xfd\x12\xf6\x59\xca\xe6\x34\x89\xb4"
-                           "\x79\xe5\x07\x6d\xde\xc2\xf0\x6c\xb5\x8f";
+    if (padding_mode == 1) {
+        /*! Seed string of hash size */
+        /*FIXME: should this come from test data? */
+        static Ipp8u pSeed[] = "\xaa\xfd\x12\xf6\x59\xca\xe6\x34\x89\xb4"
+                               "\x79\xe5\x07\x6d\xde\xc2\xf0\x6c\xb5\x8f";
 
-    /* Encrypt message */
-    status = ippsRSAEncrypt_OAEP_rmf(data.m_msg,
-                                     data.m_msg_len,
-                                     0,
-                                     0,
-                                     pSeed,
-                                     data.m_encrypted_data,
-                                     m_pPub,
-                                     ippsHashMethod_SHA1(),
-                                     m_scratchBuffer);
+        /* Encrypt message */
+        status = ippsRSAEncrypt_OAEP_rmf(data.m_msg,
+                                         data.m_msg_len,
+                                         0,
+                                         0,
+                                         pSeed,
+                                         data.m_encrypted_data,
+                                         m_pPub,
+                                         ippsHashMethod_SHA1(),
+                                         m_scratchBuffer);
 
-    if (status != ippStsNoErr) {
-        std::cout << "ippsRSAEncrypt_OAEP_rmf failed with err code" << status
-                  << std::endl;
-        return false;
-    }
-#endif
-
-/* The BigNum way */
-#if 1
-    std::string temp =
-        alcp::testing::utils::parseBytesToHexStr(data.m_msg, data.m_msg_len);
-
-    temp = alcp::testing::utils::bytes_to_hex(temp);
-
-    char tab2[data.m_msg_len];
-    strncpy(tab2, temp.c_str(), sizeof(tab2));
-    tab2[sizeof(tab2) - 1] = 0;
-
-    // BigNumber PlainText_BN((const char*)data.m_msg);
-    // IppsBigNumSGN sign;
-
-    BigNumber PlainText_BN(tab2);
-    int       size_pt;
-    PlainText_BN.GetSize(&size_pt);
-    BigNumber CipherText_BN(0, m_modulus_size);
-    status =
-        ippsRSA_Encrypt(PlainText_BN, CipherText_BN, m_pPub, m_scratchBuffer);
-    if (status != ippStsNoErr) {
-        std::cout << "ippsRSA_Encrypt failed with err code" << status
-                  << std::endl;
-        return false;
-    }
-    status =
-        CipherText_BN.GetOctetString(data.m_encrypted_data, data.m_msg_len);
-    if (status != ippStsNoErr) {
-        std::cout << "ippsGetOctString_BN failed with err code" << status
-                  << std::endl;
-        return false;
+        if (status != ippStsNoErr) {
+            std::cout << "ippsRSAEncrypt_OAEP_rmf failed with err code"
+                      << status << std::endl;
+            return false;
+        }
+        //#endif
     }
 
-    /* TESTING */
-    BigNumber PlainText_BN_2(0, m_modulus_size);
-    status =
-        ippsRSA_Decrypt(CipherText_BN, PlainText_BN_2, m_pPrv, m_scratchBuffer);
-    if (status != ippStsNoErr) {
-        std::cout << "ippsRSA_Decrypt failed with err code" << status
-                  << std::endl;
-        return false;
-    }
-    if (PlainText_BN != PlainText_BN_2) {
-        std::cout << "FAIL" << std::endl;
-    }
-    /* TESTING */
+    /* The BigNum way */
+    //#if 0
+    else {
+        std::string temp = alcp::testing::utils::parseBytesToHexStr(
+            data.m_msg, data.m_msg_len);
 
-#endif
+        temp = alcp::testing::utils::bytes_to_hex(temp);
 
+        char tab2[data.m_msg_len];
+        strncpy(tab2, temp.c_str(), sizeof(tab2));
+        tab2[sizeof(tab2) - 1] = 0;
+
+        // BigNumber PlainText_BN((const char*)data.m_msg);
+        // IppsBigNumSGN sign;
+
+        BigNumber PlainText_BN(tab2);
+        int       size_pt;
+        PlainText_BN.GetSize(&size_pt);
+        BigNumber CipherText_BN(0, m_modulus_size);
+        status = ippsRSA_Encrypt(
+            PlainText_BN, CipherText_BN, m_pPub, m_scratchBuffer);
+        if (status != ippStsNoErr) {
+            std::cout << "ippsRSA_Encrypt failed with err code" << status
+                      << std::endl;
+            return false;
+        }
+        status =
+            CipherText_BN.GetOctetString(data.m_encrypted_data, data.m_msg_len);
+        if (status != ippStsNoErr) {
+            std::cout << "ippsGetOctString_BN failed with err code" << status
+                      << std::endl;
+            return false;
+        }
+
+        /* TESTING */
+        BigNumber PlainText_BN_2(0, m_modulus_size);
+        status = ippsRSA_Decrypt(
+            CipherText_BN, PlainText_BN_2, m_pPrv, m_scratchBuffer);
+        if (status != ippStsNoErr) {
+            std::cout << "ippsRSA_Decrypt failed with err code" << status
+                      << std::endl;
+            return false;
+        }
+        if (PlainText_BN != PlainText_BN_2) {
+            std::cout << "FAIL" << std::endl;
+        }
+        /* TESTING */
+
+        //#endif
+    }
     return 0;
 }
 
 int
-IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
+IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data, int padding_mode)
 {
     IppStatus status = ippStsNoErr;
 
-#if 0
-    int    plainTextLen = data.m_msg_len;
-    Ipp8u* pPlainText   = new Ipp8u[plainTextLen];
-    /* Decrypt message */
-    status = ippsRSADecrypt_OAEP_rmf(data.m_encrypted_data,
-                                     0,
-                                     0,
-                                     pPlainText,
-                                     &plainTextLen,
-                                     m_pPrv,
-                                     ippsHashMethod_SHA1(),
-                                     m_scratchBuffer);
+    //#if 1
+    if (padding_mode == 1) {
+        int    plainTextLen = data.m_msg_len;
+        Ipp8u* pPlainText   = new Ipp8u[plainTextLen];
+        /* Decrypt message */
+        status = ippsRSADecrypt_OAEP_rmf(data.m_encrypted_data,
+                                         0,
+                                         0,
+                                         pPlainText,
+                                         &plainTextLen,
+                                         m_pPrv,
+                                         ippsHashMethod_SHA1(),
+                                         m_scratchBuffer);
 
-    if (status != ippStsNoErr) {
-        std::cout << "ippsRSADecrypt_OAEP_rmf failed with err code" << status
-                  << std::endl;
-        return false;
+        if (status != ippStsNoErr) {
+            std::cout << "ippsRSADecrypt_OAEP_rmf failed with err code"
+                      << status << std::endl;
+            return false;
+        }
+
+        std::memcpy(data.m_decrypted_data, pPlainText, plainTextLen);
+
+        if (pPlainText) {
+            delete[] pPlainText;
+        }
+        //#endif
     }
 
-    std::memcpy(data.m_decrypted_data, pPlainText, plainTextLen);
+    else {
+        /* the big num way */
+        //#if 0
+        std::string temp = alcp::testing::utils::parseBytesToHexStr(
+            data.m_encrypted_data, data.m_msg_len);
 
-    if (pPlainText) {
-        delete[] pPlainText;
+        char tab2[data.m_msg_len];
+        strncpy(tab2, temp.c_str(), sizeof(tab2));
+        tab2[sizeof(tab2) - 1] = 0;
+
+        // BigNumber CipherText_BN((const char*)data.m_encrypted_data);
+        BigNumber CipherText_BN(tab2);
+        BigNumber PlainText_BN(0, m_modulus_size);
+        status = ippsRSA_Decrypt(
+            CipherText_BN, PlainText_BN, m_pPrv, m_scratchBuffer);
+        if (status != ippStsNoErr) {
+            std::cout << "ippsRSA_Decrypt failed with err code" << status
+                      << std::endl;
+            return false;
+        }
+
+        status =
+            PlainText_BN.GetOctetString(data.m_decrypted_data, data.m_msg_len);
+        if (status != ippStsNoErr) {
+            std::cout << "ippsGetOctString_BN failed with err code" << status
+                      << std::endl;
+            return false;
+        }
+        //#endif
     }
-#endif
-
-    /* the big num way */
-#if 1
-    std::string temp = alcp::testing::utils::parseBytesToHexStr(
-        data.m_encrypted_data, data.m_msg_len);
-
-    char tab2[data.m_msg_len];
-    strncpy(tab2, temp.c_str(), sizeof(tab2));
-    tab2[sizeof(tab2) - 1] = 0;
-
-    // BigNumber CipherText_BN((const char*)data.m_encrypted_data);
-    BigNumber CipherText_BN(tab2);
-    BigNumber PlainText_BN(0, m_modulus_size);
-    status =
-        ippsRSA_Decrypt(CipherText_BN, PlainText_BN, m_pPrv, m_scratchBuffer);
-    if (status != ippStsNoErr) {
-        std::cout << "ippsRSA_Decrypt failed with err code" << status
-                  << std::endl;
-        return false;
-    }
-
-    status = PlainText_BN.GetOctetString(data.m_decrypted_data, data.m_msg_len);
-    if (status != ippStsNoErr) {
-        std::cout << "ippsGetOctString_BN failed with err code" << status
-                  << std::endl;
-        return false;
-    }
-#endif
-
     return 0;
 }
 

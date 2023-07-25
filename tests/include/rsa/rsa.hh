@@ -38,10 +38,14 @@
 
 namespace alcp::testing {
 
+#define ALCP_TEST_RSA_PADDING    1
+#define ALCP_TEST_RSA_NO_PADDING 0
+
 typedef struct _alcp_rsa_data
 {
     const Uint8* m_msg            = nullptr;
     Uint64       m_msg_len        = 0;
+    Uint64       m_key_len        = 0;
     Uint8*       m_encrypted_data = nullptr;
     Uint8*       m_decrypted_data = nullptr;
     Uint8*       m_pub_key_mod    = {};
@@ -50,10 +54,12 @@ typedef struct _alcp_rsa_data
 class RsaBase
 {
   public:
-    virtual bool init()                                     = 0;
-    virtual bool reset()                                    = 0;
-    virtual bool GetPublicKey(const alcp_rsa_data_t& data)  = 0;
-    virtual int  EncryptPubKey(const alcp_rsa_data_t& data) = 0;
-    virtual int  DecryptPvtKey(const alcp_rsa_data_t& data) = 0;
+    virtual bool init()                                    = 0;
+    virtual bool reset()                                   = 0;
+    virtual bool GetPublicKey(const alcp_rsa_data_t& data) = 0;
+    virtual int  EncryptPubKey(const alcp_rsa_data_t& data,
+                               int                    padding_mode)           = 0;
+    virtual int  DecryptPvtKey(const alcp_rsa_data_t& data,
+                               int                    padding_mode)           = 0;
 };
 } // namespace alcp::testing

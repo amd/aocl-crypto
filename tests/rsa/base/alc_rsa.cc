@@ -92,17 +92,31 @@ AlcpRsaBase::GetPublicKey(const alcp_rsa_data_t& data)
 }
 
 int
-AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
+AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data, int padding_mode)
 {
     alc_error_t err;
-    err = alcp_rsa_publickey_encrypt(m_rsa_handle,
-                                     ALCP_RSA_PADDING_NONE,
-                                     data.m_pub_key_mod,
-                                     m_keysize,
-                                     m_pub_key_exp,
-                                     data.m_msg,
-                                     m_keysize,
-                                     data.m_encrypted_data);
+    if (padding_mode == ALCP_TEST_RSA_NO_PADDING) {
+        err = alcp_rsa_publickey_encrypt(m_rsa_handle,
+                                         ALCP_RSA_PADDING_NONE,
+                                         data.m_pub_key_mod,
+                                         m_keysize,
+                                         m_pub_key_exp,
+                                         data.m_msg,
+                                         m_keysize,
+                                         data.m_encrypted_data);
+    } else if (padding_mode == ALCP_TEST_RSA_PADDING) {
+        err = alcp_rsa_publickey_encrypt(m_rsa_handle,
+                                         ALCP_RSA_PADDING_OAEP,
+                                         data.m_pub_key_mod,
+                                         m_keysize,
+                                         m_pub_key_exp,
+                                         data.m_msg,
+                                         m_keysize,
+                                         data.m_encrypted_data);
+    } else {
+        std::cout << "Error: Invalid paddind mode!" << std::endl;
+        return 1;
+    }
     if (alcp_is_error(err)) {
         /* FIXME: this has to be enabled back later */
         // std::cout << "Error in alcp_rsa_publickey_encrypt " << err <<
@@ -113,14 +127,25 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 }
 
 int
-AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
+AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data, int padding_mode)
 {
     alc_error_t err;
-    err = alcp_rsa_privatekey_decrypt(m_rsa_handle,
-                                      ALCP_RSA_PADDING_NONE,
-                                      data.m_encrypted_data,
-                                      m_keysize,
-                                      data.m_decrypted_data);
+    if (padding_mode == ALCP_TEST_RSA_NO_PADDING) {
+        err = alcp_rsa_privatekey_decrypt(m_rsa_handle,
+                                          ALCP_RSA_PADDING_NONE,
+                                          data.m_encrypted_data,
+                                          m_keysize,
+                                          data.m_decrypted_data);
+    } else if (padding_mode == ALCP_TEST_RSA_PADDING) {
+        err = alcp_rsa_privatekey_decrypt(m_rsa_handle,
+                                          ALCP_RSA_PADDING_OAEP,
+                                          data.m_encrypted_data,
+                                          m_keysize,
+                                          data.m_decrypted_data);
+    } else {
+        std::cout << "Error: Invalid padding mode!" << std::endl;
+        return 1;
+    }
     if (alcp_is_error(err)) {
         std::cout << "Error in alcp_rsa_privatekey_decrypt " << err
                   << std::endl;

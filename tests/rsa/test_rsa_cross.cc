@@ -34,9 +34,13 @@
 #include <iostream>
 
 /* All tests to be added here */
+TEST(RSA_Padding, CROSS)
+{
+    Rsa_Cross(ALCP_TEST_RSA_PADDING);
+}
 TEST(RSA, CROSS)
 {
-    Rsa_Cross();
+    Rsa_Cross(ALCP_TEST_RSA_NO_PADDING);
 }
 
 int

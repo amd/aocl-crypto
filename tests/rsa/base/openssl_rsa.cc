@@ -109,7 +109,7 @@ OpenSSLRsaBase::GetPublicKey(const alcp_rsa_data_t& data)
 }
 
 int
-OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
+OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data, int padding_mode)
 {
     size_t outlen;
     int    ret_val = 0;
@@ -148,7 +148,7 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 }
 
 int
-OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
+OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data, int padding_mode)
 {
     size_t outlen;
     int    ret_val = 0;
