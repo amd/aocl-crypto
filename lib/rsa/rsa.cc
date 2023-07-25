@@ -147,9 +147,6 @@ Select(Uint8 mask, Uint8 first, Uint8 second)
     return (mask & first) | (~mask & second);
 }
 
-template class Rsa<KEY_SIZE_1024>;
-template class Rsa<KEY_SIZE_2048>;
-
 template<alc_rsa_key_size T>
 Rsa<T>::Rsa()
 {
@@ -619,5 +616,6 @@ Rsa<T>::getKeySize()
 {
     return m_key_size;
 }
-
+template class Rsa<KEY_SIZE_1024>;
+template class Rsa<KEY_SIZE_2048>;
 } // namespace alcp::rsa
