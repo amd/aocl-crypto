@@ -155,7 +155,13 @@ Rsa<T>::Rsa()
 {
     // todo : this will be removed and will be called from outside
     // after testing is done
-    setPrivateKey(DP, DQ, P, Q, QINV, Modulus, sizeof(P));
+    setPrivateKey(DP_EXP,
+                  DQ_EXP,
+                  P_Modulus,
+                  Q_Modulus,
+                  Q_ModulusINV,
+                  Modulus,
+                  sizeof(P_Modulus));
     setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
 }
 
