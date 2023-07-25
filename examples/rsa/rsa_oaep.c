@@ -32,6 +32,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "alcp/digest.h"
+#include "alcp/rng.h"
 #include "alcp/rsa.h"
 
 // RSA Private key
@@ -111,6 +113,8 @@ static const Uint8 Q_ModulusINV[] = {
 
 static const Uint8 Label[] = { 'h', 'e', 'l', 'l', 'o' };
 
+static const Uint64 PublicKeyExponent = 0x10001;
+
 #define ALCP_PRINT_TEXT(I, L, S)                                               \
     printf("%s\n", S);                                                         \
     for (int x = 0; x < L; x++) {                                              \
@@ -132,12 +136,78 @@ create_demo_session(alc_rsa_handle_t* s_rsa_handle)
 }
 
 static alc_error_t
-Rsa_decrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
+Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
 {
     alc_error_t err;
+    Uint8*      text     = NULL;
     Uint8*      enc_text = NULL;
     Uint8*      dec_text = NULL;
+    Uint8*      p_seed   = NULL;
 
+    Uint64 size = sizeof(Modulus);
+
+    // Adding the public key for applying encryption
+    err =
+        alcp_rsa_set_publickey(ps_rsa_handle, PublicKeyExponent, Modulus, size);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n setting of publc key failed");
+        return err;
+    }
+
+    alc_digest_info_t dinfo = {
+        .dt_type = ALC_DIGEST_TYPE_SHA2,
+        .dt_len = ALC_DIGEST_LEN_256,
+        .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
+    };
+
+    // Adding the digest function for generating the hash in oaep padding
+    err = alcp_rsa_add_digest_oaep(ps_rsa_handle, &dinfo);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n setting of digest for oaep failed");
+        return err;
+    }
+
+    alc_digest_info_t mgf_info = {
+        .dt_type = ALC_DIGEST_TYPE_SHA2,
+        .dt_len = ALC_DIGEST_LEN_256,
+        .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
+    };
+    // Adding the mask generation function for generating the seed and data
+    // block mask
+    err = alcp_rsa_add_mgf_oaep(ps_rsa_handle, &mgf_info);
+    if (err != ALC_ERROR_NONE) {
+        printf("\n setting of mgf for oaep failed");
+        return err;
+    }
+    Uint64 hash_len = ALC_DIGEST_LEN_256 / 8;
+    // text size should be in the range 2 * hash_len + 2
+    // to sizeof(Modulus) - 2* hash_len - 2
+    Uint64 text_size = size - 2 * hash_len - 2;
+
+    p_seed   = malloc(hash_len);
+    enc_text = malloc(size);
+    dec_text = malloc(size);
+    text     = malloc(text_size);
+
+    memset(text, 0x31, text_size);
+
+    ALCP_PRINT_TEXT(text, text_size, "text")
+
+    // todo call hmac drbg / ctr drbg to generate seed
+    // for now the seed is random at buffer allocation
+
+    // Encrypt text
+    err = alcp_rsa_publickey_encrypt_oaep(
+        ps_rsa_handle, text, text_size, Label, sizeof(Label), p_seed, enc_text);
+
+    if (err != ALC_ERROR_NONE) {
+        printf("\n peer1 publc key encrypt failed");
+        goto free_buff;
+    }
+
+    ALCP_PRINT_TEXT(enc_text, size, "enc_text")
+
+    // setting the private key for decryption
     err = alcp_rsa_set_privatekey(ps_rsa_handle,
                                   DP_EXP,
                                   DQ_EXP,
@@ -148,36 +218,37 @@ Rsa_decrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
                                   sizeof(P_Modulus));
     if (err != ALC_ERROR_NONE) {
         printf("\n setting of publc key failed");
-        return err;
+        goto free_buff;
     }
 
-    Uint64 size_key = alcp_rsa_get_key_size(ps_rsa_handle);
+    // decrypt text
+    err = alcp_rsa_privatekey_decrypt_oaep(ps_rsa_handle,
+                                           enc_text,
+                                           size,
+                                           Label,
+                                           sizeof(Label),
+                                           dec_text,
+                                           &text_size);
 
-    if (size_key == 0) {
-        printf("\n peer1 key size fetch failed");
-        return ALC_ERROR_INVALID_SIZE;
-    }
-
-    enc_text = malloc(sizeof(Uint8) * size_key);
-    memset(enc_text, 0x31, sizeof(Uint8) * size_key);
-
-    ALCP_PRINT_TEXT(enc_text, size_key, "encrypted text")
-
-    dec_text = malloc(sizeof(Uint8) * size_key);
-    memset(dec_text, 0, sizeof(Uint8) * size_key);
-
-    err = alcp_rsa_privatekey_decrypt(
-        ps_rsa_handle, ALCP_RSA_PADDING_NONE, enc_text, size_key, dec_text);
     if (err != ALC_ERROR_NONE) {
-        printf("\n private key decryption failed\n");
-        goto free_dec_text;
+        printf("\n private key decryption failed");
+        goto free_buff;
     }
 
-    ALCP_PRINT_TEXT(dec_text, size_key, "decrypted text")
+    if (memcmp(dec_text, text, text_size) == 0) {
+        err = ALC_ERROR_NONE;
+        ALCP_PRINT_TEXT(dec_text, text_size, "dec_text")
+    } else {
+        printf("\n decrypted text not matching the original text");
+        err = ALC_ERROR_GENERIC;
+    }
 
-free_dec_text:
-    free(enc_text);
+free_buff:
     free(dec_text);
+    free(enc_text);
+    free(text);
+    free(p_seed);
+
     return err;
 }
 
@@ -189,12 +260,13 @@ main(void)
     if (alcp_is_error(err)) {
         return -1;
     }
-    err = Rsa_decrypt_demo(&s_rsa_handle);
+
+    err = Rsa_demo(&s_rsa_handle);
     if (alcp_is_error(err)) {
         return -1;
     }
+
     alcp_rsa_finish(&s_rsa_handle);
     free(s_rsa_handle.context);
-
     return 0;
 }

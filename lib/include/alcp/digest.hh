@@ -108,7 +108,6 @@ class IDigest
      */
     virtual Uint64 getHashSize() = 0;
 
-  protected:
     virtual ~IDigest() {}
 };
 

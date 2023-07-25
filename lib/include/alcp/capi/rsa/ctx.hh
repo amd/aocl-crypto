@@ -36,24 +36,55 @@ namespace alcp::rsa {
 class Context
 {
   public:
-    void* m_rsa;
+    void* m_rsa    = nullptr;
+    void* m_digest = nullptr;
+    void* m_mgf    = nullptr;
+    Status (*encryptPublicFn)(void*        pRsaHandle,
+                              const Uint8* pText,
+                              Uint64       textSize,
+                              Uint8*       pEncText);
 
-    Status (*encryptPublicFn)(void*               pRsaHandle,
-                              alc_rsa_padding     pad,
-                              const RsaPublicKey& publicKey,
-                              const Uint8*        pText,
-                              Uint64              textSize,
-                              Uint8*              pEncText);
+    Status (*decryptPrivateFn)(void*        pRsaHandle,
+                               const Uint8* pEncText,
+                               Uint64       encSize,
+                               Uint8*       pText);
 
-    Status (*decryptPrivateFn)(void*           pRsaHandle,
-                               alc_rsa_padding pad,
-                               const Uint8*    pEncText,
-                               Uint64          encSize,
-                               Uint8*          pText);
+    Status (*encryptPublicOaepFn)(void*        pRsaHandle,
+                                  const Uint8* pText,
+                                  Uint64       textSize,
+                                  const Uint8* label,
+                                  Uint64       labelSize,
+                                  const Uint8* pSeed,
+                                  Uint8*       pEncText);
+
+    Status (*decryptPrivateOaepFn)(void*        pRsaHandle,
+                                   const Uint8* pEncText,
+                                   Uint64       encSize,
+                                   const Uint8* label,
+                                   Uint64       labelSize,
+                                   Uint8*       pText,
+                                   Uint64&      textSize);
 
     Uint64 (*getKeySize)(void* pRsaHandle);
 
     Status (*getPublickey)(void* pRsaHandle, RsaPublicKey& publicKey);
+
+    Status (*setPublicKey)(void*        pRsaHandle,
+                           const Uint64 exponent,
+                           const Uint8* mod,
+                           const Uint64 size);
+
+    Status (*setPrivateKey)(void*        pRsaHandle,
+                            const Uint8* dp,
+                            const Uint8* dq,
+                            const Uint8* p,
+                            const Uint8* q,
+                            const Uint8* qinv,
+                            const Uint8* mod,
+                            const Uint64 size);
+
+    void (*setDigest)(void* pRsaHandle, digest::IDigest* digest);
+    void (*setMgf)(void* pRsaHandle, digest::IDigest* digest);
 
     Status (*finish)(void*);
 

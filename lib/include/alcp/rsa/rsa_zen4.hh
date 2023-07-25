@@ -23,30 +23,26 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
-#include "alcp/rsa/rsaerror.hh"
+#pragma once
 
-namespace alcp::rsa::status {
+namespace alcp::rsa { namespace zen4 {
 
-Status
-NotPermitted(StringView msg)
-{
-    auto e = RsaError(alcp::base::eInvalidArgument, ErrorCode::eNotPermitted);
-    return Status(e, msg);
-}
+    void archEncryptPublic(Uint8*              pEncText,
+                           const Uint64*       pTextBigNum,
+                           RsaPublicKeyBignum& pubKey,
+                           MontContextBignum&  context);
 
-Status
-Unavailable(StringView msg)
-{
-    auto e = RsaError(alcp::base::eNotAvailable, ErrorCode::eUnavailable);
-    return Status(e, msg);
-}
+    void archDecryptPrivate(Uint8*               pText,
+                            const Uint64*        pEncTextBigNum,
+                            RsaPrivateKeyBignum& privKey,
+                            MontContextBignum&   contextP,
+                            MontContextBignum&   contextQ);
 
-Status
-Generic(StringView msg)
-{
-    auto e = RsaError(alcp::base::eInternal, ErrorCode::eInternal);
-    return Status(e, msg);
-}
-} // namespace alcp::rsa::status
+    // todo remove the size param.
+    void archCreateContext(MontContextBignum& context,
+                           Uint64*            mod,
+                           Uint64             size);
+}} // namespace alcp::rsa::zen4
