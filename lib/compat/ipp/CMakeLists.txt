@@ -38,9 +38,10 @@ TARGET_INCLUDE_DIRECTORIES(ipp-compat PRIVATE include)
 TARGET_INCLUDE_DIRECTORIES(ipp-compat PRIVATE ${PROJECT_SOURCE_DIR}/include)
 
 # Include IPPCP files
+IF(IPP_INSTALL_DIR)
+	TARGET_INCLUDE_DIRECTORIES(ipp-compat PRIVATE ${IPP_INSTALL_DIR}/include)
+ENDIF(IPP_INSTALL_DIR)
+
 IF(WIN32)
-	IF(IPP_INSTALL_DIR)
-		TARGET_INCLUDE_DIRECTORIES(ipp-compat PRIVATE ${IPP_INSTALL_DIR}/include)
-		TARGET_COMPILE_OPTIONS(ipp-compat PRIVATE -Wno-language-extension-token -Wno-missing-field-initializers)
-	ENDIF()
+	TARGET_COMPILE_OPTIONS(ipp-compat PRIVATE -Wno-language-extension-token -Wno-missing-field-initializers)
 ENDIF(WIN32)
