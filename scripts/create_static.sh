@@ -139,6 +139,10 @@ pushd .
 # Assemble all the libs into single
 cd assemble
 
+# clean up unwanted files
+find $PWD -name "*.txt" -exec rm {} \;
+
+# archive
 ar -crs ../libalcp_static.a */*/* */*.o
 
 popd
