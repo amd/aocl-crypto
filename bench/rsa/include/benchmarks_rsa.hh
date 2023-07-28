@@ -57,7 +57,7 @@ typedef enum
 inline int
 Rsa_Bench(benchmark::State& state, rsa_bench_opt opt, int padding_mode)
 {
-    int             KeySize = 128;
+    int             InputSize = 128, KeySize = 128;
     alcp_rsa_data_t data;
 
     AlcpRsaBase arb;
@@ -85,13 +85,17 @@ Rsa_Bench(benchmark::State& state, rsa_bench_opt opt, int padding_mode)
 
     /* for non padded mode, input len = keysize */
     /* for padded mode, input len = 1024*/
-    if (padding_mode == 1)
-        KeySize = 1024 * 2;
-
+    if (padding_mode == 1) {
+        rb->m_padding_mode = ALCP_TEST_RSA_PADDING;
+        InputSize          = 16;
+    } else {
+        rb->m_padding_mode = ALCP_TEST_RSA_NO_PADDING;
+        InputSize          = 128;
+    }
     /* keeping input const, a valid data for now */
-    std::vector<Uint8> input_data(KeySize, 30);
-    std::vector<Uint8> encrypted_data(KeySize);
-    std::vector<Uint8> decrypted_data(KeySize);
+    std::vector<Uint8> input_data(InputSize, 30);
+    std::vector<Uint8> encrypted_data(InputSize);
+    std::vector<Uint8> decrypted_data(InputSize);
     std::vector<Uint8> PubKeyKeyMod(KeySize);
 
     data.m_msg            = &(input_data[0]);
@@ -99,28 +103,32 @@ Rsa_Bench(benchmark::State& state, rsa_bench_opt opt, int padding_mode)
     data.m_encrypted_data = &(encrypted_data[0]);
     data.m_decrypted_data = &(decrypted_data[0]);
     data.m_msg_len        = input_data.size();
+    data.m_key_len        = KeySize;
 
     if (!rb->init()) {
         state.SkipWithError("Error in RSA init");
     }
-
-    if (!rb->GetPublicKey(data)) {
-        state.SkipWithError("Error in RSA GetPublicKey");
+    if (!rb->SetPublicKey(data)) {
+        state.SkipWithError("Error in RSA SetPublicKey");
+    }
+    if (!rb->SetPrivateKey(data)) {
+        state.SkipWithError("Error in RSA SetPrivateKey");
     }
 
     if (opt == RSA_BENCH_ENC_PUB_KEY) {
         for (auto _ : state) {
-            if (0 != rb->EncryptPubKey(data, padding_mode)) {
+            if (!rb->EncryptPubKey(data)) {
                 state.SkipWithError("Error in RSA EncryptPubKey");
             }
         }
     } else if (opt == RSA_BENCH_DEC_PVT_KEY) {
         /* encrypt, then benchmark only dec pvt key */
-        if (0 != rb->EncryptPubKey(data, padding_mode)) {
+        if (!rb->EncryptPubKey(data)) {
             state.SkipWithError("Error in RSA EncryptPubKey");
         }
+        /* benchmark only this */
         for (auto _ : state) {
-            if (0 != rb->DecryptPvtKey(data, padding_mode)) {
+            if (!rb->DecryptPvtKey(data)) {
                 state.SkipWithError("Error in RSA DecryptPvtKey");
             }
         }

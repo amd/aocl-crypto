@@ -39,6 +39,7 @@ class AlcpRsaBase : public RsaBase
     alc_rsa_handle_t* m_rsa_handle{};
     int               m_keysize     = 0;
     Uint64            m_pub_key_exp = {};
+    Uint64            m_hash_len    = 0;
 
   public:
     AlcpRsaBase();
@@ -46,9 +47,12 @@ class AlcpRsaBase : public RsaBase
 
     bool init();
     bool reset();
-    bool GetPublicKey(const alcp_rsa_data_t& data);
-    int  EncryptPubKey(const alcp_rsa_data_t& data, int padding_mode);
-    int  DecryptPvtKey(const alcp_rsa_data_t& data, int padding_mode);
+
+    bool SetPublicKey(const alcp_rsa_data_t& data);
+    bool SetPrivateKey(const alcp_rsa_data_t& data);
+
+    bool EncryptPubKey(const alcp_rsa_data_t& data);
+    bool DecryptPvtKey(const alcp_rsa_data_t& data);
 };
 
 } // namespace alcp::testing
