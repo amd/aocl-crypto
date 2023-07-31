@@ -377,8 +377,8 @@ MontReduce(Uint64* res, Uint64* inp, Uint64* mod, Uint64 k0, Uint64 size)
 static inline void
 CreateContext(MontContextBignum& context, Uint64* mod, Uint64 size)
 {
-    Uint64* r1 = new Uint64[size];
-    Uint64* r2 = new Uint64[size];
+    Uint64* r1 = new Uint64[size]{};
+    Uint64* r2 = new Uint64[size]{};
 
     context.m_r1.reset(r1);
     context.m_r2.reset(r2);
