@@ -35,6 +35,7 @@
 #include "alcp/utils/copy.hh"
 #include <immintrin.h>
 
+// #define DEBUG 1
 namespace alcp::rng::drbg::avx2 {
 
 class EncryptAes : public cipher::Aes
@@ -107,10 +108,16 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
 #endif
 
     // temp = Null.
-    std::vector<Uint8> temp;
+    // std::vector<Uint8> temp;
 
+    static constexpr Uint64 cMaxSeedLength =
+        384; // For key size 256 (Block Size + KeySize = 256+128=384)
+
+    Uint8  temp[cMaxSeedLength];
+    Uint64 temp_size = 0;
     // While (len (temp) < seedlen) do
-    while (temp.size() < seed_length) {
+    // while (temp_size < seed_length) {
+    while (temp_size < seed_length) {
 #ifdef DEBUG
         printf("CTR DRBG Update: Temp Size %ld\n", temp.size());
         std::cout << "CTR DRBG Update: Value before incrementing : "
@@ -123,7 +130,7 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
                   << parseBytesToHexStr(value, 16) << std::endl;
 #endif
 
-        std::vector<Uint8> output_block(16, 0);
+        // std::vector<Uint8> output_block(16, 0);
 #ifdef DEBUG
         printf("Encryption Details\n");
         std::cout << "Key : " << parseBytesToHexStr(key, key_len) << std::endl;
@@ -131,16 +138,17 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
         std::cout << "Value : " << parseBytesToHexStr(value, 16) << std::endl;
 #endif
         // output_block = Block_Encrypt (Key, V).
-        avx2::encrypt_block(&value[0], &key[0], key_len, &output_block[0]);
+        avx2::encrypt_block(&value[0], &key[0], key_len, &temp[0] + temp_size);
 #ifdef DEBUG
         std::cout << "Output_block : "
                   << parseBytesToHexStr(&output_block[0], 16) << std::endl;
 #endif
         // temp = temp || output_block.
-        temp.insert(temp.end(), output_block.begin(), output_block.end());
+        // temp.insert(temp.end(), output_block.begin(), output_block.end());
 #ifdef DEBUG
         printf("Update: Iteration End \n\n");
 #endif
+        temp_size += 16;
     }
 
 #ifdef DEBUG
@@ -149,15 +157,17 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
 
 #endif
     // temp = leftmost (temp, seedlen).
-    temp = std::vector<Uint8>(temp.begin(), temp.begin() + seed_length);
+    // temp = std::vector<Uint8>(temp.begin(), temp.begin() + seed_length);
+    assert(temp_size >= seed_length);
+    temp_size = seed_length;
 #ifdef DEBUG
     std::cout << "leftmost (temp, seedlen) : "
               << parseBytesToHexStr(&temp[0], temp.size()) << std::endl;
 
 #endif
 
-    assert(seed_length == temp.size());
-    assert(cProvidedDataLen == temp.size());
+    assert(seed_length == temp_size);
+    assert(cProvidedDataLen == temp_size);
 
     // temp = temp ⊕ provided_data
     for (Uint64 i = 0; i < cProvidedDataLen; i++) {
@@ -176,7 +186,7 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
               << parseBytesToHexStr(key, key_len) << std::endl;
 #endif
     // V = rightmost (temp, blocklen).
-    utils::CopyBytes(value, &temp[0] + temp.size() - 16, 16);
+    utils::CopyBytes(value, temp + temp_size - 16, 16);
 #ifdef DEBUG
     std::cout << "V = rightmost (temp, blocklen). So Value = "
               << parseBytesToHexStr(value, 16) << std::endl;
@@ -228,23 +238,27 @@ DrbgCtrGenerate(const Uint8  cAdditionalInput[],
                                              &value[0]);
     }
 
-    // temp = Null.
-    std::vector<Uint8> temp;
+    Uint64 inc = 0;
 
-    std::vector<Uint8> output_block(16, 0);
-
+    // We wont create a temporary buffer as the FIPS algorithm suggests but
+    // rather store the data directly to the output buffer of the encryption
     // While (len (temp) < requested_number_of_bits) do:
-    while (temp.size() < cOutputLen) {
+    for (inc = 0; cOutputLen - inc >= 16; inc += 16) {
         // V = (V+1) mod 2^blocklen
         increment_value(value);
         // output_block = Block_Encrypt (Key, V)
         alcp::rng::drbg::avx2::encrypt_block(
-            &value[0], &key[0], key_len, &output_block[0]);
-        // emp = temp || output_block.
-        temp.insert(temp.end(), output_block.begin(), output_block.end());
+            &value[0], &key[0], key_len, output + inc);
     }
-    // returned_bits = leftmost (temp, requested_number_of_bits)
-    utils::CopyBytes(output, &temp[0], cOutputLen);
+
+    if (cOutputLen - inc > 0) {
+        increment_value(value);
+        Uint8 output_block[16];
+        alcp::rng::drbg::avx2::encrypt_block(
+            &value[0], &key[0], key_len, output_block);
+        utils::CopyBytes(output + inc, output_block, cOutputLen - inc);
+    }
+
     // (Key, V) = CTR_DRBG_Update (additional_input, Key, V).
     alcp::rng::drbg::avx2::ctrDrbgUpdate(
         &additional_input_bits[0], seed_length, &key[0], key_len, &value[0]);
