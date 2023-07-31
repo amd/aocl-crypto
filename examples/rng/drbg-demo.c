@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -18,7 +18,7 @@
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS!
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
@@ -26,46 +26,36 @@
  *
  */
 
-#ifndef _ALCP_ALCP_H_
-#define _ALCP_ALCP_H_ 2
+#include "alcp/alcp.h"
+#include <malloc.h>
 
-#include "macros.h"
+static alc_drbg_handle_t handle;
 
-#include "types.h"
-
-#include "error.h"
-
-#include "key.h"
-
-#include "cipher.h"
-
-#include "cipher_aead.h"
-
-#include "digest.h"
-
-#include "mac.h"
-
-#include "rng.h"
-
-#include "drbg.h"
-
-#include "ecdh.h"
-
-#include "version.h"
-
-/**
- * @brief
- * Version to be printed as : AOCL Crypto   1.0 (0xabcdef)
- *                           `-----------' `-'-'----------'
- *                              Name        M m  git ver
- * @struct alc_version_t
- */
-typedef struct _alc_version
+int
+main(int argc, char const* argv[])
 {
-    int          major;    /* M in above        */
-    int          minor;    /* m in above        */
-    unsigned int revision; /* git version above */
-    const char*  date;     /* e.g. "Jul 20 99"  */
-} alc_version_t;
 
-#endif /* _ALCP_ALCP_H_ */
+    alc_drbg_info_t drbg_info = { .di_type     = ALC_DRBG_CTR,
+                                  .di_algoinfo = {
+                                      .ctr_drbg = { .di_keysize = 128 } } };
+
+    alc_error_t err = ALC_ERROR_NONE;
+    err             = alcp_drbg_supported(&drbg_info);
+
+    if (!alcp_is_error(err)) {
+
+        handle.ch_context = malloc(alcp_drbg_context_size(&drbg_info));
+    } else {
+        printf("DRBG Information provided is unsupported\n");
+        return err;
+    }
+
+    err = alcp_drbg_request(&handle, &drbg_info);
+    if (alcp_is_error(err)) {
+        printf("Error Occurred on DRBG Request - %lu\n", err);
+        return err;
+    }
+    return 0;
+out:
+    return -1;
+}

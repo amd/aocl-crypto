@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,46 +26,57 @@
  *
  */
 
-#ifndef _ALCP_ALCP_H_
-#define _ALCP_ALCP_H_ 2
+#ifndef _ALCP_DRBG_H_
+#define _ALCP_DRBG_H_ 2
+#include "alcp/cipher.h"
+EXTERN_C_BEGIN
 
-#include "macros.h"
-
-#include "types.h"
-
-#include "error.h"
-
-#include "key.h"
-
-#include "cipher.h"
-
-#include "cipher_aead.h"
-
-#include "digest.h"
-
-#include "mac.h"
-
-#include "rng.h"
-
-#include "drbg.h"
-
-#include "ecdh.h"
-
-#include "version.h"
-
-/**
- * @brief
- * Version to be printed as : AOCL Crypto   1.0 (0xabcdef)
- *                           `-----------' `-'-'----------'
- *                              Name        M m  git ver
- * @struct alc_version_t
- */
-typedef struct _alc_version
+typedef enum _alc_drbg_type
 {
-    int          major;    /* M in above        */
-    int          minor;    /* m in above        */
-    unsigned int revision; /* git version above */
-    const char*  date;     /* e.g. "Jul 20 99"  */
-} alc_version_t;
+    ALC_DRBG_HMAC,
+    ALC_DRBG_CTR
+} alc_drbg_type_t;
 
-#endif /* _ALCP_ALCP_H_ */
+typedef struct _alc_hmacdrbg_info
+{
+} alc_hmacdrbg_info_t, *alc_hmacdrbg_info_p;
+
+typedef struct _alc_ctrdrbg_info
+{
+    Uint64 di_keysize;
+} alc_ctrdrbg_info_t, *alc_ctrdrbg_info_p;
+
+typedef struct _alc_drbg_info_t
+{
+    alc_drbg_type_t di_type;
+    union
+    {
+        alc_hmacdrbg_info_t hmac_drbg;
+        alc_ctrdrbg_info_t  ctr_drbg;
+    } di_algoinfo;
+
+    // any other common fields that are needed
+
+} alc_drbg_info_t, *alc_drbg_info_p;
+
+typedef void                alc_drbg_context_t;
+typedef alc_drbg_context_t* alc_drbg_context_p;
+
+typedef struct alc_drbg_handle
+{
+    alc_drbg_context_p ch_context;
+} alc_drbg_handle_t, *alc_drbg_handle_p, AlcDrbgHandle;
+
+ALCP_API_EXPORT alc_error_t
+alcp_drbg_supported(const alc_drbg_info_p pcDrbgInfo);
+
+ALCP_API_EXPORT Uint64
+alcp_drbg_context_size(const alc_drbg_info_p pDrbgInfo);
+
+ALCP_API_EXPORT alc_error_t
+alcp_drbg_request(alc_drbg_handle_p     pDrbgHandle,
+                  const alc_drbg_info_p pDrbgInfo);
+
+EXTERN_C_END
+
+#endif

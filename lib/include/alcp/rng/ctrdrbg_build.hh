@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,46 +26,37 @@
  *
  */
 
-#ifndef _ALCP_ALCP_H_
-#define _ALCP_ALCP_H_ 2
-
-#include "macros.h"
-
-#include "types.h"
-
-#include "error.h"
-
-#include "key.h"
-
-#include "cipher.h"
-
-#include "cipher_aead.h"
-
-#include "digest.h"
-
-#include "mac.h"
-
-#include "rng.h"
-
-#include "drbg.h"
-
-#include "ecdh.h"
-
-#include "version.h"
-
-/**
- * @brief
- * Version to be printed as : AOCL Crypto   1.0 (0xabcdef)
- *                           `-----------' `-'-'----------'
- *                              Name        M m  git ver
- * @struct alc_version_t
- */
-typedef struct _alc_version
+#include "alcp/base.hh"
+#include "drbg_ctr.hh"
+namespace alcp::drbg {
+class CtrDrbgBuilder
 {
-    int          major;    /* M in above        */
-    int          minor;    /* m in above        */
-    unsigned int revision; /* git version above */
-    const char*  date;     /* e.g. "Jul 20 99"  */
-} alc_version_t;
+  public:
+    static Status build(const alc_drbg_info_t& drbgInfo,
+                        const alc_key_info_t&  keyInfo,
+                        Context&               ctx);
 
-#endif /* _ALCP_ALCP_H_ */
+    static Uint64 getSize(const alc_drbg_info_t& drbgInfo);
+
+    static Status isSupported(const alc_drbg_info_t& drbgInfo);
+};
+
+Status
+CtrDrbgBuilder::build(const alc_drbg_info_t& drbgInfo,
+                      const alc_key_info_t&  keyInfo,
+                      Context&               ctx)
+{
+    return StatusOk();
+}
+Uint64
+CtrDrbgBuilder::getSize(const alc_drbg_info_t& drbgInfo)
+{
+    return sizeof(alcp::rng::drbg::CtrDrbg);
+}
+
+Status
+CtrDrbgBuilder::isSupported(const alc_drbg_info_t& drbgInfo)
+{
+    return StatusOk();
+}
+} // namespace alcp::drbg

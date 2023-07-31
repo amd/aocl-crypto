@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -18,7 +18,7 @@
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS!
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
@@ -26,46 +26,43 @@
  *
  */
 
-#ifndef _ALCP_ALCP_H_
-#define _ALCP_ALCP_H_ 2
+#include "alcp/base.hh"
+#include "alcp/base/error.hh"
+#include "alcp/capi/defs.hh"
+#include "alcp/capi/drbg/builder.hh"
+#include "alcp/capi/drbg/ctx.hh"
 
-#include "macros.h"
+#include "alcp/drbg.h"
+#include "alcp/rng/drbg.hh"
 
-#include "types.h"
+EXTERN_C_BEGIN
+using namespace alcp;
 
-#include "error.h"
+namespace alcp::drbg {
 
-#include "key.h"
-
-#include "cipher.h"
-
-#include "cipher_aead.h"
-
-#include "digest.h"
-
-#include "mac.h"
-
-#include "rng.h"
-
-#include "drbg.h"
-
-#include "ecdh.h"
-
-#include "version.h"
-
-/**
- * @brief
- * Version to be printed as : AOCL Crypto   1.0 (0xabcdef)
- *                           `-----------' `-'-'----------'
- *                              Name        M m  git ver
- * @struct alc_version_t
- */
-typedef struct _alc_version
+Uint64
+alcp_drbg_context_size(const alc_drbg_info_p pDrbgInfo)
 {
-    int          major;    /* M in above        */
-    int          minor;    /* m in above        */
-    unsigned int revision; /* git version above */
-    const char*  date;     /* e.g. "Jul 20 99"  */
-} alc_version_t;
+    printf("Executing Context Size API\n");
 
-#endif /* _ALCP_ALCP_H_ */
+    Uint64 size = sizeof(Context) + DrbgBuilder::getSize(*pDrbgInfo);
+    return size;
+}
+
+alc_error_t
+alcp_drbg_supported(const alc_drbg_info_p pcDrbgInfo)
+{
+    printf("Executing DRBG Supported API\n");
+    return ALC_ERROR_NONE;
+}
+
+alc_error_t
+alcp_drbg_request(alc_drbg_handle_p     pDrbgHandle,
+                  const alc_drbg_info_p pDrbgInfo)
+{
+    printf("Executing alcp drbg request\n");
+    return ALC_ERROR_NONE;
+}
+} // namespace alcp::drbg
+// TODO: Add the remaining APIS
+EXTERN_C_END

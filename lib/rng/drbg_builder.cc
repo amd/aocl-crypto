@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,46 +26,45 @@
  *
  */
 
-#ifndef _ALCP_ALCP_H_
-#define _ALCP_ALCP_H_ 2
+#include "alcp/base.hh"
+#include "alcp/capi/drbg/builder.hh"
+#include "alcp/rng/drbg_ctr.hh"
+#include "alcp/rng/drbg_hmac.hh"
 
-#include "macros.h"
+namespace alcp::drbg {
 
-#include "types.h"
-
-#include "error.h"
-
-#include "key.h"
-
-#include "cipher.h"
-
-#include "cipher_aead.h"
-
-#include "digest.h"
-
-#include "mac.h"
-
-#include "rng.h"
-
-#include "drbg.h"
-
-#include "ecdh.h"
-
-#include "version.h"
-
-/**
- * @brief
- * Version to be printed as : AOCL Crypto   1.0 (0xabcdef)
- *                           `-----------' `-'-'----------'
- *                              Name        M m  git ver
- * @struct alc_version_t
- */
-typedef struct _alc_version
+Status
+DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
 {
-    int          major;    /* M in above        */
-    int          minor;    /* m in above        */
-    unsigned int revision; /* git version above */
-    const char*  date;     /* e.g. "Jul 20 99"  */
-} alc_version_t;
+    return StatusOk();
+}
 
-#endif /* _ALCP_ALCP_H_ */
+Uint64
+DrbgBuilder::getSize(const alc_drbg_info_t& drbgInfo)
+{
+    printf("Executing DRBG Builder GetSize\n");
+    Uint64 size = 0;
+    switch (drbgInfo.di_type) {
+        case ALC_DRBG_HMAC:
+            size = sizeof(alcp::rng::drbg::HmacDrbg);
+            printf("DRBG HMAC\n");
+            break;
+        case ALC_DRBG_CTR:
+            size = sizeof(alcp::rng::drbg::CtrDrbg);
+            printf("DRBG CTR\n");
+            break;
+        default:
+            size = 0;
+    }
+    return size;
+}
+
+Status
+DrbgBuilder::isSupported(const alc_drbg_info_t& drbgInfo)
+{
+    Status s{ StatusOk() };
+
+    return s;
+}
+
+} // namespace alcp::drbg
