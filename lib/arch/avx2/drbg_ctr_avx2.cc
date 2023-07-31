@@ -44,43 +44,39 @@ class EncryptAes : public cipher::Aes
 };
 
 inline void
-increment_value(reg_128& reg_value)
+increment_value(__m128i& reg_value)
 {
-    reg_128 shuffle_mask;
-    shuffle_mask.reg =
+    __m128i shuffle_mask =
         _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-    reg_value.reg = _mm_shuffle_epi8(reg_value.reg, shuffle_mask.reg);
-    reg_128 one_reg_128;
-    one_reg_128.reg =
+    reg_value = _mm_shuffle_epi8(reg_value, shuffle_mask);
+    __m128i one_reg_128 =
         _mm_setr_epi8(0x01, 0, 0, 0, 0, 0, 0x00, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    reg_value.reg = reg_value.reg + one_reg_128.reg;
-    reg_value.reg = _mm_shuffle_epi8(reg_value.reg, shuffle_mask.reg);
+    reg_value = reg_value + one_reg_128;
+    reg_value = _mm_shuffle_epi8(reg_value, shuffle_mask);
 }
 void
 encrypt_block(Uint8* input, const Uint8* key, Uint64 key_size, Uint8* output)
 {
     EncryptAes aes;
     aes.setKey(&key[0], key_size * 8);
-    reg_128 reg_input;
-    reg_input.reg = _mm_loadu_si128(reinterpret_cast<__m128i*>(input));
-    auto p_key    = reinterpret_cast<const __m128i*>(aes.getEncryptKeys());
+    __m128i reg_input = _mm_loadu_si128(reinterpret_cast<__m128i*>(input));
+    auto    p_key     = reinterpret_cast<const __m128i*>(aes.getEncryptKeys());
     alcp::cipher::aesni::AesEncrypt(
-        &reg_input.reg, (const __m128i*)p_key, aes.getRounds());
-    _mm_storeu_si128(reinterpret_cast<__m128i*>(output), reg_input.reg);
+        &reg_input, (const __m128i*)p_key, aes.getRounds());
+    _mm_storeu_si128(reinterpret_cast<__m128i*>(output), reg_input);
 }
 
-void
-encrypt_block_reg(reg_128      reg_input,
-                  const Uint8* key,
-                  Uint64       key_size,
-                  Uint8*       output)
+void inline encrypt_block_reg(__m128i      reg_input,
+                              const Uint8* key,
+                              Uint64       key_size,
+                              Uint8*       output)
 {
     EncryptAes aes;
     aes.setKey(&key[0], key_size * 8);
     auto p_key = reinterpret_cast<const __m128i*>(aes.getEncryptKeys());
     alcp::cipher::aesni::AesEncrypt(
-        &reg_input.reg, (const __m128i*)p_key, aes.getRounds());
-    _mm_storeu_si128(reinterpret_cast<__m128i*>(output), reg_input.reg);
+        &reg_input, (const __m128i*)p_key, aes.getRounds());
+    _mm_storeu_si128(reinterpret_cast<__m128i*>(output), reg_input);
 }
 
 // CTR_DRBG_Update
@@ -101,8 +97,7 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
     Uint8  temp[cMaxSeedLength];
     Uint64 temp_size = 0;
 
-    reg_128 reg_value;
-    reg_value.reg = _mm_loadu_si128(reinterpret_cast<__m128i*>(value));
+    __m128i reg_value = _mm_loadu_si128(reinterpret_cast<__m128i*>(value));
     // While (len (temp) < seedlen) do
     while (temp_size < seed_length) {
         // V = (V+1) mod 2^blocklen.
@@ -114,7 +109,7 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
             reg_value, &key[0], key_len, &temp[0] + temp_size);
         temp_size += 16;
     }
-    _mm_storeu_si128(reinterpret_cast<__m128i*>(&value[0]), reg_value.reg);
+    _mm_storeu_si128(reinterpret_cast<__m128i*>(&value[0]), reg_value);
 
     // temp = leftmost (temp, seedlen).
     assert(temp_size >= seed_length);
@@ -185,8 +180,7 @@ DrbgCtrGenerate(const Uint8  cAdditionalInput[],
     // We wont create a temporary buffer as the FIPS algorithm suggests but
     // rather store the data directly to the output buffer of the encryption
     // While (len (temp) < requested_number_of_bits) do:
-    reg_128 reg_value;
-    reg_value.reg = _mm_loadu_si128(reinterpret_cast<__m128i*>(value));
+    __m128i reg_value = _mm_loadu_si128(reinterpret_cast<__m128i*>(value));
     for (inc = 0; cOutputLen - inc >= 16; inc += 16) {
         // V = (V+1) mod 2^blocklen
         increment_value(reg_value);
@@ -202,7 +196,7 @@ DrbgCtrGenerate(const Uint8  cAdditionalInput[],
             reg_value, &key[0], key_len, output_block);
         utils::CopyBytes(output + inc, output_block, cOutputLen - inc);
     }
-    _mm_storeu_si128(reinterpret_cast<__m128i*>(&value[0]), reg_value.reg);
+    _mm_storeu_si128(reinterpret_cast<__m128i*>(&value[0]), reg_value);
 
     // (Key, V) = CTR_DRBG_Update (additional_input, Key, V).
     alcp::rng::drbg::avx2::ctrDrbgUpdate(
@@ -221,31 +215,29 @@ BCC(Uint8* key,
     static constexpr int outlen = 16; // Block length in bytes
     assert(data_length % outlen == 0);
 
-    reg_128 chaining_value_reg;
-    chaining_value_reg.reg = _mm_setzero_si128();
-    auto n                 = data_length / outlen; // number of blocks
+    __m128i chaining_value_reg = _mm_setzero_si128();
+    auto    n                  = data_length / outlen; // number of blocks
 
     // Starting with the leftmost bits of data, split data into n blocks
     // ofencrypt_block outlen bits each, forming block1 to blockn. For i = 1 to
     // n do
-    reg_128    data_reg;
+    __m128i    data_reg;
     EncryptAes aes;
     aes.setKey(&key[0], key_length * 8);
     auto p_key = reinterpret_cast<const __m128i*>(aes.getEncryptKeys());
     for (Uint64 i = 0; i < n; i++) {
         // input_block = chaining_value ⊕ blocki.
-        data_reg.reg =
+        data_reg =
             _mm_loadu_si128(reinterpret_cast<__m128i*>(data + i * outlen));
-        chaining_value_reg.reg =
-            _mm_xor_si128(data_reg.reg, chaining_value_reg.reg);
+        chaining_value_reg = _mm_xor_si128(data_reg, chaining_value_reg);
 
         // chaining_value = Block_Encrypt (Key, input_block)
         alcp::cipher::aesni::AesEncrypt(
-            &chaining_value_reg.reg, (const __m128i*)p_key, aes.getRounds());
+            &chaining_value_reg, (const __m128i*)p_key, aes.getRounds());
     }
     // output_block = chaining_value.
     _mm_storeu_si128(reinterpret_cast<__m128i*>(output_block),
-                     chaining_value_reg.reg);
+                     chaining_value_reg);
 }
 
 void

@@ -57,63 +57,6 @@ namespace avx2 {
                                          Uint64       keylen);
 } // namespace avx2
 
-// Data structures and functions for debugging. FIXME: Remove once API testing
-// is in place.
-typedef union _reg_128
-{
-    __m128i  reg;
-    uint64_t u64[2];
-    uint32_t u32[4];
-    uint16_t u16[8];
-    uint8_t  u8[16];
-
-} reg_128;
-
-typedef union
-{
-    __m256i  reg;
-    uint64_t u64[4];
-    uint32_t u32[8];
-    uint16_t u16[16];
-    uint8_t  u8[32];
-
-} reg_256;
-
-inline std::string
-parseBytesToHexStr(const uint8_t* bytes, const int length)
-{
-    std::stringstream ss;
-    for (int i = 0; i < length; i++) {
-        int               charRep;
-        std::stringstream il;
-        charRep = bytes[i];
-        // Convert int to hex
-        il << std::hex << charRep;
-        std::string ilStr = il.str();
-        // 01 will be 0x1 so we need to make it 0x01
-        if (ilStr.size() != 2) {
-            ilStr = "0" + ilStr;
-        }
-        ss << ilStr;
-    }
-    // return "something";
-    return ss.str();
-}
-
-template<typename T>
-inline void
-print(T reg, bool split_64 = false, bool split_bytes = false)
-{
-    for (int i = sizeof(reg) - 1; i > -1; i--) {
-        if (split_64 && (i == 7 || i == 15 || i == 23)) {
-            std::cout << " ";
-        }
-        std::cout << parseBytesToHexStr((const uint8_t*)&(reg.u8) + i, 1);
-        if (split_bytes) {
-            std::cout << " ";
-        }
-    }
-}
 template<typename VectType>
 using concat_type_t = std::vector<const std::vector<VectType>*>;
 void
