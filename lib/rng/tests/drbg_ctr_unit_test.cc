@@ -35,6 +35,32 @@
 #include <iostream>
 #include <typeinfo>
 
+#ifdef WIN32
+#include "alcp/utils/time.hh"
+#else
+#include <sys/time.h>
+#endif
+
+// to do: these macro is better to be moved to common header.
+#define ALCP_CRYPT_TIMER_INIT struct timeval begin, end;
+long   seconds;
+long   microseconds;
+double elapsed;
+double totalTimeElapsed;
+
+#define ALCP_CRYPT_TIMER_START gettimeofday(&begin, 0);
+
+#define ALCP_CRYPT_GET_TIME(X, Y)                                              \
+    gettimeofday(&end, 0);                                                     \
+    seconds      = end.tv_sec - begin.tv_sec;                                  \
+    microseconds = end.tv_usec - begin.tv_usec;                                \
+    elapsed      = seconds + microseconds * 1e-6;                              \
+    totalTimeElapsed += elapsed;                                               \
+    if (X) {                                                                   \
+        printf("\t" Y);                                                        \
+        printf(" %2.2f ms ", elapsed * 1000);                                  \
+    }
+
 using namespace alcp::rng::drbg;
 using alcp::base::Status;
 Uint8
@@ -384,8 +410,8 @@ known_answer_map_t KAT_CtrDrbgDataset{
           "12dfd224c6dc7454e5250b3d97165e16260c2faf1cc7735cb75fb4f07e1d" } } }
 
 };
-
 // clang-format on
+
 class CtrDrbgFuncionalityTest
     : public ::testing::TestWithParam<std::pair<const std::string, param_tuple>>
 {
@@ -454,6 +480,33 @@ TEST_P(CtrDrbgFuncionalityTest, KAT)
     EXPECT_EQ(actual_value3, expected_value3);
 
     EXPECT_EQ(expected_generated_bits, generated_bits);
+}
+
+// TODO: To be removed once API based benchmarks are up
+TEST(CtrDrbg, PerformanceTest)
+{
+    CtrDrbg            m_ctrDrbg;
+    constexpr int      sizes = 31;
+    std::vector<Uint8> EntropyInput(sizes);
+    std::vector<Uint8> nonce(10000);
+    std::vector<Uint8> PersonalizationString(32);
+    std::vector<Uint8> AdditionalInput(sizes);
+    std::vector<Uint8> generatedbits(sizes);
+    m_ctrDrbg.setKeySize(16);
+    m_ctrDrbg.instantiate(EntropyInput, nonce, PersonalizationString);
+
+    ALCP_CRYPT_TIMER_INIT
+    totalTimeElapsed = 0.0;
+    for (int k = 0; k < 100000000; k++) {
+        ALCP_CRYPT_TIMER_START
+        m_ctrDrbg.generate(AdditionalInput, generatedbits);
+        ALCP_CRYPT_GET_TIME(0, "Generate")
+        if (totalTimeElapsed > 1) {
+            printf("\n\n  %5lu Generated bits per second\n",
+                   k * generatedbits.size() * 8);
+            break;
+        }
+    }
 }
 
 INSTANTIATE_TEST_SUITE_P(
