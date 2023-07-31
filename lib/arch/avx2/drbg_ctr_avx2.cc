@@ -55,19 +55,6 @@ increment_value(__m128i& reg_value)
     reg_value = _mm_shuffle_epi8(reg_value, shuffle_mask);
 }
 
-void inline encrypt_block_reg(__m128i      reg_input,
-                              const Uint8* key,
-                              Uint64       key_size,
-                              Uint8*       output)
-{
-    EncryptAes aes;
-    aes.setKey(&key[0], key_size * 8);
-    auto p_key = reinterpret_cast<const __m128i*>(aes.getEncryptKeys());
-    alcp::cipher::aesni::AesEncrypt(
-        &reg_input, (const __m128i*)p_key, aes.getRounds());
-    _mm_storeu_si128(reinterpret_cast<__m128i*>(output), reg_input);
-}
-
 // CTR_DRBG_Update
 void
 ctrDrbgUpdate(const Uint8  p_provided_data[],
@@ -85,16 +72,23 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
     Uint8  temp[cMaxSeedLength];
     Uint64 temp_size = 0;
 
+    EncryptAes aes;
+    aes.setKey(&key[0], key_len * 8);
+    auto    p_key     = reinterpret_cast<const __m128i*>(aes.getEncryptKeys());
     __m128i reg_value = _mm_loadu_si128(reinterpret_cast<__m128i*>(value));
+
     // While (len (temp) < seedlen) do
     while (temp_size < seed_length) {
         // V = (V+1) mod 2^blocklen.
         increment_value(reg_value);
 
         // output_block = Block_Encrypt (Key, V).
+        __m128i temp_reg_value = reg_value;
+        alcp::cipher::aesni::AesEncrypt(
+            &temp_reg_value, (const __m128i*)p_key, aes.getRounds());
         // temp = temp || output_block.
-        avx2::encrypt_block_reg(
-            reg_value, &key[0], key_len, &temp[0] + temp_size);
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(&temp[0] + temp_size),
+                         temp_reg_value);
         temp_size += 16;
     }
     _mm_storeu_si128(reinterpret_cast<__m128i*>(&value[0]), reg_value);
@@ -168,20 +162,30 @@ DrbgCtrGenerate(const Uint8  cAdditionalInput[],
     // We wont create a temporary buffer as the FIPS algorithm suggests but
     // rather store the data directly to the output buffer of the encryption
     // While (len (temp) < requested_number_of_bits) do:
-    __m128i reg_value = _mm_loadu_si128(reinterpret_cast<__m128i*>(value));
+    __m128i    reg_value = _mm_loadu_si128(reinterpret_cast<__m128i*>(value));
+    EncryptAes aes;
+    aes.setKey(&key[0], key_len * 8);
+    auto p_key = reinterpret_cast<const __m128i*>(aes.getEncryptKeys());
+
     for (inc = 0; cOutputLen - inc >= 16; inc += 16) {
         // V = (V+1) mod 2^blocklen
         increment_value(reg_value);
+        __m128i temp_reg_value = reg_value;
         // output_block = Block_Encrypt (Key, V)
-        alcp::rng::drbg::avx2::encrypt_block_reg(
-            reg_value, &key[0], key_len, output + inc);
+        alcp::cipher::aesni::AesEncrypt(
+            &temp_reg_value, (const __m128i*)p_key, aes.getRounds());
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(output + inc),
+                         temp_reg_value);
     }
 
     if (cOutputLen - inc > 0) {
         increment_value(reg_value);
-        Uint8 output_block[16];
-        alcp::rng::drbg::avx2::encrypt_block_reg(
-            reg_value, &key[0], key_len, output_block);
+        Uint8   output_block[16];
+        __m128i temp_reg_value = reg_value;
+        alcp::cipher::aesni::AesEncrypt(
+            &temp_reg_value, (const __m128i*)p_key, aes.getRounds());
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(output_block),
+                         temp_reg_value);
         utils::CopyBytes(output + inc, output_block, cOutputLen - inc);
     }
     _mm_storeu_si128(reinterpret_cast<__m128i*>(&value[0]), reg_value);
@@ -317,11 +321,8 @@ Block_Cipher_df(const Uint8* input_string,
     std::vector<Uint8> requested_bytes_temp;
     Uint64             inc = 0;
     for (inc = 0; no_of_bytes_to_return - inc >= outlen; inc += outlen) {
-        // encrypt_block(&temp[0] + keylen, &K[0], keylen, &X[0]);
         alcp::cipher::aesni::AesEncrypt(
             &X_reg, (const __m128i*)p_key, aes.getRounds());
-        // requested_bytes_temp.insert(requested_bytes_temp.end(), X, X +
-        // outlen);
         _mm_storeu_si128(reinterpret_cast<__m128i*>(requested_bits + inc),
                          X_reg);
     }
