@@ -237,12 +237,12 @@ Rsa::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
     auto                      ptext_bignum = CreateBigNum(pText, m_key_size);
     auto                      mod_bignum   = m_pub_key.m_mod.get();
 
+    bignum_text.reset(ptext_bignum);
+
     if (!IsLess(ptext_bignum, mod_bignum, m_pub_key.m_size)) {
         return status::NotPermitted(
             "text absolute value should be less than modulus");
     }
-
-    bignum_text.reset(ptext_bignum);
 
     static bool zen4_available = CpuId::cpuIsZen4();
     static bool zen3_available = CpuId::cpuIsZen3();
@@ -281,7 +281,8 @@ Rsa::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
 
     std::unique_ptr<Uint64[]> bignum_text;
     auto ptext_bignum = CreateBigNum(pEncText, m_priv_key.m_size * 2 * 8);
-    auto mod_bignum   = m_priv_key.m_mod.get();
+    bignum_text.reset(ptext_bignum);
+    auto mod_bignum = m_priv_key.m_mod.get();
 
     if (!IsLess(ptext_bignum, mod_bignum, m_priv_key.m_size * 2)) {
         return status::NotPermitted(

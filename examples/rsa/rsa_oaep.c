@@ -189,6 +189,9 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
     dec_text = malloc(size);
     text     = malloc(text_size);
 
+    memset(p_seed, 0x01, hash_len);
+    memset(enc_text, 0, size);
+    memset(dec_text, 0, size);
     memset(text, 0x31, text_size);
 
     ALCP_PRINT_TEXT(text, text_size, "text")

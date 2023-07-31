@@ -71,7 +71,7 @@ CreateBigNum(const Uint8* bytes, Uint64 size)
 
     Uint64 big_num_size = size / BytesBignum;
 
-    auto   res_buffer_bignum = new Uint64[big_num_size];
+    auto   res_buffer_bignum = new Uint64[big_num_size]{};
     Uint8* p_res             = reinterpret_cast<Uint8*>(res_buffer_bignum);
 
     if (bytes == nullptr)
