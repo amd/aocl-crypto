@@ -44,38 +44,6 @@ class EncryptAes : public cipher::Aes
     bool isSupported(const alc_cipher_info_t& cipherInfo) { return true; }
 };
 
-void
-increment_value(Uint8* value)
-{
-    reg_128 shuffle_mask;
-    shuffle_mask.reg =
-        _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-    reg_128 v_reg_128;
-    v_reg_128.reg = _mm_loadu_si128(reinterpret_cast<__m128i*>(&value[0]));
-    v_reg_128.reg = _mm_shuffle_epi8(v_reg_128.reg, shuffle_mask.reg);
-#ifdef DEBUG
-    printf("CTR DRBG: Loaded data from value in register ");
-    print(v_reg_128);
-    printf("\n");
-#endif
-    reg_128 one_reg_128;
-    one_reg_128.reg =
-        _mm_setr_epi8(0x01, 0, 0, 0, 0, 0, 0x00, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-#ifdef DEBUG
-    printf("one_reg value is ");
-    print(one_reg_128);
-    printf("\n");
-#endif
-    v_reg_128.reg = v_reg_128.reg + one_reg_128.reg;
-#ifdef DEBUG
-    printf("v_reg value after adding 1 ");
-    print(v_reg_128);
-    printf("\n");
-#endif
-    v_reg_128.reg = _mm_shuffle_epi8(v_reg_128.reg, shuffle_mask.reg);
-    _mm_storeu_si128(reinterpret_cast<__m128i*>(&value[0]), v_reg_128.reg);
-}
-
 inline void
 increment_value(reg_128& reg_value)
 {
@@ -151,7 +119,7 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
         std::cout << "CTR DRBG Update: Value before incrementing : "
                   << parseBytesToHexStr(value, 16) << std::endl;
 #endif
-        // V = (V+1) mod 2blocklen.
+        // V = (V+1) mod 2^blocklen.
         increment_value(reg_value);
 #ifdef DEBUG
         std::cout << "CTR DRBG Update: Value after incrementing : "
@@ -269,21 +237,24 @@ DrbgCtrGenerate(const Uint8  cAdditionalInput[],
     // We wont create a temporary buffer as the FIPS algorithm suggests but
     // rather store the data directly to the output buffer of the encryption
     // While (len (temp) < requested_number_of_bits) do:
+    reg_128 reg_value;
+    reg_value.reg = _mm_loadu_si128(reinterpret_cast<__m128i*>(value));
     for (inc = 0; cOutputLen - inc >= 16; inc += 16) {
         // V = (V+1) mod 2^blocklen
-        increment_value(value);
+        increment_value(reg_value);
         // output_block = Block_Encrypt (Key, V)
-        alcp::rng::drbg::avx2::encrypt_block(
-            &value[0], &key[0], key_len, output + inc);
+        alcp::rng::drbg::avx2::encrypt_block_reg(
+            reg_value, &key[0], key_len, output + inc);
     }
 
     if (cOutputLen - inc > 0) {
-        increment_value(value);
+        increment_value(reg_value);
         Uint8 output_block[16];
-        alcp::rng::drbg::avx2::encrypt_block(
-            &value[0], &key[0], key_len, output_block);
+        alcp::rng::drbg::avx2::encrypt_block_reg(
+            reg_value, &key[0], key_len, output_block);
         utils::CopyBytes(output + inc, output_block, cOutputLen - inc);
     }
+    _mm_storeu_si128(reinterpret_cast<__m128i*>(&value[0]), reg_value.reg);
 
     // (Key, V) = CTR_DRBG_Update (additional_input, Key, V).
     alcp::rng::drbg::avx2::ctrDrbgUpdate(
