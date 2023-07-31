@@ -35,10 +35,6 @@
 namespace alcp::rng::drbg {
 
 namespace avx2 {
-    ALCP_API_EXPORT void encrypt_block(Uint8*       input,
-                                       const Uint8* key,
-                                       Uint64       key_size,
-                                       Uint8*       output);
     ALCP_API_EXPORT void ctrDrbgUpdate(const Uint8  p_provided_data[],
                                        const Uint64 cProvidedDataLen,
                                        Uint8*       key,
@@ -142,7 +138,6 @@ class ALCP_API_EXPORT CtrDrbg : public Drbg
     void setKeySize(Uint64 keySize);
     void setUseDerivationFunction(const bool use_derivation_function);
 
-  protected:
     /**
      * @brief Given Data and Length, updates key and value internally
      *
@@ -217,6 +212,7 @@ class ALCP_API_EXPORT CtrDrbg : public Drbg
     void generate(const std::vector<Uint8>& cAdditionalInput,
                   std::vector<Uint8>&       cOutput);
 
+  protected:
     /**
      * @brief Reseed the drbg internal state for unpredictability.
      *

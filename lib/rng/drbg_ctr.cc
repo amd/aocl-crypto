@@ -189,9 +189,6 @@ CtrDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
                            const Uint8  cPersonalizationString[],
                            const Uint64 cPersonalizationStringLen)
 {
-#ifdef DEBUG
-    printf("Running CtrDrbg Instantiate\n");
-#endif
     // From NIST documentation, temp = len (personalization_string). This does
     // not mean temp is length. This means a temporary buffer temp of
     // seed_length is created.
@@ -208,31 +205,30 @@ CtrDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
     // V = 0^blocklen
     std::fill(m_v.begin(), m_v.end(), 0);
 
-    std::vector<Uint8> seed_material_copy;
+    std::vector<Uint8> provided_data;
     if (!m_use_derivation_function) {
-        seed_material_copy = std::vector<Uint8>(m_seedlength, 0);
-        utils::CopyBytes(&seed_material_copy[0],
+        provided_data = std::vector<Uint8>(m_seedlength, 0);
+        if (m_seedlength < cPersonalizationStringLen) {
+            // FIXME: Should be moved to status
+            printf("Seed Length Should be same size as Personalization String "
+                   "Length\n");
+            return;
+        }
+        utils::CopyBytes(&provided_data[0],
                          cPersonalizationString,
                          cPersonalizationStringLen);
 
         // seed_material = entropy_input ⊕ personalization_string.
-        assert(cEntropyInputLen == m_seedlength);
+        // assert(cEntropyInputLen == m_seedlength);
         for (Uint64 i = 0; i < cEntropyInputLen; i++) {
-            seed_material_copy[i] = cEntropyInput[i] ^ seed_material_copy[i];
+            provided_data[i] = cEntropyInput[i] ^ provided_data[i];
         }
 
         DebugPrint(m_key, "K", __FILE__, __LINE__);
         DebugPrint(m_v, "V", __FILE__, __LINE__);
-#ifdef DEBUG
-        std::cout << "&seed_material_copy[0]: "
-                  << parseBytesToHexStr(&seed_material_copy[0],
-                                        seed_material.size())
-                  << std::endl;
-        std::cout << "Seed Material Length: " << seed_material.size()
-                  << std::endl;
-#endif
+
         // (Key, V) = CTR_DRBG_Update (seed_material, Key, V).
-        update(&seed_material_copy[0], seed_material_copy.size());
+        update(&provided_data[0], provided_data.size());
 
         DebugPrint(m_key, "K", __FILE__, __LINE__);
         DebugPrint(m_v, "V", __FILE__, __LINE__);
@@ -240,34 +236,26 @@ CtrDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
         // FIXME: Currently no reseed counter is there
         // reseed_counter = 1
     } else {
-        seed_material_copy = std::vector<Uint8>(
+        provided_data = std::vector<Uint8>(
             cEntropyInputLen + cNonceLen + cPersonalizationStringLen, 0);
         // Copy can't be avoided
+        utils::CopyBytes(&provided_data[0], cEntropyInput, cEntropyInputLen);
         utils::CopyBytes(
-            &seed_material_copy[0], cEntropyInput, cEntropyInputLen);
-        utils::CopyBytes(
-            &seed_material_copy[0] + cEntropyInputLen, cNonce, cNonceLen);
-        utils::CopyBytes(&seed_material_copy[0] + cEntropyInputLen + cNonceLen,
+            &provided_data[0] + cEntropyInputLen, cNonce, cNonceLen);
+        utils::CopyBytes(&provided_data[0] + cEntropyInputLen + cNonceLen,
                          cPersonalizationString,
                          cPersonalizationStringLen);
 
         std::vector<Uint8> df_output(m_seedlength);
-        alcp::rng::drbg::avx2::Block_Cipher_df(&seed_material_copy[0],
-                                               seed_material_copy.size() * 8,
+        alcp::rng::drbg::avx2::Block_Cipher_df(&provided_data[0],
+                                               provided_data.size() * 8,
                                                &df_output[0],
                                                df_output.size() * 8,
                                                m_key.size());
 
         DebugPrint(m_key, "K", __FILE__, __LINE__);
         DebugPrint(m_v, "V", __FILE__, __LINE__);
-#ifdef DEBUG
-        std::cout << "&seed_material_copy[0]: "
-                  << parseBytesToHexStr(&seed_material_copy[0],
-                                        seed_material.size())
-                  << std::endl;
-        std::cout << "Seed Material Length: " << seed_material.size()
-                  << std::endl;
-#endif
+
         // (Key, V) = CTR_DRBG_Update (seed_material, Key, V).
         update(&df_output[0], df_output.size());
 
@@ -346,12 +334,6 @@ CtrDrbg::Impl::setKeySize(Uint64 keySize)
     m_seedlength = 16 + m_keySize;
 
     m_key = std::vector<Uint8>(m_keySize);
-#ifdef DEBUG
-    std::cout << "Key value after setting "
-              << parseBytesToHexStr(&m_key[0], m_key.size()) << std::endl;
-
-    std::cout << "Key length after setting " << m_keySize << std::endl;
-#endif
 }
 
 void

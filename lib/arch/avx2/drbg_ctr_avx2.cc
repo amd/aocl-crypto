@@ -35,7 +35,6 @@
 #include "alcp/utils/copy.hh"
 #include <immintrin.h>
 
-// #define DEBUG 1
 namespace alcp::rng::drbg::avx2 {
 
 class EncryptAes : public cipher::Aes
@@ -93,14 +92,6 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
               Uint8*       value)
 {
     Uint64 seed_length = key_len + 16;
-#ifdef DEBUG
-    printf("Inside DRBG Update:\n");
-    std::cout << "Provided Data : "
-              << parseBytesToHexStr(p_provided_data, cProvidedDataLen)
-              << std::endl;
-    printf("Provided Data Length : %ld\n", cProvidedDataLen);
-    printf("Seed Length: %ld\n", seed_length);
-#endif
 
     // temp = Null.
 
@@ -114,49 +105,21 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
     reg_value.reg = _mm_loadu_si128(reinterpret_cast<__m128i*>(value));
     // While (len (temp) < seedlen) do
     while (temp_size < seed_length) {
-#ifdef DEBUG
-        printf("CTR DRBG Update: Temp Size %ld\n", temp.size());
-        std::cout << "CTR DRBG Update: Value before incrementing : "
-                  << parseBytesToHexStr(value, 16) << std::endl;
-#endif
         // V = (V+1) mod 2^blocklen.
         increment_value(reg_value);
-#ifdef DEBUG
-        std::cout << "CTR DRBG Update: Value after incrementing : "
-                  << parseBytesToHexStr(value, 16) << std::endl;
-#endif
 
-#ifdef DEBUG
-        printf("Encryption Details\n");
-        std::cout << "Key : " << parseBytesToHexStr(key, key_len) << std::endl;
-        std::cout << "Key Length : " << key_len << std::endl;
-        std::cout << "Value : " << parseBytesToHexStr(value, 16) << std::endl;
-#endif
         // output_block = Block_Encrypt (Key, V).
         // temp = temp || output_block.
         avx2::encrypt_block_reg(
             reg_value, &key[0], key_len, &temp[0] + temp_size);
         temp_size += 16;
-#ifdef DEBUG
-        printf("Update: Iteration End \n\n");
-#endif
     }
     _mm_storeu_si128(reinterpret_cast<__m128i*>(&value[0]), reg_value.reg);
 
-#ifdef DEBUG
-    std::cout << "Temp after loop :  "
-              << parseBytesToHexStr(&temp[0], temp.size()) << std::endl;
-
-#endif
     // temp = leftmost (temp, seedlen).
     assert(temp_size >= seed_length);
     temp_size = seed_length; // Meaning, only seed_length bytes are considered
                              // from here on. rest is discarded.
-#ifdef DEBUG
-    std::cout << "leftmost (temp, seedlen) : "
-              << parseBytesToHexStr(&temp[0], temp.size()) << std::endl;
-
-#endif
 
     assert(seed_length == temp_size);
     assert(cProvidedDataLen == temp_size);
@@ -166,25 +129,10 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
         temp[i] = temp[i] ^ p_provided_data[i];
     }
 
-#ifdef DEBUG
-    std::cout << "Temp value after xor is : "
-              << parseBytesToHexStr(&temp[0], temp.size()) << std::endl;
-    std::cout << "Size of temp  is " << temp.size() << std::endl;
-#endif
     // Key = leftmost (temp, keylen).
     utils::CopyBytes(key, temp, key_len);
-#ifdef DEBUG
-    std::cout << "Key = leftmost (temp, keylen). So Key = "
-              << parseBytesToHexStr(key, key_len) << std::endl;
-#endif
     // V = rightmost (temp, blocklen).
     utils::CopyBytes(value, temp + temp_size - 16, 16);
-#ifdef DEBUG
-    std::cout << "V = rightmost (temp, blocklen). So Value = "
-              << parseBytesToHexStr(value, 16) << std::endl;
-
-    printf("Exit DRBG Update:\n");
-#endif
 }
 
 // CTR_DRBG_Generate_algorithm
