@@ -76,6 +76,19 @@ increment_value(Uint8* value)
     _mm_storeu_si128(reinterpret_cast<__m128i*>(&value[0]), v_reg_128.reg);
 }
 
+inline void
+increment_value(reg_128& reg_value)
+{
+    reg_128 shuffle_mask;
+    shuffle_mask.reg =
+        _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+    reg_value.reg = _mm_shuffle_epi8(reg_value.reg, shuffle_mask.reg);
+    reg_128 one_reg_128;
+    one_reg_128.reg =
+        _mm_setr_epi8(0x01, 0, 0, 0, 0, 0, 0x00, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    reg_value.reg = reg_value.reg + one_reg_128.reg;
+    reg_value.reg = _mm_shuffle_epi8(reg_value.reg, shuffle_mask.reg);
+}
 void
 encrypt_block(Uint8* input, const Uint8* key, Uint64 key_size, Uint8* output)
 {
@@ -84,6 +97,20 @@ encrypt_block(Uint8* input, const Uint8* key, Uint64 key_size, Uint8* output)
     reg_128 reg_input;
     reg_input.reg = _mm_loadu_si128(reinterpret_cast<__m128i*>(input));
     auto p_key    = reinterpret_cast<const __m128i*>(aes.getEncryptKeys());
+    alcp::cipher::aesni::AesEncrypt(
+        &reg_input.reg, (const __m128i*)p_key, aes.getRounds());
+    _mm_storeu_si128(reinterpret_cast<__m128i*>(output), reg_input.reg);
+}
+
+void
+encrypt_block_reg(reg_128      reg_input,
+                  const Uint8* key,
+                  Uint64       key_size,
+                  Uint8*       output)
+{
+    EncryptAes aes;
+    aes.setKey(&key[0], key_size * 8);
+    auto p_key = reinterpret_cast<const __m128i*>(aes.getEncryptKeys());
     alcp::cipher::aesni::AesEncrypt(
         &reg_input.reg, (const __m128i*)p_key, aes.getRounds());
     _mm_storeu_si128(reinterpret_cast<__m128i*>(output), reg_input.reg);
@@ -108,15 +135,16 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
 #endif
 
     // temp = Null.
-    // std::vector<Uint8> temp;
 
     static constexpr Uint64 cMaxSeedLength =
         384; // For key size 256 (Block Size + KeySize = 256+128=384)
 
     Uint8  temp[cMaxSeedLength];
     Uint64 temp_size = 0;
+
+    reg_128 reg_value;
+    reg_value.reg = _mm_loadu_si128(reinterpret_cast<__m128i*>(value));
     // While (len (temp) < seedlen) do
-    // while (temp_size < seed_length) {
     while (temp_size < seed_length) {
 #ifdef DEBUG
         printf("CTR DRBG Update: Temp Size %ld\n", temp.size());
@@ -124,13 +152,12 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
                   << parseBytesToHexStr(value, 16) << std::endl;
 #endif
         // V = (V+1) mod 2blocklen.
-        increment_value(value);
+        increment_value(reg_value);
 #ifdef DEBUG
         std::cout << "CTR DRBG Update: Value after incrementing : "
                   << parseBytesToHexStr(value, 16) << std::endl;
 #endif
 
-        // std::vector<Uint8> output_block(16, 0);
 #ifdef DEBUG
         printf("Encryption Details\n");
         std::cout << "Key : " << parseBytesToHexStr(key, key_len) << std::endl;
@@ -138,18 +165,15 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
         std::cout << "Value : " << parseBytesToHexStr(value, 16) << std::endl;
 #endif
         // output_block = Block_Encrypt (Key, V).
-        avx2::encrypt_block(&value[0], &key[0], key_len, &temp[0] + temp_size);
-#ifdef DEBUG
-        std::cout << "Output_block : "
-                  << parseBytesToHexStr(&output_block[0], 16) << std::endl;
-#endif
         // temp = temp || output_block.
-        // temp.insert(temp.end(), output_block.begin(), output_block.end());
+        avx2::encrypt_block_reg(
+            reg_value, &key[0], key_len, &temp[0] + temp_size);
+        temp_size += 16;
 #ifdef DEBUG
         printf("Update: Iteration End \n\n");
 #endif
-        temp_size += 16;
     }
+    _mm_storeu_si128(reinterpret_cast<__m128i*>(&value[0]), reg_value.reg);
 
 #ifdef DEBUG
     std::cout << "Temp after loop :  "
@@ -157,9 +181,9 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
 
 #endif
     // temp = leftmost (temp, seedlen).
-    // temp = std::vector<Uint8>(temp.begin(), temp.begin() + seed_length);
     assert(temp_size >= seed_length);
-    temp_size = seed_length;
+    temp_size = seed_length; // Meaning, only seed_length bytes are considered
+                             // from here on. rest is discarded.
 #ifdef DEBUG
     std::cout << "leftmost (temp, seedlen) : "
               << parseBytesToHexStr(&temp[0], temp.size()) << std::endl;
@@ -180,7 +204,7 @@ ctrDrbgUpdate(const Uint8  p_provided_data[],
     std::cout << "Size of temp  is " << temp.size() << std::endl;
 #endif
     // Key = leftmost (temp, keylen).
-    utils::CopyBytes(key, &temp[0], key_len);
+    utils::CopyBytes(key, temp, key_len);
 #ifdef DEBUG
     std::cout << "Key = leftmost (temp, keylen). So Key = "
               << parseBytesToHexStr(key, key_len) << std::endl;
@@ -210,9 +234,12 @@ DrbgCtrGenerate(const Uint8  cAdditionalInput[],
     Uint64 seed_length = key_len + 16;
 
     // Fully create a zeroed out buffer of seed_length length
-    // Uint8 additional_input_bits[seed_length] = {};
-
-    std::vector<Uint8> additional_input_bits(seed_length, 0);
+    static constexpr Uint64 cMaxSeedLength =
+        384; // For key size 256 (Block Size + KeySize = 256+128=384)
+    Uint8 additional_input_bits
+        [cMaxSeedLength] = {}; // Allocating for max seedlength although the
+                               // function should only consider seed_length
+                               // bytes
 
     // If (additional_input ≠ Null), then
     if (cAdditionalInput != nullptr && cAdditionalInputLen != 0) {
@@ -220,8 +247,7 @@ DrbgCtrGenerate(const Uint8  cAdditionalInput[],
             alcp::rng::drbg::avx2::Block_Cipher_df(cAdditionalInput,
                                                    cAdditionalInputLen * 8,
                                                    &additional_input_bits[0],
-                                                   additional_input_bits.size()
-                                                       * 8,
+                                                   seed_length * 8,
                                                    key_len);
         } else {
             // If (temp < seedlen), then  additional_input =
@@ -364,10 +390,6 @@ Block_Cipher_df(const Uint8* input_string,
         }
 
         // temp = temp || BCC (K, (IV || S)).
-        /*   Uint64 s_concat_iv[iv_concat_s_size] = {};
-          utils::CopyBytes(s_concat_iv, IV, outlen / 64);
-          utils::CopyBytes(s_concat_iv, S, outlen / 64); */
-
         std::vector<Uint8> iv_concat_s(IV.size() + S.size());
         ;
         memcpy(&iv_concat_s[0], &IV[0], IV.size());
