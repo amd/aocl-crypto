@@ -261,14 +261,6 @@ DrbgCtrGenerate(const Uint8  cAdditionalInput[],
         &additional_input_bits[0], seed_length, &key[0], key_len, &value[0]);
 }
 
-void
-do_xor(const Uint8* input1, const Uint8* input2, Uint8* output, Uint64 n)
-{
-    for (Uint64 i = 0; i < n; i++) {
-        output[i] = input1[i] ^ input2[i];
-    }
-}
-
 // BCC (Key, data):
 void
 BCC(Uint8* key,
@@ -280,22 +272,32 @@ BCC(Uint8* key,
     // chaining_value = 0^outlen.
     static constexpr int outlen = 16; // Block length in bytes
     assert(data_length % outlen == 0);
-    Uint8 chaining_value[outlen] = {};
-    // n = len (data)/outlen.
-    auto n = data_length / outlen; // number of blocks
+
+    reg_128 chaining_value_reg;
+    chaining_value_reg.reg = _mm_setzero_si128();
+    auto n                 = data_length / outlen; // number of blocks
 
     // Starting with the leftmost bits of data, split data into n blocks
     // ofencrypt_block outlen bits each, forming block1 to blockn. For i = 1 to
     // n do
-    Uint8 input_block[outlen] = {};
+    reg_128    data_reg;
+    EncryptAes aes;
+    aes.setKey(&key[0], key_length * 8);
+    auto p_key = reinterpret_cast<const __m128i*>(aes.getEncryptKeys());
     for (Uint64 i = 0; i < n; i++) {
         // input_block = chaining_value ⊕ blocki.
-        do_xor(chaining_value, data + i * outlen, input_block, 16);
+        data_reg.reg =
+            _mm_loadu_si128(reinterpret_cast<__m128i*>(data + i * outlen));
+        chaining_value_reg.reg =
+            _mm_xor_si128(data_reg.reg, chaining_value_reg.reg);
+
         // chaining_value = Block_Encrypt (Key, input_block)
-        encrypt_block(input_block, key, key_length, chaining_value);
+        alcp::cipher::aesni::AesEncrypt(
+            &chaining_value_reg.reg, (const __m128i*)p_key, aes.getRounds());
     }
     // output_block = chaining_value.
-    utils::CopyBytes(output_block, chaining_value, outlen);
+    _mm_storeu_si128(reinterpret_cast<__m128i*>(output_block),
+                     chaining_value_reg.reg);
 }
 
 void
