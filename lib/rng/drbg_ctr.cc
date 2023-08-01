@@ -170,7 +170,7 @@ void
 CtrDrbg::Impl::update(const Uint8  p_provided_data[],
                       const Uint64 cProvidedDataLen)
 {
-    avx2::ctrDrbgUpdate(
+    avx2::CtrDrbgUpdate(
         p_provided_data, cProvidedDataLen, &m_key[0], m_keySize, &m_v[0]);
 }
 
@@ -247,11 +247,11 @@ CtrDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
                          cPersonalizationStringLen);
 
         std::vector<Uint8> df_output(m_seedlength);
-        alcp::rng::drbg::avx2::Block_Cipher_df(&provided_data[0],
-                                               provided_data.size() * 8,
-                                               &df_output[0],
-                                               df_output.size() * 8,
-                                               m_key.size());
+        alcp::rng::drbg::avx2::BlockCipherDf(&provided_data[0],
+                                             provided_data.size() * 8,
+                                             &df_output[0],
+                                             df_output.size() * 8,
+                                             m_key.size());
 
         DebugPrint(m_key, "K", __FILE__, __LINE__);
         DebugPrint(m_v, "V", __FILE__, __LINE__);

@@ -36,7 +36,7 @@
 namespace alcp::rng::drbg {
 
 namespace avx2 {
-    ALCP_API_EXPORT void ctrDrbgUpdate(const Uint8  p_provided_data[],
+    ALCP_API_EXPORT void CtrDrbgUpdate(const Uint8  p_provided_data[],
                                        const Uint64 cProvidedDataLen,
                                        Uint8*       key,
                                        Uint64       key_len,
@@ -51,11 +51,11 @@ namespace avx2 {
                                          Uint8*       value,
                                          Uint64       value_len,
                                          bool         use_df);
-    ALCP_API_EXPORT void Block_Cipher_df(const Uint8* input_string,
-                                         Uint64       input_string_length,
-                                         Uint8*       requested_bits,
-                                         Uint64       no_of_bits_to_return,
-                                         Uint64       keylen);
+    ALCP_API_EXPORT void BlockCipherDf(const Uint8* input_string,
+                                       Uint64       input_string_length,
+                                       Uint8*       requested_bits,
+                                       Uint64       no_of_bits_to_return,
+                                       Uint64       keylen);
 } // namespace avx2
 
 template<typename VectType>
