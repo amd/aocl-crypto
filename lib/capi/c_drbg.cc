@@ -61,7 +61,72 @@ alcp_drbg_request(alc_drbg_handle_p     pDrbgHandle,
                   const alc_drbg_info_p pDrbgInfo)
 {
     printf("Executing alcp drbg request\n");
-    return ALC_ERROR_NONE;
+
+    alc_error_t err = ALC_ERROR_NONE;
+
+    ALCP_BAD_PTR_ERR_RET(pDrbgHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pDrbgInfo, err);
+    ALCP_BAD_PTR_ERR_RET(pDrbgHandle->ch_context, err);
+
+    auto p_ctx = static_cast<drbg::Context*>(pDrbgHandle->ch_context);
+    new (p_ctx) drbg::Context;
+    p_ctx->status = drbg::DrbgBuilder::build(*pDrbgInfo, *p_ctx);
+    return err;
+}
+
+alc_error_t
+alcp_drbg_initialize(alc_drbg_handle_p pDrbgHandle,
+                     int               cSecurityStrength,
+                     Uint8*            personalization_string,
+                     Uint64            personalization_string_length)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pDrbgHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pDrbgHandle->ch_context, err);
+
+    auto p_ctx = static_cast<drbg::Context*>(pDrbgHandle->ch_context);
+
+    p_ctx->status = p_ctx->initialize(p_ctx->m_drbg,
+                                      cSecurityStrength,
+                                      personalization_string,
+                                      personalization_string_length);
+    // TODO: Convert status to proper alc_error_t code and return
+    if (!p_ctx->status.ok()) {
+        err = ALC_ERROR_EXISTS;
+    } else {
+        err = ALC_ERROR_NONE;
+    }
+    return err;
+}
+
+alc_error_t
+alcp_drbg_randomize(alc_drbg_handle_p pDrbgHandle,
+                    Uint8             p_Output[],
+                    const size_t      cOutputLength,
+                    int               cSecurityStrength,
+                    const Uint8       cAdditionalInput[],
+                    const size_t      cAdditionalInputLength)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pDrbgHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pDrbgHandle->ch_context, err);
+    ALCP_BAD_PTR_ERR_RET(p_Output, err);
+
+    auto p_ctx = static_cast<drbg::Context*>(pDrbgHandle->ch_context);
+
+    p_ctx->status = p_ctx->randomize(p_ctx->m_drbg,
+                                     p_Output,
+                                     cOutputLength,
+                                     cSecurityStrength,
+                                     cAdditionalInput,
+                                     cAdditionalInputLength);
+    // TODO: Convert status to proper alc_error_t code and return
+    if (!p_ctx->status.ok()) {
+        err = ALC_ERROR_EXISTS;
+    } else {
+        err = ALC_ERROR_NONE;
+    }
+    return err;
 }
 } // namespace alcp::drbg
 // TODO: Add the remaining APIS

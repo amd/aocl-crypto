@@ -28,14 +28,87 @@
 
 #include "alcp/base.hh"
 #include "alcp/capi/drbg/builder.hh"
-#include "alcp/rng/drbg_ctr.hh"
+#include "alcp/rng/ctrdrbg_build.hh"
 #include "alcp/rng/drbg_hmac.hh"
-
+#include "hardware_rng.hh"
+#include "system_rng.hh"
 namespace alcp::drbg {
+
+static Status
+__drbg_wrapperinitialize(void*        m_drbg,
+                         int          cSecurityStrength,
+                         const Uint8* buff,
+                         Uint64       size)
+{
+    std::vector<Uint8> temp_personalization_string;
+    if (buff != nullptr && size != 0) {
+        temp_personalization_string = std::vector<Uint8>(buff, buff + size);
+    }
+    alcp::rng::Drbg* p_drbg = static_cast<alcp::rng::Drbg*>(m_drbg);
+    return p_drbg->initialize(cSecurityStrength, temp_personalization_string);
+}
+
+static Status
+__drbg_wrapperrandomize(void*        m_drbg,
+                        Uint8        p_Output[],
+                        const size_t cOutputLength,
+                        int          cSecurityStrength,
+                        const Uint8  cAdditionalInput[],
+                        const size_t cAdditionalInputLength)
+{
+    alcp::rng::Drbg* p_drbg = static_cast<alcp::rng::Drbg*>(m_drbg);
+    return p_drbg->randomize(p_Output,
+                             cOutputLength,
+                             cSecurityStrength,
+                             cAdditionalInput,
+                             cAdditionalInputLength);
+}
 
 Status
 DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
 {
+    using namespace status;
+    Status status = StatusOk();
+    switch (drbgInfo.di_type) {
+        case ALC_DRBG_HMAC:
+            // status = HmacBuilder::build(macInfo, macInfo.mi_keyinfo, ctx);
+            break;
+        case ALC_DRBG_CTR:
+            status = CtrDrbgBuilder::build(drbgInfo, ctx);
+            if (!status.ok()) {
+                return status;
+            }
+            break;
+        default:
+            status.update(InvalidArgument("Unknown MAC Type"));
+            break;
+    }
+    std::shared_ptr<IRng> irng;
+    if (drbgInfo.di_rng_sourceinfo.custom_rng == false) {
+        switch (drbgInfo.di_rng_sourceinfo.di_sourceinfo.rng_info.ri_source) {
+            case ALC_RNG_SOURCE_OS: {
+                irng = std::make_shared<alcp::rng::SystemRng>();
+                break;
+            }
+            case ALC_RNG_SOURCE_ARCH: {
+                irng = std::make_shared<alcp::rng::HardwareRng>();
+                break;
+            }
+            default:
+                status.update(alcp::rng::status::NotPermitted(
+                    "RNG type specified is unknown"));
+                break;
+        }
+    }
+
+    alcp::rng::Drbg* p_drbg = static_cast<alcp::rng::Drbg*>(ctx.m_drbg);
+    p_drbg->setRng(irng);
+    p_drbg->setEntropyLen(drbgInfo.max_entropy_len);
+    p_drbg->setNonceLen(drbgInfo.max_nonce_len);
+
+    ctx.initialize = __drbg_wrapperinitialize;
+    ctx.randomize  = __drbg_wrapperrandomize;
+
     return StatusOk();
 }
 

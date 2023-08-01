@@ -32,9 +32,7 @@ namespace alcp::drbg {
 class CtrDrbgBuilder
 {
   public:
-    static Status build(const alc_drbg_info_t& drbgInfo,
-                        const alc_key_info_t&  keyInfo,
-                        Context&               ctx);
+    static Status build(const alc_drbg_info_t& drbgInfo, Context& ctx);
 
     static Uint64 getSize(const alc_drbg_info_t& drbgInfo);
 
@@ -42,10 +40,13 @@ class CtrDrbgBuilder
 };
 
 Status
-CtrDrbgBuilder::build(const alc_drbg_info_t& drbgInfo,
-                      const alc_key_info_t&  keyInfo,
-                      Context&               ctx)
+CtrDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
 {
+    printf("Running CTR DRBG BUILD\n");
+    auto ctrdrbg = new alcp::rng::drbg::CtrDrbg();
+    ctrdrbg->setKeySize(drbgInfo.di_algoinfo.ctr_drbg.di_keysize / 8);
+
+    ctx.m_drbg = static_cast<void*>(ctrdrbg);
     return StatusOk();
 }
 Uint64
