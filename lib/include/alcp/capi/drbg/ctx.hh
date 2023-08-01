@@ -35,6 +35,17 @@ struct Context
     void* m_drbg;
     // TODO: Add the remaining functions
     alcp::base::Status status{ StatusOk() };
+
+    Status (*initialize)(void*        m_drbg,
+                         int          cSecurityStrength,
+                         const Uint8* buff,
+                         Uint64       size);
+    Status (*randomize)(void*        m_drbg,
+                        Uint8        p_Output[],
+                        const size_t cOutputLength,
+                        int          cSecurityStrength,
+                        const Uint8  cAdditionalInput[],
+                        const size_t cAdditionalInputLength);
 };
 
 } // namespace alcp::drbg

@@ -29,6 +29,9 @@
 #ifndef _ALCP_DRBG_H_
 #define _ALCP_DRBG_H_ 2
 #include "alcp/cipher.h"
+#include "alcp/rng.h"
+#include <stddef.h>
+
 EXTERN_C_BEGIN
 
 typedef enum _alc_drbg_type
@@ -46,6 +49,29 @@ typedef struct _alc_ctrdrbg_info
     Uint64 di_keysize;
 } alc_ctrdrbg_info_t, *alc_ctrdrbg_info_p;
 
+typedef struct _alc_customrng_info
+{
+    Uint8* entropy;
+    Uint64 entropylen;
+    Uint8* nonce;
+    Uint64 noncelen;
+
+} alc_customrng_info_t, *alc_customrng_info_p;
+
+typedef struct _alc_rngsource_info
+{
+    bool custom_rng;
+
+    union
+    {
+        alc_rng_info_t rng_info;
+        alc_customrng_info_t
+            custom_rng_info; // Used for Testing purposes. Not pure Random but
+                             // allows to provide custom entropy and nonce
+    } di_sourceinfo;
+
+} alc_rngsource_info_t, *alc_rngsource_info_p;
+
 typedef struct _alc_drbg_info_t
 {
     alc_drbg_type_t di_type;
@@ -54,6 +80,11 @@ typedef struct _alc_drbg_info_t
         alc_hmacdrbg_info_t hmac_drbg;
         alc_ctrdrbg_info_t  ctr_drbg;
     } di_algoinfo;
+
+    alc_rngsource_info_t di_rng_sourceinfo;
+
+    Uint64 max_entropy_len;
+    Uint64 max_nonce_len;
 
     // any other common fields that are needed
 
@@ -76,6 +107,21 @@ alcp_drbg_context_size(const alc_drbg_info_p pDrbgInfo);
 ALCP_API_EXPORT alc_error_t
 alcp_drbg_request(alc_drbg_handle_p     pDrbgHandle,
                   const alc_drbg_info_p pDrbgInfo);
+
+// FIXME: To be verified whether personalization string should be exposed
+ALCP_API_EXPORT alc_error_t
+alcp_drbg_initialize(alc_drbg_handle_p pDrbgHandle,
+                     int               cSecurityStrength,
+                     Uint8*            personalization_string,
+                     Uint64            personalization_string_length);
+
+ALCP_API_EXPORT alc_error_t
+alcp_drbg_randomize(alc_drbg_handle_p pDrbgHandle,
+                    Uint8             p_Output[],
+                    const size_t      cOutputLength,
+                    int               cSecurityStrength,
+                    const Uint8       cAdditionalInput[],
+                    const size_t      cAdditionalInputLength);
 
 EXTERN_C_END
 
