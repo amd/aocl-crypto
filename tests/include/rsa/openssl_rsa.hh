@@ -40,8 +40,9 @@
 namespace alcp::testing {
 class OpenSSLRsaBase : public RsaBase
 {
-    EVP_PKEY_CTX* m_rsa_handle = nullptr;
-    EVP_PKEY*     m_pkey       = nullptr;
+    EVP_PKEY_CTX* m_rsa_handle  = nullptr;
+    EVP_PKEY*     m_pkey        = nullptr;
+    EVP_PKEY*     m_pkey_shared = nullptr;
 
   public:
     OpenSSLRsaBase();
@@ -49,9 +50,12 @@ class OpenSSLRsaBase : public RsaBase
 
     bool init();
     bool reset();
-    bool GetPublicKey(const alcp_rsa_data_t& data);
-    int  EncryptPubKey(const alcp_rsa_data_t& data, int padding_mode);
-    int  DecryptPvtKey(const alcp_rsa_data_t& data, int padding_mode);
+
+    bool SetPublicKey(const alcp_rsa_data_t& data);
+    bool SetPrivateKey(const alcp_rsa_data_t& data);
+
+    bool EncryptPubKey(const alcp_rsa_data_t& data);
+    bool DecryptPvtKey(const alcp_rsa_data_t& data);
 };
 
 } // namespace alcp::testing

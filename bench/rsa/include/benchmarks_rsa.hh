@@ -57,7 +57,7 @@ typedef enum
 inline int
 Rsa_Bench(benchmark::State& state, rsa_bench_opt opt, int padding_mode)
 {
-    int             InputSize = 128, KeySize = 128;
+    int             InputSize, KeySize = 128;
     alcp_rsa_data_t data;
 
     AlcpRsaBase arb;
@@ -83,8 +83,6 @@ Rsa_Bench(benchmark::State& state, rsa_bench_opt opt, int padding_mode)
     }
 #endif
 
-    /* for non padded mode, input len = keysize */
-    /* for padded mode, input len = 1024*/
     if (padding_mode == 1) {
         rb->m_padding_mode = ALCP_TEST_RSA_PADDING;
         InputSize          = 16;
@@ -92,10 +90,10 @@ Rsa_Bench(benchmark::State& state, rsa_bench_opt opt, int padding_mode)
         rb->m_padding_mode = ALCP_TEST_RSA_NO_PADDING;
         InputSize          = 128;
     }
-    /* keeping input const, a valid data for now */
+    /*FIXME: keeping input const for now, a valid data for now */
     std::vector<Uint8> input_data(InputSize, 30);
-    std::vector<Uint8> encrypted_data(InputSize);
-    std::vector<Uint8> decrypted_data(InputSize);
+    std::vector<Uint8> encrypted_data(KeySize);
+    std::vector<Uint8> decrypted_data(KeySize);
     std::vector<Uint8> PubKeyKeyMod(KeySize);
 
     data.m_msg            = &(input_data[0]);
