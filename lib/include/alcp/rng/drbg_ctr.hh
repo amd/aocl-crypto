@@ -25,6 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include "alcp/cipher/aes.hh"
 #include "alcp/rng/drbg.hh"
 #include "alcp/types.h"
 #include "iostream"
@@ -57,6 +58,14 @@ namespace avx2 {
                                        const Uint64 cKeylen);
 } // namespace avx2
 
+class EncryptAes : public cipher::Aes
+{
+  public:
+    bool isSupported(const alc_cipher_info_t& cipherInfo) { return true; }
+};
+static EncryptAes
+    m_enc_aes; // Atleast once object is required here for EncryptAes to have a
+               // vtable in libaclpstatic and hence to be linked in avx2
 class ALCP_API_EXPORT CtrDrbg : public Drbg
 {
   private:

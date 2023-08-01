@@ -37,12 +37,6 @@
 
 namespace alcp::rng::drbg::avx2 {
 
-class EncryptAes : public cipher::Aes
-{
-  public:
-    bool isSupported(const alc_cipher_info_t& cipherInfo) { return true; }
-};
-
 inline void
 IncrementValue(__m128i&       regValue,
                const __m128i& shuffleMask,
