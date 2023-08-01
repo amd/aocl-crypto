@@ -27,8 +27,6 @@
  */
 
 #include "alcp/base.hh"
-
-#include "../../rng/include/hardware_rng.hh"
 #include "alcp/rng/drbg_ctr.hh"
 #include "openssl/bio.h"
 #include "gtest/gtest.h"

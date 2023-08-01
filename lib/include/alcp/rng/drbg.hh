@@ -54,8 +54,12 @@ class ALCP_API_EXPORT Drbg : public IDrbg
   private:
     std::shared_ptr<IRng> m_entropy_in            = {};
     bool                  m_prediction_resistance = false;
+    Uint64                m_entropy_len           = 0;
+    Uint64                m_nonce_len             = 0;
 
   public:
+    void setEntropyLen(Uint64 entropyLen) { m_entropy_len = entropyLen; }
+    void setNonceLen(Uint64 nonceLen) { m_nonce_len = nonceLen; }
     Drbg() {}
 
     Status setRng(std::shared_ptr<IRng> entropyIn);
