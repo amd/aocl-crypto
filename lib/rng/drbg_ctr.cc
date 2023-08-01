@@ -223,15 +223,8 @@ CtrDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
         for (Uint64 i = 0; i < cEntropyInputLen; i++) {
             provided_data[i] = cEntropyInput[i] ^ provided_data[i];
         }
-
-        DebugPrint(m_key, "K", __FILE__, __LINE__);
-        DebugPrint(m_v, "V", __FILE__, __LINE__);
-
         // (Key, V) = CTR_DRBG_Update (seed_material, Key, V).
         update(&provided_data[0], provided_data.size());
-
-        DebugPrint(m_key, "K", __FILE__, __LINE__);
-        DebugPrint(m_v, "V", __FILE__, __LINE__);
 
         // FIXME: Currently no reseed counter is there
         // reseed_counter = 1
