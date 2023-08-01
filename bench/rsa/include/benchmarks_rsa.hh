@@ -55,9 +55,14 @@ typedef enum
 
 /* bench function */
 inline int
-Rsa_Bench(benchmark::State& state, rsa_bench_opt opt, int padding_mode)
+Rsa_Bench(benchmark::State& state,
+          rsa_bench_opt     opt,
+          int               padding_mode,
+          int               KeySize)
 {
-    int             InputSize, KeySize = 128;
+    int InputSize;
+    /* Keysize is in bits */
+    KeySize = KeySize / 8;
     alcp_rsa_data_t data;
 
     AlcpRsaBase arb;
@@ -103,6 +108,8 @@ Rsa_Bench(benchmark::State& state, rsa_bench_opt opt, int padding_mode)
     data.m_msg_len        = input_data.size();
     data.m_key_len        = KeySize;
 
+    rb->m_key_len = KeySize;
+
     if (!rb->init()) {
         state.SkipWithError("Error in RSA init");
     }
@@ -141,39 +148,72 @@ Rsa_Bench(benchmark::State& state, rsa_bench_opt opt, int padding_mode)
     return 0;
 }
 
+/* For 1024 bit key size*/
 static void
-BENCH_RSA_EncryptPubKey_Padding(benchmark::State& state)
+BENCH_RSA_EncryptPubKey_Padding_1024(benchmark::State& state)
 {
     benchmark::DoNotOptimize(
-        Rsa_Bench(state, RSA_BENCH_ENC_PUB_KEY, ALCP_TEST_RSA_PADDING));
+        Rsa_Bench(state, RSA_BENCH_ENC_PUB_KEY, ALCP_TEST_RSA_PADDING, 1024));
 }
 static void
-BENCH_RSA_DecryptPvtKey_Padding(benchmark::State& state)
+BENCH_RSA_DecryptPvtKey_Padding_1024(benchmark::State& state)
 {
     benchmark::DoNotOptimize(
-        Rsa_Bench(state, RSA_BENCH_DEC_PVT_KEY, ALCP_TEST_RSA_PADDING));
+        Rsa_Bench(state, RSA_BENCH_DEC_PVT_KEY, ALCP_TEST_RSA_PADDING, 1024));
 }
 
 static void
-BENCH_RSA_EncryptPubKey_NoPadding(benchmark::State& state)
+BENCH_RSA_EncryptPubKey_NoPadding_1024(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(
-        Rsa_Bench(state, RSA_BENCH_ENC_PUB_KEY, ALCP_TEST_RSA_NO_PADDING));
+    benchmark::DoNotOptimize(Rsa_Bench(
+        state, RSA_BENCH_ENC_PUB_KEY, ALCP_TEST_RSA_NO_PADDING, 1024));
 }
 static void
-BENCH_RSA_DecryptPvtKey_NoPadding(benchmark::State& state)
+BENCH_RSA_DecryptPvtKey_NoPadding_1024(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(Rsa_Bench(
+        state, RSA_BENCH_DEC_PVT_KEY, ALCP_TEST_RSA_NO_PADDING, 1024));
+}
+
+/* 2048 bit key size*/
+static void
+BENCH_RSA_EncryptPubKey_Padding_2048(benchmark::State& state)
 {
     benchmark::DoNotOptimize(
-        Rsa_Bench(state, RSA_BENCH_DEC_PVT_KEY, ALCP_TEST_RSA_NO_PADDING));
+        Rsa_Bench(state, RSA_BENCH_ENC_PUB_KEY, ALCP_TEST_RSA_PADDING, 2048));
+}
+static void
+BENCH_RSA_DecryptPvtKey_Padding_2048(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        Rsa_Bench(state, RSA_BENCH_DEC_PVT_KEY, ALCP_TEST_RSA_PADDING, 2048));
+}
+
+static void
+BENCH_RSA_EncryptPubKey_NoPadding_2048(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(Rsa_Bench(
+        state, RSA_BENCH_ENC_PUB_KEY, ALCP_TEST_RSA_NO_PADDING, 2048));
+}
+static void
+BENCH_RSA_DecryptPvtKey_NoPadding_2048(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(Rsa_Bench(
+        state, RSA_BENCH_DEC_PVT_KEY, ALCP_TEST_RSA_NO_PADDING, 2048));
 }
 
 /* add new benchmarks here */
 int
 AddBenchmarks_rsa()
 {
-    BENCHMARK(BENCH_RSA_EncryptPubKey_Padding);
-    BENCHMARK(BENCH_RSA_DecryptPvtKey_Padding);
-    BENCHMARK(BENCH_RSA_EncryptPubKey_NoPadding);
-    BENCHMARK(BENCH_RSA_DecryptPvtKey_NoPadding);
+    /* FIXME: parameterize keysize */
+    BENCHMARK(BENCH_RSA_EncryptPubKey_Padding_1024);
+    BENCHMARK(BENCH_RSA_DecryptPvtKey_Padding_1024);
+    BENCHMARK(BENCH_RSA_EncryptPubKey_NoPadding_1024);
+    BENCHMARK(BENCH_RSA_DecryptPvtKey_NoPadding_1024);
+    BENCHMARK(BENCH_RSA_EncryptPubKey_Padding_2048);
+    BENCHMARK(BENCH_RSA_DecryptPvtKey_Padding_2048);
+    BENCHMARK(BENCH_RSA_EncryptPubKey_NoPadding_2048);
+    BENCHMARK(BENCH_RSA_DecryptPvtKey_NoPadding_2048);
     return 0;
 }

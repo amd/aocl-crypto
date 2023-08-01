@@ -34,13 +34,13 @@
 #include <iostream>
 
 /* All tests to be added here */
-TEST(rsa_padding, KAT)
+TEST(rsa_padding_1024, KAT)
 {
-    Rsa_KAT(ALCP_TEST_RSA_PADDING);
+    Rsa_KAT(ALCP_TEST_RSA_PADDING, 1024);
 }
-TEST(rsa_no_padding, KAT)
+TEST(rsa_no_padding_1024, KAT)
 {
-    Rsa_KAT(ALCP_TEST_RSA_NO_PADDING);
+    Rsa_KAT(ALCP_TEST_RSA_NO_PADDING, 1024);
 }
 
 int

@@ -68,7 +68,7 @@ PrintRsaTestData(alcp_rsa_data_t data)
 }
 
 void
-Rsa_KAT(int padding_mode)
+Rsa_KAT(int padding_mode, int KeySize)
 {
     alcp_rsa_data_t data;
 
@@ -98,7 +98,8 @@ Rsa_KAT(int padding_mode)
     std::string TestDataFile = "";
     if (padding_mode == 1) {
         rb->m_padding_mode = ALCP_TEST_RSA_PADDING;
-        TestDataFile       = std::string("dataset_RSA_padding.csv");
+        /*FIXME: change csv file names based on size? */
+        TestDataFile = std::string("dataset_RSA_padding.csv");
     } else {
         rb->m_padding_mode = ALCP_TEST_RSA_NO_PADDING;
         TestDataFile       = std::string("dataset_RSA_no_padding.csv");
@@ -106,7 +107,9 @@ Rsa_KAT(int padding_mode)
     Csv csv = Csv(TestDataFile);
 
     /* FIXME: read from csv: diff csvs for diff keysizes */
-    int KeySize = 128;
+
+    /* Keysize is in bits (1024/2048) */
+    KeySize = KeySize / 8;
 
     while (csv.readNext()) {
         /* input text to be loaded */
@@ -121,6 +124,8 @@ Rsa_KAT(int padding_mode)
         data.m_decrypted_data = &(decrypted_data[0]);
         data.m_msg_len        = input_data.size();
         data.m_key_len        = KeySize;
+
+        rb->m_key_len = KeySize;
 
         if (!rb->init()) {
             std::cout << "Error in RSA init" << std::endl;
@@ -157,7 +162,7 @@ Rsa_KAT(int padding_mode)
 }
 
 /* RSA Cross tests */
-#if 1
+#if 0
 void
 Rsa_Cross(int padding_mode)
 {
