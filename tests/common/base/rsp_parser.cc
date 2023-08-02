@@ -31,12 +31,10 @@
 namespace alcp::testing {
 
 CRspParser::CRspParser(const String& filename)
-   : File(filename)
+   : File(filename), m_input_rsp_file(filename)
 {
-    m_input_rsp_file = filename;
     m_file_exists = CheckFileExists();
     if (!m_file_exists) {
-        //std::cout << "File doesnt exist: " <<  m_input_rsp_file << std::endl;
         utils::printErrors("File doesnt exist: " + m_input_rsp_file);
         return;
     }
