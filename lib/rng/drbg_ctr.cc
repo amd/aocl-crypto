@@ -205,9 +205,8 @@ CtrDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
     // V = 0^blocklen
     std::fill(m_v.begin(), m_v.end(), 0);
 
-    std::vector<Uint8> provided_data;
+    std::vector<Uint8> provided_data(m_seedlength + cPersonalizationStringLen);
     if (!m_use_derivation_function) {
-        provided_data = std::vector<Uint8>(m_seedlength, 0);
         if (m_seedlength < cPersonalizationStringLen) {
             // FIXME: Should be moved to status
             printf("Seed Length Should be same size as Personalization String "
@@ -219,18 +218,15 @@ CtrDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
                          cPersonalizationStringLen);
 
         // seed_material = entropy_input ⊕ personalization_string.
-        // assert(cEntropyInputLen == m_seedlength);
         for (Uint64 i = 0; i < cEntropyInputLen; i++) {
             provided_data[i] = cEntropyInput[i] ^ provided_data[i];
         }
         // (Key, V) = CTR_DRBG_Update (seed_material, Key, V).
-        update(&provided_data[0], provided_data.size());
+        update(&provided_data[0], m_seedlength);
 
         // FIXME: Currently no reseed counter is there
         // reseed_counter = 1
     } else {
-        provided_data = std::vector<Uint8>(
-            cEntropyInputLen + cNonceLen + cPersonalizationStringLen, 0);
         // Copy can't be avoided
         utils::CopyBytes(&provided_data[0], cEntropyInput, cEntropyInputLen);
         utils::CopyBytes(
@@ -240,11 +236,12 @@ CtrDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
                          cPersonalizationStringLen);
 
         std::vector<Uint8> df_output(m_seedlength);
-        alcp::rng::drbg::avx2::BlockCipherDf(&provided_data[0],
-                                             provided_data.size() * 8,
-                                             &df_output[0],
-                                             df_output.size() * 8,
-                                             m_key.size());
+        alcp::rng::drbg::avx2::BlockCipherDf(
+            &provided_data[0],
+            (cEntropyInputLen + cNonceLen + cPersonalizationStringLen) * 8,
+            &df_output[0],
+            df_output.size() * 8,
+            m_key.size());
 
         DebugPrint(m_key, "K", __FILE__, __LINE__);
         DebugPrint(m_v, "V", __FILE__, __LINE__);
