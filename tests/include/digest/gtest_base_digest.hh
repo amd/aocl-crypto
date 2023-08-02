@@ -53,8 +53,6 @@
 #define INC_LOOP   1
 #define START_LOOP 1
 
-#define Enable_CSV 1
-
 /* print test data */
 inline void
 PrintDigestTestData(alcp_digest_data_t data, std::string mode)
@@ -81,7 +79,7 @@ GetDigestStr(_alc_digest_type digest_type)
             return "";
     }
 }
-#if Enable_CSV
+#if ENABLE_CSV
 void
 Digest_KAT(alc_digest_info_t info)
 {

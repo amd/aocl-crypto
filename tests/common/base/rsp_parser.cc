@@ -33,8 +33,8 @@ namespace alcp::testing {
 CRspParser::CRspParser(const String& filename)
    : File(filename), m_input_rsp_file(filename)
 {
-    m_file_exists = CheckFileExists();
-    if (!m_file_exists) {
+    file_exists = checkFileExists();
+    if (!file_exists) {
         utils::printErrors("File doesnt exist: " + m_input_rsp_file);
         return;
     }
@@ -46,7 +46,6 @@ CRspParser::init()
 {
     bool retVal = skipRSPHeader();
     if(!retVal) {
-        //std::cout << "Parsing header failed for : " << m_input_rsp_file << std::endl;
         utils::printErrors("Parsing header failed for : " + m_input_rsp_file);
         return false;
     }
@@ -57,7 +56,7 @@ CRspParser::init()
 
 /* Function to get the index of deststr in srcstr   */
 int
-CRspParser::isSubstring(StringView deststr, StringView srcstr) {
+CRspParser::isSubString(StringView deststr, StringView srcstr) {
     size_t index = srcstr.find(deststr);
     if ( index != String::npos)
         return index;
@@ -78,22 +77,22 @@ CRspParser::removeSpaces(String& str)
   Used to read key-value pair from a Param
 */
 void
-CRspParser::StoreTCinUMap(StringView myStr)
+CRspParser::storeTCinUMap(StringView myStr)
 {
     m_data_map.clear();
 
-    String key {}, value {}, myParam {};
+    String key, value, myParam;
     int pos {};
     
     // Vectorize a TC into params_vec based on
     // comma seperated values
     for (size_t i =0;i < m_paramPerTC; i++) {    
-        pos = isSubstring(",", myStr);
+        pos = isSubString(",", myStr);
         myParam = myStr.substr(0, pos);
         myStr = myStr.begin()+pos+1;
 
         // Store each param from params_vec into m_data_map 
-        pos = isSubstring("=", myParam);
+        pos = isSubString("=", myParam);
         if (pos == -1) {
             key = myParam;
             //value = nullptr;
@@ -131,7 +130,6 @@ CRspParser::skipRSPHeader()
             break;
         }
     }
-    //std::cout << "Header Parsed...." << std::endl;
     utils::printErrors("Header Parsed....");
     return true;
 }
@@ -140,9 +138,9 @@ CRspParser::skipRSPHeader()
    RSP File into a comma seperated String
 */
 String
-CRspParser::FetchTCfromRSP() 
+CRspParser::fetchTCfromRSP() 
 {
-    String myTestCase {};
+    String myTestCase;
     static size_t TC_Count {0};
     
     bool newTC {false};
@@ -178,16 +176,16 @@ bool
 CRspParser::readNextTC()
 {
     static bool keysParsed {false};
-    String myTC {};
+    String myTC;
 
     // Get one TC in a one-lined String
-    myTC = FetchTCfromRSP();
+    myTC = fetchTCfromRSP();
     if (m_fileEOF && myTC.empty()) return false;
 
     m_paramPerTC = count(myTC.begin(), myTC.end(), ',');
     
     // Store Key-Value pairs per TC in an unordered_map
-    StoreTCinUMap(myTC);
+    storeTCinUMap(myTC);
 
     // Vectorize m_names (Store Keys in a vector to align "csv" imple)
     if (m_data_map.size() > 0 && keysParsed == false ) {
@@ -204,7 +202,7 @@ CRspParser::readNextTC()
 std::vector<Uint8>
 CRspParser::getVect(StringView cName)
 {
-    String key {}, value {};
+    String key, value;
     key = cName;
     if (m_data_map.find(key)!= m_data_map.end())
         value =  m_data_map[key];
@@ -220,7 +218,7 @@ CRspParser::getVect(StringView cName)
 Uint64
 CRspParser::getLenBytes(StringView cName)
 {
-    String key {}, value {};
+    String key, value;
     key = cName;
     if (m_data_map.find(key)!= m_data_map.end())
         value =  m_data_map[key];
@@ -234,7 +232,7 @@ CRspParser::getLenBytes(StringView cName)
 String
 CRspParser::adjustKeyNames(String cName)
 {
-    String myKey {};
+    String myKey;
     
     // Unordered Map to store key names from different modes
     param_map_t keyMap = {{"Msg", "MESSAGE"}, 

@@ -67,7 +67,7 @@ File::~File()
 }
 
 bool
-File::CheckFileExists()
+File::checkFileExists()
 {
     return m_fileExists;
 }

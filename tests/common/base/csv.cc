@@ -36,7 +36,7 @@ Csv::Csv(String filename)
     : File(filename)
 {
     m_filename    = filename;
-    m_file_exists = CheckFileExists();
+    m_file_exists = checkFileExists();
     if (!m_file_exists) {
         utils::printErrors("File doesnt exist: " + m_filename);
         return;
@@ -123,7 +123,7 @@ bool
 Csv::readNext()
 {
     m_data_vect.clear();
-    if (!CheckFileExists()) {
+    if (!checkFileExists()) {
         std::cout << "File doesnt exist: " << m_filename << std::endl;
         return false;
     }

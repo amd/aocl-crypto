@@ -46,7 +46,7 @@ class File
     std::fstream m_file;
     bool m_fileEOF = false;
 
-    bool CheckFileExists();
+    bool checkFileExists();
     // Opens File as Bin/ASCII File with write support.
     File(std::string fileName, bool binary, bool write);
     // Opens File as ASCII Text File

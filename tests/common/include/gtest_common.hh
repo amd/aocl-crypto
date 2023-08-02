@@ -38,6 +38,8 @@ using namespace alcp::testing;
 using utils::parseBytesToHexStr;
 using utils::printErrors;
 
+#define ENABLE_CSV 1
+
 // Variables for Argument Parser
 static int  verbose     = 0;
 static bool useipp      = false;
