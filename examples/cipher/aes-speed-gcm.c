@@ -123,24 +123,12 @@ create_aes_session(Uint8*                  key,
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
-    Uint8       tweakKey[16] = {
-        0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
-        0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xf, 0xf,
-    };
 
-    alc_key_info_t kinfo = {
-        .type = ALC_KEY_TYPE_SYMMETRIC,
-        .fmt  = ALC_KEY_FMT_RAW,
-        .key  = tweakKey,
-        .len  = key_len,
-    };
-
-    alc_cipher_info_t cinfo = {
+    alc_cipher_aead_info_t cinfo = {
         .ci_type = ALC_CIPHER_TYPE_AES,
         .ci_algo_info   = {
             .ai_mode = mode,
             .ai_iv   = iv,
-            .ai_xts = &kinfo,
         },
        /* No padding, Not Implemented yet*/
         //.pad     = ALC_CIPHER_PADDING_NONE,
@@ -159,7 +147,7 @@ create_aes_session(Uint8*                  key,
      *
      * This query call is provided to support fallback mode for applications
      */
-    err = alcp_cipher_supported(&cinfo);
+    err = alcp_cipher_aead_supported(&cinfo);
     if (alcp_is_error(err)) {
         printf("Error: not supported \n");
         alcp_error_str(err, err_buf, err_size);
@@ -169,12 +157,12 @@ create_aes_session(Uint8*                  key,
     /*
      * Application is expected to allocate for context
      */
-    handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
+    handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
     // if (!ctx)
     //    return;
 
     /* Request a context with cinfo */
-    err = alcp_cipher_request(&cinfo, &handle);
+    err = alcp_cipher_aead_request(&cinfo, &handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);
@@ -200,7 +188,7 @@ aclp_aes_gcm_encrypt_demo(
     Uint8       err_buf[err_size];
 
     // GCM init
-    err = alcp_cipher_set_iv(&handle, ivLen, iv);
+    err = alcp_cipher_aead_set_iv(&handle, ivLen, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm encrypt init \n");
         alcp_error_str(err, err_buf, err_size);
@@ -208,7 +196,7 @@ aclp_aes_gcm_encrypt_demo(
     }
 
     // Additional Data
-    err = alcp_cipher_set_aad(&handle, ad, adLen);
+    err = alcp_cipher_aead_set_aad(&handle, ad, adLen);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm add data processing \n");
         alcp_error_str(err, err_buf, err_size);
@@ -216,7 +204,8 @@ aclp_aes_gcm_encrypt_demo(
     }
 
     // GCM encrypt
-    err = alcp_cipher_encrypt_update(&handle, plaintxt, ciphertxt, len, iv);
+    err =
+        alcp_cipher_aead_encrypt_update(&handle, plaintxt, ciphertxt, len, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -224,7 +213,7 @@ aclp_aes_gcm_encrypt_demo(
     }
 
     // get tag
-    err = alcp_cipher_get_tag(&handle, tag, tagLen);
+    err = alcp_cipher_aead_get_tag(&handle, tag, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);
@@ -250,7 +239,7 @@ aclp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
     Uint8       tagDecrypt[16];
 
     // GCM init
-    err = alcp_cipher_set_iv(&handle, ivLen, iv);
+    err = alcp_cipher_aead_set_iv(&handle, ivLen, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm encrypt init \n");
         alcp_error_str(err, err_buf, err_size);
@@ -258,7 +247,7 @@ aclp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
     }
 
     // Additional Data
-    err = alcp_cipher_set_aad(&handle, ad, adLen);
+    err = alcp_cipher_aead_set_aad(&handle, ad, adLen);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm add data processing \n");
         alcp_error_str(err, err_buf, err_size);
@@ -266,7 +255,8 @@ aclp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
     }
 
     // GCM decrypt
-    err = alcp_cipher_decrypt_update(&handle, ciphertxt, plaintxt, len, iv);
+    err =
+        alcp_cipher_aead_decrypt_update(&handle, ciphertxt, plaintxt, len, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -274,7 +264,7 @@ aclp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
     }
 
     // get tag
-    err = alcp_cipher_get_tag(&handle, tagDecrypt, tagLen);
+    err = alcp_cipher_aead_get_tag(&handle, tagDecrypt, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
         alcp_error_str(err, err_buf, err_size);
