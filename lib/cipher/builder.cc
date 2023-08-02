@@ -249,16 +249,15 @@ __build_aes_cipher(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
  */
 template<typename CIPHERMODE>
 static Status
-__build_aes(const alc_cipher_algo_info_t& aesInfo,
-            const alc_key_info_t&         keyInfo,
-            Context&                      ctx)
+__build_aes(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
     Status sts = StatusOk();
 
-    auto algo    = new CIPHERMODE(aesInfo, keyInfo);
+    auto algo    = new CIPHERMODE(pKey, keyLen);
     ctx.m_cipher = static_cast<void*>(algo);
     ctx.decrypt  = __aes_wrapper<CIPHERMODE, false>;
     ctx.encrypt  = __aes_wrapper<CIPHERMODE, true>;
+#if 0
     if constexpr (std::is_same_v<CIPHERMODE, Ccm>) {
         ctx.decryptUpdate = __aes_wrapperUpdate<Ccm, false>;
         ctx.encryptUpdate = __aes_wrapperUpdate<Ccm, true>;
@@ -269,6 +268,7 @@ __build_aes(const alc_cipher_algo_info_t& aesInfo,
         // } else if constexpr (std::is_same_v<CIPHERMODE, Xts>) {
         //     ctx.setIv = __aes_wrapperSetIv<Xts>;
     }
+#endif
     ctx.finish = __aes_dtor<CIPHERMODE>;
 
     return sts;
@@ -288,7 +288,8 @@ template<typename AEADMODE>
 void
 _build_aead(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
-    auto algo         = new AEADMODE(pKey, keyLen);
+    auto algo = new AEADMODE(pKey, keyLen);
+
     ctx.m_cipher      = static_cast<void*>(algo);
     ctx.decryptUpdate = __aes_wrapperUpdate<AEADMODE, false>;
     ctx.encryptUpdate = __aes_wrapperUpdate<AEADMODE, true>;
@@ -296,6 +297,10 @@ _build_aead(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
     ctx.setAad = __aes_wrapperSetAad<AEADMODE>;
     ctx.setIv  = __aes_wrapperSetIv<AEADMODE>;
     ctx.getTag = __aes_wrapperGetTag<AEADMODE>;
+
+    if constexpr (std::is_same_v<AEADMODE, Ccm>) {
+        ctx.setTagLength = __aes_wrapperSetTagLength<AEADMODE>;
+    }
 
     ctx.finish = __aes_dtor<AEADMODE>;
 }
@@ -483,17 +488,13 @@ __build_aesXts(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
     return sts;
 }
 
-// FIXME: Horror ahead, custom builder for SIV
-// FIXME: Bringup New AEAD builder with support for all AEAD
-#if 1
-
 template<typename AEADMODE>
 void
-__build_aead_siv(const alc_cipher_algo_info_t& aesInfo,
-                 const alc_key_info_t&         keyInfo,
-                 Context&                      ctx)
+__build_aead_siv(const alc_key_info_t& encKey,
+                 const alc_key_info_t& authKey,
+                 Context&              ctx)
 {
-    auto algo    = new AEADMODE(aesInfo, keyInfo);
+    auto algo    = new AEADMODE(encKey, authKey);
     ctx.m_cipher = static_cast<void*>(algo);
     ctx.decrypt  = __aes_wrapper<AEADMODE, false>;
     ctx.encrypt  = __aes_wrapper<AEADMODE, true>;
@@ -506,75 +507,44 @@ __build_aead_siv(const alc_cipher_algo_info_t& aesInfo,
 
 template<typename T1, typename T2, typename T3>
 void
-__build_aes(const alc_cipher_algo_info_t& aesInfo,
-            const alc_key_info_t&         keyInfo,
-            Context&                      ctx)
+__build_aes_siv(const alc_key_info_t& encKey,
+                const alc_key_info_t& keyInfo,
+                Context&              ctx)
 {
     if (keyInfo.len == ALC_KEY_LEN_128) {
-        __build_aead_siv<T1>(aesInfo, keyInfo, ctx);
+        __build_aead_siv<T1>(encKey, keyInfo, ctx);
     } else if (keyInfo.len == ALC_KEY_LEN_192) {
-        __build_aead_siv<T2>(aesInfo, keyInfo, ctx);
+        __build_aead_siv<T2>(encKey, keyInfo, ctx);
     } else if (keyInfo.len == ALC_KEY_LEN_256) {
-        __build_aead_siv<T3>(aesInfo, keyInfo, ctx);
+        __build_aead_siv<T3>(encKey, keyInfo, ctx);
     }
 }
 
 static Status
-__build_aesSiv(const alc_cipher_algo_info_t& aesInfo,
-               const alc_key_info_t&         keyInfo,
-               Context&                      ctx)
+__build_aesSiv(const alc_cipher_aead_algo_info_t& aesInfo,
+               const alc_key_info_t&              keyInfo,
+               Context&                           ctx)
 {
     Status sts = StatusOk();
 
     CpuCipherFeatures cpu_feature = getCpuCipherfeature();
     if (cpu_feature == CpuCipherFeatures::eVaes512) {
         using namespace vaes512;
-        __build_aes<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
-            aesInfo, keyInfo, ctx);
+        __build_aes_siv<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
+            *aesInfo.ai_siv.xi_ctr_key, keyInfo, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
         using namespace vaes;
-        __build_aes<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
-            aesInfo, keyInfo, ctx);
+        __build_aes_siv<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
+            *aesInfo.ai_siv.xi_ctr_key, keyInfo, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eAesni) {
         using namespace aesni;
-        __build_aes<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
-            aesInfo, keyInfo, ctx);
+        __build_aes_siv<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
+            *aesInfo.ai_siv.xi_ctr_key, keyInfo, ctx);
     }
     return sts;
 }
 
-#endif
-
-// DEPRICIATED AES BUILDER
-alc_error_t
-AesBuilder::Build(const alc_cipher_algo_info_t& aesInfo,
-                  const alc_key_info_t&         keyInfo,
-                  Context&                      ctx)
-{
-    Status sts = StatusOk();
-
-    switch (aesInfo.ai_mode) {
-        case ALC_AES_MODE_OFB:
-            if (Ofb::isSupported(aesInfo, keyInfo))
-                sts = __build_aes<Ofb>(aesInfo, keyInfo, ctx);
-            break;
-
-        case ALC_AES_MODE_CCM:
-            if (Ccm::isSupported(aesInfo, keyInfo))
-                sts = __build_aes<Ccm>(aesInfo, keyInfo, ctx);
-            break;
-        // New builder has to come in place.
-        case ALC_AES_MODE_SIV:
-            sts = __build_aesSiv(aesInfo, keyInfo, ctx);
-            break;
-
-        default:
-            break;
-    }
-    return (alc_error_t)sts.code();
-}
-
-// DEPRICIATED CIPHER BUILDER
+// Non-AEAD Builder
 alc_error_t
 CipherBuilder::Build(const alc_cipher_info_t& cipherInfo, Context& ctx)
 {
@@ -594,41 +564,39 @@ CipherBuilder::Build(const alc_cipher_info_t& cipherInfo, Context& ctx)
     return err;
 }
 
-// NEW AES BUILDER
 alc_error_t
-AesBuilder::Build(const alc_cipher_mode_t cipherMode,
-                  const Uint8*            pKey,
-                  const Uint32            keyLen,
-                  Context&                ctx)
+AesBuilder::Build(const alc_cipher_algo_info_t& aesInfo,
+                  const alc_key_info_t&         keyInfo,
+                  Context&                      ctx)
 {
     Status sts = StatusOk();
 
-    switch (cipherMode) {
+    switch (aesInfo.ai_mode) {
         case ALC_AES_MODE_CTR:
-            if (Ctr::isSupported(keyLen))
-                sts = __build_aesCtr(pKey, keyLen, ctx);
+            if (Ctr::isSupported(keyInfo.len))
+                sts = __build_aesCtr(keyInfo.key, keyInfo.len, ctx);
             break;
         case ALC_AES_MODE_CBC:
             if (Cbc<aesni::EncryptCbc128, aesni::DecryptCbc128>::isSupported(
-                    keyLen))
-                sts = __build_aesCbc(pKey, keyLen, ctx);
+                    keyInfo.len))
+                sts = __build_aesCbc(keyInfo.key, keyInfo.len, ctx);
             break;
         case ALC_AES_MODE_CFB:
             if (Cfb<aesni::EncryptCfb256, aesni::DecryptCfb256>::isSupported(
-                    keyLen)) {
-                sts = __build_aesCfb(pKey, keyLen, ctx);
+                    keyInfo.len)) {
+                sts = __build_aesCfb(keyInfo.key, keyInfo.len, ctx);
             }
             break;
             // FIXME: GCM, XTS, CCM should be moved to AeadBuilder.
         case ALC_AES_MODE_XTS:
             if (Xts<aesni::EncryptXts128, aesni::DecryptXts128>::isSupported(
-                    keyLen)) {
-                sts = __build_aesXts(pKey, keyLen, ctx);
+                    keyInfo.len)) {
+                sts = __build_aesXts(keyInfo.key, keyInfo.len, ctx);
             }
             break;
-        case ALC_AES_MODE_GCM:
-            if (Gcm::isSupported(keyLen))
-                sts = __build_GcmAead(pKey, keyLen, ctx);
+        case ALC_AES_MODE_OFB:
+            if (Ofb::isSupported(keyInfo.len))
+                sts = __build_aes<Ofb>(keyInfo.key, keyInfo.len, ctx);
             break;
 
         default:
@@ -637,26 +605,61 @@ AesBuilder::Build(const alc_cipher_mode_t cipherMode,
     return (alc_error_t)sts.code();
 }
 
-// NEW CIPHER BUILDER
+// AEAD Builder
 alc_error_t
-CipherBuilder::Build(const alc_cipher_type_t cipherType,
-                     const alc_cipher_mode_t cipherMode,
-                     const Uint8*            pKey,
-                     const Uint32            keyLen,
-                     Context&                ctx)
+CipherAeadBuilder::Build(const alc_cipher_aead_info_t& cipherInfo,
+                         alcp::cipher::Context&        ctx)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    switch (cipherType) {
+    switch (cipherInfo.ci_type) {
         case ALC_CIPHER_TYPE_AES:
-            err = AesBuilder::Build(cipherMode, pKey, keyLen, ctx);
+            err = AesAeadBuilder::Build(
+                cipherInfo.ci_algo_info, cipherInfo.ci_key_info, ctx);
             break;
+
         default:
             err = ALC_ERROR_NOT_SUPPORTED;
             break;
     }
 
     return err;
+}
+
+alc_error_t
+AesAeadBuilder::Build(const alc_cipher_aead_algo_info_t& cCipherAlgoInfo,
+                      const alc_key_info_t&              keyInfo,
+                      Context&                           ctx)
+{
+    Status sts = StatusOk();
+
+    switch (cCipherAlgoInfo.ai_mode) {
+        case ALC_AES_MODE_GCM:
+            if (Gcm::isSupported(keyInfo.len))
+                // FIXME: GCM Info is empty we need to do something about it
+                sts = __build_GcmAead(keyInfo.key, keyInfo.len, ctx);
+            break;
+        case ALC_AES_MODE_SIV:
+            // FIXME: Find a way to call the template without the argument
+            if (CmacSiv<aesni::Ctr128>::isSupported(keyInfo.len))
+                sts = __build_aesSiv(cCipherAlgoInfo, keyInfo, ctx);
+            break;
+        case ALC_AES_MODE_CCM:
+            // FIXME: Rewrite below
+            if (Ccm::isSupported(keyInfo.len))
+                _build_aead<Ccm>(keyInfo.key, keyInfo.len, ctx);
+            sts = StatusOk();
+            break;
+#if 0
+        case ALC_AES_MODE_CCM:
+            if (Ccm::isSupported(aesInfo, keyInfo))
+                sts = __build_aes<Ccm>(aesInfo, keyInfo, ctx);
+            break;
+#endif
+        default:
+            break;
+    }
+    return (alc_error_t)sts.code();
 }
 
 } // namespace alcp::cipher

@@ -96,17 +96,16 @@ class Aes : public Rijndael
 class ALCP_API_EXPORT Ofb final : public Aes
 {
   public:
-    explicit Ofb(const alc_cipher_algo_info_t& aesInfo,
-                 const alc_key_info_t&         keyInfo)
-        : Aes(aesInfo, keyInfo)
+    explicit Ofb(const Uint8* pKey, const Uint32 keyLen)
+        : Aes(pKey, keyLen)
     {}
 
     ~Ofb() {}
 
   public:
-    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                            const alc_key_info_t&         keyInfo)
+    static bool isSupported(const Uint32 keyLen)
     {
+        // FIXME: To be implemented
         return true;
     }
 

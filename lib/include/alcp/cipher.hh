@@ -31,7 +31,7 @@
 #include "config.h"
 
 #include "alcp/base.hh"
-#include "alcp/cipher.h"
+#include "alcp/cipher_aead.h"
 
 #include <array>
 #include <cstdint>

@@ -748,8 +748,8 @@ Ccm::Ccm()
     : pImpl{ std::make_unique<Impl>(this) }
 {}
 
-Ccm::Ccm(const alc_cipher_algo_info_t& aesInfo, const alc_key_info_t& keyInfo)
-    : Aes(aesInfo, keyInfo)
+Ccm::Ccm(const Uint8* pKey, const Uint32 keyLen)
+    : Aes(pKey, keyLen)
     , pImpl{ std::make_unique<Impl>(this) }
 {}
 

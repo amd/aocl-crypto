@@ -42,11 +42,14 @@ class AesBuilder
     static alc_error_t Build(const alc_cipher_algo_info_t& aesInfo,
                              const alc_key_info_t&         keyInfo,
                              Context&                      ctx);
+};
 
-    static alc_error_t Build(const alc_cipher_mode_t cipherMode,
-                             const Uint8*            pKey,
-                             const Uint32            keyLen,
-                             Context&                ctx);
+class AesAeadBuilder
+{
+  public:
+    static alc_error_t Build(const alc_cipher_aead_algo_info_t& cCipherAlgoInfo,
+                             const alc_key_info_t&              keyInfo,
+                             Context&                           ctx);
 };
 
 } // namespace alcp::cipher
