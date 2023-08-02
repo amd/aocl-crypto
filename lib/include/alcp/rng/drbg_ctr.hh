@@ -58,15 +58,6 @@ namespace avx2 {
                                        Uint64       keylen);
 } // namespace avx2
 
-template<typename VectType>
-using concat_type_t = std::vector<const std::vector<VectType>*>;
-void
-DebugPrint(const std::vector<Uint8>& p_cIn,
-           std::string               message,
-           std::string               file,
-           int                       line);
-// end of debugging structures and functions
-
 class ALCP_API_EXPORT CtrDrbg : public Drbg
 {
   private:
