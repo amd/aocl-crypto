@@ -931,7 +931,7 @@ struct MontCompute
     {
         MontSq(res, res, mod, k0);
         if (val & one_msb) {
-            MontMult(res, res, mult, mod, k0 /*, T / 64*/);
+            MontMult(res, res, mult, mod, k0);
         }
     }
 
@@ -973,8 +973,7 @@ struct MontCompute
                                                  Uint64  k0)
     {
         alignas(64) Uint64 t[16 * 16] = {};
-        // conversion to mont domain by multiplying with mont converter
-        // MontMultHalf(res, input, r2, mod, k0);
+
         // to do check which window size is correct
         Uint64 winSize    = 4;
         Uint64 valueLimit = 1 << 4;
@@ -1036,7 +1035,7 @@ struct MontCompute
 
         Uint64* mult = res + T / 64;
 
-        alcp::utils::CopyChunkExact(mult, res, T / 64);
+        alcp::utils::CopyChunk(mult, res, T / 8);
 
         while (index++ < 64) {
             MultAndSquare(res, mult, mod, k0, val);
@@ -1054,7 +1053,7 @@ struct MontCompute
 
         // convert from mont domain to residue domain
 
-        alcp::utils::CopyChunkExact(mult, res, T / 64);
+        alcp::utils::CopyChunk(mult, res, T / 8);
 
         MontReduce(res, mult, mod, k0);
     }
@@ -1089,13 +1088,13 @@ struct MontCompute
         auto    q_k0     = contextQ.m_k0;
 
         // P reduction - ap
-        alcp::utils::CopyChunkExact(buff_p, inp, T / 64);
+        alcp::utils::CopyChunk(buff_p, inp, T / 8);
         MontReduceHalf(buff_0_p, buff_p, p_mod, p_k0);
 
         MontMultHalf(buff_0_p, buff_0_p, r3_p, p_mod, p_k0);
 
         // Q reduction - aq
-        alcp::utils::CopyChunkExact(buff_p, inp, T / 64);
+        alcp::utils::CopyChunk(buff_p, inp, T / 8);
         MontReduceHalf(buff_1_p, buff_p, q_mod, q_k0);
         MontMultHalf(buff_1_p, buff_1_p, r3_q, q_mod, q_k0);
 
