@@ -195,11 +195,11 @@ DrbgCtrGenerate(const Uint8  cAdditionalInput[],
 
 // BCC (Key, data):
 void
-BCC(Uint8* key,
-    Uint64 keyLength,
-    Uint8* data,
-    Uint64 dataLength,
-    Uint8* outputBlock)
+BCC(const Uint8* key,
+    Uint64       keyLength,
+    Uint8*       data,
+    Uint64       dataLength,
+    Uint8*       outputBlock)
 {
     // chaining_value = 0^outlen.
     static constexpr int cOutlen = 16; // Block length in bytes
@@ -264,9 +264,9 @@ BlockCipherDf(const Uint8* inputString,
         Uint8 t                      = (N & (0xff << i * 8)) >> (i * 8);
         p_s_8[sizeof(Int32) - i - 1] = t;
     }
-
-    memcpy((&S[0]) + sizeof(L) + sizeof(N), inputString, L);
-    memset((&S[0]) + sizeof(L) + sizeof(N) + L, 0x80, 1);
+    auto p_s_input_str = (&S[0]) + sizeof(L) + sizeof(N);
+    memcpy(p_s_input_str, inputString, L);
+    memset(p_s_input_str + L, 0x80, 1);
 
     // temp = the Null string.
     constexpr Uint64 cMaxTempSize = 32 + 16; // maxKeySize+Blocklen
@@ -277,10 +277,11 @@ BlockCipherDf(const Uint8* inputString,
     Int32 i = 0;
 
     // K = leftmost (0x00010203...1D1E1F, keylen).
-    Uint8 big_key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                        0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-                        0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-                        0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f };
+    static const Uint8 big_key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+                                     0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d,
+                                     0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14,
+                                     0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b,
+                                     0x1c, 0x1d, 0x1e, 0x1f };
 
     // While len (temp) < keylen + outlen, do
     while (temp_size < (keylen + cOutlen)) {
