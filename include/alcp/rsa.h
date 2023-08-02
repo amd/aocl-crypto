@@ -55,6 +55,18 @@ typedef enum
 } alc_rsa_padding;
 
 /**
+ * @brief Store info about supported RSA key sizes
+ *
+ * @typedef enum alc_rsa_key_size
+ */
+typedef enum
+{
+    KEY_SIZE_1024 = 1024,
+    KEY_SIZE_2048 = 2048,
+    KEY_SIZE_UNSUPPORTED
+} alc_rsa_key_size;
+
+/**
  * @brief Store Context for the future operation of RSA
  *
  */
@@ -81,47 +93,22 @@ typedef struct _alc_rsa_handle
  * Context will be empty </b>
  * @endparblock
  *
- * @note        @ref alcp_rsa_supported() should be called first to
- *              know if the rsa is supported
  *
+ * @param [in]  keySize     - RSA key size
  *
  * @return      Size of Context
  */
 ALCP_API_EXPORT Uint64
-alcp_rsa_context_size();
-
-/**
- * @brief       Allows to check if RSA is supported
- *
- * @parblock <br> &nbsp;
- * <b>This API needs to be called before any other API is called to
- * know if RSA is supported or not </b>
- * @endparblock
- *
- * @note        alcp_rsa_supported() should be called to
- *              know if the if RSA is supported.
- *
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_error_str needs to be called to know
- * about error occurred
- */
-ALCP_API_EXPORT alc_error_t
-alcp_rsa_supported();
+alcp_rsa_context_size(const alc_rsa_key_size keySize);
 
 /**
  * @brief       Request a handle for rsa for a configuration
  *              as pointed by p_ec_info_p
  *
- * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_supported is called and at the
- * end of session call @ref alcp_ec_finish</b>
- * @endparblock
+ * @note        Only 1024 and 2048 key size supported
  *
- * @note        alcp_rsa_supported() should be called first to
- *              know if the RSA algorithm is supported.
- *
- *
- * @param [out] pRsaHandle Library populated session handle for future
+ * @param [in]  keySize         - Supported key size
+ * @param [out] pRsaHandle      - Library populated session handle for future
  * rsa operations.
  *
  * @return   &nbsp; Error Code for the API called. If alc_error_t
@@ -129,7 +116,7 @@ alcp_rsa_supported();
  * about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_request(alc_rsa_handle_p pRsaHandle);
+alcp_rsa_request(const alc_rsa_key_size keySize, alc_rsa_handle_p pRsaHandle);
 
 /**
  * @brief Function encrypts text using using public key

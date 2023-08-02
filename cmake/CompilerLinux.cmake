@@ -119,7 +119,7 @@ endfunction(alcp_get_arch_cflags_zen3)
 # lib/arch/zen4 Compile Flags
 function(alcp_get_arch_cflags_zen4)
     set(ARCH_COMPILE_FLAGS
-     -O3 -fPIC -march=znver3 -mavx -mavx2 -maes -mvaes -mpclmul -mavx512f -mavx512dq -mavx512ifma
+        -O3 -fPIC -march=znver3 -mavx -mavx2 -maes -mvaes -mpclmul -mavx512f -mavx512dq -mavx512ifma
         -mavx512cd -mavx512bw -mavx512vl -mavx512vbmi -mavx512vbmi2 -mavx512vnni -mavx512bitalg
         -mavx512vpopcntdq -mvpclmulqdq -DUSE_AVX512
         CACHE INTERNAL ""

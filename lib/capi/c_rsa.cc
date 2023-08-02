@@ -43,34 +43,30 @@ using namespace alcp;
 EXTERN_C_BEGIN
 
 Uint64
-alcp_rsa_context_size()
+alcp_rsa_context_size(const alc_rsa_key_size keySize)
 {
-    Uint64 size = sizeof(rsa::Context) + rsa::RsaBuilder::getSize();
+    Uint64 size = sizeof(rsa::Context) + rsa::RsaBuilder::getSize(keySize);
     return size;
 }
 
 alc_error_t
-alcp_rsa_supported()
-{
-    alc_error_t err = ALC_ERROR_NOT_SUPPORTED;
-
-    return err;
-}
-
-alc_error_t
-alcp_rsa_request(alc_rsa_handle_p pRsaHandle)
+alcp_rsa_request(const alc_rsa_key_size keySize, alc_rsa_handle_p pRsaHandle)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
     ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
 
+    if (keySize != KEY_SIZE_1024 && keySize != KEY_SIZE_2048) {
+        return ALC_ERROR_NOT_SUPPORTED;
+    }
+
     auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
 
     // To initialize all context members
     new (ctx) rsa::Context;
 
-    ctx->status = rsa::RsaBuilder::Build(*ctx);
+    ctx->status = rsa::RsaBuilder::Build(keySize, *ctx);
 
     return ctx->status.ok() ? err : ALC_ERROR_GENERIC;
 }

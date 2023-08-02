@@ -27,4 +27,5 @@
  ADD_EXAMPLE(rsa_encrypt rsa_encrypt.c)
  ADD_EXAMPLE(rsa_decrypt rsa_decrypt.c)
  ADD_EXAMPLE(rsa_oaep rsa_oaep.c)
+ ADD_EXAMPLE(rsa_2048 rsa_2048.c)
 

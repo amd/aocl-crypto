@@ -26,8 +26,8 @@
  *
  */
 
-#include "alcp/rsa.h"
 #include "rsa/alc_rsa.hh"
+#include "alcp/rsa.h"
 #include "rsa/rsa.hh"
 #include <cstring>
 
@@ -39,7 +39,7 @@ bool
 AlcpRsaBase::init()
 {
     alc_error_t err;
-    Uint64      size = alcp_rsa_context_size();
+    Uint64      size = alcp_rsa_context_size(KEY_SIZE_1024);
 
     if (m_rsa_handle == nullptr) {
         m_rsa_handle          = new alc_rsa_handle_t;
@@ -50,7 +50,7 @@ AlcpRsaBase::init()
         alcp_rsa_finish(m_rsa_handle);
     }
 
-    err = alcp_rsa_request(m_rsa_handle);
+    err = alcp_rsa_request(KEY_SIZE_1024, m_rsa_handle);
     if (alcp_is_error(err)) {
         std::cout << "Error in alcp_rsa_request " << err << std::endl;
         return false;

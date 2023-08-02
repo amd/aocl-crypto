@@ -37,8 +37,8 @@ namespace alcp::rsa {
 class RsaBuilder
 {
   public:
-    static Status Build(Context& ctx);
-    static Uint32 getSize();
+    static Status Build(alc_rsa_key_size keySize, Context& ctx);
+    static Uint32 getSize(alc_rsa_key_size keySize);
 };
 
 } // namespace alcp::rsa

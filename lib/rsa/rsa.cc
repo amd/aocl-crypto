@@ -147,22 +147,24 @@ Select(Uint8 mask, Uint8 first, Uint8 second)
     return (mask & first) | (~mask & second);
 }
 
-Rsa::Rsa()
+template<alc_rsa_key_size T>
+Rsa<T>::Rsa()
 {
     // todo : this will be removed and will be called from outside
     // after testing is done
-    Rsa::setPrivateKey(DP_EXP,
-                       DQ_EXP,
-                       P_Modulus,
-                       Q_Modulus,
-                       Q_ModulusINV,
-                       Modulus,
-                       sizeof(P_Modulus));
-    Rsa::setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
+    setPrivateKey(DP_EXP,
+                  DQ_EXP,
+                  P_Modulus,
+                  Q_Modulus,
+                  Q_ModulusINV,
+                  Modulus,
+                  sizeof(P_Modulus));
+    setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
 }
 
+template<alc_rsa_key_size T>
 void
-Rsa::setDigestOaep(digest::IDigest* digest)
+Rsa<T>::setDigestOaep(digest::IDigest* digest)
 {
     if (digest) {
         m_digest   = digest;
@@ -170,8 +172,9 @@ Rsa::setDigestOaep(digest::IDigest* digest)
     }
 }
 
+template<alc_rsa_key_size T>
 void
-Rsa::setMgfOaep(digest::IDigest* mgf)
+Rsa<T>::setMgfOaep(digest::IDigest* mgf)
 {
     if (mgf) {
         m_mgf          = mgf;
@@ -179,11 +182,12 @@ Rsa::setMgfOaep(digest::IDigest* mgf)
     }
 }
 
+template<alc_rsa_key_size T>
 void
-Rsa::maskGenFunct(Uint8*       mask,
-                  Uint64       maskSize,
-                  const Uint8* input,
-                  Uint64       inputLen)
+Rsa<T>::maskGenFunct(Uint8*       mask,
+                     Uint64       maskSize,
+                     const Uint8* input,
+                     Uint64       inputLen)
 {
     Uint64 out_len = 0;
     Uint32 count   = 0;
@@ -216,13 +220,15 @@ Rsa::maskGenFunct(Uint8*       mask,
     }
 }
 
-Rsa::~Rsa()
+template<alc_rsa_key_size T>
+Rsa<T>::~Rsa()
 {
     reset();
 }
 
+template<alc_rsa_key_size T>
 Status
-Rsa::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
+Rsa<T>::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
 {
     // For non padded output
     if (textSize != m_key_size) {
@@ -249,26 +255,27 @@ Rsa::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
     static bool zen_available  = CpuId::cpuIsZen1();
 
     if (zen4_available) {
-        zen4::archEncryptPublic(
+        zen4::archEncryptPublic<T>(
             pEncText, ptext_bignum, m_pub_key, m_context_pub);
         return StatusOk();
     } else if (zen3_available) {
-        zen3::archEncryptPublic(
+        zen3::archEncryptPublic<T>(
             pEncText, ptext_bignum, m_pub_key, m_context_pub);
         return StatusOk();
     } else if (zen_available) {
-        zen::archEncryptPublic(
+        zen::archEncryptPublic<T>(
             pEncText, ptext_bignum, m_pub_key, m_context_pub);
         return StatusOk();
     }
 
-    archEncryptPublic(pEncText, ptext_bignum, m_pub_key, m_context_pub);
+    archEncryptPublic<T>(pEncText, ptext_bignum, m_pub_key, m_context_pub);
 
     return StatusOk();
 }
 
+template<alc_rsa_key_size T>
 Status
-Rsa::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
+Rsa<T>::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
 {
     // For non padded output
     if (encSize != m_priv_key.m_size * 2 * 8) {
@@ -294,32 +301,33 @@ Rsa::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
     static bool zen_available  = CpuId::cpuIsZen1();
 
     if (zen4_available) {
-        zen4::archDecryptPrivate(
+        zen4::archDecryptPrivate<T>(
             pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
         return StatusOk();
     } else if (zen3_available) {
-        zen3::archDecryptPrivate(
+        zen3::archDecryptPrivate<T>(
             pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
         return StatusOk();
     } else if (zen_available) {
-        zen::archDecryptPrivate(
+        zen::archDecryptPrivate<T>(
             pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
         return StatusOk();
     }
 
-    archDecryptPrivate(
+    archDecryptPrivate<T>(
         pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
 
     return StatusOk();
 }
 
+template<alc_rsa_key_size T>
 Status
-Rsa::encryptPublicOaep(const Uint8* pText,
-                       Uint64       textSize,
-                       const Uint8* pLabel,
-                       Uint64       labelSize,
-                       const Uint8* pSeed,
-                       Uint8*       pEncText)
+Rsa<T>::encryptPublicOaep(const Uint8* pText,
+                          Uint64       textSize,
+                          const Uint8* pLabel,
+                          Uint64       labelSize,
+                          const Uint8* pSeed,
+                          Uint8*       pEncText)
 {
     // clang-format off
             //                     +----------+------+--+-------+
@@ -392,13 +400,14 @@ Rsa::encryptPublicOaep(const Uint8* pText,
     return encryptPublic(p_mod_text, m_key_size, pEncText);
 }
 
+template<alc_rsa_key_size T>
 Status
-Rsa::decryptPrivateOaep(const Uint8* pEncText,
-                        Uint64       encSize,
-                        const Uint8* pLabel,
-                        Uint64       labelSize,
-                        Uint8*       pText,
-                        Uint64&      textSize)
+Rsa<T>::decryptPrivateOaep(const Uint8* pEncText,
+                           Uint64       encSize,
+                           const Uint8* pLabel,
+                           Uint64       labelSize,
+                           Uint8*       pText,
+                           Uint64&      textSize)
 {
 
     auto mod_text   = std::make_unique<Uint8[]>(encSize);
@@ -474,8 +483,9 @@ Rsa::decryptPrivateOaep(const Uint8* pEncText,
     return (error_code == eOk) ? StatusOk() : status::Generic("Generic error");
 }
 
+template<alc_rsa_key_size T>
 Status
-Rsa::getPublickey(RsaPublicKey& pPublicKey)
+Rsa<T>::getPublickey(RsaPublicKey& pPublicKey)
 {
 
     if (pPublicKey.size != m_key_size) {
@@ -496,8 +506,9 @@ Rsa::getPublickey(RsaPublicKey& pPublicKey)
     return StatusOk();
 }
 
+template<alc_rsa_key_size T>
 Status
-Rsa::setPublicKey(const Uint64 exponent, const Uint8* mod, const Uint64 size)
+Rsa<T>::setPublicKey(const Uint64 exponent, const Uint8* mod, const Uint64 size)
 {
     if (!mod || exponent == 0) {
         return status::NotPermitted("Invalid public key");
@@ -516,33 +527,34 @@ Rsa::setPublicKey(const Uint64 exponent, const Uint8* mod, const Uint64 size)
     static bool zen_available  = CpuId::cpuIsZen1();
 
     if (zen4_available) {
-        zen4::archCreateContext(
+        zen4::archCreateContext<T>(
             m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
 
     } else if (zen3_available) {
-        zen3::archCreateContext(
+        zen3::archCreateContext<T>(
             m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
 
     } else if (zen_available) {
-        zen::archCreateContext(
+        zen::archCreateContext<T>(
             m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
 
     } else {
 
-        archCreateContext(
+        archCreateContext<T>(
             m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
     }
     return StatusOk();
 }
 
+template<alc_rsa_key_size T>
 Status
-Rsa::setPrivateKey(const Uint8* dp,
-                   const Uint8* dq,
-                   const Uint8* p,
-                   const Uint8* q,
-                   const Uint8* qinv,
-                   const Uint8* mod,
-                   const Uint64 size)
+Rsa<T>::setPrivateKey(const Uint8* dp,
+                      const Uint8* dq,
+                      const Uint8* p,
+                      const Uint8* q,
+                      const Uint8* qinv,
+                      const Uint8* mod,
+                      const Uint64 size)
 {
     if (!dp || !dq || !p || !q || !mod) {
         return status::NotPermitted("Invalid private key");
@@ -567,38 +579,43 @@ Rsa::setPrivateKey(const Uint8* dp,
     static bool zen_available  = CpuId::cpuIsZen1();
 
     if (zen4_available) {
-        zen4::archCreateContext(
+        zen4::archCreateContext<T>(
             m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
-        zen4::archCreateContext(
+        zen4::archCreateContext<T>(
             m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
     } else if (zen3_available) {
-        zen3::archCreateContext(
+        zen3::archCreateContext<T>(
             m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
-        zen3::archCreateContext(
+        zen3::archCreateContext<T>(
             m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
     } else if (zen_available) {
-        zen::archCreateContext(
+        zen::archCreateContext<T>(
             m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
-        zen::archCreateContext(
+        zen::archCreateContext<T>(
             m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
     } else {
 
-        archCreateContext(m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
-        archCreateContext(m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
+        archCreateContext<T>(
+            m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
+        archCreateContext<T>(
+            m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
     }
     return StatusOk();
 }
 
+template<alc_rsa_key_size T>
 void
-Rsa::reset()
+Rsa<T>::reset()
 {
     // Todo rest the big num here
 }
 
+template<alc_rsa_key_size T>
 Uint64
-Rsa::getKeySize()
+Rsa<T>::getKeySize()
 {
     return m_key_size;
 }
-
+template class Rsa<KEY_SIZE_1024>;
+template class Rsa<KEY_SIZE_2048>;
 } // namespace alcp::rsa
