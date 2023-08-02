@@ -251,7 +251,7 @@ BlockCipherDf(const Uint8* inputString,
         s_size += (cOutlen - (s_size % cOutlen));
     }
 
-    std::vector<Uint8> S(s_size, 0);
+    std::vector<Uint8> S(s_size);
 
     Uint8* p_s_8 = &S[0];
     for (size_t i = 0; i < sizeof(Int32); i++) {
@@ -286,7 +286,7 @@ BlockCipherDf(const Uint8* inputString,
     // While len (temp) < keylen + outlen, do
     while (temp_size < (keylen + cOutlen)) {
         // IV = i || 0^(outlen - len (i)); len(i) is fixed as 32 bits
-        std::vector<Uint8> IV(cOutlen, 0);
+        std::vector<Uint8> IV(cOutlen);
         auto               iv_8 = &IV[0];
         for (size_t j = 0; j < sizeof(Int32); j++) {
             Uint8 t                     = (i & (0xff << j * 8)) >> (j * 8);
@@ -315,8 +315,7 @@ BlockCipherDf(const Uint8* inputString,
     // X = select (temp, keylen+1, keylen+outlen).
     __m128i x_reg =
         _mm_loadu_si128(reinterpret_cast<__m128i*>(&temp[0] + keylen));
-    std::vector<Uint8> requested_bytes_temp;
-    Uint64             inc = 0;
+    Uint64 inc = 0;
     for (inc = 0; cNoOfBytesToReturn - inc >= cOutlen; inc += cOutlen) {
         alcp::cipher::aesni::AesEncrypt(
             &x_reg, (const __m128i*)p_key, aes_rounds);

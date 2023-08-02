@@ -196,10 +196,6 @@ CtrDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
     // ALGO: If (temp < seedlen), then personalization_string =
     // personalization_string || 0^(seedlen- temp)
 
-    // Here buffer is created of length m_seedlength and not
-    // cPersonalizationStringLen to avoid further padding of 0^(seedlen- temp)
-    // Uint8 seed_material_copy[m_seedlength] = {};
-
     // Key = 0^keylen
     std::fill(m_key.begin(), m_key.end(), 0);
     // V = 0^blocklen
@@ -317,7 +313,7 @@ CtrDrbg::Impl::setKeySize(Uint64 keySize)
     m_keySize    = keySize;
     m_seedlength = 16 + m_keySize;
 
-    m_key = std::vector<Uint8>(m_keySize);
+    m_key.resize(m_keySize);
 }
 
 void
