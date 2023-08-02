@@ -53,14 +53,14 @@ class CRspParser final : private File
 
   public:
     CRspParser(const String&);
-    bool file_exists = {};
+    bool fileExists {};
     bool init();
     bool skipRSPHeader();
     String fetchTCfromRSP();
     void removeSpaces(String& str);
     bool readNextTC();
     void storeTCinUMap(StringView);
-    int isSubString(StringView deststr, StringView srcstr);
+    int isSubString(StringView destStr, StringView srcStr);
 
     std::vector<Uint8> getVect(StringView cName);
     Uint64 getLenBytes(StringView cName);

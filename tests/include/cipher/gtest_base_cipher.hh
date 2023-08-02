@@ -897,7 +897,7 @@ AesKatTest(int keySize, enc_dec_t encDec, alc_cipher_mode_t mode)
         EXPECT_TRUE(retval);
     }
 #else
-    if (!testing_core.getRsp()->m_file_exists) {
+    if (!testing_core.getRsp()->fileExists) {
         EXPECT_TRUE(retval);
     }
 

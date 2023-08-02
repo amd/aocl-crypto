@@ -42,10 +42,11 @@ class File
     //std::fstream m_file;
     bool         m_fileExists;
 
-  public:
+protected:
     std::fstream m_file;
     bool m_fileEOF = false;
 
+  public:
     bool checkFileExists();
     // Opens File as Bin/ASCII File with write support.
     File(std::string fileName, bool binary, bool write);

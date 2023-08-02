@@ -33,8 +33,8 @@ namespace alcp::testing {
 CRspParser::CRspParser(const String& filename)
    : File(filename), m_input_rsp_file(filename)
 {
-    file_exists = checkFileExists();
-    if (!file_exists) {
+    fileExists = checkFileExists();
+    if (!fileExists) {
         utils::printErrors("File doesnt exist: " + m_input_rsp_file);
         return;
     }
@@ -54,10 +54,10 @@ CRspParser::init()
     return true;
 }
 
-/* Function to get the index of deststr in srcstr   */
+/* Function to get the index of destStr in srcStr   */
 int
-CRspParser::isSubString(StringView deststr, StringView srcstr) {
-    size_t index = srcstr.find(deststr);
+CRspParser::isSubString(StringView destStr, StringView srcStr) {
+    size_t index = srcStr.find(destStr);
     if ( index != String::npos)
         return index;
     return -1;
@@ -81,27 +81,27 @@ CRspParser::storeTCinUMap(StringView myStr)
 {
     m_data_map.clear();
 
-    String key, value, myParam;
+    String key, value, my_param;
     int pos {};
     
-    // Vectorize a TC into params_vec based on
+    // Stringize a TC into my_param based on
     // comma seperated values
     for (size_t i =0;i < m_paramPerTC; i++) {    
         pos = isSubString(",", myStr);
-        myParam = myStr.substr(0, pos);
+        my_param = myStr.substr(0, pos);
         myStr = myStr.begin()+pos+1;
 
-        // Store each param from params_vec into m_data_map 
-        pos = isSubString("=", myParam);
+        // Store each param from my_param into m_data_map 
+        pos = isSubString("=", my_param);
         if (pos == -1) {
-            key = myParam;
+            key = my_param;
             //value = nullptr;
-            value = myParam;    // GCM Seg Fault when "FAIL" in TC
+            value = my_param;    // GCM Seg Fault when "FAIL" in TC
         }
         else {
-            size_t len = myParam.size()-pos+1;
-            key = myParam.substr(0,pos);
-            value = myParam.substr(pos+1, len);
+            size_t len = my_param.size()-pos+1;
+            key = my_param.substr(0,pos);
+            value = my_param.substr(pos+1, len);
         }
         
         String myKey = adjustKeyNames(key);
