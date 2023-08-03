@@ -50,10 +50,10 @@ struct _alc_prov_cipher_ctx
     alc_prov_ctx_t*     pc_prov_ctx;
     alc_cipher_handle_t handle;
     alc_key_info_t      kinfo_tweak_key;
-    
-    // For storing CTR Key for AES-SIV 
-    alc_key_info_t      kinfo_siv_ctr_key;
-    int                 enc_flag;
+
+    // For storing CTR Key for AES-SIV
+    alc_key_info_t kinfo_siv_ctr_key;
+    int            enc_flag;
 
     int               pc_nid;
     EVP_CIPHER*       pc_evp_cipher;
@@ -66,9 +66,13 @@ struct _alc_prov_cipher_ctx
     int               aadlen;
     bool              add_inititalized;
 
-    alc_cipher_info_t pc_cipher_info;
-    int               pc_ctx_size;
-    int               pc_flags;
+    bool is_aead;
+
+    alc_cipher_info_t      pc_cipher_info;
+    alc_cipher_aead_info_t pc_cipher_aead_info;
+
+    int pc_ctx_size;
+    int pc_flags;
 
     OSSL_LIB_CTX* pc_libctx;
 };
@@ -84,7 +88,7 @@ extern const OSSL_ALGORITHM ALC_prov_ciphers[];
 typedef void (*fptr_t)(void);
 
 void*
-ALCP_prov_cipher_newctx(void* vprovctx, const alc_cipher_info_p cinfo);
+ALCP_prov_cipher_newctx(void* vprovctx, const void* cinfo,bool is_aead);
 void
 ALCP_prov_cipher_freectx(void* vctx);
 
@@ -128,8 +132,24 @@ OSSL_FUNC_cipher_final_fn          ALCP_prov_cipher_final;
             },                                                             \
     }
 
+// Macro for Context Creation
+#define CIPHER_AEAD_CONTEXT(mode, alcp_mode)                                   \
+    static alc_cipher_aead_info_t s_cipher_##mode##_info = {                    \
+        .ci_type = ALC_CIPHER_TYPE_AES,                                        \
+        .ci_key_info = {                                                       \
+            ALC_KEY_TYPE_SYMMETRIC,                                            \
+            ALC_KEY_FMT_RAW,                                                   \
+            ALC_KEY_ALG_SYMMETRIC,                                             \
+            ALC_KEY_LEN_128,                                                   \
+            128,                                                               \
+        },                                                                     \
+        .ci_algo_info = {                                       \
+                .ai_mode =      alcp_mode,                                     \
+            },                                                             \
+    }
+
 // Macro for OpenSSL Dispatcher Creation
-#define CREATE_CIPHER_DISPATCHERS(name, grp, mode, key_size)                   \
+#define CREATE_CIPHER_DISPATCHERS(name, grp, mode, key_size, is_aead)          \
     static OSSL_FUNC_cipher_get_params_fn                                      \
                ALCP_prov_##name##_get_params_##key_size;                       \
     static int ALCP_prov_##name##_get_params_##key_size(OSSL_PARAM* params)    \
@@ -142,7 +162,8 @@ OSSL_FUNC_cipher_final_fn          ALCP_prov_cipher_final;
     static void* ALCP_prov_##name##_newctx_##key_size(void* provctx)           \
     {                                                                          \
         ENTER();                                                               \
-        return ALCP_prov_aes_newctx(provctx, &s_cipher_##name##_info);         \
+        return ALCP_prov_aes_newctx(                                           \
+            provctx, &s_cipher_##name##_info, is_aead);                        \
     }                                                                          \
     static OSSL_FUNC_cipher_decrypt_init_fn                                    \
                ALCP_prov_##name##_decrypt_init_##key_size;                     \
