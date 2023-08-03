@@ -332,7 +332,7 @@ class CCM_KAT
         // clang-format on
 
         // Setup CCM Object
-        pCcmObj = new Ccm(aesInfo, keyInfo);
+        pCcmObj = new Ccm(keyInfo.key, keyInfo.len);
     }
     void TearDown() override { delete pCcmObj; }
 };
@@ -350,7 +350,7 @@ TEST(CCM, Initiantiation)
                                      {},
                                      128,
                                      key };
-    Ccm                  ccm_obj = Ccm(aesInfo, keyInfo);
+    Ccm                  ccm_obj =Ccm(keyInfo.key, keyInfo.len);
     // clang-format on
     EXPECT_EQ(ccm_obj.getRounds(), 10U);
     EXPECT_EQ(ccm_obj.getNr(), 10U);
@@ -375,7 +375,7 @@ TEST(CCM, ZeroLEN)
                                      .len  = 128,
                                      .key  = key };
     // clang-format on
-    Ccm         ccm_obj = Ccm(aesInfo, keyInfo);
+    Ccm         ccm_obj =Ccm(keyInfo.key, keyInfo.len);
     alc_error_t err;
     err = ccm_obj.setIv(0, iv);
     EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
@@ -698,7 +698,7 @@ TEST(CCM, InvalidTagLen)
                                      {},
                                      128,
                                      key };
-    Ccm                  ccm_obj = Ccm(aesInfo, keyInfo);
+    Ccm                  ccm_obj = Ccm(keyInfo.key, keyInfo.len);
     alc_error_t err;
 
     // TODO: Create a parametrized test
@@ -729,7 +729,7 @@ TEST(CCM, InvalidNonceLen)
                                      {},
                                      128,
                                      key };
-    Ccm                  ccm_obj = Ccm(aesInfo, keyInfo);
+    Ccm                  ccm_obj = Ccm(keyInfo.key, keyInfo.len);
     alc_error_t err;
 
     // TODO: Create a parametrized test
