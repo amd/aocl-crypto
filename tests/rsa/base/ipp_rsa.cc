@@ -45,8 +45,11 @@ IPPRsaBase::~IPPRsaBase()
     if (m_pPrv) {
         delete[](Ipp8u*) m_pPrv;
     }
-    if (m_scratchBuffer) {
-        delete[](Ipp8u*) m_scratchBuffer;
+    if (m_scratchBuffer_Pub) {
+        delete[](Ipp8u*) m_scratchBuffer_Pub;
+    }
+    if (m_scratchBuffer_Pvt) {
+        delete[](Ipp8u*) m_scratchBuffer_Pvt;
     }
 }
 
@@ -56,162 +59,18 @@ IPPRsaBase::init()
     return true;
 }
 
-int
-IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data, int padding_mode)
-{
-    IppStatus status = ippStsNoErr;
-
-    if (padding_mode == 1) {
-        /*! Seed string of hash size */
-        /*FIXME: should this come from test data? */
-        static Ipp8u pSeed[] = "\xaa\xfd\x12\xf6\x59\xca\xe6\x34\x89\xb4"
-                               "\x79\xe5\x07\x6d\xde\xc2\xf0\x6c\xb5\x8f";
-
-        /* Encrypt message */
-        status = ippsRSAEncrypt_OAEP_rmf(data.m_msg,
-                                         data.m_msg_len,
-                                         0,
-                                         0,
-                                         pSeed,
-                                         data.m_encrypted_data,
-                                         m_pPub,
-                                         ippsHashMethod_SHA1(),
-                                         m_scratchBuffer);
-
-        if (status != ippStsNoErr) {
-            std::cout << "ippsRSAEncrypt_OAEP_rmf failed with err code"
-                      << status << std::endl;
-            return false;
-        }
-        //#endif
-    }
-
-    /* The BigNum way */
-    //#if 0
-    else {
-        std::string temp = alcp::testing::utils::parseBytesToHexStr(
-            data.m_msg, data.m_msg_len);
-
-        temp = alcp::testing::utils::bytes_to_hex(temp);
-
-        char tab2[data.m_msg_len];
-        strncpy(tab2, temp.c_str(), sizeof(tab2));
-        tab2[sizeof(tab2) - 1] = 0;
-
-        // BigNumber PlainText_BN((const char*)data.m_msg);
-        // IppsBigNumSGN sign;
-
-        BigNumber PlainText_BN(tab2);
-        int       size_pt;
-        PlainText_BN.GetSize(&size_pt);
-        BigNumber CipherText_BN(0, m_modulus_size);
-        status = ippsRSA_Encrypt(
-            PlainText_BN, CipherText_BN, m_pPub, m_scratchBuffer);
-        if (status != ippStsNoErr) {
-            std::cout << "ippsRSA_Encrypt failed with err code" << status
-                      << std::endl;
-            return false;
-        }
-        status =
-            CipherText_BN.GetOctetString(data.m_encrypted_data, data.m_msg_len);
-        if (status != ippStsNoErr) {
-            std::cout << "ippsGetOctString_BN failed with err code" << status
-                      << std::endl;
-            return false;
-        }
-
-        /* TESTING */
-        BigNumber PlainText_BN_2(0, m_modulus_size);
-        status = ippsRSA_Decrypt(
-            CipherText_BN, PlainText_BN_2, m_pPrv, m_scratchBuffer);
-        if (status != ippStsNoErr) {
-            std::cout << "ippsRSA_Decrypt failed with err code" << status
-                      << std::endl;
-            return false;
-        }
-        if (PlainText_BN != PlainText_BN_2) {
-            std::cout << "FAIL" << std::endl;
-        }
-        /* TESTING */
-
-        //#endif
-    }
-    return 0;
-}
-
-int
-IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data, int padding_mode)
-{
-    IppStatus status = ippStsNoErr;
-
-    //#if 1
-    if (padding_mode == 1) {
-        int    plainTextLen = data.m_msg_len;
-        Ipp8u* pPlainText   = new Ipp8u[plainTextLen];
-        /* Decrypt message */
-        status = ippsRSADecrypt_OAEP_rmf(data.m_encrypted_data,
-                                         0,
-                                         0,
-                                         pPlainText,
-                                         &plainTextLen,
-                                         m_pPrv,
-                                         ippsHashMethod_SHA1(),
-                                         m_scratchBuffer);
-
-        if (status != ippStsNoErr) {
-            std::cout << "ippsRSADecrypt_OAEP_rmf failed with err code"
-                      << status << std::endl;
-            return false;
-        }
-
-        std::memcpy(data.m_decrypted_data, pPlainText, plainTextLen);
-
-        if (pPlainText) {
-            delete[] pPlainText;
-        }
-        //#endif
-    }
-
-    else {
-        /* the big num way */
-        //#if 0
-        std::string temp = alcp::testing::utils::parseBytesToHexStr(
-            data.m_encrypted_data, data.m_msg_len);
-
-        char tab2[data.m_msg_len];
-        strncpy(tab2, temp.c_str(), sizeof(tab2));
-        tab2[sizeof(tab2) - 1] = 0;
-
-        // BigNumber CipherText_BN((const char*)data.m_encrypted_data);
-        BigNumber CipherText_BN(tab2);
-        BigNumber PlainText_BN(0, m_modulus_size);
-        status = ippsRSA_Decrypt(
-            CipherText_BN, PlainText_BN, m_pPrv, m_scratchBuffer);
-        if (status != ippStsNoErr) {
-            std::cout << "ippsRSA_Decrypt failed with err code" << status
-                      << std::endl;
-            return false;
-        }
-
-        status =
-            PlainText_BN.GetOctetString(data.m_decrypted_data, data.m_msg_len);
-        if (status != ippStsNoErr) {
-            std::cout << "ippsGetOctString_BN failed with err code" << status
-                      << std::endl;
-            return false;
-        }
-        //#endif
-    }
-    return 0;
-}
-
 bool
-IPPRsaBase::GetPublicKey(const alcp_rsa_data_t& data)
+IPPRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
 {
     IppStatus status = ippStsNoErr;
-
+    //      private exponent
+    BigNumber D(
+        "0xA5DAFC5341FAF289C4B988DB30C1CDF83F31251E0668B42784813801579641B2"
+        "9410B3C7998D6BC465745E5C392669D6870DA2C082A939E37FDCB82EC93EDAC9"
+        "7FF3AD5950ACCFBC111C76F1A9529444E56AAF68C56C092CD38DC3BEF5D20A93"
+        "9926ED4F74A13EDDFBE1A1CECC4894AF9428C2B7B8883FE4463A4BC85B1CB3C1");
     /* FIXME: should these params come from outside? */
-    // P prime factor
+    //  P prime factor
     BigNumber P(
         "0xEECFAE81B1B9B3C908810B10A1B5600199EB9F44AEF4FDA493B81A9E3D84F632"
         "124EF0236E5D1E3B7E28FAE7AA040A2D5B252176459D1F397541BA2A58FB6599");
@@ -231,51 +90,12 @@ IPPRsaBase::GetPublicKey(const alcp_rsa_data_t& data)
     BigNumber invQ(
         "0xB06C4FDABB6301198D265BDBAE9423B380F271F73453885093077FCD39E2119F"
         "C98632154F5883B167A967BF402B4E9E2E0F9656E698EA3666EDFB25798039F7");
-    // rsa modulus N = P*Q
-    BigNumber N(
-        "0xBBF82F090682CE9C2338AC2B9DA871F7368D07EED41043A440D6B6F07454F51F"
-        "B8DFBAAF035C02AB61EA48CEEB6FCD4876ED520D60E1EC4619719D8A5B8B807F"
-        "AFB8E0A3DFC737723EE6B4B7D93A2584EE6A649D060953748834B2454598394E"
-        "E0AAB12D7B61A51F527A9A41F6C1687FE2537298CA2A8F5946F8E5FD091DBDCB");
-    // private exponent
-    BigNumber D(
-        "0xA5DAFC5341FAF289C4B988DB30C1CDF83F31251E0668B42784813801579641B2"
-        "9410B3C7998D6BC465745E5C392669D6870DA2C082A939E37FDCB82EC93EDAC9"
-        "7FF3AD5950ACCFBC111C76F1A9529444E56AAF68C56C092CD38DC3BEF5D20A93"
-        "9926ED4F74A13EDDFBE1A1CECC4894AF9428C2B7B8883FE4463A4BC85B1CB3C1");
-    // public exponent
-    BigNumber E("0x11");
 
     int keyCtxSize;
-
-    // (bit) size of key components
-    int bitsN = N.BitSize();
-    int bitsE = E.BitSize();
     int bitsP = P.BitSize();
     int bitsQ = Q.BitSize();
 
-    // define and setup public key
-    status = ippsRSA_GetSizePublicKey(bitsN, bitsE, &keyCtxSize);
-    if (status != ippStsNoErr) {
-        std::cout << "ippsRSA_GetSizePublicKey failed with err code" << status
-                  << std::endl;
-        return false;
-    }
-    m_pPub = (IppsRSAPublicKeyState*)(new Ipp8u[keyCtxSize]);
-    status = ippsRSA_InitPublicKey(bitsN, bitsE, m_pPub, keyCtxSize);
-    if (status != ippStsNoErr) {
-        std::cout << "ippsRSA_InitPublicKey failed with err code" << status
-                  << std::endl;
-        return false;
-    }
-    status = ippsRSA_SetPublicKey(N, E, m_pPub);
-    if (status != ippStsNoErr) {
-        std::cout << "ippsRSA_SetPublicKey failed with err code" << status
-                  << std::endl;
-        return false;
-    }
-
-    // define and setup (type2) private key
+    // define and setup(type2) private key
     status = ippsRSA_GetSizePrivateKeyType2(bitsP, bitsQ, &keyCtxSize);
     if (status != ippStsNoErr) {
         std::cout << "ippsRSA_GetSizePrivateKeyType2 failed with err code"
@@ -296,7 +116,58 @@ IPPRsaBase::GetPublicKey(const alcp_rsa_data_t& data)
                   << std::endl;
         return false;
     }
+    status = ippsRSA_GetBufferSizePrivateKey(&m_buffSizePrivate, m_pPrv);
+    if (status != ippStsNoErr) {
+        std::cout << "ippsRSA_GetBufferSizePrivateKey failed with err code"
+                  << status << std::endl;
+        return false;
+    }
+    m_buffSize          = m_buffSizePrivate;
+    m_scratchBuffer_Pvt = new Ipp8u[m_buffSize];
 
+    return true;
+}
+
+bool
+IPPRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
+{
+    IppStatus status = ippStsNoErr;
+
+    /* FIXME: this should be from outside ?*/
+    // rsa modulus N = P*Q
+    BigNumber N(
+        "0xBBF82F090682CE9C2338AC2B9DA871F7368D07EED41043A440D6B6F07454F51F"
+        "B8DFBAAF035C02AB61EA48CEEB6FCD4876ED520D60E1EC4619719D8A5B8B807F"
+        "AFB8E0A3DFC737723EE6B4B7D93A2584EE6A649D060953748834B2454598394E"
+        "E0AAB12D7B61A51F527A9A41F6C1687FE2537298CA2A8F5946F8E5FD091DBDCB");
+    // public exponent
+    BigNumber E("0x11");
+
+    int keyCtxSize;
+
+    // (bit) size of key components
+    int bitsN = N.BitSize();
+    int bitsE = E.BitSize();
+    // define and setup public key
+    status = ippsRSA_GetSizePublicKey(bitsN, bitsE, &keyCtxSize);
+    if (status != ippStsNoErr) {
+        std::cout << "ippsRSA_GetSizePublicKey failed with err code" << status
+                  << std::endl;
+        return false;
+    }
+    m_pPub = (IppsRSAPublicKeyState*)(new Ipp8u[keyCtxSize]);
+    status = ippsRSA_InitPublicKey(bitsN, bitsE, m_pPub, keyCtxSize);
+    if (status != ippStsNoErr) {
+        std::cout << "ippsRSA_InitPublicKey failed with err code" << status
+                  << std::endl;
+        return false;
+    }
+    status = ippsRSA_SetPublicKey(N, E, m_pPub);
+    if (status != ippStsNoErr) {
+        std::cout << "ippsRSA_SetPublicKey failed with err code" << status
+                  << std::endl;
+        return false;
+    }
     // allocate scratch buffer
     status = ippsRSA_GetBufferSizePublicKey(&m_buffSizePublic, m_pPub);
     if (status != ippStsNoErr) {
@@ -304,18 +175,168 @@ IPPRsaBase::GetPublicKey(const alcp_rsa_data_t& data)
                   << status << std::endl;
         return false;
     }
-    status = ippsRSA_GetBufferSizePrivateKey(&m_buffSizePrivate, m_pPrv);
-    if (status != ippStsNoErr) {
-        std::cout << "ippsRSA_GetBufferSizePrivateKey failed with err code"
-                  << status << std::endl;
-        return false;
-    }
-    m_buffSize      = max(m_buffSizePublic, m_buffSizePrivate);
-    m_scratchBuffer = new Ipp8u[m_buffSize];
-
+    m_scratchBuffer_Pub = new Ipp8u[m_buffSizePublic];
     // save modulus size, will be used in enc/dec
     m_modulus_size = N.DwordSize();
 
+    return true;
+}
+
+// int
+// IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data, int padding_mode)
+// {
+//     IppStatus status = ippStsNoErr;
+
+//     if (padding_mode == 1) {
+//         /*! Seed string of hash size */
+//         /*FIXME: should this come from test data? */
+//         static Ipp8u pSeed[] = "\xaa\xfd\x12\xf6\x59\xca\xe6\x34\x89\xb4"
+//                                "\x79\xe5\x07\x6d\xde\xc2\xf0\x6c\xb5\x8f";
+
+//         /* Encrypt message */
+//         status = ippsRSAEncrypt_OAEP_rmf(data.m_msg,
+//                                          data.m_msg_len,
+//                                          0,
+//                                          0,
+//                                          pSeed,
+//                                          data.m_encrypted_data,
+//                                          m_pPub,
+//                                          ippsHashMethod_SHA1(),
+//                                          m_scratchBuffer);
+
+//         if (status != ippStsNoErr) {
+//             std::cout << "ippsRSAEncrypt_OAEP_rmf failed with err code"
+//                       << status << std::endl;
+//             return false;
+//         }
+//         //#endif
+//     }
+
+//     /* The BigNum way */
+//     //#if 0
+//     else {
+//         std::string temp = alcp::testing::utils::parseBytesToHexStr(
+//             data.m_msg, data.m_msg_len);
+
+//         temp = alcp::testing::utils::bytes_to_hex(temp);
+
+//         char tab2[data.m_msg_len];
+//         strncpy(tab2, temp.c_str(), sizeof(tab2));
+//         tab2[sizeof(tab2) - 1] = 0;
+
+//         // BigNumber PlainText_BN((const char*)data.m_msg);
+//         // IppsBigNumSGN sign;
+
+//         BigNumber PlainText_BN(tab2);
+//         int       size_pt;
+//         PlainText_BN.GetSize(&size_pt);
+//         BigNumber CipherText_BN(0, m_modulus_size);
+//         status = ippsRSA_Encrypt(
+//             PlainText_BN, CipherText_BN, m_pPub, m_scratchBuffer);
+//         if (status != ippStsNoErr) {
+//             std::cout << "ippsRSA_Encrypt failed with err code" << status
+//                       << std::endl;
+//             return false;
+//         }
+//         status =
+//             CipherText_BN.GetOctetString(data.m_encrypted_data,
+//             data.m_msg_len);
+//         if (status != ippStsNoErr) {
+//             std::cout << "ippsGetOctString_BN failed with err code" << status
+//                       << std::endl;
+//             return false;
+//         }
+
+//         /* TESTING */
+//         BigNumber PlainText_BN_2(0, m_modulus_size);
+//         status = ippsRSA_Decrypt(
+//             CipherText_BN, PlainText_BN_2, m_pPrv, m_scratchBuffer);
+//         if (status != ippStsNoErr) {
+//             std::cout << "ippsRSA_Decrypt failed with err code" << status
+//                       << std::endl;
+//             return false;
+//         }
+//         if (PlainText_BN != PlainText_BN_2) {
+//             std::cout << "FAIL" << std::endl;
+//         }
+//         /* TESTING */
+
+//         //#endif
+//     }
+//     return 0;
+// }
+
+bool
+IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
+{
+    IppStatus status = ippStsNoErr;
+
+    if (m_padding_mode == 1) {
+        /*! Seed string of hash size */
+        /*FIXME: should this come from test data? */
+        static Ipp8u pSeed[] = "\xaa\xfd\x12\xf6\x59\xca\xe6\x34\x89\xb4"
+                               "\x79\xe5\x07\x6d\xde\xc2\xf0\x6c\xb5\x8f";
+
+        /* Encrypt message */
+        status = ippsRSAEncrypt_OAEP_rmf(data.m_msg,
+                                         data.m_msg_len,
+                                         0,
+                                         0,
+                                         pSeed,
+                                         data.m_encrypted_data,
+                                         m_pPub,
+                                         ippsHashMethod_SHA1(),
+                                         m_scratchBuffer_Pub);
+
+        if (status != ippStsNoErr) {
+            std::cout << "ippsRSAEncrypt_OAEP_rmf failed with err code"
+                      << status << std::endl;
+            return false;
+        }
+    } else {
+        std::cout
+            << "Non padding mode is not yet supported in IPP Bench! Skipping"
+            << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool
+IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
+{
+    IppStatus status = ippStsNoErr;
+
+    if (m_padding_mode == 1) {
+        int    plainTextLen = data.m_msg_len;
+        Ipp8u* pPlainText   = new Ipp8u[plainTextLen];
+        /* Decrypt message */
+        status = ippsRSADecrypt_OAEP_rmf(data.m_encrypted_data,
+                                         0,
+                                         0,
+                                         pPlainText,
+                                         &plainTextLen,
+                                         m_pPrv,
+                                         ippsHashMethod_SHA1(),
+                                         m_scratchBuffer_Pvt);
+
+        if (status != ippStsNoErr) {
+            std::cout << "ippsRSADecrypt_OAEP_rmf failed with err code"
+                      << status << std::endl;
+            return false;
+        }
+
+        std::memcpy(data.m_decrypted_data, pPlainText, plainTextLen);
+
+        if (pPlainText) {
+            delete[] pPlainText;
+        }
+    } else {
+        std::cout
+            << "Non padding mode is not yet supported in IPP Bench! Skipping"
+            << std::endl;
+        return false;
+    }
     return true;
 }
 
