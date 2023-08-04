@@ -39,11 +39,14 @@ namespace alcp::rng::drbg {
 class CtrDrbg::Impl
 {
   private:
-    std::vector<Uint8> m_v = std::vector<Uint8>(16);
-    std::vector<Uint8> m_key;
-    Uint64             m_keySize                 = 0;
-    Uint64             m_seedlength              = 0;
-    bool               m_use_derivation_function = false;
+    static constexpr Uint64 m_vsize      = 16;
+    static constexpr Uint64 m_maxKeySize = 32;
+
+    Uint8  m_v[m_vsize];
+    Uint8  m_key[m_maxKeySize];
+    Uint64 m_keySize                 = 0;
+    Uint64 m_seedlength              = 0;
+    bool   m_use_derivation_function = false;
 
   public:
     void setKeySize(Uint64 keySize);
@@ -153,14 +156,20 @@ class CtrDrbg::Impl
      *
      * @return std::vector<Uint8> Key vector
      */
-    std::vector<Uint8> getKCopy() { return m_key; }
+    std::vector<Uint8> getKCopy()
+    {
+        return std::vector<Uint8>(m_key, m_key + m_keySize);
+    }
 
     /**
      * @brief Get a copy of internal Value
      *
      * @return std::vector<Uint8> Value vector
      */
-    std::vector<Uint8> getVCopy() { return m_v; }
+    std::vector<Uint8> getVCopy()
+    {
+        return std::vector<Uint8>(m_v, m_v + m_vsize);
+    }
 
     Impl()  = default;
     ~Impl() = default;
@@ -197,9 +206,9 @@ CtrDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
     // personalization_string || 0^(seedlen- temp)
 
     // Key = 0^keylen
-    std::fill(m_key.begin(), m_key.end(), 0);
+    std::fill(m_key, m_key + m_keySize, 0);
     // V = 0^blocklen
-    std::fill(m_v.begin(), m_v.end(), 0);
+    std::fill(m_v, m_v + m_vsize, 0);
 
     std::vector<Uint8> provided_data(m_seedlength + cPersonalizationStringLen);
     if (!m_use_derivation_function) {
@@ -237,7 +246,7 @@ CtrDrbg::Impl::instantiate(const Uint8  cEntropyInput[],
             (cEntropyInputLen + cNonceLen + cPersonalizationStringLen) * 8,
             &df_output[0],
             df_output.size() * 8,
-            m_key.size());
+            m_keySize);
 
         // (Key, V) = CTR_DRBG_Update (seed_material, Key, V).
         update(&df_output[0], df_output.size());
@@ -301,9 +310,8 @@ CtrDrbg::Impl::generate(const Uint8  cAdditionalInput[],
                                            output,
                                            cOutputLen,
                                            &m_key[0],
-                                           m_key.size(),
+                                           m_keySize,
                                            &m_v[0],
-                                           m_v.size(),
                                            m_use_derivation_function);
 }
 
@@ -312,8 +320,6 @@ CtrDrbg::Impl::setKeySize(Uint64 keySize)
 {
     m_keySize    = keySize;
     m_seedlength = 16 + m_keySize;
-
-    m_key.resize(m_keySize);
 }
 
 void

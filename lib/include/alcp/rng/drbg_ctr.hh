@@ -39,23 +39,22 @@ namespace avx2 {
     ALCP_API_EXPORT void CtrDrbgUpdate(const Uint8  p_provided_data[],
                                        const Uint64 cProvidedDataLen,
                                        Uint8*       key,
-                                       Uint64       key_len,
+                                       const Uint64 cKeyLen,
                                        Uint8*       value);
 
     ALCP_API_EXPORT void DrbgCtrGenerate(const Uint8  cAdditionalInput[],
                                          const Uint64 cAdditionalInputLen,
                                          Uint8        output[],
                                          const Uint64 cOutputLen,
-                                         Uint8*       key,
-                                         Uint64       key_len,
+                                         Uint8*       pKey,
+                                         const Uint64 cKeyLen,
                                          Uint8*       value,
-                                         Uint64       value_len,
-                                         bool         use_df);
+                                         const bool   use_df);
     ALCP_API_EXPORT void BlockCipherDf(const Uint8* input_string,
-                                       Uint64       input_string_length,
+                                       const Uint64 cInputStringLength,
                                        Uint8*       requested_bits,
-                                       Uint64       no_of_bits_to_return,
-                                       Uint64       keylen);
+                                       const Uint64 cNoOfBitsToReturn,
+                                       const Uint64 cKeylen);
 } // namespace avx2
 
 class ALCP_API_EXPORT CtrDrbg : public Drbg
