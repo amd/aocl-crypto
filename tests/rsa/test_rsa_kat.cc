@@ -42,6 +42,14 @@ TEST(rsa_no_padding_1024, KAT)
 {
     Rsa_KAT(ALCP_TEST_RSA_NO_PADDING, 1024);
 }
+TEST(rsa_padding_2048, KAT)
+{
+    Rsa_KAT(ALCP_TEST_RSA_PADDING, 2048);
+}
+TEST(rsa_no_padding_2048, KAT)
+{
+    Rsa_KAT(ALCP_TEST_RSA_NO_PADDING, 2048);
+}
 
 int
 main(int argc, char** argv)

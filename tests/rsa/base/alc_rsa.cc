@@ -40,9 +40,9 @@ AlcpRsaBase::init()
 {
     alc_error_t err;
     Uint64      size;
-    if (m_key_len * 8 == 1024)
+    if (m_key_len * 8 == KEY_SIZE_1024)
         size = alcp_rsa_context_size(KEY_SIZE_1024);
-    else if (m_key_len * 8 == 2048)
+    else if (m_key_len * 8 == KEY_SIZE_2048)
         size = alcp_rsa_context_size(KEY_SIZE_2048);
     else {
         std::cout << "Invalid keysize in RSA Init" << std::endl;
@@ -58,9 +58,9 @@ AlcpRsaBase::init()
         alcp_rsa_finish(m_rsa_handle);
     }
 
-    if (m_key_len * 8 == 1024)
+    if (m_key_len * 8 == KEY_SIZE_1024)
         err = alcp_rsa_request(KEY_SIZE_1024, m_rsa_handle);
-    else if (m_key_len * 8 == 2048)
+    else if (m_key_len * 8 == KEY_SIZE_2048)
         err = alcp_rsa_request(KEY_SIZE_2048, m_rsa_handle);
 
     if (alcp_is_error(err)) {
@@ -130,23 +130,17 @@ AlcpRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
     /*FIXME: where should this be defined? */
     m_pub_key_exp = 0x10001;
     alc_error_t err;
-    Uint64      size;
-    if (m_key_len * 8 == 1024)
-        size = sizeof(Modulus_1024);
-    else if (m_key_len * 8 == 2048)
-        size = sizeof(Modulus_2048);
-    else {
-        std::cout << "Invalid keysize in RSA SetPublicKey" << std::endl;
-        return false;
-    }
 
     /* Adding the public key for applying encryption */
-    if (m_key_len * 8 == 1024) {
+    if (m_key_len * 8 == KEY_SIZE_1024) {
         err = alcp_rsa_set_publickey(
             m_rsa_handle, m_pub_key_exp, Modulus_1024, data.m_key_len);
-    } else if (m_key_len * 8 == 2048) {
+    } else if (m_key_len * 8 == KEY_SIZE_2048) {
         err = alcp_rsa_set_publickey(
             m_rsa_handle, m_pub_key_exp, Modulus_2048, data.m_key_len);
+    } else {
+        std::cout << "Invalid keysize in RSA SetPublicKey" << std::endl;
+        return false;
     }
     if (alcp_is_error(err)) {
         std::cout << "Error in alcp_rsa_set_publickey " << err << std::endl;
@@ -355,7 +349,7 @@ AlcpRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
         0x49, 0x41, 0x2e, 0xd9, 0xc0, 0xe6, 0xd2, 0xc8
     };
 
-    if (m_key_len * 8 == 1024) {
+    if (m_key_len * 8 == KEY_SIZE_1024) {
         err = alcp_rsa_set_privatekey(m_rsa_handle,
                                       DP_EXP_1024,
                                       DQ_EXP_1024,
@@ -364,7 +358,7 @@ AlcpRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
                                       Q_ModulusINV_1024,
                                       Modulus_1024,
                                       sizeof(P_Modulus_1024));
-    } else if (m_key_len * 8 == 2048) {
+    } else if (m_key_len * 8 == KEY_SIZE_2048) {
         err = alcp_rsa_set_privatekey(m_rsa_handle,
                                       DP_EXP_2048,
                                       DQ_EXP_2048,
