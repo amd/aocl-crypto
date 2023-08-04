@@ -30,19 +30,22 @@
 #include "openssl/conf.h"
 #include "openssl/err.h"
 #include "openssl/evp.h"
+#include "openssl/rsa.h"
 #include "openssl/rsaerr.h"
 #include "rsa/rsa.hh"
 #include <iostream>
 #include <malloc.h>
+#include <openssl/param_build.h>
 #include <vector>
 
 #pragma once
 namespace alcp::testing {
 class OpenSSLRsaBase : public RsaBase
 {
-    EVP_PKEY_CTX* m_rsa_handle  = nullptr;
-    EVP_PKEY*     m_pkey        = nullptr;
-    EVP_PKEY*     m_pkey_shared = nullptr;
+    EVP_PKEY_CTX* m_rsa_handle        = nullptr;
+    EVP_PKEY_CTX* m_rsa_handle_keyctx = nullptr;
+    EVP_PKEY*     m_pkey              = nullptr;
+    EVP_PKEY*     m_pkey_shared       = nullptr;
 
   public:
     OpenSSLRsaBase();
