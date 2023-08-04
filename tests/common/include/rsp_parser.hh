@@ -43,29 +43,30 @@ typedef std::unordered_map<String, String> param_map_t;
 class CRspParser final : private File
 {
   private:
-    String              m_input_rsp_file  = {};
-    String              m_lineBuf      = {};   // Buffer to a line in RSP file
-    size_t              m_paramPerTC  = 0;  // Number of parameters per TC
-    std::vector<String> m_names     = {};   // Keys (CSV header items)
-    param_map_t         m_data_map= {};   // Parameters stored as key-value pair
+    String              m_input_rsp_file = {};
+    String              m_lineBuf        = {}; // Buffer to a line in RSP file
+    size_t              m_paramPerTC     = 0;  // Number of parameters per TC
+    std::vector<String> m_names          = {}; // Keys (CSV header items)
+    param_map_t         m_data_map = {}; // Parameters stored as key-value pair
+    bool m_keys_parsed{ false }; // Indicator if m_names (Keys) are parsed
     // Linenum starts from 0
-    Uint m_lineno = 0;   // Line Count
+    Uint m_lineno = 0; // Line Count
 
   public:
     CRspParser(const String&);
-    bool fileExists {};
-    bool init();
-    bool skipRSPHeader();
+    bool   fileExists{};
+    bool   init();
+    bool   skipRSPHeader();
     String fetchTCfromRSP();
-    void removeSpaces(String& str);
-    bool readNextTC();
-    void storeTCinUMap(StringView);
-    int isSubString(StringView destStr, StringView srcStr);
+    void   removeSpaces(String& str);
+    bool   readNextTC();
+    void   storeTCinUMap(StringView);
+    int    isSubString(StringView destStr, StringView srcStr);
 
     std::vector<Uint8> getVect(StringView cName);
-    Uint64 getLenBytes(StringView cName);
-    String adjustKeyNames(String cName);
-    Uint getLineNumber();
+    Uint64             getLenBytes(StringView cName);
+    String             adjustKeyNames(String cName);
+    Uint               getLineNumber();
 };
 
 } // namespace alcp::testing
