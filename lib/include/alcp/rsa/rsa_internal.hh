@@ -55,6 +55,7 @@ struct MontContextBignum
     Uint64                    m_k0; // Montgomery parameter
     std::unique_ptr<Uint64[]> m_r1; // Montgomery identity
     std::unique_ptr<Uint64[]> m_r2; // Montgomery converter
+    std::unique_ptr<Uint64[]> m_r3; // Montgomery optimizer
     // todo : calculating r3 helps is removing one step of converting the
     // number back to regular domain before applying exponentiation as
     // a*r^-1 * r^3 r^-1 mod p -> ar modp Bignum r3; //
