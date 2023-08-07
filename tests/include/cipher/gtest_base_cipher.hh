@@ -199,7 +199,7 @@ class CipherAeadTestingCore
   private:
     std::shared_ptr<Csv> m_csv;
     // FIXME: Change these to unique_ptr
-    CipherAeadTesting*  m_cipherHandler = {};
+    CipherTesting*      m_cipherHandler = {};
     AlcpCipherAeadBase* m_acb           = {};
     lib_t               m_lib;
     alc_cipher_mode_t   m_alcpMode;
@@ -214,7 +214,7 @@ class CipherAeadTestingCore
     {
         m_lib           = lib;
         m_alcpMode      = alcpMode;
-        m_cipherHandler = new CipherAeadTesting();
+        m_cipherHandler = new CipherTesting();
         switch (lib) {
 // FIXME: OpenSSL and IPP AEAD Bringup needed
 #if 0
@@ -255,7 +255,7 @@ class CipherAeadTestingCore
                                       + std::string(".csv"));
 
         // Initialize cipher testing classes
-        m_cipherHandler = new CipherAeadTesting();
+        m_cipherHandler = new CipherTesting();
         m_acb           = new AlcpCipherAeadBase(alcpMode, NULL);
         m_cipherHandler->setcb(m_acb);
 #if 0 // FIXME: OpenSSL and IPP AEAD Bringup needed
@@ -300,7 +300,7 @@ class CipherAeadTestingCore
 #endif
     }
     std::shared_ptr<Csv> getCsv() { return m_csv; }
-    CipherAeadTesting*   getCipherHandler() { return m_cipherHandler; }
+    CipherTesting*       getCipherHandler() { return m_cipherHandler; }
 };
 
 /**

@@ -301,7 +301,7 @@ CipherTesting::CipherTesting(CipherBase* impl)
 }
 
 bool
-CipherTesting::testingEncrypt(alcp_dc_ex_t data, const std::vector<Uint8> key)
+CipherTesting::testingEncrypt(alcp_dc_ex_t& data, const std::vector<Uint8> key)
 {
     if (cb != nullptr) {
         if (cb->init(data.m_iv,
@@ -323,7 +323,7 @@ CipherTesting::testingEncrypt(alcp_dc_ex_t data, const std::vector<Uint8> key)
 }
 
 bool
-CipherTesting::testingDecrypt(alcp_dc_ex_t data, const std::vector<Uint8> key)
+CipherTesting::testingDecrypt(alcp_dc_ex_t& data, const std::vector<Uint8> key)
 {
     if (cb != nullptr) {
         if (cb->init(data.m_iv,
@@ -345,61 +345,6 @@ void
 CipherTesting::setcb(CipherBase* impl)
 {
     cb = impl;
-}
-
-// CipherAeadTesting class functionsW
-CipherAeadTesting::CipherAeadTesting(CipherAeadBase* impl)
-{
-    setcb(impl);
-}
-
-bool
-CipherAeadTesting::testingEncrypt(alcp_dca_ex_t            data,
-                                  const std::vector<Uint8> key)
-{
-    if (acb != nullptr) {
-        if (acb->init(data.m_iv,
-                      data.m_ivl,
-                      &(key[0]),
-                      key.size() * 8,
-                      data.m_tkey,
-                      data.m_block_size)) {
-            // For very large sizes, dynamic is better.
-            return acb->encrypt(data);
-        } else {
-            std::cout << "Test: Cipher: Encrypt: Failure in Init" << std::endl;
-        }
-    } else {
-        std::cout << "base.hh: CipherAeadTesting: Implementation missing!"
-                  << std::endl;
-    }
-    return false;
-}
-
-bool
-CipherAeadTesting::testingDecrypt(alcp_dca_ex_t            data,
-                                  const std::vector<Uint8> key)
-{
-    if (acb != nullptr) {
-        if (acb->init(data.m_iv,
-                      data.m_ivl,
-                      &(key[0]),
-                      key.size() * 8,
-                      data.m_tkey,
-                      data.m_block_size)) {
-            return acb->decrypt(data);
-        }
-    } else {
-        std::cout << "base.hh: CipherAeadTesting: Implementation missing!"
-                  << std::endl;
-    }
-    return false;
-}
-
-void
-CipherAeadTesting::setcb(CipherAeadBase* impl)
-{
-    acb = impl;
 }
 
 bool

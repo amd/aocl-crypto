@@ -108,8 +108,8 @@ class AlcpCipherBase : public CipherBase
               const Uint32 key_len);
     bool init(const Uint8* iv, const Uint8* key, const Uint32 key_len);
     bool init(const Uint8* key, const Uint32 key_len);
-    bool encrypt(alcp_dc_ex_t data);
-    bool decrypt(alcp_dc_ex_t data);
+    bool encrypt(alcp_dc_ex_t& data);
+    bool decrypt(alcp_dc_ex_t& data);
     bool reset();
 };
 

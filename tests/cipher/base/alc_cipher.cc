@@ -195,7 +195,7 @@ out:
 }
 
 bool
-AlcpCipherBase::encrypt(alcp_dc_ex_t data)
+AlcpCipherBase::encrypt(alcp_dc_ex_t& data)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -278,7 +278,7 @@ enc_out:
 }
 
 bool
-AlcpCipherBase::decrypt(alcp_dc_ex_t data)
+AlcpCipherBase::decrypt(alcp_dc_ex_t& data)
 {
     alc_error_t err;
     const int   err_size = 256;

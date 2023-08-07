@@ -408,7 +408,7 @@ OpenSSLCipherBase::encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt)
     return true;
 }
 bool
-OpenSSLCipherBase::encrypt(alcp_dc_ex_t data)
+OpenSSLCipherBase::encrypt(alcp_dc_ex_t& data)
 {
     int          len_ct = 0;
     static Uint8 Temp;
@@ -576,7 +576,7 @@ OpenSSLCipherBase::decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt)
     return true;
 }
 bool
-OpenSSLCipherBase::decrypt(alcp_dc_ex_t data)
+OpenSSLCipherBase::decrypt(alcp_dc_ex_t& data)
 {
     int          len_pt = 0;
     static Uint8 Temp;

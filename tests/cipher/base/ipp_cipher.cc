@@ -523,7 +523,7 @@ IPPCipherBase::encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt)
 }
 
 bool
-IPPCipherBase::encrypt(alcp_dc_ex_t data)
+IPPCipherBase::encrypt(alcp_dc_ex_t& data)
 {
     bool retval = false;
     switch (m_mode) {
@@ -553,7 +553,7 @@ IPPCipherBase::decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt)
 }
 
 bool
-IPPCipherBase::decrypt(alcp_dc_ex_t data)
+IPPCipherBase::decrypt(alcp_dc_ex_t& data)
 {
     bool retval = false;
     switch (m_mode) {

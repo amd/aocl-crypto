@@ -193,33 +193,16 @@ class CipherBase
                       const Uint32 key_len,
                       const Uint8* tkey,
                       const Uint64 block_size)                = 0;
-    virtual bool encrypt(alcp_dc_ex_t data)                   = 0;
-    virtual bool decrypt(alcp_dc_ex_t data)                   = 0;
+    virtual bool encrypt(alcp_dc_ex_t& data)                  = 0;
+    virtual bool decrypt(alcp_dc_ex_t& data)                  = 0;
     virtual bool reset()                                      = 0;
     virtual ~CipherBase()                                     = default;
 };
 
-class CipherAeadBase
+class CipherAeadBase : public CipherBase
 {
   public:
-    virtual bool init(const Uint8* iv,
-                      const Uint32 iv_len,
-                      const Uint8* key,
-                      const Uint32 key_len)                   = 0;
-    virtual bool init(const Uint8* iv,
-                      const Uint8* key,
-                      const Uint32 key_len)                   = 0;
-    virtual bool init(const Uint8* key, const Uint32 key_len) = 0;
-    virtual bool init(const Uint8* iv,
-                      const Uint32 iv_len,
-                      const Uint8* key,
-                      const Uint32 key_len,
-                      const Uint8* tkey,
-                      const Uint64 block_size)                = 0;
-    virtual bool encrypt(alcp_dc_ex_t& data)                  = 0;
-    virtual bool decrypt(alcp_dc_ex_t& data)                  = 0;
-    virtual bool reset()                                      = 0;
-    virtual ~CipherAeadBase()                                 = default;
+    virtual ~CipherAeadBase() = default;
     static bool isAead(const alc_cipher_mode_t& mode);
 };
 
@@ -241,7 +224,7 @@ class CipherTesting
      * @return true
      * @return false
      */
-    bool testingEncrypt(alcp_dc_ex_t data, const std::vector<Uint8> key);
+    bool testingEncrypt(alcp_dc_ex_t& data, const std::vector<Uint8> key);
 
     /**
      * @brief Decrypts data and puts in data.out, expects data.out to already
@@ -253,52 +236,13 @@ class CipherTesting
      * @return true
      * @return false
      */
-    bool testingDecrypt(alcp_dc_ex_t data, const std::vector<Uint8> key);
+    bool testingDecrypt(alcp_dc_ex_t& data, const std::vector<Uint8> key);
     /**
      * @brief Set CipherBase pimpl
      *
      * @param impl - Object of class extended from CipherBase
      */
     void setcb(CipherBase* impl);
-};
-
-class CipherAeadTesting
-{
-  private:
-    CipherAeadBase* acb = nullptr;
-
-  public:
-    CipherAeadTesting() {}
-    CipherAeadTesting(CipherAeadBase* impl);
-    /**
-     * @brief Encrypts data and puts in data.out, expects data.out to already
-     * have valid memory pointer with appropriate size
-     *
-     * @param data - Everything that should go in or out of the cipher except
-     * the key
-     * @param key - Key used to encrypt, should be std::vector
-     * @return true
-     * @return false
-     */
-    bool testingEncrypt(alcp_dca_ex_t data, const std::vector<Uint8> key);
-
-    /**
-     * @brief Decrypts data and puts in data.out, expects data.out to already
-     * have valid memory point with appropriate size
-     *
-     * @param data - Everything that should go in or out of the cipher expect
-     * the key
-     * @param key - Key ysed to decrypt, should be std::vector
-     * @return true
-     * @return false
-     */
-    bool testingDecrypt(alcp_dca_ex_t data, const std::vector<Uint8> key);
-    /**
-     * @brief Set CipherBase pimpl
-     *
-     * @param impl - Object of class extended from CipherBase
-     */
-    void setcb(CipherAeadBase* impl);
 };
 
 } // namespace alcp::testing
