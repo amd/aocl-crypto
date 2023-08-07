@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,19 +34,19 @@
 
 #pragma once
 namespace alcp::testing {
-class AlcpCipherBase : public CipherBase
+class AlcpCipherAeadBase : public CipherAeadBase
 {
   private:
-    alc_cipher_handle_p m_handle = nullptr;
-    alc_cipher_info_t   m_cinfo;
-    alc_key_info_t      m_keyinfo;
-    alc_cipher_mode_t   m_mode;
-    const Uint8*        m_iv;
-    Uint8               m_key[64];
-    const Uint8*        m_tkey = nullptr;
+    alc_cipher_handle_p    m_handle = nullptr;
+    alc_cipher_aead_info_t m_cinfo;
+    alc_key_info_t         m_keyinfo;
+    alc_cipher_mode_t      m_mode;
+    const Uint8*           m_iv;
+    Uint8                  m_key[64];
+    const Uint8*           m_tkey = nullptr;
 
   public:
-    AlcpCipherBase() {}
+    AlcpCipherAeadBase() {}
     /**
      * @brief Construct a new Alcp Cipher Base object
      *
@@ -56,13 +56,13 @@ class AlcpCipherBase : public CipherBase
      * @param key_len
      * @param tkey
      */
-    AlcpCipherBase(const alc_cipher_mode_t mode,
-                   const Uint8*            iv,
-                   const Uint32            iv_len,
-                   const Uint8*            key,
-                   const Uint32            key_len,
-                   const Uint8*            tkey,
-                   const Uint64            block_size);
+    AlcpCipherAeadBase(const alc_cipher_mode_t mode,
+                       const Uint8*            iv,
+                       const Uint32            iv_len,
+                       const Uint8*            key,
+                       const Uint32            key_len,
+                       const Uint8*            tkey,
+                       const Uint64            block_size);
     /**
      * @brief Construct a new Alcp Base object - Manual initilization needed,
      * run alcpInit
@@ -70,7 +70,7 @@ class AlcpCipherBase : public CipherBase
      * @param mode
      * @param iv
      */
-    AlcpCipherBase(const alc_cipher_mode_t mode, const Uint8* iv);
+    AlcpCipherAeadBase(const alc_cipher_mode_t mode, const Uint8* iv);
 
     /**
      * @brief Construct a new Alcp Base object - Initlized and ready to go
@@ -80,10 +80,10 @@ class AlcpCipherBase : public CipherBase
      * @param key
      * @param key_len
      */
-    AlcpCipherBase(const alc_cipher_mode_t mode,
-                   const Uint8*            iv,
-                   const Uint8*            key,
-                   const Uint32            key_len);
+    AlcpCipherAeadBase(const alc_cipher_mode_t mode,
+                       const Uint8*            iv,
+                       const Uint8*            key,
+                       const Uint32            key_len);
 
     /**
      * @brief         Initialization/Reinitialization function, created handle
@@ -94,7 +94,7 @@ class AlcpCipherBase : public CipherBase
      * @return true -  if no failure
      * @return false - if there is some failure
      */
-    ~AlcpCipherBase();
+    ~AlcpCipherAeadBase();
 
     bool init(const Uint8* iv,
               const Uint32 iv_len,
@@ -108,8 +108,8 @@ class AlcpCipherBase : public CipherBase
               const Uint32 key_len);
     bool init(const Uint8* iv, const Uint8* key, const Uint32 key_len);
     bool init(const Uint8* key, const Uint32 key_len);
-    bool encrypt(alcp_dc_ex_t data);
-    bool decrypt(alcp_dc_ex_t data);
+    bool encrypt(alcp_dc_ex_t& data);
+    bool decrypt(alcp_dc_ex_t& data);
     bool reset();
 };
 

@@ -37,32 +37,32 @@ using namespace alcp::testing;
 /* Testing Starts Here! */
 TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
 {
-    AesKatTest(128, ENCRYPT, ALC_MODE);
+    AesAeadKatTest(128, ENCRYPT, ALC_MODE);
 }
 
 TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
 {
-    AesKatTest(192, ENCRYPT, ALC_MODE);
+    AesAeadKatTest(192, ENCRYPT, ALC_MODE);
 }
 
 TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
 {
-    AesKatTest(256, ENCRYPT, ALC_MODE);
+    AesAeadKatTest(256, ENCRYPT, ALC_MODE);
 }
 
 TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
 {
-    AesKatTest(128, DECRYPT, ALC_MODE);
+    AesAeadKatTest(128, DECRYPT, ALC_MODE);
 }
 
 TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
 {
-    AesKatTest(192, DECRYPT, ALC_MODE);
+    AesAeadKatTest(192, DECRYPT, ALC_MODE);
 }
 
 TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
 {
-    AesKatTest(256, DECRYPT, ALC_MODE);
+    AesAeadKatTest(256, DECRYPT, ALC_MODE);
 }
 
 int

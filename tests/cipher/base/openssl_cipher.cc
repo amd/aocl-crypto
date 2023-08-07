@@ -408,10 +408,11 @@ OpenSSLCipherBase::encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt)
     return true;
 }
 bool
-OpenSSLCipherBase::encrypt(alcp_data_ex_t data)
+OpenSSLCipherBase::encrypt(alcp_dc_ex_t data)
 {
     int          len_ct = 0;
     static Uint8 Temp;
+#if 0
     if (m_mode == ALC_AES_MODE_GCM) {
         if (data.m_adl > 0)
             if (1
@@ -547,16 +548,20 @@ OpenSSLCipherBase::encrypt(alcp_data_ex_t data)
             return false;
         }
     }
+    
 
     else {
-        if (1
-            != EVP_EncryptUpdate(
-                m_ctx_enc, data.m_out, &len_ct, data.m_in, data.m_inl)) {
-            std::cout << "Error: Encrypt update" << std::endl;
-            handleErrors();
-            return false;
-        }
+#endif
+    if (1
+        != EVP_EncryptUpdate(
+            m_ctx_enc, data.m_out, &len_ct, data.m_in, data.m_inl)) {
+        std::cout << "Error: Encrypt update" << std::endl;
+        handleErrors();
+        return false;
     }
+#if 0
+}
+#endif
     return true;
 }
 bool
@@ -571,10 +576,11 @@ OpenSSLCipherBase::decrypt(const Uint8* ciphertxt, size_t len, Uint8* plaintxt)
     return true;
 }
 bool
-OpenSSLCipherBase::decrypt(alcp_data_ex_t data)
+OpenSSLCipherBase::decrypt(alcp_dc_ex_t data)
 {
     int          len_pt = 0;
     static Uint8 Temp;
+#if 0
     if (m_mode == ALC_AES_MODE_GCM) {
 
         if (data.m_adl > 0)
@@ -714,14 +720,17 @@ OpenSSLCipherBase::decrypt(alcp_data_ex_t data)
 
     /* non gcm/ccm/xts*/
     else {
-        if (1
-            != EVP_DecryptUpdate(
-                m_ctx_dec, data.m_out, &len_pt, data.m_in, data.m_inl)) {
-            std::cout << "Error: Openssl Decrypt update" << std::endl;
-            handleErrors();
-            return false;
-        }
+#endif
+    if (1
+        != EVP_DecryptUpdate(
+            m_ctx_dec, data.m_out, &len_pt, data.m_in, data.m_inl)) {
+        std::cout << "Error: Openssl Decrypt update" << std::endl;
+        handleErrors();
+        return false;
     }
+#if 0
+}
+#endif
     return true;
 }
 

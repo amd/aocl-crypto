@@ -36,7 +36,11 @@ endif (POLICY CMP0079)
 
 # Basic sources and libs needed for ALCP
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
-SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher.cc ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher.cc)
+SET(ALC_BASE_FILES ${ALC_BASE_FILES} 
+                   ${ALC_COMMON_SRC} 
+                   ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher.cc 
+                   ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher_aead.cc 
+                   ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher.cc)
 SET(LIBS ${LIBS} gtest alcp)
 
 IF(WIN32)

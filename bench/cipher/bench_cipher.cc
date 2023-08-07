@@ -70,7 +70,7 @@ CipherAes(benchmark::State& state,
         cb = &ocb;
     }
 #endif
-    alcp::testing::alcp_data_ex_t data;
+    alcp::testing::alcp_dc_ex_t data;
     data.m_in      = &(vec_in[0]);
     data.m_inl     = blockSize;
     data.m_out     = &(vec_out[0]);

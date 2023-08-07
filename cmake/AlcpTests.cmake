@@ -118,6 +118,7 @@ function(alcp_cc_test testName)
   if(${ALCP_MODULE} STREQUAL "Cipher")
     SET(TEST_COMMON_SRC ${TEST_COMMON_SRC}
                         ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher.cc
+                        ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher_aead.cc
                         ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher.cc
        )
   endif()
