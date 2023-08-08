@@ -90,10 +90,14 @@ Rsa_Bench(benchmark::State& state,
 
     if (padding_mode == 1) {
         rb->m_padding_mode = ALCP_TEST_RSA_PADDING;
-        InputSize          = 16;
+        /* input size should be 0 to m_key_size - 2 * m_hash_len - 2*/
+        if (KeySize == 128) {
+            InputSize = 62;
+        } else
+            InputSize = 47;
     } else {
         rb->m_padding_mode = ALCP_TEST_RSA_NO_PADDING;
-        InputSize          = 128;
+        InputSize          = KeySize;
     }
     /*FIXME: keeping input const for now, a valid data for now */
     std::vector<Uint8> input_data(InputSize, 30);
@@ -109,6 +113,9 @@ Rsa_Bench(benchmark::State& state,
     data.m_key_len        = KeySize;
 
     rb->m_key_len = KeySize;
+
+    /*FIXME: Hash len should be parameterized */
+    rb->m_hash_len = 256;
 
     if (!rb->init()) {
         state.SkipWithError("Error in RSA init");
@@ -207,13 +214,17 @@ int
 AddBenchmarks_rsa()
 {
     /* FIXME: parameterize keysize */
+    /*FIXME: IPP non padded mode is not yet supported */
+    if (!useipp) {
+        BENCHMARK(BENCH_RSA_EncryptPubKey_NoPadding_1024);
+        BENCHMARK(BENCH_RSA_DecryptPvtKey_NoPadding_1024);
+        BENCHMARK(BENCH_RSA_EncryptPubKey_NoPadding_2048);
+        BENCHMARK(BENCH_RSA_DecryptPvtKey_NoPadding_2048);
+    }
     BENCHMARK(BENCH_RSA_EncryptPubKey_Padding_1024);
     BENCHMARK(BENCH_RSA_DecryptPvtKey_Padding_1024);
-    BENCHMARK(BENCH_RSA_EncryptPubKey_NoPadding_1024);
-    BENCHMARK(BENCH_RSA_DecryptPvtKey_NoPadding_1024);
     BENCHMARK(BENCH_RSA_EncryptPubKey_Padding_2048);
     BENCHMARK(BENCH_RSA_DecryptPvtKey_Padding_2048);
-    BENCHMARK(BENCH_RSA_EncryptPubKey_NoPadding_2048);
-    BENCHMARK(BENCH_RSA_DecryptPvtKey_NoPadding_2048);
+
     return 0;
 }

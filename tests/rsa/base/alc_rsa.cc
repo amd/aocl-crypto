@@ -447,12 +447,14 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
         if (alcp_is_error(err)) {
             std::cout << "Error in alcp_rsa_publickey_encrypt_oaep " << err
                       << std::endl;
+            free(p_seed);
             return false;
         }
     } else {
         std::cout << "Error: Invalid padding mode!" << std::endl;
         return false;
     }
+    free(p_seed);
     return true;
 }
 

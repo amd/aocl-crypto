@@ -278,15 +278,17 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                                "\x79\xe5\x07\x6d\xde\xc2\xf0\x6c\xb5\x8f";
 
         /* Encrypt message */
-        status = ippsRSAEncrypt_OAEP_rmf(data.m_msg,
-                                         data.m_msg_len,
-                                         0,
-                                         0,
-                                         pSeed,
-                                         data.m_encrypted_data,
-                                         m_pPub,
-                                         ippsHashMethod_SHA1(),
-                                         m_scratchBuffer_Pub);
+        status = ippsRSAEncrypt_OAEP_rmf(
+            data.m_msg,
+            data.m_msg_len,
+            0,
+            0,
+            pSeed,
+            data.m_encrypted_data,
+            m_pPub,
+            // ippsHashMethod_SHA1(),
+            ippsHashMethod_SHA256_TT(), /*FIXME: parameterize this*/
+            m_scratchBuffer_Pub);
 
         if (status != ippStsNoErr) {
             std::cout << "ippsRSAEncrypt_OAEP_rmf failed with err code"
@@ -317,7 +319,8 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                                          pPlainText,
                                          &plainTextLen,
                                          m_pPrv,
-                                         ippsHashMethod_SHA1(),
+                                         // ippsHashMethod_SHA1(),
+                                         ippsHashMethod_SHA256_TT(),
                                          m_scratchBuffer_Pvt);
 
         if (status != ippStsNoErr) {

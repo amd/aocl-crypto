@@ -58,6 +58,7 @@ class RsaBase
   public:
     int          m_padding_mode                             = 0;
     Uint64       m_key_len                                  = 0;
+    Uint64       m_hash_len                                 = 0;
     virtual bool init()                                     = 0;
     virtual bool reset()                                    = 0;
     virtual bool SetPublicKey(const alcp_rsa_data_t& data)  = 0;

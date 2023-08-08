@@ -98,15 +98,14 @@ Rsa_KAT(int padding_mode, int KeySize)
     std::string TestDataFile = "";
     if (padding_mode == 1) {
         rb->m_padding_mode = ALCP_TEST_RSA_PADDING;
-        /*FIXME: change csv file names based on size? */
-        TestDataFile = std::string("dataset_RSA_padding.csv");
+        TestDataFile = std::string("dataset_RSA_" + std::to_string(KeySize)
+                                   + "_padding" + ".csv");
     } else {
         rb->m_padding_mode = ALCP_TEST_RSA_NO_PADDING;
-        TestDataFile       = std::string("dataset_RSA_no_padding.csv");
+        TestDataFile = std::string("dataset_RSA_" + std::to_string(KeySize)
+                                   + "_no_padding" + ".csv");
     }
     Csv csv = Csv(TestDataFile);
-
-    /* FIXME: read from csv: diff csvs for diff keysizes */
 
     /* Keysize is in bits (1024/2048) */
     KeySize = KeySize / 8;
