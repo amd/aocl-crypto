@@ -34,13 +34,17 @@
 #include <iostream>
 
 /* All tests to be added here */
-TEST(RSA_Padding, CROSS)
+TEST(RSA_Padding_1024, Cross)
 {
-    // Rsa_Cross(ALCP_TEST_RSA_PADDING);
+    if (useossl)
+        GTEST_SKIP() << "OpenSSL is not supported yet";
+    Rsa_Cross(ALCP_TEST_RSA_PADDING, 1024);
 }
-TEST(RSA, CROSS)
+TEST(RSA_Padding_2048, Cross)
 {
-    // Rsa_Cross(ALCP_TEST_RSA_NO_PADDING);
+    if (useossl)
+        GTEST_SKIP() << "OpenSSL is not supported yet";
+    Rsa_Cross(ALCP_TEST_RSA_PADDING, 2048);
 }
 
 int

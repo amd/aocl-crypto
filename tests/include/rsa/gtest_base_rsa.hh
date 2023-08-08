@@ -161,9 +161,8 @@ Rsa_KAT(int padding_mode, int KeySize)
 }
 
 /* RSA Cross tests */
-#if 0
 void
-Rsa_Cross(int padding_mode)
+Rsa_Cross(int padding_mode, int KeySize)
 {
     alcp_rsa_data_t data_main, data_ext;
 
@@ -173,6 +172,10 @@ Rsa_Cross(int padding_mode)
 
     rb_main                = &arb;
     std::string LibStrMain = "ALCP", LibStrExt = "";
+
+    /* Keysize is in bits */
+    KeySize = KeySize / 8;
+    int InputSize;
 
 #ifdef USE_OSSL
     OpenSSLRsaBase orb;
@@ -190,10 +193,25 @@ Rsa_Cross(int padding_mode)
     }
 #endif
 
-    // FIXME change this to 1024/2048
-    int KeySize  = 128;
+    if (padding_mode == 1) {
+        rb_main->m_padding_mode = ALCP_TEST_RSA_PADDING;
+        rb_ext->m_padding_mode  = ALCP_TEST_RSA_PADDING;
+        /* input size should be 0 to m_key_size - 2 * m_hash_len - 2*/
+        if (KeySize == 128) {
+            InputSize = 62;
+        } else
+            InputSize = 47;
+    } else {
+        /* for no padding, input size = key size */
+        rb_main->m_padding_mode = ALCP_TEST_RSA_NO_PADDING;
+        rb_ext->m_padding_mode  = ALCP_TEST_RSA_NO_PADDING;
+        InputSize               = KeySize;
+    }
+
+    rb_main->m_key_len = KeySize;
+    rb_ext->m_key_len  = KeySize;
+
     int loop_max = 1600, loop_start = 1;
-    int ret_val = 0;
     if (rb_ext == nullptr) {
         std::cout << "No external lib selected!" << std::endl;
         exit(-1);
@@ -201,15 +219,16 @@ Rsa_Cross(int padding_mode)
     std::vector<Uint8>::const_iterator pos1, pos2;
     auto                               rng = std::default_random_engine{};
 
-    std::vector<Uint8> input_data = rngb.genRandomBytes(KeySize);
+    /*FIXME: change this to input len in a range */
+    std::vector<Uint8> input_data = rngb.genRandomBytes(InputSize);
     for (int i = loop_start; i < loop_max; i++) {
         input_data = ShuffleVector(input_data, rng);
         std::vector<Uint8> encrypted_data_main(KeySize);
-        std::vector<Uint8> decrypted_data_main(KeySize);
+        std::vector<Uint8> decrypted_data_main(input_data.size());
         std::vector<Uint8> PubKeyKeyMod_main(KeySize);
 
         std::vector<Uint8> encrypted_data_ext(KeySize);
-        std::vector<Uint8> decrypted_data_ext(KeySize);
+        std::vector<Uint8> decrypted_data_ext(input_data.size());
         std::vector<Uint8> PubKeyKeyMod_ext(KeySize);
 
         data_main.m_msg            = &(input_data[0]);
@@ -217,12 +236,16 @@ Rsa_Cross(int padding_mode)
         data_main.m_encrypted_data = &(encrypted_data_main[0]);
         data_main.m_decrypted_data = &(decrypted_data_main[0]);
         data_main.m_msg_len        = input_data.size();
+        data_main.m_key_len        = KeySize;
 
         data_ext.m_msg            = &(input_data[0]);
         data_ext.m_pub_key_mod    = &(PubKeyKeyMod_ext[0]);
         data_ext.m_encrypted_data = &(encrypted_data_ext[0]);
         data_ext.m_decrypted_data = &(decrypted_data_ext[0]);
         data_ext.m_msg_len        = input_data.size();
+        data_ext.m_key_len        = KeySize;
+
+        /* FIXME: set the hash len for each rb here as per passed parameter */
 
         if (!rb_main->init()) {
             std::cout << "Error in RSA init for " << LibStrMain << std::endl;
@@ -295,6 +318,4 @@ Rsa_Cross(int padding_mode)
     }
     return;
 }
-#endif
-
 #endif
