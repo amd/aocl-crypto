@@ -175,6 +175,7 @@ CRspParser::fetchTCfromRSP()
     return my_test_case;
 }
 
+
 /* Parse Next Test Case and store in m_data_map    */
 bool
 CRspParser::readNextTC()
@@ -252,7 +253,8 @@ CRspParser::adjustKeyNames(String cName)
                             { "Tag", "TAG" },
                             { "AAD", "AD" },
                             { "TKey", "TWEAK_KEY" },
-                            { "CKey", "CTR_KEY" } };
+                            { "CKey", "CTR_KEY" },
+                            { "Mac", "CMAC" } };
 
     if (key_map.find(cName) != key_map.end())
         my_key = key_map[cName];
