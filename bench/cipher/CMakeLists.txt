@@ -76,7 +76,9 @@ IF(ENABLE_TESTS_OPENSSL_API)
         MESSAGE(STATUS "OPENSSL_INSTALL_DIR not set, defaulting to external")
     ENDIF(OPENSSL_INSTALL_DIR)
     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
-    SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cipher/base/openssl_cipher.cc)
+    SET(EXTRA_SOURCES ${EXTRA_SOURCES} 
+                      ../../tests/cipher/base/openssl_cipher.cc
+                      ../../tests/cipher/base/openssl_cipher_aead.cc)
 	IF(UNIX)
 		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
 			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)

@@ -92,7 +92,9 @@ IF(ENABLE_TESTS_OPENSSL_API)
     ENDIF(OPENSSL_INSTALL_DIR)
 
     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
-    SET(EXTRA_SOURCES ${EXTRA_SOURCES} base/openssl_cipher.cc)
+    SET(EXTRA_SOURCES ${EXTRA_SOURCES}
+                      base/openssl_cipher.cc
+                      base/openssl_cipher_aead.cc)
 	IF(UNIX)
 		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
 			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)

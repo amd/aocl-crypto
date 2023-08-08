@@ -42,6 +42,7 @@
 #endif
 #ifdef USE_OSSL
 #include "openssl_cipher.hh"
+#include "openssl_cipher_aead.hh"
 #endif
 #include "rng_base.hh"
 #include <algorithm>
@@ -207,7 +208,7 @@ class CipherAeadTestingCore
     IPPCipherBase* icb = nullptr;
 #endif
 #ifdef USE_OSSL
-    OpenSSLCipherBase* ocb = nullptr;
+    OpenSSLCipherAeadBase* ocb = nullptr;
 #endif
   public:
     CipherAeadTestingCore(lib_t lib, alc_cipher_mode_t alcpMode)
@@ -216,17 +217,17 @@ class CipherAeadTestingCore
         m_alcpMode      = alcpMode;
         m_cipherHandler = new CipherTesting();
         switch (lib) {
-// FIXME: OpenSSL and IPP AEAD Bringup needed
-#if 0
+                // FIXME: OpenSSL and IPP AEAD Bringup needed
             case OPENSSL:
 #ifndef USE_OSSL
                 delete m_cipherHandler;
                 throw "OpenSSL not avaiable!";
 #else
-                ocb = new OpenSSLCipherBase(alcpMode, NULL);
+                ocb = new OpenSSLCipherAeadBase(alcpMode, NULL);
                 m_cipherHandler->setcb(ocb);
 #endif
                 break;
+#if 0
             case IPP:
 #ifndef USE_IPP
                 delete m_cipherHandler;
@@ -270,8 +271,9 @@ class CipherAeadTestingCore
             printErrors("IPP is unavailable at the moment switching to ALCP!");
         }
 #endif
+#endif
 #ifdef USE_OSSL
-        ocb = new OpenSSLCipherBase(alcpMode, NULL);
+        ocb = new OpenSSLCipherAeadBase(alcpMode, NULL);
         if (useossl) {
             std::cout << "Using OpenSSL" << std::endl;
             m_cipherHandler->setcb(ocb);
@@ -281,7 +283,6 @@ class CipherAeadTestingCore
             printErrors(
                 "OpenSSL is unavailable at the moment switching to ALCP!");
         }
-#endif
 #endif
     }
     ~CipherAeadTestingCore()
@@ -941,10 +942,6 @@ AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode)
     size_t            key_size = keySize;
     const std::string cModeStr = GetModeSTR(mode);
     std::string       enc_dec_str;
-    bool              isxts = (cModeStr.compare("XTS") == 0);
-    bool              isgcm = (cModeStr.compare("GCM") == 0);
-    bool              isccm = (cModeStr.compare("CCM") == 0);
-    bool              issiv = (cModeStr.compare("SIV") == 0);
 
     if (enc_dec == ENCRYPT)
         enc_dec_str = "_ENC";
