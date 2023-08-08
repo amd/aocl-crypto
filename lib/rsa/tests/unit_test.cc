@@ -237,7 +237,15 @@ TEST(RsaTest, PrivKeyDecryptValidBuffTest)
     auto               p_buff_enc = std::make_unique<Uint8[]>(enc_size);
     auto               p_buff_dec = std::make_unique<Uint8[]>(enc_size);
 
-    Status status =
+    Status status = rsa_obj.setPrivateKey(DP_EXP,
+                                          DQ_EXP,
+                                          P_Modulus,
+                                          Q_Modulus,
+                                          Q_ModulusINV,
+                                          Modulus,
+                                          sizeof(P_Modulus));
+
+    status =
         rsa_obj.decryptPrivate(p_buff_enc.get(), enc_size, p_buff_dec.get());
     EXPECT_EQ(status.code(), ErrorCode::eOk);
 }
@@ -255,10 +263,13 @@ TEST(RsaTest, PubKeyWithValidModulusTest)
 {
     Rsa<KEY_SIZE_1024> rsa_obj;
     RsaPublicKey       pub_key;
-    pub_key.size    = rsa_obj.getKeySize();
+    pub_key.size = rsa_obj.getKeySize();
+    Status status =
+        rsa_obj.setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
     auto p_buff     = std::make_unique<Uint8[]>(pub_key.size);
     pub_key.modulus = p_buff.get();
-    Status status   = rsa_obj.getPublickey(pub_key);
+    status          = rsa_obj.getPublickey(pub_key);
     EXPECT_EQ(status.code(), ErrorCode::eOk);
 }
 
@@ -266,9 +277,12 @@ TEST(RsaTest, PubKeyWithInValidModulusTest)
 {
     Rsa<KEY_SIZE_1024> rsa_obj;
     RsaPublicKey       pub_key;
-    pub_key.size    = rsa_obj.getKeySize();
+    pub_key.size = rsa_obj.getKeySize();
+    Status status =
+        rsa_obj.setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
     pub_key.modulus = nullptr;
-    Status status   = rsa_obj.getPublickey(pub_key);
+    status          = rsa_obj.getPublickey(pub_key);
     EXPECT_NE(status.code(), ErrorCode::eOk);
 }
 
@@ -276,8 +290,11 @@ TEST(RsaTest, PubKeyWithInvalidSizeTest)
 {
     Rsa<KEY_SIZE_1024> rsa_obj;
     RsaPublicKey       pub_key;
-    pub_key.size  = rsa_obj.getKeySize() + 1;
-    Status status = rsa_obj.getPublickey(pub_key);
+    pub_key.size = rsa_obj.getKeySize() + 1;
+    Status status =
+        rsa_obj.setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+    status = rsa_obj.getPublickey(pub_key);
     EXPECT_NE(status.code(), ErrorCode::eOk);
 }
 
@@ -287,10 +304,15 @@ TEST(RsaTest, PubKeyWithValidSizeTest)
     RsaPublicKey       pub_key;
 
     pub_key.size = rsa_obj.getKeySize();
-    auto p_buff  = std::make_unique<Uint8[]>(pub_key.size);
+
+    Status status =
+        rsa_obj.setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    auto p_buff = std::make_unique<Uint8[]>(pub_key.size);
 
     pub_key.modulus = p_buff.get();
-    Status status   = rsa_obj.getPublickey(pub_key);
+    status          = rsa_obj.getPublickey(pub_key);
     EXPECT_EQ(status.code(), ErrorCode::eOk);
 }
 
