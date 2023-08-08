@@ -32,6 +32,105 @@
 
 namespace alcp::rsa { namespace zen4 {
 #include "../../rsa/rsa.cc.inc"
+
+    static inline Uint64 GetRadix52Bit(Uint64 val)
+    {
+        constexpr Uint64 MaskRadix52Bit = 0xfffffffffffff;
+        return val & MaskRadix52Bit;
+    }
+
+    static inline void BytesToRadix52Bit(Uint64* out, const Uint64* in)
+    {
+        const Uint8* in_byte = reinterpret_cast<const Uint8*>(in);
+        for (Uint64 i = 0; i < 38; i += 2) {
+            out[i] = GetRadix52Bit(*(reinterpret_cast<const Uint64*>(in_byte)));
+            out[i + 1] = GetRadix52Bit(
+                (*(reinterpret_cast<const Uint64*>(in_byte + 6))) >> 4);
+            in_byte += 13;
+        }
+
+        out[38] = GetRadix52Bit(*(reinterpret_cast<const Uint64*>(in_byte)));
+
+        out[39] = (*(in_byte + 6) >> 4) + (*(in_byte + 7) << 4)
+                  + (*(in_byte + 8) << 12);
+    }
+
+    static inline void LoadRadix52Buffer(const Uint64* buff, __m512i reg[5])
+    {
+        for (Uint64 i = 0; i < 5; i++) {
+            reg[i] = _mm512_load_si512(buff);
+            buff += 64;
+        }
+    }
+
+    static inline void MontMultAVX512(Uint64*       res,
+                                      const Uint64* first,
+                                      const Uint64* second,
+                                      const Uint64* mod,
+                                      Uint64        k0)
+    {
+        __m512i reg_first[5];
+        __m512i reg_second[5];
+        __m512i reg_mod[5];
+
+        LoadRadix52Buffer(first, reg_first);
+        LoadRadix52Buffer(mod, reg_mod);
+
+        // MontMult2048(res, first, second, mod, k0);
+    }
+
+    template<>
+    inline void mont::MontCompute<KEY_SIZE_2048>::MontgomeryExp(
+        Uint64*       res,
+        const Uint64* input,
+        Uint64*       exp,
+        Uint64        expSize,
+        Uint64*       mod,
+        Uint64*       r2,
+        Uint64        k0)
+    {
+
+        alignas(64) Uint64 mod_radix_52_bit[40];
+        alignas(64) Uint64 r2_radix_52_bit[40];
+        BytesToRadix52Bit(mod_radix_52_bit, mod);
+        BytesToRadix52Bit(r2_radix_52_bit, r2);
+
+        // conversion to mont domain by multiplying with mont converter
+        MontMultAVX512(res, input, r2, mod, k0);
+
+        Uint64 val = exp[expSize - 1];
+
+        Uint64 num_leading_zero = _lzcnt_u64(val);
+
+        Uint64 index = num_leading_zero + 1;
+
+        val = val << index;
+
+        Uint64* mult = res + KEY_SIZE_2048 / 64;
+
+        alcp::utils::CopyChunk(mult, res, KEY_SIZE_2048 / 8);
+
+        while (index++ < 64) {
+            MultAndSquare(res, mult, mod, k0, val);
+            val <<= 1;
+        }
+
+        for (Int64 i = expSize - 2; i >= 0; i--) {
+            val = exp[i];
+            UNROLL_64
+            for (Uint64 j = 0; j < 64; j++) {
+                MultAndSquare(res, mult, mod, k0, val);
+                val <<= 1;
+            }
+        }
+
+        // convert from mont domain to residue domain
+
+        alcp::utils::CopyChunk(mult, res, KEY_SIZE_2048 / 8);
+
+        MontReduce(res, mult, mod, k0);
+    }
+
     template void archEncryptPublic<KEY_SIZE_1024>(Uint8*        pEncText,
                                                    const Uint64* pTextBignum,
                                                    RsaPublicKeyBignum& pubKey,
