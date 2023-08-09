@@ -28,6 +28,7 @@
 #pragma once
 
 #include "cipher/alc_cipher.hh"
+#include "cipher/alc_cipher_aead.hh"
 #include "cipher/cipher.hh"
 #include <alcp/alcp.h>
 #include <benchmark/benchmark.h>
@@ -36,10 +37,12 @@
 
 #ifdef USE_IPP
 #include "cipher/ipp_cipher.hh"
+#include "cipher/ipp_cipher_aead.hh"
 #endif
 
 #ifdef USE_OSSL
 #include "cipher/openssl_cipher.hh"
+#include "cipher/openssl_cipher_aead.hh"
 #endif
 
 typedef enum

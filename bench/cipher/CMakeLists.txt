@@ -34,7 +34,10 @@ FetchContent_Declare(benchmark
 FetchContent_MakeAvailable(benchmark)
 
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
-SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher.cc ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher.cc)
+SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} 
+                                     ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher.cc 
+                                     ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher_aead.cc 
+                                     ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher.cc)
 SET(LIBS ${LIBS} benchmark alcp)
 SET(EXTRA_INCLUDES "")
 
