@@ -47,7 +47,9 @@ IF(ENABLE_TESTS_IPP_API)
         MESSAGE(STATUS "IPP_INSTALL_DIR not set, defaulting to external")
     ENDIF(IPP_INSTALL_DIR)
     # If there is IPP, add IPP source and add IPP liberary
-    SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/cipher/base/ipp_cipher.cc)
+    SET(EXTRA_SOURCES ${EXTRA_SOURCES} 
+                      ../../tests/cipher/base/ipp_cipher.cc
+                      ../../tests/cipher/base/ipp_cipher_aead.cc)
 	IF(UNIX)
         IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
             SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)

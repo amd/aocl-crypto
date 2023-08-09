@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,10 +38,8 @@
 #include "alcp/alcp.h"
 #include "cipher.hh"
 
-#ifndef __IPP_BASE_HH
-#define __IPP_BASE_HH 2
 namespace alcp::testing {
-class IPPCipherBase : public CipherBase
+class IPPCipherAeadBase : public CipherAeadBase
 {
   private:
     alc_cipher_mode_t m_mode;
@@ -60,12 +58,9 @@ class IPPCipherBase : public CipherBase
     Uint64       m_block_size = 0;
     Uint8        m_key_final[64];
     void         PrintErrors(IppStatus status);
-    bool alcpModeToFuncCall(const Uint8* in, Uint8* out, size_t len, bool enc);
-#if 0
-    bool alcpGCMModeToFuncCall(alcp_data_ex_t data, bool enc);
-    bool alcpCCMModeToFuncCall(alcp_data_ex_t data, bool enc);
-    bool alcpSIVModeToFuncCall(alcp_data_ex_t data, bool enc);
-#endif
+    bool         alcpGCMModeToFuncCall(alcp_dca_ex_t data, bool enc);
+    bool         alcpCCMModeToFuncCall(alcp_dca_ex_t data, bool enc);
+    bool         alcpSIVModeToFuncCall(alcp_dca_ex_t data, bool enc);
 
   public:
     /**
@@ -75,7 +70,7 @@ class IPPCipherBase : public CipherBase
      * @param mode
      * @param iv
      */
-    IPPCipherBase(const alc_cipher_mode_t mode, const Uint8* iv);
+    IPPCipherAeadBase(const alc_cipher_mode_t mode, const Uint8* iv);
     /**
      * @brief Construct a new Alcp Base object - Initlized and ready to go
      *
@@ -84,10 +79,10 @@ class IPPCipherBase : public CipherBase
      * @param key
      * @param key_len
      */
-    IPPCipherBase(const alc_cipher_mode_t mode,
-                  const Uint8*            iv,
-                  const Uint8*            key,
-                  const Uint32            key_len);
+    IPPCipherAeadBase(const alc_cipher_mode_t mode,
+                      const Uint8*            iv,
+                      const Uint8*            key,
+                      const Uint32            key_len);
     /**
      * @brief         Initialization/Reinitialization function, created handle
      *
@@ -98,15 +93,15 @@ class IPPCipherBase : public CipherBase
      * @return false - if there is some failure
      */
 
-    IPPCipherBase(const alc_cipher_mode_t mode,
-                  const Uint8*            iv,
-                  const Uint32            iv_len,
-                  const Uint8*            key,
-                  const Uint32            key_len,
-                  const Uint8*            tkey,
-                  const Uint64            block_size);
+    IPPCipherAeadBase(const alc_cipher_mode_t mode,
+                      const Uint8*            iv,
+                      const Uint32            iv_len,
+                      const Uint8*            key,
+                      const Uint32            key_len,
+                      const Uint8*            tkey,
+                      const Uint64            block_size);
 
-    ~IPPCipherBase();
+    ~IPPCipherAeadBase();
     bool init(const Uint8* iv,
               const Uint32 iv_len,
               const Uint8* key,
@@ -128,4 +123,3 @@ class IPPCipherBase : public CipherBase
     bool reset();
 };
 } // namespace alcp::testing
-#endif
