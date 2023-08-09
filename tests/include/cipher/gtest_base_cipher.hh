@@ -340,6 +340,7 @@ EncDecType(enc_dec_t e_d, big_small_t b_s)
     return SMALL_DEC;
 }
 
+// Non AEAD Version
 /* print params verbosely */
 inline void
 PrintTestData(std::vector<Uint8> key, alcp_dc_ex_t data, std::string mode)
@@ -352,7 +353,22 @@ PrintTestData(std::vector<Uint8> key, alcp_dc_ex_t data, std::string mode)
               << " Len: " << data.m_ivl << std::endl;
     std::cout << "CIPHERTEXT: " << parseBytesToHexStr(data.m_out, data.m_outl)
               << " Len: " << data.m_outl << std::endl;
-#if 0
+    return;
+}
+
+// FIXME: Reduce the dupication
+// AEAD Version
+inline void
+PrintTestData(std::vector<Uint8> key, alcp_dca_ex_t data, std::string mode)
+{
+    std::cout << "KEY: " << parseBytesToHexStr(&key[0], key.size())
+              << " Len: " << key.size() << std::endl;
+    std::cout << "PLAINTEXT: " << parseBytesToHexStr(data.m_in, data.m_inl)
+              << " Len: " << data.m_inl << std::endl;
+    std::cout << "IV: " << parseBytesToHexStr(data.m_iv, data.m_ivl)
+              << " Len: " << data.m_ivl << std::endl;
+    std::cout << "CIPHERTEXT: " << parseBytesToHexStr(data.m_out, data.m_outl)
+              << " Len: " << data.m_outl << std::endl;
     /* gcm / ccm / xts specific */
     if (mode.compare("GCM") == 0 || mode.compare("CCM") == 0) {
         std::cout << "ADL: " << parseBytesToHexStr(data.m_ad, data.m_adl)
@@ -364,7 +380,6 @@ PrintTestData(std::vector<Uint8> key, alcp_dc_ex_t data, std::string mode)
         std::cout << "TKEY: " << parseBytesToHexStr(data.m_tkey, data.m_tkeyl)
                   << " Len: " << data.m_tkeyl << std::endl;
     }
-#endif
     return;
 }
 
@@ -784,7 +799,6 @@ AesAeadCrosstest(int               keySize,
                 data_alc.m_ivl  = iv.size();
                 data_alc.m_out  = &(out_ct_alc[0]);
                 data_alc.m_outl = data_alc.m_inl;
-#if 1
                 if (isgcm || isccm || issiv) {
                     data_alc.m_ad      = &(add[0]);
                     data_alc.m_adl     = add.size();
@@ -796,7 +810,6 @@ AesAeadCrosstest(int               keySize,
                     data_alc.m_tkey  = &(tkey[0]);
                     data_alc.m_tkeyl = tkeyl;
                 }
-#endif
 
                 // External Lib Data
                 data_ext.m_in   = &(pt[0]);
@@ -805,7 +818,6 @@ AesAeadCrosstest(int               keySize,
                 data_ext.m_ivl  = iv.size();
                 data_ext.m_out  = &(out_ct_ext[0]);
                 data_ext.m_outl = data_alc.m_inl;
-#if 1
                 if (isgcm || isccm || issiv) {
                     data_ext.m_ad      = &(add[0]);
                     data_ext.m_adl     = add.size();
@@ -818,7 +830,6 @@ AesAeadCrosstest(int               keySize,
                     data_ext.m_tkeyl      = tkeyl;
                     data_ext.m_block_size = ct.size();
                 }
-#endif
                 if (enc_dec == ENCRYPT)
                     fr->setRecEvent(
                         key, iv, pt, EncDecType(enc_dec, big_small));
@@ -860,7 +871,6 @@ AesAeadCrosstest(int               keySize,
                     PrintTestData(key, data_ext, MODE_STR);
                 }
             } else {
-#if 1
                 if (isgcm || isccm || issiv) {
                     ret = alcpTC->getCipherHandler()->testingEncrypt(data_alc,
                                                                      key);
@@ -875,14 +885,12 @@ AesAeadCrosstest(int               keySize,
                     data_alc.m_in  = &(out_ct_alc[0]);
                     data_alc.m_out = &(pt[0]);
                 }
-#endif
                 ret = alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
                 if (!ret) {
                     std::cout << "ERROR: Dec: main lib" << std::endl;
                     FAIL();
                 }
 
-#if 1
                 /*ext lib decrypt */
                 if (isgcm || isccm || issiv) {
                     ret = alcpTC->getCipherHandler()->testingEncrypt(data_ext,
@@ -898,13 +906,12 @@ AesAeadCrosstest(int               keySize,
                     data_ext.m_in  = &(out_ct_ext[0]);
                     data_ext.m_out = &(pt[0]);
                 }
-#endif
                 ret = extTC->getCipherHandler()->testingDecrypt(data_ext, key);
                 if (!ret) {
                     std::cout << "ERROR: Dec: ext lib" << std::endl;
                     FAIL();
                 }
-#if 1
+
                 data_ext.m_isTagValid = /* check if Tag is valid */
                     (std::find(tag_ext.begin(), tag_ext.end(), true)
                      == tag_ext.end());
@@ -917,9 +924,7 @@ AesAeadCrosstest(int               keySize,
                         ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
                         EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
                     }
-                } else
-#endif
-                    if (!(isgcm || isccm)) {
+                } else if (!(isgcm || isccm)) {
                     ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
                 }
                 if (verbose > 1) {
@@ -1052,8 +1057,7 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
     std::vector<Uint8>   tagBuff = std::vector<Uint8>(outtag.size());
     std::vector<Uint8>   ctrkey  = csv->getVect("CTR_KEY");
 
-// Common Initialization
-#if 1
+    // Common Initialization
     data.m_tkeyl = 0;
     data.m_adl   = 0;
     data.m_tagl  = 0;
@@ -1071,7 +1075,6 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
             data.m_adl = ad.size();
         }
     }
-#endif
     if (isCcm && isGcm) {
         iv = csv->getVect("TAG"); // Let tag be IV (which is techically true
                                   // but not good idea)
@@ -1086,7 +1089,6 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
         if (outct.size())
             data.m_out = &(outct[0]);
         data.m_outl = data.m_inl;
-#if 1
         if (isCcm && isGcm) {
             data.m_tkey  = &(ctrkey[0]);
             data.m_tkeyl = tkey.size();
@@ -1095,7 +1097,6 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
             data.m_tkeyl      = tkey.size();
             data.m_block_size = pt.size();
         }
-#endif
         ret = testingCore.getCipherHandler()->testingEncrypt(
             data, csv->getVect("KEY"));
         if (!ret) {
@@ -1129,7 +1130,6 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
         if (outpt.size())
             data.m_out = &(outpt[0]);
         data.m_outl = data.m_inl;
-#if 1
         // FIXME: Ugly solution, this is SIV
         if (isCcm && isGcm) {
             data.m_tkey  = &(ctrkey[0]);
@@ -1139,14 +1139,11 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
             data.m_tkeyl      = tkey.size();
             data.m_block_size = ct.size();
         }
-#endif
         ret = testingCore.getCipherHandler()->testingDecrypt(
             data, csv->getVect("KEY"));
-#if 1
         if (isGcm && data.m_tagl == 0) {
             ret = true; // Skip tag test
         }
-#endif
         if (!ret) {
             std::cout << "ERROR: Dec" << std::endl;
             EXPECT_TRUE(ret);

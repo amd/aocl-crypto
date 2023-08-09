@@ -319,8 +319,6 @@ class CCM_KAT
         m_test_name  = test_name;
 
         /* Initialization */
-        const alc_cipher_algo_info_t aesInfo = { ALC_AES_MODE_CCM,
-                                                 &(nonce.at(0)) };
 
         // clang-format off
         const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
@@ -339,10 +337,8 @@ class CCM_KAT
 
 TEST(CCM, Initiantiation)
 {
-    Uint8 iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
     Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-    const alc_cipher_algo_info_t aesInfo = { ALC_AES_MODE_CCM, iv };
     // clang-format off
     const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
                                      ALC_KEY_FMT_RAW,
@@ -687,10 +683,8 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST(CCM, InvalidTagLen)
 {
-    Uint8 iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
     Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-    const alc_cipher_algo_info_t aesInfo = { ALC_AES_MODE_CCM, iv };
     // clang-format off
     const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
                                      ALC_KEY_FMT_RAW,
@@ -714,14 +708,11 @@ TEST(CCM, InvalidTagLen)
 
 TEST(CCM, InvalidNonceLen)
 {
-    Uint8              iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
     Uint8              key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
     Uint8              tagbuff[16];
     std::vector<Uint8> out_tag(sizeof(tagbuff), 0);
     std::vector<Uint8> nonce(14,0);
-    const alc_cipher_algo_info_t aesInfo = { ALC_AES_MODE_CCM,
-                                             iv };
     // clang-format off
     const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
                                      ALC_KEY_FMT_RAW,

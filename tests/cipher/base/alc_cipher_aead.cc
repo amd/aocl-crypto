@@ -145,15 +145,6 @@ AlcpCipherAeadBase::init(const Uint8* key, const Uint32 key_len)
 
     m_cinfo.ci_type = ALC_CIPHER_TYPE_AES;
 
-// FIXME: To be removed
-#if 0
-    /* set these only for XTS */
-    if (m_mode == ALC_AES_MODE_XTS) {
-        memcpy(m_key, key, key_len / 8);
-        memcpy(m_key + (key_len / 8), m_tkey, key_len / 8);
-        m_keyinfo.key = m_key;
-    } else
-#endif
 #if 1
     if (m_mode == ALC_AES_MODE_SIV) {
         alc_key_info_t* p_kinfo =
@@ -206,7 +197,6 @@ AlcpCipherAeadBase::encrypt(alcp_dc_ex_t& data)
     if ((m_mode == ALC_AES_MODE_GCM) || (m_mode == ALC_AES_MODE_CCM)
         || (m_mode == ALC_AES_MODE_SIV)) {
 
-#if 1
         // GCM/CCM init
         if (m_mode == ALC_AES_MODE_CCM) {
             err = alcp_cipher_aead_set_tag_length(m_handle, aead_data.m_tagl);
@@ -270,18 +260,7 @@ AlcpCipherAeadBase::encrypt(alcp_dc_ex_t& data)
                 goto enc_out;
             }
         }
-#endif
     }
-// FIXME: To be removed
-#if 0
-else {
-        err = alcp_cipher_aead_encrypt(
-            m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl, m_iv);
-        if (alcp_is_error(err)) {
-            goto enc_out;
-        }
-    }
-#endif
     return true;
 enc_out:
     alcp_error_str(err, err_buff, err_size);
@@ -299,7 +278,6 @@ AlcpCipherAeadBase::decrypt(alcp_dc_ex_t& data)
 
     if ((m_mode == ALC_AES_MODE_GCM) || (m_mode == ALC_AES_MODE_CCM)
         || (m_mode == ALC_AES_MODE_SIV)) {
-#if 1
         /* only for ccm */
         if (m_mode == ALC_AES_MODE_CCM) {
             err = alcp_cipher_aead_set_tag_length(m_handle, aead_data.m_tagl);
@@ -371,19 +349,7 @@ AlcpCipherAeadBase::decrypt(alcp_dc_ex_t& data)
                 return false;
             }
         }
-#endif
-        // FIXME: To be removed
     }
-#if 0
-    else {
-        // For non GCM/CCM mode
-        err = alcp_cipher_aead_decrypt(
-            m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl, m_iv);
-        if (alcp_is_error(err)) {
-            goto dec_out;
-        }
-    }
-#endif
     return true;
 dec_out:
     alcp_error_str(err, err_buff, err_size);

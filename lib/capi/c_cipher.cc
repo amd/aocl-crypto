@@ -103,43 +103,7 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
 
     new (ctx) cipher::Context;
 
-    // FIXME: other AES Build() to be modified like CTR in other modes as well.
-    // From here the algoinfo is lost hence we cannot use tweak key inside for
-    // XTS
-    if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_CTR
-        || pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_CFB
-        || pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_CBC
-        || pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
-        // err = cipher::CipherBuilder::Build(pCipherInfo->ci_type,
-        //                                    pCipherInfo->ci_algo_info.ai_mode,
-        //                                    pCipherInfo->ci_key_info.key,
-        //                                    pCipherInfo->ci_key_info.len,
-        //                                    *ctx);
-        err = cipher::CipherBuilder::Build(*pCipherInfo, *ctx);
-    }
-
-// FIXME: As all are using same builder a switch case without break will
-// better.
-// FIXME: To be enabled in future.
-#if 0
-    else if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
-        err = cipher::CipherBuilder::Build(pCipherInfo->ci_type,
-                                           pCipherInfo->ci_algo_info.ai_mode,
-                                           pCipherInfo->ci_key_info.key,
-                                           pCipherInfo->ci_key_info.len,
-                                           *ctx);
-    }
-#endif
-
-    // FIXME: GCM, XTS, CCM to be moved to AeadBuilder
-    else if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
-        err = cipher::CipherBuilder::Build(*pCipherInfo, *ctx);
-    } else {
-
-        // FIXME: Modify Builder to return Status and assign to context
-        // status
-        err = cipher::CipherBuilder::Build(*pCipherInfo, *ctx);
-    }
+    err = cipher::CipherBuilder::Build(*pCipherInfo, *ctx);
 
     return err;
 }
