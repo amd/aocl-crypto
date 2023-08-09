@@ -92,7 +92,11 @@ GetModeSTR(alc_cipher_mode_t mode)
 class TestingCore
 {
   private:
+#ifndef ENABLE_RSP
     std::shared_ptr<Csv> m_csv;
+#else
+    std::shared_ptr<CRspParser> m_rsp;
+#endif
     // FIXME: Change these to unique_ptr
     CipherTesting*    m_cipherHandler = {};
     AlcpCipherBase*   m_acb           = {};
@@ -143,9 +147,13 @@ class TestingCore
     {
         std::transform(
             modeStr.begin(), modeStr.end(), modeStr.begin(), ::tolower);
+#ifndef ENABLE_RSP
         m_csv = std::make_shared<Csv>(std::string("dataset_") + modeStr
                                       + std::string(".csv"));
-
+#else
+        m_rsp = std::make_shared<CRspParser>(std::string("dataset_") + modeStr
+                                             + std::string(".rsp"));
+#endif
         // Initialize cipher testing classes
         m_cipherHandler = new CipherTesting();
         m_acb           = new AlcpCipherBase(alcpMode, NULL);
@@ -189,8 +197,12 @@ class TestingCore
             delete ocb;
 #endif
     }
+#ifndef ENABLE_RSP
     std::shared_ptr<Csv> getCsv() { return m_csv; }
-    CipherTesting*       getCipherHandler() { return m_cipherHandler; }
+#else
+    std::shared_ptr<CRspParser> getRsp() { return m_rsp; }
+#endif
+    CipherTesting* getCipherHandler() { return m_cipherHandler; }
 };
 
 /**
@@ -263,31 +275,31 @@ PrintTestData(std::vector<Uint8> key, alcp_data_ex_t data, std::string mode)
  * for AES-CTR,AES-CBC,AES-OFB,AES-CFB
  *
  * @param keySize keysize in bits(128,192 or 256)
- * @param enc_dec (encryption or Decryption)
+ * @param encDec (encryption or Decryption)
  * @param mode AES modes (CTR, OFB, CBC and CFB)
  * @param big_small Type (Big or Small) of test
  */
 void
 AesCrosstest(int               keySize,
-             enc_dec_t         enc_dec,
+             enc_dec_t         encDec,
              alc_cipher_mode_t mode,
              big_small_t       big_small)
 {
     int         key_size = keySize;
     int         LOOP_START, MAX_LOOP, INC_LOOP;
     size_t      size = 1;
-    std::string enc_dec_str, big_small_str;
-    std::string MODE_STR = GetModeSTR(mode);
+    std::string encDecStr, big_small_str;
+    std::string modeStr = GetModeSTR(mode);
     Int32       ivl, adl, tkeyl = 16;
     bool        ret       = false;
     Int32       IVL_START = 0, IVL_MAX = 0, ADL_START = 0, ADL_MAX = 0;
     // FIXME: Tag Length should not be hard coded
     const Uint64 tagLength = 16;
 
-    bool isxts = (MODE_STR.compare("XTS") == 0);
-    bool isgcm = (MODE_STR.compare("GCM") == 0);
-    bool isccm = (MODE_STR.compare("CCM") == 0);
-    bool issiv = (MODE_STR.compare("SIV") == 0);
+    bool isxts = (modeStr.compare("XTS") == 0);
+    bool isgcm = (modeStr.compare("GCM") == 0);
+    bool isccm = (modeStr.compare("CCM") == 0);
+    bool issiv = (modeStr.compare("SIV") == 0);
 
     /* IV, AD Length limits for different cases */
     if (isccm) {
@@ -310,10 +322,10 @@ AesCrosstest(int               keySize,
         IVL_MAX   = 16;
     }
 
-    if (enc_dec == ENCRYPT)
-        enc_dec_str.assign("ENC");
+    if (encDec == ENCRYPT)
+        encDecStr.assign("ENC");
     else
-        enc_dec_str.assign("DEC");
+        encDecStr.assign("DEC");
     if (big_small == BIG)
         big_small_str.assign("BIG");
     else
@@ -333,17 +345,17 @@ AesCrosstest(int               keySize,
     ExecRecPlay* fr    = nullptr;
     RngBase      rb;
     if (bbxreplay) {
-        fr = new ExecRecPlay("AES_" + MODE_STR + "_" + enc_dec_str + "_"
+        fr = new ExecRecPlay("AES_" + modeStr + "_" + encDecStr + "_"
                                  + std::to_string(key_size) + "_"
                                  + big_small_str,
-                             "AES_" + MODE_STR + "_TEST_DATA",
+                             "AES_" + modeStr + "_TEST_DATA",
                              true);
-        fr->fastForward(EncDecType(enc_dec, big_small));
+        fr->fastForward(EncDecType(encDec, big_small));
     } else
-        fr = new ExecRecPlay("AES_" + MODE_STR + "_" + enc_dec_str + "_"
+        fr = new ExecRecPlay("AES_" + modeStr + "_" + encDecStr + "_"
                                  + std::to_string(key_size) + "_"
                                  + big_small_str,
-                             "AES_" + MODE_STR + "_TEST_DATA",
+                             "AES_" + modeStr + "_TEST_DATA",
                              false);
     /* Set extTC based on which external testing core user asks*/
     try {
@@ -468,18 +480,16 @@ AesCrosstest(int               keySize,
                     data_ext.m_tkeyl      = tkeyl;
                     data_ext.m_block_size = ct.size();
                 }
-                if (enc_dec == ENCRYPT)
-                    fr->setRecEvent(
-                        key, iv, pt, EncDecType(enc_dec, big_small));
-                else if (enc_dec == DECRYPT)
-                    fr->setRecEvent(
-                        key, iv, ct, EncDecType(enc_dec, big_small));
+                if (encDec == ENCRYPT)
+                    fr->setRecEvent(key, iv, pt, EncDecType(encDec, big_small));
+                else if (encDec == DECRYPT)
+                    fr->setRecEvent(key, iv, ct, EncDecType(encDec, big_small));
             } else {
                 fr->nextLog();
                 try {
-                    if (enc_dec == ENCRYPT)
+                    if (encDec == ENCRYPT)
                         fr->getValues(&key, &iv, &pt);
-                    else if (enc_dec == DECRYPT)
+                    else if (encDec == DECRYPT)
                         fr->getValues(&key, &iv, &ct);
 
                 } catch (std::string excp) {
@@ -488,7 +498,7 @@ AesCrosstest(int               keySize,
                 }
             }
 
-            if (enc_dec == ENCRYPT) {
+            if (encDec == ENCRYPT) {
                 ret = alcpTC->getCipherHandler()->testingEncrypt(data_alc, key);
                 if (!ret) {
                     std::cout << "ERROR: Enc: Main lib" << std::endl;
@@ -505,8 +515,8 @@ AesCrosstest(int               keySize,
                     EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
                 }
                 if (verbose > 1) {
-                    PrintTestData(key, data_alc, MODE_STR);
-                    PrintTestData(key, data_ext, MODE_STR);
+                    PrintTestData(key, data_alc, modeStr);
+                    PrintTestData(key, data_ext, modeStr);
                 }
             } else {
                 if (isgcm || isccm || issiv) {
@@ -565,8 +575,8 @@ AesCrosstest(int               keySize,
                     ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
                 }
                 if (verbose > 1) {
-                    PrintTestData(key, data_alc, MODE_STR);
-                    PrintTestData(key, data_ext, MODE_STR);
+                    PrintTestData(key, data_alc, modeStr);
+                    PrintTestData(key, data_ext, modeStr);
                 }
             }
             if (!bbxreplay) {
@@ -581,17 +591,19 @@ AesCrosstest(int               keySize,
     delete fr;
 }
 
+#ifndef ENABLE_RSP
 bool
 RunCipherKATTest(TestingCore& testingCore,
-                 enc_dec_t    enc_dec,
-                 std::string  enc_dec_str,
-                 std::string  MODE_STR,
+                 enc_dec_t    encDec,
+                 std::string  encDecStr,
+                 std::string  modeStr,
                  int          keySize,
                  bool         isxts,
                  bool         isgcm)
 {
-    bool                 ret = false;
-    alcp_data_ex_t       data;
+    bool           ret = false;
+    alcp_data_ex_t data;
+
     std::shared_ptr<Csv> csv = testingCore.getCsv();
     std::vector<Uint8>   outpt(csv->getVect("PLAINTEXT").size(), 0);
     std::vector<Uint8>   outct(csv->getVect("CIPHERTEXT").size(), 0);
@@ -610,7 +622,7 @@ RunCipherKATTest(TestingCore& testingCore,
     data.m_tagl  = 0;
     if (isgcm) {
         if (outtag.size()) {
-            if (enc_dec == ENCRYPT) {
+            if (encDec == ENCRYPT) {
                 std::fill(outtag.begin(), outtag.end(), 0);
             }
             data.m_tag     = &(outtag[0]);
@@ -626,7 +638,7 @@ RunCipherKATTest(TestingCore& testingCore,
         iv = csv->getVect("TAG"); // Let tag be IV (which is techically true
                                   // but not good idea)
     }
-    if (enc_dec == ENCRYPT) {
+    if (encDec == ENCRYPT) {
         if (pt.size()) {
             data.m_in  = &(pt[0]);
             data.m_inl = pt.size();
@@ -646,6 +658,7 @@ RunCipherKATTest(TestingCore& testingCore,
         }
         ret = testingCore.getCipherHandler()->testingEncrypt(
             data, csv->getVect("KEY"));
+
         if (!ret) {
             std::cout << "ERROR: Enc" << std::endl;
             EXPECT_TRUE(ret);
@@ -654,16 +667,16 @@ RunCipherKATTest(TestingCore& testingCore,
             ArraysMatch(outct,
                         csv->getVect("CIPHERTEXT"),
                         *(csv.get()),
-                        std::string("AES_" + MODE_STR + "_"
-                                    + std::to_string(keySize) + enc_dec_str)));
+                        std::string("AES_" + modeStr + "_"
+                                    + std::to_string(keySize) + encDecStr)));
 
         if (isgcm || (isgcm && isxts)) {
             EXPECT_TRUE(ArraysMatch(outtag,
                                     csv->getVect("TAG"),
                                     *(csv.get()),
-                                    std::string("AES_" + MODE_STR + "_"
+                                    std::string("AES_" + modeStr + "_"
                                                 + std::to_string(keySize)
-                                                + enc_dec_str + "_TAG")));
+                                                + encDecStr + "_TAG")));
         }
         // Enforce that no errors are reported from lib side.
         EXPECT_TRUE(ret);
@@ -695,61 +708,211 @@ RunCipherKATTest(TestingCore& testingCore,
             std::cout << "ERROR: Dec" << std::endl;
             EXPECT_TRUE(ret);
         }
+
         EXPECT_TRUE(
             ArraysMatch(outpt,
                         csv->getVect("PLAINTEXT"),
                         *(testingCore.getCsv()),
-                        std::string("AES_" + MODE_STR + "_"
-                                    + std::to_string(keySize) + enc_dec_str)));
+                        std::string("AES_" + modeStr + "_"
+                                    + std::to_string(keySize) + encDecStr)));
+
         // Enforce that no errors are reported from lib side.
         EXPECT_TRUE(ret);
     }
     return ret;
 }
+#else
+bool
+RunCipherKATTest(TestingCore& testingCore,
+                 enc_dec_t    encDec,
+                 std::string  encDecStr,
+                 std::string  modeStr,
+                 int          keySize,
+                 bool         isxts,
+                 bool         isgcm)
+{
+    bool                        ret = false;
+    alcp_data_ex_t              data;
+    std::shared_ptr<CRspParser> rsp = testingCore.getRsp();
+    std::vector<Uint8>          outpt(rsp->getVect("PLAINTEXT").size(), 0);
+    std::vector<Uint8>          outct(rsp->getVect("CIPHERTEXT").size(), 0);
+    std::vector<Uint8>          pt      = rsp->getVect("PLAINTEXT");
+    std::vector<Uint8>          ct      = rsp->getVect("CIPHERTEXT");
+    std::vector<Uint8>          iv      = rsp->getVect("INITVECT");
+    std::vector<Uint8>          tkey    = rsp->getVect("TWEAK_KEY");
+    std::vector<Uint8>          outtag  = rsp->getVect("TAG");
+    std::vector<Uint8>          ad      = rsp->getVect("AD");
+    std::vector<Uint8>          tagBuff = std::vector<Uint8>(outtag.size());
+    std::vector<Uint8>          ctrkey  = rsp->getVect("CTR_KEY");
+
+    // Common Initialization
+    data.m_tkeyl = 0;
+    data.m_adl   = 0;
+    data.m_tagl  = 0;
+    if (isgcm) {
+        if (outtag.size()) {
+            if (encDec == ENCRYPT) {
+                std::fill(outtag.begin(), outtag.end(), 0);
+            }
+            data.m_tag     = &(outtag[0]);
+            data.m_tagl    = outtag.size();
+            data.m_tagBuff = &tagBuff[0];
+        }
+        if (ad.size()) {
+            data.m_ad  = &(ad[0]);
+            data.m_adl = ad.size();
+        }
+    }
+    if (isxts && isgcm) {
+        iv = rsp->getVect("TAG");
+    }
+    if (encDec == ENCRYPT) {
+        if (pt.size()) {
+            data.m_in  = &(pt[0]);
+            data.m_inl = pt.size();
+        }
+        data.m_iv  = &(iv[0]);
+        data.m_ivl = iv.size();
+        if (outct.size())
+            data.m_out = &(outct[0]);
+        data.m_outl = data.m_inl;
+        if (isxts && isgcm) {
+            data.m_tkey  = &(ctrkey[0]);
+            data.m_tkeyl = tkey.size();
+        } else if (isxts) {
+            data.m_tkey       = &(tkey[0]);
+            data.m_tkeyl      = tkey.size();
+            data.m_block_size = pt.size();
+        }
+        ret = testingCore.getCipherHandler()->testingEncrypt(
+            data, rsp->getVect("KEY"));
+        if (!ret) {
+            std::cout << "ERROR: Enc" << std::endl;
+            EXPECT_TRUE(ret);
+        }
+        EXPECT_TRUE(
+            ArraysMatch(outct,
+                        rsp->getVect("CIPHERTEXT"),
+                        *(rsp.get()),
+                        std::string("AES_" + modeStr + "_"
+                                    + std::to_string(keySize) + encDecStr)));
+
+        if (isgcm || (isgcm && isxts)) {
+            EXPECT_TRUE(ArraysMatch(outtag,
+                                    rsp->getVect("TAG"),
+                                    *(rsp.get()),
+                                    std::string("AES_" + modeStr + "_"
+                                                + std::to_string(keySize)
+                                                + encDecStr + "_TAG")));
+        }
+        // Enforce that no errors are reported from lib side.
+        EXPECT_TRUE(ret);
+    } else {
+        if (ct.size()) {
+            data.m_in  = &(ct[0]);
+            data.m_inl = ct.size();
+        }
+        data.m_iv  = &(iv[0]);
+        data.m_ivl = iv.size();
+        if (outpt.size())
+            data.m_out = &(outpt[0]);
+        data.m_outl = data.m_inl;
+        if (isxts && isgcm) {
+            data.m_tkey  = &(ctrkey[0]);
+            data.m_tkeyl = tkey.size();
+        } else if (isxts) {
+            data.m_tkey       = &(tkey[0]);
+            data.m_tkeyl      = tkey.size();
+            data.m_block_size = ct.size();
+        }
+        ret = testingCore.getCipherHandler()->testingDecrypt(
+            data, rsp->getVect("KEY"));
+
+        if (isgcm && data.m_tagl == 0) {
+            ret = true; // Skip tag test
+        }
+        if (!ret) {
+            std::cout << "ERROR: Dec" << std::endl;
+            EXPECT_TRUE(ret);
+        }
+        EXPECT_TRUE(
+            ArraysMatch(outpt,
+                        rsp->getVect("PLAINTEXT"),
+                        *(testingCore.getRsp()),
+                        std::string("AES_" + modeStr + "_"
+                                    + std::to_string(keySize) + encDecStr)));
+        // Enforce that no errors are reported from lib side.
+        EXPECT_TRUE(ret);
+    }
+    return ret;
+}
+#endif
 
 /**
  * @brief Function to run KAT for AES Schemes CTR,CFB,OFB,CBC,XTS
  *
  * @param keySize keysize in bits(128,192,256)
- * @param enc_dec enum for encryption or decryption
+ * @param encDec enum for encryption or decryption
  * @param mode Aode of encryption/Decryption (CTR,CFB,OFB,CBC,XTS)
  */
 void
-AesKatTest(int keySize, enc_dec_t enc_dec, alc_cipher_mode_t mode)
+AesKatTest(int keySize, enc_dec_t encDec, alc_cipher_mode_t mode)
 {
     size_t            key_size = keySize;
     const std::string cModeStr = GetModeSTR(mode);
-    std::string       enc_dec_str;
+    std::string       encDecStr;
     bool              isxts = (cModeStr.compare("XTS") == 0);
     bool              isgcm = (cModeStr.compare("GCM") == 0);
     bool              isccm = (cModeStr.compare("CCM") == 0);
     bool              issiv = (cModeStr.compare("SIV") == 0);
 
-    if (enc_dec == ENCRYPT)
-        enc_dec_str = "_ENC";
+    if (encDec == ENCRYPT)
+        encDecStr = "_ENC";
     else
-        enc_dec_str = "_DEC";
+        encDecStr = "_DEC";
 
     TestingCore testing_core = TestingCore(cModeStr, mode);
 
     bool retval = false;
 
+#ifndef ENABLE_RSP
     /* check if file is valid */
     if (!testing_core.getCsv()->m_file_exists) {
         EXPECT_TRUE(retval);
     }
+
     while (testing_core.getCsv()->readNext()) {
         if ((testing_core.getCsv()->getVect("KEY").size() * 8) != key_size) {
             continue;
         }
         retval = RunCipherKATTest(testing_core,
-                                  enc_dec,
-                                  enc_dec_str,
+                                  encDec,
+                                  encDecStr,
                                   cModeStr,
                                   keySize,
                                   isxts || issiv,
                                   isgcm || isccm || issiv);
         EXPECT_TRUE(retval);
     }
+#else
+    if (!testing_core.getRsp()->fileExists) {
+        EXPECT_TRUE(retval);
+    }
+
+    while (testing_core.getRsp()->readNextTC()) {
+        if ((testing_core.getRsp()->getVect("KEY").size() * 8) != key_size) {
+            continue;
+        }
+        retval = RunCipherKATTest(testing_core,
+                                  encDec,
+                                  encDecStr,
+                                  cModeStr,
+                                  keySize,
+                                  isxts || issiv,
+                                  isgcm || isccm || issiv);
+        EXPECT_TRUE(retval);
+    }
+#endif
 }
+
 #endif

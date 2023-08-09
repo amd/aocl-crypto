@@ -112,16 +112,29 @@ IF(UNIX)
 SET(LIBS ${LIBS} pthread)
 ENDIF()
 
+IF(ALCP_ENABLE_RSP)
+    ADD_COMPILE_OPTIONS("-DENABLE_RSP")
+ENDIF(ALCP_ENABLE_RSP)
+
 # Function to dynamically generate compilation of each test cases
 FUNCTION(KAT_AES MOD)
     ADD_EXECUTABLE(aes_${MOD}_kat test_${MOD}_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
     # Depending on the person, they are gonna run from root dir or binary directory
     # Link dataset to the root dir
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.csv ${CMAKE_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
+    IF(ALCP_ENABLE_RSP)
+        FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.rsp ${CMAKE_BINARY_DIR}/dataset_${MOD}.rsp SYMBOLIC)
+    ELSE()
+        FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.csv ${CMAKE_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
+    ENDIF(ALCP_ENABLE_RSP)
 
     # Link dataset to the actual place of test binary
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
+    IF(ALCP_ENABLE_RSP)
+        FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.rsp ${CMAKE_CURRENT_BINARY_DIR}/dataset_${MOD}.rsp SYMBOLIC)
+    ELSE()
+        FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
+    ENDIF(ALCP_ENABLE_RSP)
+
     TARGET_INCLUDE_DIRECTORIES(aes_${MOD}_kat PRIVATE
         "${CMAKE_SOURCE_DIR}/include"
         "${CMAKE_SOURCE_DIR}/lib/include"

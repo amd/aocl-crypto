@@ -69,6 +69,7 @@ PrintCmacTestData(std::vector<Uint8> key,
     return;
 }
 
+#ifndef ENABLE_RSP
 void
 Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
 {
@@ -145,6 +146,86 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
                         + "_KAT")));
     }
 }
+#else
+void
+Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
+{
+    alcp_cmac_data_t data     = {};
+    const int        CmacSize = 16;
+
+    info.mi_type                                         = ALC_MAC_CMAC;
+    info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_iv = NULL;
+
+    AlcpCmacBase acb(info);
+    CmacBase*    cb;
+    cb = &acb;
+
+    std::string TestDataFile = std::string("dataset_CMAC_" + CmacType + "_"
+                                           + std::to_string(KeySize) + ".csv");
+
+    TestDataFile.replace(TestDataFile.find(".csv"), 4, ".rsp");
+    CRspParser rsp = CRspParser(TestDataFile);
+
+    /* check if file is valid */
+    if (!rsp.fileExists) {
+        FAIL();
+    }
+
+#ifdef USE_OSSL
+    OpenSSLCmacBase ocb(info);
+    if (useossl == true)
+        cb = &ocb;
+#endif
+#ifdef USE_IPP
+    IPPCmacBase icb(info);
+    if (useipp == true)
+        cb = &icb;
+#endif
+
+    while (rsp.readNextTC()) {
+
+        std::vector<Uint8> cmac(CmacSize, 0);
+
+        auto msg = rsp.getVect("MESSAGE");
+        auto key = rsp.getVect("KEY");
+
+        data.m_msg  = &(msg[0]);
+        data.m_key  = &(key[0]);
+        data.m_cmac = &(cmac[0]);
+
+        data.m_msg_len  = msg.size();
+        data.m_cmac_len = cmac.size();
+        data.m_key_len  = key.size();
+
+        if (!cb->init(info, key)) {
+            std::cout << "Error in cmac init function" << std::endl;
+            FAIL();
+        }
+
+        if (!cb->cmacFunction(data)) {
+            std::cout << "Error in cmac function" << std::endl;
+            FAIL();
+        }
+
+        if (!cb->reset()) {
+            std::cout << "Error in cmac reset function" << std::endl;
+            FAIL();
+        }
+
+        /*conv cmac output into a vector */
+        /* we need only the no of bytes needed, from the output */
+        std::vector<Uint8> cmac_vector(
+            std::begin(cmac), std::begin(cmac) + rsp.getVect("CMAC").size());
+
+        EXPECT_TRUE(ArraysMatch(
+            cmac_vector,         // Actual output
+            rsp.getVect("CMAC"), // expected output, from the rsp test data
+            rsp,
+            std::string("CMAC_" + CmacType + "_" + std::to_string(KeySize)
+                        + "_KAT")));
+    }
+}
+#endif
 
 /* Cmac Cross tests */
 void

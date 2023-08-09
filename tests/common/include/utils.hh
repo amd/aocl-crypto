@@ -53,6 +53,8 @@ std::string
 parseBytesToHexStr(const Uint8* bytes, const int length);
 Uint8
 parseHexToNum(const unsigned char c);
+Uint64
+parseStrToUint64(std::string);
 bool
 isPathExist(const std::string dir);
 void
