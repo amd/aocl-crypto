@@ -46,6 +46,7 @@ TEST(RSA_Padding_2048, Cross)
         GTEST_SKIP() << "OpenSSL is not supported yet";
     Rsa_Cross(ALCP_TEST_RSA_PADDING, 2048);
 }
+/* FIXME: Padding mode is still WIP for IPP */
 
 int
 main(int argc, char** argv)
