@@ -38,7 +38,8 @@
 #include "gtest_common.hh"
 #include <vector>
 #ifdef USE_IPP
-#include "ipp_cipher_base.hh"
+#include "ipp_cipher.hh"
+#include "ipp_cipher_aead.hh"
 #endif
 #ifdef USE_OSSL
 #include "openssl_cipher.hh"
@@ -205,7 +206,7 @@ class CipherAeadTestingCore
     lib_t               m_lib;
     alc_cipher_mode_t   m_alcpMode;
 #ifdef USE_IPP
-    IPPCipherBase* icb = nullptr;
+    IPPCipherAeadBase* icb = nullptr;
 #endif
 #ifdef USE_OSSL
     OpenSSLCipherAeadBase* ocb = nullptr;
@@ -227,7 +228,6 @@ class CipherAeadTestingCore
                 m_cipherHandler->setcb(ocb);
 #endif
                 break;
-#if 0
             case IPP:
 #ifndef USE_IPP
                 delete m_cipherHandler;
@@ -237,11 +237,10 @@ class CipherAeadTestingCore
                     delete m_cipherHandler;
                     throw "IPP disabled!";
                 }
-                icb = new IPPCipherBase(alcpMode, NULL);
+                icb = new IPPCipherAeadBase(alcpMode, NULL);
                 m_cipherHandler->setcb(icb);
 #endif
                 break;
-#endif
             case ALCP:
                 m_acb = new AlcpCipherAeadBase(alcpMode, NULL);
                 m_cipherHandler->setcb(m_acb);
@@ -259,9 +258,8 @@ class CipherAeadTestingCore
         m_cipherHandler = new CipherTesting();
         m_acb           = new AlcpCipherAeadBase(alcpMode, NULL);
         m_cipherHandler->setcb(m_acb);
-#if 0 // FIXME: OpenSSL and IPP AEAD Bringup needed
 #ifdef USE_IPP
-        icb = new IPPCipherBase(alcpMode, NULL);
+        icb = new IPPCipherAeadBase(alcpMode, NULL);
         if (useipp) {
             std::cout << "Using IPP" << std::endl;
             m_cipherHandler->setcb(icb);
@@ -270,7 +268,6 @@ class CipherAeadTestingCore
         if (useipp) {
             printErrors("IPP is unavailable at the moment switching to ALCP!");
         }
-#endif
 #endif
 #ifdef USE_OSSL
         ocb = new OpenSSLCipherAeadBase(alcpMode, NULL);
@@ -391,37 +388,15 @@ AesCrosstest(int               keySize,
     size_t      size = 1;
     std::string enc_dec_str, big_small_str;
     std::string MODE_STR = GetModeSTR(mode);
-    Int32       ivl, adl, tkeyl = 16;
+    Int32       ivl, tkeyl = 16;
     bool        ret       = false;
-    Int32       IVL_START = 0, IVL_MAX = 0, ADL_START = 0, ADL_MAX = 0;
+    Int32       IVL_START = 0, IVL_MAX = 0;
     // FIXME: Tag Length should not be hard coded
     const Uint64 tagLength = 16;
+    bool         isxts     = (MODE_STR.compare("XTS") == 0);
 
-    bool isxts = (MODE_STR.compare("XTS") == 0);
-    bool isgcm = (MODE_STR.compare("GCM") == 0);
-    bool isccm = (MODE_STR.compare("CCM") == 0);
-    bool issiv = (MODE_STR.compare("SIV") == 0);
-
-    /* IV, AD Length limits for different cases */
-    if (isccm) {
-        IVL_START = 7;
-        IVL_MAX   = 13;
-        ADL_START = 12;
-        ADL_MAX   = 16;
-    } else if (issiv) {
-        IVL_START = 16;
-        IVL_MAX   = 16;
-        ADL_START = 16;
-        ADL_MAX   = 16;
-    } else if (isgcm) {
-        IVL_START = 12;
-        IVL_MAX   = 16;
-        ADL_START = 12;
-        ADL_MAX   = 16;
-    } else {
-        IVL_START = 16;
-        IVL_MAX   = 16;
-    }
+    IVL_START = 16;
+    IVL_MAX   = 16;
 
     if (enc_dec == ENCRYPT)
         enc_dec_str.assign("ENC");
@@ -496,6 +471,265 @@ AesCrosstest(int               keySize,
     std::vector<Uint8> msg_full  = rb.genRandomBytes(MAX_LOOP * size);
     std::vector<Uint8> key_full  = rb.genRandomBytes(key_size);
     std::vector<Uint8> iv_full   = rb.genRandomBytes(IVL_MAX);
+    std::vector<Uint8> tkey_full = rb.genRandomBytes(key_size);
+
+    std::vector<Uint8>::const_iterator pos1, pos2;
+
+    auto rng = std::default_random_engine{};
+
+    if (extTC != nullptr) {
+        for (int i = LOOP_START; i < MAX_LOOP; i += INC_LOOP) {
+            if (!bbxreplay)
+                fr->startRecEvent();
+
+            /* generate multiple iv and adl */
+            ivl = IVL_START + (std::rand() % (IVL_START - IVL_MAX + 1));
+
+            alcp_dc_ex_t data_alc, data_ext;
+
+            std::vector<Uint8> ct(i * size, 0), tag_alc(tagLength, 0),
+                tag_ext(tagLength, 0), out_ct_alc(i * size, 0),
+                out_ct_ext(i * size, 0), out_pt(i * size, 0);
+
+            auto tagBuff = std::make_unique<Uint8[]>(tagLength);
+
+            pos1 = msg_full.end() - i * size;
+            pos2 = msg_full.end();
+            std::vector<Uint8> pt(pos1, pos2);
+
+            key_full = ShuffleVector(key_full, rng);
+            pos1     = key_full.begin();
+            pos2     = key_full.begin() + (key_size / 8);
+            std::vector<Uint8> key(pos1, pos2);
+
+            pos1 = iv_full.begin();
+            pos2 = iv_full.begin() + (ivl);
+            std::vector<Uint8> iv(pos1, pos2);
+
+            tkey_full = ShuffleVector(tkey_full, rng);
+            pos1      = tkey_full.begin();
+            pos2      = tkey_full.begin() + (key_size / 8);
+            std::vector<Uint8> tkey(pos1, pos2);
+
+            if (!bbxreplay) {
+                // ALC/Main Lib Data
+                data_alc.m_in   = &(pt[0]);
+                data_alc.m_inl  = pt.size();
+                data_alc.m_iv   = &(iv[0]);
+                data_alc.m_ivl  = iv.size();
+                data_alc.m_out  = &(out_ct_alc[0]);
+                data_alc.m_outl = data_alc.m_inl;
+                if (isxts) {
+                    data_alc.m_tkey  = &(tkey[0]);
+                    data_alc.m_tkeyl = tkeyl;
+                }
+
+                // External Lib Data
+                data_ext.m_in   = &(pt[0]);
+                data_ext.m_inl  = pt.size();
+                data_ext.m_iv   = &(iv[0]);
+                data_ext.m_ivl  = iv.size();
+                data_ext.m_out  = &(out_ct_ext[0]);
+                data_ext.m_outl = data_alc.m_inl;
+                if (isxts) {
+                    data_ext.m_tkey       = &(tkey[0]);
+                    data_ext.m_tkeyl      = tkeyl;
+                    data_ext.m_block_size = ct.size();
+                }
+                if (enc_dec == ENCRYPT)
+                    fr->setRecEvent(
+                        key, iv, pt, EncDecType(enc_dec, big_small));
+                else if (enc_dec == DECRYPT)
+                    fr->setRecEvent(
+                        key, iv, ct, EncDecType(enc_dec, big_small));
+            } else {
+                fr->nextLog();
+                try {
+                    if (enc_dec == ENCRYPT)
+                        fr->getValues(&key, &iv, &pt);
+                    else if (enc_dec == DECRYPT)
+                        fr->getValues(&key, &iv, &ct);
+
+                } catch (std::string excp) {
+                    std::cout << excp << std::endl;
+                    exit(-1);
+                }
+            }
+
+            if (enc_dec == ENCRYPT) {
+                ret = alcpTC->getCipherHandler()->testingEncrypt(data_alc, key);
+                if (!ret) {
+                    std::cout << "ERROR: Enc: Main lib" << std::endl;
+                    FAIL();
+                }
+                ret = extTC->getCipherHandler()->testingEncrypt(data_ext, key);
+                if (!ret) {
+                    std::cout << "ERROR: Enc: ext lib" << std::endl;
+                    FAIL();
+                }
+                ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
+                if (verbose > 1) {
+                    PrintTestData(key, data_alc, MODE_STR);
+                    PrintTestData(key, data_ext, MODE_STR);
+                }
+            } else {
+                ret = alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
+                if (!ret) {
+                    std::cout << "ERROR: Dec: main lib" << std::endl;
+                    FAIL();
+                }
+
+                ret = extTC->getCipherHandler()->testingDecrypt(data_ext, key);
+                if (!ret) {
+                    std::cout << "ERROR: Dec: ext lib" << std::endl;
+                    FAIL();
+                }
+
+                ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
+
+                if (verbose > 1) {
+                    PrintTestData(key, data_alc, MODE_STR);
+                    PrintTestData(key, data_ext, MODE_STR);
+                }
+            }
+            if (!bbxreplay) {
+                fr->dumpBlackBox();
+                fr->endRecEvent();
+                fr->dumpLog();
+            }
+        }
+        delete extTC;
+        delete alcpTC;
+    }
+    delete fr;
+}
+
+// FIXME: In future we need a direct path to each aead modes
+/**
+ * @brief funtion to avoid repeated code in every cross test, can only be used
+ * for AES-CTR,AES-CBC,AES-OFB,AES-CFB
+ *
+ * @param keySize keysize in bits(128,192 or 256)
+ * @param enc_dec (encryption or Decryption)
+ * @param mode AES modes (CTR, OFB, CBC and CFB)
+ * @param big_small Type (Big or Small) of test
+ */
+void
+AesAeadCrosstest(int               keySize,
+                 enc_dec_t         enc_dec,
+                 alc_cipher_mode_t mode,
+                 big_small_t       big_small)
+{
+    int         key_size = keySize;
+    int         LOOP_START, MAX_LOOP, INC_LOOP;
+    size_t      size = 1;
+    std::string enc_dec_str, big_small_str;
+    std::string MODE_STR = GetModeSTR(mode);
+    Int32       ivl, adl, tkeyl = 16;
+    bool        ret       = false;
+    Int32       IVL_START = 0, IVL_MAX = 0, ADL_START = 0, ADL_MAX = 0;
+    // FIXME: Tag Length should not be hard coded
+    const Uint64 tagLength = 16;
+
+    bool isxts = (MODE_STR.compare("XTS") == 0);
+    bool isgcm = (MODE_STR.compare("GCM") == 0);
+    bool isccm = (MODE_STR.compare("CCM") == 0);
+    bool issiv = (MODE_STR.compare("SIV") == 0);
+
+    /* IV, AD Length limits for different cases */
+    if (isccm) {
+        IVL_START = 7;
+        IVL_MAX   = 13;
+        ADL_START = 12;
+        ADL_MAX   = 16;
+    } else if (issiv) {
+        IVL_START = 16;
+        IVL_MAX   = 16;
+        ADL_START = 16;
+        ADL_MAX   = 16;
+    } else if (isgcm) {
+        IVL_START = 12;
+        IVL_MAX   = 16;
+        ADL_START = 12;
+        ADL_MAX   = 16;
+    } else {
+        IVL_START = 16;
+        IVL_MAX   = 16;
+    }
+
+    if (enc_dec == ENCRYPT)
+        enc_dec_str.assign("ENC");
+    else
+        enc_dec_str.assign("DEC");
+    if (big_small == BIG)
+        big_small_str.assign("BIG");
+    else
+        big_small_str.assign("SMALL");
+    /* Request from others to validate openssl with ipp */
+    CipherAeadTestingCore* alcpTC = nullptr;
+    if (oa_override) {
+        alcpTC = new CipherAeadTestingCore(OPENSSL, mode);
+        printErrors("ALCP is overriden!... OpenSSL is now main lib");
+        printErrors("ALCP is overriden!... Forcing IPP as extlib");
+        useipp  = true;
+        useossl = false;
+    } else {
+        alcpTC = new CipherAeadTestingCore(ALCP, mode);
+    }
+    CipherAeadTestingCore* extTC = nullptr;
+    ExecRecPlay*           fr    = nullptr;
+    RngBase                rb;
+    if (bbxreplay) {
+        fr = new ExecRecPlay("AES_" + MODE_STR + "_" + enc_dec_str + "_"
+                                 + std::to_string(key_size) + "_"
+                                 + big_small_str,
+                             "AES_" + MODE_STR + "_TEST_DATA",
+                             true);
+        fr->fastForward(EncDecType(enc_dec, big_small));
+    } else
+        fr = new ExecRecPlay("AES_" + MODE_STR + "_" + enc_dec_str + "_"
+                                 + std::to_string(key_size) + "_"
+                                 + big_small_str,
+                             "AES_" + MODE_STR + "_TEST_DATA",
+                             false);
+    /* Set extTC based on which external testing core user asks*/
+    try {
+        if (useossl)
+            extTC = new CipherAeadTestingCore(OPENSSL, mode);
+        else if (useipp)
+            extTC = new CipherAeadTestingCore(IPP, mode);
+        else {
+            printErrors("No Lib Specified!.. but trying OpenSSL");
+            extTC = new CipherAeadTestingCore(OPENSSL, mode);
+        }
+    } catch (const char* exc) {
+        std::cerr << exc << std::endl;
+    }
+    if (big_small == SMALL) {
+        LOOP_START = SMALL_START_LOOP;
+        MAX_LOOP   = SMALL_MAX_LOOP;
+        INC_LOOP   = SMALL_INC_LOOP;
+        size       = 1;
+        if (useipp && isxts) {
+            /* ipp max supported block size is 128 */
+            MAX_LOOP = 128;
+        }
+    } else {
+        LOOP_START = BIG_START_LOOP;
+        MAX_LOOP   = BIG_MAX_LOOP;
+        INC_LOOP   = BIG_INC_LOOP;
+        size       = 16 * 10000000;
+    }
+
+    /* max size supported by XTS is 2 ^ 20 = 1048576 */
+    if (big_small == BIG && isxts) {
+        size = (1048576 / 2);
+    }
+
+    /* generate these only once and use it in the loop below, chunk by chunk */
+    std::vector<Uint8> msg_full  = rb.genRandomBytes(MAX_LOOP * size);
+    std::vector<Uint8> key_full  = rb.genRandomBytes(key_size);
+    std::vector<Uint8> iv_full   = rb.genRandomBytes(IVL_MAX);
     std::vector<Uint8> add_full  = rb.genRandomBytes(ADL_MAX);
     std::vector<Uint8> tkey_full = rb.genRandomBytes(key_size);
 
@@ -512,7 +746,7 @@ AesCrosstest(int               keySize,
             ivl = IVL_START + (std::rand() % (IVL_START - IVL_MAX + 1));
             adl = ADL_START + (std::rand() % (ADL_MAX - ADL_START + 1));
 
-            alcp_dc_ex_t data_alc, data_ext;
+            alcp_dca_ex_t data_alc, data_ext;
 
             std::vector<Uint8> ct(i * size, 0), tag_alc(tagLength, 0),
                 tag_ext(tagLength, 0), out_ct_alc(i * size, 0),
@@ -550,7 +784,7 @@ AesCrosstest(int               keySize,
                 data_alc.m_ivl  = iv.size();
                 data_alc.m_out  = &(out_ct_alc[0]);
                 data_alc.m_outl = data_alc.m_inl;
-#if 0
+#if 1
                 if (isgcm || isccm || issiv) {
                     data_alc.m_ad      = &(add[0]);
                     data_alc.m_adl     = add.size();
@@ -571,7 +805,7 @@ AesCrosstest(int               keySize,
                 data_ext.m_ivl  = iv.size();
                 data_ext.m_out  = &(out_ct_ext[0]);
                 data_ext.m_outl = data_alc.m_inl;
-#if 0
+#if 1
                 if (isgcm || isccm || issiv) {
                     data_ext.m_ad      = &(add[0]);
                     data_ext.m_adl     = add.size();
@@ -626,7 +860,7 @@ AesCrosstest(int               keySize,
                     PrintTestData(key, data_ext, MODE_STR);
                 }
             } else {
-#if 0
+#if 1
                 if (isgcm || isccm || issiv) {
                     ret = alcpTC->getCipherHandler()->testingEncrypt(data_alc,
                                                                      key);
@@ -648,7 +882,7 @@ AesCrosstest(int               keySize,
                     FAIL();
                 }
 
-#if 0
+#if 1
                 /*ext lib decrypt */
                 if (isgcm || isccm || issiv) {
                     ret = alcpTC->getCipherHandler()->testingEncrypt(data_ext,
@@ -670,7 +904,7 @@ AesCrosstest(int               keySize,
                     std::cout << "ERROR: Dec: ext lib" << std::endl;
                     FAIL();
                 }
-#if 0
+#if 1
                 data_ext.m_isTagValid = /* check if Tag is valid */
                     (std::find(tag_ext.begin(), tag_ext.end(), true)
                      == tag_ext.end());
@@ -683,9 +917,9 @@ AesCrosstest(int               keySize,
                         ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
                         EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
                     }
-                }else
+                } else
 #endif
-                if (!(isgcm || isccm)) {
+                    if (!(isgcm || isccm)) {
                     ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
                 }
                 if (verbose > 1) {

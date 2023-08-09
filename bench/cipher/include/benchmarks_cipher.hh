@@ -35,7 +35,7 @@
 #include <string.h>
 
 #ifdef USE_IPP
-#include "cipher/ipp_cipher_base.hh"
+#include "cipher/ipp_cipher.hh"
 #endif
 
 #ifdef USE_OSSL

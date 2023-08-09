@@ -30,7 +30,7 @@
 #include "alcp/alcp.h"
 #include <sstream>
 #ifdef USE_IPP
-#include "cipher/ipp_cipher_base.hh"
+#include "cipher/ipp_cipher.hh"
 #endif
 #ifdef WIN32
 #include <direct.h>
