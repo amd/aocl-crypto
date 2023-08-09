@@ -47,30 +47,21 @@ ippsAES_GCMInit(const Ipp8u*      pKey,
     std::stringstream ss;
     ss << "KeyLength:" << keyLen;
     printMsg(ss.str());
-    ipp_wrp_aes_ctx* context_dec =
-        &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->decrypt_ctx);
-    ipp_wrp_aes_ctx* context_enc =
-        &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->encrypt_ctx);
+    ipp_wrp_aes_ctx* context_aead =
+        &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->aead_ctx);
     if (pKey != nullptr) {
-        context_dec->c_aeadinfo.ci_type              = ALC_CIPHER_TYPE_AES;
-        context_dec->c_aeadinfo.ci_key_info.type     = ALC_KEY_TYPE_SYMMETRIC;
-        context_dec->c_aeadinfo.ci_key_info.fmt      = ALC_KEY_FMT_RAW;
-        context_dec->c_aeadinfo.ci_key_info.key      = (Uint8*)pKey;
-        context_dec->c_aeadinfo.ci_key_info.len      = keyLen * 8;
-        context_dec->c_aeadinfo.ci_algo_info.ai_mode = ALC_AES_MODE_GCM;
-        context_dec->handle.ch_context               = nullptr;
-        context_enc->c_aeadinfo                      = context_dec->c_aeadinfo;
-        context_enc->handle.ch_context               = nullptr;
+        context_aead->c_aeadinfo.ci_type              = ALC_CIPHER_TYPE_AES;
+        context_aead->c_aeadinfo.ci_key_info.type     = ALC_KEY_TYPE_SYMMETRIC;
+        context_aead->c_aeadinfo.ci_key_info.fmt      = ALC_KEY_FMT_RAW;
+        context_aead->c_aeadinfo.ci_key_info.key      = (Uint8*)pKey;
+        context_aead->c_aeadinfo.ci_key_info.len      = keyLen * 8;
+        context_aead->c_aeadinfo.ci_algo_info.ai_mode = ALC_AES_MODE_GCM;
+        context_aead->handle.ch_context               = nullptr;
     } else {
-        if (context_dec->handle.ch_context != nullptr) {
-            alcp_cipher_finish(&(context_dec->handle));
-            free(context_dec->handle.ch_context);
-            context_dec->handle.ch_context = nullptr;
-        }
-        if (context_enc->handle.ch_context != nullptr) {
-            alcp_cipher_finish(&(context_enc->handle));
-            free(context_enc->handle.ch_context);
-            context_enc->handle.ch_context = nullptr;
+        if (context_aead->handle.ch_context != nullptr) {
+            alcp_cipher_finish(&(context_aead->handle));
+            free(context_aead->handle.ch_context);
+            context_aead->handle.ch_context = nullptr;
         }
     }
     printMsg("GCM Init End");
