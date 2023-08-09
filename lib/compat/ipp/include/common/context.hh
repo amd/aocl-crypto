@@ -43,18 +43,13 @@ typedef struct _ipp_wrp_aes_aead_ctx
     bool            is_encrypt;
     size_t          msg_len;
     size_t          tag_len;
-    ipp_wrp_aes_ctx encrypt_ctx;
-    ipp_wrp_aes_ctx decrypt_ctx;
+    ipp_wrp_aes_ctx aead_ctx;
 } ipp_wrp_aes_aead_ctx;
 
 typedef struct _ipp_wrp_aes_xts_ctx
 {
     bool            is_encrypt;
-    ipp_wrp_aes_ctx encrypt_ctx;
-    ipp_wrp_aes_ctx decrypt_ctx;
-    alc_key_info_t  tweak_key;
-    Uint8           tkey[32];
-    Uint8           key[32];
+    ipp_wrp_aes_ctx cipher_ctx;
 } ipp_wrp_aes_xts_ctx;
 
 typedef struct _ipp_wrp_sha2_ctx
