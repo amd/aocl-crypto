@@ -114,7 +114,7 @@ Rsa_KAT(int padding_mode, int KeySize)
         /* input text to be loaded */
         std::vector<Uint8> input_data = csv.getVect("INPUT");
         std::vector<Uint8> encrypted_data(KeySize, 0);
-        std::vector<Uint8> decrypted_data(input_data.size(), 0);
+        std::vector<Uint8> decrypted_data(KeySize, 0); /* keysize for padded */
         std::vector<Uint8> PubKeyKeyMod(KeySize, 0);
 
         data.m_msg            = &(input_data[0]);
@@ -125,6 +125,10 @@ Rsa_KAT(int padding_mode, int KeySize)
         data.m_key_len        = KeySize;
 
         rb->m_key_len = KeySize;
+
+        /* FIXME: as of now we will use SHA256, this will be parameterized later
+         */
+        rb->m_hash_len = ALC_DIGEST_LEN_256 / 8;
 
         if (!rb->init()) {
             std::cout << "Error in RSA init" << std::endl;
@@ -150,9 +154,14 @@ Rsa_KAT(int padding_mode, int KeySize)
             FAIL();
         }
         /* check if dec val is same as input */
-        EXPECT_TRUE(
-            ArraysMatch(decrypted_data, input_data, csv, std::string("RSA")));
 
+        if (padding_mode == 1) {
+            input_data.resize(KeySize, 0);
+            EXPECT_TRUE(
+                ArraysMatch(decrypted_data, input_data, input_data.size()));
+        } else
+            EXPECT_TRUE(ArraysMatch(
+                decrypted_data, input_data, csv, std::string("RSA")));
         if (verbose > 1) {
             PrintRsaTestData(data);
         }
@@ -210,6 +219,9 @@ Rsa_Cross(int padding_mode, int KeySize)
 
     rb_main->m_key_len = KeySize;
     rb_ext->m_key_len  = KeySize;
+    /* FIXME: set the hash len for each rb here as per passed parameter */
+    rb_main->m_hash_len = ALC_DIGEST_LEN_256 / 8;
+    rb_ext->m_hash_len  = ALC_DIGEST_LEN_256 / 8;
 
     int loop_max = 1600, loop_start = 1;
     if (rb_ext == nullptr) {
@@ -244,8 +256,6 @@ Rsa_Cross(int padding_mode, int KeySize)
         data_ext.m_decrypted_data = &(decrypted_data_ext[0]);
         data_ext.m_msg_len        = input_data.size();
         data_ext.m_key_len        = KeySize;
-
-        /* FIXME: set the hash len for each rb here as per passed parameter */
 
         if (!rb_main->init()) {
             std::cout << "Error in RSA init for " << LibStrMain << std::endl;

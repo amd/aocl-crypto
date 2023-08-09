@@ -155,7 +155,7 @@ AlcpRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
 {
     alc_error_t err;
     // RSA Private key
-    /*FIXME: All these should come from outside test data */
+    /* FIXME: All these should come from outside test data at one point */
     static const Uint8 Modulus_1024[] = {
         0xef, 0x4f, 0xa2, 0xcd, 0x00, 0xea, 0x99, 0xeb, 0x12, 0xa8, 0x3a, 0x1b,
         0xc5, 0x5d, 0x49, 0x04, 0x18, 0xcd, 0x96, 0x69, 0xc9, 0x28, 0x2c, 0x36,
@@ -390,7 +390,7 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
     /*FIXME: seed should be part of test data */
     Uint8* p_seed = nullptr;
 
-    /* FIXME: these 2 should be parameterized */
+    /* FIXME: these 2 should be parameterized based on m_hash_len */
     alc_digest_info_t dinfo = {
         .dt_type = ALC_DIGEST_TYPE_SHA2,
         .dt_len = ALC_DIGEST_LEN_256,
@@ -430,9 +430,6 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
             std::cout << "Error in alcp_rsa_add_mgf_oaep " << err << std::endl;
             return false;
         }
-        m_hash_len = ALC_DIGEST_LEN_256 / 8;
-        // text size should be in the range 2 * hash_len + 2
-        // to sizeof(Modulus) - 2* hash_len - 2
         /* generate randomly */
         p_seed = (Uint8*)malloc(m_hash_len);
 
@@ -464,8 +461,9 @@ AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
     /*FIXME: where should this be defined? */
     static const Uint8 Label[] = { 'h', 'e', 'l', 'l', 'o' };
     alc_error_t        err;
-    /*FIXME: mod size from outside */
-    Uint64 text_size = data.m_key_len - 2 * m_hash_len - 2;
+
+    Uint64 text_size = 0;
+
     if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
         err = alcp_rsa_privatekey_decrypt(m_rsa_handle,
                                           ALCP_RSA_PADDING_NONE,
@@ -473,7 +471,8 @@ AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                                           data.m_key_len,
                                           data.m_decrypted_data);
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING) {
-        err = alcp_rsa_privatekey_decrypt_oaep(m_rsa_handle,
+        text_size = data.m_key_len - 2 * m_hash_len - 2;
+        err       = alcp_rsa_privatekey_decrypt_oaep(m_rsa_handle,
                                                data.m_encrypted_data,
                                                data.m_key_len,
                                                Label,

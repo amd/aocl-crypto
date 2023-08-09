@@ -115,7 +115,7 @@ Rsa_Bench(benchmark::State& state,
     rb->m_key_len = KeySize;
 
     /*FIXME: Hash len should be parameterized */
-    rb->m_hash_len = 256;
+    rb->m_hash_len = ALC_DIGEST_LEN_256 / 8;
 
     if (!rb->init()) {
         state.SkipWithError("Error in RSA init");

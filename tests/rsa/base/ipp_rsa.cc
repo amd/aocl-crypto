@@ -273,7 +273,7 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 
     if (m_padding_mode == 1) {
         /*! Seed string of hash size */
-        /*FIXME: should this come from test data? */
+        /*FIXME: should this come from test data? Also randomize this */
         static Ipp8u pSeed[] = "\xaa\xfd\x12\xf6\x59\xca\xe6\x34\x89\xb4"
                                "\x79\xe5\x07\x6d\xde\xc2\xf0\x6c\xb5\x8f";
 
@@ -286,8 +286,8 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
             pSeed,
             data.m_encrypted_data,
             m_pPub,
-            // ippsHashMethod_SHA1(),
-            ippsHashMethod_SHA256_TT(), /*FIXME: parameterize this*/
+            ippsHashMethod_SHA256_TT(), /*FIXME: parameterize this based on
+                                           m_hash_len */
             m_scratchBuffer_Pub);
 
         if (status != ippStsNoErr) {
@@ -319,7 +319,6 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                                          pPlainText,
                                          &plainTextLen,
                                          m_pPrv,
-                                         // ippsHashMethod_SHA1(),
                                          ippsHashMethod_SHA256_TT(),
                                          m_scratchBuffer_Pvt);
 
