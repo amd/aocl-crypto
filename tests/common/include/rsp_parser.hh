@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,40 +25,48 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#pragma once
 
-#include "cipher/alc_cipher.hh"
-#include "cipher/cipher.hh"
-#include "cipher/gtest_base_cipher.hh"
+/* C/C++ Headers */
+#include <bits/stdc++.h>
 
-using namespace alcp::testing;
+/* ALCP Headers */
+#include "file.hh"
+#include "utils.hh"
 
-#define ALC_MODE ALC_AES_MODE_XTS
-#define STR_MODE "AES_XTS"
+namespace alcp::testing {
+using utils::parseHexStrToBin;
 
-TEST(AES_ENC_128, KAT_128)
+typedef std::unordered_map<String, String> param_map_t;
+
+// A Generic DataSet
+class CRspParser final : private File
 {
-    AesKatTest(128, ENCRYPT, ALC_MODE);
-}
+  private:
+    String              m_input_rsp_file = {};
+    String              m_lineBuf        = {}; // Buffer to a line in RSP file
+    size_t              m_paramPerTC     = 0;  // Number of parameters per TC
+    std::vector<String> m_names          = {}; // Keys (CSV header items)
+    param_map_t         m_data_map = {}; // Parameters stored as key-value pair
+    bool m_keys_parsed{ false }; // Indicator if m_names (Keys) are parsed
+    // Linenum starts from 0
+    Uint m_lineno = 0; // Line Count
 
-TEST(AES_ENC_256, KAT_256)
-{
-    AesKatTest(256, ENCRYPT, ALC_MODE);
-}
+  public:
+    CRspParser(const String&);
+    bool   fileExists{};
+    bool   init();
+    bool   skipRSPHeader();
+    String fetchTCfromRSP();
+    void   removeSpaces(String& str);
+    bool   readNextTC();
+    void   storeTCinUMap(StringView);
+    int    isSubString(StringView destStr, StringView srcStr);
 
-TEST(AES_DEC_128, KAT_128)
-{
-    AesKatTest(128, DECRYPT, ALC_MODE);
-}
+    std::vector<Uint8> getVect(StringView cName);
+    Uint64             getLenBytes(StringView cName);
+    String             adjustKeyNames(String cName);
+    Uint               getLineNumber();
+};
 
-TEST(AES_DEC_256, KAT_256)
-{
-    AesKatTest(256, DECRYPT, ALC_MODE);
-}
-
-int
-main(int argc, char** argv)
-{
-    ::testing::InitGoogleTest(&argc, argv);
-    parseArgs(argc, argv);
-    return RUN_ALL_TESTS();
-}
+} // namespace alcp::testing

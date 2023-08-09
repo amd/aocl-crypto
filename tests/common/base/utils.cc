@@ -62,7 +62,7 @@ parseHexStrToBin(const std::string in)
     std::vector<Uint8> vector;
     int                len = in.size();
     int                ind = 0;
-
+    
     for (int i = 0; i < len; i += 2) {
         Uint8 val =
             parseHexToNum(in.at(ind)) << 4 | parseHexToNum(in.at(ind + 1));
@@ -102,6 +102,13 @@ parseHexToNum(const unsigned char c)
 
     return 0;
 }
+
+Uint64
+parseStrToUint64(const std::string str)
+{
+    return std::stoull(str);
+}
+
 bool
 isPathExist(const std::string dir)
 {

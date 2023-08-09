@@ -35,32 +35,32 @@ using namespace alcp::testing;
 #define ALC_MODE ALC_AES_MODE_SIV
 
 /* Testing Starts Here! */
-TEST(SYMMETRIC_ENC_128, 128_KnownAnsTest)
+TEST(AES_ENC_128, KAT_128)
 {
     AesAeadKatTest(128, ENCRYPT, ALC_MODE);
 }
 
-TEST(SYMMETRIC_ENC_192, 192_KnownAnsTest)
+TEST(AES_ENC_192, KAT_192)
 {
     AesAeadKatTest(192, ENCRYPT, ALC_MODE);
 }
 
-TEST(SYMMETRIC_ENC_256, 256_KnownAnsTest)
+TEST(AES_ENC_256, KAT_256)
 {
     AesAeadKatTest(256, ENCRYPT, ALC_MODE);
 }
 
-TEST(SYMMETRIC_DEC_128, 128_KnownAnsTest)
+TEST(AES_DEC_128, KAT_128)
 {
     AesAeadKatTest(128, DECRYPT, ALC_MODE);
 }
 
-TEST(SYMMETRIC_DEC_192, 192_KnownAnsTest)
+TEST(AES_DEC_192, KAT_192)
 {
     AesAeadKatTest(192, DECRYPT, ALC_MODE);
 }
 
-TEST(SYMMETRIC_DEC_256, 256_KnownAnsTest)
+TEST(AES_DEC_256, KAT_256)
 {
     AesAeadKatTest(256, DECRYPT, ALC_MODE);
 }
