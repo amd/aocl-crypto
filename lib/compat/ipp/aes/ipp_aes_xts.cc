@@ -37,12 +37,12 @@ ippsAES_XTSEncrypt(const Ipp8u*           pSrc,
                    int                    startCipherBlkNo)
 {
     printMsg("XTSEncrypt Start");
-    ipp_wrp_aes_ctx* context_enc =
-        &(((ipp_wrp_aes_xts_ctx*)(pCtx))->encrypt_ctx);
+    ipp_wrp_aes_ctx* context_cipher =
+        &(((ipp_wrp_aes_xts_ctx*)(pCtx))->cipher_ctx);
     return alcp_encdecAES(pSrc,
                           pDst,
                           bitSizeLen / 8,
-                          (IppsAESSpec*)context_enc,
+                          (IppsAESSpec*)context_cipher,
                           pTweak,
                           startCipherBlkNo,
                           ALC_AES_MODE_XTS,
@@ -59,12 +59,12 @@ ippsAES_XTSDecrypt(const Ipp8u*           pSrc,
                    int                    startCipherBlkNo)
 {
     printMsg("XTSDecrypt Start");
-    ipp_wrp_aes_ctx* context_dec =
-        &(((ipp_wrp_aes_xts_ctx*)(pCtx))->decrypt_ctx);
+    ipp_wrp_aes_ctx* context_cipher =
+        &(((ipp_wrp_aes_xts_ctx*)(pCtx))->cipher_ctx);
     return alcp_encdecAES(pSrc,
                           pDst,
                           bitSizeLen / 8,
-                          (IppsAESSpec*)context_dec,
+                          (IppsAESSpec*)context_cipher,
                           pTweak,
                           startCipherBlkNo,
                           ALC_AES_MODE_XTS,

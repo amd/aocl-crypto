@@ -48,48 +48,22 @@ ippsAES_XTSInit(const Ipp8u*     pKey,
     std::stringstream ss;
     ss << "KeyLength:" << keyLen;
     printMsg(ss.str());
-    ipp_wrp_aes_ctx* context_dec =
-        &((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->decrypt_ctx);
-    ipp_wrp_aes_ctx* context_enc =
-        &((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->encrypt_ctx);
-    alc_key_info_t* tkey =
-        &((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->tweak_key);
-    Uint8* tweak = ((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->tkey);
-    Uint8* key   = ((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->key);
+    ipp_wrp_aes_ctx* context_cipher =
+        &((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->cipher_ctx);
     if (pKey != nullptr) {
 
-        // FIXME: This is not needed but test framework is insane as of now.
-        memcpy(tweak, ((Uint8*)pKey) + (keyLen / (8 * 2)), (keyLen / (8 * 2)));
-        memcpy(key, ((Uint8*)pKey), (keyLen / (8 * 2)));
-
-        alc_key_info_t kinfo;
-        kinfo.type = ALC_KEY_TYPE_SYMMETRIC;
-        kinfo.fmt  = ALC_KEY_FMT_RAW;
-        kinfo.len  = keyLen / 2;
-        kinfo.key  = tweak;
-        *tkey      = kinfo;
-
-        context_dec->cinfo.ci_type              = ALC_CIPHER_TYPE_AES;
-        context_dec->cinfo.ci_key_info.type     = ALC_KEY_TYPE_SYMMETRIC;
-        context_dec->cinfo.ci_key_info.fmt      = ALC_KEY_FMT_RAW;
-        context_dec->cinfo.ci_key_info.key      = key;
-        context_dec->cinfo.ci_key_info.len      = keyLen / 2;
-        context_dec->cinfo.ci_algo_info.ai_mode = ALC_AES_MODE_XTS;
-        context_dec->cinfo.ci_algo_info.ai_xts.xi_tweak_key = tkey;
-        context_dec->handle.ch_context                      = nullptr;
-
-        context_enc->cinfo             = context_dec->cinfo;
-        context_enc->handle.ch_context = nullptr;
+        context_cipher->cinfo.ci_type              = ALC_CIPHER_TYPE_AES;
+        context_cipher->cinfo.ci_key_info.type     = ALC_KEY_TYPE_SYMMETRIC;
+        context_cipher->cinfo.ci_key_info.fmt      = ALC_KEY_FMT_RAW;
+        context_cipher->cinfo.ci_key_info.key      = pKey;
+        context_cipher->cinfo.ci_key_info.len      = keyLen / 2;
+        context_cipher->cinfo.ci_algo_info.ai_mode = ALC_AES_MODE_XTS;
+        context_cipher->handle.ch_context          = nullptr;
     } else {
-        if (context_dec->handle.ch_context != nullptr) {
-            alcp_cipher_finish(&(context_dec->handle));
-            free(context_dec->handle.ch_context);
-            context_dec->handle.ch_context = nullptr;
-        }
-        if (context_enc->handle.ch_context != nullptr) {
-            alcp_cipher_finish(&(context_enc->handle));
-            free(context_enc->handle.ch_context);
-            context_enc->handle.ch_context = nullptr;
+        if (context_cipher->handle.ch_context != nullptr) {
+            alcp_cipher_finish(&(context_cipher->handle));
+            free(context_cipher->handle.ch_context);
+            context_cipher->handle.ch_context = nullptr;
         }
     }
     printMsg("XTS Init End");
