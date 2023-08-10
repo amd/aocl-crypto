@@ -125,6 +125,9 @@ alcp_drbg_randomize(alc_drbg_handle_p pDrbgHandle,
                     const Uint8       cAdditionalInput[],
                     const size_t      cAdditionalInputLength);
 
+ALCP_API_EXPORT alc_error_t
+alcp_drbg_finish(alc_drbg_handle_p pDrbgHandle);
+
 EXTERN_C_END
 
 #endif

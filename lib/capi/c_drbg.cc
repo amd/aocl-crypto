@@ -128,6 +128,22 @@ alcp_drbg_randomize(alc_drbg_handle_p pDrbgHandle,
     }
     return err;
 }
+
+alc_error_t
+alcp_drbg_finish(alc_drbg_handle_p pDrbgHandle)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pDrbgHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pDrbgHandle->ch_context, err);
+    auto p_ctx    = static_cast<drbg::Context*>(pDrbgHandle->ch_context);
+    p_ctx->status = p_ctx->finish(p_ctx->m_drbg);
+    if (!p_ctx->status.ok()) {
+        err = ALC_ERROR_EXISTS;
+    } else {
+        err = ALC_ERROR_NONE;
+    }
+    return err;
+}
 } // namespace alcp::drbg
 // TODO: Add the remaining APIS
 EXTERN_C_END

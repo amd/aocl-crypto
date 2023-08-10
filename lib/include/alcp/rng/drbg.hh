@@ -47,6 +47,10 @@ class IDrbg : public IRng
                              std::vector<Uint8>& p_cAdditionalInput)        = 0;
 
     virtual Status randomize(Uint8 p_Output[], size_t length) = 0;
+
+    virtual Status setRng(std::shared_ptr<IRng> entropyIn) = 0;
+    virtual void   setNonceLen(Uint64 nonceLen)            = 0;
+    virtual void   setEntropyLen(Uint64 entropyLen)        = 0;
 };
 
 class ALCP_API_EXPORT Drbg : public IDrbg

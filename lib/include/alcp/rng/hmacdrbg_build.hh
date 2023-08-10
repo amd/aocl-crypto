@@ -48,7 +48,7 @@ Status
 HmacDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
 {
     printf("Running HMAC DRBG BUILD\n");
-    alcp::rng::drbg::HmacDrbg* hmacdrbg = new alcp::rng::drbg::HmacDrbg();
+    auto* hmacdrbg = new alcp::rng::drbg::HmacDrbg();
     std::shared_ptr<alcp::digest::Digest> p_digest;
     switch (drbgInfo.di_algoinfo.hmac_drbg.digest_info.dt_type) {
         case ALC_DIGEST_TYPE_SHA2: {
@@ -96,16 +96,12 @@ HmacDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
 Uint64
 HmacDrbgBuilder::getSize(const alc_drbg_info_t& drbgInfo)
 {
-#if 0 
-    return sizeof(alcp::rng::drbg::CtrDrbg);
-#endif
+    return sizeof(alcp::rng::drbg::HmacDrbg);
 }
 
 Status
 HmacDrbgBuilder::isSupported(const alc_drbg_info_t& drbgInfo)
 {
-#if 0 
     return StatusOk();
-#endif
 }
 } // namespace alcp::drbg

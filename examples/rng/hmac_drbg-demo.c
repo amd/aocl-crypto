@@ -105,6 +105,13 @@ main(int argc, char const* argv[])
     printHexString(output, sizeof(output));
     printf("\n");
 
+    alcp_drbg_finish(&handle);
+
+    if (handle.ch_context) {
+        free(handle.ch_context);
+        handle.ch_context = NULL;
+    }
+
     return 0;
 out:
     return -1;

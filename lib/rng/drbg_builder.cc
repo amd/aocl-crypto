@@ -64,6 +64,18 @@ __drbg_wrapperrandomize(void*        m_drbg,
                              cAdditionalInputLength);
 }
 
+static Status
+__drbg_wrapperFinish(void* m_drbg)
+{
+    Status status = StatusOk();
+
+    alcp::rng::IDrbg* p_drbg = static_cast<alcp::rng::IDrbg*>(m_drbg);
+    // p_drbg->~IDrbg();
+    delete p_drbg;
+
+    return status;
+}
+
 Status
 DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
 {
@@ -101,13 +113,14 @@ DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
         }
     }
 
-    alcp::rng::Drbg* p_drbg = static_cast<alcp::rng::Drbg*>(ctx.m_drbg);
+    alcp::rng::IDrbg* p_drbg = static_cast<alcp::rng::Drbg*>(ctx.m_drbg);
     p_drbg->setRng(irng);
     p_drbg->setEntropyLen(drbgInfo.max_entropy_len);
     p_drbg->setNonceLen(drbgInfo.max_nonce_len);
 
     ctx.initialize = __drbg_wrapperinitialize;
     ctx.randomize  = __drbg_wrapperrandomize;
+    ctx.finish     = __drbg_wrapperFinish;
 
     return StatusOk();
 }

@@ -46,6 +46,7 @@ struct Context
                         int          cSecurityStrength,
                         const Uint8  cAdditionalInput[],
                         const size_t cAdditionalInputLength);
+    Status (*finish)(void* m_drbg);
 };
 
 } // namespace alcp::drbg
