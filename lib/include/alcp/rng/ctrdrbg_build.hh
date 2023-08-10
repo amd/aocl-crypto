@@ -43,7 +43,8 @@ Status
 CtrDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
 {
     printf("Running CTR DRBG BUILD\n");
-    auto ctrdrbg = new alcp::rng::drbg::CtrDrbg();
+    auto addr    = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
+    auto ctrdrbg = new (addr) alcp::rng::drbg::CtrDrbg();
     ctrdrbg->setKeySize(drbgInfo.di_algoinfo.ctr_drbg.di_keysize / 8);
 
     ctx.m_drbg = static_cast<void*>(ctrdrbg);
@@ -58,6 +59,7 @@ CtrDrbgBuilder::getSize(const alc_drbg_info_t& drbgInfo)
 Status
 CtrDrbgBuilder::isSupported(const alc_drbg_info_t& drbgInfo)
 {
+    // FIMXE : Need to be added
     return StatusOk();
 }
 } // namespace alcp::drbg

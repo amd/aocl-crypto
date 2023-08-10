@@ -70,8 +70,7 @@ __drbg_wrapperFinish(void* m_drbg)
     Status status = StatusOk();
 
     alcp::rng::IDrbg* p_drbg = static_cast<alcp::rng::IDrbg*>(m_drbg);
-    // p_drbg->~IDrbg();
-    delete p_drbg;
+    p_drbg->~IDrbg();
 
     return status;
 }

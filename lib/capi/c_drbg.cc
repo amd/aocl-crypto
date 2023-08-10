@@ -135,15 +135,18 @@ alcp_drbg_finish(alc_drbg_handle_p pDrbgHandle)
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pDrbgHandle, err);
     ALCP_BAD_PTR_ERR_RET(pDrbgHandle->ch_context, err);
-    auto p_ctx    = static_cast<drbg::Context*>(pDrbgHandle->ch_context);
+
+    auto p_ctx = static_cast<drbg::Context*>(pDrbgHandle->ch_context);
+
     p_ctx->status = p_ctx->finish(p_ctx->m_drbg);
+    // TODO: Convert status to proper alc_error_t code and return
     if (!p_ctx->status.ok()) {
         err = ALC_ERROR_EXISTS;
     } else {
         err = ALC_ERROR_NONE;
     }
+    p_ctx->~Context();
     return err;
 }
 } // namespace alcp::drbg
-// TODO: Add the remaining APIS
 EXTERN_C_END
