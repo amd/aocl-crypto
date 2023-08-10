@@ -43,8 +43,6 @@ namespace alcp::drbg {
 Uint64
 alcp_drbg_context_size(const alc_drbg_info_p pDrbgInfo)
 {
-    printf("Executing Context Size API\n");
-
     Uint64 size = sizeof(Context) + DrbgBuilder::getSize(*pDrbgInfo);
     return size;
 }
@@ -52,7 +50,6 @@ alcp_drbg_context_size(const alc_drbg_info_p pDrbgInfo)
 alc_error_t
 alcp_drbg_supported(const alc_drbg_info_p pcDrbgInfo)
 {
-    printf("Executing DRBG Supported API\n");
     return ALC_ERROR_NONE;
 }
 
@@ -60,8 +57,6 @@ alc_error_t
 alcp_drbg_request(alc_drbg_handle_p     pDrbgHandle,
                   const alc_drbg_info_p pDrbgInfo)
 {
-    printf("Executing alcp drbg request\n");
-
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pDrbgHandle, err);

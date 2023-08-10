@@ -42,7 +42,6 @@ class CtrDrbgBuilder
 Status
 CtrDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
 {
-    printf("Running CTR DRBG BUILD\n");
     auto addr    = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
     auto ctrdrbg = new (addr) alcp::rng::drbg::CtrDrbg();
     ctrdrbg->setKeySize(drbgInfo.di_algoinfo.ctr_drbg.di_keysize / 8);

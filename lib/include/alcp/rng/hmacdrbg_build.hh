@@ -47,7 +47,6 @@ class HmacDrbgBuilder
 Status
 HmacDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
 {
-    printf("Running HMAC DRBG BUILD\n");
     auto  addr     = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
     auto* hmacdrbg = new (addr) alcp::rng::drbg::HmacDrbg();
     std::shared_ptr<alcp::digest::Digest> p_digest;

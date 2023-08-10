@@ -127,16 +127,13 @@ DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
 Uint64
 DrbgBuilder::getSize(const alc_drbg_info_t& drbgInfo)
 {
-    printf("Executing DRBG Builder GetSize\n");
     Uint64 size = 0;
     switch (drbgInfo.di_type) {
         case ALC_DRBG_HMAC:
             size = sizeof(alcp::rng::drbg::HmacDrbg);
-            printf("DRBG HMAC\n");
             break;
         case ALC_DRBG_CTR:
             size = sizeof(alcp::rng::drbg::CtrDrbg);
-            printf("DRBG CTR\n");
             break;
         default:
             size = 0;
