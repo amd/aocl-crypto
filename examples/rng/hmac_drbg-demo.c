@@ -44,11 +44,17 @@ int
 main(int argc, char const* argv[])
 {
 
+    alc_digest_info_t dinfo = {
+                        .dt_type = ALC_DIGEST_TYPE_SHA2,
+        .dt_len = ALC_DIGEST_LEN_256,
+        .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
+    };
+
     alc_drbg_info_t
-        drbg_info = { .di_type         = ALC_DRBG_CTR,
+        drbg_info = { .di_type         = ALC_DRBG_HMAC,
                       .max_entropy_len = 16,
                       .max_nonce_len   = 16,
-                      .di_algoinfo     = { .ctr_drbg = { .di_keysize = 128 } },
+                      .di_algoinfo = { .hmac_drbg = { .digest_info = dinfo } },
                       .di_rng_sourceinfo = {
                           .custom_rng    = false,
                           .di_sourceinfo = {

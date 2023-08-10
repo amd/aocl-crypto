@@ -29,6 +29,7 @@
 #ifndef _ALCP_DRBG_H_
 #define _ALCP_DRBG_H_ 2
 #include "alcp/cipher.h"
+#include "alcp/digest.h"
 #include "alcp/rng.h"
 #include <stddef.h>
 
@@ -42,6 +43,7 @@ typedef enum _alc_drbg_type
 
 typedef struct _alc_hmacdrbg_info
 {
+    alc_digest_info_t digest_info;
 } alc_hmacdrbg_info_t, *alc_hmacdrbg_info_p;
 
 typedef struct _alc_ctrdrbg_info

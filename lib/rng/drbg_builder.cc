@@ -29,7 +29,7 @@
 #include "alcp/base.hh"
 #include "alcp/capi/drbg/builder.hh"
 #include "alcp/rng/ctrdrbg_build.hh"
-#include "alcp/rng/drbg_hmac.hh"
+#include "alcp/rng/hmacdrbg_build.hh"
 #include "hardware_rng.hh"
 #include "system_rng.hh"
 namespace alcp::drbg {
@@ -71,7 +71,7 @@ DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
     Status status = StatusOk();
     switch (drbgInfo.di_type) {
         case ALC_DRBG_HMAC:
-            // status = HmacBuilder::build(macInfo, macInfo.mi_keyinfo, ctx);
+            status = HmacDrbgBuilder::build(drbgInfo, ctx);
             break;
         case ALC_DRBG_CTR:
             status = CtrDrbgBuilder::build(drbgInfo, ctx);
