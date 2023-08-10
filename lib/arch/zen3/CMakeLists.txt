@@ -42,7 +42,7 @@ endif()
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib/include)
 
 ADD_LIBRARY(arch_zen3
-	STATIC
+	OBJECT
 	${ZEN3_SRCS})
 
 

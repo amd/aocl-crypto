@@ -77,6 +77,9 @@ SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 # Hence this is commented out
 #SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 
+# Install Options
+OPTION(ALCP_INSTALL_COMBINED_STATIC "INSTALL ALCP+ALCI COMBINED STATIC LIB" OFF)
+
 # All the options which are avaiable with ALCP
 # These options can be listed with cmake -LH
 OPTION(ALCP_ENABLE_DOCS "ENABLE DOCUMENTATION" OFF)
@@ -175,14 +178,20 @@ ENDIF()
 
 INSTALL(TARGETS alcp)
 
+INSTALL(TARGETS alcp_static)
+
 INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/include/alcp
         TYPE INCLUDE
 		)
 
-IF(UNIX)
-# FIXME: SUFIX Debug will be ignored
-INSTALL(FILES ${CMAKE_BINARY_DIR}/libalcp_static.a DESTINATION lib RENAME libalcp.a)
-ENDIF()
+IF(ALCP_INSTALL_COMBINED_STATIC)
+	IF(UNIX)
+	# FIXME: SUFIX Debug will be ignored
+	INSTALL(FILES ${CMAKE_BINARY_DIR}/libalcp_static.a DESTINATION lib RENAME libalcp.a)
+	ENDIF()
+ELSE()
+	INSTALL(TARGETS alcp_static)
+ENDIF(ALCP_INSTALL_COMBINED_STATIC)
 
 IF (ALCP_ENABLE_EXAMPLES)
 	# examples which should be part of release package

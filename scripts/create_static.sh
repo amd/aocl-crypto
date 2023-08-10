@@ -49,10 +49,6 @@ fi
 # ALCP STATIC LIB LIST
 alcp_libs=(
     libalcp
-    libarch_avx2
-    libarch_zen
-    libarch_zen3
-    libarch_zen4
 )
 
 # Bailout function

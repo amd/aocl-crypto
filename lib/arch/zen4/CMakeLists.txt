@@ -43,7 +43,7 @@ endif()
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib/include)
 
 ADD_LIBRARY(arch_zen4
-	STATIC
+	OBJECT
 	${ZEN4_SRCS})
 
 # BUG in GCC-12
