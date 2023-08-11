@@ -82,6 +82,7 @@ class Sha512::Impl
     void        reset();
     alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size);
     alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const;
+    Uint64      getHashSize();
 
   private:
     Uint64 m_msg_len;
@@ -486,14 +487,20 @@ Sha512::finish()
 }
 
 Uint64
-Sha512::getHashSize()
+Sha512::Impl::getHashSize()
 {
     return m_digest_len_bytes;
 }
 Uint64
+Sha512::getHashSize()
+{
+    return m_pImpl->getHashSize();
+}
+
+Uint64
 Sha512::getInputBlockSize()
 {
-    return cChunkSize;
+    return Sha512::cChunkSize;
 }
 
 } // namespace alcp::digest
