@@ -259,7 +259,7 @@ DigestBuilder::getSize(const alc_digest_info_t& rDigestInfo)
                 case ALC_DIGEST_LEN_512:
                     return sizeof(Sha512);
                 case ALC_DIGEST_LEN_384:
-                    return sizeof(Sha512);
+                    return sizeof(Sha384);
                 default:
                     break;
             }
