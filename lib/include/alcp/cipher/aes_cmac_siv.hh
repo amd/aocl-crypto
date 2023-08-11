@@ -129,11 +129,13 @@ class ALCP_API_EXPORT CmacSiv : public Aes
                         Uint64       len,
                         const Uint8* pIv) const;
 
+    CmacSiv(const alc_key_info_t& encKey, const alc_key_info_t& authKey);
+
     /* Depriciated Functions */
     // FIXME: Needs to be removed from Cipher as a whole
-    // Cipher support should end in capi
-    CmacSiv(const alc_cipher_algo_info_t& aesInfo,
-            const alc_key_info_t& keyInfo); // Depriciated, implemented for CAPI
+
+    static bool isSupported(const Uint32 keyLen);
+
     bool isSupported(const alc_cipher_info_t& cipherInfo);
     /**
      * @brief Depriciated, please use addAdditionalInput
@@ -617,12 +619,11 @@ CmacSiv<T>::CmacSiv()
 {}
 
 template<typename T>
-CmacSiv<T>::CmacSiv(const alc_cipher_algo_info_t& aesInfo,
-                    const alc_key_info_t&         keyInfo)
+CmacSiv<T>::CmacSiv(const alc_key_info_t& encKey, const alc_key_info_t& authKey)
     : pImpl{ std::make_unique<Impl>() }
 {
-    assert(aesInfo.ai_siv.xi_ctr_key->len == keyInfo.len);
-    setKeys(keyInfo.key, aesInfo.ai_siv.xi_ctr_key->key, keyInfo.len);
+    assert(authKey.len == encKey.len);
+    setKeys(authKey.key, encKey.key, encKey.len);
 }
 
 template<typename T>
@@ -737,6 +738,14 @@ bool
 CmacSiv<T>::isSupported(const alc_cipher_info_t& cipherInfo)
 {
     // Northing much to do here, need to be removed.
+    return true;
+}
+
+template<typename T>
+bool
+CmacSiv<T>::isSupported(const Uint32 keyLen)
+{
+    // FIXME: Tobe Implemented
     return true;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -54,7 +54,7 @@
 #endif
 
 namespace alcp::testing {
-class OpenSSLCipherBase : public CipherBase
+class OpenSSLCipherAeadBase : public CipherAeadBase
 {
   private:
     EVP_CIPHER_CTX*   m_ctx_enc = nullptr;
@@ -75,24 +75,24 @@ class OpenSSLCipherBase : public CipherBase
                                              size_t            keylen);
 
   public:
-    OpenSSLCipherBase(const alc_cipher_mode_t mode, const Uint8* iv);
-    OpenSSLCipherBase(const alc_cipher_mode_t mode,
-                      const Uint8*            iv,
-                      const Uint8*            key,
-                      const Uint32            key_len);
-    OpenSSLCipherBase(const alc_cipher_mode_t mode,
-                      const Uint8*            iv,
-                      const Uint32            iv_len,
-                      const Uint8*            key,
-                      const Uint32            key_len,
-                      const Uint8*            tkey,
-                      const Uint64            block_size);
-    OpenSSLCipherBase(const alc_cipher_mode_t mode,
-                      const Uint8*            iv,
-                      const Uint32            iv_len,
-                      const Uint8*            key,
-                      const Uint32            key_len);
-    ~OpenSSLCipherBase();
+    OpenSSLCipherAeadBase(const alc_cipher_mode_t mode, const Uint8* iv);
+    OpenSSLCipherAeadBase(const alc_cipher_mode_t mode,
+                          const Uint8*            iv,
+                          const Uint8*            key,
+                          const Uint32            key_len);
+    OpenSSLCipherAeadBase(const alc_cipher_mode_t mode,
+                          const Uint8*            iv,
+                          const Uint32            iv_len,
+                          const Uint8*            key,
+                          const Uint32            key_len,
+                          const Uint8*            tkey,
+                          const Uint64            block_size);
+    OpenSSLCipherAeadBase(const alc_cipher_mode_t mode,
+                          const Uint8*            iv,
+                          const Uint32            iv_len,
+                          const Uint8*            key,
+                          const Uint32            key_len);
+    ~OpenSSLCipherAeadBase();
     bool init(const Uint8* iv,
               const Uint32 iv_len,
               const Uint8* key,

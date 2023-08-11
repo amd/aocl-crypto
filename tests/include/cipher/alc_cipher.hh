@@ -33,8 +33,6 @@
 #include <vector>
 
 #pragma once
-#ifndef __ALC_BASE_HH
-#define __ALC_BASE_HH 2
 namespace alcp::testing {
 class AlcpCipherBase : public CipherBase
 {
@@ -110,10 +108,9 @@ class AlcpCipherBase : public CipherBase
               const Uint32 key_len);
     bool init(const Uint8* iv, const Uint8* key, const Uint32 key_len);
     bool init(const Uint8* key, const Uint32 key_len);
-    bool encrypt(alcp_data_ex_t data);
-    bool decrypt(alcp_data_ex_t data);
+    bool encrypt(alcp_dc_ex_t& data);
+    bool decrypt(alcp_dc_ex_t& data);
     bool reset();
 };
 
 } // namespace alcp::testing
-#endif

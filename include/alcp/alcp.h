@@ -39,6 +39,8 @@
 
 #include "cipher.h"
 
+#include "cipher_aead.h"
+
 #include "digest.h"
 
 #include "mac.h"

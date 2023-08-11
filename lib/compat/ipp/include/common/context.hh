@@ -33,8 +33,9 @@
 #pragma once
 typedef struct _ipp_wrp_aes_ctx
 {
-    alc_cipher_handle_t handle;
-    alc_cipher_info_t   cinfo;
+    alc_cipher_handle_t    handle;
+    alc_cipher_info_t      cinfo;
+    alc_cipher_aead_info_t c_aeadinfo;
 
 } ipp_wrp_aes_ctx;
 typedef struct _ipp_wrp_aes_aead_ctx

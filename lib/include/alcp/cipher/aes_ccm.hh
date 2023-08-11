@@ -81,15 +81,14 @@ class ALCP_API_EXPORT Ccm final
 {
 
   public:
-    explicit Ccm(const alc_cipher_algo_info_t& aesInfo,
-                 const alc_key_info_t&         keyInfo);
+    explicit Ccm(const Uint8* pKey, const Uint32 keyLen);
 
     Ccm();
     ~Ccm();
 
-    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                            const alc_key_info_t&         keyInfo)
+    static bool isSupported(const Uint32 keyLen)
     {
+        // FIXME: To be implemented
         return true;
     }
 

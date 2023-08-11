@@ -54,7 +54,7 @@ create_demo_session(const Uint8* key_cmac,
     kinfo.key = key_ctr;
     kinfo.len = key_len;
 
-    alc_cipher_info_t cinfo = {
+    alc_cipher_aead_info_t cinfo = {
         .ci_type = ALC_CIPHER_TYPE_AES,
         .ci_algo_info   = {
            .ai_mode = ALC_AES_MODE_SIV,
@@ -73,12 +73,12 @@ create_demo_session(const Uint8* key_cmac,
 
     /*
      * Check if the current cipher is supported,
-     * optional call, alcp_cipher_request() will anyway return
+     * optional call, alcp_cipher_aead_request() will anyway return
      * ALC_ERR_NOSUPPORT error.
      *
      * This query call is provided to support fallback mode for applications
      */
-    err = alcp_cipher_supported(&cinfo);
+    err = alcp_cipher_aead_supported(&cinfo);
     if (alcp_is_error(err)) {
         printf("Error: not supported \n");
         alcp_error_str(err, err_buf, err_size);
@@ -88,12 +88,12 @@ create_demo_session(const Uint8* key_cmac,
     /*
      * Application is expected to allocate for context
      */
-    handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
+    handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
     // if (!ctx)
     //    return;
 
     /* Request a context with cinfo */
-    err = alcp_cipher_request(&cinfo, &handle);
+    err = alcp_cipher_aead_request(&cinfo, &handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);
@@ -116,7 +116,7 @@ encrypt_demo(const Uint8* plaintxt,
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    err = alcp_cipher_set_aad(&handle, aad, aad_len);
+    err = alcp_cipher_aead_set_aad(&handle, aad, aad_len);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -124,21 +124,21 @@ encrypt_demo(const Uint8* plaintxt,
     }
 
     // IV is not needed for encrypt, but still should not be NullPtr
-    err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len, iv);
+    err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
         return false;
     }
 
-    err = alcp_cipher_get_tag(&handle, iv, 16);
+    err = alcp_cipher_aead_get_tag(&handle, iv, 16);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
         return false;
     }
 
-    alcp_cipher_finish(&handle);
+    alcp_cipher_aead_finish(&handle);
 
     free(handle.ch_context);
 
@@ -159,21 +159,21 @@ decrypt_demo(const Uint8* ciphertxt,
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    err = alcp_cipher_set_aad(&handle, aad, aad_len);
+    err = alcp_cipher_aead_set_aad(&handle, aad, aad_len);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
         return false;
     }
 
-    err = alcp_cipher_decrypt(&handle, ciphertxt, plaintxt, len, iv);
+    err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, len, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);
         return false;
     }
 
-    alcp_cipher_finish(&handle);
+    alcp_cipher_aead_finish(&handle);
 
     free(handle.ch_context);
 

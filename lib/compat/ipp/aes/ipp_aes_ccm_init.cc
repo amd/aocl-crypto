@@ -52,15 +52,15 @@ ippsAES_CCMInit(const Ipp8u*      pKey,
     ipp_wrp_aes_ctx* context_enc =
         &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->encrypt_ctx);
     if (pKey != nullptr) {
-        context_dec->cinfo.ci_type              = ALC_CIPHER_TYPE_AES;
-        context_dec->cinfo.ci_key_info.type     = ALC_KEY_TYPE_SYMMETRIC;
-        context_dec->cinfo.ci_key_info.fmt      = ALC_KEY_FMT_RAW;
-        context_dec->cinfo.ci_key_info.key      = (Uint8*)pKey;
-        context_dec->cinfo.ci_key_info.len      = keyLen * 8;
-        context_dec->cinfo.ci_algo_info.ai_mode = ALC_AES_MODE_CCM;
-        context_dec->handle.ch_context          = nullptr;
-        context_enc->cinfo                      = context_dec->cinfo;
-        context_enc->handle.ch_context          = nullptr;
+        context_dec->c_aeadinfo.ci_type              = ALC_CIPHER_TYPE_AES;
+        context_dec->c_aeadinfo.ci_key_info.type     = ALC_KEY_TYPE_SYMMETRIC;
+        context_dec->c_aeadinfo.ci_key_info.fmt      = ALC_KEY_FMT_RAW;
+        context_dec->c_aeadinfo.ci_key_info.key      = (Uint8*)pKey;
+        context_dec->c_aeadinfo.ci_key_info.len      = keyLen * 8;
+        context_dec->c_aeadinfo.ci_algo_info.ai_mode = ALC_AES_MODE_CCM;
+        context_dec->handle.ch_context               = nullptr;
+        context_enc->c_aeadinfo                      = context_dec->c_aeadinfo;
+        context_enc->handle.ch_context               = nullptr;
     } else {
         if (context_dec->handle.ch_context != nullptr) {
             alcp_cipher_finish(&(context_dec->handle));

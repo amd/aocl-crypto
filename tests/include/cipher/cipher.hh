@@ -37,7 +37,8 @@ namespace alcp::testing {
 using alcp::testing::utils::isPathExist;
 using alcp::testing::utils::parseHexStrToBin;
 
-struct alcp_data_ex_t
+// alcp_data_cipher_ex_t
+struct alcp_dc_ex_t
 {
     const Uint8* m_in;
     Uint64       m_inl;
@@ -45,17 +46,11 @@ struct alcp_data_ex_t
     Uint64       m_outl;
     const Uint8* m_iv;
     Uint64       m_ivl;
-    const Uint8* m_ad;
-    Uint64       m_adl;
-    Uint8*       m_tag; // Probably const but openssl expects non const
-    Uint64       m_tagl;
-    bool         m_isTagValid;
-    Uint8*       m_tkey;    // tweak key
-    Uint64       m_tkeyl;   // tweak key len
-    Uint8*       m_tagBuff; // Place to store tag buffer
+    Uint8*       m_tkey;  // tweak key
+    Uint64       m_tkeyl; // tweak key len
     Uint64       m_block_size;
     // Initialize everything to 0
-    alcp_data_ex_t()
+    alcp_dc_ex_t()
     {
         m_in         = {};
         m_inl        = {};
@@ -63,14 +58,30 @@ struct alcp_data_ex_t
         m_outl       = {};
         m_iv         = {};
         m_ivl        = {};
+        m_tkey       = {};
+        m_tkeyl      = {};
+        m_block_size = {};
+    }
+};
+// alcp_data_cipher_aead_ex_t
+struct alcp_dca_ex_t : public alcp_dc_ex_t
+{
+    const Uint8* m_ad;
+    Uint64       m_adl;
+    Uint8*       m_tag; // Probably const but openssl expects non const
+    Uint64       m_tagl;
+    bool         m_isTagValid;
+
+    Uint8* m_tagBuff; // Place to store tag buffer
+    // Initialize everything to 0
+    alcp_dca_ex_t()
+        : alcp_dc_ex_t::alcp_dc_ex_t()
+    {
         m_ad         = {};
         m_adl        = {};
         m_tag        = {};
         m_tagl       = {};
-        m_tkey       = {};
-        m_tkeyl      = {};
         m_tagBuff    = {};
-        m_block_size = {};
         m_isTagValid = true;
     }
 };
@@ -182,10 +193,17 @@ class CipherBase
                       const Uint32 key_len,
                       const Uint8* tkey,
                       const Uint64 block_size)                = 0;
-    virtual bool encrypt(alcp_data_ex_t data)                 = 0;
-    virtual bool decrypt(alcp_data_ex_t data)                 = 0;
+    virtual bool encrypt(alcp_dc_ex_t& data)                  = 0;
+    virtual bool decrypt(alcp_dc_ex_t& data)                  = 0;
     virtual bool reset()                                      = 0;
-    virtual ~CipherBase(){};
+    virtual ~CipherBase()                                     = default;
+};
+
+class CipherAeadBase : public CipherBase
+{
+  public:
+    virtual ~CipherAeadBase() = default;
+    static bool isAead(const alc_cipher_mode_t& mode);
 };
 
 class CipherTesting
@@ -206,7 +224,7 @@ class CipherTesting
      * @return true
      * @return false
      */
-    bool testingEncrypt(alcp_data_ex_t data, const std::vector<Uint8> key);
+    bool testingEncrypt(alcp_dc_ex_t& data, const std::vector<Uint8> key);
 
     /**
      * @brief Decrypts data and puts in data.out, expects data.out to already
@@ -218,7 +236,7 @@ class CipherTesting
      * @return true
      * @return false
      */
-    bool testingDecrypt(alcp_data_ex_t data, const std::vector<Uint8> key);
+    bool testingDecrypt(alcp_dc_ex_t& data, const std::vector<Uint8> key);
     /**
      * @brief Set CipherBase pimpl
      *
@@ -226,4 +244,5 @@ class CipherTesting
      */
     void setcb(CipherBase* impl);
 };
+
 } // namespace alcp::testing

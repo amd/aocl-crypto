@@ -124,31 +124,6 @@ typedef struct _alc_cipher_mode_xts_info
 } alc_cipher_mode_xts_info_t, *alc_cipher_mode_xts_info_p;
 
 /**
- * @brief  Stores special info needed for GCM mode.
- *
- * @note Currently not in use
- *
- * @struct alc_cipher_mode_gcm_info_t
- */
-typedef struct _alc_cipher_mode_gcm_info
-{
-    // FIXME: C do not support empty structures, populate with actual ones
-    char dummy;
-} alc_cipher_mode_gcm_info_t, *alc_cipher_mode_gcm_info_p;
-
-/**
- * @brief  Stores special info needed for SIV mode.
- *
- * @param xi_ctr_key   holds the info about secondary key for SIV
- *
- * @struct alc_cipher_mode_siv_info_t
- */
-typedef struct _alc_cipher_mode_siv_info
-{
-    const alc_key_info_t* xi_ctr_key;
-} alc_cipher_mode_siv_info_t, alc_cipher_mode_siv_info_p;
-
-/**
  *
  * @brief  Stores algorithm specific info for cipher.
  * @param ai_mode Specific which Mode of AES to be used @ref alcp_cipher_mode_t
@@ -159,15 +134,9 @@ typedef struct _alc_cipher_mode_siv_info
  */
 typedef struct _alc_cipher_algo_info
 {
-    alc_cipher_mode_t ai_mode; /* Mode: ALC_AES_MODE_CFB etc */
-    const Uint8*      ai_iv;   /* Initialization Vector */
-    union
-    {
-        alc_cipher_mode_xts_info_t ai_xts;
-        alc_cipher_mode_gcm_info_t ai_gcm;
-        alc_cipher_mode_siv_info_t ai_siv;
-    };
-
+    alc_cipher_mode_t          ai_mode; /* Mode: ALC_AES_MODE_CFB etc */
+    const Uint8*               ai_iv;   /* Initialization Vector */
+    alc_cipher_mode_xts_info_t ai_xts;
 } alc_cipher_algo_info_t, *alc_cpher_algo_info_p;
 
 /**
@@ -183,7 +152,7 @@ typedef struct _alc_cipher_algo_info
  */
 typedef struct _alc_cipher_info
 {
-    alc_cipher_type_t      ci_type; /*! Type: ALC_CIPHER_AES etc */
+    alc_cipher_type_t      ci_type;      /*! Type: ALC_CIPHER_AES etc */
     alc_key_info_t         ci_key_info;
     alc_cipher_algo_info_t ci_algo_info; /*! mode specific data */
 } alc_cipher_info_t, *alc_cipher_info_p;
@@ -293,134 +262,6 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
                     Uint8*                    pCipherText,
                     Uint64                    len,
                     const Uint8*              pIv);
-
-/**
- * @brief    AEAD encryption of plain text and write it to cipher text with
- * provided handle.
- * @parblock <br> &nbsp;
- * <b>This AEAD API can be called after @ref alcp_cipher_request is called  and
- * at the end of session call @ref alcp_cipher_finish</b>
- * @endparblock
- * @note    Error needs to be checked for each call,
- *           valid only if @ref alcp_is_error (ret) is false, ctx to be
- * considered valid.
- * @param [in]   pCipherHandle Session handle for future encrypt decrypt
- *                         operation
- * @param[in]    pInput    Pointer to Input data (plainText or additional data)
- * @param[out]   pOutput   Pointer to output data (cipherText or Tag)
- * @param[in]    len       Length of input or output data
- * @param[in]    pIv       Pointer to Initialization Vector
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_error or @ref alcp_error_str
- * needs to be called to know about error occurred
- */
-ALCP_API_EXPORT alc_error_t
-alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
-                           const Uint8*              pInput,
-                           Uint8*                    pOutput,
-                           Uint64                    len,
-                           const Uint8*              pIv);
-
-/**
- * @brief    AEAD decryption of cipher text and write it to plain text with
- * provided handle.
- * @parblock <br> &nbsp;
- * <b>This AEAD API can be called after @ref alcp_cipher_request is called
- * and at the end of session call @ref alcp_cipher_finish</b>
- * @endparblock
- * @note    Error needs to be checked for each call,
- *           valid only if @ref alcp_is_error (ret) is false, ctx to be
- *          considered valid.
- * @param [in]   pCipherHandle Session handle for future encrypt decrypt
- *                         operation
- * @param[in]    pInput    Pointer to Input data (CipherText or additional
- * data)
- * @param[out]   pOutput   Pointer to output data (PlainText or Tag)
- * @param[in]    len       Length of input or output data
- * @param[in]    pIv       Pointer to Initialization Vector
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_error or @ref alcp_error_str
- * needs to be called to know about error occurred
- */
-ALCP_API_EXPORT alc_error_t
-alcp_cipher_decrypt_update(const alc_cipher_handle_p pCipherHandle,
-                           const Uint8*              pInput,
-                           Uint8*                    pOutput,
-                           Uint64                    len,
-                           const Uint8*              pIv);
-
-/**
- * @brief AEAD set the IV/Nonce.
- * @parblock <br> &nbsp;
- * <b>This AEAD API can be called after @ref alcp_cipher_request is called. It
- * should be called after @ref alcp_cipher_set_tag_length for CCM mode. For GCM
- * mode should be called before @ref alcp_cipher_set_aad</b>
- * @endparblock
- * @param [in] pCipherHandle Session handle for encrypt/decrypt operation
- * @param[in] len  Length in bytes of IV/Nonce
- * @param[in] pIv  IV/Nonce
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_error or @ref alcp_error_str
- * needs to be called to know about error occurred
- */
-ALCP_API_EXPORT alc_error_t
-alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
-                   Uint64                    len,
-                   const Uint8*              pIv);
-
-/**
- * @brief AEAD set Additonal Data for the Tag Generation.
- * @parblock <br> &nbsp;
- * <b>This AEAD API can be called after @ref alcp_cipher_request. For
- * SIV there should only be one call to this API and for others like GCM
- * and CCM mode, this has to be called after @ref alcp_cipher_set_iv. For
- * SIV, this has to be called immediately after @ref alcp_cipher_request,
- * also IV of SIV needs to be passed into this API as the last call.</b>
- * @endparblock
- * @param[in] pCipherHandle Session handle for encrypt/decrypt operation
- * @param[in] pInput    Additional Data in Bytes
- * @param[in] len       Length in bytes of Additional Data
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_error or @ref alcp_error_str
- * needs to be called to know about error occurred
- */
-ALCP_API_EXPORT alc_error_t
-alcp_cipher_set_aad(const alc_cipher_handle_p pCipherHandle,
-                    const Uint8*              pInput,
-                    Uint64                    len);
-
-/**
- * @brief AEAD get a copy of Tag generated.
- * @parblock <br> &nbsp;
- * <b>This AEAD API can be called after @ref alcp_cipher_request is called  and
- * at the end of session call, just before @ref alcp_cipher_finish </b>
- * @endparblock
- * @param[in] pCipherHandle Session handle for encrypt/decrypt operation
- * @param[out] pOutput  Byte addressable memory to write tag into
- * @param[in] len       Length in bytes of Tag in bytes
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_error or @ref alcp_error_str
- * needs to be called to know about error occurred
- */
-ALCP_API_EXPORT alc_error_t
-alcp_cipher_get_tag(const alc_cipher_handle_p pCipherHandle,
-                    Uint8*                    pOutput,
-                    Uint64                    len);
-
-/**
- * @brief AEAD set the tag length.
- * @parblock <br> &nbsp;
- * <b>This AEAD API can be called after @ref alcp_cipher_request is called. It's
- * meant for CCM mode, should be called before @ref alcp_cipher_set_iv.</b>
- * @endparblock
- * @param[in] pCipherHandle Session handle for encrypt/decrypt operation
- * @param[in] len       Length in bytes of Tag in bytes
- * @return   &nbsp; Error Code for the API called. If alc_error_t
- * is not ALC_ERROR_NONE then @ref alcp_cipher_error or @ref alcp_error_str
- * needs to be called to know about error occurred
- */
-ALCP_API_EXPORT alc_error_t
-alcp_cipher_set_tag_length(const alc_cipher_handle_p pCipherHandle, Uint64 len);
 
 /**
  * @brief    Decryption of cipher text and write it to plain text with provided

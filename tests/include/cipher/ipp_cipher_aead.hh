@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,76 +27,86 @@
  */
 #pragma once
 
-// This define needs to be on the top so that it affects all the includes
-/*
-   FIXME: Need to change this implementation, selection of provider
-   needs to be taken as a command line argument
-*/
-/*  Loading ALCP-Provider can be used
-    to test/benchmark provider.       */
-// #define USE_PROVIDER
-#define OPENSSL_PROVIDER_PATH "."
-#if 1
-#define OPENSSL_PROVIDER_NAME "libopenssl-compat"
-#else
-#define OPENSSL_PROVIDER_NAME "libopenssl-compat_DEBUG"
-#endif
+/* C/C++ Headers */
+#include <alcp/types.h>
+#include <iostream>
+#include <ippcp.h>
+#include <stdio.h>
+#include <string.h>
 
+/* ALCP Headers */
 #include "alcp/alcp.h"
-#include "alcp/base.hh"
-#include "alcp/utils/copy.hh"
 #include "cipher.hh"
-#include <openssl/conf.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
-#ifdef USE_PROVIDER
-#include <openssl/provider.h>
-#endif
 
 namespace alcp::testing {
-class OpenSSLCipherBase : public CipherBase
+class IPPCipherAeadBase : public CipherAeadBase
 {
   private:
-    EVP_CIPHER_CTX*   m_ctx_enc = nullptr;
-    EVP_CIPHER_CTX*   m_ctx_dec = nullptr;
-    alc_cipher_mode_t m_mode    = {};
-    const Uint8*      m_iv      = nullptr;
-    Uint32            m_iv_len  = 12;
-    const Uint8*      m_key     = nullptr;
-    Uint32            m_key_len = 0;
-    const Uint8*      m_tkey    = nullptr;
-    Uint8             m_key_final[64];
-#ifdef USE_PROVIDER
-    OSSL_PROVIDER* m_alcp_provider = nullptr;
-#endif
+    alc_cipher_mode_t m_mode;
+    IppsAESSpec*      m_ctx       = NULL;
+    IppsAES_XTSSpec*  m_ctx_xts   = NULL;
+    IppsAES_GCMState* m_ctx_gcm   = NULL;
+    IppsAES_GCMState* m_pStateGCM = NULL;
+    IppsAES_CCMState* m_ctx_ccm   = NULL;
+    IppsAES_CCMState* m_pStateCCM = NULL;
 
-    void              handleErrors();
-    const EVP_CIPHER* alcpModeKeyLenToCipher(alc_cipher_mode_t mode,
-                                             size_t            keylen);
+    const Uint8* m_iv;
+    const Uint8* m_key;
+    Uint32       m_key_len;
+    const Uint8* m_tkey       = NULL;
+    int          m_ctxSize    = 0;
+    Uint64       m_block_size = 0;
+    Uint8        m_key_final[64];
+    void         PrintErrors(IppStatus status);
+    bool         alcpGCMModeToFuncCall(alcp_dca_ex_t data, bool enc);
+    bool         alcpCCMModeToFuncCall(alcp_dca_ex_t data, bool enc);
+    bool         alcpSIVModeToFuncCall(alcp_dca_ex_t data, bool enc);
 
   public:
-    OpenSSLCipherBase(const alc_cipher_mode_t mode, const Uint8* iv);
-    OpenSSLCipherBase(const alc_cipher_mode_t mode,
+    /**
+     * @brief Construct a new Alcp Base object - Manual initilization
+     * needed, run alcpInit
+     *
+     * @param mode
+     * @param iv
+     */
+    IPPCipherAeadBase(const alc_cipher_mode_t mode, const Uint8* iv);
+    /**
+     * @brief Construct a new Alcp Base object - Initlized and ready to go
+     *
+     * @param mode
+     * @param iv
+     * @param key
+     * @param key_len
+     */
+    IPPCipherAeadBase(const alc_cipher_mode_t mode,
                       const Uint8*            iv,
                       const Uint8*            key,
                       const Uint32            key_len);
-    OpenSSLCipherBase(const alc_cipher_mode_t mode,
+    /**
+     * @brief         Initialization/Reinitialization function, created handle
+     *
+     * @param iv      Intilization vector or start of counter (CTR mode)
+     * @param key     Binary(RAW) Key 128/192/256 bits
+     * @param key_len Length of the Key
+     * @return true -  if no failure
+     * @return false - if there is some failure
+     */
+
+    IPPCipherAeadBase(const alc_cipher_mode_t mode,
                       const Uint8*            iv,
                       const Uint32            iv_len,
                       const Uint8*            key,
                       const Uint32            key_len,
                       const Uint8*            tkey,
                       const Uint64            block_size);
-    OpenSSLCipherBase(const alc_cipher_mode_t mode,
-                      const Uint8*            iv,
-                      const Uint32            iv_len,
-                      const Uint8*            key,
-                      const Uint32            key_len);
-    ~OpenSSLCipherBase();
+
+    ~IPPCipherAeadBase();
     bool init(const Uint8* iv,
               const Uint32 iv_len,
               const Uint8* key,
               const Uint32 key_len);
+    /* xts */
     bool init(const Uint8* iv,
               const Uint32 iv_len,
               const Uint8* key,
