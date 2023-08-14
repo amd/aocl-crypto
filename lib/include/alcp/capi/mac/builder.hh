@@ -44,4 +44,7 @@ class MacBuilder
                                     alcp::mac::Context&   ctx);
 };
 
+Status
+isDigestSupported(const alc_digest_info_t& digestInfo);
+
 } // namespace alcp::mac

@@ -29,6 +29,7 @@
 
 #include "alcp/base.hh"
 #include "alcp/capi/digest/builder.hh"
+#include "alcp/capi/mac/ctx.hh"
 #include "alcp/digest/sha2_384.hh"
 #include "alcp/digest/sha3.hh"
 #include "hmac.hh"
@@ -296,12 +297,12 @@ HmacBuilder::getSize(const alc_mac_info_t& macInfo)
 }
 
 Status
-HmacBuilder::isSupported(const alc_mac_info_t& macInfo)
+isDigestSupported(const alc_digest_info_t& digestInfo)
 {
     Status status{ StatusOk() };
-    switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_type) {
+    switch (digestInfo.dt_type) {
         case ALC_DIGEST_TYPE_SHA2: {
-            switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha2) {
+            switch (digestInfo.dt_mode.dm_sha2) {
                 case ALC_SHA2_256: {
                     break;
                 }
@@ -322,7 +323,7 @@ HmacBuilder::isSupported(const alc_mac_info_t& macInfo)
             break;
         }
         case ALC_DIGEST_TYPE_SHA3: {
-            switch (macInfo.mi_algoinfo.hmac.hmac_digest.dt_mode.dm_sha3) {
+            switch (digestInfo.dt_mode.dm_sha3) {
                 case ALC_SHA3_224: {
                     break;
                 }
@@ -349,6 +350,12 @@ HmacBuilder::isSupported(const alc_mac_info_t& macInfo)
         }
     }
     return status;
+}
+
+Status
+HmacBuilder::isSupported(const alc_mac_info_t& macInfo)
+{
+    return isDigestSupported(macInfo.mi_algoinfo.hmac.hmac_digest);
 }
 
 } // namespace alcp::mac
