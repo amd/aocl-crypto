@@ -29,11 +29,65 @@
 #include "alcp/base.hh"
 #include "alcp/capi/drbg/builder.hh"
 #include "alcp/capi/rng/builder.hh"
+#include "alcp/interface/Irng.hh"
 #include "alcp/rng/ctrdrbg_build.hh"
 #include "alcp/rng/hmacdrbg_build.hh"
 #include "hardware_rng.hh"
 #include "system_rng.hh"
+
 namespace alcp::drbg {
+class CustomRng : public IRng
+{
+
+  private:
+    std::vector<Uint8> m_entropy;
+    std::vector<Uint8> m_nonce;
+
+    Uint64 m_call_count;
+
+  public:
+    CustomRng() = default;
+
+    Status readRandom(Uint8* pBuf, Uint64 size) override { return StatusOk(); }
+
+    Status randomize(Uint8 output[], size_t length) override
+    {
+        Status s = StatusOk();
+        if (m_call_count == 0) {
+            utils::CopyBytes(output, &m_entropy[0], length);
+            m_call_count++;
+        } else if (m_call_count == 1) {
+            utils::CopyBytes(output, &m_nonce[0], length);
+            m_call_count++;
+        } else {
+            printf("Not Allowed\n");
+        }
+
+        return s;
+    }
+
+    std::string name() const override { return "Dummy DRBG"; }
+
+    bool isSeeded() const override { return true; }
+
+    size_t reseed() override { return 0; }
+
+    Status setPredictionResistance(bool value) override
+    {
+        Status s = StatusOk();
+        return s;
+    }
+
+    void setEntropy(std::vector<Uint8> entropy) { m_entropy = entropy; }
+    void setNonce(std::vector<Uint8> nonce) { m_nonce = nonce; }
+
+    void reset()
+    {
+        m_call_count = 0;
+        m_entropy.clear();
+        m_nonce.clear();
+    }
+};
 
 static Status
 __drbg_wrapperinitialize(void*        m_drbg,
@@ -95,9 +149,11 @@ DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
             status.update(InvalidArgument("Unknown MAC Type"));
             break;
     }
-    std::shared_ptr<IRng> irng;
-    if (drbgInfo.di_rng_sourceinfo.custom_rng == false) {
-        switch (drbgInfo.di_rng_sourceinfo.di_sourceinfo.rng_info.ri_source) {
+    const alc_rngsource_info_t* rng_source_info = &(drbgInfo.di_rng_sourceinfo);
+    alcp::rng::IDrbg* p_drbg = static_cast<alcp::rng::Drbg*>(ctx.m_drbg);
+    if (rng_source_info->custom_rng == false) {
+        std::shared_ptr<IRng> irng;
+        switch (rng_source_info->di_sourceinfo.rng_info.ri_source) {
             case ALC_RNG_SOURCE_OS: {
                 irng = std::make_shared<alcp::rng::SystemRng>();
                 break;
@@ -111,10 +167,38 @@ DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
                     "RNG type specified is unknown"));
                 break;
         }
+        status = p_drbg->setRng(irng);
+        if (!status.ok()) {
+            return status;
+        }
+    } else {
+        auto* entropy = rng_source_info->di_sourceinfo.custom_rng_info.entropy;
+        auto  entropylen =
+            rng_source_info->di_sourceinfo.custom_rng_info.entropylen;
+
+        auto nonce    = rng_source_info->di_sourceinfo.custom_rng_info.nonce;
+        auto noncelen = rng_source_info->di_sourceinfo.custom_rng_info.noncelen;
+
+        auto entropy_vect = std::vector<Uint8>(entropy, entropy + entropylen);
+        auto nonce_vect   = std::vector<Uint8>(nonce, nonce + noncelen);
+
+        if (noncelen != drbgInfo.max_nonce_len
+            && entropylen != drbgInfo.max_entropy_len) {
+            return InternalError(
+                "For Testing Purposes Max Entropy,Nonce Length should match "
+                "given Entropy,Nonce Lengths");
+        }
+
+        auto custom_rng = std::make_shared<alcp::drbg::CustomRng>();
+        custom_rng->setEntropy(entropy_vect);
+        custom_rng->setNonce(nonce_vect);
+
+        status = p_drbg->setRng(custom_rng);
+        if (!status.ok()) {
+            return status;
+        }
     }
 
-    alcp::rng::IDrbg* p_drbg = static_cast<alcp::rng::Drbg*>(ctx.m_drbg);
-    p_drbg->setRng(irng);
     p_drbg->setEntropyLen(drbgInfo.max_entropy_len);
     p_drbg->setNonceLen(drbgInfo.max_nonce_len);
 
