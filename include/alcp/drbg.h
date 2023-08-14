@@ -49,6 +49,7 @@ typedef struct _alc_hmacdrbg_info
 typedef struct _alc_ctrdrbg_info
 {
     Uint64 di_keysize;
+    bool   use_derivation_function;
 } alc_ctrdrbg_info_t, *alc_ctrdrbg_info_p;
 
 typedef struct _alc_customrng_info

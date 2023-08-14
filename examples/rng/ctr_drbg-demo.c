@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
@@ -45,10 +46,12 @@ main(int argc, char const* argv[])
 {
 
     alc_drbg_info_t
-        drbg_info = { .di_type         = ALC_DRBG_CTR,
-                      .max_entropy_len = 16,
-                      .max_nonce_len   = 16,
-                      .di_algoinfo     = { .ctr_drbg = { .di_keysize = 128 } },
+        drbg_info = { .di_type           = ALC_DRBG_CTR,
+                      .max_entropy_len   = 16,
+                      .max_nonce_len     = 16,
+                      .di_algoinfo       = { .ctr_drbg = { .di_keysize = 128,
+                                                           .use_derivation_function =
+                                                               true } },
                       .di_rng_sourceinfo = {
                           .custom_rng    = false,
                           .di_sourceinfo = {

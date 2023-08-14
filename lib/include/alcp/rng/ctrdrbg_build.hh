@@ -47,6 +47,8 @@ CtrDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
     auto addr    = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
     auto ctrdrbg = new (addr) alcp::rng::drbg::CtrDrbg();
     ctrdrbg->setKeySize(drbgInfo.di_algoinfo.ctr_drbg.di_keysize / 8);
+    ctrdrbg->setUseDerivationFunction(
+        drbgInfo.di_algoinfo.ctr_drbg.use_derivation_function);
 
     ctx.m_drbg = static_cast<void*>(ctrdrbg);
     return StatusOk();
