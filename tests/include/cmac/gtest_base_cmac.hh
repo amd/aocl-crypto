@@ -193,7 +193,9 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
         data.m_key  = &(key[0]);
         data.m_cmac = &(cmac[0]);
 
-        data.m_msg_len  = msg.size();
+        // data.m_msg_len = msg.size();
+        // RSP input vectors have Length value in bytes.
+        data.m_msg_len  = rsp.getLenBytes("MESSAGELEN");
         data.m_cmac_len = cmac.size();
         data.m_key_len  = key.size();
 
