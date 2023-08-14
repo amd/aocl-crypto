@@ -31,6 +31,7 @@
 #include "hardware_rng.hh"
 #include "system_rng.hh"
 
+using namespace alcp::base::status;
 namespace alcp::rng {
 
 static alc_error_t
@@ -75,9 +76,8 @@ template<typename SOURCENAME>
 static Status
 __build_rng(const alc_rng_info_t& rRngInfo, Context& rCtx)
 {
-    Uint8 *ctx_uint8 = reinterpret_cast<Uint8*>(&rCtx);
-    auto p_source = new ((ctx_uint8) + sizeof(Context))
-        SOURCENAME();
+    Uint8* ctx_uint8 = reinterpret_cast<Uint8*>(&rCtx);
+    auto   p_source  = new ((ctx_uint8) + sizeof(Context)) SOURCENAME();
     rCtx.m_rng       = static_cast<void*>(p_source);
     rCtx.read_random = __read_random_wrapper;
     rCtx.reseed      = __reseed_wrapper;
@@ -146,6 +146,24 @@ RngBuilder::getSize(const alc_rng_info_t& rRngInfo)
         default:
             return 0;
     }
+}
+
+Status
+RngBuilder::isSupported(const alc_rng_info_t& rRngInfo)
+{
+    Status s{ StatusOk() };
+    switch (rRngInfo.ri_source) {
+        case ALC_RNG_SOURCE_OS:
+            return s;
+        case ALC_RNG_SOURCE_ARCH:
+            return s;
+        case ALC_RNG_SOURCE_ALGO:
+        case ALC_RNG_SOURCE_DEV:
+        case ALC_RNG_SOURCE_MAX:
+        default:
+            InvalidArgument("RNG Type not supported");
+    }
+    return s;
 }
 
 } // namespace alcp::rng
