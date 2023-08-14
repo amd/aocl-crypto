@@ -431,7 +431,8 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
             return false;
         }
         /* generate randomly */
-        p_seed = (Uint8*)malloc(m_hash_len);
+        m_hash_len = ALC_DIGEST_LEN_256 / 8;
+        p_seed     = (Uint8*)malloc(m_hash_len);
 
         // Encrypt text
         err = alcp_rsa_publickey_encrypt_oaep(m_rsa_handle,

@@ -40,28 +40,34 @@ OpenSSLRsaBase::OpenSSLRsaBase() {}
 
 OpenSSLRsaBase::~OpenSSLRsaBase()
 {
-    if (m_rsa_handle != nullptr) {
-        EVP_PKEY_CTX_free(m_rsa_handle);
-        m_rsa_handle = nullptr;
+    if (m_rsa_handle_keyctx_pub != nullptr) {
+        EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pub);
+        m_rsa_handle_keyctx_pub = nullptr;
+    }
+    if (m_rsa_handle_keyctx_pvt != nullptr) {
+        EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pvt);
+        m_rsa_handle_keyctx_pvt = nullptr;
     }
     if (m_pkey != nullptr) {
         EVP_PKEY_free(m_pkey);
         m_pkey = nullptr;
+    }
+    if (m_pkey_pvt != nullptr) {
+        EVP_PKEY_free(m_pkey_pvt);
+        m_pkey_pvt = nullptr;
     }
 }
 
 bool
 OpenSSLRsaBase::init()
 {
-    if (m_rsa_handle != nullptr) {
-        EVP_PKEY_CTX_free(m_rsa_handle);
-        m_rsa_handle = nullptr;
+    if (m_rsa_handle_keyctx_pub != nullptr) {
+        EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pub);
+        m_rsa_handle_keyctx_pub = nullptr;
     }
-    m_rsa_handle = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
-    if (m_rsa_handle == nullptr) {
-        std::cout << "EVP_PKEY_CTX_new_from_name returned null: Error:"
-                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
-        return false;
+    if (m_rsa_handle_keyctx_pvt != nullptr) {
+        EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pvt);
+        m_rsa_handle_keyctx_pvt = nullptr;
     }
     return true;
 }
@@ -69,130 +75,91 @@ OpenSSLRsaBase::init()
 bool
 OpenSSLRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 {
-    ENGINE*       eng   = NULL;
-    unsigned long rsa_n = 0x400;
-    unsigned long rsa_e = 0x10001; // 0x10001
-    unsigned long rsa_d = 0x7b133399;
+    const char* strPublicKey =
+        "-----BEGIN PUBLIC KEY-----\n"
+        "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDxiJ0nHJBUK15SY2NNgyNtm0hr\n"
+        "a52HbdoWsBnN8d0QtMU1vKoAjEBB4aBXkUkP2TyJtLyyR+d9JLIvmrlqpSDm1N7T\n"
+        "Dijcrz+IEU+lAkaR5/GTskcRW3u72ulHf+ul1xeWUwmmar6O5EXf5xKAeIZlR/lK\n"
+        "5ZDW3AwNWlrOEsobCQIDAQAB\n"
+        "-----END PUBLIC KEY-----\n";
 
-    static const Uint8 Modulus_1024[] = {
-        0xef, 0x4f, 0xa2, 0xcd, 0x00, 0xea, 0x99, 0xeb, 0x12, 0xa8, 0x3a, 0x1b,
-        0xc5, 0x5d, 0x49, 0x04, 0x18, 0xcd, 0x96, 0x69, 0xc9, 0x28, 0x2c, 0x36,
-        0x40, 0x9a, 0x15, 0x40, 0x05, 0x6b, 0x35, 0x6f, 0x89, 0x76, 0xf3, 0xb9,
-        0xe3, 0xac, 0x4d, 0x2a, 0xe4, 0xba, 0xd9, 0x6e, 0xb8, 0xa4, 0x05, 0x0b,
-        0xc5, 0x8e, 0xdf, 0x15, 0x33, 0xfc, 0x81, 0x2b, 0xb5, 0xf4, 0x3a, 0x0b,
-        0x67, 0x2d, 0x7d, 0x7c, 0x41, 0x8c, 0xc0, 0x46, 0x93, 0x7d, 0xe9, 0x95,
-        0x90, 0x1e, 0xdd, 0xc0, 0xf4, 0xfc, 0x23, 0x90, 0xbb, 0x14, 0x73, 0x5e,
-        0xcc, 0x86, 0x45, 0x6a, 0x9c, 0x15, 0x46, 0x92, 0xf3, 0xac, 0x24, 0x8f,
-        0x0c, 0x28, 0x25, 0x17, 0xb1, 0xb8, 0x3f, 0xa5, 0x9c, 0x61, 0xbd, 0x2c,
-        0x10, 0x7a, 0x5c, 0x47, 0xe0, 0xa2, 0xf1, 0xf3, 0x24, 0xca, 0x37, 0xc2,
-        0x06, 0x78, 0xa4, 0xad, 0x0e, 0xbd, 0x72, 0xeb
-    };
-
-    OSSL_PARAM_BLD* bld  = OSSL_PARAM_BLD_new();
-    BIGNUM*         n_bn = BN_bin2bn(Modulus_1024, 128, NULL);
-    // OSSL_PARAM_BLD_push_BN(bld, OSSL_KEY_PARAM_RSA, n_bn);
-
-    OSSL_PARAM params[] = { OSSL_PARAM_ulong("n", &rsa_n),
-                            OSSL_PARAM_ulong("e", &rsa_e),
-                            OSSL_PARAM_ulong("d", &rsa_d),
-                            OSSL_PARAM_END };
-
-    if (1 != EVP_PKEY_fromdata_init(m_rsa_handle)) {
-        std::cout << "EVP_PKEY_fromdata_init failed: Error:"
+    // encrypt
+    BIO* bioPublic = BIO_new_mem_buf(strPublicKey, -1);
+    m_pkey         = PEM_read_bio_PUBKEY(bioPublic, &m_pkey, nullptr, nullptr);
+    m_rsa_handle_keyctx_pub = EVP_PKEY_CTX_new(m_pkey, nullptr);
+    if (m_rsa_handle_keyctx_pub == nullptr) {
+        std::cout << "EVP_PKEY_CTX_new returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
-    if (1
-        != EVP_PKEY_fromdata(
-            m_rsa_handle, &m_pkey, EVP_PKEY_PUBLIC_KEY, params)) {
-        std::cout << "EVP_PKEY_fromdata failed: Error:"
-                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
-        return false;
-    }
+
     return true;
-    // ENGINE*      eng    = NULL;
-    // unsigned int primes = 3;
-    // /*TODO: change this later*/
-    // unsigned int bits = 1024;
-    // if (m_key_len * 8 == 1024) {
-    //     bits = 1024;
-    // } else if (m_key_len * 8 == 2048) {
-    //     bits = 2048;
-    // } else {
-    //     std::cout << "Invalid key size passed to OpenSSL SetPublicKey"
-    //               << std::endl;
-    //     return false;
-    // }
-
-    // OSSL_PARAM params[3];
-
-    // if (1 != EVP_PKEY_keygen_init(m_rsa_handle)) {
-    //     std::cout << "EVP_PKEY_keygen_init failed: Error:"
-    //               << ERR_GET_REASON(ERR_get_error()) << std::endl;
-    //     return false;
-    // }
-
-    // params[0] = OSSL_PARAM_construct_uint("bits", &bits);
-    // params[1] = OSSL_PARAM_construct_uint("primes", &primes);
-    // params[2] = OSSL_PARAM_construct_end();
-
-    // if (1 != EVP_PKEY_CTX_set_params(m_rsa_handle, params)) {
-    //     std::cout << "EVP_PKEY_CTX_set_params failed: Error:"
-    //               << ERR_GET_REASON(ERR_get_error()) << std::endl;
-    //     return false;
-    // }
-    // if (1 != EVP_PKEY_generate(m_rsa_handle, &m_pkey)) {
-    //     std::cout << "EVP_PKEY_generate failed: Error:"
-    //               << ERR_GET_REASON(ERR_get_error()) << std::endl;
-    //     return false;
-    // }
-    // if (m_rsa_handle != nullptr) {
-    //     EVP_PKEY_CTX_free(m_rsa_handle);
-    //     m_rsa_handle = nullptr;
-    // }
-    // m_rsa_handle = EVP_PKEY_CTX_new(m_pkey, eng);
-    // if (m_rsa_handle == nullptr) {
-    //     std::cout << "EVP_PKEY_CTX_new returned null: Error:"
-    //               << ERR_GET_REASON(ERR_get_error()) << std::endl;
-    //     return false;
-    // }
-    // return true;
 }
 
 bool
 OpenSSLRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
 {
+    const char* strPrivateKey =
+        "-----BEGIN PRIVATE KEY-----\n"
+        "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAPGInScckFQrXlJj\n"
+        "Y02DI22bSGtrnYdt2hawGc3x3RC0xTW8qgCMQEHhoFeRSQ/ZPIm0vLJH530ksi+a\n"
+        "uWqlIObU3tMOKNyvP4gRT6UCRpHn8ZOyRxFbe7va6Ud/66XXF5ZTCaZqvo7kRd/n\n"
+        "EoB4hmVH+UrlkNbcDA1aWs4SyhsJAgMBAAECgYAFvAyfJRp4JR90LU/qQzbQH2O0\n"
+        "yTVQRddrunqiXR+2idQ01mni4XGVHtpDuftWGP5K9rOUOAjS+9APOUk1sv348T1x\n"
+        "EKxYLQvXLPJcVtYE8sJgJIO6PX0ZpO0upMocX08U8naQUwNPeMC2jr9OzwZmK9BL\n"
+        "RW6E6rVSyZNro9bBUQJBAP35x2lsO2CP7CfHUEIp8IGbqet758FYBFLAB4Qy0/Jy\n"
+        "QZyWXIQUnmO6CpjNVqtHC9WnQzAM9WLRO6INft84mksCQQDzdXKd7IgSI2XRlpj+\n"
+        "5rOyyULNZVy7z5+BxfKpVeoCWZuIdsdWmbyAhAysurTvRRNS+/hJ817338Fy1qbZ\n"
+        "rEt7AkEAlpYlIGLmCekL8sIA2loXmiF77H34+fCAD7iAPGgOty/7qyaUEFRRXXwP\n"
+        "kG4ft0pWwAV+ltz4GfFJVFqAIUZkZQJAVI6UMnl2gSY+NN8jYFTsUMpKI2BzJt/j\n"
+        "vITt1RZ74jkRJgJrFY7rw48Zf9yQ/xF0trvA7p5Se7EBVUtsQ+nthQJAZZXXeu6C\n"
+        "94JyNMuRvyVlRwMeW+koxp705xsklQRyMAeapwmYsRtXw6jRGHXKXwKN15lj3zQf\n"
+        "UmR8Qxe3QXnFQg==\n"
+        "-----END PRIVATE KEY-----\n";
+
+    // encrypt
+    BIO* bioPrivate = BIO_new_mem_buf(strPrivateKey, -1);
+    m_pkey_pvt =
+        PEM_read_bio_PrivateKey(bioPrivate, &m_pkey_pvt, nullptr, nullptr);
+
+    m_rsa_handle_keyctx_pvt = EVP_PKEY_CTX_new(m_pkey_pvt, nullptr);
+    if (m_rsa_handle_keyctx_pvt == nullptr) {
+        std::cout << "EVP_PKEY_CTX_new returned null: Error:"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
+        return false;
+    }
     return true;
 }
 
 bool
 OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 {
-    ENGINE* eng = NULL;
-    size_t  outlen;
-    m_rsa_handle_keyctx = EVP_PKEY_CTX_new(m_pkey, eng);
-
-    if (1 != EVP_PKEY_encrypt_init(m_rsa_handle_keyctx)) {
+    size_t outlen;
+    if (1 != EVP_PKEY_encrypt_init(m_rsa_handle_keyctx_pub)) {
         std::cout << "EVP_PKEY_encrypt_init failed: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     /* FIXME: parameterize the padding scheme */
     if (1
-        != EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle_keyctx, RSA_NO_PADDING)) {
+        != EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle_keyctx_pub,
+                                        RSA_NO_PADDING)) {
         std::cout << "EVP_PKEY_CTX_set_rsa_padding failed: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     if (1
-        != EVP_PKEY_encrypt(
-            m_rsa_handle_keyctx, NULL, &outlen, data.m_msg, data.m_msg_len)) {
+        != EVP_PKEY_encrypt(m_rsa_handle_keyctx_pub,
+                            NULL,
+                            &outlen,
+                            data.m_msg,
+                            data.m_msg_len)) {
         std::cout << "EVP_PKEY_encrypt failed: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     if (1
-        != EVP_PKEY_encrypt(m_rsa_handle_keyctx,
+        != EVP_PKEY_encrypt(m_rsa_handle_keyctx_pub,
                             data.m_encrypted_data,
                             &outlen,
                             data.m_msg,
@@ -208,18 +175,21 @@ bool
 OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 {
     size_t outlen;
-    if (1 != EVP_PKEY_decrypt_init(m_rsa_handle)) {
+    if (1 != EVP_PKEY_decrypt_init(m_rsa_handle_keyctx_pvt)) {
         std::cout << "EVP_PKEY_decrypt_init failed: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
-    if (1 != EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle, RSA_NO_PADDING)) {
+    /* FIXME: parameterize the padding scheme */
+    if (1
+        != EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle_keyctx_pvt,
+                                        RSA_NO_PADDING)) {
         std::cout << "EVP_PKEY_CTX_set_rsa_padding failed: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     if (1
-        != EVP_PKEY_decrypt(m_rsa_handle,
+        != EVP_PKEY_decrypt(m_rsa_handle_keyctx_pvt,
                             NULL,
                             &outlen,
                             data.m_encrypted_data,
@@ -229,7 +199,7 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
         return false;
     }
     if (1
-        != EVP_PKEY_decrypt(m_rsa_handle,
+        != EVP_PKEY_decrypt(m_rsa_handle_keyctx_pvt,
                             data.m_decrypted_data,
                             &outlen,
                             data.m_encrypted_data,
