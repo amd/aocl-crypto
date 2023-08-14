@@ -50,7 +50,19 @@ alcp_drbg_context_size(const alc_drbg_info_p pDrbgInfo)
 alc_error_t
 alcp_drbg_supported(const alc_drbg_info_p pcDrbgInfo)
 {
-    return ALC_ERROR_NONE;
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pcDrbgInfo, err);
+    // FIXME: Implement Digest Support check
+    Status s = drbg::DrbgBuilder::isSupported(*pcDrbgInfo);
+
+    // TODO: Convert status to proper alc_error_t code and return
+    if (!s.ok()) {
+        err = ALC_ERROR_EXISTS;
+    } else {
+        err = ALC_ERROR_NONE;
+    }
+
+    return err;
 }
 
 alc_error_t

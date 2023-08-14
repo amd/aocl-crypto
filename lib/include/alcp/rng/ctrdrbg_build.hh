@@ -28,6 +28,8 @@
 
 #include "alcp/base.hh"
 #include "drbg_ctr.hh"
+
+using namespace alcp::base::status;
 namespace alcp::drbg {
 class CtrDrbgBuilder
 {
@@ -58,7 +60,13 @@ CtrDrbgBuilder::getSize(const alc_drbg_info_t& drbgInfo)
 Status
 CtrDrbgBuilder::isSupported(const alc_drbg_info_t& drbgInfo)
 {
-    // FIMXE : Need to be added
+    if ((drbgInfo.di_algoinfo.ctr_drbg.di_keysize == 128)
+        | (drbgInfo.di_algoinfo.ctr_drbg.di_keysize == 192)
+        | (drbgInfo.di_algoinfo.ctr_drbg.di_keysize == 256)) {
+        return StatusOk();
+    } else {
+        return InvalidArgument("CTR-DRBG: Unsupported CTR Key Size");
+    }
     return StatusOk();
 }
 } // namespace alcp::drbg

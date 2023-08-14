@@ -28,6 +28,7 @@
 
 #include "alcp/base.hh"
 #include "alcp/capi/drbg/builder.hh"
+#include "alcp/capi/rng/builder.hh"
 #include "alcp/rng/ctrdrbg_build.hh"
 #include "alcp/rng/hmacdrbg_build.hh"
 #include "hardware_rng.hh"
@@ -145,7 +146,19 @@ Status
 DrbgBuilder::isSupported(const alc_drbg_info_t& drbgInfo)
 {
     Status s{ StatusOk() };
-
+    s = alcp::rng::RngBuilder::isSupported(
+        drbgInfo.di_rng_sourceinfo.di_sourceinfo.rng_info);
+    if (!s.ok()) {
+        return s;
+    }
+    switch (drbgInfo.di_type) {
+        case ALC_DRBG_CTR:
+            return CtrDrbgBuilder::isSupported(drbgInfo);
+            break;
+        case ALC_DRBG_HMAC:
+            return HmacDrbgBuilder::isSupported(drbgInfo);
+            break;
+    }
     return s;
 }
 

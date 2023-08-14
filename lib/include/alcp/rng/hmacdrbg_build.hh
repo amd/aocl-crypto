@@ -25,9 +25,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#pragma once
 
 #include "alcp/base.hh"
-#include "alcp/capi/digest/builder.hh"
+#include "alcp/capi/mac/builder.hh"
 #include "alcp/digest/sha2.hh"
 #include "alcp/digest/sha2_384.hh"
 #include "alcp/digest/sha2_512.hh"
@@ -47,6 +48,7 @@ class HmacDrbgBuilder
 Status
 HmacDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
 {
+    auto  status   = StatusOk();
     auto  addr     = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
     auto* hmacdrbg = new (addr) alcp::rng::drbg::HmacDrbg();
     std::shared_ptr<alcp::digest::Digest> p_digest;
@@ -71,8 +73,8 @@ HmacDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
                     break;
                 }
                 default: {
-                    // status.update(
-                    //     InternalError("Unsupported HMAC Sha2 Algorithm"));
+                    status.update(
+                        InternalError("Unsupported HMAC Sha2 Algorithm"));
                 }
             }
             break;
@@ -83,15 +85,21 @@ HmacDrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
             break;
         }
         default: {
-            // status.update(InternalError("Digest algorithm Unknown"));
+            status.update(InternalError("Digest algorithm Unknown"));
             break;
         }
     }
-
-    hmacdrbg->setDigest(p_digest);
-
+    if (!status.ok()) {
+        return status;
+    }
     ctx.m_drbg = static_cast<void*>(hmacdrbg);
-    return StatusOk();
+
+    status = hmacdrbg->setDigest(p_digest);
+    if (!status.ok()) {
+        return status;
+    }
+
+    return status;
 }
 Uint64
 HmacDrbgBuilder::getSize(const alc_drbg_info_t& drbgInfo)
@@ -102,6 +110,6 @@ HmacDrbgBuilder::getSize(const alc_drbg_info_t& drbgInfo)
 Status
 HmacDrbgBuilder::isSupported(const alc_drbg_info_t& drbgInfo)
 {
-    return StatusOk();
+    return mac::isDigestSupported(drbgInfo.di_algoinfo.hmac_drbg.digest_info);
 }
 } // namespace alcp::drbg
