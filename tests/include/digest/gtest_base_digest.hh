@@ -142,9 +142,10 @@ Digest_KAT(alc_digest_info_t info)
 
     if (info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
         while (rsp.readNextTC()) {
-            auto msg          = rsp.getVect("MESSAGE");
-            data.m_msg        = &(msg[0]);
-            data.m_msg_len    = rsp.getLenBytes("MESSAGELEN");
+            auto msg   = rsp.getVect("MESSAGE");
+            data.m_msg = &(msg[0]);
+            // RSP input vectors have Length value in bits.
+            data.m_msg_len    = rsp.getLenBytes("MESSAGELEN") / 8;
             data.m_digest_len = rsp.getVect("DIGEST").size();
             std::vector<Uint8> digest_(data.m_digest_len, 0);
             data.m_digest = &(digest_[0]);
@@ -166,9 +167,11 @@ Digest_KAT(alc_digest_info_t info)
         }
     } else {
         while (rsp.readNextTC()) {
-            auto msg          = rsp.getVect("MESSAGE");
-            data.m_msg        = &(msg[0]);
-            data.m_msg_len    = rsp.getLenBytes("MESSAGELEN");
+            auto msg   = rsp.getVect("MESSAGE");
+            data.m_msg = &(msg[0]);
+            // RSP input vectors have Length value in bits.
+            data.m_msg_len = rsp.getLenBytes("MESSAGELEN") / 8;
+
             data.m_digest_len = rsp.getVect("DIGEST").size();
             data.m_digest     = &(digest[0]);
 

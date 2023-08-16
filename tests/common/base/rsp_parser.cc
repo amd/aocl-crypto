@@ -175,7 +175,6 @@ CRspParser::fetchTCfromRSP()
     return my_test_case;
 }
 
-
 /* Parse Next Test Case and store in m_data_map    */
 bool
 CRspParser::readNextTC()
@@ -228,7 +227,7 @@ CRspParser::getLenBytes(StringView cName)
     if (m_data_map.find(key) != m_data_map.end())
         value = m_data_map[key];
 
-    return (utils::parseStrToUint64(value)) / 8;
+    return (utils::parseStrToUint64(value));
 }
 
 /*  Map the Key names with that of Algorithm Specific
@@ -240,21 +239,16 @@ CRspParser::adjustKeyNames(String cName)
     String my_key;
 
     // Unordered Map to store key names from different modes
-    param_map_t key_map = { { "Msg", "MESSAGE" },
-                            { "Len", "MESSAGELEN" },
-                            { "MD", "DIGEST" },
-                            { "Output", "DIGEST" },
-                            { "Outputlen", "DIGESTLEN" },
-                            { "PT", "PLAINTEXT" },
-                            { "CT", "CIPHERTEXT" },
-                            { "Key", "KEY" },
-                            { "IV", "INITVECT" },
-                            { "Nonce", "INITVECT" },
-                            { "Tag", "TAG" },
-                            { "AAD", "AD" },
-                            { "TKey", "TWEAK_KEY" },
-                            { "CKey", "CTR_KEY" },
-                            { "Mac", "CMAC" } };
+    param_map_t key_map = {
+        { "Msg", "MESSAGE" },     { "Len", "MESSAGELEN" },
+        { "Mlen", "MESSAGELEN" }, { "MD", "DIGEST" },
+        { "Output", "DIGEST" },   { "Outputlen", "DIGESTLEN" },
+        { "PT", "PLAINTEXT" },    { "CT", "CIPHERTEXT" },
+        { "Key", "KEY" },         { "IV", "INITVECT" },
+        { "Nonce", "INITVECT" },  { "Tag", "TAG" },
+        { "AAD", "AD" },          { "TKey", "TWEAK_KEY" },
+        { "CKey", "CTR_KEY" },    { "Mac", "CMAC" }
+    };
 
     if (key_map.find(cName) != key_map.end())
         my_key = key_map[cName];
