@@ -1,6 +1,6 @@
 (C) 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
 
-AOCL Crypto - Release Notes - AOCL version 4.1
+AOCL Crypto - Release Notes - AOCL version 4.2
 ----------------------------------------------
 
 AOCL Crypto Contents
@@ -13,6 +13,22 @@ implementations of different cryptographic algorithms which is given below:
 -- MAC (Cipher and Hash based) routines
 -- ECDH x25519 Key exchange functions
 -- RSA Encrypt/Decrypt functions.
+
+Highlights of AOCL Crypto version 4.2
+--------------------------------------
+-- RSA
+   -- Encryption / Decryption support for 1024 and 2048 bit key sizes.
+   -- OAEP Padding support
+-- Digest
+   -- Performance improvements in SHA2-512, SHA2-256 and the dependent algorithms.
+-- Cipher
+   -- Performance improvements in CFB and CBC Decrypt.
+   -- Performance improvements in GCM, CTR and XTS Encrypt / Decrypt.
+   -- New architecture, Improvements in Dynamic dispatcher.
+   -- Split algorithms into AEAD and non-AEAD APIs.
+   -- IPP and OpenSSL compat support for AEAD APIs.
+-- Bug fixes in static library generation.
+
 
 Highlights of AOCL Crypto version 4.1
 --------------------------------------
