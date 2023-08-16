@@ -29,4 +29,5 @@
  ADD_EXAMPLE(rsa_oaep rsa_oaep.c)
  #Fix me : Enable when the new RSA API's are added in test and bench
  #ADD_EXAMPLE(rsa_2048 rsa_2048.c)
+ #ADD_EXAMPLE(rsa_oaep_2048 rsa_oaep_2048.c)
 
