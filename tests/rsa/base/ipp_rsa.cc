@@ -338,13 +338,14 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
             return false;
         }
         /*FIXME: how to read data from this Bignum ?*/
-        status =
-            PlainText_BN.GetOctetString(data.m_decrypted_data, data.m_msg_len);
-        if (status != ippStsNoErr) {
-            std::cout << "ippsGetOctString_BN failed with err code" << status
-                      << std::endl;
-            return false;
-        }
+        // status =
+        //     PlainText_BN.GetOctetString(data.m_decrypted_data,
+        //     data.m_msg_len);
+        // if (status != ippStsNoErr) {
+        //     std::cout << "ippsGetOctString_BN failed with err code" << status
+        //               << std::endl;
+        //     return false;
+        // }
     }
     return true;
 }

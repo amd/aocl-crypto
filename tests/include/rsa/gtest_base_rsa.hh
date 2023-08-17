@@ -223,7 +223,7 @@ Rsa_Cross(int padding_mode, int KeySize)
     rb_main->m_hash_len = ALC_DIGEST_LEN_256 / 8;
     rb_ext->m_hash_len  = ALC_DIGEST_LEN_256 / 8;
 
-    int loop_max = 1600, loop_start = 1;
+    int loop_max = 1500, loop_start = 1;
     if (rb_ext == nullptr) {
         std::cout << "No external lib selected!" << std::endl;
         exit(-1);

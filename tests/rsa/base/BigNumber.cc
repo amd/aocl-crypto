@@ -37,14 +37,6 @@ using namespace std;
 // BigNumber
 //
 //////////////////////////////////////////////////////////////////////
-void
-BigNumber::Test()
-{
-    return;
-}
-
-BigNumber::BigNumber() {}
-
 BigNumber::~BigNumber()
 {
     delete[](Ipp8u*) m_pBN;
@@ -133,37 +125,6 @@ BigNumber::BigNumber(const BigNumber& bn)
     ippsRef_BN(&bnSgn, &bnBitLen, &bnData, bn);
 
     create(bnData, BITSIZE_WORD(bnBitLen), bnSgn);
-}
-
-// get octet string
-IppStatus
-BigNumber::GetOctetString(unsigned char* pMsg, int len)
-{
-    IppStatus status;
-    // size of Big Number
-    int size;
-    status = ippsGetSize_BN(m_pBN, &size);
-    // extract Big Number value and convert it to the string presentation
-    Ipp8u* bnValue = new Ipp8u[size * 4];
-    status         = ippsGetOctString_BN(bnValue, size * 4, m_pBN);
-
-    /* copy to input */
-    memcpy(pMsg, bnValue, size * 4);
-
-    delete[] bnValue;
-    return status;
-}
-
-// get value
-void
-BigNumber::GetSize(int* pLength)
-{
-    ippsGetSize_BN(m_pBN, pLength);
-}
-void
-BigNumber::Get(Ipp32u* pData, int* pLength, IppsBigNumSGN* pSgn)
-{
-    ippsGet_BN(pSgn, pLength, pData, m_pBN);
 }
 
 // set value

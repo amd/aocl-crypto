@@ -28,8 +28,9 @@
 #if !defined _BIGNUMBER_H_
 #define _BIGNUMBER_H_
 
+#include "ippcp.h"
+
 #include <iostream>
-#include <ippcp.h>
 #include <iterator>
 #include <vector>
 using namespace std;
@@ -37,7 +38,6 @@ using namespace std;
 class BigNumber
 {
   public:
-    BigNumber();
     BigNumber(Ipp32u value = 0);
     BigNumber(Ipp32s value);
     BigNumber(const IppsBigNumState* pBN);
@@ -47,13 +47,6 @@ class BigNumber
     BigNumber(const BigNumber& bn);
     BigNumber(const char* s);
     virtual ~BigNumber();
-
-    static void Test(void);
-
-    // get
-    IppStatus GetOctetString(unsigned char* pMsg, int len);
-    void      GetSize(int* pLength);
-    void      Get(Ipp32u* pData, int* pLength, IppsBigNumSGN* pSgn);
 
     // set value
     void Set(const Ipp32u* pData,
