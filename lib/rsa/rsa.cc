@@ -74,7 +74,9 @@ Select(Uint8 mask, Uint8 first, Uint8 second)
 
 template<alc_rsa_key_size T>
 Rsa<T>::Rsa()
-{}
+{
+    m_key_size = T / 8;
+}
 
 template<alc_rsa_key_size T>
 void
