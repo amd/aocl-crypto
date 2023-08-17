@@ -31,6 +31,7 @@
 #include "alcp/ec.h"
 #include "alcp/ecdh.h"
 #include "ecdh/ecdh.hh"
+#include <crypto_mb/ec_nistp256.h>
 #include <crypto_mb/x25519.h>
 #include <iostream>
 #include <ippcp.h>

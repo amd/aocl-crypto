@@ -27,11 +27,11 @@
  */
 
 #include "ecdh/ipp_ecdh.hh"
+#include <algorithm>
 #include <cstddef>
 #include <cstring>
 #include <iostream>
 #include <ostream>
-
 namespace alcp::testing {
 
 IPPEcdhBase::IPPEcdhBase(const alc_ec_info_t& info) {}
@@ -81,27 +81,85 @@ bool
 IPPEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
                               const alcp_ecdh_data_t& data_peer2)
 {
-    mbx_status status = 0;
-    /* FIXME: this is because we are calling 8 elem buffer variant of ipp */
-    int elem = 8;
-    if (data_peer1.m_Peer_PubKey == NULL || data_peer2.m_Peer_PubKey == NULL) {
-        std::cout << "Pub key data is null" << std::endl;
-        return false;
-    }
+    mbx_status status     = 0;
+    const int  cElem      = 8;
+    int64u*    pa_pubx[8] = {};
+    int64u*    pa_puby[8] = {};
     /* load keys */
-    for (int i = 0; i < elem; i++) {
-        m_pSecretKey_mb[i]     = data_peer1.m_Peer_SecretKey;
-        m_pPublicKeyData_mb[i] = data_peer2.m_Peer_PubKey;
-        // same public key is set for all 8 paths.
+    for (int i = 0; i < cElem; i++) {
+        m_pSecretKey_mb[i] = data_peer1.m_Peer_SecretKey;
     }
+    if (m_info.ecCurveId == ALCP_EC_CURVE25519) {
+        // Store Private Key
+        for (int i = 0; i < cElem; i++) {
+            m_pPrivKey_mb[i]       = data_peer1.m_Peer_PvtKey;
+            m_pPublicKeyData_mb[i] = data_peer2.m_Peer_PubKey;
+        }
+        if (data_peer2.m_Peer_PubKey == NULL) {
+            std::cout << "Pub key data is null" << std::endl;
+            return false;
+        }
+        /* FIXME: this is because we are calling 8 elem buffer variant of ipp */
 
-    /* compute secret key using pub key of the other peer */
-    status =
-        mbx_x25519_mb8(m_pSecretKey_mb, m_pPrivKey_mb, m_pPublicKeyData_mb);
-    if (MBX_STATUS_OK != MBX_GET_STS(status, 0)) {
-        std::cout << "mbx_x25519_mb8 failed with err code: " << status
-                  << std::endl;
-        return false;
+        /* compute secret key using pub key of the other peer */
+        status =
+            mbx_x25519_mb8(m_pSecretKey_mb, m_pPrivKey_mb, m_pPublicKeyData_mb);
+        if (MBX_STATUS_OK != MBX_GET_STS(status, 0)) {
+            std::cout << "mbx_x25519_mb8 failed with err code: " << status
+                      << std::endl;
+            return false;
+        }
+    } else if (m_info.ecCurveId == ALCP_EC_SECP256R1) {
+        // Store Private Key
+        int64u* p_priv_key = (int64u*)malloc(data_peer1.m_Peer_PvtKeyLen);
+        int64u* p_pub_x    = (int64u*)malloc(data_peer2.m_Peer_PubKeyLen / 2);
+        int64u* p_pub_y    = (int64u*)malloc(data_peer2.m_Peer_PubKeyLen / 2);
+
+        /*
+         * For some reason IPPCP decided to take the input in the reverse
+         * order, so we need to do that or go with openssl bignum which will
+         * cause another set of bottleknecks
+         */
+
+        std::reverse_copy(data_peer1.m_Peer_PvtKey,
+                          data_peer1.m_Peer_PvtKey
+                              + data_peer1.m_Peer_PvtKeyLen,
+                          (Uint8*)p_priv_key);
+        std::reverse_copy(data_peer2.m_Peer_PubKey,
+                          data_peer2.m_Peer_PubKey
+                              + data_peer2.m_Peer_PubKeyLen / 2,
+                          (Uint8*)p_pub_x);
+        std::reverse_copy(
+            data_peer2.m_Peer_PubKey + data_peer2.m_Peer_PubKeyLen / 2,
+            data_peer2.m_Peer_PubKey + data_peer2.m_Peer_PubKeyLen,
+            (Uint8*)p_pub_y);
+
+        for (int i = 0; i < cElem; i++) {
+            m_pPrivKey_mb[i] = (const int8u*)p_priv_key;
+            pa_pubx[i]       = p_pub_x;
+            pa_puby[i]       = p_pub_y;
+        }
+
+        status = mbx_nistp256_ecdh_mb8(m_pSecretKey_mb,
+                                       (const int64u* const*)m_pPrivKey_mb,
+                                       pa_pubx,
+                                       pa_puby,
+                                       NULL,
+                                       NULL);
+
+        for (int i = 0; i < cElem; i++) {
+            if (MBX_STATUS_OK != MBX_GET_STS(status, i)) {
+                std::cout << "mbx_x25519_mb8 failed with err code: "
+                          << MBX_GET_STS(status, i) << std::endl;
+                return false;
+            }
+        }
+
+        free(p_priv_key);
+        free(p_pub_x);
+        free(p_pub_y);
+    } else { // Should not come here
+        std::cout << "ipp_ecdh.cc: In dead code" << std::endl;
     }
     return true;
 }

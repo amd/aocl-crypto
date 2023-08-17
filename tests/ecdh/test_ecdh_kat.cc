@@ -45,7 +45,7 @@ TEST(ECDH, KAT_x25519)
 
 TEST(ECDH, KAT_p256)
 {
-    if (useipp || (useossl == false)) {
+    if ((useipp == false) && (useossl == false)) {
         GTEST_SKIP() << "Test not implemented for ALCP and IPP";
     }
     alc_ec_info_t info;

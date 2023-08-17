@@ -272,13 +272,11 @@ ecdh_KAT_p256(alc_ec_info_t info)
         data_peer2.m_Peer_SecretKeyLen = 0;
 
         if (!eb_peer1->init(info)) {
-            std::cout << "Error in ECDH init" << std::endl;
-            FAIL();
+            FAIL() << "Error in ECDH init";
         }
 
         if (!eb_peer1->ComputeSecretKey(data_peer1, data_peer2)) {
-            std::cout << "Error in ECDH Compute Secret key" << std::endl;
-            FAIL();
+            FAIL() << "Error in ECDH Compute Secret key";
         }
 
         /* now check both Peers' secret keys match or not */
