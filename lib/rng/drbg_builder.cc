@@ -149,7 +149,7 @@ DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
             status.update(InvalidArgument("Unknown MAC Type"));
             break;
     }
-    const alc_rngsource_info_t* rng_source_info = &(drbgInfo.di_rng_sourceinfo);
+    const alc_rng_source_info_t* rng_source_info = &(drbgInfo.di_rng_sourceinfo);
     alcp::rng::IDrbg* p_drbg = static_cast<alcp::rng::Drbg*>(ctx.m_drbg);
     if (rng_source_info->custom_rng == false) {
         std::shared_ptr<IRng> irng;

@@ -28,7 +28,6 @@
 
 #ifndef _ALCP_DRBG_H_
 #define _ALCP_DRBG_H_ 2
-#include "alcp/cipher.h"
 #include "alcp/digest.h"
 #include "alcp/rng.h"
 #include <stddef.h>
@@ -41,50 +40,50 @@ typedef enum _alc_drbg_type
     ALC_DRBG_CTR
 } alc_drbg_type_t;
 
-typedef struct _alc_hmacdrbg_info
+typedef struct _alc_hmac_drbg_info
 {
     alc_digest_info_t digest_info;
-} alc_hmacdrbg_info_t, *alc_hmacdrbg_info_p;
+} alc_hmac_drbg_info_t, *alc_hmac_drbg_info_p;
 
-typedef struct _alc_ctrdrbg_info
+typedef struct _alc_ctr_drbg_info
 {
     Uint64 di_keysize;
     bool   use_derivation_function;
-} alc_ctrdrbg_info_t, *alc_ctrdrbg_info_p;
+} alc_ctr_drbg_info_t, *alc_ctr_drbg_info_p;
 
-typedef struct _alc_customrng_info
+typedef struct _alc_custom_rng_info
 {
     Uint8* entropy;
     Uint64 entropylen;
     Uint8* nonce;
     Uint64 noncelen;
 
-} alc_customrng_info_t, *alc_customrng_info_p;
+} alc_custom_rng_info_t, *alc_custom_rng_info_p;
 
-typedef struct _alc_rngsource_info
+typedef struct _alc_rng_source_info
 {
     bool custom_rng;
 
     union
     {
         alc_rng_info_t rng_info;
-        alc_customrng_info_t
+        alc_custom_rng_info_t
             custom_rng_info; // Used for Testing purposes. Not pure Random but
                              // allows to provide custom entropy and nonce
     } di_sourceinfo;
 
-} alc_rngsource_info_t, *alc_rngsource_info_p;
+} alc_rng_source_info_t, *alc_rng_source_info_p;
 
 typedef struct _alc_drbg_info_t
 {
     alc_drbg_type_t di_type;
     union
     {
-        alc_hmacdrbg_info_t hmac_drbg;
-        alc_ctrdrbg_info_t  ctr_drbg;
+        alc_hmac_drbg_info_t hmac_drbg;
+        alc_ctr_drbg_info_t  ctr_drbg;
     } di_algoinfo;
 
-    alc_rngsource_info_t di_rng_sourceinfo;
+    alc_rng_source_info_t di_rng_sourceinfo;
 
     Uint64 max_entropy_len;
     Uint64 max_nonce_len;
