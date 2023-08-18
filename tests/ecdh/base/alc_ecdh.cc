@@ -26,9 +26,9 @@
  *
  */
 
+#include "ecdh/alc_ecdh.hh"
 #include "alcp/ec.h"
 #include "alcp/ecdh.h"
-#include "ecdh/alc_ecdh.hh"
 #include "ecdh/ecdh.hh"
 #include <cstring>
 
@@ -39,6 +39,7 @@ AlcpEcdhBase::AlcpEcdhBase(const alc_ec_info_t& info) {}
 bool
 AlcpEcdhBase::init(const alc_ec_info_t& info)
 {
+    Uint8       err_buff[256];
     alc_error_t err;
     m_info              = info;
     alc_ec_info_t dinfo = m_info;
@@ -53,8 +54,9 @@ AlcpEcdhBase::init(const alc_ec_info_t& info)
 
     err = alcp_ec_request(&dinfo, m_ec_handle);
     if (alcp_is_error(err)) {
+        alcp_ec_error(m_ec_handle, err_buff, 256);
         /*FIXME: get a peerID to indicate which peer*/
-        std::cout << "Error in alcp_ec_request:Peer1 " << err << std::endl;
+        std::cout << "Error in alcp_ec_request:Peer1 " << err_buff << std::endl;
         return false;
     }
     return true;
@@ -76,11 +78,13 @@ bool
 AlcpEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
 {
     alc_error_t err;
+    Uint8       err_buff[256];
 
     err = alcp_ec_get_publickey(
         m_ec_handle, data.m_Peer_PubKey, data.m_Peer_PvtKey);
     if (alcp_is_error(err)) {
-        std::cout << "Error in alcp_ec_get_publickey peer: " << err
+        alcp_ec_error(m_ec_handle, err_buff, 256);
+        std::cout << "Error in alcp_ec_get_publickey peer: " << err_buff
                   << std::endl;
         return false;
     }
@@ -93,15 +97,42 @@ AlcpEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
 {
     alc_error_t err;
     Uint64      keyLength;
+    Uint8       err_buff[256];
+
+    if (m_info.ecCurveId == ALCP_EC_SECP256R1) {
+        err = alcp_ec_set_privatekey(m_ec_handle, data_peer1.m_Peer_PvtKey);
+        if (err != ALC_ERROR_NONE) {
+            alcp_ec_error(m_ec_handle, err_buff, 256);
+            std::cout << "Error in alcp_ec_set_privatekey : " << err_buff
+                      << std::endl;
+            return err;
+        }
+    }
+
     err = alcp_ec_get_secretkey(m_ec_handle,
                                 data_peer1.m_Peer_SecretKey,
                                 data_peer2.m_Peer_PubKey,
                                 &keyLength);
+
     if (alcp_is_error(err)) {
-        std::cout << "Error in alcp_ec_get_secretkey peer: " << err
+        alcp_ec_error(m_ec_handle, err_buff, 256);
+        std::cout << "Error in alcp_ec_get_secretkey : " << err_buff
                   << std::endl;
         return false;
     }
+
+    if (m_info.ecCurveId == ALCP_EC_SECP256R1) {
+        alcp_ec_finish(m_ec_handle);
+        if (alcp_is_error(err)) {
+            alcp_ec_error(m_ec_handle, err_buff, 256);
+            std::cout << "Error in alcp_ec_finish : " << err_buff << std::endl;
+            return false;
+        }
+        free(m_ec_handle->context);
+        delete m_ec_handle;
+        m_ec_handle = nullptr;
+    }
+
     return true;
 }
 
