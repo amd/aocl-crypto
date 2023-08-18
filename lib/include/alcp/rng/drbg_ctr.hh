@@ -63,9 +63,6 @@ class EncryptAes : public cipher::Aes
   public:
     bool isSupported(const alc_cipher_info_t& cipherInfo) { return true; }
 };
-static EncryptAes
-    m_enc_aes; // Atleast once object is required here for EncryptAes to have a
-               // vtable in libaclpstatic and hence to be linked in avx2
 class ALCP_API_EXPORT CtrDrbg : public Drbg
 {
   private:
