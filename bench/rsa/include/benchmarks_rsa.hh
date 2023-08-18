@@ -221,10 +221,12 @@ AddBenchmarks_rsa()
         BENCHMARK(BENCH_RSA_EncryptPubKey_NoPadding_2048);
         BENCHMARK(BENCH_RSA_DecryptPvtKey_NoPadding_2048);
     }
-    BENCHMARK(BENCH_RSA_EncryptPubKey_Padding_1024);
-    BENCHMARK(BENCH_RSA_DecryptPvtKey_Padding_1024);
-    BENCHMARK(BENCH_RSA_EncryptPubKey_Padding_2048);
-    BENCHMARK(BENCH_RSA_DecryptPvtKey_Padding_2048);
-
+    /*FIXME openssl padded mode not added yet*/
+    if (!useossl) {
+        BENCHMARK(BENCH_RSA_EncryptPubKey_Padding_1024);
+        BENCHMARK(BENCH_RSA_DecryptPvtKey_Padding_1024);
+        BENCHMARK(BENCH_RSA_EncryptPubKey_Padding_2048);
+        BENCHMARK(BENCH_RSA_DecryptPvtKey_Padding_2048);
+    }
     return 0;
 }

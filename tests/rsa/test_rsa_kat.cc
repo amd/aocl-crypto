@@ -36,13 +36,13 @@
 /* All tests to be added here */
 TEST(RSA_No_Padding_1024, KAT)
 {
-    if (useipp || useossl)
+    if (useipp)
         GTEST_SKIP() << "IPP non-padded mode is not supported yet";
     Rsa_KAT(ALCP_TEST_RSA_NO_PADDING, 1024);
 }
 TEST(RSA_No_Padding_2048, KAT)
 {
-    if (useipp || useossl)
+    if (useipp)
         GTEST_SKIP() << "IPP non-padded mode is not supported yet";
     Rsa_KAT(ALCP_TEST_RSA_NO_PADDING, 2048);
 }
