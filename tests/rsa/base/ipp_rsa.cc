@@ -241,7 +241,7 @@ IPPRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 //     return 0;
 // }
 
-bool
+int
 IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 {
     IppStatus status = ippStsNoErr;
@@ -268,7 +268,7 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
         if (status != ippStsNoErr) {
             std::cout << "ippsRSAEncrypt_OAEP_rmf failed with err code"
                       << status << std::endl;
-            return false;
+            return status;
         }
     } else {
         /* FIXME: not functional now */
@@ -280,7 +280,7 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
         if (status != ippStsNoErr) {
             std::cout << "ippsRSA_Encrypt failed with err code" << status
                       << std::endl;
-            return false;
+            return status;
         }
         /*FIXME: how to read data from this Bignum ?*/
         // status =
@@ -292,10 +292,10 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
         //     return false;
         // }
     }
-    return true;
+    return 0;
 }
 
-bool
+int
 IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 {
     IppStatus status = ippStsNoErr;
@@ -318,7 +318,7 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
         if (status != ippStsNoErr) {
             std::cout << "ippsRSADecrypt_OAEP_rmf failed with err code"
                       << status << std::endl;
-            return false;
+            return status;
         }
 
         std::memcpy(data.m_decrypted_data, pPlainText, plainTextLen);
@@ -335,7 +335,7 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
         if (status != ippStsNoErr) {
             std::cout << "ippsRSA_Decrypt failed with err code" << status
                       << std::endl;
-            return false;
+            return status;
         }
         /*FIXME: how to read data from this Bignum ?*/
         // status =
@@ -347,7 +347,7 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
         //     return false;
         // }
     }
-    return true;
+    return 0;
 }
 
 bool

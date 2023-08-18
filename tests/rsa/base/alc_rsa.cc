@@ -379,7 +379,7 @@ AlcpRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
     return true;
 }
 
-bool
+int
 AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 {
     /*FIXME: where should this be defined?
@@ -413,9 +413,7 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                                          data.m_key_len,
                                          data.m_encrypted_data);
         if (alcp_is_error(err)) {
-            std::cout << "Error in alcp_rsa_publickey_encrypt " << err
-                      << std::endl;
-            return false;
+            return err;
         }
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING) {
         // Adding the digest function for generating the hash in oaep padding
@@ -423,12 +421,12 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
         if (alcp_is_error(err)) {
             std::cout << "Error in alcp_rsa_add_digest_oaep " << err
                       << std::endl;
-            return false;
+            return err;
         }
         err = alcp_rsa_add_mgf_oaep(m_rsa_handle, &mgf_info);
         if (alcp_is_error(err)) {
             std::cout << "Error in alcp_rsa_add_mgf_oaep " << err << std::endl;
-            return false;
+            return err;
         }
         /* generate randomly */
         m_hash_len = ALC_DIGEST_LEN_256 / 8;
@@ -446,17 +444,17 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
             std::cout << "Error in alcp_rsa_publickey_encrypt_oaep " << err
                       << std::endl;
             free(p_seed);
-            return false;
+            return err;
         }
     } else {
         std::cout << "Error: Invalid padding mode!" << std::endl;
-        return false;
+        return 1;
     }
     free(p_seed);
-    return true;
+    return 0;
 }
 
-bool
+int
 AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 {
     /*FIXME: where should this be defined? */
@@ -488,12 +486,12 @@ AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
         if (alcp_is_error(err)) {
             std::cout << "Error in alcp_rsa_add_digest_oaep " << err
                       << std::endl;
-            return false;
+            return err;
         }
         err = alcp_rsa_add_mgf_oaep(m_rsa_handle, &mgf_info);
         if (alcp_is_error(err)) {
             std::cout << "Error in alcp_rsa_add_mgf_oaep " << err << std::endl;
-            return false;
+            return err;
         }
         err = alcp_rsa_privatekey_decrypt_oaep(m_rsa_handle,
                                                data.m_encrypted_data,
@@ -504,14 +502,14 @@ AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                                                &text_size);
     } else {
         std::cout << "Error: Invalid padding mode!" << std::endl;
-        return false;
+        return 1;
     }
     if (alcp_is_error(err)) {
         std::cout << "Error in alcp_rsa_privatekey_decrypt " << err
                   << std::endl;
-        return false;
+        return err;
     }
-    return true;
+    return 0;
 }
 
 bool

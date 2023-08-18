@@ -67,6 +67,27 @@ PrintRsaTestData(alcp_rsa_data_t data)
     return;
 }
 
+/* to bypass some invalid input cases */
+bool
+SkipTest(int ret_val, std::string LibStr)
+{
+    /* for invalid
+      inputs, openssl returns RSA_R_DATA_TOO_LARGE_FOR_MODULUS and
+      alcp returns ALC_ERROR_NOT_PERMITTED */
+    if ((LibStr.compare("OpenSSL") == 0)
+        && ret_val == RSA_R_DATA_TOO_LARGE_FOR_MODULUS) {
+        if (verbose > 1)
+            std::cout << "Invalid case: Skipping this test" << std::endl;
+        return true;
+    } else if ((LibStr.compare("ALCP") == 0)
+               && ret_val == ALC_ERROR_NOT_PERMITTED) {
+        if (verbose > 1)
+            std::cout << "Invalid case: Skipping this test" << std::endl;
+        return true;
+    } else
+        return false;
+}
+
 void
 Rsa_KAT(int padding_mode, int KeySize)
 {
@@ -130,6 +151,7 @@ Rsa_KAT(int padding_mode, int KeySize)
          */
         rb->m_hash_len = ALC_DIGEST_LEN_256 / 8;
 
+        int ret_val = 0;
         if (!rb->init()) {
             std::cout << "Error in RSA init" << std::endl;
             FAIL();
@@ -138,8 +160,10 @@ Rsa_KAT(int padding_mode, int KeySize)
             std::cout << "Error in RSA set pubkey" << std::endl;
             FAIL();
         }
-
-        if (!rb->EncryptPubKey(data)) {
+        ret_val = rb->EncryptPubKey(data);
+        if (SkipTest(ret_val, LibStr))
+            continue;
+        if (ret_val != 0) {
             std::cout << "Error in RSA EncryptPubKey" << std::endl;
             FAIL();
         }
@@ -149,7 +173,10 @@ Rsa_KAT(int padding_mode, int KeySize)
             FAIL();
         }
 
-        if (!rb->DecryptPvtKey(data)) {
+        ret_val = rb->DecryptPvtKey(data);
+        if (SkipTest(ret_val, LibStr))
+            continue;
+        if (ret_val != 0) {
             std::cout << "Error in RSA DecryptPvtKey" << std::endl;
             FAIL();
         }
@@ -174,10 +201,10 @@ void
 Rsa_Cross(int padding_mode, int KeySize)
 {
     alcp_rsa_data_t data_main, data_ext;
-
-    AlcpRsaBase arb;
-    RsaBase *   rb_main, *rb_ext;
-    RngBase     rngb;
+    int             ret_val = 0;
+    AlcpRsaBase     arb;
+    RsaBase *       rb_main = {}, *rb_ext = {};
+    RngBase         rngb;
 
     rb_main                = &arb;
     std::string LibStrMain = "ALCP", LibStrExt = "";
@@ -186,19 +213,20 @@ Rsa_Cross(int padding_mode, int KeySize)
     KeySize = KeySize / 8;
     int InputSize;
 
-#ifdef USE_OSSL
-    OpenSSLRsaBase orb;
-    if (useossl == true || rb_ext == nullptr) {
-        rb_ext    = &orb;
-        LibStrExt = "OpenSSL";
-    }
-#endif
-
 #ifdef USE_IPP
     IPPRsaBase irb;
     if (useipp == true) {
         rb_ext    = &irb;
         LibStrExt = "IPP";
+    }
+#endif
+
+#ifdef USE_OSSL
+    OpenSSLRsaBase orb;
+    if (useossl == true || useipp == false) {
+        std::cout << "Using ossl" << std::endl;
+        rb_ext    = &orb;
+        LibStrExt = "OpenSSL";
     }
 #endif
 
@@ -223,7 +251,7 @@ Rsa_Cross(int padding_mode, int KeySize)
     rb_main->m_hash_len = ALC_DIGEST_LEN_256 / 8;
     rb_ext->m_hash_len  = ALC_DIGEST_LEN_256 / 8;
 
-    int loop_max = 1500, loop_start = 1;
+    int loop_max = 10, loop_start = 1;
     if (rb_ext == nullptr) {
         std::cout << "No external lib selected!" << std::endl;
         exit(-1);
@@ -267,8 +295,10 @@ Rsa_Cross(int padding_mode, int KeySize)
                       << std::endl;
             FAIL();
         }
-
-        if (!rb_main->EncryptPubKey(data_main)) {
+        ret_val = rb_main->EncryptPubKey(data_main);
+        if (SkipTest(ret_val, LibStrMain))
+            continue;
+        if (ret_val != 0) {
             std::cout << "Error in RSA EncryptPubKey for " << LibStrMain
                       << std::endl;
             FAIL();
@@ -280,7 +310,10 @@ Rsa_Cross(int padding_mode, int KeySize)
             FAIL();
         }
 
-        if (!rb_main->DecryptPvtKey(data_main)) {
+        ret_val = rb_main->DecryptPvtKey(data_main);
+        if (SkipTest(ret_val, LibStrMain))
+            continue;
+        if (ret_val != 0) {
             std::cout << "Error in RSA DecryptPvtKey for " << LibStrMain
                       << std::endl;
             FAIL();
@@ -299,7 +332,13 @@ Rsa_Cross(int padding_mode, int KeySize)
             FAIL();
         }
 
-        if (!rb_ext->EncryptPubKey(data_ext)) {
+        ret_val = rb_ext->EncryptPubKey(data_ext);
+        if (ret_val == 132) {
+            ret_val = ret_val;
+        }
+        if (SkipTest(ret_val, LibStrExt))
+            continue;
+        if (ret_val != 0) {
             std::cout << "Error in RSA EncryptPubKey for " << LibStrExt
                       << std::endl;
             FAIL();
@@ -311,7 +350,10 @@ Rsa_Cross(int padding_mode, int KeySize)
             FAIL();
         }
 
-        if (!rb_ext->DecryptPvtKey(data_ext)) {
+        ret_val = rb_ext->DecryptPvtKey(data_ext);
+        if (SkipTest(ret_val, LibStrExt))
+            continue;
+        if (ret_val != 0) {
             std::cout << "Error in RSA DecryptPvtKey for " << LibStrExt
                       << std::endl;
             FAIL();

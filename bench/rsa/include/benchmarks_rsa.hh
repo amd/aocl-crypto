@@ -129,18 +129,18 @@ Rsa_Bench(benchmark::State& state,
 
     if (opt == RSA_BENCH_ENC_PUB_KEY) {
         for (auto _ : state) {
-            if (!rb->EncryptPubKey(data)) {
+            if (0 != rb->EncryptPubKey(data)) {
                 state.SkipWithError("Error in RSA EncryptPubKey");
             }
         }
     } else if (opt == RSA_BENCH_DEC_PVT_KEY) {
         /* encrypt, then benchmark only dec pvt key */
-        if (!rb->EncryptPubKey(data)) {
+        if (0 != rb->EncryptPubKey(data)) {
             state.SkipWithError("Error in RSA EncryptPubKey");
         }
         /* benchmark only this */
         for (auto _ : state) {
-            if (!rb->DecryptPvtKey(data)) {
+            if (0 != rb->DecryptPvtKey(data)) {
                 state.SkipWithError("Error in RSA DecryptPvtKey");
             }
         }

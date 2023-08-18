@@ -177,51 +177,52 @@ OpenSSLRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
     return true;
 }
 
-bool
+int
 OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 {
+    int           ret_val = 0;
     size_t        outlen;
     const EVP_MD* digest = EVP_get_digestbyname("sha256");
 
     if (1 != EVP_PKEY_encrypt_init(m_rsa_handle_keyctx_pub)) {
-        std::cout << "EVP_PKEY_encrypt_init failed: Error:"
-                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
-        return false;
+        std::cout << "EVP_PKEY_encrypt_init failed" << std::endl;
+        ret_val = ERR_GET_REASON(ERR_get_error());
+        return ret_val;
     }
     /* FIXME: parameterize the padding scheme */
     if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
         if (1
             != EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle_keyctx_pub,
                                             RSA_NO_PADDING)) {
-            std::cout << "EVP_PKEY_CTX_set_rsa_padding failed: Error:"
-                      << ERR_GET_REASON(ERR_get_error()) << std::endl;
-            return false;
+            std::cout << "EVP_PKEY_CTX_set_rsa_padding failed" << std::endl;
+            ret_val = ERR_GET_REASON(ERR_get_error());
+            return ret_val;
         }
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING) {
         /* set padding mode parameters */
         if (1
             != EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle_keyctx_pub,
                                             RSA_PKCS1_OAEP_PADDING)) {
-            std::cout << "EVP_PKEY_CTX_set_rsa_padding failed: Error:"
-                      << ERR_GET_REASON(ERR_get_error()) << std::endl;
-            return false;
+            std::cout << "EVP_PKEY_CTX_set_rsa_padding failed" << std::endl;
+            ret_val = ERR_GET_REASON(ERR_get_error());
+            return ret_val;
         }
         /* FIXME: MD scheme should be parameterized in future */
         if (1
             != EVP_PKEY_CTX_set_rsa_oaep_md(m_rsa_handle_keyctx_pub, digest)) {
-            std::cout << "EVP_PKEY_CTX_set_rsa_oaep_md failed: Error:"
-                      << ERR_GET_REASON(ERR_get_error()) << std::endl;
-            return false;
+            std::cout << "EVP_PKEY_CTX_set_rsa_oaep_md failed:" << std::endl;
+            ret_val = ERR_GET_REASON(ERR_get_error());
+            return ret_val;
         }
         if (1
             != EVP_PKEY_CTX_set_rsa_mgf1_md(m_rsa_handle_keyctx_pub, digest)) {
-            std::cout << "EVP_PKEY_CTX_set_rsa_mgf1_md failed: Error:"
-                      << ERR_GET_REASON(ERR_get_error()) << std::endl;
-            return false;
+            std::cout << "EVP_PKEY_CTX_set_rsa_mgf1_md failed:" << std::endl;
+            ret_val = ERR_GET_REASON(ERR_get_error());
+            return ret_val;
         }
     } else {
         std::cout << "Error: Invalid padding mode!" << std::endl;
-        return false;
+        return 1;
     }
 
     /* call encrypt */
@@ -231,9 +232,9 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                             &outlen,
                             data.m_msg,
                             data.m_msg_len)) {
-        std::cout << "EVP_PKEY_encrypt failed: Error:"
-                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
-        return false;
+        std::cout << "EVP_PKEY_encrypt failed: Error:" << std::endl;
+        ret_val = ERR_GET_REASON(ERR_get_error());
+        return ret_val;
     }
     if (1
         != EVP_PKEY_encrypt(m_rsa_handle_keyctx_pub,
@@ -241,23 +242,24 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                             &outlen,
                             data.m_msg,
                             data.m_msg_len)) {
-        std::cout << "EVP_PKEY_encrypt failed: Error:"
-                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
-        return false;
+        ret_val = ERR_GET_REASON(ERR_get_error());
+        return ret_val;
     }
-    return true;
+    return 0;
 }
 
-bool
+int
 OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 {
+    int           ret_val = 0;
     size_t        outlen;
     const EVP_MD* digest = EVP_get_digestbyname("sha256");
 
     if (1 != EVP_PKEY_decrypt_init(m_rsa_handle_keyctx_pvt)) {
         std::cout << "EVP_PKEY_decrypt_init failed: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
-        return false;
+        ret_val = ERR_GET_REASON(ERR_get_error());
+        return ret_val;
     }
 
     if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
@@ -266,7 +268,8 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                                             RSA_NO_PADDING)) {
             std::cout << "EVP_PKEY_CTX_set_rsa_padding failed: Error:"
                       << ERR_GET_REASON(ERR_get_error()) << std::endl;
-            return false;
+            ret_val = ERR_GET_REASON(ERR_get_error());
+            return ret_val;
         }
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING) {
         if (1
@@ -274,23 +277,26 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                                             RSA_PKCS1_OAEP_PADDING)) {
             std::cout << "EVP_PKEY_CTX_set_rsa_padding failed: Error:"
                       << ERR_GET_REASON(ERR_get_error()) << std::endl;
-            return false;
+            ret_val = ERR_GET_REASON(ERR_get_error());
+            return ret_val;
         }
         if (1
             != EVP_PKEY_CTX_set_rsa_oaep_md(m_rsa_handle_keyctx_pvt, digest)) {
             std::cout << "EVP_PKEY_CTX_set_rsa_oaep_md failed: Error:"
                       << ERR_GET_REASON(ERR_get_error()) << std::endl;
-            return false;
+            ret_val = ERR_GET_REASON(ERR_get_error());
+            return ret_val;
         }
         if (1
             != EVP_PKEY_CTX_set_rsa_mgf1_md(m_rsa_handle_keyctx_pvt, digest)) {
             std::cout << "EVP_PKEY_CTX_set_rsa_mgf1_md failed: Error:"
                       << ERR_GET_REASON(ERR_get_error()) << std::endl;
-            return false;
+            ret_val = ERR_GET_REASON(ERR_get_error());
+            return ret_val;
         }
     } else {
         std::cout << "Error: Invalid padding mode!" << std::endl;
-        return false;
+        return 1;
     }
     /* now call decrypt */
     if (1
@@ -301,7 +307,8 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                             data.m_msg_len)) {
         std::cout << "EVP_PKEY_decrypt failed: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
-        return false;
+        ret_val = ERR_GET_REASON(ERR_get_error());
+        return ret_val;
     }
     if (1
         != EVP_PKEY_decrypt(m_rsa_handle_keyctx_pvt,
@@ -311,9 +318,10 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                             data.m_msg_len)) {
         std::cout << "EVP_PKEY_decrypt failed: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
-        return false;
+        ret_val = ERR_GET_REASON(ERR_get_error());
+        return ret_val;
     }
-    return true;
+    return 0;
 }
 
 bool
