@@ -111,14 +111,7 @@ class ALCP_API_EXPORT Ofb final : public Aes
 
     virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
     {
-        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_algo_info;
-            if (aip->ai_mode == ALC_AES_MODE_OFB) {
-                return true;
-            }
-        }
-
-        return false;
+        return isSupported(cipherInfo.ci_algo_info, cipherInfo.ci_key_info);
     }
 
     /**
