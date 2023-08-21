@@ -42,6 +42,8 @@ class AesBuilder
     static alc_error_t Build(const alc_cipher_algo_info_t& aesInfo,
                              const alc_key_info_t&         keyInfo,
                              Context&                      ctx);
+    static bool        Supported(const alc_cipher_algo_info_t ci_algo_info,
+                                 const alc_key_info_t         ci_key_info);
 };
 
 class AesAeadBuilder

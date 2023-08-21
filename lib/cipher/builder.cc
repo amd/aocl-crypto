@@ -662,4 +662,42 @@ AesAeadBuilder::Build(const alc_cipher_aead_algo_info_t& cCipherAlgoInfo,
     return (alc_error_t)sts.code();
 }
 
+bool
+AesBuilder::Supported(const alc_cipher_algo_info_t ci_algo_info,
+                      const alc_key_info_t         ci_key_info)
+{
+    // FIXME: Below all must be accessible via
+    switch (ci_algo_info.ai_mode) {
+        case ALC_AES_MODE_CBC:
+            return Cbc::isSupported(ci_algo_info, ci_key_info);
+        case ALC_AES_MODE_OFB:
+            return Ofb::isSupported(ci_algo_info, ci_key_info);
+        case ALC_AES_MODE_CCM:
+            return Ccm::isSupported(ci_algo_info, ci_key_info);
+        case ALC_AES_MODE_CFB:
+            return Cfb::isSupported(ci_algo_info, ci_key_info);
+        case ALC_AES_MODE_CTR:
+            return Ctr::isSupported(ci_algo_info, ci_key_info);
+        case ALC_AES_MODE_GCM:
+            return Gcm::isSupported(ci_algo_info, ci_key_info);
+        case ALC_AES_MODE_XTS:
+            return Xts::isSupported(ci_algo_info, ci_key_info);
+        case ALC_AES_MODE_SIV:
+            return CmacSiv::isSupported(ci_algo_info, ci_key_info);
+        default:
+            return false;
+    }
+}
+
+bool
+CipherBuilder::Supported(alc_cipher_info_t& cinfo)
+{
+    switch (cinfo.ci_type) {
+        case ALC_CIPHER_TYPE_AES:
+            return AesBuilder::Supported(cinfo.ci_algo_info, cinfo.ci_key_info);
+        default:
+            return false;
+    }
+}
+
 } // namespace alcp::cipher

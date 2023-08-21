@@ -47,6 +47,7 @@ class CipherBuilder
                              const Uint8*                 pKey,
                              const Uint32                 keyLen,
                              alcp::cipher::Context&       ctx);
+    static bool        Supported(alc_cipher_info_t& cinfo);
 };
 
 class CipherAeadBuilder

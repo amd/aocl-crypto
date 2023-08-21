@@ -137,6 +137,9 @@ class ALCP_API_EXPORT CmacSiv : public Aes
     static bool isSupported(const Uint32 keyLen);
 
     bool isSupported(const alc_cipher_info_t& cipherInfo);
+
+    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
+                            const alc_key_info_t&         keyInfo);
     /**
      * @brief Depriciated, please use addAdditionalInput
      * @param memory Pointer which points to the additional data.

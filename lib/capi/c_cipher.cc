@@ -43,6 +43,11 @@ alcp_cipher_supported(const alc_cipher_info_p pCipherInfo)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
+    // FIXME: Replace with Prem's idea below in future.
+    if (!alcp::cipher::CipherBuilder::Supported(*pCipherInfo)) {
+        err = ALC_ERROR_NOT_SUPPORTED;
+    }
+
     /* TODO: Check for pointer validity */
 
     // err = cipher::FindCipher(*pCipherInfo).isSupported();
