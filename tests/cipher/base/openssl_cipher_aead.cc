@@ -27,9 +27,6 @@
  */
 
 /* C/C++ Headers */
-#ifdef WIN32
-#include <openssl/applink.c>
-#endif
 
 /* ALCP Headers */
 #include "cipher/openssl_cipher_aead.hh"

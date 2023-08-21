@@ -28,7 +28,11 @@
 #pragma once
 
 /* C/C++ Headers */
-#include <bits/stdc++.h>
+#include <algorithm>
+#include <iostream>
+#include <string_view>
+#include <unordered_map>
+#include <vector>
 
 /* ALCP Headers */
 #include "file.hh"

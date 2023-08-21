@@ -350,7 +350,7 @@ class XTS_KAT
 
         const alc_cipher_algo_info_t aesInfo = { ALC_MODE,
                                                  &(iv.at(0)),
-                                                 { { &tweakKeyInfo } } };
+                                                 { &tweakKeyInfo } };
 
         const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
                                          ALC_KEY_FMT_RAW,

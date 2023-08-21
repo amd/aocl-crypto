@@ -92,7 +92,7 @@ CRspParser::storeTCinUMap(StringView myStr)
     for (size_t i = 0; i < m_paramPerTC; i++) {
         pos      = isSubString(",", myStr);
         my_param = myStr.substr(0, pos);
-        myStr    = myStr.begin() + pos + 1;
+        myStr    = myStr.substr(pos + 1,myStr.size() - pos);
 
         // Store each param from my_param into m_data_map
         pos = isSubString("=", my_param);
