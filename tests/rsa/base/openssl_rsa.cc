@@ -182,7 +182,7 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 {
     int           ret_val = 0;
     size_t        outlen;
-    const EVP_MD* digest = EVP_get_digestbyname("sha256");
+    const EVP_MD* digest;
 
     if (1 != EVP_PKEY_encrypt_init(m_rsa_handle_keyctx_pub)) {
         std::cout << "EVP_PKEY_encrypt_init failed" << std::endl;
@@ -199,6 +199,7 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
             return ret_val;
         }
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING) {
+        digest = EVP_get_digestbyname("sha256");
         /* set padding mode parameters */
         if (1
             != EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle_keyctx_pub,
@@ -253,7 +254,7 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 {
     int           ret_val = 0;
     size_t        outlen;
-    const EVP_MD* digest = EVP_get_digestbyname("sha256");
+    const EVP_MD* digest;
 
     if (1 != EVP_PKEY_decrypt_init(m_rsa_handle_keyctx_pvt)) {
         std::cout << "EVP_PKEY_decrypt_init failed: Error:"
@@ -272,6 +273,7 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
             return ret_val;
         }
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING) {
+        digest = EVP_get_digestbyname("sha256");
         if (1
             != EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle_keyctx_pvt,
                                             RSA_PKCS1_OAEP_PADDING)) {
