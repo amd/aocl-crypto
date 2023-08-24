@@ -39,13 +39,13 @@ struct Context
 {
     void* m_cipher;
 
-    alc_error_t (*decrypt)(const void*  rCipher,
+    alc_error_t (*decrypt)(void*        rCipher,
                            const Uint8* pSrc,
                            Uint8*       pDst,
                            Uint64       len,
                            const Uint8* pIv);
 
-    alc_error_t (*encrypt)(const void*  rCipher,
+    alc_error_t (*encrypt)(void*        rCipher,
                            const Uint8* pSrt,
                            Uint8*       pDrc,
                            Uint64       len,
@@ -71,7 +71,7 @@ struct Context
 
     alc_error_t (*setTagLength)(void* rCipher, Uint64 len);
 
-    alc_error_t (*finish)(const void*);
+    alc_error_t (*finish)(void*);
 
     Status status{ StatusOk() };
 };

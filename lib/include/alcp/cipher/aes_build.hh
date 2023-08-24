@@ -54,4 +54,11 @@ class AesAeadBuilder
                              Context&                           ctx);
 };
 
+class Chacha20Builder
+{
+  public:
+    static alc_error_t Build(const alc_cipher_info_t& cCipherAlgoInfo,
+                             Context&                 ctx);
+};
+
 } // namespace alcp::cipher

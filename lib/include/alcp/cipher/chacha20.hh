@@ -63,13 +63,21 @@ class ChaCha20
         0x6b206574,
     };
 
+    static constexpr Uint64 m_keylen = 256 / 8;
+    Uint8                   m_key[m_keylen];
+
+    static constexpr Uint64 m_noncelen = (96 / 8);
+    Uint8                   m_nonce[m_noncelen];
+
+    Uint32 m_counter;
+
     void displayState() { display_state(m_state); }
 
-    inline int setKey(Uint8* key, Uint64 keylen);
+    int setKey(const Uint8* key, Uint64 keylen);
 
-    inline int setNonce(Uint8* nonce, Uint64 noncelen);
+    int setNonce(const Uint8* nonce, Uint64 noncelen);
 
-    inline int setCounter(Uint32 counter);
+    int setCounter(Uint32 counter);
 
     int createInitialState(Uint8* key,
                            Uint64 keylen,
@@ -77,14 +85,9 @@ class ChaCha20
                            Uint8* nonce,
                            Uint64 noncelen);
 
-    int processInput(Uint8* key,
-                     Uint64 keylen,
-                     Uint32 counter,
-                     Uint8* nonce,
-                     Uint64 noncelen,
-                     Uint8* plaintext,
-                     Uint64 plaintext_length,
-                     Uint8* ciphertext);
+    int processInput(const Uint8* plaintext,
+                     Uint64       plaintext_length,
+                     Uint8*       ciphertext);
 };
 
 } // namespace alcp::cipher

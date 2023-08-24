@@ -28,6 +28,7 @@
 
 #include <alcp/types.h>
 #include <cstring>
+#include <iostream>
 #define UNROLL_8 _Pragma("GCC unroll 2")
 inline Uint32
 RotateLeft(Uint32 value, Uint32 count)
@@ -84,7 +85,7 @@ add_state(Uint32 state1[16], Uint32 state2[16])
     }
 }
 inline int
-SetKey(Uint32 m_state[16], Uint8* key, Uint64 keylen)
+SetKey(Uint32 m_state[16], const Uint8* key, Uint64 keylen)
 {
     if ((keylen != (256 / 8))) {
         return 0;
@@ -94,10 +95,11 @@ SetKey(Uint32 m_state[16], Uint8* key, Uint64 keylen)
 }
 
 inline int
-SetNonce(Uint32 m_state[16], Uint8* nonce, Uint64 noncelen)
+SetNonce(Uint32 m_state[16], const Uint8* nonce, Uint64 noncelen)
 {
     static constexpr unsigned int cAllowedNonceLenBytes = (96 / 8);
     if ((noncelen != cAllowedNonceLenBytes)) {
+        std::cout << "Actual noncelen" << noncelen << std::endl;
         return 0;
     }
     memcpy(m_state + 13, nonce, noncelen);
@@ -139,15 +141,15 @@ CreateInitialState(Uint32 state[16],
 }
 
 int
-ProcessInput(Uint32 m_state[16],
-             Uint8* key,
-             Uint64 keylen,
-             Uint32 counter,
-             Uint8* nonce,
-             Uint64 noncelen,
-             Uint8* plaintext,
-             Uint64 plaintext_length,
-             Uint8* ciphertext)
+ProcessInput(Uint32       m_state[16],
+             Uint8*       key,
+             Uint64       keylen,
+             Uint32       counter,
+             Uint8*       nonce,
+             Uint64       noncelen,
+             const Uint8* plaintext,
+             Uint64       plaintext_length,
+             Uint8*       ciphertext)
 {
     Uint64 n_blocks = plaintext_length / 64;
     if (plaintext_length - n_blocks * 64 > 0) {
@@ -175,5 +177,5 @@ ProcessInput(Uint32 m_state[16],
         processed_message_bytes += bytes_to_xor;
         counter++;
     }
-    return 1;
+    return 0;
 }

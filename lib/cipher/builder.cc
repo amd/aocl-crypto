@@ -35,7 +35,7 @@
 #include "alcp/cipher/aes_ctr.hh"
 #include "alcp/cipher/aes_gcm.hh"
 #include "alcp/cipher/aes_xts.hh"
-
+#include "alcp/cipher/chacha20.hh"
 #include "alcp/utils/cpuid.hh"
 
 using alcp::utils::CpuId;
@@ -56,7 +56,7 @@ using namespace alcp::base;
 
 template<typename CIPHERMODE, bool encrypt = true>
 static alc_error_t
-__aes_wrapper(const void*  rCipher,
+__aes_wrapper(void*        rCipher,
               const Uint8* pSrc,
               Uint8*       pDest,
               Uint64       len,
@@ -161,7 +161,7 @@ __aes_wrapperSetAad(void* rCipher, const Uint8* pAad, Uint64 len)
 
 template<typename CIPHERMODE>
 static alc_error_t
-__aes_dtor(const void* rCipher)
+__aes_dtor(void* rCipher)
 {
     alc_error_t e  = ALC_ERROR_NONE;
     auto        ap = static_cast<const CIPHERMODE*>(rCipher);
@@ -555,13 +555,66 @@ CipherBuilder::Build(const alc_cipher_info_t& cipherInfo, Context& ctx)
             err = AesBuilder::Build(
                 cipherInfo.ci_algo_info, cipherInfo.ci_key_info, ctx);
             break;
-
+        case ALC_CIPHER_TYPE_CHACHA20:
+            err = Chacha20Builder::Build(cipherInfo, ctx);
+            break;
         default:
             err = ALC_ERROR_NOT_SUPPORTED;
             break;
     }
 
     return err;
+}
+
+static alc_error_t
+__chacha20_processInputWrapper(void*        rCipher,
+                               const Uint8* pSrc,
+                               Uint8*       pDest,
+                               Uint64       len,
+                               const Uint8* pIv)
+{
+    alc_error_t e = ALC_ERROR_NONE;
+
+    auto ap = static_cast<alcp::cipher::ChaCha20*>(rCipher);
+
+    e = ap->processInput(pSrc, len, pDest);
+
+    return e;
+}
+
+static alc_error_t
+__chacha20_FinishWrapper(void* rCipher)
+{
+    alc_error_t e = ALC_ERROR_NONE;
+
+    auto ap = static_cast<alcp::cipher::ChaCha20*>(rCipher);
+    delete ap;
+
+    return e;
+}
+alc_error_t
+Chacha20Builder::Build(const alc_cipher_info_t& cCipherAlgoInfo, Context& ctx)
+{
+    alcp::cipher::ChaCha20* chacha = new alcp::cipher::ChaCha20();
+    ctx.m_cipher                   = chacha;
+    if (!chacha->setKey(cCipherAlgoInfo.ci_key_info.key,
+                        cCipherAlgoInfo.ci_key_info.len)) {
+        return ALC_ERROR_INVALID_ARG;
+    }
+    if (!chacha->setCounter(
+            cCipherAlgoInfo.ci_algo_info.chacha20_info.counter)) {
+        return ALC_ERROR_INVALID_ARG;
+    }
+    if (!chacha->setNonce(
+            cCipherAlgoInfo.ci_algo_info.chacha20_info.nonce,
+            cCipherAlgoInfo.ci_algo_info.chacha20_info.nonce_length)) {
+
+        return ALC_ERROR_INVALID_ARG;
+    }
+    ctx.encrypt = __chacha20_processInputWrapper;
+    ctx.decrypt = __chacha20_processInputWrapper;
+    ctx.finish  = __chacha20_FinishWrapper;
+    return ALC_ERROR_NONE;
 }
 
 alc_error_t

@@ -125,7 +125,7 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
     ALCP_BAD_PTR_ERR_RET(pPlainText, err);
     ALCP_BAD_PTR_ERR_RET(pCipherText, err);
-    ALCP_BAD_PTR_ERR_RET(pIv, err);
+    // ALCP_BAD_PTR_ERR_RET(pIv, err);
 
     ALCP_ZERO_LEN_ERR_RET(len, err);
 
@@ -149,7 +149,7 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
     ALCP_BAD_PTR_ERR_RET(pPlainText, err);
     ALCP_BAD_PTR_ERR_RET(pCipherText, err);
-    ALCP_BAD_PTR_ERR_RET(pIv, err);
+    // ALCP_BAD_PTR_ERR_RET(pIv, err);
 
     ALCP_ZERO_LEN_ERR_RET(len, err);
 

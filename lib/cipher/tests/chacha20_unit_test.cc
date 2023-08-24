@@ -98,10 +98,10 @@ TEST(Chacha20, Encrypt)
                        0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
                        0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f };
 
-    Uint32 counter     = 0x01;
-    Uint8  nonce[]     = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                           0x00, 0x4a, 0x00, 0x00, 0x00, 0x00 };
-    Uint8  plaintext[] = {
+    Uint32             counter   = 0x01;
+    Uint8              nonce[]   = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                     0x00, 0x4a, 0x00, 0x00, 0x00, 0x00 };
+    std::vector<Uint8> plaintext = {
         0x4c, 0x61, 0x64, 0x69, 0x65, 0x73, 0x20, 0x61, 0x6e, 0x64, 0x20, 0x47,
         0x65, 0x6e, 0x74, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x20, 0x6f, 0x66, 0x20,
         0x74, 0x68, 0x65, 0x20, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x20, 0x6f, 0x66,
@@ -113,7 +113,8 @@ TEST(Chacha20, Encrypt)
         0x63, 0x72, 0x65, 0x65, 0x6e, 0x20, 0x77, 0x6f, 0x75, 0x6c, 0x64, 0x20,
         0x62, 0x65, 0x20, 0x69, 0x74, 0x2e
     };
-    std::vector<Uint8> output(sizeof(plaintext));
+    std::vector<Uint8> output(plaintext.size());
+    std::vector<Uint8> decrypted_plaintext(plaintext.size());
 
     std::vector<Uint8> expected_output = {
         0x6e, 0x2e, 0x35, 0x9a, 0x25, 0x68, 0xf9, 0x80, 0x41, 0xba, 0x07, 0x28,
@@ -127,16 +128,16 @@ TEST(Chacha20, Encrypt)
         0x5a, 0xf9, 0x0b, 0xbf, 0x74, 0xa3, 0x5b, 0xe6, 0xb4, 0x0b, 0x8e, 0xed,
         0xf2, 0x78, 0x5e, 0x42, 0x87, 0x4d
     };
-    ASSERT_NE(chacha20_obj.processInput(key,
-                                        sizeof(key),
-                                        counter,
-                                        nonce,
-                                        sizeof(nonce),
-                                        plaintext,
-                                        sizeof(plaintext),
-                                        &output[0]),
-              0);
+
+    chacha20_obj.setKey(key, sizeof(key));
+    chacha20_obj.setNonce(nonce, sizeof(nonce));
+    chacha20_obj.setCounter(counter);
+    chacha20_obj.processInput(&plaintext[0], plaintext.size(), &output[0]);
     EXPECT_EQ(output, expected_output);
+    chacha20_obj.processInput(
+        &output[0], plaintext.size(), &decrypted_plaintext[0]);
+
+    EXPECT_EQ(decrypted_plaintext, plaintext);
     std::cout << "CipherText after encryption" << std::endl;
     BIO_dump_fp(stdout, &output[0], output.size());
 }
@@ -156,18 +157,15 @@ TEST(Chacha20, PerformanceTest)
     std::vector<Uint8> plaintext(16384);
     std::vector<Uint8> ciphertext(plaintext.size());
 
+    chacha20_obj.setKey(key, sizeof(key));
+    chacha20_obj.setNonce(nonce, sizeof(nonce));
+    chacha20_obj.setCounter(counter);
     ALCP_CRYPT_TIMER_INIT
     totalTimeElapsed = 0.0;
     for (int k = 0; k < 1000000000; k++) {
         ALCP_CRYPT_TIMER_START
-        chacha20_obj.processInput(key,
-                                  sizeof(key),
-                                  counter,
-                                  nonce,
-                                  sizeof(nonce),
-                                  &plaintext[0],
-                                  plaintext.size(),
-                                  &ciphertext[0]);
+        chacha20_obj.processInput(
+            &plaintext[0], plaintext.size(), &ciphertext[0]);
         ALCP_CRYPT_GET_TIME(0, "Encrypt")
         if (totalTimeElapsed > 1) {
             std::cout << "\n\n"

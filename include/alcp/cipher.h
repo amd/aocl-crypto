@@ -59,7 +59,7 @@ typedef enum _alc_cipher_type
     ALC_CIPHER_TYPE_3DES,
     ALC_CIPHER_TYPE_TWOFISH,
     ALC_CIPHER_TYPE_SERPENT,
-
+    ALC_CIPHER_TYPE_CHACHA20,
     ALC_CIPHER_TYPE_MAX,
 } alc_cipher_type_t;
 
@@ -83,8 +83,8 @@ typedef enum _alc_cipher_mode
     ALC_AES_MODE_SIV,
 
     ALC_AES_MODE_MAX,
-} alc_cipher_mode_t;
 
+} alc_cipher_mode_t;
 // FIXME: Below typedef is not used, need to remove or use it.
 /**
  *
@@ -123,6 +123,12 @@ typedef struct _alc_cipher_mode_xts_info
     alc_key_info_t* xi_tweak_key;
 } alc_cipher_mode_xts_info_t, *alc_cipher_mode_xts_info_p;
 
+typedef struct _alc_cipher_chacha20_info
+{
+    Uint32       counter;
+    const Uint8* nonce;
+    Uint64       nonce_length;
+} alc_cipher_chacha20_info_t, *alc_cipher_chacha20_info_p;
 /**
  *
  * @brief  Stores algorithm specific info for cipher.
@@ -137,6 +143,7 @@ typedef struct _alc_cipher_algo_info
     alc_cipher_mode_t          ai_mode; /* Mode: ALC_AES_MODE_CFB etc */
     const Uint8*               ai_iv;   /* Initialization Vector */
     alc_cipher_mode_xts_info_t ai_xts;
+    alc_cipher_chacha20_info_t chacha20_info;
 } alc_cipher_algo_info_t, *alc_cpher_algo_info_p;
 
 /**
@@ -152,7 +159,7 @@ typedef struct _alc_cipher_algo_info
  */
 typedef struct _alc_cipher_info
 {
-    alc_cipher_type_t      ci_type;      /*! Type: ALC_CIPHER_AES etc */
+    alc_cipher_type_t      ci_type; /*! Type: ALC_CIPHER_AES etc */
     alc_key_info_t         ci_key_info;
     alc_cipher_algo_info_t ci_algo_info; /*! mode specific data */
 } alc_cipher_info_t, *alc_cipher_info_p;

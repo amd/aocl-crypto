@@ -32,20 +32,23 @@
 namespace alcp::cipher {
 
 int
-ChaCha20::setKey(Uint8* key, Uint64 keylen)
+ChaCha20::setKey(const Uint8* key, Uint64 keylen)
 {
+    memcpy(m_key, key, keylen);
     return SetKey(m_state, key, keylen);
 }
 
 int
-ChaCha20::setNonce(Uint8* nonce, Uint64 noncelen)
+ChaCha20::setNonce(const Uint8* nonce, Uint64 noncelen)
 {
+    memcpy(m_nonce, nonce, noncelen);
     return SetNonce(m_state, nonce, noncelen);
 }
 
 int
 ChaCha20::setCounter(Uint32 counter)
 {
+    m_counter = counter;
     return SetCounter(m_state, counter);
 }
 int
@@ -56,21 +59,16 @@ ChaCha20::createInitialState(
 }
 
 int
-ChaCha20::processInput(Uint8* key,
-                       Uint64 keylen,
-                       Uint32 counter,
-                       Uint8* nonce,
-                       Uint64 noncelen,
-                       Uint8* plaintext,
-                       Uint64 plaintext_length,
-                       Uint8* ciphertext)
+ChaCha20::processInput(const Uint8* plaintext,
+                       Uint64       plaintext_length,
+                       Uint8*       ciphertext)
 {
     return zen4::ProcessInput(m_state,
-                              key,
-                              keylen,
-                              counter,
-                              nonce,
-                              noncelen,
+                              m_key,
+                              m_keylen,
+                              m_counter,
+                              m_nonce,
+                              m_noncelen,
                               plaintext,
                               plaintext_length,
                               ciphertext);
