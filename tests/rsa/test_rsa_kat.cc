@@ -48,14 +48,10 @@ TEST(RSA_No_Padding_2048, KAT)
 }
 TEST(RSA_Padding_1024, KAT)
 {
-    if (useossl)
-        GTEST_SKIP() << "OpenSSL tests are still WIP";
     Rsa_KAT(ALCP_TEST_RSA_PADDING, 1024);
 }
 TEST(RSA_Padding_2048, KAT)
 {
-    if (useossl)
-        GTEST_SKIP() << "OpenSSL tests are still WIP";
     Rsa_KAT(ALCP_TEST_RSA_PADDING, 2048);
 }
 

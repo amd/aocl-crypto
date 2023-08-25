@@ -36,16 +36,13 @@
 /* All tests to be added here */
 TEST(RSA_Padding_1024, Cross)
 {
-    if (useossl || useipp == false)
-        GTEST_SKIP() << "OpenSSL padded mode is not supported yet";
     Rsa_Cross(ALCP_TEST_RSA_PADDING, 1024);
 }
 TEST(RSA_Padding_2048, Cross)
 {
-    if (useossl || useipp == false)
-        GTEST_SKIP() << "OpenSSL padded mode is not supported yet";
     Rsa_Cross(ALCP_TEST_RSA_PADDING, 2048);
 }
+/* FIXME: No Padding mode is still WIP for IPP */
 TEST(RSA_No_Padding_1024, Cross)
 {
     if (useipp)
@@ -58,7 +55,6 @@ TEST(RSA_No_Padding_2048, Cross)
         GTEST_SKIP() << "IPP non padding mode is not supported yet";
     Rsa_Cross(ALCP_TEST_RSA_NO_PADDING, 2048);
 }
-/* FIXME: Padding mode is still WIP for IPP */
 
 int
 main(int argc, char** argv)
