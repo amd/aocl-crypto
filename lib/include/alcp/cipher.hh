@@ -137,16 +137,6 @@ class Cipher
   public:
     virtual ~Cipher() {}
 
-    /**
-     * @brief           Checks if a given algorithm is supported
-     * @note           Function  checks for algorithm and its
-     *                  configuration for supported options
-     * @param   pCipherInfo  Pointer to Cipher information
-     * @return          'true' if the given configuration/cipher is
-     * supported 'false' otherwise
-     */
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) = 0;
-
   protected:
     Cipher() {}
 

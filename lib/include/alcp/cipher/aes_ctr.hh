@@ -69,18 +69,6 @@ class ALCP_API_EXPORT Ctr : public Aes
         }
         return false;
     }
-
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo)
-    {
-        // std::cout << "ctr B" << std::endl;
-        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_algo_info;
-            if (aip->ai_mode == ALC_AES_MODE_CTR) {
-                return true;
-            }
-        }
-        return false;
-    }
 };
 
 namespace vaes512 {
@@ -91,7 +79,8 @@ namespace vaes512 {
 
         explicit Ctr128(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {}
+        {
+        }
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -134,7 +123,8 @@ namespace vaes512 {
 
         explicit Ctr192(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {}
+        {
+        }
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -177,7 +167,8 @@ namespace vaes512 {
 
         explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {}
+        {
+        }
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -224,7 +215,8 @@ namespace vaes {
 
         explicit Ctr128(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {}
+        {
+        }
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -267,7 +259,8 @@ namespace vaes {
 
         explicit Ctr192(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {}
+        {
+        }
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -310,7 +303,8 @@ namespace vaes {
 
         explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {}
+        {
+        }
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -357,7 +351,8 @@ namespace aesni {
 
         explicit Ctr128(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {}
+        {
+        }
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -400,7 +395,8 @@ namespace aesni {
 
         explicit Ctr192(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {}
+        {
+        }
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -443,7 +439,8 @@ namespace aesni {
 
         explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {}
+        {
+        }
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 

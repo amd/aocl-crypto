@@ -64,11 +64,13 @@ class ALCP_API_EXPORT Cbc final : public Aes
     explicit Cbc(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {}
+    {
+    }
 
     explicit Cbc(const Uint8* pKey, const Uint32 keyLen)
         : Aes(pKey, keyLen)
-    {}
+    {
+    }
 
     ~Cbc() {}
 
@@ -77,18 +79,6 @@ class ALCP_API_EXPORT Cbc final : public Aes
                             const alc_key_info_t&         keyInfo)
     {
         return true;
-    }
-
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
-    {
-        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_algo_info;
-            if (aip->ai_mode == ALC_AES_MODE_CBC) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     static bool isSupported(const Uint32 keyLen)

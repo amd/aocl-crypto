@@ -84,18 +84,6 @@ class ALCP_API_EXPORT Gcm
         }
         return false;
     }
-
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
-    {
-        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_algo_info;
-            if (aip->ai_mode == ALC_AES_MODE_GCM) {
-                return true;
-            }
-        }
-
-        return false;
-    }
 };
 
 class ALCP_API_EXPORT GcmAuth
@@ -159,7 +147,8 @@ namespace vaes512 {
       public:
         explicit GcmGhash(const Uint8* pKey, const Uint32 keyLen)
             : Gcm(pKey, keyLen)
-        {}
+        {
+        }
 
         ~GcmGhash() {}
 
@@ -196,7 +185,8 @@ namespace vaes512 {
       public:
         explicit GcmAEAD128(const Uint8* pKey, const Uint32 keyLen)
             : GcmGhash(pKey, keyLen)
-        {}
+        {
+        }
 
         ~GcmAEAD128() {}
 
@@ -239,7 +229,8 @@ namespace vaes512 {
       public:
         explicit GcmAEAD192(const Uint8* pKey, const Uint32 keyLen)
             : GcmGhash(pKey, keyLen)
-        {}
+        {
+        }
 
         ~GcmAEAD192() {}
 
@@ -282,7 +273,8 @@ namespace vaes512 {
       public:
         explicit GcmAEAD256(const Uint8* pKey, const Uint32 keyLen)
             : GcmGhash(pKey, keyLen)
-        {}
+        {
+        }
 
         ~GcmAEAD256() {}
 
@@ -330,7 +322,8 @@ namespace aesni {
       public:
         explicit GcmGhash(const Uint8* pKey, const Uint32 keyLen)
             : Gcm(pKey, keyLen)
-        {}
+        {
+        }
 
         ~GcmGhash() {}
 
@@ -367,7 +360,8 @@ namespace aesni {
       public:
         explicit GcmAEAD128(const Uint8* pKey, const Uint32 keyLen)
             : GcmGhash(pKey, keyLen)
-        {}
+        {
+        }
 
         ~GcmAEAD128() {}
 
@@ -410,7 +404,8 @@ namespace aesni {
       public:
         explicit GcmAEAD192(const Uint8* pKey, const Uint32 keyLen)
             : GcmGhash(pKey, keyLen)
-        {}
+        {
+        }
 
         ~GcmAEAD192() {}
 
@@ -453,7 +448,8 @@ namespace aesni {
       public:
         explicit GcmAEAD256(const Uint8* pKey, const Uint32 keyLen)
             : GcmGhash(pKey, keyLen)
-        {}
+        {
+        }
 
         ~GcmAEAD256() {}
 

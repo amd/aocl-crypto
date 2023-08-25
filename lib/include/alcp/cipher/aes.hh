@@ -63,11 +63,13 @@ class Aes : public Rijndael
                  const alc_key_info_t&         keyInfo)
         : Rijndael{ keyInfo }
         , m_mode{ aesInfo.ai_mode }
-    {}
+    {
+    }
 
     explicit Aes(const Uint8* pKey, const Uint32 keyLen)
         : Rijndael(pKey, keyLen)
-    {}
+    {
+    }
 
   protected:
     virtual ~Aes() {}
@@ -98,7 +100,8 @@ class ALCP_API_EXPORT Ofb final : public Aes
   public:
     explicit Ofb(const Uint8* pKey, const Uint32 keyLen)
         : Aes(pKey, keyLen)
-    {}
+    {
+    }
 
     ~Ofb() {}
 
@@ -106,12 +109,15 @@ class ALCP_API_EXPORT Ofb final : public Aes
     static bool isSupported(const Uint32 keyLen)
     {
         // FIXME: To be implemented
-        return true;
-    }
-
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
-    {
-        return isSupported(cipherInfo.ci_algo_info, cipherInfo.ci_key_info);
+        switch (keyLen) {
+            case 128:
+            case 192:
+            case 256:
+                return true;
+                break;
+            default:
+                return false;
+        }
     }
 
     /**

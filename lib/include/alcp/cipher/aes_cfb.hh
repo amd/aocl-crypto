@@ -64,11 +64,13 @@ class ALCP_API_EXPORT Cfb final : public Aes
     explicit Cfb(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {}
+    {
+    }
 
     explicit Cfb(const Uint8* pKey, const Uint32 keyLen)
         : Aes(pKey, keyLen)
-    {}
+    {
+    }
 
     ~Cfb() {}
 
@@ -85,24 +87,6 @@ class ALCP_API_EXPORT Cfb final : public Aes
             || (keyLen == ALC_KEY_LEN_256)) {
             return true;
         }
-        return false;
-    }
-
-    /**
-     * \brief
-     * \notes
-     * \param
-     * \return
-     */
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
-    {
-        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_algo_info;
-            if (aip->ai_mode == ALC_AES_MODE_CFB) {
-                return true;
-            }
-        }
-
         return false;
     }
 

@@ -68,29 +68,4 @@ Ofb::encrypt(const Uint8* pPlainText,
     return err;
 }
 
-bool
-Ofb::isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                 const alc_key_info_t&         keyInfo)
-{
-
-    // FIXME: isSupported better be moved to Aes Class and no need for
-    // isSupported for each mode class
-    if (cipherInfo.ai_mode == ALC_AES_MODE_OFB) { // OR ALC_DES_MODE_OFB
-        // This check has to be inside key managment
-        if (keyInfo.fmt != ALC_KEY_FMT_RAW || keyInfo.key == nullptr
-            || keyInfo.type != ALC_KEY_TYPE_SYMMETRIC) {
-            return false;
-        }
-        switch (keyInfo.len) {
-            case ALC_KEY_LEN_128:
-            case ALC_KEY_LEN_192:
-            case ALC_KEY_LEN_256:
-                return true;
-            default:
-                return false;
-        }
-    }
-    return false;
-}
-
 } // namespace alcp::cipher

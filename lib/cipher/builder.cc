@@ -669,21 +669,24 @@ AesBuilder::Supported(const alc_cipher_algo_info_t ci_algo_info,
     // FIXME: Below all must be accessible via
     switch (ci_algo_info.ai_mode) {
         case ALC_AES_MODE_CBC:
-            return Cbc::isSupported(ci_algo_info, ci_key_info);
+            return Cbc<aesni::EncryptCbc128, aesni::DecryptCbc128>::isSupported(
+                ci_key_info.len);
         case ALC_AES_MODE_OFB:
-            return Ofb::isSupported(ci_algo_info, ci_key_info);
+            return Ofb::isSupported(ci_key_info.len);
         case ALC_AES_MODE_CCM:
-            return Ccm::isSupported(ci_algo_info, ci_key_info);
+            return Ccm::isSupported(ci_key_info.len);
         case ALC_AES_MODE_CFB:
-            return Cfb::isSupported(ci_algo_info, ci_key_info);
+            return Cfb<aesni::EncryptCfb256, aesni::DecryptCfb256>::isSupported(
+                ci_key_info.len);
         case ALC_AES_MODE_CTR:
-            return Ctr::isSupported(ci_algo_info, ci_key_info);
+            return Ctr::isSupported(ci_key_info.len);
         case ALC_AES_MODE_GCM:
-            return Gcm::isSupported(ci_algo_info, ci_key_info);
+            return Gcm::isSupported(ci_key_info.len);
         case ALC_AES_MODE_XTS:
-            return Xts::isSupported(ci_algo_info, ci_key_info);
+            return Xts<aesni::EncryptXts128, aesni::DecryptXts128>::isSupported(
+                ci_key_info.len);
         case ALC_AES_MODE_SIV:
-            return CmacSiv::isSupported(ci_algo_info, ci_key_info);
+            return CmacSiv<aesni::Ctr128>::isSupported(ci_key_info.len);
         default:
             return false;
     }

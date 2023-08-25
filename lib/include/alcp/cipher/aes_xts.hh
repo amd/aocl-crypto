@@ -90,17 +90,6 @@ class ALCP_API_EXPORT Xts final : public Aes
         return true;
     }
 
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
-    {
-        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_algo_info;
-            if (aip->ai_mode == ALC_AES_MODE_XTS)
-                return true;
-        }
-
-        return false;
-    }
-
     static bool isSupported(const Uint32 keyLen)
     {
         if ((keyLen == ALC_KEY_LEN_128) || (keyLen == ALC_KEY_LEN_256)) {

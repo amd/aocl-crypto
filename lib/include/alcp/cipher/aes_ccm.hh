@@ -89,19 +89,14 @@ class ALCP_API_EXPORT Ccm final
     static bool isSupported(const Uint32 keyLen)
     {
         // FIXME: To be implemented
-        return true;
-    }
-
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
-    {
-        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_algo_info;
-            if (aip->ai_mode == ALC_AES_MODE_CCM) {
+        switch (keyLen) {
+            case 128:
+            case 192:
+            case 256:
                 return true;
-            }
+            default:
+                return false;
         }
-
-        return false;
     }
 
     virtual alc_error_t getTag(Uint8* pOutput, Uint64 len);
