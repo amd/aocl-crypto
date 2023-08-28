@@ -33,6 +33,9 @@ ADD_EXAMPLE(aes-ccm aes-ccm.c)
 
 ADD_EXAMPLE(aes-siv aes-siv.c)
 
+ADD_EXAMPLE(chacha20 chacha20.c)
+
+
 #FIXME: temporarily disabling this for coverage build, due to a known runtime issue in these examples 
 IF (NOT CMAKE_BUILD_TYPE STREQUAL "Coverage")
     ADD_EXAMPLE(aes-speed-cipher aes-speed-cipher.c)
