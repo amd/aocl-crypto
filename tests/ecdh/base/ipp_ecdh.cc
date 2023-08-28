@@ -36,7 +36,8 @@ namespace alcp::testing {
 
 IPPEcdhBase::IPPEcdhBase(const alc_ec_info_t& info)
     : m_info{ info }
-{}
+{
+}
 
 IPPEcdhBase::~IPPEcdhBase() {}
 
@@ -84,7 +85,6 @@ bool
 IPPEcdhBase::SetPrivateKey(Uint8 private_key[], Uint64 len)
 {
     if (m_info.ecCurveId == ALCP_EC_CURVE25519) {
-        // FIXME: Implement
         std::fill(m_pPrivKey_mb, m_pPrivKey_mb + 8, private_key);
     } else {
         m_pPrivKey = std::make_unique<int8u[]>(len);

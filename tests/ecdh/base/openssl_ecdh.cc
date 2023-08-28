@@ -100,7 +100,13 @@ bool
 OpenSSLEcdhBase::SetPrivateKey(Uint8 private_key[], Uint64 len)
 {
     if (m_info.ecCurveId == ALCP_EC_CURVE25519) {
-        // FIXME: Implement
+        m_pPrivateKey = EVP_PKEY_new_raw_private_key_ex(
+            m_ec_handle, m_pkeytype, NULL, private_key, len);
+        if (m_pPrivateKey == nullptr) {
+            std::cout << "EVP_PKEY_new_raw_private_key_ex returned null: Error:"
+                      << ERR_get_error() << std::endl;
+            return false;
+        }
     } else {
         /* Private Key Creation */
         OSSL_PARAM_BLD* param_bld;

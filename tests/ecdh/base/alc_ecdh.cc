@@ -99,6 +99,7 @@ AlcpEcdhBase::SetPrivateKey(Uint8 private_key[], Uint64 len)
 {
     if (m_info.ecCurveId == ALCP_EC_CURVE25519) {
         // FIXME: Implement
+        // FIXME: SetPrivKey method missing of X25519 ECC Curve
     } else {
         alc_error_t err;
         Uint8       err_buff[256];

@@ -154,6 +154,8 @@ ecdh_KAT(alc_ec_info_t info)
             std::cout << "Error in ECDH init" << std::endl;
             FAIL();
         }
+
+        // FIXME: Generate public key should be following a setPrivateKey
         if (!eb_peer1->GeneratePublicKey(data_peer1)) {
             std::cout << "Error in ECDH Generate public key" << std::endl;
             FAIL();
