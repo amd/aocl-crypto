@@ -275,6 +275,11 @@ ecdh_KAT_p256(alc_ec_info_t info)
             FAIL() << "Error in ECDH init";
         }
 
+        if (!eb_peer1->SetPrivateKey(data_peer1.m_Peer_PvtKey,
+                                     data_peer1.m_Peer_PvtKeyLen)) {
+            FAIL() << "Error in ECDH Setting Private Key";
+        }
+
         if (!eb_peer1->ComputeSecretKey(data_peer1, data_peer2)) {
             FAIL() << "Error in ECDH Compute Secret key";
         }

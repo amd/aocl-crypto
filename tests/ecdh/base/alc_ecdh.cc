@@ -34,7 +34,10 @@
 
 namespace alcp::testing {
 
-AlcpEcdhBase::AlcpEcdhBase(const alc_ec_info_t& info) {}
+AlcpEcdhBase::AlcpEcdhBase(const alc_ec_info_t& info)
+    : m_info{ info }
+{
+}
 
 bool
 AlcpEcdhBase::init(const alc_ec_info_t& info)
@@ -92,15 +95,14 @@ AlcpEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
 }
 
 bool
-AlcpEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
-                               const alcp_ecdh_data_t& data_peer2)
+AlcpEcdhBase::SetPrivateKey(Uint8 private_key[], Uint64 len)
 {
-    alc_error_t err;
-    Uint64      keyLength;
-    Uint8       err_buff[256];
-
-    if (m_info.ecCurveId == ALCP_EC_SECP256R1) {
-        err = alcp_ec_set_privatekey(m_ec_handle, data_peer1.m_Peer_PvtKey);
+    if (m_info.ecCurveId == ALCP_EC_CURVE25519) {
+        // FIXME: Implement
+    } else {
+        alc_error_t err;
+        Uint8       err_buff[256];
+        err = alcp_ec_set_privatekey(m_ec_handle, private_key);
         if (err != ALC_ERROR_NONE) {
             alcp_ec_error(m_ec_handle, err_buff, 256);
             std::cout << "Error in alcp_ec_set_privatekey : " << err_buff
@@ -108,6 +110,16 @@ AlcpEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
             return err;
         }
     }
+    return true;
+}
+
+bool
+AlcpEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
+                               const alcp_ecdh_data_t& data_peer2)
+{
+    alc_error_t err;
+    Uint64      keyLength;
+    Uint8       err_buff[256];
 
     err = alcp_ec_get_secretkey(m_ec_handle,
                                 data_peer1.m_Peer_SecretKey,

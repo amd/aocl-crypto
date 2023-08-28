@@ -62,6 +62,7 @@ class EcdhBase
 {
   public:
     virtual bool init(const alc_ec_info_t& info)                      = 0;
+    virtual bool SetPrivateKey(Uint8 private_key[], Uint64 len)       = 0;
     virtual bool GeneratePublicKey(const alcp_ecdh_data_t& data)      = 0;
     virtual bool ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
                                   const alcp_ecdh_data_t& data_peer2) = 0;

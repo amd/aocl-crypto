@@ -34,7 +34,10 @@
 #include <ostream>
 namespace alcp::testing {
 
-IPPEcdhBase::IPPEcdhBase(const alc_ec_info_t& info) {}
+IPPEcdhBase::IPPEcdhBase(const alc_ec_info_t& info)
+    : m_info{ info }
+{
+}
 
 IPPEcdhBase::~IPPEcdhBase() {}
 
@@ -78,9 +81,30 @@ IPPEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
 }
 
 bool
+IPPEcdhBase::SetPrivateKey(Uint8 private_key[], Uint64 len)
+{
+    if (m_info.ecCurveId == ALCP_EC_CURVE25519) {
+        // FIXME: Implement
+        std::fill(m_pPrivKey_mb, m_pPrivKey_mb + 7, private_key);
+    } else {
+        m_pPrivKey = std::make_unique<int8u[]>(len);
+        std::fill(m_pPrivKey_mb, m_pPrivKey_mb + 7, m_pPrivKey.get());
+        /*
+         * For some reason IPPCP decided to take the input in the reverse
+         * order, so we need to do that or go with openssl bignum which will
+         * cause another set of bottleknecks
+         */
+        std::reverse_copy(
+            private_key, private_key + len, (Uint8*)(m_pPrivKey.get()));
+    }
+    return true;
+}
+
+bool
 IPPEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
                               const alcp_ecdh_data_t& data_peer2)
 {
+    // m_pPrivKey_mb is supposed to be set in SetPrivateKey method.
     mbx_status status     = 0;
     const int  cElem      = 8;
     int64u*    pa_pubx[8] = {};
@@ -91,10 +115,9 @@ IPPEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
     }
     if (m_info.ecCurveId == ALCP_EC_CURVE25519) {
         // Store Private Key
-        for (int i = 0; i < cElem; i++) {
-            m_pPrivKey_mb[i]       = data_peer1.m_Peer_PvtKey;
-            m_pPublicKeyData_mb[i] = data_peer2.m_Peer_PubKey;
-        }
+        std::fill(m_pPublicKeyData_mb,
+                  m_pPublicKeyData_mb + 7,
+                  data_peer2.m_Peer_PubKey);
         if (data_peer2.m_Peer_PubKey == NULL) {
             std::cout << "Pub key data is null" << std::endl;
             return false;
@@ -111,20 +134,14 @@ IPPEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
         }
     } else if (m_info.ecCurveId == ALCP_EC_SECP256R1) {
         // Store Private Key
-        int64u* p_priv_key = (int64u*)malloc(data_peer1.m_Peer_PvtKeyLen);
-        int64u* p_pub_x    = (int64u*)malloc(data_peer2.m_Peer_PubKeyLen / 2);
-        int64u* p_pub_y    = (int64u*)malloc(data_peer2.m_Peer_PubKeyLen / 2);
+        int64u* p_pub_x = (int64u*)malloc(data_peer2.m_Peer_PubKeyLen / 2);
+        int64u* p_pub_y = (int64u*)malloc(data_peer2.m_Peer_PubKeyLen / 2);
 
         /*
          * For some reason IPPCP decided to take the input in the reverse
          * order, so we need to do that or go with openssl bignum which will
          * cause another set of bottleknecks
          */
-
-        std::reverse_copy(data_peer1.m_Peer_PvtKey,
-                          data_peer1.m_Peer_PvtKey
-                              + data_peer1.m_Peer_PvtKeyLen,
-                          (Uint8*)p_priv_key);
         std::reverse_copy(data_peer2.m_Peer_PubKey,
                           data_peer2.m_Peer_PubKey
                               + data_peer2.m_Peer_PubKeyLen / 2,
@@ -135,9 +152,8 @@ IPPEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
             (Uint8*)p_pub_y);
 
         for (int i = 0; i < cElem; i++) {
-            m_pPrivKey_mb[i] = (const int8u*)p_priv_key;
-            pa_pubx[i]       = p_pub_x;
-            pa_puby[i]       = p_pub_y;
+            pa_pubx[i] = p_pub_x;
+            pa_puby[i] = p_pub_y;
         }
 
         status = mbx_nistp256_ecdh_mb8(m_pSecretKey_mb,
@@ -155,7 +171,6 @@ IPPEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
             }
         }
 
-        free(p_priv_key);
         free(p_pub_x);
         free(p_pub_y);
     } else { // Should not come here

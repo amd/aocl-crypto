@@ -49,7 +49,7 @@ class AlcpEcdhBase : public EcdhBase
 
     bool init(const alc_ec_info_t& info);
     bool reset();
-
+    bool SetPrivateKey(Uint8 private_key[], Uint64 len);
     bool GeneratePublicKey(const alcp_ecdh_data_t& data);
     bool ComputeSecretKey(const alcp_ecdh_data_t& data1,
                           const alcp_ecdh_data_t& data2);

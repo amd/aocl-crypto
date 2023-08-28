@@ -36,6 +36,7 @@
 #include <iostream>
 #include <ippcp.h>
 #include <malloc.h>
+#include <memory>
 #include <vector>
 
 namespace alcp::testing {
@@ -43,9 +44,10 @@ class IPPEcdhBase : public EcdhBase
 {
     alc_ec_info_t m_info;
 
-    int8u*       m_pPublicKeyData_mb[8];
-    const int8u* m_pPrivKey_mb[8];
-    int8u*       m_pSecretKey_mb[8];
+    int8u*                   m_pPublicKeyData_mb[8];
+    const int8u*             m_pPrivKey_mb[8];
+    std::unique_ptr<int8u[]> m_pPrivKey;
+    int8u*                   m_pSecretKey_mb[8];
 
   public:
     IPPEcdhBase(const alc_ec_info_t& info);
@@ -53,7 +55,7 @@ class IPPEcdhBase : public EcdhBase
 
     bool init(const alc_ec_info_t& info);
     bool reset();
-
+    bool SetPrivateKey(Uint8 private_key[], Uint64 len);
     bool GeneratePublicKey(const alcp_ecdh_data_t& data);
     bool ComputeSecretKey(const alcp_ecdh_data_t& data1,
                           const alcp_ecdh_data_t& data2);

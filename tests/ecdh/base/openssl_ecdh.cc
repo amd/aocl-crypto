@@ -38,14 +38,14 @@
 namespace alcp::testing {
 
 OpenSSLEcdhBase::OpenSSLEcdhBase(const alc_ec_info_t& info)
+    : m_info{ info }
 {
-    init(info);
 }
 
 OpenSSLEcdhBase::~OpenSSLEcdhBase()
 {
     OSSL_LIB_CTX_free(m_ec_handle);
-    EVP_PKEY_free(m_pPrivateKeyData);
+    EVP_PKEY_free(m_pPrivateKey);
 }
 
 bool
@@ -69,22 +69,22 @@ OpenSSLEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
 {
     Uint64 keyLength;
 
-    EVP_PKEY_free(m_pPrivateKeyData);
+    EVP_PKEY_free(m_pPrivateKey);
 
     /*Initialize handle, generate or load KAT private key*/
-    m_pPrivateKeyData = EVP_PKEY_new_raw_private_key_ex(m_ec_handle,
-                                                        m_pkeytype,
-                                                        NULL,
-                                                        data.m_Peer_PvtKey,
-                                                        data.m_Peer_PvtKeyLen);
-    if (m_pPrivateKeyData == nullptr) {
+    m_pPrivateKey = EVP_PKEY_new_raw_private_key_ex(m_ec_handle,
+                                                    m_pkeytype,
+                                                    NULL,
+                                                    data.m_Peer_PvtKey,
+                                                    data.m_Peer_PvtKeyLen);
+    if (m_pPrivateKey == nullptr) {
         std::cout << "EVP_PKEY_new_raw_private_key_ex returned null: Error:"
                   << ERR_get_error() << std::endl;
         return false;
     }
     /* Get public key corresponding to the private key */
     if (1
-        != EVP_PKEY_get_octet_string_param(m_pPrivateKeyData,
+        != EVP_PKEY_get_octet_string_param(m_pPrivateKey,
                                            "pub",
                                            data.m_Peer_PubKey,
                                            data.m_Peer_PubKeyLen,
@@ -97,12 +97,56 @@ OpenSSLEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
 }
 
 bool
+OpenSSLEcdhBase::SetPrivateKey(Uint8 private_key[], Uint64 len)
+{
+    if (m_info.ecCurveId == ALCP_EC_CURVE25519) {
+        // FIXME: Implement
+    } else {
+        /* Private Key Creation */
+        OSSL_PARAM_BLD* param_bld;
+        BIGNUM*         priv;
+        EVP_PKEY_CTX*   ctx_pkey;
+        OSSL_PARAM*     params = nullptr;
+
+        // Create the BigNumber representation of the Private key
+        priv = BN_bin2bn(private_key, len, NULL);
+        // Initiate the Pram Builder
+        param_bld = OSSL_PARAM_BLD_new();
+        // Build the Params
+        if (priv != NULL && param_bld != NULL
+            && OSSL_PARAM_BLD_push_utf8_string(
+                param_bld, "group", m_pkeytype, 0)
+            && OSSL_PARAM_BLD_push_BN(param_bld, "priv", priv))
+            params = OSSL_PARAM_BLD_to_param(param_bld);
+        // Context for RAW to PKey conversion
+        ctx_pkey = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);
+        // Initiate RAW to PKey conversion
+        if (ctx_pkey == NULL || params == NULL
+            || EVP_PKEY_fromdata_init(ctx_pkey) <= 0
+            || EVP_PKEY_fromdata(
+                   ctx_pkey, &m_pPrivateKey, EVP_PKEY_KEYPAIR, params)
+                   <= 0) {
+            ERR_print_errors_fp(stderr);
+            // FIXME: Add cleanup
+            return false; // Error Status
+        }
+        // Free unused resources
+        OSSL_PARAM_BLD_free(param_bld);
+        BN_free(priv);
+        EVP_PKEY_CTX_free(ctx_pkey);
+        OSSL_PARAM_free(params);
+    }
+    return true;
+}
+
+bool
 OpenSSLEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
                                   const alcp_ecdh_data_t& data_peer2)
 {
+    // m_pPrivateKey is supposed to be populated by SetPrivateKey method
     Uint64        SecretkeyLength;
-    EVP_PKEY *    externalPeerPubKey = nullptr, *selfPeerPivKey = nullptr;
-    EVP_PKEY_CTX* KeyExchangeCtx = nullptr;
+    EVP_PKEY*     externalPeerPubKey = nullptr;
+    EVP_PKEY_CTX* KeyExchangeCtx     = nullptr;
 
     if (m_st == "X25519") {
         /* Load public key for other peer. */
@@ -119,48 +163,17 @@ OpenSSLEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
         }
         /* Create key exchange context. */
         KeyExchangeCtx =
-            EVP_PKEY_CTX_new_from_pkey(m_ec_handle, m_pPrivateKeyData, NULL);
+            EVP_PKEY_CTX_new_from_pkey(m_ec_handle, m_pPrivateKey, NULL);
         if (KeyExchangeCtx == NULL) {
             std::cout << "EVP_PKEY_CTX_new_from_pkey returned null: Error:"
                       << ERR_get_error() << std::endl;
             return false;
         }
     } else if (m_st == "prime256v1") {
-        /* Private Key Creation */
-
         OSSL_PARAM_BLD* param_bld;
         BIGNUM*         priv;
         EVP_PKEY_CTX*   ctx_pkey;
         OSSL_PARAM*     params = nullptr;
-
-        // Create the BigNumber representation of the Private key
-        priv = BN_bin2bn(
-            data_peer1.m_Peer_PvtKey, data_peer1.m_Peer_PvtKeyLen, NULL);
-        // Initiate the Pram Builder
-        param_bld = OSSL_PARAM_BLD_new();
-        // Build the Params
-        if (priv != NULL && param_bld != NULL
-            && OSSL_PARAM_BLD_push_utf8_string(
-                param_bld, "group", m_pkeytype, 0)
-            && OSSL_PARAM_BLD_push_BN(param_bld, "priv", priv))
-            params = OSSL_PARAM_BLD_to_param(param_bld);
-        // Context for RAW to PKey conversion
-        ctx_pkey = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);
-        // Initiate RAW to PKey conversion
-        if (ctx_pkey == NULL || params == NULL
-            || EVP_PKEY_fromdata_init(ctx_pkey) <= 0
-            || EVP_PKEY_fromdata(
-                   ctx_pkey, &selfPeerPivKey, EVP_PKEY_KEYPAIR, params)
-                   <= 0) {
-            ERR_print_errors_fp(stderr);
-            // FIXME: Add cleanup
-            return false; // Error Status
-        }
-        // Free unused resources
-        OSSL_PARAM_BLD_free(param_bld);
-        BN_free(priv);
-        EVP_PKEY_CTX_free(ctx_pkey);
-        OSSL_PARAM_free(params);
 
         /* Public Key Creation */
 
@@ -191,7 +204,7 @@ OpenSSLEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
         EVP_PKEY_CTX_free(ctx_pkey);
         OSSL_PARAM_free(params);
 
-        KeyExchangeCtx = EVP_PKEY_CTX_new(selfPeerPivKey, NULL);
+        KeyExchangeCtx = EVP_PKEY_CTX_new(m_pPrivateKey, NULL);
     }
 
     /* Initialize derivation process. */
@@ -229,7 +242,6 @@ OpenSSLEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
 
     /* dealloc peer pubkey data and context */
     EVP_PKEY_free(externalPeerPubKey);
-    EVP_PKEY_free(selfPeerPivKey);
     EVP_PKEY_CTX_free(KeyExchangeCtx);
 
     return true;
