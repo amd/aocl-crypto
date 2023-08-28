@@ -36,8 +36,7 @@ namespace alcp::testing {
 
 IPPEcdhBase::IPPEcdhBase(const alc_ec_info_t& info)
     : m_info{ info }
-{
-}
+{}
 
 IPPEcdhBase::~IPPEcdhBase() {}
 
@@ -63,10 +62,11 @@ IPPEcdhBase::GeneratePublicKey(const alcp_ecdh_data_t& data)
     /* TODO: when there is alcp multi-buffer implementation available, modify
      * this*/
     Uint8 m_pPublicKeyData_mb_temp_buff[7][ECDH_KEYSIZE];
+
     m_pPublicKeyData_mb[0] = data.m_Peer_PubKey;
-    m_pPrivKey_mb[0]       = data.m_Peer_PvtKey;
+
+    std::fill(m_pPrivKey_mb, m_pPrivKey_mb + 8, data.m_Peer_PvtKey);
     for (int i = 1; i < elem; i++) {
-        m_pPrivKey_mb[i]       = data.m_Peer_PvtKey;
         m_pPublicKeyData_mb[i] = m_pPublicKeyData_mb_temp_buff[i - 1];
     }
 
@@ -85,10 +85,10 @@ IPPEcdhBase::SetPrivateKey(Uint8 private_key[], Uint64 len)
 {
     if (m_info.ecCurveId == ALCP_EC_CURVE25519) {
         // FIXME: Implement
-        std::fill(m_pPrivKey_mb, m_pPrivKey_mb + 7, private_key);
+        std::fill(m_pPrivKey_mb, m_pPrivKey_mb + 8, private_key);
     } else {
         m_pPrivKey = std::make_unique<int8u[]>(len);
-        std::fill(m_pPrivKey_mb, m_pPrivKey_mb + 7, m_pPrivKey.get());
+        std::fill(m_pPrivKey_mb, m_pPrivKey_mb + 8, m_pPrivKey.get());
         /*
          * For some reason IPPCP decided to take the input in the reverse
          * order, so we need to do that or go with openssl bignum which will
@@ -110,13 +110,12 @@ IPPEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
     int64u*    pa_pubx[8] = {};
     int64u*    pa_puby[8] = {};
     /* load keys */
-    for (int i = 0; i < cElem; i++) {
-        m_pSecretKey_mb[i] = data_peer1.m_Peer_SecretKey;
-    }
+    std::fill(
+        m_pSecretKey_mb, m_pSecretKey_mb + 8, data_peer1.m_Peer_SecretKey);
     if (m_info.ecCurveId == ALCP_EC_CURVE25519) {
         // Store Private Key
         std::fill(m_pPublicKeyData_mb,
-                  m_pPublicKeyData_mb + 7,
+                  m_pPublicKeyData_mb + 8,
                   data_peer2.m_Peer_PubKey);
         if (data_peer2.m_Peer_PubKey == NULL) {
             std::cout << "Pub key data is null" << std::endl;
@@ -151,10 +150,8 @@ IPPEcdhBase::ComputeSecretKey(const alcp_ecdh_data_t& data_peer1,
             data_peer2.m_Peer_PubKey + data_peer2.m_Peer_PubKeyLen,
             (Uint8*)p_pub_y);
 
-        for (int i = 0; i < cElem; i++) {
-            pa_pubx[i] = p_pub_x;
-            pa_puby[i] = p_pub_y;
-        }
+        std::fill(pa_pubx, pa_pubx + 8, p_pub_x);
+        std::fill(pa_puby, pa_puby + 8, p_pub_y);
 
         status = mbx_nistp256_ecdh_mb8(m_pSecretKey_mb,
                                        (const int64u* const*)m_pPrivKey_mb,
