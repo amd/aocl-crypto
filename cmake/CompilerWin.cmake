@@ -115,6 +115,17 @@ function(alcp_add_sanitize_flags)
             -fsanitize=nullability
             CACHE INTERNAL ""
         )
-	link_libraries(clang_rt.asan_dynamic-x86_64)
-    add_compile_options(${ALCP_OPTIONS_SANITIZE} -fno-sanitize=address)
+    link_libraries(clang_rt.asan_dynamic-x86_64)
+    add_compile_options(${ALCP_OPTIONS_SANITIZE} -fno-sanitize=address /Zi /Od)
 endfunction(alcp_add_sanitize_flags)
+
+#coverage
+function(alcp_add_coverage_flags)
+    set(ALCP_CFLAGS_COV
+            --coverage
+            CACHE INTERNAL ""
+        )
+    link_libraries(clang_rt.profile-x86_64.lib)
+    set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE ON)
+    add_compile_options(${ALCP_CFLAGS_COV} /Od)
+endfunction(alcp_add_coverage_flags)

@@ -29,6 +29,7 @@
 
 #include "alcp/alcp.h"
 #include <malloc.h>
+#include <stdio.h>
 
 #define RED   "\033[0;31m"
 #define RESET "\033[0m"

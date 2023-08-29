@@ -29,6 +29,7 @@
 
 #include "alcp/alcp.h"
 #include <malloc.h>
+#include <stdio.h>
 
 static alc_drbg_handle_t handle;
 
