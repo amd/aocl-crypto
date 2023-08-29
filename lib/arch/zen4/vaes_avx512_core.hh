@@ -537,6 +537,8 @@ namespace alcp::cipher { namespace vaes512 {
         d = _mm512_aesenclast_epi128(d, keys.data.keys14.key_512_14);
     }
 
+/* kernel variations for certain algorithms, keysize and input block size ranges
+ * in future, where other register usage is high */
 #if 0 // experimental variations with load
     // reduce keys register usage
     static inline void AesEncrypt_4x512Rounds10(
@@ -600,7 +602,6 @@ namespace alcp::cipher { namespace vaes512 {
         c    = _mm512_aesenclast_epi128(c, rkey);
         d    = _mm512_aesenclast_epi128(d, rkey);
     }
-
 
     static inline void AesEncrypt_4x512Rounds12(
         __m512i& a, __m512i& b, __m512i& c, __m512i& d, const __m128i* pKey)

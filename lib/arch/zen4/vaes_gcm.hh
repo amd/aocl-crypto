@@ -43,8 +43,6 @@ whereas MSVC still expects `const char* ` */
 #define cast_to(ptr) ((void*)ptr)
 #endif
 
-#define NEW 0
-
 namespace alcp::cipher::vaes512 {
 
 static inline void

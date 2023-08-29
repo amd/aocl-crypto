@@ -151,7 +151,6 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
         UNROLL_8
         for (; blocks >= blockCount_4x512_4_unroll;
              blocks -= blockCount_4x512_4_unroll) {
-            // printf("\n blockCount_4x512_4_unroll %d ", blocks);
             __m512i z0_512, z1_512, z2_512;
 
             int n = 12;
@@ -427,6 +426,10 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
             p_out_x += PARALLEL_512_BLKS_4;
 
             // compute Ghash
+            /* Performance variations observed while using const_factor_128 and
+             * const_factor_256, this sections needs to be investigated
+             * further. */
+
             // getGhash(z0_512, z1_512, z2_512, gHash_128, const_factor_128);
             getGhash(z0_512, z1_512, z2_512, gHash_128, const_factor_256);
         }

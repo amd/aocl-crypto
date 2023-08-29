@@ -311,11 +311,17 @@ namespace alcp::cipher { namespace vaes512 {
          *  [(Xi • H1) + (Xi-1 • H2) + (Xi-2 • H3) + (Xi-3+Yi-4) •H4] modP
          *
          */
-        // computeKaratsuba_Z0_Z2_acc(H_512, abcd_512, z0_512, z2_512);
+#if 0 // trade-off between fusing z0, z2 & z1 computation vs keeping as separate
+      // functions to be analyzed further
+        computeKaratsuba_Z0_Z2_acc(H_512, abcd_512, z0_512, z2_512);
+#endif
 
         /* To compute: z1 = (x1+x0) (y1+y0) - z2 - z0
          * compute (x1+x0) (y1+y0) part in below function */
-        // computeKaratsuba_Z1_acc(H_512, abcd_512, z1_512);
+#if 0 // trade-off between fusing z0, z2 & z1 computation vs keeping as separate
+      // functions to be analyzed further
+        computeKaratsuba_Z1_acc(H_512, abcd_512, z1_512);
+#endif
 
         __m512i t1, t2;
 
