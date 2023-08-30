@@ -226,7 +226,6 @@ Rsa_Cross(int padding_mode, int KeySize)
 #ifdef USE_OSSL
     OpenSSLRsaBase orb;
     if (useossl == true || useipp == false) {
-        std::cout << "Using ossl" << std::endl;
         rb_ext    = &orb;
         LibStrExt = "OpenSSL";
     }
