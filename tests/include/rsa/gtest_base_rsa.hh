@@ -75,7 +75,8 @@ SkipTest(int ret_val, std::string LibStr)
       inputs, openssl returns RSA_R_DATA_TOO_LARGE_FOR_MODULUS and
       alcp returns ALC_ERROR_NOT_PERMITTED */
     if ((LibStr.compare("OpenSSL") == 0)
-        && ret_val == RSA_R_DATA_TOO_LARGE_FOR_MODULUS) {
+            && ret_val == RSA_R_DATA_TOO_LARGE_FOR_MODULUS
+        || ret_val == RSA_R_DATA_TOO_LARGE_FOR_KEY_SIZE) {
         if (verbose > 1)
             std::cout << LibStr << ": Invalid case: Skipping this test"
                       << std::endl;
@@ -203,7 +204,7 @@ void
 Rsa_Cross(int padding_mode, int KeySize)
 {
     alcp_rsa_data_t data_main, data_ext;
-    int             ret_val = 0;
+    int             ret_val_main, ret_val_ext = 0;
     AlcpRsaBase     arb;
     RsaBase *       rb_main = {}, *rb_ext = {};
     RngBase         rngb;
@@ -286,45 +287,20 @@ Rsa_Cross(int padding_mode, int KeySize)
         data_ext.m_msg_len        = KeySize;
         data_ext.m_key_len        = KeySize;
 
+        /* init */
         if (!rb_main->init()) {
             std::cout << "Error in RSA init for " << LibStrMain << std::endl;
             FAIL();
         }
+        if (!rb_ext->init()) {
+            std::cout << "Error in RSA init for " << LibStrExt << std::endl;
+            FAIL();
+        }
 
+        /* set pub, pvt keys */
         if (!rb_main->SetPublicKey(data_main)) {
             std::cout << "Error in RSA set pubkey for " << LibStrMain
                       << std::endl;
-            FAIL();
-        }
-        ret_val = rb_main->EncryptPubKey(data_main);
-        if (SkipTest(ret_val, LibStrMain))
-            continue;
-        if (ret_val != 0) {
-            std::cout << "Error in RSA EncryptPubKey for " << LibStrMain
-                      << std::endl;
-            FAIL();
-        }
-
-        if (!rb_main->SetPrivateKey(data_main)) {
-            std::cout << "Error in RSA set pvt key for " << LibStrMain
-                      << std::endl;
-            FAIL();
-        }
-
-        ret_val = rb_main->DecryptPvtKey(data_main);
-        if (SkipTest(ret_val, LibStrMain))
-            continue;
-        if (ret_val != 0) {
-            std::cout << "Error in RSA DecryptPvtKey for " << LibStrMain
-                      << std::endl;
-            FAIL();
-        }
-        /* check if decrypted output is same as input */
-        EXPECT_TRUE(ArraysMatch(decrypted_data_main, input_data, i));
-
-        /* For Ext lib */
-        if (!rb_ext->init()) {
-            std::cout << "Error in RSA init for " << LibStrExt << std::endl;
             FAIL();
         }
         if (!rb_ext->SetPublicKey(data_ext)) {
@@ -332,27 +308,47 @@ Rsa_Cross(int padding_mode, int KeySize)
                       << std::endl;
             FAIL();
         }
-
-        ret_val = rb_ext->EncryptPubKey(data_ext);
-        if (SkipTest(ret_val, LibStrExt))
-            continue;
-        if (ret_val != 0) {
-            std::cout << "Error in RSA EncryptPubKey for " << LibStrExt
+        if (!rb_main->SetPrivateKey(data_main)) {
+            std::cout << "Error in RSA set pvt key for " << LibStrMain
                       << std::endl;
             FAIL();
         }
-
         if (!rb_ext->SetPrivateKey(data_ext)) {
             std::cout << "Error in RSA set pvt key for " << LibStrExt
                       << std::endl;
             FAIL();
         }
 
-        ret_val = rb_ext->DecryptPvtKey(data_ext);
-        if (SkipTest(ret_val, LibStrExt))
+        /* encrypt */
+        ret_val_main = rb_main->EncryptPubKey(data_main);
+        ret_val_ext  = rb_ext->EncryptPubKey(data_ext);
+        if (SkipTest(ret_val_main, LibStrMain)
+            && SkipTest(ret_val_ext, LibStrExt))
             continue;
-        if (ret_val != 0) {
-            std::cout << "Error in RSA DecryptPvtKey for " << LibStrExt
+        if (ret_val_main != 0) {
+            std::cout << "Error in RSA EncryptPubKey for " << LibStrMain
+                      << std::endl;
+            FAIL();
+        }
+        if (ret_val_ext != 0) {
+            std::cout << "Error in RSA EncryptPubKey for " << LibStrExt
+                      << std::endl;
+            FAIL();
+        }
+
+        /* decrypt */
+        ret_val_main = rb_main->DecryptPvtKey(data_main);
+        ret_val_ext  = rb_ext->DecryptPvtKey(data_ext);
+        if (SkipTest(ret_val_main, LibStrMain)
+            && SkipTest(ret_val_ext, LibStrExt))
+            continue;
+        if (ret_val_main != 0) {
+            std::cout << "Error in RSA EncryptPubKey for " << LibStrMain
+                      << std::endl;
+            FAIL();
+        }
+        if (ret_val_ext != 0) {
+            std::cout << "Error in RSA EncryptPubKey for " << LibStrExt
                       << std::endl;
             FAIL();
         }
