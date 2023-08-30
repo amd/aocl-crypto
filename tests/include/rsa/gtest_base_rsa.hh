@@ -75,19 +75,13 @@ SkipTest(int ret_val, std::string LibStr)
       inputs, openssl returns RSA_R_DATA_TOO_LARGE_FOR_MODULUS and
       alcp returns ALC_ERROR_NOT_PERMITTED */
     if ((LibStr.compare("OpenSSL") == 0)
-            && ret_val == RSA_R_DATA_TOO_LARGE_FOR_MODULUS
-        || ret_val == RSA_R_DATA_TOO_LARGE_FOR_KEY_SIZE) {
+        && ret_val == RSA_R_DATA_TOO_LARGE_FOR_MODULUS) {
         if (verbose > 1)
             std::cout << LibStr << ": Invalid case: Skipping this test"
                       << std::endl;
         return true;
     } else if ((LibStr.compare("ALCP") == 0)
                && ret_val == ALC_ERROR_NOT_PERMITTED) {
-        if (verbose > 1)
-            std::cout << LibStr << ": Invalid case: Skipping this test"
-                      << std::endl;
-        return true;
-    } else if ((LibStr.compare("IPP") == 0) && ret_val == -15) {
         if (verbose > 1)
             std::cout << LibStr << ": Invalid case: Skipping this test"
                       << std::endl;
@@ -282,14 +276,14 @@ Rsa_Cross(int padding_mode, int KeySize)
         data_main.m_pub_key_mod    = &(PubKeyKeyMod_main[0]);
         data_main.m_encrypted_data = &(encrypted_data_main[0]);
         data_main.m_decrypted_data = &(decrypted_data_main[0]);
-        data_main.m_msg_len        = KeySize;
+        data_main.m_msg_len        = input_data.size();
         data_main.m_key_len        = KeySize;
 
         data_ext.m_msg            = &(input_data[0]);
         data_ext.m_pub_key_mod    = &(PubKeyKeyMod_ext[0]);
         data_ext.m_encrypted_data = &(encrypted_data_ext[0]);
         data_ext.m_decrypted_data = &(decrypted_data_ext[0]);
-        data_ext.m_msg_len        = KeySize;
+        data_ext.m_msg_len        = input_data.size();
         data_ext.m_key_len        = KeySize;
 
         /* init */
@@ -365,6 +359,8 @@ Rsa_Cross(int padding_mode, int KeySize)
             EXPECT_TRUE(ArraysMatch(decrypted_data_ext, input_data, i));
             EXPECT_TRUE(
                 ArraysMatch(decrypted_data_ext, decrypted_data_main, i));
+            /* now revert input data to original length */
+            input_data.resize(InputSize);
         } else {
             EXPECT_TRUE(ArraysMatch(decrypted_data_main, input_data, i));
             EXPECT_TRUE(ArraysMatch(decrypted_data_ext, input_data, i));
