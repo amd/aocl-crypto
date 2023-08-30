@@ -77,12 +77,14 @@ SkipTest(int ret_val, std::string LibStr)
     if ((LibStr.compare("OpenSSL") == 0)
         && ret_val == RSA_R_DATA_TOO_LARGE_FOR_MODULUS) {
         if (verbose > 1)
-            std::cout << "Invalid case: Skipping this test" << std::endl;
+            std::cout << LibStr << ": Invalid case: Skipping this test"
+                      << std::endl;
         return true;
     } else if ((LibStr.compare("ALCP") == 0)
                && ret_val == ALC_ERROR_NOT_PERMITTED) {
         if (verbose > 1)
-            std::cout << "Invalid case: Skipping this test" << std::endl;
+            std::cout << LibStr << ": Invalid case: Skipping this test"
+                      << std::endl;
         return true;
     } else
         return false;
@@ -251,7 +253,7 @@ Rsa_Cross(int padding_mode, int KeySize)
     rb_main->m_hash_len = ALC_DIGEST_LEN_256 / 8;
     rb_ext->m_hash_len  = ALC_DIGEST_LEN_256 / 8;
 
-    int loop_max = 10, loop_start = 1;
+    int loop_max = 1500, loop_start = 1;
     if (rb_ext == nullptr) {
         std::cout << "No external lib selected!" << std::endl;
         exit(-1);
@@ -264,25 +266,25 @@ Rsa_Cross(int padding_mode, int KeySize)
     for (int i = loop_start; i < loop_max; i++) {
         input_data = ShuffleVector(input_data, rng);
         std::vector<Uint8> encrypted_data_main(KeySize);
-        std::vector<Uint8> decrypted_data_main(input_data.size());
+        std::vector<Uint8> decrypted_data_main(KeySize);
         std::vector<Uint8> PubKeyKeyMod_main(KeySize);
 
         std::vector<Uint8> encrypted_data_ext(KeySize);
-        std::vector<Uint8> decrypted_data_ext(input_data.size());
+        std::vector<Uint8> decrypted_data_ext(KeySize);
         std::vector<Uint8> PubKeyKeyMod_ext(KeySize);
 
         data_main.m_msg            = &(input_data[0]);
         data_main.m_pub_key_mod    = &(PubKeyKeyMod_main[0]);
         data_main.m_encrypted_data = &(encrypted_data_main[0]);
         data_main.m_decrypted_data = &(decrypted_data_main[0]);
-        data_main.m_msg_len        = input_data.size();
+        data_main.m_msg_len        = KeySize;
         data_main.m_key_len        = KeySize;
 
         data_ext.m_msg            = &(input_data[0]);
         data_ext.m_pub_key_mod    = &(PubKeyKeyMod_ext[0]);
         data_ext.m_encrypted_data = &(encrypted_data_ext[0]);
         data_ext.m_decrypted_data = &(decrypted_data_ext[0]);
-        data_ext.m_msg_len        = input_data.size();
+        data_ext.m_msg_len        = KeySize;
         data_ext.m_key_len        = KeySize;
 
         if (!rb_main->init()) {
@@ -333,9 +335,6 @@ Rsa_Cross(int padding_mode, int KeySize)
         }
 
         ret_val = rb_ext->EncryptPubKey(data_ext);
-        if (ret_val == 132) {
-            ret_val = ret_val;
-        }
         if (SkipTest(ret_val, LibStrExt))
             continue;
         if (ret_val != 0) {
@@ -359,10 +358,19 @@ Rsa_Cross(int padding_mode, int KeySize)
             FAIL();
         }
 
-        /* compare decrypted output for ext lib vs original input */
-        EXPECT_TRUE(ArraysMatch(decrypted_data_ext, input_data, i));
-        /* compare decrypted outputs for both libs */
-        EXPECT_TRUE(ArraysMatch(decrypted_data_ext, decrypted_data_main, i));
+        if (padding_mode == 1) {
+            input_data.resize(KeySize, 0);
+            /* compare decrypted output for ext lib vs original input */
+            EXPECT_TRUE(ArraysMatch(decrypted_data_main, input_data, i));
+            EXPECT_TRUE(ArraysMatch(decrypted_data_ext, input_data, i));
+            EXPECT_TRUE(
+                ArraysMatch(decrypted_data_ext, decrypted_data_main, i));
+        } else {
+            EXPECT_TRUE(ArraysMatch(decrypted_data_main, input_data, i));
+            EXPECT_TRUE(ArraysMatch(decrypted_data_ext, input_data, i));
+            EXPECT_TRUE(
+                ArraysMatch(decrypted_data_ext, decrypted_data_main, i));
+        }
         if (verbose > 1) {
             PrintRsaTestData(data_main);
             PrintRsaTestData(data_ext);

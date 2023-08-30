@@ -441,8 +441,6 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                                               p_seed,
                                               data.m_encrypted_data);
         if (alcp_is_error(err)) {
-            std::cout << "Error in alcp_rsa_publickey_encrypt_oaep " << err
-                      << std::endl;
             free(p_seed);
             return err;
         }
