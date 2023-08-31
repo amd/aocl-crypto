@@ -213,7 +213,7 @@ Rsa_Cross(int padding_mode, int KeySize)
 
     /* Keysize is in bits */
     KeySize = KeySize / 8;
-    int InputSize;
+    int InputSize_Max;
 
 #ifdef USE_IPP
     IPPRsaBase irb;
@@ -236,14 +236,14 @@ Rsa_Cross(int padding_mode, int KeySize)
         rb_ext->m_padding_mode  = ALCP_TEST_RSA_PADDING;
         /* input size should be 0 to m_key_size - 2 * m_hash_len - 2*/
         if (KeySize == 128) {
-            InputSize = 62;
+            InputSize_Max = 62;
         } else
-            InputSize = 47;
+            InputSize_Max = 47;
     } else {
         /* for no padding, input size = key size */
         rb_main->m_padding_mode = ALCP_TEST_RSA_NO_PADDING;
         rb_ext->m_padding_mode  = ALCP_TEST_RSA_NO_PADDING;
-        InputSize               = KeySize;
+        InputSize_Max           = KeySize;
     }
 
     rb_main->m_key_len = KeySize;
@@ -252,7 +252,7 @@ Rsa_Cross(int padding_mode, int KeySize)
     rb_main->m_hash_len = ALC_DIGEST_LEN_256 / 8;
     rb_ext->m_hash_len  = ALC_DIGEST_LEN_256 / 8;
 
-    int loop_max = 1500, loop_start = 1;
+    int loop_max = InputSize_Max, loop_start = 1;
     if (rb_ext == nullptr) {
         std::cout << "No external lib selected!" << std::endl;
         exit(-1);
@@ -261,13 +261,22 @@ Rsa_Cross(int padding_mode, int KeySize)
     auto                               rng = std::default_random_engine{};
 
     /*FIXME: change this to input len in a range */
-    std::vector<Uint8> input_data = rngb.genRandomBytes(InputSize);
-    for (int i = loop_start; i < loop_max; i++) {
+    std::vector<Uint8> input_data;
+    for (int i = loop_start; i < InputSize_Max; i++) {
+        if (padding_mode == 1) {
+            input_data = rngb.genRandomBytes(i);
+        } else {
+            /* For non-padded mode, input len will always be KeySize */
+            input_data = rngb.genRandomBytes(InputSize_Max);
+        }
+
+        /* shuffle input vector after each iterations */
         input_data = ShuffleVector(input_data, rng);
+
+        /* set test data for each lib */
         std::vector<Uint8> encrypted_data_main(KeySize);
         std::vector<Uint8> decrypted_data_main(KeySize);
         std::vector<Uint8> PubKeyKeyMod_main(KeySize);
-
         std::vector<Uint8> encrypted_data_ext(KeySize);
         std::vector<Uint8> decrypted_data_ext(KeySize);
         std::vector<Uint8> PubKeyKeyMod_ext(KeySize);
@@ -286,7 +295,7 @@ Rsa_Cross(int padding_mode, int KeySize)
         data_ext.m_msg_len        = input_data.size();
         data_ext.m_key_len        = KeySize;
 
-        /* init */
+        /* initialize */
         if (!rb_main->init()) {
             std::cout << "Error in RSA init for " << LibStrMain << std::endl;
             FAIL();
@@ -296,7 +305,7 @@ Rsa_Cross(int padding_mode, int KeySize)
             FAIL();
         }
 
-        /* set pub, pvt keys */
+        /* set public, private keys for both libs */
         if (!rb_main->SetPublicKey(data_main)) {
             std::cout << "Error in RSA set pubkey for " << LibStrMain
                       << std::endl;
@@ -318,7 +327,7 @@ Rsa_Cross(int padding_mode, int KeySize)
             FAIL();
         }
 
-        /* encrypt */
+        /* Call encrypt for both libs */
         ret_val_main = rb_main->EncryptPubKey(data_main);
         ret_val_ext  = rb_ext->EncryptPubKey(data_ext);
         if (SkipTest(ret_val_main, LibStrMain)
@@ -335,7 +344,7 @@ Rsa_Cross(int padding_mode, int KeySize)
             FAIL();
         }
 
-        /* decrypt */
+        /* Call decrypt for both libs */
         ret_val_main = rb_main->DecryptPvtKey(data_main);
         ret_val_ext  = rb_ext->DecryptPvtKey(data_ext);
         if (SkipTest(ret_val_main, LibStrMain)
@@ -352,6 +361,7 @@ Rsa_Cross(int padding_mode, int KeySize)
             FAIL();
         }
 
+        /* Now check outputs from both libs */
         if (padding_mode == 1) {
             input_data.resize(KeySize, 0);
             /* compare decrypted output for ext lib vs original input */
@@ -359,13 +369,16 @@ Rsa_Cross(int padding_mode, int KeySize)
             EXPECT_TRUE(ArraysMatch(decrypted_data_ext, input_data, i));
             EXPECT_TRUE(
                 ArraysMatch(decrypted_data_ext, decrypted_data_main, i));
-            /* now revert input data to original length */
-            input_data.resize(InputSize);
+            /* now revert input data to original length after verification */
+            input_data.resize(i);
         } else {
-            EXPECT_TRUE(ArraysMatch(decrypted_data_main, input_data, i));
-            EXPECT_TRUE(ArraysMatch(decrypted_data_ext, input_data, i));
+            /* For non-padded mode, input len will always be KeySize */
             EXPECT_TRUE(
-                ArraysMatch(decrypted_data_ext, decrypted_data_main, i));
+                ArraysMatch(decrypted_data_main, input_data, InputSize_Max));
+            EXPECT_TRUE(
+                ArraysMatch(decrypted_data_ext, input_data, InputSize_Max));
+            EXPECT_TRUE(ArraysMatch(
+                decrypted_data_ext, decrypted_data_main, InputSize_Max));
         }
         if (verbose > 1) {
             PrintRsaTestData(data_main);
