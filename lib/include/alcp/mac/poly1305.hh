@@ -35,7 +35,7 @@ class Poly1305
     void clamp(Uint8 in[16]);
 
   public:
-    Uint8* mac(const Uint8 msg[], const Uint8 key[], Uint64 msgLen);
+    Uint8* mac(const Uint8 msg[], const Uint8 key[], Uint64 msgLen, Uint8* mac);
     // Uint8* macUpdate(const Uint8 msg[], const Uint8 key[], Uint64 msgLen);
     Poly1305() = default;
 };

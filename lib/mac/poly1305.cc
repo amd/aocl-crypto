@@ -64,10 +64,10 @@ Poly1305::clamp(Uint8 in[16])
 }
 
 Uint8*
-Poly1305::mac(const Uint8 msg[], const Uint8 key[], Uint64 msgLen)
+Poly1305::mac(const Uint8 msg[], const Uint8 key[], Uint64 msgLen, Uint8* mac)
 {
-    static Uint8 a_mem[16]    = {};
-    Uint8        key_copy[32] = {};
+    Uint8 a_mem[18]    = {};
+    Uint8 key_copy[32] = {};
 
     Uint8 p_mem[] = { 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                       0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfb };
@@ -89,28 +89,36 @@ Poly1305::mac(const Uint8 msg[], const Uint8 key[], Uint64 msgLen)
     // Ceil Function 'q = x + (y - 1) / y'
     BN_CTX* ctx = BN_CTX_new();
 
-    for (int i = 1; i <= ((msgLen + (16 - 1)) / 16); i++) {
+    for (int i = 0; i < ((msgLen + (16 - 1)) / 16); i++) {
         Uint8 n_buff[17] = {};
 
         // Find if we are in the last block, if we are, then only do left bytes
-        Uint64 curr_blocklen = msgLen - ((i + 1) * 16) < 0 ? msgLen - ((i) * 16)
-                                                           : 16;
+        Uint64 curr_blocklen = msgLen < ((i + 1) * 16) ? msgLen - ((i) * 16)
+                                                       : 16;
+        std::cout << "Current Block Length:" << curr_blocklen << std::endl;
         std::reverse_copy(msg_ptr_cpy, msg_ptr_cpy + curr_blocklen, n_buff + 1);
         n_buff[0] = 0x01;
-        BIGNUM* n = BN_bin2bn(n_buff, 17, n);
+        BIGNUM* n = BN_new();
+        n         = BN_bin2bn(n_buff, curr_blocklen + 1, n);
         debug_dump("N BLK:", n);
 
         // We select the next block
         msg_ptr_cpy += curr_blocklen;
+        // a+=n
         BN_add(a, a, n);
         debug_dump("A ADD:", a);
+        // a = (a * r) % p
         BN_mod_mul(a, a, r, p, ctx);
         debug_dump("A END:", a);
     }
 
+    // a+=s;
     BN_add(a, a, s);
+    debug_dump("A FIN:", a);
     BN_bn2bin(a, a_mem);
-    return a_mem;
+    std::reverse_copy(a_mem + 1, a_mem + 17, mac);
+
+    return mac;
 }
 
 } // namespace alcp::mac::poly1305
