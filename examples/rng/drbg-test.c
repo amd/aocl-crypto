@@ -113,6 +113,7 @@ test_drbg(alc_drbg_info_t drbg_info,
         free(handle.ch_context);
         handle.ch_context = NULL;
     }
+    return err;
 }
 
 alc_error_t
