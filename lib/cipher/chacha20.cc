@@ -28,13 +28,19 @@
 
 #include "alcp/cipher/chacha20.hh"
 #include "chacha20_inplace.cc.inc"
-
+#include <algorithm>
 namespace alcp::cipher {
 
 int
 ChaCha20::setKey(const Uint8* key, Uint64 keylen)
 {
-    memcpy(m_key, key, keylen);
+    std::copy(key, key + 8, m_key);
+    std::copy(key + 8, key + 16, m_key + 8);
+
+    std::reverse_copy(key + 16, key + 24, m_key + 16);
+
+    std::reverse_copy(key + 24, key + 32, m_key + 24);
+
     return SetKey(m_state, key, keylen);
 }
 
@@ -50,6 +56,8 @@ ChaCha20::processInput(const Uint8* plaintext,
                        Uint64       plaintext_length,
                        Uint8*       ciphertext)
 {
+
+#if 0
     return zen4::ProcessInput(m_state,
                               m_key,
                               m_keylen,
@@ -58,6 +66,22 @@ ChaCha20::processInput(const Uint8* plaintext,
                               plaintext,
                               plaintext_length,
                               ciphertext);
+#else
+    return ProcessInput(m_state,
+                        m_key,
+                        m_keylen,
+                        m_iv,
+                        m_ivlen,
+                        plaintext,
+                        plaintext_length,
+                        ciphertext);
+#endif
+}
+
+void
+ChaCha20::displayState()
+{
+    display_state(m_state);
 }
 
 } // namespace alcp::cipher

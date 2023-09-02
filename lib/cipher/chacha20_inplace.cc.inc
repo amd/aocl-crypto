@@ -28,8 +28,21 @@
 
 #include <alcp/types.h>
 #include <cstring>
+#include <iomanip>
 #include <iostream>
 #define UNROLL_8 _Pragma("GCC unroll 2")
+
+inline void
+display_state(Uint32 state[16])
+{
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            std::cout << std::hex << std::setfill('0') << std::setw(8)
+                      << +state[i * 4 + j] << " ";
+        }
+        std::cout << std::endl;
+    }
+}
 inline Uint32
 RotateLeft(Uint32 value, Uint32 count)
 {
@@ -71,10 +84,16 @@ inner_block(Uint32 state[16])
     QuarterRoundState(state, 1, 5, 9, 13);
     QuarterRoundState(state, 2, 6, 10, 14);
     QuarterRoundState(state, 3, 7, 11, 15);
+    std::cout << "After Row Round" << std::endl;
+    display_state(state);
+    std::cout << std::endl;
     QuarterRoundState(state, 0, 5, 10, 15);
     QuarterRoundState(state, 1, 6, 11, 12);
     QuarterRoundState(state, 2, 7, 8, 13);
     QuarterRoundState(state, 3, 4, 9, 14);
+    std::cout << "After Column Round" << std::endl;
+    display_state(state);
+    std::cout << std::endl;
 }
 
 inline void
@@ -149,6 +168,9 @@ ProcessInput(Uint32       m_state[16],
         for (int i = 0; i < 10; i++) {
             inner_block(working_state);
         }
+        std::cout << "Block" << blocks << std::endl;
+        display_state(working_state);
+        std::cout << std::endl;
         add_state(working_state, m_state);
         auto   p_state                 = reinterpret_cast<Uint8*>(m_state);
         auto   processed_message_bytes = blocks;

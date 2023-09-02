@@ -41,17 +41,12 @@ namespace alcp::cipher::zen4 {
 
 namespace alcp::cipher {
 
-inline void
-display_state(Uint32 state[16])
-{
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            std::cout << std::hex << std::setfill('0') << std::setw(8)
-                      << +state[i * 4 + j] << " ";
-        }
-        std::cout << std::endl;
-    }
-}
+static Uint32 Chacha20Constants[] = {
+    0x61707865,
+    0x3320646e,
+    0x79622d32,
+    0x6b206574,
+};
 
 class ChaCha20
 {
@@ -71,7 +66,7 @@ class ChaCha20
 
     Uint32 m_counter;
 
-    void displayState() { display_state(m_state); }
+    void displayState();
 
     int setKey(const Uint8* key, Uint64 keylen);
 
