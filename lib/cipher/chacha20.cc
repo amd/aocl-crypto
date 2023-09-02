@@ -34,12 +34,17 @@ namespace alcp::cipher {
 int
 ChaCha20::setKey(const Uint8* key, Uint64 keylen)
 {
+
+#if 0
     std::copy(key, key + 8, m_key);
     std::copy(key + 8, key + 16, m_key + 8);
 
     std::reverse_copy(key + 16, key + 24, m_key + 16);
 
     std::reverse_copy(key + 24, key + 32, m_key + 24);
+#else
+    memcpy(m_key, key, keylen);
+#endif
 
     return SetKey(m_state, key, keylen);
 }
@@ -57,7 +62,7 @@ ChaCha20::processInput(const Uint8* plaintext,
                        Uint8*       ciphertext)
 {
 
-#if 0
+#if 1
     return zen4::ProcessInput(m_state,
                               m_key,
                               m_keylen,

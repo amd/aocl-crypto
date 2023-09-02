@@ -216,6 +216,37 @@ print(reg_512 reg)
     std::cout << std::endl;
 }
 
+inline void
+RoundFunction(__m512i& reg_a, __m512i& reg_b, __m512i& reg_c, __m512i& reg_d)
+{
+    reg_a = _mm512_add_epi32(reg_a, reg_b);
+    // d ^= a;
+    reg_d = _mm512_xor_si512(reg_d, reg_a);
+    // d << <= 16;
+    reg_d = _mm512_rol_epi32(reg_d, 16);
+
+    // c += d;
+    reg_c = _mm512_add_epi32(reg_c, reg_d);
+    // b ^= c;
+    reg_b = _mm512_xor_si512(reg_b, reg_c);
+    // b << <= 12;
+    reg_b = _mm512_rol_epi32(reg_b, 12);
+
+    // a += b;
+    reg_a = _mm512_add_epi32(reg_a, reg_b);
+    // d ^= a;
+    reg_d = _mm512_xor_si512(reg_d, reg_a);
+    // d <<<= 8;
+    reg_d = _mm512_rol_epi32(reg_d, 8);
+
+    // c += d;
+    reg_c = _mm512_add_epi32(reg_c, reg_d);
+    // b ^= c;
+    reg_b = _mm512_xor_si512(reg_b, reg_c);
+    // b <<<= 7;
+    reg_b = _mm512_rol_epi32(reg_b, 7);
+}
+
 int
 ProcessInput(Uint32       m_state[16],
              Uint8*       key,
@@ -229,6 +260,7 @@ ProcessInput(Uint32       m_state[16],
     // -- Setup Registers for Row Round Function
     // a
     auto reg_state_1_0_3_2 =
+
         _mm512_broadcast_i32x4(*reinterpret_cast<__m128i*>(Chacha20Constants));
     // b
     auto reg_state_5_4_7_6 =
@@ -258,51 +290,23 @@ ProcessInput(Uint32       m_state[16],
                                          0x0);
     reg_state_13_12_15_14 =
         _mm512_add_epi32(reg_state_13_12_15_14, counter_reg);
+    auto reg_state_1_0_3_2_save     = reg_state_1_0_3_2;
+    auto reg_state_5_4_7_6_save     = reg_state_5_4_7_6;
+    auto reg_state_9_8_11_10_save   = reg_state_9_8_11_10;
+    auto reg_state_13_12_15_14_save = reg_state_13_12_15_14;
     for (int i = 0; i < 10; i++) {
 
         // -- Row Round Register Setup Complete.
 
-        //  Perform Row Round Function
-        // a += b;
-        reg_state_1_0_3_2 =
-            _mm512_add_epi32(reg_state_1_0_3_2, reg_state_5_4_7_6);
-        // d ^= a;
-        reg_state_13_12_15_14 =
-            _mm512_xor_si512(reg_state_13_12_15_14, reg_state_1_0_3_2);
-        // d << <= 16;
-        reg_state_13_12_15_14 = _mm512_rol_epi32(reg_state_13_12_15_14, 16);
-
-        // c += d;
-        reg_state_9_8_11_10 =
-            _mm512_add_epi32(reg_state_9_8_11_10, reg_state_13_12_15_14);
-        // b ^= c;
-        reg_state_5_4_7_6 =
-            _mm512_xor_si512(reg_state_5_4_7_6, reg_state_9_8_11_10);
-        // b << <= 12;
-        reg_state_5_4_7_6 = _mm512_rol_epi32(reg_state_5_4_7_6, 12);
-
-        // a += b;
-        reg_state_1_0_3_2 =
-            _mm512_add_epi32(reg_state_1_0_3_2, reg_state_5_4_7_6);
-        // d ^= a;
-        reg_state_13_12_15_14 =
-            _mm512_xor_si512(reg_state_13_12_15_14, reg_state_1_0_3_2);
-        // d <<<= 8;
-        reg_state_13_12_15_14 = _mm512_rol_epi32(reg_state_13_12_15_14, 8);
-
-        // c += d;
-        reg_state_9_8_11_10 =
-            _mm512_add_epi32(reg_state_9_8_11_10, reg_state_13_12_15_14);
-        // b ^= c;
-        reg_state_5_4_7_6 =
-            _mm512_xor_si512(reg_state_5_4_7_6, reg_state_9_8_11_10);
-        // b <<<= 7;
-        reg_state_5_4_7_6 = _mm512_rol_epi32(reg_state_5_4_7_6, 7);
-
+        RoundFunction(reg_state_1_0_3_2,
+                      reg_state_5_4_7_6,
+                      reg_state_9_8_11_10,
+                      reg_state_13_12_15_14);
         // -- Row Round Function Complete
         // --- Setting up Register for Column Round Function
         // 6547
-        reg_state_5_4_7_6 = _mm512_shuffle_epi32(reg_state_5_4_7_6, 0b00111001);
+        reg_state_5_4_7_6 =
+            _mm512_shuffle_epi32(reg_state_5_4_7_6, _MM_PERM_BBBD);
         // 10,11,8,9 -> 11,10,9,8
         reg_state_9_8_11_10 =
             _mm512_shuffle_epi32(reg_state_9_8_11_10, 0b01001110);
@@ -311,41 +315,245 @@ ProcessInput(Uint32       m_state[16],
             _mm512_shuffle_epi32(reg_state_13_12_15_14, 0b10010011);
 
         // Column Round Function
-        // a += b;
-        reg_state_1_0_3_2 =
-            _mm512_add_epi32(reg_state_1_0_3_2, reg_state_5_4_7_6);
-        // d ^= a;
-        reg_state_13_12_15_14 =
-            _mm512_xor_si512(reg_state_13_12_15_14, reg_state_1_0_3_2);
-        // d << <= 16;
-        reg_state_13_12_15_14 = _mm512_rol_epi32(reg_state_13_12_15_14, 16);
 
-        // c += d;
+        RoundFunction(reg_state_1_0_3_2,
+                      reg_state_5_4_7_6,
+                      reg_state_9_8_11_10,
+                      reg_state_13_12_15_14);
+
+        //   Reshuffle it back for next Row operation
+        // 6547 -> 5_4_7_6
+        reg_state_5_4_7_6 = _mm512_shuffle_epi32(reg_state_5_4_7_6, 0b10010011);
+        // 11,10,9,8 -> 9_8_11_10
         reg_state_9_8_11_10 =
-            _mm512_add_epi32(reg_state_9_8_11_10, reg_state_13_12_15_14);
-        // b ^= c;
-        reg_state_5_4_7_6 =
-            _mm512_xor_si512(reg_state_5_4_7_6, reg_state_9_8_11_10);
-        // b << <= 12;
-        reg_state_5_4_7_6 = _mm512_rol_epi32(reg_state_5_4_7_6, 12);
-
-        // a += b;
-        reg_state_1_0_3_2 =
-            _mm512_add_epi32(reg_state_1_0_3_2, reg_state_5_4_7_6);
-        // d ^= a;
+            _mm512_shuffle_epi32(reg_state_9_8_11_10, 0b01001110);
+        // 12,15,14,13 -> 13_12_15_14
         reg_state_13_12_15_14 =
-            _mm512_xor_si512(reg_state_13_12_15_14, reg_state_1_0_3_2);
-        // d <<<= 8;
-        reg_state_13_12_15_14 = _mm512_rol_epi32(reg_state_13_12_15_14, 8);
+            _mm512_shuffle_epi32(reg_state_13_12_15_14, 0b00111001);
+    }
 
-        // c += d;
-        reg_state_9_8_11_10 =
-            _mm512_add_epi32(reg_state_9_8_11_10, reg_state_13_12_15_14);
-        // b ^= c;
-        reg_state_5_4_7_6 =
-            _mm512_xor_si512(reg_state_5_4_7_6, reg_state_9_8_11_10);
-        // b <<<= 7;
-        reg_state_5_4_7_6 = _mm512_rol_epi32(reg_state_5_4_7_6, 7);
+    reg_state_1_0_3_2 =
+        _mm512_add_epi32(reg_state_1_0_3_2, reg_state_1_0_3_2_save);
+    reg_state_5_4_7_6 =
+        _mm512_add_epi32(reg_state_5_4_7_6, reg_state_5_4_7_6_save);
+    reg_state_9_8_11_10 =
+        _mm512_add_epi32(reg_state_9_8_11_10, reg_state_9_8_11_10_save);
+    reg_state_13_12_15_14 =
+        _mm512_add_epi32(reg_state_13_12_15_14, reg_state_13_12_15_14_save);
+
+    reg_state_1_0_3_2 = _mm512_shuffle_epi32(reg_state_1_0_3_2, 0b10110001);
+
+    // b
+    reg_state_5_4_7_6 = _mm512_shuffle_epi32(reg_state_5_4_7_6, 0b10110001);
+
+    // c
+    reg_state_9_8_11_10 = _mm512_shuffle_epi32(reg_state_9_8_11_10, 0b10110001);
+
+    // d
+    reg_state_13_12_15_14 =
+        _mm512_shuffle_epi32(reg_state_13_12_15_14, 0b10110001);
+
+    __m128i reg_state;
+    __m128i reg_128_msg;
+    __m128i shuffle_reg      = _mm_setr_epi8(0x04,
+                                        0x05,
+                                        0x06,
+                                        0x07,
+                                        0x00,
+                                        0x01,
+                                        0x02,
+                                        0x03,
+                                        0x0c,
+                                        0x0d,
+                                        0x0e,
+                                        0x0f,
+                                        0x08,
+                                        0x09,
+                                        0xa,
+                                        0x0b);
+    Uint64  blocks_128bits   = plaintext_length / 16;
+    auto    p_plaintext_128  = reinterpret_cast<const __m128i*>(plaintext);
+    auto    p_ciphertext_128 = reinterpret_cast<__m128i*>(ciphertext);
+
+    bool processed = false;
+
+    for (Uint64 i = 0; i < blocks_128bits; i++) {
+        // if plaintext length is > 64 then use load plaintext to
+        reg_state   = _mm512_extracti64x2_epi64(reg_state_1_0_3_2, 0);
+        reg_128_msg = _mm_loadu_si128(p_plaintext_128);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        reg_128_msg = _mm_xor_si128(reg_state, reg_128_msg);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        _mm_store_si128(p_ciphertext_128, reg_128_msg);
+
+        i++;
+        if (i == blocks_128bits) {
+            processed = true;
+            break;
+        }
+        p_plaintext_128++;
+        p_ciphertext_128++;
+        reg_state   = _mm512_extracti64x2_epi64(reg_state_5_4_7_6, 0);
+        reg_128_msg = _mm_loadu_si128(p_plaintext_128);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        reg_128_msg = _mm_xor_si128(reg_state, reg_128_msg);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        _mm_store_si128(p_ciphertext_128, reg_128_msg);
+
+        i++;
+        if (i == blocks_128bits) {
+            processed = true;
+            break;
+        }
+        p_plaintext_128++;
+        p_ciphertext_128++;
+
+        reg_state   = _mm512_extracti64x2_epi64(reg_state_9_8_11_10, 0);
+        reg_128_msg = _mm_loadu_si128(p_plaintext_128);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        reg_128_msg = _mm_xor_si128(reg_state, reg_128_msg);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        _mm_store_si128(p_ciphertext_128, reg_128_msg);
+
+        i++;
+        if (i == blocks_128bits) {
+            processed = true;
+            break;
+        }
+        p_plaintext_128++;
+        p_ciphertext_128++;
+        reg_state   = _mm512_extracti64x2_epi64(reg_state_13_12_15_14, 0);
+        reg_128_msg = _mm_loadu_si128(p_plaintext_128);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        reg_128_msg = _mm_xor_si128(reg_state, reg_128_msg);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        _mm_store_si128(p_ciphertext_128, reg_128_msg);
+
+        i++;
+        if (i == blocks_128bits) {
+            processed = true;
+            break;
+        }
+        p_plaintext_128++;
+        p_ciphertext_128++;
+
+        // if plaintext length is > 64 then use load plaintext to
+        reg_state   = _mm512_extracti64x2_epi64(reg_state_1_0_3_2, 1);
+        reg_128_msg = _mm_loadu_si128(p_plaintext_128);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        reg_128_msg = _mm_xor_si128(reg_state, reg_128_msg);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        _mm_store_si128(p_ciphertext_128, reg_128_msg);
+
+        i++;
+        if (i == blocks_128bits) {
+            processed = true;
+            break;
+        }
+        p_plaintext_128++;
+        p_ciphertext_128++;
+        reg_state   = _mm512_extracti64x2_epi64(reg_state_5_4_7_6, 1);
+        reg_128_msg = _mm_loadu_si128(p_plaintext_128);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        reg_128_msg = _mm_xor_si128(reg_state, reg_128_msg);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        _mm_store_si128(p_ciphertext_128, reg_128_msg);
+
+        i++;
+        if (i == blocks_128bits) {
+            processed = true;
+            break;
+        }
+        p_plaintext_128++;
+        p_ciphertext_128++;
+
+        reg_state   = _mm512_extracti64x2_epi64(reg_state_9_8_11_10, 1);
+        reg_128_msg = _mm_loadu_si128(p_plaintext_128);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        reg_128_msg = _mm_xor_si128(reg_state, reg_128_msg);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        _mm_store_si128(p_ciphertext_128, reg_128_msg);
+
+        i++;
+        if (i == blocks_128bits) {
+            processed = true;
+            break;
+        }
+        p_plaintext_128++;
+        p_ciphertext_128++;
+        reg_state   = _mm512_extracti64x2_epi64(reg_state_13_12_15_14, 1);
+        reg_128_msg = _mm_loadu_si128(p_plaintext_128);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        reg_128_msg = _mm_xor_si128(reg_state, reg_128_msg);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        _mm_store_si128(p_ciphertext_128, reg_128_msg);
+
+        i++;
+        if (i == blocks_128bits) {
+            processed = true;
+            break;
+        }
+        p_plaintext_128++;
+        p_ciphertext_128++;
+
+        // if plaintext length is > 64 then use load plaintext to
+        reg_state   = _mm512_extracti64x2_epi64(reg_state_1_0_3_2, 2);
+        reg_128_msg = _mm_loadu_si128(p_plaintext_128);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        reg_128_msg = _mm_xor_si128(reg_state, reg_128_msg);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        _mm_store_si128(p_ciphertext_128, reg_128_msg);
+
+        i++;
+        if (i == blocks_128bits) {
+            processed = true;
+            break;
+        }
+        p_plaintext_128++;
+        p_ciphertext_128++;
+        reg_state   = _mm512_extracti64x2_epi64(reg_state_5_4_7_6, 2);
+        reg_128_msg = _mm_loadu_si128(p_plaintext_128);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        reg_128_msg = _mm_xor_si128(reg_state, reg_128_msg);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        _mm_store_si128(p_ciphertext_128, reg_128_msg);
+
+        i++;
+        if (i == blocks_128bits) {
+            processed = true;
+            break;
+        }
+        p_plaintext_128++;
+        p_ciphertext_128++;
+
+        reg_state   = _mm512_extracti64x2_epi64(reg_state_9_8_11_10, 2);
+        reg_128_msg = _mm_loadu_si128(p_plaintext_128);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        reg_128_msg = _mm_xor_si128(reg_state, reg_128_msg);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        _mm_store_si128(p_ciphertext_128, reg_128_msg);
+
+        i++;
+        if (i == blocks_128bits) {
+            processed = true;
+            break;
+        }
+        p_plaintext_128++;
+        p_ciphertext_128++;
+        reg_state   = _mm512_extracti64x2_epi64(reg_state_13_12_15_14, 2);
+        reg_128_msg = _mm_loadu_si128(p_plaintext_128);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        reg_128_msg = _mm_xor_si128(reg_state, reg_128_msg);
+        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
+        _mm_store_si128(p_ciphertext_128, reg_128_msg);
+
+        i++;
+        if (i == blocks_128bits) {
+            processed = true;
+            break;
+        }
+        p_plaintext_128++;
+        p_ciphertext_128++;
     }
     return 1;
 }
