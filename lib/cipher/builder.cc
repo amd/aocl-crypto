@@ -601,14 +601,9 @@ Chacha20Builder::Build(const alc_cipher_info_t& cCipherAlgoInfo, Context& ctx)
                         cCipherAlgoInfo.ci_key_info.len)) {
         return ALC_ERROR_INVALID_ARG;
     }
-    if (!chacha->setCounter(
-            cCipherAlgoInfo.ci_algo_info.chacha20_info.counter)) {
-        return ALC_ERROR_INVALID_ARG;
-    }
-    if (!chacha->setNonce(
-            cCipherAlgoInfo.ci_algo_info.chacha20_info.nonce,
-            cCipherAlgoInfo.ci_algo_info.chacha20_info.nonce_length)) {
 
+    if (!chacha->setIv(cCipherAlgoInfo.ci_algo_info.ai_iv,
+                       cCipherAlgoInfo.ci_algo_info.iv_length)) {
         return ALC_ERROR_INVALID_ARG;
     }
     ctx.encrypt = __chacha20_processInputWrapper;

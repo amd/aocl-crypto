@@ -48,25 +48,21 @@ add_state(Uint32 state1[16], Uint32 state2[16]);
 inline int
 SetKey(Uint32 m_state[16], const Uint8* key, Uint64 keylen);
 inline int
-SetNonce(Uint32 m_state[16], const Uint8* nonce, Uint64 noncelen);
-inline int
-SetCounter(Uint32 m_state[16], Uint32 counter);
-
+SetIv(Uint32* m_state, const Uint8* iv, Uint64 ivlen);
 inline int
 CreateInitialState(Uint32 state[16],
                    Uint8* key,
                    Uint64 keylen,
-                   Uint32 counter,
-                   Uint8* nonce,
-                   Uint64 noncelen);
+                   Uint8* iv,
+                   Uint64 ivlen,
+                   Uint32 counter);
 
 int
 ProcessInput(Uint32       m_state[16],
              Uint8*       key,
              Uint64       keylen,
-             Uint32       counter,
-             Uint8*       nonce,
-             Uint64       noncelen,
+             Uint8*       iv,
+             Uint64       ivlen,
              const Uint8* plaintext,
              Uint64       plaintext_length,
              Uint8*       ciphertext);

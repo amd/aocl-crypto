@@ -123,12 +123,6 @@ typedef struct _alc_cipher_mode_xts_info
     alc_key_info_t* xi_tweak_key;
 } alc_cipher_mode_xts_info_t, *alc_cipher_mode_xts_info_p;
 
-typedef struct _alc_cipher_chacha20_info
-{
-    Uint32       counter;
-    const Uint8* nonce;
-    Uint64       nonce_length;
-} alc_cipher_chacha20_info_t, *alc_cipher_chacha20_info_p;
 /**
  *
  * @brief  Stores algorithm specific info for cipher.
@@ -143,7 +137,7 @@ typedef struct _alc_cipher_algo_info
     alc_cipher_mode_t          ai_mode; /* Mode: ALC_AES_MODE_CFB etc */
     const Uint8*               ai_iv;   /* Initialization Vector */
     alc_cipher_mode_xts_info_t ai_xts;
-    alc_cipher_chacha20_info_t chacha20_info;
+    Uint64                     iv_length;
 } alc_cipher_algo_info_t, *alc_cpher_algo_info_p;
 
 /**

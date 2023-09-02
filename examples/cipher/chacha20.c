@@ -51,9 +51,8 @@ dump_hex(Uint8* value, size_t size)
 int
 create_demo_session(alc_cipher_handle_p handle,
                     const Uint8*        key,
-                    const Uint32        counter,
-                    const Uint8*        nonce,
-                    Uint64              noncelength,
+                    const Uint8*        iv,
+                    Uint64              ivlength,
                     const alc_key_len_t cKeyLen)
 {
     alc_error_t err;
@@ -69,11 +68,8 @@ create_demo_session(alc_cipher_handle_p handle,
             .len     = cKeyLen,
         },
         .ci_algo_info   = {
-           .chacha20_info = {
-            .counter=counter,
-            .nonce=nonce,
-            .nonce_length=noncelength
-            }
+          .ai_iv=iv,
+          .iv_length=ivlength
         }
     };
 
@@ -175,7 +171,7 @@ static const Uint8 sample_key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
                                     0x1c, 0x1d, 0x1e, 0x1f };
 
 // IV must be 128 bits
-static const Uint8 nonce[] = { 0, 0, 0, 0, 0, 0, 0, 0x4a, 0, 0, 0, 0 };
+static const Uint8 iv[] = { 0, 0, 0, 0, 0, 0, 0, 0x4a, 0, 0, 0, 0 };
 
 // Buffer to write encrypted message into
 // It should have size greater than or equal to plaintext as there is no padding
@@ -198,9 +194,8 @@ main(void)
     // Create the handle, this handle will be used for encrypt and decrypt
     // operations
     alc_cipher_handle_t handle;
-    Uint32              counter = 0x01;
-    retval                      = create_demo_session(
-        &handle, sample_key, counter, nonce, sizeof(nonce), sizeof(sample_key));
+    retval = create_demo_session(
+        &handle, sample_key, iv, sizeof(iv), sizeof(sample_key));
     if (retval != 0)
         goto out;
 

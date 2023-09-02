@@ -66,8 +66,8 @@ class ChaCha20
     static constexpr Uint64 m_keylen = 256 / 8;
     Uint8                   m_key[m_keylen];
 
-    static constexpr Uint64 m_noncelen = (96 / 8);
-    Uint8                   m_nonce[m_noncelen];
+    static constexpr Uint64 m_ivlen = (128 / 8);
+    Uint8                   m_iv[m_ivlen];
 
     Uint32 m_counter;
 
@@ -75,15 +75,7 @@ class ChaCha20
 
     int setKey(const Uint8* key, Uint64 keylen);
 
-    int setNonce(const Uint8* nonce, Uint64 noncelen);
-
-    int setCounter(Uint32 counter);
-
-    int createInitialState(Uint8* key,
-                           Uint64 keylen,
-                           Uint32 counter,
-                           Uint8* nonce,
-                           Uint64 noncelen);
+    int setIv(const Uint8* iv, Uint64 ivlen);
 
     int processInput(const Uint8* plaintext,
                      Uint64       plaintext_length,

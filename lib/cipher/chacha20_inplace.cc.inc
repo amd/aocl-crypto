@@ -93,33 +93,22 @@ SetKey(Uint32 m_state[16], const Uint8* key, Uint64 keylen)
     memcpy(m_state + 4, key, keylen);
     return 1;
 }
-
 inline int
-SetNonce(Uint32 m_state[16], const Uint8* nonce, Uint64 noncelen)
+SetIv(Uint32* m_state, const Uint8* iv, Uint64 ivlen)
 {
-    static constexpr unsigned int cAllowedNonceLenBytes = (96 / 8);
-    if ((noncelen != cAllowedNonceLenBytes)) {
-        std::cout << "Actual noncelen" << noncelen << std::endl;
+    if (ivlen != 16) {
         return 0;
     }
-    memcpy(m_state + 13, nonce, noncelen);
+    memcpy(m_state + 12, iv, ivlen);
     return 1;
 }
-
-inline int
-SetCounter(Uint32 m_state[16], Uint32 counter)
-{
-    m_state[12] = counter;
-    return 1;
-}
-
 inline int
 CreateInitialState(Uint32 state[16],
                    Uint8* key,
                    Uint64 keylen,
-                   Uint32 counter,
-                   Uint8* nonce,
-                   Uint64 noncelen)
+                   Uint8* iv,
+                   Uint64 ivlen,
+                   Uint32 counter)
 {
     state[0] = 0x61707865;
     state[1] = 0x3320646e;
@@ -129,14 +118,10 @@ CreateInitialState(Uint32 state[16],
     if (!SetKey(state, key, keylen)) {
         return 0;
     };
-    if (!SetCounter(state, counter)) {
+    if (!SetIv(state, iv, ivlen)) {
         return 0;
     };
-
-    if (!SetNonce(state, nonce, noncelen)) {
-        return 0;
-    };
-
+    state[12] = counter;
     return 1;
 }
 
@@ -144,9 +129,8 @@ int
 ProcessInput(Uint32       m_state[16],
              Uint8*       key,
              Uint64       keylen,
-             Uint32       counter,
-             Uint8*       nonce,
-             Uint64       noncelen,
+             Uint8*       iv,
+             Uint64       ivlen,
              const Uint8* plaintext,
              Uint64       plaintext_length,
              Uint8*       ciphertext)
@@ -155,9 +139,11 @@ ProcessInput(Uint32       m_state[16],
     if (plaintext_length - n_blocks * 64 > 0) {
         n_blocks++;
     }
+    const Uint32 initial_counter = m_state[12];
     UNROLL_8
     for (Uint64 blocks = 0; blocks < plaintext_length; blocks += 64) {
-        CreateInitialState(m_state, key, keylen, counter, nonce, noncelen);
+        CreateInitialState(
+            m_state, key, keylen, iv, ivlen, initial_counter + blocks / 64);
         Uint32 working_state[16];
         memcpy(working_state, m_state, sizeof(working_state));
         for (int i = 0; i < 10; i++) {
@@ -175,7 +161,6 @@ ProcessInput(Uint32       m_state[16],
             *(p_cipher_text + i) = *(p_plain_text + i) ^ p_state[i];
         }
         processed_message_bytes += bytes_to_xor;
-        counter++;
     }
     return 0;
 }
