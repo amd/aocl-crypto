@@ -56,7 +56,7 @@ using namespace alcp::base;
 
 template<typename CIPHERMODE, bool encrypt = true>
 static alc_error_t
-__aes_wrapper(void*        rCipher,
+__aes_wrapper(const void*  rCipher,
               const Uint8* pSrc,
               Uint8*       pDest,
               Uint64       len,
@@ -161,7 +161,7 @@ __aes_wrapperSetAad(void* rCipher, const Uint8* pAad, Uint64 len)
 
 template<typename CIPHERMODE>
 static alc_error_t
-__aes_dtor(void* rCipher)
+__aes_dtor(const void* rCipher)
 {
     alc_error_t e  = ALC_ERROR_NONE;
     auto        ap = static_cast<const CIPHERMODE*>(rCipher);
@@ -567,7 +567,7 @@ CipherBuilder::Build(const alc_cipher_info_t& cipherInfo, Context& ctx)
 }
 
 static alc_error_t
-__chacha20_processInputWrapper(void*        rCipher,
+__chacha20_processInputWrapper(const void*  rCipher,
                                const Uint8* pSrc,
                                Uint8*       pDest,
                                Uint64       len,
@@ -575,7 +575,7 @@ __chacha20_processInputWrapper(void*        rCipher,
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<alcp::cipher::ChaCha20*>(rCipher);
+    auto ap = static_cast<const alcp::cipher::ChaCha20*>(rCipher);
 
     e = ap->processInput(pSrc, len, pDest);
 
@@ -583,11 +583,11 @@ __chacha20_processInputWrapper(void*        rCipher,
 }
 
 static alc_error_t
-__chacha20_FinishWrapper(void* rCipher)
+__chacha20_FinishWrapper(const void* rCipher)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<alcp::cipher::ChaCha20*>(rCipher);
+    auto ap = static_cast<const alcp::cipher::ChaCha20*>(rCipher);
     delete ap;
 
     return e;
@@ -597,13 +597,13 @@ Chacha20Builder::Build(const alc_cipher_info_t& cCipherAlgoInfo, Context& ctx)
 {
     alcp::cipher::ChaCha20* chacha = new alcp::cipher::ChaCha20();
     ctx.m_cipher                   = chacha;
-    if (!chacha->setKey(cCipherAlgoInfo.ci_key_info.key,
-                        cCipherAlgoInfo.ci_key_info.len)) {
+    if (chacha->setKey(cCipherAlgoInfo.ci_key_info.key,
+                       cCipherAlgoInfo.ci_key_info.len)) {
         return ALC_ERROR_INVALID_ARG;
     }
 
-    if (!chacha->setIv(cCipherAlgoInfo.ci_algo_info.ai_iv,
-                       cCipherAlgoInfo.ci_algo_info.iv_length)) {
+    if (chacha->setIv(cCipherAlgoInfo.ci_algo_info.ai_iv,
+                      cCipherAlgoInfo.ci_algo_info.iv_length)) {
         return ALC_ERROR_INVALID_ARG;
     }
     ctx.encrypt = __chacha20_processInputWrapper;

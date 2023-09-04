@@ -36,7 +36,14 @@
 #include <openssl/bn.h>
 
 namespace alcp::cipher::zen4 {
-#include "alcp/cipher/chacha20_inplace.hh"
+int
+ProcessInput(const Uint8* key,
+             Uint64       keylen,
+             const Uint8* iv,
+             Uint64       ivlen,
+             const Uint8* plaintext,
+             Uint64       plaintext_length,
+             Uint8*       ciphertext);
 } // namespace alcp::cipher::zen4
 
 namespace alcp::cipher {
@@ -44,23 +51,22 @@ namespace alcp::cipher {
 class ChaCha20
 {
 
+    Uint32 m_counter;
+    Uint32 m_state[16];
+
+    static constexpr Uint64 m_keylen = 256 / 8;
+    Uint8                   m_key[m_keylen];
+    static constexpr Uint64 m_ivlen = (128 / 8);
+    Uint8                   m_iv[m_ivlen];
+
+    void displayState();
+
   public:
     static constexpr Uint32 Chacha20Constants[4] = {
         0x61707865, 0x3320646e, 0x79622d32, 0x6b206574
     };
-    Uint32 m_state[16];
 
     ChaCha20();
-
-    static constexpr Uint64 m_keylen = 256 / 8;
-    Uint8                   m_key[m_keylen];
-
-    static constexpr Uint64 m_ivlen = (128 / 8);
-    Uint8                   m_iv[m_ivlen];
-
-    Uint32 m_counter;
-
-    void displayState();
 
     int setKey(const Uint8* key, Uint64 keylen);
 
@@ -68,7 +74,7 @@ class ChaCha20
 
     int processInput(const Uint8* plaintext,
                      Uint64       plaintext_length,
-                     Uint8*       ciphertext);
+                     Uint8*       ciphertext) const;
 };
 
 } // namespace alcp::cipher

@@ -36,187 +36,6 @@
 namespace alcp::cipher::zen4 {
 
 inline void
-display_state(Uint32 state[16])
-{
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            std::cout << std::hex << std::setfill('0') << std::setw(8)
-                      << +state[i * 4 + j] << " ";
-        }
-        std::cout << std::endl;
-    }
-}
-inline Uint32
-RotateLeft(Uint32 value, Uint32 count)
-{
-    return value << count | value >> (32 - count);
-}
-
-inline void
-QuarterRound(Uint32& a, Uint32& b, Uint32& c, Uint32& d)
-{
-    a += b;
-    d ^= a;
-    d = RotateLeft(d, 16);
-    c += d;
-    b ^= c;
-    b = RotateLeft(b, 12);
-    a += b;
-    d ^= a;
-    d = RotateLeft(d, 8);
-    c += d;
-    b ^= c;
-    b = RotateLeft(b, 7);
-}
-
-inline void
-QuarterRoundState(Uint32               state[16],
-                  const unsigned short index1,
-                  const unsigned short index2,
-                  const unsigned short index3,
-                  const unsigned short index4)
-{
-
-    QuarterRound(state[index1], state[index2], state[index3], state[index4]);
-}
-
-inline void
-inner_block(Uint32 state[16])
-{
-    QuarterRoundState(state, 0, 4, 8, 12);
-    QuarterRoundState(state, 1, 5, 9, 13);
-    QuarterRoundState(state, 2, 6, 10, 14);
-    QuarterRoundState(state, 3, 7, 11, 15);
-    QuarterRoundState(state, 0, 5, 10, 15);
-    QuarterRoundState(state, 1, 6, 11, 12);
-    QuarterRoundState(state, 2, 7, 8, 13);
-    QuarterRoundState(state, 3, 4, 9, 14);
-}
-
-inline void
-add_state(Uint32 state1[16], Uint32 state2[16])
-{
-    for (int i = 0; i < 16; i++) {
-        state2[i] = state1[i] + state2[i];
-    }
-}
-inline int
-SetKey(Uint32 m_state[16], const Uint8* key, Uint64 keylen)
-{
-    if ((keylen != (256 / 8))) {
-        return 0;
-    }
-    memcpy(m_state + 4, key, keylen);
-    return 1;
-}
-inline int
-SetIv(Uint32* m_state, const Uint8* iv, Uint64 ivlen)
-{
-    if (ivlen != 16) {
-        return 0;
-    }
-    memcpy(m_state + 12, iv, ivlen);
-    return 1;
-}
-inline int
-CreateInitialState(Uint32 state[16],
-                   Uint8* key,
-                   Uint64 keylen,
-                   Uint8* iv,
-                   Uint64 ivlen,
-                   Uint32 counter)
-{
-    state[0] = 0x61707865;
-    state[1] = 0x3320646e;
-    state[2] = 0x79622d32;
-    state[3] = 0x6b206574;
-    //  state = constants | key | counter | nonce
-    if (!SetKey(state, key, keylen)) {
-        return 0;
-    };
-    if (!SetIv(state, iv, ivlen)) {
-        return 0;
-    };
-    state[12] = counter;
-    return 1;
-}
-
-typedef union
-{
-    __m128i  reg;
-    uint64_t u64[2];
-    uint32_t u32[4];
-    uint16_t u16[8];
-    uint8_t  u8[16];
-} reg_128;
-
-typedef union
-{
-    __m256i  reg;
-    uint64_t u64[4];
-    uint32_t u32[8];
-    uint16_t u16[16];
-    uint8_t  u8[32];
-} reg_256;
-
-typedef union
-{
-    __m512i  reg;
-    uint64_t u64[8];
-    uint32_t u32[16];
-    uint16_t u16[32];
-    uint8_t  u8[64];
-} reg_512;
-
-std::string
-parseBytesToHexStr(const Uint8* bytes, const int length)
-{
-    std::stringstream ss;
-    for (int i = 0; i < length; i++) {
-        int               charRep;
-        std::stringstream il;
-        charRep = bytes[i];
-        // Convert int to hex
-        il << std::hex << charRep;
-        std::string ilStr = il.str();
-        // 01 will be 0x1 so we need to make it 0x01
-        if (ilStr.size() != 2) {
-            ilStr = "0" + ilStr;
-        }
-        ss << ilStr;
-    }
-    // return "something";
-    return ss.str();
-}
-
-void
-print(reg_128 reg)
-{
-    for (int i = 15; i > -1; i--) {
-        std::cout << parseBytesToHexStr((const uint8_t*)&(reg.u8) + i, 1);
-    }
-    std::cout << std::endl;
-}
-
-void
-print(reg_256 reg)
-{
-    for (int i = 31; i > -1; i--) {
-        std::cout << parseBytesToHexStr((const uint8_t*)&(reg.u8) + i, 1);
-    }
-    std::cout << std::endl;
-}
-
-void
-print(reg_512 reg)
-{
-    for (int i = 53; i > -1; i--) {
-        std::cout << parseBytesToHexStr((const uint8_t*)&(reg.u8) + i, 1);
-    }
-    std::cout << std::endl;
-}
-
-inline void
 RoundFunction(__m512i& reg_a, __m512i& reg_b, __m512i& reg_c, __m512i& reg_d)
 {
     reg_a = _mm512_add_epi32(reg_a, reg_b);
@@ -256,7 +75,6 @@ handleLastBlocks(__m128i&     state_reg,
                  Uint8*       ciphertext)
 {
     Uint8 temp[16];
-    // printf("Last Block\n");
     state_reg = _mm_shuffle_epi8(state_reg, shuffle_reg);
     _mm_storeu_si128(reinterpret_cast<__m128i*>(temp), state_reg);
 
@@ -275,9 +93,9 @@ handleLastBlocks(__m128i&     state_reg,
                              shuffle_reg,                                      \
                              plaintext,                                        \
                              ciphertext);                                      \
-            return 1;                                                          \
+            return 0;                                                          \
         } else {                                                               \
-            return 1;                                                          \
+            return 0;                                                          \
         }                                                                      \
     }                                                                          \
     reg_128_msg = _mm_loadu_si128(p_plaintext_128);                            \
@@ -290,10 +108,9 @@ handleLastBlocks(__m128i&     state_reg,
     p_ciphertext_128++;
 
 int
-ProcessInput(Uint32       m_state[16],
-             Uint8*       key,
+ProcessInput(const Uint8* key,
              Uint64       keylen,
-             Uint8*       iv,
+             const Uint8* iv,
              Uint64       ivlen,
              const Uint8* plaintext,
              Uint64       plaintext_length,
@@ -308,13 +125,13 @@ ProcessInput(Uint32       m_state[16],
             *reinterpret_cast<const __m128i*>(ChaCha20::Chacha20Constants));
         // b
         auto reg_state_5_4_7_6 =
-            _mm512_broadcast_i32x4(*reinterpret_cast<__m128i*>(key));
+            _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(key));
         // c
         auto reg_state_9_8_11_10 =
-            _mm512_broadcast_i32x4(*reinterpret_cast<__m128i*>(key + 16));
+            _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(key + 16));
         // d
         auto reg_state_13_12_15_14 =
-            _mm512_broadcast_i32x4(*reinterpret_cast<__m128i*>(iv));
+            _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(iv));
 
         auto counter_reg = _mm512_setr_epi32(0x0 + k * 4,
                                              0x0,
@@ -425,67 +242,6 @@ ProcessInput(Uint32       m_state[16],
         auto    p_ciphertext_128 = reinterpret_cast<__m128i*>(ciphertext);
 
         Uint64 i = 0;
-// if plaintext length is > 64 then use load plaintext to
-#if 0
-        reg_state   = _mm512_extracti64x2_epi64(reg_state_1_0_3_2, 0);
-        reg_128_msg = _mm_loadu_si128(p_plaintext_128);
-        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
-        reg_128_msg = _mm_xor_si128(reg_state, reg_128_msg);
-        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
-        _mm_store_si128(p_ciphertext_128, reg_128_msg);
-
-        i++;
-        if (i == blocks_128bits) {
-            processed = true;
-            break;
-        }
-        p_plaintext_128++;
-        p_ciphertext_128++;
-
-        reg_state   = _mm512_extracti64x2_epi64(reg_state_5_4_7_6, 0);
-        reg_128_msg = _mm_loadu_si128(p_plaintext_128);
-        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
-        reg_128_msg = _mm_xor_si128(reg_state, reg_128_msg);
-        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
-        _mm_store_si128(p_ciphertext_128, reg_128_msg);
-
-        i++;
-        if (i == blocks_128bits) {
-            processed = true;
-            break;
-        }
-
-        p_plaintext_128++;
-        p_ciphertext_128++;
-           reg_state   = _mm512_extracti64x2_epi64(reg_state_9_8_11_10, 0);
-        reg_128_msg = _mm_loadu_si128(p_plaintext_128);
-        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
-        reg_128_msg = _mm_xor_si128(reg_state, reg_128_msg);
-        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
-        _mm_store_si128(p_ciphertext_128, reg_128_msg);
-
-        i++;
-        if (i == blocks_128bits) {
-            processed = true;
-            break;
-        }
-        p_plaintext_128++;
-        p_ciphertext_128++;
-        reg_state   = _mm512_extracti64x2_epi64(reg_state_13_12_15_14, 0);
-        reg_128_msg = _mm_loadu_si128(p_plaintext_128);
-        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
-        reg_128_msg = _mm_xor_si128(reg_state, reg_128_msg);
-        reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);
-        _mm_store_si128(p_ciphertext_128, reg_128_msg);
-
-        i++;
-        if (i == blocks_128bits) {
-            processed = true;
-            break;
-        }
-        p_plaintext_128++;
-        p_ciphertext_128++;
-#endif
         XOR_MESSAGE_KEYSTREAM_STORE(reg_state_1_0_3_2, 0)
         XOR_MESSAGE_KEYSTREAM_STORE(reg_state_5_4_7_6, 0)
         XOR_MESSAGE_KEYSTREAM_STORE(reg_state_9_8_11_10, 0)
@@ -507,6 +263,6 @@ ProcessInput(Uint32       m_state[16],
         plaintext_length -= 256;
         ciphertext += 256;
     }
-    return 1;
+    return 0;
 }
 } // namespace alcp::cipher::zen4

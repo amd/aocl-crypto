@@ -27,9 +27,6 @@
  */
 
 #include <alcp/types.h>
-// inline Uint32
-// RotateLeft(Uint32 value, Uint32 count);
-
 inline void
 QuarterRound(Uint32& a, Uint32& b, Uint32& c, Uint32& d);
 
@@ -50,18 +47,17 @@ SetKey(Uint32 m_state[16], const Uint8* key, Uint64 keylen);
 inline int
 SetIv(Uint32* m_state, const Uint8* iv, Uint64 ivlen);
 inline int
-CreateInitialState(Uint32 state[16],
-                   Uint8* key,
-                   Uint64 keylen,
-                   Uint8* iv,
-                   Uint64 ivlen,
-                   Uint32 counter);
+CreateInitialState(Uint32       state[16],
+                   const Uint8* key,
+                   Uint64       keylen,
+                   const Uint8* iv,
+                   Uint64       ivlen,
+                   Uint32       counter);
 
 int
-ProcessInput(Uint32       m_state[16],
-             Uint8*       key,
+ProcessInput(const Uint8* key,
              Uint64       keylen,
-             Uint8*       iv,
+             const Uint8* iv,
              Uint64       ivlen,
              const Uint8* plaintext,
              Uint64       plaintext_length,

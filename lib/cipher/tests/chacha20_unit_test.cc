@@ -83,7 +83,7 @@ TEST(Chacha20, IntialState)
     Uint32 counter = 0x01;
 
     Uint32 m_state[16];
-    ASSERT_NE(
+    ASSERT_EQ(
         CreateInitialState(m_state, key, sizeof(key), iv, sizeof(iv), counter),
         0);
 }
@@ -236,15 +236,11 @@ TEST(Chacha20, Encrypt_MultipleBytes)
     chacha20_obj_enc.setKey(key, sizeof(key));
     chacha20_obj_enc.setIv(iv, sizeof(iv));
     for (Uint64 i = 0; i < plaintext.size(); i++) {
-        std::cout << "PlainText Size: " << i << std::endl;
-        std::cout << "Plaintext before encryption" << std::endl;
-        BIO_dump_fp(stdout, &plaintext[0], i);
         chacha20_obj_enc.processInput(&plaintext[0], i, &output[0]);
-        std::cout << "CipherText after encryption" << std::endl;
-        BIO_dump_fp(stdout, &output[0], i);
         ASSERT_EQ(
             std::vector<Uint8>(&output[0], &output[0] + i),
-            std::vector<Uint8>(&expected_output[0], &expected_output[0] + i));
+            std::vector<Uint8>(&expected_output[0], &expected_output[0] + i))
+            << "Failed to verify block size " << i;
     }
 #if 0
     chacha20_obj_dec.setKey(key, sizeof(key));
