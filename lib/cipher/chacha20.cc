@@ -31,28 +31,29 @@
 #include <algorithm>
 namespace alcp::cipher {
 
-ChaCha20::ChaCha20()
-{
-    m_state[0] = Chacha20Constants[0];
-    m_state[1] = Chacha20Constants[1];
-    m_state[2] = Chacha20Constants[2];
-    m_state[3] = Chacha20Constants[3];
-}
-int
+alc_error_t
 ChaCha20::setKey(const Uint8* key, Uint64 keylen)
 {
+    alc_error_t err = validate_key(key, keylen);
+    if (alcp_is_error(err)) {
+        return err;
+    }
     memcpy(m_key, key, keylen);
-    return SetKey(m_state, key, keylen);
+    return ALC_ERROR_NONE;
 }
 
-int
+alc_error_t
 ChaCha20::setIv(const Uint8* iv, Uint64 ivlen)
 {
+    alc_error_t err = validate_IV(iv, ivlen);
+    if (alcp_is_error(err)) {
+        return err;
+    }
     memcpy(m_iv, iv, ivlen);
-    return SetIv(m_state, iv, ivlen);
+    return ALC_ERROR_NONE;
 }
 
-int
+alc_error_t
 ChaCha20::processInput(const Uint8* plaintext,
                        Uint64       plaintext_length,
                        Uint8*       ciphertext) const
@@ -75,12 +76,6 @@ ChaCha20::processInput(const Uint8* plaintext,
                         plaintext_length,
                         ciphertext);
 #endif
-}
-
-void
-ChaCha20::displayState()
-{
-    display_state(m_state);
 }
 
 } // namespace alcp::cipher

@@ -26,6 +26,7 @@
  *
  */
 
+#include "alcp/error.h"
 #include <alcp/types.h>
 inline void
 QuarterRound(Uint32& a, Uint32& b, Uint32& c, Uint32& d);
@@ -42,11 +43,11 @@ inner_block(Uint32 state[16]);
 
 inline void
 add_state(Uint32 state1[16], Uint32 state2[16]);
-inline int
+inline alc_error_t
 SetKey(Uint32 m_state[16], const Uint8* key, Uint64 keylen);
-inline int
+inline alc_error_t
 SetIv(Uint32* m_state, const Uint8* iv, Uint64 ivlen);
-inline int
+inline alc_error_t
 CreateInitialState(Uint32       state[16],
                    const Uint8* key,
                    Uint64       keylen,
@@ -54,7 +55,7 @@ CreateInitialState(Uint32       state[16],
                    Uint64       ivlen,
                    Uint32       counter);
 
-int
+alc_error_t
 ProcessInput(const Uint8* key,
              Uint64       keylen,
              const Uint8* iv,

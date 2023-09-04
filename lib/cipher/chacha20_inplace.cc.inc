@@ -26,6 +26,7 @@
  *
  */
 
+#include "alcp/error.h"
 #include <alcp/types.h>
 #include <cstring>
 #include <iomanip>
@@ -97,25 +98,44 @@ add_state(Uint32 state1[16], Uint32 state2[16])
         state2[i] = state1[i] + state2[i];
     }
 }
-inline int
+
+inline alc_error_t
+validate_key(const Uint8* key, Uint64 keylen)
+{
+    if (key == NULL || (keylen != (256 / 8))) {
+        return ALC_ERROR_INVALID_ARG;
+    }
+    return ALC_ERROR_NONE;
+}
+inline alc_error_t
 SetKey(Uint32 m_state[16], const Uint8* key, Uint64 keylen)
 {
-    if ((keylen != (256 / 8))) {
-        return 1;
+    alc_error_t err = validate_key(key, keylen);
+    if (alcp_is_error(err)) {
+        return err;
     }
     memcpy(m_state + 4, key, keylen);
-    return 0;
+    return ALC_ERROR_NONE;
 }
-inline int
+inline alc_error_t
+validate_IV(const Uint8* IV, Uint64 IVlen)
+{
+    if (IV == NULL || (IVlen != 16)) {
+        return ALC_ERROR_INVALID_ARG;
+    }
+    return ALC_ERROR_NONE;
+}
+inline alc_error_t
 SetIv(Uint32* m_state, const Uint8* iv, Uint64 ivlen)
 {
-    if (ivlen != 16) {
-        return 1;
+    alc_error_t err = validate_IV(iv, ivlen);
+    if (alcp_is_error(err)) {
+        return err;
     }
     memcpy(m_state + 12, iv, ivlen);
-    return 0;
+    return ALC_ERROR_NONE;
 }
-inline int
+inline alc_error_t
 CreateInitialState(Uint32       state[16],
                    const Uint8* key,
                    Uint64       keylen,
@@ -128,17 +148,19 @@ CreateInitialState(Uint32       state[16],
     state[2] = 0x79622d32;
     state[3] = 0x6b206574;
     //  state = constants | key | counter | nonce
-    if (SetKey(state, key, keylen)) {
-        return 1;
+    alc_error_t err = SetKey(state, key, keylen);
+    if (alcp_is_error(err)) {
+        return err;
     };
-    if (SetIv(state, iv, ivlen)) {
-        return 1;
+    err = SetIv(state, iv, ivlen);
+    if (alcp_is_error(err)) {
+        return err;
     };
     state[12] = counter;
-    return 0;
+    return ALC_ERROR_NONE;
 }
 
-int
+alc_error_t
 ProcessInput(const Uint8* key,
              Uint64       keylen,
              const Uint8* iv,
@@ -175,5 +197,5 @@ ProcessInput(const Uint8* key,
         }
         processed_message_bytes += bytes_to_xor;
     }
-    return 0;
+    return ALC_ERROR_NONE;
 }

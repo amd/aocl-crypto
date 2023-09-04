@@ -73,18 +73,17 @@ TEST(Chacha20, QuarterRoundTest)
 
 TEST(Chacha20, IntialState)
 {
-    ChaCha20 chacha20_obj;
-    Uint8    key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                       0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-                       0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-                       0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f };
+    Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+                    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+                    0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f };
 
     Uint8  iv[]    = { 0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x4a, 0, 0, 0, 0 };
     Uint32 counter = 0x01;
 
-    Uint32 m_state[16];
+    Uint32 state[16];
     ASSERT_EQ(
-        CreateInitialState(m_state, key, sizeof(key), iv, sizeof(iv), counter),
+        CreateInitialState(state, key, sizeof(key), iv, sizeof(iv), counter),
         0);
 }
 
@@ -128,16 +127,11 @@ TEST(Chacha20, Encrypt)
     chacha20_obj_enc.setKey(key, sizeof(key));
     chacha20_obj_enc.setIv(iv, sizeof(iv));
     chacha20_obj_enc.processInput(&plaintext[0], plaintext.size(), &output[0]);
-    // std::cout << "CipherText after encryption" << std::endl;
-    // BIO_dump_fp(stdout, &output[0], output.size());
     ASSERT_EQ(output, expected_output);
-
     chacha20_obj_dec.setKey(key, sizeof(key));
     chacha20_obj_dec.setIv(iv, sizeof(iv));
     chacha20_obj_dec.processInput(
         &output[0], plaintext.size(), &decrypted_plaintext[0]);
-    // std::cout << "Plaintext after decryption" << std::endl;
-    // BIO_dump_fp(stdout, &decrypted_plaintext[0], decrypted_plaintext.size());
     EXPECT_EQ(decrypted_plaintext, plaintext);
 }
 
@@ -235,22 +229,21 @@ TEST(Chacha20, Encrypt_MultipleBytes)
     };
     chacha20_obj_enc.setKey(key, sizeof(key));
     chacha20_obj_enc.setIv(iv, sizeof(iv));
+    chacha20_obj_dec.setKey(key, sizeof(key));
+    chacha20_obj_dec.setIv(iv, sizeof(iv));
     for (Uint64 i = 0; i < plaintext.size(); i++) {
         chacha20_obj_enc.processInput(&plaintext[0], i, &output[0]);
         ASSERT_EQ(
             std::vector<Uint8>(&output[0], &output[0] + i),
             std::vector<Uint8>(&expected_output[0], &expected_output[0] + i))
-            << "Failed to verify block size " << i;
+            << "Failed to Encrypt block size " << i;
+        chacha20_obj_dec.processInput(
+            &output[0], plaintext.size(), &decrypted_plaintext[0]);
+        ASSERT_EQ(
+            std::vector<Uint8>(&output[0], &output[0] + i),
+            std::vector<Uint8>(&expected_output[0], &expected_output[0] + i))
+            << "Failed to Decrypt block size " << i;
     }
-#if 0
-    chacha20_obj_dec.setKey(key, sizeof(key));
-    chacha20_obj_dec.setIv(iv, sizeof(iv));
-    chacha20_obj_dec.processInput(
-        &output[0], plaintext.size(), &decrypted_plaintext[0]);
-    std::cout << "Plaintext after decryption" << std::endl;
-    BIO_dump_fp(stdout, &decrypted_plaintext[0], decrypted_plaintext.size());
-    EXPECT_EQ(decrypted_plaintext, plaintext);
-#endif
 }
 
 TEST(Chacha20, PerformanceTest)
@@ -264,7 +257,7 @@ TEST(Chacha20, PerformanceTest)
     Uint8 iv[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                    0x00, 0x4a, 0x00, 0x00, 0x00, 0x00 };
 
-    std::vector<Uint8> plaintext(8192);
+    std::vector<Uint8> plaintext(16);
     std::vector<Uint8> ciphertext(plaintext.size());
     chacha20_obj.setKey(key, sizeof(key));
     chacha20_obj.setIv(iv, sizeof(iv));

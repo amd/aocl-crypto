@@ -93,9 +93,9 @@ handleLastBlocks(__m128i&     state_reg,
                              shuffle_reg,                                      \
                              plaintext,                                        \
                              ciphertext);                                      \
-            return 0;                                                          \
+            return ALC_ERROR_NONE;                                             \
         } else {                                                               \
-            return 0;                                                          \
+            return ALC_ERROR_NONE;                                             \
         }                                                                      \
     }                                                                          \
     reg_128_msg = _mm_loadu_si128(p_plaintext_128);                            \
@@ -107,7 +107,7 @@ handleLastBlocks(__m128i&     state_reg,
     p_plaintext_128++;                                                         \
     p_ciphertext_128++;
 
-int
+alc_error_t
 ProcessInput(const Uint8* key,
              Uint64       keylen,
              const Uint8* iv,
@@ -221,22 +221,9 @@ ProcessInput(const Uint8* key,
 
         __m128i reg_state;
         __m128i reg_128_msg;
-        __m128i shuffle_reg      = _mm_setr_epi8(0x04,
-                                            0x05,
-                                            0x06,
-                                            0x07,
-                                            0x00,
-                                            0x01,
-                                            0x02,
-                                            0x03,
-                                            0x0c,
-                                            0x0d,
-                                            0x0e,
-                                            0x0f,
-                                            0x08,
-                                            0x09,
-                                            0xa,
-                                            0x0b);
+        // clang-format off
+        __m128i shuffle_reg      = _mm_setr_epi8(0x04, 0x05, 0x06,0x07, 0x00,
+                                            0x01,0x02,0x03,0x0c,0x0d,0x0e,0x0f,0x08,0x09,0xa,0x0b);
         Uint64  blocks_128bits   = plaintext_length / 16;
         auto    p_plaintext_128  = reinterpret_cast<const __m128i*>(plaintext);
         auto    p_ciphertext_128 = reinterpret_cast<__m128i*>(ciphertext);
@@ -263,6 +250,6 @@ ProcessInput(const Uint8* key,
         plaintext_length -= 256;
         ciphertext += 256;
     }
-    return 0;
+    return ALC_ERROR_NONE;
 }
 } // namespace alcp::cipher::zen4
