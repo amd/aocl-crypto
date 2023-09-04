@@ -140,6 +140,110 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
+    static inline void AMS2048(Uint64*       res,
+                               const Uint64* first,
+                               const Uint64* mod,
+                               Uint64        k0)
+    {
+        __m512i first_reg_0;
+        __m512i first_reg_1;
+        __m512i first_reg_2;
+        __m512i first_reg_3;
+        __m512i first_reg_4;
+
+        __m512i mod_reg_0;
+        __m512i mod_reg_1;
+        __m512i mod_reg_2;
+        __m512i mod_reg_3;
+        __m512i mod_reg_4;
+
+        __m512i res_reg_0{};
+        __m512i res_reg_1{};
+        __m512i res_reg_2{};
+        __m512i res_reg_3{};
+        __m512i res_reg_4{};
+
+        first_reg_0 = _mm512_loadu_si512(first);
+        first_reg_1 = _mm512_loadu_si512(first + 8);
+        first_reg_2 = _mm512_loadu_si512(first + 16);
+        first_reg_3 = _mm512_loadu_si512(first + 24);
+        first_reg_4 = _mm512_loadu_si512(first + 32);
+
+        mod_reg_0 = _mm512_loadu_si512(mod);
+        mod_reg_1 = _mm512_loadu_si512(mod + 8);
+        mod_reg_2 = _mm512_loadu_si512(mod + 16);
+        mod_reg_3 = _mm512_loadu_si512(mod + 24);
+        mod_reg_4 = _mm512_loadu_si512(mod + 32);
+
+        const __m512i zero{};
+
+        for (Uint64 i = 0; i < num_digit; i++) {
+            __m512i second_reg = _mm512_set1_epi64(first[i]);
+
+            res_reg_0 =
+                _mm512_madd52lo_epu64(res_reg_0, first_reg_0, second_reg);
+            res_reg_1 =
+                _mm512_madd52lo_epu64(res_reg_1, first_reg_1, second_reg);
+            res_reg_2 =
+                _mm512_madd52lo_epu64(res_reg_2, first_reg_2, second_reg);
+            res_reg_3 =
+                _mm512_madd52lo_epu64(res_reg_3, first_reg_3, second_reg);
+            res_reg_4 =
+                _mm512_madd52lo_epu64(res_reg_4, first_reg_4, second_reg);
+
+            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg_0));
+
+            Uint64 y0 = (k0 * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
+
+            __m512i y_reg = _mm512_set1_epi64(y0);
+
+            res_reg_0 = _mm512_madd52lo_epu64(res_reg_0, mod_reg_0, y_reg);
+            res_reg_1 = _mm512_madd52lo_epu64(res_reg_1, mod_reg_1, y_reg);
+            res_reg_2 = _mm512_madd52lo_epu64(res_reg_2, mod_reg_2, y_reg);
+            res_reg_3 = _mm512_madd52lo_epu64(res_reg_3, mod_reg_3, y_reg);
+            res_reg_4 = _mm512_madd52lo_epu64(res_reg_4, mod_reg_4, y_reg);
+
+            __m512i carry = _mm512_maskz_srli_epi64(1, res_reg_0, 52);
+            res_reg_0     = _mm512_alignr_epi64(res_reg_1, res_reg_0, 1);
+            res_reg_0     = _mm512_add_epi64(res_reg_0, carry);
+            res_reg_1     = _mm512_alignr_epi64(res_reg_2, res_reg_1, 1);
+            res_reg_2     = _mm512_alignr_epi64(res_reg_3, res_reg_2, 1);
+            res_reg_3     = _mm512_alignr_epi64(res_reg_4, res_reg_3, 1);
+            res_reg_4     = _mm512_alignr_epi64(zero, res_reg_4, 1);
+
+            res_reg_0 =
+                _mm512_madd52hi_epu64(res_reg_0, first_reg_0, second_reg);
+            res_reg_1 =
+                _mm512_madd52hi_epu64(res_reg_1, first_reg_1, second_reg);
+            res_reg_2 =
+                _mm512_madd52hi_epu64(res_reg_2, first_reg_2, second_reg);
+            res_reg_3 =
+                _mm512_madd52hi_epu64(res_reg_3, first_reg_3, second_reg);
+            res_reg_4 =
+                _mm512_madd52hi_epu64(res_reg_4, first_reg_4, second_reg);
+
+            res_reg_0 = _mm512_madd52hi_epu64(res_reg_0, mod_reg_0, y_reg);
+            res_reg_1 = _mm512_madd52hi_epu64(res_reg_1, mod_reg_1, y_reg);
+            res_reg_2 = _mm512_madd52hi_epu64(res_reg_2, mod_reg_2, y_reg);
+            res_reg_3 = _mm512_madd52hi_epu64(res_reg_3, mod_reg_3, y_reg);
+            res_reg_4 = _mm512_madd52hi_epu64(res_reg_4, mod_reg_4, y_reg);
+        }
+
+        _mm512_storeu_si512(res, res_reg_0);
+        _mm512_storeu_si512(res + 8, res_reg_1);
+        _mm512_storeu_si512(res + 16, res_reg_2);
+        _mm512_storeu_si512(res + 24, res_reg_3);
+        _mm512_storeu_si512(res + 32, res_reg_4);
+
+        Uint64 carry = 0;
+        // convert from redundant radix 2^52 to radix 2^52
+        for (Uint64 i = 0; i < 40; i++) {
+            Uint64 sum = res[i] + carry;
+            carry      = sum >> 52;
+            res[i]     = sum & 0xfffffffffffff;
+        }
+    }
+
     static inline void AMM2048Reduce(Uint64*       res,
                                      const Uint64* first,
                                      const Uint64* mod,
@@ -213,7 +317,7 @@ namespace alcp::rsa { namespace zen4 {
     static inline void AMMAndAMS2048(
         Uint64* res, Uint64* mult, Uint64* mod, Uint64 k0, Uint64 val)
     {
-        AMM2048(res, res, res, mod, k0);
+        AMS2048(res, res, mod, k0);
         if (val & mont::one_msb) {
             AMM2048(res, res, mult, mod, k0);
         }
