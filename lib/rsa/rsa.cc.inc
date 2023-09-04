@@ -80,6 +80,39 @@ struct BigNum
 template<alc_rsa_key_size T>
 struct MontCompute
 {
+    static inline Uint64 GetRadix52Bit(Uint64 val)
+    {
+        constexpr Uint64 MaskRadix52Bit = 0xfffffffffffff;
+        return val & MaskRadix52Bit;
+    }
+
+    static inline void BytesToRadix52Bit(Uint64* out, const Uint64* in)
+    {
+        const Uint8* in_byte = reinterpret_cast<const Uint8*>(in);
+        for (Uint64 i = 0; i < 38; i += 2) {
+            out[i] = GetRadix52Bit(*(reinterpret_cast<const Uint64*>(in_byte)));
+            out[i + 1] = GetRadix52Bit(
+                (*(reinterpret_cast<const Uint64*>(in_byte + 6))) >> 4);
+            in_byte += 13;
+        }
+
+        out[38] = GetRadix52Bit(*(reinterpret_cast<const Uint64*>(in_byte)));
+
+        out[39] = (*(in_byte + 6) >> 4) + (*(in_byte + 7) << 4)
+                  + (*(in_byte + 8) << 12);
+    }
+
+    static inline void Radix52BitToBytes(Uint64* out, const Uint64* in)
+    {
+        Uint8* out_byte = reinterpret_cast<Uint8*>(out);
+        for (Uint64 i = 0; i < 39; i += 2) {
+            *(reinterpret_cast<Uint64*>(out_byte)) = in[i];
+            out_byte += 6;
+            *(reinterpret_cast<Uint64*>(out_byte)) ^= (in[i + 1] << 4);
+            out_byte += 7;
+        }
+    }
+
     // res size is always 1 greater than second
     static inline void SubBigNum(BigNum& bigNumRes, BigNum& bigNumMod)
     {

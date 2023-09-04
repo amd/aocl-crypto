@@ -55,11 +55,14 @@ struct MontContextBignum
     Uint64                    m_k0; // Montgomery parameter
     std::unique_ptr<Uint64[]> m_r1; // Montgomery identity
     std::unique_ptr<Uint64[]> m_r2; // Montgomery converter
+    std::unique_ptr<Uint64[]>
+        m_r2_radix_52_bit; // Montgomery converter in radix 52 bit. Currently
+                           // valid only for RSA2048
+    std::unique_ptr<Uint64[]>
+        m_mod_radix_52_bit; // Modulus in radix 52. Currently valid only for
+                            // RSA2048
     std::unique_ptr<Uint64[]> m_r3; // Montgomery optimizer
-    // todo : calculating r3 helps is removing one step of converting the
-    // number back to regular domain before applying exponentiation as
-    // a*r^-1 * r^3 r^-1 mod p -> ar modp Bignum r3; //
-    Uint64 m_size = 0;
+    Uint64                    m_size = 0;
 };
 
 static inline Uint64*
