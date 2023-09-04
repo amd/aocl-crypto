@@ -305,7 +305,7 @@ ProcessInput(Uint32       m_state[16],
         // -- Setup Registers for Row Round Function
         // a
         auto reg_state_1_0_3_2 = _mm512_broadcast_i32x4(
-            *reinterpret_cast<__m128i*>(Chacha20Constants));
+            *reinterpret_cast<const __m128i*>(ChaCha20::Chacha20Constants));
         // b
         auto reg_state_5_4_7_6 =
             _mm512_broadcast_i32x4(*reinterpret_cast<__m128i*>(key));

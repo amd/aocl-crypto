@@ -30,7 +30,13 @@
 #include "chacha20_inplace.cc.inc"
 #include <algorithm>
 namespace alcp::cipher {
-
+ChaCha20::ChaCha20()
+{
+    m_state[0] = Chacha20Constants[0];
+    m_state[1] = Chacha20Constants[1];
+    m_state[2] = Chacha20Constants[2];
+    m_state[3] = Chacha20Constants[3];
+}
 int
 ChaCha20::setKey(const Uint8* key, Uint64 keylen)
 {

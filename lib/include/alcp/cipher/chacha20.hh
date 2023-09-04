@@ -41,22 +41,16 @@ namespace alcp::cipher::zen4 {
 
 namespace alcp::cipher {
 
-static Uint32 Chacha20Constants[] = {
-    0x61707865,
-    0x3320646e,
-    0x79622d32,
-    0x6b206574,
-};
-
 class ChaCha20
 {
+
   public:
-    Uint32 m_state[16] = {
-        0x61707865,
-        0x3320646e,
-        0x79622d32,
-        0x6b206574,
+    static constexpr Uint32 Chacha20Constants[4] = {
+        0x61707865, 0x3320646e, 0x79622d32, 0x6b206574
     };
+    Uint32 m_state[16];
+
+    ChaCha20();
 
     static constexpr Uint64 m_keylen = 256 / 8;
     Uint8                   m_key[m_keylen];
