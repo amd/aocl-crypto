@@ -412,7 +412,7 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                       << std::endl;
             return err;
         }
-        err = alcp_rsa_add_mgf_oaep(m_rsa_handle, &m_digest_info);
+        err = alcp_rsa_add_mgf_oaep(m_rsa_handle, &m_mgf_info);
         if (alcp_is_error(err)) {
             std::cout << "Error in alcp_rsa_add_mgf_oaep " << err << std::endl;
             return err;
@@ -463,7 +463,7 @@ AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                       << std::endl;
             return err;
         }
-        err = alcp_rsa_add_mgf_oaep(m_rsa_handle, &m_digest_info);
+        err = alcp_rsa_add_mgf_oaep(m_rsa_handle, &m_mgf_info);
         if (alcp_is_error(err)) {
             std::cout << "Error in alcp_rsa_add_mgf_oaep " << err << std::endl;
             return err;

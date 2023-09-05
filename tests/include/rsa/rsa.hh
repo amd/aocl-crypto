@@ -57,6 +57,7 @@ class RsaBase
 {
   public:
     alc_digest_info_t m_digest_info{};
+    alc_digest_info_t m_mgf_info{};
     int               m_padding_mode                             = 0;
     Uint64            m_key_len                                  = 0;
     Uint64            m_hash_len                                 = 0;

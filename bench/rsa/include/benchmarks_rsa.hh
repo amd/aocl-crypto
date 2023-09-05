@@ -61,7 +61,8 @@ Rsa_Bench(benchmark::State& state,
           int               KeySize,
           std::string       DigestType,
           int               DigestSize,
-          alc_digest_info_t dinfo)
+          alc_digest_info_t dinfo,
+          alc_digest_info_t mgfinfo)
 {
     int InputSize;
     /* Keysize is in bits */
@@ -117,9 +118,7 @@ Rsa_Bench(benchmark::State& state,
 
     rb->m_key_len     = KeySize;
     rb->m_digest_info = dinfo;
-
-    /*FIXME: Hash len should be parameterized */
-    // rb->m_hash_len = ALC_DIGEST_LEN_256 / 8;
+    rb->m_mgf_info    = mgfinfo;
 
     if (!rb->init()) {
         state.SkipWithError("Error in RSA init");
@@ -163,126 +162,143 @@ Rsa_Bench(benchmark::State& state,
 static void
 BENCH_RSA_EncryptPubKey_Padding_1024(benchmark::State& state)
 {
-    alc_digest_info_t dinfo;
+    alc_digest_info_t dinfo, mgfinfo;
     dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
     dinfo.dt_len          = ALC_DIGEST_LEN_256;
     dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    /* FIXME, this will be different */
+    mgfinfo = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
                                        RSA_BENCH_ENC_PUB_KEY,
                                        ALCP_TEST_RSA_PADDING,
                                        1024,
                                        "SHA2",
                                        256,
-                                       dinfo));
+                                       dinfo,
+                                       mgfinfo));
 }
 static void
 BENCH_RSA_DecryptPvtKey_Padding_1024(benchmark::State& state)
 {
-    alc_digest_info_t dinfo;
+    alc_digest_info_t dinfo, mgfinfo;
     dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
     dinfo.dt_len          = ALC_DIGEST_LEN_256;
     dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo               = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
                                        RSA_BENCH_DEC_PVT_KEY,
                                        ALCP_TEST_RSA_PADDING,
                                        1024,
                                        "SHA2",
                                        256,
-                                       dinfo));
+                                       dinfo,
+                                       mgfinfo));
 }
 
 static void
 BENCH_RSA_EncryptPubKey_NoPadding_1024(benchmark::State& state)
 {
-    alc_digest_info_t dinfo;
+    alc_digest_info_t dinfo, mgfinfo;
     dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
     dinfo.dt_len          = ALC_DIGEST_LEN_256;
     dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo               = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
                                        RSA_BENCH_ENC_PUB_KEY,
                                        ALCP_TEST_RSA_NO_PADDING,
                                        1024,
                                        "SHA2",
                                        256,
-                                       dinfo));
+                                       dinfo,
+                                       mgfinfo));
 }
 static void
 BENCH_RSA_DecryptPvtKey_NoPadding_1024(benchmark::State& state)
 {
-    alc_digest_info_t dinfo;
+    alc_digest_info_t dinfo, mgfinfo;
     dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
     dinfo.dt_len          = ALC_DIGEST_LEN_256;
     dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo               = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
                                        RSA_BENCH_DEC_PVT_KEY,
                                        ALCP_TEST_RSA_NO_PADDING,
                                        1024,
                                        "SHA2",
                                        256,
-                                       dinfo));
+                                       dinfo,
+                                       mgfinfo));
 }
 
 /* 2048 bit key size*/
 static void
 BENCH_RSA_EncryptPubKey_Padding_2048(benchmark::State& state)
 {
-    alc_digest_info_t dinfo;
+    alc_digest_info_t dinfo, mgfinfo;
     dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
     dinfo.dt_len          = ALC_DIGEST_LEN_256;
     dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo               = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
                                        RSA_BENCH_ENC_PUB_KEY,
                                        ALCP_TEST_RSA_PADDING,
                                        2048,
                                        "SHA2",
                                        256,
-                                       dinfo));
+                                       dinfo,
+                                       mgfinfo));
 }
 static void
 BENCH_RSA_DecryptPvtKey_Padding_2048(benchmark::State& state)
 {
-    alc_digest_info_t dinfo;
+    alc_digest_info_t dinfo, mgfinfo;
     dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
     dinfo.dt_len          = ALC_DIGEST_LEN_256;
     dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo               = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
                                        RSA_BENCH_DEC_PVT_KEY,
                                        ALCP_TEST_RSA_PADDING,
                                        2048,
                                        "SHA2",
                                        256,
-                                       dinfo));
+                                       dinfo,
+                                       mgfinfo));
 }
 
 static void
 BENCH_RSA_EncryptPubKey_NoPadding_2048(benchmark::State& state)
 {
-    alc_digest_info_t dinfo;
+    alc_digest_info_t dinfo, mgfinfo;
     dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
     dinfo.dt_len          = ALC_DIGEST_LEN_256;
     dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo               = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
                                        RSA_BENCH_ENC_PUB_KEY,
                                        ALCP_TEST_RSA_NO_PADDING,
                                        2048,
                                        "SHA2",
                                        256,
-                                       dinfo));
+                                       dinfo,
+                                       mgfinfo));
 }
 static void
 BENCH_RSA_DecryptPvtKey_NoPadding_2048(benchmark::State& state)
 {
-    alc_digest_info_t dinfo;
+    alc_digest_info_t dinfo, mgfinfo;
     dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
     dinfo.dt_len          = ALC_DIGEST_LEN_256;
     dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo               = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
                                        RSA_BENCH_DEC_PVT_KEY,
                                        ALCP_TEST_RSA_NO_PADDING,
                                        2048,
                                        "SHA2",
                                        256,
-                                       dinfo));
+                                       dinfo,
+                                       mgfinfo));
 }
 
 /* add new benchmarks here */

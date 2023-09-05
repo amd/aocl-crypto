@@ -95,7 +95,8 @@ Rsa_KAT(int               padding_mode,
         int               KeySize,
         std::string       DigestType,
         int               DigestSize,
-        alc_digest_info_t dinfo)
+        alc_digest_info_t dinfo,
+        alc_digest_info_t mgfinfo)
 {
     alcp_rsa_data_t data;
 
@@ -153,6 +154,7 @@ Rsa_KAT(int               padding_mode,
 
         rb->m_key_len     = KeySize;
         rb->m_digest_info = dinfo;
+        rb->m_mgf_info    = mgfinfo;
 
         int ret_val = 0;
         if (!rb->init()) {
@@ -205,7 +207,8 @@ Rsa_Cross(int               padding_mode,
           int               KeySize,
           std::string       DigestType,
           int               DigestSize,
-          alc_digest_info_t dinfo)
+          alc_digest_info_t dinfo,
+          alc_digest_info_t mgfinfo)
 {
     alcp_rsa_data_t data_main, data_ext;
     int             ret_val_main, ret_val_ext = 0;
@@ -237,6 +240,7 @@ Rsa_Cross(int               padding_mode,
 #endif
 
     rb_main->m_digest_info = rb_ext->m_digest_info = dinfo;
+    rb_main->m_mgf_info = rb_ext->m_mgf_info = mgfinfo;
 
     if (padding_mode == 1) {
         rb_main->m_padding_mode = ALCP_TEST_RSA_PADDING;
@@ -255,9 +259,6 @@ Rsa_Cross(int               padding_mode,
 
     rb_main->m_key_len = KeySize;
     rb_ext->m_key_len  = KeySize;
-    /* FIXME: set the hash len for each rb here as per passed parameter */
-    // rb_main->m_hash_len = ALC_DIGEST_LEN_256 / 8;
-    // rb_ext->m_hash_len  = ALC_DIGEST_LEN_256 / 8;
 
     int loop_max = InputSize_Max, loop_start = 1;
     if (rb_ext == nullptr) {
@@ -267,7 +268,6 @@ Rsa_Cross(int               padding_mode,
     std::vector<Uint8>::const_iterator pos1, pos2;
     auto                               rng = std::default_random_engine{};
 
-    /*FIXME: change this to input len in a range */
     std::vector<Uint8> input_data;
     for (int i = loop_start; i < InputSize_Max; i++) {
         if (padding_mode == 1) {
