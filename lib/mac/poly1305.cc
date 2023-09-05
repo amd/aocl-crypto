@@ -169,6 +169,7 @@ Poly1305::blk(const Uint8 pMsg[], Uint64 msgLen)
         BN_mod_mul(m_a_bn, m_a_bn, m_r_bn, m_p_bn, m_bn_temp_ctx);
         debug_dump("A END:", m_a_bn);
     }
+    BN_free(n);
     return s;
 }
 
@@ -295,6 +296,34 @@ Poly1305::copy(Uint8 digest[], Uint64 length)
     }
     std::reverse_copy(m_accumulator + 1, m_accumulator + 17, digest);
     return s;
+}
+
+Poly1305::~Poly1305()
+{
+    if (m_key_bn != nullptr) {
+        BN_free(m_key_bn);
+        m_key_bn = nullptr;
+    }
+    if (m_a_bn != nullptr) {
+        BN_free(m_a_bn);
+        m_a_bn = nullptr;
+    }
+    if (m_r_bn != nullptr) {
+        BN_free(m_r_bn);
+        m_r_bn = nullptr;
+    }
+    if (m_s_bn != nullptr) {
+        BN_free(m_s_bn);
+        m_s_bn = nullptr;
+    }
+    if (m_p_bn != nullptr) {
+        BN_free(m_p_bn);
+        m_p_bn = nullptr;
+    }
+    if (m_bn_temp_ctx) {
+        BN_CTX_free(m_bn_temp_ctx);
+        m_bn_temp_ctx = nullptr;
+    }
 }
 
 } // namespace alcp::mac::poly1305

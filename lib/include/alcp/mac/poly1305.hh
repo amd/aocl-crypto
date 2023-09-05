@@ -65,5 +65,6 @@ class Poly1305 : public Mac
     // Uint8* macUpdate(const Uint8 msg[], const Uint8 key[], Uint64
     // msgLen);
     Poly1305() = default;
+    virtual ~Poly1305();
 };
 } // namespace alcp::mac::poly1305

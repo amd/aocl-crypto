@@ -74,7 +74,11 @@ __poly1305_wrapperFinish(void* poly1305, void* digest)
 {
     auto p_poly1305 = static_cast<Poly1305*>(poly1305);
     p_poly1305->finish();
+#if 0
     p_poly1305->~Poly1305();
+#else
+    delete p_poly1305;
+#endif
 
     // Not deleting the memory because it is allocated by application
 }
