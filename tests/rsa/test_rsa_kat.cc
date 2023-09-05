@@ -34,29 +34,45 @@
 #include <iostream>
 
 /* All tests to be added here */
-TEST(RSA_No_Padding_1024, KAT)
+TEST(RSA_No_Padding_1024_SHA2_256, KAT)
 {
     if (useipp)
         GTEST_SKIP() << "IPP is not supported yet";
-    Rsa_KAT(ALCP_TEST_RSA_NO_PADDING, 1024);
+    alc_digest_info_t dinfo;
+    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
+    dinfo.dt_len          = ALC_DIGEST_LEN_256;
+    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    Rsa_KAT(ALCP_TEST_RSA_NO_PADDING, 1024, "SHA2", 256, dinfo);
 }
-TEST(RSA_No_Padding_2048, KAT)
+TEST(RSA_No_Padding_2048_SHA2_256, KAT)
 {
     if (useipp)
         GTEST_SKIP() << "IPP is not supported yet";
-    Rsa_KAT(ALCP_TEST_RSA_NO_PADDING, 2048);
+    alc_digest_info_t dinfo;
+    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
+    dinfo.dt_len          = ALC_DIGEST_LEN_256;
+    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    Rsa_KAT(ALCP_TEST_RSA_NO_PADDING, 2048, "SHA2", 256, dinfo);
 }
-TEST(RSA_Padding_1024, KAT)
+TEST(RSA_Padding_1024_SHA2_256, KAT)
 {
     if (useipp)
         GTEST_SKIP() << "IPP is not supported yet";
-    Rsa_KAT(ALCP_TEST_RSA_PADDING, 1024);
+    alc_digest_info_t dinfo;
+    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
+    dinfo.dt_len          = ALC_DIGEST_LEN_256;
+    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    Rsa_KAT(ALCP_TEST_RSA_PADDING, 1024, "SHA2", 256, dinfo);
 }
-TEST(RSA_Padding_2048, KAT)
+TEST(RSA_Padding_2048_SHA2_256, KAT)
 {
     if (useipp)
         GTEST_SKIP() << "IPP is not supported yet";
-    Rsa_KAT(ALCP_TEST_RSA_PADDING, 2048);
+    alc_digest_info_t dinfo;
+    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
+    dinfo.dt_len          = ALC_DIGEST_LEN_256;
+    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    Rsa_KAT(ALCP_TEST_RSA_PADDING, 2048, "SHA2", 256, dinfo);
 }
 
 int

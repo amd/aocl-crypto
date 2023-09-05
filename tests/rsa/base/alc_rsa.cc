@@ -389,20 +389,7 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
     static const Uint8 Label[] = { 'h', 'e', 'l', 'l', 'o' };
     alc_error_t        err;
 
-    /*FIXME: seed should be part of test data */
     Uint8* p_seed = nullptr;
-
-    /* FIXME: these 2 should be parameterized based on m_hash_len */
-    alc_digest_info_t dinfo = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len = ALC_DIGEST_LEN_256,
-        .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
-    };
-    alc_digest_info_t mgf_info = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len = ALC_DIGEST_LEN_256,
-        .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
-    };
 
     /* no padding mode */
     if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
@@ -419,19 +406,19 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
         }
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING) {
         // Adding the digest function for generating the hash in oaep padding
-        err = alcp_rsa_add_digest_oaep(m_rsa_handle, &dinfo);
+        err = alcp_rsa_add_digest_oaep(m_rsa_handle, &m_digest_info);
         if (alcp_is_error(err)) {
             std::cout << "Error in alcp_rsa_add_digest_oaep " << err
                       << std::endl;
             return err;
         }
-        err = alcp_rsa_add_mgf_oaep(m_rsa_handle, &mgf_info);
+        err = alcp_rsa_add_mgf_oaep(m_rsa_handle, &m_digest_info);
         if (alcp_is_error(err)) {
             std::cout << "Error in alcp_rsa_add_mgf_oaep " << err << std::endl;
             return err;
         }
         /* generate randomly */
-        m_hash_len = ALC_DIGEST_LEN_256 / 8;
+        m_hash_len = m_digest_info.dt_len / 8;
         p_seed     = (Uint8*)malloc(m_hash_len);
 
         // Encrypt text
@@ -462,18 +449,6 @@ AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
     alc_error_t        err;
     Uint64             text_size = 0;
 
-    /* FIXME: these 2 should be parameterized based on m_hash_len */
-    alc_digest_info_t dinfo = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len = ALC_DIGEST_LEN_256,
-        .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
-    };
-    alc_digest_info_t mgf_info = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len = ALC_DIGEST_LEN_256,
-        .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
-    };
-
     if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
         err = alcp_rsa_privatekey_decrypt(m_rsa_handle,
                                           ALCP_RSA_PADDING_NONE,
@@ -482,13 +457,13 @@ AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                                           data.m_decrypted_data);
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING) {
         // Adding the digest function for generating the hash in oaep padding
-        err = alcp_rsa_add_digest_oaep(m_rsa_handle, &dinfo);
+        err = alcp_rsa_add_digest_oaep(m_rsa_handle, &m_digest_info);
         if (alcp_is_error(err)) {
             std::cout << "Error in alcp_rsa_add_digest_oaep " << err
                       << std::endl;
             return err;
         }
-        err = alcp_rsa_add_mgf_oaep(m_rsa_handle, &mgf_info);
+        err = alcp_rsa_add_mgf_oaep(m_rsa_handle, &m_digest_info);
         if (alcp_is_error(err)) {
             std::cout << "Error in alcp_rsa_add_mgf_oaep " << err << std::endl;
             return err;

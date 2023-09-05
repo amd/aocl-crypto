@@ -56,14 +56,15 @@ typedef struct _alcp_rsa_data
 class RsaBase
 {
   public:
-    int          m_padding_mode                             = 0;
-    Uint64       m_key_len                                  = 0;
-    Uint64       m_hash_len                                 = 0;
-    virtual bool init()                                     = 0;
-    virtual bool reset()                                    = 0;
-    virtual bool SetPublicKey(const alcp_rsa_data_t& data)  = 0;
-    virtual bool SetPrivateKey(const alcp_rsa_data_t& data) = 0;
-    virtual int  EncryptPubKey(const alcp_rsa_data_t& data) = 0;
-    virtual int  DecryptPvtKey(const alcp_rsa_data_t& data) = 0;
+    alc_digest_info_t m_digest_info{};
+    int               m_padding_mode                             = 0;
+    Uint64            m_key_len                                  = 0;
+    Uint64            m_hash_len                                 = 0;
+    virtual bool      init()                                     = 0;
+    virtual bool      reset()                                    = 0;
+    virtual bool      SetPublicKey(const alcp_rsa_data_t& data)  = 0;
+    virtual bool      SetPrivateKey(const alcp_rsa_data_t& data) = 0;
+    virtual int       EncryptPubKey(const alcp_rsa_data_t& data) = 0;
+    virtual int       DecryptPvtKey(const alcp_rsa_data_t& data) = 0;
 };
 } // namespace alcp::testing

@@ -91,7 +91,11 @@ SkipTest(int ret_val, std::string LibStr)
 }
 
 void
-Rsa_KAT(int padding_mode, int KeySize)
+Rsa_KAT(int               padding_mode,
+        int               KeySize,
+        std::string       DigestType,
+        int               DigestSize,
+        alc_digest_info_t dinfo)
 {
     alcp_rsa_data_t data;
 
@@ -147,11 +151,8 @@ Rsa_KAT(int padding_mode, int KeySize)
         data.m_msg_len        = input_data.size();
         data.m_key_len        = KeySize;
 
-        rb->m_key_len = KeySize;
-
-        /* FIXME: as of now we will use SHA256, this will be parameterized later
-         */
-        rb->m_hash_len = ALC_DIGEST_LEN_256 / 8;
+        rb->m_key_len     = KeySize;
+        rb->m_digest_info = dinfo;
 
         int ret_val = 0;
         if (!rb->init()) {
@@ -200,7 +201,11 @@ Rsa_KAT(int padding_mode, int KeySize)
 
 /* RSA Cross tests */
 void
-Rsa_Cross(int padding_mode, int KeySize)
+Rsa_Cross(int               padding_mode,
+          int               KeySize,
+          std::string       DigestType,
+          int               DigestSize,
+          alc_digest_info_t dinfo)
 {
     alcp_rsa_data_t data_main, data_ext;
     int             ret_val_main, ret_val_ext = 0;
@@ -231,6 +236,8 @@ Rsa_Cross(int padding_mode, int KeySize)
     }
 #endif
 
+    rb_main->m_digest_info = rb_ext->m_digest_info = dinfo;
+
     if (padding_mode == 1) {
         rb_main->m_padding_mode = ALCP_TEST_RSA_PADDING;
         rb_ext->m_padding_mode  = ALCP_TEST_RSA_PADDING;
@@ -249,8 +256,8 @@ Rsa_Cross(int padding_mode, int KeySize)
     rb_main->m_key_len = KeySize;
     rb_ext->m_key_len  = KeySize;
     /* FIXME: set the hash len for each rb here as per passed parameter */
-    rb_main->m_hash_len = ALC_DIGEST_LEN_256 / 8;
-    rb_ext->m_hash_len  = ALC_DIGEST_LEN_256 / 8;
+    // rb_main->m_hash_len = ALC_DIGEST_LEN_256 / 8;
+    // rb_ext->m_hash_len  = ALC_DIGEST_LEN_256 / 8;
 
     int loop_max = InputSize_Max, loop_start = 1;
     if (rb_ext == nullptr) {
