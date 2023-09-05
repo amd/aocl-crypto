@@ -42,7 +42,7 @@ class Poly1305 : public Mac
     Uint8   m_msg_buffer[16];
     Uint64  m_msg_buffer_len = {};
     BN_CTX* m_bn_temp_ctx    = nullptr;
-    bool    finalized        = false;
+    bool    m_finalized      = false;
 
     Uint8 m_p[17] = { 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                       0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfb };
@@ -50,7 +50,7 @@ class Poly1305 : public Mac
 
   public:
     Status blk(const Uint8 pMsg[], Uint64 msgLen);
-    Status update(const Uint8 pMsg[], Uint64 msgLen);
+    Status update(const Uint8 pMsg[], Uint64 msgLen) override;
     /**
      * @brief Sets the Key and Initializes the state of Poly1305
      * @param key - Key to use for Poly1305
@@ -58,8 +58,8 @@ class Poly1305 : public Mac
      * @return Status
      */
     Status setKey(const Uint8 key[], Uint64 len);
-    Status reset();
-    Status finalize(const Uint8 pMsg[], Uint64 msgLen);
+    Status reset() override;
+    Status finalize(const Uint8 pMsg[], Uint64 msgLen) override;
     Status copy(Uint8 digest[], Uint64 length);
     void   finish() override;
     // Uint8* macUpdate(const Uint8 msg[], const Uint8 key[], Uint64

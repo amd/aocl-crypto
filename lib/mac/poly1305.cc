@@ -81,7 +81,7 @@ Status
 Poly1305::setKey(const Uint8 key[], Uint64 len)
 {
     Status s = StatusOk();
-    if (finalized) {
+    if (m_finalized) {
         s.update(status::InternalError("Cannot setKey after finalized!"));
         return s;
     }
@@ -181,7 +181,7 @@ Poly1305::update(const Uint8 pMsg[], Uint64 msgLen)
         return s;
     }
 
-    if (finalized) {
+    if (m_finalized) {
         s.update(status::InternalError("Cannot update after finalized!"));
         return s;
     }
@@ -227,7 +227,7 @@ Poly1305::reset()
     // Wipe the accumulator
     m_a_bn           = BN_bin2bn(m_accumulator, 16, m_a_bn);
     m_msg_buffer_len = 0;
-    finalized        = false;
+    m_finalized      = false;
     return s;
 }
 
@@ -235,7 +235,7 @@ Status
 Poly1305::finalize(const Uint8 pMsg[], Uint64 msgLen)
 {
     Status s = StatusOk();
-    if (finalized) {
+    if (m_finalized) {
         s.update(status::InternalError("Already finalized!"));
         return s;
     }
@@ -249,7 +249,7 @@ Poly1305::finalize(const Uint8 pMsg[], Uint64 msgLen)
     BN_add(m_a_bn, m_a_bn, m_s_bn);
     debug_dump("A FIN:", m_a_bn);
     BN_bn2bin(m_a_bn, m_accumulator);
-    finalized = true;
+    m_finalized = true;
     return s;
 }
 
@@ -286,7 +286,7 @@ Status
 Poly1305::copy(Uint8 digest[], Uint64 length)
 {
     Status s = StatusOk();
-    if (!finalized) {
+    if (!m_finalized) {
         s.update(status::InternalError("Not finalized yet!"));
         return s;
     }
