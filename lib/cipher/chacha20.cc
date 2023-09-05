@@ -27,9 +27,11 @@
  */
 
 #include "alcp/cipher/chacha20.hh"
+#include "alcp/utils/cpuid.hh"
 #include "chacha20_inplace.cc.inc"
 #include <algorithm>
 namespace alcp::cipher {
+using utils::CpuId;
 
 alc_error_t
 ChaCha20::setKey(const Uint8* key, Uint64 keylen)
@@ -59,23 +61,27 @@ ChaCha20::processInput(const Uint8* plaintext,
                        Uint8*       ciphertext) const
 {
 
-#if 0
-    return zen4::ProcessInput(m_key,
-                              m_keylen,
-                              m_iv,
-                              m_ivlen,
-                              plaintext,
-                              plaintext_length,
-                              ciphertext);
-#else
-    return ProcessInput(m_key,
-                        m_keylen,
-                        m_iv,
-                        m_ivlen,
-                        plaintext,
-                        plaintext_length,
-                        ciphertext);
-#endif
+    if (CpuId::cpuHasAvx512(utils::AVX512_F)
+        && CpuId::cpuHasAvx512(utils::AVX512_DQ)
+        && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
+
+        return zen4::ProcessInput(m_key,
+                                  m_keylen,
+                                  m_iv,
+                                  m_ivlen,
+                                  plaintext,
+                                  plaintext_length,
+                                  ciphertext);
+    } else {
+
+        return ProcessInput(m_key,
+                            m_keylen,
+                            m_iv,
+                            m_ivlen,
+                            plaintext,
+                            plaintext_length,
+                            ciphertext);
+    }
 }
 
 } // namespace alcp::cipher

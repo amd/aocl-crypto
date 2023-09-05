@@ -54,9 +54,9 @@ class ChaCha20
     Uint32 m_counter;
 
     static constexpr Uint64 m_keylen = 256 / 8;
-    Uint8                   m_key[m_keylen];
+    alignas(16) Uint8 m_key[m_keylen];
     static constexpr Uint64 m_ivlen = (128 / 8);
-    Uint8                   m_iv[m_ivlen];
+    alignas(16) Uint8 m_iv[m_ivlen];
 
   public:
     static constexpr Uint32 Chacha20Constants[4] = {
