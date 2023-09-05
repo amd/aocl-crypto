@@ -403,18 +403,17 @@ template<alc_rsa_key_size T>
 Status
 Rsa<T>::getPublickey(RsaPublicKey& pPublicKey)
 {
-
     if (pPublicKey.size != m_key_size) {
         return status::NotPermitted("keyize should match");
     }
+    Uint8* mod_text = reinterpret_cast<Uint8*>(m_pub_key.m_mod.get());
 
-    if (pPublicKey.modulus == nullptr) {
+    if (pPublicKey.modulus == nullptr || mod_text == nullptr) {
         return status::NotPermitted("Modulus cannot be empty");
     }
 
     pPublicKey.public_exponent = m_pub_key.m_public_exponent;
 
-    Uint8* mod_text = reinterpret_cast<Uint8*>(m_pub_key.m_mod.get());
     for (Int64 i = m_key_size - 1, j = 0; i >= 0; --i, ++j) {
         pPublicKey.modulus[j] = mod_text[i];
     }
