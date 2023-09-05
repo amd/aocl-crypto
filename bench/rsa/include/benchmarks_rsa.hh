@@ -214,16 +214,16 @@ int
 AddBenchmarks_rsa()
 {
     /* FIXME: parameterize keysize */
-    /*FIXME: IPP non padded mode is not yet supported */
+    /*FIXME: IPP is not yet supported */
     if (!useipp) {
         BENCHMARK(BENCH_RSA_EncryptPubKey_NoPadding_1024);
         BENCHMARK(BENCH_RSA_DecryptPvtKey_NoPadding_1024);
         BENCHMARK(BENCH_RSA_EncryptPubKey_NoPadding_2048);
         BENCHMARK(BENCH_RSA_DecryptPvtKey_NoPadding_2048);
+        BENCHMARK(BENCH_RSA_EncryptPubKey_Padding_1024);
+        BENCHMARK(BENCH_RSA_DecryptPvtKey_Padding_1024);
+        BENCHMARK(BENCH_RSA_EncryptPubKey_Padding_2048);
+        BENCHMARK(BENCH_RSA_DecryptPvtKey_Padding_2048);
     }
-    BENCHMARK(BENCH_RSA_EncryptPubKey_Padding_1024);
-    BENCHMARK(BENCH_RSA_DecryptPvtKey_Padding_1024);
-    BENCHMARK(BENCH_RSA_EncryptPubKey_Padding_2048);
-    BENCHMARK(BENCH_RSA_DecryptPvtKey_Padding_2048);
     return 0;
 }

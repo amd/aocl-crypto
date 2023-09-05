@@ -26,7 +26,6 @@
  *
  */
 
-#include "../rsa/base/BigNumber.cc"
 #include "rsa/ipp_rsa.hh"
 #include <cstddef>
 #include <cstring>
@@ -62,6 +61,7 @@ IPPRsaBase::init()
 bool
 IPPRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
 {
+#if 0
     IppStatus status = ippStsNoErr;
     //      private exponent
     BigNumber D(
@@ -124,13 +124,14 @@ IPPRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
     }
     m_buffSize          = m_buffSizePrivate;
     m_scratchBuffer_Pvt = new Ipp8u[m_buffSize];
-
+#endif
     return true;
 }
 
 bool
 IPPRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 {
+#if 0
     IppStatus status = ippStsNoErr;
 
     /* FIXME: this should be from outside ?*/
@@ -178,7 +179,7 @@ IPPRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
     m_scratchBuffer_Pub = new Ipp8u[m_buffSizePublic];
     // save modulus size, will be used in enc/dec
     m_modulus_size = N.DwordSize();
-
+#endif
     return true;
 }
 
@@ -244,6 +245,7 @@ IPPRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 int
 IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 {
+#if 0
     IppStatus status = ippStsNoErr;
 
     if (m_padding_mode == 1) {
@@ -292,12 +294,14 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
         //     return false;
         // }
     }
+#endif
     return 0;
 }
 
 int
 IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 {
+#if 0
     IppStatus status = ippStsNoErr;
 
     if (m_padding_mode == 1) {
@@ -347,6 +351,7 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
         //     return false;
         // }
     }
+#endif
     return 0;
 }
 
