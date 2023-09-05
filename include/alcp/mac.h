@@ -53,7 +53,8 @@ EXTERN_C_BEGIN
 typedef enum _alc_mac_type
 {
     ALC_MAC_HMAC,
-    ALC_MAC_CMAC
+    ALC_MAC_CMAC,
+    ALC_MAC_POLY1305,
 } alc_mac_type_t;
 
 /**
@@ -86,6 +87,11 @@ typedef struct _alc_cmac_info
     // Other specific info about CMAC
 } alc_cmac_info_t, *alc_cmac_info_p;
 
+typedef struct _alc_poly1305_info
+{
+    char dummy;
+} alc_poly1305_info_t, *alc_poly1305_info_p;
+
 /**
  * @brief Stores details of CMAC
  *
@@ -100,8 +106,9 @@ typedef struct _alc_mac_info_t
     alc_mac_type_t mi_type;
     union
     {
-        alc_hmac_info_t hmac;
-        alc_cmac_info_t cmac;
+        alc_hmac_info_t     hmac;
+        alc_cmac_info_t     cmac;
+        alc_poly1305_info_t poly1305;
     } mi_algoinfo;
 
     // any other common fields that are needed
