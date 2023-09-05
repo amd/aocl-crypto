@@ -36,59 +36,59 @@
 namespace alcp::cipher::zen4 {
 
 inline void
-RoundFunction(__m512i& reg_a, __m512i& reg_b, __m512i& reg_c, __m512i& reg_d)
+RoundFunction(__m512i& regA, __m512i& regB, __m512i& regC, __m512i& regD)
 {
-    reg_a = _mm512_add_epi32(reg_a, reg_b);
+    regA = _mm512_add_epi32(regA, regB);
     // d ^= a;
-    reg_d = _mm512_xor_si512(reg_d, reg_a);
+    regD = _mm512_xor_si512(regD, regA);
     // d << <= 16;
-    reg_d = _mm512_rol_epi32(reg_d, 16);
+    regD = _mm512_rol_epi32(regD, 16);
 
     // c += d;
-    reg_c = _mm512_add_epi32(reg_c, reg_d);
+    regC = _mm512_add_epi32(regC, regD);
     // b ^= c;
-    reg_b = _mm512_xor_si512(reg_b, reg_c);
+    regB = _mm512_xor_si512(regB, regC);
     // b << <= 12;
-    reg_b = _mm512_rol_epi32(reg_b, 12);
+    regB = _mm512_rol_epi32(regB, 12);
 
     // a += b;
-    reg_a = _mm512_add_epi32(reg_a, reg_b);
+    regA = _mm512_add_epi32(regA, regB);
     // d ^= a;
-    reg_d = _mm512_xor_si512(reg_d, reg_a);
+    regD = _mm512_xor_si512(regD, regA);
     // d <<<= 8;
-    reg_d = _mm512_rol_epi32(reg_d, 8);
+    regD = _mm512_rol_epi32(regD, 8);
 
     // c += d;
-    reg_c = _mm512_add_epi32(reg_c, reg_d);
+    regC = _mm512_add_epi32(regC, regD);
     // b ^= c;
-    reg_b = _mm512_xor_si512(reg_b, reg_c);
+    regB = _mm512_xor_si512(regB, regC);
     // b <<<= 7;
-    reg_b = _mm512_rol_epi32(reg_b, 7);
+    regB = _mm512_rol_epi32(regB, 7);
 }
 
 inline void
-handleLastBlocks(__m128i&     state_reg,
-                 Uint64       plaintext_length,
-                 Uint64       total_blocks,
-                 __m128i&     shuffle_reg,
+handleLastBlocks(__m128i&     stateReg,
+                 Uint64       plaintextLength,
+                 Uint64       totalBlocks,
+                 __m128i&     shuffleReg,
                  const Uint8* plaintext,
                  Uint8*       ciphertext)
 {
     Uint8 temp[16];
-    state_reg = _mm_shuffle_epi8(state_reg, shuffle_reg);
-    _mm_storeu_si128(reinterpret_cast<__m128i*>(temp), state_reg);
+    stateReg = _mm_shuffle_epi8(stateReg, shuffleReg);
+    _mm_storeu_si128(reinterpret_cast<__m128i*>(temp), stateReg);
 
-    for (Uint64 j = 0; j < plaintext_length - total_blocks * 16; j++) {
-        *(ciphertext + total_blocks * 16 + j) =
-            temp[j] ^ *(plaintext + total_blocks * 16 + j);
+    for (Uint64 j = 0; j < plaintextLength - totalBlocks * 16; j++) {
+        *(ciphertext + totalBlocks * 16 + j) =
+            temp[j] ^ *(plaintext + totalBlocks * 16 + j);
     }
 }
 #define XOR_MESSAGE_KEYSTREAM_STORE(state_register, index)                     \
     reg_state = _mm512_extracti64x2_epi64(state_register, index);              \
     if (i == blocks_128bits) {                                                 \
-        if ((((plaintext_length - (blocks_128bits * 16)) > 0))) {              \
+        if ((((plaintextLength - (blocks_128bits * 16)) > 0))) {               \
             handleLastBlocks(reg_state,                                        \
-                             plaintext_length,                                 \
+                             plaintextLength,                                  \
                              blocks_128bits,                                   \
                              shuffle_reg,                                      \
                              plaintext,                                        \
@@ -113,10 +113,10 @@ ProcessInput(const Uint8* key,
              const Uint8* iv,
              Uint64       ivlen,
              const Uint8* plaintext,
-             Uint64       plaintext_length,
+             Uint64       plaintextLength,
              Uint8*       ciphertext)
 {
-    Uint64 n = (plaintext_length / 256) + 1;
+    Uint64 n = (plaintextLength / 256) + 1;
     for (Uint64 k = 0; k < n; k++) {
 
         // -- Setup Registers for Row Round Function
@@ -224,7 +224,7 @@ ProcessInput(const Uint8* key,
         // clang-format off
         __m128i shuffle_reg      = _mm_setr_epi8(0x04, 0x05, 0x06,0x07, 0x00,
                                             0x01,0x02,0x03,0x0c,0x0d,0x0e,0x0f,0x08,0x09,0xa,0x0b);
-        Uint64  blocks_128bits   = plaintext_length / 16;
+        Uint64  blocks_128bits   = plaintextLength / 16;
         auto    p_plaintext_128  = reinterpret_cast<const __m128i*>(plaintext);
         auto    p_ciphertext_128 = reinterpret_cast<__m128i*>(ciphertext);
 
@@ -247,7 +247,7 @@ ProcessInput(const Uint8* key,
         XOR_MESSAGE_KEYSTREAM_STORE(reg_state_13_12_15_14, 3)
 
         plaintext += 256;
-        plaintext_length -= 256;
+        plaintextLength -= 256;
         ciphertext += 256;
     }
     return ALC_ERROR_NONE;

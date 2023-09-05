@@ -42,7 +42,7 @@ ProcessInput(const Uint8* key,
              const Uint8* iv,
              Uint64       ivlen,
              const Uint8* plaintext,
-             Uint64       plaintext_length,
+             Uint64       plaintextLength,
              Uint8*       ciphertext);
 } // namespace alcp::cipher::zen4
 
@@ -53,10 +53,10 @@ class ChaCha20
 
     Uint32 m_counter;
 
-    static constexpr Uint64 m_keylen = 256 / 8;
-    alignas(16) Uint8 m_key[m_keylen];
-    static constexpr Uint64 m_ivlen = (128 / 8);
-    alignas(16) Uint8 m_iv[m_ivlen];
+    static constexpr Uint64 cMKeylen = 256 / 8;
+    alignas(16) Uint8 m_key[cMKeylen];
+    static constexpr Uint64 cMIvlen = (128 / 8);
+    alignas(16) Uint8 m_iv[cMIvlen];
 
   public:
     static constexpr Uint32 Chacha20Constants[4] = {

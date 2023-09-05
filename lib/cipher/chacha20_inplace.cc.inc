@@ -34,7 +34,7 @@
 #define UNROLL_8 _Pragma("GCC unroll 2")
 
 inline void
-display_state(Uint32 state[16])
+DisplayState(Uint32 state[16])
 {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
@@ -69,17 +69,18 @@ QuarterRound(Uint32& a, Uint32& b, Uint32& c, Uint32& d)
 
 inline void
 QuarterRoundState(Uint32               state[16],
-                  const unsigned short index1,
-                  const unsigned short index2,
-                  const unsigned short index3,
-                  const unsigned short index4)
+                  const unsigned short cIndex1,
+                  const unsigned short cIndex2,
+                  const unsigned short cIndex3,
+                  const unsigned short cIndex4)
 {
 
-    QuarterRound(state[index1], state[index2], state[index3], state[index4]);
+    QuarterRound(
+        state[cIndex1], state[cIndex2], state[cIndex3], state[cIndex4]);
 }
 
 inline void
-inner_block(Uint32 state[16])
+InnerBlock(Uint32 state[16])
 {
     QuarterRoundState(state, 0, 4, 8, 12);
     QuarterRoundState(state, 1, 5, 9, 13);
@@ -92,7 +93,7 @@ inner_block(Uint32 state[16])
 }
 
 inline void
-add_state(Uint32 state1[16], Uint32 state2[16])
+AddState(Uint32 state1[16], Uint32 state2[16])
 {
     for (int i = 0; i < 16; i++) {
         state2[i] = state1[i] + state2[i];
@@ -100,7 +101,7 @@ add_state(Uint32 state1[16], Uint32 state2[16])
 }
 
 inline alc_error_t
-validate_key(const Uint8* key, Uint64 keylen)
+ValidateKey(const Uint8* key, Uint64 keylen)
 {
     if (key == NULL || (keylen != (256 / 8))) {
         return ALC_ERROR_INVALID_ARG;
@@ -108,31 +109,31 @@ validate_key(const Uint8* key, Uint64 keylen)
     return ALC_ERROR_NONE;
 }
 inline alc_error_t
-SetKey(Uint32 m_state[16], const Uint8* key, Uint64 keylen)
+SetKey(Uint32 state[16], const Uint8* key, Uint64 keylen)
 {
-    alc_error_t err = validate_key(key, keylen);
+    alc_error_t err = ValidateKey(key, keylen);
     if (alcp_is_error(err)) {
         return err;
     }
-    memcpy(m_state + 4, key, keylen);
+    memcpy(state + 4, key, keylen);
     return ALC_ERROR_NONE;
 }
 inline alc_error_t
-validate_IV(const Uint8* IV, Uint64 IVlen)
+ValidateIv(const Uint8* iv, Uint64 iVlen)
 {
-    if (IV == NULL || (IVlen != 16)) {
+    if (iv == NULL || (iVlen != 16)) {
         return ALC_ERROR_INVALID_ARG;
     }
     return ALC_ERROR_NONE;
 }
 inline alc_error_t
-SetIv(Uint32* m_state, const Uint8* iv, Uint64 ivlen)
+SetIv(Uint32* state, const Uint8* iv, Uint64 ivlen)
 {
-    alc_error_t err = validate_IV(iv, ivlen);
+    alc_error_t err = ValidateIv(iv, ivlen);
     if (alcp_is_error(err)) {
         return err;
     }
-    memcpy(m_state + 12, iv, ivlen);
+    memcpy(state + 12, iv, ivlen);
     return ALC_ERROR_NONE;
 }
 inline alc_error_t
@@ -166,28 +167,28 @@ ProcessInput(const Uint8* key,
              const Uint8* iv,
              Uint64       ivlen,
              const Uint8* plaintext,
-             Uint64       plaintext_length,
+             Uint64       plaintextLength,
              Uint8*       ciphertext)
 {
-    Uint64 n_blocks = plaintext_length / 64;
-    if (plaintext_length - n_blocks * 64 > 0) {
+    Uint64 n_blocks = plaintextLength / 64;
+    if (plaintextLength - n_blocks * 64 > 0) {
         n_blocks++;
     }
-    const Uint32 initial_counter = *(reinterpret_cast<const Uint32*>(iv));
+    const Uint32 cInitialCounter = *(reinterpret_cast<const Uint32*>(iv));
     Uint32       state[16];
     UNROLL_8
-    for (Uint64 blocks = 0; blocks < plaintext_length; blocks += 64) {
+    for (Uint64 blocks = 0; blocks < plaintextLength; blocks += 64) {
         CreateInitialState(
-            state, key, keylen, iv, ivlen, initial_counter + blocks / 64);
+            state, key, keylen, iv, ivlen, cInitialCounter + blocks / 64);
         Uint32 working_state[16];
         memcpy(working_state, state, sizeof(working_state));
         for (int i = 0; i < 10; i++) {
-            inner_block(working_state);
+            InnerBlock(working_state);
         }
-        add_state(working_state, state);
+        AddState(working_state, state);
         auto   p_state                 = reinterpret_cast<Uint8*>(state);
         auto   processed_message_bytes = blocks;
-        Uint64 bytes_to_xor = plaintext_length - processed_message_bytes;
+        Uint64 bytes_to_xor = plaintextLength - processed_message_bytes;
 
         auto p_cipher_text = ciphertext + processed_message_bytes;
         auto p_plain_text  = plaintext + processed_message_bytes;

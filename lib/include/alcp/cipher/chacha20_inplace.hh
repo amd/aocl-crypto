@@ -33,20 +33,20 @@ QuarterRound(Uint32& a, Uint32& b, Uint32& c, Uint32& d);
 
 inline void
 QuarterRoundState(Uint32               state[16],
-                  const unsigned short index1,
-                  const unsigned short index2,
-                  const unsigned short index3,
-                  const unsigned short index4);
+                  const unsigned short cIndex1,
+                  const unsigned short cIndex2,
+                  const unsigned short cIndex3,
+                  const unsigned short cIndex4);
 
 inline void
-inner_block(Uint32 state[16]);
+InnerBlock(Uint32 state[16]);
 
 inline void
-add_state(Uint32 state1[16], Uint32 state2[16]);
+AddState(Uint32 state1[16], Uint32 state2[16]);
 inline alc_error_t
-SetKey(Uint32 m_state[16], const Uint8* key, Uint64 keylen);
+SetKey(Uint32 state[16], const Uint8* key, Uint64 keylen);
 inline alc_error_t
-SetIv(Uint32* m_state, const Uint8* iv, Uint64 ivlen);
+SetIv(Uint32* state, const Uint8* iv, Uint64 ivlen);
 inline alc_error_t
 CreateInitialState(Uint32       state[16],
                    const Uint8* key,
@@ -61,5 +61,5 @@ ProcessInput(const Uint8* key,
              const Uint8* iv,
              Uint64       ivlen,
              const Uint8* plaintext,
-             Uint64       plaintext_length,
+             Uint64       plaintextLength,
              Uint8*       ciphertext);
