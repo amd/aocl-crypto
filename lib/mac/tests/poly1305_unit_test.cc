@@ -71,7 +71,11 @@ TEST(POLY1305, BLK0)
 
     Poly1305           poly;
     std::vector<Uint8> mac(16);
-    poly.mac(blk, key, 16, &mac.at(0));
+    poly.setKey(key, 256);
+    poly.update(blk, 16);
+    poly.finalize(nullptr, 0);
+    poly.copy(&mac[0], 16);
+    poly.finish();
 
     EXPECT_EQ(mac, out);
 }
@@ -92,7 +96,11 @@ TEST(POLY1305, BLK_ALL)
 
     Poly1305           poly;
     std::vector<Uint8> mac(16);
-    poly.mac(blk, key, sizeof(blk), &mac.at(0));
+    poly.setKey(key, 256);
+    poly.update(blk, sizeof(blk));
+    poly.finalize(nullptr, 0);
+    poly.copy(&mac[0], 16);
+    poly.finish();
 
     EXPECT_EQ(mac, out);
 }
@@ -112,7 +120,7 @@ TEST(POLY1305, BLK_ALL_UPDATE_16)
                                0xc2, 0x2b, 0x8b, 0xaf, 0x0c, 0x01, 0x27, 0xa9 };
 
     Poly1305 poly;
-    poly.setKey(key, 32);
+    poly.setKey(key, 256);
     std::vector<Uint8> mac(16);
     poly.update(blk, 16);
     poly.update(blk + 16, 16);
@@ -137,7 +145,7 @@ TEST(POLY1305, BLK_ALL_UPDATE)
                                0xc2, 0x2b, 0x8b, 0xaf, 0x0c, 0x01, 0x27, 0xa9 };
 
     Poly1305 poly;
-    poly.setKey(key, 32);
+    poly.setKey(key, 256);
     std::vector<Uint8> mac(16);
     poly.finalize(blk, sizeof(blk));
     poly.copy(&mac[0], 16);
@@ -161,7 +169,7 @@ TEST(POLY1305, BLK_ALL_UPDATE_RESET)
                                0xc2, 0x2b, 0x8b, 0xaf, 0x0c, 0x01, 0x27, 0xa9 };
 
     Poly1305 poly;
-    poly.setKey(key, 32);
+    poly.setKey(key, 256);
     std::vector<Uint8> mac(16);
     poly.update(blk, 16);
     poly.reset();
@@ -187,7 +195,7 @@ TEST(POLY1305, BLK_ALL_FINALIZE_RESET_FINALIZE)
                                0xc2, 0x2b, 0x8b, 0xaf, 0x0c, 0x01, 0x27, 0xa9 };
 
     Poly1305 poly;
-    poly.setKey(key, 32);
+    poly.setKey(key, 256);
     std::vector<Uint8> mac(16);
     poly.finalize(blk, sizeof(blk));
     poly.reset();
@@ -213,7 +221,7 @@ TEST(POLY1305, BLK_ALL_FINALIZE_UPDATE)
                                0xc2, 0x2b, 0x8b, 0xaf, 0x0c, 0x01, 0x27, 0xa9 };
 
     Poly1305 poly;
-    poly.setKey(key, 32);
+    poly.setKey(key, 256);
     std::vector<Uint8> mac(16);
     poly.finalize(blk, sizeof(blk));
     alcp::Status s = poly.update(blk, 16);
@@ -238,7 +246,7 @@ TEST(POLY1305, BLK_ALL_FINALIZE_FINALIZE)
                                0xc2, 0x2b, 0x8b, 0xaf, 0x0c, 0x01, 0x27, 0xa9 };
 
     Poly1305 poly;
-    poly.setKey(key, 32);
+    poly.setKey(key, 256);
     std::vector<Uint8> mac(16);
     poly.finalize(blk, sizeof(blk));
     alcp::Status s = poly.finalize(blk, sizeof(blk));
@@ -264,7 +272,7 @@ TEST(POLY1305, BLK_ALL_UPDATE_FINALIZE_NULL)
 
     Poly1305     poly;
     alcp::Status s = alcp::StatusOk();
-    s.update(poly.setKey(key, 32));
+    s.update(poly.setKey(key, 256));
     ASSERT_TRUE(s.ok());
     std::vector<Uint8> mac(16);
     s.update(poly.update(blk, sizeof(blk)));
@@ -295,7 +303,7 @@ TEST(POLY1305, BLK_ALL_UPDATE_COPY)
 
     Poly1305     poly;
     alcp::Status s = alcp::StatusOk();
-    s.update(poly.setKey(key, 32));
+    s.update(poly.setKey(key, 256));
     ASSERT_TRUE(s.ok());
     std::vector<Uint8> mac(16);
     s.update(poly.update(blk, sizeof(blk)));

@@ -74,7 +74,7 @@ Poly1305::clamp(Uint8 in[16])
 /**
  * @brief Sets the Key and Initializes the state of Poly1305
  * @param key - Key to use for Poly1305
- * @param len - Key Length 32 Byte, anything else wont work
+ * @param len - Key Length 256 Bits, anything else wont work
  * @return Status
  */
 Status
@@ -295,66 +295,6 @@ Poly1305::copy(Uint8 digest[], Uint64 length)
     }
     std::reverse_copy(m_accumulator + 1, m_accumulator + 17, digest);
     return s;
-}
-
-Uint8*
-Poly1305::mac(const Uint8 msg[], const Uint8 key[], Uint64 msgLen, Uint8* mac)
-{
-    Uint8 a_mem[18]    = {};
-    Uint8 key_copy[32] = {};
-
-    Uint8 p_mem[] = { 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfb };
-    const Uint8* msg_ptr_cpy = msg;
-
-    std::reverse_copy(key, key + 16, key_copy);
-    std::reverse_copy(key + 16, key + 32, key_copy + 16);
-
-    BIGNUM *r = nullptr, *s = nullptr, *a = nullptr, *p = nullptr;
-    clamp(key_copy);
-    r = BN_bin2bn(key_copy, 16, r);
-    debug_dump("R KE2:", r);
-    s = BN_bin2bn(key_copy + 16, 16, s);
-    a = BN_bin2bn(a_mem, 16, a);
-    debug_dump("A CRT:", a);
-    p = BN_bin2bn(p_mem, sizeof(p_mem), p);
-    debug_dump("P SHL:", p);
-
-    // Ceil Function 'q = x + (y - 1) / y'
-    BN_CTX* ctx = BN_CTX_new();
-
-    for (Uint64 i = 0; i < ((msgLen + (16 - 1)) / 16); i++) {
-        Uint8 n_buff[17] = {};
-
-        // Find if we are in the last block, if we are, then only do left bytes
-        Uint64 curr_blocklen = msgLen < ((i + 1) * 16) ? msgLen - ((i) * 16)
-                                                       : 16;
-#ifdef DEBUG
-        std::cout << "Current Block Length:" << curr_blocklen << std::endl;
-#endif
-        std::reverse_copy(msg_ptr_cpy, msg_ptr_cpy + curr_blocklen, n_buff + 1);
-        n_buff[0] = 0x01;
-        BIGNUM* n = BN_new();
-        n         = BN_bin2bn(n_buff, curr_blocklen + 1, n);
-        debug_dump("N BLK:", n);
-
-        // We select the next block
-        msg_ptr_cpy += curr_blocklen;
-        // a+=n
-        BN_add(a, a, n);
-        debug_dump("A ADD:", a);
-        // a = (a * r) % p
-        BN_mod_mul(a, a, r, p, ctx);
-        debug_dump("A END:", a);
-    }
-
-    // a+=s;
-    BN_add(a, a, s);
-    debug_dump("A FIN:", a);
-    BN_bn2bin(a, a_mem);
-    std::reverse_copy(a_mem + 1, a_mem + 17, mac);
-
-    return mac;
 }
 
 } // namespace alcp::mac::poly1305
