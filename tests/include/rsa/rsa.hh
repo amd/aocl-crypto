@@ -52,8 +52,9 @@ typedef struct _alcp_rsa_data
 
     Uint8* m_pub_key_mod = nullptr;
 
-    Uint8* m_pseed = nullptr;
-    Uint8* m_label = nullptr;
+    Uint8* m_pseed      = nullptr;
+    Uint8* m_label      = nullptr;
+    Uint64 m_label_size = 0;
 } alcp_rsa_data_t;
 
 class RsaBase

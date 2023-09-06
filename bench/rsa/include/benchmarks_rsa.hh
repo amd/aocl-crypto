@@ -124,6 +124,9 @@ Rsa_Bench(benchmark::State& state,
     /* seed and label for padding mode */
     std::vector<Uint8> seed(rb->m_hash_len);
     data.m_pseed = &(seed[0]);
+    std::vector<Uint8> label(5);
+    data.m_label      = &(label[0]);
+    data.m_label_size = label.size();
 
     if (!rb->init()) {
         state.SkipWithError("Error in RSA init");

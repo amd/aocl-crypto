@@ -160,6 +160,9 @@ Rsa_KAT(int               padding_mode,
         /* seed and label for padding mode */
         std::vector<Uint8> seed(rb->m_hash_len);
         data.m_pseed = &(seed[0]);
+        std::vector<Uint8> label(5);
+        data.m_label      = &(label[0]);
+        data.m_label_size = label.size();
 
         int ret_val = 0;
         if (!rb->init()) {
@@ -312,6 +315,11 @@ Rsa_Cross(int               padding_mode,
         seed              = rngb.genRandomBytes(rb_main->m_hash_len);
         data_main.m_pseed = &(seed[0]);
         data_ext.m_pseed  = &(seed[0]);
+
+        /* laben length should vary */
+        std::vector<Uint8> label(i * KeySize);
+        data_main.m_label = data_ext.m_label = &(label[0]);
+        data_main.m_label_size = data_ext.m_label_size = label.size();
 
         /* initialize */
         if (!rb_main->init()) {

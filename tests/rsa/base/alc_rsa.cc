@@ -384,10 +384,7 @@ AlcpRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
 int
 AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 {
-    /*FIXME: where should this be defined?
-     Randomly generate */
-    static const Uint8 Label[] = { 'h', 'e', 'l', 'l', 'o' };
-    alc_error_t        err;
+    alc_error_t err;
 
     /* no padding mode */
     if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
@@ -420,8 +417,8 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
         err = alcp_rsa_publickey_encrypt_oaep(m_rsa_handle,
                                               data.m_msg,
                                               data.m_msg_len,
-                                              Label,
-                                              sizeof(Label),
+                                              data.m_label,
+                                              data.m_label_size,
                                               data.m_pseed,
                                               data.m_encrypted_data);
         if (alcp_is_error(err)) {
@@ -437,10 +434,8 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 int
 AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 {
-    /*FIXME: where should this be defined? */
-    static const Uint8 Label[] = { 'h', 'e', 'l', 'l', 'o' };
-    alc_error_t        err;
-    Uint64             text_size = 0;
+    alc_error_t err;
+    Uint64      text_size = 0;
 
     if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
         err = alcp_rsa_privatekey_decrypt(m_rsa_handle,
@@ -464,8 +459,8 @@ AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
         err = alcp_rsa_privatekey_decrypt_oaep(m_rsa_handle,
                                                data.m_encrypted_data,
                                                data.m_key_len,
-                                               Label,
-                                               sizeof(Label),
+                                               data.m_label,
+                                               data.m_label_size,
                                                data.m_decrypted_data,
                                                &text_size);
     } else {
