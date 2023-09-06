@@ -34,7 +34,7 @@ namespace alcp::cipher {
 using utils::CpuId;
 
 alc_error_t
-ChaCha20::setKey(const Uint8* key, Uint64 keylen)
+ChaCha20::setKey(const Uint8 key[], Uint64 keylen)
 {
     alc_error_t err = ValidateKey(key, keylen);
     if (alcp_is_error(err)) {
@@ -45,7 +45,7 @@ ChaCha20::setKey(const Uint8* key, Uint64 keylen)
 }
 
 alc_error_t
-ChaCha20::setIv(const Uint8* iv, Uint64 ivlen)
+ChaCha20::setIv(const Uint8 iv[], Uint64 ivlen)
 {
     alc_error_t err = ValidateIv(iv, ivlen);
     if (alcp_is_error(err)) {
@@ -56,9 +56,9 @@ ChaCha20::setIv(const Uint8* iv, Uint64 ivlen)
 }
 
 alc_error_t
-ChaCha20::processInput(const Uint8* plaintext,
-                       Uint64       plaintextLength,
-                       Uint8*       ciphertext) const
+ChaCha20::processInput(const Uint8 plaintext[],
+                       Uint64      plaintextLength,
+                       Uint8       ciphertext[]) const
 {
 
     if (CpuId::cpuHasAvx512(utils::AVX512_F)

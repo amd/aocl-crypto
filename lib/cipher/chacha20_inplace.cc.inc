@@ -119,7 +119,7 @@ SetKey(Uint32 state[16], const Uint8* key, Uint64 keylen)
     return ALC_ERROR_NONE;
 }
 inline alc_error_t
-ValidateIv(const Uint8* iv, Uint64 iVlen)
+ValidateIv(const Uint8 iv[], Uint64 iVlen)
 {
     if (iv == NULL || (iVlen != 16)) {
         return ALC_ERROR_INVALID_ARG;
@@ -127,7 +127,7 @@ ValidateIv(const Uint8* iv, Uint64 iVlen)
     return ALC_ERROR_NONE;
 }
 inline alc_error_t
-SetIv(Uint32* state, const Uint8* iv, Uint64 ivlen)
+SetIv(Uint32 state[16], const Uint8 iv[], Uint64 ivlen)
 {
     alc_error_t err = ValidateIv(iv, ivlen);
     if (alcp_is_error(err)) {
@@ -137,12 +137,12 @@ SetIv(Uint32* state, const Uint8* iv, Uint64 ivlen)
     return ALC_ERROR_NONE;
 }
 inline alc_error_t
-CreateInitialState(Uint32       state[16],
-                   const Uint8* key,
-                   Uint64       keylen,
-                   const Uint8* iv,
-                   Uint64       ivlen,
-                   Uint32       counter)
+CreateInitialState(Uint32      state[16],
+                   const Uint8 key[],
+                   Uint64      keylen,
+                   const Uint8 iv[],
+                   Uint64      ivlen,
+                   Uint32      counter)
 {
     state[0] = 0x61707865;
     state[1] = 0x3320646e;
@@ -162,13 +162,13 @@ CreateInitialState(Uint32       state[16],
 }
 
 alc_error_t
-ProcessInput(const Uint8* key,
-             Uint64       keylen,
-             const Uint8* iv,
-             Uint64       ivlen,
-             const Uint8* plaintext,
-             Uint64       plaintextLength,
-             Uint8*       ciphertext)
+ProcessInput(const Uint8 key[],
+             Uint64      keylen,
+             const Uint8 iv[],
+             Uint64      ivlen,
+             const Uint8 plaintext[],
+             Uint64      plaintextLength,
+             Uint8       ciphertext[])
 {
     Uint64 n_blocks = plaintextLength / 64;
     if (plaintextLength - n_blocks * 64 > 0) {

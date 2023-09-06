@@ -67,12 +67,12 @@ RoundFunction(__m512i& regA, __m512i& regB, __m512i& regC, __m512i& regD)
 }
 
 inline void
-handleLastBlocks(__m128i&     stateReg,
-                 Uint64       plaintextLength,
-                 Uint64       totalBlocks,
-                 __m128i&     shuffleReg,
-                 const Uint8* plaintext,
-                 Uint8*       ciphertext)
+handleLastBlocks(__m128i&       stateReg,
+                 Uint64         plaintextLength,
+                 Uint64         totalBlocks,
+                 const __m128i& shuffleReg,
+                 const Uint8*   plaintext,
+                 Uint8*         ciphertext)
 {
     Uint8 temp[16];
     stateReg = _mm_shuffle_epi8(stateReg, shuffleReg);
@@ -108,53 +108,59 @@ handleLastBlocks(__m128i&     stateReg,
     p_ciphertext_128++;
 
 alc_error_t
-ProcessInput(const Uint8* key,
-             Uint64       keylen,
-             const Uint8* iv,
-             Uint64       ivlen,
-             const Uint8* plaintext,
-             Uint64       plaintextLength,
-             Uint8*       ciphertext)
+ProcessInput(const Uint8 key[],
+             Uint64      keylen,
+             const Uint8 iv[],
+             Uint64      ivlen,
+             const Uint8 plaintext[],
+             Uint64      plaintextLength,
+             Uint8       ciphertext[])
 {
-    Uint64 n = (plaintextLength / 256) + 1;
+    // -- Setup Registers for First Row Round Function
+    // a
+    __m512i reg_state_1_0_3_2_save = _mm512_broadcast_i32x4(
+        *reinterpret_cast<const __m128i*>(ChaCha20::Chacha20Constants));
+    // b
+    __m512i reg_state_5_4_7_6_save =
+        _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(key));
+    // c
+    __m512i reg_state_9_8_11_10_save =
+        _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(key + 16));
+    // d
+    __m512i reg_state_13_12_15_14_save =
+        _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(iv));
+
+    __m512i reg_state_1_0_3_2, reg_state_5_4_7_6, reg_state_9_8_11_10,
+        reg_state_13_12_15_14, counter_reg;
+
+    __m128i reg_state;
+    __m128i reg_128_msg;
+    // clang-format off
+    const __m128i shuffle_reg      = _mm_setr_epi8(0x04, 0x05, 0x06,0x07, 0x00,
+                                        0x01,0x02,0x03,0x0c,0x0d,0x0e,0x0f,0x08,0x09,0xa,0x0b);
+        counter_reg = _mm512_setr_epi32(0x0 ,0x0,0x0,0x0,
+                                        0x1 ,0x0,0x0,0x0,
+                                        0x2 ,0x0,0x0,0x0,
+                                        0x3 ,0x0,0x0,0x0);
+    const __m512i inc_reg = _mm512_setr_epi32(0x4 ,0x0,0x0,0x0,
+                                        0x4 ,0x0,0x0,0x0,
+                                        0x4 ,0x0,0x0,0x0,
+                                        0x4 ,0x0,0x0,0x0);
+    // clang-format on
+
+    auto   p_plaintext_128  = reinterpret_cast<const __m128i*>(plaintext);
+    auto   p_ciphertext_128 = reinterpret_cast<__m128i*>(ciphertext);
+    Uint64 n                = (plaintextLength / 256) + 1;
     for (Uint64 k = 0; k < n; k++) {
 
-        // -- Setup Registers for Row Round Function
-        // a
-        auto reg_state_1_0_3_2 = _mm512_broadcast_i32x4(
-            *reinterpret_cast<const __m128i*>(ChaCha20::Chacha20Constants));
-        // b
-        auto reg_state_5_4_7_6 =
-            _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(key));
-        // c
-        auto reg_state_9_8_11_10 =
-            _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(key + 16));
-        // d
-        auto reg_state_13_12_15_14 =
-            _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(iv));
-
-        auto counter_reg = _mm512_setr_epi32(0x0 + k * 4,
-                                             0x0,
-                                             0x0,
-                                             0x0,
-                                             0x1 + k * 4,
-                                             0x0,
-                                             0x0,
-                                             0x0,
-                                             0x2 + k * 4,
-                                             0x0,
-                                             0x0,
-                                             0x0,
-                                             0x3 + k * 4,
-                                             0x0,
-                                             0x0,
-                                             0x0);
+        // Restoring the registers to last Round State
+        reg_state_1_0_3_2     = reg_state_1_0_3_2_save;
+        reg_state_5_4_7_6     = reg_state_5_4_7_6_save;
+        reg_state_9_8_11_10   = reg_state_9_8_11_10_save;
+        reg_state_13_12_15_14 = reg_state_13_12_15_14_save;
 
         reg_state_13_12_15_14 =
             _mm512_add_epi32(reg_state_13_12_15_14, counter_reg);
-        auto reg_state_1_0_3_2_save     = reg_state_1_0_3_2;
-        auto reg_state_5_4_7_6_save     = reg_state_5_4_7_6;
-        auto reg_state_9_8_11_10_save   = reg_state_9_8_11_10;
         auto reg_state_13_12_15_14_save = reg_state_13_12_15_14;
         for (int i = 0; i < 10; i++) {
 
@@ -203,7 +209,7 @@ ProcessInput(const Uint8* key,
             _mm512_add_epi32(reg_state_9_8_11_10, reg_state_9_8_11_10_save);
         reg_state_13_12_15_14 =
             _mm512_add_epi32(reg_state_13_12_15_14, reg_state_13_12_15_14_save);
-
+        // a
         reg_state_1_0_3_2 =
             _mm512_shuffle_epi32(reg_state_1_0_3_2, (_MM_PERM_ENUM)0b10110001);
 
@@ -219,14 +225,7 @@ ProcessInput(const Uint8* key,
         reg_state_13_12_15_14 = _mm512_shuffle_epi32(reg_state_13_12_15_14,
                                                      (_MM_PERM_ENUM)0b10110001);
 
-        __m128i reg_state;
-        __m128i reg_128_msg;
-        // clang-format off
-        __m128i shuffle_reg      = _mm_setr_epi8(0x04, 0x05, 0x06,0x07, 0x00,
-                                            0x01,0x02,0x03,0x0c,0x0d,0x0e,0x0f,0x08,0x09,0xa,0x0b);
-        Uint64  blocks_128bits   = plaintextLength / 16;
-        auto    p_plaintext_128  = reinterpret_cast<const __m128i*>(plaintext);
-        auto    p_ciphertext_128 = reinterpret_cast<__m128i*>(ciphertext);
+        Uint64 blocks_128bits = plaintextLength / 16;
 
         Uint64 i = 0;
         XOR_MESSAGE_KEYSTREAM_STORE(reg_state_1_0_3_2, 0)
@@ -249,6 +248,7 @@ ProcessInput(const Uint8* key,
         plaintext += 256;
         plaintextLength -= 256;
         ciphertext += 256;
+        counter_reg = _mm512_add_epi32(counter_reg, inc_reg);
     }
     return ALC_ERROR_NONE;
 }

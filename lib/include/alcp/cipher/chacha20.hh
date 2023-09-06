@@ -37,13 +37,13 @@
 #include <openssl/bn.h>
 namespace alcp::cipher::zen4 {
 alc_error_t
-ProcessInput(const Uint8* key,
-             Uint64       keylen,
-             const Uint8* iv,
-             Uint64       ivlen,
-             const Uint8* plaintext,
-             Uint64       plaintextLength,
-             Uint8*       ciphertext);
+ProcessInput(const Uint8 key[],
+             Uint64      keylen,
+             const Uint8 iv[],
+             Uint64      ivlen,
+             const Uint8 plaintext[],
+             Uint64      plaintextLength,
+             Uint8       ciphertext[]);
 } // namespace alcp::cipher::zen4
 
 namespace alcp::cipher {
@@ -63,13 +63,13 @@ class ChaCha20
         0x61707865, 0x3320646e, 0x79622d32, 0x6b206574
     };
 
-    alc_error_t setKey(const Uint8* key, Uint64 keylen);
+    alc_error_t setKey(const Uint8 key[], Uint64 keylen);
 
-    alc_error_t setIv(const Uint8* iv, Uint64 ivlen);
+    alc_error_t setIv(const Uint8 iv[], Uint64 ivlen);
 
-    alc_error_t processInput(const Uint8* plaintext,
-                             Uint64       plaintext_length,
-                             Uint8*       ciphertext) const;
+    alc_error_t processInput(const Uint8 plaintext[],
+                             Uint64      plaintext_length,
+                             Uint8       ciphertext[]) const;
 };
 
 } // namespace alcp::cipher

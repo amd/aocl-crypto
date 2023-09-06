@@ -257,7 +257,7 @@ TEST(Chacha20, PerformanceTest)
     Uint8 iv[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                    0x00, 0x4a, 0x00, 0x00, 0x00, 0x00 };
 
-    std::vector<Uint8> plaintext(16);
+    std::vector<Uint8> plaintext(32768);
     std::vector<Uint8> ciphertext(plaintext.size());
     chacha20_obj.setKey(key, sizeof(key));
     chacha20_obj.setIv(iv, sizeof(iv));
@@ -269,7 +269,6 @@ TEST(Chacha20, PerformanceTest)
             &plaintext[0], plaintext.size(), &ciphertext[0]);
         ALCP_CRYPT_GET_TIME(0, "Encrypt")
         if (totalTimeElapsed > 1) {
-            // int speed = ;
             std::cout << "\n\n"
                       << std::setw(5) << (k * plaintext.size())
                       << " Encrypted bytes per second\n";

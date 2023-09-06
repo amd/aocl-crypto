@@ -44,22 +44,22 @@ InnerBlock(Uint32 state[16]);
 inline void
 AddState(Uint32 state1[16], Uint32 state2[16]);
 inline alc_error_t
-SetKey(Uint32 state[16], const Uint8* key, Uint64 keylen);
+SetKey(Uint32 state[16], const Uint8 key[], Uint64 keylen);
 inline alc_error_t
-SetIv(Uint32* state, const Uint8* iv, Uint64 ivlen);
+SetIv(Uint32 state[16], const Uint8 iv[], Uint64 ivlen);
 inline alc_error_t
-CreateInitialState(Uint32       state[16],
-                   const Uint8* key,
-                   Uint64       keylen,
-                   const Uint8* iv,
-                   Uint64       ivlen,
-                   Uint32       counter);
+CreateInitialState(Uint32      state[16],
+                   const Uint8 key[],
+                   Uint64      keylen,
+                   const Uint8 iv[],
+                   Uint64      ivlen,
+                   Uint32      counter);
 
 alc_error_t
-ProcessInput(const Uint8* key,
-             Uint64       keylen,
-             const Uint8* iv,
-             Uint64       ivlen,
-             const Uint8* plaintext,
-             Uint64       plaintextLength,
-             Uint8*       ciphertext);
+ProcessInput(const Uint8 key[],
+             Uint64      keylen,
+             const Uint8 iv[],
+             Uint64      ivlen,
+             const Uint8 plaintext[],
+             Uint64      plaintextLength,
+             Uint8       ciphertext[]);
