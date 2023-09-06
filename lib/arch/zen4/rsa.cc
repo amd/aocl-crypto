@@ -35,6 +35,270 @@ namespace alcp::rsa { namespace zen4 {
 
     constexpr Uint64 num_digit = (2048 / 52 + 1);
 
+    static inline void Amm1024LoopInternalStage1(__m512i       res_reg[3],
+                                                 __m512i       first_reg[3],
+                                                 __m512i       mod_reg[3],
+                                                 const Uint64* first,
+                                                 Uint64        k0)
+    {
+        const __m512i zero{};
+        for (Uint64 j = 0; j < 8; j++) {
+
+            __m512i second_reg = _mm512_set1_epi64(first[j]);
+
+            res_reg[0] =
+                _mm512_madd52lo_epu64(res_reg[0], first_reg[0], second_reg);
+
+            for (Uint64 z = 1; z < 3; z++) {
+                __m512i temp =
+                    _mm512_madd52lo_epu64(zero, first_reg[z], second_reg);
+
+                temp       = _mm512_slli_epi64(temp, 1);
+                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
+            }
+
+            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg[0]));
+
+            Uint64 y0 = (k0 * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
+
+            __m512i y_reg = _mm512_set1_epi64(y0);
+
+            res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
+            res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
+            res_reg[2] = _mm512_madd52lo_epu64(res_reg[2], mod_reg[2], y_reg);
+
+            __m512i carry = _mm512_maskz_srli_epi64(1, res_reg[0], 52);
+            res_reg[0]    = _mm512_alignr_epi64(res_reg[1], res_reg[0], 1);
+            res_reg[0]    = _mm512_add_epi64(res_reg[0], carry);
+            res_reg[1]    = _mm512_alignr_epi64(res_reg[2], res_reg[1], 1);
+            res_reg[2]    = _mm512_alignr_epi64(zero, res_reg[2], 1);
+
+            res_reg[0] =
+                _mm512_madd52hi_epu64(res_reg[0], first_reg[0], second_reg);
+
+            for (Uint64 z = 1; z < 3; z++) {
+                __m512i temp =
+                    _mm512_madd52hi_epu64(zero, first_reg[z], second_reg);
+
+                temp       = _mm512_slli_epi64(temp, 1);
+                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
+            }
+
+            res_reg[0] = _mm512_madd52hi_epu64(res_reg[0], mod_reg[0], y_reg);
+            res_reg[1] = _mm512_madd52hi_epu64(res_reg[1], mod_reg[1], y_reg);
+            res_reg[2] = _mm512_madd52hi_epu64(res_reg[2], mod_reg[2], y_reg);
+        }
+    }
+
+    static inline void Amm1024LoopInternalStage2(__m512i       res_reg[3],
+                                                 __m512i       first_reg[3],
+                                                 __m512i       mod_reg[3],
+                                                 const Uint64* first,
+                                                 Uint64        k0)
+    {
+        const __m512i zero{};
+        for (Uint64 j = 0; j < 8; j++) {
+
+            __m512i second_reg = _mm512_set1_epi64(first[j]);
+
+            res_reg[1] =
+                _mm512_madd52lo_epu64(res_reg[1], first_reg[1], second_reg);
+
+            for (Uint64 z = 2; z < 3; z++) {
+                __m512i temp =
+                    _mm512_madd52lo_epu64(zero, first_reg[z], second_reg);
+
+                temp       = _mm512_slli_epi64(temp, 1);
+                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
+            }
+
+            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg[0]));
+
+            Uint64 y0 = (k0 * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
+
+            __m512i y_reg = _mm512_set1_epi64(y0);
+
+            res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
+            res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
+            res_reg[2] = _mm512_madd52lo_epu64(res_reg[2], mod_reg[2], y_reg);
+
+            __m512i carry = _mm512_maskz_srli_epi64(1, res_reg[0], 52);
+            res_reg[0]    = _mm512_alignr_epi64(res_reg[1], res_reg[0], 1);
+            res_reg[0]    = _mm512_add_epi64(res_reg[0], carry);
+            res_reg[1]    = _mm512_alignr_epi64(res_reg[2], res_reg[1], 1);
+            res_reg[2]    = _mm512_alignr_epi64(zero, res_reg[2], 1);
+
+            res_reg[1] =
+                _mm512_madd52hi_epu64(res_reg[1], first_reg[1], second_reg);
+
+            for (Uint64 z = 2; z < 3; z++) {
+                __m512i temp =
+                    _mm512_madd52hi_epu64(zero, first_reg[z], second_reg);
+
+                temp       = _mm512_slli_epi64(temp, 1);
+                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
+            }
+
+            res_reg[0] = _mm512_madd52hi_epu64(res_reg[0], mod_reg[0], y_reg);
+            res_reg[1] = _mm512_madd52hi_epu64(res_reg[1], mod_reg[1], y_reg);
+            res_reg[2] = _mm512_madd52hi_epu64(res_reg[2], mod_reg[2], y_reg);
+        }
+    }
+
+    static inline void Amm1024LoopInternalStage3(__m512i       res_reg[3],
+                                                 __m512i       first_reg[3],
+                                                 __m512i       mod_reg[3],
+                                                 const Uint64* first,
+                                                 Uint64        k0)
+    {
+        const __m512i zero{};
+        for (Uint64 j = 0; j < 4; j++) {
+
+            __m512i second_reg = _mm512_set1_epi64(first[j]);
+
+            res_reg[2] =
+                _mm512_madd52lo_epu64(res_reg[2], first_reg[2], second_reg);
+
+            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg[0]));
+
+            Uint64 y0 = (k0 * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
+
+            __m512i y_reg = _mm512_set1_epi64(y0);
+
+            res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
+            res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
+            res_reg[2] = _mm512_madd52lo_epu64(res_reg[2], mod_reg[2], y_reg);
+
+            __m512i carry = _mm512_maskz_srli_epi64(1, res_reg[0], 52);
+            res_reg[0]    = _mm512_alignr_epi64(res_reg[1], res_reg[0], 1);
+            res_reg[0]    = _mm512_add_epi64(res_reg[0], carry);
+            res_reg[1]    = _mm512_alignr_epi64(res_reg[2], res_reg[1], 1);
+            res_reg[2]    = _mm512_alignr_epi64(zero, res_reg[2], 1);
+
+            res_reg[2] =
+                _mm512_madd52hi_epu64(res_reg[2], first_reg[2], second_reg);
+
+            res_reg[0] = _mm512_madd52hi_epu64(res_reg[0], mod_reg[0], y_reg);
+            res_reg[1] = _mm512_madd52hi_epu64(res_reg[1], mod_reg[1], y_reg);
+            res_reg[2] = _mm512_madd52hi_epu64(res_reg[2], mod_reg[2], y_reg);
+        }
+    }
+
+    static inline void AMM1024(Uint64*       res,
+                               const Uint64* first,
+                               const Uint64* second,
+                               const Uint64* mod,
+                               Uint64        k0)
+    {
+        __m512i first_reg_0;
+        __m512i first_reg_1;
+        __m512i first_reg_2;
+
+        __m512i mod_reg_0;
+        __m512i mod_reg_1;
+        __m512i mod_reg_2;
+
+        __m512i res_reg_0{};
+        __m512i res_reg_1{};
+        __m512i res_reg_2{};
+
+        first_reg_0 = _mm512_loadu_si512(first);
+        first_reg_1 = _mm512_loadu_si512(first + 8);
+        first_reg_2 = _mm512_loadu_si512(first + 16);
+
+        mod_reg_0 = _mm512_loadu_si512(mod);
+        mod_reg_1 = _mm512_loadu_si512(mod + 8);
+        mod_reg_2 = _mm512_loadu_si512(mod + 16);
+
+        const __m512i zero{};
+
+        for (Uint64 i = 0; i < 20; i++) {
+
+            __m512i second_reg = _mm512_set1_epi64(second[i]);
+
+            res_reg_0 =
+                _mm512_madd52lo_epu64(res_reg_0, first_reg_0, second_reg);
+            res_reg_1 =
+                _mm512_madd52lo_epu64(res_reg_1, first_reg_1, second_reg);
+            res_reg_2 =
+                _mm512_madd52lo_epu64(res_reg_2, first_reg_2, second_reg);
+
+            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg_0));
+
+            Uint64 y0 = (k0 * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
+
+            __m512i y_reg = _mm512_set1_epi64(y0);
+
+            res_reg_0 = _mm512_madd52lo_epu64(res_reg_0, mod_reg_0, y_reg);
+            res_reg_1 = _mm512_madd52lo_epu64(res_reg_1, mod_reg_1, y_reg);
+            res_reg_2 = _mm512_madd52lo_epu64(res_reg_2, mod_reg_2, y_reg);
+
+            __m512i carry = _mm512_maskz_srli_epi64(1, res_reg_0, 52);
+            res_reg_0     = _mm512_alignr_epi64(res_reg_1, res_reg_0, 1);
+            res_reg_0     = _mm512_add_epi64(res_reg_0, carry);
+            res_reg_1     = _mm512_alignr_epi64(res_reg_2, res_reg_1, 1);
+            res_reg_2     = _mm512_alignr_epi64(zero, res_reg_2, 1);
+
+            res_reg_0 =
+                _mm512_madd52hi_epu64(res_reg_0, first_reg_0, second_reg);
+            res_reg_1 =
+                _mm512_madd52hi_epu64(res_reg_1, first_reg_1, second_reg);
+            res_reg_2 =
+                _mm512_madd52hi_epu64(res_reg_2, first_reg_2, second_reg);
+
+            res_reg_0 = _mm512_madd52hi_epu64(res_reg_0, mod_reg_0, y_reg);
+            res_reg_1 = _mm512_madd52hi_epu64(res_reg_1, mod_reg_1, y_reg);
+            res_reg_2 = _mm512_madd52hi_epu64(res_reg_2, mod_reg_2, y_reg);
+        }
+
+        _mm512_storeu_si512(res, res_reg_0);
+        _mm512_storeu_si512(res + 8, res_reg_1);
+        _mm512_storeu_si512(res + 16, res_reg_2);
+
+        Uint64 carry = 0;
+        // convert from redundant radix 2^52 to radix 2^52
+        for (Uint64 i = 0; i < 20; i++) {
+            Uint64 sum = res[i] + carry;
+            carry      = sum >> 52;
+            res[i]     = sum & 0xfffffffffffff;
+        }
+    }
+
+    static inline void AMS1024(Uint64*       res,
+                               const Uint64* first,
+                               const Uint64* mod,
+                               Uint64        k0)
+    {
+        __m512i first_reg[3];
+        __m512i mod_reg[3];
+
+        __m512i res_reg[3]{};
+
+        first_reg[0] = _mm512_loadu_si512(first);
+        first_reg[1] = _mm512_loadu_si512(first + 8);
+        first_reg[2] = _mm512_loadu_si512(first + 16);
+
+        mod_reg[0] = _mm512_loadu_si512(mod);
+        mod_reg[1] = _mm512_loadu_si512(mod + 8);
+        mod_reg[2] = _mm512_loadu_si512(mod + 16);
+
+        Amm1024LoopInternalStage1(res_reg, first_reg, mod_reg, first, k0);
+        Amm1024LoopInternalStage2(res_reg, first_reg, mod_reg, first + 8, k0);
+        Amm1024LoopInternalStage3(res_reg, first_reg, mod_reg, first + 16, k0);
+
+        _mm512_storeu_si512(res, res_reg[0]);
+        _mm512_storeu_si512(res + 8, res_reg[1]);
+        _mm512_storeu_si512(res + 16, res_reg[2]);
+
+        Uint64 carry = 0;
+        // convert from redundant radix 2^52 to radix 2^52
+        for (Uint64 i = 0; i < 20; i++) {
+            Uint64 sum = res[i] + carry;
+            carry      = sum >> 52;
+            res[i]     = sum & 0xfffffffffffff;
+        }
+    }
+
     static inline void AMM2048(Uint64*       res,
                                const Uint64* first,
                                const Uint64* second,
@@ -140,11 +404,11 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
-    static inline void LoopInternalStage1(__m512i       res_reg[5],
-                                          __m512i       first_reg[5],
-                                          __m512i       mod_reg[5],
-                                          const Uint64* first,
-                                          Uint64        k0)
+    static inline void Amm2048LoopInternalStage1(__m512i       res_reg[5],
+                                                 __m512i       first_reg[5],
+                                                 __m512i       mod_reg[5],
+                                                 const Uint64* first,
+                                                 Uint64        k0)
     {
         const __m512i zero{};
         for (Uint64 j = 0; j < 8; j++) {
@@ -201,11 +465,11 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
-    static inline void LoopInternalStage2(__m512i       res_reg[5],
-                                          __m512i       first_reg[5],
-                                          __m512i       mod_reg[5],
-                                          const Uint64* first,
-                                          Uint64        k0)
+    static inline void Amm2048LoopInternalStage2(__m512i       res_reg[5],
+                                                 __m512i       first_reg[5],
+                                                 __m512i       mod_reg[5],
+                                                 const Uint64* first,
+                                                 Uint64        k0)
     {
         const __m512i zero{};
         for (Uint64 j = 0; j < 8; j++) {
@@ -261,11 +525,11 @@ namespace alcp::rsa { namespace zen4 {
             res_reg[4] = _mm512_madd52hi_epu64(res_reg[4], mod_reg[4], y_reg);
         }
     }
-    static inline void LoopInternalStage3(__m512i       res_reg[5],
-                                          __m512i       first_reg[5],
-                                          __m512i       mod_reg[5],
-                                          const Uint64* first,
-                                          Uint64        k0)
+    static inline void Amm2048LoopInternalStage3(__m512i       res_reg[5],
+                                                 __m512i       first_reg[5],
+                                                 __m512i       mod_reg[5],
+                                                 const Uint64* first,
+                                                 Uint64        k0)
     {
         const __m512i zero{};
         for (Uint64 j = 0; j < 8; j++) {
@@ -321,11 +585,11 @@ namespace alcp::rsa { namespace zen4 {
             res_reg[4] = _mm512_madd52hi_epu64(res_reg[4], mod_reg[4], y_reg);
         }
     }
-    static inline void LoopInternalStage4(__m512i       res_reg[5],
-                                          __m512i       first_reg[5],
-                                          __m512i       mod_reg[5],
-                                          const Uint64* first,
-                                          Uint64        k0)
+    static inline void Amm2048LoopInternalStage4(__m512i       res_reg[5],
+                                                 __m512i       first_reg[5],
+                                                 __m512i       mod_reg[5],
+                                                 const Uint64* first,
+                                                 Uint64        k0)
     {
         const __m512i zero{};
         for (Uint64 j = 0; j < 8; j++) {
@@ -449,10 +713,10 @@ namespace alcp::rsa { namespace zen4 {
         mod_reg[3] = _mm512_loadu_si512(mod + 24);
         mod_reg[4] = _mm512_loadu_si512(mod + 32);
 
-        LoopInternalStage1(res_reg, first_reg, mod_reg, first, k0);
-        LoopInternalStage2(res_reg, first_reg, mod_reg, first + 8, k0);
-        LoopInternalStage3(res_reg, first_reg, mod_reg, first + 16, k0);
-        LoopInternalStage4(res_reg, first_reg, mod_reg, first + 24, k0);
+        Amm2048LoopInternalStage1(res_reg, first_reg, mod_reg, first, k0);
+        Amm2048LoopInternalStage2(res_reg, first_reg, mod_reg, first + 8, k0);
+        Amm2048LoopInternalStage3(res_reg, first_reg, mod_reg, first + 16, k0);
+        Amm2048LoopInternalStage4(res_reg, first_reg, mod_reg, first + 24, k0);
         LoopInternalStage5(res_reg, first_reg, mod_reg, first + 32, k0);
 
         _mm512_storeu_si512(res, res_reg[0]);
@@ -539,7 +803,71 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
-    // Todo: Adding the AMS2048 version
+    static inline void AMM1024Reduce(Uint64*       res,
+                                     const Uint64* first,
+                                     const Uint64* mod,
+                                     Uint64        k0)
+    {
+        __m512i mod_reg_0;
+        __m512i mod_reg_1;
+        __m512i mod_reg_2;
+
+        __m512i res_reg_0 = _mm512_loadu_si512(first);
+        __m512i res_reg_1 = _mm512_loadu_si512(first + 8);
+        __m512i res_reg_2 = _mm512_loadu_si512(first + 16);
+
+        mod_reg_0 = _mm512_loadu_si512(mod);
+        mod_reg_1 = _mm512_loadu_si512(mod + 8);
+        mod_reg_2 = _mm512_loadu_si512(mod + 16);
+
+        const __m512i zero{};
+
+        for (Uint64 i = 0; i < 20; i++) {
+
+            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg_0));
+
+            Uint64 y0 = (k0 * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
+
+            __m512i y_reg = _mm512_set1_epi64(y0);
+
+            res_reg_0 = _mm512_madd52lo_epu64(res_reg_0, mod_reg_0, y_reg);
+            res_reg_1 = _mm512_madd52lo_epu64(res_reg_1, mod_reg_1, y_reg);
+            res_reg_2 = _mm512_madd52lo_epu64(res_reg_2, mod_reg_2, y_reg);
+
+            __m512i carry = _mm512_maskz_srli_epi64(1, res_reg_0, 52);
+            res_reg_0     = _mm512_alignr_epi64(res_reg_1, res_reg_0, 1);
+            res_reg_0     = _mm512_add_epi64(res_reg_0, carry);
+            res_reg_1     = _mm512_alignr_epi64(res_reg_2, res_reg_1, 1);
+            res_reg_2     = _mm512_alignr_epi64(zero, res_reg_2, 1);
+
+            res_reg_0 = _mm512_madd52hi_epu64(res_reg_0, mod_reg_0, y_reg);
+            res_reg_1 = _mm512_madd52hi_epu64(res_reg_1, mod_reg_1, y_reg);
+            res_reg_2 = _mm512_madd52hi_epu64(res_reg_2, mod_reg_2, y_reg);
+        }
+
+        _mm512_storeu_si512(res, res_reg_0);
+        _mm512_storeu_si512(res + 8, res_reg_1);
+        _mm512_storeu_si512(res + 16, res_reg_2);
+
+        Uint64 carry = 0;
+        // convert from redundant radix 2^52 to radix 2^52
+        for (Uint64 i = 0; i < 20; i++) {
+            Uint64 sum = res[i] + carry;
+            carry      = sum >> 52;
+            res[i]     = sum & 0xfffffffffffff;
+        }
+    }
+
+    static inline void AMMAndAMS1024(
+        Uint64* res, Uint64* mult, Uint64* mod, Uint64 k0, Uint64 val)
+    {
+        AMS1024(res, res, mod, k0);
+        // AMM1024(res, res, res, mod, k0);
+        if (val & mont::one_msb) {
+            AMM1024(res, res, mult, mod, k0);
+        }
+    }
+
     static inline void AMMAndAMS2048(
         Uint64* res, Uint64* mult, Uint64* mod, Uint64 k0, Uint64 val)
     {
@@ -579,8 +907,8 @@ namespace alcp::rsa { namespace zen4 {
 
         MontReduce(r1, param_ptr, mod, context.m_k0, size * 2);
 
-        BytesToRadix52Bit(mod_radix_52_bit, mod);
-        BytesToRadix52Bit(r2_radix_52_bit, r2);
+        Rsa2048BytesToRadix52Bit(mod_radix_52_bit, mod);
+        Rsa2048BytesToRadix52Bit(r2_radix_52_bit, r2);
 
         //(congruent to 2^(4n-k×m) mod M)
         AMM2048(r2_radix_52_bit,
@@ -600,6 +928,56 @@ namespace alcp::rsa { namespace zen4 {
     }
 
     template<>
+    inline void mont::MontCompute<KEY_SIZE_1024>::CreateContext(
+        MontContextBignum& context, Uint64* mod, Uint64 size)
+    {
+        Uint64* r1               = new Uint64[size]{};
+        Uint64* r2               = new Uint64[size]{};
+        Uint64* r3               = new Uint64[size]{};
+        Uint64* r2_radix_52_bit  = new Uint64[24]{};
+        Uint64* mod_radix_52_bit = new Uint64[24]{};
+
+        context.m_r1.reset(r1);
+        context.m_r2.reset(r2);
+        context.m_r3.reset(r3);
+        context.m_r2_radix_52_bit.reset(r2_radix_52_bit);
+        context.m_mod_radix_52_bit.reset(mod_radix_52_bit);
+        context.m_size = size;
+        context.m_k0   = computeMontFactor(mod[0]);
+
+        BigNum inp{ mod, size, size - 1 }, res{ r2, size, size - 1 };
+
+        computeMontConverter(res, inp);
+
+        MontMultHalf(r3, r2, r2, mod, context.m_k0);
+
+        auto param     = std::make_unique<Uint64[]>(size * 2);
+        auto param_ptr = param.get();
+        alcp::utils::CopyChunk(param_ptr, r2, size * 8);
+
+        MontReduce(r1, param_ptr, mod, context.m_k0, size * 2);
+
+        Rsa1024BytesToRadix52Bit(mod_radix_52_bit, mod);
+        Rsa1024BytesToRadix52Bit(r2_radix_52_bit, r2);
+
+        //(congruent to 2^(4n-k×m) mod M)
+        AMM1024(r2_radix_52_bit,
+                r2_radix_52_bit,
+                r2_radix_52_bit,
+                mod_radix_52_bit,
+                context.m_k0);
+        // 2^(4n-km) in radix 52
+        alignas(64) const Uint64 mult[20] = { 0x00, 0x1000 };
+
+        //(congruent to 2^2k×m mod M)
+        AMM1024(r2_radix_52_bit,
+                r2_radix_52_bit,
+                mult,
+                mod_radix_52_bit,
+                context.m_k0);
+    }
+
+    template<>
     inline void mont::MontCompute<KEY_SIZE_2048>::MontgomeryExp(
         Uint64*       res,
         const Uint64* input,
@@ -612,7 +990,7 @@ namespace alcp::rsa { namespace zen4 {
 
         alignas(64) Uint64 input_radix_52_bit[40];
         alignas(64) Uint64 res_radix_52_bit[40];
-        BytesToRadix52Bit(input_radix_52_bit, input);
+        Rsa2048BytesToRadix52Bit(input_radix_52_bit, input);
 
         // conversion to mont domain by multiplying with mont converter
         AMM2048(input_radix_52_bit,
@@ -656,13 +1034,89 @@ namespace alcp::rsa { namespace zen4 {
         AMM2048Reduce(
             input_radix_52_bit, res_radix_52_bit, mod_radix_52_bit, k0);
 
-        Radix52BitToBytes(res, input_radix_52_bit);
+        Rsa2048Radix52BitToBytes(res, input_radix_52_bit);
     }
 
-    template void archEncryptPublic<KEY_SIZE_1024>(Uint8*        pEncText,
-                                                   const Uint64* pTextBignum,
-                                                   RsaPublicKeyBignum& pubKey,
-                                                   MontContextBignum&  context);
+    template<>
+    inline void mont::MontCompute<KEY_SIZE_1024>::MontgomeryExp(
+        Uint64*       res,
+        const Uint64* input,
+        Uint64*       exp,
+        Uint64        expSize,
+        Uint64*       mod_radix_52_bit,
+        Uint64*       r2_radix_52_bit,
+        Uint64        k0)
+    {
+
+        alignas(64) Uint64 input_radix_52_bit[24]{};
+        alignas(64) Uint64 res_radix_52_bit[24]{};
+        Rsa1024BytesToRadix52Bit(input_radix_52_bit, input);
+
+        // conversion to mont domain by multiplying with mont converter
+        AMM1024(input_radix_52_bit,
+                input_radix_52_bit,
+                r2_radix_52_bit,
+                mod_radix_52_bit,
+                k0);
+
+        Uint64 val = exp[expSize - 1];
+
+        Uint64 num_leading_zero = _lzcnt_u64(val);
+
+        Uint64 index = num_leading_zero + 1;
+
+        val = val << index;
+
+        alcp::utils::CopyChunk(res_radix_52_bit, input_radix_52_bit, 20 * 8);
+
+        while (index++ < 64) {
+            AMMAndAMS1024(res_radix_52_bit,
+                          input_radix_52_bit,
+                          mod_radix_52_bit,
+                          k0,
+                          val);
+            val <<= 1;
+        }
+
+        for (Int64 i = expSize - 2; i >= 0; i--) {
+            val = exp[i];
+            UNROLL_64
+            for (Uint64 j = 0; j < 64; j++) {
+                AMMAndAMS1024(res_radix_52_bit,
+                              input_radix_52_bit,
+                              mod_radix_52_bit,
+                              k0,
+                              val);
+                val <<= 1;
+            }
+        }
+
+        AMM1024Reduce(
+            input_radix_52_bit, res_radix_52_bit, mod_radix_52_bit, k0);
+
+        Rsa1024Radix52BitToBytes(res, input_radix_52_bit);
+    }
+
+    template<>
+    void archEncryptPublic<KEY_SIZE_1024>(Uint8*              pEncText,
+                                          const Uint64*       pTextBignum,
+                                          RsaPublicKeyBignum& pubKey,
+                                          MontContextBignum&  context)
+    {
+        auto mod = context.m_mod_radix_52_bit.get(); //.m_mod.get();
+        auto r2  = context.m_r2_radix_52_bit.get();  // context.m_r2.get();
+        auto k0  = context.m_k0;
+        auto exp = &pubKey.m_public_exponent;
+
+        alignas(64) Uint64 res_buffer_bignum[1024 / 64 * 3]{};
+        mont::MontCompute<KEY_SIZE_1024>::MontgomeryExp(
+            res_buffer_bignum, pTextBignum, exp, 1, mod, r2, k0);
+
+        Uint8* enc_text = reinterpret_cast<Uint8*>(res_buffer_bignum);
+        for (Int64 i = 1024 / 8 - 1, j = 0; i >= 0; --i, ++j) {
+            pEncText[j] = enc_text[i];
+        }
+    }
 
     template<>
     void archEncryptPublic<KEY_SIZE_2048>(Uint8*              pEncText,
