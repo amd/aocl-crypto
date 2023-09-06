@@ -148,9 +148,13 @@ ProcessInput(const Uint8 key[],
                                         0x4 ,0x0,0x0,0x0);
     // clang-format on
 
-    auto   p_plaintext_128  = reinterpret_cast<const __m128i*>(plaintext);
-    auto   p_ciphertext_128 = reinterpret_cast<__m128i*>(ciphertext);
-    Uint64 n                = (plaintextLength / 256) + 1;
+    auto     p_plaintext_128  = reinterpret_cast<const __m128i*>(plaintext);
+    auto     p_ciphertext_128 = reinterpret_cast<__m128i*>(ciphertext);
+    Uint64   n                = (plaintextLength / 256) + 1;
+    __m512i* state[4]         = { &reg_state_1_0_3_2,
+                                  &reg_state_5_4_7_6,
+                                  &reg_state_9_8_11_10,
+                                  &reg_state_13_12_15_14 };
     for (Uint64 k = 0; k < n; k++) {
 
         // Restoring the registers to last Round State
@@ -228,22 +232,12 @@ ProcessInput(const Uint8 key[],
         Uint64 blocks_128bits = plaintextLength / 16;
 
         Uint64 i = 0;
-        XOR_MESSAGE_KEYSTREAM_STORE(reg_state_1_0_3_2, 0)
-        XOR_MESSAGE_KEYSTREAM_STORE(reg_state_5_4_7_6, 0)
-        XOR_MESSAGE_KEYSTREAM_STORE(reg_state_9_8_11_10, 0)
-        XOR_MESSAGE_KEYSTREAM_STORE(reg_state_13_12_15_14, 0)
-        XOR_MESSAGE_KEYSTREAM_STORE(reg_state_1_0_3_2, 1)
-        XOR_MESSAGE_KEYSTREAM_STORE(reg_state_5_4_7_6, 1)
-        XOR_MESSAGE_KEYSTREAM_STORE(reg_state_9_8_11_10, 1)
-        XOR_MESSAGE_KEYSTREAM_STORE(reg_state_13_12_15_14, 1)
-        XOR_MESSAGE_KEYSTREAM_STORE(reg_state_1_0_3_2, 2)
-        XOR_MESSAGE_KEYSTREAM_STORE(reg_state_5_4_7_6, 2)
-        XOR_MESSAGE_KEYSTREAM_STORE(reg_state_9_8_11_10, 2)
-        XOR_MESSAGE_KEYSTREAM_STORE(reg_state_13_12_15_14, 2)
-        XOR_MESSAGE_KEYSTREAM_STORE(reg_state_1_0_3_2, 3)
-        XOR_MESSAGE_KEYSTREAM_STORE(reg_state_5_4_7_6, 3)
-        XOR_MESSAGE_KEYSTREAM_STORE(reg_state_9_8_11_10, 3)
-        XOR_MESSAGE_KEYSTREAM_STORE(reg_state_13_12_15_14, 3)
+
+        for (int p = 0; p < 4; p++) {
+            for (int j = 0; j < 4; j++) {
+                XOR_MESSAGE_KEYSTREAM_STORE(*state[j], p)
+            }
+        }
 
         plaintext += 256;
         plaintextLength -= 256;
