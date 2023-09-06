@@ -318,6 +318,7 @@ Rsa_Cross(int               padding_mode,
 
         /* laben length should vary */
         std::vector<Uint8> label(i * KeySize);
+        label             = rngb.genRandomBytes(i * KeySize);
         data_main.m_label = data_ext.m_label = &(label[0]);
         data_main.m_label_size = data_ext.m_label_size = label.size();
 
