@@ -155,6 +155,11 @@ Rsa_KAT(int               padding_mode,
         rb->m_key_len     = KeySize;
         rb->m_digest_info = dinfo;
         rb->m_mgf_info    = mgfinfo;
+        rb->m_hash_len    = dinfo.dt_len / 8;
+
+        /* seed and label for padding mode */
+        std::vector<Uint8> seed(rb->m_hash_len);
+        data.m_pseed = &(seed[0]);
 
         int ret_val = 0;
         if (!rb->init()) {
@@ -186,7 +191,6 @@ Rsa_KAT(int               padding_mode,
             FAIL();
         }
         /* check if dec val is same as input */
-
         if (padding_mode == 1) {
             input_data.resize(KeySize, 0);
             EXPECT_TRUE(
@@ -241,6 +245,7 @@ Rsa_Cross(int               padding_mode,
 
     rb_main->m_digest_info = rb_ext->m_digest_info = dinfo;
     rb_main->m_mgf_info = rb_ext->m_mgf_info = mgfinfo;
+    rb_main->m_hash_len = rb_ext->m_hash_len = dinfo.dt_len / 8;
 
     if (padding_mode == 1) {
         rb_main->m_padding_mode = ALCP_TEST_RSA_PADDING;
@@ -301,6 +306,12 @@ Rsa_Cross(int               padding_mode,
         data_ext.m_decrypted_data = &(decrypted_data_ext[0]);
         data_ext.m_msg_len        = input_data.size();
         data_ext.m_key_len        = KeySize;
+
+        /* seed and label for padding mode */
+        std::vector<Uint8> seed(rb_main->m_hash_len);
+        seed              = rngb.genRandomBytes(rb_main->m_hash_len);
+        data_main.m_pseed = &(seed[0]);
+        data_ext.m_pseed  = &(seed[0]);
 
         /* initialize */
         if (!rb_main->init()) {

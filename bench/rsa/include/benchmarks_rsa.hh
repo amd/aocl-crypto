@@ -119,6 +119,11 @@ Rsa_Bench(benchmark::State& state,
     rb->m_key_len     = KeySize;
     rb->m_digest_info = dinfo;
     rb->m_mgf_info    = mgfinfo;
+    rb->m_hash_len    = dinfo.dt_len / 8;
+
+    /* seed and label for padding mode */
+    std::vector<Uint8> seed(rb->m_hash_len);
+    data.m_pseed = &(seed[0]);
 
     if (!rb->init()) {
         state.SkipWithError("Error in RSA init");

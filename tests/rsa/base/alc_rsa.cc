@@ -389,8 +389,6 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
     static const Uint8 Label[] = { 'h', 'e', 'l', 'l', 'o' };
     alc_error_t        err;
 
-    Uint8* p_seed = nullptr;
-
     /* no padding mode */
     if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
         err = alcp_rsa_publickey_encrypt(m_rsa_handle,
@@ -417,9 +415,6 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
             std::cout << "Error in alcp_rsa_add_mgf_oaep " << err << std::endl;
             return err;
         }
-        /* generate randomly */
-        m_hash_len = m_digest_info.dt_len / 8;
-        p_seed     = (Uint8*)malloc(m_hash_len);
 
         // Encrypt text
         err = alcp_rsa_publickey_encrypt_oaep(m_rsa_handle,
@@ -427,17 +422,15 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                                               data.m_msg_len,
                                               Label,
                                               sizeof(Label),
-                                              p_seed,
+                                              data.m_pseed,
                                               data.m_encrypted_data);
         if (alcp_is_error(err)) {
-            free(p_seed);
             return err;
         }
     } else {
         std::cout << "Error: Invalid padding mode!" << std::endl;
         return 1;
     }
-    free(p_seed);
     return 0;
 }
 
