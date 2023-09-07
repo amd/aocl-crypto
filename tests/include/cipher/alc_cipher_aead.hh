@@ -84,6 +84,10 @@ class AlcpCipherAeadBase : public CipherAeadBase
                        const Uint8*            key,
                        const Uint32            key_len);
 
+    bool alcpGCMModeToFuncCall(alcp_dca_ex_t data, bool enc);
+    bool alcpCCMModeToFuncCall(alcp_dca_ex_t aead_data, bool enc);
+    bool alcpSIVModeToFuncCall(alcp_dca_ex_t aead_data, bool enc);
+
     /**
      * @brief         Initialization/Reinitialization function, created handle
      *
