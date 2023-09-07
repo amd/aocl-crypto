@@ -126,7 +126,8 @@ struct MontCompute
         out[18] = GetRadix52Bit(*(reinterpret_cast<const Uint64*>(in_byte)));
 
         out[19] = (*(in_byte + 6) >> 4) + (*(in_byte + 7) << 4)
-                  + (*(reinterpret_cast<const Uint64*>(in_byte + 8)) << 12);
+                  + (*(in_byte + 8) << 12) + (*(in_byte + 9) << 20)
+                  + ((Uint64)(*(in_byte + 10)) << 28);
     }
 
     static inline void Rsa1024Radix52BitToBytes(Uint64* out, const Uint64* in)
