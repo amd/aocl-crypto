@@ -1119,7 +1119,7 @@ struct MontCompute
         // h = qInv * ap mod P
         MontMultHalf(buff_0_p, buff_0_p, res, p_mod, p_k0);
 
-        alcp::utils::PadBlock(buff_p, 0LL, size * 8 * 2);
+        alcp::utils::PadBlock<Uint64>(buff_p, 0LL, size * 8 * 2);
 
         // h * Q
         mul(buff_p, buff_0_p, size, q_mod, size);
