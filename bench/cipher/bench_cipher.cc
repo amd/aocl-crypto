@@ -36,14 +36,14 @@ std::vector<Int64> blocksizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
 
 int
 AesAeadCipher(benchmark::State& state,
-              Uint64            blockSize,
+              const Uint64      blockSize,
               encrypt_t         enc,
               alc_cipher_mode_t alcpMode,
               size_t            keylen)
 {
-    // Dynamic allocation better for larger sizes
-    std::vector<Uint8>             vec_in(blockSize, 0x01);
-    std::vector<Uint8>             vec_out(blockSize, 0x21);
+    // Allocate with 512 bit alignment
+    alignas(64) Uint8              vec_in_arr[blockSize];
+    alignas(64) Uint8              vec_out_arr[blockSize];
     std::unique_ptr<Uint8[]>       tagBuffer = std::make_unique<Uint8[]>(16);
     Uint8                          key[keylen / 8];
     Uint8                          iv[16];
@@ -72,9 +72,9 @@ AesAeadCipher(benchmark::State& state,
     }
 #endif
     alcp::testing::alcp_dca_ex_t data;
-    data.m_in      = &(vec_in[0]);
+    data.m_in      = vec_in_arr;
     data.m_inl     = blockSize;
-    data.m_out     = &(vec_out[0]);
+    data.m_out     = vec_out_arr;
     data.m_outl    = blockSize;
     data.m_iv      = iv;
     data.m_ivl     = 12;
@@ -92,8 +92,8 @@ AesAeadCipher(benchmark::State& state,
         if (!cb->encrypt(data)) {
             state.SkipWithError("GCM / CCM : BENCH_ENC_FAILURE");
         }
-        data.m_in  = &(vec_out[0]);
-        data.m_out = &(vec_in[0]);
+        data.m_in  = vec_out_arr;
+        data.m_out = vec_in_arr;
         // TAG is the IV
         // cb->init(key, keylen);
         if (alcpMode == ALC_AES_MODE_SIV)
