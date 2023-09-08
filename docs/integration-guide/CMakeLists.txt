@@ -23,14 +23,15 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
  
+
+# Check if mermaid exists
+find_program(NODE_EXEC npm)
 # Index/Main files to read from
 SET(ALCP_USAGE_DOC  alcp_getting_started.md)
 
 # Combine one or more Index/Main doc files into an array for
 # generating each pdf
-SET(ALCRYPTO_DOCS  ${ALCP_USAGE_DOC}
-  ${ALCP_TESTING_DOC}
-)
+SET(ALCRYPTO_DOCS  ${ALCP_USAGE_DOC})
 
 # Replace .md with .pdf in all entry of ALCRYPTO_DOCS array
 STRING(REGEX REPLACE "\\.md(;|$)" ".pdf\\1" DOC_PDFS "${ALCRYPTO_DOCS}")
@@ -38,13 +39,46 @@ STRING(REGEX REPLACE "\\.md(;|$)" ".pdf\\1" DOC_PDFS "${ALCRYPTO_DOCS}")
 # exist for each entry in ALCRYPTO_DOCS array
 STRING(REGEX REPLACE "\\.md(;|$)" "\\1" DOC_STEMS "${ALCRYPTO_DOCS}") 
 
+if(NODE_EXEC)
+  FILE(GLOB MERMAID_SRCS "mermaid/*.mmd")
+  # Remove .mmd, there by stemming it
+  STRING(REGEX REPLACE "\\.mmd(;|$)" "\\1" MERMAID_SRCS_STEMS "${MERMAID_SRCS}") 
+  # Replace .mmd with .png thereby creating list of outputs
+  STRING(REGEX REPLACE "\\.mmd(;|$)" ".png\\1" MERMAID_PNGS "${MERMAID_SRCS}")
+  ADD_CUSTOM_COMMAND(
+    OUTPUT ${CMAKE_BINARY_DIR}/node_modules/.bin/mmdc
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMAND ${NODE_EXEC}
+    install
+    @mermaid-js/mermaid-cli
+  )
+  ADD_CUSTOM_TARGET(mermaid ALL DEPENDS ${CMAKE_BINARY_DIR}/node_modules/.bin/mmdc)
+  FOREACH(MERMAID_CURR ${MERMAID_SRCS_STEMS})
+    MESSAGE(STATUS MERMAID ${MERMAID_CURR}.png)
+    ADD_CUSTOM_COMMAND(
+      OUTPUT ${MERMAID_CURR}.png
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/mermaid
+      COMMAND ${CMAKE_BINARY_DIR}/node_modules/.bin/mmdc
+      -b transparent
+        -i 
+      ${MERMAID_CURR}.mmd
+      -o 
+      ${MERMAID_CURR}.png
+    )
+  ENDFOREACH()
+  ADD_CUSTOM_TARGET(mermaid-png ALL DEPENDS mermaid ${MERMAID_PNGS})
+else(NODE_EXEC)
+  MESSAGE(STATUS NODE EXECUTABLE: ${NODE_EXEC})
+  MESSAGE(FATAL_ERROR "NODE NOT FOUND")
+endif(NODE_EXEC)
+
 IF( PDFLATEX AND PANDOC )
-    # For each "Index/Main" file named directory, include all .md
-    # files in them.
-    FOREACH(CDOC ${DOC_STEMS})
-      FILE(GLOB DOC_FILES ${CDOC}/*.md)
-      MESSAGE("Including Documents: ${DOC_FILES}")
-      ADD_CUSTOM_COMMAND(
+  # For each "Index/Main" file named directory, include all .md
+  # files in them.
+  FOREACH(CDOC ${DOC_STEMS})
+    FILE(GLOB DOC_FILES ${CDOC}/*.md)
+    MESSAGE("Including Documents: ${DOC_FILES}")
+    ADD_CUSTOM_COMMAND(
             OUTPUT ${CDOC}.pdf
             DEPENDS ${CDOC}.md ${THIS_DOC}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -63,11 +97,10 @@ IF( PDFLATEX AND PANDOC )
             -V geometry:margin=1in
             -o ${CDOC}.pdf ${CDOC}.md ${DOC_FILES}
       )
-      MESSAGE(STATUS "DOC OUTPUT FILE ${CDOC}.pdf")
-    ENDFOREACH()
-    # Create a target named docs and add "Index/Main" file name 
-    # with pdf extension as a dependancy
-    ADD_CUSTOM_TARGET(docs_alcp_starter ALL DEPENDS ${DOC_PDFS})
+    MESSAGE(STATUS "DOC OUTPUT FILE ${CDOC}.pdf")
+  ENDFOREACH()
+  # Create a target named docs and add "Index/Main" file name 
+  # with pdf extension as a dependancy
+  ADD_CUSTOM_TARGET(docs_alcp_starter ALL DEPENDS mermaid ${DOC_PDFS})
 ENDIF()
-
 #ADD_CUSTOM_TARGET(docs ALL DEPENDS ${PDFDESIGN})
