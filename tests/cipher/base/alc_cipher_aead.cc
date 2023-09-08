@@ -188,9 +188,6 @@ out:
 bool
 AlcpCipherAeadBase::encrypt(alcp_dc_ex_t& data)
 {
-    alc_error_t    err;
-    const int      err_size = 256;
-    Uint8          err_buff[err_size];
     alcp_dca_ex_t  aead_data = *reinterpret_cast<alcp_dca_ex_t*>(&data);
     constexpr bool enc       = true;
 
@@ -202,91 +199,13 @@ AlcpCipherAeadBase::encrypt(alcp_dc_ex_t& data)
         case ALC_AES_MODE_SIV:
             return alcpSIVModeToFuncCall<enc>(aead_data);
         default:
-            /* for gcm / ccm */
-            if ((m_mode == ALC_AES_MODE_GCM) || (m_mode == ALC_AES_MODE_CCM)
-                || (m_mode == ALC_AES_MODE_SIV)) {
-
-                // GCM/CCM init
-                if (m_mode == ALC_AES_MODE_CCM) {
-                    err = alcp_cipher_aead_set_tag_length(m_handle,
-                                                          aead_data.m_tagl);
-
-                    if (alcp_is_error(err)) {
-                        printf("Err:setting tagl\n");
-                        goto enc_out;
-                    }
-                }
-
-                // SIV generates IV synthetically.
-                if (m_mode != ALC_AES_MODE_SIV) {
-                    err = alcp_cipher_aead_set_iv(
-                        m_handle, aead_data.m_ivl, m_iv);
-                    if (alcp_is_error(err)) {
-                        printf("Err:Setting iv\n");
-                        goto enc_out;
-                    }
-                }
-
-                if (aead_data.m_adl > 0) {
-                    err = alcp_cipher_aead_set_aad(
-                        m_handle, aead_data.m_ad, aead_data.m_adl);
-
-                    if (alcp_is_error(err)) {
-                        printf("Err:Setadl\n");
-                        goto enc_out;
-                    }
-                }
-
-                // GCM/CCM Encrypt
-                if (aead_data.m_inl) {
-                    if (m_mode == ALC_AES_MODE_SIV) {
-                        err = alcp_cipher_aead_encrypt(m_handle,
-                                                       aead_data.m_in,
-                                                       aead_data.m_out,
-                                                       aead_data.m_inl,
-                                                       m_iv);
-                    } else {
-                        err = alcp_cipher_aead_encrypt_update(m_handle,
-                                                              aead_data.m_in,
-                                                              aead_data.m_out,
-                                                              aead_data.m_inl,
-                                                              m_iv);
-                    }
-                } else {
-                    // Call encrypt update with a valid memory if no plaintext
-                    Uint8 a;
-                    err = alcp_cipher_aead_encrypt_update(
-                        m_handle, &a, &a, 0, m_iv);
-                }
-                if (alcp_is_error(err)) {
-                    printf("Encrypt Error\n");
-                    goto enc_out;
-                }
-
-                // Get Tag
-                if (aead_data.m_tagl > 0) {
-                    err = alcp_cipher_aead_get_tag(
-                        m_handle, aead_data.m_tag, aead_data.m_tagl);
-                    if (alcp_is_error(err)) {
-                        printf("TAG Error\n");
-                        goto enc_out;
-                    }
-                }
-            }
+            return false; // Should not come here
     }
-    return true;
-enc_out:
-    alcp_error_str(err, err_buff, err_size);
-    std::cout << "Error:" << err_buff << std::endl;
-    return false;
 }
 
 bool
 AlcpCipherAeadBase::decrypt(alcp_dc_ex_t& data)
 {
-    alc_error_t    err;
-    const int      err_size = 256;
-    Uint8          err_buff[err_size];
     alcp_dca_ex_t  aead_data = *reinterpret_cast<alcp_dca_ex_t*>(&data);
     constexpr bool enc       = false;
     switch (m_mode) {
@@ -297,90 +216,8 @@ AlcpCipherAeadBase::decrypt(alcp_dc_ex_t& data)
         case ALC_AES_MODE_SIV:
             return alcpSIVModeToFuncCall<enc>(aead_data);
         default:
-            if ((m_mode == ALC_AES_MODE_GCM) || (m_mode == ALC_AES_MODE_CCM)
-                || (m_mode == ALC_AES_MODE_SIV)) {
-                /* only for ccm */
-                if (m_mode == ALC_AES_MODE_CCM) {
-                    err = alcp_cipher_aead_set_tag_length(m_handle,
-                                                          aead_data.m_tagl);
-                    if (alcp_is_error(err)) {
-                        goto dec_out;
-                    }
-                }
-
-                if (m_mode != ALC_AES_MODE_SIV) {
-                    err = alcp_cipher_aead_set_iv(
-                        m_handle, aead_data.m_ivl, m_iv);
-                    if (alcp_is_error(err)) {
-                        goto dec_out;
-                    }
-                }
-
-                if (aead_data.m_adl > 0) {
-                    err = alcp_cipher_aead_set_aad(
-                        m_handle, aead_data.m_ad, aead_data.m_adl);
-                    if (alcp_is_error(err)) {
-                        goto dec_out;
-                    }
-                }
-
-                // GCM/CCM Decrypt
-                if (aead_data.m_inl) {
-                    if (m_mode == ALC_AES_MODE_SIV) {
-                        err = alcp_cipher_aead_decrypt(m_handle,
-                                                       aead_data.m_in,
-                                                       aead_data.m_out,
-                                                       aead_data.m_inl,
-                                                       m_iv);
-                    } else {
-                        err = alcp_cipher_aead_decrypt_update(m_handle,
-                                                              aead_data.m_in,
-                                                              aead_data.m_out,
-                                                              aead_data.m_inl,
-                                                              m_iv);
-                    }
-                } else {
-                    Uint8 a;
-                    if (m_mode == ALC_AES_MODE_SIV) {
-                        err = alcp_cipher_aead_decrypt(m_handle,
-                                                       aead_data.m_in,
-                                                       aead_data.m_out,
-                                                       aead_data.m_inl,
-                                                       m_iv);
-                    } else {
-                        err = alcp_cipher_aead_decrypt_update(
-                            m_handle, &a, &a, 0, m_iv);
-                    }
-                }
-                if (alcp_is_error(err)) {
-                    printf("Decrypt Error\n");
-                    goto dec_out;
-                }
-
-                if (aead_data.m_tagl > 0) {
-                    err = alcp_cipher_aead_get_tag(
-                        m_handle, aead_data.m_tagBuff, aead_data.m_tagl);
-                    if (alcp_is_error(err)) {
-                        printf("Tag Error\n");
-                        goto dec_out;
-                    }
-                    // Tag verification
-                    if (std::memcmp(aead_data.m_tagBuff,
-                                    aead_data.m_tag,
-                                    aead_data.m_tagl)
-                        != 0) {
-                        std::cout << "Error: Tag Verification Failed!"
-                                  << std::endl;
-                        return false;
-                    }
-                }
-            }
+            return false; // Should not come here
     }
-    return true;
-dec_out:
-    alcp_error_str(err, err_buff, err_size);
-    std::cout << "Error:" << err_buff << std::endl;
-    return false;
 }
 
 template<bool enc>
