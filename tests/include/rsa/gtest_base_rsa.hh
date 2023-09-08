@@ -93,8 +93,6 @@ SkipTest(int ret_val, std::string LibStr)
 void
 Rsa_KAT(int               padding_mode,
         int               KeySize,
-        std::string       DigestType,
-        int               DigestSize,
         alc_digest_info_t dinfo,
         alc_digest_info_t mgfinfo)
 {
@@ -174,8 +172,6 @@ Rsa_KAT(int               padding_mode,
             FAIL();
         }
         ret_val = rb->EncryptPubKey(data);
-        if (SkipTest(ret_val, LibStr))
-            continue;
         if (ret_val != 0) {
             std::cout << "Error in RSA EncryptPubKey" << std::endl;
             FAIL();
@@ -187,8 +183,6 @@ Rsa_KAT(int               padding_mode,
         }
 
         ret_val = rb->DecryptPvtKey(data);
-        if (SkipTest(ret_val, LibStr))
-            continue;
         if (ret_val != 0) {
             std::cout << "Error in RSA DecryptPvtKey" << std::endl;
             FAIL();
@@ -212,8 +206,6 @@ Rsa_KAT(int               padding_mode,
 void
 Rsa_Cross(int               padding_mode,
           int               KeySize,
-          std::string       DigestType,
-          int               DigestSize,
           alc_digest_info_t dinfo,
           alc_digest_info_t mgfinfo)
 {
