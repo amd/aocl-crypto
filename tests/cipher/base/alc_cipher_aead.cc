@@ -35,8 +35,7 @@ AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t mode,
                                        const Uint8*            iv)
     : m_mode{ mode }
     , m_iv{ iv }
-{
-}
+{}
 
 AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t mode,
                                        const Uint8*            iv,
@@ -189,18 +188,19 @@ out:
 bool
 AlcpCipherAeadBase::encrypt(alcp_dc_ex_t& data)
 {
-    alc_error_t   err;
-    const int     err_size = 256;
-    Uint8         err_buff[err_size];
-    alcp_dca_ex_t aead_data = *reinterpret_cast<alcp_dca_ex_t*>(&data);
+    alc_error_t    err;
+    const int      err_size = 256;
+    Uint8          err_buff[err_size];
+    alcp_dca_ex_t  aead_data = *reinterpret_cast<alcp_dca_ex_t*>(&data);
+    constexpr bool enc       = true;
 
     switch (m_mode) {
         case ALC_AES_MODE_GCM:
-            return alcpGCMModeToFuncCall(aead_data, true);
+            return alcpGCMModeToFuncCall<enc>(aead_data);
         case ALC_AES_MODE_CCM:
-            return alcpCCMModeToFuncCall(aead_data, true);
+            return alcpCCMModeToFuncCall<enc>(aead_data);
         case ALC_AES_MODE_SIV:
-            return alcpSIVModeToFuncCall(aead_data, true);
+            return alcpSIVModeToFuncCall<enc>(aead_data);
         default:
             /* for gcm / ccm */
             if ((m_mode == ALC_AES_MODE_GCM) || (m_mode == ALC_AES_MODE_CCM)
@@ -284,18 +284,18 @@ enc_out:
 bool
 AlcpCipherAeadBase::decrypt(alcp_dc_ex_t& data)
 {
-    alc_error_t   err;
-    const int     err_size = 256;
-    Uint8         err_buff[err_size];
-    alcp_dca_ex_t aead_data = *reinterpret_cast<alcp_dca_ex_t*>(&data);
-
+    alc_error_t    err;
+    const int      err_size = 256;
+    Uint8          err_buff[err_size];
+    alcp_dca_ex_t  aead_data = *reinterpret_cast<alcp_dca_ex_t*>(&data);
+    constexpr bool enc       = false;
     switch (m_mode) {
         case ALC_AES_MODE_GCM:
-            return alcpGCMModeToFuncCall(aead_data, false);
+            return alcpGCMModeToFuncCall<enc>(aead_data);
         case ALC_AES_MODE_CCM:
-            return alcpCCMModeToFuncCall(aead_data, false);
+            return alcpCCMModeToFuncCall<enc>(aead_data);
         case ALC_AES_MODE_SIV:
-            return alcpSIVModeToFuncCall(aead_data, false);
+            return alcpSIVModeToFuncCall<enc>(aead_data);
         default:
             if ((m_mode == ALC_AES_MODE_GCM) || (m_mode == ALC_AES_MODE_CCM)
                 || (m_mode == ALC_AES_MODE_SIV)) {
@@ -383,8 +383,9 @@ dec_out:
     return false;
 }
 
+template<bool enc>
 bool
-AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t aead_data, bool enc)
+AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -409,7 +410,7 @@ AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t aead_data, bool enc)
         }
     }
 
-    if (enc) {
+    if constexpr (enc) {
         err = alcp_cipher_aead_encrypt_update(
             m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl, m_iv);
         if (alcp_is_error(err)) {
@@ -453,8 +454,9 @@ AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t aead_data, bool enc)
     return true;
 }
 
+template<bool enc>
 bool
-AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t aead_data, bool enc)
+AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -485,7 +487,7 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t aead_data, bool enc)
         }
     }
 
-    if (enc) {
+    if constexpr (enc) {
         if (aead_data.m_inl) {
             err = alcp_cipher_aead_encrypt_update(m_handle,
                                                   aead_data.m_in,
@@ -547,8 +549,10 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t aead_data, bool enc)
     }
     return true;
 }
+
+template<bool enc>
 bool
-AlcpCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t aead_data, bool enc)
+AlcpCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t& aead_data)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -563,7 +567,7 @@ AlcpCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t aead_data, bool enc)
         return false;
     }
 
-    if (enc) {
+    if constexpr (enc) {
         err = alcp_cipher_aead_encrypt(
             m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl, m_iv);
         if (alcp_is_error(err)) {
