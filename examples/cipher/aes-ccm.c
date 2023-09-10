@@ -94,48 +94,6 @@ create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
     return 0;
 }
 
-int
-encrypt_demo(const Uint8* plaintxt,
-             const Uint32 len, /*  for both 'plaintxt' and 'ciphertxt' */
-             Uint8*       ciphertxt,
-             const Uint8* iv)
-{
-    alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
-
-    err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len, iv);
-    if (alcp_is_error(err)) {
-        printf("Error: unable to encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        return -1;
-    }
-
-    printf("encrypt succeeded\n");
-    return 0;
-}
-
-int
-decrypt_demo(const Uint8* ciphertxt,
-             const Uint32 len, /* for both 'plaintxt' and 'ciphertxt' */
-             Uint8*       plaintxt,
-             const Uint8* iv)
-{
-    alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
-
-    err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, len, iv);
-    if (alcp_is_error(err)) {
-        printf("Error: unable decrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        return -1;
-    }
-
-    printf("decrypt succeeded\n");
-    return 0;
-}
-
 static Uint8* sample_plaintxt =
     (Uint8*)"Happy and Fantastic Diwali from AOCL Crypto !!";
 
