@@ -77,15 +77,64 @@ struct BigNum
     Uint64  m_pos  = 0;
 };
 
+static inline Uint64
+GetRadix52Bit(Uint64 val)
+{
+    constexpr Uint64 MaskRadix52Bit = 0xfffffffffffff;
+    return val & MaskRadix52Bit;
+}
+
+static inline void
+GetFromTable(Uint64* t, Uint64 index, Uint64* num, Uint64 size, Uint64 limit)
+{
+    for (Uint64 i = 0; i < size; i++) {
+        num[i] = t[index];
+        index += limit;
+    }
+}
+
+static inline void
+PutInTable(Uint64* t, Uint64 index, Uint64* num, Uint64 size, Uint64 limit)
+{
+    for (Uint64 i = 0; i < size; i++) {
+        t[index] = num[i];
+        index += limit;
+    }
+}
+
+static inline void
+Rsa1024BytesToRadix52Bit(Uint64* out, const Uint64* in)
+{
+    const Uint8* in_byte = reinterpret_cast<const Uint8*>(in);
+    for (Uint64 i = 0; i < 18; i += 2) {
+        out[i]     = GetRadix52Bit(*(reinterpret_cast<const Uint64*>(in_byte)));
+        out[i + 1] = GetRadix52Bit(
+            (*(reinterpret_cast<const Uint64*>(in_byte + 6))) >> 4);
+        in_byte += 13;
+    }
+
+    out[18] = GetRadix52Bit(*(reinterpret_cast<const Uint64*>(in_byte)));
+
+    out[19] = (*(in_byte + 6) >> 4) + (*(in_byte + 7) << 4)
+              + (*(in_byte + 8) << 12) + (*(in_byte + 9) << 20)
+              + ((Uint64)(*(in_byte + 10)) << 28);
+}
+
+static inline void
+Rsa1024Radix52BitToBytes(Uint64* out, const Uint64* in)
+{
+    Uint8* out_byte = reinterpret_cast<Uint8*>(out);
+    for (Uint64 i = 0; i < 19; i += 2) {
+        *(reinterpret_cast<Uint64*>(out_byte)) = in[i];
+        out_byte += 6;
+        *(reinterpret_cast<Uint64*>(out_byte)) ^= (in[i + 1] << 4);
+        out_byte += 7;
+    }
+}
+
 template<alc_rsa_key_size T>
 struct MontCompute
 {
-    static inline Uint64 GetRadix52Bit(Uint64 val)
-    {
-        constexpr Uint64 MaskRadix52Bit = 0xfffffffffffff;
-        return val & MaskRadix52Bit;
-    }
-
     static inline void Rsa2048BytesToRadix52Bit(Uint64* out, const Uint64* in)
     {
         const Uint8* in_byte = reinterpret_cast<const Uint8*>(in);
@@ -106,34 +155,6 @@ struct MontCompute
     {
         Uint8* out_byte = reinterpret_cast<Uint8*>(out);
         for (Uint64 i = 0; i < 39; i += 2) {
-            *(reinterpret_cast<Uint64*>(out_byte)) = in[i];
-            out_byte += 6;
-            *(reinterpret_cast<Uint64*>(out_byte)) ^= (in[i + 1] << 4);
-            out_byte += 7;
-        }
-    }
-
-    static inline void Rsa1024BytesToRadix52Bit(Uint64* out, const Uint64* in)
-    {
-        const Uint8* in_byte = reinterpret_cast<const Uint8*>(in);
-        for (Uint64 i = 0; i < 18; i += 2) {
-            out[i] = GetRadix52Bit(*(reinterpret_cast<const Uint64*>(in_byte)));
-            out[i + 1] = GetRadix52Bit(
-                (*(reinterpret_cast<const Uint64*>(in_byte + 6))) >> 4);
-            in_byte += 13;
-        }
-
-        out[18] = GetRadix52Bit(*(reinterpret_cast<const Uint64*>(in_byte)));
-
-        out[19] = (*(in_byte + 6) >> 4) + (*(in_byte + 7) << 4)
-                  + (*(in_byte + 8) << 12) + (*(in_byte + 9) << 20)
-                  + ((Uint64)(*(in_byte + 10)) << 28);
-    }
-
-    static inline void Rsa1024Radix52BitToBytes(Uint64* out, const Uint64* in)
-    {
-        Uint8* out_byte = reinterpret_cast<Uint8*>(out);
-        for (Uint64 i = 0; i < 19; i += 2) {
             *(reinterpret_cast<Uint64*>(out_byte)) = in[i];
             out_byte += 6;
             *(reinterpret_cast<Uint64*>(out_byte)) ^= (in[i + 1] << 4);
@@ -996,22 +1017,6 @@ struct MontCompute
         }
     }
 
-    static inline void PutInTable(
-        Uint64* t, Uint64 index, Uint64* num, Uint64 size, Uint64 limit)
-    {
-        for (Uint64 i = 0; i < size; i++) {
-            t[index] = num[i];
-            index += limit;
-        }
-    }
-    static inline void GetFromTable(
-        Uint64* t, Uint64 index, Uint64* num, Uint64 size, Uint64 limit)
-    {
-        for (Uint64 i = 0; i < size; i++) {
-            num[i] = t[index];
-            index += limit;
-        }
-    }
     // INPUT: an element g ∈ G and positive integer e = (etet−1...e1e0)b
     // OUTPUT: g^e
     // 1. Precomputation

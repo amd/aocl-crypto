@@ -907,24 +907,45 @@ namespace alcp::rsa { namespace zen4 {
 
         MontReduce(r1, param_ptr, mod, context.m_k0, size * 2);
 
-        Rsa2048BytesToRadix52Bit(mod_radix_52_bit, mod);
-        Rsa2048BytesToRadix52Bit(r2_radix_52_bit, r2);
+        if (size == 32) {
+            Rsa2048BytesToRadix52Bit(mod_radix_52_bit, mod);
+            Rsa2048BytesToRadix52Bit(r2_radix_52_bit, r2);
 
-        //(congruent to 2^(4n-k×m) mod M)
-        AMM2048(r2_radix_52_bit,
-                r2_radix_52_bit,
-                r2_radix_52_bit,
-                mod_radix_52_bit,
-                context.m_k0);
-        // 2^(4n-km) in radix 52
-        alignas(64) const Uint64 mult[40] = { 0x00, 0x00, 0x1000000 };
+            //(congruent to 2^(4n-k×m) mod M)
+            AMM2048(r2_radix_52_bit,
+                    r2_radix_52_bit,
+                    r2_radix_52_bit,
+                    mod_radix_52_bit,
+                    context.m_k0);
+            // 2^(4n-km) in radix 52
+            alignas(64) const Uint64 mult[40] = { 0x00, 0x00, 0x1000000 };
 
-        //(congruent to 2^2k×m mod M)
-        AMM2048(r2_radix_52_bit,
-                r2_radix_52_bit,
-                mult,
-                mod_radix_52_bit,
-                context.m_k0);
+            //(congruent to 2^2k×m mod M)
+            AMM2048(r2_radix_52_bit,
+                    r2_radix_52_bit,
+                    mult,
+                    mod_radix_52_bit,
+                    context.m_k0);
+        } else {
+            Rsa1024BytesToRadix52Bit(mod_radix_52_bit, mod);
+            Rsa1024BytesToRadix52Bit(r2_radix_52_bit, r2);
+
+            //(congruent to 2^(4n-k×m) mod M)
+            AMM1024(r2_radix_52_bit,
+                    r2_radix_52_bit,
+                    r2_radix_52_bit,
+                    mod_radix_52_bit,
+                    context.m_k0);
+            // 2^(4n-km) in radix 52
+            alignas(64) const Uint64 mult[20] = { 0x00, 0x1000 };
+
+            //(congruent to 2^2k×m mod M)
+            AMM1024(r2_radix_52_bit,
+                    r2_radix_52_bit,
+                    mult,
+                    mod_radix_52_bit,
+                    context.m_k0);
+        }
     }
 
     template<>
@@ -1137,6 +1158,165 @@ namespace alcp::rsa { namespace zen4 {
         for (Int64 i = 2048 / 8 - 1, j = 0; i >= 0; --i, ++j) {
             pEncText[j] = enc_text[i];
         }
+    }
+
+    static inline void RSA2048MontgomeryExpConstantTime(
+        Uint64* res,
+        Uint64* input,
+        Uint64* exp,
+        Uint64* mod_radix_52_bit,
+        Uint64* r2_radix_52_bit,
+        Uint64  k0)
+    {
+        alignas(64) Uint64 t[16 * 20] = {};
+        Uint64             r1_radix_52_bit_p[24]{};
+        Uint64             input_radix_52[24]{};
+        Uint64             res_radix_52[24]{};
+        Uint64             mult_radix_52[24]{};
+        Uint64             sq_radix_52[24]{};
+
+        // to do check which window size is correct
+        Uint64 winSize    = 4;
+        Uint64 valueLimit = 1 << 4;
+        // putting one in mont form
+        AMM1024Reduce(r1_radix_52_bit_p, r2_radix_52_bit, mod_radix_52_bit, k0);
+        mont::PutInTable(t, 0, r1_radix_52_bit_p, 20, valueLimit);
+
+        mont::Rsa1024BytesToRadix52Bit(input_radix_52, input);
+        AMM1024(res_radix_52,
+                input_radix_52,
+                r2_radix_52_bit,
+                mod_radix_52_bit,
+                k0);
+        mont::PutInTable(t, 1, res_radix_52, 20, valueLimit);
+
+        alcp::utils::CopyChunk(mult_radix_52, res_radix_52, 20 * 8);
+        for (Uint64 i = 2; i < valueLimit; i++) {
+            AMM1024(mult_radix_52,
+                    mult_radix_52,
+                    res_radix_52,
+                    mod_radix_52_bit,
+                    k0);
+            mont::PutInTable(t, i, mult_radix_52, 20, valueLimit);
+        }
+
+        const Uint8* exp_byte_ptr = reinterpret_cast<const Uint8*>(exp);
+        Uint8        index_value  = exp_byte_ptr[127];
+        mont::GetFromTable(t, index_value >> 4, sq_radix_52, 20, valueLimit);
+        for (Uint64 i = 0; i < winSize; i++) {
+            AMS1024(sq_radix_52, sq_radix_52, mod_radix_52_bit, k0);
+        }
+
+        mont::GetFromTable(t, index_value & 0xf, mult_radix_52, 20, valueLimit);
+        AMM1024(sq_radix_52, sq_radix_52, mult_radix_52, mod_radix_52_bit, k0);
+
+        for (Int64 i = 126; i >= 0; --i) {
+
+            // first 4 bits
+            for (Uint64 i = 0; i < winSize; i++) {
+                AMS1024(sq_radix_52, sq_radix_52, mod_radix_52_bit, k0);
+            }
+            index_value = exp_byte_ptr[i];
+            mont::GetFromTable(
+                t, index_value >> 4, mult_radix_52, 20, valueLimit);
+
+            AMM1024(
+                sq_radix_52, mult_radix_52, sq_radix_52, mod_radix_52_bit, k0);
+
+            // next 4 bits
+            for (Uint64 i = 0; i < winSize; i++) {
+                AMS1024(sq_radix_52, sq_radix_52, mod_radix_52_bit, k0);
+            }
+            mont::GetFromTable(
+                t, index_value & 0xf, mult_radix_52, 20, valueLimit);
+            AMM1024(
+                sq_radix_52, mult_radix_52, sq_radix_52, mod_radix_52_bit, k0);
+        }
+
+        AMM1024Reduce(sq_radix_52, sq_radix_52, mod_radix_52_bit, k0);
+
+        alcp::utils::PadBlock<Uint64>(res, 0LL, 16 * 8);
+        mont::Rsa1024Radix52BitToBytes(res, sq_radix_52);
+    }
+
+    template<>
+    inline void mont::MontCompute<KEY_SIZE_2048>::decryptUsingCRT(
+        Uint64*              res,
+        const Uint64*        inp,
+        RsaPrivateKeyBignum& privKey,
+        MontContextBignum&   contextP,
+        MontContextBignum&   contextQ)
+    {
+        auto size = contextP.m_size;
+
+        Uint64 buff_p[32];
+        Uint64 buff_0_p[16];
+        Uint64 buff_1_p[16];
+
+        auto p_mod_radix_52_bit = contextP.m_mod_radix_52_bit.get();
+        auto p_mod              = privKey.m_p.get();
+        auto q_mod              = privKey.m_q.get();
+        auto p_exp              = privKey.m_dp.get();
+        auto q_mod_radix_52_bit = contextQ.m_mod_radix_52_bit.get();
+        auto q_exp              = privKey.m_dq.get();
+        auto r2_p               = contextP.m_r2.get();
+        auto r2_q               = contextQ.m_r2.get();
+        auto r2_radix_52_bit_p  = contextP.m_r2_radix_52_bit.get();
+        auto r2_radix_52_bit_q  = contextQ.m_r2_radix_52_bit.get();
+        auto qinv               = privKey.m_qinv.get();
+        auto p_k0               = contextP.m_k0;
+        auto q_k0               = contextQ.m_k0;
+
+        // P reduction - ap
+        alcp::utils::CopyChunk(buff_p, inp, 2048 / 8);
+
+        MontReduceHalf(buff_0_p, buff_p, p_mod, p_k0);
+
+        MontMultHalf(buff_0_p, buff_0_p, r2_p, p_mod, p_k0);
+
+        // Q reduction - aq
+        alcp::utils::CopyChunk(buff_p, inp, 2048 / 8);
+        MontReduceHalf(buff_1_p, buff_p, q_mod, q_k0);
+        MontMultHalf(buff_1_p, buff_1_p, r2_q, q_mod, q_k0);
+
+        // Rsa1024BytesToRadix52Bit(r1_p_rdix_52_bit, r1_p);
+        // ap = ap ^ dp mod p
+        RSA2048MontgomeryExpConstantTime(buff_0_p,
+                                         buff_0_p,
+                                         p_exp,
+                                         p_mod_radix_52_bit,
+                                         r2_radix_52_bit_p,
+                                         p_k0);
+
+        // aq = aq ^dq mod q
+        RSA2048MontgomeryExpConstantTime(buff_1_p,
+                                         buff_1_p,
+                                         q_exp,
+                                         q_mod_radix_52_bit,
+                                         r2_radix_52_bit_q,
+                                         q_k0);
+
+        // convert aq to aq mod p
+        MontSub(buff_p, buff_1_p, p_mod, p_mod, size);
+
+        // ap = (ap - aq) mod p
+        MontSub(buff_0_p, buff_0_p, buff_p, p_mod, size);
+
+        // convert qInv to qInv * r mod P
+        MontMultHalf(res, qinv, r2_p, p_mod, p_k0);
+
+        // qInv * r * ap * r^-1 mod P -> qInv * ap mod P
+        // h = qInv * ap mod P
+        MontMultHalf(buff_0_p, buff_0_p, res, p_mod, p_k0);
+
+        alcp::utils::PadBlock<Uint64>(buff_p, 0LL, size * 8 * 2);
+
+        // h * Q
+        mul(buff_p, buff_0_p, size, q_mod, size);
+
+        // res = aq + h*Q
+        AddBigNum(res, size * 2, buff_p, buff_1_p, size);
+        return;
     }
 
     template void archDecryptPrivate<KEY_SIZE_1024>(
