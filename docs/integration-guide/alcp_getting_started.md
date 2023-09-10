@@ -65,13 +65,16 @@ Life cycle of any algorithm of AOCL-Crypto is divided into 4 steps.
 
 3. Request - Requesting a context from AOCL-Crypto will finalize the internal paths required to achieve the requested task. You can request by invoking `alcp_<algo>_request(&info,handle)`.
 
-4. Finish/Finalize - Some algorithms require `finish` and `finalize` but most of them only require `finish`. To `finish` the operation, you can involk `alcp_<algo>_finish(&handle)`, once finished the handle is no longer valid and must be destroyed by deallocating context. Optionally you can also write zeros to the context memory.
+4. Core Operation - Core Operations of the algorithm involes feeding in the data required by the algorithm. Each algotithm will have its own core operations.
+
+5. Finish/Finalize - Some algorithms require `finish` and `finalize` but most of them only require `finish`. To `finish` the operation, you can involk `alcp_<algo>_finish(&handle)`, once finished the handle is no longer valid and must be destroyed by deallocating context. Optionally you can also write zeros to the context memory.
 
 Every API mentioned above will return an `alc_error_t` which will let you know if any error occured. 
 
 ### An example C code for encryption using a Cipher AES algorithm
 ```C
 #include <stdio.h>
+#include <alcp/alcp.h>
 
 int main(){
 
@@ -119,7 +122,7 @@ int main(){
     return 0;
   }
 
-  /* Additional Step specific to algorithm */
+  /* Core Operations Step specific to algorithm */
   err = alcp_cipher_encrypt(handle, plaintext, ciphertext, len, iv);
   if (alcp_is_error(err)) {
       printf("Error: Unable to Encrypt \n");
@@ -183,24 +186,276 @@ Life cycle of AEAD cipher should be all similar. AES, Chacha20-Poly all should u
 
 All AEAD API has this format `alcp_cipher_aead_<operation>`. Any API which starts with `alcp_cipher_aead_` can be considered as an AEAD API.
 
-Life Cycle of AEAD
+Life Cycle of AEAD Core Operations
+
 1. Setting IV - Every AEAD except SIV expects an Initialization vector to be set. For SIV this step is skipped. For CCM mode, it requires tag length to be set prior to IV.
+
 2. Setting AAD - `Additional Data` is the `Authentication Data`. This data will influence the final tag generation. It will serve to improve the authenticity of message as any difference in this authentication data will result in an entirely different tag.
+
 3. Encrypt/Decrypt - A plaintext or ciphertext can be given to the algorithm at this stage. Plaintext will be encrypted into ciphertext whereas ciphertext will be decrypted into plaintext.
+
 4. Tag Generation - Once a tag is generated, we can concude that the transaction is complete. Now only `finish` call will be possible on the current state.
 For Decryption this tag must be compared with the expected tag to make sure that the plaintext is authentic.
+
 #### SIV
 
-Example Code for AES-SIV
-```c
+Conceptual example not a working example of SIV operation.
 
+Example Code for AES-SIV,
+```C
+// Info about the cipher operation
+alc_cipher_aead_info_t cinfo = {
+    .ci_type = ALC_CIPHER_TYPE_AES,
+    .ci_algo_info   = {
+        .ai_mode = ALC_AES_MODE_SIV,
+        .ai_iv   = NULL,
+        .ai_siv.xi_ctr_key = &kinfo,
+    },
+    /* No padding, Not Implemented yet*/
+    //.pad     = ALC_CIPHER_PADDING_NONE, 
+    .ci_key_info     = {
+        .type    = ALC_KEY_TYPE_SYMMETRIC,
+        .fmt     = ALC_KEY_FMT_RAW,
+        .key     = key_cmac,
+        .len     = key_len,
+    },
+};
+
+// Support Check
+err = alcp_cipher_aead_supported(&cinfo);
+if (alcp_is_error(err)) {
+    printf("Error: not supported \n");
+}
+printf("supported succeeded\n");
+/*
+  * Application is expected to allocate for context
+  */
+
+// Context Allocation
+handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
+
+// Request
+err = alcp_cipher_aead_request(&cinfo, &handle);
+if (alcp_is_error(err)) {
+    printf("Error: unable to request \n");
+    alcp_error_str(err, err_buf, err_size);
+}
+printf("request succeeded\n");
+
+/* For SIV directly step 2 as IV is generated synthetically */
+err = alcp_cipher_aead_set_aad(&handle, aad, aad_len);
+if (alcp_is_error(err)) {
+    printf("Error: unable to encrypt \n");
+    alcp_error_str(err, err_buf, err_size);
+    return false;
+}
+
+/* Step 3 Encrypt stage, tag gets generated here */
+// Memory for IV can be memory for tag, its unused by the API
+err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len, iv);
+if (alcp_is_error(err)) {
+    printf("Error: unable to encrypt \n");
+    alcp_error_str(err, err_buf, err_size);
+    return false;
+}
+
+/* Step 4 Tag Generation */
+// Tag in this case generated will be the synthetic IV
+err = alcp_cipher_aead_get_tag(&handle, iv, 16);
+if (alcp_is_error(err)) {
+    printf("Error: unable to encrypt \n");
+    alcp_error_str(err, err_buf, err_size);
+    return false;
+}
+
+// Finish the operation
+alcp_cipher_aead_finish(&handle);
+
+// Deallocate context
+free(handle.context);
 ```
 
 
 #### CCM
 
+Conceptual example not a working example of CCM operation.
+
+Example Code for AES-CCM,
+```C
+// Info about the cipher operation
+alc_cipher_aead_info_t cinfo = {
+    .ci_type = ALC_CIPHER_TYPE_AES,
+    .ci_algo_info   = {
+        .ai_mode = ALC_AES_MODE_CCM,
+        .ai_iv   = iv,
+    },
+    /* No padding, Not Implemented yet*/
+    //.pad     = ALC_CIPHER_PADDING_NONE, 
+    .ci_key_info     = {
+        .type    = ALC_KEY_TYPE_SYMMETRIC,
+        .fmt     = ALC_KEY_FMT_RAW,
+        .key     = key,
+        .len     = key_len,
+    },
+};
+
+// Support Check
+err = alcp_cipher_aead_supported(&cinfo);
+if (alcp_is_error(err)) {
+    printf("Error: not supported \n");
+    alcp_error_str(err, err_buf, err_size);
+    return -1;
+}
+printf("supported succeeded\n");
+
+// Context Allocation
+handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
+if (!handle.ch_context)
+    return -1;
+
+// Request
+err = alcp_cipher_aead_request(&cinfo, &handle);
+if (alcp_is_error(err)) {
+    printf("Error: unable to request \n");
+    alcp_error_str(err, err_buf, err_size);
+    return -1;
+}
+printf("request succeeded\n");
+
+/* Step 0 Additional step for CCM, set tag length */
+err = alcp_cipher_aead_set_tag_length(&handle, tagLen);
+if (alcp_is_error(err)) {
+    printf("Error: unable getting tag \n");
+    alcp_error_str(err, err_buf, err_size);
+    return -1;
+}
+
+/* Step 1 set IV */
+err = alcp_cipher_aead_set_iv(&handle, ivLen, iv);
+if (alcp_is_error(err)) {
+    printf("Error: unable ccm encrypt init \n");
+    alcp_error_str(err, err_buf, err_size);
+    return -1;
+}
+
+/* Step 2 set Additional Data */
+err = alcp_cipher_aead_set_aad(&handle, ad, adLen);
+if (alcp_is_error(err)) {
+    printf("Error: unable ccm add data processing \n");
+    alcp_error_str(err, err_buf, err_size);
+    return -1;
+}
+
+/* Step 3 Encrypt/Decrypt */
+err =
+    alcp_cipher_aead_encrypt_update(&handle, plaintxt, ciphertxt, len, iv);
+if (alcp_is_error(err)) {
+    printf("Error: unable encrypt \n");
+    alcp_error_str(err, err_buf, err_size);
+    return -1;
+}
+
+/* Step 4 Get the Tag */
+err = alcp_cipher_aead_get_tag(&handle, tag, tagLen);
+if (alcp_is_error(err)) {
+    printf("Error: unable getting tag \n");
+    alcp_error_str(err, err_buf, err_size);
+    return -1;
+}
+
+// Finish
+alcp_cipher_aead_finish(&handle);
+
+// Deallocate the context
+free(handle.ch_context);
+
+```
+
 #### GCM
 
+Conceptual example not a working example of GCM operation.
+
+Example Code for AES-GCM,
+
+```C
+// Info about the cipher operation
+alc_cipher_aead_info_t cinfo = {
+    .ci_type = ALC_CIPHER_TYPE_AES,
+    .ci_algo_info   = {
+        .ai_mode = ALC_AES_MODE_GCM,
+        .ai_iv   = iv,
+    },
+    /* No padding, Not Implemented yet*/
+    //.pad     = ALC_CIPHER_PADDING_NONE,
+    .ci_key_info     = {
+        .type    = ALC_KEY_TYPE_SYMMETRIC,
+        .fmt     = ALC_KEY_FMT_RAW,
+        .key     = key,
+        .len     = key_len,
+    },
+};
+
+// Support Check
+err = alcp_cipher_aead_supported(&cinfo);
+if (alcp_is_error(err)) {
+    printf("Error: not supported \n");
+    alcp_error_str(err, err_buf, err_size);
+    return -1;
+}
+
+// Context Allocation
+handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
+if (!handle.ch_context)
+    return -1;
+
+// Request
+err = alcp_cipher_aead_request(&cinfo, &handle);
+if (alcp_is_error(err)) {
+    printf("Error: unable to request \n");
+    alcp_error_str(err, err_buf, err_size);
+    return -1;
+}
+
+/* Step 1 Set IV */
+err = alcp_cipher_aead_set_iv(&handle, ivLen, iv);
+if (alcp_is_error(err)) {
+    printf("Error: unable gcm encrypt init \n");
+    alcp_error_str(err, err_buf, err_size);
+    return -1;
+}
+
+/* Step 2 set additional data */
+err = alcp_cipher_aead_set_aad(&handle, ad, adLen);
+if (alcp_is_error(err)) {
+    printf("Error: unable gcm add data processing \n");
+    alcp_error_str(err, err_buf, err_size);
+    return -1;
+}
+
+/* Step 3 Encrypt or Decrypt */
+err =
+    alcp_cipher_aead_encrypt_update(&handle, plaintxt, ciphertxt, len, iv);
+if (alcp_is_error(err)) {
+    printf("Error: unable encrypt \n");
+    alcp_error_str(err, err_buf, err_size);
+    return -1;
+}
+
+/* Step 4 Get Tag */
+err = alcp_cipher_aead_get_tag(&handle, tag, tagLen);
+if (alcp_is_error(err)) {
+    printf("Error: unable getting tag \n");
+    alcp_error_str(err, err_buf, err_size);
+    return -1;
+}
+
+// Finish the operation
+alcp_cipher_aead_finish(&handle);
+
+// Deallocate the context
+free(handle.context)
+
+```
 
 
 # Appendix
