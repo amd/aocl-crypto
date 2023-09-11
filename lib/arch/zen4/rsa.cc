@@ -264,6 +264,149 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
+    static inline void AMM1024Parallel(Uint64* res[2],
+                                       Uint64* first[2],
+                                       Uint64* second[2],
+                                       Uint64* mod[2],
+                                       Uint64  k0[2])
+    {
+        __m512i first_reg_0;
+        __m512i first_reg_1;
+        __m512i first_reg_2;
+        __m512i first_reg_3;
+        __m512i first_reg_4;
+        __m512i first_reg_5;
+
+        __m512i mod_reg_0;
+        __m512i mod_reg_1;
+        __m512i mod_reg_2;
+        __m512i mod_reg_3;
+        __m512i mod_reg_4;
+        __m512i mod_reg_5;
+
+        __m512i res_reg_0{};
+        __m512i res_reg_1{};
+        __m512i res_reg_2{};
+        __m512i res_reg_3{};
+        __m512i res_reg_4{};
+        __m512i res_reg_5{};
+
+        first_reg_0 = _mm512_loadu_si512(first[0]);
+        first_reg_1 = _mm512_loadu_si512(first[0] + 8);
+        first_reg_2 = _mm512_loadu_si512(first[0] + 16);
+        first_reg_3 = _mm512_loadu_si512(first[1]);
+        first_reg_4 = _mm512_loadu_si512(first[1] + 8);
+        first_reg_5 = _mm512_loadu_si512(first[1] + 16);
+
+        mod_reg_0 = _mm512_loadu_si512(mod[0]);
+        mod_reg_1 = _mm512_loadu_si512(mod[0] + 8);
+        mod_reg_2 = _mm512_loadu_si512(mod[0] + 16);
+        mod_reg_3 = _mm512_loadu_si512(mod[1]);
+        mod_reg_4 = _mm512_loadu_si512(mod[1] + 8);
+        mod_reg_5 = _mm512_loadu_si512(mod[1] + 16);
+
+        const __m512i zero{};
+
+        for (Uint64 i = 0; i < 20; i++) {
+
+            __m512i second_reg = _mm512_set1_epi64(second[0][i]);
+
+            res_reg_0 =
+                _mm512_madd52lo_epu64(res_reg_0, first_reg_0, second_reg);
+            res_reg_1 =
+                _mm512_madd52lo_epu64(res_reg_1, first_reg_1, second_reg);
+            res_reg_2 =
+                _mm512_madd52lo_epu64(res_reg_2, first_reg_2, second_reg);
+
+            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg_0));
+
+            Uint64 y0 = (k0[0] * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
+
+            __m512i y_reg = _mm512_set1_epi64(y0);
+
+            res_reg_0 = _mm512_madd52lo_epu64(res_reg_0, mod_reg_0, y_reg);
+            res_reg_1 = _mm512_madd52lo_epu64(res_reg_1, mod_reg_1, y_reg);
+            res_reg_2 = _mm512_madd52lo_epu64(res_reg_2, mod_reg_2, y_reg);
+
+            __m512i carry = _mm512_maskz_srli_epi64(1, res_reg_0, 52);
+            res_reg_0     = _mm512_alignr_epi64(res_reg_1, res_reg_0, 1);
+            res_reg_0     = _mm512_add_epi64(res_reg_0, carry);
+            res_reg_1     = _mm512_alignr_epi64(res_reg_2, res_reg_1, 1);
+            res_reg_2     = _mm512_alignr_epi64(zero, res_reg_2, 1);
+
+            res_reg_0 =
+                _mm512_madd52hi_epu64(res_reg_0, first_reg_0, second_reg);
+            res_reg_1 =
+                _mm512_madd52hi_epu64(res_reg_1, first_reg_1, second_reg);
+            res_reg_2 =
+                _mm512_madd52hi_epu64(res_reg_2, first_reg_2, second_reg);
+
+            res_reg_0 = _mm512_madd52hi_epu64(res_reg_0, mod_reg_0, y_reg);
+            res_reg_1 = _mm512_madd52hi_epu64(res_reg_1, mod_reg_1, y_reg);
+            res_reg_2 = _mm512_madd52hi_epu64(res_reg_2, mod_reg_2, y_reg);
+
+            // second multiplier
+            second_reg = _mm512_set1_epi64(second[1][i]);
+
+            res_reg_3 =
+                _mm512_madd52lo_epu64(res_reg_3, first_reg_3, second_reg);
+            res_reg_4 =
+                _mm512_madd52lo_epu64(res_reg_4, first_reg_4, second_reg);
+            res_reg_5 =
+                _mm512_madd52lo_epu64(res_reg_5, first_reg_5, second_reg);
+
+            x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg_3));
+
+            y0 = (k0[1] * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
+
+            y_reg = _mm512_set1_epi64(y0);
+
+            res_reg_3 = _mm512_madd52lo_epu64(res_reg_3, mod_reg_3, y_reg);
+            res_reg_4 = _mm512_madd52lo_epu64(res_reg_4, mod_reg_4, y_reg);
+            res_reg_5 = _mm512_madd52lo_epu64(res_reg_5, mod_reg_5, y_reg);
+
+            carry     = _mm512_maskz_srli_epi64(1, res_reg_3, 52);
+            res_reg_3 = _mm512_alignr_epi64(res_reg_4, res_reg_3, 1);
+            res_reg_3 = _mm512_add_epi64(res_reg_3, carry);
+            res_reg_4 = _mm512_alignr_epi64(res_reg_5, res_reg_4, 1);
+            res_reg_5 = _mm512_alignr_epi64(zero, res_reg_5, 1);
+
+            res_reg_3 =
+                _mm512_madd52hi_epu64(res_reg_3, first_reg_3, second_reg);
+            res_reg_4 =
+                _mm512_madd52hi_epu64(res_reg_4, first_reg_4, second_reg);
+            res_reg_5 =
+                _mm512_madd52hi_epu64(res_reg_5, first_reg_5, second_reg);
+
+            res_reg_3 = _mm512_madd52hi_epu64(res_reg_3, mod_reg_3, y_reg);
+            res_reg_4 = _mm512_madd52hi_epu64(res_reg_4, mod_reg_4, y_reg);
+            res_reg_5 = _mm512_madd52hi_epu64(res_reg_5, mod_reg_5, y_reg);
+        }
+
+        _mm512_storeu_si512(res[0], res_reg_0);
+        _mm512_storeu_si512(res[0] + 8, res_reg_1);
+        _mm512_storeu_si512(res[0] + 16, res_reg_2);
+        _mm512_storeu_si512(res[1], res_reg_3);
+        _mm512_storeu_si512(res[1] + 8, res_reg_4);
+        _mm512_storeu_si512(res[1] + 16, res_reg_5);
+
+        Uint64 carry = 0;
+        // convert from redundant radix 2^52 to radix 2^52
+        for (Uint64 i = 0; i < 20; i++) {
+            Uint64 sum = res[0][i] + carry;
+            carry      = sum >> 52;
+            res[0][i]  = sum & 0xfffffffffffff;
+        }
+
+        carry = 0;
+        // convert from redundant radix 2^52 to radix 2^52
+        for (Uint64 i = 0; i < 20; i++) {
+            Uint64 sum = res[1][i] + carry;
+            carry      = sum >> 52;
+            res[1][i]  = sum & 0xfffffffffffff;
+        }
+    }
+
     static inline void AMS1024(Uint64*       res,
                                const Uint64* first,
                                const Uint64* mod,
@@ -296,6 +439,67 @@ namespace alcp::rsa { namespace zen4 {
             Uint64 sum = res[i] + carry;
             carry      = sum >> 52;
             res[i]     = sum & 0xfffffffffffff;
+        }
+    }
+
+    static inline void AMS1024Parallel(Uint64* res[2],
+                                       Uint64* first[2],
+                                       Uint64* mod[2],
+                                       Uint64  k0[2])
+    {
+        __m512i first_reg[6];
+        __m512i mod_reg[6];
+
+        __m512i res_reg[6]{};
+
+        first_reg[0] = _mm512_loadu_si512(first[0]);
+        first_reg[1] = _mm512_loadu_si512(first[0] + 8);
+        first_reg[2] = _mm512_loadu_si512(first[0] + 16);
+        first_reg[3] = _mm512_loadu_si512(first[1]);
+        first_reg[4] = _mm512_loadu_si512(first[1] + 8);
+        first_reg[5] = _mm512_loadu_si512(first[1] + 16);
+
+        mod_reg[0] = _mm512_loadu_si512(mod[0]);
+        mod_reg[1] = _mm512_loadu_si512(mod[0] + 8);
+        mod_reg[2] = _mm512_loadu_si512(mod[0] + 16);
+        mod_reg[3] = _mm512_loadu_si512(mod[1]);
+        mod_reg[4] = _mm512_loadu_si512(mod[1] + 8);
+        mod_reg[5] = _mm512_loadu_si512(mod[1] + 16);
+
+        Amm1024LoopInternalStage1(res_reg, first_reg, mod_reg, first[0], k0[0]);
+        Amm1024LoopInternalStage2(
+            res_reg, first_reg, mod_reg, first[0] + 8, k0[0]);
+        Amm1024LoopInternalStage3(
+            res_reg, first_reg, mod_reg, first[0] + 16, k0[0]);
+
+        Amm1024LoopInternalStage1(
+            res_reg + 3, first_reg + 3, mod_reg + 3, first[1], k0[1]);
+        Amm1024LoopInternalStage2(
+            res_reg + 3, first_reg + 3, mod_reg + 3, first[1] + 8, k0[1]);
+        Amm1024LoopInternalStage3(
+            res_reg + 3, first_reg + 3, mod_reg + 3, first[1] + 16, k0[1]);
+
+        _mm512_storeu_si512(res[0], res_reg[0]);
+        _mm512_storeu_si512(res[0] + 8, res_reg[1]);
+        _mm512_storeu_si512(res[0] + 16, res_reg[2]);
+        _mm512_storeu_si512(res[1], res_reg[3]);
+        _mm512_storeu_si512(res[1] + 8, res_reg[4]);
+        _mm512_storeu_si512(res[1] + 16, res_reg[5]);
+
+        Uint64 carry = 0;
+        // convert from redundant radix 2^52 to radix 2^52
+        for (Uint64 i = 0; i < 20; i++) {
+            Uint64 sum = res[0][i] + carry;
+            carry      = sum >> 52;
+            res[0][i]  = sum & 0xfffffffffffff;
+        }
+
+        carry = 0;
+        // convert from redundant radix 2^52 to radix 2^52
+        for (Uint64 i = 0; i < 20; i++) {
+            Uint64 sum = res[1][i] + carry;
+            carry      = sum >> 52;
+            res[1][i]  = sum & 0xfffffffffffff;
         }
     }
 
@@ -858,6 +1062,100 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
+    static inline void AMM1024ReduceParallel(Uint64* res[2],
+                                             Uint64* first[2],
+                                             Uint64* mod[2],
+                                             Uint64  k0[2])
+    {
+        __m512i mod_reg_0;
+        __m512i mod_reg_1;
+        __m512i mod_reg_2;
+        __m512i mod_reg_3;
+        __m512i mod_reg_4;
+        __m512i mod_reg_5;
+
+        __m512i res_reg_0 = _mm512_loadu_si512(first[0]);
+        __m512i res_reg_1 = _mm512_loadu_si512(first[0] + 8);
+        __m512i res_reg_2 = _mm512_loadu_si512(first[0] + 16);
+        __m512i res_reg_3 = _mm512_loadu_si512(first[1]);
+        __m512i res_reg_4 = _mm512_loadu_si512(first[1] + 8);
+        __m512i res_reg_5 = _mm512_loadu_si512(first[1] + 16);
+
+        mod_reg_0 = _mm512_loadu_si512(mod[0]);
+        mod_reg_1 = _mm512_loadu_si512(mod[0] + 8);
+        mod_reg_2 = _mm512_loadu_si512(mod[0] + 16);
+        mod_reg_3 = _mm512_loadu_si512(mod[1]);
+        mod_reg_4 = _mm512_loadu_si512(mod[1] + 8);
+        mod_reg_5 = _mm512_loadu_si512(mod[1] + 16);
+
+        const __m512i zero{};
+
+        for (Uint64 i = 0; i < 20; i++) {
+
+            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg_0));
+
+            Uint64 y0 = (k0[0] * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
+
+            __m512i y_reg = _mm512_set1_epi64(y0);
+
+            res_reg_0 = _mm512_madd52lo_epu64(res_reg_0, mod_reg_0, y_reg);
+            res_reg_1 = _mm512_madd52lo_epu64(res_reg_1, mod_reg_1, y_reg);
+            res_reg_2 = _mm512_madd52lo_epu64(res_reg_2, mod_reg_2, y_reg);
+
+            __m512i carry = _mm512_maskz_srli_epi64(1, res_reg_0, 52);
+            res_reg_0     = _mm512_alignr_epi64(res_reg_1, res_reg_0, 1);
+            res_reg_0     = _mm512_add_epi64(res_reg_0, carry);
+            res_reg_1     = _mm512_alignr_epi64(res_reg_2, res_reg_1, 1);
+            res_reg_2     = _mm512_alignr_epi64(zero, res_reg_2, 1);
+
+            res_reg_0 = _mm512_madd52hi_epu64(res_reg_0, mod_reg_0, y_reg);
+            res_reg_1 = _mm512_madd52hi_epu64(res_reg_1, mod_reg_1, y_reg);
+            res_reg_2 = _mm512_madd52hi_epu64(res_reg_2, mod_reg_2, y_reg);
+
+            // second multiplier
+            x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg_3));
+
+            y0 = (k0[1] * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
+
+            y_reg = _mm512_set1_epi64(y0);
+
+            res_reg_3 = _mm512_madd52lo_epu64(res_reg_3, mod_reg_3, y_reg);
+            res_reg_4 = _mm512_madd52lo_epu64(res_reg_4, mod_reg_4, y_reg);
+            res_reg_5 = _mm512_madd52lo_epu64(res_reg_5, mod_reg_5, y_reg);
+
+            carry     = _mm512_maskz_srli_epi64(1, res_reg_3, 52);
+            res_reg_3 = _mm512_alignr_epi64(res_reg_4, res_reg_3, 1);
+            res_reg_3 = _mm512_add_epi64(res_reg_3, carry);
+            res_reg_4 = _mm512_alignr_epi64(res_reg_5, res_reg_4, 1);
+            res_reg_5 = _mm512_alignr_epi64(zero, res_reg_5, 1);
+
+            res_reg_3 = _mm512_madd52hi_epu64(res_reg_3, mod_reg_3, y_reg);
+            res_reg_4 = _mm512_madd52hi_epu64(res_reg_4, mod_reg_4, y_reg);
+            res_reg_5 = _mm512_madd52hi_epu64(res_reg_5, mod_reg_5, y_reg);
+        }
+
+        _mm512_storeu_si512(res[0], res_reg_0);
+        _mm512_storeu_si512(res[0] + 8, res_reg_1);
+        _mm512_storeu_si512(res[0] + 16, res_reg_2);
+        _mm512_storeu_si512(res[1], res_reg_3);
+        _mm512_storeu_si512(res[1] + 8, res_reg_4);
+        _mm512_storeu_si512(res[1] + 16, res_reg_5);
+
+        Uint64 carry = 0;
+        // convert from redundant radix 2^52 to radix 2^52
+        for (Uint64 i = 0; i < 20; i++) {
+            Uint64 sum = res[0][i] + carry;
+            carry      = sum >> 52;
+            res[0][i]  = sum & 0xfffffffffffff;
+        }
+        carry = 0;
+        for (Uint64 i = 0; i < 20; i++) {
+            Uint64 sum = res[1][i] + carry;
+            carry      = sum >> 52;
+            res[1][i]  = sum & 0xfffffffffffff;
+        }
+    }
+
     static inline void AMMAndAMS1024(
         Uint64* res, Uint64* mult, Uint64* mod, Uint64 k0, Uint64 val)
     {
@@ -1160,83 +1458,208 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
-    static inline void RSA2048MontgomeryExpConstantTime(
-        Uint64* res,
-        Uint64* input,
-        Uint64* exp,
-        Uint64* mod_radix_52_bit,
-        Uint64* r2_radix_52_bit,
-        Uint64  k0)
+    // static inline void RSA2048MontgomeryExpConstantTime(
+    //     Uint64* res,
+    //     Uint64* input,
+    //     Uint64* exp,
+    //     Uint64* mod_radix_52_bit,
+    //     Uint64* r2_radix_52_bit,
+    //     Uint64  k0)
+    // {
+    //     alignas(64) Uint64 t[16 * 20] = {};
+    //     Uint64             r1_radix_52_bit_p[24]{};
+    //     Uint64             input_radix_52[24]{};
+    //     Uint64             res_radix_52[24]{};
+    //     Uint64             mult_radix_52[24]{};
+    //     Uint64             sq_radix_52[24]{};
+
+    //     // to do check which window size is correct
+    //     Uint64 winSize    = 4;
+    //     Uint64 valueLimit = 1 << 4;
+    //     // putting one in mont form
+    //     AMM1024Reduce(r1_radix_52_bit_p, r2_radix_52_bit, mod_radix_52_bit,
+    //     k0); mont::PutInTable(t, 0, r1_radix_52_bit_p, 20, valueLimit);
+
+    //     mont::Rsa1024BytesToRadix52Bit(input_radix_52, input);
+    //     AMM1024(res_radix_52,
+    //             input_radix_52,
+    //             r2_radix_52_bit,
+    //             mod_radix_52_bit,
+    //             k0);
+    //     mont::PutInTable(t, 1, res_radix_52, 20, valueLimit);
+
+    //     alcp::utils::CopyChunk(mult_radix_52, res_radix_52, 20 * 8);
+    //     for (Uint64 i = 2; i < valueLimit; i++) {
+    //         AMM1024(mult_radix_52,
+    //                 mult_radix_52,
+    //                 res_radix_52,
+    //                 mod_radix_52_bit,
+    //                 k0);
+    //         mont::PutInTable(t, i, mult_radix_52, 20, valueLimit);
+    //     }
+
+    //     const Uint8* exp_byte_ptr = reinterpret_cast<const Uint8*>(exp);
+    //     Uint8        index_value  = exp_byte_ptr[127];
+    //     mont::GetFromTable(t, index_value >> 4, sq_radix_52, 20, valueLimit);
+    //     for (Uint64 i = 0; i < winSize; i++) {
+    //         AMS1024(sq_radix_52, sq_radix_52, mod_radix_52_bit, k0);
+    //     }
+
+    //     mont::GetFromTable(t, index_value & 0xf, mult_radix_52, 20,
+    //     valueLimit); AMM1024(sq_radix_52, sq_radix_52, mult_radix_52,
+    //     mod_radix_52_bit, k0);
+
+    //     for (Int64 i = 126; i >= 0; --i) {
+
+    //         // first 4 bits
+    //         for (Uint64 i = 0; i < winSize; i++) {
+    //             AMS1024(sq_radix_52, sq_radix_52, mod_radix_52_bit, k0);
+    //         }
+    //         index_value = exp_byte_ptr[i];
+    //         mont::GetFromTable(
+    //             t, index_value >> 4, mult_radix_52, 20, valueLimit);
+
+    //         AMM1024(
+    //             sq_radix_52, mult_radix_52, sq_radix_52, mod_radix_52_bit,
+    //             k0);
+
+    //         // next 4 bits
+    //         for (Uint64 i = 0; i < winSize; i++) {
+    //             AMS1024(sq_radix_52, sq_radix_52, mod_radix_52_bit, k0);
+    //         }
+    //         mont::GetFromTable(
+    //             t, index_value & 0xf, mult_radix_52, 20, valueLimit);
+    //         AMM1024(
+    //             sq_radix_52, mult_radix_52, sq_radix_52, mod_radix_52_bit,
+    //             k0);
+    //     }
+
+    //     AMM1024Reduce(sq_radix_52, sq_radix_52, mod_radix_52_bit, k0);
+
+    //     alcp::utils::PadBlock<Uint64>(res, 0LL, 16 * 8);
+    //     mont::Rsa1024Radix52BitToBytes(res, sq_radix_52);
+    // }
+
+    static inline void RSA2048MontgomeryExpConstantTimeParallel(
+        Uint64* res[2],
+        Uint64* input[2],
+        Uint64* exp[2],
+        Uint64* modRadix52Bit[2],
+        Uint64* r2Radix52Bit[2],
+        Uint64  k0[2])
     {
-        alignas(64) Uint64 t[16 * 20] = {};
-        Uint64             r1_radix_52_bit_p[24]{};
-        Uint64             input_radix_52[24]{};
-        Uint64             res_radix_52[24]{};
-        Uint64             mult_radix_52[24]{};
-        Uint64             sq_radix_52[24]{};
+        alignas(64) Uint64 t[16 * 20 * 2] = {};
+        Uint64             r1_radix_52_bit_contig[2 * 24]{};
+        Uint64             input_radix_52_contig[2 * 24]{};
+        Uint64             res_radix_52_contig[2 * 24]{};
+        Uint64             mult_radix_52_contig[2 * 24]{};
+        Uint64             sq_radix_52_contig[2 * 24]{};
+
+        Uint64* r1_radix_52_bit_p[2] = { r1_radix_52_bit_contig,
+                                         r1_radix_52_bit_contig + 24 };
+        Uint64* input_radix_52[2]    = { input_radix_52_contig,
+                                      input_radix_52_contig + 24 };
+        Uint64* res_radix_52[2]      = { res_radix_52_contig,
+                                    res_radix_52_contig + 24 };
+
+        Uint64* mult_radix_52[2] = { mult_radix_52_contig,
+                                     mult_radix_52_contig + 24 };
+        Uint64* sq_radix_52[2]   = { sq_radix_52_contig,
+                                   sq_radix_52_contig + 24 };
 
         // to do check which window size is correct
         Uint64 winSize    = 4;
         Uint64 valueLimit = 1 << 4;
         // putting one in mont form
-        AMM1024Reduce(r1_radix_52_bit_p, r2_radix_52_bit, mod_radix_52_bit, k0);
-        mont::PutInTable(t, 0, r1_radix_52_bit_p, 20, valueLimit);
+        AMM1024ReduceParallel(
+            r1_radix_52_bit_p, r2Radix52Bit, modRadix52Bit, k0);
+        mont::PutInTable(t, 0, r1_radix_52_bit_p[0], 20, valueLimit);
+        mont::PutInTable(t + 16 * 20, 0, r1_radix_52_bit_p[1], 20, valueLimit);
 
-        mont::Rsa1024BytesToRadix52Bit(input_radix_52, input);
-        AMM1024(res_radix_52,
-                input_radix_52,
-                r2_radix_52_bit,
-                mod_radix_52_bit,
-                k0);
-        mont::PutInTable(t, 1, res_radix_52, 20, valueLimit);
+        mont::Rsa1024BytesToRadix52Bit(input_radix_52[0], input[0]);
+        mont::Rsa1024BytesToRadix52Bit(input_radix_52[1], input[1]);
 
-        alcp::utils::CopyChunk(mult_radix_52, res_radix_52, 20 * 8);
+        AMM1024Parallel(
+            res_radix_52, input_radix_52, r2Radix52Bit, modRadix52Bit, k0);
+        mont::PutInTable(t, 1, res_radix_52[0], 20, valueLimit);
+        mont::PutInTable(t + 16 * 20, 1, res_radix_52[1], 20, valueLimit);
+
+        alcp::utils::CopyChunk(
+            mult_radix_52_contig, res_radix_52_contig, 24 * 8 * 2);
+
         for (Uint64 i = 2; i < valueLimit; i++) {
-            AMM1024(mult_radix_52,
-                    mult_radix_52,
-                    res_radix_52,
-                    mod_radix_52_bit,
-                    k0);
-            mont::PutInTable(t, i, mult_radix_52, 20, valueLimit);
+            AMM1024Parallel(
+                mult_radix_52, mult_radix_52, res_radix_52, modRadix52Bit, k0);
+            mont::PutInTable(t, i, mult_radix_52[0], 20, valueLimit);
+            mont::PutInTable(t + 16 * 20, i, mult_radix_52[1], 20, valueLimit);
         }
 
-        const Uint8* exp_byte_ptr = reinterpret_cast<const Uint8*>(exp);
-        Uint8        index_value  = exp_byte_ptr[127];
-        mont::GetFromTable(t, index_value >> 4, sq_radix_52, 20, valueLimit);
+        const Uint8* exp_byte_ptr_1 = reinterpret_cast<const Uint8*>(exp[0]);
+        const Uint8* exp_byte_ptr_2 = reinterpret_cast<const Uint8*>(exp[1]);
+
+        Uint8 index_value_1 = exp_byte_ptr_1[127];
+        Uint8 index_value_2 = exp_byte_ptr_2[127];
+        mont::GetFromTable(
+            t, index_value_1 >> 4, sq_radix_52[0], 20, valueLimit);
+        mont::GetFromTable(
+            t + 16 * 20, index_value_2 >> 4, sq_radix_52[1], 20, valueLimit);
+
         for (Uint64 i = 0; i < winSize; i++) {
-            AMS1024(sq_radix_52, sq_radix_52, mod_radix_52_bit, k0);
+            AMS1024Parallel(sq_radix_52, sq_radix_52, modRadix52Bit, k0);
         }
 
-        mont::GetFromTable(t, index_value & 0xf, mult_radix_52, 20, valueLimit);
-        AMM1024(sq_radix_52, sq_radix_52, mult_radix_52, mod_radix_52_bit, k0);
+        mont::GetFromTable(
+            t, index_value_1 & 0xf, mult_radix_52[0], 20, valueLimit);
+        mont::GetFromTable(
+            t + 16 * 20, index_value_2 & 0xf, mult_radix_52[1], 20, valueLimit);
+
+        AMM1024Parallel(
+            sq_radix_52, sq_radix_52, mult_radix_52, modRadix52Bit, k0);
 
         for (Int64 i = 126; i >= 0; --i) {
 
             // first 4 bits
             for (Uint64 i = 0; i < winSize; i++) {
-                AMS1024(sq_radix_52, sq_radix_52, mod_radix_52_bit, k0);
+                AMS1024Parallel(sq_radix_52, sq_radix_52, modRadix52Bit, k0);
             }
-            index_value = exp_byte_ptr[i];
-            mont::GetFromTable(
-                t, index_value >> 4, mult_radix_52, 20, valueLimit);
+            index_value_1 = exp_byte_ptr_1[i];
+            index_value_2 = exp_byte_ptr_2[i];
 
-            AMM1024(
-                sq_radix_52, mult_radix_52, sq_radix_52, mod_radix_52_bit, k0);
+            mont::GetFromTable(
+                t, index_value_1 >> 4, mult_radix_52[0], 20, valueLimit);
+            mont::GetFromTable(t + 16 * 20,
+                               index_value_2 >> 4,
+                               mult_radix_52[1],
+                               20,
+                               valueLimit);
+
+            AMM1024Parallel(
+                sq_radix_52, mult_radix_52, sq_radix_52, modRadix52Bit, k0);
 
             // next 4 bits
             for (Uint64 i = 0; i < winSize; i++) {
-                AMS1024(sq_radix_52, sq_radix_52, mod_radix_52_bit, k0);
+                AMS1024Parallel(sq_radix_52, sq_radix_52, modRadix52Bit, k0);
             }
             mont::GetFromTable(
-                t, index_value & 0xf, mult_radix_52, 20, valueLimit);
-            AMM1024(
-                sq_radix_52, mult_radix_52, sq_radix_52, mod_radix_52_bit, k0);
+                t, index_value_1 & 0xf, mult_radix_52[0], 20, valueLimit);
+
+            mont::GetFromTable(t + 16 * 20,
+                               index_value_2 & 0xf,
+                               mult_radix_52[1],
+                               20,
+                               valueLimit);
+
+            AMM1024Parallel(
+                sq_radix_52, mult_radix_52, sq_radix_52, modRadix52Bit, k0);
         }
 
-        AMM1024Reduce(sq_radix_52, sq_radix_52, mod_radix_52_bit, k0);
+        AMM1024ReduceParallel(sq_radix_52, sq_radix_52, modRadix52Bit, k0);
 
-        alcp::utils::PadBlock<Uint64>(res, 0LL, 16 * 8);
-        mont::Rsa1024Radix52BitToBytes(res, sq_radix_52);
+        alcp::utils::PadBlock<Uint64>(res[0], 0LL, 16 * 8);
+        mont::Rsa1024Radix52BitToBytes(res[0], sq_radix_52[0]);
+
+        alcp::utils::PadBlock<Uint64>(res[1], 0LL, 16 * 8);
+        mont::Rsa1024Radix52BitToBytes(res[1], sq_radix_52[1]);
     }
 
     template<>
@@ -1280,21 +1703,22 @@ namespace alcp::rsa { namespace zen4 {
         MontMultHalf(buff_1_p, buff_1_p, r2_q, q_mod, q_k0);
 
         // Rsa1024BytesToRadix52Bit(r1_p_rdix_52_bit, r1_p);
-        // ap = ap ^ dp mod p
-        RSA2048MontgomeryExpConstantTime(buff_0_p,
-                                         buff_0_p,
-                                         p_exp,
-                                         p_mod_radix_52_bit,
-                                         r2_radix_52_bit_p,
-                                         p_k0);
+        // ap = ap ^ dp mod p // aq = aq ^dq mod q
+        Uint64* buff[2] = { buff_0_p, buff_1_p };
+        Uint64* exp[2]  = { p_exp, q_exp };
+        Uint64* mod[2]  = { p_mod_radix_52_bit, q_mod_radix_52_bit };
+        Uint64* r2[2]   = { r2_radix_52_bit_p, r2_radix_52_bit_q };
+        Uint64  k0[2]   = { p_k0, q_k0 };
 
-        // aq = aq ^dq mod q
-        RSA2048MontgomeryExpConstantTime(buff_1_p,
-                                         buff_1_p,
-                                         q_exp,
-                                         q_mod_radix_52_bit,
-                                         r2_radix_52_bit_q,
-                                         q_k0);
+        RSA2048MontgomeryExpConstantTimeParallel(buff, buff, exp, mod, r2, k0);
+
+        // // aq = aq ^dq mod q
+        // RSA2048MontgomeryExpConstantTime(buff_1_p,
+        //                                  buff_1_p,
+        //                                  q_exp,
+        //                                  q_mod_radix_52_bit,
+        //                                  r2_radix_52_bit_q,
+        //                                  q_k0);
 
         // convert aq to aq mod p
         MontSub(buff_p, buff_1_p, p_mod, p_mod, size);
