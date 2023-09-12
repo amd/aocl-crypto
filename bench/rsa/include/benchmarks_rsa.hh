@@ -55,14 +55,12 @@ typedef enum
 
 /* bench function */
 inline int
-Rsa_Bench(benchmark::State& state,
-          rsa_bench_opt     opt,
-          int               padding_mode,
-          int               KeySize,
-          std::string       DigestType,
-          int               DigestSize,
-          alc_digest_info_t dinfo,
-          alc_digest_info_t mgfinfo)
+Rsa_Bench(benchmark::State&       state,
+          rsa_bench_opt           opt,
+          int                     padding_mode,
+          int                     KeySize,
+          const alc_digest_info_t dinfo,
+          const alc_digest_info_t mgfinfo)
 {
     int InputSize;
     /* Keysize is in bits */
@@ -180,8 +178,6 @@ BENCH_RSA_EncryptPubKey_Padding_1024(benchmark::State& state)
                                        RSA_BENCH_ENC_PUB_KEY,
                                        ALCP_TEST_RSA_PADDING,
                                        1024,
-                                       "SHA2",
-                                       256,
                                        dinfo,
                                        mgfinfo));
 }
@@ -197,8 +193,6 @@ BENCH_RSA_DecryptPvtKey_Padding_1024(benchmark::State& state)
                                        RSA_BENCH_DEC_PVT_KEY,
                                        ALCP_TEST_RSA_PADDING,
                                        1024,
-                                       "SHA2",
-                                       256,
                                        dinfo,
                                        mgfinfo));
 }
@@ -215,8 +209,6 @@ BENCH_RSA_EncryptPubKey_NoPadding_1024(benchmark::State& state)
                                        RSA_BENCH_ENC_PUB_KEY,
                                        ALCP_TEST_RSA_NO_PADDING,
                                        1024,
-                                       "SHA2",
-                                       256,
                                        dinfo,
                                        mgfinfo));
 }
@@ -232,8 +224,6 @@ BENCH_RSA_DecryptPvtKey_NoPadding_1024(benchmark::State& state)
                                        RSA_BENCH_DEC_PVT_KEY,
                                        ALCP_TEST_RSA_NO_PADDING,
                                        1024,
-                                       "SHA2",
-                                       256,
                                        dinfo,
                                        mgfinfo));
 }
@@ -251,8 +241,6 @@ BENCH_RSA_EncryptPubKey_Padding_2048(benchmark::State& state)
                                        RSA_BENCH_ENC_PUB_KEY,
                                        ALCP_TEST_RSA_PADDING,
                                        2048,
-                                       "SHA2",
-                                       256,
                                        dinfo,
                                        mgfinfo));
 }
@@ -268,8 +256,6 @@ BENCH_RSA_DecryptPvtKey_Padding_2048(benchmark::State& state)
                                        RSA_BENCH_DEC_PVT_KEY,
                                        ALCP_TEST_RSA_PADDING,
                                        2048,
-                                       "SHA2",
-                                       256,
                                        dinfo,
                                        mgfinfo));
 }
@@ -286,8 +272,6 @@ BENCH_RSA_EncryptPubKey_NoPadding_2048(benchmark::State& state)
                                        RSA_BENCH_ENC_PUB_KEY,
                                        ALCP_TEST_RSA_NO_PADDING,
                                        2048,
-                                       "SHA2",
-                                       256,
                                        dinfo,
                                        mgfinfo));
 }
@@ -303,8 +287,6 @@ BENCH_RSA_DecryptPvtKey_NoPadding_2048(benchmark::State& state)
                                        RSA_BENCH_DEC_PVT_KEY,
                                        ALCP_TEST_RSA_NO_PADDING,
                                        2048,
-                                       "SHA2",
-                                       256,
                                        dinfo,
                                        mgfinfo));
 }

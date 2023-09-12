@@ -91,10 +91,10 @@ SkipTest(int ret_val, std::string LibStr)
 }
 
 void
-Rsa_KAT(int               padding_mode,
-        int               KeySize,
-        alc_digest_info_t dinfo,
-        alc_digest_info_t mgfinfo)
+Rsa_KAT(int                     padding_mode,
+        int                     KeySize,
+        const alc_digest_info_t dinfo,
+        const alc_digest_info_t mgfinfo)
 {
     alcp_rsa_data_t data;
 
@@ -204,10 +204,10 @@ Rsa_KAT(int               padding_mode,
 
 /* RSA Cross tests */
 void
-Rsa_Cross(int               padding_mode,
-          int               KeySize,
-          alc_digest_info_t dinfo,
-          alc_digest_info_t mgfinfo)
+Rsa_Cross(int                     padding_mode,
+          int                     KeySize,
+          const alc_digest_info_t dinfo,
+          const alc_digest_info_t mgfinfo)
 {
     alcp_rsa_data_t data_main, data_ext;
     int             ret_val_main, ret_val_ext = 0;
