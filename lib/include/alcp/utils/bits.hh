@@ -35,6 +35,40 @@
 
 namespace alcp::utils {
 
+static inline Uint32
+RotateRight(Uint32 value, Uint32 count)
+{
+#if 0
+    __asm__("rorl %%cl, %0" : "+r"(value) : "c"(count));
+    return value;
+#else
+    return value >> count | value << (32 - count);
+#endif
+}
+
+static inline Uint64
+RotateRight(Uint64 value, Uint64 count)
+{
+#if 0
+    __asm__("rorq %%cl, %0" : "+r"(value) : "c"(count));
+    return value;
+#else
+    return value >> count | value << (64 - count);
+#endif
+}
+
+static inline Uint32
+RotateLeft(Uint32 value, Uint32 count)
+{
+    return value << count | value >> (32 - count);
+}
+
+static inline Uint64
+RotateLeft(Uint64 value, Uint64 count)
+{
+    return value << count | value >> (64 - count);
+}
+
 constexpr Uint32 BitsPerByte   = 8;
 constexpr Uint32 BytesPerWord  = 4;
 constexpr Uint32 BytesPerDWord = 8;

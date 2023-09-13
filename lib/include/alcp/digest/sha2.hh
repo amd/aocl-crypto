@@ -29,9 +29,10 @@
 #pragma once
 
 #include "alcp/digest.hh"
+#include "alcp/utils/bits.hh"
 
 #include <memory> // for unique_ptr
-
+using alcp::utils::RotateRight;
 namespace alcp::digest {
 
 class Sha2 : public Digest

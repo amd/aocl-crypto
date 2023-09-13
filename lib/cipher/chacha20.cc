@@ -27,9 +27,8 @@
  */
 
 #include "alcp/cipher/chacha20.hh"
-#include "alcp/utils/cpuid.hh"
 #include "chacha20_inplace.cc.inc"
-#include <algorithm>
+
 namespace alcp::cipher::chacha20 {
 using utils::CpuId;
 
@@ -86,13 +85,13 @@ ChaCha20::processInput(const Uint8 plaintext[],
                                   ciphertext);
     } else {
 
-        return cipher::chacha20::ProcessInput(m_key,
-                                              cMKeylen,
-                                              m_iv,
-                                              cMIvlen,
-                                              plaintext,
-                                              plaintextLength,
-                                              ciphertext);
+        return ProcessInput(m_key,
+                            cMKeylen,
+                            m_iv,
+                            cMIvlen,
+                            plaintext,
+                            plaintextLength,
+                            ciphertext);
     }
 }
 

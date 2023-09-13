@@ -28,9 +28,10 @@
 
 #pragma once
 
-#include "alcp/cipher/chacha20_inplace.hh"
+#include "alcp/base.hh"
+#include "alcp/utils/cpuid.hh"
 #include <alcp/error.h>
-#include <alcp/types.h>
+
 namespace alcp::cipher::chacha20::zen4 {
 alc_error_t
 ProcessInput(const Uint8 key[],

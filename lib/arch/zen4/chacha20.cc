@@ -27,11 +27,7 @@
  */
 
 #include "alcp/cipher/chacha20.hh"
-#include <alcp/types.h>
 #include <cstring>
-#include <iomanip>
-#include <iostream>
-#define UNROLL_8 _Pragma("GCC unroll 2")
 #include <immintrin.h>
 namespace alcp::cipher::chacha20::zen4 {
 

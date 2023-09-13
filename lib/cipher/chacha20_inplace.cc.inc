@@ -26,15 +26,14 @@
  *
  */
 
+#include "alcp/base.hh"
 #include "alcp/error.h"
-#include <alcp/types.h>
+#include "alcp/utils/bits.hh"
 #include <cstring>
 #include <iomanip>
 #include <iostream>
-#define UNROLL_8 _Pragma("GCC unroll 2")
-
 namespace alcp::cipher::chacha20 {
-
+using alcp::utils::RotateLeft;
 inline void
 DisplayState(Uint32 state[16])
 {
@@ -45,11 +44,6 @@ DisplayState(Uint32 state[16])
         }
         std::cout << std::endl;
     }
-}
-inline Uint32
-RotateLeft(Uint32 value, Uint32 count)
-{
-    return value << count | value >> (32 - count);
 }
 
 inline void
@@ -178,7 +172,6 @@ ProcessInput(const Uint8 key[],
     }
     const Uint32 cInitialCounter = *(reinterpret_cast<const Uint32*>(iv));
     Uint32       state[16];
-    UNROLL_8
     for (Uint64 blocks = 0; blocks < plaintextLength; blocks += 64) {
         CreateInitialState(
             state, key, keylen, iv, ivlen, cInitialCounter + blocks / 64);
