@@ -51,8 +51,6 @@ TEST(RSA_No_Padding_2048, KAT)
 /* padding mode */
 TEST(RSA_Padding_1024, KAT_SHA2_256_MGF_256)
 {
-    if (useipp)
-        GTEST_SKIP() << "IPP is not supported yet";
     dinfo_256.dt_mode.dm_sha2 = ALC_SHA2_256;
     dinfo_256.dt_len          = ALC_DIGEST_LEN_256;
     dinfo_256.dt_type         = ALC_DIGEST_TYPE_SHA2;
@@ -69,8 +67,6 @@ TEST(RSA_Padding_2048, KAT_SHA2_256_MGF_256)
 }
 TEST(RSA_Padding_2048, KAT_SHA2_512_MGF_256)
 {
-    // if (useipp)
-    //    GTEST_SKIP() << "IPP is not supported yet";
     dinfo_512.dt_mode.dm_sha2   = ALC_SHA2_512;
     dinfo_512.dt_len            = ALC_DIGEST_LEN_512;
     dinfo_512.dt_type           = ALC_DIGEST_TYPE_SHA2;

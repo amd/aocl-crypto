@@ -51,8 +51,6 @@ TEST(RSA_No_Padding_2048, Cross)
 /* padding mode */
 TEST(RSA_Padding_1024, Cross_SHA2_256_MGF_256)
 {
-    if (useipp)
-        GTEST_SKIP() << "IPP is not supported yet";
     dinfo_256.dt_mode.dm_sha2 = ALC_SHA2_256;
     dinfo_256.dt_len          = ALC_DIGEST_LEN_256;
     dinfo_256.dt_type         = ALC_DIGEST_TYPE_SHA2;
