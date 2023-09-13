@@ -39,9 +39,10 @@ namespace alcp::rsa { namespace zen4 {
                                                  __m512i       first_reg[3],
                                                  __m512i       mod_reg[3],
                                                  const Uint64* first,
-                                                 Uint64        k0)
+                                                 __m512i       k_reg)
     {
         const __m512i zero{};
+
         for (Uint64 j = 0; j < 8; j++) {
 
             __m512i second_reg = _mm512_set1_epi64(first[j]);
@@ -57,11 +58,8 @@ namespace alcp::rsa { namespace zen4 {
                 res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
             }
 
-            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg[0]));
-
-            Uint64 y0 = (k0 * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
-
-            __m512i y_reg = _mm512_set1_epi64(y0);
+            __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg[0]);
+            y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
 
             res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
             res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
@@ -94,7 +92,7 @@ namespace alcp::rsa { namespace zen4 {
                                                  __m512i       first_reg[3],
                                                  __m512i       mod_reg[3],
                                                  const Uint64* first,
-                                                 Uint64        k0)
+                                                 __m512i       k_reg)
     {
         const __m512i zero{};
         for (Uint64 j = 0; j < 8; j++) {
@@ -112,11 +110,8 @@ namespace alcp::rsa { namespace zen4 {
                 res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
             }
 
-            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg[0]));
-
-            Uint64 y0 = (k0 * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
-
-            __m512i y_reg = _mm512_set1_epi64(y0);
+            __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg[0]);
+            y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
 
             res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
             res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
@@ -149,7 +144,7 @@ namespace alcp::rsa { namespace zen4 {
                                                  __m512i       first_reg[3],
                                                  __m512i       mod_reg[3],
                                                  const Uint64* first,
-                                                 Uint64        k0)
+                                                 __m512i       k_reg)
     {
         const __m512i zero{};
         for (Uint64 j = 0; j < 4; j++) {
@@ -159,11 +154,8 @@ namespace alcp::rsa { namespace zen4 {
             res_reg[2] =
                 _mm512_madd52lo_epu64(res_reg[2], first_reg[2], second_reg);
 
-            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg[0]));
-
-            Uint64 y0 = (k0 * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
-
-            __m512i y_reg = _mm512_set1_epi64(y0);
+            __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg[0]);
+            y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
 
             res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
             res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
@@ -211,6 +203,7 @@ namespace alcp::rsa { namespace zen4 {
         mod_reg_2 = _mm512_loadu_si512(mod + 16);
 
         const __m512i zero{};
+        __m512i       k_reg = _mm512_set1_epi64(k0);
 
         for (Uint64 i = 0; i < 20; i++) {
 
@@ -223,11 +216,8 @@ namespace alcp::rsa { namespace zen4 {
             res_reg_2 =
                 _mm512_madd52lo_epu64(res_reg_2, first_reg_2, second_reg);
 
-            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg_0));
-
-            Uint64 y0 = (k0 * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
-
-            __m512i y_reg = _mm512_set1_epi64(y0);
+            __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg_0);
+            y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
 
             res_reg_0 = _mm512_madd52lo_epu64(res_reg_0, mod_reg_0, y_reg);
             res_reg_1 = _mm512_madd52lo_epu64(res_reg_1, mod_reg_1, y_reg);
@@ -306,6 +296,8 @@ namespace alcp::rsa { namespace zen4 {
         mod_reg_5 = _mm512_loadu_si512(mod[1] + 16);
 
         const __m512i zero{};
+        __m512i       k_reg_0 = _mm512_set1_epi64(k0[0]);
+        __m512i       k_reg_1 = _mm512_set1_epi64(k0[1]);
 
         for (Uint64 i = 0; i < 20; i++) {
 
@@ -318,11 +310,14 @@ namespace alcp::rsa { namespace zen4 {
             res_reg_2 =
                 _mm512_madd52lo_epu64(res_reg_2, first_reg_2, second_reg);
 
-            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg_0));
+            // Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg_0));
 
-            Uint64 y0 = (k0[0] * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
+            // Uint64 y0 = (k0[0] * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
 
-            __m512i y_reg = _mm512_set1_epi64(y0);
+            // __m512i y_reg = _mm512_set1_epi64(y0);
+
+            __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg_0, res_reg_0);
+            y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
 
             res_reg_0 = _mm512_madd52lo_epu64(res_reg_0, mod_reg_0, y_reg);
             res_reg_1 = _mm512_madd52lo_epu64(res_reg_1, mod_reg_1, y_reg);
@@ -355,11 +350,14 @@ namespace alcp::rsa { namespace zen4 {
             res_reg_5 =
                 _mm512_madd52lo_epu64(res_reg_5, first_reg_5, second_reg);
 
-            x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg_3));
+            // x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg_3));
 
-            y0 = (k0[1] * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
+            // y0 = (k0[1] * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
 
-            y_reg = _mm512_set1_epi64(y0);
+            // y_reg = _mm512_set1_epi64(y0);
+
+            y_reg = _mm512_madd52lo_epu64(zero, k_reg_1, res_reg_3);
+            y_reg = _mm512_permutexvar_epi64(zero, y_reg);
 
             res_reg_3 = _mm512_madd52lo_epu64(res_reg_3, mod_reg_3, y_reg);
             res_reg_4 = _mm512_madd52lo_epu64(res_reg_4, mod_reg_4, y_reg);
@@ -425,9 +423,13 @@ namespace alcp::rsa { namespace zen4 {
         mod_reg[1] = _mm512_loadu_si512(mod + 8);
         mod_reg[2] = _mm512_loadu_si512(mod + 16);
 
-        Amm1024LoopInternalStage1(res_reg, first_reg, mod_reg, first, k0);
-        Amm1024LoopInternalStage2(res_reg, first_reg, mod_reg, first + 8, k0);
-        Amm1024LoopInternalStage3(res_reg, first_reg, mod_reg, first + 16, k0);
+        __m512i k_reg = _mm512_set1_epi64(k0);
+
+        Amm1024LoopInternalStage1(res_reg, first_reg, mod_reg, first, k_reg);
+        Amm1024LoopInternalStage2(
+            res_reg, first_reg, mod_reg, first + 8, k_reg);
+        Amm1024LoopInternalStage3(
+            res_reg, first_reg, mod_reg, first + 16, k_reg);
 
         _mm512_storeu_si512(res, res_reg[0]);
         _mm512_storeu_si512(res + 8, res_reg[1]);
@@ -451,40 +453,48 @@ namespace alcp::rsa { namespace zen4 {
         __m512i mod_reg[6];
 
         __m512i res_reg[6]{};
+        Uint64* first_0 = first[0];
+        Uint64* first_1 = first[1];
+        Uint64* mod_0   = mod[0];
+        Uint64* mod_1   = mod[1];
+        Uint64* res_0   = res[0];
+        Uint64* res_1   = res[1];
 
-        first_reg[0] = _mm512_loadu_si512(first[0]);
-        first_reg[1] = _mm512_loadu_si512(first[0] + 8);
-        first_reg[2] = _mm512_loadu_si512(first[0] + 16);
-        first_reg[3] = _mm512_loadu_si512(first[1]);
-        first_reg[4] = _mm512_loadu_si512(first[1] + 8);
-        first_reg[5] = _mm512_loadu_si512(first[1] + 16);
+        first_reg[0] = _mm512_loadu_si512(first_0);
+        first_reg[1] = _mm512_loadu_si512(first_0 + 8);
+        first_reg[2] = _mm512_loadu_si512(first_0 + 16);
+        first_reg[3] = _mm512_loadu_si512(first_1);
+        first_reg[4] = _mm512_loadu_si512(first_1 + 8);
+        first_reg[5] = _mm512_loadu_si512(first_1 + 16);
 
-        mod_reg[0] = _mm512_loadu_si512(mod[0]);
-        mod_reg[1] = _mm512_loadu_si512(mod[0] + 8);
-        mod_reg[2] = _mm512_loadu_si512(mod[0] + 16);
-        mod_reg[3] = _mm512_loadu_si512(mod[1]);
-        mod_reg[4] = _mm512_loadu_si512(mod[1] + 8);
-        mod_reg[5] = _mm512_loadu_si512(mod[1] + 16);
+        mod_reg[0] = _mm512_loadu_si512(mod_0);
+        mod_reg[1] = _mm512_loadu_si512(mod_0 + 8);
+        mod_reg[2] = _mm512_loadu_si512(mod_0 + 16);
+        mod_reg[3] = _mm512_loadu_si512(mod_1);
+        mod_reg[4] = _mm512_loadu_si512(mod_1 + 8);
+        mod_reg[5] = _mm512_loadu_si512(mod_1 + 16);
 
-        Amm1024LoopInternalStage1(res_reg, first_reg, mod_reg, first[0], k0[0]);
+        __m512i k_reg = _mm512_set1_epi64(k0[0]);
+        Amm1024LoopInternalStage1(res_reg, first_reg, mod_reg, first_0, k_reg);
         Amm1024LoopInternalStage2(
-            res_reg, first_reg, mod_reg, first[0] + 8, k0[0]);
+            res_reg, first_reg, mod_reg, first_0 + 8, k_reg);
         Amm1024LoopInternalStage3(
-            res_reg, first_reg, mod_reg, first[0] + 16, k0[0]);
+            res_reg, first_reg, mod_reg, first_0 + 16, k_reg);
 
+        k_reg = _mm512_set1_epi64(k0[1]);
         Amm1024LoopInternalStage1(
-            res_reg + 3, first_reg + 3, mod_reg + 3, first[1], k0[1]);
+            res_reg + 3, first_reg + 3, mod_reg + 3, first_1, k_reg);
         Amm1024LoopInternalStage2(
-            res_reg + 3, first_reg + 3, mod_reg + 3, first[1] + 8, k0[1]);
+            res_reg + 3, first_reg + 3, mod_reg + 3, first_1 + 8, k_reg);
         Amm1024LoopInternalStage3(
-            res_reg + 3, first_reg + 3, mod_reg + 3, first[1] + 16, k0[1]);
+            res_reg + 3, first_reg + 3, mod_reg + 3, first_1 + 16, k_reg);
 
-        _mm512_storeu_si512(res[0], res_reg[0]);
-        _mm512_storeu_si512(res[0] + 8, res_reg[1]);
-        _mm512_storeu_si512(res[0] + 16, res_reg[2]);
-        _mm512_storeu_si512(res[1], res_reg[3]);
-        _mm512_storeu_si512(res[1] + 8, res_reg[4]);
-        _mm512_storeu_si512(res[1] + 16, res_reg[5]);
+        _mm512_storeu_si512(res_0, res_reg[0]);
+        _mm512_storeu_si512(res_0 + 8, res_reg[1]);
+        _mm512_storeu_si512(res_0 + 16, res_reg[2]);
+        _mm512_storeu_si512(res_1, res_reg[3]);
+        _mm512_storeu_si512(res_1 + 8, res_reg[4]);
+        _mm512_storeu_si512(res_1 + 16, res_reg[5]);
 
         Uint64 carry = 0;
         // convert from redundant radix 2^52 to radix 2^52
@@ -539,6 +549,8 @@ namespace alcp::rsa { namespace zen4 {
         mod_reg_3 = _mm512_loadu_si512(mod + 24);
         mod_reg_4 = _mm512_loadu_si512(mod + 32);
 
+        __m512i k_reg = _mm512_set1_epi64(k0);
+
         const __m512i zero{};
 
         for (Uint64 i = 0; i < num_digit; i++) {
@@ -555,11 +567,14 @@ namespace alcp::rsa { namespace zen4 {
             res_reg_4 =
                 _mm512_madd52lo_epu64(res_reg_4, first_reg_4, second_reg);
 
-            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg_0));
+            // Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg_0));
 
-            Uint64 y0 = (k0 * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
+            // Uint64 y0 = (k0 * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
 
-            __m512i y_reg = _mm512_set1_epi64(y0);
+            // __m512i y_reg = _mm512_set1_epi64(y0);
+
+            __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg_0);
+            y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
 
             res_reg_0 = _mm512_madd52lo_epu64(res_reg_0, mod_reg_0, y_reg);
             res_reg_1 = _mm512_madd52lo_epu64(res_reg_1, mod_reg_1, y_reg);
@@ -612,7 +627,7 @@ namespace alcp::rsa { namespace zen4 {
                                                  __m512i       first_reg[5],
                                                  __m512i       mod_reg[5],
                                                  const Uint64* first,
-                                                 Uint64        k0)
+                                                 __m512i       k_reg)
     {
         const __m512i zero{};
         for (Uint64 j = 0; j < 8; j++) {
@@ -630,11 +645,15 @@ namespace alcp::rsa { namespace zen4 {
                 res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
             }
 
-            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg[0]));
+            // Uint64 x0 =
+            // _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg[0]));
 
-            Uint64 y0 = (k0 * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
+            // Uint64 y0 = (k0 * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
 
-            __m512i y_reg = _mm512_set1_epi64(y0);
+            // __m512i y_reg = _mm512_set1_epi64(y0);
+
+            __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg[0]);
+            y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
 
             res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
             res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
@@ -673,7 +692,7 @@ namespace alcp::rsa { namespace zen4 {
                                                  __m512i       first_reg[5],
                                                  __m512i       mod_reg[5],
                                                  const Uint64* first,
-                                                 Uint64        k0)
+                                                 __m512i       k_reg)
     {
         const __m512i zero{};
         for (Uint64 j = 0; j < 8; j++) {
@@ -691,11 +710,8 @@ namespace alcp::rsa { namespace zen4 {
                 res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
             }
 
-            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg[0]));
-
-            Uint64 y0 = (k0 * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
-
-            __m512i y_reg = _mm512_set1_epi64(y0);
+            __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg[0]);
+            y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
 
             res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
             res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
@@ -733,7 +749,7 @@ namespace alcp::rsa { namespace zen4 {
                                                  __m512i       first_reg[5],
                                                  __m512i       mod_reg[5],
                                                  const Uint64* first,
-                                                 Uint64        k0)
+                                                 __m512i       k_reg)
     {
         const __m512i zero{};
         for (Uint64 j = 0; j < 8; j++) {
@@ -751,11 +767,8 @@ namespace alcp::rsa { namespace zen4 {
                 res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
             }
 
-            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg[0]));
-
-            Uint64 y0 = (k0 * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
-
-            __m512i y_reg = _mm512_set1_epi64(y0);
+            __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg[0]);
+            y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
 
             res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
             res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
@@ -793,9 +806,10 @@ namespace alcp::rsa { namespace zen4 {
                                                  __m512i       first_reg[5],
                                                  __m512i       mod_reg[5],
                                                  const Uint64* first,
-                                                 Uint64        k0)
+                                                 __m512i       k_reg)
     {
         const __m512i zero{};
+
         for (Uint64 j = 0; j < 8; j++) {
 
             __m512i second_reg = _mm512_set1_epi64(first[j]);
@@ -811,11 +825,8 @@ namespace alcp::rsa { namespace zen4 {
                 res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
             }
 
-            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg[0]));
-
-            Uint64 y0 = (k0 * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
-
-            __m512i y_reg = _mm512_set1_epi64(y0);
+            __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg[0]);
+            y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
 
             res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
             res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
@@ -850,13 +861,14 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
-    static inline void LoopInternalStage5(__m512i       res_reg[5],
-                                          __m512i       first_reg[5],
-                                          __m512i       mod_reg[5],
-                                          const Uint64* first,
-                                          Uint64        k0)
+    static inline void Amm2048LoopInternalStage5(__m512i       res_reg[5],
+                                                 __m512i       first_reg[5],
+                                                 __m512i       mod_reg[5],
+                                                 const Uint64* first,
+                                                 __m512i       k_reg)
     {
         const __m512i zero{};
+
         for (Uint64 j = 0; j < 8; j++) {
 
             __m512i second_reg = _mm512_set1_epi64(first[j]);
@@ -864,11 +876,8 @@ namespace alcp::rsa { namespace zen4 {
             res_reg[4] =
                 _mm512_madd52lo_epu64(res_reg[4], first_reg[4], second_reg);
 
-            Uint64 x0 = _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg[0]));
-
-            Uint64 y0 = (k0 * (x0 & 0xfffffffffffff)) & 0xfffffffffffff;
-
-            __m512i y_reg = _mm512_set1_epi64(y0);
+            __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg[0]);
+            y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
 
             res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
             res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
@@ -917,11 +926,16 @@ namespace alcp::rsa { namespace zen4 {
         mod_reg[3] = _mm512_loadu_si512(mod + 24);
         mod_reg[4] = _mm512_loadu_si512(mod + 32);
 
-        Amm2048LoopInternalStage1(res_reg, first_reg, mod_reg, first, k0);
-        Amm2048LoopInternalStage2(res_reg, first_reg, mod_reg, first + 8, k0);
-        Amm2048LoopInternalStage3(res_reg, first_reg, mod_reg, first + 16, k0);
-        Amm2048LoopInternalStage4(res_reg, first_reg, mod_reg, first + 24, k0);
-        LoopInternalStage5(res_reg, first_reg, mod_reg, first + 32, k0);
+        __m512i k_reg = _mm512_set1_epi64(k0);
+        Amm2048LoopInternalStage1(res_reg, first_reg, mod_reg, first, k_reg);
+        Amm2048LoopInternalStage2(
+            res_reg, first_reg, mod_reg, first + 8, k_reg);
+        Amm2048LoopInternalStage3(
+            res_reg, first_reg, mod_reg, first + 16, k_reg);
+        Amm2048LoopInternalStage4(
+            res_reg, first_reg, mod_reg, first + 24, k_reg);
+        Amm2048LoopInternalStage5(
+            res_reg, first_reg, mod_reg, first + 32, k_reg);
 
         _mm512_storeu_si512(res, res_reg[0]);
         _mm512_storeu_si512(res + 8, res_reg[1]);
