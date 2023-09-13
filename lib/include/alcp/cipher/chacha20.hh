@@ -54,8 +54,6 @@ template<CpuCipherFeatures cpu_cipher_feature = CpuCipherFeatures::eDynamic>
 class ChaCha20
 {
 
-    Uint32 m_counter;
-
     static constexpr Uint64 cMKeylen = 256 / 8;
     alignas(16) Uint8 m_key[cMKeylen];
     static constexpr Uint64 cMIvlen = (128 / 8);
