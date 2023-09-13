@@ -33,7 +33,7 @@
 #include <iostream>
 #define UNROLL_8 _Pragma("GCC unroll 2")
 #include <immintrin.h>
-namespace alcp::cipher::zen4 {
+namespace alcp::cipher::chacha20::zen4 {
 
 inline void
 RoundFunction(__m512i& regA, __m512i& regB, __m512i& regC, __m512i& regD)
@@ -325,4 +325,4 @@ ProcessInput(const Uint8 key[],
     }
     return ALC_ERROR_NONE;
 }
-} // namespace alcp::cipher::zen4
+} // namespace alcp::cipher::chacha20::zen4

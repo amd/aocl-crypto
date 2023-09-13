@@ -25,50 +25,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
-#pragma once
-
-#include "alcp/cipher/chacha20_inplace.hh"
-#include <alcp/error.h>
-#include <alcp/types.h>
-namespace alcp::cipher::chacha20::zen4 {
-alc_error_t
-ProcessInput(const Uint8 key[],
-             Uint64      keylen,
-             const Uint8 iv[],
-             Uint64      ivlen,
-             const Uint8 plaintext[],
-             Uint64      plaintextLength,
-             Uint8       ciphertext[]);
-} // namespace alcp::cipher::chacha20::zen4
+#include "alcp/base.hh"
+#include "alcp/capi/cipher/builder.hh"
+#include "alcp/cipher/chacha20.hh"
 
 namespace alcp::cipher::chacha20 {
 
-class ChaCha20
+class Chacha20Builder
 {
-
-    Uint32 m_counter;
-
-    static constexpr Uint64 cMKeylen = 256 / 8;
-    alignas(16) Uint8 m_key[cMKeylen];
-    static constexpr Uint64 cMIvlen = (128 / 8);
-    alignas(16) Uint8 m_iv[cMIvlen];
-
   public:
-    static constexpr Uint32 Chacha20Constants[4] = {
-        0x61707865, 0x3320646e, 0x79622d32, 0x6b206574
-    };
+    static alc_error_t Build(const alc_cipher_info_t& cCipherAlgoInfo,
+                             Context&                 ctx);
 
-    alc_error_t setKey(const Uint8 key[], Uint64 keylen);
-
-    alc_error_t setIv(const Uint8 iv[], Uint64 ivlen);
-
-    alc_error_t processInput(const Uint8 plaintext[],
-                             Uint64      plaintext_length,
-                             Uint8       ciphertext[]) const;
-
-    static alc_error_t validateKey(const Uint8* key, Uint64 keylen);
-    static alc_error_t validateIv(const Uint8 iv[], Uint64 iVlen);
+    static bool Supported(const alc_cipher_algo_info_t ci_algo_info,
+                          const alc_key_info_t         ci_key_info);
 };
 
-} // namespace alcp::cipher::chacha20
+}

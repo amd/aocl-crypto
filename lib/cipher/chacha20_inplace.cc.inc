@@ -33,6 +33,8 @@
 #include <iostream>
 #define UNROLL_8 _Pragma("GCC unroll 2")
 
+namespace alcp::cipher::chacha20 {
+
 inline void
 DisplayState(Uint32 state[16])
 {
@@ -200,3 +202,4 @@ ProcessInput(const Uint8 key[],
     }
     return ALC_ERROR_NONE;
 }
+} // namespace alcp::cipher::chacha20

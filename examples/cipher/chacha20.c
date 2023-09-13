@@ -190,17 +190,18 @@ main(void)
     int retval = 0;
     // Buffer to write plain text into.
     // It should have size greater than or equal to the plaintext.
-    Uint8     sample_output[512] = { 0 };
-    const int cPlaintextSize     = strlen((const char*)sample_plaintxt);
-    const int cCiphertextSize    = cPlaintextSize; // No padding
+    Uint8        sample_output[512] = { 0 };
+    const int    cPlaintextSize     = strlen((const char*)sample_plaintxt);
+    const int    cCiphertextSize    = cPlaintextSize; // No padding
+    const Uint64 ivlen              = sizeof(iv) * 8;
+    const Uint64 keylen             = sizeof(sample_key) * 8;
 
     printf("Input Text: %s\n", sample_plaintxt);
 
     // Create the handle, this handle will be used for encrypt and decrypt
     // operations
     alc_cipher_handle_t handle;
-    retval = create_demo_session(
-        &handle, sample_key, iv, sizeof(iv), sizeof(sample_key));
+    retval = create_demo_session(&handle, sample_key, iv, ivlen, keylen);
     if (retval != 0)
         goto out;
 

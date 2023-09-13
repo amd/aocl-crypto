@@ -28,7 +28,6 @@
 
 #include "../chacha20_inplace.cc.inc"
 #include "alcp/cipher/chacha20.hh"
-#include "alcp/cipher/chacha20_inplace.hh"
 #include "alcp/types.h"
 #include "gtest/gtest.h"
 #include <openssl/bio.h>
@@ -57,7 +56,7 @@ double totalTimeElapsed;
         printf(" %2.2f ms ", elapsed * 1000);                                  \
     }
 
-using namespace alcp::cipher;
+using namespace alcp::cipher::chacha20;
 TEST(Chacha20, QuarterRoundTest)
 {
     Uint32 a = 0x11111111;
@@ -237,8 +236,7 @@ TEST(Chacha20, Encrypt_MultipleBytes)
             std::vector<Uint8>(&output[0], &output[0] + i),
             std::vector<Uint8>(&expected_output[0], &expected_output[0] + i))
             << "Failed to Encrypt block size " << i;
-        chacha20_obj_dec.processInput(
-            &output[0], plaintext.size(), &decrypted_plaintext[0]);
+        chacha20_obj_dec.processInput(&output[0], i, &decrypted_plaintext[0]);
         ASSERT_EQ(
             std::vector<Uint8>(&output[0], &output[0] + i),
             std::vector<Uint8>(&expected_output[0], &expected_output[0] + i))

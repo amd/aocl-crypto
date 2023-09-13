@@ -27,8 +27,6 @@
  */
 #pragma once
 
-#include "alcp/cipher.h"
-
 #include "alcp/base.hh"
 #include "alcp/capi/cipher/builder.hh"
 #include "alcp/cipher.hh"
@@ -52,13 +50,6 @@ class AesAeadBuilder
     static alc_error_t Build(const alc_cipher_aead_algo_info_t& cCipherAlgoInfo,
                              const alc_key_info_t&              keyInfo,
                              Context&                           ctx);
-};
-
-class Chacha20Builder
-{
-  public:
-    static alc_error_t Build(const alc_cipher_info_t& cCipherAlgoInfo,
-                             Context&                 ctx);
 };
 
 } // namespace alcp::cipher

@@ -30,13 +30,25 @@
 #include "alcp/utils/cpuid.hh"
 #include "chacha20_inplace.cc.inc"
 #include <algorithm>
-namespace alcp::cipher {
+namespace alcp::cipher::chacha20 {
 using utils::CpuId;
+
+alc_error_t
+ChaCha20::validateKey(const Uint8* key, Uint64 keylen)
+{
+    return ValidateKey(key, keylen);
+}
+
+alc_error_t
+ChaCha20::validateIv(const Uint8 iv[], Uint64 iVlen)
+{
+    return ValidateIv(iv, iVlen);
+}
 
 alc_error_t
 ChaCha20::setKey(const Uint8 key[], Uint64 keylen)
 {
-    alc_error_t err = ValidateKey(key, keylen);
+    alc_error_t err = this->validateKey(key, keylen);
     if (alcp_is_error(err)) {
         return err;
     }
@@ -47,7 +59,7 @@ ChaCha20::setKey(const Uint8 key[], Uint64 keylen)
 alc_error_t
 ChaCha20::setIv(const Uint8 iv[], Uint64 ivlen)
 {
-    alc_error_t err = ValidateIv(iv, ivlen);
+    alc_error_t err = this->validateIv(iv, ivlen);
     if (alcp_is_error(err)) {
         return err;
     }
@@ -60,10 +72,10 @@ ChaCha20::processInput(const Uint8 plaintext[],
                        Uint64      plaintextLength,
                        Uint8       ciphertext[]) const
 {
-
-    if (CpuId::cpuHasAvx512(utils::AVX512_F)
-        && CpuId::cpuHasAvx512(utils::AVX512_DQ)
-        && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
+    static bool is_avx512 = CpuId::cpuHasAvx512(utils::AVX512_F)
+                            && CpuId::cpuHasAvx512(utils::AVX512_DQ)
+                            && CpuId::cpuHasAvx512(utils::AVX512_BW);
+    if (is_avx512) {
 
         return zen4::ProcessInput(m_key,
                                   cMKeylen,
@@ -74,14 +86,14 @@ ChaCha20::processInput(const Uint8 plaintext[],
                                   ciphertext);
     } else {
 
-        return ProcessInput(m_key,
-                            cMKeylen,
-                            m_iv,
-                            cMIvlen,
-                            plaintext,
-                            plaintextLength,
-                            ciphertext);
+        return cipher::chacha20::ProcessInput(m_key,
+                                              cMKeylen,
+                                              m_iv,
+                                              cMIvlen,
+                                              plaintext,
+                                              plaintextLength,
+                                              ciphertext);
     }
 }
 
-} // namespace alcp::cipher
+} // namespace alcp::cipher::chacha20

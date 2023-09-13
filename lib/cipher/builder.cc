@@ -35,7 +35,7 @@
 #include "alcp/cipher/aes_ctr.hh"
 #include "alcp/cipher/aes_gcm.hh"
 #include "alcp/cipher/aes_xts.hh"
-#include "alcp/cipher/chacha20.hh"
+#include "alcp/cipher/chacha20_build.hh"
 #include "alcp/utils/cpuid.hh"
 
 using alcp::utils::CpuId;
@@ -556,7 +556,7 @@ CipherBuilder::Build(const alc_cipher_info_t& cipherInfo, Context& ctx)
                 cipherInfo.ci_algo_info, cipherInfo.ci_key_info, ctx);
             break;
         case ALC_CIPHER_TYPE_CHACHA20:
-            err = Chacha20Builder::Build(cipherInfo, ctx);
+            err = chacha20::Chacha20Builder::Build(cipherInfo, ctx);
             break;
         default:
             err = ALC_ERROR_NOT_SUPPORTED;
@@ -575,7 +575,7 @@ __chacha20_processInputWrapper(const void*  rCipher,
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<const alcp::cipher::ChaCha20*>(rCipher);
+    auto ap = static_cast<const alcp::cipher::chacha20::ChaCha20*>(rCipher);
 
     e = ap->processInput(pSrc, len, pDest);
 
@@ -587,23 +587,24 @@ __chacha20_FinishWrapper(const void* rCipher)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<const alcp::cipher::ChaCha20*>(rCipher);
+    auto ap = static_cast<const chacha20::ChaCha20*>(rCipher);
     delete ap;
 
     return e;
 }
 alc_error_t
-Chacha20Builder::Build(const alc_cipher_info_t& cCipherAlgoInfo, Context& ctx)
+chacha20::Chacha20Builder::Build(const alc_cipher_info_t& cCipherAlgoInfo,
+                                 Context&                 ctx)
 {
-    alcp::cipher::ChaCha20* chacha = new alcp::cipher::ChaCha20();
-    ctx.m_cipher                   = chacha;
+    chacha20::ChaCha20* chacha = new chacha20::ChaCha20();
+    ctx.m_cipher               = chacha;
     if (chacha->setKey(cCipherAlgoInfo.ci_key_info.key,
-                       cCipherAlgoInfo.ci_key_info.len)) {
+                       cCipherAlgoInfo.ci_key_info.len / 8)) {
         return ALC_ERROR_INVALID_ARG;
     }
 
     if (chacha->setIv(cCipherAlgoInfo.ci_algo_info.ai_iv,
-                      cCipherAlgoInfo.ci_algo_info.iv_length)) {
+                      cCipherAlgoInfo.ci_algo_info.iv_length / 8)) {
         return ALC_ERROR_INVALID_ARG;
     }
     ctx.encrypt = __chacha20_processInputWrapper;
@@ -612,6 +613,18 @@ Chacha20Builder::Build(const alc_cipher_info_t& cCipherAlgoInfo, Context& ctx)
     return ALC_ERROR_NONE;
 }
 
+bool
+chacha20::Chacha20Builder::Supported(const alc_cipher_algo_info_t ci_algo_info,
+                                     const alc_key_info_t         ci_key_info)
+{
+    if (chacha20::ChaCha20::validateKey(ci_key_info.key, ci_key_info.len / 8)) {
+        return false;
+    } else if (chacha20::ChaCha20::validateIv(ci_algo_info.ai_iv,
+                                              ci_algo_info.iv_length / 8)) {
+        return false;
+    }
+    return true;
+}
 alc_error_t
 AesBuilder::Build(const alc_cipher_algo_info_t& aesInfo,
                   const alc_key_info_t&         keyInfo,
@@ -746,6 +759,9 @@ CipherBuilder::Supported(alc_cipher_info_t& cinfo)
     switch (cinfo.ci_type) {
         case ALC_CIPHER_TYPE_AES:
             return AesBuilder::Supported(cinfo.ci_algo_info, cinfo.ci_key_info);
+        case ALC_CIPHER_TYPE_CHACHA20:
+            return chacha20::Chacha20Builder::Supported(cinfo.ci_algo_info,
+                                                        cinfo.ci_key_info);
         default:
             return false;
     }

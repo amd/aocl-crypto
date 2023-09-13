@@ -28,6 +28,11 @@
 
 #include "alcp/error.h"
 #include <alcp/types.h>
+namespace alcp::cipher::chacha20 {
+inline alc_error_t
+ValidateKey(const Uint8* key, Uint64 keylen);
+inline alc_error_t
+ValidateIv(const Uint8 iv[], Uint64 iVlen);
 inline void
 QuarterRound(Uint32& a, Uint32& b, Uint32& c, Uint32& d);
 
@@ -63,3 +68,5 @@ ProcessInput(const Uint8 key[],
              const Uint8 plaintext[],
              Uint64      plaintextLength,
              Uint8       ciphertext[]);
+
+} // namespace alcp::cipher::chacha20
