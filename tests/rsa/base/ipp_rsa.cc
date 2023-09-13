@@ -34,6 +34,8 @@
 
 namespace alcp::testing {
 
+/* FIXME function to get data from bignum */
+
 /* Function to create bignum from a byte stream */
 IppsBigNumState*
 createSetBigNUM(Uint8* buff, int size_buff) // size in bytes
@@ -54,6 +56,23 @@ createSetBigNUM(Uint8* buff, int size_buff) // size in bytes
     }
     ippsSet_BN(IppsBigNumPOS, size_buff * 2 / 8, N, m_pBN_N);
     return m_pBN_N;
+}
+
+/* get sha2 method from digest info */
+const IppsHashMethod*
+getIppHashMethod(alc_digest_info_t pDigestInfo)
+{
+    switch (pDigestInfo.dt_len) {
+        case ALC_DIGEST_LEN_256:
+            return ippsHashMethod_SHA256_TT();
+            break;
+        case ALC_DIGEST_LEN_512:
+            return ippsHashMethod_SHA512();
+            break;
+        default:
+            return nullptr;
+    }
+    return nullptr;
 }
 
 IPPRsaBase::IPPRsaBase() {}
@@ -371,66 +390,6 @@ IPPRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
     return true;
 }
 
-// int
-// IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data, int padding_mode)
-// {
-//     IppStatus status = ippStsNoErr;
-
-//     /* The BigNum way */
-//     //#if 0
-//     else {
-//         std::string temp = alcp::testing::utils::parseBytesToHexStr(
-//             data.m_msg, data.m_msg_len);
-
-//         temp = alcp::testing::utils::bytes_to_hex(temp);
-
-//         char tab2[data.m_msg_len];
-//         strncpy(tab2, temp.c_str(), sizeof(tab2));
-//         tab2[sizeof(tab2) - 1] = 0;
-
-//         // BigNumber PlainText_BN((const char*)data.m_msg);
-//         // IppsBigNumSGN sign;
-
-//         BigNumber PlainText_BN(tab2);
-//         int       size_pt;
-//         PlainText_BN.GetSize(&size_pt);
-//         BigNumber CipherText_BN(0, m_modulus_size);
-//         status = ippsRSA_Encrypt(
-//             PlainText_BN, CipherText_BN, m_pPub, m_scratchBuffer);
-//         if (status != ippStsNoErr) {
-//             std::cout << "ippsRSA_Encrypt failed with err code" << status
-//                       << std::endl;
-//             return false;
-//         }
-//         status =
-//             CipherText_BN.GetOctetString(data.m_encrypted_data,
-//             data.m_msg_len);
-//         if (status != ippStsNoErr) {
-//             std::cout << "ippsGetOctString_BN failed with err code" <<
-//             status
-//                       << std::endl;
-//             return false;
-//         }
-
-//         /* TESTING */
-//         BigNumber PlainText_BN_2(0, m_modulus_size);
-//         status = ippsRSA_Decrypt(
-//             CipherText_BN, PlainText_BN_2, m_pPrv, m_scratchBuffer);
-//         if (status != ippStsNoErr) {
-//             std::cout << "ippsRSA_Decrypt failed with err code" << status
-//                       << std::endl;
-//             return false;
-//         }
-//         if (PlainText_BN != PlainText_BN_2) {
-//             std::cout << "FAIL" << std::endl;
-//         }
-//         /* TESTING */
-
-//         //#endif
-//     }
-//     return 0;
-// }
-
 int
 IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 {
@@ -442,18 +401,19 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
         static Ipp8u pSeed[] = "\xaa\xfd\x12\xf6\x59\xca\xe6\x34\x89\xb4"
                                "\x79\xe5\x07\x6d\xde\xc2\xf0\x6c\xb5\x8f";
 
+        /* get hash type based on digest len */
+        const IppsHashMethod* p_hash_method = getIppHashMethod(m_digest_info);
+
         /* Encrypt message */
-        status = ippsRSAEncrypt_OAEP_rmf(
-            data.m_msg,
-            data.m_msg_len,
-            0,
-            0,
-            pSeed,
-            data.m_encrypted_data,
-            m_pPub,
-            ippsHashMethod_SHA256_TT(), /*FIXME: this will change based on
-                                           hash lenght in future */
-            m_scratchBuffer_Pub);
+        status = ippsRSAEncrypt_OAEP_rmf(data.m_msg,
+                                         data.m_msg_len,
+                                         0,
+                                         0,
+                                         pSeed,
+                                         data.m_encrypted_data,
+                                         m_pPub,
+                                         p_hash_method,
+                                         m_scratchBuffer_Pub);
 
         if (status != ippStsNoErr) {
             std::cout << "ippsRSAEncrypt_OAEP_rmf failed with err code"
@@ -461,27 +421,20 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
             return status;
         }
     } else {
-        /* FIXME: not functional now */
-        // BigNumber     PlainText_BN((const char*)data.m_msg);
-        // IppsBigNumSGN sign;
-        // BigNumber     CipherText_BN(0, 128);
-        // status = ippsRSA_Encrypt(
-        //     PlainText_BN, CipherText_BN, m_pPub, m_scratchBuffer_Pub);
-        // if (status != ippStsNoErr) {
-        //     std::cout << "ippsRSA_Encrypt failed with err code" << status
-        //               << std::endl;
-        //     return status;
-        // }
-        /*FIXME: how to read data from this Bignum ?*/
-        // status =
-        //     CipherText_BN.GetOctetString(data.m_encrypted_data,
-        //     data.m_msg_len);
-        // if (status != ippStsNoErr) {
-        //     std::cout << "ippsGetOctString_BN failed with err code" <<
-        //     status
-        //               << std::endl;
-        //     return false;
-        // }
+        IppsBigNumState* m_pBN_kat_PT =
+            createSetBigNUM((Uint8*)data.m_msg, data.m_msg_len);
+
+        IppsBigNumState* m_pBN_kat_CT = createSetBigNUM(NULL, data.m_msg_len);
+
+        status = ippsRSA_Encrypt(
+            m_pBN_kat_PT, m_pBN_kat_CT, m_pPub, m_scratchBuffer_Pub);
+        if (status != ippStsNoErr) {
+            std::cout << "ippsRSA_Encrypt failed with err code" << status
+                      << std::endl;
+            return status;
+        }
+        /* try to read from the bignum */
+        ReadFromBigNum(m_pBN_kat_CT, data.m_encrypted_data, data.m_msg_len);
     }
 
     return 0;
@@ -495,17 +448,17 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
     if (m_padding_mode == 1) {
         int    plainTextLen = data.m_msg_len;
         Ipp8u* pPlainText   = new Ipp8u[plainTextLen];
+        /* get hash type based on digest len */
+        const IppsHashMethod* p_hash_method = getIppHashMethod(m_digest_info);
         /* Decrypt message */
-        status = ippsRSADecrypt_OAEP_rmf(
-            data.m_encrypted_data,
-            0,
-            0,
-            pPlainText,
-            &plainTextLen,
-            m_pPrv,
-            ippsHashMethod_SHA256_TT(), /*FIXME: this will change based on
-                                           hash lenght in future */
-            m_scratchBuffer_Pvt);
+        status = ippsRSADecrypt_OAEP_rmf(data.m_encrypted_data,
+                                         0,
+                                         0,
+                                         pPlainText,
+                                         &plainTextLen,
+                                         m_pPrv,
+                                         p_hash_method,
+                                         m_scratchBuffer_Pvt);
 
         if (status != ippStsNoErr) {
             std::cout << "ippsRSADecrypt_OAEP_rmf failed with err code"
@@ -519,26 +472,8 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
             delete[] pPlainText;
         }
     } else {
-        /* FIXME: not functional now */
-        // BigNumber CipherText_BN((const char*)data.m_encrypted_data);
-        // BigNumber PlainText_BN(0, m_modulus_size);
-        // status = ippsRSA_Decrypt(
-        //     CipherText_BN, PlainText_BN, m_pPrv, m_scratchBuffer_Pvt);
-        // if (status != ippStsNoErr) {
-        //     std::cout << "ippsRSA_Decrypt failed with err code" << status
-        //               << std::endl;
-        //     return status;
-        // }
-        /*FIXME: how to read data from this Bignum ?*/
-        // status =
-        //     PlainText_BN.GetOctetString(data.m_decrypted_data,
-        //     data.m_msg_len);
-        // if (status != ippStsNoErr) {
-        //     std::cout << "ippsGetOctString_BN failed with err code" <<
-        //     status
-        //               << std::endl;
-        //     return false;
-        // }
+        /*FIXME*/
+        return 1;
     }
     return 0;
 }
