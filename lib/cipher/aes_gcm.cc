@@ -264,17 +264,14 @@ namespace aesni {
                                           const Uint8* pIv)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        m_len           = len;
+        m_len += len;
         // to be modified to decryptGcm128 function
         err = CryptGcm(pInput,
                        pOutput,
                        len,
                        m_enc_key,
                        m_nrounds,
-                       pIv,
-                       &m_gHash_128,
-                       m_hash_subKey_128,
-                       m_iv_128,
+                       this,
                        m_reverse_mask_128,
                        false,
                        m_hashSubkeyTable);
@@ -287,17 +284,14 @@ namespace aesni {
                                           const Uint8* pIv)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        m_len           = len;
+        m_len += len;
         // to be modified to decryptGcm192 function
         err = CryptGcm(pInput,
                        pOutput,
                        len,
                        m_enc_key,
                        m_nrounds,
-                       pIv,
-                       &m_gHash_128,
-                       m_hash_subKey_128,
-                       m_iv_128,
+                       this,
                        m_reverse_mask_128,
                        false,
                        m_hashSubkeyTable);
@@ -310,17 +304,14 @@ namespace aesni {
                                           const Uint8* pIv)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        m_len           = len;
+        m_len += len;
         // to be modified to decryptGcm256 function
         err = CryptGcm(pInput,
                        pOutput,
                        len,
                        m_enc_key,
                        m_nrounds,
-                       pIv,
-                       &m_gHash_128,
-                       m_hash_subKey_128,
-                       m_iv_128,
+                       this,
                        m_reverse_mask_128,
                        false,
                        m_hashSubkeyTable);
@@ -333,17 +324,14 @@ namespace aesni {
                                           const Uint8* pIv)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        m_len           = len;
+        m_len += len;
         // to be modified to encryptGcm128 function
         err = CryptGcm(pInput,
                        pOutput,
                        len,
                        m_enc_key,
                        m_nrounds,
-                       pIv,
-                       &m_gHash_128,
-                       m_hash_subKey_128,
-                       m_iv_128,
+                       this,
                        m_reverse_mask_128,
                        true,
                        m_hashSubkeyTable);
@@ -356,17 +344,14 @@ namespace aesni {
                                           const Uint8* pIv)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        m_len           = len;
+        m_len += len;
         // to be modified to encryptGcm192 function
         err = CryptGcm(pInput,
                        pOutput,
                        len,
                        m_enc_key,
                        m_nrounds,
-                       pIv,
-                       &m_gHash_128,
-                       m_hash_subKey_128,
-                       m_iv_128,
+                       this,
                        m_reverse_mask_128,
                        true,
                        m_hashSubkeyTable);
@@ -379,17 +364,14 @@ namespace aesni {
                                           const Uint8* pIv)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        m_len           = len;
+        m_len += len;
         // to be modified to encryptGcm192 function
         err = CryptGcm(pInput,
                        pOutput,
                        len,
                        m_enc_key,
                        m_nrounds,
-                       pIv,
-                       &m_gHash_128,
-                       m_hash_subKey_128,
-                       m_iv_128,
+                       this,
                        m_reverse_mask_128,
                        true,
                        m_hashSubkeyTable);

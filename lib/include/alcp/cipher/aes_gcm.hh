@@ -59,7 +59,6 @@ class ALCP_API_EXPORT Gcm
 
     __m128i m_reverse_mask_128 =
         _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-    __m128i      m_iv_128;
     const Uint8* m_iv    = nullptr;
     Uint64       m_len   = 0;
     Uint64       m_ivLen = 12; // default 12 bytes or 96bits
@@ -86,13 +85,11 @@ class ALCP_API_EXPORT Gcm
     }
 };
 
-class ALCP_API_EXPORT GcmAuth
+class ALCP_API_EXPORT GcmAuth : public GcmAuthData
 {
   public:
-    Uint64  m_tagLen          = 0;
-    __m128i m_hash_subKey_128 = _mm_setzero_si128(); // Uint8 m_hash_subKey[16];
-    __m128i m_gHash_128       = _mm_setzero_si128(); // Uint8 m_gHash[16];
-    __m128i m_tag_128;                               // Uint8 m_tag[16];
+    Uint64  m_tagLen = 0;
+    __m128i m_tag_128; // Uint8 m_tag[16];
     Uint64  m_additionalDataLen     = 0;
     Uint64  m_isHashSubKeyGenerated = false;
 

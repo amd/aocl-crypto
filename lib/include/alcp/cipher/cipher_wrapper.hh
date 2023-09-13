@@ -42,6 +42,14 @@
 
 namespace alcp::cipher {
 
+// GCM Authentication Data
+struct ALCP_API_EXPORT GcmAuthData
+{
+    __m128i m_hash_subKey_128 = _mm_setzero_si128(); // Uint8 m_hash_subKey[16];
+    __m128i m_gHash_128       = _mm_setzero_si128(); // Uint8 m_gHash[16];
+    __m128i m_iv_128          = _mm_setzero_si128(); // Persistent Counter
+};
+
 namespace aesni {
 
     alc_error_t ExpandKeys(const Uint8* pUserKey,
@@ -228,18 +236,15 @@ namespace aesni {
                       __m128i* four_x,
                       __m128i* swap_ctr);
 
-    alc_error_t CryptGcm(const Uint8* pPlainText,
-                         Uint8*       pCipherText,
-                         Uint64       len,
-                         const Uint8* pKey,
-                         int          nRounds,
-                         const Uint8* pIv,
-                         __m128i*     pgHash,
-                         __m128i      Hsubkey_128,
-                         __m128i      iv_128,
-                         __m128i      reverse_mask_128,
-                         bool         isEncrypt,
-                         Uint64*      pHashSubkeyTable);
+    alc_error_t CryptGcm(const Uint8* pInputText,  // ptr to inputText
+                         Uint8*       pOutputText, // ptr to outputtext
+                         Uint64       len,         // message length in bytes
+                         const Uint8* pKey,        // ptr to Key
+                         int          nRounds,     // No. of rounds
+                         alcp::cipher::GcmAuthData* gcm,
+                         __m128i                    reverse_mask_128,
+                         bool                       isEncrypt,
+                         Uint64*                    pHashSubkeyTable);
 
     alc_error_t GetTagGcm(Uint64   tagLen,
                           Uint64   plaintextLen,
