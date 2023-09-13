@@ -66,13 +66,21 @@ RoundFunction(__m512i& regA, __m512i& regB, __m512i& regC, __m512i& regD)
     regB = _mm512_rol_epi32(regB, 7);
 }
 
-#define XOR_MESSAGE_KEYSTREAM_STORE(state_register, index)                     \
-    reg_state   = _mm512_extracti64x2_epi64(state_register, index);            \
-    reg_128_msg = _mm_loadu_si128(p_plaintext_128);                            \
-    reg_128_msg = _mm_xor_si128(reg_state, reg_128_msg);                       \
-    _mm_store_si128(p_ciphertext_128, reg_128_msg);                            \
-    p_plaintext_128++;                                                         \
+template<int index>
+inline void
+XorMessageKeyStreamStore(__m512i&        state_register,
+                         __m128i&        reg_128_state,
+                         __m128i&        reg_128_msg,
+                         const __m128i*& p_plaintext_128,
+                         __m128i*&       p_ciphertext_128)
+{
+    reg_128_state = _mm512_extracti64x2_epi64(state_register, index);
+    reg_128_msg   = _mm_loadu_si128(p_plaintext_128);
+    reg_128_msg   = _mm_xor_si128(reg_128_msg, reg_128_state);
+    _mm_storeu_si128(p_ciphertext_128, reg_128_msg);
+    p_plaintext_128++;
     p_ciphertext_128++;
+}
 
 void
 processParallelBlocks(const Uint8 key[],
@@ -101,7 +109,7 @@ processParallelBlocks(const Uint8 key[],
     __m512i reg_state_1_0_3_2, reg_state_5_4_7_6, reg_state_9_8_11_10,
         reg_state_13_12_15_14, counter_reg;
 
-    __m128i reg_state;
+    __m128i reg_128_state;
     __m128i reg_128_msg;
     // clang-format off
         counter_reg = _mm512_setr_epi32(0x0 ,0x0,0x0,0x0,
@@ -114,8 +122,9 @@ processParallelBlocks(const Uint8 key[],
                                         0x4 ,0x0,0x0,0x0);
     // clang-format on
 
-    auto     p_plaintext_128  = reinterpret_cast<const __m128i*>(plaintext);
-    auto     p_ciphertext_128 = reinterpret_cast<__m128i*>(ciphertext);
+    const __m128i* p_plaintext_128 =
+        reinterpret_cast<const __m128i*>(plaintext);
+    __m128i* p_ciphertext_128 = reinterpret_cast<__m128i*>(ciphertext);
     __m512i* state[4]         = { &reg_state_1_0_3_2,
                                   &reg_state_5_4_7_6,
                                   &reg_state_9_8_11_10,
@@ -179,22 +188,87 @@ processParallelBlocks(const Uint8 key[],
         reg_state_13_12_15_14 =
             _mm512_add_epi32(reg_state_13_12_15_14, reg_state_13_12_15_14_save);
 
-        XOR_MESSAGE_KEYSTREAM_STORE(*state[0], 0);
-        XOR_MESSAGE_KEYSTREAM_STORE(*state[1], 0);
-        XOR_MESSAGE_KEYSTREAM_STORE(*state[2], 0);
-        XOR_MESSAGE_KEYSTREAM_STORE(*state[3], 0);
-        XOR_MESSAGE_KEYSTREAM_STORE(*state[0], 1);
-        XOR_MESSAGE_KEYSTREAM_STORE(*state[1], 1);
-        XOR_MESSAGE_KEYSTREAM_STORE(*state[2], 1);
-        XOR_MESSAGE_KEYSTREAM_STORE(*state[3], 1);
-        XOR_MESSAGE_KEYSTREAM_STORE(*state[0], 2);
-        XOR_MESSAGE_KEYSTREAM_STORE(*state[1], 2);
-        XOR_MESSAGE_KEYSTREAM_STORE(*state[2], 2);
-        XOR_MESSAGE_KEYSTREAM_STORE(*state[3], 2);
-        XOR_MESSAGE_KEYSTREAM_STORE(*state[0], 3);
-        XOR_MESSAGE_KEYSTREAM_STORE(*state[1], 3);
-        XOR_MESSAGE_KEYSTREAM_STORE(*state[2], 3);
-        XOR_MESSAGE_KEYSTREAM_STORE(*state[3], 3);
+        XorMessageKeyStreamStore<0>(*state[0],
+                                    reg_128_state,
+                                    reg_128_msg,
+                                    p_plaintext_128,
+                                    p_ciphertext_128);
+
+        XorMessageKeyStreamStore<0>(*state[1],
+                                    reg_128_state,
+                                    reg_128_msg,
+                                    p_plaintext_128,
+                                    p_ciphertext_128);
+        XorMessageKeyStreamStore<0>(*state[2],
+                                    reg_128_state,
+                                    reg_128_msg,
+                                    p_plaintext_128,
+                                    p_ciphertext_128);
+        XorMessageKeyStreamStore<0>(*state[3],
+                                    reg_128_state,
+                                    reg_128_msg,
+                                    p_plaintext_128,
+                                    p_ciphertext_128);
+        XorMessageKeyStreamStore<1>(*state[0],
+                                    reg_128_state,
+                                    reg_128_msg,
+                                    p_plaintext_128,
+                                    p_ciphertext_128);
+        XorMessageKeyStreamStore<1>(*state[1],
+                                    reg_128_state,
+                                    reg_128_msg,
+                                    p_plaintext_128,
+                                    p_ciphertext_128);
+        XorMessageKeyStreamStore<1>(*state[2],
+                                    reg_128_state,
+                                    reg_128_msg,
+                                    p_plaintext_128,
+                                    p_ciphertext_128);
+        XorMessageKeyStreamStore<1>(*state[3],
+                                    reg_128_state,
+                                    reg_128_msg,
+                                    p_plaintext_128,
+                                    p_ciphertext_128);
+        XorMessageKeyStreamStore<2>(*state[0],
+                                    reg_128_state,
+                                    reg_128_msg,
+                                    p_plaintext_128,
+                                    p_ciphertext_128);
+        XorMessageKeyStreamStore<2>(*state[1],
+                                    reg_128_state,
+                                    reg_128_msg,
+                                    p_plaintext_128,
+                                    p_ciphertext_128);
+        XorMessageKeyStreamStore<2>(*state[2],
+                                    reg_128_state,
+                                    reg_128_msg,
+                                    p_plaintext_128,
+                                    p_ciphertext_128);
+        XorMessageKeyStreamStore<2>(*state[3],
+                                    reg_128_state,
+                                    reg_128_msg,
+                                    p_plaintext_128,
+                                    p_ciphertext_128);
+        XorMessageKeyStreamStore<3>(*state[0],
+                                    reg_128_state,
+                                    reg_128_msg,
+                                    p_plaintext_128,
+                                    p_ciphertext_128);
+        XorMessageKeyStreamStore<3>(*state[1],
+                                    reg_128_state,
+                                    reg_128_msg,
+                                    p_plaintext_128,
+                                    p_ciphertext_128);
+        XorMessageKeyStreamStore<3>(*state[2],
+                                    reg_128_state,
+                                    reg_128_msg,
+                                    p_plaintext_128,
+                                    p_ciphertext_128);
+        XorMessageKeyStreamStore<3>(*state[3],
+                                    reg_128_state,
+                                    reg_128_msg,
+                                    p_plaintext_128,
+                                    p_ciphertext_128);
 
         plaintext += 256;
         plaintextLength -= 256;
@@ -244,7 +318,9 @@ ProcessInput(const Uint8 key[],
                               chacha20_key_stream,
                               1);
         for (Uint64 i = 0; i < chacha20_non_parallel_bytes; i++) {
-            *(ciphertext + i) = chacha20_key_stream[i] ^ *(plaintext + i);
+            *(ciphertext) = chacha20_key_stream[i] ^ *(plaintext);
+            plaintext++;
+            ciphertext++;
         }
     }
     return ALC_ERROR_NONE;
