@@ -38,18 +38,12 @@
 #include "alcp/cipher/chacha20_build.hh"
 #include "alcp/utils/cpuid.hh"
 
+using alcp::utils::CpuCipherFeatures;
 using alcp::utils::CpuId;
 
 #include <type_traits> /* for is_same_v<> */
 
 namespace alcp::cipher {
-
-enum class CpuCipherFeatures
-{
-    eAesni,
-    eVaes256,
-    eVaes512,
-};
 
 using Context = alcp::cipher::Context;
 using namespace alcp::base;
@@ -173,16 +167,20 @@ CpuCipherFeatures
 getCpuCipherfeature()
 {
     CpuCipherFeatures cpu_feature =
-        CpuCipherFeatures::eAesni; // default minimum arch feature
-                                   // considered to be present.
+        CpuCipherFeatures::eReference; // If no arch features present,means no
+                                       // acceleration, Fall back to reference
 
-    if (CpuId::cpuHasVaes()) {
-        cpu_feature = CpuCipherFeatures::eVaes256;
+    if (CpuId::cpuHasAesni()) {
+        cpu_feature = CpuCipherFeatures::eAesni;
 
-        if (CpuId::cpuHasAvx512(utils::AVX512_F)
-            && CpuId::cpuHasAvx512(utils::AVX512_DQ)
-            && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
-            cpu_feature = CpuCipherFeatures::eVaes512;
+        if (CpuId::cpuHasVaes()) {
+            cpu_feature = CpuCipherFeatures::eVaes256;
+
+            if (CpuId::cpuHasAvx512(utils::AVX512_F)
+                && CpuId::cpuHasAvx512(utils::AVX512_DQ)
+                && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
+                cpu_feature = CpuCipherFeatures::eVaes512;
+            }
         }
     }
     return cpu_feature;
@@ -565,7 +563,7 @@ CipherBuilder::Build(const alc_cipher_info_t& cipherInfo, Context& ctx)
 
     return err;
 }
-
+template<CpuCipherFeatures cpu_cipher_feature>
 static alc_error_t
 __chacha20_processInputWrapper(const void*  rCipher,
                                const Uint8* pSrc,
@@ -575,29 +573,32 @@ __chacha20_processInputWrapper(const void*  rCipher,
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<const alcp::cipher::chacha20::ChaCha20*>(rCipher);
+    auto ap =
+        static_cast<const chacha20::ChaCha20<cpu_cipher_feature>*>(rCipher);
 
     e = ap->processInput(pSrc, len, pDest);
 
     return e;
 }
-
+template<CpuCipherFeatures cpu_cipher_feature>
 static alc_error_t
 __chacha20_FinishWrapper(const void* rCipher)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<const chacha20::ChaCha20*>(rCipher);
+    auto ap =
+        static_cast<const chacha20::ChaCha20<cpu_cipher_feature>*>(rCipher);
     delete ap;
 
     return e;
 }
+template<CpuCipherFeatures cpu_cipher_feature>
 alc_error_t
-chacha20::Chacha20Builder::Build(const alc_cipher_info_t& cCipherAlgoInfo,
-                                 Context&                 ctx)
+__build_chacha20(const alc_cipher_info_t& cCipherAlgoInfo, Context& ctx)
 {
-    chacha20::ChaCha20* chacha = new chacha20::ChaCha20();
-    ctx.m_cipher               = chacha;
+    chacha20::ChaCha20<cpu_cipher_feature>* chacha =
+        new chacha20::ChaCha20<cpu_cipher_feature>();
+    ctx.m_cipher = chacha;
     if (chacha->setKey(cCipherAlgoInfo.ci_key_info.key,
                        cCipherAlgoInfo.ci_key_info.len / 8)) {
         return ALC_ERROR_INVALID_ARG;
@@ -607,9 +608,24 @@ chacha20::Chacha20Builder::Build(const alc_cipher_info_t& cCipherAlgoInfo,
                       cCipherAlgoInfo.ci_algo_info.iv_length / 8)) {
         return ALC_ERROR_INVALID_ARG;
     }
-    ctx.encrypt = __chacha20_processInputWrapper;
-    ctx.decrypt = __chacha20_processInputWrapper;
-    ctx.finish  = __chacha20_FinishWrapper;
+    ctx.encrypt = __chacha20_processInputWrapper<cpu_cipher_feature>;
+    ctx.decrypt = __chacha20_processInputWrapper<cpu_cipher_feature>;
+    ctx.finish  = __chacha20_FinishWrapper<cpu_cipher_feature>;
+
+    return ALC_ERROR_NONE;
+}
+alc_error_t
+chacha20::Chacha20Builder::Build(const alc_cipher_info_t& cCipherAlgoInfo,
+                                 Context&                 ctx)
+{
+
+    CpuCipherFeatures cpu_cipher_feature = getCpuCipherfeature();
+    if (cpu_cipher_feature == CpuCipherFeatures::eVaes512) {
+        __build_chacha20<CpuCipherFeatures::eVaes512>(cCipherAlgoInfo, ctx);
+    } else {
+        __build_chacha20<CpuCipherFeatures::eReference>(cCipherAlgoInfo, ctx);
+    }
+
     return ALC_ERROR_NONE;
 }
 
@@ -617,10 +633,11 @@ bool
 chacha20::Chacha20Builder::Supported(const alc_cipher_algo_info_t ci_algo_info,
                                      const alc_key_info_t         ci_key_info)
 {
-    if (chacha20::ChaCha20::validateKey(ci_key_info.key, ci_key_info.len / 8)) {
+    if (chacha20::ChaCha20<CpuCipherFeatures::eReference>::validateKey(
+            ci_key_info.key, ci_key_info.len / 8)) {
         return false;
-    } else if (chacha20::ChaCha20::validateIv(ci_algo_info.ai_iv,
-                                              ci_algo_info.iv_length / 8)) {
+    } else if (chacha20::ChaCha20<CpuCipherFeatures::eReference>::validateIv(
+                   ci_algo_info.ai_iv, ci_algo_info.iv_length / 8)) {
         return false;
     }
     return true;

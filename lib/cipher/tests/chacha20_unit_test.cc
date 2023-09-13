@@ -255,7 +255,7 @@ TEST(Chacha20, PerformanceTest)
     Uint8 iv[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                    0x00, 0x4a, 0x00, 0x00, 0x00, 0x00 };
 
-    std::vector<Uint8> plaintext(16);
+    std::vector<Uint8> plaintext(256);
     std::vector<Uint8> ciphertext(plaintext.size());
     chacha20_obj.setKey(key, sizeof(key));
     chacha20_obj.setIv(iv, sizeof(iv));

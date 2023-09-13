@@ -44,7 +44,13 @@ ProcessInput(const Uint8 key[],
 } // namespace alcp::cipher::chacha20::zen4
 
 namespace alcp::cipher::chacha20 {
+using utils::CpuCipherFeatures;
+using utils::CpuId;
 
+static constexpr Uint32 Chacha20Constants[4] = {
+    0x61707865, 0x3320646e, 0x79622d32, 0x6b206574
+};
+template<CpuCipherFeatures cpu_cipher_feature = CpuCipherFeatures::eDynamic>
 class ChaCha20
 {
 
@@ -56,10 +62,6 @@ class ChaCha20
     alignas(16) Uint8 m_iv[cMIvlen];
 
   public:
-    static constexpr Uint32 Chacha20Constants[4] = {
-        0x61707865, 0x3320646e, 0x79622d32, 0x6b206574
-    };
-
     alc_error_t setKey(const Uint8 key[], Uint64 keylen);
 
     alc_error_t setIv(const Uint8 iv[], Uint64 ivlen);

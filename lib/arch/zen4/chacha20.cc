@@ -91,7 +91,7 @@ processParallelBlocks(const Uint8 key[],
     // -- Setup Registers for First Row Round Function
     // a
     __m512i reg_state_1_0_3_2_save = _mm512_broadcast_i32x4(
-        *reinterpret_cast<const __m128i*>(ChaCha20::Chacha20Constants));
+        *reinterpret_cast<const __m128i*>(chacha20::Chacha20Constants));
     // b
     __m512i reg_state_5_4_7_6_save =
         _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(key));

@@ -34,6 +34,7 @@ namespace alcp::cipher::chacha20 {
 class Chacha20Builder
 {
   public:
+  
     static alc_error_t Build(const alc_cipher_info_t& cCipherAlgoInfo,
                              Context&                 ctx);
 
