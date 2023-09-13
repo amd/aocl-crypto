@@ -66,55 +66,23 @@ RoundFunction(__m512i& regA, __m512i& regB, __m512i& regC, __m512i& regD)
     regB = _mm512_rol_epi32(regB, 7);
 }
 
-inline void
-handleLastBlocks(__m128i&       stateReg,
-                 Uint64         plaintextLength,
-                 Uint64         totalBlocks,
-                 const __m128i& shuffleReg,
-                 const Uint8*   plaintext,
-                 Uint8*         ciphertext)
-{
-    Uint8 temp[16];
-    stateReg = _mm_shuffle_epi8(stateReg, shuffleReg);
-    _mm_storeu_si128(reinterpret_cast<__m128i*>(temp), stateReg);
-
-    for (Uint64 j = 0; j < plaintextLength - totalBlocks * 16; j++) {
-        *(ciphertext + totalBlocks * 16 + j) =
-            temp[j] ^ *(plaintext + totalBlocks * 16 + j);
-    }
-}
 #define XOR_MESSAGE_KEYSTREAM_STORE(state_register, index)                     \
-    reg_state = _mm512_extracti64x2_epi64(state_register, index);              \
-    if (i == blocks_128bits) {                                                 \
-        if ((((plaintextLength - (blocks_128bits * 16)) > 0))) {               \
-            handleLastBlocks(reg_state,                                        \
-                             plaintextLength,                                  \
-                             blocks_128bits,                                   \
-                             shuffle_reg,                                      \
-                             plaintext,                                        \
-                             ciphertext);                                      \
-            return ALC_ERROR_NONE;                                             \
-        } else {                                                               \
-            return ALC_ERROR_NONE;                                             \
-        }                                                                      \
-    }                                                                          \
+    reg_state   = _mm512_extracti64x2_epi64(state_register, index);            \
     reg_128_msg = _mm_loadu_si128(p_plaintext_128);                            \
-    reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);                  \
     reg_128_msg = _mm_xor_si128(reg_state, reg_128_msg);                       \
-    reg_128_msg = _mm_shuffle_epi8(reg_128_msg, shuffle_reg);                  \
     _mm_store_si128(p_ciphertext_128, reg_128_msg);                            \
-    i++;                                                                       \
     p_plaintext_128++;                                                         \
     p_ciphertext_128++;
 
-alc_error_t
-ProcessInput(const Uint8 key[],
-             Uint64      keylen,
-             const Uint8 iv[],
-             Uint64      ivlen,
-             const Uint8 plaintext[],
-             Uint64      plaintextLength,
-             Uint8       ciphertext[])
+void
+processParallelBlocks(const Uint8 key[],
+                      Uint64      keylen,
+                      const Uint8 iv[],
+                      Uint64      ivlen,
+                      const Uint8 plaintext[],
+                      Uint64      plaintextLength,
+                      Uint8       ciphertext[],
+                      Uint64      chacha20_parallel_blocks)
 {
     // -- Setup Registers for First Row Round Function
     // a
@@ -136,8 +104,6 @@ ProcessInput(const Uint8 key[],
     __m128i reg_state;
     __m128i reg_128_msg;
     // clang-format off
-    const __m128i shuffle_reg      = _mm_setr_epi8(0x04, 0x05, 0x06,0x07, 0x00,
-                                        0x01,0x02,0x03,0x0c,0x0d,0x0e,0x0f,0x08,0x09,0xa,0x0b);
         counter_reg = _mm512_setr_epi32(0x0 ,0x0,0x0,0x0,
                                         0x1 ,0x0,0x0,0x0,
                                         0x2 ,0x0,0x0,0x0,
@@ -150,12 +116,11 @@ ProcessInput(const Uint8 key[],
 
     auto     p_plaintext_128  = reinterpret_cast<const __m128i*>(plaintext);
     auto     p_ciphertext_128 = reinterpret_cast<__m128i*>(ciphertext);
-    Uint64   n                = (plaintextLength / 256) + 1;
     __m512i* state[4]         = { &reg_state_1_0_3_2,
                                   &reg_state_5_4_7_6,
                                   &reg_state_9_8_11_10,
                                   &reg_state_13_12_15_14 };
-    for (Uint64 k = 0; k < n; k++) {
+    for (Uint64 k = 0; k < chacha20_parallel_blocks; k++) {
 
         // Restoring the registers to last Round State
         reg_state_1_0_3_2     = reg_state_1_0_3_2_save;
@@ -213,36 +178,74 @@ ProcessInput(const Uint8 key[],
             _mm512_add_epi32(reg_state_9_8_11_10, reg_state_9_8_11_10_save);
         reg_state_13_12_15_14 =
             _mm512_add_epi32(reg_state_13_12_15_14, reg_state_13_12_15_14_save);
-        // a
-        reg_state_1_0_3_2 =
-            _mm512_shuffle_epi32(reg_state_1_0_3_2, (_MM_PERM_ENUM)0b10110001);
 
-        // b
-        reg_state_5_4_7_6 =
-            _mm512_shuffle_epi32(reg_state_5_4_7_6, (_MM_PERM_ENUM)0b10110001);
-
-        // c
-        reg_state_9_8_11_10 = _mm512_shuffle_epi32(reg_state_9_8_11_10,
-                                                   (_MM_PERM_ENUM)0b10110001);
-
-        // d
-        reg_state_13_12_15_14 = _mm512_shuffle_epi32(reg_state_13_12_15_14,
-                                                     (_MM_PERM_ENUM)0b10110001);
-
-        Uint64 blocks_128bits = plaintextLength / 16;
-
-        Uint64 i = 0;
-
-        for (int p = 0; p < 4; p++) {
-            for (int j = 0; j < 4; j++) {
-                XOR_MESSAGE_KEYSTREAM_STORE(*state[j], p)
-            }
-        }
+        XOR_MESSAGE_KEYSTREAM_STORE(*state[0], 0);
+        XOR_MESSAGE_KEYSTREAM_STORE(*state[1], 0);
+        XOR_MESSAGE_KEYSTREAM_STORE(*state[2], 0);
+        XOR_MESSAGE_KEYSTREAM_STORE(*state[3], 0);
+        XOR_MESSAGE_KEYSTREAM_STORE(*state[0], 1);
+        XOR_MESSAGE_KEYSTREAM_STORE(*state[1], 1);
+        XOR_MESSAGE_KEYSTREAM_STORE(*state[2], 1);
+        XOR_MESSAGE_KEYSTREAM_STORE(*state[3], 1);
+        XOR_MESSAGE_KEYSTREAM_STORE(*state[0], 2);
+        XOR_MESSAGE_KEYSTREAM_STORE(*state[1], 2);
+        XOR_MESSAGE_KEYSTREAM_STORE(*state[2], 2);
+        XOR_MESSAGE_KEYSTREAM_STORE(*state[3], 2);
+        XOR_MESSAGE_KEYSTREAM_STORE(*state[0], 3);
+        XOR_MESSAGE_KEYSTREAM_STORE(*state[1], 3);
+        XOR_MESSAGE_KEYSTREAM_STORE(*state[2], 3);
+        XOR_MESSAGE_KEYSTREAM_STORE(*state[3], 3);
 
         plaintext += 256;
         plaintextLength -= 256;
         ciphertext += 256;
         counter_reg = _mm512_add_epi32(counter_reg, inc_reg);
+    }
+}
+
+alc_error_t
+ProcessInput(const Uint8 key[],
+             Uint64      keylen,
+             const Uint8 iv[],
+             Uint64      ivlen,
+             const Uint8 plaintext[],
+             Uint64      plaintextLength,
+             Uint8       ciphertext[])
+{
+    Uint64 chacha20_parallel_blocks = plaintextLength / 256;
+    Uint64 chacha20_non_parallel_bytes =
+        plaintextLength - (chacha20_parallel_blocks * 256);
+    if (chacha20_parallel_blocks > 0) {
+        processParallelBlocks(key,
+                              keylen,
+                              iv,
+                              ivlen,
+                              plaintext,
+                              plaintextLength,
+                              ciphertext,
+                              chacha20_parallel_blocks);
+        plaintext += chacha20_parallel_blocks * 256;
+        ciphertext += chacha20_parallel_blocks * 256;
+    }
+
+    if (chacha20_non_parallel_bytes > 0) {
+        Uint8 chacha20_key_stream[256] = {};
+        Uint8 iv_copy[16];
+        memcpy(iv_copy, iv, 16);
+        if (chacha20_parallel_blocks > 0) {
+            (*(reinterpret_cast<Uint32*>(iv_copy))) += 4;
+        }
+        processParallelBlocks(key,
+                              keylen,
+                              iv_copy,
+                              ivlen,
+                              chacha20_key_stream,
+                              256,
+                              chacha20_key_stream,
+                              1);
+        for (Uint64 i = 0; i < chacha20_non_parallel_bytes; i++) {
+            *(ciphertext + i) = chacha20_key_stream[i] ^ *(plaintext + i);
+        }
     }
     return ALC_ERROR_NONE;
 }
