@@ -244,7 +244,8 @@ IPPRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
     }
 
     /* create bignums from the byte stream data */
-    IppsBigNumState *m_pBN_P, *m_pBN_Q, *m_pBN_DP, *m_pBN_DQ, *m_pBN_invQ;
+    IppsBigNumState *m_pBN_P = nullptr, *m_pBN_Q = nullptr, *m_pBN_DP = nullptr,
+                    *m_pBN_DQ = nullptr, *m_pBN_invQ = nullptr;
 
     if (m_key_len * 8 == KEY_SIZE_2048) {
         m_pBN_P    = createSetBigNUM(P_2048, sizeof(P_2048));
@@ -383,7 +384,7 @@ IPPRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
     }
 
     /* create bignums */
-    IppsBigNumState *m_pBN_N, *m_pBN_E;
+    IppsBigNumState *m_pBN_N = nullptr, *m_pBN_E = nullptr;
 
     if (m_key_len * 8 == KEY_SIZE_2048) {
         m_pBN_N = createSetBigNUM(Modulus_2048, sizeof(Modulus_2048));
@@ -435,9 +436,9 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 
     if (m_padding_mode == 1) {
         /*! Seed string of hash size */
-        /*FIXME: should this come from test data? Also randomize this */
-        static Ipp8u pSeed[] = "\xaa\xfd\x12\xf6\x59\xca\xe6\x34\x89\xb4"
-                               "\x79\xe5\x07\x6d\xde\xc2\xf0\x6c\xb5\x8f";
+        static Ipp8u pSeed[] = { 0xaa, 0xfd, 0x12, 0xf6, 0x59, 0xca, 0xe6,
+                                 0x34, 0x89, 0xb4, 0x79, 0xe5, 0x07, 0x6d,
+                                 0xde, 0xc2, 0xf0, 0x6c, 0xb5, 0x8f };
 
         /* get hash type based on digest len */
         const IppsHashMethod* p_hash_method = getIppHashMethod(m_digest_info);
