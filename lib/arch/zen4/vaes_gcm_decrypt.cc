@@ -78,21 +78,43 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
                              // gcm specific params
                              __m128i& gHash_128,
                              __m128i  Hsubkey_128,
-                             __m128i  iv_128,
+                             __m128i& iv_128,
                              __m128i  reverse_mask_128,
                              int      remBytes,
                              Uint64*  pHashSubkeyTable)
 {
-    __m512i swap_ctr, c1;
-    __m512i one_x, two_x, four_x;
+    __m512i c1;
+
+    /* gcm init + Hash subkey init */
+    const __m512i one_x = alcp_set_epi32(
+                      4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0),
+                  two_x = alcp_set_epi32(
+                      8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0),
+                  four_x = alcp_set_epi32(
+                      16, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0),
+                  swap_ctr = _mm512_set_epi32(0x0c0d0e0f,
+                                              0x0b0a0908,
+                                              0x07060504,
+                                              0x03020100,
+                                              0x0c0d0e0f, // Repeats here
+                                              0x0b0a0908,
+                                              0x07060504,
+                                              0x03020100,
+                                              0x0c0d0e0f, // Repeats here
+                                              0x0b0a0908,
+                                              0x07060504,
+                                              0x03020100,
+                                              0x0c0d0e0f, // Repeats here
+                                              0x0b0a0908,
+                                              0x07060504,
+                                              0x03020100);
 
     const __m256i const_factor_256 =
         _mm256_set_epi64x(0xC200000000000000, 0x1, 0xC200000000000000, 0x1);
 
     const __m128i const_factor_128 = _mm_set_epi64x(0xC200000000000000, 0x1);
 
-    /* gcm init + Hash subkey init */
-    gcmCryptInit(c1, iv_128, one_x, two_x, four_x, swap_ctr);
+    c1 = _mm512_broadcast_i64x2(iv_128);
 
     _mm_prefetch(cast_to(pkey128), _MM_HINT_T0);
 
@@ -550,6 +572,10 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
 
     // clear all keys in registers.
     alcp_clear_keys_zmm(keys);
+
+    // Extract the first counter
+    iv_128 = c1_128;
+
     return blocks;
 }
 
@@ -562,7 +588,7 @@ decryptGcm128(const Uint8* pInputText,  // ptr to inputText
               const Uint8* pIv,         // ptr to Initialization Vector
               __m128i&     gHash_128,
               __m128i      Hsubkey_128,
-              __m128i      iv_128,
+              __m128i&     iv_128,
               __m128i      reverse_mask_128,
               Uint64*      pHashSubkeyTable)
 {
@@ -607,7 +633,7 @@ decryptGcm192(const Uint8* pInputText,  // ptr to inputText
               const Uint8* pIv,         // ptr to Initialization Vector
               __m128i&     gHash_128,
               __m128i      Hsubkey_128,
-              __m128i      iv_128,
+              __m128i&     iv_128,
               __m128i      reverse_mask_128,
               Uint64*      pHashSubkeyTable)
 {
@@ -652,7 +678,7 @@ decryptGcm256(const Uint8* pInputText,  // ptr to inputText
               const Uint8* pIv,         // ptr to Initialization Vector
               __m128i&     gHash_128,
               __m128i      Hsubkey_128,
-              __m128i      iv_128,
+              __m128i&     iv_128,
               __m128i      reverse_mask_128,
               Uint64*      pHashSubkeyTable)
 {

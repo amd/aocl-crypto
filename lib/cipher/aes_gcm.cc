@@ -47,8 +47,8 @@ namespace vaes512 {
                                           const Uint8* pIv)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        m_len           = len;
-        err             = decryptGcm128(pInput,
+        m_len += len;
+        err = decryptGcm128(pInput,
                             pOutput,
                             len,
                             m_enc_key,
@@ -68,8 +68,8 @@ namespace vaes512 {
                                           const Uint8* pIv)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        m_len           = len;
-        err             = decryptGcm192(pInput,
+        m_len += len;
+        err = decryptGcm192(pInput,
                             pOutput,
                             len,
                             m_enc_key,
@@ -89,8 +89,8 @@ namespace vaes512 {
                                           const Uint8* pIv)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        m_len           = len;
-        err             = decryptGcm256(pInput,
+        m_len += len;
+        err = decryptGcm256(pInput,
                             pOutput,
                             len,
                             m_enc_key,
@@ -110,8 +110,8 @@ namespace vaes512 {
                                           const Uint8* pIv)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        m_len           = len;
-        err             = encryptGcm128(pInput,
+        m_len += len;
+        err = encryptGcm128(pInput,
                             pOutput,
                             len,
                             m_enc_key,
@@ -131,8 +131,8 @@ namespace vaes512 {
                                           const Uint8* pIv)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        m_len           = len;
-        err             = encryptGcm192(pInput,
+        m_len += len;
+        err = encryptGcm192(pInput,
                             pOutput,
                             len,
                             m_enc_key,
@@ -152,8 +152,8 @@ namespace vaes512 {
                                           const Uint8* pIv)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        m_len           = len;
-        err             = encryptGcm256(pInput,
+        m_len += len;
+        err = encryptGcm256(pInput,
                             pOutput,
                             len,
                             m_enc_key,

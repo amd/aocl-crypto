@@ -227,15 +227,6 @@ namespace aesni {
                                          __m128i      hash_subKey_128,
                                          __m128i      reverse_mask_128);
 
-    void gcmCryptInit(__m128i* c1,
-                      __m128i  iv_128,
-                      __m128i* one_lo,
-                      __m128i* one_x,
-                      __m128i* two_x,
-                      __m128i* three_x,
-                      __m128i* four_x,
-                      __m128i* swap_ctr);
-
     alc_error_t CryptGcm(const Uint8* pInputText,  // ptr to inputText
                          Uint8*       pOutputText, // ptr to outputtext
                          Uint64       len,         // message length in bytes
@@ -381,7 +372,7 @@ namespace vaes512 {
                               const Uint8* pIv,
                               __m128i&     gHash,
                               __m128i      Hsubkey_128,
-                              __m128i      iv_128,
+                              __m128i&     iv_128,
                               __m128i      reverse_mask_128,
                               Uint64*      pHashSubkeyTable);
 
@@ -393,7 +384,7 @@ namespace vaes512 {
                               const Uint8* pIv,
                               __m128i&     gHash,
                               __m128i      Hsubkey_128,
-                              __m128i      iv_128,
+                              __m128i&     iv_128,
                               __m128i      reverse_mask_128,
                               Uint64*      pHashSubkeyTable);
 
@@ -405,7 +396,7 @@ namespace vaes512 {
                               const Uint8* pIv,
                               __m128i&     gHash,
                               __m128i      Hsubkey_128,
-                              __m128i      iv_128,
+                              __m128i&     iv_128,
                               __m128i      reverse_mask_128,
                               Uint64*      pHashSubkeyTable);
 
@@ -417,7 +408,7 @@ namespace vaes512 {
                               const Uint8* pIv,
                               __m128i&     pgHash,
                               __m128i      Hsubkey_128,
-                              __m128i      iv_128,
+                              __m128i&     iv_128,
                               __m128i      reverse_mask_128,
                               Uint64*      pHashSubkeyTable);
 
@@ -429,7 +420,7 @@ namespace vaes512 {
                               const Uint8* pIv,
                               __m128i&     pgHash,
                               __m128i      Hsubkey_128,
-                              __m128i      iv_128,
+                              __m128i&     iv_128,
                               __m128i      reverse_mask_128,
                               Uint64*      pHashSubkeyTable);
 
@@ -441,7 +432,7 @@ namespace vaes512 {
                               const Uint8* pIv,
                               __m128i&     pgHash,
                               __m128i      Hsubkey_128,
-                              __m128i      iv_128,
+                              __m128i&     iv_128,
                               __m128i      reverse_mask_128,
                               Uint64*      pHashSubkeyTable);
 
