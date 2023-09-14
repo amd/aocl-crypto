@@ -27,14 +27,12 @@
  */
 
 #include "rsa/ipp_rsa.hh"
+#include <algorithm>
 #include <cstddef>
 #include <cstring>
 #include <iostream>
 #include <ostream>
-
 namespace alcp::testing {
-
-/* FIXME function to get data from bignum */
 
 /* Function to create bignum from a byte stream */
 IppsBigNumState*
@@ -461,6 +459,7 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
             return status;
         }
     } else {
+        /* for non padded mode */
         IppsBigNumState* m_pBN_kat_PT =
             createSetBigNUM((Uint8*)data.m_msg, data.m_msg_len);
 
@@ -473,9 +472,27 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                       << std::endl;
             return status;
         }
-        /* try to read from the bignum */
+        /* read data from the bignum */
+        IppsBigNumSGN sgn;
+        int           length = 0;
+        Ipp32u*       pdata  = NULL;
+        status               = ippsRef_BN(&sgn, &length, &pdata, m_pBN_kat_CT);
+        if (status != ippStsNoErr) {
+            std::cout << "ippsRef_BN failed with err code" << status
+                      << std::endl;
+            return status;
+        }
+        std::reverse_copy((Uint8*)pdata,
+                          (Uint8*)pdata + m_key_len * 8 / (sizeof(Uint8) * 8),
+                          data.m_encrypted_data);
+        /* clean up these after encrypt */
+        if (m_pBN_kat_PT) {
+            delete[](Ipp8u*) m_pBN_kat_PT;
+        }
+        if (m_pBN_kat_CT) {
+            delete[](Ipp8u*) m_pBN_kat_CT;
+        }
     }
-
     return 0;
 }
 
@@ -511,8 +528,37 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
             delete[](Ipp8u*) pPlainText;
         }
     } else {
-        /*FIXME: no padding mode*/
-        return 1;
+        /* for non padded mode */
+        IppsBigNumState* m_pBN_kat_CT =
+            createSetBigNUM((Uint8*)data.m_encrypted_data, data.m_msg_len);
+        IppsBigNumState* m_pBN_kat_PT = createSetBigNUM(NULL, data.m_msg_len);
+        status                        = ippsRSA_Decrypt(
+            m_pBN_kat_CT, m_pBN_kat_PT, m_pPrv, m_scratchBuffer_Pvt);
+        if (status != ippStsNoErr) {
+            std::cout << "ippsRSA_Decrypt failed with err code" << status
+                      << std::endl;
+            return status;
+        }
+        /* read data from the bignum */
+        IppsBigNumSGN sgn;
+        int           length = 0;
+        Ipp32u*       pdata  = NULL;
+        status               = ippsRef_BN(&sgn, &length, &pdata, m_pBN_kat_PT);
+        if (status != ippStsNoErr) {
+            std::cout << "ippsRef_BN failed with err code" << status
+                      << std::endl;
+            return status;
+        }
+        std::reverse_copy((Uint8*)pdata,
+                          (Uint8*)pdata + m_key_len * 8 / (sizeof(Uint8) * 8),
+                          data.m_decrypted_data);
+        /* clean up these after decrypt */
+        if (m_pBN_kat_PT) {
+            delete[](Ipp8u*) m_pBN_kat_PT;
+        }
+        if (m_pBN_kat_CT) {
+            delete[](Ipp8u*) m_pBN_kat_CT;
+        }
     }
     return 0;
 }

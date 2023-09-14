@@ -36,19 +36,16 @@
 alc_digest_info_t dinfo_256, dinfo_384, dinfo_512, mgfinfo_256, mgfinfo_512;
 
 /* All tests to be added here */
+/* non padded mode */
 TEST(RSA_No_Padding_1024, Cross)
 {
-    if (useipp)
-        GTEST_SKIP() << "IPP is not supported yet";
     Rsa_Cross(ALCP_TEST_RSA_NO_PADDING, 1024, dinfo_256, mgfinfo_256);
 }
 TEST(RSA_No_Padding_2048, Cross)
 {
-    if (useipp)
-        GTEST_SKIP() << "IPP is not supported yet";
     Rsa_KAT(ALCP_TEST_RSA_NO_PADDING, 2048, dinfo_256, mgfinfo_256);
 }
-/* padding mode */
+/* padded mode */
 TEST(RSA_Padding_1024, Cross_SHA2_256_MGF_256)
 {
     dinfo_256.dt_mode.dm_sha2 = ALC_SHA2_256;

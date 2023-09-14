@@ -234,13 +234,10 @@ BENCH_RSA_EncryptPubKey_NoPadding(benchmark::State& state)
 int
 AddBenchmarks_rsa()
 {
-    /* ipp no padding mode is WIP */
-    if (!useipp) {
-        BENCHMARK(BENCH_RSA_EncryptPubKey_NoPadding)
-            ->ArgsProduct({ rsa_key_sizes });
-        BENCHMARK(BENCH_RSA_DecryptPvtKey_NoPadding)
-            ->ArgsProduct({ rsa_key_sizes });
-    }
+    BENCHMARK(BENCH_RSA_EncryptPubKey_NoPadding)
+        ->ArgsProduct({ rsa_key_sizes });
+    BENCHMARK(BENCH_RSA_DecryptPvtKey_NoPadding)
+        ->ArgsProduct({ rsa_key_sizes });
     BENCHMARK(BENCH_RSA_EncryptPubKey_Padding)->ArgsProduct({ rsa_key_sizes });
     BENCHMARK(BENCH_RSA_DecryptPvtKey_Padding)->ArgsProduct({ rsa_key_sizes });
 

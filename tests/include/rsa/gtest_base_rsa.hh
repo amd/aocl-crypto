@@ -86,6 +86,11 @@ SkipTest(int ret_val, std::string LibStr)
             std::cout << LibStr << ": Invalid case: Skipping this test"
                       << std::endl;
         return true;
+    } else if ((LibStr.compare("IPP") == 0) && ret_val == -11) {
+        if (verbose > 1)
+            std::cout << LibStr << ": Invalid case: Skipping this test"
+                      << std::endl;
+        return true;
     } else
         return false;
 }
