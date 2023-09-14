@@ -48,13 +48,14 @@ createSetBigNUM(Uint8* buff, int size_buff) // size in bytes
     if (buff == NULL) {
         return m_pBN_N;
     }
-    Ipp32u*        N     = (Ipp32u*)malloc(size_buff * 2 / 8
-                                * sizeof(int)); // new Ipp32u[size_buff * 2 /8];
+    Ipp32u*        N     = new Ipp32u[size_buff * 2 / 8];
     unsigned char* p_res = (unsigned char*)(N);
     for (int i = size_buff - 1, j = 0; i >= 0; --i, ++j) {
         p_res[j] = buff[i];
     }
     ippsSet_BN(IppsBigNumPOS, size_buff * 2 / 8, N, m_pBN_N);
+    delete[](Ipp32u*) N;
+
     return m_pBN_N;
 }
 
@@ -232,6 +233,9 @@ IPPRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
                   << status << std::endl;
         return false;
     }
+    if (m_pPrv) {
+        delete[](Ipp8u*) m_pPrv;
+    }
     m_pPrv = (IppsRSAPrivateKeyState*)(new Ipp8u[keyCtxSize]);
 
     status = ippsRSA_InitPrivateKeyType2(bitsP, bitsQ, m_pPrv, keyCtxSize);
@@ -268,13 +272,33 @@ IPPRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
                   << std::endl;
         return false;
     }
+    /* clean up these after setting pub key */
+    if (m_pBN_P) {
+        delete[](Ipp8u*) m_pBN_P;
+    }
+    if (m_pBN_Q) {
+        delete[](Ipp8u*) m_pBN_Q;
+    }
+    if (m_pBN_DP) {
+        delete[](Ipp8u*) m_pBN_DP;
+    }
+    if (m_pBN_DQ) {
+        delete[](Ipp8u*) m_pBN_DQ;
+    }
+    if (m_pBN_invQ) {
+        delete[](Ipp8u*) m_pBN_invQ;
+    }
     status = ippsRSA_GetBufferSizePrivateKey(&m_buffSizePrivate, m_pPrv);
     if (status != ippStsNoErr) {
         std::cout << "ippsRSA_GetBufferSizePrivateKey failed with err code"
                   << status << std::endl;
         return false;
     }
-    m_buffSize          = m_buffSizePrivate;
+    m_buffSize = m_buffSizePrivate;
+
+    if (m_scratchBuffer_Pvt) {
+        delete[](Ipp8u*) m_scratchBuffer_Pvt;
+    }
     m_scratchBuffer_Pvt = new Ipp8u[m_buffSize];
 
     return true;
@@ -348,6 +372,10 @@ IPPRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
                   << std::endl;
         return false;
     }
+
+    if (m_pPub) {
+        delete[](Ipp8u*) m_pPub;
+    }
     m_pPub = (IppsRSAPublicKeyState*)(new Ipp8u[keyCtxSize]);
     status = ippsRSA_InitPublicKey(bitsN, bitsE, m_pPub, keyCtxSize);
     if (status != ippStsNoErr) {
@@ -373,6 +401,14 @@ IPPRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 
     ippsSet_BN(IppsBigNumPOS, 1, &PublicKeyExponent, m_pBN_E);
     status = ippsRSA_SetPublicKey(m_pBN_N, m_pBN_E, m_pPub);
+
+    /* clean up these after setting pub key */
+    if (m_pBN_E) {
+        delete[](Ipp8u*) m_pBN_E;
+    }
+    if (m_pBN_N) {
+        delete[](Ipp8u*) m_pBN_N;
+    }
     if (status != ippStsNoErr) {
         std::cout << "ippsRSA_SetPublicKey failed with err code" << status
                   << std::endl;
@@ -384,6 +420,10 @@ IPPRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
         std::cout << "ippsRSA_GetBufferSizePublicKey failed with err code"
                   << status << std::endl;
         return false;
+    }
+
+    if (m_scratchBuffer_Pub) {
+        delete[](Ipp8u*) m_scratchBuffer_Pub;
     }
     m_scratchBuffer_Pub = new Ipp8u[m_buffSizePublic];
 
@@ -434,7 +474,6 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
             return status;
         }
         /* try to read from the bignum */
-        ReadFromBigNum(m_pBN_kat_CT, data.m_encrypted_data, data.m_msg_len);
     }
 
     return 0;
@@ -469,10 +508,10 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
         std::memcpy(data.m_decrypted_data, pPlainText, plainTextLen);
 
         if (pPlainText) {
-            delete[] pPlainText;
+            delete[](Ipp8u*) pPlainText;
         }
     } else {
-        /*FIXME*/
+        /*FIXME: no padding mode*/
         return 1;
     }
     return 0;
