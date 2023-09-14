@@ -121,19 +121,17 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
 
     c1 = _mm512_broadcast_i64x2(iv_128);
 
+    _mm_prefetch(cast_to(pkey128), _MM_HINT_T0);
+
+    sKeys keys{};
+    alcp_load_key_zmm(pkey128, keys);
+
     {
         // Increment each counter to create proper parrallel counter
         __m512i onehi =
             _mm512_setr_epi32(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3);
         c1 = alcp_add_epi32(c1, onehi);
     }
-
-    // gcmCryptInit(c1, iv_128, one_x, two_x, four_x, swap_ctr);
-
-    _mm_prefetch(cast_to(pkey128), _MM_HINT_T0);
-
-    sKeys keys{};
-    alcp_load_key_zmm(pkey128, keys);
 
     // clang-format off
     __m512i reverse_mask_512 =

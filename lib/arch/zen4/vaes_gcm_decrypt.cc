@@ -121,6 +121,13 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
     sKeys keys{};
     alcp_load_key_zmm(pkey128, keys);
 
+    {
+        // Increment each counter to create proper parrallel counter
+        __m512i onehi =
+            _mm512_setr_epi32(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3);
+        c1 = alcp_add_epi32(c1, onehi);
+    }
+
     // clang-format off
     __m512i reverse_mask_512 =
             _mm512_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
