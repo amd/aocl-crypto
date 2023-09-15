@@ -88,6 +88,103 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
+    static inline void Amm1024LoopInternalStage1Parallel(__m512i res_reg[6],
+                                                         __m512i first_reg[6],
+                                                         __m512i mod_reg[6],
+                                                         const Uint64* first,
+                                                         const Uint64* second,
+                                                         __m512i       k_reg_0,
+                                                         __m512i       k_reg_1)
+    {
+        const __m512i zero{};
+
+        for (Uint64 j = 0; j < 8; j++) {
+
+            __m512i second_reg = _mm512_set1_epi64(first[j]);
+
+            res_reg[0] =
+                _mm512_madd52lo_epu64(res_reg[0], first_reg[0], second_reg);
+
+            for (Uint64 z = 1; z < 3; z++) {
+                __m512i temp =
+                    _mm512_madd52lo_epu64(zero, first_reg[z], second_reg);
+
+                temp       = _mm512_slli_epi64(temp, 1);
+                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
+            }
+
+            __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg_0, res_reg[0]);
+            y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
+
+            res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
+            res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
+            res_reg[2] = _mm512_madd52lo_epu64(res_reg[2], mod_reg[2], y_reg);
+
+            __m512i carry = _mm512_maskz_srli_epi64(1, res_reg[0], 52);
+            res_reg[0]    = _mm512_alignr_epi64(res_reg[1], res_reg[0], 1);
+            res_reg[0]    = _mm512_add_epi64(res_reg[0], carry);
+            res_reg[1]    = _mm512_alignr_epi64(res_reg[2], res_reg[1], 1);
+            res_reg[2]    = _mm512_alignr_epi64(zero, res_reg[2], 1);
+
+            res_reg[0] =
+                _mm512_madd52hi_epu64(res_reg[0], first_reg[0], second_reg);
+
+            for (Uint64 z = 1; z < 3; z++) {
+                __m512i temp =
+                    _mm512_madd52hi_epu64(zero, first_reg[z], second_reg);
+
+                temp       = _mm512_slli_epi64(temp, 1);
+                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
+            }
+
+            res_reg[0] = _mm512_madd52hi_epu64(res_reg[0], mod_reg[0], y_reg);
+            res_reg[1] = _mm512_madd52hi_epu64(res_reg[1], mod_reg[1], y_reg);
+            res_reg[2] = _mm512_madd52hi_epu64(res_reg[2], mod_reg[2], y_reg);
+
+            // second multiplier
+            second_reg = _mm512_set1_epi64(second[j]);
+
+            res_reg[3] =
+                _mm512_madd52lo_epu64(res_reg[3], first_reg[3], second_reg);
+
+            for (Uint64 z = 4; z < 6; z++) {
+                __m512i temp =
+                    _mm512_madd52lo_epu64(zero, first_reg[z], second_reg);
+
+                temp       = _mm512_slli_epi64(temp, 1);
+                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
+            }
+
+            y_reg = _mm512_madd52lo_epu64(zero, k_reg_1, res_reg[3]);
+            y_reg = _mm512_permutexvar_epi64(zero, y_reg);
+
+            res_reg[3] = _mm512_madd52lo_epu64(res_reg[3], mod_reg[3], y_reg);
+            res_reg[4] = _mm512_madd52lo_epu64(res_reg[4], mod_reg[4], y_reg);
+            res_reg[5] = _mm512_madd52lo_epu64(res_reg[5], mod_reg[5], y_reg);
+
+            carry      = _mm512_maskz_srli_epi64(1, res_reg[3], 52);
+            res_reg[3] = _mm512_alignr_epi64(res_reg[4], res_reg[3], 1);
+            res_reg[3] = _mm512_add_epi64(res_reg[3], carry);
+            res_reg[4] = _mm512_alignr_epi64(res_reg[5], res_reg[4], 1);
+            res_reg[5] = _mm512_alignr_epi64(zero, res_reg[5], 1);
+
+            res_reg[3] =
+                _mm512_madd52hi_epu64(res_reg[3], first_reg[3], second_reg);
+
+            for (Uint64 z = 4; z < 6; z++) {
+                __m512i temp =
+                    _mm512_madd52hi_epu64(zero, first_reg[z], second_reg);
+
+                temp       = _mm512_slli_epi64(temp, 1);
+                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
+            }
+
+            res_reg[3] = _mm512_madd52hi_epu64(res_reg[3], mod_reg[3], y_reg);
+            res_reg[4] = _mm512_madd52hi_epu64(res_reg[4], mod_reg[4], y_reg);
+            res_reg[5] = _mm512_madd52hi_epu64(res_reg[5], mod_reg[5], y_reg);
+        }
+    }
+
     static inline void Amm1024LoopInternalStage2(__m512i       res_reg[3],
                                                  __m512i       first_reg[3],
                                                  __m512i       mod_reg[3],
@@ -140,6 +237,102 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
+    static inline void Amm1024LoopInternalStage2Parallel(__m512i res_reg[6],
+                                                         __m512i first_reg[6],
+                                                         __m512i mod_reg[6],
+                                                         const Uint64* first,
+                                                         const Uint64* second,
+                                                         __m512i       k_reg_0,
+                                                         __m512i       k_reg_1)
+    {
+        const __m512i zero{};
+        for (Uint64 j = 0; j < 8; j++) {
+
+            __m512i second_reg = _mm512_set1_epi64(first[j]);
+
+            res_reg[1] =
+                _mm512_madd52lo_epu64(res_reg[1], first_reg[1], second_reg);
+
+            for (Uint64 z = 2; z < 3; z++) {
+                __m512i temp =
+                    _mm512_madd52lo_epu64(zero, first_reg[z], second_reg);
+
+                temp       = _mm512_slli_epi64(temp, 1);
+                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
+            }
+
+            __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg_0, res_reg[0]);
+            y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
+
+            res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
+            res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
+            res_reg[2] = _mm512_madd52lo_epu64(res_reg[2], mod_reg[2], y_reg);
+
+            __m512i carry = _mm512_maskz_srli_epi64(1, res_reg[0], 52);
+            res_reg[0]    = _mm512_alignr_epi64(res_reg[1], res_reg[0], 1);
+            res_reg[0]    = _mm512_add_epi64(res_reg[0], carry);
+            res_reg[1]    = _mm512_alignr_epi64(res_reg[2], res_reg[1], 1);
+            res_reg[2]    = _mm512_alignr_epi64(zero, res_reg[2], 1);
+
+            res_reg[1] =
+                _mm512_madd52hi_epu64(res_reg[1], first_reg[1], second_reg);
+
+            for (Uint64 z = 2; z < 3; z++) {
+                __m512i temp =
+                    _mm512_madd52hi_epu64(zero, first_reg[z], second_reg);
+
+                temp       = _mm512_slli_epi64(temp, 1);
+                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
+            }
+
+            res_reg[0] = _mm512_madd52hi_epu64(res_reg[0], mod_reg[0], y_reg);
+            res_reg[1] = _mm512_madd52hi_epu64(res_reg[1], mod_reg[1], y_reg);
+            res_reg[2] = _mm512_madd52hi_epu64(res_reg[2], mod_reg[2], y_reg);
+
+            // second multiplier
+            second_reg = _mm512_set1_epi64(second[j]);
+
+            res_reg[4] =
+                _mm512_madd52lo_epu64(res_reg[4], first_reg[4], second_reg);
+
+            for (Uint64 z = 5; z < 6; z++) {
+                __m512i temp =
+                    _mm512_madd52lo_epu64(zero, first_reg[z], second_reg);
+
+                temp       = _mm512_slli_epi64(temp, 1);
+                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
+            }
+
+            y_reg = _mm512_madd52lo_epu64(zero, k_reg_1, res_reg[3]);
+            y_reg = _mm512_permutexvar_epi64(zero, y_reg);
+
+            res_reg[3] = _mm512_madd52lo_epu64(res_reg[3], mod_reg[3], y_reg);
+            res_reg[4] = _mm512_madd52lo_epu64(res_reg[4], mod_reg[4], y_reg);
+            res_reg[5] = _mm512_madd52lo_epu64(res_reg[5], mod_reg[5], y_reg);
+
+            carry      = _mm512_maskz_srli_epi64(1, res_reg[3], 52);
+            res_reg[3] = _mm512_alignr_epi64(res_reg[4], res_reg[3], 1);
+            res_reg[3] = _mm512_add_epi64(res_reg[3], carry);
+            res_reg[4] = _mm512_alignr_epi64(res_reg[5], res_reg[4], 1);
+            res_reg[5] = _mm512_alignr_epi64(zero, res_reg[5], 1);
+
+            res_reg[4] =
+                _mm512_madd52hi_epu64(res_reg[4], first_reg[4], second_reg);
+
+            for (Uint64 z = 5; z < 6; z++) {
+                __m512i temp =
+                    _mm512_madd52hi_epu64(zero, first_reg[z], second_reg);
+
+                temp       = _mm512_slli_epi64(temp, 1);
+                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
+            }
+
+            res_reg[3] = _mm512_madd52hi_epu64(res_reg[3], mod_reg[3], y_reg);
+            res_reg[4] = _mm512_madd52hi_epu64(res_reg[4], mod_reg[4], y_reg);
+            res_reg[5] = _mm512_madd52hi_epu64(res_reg[5], mod_reg[5], y_reg);
+        }
+    }
+
     static inline void Amm1024LoopInternalStage3(__m512i       res_reg[3],
                                                  __m512i       first_reg[3],
                                                  __m512i       mod_reg[3],
@@ -173,6 +366,70 @@ namespace alcp::rsa { namespace zen4 {
             res_reg[0] = _mm512_madd52hi_epu64(res_reg[0], mod_reg[0], y_reg);
             res_reg[1] = _mm512_madd52hi_epu64(res_reg[1], mod_reg[1], y_reg);
             res_reg[2] = _mm512_madd52hi_epu64(res_reg[2], mod_reg[2], y_reg);
+        }
+    }
+
+    static inline void Amm1024LoopInternalStage3Parallel(__m512i res_reg[6],
+                                                         __m512i first_reg[6],
+                                                         __m512i mod_reg[6],
+                                                         const Uint64* first,
+                                                         const Uint64* second,
+                                                         __m512i       k_reg_0,
+                                                         __m512i       k_reg_1)
+    {
+        const __m512i zero{};
+        for (Uint64 j = 0; j < 4; j++) {
+
+            __m512i second_reg = _mm512_set1_epi64(first[j]);
+
+            res_reg[2] =
+                _mm512_madd52lo_epu64(res_reg[2], first_reg[2], second_reg);
+
+            __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg_0, res_reg[0]);
+            y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
+
+            res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
+            res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
+            res_reg[2] = _mm512_madd52lo_epu64(res_reg[2], mod_reg[2], y_reg);
+
+            __m512i carry = _mm512_maskz_srli_epi64(1, res_reg[0], 52);
+            res_reg[0]    = _mm512_alignr_epi64(res_reg[1], res_reg[0], 1);
+            res_reg[0]    = _mm512_add_epi64(res_reg[0], carry);
+            res_reg[1]    = _mm512_alignr_epi64(res_reg[2], res_reg[1], 1);
+            res_reg[2]    = _mm512_alignr_epi64(zero, res_reg[2], 1);
+
+            res_reg[2] =
+                _mm512_madd52hi_epu64(res_reg[2], first_reg[2], second_reg);
+
+            res_reg[0] = _mm512_madd52hi_epu64(res_reg[0], mod_reg[0], y_reg);
+            res_reg[1] = _mm512_madd52hi_epu64(res_reg[1], mod_reg[1], y_reg);
+            res_reg[2] = _mm512_madd52hi_epu64(res_reg[2], mod_reg[2], y_reg);
+
+            // second multiplier
+            second_reg = _mm512_set1_epi64(second[j]);
+
+            res_reg[5] =
+                _mm512_madd52lo_epu64(res_reg[5], first_reg[5], second_reg);
+
+            y_reg = _mm512_madd52lo_epu64(zero, k_reg_1, res_reg[3]);
+            y_reg = _mm512_permutexvar_epi64(zero, y_reg);
+
+            res_reg[3] = _mm512_madd52lo_epu64(res_reg[3], mod_reg[3], y_reg);
+            res_reg[4] = _mm512_madd52lo_epu64(res_reg[4], mod_reg[4], y_reg);
+            res_reg[5] = _mm512_madd52lo_epu64(res_reg[5], mod_reg[5], y_reg);
+
+            carry      = _mm512_maskz_srli_epi64(1, res_reg[3], 52);
+            res_reg[3] = _mm512_alignr_epi64(res_reg[4], res_reg[3], 1);
+            res_reg[3] = _mm512_add_epi64(res_reg[3], carry);
+            res_reg[4] = _mm512_alignr_epi64(res_reg[5], res_reg[4], 1);
+            res_reg[5] = _mm512_alignr_epi64(zero, res_reg[5], 1);
+
+            res_reg[5] =
+                _mm512_madd52hi_epu64(res_reg[5], first_reg[5], second_reg);
+
+            res_reg[3] = _mm512_madd52hi_epu64(res_reg[3], mod_reg[3], y_reg);
+            res_reg[4] = _mm512_madd52hi_epu64(res_reg[4], mod_reg[4], y_reg);
+            res_reg[5] = _mm512_madd52hi_epu64(res_reg[5], mod_reg[5], y_reg);
         }
     }
 
@@ -474,20 +731,24 @@ namespace alcp::rsa { namespace zen4 {
         mod_reg[4] = _mm512_loadu_si512(mod_1 + 8);
         mod_reg[5] = _mm512_loadu_si512(mod_1 + 16);
 
-        __m512i k_reg = _mm512_set1_epi64(k0[0]);
-        Amm1024LoopInternalStage1(res_reg, first_reg, mod_reg, first_0, k_reg);
-        Amm1024LoopInternalStage2(
-            res_reg, first_reg, mod_reg, first_0 + 8, k_reg);
-        Amm1024LoopInternalStage3(
-            res_reg, first_reg, mod_reg, first_0 + 16, k_reg);
-
-        k_reg = _mm512_set1_epi64(k0[1]);
-        Amm1024LoopInternalStage1(
-            res_reg + 3, first_reg + 3, mod_reg + 3, first_1, k_reg);
-        Amm1024LoopInternalStage2(
-            res_reg + 3, first_reg + 3, mod_reg + 3, first_1 + 8, k_reg);
-        Amm1024LoopInternalStage3(
-            res_reg + 3, first_reg + 3, mod_reg + 3, first_1 + 16, k_reg);
+        __m512i k_reg_0 = _mm512_set1_epi64(k0[0]);
+        __m512i k_reg_1 = _mm512_set1_epi64(k0[1]);
+        Amm1024LoopInternalStage1Parallel(
+            res_reg, first_reg, mod_reg, first_0, first_1, k_reg_0, k_reg_1);
+        Amm1024LoopInternalStage2Parallel(res_reg,
+                                          first_reg,
+                                          mod_reg,
+                                          first_0 + 8,
+                                          first_1 + 8,
+                                          k_reg_0,
+                                          k_reg_1);
+        Amm1024LoopInternalStage3Parallel(res_reg,
+                                          first_reg,
+                                          mod_reg,
+                                          first_0 + 16,
+                                          first_1 + 16,
+                                          k_reg_0,
+                                          k_reg_1);
 
         _mm512_storeu_si512(res_0, res_reg[0]);
         _mm512_storeu_si512(res_0 + 8, res_reg[1]);
