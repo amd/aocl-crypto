@@ -48,14 +48,15 @@ OpenSSLRsaBase::~OpenSSLRsaBase()
         EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pvt);
         m_rsa_handle_keyctx_pvt = nullptr;
     }
-    if (m_pkey != nullptr) {
-        EVP_PKEY_free(m_pkey);
-        m_pkey = nullptr;
+    if (m_pkey_pub != nullptr) {
+        EVP_PKEY_free(m_pkey_pub);
+        m_pkey_pub = nullptr;
     }
     if (m_pkey_pvt != nullptr) {
         EVP_PKEY_free(m_pkey_pvt);
         m_pkey_pvt = nullptr;
     }
+    OSSL_PARAM_free(m_params);
 }
 
 bool
@@ -270,7 +271,9 @@ OpenSSLRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 
     unsigned long Exponent = 0x10001;
     int           ret_val;
-    BIGNUM *mod_BN, *pvt_exponent_BN, *P_BN, *Q_BN, *DP_BN, *DQ_BN, *QINV_BN;
+    BIGNUM *      mod_BN = nullptr, *pvt_exponent_BN = nullptr, *P_BN = nullptr,
+           *Q_BN = nullptr, *DP_BN = nullptr, *DQ_BN = nullptr,
+           *QINV_BN = nullptr;
 
     if (m_key_len * 8 == KEY_SIZE_1024) {
         mod_BN          = BN_bin2bn(Modulus_1024, sizeof(Modulus_1024), NULL);
@@ -310,6 +313,8 @@ OpenSSLRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
     OSSL_PARAM_BLD_push_BN(param_bld, "rsa-exponent2", DQ_BN);
     OSSL_PARAM_BLD_push_BN(param_bld, "rsa-coefficient1", QINV_BN);
 
+    OSSL_PARAM_free(m_params);
+
     m_params = OSSL_PARAM_BLD_to_param(param_bld);
 
     OSSL_PARAM_BLD_free(param_bld);
@@ -322,8 +327,10 @@ OpenSSLRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
         return false;
     }
     if (1
-        != EVP_PKEY_fromdata(
-            m_rsa_handle_keyctx_pub, &m_pkey, EVP_PKEY_PUBLIC_KEY, m_params)) {
+        != EVP_PKEY_fromdata(m_rsa_handle_keyctx_pub,
+                             &m_pkey_pub,
+                             EVP_PKEY_PUBLIC_KEY,
+                             m_params)) {
         std::cout << "EVP_PKEY_fromdata failed" << std::endl;
         ret_val = ERR_GET_REASON(ERR_get_error());
         return false;
@@ -333,11 +340,18 @@ OpenSSLRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
-    if (m_pkey == nullptr) {
+    if (m_pkey_pub == nullptr) {
         std::cout << "Null key : Error:" << ERR_GET_REASON(ERR_get_error())
                   << std::endl;
         return false;
     }
+    BN_free(mod_BN);
+    BN_free(pvt_exponent_BN);
+    BN_free(P_BN);
+    BN_free(Q_BN);
+    BN_free(DP_BN);
+    BN_free(DQ_BN);
+    BN_free(QINV_BN);
     return true;
 }
 
@@ -381,7 +395,7 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
     const EVP_MD* digest     = nullptr;
     const char*   digest_str = "";
 
-    m_rsa_handle_keyctx_pub = EVP_PKEY_CTX_new(m_pkey, NULL);
+    m_rsa_handle_keyctx_pub = EVP_PKEY_CTX_new(m_pkey_pub, NULL);
     if (m_rsa_handle_keyctx_pub == nullptr) {
         std::cout << "EVP_PKEY_CTX_new returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
