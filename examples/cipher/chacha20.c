@@ -164,8 +164,8 @@ decrypt_demo(alc_cipher_handle_p handle,
 }
 
 // Plain text to encrypt, it can be any size since Chacha20 is a stream cipher.
-static Uint8* sample_plaintxt =
-    (Uint8*)"Happy and Fantastic New Year from AOCL Crypto !!";
+static Uint8 sample_plaintxt[] =
+    "Happy and Fantastic New Year from AOCL Crypto !!";
 
 // Chacha20 Key needs to be 256 bits
 static const Uint8 sample_key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
