@@ -4,15 +4,15 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
+ *    gcm list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
+ *    gcm list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
  * 3. Neither the name of the copyright holder nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
+ *    may be used to endorse or promote products derived from gcm software
  * without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * gcm SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -21,7 +21,7 @@
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * ARISING IN ANY WAY OUT OF THE USE OF gcm SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
@@ -47,6 +47,7 @@
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/aes_gcm.hh"
 #include "alcp/cipher/aesni.hh"
+#include "alcp/cipher/cipher_wrapper.hh"
 #include "alcp/cipher/gmul.hh"
 #include "avx512.hh"
 #include "avx512_gmul.hh"
@@ -76,16 +77,19 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
                              int            nRounds,
                              Uint8          factor,
                              // gcm specific params
-                             __m128i& gHash_128,
-                             __m128i  Hsubkey_128,
-                             __m128i& iv_128,
-                             __m128i  reverse_mask_128,
-                             int      remBytes,
-                             Uint64*  pHashSubkeyTable)
+                             alcp::cipher::GcmAuthData* gcm,
+                             __m128i                    reverse_mask_128,
+                             int                        remBytes,
+                             Uint64*                    pHashSubkeyTable)
 {
     __m512i c1;
 
     /* gcm init + Hash subkey init */
+    const __m256i const_factor_256 =
+        _mm256_set_epi64x(0xC200000000000000, 0x1, 0xC200000000000000, 0x1);
+
+    const __m128i const_factor_128 = _mm_set_epi64x(0xC200000000000000, 0x1);
+
     const __m512i one_x = alcp_set_epi32(
                       4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0),
                   two_x = alcp_set_epi32(
@@ -109,24 +113,19 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
                                               0x07060504,
                                               0x03020100);
 
-    const __m256i const_factor_256 =
-        _mm256_set_epi64x(0xC200000000000000, 0x1, 0xC200000000000000, 0x1);
+    c1 = _mm512_broadcast_i64x2(gcm->m_iv_128);
 
-    const __m128i const_factor_128 = _mm_set_epi64x(0xC200000000000000, 0x1);
-
-    c1 = _mm512_broadcast_i64x2(iv_128);
+    {
+        // Increment each counter to create proper parallel counter
+        __m512i onehi =
+            _mm512_setr_epi32(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3);
+        c1 = alcp_add_epi32(c1, onehi);
+    }
 
     _mm_prefetch(cast_to(pkey128), _MM_HINT_T0);
 
     sKeys keys{};
     alcp_load_key_zmm(pkey128, keys);
-
-    {
-        // Increment each counter to create proper parrallel counter
-        __m512i onehi =
-            _mm512_setr_epi32(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3);
-        c1 = alcp_add_epi32(c1, onehi);
-    }
 
     // clang-format off
     __m512i reverse_mask_512 =
@@ -153,8 +152,10 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
 #endif
 
     if (num_512_blks) {
-        computeHashSubKeys(
-            num_512_blks, Hsubkey_128, Hsubkey_512, const_factor_128);
+        computeHashSubKeys(num_512_blks,
+                           gcm->m_hash_subKey_128,
+                           Hsubkey_512,
+                           const_factor_128);
     }
 
     Uint64  blockCount_1x512 = factor;
@@ -171,7 +172,7 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
     c4 = alcp_add_epi32(c2, two_x);
 
     __m512i Hsubkey_512_0, Hsubkey_512_1, Hsubkey_512_2, Hsubkey_512_3;
-    //__m512i gHash_512 = _mm512_zextsi128_si512(gHash_128);
+    //__m512i gHash_512 = _mm512_zextsi128_si512(gcm->m_gHash_128);
 
     // (16x512) 64 blks aesenc 64 blks gmul and 1 reduction
     if (num_512_blks == 16) {
@@ -241,7 +242,7 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
                                                       z0_512,
                                                       z1_512,
                                                       z2_512,
-                                                      gHash_128);
+                                                      gcm->m_gHash_128);
 
             alcp_loadu_4values(pHsubkey_512,
                                Hsubkey_512_0,
@@ -359,7 +360,8 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
             p_out_x += PARALLEL_512_BLKS_4;
 
             // do reduction once
-            getGhash(z0_512, z1_512, z2_512, gHash_128, const_factor_256);
+            getGhash(
+                z0_512, z1_512, z2_512, gcm->m_gHash_128, const_factor_256);
         }
     } else if (num_512_blks == 8) {
         constexpr Uint64 blockCount_4x512_2_unroll = 16 * 2;
@@ -420,7 +422,7 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
                                                       z0_512,
                                                       z1_512,
                                                       z2_512,
-                                                      gHash_128);
+                                                      gcm->m_gHash_128);
 
             alcp_loadu_4values(pHsubkey_512,
                                Hsubkey_512_0,
@@ -456,11 +458,13 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
 
             // compute Ghash
             /* Performance variations observed while using const_factor_128 and
-             * const_factor_256, this sections needs to be investigated
+             * const_factor_256, gcm sections needs to be investigated
              * further. */
 
-            // getGhash(z0_512, z1_512, z2_512, gHash_128, const_factor_128);
-            getGhash(z0_512, z1_512, z2_512, gHash_128, const_factor_256);
+            // getGhash(z0_512, z1_512, z2_512, gcm->m_gHash_128,
+            // const_factor_128);
+            getGhash(
+                z0_512, z1_512, z2_512, gcm->m_gHash_128, const_factor_256);
         }
     }
 
@@ -476,10 +480,26 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
         alcp_shuffle_epi8(c1, c2, c3, c4, swap_ctr, b1, b2, b3, b4);
         AesEncNoLoad_4x512(b1, b2, b3, b4, keys);
 
-        gMulR(Hsubkey_512_0, a1, reverse_mask_512, gHash_128, const_factor_128);
-        gMulR(Hsubkey_512_0, a2, reverse_mask_512, gHash_128, const_factor_128);
-        gMulR(Hsubkey_512_0, a3, reverse_mask_512, gHash_128, const_factor_128);
-        gMulR(Hsubkey_512_0, a4, reverse_mask_512, gHash_128, const_factor_128);
+        gMulR(Hsubkey_512_0,
+              a1,
+              reverse_mask_512,
+              gcm->m_gHash_128,
+              const_factor_128);
+        gMulR(Hsubkey_512_0,
+              a2,
+              reverse_mask_512,
+              gcm->m_gHash_128,
+              const_factor_128);
+        gMulR(Hsubkey_512_0,
+              a3,
+              reverse_mask_512,
+              gcm->m_gHash_128,
+              const_factor_128);
+        gMulR(Hsubkey_512_0,
+              a4,
+              reverse_mask_512,
+              gcm->m_gHash_128,
+              const_factor_128);
 
         alcp_xor_4values(b1, b2, b3, b4, a1, a2, a3, a4);
         c1 = alcp_add_epi32(c1, four_x);
@@ -496,7 +516,11 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
         _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
         a1 = alcp_loadu(p_in_x);
 
-        gMulR(Hsubkey_512_0, a1, reverse_mask_512, gHash_128, const_factor_128);
+        gMulR(Hsubkey_512_0,
+              a1,
+              reverse_mask_512,
+              gcm->m_gHash_128,
+              const_factor_128);
 
         // re-arrange as per spec
         b1 = alcp_shuffle_epi8(c1, swap_ctr);
@@ -512,7 +536,7 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
         p_out_x += 1;
     }
 
-    // gHash_128 = _mm512_castsi512_si128(gHash_512);
+    // gcm->m_gHash_128 = _mm512_castsi512_si128(gHash_512);
 
     /* residual block=1 when factor = 2, load and store only
      lower half. */
@@ -525,9 +549,12 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
 
         a1 = _mm_loadu_si128((__m128i*)p_in_x);
 
-        __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
-        gHash_128   = _mm_xor_si128(ra1, gHash_128);
-        gMul(gHash_128, Hsubkey_128, gHash_128, const_factor_128);
+        __m128i ra1      = _mm_shuffle_epi8(a1, reverse_mask_128);
+        gcm->m_gHash_128 = _mm_xor_si128(ra1, gcm->m_gHash_128);
+        gMul(gcm->m_gHash_128,
+             gcm->m_hash_subKey_128,
+             gcm->m_gHash_128,
+             const_factor_128);
 
         // re-arrange as per spec
         __m128i b1 = _mm_shuffle_epi8(c1_128, swap_ctr_128);
@@ -562,9 +589,12 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
             p_out[i] = 0;
         }
 
-        __m128i ra1 = _mm_shuffle_epi8(a1, reverse_mask_128);
-        gHash_128   = _mm_xor_si128(ra1, gHash_128);
-        gMul(gHash_128, Hsubkey_128, gHash_128, const_factor_128);
+        __m128i ra1      = _mm_shuffle_epi8(a1, reverse_mask_128);
+        gcm->m_gHash_128 = _mm_xor_si128(ra1, gcm->m_gHash_128);
+        gMul(gcm->m_gHash_128,
+             gcm->m_hash_subKey_128,
+             gcm->m_gHash_128,
+             const_factor_128);
 
         a1 = _mm_xor_si128(b1, a1);
         for (i = remBytes; i < 16; i++) {
@@ -581,23 +611,21 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
     alcp_clear_keys_zmm(keys);
 
     // Extract the first counter
-    iv_128 = c1_128;
+    gcm->m_iv_128 = c1_128;
 
     return blocks;
 }
 
 alc_error_t
-decryptGcm128(const Uint8* pInputText,  // ptr to inputText
-              Uint8*       pOutputText, // ptr to outputtext
-              Uint64       len,         // message length in bytes
-              const Uint8* pKey,        // ptr to Key
-              const int    nRounds,     // No. of rounds
-              const Uint8* pIv,         // ptr to Initialization Vector
-              __m128i&     gHash_128,
-              __m128i      Hsubkey_128,
-              __m128i&     iv_128,
-              __m128i      reverse_mask_128,
-              Uint64*      pHashSubkeyTable)
+decryptGcm128(const Uint8*               pInputText,  // ptr to inputText
+              Uint8*                     pOutputText, // ptr to outputtext
+              Uint64                     len,         // message length in bytes
+              const Uint8*               pKey,        // ptr to Key
+              const int                  nRounds,     // No. of rounds
+              const Uint8*               pIv, // ptr to Initialization Vector
+              alcp::cipher::GcmAuthData* gcm,
+              __m128i                    reverse_mask_128,
+              Uint64*                    pHashSubkeyTable)
 {
     alc_error_t     err             = ALC_ERROR_NONE;
     constexpr Uint8 numBlksIn512bit = 4;
@@ -621,9 +649,7 @@ decryptGcm128(const Uint8* pInputText,  // ptr to inputText
                                                  nRounds,
                                                  numBlksIn512bit,
                                                  // gcm specific params
-                                                 gHash_128,
-                                                 Hsubkey_128,
-                                                 iv_128,
+                                                 gcm,
                                                  reverse_mask_128,
                                                  remBytes,
                                                  pHashSubkeyTable);
@@ -632,17 +658,15 @@ decryptGcm128(const Uint8* pInputText,  // ptr to inputText
 }
 
 alc_error_t
-decryptGcm192(const Uint8* pInputText,  // ptr to inputText
-              Uint8*       pOutputText, // ptr to outputtext
-              Uint64       len,         // message length in bytes
-              const Uint8* pKey,        // ptr to Key
-              const int    nRounds,     // No. of rounds
-              const Uint8* pIv,         // ptr to Initialization Vector
-              __m128i&     gHash_128,
-              __m128i      Hsubkey_128,
-              __m128i&     iv_128,
-              __m128i      reverse_mask_128,
-              Uint64*      pHashSubkeyTable)
+decryptGcm192(const Uint8*               pInputText,  // ptr to inputText
+              Uint8*                     pOutputText, // ptr to outputtext
+              Uint64                     len,         // message length in bytes
+              const Uint8*               pKey,        // ptr to Key
+              const int                  nRounds,     // No. of rounds
+              const Uint8*               pIv, // ptr to Initialization Vector
+              alcp::cipher::GcmAuthData* gcm,
+              __m128i                    reverse_mask_128,
+              Uint64*                    pHashSubkeyTable)
 {
     alc_error_t     err             = ALC_ERROR_NONE;
     constexpr Uint8 numBlksIn512bit = 4;
@@ -666,9 +690,7 @@ decryptGcm192(const Uint8* pInputText,  // ptr to inputText
                                                  nRounds,
                                                  numBlksIn512bit,
                                                  // gcm specific params
-                                                 gHash_128,
-                                                 Hsubkey_128,
-                                                 iv_128,
+                                                 gcm,
                                                  reverse_mask_128,
                                                  remBytes,
                                                  pHashSubkeyTable);
@@ -677,17 +699,15 @@ decryptGcm192(const Uint8* pInputText,  // ptr to inputText
 }
 
 alc_error_t
-decryptGcm256(const Uint8* pInputText,  // ptr to inputText
-              Uint8*       pOutputText, // ptr to outputtext
-              Uint64       len,         // message length in bytes
-              const Uint8* pKey,        // ptr to Key
-              const int    nRounds,     // No. of rounds
-              const Uint8* pIv,         // ptr to Initialization Vector
-              __m128i&     gHash_128,
-              __m128i      Hsubkey_128,
-              __m128i&     iv_128,
-              __m128i      reverse_mask_128,
-              Uint64*      pHashSubkeyTable)
+decryptGcm256(const Uint8*               pInputText,  // ptr to inputText
+              Uint8*                     pOutputText, // ptr to outputtext
+              Uint64                     len,         // message length in bytes
+              const Uint8*               pKey,        // ptr to Key
+              const int                  nRounds,     // No. of rounds
+              const Uint8*               pIv, // ptr to Initialization Vector
+              alcp::cipher::GcmAuthData* gcm,
+              __m128i                    reverse_mask_128,
+              Uint64*                    pHashSubkeyTable)
 {
     alc_error_t     err             = ALC_ERROR_NONE;
     constexpr Uint8 numBlksIn512bit = 4;
@@ -711,9 +731,7 @@ decryptGcm256(const Uint8* pInputText,  // ptr to inputText
                                                  nRounds,
                                                  numBlksIn512bit,
                                                  // gcm specific params
-                                                 gHash_128,
-                                                 Hsubkey_128,
-                                                 iv_128,
+                                                 gcm,
                                                  reverse_mask_128,
                                                  remBytes,
                                                  pHashSubkeyTable);

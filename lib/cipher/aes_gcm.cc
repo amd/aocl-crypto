@@ -54,9 +54,7 @@ namespace vaes512 {
                             m_enc_key,
                             m_nrounds,
                             pIv,
-                            m_gHash_128,
-                            m_hash_subKey_128,
-                            m_iv_128,
+                            this,
                             m_reverse_mask_128,
                             m_hashSubkeyTable);
         return err;
@@ -75,9 +73,7 @@ namespace vaes512 {
                             m_enc_key,
                             m_nrounds,
                             pIv,
-                            m_gHash_128,
-                            m_hash_subKey_128,
-                            m_iv_128,
+                            this,
                             m_reverse_mask_128,
                             m_hashSubkeyTable);
         return err;
@@ -96,9 +92,7 @@ namespace vaes512 {
                             m_enc_key,
                             m_nrounds,
                             pIv,
-                            m_gHash_128,
-                            m_hash_subKey_128,
-                            m_iv_128,
+                            this,
                             m_reverse_mask_128,
                             m_hashSubkeyTable);
         return err;
@@ -117,9 +111,7 @@ namespace vaes512 {
                             m_enc_key,
                             m_nrounds,
                             pIv,
-                            m_gHash_128,
-                            m_hash_subKey_128,
-                            m_iv_128,
+                            this,
                             m_reverse_mask_128,
                             m_hashSubkeyTable);
         return err;
@@ -138,9 +130,7 @@ namespace vaes512 {
                             m_enc_key,
                             m_nrounds,
                             pIv,
-                            m_gHash_128,
-                            m_hash_subKey_128,
-                            m_iv_128,
+                            this,
                             m_reverse_mask_128,
                             m_hashSubkeyTable);
         return err;
@@ -159,9 +149,7 @@ namespace vaes512 {
                             m_enc_key,
                             m_nrounds,
                             pIv,
-                            m_gHash_128,
-                            m_hash_subKey_128,
-                            m_iv_128,
+                            this,
                             m_reverse_mask_128,
                             m_hashSubkeyTable);
         return err;
