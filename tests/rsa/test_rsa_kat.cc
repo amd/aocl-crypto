@@ -33,7 +33,8 @@
 #include "string.h"
 #include <iostream>
 
-alc_digest_info_t dinfo_256, dinfo_384, dinfo_512, mgfinfo_256, mgfinfo_512;
+alc_digest_info_t dinfo_256{}, dinfo_384{}, dinfo_512{}, mgfinfo_256{},
+    mgfinfo_512{};
 
 /* All tests to be added here */
 /* non padded mode */
@@ -64,6 +65,10 @@ TEST(RSA_Padding_2048, KAT_SHA2_256_MGF_256)
 }
 TEST(RSA_Padding_2048, KAT_SHA2_512_MGF_256)
 {
+    if (useipp)
+        GTEST_SKIP()
+            << "IPP doesnt support using different types of Digest and Mgf "
+               "schemes, skipping this test";
     dinfo_512.dt_mode.dm_sha2   = ALC_SHA2_512;
     dinfo_512.dt_len            = ALC_DIGEST_LEN_512;
     dinfo_512.dt_type           = ALC_DIGEST_TYPE_SHA2;
@@ -74,6 +79,10 @@ TEST(RSA_Padding_2048, KAT_SHA2_512_MGF_256)
 }
 TEST(RSA_Padding_2048, KAT_SHA2_256_MGF_512)
 {
+    if (useipp)
+        GTEST_SKIP()
+            << "IPP doesnt support using different types of Digest and Mgf "
+               "schemes, skipping this test";
     dinfo_256.dt_mode.dm_sha2   = ALC_SHA2_256;
     dinfo_256.dt_len            = ALC_DIGEST_LEN_256;
     dinfo_256.dt_type           = ALC_DIGEST_TYPE_SHA2;
