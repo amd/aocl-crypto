@@ -1802,6 +1802,28 @@ namespace alcp::rsa { namespace zen4 {
     //     mont::Rsa1024Radix52BitToBytes(res, sq_radix_52);
     // }
 
+    static inline void SqauareAndMultiplySet(Uint64* sq_radix_52[2],
+                                             Uint64* mult_radix_52[2],
+                                             Uint64* modRadix52Bit[2],
+                                             Uint64  k0[2],
+                                             int     index1,
+                                             int     index2,
+                                             Uint64  winSize,
+                                             int     valueLimit,
+                                             Uint64* t)
+    {
+        for (Uint64 i = 0; i < winSize; i++) {
+            AMS1024Parallel(sq_radix_52, sq_radix_52, modRadix52Bit, k0);
+        }
+
+        mont::GetFromTable(t, index1, mult_radix_52[0], 20, valueLimit);
+        mont::GetFromTable(
+            t + 32 * 20, index2, mult_radix_52[1], 20, valueLimit);
+
+        AMM1024Parallel(
+            sq_radix_52, sq_radix_52, mult_radix_52, modRadix52Bit, k0);
+    }
+
     static inline void RSA2048MontgomeryExpConstantTimeParallel(
         Uint64* res[2],
         Uint64* input[2],
@@ -1810,7 +1832,7 @@ namespace alcp::rsa { namespace zen4 {
         Uint64* r2Radix52Bit[2],
         Uint64  k0[2])
     {
-        alignas(64) Uint64 t[16 * 20 * 2] = {};
+        alignas(64) Uint64 t[32 * 20 * 2] = {};
         Uint64             r1_radix_52_bit_contig[2 * 24]{};
         Uint64             input_radix_52_contig[2 * 24]{};
         Uint64             res_radix_52_contig[2 * 24]{};
@@ -1830,13 +1852,13 @@ namespace alcp::rsa { namespace zen4 {
                                    sq_radix_52_contig + 24 };
 
         // to do check which window size is correct
-        Uint64 winSize    = 4;
-        Uint64 valueLimit = 1 << 4;
+        Uint64 winSize    = 5;
+        Uint64 valueLimit = 1 << 5;
         // putting one in mont form
         AMM1024ReduceParallel(
             r1_radix_52_bit_p, r2Radix52Bit, modRadix52Bit, k0);
         mont::PutInTable(t, 0, r1_radix_52_bit_p[0], 20, valueLimit);
-        mont::PutInTable(t + 16 * 20, 0, r1_radix_52_bit_p[1], 20, valueLimit);
+        mont::PutInTable(t + 32 * 20, 0, r1_radix_52_bit_p[1], 20, valueLimit);
 
         mont::Rsa1024BytesToRadix52Bit(input_radix_52[0], input[0]);
         mont::Rsa1024BytesToRadix52Bit(input_radix_52[1], input[1]);
@@ -1844,7 +1866,7 @@ namespace alcp::rsa { namespace zen4 {
         AMM1024Parallel(
             res_radix_52, input_radix_52, r2Radix52Bit, modRadix52Bit, k0);
         mont::PutInTable(t, 1, res_radix_52[0], 20, valueLimit);
-        mont::PutInTable(t + 16 * 20, 1, res_radix_52[1], 20, valueLimit);
+        mont::PutInTable(t + 32 * 20, 1, res_radix_52[1], 20, valueLimit);
 
         alcp::utils::CopyChunk(
             mult_radix_52_contig, res_radix_52_contig, 24 * 8 * 2);
@@ -1853,66 +1875,162 @@ namespace alcp::rsa { namespace zen4 {
             AMM1024Parallel(
                 mult_radix_52, mult_radix_52, res_radix_52, modRadix52Bit, k0);
             mont::PutInTable(t, i, mult_radix_52[0], 20, valueLimit);
-            mont::PutInTable(t + 16 * 20, i, mult_radix_52[1], 20, valueLimit);
+            mont::PutInTable(t + 32 * 20, i, mult_radix_52[1], 20, valueLimit);
         }
 
         const Uint8* exp_byte_ptr_1 = reinterpret_cast<const Uint8*>(exp[0]);
         const Uint8* exp_byte_ptr_2 = reinterpret_cast<const Uint8*>(exp[1]);
 
-        Uint8 index_value_1 = exp_byte_ptr_1[127];
-        Uint8 index_value_2 = exp_byte_ptr_2[127];
+        // first 4 bit
         mont::GetFromTable(
-            t, index_value_1 >> 4, sq_radix_52[0], 20, valueLimit);
-        mont::GetFromTable(
-            t + 16 * 20, index_value_2 >> 4, sq_radix_52[1], 20, valueLimit);
+            t, exp_byte_ptr_1[127] >> 4, sq_radix_52[0], 20, valueLimit);
+        mont::GetFromTable(t + 32 * 20,
+                           exp_byte_ptr_2[127] >> 4,
+                           sq_radix_52[1],
+                           20,
+                           valueLimit);
 
-        for (Uint64 i = 0; i < winSize; i++) {
-            AMS1024Parallel(sq_radix_52, sq_radix_52, modRadix52Bit, k0);
-        }
+        // second 5 bit
+        SqauareAndMultiplySet(
+            sq_radix_52,
+            mult_radix_52,
+            modRadix52Bit,
+            k0,
+            (exp_byte_ptr_1[126] >> 7) | ((exp_byte_ptr_1[127] & 0xf) << 1),
+            (exp_byte_ptr_2[126] >> 7) | ((exp_byte_ptr_2[127] & 0xf) << 1),
+            winSize,
+            valueLimit,
+            t);
 
-        mont::GetFromTable(
-            t, index_value_1 & 0xf, mult_radix_52[0], 20, valueLimit);
-        mont::GetFromTable(
-            t + 16 * 20, index_value_2 & 0xf, mult_radix_52[1], 20, valueLimit);
+        // third 5 bit
+        SqauareAndMultiplySet(sq_radix_52,
+                              mult_radix_52,
+                              modRadix52Bit,
+                              k0,
+                              (exp_byte_ptr_1[126] >> 2) & 0x1f,
+                              (exp_byte_ptr_2[126] >> 2) & 0x1f,
+                              winSize,
+                              valueLimit,
+                              t);
 
-        AMM1024Parallel(
-            sq_radix_52, sq_radix_52, mult_radix_52, modRadix52Bit, k0);
+        // fourth 5 bit
+        SqauareAndMultiplySet(
+            sq_radix_52,
+            mult_radix_52,
+            modRadix52Bit,
+            k0,
+            (exp_byte_ptr_1[125] >> 5) | ((exp_byte_ptr_1[126] & 0x3) << 3),
+            (exp_byte_ptr_2[125] >> 5) | ((exp_byte_ptr_2[126] & 0x3) << 3),
+            winSize,
+            valueLimit,
+            t);
 
-        for (Int64 i = 126; i >= 0; --i) {
+        // fifth 5 bit
+        SqauareAndMultiplySet(sq_radix_52,
+                              mult_radix_52,
+                              modRadix52Bit,
+                              k0,
+                              ((exp_byte_ptr_1[125] & 0x1f)),
+                              ((exp_byte_ptr_2[125] & 0x1f)),
+                              winSize,
+                              valueLimit,
+                              t);
 
-            // first 4 bits
-            for (Uint64 i = 0; i < winSize; i++) {
-                AMS1024Parallel(sq_radix_52, sq_radix_52, modRadix52Bit, k0);
-            }
-            index_value_1 = exp_byte_ptr_1[i];
-            index_value_2 = exp_byte_ptr_2[i];
+        for (Int64 i = 124; i > 3; i -= 5) {
 
-            mont::GetFromTable(
-                t, index_value_1 >> 4, mult_radix_52[0], 20, valueLimit);
-            mont::GetFromTable(t + 16 * 20,
-                               index_value_2 >> 4,
-                               mult_radix_52[1],
-                               20,
-                               valueLimit);
+            // first 5 bits
+            SqauareAndMultiplySet(sq_radix_52,
+                                  mult_radix_52,
+                                  modRadix52Bit,
+                                  k0,
+                                  exp_byte_ptr_1[i] >> 3,
+                                  exp_byte_ptr_2[i] >> 3,
+                                  winSize,
+                                  valueLimit,
+                                  t);
 
-            AMM1024Parallel(
-                sq_radix_52, mult_radix_52, sq_radix_52, modRadix52Bit, k0);
+            // second 5 bits
+            SqauareAndMultiplySet(
+                sq_radix_52,
+                mult_radix_52,
+                modRadix52Bit,
+                k0,
+                (exp_byte_ptr_1[i - 1] >> 6) | ((exp_byte_ptr_1[i] & 0x7) << 2),
+                (exp_byte_ptr_2[i - 1] >> 6) | ((exp_byte_ptr_2[i] & 0x7) << 2),
+                winSize,
+                valueLimit,
+                t);
 
-            // next 4 bits
-            for (Uint64 i = 0; i < winSize; i++) {
-                AMS1024Parallel(sq_radix_52, sq_radix_52, modRadix52Bit, k0);
-            }
-            mont::GetFromTable(
-                t, index_value_1 & 0xf, mult_radix_52[0], 20, valueLimit);
+            // third 5 bit
+            SqauareAndMultiplySet(sq_radix_52,
+                                  mult_radix_52,
+                                  modRadix52Bit,
+                                  k0,
+                                  (exp_byte_ptr_1[i - 1] >> 1) & 0x1f,
+                                  (exp_byte_ptr_2[i - 1] >> 1) & 0x1f,
+                                  winSize,
+                                  valueLimit,
+                                  t);
 
-            mont::GetFromTable(t + 16 * 20,
-                               index_value_2 & 0xf,
-                               mult_radix_52[1],
-                               20,
-                               valueLimit);
+            // fourth 5 bit
+            SqauareAndMultiplySet(sq_radix_52,
+                                  mult_radix_52,
+                                  modRadix52Bit,
+                                  k0,
+                                  (exp_byte_ptr_1[i - 2] >> 4)
+                                      | ((exp_byte_ptr_1[i - 1] & 0x1) << 4),
+                                  (exp_byte_ptr_2[i - 2] >> 4)
+                                      | ((exp_byte_ptr_2[i - 1] & 0x1) << 4),
+                                  winSize,
+                                  valueLimit,
+                                  t);
 
-            AMM1024Parallel(
-                sq_radix_52, mult_radix_52, sq_radix_52, modRadix52Bit, k0);
+            // fifth 5 bit
+            SqauareAndMultiplySet(sq_radix_52,
+                                  mult_radix_52,
+                                  modRadix52Bit,
+                                  k0,
+                                  ((exp_byte_ptr_1[i - 2] & 0xf) << 1)
+                                      | (exp_byte_ptr_1[i - 3] >> 7),
+                                  ((exp_byte_ptr_2[i - 2] & 0xf) << 1)
+                                      | (exp_byte_ptr_2[i - 3] >> 7),
+                                  winSize,
+                                  valueLimit,
+                                  t);
+
+            // 6th 5 bits
+            SqauareAndMultiplySet(sq_radix_52,
+                                  mult_radix_52,
+                                  modRadix52Bit,
+                                  k0,
+                                  (exp_byte_ptr_1[i - 3] >> 2) & 0x1f,
+                                  (exp_byte_ptr_2[i - 3] >> 2) & 0x1f,
+                                  winSize,
+                                  valueLimit,
+                                  t);
+            // 7th 5 bits
+            SqauareAndMultiplySet(sq_radix_52,
+                                  mult_radix_52,
+                                  modRadix52Bit,
+                                  k0,
+                                  ((exp_byte_ptr_1[i - 3] & 0x3) << 3)
+                                      | (exp_byte_ptr_1[i - 4] >> 5),
+                                  ((exp_byte_ptr_2[i - 3] & 0x3) << 3)
+                                      | (exp_byte_ptr_2[i - 4] >> 5),
+                                  winSize,
+                                  valueLimit,
+                                  t);
+
+            // 8th 5 bits
+            SqauareAndMultiplySet(sq_radix_52,
+                                  mult_radix_52,
+                                  modRadix52Bit,
+                                  k0,
+                                  exp_byte_ptr_1[i - 4] & 0x1f,
+                                  exp_byte_ptr_2[i - 4] & 0x1f,
+                                  winSize,
+                                  valueLimit,
+                                  t);
         }
 
         AMM1024ReduceParallel(sq_radix_52, sq_radix_52, modRadix52Bit, k0);
