@@ -56,7 +56,10 @@ OpenSSLRsaBase::~OpenSSLRsaBase()
         EVP_PKEY_free(m_pkey_pvt);
         m_pkey_pvt = nullptr;
     }
-    OSSL_PARAM_free(m_params);
+    if (m_params != nullptr) {
+        OSSL_PARAM_free(m_params);
+        m_params = nullptr;
+    }
 }
 
 bool
@@ -76,6 +79,8 @@ OpenSSLRsaBase::init()
 bool
 OpenSSLRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 {
+    /* components for public key */
+    /* for 1024 key size */
     const Uint8 Modulus_1024[] = {
         0xf1, 0x88, 0x9d, 0x27, 0x1c, 0x90, 0x54, 0x2b, 0x5e, 0x52, 0x63, 0x63,
         0x4d, 0x83, 0x23, 0x6d, 0x9b, 0x48, 0x6b, 0x6b, 0x9d, 0x87, 0x6d, 0xda,
@@ -89,6 +94,7 @@ OpenSSLRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
         0x80, 0x78, 0x86, 0x65, 0x47, 0xf9, 0x4a, 0xe5, 0x90, 0xd6, 0xdc, 0x0c,
         0x0d, 0x5a, 0x5a, 0xce, 0x12, 0xca, 0x1b, 0x09
     };
+
     /* for 2048 keysize */
     const Uint8 Modulus_2048[] = {
         0xae, 0x20, 0xe8, 0x1f, 0x78, 0x01, 0x6c, 0x9a, 0x3e, 0x4a, 0x88, 0xde,
@@ -345,6 +351,12 @@ OpenSSLRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
                   << std::endl;
         return false;
     }
+    if (m_rsa_handle_keyctx_pub != nullptr) {
+        EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pub);
+        m_rsa_handle_keyctx_pub = nullptr;
+    }
+
+    /* free all these Bignums after use */
     BN_free(mod_BN);
     BN_free(pvt_exponent_BN);
     BN_free(P_BN);
@@ -352,6 +364,7 @@ OpenSSLRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
     BN_free(DP_BN);
     BN_free(DQ_BN);
     BN_free(QINV_BN);
+
     return true;
 }
 
@@ -384,6 +397,16 @@ OpenSSLRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
                   << std::endl;
         return false;
     }
+    if (m_rsa_handle_keyctx_pvt != nullptr) {
+        EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pvt);
+        m_rsa_handle_keyctx_pvt = nullptr;
+    }
+    return true;
+}
+
+bool
+OpenSSLRsaBase::ValidateKeys()
+{
     return true;
 }
 

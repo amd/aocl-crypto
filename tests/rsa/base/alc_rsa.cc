@@ -381,6 +381,12 @@ AlcpRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
     return true;
 }
 
+bool
+AlcpRsaBase::ValidateKeys()
+{
+    return true;
+}
+
 int
 AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 {

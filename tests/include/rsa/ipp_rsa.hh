@@ -58,6 +58,8 @@ class IPPRsaBase : public RsaBase
     bool SetPublicKey(const alcp_rsa_data_t& data);
     bool SetPrivateKey(const alcp_rsa_data_t& data);
 
+    bool ValidateKeys();
+
     int EncryptPubKey(const alcp_rsa_data_t& data);
     int DecryptPvtKey(const alcp_rsa_data_t& data);
 };

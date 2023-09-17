@@ -71,5 +71,6 @@ class RsaBase
     virtual bool      SetPrivateKey(const alcp_rsa_data_t& data) = 0;
     virtual int       EncryptPubKey(const alcp_rsa_data_t& data) = 0;
     virtual int       DecryptPvtKey(const alcp_rsa_data_t& data) = 0;
+    virtual bool      ValidateKeys()                             = 0;
 };
 } // namespace alcp::testing

@@ -429,6 +429,12 @@ IPPRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
     return true;
 }
 
+bool
+IPPRsaBase::ValidateKeys()
+{
+    return true;
+}
+
 int
 IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 {
