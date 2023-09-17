@@ -632,20 +632,16 @@ namespace alcp::rsa { namespace zen4 {
         _mm512_storeu_si512(res[1] + 8, res_reg_4);
         _mm512_storeu_si512(res[1] + 16, res_reg_5);
 
-        Uint64 carry = 0;
+        Uint64 carry = 0, carry1 = 0;
         // convert from redundant radix 2^52 to radix 2^52
         for (Uint64 i = 0; i < 20; i++) {
             Uint64 sum = res[0][i] + carry;
             carry      = sum >> 52;
             res[0][i]  = sum & 0xfffffffffffff;
-        }
 
-        carry = 0;
-        // convert from redundant radix 2^52 to radix 2^52
-        for (Uint64 i = 0; i < 20; i++) {
-            Uint64 sum = res[1][i] + carry;
-            carry      = sum >> 52;
-            res[1][i]  = sum & 0xfffffffffffff;
+            sum       = res[1][i] + carry1;
+            carry1    = sum >> 52;
+            res[1][i] = sum & 0xfffffffffffff;
         }
     }
 
@@ -744,20 +740,16 @@ namespace alcp::rsa { namespace zen4 {
         _mm512_storeu_si512(res_1 + 8, res_reg[4]);
         _mm512_storeu_si512(res_1 + 16, res_reg[5]);
 
-        Uint64 carry = 0;
+        Uint64 carry = 0, carry1 = 0;
         // convert from redundant radix 2^52 to radix 2^52
         for (Uint64 i = 0; i < 20; i++) {
             Uint64 sum = res[0][i] + carry;
             carry      = sum >> 52;
             res[0][i]  = sum & 0xfffffffffffff;
-        }
 
-        carry = 0;
-        // convert from redundant radix 2^52 to radix 2^52
-        for (Uint64 i = 0; i < 20; i++) {
-            Uint64 sum = res[1][i] + carry;
-            carry      = sum >> 52;
-            res[1][i]  = sum & 0xfffffffffffff;
+            sum       = res[1][i] + carry1;
+            carry1    = sum >> 52;
+            res[1][i] = sum & 0xfffffffffffff;
         }
     }
 
