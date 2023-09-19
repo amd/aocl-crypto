@@ -1,6 +1,6 @@
 ---
 title: Switching to AOCL Crypto
-subtitle: A Poweful and Flexible Cryptographic Library from AOCL
+subtitle: A Powerful and Flexible Cryptographic Library from AOCL
 author: Abhiram S <abhiram.s@amd.com>
 subject: "markdown"
 keywords: [books,programming]
@@ -54,7 +54,13 @@ colorlinks: true
 
 # Getting Started
 
+
+All the examples shown here are available under examples section, if you have recieved a binary tarball or source code, there should be an `examples` directory. In this examples directory there are working examples which you can compile and run.
+
+For a binary tarball you should be able to run `make` command on the root directory to compile the examples.
+
 For more info go to doxygen 
+
 ## Flow of AOCL-Crypto
 
 Life cycle of any algorithm of AOCL-Crypto is divided into 4 steps. 
@@ -71,7 +77,8 @@ Life cycle of any algorithm of AOCL-Crypto is divided into 4 steps.
 
 Every API mentioned above will return an `alc_error_t` which will let you know if any error occured. 
 
-### An example C code for encryption using a Cipher AES algorithm
+### Cipher
+#### An example C code for encryption using a Cipher AES algorithm
 ```C
 #include <stdio.h>
 #include <alcp/alcp.h>
@@ -142,7 +149,7 @@ In the above code plaintext, ciphertext, len, iv are assumed to be declared.
 
 ![Overall Life Cycle Diagram](mermaid/overall-lifecycle.png)
 
-## Symmentric Cipher Algorithms.
+#### Symmentric Cipher Algorithms.
 
 There are different ciphers which are supported by ALCP, these ciphers can be grouped into `AEAD` (Authenticated Encrypt Authenticated Decrypt) and `Non AEAD` algorithms. Ciphers which are supported by ALCP are
 
@@ -167,20 +174,17 @@ There are different ciphers which are supported by ALCP, these ciphers can be gr
 2. ChaCha
 
     i. Stream Cipher Mode
+    ii. Chache20-Poly1305 AEAD
 
-    ii. Block Cipher Mode
-
-    iii. Chache20-Poly1305 AEAD
-
-### AES (Advanced Encryption Standard)
+##### AES (Advanced Encryption Standard)
 
 AES is the defacto standard for internet communication. AES has been time tested and is trusted even for military applications.
 
-### Chacha (Modified Salsa with better security)
+##### Chacha (Modified Salsa with better security)
 
 Chacha has been chosen to succeed AES as the standard for internet communication. In the present most of the Certificate Authorities set ChaCha20 as the default encryption scheme.
 
-### API Usage AEAD
+##### API Usage AEAD
 
 Life cycle of AEAD cipher should be all similar. AES, Chacha20-Poly all should use same API for AEAD. Life cycle of different modes of encryption or decryption will differ. This is because each AEAD comes with its own way of handling data.
 
@@ -197,7 +201,7 @@ Life Cycle of AEAD Core Operations
 4. Tag Generation - Once a tag is generated, we can concude that the transaction is complete. Now only `finish` call will be possible on the current state.
 For Decryption this tag must be compared with the expected tag to make sure that the plaintext is authentic.
 
-#### SIV
+###### SIV
 
 Conceptual example not a working example of SIV operation.
 
@@ -276,7 +280,7 @@ free(handle.context);
 ```
 
 
-#### CCM
+###### CCM
 
 Conceptual example not a working example of CCM operation.
 
@@ -371,7 +375,7 @@ free(handle.ch_context);
 
 ```
 
-#### GCM
+###### GCM
 
 Conceptual example not a working example of GCM operation.
 
@@ -456,6 +460,14 @@ alcp_cipher_aead_finish(&handle);
 free(handle.context)
 
 ```
+
+#### Asymmetric Cipher Algorithms
+
+### Digest
+
+### Message Authentication Code (MAC)
+
+### Random Number Generator (RNG)
 
 
 # Appendix
