@@ -164,6 +164,7 @@ class CipherTestingCore
                                              + std::string(".rsp"));
 #endif
         // Initialize cipher testing classes
+        /* alcpMode is valid only for AES schemes */
         m_cipherHandler = new CipherTesting();
         m_acb           = new AlcpCipherBase(cipher_type, alcpMode, NULL);
         m_cipherHandler->setcb(m_acb);
@@ -1205,6 +1206,68 @@ AesKatTest(int               keySize,
 
     CipherTestingCore testing_core =
         CipherTestingCore(cModeStr, cipher_type, mode);
+
+    bool retval = false;
+
+#ifndef ENABLE_RSP
+    /* check if file is valid */
+    if (!testing_core.getCsv()->m_file_exists) {
+        EXPECT_TRUE(retval);
+    }
+
+    while (testing_core.getCsv()->readNext()) {
+        if ((testing_core.getCsv()->getVect("KEY").size() * 8) != key_size) {
+            continue;
+        }
+
+        retval = RunCipherKatTest(
+            testing_core, encDec, encDecStr, cModeStr, keySize);
+
+        EXPECT_TRUE(retval);
+    }
+#else
+    if (!testing_core.getRsp()->fileExists) {
+        EXPECT_TRUE(retval);
+    }
+
+    while (testing_core.getRsp()->readNextTC()) {
+        if ((testing_core.getRsp()->getVect("KEY").size() * 8) != key_size) {
+            continue;
+        }
+        retval = RunCipherKATTest(testing_core,
+                                  encDec,
+                                  encDecStr,
+                                  cModeStr,
+                                  keySize,
+                                  isxts || issiv,
+                                  isgcm || isccm || issiv);
+        EXPECT_TRUE(retval);
+    }
+#endif
+}
+
+/**
+ * @brief Function to run KAT for chacha20
+ *
+ * @param keySize keysize in bits(128,192,256)
+ * @param encDec enum for encryption or decryption
+ * @param mode Aode of encryption/Decryption (CTR,CFB,OFB,CBC,XTS)
+ */
+void
+ChachaKatTest(int keySize, encDec_t encDec, _alc_cipher_type cipher_type)
+{
+    size_t            key_size = keySize;
+    const std::string cModeStr = "Chacha20";
+    std::string       encDecStr;
+
+    if (encDec == ENCRYPT)
+        encDecStr = "_ENC";
+    else
+        encDecStr = "_DEC";
+
+    /* for chacha20, AES mode is not used */
+    CipherTestingCore testing_core =
+        CipherTestingCore(cModeStr, cipher_type, ALC_AES_MODE_NONE);
 
     bool retval = false;
 

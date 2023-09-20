@@ -31,10 +31,22 @@
 namespace alcp::testing {
 
 // AlcpCipherBase class functions
+/* for chacha20 */
+AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type cipher_type,
+                               const Uint8*           iv,
+                               const Uint8*           key,
+                               const Uint32           key_len,
+                               const Uint32           iv_len)
+{
+    this->m_iv = iv;
+    init(key, key_len);
+}
+
 AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cipher_type,
                                const alc_cipher_mode_t mode,
                                const Uint8*            iv)
     : m_mode{ mode }
+    , m_cipher_type{ cipher_type }
     , m_iv{ iv }
 {}
 
@@ -59,6 +71,7 @@ AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cipher_type,
                                const Uint8*            tkey,
                                const Uint64            block_size)
     : m_mode{ mode }
+    , m_cipher_type{ cipher_type }
     , m_iv{ iv }
 {
     init(iv, iv_len, key, key_len, tkey, block_size);
@@ -136,25 +149,37 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 key_len)
         goto out;
     }
 
-    /* Initialize keyinfo */
-    m_cinfo.ci_algo_info.ai_xts.xi_tweak_key = nullptr;
+    m_cinfo.ci_type = m_cipher_type;
+    if (m_cinfo.ci_type == ALC_CIPHER_TYPE_CHACHA20) {
+        m_cinfo.ci_key_info.type   = ALC_KEY_TYPE_SYMMETRIC;
+        m_cinfo.ci_key_info.fmt    = ALC_KEY_FMT_RAW;
+        m_cinfo.ci_key_info.key    = key;
+        m_cinfo.ci_key_info.len    = key_len;
+        m_cinfo.ci_algo_info.ai_iv = m_iv;
+        m_cinfo.ci_algo_info.iv_length =
+            16 * 8; /* FIXME is it always 16 bytes ?*/
+    } else {
+        /* FOR AES */
+        /* Initialize keyinfo */
+        m_cinfo.ci_algo_info.ai_xts.xi_tweak_key = nullptr;
 
-    m_keyinfo.algo = ALC_KEY_ALG_SYMMETRIC;
-    m_keyinfo.type = ALC_KEY_TYPE_SYMMETRIC;
-    m_keyinfo.fmt  = ALC_KEY_FMT_RAW;
-    m_keyinfo.len  = key_len;
-    m_keyinfo.key  = key;
+        m_keyinfo.algo = ALC_KEY_ALG_SYMMETRIC;
+        m_keyinfo.type = ALC_KEY_TYPE_SYMMETRIC;
+        m_keyinfo.fmt  = ALC_KEY_FMT_RAW;
+        m_keyinfo.len  = key_len;
+        m_keyinfo.key  = key;
 
-    /* Initialize cinfo */
-    m_cinfo.ci_algo_info.ai_mode = m_mode;
-    m_cinfo.ci_algo_info.ai_iv   = m_iv;
+        /* Initialize cinfo */
+        m_cinfo.ci_algo_info.ai_mode = m_mode;
+        m_cinfo.ci_algo_info.ai_iv   = m_iv;
 
-    m_cinfo.ci_type = ALC_CIPHER_TYPE_AES;
-    /* set these only for XTS */
-    if (m_mode == ALC_AES_MODE_XTS) {
-        memcpy(m_key, key, key_len / 8);
-        memcpy(m_key + (key_len / 8), m_tkey, key_len / 8);
-        m_keyinfo.key = m_key;
+        /* set these only for XTS */
+        if (m_mode == ALC_AES_MODE_XTS) {
+            memcpy(m_key, key, key_len / 8);
+            memcpy(m_key + (key_len / 8), m_tkey, key_len / 8);
+            m_keyinfo.key = m_key;
+        }
+        m_cinfo.ci_key_info = m_keyinfo;
     }
 #if 0
     else if (m_mode == ALC_AES_MODE_SIV) {
@@ -167,7 +192,6 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 key_len)
         m_cinfo.ci_algo_info.ai_siv.xi_ctr_key = p_kinfo;
     }
 #endif
-    m_cinfo.ci_key_info = m_keyinfo;
 
     /* Check support */
     err = alcp_cipher_supported(&m_cinfo);

@@ -48,6 +48,14 @@ class AlcpCipherBase : public CipherBase
 
   public:
     AlcpCipherBase() {}
+
+    /* for chacha20 */
+    AlcpCipherBase(const _alc_cipher_type cipher_type,
+                   const Uint8*           iv,
+                   const Uint8*           key,
+                   const Uint32           key_len,
+                   const Uint32           iv_len);
+
     /**
      * @brief Construct a new Alcp Cipher Base object
      *

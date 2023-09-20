@@ -182,6 +182,8 @@ KAT_AES(xts)
 KAT_AES(ccm)
 KAT_AES(siv)
 
+KAT_AES(chacha20)
+
 CROSS_AES(cbc)
 CROSS_AES(cfb)
 CROSS_AES(ctr)
