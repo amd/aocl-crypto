@@ -40,6 +40,7 @@ class AlcpCipherAeadBase : public CipherAeadBase
     alc_cipher_handle_p    m_handle = nullptr;
     alc_cipher_aead_info_t m_cinfo;
     alc_key_info_t         m_keyinfo;
+    _alc_cipher_type       m_cipher_type;
     alc_cipher_mode_t      m_mode;
     const Uint8*           m_iv;
     const Uint8*           m_tkey = nullptr;
@@ -55,7 +56,8 @@ class AlcpCipherAeadBase : public CipherAeadBase
      * @param key_len
      * @param tkey
      */
-    AlcpCipherAeadBase(const alc_cipher_mode_t mode,
+    AlcpCipherAeadBase(const _alc_cipher_type  cipher_type,
+                       const alc_cipher_mode_t mode,
                        const Uint8*            iv,
                        const Uint32            iv_len,
                        const Uint8*            key,
@@ -69,7 +71,9 @@ class AlcpCipherAeadBase : public CipherAeadBase
      * @param mode
      * @param iv
      */
-    AlcpCipherAeadBase(const alc_cipher_mode_t mode, const Uint8* iv);
+    AlcpCipherAeadBase(const _alc_cipher_type  cipher_type,
+                       const alc_cipher_mode_t mode,
+                       const Uint8*            iv);
 
     /**
      * @brief Construct a new Alcp Base object - Initlized and ready to go
@@ -79,7 +83,8 @@ class AlcpCipherAeadBase : public CipherAeadBase
      * @param key
      * @param key_len
      */
-    AlcpCipherAeadBase(const alc_cipher_mode_t mode,
+    AlcpCipherAeadBase(const _alc_cipher_type  cipher_type,
+                       const alc_cipher_mode_t mode,
                        const Uint8*            iv,
                        const Uint8*            key,
                        const Uint32            key_len);

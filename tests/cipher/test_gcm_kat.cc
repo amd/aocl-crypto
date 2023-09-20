@@ -32,37 +32,39 @@
 
 using namespace alcp::testing;
 
-#define ALC_MODE ALC_AES_MODE_GCM
+#define ALC_MODE        ALC_AES_MODE_GCM
+#define ALC_CIPHER_TYPE ALC_CIPHER_TYPE_AES
+
 #define STR_MODE "AES_GCM"
 
 TEST(AES_ENC_128, KAT_128)
 {
-    AesAeadKatTest(128, ENCRYPT, ALC_MODE);
+    AesAeadKatTest(128, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE);
 }
 
 TEST(AES_ENC_192, KAT_192)
 {
-    AesAeadKatTest(192, ENCRYPT, ALC_MODE);
+    AesAeadKatTest(192, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE);
 }
 
 TEST(AES_ENC_256, KAT_256)
 {
-    AesAeadKatTest(256, ENCRYPT, ALC_MODE);
+    AesAeadKatTest(256, ENCRYPT, ALC_CIPHER_TYPE, ALC_MODE);
 }
 
 TEST(AES_DEC_128, KAT_128)
 {
-    AesAeadKatTest(128, DECRYPT, ALC_MODE);
+    AesAeadKatTest(128, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE);
 }
 
 TEST(AES_DEC_192, KAT_192)
 {
-    AesAeadKatTest(192, DECRYPT, ALC_MODE);
+    AesAeadKatTest(192, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE);
 }
 
 TEST(AES_DEC_256, KAT_256)
 {
-    AesAeadKatTest(256, DECRYPT, ALC_MODE);
+    AesAeadKatTest(256, DECRYPT, ALC_CIPHER_TYPE, ALC_MODE);
 }
 
 int

@@ -31,13 +31,15 @@
 namespace alcp::testing {
 
 // AlcpCipherAeadBase class functions
-AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t mode,
+AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cipher_type,
+                                       const alc_cipher_mode_t mode,
                                        const Uint8*            iv)
     : m_mode{ mode }
     , m_iv{ iv }
 {}
 
-AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t mode,
+AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cipher_type,
+                                       const alc_cipher_mode_t mode,
                                        const Uint8*            iv,
                                        const Uint8*            key,
                                        const Uint32            key_len)
@@ -48,7 +50,8 @@ AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t mode,
 }
 
 /* xts */
-AlcpCipherAeadBase::AlcpCipherAeadBase(const alc_cipher_mode_t mode,
+AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cipher_type,
+                                       const alc_cipher_mode_t mode,
                                        const Uint8*            iv,
                                        const Uint32            iv_len,
                                        const Uint8*            key,

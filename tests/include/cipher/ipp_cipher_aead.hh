@@ -43,6 +43,7 @@ class IPPCipherAeadBase : public CipherAeadBase
 {
   private:
     alc_cipher_mode_t m_mode;
+    _alc_cipher_type  m_cipher_type;
     IppsAESSpec*      m_ctx       = NULL;
     IppsAES_XTSSpec*  m_ctx_xts   = NULL;
     IppsAES_GCMState* m_ctx_gcm   = NULL;
@@ -70,7 +71,9 @@ class IPPCipherAeadBase : public CipherAeadBase
      * @param mode
      * @param iv
      */
-    IPPCipherAeadBase(const alc_cipher_mode_t mode, const Uint8* iv);
+    IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
+                      const alc_cipher_mode_t mode,
+                      const Uint8*            iv);
     /**
      * @brief Construct a new Alcp Base object - Initlized and ready to go
      *
@@ -79,7 +82,8 @@ class IPPCipherAeadBase : public CipherAeadBase
      * @param key
      * @param key_len
      */
-    IPPCipherAeadBase(const alc_cipher_mode_t mode,
+    IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
+                      const alc_cipher_mode_t mode,
                       const Uint8*            iv,
                       const Uint8*            key,
                       const Uint32            key_len);
@@ -93,7 +97,8 @@ class IPPCipherAeadBase : public CipherAeadBase
      * @return false - if there is some failure
      */
 
-    IPPCipherAeadBase(const alc_cipher_mode_t mode,
+    IPPCipherAeadBase(const _alc_cipher_type  cipher_type,
+                      const alc_cipher_mode_t mode,
                       const Uint8*            iv,
                       const Uint32            iv_len,
                       const Uint8*            key,

@@ -246,7 +246,7 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 key_len)
     if (1
         != EVP_DecryptInit_ex(
             m_ctx_dec,
-            alcpModeKeyLenToCipher(ALC_CIPHER_TYPE_AES, m_mode, m_key_len),
+            alcpModeKeyLenToCipher(m_cipher_type, m_mode, m_key_len),
             NULL,
             m_key,
             m_iv)) {
