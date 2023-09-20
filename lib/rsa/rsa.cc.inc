@@ -77,13 +77,6 @@ struct BigNum
     Uint64  m_pos  = 0;
 };
 
-static inline Uint64
-GetRadix52Bit(Uint64 val)
-{
-    constexpr Uint64 MaskRadix52Bit = 0xfffffffffffff;
-    return val & MaskRadix52Bit;
-}
-
 static inline void
 GetFromTable(Uint64* t, Uint64 index, Uint64* num, Uint64 size, Uint64 limit)
 {
