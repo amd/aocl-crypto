@@ -54,9 +54,7 @@ AlcpPoly1305Base::init()
                                    .len  = m_key_len * 8,
                                    .key  = m_key };
 
-    dinfo.mi_keyinfo                               = kinfo;
-    dinfo.mi_algoinfo.cmac.cmac_cipher.ci_key_info = kinfo;
-
+    dinfo.mi_keyinfo = kinfo;
     if (m_handle == nullptr) {
         m_handle             = new alc_mac_handle_t;
         m_handle->ch_context = malloc(alcp_mac_context_size(&dinfo));

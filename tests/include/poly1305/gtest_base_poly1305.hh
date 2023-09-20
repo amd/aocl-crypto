@@ -95,12 +95,8 @@ Poly_Kat(alc_mac_info_t info)
     while (csv.readNext()) {
 
         std::vector<Uint8> mac(macSize, 0);
-        std::cout << "MAC ACTUAL " << parseBytesToHexStr(&mac[0], macSize)
-                  << std::endl;
 
         auto msg = csv.getVect("MESSAGE");
-        std::cout << "MESSAGE: " << parseBytesToHexStr(&msg[0], msg.size())
-                  << std::endl;
 
         auto key = csv.getVect("KEY");
 
@@ -131,19 +127,10 @@ Poly_Kat(alc_mac_info_t info)
         /* we need only the no of bytes needed, from the output */
         std::vector<Uint8> mac_vector(
             std::begin(mac), std::begin(mac) + csv.getVect("MAC").size());
-        std::cout << "CSV MAC SIZE " << csv.getVect("MAC").size() << std::endl;
-        std::cout << "MAC expected "
-                  << parseBytesToHexStr(&csv.getVect("MAC")[0],
-                                        csv.getVect("MAC").size())
-                  << std::endl;
-
-        std::cout << "MAC ACTUAL "
-                  << parseBytesToHexStr(&mac[0], mac_vector.size())
-                  << std::endl;
         EXPECT_TRUE(ArraysMatch(
             mac_vector,         // Actual output
             csv.getVect("MAC"), // expected output, from the csv test data
             csv,
-            "POLY1305 Failure"));
+            "POLY1305"));
     }
 }

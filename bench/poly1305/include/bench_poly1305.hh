@@ -31,11 +31,11 @@
 #include "poly1305/poly1305.hh"
 
 #ifdef USE_IPP
-#include "cmac/ipp_cmac.hh"
+#include "poly1305/ipp_poly1305.hh"
 #endif
 
 #ifdef USE_OSSL
-#include "cmac/openssl_cmac.hh"
+#include "poly1305/openssl_poly1305.hh"
 #endif
 
 #include "gbench_base.hh"
@@ -56,27 +56,26 @@ void inline Poly1305_Bench(benchmark::State& state,
                            Uint64            KeySize)
 {
 
-    /* MAX len of cmac would be 128 bits */
+    /* MAX len of poly1305 would be 128 bits */
     std::vector<Uint8> poly1305_mac(128 / 8, 0);
     std::vector<Uint8> message(block_size, 0);
     std::vector<Uint8> Key(KeySize / 8, 0);
 
-    /* Initialize info params based on cmac type */
-    info.mi_type                                         = ALC_MAC_POLY1305;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_iv = NULL;
+    /* Initialize info params based on poly1305 type */
+    info.mi_type = ALC_MAC_POLY1305;
 
     AlcpPoly1305Base     acb(info);
     Poly1305Base*        cb = &acb;
     alcp_poly1305_data_t data;
 #ifdef USE_IPP
-    IPPCmacBase icb(info);
+    IPPPoly1305Base icb(info);
     if (useipp) {
         cb = &icb;
     }
 #endif
 
 #ifdef USE_OSSL
-    OpenSSLCmacBase ocb(info);
+    OpenSSLPoly1305Base ocb(info);
     if (useossl) {
         cb = &ocb;
     }
@@ -90,11 +89,11 @@ void inline Poly1305_Bench(benchmark::State& state,
     data.m_key_len = Key.size();
 
     if (!cb->init(info, Key)) {
-        state.SkipWithError("Error in cmac init function");
+        state.SkipWithError("Error in poly1305 init function");
     }
     for (auto _ : state) {
         if (!cb->mac(data)) {
-            state.SkipWithError("Error in cmac bench function");
+            state.SkipWithError("Error in poly1305 bench function");
         }
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(
@@ -104,7 +103,7 @@ void inline Poly1305_Bench(benchmark::State& state,
 }
 
 /* add all your new benchmarks here */
-/* CMAC AES benchmarks */
+/* POLY1305 benchmarks */
 static void
 BENCH_POLY1305(benchmark::State& state)
 {

@@ -44,7 +44,6 @@ class AlcpPoly1305Base : public Poly1305Base
     alc_mac_info_t    m_info;
     Uint8*            m_message = {};
     Uint8*            m_key     = {};
-    Uint8*            m_cmac    = {};
     Uint32            m_key_len;
 
   public:
