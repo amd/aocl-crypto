@@ -123,7 +123,8 @@ class CipherTestingCore
                 delete m_cipherHandler;
                 throw "OpenSSL not avaiable!";
 #else
-                ocb = new OpenSSLCipherBase(alcpMode, NULL);
+                ocb =
+                    new OpenSSLCipherBase(ALC_CIPHER_TYPE_AES, alcpMode, NULL);
                 m_cipherHandler->setcb(ocb);
 #endif
                 break;
@@ -136,12 +137,12 @@ class CipherTestingCore
                     delete m_cipherHandler;
                     throw "IPP disabled!";
                 }
-                icb = new IPPCipherBase(alcpMode, NULL);
+                icb = new IPPCipherBase(ALC_CIPHER_TYPE_AES, alcpMode, NULL);
                 m_cipherHandler->setcb(icb);
 #endif
                 break;
             case ALCP:
-                m_acb = new AlcpCipherBase(alcpMode, NULL);
+                m_acb = new AlcpCipherBase(ALC_CIPHER_TYPE_AES, alcpMode, NULL);
                 m_cipherHandler->setcb(m_acb);
                 break;
         }
@@ -159,10 +160,10 @@ class CipherTestingCore
 #endif
         // Initialize cipher testing classes
         m_cipherHandler = new CipherTesting();
-        m_acb           = new AlcpCipherBase(alcpMode, NULL);
+        m_acb = new AlcpCipherBase(ALC_CIPHER_TYPE_AES, alcpMode, NULL);
         m_cipherHandler->setcb(m_acb);
 #ifdef USE_IPP
-        icb = new IPPCipherBase(alcpMode, NULL);
+        icb = new IPPCipherBase(ALC_CIPHER_TYPE_AES, alcpMode, NULL);
         if (useipp) {
             std::cout << "Using IPP" << std::endl;
             m_cipherHandler->setcb(icb);
@@ -173,7 +174,7 @@ class CipherTestingCore
         }
 #endif
 #ifdef USE_OSSL
-        ocb = new OpenSSLCipherBase(alcpMode, NULL);
+        ocb = new OpenSSLCipherBase(ALC_CIPHER_TYPE_AES, alcpMode, NULL);
         if (useossl) {
             std::cout << "Using OpenSSL" << std::endl;
             m_cipherHandler->setcb(ocb);

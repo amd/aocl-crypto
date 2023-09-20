@@ -41,6 +41,7 @@ class AlcpCipherBase : public CipherBase
     alc_cipher_info_t   m_cinfo;
     alc_key_info_t      m_keyinfo;
     alc_cipher_mode_t   m_mode;
+    _alc_cipher_type    m_cipher_type;
     const Uint8*        m_iv;
     Uint8               m_key[64];
     const Uint8*        m_tkey = nullptr;
@@ -56,7 +57,8 @@ class AlcpCipherBase : public CipherBase
      * @param key_len
      * @param tkey
      */
-    AlcpCipherBase(const alc_cipher_mode_t mode,
+    AlcpCipherBase(const _alc_cipher_type  cipher_type,
+                   const alc_cipher_mode_t mode,
                    const Uint8*            iv,
                    const Uint32            iv_len,
                    const Uint8*            key,
@@ -70,7 +72,9 @@ class AlcpCipherBase : public CipherBase
      * @param mode
      * @param iv
      */
-    AlcpCipherBase(const alc_cipher_mode_t mode, const Uint8* iv);
+    AlcpCipherBase(const _alc_cipher_type  cipher_type,
+                   const alc_cipher_mode_t mode,
+                   const Uint8*            iv);
 
     /**
      * @brief Construct a new Alcp Base object - Initlized and ready to go
@@ -80,7 +84,8 @@ class AlcpCipherBase : public CipherBase
      * @param key
      * @param key_len
      */
-    AlcpCipherBase(const alc_cipher_mode_t mode,
+    AlcpCipherBase(const _alc_cipher_type  cipher_type,
+                   const alc_cipher_mode_t mode,
                    const Uint8*            iv,
                    const Uint8*            key,
                    const Uint32            key_len);

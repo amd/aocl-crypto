@@ -146,19 +146,19 @@ AesCipher(benchmark::State& state,
     alcp::testing::CipherBase* cb;
 
     alcp::testing::AlcpCipherBase acb = alcp::testing::AlcpCipherBase(
-        alcpMode, iv, 12, key, keylen, tkey, blockSize);
+        ALC_CIPHER_TYPE_AES, alcpMode, iv, 12, key, keylen, tkey, blockSize);
 
     cb = &acb;
 #ifdef USE_IPP
     alcp::testing::IPPCipherBase icb = alcp::testing::IPPCipherBase(
-        alcpMode, iv, 12, key, keylen, tkey, blockSize);
+        ALC_CIPHER_TYPE_AES, alcpMode, iv, 12, key, keylen, tkey, blockSize);
     if (useipp) {
         cb = &icb;
     }
 #endif
 #ifdef USE_OSSL
     alcp::testing::OpenSSLCipherBase ocb = alcp::testing::OpenSSLCipherBase(
-        alcpMode, iv, 12, key, keylen, tkey, blockSize);
+        ALC_CIPHER_TYPE_AES, alcpMode, iv, 12, key, keylen, tkey, blockSize);
     if (useossl) {
         cb = &ocb;
     }

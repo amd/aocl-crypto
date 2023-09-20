@@ -43,6 +43,7 @@ class IPPCipherBase : public CipherBase
 {
   private:
     alc_cipher_mode_t m_mode;
+    _alc_cipher_type  m_cipher_type;
     IppsAESSpec*      m_ctx       = NULL;
     IppsAES_XTSSpec*  m_ctx_xts   = NULL;
     IppsAES_GCMState* m_ctx_gcm   = NULL;
@@ -73,7 +74,9 @@ class IPPCipherBase : public CipherBase
      * @param mode
      * @param iv
      */
-    IPPCipherBase(const alc_cipher_mode_t mode, const Uint8* iv);
+    IPPCipherBase(const _alc_cipher_type  cipher_type,
+                  const alc_cipher_mode_t mode,
+                  const Uint8*            iv);
     /**
      * @brief Construct a new Alcp Base object - Initlized and ready to go
      *
@@ -82,7 +85,8 @@ class IPPCipherBase : public CipherBase
      * @param key
      * @param key_len
      */
-    IPPCipherBase(const alc_cipher_mode_t mode,
+    IPPCipherBase(const _alc_cipher_type  cipher_type,
+                  const alc_cipher_mode_t mode,
                   const Uint8*            iv,
                   const Uint8*            key,
                   const Uint32            key_len);
@@ -96,7 +100,8 @@ class IPPCipherBase : public CipherBase
      * @return false - if there is some failure
      */
 
-    IPPCipherBase(const alc_cipher_mode_t mode,
+    IPPCipherBase(const _alc_cipher_type  cipher_type,
+                  const alc_cipher_mode_t mode,
                   const Uint8*            iv,
                   const Uint32            iv_len,
                   const Uint8*            key,
