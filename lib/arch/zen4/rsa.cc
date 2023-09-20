@@ -35,6 +35,67 @@ namespace alcp::rsa { namespace zen4 {
 
     constexpr Uint64 num_digit = (2048 / 52 + 1);
 
+    static inline Uint64 GetRadix52Bit(Uint64 val)
+    {
+        constexpr Uint64 MaskRadix52Bit = 0xfffffffffffff;
+        return val & MaskRadix52Bit;
+    }
+
+    static inline void Rsa1024BytesToRadix52Bit(Uint64* out, const Uint64* in)
+    {
+        const Uint8* in_byte = reinterpret_cast<const Uint8*>(in);
+        for (Uint64 i = 0; i < 18; i += 2) {
+            out[i] = GetRadix52Bit(*(reinterpret_cast<const Uint64*>(in_byte)));
+            out[i + 1] = GetRadix52Bit(
+                (*(reinterpret_cast<const Uint64*>(in_byte + 6))) >> 4);
+            in_byte += 13;
+        }
+
+        out[18] = GetRadix52Bit(*(reinterpret_cast<const Uint64*>(in_byte)));
+
+        out[19] = (*(in_byte + 6) >> 4) + (*(in_byte + 7) << 4)
+                  + (*(in_byte + 8) << 12) + (*(in_byte + 9) << 20)
+                  + ((Uint64)(*(in_byte + 10)) << 28);
+    }
+
+    static inline void Rsa1024Radix52BitToBytes(Uint64* out, const Uint64* in)
+    {
+        Uint8* out_byte = reinterpret_cast<Uint8*>(out);
+        for (Uint64 i = 0; i < 19; i += 2) {
+            *(reinterpret_cast<Uint64*>(out_byte)) = in[i];
+            out_byte += 6;
+            *(reinterpret_cast<Uint64*>(out_byte)) ^= (in[i + 1] << 4);
+            out_byte += 7;
+        }
+    }
+
+    static inline void Rsa2048BytesToRadix52Bit(Uint64* out, const Uint64* in)
+    {
+        const Uint8* in_byte = reinterpret_cast<const Uint8*>(in);
+        for (Uint64 i = 0; i < 38; i += 2) {
+            out[i] = GetRadix52Bit(*(reinterpret_cast<const Uint64*>(in_byte)));
+            out[i + 1] = GetRadix52Bit(
+                (*(reinterpret_cast<const Uint64*>(in_byte + 6))) >> 4);
+            in_byte += 13;
+        }
+
+        out[38] = GetRadix52Bit(*(reinterpret_cast<const Uint64*>(in_byte)));
+
+        out[39] = (*(in_byte + 6) >> 4) + (*(in_byte + 7) << 4)
+                  + (*(in_byte + 8) << 12);
+    }
+
+    static inline void Rsa2048Radix52BitToBytes(Uint64* out, const Uint64* in)
+    {
+        Uint8* out_byte = reinterpret_cast<Uint8*>(out);
+        for (Uint64 i = 0; i < 39; i += 2) {
+            *(reinterpret_cast<Uint64*>(out_byte)) = in[i];
+            out_byte += 6;
+            *(reinterpret_cast<Uint64*>(out_byte)) ^= (in[i + 1] << 4);
+            out_byte += 7;
+        }
+    }
+
     static inline void Amm1024LoopInternalStage1(__m512i       res_reg[3],
                                                  __m512i       first_reg[3],
                                                  __m512i       mod_reg[3],
@@ -2608,7 +2669,7 @@ namespace alcp::rsa { namespace zen4 {
     //     r1_radix_52_bit_p, 20,
     //     valueLimit);
 
-    //     mont::Rsa1024BytesToRadix52Bit(input_radix_52,
+    //     Rsa1024BytesToRadix52Bit(input_radix_52,
     //     input); AMM1024(res_radix_52,
     //             input_radix_52,
     //             r2_radix_52_bit,
@@ -2761,8 +2822,8 @@ namespace alcp::rsa { namespace zen4 {
         mont::PutInTable(t, 0, r1_radix_52_bit_p[0], 20, valueLimit);
         mont::PutInTable(t + 32 * 20, 0, r1_radix_52_bit_p[1], 20, valueLimit);
 
-        mont::Rsa1024BytesToRadix52Bit(input_radix_52[0], input[0]);
-        mont::Rsa1024BytesToRadix52Bit(input_radix_52[1], input[1]);
+        Rsa1024BytesToRadix52Bit(input_radix_52[0], input[0]);
+        Rsa1024BytesToRadix52Bit(input_radix_52[1], input[1]);
 
         AMM1024Parallel256(
             res_radix_52, input_radix_52, r2Radix52Bit, modRadix52Bit, k0);
@@ -2937,10 +2998,10 @@ namespace alcp::rsa { namespace zen4 {
         AMM1024ReduceParallel(sq_radix_52, sq_radix_52, modRadix52Bit, k0);
 
         alcp::utils::PadBlock<Uint64>(res[0], 0LL, 16 * 8);
-        mont::Rsa1024Radix52BitToBytes(res[0], sq_radix_52[0]);
+        Rsa1024Radix52BitToBytes(res[0], sq_radix_52[0]);
 
         alcp::utils::PadBlock<Uint64>(res[1], 0LL, 16 * 8);
-        mont::Rsa1024Radix52BitToBytes(res[1], sq_radix_52[1]);
+        Rsa1024Radix52BitToBytes(res[1], sq_radix_52[1]);
     }
 
     template<>

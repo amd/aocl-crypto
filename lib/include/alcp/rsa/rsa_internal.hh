@@ -56,12 +56,9 @@ struct MontContextBignum
     std::unique_ptr<Uint64[]> m_r1; // Montgomery identity
     std::unique_ptr<Uint64[]> m_r2; // Montgomery converter
     std::unique_ptr<Uint64[]>
-        m_r2_radix_52_bit; // Montgomery converter in radix 52 bit. Currently
-                           // valid only for RSA2048
-    std::unique_ptr<Uint64[]>
-        m_mod_radix_52_bit; // Modulus in radix 52. Currently valid only for
-                            // RSA2048
-    std::unique_ptr<Uint64[]> m_r3; // Montgomery optimizer
+        m_r2_radix_52_bit; // Montgomery converter in radix 52 bit.
+    std::unique_ptr<Uint64[]> m_mod_radix_52_bit; // Modulus in radix 52.
+    std::unique_ptr<Uint64[]> m_r3;               // Montgomery optimizer
     Uint64                    m_size = 0;
 };
 
