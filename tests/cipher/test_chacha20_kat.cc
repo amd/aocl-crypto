@@ -32,13 +32,14 @@
 
 using namespace alcp::testing;
 
-#define ALC_MODE        ALC_AES_MODE_CFB
-#define ALC_CIPHER_TYPE ALC_CIPHER_TYPE_CHACHA20
-
-// /* Testing Starts Here! */
+/* Testing Starts Here! */
 TEST(AES_ENC_256, KAT_256)
 {
     ChachaKatTest(256, ENCRYPT, ALC_CIPHER_TYPE_CHACHA20);
+}
+TEST(AES_DEC_256, KAT_256)
+{
+    ChachaKatTest(256, DECRYPT, ALC_CIPHER_TYPE_CHACHA20);
 }
 
 int

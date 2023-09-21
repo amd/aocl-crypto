@@ -149,6 +149,8 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 key_len)
         goto out;
     }
 
+    m_cinfo.ci_algo_info.ai_xts.xi_tweak_key = nullptr;
+
     m_cinfo.ci_type = m_cipher_type;
     if (m_cinfo.ci_type == ALC_CIPHER_TYPE_CHACHA20) {
         m_cinfo.ci_key_info.type   = ALC_KEY_TYPE_SYMMETRIC;
@@ -161,8 +163,6 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 key_len)
     } else {
         /* FOR AES */
         /* Initialize keyinfo */
-        m_cinfo.ci_algo_info.ai_xts.xi_tweak_key = nullptr;
-
         m_keyinfo.algo = ALC_KEY_ALG_SYMMETRIC;
         m_keyinfo.type = ALC_KEY_TYPE_SYMMETRIC;
         m_keyinfo.fmt  = ALC_KEY_FMT_RAW;

@@ -35,6 +35,71 @@
 std::vector<Int64> blocksizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
 
 int
+Chacha20Cipher(benchmark::State& state,
+               Uint64            blockSize,
+               encrypt_t         enc,
+               _alc_cipher_type  cipher_type,
+               alc_cipher_mode_t alcpMode,
+               size_t            keylen)
+{
+    // Dynamic allocation better for larger sizes
+    std::vector<Uint8>         vec_in(blockSize, 0x01);
+    std::vector<Uint8>         vec_out(blockSize, 0x21);
+    std::unique_ptr<Uint8[]>   tagBuffer = std::make_unique<Uint8[]>(16);
+    Uint8                      key[keylen / 8];
+    Uint8                      iv[16];
+    Uint8                      ad[16] = {};
+    Uint8                      tag[16];
+    Uint8                      tkey[keylen / 8];
+    alcp::testing::CipherBase* cb;
+
+    alcp::testing::AlcpCipherBase acb = alcp::testing::AlcpCipherBase(
+        cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
+
+    cb = &acb;
+#ifdef USE_IPP
+    alcp::testing::IPPCipherBase icb = alcp::testing::IPPCipherBase(
+        cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
+    if (useipp) {
+        cb = &icb;
+    }
+#endif
+#ifdef USE_OSSL
+    // alcp::testing::OpenSSLCipherBase ocb = alcp::testing::OpenSSLCipherBase(
+    //    cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
+    // if (useossl) {
+    //    cb = &ocb;
+    //}
+#endif
+    alcp::testing::alcp_dc_ex_t data;
+    data.m_in    = &(vec_in[0]);
+    data.m_inl   = blockSize;
+    data.m_out   = &(vec_out[0]);
+    data.m_outl  = blockSize;
+    data.m_iv    = iv;
+    data.m_ivl   = 16;
+    data.m_tkey  = tkey;
+    data.m_tkeyl = 16;
+    for (auto _ : state) {
+        if (enc) {
+            if (!cb->encrypt(data)) {
+                state.SkipWithError("BENCH_ENC_FAILURE");
+            }
+
+        } else {
+            if (!cb->decrypt(data)) {
+                state.SkipWithError("BENCH_DEC_FAILURE");
+            }
+        }
+    }
+    state.counters["Speed(Bytes/s)"] = benchmark::Counter(
+        state.iterations() * blockSize, benchmark::Counter::kIsRate);
+    state.counters["BlockSize(Bytes)"] = blockSize;
+
+    return 0;
+}
+
+int
 AesAeadCipher(benchmark::State& state,
               const Uint64      blockSize,
               encrypt_t         enc,
@@ -744,9 +809,34 @@ BENCH_AES_DECRYPT_SIV_256(benchmark::State& state)
 }
 // END 256 bit keysize
 
+/* non AES ciphers */
+static void
+BENCH_CHACHA20_ENCRYPT_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(Chacha20Cipher(state,
+                                            state.range(0),
+                                            ENCRYPT,
+                                            ALC_CIPHER_TYPE_CHACHA20,
+                                            ALC_AES_MODE_NONE,
+                                            256));
+}
+static void
+BENCH_CHACHA20_DECRYPT_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(Chacha20Cipher(state,
+                                            state.range(0),
+                                            DECRYPT,
+                                            ALC_CIPHER_TYPE_CHACHA20,
+                                            ALC_AES_MODE_NONE,
+                                            256));
+}
+
 int
 AddBenchmarks()
 {
+    BENCHMARK(BENCH_CHACHA20_ENCRYPT_256)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_CHACHA20_DECRYPT_256)->ArgsProduct({ blocksizes });
+
     BENCHMARK(BENCH_AES_ENCRYPT_CBC_128)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_CTR_128)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_ENCRYPT_OFB_128)->ArgsProduct({ blocksizes });
