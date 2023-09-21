@@ -130,6 +130,156 @@ namespace alcp::rsa { namespace zen4 {
         res[4]              = _mm512_alignr_epi64(zero, res[4], 1);
     }
 
+    static inline void FusedMultiplyAddShiftLow512Stage1(__m512i res[5],
+                                                         __m512i first[5],
+                                                         __m512i second)
+    {
+        const __m512i zero{};
+        res[0]       = _mm512_madd52lo_epu64(res[0], first[0], second);
+        __m512i temp = _mm512_madd52lo_epu64(zero, first[1], second);
+        temp         = _mm512_slli_epi64(temp, 1);
+        res[1]       = _mm512_add_epi64(temp, res[1]);
+
+        temp   = _mm512_madd52lo_epu64(zero, first[2], second);
+        temp   = _mm512_slli_epi64(temp, 1);
+        res[2] = _mm512_add_epi64(temp, res[2]);
+
+        temp   = _mm512_madd52lo_epu64(zero, first[3], second);
+        temp   = _mm512_slli_epi64(temp, 1);
+        res[3] = _mm512_add_epi64(temp, res[3]);
+
+        temp   = _mm512_madd52lo_epu64(zero, first[4], second);
+        temp   = _mm512_slli_epi64(temp, 1);
+        res[4] = _mm512_add_epi64(temp, res[4]);
+    }
+
+    static inline void FusedMultiplyAddShiftLow512Stage2(__m512i res[4],
+                                                         __m512i first[4],
+                                                         __m512i second)
+    {
+        const __m512i zero{};
+        res[0]       = _mm512_madd52lo_epu64(res[0], first[0], second);
+        __m512i temp = _mm512_madd52lo_epu64(zero, first[1], second);
+        temp         = _mm512_slli_epi64(temp, 1);
+        res[1]       = _mm512_add_epi64(temp, res[1]);
+
+        temp   = _mm512_madd52lo_epu64(zero, first[2], second);
+        temp   = _mm512_slli_epi64(temp, 1);
+        res[2] = _mm512_add_epi64(temp, res[2]);
+
+        temp   = _mm512_madd52lo_epu64(zero, first[3], second);
+        temp   = _mm512_slli_epi64(temp, 1);
+        res[3] = _mm512_add_epi64(temp, res[3]);
+    }
+
+    static inline void FusedMultiplyAddShiftLow512Stage3(__m512i res[3],
+                                                         __m512i first[3],
+                                                         __m512i second)
+    {
+        const __m512i zero{};
+        res[0]       = _mm512_madd52lo_epu64(res[0], first[0], second);
+        __m512i temp = _mm512_madd52lo_epu64(zero, first[1], second);
+        temp         = _mm512_slli_epi64(temp, 1);
+        res[1]       = _mm512_add_epi64(temp, res[1]);
+
+        temp   = _mm512_madd52lo_epu64(zero, first[2], second);
+        temp   = _mm512_slli_epi64(temp, 1);
+        res[2] = _mm512_add_epi64(temp, res[2]);
+    }
+
+    static inline void FusedMultiplyAddShiftLow512Stage4(__m512i res[2],
+                                                         __m512i first[2],
+                                                         __m512i second)
+    {
+        const __m512i zero{};
+        res[0]       = _mm512_madd52lo_epu64(res[0], first[0], second);
+        __m512i temp = _mm512_madd52lo_epu64(zero, first[1], second);
+        temp         = _mm512_slli_epi64(temp, 1);
+        res[1]       = _mm512_add_epi64(temp, res[1]);
+    }
+
+    static inline void FusedMultiplyAddShiftLow512Stage5(__m512i& res,
+                                                         __m512i  first,
+                                                         __m512i  second)
+    {
+        res = _mm512_madd52lo_epu64(res, first, second);
+    }
+
+    static inline void FusedMultiplyAddShiftHigh512Stage1(__m512i res[5],
+                                                          __m512i first[5],
+                                                          __m512i second)
+    {
+        const __m512i zero{};
+        res[0]       = _mm512_madd52hi_epu64(res[0], first[0], second);
+        __m512i temp = _mm512_madd52hi_epu64(zero, first[1], second);
+        temp         = _mm512_slli_epi64(temp, 1);
+        res[1]       = _mm512_add_epi64(temp, res[1]);
+
+        temp   = _mm512_madd52hi_epu64(zero, first[2], second);
+        temp   = _mm512_slli_epi64(temp, 1);
+        res[2] = _mm512_add_epi64(temp, res[2]);
+
+        temp   = _mm512_madd52hi_epu64(zero, first[3], second);
+        temp   = _mm512_slli_epi64(temp, 1);
+        res[3] = _mm512_add_epi64(temp, res[3]);
+
+        temp   = _mm512_madd52hi_epu64(zero, first[4], second);
+        temp   = _mm512_slli_epi64(temp, 1);
+        res[4] = _mm512_add_epi64(temp, res[4]);
+    }
+
+    static inline void FusedMultiplyAddShiftHigh512Stage2(__m512i res[4],
+                                                          __m512i first[4],
+                                                          __m512i second)
+    {
+        const __m512i zero{};
+        res[0]       = _mm512_madd52hi_epu64(res[0], first[0], second);
+        __m512i temp = _mm512_madd52hi_epu64(zero, first[1], second);
+        temp         = _mm512_slli_epi64(temp, 1);
+        res[1]       = _mm512_add_epi64(temp, res[1]);
+
+        temp   = _mm512_madd52hi_epu64(zero, first[2], second);
+        temp   = _mm512_slli_epi64(temp, 1);
+        res[2] = _mm512_add_epi64(temp, res[2]);
+
+        temp   = _mm512_madd52hi_epu64(zero, first[3], second);
+        temp   = _mm512_slli_epi64(temp, 1);
+        res[3] = _mm512_add_epi64(temp, res[3]);
+    }
+
+    static inline void FusedMultiplyAddShiftHigh512Stage3(__m512i res[3],
+                                                          __m512i first[3],
+                                                          __m512i second)
+    {
+        const __m512i zero{};
+        res[0]       = _mm512_madd52hi_epu64(res[0], first[0], second);
+        __m512i temp = _mm512_madd52hi_epu64(zero, first[1], second);
+        temp         = _mm512_slli_epi64(temp, 1);
+        res[1]       = _mm512_add_epi64(temp, res[1]);
+
+        temp   = _mm512_madd52hi_epu64(zero, first[2], second);
+        temp   = _mm512_slli_epi64(temp, 1);
+        res[2] = _mm512_add_epi64(temp, res[2]);
+    }
+
+    static inline void FusedMultiplyAddShiftHigh512Stage4(__m512i res[2],
+                                                          __m512i first[2],
+                                                          __m512i second)
+    {
+        const __m512i zero{};
+        res[0]       = _mm512_madd52hi_epu64(res[0], first[0], second);
+        __m512i temp = _mm512_madd52hi_epu64(zero, first[1], second);
+        temp         = _mm512_slli_epi64(temp, 1);
+        res[1]       = _mm512_add_epi64(temp, res[1]);
+    }
+
+    static inline void FusedMultiplyAddShiftHigh512Stage5(__m512i& res,
+                                                          __m512i  first,
+                                                          __m512i  second)
+    {
+        res = _mm512_madd52hi_epu64(res, first, second);
+    }
+
     static inline void FusedMultiplyAddLow256(__m256i res[5],
                                               __m256i mod[5],
                                               __m256i y)
@@ -1063,55 +1213,25 @@ namespace alcp::rsa { namespace zen4 {
                                                  const Uint64* first,
                                                  __m512i       k_reg)
     {
+
         const __m512i zero{};
+
         for (Uint64 j = 0; j < 8; j++) {
 
             __m512i second_reg = _mm512_set1_epi64(first[j]);
 
-            res_reg[0] =
-                _mm512_madd52lo_epu64(res_reg[0], first_reg[0], second_reg);
-
-            for (Uint64 z = 1; z < 5; z++) {
-                __m512i temp =
-                    _mm512_madd52lo_epu64(zero, first_reg[z], second_reg);
-
-                temp       = _mm512_slli_epi64(temp, 1);
-                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
-            }
+            FusedMultiplyAddShiftLow512Stage1(res_reg, first_reg, second_reg);
 
             __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg[0]);
             y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
 
-            res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
-            res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
-            res_reg[2] = _mm512_madd52lo_epu64(res_reg[2], mod_reg[2], y_reg);
-            res_reg[3] = _mm512_madd52lo_epu64(res_reg[3], mod_reg[3], y_reg);
-            res_reg[4] = _mm512_madd52lo_epu64(res_reg[4], mod_reg[4], y_reg);
+            FusedMultiplyAddLow512(res_reg, mod_reg, y_reg);
 
-            __m512i carry = _mm512_maskz_srli_epi64(1, res_reg[0], 52);
-            res_reg[0]    = _mm512_alignr_epi64(res_reg[1], res_reg[0], 1);
-            res_reg[0]    = _mm512_add_epi64(res_reg[0], carry);
-            res_reg[1]    = _mm512_alignr_epi64(res_reg[2], res_reg[1], 1);
-            res_reg[2]    = _mm512_alignr_epi64(res_reg[3], res_reg[2], 1);
-            res_reg[3]    = _mm512_alignr_epi64(res_reg[4], res_reg[3], 1);
-            res_reg[4]    = _mm512_alignr_epi64(zero, res_reg[4], 1);
+            ShiftAndAddCarry512(res_reg);
 
-            res_reg[0] =
-                _mm512_madd52hi_epu64(res_reg[0], first_reg[0], second_reg);
+            FusedMultiplyAddShiftHigh512Stage1(res_reg, first_reg, second_reg);
 
-            for (Uint64 z = 1; z < 5; z++) {
-                __m512i temp =
-                    _mm512_madd52hi_epu64(zero, first_reg[z], second_reg);
-
-                temp       = _mm512_slli_epi64(temp, 1);
-                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
-            }
-
-            res_reg[0] = _mm512_madd52hi_epu64(res_reg[0], mod_reg[0], y_reg);
-            res_reg[1] = _mm512_madd52hi_epu64(res_reg[1], mod_reg[1], y_reg);
-            res_reg[2] = _mm512_madd52hi_epu64(res_reg[2], mod_reg[2], y_reg);
-            res_reg[3] = _mm512_madd52hi_epu64(res_reg[3], mod_reg[3], y_reg);
-            res_reg[4] = _mm512_madd52hi_epu64(res_reg[4], mod_reg[4], y_reg);
+            FusedMultiplyAddHigh512(res_reg, mod_reg, y_reg);
         }
     }
 
@@ -1122,54 +1242,25 @@ namespace alcp::rsa { namespace zen4 {
                                                  __m512i       k_reg)
     {
         const __m512i zero{};
+
         for (Uint64 j = 0; j < 8; j++) {
 
             __m512i second_reg = _mm512_set1_epi64(first[j]);
 
-            res_reg[1] =
-                _mm512_madd52lo_epu64(res_reg[1], first_reg[1], second_reg);
-
-            for (Uint64 z = 2; z < 5; z++) {
-                __m512i temp =
-                    _mm512_madd52lo_epu64(zero, first_reg[z], second_reg);
-
-                temp       = _mm512_slli_epi64(temp, 1);
-                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
-            }
+            FusedMultiplyAddShiftLow512Stage2(
+                res_reg + 1, first_reg + 1, second_reg);
 
             __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg[0]);
             y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
 
-            res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
-            res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
-            res_reg[2] = _mm512_madd52lo_epu64(res_reg[2], mod_reg[2], y_reg);
-            res_reg[3] = _mm512_madd52lo_epu64(res_reg[3], mod_reg[3], y_reg);
-            res_reg[4] = _mm512_madd52lo_epu64(res_reg[4], mod_reg[4], y_reg);
+            FusedMultiplyAddLow512(res_reg, mod_reg, y_reg);
 
-            __m512i carry = _mm512_maskz_srli_epi64(1, res_reg[0], 52);
-            res_reg[0]    = _mm512_alignr_epi64(res_reg[1], res_reg[0], 1);
-            res_reg[0]    = _mm512_add_epi64(res_reg[0], carry);
-            res_reg[1]    = _mm512_alignr_epi64(res_reg[2], res_reg[1], 1);
-            res_reg[2]    = _mm512_alignr_epi64(res_reg[3], res_reg[2], 1);
-            res_reg[3]    = _mm512_alignr_epi64(res_reg[4], res_reg[3], 1);
-            res_reg[4]    = _mm512_alignr_epi64(zero, res_reg[4], 1);
+            ShiftAndAddCarry512(res_reg);
 
-            res_reg[1] =
-                _mm512_madd52hi_epu64(res_reg[1], first_reg[1], second_reg);
+            FusedMultiplyAddShiftHigh512Stage2(
+                res_reg + 1, first_reg + 1, second_reg);
 
-            for (Uint64 z = 2; z < 5; z++) {
-                __m512i temp =
-                    _mm512_madd52hi_epu64(zero, first_reg[z], second_reg);
-
-                temp       = _mm512_slli_epi64(temp, 1);
-                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
-            }
-
-            res_reg[0] = _mm512_madd52hi_epu64(res_reg[0], mod_reg[0], y_reg);
-            res_reg[1] = _mm512_madd52hi_epu64(res_reg[1], mod_reg[1], y_reg);
-            res_reg[2] = _mm512_madd52hi_epu64(res_reg[2], mod_reg[2], y_reg);
-            res_reg[3] = _mm512_madd52hi_epu64(res_reg[3], mod_reg[3], y_reg);
-            res_reg[4] = _mm512_madd52hi_epu64(res_reg[4], mod_reg[4], y_reg);
+            FusedMultiplyAddHigh512(res_reg, mod_reg, y_reg);
         }
     }
     static inline void Amm2048LoopInternalStage3(__m512i       res_reg[5],
@@ -1179,54 +1270,25 @@ namespace alcp::rsa { namespace zen4 {
                                                  __m512i       k_reg)
     {
         const __m512i zero{};
+
         for (Uint64 j = 0; j < 8; j++) {
 
             __m512i second_reg = _mm512_set1_epi64(first[j]);
 
-            res_reg[2] =
-                _mm512_madd52lo_epu64(res_reg[2], first_reg[2], second_reg);
-
-            for (Uint64 z = 3; z < 5; z++) {
-                __m512i temp =
-                    _mm512_madd52lo_epu64(zero, first_reg[z], second_reg);
-
-                temp       = _mm512_slli_epi64(temp, 1);
-                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
-            }
+            FusedMultiplyAddShiftLow512Stage3(
+                res_reg + 2, first_reg + 2, second_reg);
 
             __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg[0]);
             y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
 
-            res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
-            res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
-            res_reg[2] = _mm512_madd52lo_epu64(res_reg[2], mod_reg[2], y_reg);
-            res_reg[3] = _mm512_madd52lo_epu64(res_reg[3], mod_reg[3], y_reg);
-            res_reg[4] = _mm512_madd52lo_epu64(res_reg[4], mod_reg[4], y_reg);
+            FusedMultiplyAddLow512(res_reg, mod_reg, y_reg);
 
-            __m512i carry = _mm512_maskz_srli_epi64(1, res_reg[0], 52);
-            res_reg[0]    = _mm512_alignr_epi64(res_reg[1], res_reg[0], 1);
-            res_reg[0]    = _mm512_add_epi64(res_reg[0], carry);
-            res_reg[1]    = _mm512_alignr_epi64(res_reg[2], res_reg[1], 1);
-            res_reg[2]    = _mm512_alignr_epi64(res_reg[3], res_reg[2], 1);
-            res_reg[3]    = _mm512_alignr_epi64(res_reg[4], res_reg[3], 1);
-            res_reg[4]    = _mm512_alignr_epi64(zero, res_reg[4], 1);
+            ShiftAndAddCarry512(res_reg);
 
-            res_reg[2] =
-                _mm512_madd52hi_epu64(res_reg[2], first_reg[2], second_reg);
+            FusedMultiplyAddShiftHigh512Stage3(
+                res_reg + 2, first_reg + 2, second_reg);
 
-            for (Uint64 z = 3; z < 5; z++) {
-                __m512i temp =
-                    _mm512_madd52hi_epu64(zero, first_reg[z], second_reg);
-
-                temp       = _mm512_slli_epi64(temp, 1);
-                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
-            }
-
-            res_reg[0] = _mm512_madd52hi_epu64(res_reg[0], mod_reg[0], y_reg);
-            res_reg[1] = _mm512_madd52hi_epu64(res_reg[1], mod_reg[1], y_reg);
-            res_reg[2] = _mm512_madd52hi_epu64(res_reg[2], mod_reg[2], y_reg);
-            res_reg[3] = _mm512_madd52hi_epu64(res_reg[3], mod_reg[3], y_reg);
-            res_reg[4] = _mm512_madd52hi_epu64(res_reg[4], mod_reg[4], y_reg);
+            FusedMultiplyAddHigh512(res_reg, mod_reg, y_reg);
         }
     }
     static inline void Amm2048LoopInternalStage4(__m512i       res_reg[5],
@@ -1241,50 +1303,20 @@ namespace alcp::rsa { namespace zen4 {
 
             __m512i second_reg = _mm512_set1_epi64(first[j]);
 
-            res_reg[3] =
-                _mm512_madd52lo_epu64(res_reg[3], first_reg[3], second_reg);
-
-            for (Uint64 z = 4; z < 5; z++) {
-                __m512i temp =
-                    _mm512_madd52lo_epu64(zero, first_reg[z], second_reg);
-
-                temp       = _mm512_slli_epi64(temp, 1);
-                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
-            }
+            FusedMultiplyAddShiftLow512Stage4(
+                res_reg + 3, first_reg + 3, second_reg);
 
             __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg[0]);
             y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
 
-            res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
-            res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
-            res_reg[2] = _mm512_madd52lo_epu64(res_reg[2], mod_reg[2], y_reg);
-            res_reg[3] = _mm512_madd52lo_epu64(res_reg[3], mod_reg[3], y_reg);
-            res_reg[4] = _mm512_madd52lo_epu64(res_reg[4], mod_reg[4], y_reg);
+            FusedMultiplyAddLow512(res_reg, mod_reg, y_reg);
 
-            __m512i carry = _mm512_maskz_srli_epi64(1, res_reg[0], 52);
-            res_reg[0]    = _mm512_alignr_epi64(res_reg[1], res_reg[0], 1);
-            res_reg[0]    = _mm512_add_epi64(res_reg[0], carry);
-            res_reg[1]    = _mm512_alignr_epi64(res_reg[2], res_reg[1], 1);
-            res_reg[2]    = _mm512_alignr_epi64(res_reg[3], res_reg[2], 1);
-            res_reg[3]    = _mm512_alignr_epi64(res_reg[4], res_reg[3], 1);
-            res_reg[4]    = _mm512_alignr_epi64(zero, res_reg[4], 1);
+            ShiftAndAddCarry512(res_reg);
 
-            res_reg[3] =
-                _mm512_madd52hi_epu64(res_reg[3], first_reg[3], second_reg);
+            FusedMultiplyAddShiftHigh512Stage4(
+                res_reg + 3, first_reg + 3, second_reg);
 
-            for (Uint64 z = 4; z < 5; z++) {
-                __m512i temp =
-                    _mm512_madd52hi_epu64(zero, first_reg[z], second_reg);
-
-                temp       = _mm512_slli_epi64(temp, 1);
-                res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
-            }
-
-            res_reg[0] = _mm512_madd52hi_epu64(res_reg[0], mod_reg[0], y_reg);
-            res_reg[1] = _mm512_madd52hi_epu64(res_reg[1], mod_reg[1], y_reg);
-            res_reg[2] = _mm512_madd52hi_epu64(res_reg[2], mod_reg[2], y_reg);
-            res_reg[3] = _mm512_madd52hi_epu64(res_reg[3], mod_reg[3], y_reg);
-            res_reg[4] = _mm512_madd52hi_epu64(res_reg[4], mod_reg[4], y_reg);
+            FusedMultiplyAddHigh512(res_reg, mod_reg, y_reg);
         }
     }
 
@@ -1300,34 +1332,20 @@ namespace alcp::rsa { namespace zen4 {
 
             __m512i second_reg = _mm512_set1_epi64(first[j]);
 
-            res_reg[4] =
-                _mm512_madd52lo_epu64(res_reg[4], first_reg[4], second_reg);
+            FusedMultiplyAddShiftLow512Stage5(
+                res_reg[4], first_reg[4], second_reg);
 
             __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg[0]);
             y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
 
-            res_reg[0] = _mm512_madd52lo_epu64(res_reg[0], mod_reg[0], y_reg);
-            res_reg[1] = _mm512_madd52lo_epu64(res_reg[1], mod_reg[1], y_reg);
-            res_reg[2] = _mm512_madd52lo_epu64(res_reg[2], mod_reg[2], y_reg);
-            res_reg[3] = _mm512_madd52lo_epu64(res_reg[3], mod_reg[3], y_reg);
-            res_reg[4] = _mm512_madd52lo_epu64(res_reg[4], mod_reg[4], y_reg);
+            FusedMultiplyAddLow512(res_reg, mod_reg, y_reg);
 
-            __m512i carry = _mm512_maskz_srli_epi64(1, res_reg[0], 52);
-            res_reg[0]    = _mm512_alignr_epi64(res_reg[1], res_reg[0], 1);
-            res_reg[0]    = _mm512_add_epi64(res_reg[0], carry);
-            res_reg[1]    = _mm512_alignr_epi64(res_reg[2], res_reg[1], 1);
-            res_reg[2]    = _mm512_alignr_epi64(res_reg[3], res_reg[2], 1);
-            res_reg[3]    = _mm512_alignr_epi64(res_reg[4], res_reg[3], 1);
-            res_reg[4]    = _mm512_alignr_epi64(zero, res_reg[4], 1);
+            ShiftAndAddCarry512(res_reg);
 
-            res_reg[4] =
-                _mm512_madd52hi_epu64(res_reg[4], first_reg[4], second_reg);
+            FusedMultiplyAddShiftHigh512Stage5(
+                res_reg[4], first_reg[4], second_reg);
 
-            res_reg[0] = _mm512_madd52hi_epu64(res_reg[0], mod_reg[0], y_reg);
-            res_reg[1] = _mm512_madd52hi_epu64(res_reg[1], mod_reg[1], y_reg);
-            res_reg[2] = _mm512_madd52hi_epu64(res_reg[2], mod_reg[2], y_reg);
-            res_reg[3] = _mm512_madd52hi_epu64(res_reg[3], mod_reg[3], y_reg);
-            res_reg[4] = _mm512_madd52hi_epu64(res_reg[4], mod_reg[4], y_reg);
+            FusedMultiplyAddHigh512(res_reg, mod_reg, y_reg);
         }
     }
 
@@ -1341,17 +1359,9 @@ namespace alcp::rsa { namespace zen4 {
 
         __m512i res_reg[5]{};
 
-        first_reg[0] = _mm512_loadu_si512(first);
-        first_reg[1] = _mm512_loadu_si512(first + 8);
-        first_reg[2] = _mm512_loadu_si512(first + 16);
-        first_reg[3] = _mm512_loadu_si512(first + 24);
-        first_reg[4] = _mm512_loadu_si512(first + 32);
+        LoadReg512(first_reg, first);
 
-        mod_reg[0] = _mm512_loadu_si512(mod);
-        mod_reg[1] = _mm512_loadu_si512(mod + 8);
-        mod_reg[2] = _mm512_loadu_si512(mod + 16);
-        mod_reg[3] = _mm512_loadu_si512(mod + 24);
-        mod_reg[4] = _mm512_loadu_si512(mod + 32);
+        LoadReg512(mod_reg, mod);
 
         __m512i k_reg = _mm512_set1_epi64(k0);
         Amm2048LoopInternalStage1(res_reg, first_reg, mod_reg, first, k_reg);
@@ -1364,11 +1374,7 @@ namespace alcp::rsa { namespace zen4 {
         Amm2048LoopInternalStage5(
             res_reg, first_reg, mod_reg, first + 32, k_reg);
 
-        _mm512_storeu_si512(res, res_reg[0]);
-        _mm512_storeu_si512(res + 8, res_reg[1]);
-        _mm512_storeu_si512(res + 16, res_reg[2]);
-        _mm512_storeu_si512(res + 24, res_reg[3]);
-        _mm512_storeu_si512(res + 32, res_reg[4]);
+        StoreReg512(res, res_reg);
 
         Uint64 carry = 0;
         // convert from redundant radix
