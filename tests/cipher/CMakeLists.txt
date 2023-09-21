@@ -156,6 +156,27 @@ FUNCTION(KAT_AES MOD)
         TEST_SUFFIX .${MOD})
 ENDFUNCTION()
 
+# Function to dynamically generate compilation of each test cases for chacha20
+FUNCTION(KAT_CHACHA20)
+    ADD_EXECUTABLE(chacha20_kat test_chacha20_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
+    # Depending on the person, they are gonna run from root dir or binary directory
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_chacha20.csv ${CMAKE_BINARY_DIR}/dataset_chacha20.csv SYMBOLIC)
+    # Link dataset to the actual place of test binary
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_chacha20.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_chacha20.csv SYMBOLIC)
+
+    TARGET_INCLUDE_DIRECTORIES(chacha20_kat PRIVATE
+        "${CMAKE_SOURCE_DIR}/include"
+        "${CMAKE_SOURCE_DIR}/lib/include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+        ${EXTRA_INCLUDES})
+
+    TARGET_COMPILE_OPTIONS(chacha20_kat PUBLIC -O2 ${ALCP_WARNINGS})
+    TARGET_LINK_LIBRARIES(chacha20_kat ${LIBS})
+    gtest_add_tests(TARGET chacha20_kat
+        TEST_SUFFIX .chacha20)
+ENDFUNCTION()
+
 FUNCTION(CROSS_AES MOD)
     ADD_EXECUTABLE(aes_${MOD}_cross test_${MOD}_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
     TARGET_INCLUDE_DIRECTORIES(aes_${MOD}_cross PRIVATE
@@ -182,7 +203,7 @@ KAT_AES(xts)
 KAT_AES(ccm)
 KAT_AES(siv)
 
-KAT_AES(chacha20)
+KAT_CHACHA20()
 
 CROSS_AES(cbc)
 CROSS_AES(cfb)
