@@ -96,9 +96,43 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
-    static inline void FusedMultiplyAddLow(__m256i res[5],
-                                           __m256i mod[5],
-                                           __m256i y)
+    static inline void FusedMultiplyAddLow512(__m512i res[5],
+                                              __m512i mod[5],
+                                              __m512i y)
+    {
+        res[0] = _mm512_madd52lo_epu64(res[0], mod[0], y);
+        res[1] = _mm512_madd52lo_epu64(res[1], mod[1], y);
+        res[2] = _mm512_madd52lo_epu64(res[2], mod[2], y);
+        res[3] = _mm512_madd52lo_epu64(res[3], mod[3], y);
+        res[4] = _mm512_madd52lo_epu64(res[4], mod[4], y);
+    }
+
+    static inline void FusedMultiplyAddHigh512(__m512i res[5],
+                                               __m512i mod[5],
+                                               __m512i y)
+    {
+        res[0] = _mm512_madd52hi_epu64(res[0], mod[0], y);
+        res[1] = _mm512_madd52hi_epu64(res[1], mod[1], y);
+        res[2] = _mm512_madd52hi_epu64(res[2], mod[2], y);
+        res[3] = _mm512_madd52hi_epu64(res[3], mod[3], y);
+        res[4] = _mm512_madd52hi_epu64(res[4], mod[4], y);
+    }
+
+    static inline void ShiftAndAddCarry512(__m512i res[5])
+    {
+        const __m512i zero{};
+        __m512i       carry = _mm512_maskz_srli_epi64(1, res[0], 52);
+        res[0]              = _mm512_alignr_epi64(res[1], res[0], 1);
+        res[0]              = _mm512_add_epi64(res[0], carry);
+        res[1]              = _mm512_alignr_epi64(res[2], res[1], 1);
+        res[2]              = _mm512_alignr_epi64(res[3], res[2], 1);
+        res[3]              = _mm512_alignr_epi64(res[4], res[3], 1);
+        res[4]              = _mm512_alignr_epi64(zero, res[4], 1);
+    }
+
+    static inline void FusedMultiplyAddLow256(__m256i res[5],
+                                              __m256i mod[5],
+                                              __m256i y)
     {
         res[0] = _mm256_madd52lo_epu64(res[0], mod[0], y);
         res[1] = _mm256_madd52lo_epu64(res[1], mod[1], y);
@@ -107,9 +141,9 @@ namespace alcp::rsa { namespace zen4 {
         res[4] = _mm256_madd52lo_epu64(res[4], mod[4], y);
     }
 
-    static inline void FusedMultiplyAddHigh(__m256i res[5],
-                                            __m256i mod[5],
-                                            __m256i y)
+    static inline void FusedMultiplyAddHigh256(__m256i res[5],
+                                               __m256i mod[5],
+                                               __m256i y)
     {
         res[0] = _mm256_madd52hi_epu64(res[0], mod[0], y);
         res[1] = _mm256_madd52hi_epu64(res[1], mod[1], y);
@@ -118,7 +152,7 @@ namespace alcp::rsa { namespace zen4 {
         res[4] = _mm256_madd52hi_epu64(res[4], mod[4], y);
     }
 
-    static inline void ShiftAndAddCarry(__m256i res[5])
+    static inline void ShiftAndAddCarry256(__m256i res[5])
     {
         const __m256i zero{};
         __m256i       carry = _mm256_maskz_srli_epi64(1, res[0], 52);
@@ -130,9 +164,9 @@ namespace alcp::rsa { namespace zen4 {
         res[4]              = _mm256_alignr_epi64(zero, res[4], 1);
     }
 
-    static inline void FusedMultiplyAddShiftLowStage1(__m256i res[5],
-                                                      __m256i first[5],
-                                                      __m256i second)
+    static inline void FusedMultiplyAddShiftLow256Stage1(__m256i res[5],
+                                                         __m256i first[5],
+                                                         __m256i second)
     {
         const __m256i zero{};
         res[0]       = _mm256_madd52lo_epu64(res[0], first[0], second);
@@ -153,9 +187,9 @@ namespace alcp::rsa { namespace zen4 {
         res[4] = _mm256_add_epi64(temp, res[4]);
     }
 
-    static inline void FusedMultiplyAddShiftHighStage1(__m256i res[5],
-                                                       __m256i first[5],
-                                                       __m256i second)
+    static inline void FusedMultiplyAddShiftHigh256Stage1(__m256i res[5],
+                                                          __m256i first[5],
+                                                          __m256i second)
     {
         const __m256i zero{};
         res[0]       = _mm256_madd52hi_epu64(res[0], first[0], second);
@@ -173,9 +207,9 @@ namespace alcp::rsa { namespace zen4 {
         res[4]       = _mm256_add_epi64(temp, res[4]);
     }
 
-    static inline void FusedMultiplyAddShiftLowStage2(__m256i res[4],
-                                                      __m256i first[4],
-                                                      __m256i second)
+    static inline void FusedMultiplyAddShiftLow256Stage2(__m256i res[4],
+                                                         __m256i first[4],
+                                                         __m256i second)
     {
         const __m256i zero{};
         res[0]       = _mm256_madd52lo_epu64(res[0], first[0], second);
@@ -192,9 +226,9 @@ namespace alcp::rsa { namespace zen4 {
         res[3] = _mm256_add_epi64(temp, res[3]);
     }
 
-    static inline void FusedMultiplyAddShiftHighStage2(__m256i res[4],
-                                                       __m256i first[4],
-                                                       __m256i second)
+    static inline void FusedMultiplyAddShiftHigh256Stage2(__m256i res[4],
+                                                          __m256i first[4],
+                                                          __m256i second)
     {
         const __m256i zero{};
         res[0]       = _mm256_madd52hi_epu64(res[0], first[0], second);
@@ -209,9 +243,9 @@ namespace alcp::rsa { namespace zen4 {
         res[3]       = _mm256_add_epi64(temp, res[3]);
     }
 
-    static inline void FusedMultiplyAddShiftLowStage3(__m256i res[3],
-                                                      __m256i first[3],
-                                                      __m256i second)
+    static inline void FusedMultiplyAddShiftLow256Stage3(__m256i res[3],
+                                                         __m256i first[3],
+                                                         __m256i second)
     {
         const __m256i zero{};
         res[0]       = _mm256_madd52lo_epu64(res[0], first[0], second);
@@ -238,9 +272,9 @@ namespace alcp::rsa { namespace zen4 {
         res[2]       = _mm256_add_epi64(temp, res[2]);
     }
 
-    static inline void FusedMultiplyAddShiftLowStage4(__m256i res[2],
-                                                      __m256i first[2],
-                                                      __m256i second)
+    static inline void FusedMultiplyAddShiftLow256Stage4(__m256i res[2],
+                                                         __m256i first[2],
+                                                         __m256i second)
     {
         const __m256i zero{};
         res[0]       = _mm256_madd52lo_epu64(res[0], first[0], second);
@@ -249,9 +283,9 @@ namespace alcp::rsa { namespace zen4 {
         res[1]       = _mm256_add_epi64(temp, res[1]);
     }
 
-    static inline void FusedMultiplyAddShiftHighStage4(__m256i res[2],
-                                                       __m256i first[2],
-                                                       __m256i second)
+    static inline void FusedMultiplyAddShiftHigh256Stage4(__m256i res[2],
+                                                          __m256i first[2],
+                                                          __m256i second)
     {
         const __m256i zero{};
         res[0]       = _mm256_madd52hi_epu64(res[0], first[0], second);
@@ -260,16 +294,16 @@ namespace alcp::rsa { namespace zen4 {
         res[1]       = _mm256_add_epi64(temp, res[1]);
     }
 
-    static inline void FusedMultiplyAddShiftLowStage5(__m256i& res,
-                                                      __m256i  first,
-                                                      __m256i  second)
+    static inline void FusedMultiplyAddShiftLow256Stage5(__m256i& res,
+                                                         __m256i  first,
+                                                         __m256i  second)
     {
         res = _mm256_madd52lo_epu64(res, first, second);
     }
 
-    static inline void FusedMultiplyAddShiftHighStage5(__m256i& res,
-                                                       __m256i  first,
-                                                       __m256i  second)
+    static inline void FusedMultiplyAddShiftHigh256Stage5(__m256i& res,
+                                                          __m256i  first,
+                                                          __m256i  second)
     {
         res = _mm256_madd52hi_epu64(res, first, second);
     }
@@ -292,6 +326,24 @@ namespace alcp::rsa { namespace zen4 {
         _mm256_storeu_si256((__m256i*)(out + 16), inp[4]);
     }
 
+    static inline void LoadReg512(__m512i out[5], const Uint64* inp)
+    {
+        out[0] = _mm512_loadu_si512(inp);
+        out[1] = _mm512_loadu_si512(inp + 8);
+        out[2] = _mm512_loadu_si512(inp + 16);
+        out[3] = _mm512_loadu_si512(inp + 24);
+        out[4] = _mm512_loadu_si512(inp + 32);
+    }
+
+    static inline void StoreReg512(Uint64* out, __m512i inp[5])
+    {
+        _mm512_storeu_si512(out, inp[0]);
+        _mm512_storeu_si512(out + 8, inp[1]);
+        _mm512_storeu_si512(out + 16, inp[2]);
+        _mm512_storeu_si512(out + 24, inp[3]);
+        _mm512_storeu_si512(out + 32, inp[4]);
+    }
+
     static inline void Amm1024LoopInternalStage1Parallel(__m256i res_reg[10],
                                                          __m256i first_reg[10],
                                                          __m256i mod_reg[10],
@@ -306,36 +358,36 @@ namespace alcp::rsa { namespace zen4 {
 
             __m256i second_reg = _mm256_set1_epi64x(first[j]);
 
-            FusedMultiplyAddShiftLowStage1(res_reg, first_reg, second_reg);
+            FusedMultiplyAddShiftLow256Stage1(res_reg, first_reg, second_reg);
 
             __m256i y_reg = _mm256_madd52lo_epu64(zero, k_reg_0, res_reg[0]);
             y_reg         = _mm256_permutexvar_epi64(zero, y_reg);
 
-            FusedMultiplyAddLow(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddLow256(res_reg, mod_reg, y_reg);
 
-            ShiftAndAddCarry(res_reg);
+            ShiftAndAddCarry256(res_reg);
 
-            FusedMultiplyAddShiftHighStage1(res_reg, first_reg, second_reg);
+            FusedMultiplyAddShiftHigh256Stage1(res_reg, first_reg, second_reg);
 
-            FusedMultiplyAddHigh(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddHigh256(res_reg, mod_reg, y_reg);
 
             // second multiplier
             second_reg = _mm256_set1_epi64x(second[j]);
 
-            FusedMultiplyAddShiftLowStage1(
+            FusedMultiplyAddShiftLow256Stage1(
                 res_reg + 5, first_reg + 5, second_reg);
 
             y_reg = _mm256_madd52lo_epu64(zero, k_reg_1, res_reg[5]);
             y_reg = _mm256_permutexvar_epi64(zero, y_reg);
 
-            FusedMultiplyAddLow(res_reg + 5, mod_reg + 5, y_reg);
+            FusedMultiplyAddLow256(res_reg + 5, mod_reg + 5, y_reg);
 
-            ShiftAndAddCarry(res_reg + 5);
+            ShiftAndAddCarry256(res_reg + 5);
 
-            FusedMultiplyAddShiftHighStage1(
+            FusedMultiplyAddShiftHigh256Stage1(
                 res_reg + 5, first_reg + 5, second_reg);
 
-            FusedMultiplyAddHigh(res_reg + 5, mod_reg + 5, y_reg);
+            FusedMultiplyAddHigh256(res_reg + 5, mod_reg + 5, y_reg);
         }
     }
 
@@ -353,38 +405,38 @@ namespace alcp::rsa { namespace zen4 {
 
             __m256i second_reg = _mm256_set1_epi64x(first[j]);
 
-            FusedMultiplyAddShiftLowStage2(
+            FusedMultiplyAddShiftLow256Stage2(
                 res_reg + 1, first_reg + 1, second_reg);
 
             __m256i y_reg = _mm256_madd52lo_epu64(zero, k_reg_0, res_reg[0]);
             y_reg         = _mm256_permutexvar_epi64(zero, y_reg);
 
-            FusedMultiplyAddLow(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddLow256(res_reg, mod_reg, y_reg);
 
-            ShiftAndAddCarry(res_reg);
+            ShiftAndAddCarry256(res_reg);
 
-            FusedMultiplyAddShiftHighStage2(
+            FusedMultiplyAddShiftHigh256Stage2(
                 res_reg + 1, first_reg + 1, second_reg);
 
-            FusedMultiplyAddHigh(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddHigh256(res_reg, mod_reg, y_reg);
 
             // second multiplier
             second_reg = _mm256_set1_epi64x(second[j]);
 
-            FusedMultiplyAddShiftLowStage2(
+            FusedMultiplyAddShiftLow256Stage2(
                 res_reg + 6, first_reg + 6, second_reg);
 
             y_reg = _mm256_madd52lo_epu64(zero, k_reg_1, res_reg[5]);
             y_reg = _mm256_permutexvar_epi64(zero, y_reg);
 
-            FusedMultiplyAddLow(res_reg + 5, mod_reg + 5, y_reg);
+            FusedMultiplyAddLow256(res_reg + 5, mod_reg + 5, y_reg);
 
-            ShiftAndAddCarry(res_reg + 5);
+            ShiftAndAddCarry256(res_reg + 5);
 
-            FusedMultiplyAddShiftHighStage2(
+            FusedMultiplyAddShiftHigh256Stage2(
                 res_reg + 6, first_reg + 6, second_reg);
 
-            FusedMultiplyAddHigh(res_reg + 5, mod_reg + 5, y_reg);
+            FusedMultiplyAddHigh256(res_reg + 5, mod_reg + 5, y_reg);
         }
     }
 
@@ -402,38 +454,38 @@ namespace alcp::rsa { namespace zen4 {
 
             __m256i second_reg = _mm256_set1_epi64x(first[j]);
 
-            FusedMultiplyAddShiftLowStage3(
+            FusedMultiplyAddShiftLow256Stage3(
                 res_reg + 2, first_reg + 2, second_reg);
 
             __m256i y_reg = _mm256_madd52lo_epu64(zero, k_reg_0, res_reg[0]);
             y_reg         = _mm256_permutexvar_epi64(zero, y_reg);
 
-            FusedMultiplyAddLow(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddLow256(res_reg, mod_reg, y_reg);
 
-            ShiftAndAddCarry(res_reg);
+            ShiftAndAddCarry256(res_reg);
 
             FusedMultiplyAddShiftHighStage3(
                 res_reg + 2, first_reg + 2, second_reg);
 
-            FusedMultiplyAddHigh(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddHigh256(res_reg, mod_reg, y_reg);
 
             // second multiplier
             second_reg = _mm256_set1_epi64x(second[j]);
 
-            FusedMultiplyAddShiftLowStage3(
+            FusedMultiplyAddShiftLow256Stage3(
                 res_reg + 7, first_reg + 7, second_reg);
 
             y_reg = _mm256_madd52lo_epu64(zero, k_reg_1, res_reg[5]);
             y_reg = _mm256_permutexvar_epi64(zero, y_reg);
 
-            FusedMultiplyAddLow(res_reg + 5, mod_reg + 5, y_reg);
+            FusedMultiplyAddLow256(res_reg + 5, mod_reg + 5, y_reg);
 
-            ShiftAndAddCarry(res_reg + 5);
+            ShiftAndAddCarry256(res_reg + 5);
 
             FusedMultiplyAddShiftHighStage3(
                 res_reg + 7, first_reg + 7, second_reg);
 
-            FusedMultiplyAddHigh(res_reg + 5, mod_reg + 5, y_reg);
+            FusedMultiplyAddHigh256(res_reg + 5, mod_reg + 5, y_reg);
         }
     }
 
@@ -451,38 +503,38 @@ namespace alcp::rsa { namespace zen4 {
 
             __m256i second_reg = _mm256_set1_epi64x(first[j]);
 
-            FusedMultiplyAddShiftLowStage4(
+            FusedMultiplyAddShiftLow256Stage4(
                 res_reg + 3, first_reg + 3, second_reg);
 
             __m256i y_reg = _mm256_madd52lo_epu64(zero, k_reg_0, res_reg[0]);
             y_reg         = _mm256_permutexvar_epi64(zero, y_reg);
 
-            FusedMultiplyAddLow(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddLow256(res_reg, mod_reg, y_reg);
 
-            ShiftAndAddCarry(res_reg);
+            ShiftAndAddCarry256(res_reg);
 
-            FusedMultiplyAddShiftHighStage4(
+            FusedMultiplyAddShiftHigh256Stage4(
                 res_reg + 3, first_reg + 3, second_reg);
 
-            FusedMultiplyAddHigh(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddHigh256(res_reg, mod_reg, y_reg);
 
             // second multiplier
             second_reg = _mm256_set1_epi64x(second[j]);
 
-            FusedMultiplyAddShiftLowStage4(
+            FusedMultiplyAddShiftLow256Stage4(
                 res_reg + 8, first_reg + 8, second_reg);
 
             y_reg = _mm256_madd52lo_epu64(zero, k_reg_1, res_reg[5]);
             y_reg = _mm256_permutexvar_epi64(zero, y_reg);
 
-            FusedMultiplyAddLow(res_reg + 5, mod_reg + 5, y_reg);
+            FusedMultiplyAddLow256(res_reg + 5, mod_reg + 5, y_reg);
 
-            ShiftAndAddCarry(res_reg + 5);
+            ShiftAndAddCarry256(res_reg + 5);
 
-            FusedMultiplyAddShiftHighStage4(
+            FusedMultiplyAddShiftHigh256Stage4(
                 res_reg + 8, first_reg + 8, second_reg);
 
-            FusedMultiplyAddHigh(res_reg + 5, mod_reg + 5, y_reg);
+            FusedMultiplyAddHigh256(res_reg + 5, mod_reg + 5, y_reg);
         }
     }
 
@@ -500,38 +552,38 @@ namespace alcp::rsa { namespace zen4 {
 
             __m256i second_reg = _mm256_set1_epi64x(first[j]);
 
-            FusedMultiplyAddShiftLowStage5(
+            FusedMultiplyAddShiftLow256Stage5(
                 res_reg[4], first_reg[4], second_reg);
 
             __m256i y_reg = _mm256_madd52lo_epu64(zero, k_reg_0, res_reg[0]);
             y_reg         = _mm256_permutexvar_epi64(zero, y_reg);
 
-            FusedMultiplyAddLow(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddLow256(res_reg, mod_reg, y_reg);
 
-            ShiftAndAddCarry(res_reg);
+            ShiftAndAddCarry256(res_reg);
 
-            FusedMultiplyAddShiftHighStage5(
+            FusedMultiplyAddShiftHigh256Stage5(
                 res_reg[4], first_reg[4], second_reg);
 
-            FusedMultiplyAddHigh(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddHigh256(res_reg, mod_reg, y_reg);
 
             // second multiplier
             second_reg = _mm256_set1_epi64x(second[j]);
 
-            FusedMultiplyAddShiftLowStage5(
+            FusedMultiplyAddShiftLow256Stage5(
                 res_reg[9], first_reg[9], second_reg);
 
             y_reg = _mm256_madd52lo_epu64(zero, k_reg_1, res_reg[5]);
             y_reg = _mm256_permutexvar_epi64(zero, y_reg);
 
-            FusedMultiplyAddLow(res_reg + 5, mod_reg + 5, y_reg);
+            FusedMultiplyAddLow256(res_reg + 5, mod_reg + 5, y_reg);
 
-            ShiftAndAddCarry(res_reg + 5);
+            ShiftAndAddCarry256(res_reg + 5);
 
-            FusedMultiplyAddShiftHighStage5(
+            FusedMultiplyAddShiftHigh256Stage5(
                 res_reg[9], first_reg[9], second_reg);
 
-            FusedMultiplyAddHigh(res_reg + 5, mod_reg + 5, y_reg);
+            FusedMultiplyAddHigh256(res_reg + 5, mod_reg + 5, y_reg);
         }
     }
 
@@ -547,18 +599,18 @@ namespace alcp::rsa { namespace zen4 {
 
             __m256i second_reg = _mm256_set1_epi64x(first[j]);
 
-            FusedMultiplyAddShiftLowStage1(res_reg, first_reg, second_reg);
+            FusedMultiplyAddShiftLow256Stage1(res_reg, first_reg, second_reg);
 
             __m256i y_reg = _mm256_madd52lo_epu64(zero, k_reg, res_reg[0]);
             y_reg         = _mm256_permutexvar_epi64(zero, y_reg);
 
-            FusedMultiplyAddLow(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddLow256(res_reg, mod_reg, y_reg);
 
-            ShiftAndAddCarry(res_reg);
+            ShiftAndAddCarry256(res_reg);
 
-            FusedMultiplyAddShiftHighStage1(res_reg, first_reg, second_reg);
+            FusedMultiplyAddShiftHigh256Stage1(res_reg, first_reg, second_reg);
 
-            FusedMultiplyAddHigh(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddHigh256(res_reg, mod_reg, y_reg);
         }
     }
 
@@ -574,20 +626,20 @@ namespace alcp::rsa { namespace zen4 {
 
             __m256i second_reg = _mm256_set1_epi64x(first[j]);
 
-            FusedMultiplyAddShiftLowStage2(
+            FusedMultiplyAddShiftLow256Stage2(
                 res_reg + 1, first_reg + 1, second_reg);
 
             __m256i y_reg = _mm256_madd52lo_epu64(zero, k_reg, res_reg[0]);
             y_reg         = _mm256_permutexvar_epi64(zero, y_reg);
 
-            FusedMultiplyAddLow(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddLow256(res_reg, mod_reg, y_reg);
 
-            ShiftAndAddCarry(res_reg);
+            ShiftAndAddCarry256(res_reg);
 
-            FusedMultiplyAddShiftHighStage2(
+            FusedMultiplyAddShiftHigh256Stage2(
                 res_reg + 1, first_reg + 1, second_reg);
 
-            FusedMultiplyAddHigh(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddHigh256(res_reg, mod_reg, y_reg);
         }
     }
 
@@ -603,20 +655,20 @@ namespace alcp::rsa { namespace zen4 {
 
             __m256i second_reg = _mm256_set1_epi64x(first[j]);
 
-            FusedMultiplyAddShiftLowStage3(
+            FusedMultiplyAddShiftLow256Stage3(
                 res_reg + 2, first_reg + 2, second_reg);
 
             __m256i y_reg = _mm256_madd52lo_epu64(zero, k_reg, res_reg[0]);
             y_reg         = _mm256_permutexvar_epi64(zero, y_reg);
 
-            FusedMultiplyAddLow(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddLow256(res_reg, mod_reg, y_reg);
 
-            ShiftAndAddCarry(res_reg);
+            ShiftAndAddCarry256(res_reg);
 
             FusedMultiplyAddShiftHighStage3(
                 res_reg + 2, first_reg + 2, second_reg);
 
-            FusedMultiplyAddHigh(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddHigh256(res_reg, mod_reg, y_reg);
         }
     }
 
@@ -632,20 +684,20 @@ namespace alcp::rsa { namespace zen4 {
 
             __m256i second_reg = _mm256_set1_epi64x(first[j]);
 
-            FusedMultiplyAddShiftLowStage4(
+            FusedMultiplyAddShiftLow256Stage4(
                 res_reg + 3, first_reg + 3, second_reg);
 
             __m256i y_reg = _mm256_madd52lo_epu64(zero, k_reg, res_reg[0]);
             y_reg         = _mm256_permutexvar_epi64(zero, y_reg);
 
-            FusedMultiplyAddLow(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddLow256(res_reg, mod_reg, y_reg);
 
-            ShiftAndAddCarry(res_reg);
+            ShiftAndAddCarry256(res_reg);
 
-            FusedMultiplyAddShiftHighStage4(
+            FusedMultiplyAddShiftHigh256Stage4(
                 res_reg + 3, first_reg + 3, second_reg);
 
-            FusedMultiplyAddHigh(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddHigh256(res_reg, mod_reg, y_reg);
         }
     }
 
@@ -661,20 +713,20 @@ namespace alcp::rsa { namespace zen4 {
 
             __m256i second_reg = _mm256_set1_epi64x(first[j]);
 
-            FusedMultiplyAddShiftLowStage5(
+            FusedMultiplyAddShiftLow256Stage5(
                 res_reg[4], first_reg[4], second_reg);
 
             __m256i y_reg = _mm256_madd52lo_epu64(zero, k_reg, res_reg[0]);
             y_reg         = _mm256_permutexvar_epi64(zero, y_reg);
 
-            FusedMultiplyAddLow(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddLow256(res_reg, mod_reg, y_reg);
 
-            ShiftAndAddCarry(res_reg);
+            ShiftAndAddCarry256(res_reg);
 
-            FusedMultiplyAddShiftHighStage5(
+            FusedMultiplyAddShiftHigh256Stage5(
                 res_reg[4], first_reg[4], second_reg);
 
-            FusedMultiplyAddHigh(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddHigh256(res_reg, mod_reg, y_reg);
         }
     }
 
@@ -690,34 +742,34 @@ namespace alcp::rsa { namespace zen4 {
         for (Uint64 j = 0; j < 20; j++) {
             __m256i second_reg = _mm256_set1_epi64x(first[j]);
 
-            FusedMultiplyAddLow(res_reg, first_reg, second_reg);
+            FusedMultiplyAddLow256(res_reg, first_reg, second_reg);
 
             __m256i y_reg = _mm256_madd52lo_epu64(zero, k_reg_0, res_reg[0]);
             y_reg         = _mm256_permutexvar_epi64(zero, y_reg);
 
-            FusedMultiplyAddLow(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddLow256(res_reg, mod_reg, y_reg);
 
-            ShiftAndAddCarry(res_reg);
+            ShiftAndAddCarry256(res_reg);
 
-            FusedMultiplyAddHigh(res_reg, first_reg, second_reg);
+            FusedMultiplyAddHigh256(res_reg, first_reg, second_reg);
 
-            FusedMultiplyAddHigh(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddHigh256(res_reg, mod_reg, y_reg);
 
             // second multiplier
             second_reg = _mm256_set1_epi64x(second[j]);
 
-            FusedMultiplyAddLow(res_reg + 5, first_reg + 5, second_reg);
+            FusedMultiplyAddLow256(res_reg + 5, first_reg + 5, second_reg);
 
             y_reg = _mm256_madd52lo_epu64(zero, k_reg_1, res_reg[5]);
             y_reg = _mm256_permutexvar_epi64(zero, y_reg);
 
-            FusedMultiplyAddLow(res_reg + 5, mod_reg + 5, y_reg);
+            FusedMultiplyAddLow256(res_reg + 5, mod_reg + 5, y_reg);
 
-            ShiftAndAddCarry(res_reg + 5);
+            ShiftAndAddCarry256(res_reg + 5);
 
-            FusedMultiplyAddHigh(res_reg + 5, first_reg + 5, second_reg);
+            FusedMultiplyAddHigh256(res_reg + 5, first_reg + 5, second_reg);
 
-            FusedMultiplyAddHigh(res_reg + 5, mod_reg + 5, y_reg);
+            FusedMultiplyAddHigh256(res_reg + 5, mod_reg + 5, y_reg);
         }
     }
 
@@ -731,18 +783,43 @@ namespace alcp::rsa { namespace zen4 {
         for (Uint64 j = 0; j < 20; j++) {
             __m256i second_reg = _mm256_set1_epi64x(first[j]);
 
-            FusedMultiplyAddLow(res_reg, first_reg, second_reg);
+            FusedMultiplyAddLow256(res_reg, first_reg, second_reg);
 
             __m256i y_reg = _mm256_madd52lo_epu64(zero, k_reg, res_reg[0]);
             y_reg         = _mm256_permutexvar_epi64(zero, y_reg);
 
-            FusedMultiplyAddLow(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddLow256(res_reg, mod_reg, y_reg);
 
-            ShiftAndAddCarry(res_reg);
+            ShiftAndAddCarry256(res_reg);
 
-            FusedMultiplyAddHigh(res_reg, first_reg, second_reg);
+            FusedMultiplyAddHigh256(res_reg, first_reg, second_reg);
 
-            FusedMultiplyAddHigh(res_reg, mod_reg, y_reg);
+            FusedMultiplyAddHigh256(res_reg, mod_reg, y_reg);
+        }
+    }
+
+    static inline void Amm2048LoopInternal(__m512i       res_reg[5],
+                                           __m512i       first_reg[5],
+                                           __m512i       mod_reg[5],
+                                           const Uint64* first,
+                                           __m512i       k_reg)
+    {
+        const __m512i zero{};
+        for (Uint64 j = 0; j < 40; j++) {
+            __m512i second_reg = _mm512_set1_epi64(first[j]);
+
+            FusedMultiplyAddLow512(res_reg, first_reg, second_reg);
+
+            __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg[0]);
+            y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
+
+            FusedMultiplyAddLow512(res_reg, mod_reg, y_reg);
+
+            ShiftAndAddCarry512(res_reg);
+
+            FusedMultiplyAddHigh512(res_reg, first_reg, second_reg);
+
+            FusedMultiplyAddHigh512(res_reg, mod_reg, y_reg);
         }
     }
 
@@ -954,104 +1031,21 @@ namespace alcp::rsa { namespace zen4 {
                                const Uint64* mod,
                                Uint64        k0)
     {
-        __m512i first_reg_0;
-        __m512i first_reg_1;
-        __m512i first_reg_2;
-        __m512i first_reg_3;
-        __m512i first_reg_4;
+        __m512i first_reg[5];
 
-        __m512i mod_reg_0;
-        __m512i mod_reg_1;
-        __m512i mod_reg_2;
-        __m512i mod_reg_3;
-        __m512i mod_reg_4;
+        __m512i mod_reg[5];
 
-        __m512i res_reg_0{};
-        __m512i res_reg_1{};
-        __m512i res_reg_2{};
-        __m512i res_reg_3{};
-        __m512i res_reg_4{};
+        __m512i res_reg[5]{};
 
-        first_reg_0 = _mm512_loadu_si512(first);
-        first_reg_1 = _mm512_loadu_si512(first + 8);
-        first_reg_2 = _mm512_loadu_si512(first + 16);
-        first_reg_3 = _mm512_loadu_si512(first + 24);
-        first_reg_4 = _mm512_loadu_si512(first + 32);
+        LoadReg512(first_reg, first);
 
-        mod_reg_0 = _mm512_loadu_si512(mod);
-        mod_reg_1 = _mm512_loadu_si512(mod + 8);
-        mod_reg_2 = _mm512_loadu_si512(mod + 16);
-        mod_reg_3 = _mm512_loadu_si512(mod + 24);
-        mod_reg_4 = _mm512_loadu_si512(mod + 32);
+        LoadReg512(mod_reg, mod);
 
         __m512i k_reg = _mm512_set1_epi64(k0);
 
-        const __m512i zero{};
+        Amm2048LoopInternal(res_reg, first_reg, mod_reg, second, k_reg);
 
-        for (Uint64 i = 0; i < num_digit; i++) {
-            __m512i second_reg = _mm512_set1_epi64(second[i]);
-
-            res_reg_0 =
-                _mm512_madd52lo_epu64(res_reg_0, first_reg_0, second_reg);
-            res_reg_1 =
-                _mm512_madd52lo_epu64(res_reg_1, first_reg_1, second_reg);
-            res_reg_2 =
-                _mm512_madd52lo_epu64(res_reg_2, first_reg_2, second_reg);
-            res_reg_3 =
-                _mm512_madd52lo_epu64(res_reg_3, first_reg_3, second_reg);
-            res_reg_4 =
-                _mm512_madd52lo_epu64(res_reg_4, first_reg_4, second_reg);
-
-            // Uint64 x0 =
-            // _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg_0));
-
-            // Uint64 y0 = (k0 * (x0 &
-            // 0xfffffffffffff)) &
-            // 0xfffffffffffff;
-
-            // __m512i y_reg =
-            // _mm512_set1_epi64(y0);
-
-            __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg_0);
-            y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
-
-            res_reg_0 = _mm512_madd52lo_epu64(res_reg_0, mod_reg_0, y_reg);
-            res_reg_1 = _mm512_madd52lo_epu64(res_reg_1, mod_reg_1, y_reg);
-            res_reg_2 = _mm512_madd52lo_epu64(res_reg_2, mod_reg_2, y_reg);
-            res_reg_3 = _mm512_madd52lo_epu64(res_reg_3, mod_reg_3, y_reg);
-            res_reg_4 = _mm512_madd52lo_epu64(res_reg_4, mod_reg_4, y_reg);
-
-            __m512i carry = _mm512_maskz_srli_epi64(1, res_reg_0, 52);
-            res_reg_0     = _mm512_alignr_epi64(res_reg_1, res_reg_0, 1);
-            res_reg_0     = _mm512_add_epi64(res_reg_0, carry);
-            res_reg_1     = _mm512_alignr_epi64(res_reg_2, res_reg_1, 1);
-            res_reg_2     = _mm512_alignr_epi64(res_reg_3, res_reg_2, 1);
-            res_reg_3     = _mm512_alignr_epi64(res_reg_4, res_reg_3, 1);
-            res_reg_4     = _mm512_alignr_epi64(zero, res_reg_4, 1);
-
-            res_reg_0 =
-                _mm512_madd52hi_epu64(res_reg_0, first_reg_0, second_reg);
-            res_reg_1 =
-                _mm512_madd52hi_epu64(res_reg_1, first_reg_1, second_reg);
-            res_reg_2 =
-                _mm512_madd52hi_epu64(res_reg_2, first_reg_2, second_reg);
-            res_reg_3 =
-                _mm512_madd52hi_epu64(res_reg_3, first_reg_3, second_reg);
-            res_reg_4 =
-                _mm512_madd52hi_epu64(res_reg_4, first_reg_4, second_reg);
-
-            res_reg_0 = _mm512_madd52hi_epu64(res_reg_0, mod_reg_0, y_reg);
-            res_reg_1 = _mm512_madd52hi_epu64(res_reg_1, mod_reg_1, y_reg);
-            res_reg_2 = _mm512_madd52hi_epu64(res_reg_2, mod_reg_2, y_reg);
-            res_reg_3 = _mm512_madd52hi_epu64(res_reg_3, mod_reg_3, y_reg);
-            res_reg_4 = _mm512_madd52hi_epu64(res_reg_4, mod_reg_4, y_reg);
-        }
-
-        _mm512_storeu_si512(res, res_reg_0);
-        _mm512_storeu_si512(res + 8, res_reg_1);
-        _mm512_storeu_si512(res + 16, res_reg_2);
-        _mm512_storeu_si512(res + 24, res_reg_3);
-        _mm512_storeu_si512(res + 32, res_reg_4);
+        StoreReg512(res, res_reg);
 
         Uint64 carry = 0;
         // convert from redundant radix
@@ -1084,16 +1078,6 @@ namespace alcp::rsa { namespace zen4 {
                 temp       = _mm512_slli_epi64(temp, 1);
                 res_reg[z] = _mm512_add_epi64(temp, res_reg[z]);
             }
-
-            // Uint64 x0 =
-            // _mm_cvtsi128_si64(_mm512_castsi512_si128(res_reg[0]));
-
-            // Uint64 y0 = (k0 * (x0 &
-            // 0xfffffffffffff)) &
-            // 0xfffffffffffff;
-
-            // __m512i y_reg =
-            // _mm512_set1_epi64(y0);
 
             __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg[0]);
             y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
