@@ -98,6 +98,7 @@ OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cipher_type,
                                      const alc_cipher_mode_t mode,
                                      const Uint8*            iv)
     : m_mode{ mode }
+    , m_cipher_type{ cipher_type }
     , m_iv{ iv }
 {}
 OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cipher_type,
@@ -109,6 +110,7 @@ OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cipher_type,
                                      const Uint8*            tkey,
                                      const Uint64            block_size)
     : m_mode{ mode }
+    , m_cipher_type{ cipher_type }
     , m_iv{ iv }
     , m_iv_len{ iv_len }
     , m_key{ key }
@@ -151,6 +153,7 @@ OpenSSLCipherBase::~OpenSSLCipherBase()
     // Destroy call contexts
     EVP_CIPHER_CTX_free(m_ctx_enc);
     EVP_CIPHER_CTX_free(m_ctx_dec);
+    EVP_CIPHER_free(m_cipher);
 #ifdef USE_PROVIDER
     if (m_alcp_provider != nullptr) {
         OSSL_PROVIDER_unload(m_alcp_provider);
@@ -223,17 +226,27 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 key_len)
         return false;
     }
 
-    if (1
-        != EVP_EncryptInit_ex(
-            m_ctx_enc,
-            alcpModeKeyLenToCipher(ALC_CIPHER_TYPE_AES, m_mode, m_key_len),
-            NULL,
-            m_key,
-            m_iv)) {
-        handleErrors();
-        return false;
+    /* for non AES types */
+    if (m_cipher_type == ALC_CIPHER_TYPE_CHACHA20) {
+        m_cipher = EVP_CIPHER_fetch(NULL, "ChaCha20", NULL);
     }
-
+    if (m_cipher_type == ALC_CIPHER_TYPE_CHACHA20) {
+        if (1 != EVP_CipherInit_ex(m_ctx_enc, m_cipher, NULL, m_key, m_iv, 1)) {
+            handleErrors();
+            return false;
+        }
+    } else {
+        if (1
+            != EVP_EncryptInit_ex(
+                m_ctx_enc,
+                alcpModeKeyLenToCipher(ALC_CIPHER_TYPE_AES, m_mode, m_key_len),
+                NULL,
+                m_key,
+                m_iv)) {
+            handleErrors();
+            return false;
+        }
+    }
     // Create context for decryption and initalize
     EVP_CIPHER_CTX_free(m_ctx_dec);
     m_ctx_dec = EVP_CIPHER_CTX_new();
@@ -243,22 +256,28 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 key_len)
         return false;
     }
 
-    if (1
-        != EVP_DecryptInit_ex(
-            m_ctx_dec,
-            alcpModeKeyLenToCipher(m_cipher_type, m_mode, m_key_len),
-            NULL,
-            m_key,
-            m_iv)) {
-        handleErrors();
-        return false;
+    /* for non AES types */
+    if (m_cipher_type == ALC_CIPHER_TYPE_CHACHA20) {
+        if (1 != EVP_CipherInit_ex(m_ctx_dec, m_cipher, NULL, m_key, m_iv, 1)) {
+            handleErrors();
+            return false;
+        }
+    } else {
+        if (1
+            != EVP_DecryptInit_ex(
+                m_ctx_dec,
+                alcpModeKeyLenToCipher(m_cipher_type, m_mode, m_key_len),
+                NULL,
+                m_key,
+                m_iv)) {
+            handleErrors();
+            return false;
+        }
+        if (1 != EVP_CIPHER_CTX_set_padding(m_ctx_dec, 0)) {
+            handleErrors();
+            return false;
+        }
     }
-
-    if (1 != EVP_CIPHER_CTX_set_padding(m_ctx_dec, 0)) {
-        handleErrors();
-        return false;
-    }
-
     return true;
 }
 bool
@@ -275,12 +294,28 @@ bool
 OpenSSLCipherBase::encrypt(alcp_dc_ex_t& data)
 {
     int len_ct = 0;
-    if (1
-        != EVP_EncryptUpdate(
-            m_ctx_enc, data.m_out, &len_ct, data.m_in, data.m_inl)) {
-        std::cout << "Error: Encrypt update" << std::endl;
-        handleErrors();
-        return false;
+    /* for non aes*/
+    if (m_cipher_type == ALC_CIPHER_TYPE_CHACHA20) {
+        if (1
+            != EVP_CipherUpdate(
+                m_ctx_enc, data.m_out, &len_ct, data.m_in, data.m_inl)) {
+            std::cout << "Error: EVP_CipherUpdate" << std::endl;
+            handleErrors();
+            return false;
+        }
+        if (1 != EVP_CipherFinal_ex(m_ctx_enc, data.m_out + len_ct, &len_ct)) {
+            std::cout << "Error: EVP_CipherFinal_ex" << std::endl;
+            handleErrors();
+            return false;
+        }
+    } else {
+        if (1
+            != EVP_EncryptUpdate(
+                m_ctx_enc, data.m_out, &len_ct, data.m_in, data.m_inl)) {
+            std::cout << "Error: Encrypt update" << std::endl;
+            handleErrors();
+            return false;
+        }
     }
     return true;
 }
@@ -299,12 +334,28 @@ bool
 OpenSSLCipherBase::decrypt(alcp_dc_ex_t& data)
 {
     int len_pt = 0;
-    if (1
-        != EVP_DecryptUpdate(
-            m_ctx_dec, data.m_out, &len_pt, data.m_in, data.m_inl)) {
-        std::cout << "Error: Openssl Decrypt update" << std::endl;
-        handleErrors();
-        return false;
+    /* for non aes*/
+    if (m_cipher_type == ALC_CIPHER_TYPE_CHACHA20) {
+        if (1
+            != EVP_CipherUpdate(
+                m_ctx_dec, data.m_out, &len_pt, data.m_in, data.m_inl)) {
+            std::cout << "Error: EVP_CipherUpdate" << std::endl;
+            handleErrors();
+            return false;
+        }
+        if (1 != EVP_CipherFinal_ex(m_ctx_dec, data.m_out + len_pt, &len_pt)) {
+            std::cout << "Error: EVP_CipherFinal_ex" << std::endl;
+            handleErrors();
+            return false;
+        }
+    } else {
+        if (1
+            != EVP_DecryptUpdate(
+                m_ctx_dec, data.m_out, &len_pt, data.m_in, data.m_inl)) {
+            std::cout << "Error: Openssl Decrypt update" << std::endl;
+            handleErrors();
+            return false;
+        }
     }
     return true;
 }

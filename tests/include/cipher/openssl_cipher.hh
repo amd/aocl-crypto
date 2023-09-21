@@ -59,6 +59,7 @@ class OpenSSLCipherBase : public CipherBase
   private:
     EVP_CIPHER_CTX*   m_ctx_enc = nullptr;
     EVP_CIPHER_CTX*   m_ctx_dec = nullptr;
+    EVP_CIPHER*       m_cipher  = nullptr;
     _alc_cipher_type  m_cipher_type{};
     alc_cipher_mode_t m_mode    = {};
     const Uint8*      m_iv      = nullptr;

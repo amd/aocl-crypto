@@ -65,11 +65,11 @@ Chacha20Cipher(benchmark::State& state,
     }
 #endif
 #ifdef USE_OSSL
-    // alcp::testing::OpenSSLCipherBase ocb = alcp::testing::OpenSSLCipherBase(
-    //    cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
-    // if (useossl) {
-    //    cb = &ocb;
-    //}
+    alcp::testing::OpenSSLCipherBase ocb = alcp::testing::OpenSSLCipherBase(
+        cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
+    if (useossl) {
+        cb = &ocb;
+    }
 #endif
     alcp::testing::alcp_dc_ex_t data;
     data.m_in    = &(vec_in[0]);
