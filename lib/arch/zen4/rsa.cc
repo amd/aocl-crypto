@@ -678,77 +678,99 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
+    static inline void Amm1024LoopInternalParallel(__m256i       res_reg[10],
+                                                   __m256i       first_reg[10],
+                                                   __m256i       mod_reg[10],
+                                                   const Uint64* first,
+                                                   const Uint64* second,
+                                                   __m256i       k_reg_0,
+                                                   __m256i       k_reg_1)
+    {
+        const __m256i zero{};
+        for (Uint64 j = 0; j < 20; j++) {
+            __m256i second_reg = _mm256_set1_epi64x(first[j]);
+
+            FusedMultiplyAddLow(res_reg, first_reg, second_reg);
+
+            __m256i y_reg = _mm256_madd52lo_epu64(zero, k_reg_0, res_reg[0]);
+            y_reg         = _mm256_permutexvar_epi64(zero, y_reg);
+
+            FusedMultiplyAddLow(res_reg, mod_reg, y_reg);
+
+            ShiftAndAddCarry(res_reg);
+
+            FusedMultiplyAddHigh(res_reg, first_reg, second_reg);
+
+            FusedMultiplyAddHigh(res_reg, mod_reg, y_reg);
+
+            // second multiplier
+            second_reg = _mm256_set1_epi64x(second[j]);
+
+            FusedMultiplyAddLow(res_reg + 5, first_reg + 5, second_reg);
+
+            y_reg = _mm256_madd52lo_epu64(zero, k_reg_1, res_reg[5]);
+            y_reg = _mm256_permutexvar_epi64(zero, y_reg);
+
+            FusedMultiplyAddLow(res_reg + 5, mod_reg + 5, y_reg);
+
+            ShiftAndAddCarry(res_reg + 5);
+
+            FusedMultiplyAddHigh(res_reg + 5, first_reg + 5, second_reg);
+
+            FusedMultiplyAddHigh(res_reg + 5, mod_reg + 5, y_reg);
+        }
+    }
+
+    static inline void Amm1024LoopInternal(__m256i       res_reg[5],
+                                           __m256i       first_reg[5],
+                                           __m256i       mod_reg[5],
+                                           const Uint64* first,
+                                           __m256i       k_reg)
+    {
+        const __m256i zero{};
+        for (Uint64 j = 0; j < 20; j++) {
+            __m256i second_reg = _mm256_set1_epi64x(first[j]);
+
+            FusedMultiplyAddLow(res_reg, first_reg, second_reg);
+
+            __m256i y_reg = _mm256_madd52lo_epu64(zero, k_reg, res_reg[0]);
+            y_reg         = _mm256_permutexvar_epi64(zero, y_reg);
+
+            FusedMultiplyAddLow(res_reg, mod_reg, y_reg);
+
+            ShiftAndAddCarry(res_reg);
+
+            FusedMultiplyAddHigh(res_reg, first_reg, second_reg);
+
+            FusedMultiplyAddHigh(res_reg, mod_reg, y_reg);
+        }
+    }
+
     static inline void AMM1024(Uint64*       res,
                                const Uint64* first,
                                const Uint64* second,
                                const Uint64* mod,
                                Uint64        k0)
     {
-        __m512i first_reg_0;
-        __m512i first_reg_1;
-        __m512i first_reg_2;
+        __m256i first_reg[5];
 
-        __m512i mod_reg_0;
-        __m512i mod_reg_1;
-        __m512i mod_reg_2;
+        __m256i mod_reg[5];
 
-        __m512i res_reg_0{};
-        __m512i res_reg_1{};
-        __m512i res_reg_2{};
+        __m256i res_reg[5]{};
 
-        first_reg_0 = _mm512_loadu_si512(first);
-        first_reg_1 = _mm512_loadu_si512(first + 8);
-        first_reg_2 = _mm512_loadu_si512(first + 16);
+        LoadReg256(first_reg, first);
 
-        mod_reg_0 = _mm512_loadu_si512(mod);
-        mod_reg_1 = _mm512_loadu_si512(mod + 8);
-        mod_reg_2 = _mm512_loadu_si512(mod + 16);
+        LoadReg256(mod_reg, mod);
 
-        const __m512i zero{};
-        __m512i       k_reg = _mm512_set1_epi64(k0);
+        __m256i k_reg = _mm256_set1_epi64x(k0);
 
-        for (Uint64 i = 0; i < 20; i++) {
+        Amm1024LoopInternal(res_reg, first_reg, mod_reg, second, k_reg);
 
-            __m512i second_reg = _mm512_set1_epi64(second[i]);
-
-            res_reg_0 =
-                _mm512_madd52lo_epu64(res_reg_0, first_reg_0, second_reg);
-            res_reg_1 =
-                _mm512_madd52lo_epu64(res_reg_1, first_reg_1, second_reg);
-            res_reg_2 =
-                _mm512_madd52lo_epu64(res_reg_2, first_reg_2, second_reg);
-
-            __m512i y_reg = _mm512_madd52lo_epu64(zero, k_reg, res_reg_0);
-            y_reg         = _mm512_permutexvar_epi64(zero, y_reg);
-
-            res_reg_0 = _mm512_madd52lo_epu64(res_reg_0, mod_reg_0, y_reg);
-            res_reg_1 = _mm512_madd52lo_epu64(res_reg_1, mod_reg_1, y_reg);
-            res_reg_2 = _mm512_madd52lo_epu64(res_reg_2, mod_reg_2, y_reg);
-
-            __m512i carry = _mm512_maskz_srli_epi64(1, res_reg_0, 52);
-            res_reg_0     = _mm512_alignr_epi64(res_reg_1, res_reg_0, 1);
-            res_reg_0     = _mm512_add_epi64(res_reg_0, carry);
-            res_reg_1     = _mm512_alignr_epi64(res_reg_2, res_reg_1, 1);
-            res_reg_2     = _mm512_alignr_epi64(zero, res_reg_2, 1);
-
-            res_reg_0 =
-                _mm512_madd52hi_epu64(res_reg_0, first_reg_0, second_reg);
-            res_reg_1 =
-                _mm512_madd52hi_epu64(res_reg_1, first_reg_1, second_reg);
-            res_reg_2 =
-                _mm512_madd52hi_epu64(res_reg_2, first_reg_2, second_reg);
-
-            res_reg_0 = _mm512_madd52hi_epu64(res_reg_0, mod_reg_0, y_reg);
-            res_reg_1 = _mm512_madd52hi_epu64(res_reg_1, mod_reg_1, y_reg);
-            res_reg_2 = _mm512_madd52hi_epu64(res_reg_2, mod_reg_2, y_reg);
-        }
-
-        _mm512_storeu_si512(res, res_reg_0);
-        _mm512_storeu_si512(res + 8, res_reg_1);
-        _mm512_storeu_si512(res + 16, res_reg_2);
+        StoreReg256(res, res_reg);
 
         Uint64 carry = 0;
-        // convert from redundant radix 2^52 to radix 2^52
+        // convert from redundant radix
+        // 2^52 to radix 2^52
         for (Uint64 i = 0; i < 20; i++) {
             Uint64 sum = res[i] + carry;
             carry      = sum >> 52;
@@ -768,12 +790,14 @@ namespace alcp::rsa { namespace zen4 {
 
         __m256i res_reg[10]{};
 
-        Uint64* first_0 = first[0];
-        Uint64* first_1 = first[1];
-        Uint64* mod_0   = mod[0];
-        Uint64* mod_1   = mod[1];
-        Uint64* res_0   = res[0];
-        Uint64* res_1   = res[1];
+        Uint64* first_0  = first[0];
+        Uint64* first_1  = first[1];
+        Uint64* second_0 = second[0];
+        Uint64* second_1 = second[1];
+        Uint64* mod_0    = mod[0];
+        Uint64* mod_1    = mod[1];
+        Uint64* res_0    = res[0];
+        Uint64* res_1    = res[1];
 
         LoadReg256(first_reg, first_0);
 
@@ -783,43 +807,11 @@ namespace alcp::rsa { namespace zen4 {
 
         LoadReg256(mod_reg + 5, mod_1);
 
-        const __m256i zero{};
-        __m256i       k_reg_0 = _mm256_set1_epi64x(k0[0]);
-        __m256i       k_reg_1 = _mm256_set1_epi64x(k0[1]);
+        __m256i k_reg_0 = _mm256_set1_epi64x(k0[0]);
+        __m256i k_reg_1 = _mm256_set1_epi64x(k0[1]);
 
-        for (Uint64 i = 0; i < 20; i++) {
-
-            __m256i second_reg = _mm256_set1_epi64x(second[0][i]);
-
-            FusedMultiplyAddLow(res_reg, first_reg, second_reg);
-
-            __m256i y_reg = _mm256_madd52lo_epu64(zero, k_reg_0, res_reg[0]);
-            y_reg         = _mm256_permutexvar_epi64(zero, y_reg);
-
-            FusedMultiplyAddLow(res_reg, mod_reg, y_reg);
-
-            ShiftAndAddCarry(res_reg);
-
-            FusedMultiplyAddHigh(res_reg, first_reg, second_reg);
-
-            FusedMultiplyAddHigh(res_reg, mod_reg, y_reg);
-
-            // second multiplier
-            second_reg = _mm256_set1_epi64x(second[1][i]);
-
-            FusedMultiplyAddLow(res_reg + 5, first_reg + 5, second_reg);
-
-            y_reg = _mm256_madd52lo_epu64(zero, k_reg_1, res_reg[5]);
-            y_reg = _mm256_permutexvar_epi64(zero, y_reg);
-
-            FusedMultiplyAddLow(res_reg + 5, mod_reg + 5, y_reg);
-
-            ShiftAndAddCarry(res_reg + 5);
-
-            FusedMultiplyAddHigh(res_reg + 5, first_reg + 5, second_reg);
-
-            FusedMultiplyAddHigh(res_reg + 5, mod_reg + 5, y_reg);
-        }
+        Amm1024LoopInternalParallel(
+            res_reg, first_reg, mod_reg, second_0, second_1, k_reg_0, k_reg_1);
 
         StoreReg256(res_0, res_reg);
         StoreReg256(res_1, res_reg + 5);
