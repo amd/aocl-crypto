@@ -64,9 +64,9 @@
 namespace alcp::cipher::vaes512 {
 
 template<void AesEncNoLoad_4x512(
-             __m512i& a, __m512i& b, __m512i& c, __m512i& d, const sKeys keys),
-         void AesEncNoLoad_2x512(__m512i& a, __m512i& b, const sKeys keys),
-         void AesEncNoLoad_1x512(__m512i& a, const sKeys keys),
+             __m512i& a, __m512i& b, __m512i& c, __m512i& d, const sKeys& keys),
+         void AesEncNoLoad_2x512(__m512i& a, __m512i& b, const sKeys& keys),
+         void AesEncNoLoad_1x512(__m512i& a, const sKeys& keys),
          void alcp_load_key_zmm(const __m128i pkey128[], sKeys& keys),
          void alcp_clear_keys_zmm(sKeys& keys)>
 Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
@@ -151,7 +151,10 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
     __m512i* Hsubkey_512 = (__m512i*)pHashSubkeyTable;
 #endif
 
-    if (num_512_blks) {
+    /* avoiding branching gives better performance for large blocksizes (>=8k
+     * bytes) */
+    // if (num_512_blks)
+    {
         computeHashSubKeys(num_512_blks,
                            gcm->m_hash_subKey_128,
                            Hsubkey_512,
@@ -174,6 +177,7 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
     __m512i Hsubkey_512_0, Hsubkey_512_1, Hsubkey_512_2, Hsubkey_512_3;
     //__m512i gHash_512 = _mm512_zextsi128_si512(gcm->m_gHash_128);
 
+#if 0
     // (16x512) 64 blks aesenc 64 blks gmul and 1 reduction
     if (num_512_blks == 16) {
         constexpr Uint64 blockCount_4x512_4_unroll = 16 * 4;
@@ -363,7 +367,10 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
             getGhash(
                 z0_512, z1_512, z2_512, gcm->m_gHash_128, const_factor_256);
         }
-    } else if (num_512_blks == 8) {
+    } else
+#endif
+
+    if (num_512_blks >= 8) {
         constexpr Uint64 blockCount_4x512_2_unroll = 16 * 2;
 
         // (8x512)=32 blks aesenc, 32 blks gmul and 1 reduction

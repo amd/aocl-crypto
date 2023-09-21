@@ -33,7 +33,7 @@
 #include "alcp/types.hh"
 
 #define PARALLEL_512_BLKS_4 4
-#define MAX_NUM_512_BLKS    16 // 24
+#define MAX_NUM_512_BLKS    8 // 16 // 24
 
 /*_mm_prefetch accepts const void*` arguments for GCC / ICC
 whereas MSVC still expects `const char* ` */
@@ -64,10 +64,12 @@ int inline dynamicUnroll(Uint64 blocks)
      */
 
     // 16*num_unroll*MinloopCount
-    auto constexpr threshold_4x512_4unroll = 16 * 4 * 20;
-    auto constexpr threshold_4x512_2unroll = 16 * 2 * 2;
-    int num_512_blks                       = 0;
 
+    auto constexpr threshold_4x512_2unroll = 16 * 2 * 2;
+
+#if 0
+    int num_512_blks                       = 0;
+    auto constexpr threshold_4x512_4unroll = 16 * 4 * 20;
     if (blocks >= threshold_4x512_4unroll) {
         num_512_blks = 16; // 16x4 = 64 blks
     } else if (blocks >= threshold_4x512_2unroll) {
@@ -79,6 +81,21 @@ int inline dynamicUnroll(Uint64 blocks)
     if (num_512_blks > MAX_NUM_512_BLKS) {
         num_512_blks = MAX_NUM_512_BLKS;
     }
+
+#else // disable 64 blks kernel
+
+    /*
+     * Limited branches in choosing kernels improves overall performance for
+     * different input blocksizes. This brings down overall backend stalls. This
+     * effect needs to be verified when applications uses prodominantly single
+     * block size for encrypt/decrypt.
+     */
+    int num_512_blks = 1;
+    if (blocks >= threshold_4x512_2unroll) {
+        num_512_blks = 8; // 8x4 = 32 blks
+    }
+
+#endif
     return num_512_blks;
 };
 

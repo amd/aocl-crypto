@@ -38,10 +38,10 @@
 namespace alcp::cipher { namespace vaes512 {
 
     template<
-        void AesEncNoLoad_1x512(__m512i& a, const sKeys keys),
-        void AesEncNoLoad_2x512(__m512i& a, __m512i& b, const sKeys keys),
+        void AesEncNoLoad_1x512(__m512i& a, const sKeys& keys),
+        void AesEncNoLoad_2x512(__m512i& a, __m512i& b, const sKeys& keys),
         void AesEncNoLoad_4x512(
-            __m512i& a, __m512i& b, __m512i& c, __m512i& d, const sKeys keys),
+            __m512i& a, __m512i& b, __m512i& c, __m512i& d, const sKeys& keys),
         void alcp_load_key_zmm(const __m128i pkey128[], sKeys& keys),
         void alcp_clear_keys_zmm(sKeys& keys)>
     inline alc_error_t DecryptCfb(const Uint8* pSrc,

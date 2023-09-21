@@ -67,9 +67,9 @@ namespace alcp::cipher::vaes512 {
 
 // FIXME: Encrypt and Decrypt can be fused with a constexpr template argument
 template<void AesEncNoLoad_4x512(
-             __m512i& a, __m512i& b, __m512i& c, __m512i& d, const sKeys keys),
-         void AesEncNoLoad_2x512(__m512i& a, __m512i& b, const sKeys keys),
-         void AesEncNoLoad_1x512(__m512i& a, const sKeys keys),
+             __m512i& a, __m512i& b, __m512i& c, __m512i& d, const sKeys& keys),
+         void AesEncNoLoad_2x512(__m512i& a, __m512i& b, const sKeys& keys),
+         void AesEncNoLoad_1x512(__m512i& a, const sKeys& keys),
          void alcp_load_key_zmm(const __m128i pkey128[], sKeys& keys),
          void alcp_clear_keys_zmm(sKeys& keys)>
 Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
@@ -155,7 +155,8 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
     __m512i* Hsubkey_512 = (__m512i*)pHashSubkeyTable;
 #endif
 
-    if (num_512_blks) {
+    // if (num_512_blks)
+    {
         computeHashSubKeys(num_512_blks,
                            gcm->m_hash_subKey_128,
                            Hsubkey_512,
@@ -177,6 +178,9 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
 
     __m512i Hsubkey_512_0, Hsubkey_512_1, Hsubkey_512_2, Hsubkey_512_3;
 
+    __m512i gHash_512 = _mm512_zextsi128_si512(gcm->m_gHash_128);
+
+#if 0
     // (16x512) 64 blks aesenc 64 blks gmul and 1 reduction
     if (num_512_blks == 16) {
         constexpr Uint64 blockCount_4x512_4_unroll = 16 * 4;
@@ -245,7 +249,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
                                                       z0_512,
                                                       z1_512,
                                                       z2_512,
-                                                      gcm->m_gHash_128);
+                                                      gHash_512);
 
             alcp_loadu_4values(pHsubkey_512,
                                Hsubkey_512_0,
@@ -363,10 +367,12 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
             p_out_x += PARALLEL_512_BLKS_4;
 
             // do reduction once
-            getGhash(
-                z0_512, z1_512, z2_512, gcm->m_gHash_128, const_factor_256);
+            getGhash(z0_512, z1_512, z2_512, gHash_512, const_factor_256);
         }
-    } else if (num_512_blks == 8) {
+    } else
+#endif
+
+    if (num_512_blks >= 8) {
         constexpr Uint64 blockCount_4x512_2_unroll = 16 * 2;
         constexpr Uint64 blockCount_4x512_4_unroll = 16 * 4;
 
@@ -440,7 +446,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
                                                       z0_512,
                                                       z1_512,
                                                       z2_512,
-                                                      gcm->m_gHash_128);
+                                                      gHash_512);
             alcp_loadu_4values(pHsubkey_512,
                                Hsubkey_512_0,
                                Hsubkey_512_1,
@@ -490,8 +496,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
                                Hsubkey_512_3);
 
             // first reduction
-            getGhash(
-                z0_512, z1_512, z2_512, gcm->m_gHash_128, const_factor_256);
+            getGhash(z0_512, z1_512, z2_512, gHash_512, const_factor_256);
 
             alcp_loadu_4values(p_in_x, a1, a2, a3, a4);
             alcp_xor_4values(b1, b2, b3, b4, a1, a2, a3, a4);
@@ -526,7 +531,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
                                                       z0_512,
                                                       z1_512,
                                                       z2_512,
-                                                      gcm->m_gHash_128);
+                                                      gHash_512);
 
             alcp_loadu_4values(pHsubkey_512,
                                Hsubkey_512_0,
@@ -560,8 +565,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
             p_out_x += PARALLEL_512_BLKS_4;
 
             // second reduction
-            getGhash(
-                z0_512, z1_512, z2_512, gcm->m_gHash_128, const_factor_256);
+            getGhash(z0_512, z1_512, z2_512, gHash_512, const_factor_256);
         }
 
         // UNROLL_8
@@ -619,7 +623,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
                                                       z0_512,
                                                       z1_512,
                                                       z2_512,
-                                                      gcm->m_gHash_128);
+                                                      gHash_512);
 
             alcp_loadu_4values(pHsubkey_512,
                                Hsubkey_512_0,
@@ -659,10 +663,11 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
              * further. */
             // getGhash(z0_512, z1_512, z2_512, gcm->m_gHash_128,
             // const_factor_128);
-            getGhash(
-                z0_512, z1_512, z2_512, gcm->m_gHash_128, const_factor_256);
+            getGhash(z0_512, z1_512, z2_512, gHash_512, const_factor_256);
         }
     }
+
+    //    gcm->m_gHash_128 = _mm512_castsi512_si128(gHash_512);
 
     /* Maintaining ghash in zmm didnt result in performance improvement.
      * This needs to be revisited again
@@ -682,26 +687,10 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
         AesEncNoLoad_4x512(b1, b2, b3, b4, keys);
         alcp_xor_4values(b1, b2, b3, b4, a1, a2, a3, a4);
 
-        gMulR(Hsubkey_512_0,
-              a1,
-              reverse_mask_512,
-              gcm->m_gHash_128,
-              const_factor_128);
-        gMulR(Hsubkey_512_0,
-              a2,
-              reverse_mask_512,
-              gcm->m_gHash_128,
-              const_factor_128);
-        gMulR(Hsubkey_512_0,
-              a3,
-              reverse_mask_512,
-              gcm->m_gHash_128,
-              const_factor_128);
-        gMulR(Hsubkey_512_0,
-              a4,
-              reverse_mask_512,
-              gcm->m_gHash_128,
-              const_factor_128);
+        gMulR(Hsubkey_512_0, a1, reverse_mask_512, gHash_512, const_factor_256);
+        gMulR(Hsubkey_512_0, a2, reverse_mask_512, gHash_512, const_factor_256);
+        gMulR(Hsubkey_512_0, a3, reverse_mask_512, gHash_512, const_factor_256);
+        gMulR(Hsubkey_512_0, a4, reverse_mask_512, gHash_512, const_factor_256);
 
         c1 = alcp_add_epi32(c1, four_x);
         c2 = alcp_add_epi32(c2, four_x);
@@ -726,16 +715,14 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
 
         // increment counter
         c1 = alcp_add_epi32(c1, one_x);
-        gMulR(Hsubkey_512_0,
-              a1,
-              reverse_mask_512,
-              gcm->m_gHash_128,
-              const_factor_128);
+        gMulR(Hsubkey_512_0, a1, reverse_mask_512, gHash_512, const_factor_256);
 
         alcp_storeu(p_out_x, a1);
 
         p_out_x += 1;
     }
+
+    gcm->m_gHash_128 = _mm512_castsi512_si128(gHash_512);
 
     // residual block=1 when factor = 2, load and store only lower half.
     __m128i c1_128     = _mm512_castsi512_si128(c1);
