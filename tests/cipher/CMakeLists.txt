@@ -194,6 +194,22 @@ FUNCTION(CROSS_AES MOD)
     ENDIF(ENABLE_TESTS_OPENSSL_API)
 ENDFUNCTION()
 
+FUNCTION(CROSS_CHACHA20)
+    ADD_EXECUTABLE(chacha20_cross test_chacha20_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
+    TARGET_INCLUDE_DIRECTORIES(chacha20_cross PRIVATE
+        "${CMAKE_SOURCE_DIR}/include"
+        "${CMAKE_SOURCE_DIR}/lib/include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+        ${EXTRA_INCLUDES})
+    TARGET_COMPILE_OPTIONS(chacha20_cross PUBLIC -O2 ${ALCP_WARNINGS})
+    TARGET_LINK_LIBRARIES(chacha20_cross ${LIBS})
+    IF(ENABLE_TESTS_OPENSSL_API)
+        gtest_add_tests(TARGET chacha20_cross
+            TEST_SUFFIX .chacha20)
+    ENDIF(ENABLE_TESTS_OPENSSL_API)
+ENDFUNCTION()
+
 KAT_AES(cbc)
 KAT_AES(cfb)
 KAT_AES(ctr)
@@ -204,6 +220,7 @@ KAT_AES(ccm)
 KAT_AES(siv)
 
 KAT_CHACHA20()
+CROSS_CHACHA20()
 
 CROSS_AES(cbc)
 CROSS_AES(cfb)

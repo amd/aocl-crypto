@@ -29,17 +29,14 @@
 #include "cipher/alc_cipher.hh"
 #include "cipher/cipher.hh"
 #include "cipher/gtest_base_cipher.hh"
+#include "rng_base.hh"
 
 using namespace alcp::testing;
 
 /* Testing Starts Here! */
-TEST(CHACHA20_ENC_256, KAT_256)
+TEST(CHACHA20_ENC_256, CROSS_SMALL_256)
 {
-    ChachaKatTest(256, ENCRYPT, ALC_CIPHER_TYPE_CHACHA20);
-}
-TEST(CHACHA20_DEC_256, KAT_256)
-{
-    ChachaKatTest(256, DECRYPT, ALC_CIPHER_TYPE_CHACHA20);
+    Chacha20Crosstest(256, ENCRYPT, ALC_CIPHER_TYPE_CHACHA20, SMALL);
 }
 
 int
