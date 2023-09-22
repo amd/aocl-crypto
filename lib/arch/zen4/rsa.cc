@@ -30,6 +30,18 @@
 #include "alcp/utils/copy.hh"
 #include <immintrin.h>
 
+/*
+ * AMS1024 is bases on Fast modular squaring with AVX512IFMA
+ * reference as mentioned on below link
+ * https://eprint.iacr.org/2018/335
+ *
+ * AMM1024  and RSA2048MontgomeryExpConstantTimeParallel is based on Fast
+ * modular multplication and exponentiation with AVX512IFMA referenced as
+ * mentioned on below link
+ * https://link.springer.com/chapter/10.1007/978-3-642-31662-3_9
+ *
+ */
+
 namespace alcp::rsa { namespace zen4 {
 #include "../../rsa/rsa.cc.inc"
 
@@ -41,7 +53,9 @@ namespace alcp::rsa { namespace zen4 {
         return val & MaskRadix52Bit;
     }
 
-    static inline void Rsa1024BytesToRadix52Bit(Uint64* out, const Uint64* in)
+    // Converts the radix 64 bit in 1024 bits to radix 52 with 20 digits
+    static inline void Rsa1024Radix64BitToRadix52Bit(Uint64*       out,
+                                                     const Uint64* in)
     {
         const Uint8* in_byte = reinterpret_cast<const Uint8*>(in);
         for (Uint64 i = 0; i < 18; i += 2) {
@@ -58,7 +72,8 @@ namespace alcp::rsa { namespace zen4 {
                   + ((Uint64)(*(in_byte + 10)) << 28);
     }
 
-    static inline void Rsa1024Radix52BitToBytes(Uint64* out, const Uint64* in)
+    // Converts back the radix 52 bit in 1024 bits to radix 64
+    static inline void Rsa1024Radix52BitToRadix64(Uint64* out, const Uint64* in)
     {
         Uint8* out_byte = reinterpret_cast<Uint8*>(out);
         for (Uint64 i = 0; i < 19; i += 2) {
@@ -69,7 +84,9 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
-    static inline void Rsa2048BytesToRadix52Bit(Uint64* out, const Uint64* in)
+    // Converts the radix 64 bit in 2048 bits to radix 52 bit with 40 digits
+    static inline void Rsa2048Radix64BitToRadix52Bit(Uint64*       out,
+                                                     const Uint64* in)
     {
         const Uint8* in_byte = reinterpret_cast<const Uint8*>(in);
         for (Uint64 i = 0; i < 38; i += 2) {
@@ -85,7 +102,9 @@ namespace alcp::rsa { namespace zen4 {
                   + (*(in_byte + 8) << 12);
     }
 
-    static inline void Rsa2048Radix52BitToBytes(Uint64* out, const Uint64* in)
+    // Converts back the radix 52 bit in 2048 bits to radix 64
+    static inline void Rsa2048Radix52BitToRadix64Bit(Uint64*       out,
+                                                     const Uint64* in)
     {
         Uint8* out_byte = reinterpret_cast<Uint8*>(out);
         for (Uint64 i = 0; i < 39; i += 2) {
@@ -494,6 +513,8 @@ namespace alcp::rsa { namespace zen4 {
         _mm512_storeu_si512(out + 32, inp[4]);
     }
 
+    // Multiplying registers holding first to 4th digit to all other digits
+    // starting from first to last digit
     static inline void Amm1024LoopInternalStage1Parallel(__m256i res_reg[10],
                                                          __m256i first_reg[10],
                                                          __m256i mod_reg[10],
@@ -541,6 +562,8 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
+    // Multiplying registers holding 5th to 8th digit to all other digits
+    // starting from 5th to last digit
     static inline void Amm1024LoopInternalStage2Parallel(__m256i res_reg[10],
                                                          __m256i first_reg[10],
                                                          __m256i mod_reg[10],
@@ -590,6 +613,8 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
+    // Multiplying registers holding 9th to 12th digit to all other digits
+    // starting from 9th to last digit
     static inline void Amm1024LoopInternalStage3Parallel(__m256i res_reg[10],
                                                          __m256i first_reg[10],
                                                          __m256i mod_reg[10],
@@ -639,6 +664,8 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
+    // Multiplying registers holding 13th to 16th digit to all other digits
+    // starting from 13th to last digit
     static inline void Amm1024LoopInternalStage4Parallel(__m256i res_reg[10],
                                                          __m256i first_reg[10],
                                                          __m256i mod_reg[10],
@@ -688,6 +715,8 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
+    // Multiplying registers holding 17th to 20th digit to all other digits
+    // starting from 17th to last digit
     static inline void Amm1024LoopInternalStage5Parallel(__m256i res_reg[10],
                                                          __m256i first_reg[10],
                                                          __m256i mod_reg[10],
@@ -933,17 +962,23 @@ namespace alcp::rsa { namespace zen4 {
         for (Uint64 j = 0; j < 20; j++) {
             __m256i second_reg = _mm256_set1_epi64x(first[j]);
 
+            // x0 = x0 + a0 × bi on lower 52 bits
             FusedMultiplyAddLow256(res_reg, first_reg, second_reg);
 
+            // Broadcast y0
             __m256i y_reg = _mm256_madd52lo_epu64(zero, k_reg, res_reg[0]);
             y_reg         = _mm256_permutexvar_epi64(zero, y_reg);
 
+            // x0 = x0 + m0 × y0 on lower 52 bits
             FusedMultiplyAddLow256(res_reg, mod_reg, y_reg);
 
+            // Xq,…,X1 = Xq,…,X1 >> 64
             ShiftAndAddCarry256(res_reg);
 
+            // x0 = x0 + a0 × bi on higher 52 bits
             FusedMultiplyAddHigh256(res_reg, first_reg, second_reg);
 
+            // x0 = x0 + m0 × y0 on higher 52 bits
             FusedMultiplyAddHigh256(res_reg, mod_reg, y_reg);
         }
     }
@@ -1005,6 +1040,7 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
+    // Parallel AMM1024 for two sets of different inputs
     static inline void AMM1024Parallel(Uint64* res[2],
                                        Uint64* first[2],
                                        Uint64* second[2],
@@ -1073,6 +1109,9 @@ namespace alcp::rsa { namespace zen4 {
         LoadReg256(mod_reg, mod);
 
         __m256i k_reg = _mm256_set1_epi64x(k0);
+
+        // each stage will multiply 4 set of registers from first to all
+        // other with the first pointer
         Amm1024LoopInternalStage1(res_reg, first_reg, mod_reg, first, k_reg);
 
         Amm1024LoopInternalStage2(
@@ -1124,6 +1163,7 @@ namespace alcp::rsa { namespace zen4 {
         __m256i k_reg_0 = _mm256_set1_epi64x(k0[0]);
         __m256i k_reg_1 = _mm256_set1_epi64x(k0[1]);
 
+        //
         Amm1024LoopInternalStage1Parallel(
             res_reg, first_reg, mod_reg, first_0, first_1, k_reg_0, k_reg_1);
 
@@ -1573,17 +1613,18 @@ namespace alcp::rsa { namespace zen4 {
         MontReduce(r1, param_ptr, mod, context.m_k0, size * 2);
 
         if (size == 32) {
-            Rsa2048BytesToRadix52Bit(mod_radix_52_bit, mod);
-            Rsa2048BytesToRadix52Bit(r2_radix_52_bit, r2);
+            Rsa2048Radix64BitToRadix52Bit(mod_radix_52_bit, mod);
+            Rsa2048Radix64BitToRadix52Bit(r2_radix_52_bit, r2);
 
-            //(congruent to 2^(4n-k×m) mod
+            //(congruent to 2^(4n-k×m) mod (n is number of bit, k is digits for
+            // holding radix 52 number ,m is 52)
             // M)
             AMM2048(r2_radix_52_bit,
                     r2_radix_52_bit,
                     r2_radix_52_bit,
                     mod_radix_52_bit,
                     context.m_k0);
-            // 2^(4n-km) in radix 52
+            // 2^(4km - 4n) in radix 52
             alignas(64) const Uint64 mult[40] = { 0x00, 0x00, 0x1000000 };
 
             //(congruent to 2^2k×m mod M)
@@ -1593,8 +1634,8 @@ namespace alcp::rsa { namespace zen4 {
                     mod_radix_52_bit,
                     context.m_k0);
         } else {
-            Rsa1024BytesToRadix52Bit(mod_radix_52_bit, mod);
-            Rsa1024BytesToRadix52Bit(r2_radix_52_bit, r2);
+            Rsa1024Radix64BitToRadix52Bit(mod_radix_52_bit, mod);
+            Rsa1024Radix64BitToRadix52Bit(r2_radix_52_bit, r2);
 
             //(congruent to 2^(4n-k×m) mod
             // M)
@@ -1603,7 +1644,7 @@ namespace alcp::rsa { namespace zen4 {
                     r2_radix_52_bit,
                     mod_radix_52_bit,
                     context.m_k0);
-            // 2^(4n-km) in radix 52
+            // 2^(4km - 4n) in radix 52
             alignas(64) const Uint64 mult[20] = { 0x00, 0x1000 };
 
             //(congruent to 2^2k×m mod M)
@@ -1645,8 +1686,8 @@ namespace alcp::rsa { namespace zen4 {
 
         MontReduce(r1, param_ptr, mod, context.m_k0, size * 2);
 
-        Rsa1024BytesToRadix52Bit(mod_radix_52_bit, mod);
-        Rsa1024BytesToRadix52Bit(r2_radix_52_bit, r2);
+        Rsa1024Radix64BitToRadix52Bit(mod_radix_52_bit, mod);
+        Rsa1024Radix64BitToRadix52Bit(r2_radix_52_bit, r2);
 
         //(congruent to 2^(4n-k×m) mod M)
         AMM1024(r2_radix_52_bit,
@@ -1678,7 +1719,7 @@ namespace alcp::rsa { namespace zen4 {
 
         alignas(64) Uint64 input_radix_52_bit[40];
         alignas(64) Uint64 res_radix_52_bit[40];
-        Rsa2048BytesToRadix52Bit(input_radix_52_bit, input);
+        Rsa2048Radix64BitToRadix52Bit(input_radix_52_bit, input);
 
         // conversion to mont domain by
         // multiplying with mont converter
@@ -1723,7 +1764,7 @@ namespace alcp::rsa { namespace zen4 {
         AMM2048Reduce(
             input_radix_52_bit, res_radix_52_bit, mod_radix_52_bit, k0);
 
-        Rsa2048Radix52BitToBytes(res, input_radix_52_bit);
+        Rsa2048Radix52BitToRadix64Bit(res, input_radix_52_bit);
     }
 
     template<>
@@ -1739,7 +1780,7 @@ namespace alcp::rsa { namespace zen4 {
 
         alignas(64) Uint64 input_radix_52_bit[24]{};
         alignas(64) Uint64 res_radix_52_bit[24]{};
-        Rsa1024BytesToRadix52Bit(input_radix_52_bit, input);
+        Rsa1024Radix64BitToRadix52Bit(input_radix_52_bit, input);
 
         // conversion to mont domain by
         // multiplying with mont converter
@@ -1784,7 +1825,7 @@ namespace alcp::rsa { namespace zen4 {
         AMM1024Reduce(
             input_radix_52_bit, res_radix_52_bit, mod_radix_52_bit, k0);
 
-        Rsa1024Radix52BitToBytes(res, input_radix_52_bit);
+        Rsa1024Radix52BitToRadix64(res, input_radix_52_bit);
     }
 
     template<>
@@ -1888,9 +1929,10 @@ namespace alcp::rsa { namespace zen4 {
         mont::PutInTable(t, 0, r1_radix_52_bit_p[0], 20, valueLimit);
         mont::PutInTable(t + 32 * 20, 0, r1_radix_52_bit_p[1], 20, valueLimit);
 
-        Rsa1024BytesToRadix52Bit(input_radix_52[0], input[0]);
-        Rsa1024BytesToRadix52Bit(input_radix_52[1], input[1]);
+        Rsa1024Radix64BitToRadix52Bit(input_radix_52[0], input[0]);
+        Rsa1024Radix64BitToRadix52Bit(input_radix_52[1], input[1]);
 
+        // almost montgomery multiplication on 1024 bits
         AMM1024Parallel(
             res_radix_52, input_radix_52, r2Radix52Bit, modRadix52Bit, k0);
         mont::PutInTable(t, 1, res_radix_52[0], 20, valueLimit);
@@ -1909,6 +1951,8 @@ namespace alcp::rsa { namespace zen4 {
         const Uint8* exp_byte_ptr_1 = reinterpret_cast<const Uint8*>(exp[0]);
         const Uint8* exp_byte_ptr_2 = reinterpret_cast<const Uint8*>(exp[1]);
 
+        // applying exponentiation using 5 bits at time and fetching the values
+        // from precomputed tables
         // first 4 bit
         mont::GetFromTable(
             t, exp_byte_ptr_1[127] >> 4, sq_radix_52[0], 20, valueLimit);
@@ -2064,10 +2108,10 @@ namespace alcp::rsa { namespace zen4 {
         AMM1024ReduceParallel(sq_radix_52, sq_radix_52, modRadix52Bit, k0);
 
         alcp::utils::PadBlock<Uint64>(res[0], 0LL, 16 * 8);
-        Rsa1024Radix52BitToBytes(res[0], sq_radix_52[0]);
+        Rsa1024Radix52BitToRadix64(res[0], sq_radix_52[0]);
 
         alcp::utils::PadBlock<Uint64>(res[1], 0LL, 16 * 8);
-        Rsa1024Radix52BitToBytes(res[1], sq_radix_52[1]);
+        Rsa1024Radix52BitToRadix64(res[1], sq_radix_52[1]);
     }
 
     template<>
@@ -2110,7 +2154,7 @@ namespace alcp::rsa { namespace zen4 {
         MontReduceHalf(buff_1_p, buff_p, q_mod, q_k0);
         MontMultHalf(buff_1_p, buff_1_p, r2_q, q_mod, q_k0);
 
-        // Rsa1024BytesToRadix52Bit(r1_p_rdix_52_bit,
+        // Rsa1024Radix64BitToRadix52Bit(r1_p_rdix_52_bit,
         // r1_p); ap = ap ^ dp mod p // aq
         // = aq ^dq mod q
         Uint64* buff[2] = { buff_0_p, buff_1_p };
