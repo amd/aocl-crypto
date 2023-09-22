@@ -108,17 +108,17 @@ IF(UNIX)
 SET(LIBS ${LIBS} pthread)
 ENDIF()
 
-ADD_EXECUTABLE(test_rsa test_rsa_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
+ADD_EXECUTABLE(test_rsa_kat test_rsa_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
-TARGET_INCLUDE_DIRECTORIES(test_rsa PRIVATE
+TARGET_INCLUDE_DIRECTORIES(test_rsa_kat PRIVATE
 	"${CMAKE_SOURCE_DIR}/include" 
 	"${CMAKE_SOURCE_DIR}/lib/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/../include"
     "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
     ${EXTRA_INCLUDES})
 
-TARGET_COMPILE_OPTIONS(test_rsa PUBLIC ${ALCP_WARNINGS})
-TARGET_LINK_LIBRARIES(test_rsa ${LIBS})
+TARGET_COMPILE_OPTIONS(test_rsa_kat PUBLIC ${ALCP_WARNINGS})
+TARGET_LINK_LIBRARIES(test_rsa_kat ${LIBS})
 
 ADD_EXECUTABLE(test_rsa_cross test_rsa_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
@@ -149,7 +149,7 @@ ENDFUNCTION(TEST_DATA_LINK RSA_ALG)
 TEST_DATA_LINK(RSA_1024)
 TEST_DATA_LINK(RSA_2048)
 
-gtest_add_tests(TARGET test_rsa)
+gtest_add_tests(TARGET test_rsa_kat)
 
 IF(ENABLE_TESTS_OPENSSL_API)
     gtest_add_tests(TARGET test_rsa_cross)

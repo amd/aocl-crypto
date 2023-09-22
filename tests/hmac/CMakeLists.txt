@@ -103,17 +103,17 @@ IF(UNIX)
 SET(LIBS ${LIBS} pthread)
 ENDIF()
 
-ADD_EXECUTABLE(test_hmac test_hmac_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
+ADD_EXECUTABLE(test_hmac_kat test_hmac_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
-TARGET_INCLUDE_DIRECTORIES(test_hmac PRIVATE
+TARGET_INCLUDE_DIRECTORIES(test_hmac_kat PRIVATE
 	"${CMAKE_SOURCE_DIR}/include" 
 	"${CMAKE_SOURCE_DIR}/lib/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/../include"
     "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
     ${EXTRA_INCLUDES})
 
-TARGET_COMPILE_OPTIONS(test_hmac PUBLIC ${ALCP_WARNINGS})
-TARGET_LINK_LIBRARIES(test_hmac ${LIBS})
+TARGET_COMPILE_OPTIONS(test_hmac_kat PUBLIC ${ALCP_WARNINGS})
+TARGET_LINK_LIBRARIES(test_hmac_kat ${LIBS})
 
 ADD_EXECUTABLE(test_hmac_cross test_hmac_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
@@ -145,7 +145,7 @@ TEST_DATA_LINK(HMAC_SHA3_256)
 TEST_DATA_LINK(HMAC_SHA3_384)
 TEST_DATA_LINK(HMAC_SHA3_512)
 
-gtest_add_tests(TARGET test_hmac)
+gtest_add_tests(TARGET test_hmac_kat)
 
 IF(ENABLE_TESTS_OPENSSL_API)
     gtest_add_tests(TARGET test_hmac_cross)

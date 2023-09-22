@@ -117,17 +117,17 @@ IF(UNIX)
 SET(LIBS ${LIBS} pthread)
 ENDIF()
 
-ADD_EXECUTABLE(test_ecdh test_ecdh_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
+ADD_EXECUTABLE(test_ecdh_kat test_ecdh_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
-TARGET_INCLUDE_DIRECTORIES(test_ecdh PRIVATE
+TARGET_INCLUDE_DIRECTORIES(test_ecdh_kat PRIVATE
 	"${CMAKE_SOURCE_DIR}/include" 
 	"${CMAKE_SOURCE_DIR}/lib/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/../include"
     "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
     ${EXTRA_INCLUDES})
 
-TARGET_COMPILE_OPTIONS(test_ecdh PUBLIC ${ALCP_WARNINGS})
-TARGET_LINK_LIBRARIES(test_ecdh ${LIBS})
+TARGET_COMPILE_OPTIONS(test_ecdh_kat PUBLIC ${ALCP_WARNINGS})
+TARGET_LINK_LIBRARIES(test_ecdh_kat ${LIBS})
 
 ADD_EXECUTABLE(test_ecdh_cross test_ecdh_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
@@ -153,7 +153,7 @@ ENDFUNCTION(TEST_DATA_LINK ALG)
 TEST_DATA_LINK(ECDH)
 TEST_DATA_LINK(ECDH_p256)
 
-gtest_add_tests(TARGET test_ecdh)
+gtest_add_tests(TARGET test_ecdh_kat)
 
 IF(ENABLE_TESTS_OPENSSL_API)
     gtest_add_tests(TARGET test_ecdh_cross)

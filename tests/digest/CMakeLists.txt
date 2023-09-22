@@ -107,17 +107,17 @@ IF(ALCP_ENABLE_RSP)
 ADD_COMPILE_OPTIONS("-DENABLE_RSP")
 ENDIF(ALCP_ENABLE_RSP)
 
-ADD_EXECUTABLE(test_digest test_digest_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
+ADD_EXECUTABLE(test_digest_kat test_digest_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
-TARGET_INCLUDE_DIRECTORIES(test_digest PRIVATE
+TARGET_INCLUDE_DIRECTORIES(test_digest_kat PRIVATE
 	"${CMAKE_SOURCE_DIR}/include" 
 	"${CMAKE_SOURCE_DIR}/lib/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/../include"
     "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
     ${EXTRA_INCLUDES})
 
-TARGET_COMPILE_OPTIONS(test_digest PUBLIC ${ALCP_WARNINGS})
-TARGET_LINK_LIBRARIES(test_digest ${LIBS})
+TARGET_COMPILE_OPTIONS(test_digest_kat PUBLIC ${ALCP_WARNINGS})
+TARGET_LINK_LIBRARIES(test_digest_kat ${LIBS})
 
 ADD_EXECUTABLE(test_digest_cross test_digest_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
@@ -161,7 +161,7 @@ TEST_DATA_LINK(SHA3_SHAKE_256)
 TEST_DATA_LINK(SHA_512_224)
 TEST_DATA_LINK(SHA_512_256)
 
-gtest_add_tests(TARGET test_digest)
+gtest_add_tests(TARGET test_digest_kat)
 
 IF(ENABLE_TESTS_OPENSSL_API)
     gtest_add_tests(TARGET test_digest_cross)
