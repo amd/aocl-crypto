@@ -166,6 +166,7 @@ ippsAES_GCMGetTag(Ipp8u* pDstTag, int tagLen, const IppsAES_GCMState* pState)
     alcp_cipher_aead_finish(&(context_aead->handle));
     if (context_aead->handle.ch_context) {
         free(context_aead->handle.ch_context);
+        context_aead->handle.ch_context = nullptr;
     }
 
     if (alcp_is_error(err)) {
@@ -185,6 +186,7 @@ ippsAES_GCMReset(IppsAES_GCMState* pState)
     ((ipp_wrp_aes_aead_ctx*)(pState))->is_encrypt = false;
     if (context_aead->handle.ch_context) {
         free(context_aead->handle.ch_context);
+        context_aead->handle.ch_context = nullptr;
     }
     return ippStsNoErr;
 }
