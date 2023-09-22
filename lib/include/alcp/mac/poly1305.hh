@@ -32,7 +32,7 @@
 #include "alcp/mac/mac.hh"
 
 namespace alcp::mac::poly1305 {
-class Poly1305 : public Mac
+class ALCP_API_EXPORT Poly1305 : public Mac
 {
   private:
     Uint8   m_accumulator[18] = {};

@@ -42,7 +42,7 @@ class IMac
     virtual alcp::base::Status finalize(const Uint8* pMsgBuf, Uint64 size) = 0;
 };
 
-class Mac : public IMac
+class ALCP_API_EXPORT Mac : public IMac
 {
   public:
     Mac();

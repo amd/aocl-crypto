@@ -267,7 +267,10 @@ processParallelBlocks(const Uint8 key[],
                                     p_ciphertext_128);
 
         plaintext += 256;
-        plaintextLength -= 256;
+
+        //Fixme: Unused param need to remove it
+        plaintextLength += plaintextLength;
+
         ciphertext += 256;
         counter_reg = _mm512_add_epi32(counter_reg, inc_reg);
     }
