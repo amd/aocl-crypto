@@ -74,9 +74,6 @@ alcp_rsa_request(const alc_rsa_key_size keySize, alc_rsa_handle_p pRsaHandle)
 alc_error_t
 alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
                            alc_rsa_padding        pad,
-                           const Uint8*           pPublicKeyMod,
-                           Uint64                 pPublicKeyModSize,
-                           Uint64                 publicKeyExp,
                            const Uint8*           pText,
                            Uint64                 textSize,
                            Uint8*                 pEncText)
@@ -84,7 +81,6 @@ alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
     ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
-    ALCP_BAD_PTR_ERR_RET(pPublicKeyMod, err);
     ALCP_BAD_PTR_ERR_RET(pText, err);
     ALCP_BAD_PTR_ERR_RET(pEncText, err);
 

@@ -131,9 +131,6 @@ alcp_rsa_request(const alc_rsa_key_size keySize, alc_rsa_handle_p pRsaHandle);
  *
  * @param [in]  pRsaHandle         - Handler of the Context for the session
  * @param [in]  pad                - padding scheme for rsa encryption
- * @param [in]  pPublicKeyMod      - public key modulus
- * @param [in]  pPublicKeyModSize  - public key modulus size
- * @param [in]  publicKeyExp       - public key exponent
  * @param [in]  pText              - pointer to raw bytes
  * @param [in]  textSize           - size of raw bytes
  * @param [out] pEncText           - pointer to encrypted bytes
@@ -145,12 +142,10 @@ alcp_rsa_request(const alc_rsa_key_size keySize, alc_rsa_handle_p pRsaHandle);
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
                            alc_rsa_padding        pad,
-                           const Uint8*           pPublicKeyMod,
-                           Uint64                 pPublicKeyModSize,
-                           Uint64                 publicKeyExp,
-                           const Uint8*           pText,
-                           Uint64                 textSize,
-                           Uint8*                 pEncText);
+
+                           const Uint8* pText,
+                           Uint64       textSize,
+                           Uint8*       pEncText);
 
 /**
  * @brief Function encrypts text using using public key and oaep padding

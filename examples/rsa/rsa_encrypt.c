@@ -117,14 +117,8 @@ Rsa_encrypt_demo(alc_rsa_handle_t* ps_rsa_handle)
     enc_text = malloc(sizeof(Uint8) * size_key);
     memset(enc_text, 0, sizeof(Uint8) * size_key);
 
-    err = alcp_rsa_publickey_encrypt(ps_rsa_handle,
-                                     ALCP_RSA_PADDING_NONE,
-                                     pub_key_mod,
-                                     size_key,
-                                     public_exponent,
-                                     text,
-                                     size_key,
-                                     enc_text);
+    err = alcp_rsa_publickey_encrypt(
+        ps_rsa_handle, ALCP_RSA_PADDING_NONE, text, size_key, enc_text);
     if (err != ALC_ERROR_NONE) {
         printf("\n public key encrypt failed\n");
         goto free_enc_text;

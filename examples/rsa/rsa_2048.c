@@ -209,14 +209,8 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
 
     // Encrypt text
 
-    err = alcp_rsa_publickey_encrypt(ps_rsa_handle,
-                                     ALCP_RSA_PADDING_NONE,
-                                     Modulus,
-                                     sizeof(Modulus),
-                                     PublicKeyExponent,
-                                     text,
-                                     size,
-                                     enc_text);
+    err = alcp_rsa_publickey_encrypt(
+        ps_rsa_handle, ALCP_RSA_PADDING_NONE, text, size, enc_text);
 
     if (err != ALC_ERROR_NONE) {
         printf("\n publc key encrypt failed");
