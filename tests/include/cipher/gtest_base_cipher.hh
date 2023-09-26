@@ -416,7 +416,7 @@ PrintTestData(std::vector<Uint8> key, alcp_dca_ex_t data, std::string mode)
  * @param big_small Type (Big or Small) of test
  */
 void
-Chacha20Crosstest(int              keySize,
+Chacha20CrossTest(int              keySize,
                   encDec_t         encDec,
                   _alc_cipher_type cipher_type,
                   big_small_t      big_small)
@@ -472,7 +472,7 @@ Chacha20Crosstest(int              keySize,
     }
     if (big_small == SMALL) {
         LOOP_START = SMALL_START_LOOP;
-        MAX_LOOP   = SMALL_MAX_LOOP;
+        MAX_LOOP   = 512; /*FIXME*/
         INC_LOOP   = SMALL_INC_LOOP;
         size       = 1;
     } else {

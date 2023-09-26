@@ -36,7 +36,11 @@ using namespace alcp::testing;
 /* Testing Starts Here! */
 TEST(CHACHA20_ENC_256, CROSS_SMALL_256)
 {
-    Chacha20Crosstest(256, ENCRYPT, ALC_CIPHER_TYPE_CHACHA20, SMALL);
+    Chacha20CrossTest(256, ENCRYPT, ALC_CIPHER_TYPE_CHACHA20, SMALL);
+}
+TEST(CHACHA20_ENC_256, CROSS_BIG_256)
+{
+    Chacha20CrossTest(256, ENCRYPT, ALC_CIPHER_TYPE_CHACHA20, BIG);
 }
 
 int
