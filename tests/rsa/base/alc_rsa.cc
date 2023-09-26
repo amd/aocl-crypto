@@ -26,8 +26,8 @@
  *
  */
 
-#include "alcp/rsa.h"
 #include "rsa/alc_rsa.hh"
+#include "alcp/rsa.h"
 #include "rsa/rsa.hh"
 #include <cstring>
 
@@ -396,9 +396,6 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
     if (m_padding_mode == ALCP_TEST_RSA_NO_PADDING) {
         err = alcp_rsa_publickey_encrypt(m_rsa_handle,
                                          ALCP_RSA_PADDING_NONE,
-                                         data.m_pub_key_mod,
-                                         data.m_key_len,
-                                         m_pub_key_exp,
                                          data.m_msg,
                                          data.m_key_len,
                                          data.m_encrypted_data);

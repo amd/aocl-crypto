@@ -134,14 +134,12 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
          alc_rsa_handle_t* ps_rsa_handle_peer2)
 {
     alc_error_t err;
-    Uint8*      text_peer_1        = NULL;
-    Uint8*      text_peer_2        = NULL;
-    Uint8*      pub_key_mod_peer_2 = NULL;
-    Uint8*      pub_key_mod_peer_1 = NULL;
-    Uint8*      enc_text_peer_1    = NULL;
-    Uint8*      dec_text_peer_1    = NULL;
-    Uint8*      dec_text_peer_2    = NULL;
-    Uint8*      enc_text_peer_2    = NULL;
+    Uint8*      text_peer_1     = NULL;
+    Uint8*      text_peer_2     = NULL;
+    Uint8*      enc_text_peer_1 = NULL;
+    Uint8*      dec_text_peer_1 = NULL;
+    Uint8*      dec_text_peer_2 = NULL;
+    Uint8*      enc_text_peer_2 = NULL;
 
     /* Peer 1 set keys*/
     err = alcp_rsa_set_publickey(
@@ -198,21 +196,6 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
 
     printf("\n");
 
-    pub_key_mod_peer_1 = malloc(sizeof(Uint8) * size_key_peer_1);
-    memset(pub_key_mod_peer_1, 0, sizeof(Uint8) * size_key_peer_1);
-
-    Uint64 public_exponent_peer_1;
-
-    err = alcp_rsa_get_publickey(ps_rsa_handle_peer1,
-                                 &public_exponent_peer_1,
-                                 pub_key_mod_peer_1,
-                                 size_key_peer_1);
-
-    if (err != ALC_ERROR_NONE) {
-        printf("\n peer1 publickey fetch failed");
-        goto free_pub_mod_peer_1;
-    }
-
     /* Peer 2 */
     Uint64 size_key_peer_2 = alcp_rsa_get_key_size(ps_rsa_handle_peer2);
 
@@ -225,28 +208,12 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
     text_peer_2 = malloc(sizeof(Uint8) * size_key_peer_2);
     memset(text_peer_2, 0x01, sizeof(Uint8) * size_key_peer_2);
 
-    pub_key_mod_peer_2 = malloc(sizeof(Uint8) * size_key_peer_2);
-    memset(pub_key_mod_peer_2, 0, sizeof(Uint8) * size_key_peer_2);
-
-    Uint64 public_exponent_peer_2;
-    err = alcp_rsa_get_publickey(ps_rsa_handle_peer2,
-                                 &public_exponent_peer_2,
-                                 pub_key_mod_peer_2,
-                                 size_key_peer_2);
-    if (err != ALC_ERROR_NONE) {
-        printf("\n peer2 publickey fetch failed");
-        goto free_pub_mod_peer_2;
-    }
-
     // Encrypt text by peer1 using public key of peer 2
     enc_text_peer_1 = malloc(sizeof(Uint8) * size_key_peer_2);
     memset(enc_text_peer_1, 0, sizeof(Uint8) * size_key_peer_2);
 
     err = alcp_rsa_publickey_encrypt(ps_rsa_handle_peer1,
                                      ALCP_RSA_PADDING_NONE,
-                                     pub_key_mod_peer_2,
-                                     size_key_peer_2,
-                                     public_exponent_peer_2,
                                      text_peer_1,
                                      size_key_peer_1,
                                      enc_text_peer_1);
@@ -294,9 +261,6 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle_peer1,
 
     err = alcp_rsa_publickey_encrypt(ps_rsa_handle_peer2,
                                      ALCP_RSA_PADDING_NONE,
-                                     pub_key_mod_peer_1,
-                                     size_key_peer_1,
-                                     public_exponent_peer_1,
                                      text_peer_2,
                                      size_key_peer_2,
                                      enc_text_peer_2);
@@ -337,10 +301,8 @@ free_dec_text_peer_2:
 free_enc_text_peer_1:
     free(enc_text_peer_1);
 free_pub_mod_peer_2:
-    free(pub_key_mod_peer_2);
     free(text_peer_2);
 free_pub_mod_peer_1:
-    free(pub_key_mod_peer_1);
     free(text_peer_1);
 
     return err;
