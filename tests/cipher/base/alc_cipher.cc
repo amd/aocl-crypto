@@ -160,6 +160,7 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 key_len)
         m_cinfo.ci_algo_info.ai_iv = m_iv;
         m_cinfo.ci_algo_info.iv_length =
             16 * 8; /* FIXME is it always 16 bytes ?*/
+        m_cinfo.ci_algo_info.ai_mode = ALC_AES_MODE_NONE;
     } else {
         /* FOR AES */
         /* Initialize keyinfo */

@@ -45,41 +45,35 @@ Chacha20Cipher(benchmark::State& state,
     // Dynamic allocation better for larger sizes
     std::vector<Uint8>         vec_in(blockSize, 0x01);
     std::vector<Uint8>         vec_out(blockSize, 0x21);
-    std::unique_ptr<Uint8[]>   tagBuffer = std::make_unique<Uint8[]>(16);
     Uint8                      key[keylen / 8];
     Uint8                      iv[16];
-    Uint8                      ad[16] = {};
-    Uint8                      tag[16];
-    Uint8                      tkey[keylen / 8];
     alcp::testing::CipherBase* cb;
 
     alcp::testing::AlcpCipherBase acb = alcp::testing::AlcpCipherBase(
-        cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
+        cipher_type, alcpMode, iv, 12, key, keylen, nullptr, blockSize);
 
     cb = &acb;
 #ifdef USE_IPP
     alcp::testing::IPPCipherBase icb = alcp::testing::IPPCipherBase(
-        cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
+        cipher_type, alcpMode, iv, 12, key, keylen, nullptr, blockSize);
     if (useipp) {
         cb = &icb;
     }
 #endif
 #ifdef USE_OSSL
     alcp::testing::OpenSSLCipherBase ocb = alcp::testing::OpenSSLCipherBase(
-        cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
+        cipher_type, alcpMode, iv, 12, key, keylen, nullptr, blockSize);
     if (useossl) {
         cb = &ocb;
     }
 #endif
     alcp::testing::alcp_dc_ex_t data;
-    data.m_in    = &(vec_in[0]);
-    data.m_inl   = blockSize;
-    data.m_out   = &(vec_out[0]);
-    data.m_outl  = blockSize;
-    data.m_iv    = iv;
-    data.m_ivl   = 16;
-    data.m_tkey  = tkey;
-    data.m_tkeyl = 16;
+    data.m_in   = &(vec_in[0]);
+    data.m_inl  = blockSize;
+    data.m_out  = &(vec_out[0]);
+    data.m_outl = blockSize;
+    data.m_iv   = iv;
+    data.m_ivl  = 16;
     for (auto _ : state) {
         if (enc) {
             if (!cb->encrypt(data)) {
