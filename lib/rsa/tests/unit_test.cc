@@ -30,6 +30,9 @@
 #include <string.h>
 
 #include "alcp/base.hh"
+#include "alcp/digest/sha2.hh"
+#include "alcp/digest/sha2_384.hh"
+#include "alcp/digest/sha3.hh"
 #include "alcp/error.h"
 #include "alcp/rsa.hh"
 #include "alcp/types.hh"
@@ -99,7 +102,153 @@ static const Uint8 Q_ModulusINV[] = {
     0x8c, 0x43, 0xcc, 0xfd, 0x41, 0x43, 0x02, 0x45, 0xde
 };
 
+static const Uint8 Modulus_2048[] = {
+    0xae, 0xdd, 0x0e, 0x10, 0xa5, 0xcc, 0xc0, 0x86, 0xfd, 0xdb, 0xef, 0x26,
+    0xaa, 0x5b, 0x60, 0xa2, 0x67, 0xc7, 0x0e, 0x50, 0x5c, 0x91, 0x32, 0xc1,
+    0x95, 0x27, 0x71, 0xee, 0x30, 0xc6, 0x15, 0x93, 0x77, 0xea, 0x34, 0x8c,
+    0x35, 0x67, 0x2e, 0x48, 0xb5, 0x96, 0x77, 0x97, 0x0a, 0x49, 0x74, 0x5d,
+    0x44, 0x69, 0x3b, 0xee, 0xb9, 0xa4, 0x1d, 0x75, 0x50, 0xfe, 0x89, 0xa9,
+    0xd4, 0xfc, 0x66, 0xbb, 0x4e, 0xca, 0x57, 0xf9, 0xaf, 0x06, 0x35, 0x42,
+    0x0c, 0x5b, 0x91, 0x13, 0xf9, 0x1f, 0x7b, 0x16, 0x88, 0xc8, 0x0e, 0x3c,
+    0xc2, 0x20, 0x73, 0x39, 0x77, 0xf9, 0x01, 0x58, 0xa2, 0x15, 0x0a, 0x17,
+    0x7d, 0x83, 0xb3, 0x5c, 0xcc, 0x23, 0x2d, 0xe4, 0x99, 0xb8, 0x14, 0xf4,
+    0x60, 0x61, 0x7a, 0x8e, 0x41, 0x5f, 0x1e, 0x15, 0xe3, 0xe6, 0x46, 0x73,
+    0xda, 0xd8, 0xa7, 0xe4, 0xab, 0xda, 0x86, 0xdd, 0x34, 0xdf, 0x9c, 0x28,
+    0xd2, 0xcd, 0x3d, 0xb2, 0x40, 0x40, 0x4d, 0xf9, 0x24, 0xf3, 0x4c, 0x65,
+    0x1a, 0xb7, 0x41, 0x8e, 0xfe, 0x82, 0xc4, 0x55, 0x74, 0xe2, 0x40, 0xa3,
+    0xa5, 0x3e, 0x04, 0x3f, 0x1e, 0x48, 0xf0, 0x55, 0x86, 0x2b, 0x75, 0xd0,
+    0xaf, 0x05, 0xcf, 0xe0, 0xa6, 0x93, 0x24, 0x94, 0xad, 0x12, 0xd3, 0x1f,
+    0xe1, 0x0f, 0x70, 0x86, 0xa5, 0x87, 0xb1, 0x79, 0x53, 0x5e, 0x07, 0x21,
+    0x9d, 0x40, 0x63, 0x5d, 0x8c, 0xd0, 0x21, 0xfd, 0x7f, 0xe2, 0xec, 0xbf,
+    0x9e, 0x2e, 0x5f, 0x8b, 0x8c, 0x22, 0x0b, 0x2e, 0xf1, 0xda, 0x6d, 0x35,
+    0x7d, 0x76, 0x12, 0x8b, 0x7f, 0xf7, 0xc4, 0x7f, 0x45, 0x3b, 0x8c, 0x29,
+    0x3f, 0x7e, 0x53, 0x79, 0xc1, 0x33, 0x8e, 0x77, 0xc2, 0xfa, 0xde, 0xc1,
+    0xcf, 0xd1, 0x45, 0x8a, 0x6f, 0x7c, 0xf2, 0x3a, 0x57, 0x40, 0x18, 0x3a,
+    0x2e, 0x0a, 0xef, 0x67
+};
+
+static const Uint8 P_Modulus_2048[] = {
+    0xb8, 0xc7, 0x80, 0xd1, 0xa9, 0xf2, 0x33, 0x7a, 0x1e, 0xbb, 0x57, 0xcc,
+    0x0e, 0x4e, 0x97, 0xfb, 0x92, 0xde, 0xa1, 0x7c, 0xee, 0xf5, 0xaa, 0x63,
+    0xd0, 0xa8, 0x24, 0xa6, 0x99, 0x89, 0xb5, 0x7d, 0xf0, 0x82, 0x1c, 0x7e,
+    0xad, 0x35, 0xc6, 0x46, 0xb9, 0xa7, 0x8f, 0xa7, 0x37, 0x25, 0x12, 0x4e,
+    0xdf, 0xfd, 0x7a, 0x74, 0x21, 0x42, 0x2a, 0x98, 0x4d, 0x4b, 0x86, 0xd8,
+    0xca, 0xfb, 0x0e, 0x02, 0xf8, 0x17, 0x59, 0xa5, 0x38, 0x73, 0xba, 0xcb,
+    0x57, 0xf5, 0x26, 0xa3, 0x57, 0x27, 0x3f, 0x6f, 0xce, 0xb7, 0x46, 0x32,
+    0xc7, 0x00, 0x5b, 0xbb, 0xa9, 0x38, 0x61, 0xa0, 0xc3, 0x28, 0xb2, 0x34,
+    0x3b, 0x57, 0xa7, 0x2a, 0xe6, 0xdb, 0x28, 0x7e, 0xbe, 0x0b, 0x78, 0x1a,
+    0x8e, 0xec, 0x81, 0x89, 0x18, 0xda, 0x1c, 0xa1, 0xb2, 0x80, 0x26, 0x3c,
+    0x83, 0x3c, 0xd4, 0xfc, 0xbc, 0xfb, 0xed, 0x59
+};
+
+static const Uint8 Q_Modulus_2048[] = {
+    0xf2, 0x43, 0x24, 0x20, 0xce, 0xbc, 0xb0, 0x3a, 0x9a, 0xf4, 0x08, 0xad,
+    0xb2, 0xd2, 0x34, 0x63, 0x37, 0x8a, 0xcb, 0xb9, 0xee, 0xa3, 0x7a, 0x30,
+    0x19, 0x88, 0xf3, 0xe1, 0x6b, 0xd1, 0x81, 0xbf, 0xb6, 0xb9, 0x90, 0x88,
+    0x9b, 0xcd, 0x82, 0x45, 0xa0, 0x7d, 0x8e, 0x7e, 0xe1, 0x3a, 0xc3, 0x62,
+    0x30, 0x90, 0x0d, 0xf2, 0x0b, 0x3c, 0x37, 0x59, 0x28, 0xcd, 0x67, 0x08,
+    0xdf, 0x78, 0x13, 0x4b, 0x1d, 0xaa, 0xee, 0x30, 0x00, 0x49, 0x00, 0xe8,
+    0x6c, 0x20, 0x6f, 0x96, 0xef, 0x9c, 0x7e, 0x8d, 0x32, 0x11, 0x12, 0x07,
+    0xfa, 0x33, 0xf8, 0x1d, 0x1a, 0xb3, 0xe0, 0x0b, 0xc0, 0x71, 0x3c, 0xb5,
+    0x72, 0x3c, 0x47, 0x16, 0x04, 0x8b, 0xb4, 0x8c, 0x41, 0xf0, 0x44, 0x24,
+    0x29, 0xb7, 0x5a, 0xe3, 0x1b, 0x89, 0xe7, 0x53, 0xa8, 0x33, 0xe0, 0x5e,
+    0x14, 0xeb, 0x5b, 0xfc, 0xec, 0x7e, 0x6a, 0xbf
+};
+
+static const Uint8 DP_EXP_2048[] = {
+    0x54, 0x29, 0xf3, 0x00, 0x0c, 0xf3, 0x98, 0x04, 0xe8, 0xd8, 0x96, 0x5e,
+    0x08, 0xaa, 0x3d, 0xc9, 0xc6, 0x15, 0x07, 0xe3, 0x5b, 0x08, 0xa4, 0xea,
+    0xc0, 0x10, 0xc6, 0x58, 0xe8, 0x18, 0x74, 0x85, 0x7f, 0xb6, 0x13, 0xfa,
+    0x93, 0x34, 0xaa, 0x32, 0x6e, 0xbf, 0xe6, 0xcb, 0xd8, 0x6f, 0x57, 0x4e,
+    0x7b, 0xf1, 0xfe, 0x03, 0xc5, 0x5e, 0x58, 0xfe, 0x74, 0x3e, 0x91, 0x96,
+    0x4f, 0xa6, 0x58, 0xb4, 0x7b, 0x82, 0x4f, 0x3f, 0xd5, 0x5d, 0xc9, 0x58,
+    0x73, 0xa0, 0xe3, 0x4f, 0x85, 0x14, 0x08, 0x6e, 0x09, 0xef, 0x2a, 0xd7,
+    0x58, 0x13, 0x4e, 0xb5, 0x44, 0x97, 0xbc, 0xc8, 0x37, 0xfc, 0x62, 0x67,
+    0x2e, 0x1c, 0x77, 0xb5, 0x2f, 0xdf, 0xe5, 0x2b, 0x0d, 0xaf, 0x35, 0xae,
+    0x8b, 0x29, 0x28, 0xbb, 0x64, 0x89, 0x7c, 0x7f, 0x1e, 0x4a, 0x06, 0xa0,
+    0x8b, 0x7a, 0x7a, 0xdc, 0xff, 0xcb, 0x94, 0x49
+};
+
+static const Uint8 DQ_EXP_2048[] = {
+    0x56, 0xce, 0x7e, 0x14, 0x8f, 0x5f, 0x87, 0x1a, 0x08, 0xc9, 0xe6, 0x8e,
+    0x2e, 0xe4, 0x29, 0x47, 0x5f, 0xf0, 0x88, 0xdd, 0x5f, 0xc8, 0x0e, 0x11,
+    0x4c, 0x25, 0x09, 0x96, 0x3d, 0x66, 0xfd, 0xc1, 0xef, 0x3c, 0x80, 0xb0,
+    0xa2, 0x7b, 0x39, 0xf1, 0xae, 0xf7, 0x2e, 0x67, 0x02, 0x57, 0x67, 0x09,
+    0x38, 0xf3, 0x75, 0x3b, 0xc4, 0x90, 0xd8, 0x18, 0x47, 0x89, 0x8a, 0x20,
+    0xe0, 0xca, 0x0a, 0xc7, 0xc0, 0xa2, 0xad, 0xe4, 0x5f, 0x45, 0xc9, 0x60,
+    0x7e, 0xd6, 0x04, 0x86, 0x25, 0xe7, 0x82, 0x65, 0x1f, 0x8a, 0x84, 0x56,
+    0x7d, 0x6d, 0xbf, 0xba, 0xd6, 0x05, 0x9c, 0x03, 0x39, 0xfa, 0x99, 0x51,
+    0x3e, 0xd4, 0xa0, 0x78, 0x20, 0x3a, 0xda, 0xff, 0xe2, 0xe4, 0xaf, 0xd5,
+    0xf1, 0x68, 0xb4, 0xd5, 0x69, 0xd9, 0xb9, 0x1c, 0xfd, 0xc9, 0x50, 0xdd,
+    0x05, 0x4b, 0xec, 0x53, 0x2d, 0x7e, 0x82, 0xcb
+};
+
+static const Uint8 Q_ModulusINV_2048[] = {
+    0x29, 0x46, 0xdd, 0xbd, 0x16, 0x47, 0x73, 0xb8, 0x80, 0x88, 0x05, 0xe1,
+    0x2b, 0x30, 0xb1, 0x58, 0x25, 0x59, 0xe6, 0x18, 0x54, 0xd6, 0x9e, 0xb8,
+    0xc5, 0xb6, 0xe4, 0x07, 0xa1, 0xdd, 0x34, 0x82, 0x61, 0x46, 0xb0, 0x8b,
+    0x1d, 0x96, 0xd5, 0x1d, 0x6f, 0x0b, 0x5f, 0xfa, 0xa0, 0xaa, 0x1c, 0xed,
+    0x40, 0x9a, 0x5a, 0xf5, 0x08, 0x35, 0xa3, 0x61, 0x22, 0x11, 0x34, 0xd3,
+    0xcf, 0x9f, 0xea, 0x7b, 0xb5, 0x41, 0x65, 0x16, 0xfb, 0x58, 0x01, 0x0d,
+    0x65, 0x1d, 0x39, 0x16, 0x4e, 0x76, 0xbe, 0x12, 0x32, 0x43, 0x72, 0x13,
+    0xd0, 0xe8, 0xdc, 0x9d, 0x5a, 0xdb, 0xaa, 0xe4, 0x77, 0x52, 0x89, 0xcf,
+    0xf9, 0xb0, 0x78, 0x59, 0xa9, 0x8c, 0x9e, 0x99, 0x96, 0x0c, 0xfd, 0x9d,
+    0x12, 0x56, 0xd0, 0x19, 0x81, 0x10, 0x18, 0xf9, 0x4e, 0x54, 0x92, 0x34,
+    0x49, 0x41, 0x2e, 0xd9, 0xc0, 0xe6, 0xd2, 0xc8
+};
+
 static const Uint64 PublicKeyExponent = 0x10001;
+
+static inline void*
+fetch_digest(const alc_digest_info_t& digestInfo)
+{
+    using namespace alcp::digest;
+    void* digest = nullptr;
+    switch (digestInfo.dt_type) {
+        case ALC_DIGEST_TYPE_SHA2: {
+            switch (digestInfo.dt_mode.dm_sha2) {
+                case ALC_SHA2_256: {
+                    digest = new Sha256;
+                    break;
+                }
+                case ALC_SHA2_224: {
+                    digest = new Sha224;
+                    break;
+                }
+                case ALC_SHA2_384: {
+                    digest = new Sha384;
+                    break;
+                }
+                case ALC_SHA2_512: {
+                    digest = new Sha512;
+                    break;
+                }
+                default: {
+                    digest = nullptr;
+                }
+            }
+            break;
+        }
+        case ALC_DIGEST_TYPE_SHA3: {
+            switch (digestInfo.dt_mode.dm_sha3) {
+                case ALC_SHA3_224: {
+                    digest = new digest::Sha3(digestInfo);
+                    break;
+                }
+                default: {
+                    digest = nullptr;
+                    break;
+                }
+            }
+            break;
+        }
+        default: {
+            digest = nullptr;
+            break;
+        }
+    }
+    return digest;
+}
 
 TEST(RsaTest, PublicEncryptPrivateDecryptTest)
 {
@@ -134,6 +283,38 @@ TEST(RsaTest, PublicEncryptPrivateDecryptTest)
     ASSERT_EQ(status.code(), ErrorCode::eOk);
 
     EXPECT_EQ(memcmp(p_dec.get(), p_text.get(), key_size), 0);
+
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+
+    key_size = rsa_obj_2048.getKeySize();
+
+    p_text = std::make_unique<Uint8[]>(key_size);
+    p_mod  = std::make_unique<Uint8[]>(key_size);
+    p_enc  = std::make_unique<Uint8[]>(key_size);
+    p_dec  = std::make_unique<Uint8[]>(key_size);
+
+    std::fill(p_text.get(), p_text.get() + key_size, 0x31);
+
+    status = rsa_obj_2048.setPublicKey(
+        PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    status = rsa_obj_2048.encryptPublic(p_text.get(), key_size, p_enc.get());
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    status = rsa_obj_2048.setPrivateKey(DP_EXP_2048,
+                                        DQ_EXP_2048,
+                                        P_Modulus_2048,
+                                        Q_Modulus_2048,
+                                        Q_ModulusINV_2048,
+                                        Modulus_2048,
+                                        sizeof(P_Modulus_2048));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    status = rsa_obj_2048.decryptPrivate(p_enc.get(), key_size, p_dec.get());
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    EXPECT_EQ(memcmp(p_dec.get(), p_text.get(), key_size), 0);
 }
 
 TEST(RsaTest, PubKeyEncryptValidSizeTest)
@@ -151,6 +332,20 @@ TEST(RsaTest, PubKeyEncryptValidSizeTest)
 
     status = rsa_obj.encryptPublic(p_text.get(), size, p_enc.get());
     EXPECT_EQ(status.code(), ErrorCode::eOk);
+
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+    size = rsa_obj_2048.getKeySize();
+
+    p_mod  = std::make_unique<Uint8[]>(size);
+    p_text = std::make_unique<Uint8[]>(size);
+    p_enc  = std::make_unique<Uint8[]>(size);
+
+    status = rsa_obj_2048.setPublicKey(
+        PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    status = rsa_obj_2048.encryptPublic(p_text.get(), size, p_enc.get());
+    EXPECT_EQ(status.code(), ErrorCode::eOk);
 }
 
 TEST(RsaTest, PubKeyEncryptInValidSizeTest)
@@ -166,6 +361,19 @@ TEST(RsaTest, PubKeyEncryptInValidSizeTest)
     ASSERT_EQ(status.code(), ErrorCode::eOk);
 
     status = rsa_obj.encryptPublic(p_text.get(), size + 1, p_enc.get());
+    EXPECT_NE(status.code(), ErrorCode::eOk);
+
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+    size   = rsa_obj_2048.getKeySize();
+    p_mod  = std::make_unique<Uint8[]>(size);
+    p_text = std::make_unique<Uint8[]>(size);
+    p_enc  = std::make_unique<Uint8[]>(size);
+
+    status = rsa_obj_2048.setPublicKey(
+        PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    status = rsa_obj_2048.encryptPublic(p_text.get(), size + 1, p_enc.get());
     EXPECT_NE(status.code(), ErrorCode::eOk);
 }
 
@@ -184,6 +392,21 @@ TEST(RsaTest, PubKeyEncryptValidBuffTest)
 
     status = rsa_obj.encryptPublic(p_buff.get(), key_size, p_buff_enc.get());
     EXPECT_EQ(status.code(), ErrorCode::eOk);
+
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+    key_size   = rsa_obj_2048.getKeySize();
+    p_buff     = std::make_unique<Uint8[]>(key_size);
+    p_buff_enc = std::make_unique<Uint8[]>(key_size);
+
+    p_modulus = std::make_unique<Uint8[]>(key_size);
+
+    status = rsa_obj_2048.setPublicKey(
+        PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    status =
+        rsa_obj_2048.encryptPublic(p_buff.get(), key_size, p_buff_enc.get());
+    EXPECT_EQ(status.code(), ErrorCode::eOk);
 }
 
 TEST(RsaTest, PubKeyEncryptInValidBuffTest)
@@ -195,6 +418,16 @@ TEST(RsaTest, PubKeyEncryptInValidBuffTest)
     ASSERT_EQ(status.code(), ErrorCode::eOk);
 
     status = rsa_obj.encryptPublic(nullptr, rsa_obj.getKeySize(), nullptr);
+    EXPECT_NE(status.code(), ErrorCode::eOk);
+
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+
+    status = rsa_obj_2048.setPublicKey(
+        PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    status =
+        rsa_obj_2048.encryptPublic(nullptr, rsa_obj_2048.getKeySize(), nullptr);
     EXPECT_NE(status.code(), ErrorCode::eOk);
 }
 
@@ -219,6 +452,26 @@ TEST(RsaTest, PrivKeyDecryptValidSizeTest)
         rsa_obj.decryptPrivate(p_buff_enc.get(), enc_size, p_buff_dec.get());
 
     EXPECT_EQ(status.code(), ErrorCode::eOk);
+
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+    enc_size = rsa_obj_2048.getKeySize();
+
+    p_buff_enc = std::make_unique<Uint8[]>(enc_size);
+    p_buff_dec = std::make_unique<Uint8[]>(enc_size);
+
+    status = rsa_obj_2048.setPrivateKey(DP_EXP_2048,
+                                        DQ_EXP_2048,
+                                        P_Modulus_2048,
+                                        Q_Modulus_2048,
+                                        Q_ModulusINV_2048,
+                                        Modulus_2048,
+                                        sizeof(P_Modulus_2048));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    status = rsa_obj_2048.decryptPrivate(
+        p_buff_enc.get(), enc_size, p_buff_dec.get());
+
+    EXPECT_EQ(status.code(), ErrorCode::eOk);
 }
 
 TEST(RsaTest, PrivKeyDecryptInvalidSizeTest)
@@ -227,6 +480,12 @@ TEST(RsaTest, PrivKeyDecryptInvalidSizeTest)
     Uint64             enc_size = rsa_obj.getKeySize() + 1;
 
     Status status = rsa_obj.decryptPrivate(nullptr, enc_size, nullptr);
+    EXPECT_NE(status.code(), ErrorCode::eOk);
+
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+    enc_size = rsa_obj_2048.getKeySize() + 1;
+
+    status = rsa_obj_2048.decryptPrivate(nullptr, enc_size, nullptr);
     EXPECT_NE(status.code(), ErrorCode::eOk);
 }
 
@@ -248,6 +507,23 @@ TEST(RsaTest, PrivKeyDecryptValidBuffTest)
     status =
         rsa_obj.decryptPrivate(p_buff_enc.get(), enc_size, p_buff_dec.get());
     EXPECT_EQ(status.code(), ErrorCode::eOk);
+
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+    enc_size   = rsa_obj_2048.getKeySize();
+    p_buff_enc = std::make_unique<Uint8[]>(enc_size);
+    p_buff_dec = std::make_unique<Uint8[]>(enc_size);
+
+    status = rsa_obj_2048.setPrivateKey(DP_EXP_2048,
+                                        DQ_EXP_2048,
+                                        P_Modulus_2048,
+                                        Q_Modulus_2048,
+                                        Q_ModulusINV_2048,
+                                        Modulus_2048,
+                                        sizeof(P_Modulus_2048));
+
+    status = rsa_obj_2048.decryptPrivate(
+        p_buff_enc.get(), enc_size, p_buff_dec.get());
+    EXPECT_EQ(status.code(), ErrorCode::eOk);
 }
 
 TEST(RsaTest, PrivKeyDecryptInValidBuffTest)
@@ -256,6 +532,12 @@ TEST(RsaTest, PrivKeyDecryptInValidBuffTest)
     Uint64             enc_size = rsa_obj.getKeySize();
 
     Status status = rsa_obj.decryptPrivate(nullptr, enc_size, nullptr);
+    EXPECT_NE(status.code(), ErrorCode::eOk);
+
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+    enc_size = rsa_obj_2048.getKeySize();
+
+    status = rsa_obj_2048.decryptPrivate(nullptr, enc_size, nullptr);
     EXPECT_NE(status.code(), ErrorCode::eOk);
 }
 
@@ -271,6 +553,16 @@ TEST(RsaTest, PubKeyWithValidModulusTest)
     pub_key.modulus = p_buff.get();
     status          = rsa_obj.getPublickey(pub_key);
     EXPECT_EQ(status.code(), ErrorCode::eOk);
+
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+    pub_key.size = rsa_obj_2048.getKeySize();
+    status       = rsa_obj_2048.setPublicKey(
+        PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+    p_buff          = std::make_unique<Uint8[]>(pub_key.size);
+    pub_key.modulus = p_buff.get();
+    status          = rsa_obj_2048.getPublickey(pub_key);
+    EXPECT_EQ(status.code(), ErrorCode::eOk);
 }
 
 TEST(RsaTest, PubKeyWithInValidModulusTest)
@@ -284,6 +576,15 @@ TEST(RsaTest, PubKeyWithInValidModulusTest)
     pub_key.modulus = nullptr;
     status          = rsa_obj.getPublickey(pub_key);
     EXPECT_NE(status.code(), ErrorCode::eOk);
+
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+    pub_key.size = rsa_obj_2048.getKeySize();
+    status       = rsa_obj_2048.setPublicKey(
+        PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+    pub_key.modulus = nullptr;
+    status          = rsa_obj_2048.getPublickey(pub_key);
+    EXPECT_NE(status.code(), ErrorCode::eOk);
 }
 
 TEST(RsaTest, PubKeyWithInvalidSizeTest)
@@ -295,6 +596,14 @@ TEST(RsaTest, PubKeyWithInvalidSizeTest)
         rsa_obj.setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
     ASSERT_EQ(status.code(), ErrorCode::eOk);
     status = rsa_obj.getPublickey(pub_key);
+    EXPECT_NE(status.code(), ErrorCode::eOk);
+
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+    pub_key.size = rsa_obj_2048.getKeySize() + 1;
+    status       = rsa_obj_2048.setPublicKey(
+        PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+    status = rsa_obj_2048.getPublickey(pub_key);
     EXPECT_NE(status.code(), ErrorCode::eOk);
 }
 
@@ -314,12 +623,156 @@ TEST(RsaTest, PubKeyWithValidSizeTest)
     pub_key.modulus = p_buff.get();
     status          = rsa_obj.getPublickey(pub_key);
     EXPECT_EQ(status.code(), ErrorCode::eOk);
+
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+
+    pub_key.size = rsa_obj_2048.getKeySize();
+
+    status = rsa_obj_2048.setPublicKey(
+        PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    p_buff = std::make_unique<Uint8[]>(pub_key.size);
+
+    pub_key.modulus = p_buff.get();
+    status          = rsa_obj_2048.getPublickey(pub_key);
+    EXPECT_EQ(status.code(), ErrorCode::eOk);
 }
 
 TEST(RsaTest, KeySizeTest)
 {
     Rsa<KEY_SIZE_1024> rsa_obj;
-    EXPECT_NE(rsa_obj.getKeySize(), 0UL);
+    EXPECT_EQ(rsa_obj.getKeySize(), 1024 / 8);
+
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+    EXPECT_EQ(rsa_obj_2048.getKeySize(), 2048 / 8);
+}
+
+TEST(RsaTest, EncryptOaepPadding)
+{
+    alc_digest_info_t dinfo{};
+
+    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    dinfo.dt_len          = ALC_DIGEST_LEN_256;
+    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
+
+    std::unique_ptr<digest::IDigest> digest_ptr;
+
+    void* digest = fetch_digest(dinfo);
+    digest_ptr.reset(reinterpret_cast<digest::IDigest*>(digest));
+
+    Rsa<KEY_SIZE_1024> rsa_obj;
+    rsa_obj.setDigestOaep(static_cast<digest::IDigest*>(digest));
+    rsa_obj.setMgfOaep(static_cast<digest::IDigest*>(digest));
+
+    Status status =
+        rsa_obj.setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
+
+    // text size should be in the range 2 * hash_len + 2
+    // to sizeof(Modulus) - 2* hash_len - 2
+    const Uint64 text_size = 62; // size - 2 * hash_len - 2;
+    const Uint8  Label[]   = { 'h', 'e', 'l', 'l', 'o' };
+    Uint8        p_seed[256 / 8];
+    Uint8        enc_text[1024 / 8];
+    Uint8        text[text_size];
+
+    status = rsa_obj.encryptPublicOaep(
+        text, text_size, Label, sizeof(Label), p_seed, enc_text);
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+    rsa_obj_2048.setDigestOaep(static_cast<digest::IDigest*>(digest));
+    rsa_obj_2048.setMgfOaep(static_cast<digest::IDigest*>(digest));
+
+    status = rsa_obj_2048.setPublicKey(
+        PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));
+
+    const Uint64 text_size_2048 = 190; // size - 2 * hash_len - 2;
+    Uint8        enc_text_2048[2048 / 8];
+    Uint8        text_2048[text_size_2048];
+    status = rsa_obj_2048.encryptPublicOaep(
+        text_2048, text_size_2048, Label, sizeof(Label), p_seed, enc_text_2048);
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+}
+
+TEST(RsaTest, DecryptOaepPadding)
+{
+    alc_digest_info_t dinfo{};
+
+    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    dinfo.dt_len          = ALC_DIGEST_LEN_256;
+    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
+
+    std::unique_ptr<digest::IDigest> digest_ptr;
+
+    void* digest = fetch_digest(dinfo);
+    digest_ptr.reset(reinterpret_cast<digest::IDigest*>(digest));
+
+    Rsa<KEY_SIZE_1024> rsa_obj;
+    rsa_obj.setDigestOaep(static_cast<digest::IDigest*>(digest));
+    rsa_obj.setMgfOaep(static_cast<digest::IDigest*>(digest));
+
+    Status status =
+        rsa_obj.setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
+
+    // text size should be in the range 2 * hash_len + 2
+    // to sizeof(Modulus) - 2* hash_len - 2
+    Uint64      text_size = 62;
+    const Uint8 Label[]   = { 'h', 'e', 'l', 'l', 'o' };
+    Uint8       p_seed[256 / 8];
+    Uint8       enc_text[1024 / 8];
+    Uint8       text[62]; // size - 2 * hash_len - 2;
+
+    status = rsa_obj.encryptPublicOaep(
+        text, text_size, Label, sizeof(Label), p_seed, enc_text);
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    status = rsa_obj.setPrivateKey(DP_EXP,
+                                   DQ_EXP,
+                                   P_Modulus,
+                                   Q_Modulus,
+                                   Q_ModulusINV,
+                                   Modulus,
+                                   sizeof(P_Modulus));
+
+    Uint8 text_full[1024 / 8];
+
+    status = rsa_obj.decryptPrivateOaep(
+        enc_text, sizeof(enc_text), Label, sizeof(Label), text_full, text_size);
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+    rsa_obj_2048.setDigestOaep(static_cast<digest::IDigest*>(digest));
+
+    rsa_obj_2048.setMgfOaep(static_cast<digest::IDigest*>(digest));
+
+    status = rsa_obj_2048.setPublicKey(
+        PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));
+
+    Uint64 text_size_2048 = 190;
+    Uint8  enc_text_2048[2048 / 8];
+    Uint8  text_2048[190]; // size - 2 * hash_len - 2;
+    Uint8  text_full_2048[2048 / 8];
+
+    status = rsa_obj_2048.encryptPublicOaep(
+        text_2048, text_size_2048, Label, sizeof(Label), p_seed, enc_text_2048);
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    status = rsa_obj_2048.setPrivateKey(DP_EXP_2048,
+                                        DQ_EXP_2048,
+                                        P_Modulus_2048,
+                                        Q_Modulus_2048,
+                                        Q_ModulusINV_2048,
+                                        Modulus_2048,
+                                        sizeof(P_Modulus_2048));
+
+    status = rsa_obj_2048.decryptPrivateOaep(enc_text_2048,
+                                             sizeof(enc_text_2048),
+                                             Label,
+                                             sizeof(Label),
+                                             text_full_2048,
+                                             text_size);
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
 }
 
 } // namespace

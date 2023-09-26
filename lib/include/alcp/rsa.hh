@@ -43,8 +43,11 @@ struct RsaPublicKey
     Uint64 size            = 0;
 };
 
+class IRsa
+{};
+
 template<alc_rsa_key_size T>
-class ALCP_API_EXPORT Rsa
+class ALCP_API_EXPORT Rsa : public IRsa
 {
   public:
     static_assert(T == KEY_SIZE_1024 || T == KEY_SIZE_2048);
