@@ -445,21 +445,8 @@ AesCrosstest(int               keySize,
         alcpTC = new CipherTestingCore(ALCP, mode);
     }
     CipherTestingCore* extTC = nullptr;
-    ExecRecPlay*       fr    = nullptr;
     RngBase            rb;
-    if (bbxreplay) {
-        fr = new ExecRecPlay("AES_" + modeStr + "_" + encDecStr + "_"
-                                 + std::to_string(key_size) + "_"
-                                 + big_small_str,
-                             "AES_" + modeStr + "_TEST_DATA",
-                             true);
-        fr->fastForward(EncDecType(encDec, big_small));
-    } else
-        fr = new ExecRecPlay("AES_" + modeStr + "_" + encDecStr + "_"
-                                 + std::to_string(key_size) + "_"
-                                 + big_small_str,
-                             "AES_" + modeStr + "_TEST_DATA",
-                             false);
+
     /* Set extTC based on which external testing core user asks*/
     try {
         if (useossl)
@@ -506,9 +493,6 @@ AesCrosstest(int               keySize,
 
     if (extTC != nullptr) {
         for (int i = LOOP_START; i < MAX_LOOP; i += INC_LOOP) {
-            if (!bbxreplay)
-                fr->startRecEvent();
-
             /* generate multiple iv and adl */
             ivl = IVL_START + (std::rand() % (IVL_START - IVL_MAX + 1));
 
@@ -538,47 +522,29 @@ AesCrosstest(int               keySize,
             pos2      = tkey_full.begin() + (key_size / 8);
             std::vector<Uint8> tkey(pos1, pos2);
 
-            if (!bbxreplay) {
-                // ALC/Main Lib Data
-                data_alc.m_in   = &(pt[0]);
-                data_alc.m_inl  = pt.size();
-                data_alc.m_iv   = &(iv[0]);
-                data_alc.m_ivl  = iv.size();
-                data_alc.m_out  = &(out_ct_alc[0]);
-                data_alc.m_outl = data_alc.m_inl;
-                if (isxts) {
-                    data_alc.m_tkey  = &(tkey[0]);
-                    data_alc.m_tkeyl = tkeyl;
-                }
+            // ALC/Main Lib Data
+            data_alc.m_in   = &(pt[0]);
+            data_alc.m_inl  = pt.size();
+            data_alc.m_iv   = &(iv[0]);
+            data_alc.m_ivl  = iv.size();
+            data_alc.m_out  = &(out_ct_alc[0]);
+            data_alc.m_outl = data_alc.m_inl;
+            if (isxts) {
+                data_alc.m_tkey  = &(tkey[0]);
+                data_alc.m_tkeyl = tkeyl;
+            }
 
-                // External Lib Data
-                data_ext.m_in   = &(pt[0]);
-                data_ext.m_inl  = pt.size();
-                data_ext.m_iv   = &(iv[0]);
-                data_ext.m_ivl  = iv.size();
-                data_ext.m_out  = &(out_ct_ext[0]);
-                data_ext.m_outl = data_alc.m_inl;
-                if (isxts) {
-                    data_ext.m_tkey       = &(tkey[0]);
-                    data_ext.m_tkeyl      = tkeyl;
-                    data_ext.m_block_size = ct.size();
-                }
-                if (encDec == ENCRYPT)
-                    fr->setRecEvent(key, iv, pt, EncDecType(encDec, big_small));
-                else if (encDec == DECRYPT)
-                    fr->setRecEvent(key, iv, ct, EncDecType(encDec, big_small));
-            } else {
-                fr->nextLog();
-                try {
-                    if (encDec == ENCRYPT)
-                        fr->getValues(&key, &iv, &pt);
-                    else if (encDec == DECRYPT)
-                        fr->getValues(&key, &iv, &ct);
-
-                } catch (std::string excp) {
-                    std::cout << excp << std::endl;
-                    exit(-1);
-                }
+            // External Lib Data
+            data_ext.m_in   = &(pt[0]);
+            data_ext.m_inl  = pt.size();
+            data_ext.m_iv   = &(iv[0]);
+            data_ext.m_ivl  = iv.size();
+            data_ext.m_out  = &(out_ct_ext[0]);
+            data_ext.m_outl = data_alc.m_inl;
+            if (isxts) {
+                data_ext.m_tkey       = &(tkey[0]);
+                data_ext.m_tkeyl      = tkeyl;
+                data_ext.m_block_size = ct.size();
             }
 
             if (encDec == ENCRYPT) {
@@ -617,16 +583,10 @@ AesCrosstest(int               keySize,
                     PrintTestData(key, data_ext, modeStr);
                 }
             }
-            if (!bbxreplay) {
-                fr->dumpBlackBox();
-                fr->endRecEvent();
-                fr->dumpLog();
-            }
         }
         delete extTC;
         delete alcpTC;
     }
-    delete fr;
 }
 
 // FIXME: In future we need a direct path to each aead modes
@@ -702,21 +662,8 @@ AesAeadCrosstest(int               keySize,
         alcpTC = new CipherAeadTestingCore(ALCP, mode);
     }
     CipherAeadTestingCore* extTC = nullptr;
-    ExecRecPlay*           fr    = nullptr;
     RngBase                rb;
-    if (bbxreplay) {
-        fr = new ExecRecPlay("AES_" + modeStr + "_" + encDecStr + "_"
-                                 + std::to_string(key_size) + "_"
-                                 + big_small_str,
-                             "AES_" + modeStr + "_TEST_DATA",
-                             true);
-        fr->fastForward(EncDecType(encDec, big_small));
-    } else
-        fr = new ExecRecPlay("AES_" + modeStr + "_" + encDecStr + "_"
-                                 + std::to_string(key_size) + "_"
-                                 + big_small_str,
-                             "AES_" + modeStr + "_TEST_DATA",
-                             false);
+
     /* Set extTC based on which external testing core user asks*/
     try {
         if (useossl)
@@ -764,9 +711,6 @@ AesAeadCrosstest(int               keySize,
 
     if (extTC != nullptr) {
         for (int i = LOOP_START; i < MAX_LOOP; i += INC_LOOP) {
-            if (!bbxreplay)
-                fr->startRecEvent();
-
             /* generate multiple iv and adl */
             ivl = IVL_START + (std::rand() % (IVL_START - IVL_MAX + 1));
             adl = ADL_START + (std::rand() % (ADL_MAX - ADL_START + 1));
@@ -801,61 +745,43 @@ AesAeadCrosstest(int               keySize,
             pos2      = tkey_full.begin() + (key_size / 8);
             std::vector<Uint8> tkey(pos1, pos2);
 
-            if (!bbxreplay) {
-                // ALC/Main Lib Data
-                data_alc.m_in   = &(pt[0]);
-                data_alc.m_inl  = pt.size();
-                data_alc.m_iv   = &(iv[0]);
-                data_alc.m_ivl  = iv.size();
-                data_alc.m_out  = &(out_ct_alc[0]);
-                data_alc.m_outl = data_alc.m_inl;
-                if (isgcm || isccm || issiv) {
-                    data_alc.m_ad      = &(add[0]);
-                    data_alc.m_adl     = add.size();
-                    data_alc.m_tag     = &(tag_alc[0]);
-                    data_alc.m_tagl    = tag_alc.size();
-                    data_alc.m_tagBuff = tagBuff.get();
-                }
-                if (isxts || issiv) {
-                    data_alc.m_tkey  = &(tkey[0]);
-                    data_alc.m_tkeyl = tkeyl;
-                }
+            // ALC/Main Lib Data
+            data_alc.m_in   = &(pt[0]);
+            data_alc.m_inl  = pt.size();
+            data_alc.m_iv   = &(iv[0]);
+            data_alc.m_ivl  = iv.size();
+            data_alc.m_out  = &(out_ct_alc[0]);
+            data_alc.m_outl = data_alc.m_inl;
+            if (isgcm || isccm || issiv) {
+                data_alc.m_ad      = &(add[0]);
+                data_alc.m_adl     = add.size();
+                data_alc.m_tag     = &(tag_alc[0]);
+                data_alc.m_tagl    = tag_alc.size();
+                data_alc.m_tagBuff = tagBuff.get();
+            }
+            if (isxts || issiv) {
+                data_alc.m_tkey  = &(tkey[0]);
+                data_alc.m_tkeyl = tkeyl;
+            }
 
-                // External Lib Data
-                data_ext.m_in   = &(pt[0]);
-                data_ext.m_inl  = pt.size();
-                data_ext.m_iv   = &(iv[0]);
-                data_ext.m_ivl  = iv.size();
-                data_ext.m_out  = &(out_ct_ext[0]);
-                data_ext.m_outl = data_alc.m_inl;
-                if (isgcm || isccm || issiv) {
-                    data_ext.m_ad      = &(add[0]);
-                    data_ext.m_adl     = add.size();
-                    data_ext.m_tag     = &(tag_ext[0]);
-                    data_ext.m_tagl    = tag_ext.size();
-                    data_ext.m_tagBuff = tagBuff.get();
-                }
-                if (isxts || issiv) {
-                    data_ext.m_tkey       = &(tkey[0]);
-                    data_ext.m_tkeyl      = tkeyl;
-                    data_ext.m_block_size = ct.size();
-                }
-                if (encDec == ENCRYPT)
-                    fr->setRecEvent(key, iv, pt, EncDecType(encDec, big_small));
-                else if (encDec == DECRYPT)
-                    fr->setRecEvent(key, iv, ct, EncDecType(encDec, big_small));
-            } else {
-                fr->nextLog();
-                try {
-                    if (encDec == ENCRYPT)
-                        fr->getValues(&key, &iv, &pt);
-                    else if (encDec == DECRYPT)
-                        fr->getValues(&key, &iv, &ct);
-
-                } catch (std::string excp) {
-                    std::cout << excp << std::endl;
-                    exit(-1);
-                }
+            // External Lib Data
+            data_ext.m_in   = &(pt[0]);
+            data_ext.m_inl  = pt.size();
+            data_ext.m_iv   = &(iv[0]);
+            data_ext.m_ivl  = iv.size();
+            data_ext.m_out  = &(out_ct_ext[0]);
+            data_ext.m_outl = data_alc.m_inl;
+            if (isgcm || isccm || issiv) {
+                data_ext.m_ad      = &(add[0]);
+                data_ext.m_adl     = add.size();
+                data_ext.m_tag     = &(tag_ext[0]);
+                data_ext.m_tagl    = tag_ext.size();
+                data_ext.m_tagBuff = tagBuff.get();
+            }
+            if (isxts || issiv) {
+                data_ext.m_tkey       = &(tkey[0]);
+                data_ext.m_tkeyl      = tkeyl;
+                data_ext.m_block_size = ct.size();
             }
 
             if (encDec == ENCRYPT) {
@@ -940,16 +866,10 @@ AesAeadCrosstest(int               keySize,
                     PrintTestData(key, data_ext, modeStr);
                 }
             }
-            if (!bbxreplay) {
-                fr->dumpBlackBox();
-                fr->endRecEvent();
-                fr->dumpLog();
-            }
         }
         delete extTC;
         delete alcpTC;
     }
-    delete fr;
 }
 
 #ifndef ENABLE_RSP
