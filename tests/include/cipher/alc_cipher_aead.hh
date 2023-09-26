@@ -40,7 +40,6 @@ class AlcpCipherAeadBase : public CipherAeadBase
     alc_cipher_handle_p    m_handle = nullptr;
     alc_cipher_aead_info_t m_cinfo;
     alc_key_info_t         m_keyinfo;
-    _alc_cipher_type       m_cipher_type;
     alc_cipher_mode_t      m_mode;
     const Uint8*           m_iv;
     const Uint8*           m_tkey = nullptr;
