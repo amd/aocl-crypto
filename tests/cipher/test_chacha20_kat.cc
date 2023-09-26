@@ -35,10 +35,14 @@ using namespace alcp::testing;
 /* Testing Starts Here! */
 TEST(CHACHA20_ENC_256, KAT_256)
 {
+    if (useipp || oa_override)
+        GTEST_SKIP() << "IPP doesnt have Chacha20 cipher implemented yet";
     ChachaKatTest(256, ENCRYPT, ALC_CIPHER_TYPE_CHACHA20);
 }
 TEST(CHACHA20_DEC_256, KAT_256)
 {
+    if (useipp || oa_override)
+        GTEST_SKIP() << "IPP doesnt have Chacha20 cipher implemented yet";
     ChachaKatTest(256, DECRYPT, ALC_CIPHER_TYPE_CHACHA20);
 }
 
