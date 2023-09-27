@@ -35,6 +35,7 @@ alcp_MacInit(const alc_mac_info_p pcMacInfo, ipp_wrp_mac_ctx* p_mac_ctx)
 
     if (err == ALC_ERROR_NONE) {
         p_mac_ctx->handle.ch_context = malloc(alcp_mac_context_size(pcMacInfo));
+        p_mac_ctx->mac_info          = *pcMacInfo;
     } else {
         p_mac_ctx->handle.ch_context = nullptr;
         printErr("ALCP MAC Provider:  Information provided is unsupported\n");
@@ -54,6 +55,9 @@ IppStatus
 alcp_MacUpdate(const Ipp8u* pSrc, int len, ipp_wrp_mac_ctx* p_mac_ctx)
 {
 
+    if (p_mac_ctx->handle.ch_context == nullptr) {
+        alcp_MacInit(&p_mac_ctx->mac_info, p_mac_ctx);
+    }
     auto err = alcp_mac_update(&p_mac_ctx->handle,
                                static_cast<const Uint8*>(pSrc),
                                static_cast<Uint64>(len));
@@ -88,5 +92,6 @@ alcp_MacFinalize(Ipp8u* pMD, int len, ipp_wrp_mac_ctx* p_mac_ctx)
     }
     p_mac_ctx->~ipp_wrp_mac_ctx();
     free(p_mac_ctx->handle.ch_context);
+    p_mac_ctx->handle.ch_context = nullptr;
     return ippStsNoErr;
 }

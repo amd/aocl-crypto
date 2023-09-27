@@ -69,5 +69,6 @@ typedef struct _ipp_sha2_rmf_algo_ctx
 
 typedef struct _ipp_wrp_mac_ctx
 {
-    alc_mac_handle handle = {};
+    alc_mac_handle handle   = {};
+    alc_mac_info_t mac_info = {};
 } ipp_wrp_mac_ctx;
