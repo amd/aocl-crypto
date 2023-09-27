@@ -268,9 +268,6 @@ processParallelBlocks(const Uint8 key[],
 
         plaintext += 256;
 
-        //Fixme: Unused param need to remove it
-        plaintextLength += plaintextLength;
-
         ciphertext += 256;
         counter_reg = _mm512_add_epi32(counter_reg, inc_reg);
     }
@@ -306,7 +303,8 @@ ProcessInput(const Uint8 key[],
         Uint8 iv_copy[16];
         memcpy(iv_copy, iv, 16);
         if (chacha20_parallel_blocks > 0) {
-            (*(reinterpret_cast<Uint32*>(iv_copy))) += 4;
+            (*(reinterpret_cast<Uint32*>(iv_copy))) +=
+                4 * chacha20_parallel_blocks;
         }
         processParallelBlocks(key,
                               keylen,
