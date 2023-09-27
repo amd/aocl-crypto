@@ -77,6 +77,24 @@ struct BigNum
     Uint64  m_pos  = 0;
 };
 
+static inline void
+GetFromTable(Uint64* t, Uint64 index, Uint64* num, Uint64 size, Uint64 limit)
+{
+    for (Uint64 i = 0; i < size; i++) {
+        num[i] = t[index];
+        index += limit;
+    }
+}
+
+static inline void
+PutInTable(Uint64* t, Uint64 index, Uint64* num, Uint64 size, Uint64 limit)
+{
+    for (Uint64 i = 0; i < size; i++) {
+        t[index] = num[i];
+        index += limit;
+    }
+}
+
 template<alc_rsa_key_size T>
 struct MontCompute
 {
@@ -935,22 +953,6 @@ struct MontCompute
         }
     }
 
-    static inline void PutInTable(
-        Uint64* t, Uint64 index, Uint64* num, Uint64 size, Uint64 limit)
-    {
-        for (Uint64 i = 0; i < size; i++) {
-            t[index] = num[i];
-            index += limit;
-        }
-    }
-    static inline void GetFromTable(
-        Uint64* t, Uint64 index, Uint64* num, Uint64 size, Uint64 limit)
-    {
-        for (Uint64 i = 0; i < size; i++) {
-            num[i] = t[index];
-            index += limit;
-        }
-    }
     // INPUT: an element g ∈ G and positive integer e = (etet−1...e1e0)b
     // OUTPUT: g^e
     // 1. Precomputation
