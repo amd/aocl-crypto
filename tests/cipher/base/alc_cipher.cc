@@ -38,8 +38,10 @@ AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type cipher_type,
                                const Uint32           key_len,
                                const Uint32           iv_len)
 {
-    this->m_iv = iv;
-    init(key, key_len);
+    if (iv_len != 0)
+        this->m_iv = iv;
+    if (key_len != 0)
+        init(key, key_len);
 }
 
 AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cipher_type,
@@ -96,7 +98,8 @@ AlcpCipherBase::init(const Uint8* iv,
                      const Uint8* key,
                      const Uint32 key_len)
 {
-    this->m_iv = iv;
+    if (iv_len != 0)
+        this->m_iv = iv;
     return init(key, key_len);
 }
 
