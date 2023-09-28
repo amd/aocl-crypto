@@ -50,6 +50,15 @@ ENDIF()
 
 SET(EXTRA_INCLUDES "")
 
+# sources for tests
+SET(ALCP_INCLUDES
+        "${CMAKE_SOURCE_DIR}/include"
+        "${CMAKE_SOURCE_DIR}/lib/include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+        ${EXTRA_INCLUDES}
+)
+
 IF(ENABLE_TESTS_IPP_API)
     ADD_COMPILE_OPTIONS("-DUSE_IPP")
 
@@ -144,10 +153,7 @@ FUNCTION(KAT_AES MOD)
     ENDIF(ALCP_ENABLE_RSP)
 
     TARGET_INCLUDE_DIRECTORIES(aes_${MOD}_kat PRIVATE
-        "${CMAKE_SOURCE_DIR}/include"
-        "${CMAKE_SOURCE_DIR}/lib/include"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../include"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+        ${ALCP_INCLUDES}
         ${EXTRA_INCLUDES})
 
     TARGET_COMPILE_OPTIONS(aes_${MOD}_kat PUBLIC -O2 ${ALCP_WARNINGS})
@@ -165,10 +171,7 @@ FUNCTION(KAT_CHACHA20)
     FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_chacha20.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_chacha20.csv SYMBOLIC)
 
     TARGET_INCLUDE_DIRECTORIES(chacha20_kat PRIVATE
-        "${CMAKE_SOURCE_DIR}/include"
-        "${CMAKE_SOURCE_DIR}/lib/include"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../include"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+        ${ALCP_INCLUDES}
         ${EXTRA_INCLUDES})
 
     TARGET_COMPILE_OPTIONS(chacha20_kat PUBLIC -O2 ${ALCP_WARNINGS})
@@ -180,10 +183,7 @@ ENDFUNCTION()
 FUNCTION(CROSS_AES MOD)
     ADD_EXECUTABLE(aes_${MOD}_cross test_${MOD}_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
     TARGET_INCLUDE_DIRECTORIES(aes_${MOD}_cross PRIVATE
-        "${CMAKE_SOURCE_DIR}/include"
-        "${CMAKE_SOURCE_DIR}/lib/include"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../include"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+        ${ALCP_INCLUDES}
         ${EXTRA_INCLUDES})
     TARGET_COMPILE_OPTIONS(aes_${MOD}_cross PUBLIC -O2 ${ALCP_WARNINGS})
     TARGET_LINK_LIBRARIES(aes_${MOD}_cross ${LIBS})
@@ -197,10 +197,7 @@ ENDFUNCTION()
 FUNCTION(CROSS_CHACHA20)
     ADD_EXECUTABLE(chacha20_cross test_chacha20_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
     TARGET_INCLUDE_DIRECTORIES(chacha20_cross PRIVATE
-        "${CMAKE_SOURCE_DIR}/include"
-        "${CMAKE_SOURCE_DIR}/lib/include"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../include"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+        ${ALCP_INCLUDES}
         ${EXTRA_INCLUDES})
     TARGET_COMPILE_OPTIONS(chacha20_cross PUBLIC -O2 ${ALCP_WARNINGS})
     TARGET_LINK_LIBRARIES(chacha20_cross ${LIBS})
