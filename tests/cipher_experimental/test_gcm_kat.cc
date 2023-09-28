@@ -30,7 +30,7 @@
 #include <map>
 #include <memory>
 
-#include "cipher_expiremental/alc_cipher_gcm.hh"
+#include "cipher_experimental/alc_cipher_gcm.hh"
 #include "csv.hh"
 #include "utils.hh"
 
@@ -40,7 +40,7 @@ using alcp::testing::Csv;
 using alcp::testing::cipher::ITestCipher;
 using namespace alcp::testing::cipher::gcm;
 
-// Expiremental code
+// experimental code
 #if 0
 class GcmParameterizedTestFixture : public ::testing::TestWithParam<test_data_t>
 {
@@ -147,12 +147,12 @@ GcmKat(const std::string filename)
     }
 }
 
-TEST(KnownAnswerTest, GCM_Encrypt_Expiremental)
+TEST(KnownAnswerTest, GCM_Encrypt_experimental)
 {
     GcmKat<true>("dataset_gcm.csv");
 }
 
-TEST(KnownAnswerTest, GCM_Decrypt_Expiremental)
+TEST(KnownAnswerTest, GCM_Decrypt_experimental)
 {
     GcmKat<false>("dataset_gcm.csv");
 }

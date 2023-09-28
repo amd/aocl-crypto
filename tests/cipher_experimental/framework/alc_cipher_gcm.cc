@@ -26,7 +26,7 @@
  *
  */
 
-#include "cipher_expiremental/alc_cipher_gcm.hh"
+#include "cipher_experimental/alc_cipher_gcm.hh"
 
 namespace alcp::testing::cipher::gcm {
 template<bool encryptor>

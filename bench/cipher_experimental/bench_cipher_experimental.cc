@@ -29,7 +29,7 @@
 #include <benchmark/benchmark.h>
 #include <memory>
 
-#include "cipher_expiremental/alc_cipher_gcm.hh"
+#include "cipher_experimental/alc_cipher_gcm.hh"
 
 namespace alcp::benchmarking::cipher {
 
@@ -40,7 +40,7 @@ std::vector<Int64> blocksizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
 
 template<bool encryptor, alc_cipher_mode_t mode>
 int
-BenchCipherExpiremental(benchmark::State& state,
+BenchCipherexperimental(benchmark::State& state,
                         const Uint64      cBlockSize,
                         Uint32            keylen)
 {
@@ -127,47 +127,47 @@ BenchCipherExpiremental(benchmark::State& state,
 }
 } // namespace alcp::benchmarking::cipher
 
-using alcp::benchmarking::cipher::BenchCipherExpiremental;
+using alcp::benchmarking::cipher::BenchCipherexperimental;
 
 static void
 BENCH_AES_ENCRYPT_GCM_128(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(BenchCipherExpiremental<true, ALC_AES_MODE_GCM>(
+    benchmark::DoNotOptimize(BenchCipherexperimental<true, ALC_AES_MODE_GCM>(
         state, state.range(0), 128));
 }
 
 static void
 BENCH_AES_ENCRYPT_GCM_192(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(BenchCipherExpiremental<true, ALC_AES_MODE_GCM>(
+    benchmark::DoNotOptimize(BenchCipherexperimental<true, ALC_AES_MODE_GCM>(
         state, state.range(0), 192));
 }
 
 static void
 BENCH_AES_ENCRYPT_GCM_256(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(BenchCipherExpiremental<true, ALC_AES_MODE_GCM>(
+    benchmark::DoNotOptimize(BenchCipherexperimental<true, ALC_AES_MODE_GCM>(
         state, state.range(0), 256));
 }
 
 static void
 BENCH_AES_DECRYPT_GCM_128(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(BenchCipherExpiremental<false, ALC_AES_MODE_GCM>(
+    benchmark::DoNotOptimize(BenchCipherexperimental<false, ALC_AES_MODE_GCM>(
         state, state.range(0), 128));
 }
 
 static void
 BENCH_AES_DECRYPT_GCM_192(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(BenchCipherExpiremental<false, ALC_AES_MODE_GCM>(
+    benchmark::DoNotOptimize(BenchCipherexperimental<false, ALC_AES_MODE_GCM>(
         state, state.range(0), 192));
 }
 
 static void
 BENCH_AES_DECRYPT_GCM_256(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(BenchCipherExpiremental<false, ALC_AES_MODE_GCM>(
+    benchmark::DoNotOptimize(BenchCipherexperimental<false, ALC_AES_MODE_GCM>(
         state, state.range(0), 256));
 }
 

@@ -28,8 +28,8 @@
 
 #pragma once
 
-#include "cipher_expiremental/cipher.hh"
-#include "cipher_expiremental/cipher_gcm_data.hh"
+#include "cipher_experimental/cipher.hh"
+#include "cipher_experimental/cipher_gcm_data.hh"
 
 #include "alcp/alcp.h"
 

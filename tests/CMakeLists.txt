@@ -31,7 +31,7 @@ ADD_SUBDIRECTORY(cmac)
 ADD_SUBDIRECTORY(poly1305)
 ADD_SUBDIRECTORY(examples)
 ADD_SUBDIRECTORY(rsa)
-ADD_SUBDIRECTORY(cipher_expiremental)
+ADD_SUBDIRECTORY(cipher_experimental)
 # FIXME: Enable this once this test is up and running on windows
 IF(UNIX)
 ADD_SUBDIRECTORY(dl_load)

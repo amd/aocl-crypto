@@ -26,7 +26,7 @@
  *
  */
 
-#include "cipher_expiremental/cipher_data.hh"
+#include "cipher_experimental/cipher_data.hh"
 
 namespace alcp::testing::cipher::gcm {
 

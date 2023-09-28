@@ -31,7 +31,7 @@ FetchContent_Declare(gtest
 FetchContent_MakeAvailable(gtest)
 
 FILE(GLOB COMMON_SRCS ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
-FILE(GLOB ALC_CIPHER_FWK_SRCS ${CMAKE_SOURCE_DIR}/tests/cipher_expiremental/framework/alc_*.cc)
+FILE(GLOB ALC_CIPHER_FWK_SRCS ${CMAKE_SOURCE_DIR}/tests/cipher_experimental/framework/alc_*.cc)
 SET(LIBS ${LIBS} gtest alcp)
 
 IF(WIN32)
@@ -45,7 +45,7 @@ SET(EXTRA_INCLUDES "")
 
 # Function to dynamically generate compilation of each test cases
 FUNCTION(KAT_AES MOD)
-    ADD_EXECUTABLE(aes_${MOD}_kat_expiremental test_${MOD}_kat.cc ${COMMON_SRCS} ${ALC_CIPHER_FWK_SRCS} ${EXTRA_SOURCES})
+    ADD_EXECUTABLE(aes_${MOD}_kat_experimental test_${MOD}_kat.cc ${COMMON_SRCS} ${ALC_CIPHER_FWK_SRCS} ${EXTRA_SOURCES})
 
     # Below code must be enabled once we merge completely
     # Depending on the person, they are gonna run from root dir or binary directory
@@ -55,16 +55,16 @@ FUNCTION(KAT_AES MOD)
     # Link dataset to the actual place of test binary
     # FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
 
-    TARGET_INCLUDE_DIRECTORIES(aes_${MOD}_kat_expiremental PRIVATE
+    TARGET_INCLUDE_DIRECTORIES(aes_${MOD}_kat_experimental PRIVATE
         "${CMAKE_SOURCE_DIR}/include"
         "${CMAKE_SOURCE_DIR}/lib/include"
         "${CMAKE_SOURCE_DIR}/tests/include"
         "${CMAKE_SOURCE_DIR}/tests/common/include"
         ${EXTRA_INCLUDES})
 
-    TARGET_COMPILE_OPTIONS(aes_${MOD}_kat_expiremental PUBLIC ${ALCP_WARNINGS})
-    TARGET_LINK_LIBRARIES(aes_${MOD}_kat_expiremental ${LIBS})
-    gtest_add_tests(TARGET aes_${MOD}_kat_expiremental
+    TARGET_COMPILE_OPTIONS(aes_${MOD}_kat_experimental PUBLIC ${ALCP_WARNINGS})
+    TARGET_LINK_LIBRARIES(aes_${MOD}_kat_experimental ${LIBS})
+    gtest_add_tests(TARGET aes_${MOD}_kat_experimental
         TEST_SUFFIX .${MOD})
 ENDFUNCTION()
 

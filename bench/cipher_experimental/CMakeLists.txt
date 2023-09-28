@@ -35,7 +35,7 @@
 
 
 FILE(GLOB COMMON_SRCS ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
-FILE(GLOB ALC_CIPHER_FWK_SRCS ${CMAKE_SOURCE_DIR}/tests/cipher_expiremental/framework/alc_*.cc)
+FILE(GLOB ALC_CIPHER_FWK_SRCS ${CMAKE_SOURCE_DIR}/tests/cipher_experimental/framework/alc_*.cc)
 SET(LIBS ${LIBS} benchmark alcp)
 
 SET(EXTRA_SOURCES "")
@@ -43,14 +43,14 @@ SET(EXTRA_INCLUDES "")
 
 
 # FIXME: Move into a function
-ADD_EXECUTABLE(bench_cipher_expiremental bench_cipher_expiremental.cc ${COMMON_SRCS} ${ALC_CIPHER_FWK_SRCS} ${EXTRA_SOURCES})
+ADD_EXECUTABLE(bench_cipher_experimental bench_cipher_experimental.cc ${COMMON_SRCS} ${ALC_CIPHER_FWK_SRCS} ${EXTRA_SOURCES})
 
-TARGET_INCLUDE_DIRECTORIES(bench_cipher_expiremental PRIVATE
+TARGET_INCLUDE_DIRECTORIES(bench_cipher_experimental PRIVATE
 "${CMAKE_SOURCE_DIR}/include"
 "${CMAKE_SOURCE_DIR}/lib/include"
 "${CMAKE_SOURCE_DIR}/tests/include"
 "${CMAKE_SOURCE_DIR}/tests/common/include"
 ${EXTRA_INCLUDES})
 
-TARGET_COMPILE_OPTIONS(bench_cipher_expiremental PUBLIC ${ALCP_WARNINGS})
-TARGET_LINK_LIBRARIES(bench_cipher_expiremental ${LIBS})
+TARGET_COMPILE_OPTIONS(bench_cipher_experimental PUBLIC ${ALCP_WARNINGS})
+TARGET_LINK_LIBRARIES(bench_cipher_experimental ${LIBS})
