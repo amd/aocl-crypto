@@ -199,11 +199,11 @@ static const Uint8 Q_ModulusINV_2048[] = {
 
 static const Uint64 PublicKeyExponent = 0x10001;
 
-static inline void*
+static inline digest::IDigest*
 fetch_digest(const alc_digest_info_t& digestInfo)
 {
     using namespace alcp::digest;
-    void* digest = nullptr;
+    digest::IDigest* digest = nullptr;
     switch (digestInfo.dt_type) {
         case ALC_DIGEST_TYPE_SHA2: {
             switch (digestInfo.dt_mode.dm_sha2) {
@@ -658,12 +658,12 @@ TEST(RsaTest, EncryptOaepPadding)
 
     std::unique_ptr<digest::IDigest> digest_ptr;
 
-    void* digest = fetch_digest(dinfo);
-    digest_ptr.reset(reinterpret_cast<digest::IDigest*>(digest));
+    digest::IDigest* digest = fetch_digest(dinfo);
+    digest_ptr.reset(digest);
 
     Rsa<KEY_SIZE_1024> rsa_obj;
-    rsa_obj.setDigestOaep(static_cast<digest::IDigest*>(digest));
-    rsa_obj.setMgfOaep(static_cast<digest::IDigest*>(digest));
+    rsa_obj.setDigestOaep(digest);
+    rsa_obj.setMgfOaep(digest);
 
     Status status =
         rsa_obj.setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
