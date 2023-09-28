@@ -472,7 +472,7 @@ Chacha20CrossTest(int              keySize,
     }
     if (big_small == SMALL) {
         LOOP_START = SMALL_START_LOOP;
-        MAX_LOOP   = 512; /*FIXME*/
+        MAX_LOOP   = SMALL_MAX_LOOP;
         INC_LOOP   = SMALL_INC_LOOP;
         size       = 1;
     } else {
@@ -1143,33 +1143,33 @@ RunCipherKatTest(CipherTestingCore& testingCore,
 #else
 bool
 RunCipherKATTest(TestingCore& testingCore,
-                 encDec_t encDec,
-                 std::string encDecStr,
-                 std::string modeStr,
-                 int keySize,
-                 bool isxts,
-                 bool isgcm)
+                 encDec_t     encDec,
+                 std::string  encDecStr,
+                 std::string  modeStr,
+                 int          keySize,
+                 bool         isxts,
+                 bool         isgcm)
 {
-    bool ret = false;
-    alcp_dc_ex_t data;
+    bool                        ret = false;
+    alcp_dc_ex_t                data;
     std::shared_ptr<CRspParser> rsp = testingCore.getRsp();
-    std::vector<Uint8> pt = rsp->getVect("PLAINTEXT");
-    std::vector<Uint8> ct = rsp->getVect("CIPHERTEXT");
-    std::vector<Uint8> outpt(pt.size(), 0);
-    std::vector<Uint8> outct(ct.size(), 0);
-    std::vector<Uint8> iv = rsp->getVect("INITVECT");
-    std::vector<Uint8> tkey = rsp->getVect("TWEAK_KEY");
+    std::vector<Uint8>          pt  = rsp->getVect("PLAINTEXT");
+    std::vector<Uint8>          ct  = rsp->getVect("CIPHERTEXT");
+    std::vector<Uint8>          outpt(pt.size(), 0);
+    std::vector<Uint8>          outct(ct.size(), 0);
+    std::vector<Uint8>          iv   = rsp->getVect("INITVECT");
+    std::vector<Uint8>          tkey = rsp->getVect("TWEAK_KEY");
 
     if (encDec == ENCRYPT) {
         if (pt.size()) {
-            data.m_in = &(pt[0]);
+            data.m_in  = &(pt[0]);
             data.m_inl = pt.size();
         }
-        data.m_iv = &(iv[0]);
+        data.m_iv  = &(iv[0]);
         data.m_ivl = iv.size();
         // XTS Specific
-        data.m_tkey = &(tkey[0]);
-        data.m_tkeyl = tkey.size();
+        data.m_tkey       = &(tkey[0]);
+        data.m_tkeyl      = tkey.size();
         data.m_block_size = pt.size();
         if (outct.size())
             data.m_out = &(outct[0]);
@@ -1189,14 +1189,14 @@ RunCipherKATTest(TestingCore& testingCore,
                                     + std::to_string(keySize) + encDecStr)));
     } else {
         if (ct.size()) {
-            data.m_in = &(ct[0]);
+            data.m_in  = &(ct[0]);
             data.m_inl = ct.size();
         }
-        data.m_iv = &(iv[0]);
+        data.m_iv  = &(iv[0]);
         data.m_ivl = iv.size();
         // XTS Specific
-        data.m_tkey = &(tkey[0]);
-        data.m_tkeyl = tkey.size();
+        data.m_tkey       = &(tkey[0]);
+        data.m_tkeyl      = tkey.size();
         data.m_block_size = pt.size();
         if (outpt.size())
             data.m_out = &(outpt[0]);
