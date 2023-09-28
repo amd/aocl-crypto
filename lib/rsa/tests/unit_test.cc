@@ -705,12 +705,12 @@ TEST(RsaTest, DecryptOaepPadding)
 
     std::unique_ptr<digest::IDigest> digest_ptr;
 
-    void* digest = fetch_digest(dinfo);
+    digest::IDigest* digest = fetch_digest(dinfo);
     digest_ptr.reset(reinterpret_cast<digest::IDigest*>(digest));
 
     Rsa<KEY_SIZE_1024> rsa_obj;
-    rsa_obj.setDigestOaep(static_cast<digest::IDigest*>(digest));
-    rsa_obj.setMgfOaep(static_cast<digest::IDigest*>(digest));
+    rsa_obj.setDigestOaep(digest);
+    rsa_obj.setMgfOaep(digest);
 
     Status status =
         rsa_obj.setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
