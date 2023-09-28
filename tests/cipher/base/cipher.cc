@@ -26,8 +26,8 @@
  *
  */
 
-#include "cipher/cipher.hh"
 #include "alcp/alcp.h"
+#include "cipher/cipher.hh"
 #include <sstream>
 #ifdef USE_IPP
 #include "cipher/ipp_cipher.hh"
@@ -37,6 +37,14 @@
 #endif
 
 namespace alcp::testing {
+
+/* to check if cipher type is non-AES
+ TO DO: Update this when we have more non-AES types */
+bool
+isNonAESCipherType(_alc_cipher_type cipher_type)
+{
+    return cipher_type != ALC_CIPHER_TYPE_AES;
+}
 
 // Class ExecRecPlay - FlightRecorder/FlightReplay
 ExecRecPlay::ExecRecPlay()

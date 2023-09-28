@@ -37,6 +37,10 @@ namespace alcp::testing {
 using alcp::testing::utils::isPathExist;
 using alcp::testing::utils::parseHexStrToBin;
 
+/* to check cipher type is AES */
+bool
+isNonAESCipherType(_alc_cipher_type cipher_type);
+
 // alcp_data_cipher_ex_t
 struct alcp_dc_ex_t
 {

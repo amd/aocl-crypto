@@ -227,10 +227,8 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 key_len)
     }
 
     /* for non AES types */
-    if (m_cipher_type == ALC_CIPHER_TYPE_CHACHA20) {
+    if (isNonAESCipherType(m_cipher_type)) {
         m_cipher = EVP_CIPHER_fetch(NULL, "ChaCha20", NULL);
-    }
-    if (m_cipher_type == ALC_CIPHER_TYPE_CHACHA20) {
         if (1 != EVP_CipherInit_ex(m_ctx_enc, m_cipher, NULL, m_key, m_iv, 1)) {
             handleErrors();
             return false;
@@ -257,7 +255,7 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 key_len)
     }
 
     /* for non AES types */
-    if (m_cipher_type == ALC_CIPHER_TYPE_CHACHA20) {
+    if (isNonAESCipherType(m_cipher_type)) {
         if (1 != EVP_CipherInit_ex(m_ctx_dec, m_cipher, NULL, m_key, m_iv, 1)) {
             handleErrors();
             return false;
@@ -295,7 +293,7 @@ OpenSSLCipherBase::encrypt(alcp_dc_ex_t& data)
 {
     int len_ct = 0;
     /* for non aes*/
-    if (m_cipher_type == ALC_CIPHER_TYPE_CHACHA20) {
+    if (isNonAESCipherType(m_cipher_type)) {
         if (1
             != EVP_CipherUpdate(
                 m_ctx_enc, data.m_out, &len_ct, data.m_in, data.m_inl)) {
@@ -335,7 +333,7 @@ OpenSSLCipherBase::decrypt(alcp_dc_ex_t& data)
 {
     int len_pt = 0;
     /* for non aes*/
-    if (m_cipher_type == ALC_CIPHER_TYPE_CHACHA20) {
+    if (isNonAESCipherType(m_cipher_type)) {
         if (1
             != EVP_CipherUpdate(
                 m_ctx_dec, data.m_out, &len_pt, data.m_in, data.m_inl)) {
