@@ -228,6 +228,7 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 key_len)
 
     /* for non AES types */
     if (isNonAESCipherType(m_cipher_type)) {
+        EVP_CIPHER_free(m_cipher);
         m_cipher = EVP_CIPHER_fetch(NULL, "ChaCha20", NULL);
         if (1 != EVP_CipherInit_ex(m_ctx_enc, m_cipher, NULL, m_key, m_iv, 1)) {
             handleErrors();
