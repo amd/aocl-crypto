@@ -71,27 +71,34 @@ PrintRsaTestData(alcp_rsa_data_t data)
 bool
 SkipTest(int ret_val, std::string LibStr)
 {
-    /* for invalid
-      inputs, openssl returns RSA_R_DATA_TOO_LARGE_FOR_MODULUS and
-      alcp returns ALC_ERROR_NOT_PERMITTED */
+/* for invalid
+  inputs, openssl returns RSA_R_DATA_TOO_LARGE_FOR_MODULUS and
+  alcp returns ALC_ERROR_NOT_PERMITTED */
+#if USE_OSSL
     if ((LibStr.compare("OpenSSL") == 0)
         && ret_val == RSA_R_DATA_TOO_LARGE_FOR_MODULUS) {
         if (verbose > 1)
             std::cout << LibStr << ": Invalid case: Skipping this test"
                       << std::endl;
         return true;
-    } else if ((LibStr.compare("ALCP") == 0)
-               && ret_val == ALC_ERROR_NOT_PERMITTED) {
-        if (verbose > 1)
-            std::cout << LibStr << ": Invalid case: Skipping this test"
-                      << std::endl;
-        return true;
-    } else if ((LibStr.compare("IPP") == 0) && ret_val == -11) {
-        if (verbose > 1)
-            std::cout << LibStr << ": Invalid case: Skipping this test"
-                      << std::endl;
-        return true;
     } else
+#endif
+        if ((LibStr.compare("ALCP") == 0)
+            && ret_val == ALC_ERROR_NOT_PERMITTED) {
+        if (verbose > 1)
+            std::cout << LibStr << ": Invalid case: Skipping this test"
+                      << std::endl;
+        return true;
+    }
+#if USE_IPP
+    else if ((LibStr.compare("IPP") == 0) && ret_val == -11) {
+        if (verbose > 1)
+            std::cout << LibStr << ": Invalid case: Skipping this test"
+                      << std::endl;
+        return true;
+    }
+#endif
+    else
         return false;
 }
 
