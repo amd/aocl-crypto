@@ -1017,14 +1017,14 @@ namespace alcp::rsa { namespace zen4 {
                                const Uint64* first,
                                const Uint64* second,
                                const __m256i mod_reg[5],
-                               Uint64        k0)
+                               const __m256i k_reg)
     {
         __m256i first_reg[5];
 
         __m256i res_reg[5]{};
 
         LoadReg256(first_reg, first);
-        __m256i k_reg = _mm256_set1_epi64x(k0);
+
         Amm1024LoopInternal(res_reg, first_reg, mod_reg, second, k_reg);
 
         StoreReg256(res, res_reg);
@@ -1086,14 +1086,14 @@ namespace alcp::rsa { namespace zen4 {
     static inline void AMS1024(Uint64*       res,
                                const Uint64* first,
                                const __m256i mod_reg[5],
-                               Uint64        k0)
+                               const __m256i k_reg)
     {
 
         __m256i first_reg[5];
 
         __m256i res_reg[5]{};
         LoadReg256(first_reg, first);
-        __m256i k_reg = _mm256_set1_epi64x(k0);
+
         // each stage will multiply 4 set of registers from first to all
         // other with the first pointer
         Amm1024LoopInternalStage1(res_reg, first_reg, mod_reg, first, k_reg);
@@ -1430,12 +1430,12 @@ namespace alcp::rsa { namespace zen4 {
     static inline void AMM1024Reduce(Uint64*       res,
                                      const Uint64* first,
                                      const __m256i mod_reg[5],
-                                     Uint64        k0)
+                                     const __m256i k_reg)
     {
         __m256i res_reg[5];
 
         LoadReg256(res_reg, first);
-        __m256i       k_reg = _mm256_set1_epi64x(k0);
+
         const __m256i zero{};
 
         for (Uint64 i = 0; i < 20; i++) {
@@ -1521,12 +1521,12 @@ namespace alcp::rsa { namespace zen4 {
     static inline void AMMAndAMS1024(Uint64*       res,
                                      Uint64*       mult,
                                      const __m256i mod_reg[5],
-                                     Uint64        k0,
+                                     const __m256i k_reg,
                                      Uint64        val)
     {
-        AMS1024(res, res, mod_reg, k0);
+        AMS1024(res, res, mod_reg, k_reg);
         if (val & mont::one_msb) {
-            AMM1024(res, res, mult, mod_reg, k0);
+            AMM1024(res, res, mult, mod_reg, k_reg);
         }
     }
 
@@ -1602,19 +1602,19 @@ namespace alcp::rsa { namespace zen4 {
 
             LoadReg256(mod_reg, mod_radix_52_bit);
 
+            __m256i k_reg = _mm256_set1_epi64x(context.m_k0);
             //(congruent to 2^(4n-k×m) mod
             // M)
             AMM1024(r2_radix_52_bit,
                     r2_radix_52_bit,
                     r2_radix_52_bit,
                     mod_reg,
-                    context.m_k0);
+                    k_reg);
             // 2^(4km - 4n) in radix 52
             alignas(64) const Uint64 mult[20] = { 0x00, 0x1000 };
 
             //(congruent to 2^2k×m mod M)
-            AMM1024(
-                r2_radix_52_bit, r2_radix_52_bit, mult, mod_reg, context.m_k0);
+            AMM1024(r2_radix_52_bit, r2_radix_52_bit, mult, mod_reg, k_reg);
         }
     }
 
@@ -1654,17 +1654,16 @@ namespace alcp::rsa { namespace zen4 {
         __m256i mod_reg[5];
         LoadReg256(mod_reg, mod_radix_52_bit);
 
+        __m256i k_reg = _mm256_set1_epi64x(context.m_k0);
+
         //(congruent to 2^(4n-k×m) mod M)
-        AMM1024(r2_radix_52_bit,
-                r2_radix_52_bit,
-                r2_radix_52_bit,
-                mod_reg,
-                context.m_k0);
+        AMM1024(
+            r2_radix_52_bit, r2_radix_52_bit, r2_radix_52_bit, mod_reg, k_reg);
         // 2^(4n-km) in radix 52
         alignas(64) const Uint64 mult[20] = { 0x00, 0x1000 };
 
         //(congruent to 2^2k×m mod M)
-        AMM1024(r2_radix_52_bit, r2_radix_52_bit, mult, mod_reg, context.m_k0);
+        AMM1024(r2_radix_52_bit, r2_radix_52_bit, mult, mod_reg, k_reg);
     }
 
     template<>
@@ -1744,13 +1743,15 @@ namespace alcp::rsa { namespace zen4 {
         __m256i mod_reg[5];
         LoadReg256(mod_reg, mod_radix_52_bit);
 
+        __m256i k_reg = _mm256_set1_epi64x(k0);
+
         // conversion to mont domain by
         // multiplying with mont converter
         AMM1024(input_radix_52_bit,
                 input_radix_52_bit,
                 r2_radix_52_bit,
                 mod_reg,
-                k0);
+                k_reg);
 
         Uint64 val = exp[expSize - 1];
 
@@ -1764,7 +1765,7 @@ namespace alcp::rsa { namespace zen4 {
 
         while (index++ < 64) {
             AMMAndAMS1024(
-                res_radix_52_bit, input_radix_52_bit, mod_reg, k0, val);
+                res_radix_52_bit, input_radix_52_bit, mod_reg, k_reg, val);
             val <<= 1;
         }
 
@@ -1773,12 +1774,12 @@ namespace alcp::rsa { namespace zen4 {
             UNROLL_64
             for (Uint64 j = 0; j < 64; j++) {
                 AMMAndAMS1024(
-                    res_radix_52_bit, input_radix_52_bit, mod_reg, k0, val);
+                    res_radix_52_bit, input_radix_52_bit, mod_reg, k_reg, val);
                 val <<= 1;
             }
         }
 
-        AMM1024Reduce(input_radix_52_bit, res_radix_52_bit, mod_reg, k0);
+        AMM1024Reduce(input_radix_52_bit, res_radix_52_bit, mod_reg, k_reg);
 
         Rsa1024Radix52BitToRadix64(res, input_radix_52_bit);
     }
