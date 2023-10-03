@@ -224,8 +224,10 @@ Rsa_Cross(int                     padding_mode,
     alcp_rsa_data_t data_main, data_ext;
     int             ret_val_main, ret_val_ext = 0;
     AlcpRsaBase     arb;
-    RsaBase *       rb_main = {}, *rb_ext = {};
-    RngBase         rngb;
+
+    // FIXME: Better use unique pointer here
+    RsaBase *rb_main = {}, *rb_ext = {};
+    RngBase  rngb;
 
     rb_main                = &arb;
     std::string LibStrMain = "ALCP", LibStrExt = "";
@@ -234,21 +236,39 @@ Rsa_Cross(int                     padding_mode,
     KeySize = KeySize / 8;
     int InputSize_Max;
 
+#ifdef USE_OSSL
+    OpenSSLRsaBase orb;
+    if (useipp == false && useossl == false) {
+        printErrors("Defaulting to OpenSSL");
+        useossl = true;
+    }
+    if (useossl) {
+        rb_ext    = &orb;
+        LibStrExt = "OpenSSL";
+    }
+#else
+    if ((useipp == false && useossl == false) || useossl == true) {
+        printErrors("No Lib Selected. OpenSSL also not available");
+        FAIL() << "OpenSSL not available, cannot proceed with defaults!";
+    }
+#endif
 #ifdef USE_IPP
     IPPRsaBase irb;
     if (useipp == true) {
         rb_ext    = &irb;
         LibStrExt = "IPP";
     }
-#endif
-
-#ifdef USE_OSSL
-    OpenSSLRsaBase orb;
-    if (useossl == true || useipp == false) {
-        rb_ext    = &orb;
-        LibStrExt = "OpenSSL";
+#else
+    if (useipp == true) {
+        printErrors("IPP selected, but not available.");
+        FAIL() << "IPP Missing at compile time!";
     }
 #endif
+
+    if (rb_ext == nullptr) {
+        printErrors("No external lib selected!");
+        exit(-1);
+    }
 
     rb_main->m_digest_info = rb_ext->m_digest_info = dinfo;
     rb_main->m_mgf_info = rb_ext->m_mgf_info = mgfinfo;
