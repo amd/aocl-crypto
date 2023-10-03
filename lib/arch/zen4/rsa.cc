@@ -1856,11 +1856,11 @@ namespace alcp::rsa { namespace zen4 {
         Uint64  k0[2])
     {
         alignas(64) Uint64 t[32 * 20 * 2] = {};
-        Uint64             r1_radix_52_bit_contig[2 * 20]{};
-        Uint64             input_radix_52_contig[2 * 20]{};
-        Uint64             res_radix_52_contig[2 * 20]{};
-        Uint64             mult_radix_52_contig[2 * 20]{};
-        Uint64             sq_radix_52_contig[2 * 20]{};
+        alignas(64) Uint64 r1_radix_52_bit_contig[2 * 20]{};
+        alignas(64) Uint64 input_radix_52_contig[2 * 20]{};
+        alignas(64) Uint64 res_radix_52_contig[2 * 20]{};
+        alignas(64) Uint64 mult_radix_52_contig[2 * 20]{};
+        alignas(64) Uint64 sq_radix_52_contig[2 * 20]{};
 
         Uint64* r1_radix_52_bit_p[2] = { r1_radix_52_bit_contig,
                                          r1_radix_52_bit_contig + 20 };
