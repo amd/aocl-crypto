@@ -1546,11 +1546,11 @@ namespace alcp::rsa { namespace zen4 {
     inline void mont::MontCompute<KEY_SIZE_2048>::CreateContext(
         MontContextBignum& context, Uint64* mod, Uint64 size)
     {
-        Uint64* r1               = new Uint64[size]{};
-        Uint64* r2               = new Uint64[size]{};
-        Uint64* r3               = new Uint64[size]{};
-        Uint64* r2_radix_52_bit  = new Uint64[40]{};
-        Uint64* mod_radix_52_bit = new Uint64[40]{};
+        Uint64* r1               = new (std::align_val_t(8)) Uint64[size]{};
+        Uint64* r2               = new (std::align_val_t(8)) Uint64[size]{};
+        Uint64* r3               = new (std::align_val_t(8)) Uint64[size]{};
+        Uint64* r2_radix_52_bit  = new (std::align_val_t(8)) Uint64[40]{};
+        Uint64* mod_radix_52_bit = new (std::align_val_t(8)) Uint64[40]{};
 
         context.m_r1.reset(r1);
         context.m_r2.reset(r2);
@@ -1622,11 +1622,11 @@ namespace alcp::rsa { namespace zen4 {
     inline void mont::MontCompute<KEY_SIZE_1024>::CreateContext(
         MontContextBignum& context, Uint64* mod, Uint64 size)
     {
-        Uint64* r1               = new Uint64[size]{};
-        Uint64* r2               = new Uint64[size]{};
-        Uint64* r3               = new Uint64[size]{};
-        Uint64* r2_radix_52_bit  = new Uint64[24]{};
-        Uint64* mod_radix_52_bit = new Uint64[24]{};
+        Uint64* r1               = new (std::align_val_t(8)) Uint64[size]{};
+        Uint64* r2               = new (std::align_val_t(8)) Uint64[size]{};
+        Uint64* r3               = new (std::align_val_t(8)) Uint64[size]{};
+        Uint64* r2_radix_52_bit  = new (std::align_val_t(8)) Uint64[20]{};
+        Uint64* mod_radix_52_bit = new (std::align_val_t(8)) Uint64[20]{};
 
         context.m_r1.reset(r1);
         context.m_r2.reset(r2);
@@ -1736,8 +1736,8 @@ namespace alcp::rsa { namespace zen4 {
         Uint64        k0)
     {
 
-        alignas(64) Uint64 input_radix_52_bit[24]{};
-        alignas(64) Uint64 res_radix_52_bit[24]{};
+        alignas(64) Uint64 input_radix_52_bit[20]{};
+        alignas(64) Uint64 res_radix_52_bit[20]{};
         Rsa1024Radix64BitToRadix52Bit(input_radix_52_bit, input);
 
         __m256i mod_reg[5];
@@ -1856,23 +1856,23 @@ namespace alcp::rsa { namespace zen4 {
         Uint64  k0[2])
     {
         alignas(64) Uint64 t[32 * 20 * 2] = {};
-        Uint64             r1_radix_52_bit_contig[2 * 24]{};
-        Uint64             input_radix_52_contig[2 * 24]{};
-        Uint64             res_radix_52_contig[2 * 24]{};
-        Uint64             mult_radix_52_contig[2 * 24]{};
-        Uint64             sq_radix_52_contig[2 * 24]{};
+        Uint64             r1_radix_52_bit_contig[2 * 20]{};
+        Uint64             input_radix_52_contig[2 * 20]{};
+        Uint64             res_radix_52_contig[2 * 20]{};
+        Uint64             mult_radix_52_contig[2 * 20]{};
+        Uint64             sq_radix_52_contig[2 * 20]{};
 
         Uint64* r1_radix_52_bit_p[2] = { r1_radix_52_bit_contig,
-                                         r1_radix_52_bit_contig + 24 };
+                                         r1_radix_52_bit_contig + 20 };
         Uint64* input_radix_52[2]    = { input_radix_52_contig,
-                                      input_radix_52_contig + 24 };
+                                      input_radix_52_contig + 20 };
         Uint64* res_radix_52[2]      = { res_radix_52_contig,
-                                    res_radix_52_contig + 24 };
+                                    res_radix_52_contig + 20 };
 
         Uint64* mult_radix_52[2] = { mult_radix_52_contig,
-                                     mult_radix_52_contig + 24 };
+                                     mult_radix_52_contig + 20 };
         Uint64* sq_radix_52[2]   = { sq_radix_52_contig,
-                                   sq_radix_52_contig + 24 };
+                                   sq_radix_52_contig + 20 };
 
         __m256i mod_reg[10];
         LoadReg256(mod_reg, modRadix52Bit[0]);
@@ -1898,7 +1898,7 @@ namespace alcp::rsa { namespace zen4 {
         mont::PutInTable(t + 32 * 20, 1, res_radix_52[1], 20, valueLimit);
 
         alcp::utils::CopyChunk(
-            mult_radix_52_contig, res_radix_52_contig, 24 * 8 * 2);
+            mult_radix_52_contig, res_radix_52_contig, 20 * 8 * 2);
 
         for (Uint64 i = 2; i < valueLimit; i++) {
             AMM1024Parallel(
