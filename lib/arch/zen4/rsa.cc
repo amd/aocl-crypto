@@ -521,8 +521,8 @@ namespace alcp::rsa { namespace zen4 {
         const __m256i mod_reg[10],
         const Uint64* first,
         const Uint64* second,
-        __m256i       k_reg_0,
-        __m256i       k_reg_1)
+        const __m256i k_reg_0,
+        const __m256i k_reg_1)
     {
         const __m256i zero{};
 
@@ -571,8 +571,8 @@ namespace alcp::rsa { namespace zen4 {
         const __m256i mod_reg[10],
         const Uint64* first,
         const Uint64* second,
-        __m256i       k_reg_0,
-        __m256i       k_reg_1)
+        const __m256i k_reg_0,
+        const __m256i k_reg_1)
     {
         const __m256i zero{};
 
@@ -623,8 +623,8 @@ namespace alcp::rsa { namespace zen4 {
         const __m256i mod_reg[10],
         const Uint64* first,
         const Uint64* second,
-        __m256i       k_reg_0,
-        __m256i       k_reg_1)
+        const __m256i k_reg_0,
+        const __m256i k_reg_1)
     {
         const __m256i zero{};
 
@@ -675,8 +675,8 @@ namespace alcp::rsa { namespace zen4 {
         const __m256i mod_reg[10],
         const Uint64* first,
         const Uint64* second,
-        __m256i       k_reg_0,
-        __m256i       k_reg_1)
+        const __m256i k_reg_0,
+        const __m256i k_reg_1)
     {
         const __m256i zero{};
 
@@ -727,8 +727,8 @@ namespace alcp::rsa { namespace zen4 {
         const __m256i mod_reg[10],
         const Uint64* first,
         const Uint64* second,
-        __m256i       k_reg_0,
-        __m256i       k_reg_1)
+        const __m256i k_reg_0,
+        const __m256i k_reg_1)
     {
         const __m256i zero{};
 
@@ -775,7 +775,7 @@ namespace alcp::rsa { namespace zen4 {
                                                  __m256i       first_reg[5],
                                                  const __m256i mod_reg[5],
                                                  const Uint64* first,
-                                                 __m256i       k_reg)
+                                                 const __m256i k_reg)
     {
         const __m256i zero{};
 
@@ -802,7 +802,7 @@ namespace alcp::rsa { namespace zen4 {
                                                  __m256i       first_reg[5],
                                                  const __m256i mod_reg[5],
                                                  const Uint64* first,
-                                                 __m256i       k_reg)
+                                                 const __m256i k_reg)
     {
         const __m256i zero{};
 
@@ -831,7 +831,7 @@ namespace alcp::rsa { namespace zen4 {
                                                  __m256i       first_reg[5],
                                                  const __m256i mod_reg[5],
                                                  const Uint64* first,
-                                                 __m256i       k_reg)
+                                                 const __m256i k_reg)
     {
         const __m256i zero{};
 
@@ -860,7 +860,7 @@ namespace alcp::rsa { namespace zen4 {
                                                  __m256i       first_reg[5],
                                                  const __m256i mod_reg[5],
                                                  const Uint64* first,
-                                                 __m256i       k_reg)
+                                                 const __m256i k_reg)
     {
         const __m256i zero{};
 
@@ -889,7 +889,7 @@ namespace alcp::rsa { namespace zen4 {
                                                  __m256i       first_reg[5],
                                                  const __m256i mod_reg[5],
                                                  const Uint64* first,
-                                                 __m256i       k_reg)
+                                                 const __m256i k_reg)
     {
         const __m256i zero{};
 
@@ -919,8 +919,8 @@ namespace alcp::rsa { namespace zen4 {
                                                    const __m256i mod_reg[10],
                                                    const Uint64* first,
                                                    const Uint64* second,
-                                                   __m256i       k_reg_0,
-                                                   __m256i       k_reg_1)
+                                                   const __m256i k_reg_0,
+                                                   const __m256i k_reg_1)
     {
         const __m256i zero{};
         for (Uint64 j = 0; j < 20; j++) {
@@ -961,7 +961,7 @@ namespace alcp::rsa { namespace zen4 {
                                            __m256i       first_reg[5],
                                            const __m256i mod_reg[5],
                                            const Uint64* first,
-                                           __m256i       k_reg)
+                                           const __m256i k_reg)
     {
         const __m256i zero{};
         for (Uint64 j = 0; j < 20; j++) {
