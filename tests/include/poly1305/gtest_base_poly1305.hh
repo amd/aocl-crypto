@@ -41,6 +41,10 @@
 /* ALCP Headers */
 #include "alcp/alcp.h"
 
+#ifdef USE_OSSL
+#include "poly1305/openssl_poly1305.hh"
+#endif
+
 #define MAX_LOOP    1600
 #define KEY_LEN_MAX 1600
 #define INC_LOOP    1
@@ -82,7 +86,7 @@ Poly_Kat(alc_mac_info_t info)
     }
 
 #ifdef USE_OSSL
-    OpenSSLmacBase ocb(info);
+    OpenSSLPoly1305Base ocb(info);
     if (useossl == true)
         cb = &ocb;
 #endif
