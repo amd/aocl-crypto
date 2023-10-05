@@ -26,6 +26,8 @@
  *
  */
 
+#pragma once
+
 #include "cipher_experimental/cipher_data.hh"
 
 namespace alcp::testing::cipher::gcm {
@@ -42,8 +44,7 @@ struct alc_test_gcm_init_data_t : public alc_test_init_data_t
         , m_iv_len{ 0 }
         , m_aad{ nullptr }
         , m_aad_len{ 0 }
-    {
-    }
+    {}
 };
 using alc_test_gcm_init_data_p = alc_test_gcm_init_data_t*;
 
@@ -55,8 +56,7 @@ struct alc_test_gcm_update_data_t : public alc_test_update_data_t
         : alc_test_update_data_t()
         , m_iv{ nullptr }
         , m_iv_len{ 0 }
-    {
-    }
+    {}
 };
 using alc_test_gcm_update_data_p = alc_test_gcm_update_data_t*;
 
@@ -65,13 +65,16 @@ struct alc_test_gcm_finalize_data_t : public alc_test_finalize_data_t
     Uint8* m_tag;
     Uint64 m_tag_len;
     Uint8* m_tag_expected;
+    Uint8* m_out;
+    Uint64 m_pt_len; // Plain Text Length
     alc_test_gcm_finalize_data_t()
         : alc_test_finalize_data_t()
         , m_tag{ nullptr }
         , m_tag_len{ 0 }
         , m_tag_expected{ nullptr }
-    {
-    }
+        , m_out{ nullptr }
+        , m_pt_len{ 0 }
+    {}
 };
 using alc_test_gcm_finalize_data_p = alc_test_gcm_finalize_data_t*;
 

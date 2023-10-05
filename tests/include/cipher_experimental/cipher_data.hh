@@ -40,25 +40,23 @@ struct alc_test_init_data_t
     alc_test_init_data_t()
         : m_key{ nullptr }
         , m_key_len{ 0 }
-    {
-    }
+    {}
 };
 using alc_test_init_data_p = alc_test_init_data_t*;
 
 struct alc_test_update_data_t
 {
-    Uint8* m_input;
-    Uint64 m_input_len;
-    Uint8* m_output;
-    Uint64 m_output_len;
+    const Uint8* m_input;
+    Uint64       m_input_len;
+    Uint8*       m_output;
+    Uint64       m_output_len;
 
     alc_test_update_data_t()
         : m_input{ nullptr }
         , m_input_len{ 0 }
         , m_output{ nullptr }
         , m_output_len{ 0 }
-    {
-    }
+    {}
 };
 using alc_test_update_data_p = alc_test_update_data_t*;
 
@@ -68,8 +66,7 @@ struct alc_test_finalize_data_t
 
     alc_test_finalize_data_t()
         : verified{ false }
-    {
-    }
+    {}
 };
 using alc_test_finalize_data_p = alc_test_finalize_data_t*;
 
