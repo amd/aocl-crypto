@@ -31,8 +31,12 @@
 #include <memory>
 
 #include "cipher_experimental/alc_cipher_gcm.hh"
-#include "cipher_experimental/ipp_cipher_gcm.hh"
+#if USE_OSSL
 #include "cipher_experimental/openssl_cipher_gcm.hh"
+#endif
+#if USE_IPP
+#include "cipher_experimental/ipp_cipher_gcm.hh"
+#endif
 
 namespace alcp::testing::cipher {
 
@@ -51,9 +55,17 @@ CipherFactory(LibrarySelect selection)
         case LibrarySelect::ALCP:
             return std::make_unique<C1>();
         case LibrarySelect::OPENSSL:
+#if USE_OSSL
             return std::make_unique<C2>();
+#else
+            return nullptr;
+#endif
         case LibrarySelect::IPP:
+#if USE_IPP
             return std::make_unique<C3>();
+#else
+            return nullptr;
+#endif
         default:
             return nullptr;
     }
@@ -64,8 +76,16 @@ namespace gcm {
     std::unique_ptr<ITestCipher> GcmCipherFactory(LibrarySelect selection)
     {
         return CipherFactory<AlcpGcmCipher<encryptor>,
+#if USE_OSSL
                              OpenSSLGcmCipher<encryptor>,
+#else
+                             AlcpGcmCipher<encryptor>,
+#endif
+#if USE_IPP
                              IppGcmCipher<encryptor>>(selection);
+#else
+                             AlcpGcmCipher<encryptor>>(selection);
+#endif
     }
 } // namespace gcm
 

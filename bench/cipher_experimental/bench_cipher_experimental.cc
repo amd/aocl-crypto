@@ -32,6 +32,7 @@
 #include "cipher_experimental/alc_cipher_gcm.hh"
 #include "cipher_experimental/factory.hh"
 #include "common/experimental/gtest_essentials.hh"
+#include "utils.hh"
 
 namespace alcp::benchmarking::cipher {
 
@@ -47,6 +48,11 @@ BenchCipherexperimental(benchmark::State&            state,
                         std::unique_ptr<ITestCipher> iTestCipher,
                         Uint32                       keylen)
 {
+    if (iTestCipher == nullptr) {
+        state.SkipWithError(
+            "MicroBench: Library is unavailable at compile time");
+        return -1;
+    }
     alignas(64) Uint8 input_text[cBlockSize];
     alignas(64) Uint8 output_text[cBlockSize];
     alignas(32) Uint8 key[keylen / 8];
@@ -86,16 +92,19 @@ BenchCipherexperimental(benchmark::State&            state,
         if (no_err == false) {
             state.SkipWithError("MicroBench: Initialization failed for decrypt "
                                 "ct,tag generation using encrypt");
+            return -1;
         }
         no_err &= iTestCipher->update(&dataUpdate);
         if (no_err == false) {
             state.SkipWithError("MicroBench: Update failed for decrypt "
                                 "ct,tag generation using encrypt");
+            return -1;
         }
         no_err &= iTestCipher->finalize(&dataFinalize);
         if (no_err == false) {
             state.SkipWithError("MicroBench: Finalize failed for decrypt "
                                 "ct,tag generation using encrypt");
+            return -1;
         }
     }
 
@@ -201,10 +210,11 @@ using alcp::testing::cipher::LibrarySelect;
 using alcp::testing::utils::ArgsMap;
 using alcp::testing::utils::ParamType;
 using alcp::testing::utils::parseArgs;
+using alcp::testing::utils::printErrors;
 int
 main(int argc, char** argv)
 {
-    std::vector<Int64> testsizes = {};
+    std::vector<Int64> testlibs = {};
 
     ::benchmark::Initialize(&argc, argv);
 
@@ -217,44 +227,58 @@ main(int argc, char** argv)
     if (std::get<bool>(argsMap["USE_OSSL"].value) == false
         && std::get<bool>(argsMap["USE_IPP"].value) == false
         && std::get<bool>(argsMap["USE_ALCP"].value) == false) {
-        testsizes.insert(testsizes.begin(),
-                         static_cast<Int64>(LibrarySelect::IPP));
-        testsizes.insert(testsizes.begin(),
-                         static_cast<Int64>(LibrarySelect::OPENSSL));
-        testsizes.insert(testsizes.begin(),
-                         static_cast<Int64>(LibrarySelect::ALCP));
+#ifdef USE_IPP
+        testlibs.insert(testlibs.begin(),
+                        static_cast<Int64>(LibrarySelect::IPP));
+#endif
+#ifdef USE_OSSL
+        testlibs.insert(testlibs.begin(),
+                        static_cast<Int64>(LibrarySelect::OPENSSL));
+#endif
+        testlibs.insert(testlibs.begin(),
+                        static_cast<Int64>(LibrarySelect::ALCP));
     } else {
         if (std::get<bool>(argsMap["USE_ALCP"].value) == true) {
-            testsizes.insert(testsizes.begin(),
-                             static_cast<Int64>(LibrarySelect::ALCP));
+            testlibs.insert(testlibs.begin(),
+                            static_cast<Int64>(LibrarySelect::ALCP));
         }
         if (std::get<bool>(argsMap["USE_OSSL"].value) == true) {
-            testsizes.insert(testsizes.begin(),
-                             static_cast<Int64>(LibrarySelect::OPENSSL));
+#ifdef USE_OSSL
+            testlibs.insert(testlibs.begin(),
+                            static_cast<Int64>(LibrarySelect::OPENSSL));
+#else
+            printErrors("OpenSSL unavailable at compile time!");
+            return -1;
+#endif
         }
         if (std::get<bool>(argsMap["USE_IPP"].value) == true) {
-            testsizes.insert(testsizes.begin(),
-                             static_cast<Int64>(LibrarySelect::IPP));
+#ifdef USE_IPP
+            testlibs.insert(testlibs.begin(),
+                            static_cast<Int64>(LibrarySelect::IPP));
+#else
+            printErrors("IPP unavailable at compile time!");
+            return -1;
+#endif
         }
     }
 
     BENCHMARK(BENCH_AES_ENCRYPT_GCM_128)
-        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testsizes });
+        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
 
     BENCHMARK(BENCH_AES_ENCRYPT_GCM_192)
-        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testsizes });
+        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
 
     BENCHMARK(BENCH_AES_ENCRYPT_GCM_256)
-        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testsizes });
+        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
 
     BENCHMARK(BENCH_AES_DECRYPT_GCM_128)
-        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testsizes });
+        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
 
     BENCHMARK(BENCH_AES_DECRYPT_GCM_192)
-        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testsizes });
+        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
 
     BENCHMARK(BENCH_AES_DECRYPT_GCM_256)
-        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testsizes });
+        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
 
     // if (::benchmark::ReportUnrecognizedArguments(argc, argv))
     //     return 1;
