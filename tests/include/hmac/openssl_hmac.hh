@@ -47,6 +47,7 @@ class OpenSSLHmacBase : public HmacBase
     Uint8*         m_hmac;
     EVP_MAC*       m_mac = nullptr;
     Uint32         m_key_len;
+    OSSL_PARAM     m_ossl_params[3] = {};
 
   public:
     OpenSSLHmacBase(const alc_mac_info_t& info);

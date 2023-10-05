@@ -50,10 +50,9 @@ OpenSSLHmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 bool
 OpenSSLHmacBase::init()
 {
-    int         ret_val   = 0;
-    OSSL_PARAM  params[3] = {};
-    size_t      params_n  = 0;
-    const char* digest    = NULL;
+    int         ret_val  = 0;
+    size_t      params_n = 0;
+    const char* digest   = NULL;
 
     if (m_info.mi_algoinfo.hmac.hmac_digest.dt_type == ALC_DIGEST_TYPE_SHA2) {
         switch (m_info.mi_algoinfo.hmac.hmac_digest.dt_len) {
@@ -102,10 +101,11 @@ OpenSSLHmacBase::init()
         return false;
     }
 
-    if (digest != NULL)
-        params[params_n++] =
+    if (digest != NULL) {
+        m_ossl_params[params_n++] =
             OSSL_PARAM_construct_utf8_string("digest", (char*)digest, 0);
-    params[params_n] = OSSL_PARAM_construct_end();
+        m_ossl_params[params_n] = OSSL_PARAM_construct_end();
+    }
 
     if (m_handle != nullptr) {
         EVP_MAC_CTX_free(m_handle);
@@ -117,7 +117,7 @@ OpenSSLHmacBase::init()
         return false;
     }
 
-    ret_val = EVP_MAC_init(m_handle, m_key, m_key_len, params);
+    ret_val = EVP_MAC_init(m_handle, m_key, m_key_len, m_ossl_params);
     if (ret_val != 1) {
         std::cout << "EVP_MAC_init failed, error : " << ERR_get_error()
                   << std::endl;
@@ -151,6 +151,12 @@ OpenSSLHmacBase::Hmac_function(const alcp_hmac_data_t& data)
 bool
 OpenSSLHmacBase::reset()
 {
+    int ret_val = EVP_MAC_init(m_handle, m_key, m_key_len, m_ossl_params);
+    if (ret_val != 1) {
+        std::cout << "EVP_MAC_init failed, error : " << ERR_get_error()
+                  << std::endl;
+        return false;
+    }
     return true;
 }
 
