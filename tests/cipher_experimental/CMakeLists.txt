@@ -23,116 +23,13 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
-INCLUDE(FetchContent)
-INCLUDE(GoogleTest)
-FetchContent_Declare(gtest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.12.1)
-FetchContent_MakeAvailable(gtest)
+include(${CMAKE_SOURCE_DIR}/cmake/IntegrationTests.cmake)
 
-FILE(GLOB COMMON_SRCS ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 FILE(GLOB ALC_CIPHER_FWK_SRCS ${CMAKE_SOURCE_DIR}/tests/cipher_experimental/framework/alc_*.cc)
-SET(LIBS ${LIBS} gtest alcp)
 
-IF(WIN32)
-target_link_libraries(gmock PUBLIC gtest)
-target_link_libraries(gmock_main PUBLIC gtest_main)
-ENDIF()
+add_openssl(framework/openssl_cipher_gcm.cc)
 
-SET(EXTRA_SOURCES "")
-SET(EXTRA_INCLUDES "")
+add_ipp(framework/ipp_cipher_gcm.cc)
 
-
-IF(ENABLE_TESTS_OPENSSL_API)
-    ADD_COMPILE_OPTIONS("-DUSE_OSSL")
-
-    IF(OPENSSL_INSTALL_DIR)
-        MESSAGE(STATUS "OPENSSL_INSTALL_DIR set, overriding fetch path")
-    ELSE(OPENSSL_INSTALL_DIR)
-        SET(OPENSSL_INSTALL_DIR "${CMAKE_SOURCE_DIR}/external")
-        MESSAGE(STATUS "OPENSSL_INSTALL_DIR not set, defaulting to external")
-    ENDIF(OPENSSL_INSTALL_DIR)
-
-    # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
-    SET(EXTRA_SOURCES ${EXTRA_SOURCES}
-                      framework/openssl_cipher_gcm.cc)
-	IF(UNIX)
-		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
-		ELSEIF(EXISTS ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
-		ELSE()
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib/x86_64-linux-gnu/libcrypto.so)
-		ENDIF()
-	ENDIF(UNIX)
-	IF(WIN32)
-		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib/libcrypto.lib)
-			INCLUDE_DIRECTORIES(${OPENSSL_INSTALL_DIR}/include)
-			INCLUDE_DIRECTORIES(${OPENSSL_INSTALL_DIR}/bin)
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib/libcrypto.lib)
-		ENDIF()
-	ENDIF(WIN32)
-    SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${OPENSSL_INSTALL_DIR}/include)
-ENDIF(ENABLE_TESTS_OPENSSL_API)
-
-IF(ENABLE_TESTS_IPP_API)
-    ADD_COMPILE_OPTIONS("-DUSE_IPP")
-
-    IF(IPP_INSTALL_DIR)
-        MESSAGE(STATUS "IPP_INSTALL_DIR set, overriding fetch path")
-    ELSE(IPP_INSTALL_DIR)
-        SET(IPP_INSTALL_DIR "${CMAKE_SOURCE_DIR}/external")
-        MESSAGE(STATUS "IPP_INSTALL_DIR not set, defaulting to external")
-    ENDIF(IPP_INSTALL_DIR)
-
-    # If there is IPP, add IPP source and add IPP liberary
-    SET(EXTRA_SOURCES ${EXTRA_SOURCES} 
-                      framework/ipp_cipher_gcm.cc)
-	IF(UNIX)
-		IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
-			SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
-		ELSE(EXISTS ${IPP_INSTALL_DIR}/lib/intel/libippcp.so)
-			SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel/libippcp.so)
-		ENDIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
-	ENDIF(UNIX)
-	IF(WIN32)
-	 IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/ippcp.lib)
-        set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/ippcp.lib)
-	 ELSEIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel/ippcp.lib)
-        set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel/ippcp.lib)
-	 ELSE(EXISTS ${IPP_INSTALL_DIR}/lib/ippcp.lib)
-		set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/ippcp.lib)
-	 ENDIF()
-	ENDIF(WIN32)
-    SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${IPP_INSTALL_DIR}/include)
-ENDIF(ENABLE_TESTS_IPP_API)
-
-# Function to dynamically generate compilation of each test cases
-FUNCTION(KAT_AES MOD)
-    ADD_EXECUTABLE(aes_${MOD}_kat_experimental test_${MOD}_kat.cc ${COMMON_SRCS} ${ALC_CIPHER_FWK_SRCS} ${EXTRA_SOURCES})
-
-    # Below code must be enabled once we merge completely
-    # Depending on the person, they are gonna run from root dir or binary directory
-    # Link dataset to the root dir
-    # FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.csv ${CMAKE_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
-
-    # Link dataset to the actual place of test binary
-    # FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
-
-    TARGET_INCLUDE_DIRECTORIES(aes_${MOD}_kat_experimental PRIVATE
-        "${CMAKE_SOURCE_DIR}/include"
-        "${CMAKE_SOURCE_DIR}/lib/include"
-        "${CMAKE_SOURCE_DIR}/tests/include"
-        "${CMAKE_SOURCE_DIR}/tests/common/include"
-        ${EXTRA_INCLUDES})
-
-    TARGET_COMPILE_OPTIONS(aes_${MOD}_kat_experimental PUBLIC ${ALCP_WARNINGS})
-    TARGET_LINK_LIBRARIES(aes_${MOD}_kat_experimental ${LIBS})
-    gtest_add_tests(TARGET aes_${MOD}_kat_experimental
-        TEST_SUFFIX .${MOD})
-ENDFUNCTION()
-
-
-
-KAT_AES(gcm)
+AES_TEST(kat gcm)
 
