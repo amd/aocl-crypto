@@ -36,6 +36,8 @@
 
 TEST(POLY1305, KAT)
 {
+    if (useipp || oa_override)
+        GTEST_SKIP() << "IPP doesnt have Poly1305 Mac implemented yet";
     alc_mac_info_t info;
     Poly_Kat(info);
 }

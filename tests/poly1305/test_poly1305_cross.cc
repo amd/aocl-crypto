@@ -38,6 +38,8 @@
 
 TEST(POLY1305, CROSS)
 {
+    if (useipp || oa_override)
+        GTEST_SKIP() << "IPP doesnt have Poly1305 Mac implemented yet";
     alc_mac_info_t info;
     Poly_Cross(info);
 }
@@ -47,13 +49,6 @@ main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
     parseArgs(argc, argv);
-    // #ifndef USE_IPP
-    //     if (useipp)
-    //         std::cout << RED << "IPP is not available, defaulting to ALCP" <<
-    //         RESET
-    //                   << std::endl;
-    // #endif
-
 #ifndef USE_OSSL
     if (useossl) {
         std::cout << RED << "OpenSSL is not available, defaulting to ALCP"

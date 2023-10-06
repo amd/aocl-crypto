@@ -50,6 +50,7 @@ using namespace alcp::testing;
 std::vector<Int64> poly1305_blocksizes = {
     16, 64, 256, 1024, 8192, 16384, 32768
 };
+
 void inline Poly1305_Bench(benchmark::State& state,
                            alc_mac_info_t    info,
                            Uint64            block_size,
@@ -57,42 +58,37 @@ void inline Poly1305_Bench(benchmark::State& state,
 {
 
     /* MAX len of poly1305 would be 128 bits */
-    std::vector<Uint8> poly1305_mac(128 / 8, 0);
-    std::vector<Uint8> message(block_size, 0);
-    std::vector<Uint8> Key(KeySize / 8, 0);
+    const int          macSize = 16;
+    std::vector<Uint8> poly1305_mac(macSize, 0);
+    std::vector<Uint8> msg(block_size);
+    std::vector<Uint8> Key(KeySize);
 
     /* Initialize info params based on poly1305 type */
     info.mi_type = ALC_MAC_POLY1305;
 
-    AlcpPoly1305Base     acb(info);
-    Poly1305Base*        cb = &acb;
-    alcp_poly1305_data_t data;
-#ifdef USE_IPP
-    IPPPoly1305Base icb(info);
-    if (useipp) {
-        cb = &icb;
-    }
-#endif
+    AlcpPoly1305Base     apb(info);
+    Poly1305Base*        pb = &apb;
+    alcp_poly1305_data_t data{};
 
 #ifdef USE_OSSL
-    OpenSSLPoly1305Base ocb(info);
+    OpenSSLPoly1305Base opb(info);
     if (useossl) {
-        cb = &ocb;
+        pb = &opb;
     }
 #endif
 
-    data.m_msg     = &(message[0]);
-    data.m_msg_len = message.size();
+    data.m_msg     = &(msg[0]);
+    data.m_msg_len = msg.size();
     data.m_mac     = &(poly1305_mac[0]);
     data.m_mac_len = poly1305_mac.size();
     data.m_key     = &(Key[0]);
     data.m_key_len = Key.size();
 
-    if (!cb->init(info, Key)) {
+    if (!pb->init(info, Key)) {
         state.SkipWithError("Error in poly1305 init function");
     }
     for (auto _ : state) {
-        if (!cb->mac(data)) {
+        if (!pb->mac(data)) {
             state.SkipWithError("Error in poly1305 bench function");
         }
     }
@@ -108,13 +104,15 @@ static void
 BENCH_POLY1305(benchmark::State& state)
 {
     alc_mac_info_t info;
-    Poly1305_Bench(state, info, state.range(0), 256);
+    Poly1305_Bench(state, info, state.range(0), 32);
 }
 
 /* add benchmarks */
 int
 AddBenchmarks_Poly1305()
 {
-    BENCHMARK(BENCH_POLY1305)->ArgsProduct({ poly1305_blocksizes });
+    /* ippcp doesnt have poly1305 mac implementations yet */
+    if (!useipp)
+        BENCHMARK(BENCH_POLY1305)->ArgsProduct({ poly1305_blocksizes });
     return 0;
 }

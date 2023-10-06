@@ -34,12 +34,6 @@ int
 main(int argc, char** argv)
 {
     parseArgs(&argc, argv);
-#ifndef USE_IPP
-    if (useipp) {
-        std::cout << RED << "Error IPP not found defaulting to ALCP" << RESET
-                  << std::endl;
-    }
-#endif
 #ifndef USE_OSSL
     if (useossl) {
         std::cout << RED << "Error OpenSSL not found defaulting to ALCP"

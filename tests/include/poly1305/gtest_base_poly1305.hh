@@ -171,9 +171,9 @@ Poly_Kat(alc_mac_info_t info)
 
     info.mi_type = ALC_MAC_POLY1305;
 
-    AlcpPoly1305Base acb(info);
-    Poly1305Base*    cb;
-    cb = &acb;
+    AlcpPoly1305Base apb(info);
+    Poly1305Base*    pb;
+    pb = &apb;
 
     std::string TestDataFile = std::string("dataset_poly1305.csv");
     Csv         csv          = Csv(TestDataFile);
@@ -184,20 +184,14 @@ Poly_Kat(alc_mac_info_t info)
     }
 
 #ifdef USE_OSSL
-    OpenSSLPoly1305Base ocb(info);
+    OpenSSLPoly1305Base opb(info);
     if (useossl == true) {
-        cb     = &ocb;
+        pb     = &opb;
         LibStr = "OpenSSL";
     }
 #endif
-#ifdef USE_IPP
-    IPPmacBase icb(info);
-    if (useipp == true)
-        cb = &icb;
-#endif
 
     while (csv.readNext()) {
-
         std::vector<Uint8> mac(macSize, 0);
 
         auto msg = csv.getVect("MESSAGE");
@@ -211,17 +205,17 @@ Poly_Kat(alc_mac_info_t info)
         data.m_mac_len = mac.size();
         data.m_key_len = key.size();
 
-        if (!cb->init(info, key)) {
+        if (!pb->init(info, key)) {
             std::cout << "Error in mac init function" << std::endl;
             FAIL();
         }
 
-        if (!cb->mac(data)) {
+        if (!pb->mac(data)) {
             std::cout << "Error in mac function" << std::endl;
             FAIL();
         }
 
-        if (!cb->reset()) {
+        if (!pb->reset()) {
             std::cout << "Error in mac reset function" << std::endl;
             FAIL();
         }
