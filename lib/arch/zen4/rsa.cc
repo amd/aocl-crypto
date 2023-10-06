@@ -115,6 +115,38 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
+    static inline void GetFromTableParallel(Uint64* t,
+                                            Uint64  index1,
+                                            Uint64  index2,
+                                            Uint64* num1,
+                                            Uint64* num2,
+                                            Uint64  size,
+                                            Uint64  limit)
+    {
+        Uint64* t2 = t + 32 * 20;
+        for (Uint64 i = 0; i < size; i++) {
+            num1[i] = t[index1];
+            num2[i] = t2[index2];
+            index1 += limit;
+            index2 += limit;
+        }
+    }
+
+    static inline void PutInTableParallel(Uint64* t,
+                                          Uint64  index,
+                                          Uint64* num1,
+                                          Uint64* num2,
+                                          Uint64  size,
+                                          Uint64  limit)
+    {
+        Uint64* t2 = t + 32 * 20;
+        for (Uint64 i = 0; i < size; i++) {
+            t[index]  = num1[i];
+            t2[index] = num2[i];
+            index += limit;
+        }
+    }
+
     static inline void FusedMultiplyAddLow512(__m512i       res[5],
                                               const __m512i mod[5],
                                               const __m512i y)
@@ -1840,9 +1872,17 @@ namespace alcp::rsa { namespace zen4 {
             AMS1024Parallel(sq_radix_52, sq_radix_52, mod_reg, k0);
         }
 
-        mont::GetFromTable(t, index1, mult_radix_52[0], 20, valueLimit);
-        mont::GetFromTable(
-            t + 32 * 20, index2, mult_radix_52[1], 20, valueLimit);
+        // mont::GetFromTable(t, index1, mult_radix_52[0], 20, valueLimit);
+        // mont::GetFromTable(
+        //     t + 32 * 20, index2, mult_radix_52[1], 20, valueLimit);
+
+        GetFromTableParallel(t,
+                             index1,
+                             index2,
+                             mult_radix_52[0],
+                             mult_radix_52[1],
+                             20,
+                             valueLimit);
 
         AMM1024Parallel(sq_radix_52, sq_radix_52, mult_radix_52, mod_reg, k0);
     }
@@ -1884,8 +1924,10 @@ namespace alcp::rsa { namespace zen4 {
         Uint64 valueLimit = 1 << 5;
         // putting one in mont form
         AMM1024ReduceParallel(r1_radix_52_bit_p, r2Radix52Bit, mod_reg, k0);
-        mont::PutInTable(t, 0, r1_radix_52_bit_p[0], 20, valueLimit);
-        mont::PutInTable(t + 32 * 20, 0, r1_radix_52_bit_p[1], 20, valueLimit);
+        PutInTableParallel(
+            t, 0, r1_radix_52_bit_p[0], r1_radix_52_bit_p[1], 20, valueLimit);
+        // mont::PutInTable(t + 32 * 20, 0, r1_radix_52_bit_p[1], 20,
+        // valueLimit);
 
         Rsa1024Radix64BitToRadix52Bit(input_radix_52[0], input[0]);
         Rsa1024Radix64BitToRadix52Bit(input_radix_52[1], input[1]);
@@ -1894,8 +1936,11 @@ namespace alcp::rsa { namespace zen4 {
         AMM1024Parallel(
             res_radix_52, input_radix_52, r2Radix52Bit, mod_reg, k0);
 
-        mont::PutInTable(t, 1, res_radix_52[0], 20, valueLimit);
-        mont::PutInTable(t + 32 * 20, 1, res_radix_52[1], 20, valueLimit);
+        // mont::PutInTable(t, 1, res_radix_52[0], 20, valueLimit);
+        // mont::PutInTable(t + 32 * 20, 1, res_radix_52[1], 20, valueLimit);
+
+        PutInTableParallel(
+            t, 1, res_radix_52[0], res_radix_52[1], 20, valueLimit);
 
         alcp::utils::CopyChunk(
             mult_radix_52_contig, res_radix_52_contig, 20 * 8 * 2);
@@ -1903,8 +1948,11 @@ namespace alcp::rsa { namespace zen4 {
         for (Uint64 i = 2; i < valueLimit; i++) {
             AMM1024Parallel(
                 mult_radix_52, mult_radix_52, res_radix_52, mod_reg, k0);
-            mont::PutInTable(t, i, mult_radix_52[0], 20, valueLimit);
-            mont::PutInTable(t + 32 * 20, i, mult_radix_52[1], 20, valueLimit);
+            // mont::PutInTable(t, i, mult_radix_52[0], 20, valueLimit);
+            // mont::PutInTable(t + 32 * 20, i, mult_radix_52[1], 20,
+            // valueLimit);
+            PutInTableParallel(
+                t, i, mult_radix_52[0], mult_radix_52[1], 20, valueLimit);
         }
 
         const Uint8* exp_byte_ptr_1 = reinterpret_cast<const Uint8*>(exp[0]);
@@ -1913,13 +1961,21 @@ namespace alcp::rsa { namespace zen4 {
         // applying exponentiation using 5 bits at time and fetching the values
         // from precomputed tables
         // first 4 bit
-        mont::GetFromTable(
-            t, exp_byte_ptr_1[127] >> 4, sq_radix_52[0], 20, valueLimit);
-        mont::GetFromTable(t + 32 * 20,
-                           exp_byte_ptr_2[127] >> 4,
-                           sq_radix_52[1],
-                           20,
-                           valueLimit);
+        // mont::GetFromTable(
+        //     t, exp_byte_ptr_1[127] >> 4, sq_radix_52[0], 20, valueLimit);
+        // mont::GetFromTable(t + 32 * 20,
+        //                    exp_byte_ptr_2[127] >> 4,
+        //                    sq_radix_52[1],
+        //                    20,
+        //                    valueLimit);
+
+        GetFromTableParallel(t,
+                             exp_byte_ptr_1[127] >> 4,
+                             exp_byte_ptr_2[127] >> 4,
+                             sq_radix_52[0],
+                             sq_radix_52[1],
+                             20,
+                             valueLimit);
 
         // second 5 bit
         SqauareAndMultiplySet(
