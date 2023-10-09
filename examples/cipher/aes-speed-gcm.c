@@ -203,13 +203,32 @@ aclp_aes_gcm_encrypt_demo(
         return;
     }
 
-    // GCM encrypt
-    err =
-        alcp_cipher_aead_encrypt_update(&handle, plaintxt, ciphertxt, len, iv);
-    if (alcp_is_error(err)) {
-        printf("Error: unable encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        return;
+    totalTimeElapsed = 0.0;
+    for (int k = 0; k < 100000000; k++) { // 100000000
+        ALCP_CRYPT_TIMER_START
+
+        // GCM encrypt
+        err = alcp_cipher_aead_encrypt_update(
+            &handle, plaintxt, ciphertxt, len, iv);
+        if (alcp_is_error(err)) {
+            printf("Error: unable encrypt \n");
+            alcp_error_str(err, err_buf, err_size);
+            return;
+        }
+
+        alcp_get_time(0, "Encrypt time");
+
+        // plaintxt += len;
+        // ciphertxt += len;
+
+        if (totalTimeElapsed > .5) {
+            printf(
+                "\t :  %6.3lf GB Encrypted per second with block size "
+                "(%5d bytes) ",
+                (double)(((k / 1000.0) * len) / (totalTimeElapsed * 1000000.0)),
+                len);
+            break;
+        }
     }
 
     // get tag
@@ -254,13 +273,32 @@ aclp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
         return;
     }
 
-    // GCM decrypt
-    err =
-        alcp_cipher_aead_decrypt_update(&handle, ciphertxt, plaintxt, len, iv);
-    if (alcp_is_error(err)) {
-        printf("Error: unable decrypt \n");
-        alcp_error_str(err, err_buf, err_size);
-        return;
+    totalTimeElapsed = 0.0;
+    for (int k = 0; k < 100000000; k++) {
+        ALCP_CRYPT_TIMER_START
+
+        // GCM decrypt
+        err = alcp_cipher_aead_decrypt_update(
+            &handle, ciphertxt, plaintxt, len, iv);
+        if (alcp_is_error(err)) {
+            printf("Error: unable decrypt \n");
+            alcp_error_str(err, err_buf, err_size);
+            return;
+        }
+
+        alcp_get_time(0, "Decrypt time");
+
+        // plaintxt += len;
+        // ciphertxt += len;
+
+        if (totalTimeElapsed > .5) {
+            printf(
+                "\t :  %6.3lf GB Decrypted per second with block size "
+                "(%5d bytes) ",
+                (double)(((k / 1000.0) * len) / (totalTimeElapsed * 1000000.0)),
+                len);
+            break;
+        }
     }
 
     // get tag
@@ -271,19 +309,8 @@ aclp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
         return;
     }
 
-    bool isTagMatched = true;
-
-    for (int i = 0; i < tagLen; i++) {
-        if (tagDecrypt[i] != tag[i]) {
-            isTagMatched = isTagMatched & false;
-        }
-    }
-
-    if (isTagMatched == false) {
-        // printf("\n tag mismatched, input encrypted data is not trusthworthy
-        // ");
-        memset(plaintxt, 0, len);
-    }
+    // encrypt and decrypt tag will not match, since inputText, cipherText and
+    // outputText are overwritten multiple times. So we avoid tag matching part.
 }
 
 /*
@@ -347,55 +374,14 @@ encrypt_decrypt_demo(Uint8*            inputText,  // plaintext
 
     create_aes_session(key, iv, keybits, m);
 
-    totalTimeElapsed = 0.0;
-    for (int k = 0; k < 100000000; k++) {
-        ALCP_CRYPT_TIMER_START
+    // same inputText, cipherText and outputText buffer is used multiple times
+    // to measure speed, so inputText and outputText after decrypt will not
+    // match.
+    aclp_aes_gcm_encrypt_demo(
+        inputText, inputLen, cipherText, iv, ivLen, ad, adLen, tag, tagLen);
 
-        aclp_aes_gcm_encrypt_demo(
-            inputText, inputLen, cipherText, iv, ivLen, ad, adLen, tag, tagLen);
-
-        alcp_get_time(0, "Encrypt time");
-
-        if (totalTimeElapsed > .5) {
-            printf("\t :  %6.3lf GB Encrypted per second with block size "
-                   "(%5d bytes) ",
-                   (double)(((k / 1000.0) * inputLen)
-                            / (totalTimeElapsed * 1000000.0)),
-                   inputLen);
-            break;
-        }
-    }
-
-    // Decrypt section
-    totalTimeElapsed = 0.0;
-    for (int k = 0; k < 100000000; k++) {
-        ALCP_CRYPT_TIMER_START
-
-        aclp_aes_gcm_decrypt_demo(cipherText,
-                                  inputLen,
-                                  outputText,
-                                  iv,
-                                  ivLen,
-                                  ad,
-                                  adLen,
-                                  tag,
-                                  tagLen);
-
-        alcp_get_time(0, "Decrypt time");
-
-        if (totalTimeElapsed > .5) {
-            printf("\t :  %6.3lf GB Decrypted per second with block size "
-                   "(%5d bytes) ",
-                   (double)(((k / 1000.0) * inputLen)
-                            / (totalTimeElapsed * 1000000.0)),
-                   inputLen);
-            break;
-        }
-    }
-
-    if (memcmp(inputText, outputText, (long unsigned int)inputLen) != 0) {
-        printf("\n\t\t\t\t input->enc->dec->input FAILED \n");
-    }
+    aclp_aes_gcm_decrypt_demo(
+        cipherText, inputLen, outputText, iv, ivLen, ad, adLen, tag, tagLen);
 
     /*
      * Complete the transaction

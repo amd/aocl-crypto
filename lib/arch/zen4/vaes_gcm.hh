@@ -189,4 +189,38 @@ void inline computeHashSubKeys(int           num_512_blks,
     }
 }
 
+void inline getPrecomputedTable(bool     isFirstUpdate,
+                                __m512i* Hsubkey_512_precomputed,
+                                __m512i* Hsubkey_512,
+                                int      num_512_blks,
+                                alcp::cipher::GcmAuthData* gcm,
+                                __m128i                    const_factor_128)
+{
+
+    if (isFirstUpdate || (num_512_blks > gcm->m_num_512blks_precomputed)) {
+        computeHashSubKeys(num_512_blks,
+                           gcm->m_hash_subKey_128,
+                           Hsubkey_512,
+                           const_factor_128);
+
+        gcm->m_num_512blks_precomputed = num_512_blks;
+
+        for (int i = 0; i < num_512_blks; i++) {
+            __m512i temp = _mm512_loadu_si512(Hsubkey_512);
+            _mm512_storeu_si512(Hsubkey_512_precomputed, temp);
+
+            Hsubkey_512++;
+            Hsubkey_512_precomputed++;
+        }
+    } else {
+        for (int i = 0; i < num_512_blks; i++) {
+            __m512i temp = _mm512_loadu_si512(Hsubkey_512_precomputed);
+            _mm512_storeu_si512(Hsubkey_512, temp);
+
+            Hsubkey_512++;
+            Hsubkey_512_precomputed++;
+        }
+    }
+}
+
 } // namespace alcp::cipher::vaes512

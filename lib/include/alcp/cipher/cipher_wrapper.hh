@@ -48,6 +48,7 @@ struct ALCP_API_EXPORT GcmAuthData
     __m128i m_hash_subKey_128 = _mm_setzero_si128(); // Uint8 m_hash_subKey[16];
     __m128i m_gHash_128       = _mm_setzero_si128(); // Uint8 m_gHash[16];
     __m128i m_iv_128          = _mm_setzero_si128(); // Persistent Counter
+    int     m_num_512blks_precomputed = 0;
 };
 
 namespace aesni {
@@ -367,6 +368,7 @@ namespace vaes512 {
     alc_error_t encryptGcm128(const Uint8*               pPlainText,
                               Uint8*                     pCipherText,
                               Uint64                     len,
+                              Uint64                     acclen,
                               const Uint8*               pKey,
                               int                        nRounds,
                               const Uint8*               pIv,
@@ -377,6 +379,7 @@ namespace vaes512 {
     alc_error_t encryptGcm192(const Uint8*               pPlainText,
                               Uint8*                     pCipherText,
                               Uint64                     len,
+                              Uint64                     acclen,
                               const Uint8*               pKey,
                               int                        nRounds,
                               const Uint8*               pIv,
@@ -387,6 +390,7 @@ namespace vaes512 {
     alc_error_t encryptGcm256(const Uint8*               pPlainText,
                               Uint8*                     pCipherText,
                               Uint64                     len,
+                              Uint64                     acclen,
                               const Uint8*               pKey,
                               int                        nRounds,
                               const Uint8*               pIv,
@@ -397,6 +401,7 @@ namespace vaes512 {
     alc_error_t decryptGcm128(const Uint8*               pPlainText,
                               Uint8*                     pCipherText,
                               Uint64                     len,
+                              Uint64                     acclen,
                               const Uint8*               pKey,
                               int                        nRounds,
                               const Uint8*               pIv,
@@ -407,6 +412,7 @@ namespace vaes512 {
     alc_error_t decryptGcm192(const Uint8*               pPlainText,
                               Uint8*                     pCipherText,
                               Uint64                     len,
+                              Uint64                     acclen,
                               const Uint8*               pKey,
                               int                        nRounds,
                               const Uint8*               pIv,
@@ -417,6 +423,7 @@ namespace vaes512 {
     alc_error_t decryptGcm256(const Uint8*               pPlainText,
                               Uint8*                     pCipherText,
                               Uint64                     len,
+                              Uint64                     acclen,
                               const Uint8*               pKey,
                               int                        nRounds,
                               const Uint8*               pIv,

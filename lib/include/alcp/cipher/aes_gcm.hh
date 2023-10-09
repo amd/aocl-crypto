@@ -39,7 +39,7 @@
 
 namespace alcp::cipher {
 
-#define LOCAL_TABLE 1
+#define LOCAL_TABLE 0
 //#define MAX_NUM_512_BLKS 8
 
 /*
@@ -85,6 +85,7 @@ class ALCP_API_EXPORT Gcm
     }
 };
 
+#define MAX_NUM_512_BLKS 8
 class ALCP_API_EXPORT GcmAuth : public GcmAuthData
 {
   public:

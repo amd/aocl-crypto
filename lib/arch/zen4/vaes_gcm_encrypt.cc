@@ -75,6 +75,7 @@ template<void AesEncNoLoad_4x512(
 Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
                              __m512i*       p_out_x,
                              Uint64         blocks,
+                             bool           isFirstUpdate,
                              const __m128i* pkey128,
                              const Uint8*   pIv,
                              int            nRounds,
@@ -144,16 +145,9 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
 
     num_512_blks = dynamicUnroll(blocks);
 
-#if LOCAL_TABLE // local table improves performance of large block size (>8192
-                // bytes)
-    //__attribute__((aligned(64))) Uint64 hashSubkeyTable[MAX_NUM_512_BLKS * 8];
-    //__m512i* Hsubkey_512 = (__m512i*)&hashSubkeyTable;
+#if LOCAL_TABLE
     __m512i  hashSubkeyTable[MAX_NUM_512_BLKS];
     __m512i* Hsubkey_512 = hashSubkeyTable;
-
-#else
-    __m512i* Hsubkey_512 = (__m512i*)pHashSubkeyTable;
-#endif
 
     // if (num_512_blks)
     {
@@ -162,6 +156,18 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
                            Hsubkey_512,
                            const_factor_128);
     }
+#else
+    __m512i* Hsubkey_512_precomputed = (__m512i*)pHashSubkeyTable;
+    __m512i  hashSubkeyTable[MAX_NUM_512_BLKS];
+    __m512i* Hsubkey_512 = hashSubkeyTable;
+    getPrecomputedTable(isFirstUpdate,
+                        Hsubkey_512_precomputed,
+                        Hsubkey_512,
+                        num_512_blks,
+                        gcm,
+                        const_factor_128);
+
+#endif
 
     Uint64  blockCount_1x512 = factor;
     __m512i a1, b1;
@@ -667,12 +673,6 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
         }
     }
 
-    //    gcm->m_gHash_128 = _mm512_castsi512_si128(gHash_512);
-
-    /* Maintaining ghash in zmm didnt result in performance improvement.
-     * This needs to be revisited again
-     * gcm->m_gHash_128 = _mm512_castsi512_si128(gHash_512);
-     */
     __m512i* pHsubkey_512 = Hsubkey_512;
     Hsubkey_512_0         = _mm512_loadu_si512(pHsubkey_512);
 
@@ -806,8 +806,9 @@ alc_error_t
 encryptGcm128(const Uint8*               pInputText,  // ptr to inputText
               Uint8*                     pOutputText, // ptr to outputtext
               Uint64                     len,         // message length in bytes
-              const Uint8*               pKey,        // ptr to Key
-              const int                  nRounds,     // No. of rounds
+              Uint64                     acclen,
+              const Uint8*               pKey,    // ptr to Key
+              const int                  nRounds, // No. of rounds
               const Uint8*               pIv, // ptr to Initialization Vector
               alcp::cipher::GcmAuthData* gcm,
               __m128i                    reverse_mask_128,
@@ -823,6 +824,11 @@ encryptGcm128(const Uint8*               pInputText,  // ptr to inputText
     auto p_out_512 = reinterpret_cast<__m512i*>(pOutputText);
     auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
 
+    bool isFirstUpdate = false;
+    if (len == acclen) {
+        isFirstUpdate = true;
+    }
+
     gcmBlk_512_enc< // AesEncrypt_4x512Rounds10,
                     // AesEncrypt_2x512Rounds10,
         AesEncryptNoLoad_4x512Rounds10,
@@ -832,6 +838,7 @@ encryptGcm128(const Uint8*               pInputText,  // ptr to inputText
         alcp_clear_keys_zmm_10rounds>(p_in_512,
                                       p_out_512,
                                       blocks,
+                                      isFirstUpdate,
                                       pkey128,
                                       pIv,
                                       nRounds,
@@ -849,8 +856,9 @@ alc_error_t
 encryptGcm192(const Uint8*               pInputText,  // ptr to inputText
               Uint8*                     pOutputText, // ptr to outputtext
               Uint64                     len,         // message length in bytes
-              const Uint8*               pKey,        // ptr to Key
-              const int                  nRounds,     // No. of rounds
+              Uint64                     acclen,
+              const Uint8*               pKey,    // ptr to Key
+              const int                  nRounds, // No. of rounds
               const Uint8*               pIv, // ptr to Initialization Vector
               alcp::cipher::GcmAuthData* gcm,
               __m128i                    reverse_mask_128,
@@ -866,6 +874,11 @@ encryptGcm192(const Uint8*               pInputText,  // ptr to inputText
     auto p_out_512 = reinterpret_cast<__m512i*>(pOutputText);
     auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
 
+    bool isFirstUpdate = false;
+    if (len == acclen) {
+        isFirstUpdate = true;
+    }
+
     gcmBlk_512_enc<AesEncryptNoLoad_4x512Rounds12,
                    AesEncryptNoLoad_2x512Rounds12,
                    AesEncryptNoLoad_1x512Rounds12,
@@ -873,6 +886,7 @@ encryptGcm192(const Uint8*               pInputText,  // ptr to inputText
                    alcp_clear_keys_zmm_12rounds>(p_in_512,
                                                  p_out_512,
                                                  blocks,
+                                                 isFirstUpdate,
                                                  pkey128,
                                                  pIv,
                                                  nRounds,
@@ -890,8 +904,9 @@ alc_error_t
 encryptGcm256(const Uint8*               pInputText,  // ptr to inputText
               Uint8*                     pOutputText, // ptr to outputtext
               Uint64                     len,         // message length in bytes
-              const Uint8*               pKey,        // ptr to Key
-              const int                  nRounds,     // No. of rounds
+              Uint64                     acclen,
+              const Uint8*               pKey,    // ptr to Key
+              const int                  nRounds, // No. of rounds
               const Uint8*               pIv, // ptr to Initialization Vector
               alcp::cipher::GcmAuthData* gcm,
               __m128i                    reverse_mask_128,
@@ -907,6 +922,11 @@ encryptGcm256(const Uint8*               pInputText,  // ptr to inputText
     auto p_out_512 = reinterpret_cast<__m512i*>(pOutputText);
     auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
 
+    bool isFirstUpdate = false;
+    if (len == acclen) {
+        isFirstUpdate = true;
+    }
+
     gcmBlk_512_enc<AesEncryptNoLoad_4x512Rounds14,
                    AesEncryptNoLoad_2x512Rounds14,
                    AesEncryptNoLoad_1x512Rounds14,
@@ -914,6 +934,7 @@ encryptGcm256(const Uint8*               pInputText,  // ptr to inputText
                    alcp_clear_keys_zmm_14rounds>(p_in_512,
                                                  p_out_512,
                                                  blocks,
+                                                 isFirstUpdate,
                                                  pkey128,
                                                  pIv,
                                                  nRounds,
