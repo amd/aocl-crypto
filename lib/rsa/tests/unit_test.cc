@@ -642,10 +642,10 @@ TEST(RsaTest, PubKeyWithValidSizeTest)
 TEST(RsaTest, KeySizeTest)
 {
     Rsa<KEY_SIZE_1024> rsa_obj;
-    EXPECT_EQ(rsa_obj.getKeySize(), 1024 / 8);
+    EXPECT_EQ(rsa_obj.getKeySize(), 1024 / 8LLU);
 
     Rsa<KEY_SIZE_2048> rsa_obj_2048;
-    EXPECT_EQ(rsa_obj_2048.getKeySize(), 2048 / 8);
+    EXPECT_EQ(rsa_obj_2048.getKeySize(), 2048 / 8LLU);
 }
 
 TEST(RsaTest, EncryptOaepPadding)
