@@ -118,6 +118,7 @@ namespace alcp::rsa { namespace zen4 {
     static inline void GetFromTableParallel(
         Uint64* t, Uint64 index1, Uint64 index2, Uint64* num1, Uint64* num2)
     {
+        // table has 32 entry and each entry is 20 64 bits
         Uint64* t2 = t + 32 * 20;
         for (Uint64 i = 0; i < 20; i++) {
             num1[i] = t[index1];
@@ -132,6 +133,7 @@ namespace alcp::rsa { namespace zen4 {
                                           Uint64* num1,
                                           Uint64* num2)
     {
+        // table has 32 entry and each entry is 20 64 bits
         Uint64* t2 = t + 32 * 20;
         for (Uint64 i = 0; i < 20; i++) {
             t[index]  = num1[i];
