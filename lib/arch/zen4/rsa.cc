@@ -115,35 +115,28 @@ namespace alcp::rsa { namespace zen4 {
         }
     }
 
-    static inline void GetFromTableParallel(Uint64* t,
-                                            Uint64  index1,
-                                            Uint64  index2,
-                                            Uint64* num1,
-                                            Uint64* num2,
-                                            Uint64  size,
-                                            Uint64  limit)
+    static inline void GetFromTableParallel(
+        Uint64* t, Uint64 index1, Uint64 index2, Uint64* num1, Uint64* num2)
     {
         Uint64* t2 = t + 32 * 20;
-        for (Uint64 i = 0; i < size; i++) {
+        for (Uint64 i = 0; i < 20; i++) {
             num1[i] = t[index1];
             num2[i] = t2[index2];
-            index1 += limit;
-            index2 += limit;
+            index1 += 32;
+            index2 += 32;
         }
     }
 
     static inline void PutInTableParallel(Uint64* t,
                                           Uint64  index,
                                           Uint64* num1,
-                                          Uint64* num2,
-                                          Uint64  size,
-                                          Uint64  limit)
+                                          Uint64* num2)
     {
         Uint64* t2 = t + 32 * 20;
-        for (Uint64 i = 0; i < size; i++) {
+        for (Uint64 i = 0; i < 20; i++) {
             t[index]  = num1[i];
             t2[index] = num2[i];
-            index += limit;
+            index += 32;
         }
     }
 
@@ -1864,11 +1857,9 @@ namespace alcp::rsa { namespace zen4 {
                                              Uint64        k0[2],
                                              int           index1,
                                              int           index2,
-                                             Uint64        winSize,
-                                             int           valueLimit,
                                              Uint64*       t)
     {
-        for (Uint64 i = 0; i < winSize; i++) {
+        for (Uint64 i = 0; i < 5; i++) {
             AMS1024Parallel(sq_radix_52, sq_radix_52, mod_reg, k0);
         }
 
@@ -1876,13 +1867,8 @@ namespace alcp::rsa { namespace zen4 {
         // mont::GetFromTable(
         //     t + 32 * 20, index2, mult_radix_52[1], 20, valueLimit);
 
-        GetFromTableParallel(t,
-                             index1,
-                             index2,
-                             mult_radix_52[0],
-                             mult_radix_52[1],
-                             20,
-                             valueLimit);
+        GetFromTableParallel(
+            t, index1, index2, mult_radix_52[0], mult_radix_52[1]);
 
         AMM1024Parallel(sq_radix_52, sq_radix_52, mult_radix_52, mod_reg, k0);
     }
@@ -1920,12 +1906,10 @@ namespace alcp::rsa { namespace zen4 {
 
         // to do check which window size
         // is correct
-        Uint64 winSize    = 5;
-        Uint64 valueLimit = 1 << 5;
+        // Uint64 winSize    = 5;
         // putting one in mont form
         AMM1024ReduceParallel(r1_radix_52_bit_p, r2Radix52Bit, mod_reg, k0);
-        PutInTableParallel(
-            t, 0, r1_radix_52_bit_p[0], r1_radix_52_bit_p[1], 20, valueLimit);
+        PutInTableParallel(t, 0, r1_radix_52_bit_p[0], r1_radix_52_bit_p[1]);
         // mont::PutInTable(t + 32 * 20, 0, r1_radix_52_bit_p[1], 20,
         // valueLimit);
 
@@ -1939,20 +1923,18 @@ namespace alcp::rsa { namespace zen4 {
         // mont::PutInTable(t, 1, res_radix_52[0], 20, valueLimit);
         // mont::PutInTable(t + 32 * 20, 1, res_radix_52[1], 20, valueLimit);
 
-        PutInTableParallel(
-            t, 1, res_radix_52[0], res_radix_52[1], 20, valueLimit);
+        PutInTableParallel(t, 1, res_radix_52[0], res_radix_52[1]);
 
         alcp::utils::CopyChunk(
             mult_radix_52_contig, res_radix_52_contig, 20 * 8 * 2);
 
-        for (Uint64 i = 2; i < valueLimit; i++) {
+        for (Uint64 i = 2; i < 32; i++) {
             AMM1024Parallel(
                 mult_radix_52, mult_radix_52, res_radix_52, mod_reg, k0);
             // mont::PutInTable(t, i, mult_radix_52[0], 20, valueLimit);
             // mont::PutInTable(t + 32 * 20, i, mult_radix_52[1], 20,
             // valueLimit);
-            PutInTableParallel(
-                t, i, mult_radix_52[0], mult_radix_52[1], 20, valueLimit);
+            PutInTableParallel(t, i, mult_radix_52[0], mult_radix_52[1]);
         }
 
         const Uint8* exp_byte_ptr_1 = reinterpret_cast<const Uint8*>(exp[0]);
@@ -1973,9 +1955,7 @@ namespace alcp::rsa { namespace zen4 {
                              exp_byte_ptr_1[127] >> 4,
                              exp_byte_ptr_2[127] >> 4,
                              sq_radix_52[0],
-                             sq_radix_52[1],
-                             20,
-                             valueLimit);
+                             sq_radix_52[1]);
 
         // second 5 bit
         SqauareAndMultiplySet(
@@ -1985,8 +1965,6 @@ namespace alcp::rsa { namespace zen4 {
             k0,
             (exp_byte_ptr_1[126] >> 7) | ((exp_byte_ptr_1[127] & 0xf) << 1),
             (exp_byte_ptr_2[126] >> 7) | ((exp_byte_ptr_2[127] & 0xf) << 1),
-            winSize,
-            valueLimit,
             t);
 
         // third 5 bit
@@ -1996,8 +1974,6 @@ namespace alcp::rsa { namespace zen4 {
                               k0,
                               (exp_byte_ptr_1[126] >> 2) & 0x1f,
                               (exp_byte_ptr_2[126] >> 2) & 0x1f,
-                              winSize,
-                              valueLimit,
                               t);
 
         // fourth 5 bit
@@ -2008,8 +1984,6 @@ namespace alcp::rsa { namespace zen4 {
             k0,
             (exp_byte_ptr_1[125] >> 5) | ((exp_byte_ptr_1[126] & 0x3) << 3),
             (exp_byte_ptr_2[125] >> 5) | ((exp_byte_ptr_2[126] & 0x3) << 3),
-            winSize,
-            valueLimit,
             t);
 
         // fifth 5 bit
@@ -2019,8 +1993,6 @@ namespace alcp::rsa { namespace zen4 {
                               k0,
                               ((exp_byte_ptr_1[125] & 0x1f)),
                               ((exp_byte_ptr_2[125] & 0x1f)),
-                              winSize,
-                              valueLimit,
                               t);
 
         for (Int64 i = 124; i > 3; i -= 5) {
@@ -2032,8 +2004,6 @@ namespace alcp::rsa { namespace zen4 {
                                   k0,
                                   exp_byte_ptr_1[i] >> 3,
                                   exp_byte_ptr_2[i] >> 3,
-                                  winSize,
-                                  valueLimit,
                                   t);
 
             // second 5 bits
@@ -2044,8 +2014,6 @@ namespace alcp::rsa { namespace zen4 {
                 k0,
                 (exp_byte_ptr_1[i - 1] >> 6) | ((exp_byte_ptr_1[i] & 0x7) << 2),
                 (exp_byte_ptr_2[i - 1] >> 6) | ((exp_byte_ptr_2[i] & 0x7) << 2),
-                winSize,
-                valueLimit,
                 t);
 
             // third 5 bit
@@ -2055,8 +2023,6 @@ namespace alcp::rsa { namespace zen4 {
                                   k0,
                                   (exp_byte_ptr_1[i - 1] >> 1) & 0x1f,
                                   (exp_byte_ptr_2[i - 1] >> 1) & 0x1f,
-                                  winSize,
-                                  valueLimit,
                                   t);
 
             // fourth 5 bit
@@ -2068,8 +2034,6 @@ namespace alcp::rsa { namespace zen4 {
                                       | ((exp_byte_ptr_1[i - 1] & 0x1) << 4),
                                   (exp_byte_ptr_2[i - 2] >> 4)
                                       | ((exp_byte_ptr_2[i - 1] & 0x1) << 4),
-                                  winSize,
-                                  valueLimit,
                                   t);
 
             // fifth 5 bit
@@ -2081,8 +2045,6 @@ namespace alcp::rsa { namespace zen4 {
                                       | (exp_byte_ptr_1[i - 3] >> 7),
                                   ((exp_byte_ptr_2[i - 2] & 0xf) << 1)
                                       | (exp_byte_ptr_2[i - 3] >> 7),
-                                  winSize,
-                                  valueLimit,
                                   t);
 
             // 6th 5 bits
@@ -2092,8 +2054,6 @@ namespace alcp::rsa { namespace zen4 {
                                   k0,
                                   (exp_byte_ptr_1[i - 3] >> 2) & 0x1f,
                                   (exp_byte_ptr_2[i - 3] >> 2) & 0x1f,
-                                  winSize,
-                                  valueLimit,
                                   t);
             // 7th 5 bits
             SqauareAndMultiplySet(sq_radix_52,
@@ -2104,8 +2064,6 @@ namespace alcp::rsa { namespace zen4 {
                                       | (exp_byte_ptr_1[i - 4] >> 5),
                                   ((exp_byte_ptr_2[i - 3] & 0x3) << 3)
                                       | (exp_byte_ptr_2[i - 4] >> 5),
-                                  winSize,
-                                  valueLimit,
                                   t);
 
             // 8th 5 bits
@@ -2115,8 +2073,6 @@ namespace alcp::rsa { namespace zen4 {
                                   k0,
                                   exp_byte_ptr_1[i - 4] & 0x1f,
                                   exp_byte_ptr_2[i - 4] & 0x1f,
-                                  winSize,
-                                  valueLimit,
                                   t);
         }
 
