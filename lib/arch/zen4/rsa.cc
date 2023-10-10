@@ -1863,10 +1863,6 @@ namespace alcp::rsa { namespace zen4 {
             AMS1024Parallel(sq_radix_52, sq_radix_52, mod_reg, k0);
         }
 
-        // mont::GetFromTable(t, index1, mult_radix_52[0], 20, valueLimit);
-        // mont::GetFromTable(
-        //     t + 32 * 20, index2, mult_radix_52[1], 20, valueLimit);
-
         GetFromTableParallel(
             t, index1, index2, mult_radix_52[0], mult_radix_52[1]);
 
@@ -1910,8 +1906,6 @@ namespace alcp::rsa { namespace zen4 {
         // putting one in mont form
         AMM1024ReduceParallel(r1_radix_52_bit_p, r2Radix52Bit, mod_reg, k0);
         PutInTableParallel(t, 0, r1_radix_52_bit_p[0], r1_radix_52_bit_p[1]);
-        // mont::PutInTable(t + 32 * 20, 0, r1_radix_52_bit_p[1], 20,
-        // valueLimit);
 
         Rsa1024Radix64BitToRadix52Bit(input_radix_52[0], input[0]);
         Rsa1024Radix64BitToRadix52Bit(input_radix_52[1], input[1]);
@@ -1919,9 +1913,6 @@ namespace alcp::rsa { namespace zen4 {
         // almost montgomery multiplication on 1024 bits
         AMM1024Parallel(
             res_radix_52, input_radix_52, r2Radix52Bit, mod_reg, k0);
-
-        // mont::PutInTable(t, 1, res_radix_52[0], 20, valueLimit);
-        // mont::PutInTable(t + 32 * 20, 1, res_radix_52[1], 20, valueLimit);
 
         PutInTableParallel(t, 1, res_radix_52[0], res_radix_52[1]);
 
@@ -1931,9 +1922,6 @@ namespace alcp::rsa { namespace zen4 {
         for (Uint64 i = 2; i < 32; i++) {
             AMM1024Parallel(
                 mult_radix_52, mult_radix_52, res_radix_52, mod_reg, k0);
-            // mont::PutInTable(t, i, mult_radix_52[0], 20, valueLimit);
-            // mont::PutInTable(t + 32 * 20, i, mult_radix_52[1], 20,
-            // valueLimit);
             PutInTableParallel(t, i, mult_radix_52[0], mult_radix_52[1]);
         }
 
@@ -1943,14 +1931,6 @@ namespace alcp::rsa { namespace zen4 {
         // applying exponentiation using 5 bits at time and fetching the values
         // from precomputed tables
         // first 4 bit
-        // mont::GetFromTable(
-        //     t, exp_byte_ptr_1[127] >> 4, sq_radix_52[0], 20, valueLimit);
-        // mont::GetFromTable(t + 32 * 20,
-        //                    exp_byte_ptr_2[127] >> 4,
-        //                    sq_radix_52[1],
-        //                    20,
-        //                    valueLimit);
-
         GetFromTableParallel(t,
                              exp_byte_ptr_1[127] >> 4,
                              exp_byte_ptr_2[127] >> 4,
