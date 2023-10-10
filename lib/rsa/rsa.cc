@@ -528,13 +528,19 @@ template<alc_rsa_key_size T>
 void
 Rsa<T>::reset()
 {
-    Reset(m_priv_key.m_dp.get(), T / (2 * 64));
-    Reset(m_priv_key.m_dq.get(), T / (2 * 64));
-    Reset(m_priv_key.m_mod.get(), T / (64));
-    Reset(m_priv_key.m_p.get(), T / (2 * 64));
-    Reset(m_priv_key.m_q.get(), T / (2 * 64));
-    Reset(m_priv_key.m_qinv.get(), T / (2 * 64));
-    Reset(m_pub_key.m_mod.get(), T / (64));
+
+    if (m_priv_key.m_mod) {
+        Reset(m_priv_key.m_dp.get(), T / (2 * 64));
+        Reset(m_priv_key.m_dq.get(), T / (2 * 64));
+        Reset(m_priv_key.m_mod.get(), T / (64));
+        Reset(m_priv_key.m_p.get(), T / (2 * 64));
+        Reset(m_priv_key.m_q.get(), T / (2 * 64));
+        Reset(m_priv_key.m_qinv.get(), T / (2 * 64));
+    }
+
+    if (m_pub_key.m_mod) {
+        Reset(m_pub_key.m_mod.get(), T / (64));
+    }
 
     static bool zen4_available = CpuId::cpuIsZen4();
     if (zen4_available) {
