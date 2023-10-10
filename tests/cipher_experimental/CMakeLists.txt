@@ -32,4 +32,4 @@ add_openssl(framework/openssl_cipher_gcm.cc)
 add_ipp(framework/ipp_cipher_gcm.cc)
 
 AES_TEST(kat gcm)
-
+AES_TEST(cross gcm)
