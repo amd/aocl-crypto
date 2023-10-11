@@ -41,6 +41,10 @@ SET(ALCP_TEST_INCLUDES "${CMAKE_SOURCE_DIR}/include"
                        "${CMAKE_SOURCE_DIR}/tests/common/include"
     )
 
+IF (POLICY CMP0079) # Visibility
+  cmake_policy(SET CMP0079 NEW)
+ENDIF (POLICY CMP0079)
+
 IF(WIN32)
 target_link_libraries(gmock PUBLIC gtest)
 target_link_libraries(gmock_main PUBLIC gtest_main)
@@ -113,10 +117,6 @@ function(add_ipp IPP_SOURCE_FILES)
         SET(IPP_LIBS ${IPP_LIBS} PARENT_SCOPE)
     ENDIF(ENABLE_TESTS_IPP_API)
 endfunction(add_ipp IPP_SOURCE_FILES)
-
-if (POLICY CMP0079) # Visibility
-  cmake_policy(SET CMP0079 NEW)
-endif (POLICY CMP0079)
 
 # Function to dynamically generate compilation of each test cases
 FUNCTION(AES_TEST TYPE MOD)
