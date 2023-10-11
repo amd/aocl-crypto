@@ -31,6 +31,9 @@
 #include "gbench_base.hh"
 #include <memory>
 
+#define MAX_BLOCK_SIZE 32768
+#define MAX_KEY_SIZE   256
+
 // Test blocksizes, append more if needed, size is in bytes
 std::vector<Int64> blocksizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
 
@@ -102,25 +105,33 @@ AesAeadCipher(benchmark::State& state,
               size_t            keylen)
 {
     // Allocate with 512 bit alignment
-    alignas(64) Uint8              vec_in_arr[blockSize]  = {};
-    alignas(64) Uint8              vec_out_arr[blockSize] = {};
-    alignas(16) Uint8              tagBuffer[16]          = {};
-    alignas(16) Uint8              key[keylen / 8]        = {};
-    alignas(16) Uint8              iv[16]                 = {};
-    alignas(16) Uint8              ad[16]                 = {};
-    alignas(16) Uint8              tag[16]                = {};
-    alignas(16) Uint8              tkey[keylen / 8]       = {};
-    alcp::testing::CipherAeadBase* cb                     = nullptr;
+    alignas(64) Uint8              vec_in_arr[MAX_BLOCK_SIZE]  = {};
+    alignas(64) Uint8              vec_out_arr[MAX_BLOCK_SIZE] = {};
+    alignas(16) Uint8              tagBuffer[16]               = {};
+    alignas(16) Uint8              key[MAX_KEY_SIZE / 8]       = {};
+    alignas(16) Uint8              iv[16]                      = {};
+    alignas(16) Uint8              ad[16]                      = {};
+    alignas(16) Uint8              tag[16]                     = {};
+    alignas(16) Uint8              tkey[MAX_KEY_SIZE / 8]      = {};
+    alcp::testing::CipherAeadBase* cb                          = nullptr;
 
     alcp::testing::AlcpCipherAeadBase acb = alcp::testing::AlcpCipherAeadBase(
         cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
 
     cb = &acb;
 #ifdef USE_IPP
-    alcp::testing::IPPCipherAeadBase icb = alcp::testing::IPPCipherAeadBase(
-        cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
+    std::unique_ptr<alcp::testing::IPPCipherAeadBase> icb;
     if (useipp) {
-        cb = &icb;
+        icb = std::make_unique<alcp::testing::IPPCipherAeadBase>(
+            cipher_type,
+            alcpMode,
+            iv,
+            12,
+            reinterpret_cast<Uint8*>(key),
+            keylen,
+            reinterpret_cast<Uint8*>(tkey),
+            blockSize);
+        cb = icb.get();
     }
 #endif
 #ifdef USE_OSSL
