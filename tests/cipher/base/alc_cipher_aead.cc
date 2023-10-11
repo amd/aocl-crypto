@@ -285,7 +285,7 @@ AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data)
             return false;
         }
         // Tag verification
-        if (std::memcmp(aead_data.m_tagBuff, aead_data.m_tag, aead_data.m_tagl)
+        if (std::memcmp(aead_data.m_tag, aead_data.m_tagBuff, aead_data.m_tagl)
             != 0) {
             std::cout << "Error: Tag Verification Failed!" << std::endl;
             return false;

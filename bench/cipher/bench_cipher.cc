@@ -102,15 +102,15 @@ AesAeadCipher(benchmark::State& state,
               size_t            keylen)
 {
     // Allocate with 512 bit alignment
-    alignas(64) Uint8              vec_in_arr[blockSize];
-    alignas(64) Uint8              vec_out_arr[blockSize];
-    std::unique_ptr<Uint8[]>       tagBuffer = std::make_unique<Uint8[]>(16);
-    Uint8                          key[keylen / 8];
-    Uint8                          iv[16];
-    Uint8                          ad[16] = {};
-    Uint8                          tag[16];
-    Uint8                          tkey[keylen / 8];
-    alcp::testing::CipherAeadBase* cb;
+    alignas(64) Uint8              vec_in_arr[blockSize]  = {};
+    alignas(64) Uint8              vec_out_arr[blockSize] = {};
+    alignas(16) Uint8              tagBuffer[16]          = {};
+    alignas(16) Uint8              key[keylen / 8]        = {};
+    alignas(16) Uint8              iv[16]                 = {};
+    alignas(16) Uint8              ad[16]                 = {};
+    alignas(16) Uint8              tag[16]                = {};
+    alignas(16) Uint8              tkey[keylen / 8]       = {};
+    alcp::testing::CipherAeadBase* cb                     = nullptr;
 
     alcp::testing::AlcpCipherAeadBase acb = alcp::testing::AlcpCipherAeadBase(
         cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
@@ -124,11 +124,18 @@ AesAeadCipher(benchmark::State& state,
     }
 #endif
 #ifdef USE_OSSL
-    alcp::testing::OpenSSLCipherAeadBase ocb =
-        alcp::testing::OpenSSLCipherAeadBase(
-            cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
+    std::unique_ptr<alcp::testing::OpenSSLCipherAeadBase> ocb;
     if (useossl) {
-        cb = &ocb;
+        ocb = std::make_unique<alcp::testing::OpenSSLCipherAeadBase>(
+            cipher_type,
+            alcpMode,
+            iv,
+            12,
+            reinterpret_cast<Uint8*>(key),
+            keylen,
+            reinterpret_cast<Uint8*>(tkey),
+            blockSize);
+        cb = ocb.get();
     }
 #endif
     alcp::testing::alcp_dca_ex_t data;
@@ -142,7 +149,7 @@ AesAeadCipher(benchmark::State& state,
     data.m_adl     = 16;
     data.m_tag     = tag;
     data.m_tagl    = 16;
-    data.m_tagBuff = tagBuffer.get();
+    data.m_tagBuff = tagBuffer;
     data.m_tkey    = tkey;
     data.m_tkeyl   = 16;
 
