@@ -61,7 +61,8 @@ alcp_error_str(alc_error_t err, Uint8* buf, Uint64 size)
 bool
 alcp_is_error(alc_error_t err)
 {
-    return err != 0;
+    alc_error_t err_temp = err;
+    return (err_temp != 0);
 }
 
 EXTERN_C_END
