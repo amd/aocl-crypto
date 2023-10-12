@@ -32,29 +32,43 @@ namespace alcp::testing {
 RngBase::RngBase()
 {
     alc_rng_info_t rng_info;
+
+    // Using CAPI for RNG we initialize OS RNG for best performance
     rng_info.ri_distrib =
         ALC_RNG_DISTRIB_UNIFORM; // Output should be uniform probablilty
     rng_info.ri_source = ALC_RNG_SOURCE_OS;     // Use OS RNG
     rng_info.ri_type   = ALC_RNG_TYPE_DESCRETE; // Discrete output (uint8)
+
     /* Check if RNG mode is supported with RNG info */
     if (alcp_rng_supported(&rng_info) != ALC_ERROR_NONE) {
         printf("Support Failed!\n");
         throw "RNG not supported";
     }
-    if (m_handle.rh_context != nullptr) {
-        free(m_handle.rh_context);
-    }
+
+    // Assuming this is the first run, allocate and request for a handle.
     m_handle.rh_context = malloc(alcp_rng_context_size(&rng_info));
     if (alcp_rng_request(&rng_info, &m_handle) != ALC_ERROR_NONE) {
         printf("Request Failed!\n");
         throw "RNG request failed!";
     }
+
+    // Intialize internal PRNG for faster RNG with reproducability
+    std::vector<Uint8> seed_v = genRandomBytes(sizeof(Uint64));
+    std::copy(&seed_v[0],
+              &seed_v[0] + seed_v.size(),
+              reinterpret_cast<Uint8*>(&m_seed_));
+    mt_rand_ = std::mt19937(m_seed_); // Initialize with a random seed
 }
+
 RngBase::~RngBase()
 {
-    alcp_rng_finish(&m_handle);
-    free(m_handle.rh_context);
+    if (m_handle.rh_context != nullptr) {
+        alcp_rng_finish(&m_handle);
+        free(m_handle.rh_context);
+        m_handle.rh_context = nullptr;
+    }
 }
+
 std::vector<Uint8>
 RngBase::genRandomBytes(std::size_t l)
 {
@@ -68,4 +82,41 @@ RngBase::genRandomBytes(std::size_t l)
     }
     return ret;
 }
+
+// We can optimize by assuming 64 bit (8byte) alignment of buffer
+void
+RngBase::genRandomMt19937(std::vector<Uint8>& buffer)
+{
+    {
+        size_t iter = buffer.size() / 4;
+        for (size_t i = 0; i < iter; i++) {
+            Uint32 r   = mt_rand_();
+            Uint8* r_8 = reinterpret_cast<Uint8*>(&r);
+            std::copy(r_8, r_8 + 4, (&buffer[0]) + (i * 4));
+        }
+    }
+    {
+        int rem = buffer.size() % 4;
+        if (rem) {
+            Uint32 r   = mt_rand_();
+            Uint8* r_8 = reinterpret_cast<Uint8*>(&r);
+            std::copy(
+                r_8, r_8 + rem, ((&buffer[0]) + (buffer.size() - 1) - rem));
+        }
+    }
+}
+
+void
+RngBase::setSeedMt19937(Uint64 seed)
+{
+    m_seed_  = seed;
+    mt_rand_ = std::mt19937(m_seed_); // Initialize with the random seed
+}
+
+Uint64
+RngBase::getSeedMt19937()
+{
+    return m_seed_;
+}
+
 } // namespace alcp::testing

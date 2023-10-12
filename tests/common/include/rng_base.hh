@@ -28,16 +28,56 @@
 
 #pragma once
 #include <alcp/alcp.h>
+#include <random>
 #include <vector>
+
 namespace alcp::testing {
 class RngBase
 {
   private:
     alc_rng_handle_t m_handle{ nullptr };
+    std::mt19937     mt_rand_;
+    Uint64           m_seed_;
 
   public:
     RngBase();
     ~RngBase();
+
+    /**
+     * @brief Near to Pure Random Generator.
+     *
+     * @param l Size of buffer
+     * @return Vector of bytes with random numbers
+     */
     std::vector<Uint8> genRandomBytes(std::size_t l);
+
+    /**
+     * @brief Purely psedudo random number generator.
+     *
+     * Based on seed value provided or internally generated using genRandomBytes
+     * will use mt19937 to create deterministic bytes from uniform distribution
+     *
+     * @param buffer Buffer, with preallocated memory to store the random
+     * numbers
+     */
+    void genRandomMt19937(std::vector<Uint8>& buffer);
+
+    /**
+     * @brief Override the seed to generate stream using the seed.
+     *
+     * Same seed will mean it will never generate any other random number
+     *
+     * @param seed 64 bit seed input
+     */
+    void setSeedMt19937(Uint64 seed);
+
+    /**
+     * @brief Get the interal seed for storage purpose
+     *
+     * In case to investigate you can get the seed out.
+     *
+     * @return 64 bit seed output
+     */
+    Uint64 getSeedMt19937();
 };
 } // namespace alcp::testing
