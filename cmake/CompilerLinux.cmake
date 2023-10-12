@@ -110,7 +110,7 @@ endfunction(alcp_get_arch_cflags_zen)
 # lib/arch/zen3 Compile Flags
 function(alcp_get_arch_cflags_zen3)
     set(ARCH_COMPILE_FLAGS
-        -fPIC -march=znver3 -mavx -mavx2 -maes -mvaes -mpclmul -mvpclmulqdq
+        -O3 -fPIC -march=znver3 -mavx -mavx2 -maes -mvaes -mpclmul -mvpclmulqdq
         CACHE INTERNAL ""
         )
     set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
