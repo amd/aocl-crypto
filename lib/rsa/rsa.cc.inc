@@ -53,7 +53,7 @@ namespace mont {
 #endif
 
 /*
- * Square of bignum is based on
+ * MontSq is based on
  *
  * https://ieeexplore.ieee.org/document/6209072
  * "Speeding Up Big-Numbers Squaring"
