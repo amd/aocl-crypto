@@ -52,8 +52,7 @@ debug_dump(std::string str, BIGNUM* z)
 #else
 void
 debug_dump(std::string str, BIGNUM* z)
-{
-}
+{}
 #endif
 
 void
@@ -150,8 +149,7 @@ Poly1305::blk(const Uint8 pMsg[], Uint64 msgLen)
         Uint8 n_buff[17] = {};
 
         // Find if we are in the last block, if we are, then only do left bytes
-        Uint64 curr_blocklen = msgLen < ((i + 1) * 16) ? msgLen - ((i) * 16)
-                                                       : 16;
+        Uint64 curr_blocklen = msgLen < ((i + 1) * 16) ? msgLen - ((i)*16) : 16;
 #ifdef DEBUG
         std::cout << "Current Block Length:" << curr_blocklen << std::endl;
 #endif
@@ -294,7 +292,10 @@ Poly1305::copy(Uint8 digest[], Uint64 length)
         s.update(status::InvalidArgument("Invalid Size for Poly1305"));
         return s;
     }
-    std::reverse_copy(m_accumulator + 1, m_accumulator + 17, digest);
+
+    std::reverse_copy(
+        m_accumulator, m_accumulator + BN_num_bytes(m_a_bn), digest);
+
     return s;
 }
 
