@@ -13,9 +13,34 @@ implementations of different cryptographic algorithms which is given below:
 -- MAC (Cipher and Hash based) routines
 -- ECDH x25519 Key exchange functions
 -- RSA Encrypt/Decrypt functions.
+-- Chacha20 stream cipher functions.
+-- Poly1305 MAC functions.
 
 Highlights of AOCL Crypto version 4.2
 --------------------------------------
+-------------------------------------------------------------------------------------
+AOCL-Oct2023:
+-------------------------------------------------------------------------------------
+-- GCM: Performance improvements and bug fixes
+-- Chacha20 stream cipher functions, testing and benchmarking infra
+-- Poly1305 MAC algorithm, testing and benchmarking infra
+-- RSA
+   -- Bug fixes and performance improvements in 1024, 2048 encrypt/decrypt algorithms
+	-- Generating keys using key components in the test infrastructure
+
+-------------------------------------------------------------------------------------
+AOCL-Sep2023:
+-------------------------------------------------------------------------------------
+-- Gcov Code coverage support added for windows
+-- ECDH: Set Private Key API added
+-- Testing enhancements for AEAD Cipher APIs
+-- Testing support for RSA APIs (OAEP Padded and non-padded mode) for 1024,2048 bit key sizes
+-- Bug fixes in RSA Padded mode decrypt
+-- Examples added for file encrypt/decrypt
+
+-------------------------------------------------------------------------------------
+AOCL-Aug2023:
+-------------------------------------------------------------------------------------
 -- RSA
    -- Encryption / Decryption support for 1024 and 2048 bit key sizes.
    -- OAEP Padding support
