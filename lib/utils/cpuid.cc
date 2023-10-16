@@ -179,39 +179,54 @@ class CpuId::Impl
 bool
 CpuId::Impl::cpuHasAvx512f()
 {
+#ifdef ALCP_CPUID_DISABLE_AVX512
+    return false;
+#else
 #ifdef ALCP_ENABLE_AOCL_CPUID
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AVX512F);
 #else
     static bool state = false;
 #endif
     return state;
+#endif
 }
 
 bool
 CpuId::Impl::cpuHasAvx512dq()
 {
+#ifdef ALCP_CPUID_DISABLE_AVX512
+    return false;
+#else
 #ifdef ALCP_ENABLE_AOCL_CPUID
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AVX512DQ);
 #else
     static bool state = false;
 #endif
     return state;
+#endif
 }
 
 bool
 CpuId::Impl::cpuHasAvx512bw()
 {
+#ifdef ALCP_CPUID_DISABLE_AVX512
+    return false;
+#else
 #ifdef ALCP_ENABLE_AOCL_CPUID
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AVX512BW);
 #else
     static bool state = false;
 #endif
     return state;
+#endif
 }
 
 bool
 CpuId::Impl::cpuHasAvx512(avx512_flags_t flag)
 {
+#ifdef ALCP_CPUID_DISABLE_AVX512
+    return false;
+#else
     switch (flag) {
         case AVX512_DQ:
             return cpuHasAvx512dq();
@@ -223,127 +238,192 @@ CpuId::Impl::cpuHasAvx512(avx512_flags_t flag)
             // FIXME: Raise an exception
             return false;
     }
+#endif
 }
 
 bool
 CpuId::Impl::cpuHasVaes()
 {
+#ifdef ALCP_CPUID_DISABLE_VAES
+    return false;
+#else
 #ifdef ALCP_ENABLE_AOCL_CPUID
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_VAES);
 #else
     static bool state = false;
 #endif
     return state;
+#endif
 }
 bool
 CpuId::Impl::cpuHasAesni()
 {
+#ifdef ALCP_CPUID_DISABLE_AESNI
+    return false;
+#else
 #ifdef ALCP_ENABLE_AOCL_CPUID
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AES);
 #else
     static bool state = true;
 #endif
     return state;
+#endif
 }
 bool
 CpuId::Impl::cpuHasShani()
 {
+#ifdef ALCP_CPUID_DISABLE_SHANI
+    return false;
+#else
 #ifdef ALCP_ENABLE_AOCL_CPUID
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_SHA_NI);
 #else
     static bool state = false;
 #endif
     return state;
+#endif
 }
 bool
 CpuId::Impl::cpuHasAvx2()
 {
+#ifdef ALCP_CPUID_DISABLE_AVX2
+    return false;
+#else
 #ifdef ALCP_ENABLE_AOCL_CPUID
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AVX2);
 #else
     static bool state = false;
 #endif
     return state;
+#endif
 }
 bool
 CpuId::Impl::cpuHasRdRand()
 {
+#ifdef ALCP_CPUID_DISABLE_RAND
+    return false;
+#else
 #ifdef ALCP_ENABLE_AOCL_CPUID
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_RDRAND);
 #else
     static bool state = false;
 #endif
     return state;
+#endif
 }
 bool
 CpuId::Impl::cpuHasRdSeed()
 {
+#ifdef ALCP_CPUID_DISABLE_RAND
+    return false;
+#else
 #ifdef ALCP_ENABLE_AOCL_CPUID
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_RDSEED);
 #else
     static bool state = false;
 #endif
     return state;
+#endif
 }
 bool
 CpuId::Impl::cpuHasAdx()
 {
+#ifdef ALCP_CPUID_DISABLE_ADX
+    return false;
+#else
 #ifdef ALCP_ENABLE_AOCL_CPUID
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_ADX);
 #else
     static bool state = true;
 #endif
     return state;
+#endif
 }
 bool
 CpuId::Impl::cpuHasBmi2()
 {
+#ifdef ALCP_CPUID_DISABLE_BMI2
+    return false;
+#else
 #ifdef ALCP_ENABLE_AOCL_CPUID
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_BMI2);
 #else
     static bool state = true;
 #endif
     return state;
+#endif
 }
 bool
 CpuId::Impl::cpuIsZen1()
 {
+#if defined(ALCP_CPUID_FORCE)
+#if defined(ALCP_CPUID_FORCE_ZEN)
+    return true;
+#else
+    return false;
+#endif
+#else
 #ifdef ALCP_ENABLE_AOCL_CPUID
     static bool state = Impl::m_cpu.isUarch(Uarch::eZen);
 #else
     static bool state = false;
 #endif
     return state;
+#endif
 }
 bool
 CpuId::Impl::cpuIsZen2()
 {
+#if defined(ALCP_CPUID_FORCE)
+#if defined(ALCP_CPUID_FORCE_ZEN2)
+    return true;
+#else
+    return false;
+#endif
+#else
 #ifdef ALCP_ENABLE_AOCL_CPUID
     static bool state = Impl::m_cpu.isUarch(Uarch::eZen2);
 #else
     static bool state = false;
 #endif
     return state;
+#endif
 }
 bool
 CpuId::Impl::cpuIsZen3()
 {
+#if defined(ALCP_CPUID_FORCE)
+#if defined(ALCP_CPUID_FORCE_ZEN3)
+    return true;
+#else
+    return false;
+#endif
+#else
 #ifdef ALCP_ENABLE_AOCL_CPUID
     static bool state = Impl::m_cpu.isUarch(Uarch::eZen3);
 #else
     static bool state = false;
 #endif
     return state;
+#endif
 }
 bool
 CpuId::Impl::cpuIsZen4()
 {
+#if defined(ALCP_CPUID_FORCE)
+#if defined(ALCP_CPUID_FORCE_ZEN4)
+    return true;
+#else
+    return false;
+#endif
+#else
 #ifdef ALCP_ENABLE_AOCL_CPUID
     static bool state = Impl::m_cpu.isUarch(Uarch::eZen4);
 #else
     static bool state = false;
 #endif
     return state;
+#endif
 }
 
 bool

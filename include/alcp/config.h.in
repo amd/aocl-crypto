@@ -56,5 +56,19 @@
 
 // CPU Identification
 #cmakedefine01 ALCP_DISABLE_ASSEMBLY
+#cmakedefine ALCP_CPUID_FORCE
+#cmakedefine ALCP_CPUID_DISABLE_AVX512
+#cmakedefine ALCP_CPUID_DISABLE_AVX2
+#cmakedefine ALCP_CPUID_DISABLE_AESNI
+#cmakedefine ALCP_CPUID_DISABLE_VAES
+#cmakedefine ALCP_CPUID_DISABLE_SHANI
+#cmakedefine ALCP_CPUID_DISABLE_RAND
+#cmakedefine ALCP_CPUID_DISABLE_AVX
+#cmakedefine ALCP_CPUID_DISABLE_BMI2
+#cmakedefine ALCP_CPUID_DISABLE_ADX
+#cmakedefine ALCP_CPUID_FORCE_ZEN
+#cmakedefine ALCP_CPUID_FORCE_ZEN2
+#cmakedefine ALCP_CPUID_FORCE_ZEN3
+#cmakedefine ALCP_CPUID_FORCE_ZEN4
 
 #endif /* _INCLUDE_CONFIG_H */
