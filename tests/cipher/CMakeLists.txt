@@ -52,11 +52,11 @@ SET(EXTRA_INCLUDES "")
 
 # sources for tests
 SET(ALCP_INCLUDES
-        "${CMAKE_SOURCE_DIR}/include"
-        "${CMAKE_SOURCE_DIR}/lib/include"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../include"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
-        ${EXTRA_INCLUDES}
+    "${CMAKE_SOURCE_DIR}/include"
+    "${CMAKE_SOURCE_DIR}/lib/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+    ${EXTRA_INCLUDES}
 )
 
 IF(ENABLE_TESTS_IPP_API)

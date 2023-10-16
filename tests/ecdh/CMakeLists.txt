@@ -36,6 +36,13 @@ SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} base/alc_ecdh.cc base/ecd
 SET(LIBS ${LIBS} gtest alcp)
 
 SET(EXTRA_INCLUDES "")
+SET(ALCP_INCLUDES
+    "${CMAKE_SOURCE_DIR}/include"
+    "${CMAKE_SOURCE_DIR}/lib/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+    ${EXTRA_INCLUDES}
+)
 
 IF(ENABLE_TESTS_IPP_API)
     ADD_COMPILE_OPTIONS("-DUSE_IPP")
@@ -114,16 +121,13 @@ IF(ENABLE_TESTS_OPENSSL_API)
 ENDIF(ENABLE_TESTS_OPENSSL_API)
 
 IF(UNIX)
-SET(LIBS ${LIBS} pthread)
+    SET(LIBS ${LIBS} pthread)
 ENDIF()
 
 ADD_EXECUTABLE(test_ecdh_kat test_ecdh_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
 TARGET_INCLUDE_DIRECTORIES(test_ecdh_kat PRIVATE
-	"${CMAKE_SOURCE_DIR}/include" 
-	"${CMAKE_SOURCE_DIR}/lib/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+	${ALCP_INCLUDES}
     ${EXTRA_INCLUDES})
 
 TARGET_COMPILE_OPTIONS(test_ecdh_kat PUBLIC ${ALCP_WARNINGS})
@@ -132,10 +136,7 @@ TARGET_LINK_LIBRARIES(test_ecdh_kat ${LIBS})
 ADD_EXECUTABLE(test_ecdh_cross test_ecdh_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
 TARGET_INCLUDE_DIRECTORIES(test_ecdh_cross PRIVATE
-	"${CMAKE_SOURCE_DIR}/include"
-	"${CMAKE_SOURCE_DIR}/lib/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+	${ALCP_INCLUDES}
     ${EXTRA_INCLUDES})
 
 TARGET_COMPILE_OPTIONS(test_ecdh_cross PUBLIC ${ALCP_WARNINGS})

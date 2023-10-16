@@ -36,6 +36,13 @@ SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ../../tests/hmac/base/alc
 SET(LIBS ${LIBS} gtest alcp)
 
 SET(EXTRA_INCLUDES "")
+SET(ALCP_INCLUDES
+    "${CMAKE_SOURCE_DIR}/include"
+    "${CMAKE_SOURCE_DIR}/lib/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+    ${EXTRA_INCLUDES}
+)
 
 IF(ENABLE_TESTS_IPP_API)
     ADD_COMPILE_OPTIONS("-DUSE_IPP")
@@ -100,16 +107,13 @@ IF(ENABLE_TESTS_OPENSSL_API)
 ENDIF(ENABLE_TESTS_OPENSSL_API)
 
 IF(UNIX)
-SET(LIBS ${LIBS} pthread)
+    SET(LIBS ${LIBS} pthread)
 ENDIF()
 
 ADD_EXECUTABLE(test_hmac_kat test_hmac_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
 TARGET_INCLUDE_DIRECTORIES(test_hmac_kat PRIVATE
-	"${CMAKE_SOURCE_DIR}/include" 
-	"${CMAKE_SOURCE_DIR}/lib/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+	${ALCP_INCLUDES}
     ${EXTRA_INCLUDES})
 
 TARGET_COMPILE_OPTIONS(test_hmac_kat PUBLIC ${ALCP_WARNINGS})
@@ -118,10 +122,7 @@ TARGET_LINK_LIBRARIES(test_hmac_kat ${LIBS})
 ADD_EXECUTABLE(test_hmac_cross test_hmac_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
 TARGET_INCLUDE_DIRECTORIES(test_hmac_cross PRIVATE
-	"${CMAKE_SOURCE_DIR}/include"
-	"${CMAKE_SOURCE_DIR}/lib/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+	${ALCP_INCLUDES}
     ${EXTRA_INCLUDES})
 
 TARGET_COMPILE_OPTIONS(test_hmac_cross PUBLIC ${ALCP_WARNINGS})

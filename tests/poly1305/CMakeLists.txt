@@ -36,6 +36,13 @@ SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ../../tests/poly1305/base
 SET(LIBS ${LIBS} gtest alcp)
 
 SET(EXTRA_INCLUDES "")
+SET(ALCP_INCLUDES
+    "${CMAKE_SOURCE_DIR}/include"
+    "${CMAKE_SOURCE_DIR}/lib/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+    ${EXTRA_INCLUDES}
+)
 
 IF(ENABLE_TESTS_OPENSSL_API)
     ADD_COMPILE_OPTIONS("-DUSE_OSSL")
@@ -78,10 +85,7 @@ ENDIF(ALCP_ENABLE_RSP)
 ADD_EXECUTABLE(test_poly1305_kat test_poly1305_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
 TARGET_INCLUDE_DIRECTORIES(test_poly1305_kat PRIVATE
-    "${CMAKE_SOURCE_DIR}/include" 
-    "${CMAKE_SOURCE_DIR}/lib/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+    ${ALCP_INCLUDES}
     ${EXTRA_INCLUDES})
 
 TARGET_COMPILE_OPTIONS(test_poly1305_kat PUBLIC ${ALCP_WARNINGS})
@@ -90,10 +94,7 @@ TARGET_LINK_LIBRARIES(test_poly1305_kat ${LIBS})
 ADD_EXECUTABLE(test_poly1305_cross test_poly1305_cross.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
 TARGET_INCLUDE_DIRECTORIES(test_poly1305_cross PRIVATE
-    "${CMAKE_SOURCE_DIR}/include"
-    "${CMAKE_SOURCE_DIR}/lib/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
+    ${ALCP_INCLUDES}
     ${EXTRA_INCLUDES})
 
 TARGET_COMPILE_OPTIONS(test_poly1305_cross PUBLIC ${ALCP_WARNINGS})
