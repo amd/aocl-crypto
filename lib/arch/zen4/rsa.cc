@@ -1573,11 +1573,11 @@ namespace alcp::rsa { namespace zen4 {
     inline void mont::MontCompute<KEY_SIZE_2048>::CreateContext(
         MontContextBignum& context, Uint64* mod, Uint64 size)
     {
-        Uint64* r1               = new (std::align_val_t(8)) Uint64[size]{};
-        Uint64* r2               = new (std::align_val_t(8)) Uint64[size]{};
-        Uint64* r3               = new (std::align_val_t(8)) Uint64[size]{};
-        Uint64* r2_radix_52_bit  = new (std::align_val_t(8)) Uint64[40]{};
-        Uint64* mod_radix_52_bit = new (std::align_val_t(8)) Uint64[40]{};
+        Uint64* r1               = new Uint64[size]{};
+        Uint64* r2               = new Uint64[size]{};
+        Uint64* r3               = new Uint64[size]{};
+        Uint64* r2_radix_52_bit  = new Uint64[40]{};
+        Uint64* mod_radix_52_bit = new Uint64[40]{};
 
         context.m_r1.reset(r1);
         context.m_r2.reset(r2);
@@ -1649,11 +1649,11 @@ namespace alcp::rsa { namespace zen4 {
     inline void mont::MontCompute<KEY_SIZE_1024>::CreateContext(
         MontContextBignum& context, Uint64* mod, Uint64 size)
     {
-        Uint64* r1               = new (std::align_val_t(8)) Uint64[size]{};
-        Uint64* r2               = new (std::align_val_t(8)) Uint64[size]{};
-        Uint64* r3               = new (std::align_val_t(8)) Uint64[size]{};
-        Uint64* r2_radix_52_bit  = new (std::align_val_t(8)) Uint64[20]{};
-        Uint64* mod_radix_52_bit = new (std::align_val_t(8)) Uint64[20]{};
+        Uint64* r1               = new Uint64[size]{};
+        Uint64* r2               = new Uint64[size]{};
+        Uint64* r3               = new Uint64[size]{};
+        Uint64* r2_radix_52_bit  = new Uint64[20]{};
+        Uint64* mod_radix_52_bit = new Uint64[20]{};
 
         context.m_r1.reset(r1);
         context.m_r2.reset(r2);
