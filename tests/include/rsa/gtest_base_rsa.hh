@@ -224,7 +224,7 @@ Rsa_Cross(int                     padding_mode,
     alcp_rsa_data_t   data_main, data_ext;
     int               ret_val_main, ret_val_ext = 0;
     AlcpRsaBase       arb;
-    alc_drbg_handle_t handle;
+    alc_drbg_handle_t handle{};
     alc_drbg_info_t   drbg_info{};
     alc_error_t       err = ALC_ERROR_NONE;
 
@@ -500,6 +500,11 @@ Rsa_Cross(int                     padding_mode,
             PrintRsaTestData(data_main);
             PrintRsaTestData(data_ext);
         }
+    }
+    alcp_drbg_finish(&handle);
+    if (handle.ch_context) {
+        free(handle.ch_context);
+        handle.ch_context = nullptr;
     }
     return;
 }
