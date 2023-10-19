@@ -26,8 +26,8 @@
  *
  */
 
-#include "rng/alcp_rng_prov.h"
 #include "provider/alcp_names.h"
+#include "rng/alcp_rng_prov.h"
 
 static const char CIPHER_DEF_PROP[] = "provider=alcp,fips=no";
 
@@ -122,7 +122,7 @@ ALCP_prov_rng_instantiate(void*                vdrbg,
     alc_prov_rng_ctx_p context      = vdrbg;
     context->pc_rng_info.ri_distrib = ALC_RNG_DISTRIB_UNIFORM;
     context->pc_rng_info.ri_source  = ALC_RNG_SOURCE_ARCH; // Use SEC RNG
-    context->pc_rng_info.ri_type    = ALC_RNG_TYPE_DESCRETE;
+    context->pc_rng_info.ri_type    = ALC_RNG_TYPE_DISCRETE;
 
     // Check if that is possible, if not try another way
     if (alcp_is_error(alcp_rng_supported(&(context->pc_rng_info)))) {

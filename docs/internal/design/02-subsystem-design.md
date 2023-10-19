@@ -515,7 +515,7 @@ typedef enum {
     ALC_RNG_TYPE_INVALID = 0,
     ALC_RNG_TYPE_SIMPLE,
     ALC_RNG_TYPE_CONTINUOUS,
-    ALC_RNG_TYPE_DESCRETE,
+    ALC_RNG_TYPE_DISCRETE,
 
     ALC_RNG_TYPE_MAX,
 } alc_rng_type_t ;

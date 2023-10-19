@@ -62,7 +62,7 @@ main(int argc, char const* argv[])
                               .rng_info = {
                                   .ri_distrib = ALC_RNG_DISTRIB_UNIFORM,
                                   .ri_source  = ALC_RNG_SOURCE_ARCH,
-                                  .ri_type    = ALC_RNG_TYPE_DESCRETE } } } };
+                                  .ri_type    = ALC_RNG_TYPE_DISCRETE } } } };
 
     alc_error_t err = ALC_ERROR_NONE;
     err             = alcp_drbg_supported(&drbg_info);

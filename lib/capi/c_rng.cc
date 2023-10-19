@@ -43,7 +43,7 @@ alcp_rng_context_size(const alc_rng_info_p pRngInfo)
 {
     // Will be reported as error when debugging.
     assert(pRngInfo != nullptr);
-    if(pRngInfo == nullptr){
+    if (pRngInfo == nullptr) {
         return 0;
     }
 
@@ -63,7 +63,7 @@ alcp_rng_supported(const alc_rng_info_p pRngInfo)
     // FiXME: Status variable in context should be set with proper error message
 
     switch (pRngInfo->ri_type) {
-        case ALC_RNG_TYPE_DESCRETE:
+        case ALC_RNG_TYPE_DISCRETE:
             switch (pRngInfo->ri_distrib) {
                 case ALC_RNG_DISTRIB_UNIFORM:
                     switch (pRngInfo->ri_source) {
@@ -110,7 +110,7 @@ alcp_rng_request(const alc_rng_info_p pRngInfo, alc_rng_handle_p pHandle)
     ALCP_BAD_PTR_ERR_RET(pHandle->rh_context, error);
 
     switch (pRngInfo->ri_type) {
-        case ALC_RNG_TYPE_DESCRETE:
+        case ALC_RNG_TYPE_DISCRETE:
             switch (pRngInfo->ri_distrib) {
                 case ALC_RNG_DISTRIB_UNIFORM: {
                     error = alcp::rng::RngBuilder::build(*pRngInfo, *ctx);

@@ -66,7 +66,7 @@ main(int argc, char const* argv[])
         rng_info.ri_distrib =
             ALC_RNG_DISTRIB_UNIFORM; // Output should be uniform probablilty
         rng_info.ri_source = source;
-        rng_info.ri_type   = ALC_RNG_TYPE_DESCRETE; // Discrete output (uint8)
+        rng_info.ri_type   = ALC_RNG_TYPE_DISCRETE; // Discrete output (uint8)
 
         /* Erase buffer and prove its empty */
         memset(buffer, 0, RANDOM_SIZE); // Erase buffer

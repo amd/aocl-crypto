@@ -315,7 +315,7 @@ Rsa_Cross(int                     padding_mode,
     drbg_info.di_rng_sourceinfo.di_sourceinfo.rng_info.ri_source =
         ALC_RNG_SOURCE_ARCH;
     drbg_info.di_rng_sourceinfo.di_sourceinfo.rng_info.ri_type =
-        ALC_RNG_TYPE_DESCRETE;
+        ALC_RNG_TYPE_DISCRETE;
 
     err = alcp_drbg_supported(&drbg_info);
     if (alcp_is_error(err)) {

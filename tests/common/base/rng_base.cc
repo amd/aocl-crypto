@@ -37,7 +37,7 @@ RngBase::RngBase()
     rng_info.ri_distrib =
         ALC_RNG_DISTRIB_UNIFORM; // Output should be uniform probablilty
     rng_info.ri_source = ALC_RNG_SOURCE_OS;     // Use OS RNG
-    rng_info.ri_type   = ALC_RNG_TYPE_DESCRETE; // Discrete output (uint8)
+    rng_info.ri_type   = ALC_RNG_TYPE_DISCRETE; // Discrete output (uint8)
 
     /* Check if RNG mode is supported with RNG info */
     if (alcp_rng_supported(&rng_info) != ALC_ERROR_NONE) {
