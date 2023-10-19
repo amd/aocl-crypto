@@ -221,9 +221,12 @@ Rsa_Cross(int                     padding_mode,
           const alc_digest_info_t dinfo,
           const alc_digest_info_t mgfinfo)
 {
-    alcp_rsa_data_t data_main, data_ext;
-    int             ret_val_main, ret_val_ext = 0;
-    AlcpRsaBase     arb;
+    alcp_rsa_data_t   data_main, data_ext;
+    int               ret_val_main, ret_val_ext = 0;
+    AlcpRsaBase       arb;
+    alc_drbg_handle_t handle;
+    alc_drbg_info_t   drbg_info{};
+    alc_error_t       err = ALC_ERROR_NONE;
 
     // FIXME: Better use unique pointer here
     RsaBase *rb_main = {}, *rb_ext = {};
@@ -300,17 +303,62 @@ Rsa_Cross(int                     padding_mode,
     std::vector<Uint8>::const_iterator pos1, pos2;
     auto                               rng = std::default_random_engine{};
 
-    std::vector<Uint8> input_data;
+    /* use ctr drbg to randomize the input buffer */
+    drbg_info.di_algoinfo.ctr_drbg.di_keysize              = 128;
+    drbg_info.di_algoinfo.ctr_drbg.use_derivation_function = true;
+    drbg_info.di_type                                      = ALC_DRBG_CTR;
+    drbg_info.max_entropy_len = drbg_info.max_nonce_len = 16;
+    drbg_info.di_rng_sourceinfo.custom_rng              = false;
+    drbg_info.di_rng_sourceinfo.di_sourceinfo.rng_info.ri_distrib =
+        ALC_RNG_DISTRIB_UNIFORM;
+    drbg_info.di_rng_sourceinfo.di_sourceinfo.rng_info.ri_source =
+        ALC_RNG_SOURCE_ARCH;
+    drbg_info.di_rng_sourceinfo.di_sourceinfo.rng_info.ri_type =
+        ALC_RNG_TYPE_DESCRETE;
+    err = alcp_drbg_supported(&drbg_info);
+    if (alcp_is_error(err)) {
+        std::cout << "Error: alcp_drbg_supported: " << err << std::endl;
+        FAIL();
+    }
+    handle.ch_context = malloc(alcp_drbg_context_size(&drbg_info));
+    if (handle.ch_context == nullptr) {
+        std::cout << "Error: alcp_drbg_supported: " << std::endl;
+        FAIL();
+    }
+    err = alcp_drbg_request(&handle, &drbg_info);
+    if (alcp_is_error(err)) {
+        std::cout << "Error: alcp_drbg_request: " << err << std::endl;
+        FAIL();
+    }
+    const int cSecurityStrength = 100;
+    err = alcp_drbg_initialize(&handle, cSecurityStrength, NULL, 0);
+    if (alcp_is_error(err)) {
+        std::cout << "Error: alcp_drbg_initialize: " << err << std::endl;
+        FAIL();
+    }
+
+    // std::vector<Uint8> input_data;
+    int InputSize = 0;
     for (int i = loop_start; i < InputSize_Max; i++) {
         if (padding_mode == 1) {
-            input_data = rngb.genRandomBytes(i);
+            InputSize = i;
         } else {
             /* For non-padded mode, input len will always be KeySize */
-            input_data = rngb.genRandomBytes(InputSize_Max);
+            InputSize = InputSize_Max;
         }
 
+        std::vector<Uint8> input_data(InputSize);
         /* shuffle input vector after each iterations */
-        input_data = ShuffleVector(input_data, rng);
+        err = alcp_drbg_randomize(&handle,
+                                  &(input_data[0]),
+                                  input_data.size(),
+                                  cSecurityStrength,
+                                  NULL,
+                                  0);
+        if (alcp_is_error(err)) {
+            std::cout << "Error: alcp_drbg_randomize: " << err << std::endl;
+            FAIL();
+        }
 
         /* set test data for each lib */
         std::vector<Uint8> encrypted_data_main(KeySize);
