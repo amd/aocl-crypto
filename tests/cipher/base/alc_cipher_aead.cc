@@ -111,9 +111,10 @@ AlcpCipherAeadBase::init(const Uint8* iv,
 bool
 AlcpCipherAeadBase::init(const Uint8* key, const Uint32 key_len)
 {
-    alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
+    alc_error_t    err;
+    const int      err_size = 256;
+    Uint8          err_buf[err_size];
+    alc_key_info_t p_kinfo{};
 
     if (m_handle != nullptr) {
         alcp_cipher_aead_finish(m_handle);
@@ -150,13 +151,11 @@ AlcpCipherAeadBase::init(const Uint8* key, const Uint32 key_len)
 
 #if 1
     if (m_mode == ALC_AES_MODE_SIV) {
-        alc_key_info_t* p_kinfo =
-            (alc_key_info_p)malloc(sizeof(alc_key_info_t));
-        p_kinfo->key  = m_tkey; // Using tkey as CTR key for SIV
-        p_kinfo->len  = key_len;
-        p_kinfo->algo = ALC_KEY_ALG_SYMMETRIC;
-        p_kinfo->fmt  = ALC_KEY_FMT_RAW;
-        m_cinfo.ci_algo_info.ai_siv.xi_ctr_key = p_kinfo;
+        p_kinfo.key  = m_tkey; // Using tkey as CTR key for SIV
+        p_kinfo.len  = key_len;
+        p_kinfo.algo = ALC_KEY_ALG_SYMMETRIC;
+        p_kinfo.fmt  = ALC_KEY_FMT_RAW;
+        m_cinfo.ci_algo_info.ai_siv.xi_ctr_key = &p_kinfo;
     }
 #endif
     m_cinfo.ci_key_info = m_keyinfo;
