@@ -303,7 +303,8 @@ Rsa_Cross(int                     padding_mode,
     std::vector<Uint8>::const_iterator pos1, pos2;
     auto                               rng = std::default_random_engine{};
 
-    /* use ctr drbg to randomize the input buffer */
+    /* use ctr-drbg to randomize the input buffer */
+    /* TO DO: maybe parameterize the DRBG type, and params in future? */
     drbg_info.di_algoinfo.ctr_drbg.di_keysize              = 128;
     drbg_info.di_algoinfo.ctr_drbg.use_derivation_function = true;
     drbg_info.di_type                                      = ALC_DRBG_CTR;
@@ -315,6 +316,7 @@ Rsa_Cross(int                     padding_mode,
         ALC_RNG_SOURCE_ARCH;
     drbg_info.di_rng_sourceinfo.di_sourceinfo.rng_info.ri_type =
         ALC_RNG_TYPE_DESCRETE;
+
     err = alcp_drbg_supported(&drbg_info);
     if (alcp_is_error(err)) {
         std::cout << "Error: alcp_drbg_supported: " << err << std::endl;
@@ -337,15 +339,13 @@ Rsa_Cross(int                     padding_mode,
         FAIL();
     }
 
-    // std::vector<Uint8> input_data;
     int InputSize = 0;
     for (int i = loop_start; i < InputSize_Max; i++) {
-        if (padding_mode == 1) {
+        /* For non-padded mode, input len will always be KeySize */
+        if (padding_mode == 1)
             InputSize = i;
-        } else {
-            /* For non-padded mode, input len will always be KeySize */
+        else
             InputSize = InputSize_Max;
-        }
 
         std::vector<Uint8> input_data(InputSize);
         /* shuffle input vector after each iterations */
@@ -356,7 +356,8 @@ Rsa_Cross(int                     padding_mode,
                                   NULL,
                                   0);
         if (alcp_is_error(err)) {
-            std::cout << "Error: alcp_drbg_randomize: " << err << std::endl;
+            std::cout << "Error: alcp_drbg_randomize on input data: " << err
+                      << std::endl;
             FAIL();
         }
 
@@ -382,15 +383,31 @@ Rsa_Cross(int                     padding_mode,
         data_ext.m_msg_len        = input_data.size();
         data_ext.m_key_len        = KeySize;
 
-        /* seed and label for padding mode */
+        /* set seed and label for padding mode */
         std::vector<Uint8> seed(rb_main->m_hash_len);
-        seed              = rngb.genRandomBytes(rb_main->m_hash_len);
-        data_main.m_pseed = &(seed[0]);
-        data_ext.m_pseed  = &(seed[0]);
+        /* shuffle seed data after each iterations */
+        if (padding_mode == 1) {
+            err = alcp_drbg_randomize(
+                &handle, &(seed[0]), seed.size(), cSecurityStrength, NULL, 0);
+            if (alcp_is_error(err)) {
+                std::cout << "Error: alcp_drbg_randomize seed data: " << err
+                          << std::endl;
+                FAIL();
+            }
+        }
+        data_main.m_pseed = data_ext.m_pseed = &(seed[0]);
 
-        /* laben length should vary */
+        /* label length should vary */
         std::vector<Uint8> label(i * KeySize);
-        label             = rngb.genRandomBytes(i * KeySize);
+        if (padding_mode == 1) {
+            err = alcp_drbg_randomize(
+                &handle, &(label[0]), label.size(), cSecurityStrength, NULL, 0);
+            if (alcp_is_error(err)) {
+                std::cout << "Error: alcp_drbg_randomize label data: " << err
+                          << std::endl;
+                FAIL();
+            }
+        }
         data_main.m_label = data_ext.m_label = &(label[0]);
         data_main.m_label_size = data_ext.m_label_size = label.size();
 
