@@ -133,6 +133,7 @@ OpenSSLCipherAeadBase::~OpenSSLCipherAeadBase()
     // Destroy call contexts
     EVP_CIPHER_CTX_free(m_ctx_enc);
     EVP_CIPHER_CTX_free(m_ctx_dec);
+    EVP_CIPHER_free((EVP_CIPHER*)m_cipher_siv);
 #ifdef USE_PROVIDER
     if (m_alcp_provider != nullptr) {
         OSSL_PROVIDER_unload(m_alcp_provider);
@@ -252,13 +253,12 @@ OpenSSLCipherAeadBase::init(const Uint8* key, const Uint32 key_len)
         case ALC_AES_MODE_SIV:
             // For SIV (Synthetic Initialization Vector), there is no IV
             // passed from Application side.
+            EVP_CIPHER_free((EVP_CIPHER*)m_cipher_siv);
+            m_cipher_siv =
+                alcpModeKeyLenToCipher(m_cipher_type, m_mode, m_key_len);
             if (1
                 != EVP_EncryptInit_ex(
-                    m_ctx_enc,
-                    alcpModeKeyLenToCipher(m_cipher_type, m_mode, m_key_len),
-                    NULL,
-                    m_key,
-                    NULL)) {
+                    m_ctx_enc, m_cipher_siv, NULL, m_key, NULL)) {
                 handleErrors();
                 return false;
             }
@@ -326,13 +326,12 @@ OpenSSLCipherAeadBase::init(const Uint8* key, const Uint32 key_len)
 
             // For SIV (Synthetic Initialization Vector), there is no IV
             // passed from Application side.
+            EVP_CIPHER_free((EVP_CIPHER*)m_cipher_siv);
+            m_cipher_siv =
+                alcpModeKeyLenToCipher(m_cipher_type, m_mode, m_key_len);
             if (1
                 != EVP_DecryptInit_ex(
-                    m_ctx_dec,
-                    alcpModeKeyLenToCipher(m_cipher_type, m_mode, m_key_len),
-                    NULL,
-                    m_key,
-                    NULL)) {
+                    m_ctx_dec, m_cipher_siv, NULL, m_key, NULL)) {
                 handleErrors();
                 return false;
             }
