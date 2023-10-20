@@ -39,8 +39,11 @@
 
 namespace alcp::cipher {
 
-#define LOCAL_TABLE 0
-//#define MAX_NUM_512_BLKS 8
+/* COMPUTE_HASHSUBKEY_ONCE: Performs better when multipleEncrypt/Decrypt happens
+ * with same key. To be turned off when key/IV is modified for each
+ * Encrypt/Decrypt*/
+#define COMPUTE_HASHSUBKEY_ONCE 1
+#define MAX_NUM_512_BLKS        8
 
 /*
  * @brief        AES Encryption in GCM(Galois Counter mode)
@@ -85,7 +88,6 @@ class ALCP_API_EXPORT Gcm
     }
 };
 
-#define MAX_NUM_512_BLKS 8
 class ALCP_API_EXPORT GcmAuth : public GcmAuthData
 {
   public:
@@ -94,13 +96,10 @@ class ALCP_API_EXPORT GcmAuth : public GcmAuthData
     Uint64  m_additionalDataLen     = 0;
     Uint64  m_isHashSubKeyGenerated = false;
 
-#if LOCAL_TABLE
-    /* precomputed hash table memory when located locally in encrypt or
-    decrypt modules gives better performance for larger block sizes (>8192
-    bytes )*/
-    __attribute__((aligned(64))) Uint64 m_hashSubkeyTable[8];
-#else
+#if COMPUTE_HASHSUBKEY_ONCE
     __attribute__((aligned(64))) Uint64 m_hashSubkeyTable[MAX_NUM_512_BLKS * 8];
+#else
+    __attribute__((aligned(64))) Uint64 m_hashSubkeyTable[8]; // dummy
 #endif
 
     /**

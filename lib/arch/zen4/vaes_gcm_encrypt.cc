@@ -145,7 +145,17 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
 
     num_512_blks = dynamicUnroll(blocks);
 
-#if LOCAL_TABLE
+#if COMPUTE_HASHSUBKEY_ONCE
+    __m512i* Hsubkey_512_precomputed = (__m512i*)pHashSubkeyTable;
+    __m512i  hashSubkeyTable[MAX_NUM_512_BLKS];
+    __m512i* Hsubkey_512 = hashSubkeyTable;
+    getPrecomputedTable(isFirstUpdate,
+                        Hsubkey_512_precomputed,
+                        Hsubkey_512,
+                        num_512_blks,
+                        gcm,
+                        const_factor_128);
+#else
     __m512i  hashSubkeyTable[MAX_NUM_512_BLKS];
     __m512i* Hsubkey_512 = hashSubkeyTable;
 
@@ -156,17 +166,6 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
                            Hsubkey_512,
                            const_factor_128);
     }
-#else
-    __m512i* Hsubkey_512_precomputed = (__m512i*)pHashSubkeyTable;
-    __m512i  hashSubkeyTable[MAX_NUM_512_BLKS];
-    __m512i* Hsubkey_512 = hashSubkeyTable;
-    getPrecomputedTable(isFirstUpdate,
-                        Hsubkey_512_precomputed,
-                        Hsubkey_512,
-                        num_512_blks,
-                        gcm,
-                        const_factor_128);
-
 #endif
 
     Uint64  blockCount_1x512 = factor;
