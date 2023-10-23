@@ -58,7 +58,7 @@ __aes_wrapper(const void*  rCipher,
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<const CIPHERMODE*>(rCipher);
+    auto ap = static_cast<CIPHERMODE*>(const_cast<void*>(rCipher));
 
     if (encrypt)
         e = ap->encrypt(pSrc, pDest, len, pIv);
@@ -66,6 +66,26 @@ __aes_wrapper(const void*  rCipher,
         e = ap->decrypt(pSrc, pDest, len, pIv);
 
     return e;
+}
+
+template<typename CIPHERMODE, bool encrypt = true>
+static alc_error_t
+__aes_wrapper_crypt_block(const void*  rCipher,
+                          const Uint8* pSrc,
+                          Uint8*       pDest,
+                          Uint64       currSrcLen,
+                          Uint64       startBlockNum)
+{
+    Status e = StatusOk();
+
+    auto ap = static_cast<CIPHERMODE*>(const_cast<void*>(rCipher));
+
+    if constexpr (encrypt)
+        e.update(ap->encryptBlocks(pSrc, pDest, currSrcLen, startBlockNum));
+    else
+        e.update(ap->decryptBlocks(pSrc, pDest, currSrcLen, startBlockNum));
+
+    return e.ok();
 }
 
 template<typename CIPHERMODE, bool encrypt = true>
@@ -80,7 +100,7 @@ __aes_wrapperUpdate(void*        rCipher,
 
     auto ap = static_cast<CIPHERMODE*>(rCipher);
 
-    if (encrypt)
+    if constexpr (encrypt)
         e = ap->encryptUpdate(pSrc, pDest, len, pIv);
     else
         e = ap->decryptUpdate(pSrc, pDest, len, pIv);
@@ -213,12 +233,17 @@ _build_aes_cipher(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 // For XTS and Some modes
 template<typename T1, typename T2>
 void
-__build_aes_cipher(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
+__build_aes_cipher_xts(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
+    // FIXME In future every non AEAD Cipher should also use this
     if (keyLen == ALC_KEY_LEN_128) {
         _build_aes_cipher<T1>(pKey, keyLen, ctx);
+        ctx.decryptBlocks = __aes_wrapper_crypt_block<T1, false>;
+        ctx.setIv         = __aes_wrapperSetIv<T1>;
     } else if (keyLen == ALC_KEY_LEN_256) {
         _build_aes_cipher<T2>(pKey, keyLen, ctx);
+        ctx.encryptBlocks = __aes_wrapper_crypt_block<T2, true>;
+        ctx.setIv         = __aes_wrapperSetIv<T2>;
     }
 }
 
@@ -468,18 +493,18 @@ __build_aesXts(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 
     if (cpu_feature == CpuCipherFeatures::eVaes512) {
         using namespace vaes512;
-        __build_aes_cipher<Xts<EncryptXts128, DecryptXts128>,
-                           Xts<EncryptXts256, DecryptXts256>>(
+        __build_aes_cipher_xts<Xts<EncryptXts128, DecryptXts128>,
+                               Xts<EncryptXts256, DecryptXts256>>(
             pKey, keyLen, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
         using namespace vaes;
-        __build_aes_cipher<Xts<EncryptXts128, DecryptXts128>,
-                           Xts<EncryptXts256, DecryptXts256>>(
+        __build_aes_cipher_xts<Xts<EncryptXts128, DecryptXts128>,
+                               Xts<EncryptXts256, DecryptXts256>>(
             pKey, keyLen, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eAesni) {
         using namespace aesni;
-        __build_aes_cipher<Xts<EncryptXts128, DecryptXts128>,
-                           Xts<EncryptXts256, DecryptXts256>>(
+        __build_aes_cipher_xts<Xts<EncryptXts128, DecryptXts128>,
+                               Xts<EncryptXts256, DecryptXts256>>(
             pKey, keyLen, ctx);
     }
 
