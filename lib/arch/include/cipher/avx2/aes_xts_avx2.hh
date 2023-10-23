@@ -38,10 +38,12 @@ namespace alcp::cipher { namespace aes {
 
     static inline void MultiplyAlphaByTwo(__m128i& alpha)
     {
+        // p(x) = x^128 + x^7 + x^2 + x + 1
         unsigned long long res, carry;
 
         unsigned long long* tmp_tweak = (unsigned long long*)&alpha;
 
+        // MSB (sign bit) extended to 64 bits
         res   = (((long long)tmp_tweak[1]) >> 63) & GF_POLYNOMIAL;
         carry = (((long long)tmp_tweak[0]) >> 63) & 1;
 

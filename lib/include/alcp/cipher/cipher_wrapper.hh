@@ -180,7 +180,7 @@ namespace aesni {
                               const Uint8* pKey,
                               const Uint8* pTweakKey,
                               int          nRounds,
-                              const Uint8* pIv);
+                              Uint8*       pIv);
 
     alc_error_t EncryptXts256(const Uint8* pSrc,
                               Uint8*       pDest,
@@ -188,7 +188,7 @@ namespace aesni {
                               const Uint8* pKey,
                               const Uint8* pTweakKey,
                               int          nRounds,
-                              const Uint8* pIv);
+                              Uint8*       pIv);
 
     alc_error_t DecryptXts128(const Uint8* pSrc,
                               Uint8*       pDest,
@@ -196,7 +196,7 @@ namespace aesni {
                               const Uint8* pKey,
                               const Uint8* pTweakKey,
                               int          nRounds,
-                              const Uint8* pIv);
+                              Uint8*       pIv);
 
     alc_error_t DecryptXts256(const Uint8* pSrc,
                               Uint8*       pDest,
@@ -204,7 +204,7 @@ namespace aesni {
                               const Uint8* pKey,
                               const Uint8* pTweakKey,
                               int          nRounds,
-                              const Uint8* pIv);
+                              Uint8*       pIv);
 
     alc_error_t DecryptGcm(const Uint8* pInput,
                            Uint8*       pOutput,
@@ -263,6 +263,10 @@ namespace aesni {
                           const __m128i* pkey128,
                           const Uint8*   pIv,
                           int            nRounds);
+
+    Status InitializeTweakBlock(Uint8        pTweak[],
+                                const Uint8* pTweakKey,
+                                int          nRounds);
 } // namespace aesni
 
 namespace vaes512 {

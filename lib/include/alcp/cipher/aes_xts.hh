@@ -50,14 +50,14 @@ template<alc_error_t FEnc(const Uint8* pSrc,
                           const Uint8* pKey,
                           const Uint8* pTweakKey,
                           int          nRounds,
-                          const Uint8* pIv),
+                          Uint8*       pIv),
          alc_error_t FDec(const Uint8* pSrc,
                           Uint8*       pDest,
                           Uint64       len,
                           const Uint8* pKey,
                           const Uint8* pTweakKey,
                           int          nRounds,
-                          const Uint8* pIv)>
+                          Uint8*       pIv)>
 class ALCP_API_EXPORT Xts final : public Aes
 {
 
@@ -77,6 +77,24 @@ class ALCP_API_EXPORT Xts final : public Aes
     {
         p_tweak_key = &m_tweak_round_key[0];
         expandTweakKeys(pKey + keyLen / 8, keyLen);
+    }
+
+    Status encryptBlocks(const Uint8* pSrc,
+                         Uint8*       pDest,
+                         Uint64       currSrcLen,
+                         Uint64       startBlockNum)
+    {
+        Status s = StatusOk();
+        return s;
+    }
+
+    Status decryptBlocks(const Uint8* pSrc,
+                         Uint8*       pDest,
+                         Uint64       currSrcLen,
+                         Uint64       startBlockNum)
+    {
+        Status s = StatusOk();
+        return s;
     }
 
     ~Xts() {}
@@ -110,7 +128,7 @@ class ALCP_API_EXPORT Xts final : public Aes
     virtual alc_error_t encrypt(const Uint8* pPlainText,
                                 Uint8*       pCipherText,
                                 Uint64       len,
-                                const Uint8* pIv) const final;
+                                const Uint8* pIv) final;
 
     /**
      * @brief   XTS Decrypt Operation
@@ -124,7 +142,7 @@ class ALCP_API_EXPORT Xts final : public Aes
     virtual alc_error_t decrypt(const Uint8* pCipherText,
                                 Uint8*       pPlainText,
                                 Uint64       len,
-                                const Uint8* pIv) const final;
+                                const Uint8* pIv) final;
 
     virtual void expandTweakKeys(const Uint8* pUserKey, int len);
 
@@ -132,6 +150,7 @@ class ALCP_API_EXPORT Xts final : public Aes
     Xts() { p_tweak_key = &m_tweak_round_key[0]; };
 
   private:
+    alignas(64) Uint8 m_iv[16];
     Uint8  m_tweak_round_key[(RIJ_SIZE_ALIGNED(32) * (16))];
     Uint8* p_tweak_key = nullptr; /* Tweak key(for aes-xts mode): points to
                            offset in 'm_tweak_key' */
@@ -164,23 +183,23 @@ template<alc_error_t FEnc(const Uint8* pSrc,
                           const Uint8* pKey,
                           const Uint8* pTweakKey,
                           int          nRounds,
-                          const Uint8* pIv),
+                          Uint8*       pIv),
          alc_error_t FDec(const Uint8* pSrc,
                           Uint8*       pDest,
                           Uint64       len,
                           const Uint8* pKey,
                           const Uint8* pTweakKey,
                           int          nRounds,
-                          const Uint8* pIv)>
+                          Uint8*       pIv)>
 alc_error_t
 Xts<FEnc, FDec>::setIv(Uint64 len, const Uint8* pIv)
 {
-    alc_error_t err = ALC_ERROR_NONE;
-    if (len != 16) {
-        err = ALC_ERROR_INVALID_SIZE;
-        return err;
-    }
-    return err;
+    Status s = StatusOk();
+    // std::cout << "HERE!" << std::endl;
+    utils::CopyBytes(m_iv, pIv, len);
+    aesni::InitializeTweakBlock(m_iv, p_tweak_key, getRounds());
+
+    return s.code();
 }
 
 template<alc_error_t FEnc(const Uint8* pSrc,
@@ -189,14 +208,14 @@ template<alc_error_t FEnc(const Uint8* pSrc,
                           const Uint8* pKey,
                           const Uint8* pTweakKey,
                           int          nRounds,
-                          const Uint8* pIv),
+                          Uint8*       pIv),
          alc_error_t FDec(const Uint8* pSrc,
                           Uint8*       pDest,
                           Uint64       len,
                           const Uint8* pKey,
                           const Uint8* pTweakKey,
                           int          nRounds,
-                          const Uint8* pIv)>
+                          Uint8*       pIv)>
 void
 Xts<FEnc, FDec>::expandTweakKeys(const Uint8* pUserKey, int len)
 {
@@ -250,19 +269,19 @@ template<alc_error_t FEnc(const Uint8* pSrc,
                           const Uint8* pKey,
                           const Uint8* pTweakKey,
                           int          nRounds,
-                          const Uint8* pIv),
+                          Uint8*       pIv),
          alc_error_t FDec(const Uint8* pSrc,
                           Uint8*       pDest,
                           Uint64       len,
                           const Uint8* pKey,
                           const Uint8* pTweakKey,
                           int          nRounds,
-                          const Uint8* pIv)>
+                          Uint8*       pIv)>
 alc_error_t
 Xts<FEnc, FDec>::encrypt(const Uint8* pPlainText,
                          Uint8*       pCipherText,
                          Uint64       len,
-                         const Uint8* pIv) const
+                         const Uint8* pIv)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -278,7 +297,7 @@ Xts<FEnc, FDec>::encrypt(const Uint8* pPlainText,
                getEncryptKeys(),
                p_tweak_key,
                getRounds(),
-               pIv);
+               m_iv);
 
 #if 0
 
@@ -358,19 +377,19 @@ template<alc_error_t FEnc(const Uint8* pSrc,
                           const Uint8* pKey,
                           const Uint8* pTweakKey,
                           int          nRounds,
-                          const Uint8* pIv),
+                          Uint8*       pIv),
          alc_error_t FDec(const Uint8* pSrc,
                           Uint8*       pDest,
                           Uint64       len,
                           const Uint8* pKey,
                           const Uint8* pTweakKey,
                           int          nRounds,
-                          const Uint8* pIv)>
+                          Uint8*       pIv)>
 alc_error_t
 Xts<FEnc, FDec>::decrypt(const Uint8* pCipherText,
                          Uint8*       pPlainText,
                          Uint64       len,
-                         const Uint8* pIv) const
+                         const Uint8* pIv)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -386,7 +405,7 @@ Xts<FEnc, FDec>::decrypt(const Uint8* pCipherText,
                getDecryptKeys(),
                p_tweak_key,
                getRounds(),
-               pIv);
+               m_iv);
 
 #if 0
 

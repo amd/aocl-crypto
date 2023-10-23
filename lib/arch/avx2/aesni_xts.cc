@@ -48,21 +48,25 @@ namespace alcp::cipher { namespace aesni {
                                   const Uint8* pKey,
                                   const Uint8* pTweakKey,
                                   int          nRounds,
-                                  const Uint8* pIv)
+                                  Uint8*       pIv)
     {
-        auto p_key128       = reinterpret_cast<const __m128i*>(pKey);
-        auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
-        auto p_src128       = reinterpret_cast<const __m128i*>(pSrc);
-        auto p_dest128      = reinterpret_cast<__m128i*>(pDest);
-        auto p_iv128        = reinterpret_cast<const __m128i*>(pIv);
+        auto p_key128 = reinterpret_cast<const __m128i*>(pKey);
+        // auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
+        auto p_src128  = reinterpret_cast<const __m128i*>(pSrc);
+        auto p_dest128 = reinterpret_cast<__m128i*>(pDest);
+        auto p_iv128   = reinterpret_cast<__m128i*>(pIv);
 
         Uint64 blocks          = len / Rijndael::cBlockSize;
         int    last_Round_Byte = len % Rijndael::cBlockSize;
 
+#if 0
         // iv encryption using tweak key to get alpha
         __m128i current_alpha =
             _mm_loadu_si128(p_iv128); // loadu to handle unaligned memory
         AesEnc_1x128(&current_alpha, p_tweak_key128, nRounds);
+#endif
+
+        __m128i current_alpha = _mm_load_si128(p_iv128);
 
         // Encrypting 4 source text blocks at a time
         while (blocks >= 4) {
@@ -142,8 +146,11 @@ namespace alcp::cipher { namespace aesni {
         if (blocks >= 1) {
 
             // Encrypting Text using EncKey
+            // PP = ( Tweak xor P )
             __m128i tweaked_src_text = current_alpha ^ p_src128[0];
+            // CC = ( aesEnc(PP) )
             AesEnc_1x128(&tweaked_src_text, p_key128, nRounds);
+            // C  = ( Tweak xor CC )
             tweaked_src_text = tweaked_src_text ^ current_alpha;
 
             // storing the results in destination
@@ -173,6 +180,7 @@ namespace alcp::cipher { namespace aesni {
                              p_dest8 - 16 + last_Round_Byte,
                              16 - last_Round_Byte);
             utils::CopyBytes(p_last_messgae_block, p_src8, last_Round_Byte);
+            // mth cipher text
             utils::CopyBytes(p_dest8, p_dest8 - 16, last_Round_Byte);
 
             // encrypting last message block
@@ -182,6 +190,8 @@ namespace alcp::cipher { namespace aesni {
 
             utils::CopyBytes((p_dest8 - 16), p_last_messgae_block, 16);
         }
+
+        _mm_store_si128(p_iv128, current_alpha);
         return ALC_ERROR_NONE;
     }
 
@@ -201,21 +211,27 @@ namespace alcp::cipher { namespace aesni {
                                   const Uint8* pKey,
                                   const Uint8* pTweakKey,
                                   int          nRounds,
-                                  const Uint8* pIv)
+                                  Uint8*       pIv)
     {
-        auto p_key128       = reinterpret_cast<const __m128i*>(pKey);
-        auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
-        auto p_src128       = reinterpret_cast<const __m128i*>(pSrc);
-        auto p_dest128      = reinterpret_cast<__m128i*>(pDest);
-        auto p_iv128        = reinterpret_cast<const __m128i*>(pIv);
+        auto p_key128 = reinterpret_cast<const __m128i*>(pKey);
+        // auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
+        auto p_src128  = reinterpret_cast<const __m128i*>(pSrc);
+        auto p_dest128 = reinterpret_cast<__m128i*>(pDest);
+        auto p_iv128   = reinterpret_cast<__m128i*>(pIv);
 
         Uint64 blocks          = len / Rijndael::cBlockSize;
         int    last_Round_Byte = len % Rijndael::cBlockSize;
 
+#if 0
         // iv encryption using tweak key to get alpha
         __m128i current_alpha = _mm_loadu_si128(p_iv128),
                 last_tweak    = _mm_setzero_si128();
+
         AesEnc_1x128(&current_alpha, p_tweak_key128, nRounds);
+#endif
+
+        __m128i current_alpha = _mm_load_si128(p_iv128),
+                last_tweak    = _mm_setzero_si128();
 
         // Decrypting 4 cipher text blocks at a time
         while (blocks >= 4) {
@@ -302,7 +318,8 @@ namespace alcp::cipher { namespace aesni {
 
         if (blocks >= 1) {
 
-            if (blocks == 1 && last_Round_Byte) {
+            // Current block needs next to next tweak block
+            if (last_Round_Byte) {
                 last_tweak = current_alpha;
                 aes::MultiplyAlphaByTwo(current_alpha);
             }
@@ -319,6 +336,11 @@ namespace alcp::cipher { namespace aesni {
             p_src128++;
 
             blocks--;
+
+            // Only one complete block without partial block
+            if (!(last_Round_Byte)) {
+                aes::MultiplyAlphaByTwo(current_alpha);
+            }
         }
 
         auto p_dest8 = reinterpret_cast<Uint8*>(p_dest128);
@@ -343,7 +365,27 @@ namespace alcp::cipher { namespace aesni {
 
             utils::CopyBytes((p_dest8 - 16), p_last_src_text, 16);
         }
+
+        _mm_store_si128(p_iv128, current_alpha);
+
         return ALC_ERROR_NONE;
+    }
+
+    ALCP_API_EXPORT Status InitializeTweakBlock(Uint8        pTweak[],
+                                                const Uint8* pTweakKey,
+                                                int          nRounds)
+    {
+        Status s = StatusOk();
+        // IV
+        __m128i init_vect =
+            _mm_load_si128(reinterpret_cast<const __m128i*>(pTweak));
+
+        AesEncrypt(
+            &init_vect, reinterpret_cast<const __m128i*>(pTweakKey), nRounds);
+
+        _mm_store_si128(reinterpret_cast<__m128i*>(pTweak), init_vect);
+
+        return s;
     }
 
     ALCP_API_EXPORT
@@ -353,7 +395,7 @@ namespace alcp::cipher { namespace aesni {
                               const Uint8* pKey,
                               const Uint8* pTweakKey,
                               int          nRounds,
-                              const Uint8* pIv)
+                              Uint8*       pIv)
     {
         // AesEncrypt 1Block, 2Block, 3Block, 4Block
         return EncryptXts<AesEncrypt, AesEncrypt, AesEncrypt>(
@@ -366,7 +408,7 @@ namespace alcp::cipher { namespace aesni {
                               const Uint8* pKey,
                               const Uint8* pTweakKey,
                               int          nRounds,
-                              const Uint8* pIv)
+                              Uint8*       pIv)
     {
         // AesEncrypt 1Block, 2Block, 3Block, 4Block
         return EncryptXts<AesEncrypt, AesEncrypt, AesEncrypt>(
@@ -379,7 +421,7 @@ namespace alcp::cipher { namespace aesni {
                               const Uint8* pKey,
                               const Uint8* pTweakKey,
                               int          nRounds,
-                              const Uint8* pIv)
+                              Uint8*       pIv)
     {
         // AesEncrypt 1Block, 2Block, 3Block, 4Block
         return EncryptXts<AesEncrypt, AesEncrypt, AesEncrypt>(
@@ -393,7 +435,7 @@ namespace alcp::cipher { namespace aesni {
                               const Uint8* pKey,
                               const Uint8* pTweakKey,
                               int          nRounds,
-                              const Uint8* pIv)
+                              Uint8*       pIv)
     {
         return DecryptXts<AesEncrypt, AesDecrypt, AesDecrypt, AesDecrypt>(
             pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
@@ -405,7 +447,7 @@ namespace alcp::cipher { namespace aesni {
                               const Uint8* pKey,
                               const Uint8* pTweakKey,
                               int          nRounds,
-                              const Uint8* pIv)
+                              Uint8*       pIv)
     {
         return DecryptXts<AesEncrypt, AesDecrypt, AesDecrypt, AesDecrypt>(
             pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
