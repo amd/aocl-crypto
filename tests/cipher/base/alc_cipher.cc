@@ -50,7 +50,8 @@ AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cipher_type,
     : m_mode{ mode }
     , m_cipher_type{ cipher_type }
     , m_iv{ iv }
-{}
+{
+}
 
 AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cipher_type,
                                const alc_cipher_mode_t mode,
@@ -212,7 +213,17 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 key_len)
         alcp_error_str(err, err_buf, err_size);
         goto out;
     }
+
+    if (m_mode == ALC_AES_MODE_XTS) {
+        err = alcp_cipher_set_iv(m_handle, 16, m_iv);
+        if (alcp_is_error(err)) {
+            printf("Error: unable to set iv \n");
+            alcp_error_str(err, err_buf, err_size);
+            goto out;
+        }
+    }
     return true;
+
 out:
     if (m_handle != nullptr) {
         if (m_handle->ch_context != NULL) {
