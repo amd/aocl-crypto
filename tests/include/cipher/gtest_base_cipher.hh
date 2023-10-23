@@ -378,6 +378,10 @@ PrintTestData(std::vector<Uint8> key, alcp_dc_ex_t data, std::string mode)
               << " Len: " << data.m_ivl << std::endl;
     std::cout << "CIPHERTEXT: " << parseBytesToHexStr(data.m_out, data.m_outl)
               << " Len: " << data.m_outl << std::endl;
+    if (mode.compare("XTS") == 0) {
+        std::cout << "TKEY: " << parseBytesToHexStr(data.m_tkey, data.m_tkeyl)
+                  << " Len: " << data.m_tkeyl << std::endl;
+    }
     return;
 }
 
