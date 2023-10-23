@@ -499,8 +499,7 @@ DecryptXts(const Uint8* pSrc,
         blocks -= chunk;
     }
 
-    chunk = 4 * 2;
-
+    chunk         = 4 * 2;
     int tweak_idx = 0;
 
     // Encrypting 2*2 source text blocks at a time
@@ -666,6 +665,7 @@ DecryptXts(const Uint8* pSrc,
         blocks -= chunk;
     }
 
+    nextTweakBlock        = tweakx8[tweak_idx];
     __m256i  lastTweak    = tweakx8[tweak_idx];
     __m128i* p_lastTweak  = reinterpret_cast<__m128i*>(&lastTweak);
     Uint8*   p_lastTweak8 = reinterpret_cast<Uint8*>(&lastTweak);

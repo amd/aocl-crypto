@@ -343,7 +343,7 @@ namespace vaes512 {
                               const Uint8* pKey,
                               const Uint8* pTweakKey,
                               int          nRounds,
-                              const Uint8* pIv);
+                              Uint8*       pIv);
 
     alc_error_t EncryptXts256(const Uint8* pSrc,
                               Uint8*       pDest,
@@ -351,7 +351,7 @@ namespace vaes512 {
                               const Uint8* pKey,
                               const Uint8* pTweakKey,
                               int          nRounds,
-                              const Uint8* pIv);
+                              Uint8*       pIv);
 
     alc_error_t DecryptXts128(const Uint8* pSrc,
                               Uint8*       pDest,
@@ -359,7 +359,7 @@ namespace vaes512 {
                               const Uint8* pKey,
                               const Uint8* pTweakKey,
                               int          nRounds,
-                              const Uint8* pIv);
+                              Uint8*       pIv);
 
     alc_error_t DecryptXts256(const Uint8* pSrc,
                               Uint8*       pDest,
@@ -367,7 +367,7 @@ namespace vaes512 {
                               const Uint8* pKey,
                               const Uint8* pTweakKey,
                               int          nRounds,
-                              const Uint8* pIv);
+                              Uint8*       pIv);
 
     alc_error_t encryptGcm128(const Uint8*               pPlainText,
                               Uint8*                     pCipherText,
