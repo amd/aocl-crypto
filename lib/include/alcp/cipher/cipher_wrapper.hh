@@ -516,7 +516,7 @@ namespace vaes {
                               const Uint8* pKey,
                               const Uint8* pTweakKey,
                               int          nRounds,
-                              const Uint8* pIv);
+                              Uint8*       pIv);
 
     alc_error_t EncryptXts256(const Uint8* pSrc,
                               Uint8*       pDest,
@@ -524,7 +524,7 @@ namespace vaes {
                               const Uint8* pKey,
                               const Uint8* pTweakKey,
                               int          nRounds,
-                              const Uint8* pIv);
+                              Uint8*       pIv);
 
     alc_error_t DecryptXts128(const Uint8* pSrc,
                               Uint8*       pDest,
@@ -532,7 +532,7 @@ namespace vaes {
                               const Uint8* pKey,
                               const Uint8* pTweakKey,
                               int          nRounds,
-                              const Uint8* pIv);
+                              Uint8*       pIv);
 
     alc_error_t DecryptXts256(const Uint8* pSrc,
                               Uint8*       pDest,
@@ -540,7 +540,7 @@ namespace vaes {
                               const Uint8* pKey,
                               const Uint8* pTweakKey,
                               int          nRounds,
-                              const Uint8* pIv);
+                              Uint8*       pIv);
 
     // ctr APIs for vaes
     void ctrInit(__m256i*     c1,
