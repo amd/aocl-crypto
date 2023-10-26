@@ -293,8 +293,12 @@ Poly1305::copy(Uint8 digest[], Uint64 length)
         return s;
     }
 
+    int offset = 0;
+    if (BN_num_bytes(m_a_bn) > static_cast<int>(length)) {
+        offset = BN_num_bytes(m_a_bn) - static_cast<int>(length);
+    }
     std::reverse_copy(
-        m_accumulator, m_accumulator + BN_num_bytes(m_a_bn), digest);
+        m_accumulator + offset, m_accumulator + BN_num_bytes(m_a_bn), digest);
 
     return s;
 }
