@@ -48,7 +48,6 @@ function(alcp_get_cflags)
         /O2
         /W4
         /WX
-        /guard:cf
         CACHE INTERNAL ""
     )
     set(ALCP_CFLAGS ${ALCP_CFLAGS} PARENT_SCOPE)

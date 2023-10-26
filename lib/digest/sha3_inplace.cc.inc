@@ -501,13 +501,16 @@ fFunction(Uint64 state[cDim][cDim])
     }
 }
 inline void
-absorbChunk(Uint64* pSrc, Uint64 chunk_size_u64, Uint64* state)
+absorbChunk(Uint64* pSrc, Uint64 chunk_size_u64, Uint64* pState)
 {
+    auto src = reinterpret_cast<Uint8*>(pSrc);
+    auto state = reinterpret_cast<Uint8*>(pState);
+    auto chunk_size_u8 = chunk_size_u64 * 8;
     // check if we do gcc unroll here
-    for (Uint64 i = 0; i < chunk_size_u64; ++i) {
-        state[i] ^= pSrc[i];
+    for (Uint64 i = 0; i < chunk_size_u8; ++i) {
+        state[i] ^= src[i];
     }
-    fFunction((Uint64(*)[cDim])state);
+    fFunction((Uint64(*)[cDim])pState);
 }
 
 void
