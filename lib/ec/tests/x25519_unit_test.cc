@@ -173,6 +173,9 @@ TEST_P(x25519Test, PublicAndSharedKeyTest)
     EXPECT_EQ(ret, 0U);
     ret = memcmp(&(m_expected_shared_key.at(0)), pSecret_key2, keyLength1);
     EXPECT_EQ(ret, 0U);
+
+    delete[] pSecret_key1;
+    delete[] pSecret_key2;
 }
 
 TEST_P(x25519Test, PerformanceTest)
@@ -210,6 +213,8 @@ TEST_P(x25519Test, PerformanceTest)
             break;
         }
     }
+
+    delete[] pSecret_key;
 }
 
 TEST_P(x25519Test, GetKeySizeTest)
