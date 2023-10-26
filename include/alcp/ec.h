@@ -183,6 +183,7 @@ alcp_ec_request(const alc_ec_info_p pEcInfo, alc_ec_handle_p pEcHandle);
  * @parblock <br> &nbsp;
  * <b> This API is called to get the error string. It should be called after
  * @ref alcp_ec_request and before @ref alcp_ec_finish </b>
+ * @endparblock
  * @param [in] pEcHandle Session handle for EC operation
  * @param [out] pBuff  Destination Buffer to which Error String will be copied
  * @param [in] size    Length of the Buffer.

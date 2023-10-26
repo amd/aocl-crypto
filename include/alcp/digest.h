@@ -365,6 +365,7 @@ alcp_digest_reset(const alc_digest_handle_p p_digest_handle);
  * @parblock <br> &nbsp;
  * <b> This API is called to get the error string. It should be called after
  * @ref alcp_digest_request and before @ref alcp_digest_finish </b>
+ * @endparblock
  * @param [in] pDigestHandle Session handle for digest operation
  * @param [out] pBuff  Destination Buffer to which Error String will be copied
  * @param [in] size    Length of the Buffer.
