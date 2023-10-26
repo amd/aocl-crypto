@@ -264,9 +264,12 @@ namespace aesni {
                           const Uint8*   pIv,
                           int            nRounds);
 
-    Status InitializeTweakBlock(Uint8        pTweak[],
+    Status InitializeTweakBlock(const Uint8  pIv[],
+                                Uint8        pTweak[],
                                 const Uint8* pTweakKey,
                                 int          nRounds);
+
+    void TweakBlockCalculate(Uint8* pIv, Uint64 inc);
 } // namespace aesni
 
 namespace vaes512 {

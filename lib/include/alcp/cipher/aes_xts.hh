@@ -79,23 +79,16 @@ class ALCP_API_EXPORT Xts final : public Aes
         expandTweakKeys(pKey + keyLen / 8, keyLen);
     }
 
+    // Unoffical API, need to be replaced in future
     Status encryptBlocks(const Uint8* pSrc,
                          Uint8*       pDest,
                          Uint64       currSrcLen,
-                         Uint64       startBlockNum)
-    {
-        Status s = StatusOk();
-        return s;
-    }
+                         Uint64       startBlockNum);
 
     Status decryptBlocks(const Uint8* pSrc,
                          Uint8*       pDest,
                          Uint64       currSrcLen,
-                         Uint64       startBlockNum)
-    {
-        Status s = StatusOk();
-        return s;
-    }
+                         Uint64       startBlockNum);
 
     ~Xts() {}
 
@@ -148,12 +141,15 @@ class ALCP_API_EXPORT Xts final : public Aes
 
   private:
     Xts() { p_tweak_key = &m_tweak_round_key[0]; };
+    void tweakBlockSet(Uint64 aesBlockId);
 
   private:
     alignas(64) Uint8 m_iv[16];
+    alignas(64) Uint8 m_tweak_block[16];
     Uint8  m_tweak_round_key[(RIJ_SIZE_ALIGNED(32) * (16))];
     Uint8* p_tweak_key = nullptr; /* Tweak key(for aes-xts mode): points to
                            offset in 'm_tweak_key' */
+    Uint64 m_aes_block_id = static_cast<Uint64>(-1);
 };
 
 static inline Uint8
@@ -196,8 +192,12 @@ Xts<FEnc, FDec>::setIv(Uint64 len, const Uint8* pIv)
 {
     Status s = StatusOk();
     // std::cout << "HERE!" << std::endl;
-    utils::CopyBytes(m_iv, pIv, len);
-    aesni::InitializeTweakBlock(m_iv, p_tweak_key, getRounds());
+    utils::CopyBytes(m_iv, pIv, len); // Keep a copy of iv
+
+    // FIXME: In future we need to dispatch it correctly
+    aesni::InitializeTweakBlock(m_iv, m_tweak_block, p_tweak_key, getRounds());
+
+    m_aes_block_id = 0; // Initialized BlockId to 0
 
     return s.code();
 }
@@ -277,6 +277,92 @@ template<alc_error_t FEnc(const Uint8* pSrc,
                           const Uint8* pTweakKey,
                           int          nRounds,
                           Uint8*       pIv)>
+Status
+Xts<FEnc, FDec>::encryptBlocks(const Uint8* pSrc,
+                               Uint8*       pDest,
+                               Uint64       currSrcLen,
+                               Uint64       startBlockNum)
+{
+    Status s = StatusOk();
+    tweakBlockSet(startBlockNum);
+    alc_error_t err = encrypt(pSrc, pDest, currSrcLen, nullptr);
+    if (alcp_is_error(err)) {
+        s = alcp::base::status::InternalError("Encryption failed!");
+    }
+    return s;
+}
+
+template<alc_error_t FEnc(const Uint8* pSrc,
+                          Uint8*       pDest,
+                          Uint64       len,
+                          const Uint8* pKey,
+                          const Uint8* pTweakKey,
+                          int          nRounds,
+                          Uint8*       pIv),
+         alc_error_t FDec(const Uint8* pSrc,
+                          Uint8*       pDest,
+                          Uint64       len,
+                          const Uint8* pKey,
+                          const Uint8* pTweakKey,
+                          int          nRounds,
+                          Uint8*       pIv)>
+Status
+Xts<FEnc, FDec>::decryptBlocks(const Uint8* pSrc,
+                               Uint8*       pDest,
+                               Uint64       currSrcLen,
+                               Uint64       startBlockNum)
+{
+    Status s = StatusOk();
+    tweakBlockSet(startBlockNum);
+    alc_error_t err = decrypt(pSrc, pDest, currSrcLen, nullptr);
+    if (alcp_is_error(err)) {
+        s = alcp::base::status::InternalError("Decryption failed!");
+    }
+    return s;
+}
+
+template<alc_error_t FEnc(const Uint8* pSrc,
+                          Uint8*       pDest,
+                          Uint64       len,
+                          const Uint8* pKey,
+                          const Uint8* pTweakKey,
+                          int          nRounds,
+                          Uint8*       pIv),
+         alc_error_t FDec(const Uint8* pSrc,
+                          Uint8*       pDest,
+                          Uint64       len,
+                          const Uint8* pKey,
+                          const Uint8* pTweakKey,
+                          int          nRounds,
+                          Uint8*       pIv)>
+void
+Xts<FEnc, FDec>::tweakBlockSet(Uint64 aesBlockId)
+{
+    // FIXME: In future we need to dispatch it correctly
+    if (aesBlockId > m_aes_block_id) {
+        aesni::TweakBlockCalculate(m_tweak_block, aesBlockId - m_aes_block_id);
+    } else if (aesBlockId < m_aes_block_id) {
+        aesni::InitializeTweakBlock(
+            m_iv, m_tweak_block, p_tweak_key, getRounds());
+        aesni::TweakBlockCalculate(m_tweak_block, aesBlockId);
+    }
+    m_aes_block_id = aesBlockId;
+}
+
+template<alc_error_t FEnc(const Uint8* pSrc,
+                          Uint8*       pDest,
+                          Uint64       len,
+                          const Uint8* pKey,
+                          const Uint8* pTweakKey,
+                          int          nRounds,
+                          Uint8*       pIv),
+         alc_error_t FDec(const Uint8* pSrc,
+                          Uint8*       pDest,
+                          Uint64       len,
+                          const Uint8* pKey,
+                          const Uint8* pTweakKey,
+                          int          nRounds,
+                          Uint8*       pIv)>
 alc_error_t
 Xts<FEnc, FDec>::encrypt(const Uint8* pPlainText,
                          Uint8*       pCipherText,
@@ -291,13 +377,17 @@ Xts<FEnc, FDec>::encrypt(const Uint8* pPlainText,
         return err;
     }
 
+    Uint64 blocks_in = len / 16;
+
     err = FEnc(pPlainText,
                pCipherText,
                len,
                getEncryptKeys(),
                p_tweak_key,
                getRounds(),
-               m_iv);
+               m_tweak_block);
+
+    m_aes_block_id += blocks_in;
 
 #if 0
 
@@ -399,13 +489,17 @@ Xts<FEnc, FDec>::decrypt(const Uint8* pCipherText,
         return err;
     }
 
+    Uint64 blocks_in = len / 16;
+
     err = FDec(pCipherText,
                pPlainText,
                len,
                getDecryptKeys(),
                p_tweak_key,
                getRounds(),
-               m_iv);
+               m_tweak_block);
+
+    m_aes_block_id += blocks_in;
 
 #if 0
 

@@ -371,14 +371,27 @@ namespace alcp::cipher { namespace aesni {
         return ALC_ERROR_NONE;
     }
 
-    ALCP_API_EXPORT Status InitializeTweakBlock(Uint8        pTweak[],
+    ALCP_API_EXPORT void TweakBlockCalculate(Uint8* pTweakBlock, Uint64 inc)
+    {
+        __m128i* pTweakBlock128 = reinterpret_cast<__m128i*>(pTweakBlock);
+        __m128i  block128       = _mm_load_si128(pTweakBlock128);
+
+        for (Uint64 i = 0; i < inc; i++) {
+            aes::MultiplyAlphaByTwo(block128);
+        }
+
+        _mm_store_si128(pTweakBlock128, block128);
+    }
+
+    ALCP_API_EXPORT Status InitializeTweakBlock(const Uint8  pIv[],
+                                                Uint8        pTweak[],
                                                 const Uint8* pTweakKey,
                                                 int          nRounds)
     {
         Status s = StatusOk();
         // IV
         __m128i init_vect =
-            _mm_load_si128(reinterpret_cast<const __m128i*>(pTweak));
+            _mm_load_si128(reinterpret_cast<const __m128i*>(pIv));
 
         AesEncrypt(
             &init_vect, reinterpret_cast<const __m128i*>(pTweakKey), nRounds);
