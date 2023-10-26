@@ -121,7 +121,7 @@ alcp_rsa_request(const alc_rsa_key_size keySize, alc_rsa_handle_p pRsaHandle);
 /**
  * @brief Function encrypts text using using public key
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request
+ * <b>This API can be called after @ref alcp_rsa_request</b>
  * @endparblock
  *
  * @note  ALCP_RSA_PADDING_NONE is only supported as
@@ -150,7 +150,7 @@ alcp_rsa_publickey_encrypt(const alc_rsa_handle_p pRsaHandle,
 /**
  * @brief Function encrypts text using using public key and oaep padding
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request
+ * <b>This API can be called after @ref alcp_rsa_request</b>
  * @endparblock
  *
  * @param [in]  pRsaHandle         - Handler of the Context for the session
@@ -177,7 +177,7 @@ alcp_rsa_publickey_encrypt_oaep(const alc_rsa_handle_p pRsaHandle,
 /**
  * @brief Function adds the digest algorithm to be used in oaep padding
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request
+ * <b>This API can be called after @ref alcp_rsa_request</b>
  * @endparblock
  *
  * @param [in]  pRsaHandle         - Handler of the Context for the session
@@ -193,7 +193,7 @@ alcp_rsa_add_digest_oaep(const alc_rsa_handle_p  pRsaHandle,
 /**
  * @brief Function adds the digest algorithm for mask generation in oaep padding
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request
+ * <b>This API can be called after @ref alcp_rsa_request</b>
  * @endparblock
  *
  * @param [in]  pRsaHandle         - Handler of the Context for the session
@@ -261,7 +261,7 @@ alcp_rsa_privatekey_decrypt_oaep(const alc_rsa_handle_p pRsaHandle,
 /**
  * @brief Function fetches public key from handle
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request
+ * <b>This API can be called after @ref alcp_rsa_request</b>
  * @endparblock
  * @param [in]    pRsaHandle - Handler of the Context for the session
  * @param [out]   pPublicKey - pointer to public exponent
@@ -274,14 +274,14 @@ alcp_rsa_privatekey_decrypt_oaep(const alc_rsa_handle_p pRsaHandle,
 
 ALCP_API_EXPORT alc_error_t
 alcp_rsa_get_publickey(const alc_rsa_handle_p pRsaHandle,
-                       Uint64*                publicKey,
+                       Uint64*                pPublicKey,
                        Uint8*                 pModulus,
                        Uint64                 keySize);
 
 /**
  * @brief Function sets the public key inside the handle
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request
+ * <b>This API can be called after @ref alcp_rsa_request</b>
  * @endparblock
  * @param [in]   pRsaHandle - Handler of the Context for the session
  * @param [in]   exponent   - public key exponent
@@ -301,7 +301,7 @@ alcp_rsa_set_publickey(const alc_rsa_handle_p pRsaHandle,
 /**
  * @brief Function sets the private key inside the handle
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request
+ * <b>This API can be called after @ref alcp_rsa_request</b>
  * @endparblock
  * @param [in]   pRsaHandle - handler of the Context for the session
  * @param [in]   dp         - pointer to first exponent
@@ -367,6 +367,7 @@ alcp_rsa_finish(const alc_rsa_handle_p pRsaHandle);
  * @parblock <br> &nbsp;
  * <b> This API is called to get the error string. It should be called after
  * @ref alcp_rsa_request and before @ref alcp_rsa_finish </b>
+ * @endparblock
  * @param [in] pRsaHandle Session handle for rsa operation
  * @param [out] pBuff  Destination Buffer to which Error String will be copied
  * @param [in] size    Length of the Buffer.
