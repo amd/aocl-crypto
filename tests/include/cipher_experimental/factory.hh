@@ -30,10 +30,16 @@
 
 #include <memory>
 
+// ALCP Implementations for UAI
 #include "cipher_experimental/alc_cipher_gcm.hh"
+#include "cipher_experimental/alc_cipher_xts.hh"
+
+// OpenSSL Implementations for UAI
 #if USE_OSSL
 #include "cipher_experimental/openssl_cipher_gcm.hh"
 #endif
+
+// IPP-CP Implementations for UAI
 #if USE_IPP
 #include "cipher_experimental/ipp_cipher_gcm.hh"
 #endif
@@ -88,5 +94,25 @@ namespace gcm {
 #endif
     }
 } // namespace gcm
+
+namespace xts {
+    template<bool encryptor>
+    std::unique_ptr<ITestCipher> XtsCipherFactory(LibrarySelect selection)
+    {
+        return CipherFactory<
+            AlcpXtsCipher<encryptor>,
+
+            // #if USE_OSSL
+            //                              OpenSSLXtsCipher<encryptor>,
+            // #else
+            AlcpXtsCipher<encryptor>,
+            // #endif
+            // #if USE_IPP
+            //                              IppXtsCipher<encryptor>>(selection);
+            // #else
+            AlcpXtsCipher<encryptor>>(selection);
+        // #endif
+    }
+} // namespace xts
 
 } // namespace alcp::testing::cipher
