@@ -85,7 +85,7 @@ __aes_wrapper_crypt_block(const void*  rCipher,
     else
         e.update(ap->decryptBlocks(pSrc, pDest, currSrcLen, startBlockNum));
 
-    return e.ok();
+    return !(e.ok() == 1);
 }
 
 template<typename CIPHERMODE, bool encrypt = true>
@@ -238,11 +238,13 @@ __build_aes_cipher_xts(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
     // FIXME In future every non AEAD Cipher should also use this
     if (keyLen == ALC_KEY_LEN_128) {
         _build_aes_cipher<T1>(pKey, keyLen, ctx);
+        ctx.encryptBlocks = __aes_wrapper_crypt_block<T1, true>;
         ctx.decryptBlocks = __aes_wrapper_crypt_block<T1, false>;
         ctx.setIv         = __aes_wrapperSetIv<T1>;
     } else if (keyLen == ALC_KEY_LEN_256) {
         _build_aes_cipher<T2>(pKey, keyLen, ctx);
         ctx.encryptBlocks = __aes_wrapper_crypt_block<T2, true>;
+        ctx.decryptBlocks = __aes_wrapper_crypt_block<T2, false>;
         ctx.setIv         = __aes_wrapperSetIv<T2>;
     }
 }
