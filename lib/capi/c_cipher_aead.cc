@@ -41,6 +41,7 @@ EXTERN_C_BEGIN
 alc_error_t
 alcp_cipher_aead_supported(const alc_cipher_aead_info_p pCipherInfo)
 {
+    ALCP_BAD_PTR_ERR_RET(pCipherInfo, err);
     alc_error_t err = ALC_ERROR_NONE;
 
     /* TODO: Check for pointer validity */
@@ -57,6 +58,7 @@ alcp_cipher_aead_supported(const alc_cipher_aead_info_p pCipherInfo)
 Uint64
 alcp_cipher_aead_context_size(const alc_cipher_aead_info_p pCipherInfo)
 {
+    ALCP_BAD_PTR_ERR_RET(pCipherInfo, err);
     Uint64 size = sizeof(cipher::Context);
     return size;
 }
@@ -90,10 +92,10 @@ alcp_cipher_aead_encrypt(const alc_cipher_handle_p pCipherHandle,
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
     ALCP_BAD_PTR_ERR_RET(pPlainText, err);
     ALCP_BAD_PTR_ERR_RET(pCipherText, err);
     ALCP_BAD_PTR_ERR_RET(pIv, err);
-
     ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
@@ -114,10 +116,10 @@ alcp_cipher_aead_encrypt_update(const alc_cipher_handle_p pCipherHandle,
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
     ALCP_BAD_PTR_ERR_RET(pInput, err);
     ALCP_BAD_PTR_ERR_RET(pOutput, err);
     ALCP_BAD_PTR_ERR_RET(pIv, err);
-
     // Sometimes Encrypt needs to be called with 0 length
     // ALCP_ZERO_LEN_ERR_RET(len, err);
 
@@ -140,10 +142,10 @@ alcp_cipher_aead_decrypt(const alc_cipher_handle_p pCipherHandle,
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
     ALCP_BAD_PTR_ERR_RET(pPlainText, err);
     ALCP_BAD_PTR_ERR_RET(pCipherText, err);
     ALCP_BAD_PTR_ERR_RET(pIv, err);
-
     ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
@@ -164,10 +166,10 @@ alcp_cipher_aead_decrypt_update(const alc_cipher_handle_p pCipherHandle,
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
     ALCP_BAD_PTR_ERR_RET(pInput, err);
     ALCP_BAD_PTR_ERR_RET(pOutput, err);
     ALCP_BAD_PTR_ERR_RET(pIv, err);
-
     // Sometimes Encrypt needs to be called with 0 length
     // ALCP_ZERO_LEN_ERR_RET(len, err);
 
@@ -188,6 +190,8 @@ alcp_cipher_aead_set_iv(const alc_cipher_handle_p pCipherHandle,
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
+
     ALCP_BAD_PTR_ERR_RET(pIv, err);
 
     ALCP_ZERO_LEN_ERR_RET(len, err);
@@ -208,6 +212,7 @@ alcp_cipher_aead_set_aad(const alc_cipher_handle_p pCipherHandle,
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
     ALCP_BAD_PTR_ERR_RET(pInput, err);
 
     // ALCP_ZERO_LEN_ERR_RET(len, err);
@@ -228,6 +233,8 @@ alcp_cipher_aead_get_tag(const alc_cipher_handle_p pCipherHandle,
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
+
     ALCP_BAD_PTR_ERR_RET(pOutput, err);
 
     ALCP_ZERO_LEN_ERR_RET(len, err);
@@ -247,6 +254,7 @@ alcp_cipher_aead_set_tag_length(const alc_cipher_handle_p pCipherHandle,
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
 
     ALCP_ZERO_LEN_ERR_RET(len, err);
 
@@ -264,6 +272,9 @@ alcp_cipher_aead_finish(const alc_cipher_handle_p pCipherHandle)
 {
     if (nullptr == pCipherHandle)
         return;
+    if (pCipherHandle->ch_context == nullptr) {
+        return;
+    }
 
     cipher::Context* ctx =
         reinterpret_cast<cipher::Context*>(pCipherHandle->ch_context);
