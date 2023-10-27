@@ -322,7 +322,7 @@ BENCH_AES_ENCRYPT_CFB_128(benchmark::State& state)
 }
 
 static void
-BENCH_AES_ENCRYPT_GCM_128(benchmark::State& state)
+BENCH_AES_ENCRYPT_GCM_MULTI_INIT_128(benchmark::State& state)
 {
     benchmark::DoNotOptimize(AesAeadCipher(state,
                                            state.range(0),
@@ -416,7 +416,7 @@ BENCH_AES_DECRYPT_CFB_128(benchmark::State& state)
 }
 
 static void
-BENCH_AES_DECRYPT_GCM_128(benchmark::State& state)
+BENCH_AES_DECRYPT_GCM_MULTI_INIT_128(benchmark::State& state)
 {
     benchmark::DoNotOptimize(AesAeadCipher(state,
                                            state.range(0),
@@ -513,7 +513,7 @@ BENCH_AES_ENCRYPT_CFB_192(benchmark::State& state)
 }
 
 static void
-BENCH_AES_ENCRYPT_GCM_192(benchmark::State& state)
+BENCH_AES_ENCRYPT_GCM_MULTI_INIT_192(benchmark::State& state)
 {
     benchmark::DoNotOptimize(AesAeadCipher(state,
                                            state.range(0),
@@ -596,7 +596,7 @@ BENCH_AES_DECRYPT_CFB_192(benchmark::State& state)
 }
 
 static void
-BENCH_AES_DECRYPT_GCM_192(benchmark::State& state)
+BENCH_AES_DECRYPT_GCM_MULTI_INIT_192(benchmark::State& state)
 {
     benchmark::DoNotOptimize(AesAeadCipher(state,
                                            state.range(0),
@@ -683,7 +683,7 @@ BENCH_AES_ENCRYPT_CFB_256(benchmark::State& state)
 }
 
 static void
-BENCH_AES_ENCRYPT_GCM_256(benchmark::State& state)
+BENCH_AES_ENCRYPT_GCM_MULTI_INIT_256(benchmark::State& state)
 {
     benchmark::DoNotOptimize(AesAeadCipher(state,
                                            state.range(0),
@@ -777,7 +777,7 @@ BENCH_AES_DECRYPT_CFB_256(benchmark::State& state)
 }
 
 static void
-BENCH_AES_DECRYPT_GCM_256(benchmark::State& state)
+BENCH_AES_DECRYPT_GCM_MULTI_INIT_256(benchmark::State& state)
 {
     benchmark::DoNotOptimize(AesAeadCipher(state,
                                            state.range(0),
@@ -888,12 +888,12 @@ AddBenchmarks()
 
     /* Benchmark of AEAD Ciphers */
     // GCM Benchmarks
-    BENCHMARK(BENCH_AES_ENCRYPT_GCM_128)->ArgsProduct({ blocksizes });
-    BENCHMARK(BENCH_AES_DECRYPT_GCM_128)->ArgsProduct({ blocksizes });
-    BENCHMARK(BENCH_AES_ENCRYPT_GCM_192)->ArgsProduct({ blocksizes });
-    BENCHMARK(BENCH_AES_DECRYPT_GCM_192)->ArgsProduct({ blocksizes });
-    BENCHMARK(BENCH_AES_ENCRYPT_GCM_256)->ArgsProduct({ blocksizes });
-    BENCHMARK(BENCH_AES_DECRYPT_GCM_256)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_128)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_128)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_192)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_192)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_ENCRYPT_GCM_MULTI_INIT_256)->ArgsProduct({ blocksizes });
+    BENCHMARK(BENCH_AES_DECRYPT_GCM_MULTI_INIT_256)->ArgsProduct({ blocksizes });
     // SIV Benchmarks
     BENCHMARK(BENCH_AES_ENCRYPT_SIV_128)->ArgsProduct({ blocksizes });
     BENCHMARK(BENCH_AES_DECRYPT_SIV_128)->ArgsProduct({ blocksizes });
