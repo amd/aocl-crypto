@@ -57,12 +57,6 @@ ippsAES_GCMInit(const Ipp8u*      pKey,
         context_aead->c_aeadinfo.ci_key_info.len      = keyLen * 8;
         context_aead->c_aeadinfo.ci_algo_info.ai_mode = ALC_AES_MODE_GCM;
         context_aead->handle.ch_context               = nullptr;
-    } else {
-        if (context_aead->handle.ch_context != nullptr) {
-            alcp_cipher_finish(&(context_aead->handle));
-            free(context_aead->handle.ch_context);
-            context_aead->handle.ch_context = nullptr;
-        }
     }
     printMsg("GCM Init End");
     return ippStsNoErr;
