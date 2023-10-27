@@ -130,7 +130,8 @@ typedef struct _alc_cipher_mode_xts_info
  * @param ai_iv Initialization Vector
  * @param ai_xts,      ai_gcm,      ai_siv optional param for Some Specific Mode
  *              of AES only one param can be present at a time
- * @struct  alc_cipher_algo_info_t
+ * @param alc_cipher_algo_info_t cipher algo
+ * @param alc_cipher_mode_t cipher mode
  */
 typedef struct _alc_cipher_algo_info
 {
@@ -250,7 +251,6 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
  *                         operation
  * @param[in]    pPlainText    Pointer to Plain Text
  * @param[out]   pCipherText   Pointer to Cipher Text
- * @param[in]    pKey          Pointer to Key
  * @param[in]    pIv           Pointer to Initialization Vector
  * @param[in]    len           Length of cipher/plain text
  * @return   &nbsp; Error Code for the API called. If alc_error_t
@@ -279,7 +279,6 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
  *                         operation
  * @param[in]    pPlainText    Pointer to Plain Text
  * @param[out]   pCipherText   Pointer to Cipher Text
- * @param[in]    pKey          Pointer to Key
  * @param[in]    pIv           Pointer to Initialization Vector
  * @param[in]    len           Length of cipher/plain text
  * @return   &nbsp; Error Code for the API called. If alc_error_t

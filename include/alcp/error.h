@@ -151,8 +151,8 @@ typedef Uint64 alc_error_t;
  *
  * @param [in] err    Actual Error
  * @param [out] buf    Buffer to write the Error message to
- * @param [in] size   Size of the buffer @ref buf. Size of buf should be at least
- * 1024
+ * @param [in] size   Size of the buffer @ref buf. Size of buf should be at
+ * least 1024
  */
 ALCP_API_EXPORT void
 alcp_error_str(alc_error_t err, Uint8* buf, Uint64 size);

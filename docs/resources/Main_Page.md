@@ -127,4 +127,4 @@ Here is a Demo Code Example on how to use Cipher:
 
 ## CONTACTS
 
-AOCL Crypto is developed and maintained by AMD. For support of these libraries and the other tools of AMD Zen Software Studio, see https://www.amd.com/en/developer/aocc/compiler-technical-support.html</b>
+<b>AOCL Crypto is developed and maintained by AMD. For support of these libraries and the other tools of AMD Zen Software Studio, see https://www.amd.com/en/developer/aocc/compiler-technical-support.html</b>
