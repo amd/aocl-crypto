@@ -271,8 +271,8 @@ alcp_cipher_aead_decrypt_update(const alc_cipher_handle_p pCipherHandle,
  * @brief AEAD set the IV/Nonce.
  * @parblock <br> &nbsp;
  * <b>This AEAD API can be called after @ref alcp_cipher_request is called. It
- * should be called after @ref alcp_cipher_set_tag_length for CCM mode. For GCM
- * mode should be called before @ref alcp_cipher_set_aad</b>
+ * should be called after alcp_cipher_set_tag_length for CCM mode. For GCM
+ * mode should be called before alcp_cipher_set_aad</b>
  * @endparblock
  * @param [in] pCipherHandle Session handle for encrypt/decrypt operation
  * @param[in] len  Length in bytes of IV/Nonce
@@ -291,7 +291,7 @@ alcp_cipher_aead_set_iv(const alc_cipher_handle_p pCipherHandle,
  * @parblock <br> &nbsp;
  * <b>This AEAD API can be called after @ref alcp_cipher_request. For
  * SIV there should only be one call to this API and for others like GCM
- * and CCM mode, this has to be called after @ref alcp_cipher_set_iv. For
+ * and CCM mode, this has to be called after alcp_cipher_set_iv. For
  * SIV, this has to be called immediately after @ref alcp_cipher_request,
  * also IV of SIV needs to be passed into this API as the last call.</b>
  * @endparblock
@@ -329,7 +329,7 @@ alcp_cipher_aead_get_tag(const alc_cipher_handle_p pCipherHandle,
  * @brief AEAD set the tag length.
  * @parblock <br> &nbsp;
  * <b>This AEAD API can be called after @ref alcp_cipher_request is called. It's
- * meant for CCM mode, should be called before @ref alcp_cipher_set_iv.</b>
+ * meant for CCM mode, should be called before alcp_cipher_set_iv.</b>
  * @endparblock
  * @param[in] pCipherHandle Session handle for encrypt/decrypt operation
  * @param[in] len       Length in bytes of Tag in bytes
@@ -345,8 +345,8 @@ alcp_cipher_aead_set_tag_length(const alc_cipher_handle_p pCipherHandle,
  * @brief    Decryption of cipher text and write it to plain text with provided
  * handle.
  * @parblock <br> &nbsp;
- * <b>This AEAD API should be called only after @ref alcp_cipher_request. API is
- * meant to be used with CCM mode, it needs to be called before @ref
+ * <b>This AEAD API should be called only after alcp_cipher_request. API is
+ * meant to be used with CCM mode, it needs to be called before
  * alcp_cipher_set_iv.</b>
  * @endparblock
  * @note    Error needs to be checked for each call,
