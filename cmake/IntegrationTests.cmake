@@ -50,7 +50,7 @@ target_link_libraries(gmock PUBLIC gtest)
 target_link_libraries(gmock_main PUBLIC gtest_main)
 ENDIF()
 
-function(add_openssl OPENSSL_SOURCE_FILES)
+function(add_openssl)
     IF(ENABLE_TESTS_OPENSSL_API)
     ADD_COMPILE_OPTIONS("-DUSE_OSSL")
 
@@ -62,7 +62,7 @@ function(add_openssl OPENSSL_SOURCE_FILES)
     ENDIF(OPENSSL_INSTALL_DIR)
 
     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
-    SET(OPENSSL_SOURCES ${OPENSSL_SOURCE_FILES} PARENT_SCOPE)
+    SET(OPENSSL_SOURCES ${OPENSSL_CIPHER_FWK_SRCS} PARENT_SCOPE)
     IF(UNIX)
         IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
             SET(OPENSSL_LIBS ${OPENSSL_LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
@@ -82,9 +82,9 @@ function(add_openssl OPENSSL_SOURCE_FILES)
     SET(OPENSSL_INCLUDES ${OPENSSL_INSTALL_DIR}/include PARENT_SCOPE)
     SET(OPENSSL_LIBS ${OPENSSL_LIBS} PARENT_SCOPE)
     ENDIF(ENABLE_TESTS_OPENSSL_API)
-endfunction(add_openssl OPENSSL_SOURCE_FILES)
+endfunction(add_openssl)
 
-function(add_ipp IPP_SOURCE_FILES)
+function(add_ipp)
     IF(ENABLE_TESTS_IPP_API)
         ADD_COMPILE_OPTIONS("-DUSE_IPP")
 
@@ -96,7 +96,7 @@ function(add_ipp IPP_SOURCE_FILES)
         ENDIF(IPP_INSTALL_DIR)
 
         # If there is IPP, add IPP source and add IPP liberary
-        SET(IPP_SOURCES ${IPP_SOURCE_FILES} PARENT_SCOPE)
+        SET(IPP_SOURCES ${IPP_CIPHER_FWK_SRCS} PARENT_SCOPE)
         IF(UNIX)
             IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
                 SET(IPP_LIBS ${IPP_LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
@@ -116,7 +116,7 @@ function(add_ipp IPP_SOURCE_FILES)
         SET(IPP_INCLUDES ${IPP_INSTALL_DIR}/include PARENT_SCOPE)
         SET(IPP_LIBS ${IPP_LIBS} PARENT_SCOPE)
     ENDIF(ENABLE_TESTS_IPP_API)
-endfunction(add_ipp IPP_SOURCE_FILES)
+endfunction(add_ipp)
 
 # Function to dynamically generate compilation of each test cases
 FUNCTION(AES_TEST TYPE MOD)

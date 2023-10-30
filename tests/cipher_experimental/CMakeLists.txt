@@ -27,11 +27,16 @@ include(${CMAKE_SOURCE_DIR}/cmake/IntegrationTests.cmake)
 
 FILE(GLOB ALC_CIPHER_FWK_SRCS ${CMAKE_SOURCE_DIR}/tests/cipher_experimental/framework/alc_*.cc)
 
+FILE(GLOB OPENSSL_CIPHER_FWK_SRCS ${CMAKE_SOURCE_DIR}/tests/cipher_experimental/framework/openssl_*.cc)
+
 add_openssl(framework/openssl_cipher_gcm.cc)
 
-add_ipp(framework/ipp_cipher_gcm.cc)
+FILE(GLOB IPP_CIPHER_FWK_SRCS ${CMAKE_SOURCE_DIR}/tests/cipher_experimental/framework/ipp_*.cc)
+
+add_ipp()
 
 AES_TEST(kat gcm)
 AES_TEST(kat xts)
 
 AES_TEST(cross gcm)
+AES_TEST(cross xts)

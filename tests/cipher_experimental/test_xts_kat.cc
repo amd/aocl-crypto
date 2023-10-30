@@ -83,6 +83,7 @@ xtsKat(const std::string filename, std::unique_ptr<ITestCipher> iTestCipher)
             dataUpdate.m_input     = &datasetCipherText[0];
             dataUpdate.m_input_len = datasetCipherText.size();
         }
+        dataUpdate.m_total_input_len = dataUpdate.m_input_len;
 
         alc_test_xts_finalize_data_t dataFinalize;
         dataFinalize.m_out    = dataUpdate.m_output; // If needed for padding
@@ -179,7 +180,7 @@ main(int argc, char** argv)
                                "XTS_Decrypt_experimental_ALCP",
                                LibrarySelect::ALCP);
     }
-#if 0
+
 #ifdef USE_OSSL
     if (std::get<bool>(argsMap["USE_OSSL"].value)) {
         RegisterMyTests<true>("KnownAnswerTest",
@@ -200,7 +201,6 @@ main(int argc, char** argv)
                                "xts_Decrypt_experimental_IPP",
                                LibrarySelect::IPP);
     }
-#endif
 #endif
 
     return RUN_ALL_TESTS();
