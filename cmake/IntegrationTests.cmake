@@ -120,7 +120,7 @@ endfunction(add_ipp IPP_SOURCE_FILES)
 
 # Function to dynamically generate compilation of each test cases
 FUNCTION(AES_TEST TYPE MOD)
-    ADD_EXECUTABLE(aes_${MOD}_${TYPE}_experimental test_${MOD}_${TYPE}.cc 
+    ADD_EXECUTABLE(aes_${MOD}_experimental_${TYPE} test_${MOD}_${TYPE}.cc 
                                                    ${COMMON_SRCS} 
                                                    ${ALC_CIPHER_FWK_SRCS} 
                                                    ${EXTRA_SOURCES} 
@@ -134,15 +134,15 @@ FUNCTION(AES_TEST TYPE MOD)
     # Link dataset to the actual place of test binary
     # FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
 
-    TARGET_INCLUDE_DIRECTORIES(aes_${MOD}_${TYPE}_experimental PRIVATE
+    TARGET_INCLUDE_DIRECTORIES(aes_${MOD}_experimental_${TYPE} PRIVATE
         ${ALCP_TEST_INCLUDES}
         ${OPENSSL_INCLUDES}
         ${IPP_INCLUDES})
 
-    TARGET_COMPILE_OPTIONS(aes_${MOD}_${TYPE}_experimental PUBLIC ${ALCP_WARNINGS})
-    TARGET_LINK_LIBRARIES(aes_${MOD}_${TYPE}_experimental ${LIBS} 
+    TARGET_COMPILE_OPTIONS(aes_${MOD}_experimental_${TYPE} PUBLIC ${ALCP_WARNINGS})
+    TARGET_LINK_LIBRARIES(aes_${MOD}_experimental_${TYPE} ${LIBS} 
                                                       ${OPENSSL_LIBS} 
                                                       ${IPP_LIBS})
-    gtest_add_tests(TARGET aes_${MOD}_${TYPE}_experimental
+    gtest_add_tests(TARGET aes_${MOD}_experimental_${TYPE}
         TEST_SUFFIX .${MOD})
 ENDFUNCTION()
