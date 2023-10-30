@@ -29,7 +29,7 @@ make LIB_TYPE=static;<br>
 ## NOTE:
 To compile and run the examples from the AOCL installed directory
 cd \<AOCL_Installation_Dir\>/amd-crypto/;
-export C_INCLUDE_PATH=\<AOCL_Installation_Dir\>/include/$C_INCLUDE_PATH;
+export C_INCLUDE_PATH=\<AOCL_Installation_Dir\>/include/:$C_INCLUDE_PATH;
 make -j;
 
 ## Run the Examples:

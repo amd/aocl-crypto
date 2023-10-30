@@ -268,9 +268,9 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
  * @brief    Decryption of cipher text and write it to plain text with provided
  * handle.
  * @parblock <br> &nbsp;
- * <b>This AEAD API should be called only after alcp_cipher_request. API is
- * meant to be used with CCM mode, it needs to be called before
- * alcp_cipher_set_iv.</b>
+ * <b>This AEAD API should be called only after @ref alcp_cipher_aead_request.
+ * API is meant to be used with CCM mode, it needs to be called before
+ * @ref alcp_cipher_aead_set_iv.</b>
  * @endparblock
  * @note    Error needs to be checked for each call,
  *           valid only if @ref alcp_is_error (ret) is false, pCipherHandle
