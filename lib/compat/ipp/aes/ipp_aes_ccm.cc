@@ -76,13 +76,6 @@ ippsAES_CCMStart(const Ipp8u*      pIV,
     }
 
     // CCM Init
-    // Additional Data
-    Uint8* aad = (Uint8*)pAAD;
-    if (aadLen == 0 && aad == nullptr) {
-        // FIXME: Hack to prevent ad from being null
-        Uint8 a;
-        aad = &a; // Some random value other than NULL
-    }
 
     /* Encrypt Init */
     err =
@@ -92,16 +85,22 @@ ippsAES_CCMStart(const Ipp8u*      pIV,
         alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }
+
     err = alcp_cipher_aead_set_iv(&(context_aead->handle), ivLen, (Uint8*)pIV);
     if (alcp_is_error(err)) {
         printf("Error: CCM encrypt init failure! code:11\n");
         alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }
-    err = alcp_cipher_aead_set_aad(&(context_aead->handle), aad, aadLen);
-    if (alcp_is_error(err)) {
-        return ippStsErr;
+
+    // Additional Datas
+    if (aadLen != 0 && pAAD != nullptr) {
+        err = alcp_cipher_aead_set_aad(&(context_aead->handle), pAAD, aadLen);
+        if (alcp_is_error(err)) {
+            return ippStsErr;
+        }
     }
+
     printMsg("CCM Start End");
     return ippStsNoErr;
 }
