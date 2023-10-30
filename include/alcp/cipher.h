@@ -314,6 +314,7 @@ alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle);
  * @parblock <br> &nbsp;
  * <b> This API is called to get the error string. It should be called after
  * @ref alcp_cipher_request and before @ref alcp_cipher_finish </b>
+ * @endparblock
  * @param [in] pCipherHandle Session handle for cipher operation
  * @param [out] pBuff  Destination Buffer to which Error String will be copied
  * @param [in] size    Length of the Buffer.

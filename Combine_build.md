@@ -154,8 +154,6 @@ Default set values:
 * 2. cmake --build .\build --config=release
 
 
-> **Important Notes: ASAN in an experimental phase for Windows.**  
-
 ### Enabling features of AOCL-Crypto
 
 1. [Enable Examples - To compile example/demo code.](#win-ex)

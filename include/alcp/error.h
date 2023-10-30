@@ -187,3 +187,7 @@ alcp_error_clear(alc_error_t err);
 EXTERN_C_END
 
 #endif /* _ALCP_ERROR_H_ */
+
+/**
+ * @}
+ */
