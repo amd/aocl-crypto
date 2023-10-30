@@ -81,8 +81,7 @@ AlcpXtsCipher<encryptor>::init(alc_test_init_data_p data)
     }
 
     // xts init
-    err =
-        alcp_cipher_aead_set_iv(&m_handle, data_xts->m_iv_len, data_xts->m_iv);
+    err = alcp_cipher_set_iv(&m_handle, data_xts->m_iv_len, data_xts->m_iv);
     if (alcp_is_error(err)) {
         printf("Error: unable to set iv\n");
         alcp_error_str(err, err_buf, err_size);

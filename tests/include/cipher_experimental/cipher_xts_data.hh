@@ -50,11 +50,13 @@ struct alc_test_xts_update_data_t : public alc_test_update_data_t
     Uint8* m_iv;
     Uint64 m_iv_len;
     Uint64 m_aes_block_id;
+    Uint64 m_total_input_len;
     alc_test_xts_update_data_t()
         : alc_test_update_data_t()
         , m_iv{ nullptr }
         , m_iv_len{ 0 }
         , m_aes_block_id{ 0 }
+        , m_total_input_len{ 0 }
     {}
 };
 using alc_test_xts_update_data_p = alc_test_xts_update_data_t*;

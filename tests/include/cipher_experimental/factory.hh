@@ -30,6 +30,8 @@
 
 #include <memory>
 
+#include "utils.hh"
+
 // ALCP Implementations for UAI
 #include "cipher_experimental/alc_cipher_gcm.hh"
 #include "cipher_experimental/alc_cipher_xts.hh"
@@ -37,11 +39,13 @@
 // OpenSSL Implementations for UAI
 #if USE_OSSL
 #include "cipher_experimental/openssl_cipher_gcm.hh"
+#include "cipher_experimental/openssl_cipher_xts.hh"
 #endif
 
 // IPP-CP Implementations for UAI
 #if USE_IPP
 #include "cipher_experimental/ipp_cipher_gcm.hh"
+#include "cipher_experimental/ipp_cipher_xts.hh"
 #endif
 
 namespace alcp::testing::cipher {
@@ -99,19 +103,22 @@ namespace xts {
     template<bool encryptor>
     std::unique_ptr<ITestCipher> XtsCipherFactory(LibrarySelect selection)
     {
-        return CipherFactory<
-            AlcpXtsCipher<encryptor>,
+        return CipherFactory<AlcpXtsCipher<encryptor>,
 
-            // #if USE_OSSL
-            //                              OpenSSLXtsCipher<encryptor>,
-            // #else
-            AlcpXtsCipher<encryptor>,
-            // #endif
-            // #if USE_IPP
-            //                              IppXtsCipher<encryptor>>(selection);
-            // #else
-            AlcpXtsCipher<encryptor>>(selection);
-        // #endif
+#if USE_OSSL
+                             OpenSSLXtsCipher<encryptor>,
+#else
+               alcp::testing::utils::printErrors(
+                   "OpenSSL not avaiable!, defaulting to ALCP");
+        AlcpXtsCipher<encryptor>,
+#endif
+#if USE_IPP
+                             IppXtsCipher<encryptor>>(selection);
+#else
+            alcp::testing::utils::printErrors(
+                "IPP not avaiable!, defaulting to ALCP");
+        AlcpXtsCipher<encryptor> > (selection);
+#endif
     }
 } // namespace xts
 
