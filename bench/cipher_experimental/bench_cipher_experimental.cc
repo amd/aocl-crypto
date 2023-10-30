@@ -30,29 +30,70 @@
 #include <memory>
 
 #include "cipher_experimental/alc_cipher_gcm.hh"
+#include "cipher_experimental/alc_cipher_xts.hh"
 #include "cipher_experimental/factory.hh"
 #include "common/experimental/gtest_essentials.hh"
 #include "utils.hh"
 
 namespace alcp::benchmarking::cipher {
 
-using namespace alcp::testing::cipher::gcm;
+using namespace alcp::testing::cipher;
 using alcp::testing::cipher::ITestCipher;
 
 std::vector<Int64> blocksizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
 
 template<bool encryptor, alc_cipher_mode_t mode>
 int
-BenchCipherexperimental(benchmark::State&            state,
+BenchCipherExperimental(benchmark::State&            state,
                         const Uint64                 cBlockSize,
                         std::unique_ptr<ITestCipher> iTestCipher,
-                        Uint32                       keylen)
+                        Uint32                       keylen,
+                        alc_test_init_data_t&        dataInit,
+                        alc_test_update_data_t&      dataUpdate,
+                        alc_test_finalize_data_t&    dataFinalize)
 {
     if (iTestCipher == nullptr) {
         state.SkipWithError(
             "MicroBench: Library is unavailable at compile time");
         return -1;
     }
+
+    // Real benchmark begins here
+    bool no_err = true;
+    no_err &= iTestCipher->init(&dataInit);
+    if (no_err == false) {
+        state.SkipWithError("MicroBench: Initialization failed!");
+    }
+
+    // Benchmark hot path
+    for (auto _ : state) {
+        no_err &= iTestCipher->update(&dataUpdate);
+        if (no_err == false) {
+            state.SkipWithError("MicroBench: Update failed!");
+        }
+    }
+
+    // Cleanup
+    no_err &= iTestCipher->finalize(&dataFinalize);
+    if (no_err == false) {
+        state.SkipWithError("MicroBench: Finalize failed!");
+    }
+
+    state.counters["Speed(Bytes/s)"] = benchmark::Counter(
+        state.iterations() * cBlockSize, benchmark::Counter::kIsRate);
+    state.counters["BlockSize(Bytes)"] = cBlockSize;
+    return 0;
+}
+
+using namespace alcp::testing::cipher::gcm;
+
+template<bool encryptor, alc_cipher_mode_t mode>
+int
+BenchGcmCipherExperimental(benchmark::State&            state,
+                           const Uint64                 cBlockSize,
+                           std::unique_ptr<ITestCipher> iTestCipher,
+                           Uint32                       keylen)
+{
     alignas(64) Uint8 input_text[cBlockSize];
     alignas(64) Uint8 output_text[cBlockSize];
     alignas(32) Uint8 key[keylen / 8];
@@ -100,12 +141,73 @@ BenchCipherexperimental(benchmark::State&            state,
                                 "ct,tag generation using encrypt");
             return -1;
         }
+        // After encrypting, to decrypt output becomes input
+        dataUpdate.m_input  = output_text;
+        dataUpdate.m_output = input_text;
         no_err &= iTestCipher->finalize(&dataFinalize);
         if (no_err == false) {
             state.SkipWithError("MicroBench: Finalize failed for decrypt "
                                 "ct,tag generation using encrypt");
             return -1;
         }
+    }
+
+    return BenchCipherExperimental<encryptor, mode>(state,
+                                                    cBlockSize,
+                                                    std::move(iTestCipher),
+                                                    keylen,
+                                                    dataInit,
+                                                    dataUpdate,
+                                                    dataFinalize);
+}
+
+using namespace alcp::testing::cipher::xts;
+
+template<bool encryptor, alc_cipher_mode_t mode>
+int
+BenchXtsCipherExperimental(benchmark::State&            state,
+                           const Uint64                 cBlockSize,
+                           std::unique_ptr<ITestCipher> iTestCipher,
+                           Uint32                       keylen)
+{
+    alignas(64) Uint8 input_text[cBlockSize];
+    alignas(64) Uint8 output_text[cBlockSize];
+    alignas(32) Uint8 key[keylen / 8 * 2];
+    alignas(16) Uint8 iv[16];
+    alignas(16) Uint8 ad[16];
+    alignas(16) Uint8 tag[16];
+    int               blocks = cBlockSize / 16;
+
+    for (int i = 0; i < keylen / 8 * 2; i++) {
+        key[i] = i;
+    }
+
+    // FIXME: Tkey might be needed for XTS
+
+    alc_test_xts_init_data_t dataInit;
+    dataInit.m_iv      = iv;
+    dataInit.m_iv_len  = 12;
+    dataInit.m_key     = key;
+    dataInit.m_key_len = keylen / 8;
+
+    alc_test_xts_update_data_t dataUpdate;
+    dataUpdate.m_iv              = iv;
+    dataUpdate.m_iv_len          = 12;
+    dataUpdate.m_output          = output_text;
+    dataUpdate.m_output_len      = cBlockSize;
+    dataUpdate.m_input           = input_text;
+    dataUpdate.m_total_input_len = 100000000;
+    dataUpdate.m_input_len       = cBlockSize;
+    dataUpdate.m_aes_block_id    = 0;
+
+    alc_test_xts_finalize_data_t dataFinalize;
+    dataFinalize.m_out    = dataUpdate.m_output;
+    dataFinalize.m_pt_len = dataUpdate.m_input_len;
+
+    if (iTestCipher == nullptr) {
+        state.SkipWithError(
+            "MicroBench: Library is unavailable at compile time");
+        return -1;
     }
 
     // Real benchmark begins here
@@ -121,6 +223,7 @@ BenchCipherexperimental(benchmark::State&            state,
         if (no_err == false) {
             state.SkipWithError("MicroBench: Update failed!");
         }
+        dataUpdate.m_aes_block_id += blocks;
     }
 
     // Cleanup
@@ -134,16 +237,18 @@ BenchCipherexperimental(benchmark::State&            state,
     state.counters["BlockSize(Bytes)"] = cBlockSize;
     return 0;
 }
+
 } // namespace alcp::benchmarking::cipher
 
-using alcp::benchmarking::cipher::BenchCipherexperimental;
 using alcp::testing::cipher::LibrarySelect;
+
+using alcp::benchmarking::cipher::BenchGcmCipherExperimental;
 using alcp::testing::cipher::gcm::GcmCipherFactory;
 
 static void
 BENCH_AES_ENCRYPT_GCM_128(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(BenchCipherexperimental<true, ALC_AES_MODE_GCM>(
+    benchmark::DoNotOptimize(BenchGcmCipherExperimental<true, ALC_AES_MODE_GCM>(
         state,
         state.range(0),
         std::move(
@@ -154,7 +259,7 @@ BENCH_AES_ENCRYPT_GCM_128(benchmark::State& state)
 static void
 BENCH_AES_ENCRYPT_GCM_192(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(BenchCipherexperimental<true, ALC_AES_MODE_GCM>(
+    benchmark::DoNotOptimize(BenchGcmCipherExperimental<true, ALC_AES_MODE_GCM>(
         state,
         state.range(0),
         std::move(
@@ -165,7 +270,7 @@ BENCH_AES_ENCRYPT_GCM_192(benchmark::State& state)
 static void
 BENCH_AES_ENCRYPT_GCM_256(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(BenchCipherexperimental<true, ALC_AES_MODE_GCM>(
+    benchmark::DoNotOptimize(BenchGcmCipherExperimental<true, ALC_AES_MODE_GCM>(
         state,
         state.range(0),
         std::move(
@@ -176,35 +281,88 @@ BENCH_AES_ENCRYPT_GCM_256(benchmark::State& state)
 static void
 BENCH_AES_DECRYPT_GCM_128(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(BenchCipherexperimental<false, ALC_AES_MODE_GCM>(
-        state,
-        state.range(0),
-        std::move(
-            GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
-        128));
+    benchmark::DoNotOptimize(
+        BenchGcmCipherExperimental<false, ALC_AES_MODE_GCM>(
+            state,
+            state.range(0),
+            std::move(GcmCipherFactory<true>(
+                static_cast<LibrarySelect>(state.range(1)))),
+            128));
 }
 
 static void
 BENCH_AES_DECRYPT_GCM_192(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(BenchCipherexperimental<false, ALC_AES_MODE_GCM>(
-        state,
-        state.range(0),
-        std::move(
-            GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
-        192));
+    benchmark::DoNotOptimize(
+        BenchGcmCipherExperimental<false, ALC_AES_MODE_GCM>(
+            state,
+            state.range(0),
+            std::move(GcmCipherFactory<true>(
+                static_cast<LibrarySelect>(state.range(1)))),
+            192));
 }
 
 static void
 BENCH_AES_DECRYPT_GCM_256(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(BenchCipherexperimental<false, ALC_AES_MODE_GCM>(
+    benchmark::DoNotOptimize(
+        BenchGcmCipherExperimental<false, ALC_AES_MODE_GCM>(
+            state,
+            state.range(0),
+            std::move(GcmCipherFactory<true>(
+                static_cast<LibrarySelect>(state.range(1)))),
+            256));
+}
+
+using alcp::benchmarking::cipher::BenchXtsCipherExperimental;
+using alcp::testing::cipher::xts::XtsCipherFactory;
+
+static void
+BENCH_AES_ENCRYPT_XTS_128(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(BenchXtsCipherExperimental<true, ALC_AES_MODE_GCM>(
         state,
         state.range(0),
         std::move(
-            GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+            XtsCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        128));
+}
+
+static void
+BENCH_AES_ENCRYPT_XTS_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(BenchXtsCipherExperimental<true, ALC_AES_MODE_GCM>(
+        state,
+        state.range(0),
+        std::move(
+            XtsCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
         256));
 }
+
+static void
+BENCH_AES_DECRYPT_XTS_128(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        BenchXtsCipherExperimental<false, ALC_AES_MODE_GCM>(
+            state,
+            state.range(0),
+            std::move(XtsCipherFactory<false>(
+                static_cast<LibrarySelect>(state.range(1)))),
+            128));
+}
+
+static void
+BENCH_AES_DECRYPT_XTS_256(benchmark::State& state)
+{
+    benchmark::DoNotOptimize(
+        BenchXtsCipherExperimental<false, ALC_AES_MODE_GCM>(
+            state,
+            state.range(0),
+            std::move(XtsCipherFactory<false>(
+                static_cast<LibrarySelect>(state.range(1)))),
+            256));
+}
+
 using alcp::testing::cipher::CipherFactory;
 using alcp::testing::cipher::LibrarySelect;
 using alcp::testing::utils::ArgsMap;
@@ -262,6 +420,7 @@ main(int argc, char** argv)
         }
     }
 
+    // GCM
     BENCHMARK(BENCH_AES_ENCRYPT_GCM_128)
         ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
 
@@ -278,6 +437,19 @@ main(int argc, char** argv)
         ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
 
     BENCHMARK(BENCH_AES_DECRYPT_GCM_256)
+        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
+
+    // XTS
+    BENCHMARK(BENCH_AES_ENCRYPT_XTS_128)
+        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
+
+    BENCHMARK(BENCH_AES_ENCRYPT_XTS_256)
+        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
+
+    BENCHMARK(BENCH_AES_DECRYPT_XTS_128)
+        ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
+
+    BENCHMARK(BENCH_AES_DECRYPT_XTS_256)
         ->ArgsProduct({ alcp::benchmarking::cipher::blocksizes, testlibs });
 
     // if (::benchmark::ReportUnrecognizedArguments(argc, argv))

@@ -42,6 +42,7 @@ SET(EXTRA_SOURCES "")
 SET(EXTRA_INCLUDES "")
 
 IF(ENABLE_TESTS_OPENSSL_API)
+    FILE(GLOB OPENSSL_CIPHER_FWK_SRCS ${CMAKE_SOURCE_DIR}/tests/cipher_experimental/framework/openssl_*.cc)
     ADD_COMPILE_OPTIONS("-DUSE_OSSL")
     IF(OPENSSL_INSTALL_DIR)
         MESSAGE(STATUS "OPENSSL_INSTALL_DIR set, overriding fetch path")
@@ -51,7 +52,7 @@ IF(ENABLE_TESTS_OPENSSL_API)
     ENDIF(OPENSSL_INSTALL_DIR)
     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
     SET(EXTRA_SOURCES ${EXTRA_SOURCES} 
-                      ${CMAKE_SOURCE_DIR}/tests/cipher_experimental/framework/openssl_cipher_gcm.cc)
+                      ${OPENSSL_CIPHER_FWK_SRCS})
 	IF(UNIX)
 		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
 			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
@@ -72,6 +73,7 @@ IF(ENABLE_TESTS_OPENSSL_API)
 ENDIF(ENABLE_TESTS_OPENSSL_API)
 
 IF(ENABLE_TESTS_IPP_API)
+    FILE(GLOB IPP_CIPHER_FWK_SRCS ${CMAKE_SOURCE_DIR}/tests/cipher_experimental/framework/ipp_*.cc)
     ADD_COMPILE_OPTIONS("-DUSE_IPP")
     IF(IPP_INSTALL_DIR)
         MESSAGE(STATUS "IPP_INSTALL_DIR set, overriding fetch path")
@@ -81,7 +83,7 @@ IF(ENABLE_TESTS_IPP_API)
     ENDIF(IPP_INSTALL_DIR)
     # If there is IPP, add IPP source and add IPP liberary
     SET(EXTRA_SOURCES ${EXTRA_SOURCES} 
-                      ${CMAKE_SOURCE_DIR}/tests/cipher_experimental/framework/ipp_cipher_gcm.cc)
+                      ${IPP_CIPHER_FWK_SRCS})
 	IF(UNIX)
         IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
             SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
