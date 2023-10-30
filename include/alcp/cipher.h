@@ -128,8 +128,8 @@ typedef struct _alc_cipher_mode_xts_info
  * @brief  Stores algorithm specific info for cipher.
  * @param ai_mode Specific which Mode of AES to be used @ref alcp_cipher_mode_t
  * @param ai_iv Initialization Vector
- * @param ai_xts,      ai_gcm,      ai_siv optional param for Some Specific Mode
- *              of AES only one param can be present at a time
+ * @param ai_xts optional param for Some Specific Mode of AES only one param can
+ * be present at a time
  * @param alc_cipher_algo_info_t cipher algo
  * @param alc_cipher_mode_t cipher mode
  */

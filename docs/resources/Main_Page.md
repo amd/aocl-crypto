@@ -1,7 +1,7 @@
 
-# Welcome to AOCL-Crypto
+# Welcome to AOCL-Cryptography
 
-**AOCL-Crypto** is a library consisting of basic cryptographic functions optimized and tuned for AMD Zen™ based microarchitecture. This library provides a unified solution for Cryptographic routines such as AES (Advanced Encryption Standard) encryption/decryption routines (CFB, CTR, CBC, CCM, GCM, OFB, SIV, XTS), SHA (Secure Hash Algorithms) routines (SHA2, SHA3, SHAKE), Message Authentication Code (CMAC, HMAC), ECDH (Elliptic-curve Diffie–Hellman) and RSA (Rivest, Shamir, and Adleman) key generation functions, etc.
+**AOCL-Cryptography** is a library consisting of basic cryptographic functions optimized and tuned for AMD Zen™ based microarchitecture. This library provides a unified solution for Cryptographic routines such as AES (Advanced Encryption Standard) encryption/decryption routines (CFB, CTR, CBC, CCM, GCM, OFB, SIV, XTS), Chacha20 Stream Cipher routines, SHA (Secure Hash Algorithms) routines (SHA2, SHA3, SHAKE), Message Authentication Code (CMAC, HMAC, Poly1305 MAC), ECDH (Elliptic-curve Diffie–Hellman), RSA (Rivest, Shamir, and Adleman) key generation functions, etc.
 
 - For building, please refer to [Build.md](./BUILD.md)
 ---
@@ -17,7 +17,7 @@
 
 ## Introduction
 
-<b> AOCL Crypto </b> supports a dynamic dispatcher feature that executes the most optimal function variant implemented using Function Multi-versioning thereby offering a single optimized library portable across different x86 CPU architectures. 
+<b> AOCL-Cryptography </b> supports a dynamic dispatcher feature that executes the most optimal function variant implemented using Function Multi-versioning thereby offering a single optimized library portable across different x86 CPU architectures. 
 AOCL Crypto framework is developed in C / C++ for Unix and Windows based systems. A test suite is provided for validation and performance benchmarking for the supported Ciphers, Digest and MAC APIs. The test suite also supports the benchmarking of IPP and Openssl different methods like AES cryptographic encryption / decryption, SHA2, SHA3 and other algorithms. Below are details of AOCL Crypto APIs and Supports
 
 ### Cipher   
@@ -77,6 +77,9 @@ CMAC
 
     MAC routines for the following schemes:
         - CMAC - AES (for key size 128,192 and 256)
+
+Poly 1305 MAC routines
+
 ```
 
 - Click to know more about [AOCL MAC API](group__mac.html)
@@ -111,7 +114,7 @@ RNG
 
 ## Build and Installation
 
-To Build AOCL-Crypto for Different Platform Please refer to Document Related your Platform
+To Build AOCL-Cryptography for Different Platform Please refer to Document Related your Platform
     - [ Linux ](md_Combine_build.html#md_BUILD)
     - [ Windows  ](md_Combine_build.html#md_BUILD_Windows)
 
@@ -127,4 +130,4 @@ Here is a Demo Code Example on how to use Cipher:
 
 ## CONTACTS
 
-<b>AOCL Crypto is developed and maintained by AMD. For support of these libraries and the other tools of AMD Zen Software Studio, see https://www.amd.com/en/developer/aocc/compiler-technical-support.html</b>
+<b>AOCL Cryptography is developed and maintained by AMD. For support of these libraries and the other tools of AMD Zen Software Studio, see https://www.amd.com/en/developer/aocc/compiler-technical-support.html</b>

@@ -91,8 +91,8 @@ $ ./bench/digest/bench_digest --benchmark_filter=SHA2 (runs for all SHA2 schemes
 ```
 <div id = "tests"> </div>
 
-#### Build Tests (using KAT vectors)
-To enable sanitizers (asan, tsan etc), append `-DALCP_ENABLE_TESTS=ON` to the cmake configuration command.
+#### Build Tests (using KAT vectors, and cross library tests)
+To build tests, append `-DALCP_ENABLE_TESTS=ON` to the cmake configuration command.
 ```sh
 $ cmake -DALCP_ENABLE_TESTS=ON ../
 ```
