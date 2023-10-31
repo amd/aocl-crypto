@@ -91,7 +91,7 @@ EncryptXts(const Uint8* pSrc,
 
     while (blocks >= chunk) {
 
-        // Loading next 4*8 blocks of message
+        // Loading next 2*8 blocks of message
         __m256i src_text_1 = _mm256_loadu_si256(p_src256);
         __m256i src_text_2 = _mm256_loadu_si256(p_src256 + 1);
         __m256i src_text_3 = _mm256_loadu_si256(p_src256 + 2);
@@ -169,7 +169,7 @@ EncryptXts(const Uint8* pSrc,
     chunk         = 2 * 4;
     int tweak_idx = 0;
 
-    // Encrypting 4*2 source text blocks at a time
+    // Encrypting 2*4 source text blocks at a time
     if (blocks >= chunk) {
 
         __m256i src_text_1 = _mm256_loadu_si256(p_src256);

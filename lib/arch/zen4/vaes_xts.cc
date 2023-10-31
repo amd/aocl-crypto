@@ -312,16 +312,12 @@ EncryptXtsAvx512(const Uint8* pSrc,
         blocks -= chunk;
     }
 
-    nextTweakBlock       = tweakx8[tweak_idx];
-    __m512i lastTweak    = tweakx8[tweak_idx];
-    Uint8*  p_lastTweak8 = reinterpret_cast<Uint8*>(&lastTweak);
-    Uint8*  p_dest8      = reinterpret_cast<Uint8*>(p_dest512);
-    auto    p_src8       = reinterpret_cast<const Uint8*>(p_src512);
+    nextTweakBlock    = tweakx8[tweak_idx];
+    __m512i lastTweak = tweakx8[tweak_idx];
 
-    if (blocks) {
-        Uint8   k           = ((1 << (blocks + blocks)) - 1);
-        __m512i src_text_1  = _mm512_maskz_loadu_epi64(k, p_src512);
-        Uint8*  p_src_text8 = reinterpret_cast<Uint8*>(&src_text_1);
+    while (blocks) {
+        constexpr Uint8 k          = 3;
+        __m512i         src_text_1 = _mm512_maskz_loadu_epi64(k, p_src512);
 
         src_text_1 = (lastTweak ^ src_text_1);
 
@@ -329,20 +325,41 @@ EncryptXtsAvx512(const Uint8* pSrc,
 
         src_text_1 = (lastTweak ^ src_text_1);
 
-        utils::CopyBytes(p_dest8, p_src_text8, (unsigned long)(blocks * 16));
+        _mm512_mask_storeu_epi64(p_dest512, k, src_text_1);
 
-        utils::CopyBytes((p_dest8 + (16 * blocks)),
-                         p_src_text8 + (16 * (blocks - 1)),
-                         extra_bytes_in_message_block);
-
+#if 1
+        // Use Exisint TweakBlock Method
         // Rotate to get next tweak block
         nextTweakBlock = _mm512_alignr_epi64(lastTweak, lastTweak, 0x2);
         lastTweak      = nextTweakBlock;
-
-    } else {
-        utils::CopyBytes(p_dest8, p_dest8 - 16, extra_bytes_in_message_block);
+        p_dest512      = reinterpret_cast<__m512i*>(
+            reinterpret_cast<Uint8*>(p_dest512) + 16);
+        p_src512 = reinterpret_cast<const __m512i*>(
+            reinterpret_cast<const Uint8*>(p_src512) + 16);
+        blocks--;
+#else
+        // Generate TweakBlock Method
+        __m128i last_tweak_block = _mm512_extracti64x2_epi64(lastTweak, 0);
+        aes::MultiplyAlphaByTwo(last_tweak_block);
+        lastTweak = _mm512_inserti64x2(lastTweak, last_tweak_block, 0);
+        p_dest512 = reinterpret_cast<__m512i*>(
+            reinterpret_cast<Uint8*>(p_dest512) + 16);
+        p_src512 = reinterpret_cast<const __m512i*>(
+            reinterpret_cast<const Uint8*>(p_src512) + 16);
+        blocks--;
+#endif
     }
+    nextTweakBlock = lastTweak;
 
+    Uint8* p_lastTweak8 = reinterpret_cast<Uint8*>(&lastTweak);
+    Uint8* p_dest8      = reinterpret_cast<Uint8*>(p_dest512);
+    auto   p_src8       = reinterpret_cast<const Uint8*>(p_src512);
+
+    utils::CopyBytes(
+        reinterpret_cast<Uint8*>(p_dest512),
+        reinterpret_cast<__m512i*>(reinterpret_cast<Uint8*>(p_dest512) - 16),
+        extra_bytes_in_message_block);
+#if 1
     if (extra_bytes_in_message_block) {
         __m512i stealed_text, temp_tweak;
         Uint8*  p_stealed_text = reinterpret_cast<Uint8*>(&stealed_text);
@@ -368,6 +385,7 @@ EncryptXtsAvx512(const Uint8* pSrc,
         // Rotate to get next tweak block
         nextTweakBlock = _mm512_alignr_epi64(lastTweak, lastTweak, 0x2);
     }
+#endif
 
     _mm_store_si128(p_iv128_in, *(__m128i*)(&nextTweakBlock));
     return ALC_ERROR_NONE;
