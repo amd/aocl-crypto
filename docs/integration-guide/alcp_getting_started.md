@@ -1,7 +1,6 @@
 ---
 title: Switching to AOCL Crypto
 subtitle: A Powerful and Flexible Cryptographic Library from AOCL
-author: Abhiram S <abhiram.s@amd.com>
 subject: "markdown"
 keywords: [books,programming]
 language: en-US
