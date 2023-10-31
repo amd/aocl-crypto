@@ -129,8 +129,7 @@ XtsCross_KAT(xts_test_data& data, std::shared_ptr<ITestCipher> iTestCipher)
     ASSERT_TRUE(iTestCipher->finalize(&data_finalize));
 
     if constexpr (encryptor) { // Encrypt
-#if 1
-
+#if 0
         auto ret = std::mismatch(
             output.begin(), output.end(), datasetCipherText.begin());
         std::cout << "First:" << ret.first - output.begin()
@@ -202,35 +201,9 @@ XtsCross_REF(xts_test_data& data, std::shared_ptr<ITestCipher> iTestCipher)
     data_finalize.m_pt_len = dataset_plain_text.size();
     data_finalize.verified = false;
 
-#if 0
-    Uint64 chunks      = data.plainText.size() / data.chunkSize;
-    Uint64 extra_bytes = (data.plainText.size() - (chunks * data.chunkSize));
-    Uint64 blocks_per_chunk = data.chunkSize / 16;
-
-    if (extra_bytes) {
-        if (chunks) {
-            chunks -= 1;
-            extra_bytes += data.chunkSize;
-        }
-    }
-
-    ASSERT_TRUE(iTestCipher->init(&data_init));
-    for (int i = 0; i < chunks; i++) {
-        ASSERT_TRUE(iTestCipher->update(&data_update));
-        data_update.m_input += data.chunkSize;
-        data_update.m_output += data.chunkSize;
-        data_update.m_aes_block_id += blocks_per_chunk;
-    }
-    if (extra_bytes) {
-        data_update.m_input_len = extra_bytes;
-        ASSERT_TRUE(iTestCipher->update(&data_update));
-    }
-    ASSERT_TRUE(iTestCipher->finalize(&data_finalize));
-#else
     ASSERT_TRUE(iTestCipher->init(&data_init));
     ASSERT_TRUE(iTestCipher->update(&data_update));
     ASSERT_TRUE(iTestCipher->finalize(&data_finalize));
-#endif
 }
 
 void
@@ -238,18 +211,9 @@ CrossTestXTS(std::shared_ptr<RngBase> rng,
              LibrarySelect            select1,
              LibrarySelect            select2)
 {
-    const std::vector<Uint64> cInitVectSizes = {
-        128, 120, 112, 104, 96
-    }; // bits
-    const std::vector<Uint64> cAdditionalTextSizes = {
-        20000, 128, 120, 112, 104, 96, 64, 32
-    };                                                          // bits
-    const std::vector<Uint64> cKeySizes = { 128 * 2, 256 * 2 }; // bits
-    const std::vector<Uint64> cTagSizes = {
-        128, 120, 112, 104, 96, 64, 32
-    };                                                          // bits
-    const std::vector<Uint64> cChunkSizes = { 32, 64 };         // bits
-    const std::vector<Uint64> cPtSizes    = { 16, 1000, 2563 }; // bytes
+    const std::vector<Uint64> cKeySizes   = { 128, 256 }; // bits // bits
+    const std::vector<Uint64> cChunkSizes = { 32, 64 };   // bits
+    const std::vector<Uint64> cPtSizes    = { 16, 1000, 8192, 65536 }; // bytes
 
     xts_test_data test_data = {};
 
@@ -257,51 +221,42 @@ CrossTestXTS(std::shared_ptr<RngBase> rng,
 
     // Constant Plaintext Test
     for (Uint64 key_size : cKeySizes) {
-        for (int init_vect_size : cInitVectSizes) {
-            for (int chunk_size : cChunkSizes) {
-                for (int pt_size : cPtSizes) {
-                    test_data.key = std::vector<Uint8>(key_size / 8, 0);
-                    test_data.initVector =
-                        std::vector<Uint8>(init_vect_size / 8, 1);
-                    test_data.plainText = std::vector<Uint8>(pt_size, 2);
-                    test_data.cipherText =
-                        std::vector<Uint8>(test_data.plainText.size(), 3);
-                    test_data.chunkSize = chunk_size;
+        for (int chunk_size : cChunkSizes) {
+            for (int pt_size : cPtSizes) {
+                test_data.key = std::vector<Uint8>((key_size / 8) * 2, 0);
+                test_data.initVector = std::vector<Uint8>(16, 1);
+                test_data.plainText  = std::vector<Uint8>(pt_size, 2);
+                test_data.cipherText =
+                    std::vector<Uint8>(test_data.plainText.size(), 3);
+                test_data.chunkSize = chunk_size;
 
-                    rng->genRandomMt19937(test_data.key);
-                    rng->genRandomMt19937(test_data.initVector);
-                    rng->genRandomMt19937(test_data.plainText);
+                rng->genRandomMt19937(test_data.key);
+                rng->genRandomMt19937(test_data.initVector);
+                rng->genRandomMt19937(test_data.plainText);
 
-                    XtsCross_REF(test_data, XtsCipherFactory<true>(select1));
+                XtsCross_REF(test_data, XtsCipherFactory<true>(select1));
 
-                    XtsCross_KAT<true>(test_data,
-                                       XtsCipherFactory<true>(select2));
+                XtsCross_KAT<true>(test_data, XtsCipherFactory<true>(select2));
 
-                    XtsCross_KAT<false>(test_data,
-                                        XtsCipherFactory<false>(select2));
+                XtsCross_KAT<false>(test_data,
+                                    XtsCipherFactory<false>(select2));
 
-                    test_count++;
-                }
-                // break;
+                test_count++;
             }
             // break;
         }
-        break;
+        // break;
     }
 
-#if 0
     const Uint64 pt_min_size = 16;
     const Uint64 pt_max_size = 160000;
     const Uint64 pt_dec_size = 31;
 
-    const Uint64 cKeySize            = cKeySizes.back();
-    const Uint64 cAdditionalTextSize = cAdditionalTextSizes.back();
-    const Uint64 cTagSize            = cTagSizes.back();
-    const Uint64 cInitVectSize       = cInitVectSizes.back();
-    const Uint64 cChunkSize          = cChunkSizes.back();
+    const Uint64 cKeySize   = cKeySizes.back();
+    const Uint64 cChunkSize = cChunkSizes.back();
 
     test_data.key        = std::vector<Uint8>(cKeySize / 8);
-    test_data.initVector = std::vector<Uint8>(cInitVectSize / 8);
+    test_data.initVector = std::vector<Uint8>(16);
     test_data.plainText  = std::vector<Uint8>(pt_max_size);
     test_data.chunkSize  = cChunkSize;
     for (int pt_size = pt_max_size; pt_size >= pt_min_size;
@@ -325,7 +280,6 @@ CrossTestXTS(std::shared_ptr<RngBase> rng,
 
         test_count++;
     }
-#endif
     std::cout << "Tests Executed:" << test_count << std::endl;
 }
 
