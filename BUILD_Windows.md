@@ -83,7 +83,7 @@ $ .\examples\{algorithm_type}\release\{algorithm_type}\*.exe
 
 #### Enable CPUID Append
 ```
-PS> cmake -DENABLE_AOCL_CPUID=ON -DAOCL_CPUID_INSTALL_DIR=path/to/aocl/cpuid/source -B build
+PS> cmake -DENABLE_AOCL_UTILS=ON -DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source -B build
 PS> cmake --build .\build --config=release
 ```
 <div id = "win-debug"></div>

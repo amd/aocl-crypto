@@ -35,11 +35,11 @@ $ cmake -DALCP_ENABLE_EXAMPLES=ON ../
 
 <div id = "cpuid"> </div>
 
-#### Enable CPUID
+#### Enable AOCL UTILS
 
-To enable cpuid, append `-DAOCL_CPUID_INSTALL_DIR=path/to/aocl/cpuid/source` and `-DENABLE_AOCL_CPUID=ON` to the cmake configuration command.
+To enable aocl utils cpuid checks, append `-DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source` and `-DENABLE_AOCL_UTILS=ON` to the cmake configuration command.
 ```bash
-$ cmake -DENABLE_AOCL_CPUID=ON -DAOCL_CPUID_INSTALL_DIR=path/to/aocl/cpuid/source ../
+$ cmake -DENABLE_AOCL_UTILS=ON -DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source ../
 ```
 
 <div id = "debug"> </div>

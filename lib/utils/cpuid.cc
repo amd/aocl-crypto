@@ -27,13 +27,13 @@
  */
 
 #include "alcp/utils/cpuid.hh"
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_UTILS
 #include <alci/alci.h>
 #include <alci/cxx/cpu.hh>
 #endif
 
 namespace alcp::utils {
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_UTILS
 using namespace alci;
 #endif
 
@@ -45,7 +45,7 @@ class CpuId::Impl
   public:
     Impl()  = default;
     ~Impl() = default;
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_UTILS
     Cpu m_cpu;
 #endif
 
@@ -182,7 +182,7 @@ CpuId::Impl::cpuHasAvx512f()
 #ifdef ALCP_CPUID_DISABLE_AVX512
     return false;
 #else
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AVX512F);
 #else
     static bool state = false;
@@ -197,7 +197,7 @@ CpuId::Impl::cpuHasAvx512dq()
 #ifdef ALCP_CPUID_DISABLE_AVX512
     return false;
 #else
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AVX512DQ);
 #else
     static bool state = false;
@@ -212,7 +212,7 @@ CpuId::Impl::cpuHasAvx512bw()
 #ifdef ALCP_CPUID_DISABLE_AVX512
     return false;
 #else
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AVX512BW);
 #else
     static bool state = false;
@@ -247,7 +247,7 @@ CpuId::Impl::cpuHasVaes()
 #ifdef ALCP_CPUID_DISABLE_VAES
     return false;
 #else
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_VAES);
 #else
     static bool state = false;
@@ -261,7 +261,7 @@ CpuId::Impl::cpuHasAesni()
 #ifdef ALCP_CPUID_DISABLE_AESNI
     return false;
 #else
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AES);
 #else
     static bool state = true;
@@ -275,7 +275,7 @@ CpuId::Impl::cpuHasShani()
 #ifdef ALCP_CPUID_DISABLE_SHANI
     return false;
 #else
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_SHA_NI);
 #else
     static bool state = false;
@@ -289,7 +289,7 @@ CpuId::Impl::cpuHasAvx2()
 #ifdef ALCP_CPUID_DISABLE_AVX2
     return false;
 #else
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AVX2);
 #else
     static bool state = false;
@@ -303,7 +303,7 @@ CpuId::Impl::cpuHasRdRand()
 #ifdef ALCP_CPUID_DISABLE_RAND
     return false;
 #else
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_RDRAND);
 #else
     static bool state = false;
@@ -317,7 +317,7 @@ CpuId::Impl::cpuHasRdSeed()
 #ifdef ALCP_CPUID_DISABLE_RAND
     return false;
 #else
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_RDSEED);
 #else
     static bool state = false;
@@ -331,7 +331,7 @@ CpuId::Impl::cpuHasAdx()
 #ifdef ALCP_CPUID_DISABLE_ADX
     return false;
 #else
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_ADX);
 #else
     static bool state = true;
@@ -345,7 +345,7 @@ CpuId::Impl::cpuHasBmi2()
 #ifdef ALCP_CPUID_DISABLE_BMI2
     return false;
 #else
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_BMI2);
 #else
     static bool state = true;
@@ -363,7 +363,7 @@ CpuId::Impl::cpuIsZen1()
     return false;
 #endif
 #else
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isUarch(Uarch::eZen);
 #else
     static bool state = false;
@@ -381,7 +381,7 @@ CpuId::Impl::cpuIsZen2()
     return false;
 #endif
 #else
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isUarch(Uarch::eZen2);
 #else
     static bool state = false;
@@ -399,7 +399,7 @@ CpuId::Impl::cpuIsZen3()
     return false;
 #endif
 #else
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isUarch(Uarch::eZen3);
 #else
     static bool state = false;
@@ -417,7 +417,7 @@ CpuId::Impl::cpuIsZen4()
     return false;
 #endif
 #else
-#ifdef ALCP_ENABLE_AOCL_CPUID
+#ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isUarch(Uarch::eZen4);
 #else
     static bool state = false;

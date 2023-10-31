@@ -32,7 +32,7 @@
 #cmakedefine ALCP_CONFIG_LITTLE_ENDIAN
 
 // CPU Identification
-#cmakedefine ALCP_ENABLE_AOCL_CPUID
+#cmakedefine ALCP_ENABLE_AOCL_UTILS
 
 // ALCP Release Version
 #cmakedefine AOCL_RELEASE_VERSION "@AOCL_RELEASE_VERSION@"
