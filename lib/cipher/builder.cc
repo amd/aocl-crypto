@@ -58,7 +58,7 @@ __aes_wrapper(const void*  rCipher,
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap = static_cast<CIPHERMODE*>(const_cast<void*>(rCipher));
+    auto ap = static_cast<const CIPHERMODE*>(rCipher);
 
     if (encrypt)
         e = ap->encrypt(pSrc, pDest, len, pIv);

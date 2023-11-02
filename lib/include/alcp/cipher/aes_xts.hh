@@ -121,7 +121,7 @@ class ALCP_API_EXPORT Xts final : public Aes
     virtual alc_error_t encrypt(const Uint8* pPlainText,
                                 Uint8*       pCipherText,
                                 Uint64       len,
-                                const Uint8* pIv) final;
+                                const Uint8* pIv) const final;
 
     /**
      * @brief   XTS Decrypt Operation
@@ -135,7 +135,7 @@ class ALCP_API_EXPORT Xts final : public Aes
     virtual alc_error_t decrypt(const Uint8* pCipherText,
                                 Uint8*       pPlainText,
                                 Uint64       len,
-                                const Uint8* pIv) final;
+                                const Uint8* pIv) const final;
 
     virtual void expandTweakKeys(const Uint8* pUserKey, int len);
 
@@ -145,11 +145,11 @@ class ALCP_API_EXPORT Xts final : public Aes
 
   private:
     alignas(64) Uint8 m_iv[16];
-    alignas(64) Uint8 m_tweak_block[16];
+    alignas(64) mutable Uint8 m_tweak_block[16];
     Uint8  m_tweak_round_key[(RIJ_SIZE_ALIGNED(32) * (16))];
     Uint8* p_tweak_key = nullptr; /* Tweak key(for aes-xts mode): points to
                            offset in 'm_tweak_key' */
-    Uint64 m_aes_block_id = static_cast<Uint64>(-1);
+    mutable Uint64 m_aes_block_id = static_cast<Uint64>(-1);
 };
 
 static inline Uint8
@@ -367,7 +367,7 @@ alc_error_t
 Xts<FEnc, FDec>::encrypt(const Uint8* pPlainText,
                          Uint8*       pCipherText,
                          Uint64       len,
-                         const Uint8* pIv)
+                         const Uint8* pIv) const
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -479,7 +479,7 @@ alc_error_t
 Xts<FEnc, FDec>::decrypt(const Uint8* pCipherText,
                          Uint8*       pPlainText,
                          Uint64       len,
-                         const Uint8* pIv)
+                         const Uint8* pIv) const
 {
     alc_error_t err = ALC_ERROR_NONE;
 
