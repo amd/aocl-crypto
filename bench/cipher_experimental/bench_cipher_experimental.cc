@@ -42,7 +42,7 @@ using alcp::testing::cipher::ITestCipher;
 
 std::vector<Int64> blocksizes = { 16, 64, 256, 1024, 8192, 16384, 32768 };
 
-template<bool encryptor, alc_cipher_mode_t mode>
+template<bool encryptor>
 int
 BenchCipherExperimental(benchmark::State&            state,
                         const Uint64                 cBlockSize,
@@ -87,7 +87,7 @@ BenchCipherExperimental(benchmark::State&            state,
 
 using namespace alcp::testing::cipher::gcm;
 
-template<bool encryptor, alc_cipher_mode_t mode>
+template<bool encryptor>
 int
 BenchGcmCipherExperimental(benchmark::State&            state,
                            const Uint64                 cBlockSize,
@@ -152,18 +152,18 @@ BenchGcmCipherExperimental(benchmark::State&            state,
         }
     }
 
-    return BenchCipherExperimental<encryptor, mode>(state,
-                                                    cBlockSize,
-                                                    std::move(iTestCipher),
-                                                    keylen,
-                                                    dataInit,
-                                                    dataUpdate,
-                                                    dataFinalize);
+    return BenchCipherExperimental<encryptor>(state,
+                                              cBlockSize,
+                                              std::move(iTestCipher),
+                                              keylen,
+                                              dataInit,
+                                              dataUpdate,
+                                              dataFinalize);
 }
 
 using namespace alcp::testing::cipher::xts;
 
-template<bool encryptor, alc_cipher_mode_t mode>
+template<bool encryptor>
 int
 BenchXtsCipherExperimental(benchmark::State&            state,
                            const Uint64                 cBlockSize,
@@ -248,7 +248,7 @@ using alcp::testing::cipher::gcm::GcmCipherFactory;
 static void
 BENCH_AES_ENCRYPT_GCM_128(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(BenchGcmCipherExperimental<true, ALC_AES_MODE_GCM>(
+    benchmark::DoNotOptimize(BenchGcmCipherExperimental<true>(
         state,
         state.range(0),
         std::move(
@@ -259,7 +259,7 @@ BENCH_AES_ENCRYPT_GCM_128(benchmark::State& state)
 static void
 BENCH_AES_ENCRYPT_GCM_192(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(BenchGcmCipherExperimental<true, ALC_AES_MODE_GCM>(
+    benchmark::DoNotOptimize(BenchGcmCipherExperimental<true>(
         state,
         state.range(0),
         std::move(
@@ -270,7 +270,7 @@ BENCH_AES_ENCRYPT_GCM_192(benchmark::State& state)
 static void
 BENCH_AES_ENCRYPT_GCM_256(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(BenchGcmCipherExperimental<true, ALC_AES_MODE_GCM>(
+    benchmark::DoNotOptimize(BenchGcmCipherExperimental<true>(
         state,
         state.range(0),
         std::move(
@@ -281,37 +281,34 @@ BENCH_AES_ENCRYPT_GCM_256(benchmark::State& state)
 static void
 BENCH_AES_DECRYPT_GCM_128(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(
-        BenchGcmCipherExperimental<false, ALC_AES_MODE_GCM>(
-            state,
-            state.range(0),
-            std::move(GcmCipherFactory<true>(
-                static_cast<LibrarySelect>(state.range(1)))),
-            128));
+    benchmark::DoNotOptimize(BenchGcmCipherExperimental<false>(
+        state,
+        state.range(0),
+        std::move(
+            GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        128));
 }
 
 static void
 BENCH_AES_DECRYPT_GCM_192(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(
-        BenchGcmCipherExperimental<false, ALC_AES_MODE_GCM>(
-            state,
-            state.range(0),
-            std::move(GcmCipherFactory<true>(
-                static_cast<LibrarySelect>(state.range(1)))),
-            192));
+    benchmark::DoNotOptimize(BenchGcmCipherExperimental<false>(
+        state,
+        state.range(0),
+        std::move(
+            GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        192));
 }
 
 static void
 BENCH_AES_DECRYPT_GCM_256(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(
-        BenchGcmCipherExperimental<false, ALC_AES_MODE_GCM>(
-            state,
-            state.range(0),
-            std::move(GcmCipherFactory<true>(
-                static_cast<LibrarySelect>(state.range(1)))),
-            256));
+    benchmark::DoNotOptimize(BenchGcmCipherExperimental<false>(
+        state,
+        state.range(0),
+        std::move(
+            GcmCipherFactory<true>(static_cast<LibrarySelect>(state.range(1)))),
+        256));
 }
 
 using alcp::benchmarking::cipher::BenchXtsCipherExperimental;
@@ -320,7 +317,7 @@ using alcp::testing::cipher::xts::XtsCipherFactory;
 static void
 BENCH_AES_ENCRYPT_XTS_128(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(BenchXtsCipherExperimental<true, ALC_AES_MODE_GCM>(
+    benchmark::DoNotOptimize(BenchXtsCipherExperimental<true>(
         state,
         state.range(0),
         std::move(
@@ -331,7 +328,7 @@ BENCH_AES_ENCRYPT_XTS_128(benchmark::State& state)
 static void
 BENCH_AES_ENCRYPT_XTS_256(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(BenchXtsCipherExperimental<true, ALC_AES_MODE_GCM>(
+    benchmark::DoNotOptimize(BenchXtsCipherExperimental<true>(
         state,
         state.range(0),
         std::move(
@@ -342,25 +339,23 @@ BENCH_AES_ENCRYPT_XTS_256(benchmark::State& state)
 static void
 BENCH_AES_DECRYPT_XTS_128(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(
-        BenchXtsCipherExperimental<false, ALC_AES_MODE_GCM>(
-            state,
-            state.range(0),
-            std::move(XtsCipherFactory<false>(
-                static_cast<LibrarySelect>(state.range(1)))),
-            128));
+    benchmark::DoNotOptimize(BenchXtsCipherExperimental<false>(
+        state,
+        state.range(0),
+        std::move(XtsCipherFactory<false>(
+            static_cast<LibrarySelect>(state.range(1)))),
+        128));
 }
 
 static void
 BENCH_AES_DECRYPT_XTS_256(benchmark::State& state)
 {
-    benchmark::DoNotOptimize(
-        BenchXtsCipherExperimental<false, ALC_AES_MODE_GCM>(
-            state,
-            state.range(0),
-            std::move(XtsCipherFactory<false>(
-                static_cast<LibrarySelect>(state.range(1)))),
-            256));
+    benchmark::DoNotOptimize(BenchXtsCipherExperimental<false>(
+        state,
+        state.range(0),
+        std::move(XtsCipherFactory<false>(
+            static_cast<LibrarySelect>(state.range(1)))),
+        256));
 }
 
 using alcp::testing::cipher::CipherFactory;
