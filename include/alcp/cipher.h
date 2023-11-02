@@ -303,6 +303,9 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
  * @note    Error needs to be checked for each call,
  *           valid only if @ref alcp_is_error (ret) is false, ctx to be
  * considered valid.
+ * @note    XTS: Argument currCipherTextLen should be multiple of 16bytes unless
+ * it's the last call. Also last call if there is a paritial block, both partial
+ * and a complete block has to be included in the last call to this function.
  * @param [in]   pCipherHandle Session handle for future encrypt decrypt
  *                         operation
  * @param[in]    pPlainText    Pointer to Plain Text
@@ -332,6 +335,9 @@ alcp_cipher_blocks_encrypt(const alc_cipher_handle_p pCipherHandle,
  * @note    Error needs to be checked for each call,
  *           valid only if @ref alcp_is_error (ret) is false, pCipherHandle
  *           is valid.
+ * @note    XTS: Argument currCipherTextLen should be multiple of 16bytes unless
+ * it's the last call. Also last call if there is a paritial block, both partial
+ * and a complete block has to be included in the last call to this function.
  * @param[in]    pCipherHandle    Session handle for future encrypt decrypt
  *                         operation
  * @param[out]    pPlainText    Pointer to Plain Text

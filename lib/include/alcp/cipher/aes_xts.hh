@@ -339,6 +339,8 @@ void
 Xts<FEnc, FDec>::tweakBlockSet(Uint64 aesBlockId)
 {
     // FIXME: In future we need to dispatch it correctly
+    // m_aes_block_id is the previous block id and aesBlockId is the target
+    // block id.
     if (aesBlockId > m_aes_block_id) {
         aesni::TweakBlockCalculate(m_tweak_block, aesBlockId - m_aes_block_id);
     } else if (aesBlockId < m_aes_block_id) {
