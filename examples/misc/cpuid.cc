@@ -27,10 +27,13 @@
  */
 
 #include "alcp/utils/cpuid.hh"
-#include "colors.hh"
 #include <iostream>
 
 using alcp::utils::CpuId;
+
+#define GREEN "\033[0;32m"
+#define RED   "\033[0;31m"
+#define RESET "\033[0m"
 
 void
 printBoolMsg(const std::string& msg, bool val)
