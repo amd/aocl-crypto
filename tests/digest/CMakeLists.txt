@@ -110,10 +110,6 @@ IF(UNIX)
     SET(LIBS ${LIBS} pthread)
 ENDIF()
 
-IF(ALCP_ENABLE_RSP)
-    ADD_COMPILE_OPTIONS("-DENABLE_RSP")
-ENDIF(ALCP_ENABLE_RSP)
-
 ADD_EXECUTABLE(test_digest_kat test_digest_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
 TARGET_INCLUDE_DIRECTORIES(test_digest_kat PRIVATE
@@ -134,18 +130,10 @@ TARGET_LINK_LIBRARIES(test_digest_cross ${LIBS})
 
 FUNCTION(TEST_DATA_LINK SHA_ALG)
     # Link dataset to the root dir
-    IF(ALCP_ENABLE_RSP)
-        FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${SHA_ALG}.rsp ${CMAKE_BINARY_DIR}/dataset_${SHA_ALG}.rsp SYMBOLIC)
-    ELSE()
-        FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${SHA_ALG}.csv ${CMAKE_BINARY_DIR}/dataset_${SHA_ALG}.csv SYMBOLIC)
-    ENDIF(ALCP_ENABLE_RSP)
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${SHA_ALG}.csv ${CMAKE_BINARY_DIR}/dataset_${SHA_ALG}.csv SYMBOLIC)
 
     # Link dataset to the actual place of test binary
-    IF(ALCP_ENABLE_RSP)
-        FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${SHA_ALG}.rsp ${CMAKE_CURRENT_BINARY_DIR}/dataset_${SHA_ALG}.rsp SYMBOLIC)
-    ELSE()
-        FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${SHA_ALG}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${SHA_ALG}.csv SYMBOLIC)
-    ENDIF(ALCP_ENABLE_RSP)
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${SHA_ALG}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${SHA_ALG}.csv SYMBOLIC)
 
 ENDFUNCTION(TEST_DATA_LINK SHA_ALG)
 

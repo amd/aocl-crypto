@@ -78,10 +78,6 @@ IF(UNIX)
     SET(LIBS ${LIBS} pthread)
 ENDIF()
 
-IF(ALCP_ENABLE_RSP)
-    ADD_COMPILE_OPTIONS("-DENABLE_RSP")
-ENDIF(ALCP_ENABLE_RSP)
-
 ADD_EXECUTABLE(test_poly1305_kat test_poly1305_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
 
 TARGET_INCLUDE_DIRECTORIES(test_poly1305_kat PRIVATE
@@ -102,18 +98,11 @@ TARGET_LINK_LIBRARIES(test_poly1305_cross ${LIBS})
 
 FUNCTION(TEST_DATA_LINK)
     # Link dataset to the root dir
-    #  IF(ALCP_ENABLE_RSP)
-    #  FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_poly1305.rsp ${CMAKE_BINARY_DIR}/dataset_poly1305.rsp SYMBOLIC)
-    #  ELSE()
     FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_poly1305.csv ${CMAKE_BINARY_DIR}/dataset_poly1305.csv SYMBOLIC)
-    #  ENDIF(ALCP_ENABLE_RSP)
 
     # Link dataset to the actual place of test binary
-    #  IF(ALCP_ENABLE_RSP)
-    #  FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_poly1305.rsp ${CMAKE_CURRENT_BINARY_DIR}/dataset_poly1305.rsp SYMBOLIC)
-    #  ELSE()
     FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_poly1305.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_poly1305.csv SYMBOLIC)
-    #  ENDIF(ALCP_ENABLE_RSP)
+
 ENDFUNCTION(TEST_DATA_LINK)
 
 TEST_DATA_LINK()
