@@ -269,7 +269,7 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
  * provided handle.
  * @parblock <br> &nbsp;
  * <b>This API should be called only after @ref alcp_cipher_request.
- * API is meant to be used with CCM mode, it needs to be called before @ref
+ * API is meant to be used with CCM mode, it needs to be called before
  * @ref alcp_cipher_set_iv.</b>
  * @endparblock
  * @note    Error needs to be checked for each call,
@@ -279,7 +279,6 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
  *                         operation
  * @param[in]    pPlainText    Pointer to Plain Text
  * @param[out]   pCipherText   Pointer to Cipher Text
- * @param[in]    pKey          Pointer to Key
  * @param[in]    pIv           Pointer to Initialization Vector
  * @param[in]    len           Length of cipher/plain text
  * @return   &nbsp; Error Code for the API called. If alc_error_t
@@ -310,7 +309,6 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
  *                         operation
  * @param[in]    pPlainText    Pointer to Plain Text
  * @param[out]   pCipherText   Pointer to Cipher Text
- * @param[in]    pKey          Pointer to Key
  * @param[in]    currPlainTextLen Length of the given plaintext
  * @param[in]    startBlockNum Start block number of given plaintext
  * @return   &nbsp; Error Code for the API called. If alc_error_t
@@ -336,15 +334,15 @@ alcp_cipher_blocks_encrypt(const alc_cipher_handle_p pCipherHandle,
  *           valid only if @ref alcp_is_error (ret) is false, pCipherHandle
  *           is valid.
  * @note    XTS: Argument currCipherTextLen should be multiple of 16bytes unless
- * it's the last call. Also last call if there is a paritial block, both partial
+ * it's the last call. Also last call if there is a partial block, both partial
  * and a complete block has to be included in the last call to this function.
  * @param[in]    pCipherHandle    Session handle for future encrypt decrypt
- *                         operation
+ * operation
  * @param[out]    pPlainText    Pointer to Plain Text
- * @param[in]   pCipherText   Pointer to Cipher Text
- * @param[in]    pKey          Pointer to Key
- * @param[in]    currPlainTextLen Length of the given plaintext
- * @param[in]    startBlockNum Start block number of given plaintext
+ * @param[in]    pCipherText   Pointer to Cipher Text
+ * @param[in]    startBlockNum    Start block number of given plaintext
+ * @param[in]    currCipherTextLen    Size of the Cipher Text for the current
+ * blocks
  * @return   &nbsp; Error Code for the API called. If alc_error_t
  * is not ALC_ERROR_NONE then @ref alcp_cipher_error or @ref alcp_error_str
  * needs to be called to know about error occurred
@@ -359,7 +357,7 @@ alcp_cipher_blocks_decrypt(const alc_cipher_handle_p pCipherHandle,
 /**
  * @brief Set the IV/Nonce.
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_cipher_request is called.
+ * <b>This API can be called after @ref alcp_cipher_request is called.</b>
  * @endparblock
  * @param [in] pCipherHandle Session handle for encrypt/decrypt operation
  * @param[in] len  Length in bytes of IV/Nonce
