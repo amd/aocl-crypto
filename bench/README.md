@@ -43,13 +43,20 @@ Always you can use `--help` to know all the command line arguments which can be 
 
 ##### Cipher
 
-1. AES_CBC (128,192,256)
-2. AES_CTR (128,192,256)
-3. AES_CFB (128,192,256)
-4. AES_OFB (128,192,256)
-5. AES_GCM (128,192,256)
-6. AES_XTS (128,256)
-7. AES_CCM (128,192,256)
+1. AES_CBC             (128,192,256)
+2. AES_CTR             (128,192,256)
+3. AES_CFB             (128,192,256)
+4. AES_OFB             (128,192,256)
+5. AES_GCM_MULTI_INIT  (128,192,256)
+6. AES_XTS_MULTI_INIT  (128,256)
+7. AES_CCM             (128,192,256)
+8. AES_SIV             (128,192,256)
+9. CHACHA20            (256)
+
+##### Cipher_experimental
+
+1. AES_GCM (128,192,256)
+2. AES_XTS (128,256)
 
 ##### Digest
 
@@ -79,6 +86,7 @@ Always you can use `--help` to know all the command line arguments which can be 
 9.  HMAC_SHA3_256
 10. HMAC_SHA3_384
 11. HMAC_SHA3_512
+12. POLY1305
 
 ##### EC
 

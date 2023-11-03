@@ -18,7 +18,7 @@ mv libnew.a libalcp.a
 #### Enabling Features of AOCL-Crypto
 
 1. [Enable Examples - To compile example/demo code.](#example)
-2. [Enable CPUID - To dispatch correct kernel with CPU identification.](#cpuid)
+2. [Enable AOCL-UTILS - To dispatch correct kernel with CPU identification.](#aocl-utils)
 3. [Enable DEBUG Build - To compile code in Debug Mode.](#debug)
 4. [Enable Address Sanitizer Support ](#asan)
 5. [Enable Bench - To compile bench code.](#bench)
@@ -33,11 +33,11 @@ To enable examples, append `-DALCP_ENABLE_EXAMPLES=ON` to the cmake configuratio
 $ cmake -DALCP_ENABLE_EXAMPLES=ON ../
 ```
 
-<div id = "cpuid"> </div>
+<div id = "aocl-utils"> </div>
 
-#### Enable AOCL UTILS
+#### Enable AOCL-UTILS
 
-To enable aocl utils cpuid checks, append `-DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source` and `-DENABLE_AOCL_UTILS=ON` to the cmake configuration command.
+To enable aocl utils checks, append `-DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source` and `-DENABLE_AOCL_UTILS=ON` to the cmake configuration command.
 ```bash
 $ cmake -DENABLE_AOCL_UTILS=ON -DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source ../
 ```
@@ -83,7 +83,7 @@ $ ./bench/digest/bench_digest --benchmark_filter=SHA2 (runs for all SHA2 schemes
 <div id = "tests"> </div>
 
 #### Build Tests (using KAT vectors)
-To enable sanitizers (asan, tsan etc), append `-DALCP_ENABLE_TESTS=ON` to the cmake configuration command.
+To enable tests, append `-DALCP_ENABLE_TESTS=ON` to the cmake configuration command.
 ```sh
 $ cmake -DALCP_ENABLE_TESTS=ON ../
 ```

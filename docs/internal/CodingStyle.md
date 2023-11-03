@@ -1,7 +1,6 @@
 ---
 title: AOCL Crypto Coding Style
 subtitle: Coding Style Reference Document
-author: Prem Mallappa <pmallapp@amd.com>
 subject: "markdown"
 keywords: [books,programming]
 language: en-US

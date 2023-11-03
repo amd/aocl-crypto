@@ -48,7 +48,7 @@ Default set values:
 ### Enabling features of AOCL-Crypto
 
 1. [Enable Examples - To compile example/demo code.](#win-ex)
-2. [Enable CPUID - To dispatch correct kernel with CPU identification.](#win-cpu)
+2. [Enable AOCL-UTILS - To dispatch correct kernel with CPU identification.](#win-cpu)
 3. [Enable DEBUG Build - To compile code in Debug Mode.](#win-debug)
 4. [Enable Address Sanitizer Support ](#win-asan)
 5. [Enable Bench - To compile bench code.](#win-bench)
@@ -81,7 +81,7 @@ $ .\examples\{algorithm_type}\release\{algorithm_type}\*.exe
 <div id = "win-cpu"></div>
 
 
-#### Enable CPUID Append
+#### Enable AOCL-UTILS Append
 ```
 PS> cmake -DENABLE_AOCL_UTILS=ON -DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source -B build
 PS> cmake --build .\build --config=release
@@ -99,7 +99,6 @@ PS> cmake --build .\build --config=debug
 
 #### For Compiling with Address Sanitizer Support
 
-ASAN(Experimental)
 ```
 PS> cmake -DALCP_SANITIZE=ON -B build
 PS> cmake --build .\build --config=release

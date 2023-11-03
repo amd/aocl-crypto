@@ -1,9 +1,6 @@
 ---
 title: OpenSSL Provider Documentation
 subtitle: Developer Manual for OpenSSL Provider
-author: 
-- Abhiram S <abhiram.s@amd.com>
-- Abhijith N Raj <abhijith.raj@amd.com>
 subject: "markdown"
 keywords: [books,programming]
 language: en-US

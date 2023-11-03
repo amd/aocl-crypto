@@ -27,7 +27,7 @@ mv libnew.a libalcp.a
 #### Enabling Features of AOCL-Crypto
 
 1. [Enable Examples - To compile example/demo code.](#example)
-2. [Enable CPUID - To dispatch correct kernel with CPU identification.](#cpuid)
+2. [Enable AOCL-UTILS - To dispatch correct kernel with CPU identification.](#aocl-utils)
 3. [Enable DEBUG Build - To compile code in Debug Mode.](#debug)
 4. [Enable Address Sanitizer Support ](#asan)
 5. [Enable Bench - To compile bench code.](#bench)
@@ -42,7 +42,7 @@ To enable examples, append `-DALCP_ENABLE_EXAMPLES=ON` to the cmake configuratio
 $ cmake -DALCP_ENABLE_EXAMPLES=ON ../
 ```
 
-<div id = "cpuid"> </div>
+<div id = "aocl-utils"> </div>
 
 #### Enable AOCL UTILS CPUID checks
 
@@ -156,8 +156,8 @@ Default set values:
 
 ### Enabling features of AOCL-Crypto
 
-1. [Enable Examples - To compile example/demo code.](#win-ex)
-2. [Enable CPUID - To dispatch correct kernel with CPU identification.](#win-cpu)
+1. [Enable Examples - To compile example/demo code.](#win-ex)`
+2. [Enable AOCL-UTILS - To dispatch correct kernel with CPU identification.](#win-cpu)
 3. [Enable DEBUG Build - To compile code in Debug Mode.](#win-debug)
 4. [Enable Address Sanitizer Support ](#win-asan)
 5. [Enable Bench - To compile bench code.](#win-bench)
@@ -190,7 +190,7 @@ $ .\examples\{algorithm_type}\release\{algorithm_type}\*.exe
 <div id = "win-cpu"></div>
 
 
-#### Enable CPUID Append
+#### Enable AOCL-UTILS Append
 ```
 PS> cmake -DENABLE_AOCL_UTILS=ON -DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source -B build
 PS> cmake --build .\build --config=release

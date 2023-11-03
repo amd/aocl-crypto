@@ -1,7 +1,6 @@
 ---
 title: AOCL Crypto
 subtitle: Software Design Document
-author: Prem Mallappa <pmallapp@amd.com>
 subject: "markdown"
 keywords: [books,programming]
 language: en-US
