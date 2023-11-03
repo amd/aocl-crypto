@@ -95,11 +95,8 @@ GetModeSTR(alc_cipher_mode_t mode)
 class CipherTestingCore
 {
   private:
-#ifndef ENABLE_RSP
     std::shared_ptr<Csv> m_csv;
-#else
-    std::shared_ptr<CRspParser> m_rsp;
-#endif
+
     // FIXME: Change these to unique_ptr
     CipherTesting*    m_cipherHandler = {};
     AlcpCipherBase*   m_acb           = {};
@@ -156,13 +153,8 @@ class CipherTestingCore
     {
         std::transform(
             modeStr.begin(), modeStr.end(), modeStr.begin(), ::tolower);
-#ifndef ENABLE_RSP
         m_csv = std::make_shared<Csv>(std::string("dataset_") + modeStr
                                       + std::string(".csv"));
-#else
-        m_rsp = std::make_shared<CRspParser>(std::string("dataset_") + modeStr
-                                             + std::string(".rsp"));
-#endif
         // Initialize cipher testing classes
         /* alcpMode is valid only for AES schemes */
         m_cipherHandler = new CipherTesting();
@@ -318,11 +310,8 @@ class CipherAeadTestingCore
             delete ocb;
 #endif
     }
-#ifndef ENABLE_RSP
+
     std::shared_ptr<Csv> getCsv() { return m_csv; }
-#else
-    std::shared_ptr<CRspParser> getRsp() { return m_rsp; }
-#endif
     CipherTesting* getCipherHandler() { return m_cipherHandler; }
 };
 
@@ -1054,7 +1043,6 @@ AesAeadCrosstest(int               keySize,
     }
 }
 
-#ifndef ENABLE_RSP
 /**
  * @brief Testing for non-aead based modes
  *
@@ -1144,84 +1132,7 @@ RunCipherKatTest(CipherTestingCore& testingCore,
     }
     return ret;
 }
-#else
-bool
-RunCipherKATTest(TestingCore& testingCore,
-                 encDec_t     encDec,
-                 std::string  encDecStr,
-                 std::string  modeStr,
-                 int          keySize,
-                 bool         isxts,
-                 bool         isgcm)
-{
-    bool                        ret = false;
-    alcp_dc_ex_t                data;
-    std::shared_ptr<CRspParser> rsp = testingCore.getRsp();
-    std::vector<Uint8>          pt  = rsp->getVect("PLAINTEXT");
-    std::vector<Uint8>          ct  = rsp->getVect("CIPHERTEXT");
-    std::vector<Uint8>          outpt(pt.size(), 0);
-    std::vector<Uint8>          outct(ct.size(), 0);
-    std::vector<Uint8>          iv   = rsp->getVect("INITVECT");
-    std::vector<Uint8>          tkey = rsp->getVect("TWEAK_KEY");
 
-    if (encDec == ENCRYPT) {
-        if (pt.size()) {
-            data.m_in  = &(pt[0]);
-            data.m_inl = pt.size();
-        }
-        data.m_iv  = &(iv[0]);
-        data.m_ivl = iv.size();
-        // XTS Specific
-        data.m_tkey       = &(tkey[0]);
-        data.m_tkeyl      = tkey.size();
-        data.m_block_size = pt.size();
-        if (outct.size())
-            data.m_out = &(outct[0]);
-        data.m_outl = data.m_inl;
-
-        ret = testingCore.getCipherHandler()->testingEncrypt(
-            data, rsp->getVect("KEY"));
-        if (!ret) {
-            std::cout << "ERROR: Enc" << std::endl;
-            EXPECT_TRUE(ret);
-        }
-        EXPECT_TRUE(
-            ArraysMatch(outct,
-                        rsp->getVect("CIPHERTEXT"),
-                        *(rsp.get()),
-                        std::string("AES_" + modeStr + "_"
-                                    + std::to_string(keySize) + encDecStr)));
-    } else {
-        if (ct.size()) {
-            data.m_in  = &(ct[0]);
-            data.m_inl = ct.size();
-        }
-        data.m_iv  = &(iv[0]);
-        data.m_ivl = iv.size();
-        // XTS Specific
-        data.m_tkey       = &(tkey[0]);
-        data.m_tkeyl      = tkey.size();
-        data.m_block_size = pt.size();
-        if (outpt.size())
-            data.m_out = &(outpt[0]);
-        data.m_outl = data.m_inl;
-
-        ret = testingCore.getCipherHandler()->testingDecrypt(
-            data, rsp->getVect("KEY"));
-        if (!ret) {
-            std::cout << "ERROR: Dec" << std::endl;
-            EXPECT_TRUE(ret);
-        }
-        EXPECT_TRUE(
-            ArraysMatch(outpt,
-                        rsp->getVect("PLAINTEXT"),
-                        *(testingCore.getRsp()),
-                        std::string("AES_" + modeStr + "_"
-                                    + std::to_string(keySize) + encDecStr)));
-    }
-    return ret;
-}
-#endif
 
 bool
 RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
@@ -1376,7 +1287,6 @@ AesKatTest(int               keySize,
 
     bool retval = false;
 
-#ifndef ENABLE_RSP
     /* check if file is valid */
     if (!testing_core.getCsv()->m_file_exists) {
         EXPECT_TRUE(retval);
@@ -1392,25 +1302,7 @@ AesKatTest(int               keySize,
 
         EXPECT_TRUE(retval);
     }
-#else
-    if (!testing_core.getRsp()->fileExists) {
-        EXPECT_TRUE(retval);
-    }
 
-    while (testing_core.getRsp()->readNextTC()) {
-        if ((testing_core.getRsp()->getVect("KEY").size() * 8) != key_size) {
-            continue;
-        }
-        retval = RunCipherKATTest(testing_core,
-                                  encDec,
-                                  encDecStr,
-                                  cModeStr,
-                                  keySize,
-                                  isxts || issiv,
-                                  isgcm || isccm || issiv);
-        EXPECT_TRUE(retval);
-    }
-#endif
 }
 
 /**
@@ -1438,7 +1330,6 @@ ChachaKatTest(int keySize, encDec_t encDec, _alc_cipher_type cipher_type)
 
     bool retval = false;
 
-#ifndef ENABLE_RSP
     /* check if file is valid */
     if (!testing_core.getCsv()->m_file_exists) {
         EXPECT_TRUE(retval);
@@ -1454,25 +1345,7 @@ ChachaKatTest(int keySize, encDec_t encDec, _alc_cipher_type cipher_type)
 
         EXPECT_TRUE(retval);
     }
-#else
-    if (!testing_core.getRsp()->fileExists) {
-        EXPECT_TRUE(retval);
-    }
 
-    while (testing_core.getRsp()->readNextTC()) {
-        if ((testing_core.getRsp()->getVect("KEY").size() * 8) != key_size) {
-            continue;
-        }
-        retval = RunCipherKATTest(testing_core,
-                                  encDec,
-                                  encDecStr,
-                                  cModeStr,
-                                  keySize,
-                                  isxts || issiv,
-                                  isgcm || isccm || issiv);
-        EXPECT_TRUE(retval);
-    }
-#endif
 }
 
 /**
