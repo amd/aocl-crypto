@@ -42,9 +42,42 @@ using alcp::utils::CpuId;
 
 namespace alcp::cipher {
 
+class ALCP_API_EXPORT ICbc
+{
+  public:
+    /**
+     * @brief   CBC Encrypt Operation
+     * @note
+     * @param   pPlainText      Pointer to output buffer
+     * @param   pCipherText     Pointer to encrypted buffer
+     * @param   len             Len of plain and encrypted text
+     * @param   pIv             Pointer to Initialization Vector
+     * @return  alc_error_t     Error code
+     */
+    virtual alc_error_t encrypt(const Uint8* pPlainText,
+                                Uint8*       pCipherText,
+                                Uint64       len,
+                                const Uint8* pIv) const = 0;
+
+    /**
+     * @brief   CBC Decrypt Operation
+     * @note
+     * @param   pCipherText     Pointer to encrypted buffer
+     * @param   pPlainText      Pointer to output buffer
+     * @param   len             Len of plain and encrypted text
+     * @param   pIv             Pointer to Initialization Vector
+     * @return  alc_error_t     Error code
+     */
+    virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const = 0;
+
+    virtual ~ICbc(){};
+};
+
 /*
  * @brief        AES Encryption in CBC(Cipher block chaining)
- * @note        TODO: Move this to a aes_cbc.hh or other
  */
 template<alc_error_t FEnc(const Uint8* pSrc,
                           Uint8*       pDest,
@@ -58,7 +91,9 @@ template<alc_error_t FEnc(const Uint8* pSrc,
                           const Uint8* pKey,
                           int          nRounds,
                           const Uint8* pIv)>
-class ALCP_API_EXPORT Cbc final : public Aes
+class ALCP_API_EXPORT Cbc final
+    : public ICbc
+    , public Aes
 {
   public:
     explicit Cbc(const alc_cipher_algo_info_t& aesInfo,
@@ -72,9 +107,10 @@ class ALCP_API_EXPORT Cbc final : public Aes
     {
     }
 
+    Cbc() {}
+
     ~Cbc() {}
 
-  public:
     static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
                             const alc_key_info_t&         keyInfo)
     {
@@ -117,11 +153,6 @@ class ALCP_API_EXPORT Cbc final : public Aes
                                 Uint8*       pPlainText,
                                 Uint64       len,
                                 const Uint8* pIv) const final;
-
-  private:
-    Cbc(){};
-
-  private:
 };
 
 template<alc_error_t FEnc(const Uint8* pSrc,
