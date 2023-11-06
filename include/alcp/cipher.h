@@ -172,7 +172,7 @@ typedef struct _alc_cipher_handle
  *
  * @parblock <br> &nbsp;
  * <b>This API needs to be called before any other API is called to
- * know if cipher that is being request is supported or not </b>
+ * know if cipher that is being requested is supported or not </b>
  * @endparblock
  *
  * @note       This API is provided to allow application to make decision on
@@ -253,7 +253,8 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
  * provided handle.
  * @parblock <br> &nbsp;
  * <b>This API should be called only after @ref alcp_cipher_request.
- * API is meant to be used with CCM mode, it needs to be called before
+ * API is meant to be used with CBC,CTR,CFB,OFB,XTS mode, it needs to be called
+ * before
  * @ref alcp_cipher_set_iv.</b>
  * @endparblock
  * @note    Error needs to be checked for each call,
@@ -280,8 +281,9 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
  * @brief    Encrypt plain text and write it to cipher text with provided
  * handle.
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_cipher_request is called and at the
- * end of session call @ref alcp_cipher_finish</b>
+ * <b>This XTS specific API should be called only after @ref
+ * alcp_cipher_request. API is meant to be used with XTS mode, it needs to
+ * be called before @ref alcp_cipher_set_iv.</b>
  * @endparblock
  * @note    Error needs to be checked for each call,
  *           valid only if @ref alcp_is_error (ret) is false, ctx to be
@@ -310,9 +312,9 @@ alcp_cipher_blocks_encrypt(const alc_cipher_handle_p pCipherHandle,
  * @brief    Decryption of cipher text and write it to plain text with
  * provided handle.
  * @parblock <br> &nbsp;
- * <b>This API should be called only after @ref alcp_cipher_request.
- * API is meant to be used with CCM mode, it needs to be called before @ref
- * alcp_cipher_set_iv.</b>
+ * <b>This XTS specific API should be called only after @ref
+ * alcp_cipher_request. API is meant to be used with XTS mode, it needs to
+ * be called before @ref alcp_cipher_set_iv.</b>
  * @endparblock
  * @note    Error needs to be checked for each call,
  *           valid only if @ref alcp_is_error (ret) is false, pCipherHandle
@@ -325,8 +327,7 @@ alcp_cipher_blocks_encrypt(const alc_cipher_handle_p pCipherHandle,
  * @param[out]    pPlainText    Pointer to Plain Text
  * @param[in]    pCipherText   Pointer to Cipher Text
  * @param[in]    startBlockNum    Start block number of given plaintext
- * @param[in]    currCipherTextLen    Size of the Cipher Text for the current
- * blocks
+ * @param[in]    currCipherTextLen    Length of the given Cipher Text
  * @return   &nbsp; Error Code for the API called. If alc_error_t
  * is not ALC_ERROR_NONE then @ref alcp_cipher_error or @ref alcp_error_str
  * needs to be called to know about error occurred
