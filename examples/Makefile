@@ -63,7 +63,7 @@ TARGETS := cipher/aes-cfb cipher/aes-speed-cipher cipher/aes-speed-gcm cipher/ae
 all: banner create build
 
 banner:
-	@echo "Building examples for AOCL-Crypto"
+	@echo "Building examples for AOCL Cryptography"
 
 create:
 	@mkdir -p  $(OBJ)/cipher
