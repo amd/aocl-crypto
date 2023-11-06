@@ -132,7 +132,14 @@ class ALCP_API_EXPORT GcmAuth : public GcmAuthData
   public:
     GcmAuth() {}
 
-    ~GcmAuth() {}
+    ~GcmAuth()
+    {
+#if COMPUTE_HASHSUBKEY_ONCE
+        memset(m_hashSubkeyTable, 0, sizeof(Uint64) * MAX_NUM_512_BLKS * 8);
+#else
+        memset(m_hashSubkeyTable, 0, sizeof(Uint64) * 8);
+#endif
+    }
 };
 
 namespace vaes512 {
