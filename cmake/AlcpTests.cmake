@@ -120,6 +120,7 @@ function(alcp_cc_test testName)
                         ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher.cc
                         ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher_aead.cc
                         ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher.cc
+                        ${UNIT_TEST_COMMON_SRCS}
        )
   endif()
 
@@ -144,6 +145,7 @@ function(alcp_cc_test testName)
   target_include_directories(${_target_name} PRIVATE ${CMAKE_SOURCE_DIR}/tests/include)
   target_include_directories(${_target_name} PRIVATE ${CMAKE_SOURCE_DIR}/tests/common/include)
   target_include_directories(${_target_name} PRIVATE ${CMAKE_SOURCE_DIR}/lib/include)
+  target_include_directories(${_target_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/common/include)
 
   #set_property(TARGET ${_target_name}
   #  PROPERTY FOLDER "${alcp_IDE_FOLDER}/Tests")

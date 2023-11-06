@@ -58,19 +58,19 @@ template<alc_error_t FEnc(const Uint8* pSrc,
                           const Uint8* pKey,
                           int          nRounds,
                           const Uint8* pIv)>
-class ALCP_API_EXPORT Cfb final : public Aes
+class ALCP_API_EXPORT Cfb final
+    : public Aes
+    , public ICipher
 {
   public:
     explicit Cfb(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
-    {
-    }
+    {}
 
     explicit Cfb(const Uint8* pKey, const Uint32 keyLen)
         : Aes(pKey, keyLen)
-    {
-    }
+    {}
 
     ~Cfb() {}
 
