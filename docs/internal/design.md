@@ -1,5 +1,5 @@
 ---
-title: AOCL Crypto
+title: AOCL Cryptography
 subtitle: Software Design Document
 subject: "markdown"
 keywords: [books,programming]
@@ -19,7 +19,7 @@ colorlinks: true
 
 # Introduction
 ## Preface
-AOCL Crypto library described in this document is a part of AOCL Library that
+AOCL Cryptography library described in this document is a part of AOCL Library that
 provides a portable interface to cryptographic operations. The interface is
 designed to be user friendly, while still providing low-level primitives. This
 document includes:
@@ -28,7 +28,7 @@ document includes:
   - Design considerations
   - Detailed definition of API's provided by the library
 
-AOCL Crypto library here in after referred to as 'the library' or crypto or
+AOCL Cryptography library here in after referred to as 'the library' or crypto or
 cryptolib for short.
 
 This document provides details of APIs in the following categories.
@@ -43,11 +43,11 @@ This document provides details of APIs in the following categories.
   - Digest Signing and Verification
   - Padding
 
-AOCL Crypto also provides compatibility layer which translates libcrypto and
+AOCL Cryptography also provides compatibility layer which translates libcrypto and
 IPP-CP APIs to its own.
 
 # System Overview
-AOCL Crypto is designed to be future compatible and extendable. AOCL Cryptography
+AOCL Cryptography is designed to be future compatible and extendable. AOCL-Cryptography
 library has following components.
 
   1. Algorithm - Describes any algorithm that deals with one cryptographic function.
@@ -59,12 +59,12 @@ library has following components.
   3. Plugin - Is a loadable module, contains one or more algorithms, which
      registers itself with the library to extend its functionality.
 
-  4. Compatibility layer - Compatibility layer allows any application compiled
-     linked against other libraries to work with AOCL Crypto without
-     modifications. AOCL Crypto provides compatibility layer for IPP-CP and
+  4. Compatibility layer - Compatibility layer allows any application compiled and
+     linked against other libraries to work with AOCL Cryptography without
+     modifications. AOCL Cryptography provides compatibility layer for IPP-CP and
      libcrypto(from OpenSSL).
 
-Dynamic dispatcher in the library optimally dispatches to best possible function
+Dynamic dispatcher in the library optimally dispatches to the best possible function
 for a given architecture, this decision is made once in the lifetime of the
 process and would not add any overhead due to decision making process.
 Each algorithm would exist in at least 2 forms
@@ -91,13 +91,13 @@ per second using offloading.
 
 ## Design Consideration
 
-AOCL Crypto is expected to cater new as well as existing customers. Current
+AOCL Cryptography is expected to cater new as well as existing customers. Current
 customers may already be using other solutions like IPP-CP, OpenSSL-crypto,
 BoringSSL-crypto, MbedTLS etc, and may not want to recompile their entire
-software stack with AOCL Crypto. A solution must be provided to experiment with
-AOCL Crypto and to enable existing software stacks to easily migrate.
+software stack with AOCL Cryptography. A solution must be provided to experiment with
+AOCL Cryptography and to enable existing software stacks to easily migrate.
 
-A module is a subsystem of AOCL crypto like Symmetric Cipher or a Digest. Each
+A module is a subsystem of AOCL Cryptography like Symmetric Cipher or a Digest. Each
 module has various algorithms listed under them for easier management.
 
 A plugin is a loadable module which extends a module or adds new modules. This
@@ -108,7 +108,7 @@ All are version checked, and time to time libraries are updated and upgraded so
 that all versions need not be maintained.
 
 ## Assumptions and Dependencies (TODO: TBD)
-AOCL Crypto assumes following libraries/tools available on system where it is
+AOCL Cryptography assumes following libraries/tools available on system where it is
 built or running.
 
   - CMake (3.18.4 or later)
@@ -122,12 +122,12 @@ The library will contain all the listed algorithms eventually. At the library
 completeness level the priority is only for implementing one over other for a
 given release than choosing one over the other algorithm to include in library.
 
-OpenSSL compatibility library needs to be co-developed along with AOCL Crypto,
-as the requirement for drop-in replacement is crucial for AOCL Crypto to
+OpenSSL compatibility library needs to be co-developed along with AOCL Cryptography,
+as the requirement for drop-in replacement is crucial for AOCL Cryptography to
 succeed.
 
 ## Goals and Guidelines
-AOCL Crypto aims at achieving FIPS certification. Source code is expected to be
+AOCL Cryptography aims at achieving FIPS certification. Source code is expected to be
 highly secure and tamper resistant.
 All developers are requested to adhere to coding standard and guidelines
 provided. Recommended Readings:
@@ -136,14 +136,14 @@ provided. Recommended Readings:
 
 # Architectural Strategies (TODO: TBD)
 ## Programming Details
-The AOCL Crypto library provides C99 like API described in detail in
+The AOCL Cryptography library provides C99 like API described in detail in
 [API](#api-design). Though the internal structures are implemented using C++
 with no advanced features. This decision is taken to avoid writing primitive
 library functions like stacks/queues or heaps to [<0;199;17M]manage the module/algorithms.
 Also the C++ STL provides enough gears to achieve the needed functionality with
 least efforts.
 
-AOCL Crypto makes use of AMD's CPUID identification library and RNG (random
+AOCL Cryptography makes use of AMD's CPUID identification library and RNG (random
 number generator) library to provide additional functionality like dynamic
 dispatcher. The RNG library also provides needed seeds for the algorithms
 in need.
@@ -223,7 +223,7 @@ Documentation is maintained in 'markdown' format, 'pandoc' (version >= 2.9.2.1 )
 command is used to generate pdfs.
 
 ## Library Conventions
-AOCL Crypto is designed to be compliant with C99 API, hence uses all standard
+AOCL Cryptography is designed to be compliant with C99 API, hence uses all standard
 datatypes like `uint8_t` , `uint16_t`, however we avoid using `size_t` kind of
 datatypes as there is no clear mention of its size w.r.t ILP64 and LP64.
 
@@ -285,7 +285,7 @@ typedef uint64_t alc_error_t;
 
 ```
 
-All modules in AOCL Crypto library has an assigned ID which is internal
+All modules in AOCL Cryptography library has an assigned ID which is internal
 to the library. However detailed error message can be printed using the function
 `alc_error_str()`.
 
@@ -295,7 +295,7 @@ error function was called. This is used only internally in the library.
 
 ```c
 /**
-* \brief        Converts AOCL Crypto errors to human readable form
+* \brief        Converts AOCL Cryptography errors to human readable form
 * \notes        This is internal usage only, prints Filename and line number
 *
 * \param err    Actual Error
@@ -324,7 +324,7 @@ error.
 
 ```c
 /**
-* \brief        Converts AOCL Crypto errors to human readable form
+* \brief        Converts AOCL Cryptography errors to human readable form
 */
 void
 alcp_error_str(alc_error_t err,
@@ -349,7 +349,7 @@ Internally errors are represented as `class Error`
 
 ## Module Manager
 
-The AOCL Crypto library has internal module management for easy house keeping. A
+The AOCL Cryptography library has internal module management for easy house keeping. A
 module is a collection of algorithms, and each algorithm will register itself
 with the Module Manager; each algorithm registers itself using the following
 APIs.
@@ -422,7 +422,7 @@ Cipher Ops](#the-alc-cipher-ops-t-structure)
 The API `alcp_module_register()` tries to register the module with the module
 manager, the registration process returns appropriate error codes to identify
 the registration process's outcome.
-Like other parts of AOCL Crypto, use the `alcp_is_error()` API to detect success
+Like other parts of AOCL Cryptography, use the `alcp_is_error()` API to detect success
 or error. For more description see [ALC Error Types](#error-types)
 
 ```c
