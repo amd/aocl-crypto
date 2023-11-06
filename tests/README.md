@@ -8,7 +8,7 @@
 4. `$ cmake --build build`
 
 <span style="color:red"> __Note__: </span> To include IPP, please define `-DENABLE_TESTS_IPP_API=ON -DIPP_INSTALL_DIR=/path/to/ipp_prefix` in step 3.<br>
-<span style="color:red"> __Note__: </span> To include OpenSSL, please define `-DOPENSSL_INSTALL_DIR=/path/to/openssl_prefix` in step 3.
+<span style="color:red"> __Note__: </span> To include OpenSSL, please define `-DENABLE_TESTS_OPENSSL_API=ON -DOPENSSL_INSTALL_DIR=/path/to/openssl_prefix` in step 3.
 
 ## AES
 
