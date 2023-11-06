@@ -44,9 +44,9 @@ using alcp::cipher::Cbc;
 using alcp::cipher::ICbc;
 namespace alcp::cipher::unittest {
 std::vector<Uint8> key       = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                                 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+                           0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
 std::vector<Uint8> iv        = { 0x01, 0x00, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                                 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+                          0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
 std::vector<Uint8> plainText = {
     0x02, 0x01, 0x00, 0x03, 0x04, 0x05, 0x06, 0x07,
     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
@@ -97,33 +97,81 @@ getSupportedFeatures()
  * @return Instance of Cbc depending on provided architecure
  * @note Only use this with compile time resolvable expression
  */
-template<utils::CpuCipherFeatures features>
+template<utils::CpuCipherFeatures features, Uint32 keylen>
 std::unique_ptr<ICbc>
-CbcFactory(const Uint8 key[], Uint32 keylen)
+CbcFactory(const Uint8 key[])
 {
     std::unique_ptr<ICbc> cbc;
+    using namespace aesni;
     if constexpr (features == utils::CpuCipherFeatures::eAesni) {
-        cbc = std::make_unique<Cbc<aesni::EncryptCbc128, aesni::DecryptCbc128>>(
-            key,
-            keylen); // Create
-    } else if constexpr (features == utils::CpuCipherFeatures::eVaes256) {
-        cbc = std::make_unique<Cbc<aesni::EncryptCbc128, vaes::DecryptCbc128>>(
-            key,
-            keylen); // Create
-    } else if constexpr (features == utils::CpuCipherFeatures::eVaes512) {
-        cbc =
-            std::make_unique<Cbc<aesni::EncryptCbc128, vaes512::DecryptCbc128>>(
+        if constexpr (keylen == 128)
+            cbc = std::make_unique<Cbc<EncryptCbc128, DecryptCbc128>>(
                 key,
                 keylen); // Create
+        else if constexpr (keylen == 192)
+            cbc = std::make_unique<Cbc<EncryptCbc192, DecryptCbc192>>(
+                key,
+                keylen); // Create
+        else if constexpr (keylen == 256)
+            cbc = std::make_unique<Cbc<EncryptCbc256, DecryptCbc256>>(
+                key,
+                keylen); // Create
+        else {
+            std::cout << "Error Keysize is not supported!" << std::endl;
+            // Dispatch to something else
+            cbc = std::make_unique<Cbc<EncryptCbc128, DecryptCbc128>>(
+                key,
+                keylen); // Create
+        }
+    } else if constexpr (features == utils::CpuCipherFeatures::eVaes256) {
+        if constexpr (keylen == 128)
+            cbc = std::make_unique<Cbc<EncryptCbc128, vaes::DecryptCbc128>>(
+                key,
+                keylen); // Create
+        else if constexpr (keylen == 192)
+            cbc = std::make_unique<Cbc<EncryptCbc192, vaes::DecryptCbc192>>(
+                key,
+                keylen); // Create
+        else if constexpr (keylen == 256)
+            cbc = std::make_unique<Cbc<EncryptCbc256, vaes::DecryptCbc256>>(
+                key,
+                keylen); // Create
+        else {
+            std::cout << "Error Keysize is not supported!" << std::endl;
+            // Dispatch to something else
+            cbc = std::make_unique<Cbc<EncryptCbc128, DecryptCbc128>>(
+                key,
+                keylen); // Create
+        }
+    } else if constexpr (features == utils::CpuCipherFeatures::eVaes512) {
+        if constexpr (keylen == 128)
+            cbc = std::make_unique<Cbc<EncryptCbc128, vaes512::DecryptCbc128>>(
+                key,
+                keylen); // Create
+        else if constexpr (keylen == 192)
+            cbc = std::make_unique<Cbc<EncryptCbc192, vaes512::DecryptCbc192>>(
+                key,
+                keylen); // Create
+        else if constexpr (keylen == 256)
+            cbc = std::make_unique<Cbc<EncryptCbc256, vaes512::DecryptCbc256>>(
+                key,
+                keylen); // Create
+        else {
+            std::cout << "Error Keysize is not supported!" << std::endl;
+            // Dispatch to something else
+            cbc = std::make_unique<Cbc<EncryptCbc128, DecryptCbc128>>(
+                key,
+                keylen); // Create
+        }
     } else if constexpr (features == utils::CpuCipherFeatures::eDynamic) {
         CpuId                           cpu;
         static utils::CpuCipherFeatures maxFeature = getMaxFeature();
         if (maxFeature == utils::CpuCipherFeatures::eVaes512) {
-            cbc = CbcFactory<utils::CpuCipherFeatures::eVaes512>(key, keylen);
+            cbc = CbcFactory<utils::CpuCipherFeatures::eVaes512, keylen>(key);
         } else if (maxFeature == utils::CpuCipherFeatures::eVaes256) {
-            cbc = CbcFactory<utils::CpuCipherFeatures::eVaes256>(key, keylen);
+            cbc = CbcFactory<utils::CpuCipherFeatures::eVaes256, keylen>(key);
         } else if (maxFeature == utils::CpuCipherFeatures::eAesni) {
-            cbc = CbcFactory<utils::CpuCipherFeatures::eAesni>(key, keylen);
+            cbc = CbcFactory<utils::CpuCipherFeatures::eAesni, keylen>(key);
         }
     }
     assert(cbc.get() != nullptr);
@@ -140,14 +188,44 @@ CbcFactoryIndirect(utils::CpuCipherFeatures features,
                    const Uint8              key[],
                    Uint32                   keylen)
 {
-    if (features == CpuCipherFeatures::eVaes512) {
-        return CbcFactory<CpuCipherFeatures::eVaes512>(key, keylen);
-    } else if (features == CpuCipherFeatures::eVaes256) {
-        return CbcFactory<CpuCipherFeatures::eVaes256>(key, keylen);
-    } else if (features == CpuCipherFeatures::eAesni) {
-        return CbcFactory<CpuCipherFeatures::eAesni>(key, keylen);
-    } else {
-        return CbcFactory<CpuCipherFeatures::eReference>(key, keylen);
+    switch (keylen) {
+        default:
+            std::cout << "Unknown Key Length" << std::endl;
+        case 128:
+            if (features == CpuCipherFeatures::eVaes512) {
+                return CbcFactory<CpuCipherFeatures::eVaes512, 128>(key);
+            } else if (features == CpuCipherFeatures::eVaes256) {
+                return CbcFactory<CpuCipherFeatures::eVaes256, 128>(key);
+            } else if (features == CpuCipherFeatures::eAesni) {
+                return CbcFactory<CpuCipherFeatures::eAesni, 128>(key);
+            } else {
+                return CbcFactory<CpuCipherFeatures::eReference, 128>(key);
+            }
+            break;
+
+        case 192:
+            if (features == CpuCipherFeatures::eVaes512) {
+                return CbcFactory<CpuCipherFeatures::eVaes512, 192>(key);
+            } else if (features == CpuCipherFeatures::eVaes256) {
+                return CbcFactory<CpuCipherFeatures::eVaes256, 192>(key);
+            } else if (features == CpuCipherFeatures::eAesni) {
+                return CbcFactory<CpuCipherFeatures::eAesni, 192>(key);
+            } else {
+                return CbcFactory<CpuCipherFeatures::eReference, 192>(key);
+            }
+            break;
+
+        case 256:
+            if (features == CpuCipherFeatures::eVaes512) {
+                return CbcFactory<CpuCipherFeatures::eVaes512, 256>(key);
+            } else if (features == CpuCipherFeatures::eVaes256) {
+                return CbcFactory<CpuCipherFeatures::eVaes256, 256>(key);
+            } else if (features == CpuCipherFeatures::eAesni) {
+                return CbcFactory<CpuCipherFeatures::eAesni, 256>(key);
+            } else {
+                return CbcFactory<CpuCipherFeatures::eReference, 256>(key);
+            }
+            break;
     }
 }
 
@@ -201,8 +279,7 @@ TEST(CBC, creation)
 
 TEST(CBC, BasicEncryption)
 {
-    std::unique_ptr<ICbc> cbc =
-        CbcFactory<c_CpuFeatureSelect>(&key[0], key.size() * 8);
+    std::unique_ptr<ICbc> cbc = CbcFactory<c_CpuFeatureSelect, 128>(&key[0]);
 
     EXPECT_TRUE(cbc.get() != nullptr);
 
@@ -215,8 +292,7 @@ TEST(CBC, BasicEncryption)
 
 TEST(CBC, BasicDecryption)
 {
-    std::unique_ptr<ICbc> cbc =
-        CbcFactory<c_CpuFeatureSelect>(&key[0], key.size() * 8);
+    std::unique_ptr<ICbc> cbc = CbcFactory<c_CpuFeatureSelect, 128>(&key[0]);
 
     EXPECT_TRUE(cbc.get() != nullptr);
 
@@ -230,34 +306,52 @@ TEST(CBC, BasicDecryption)
 #if 1
 TEST(CBC, RandomEncryptDecryptTest)
 {
-    Uint8              key[32];
-    std::vector<Uint8> plainText(100000);
-    std::vector<Uint8> cipherText(100000);
-    Uint8              iv[16];
+    Uint8 key_256[32] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe };
+    std::vector<Uint8> plainText_vect(100000);
+    std::vector<Uint8> cipherText_vect(100000);
+    Uint8              iv[16] = {};
 
     // Fill buffer with random data
-    std::unique_ptr<IRandomize> random = std::make_unique<Randomize>();
-    random->getRandomBytes(plainText);
-    random->getRandomBytes(cipherText);
+    std::unique_ptr<IRandomize> random = std::make_unique<Randomize>(12);
+    random->getRandomBytes(plainText_vect);
+    random->getRandomBytes(cipherText_vect);
+    random->getRandomBytes(key_256, 32);
+    random->getRandomBytes(iv, 16);
 
     std::vector<CpuCipherFeatures> cpuFeatures = getSupportedFeatures();
 
     for (int i = 100000; i > 16; i -= 16)
         for (CpuCipherFeatures feature : cpuFeatures) {
+#if 0
+            std::cout
+                << "Cpu Feature:"
+                << static_cast<
+                       typename std::underlying_type<CpuCipherFeatures>::type>(
+                       feature)
+                << std::endl;
+#endif
             // Use buffer back to front to create new test cases from one buffer
-            std::vector<Uint8>    plainTextVect(plainText.begin() + i,
-                                             plainText.end());
-            std::vector<Uint8>    plainTextOut(plainTextVect.size());
-            std::unique_ptr<ICbc> cbc =
-                CbcFactoryIndirect(feature, key, sizeof(key) * 8);
+            // [ 1 2 3 4 5 6 7 8 9 10]
+            const std::vector<Uint8> plainTextVect(plainText_vect.begin() + i,
+                                                   plainText_vect.end());
+            std::vector<Uint8>       plainTextOut(plainTextVect.size());
+            std::unique_ptr<ICbc>    cbc =
+                CbcFactoryIndirect(feature, key_256, sizeof(key_256) * 8);
 
             EXPECT_TRUE(cbc.get() != nullptr);
 
-            cbc->encrypt(
-                &plainTextVect[0], &cipherText[0], plainTextVect.size(), iv);
+            cbc->encrypt(&plainTextVect[0],
+                         &cipherText_vect[0],
+                         plainTextVect.size(),
+                         iv);
 
-            cbc->decrypt(
-                &cipherText[0], &plainTextOut[0], plainTextVect.size(), iv);
+            cbc->decrypt(&cipherText_vect[0],
+                         &plainTextOut[0],
+                         plainTextVect.size(),
+                         iv);
 
             EXPECT_EQ(plainTextVect, plainTextOut);
 #if 0
@@ -269,6 +363,73 @@ TEST(CBC, RandomEncryptDecryptTest)
                       << std::endl;
 #endif
         }
+}
+#endif
+
+#if 0
+TEST(CBC, RandomEncryptDecryptTest)
+{
+    Uint8 key_256[32] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe };
+    std::vector<Uint8> plainText_vect(16, 0);
+    std::vector<Uint8> cipherText_vect(16, 1);
+    std::vector<Uint8> exp_cipherText = { 0xb0, 0x7d, 0x4f, 0x3e, 0x2c, 0xd2,
+                                          0xef, 0x2e, 0xb5, 0x45, 0x98, 0x07,
+                                          0x54, 0xdf, 0xea, 0x0f };
+    const Uint8        iv[16]         = {};
+
+    // Fill buffer with random data
+    // std::unique_ptr<IRandomize> random = std::make_unique<Randomize>(12);
+    // random->getRandomBytes(plainText_vect);
+    // random->getRandomBytes(cipherText_vect);
+
+    // std::vector<CpuCipherFeatures> cpuFeatures = getSupportedFeatures();
+    std::vector<CpuCipherFeatures> cpuFeatures = {
+        CpuCipherFeatures::eVaes512,
+    };
+
+    // for (int i = 100000; i > 16; i -= 16)
+    int i = 0;
+    for (CpuCipherFeatures feature : cpuFeatures) {
+#if 1
+        std::cout
+            << "Cpu Feature:"
+            << static_cast<
+                   typename std::underlying_type<CpuCipherFeatures>::type>(
+                   feature)
+            << std::endl;
+#endif
+        // Use buffer back to front to create new test cases from one buffer
+        // [ 1 2 3 4 5 6 7 8 9 10]
+        const std::vector<Uint8> plainTextVect(plainText_vect.begin() + i,
+                                               plainText_vect.end());
+        std::vector<Uint8>       plainTextOut(plainTextVect.size());
+        std::unique_ptr<ICbc>    cbc =
+            CbcFactoryIndirect(feature, key_256, sizeof(key_256) * 8);
+
+        EXPECT_TRUE(cbc.get() != nullptr);
+
+        // cbc->encrypt(
+        //     &plainTextVect[0], &cipherText_vect[0], plainTextVect.size(),
+        //     iv);
+
+        // cbc = CbcFactoryIndirect(feature, key_256, sizeof(key_256) * 8);
+
+        cbc->decrypt(
+            &exp_cipherText[0], &plainTextOut[0], plainTextOut.size(), iv);
+
+        // EXPECT_EQ(cipherText_vect, exp_cipherText);
+        EXPECT_EQ(plainTextVect, plainTextOut);
+#if 1
+        auto ret = std::mismatch(
+            plainTextVect.begin(), plainTextVect.end(), plainTextOut.begin());
+        std::cout << "First:" << ret.first - plainTextVect.begin()
+                  << "Second:" << ret.second - plainTextOut.begin()
+                  << std::endl;
+#endif
+    }
 }
 #endif
 
