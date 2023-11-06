@@ -72,15 +72,16 @@ class ALCP_API_EXPORT Ctr : public Aes
 };
 
 namespace vaes512 {
-    class ALCP_API_EXPORT Ctr128 : public Ctr
+    class ALCP_API_EXPORT Ctr128
+        : public Ctr
+        , public ICipher
     {
       public:
         Ctr128(){};
 
         explicit Ctr128(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {
-        }
+        {}
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -116,15 +117,16 @@ namespace vaes512 {
                                     const Uint8* pIv) const final;
     };
 
-    class ALCP_API_EXPORT Ctr192 : public Ctr
+    class ALCP_API_EXPORT Ctr192
+        : public Ctr
+        , public ICipher
     {
       public:
         Ctr192(){};
 
         explicit Ctr192(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {
-        }
+        {}
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -160,15 +162,16 @@ namespace vaes512 {
                                     const Uint8* pIv) const final;
     };
 
-    class ALCP_API_EXPORT Ctr256 : public Ctr
+    class ALCP_API_EXPORT Ctr256
+        : public Ctr
+        , public ICipher
     {
       public:
         Ctr256(){};
 
         explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {
-        }
+        {}
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -208,15 +211,16 @@ namespace vaes512 {
 
 // duplicate of vaes512 namespace, to be removed
 namespace vaes {
-    class ALCP_API_EXPORT Ctr128 : public Ctr
+    class ALCP_API_EXPORT Ctr128
+        : public Ctr
+        , public ICipher
     {
       public:
         Ctr128(){};
 
         explicit Ctr128(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {
-        }
+        {}
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -252,15 +256,16 @@ namespace vaes {
                                     const Uint8* pIv) const final;
     };
 
-    class ALCP_API_EXPORT Ctr192 : public Ctr
+    class ALCP_API_EXPORT Ctr192
+        : public Ctr
+        , public ICipher
     {
       public:
         Ctr192(){};
 
         explicit Ctr192(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {
-        }
+        {}
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -296,15 +301,16 @@ namespace vaes {
                                     const Uint8* pIv) const final;
     };
 
-    class ALCP_API_EXPORT Ctr256 : public Ctr
+    class ALCP_API_EXPORT Ctr256
+        : public Ctr
+        , public ICipher
     {
       public:
         Ctr256(){};
 
         explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {
-        }
+        {}
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -344,15 +350,16 @@ namespace vaes {
 
 // duplicate of vaes512 namespace, to be removed
 namespace aesni {
-    class ALCP_API_EXPORT Ctr128 : public Ctr
+    class ALCP_API_EXPORT Ctr128
+        : public Ctr
+        , public ICipher
     {
       public:
         Ctr128(){};
 
         explicit Ctr128(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {
-        }
+        {}
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -388,15 +395,16 @@ namespace aesni {
                                     const Uint8* pIv) const final;
     };
 
-    class ALCP_API_EXPORT Ctr192 : public Ctr
+    class ALCP_API_EXPORT Ctr192
+        : public Ctr
+        , public ICipher
     {
       public:
         Ctr192(){};
 
         explicit Ctr192(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {
-        }
+        {}
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -432,15 +440,16 @@ namespace aesni {
                                     const Uint8* pIv) const final;
     };
 
-    class ALCP_API_EXPORT Ctr256 : public Ctr
+    class ALCP_API_EXPORT Ctr256
+        : public Ctr
+        , public ICipher
     {
       public:
         Ctr256(){};
 
         explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {
-        }
+        {}
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
