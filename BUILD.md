@@ -15,7 +15,7 @@ ar crsT libnew.a libalcp.a libarch_zen3.a libarch_avx2.a
 mv libnew.a libalcp.a
 ```
 
-#### Enabling Features of AOCL-Crypto
+#### Enabling Features of AOCL Cryptography
 
 1. [Enable Examples - To compile example/demo code.](#example)
 2. [Enable AOCL-UTILS - To dispatch correct kernel with CPU identification.](#aocl-utils)

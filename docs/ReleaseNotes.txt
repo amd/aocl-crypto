@@ -1,11 +1,11 @@
 (C) 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
 
-AOCL Crypto - Release Notes - AOCL version 4.2
+AOCL Cryptography - Release Notes - AOCL version 4.2
 ----------------------------------------------
 
 AOCL Crypto Contents
 --------------------
-AOCL-Crypto is a library consisting of basic cryptographic functions
+AOCL Cryptography is a library consisting of basic cryptographic functions
 optimized for AMD Zen microarchitecture. This library has multiple
 implementations of different cryptographic algorithms which is given below: 
 -- AES cryptographic encryption / decryption routines

@@ -1,6 +1,6 @@
-## AOCL Crypto Library Build for Windows
+## AOCL Cryptography Library Build for Windows
 <!-- FIXME: use "\" instead of "/" -->
-### Following software should be installed prior to build AOCL-CRYPTO 
+### Following software should be installed prior to build AOCL Cryptography
 
 - MS Visual Studio (2019 or greater)
 - Clang 15.0 or above
@@ -45,7 +45,7 @@ Default set values:
 
 > **Important Notes: ASAN in an experimental phase for Windows.**  
 
-### Enabling features of AOCL-Crypto
+### Enabling features of AOCL Cryptography
 
 1. [Enable Examples - To compile example/demo code.](#win-ex)
 2. [Enable AOCL-UTILS - To dispatch correct kernel with CPU identification.](#win-cpu)

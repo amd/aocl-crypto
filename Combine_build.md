@@ -1,6 +1,6 @@
 # Build and Installation
 
-To Build AOCL-Crypto for Different Platform Please refer to Document Related your Platform
+To Build AOCL Cryptography for Different Platform Please refer to Document Related your Platform
     - [ Linux ](#md_BUILD)
     - [ Windows ](#md_BUILD_Windows)
 
@@ -24,7 +24,7 @@ ar crsT libnew.a libalcp.a libarch_zen3.a libarch_avx2.a
 mv libnew.a libalcp.a
 ```
 
-#### Enabling Features of AOCL-Crypto
+#### Enabling Features of AOCL Cryptography
 
 1. [Enable Examples - To compile example/demo code.](#example)
 2. [Enable AOCL-UTILS - To dispatch correct kernel with CPU identification.](#aocl-utils)
@@ -111,7 +111,7 @@ For more details see **[README.md](md_tests_README.html)** from tests.
 
 ## Build Instruction for Windows Platform
 
-### Following software should be installed prior to build AOCL-CRYPTO
+### Following software should be installed prior to build AOCL Cryptography
 
 - MS Visual Studio (2019 or greater)
 - Clang 15.0 or above
@@ -154,7 +154,7 @@ Default set values:
 * 2. cmake --build .\build --config=release
 ```
 
-### Enabling features of AOCL-Crypto
+### Enabling features of AOCL Cryptography
 
 1. [Enable Examples - To compile example/demo code.](#win-ex)`
 2. [Enable AOCL-UTILS - To dispatch correct kernel with CPU identification.](#win-cpu)

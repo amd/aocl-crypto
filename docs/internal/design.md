@@ -47,7 +47,7 @@ AOCL Crypto also provides compatibility layer which translates libcrypto and
 IPP-CP APIs to its own.
 
 # System Overview
-AOCL Crypto is designed to be future compatible and extendable. AOCL-Crypto
+AOCL Crypto is designed to be future compatible and extendable. AOCL Cryptography
 library has following components.
 
   1. Algorithm - Describes any algorithm that deals with one cryptographic function.
