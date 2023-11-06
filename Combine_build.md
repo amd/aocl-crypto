@@ -1,6 +1,6 @@
 # Build and Installation
 
-To Build AOCL Cryptography for Different Platform Please refer to Document Related your Platform
+To Build AOCL Cryptography for different platforms please refer to the document related to your platform
     - [ Linux ](#md_BUILD)
     - [ Windows ](#md_BUILD_Windows)
 

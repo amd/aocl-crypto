@@ -43,6 +43,7 @@ To run tests with verbose mode (prints also success)
 4.  `$ ./tests/cipher/aes_ctr_cross -o`
 
 5.  `$ ./tests/cipher/aes_ofb_cross -o`
+
 6. `$ ./tests/digest/test_digest_cross -o`
 
 #### Selecting tests
@@ -69,4 +70,4 @@ For using OpenSSL just specify `-o` command line argument.
 
 ### Testing Datasets
 
-Datasets are located in directory `alcp-crypto/tests/cipher/dataset/`. File name should be dataset_\<aes\_mode\>.csv. Order of elements are mentioned in line number 1. Line number 1 is always ignored, please forbid form deleting that line.
+Datasets are located in directory `alcp-crypto/tests/cipher/dataset/`. File name should be dataset_\<aes\_mode\>.csv. Order of elements are mentioned in line number 1. Line number 1 is always ignored, please forbid from deleting that line.

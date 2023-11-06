@@ -5,7 +5,7 @@
 
 - For building, please refer to [Build.md](md_BUILD.html)
 
-## Table of Content
+## Table of contents
     * [Introduction](#Introduction)
     * [Build and Installation](#Build)
     * [Examples](#Example)
@@ -113,7 +113,7 @@ RNG
 
 ## Build and Installation
 
-To Build AOCL-Cryptography for Different Platform Please refer to Document Related your Platform
+To Build AOCL-Cryptography for different platform please refer to the document related to your platform
     - [ Linux ](md_Combine_build.html#md_BUILD)
     - [ Windows  ](md_Combine_build.html#md_BUILD_Windows)
 
