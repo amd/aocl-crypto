@@ -1,9 +1,5 @@
 # ALCP Micro Benchmarks 
 
-## Building
-
-Skip to [Executing Benches](#Executing_Benches) if already installed
-
 ### Building ALCP with Testing framework
 
 1. `git clone [alcp-crypto git url here]`

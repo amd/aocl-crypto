@@ -1,9 +1,5 @@
 # ALCP Micro Tests
 
-## Building
-<!--FIXME: link broken in doxygen -->
-Skip to [Executing Tests](###Executing Tests) if already installed
-
 ### Building ALCP with Testing framework
 
 1. `$ git clone [alcp-crypto git url here]`
