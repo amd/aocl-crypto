@@ -87,6 +87,11 @@ typedef struct _alc_cmac_info
     // Other specific info about CMAC
 } alc_cmac_info_t, *alc_cmac_info_p;
 
+/**
+ * @brief Stores details for Poly1305
+ *
+ * @struct alc_poly1305_info_t
+ */
 typedef struct _alc_poly1305_info
 {
     char dummy;
@@ -99,6 +104,8 @@ typedef struct _alc_poly1305_info
  * @param  mi_algoinfo  A Union of alc_hmac_info_t, alc_cmac_info_t
  * @param  mi_keyinfo   Store key info
  * @struct alc_mac_info_t
+ *
+ * @note Supported MAC algorithms HMAC, CMAC, POLY1305
  *
  */
 typedef struct _alc_mac_info_t
