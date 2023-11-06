@@ -63,13 +63,11 @@ class Aes : public Rijndael
                  const alc_key_info_t&         keyInfo)
         : Rijndael{ keyInfo }
         , m_mode{ aesInfo.ai_mode }
-    {
-    }
+    {}
 
     explicit Aes(const Uint8* pKey, const Uint32 keyLen)
         : Rijndael(pKey, keyLen)
-    {
-    }
+    {}
 
   protected:
     virtual ~Aes() {}
@@ -95,13 +93,14 @@ class Aes : public Rijndael
  * @brief        AES Encryption in OFB(Output Feedback)
  * @note        TODO: Move this to a aes_ofb.hh or other
  */
-class ALCP_API_EXPORT Ofb final : public Aes
+class ALCP_API_EXPORT Ofb final
+    : public Aes
+    , public ICipher
 {
   public:
     explicit Ofb(const Uint8* pKey, const Uint32 keyLen)
         : Aes(pKey, keyLen)
-    {
-    }
+    {}
 
     ~Ofb() {}
 
