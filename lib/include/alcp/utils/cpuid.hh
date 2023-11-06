@@ -37,11 +37,11 @@ namespace alcp::utils {
 
 enum class CpuCipherFeatures
 {
-    eReference,
-    eAesni,
-    eVaes256,
-    eVaes512,
-    eDynamic
+    eReference = 0,
+    eAesni     = 1,
+    eVaes256   = 2,
+    eVaes512   = 3,
+    eDynamic   = 4
 };
 typedef enum
 {
