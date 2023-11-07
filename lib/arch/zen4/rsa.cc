@@ -53,33 +53,56 @@ namespace alcp::rsa { namespace zen4 {
         return val & MaskRadix52Bit;
     }
 
+    static inline Uint64 BytesToUint64(const Uint8* val)
+    {
+        // memcpy should be better as it contains more memory optimizations for
+        // tasks like this. Shifting is adding more instructions.
+#if 0
+        return static_cast<Uint64>(val[7]) << 56
+               | static_cast<Uint64>(val[6]) << 48
+               | static_cast<Uint64>(val[5]) << 40
+               | static_cast<Uint64>(val[4]) << 32
+               | static_cast<Uint64>(val[3]) << 24
+               | static_cast<Uint64>(val[2]) << 16
+               | static_cast<Uint64>(val[1]) << 8 | val[0];
+#else
+        Uint64 val64 = 0;
+        memcpy(&val64, val, 8);
+        return val64;
+#endif
+    }
+    static inline void Rsa1024Radix64BitToRadix52Bit(Uint64*       out,
+                                                     const Uint64* in);
+
     // Converts the radix 64 bit in 1024 bits to radix 52 with 20 digits
     static inline void Rsa1024Radix64BitToRadix52Bit(Uint64*       out,
                                                      const Uint64* in)
     {
+
         const Uint8* in_byte = reinterpret_cast<const Uint8*>(in);
         for (Uint64 i = 0; i < 18; i += 2) {
-            out[i] = GetRadix52Bit(*(reinterpret_cast<const Uint64*>(in_byte)));
-            out[i + 1] = GetRadix52Bit(
-                (*(reinterpret_cast<const Uint64*>(in_byte + 6))) >> 4);
+            out[i]     = GetRadix52Bit(BytesToUint64(in_byte));
+            out[i + 1] = GetRadix52Bit(BytesToUint64(in_byte + 6) >> 4);
             in_byte += 13;
         }
 
-        out[18] = GetRadix52Bit(*(reinterpret_cast<const Uint64*>(in_byte)));
+        out[18] = GetRadix52Bit(BytesToUint64(in_byte));
 
         out[19] = (*(in_byte + 6) >> 4) + (*(in_byte + 7) << 4)
                   + (*(in_byte + 8) << 12) + (*(in_byte + 9) << 20)
                   + ((Uint64)(*(in_byte + 10)) << 28);
     }
-
     // Converts back the radix 52 bit in 1024 bits to radix 64
     static inline void Rsa1024Radix52BitToRadix64(Uint64* out, const Uint64* in)
     {
-        Uint8* out_byte = reinterpret_cast<Uint8*>(out);
+
+        Uint8*       out_byte = reinterpret_cast<Uint8*>(out);
+        const Uint8* in_byte  = reinterpret_cast<const Uint8*>(in);
         for (Uint64 i = 0; i < 19; i += 2) {
-            *(reinterpret_cast<Uint64*>(out_byte)) = in[i];
+            utils::CopyBytes(out_byte, in_byte + i * 8, 8);
             out_byte += 6;
-            *(reinterpret_cast<Uint64*>(out_byte)) ^= (in[i + 1] << 4);
+            Uint64 processed = (BytesToUint64(out_byte)) ^ (in[i + 1] << 4);
+            utils::CopyBytes(out_byte, reinterpret_cast<Uint8*>(&processed), 8);
             out_byte += 7;
         }
     }
@@ -90,13 +113,12 @@ namespace alcp::rsa { namespace zen4 {
     {
         const Uint8* in_byte = reinterpret_cast<const Uint8*>(in);
         for (Uint64 i = 0; i < 38; i += 2) {
-            out[i] = GetRadix52Bit(*(reinterpret_cast<const Uint64*>(in_byte)));
-            out[i + 1] = GetRadix52Bit(
-                (*(reinterpret_cast<const Uint64*>(in_byte + 6))) >> 4);
+            out[i]     = GetRadix52Bit(BytesToUint64(in_byte));
+            out[i + 1] = GetRadix52Bit((BytesToUint64(in_byte + 6)) >> 4);
             in_byte += 13;
         }
 
-        out[38] = GetRadix52Bit(*(reinterpret_cast<const Uint64*>(in_byte)));
+        out[38] = GetRadix52Bit(BytesToUint64(in_byte));
 
         out[39] = (*(in_byte + 6) >> 4) + (*(in_byte + 7) << 4)
                   + (*(in_byte + 8) << 12);
@@ -108,9 +130,11 @@ namespace alcp::rsa { namespace zen4 {
     {
         Uint8* out_byte = reinterpret_cast<Uint8*>(out);
         for (Uint64 i = 0; i < 39; i += 2) {
-            *(reinterpret_cast<Uint64*>(out_byte)) = in[i];
+            utils::CopyBytes(
+                out_byte, reinterpret_cast<const Uint8*>(in) + i * 8, 8);
             out_byte += 6;
-            *(reinterpret_cast<Uint64*>(out_byte)) ^= (in[i + 1] << 4);
+            Uint64 processed = (BytesToUint64(out_byte)) ^ (in[i + 1] << 4);
+            utils::CopyBytes(out_byte, reinterpret_cast<Uint8*>(&processed), 8);
             out_byte += 7;
         }
     }
@@ -1675,9 +1699,13 @@ namespace alcp::rsa { namespace zen4 {
 
         MontReduce(r1, param_ptr, mod, context.m_k0, size * 2);
 
+        if (size <= 8) {
+            // If size is less than 512 bits which is the case for RSA
+            // decryption using CRT and can be returned from here.
+            return;
+        }
         Rsa1024Radix64BitToRadix52Bit(mod_radix_52_bit, mod);
         Rsa1024Radix64BitToRadix52Bit(r2_radix_52_bit, r2);
-
         __m256i mod_reg[5];
         LoadReg256(mod_reg, mod_radix_52_bit);
 
@@ -1889,14 +1917,14 @@ namespace alcp::rsa { namespace zen4 {
         Uint64* r1_radix_52_bit_p[2] = { r1_radix_52_bit_contig,
                                          r1_radix_52_bit_contig + 20 };
         Uint64* input_radix_52[2]    = { input_radix_52_contig,
-                                      input_radix_52_contig + 20 };
+                                         input_radix_52_contig + 20 };
         Uint64* res_radix_52[2]      = { res_radix_52_contig,
-                                    res_radix_52_contig + 20 };
+                                         res_radix_52_contig + 20 };
 
         Uint64* mult_radix_52[2] = { mult_radix_52_contig,
                                      mult_radix_52_contig + 20 };
         Uint64* sq_radix_52[2]   = { sq_radix_52_contig,
-                                   sq_radix_52_contig + 20 };
+                                     sq_radix_52_contig + 20 };
 
         __m256i mod_reg[10];
         LoadReg256(mod_reg, modRadix52Bit[0]);
@@ -2078,8 +2106,11 @@ namespace alcp::rsa { namespace zen4 {
         auto size = contextP.m_size;
 
         Uint64 buff_p[32];
-        Uint64 buff_0_p[16];
-        Uint64 buff_1_p[16];
+        // Buffer Overflowed when allocated as 16*64 bits. Allocating another 64
+        // bits to prevent offerflow in  Rsa1024Radix52BitToRadix64. Might be
+        // related to bignum overflowing more than 128 bytes
+        Uint64 buff_0_p[16 + 1];
+        Uint64 buff_1_p[16 + 1];
 
         auto p_mod_radix_52_bit = contextP.m_mod_radix_52_bit.get();
         auto p_mod              = privKey.m_p.get();
