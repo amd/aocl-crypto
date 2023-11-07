@@ -35,6 +35,7 @@
 #include "alcp/cipher/aes_ctr.hh"
 #include "alcp/cipher/cipher_wrapper.hh"
 #include "alcp/utils/cpuid.hh"
+#include "debug_defs.hh"
 #include "dispatcher.hh"
 #include "randomize.hh"
 
@@ -190,7 +191,7 @@ TEST(CTR, creation)
 {
     std::vector<CpuCipherFeatures> cpuFeatures = getSupportedFeatures();
     for (CpuCipherFeatures feature : cpuFeatures) {
-#if 0
+#ifdef DEBUG
         std::cout
             << "Cpu Feature:"
             << static_cast<
@@ -230,7 +231,6 @@ TEST(CTR, BasicDecryption)
     EXPECT_EQ(plainText, output);
 }
 
-#if 1
 TEST(CTR, RandomEncryptDecryptTest)
 {
     Uint8 key_256[32] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -252,7 +252,7 @@ TEST(CTR, RandomEncryptDecryptTest)
 
     for (int i = 100000; i > 16; i -= 16)
         for (CpuCipherFeatures feature : cpuFeatures) {
-#if 0
+#ifdef DEBUG
             std::cout
                 << "Cpu Feature:"
                 << static_cast<
@@ -279,7 +279,7 @@ TEST(CTR, RandomEncryptDecryptTest)
                          iv);
 
             EXPECT_EQ(plainTextVect, plainTextOut);
-#if 0
+#ifdef DEBUG
             auto ret = std::mismatch(plainTextVect.begin(),
                                      plainTextVect.end(),
                                      plainTextOut.begin());
@@ -289,7 +289,6 @@ TEST(CTR, RandomEncryptDecryptTest)
 #endif
         }
 }
-#endif
 
 int
 main(int argc, char** argv)

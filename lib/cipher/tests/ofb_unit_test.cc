@@ -34,6 +34,7 @@
 
 #include "alcp/cipher/aes.hh"
 #include "alcp/cipher/cipher_wrapper.hh"
+#include "debug_defs.hh"
 #include "dispatcher.hh"
 #include "randomize.hh"
 
@@ -136,13 +137,12 @@ using namespace alcp::cipher::unittest::ofb;
 TEST(OFB, creation)
 {
     CpuCipherFeatures feature = c_CpuFeatureSelect;
-#if 0
-        std::cout
-            << "Cpu Feature:"
-            << static_cast<
-                   typename std::underlying_type<CpuCipherFeatures>::type>(
-                   feature)
-            << std::endl;
+#ifdef DEBUG
+    std::cout
+        << "Cpu Feature:"
+        << static_cast<typename std::underlying_type<CpuCipherFeatures>::type>(
+               feature)
+        << std::endl;
 #endif
     std::unique_ptr<ICipher> ofb;
     ofb = OfbFactoryIndirect(feature, &key[0], key.size() * 8);
@@ -175,7 +175,6 @@ TEST(OFB, BasicDecryption)
     EXPECT_EQ(plainText, output);
 }
 
-#if 1
 TEST(OFB, RandomEncryptDecryptTest)
 {
     Uint8 key_256[32] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -211,17 +210,15 @@ TEST(OFB, RandomEncryptDecryptTest)
             &cipherText_vect[0], &plainTextOut[0], plainTextVect.size(), iv);
 
         EXPECT_EQ(plainTextVect, plainTextOut);
-#if 0
-            auto ret = std::mismatch(plainTextVect.begin(),
-                                     plainTextVect.end(),
-                                     plainTextOut.begin());
-            std::cout << "First:" << ret.first - plainTextVect.begin()
-                      << "Second:" << ret.second - plainTextOut.begin()
-                      << std::endl;
+#ifdef DEBUG
+        auto ret = std::mismatch(
+            plainTextVect.begin(), plainTextVect.end(), plainTextOut.begin());
+        std::cout << "First:" << ret.first - plainTextVect.begin()
+                  << "Second:" << ret.second - plainTextOut.begin()
+                  << std::endl;
 #endif
     }
 }
-#endif
 
 int
 main(int argc, char** argv)

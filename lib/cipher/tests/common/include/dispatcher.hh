@@ -26,6 +26,8 @@
  *
  */
 
+#pragma once
+
 #include <vector>
 
 #include "alcp/utils/cpuid.hh"

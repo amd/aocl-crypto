@@ -34,6 +34,7 @@
 
 #include "alcp/cipher/aes_cfb.hh"
 #include "alcp/cipher/cipher_wrapper.hh"
+#include "debug_defs.hh"
 #include "dispatcher.hh"
 #include "randomize.hh"
 
@@ -199,7 +200,7 @@ TEST(CFB, creation)
 {
     std::vector<CpuCipherFeatures> cpuFeatures = getSupportedFeatures();
     for (CpuCipherFeatures feature : cpuFeatures) {
-#if 0
+#ifdef DEBUG
         std::cout
             << "Cpu Feature:"
             << static_cast<
@@ -239,7 +240,6 @@ TEST(CFB, BasicDecryption)
     EXPECT_EQ(plainText, output);
 }
 
-#if 1
 TEST(CFB, RandomEncryptDecryptTest)
 {
     Uint8 key_256[32] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -261,7 +261,7 @@ TEST(CFB, RandomEncryptDecryptTest)
 
     for (int i = 100000; i > 16; i -= 16)
         for (CpuCipherFeatures feature : cpuFeatures) {
-#if 0
+#ifdef DEBUG
             std::cout
                 << "Cpu Feature:"
                 << static_cast<
@@ -288,7 +288,7 @@ TEST(CFB, RandomEncryptDecryptTest)
                          iv);
 
             EXPECT_EQ(plainTextVect, plainTextOut);
-#if 0
+#ifdef DEBUG
             auto ret = std::mismatch(plainTextVect.begin(),
                                      plainTextVect.end(),
                                      plainTextOut.begin());
@@ -298,7 +298,6 @@ TEST(CFB, RandomEncryptDecryptTest)
 #endif
         }
 }
-#endif
 
 int
 main(int argc, char** argv)
