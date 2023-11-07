@@ -44,7 +44,7 @@ $ cmake -DALCP_ENABLE_EXAMPLES=ON ../
 
 <div id = "aocl-utils"> </div>
 
-#### Enable AOCL UTILS CPUID checks
+#### Enable AOCL UTILS checks
 
 To enable aocl utils support, append `-DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source` and `-DENABLE_AOCL_UTILS=ON` to the cmake configuration command.
 ```bash
@@ -156,7 +156,7 @@ Default set values:
 
 ### Enabling features of AOCL Cryptography
 
-1. [Enable Examples - To compile example/demo code.](#win-ex)`
+1. [Enable Examples - To compile example/demo code.](#win-ex)
 2. [Enable AOCL-UTILS - To dispatch correct kernel with CPU identification.](#win-cpu)
 3. [Enable DEBUG Build - To compile code in Debug Mode.](#win-debug)
 4. [Enable Address Sanitizer Support ](#win-asan)
@@ -164,10 +164,10 @@ Default set values:
 6. [Enable Tests - To compile test code](#win-tests)
 
 
-#### Steps to found binaries/dll's by setting an environment variable
+#### Steps to find binaries/dll's by setting an environment variable
 
-After build,alcp & gtests dll's are not found by feature's *.exe.
-Run the batch file, this .bat file set the environment path required by examples,tests & bench.
+After build, alcp & gtests dll's are not found by feature's *.exe.
+Run the batch file(Set_Env_Path.bat) to set the environment path required by examples, tests & bench.
 ```
 PS> scripts\Set_Env_Path.bat
 -Restart the powershell & run any feature .exe from build directory or directly.
@@ -176,7 +176,7 @@ PS> scripts\Set_Env_Path.bat
 
 <div id = "win-ex"></div>
 
-#### Enable Examples Append
+#### Enable Examples
 
 ```
 PS> cmake -DALCP_ENABLE_EXAMPLES=ON -B build 
@@ -190,7 +190,7 @@ $ .\examples\{algorithm_type}\release\{algorithm_type}\*.exe
 <div id = "win-cpu"></div>
 
 
-#### Enable AOCL-UTILS Append
+#### Enable AOCL-UTILS
 ```
 PS> cmake -DENABLE_AOCL_UTILS=ON -DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source -B build
 PS> cmake --build .\build --config=release
@@ -207,7 +207,6 @@ PS> cmake --build .\build --config=debug
 
 #### For Compiling with Address Sanitizer Support
 
-ASAN(Experimental)
 ```
 PS> cmake -DALCP_SANITIZE=ON -B build
 PS> cmake --build .\build --config=release
@@ -271,13 +270,6 @@ $ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA
 
 <div id = "win-OSSL"> </div>
 
-#### To Run Tests:
-
- ```  
- $ Append the argument '-DALCP_ENABLE_TESTS=ON'
-  .\tests\{algorithm_type}\release\test_{algorithm_type}
- ```
-
 Enabling openSSL
 ```
 PS> cmake -DENABLE_TESTS_OPENSSL_API=ON -DOPENSSL_INSTALL_DIR=path/to/openssl ./
@@ -295,7 +287,7 @@ PS> cmake --build build/ --config=release
 ```
 1. Use '-o' for OpenSSL & '-i' for IPPCP to run tests & bench for them. And also set bin path of compat libs in PATH variable.
 2. Run *scripts\Set_Env_Path.bat* to set the path of binaries in environment variable.
-3. To Enable examples tests & bench:
+3. To Enable examples, tests & bench:
 >cmake -A x64 -DALCP_ENABLE_EXAMPLES=ON -DALCP_ENABLE_TESTS=ON -DALCP_ENABLE_BENCH=ON -DCMAKE_BUILD_TYPE=RELEASE -B build -T ClangCl
 4. Few non-critical warnings are expected in Windows build with Clang while integrating other libs.
 ```

@@ -1,6 +1,6 @@
 ## AOCL Crypto Library Build for Windows
 <!-- FIXME: use "\" instead of "/" -->
-### Following software should be installed prior to build AOCL-CRYPTO 
+### Following software should be installed prior to build AOCL CRYPTOGRAPHY
 
 - MS Visual Studio (2019 or greater)
 - Clang 15.0 or above
@@ -44,7 +44,7 @@ Default set values:
 ```
 
 
-### Enabling features of AOCL-Crypto
+### Enabling features of AOCL Cryptography
 
 1. [Enable Examples - To compile example/demo code.](#win-ex)
 2. [Enable AOCL-UTILS - To dispatch correct kernel with CPU identification.](#win-cpu)
@@ -54,10 +54,10 @@ Default set values:
 6. [Enable Tests - To compile test code](#win-tests)
 
 
-#### Steps to found binaries/dll's by setting an environment variable
+#### Steps to find binaries/dll's by setting an environment variable
 
-After build,alcp & gtests dll's are not found by feature's *.exe.
-Run the batch file, this .bat file set the environment path required by examples,tests & bench.
+After build, alcp & gtests dll's are not found by feature's *.exe.
+Run the batch file(Set_Env_Path.bat) to set the environment path required by examples, tests & bench.
 ```
 PS> scripts\Set_Env_Path.bat
 -Restart the powershell & run any feature .exe from build directory or directly.
@@ -66,7 +66,7 @@ PS> scripts\Set_Env_Path.bat
 
 <div id = "win-ex"></div>
 
-#### Enable Examples Append
+#### Enable Examples
 
 ```
 PS> cmake -DALCP_ENABLE_EXAMPLES=ON -B build 
@@ -80,7 +80,7 @@ $ .\examples\{algorithm_type}\release\{algorithm_type}\*.exe
 <div id = "win-cpu"></div>
 
 
-#### Enable AOCL-UTILS Append
+#### Enable AOCL-UTILS
 ```
 PS> cmake -DENABLE_AOCL_UTILS=ON -DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source -B build
 PS> cmake --build .\build --config=release
@@ -181,7 +181,7 @@ PS> cmake --build build/ --config=release
 ```
 1. Use '-o' for OpenSSL & '-i' for IPPCP to run tests & bench for them. And also set bin path of compat libs in PATH variable.
 2. Run *scripts\Set_Env_Path.bat* to set the path of binaries in environment variable.
-3. To Enable examples tests & bench:
+3. To Enable examples, tests & bench:
 >cmake -A x64 -DALCP_ENABLE_EXAMPLES=ON -DALCP_ENABLE_TESTS=ON -DALCP_ENABLE_BENCH=ON -DCMAKE_BUILD_TYPE=RELEASE -B build -T ClangCl
 4. Few non-critical warnings are expected in Windows build with Clang while integrating other libs.
 ```
