@@ -182,9 +182,13 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
     c4 = alcp_add_epi32(c2, two_x);
 
     __m512i Hsubkey_512_0, Hsubkey_512_1, Hsubkey_512_2, Hsubkey_512_3;
-
     __m512i gHash_512 = _mm512_zextsi128_si512(gcm->m_gHash_128);
 
+/* 64 blks path performs well for large input blocks >=32k but having additional
+ * branch degrades performance for smaller blocks size. Currently the path is
+ * turned off to improve performance for most frequently used 8k input block
+ * size.
+ */
 #if 0
     // (16x512) 64 blks aesenc 64 blks gmul and 1 reduction
     if (num_512_blks == 16) {
