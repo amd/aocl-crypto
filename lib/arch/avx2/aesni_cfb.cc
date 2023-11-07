@@ -193,6 +193,7 @@ namespace alcp::cipher { namespace aesni {
         return ALC_ERROR_NONE;
     }
 
+    ALCP_API_EXPORT
     alc_error_t EncryptCfb128(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
@@ -204,6 +205,7 @@ namespace alcp::cipher { namespace aesni {
             pSrc, pDest, len, pKey, nRounds, pIv);
     }
 
+    ALCP_API_EXPORT
     alc_error_t EncryptCfb192(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
@@ -215,6 +217,7 @@ namespace alcp::cipher { namespace aesni {
             pSrc, pDest, len, pKey, nRounds, pIv);
     }
 
+    ALCP_API_EXPORT
     alc_error_t EncryptCfb256(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
@@ -227,6 +230,7 @@ namespace alcp::cipher { namespace aesni {
     }
 
     // Decrypt
+    ALCP_API_EXPORT
     alc_error_t DecryptCfb128(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
@@ -240,6 +244,7 @@ namespace alcp::cipher { namespace aesni {
             pSrc, pDest, len, pKey, nRounds, pIv);
     }
 
+    ALCP_API_EXPORT
     alc_error_t DecryptCfb192(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
@@ -253,6 +258,7 @@ namespace alcp::cipher { namespace aesni {
             pSrc, pDest, len, pKey, nRounds, pIv);
     }
 
+    ALCP_API_EXPORT
     alc_error_t DecryptCfb256(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,

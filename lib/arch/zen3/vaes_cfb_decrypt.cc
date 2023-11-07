@@ -176,7 +176,7 @@ inline DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
     return err;
 }
 
-alc_error_t
+ALCP_API_EXPORT alc_error_t
 DecryptCfb128(const Uint8* pSrc,
               Uint8*       pDest,
               Uint64       len,
@@ -188,7 +188,7 @@ DecryptCfb128(const Uint8* pSrc,
         pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
-alc_error_t
+ALCP_API_EXPORT alc_error_t
 DecryptCfb192(const Uint8* pSrc,
               Uint8*       pDest,
               Uint64       len,
@@ -200,7 +200,7 @@ DecryptCfb192(const Uint8* pSrc,
         pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
-alc_error_t
+ALCP_API_EXPORT alc_error_t
 DecryptCfb256(const Uint8* pSrc,
               Uint8*       pDest,
               Uint64       len,

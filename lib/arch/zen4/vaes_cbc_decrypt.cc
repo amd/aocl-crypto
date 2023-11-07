@@ -204,7 +204,7 @@ DecryptCbc128(const Uint8* pSrc,    // ptr to ciphertext
         pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
-alc_error_t
+ALCP_API_EXPORT alc_error_t
 DecryptCbc192(const Uint8* pSrc,    // ptr to ciphertext
               Uint8*       pDest,   // ptr to plaintext
               Uint64       len,     // message length in bytes
@@ -221,7 +221,7 @@ DecryptCbc192(const Uint8* pSrc,    // ptr to ciphertext
         pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
-alc_error_t
+ALCP_API_EXPORT alc_error_t
 DecryptCbc256(const Uint8* pSrc,    // ptr to ciphertext
               Uint8*       pDest,   // ptr to plaintext
               Uint64       len,     // message length in bytes

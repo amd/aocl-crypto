@@ -186,6 +186,7 @@ namespace alcp::cipher { namespace vaes512 {
         return err;
     }
 
+    ALCP_API_EXPORT
     alc_error_t DecryptCfb128(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
@@ -201,6 +202,7 @@ namespace alcp::cipher { namespace vaes512 {
             pSrc, pDest, len, pKey, nRounds, pIv);
     }
 
+    ALCP_API_EXPORT
     alc_error_t DecryptCfb192(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
@@ -216,6 +218,7 @@ namespace alcp::cipher { namespace vaes512 {
             pSrc, pDest, len, pKey, nRounds, pIv);
     }
 
+    ALCP_API_EXPORT
     alc_error_t DecryptCfb256(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
