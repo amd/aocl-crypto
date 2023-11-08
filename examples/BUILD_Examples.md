@@ -2,8 +2,7 @@
 
 The example snippets can be found in the source code and the package under aocl-crypto/examples/
 
-<b>Example snippet for AES Cipher CFB</b><br>
-\include{lineno} cipher/aes-cfb.c
+<b>An example [snippet](https://github.com/amd/aocl-crypto/blob/main/examples/cipher/aes-cfb.c) for AES CFB Cipher example</b><br>
 
 To compile AOCL-Cryptography with examples, refer to
     - [ Linux ](md_Combine_build.html#md_BUILD)
@@ -45,7 +44,7 @@ Now to run any executable:<br>
 
 # Build and Run AOCL-Cryptography examples from the AOCL Crypto release package (Linux)
 
-Download the tar package from https://www.amd.com/en/developer/aocl/cryptography.html (under the downloads section)
+<b>Download the tar package from https://www.amd.com/en/developer/aocl/cryptography.html (under the downloads section) </b>
 
 <b>NOTE:</b><br>
 The AOCL-Cryptography library has a dependency on OpenSSL libcrypto library and also AOCL Utils library.
