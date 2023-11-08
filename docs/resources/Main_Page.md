@@ -17,16 +17,19 @@
 ## Introduction
 
 <b> AOCL-Cryptography </b> supports a dynamic dispatcher feature that executes the most optimal function variant implemented using Function Multi-versioning thereby offering a single optimized library portable across different x86 CPU architectures. 
-AOCL Crypto framework is developed in C / C++ for Unix and Windows based systems. A test suite is provided for validation and performance benchmarking for the supported Ciphers, Digest and MAC APIs. The test suite also supports the benchmarking of IPP and Openssl different methods like AES cryptographic encryption / decryption, SHA2, SHA3 and other algorithms. Below are details of AOCL Crypto APIs and Supports
+AOCL Crypto framework is developed in C / C++ for Unix and Windows based systems. A test suite is provided for validation and performance benchmarking for the supported Ciphers, Digest, MAC, EC, and RSA APIs. The test suite also supports the benchmarking of IPP and Openssl different methods like AES cryptographic encryption / decryption, SHA2, SHA3 and other algorithms. Below are details of AOCL Crypto APIs and supported features
 
-### Cipher   
+### Cipher
 
 ```
  
-AES 
+AES - Block Cipher algorithms
     
     AES Encrypt / Decrypt routines which will support the following cipher schemes:
         -  CBC, CFB, OFB, CTR, GCM, XTS, CCM, SIV.
+
+Chacha20 - Stream Cipher algorithms
+
 ```
 -   Click to know about more about [AOCL Cipher API](group__cipher.html)
 
@@ -42,7 +45,7 @@ SHA2
 SHA3
 
     Digest routines for the following schemes:
-        - SHA3_224, SHA3_256, SHA3_384, SHA3_512, SHAKE_128, SHAKE_256    
+        - SHA3_224, SHA3_256, SHA3_384, SHA3_512, SHAKE_128, SHAKE_256
 ```
 
 - Click to know more about [AOCL Digest API](group__digest.html)
