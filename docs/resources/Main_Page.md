@@ -121,9 +121,8 @@ To Build AOCL-Cryptography for different platform please refer to the document r
 
 ## Example
 
-Here is a Demo Code Example on how to use Cipher:
-
-\include{lineno} cipher/aes-cfb.c 
+To build and run the examples, please refer to the document
+    - [Examples](md_examples_BUILD_Examples.html#md_examples_BUILD_Examples)
 
 <div id = "Contact"></div>
 
