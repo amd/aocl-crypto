@@ -4,10 +4,7 @@ To Build AOCL Cryptography for different platforms please refer to the document 
     - [ Linux ](#md_BUILD)
     - [ Windows ](#md_BUILD_Windows)
 
-<div  style="padding: 10px 0 0px 0" id="md_BUILD"></div>
-<div id="md_BUILD"></div>
-
-## Build Instruction for Linux Platform
+## Build Instruction for Linux Platform {#md_BUILD}
 
 ### Building
 
@@ -33,43 +30,36 @@ mv libnew.a libalcp.a
 5. [Enable Bench - To compile bench code.](#bench)
 6. [Enable Tests - To compile test code](#tests)
 
-<div id = "example"> </div>
 
-#### Enable Examples
+#### Enable Examples {#example}
 
 To enable examples, append `-DALCP_ENABLE_EXAMPLES=ON` to the cmake configuration command.
 ```sh
 $ cmake -DALCP_ENABLE_EXAMPLES=ON ../
 ```
 
-<div id = "aocl-utils"> </div>
-
-#### Enable AOCL UTILS checks
+#### Enable AOCL UTILS checks {#aocl-utils}
 
 To enable aocl utils support, append `-DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source` and `-DENABLE_AOCL_UTILS=ON` to the cmake configuration command.
 ```bash
 $ cmake -DENABLE_AOCL_UTILS=ON -DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source ../
 ```
 
-<div id = "debug"> </div>
-
-#### Build Debug Configuration
+#### Build Debug Configuration {#debug}
 
 To build in debug mode, append `-DCMAKE_BUILD_TYPE=DEBUG` to the cmake configuration command.
 ```sh
 $ cmake -DCMAKE_BUILD_TYPE=DEBUG ../
 ```
-<div id = "asan"> </div>
 
-#### For Compiling with Address Sanitizer Support
+#### For Compiling with Address Sanitizer Support {#asan}
 
 To enable sanitizers (asan, tsan etc), append `-DALCP_SANITIZE=ON` to the cmake configuration command.
 ```sh
 $ cmake -DALCP_SANITIZE=ON ../
 ```
-<div id = "bench"> </div>
 
-#### Build Benches
+#### Build Benches {#bench}
 
 To build benchmarking support with alcp library, append `-DALCP_ENABLE_BENCH=ON` to the cmake configuration command.
 ```sh
@@ -89,9 +79,8 @@ $ ./bench/digest/bench_digest --benchmark_filter=SHA2_<SHA SCHEME>_<Block Size>
 $ ./bench/digest/bench_digest --benchmark_filter=SHA2_512_16 (runs SHA256 schemes for 16 block size)
 $ ./bench/digest/bench_digest --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
 ```
-<div id = "tests"> </div>
 
-#### Build Tests (using KAT vectors, and cross library tests)
+#### Build Tests (using KAT vectors, and cross library tests) {#tests}
 To build tests, append `-DALCP_ENABLE_TESTS=ON` to the cmake configuration command.
 ```sh
 $ cmake -DALCP_ENABLE_TESTS=ON ../
@@ -107,9 +96,8 @@ For more details see **[README.md](md_tests_README.html)** from tests.
 
 
 <br>
-<div  style="padding: 10px 0 10px 0" id="md_BUILD_Windows"></div>
 
-## Build Instruction for Windows Platform
+## Build Instruction for Windows Platform {#md_BUILD_Windows}
 
 ### Following software should be installed prior to build AOCL Cryptography
 
@@ -174,9 +162,8 @@ PS> scripts\Set_Env_Path.bat
 ```
 
 
-<div id = "win-ex"></div>
 
-#### Enable Examples
+#### Enable Examples {#win-ex}
 
 ```
 PS> cmake -DALCP_ENABLE_EXAMPLES=ON -B build 
@@ -187,36 +174,32 @@ Run from build directory after setting an environment path.
 ```
 $ .\examples\{algorithm_type}\release\{algorithm_type}\*.exe
 ```
-<div id = "win-cpu"></div>
 
 
-#### Enable AOCL-UTILS
+#### Enable AOCL-UTILS {#win-cpu}
 ```
 PS> cmake -DENABLE_AOCL_UTILS=ON -DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source -B build
 PS> cmake --build .\build --config=release
 ```
-<div id = "win-debug"></div>
 
-#### For Debug Build
+#### For Debug Build {#win-debug}
 
 ```
 PS> cmake -DCMAKE_BUILD_TYPE=DEBUG -B build
 PS> cmake --build .\build --config=debug
 ```
-<div id = "win-asan"></div>
 
-#### For Compiling with Address Sanitizer Support
+#### For Compiling with Address Sanitizer Support {#win-asan}
 
 ```
 PS> cmake -DALCP_SANITIZE=ON -B build
 PS> cmake --build .\build --config=release
 ```
-<div id = "win-tests"></div>
 
 `Running from build directory
 PS>cd build
 
-#### To Build Tests (using KAT vectors)
+#### To Build Tests (using KAT vectors) {#win-tests}
 ```
 $ Append the argument '-DALCP_ENABLE_TESTS=ON'
 
@@ -235,9 +218,8 @@ PS> cmake --build . --config=release
 ```For running all tests
 PS> ctest -C release
 ```
-<div id = "win-bench"></div>
 
-#### Build Benchmarks
+#### Build Benchmarks {#win-bench}
 
 ##### To Build Bench
 ```
@@ -263,19 +245,22 @@ $ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA
 
 ### Enabling compat libs
 
+
 1. [Enable OpenSSL - To compare performance .](#win-OSSL)
 2. [Enable IPPCP - To compare performance.](#win-IPPCP)
 
 ### Build after enabling compat libs
 
-<div id = "win-OSSL"> </div>
+#### Building OpenSSL Compatibility Libs {#win-OSSL}
+
 
 Enabling openSSL
 ```
 PS> cmake -DENABLE_TESTS_OPENSSL_API=ON -DOPENSSL_INSTALL_DIR=path/to/openssl ./
 PS> cmake --build build/ --config=release
 ```
-<div id = "win-IPPCP"> </div>
+
+#### Building IPP-CP Compatibility Libs {#win-IPPCP}
 
 Enabling IPP-Crypto
 ```

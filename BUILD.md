@@ -24,43 +24,35 @@ mv libnew.a libalcp.a
 5. [Enable Bench - To compile bench code.](#bench)
 6. [Enable Tests - To compile test code](#tests)
 
-<div id = "example"> </div>
-
-#### Enable Examples
+#### Enable Examples {#example}
 
 To enable examples, append `-DALCP_ENABLE_EXAMPLES=ON` to the cmake configuration command.
 ```sh
 $ cmake -DALCP_ENABLE_EXAMPLES=ON ../
 ```
 
-<div id = "aocl-utils"> </div>
-
-#### Enable AOCL-UTILS
+#### Enable AOCL-UTILS {#aocl-utils}
 
 To enable aocl utils checks, append `-DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source` and `-DENABLE_AOCL_UTILS=ON` to the cmake configuration command.
 ```bash
 $ cmake -DENABLE_AOCL_UTILS=ON -DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source ../
 ```
 
-<div id = "debug"> </div>
-
-#### Build Debug Configuration
+#### Build Debug Configuration {#debug}
 
 To build in debug mode, append `-DCMAKE_BUILD_TYPE=DEBUG` to the cmake configuration command.
 ```sh
 $ cmake -DCMAKE_BUILD_TYPE=DEBUG ../
 ```
-<div id = "asan"> </div>
 
-#### For Compiling with Address Sanitizer Support
+#### For Compiling with Address Sanitizer Support {#asan}
 
 To enable sanitizers (asan, tsan etc), append `-DALCP_SANITIZE=ON` to the cmake configuration command.
 ```sh
 $ cmake -DALCP_SANITIZE=ON ../
 ```
-<div id = "bench"> </div>
 
-#### Build Benches
+#### Build Benches {#bench}
 
 To build benchmarking support with alcp library, append `-DALCP_ENABLE_BENCH=ON` to the cmake configuration command.
 ```sh
@@ -80,9 +72,8 @@ $ ./bench/digest/bench_digest --benchmark_filter=SHA2_<SHA SCHEME>_<Block Size>
 $ ./bench/digest/bench_digest --benchmark_filter=SHA2_512_16 (runs SHA256 schemes for 16 block size)
 $ ./bench/digest/bench_digest --benchmark_filter=SHA2 (runs for all SHA2 schemes and block sizes)
 ```
-<div id = "tests"> </div>
 
-#### Build Tests (using KAT vectors)
+#### Build Tests (using KAT vectors) {#tests}
 To enable tests, append `-DALCP_ENABLE_TESTS=ON` to the cmake configuration command.
 ```sh
 $ cmake -DALCP_ENABLE_TESTS=ON ../

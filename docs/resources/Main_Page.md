@@ -12,9 +12,7 @@
     * [Contact Us](#Contact)
 
 
-<div id="Introduction" name="Introduction"></div>
-
-## Introduction
+## Introduction {#Introduction}
 
 <b> AOCL-Cryptography </b> supports a dynamic dispatcher feature that executes the most optimal function variant implemented using Function Multi-versioning thereby offering a single optimized library portable across different x86 CPU architectures. 
 AOCL Crypto framework is developed in C / C++ for Unix and Windows based systems. A test suite is provided for validation and performance benchmarking for the supported Ciphers, Digest, MAC, EC, and RSA APIs. The test suite also supports the benchmarking of IPP and Openssl different methods like AES cryptographic encryption / decryption, SHA2, SHA3 and other algorithms. Below are details of AOCL Crypto APIs and supported features
@@ -112,23 +110,17 @@ RNG
 - Click to know more about [AOCL RNG API](group__rng.html)
 
 
-<div id = "Build" name="Build"></div>
-
-## Build and Installation
+## Build and Installation {#Build}
 
 To Build AOCL-Cryptography for different platform please refer to the document related to your platform
     - [ Linux ](md_Combine_build.html#md_BUILD)
     - [ Windows  ](md_Combine_build.html#md_BUILD_Windows)
 
-<div id = "Example"></div>
-
-## Examples
+## Examples {#Example}
 
 To build and run the examples, please refer to the document
     - [Examples](md_examples_BUILD_Examples.html#md_examples_BUILD_Examples)
 
-<div id = "Contact"></div>
-
-## CONTACTS
+## CONTACTS {#Contact}
 
 <b>AOCL Cryptography is developed and maintained by AMD. For support of these libraries and the other tools of AMD Zen Software Studio, see https://www.amd.com/en/developer/aocc/compiler-technical-support.html</b>

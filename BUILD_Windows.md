@@ -64,9 +64,7 @@ PS> scripts\Set_Env_Path.bat
 ```
 
 
-<div id = "win-ex"></div>
-
-#### Enable Examples
+#### Enable Examples {#win-ex}
 
 ```
 PS> cmake -DALCP_ENABLE_EXAMPLES=ON -B build 
@@ -77,37 +75,33 @@ Run from build directory after setting an environment path.
 ```
 $ .\examples\{algorithm_type}\release\{algorithm_type}\*.exe
 ```
-<div id = "win-cpu"></div>
 
 
-#### Enable AOCL-UTILS
+#### Enable AOCL-UTILS {#win-cpu}
 ```
 PS> cmake -DENABLE_AOCL_UTILS=ON -DAOCL_UTILS_INSTALL_DIR=path/to/aocl/utils/source -B build
 PS> cmake --build .\build --config=release
 ```
-<div id = "win-debug"></div>
 
 
-#### For Debug Build
+#### For Debug Build {#win-debug}
 
 ```
 PS> cmake -DCMAKE_BUILD_TYPE=DEBUG -B build
 PS> cmake --build .\build --config=debug
 ```
-<div id = "win-asan"></div>
 
-#### For Compiling with Address Sanitizer Support
+#### For Compiling with Address Sanitizer Support {#win-asan}
 
 ```
 PS> cmake -DALCP_SANITIZE=ON -B build
 PS> cmake --build .\build --config=release
 ```
-<div id = "win-tests"></div>
 
  Running from build directory
 PS>cd build
 
-#### To Build Tests (using KAT vectors)
+#### To Build Tests (using KAT vectors) {#win-tests}
 ```
 $ Append the argument '-DALCP_ENABLE_TESTS=ON'
 PS> cmake -DALCP_ENABLE_TESTS=ON ./
@@ -125,9 +119,8 @@ PS> cmake --build . --config=release
 ```
 PS> ctest -C release
 ```
-<div id = "win-bench"></div>
 
-#### Build Benchmarks
+#### Build Benchmarks {#win-bench}
 
 ##### To Build Bench
 
@@ -162,19 +155,21 @@ $ .\bench\{algorithm_type}\release\bench_{algorithm_type} --benchmark_filter=SHA
 
 ### Build after enabling compat libs
 
-<div id = "win-OSSL"> </div>
+#### Building OpenSSL Compatibility Libs {#win-OSSL}
+
 ```
 Enabling openSSL
 
 PS> cmake -DENABLE_TESTS_OPENSSL_API=ON -DOPENSSL_INSTALL_DIR=path/to/openssl ./
-PS> cmake --build build/ --config=release
+PS> cmake --build build --config=release
 ```
-<div id = "win-IPPCP"> </div>
+
+#### Building IPP-CP Compatibility Libs {#win-IPPCP}
 
 ```
 Enabling IPP-Crypto
 PS> cmake -DENABLE_TESTS_IPP_API=ON -DIPP_INSTALL_DIR=path/to/ipp_crypto ./
-PS> cmake --build build/ --config=release
+PS> cmake --build build --config=release
 ```
 
 #### NOTES:
