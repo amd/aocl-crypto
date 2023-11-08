@@ -29,6 +29,7 @@ Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTests.cmake)
 set(TEST_FILES
   bignum_test.cc
   array_view_test.cc
+  copy_test.cc
   )
 
 # FIXME this unit test is failing with aocc, disabled for now

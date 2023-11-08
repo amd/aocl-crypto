@@ -121,7 +121,10 @@ CopyBlockWith(void* pDst, const void* pSrc, Uint64 len, trn_func func)
     Uint64 i = 0;
 
     for (; i < len / stride; i++) {
-        p_dst[i] = func(p_src[i]);
+        auto output = func(p_src[i]);
+        CopyBytes(reinterpret_cast<Uint8*>(p_dst + i),
+                  reinterpret_cast<Uint8*>(&output),
+                  sizeof(output));
     }
 
     Uint64 offset    = i * stride;
