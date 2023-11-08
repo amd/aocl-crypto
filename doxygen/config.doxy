@@ -975,6 +975,7 @@ INPUT                  = BUILD.md \
                          BUILD_Windows.md \
                          Combine_build.md \
                          docs/examples \
+                         scripts/helper \
                          lib/compat/ipp/README.md \
                          lib/compat/openssl/README.md \
                          docs/resources \
