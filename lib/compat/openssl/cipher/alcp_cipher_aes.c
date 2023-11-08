@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -64,7 +64,7 @@ ALCP_prov_aes_newctx(void* vprovctx, const void* cinfo, bool is_aead)
     alc_prov_cipher_ctx_p ciph_ctx;
 
     ENTER();
-        ciph_ctx = ALCP_prov_cipher_newctx(vprovctx, (const void*)cinfo,is_aead);
+    ciph_ctx = ALCP_prov_cipher_newctx(vprovctx, (const void*)cinfo, is_aead);
     if (!ciph_ctx)
         goto out;
 

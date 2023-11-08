@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,14 +34,15 @@
 #include <time.h>
 
 #ifdef WIN32
- //Windows equivalent for gettimeofday
-int gettimeofday(struct timeval* tv, struct timeval* tv1)
+// Windows equivalent for gettimeofday
+int
+gettimeofday(struct timeval* tv, struct timeval* tv1)
 {
-    FILETIME    f_time;
-    Uint64    time;
-    SYSTEMTIME  s_time;
+    FILETIME   f_time;
+    Uint64     time;
+    SYSTEMTIME s_time;
 
-    //define UNIX EPOCH time for windows
+    // define UNIX EPOCH time for windows
     static const Uint64 EPOCH = ((Uint64)116444736000000000ULL);
 
     GetSystemTimeAsFileTime(&f_time);
@@ -49,9 +50,8 @@ int gettimeofday(struct timeval* tv, struct timeval* tv1)
     time = ((Uint64)f_time.dwLowDateTime);
     time += ((Uint64)f_time.dwHighDateTime) << 32;
 
-    tv->tv_sec = (long)((time - EPOCH) / 10000000L);
+    tv->tv_sec  = (long)((time - EPOCH) / 10000000L);
     tv->tv_usec = (long)(s_time.wMilliseconds * 1000);
     return 0;
 }
 #endif
-

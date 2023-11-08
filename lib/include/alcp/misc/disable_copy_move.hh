@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,16 +31,16 @@
 class DisableCopy
 {
   protected:
-    DisableCopy(void)                          = default;
-    DisableCopy(const DisableCopy&)            = delete;
+    DisableCopy(void)               = default;
+    DisableCopy(const DisableCopy&) = delete;
     DisableCopy& operator=(const DisableCopy&) = delete;
 };
 
 class DisableMove
 {
   protected:
-    DisableMove(void)                     = default;
-    DisableMove(DisableMove&&)            = delete;
+    DisableMove(void)          = default;
+    DisableMove(DisableMove&&) = delete;
     DisableMove& operator=(DisableMove&&) = delete;
 };
 

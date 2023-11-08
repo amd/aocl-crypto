@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -88,7 +88,7 @@ extern const OSSL_ALGORITHM ALC_prov_ciphers[];
 typedef void (*fptr_t)(void);
 
 void*
-ALCP_prov_cipher_newctx(void* vprovctx, const void* cinfo,bool is_aead);
+ALCP_prov_cipher_newctx(void* vprovctx, const void* cinfo, bool is_aead);
 void
 ALCP_prov_cipher_freectx(void* vctx);
 

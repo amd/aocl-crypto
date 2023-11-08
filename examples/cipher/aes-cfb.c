@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -197,16 +197,18 @@ main(void)
     // Create the handle, this handle will be used for encrypt and decrypt
     // operations
     alc_cipher_handle_t handle;
-    retval = create_demo_session(&handle, sample_key, sample_iv, ALC_KEY_LEN_128);
+    retval =
+        create_demo_session(&handle, sample_key, sample_iv, ALC_KEY_LEN_128);
     if (retval != 0)
         goto out;
 
     // Encrypt the plaintext into the ciphertext
-    retval = encrypt_demo(&handle,
-                 sample_plaintxt,
-                 cPlaintextSize, /* len of 'plaintxt' and 'ciphertxt' */
-                 sample_ciphertxt,
-                 sample_iv);
+    retval =
+        encrypt_demo(&handle,
+                     sample_plaintxt,
+                     cPlaintextSize, /* len of 'plaintxt' and 'ciphertxt' */
+                     sample_ciphertxt,
+                     sample_iv);
     if (retval != 0)
         goto out;
     printf("CipherText:");
