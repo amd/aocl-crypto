@@ -144,9 +144,9 @@ class ALCP_API_EXPORT Xts final : public Aes
     void tweakBlockSet(Uint64 aesBlockId);
 
   private:
-    alignas(64) Uint8 m_iv[16];
-    alignas(64) mutable Uint8 m_tweak_block[16];
-    Uint8  m_tweak_round_key[(RIJ_SIZE_ALIGNED(32) * (16))];
+    alignas(64) Uint8 m_iv[16]                              = {};
+    alignas(64) mutable Uint8 m_tweak_block[16]             = {};
+    Uint8  m_tweak_round_key[(RIJ_SIZE_ALIGNED(32) * (16))] = {};
     Uint8* p_tweak_key = nullptr; /* Tweak key(for aes-xts mode): points to
                            offset in 'm_tweak_key' */
     mutable Uint64 m_aes_block_id = static_cast<Uint64>(-1);
