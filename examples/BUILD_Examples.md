@@ -34,7 +34,7 @@ Now to run any executable:<br>
 <b>To run the examples on windows:</b><br>
 Run the script:<br>
 <code>
-./scripts/Set_Env_Path.bat
+.\scripts\Set_Env_Path.bat
 </code>
 
 Now to run any executable:<br>
