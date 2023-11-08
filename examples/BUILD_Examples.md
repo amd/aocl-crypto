@@ -1,6 +1,6 @@
 # Build and run AOCL-Cryptography examples
 
-The example snippets can be found at aocl-crypto/examples/
+The example snippets can be found in the source code and the package under aocl-crypto/examples/
 
 <b>Example snippet for AES Cipher CFB</b><br>
 \include{lineno} cipher/aes-cfb.c
@@ -19,9 +19,12 @@ Please make sure the below paths are added to the environment variables
 Export the following paths:<br>
 <code>
 export LIBRARY_PATH=\<path to openssl crypto lib\>:$LIBRARY_PATH;<br>
+
 export LIBRARY_PATH=\<path to AOCL Utils lib\>:$LIBRARY_PATH;<br>
+
 export LD_LIBRARY_PATH=\<path to openssl crypto lib\>:$LD_LIBRARY_PATH;<br>
-export LD_LIBRARY_PATH=\<path to AOCL Utils lib\>:$LD_LIBRARY_PATH;<br>
+
+export LD_LIBRARY_PATH=\<path to AOCL Utils lib\>:$LD_LIBRARY_PATH;
 </code>
 
 Now to run any executable:<br>
@@ -56,24 +59,32 @@ export OPENSSL_INSTALL_DIR=\<path to openssl installation/lib64/\>;<br>
 <b>To run the examples linking to AOCL-Cryptography shared library:</b><br>
 <code>
 export LIBRARY_PATH=\<path to openssl crypto lib\>:$LIBRARY_PATH;<br>
+
 export LIBRARY_PATH=\<path to AOCL Utils lib\>:$LIBRARY_PATH;<br>
+
 export LD_LIBRARY_PATH=\<path to openssl crypto lib\>:$LD_LIBRARY_PATH;<br>
+
 export LD_LIBRARY_PATH=\<path to AOCL Utils lib\>:$LD_LIBRARY_PATH;<br>
+
 cd amd-crypto;<br>
-make;<br>
+
+make;
 </code>
 
 <b>To run the examples linking to AOCL-Cryptography static library:</b><br>
 <code>
 cd amd-crypto;<br>
-make LIB_TYPE=static;<br>
+
+make LIB_TYPE=static;
 </code>
 
 # To compile and run the examples from the AOCL-Cryptography installed directory:
 <code>
 cd \<AOCL_Installation_Dir\>/amd-crypto/;<br>
+
 export C_INCLUDE_PATH=\<AOCL_Installation_Dir\>/include/:$C_INCLUDE_PATH;<br>
-make -j;<br>
+
+make -j;
 </code>
 
 <b>Run the Examples:</b><br>
