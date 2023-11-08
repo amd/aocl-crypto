@@ -81,6 +81,7 @@ CipherFactory(LibrarySelect selection)
     }
 }
 
+using alcp::testing::utils::printErrors;
 namespace gcm {
     template<bool encryptor>
     std::unique_ptr<ITestCipher> GcmCipherFactory(LibrarySelect selection)
@@ -96,6 +97,13 @@ namespace gcm {
 #else
                              AlcpGcmCipher<encryptor>>(selection);
 #endif
+#ifndef USE_OSSL
+        printErrors(
+            "GcmCipherFactory: OpenSSL not available, defaulting to ALCP!");
+#endif
+#ifndef USE_IPP
+        printErrors("GcmCipherFactory: IPP not available, defaulting to ALCP!");
+#endif
     }
 } // namespace gcm
 
@@ -108,16 +116,19 @@ namespace xts {
 #if USE_OSSL
                              OpenSSLXtsCipher<encryptor>,
 #else
-               alcp::testing::utils::printErrors(
-                   "OpenSSL not avaiable!, defaulting to ALCP");
-        AlcpXtsCipher<encryptor>,
+                             AlcpXtsCipher<encryptor>,
 #endif
 #if USE_IPP
                              IppXtsCipher<encryptor>>(selection);
 #else
-            alcp::testing::utils::printErrors(
-                "IPP not avaiable!, defaulting to ALCP");
-        AlcpXtsCipher<encryptor> > (selection);
+                             AlcpXtsCipher<encryptor>>(selection);
+#endif
+#ifndef USE_OSSL
+        printErrors(
+            "XtsCipherFactory: OpenSSL not available, defaulting to ALCP!");
+#endif
+#ifndef USE_IPP
+        printErrors("XtsCipherFactory: IPP not available, defaulting to ALCP!");
 #endif
     }
 } // namespace xts
