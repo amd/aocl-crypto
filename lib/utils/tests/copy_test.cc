@@ -48,7 +48,15 @@ TEST(CopyBlockWith, UnalignedDstBuffCopy)
     std::fill(p_src, p_src + buffer_byte_size, 0x01);
     std::fill(p_dst, p_dst + buffer_byte_size, 0x02);
 
-    CopyBlockWith<Uint32>(p_dst, p_src, buffer_byte_size, echo);
+    // Using CopyBlockWith without copyasbytes template parameter set to true
+    // when using unaligned memory will cause misaligned store issues
+    // CopyBlockWith<Uint32>(p_dst, p_src, buffer_byte_size, echo);
+    CopyBlockWith<Uint32, true>(p_dst,
+                                p_src,
+                                buffer_byte_size,
+                                echo); // setting copyasbytes=true since caller
+                                       // knows desination buffer is unaligned
+
     int cmp = memcmp(p_dst, p_src, buffer_byte_size);
     ASSERT_EQ(cmp, 0);
 }

@@ -101,8 +101,7 @@ class Sha512::Impl
 
 Sha512::Sha512(alc_digest_len_t digest_len)
     : m_pImpl{ std::make_unique<Sha512::Impl>(digest_len) }
-{
-}
+{}
 
 Sha512::Impl::Impl(alc_digest_len_t digest_len)
     : m_msg_len{ 0 }
@@ -135,8 +134,7 @@ Sha512::Impl::Impl(alc_digest_len_t digest_len)
 
 Sha512::Sha512(const alc_digest_info_t& rDigestInfo)
     : Sha512(rDigestInfo.dt_len)
-{
-}
+{}
 
 Sha512::~Sha512() = default;
 
@@ -205,7 +203,7 @@ Sha512::Impl::copyHash(Uint8* pHash, Uint64 size) const
     }
 
     if (!err) {
-        utils::CopyBlockWith<Uint64>(
+        utils::CopyBlockWith<Uint64, true>(
             pHash, m_hash, m_digest_len_bytes, utils::ToBigEndian<Uint64>);
 
         if (m_digest_len == ALC_DIGEST_LEN_224) {

@@ -109,9 +109,10 @@ CopyBlock(void* pDst, const void* pSrc, Uint64 len)
 #endif
 }
 
-template<typename cptype   = Uint64,
-         Uint64 stride     = sizeof(cptype),
-         typename trn_func = std::function<cptype(cptype)>>
+template<typename cptype    = Uint64,
+         bool   copyasbytes = false,
+         Uint64 stride      = sizeof(cptype),
+         typename trn_func  = std::function<cptype(cptype)>>
 void
 CopyBlockWith(void* pDst, const void* pSrc, Uint64 len, trn_func func)
 {
@@ -122,9 +123,13 @@ CopyBlockWith(void* pDst, const void* pSrc, Uint64 len, trn_func func)
 
     for (; i < len / stride; i++) {
         auto output = func(p_src[i]);
-        CopyBytes(reinterpret_cast<Uint8*>(p_dst + i),
-                  reinterpret_cast<Uint8*>(&output),
-                  sizeof(output));
+        if constexpr (copyasbytes) {
+            CopyBytes(reinterpret_cast<Uint8*>(p_dst + i),
+                      reinterpret_cast<Uint8*>(&output),
+                      sizeof(output));
+        } else {
+            p_dst[i] = output;
+        }
     }
 
     Uint64 offset    = i * stride;

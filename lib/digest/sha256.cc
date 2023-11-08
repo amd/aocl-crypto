@@ -148,7 +148,7 @@ Sha256::Impl::~Impl() = default;
 alc_error_t
 Sha256::Impl::copyHash(Uint8* pHash, Uint64 size) const
 {
-    utils::CopyBlockWith<Uint32>(
+    utils::CopyBlockWith<Uint32, true>(
         pHash, m_hash, cHashSize, utils::ToBigEndian<Uint32>);
 
     return ALC_ERROR_NONE;
