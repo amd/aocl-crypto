@@ -28,7 +28,7 @@ export LD_LIBRARY_PATH=\<path to AOCL Utils lib\>:$LD_LIBRARY_PATH;
 
 Now to run any executable:<br>
 <code>
-./examples/cipher/aes-gcm;
+./examples/cipher/aes-cfb;
 </code>
 
 <b>To run the examples on windows:</b><br>
@@ -39,7 +39,7 @@ Run the script:<br>
 
 Now to run any executable:<br>
 <code>
-.\examples\cipher\release\aes-gcm.exe
+.\examples\cipher\release\aes-cfb.exe
 </code>
 
 # Build and Run AOCL-Cryptography examples from the AOCL Crypto release package (Linux)
@@ -88,5 +88,5 @@ make -j;
 
 <b>Run the Examples:</b><br>
 <code>
-./bin/cipher/aes-gcm;<br>
+./bin/cipher/aes-cfb;<br>
 </code>
