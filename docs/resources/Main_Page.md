@@ -7,7 +7,7 @@
 
 ## Table of contents
     * [Introduction](#Introduction)
-    * [Build and Installation](#Build)
+    * [Getting Started](#Getting-Started)
     * [Examples](#Example)
     * [Contact Us](#Contact)
 
@@ -110,13 +110,18 @@ RNG
 - Click to know more about [AOCL RNG API](group__rng.html)
 
 
-## Build and Installation {#Build}
+## Getting Started with AOCL-Cryptography {#Getting-Started}
+
+### Quick Starter  
+* [AOCL-Cryptography Linux Quick Starter](md_docs_resources_Quick_Start.html)
+
+### Building
 
 To Build AOCL-Cryptography for different platform please refer to the document related to your platform
     - [ Linux ](md_Combine_build.html#md_BUILD)
     - [ Windows  ](md_Combine_build.html#md_BUILD_Windows)
 
-## Examples {#Example}
+### Examples {#Example}
 
 To build and run the examples, please refer to the document
     - [Examples](md_examples_BUILD_Examples.html#md_examples_BUILD_Examples)
