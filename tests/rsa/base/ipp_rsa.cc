@@ -441,11 +441,6 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
     IppStatus status = ippStsNoErr;
 
     if (m_padding_mode == 1) {
-        /*! Seed string of hash size */
-        static Ipp8u pSeed[] = { 0xaa, 0xfd, 0x12, 0xf6, 0x59, 0xca, 0xe6,
-                                 0x34, 0x89, 0xb4, 0x79, 0xe5, 0x07, 0x6d,
-                                 0xde, 0xc2, 0xf0, 0x6c, 0xb5, 0x8f };
-
         /* get hash type based on digest len */
         const IppsHashMethod* p_hash_method = getIppHashMethod(m_digest_info);
 
@@ -454,7 +449,7 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                                          data.m_msg_len,
                                          0,
                                          0,
-                                         pSeed,
+                                         data.m_pseed,
                                          data.m_encrypted_data,
                                          m_pPub,
                                          p_hash_method,
@@ -475,8 +470,14 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
         status = ippsRSA_Encrypt(
             m_pBN_kat_PT, m_pBN_kat_CT, m_pPub, m_scratchBuffer_Pub);
         if (status != ippStsNoErr) {
-            std::cout << "ippsRSA_Encrypt failed with err code" << status
-                      << std::endl;
+            // std::cout << "ippsRSA_Encrypt failed with err code" << status
+            //           << std::endl;
+            if (m_pBN_kat_PT) {
+                delete[](Ipp8u*) m_pBN_kat_PT;
+            }
+            if (m_pBN_kat_CT) {
+                delete[](Ipp8u*) m_pBN_kat_CT;
+            }
             return status;
         }
         /* read data from the bignum */
@@ -510,7 +511,7 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 
     if (m_padding_mode == 1) {
         int    plainTextLen = data.m_msg_len;
-        Ipp8u* pPlainText   = new Ipp8u[plainTextLen];
+        Ipp8u* pPlainText   = new Ipp8u[data.m_key_len]();
         /* get hash type based on digest len */
         const IppsHashMethod* p_hash_method = getIppHashMethod(m_digest_info);
         /* Decrypt message */
@@ -526,6 +527,9 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
         if (status != ippStsNoErr) {
             std::cout << "ippsRSADecrypt_OAEP_rmf failed with err code"
                       << status << std::endl;
+            if (pPlainText) {
+                delete[](Ipp8u*) pPlainText;
+            }
             return status;
         }
 
@@ -544,6 +548,12 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
         if (status != ippStsNoErr) {
             std::cout << "ippsRSA_Decrypt failed with err code" << status
                       << std::endl;
+            if (m_pBN_kat_PT) {
+                delete[](Ipp8u*) m_pBN_kat_PT;
+            }
+            if (m_pBN_kat_CT) {
+                delete[](Ipp8u*) m_pBN_kat_CT;
+            }
             return status;
         }
         /* read data from the bignum */
@@ -554,6 +564,12 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
         if (status != ippStsNoErr) {
             std::cout << "ippsRef_BN failed with err code" << status
                       << std::endl;
+            if (m_pBN_kat_PT) {
+                delete[](Ipp8u*) m_pBN_kat_PT;
+            }
+            if (m_pBN_kat_CT) {
+                delete[](Ipp8u*) m_pBN_kat_CT;
+            }
             return status;
         }
         std::reverse_copy((Uint8*)pdata,

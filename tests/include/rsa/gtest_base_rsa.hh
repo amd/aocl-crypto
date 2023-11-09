@@ -221,8 +221,8 @@ Rsa_Cross(int                     padding_mode,
           const alc_digest_info_t dinfo,
           const alc_digest_info_t mgfinfo)
 {
-    alcp_rsa_data_t   data_main, data_ext;
-    int               ret_val_main, ret_val_ext = 0;
+    alcp_rsa_data_t   data_main{}, data_ext{};
+    int               ret_val_main = 0, ret_val_ext = 0;
     AlcpRsaBase       arb;
     alc_drbg_handle_t handle{};
     alc_drbg_info_t   drbg_info{};
