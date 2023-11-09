@@ -305,7 +305,6 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
     alc_prov_cipher_ctx_p  cctx              = vctx;
     alc_cipher_info_p      cinfo             = &cctx->pc_cipher_info;
     alc_cipher_aead_info_p c_aeadinfo        = &cctx->pc_cipher_aead_info;
-    alc_key_info_p         kinfo_tweak_key   = &cctx->kinfo_tweak_key;
     alc_key_info_p         kinfo_siv_ctr_key = &cctx->kinfo_siv_ctr_key;
     alc_error_t            err;
 
@@ -447,11 +446,6 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
             // Return with error
             return 0;
         }
-        kinfo_tweak_key->type                   = ALC_KEY_TYPE_SYMMETRIC;
-        kinfo_tweak_key->fmt                    = ALC_KEY_FMT_RAW;
-        kinfo_tweak_key->key                    = tweak_key;
-        kinfo_tweak_key->len                    = tweak_key_len;
-        cinfo->ci_algo_info.ai_xts.xi_tweak_key = kinfo_tweak_key;
     }
     if (cctx->is_aead) {
         err = alcp_cipher_aead_supported(c_aeadinfo);
@@ -542,10 +536,9 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
                               const OSSL_PARAM     params[])
 {
     const OSSL_PARAM*      p;
-    alc_prov_cipher_ctx_p  cctx            = vctx;
-    alc_key_info_p         kinfo_tweak_key = &cctx->kinfo_tweak_key;
-    alc_cipher_info_p      cinfo           = &cctx->pc_cipher_info;
-    alc_cipher_aead_info_p c_aeadinfo      = &cctx->pc_cipher_aead_info;
+    alc_prov_cipher_ctx_p  cctx       = vctx;
+    alc_cipher_info_p      cinfo      = &cctx->pc_cipher_info;
+    alc_cipher_aead_info_p c_aeadinfo = &cctx->pc_cipher_aead_info;
 
     alc_error_t err;
     // const int             err_size = 256;
@@ -699,11 +692,6 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
             // Return with Error
             return 0;
         }
-        kinfo_tweak_key->type                   = ALC_KEY_TYPE_SYMMETRIC;
-        kinfo_tweak_key->fmt                    = ALC_KEY_FMT_RAW;
-        kinfo_tweak_key->key                    = tweak_key;
-        kinfo_tweak_key->len                    = tweak_key_len;
-        cinfo->ci_algo_info.ai_xts.xi_tweak_key = kinfo_tweak_key;
     }
 
     alc_key_info_p kinfo_siv_ctr_key = &cctx->kinfo_siv_ctr_key;

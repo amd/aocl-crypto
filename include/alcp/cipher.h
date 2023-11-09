@@ -110,21 +110,6 @@ typedef enum _alc_aes_ctrl
 
 /**
  *
- * @brief  Stores special info needed for XTS mode.
- *
- * @deprecated To be removed in cleanup
- *
- * @param xi_tweak_key   holds the info about secondary key for xts
- *
- * @struct alc_cipher_mode_xts_info_t
- */
-typedef struct _alc_cipher_mode_xts_info
-{
-    alc_key_info_t* xi_tweak_key;
-} alc_cipher_mode_xts_info_t, *alc_cipher_mode_xts_info_p;
-
-/**
- *
  * @brief  Stores algorithm specific info for cipher.
  * @param ai_mode Specific which Mode of AES to be used @ref alcp_cipher_mode_t
  * @param ai_iv Initialization Vector
@@ -135,10 +120,9 @@ typedef struct _alc_cipher_mode_xts_info
  */
 typedef struct _alc_cipher_algo_info
 {
-    alc_cipher_mode_t          ai_mode; /* Mode: ALC_AES_MODE_CFB etc */
-    const Uint8*               ai_iv;   /* Initialization Vector */
-    alc_cipher_mode_xts_info_t ai_xts;
-    Uint64                     iv_length;
+    alc_cipher_mode_t ai_mode; /* Mode: ALC_AES_MODE_CFB etc */
+    const Uint8*      ai_iv;   /* Initialization Vector */
+    Uint64            iv_length;
 } alc_cipher_algo_info_t, *alc_cpher_algo_info_p;
 
 /**

@@ -130,19 +130,12 @@ create_aes_session(Uint8*             key,
     0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xf, 0xf,
     };
 
-    alc_key_info_t kinfo = {
-        .type = ALC_KEY_TYPE_SYMMETRIC,
-        .fmt  = ALC_KEY_FMT_RAW,
-        .key  = tweakKey,
-        .len  = key_len,
-    };
 
     alc_cipher_info_t cinfo = {
         .ci_type = ALC_CIPHER_TYPE_AES,
         .ci_algo_info   = {
             .ai_mode = mode,
             .ai_iv   = iv,
-            .ai_xts = &kinfo,
         },
        /* No padding, Not Implemented yet*/
         //.pad     = ALC_CIPHER_PADDING_NONE,

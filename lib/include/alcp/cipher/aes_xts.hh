@@ -62,14 +62,12 @@ class ALCP_API_EXPORT Xts final : public Aes
 {
 
   public:
+    // FIXME: Depriciated Constructor, to be removed
     explicit Xts(const alc_cipher_algo_info_t& aesInfo,
                  const alc_key_info_t&         keyInfo)
         : Aes(aesInfo, keyInfo)
     {
-
         p_tweak_key = &m_tweak_round_key[0];
-        expandTweakKeys(aesInfo.ai_xts.xi_tweak_key->key,
-                        aesInfo.ai_xts.xi_tweak_key->len);
     }
 
     explicit Xts(const Uint8* pKey, const Uint32 keyLen)

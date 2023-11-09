@@ -50,21 +50,11 @@
 static alc_cipher_handle_t handle;
 
 void
-create_demo_session(const Uint8* key,
-                    const Uint8* tweak_key,
-                    const Uint8* iv,
-                    const Uint32 key_len)
+create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
 {
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
-
-    alc_key_info_t kinfo = {
-        .type = ALC_KEY_TYPE_SYMMETRIC,
-        .fmt  = ALC_KEY_FMT_RAW,
-        .key  = tweak_key,
-        .len  = key_len,
-    };
 
     alc_cipher_info_t cinfo = {
         .ci_type = ALC_CIPHER_TYPE_AES,
@@ -72,9 +62,6 @@ create_demo_session(const Uint8* key,
         .ci_algo_info = {
             .ai_mode = ALC_AES_MODE_XTS,
             .ai_iv   = iv,
-            .ai_xts = {
-                .xi_tweak_key = &kinfo,
-            }
         },
             /* No padding, Not Implemented yet*/
         //.pad     = ALC_CIPHER_PADDING_NONE, 
@@ -165,15 +152,15 @@ static Uint8* sample_plaintxt = (Uint8*)"A paragraph is a series of sentences "
                                         "that is longer than a few sentences "
                                         "should be organized into paragraphs.";
 
+// clang-format off
 static const Uint8 sample_key[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
     0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf,
-};
-
-static const Uint8 sample_tweak_key[] = {
-    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
+    // Tweak Key
+    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 
     0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xf, 0xf,
 };
+// clang-format on
 
 static const Uint8 sample_iv[] = {
     0xf, 0x0, 0xe, 0x1, 0xd, 0x2, 0xc, 0x3,
@@ -247,8 +234,8 @@ main(void)
     int pt_size = strlen((const char*)sample_plaintxt);
     assert(sizeof(sample_plaintxt) < sizeof(sample_output));
 
-    create_demo_session(
-        sample_key, sample_tweak_key, sample_iv, sizeof(sample_key) * 8);
+    // Tweak Key is appended to Sample Key
+    create_demo_session(sample_key, sample_iv, (sizeof(sample_key) / 2) * 8);
 
 #ifdef DEBUG
     printf("plain text with size %d: \n", pt_size);

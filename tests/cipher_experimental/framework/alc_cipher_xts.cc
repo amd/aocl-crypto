@@ -53,15 +53,6 @@ AlcpXtsCipher<encryptor>::init(alc_test_init_data_p data)
         },
     };
 
-    alc_key_info_t tweak_key_info = {
-        .type = ALC_KEY_TYPE_SYMMETRIC,
-        .fmt  = ALC_KEY_FMT_RAW,
-        .len  = (data_xts->m_key_len) * 8,
-        .key  = data_xts->m_key + data_xts->m_key_len,
-    };
-
-    cinfo.ci_algo_info.ai_xts.xi_tweak_key = &tweak_key_info;
-
     err = alcp_cipher_supported(&cinfo);
     if (alcp_is_error(err)) {
         printf("Error: not supported \n");

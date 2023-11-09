@@ -84,8 +84,6 @@ AlcpCipherBase::~AlcpCipherBase()
     if (m_handle != nullptr) {
         alcp_cipher_finish(m_handle);
         if (m_handle->ch_context != NULL) {
-            if (m_cinfo.ci_algo_info.ai_xts.xi_tweak_key != nullptr)
-                free(m_cinfo.ci_algo_info.ai_xts.xi_tweak_key);
             free(m_handle->ch_context);
         }
         delete m_handle;
@@ -133,8 +131,6 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 key_len)
 
     if (m_handle != nullptr) {
         alcp_cipher_finish(m_handle);
-        if (m_cinfo.ci_algo_info.ai_xts.xi_tweak_key != nullptr)
-            free(m_cinfo.ci_algo_info.ai_xts.xi_tweak_key);
         free(m_handle->ch_context);
         delete m_handle; // Free old handle
     }
@@ -151,8 +147,6 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 key_len)
                   << std::endl;
         goto out;
     }
-
-    m_cinfo.ci_algo_info.ai_xts.xi_tweak_key = nullptr;
 
     m_cinfo.ci_type = m_cipher_type;
     if (m_cinfo.ci_type == ALC_CIPHER_TYPE_CHACHA20) {
@@ -226,8 +220,6 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 key_len)
 out:
     if (m_handle != nullptr) {
         if (m_handle->ch_context != NULL) {
-            if (m_cinfo.ci_algo_info.ai_xts.xi_tweak_key != nullptr)
-                free(m_cinfo.ci_algo_info.ai_xts.xi_tweak_key);
             free(m_handle->ch_context);
         }
         delete m_handle; // Free old handle
