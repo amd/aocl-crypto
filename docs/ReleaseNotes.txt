@@ -18,53 +18,12 @@ implementations of different cryptographic algorithms which is given below:
 
 Highlights of AOCL Crypto version 4.2
 --------------------------------------
--------------------------------------------------------------------------------------
-AOCL-Oct2023:
--------------------------------------------------------------------------------------
--- GCM: Performance improvements and bug fixes
--- Chacha20 stream cipher functions, testing and benchmarking infra
--- Poly1305 MAC algorithm, testing and benchmarking infra
--- RSA
-   -- Bug fixes and performance improvements in 1024, 2048 encrypt/decrypt algorithms
-	-- Generating keys using key components in the test infrastructure
-
--------------------------------------------------------------------------------------
-AOCL-Sep2023:
--------------------------------------------------------------------------------------
--- Gcov Code coverage support added for windows
--- ECDH: Set Private Key API added
--- Testing enhancements for AEAD Cipher APIs
--- Testing support for RSA APIs (OAEP Padded and non-padded mode) for 1024,2048 bit key sizes
--- Bug fixes in RSA Padded mode decrypt
--- Examples added for file encrypt/decrypt
-
--------------------------------------------------------------------------------------
-AOCL-Aug2023:
--------------------------------------------------------------------------------------
--- RSA
-   -- Encryption / Decryption support for 1024 and 2048 bit key sizes.
-   -- OAEP Padding support
--- Digest
-   -- Performance improvements in SHA2-512, SHA2-256 and the dependent algorithms.
--- Cipher
-   -- Performance improvements in CFB and CBC Decrypt.
-   -- Performance improvements in GCM, CTR and XTS Encrypt / Decrypt.
-   -- New architecture, Improvements in Dynamic dispatcher.
-   -- Split algorithms into AEAD and non-AEAD APIs.
-   -- IPP and OpenSSL compat support for AEAD APIs.
--- Bug fixes in static library generation.
-
-
-Highlights of AOCL Crypto version 4.1
---------------------------------------
--- Improvements in AES-GCM encrypt/decrypt routines for zen4 architecture
--- Improved SHA3 digest routines including SHAKE128 and 256 schemes
--- AES CCM encrypt/decrypt routines
--- HMAC SHA2 and SHA3 routines
--- AES CMAC routines for key sizes (128, 192, and 256)
--- AES SIV routines
--- ECDH x25519 key exchange functions: Generate Public Key and Compute Secret Key
--- RSA Functions: Encrypt Text with public key and Decrypt with private key
-    (Note: Only non-padded mode is supported in 4.1 release.)
--- Dynamic dispatch on different architectures support (using AOCL-Utils 4.1 library)
--- Windows support
+-- Poly1305 MAC algorithm
+-- Chacha20 Stream Cipher algorithm
+-- RSA improved encryption/decryption functions for 1024,2048 bit key sizes and OAEP Padding support
+-- Architectural improvements in AES Cipher: Split algorithms into AEAD and Non-AEAD
+-- Performance improvements in AES cipher (GCM, CTR, XTS, CFB, CBC) encrypt/decrypt algorithms for zen4 architecture
+-- Performance improvements in Digest SHA2-512, SHA2-256 and dependent algorithms
+-- IPP and OpenSSL compat support for more AEAD APIs
+-- Bug fixes in static library generation
+-- Improved dynamic dispatcher
