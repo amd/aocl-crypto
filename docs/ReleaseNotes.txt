@@ -22,8 +22,11 @@ Highlights of AOCL Crypto version 4.2
 -- Chacha20 Stream Cipher algorithm
 -- RSA improved encryption/decryption functions for 1024,2048 bit key sizes and OAEP Padding support
 -- Architectural improvements in AES Cipher: Split algorithms into AEAD and Non-AEAD
+-- AES-XTS: Block number based encryption / decryption
 -- Performance improvements in AES cipher (GCM, CTR, XTS, CFB, CBC) encrypt/decrypt algorithms for zen4 architecture
 -- Performance improvements in Digest SHA2-512, SHA2-256 and dependent algorithms
 -- IPP and OpenSSL compat support for more AEAD APIs
+-- IPP Compat support for MAC
+-- Extended IPP Compat support for XTS
 -- Bug fixes in static library generation
 -- Improved dynamic dispatcher
