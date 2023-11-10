@@ -38,8 +38,8 @@ EXTERN_C_BEGIN
  * @defgroup cipher Cipher API
  * @brief
  * Cipher is a cryptographic technique used to
- * secure information by transforming it into a code that can only be read by
- * those with the key to decode it.
+ * secure information by transforming message into a cryptic form that can only
+ * be read by those with the key to decipher it.
  *  @{
  */
 

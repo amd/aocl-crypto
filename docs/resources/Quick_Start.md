@@ -5,7 +5,7 @@ This guide is meant for people who want to get this library setup without going 
 
 This guide will only focus on Ubuntu-22.04 as its a popular and desktop and server OS. In future this guide might get extended to other operating systems as well.
 
-**Note: Below AOCL-Cryptograhy will be shortened to the repository name AOCL-Crypto.**
+**Note: Below AOCL-Cryptography will be shortened to the repository name AOCL-Crypto.**
 
 
 ## Building, installing and running examples from source
@@ -23,11 +23,11 @@ sudo apt install p7zip-full          # Re-archive static libs
 sudo apt install gcc-12 g++-12       # Compiler
 ```
 
-What is given above should be sufficent for most users but if your OS did not come with a working install of `sudo`, you can install it by running `apt install sudo` as root. Make sure repository list is upto date.
+What is given above should be sufficient for most users but if your OS did not come with a working install of `sudo`, you can install it by running `apt install sudo` as root. Make sure repository list is upto date.
 
 ### Cloning Repositories
 
-There are mainly two repositories which are needed, one being `aocl-crypto` and the other which is a dependancy named `aocl-utils`. `AOCL-Utils` provide the means to correctly identify the CPU. This is a necessary depedancy to ensure optimal performance of `AOCL-Crypto`. Both of these repositories can be cloned with below command
+There are mainly two repositories which are needed, one being `aocl-crypto` and the other which is a dependency named `aocl-utils`. `AOCL-Utils` provide the means to correctly identify the CPU. This is a necessary dependency to ensure optimal performance of `AOCL-Crypto`. Both of these repositories can be cloned with below command
 
 ```bash
 git clone https://github.com/amd/aocl-crypto.git -b amd-main
@@ -423,4 +423,4 @@ gcc version.c -o version -lalcp -laoclutils
 ./version
 ```
 
-Now you got AOCL-Cryptography setup for developement, Enjoy :-).
+Now you got AOCL-Cryptography setup for development, Enjoy :-).

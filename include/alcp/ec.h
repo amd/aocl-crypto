@@ -138,7 +138,7 @@ alcp_ec_context_size(const alc_ec_info_p p_ec_info);
  *
  * @parblock <br> &nbsp;
  * <b>This API needs to be called before any other API is called to
- * know if EC that is being request is supported or not </b>
+ * know if EC that is being requested is supported or not </b>
  * @endparblock
  *
  * @note        alcp_ec_supported() should be called

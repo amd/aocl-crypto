@@ -39,9 +39,9 @@ EXTERN_C_BEGIN
 /**
  * @defgroup digest Digest API
  * @brief
- * A digest is a cryptographic technique that creates a fixed-length output from
- * a variable-length input. It is often used for data integrity checks and
- * password storage.
+ * A digest is a one way cryptographic function by which a message of any length
+ * can be mapped into a fixed-length output. It can be used for verifying
+ * integrity or passwords.
  * @{
  */
 
