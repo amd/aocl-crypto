@@ -65,7 +65,7 @@ popd
 
 ### Building AOCL-Cryptography
 
-Cloned repository has the latest released version of AOCL-Cryptography. AOCL-Crypto is built using CMake build system generator. AOCL-Utils have a lot of configurations which you can enable/disable. Below command has what is minimum necessary to make it work optimally.
+Cloned repository has the latest released version of AOCL-Cryptography. AOCL-Cryptography is built using CMake build system generator. AOCL-Utils have a lot of configurations which you can enable/disable. Below command has what is minimum necessary to make it work optimally.
 
 ```bash
 # Save current working directory
@@ -76,7 +76,7 @@ cd aocl-crypto
 mkdir build
 cd build
 
-# Configure AOCL-Crypto with make build system.
+# Configure AOCL-Cryptography with make build system.
 export CC=gcc-12; export CXX=g++-12
 echo "Running \"cmake ../ -DALCP_ENABLE_EXAMPLES=ON \
 -DOPENSSL_INSTALL_DIR=/usr \
@@ -101,7 +101,7 @@ popd
 
 ### Executing Examples
 
-To execute the examples, loader has to find the library to load. For this both AOCL-Utils and AOCL-Crypto's library path has to be added into `LD_LIBRARY_PATH`. Once this is added we can execute any executable which is compiled with AOCL-Crypto. To show proof of the concept `aes-cfb` example can be executed.
+To execute the examples, loader has to find the library to load. For this both AOCL-Utils and AOCL-Cryptography's library path has to be added into `LD_LIBRARY_PATH`. Once this is added we can execute any executable which is compiled with AOCL-Cryptography. To show proof of the concept `aes-cfb` example can be executed.
 
 ```bash
 # Save current working directory
@@ -128,7 +128,7 @@ To end with, here is a script which runs everything. Feel free to save this scri
 ```bash
 #!/usr/bin/env bash
 
-# This file is supposed to be a guide to compile aocl-crypto with examples 
+# This file is supposed to be a guide to compile AOCL-Cryptography with examples 
 # from source.
 # It should only require minimal interaction from user.
 # All functions in this file should be straight forward and minimal.
@@ -266,7 +266,7 @@ compile_aocl_utils(){
 
 }
 
-# Function to build aocl-crypto with minimal configuration
+# Function to build AOCL-Cryptography with minimal configuration
 compile_aocl_crypto(){
     
     pushd .

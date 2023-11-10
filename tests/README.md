@@ -21,18 +21,25 @@
 
 ##### Manual
 
-After building ALCP, there should be binary files with name aocl-crypto/build/tests/cipher/aes\_\<aes\_mode\>\_kat. These executables expect the csv files to be located in the present working directory. CMAKE is already configured to symlink csv files to root build directory and also tests/cipher. When running these tests, please ensure you do have appropriate csv file in the present directory.
+After building AOCL-Cryptography library and tests, there should be binary files with name aocl-crypto/build/tests/cipher/aes\_\<aes\_mode\>\_kat. These executables expect the csv files to be located in the present working directory. CMAKE is already configured to symlink csv files to root build directory and also tests/cipher. When running these tests, please ensure you do have appropriate csv file in the present directory.
 
-To run tests with verbose mode (prints also success)
+To run tests with verbose mode for different modules
 
 1.   `$ cd aocl-crypto/build`
-2.  `$ ./tests/cipher/aes_cbc_kat -v`
-3.  `$ ./tests/cipher/aes_cfb_kat -v`
-4.  `$ ./tests/cipher/aes_ctr_kat -v`
-5.  `$ ./tests/cipher/aes_ofb_kat -v`
-6.  `$ ./tests/digests/test_digest -v`
 
-##### Additional (Selecting OpenSSL)
+2.  `$ ./tests/cipher/aes_cbc_kat -v`
+
+3.  `$ ./tests/cipher/aes_cfb_kat -v`
+
+4.  `$ ./tests/cipher/aes_ctr_kat -v`
+
+5.  `$ ./tests/cipher/aes_ofb_kat -v`
+
+6.  `$ ./tests/digests/test_digest_kat -v`
+
+7.  `$ ./tests/hmac/test_hmac_kat -v`
+
+##### Additional (Running Cross tests vs OpenSSL)
 
 1. `$ cd aocl-crypto/build`
 
@@ -62,7 +69,7 @@ Always you can use `--help` to know all the command line arguments which can be 
 
 #### Using IPP
 
-For using IPP just specify `-i` command line argument.
+For using IPP just specify `-i` command line argument instead of `-o`.
 
 #### Using OpenSSL
 
@@ -70,4 +77,4 @@ For using OpenSSL just specify `-o` command line argument.
 
 ### Testing Datasets
 
-Datasets are located in directory `alcp-crypto/tests/cipher/dataset/`. File name should be dataset_\<aes\_mode\>.csv. Order of elements are mentioned in line number 1. Line number 1 is always ignored, please forbid from deleting that line.
+Datasets (eg: cipher) are located in directory `alcp-crypto/tests/cipher/test_data/`. File name should be dataset_\<aes\_mode\>.csv. Order of elements are mentioned in line number 1. Line number 1 is always ignored, please forbid from deleting that line.
