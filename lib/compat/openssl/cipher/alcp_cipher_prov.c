@@ -424,20 +424,12 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
 #endif
     // For AES XTS Mode, get the tweak key
     if ((!cctx->is_aead) && cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
-        const Uint8* tweak_key     = NULL;
-        int          tweak_key_len = 128;
         if (!key) {
             // For handling when openssl speed probes the code with null key
             return 1;
         }
-        if (keylen == 128) {
-            tweak_key     = key + 16;
-            tweak_key_len = 128;
+        if (!((keylen == 128) || (keylen == 256))) {
 
-        } else if (keylen == 256) {
-            tweak_key     = key + 32;
-            tweak_key_len = 256;
-        } else {
 #ifdef DEBUG
             printf("Provider: Unsupported Key Length %ld in AES XTS Mode of "
                    "Operation\n",
@@ -467,13 +459,14 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
     (cctx->handle).ch_context =
         OPENSSL_malloc(cctx->is_aead ? alcp_cipher_aead_context_size(c_aeadinfo)
                                      : alcp_cipher_context_size(cinfo));
-    // For SIV, Authentication Key assumed to be same length as Decryption Key
-    // Hence not modifying cinfo->ci_key_info.key or cinfo->ci_key_info.len
+    // For SIV, Authentication Key assumed to be same length as Decryption
+    // Key Hence not modifying cinfo->ci_key_info.key or
+    // cinfo->ci_key_info.len
     if (cctx->is_aead
         && (c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV)) {
         // For openSSL SIV encryption and authentication key needs to be in
-        // continous memory location. Second part of the key is authentication
-        // key
+        // continous memory location. Second part of the key is
+        // authentication key
         kinfo_siv_ctr_key->len                     = keylen;
         kinfo_siv_ctr_key->key                     = key + (keylen / 8);
         c_aeadinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
@@ -496,6 +489,18 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
         printf("Provider: Request success!\n");
     }
 #endif
+    if (!cctx->is_aead && cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
+        if (cctx->pc_cipher_info.ci_algo_info.ai_iv != NULL) {
+            cctx->ivlen = ivlen;
+        }
+        err = alcp_cipher_set_iv(&(cctx->handle),
+                                 cctx->ivlen,
+                                 cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        if (alcp_is_error(err)) {
+            printf("Provider Error Setting IV\n");
+            return 0;
+        }
+    }
     // Enable Encryption Mode
     cctx->enc_flag = true;
 
@@ -636,8 +641,8 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
         cctx->pc_cipher_aead_info.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
         cctx->pc_cipher_aead_info.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
 
-        // Special handling for XTS Keylen is required if the below code is ever
-        // commented out OpenSSL Speed likes to keep keylen 0
+        // Special handling for XTS Keylen is required if the below code is
+        // ever commented out OpenSSL Speed likes to keep keylen 0
         if (keylen != 0) {
             cctx->pc_cipher_aead_info.ci_key_info.len = keylen;
         } else {
@@ -652,8 +657,8 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
         cctx->pc_cipher_info.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
         cctx->pc_cipher_info.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
 
-        // Special handling for XTS Keylen is required if the below code is ever
-        // commented out OpenSSL Speed likes to keep keylen 0
+        // Special handling for XTS Keylen is required if the below code is
+        // ever commented out OpenSSL Speed likes to keep keylen 0
         if (keylen != 0) {
             cctx->pc_cipher_info.ci_key_info.len = keylen;
         } else {
@@ -675,33 +680,27 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
             // For handling when openssl speed probes the code with null key
             return 1;
         }
-        const Uint8* tweak_key     = NULL;
-        int          tweak_key_len = 128;
-        if (keylen == 128) {
-            tweak_key     = key + 16;
-            tweak_key_len = 128;
-        } else if (keylen == 256) {
-            tweak_key     = key + 32;
-            tweak_key_len = 256;
-        } else {
+        if (!((keylen == 128) || (keylen == 256))) {
+
 #ifdef DEBUG
             printf("Provider: Unsupported Key Length %ld in AES XTS Mode of "
                    "Operation\n",
                    keylen);
 #endif
-            // Return with Error
+            // Return with error
             return 0;
         }
     }
 
     alc_key_info_p kinfo_siv_ctr_key = &cctx->kinfo_siv_ctr_key;
 
-    // For SIV, Authentication Key assumed to be same length as Encryption Key
-    // Hence not modifying cinfo->ci_key_info.key or cinfo->ci_key_info.len
+    // For SIV, Authentication Key assumed to be same length as Encryption
+    // Key Hence not modifying cinfo->ci_key_info.key or
+    // cinfo->ci_key_info.len
     if (cctx->is_aead && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
         // For openSSL SIV encryption and authentication key need to be in
-        // continous memory location. Second part of the key is authentication
-        // key
+        // continous memory location. Second part of the key is
+        // authentication key
         kinfo_siv_ctr_key->len                     = keylen;
         kinfo_siv_ctr_key->key                     = key + (keylen / 8);
         c_aeadinfo->ci_algo_info.ai_siv.xi_ctr_key = kinfo_siv_ctr_key;
@@ -748,6 +747,18 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
         printf("Provider: Request success!\n");
     }
 #endif
+    if (!cctx->is_aead && cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
+        if (cctx->pc_cipher_info.ci_algo_info.ai_iv != NULL) {
+            cctx->ivlen = ivlen;
+        }
+        err = alcp_cipher_set_iv(&(cctx->handle),
+                                 cctx->ivlen,
+                                 cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        if (alcp_is_error(err)) {
+            printf("Provider Error Setting IV\n");
+            return 0;
+        }
+    }
     // Enable Encryption Mode
     cctx->enc_flag = false;
 
@@ -902,8 +913,8 @@ ALCP_prov_cipher_update(void*                vctx,
                 err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
             } else {
                 // IV must be copied to cctx->tagbuff when application calls
-                // EVP_CIPHER_CTX_ctrl call with EVP_CTRL_AEAD_SET_TAG. This is
-                // done in ALCP_prov_cipher_set_ctx_params call.
+                // EVP_CIPHER_CTX_ctrl call with EVP_CTRL_AEAD_SET_TAG. This
+                // is done in ALCP_prov_cipher_set_ctx_params call.
                 err = alcp_cipher_decrypt(
                     &(cctx->handle), in, out, inl, cctx->tagbuff);
             }

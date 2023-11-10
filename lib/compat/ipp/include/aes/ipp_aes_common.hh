@@ -127,6 +127,14 @@ alcp_encdecAES(const Ipp8u*       pSrc,
         }
     }
 
+    if (mode == ALC_AES_MODE_XTS) {
+        err = alcp_cipher_set_iv(
+            &(context->handle), 16, context->cinfo.ci_algo_info.ai_iv);
+        if (alcp_is_error(err)) {
+            printErr("Error in Setting the IV\n");
+        }
+    }
+
     // Do the actual decryption
     if (enc) {
         // err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len, iv);
