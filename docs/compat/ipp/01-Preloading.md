@@ -22,7 +22,7 @@ In order to preload globally there is a config file `/etc/ld.so.preload` this fi
 
 Example /etc/ld.so.preload
 
-```config
+```bash
 /path/to/somelib.so
 /path/to/someotherlib.so
 ```
