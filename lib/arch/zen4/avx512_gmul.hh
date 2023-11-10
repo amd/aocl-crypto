@@ -658,14 +658,14 @@ namespace alcp::cipher { namespace vaes512 {
      * 4 * 512 bit = 4 * 4 blocks = 16 blocks
      */
     static inline void get_aggregated_karatsuba_components_first(
-        __m512i&       H1, // input + scratch register
-        __m512i&       H2, // input + scratch register
-        __m512i&       H3, // input + scratch register
-        __m512i&       H4, // input + scratch register
-        __m512i&       a,  // input + scratch register
-        __m512i&       b,  // input + scratch register
-        __m512i&       c,  // input + scratch register
-        __m512i&       d,  // input + scratch register
+        __m512i&       H1,
+        __m512i&       H2,
+        __m512i&       H3,
+        __m512i&       H4,
+        __m512i&       a,
+        __m512i&       b,
+        __m512i&       c,
+        __m512i&       d,
         const __m512i& reverse_mask_512,
         __m512i&       z0_512, // out
         __m512i&       z1_512, // out
@@ -680,111 +680,6 @@ namespace alcp::cipher { namespace vaes512 {
         c = _mm512_shuffle_epi8(c, reverse_mask_512);
         d = _mm512_shuffle_epi8(d, reverse_mask_512);
 
-#if 0
-        __m512i at1, at2, at3, at4;
-        __m512i bt1, bt2, bt3, bt4;
-        __m512i ct1, ct2, ct3, ct4;
-        __m512i dt1, dt2, dt3, dt4;
-
-        // z1 compute: extract all x1 and y1
-        at3 = _mm512_bsrli_epi128(H4, 8); // high of H4
-        at4 = _mm512_bsrli_epi128(a, 8);  // high of a
-
-        // z1 compute: (x1+x0) and (y1+y0)
-        at3 = _mm512_xor_si512(at3, H4);
-        at4 = _mm512_xor_si512(at4, a);
-
-        // compute x0y0
-        // (Xi • H1) :  (Xi-1 • H2) : (Xi-2 • H3) : (Xi-3+Yi-4) •H4
-        z0_512 = _mm512_clmulepi64_epi128(H4, a, 0x00);
-
-        // compute x1y1
-        z2_512 = _mm512_clmulepi64_epi128(H4, a, 0x11);
-
-        z1_512 = _mm512_clmulepi64_epi128(at3, at4, 0x00);
-
-        //////////////////////////////////////////////////////// part 2
-        // z1 compute: extract all x1 and y1
-        bt3 = _mm512_bsrli_epi128(H3, 8); // high of H3
-        bt4 = _mm512_bsrli_epi128(b, 8);  // high of b
-
-        // z1 compute: (x1+x0) and (y1+y0)
-        bt3 = _mm512_xor_si512(bt3, H3);
-        bt4 = _mm512_xor_si512(bt4, b);
-
-        // compute x0y0
-        // (Xi • H1) :  (Xi-1 • H2) : (Xi-2 • H3) : (Xi-3+Yi-4) •H4
-        bt1 = _mm512_clmulepi64_epi128(H3, b, 0x00);
-
-        // compute x1y1
-        bt2 = _mm512_clmulepi64_epi128(H3, b, 0x11);
-
-        bt3 = _mm512_clmulepi64_epi128(bt3, bt4, 0x00);
-
-        // accumulate with verious z0
-        z0_512 = _mm512_xor_si512(bt1, z0_512);
-
-        // accumulate with verious z2
-        z2_512 = _mm512_xor_si512(bt2, z2_512);
-
-        // accumulate with verious z1
-        z1_512 = _mm512_xor_si512(bt3, z1_512);
-
-        /////////////////////////////////////////////////////////// part 3
-        // z1 compute: extract all x1 and y1
-        ct3 = _mm512_bsrli_epi128(H2, 8); // high of H2
-        ct4 = _mm512_bsrli_epi128(c, 8);  // high of c
-
-        // z1 compute: (x1+x0) and (y1+y0)
-        ct3 = _mm512_xor_si512(ct3, H2);
-        ct4 = _mm512_xor_si512(ct4, c);
-
-        // compute x0y0
-        // (Xi • H1) :  (Xi-1 • H2) : (Xi-2 • H3) : (Xi-3+Yi-4) •H4
-        ct1 = _mm512_clmulepi64_epi128(H2, c, 0x00);
-
-        // compute x1y1
-        ct2 = _mm512_clmulepi64_epi128(H2, c, 0x11);
-
-        ct3 = _mm512_clmulepi64_epi128(ct3, ct4, 0x00);
-
-        // accumulate with verious z0
-        z0_512 = _mm512_xor_si512(ct1, z0_512);
-
-        // accumulate with verious z2
-        z2_512 = _mm512_xor_si512(ct2, z2_512);
-
-        // accumulate with verious z1
-        z1_512 = _mm512_xor_si512(ct3, z1_512);
-
-        /////////////////////////////////////////////////////////// part 4
-        // z1 compute: extract all x1 and y1
-        dt3 = _mm512_bsrli_epi128(H1, 8); // high of H2
-        dt4 = _mm512_bsrli_epi128(d, 8);  // high of d
-
-        // z1 compute: (x1+x0) and (y1+y0)
-        dt3 = _mm512_xor_si512(dt3, H1);
-        dt4 = _mm512_xor_si512(dt4, d);
-
-        // compute x0y0
-        // (Xi • H1) :  (Xi-1 • H2) : (Xi-2 • H3) : (Xi-3+Yi-4) •H4
-        dt1 = _mm512_clmulepi64_epi128(H1, d, 0x00);
-
-        // compute x1y1
-        dt2 = _mm512_clmulepi64_epi128(H1, d, 0x11);
-
-        dt3 = _mm512_clmulepi64_epi128(dt3, dt4, 0x00);
-
-        // accumulate with verious z0
-        z0_512 = _mm512_xor_si512(dt1, z0_512);
-
-        // accumulate with verious z2
-        z2_512 = _mm512_xor_si512(dt2, z2_512);
-
-        // accumulate with verious z1
-        z1_512 = _mm512_xor_si512(dt3, z1_512);
-#else
-
         computeKaratsubaComponents(H4, a, z0_512, z1_512, z2_512);
 
         // b
@@ -795,7 +690,6 @@ namespace alcp::cipher { namespace vaes512 {
 
         // d
         computeKaratsubaComponentsAccumulate(H1, d, z0_512, z1_512, z2_512);
-#endif
     }
 
     static inline void get_aggregated_karatsuba_components_first(
@@ -848,126 +742,6 @@ namespace alcp::cipher { namespace vaes512 {
         __m512i&       z2_512  // out
     )
     {
-#if 0 // experimental
-      // reverseInput
-        a = _mm512_shuffle_epi8(a, reverse_mask_512);
-        b = _mm512_shuffle_epi8(b, reverse_mask_512);
-        c = _mm512_shuffle_epi8(c, reverse_mask_512);
-        d = _mm512_shuffle_epi8(d, reverse_mask_512);
-
-        __m512i at1, at2, at3, at4;
-        __m512i bt1, bt2, bt3, bt4;
-        __m512i ct1, ct2, ct3, ct4;
-        __m512i dt1, dt2, dt3, dt4;
-
-        // z1 compute: extract all x1 and y1
-        at3 = _mm512_bsrli_epi128(H4, 8); // high of H4
-        at4 = _mm512_bsrli_epi128(a, 8);  // high of a
-
-        // z1 compute: (x1+x0) and (y1+y0)
-        at3 = _mm512_xor_si512(at3, H4);
-        at4 = _mm512_xor_si512(at4, a);
-
-        // compute x0y0
-        // (Xi • H1) :  (Xi-1 • H2) : (Xi-2 • H3) : (Xi-3+Yi-4) •H4
-        at1 = _mm512_clmulepi64_epi128(H4, a, 0x00);
-
-        // compute x1y1
-        at2 = _mm512_clmulepi64_epi128(H4, a, 0x11);
-
-        at3 = _mm512_clmulepi64_epi128(at3, at4, 0x00);
-
-        // accumulate with verious z0
-        z0_512 = _mm512_xor_si512(at1, z0_512);
-
-        // accumulate with verious z2
-        z2_512 = _mm512_xor_si512(at2, z2_512);
-
-        // accumulate with verious z1
-        z1_512 = _mm512_xor_si512(at3, z1_512);
-
-        //////////////////////////////////////////////////////// part 2
-        // z1 compute: extract all x1 and y1
-        bt3 = _mm512_bsrli_epi128(H3, 8); // high of H3
-        bt4 = _mm512_bsrli_epi128(b, 8);  // high of b
-
-        // z1 compute: (x1+x0) and (y1+y0)
-        bt3 = _mm512_xor_si512(bt3, H3);
-        bt4 = _mm512_xor_si512(bt4, b);
-
-        // compute x0y0
-        // (Xi • H1) :  (Xi-1 • H2) : (Xi-2 • H3) : (Xi-3+Yi-4) •H4
-        bt1 = _mm512_clmulepi64_epi128(H3, b, 0x00);
-
-        // compute x1y1
-        bt2 = _mm512_clmulepi64_epi128(H3, b, 0x11);
-
-        bt3 = _mm512_clmulepi64_epi128(bt3, bt4, 0x00);
-
-        // accumulate with verious z0
-        z0_512 = _mm512_xor_si512(bt1, z0_512);
-
-        // accumulate with verious z2
-        z2_512 = _mm512_xor_si512(bt2, z2_512);
-
-        // accumulate with verious z1
-        z1_512 = _mm512_xor_si512(bt3, z1_512);
-
-        /////////////////////////////////////////////////////////// part 3
-        // z1 compute: extract all x1 and y1
-        ct3 = _mm512_bsrli_epi128(H2, 8); // high of H2
-        ct4 = _mm512_bsrli_epi128(c, 8);  // high of c
-
-        // z1 compute: (x1+x0) and (y1+y0)
-        ct3 = _mm512_xor_si512(ct3, H2);
-        ct4 = _mm512_xor_si512(ct4, c);
-
-        // compute x0y0
-        // (Xi • H1) :  (Xi-1 • H2) : (Xi-2 • H3) : (Xi-3+Yi-4) •H4
-        ct1 = _mm512_clmulepi64_epi128(H2, c, 0x00);
-
-        // compute x1y1
-        ct2 = _mm512_clmulepi64_epi128(H2, c, 0x11);
-
-        ct3 = _mm512_clmulepi64_epi128(ct3, ct4, 0x00);
-
-        // accumulate with verious z0
-        z0_512 = _mm512_xor_si512(ct1, z0_512);
-
-        // accumulate with verious z2
-        z2_512 = _mm512_xor_si512(ct2, z2_512);
-
-        // accumulate with verious z1
-        z1_512 = _mm512_xor_si512(ct3, z1_512);
-
-        /////////////////////////////////////////////////////////// part 4
-        // z1 compute: extract all x1 and y1
-        dt3 = _mm512_bsrli_epi128(H1, 8); // high of H2
-        dt4 = _mm512_bsrli_epi128(d, 8);  // high of d
-
-        // z1 compute: (x1+x0) and (y1+y0)
-        dt3 = _mm512_xor_si512(dt3, H1);
-        dt4 = _mm512_xor_si512(dt4, d);
-
-        // compute x0y0
-        // (Xi • H1) :  (Xi-1 • H2) : (Xi-2 • H3) : (Xi-3+Yi-4) •H4
-        dt1 = _mm512_clmulepi64_epi128(H1, d, 0x00);
-
-        // compute x1y1
-        dt2 = _mm512_clmulepi64_epi128(H1, d, 0x11);
-
-        dt3 = _mm512_clmulepi64_epi128(dt3, dt4, 0x00);
-
-        // accumulate with verious z0
-        z0_512 = _mm512_xor_si512(dt1, z0_512);
-
-        // accumulate with verious z2
-        z2_512 = _mm512_xor_si512(dt2, z2_512);
-
-        // accumulate with verious z1
-        z1_512 = _mm512_xor_si512(dt3, z1_512);
-
-#else
 
         // reverseInput
         a = _mm512_shuffle_epi8(a, reverse_mask_512);
@@ -985,7 +759,6 @@ namespace alcp::cipher { namespace vaes512 {
 
         // d
         computeKaratsubaComponentsAccumulate(H1, d, z0_512, z1_512, z2_512);
-#endif
     }
 
     static inline void get_aggregated_karatsuba_components_not_first(
