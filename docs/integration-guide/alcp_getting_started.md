@@ -45,6 +45,11 @@ colorlinks: true
 #### IPP-CP based Application
   Application based on IPP-CP can easily use AOCL-Crypto by configuring it to use the wrapper, IPP-CP provider documentation can be found [here](https://github.com/amd/aocl-crypto/blob/main/docs/compat/ipp.pdf). Taking each module, removing IPP-CP code, and replacing with AOCL-Crypto API will allow you to slowly migrate to AOCL-Cryptography without too much effort.
 
+**Note**  
+    *Additional overhead due to no direct one on one mapping of api's for few algorithms.*  
+    *Example: AESEncryptXTS_Direct, where additional init and de-init performed causes additional overhead.*  
+    *In such cases, using OpenSSL provider based approach or direct AOCL-cryptography API is recommended.*
+
 #### Other library based Application
   Other Libraries can be a fork of OpenSSL or IPP-CP, in that case the provider or wrapper interface may still work, its not recommended to use provider or wrapper interface in the perticular situation as it may result in undefined behaviour in the cryptographic application and this can cause security vulnerabilities. Some other libraries like libsodium, libsalt, WolfSSL, MbedTLS etc does not have any provider or wrapper implementation. 
 
@@ -459,8 +464,9 @@ alcp_cipher_aead_finish(&handle);
 free(handle.context)
 
 ```
+# [ Work in Progress ]
 
-#### Asymmetric Cipher Algorithms
+#### Asymmetric Cipher Algorithms 
 
 ### Digest
 
