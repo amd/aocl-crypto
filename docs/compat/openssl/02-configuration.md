@@ -26,6 +26,8 @@ activate = 1
 activate = 1
 ```
 
+List of currently loaded OpenSSL provider can viewed using `openssl list -providers`.  
+
 Above configuration will allow you to offload functionalities if supported by AOCL-Cryptography. OpenSSL will still dispatch to it's own implementation for ones we have not implemented yet.
 To find out where openssl looks for `openssl.cnf`, type the command ```openssl info -configdir```.
 

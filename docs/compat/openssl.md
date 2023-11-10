@@ -45,6 +45,6 @@ Sometimes users of OpenSSL might reqire more optimized versions of the kernels, 
 
 ​	ALCP support for OpenSSL is provided by a provider. Provider lib name is ```libopenssl-compat.so```.  Please configure openssl to use provider by default or setup provider loading inside application itself.
 
-​	To bench with the provider, use the following example assuming you are executing command from the root of the package directory.
+​	To bench with the provider, use the following example assuming you are executing command from the root of the package (extracted tarball) directory.
 
 ​	```openssl speed -provider-path $PWD/lib  -provider libopenssl-compat -evp aes-128-gcm```
