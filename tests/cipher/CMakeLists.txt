@@ -136,10 +136,10 @@ FUNCTION(KAT_AES MOD)
 
     # Depending on the person, they are gonna run from root dir or binary directory
     # Link dataset to the root dir
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.csv ${CMAKE_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${MOD}.csv ${CMAKE_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
 
     # Link dataset to the actual place of test binary
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_${MOD}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${MOD}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
 
 
     TARGET_INCLUDE_DIRECTORIES(aes_${MOD}_kat PRIVATE
@@ -156,9 +156,9 @@ ENDFUNCTION()
 FUNCTION(KAT_CHACHA20)
     ADD_EXECUTABLE(chacha20_kat test_chacha20_kat.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})
     # Depending on the person, they are gonna run from root dir or binary directory
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_chacha20.csv ${CMAKE_BINARY_DIR}/dataset_chacha20.csv SYMBOLIC)
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_chacha20.csv ${CMAKE_BINARY_DIR}/dataset_chacha20.csv SYMBOLIC)
     # Link dataset to the actual place of test binary
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/dataset/dataset_chacha20.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_chacha20.csv SYMBOLIC)
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_chacha20.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_chacha20.csv SYMBOLIC)
 
     TARGET_INCLUDE_DIRECTORIES(chacha20_kat PRIVATE
         ${ALCP_INCLUDES}
