@@ -1,7 +1,7 @@
 (C) 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
 
-AOCL Cryptography - Release Notes - AOCL version 4.2
-----------------------------------------------
+AOCL Cryptography - Release Notes - AOCL version 4.1.1
+------------------------------------------------------
 
 AOCL Crypto Contents
 --------------------
@@ -16,8 +16,8 @@ implementations of different cryptographic algorithms which is given below:
 -- Chacha20 stream cipher functions.
 -- Poly1305 MAC functions.
 
-Highlights of AOCL Crypto version 4.2
---------------------------------------
+Highlights of AOCL Crypto version 4.1.1
+---------------------------------------
 -- Poly1305 MAC algorithm
 -- Chacha20 Stream Cipher algorithm
 -- RSA improved encryption/decryption functions for 1024,2048 bit key sizes and OAEP Padding support
