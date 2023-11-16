@@ -62,7 +62,12 @@ bool
 alcp_is_error(alc_error_t err)
 {
     alc_error_t err_temp = err;
-    return (err_temp != 0);
+    if (err_temp == 0)
+        return false;
+    else {
+        printf("Error code: %ld\n", err_temp);
+        return true;
+    }
 }
 
 EXTERN_C_END
