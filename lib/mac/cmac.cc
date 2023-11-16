@@ -168,6 +168,9 @@ class Cmac::Impl : public cipher::Aes
                          m_rounds,
                          n_blocks);
         } else {
+            // Using a separate pointer for plaintext pointer operations so
+            // original plaintext pointer is unmodified
+            const Uint8* p_plaintext = plaintext;
             // Reference Algorithm for AES CMAC block processing
             alcp::cipher::xor_a_b(m_temp_enc_result_8,
                                   m_storage_buffer,
@@ -176,11 +179,11 @@ class Cmac::Impl : public cipher::Aes
             encryptBlock(m_temp_enc_result_32, m_encrypt_keys, m_rounds);
             for (int i = 0; i < n_blocks; i++) {
                 alcp::cipher::xor_a_b(m_temp_enc_result_8,
-                                      plaintext,
+                                      p_plaintext,
                                       m_temp_enc_result_8,
                                       cAESBlockSize);
                 encryptBlock(m_temp_enc_result_32, m_encrypt_keys, m_rounds);
-                plaintext += cAESBlockSize;
+                p_plaintext += cAESBlockSize;
             }
         }
         // Copy the unprocessed plaintext bytes to the internal buffer
@@ -284,7 +287,8 @@ class Cmac::Impl : public cipher::Aes
 
 Cmac::Cmac()
     : m_pImpl{ std::make_unique<Cmac::Impl>() }
-{}
+{
+}
 
 Status
 Cmac::update(const Uint8 pMsgBuf[], Uint64 size)
