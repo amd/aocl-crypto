@@ -92,6 +92,31 @@ OPTION(ENABLE_AOCL_UTILS "ENABLE AOCL UTILS SUPPORT FOR CPUID BASED DISPATCHING"
 set(AOCL_UTILS_INSTALL_DIR "" CACHE STRING "AOCL UTILS INSTALLED DIRECTORY")
 set(AOCL_COMPAT_LIBS "" CACHE STRING "COMPATIBILITY LAYER FOR OPENSSL AND IPP")
 
+# for parsing aocl compat libs options
+SET(ENABLE_OPENSSL_COMPAT FALSE)
+SET(ENABLE_IPP_COMPAT FALSE)
+IF (AOCL_COMPAT_LIBS)
+	# Make comma seperated values (CSV), semicolen seperated values (SSV)
+	STRING (REPLACE "," ";" AOCL_COMPAT_LIBS ${AOCL_COMPAT_LIBS})
+	# Iterate through each value as it is a proper list
+	FOREACH ( value ${AOCL_COMPAT_LIBS} )
+		# Compare the value to openssl
+		string(COMPARE EQUAL "${value}" "openssl" result)
+		IF (result)
+			# If comparision true then enable openssl-compat
+			SET(ENABLE_OPENSSL_COMPAT TRUE)
+			MESSAGE("-- Enabled OpenSSL Compatibility SHIM Layer")
+		ENDIF()
+		# Compare the value to ipp
+		string(COMPARE EQUAL "${value}" "ipp" result)
+		IF (result)
+			# If comparision true then enable ipp-compat
+			SET(ENABLE_IPP_COMPAT TRUE)
+			MESSAGE("-- Enabled IPP Compatibility SHIM Layer")
+		ENDIF(result)
+	ENDFOREACH(value ${AOCL_COMPAT_LIBS})
+ENDIF(AOCL_COMPAT_LIBS)
+
 IF (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/tests)
 	SET(ALCP_ENABLE_TESTS OFF)
 	MESSAGE(STATUS "Disabling tests")
@@ -179,6 +204,14 @@ ENDIF()
 INSTALL(TARGETS alcp)
 
 INSTALL(TARGETS alcp_static)
+
+# install compat libs if option is passed
+IF (ENABLE_OPENSSL_COMPAT)
+	INSTALL(TARGETS openssl-compat)
+ENDIF()
+IF (ENABLE_IPP_COMPAT)	
+	INSTALL(TARGETS ipp-compat)
+ENDIF()
 
 INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/include/alcp
         TYPE INCLUDE
