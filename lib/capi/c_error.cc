@@ -65,7 +65,7 @@ alcp_is_error(alc_error_t err)
     if (err_temp == 0)
         return false;
     else {
-        printf("Error code: %ld\n", err_temp);
+        printf("Error code: %ld\n", (long)err_temp);
         return true;
     }
 }
