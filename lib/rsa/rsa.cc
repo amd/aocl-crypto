@@ -176,7 +176,7 @@ Rsa<T>::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
 
     static bool zen4_available = CpuId::cpuIsZen4();
     static bool zen3_available = CpuId::cpuIsZen3();
-    static bool zen_available  = CpuId::cpuIsZen1();
+    static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
 
     if (zen4_available) {
         zen4::archEncryptPublic<T>(
@@ -222,7 +222,7 @@ Rsa<T>::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
 
     static bool zen4_available = CpuId::cpuIsZen4();
     static bool zen3_available = CpuId::cpuIsZen3();
-    static bool zen_available  = CpuId::cpuIsZen1();
+    static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
 
     if (zen4_available) {
         zen4::archDecryptPrivate<T>(
@@ -447,7 +447,7 @@ Rsa<T>::setPublicKey(const Uint64 exponent, const Uint8* mod, const Uint64 size)
     m_key_size                 = size;
     static bool zen4_available = CpuId::cpuIsZen4();
     static bool zen3_available = CpuId::cpuIsZen3();
-    static bool zen_available  = CpuId::cpuIsZen1();
+    static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
 
     if (zen4_available) {
         zen4::archCreateContext<T>(
@@ -499,7 +499,7 @@ Rsa<T>::setPrivateKey(const Uint8* dp,
 
     static bool zen4_available = CpuId::cpuIsZen4();
     static bool zen3_available = CpuId::cpuIsZen3();
-    static bool zen_available  = CpuId::cpuIsZen1();
+    static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
 
     if (zen4_available) {
         zen4::archCreateContext<T>(
