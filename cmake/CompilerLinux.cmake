@@ -154,6 +154,8 @@ function(alcp_add_sanitize_flags)
         )
 
     # now check compiler and link to asan libs
+    add_compile_definitions(ALCP_COMPILE_OPTIONS_SANITIZE)
+
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         link_libraries(asan)
         add_compile_options(${ALCP_OPTIONS_SANITIZE})
