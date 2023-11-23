@@ -23,12 +23,6 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
-INCLUDE(FetchContent)
-INCLUDE(GoogleTest)
-FetchContent_Declare(gtest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.12.1)
-FetchContent_MakeAvailable(gtest)
 
 if (POLICY CMP0079) # Visibility
   cmake_policy(SET CMP0079 NEW)
@@ -36,98 +30,38 @@ endif (POLICY CMP0079)
 
 # Basic sources and libs needed for ALCP
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
-SET(ALC_BASE_FILES ${ALC_BASE_FILES} 
-                   ${ALC_COMMON_SRC} 
-                   ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher.cc 
-                   ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher_aead.cc 
+SET(ALC_BASE_FILES ${ALC_BASE_FILES}
+                   ${ALC_COMMON_SRC}
+                   ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher.cc
+                   ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher_aead.cc
                    ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher.cc)
-SET(LIBS ${LIBS} gtest alcp)
+
 
 IF(WIN32)
 target_link_libraries(gmock PUBLIC gtest)
 target_link_libraries(gmock_main PUBLIC gtest_main)
 ENDIF()
 
-SET(EXTRA_INCLUDES "")
-
-# sources for tests
-SET(ALCP_INCLUDES
-    "${CMAKE_SOURCE_DIR}/include"
-    "${CMAKE_SOURCE_DIR}/lib/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../common/include"
-    ${EXTRA_INCLUDES}
-)
 
 IF(ENABLE_TESTS_IPP_API)
-    ADD_COMPILE_OPTIONS("-DUSE_IPP")
-
-    IF(IPP_INSTALL_DIR)
-        MESSAGE(STATUS "IPP_INSTALL_DIR set, overriding fetch path")
-    ELSE(IPP_INSTALL_DIR)
-        SET(IPP_INSTALL_DIR "${CMAKE_SOURCE_DIR}/external")
-        MESSAGE(STATUS "IPP_INSTALL_DIR not set, defaulting to external")
-    ENDIF(IPP_INSTALL_DIR)
 
     # If there is IPP, add IPP source and add IPP liberary
-    SET(EXTRA_SOURCES ${EXTRA_SOURCES} 
+    SET(EXTRA_SOURCES ${EXTRA_SOURCES}
                       base/ipp_cipher.cc
                       base/ipp_cipher_aead.cc)
-	IF(UNIX)
-		IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
-			SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
-		ELSE(EXISTS ${IPP_INSTALL_DIR}/lib/intel/libippcp.so)
-			SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel/libippcp.so)
-		ENDIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
-	ENDIF(UNIX)
-	IF(WIN32)
-	 IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/ippcp.lib)
-        set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/ippcp.lib)
-	 ELSEIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel/ippcp.lib)
-        set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel/ippcp.lib)
-	 ELSE(EXISTS ${IPP_INSTALL_DIR}/lib/ippcp.lib)
-		set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/ippcp.lib)
-	 ENDIF()
-	ENDIF(WIN32)
-    SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${IPP_INSTALL_DIR}/include)
+
 ENDIF(ENABLE_TESTS_IPP_API)
 
-IF(ENABLE_TESTS_OPENSSL_API)
-    ADD_COMPILE_OPTIONS("-DUSE_OSSL")
 
-    IF(OPENSSL_INSTALL_DIR)
-        MESSAGE(STATUS "OPENSSL_INSTALL_DIR set, overriding fetch path")
-    ELSE(OPENSSL_INSTALL_DIR)
-        SET(OPENSSL_INSTALL_DIR "${CMAKE_SOURCE_DIR}/external")
-        MESSAGE(STATUS "OPENSSL_INSTALL_DIR not set, defaulting to external")
-    ENDIF(OPENSSL_INSTALL_DIR)
+
+IF(ENABLE_TESTS_OPENSSL_API)
 
     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
     SET(EXTRA_SOURCES ${EXTRA_SOURCES}
                       base/openssl_cipher.cc
                       base/openssl_cipher_aead.cc)
-	IF(UNIX)
-		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
-		ELSEIF(EXISTS ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
-		ELSE()
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib/x86_64-linux-gnu/libcrypto.so)
-		ENDIF()
-	ENDIF(UNIX)
-	IF(WIN32)
-		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib/libcrypto.lib)
-			INCLUDE_DIRECTORIES(${OPENSSL_INSTALL_DIR}/include)
-			INCLUDE_DIRECTORIES(${OPENSSL_INSTALL_DIR}/bin)
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib/libcrypto.lib)
-		ENDIF()
-	ENDIF(WIN32)
-    SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${OPENSSL_INSTALL_DIR}/include)
-ENDIF(ENABLE_TESTS_OPENSSL_API)
 
-IF(UNIX)
-SET(LIBS ${LIBS} pthread)
-ENDIF()
+ENDIF(ENABLE_TESTS_OPENSSL_API)
 
 
 # Function to dynamically generate compilation of each test cases

@@ -23,12 +23,6 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
-INCLUDE(FetchContent)
-INCLUDE(GoogleTest)
-FetchContent_Declare(gtest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.12.1)
-FetchContent_MakeAvailable(gtest)
 
 # link to -lgtest -alcp -dl for dynamic loading
 SET(LIBS ${LIBS} gtest alcp)

@@ -22,7 +22,7 @@
  # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
- 
+
 INCLUDE(FetchContent)
 FetchContent_Declare(gtest
     GIT_REPOSITORY https://github.com/google/googletest.git
@@ -35,69 +35,17 @@ FetchContent_MakeAvailable(benchmark)
 
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ../../tests/digest/base/alc_digest.cc ../../tests/digest/base/digest.cc)
-SET(LIBS ${LIBS} benchmark alcp)
-SET(EXTRA_INCLUDES "")
+
+
 
 IF(ENABLE_TESTS_IPP_API)
-    ADD_COMPILE_OPTIONS("-DUSE_IPP")
-
-    IF(IPP_INSTALL_DIR)
-        MESSAGE(STATUS "IPP_INSTALL_DIR set, overriding fetch path")
-    ELSE(IPP_INSTALL_DIR)
-        SET(IPP_INSTALL_DIR "${CMAKE_SOURCE_DIR}/external")
-        MESSAGE(STATUS "IPP_INSTALL_DIR not set, defaulting to external")
-    ENDIF(IPP_INSTALL_DIR)
-
     # If there is IPP, add IPP source and add IPP liberary
     SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/digest/base/ipp_digest.cc)
-	IF(UNIX)
-		IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
-			SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
-		ELSE(EXISTS ${IPP_INSTALL_DIR}/lib/intel/libippcp.so)
-			SET(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel/libippcp.so)
-		ENDIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/libippcp.so)
-	ENDIF(UNIX)
-	IF(WIN32)
-	 IF(EXISTS ${IPP_INSTALL_DIR}/lib/intel64/ippcp.lib)
-        set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel64/ippcp.lib)
-	 ELSEIF(EXISTS ${IPP_INSTALL_DIR}/lib/intel/ippcp.lib)
-        set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/intel/ippcp.lib)
-	 ELSE(EXISTS ${IPP_INSTALL_DIR}/lib/ippcp.lib)
-		set(LIBS ${LIBS} ${IPP_INSTALL_DIR}/lib/ippcp.lib)
-	 ENDIF()
-	ENDIF(WIN32)
-    SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${IPP_INSTALL_DIR}/include)
 ENDIF(ENABLE_TESTS_IPP_API)
 
 IF(ENABLE_TESTS_OPENSSL_API)
-    ADD_COMPILE_OPTIONS("-DUSE_OSSL")
-
-    IF(OPENSSL_INSTALL_DIR)
-        MESSAGE(STATUS "OPENSSL_INSTALL_DIR set, overriding fetch path")
-    ELSE(OPENSSL_INSTALL_DIR)
-        SET(OPENSSL_INSTALL_DIR "${CMAKE_SOURCE_DIR}/external")
-        MESSAGE(STATUS "OPENSSL_INSTALL_DIR not set, defaulting to external")
-    ENDIF(OPENSSL_INSTALL_DIR)
-
     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
     SET(EXTRA_SOURCES ${EXTRA_SOURCES} ../../tests/digest/base/openssl_digest.cc)
-	IF(UNIX)
-		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib64/libcrypto.so)
-		ELSEIF(EXISTS ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib/libcrypto.so)
-		ELSE()
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib/x86_64-linux-gnu/libcrypto.so)
-		ENDIF()
-	ENDIF(UNIX)
-	IF(WIN32)
-		IF(EXISTS ${OPENSSL_INSTALL_DIR}/lib/libcrypto.lib)
-			INCLUDE_DIRECTORIES(${OPENSSL_INSTALL_DIR}/include)
-			INCLUDE_DIRECTORIES(${OPENSSL_INSTALL_DIR}/bin)
-			SET(LIBS ${LIBS} ${OPENSSL_INSTALL_DIR}/lib/libcrypto.lib)
-		ENDIF()
-	ENDIF(WIN32)
-    SET(EXTRA_INCLUDES ${EXTRA_INCLUDES} ${OPENSSL_INSTALL_DIR}/include)
 ENDIF(ENABLE_TESTS_OPENSSL_API)
 
 ADD_EXECUTABLE(bench_digest bench_digest.cc ${ALC_BASE_FILES} ${EXTRA_SOURCES})

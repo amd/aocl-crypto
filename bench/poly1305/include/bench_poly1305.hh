@@ -30,10 +30,6 @@
 #include "poly1305/alc_poly1305.hh"
 #include "poly1305/poly1305.hh"
 
-#ifdef USE_IPP
-#include "poly1305/ipp_poly1305.hh"
-#endif
-
 #ifdef USE_OSSL
 #include "poly1305/openssl_poly1305.hh"
 #endif
