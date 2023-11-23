@@ -26,9 +26,6 @@
 # Output directory
 OBJ := bin
 
-# Default compiler
-CC := gcc
-
 # link to static or shared lib
 LIB_TYPE = dynamic #default value
 
