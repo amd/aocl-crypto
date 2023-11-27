@@ -28,6 +28,12 @@
 #include "alcp/types.hh"
 
 #pragma once
+
+#ifdef COMPILER_IS_GCC
+#define NO_OPTIMIZE
+#else
+#define NO_OPTIMIZE __attribute__((optnone))
+#endif
 Uint64
 MUL64(Uint64 a, Uint64 b, long long unsigned* rem)
 {
@@ -37,6 +43,7 @@ MUL64(Uint64 a, Uint64 b, long long unsigned* rem)
 }
 #define _mulx_u64(x, y, z) MUL64(x, y, z);
 
+NO_OPTIMIZE
 Uint8
 ADD64(Uint8 carry, Uint64 a, Uint64 b, long long unsigned* res)
 {
