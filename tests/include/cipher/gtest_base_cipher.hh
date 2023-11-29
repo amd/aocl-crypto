@@ -1075,6 +1075,12 @@ RunCipherKatTest(CipherTestingCore& testingCore,
     std::vector<Uint8>   iv   = csv->getVect("INITVECT");
     std::vector<Uint8>   tkey = csv->getVect("TWEAK_KEY");
 
+    /* check if unsupported (NULL) test vectors */
+    if (pt.empty() || ct.empty()) {
+        std::cout << "UnSupported test vector! Null PT/CT" << std::endl;
+        return false;
+    }
+
     if (encDec == ENCRYPT) {
         if (pt.size()) {
             data.m_in  = &(pt[0]);
@@ -1155,6 +1161,12 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
     std::vector<Uint8>   ad      = csv->getVect("ADDITIONAL_DATA");
     std::vector<Uint8>   tagBuff = std::vector<Uint8>(outtag.size());
     std::vector<Uint8>   ctrkey  = csv->getVect("CTR_KEY");
+
+    /* check if unsupported (NULL) test vectors */
+    if (pt.empty() || ct.empty()) {
+        std::cout << "UnSupported test vector! Null PT/CT" << std::endl;
+        return false;
+    }
 
     // Common Initialization
     data.m_tkeyl = 0;
