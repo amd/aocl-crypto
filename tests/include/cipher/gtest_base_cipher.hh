@@ -1162,8 +1162,8 @@ RunCipherAeadKATTest(CipherAeadTestingCore& testingCore,
     std::vector<Uint8>   tagBuff = std::vector<Uint8>(outtag.size());
     std::vector<Uint8>   ctrkey  = csv->getVect("CTR_KEY");
 
-    /* check if unsupported (NULL) test vectors */
-    if (pt.empty() || ct.empty()) {
+    /* check if unsupported (NULL) test vectors for gcm */
+    if (modeStr.compare("GCM") == 0 && (pt.empty() || ct.empty())) {
         std::cout << "UnSupported test vector! Null PT/CT" << std::endl;
         return false;
     }
