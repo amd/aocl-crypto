@@ -67,13 +67,14 @@ TEST(ArrayView, assignment_reuse)
     x();
 
     EXPECT_EQ(p[9], 1);
+    delete[] p;
 }
 
 TEST(ArrayView, access_as)
 {
     constexpr size_t size = 20;
     Uint8            p[size]{
-                   0,
+        0,
     };
 
     // std::memset(p, 0, 20 * sizeof(Uint8));
@@ -108,6 +109,8 @@ TEST(ArrayView, access_as_heap)
     EXPECT_EQ((int)p[0], (int)0xef);
     EXPECT_EQ((int)p[1], (int)0xcd);
     EXPECT_EQ((int)p[2], (int)0xab);
+
+    delete[] p;
 }
 
 } // namespace
