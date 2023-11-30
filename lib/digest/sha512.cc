@@ -104,7 +104,7 @@ Sha512::Sha512(alc_digest_len_t digest_len)
 {}
 
 Sha512::Impl::Impl(alc_digest_len_t digest_len)
-    : m_msg_len{ 0 }
+        : m_msg_len{ 0 }
     , m_hash{ 0,}
     , m_idx{ 0 }
     , m_finished{ false }
@@ -285,7 +285,12 @@ Sha512::Impl::processChunk(const Uint8* pSrc, Uint64 len)
     assert((len & Sha512::cChunkSizeMask) == 0);
 
     if (cpu_is_zen4) {
+#ifdef COMPILER_IS_CLANG
+        // For AOCC zen3 kernel performs better than zen4
+        return zen3::ShaUpdate512(m_hash, pSrc, len);
+#else
         return zen4::ShaUpdate512(m_hash, pSrc, len);
+#endif
     } else if (cpu_is_zen3) {
         return zen3::ShaUpdate512(m_hash, pSrc, len);
     } else if (CpuId::cpuHasAvx2()) {
@@ -457,11 +462,11 @@ Sha512::Impl::finalize(const Uint8* pBuf, Uint64 size)
     if (m_msg_len > ULLONG_MAX / 8) { // overflow happens
         // extract the left most 3bits
         len_in_bits_high = m_msg_len >> 61;
-        len_in_bits      = m_msg_len << 3;
+        len_in_bits = m_msg_len << 3;
 
     } else {
         len_in_bits_high = 0;
-        len_in_bits      = m_msg_len * 8;
+        len_in_bits = m_msg_len * 8;
     }
     Uint64* msg_len_ptr =
         reinterpret_cast<Uint64*>(&m_buffer[buf_len] - (sizeof(Uint64) * 2));
