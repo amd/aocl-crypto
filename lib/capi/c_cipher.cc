@@ -241,7 +241,7 @@ alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
 void
 alcp_cipher_finish(const alc_cipher_handle_p pCipherHandle)
 {
-    if (nullptr == pCipherHandle)
+    if (pCipherHandle == nullptr || pCipherHandle->ch_context == nullptr)
         return;
 
     cipher::Context* ctx =

@@ -33,10 +33,11 @@
 void
 ALCP_prov_cipher_freectx(void* vctx)
 {
-    alc_prov_cipher_ctx_p pcctx = vctx;
     ENTER();
+    alc_prov_cipher_ctx_p pcctx = vctx;
 
     if (pcctx->handle.ch_context != NULL) {
+        alcp_cipher_finish(&pcctx->handle);
         OPENSSL_free(pcctx->handle.ch_context);
         pcctx->handle.ch_context = NULL;
     }
@@ -48,6 +49,7 @@ ALCP_prov_cipher_freectx(void* vctx)
 
     OPENSSL_free(vctx);
     vctx = NULL;
+    EXIT();
 }
 
 void*
