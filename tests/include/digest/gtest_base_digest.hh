@@ -215,6 +215,12 @@ Digest_KAT(alc_digest_info_t info)
     }
 }
 
+static inline bool
+is_aligned(const Uint8* ptr)
+{
+    return (unsigned long)ptr % 2 == 0;
+}
+
 /* Digest Cross tests */
 void
 Digest_Cross(int HashSize, alc_digest_info_t info)
@@ -261,21 +267,28 @@ Digest_Cross(int HashSize, alc_digest_info_t info)
         alcp_digest_data_t data_alc, data_ext;
 
         msg_full = ShuffleVector(msg_full, rng);
-        pos1     = msg_full.end() - i;
+        pos1     = msg_full.end() - i - 1;
         pos2     = msg_full.end();
         std::vector<Uint8> msg(pos1, pos2);
 
+        /* misalign if buffers are aligned */
+        if (is_aligned(&(msg[0]))) {
+            data_alc.m_msg = &(msg[1]);
+            data_ext.m_msg = &(msg[1]);
+        } else {
+            data_alc.m_msg = &(msg[0]);
+            data_ext.m_msg = &(msg[0]);
+        }
+
+        data_alc.m_msg_len = data_ext.m_msg_len = msg.size() - 1;
+
         /* load test data */
-        data_alc.m_msg        = &(msg[0]);
-        data_alc.m_msg_len    = msg.size();
         data_alc.m_digest     = &(digestAlcp[0]);
         data_alc.m_digest_len = digestAlcp.size();
-
-        data_ext.m_msg        = &(msg[0]);
-        data_ext.m_msg_len    = msg.size();
         data_ext.m_digest     = &(digestExt[0]);
         data_ext.m_digest_len = digestExt.size();
 
+        /* Initialize */
         if (!db->init(info, digestAlcp.size())) {
             std::cout << "Error: Digest base init failed" << std::endl;
             FAIL();
