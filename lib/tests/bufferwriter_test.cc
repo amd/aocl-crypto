@@ -38,7 +38,7 @@ TEST(BufferWriterTest, InvalidSize)
 {
     constexpr int SIZE = 1024;
 
-    char* const buf = new char[SIZE];
+    char* const buf = new char[SIZE]{};
 
     BufferWriter bw{ buf, SIZE };
 
@@ -48,4 +48,6 @@ TEST(BufferWriterTest, InvalidSize)
     EXPECT_EQ(ret, s.length());
 
     EXPECT_STREQ(s.c_str(), buf);
+
+    delete[] buf;
 }
