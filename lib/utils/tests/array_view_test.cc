@@ -44,12 +44,7 @@ TEST(ArrayView, nullpointer_access)
         ArrayView<Uint8> av{ p, size };
         av[0] = 1;
     };
-
-#ifdef WIN32
     ASSERT_EXIT(x(), ::testing::ExitedWithCode(1), ".*");
-#else
-    ASSERT_EXIT(x(), ::testing::KilledBySignal(SIGSEGV), ".*");
-#endif
 }
 
 TEST(ArrayView, assignment_reuse)
