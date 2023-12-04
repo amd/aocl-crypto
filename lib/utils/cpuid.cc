@@ -43,7 +43,7 @@ std::unique_ptr<CpuId::Impl> CpuId::pImpl = std::make_unique<CpuId::Impl>();
 class CpuId::Impl
 {
   public:
-    Impl()  = default;
+    Impl();
     ~Impl() = default;
 #ifdef ALCP_ENABLE_AOCL_UTILS
     Cpu m_cpu;
@@ -176,6 +176,18 @@ class CpuId::Impl
     bool cpuIsZen4();
 };
 
+CpuId::Impl::Impl()
+{
+#ifndef ALCP_ENABLE_AOCL_UTILS
+    std::fprintf(stderr,
+                 "AOCL-Utils is unavailable at compile time! Defaulting to "
+                 "ZEN2 dispatch!\n");
+    std::fprintf(stderr,
+                 "Check ALCP_ENABLE_AOCL_UTILS param at configure stage!"
+                 "\n");
+#endif
+}
+
 bool
 CpuId::Impl::cpuHasAvx512f()
 {
@@ -278,7 +290,7 @@ CpuId::Impl::cpuHasShani()
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_SHA_NI);
 #else
-    static bool state = false;
+    static bool state = true;
 #endif
     return state;
 #endif
@@ -292,7 +304,7 @@ CpuId::Impl::cpuHasAvx2()
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_AVX2);
 #else
-    static bool state = false;
+    static bool state = true;
 #endif
     return state;
 #endif
@@ -306,7 +318,7 @@ CpuId::Impl::cpuHasRdRand()
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_RDRAND);
 #else
-    static bool state = false;
+    static bool state = true;
 #endif
     return state;
 #endif
@@ -320,7 +332,7 @@ CpuId::Impl::cpuHasRdSeed()
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isAvailable(ALC_E_FLAG_RDSEED);
 #else
-    static bool state = false;
+    static bool state = true;
 #endif
     return state;
 #endif
@@ -384,7 +396,7 @@ CpuId::Impl::cpuIsZen2()
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isUarch(Uarch::eZen2);
 #else
-    static bool state = false;
+    static bool state = true;
 #endif
     return state;
 #endif
