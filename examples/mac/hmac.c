@@ -64,7 +64,7 @@ run_hmac(const alc_mac_info_p macInfo,
 {
 
     alc_error_t err = ALC_ERROR_NONE;
-    err     = alcp_mac_supported(macInfo);
+    err             = alcp_mac_supported(macInfo);
     if (err == ALC_ERROR_NONE) {
         handle.ch_context = malloc(alcp_mac_context_size(macInfo));
     } else {
@@ -120,7 +120,7 @@ displayResults(char*  hmac_string,
     printf(" : ");
     printf("\n\t");
     printf("KEY = \t\t");
-    printHashAsHexString(key, keylen);
+    printHashAsHexString(key, keylen / 8);
     printf("\n\t");
     printf("CipherText = \t");
     printHashAsHexString(cipherText, cipherTextLen);
