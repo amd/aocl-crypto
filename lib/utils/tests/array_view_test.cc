@@ -44,7 +44,12 @@ TEST(ArrayView, nullpointer_access)
         ArrayView<Uint8> av{ p, size };
         av[0] = 1;
     };
-    ASSERT_EXIT(x(), ::testing::ExitedWithCode(1), ".*");
+    /* ASAN changes the exit code to 1 (hang up) for some reason */
+#ifdef ALCP_COMPILE_OPTIONS_SANITIZE
+    ASSERT_EXIT(x(), ::testing::ExitedWithCode(SIGHUP), ".*");
+#else
+    ASSERT_EXIT(x(), ::testing::KilledBySignal(SIGSEGV), ".*");
+#endif
 }
 
 TEST(ArrayView, assignment_reuse)
