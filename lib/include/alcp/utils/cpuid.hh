@@ -50,6 +50,14 @@ typedef enum
     AVX512_BW,
 } avx512_flags_t;
 
+typedef enum
+{
+    ZEN  = 0,
+    ZEN2 = 1,
+    ZEN3 = 2,
+    ZEN4 = 3,
+} CpuZenVer;
+
 // using alci::Cpu;
 // using alci::Uarch;
 
