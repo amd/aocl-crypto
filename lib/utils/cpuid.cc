@@ -176,7 +176,7 @@ class CpuId::Impl
      */
     bool cpuIsZen4();
 
-    Uint8 findCpuArch();
+    bool ensureCpuArch(CpuZenVer cpuZenVer);
 };
 
 CpuId::Impl::Impl()
@@ -372,8 +372,8 @@ bool
 CpuId::Impl::cpuIsZen1()
 {
 #if defined(ALCP_CPUID_FORCE)
-    static Uint8 arch = findCpuArch();
-    return ((arch >> CpuZenVer::ZEN) & 1);
+    static bool flag = ensureCpuArch(CpuZenVer::ZEN);
+    return flag;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isUarch(Uarch::eZen);
@@ -387,8 +387,8 @@ bool
 CpuId::Impl::cpuIsZen2()
 {
 #if defined(ALCP_CPUID_FORCE)
-    static Uint8 arch = findCpuArch();
-    return ((arch >> CpuZenVer::ZEN2) & 1);
+    static bool flag = ensureCpuArch(CpuZenVer::ZEN2);
+    return flag;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isUarch(Uarch::eZen2);
@@ -402,8 +402,8 @@ bool
 CpuId::Impl::cpuIsZen3()
 {
 #if defined(ALCP_CPUID_FORCE)
-    static Uint8 arch = findCpuArch();
-    return ((arch >> CpuZenVer::ZEN3) & 1);
+    static bool flag = ensureCpuArch(CpuZenVer::ZEN3);
+    return flag;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isUarch(Uarch::eZen3);
@@ -417,8 +417,8 @@ bool
 CpuId::Impl::cpuIsZen4()
 {
 #if defined(ALCP_CPUID_FORCE)
-    static Uint8 arch = findCpuArch();
-    return ((arch >> CpuZenVer::ZEN4) & 1);
+    static bool flag = ensureCpuArch(CpuZenVer::ZEN4);
+    return flag;
 #else
 #ifdef ALCP_ENABLE_AOCL_UTILS
     static bool state = Impl::m_cpu.isUarch(Uarch::eZen4);
@@ -429,40 +429,39 @@ CpuId::Impl::cpuIsZen4()
 #endif
 }
 
-Uint8
-CpuId::Impl::findCpuArch()
+bool
+CpuId::Impl::ensureCpuArch(CpuZenVer cpuZenVer)
 {
 #ifdef ALCP_ENABLE_AOCL_UTILS
-    Uint8 cpu_arch = Impl::m_cpu.isUarch(Uarch::eZen) << CpuZenVer::ZEN
-                     | Impl::m_cpu.isUarch(Uarch::eZen2) << CpuZenVer::ZEN2
-                     | Impl::m_cpu.isUarch(Uarch::eZen3) << CpuZenVer::ZEN3
-                     | Impl::m_cpu.isUarch(Uarch::eZen4) << CpuZenVer::ZEN4;
+    bool zen1_flag = Impl::m_cpu.isUarch(Uarch::eZen);
+    bool zen2_flag = Impl::m_cpu.isUarch(Uarch::eZen2);
+    bool zen3_flag = Impl::m_cpu.isUarch(Uarch::eZen3);
+    bool zen4_flag = Impl::m_cpu.isUarch(Uarch::eZen4);
 #else
     // Default dispatch is to Zen2
     // If this condition is setup, you can never force it to zen3 or zen4
     // We need cpuid to verify it can actually run on the machine
-    Uint8 cpu_arch = 1 << CpuZenVer::ZEN2;
+    bool zen1_flag = false;
+    bool zen2_flag = true;
+    bool zen3_flag = false;
+    bool zen4_flag = false;
 #endif
 #if defined(ALCP_CPUID_FORCE)
 #if defined(ALCP_CPUID_FORCE_ZEN4)
-    if ((cpu_arch >= (1 << CpuZenVer::ZEN4))) {
-        cpu_arch = (1 << CpuZenVer::ZEN4);
-        return cpu_arch;
+    if (zen4_flag) {
+        return (cpuZenVer == CpuZenVer::ZEN4);
     }
 #elif defined(ALCP_CPUID_FORCE_ZEN3)
-    if ((cpu_arch >= (1 << CpuZenVer::ZEN3))) {
-        cpu_arch = (1 << CpuZenVer::ZEN3);
-        return cpu_arch;
+    if (zen3_flag || zen4_flag) {
+        return (cpuZenVer == CpuZenVer::ZEN3);
     }
 #elif defined(ALCP_CPUID_FORCE_ZEN2)
-    if ((cpu_arch >= (1 << CpuZenVer::ZEN2))) {
-        cpu_arch = (1 << CpuZenVer::ZEN2);
-        return cpu_arch;
+    if (zen2_flag || zen3_flag || zen4_flag) {
+        return (cpuZenVer == CpuZenVer::ZEN2);
     }
 #elif defined(ALCP_CPUID_FORCE_ZEN)
-    if ((cpu_arch >= (1 << CpuZenVer::ZEN))) {
-        cpu_arch = (1 << CpuZenVer::ZEN);
-        return cpu_arch;
+    if (zen1_flag || zen2_flag || zen3_flag || zen4_flag) {
+        return (cpuZenVer == CpuZenVer::ZEN);
     }
 #else
     if (true) {
@@ -474,22 +473,22 @@ CpuId::Impl::findCpuArch()
     else {
         std::fprintf(stderr, "ZenVer upgrade cannot be done!\n");
         std::fprintf(stderr, "Finding best possible ZenVer!\n");
-        if (cpu_arch >= (1 << CpuZenVer::ZEN4)) {
-            cpu_arch = (1 << CpuZenVer::ZEN4);
-            return cpu_arch;
-        } else if (cpu_arch >= (1 << CpuZenVer::ZEN3)) {
-            cpu_arch = (1 << CpuZenVer::ZEN3);
-            return cpu_arch;
-        } else if (cpu_arch >= (1 << CpuZenVer::ZEN2)) {
-            cpu_arch = (1 << CpuZenVer::ZEN2);
-            return cpu_arch;
-        } else if (cpu_arch == (1 << CpuZenVer::ZEN)) {
-            cpu_arch = (1 << CpuZenVer::ZEN);
-            return cpu_arch;
-        }
     }
 #endif
-    return cpu_arch;
+    switch (cpuZenVer) {
+        case CpuZenVer::ZEN4:
+            return zen4_flag;
+
+        case CpuZenVer::ZEN3:
+            return zen3_flag;
+
+        case CpuZenVer::ZEN2:
+            return zen2_flag;
+
+        case CpuZenVer::ZEN:
+            return zen1_flag;
+    }
+    return false;
 }
 
 bool
