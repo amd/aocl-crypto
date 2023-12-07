@@ -80,7 +80,7 @@ class CpuId::Impl
      * @return true
      * @return false
      */
-    bool cpuHasAvx512(avx512_flags_t flag);
+    bool cpuHasAvx512(Avx512Flags flag);
 
     // Milan functions
     /**
@@ -237,17 +237,17 @@ CpuId::Impl::cpuHasAvx512bw()
 }
 
 bool
-CpuId::Impl::cpuHasAvx512(avx512_flags_t flag)
+CpuId::Impl::cpuHasAvx512(Avx512Flags flag)
 {
 #ifdef ALCP_CPUID_DISABLE_AVX512
     return false;
 #else
     switch (flag) {
-        case AVX512_DQ:
+        case Avx512Flags::AVX512_DQ:
             return cpuHasAvx512dq();
-        case AVX512_F:
+        case Avx512Flags::AVX512_F:
             return cpuHasAvx512f();
-        case AVX512_BW:
+        case Avx512Flags::AVX512_BW:
             return cpuHasAvx512bw();
         default:
             // FIXME: Raise an exception
@@ -504,7 +504,7 @@ CpuId::cpuHasAvx2()
 }
 
 bool
-CpuId::cpuHasAvx512(avx512_flags_t flag)
+CpuId::cpuHasAvx512(Avx512Flags flag)
 {
     return pImpl.get()->cpuHasAvx512(flag);
 }

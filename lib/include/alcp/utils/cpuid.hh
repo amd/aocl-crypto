@@ -43,20 +43,20 @@ enum class CpuCipherFeatures
     eVaes512   = 3,
     eDynamic   = 4
 };
-typedef enum
+enum class Avx512Flags
 {
     AVX512_DQ = 1,
     AVX512_F,
     AVX512_BW,
-} avx512_flags_t;
+};
 
-typedef enum
+enum class CpuZenVer
 {
     ZEN  = 0,
     ZEN2 = 1,
     ZEN3 = 2,
     ZEN4 = 3,
-} CpuZenVer;
+};
 
 // using alci::Cpu;
 // using alci::Uarch;
@@ -95,7 +95,7 @@ class ALCP_API_EXPORT CpuId
      * @return true
      * @return false
      */
-    static bool cpuHasAvx512(avx512_flags_t flag);
+    static bool cpuHasAvx512(Avx512Flags flag);
 
     // Milan functions
     /**

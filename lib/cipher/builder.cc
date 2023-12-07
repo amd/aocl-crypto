@@ -196,9 +196,9 @@ getCpuCipherfeature()
         if (CpuId::cpuHasVaes()) {
             cpu_feature = CpuCipherFeatures::eVaes256;
 
-            if (CpuId::cpuHasAvx512(utils::AVX512_F)
-                && CpuId::cpuHasAvx512(utils::AVX512_DQ)
-                && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
+            if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+                && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+                && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
                 cpu_feature = CpuCipherFeatures::eVaes512;
             }
         }

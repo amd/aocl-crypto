@@ -101,7 +101,7 @@ ecdh_KAT(alc_ec_info_t info)
     IPPEcdhBase ieb_peer2(info);
     if (useipp == true) {
         // FIXME : skip test if not running on avx512 architecture
-        if (!CpuId::cpuHasAvx512(alcp::utils::AVX512_F)) {
+        if (!CpuId::cpuHasAvx512(alcp::utils::Avx512Flags::AVX512_F)) {
             std::cout
                 << "IPP Ecdh multi-buffer implementations arent supported "
                    "on non-avx512 supported arch,"
@@ -223,7 +223,7 @@ ecdh_KAT_p256(alc_ec_info_t info)
     IPPEcdhBase ieb_peer2(info);
     if (useipp == true) {
         // FIXME : skip test if not running on avx512 architecture
-        if (!CpuId::cpuHasAvx512(alcp::utils::AVX512_F)) {
+        if (!CpuId::cpuHasAvx512(alcp::utils::Avx512Flags::AVX512_F)) {
             std::cout
                 << "IPP Ecdh multi-buffer implementations arent supported "
                    "on non-avx512 supported arch,"
@@ -339,7 +339,7 @@ ecdh_Cross(alc_ec_info_t info)
     IPPEcdhBase ieb_peer2(info);
     if (useipp == true) {
         // FIXME : skip test if not running on avx512 architecture
-        if (!CpuId::cpuHasAvx512(alcp::utils::AVX512_F)) {
+        if (!CpuId::cpuHasAvx512(alcp::utils::Avx512Flags::AVX512_F)) {
             std::cout
                 << "IPP Ecdh multi-buffer implementations arent supported "
                    "on non-avx512 supported arch,"

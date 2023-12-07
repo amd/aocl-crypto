@@ -94,9 +94,9 @@ ChaCha20<cpu_cipher_feature>::processInput(const Uint8 plaintext[],
                             plaintextLength,
                             ciphertext);
     } else if constexpr (cpu_cipher_feature == CpuCipherFeatures::eDynamic) {
-        bool is_avx512 = CpuId::cpuHasAvx512(utils::AVX512_F)
-                         && CpuId::cpuHasAvx512(utils::AVX512_DQ)
-                         && CpuId::cpuHasAvx512(utils::AVX512_BW);
+        bool is_avx512 = CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+                         && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+                         && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW);
 
         if (is_avx512) {
             return zen4::ProcessInput(m_key,
