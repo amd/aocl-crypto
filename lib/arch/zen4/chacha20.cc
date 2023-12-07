@@ -122,9 +122,9 @@ processParallelBlocks(const Uint8 key[],
         reinterpret_cast<const __m128i*>(plaintext);
     __m128i* p_ciphertext_128 = reinterpret_cast<__m128i*>(ciphertext);
     __m512i* state[4]         = { &reg_state_1_0_3_2,
-                                  &reg_state_5_4_7_6,
-                                  &reg_state_9_8_11_10,
-                                  &reg_state_13_12_15_14 };
+                          &reg_state_5_4_7_6,
+                          &reg_state_9_8_11_10,
+                          &reg_state_13_12_15_14 };
     for (Uint64 k = 0; k < chacha20_parallel_blocks; k++) {
 
         // Restoring the registers to last Round State
@@ -321,5 +321,22 @@ ProcessInput(const Uint8 key[],
         }
     }
     return ALC_ERROR_NONE;
+}
+
+alc_error_t
+getKeyStream(const Uint8 key[],
+             Uint64      keylen,
+             const Uint8 iv[],
+             Uint64      ivlen,
+             Uint8       output_key_stream[],
+             Uint64      key_stream_length)
+{
+    return ProcessInput(key,
+                        keylen,
+                        iv,
+                        ivlen,
+                        output_key_stream,
+                        key_stream_length,
+                        output_key_stream);
 }
 } // namespace alcp::cipher::chacha20::zen4

@@ -119,6 +119,54 @@ ChaCha20<cpu_cipher_feature>::processInput(const Uint8 plaintext[],
     }
 }
 
+template<CpuCipherFeatures cpu_cipher_feature>
+alc_error_t
+ChaCha20<cpu_cipher_feature>::getKeyStream(Uint8  output_key_stream[],
+                                           Uint64 output_key_stream_length)
+{
+    if constexpr (cpu_cipher_feature == CpuCipherFeatures::eVaes512) {
+
+        return zen4::getKeyStream(m_key,
+                                  cMKeylen,
+                                  m_iv,
+                                  cMIvlen,
+                                  output_key_stream,
+                                  output_key_stream_length);
+    } else if constexpr (cpu_cipher_feature == CpuCipherFeatures::eReference) {
+
+        return ProcessInput(m_key,
+                            cMKeylen,
+                            m_iv,
+                            cMIvlen,
+                            output_key_stream,
+                            output_key_stream_length,
+                            output_key_stream);
+    } else if constexpr (cpu_cipher_feature == CpuCipherFeatures::eDynamic) {
+        bool is_avx512 = CpuId::cpuHasAvx512(utils::AVX512_F)
+                         && CpuId::cpuHasAvx512(utils::AVX512_DQ)
+                         && CpuId::cpuHasAvx512(utils::AVX512_BW);
+
+        if (is_avx512) {
+            return zen4::getKeyStream(m_key,
+                                      cMKeylen,
+                                      m_iv,
+                                      cMIvlen,
+                                      output_key_stream,
+                                      output_key_stream_length);
+        } else {
+
+            return ProcessInput(m_key,
+                                cMKeylen,
+                                m_iv,
+                                cMIvlen,
+                                output_key_stream,
+                                output_key_stream_length,
+                                output_key_stream);
+        }
+    }
+
+    return ALC_ERROR_NOT_SUPPORTED;
+}
 template class ChaCha20<CpuCipherFeatures::eVaes512>;
 template class ChaCha20<CpuCipherFeatures::eReference>;
 template class ChaCha20<CpuCipherFeatures::eDynamic>;

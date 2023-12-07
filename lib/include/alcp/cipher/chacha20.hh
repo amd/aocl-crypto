@@ -41,6 +41,13 @@ ProcessInput(const Uint8 key[],
              const Uint8 plaintext[],
              Uint64      plaintextLength,
              Uint8       ciphertext[]);
+alc_error_t
+getKeyStream(const Uint8 key[],
+             Uint64      keylen,
+             const Uint8 iv[],
+             Uint64      ivlen,
+             Uint8       output_key_stream[],
+             Uint64      key_stream_length);
 } // namespace alcp::cipher::chacha20::zen4
 
 namespace alcp::cipher::chacha20 {
@@ -70,6 +77,9 @@ class ALCP_API_EXPORT ChaCha20
 
     static alc_error_t validateKey(const Uint8* key, Uint64 keylen);
     static alc_error_t validateIv(const Uint8 iv[], Uint64 iVlen);
+
+    alc_error_t getKeyStream(Uint8  output_key_stream[],
+                             Uint64 key_stream_length);
 };
 
 } // namespace alcp::cipher::chacha20
