@@ -11,14 +11,14 @@
  * 3. Neither the name of the copyright holder nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  * without specific prior written permission.
- *
+ *-
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS!
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
@@ -26,62 +26,44 @@
  *
  */
 
-#pragma once
+#include "alcp/cipher/chacha20.hh"
+#include "alcp/mac/poly1305.hh"
 
-#include "alcp/base.hh"
-#include "alcp/utils/cpuid.hh"
-#include <alcp/error.h>
+using namespace alcp::cipher::chacha20;
+union len_ciphertext_processed
+{
+    Uint64 u64 = 0;
+    Uint8  u8[8];
+};
 
-namespace alcp::cipher::chacha20::zen4 {
-alc_error_t
-ProcessInput(const Uint8 key[],
-             Uint64      keylen,
-             const Uint8 iv[],
-             Uint64      ivlen,
-             const Uint8 plaintext[],
-             Uint64      plaintextLength,
-             Uint8       ciphertext[]);
-alc_error_t
-getKeyStream(const Uint8 key[],
-             Uint64      keylen,
-             const Uint8 iv[],
-             Uint64      ivlen,
-             Uint8       output_key_stream[],
-             Uint64      key_stream_length);
-} // namespace alcp::cipher::chacha20::zen4
-
-namespace alcp::cipher::chacha20 {
-using utils::CpuCipherFeatures;
-using utils::CpuId;
-
-static constexpr Uint32 Chacha20Constants[4] = {
-    0x61707865, 0x3320646e, 0x79622d32, 0x6b206574
+union len_aad_processed
+{
+    Uint64 u64 = 0;
+    Uint8  u8[8];
 };
 template<CpuCipherFeatures cpu_cipher_feature = CpuCipherFeatures::eDynamic>
-class ALCP_API_EXPORT ChaCha20
+class ChaCha20Poly1305
+    : public ChaCha20<cpu_cipher_feature>
+    , public alcp::mac::poly1305::Poly1305
 {
+  private:
+    Uint8 m_poly1305_key[32] = {};
 
-    static constexpr Uint64 cMKeylen = 256 / 8;
-    alignas(16) Uint8 m_key[cMKeylen];
-    static constexpr Uint64 cMIvlen = (128 / 8);
+    // Uint64 m_len_ciphertext_processed = 0;
+    len_ciphertext_processed m_len_ciphertext_processed{};
+    len_aad_processed        m_len_aad_processed{};
 
-  protected:
-    alignas(16) Uint8 m_iv[cMIvlen];
+    // Uint64 m_len_aad_processed = 0;
+
+    const Uint8 m_zero_padding[16]{};
 
   public:
+    alc_error_t setNonce(const Uint8* nonce, Uint64 nonce_length);
     alc_error_t setKey(const Uint8 key[], Uint64 keylen);
-
-    alc_error_t setIv(const Uint8 iv[], Uint64 ivlen);
-
+    alc_error_t setAad(const Uint8* pInput, Uint64 len);
     alc_error_t processInput(const Uint8 plaintext[],
                              Uint64      plaintext_length,
-                             Uint8       ciphertext[]) const;
+                             Uint8       ciphertext[]);
 
-    static alc_error_t validateKey(const Uint8* key, Uint64 keylen);
-    static alc_error_t validateIv(const Uint8 iv[], Uint64 iVlen);
-
-    alc_error_t getKeyStream(Uint8  output_key_stream[],
-                             Uint64 key_stream_length);
+    alc_error_t getTag(Uint8* pOutput, Uint64 len);
 };
-
-} // namespace alcp::cipher::chacha20
