@@ -64,29 +64,29 @@ RoundFunction(__m512i& regA, __m512i& regB, __m512i& regC, __m512i& regD)
 
 template<int index>
 inline void
-XorMessageKeyStreamStore(__m512i&        state_register,
-                         __m128i&        reg_128_state,
-                         __m128i&        reg_128_msg,
-                         const __m128i*& p_plaintext_128,
-                         __m128i*&       p_ciphertext_128)
+XorMessageKeyStreamStore(__m512i&        stateRegister,
+                         __m128i&        reg128State,
+                         __m128i&        reg128Msg,
+                         const __m128i*& pPlaintext128,
+                         __m128i*&       pCiphertext128)
 {
-    reg_128_state = _mm512_extracti64x2_epi64(state_register, index);
-    reg_128_msg   = _mm_loadu_si128(p_plaintext_128);
-    reg_128_msg   = _mm_xor_si128(reg_128_msg, reg_128_state);
-    _mm_storeu_si128(p_ciphertext_128, reg_128_msg);
-    p_plaintext_128++;
-    p_ciphertext_128++;
+    reg128State = _mm512_extracti64x2_epi64(stateRegister, index);
+    reg128Msg   = _mm_loadu_si128(pPlaintext128);
+    reg128Msg   = _mm_xor_si128(reg128Msg, reg128State);
+    _mm_storeu_si128(pCiphertext128, reg128Msg);
+    pPlaintext128++;
+    pCiphertext128++;
 }
 
 void
-processParallelBlocks(const Uint8 key[],
+ProcessParallelBlocks(const Uint8 key[],
                       Uint64      keylen,
                       const Uint8 iv[],
                       Uint64      ivlen,
                       const Uint8 plaintext[],
                       Uint64      plaintextLength,
                       Uint8       ciphertext[],
-                      Uint64      chacha20_parallel_blocks)
+                      Uint64      chacha20ParallelBlocks)
 {
     // -- Setup Registers for First Row Round Function
     // a
@@ -112,7 +112,7 @@ processParallelBlocks(const Uint8 key[],
                                         0x1 ,0x0,0x0,0x0,
                                         0x2 ,0x0,0x0,0x0,
                                         0x3 ,0x0,0x0,0x0);
-    const __m512i inc_reg = _mm512_setr_epi32(0x4 ,0x0,0x0,0x0,
+    const __m512i cIncReg = _mm512_setr_epi32(0x4 ,0x0,0x0,0x0,
                                         0x4 ,0x0,0x0,0x0,
                                         0x4 ,0x0,0x0,0x0,
                                         0x4 ,0x0,0x0,0x0);
@@ -122,10 +122,10 @@ processParallelBlocks(const Uint8 key[],
         reinterpret_cast<const __m128i*>(plaintext);
     __m128i* p_ciphertext_128 = reinterpret_cast<__m128i*>(ciphertext);
     __m512i* state[4]         = { &reg_state_1_0_3_2,
-                          &reg_state_5_4_7_6,
-                          &reg_state_9_8_11_10,
-                          &reg_state_13_12_15_14 };
-    for (Uint64 k = 0; k < chacha20_parallel_blocks; k++) {
+                                  &reg_state_5_4_7_6,
+                                  &reg_state_9_8_11_10,
+                                  &reg_state_13_12_15_14 };
+    for (Uint64 k = 0; k < chacha20ParallelBlocks; k++) {
 
         // Restoring the registers to last Round State
         reg_state_1_0_3_2     = reg_state_1_0_3_2_save;
@@ -269,10 +269,9 @@ processParallelBlocks(const Uint8 key[],
         plaintext += 256;
 
         ciphertext += 256;
-        counter_reg = _mm512_add_epi32(counter_reg, inc_reg);
+        counter_reg = _mm512_add_epi32(counter_reg, cIncReg);
     }
 }
-
 alc_error_t
 ProcessInput(const Uint8 key[],
              Uint64      keylen,
@@ -286,7 +285,7 @@ ProcessInput(const Uint8 key[],
     Uint64 chacha20_non_parallel_bytes =
         plaintextLength - (chacha20_parallel_blocks * 256);
     if (chacha20_parallel_blocks > 0) {
-        processParallelBlocks(key,
+        ProcessParallelBlocks(key,
                               keylen,
                               iv,
                               ivlen,
@@ -294,6 +293,7 @@ ProcessInput(const Uint8 key[],
                               plaintextLength,
                               ciphertext,
                               chacha20_parallel_blocks);
+
         plaintext += chacha20_parallel_blocks * 256;
         ciphertext += chacha20_parallel_blocks * 256;
     }
@@ -306,7 +306,7 @@ ProcessInput(const Uint8 key[],
             (*(reinterpret_cast<Uint32*>(iv_copy))) +=
                 4 * chacha20_parallel_blocks;
         }
-        processParallelBlocks(key,
+        ProcessParallelBlocks(key,
                               keylen,
                               iv_copy,
                               ivlen,
@@ -328,15 +328,15 @@ getKeyStream(const Uint8 key[],
              Uint64      keylen,
              const Uint8 iv[],
              Uint64      ivlen,
-             Uint8       output_key_stream[],
-             Uint64      key_stream_length)
+             Uint8       outputKeyStream[],
+             Uint64      keyStreamLength)
 {
     return ProcessInput(key,
                         keylen,
                         iv,
                         ivlen,
-                        output_key_stream,
-                        key_stream_length,
-                        output_key_stream);
+                        outputKeyStream,
+                        keyStreamLength,
+                        outputKeyStream);
 }
 } // namespace alcp::cipher::chacha20::zen4

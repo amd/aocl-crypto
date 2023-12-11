@@ -29,10 +29,10 @@
 #include "alcp/cipher/chacha20.hh"
 #include "alcp/mac/poly1305.hh"
 
-using namespace alcp::cipher::chacha20;
 namespace alcp::cipher::chacha20 {
 
-union len_ciphertext_processed
+// These will be used to store the length of the ciphertext
+union len_input_processed
 {
     Uint64 u64 = 0;
     Uint8  u8[8];
@@ -44,36 +44,34 @@ union len_aad_processed
     Uint8  u8[8];
 };
 template<CpuCipherFeatures cpu_cipher_feature = CpuCipherFeatures::eDynamic>
-class ChaCha20Poly1305
+class ALCP_API_EXPORT ChaCha20Poly1305
     : public ChaCha20<cpu_cipher_feature>
     , public alcp::mac::poly1305::Poly1305
 {
   private:
-    Uint8 m_poly1305_key[32] = {};
-
-    // Uint64 m_len_ciphertext_processed = 0;
-    len_ciphertext_processed m_len_ciphertext_processed{};
-    len_aad_processed        m_len_aad_processed{};
-
-    // Uint64 m_len_aad_processed = 0;
-
-    const Uint8 m_zero_padding[16]{};
+    Uint8               m_poly1305_key[32]{};
+    const Uint8         m_zero_padding[16]{};
+    len_input_processed m_len_input_processed{};
+    len_aad_processed   m_len_aad_processed{};
 
   public:
-    alc_error_t setNonce(const Uint8* nonce, Uint64 nonce_length);
+    alc_error_t setNonce(const Uint8* nonce, Uint64 noncelen);
     alc_error_t setKey(const Uint8 key[], Uint64 keylen);
     alc_error_t setAad(const Uint8* pInput, Uint64 len);
+
+    // Depending on the context(encrypt/decrypt) the inputBuffer and
+    // outputBuffer will switch between ciphertext and plaintext buffers
     template<bool is_encrypt>
-    alc_error_t processInput(const Uint8 plaintext[],
-                             Uint64      plaintext_length,
-                             Uint8       ciphertext[]);
+    alc_error_t processInput(const Uint8 inputBuffer[],
+                             Uint64      bufferLength,
+                             Uint8       outputBuffer[]);
     alc_error_t encryptupdate(const Uint8 plaintext[],
-                              Uint64      plaintext_length,
+                              Uint64      plaintextLength,
                               Uint8       ciphertext[]);
     alc_error_t decryptupdate(const Uint8 ciphertext[],
-                              Uint64      ciphertext_length,
+                              Uint64      ciphertextLength,
                               Uint8       plaintext[]);
-    alc_error_t setTagLength(Uint64 tag_length);
+    alc_error_t setTagLength(Uint64 tagLength);
 
     alc_error_t getTag(Uint8* pOutput, Uint64 len);
 };

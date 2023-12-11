@@ -30,6 +30,8 @@
 #include "alcp/utils/benchmark.hh"
 #include "gtest/gtest.h"
 #include <openssl/bio.h>
+
+using namespace alcp::cipher::chacha20;
 class ChaCha20Poly1305Test : public testing::Test
 {
   public:
@@ -119,14 +121,14 @@ class ChaCha20Poly1305Test : public testing::Test
         ASSERT_EQ(err, ALC_ERROR_NONE);
     }
 
-    void encryptDecryptTest(bool                is_encrypt_test,
+    void encryptDecryptTest(bool                isEncryptTest,
                             std::vector<Uint8>& plaintext,
                             std::vector<Uint8>& ciphertext,
                             Uint64              size)
     {
         alc_error_t err = ALC_ERROR_NONE;
 
-        if (is_encrypt_test) {
+        if (isEncryptTest) {
             err = chacha_poly->encryptupdate(&expected_plaintext[0],
                                              expected_plaintext.size(),
                                              &ciphertext[0]);

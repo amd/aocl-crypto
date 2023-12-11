@@ -30,25 +30,25 @@
 #include <stdlib.h> // For malloc
 #include <string.h> // for memset
 char*
-bytesToHexString(unsigned char* bytes, int length);
+BytesToHexString(unsigned char* bytes, int length);
 
 static alc_cipher_handle_t handle;
 int
-create_demo_session(const Uint8* key,
-                    const Uint8* iv,
-                    Uint64       iv_length,
-                    const Uint32 key_len)
+CreateDemoSession(const Uint8* key,
+                  const Uint8* iv,
+                  Uint64       ivLength,
+                  const Uint32 cKeyLen)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
+    const int   cErrSize = 256;
+    Uint8       err_buf[cErrSize];
 
     alc_cipher_aead_info_t cinfo = {
         .ci_type = ALC_CIPHER_TYPE_CHACHA20_POLY1305,
         .ci_algo_info   = {
            .ai_mode = ALC_AES_MODE_NONE,
            .ai_iv   = iv,
-           .iv_length =iv_length
+           .iv_length =ivLength
            
         },
         /* No padding, Not Implemented yet*/
@@ -57,7 +57,7 @@ create_demo_session(const Uint8* key,
             .type    = ALC_KEY_TYPE_SYMMETRIC,
             .fmt     = ALC_KEY_FMT_RAW,
             .key     = key,
-            .len     = key_len,
+            .len     = cKeyLen,
         },
     };
 
@@ -71,7 +71,7 @@ create_demo_session(const Uint8* key,
     err = alcp_cipher_aead_supported(&cinfo);
     if (alcp_is_error(err)) {
         printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
+        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
     printf("supported succeeded\n");
@@ -86,7 +86,7 @@ create_demo_session(const Uint8* key,
     err = alcp_cipher_aead_request(&cinfo, &handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
-        alcp_error_str(err, err_buf, err_size);
+        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
     printf("request succeeded\n");
@@ -94,52 +94,52 @@ create_demo_session(const Uint8* key,
 }
 
 int
-alcp_chacha20_poly1305_encrypt_demo(
+AlcpChacha20Poly1305EncryptDemo(
     const Uint8* plaintxt,
-    const Uint32 len, /* Describes both 'plaintxt' and 'ciphertxt' */
+    const Uint32 cLen, /* Describes both 'plaintxt' and 'ciphertxt' */
     Uint8*       ciphertxt,
     const Uint8* iv,
-    const Uint32 ivLen,
+    const Uint32 cIvLen,
     const Uint8* ad,
-    const Uint32 adLen,
+    const Uint32 cAdLen,
     Uint8*       tag,
-    const Uint32 tagLen)
+    const Uint32 cTagLen)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
+    const int   cErrSize = 256;
+    Uint8       err_buf[cErrSize];
 
     // set tag length
-    err = alcp_cipher_aead_set_tag_length(&handle, tagLen);
+    err = alcp_cipher_aead_set_tag_length(&handle, cTagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, err_size);
+        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 
     // Additional Data
-    err = alcp_cipher_aead_set_aad(&handle, ad, adLen);
+    err = alcp_cipher_aead_set_aad(&handle, ad, cAdLen);
     if (alcp_is_error(err)) {
         printf("Error: unable Chacha20-Poly1305 add data processing \n");
-        alcp_error_str(err, err_buf, err_size);
+        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 
     // Chacha20-Poly1305 encrypt
     err =
-        alcp_cipher_aead_encrypt_update(&handle, plaintxt, ciphertxt, len, iv);
+        alcp_cipher_aead_encrypt_update(&handle, plaintxt, ciphertxt, cLen, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
-        alcp_error_str(err, err_buf, err_size);
+        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 
     // get tag. Once Tag is obtained encrypt_update cannot be called again and
     // will return an error.
-    err = alcp_cipher_aead_get_tag(&handle, tag, tagLen);
+    err = alcp_cipher_aead_get_tag(&handle, tag, cTagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, err_size);
+        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 
@@ -147,69 +147,69 @@ alcp_chacha20_poly1305_encrypt_demo(
 }
 
 int
-alcp_chacha20_poly1305_decrypt_demo(
+AlcpChacha20Poly1305DecryptDemo(
     const Uint8* ciphertxt,
-    const Uint32 len, /* Describes both 'plaintxt' and 'ciphertxt' */
+    const Uint32 cLen, /* Describes both 'plaintxt' and 'ciphertxt' */
     Uint8*       plaintxt,
     const Uint8* iv,
-    const Uint32 ivLen,
+    const Uint32 cIvLen,
     const Uint8* ad,
-    const Uint32 adLen,
+    const Uint32 cAdLen,
     Uint8*       tag,
-    const Uint32 tagLen)
+    const Uint32 cTagLen)
 {
     alc_error_t err;
-    const int   err_size = 256;
-    Uint8       err_buf[err_size];
-    Uint8       tagDecrypt[16];
+    const int   cErrSize = 256;
+    Uint8       err_buf[cErrSize];
+    Uint8       tag_decrypt[16];
     // set tag length
-    err = alcp_cipher_aead_set_tag_length(&handle, tagLen);
+    err = alcp_cipher_aead_set_tag_length(&handle, cTagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, err_size);
+        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 
     // Additional Data
-    err = alcp_cipher_aead_set_aad(&handle, ad, adLen);
+    err = alcp_cipher_aead_set_aad(&handle, ad, cAdLen);
     if (alcp_is_error(err)) {
         printf("Error: unable Chacha20-Poly1305 add data processing \n");
-        alcp_error_str(err, err_buf, err_size);
+        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 
     // Chacha20-Poly1305 decrypt
     err =
-        alcp_cipher_aead_decrypt_update(&handle, ciphertxt, plaintxt, len, iv);
+        alcp_cipher_aead_decrypt_update(&handle, ciphertxt, plaintxt, cLen, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
-        alcp_error_str(err, err_buf, err_size);
+        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 
     // get tag
-    err = alcp_cipher_aead_get_tag(&handle, tagDecrypt, tagLen);
+    err = alcp_cipher_aead_get_tag(&handle, tag_decrypt, cTagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
-        alcp_error_str(err, err_buf, err_size);
+        alcp_error_str(err, err_buf, cErrSize);
         return -1;
     }
 
-    char* hex_tagDecrypt = bytesToHexString(tagDecrypt, tagLen);
-    printf("TAG Decrypt:%s\n", hex_tagDecrypt);
-    free(hex_tagDecrypt);
+    char* p_hex_tag_decrypt = BytesToHexString(tag_decrypt, cTagLen);
+    printf("TAG Decrypt:%s\n", p_hex_tag_decrypt);
+    free(p_hex_tag_decrypt);
 
-    bool isTagMatched = true;
+    bool is_tag_matched = true;
 
-    for (int i = 0; i < tagLen; i++) {
-        if (tagDecrypt[i] != tag[i]) {
-            isTagMatched = isTagMatched & false;
+    for (int i = 0; i < cTagLen; i++) {
+        if (tag_decrypt[i] != tag[i]) {
+            is_tag_matched = is_tag_matched & false;
         }
     }
 
-    if (isTagMatched == false) {
+    if (is_tag_matched == false) {
         printf("\n Tag mismatched, input encrypted data is not trusthworthy\n");
-        memset(plaintxt, 0, len);
+        memset(plaintxt, 0, cLen);
         return -1;
     } else {
         printf("\n Encrypt and Decrypt Tag is matched.\n");
@@ -226,18 +226,18 @@ static Uint8 sample_ciphertxt[sizeof(sample_plaintxt)] = {
 };
 
 // Key Size has to be 256 bits
-static const Uint8 sample_key[] = { 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86,
+static const Uint8 cSampleKey[] = { 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86,
                                     0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d,
                                     0x8e, 0x8f, 0x90, 0x91, 0x92, 0x93, 0x94,
                                     0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0x9b,
                                     0x9c, 0x9d, 0x9e, 0x9f };
 
 // IV Size has to be 96 bits
-static const Uint8 sample_iv[] = { 0x07, 0x00, 0x00, 0x00, 0x40, 0x41,
+static const Uint8 cSampleIv[] = { 0x07, 0x00, 0x00, 0x00, 0x40, 0x41,
                                    0x42, 0x43, 0x44, 0x45, 0x46, 0x47 };
 
 // Additional data
-static const Uint8 sample_ad[] = "Hello World, this is a sample AAD, "
+static const Uint8 cSampleAd[] = "Hello World, this is a sample AAD, "
                                  "there can be a large value for AAD";
 
 int
@@ -246,57 +246,57 @@ main(int argc, char const* argv[])
     int   retval                = 0;
     Uint8 sample_tag_output[16] = {};
     Uint8 decrypted_plaintext[sizeof(sample_plaintxt)];
-    retval = create_demo_session(
-        sample_key, sample_iv, sizeof(sample_iv) * 8, sizeof(sample_key) * 8);
+    retval = CreateDemoSession(
+        cSampleKey, cSampleIv, sizeof(cSampleIv) * 8, sizeof(cSampleKey) * 8);
     if (retval != 0)
         goto out;
 
-    retval = alcp_chacha20_poly1305_encrypt_demo(sample_plaintxt,
-                                                 sizeof(sample_plaintxt),
-                                                 sample_ciphertxt,
-                                                 sample_iv,
-                                                 sizeof(sample_iv),
-                                                 sample_ad,
-                                                 sizeof(sample_ad),
-                                                 sample_tag_output,
-                                                 sizeof(sample_tag_output));
+    retval = AlcpChacha20Poly1305EncryptDemo(sample_plaintxt,
+                                             sizeof(sample_plaintxt),
+                                             sample_ciphertxt,
+                                             cSampleIv,
+                                             sizeof(cSampleIv),
+                                             cSampleAd,
+                                             sizeof(cSampleAd),
+                                             sample_tag_output,
+                                             sizeof(sample_tag_output));
     if (retval != 0)
         goto out;
-    char* plaintext_hex_string =
-        bytesToHexString(sample_plaintxt, sizeof(sample_plaintxt));
+    char* p_plaintext_hex_string =
+        BytesToHexString(sample_plaintxt, sizeof(sample_plaintxt));
 
-    printf("PlaintextOut:%s\n", plaintext_hex_string);
+    printf("PlaintextOut:%s\n", p_plaintext_hex_string);
 
-    free(plaintext_hex_string);
+    free(p_plaintext_hex_string);
 
-    char* ciphertext_hex_string =
-        bytesToHexString(sample_ciphertxt, sizeof(sample_ciphertxt));
+    char* p_ciphertext_hex_string =
+        BytesToHexString(sample_ciphertxt, sizeof(sample_ciphertxt));
 
-    printf("CiphertextOut:%s\n", ciphertext_hex_string);
+    printf("CiphertextOut:%s\n", p_ciphertext_hex_string);
 
-    free(ciphertext_hex_string);
+    free(p_ciphertext_hex_string);
 
-    char* tag_hex_string =
-        bytesToHexString(sample_tag_output, sizeof(sample_tag_output));
-    printf("Encrypt TAG :%s\n", tag_hex_string);
-    free(tag_hex_string);
+    char* p_tag_hex_string =
+        BytesToHexString(sample_tag_output, sizeof(sample_tag_output));
+    printf("Encrypt TAG :%s\n", p_tag_hex_string);
+    free(p_tag_hex_string);
 
     alcp_cipher_aead_finish(&handle);
     free(handle.ch_context);
 
-    retval = create_demo_session(
-        sample_key, sample_iv, sizeof(sample_iv) * 8, sizeof(sample_key) * 8);
+    retval = CreateDemoSession(
+        cSampleKey, cSampleIv, sizeof(cSampleIv) * 8, sizeof(cSampleKey) * 8);
     if (retval != 0)
         goto out;
-    retval = alcp_chacha20_poly1305_decrypt_demo(sample_ciphertxt,
-                                                 sizeof(sample_ciphertxt),
-                                                 decrypted_plaintext,
-                                                 sample_iv,
-                                                 sizeof(sample_iv),
-                                                 sample_ad,
-                                                 sizeof(sample_ad),
-                                                 sample_tag_output,
-                                                 sizeof(sample_tag_output));
+    retval = AlcpChacha20Poly1305DecryptDemo(sample_ciphertxt,
+                                             sizeof(sample_ciphertxt),
+                                             decrypted_plaintext,
+                                             cSampleIv,
+                                             sizeof(cSampleIv),
+                                             cSampleAd,
+                                             sizeof(cSampleAd),
+                                             sample_tag_output,
+                                             sizeof(sample_tag_output));
 
     if (retval != 0)
         goto out;
@@ -313,9 +313,9 @@ out:
 }
 
 char*
-bytesToHexString(unsigned char* bytes, int length)
+BytesToHexString(unsigned char* bytes, int length)
 {
-    char* outputHexString = malloc(sizeof(char) * ((length * 2) + 1));
+    char* p_output_hex_string = malloc(sizeof(char) * ((length * 2) + 1));
     for (int i = 0; i < length; i++) {
         char chararray[2];
         chararray[0] = (bytes[i] & 0xf0) >> 4;
@@ -373,9 +373,9 @@ bytesToHexString(unsigned char* bytes, int length)
                 default:
                     printf("%x %d\n", chararray[j], j);
             }
-            outputHexString[i * 2 + j] = chararray[j];
+            p_output_hex_string[i * 2 + j] = chararray[j];
         }
     }
-    outputHexString[length * 2] = 0x0;
-    return outputHexString;
+    p_output_hex_string[length * 2] = 0x0;
+    return p_output_hex_string;
 }
