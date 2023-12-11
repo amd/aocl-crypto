@@ -39,5 +39,4 @@ ADD_EXAMPLE(aes-speed-cipher aes-speed-cipher.c)
 
 ADD_EXAMPLE(aes-speed-gcm aes-speed-gcm.c)
 
-
-
+ADD_EXAMPLE(chacha20-poly1305 chacha20-poly1305.c)

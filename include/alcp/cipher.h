@@ -60,6 +60,7 @@ typedef enum _alc_cipher_type
     ALC_CIPHER_TYPE_TWOFISH,
     ALC_CIPHER_TYPE_SERPENT,
     ALC_CIPHER_TYPE_CHACHA20,
+    ALC_CIPHER_TYPE_CHACHA20_POLY1305,
     ALC_CIPHER_TYPE_MAX,
 } alc_cipher_type_t;
 

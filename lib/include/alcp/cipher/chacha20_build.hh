@@ -28,13 +28,13 @@
 #include "alcp/base.hh"
 #include "alcp/capi/cipher/builder.hh"
 #include "alcp/cipher/chacha20.hh"
+#include "alcp/cipher/chacha20_poly1305.hh"
 
 namespace alcp::cipher::chacha20 {
 
 class Chacha20Builder
 {
   public:
-  
     static alc_error_t Build(const alc_cipher_info_t& cCipherAlgoInfo,
                              Context&                 ctx);
 
@@ -42,4 +42,14 @@ class Chacha20Builder
                           const alc_key_info_t         ci_key_info);
 };
 
-}
+class Chacha20Poly1305Builder
+{
+  public:
+    static alc_error_t Build(const alc_cipher_aead_info_t& cCipherAlgoInfo,
+                             Context&                      ctx);
+
+    static bool Supported(const alc_cipher_aead_algo_info_t ci_algo_info,
+                          const alc_key_info_t              ci_key_info);
+};
+
+} // namespace alcp::cipher::chacha20

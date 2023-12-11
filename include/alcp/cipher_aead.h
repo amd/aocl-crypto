@@ -82,6 +82,7 @@ typedef struct _alc_cipher_aead_algo_info
 {
     alc_cipher_mode_t ai_mode; /* Mode: ALC_AES_MODE_CFB etc */
     const Uint8*      ai_iv;   /* Initialization Vector */
+    Uint64            iv_length;
     union
     {
         alc_cipher_aead_mode_gcm_info_t ai_gcm;
