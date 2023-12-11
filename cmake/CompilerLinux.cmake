@@ -26,23 +26,17 @@
 
 # get build environment
 function(alcp_get_build_environment)
-    #execute_process(COMMAND uname -a OUTPUT_VARIABLE SYS_DETAILS)
-    message(STATUS "SYS Details ${SYS_DETAILS}")
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         set (ALCP_BUILD_COMPILER "GCC_v${CMAKE_CXX_COMPILER_VERSION}")
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         set (ALCP_BUILD_COMPILER "Clang_v${CMAKE_CXX_COMPILER_VERSION}")
     endif()
 
-    if (UNIX)
-        find_program(LSB_RELEASE_EXEC lsb_release)
-        execute_process(COMMAND ${LSB_RELEASE_EXEC} -d
-            OUTPUT_VARIABLE OS_VERSION
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-    elseif (WIN32)
-        set(OS_VERSION ${CMAKE_HOST_SYSTEM})
-    endif()
+    find_program(LSB_RELEASE_EXEC lsb_release)
+    execute_process(COMMAND ${LSB_RELEASE_EXEC} -d
+        OUTPUT_VARIABLE OS_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
 
     set (ALCP_BUILD_ENV ${ALCP_BUILD_COMPILER}_${OS_VERSION} PARENT_SCOPE)
 endfunction(alcp_get_build_environment)

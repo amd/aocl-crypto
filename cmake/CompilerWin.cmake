@@ -23,6 +23,19 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
+
+ # get build environment
+function(alcp_get_build_environment)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set (ALCP_BUILD_COMPILER "GCC_v${CMAKE_CXX_COMPILER_VERSION}")
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set (ALCP_BUILD_COMPILER "Clang_v${CMAKE_CXX_COMPILER_VERSION}")
+    endif()
+    set(OS_VERSION ${CMAKE_HOST_SYSTEM})
+    set (ALCP_BUILD_ENV ${ALCP_BUILD_COMPILER}_${OS_VERSION} PARENT_SCOPE)
+endfunction(alcp_get_build_environment)
+
+
 # check compiler version
 function(alcp_check_compiler_version)
     set(CLANG_MIN_REQ "12.0.0")
