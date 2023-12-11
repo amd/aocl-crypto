@@ -27,50 +27,25 @@
  */
 
 #include "alcp/cipher/chacha20_poly1305.hh"
+#include "alcp/utils/benchmark.hh"
 #include "gtest/gtest.h"
 #include <openssl/bio.h>
-
-#ifdef WIN32
-#include "alcp/utils/time.hh"
-#else
-#include <sys/time.h>
-#endif
-#define ALCP_CRYPT_TIMER_INIT struct timeval begin, end;
-long   seconds;
-long   microseconds;
-double elapsed;
-double totalTimeElapsed;
-
-#define ALCP_CRYPT_TIMER_START gettimeofday(&begin, 0);
-
-#define ALCP_CRYPT_GET_TIME(X, Y)                                              \
-    gettimeofday(&end, 0);                                                     \
-    seconds      = end.tv_sec - begin.tv_sec;                                  \
-    microseconds = end.tv_usec - begin.tv_usec;                                \
-    elapsed      = seconds + microseconds * 1e-6;                              \
-    totalTimeElapsed += elapsed;                                               \
-    if (X) {                                                                   \
-        printf("\t" Y);                                                        \
-        printf(" %2.2f ms ", elapsed * 1000);                                  \
-    }
-
-TEST(ChaCha20Poly1305Test, BasicTest)
+class ChaCha20Poly1305Test : public testing::Test
 {
-
-    ChaCha20Poly1305 chacha_poly;
-    alc_error_t      err   = ALC_ERROR_NONE;
-    Uint8            key[] = { 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87,
+  public:
+    bool               is_encrypt_test = true;
+    std::vector<Uint8> key = { 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87,
                                0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f,
                                0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97,
                                0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9d, 0x9e, 0x9f };
 
-    Uint8 AAD[] = { 0x50, 0x51, 0x52, 0x53, 0xc0, 0xc1,
-                    0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7 };
+    std::vector<Uint8> AAD = { 0x50, 0x51, 0x52, 0x53, 0xc0, 0xc1,
+                               0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7 };
 
-    Uint8 nonce[] = { 0x07, 0x00, 0x00, 0x00, 0x40, 0x41,
-                      0x42, 0x43, 0x44, 0x45, 0x46, 0x47 };
+    std::vector<Uint8> nonce = { 0x07, 0x00, 0x00, 0x00, 0x40, 0x41,
+                                 0x42, 0x43, 0x44, 0x45, 0x46, 0x47 };
 
-    std::vector<Uint8> plaintext = {
+    std::vector<Uint8> expected_plaintext = {
         0x4c, 0x61, 0x64, 0x69, 0x65, 0x73, 0x20, 0x61, 0x6e, 0x64, 0x20, 0x47,
         0x65, 0x6e, 0x74, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x20, 0x6f, 0x66, 0x20,
         0x74, 0x68, 0x65, 0x20, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x20, 0x6f, 0x66,
@@ -96,33 +71,124 @@ TEST(ChaCha20Poly1305Test, BasicTest)
         0x86, 0xce, 0xc6, 0x4b, 0x61, 0x16
     };
 
-    std::vector<Uint8> ciphertext(plaintext.size());
-
-    chacha_poly.setNonce(nonce, sizeof(nonce));
-    ASSERT_EQ(err, ALC_ERROR_NONE);
-
-    err = chacha_poly.setKey(key, sizeof(key));
-    ASSERT_EQ(err, ALC_ERROR_NONE);
-    err = chacha_poly.setAad(AAD, sizeof(AAD));
-    ASSERT_EQ(err, ALC_ERROR_NONE);
-
-    err = chacha_poly.encryptupdate(
-        &plaintext[0], plaintext.size(), &ciphertext[0]);
-    ASSERT_EQ(err, ALC_ERROR_NONE);
-    EXPECT_EQ(ciphertext, expected_ciphertext);
-
-    std::vector<Uint8> tag(16);
-
-    err = chacha_poly.getTag(&tag[0], 16);
-#ifdef DEBUG
-    std::cout << "Tag is " << std::endl;
-    BIO_dump_fp(stdout, &tag[0], tag.size());
-#endif
     std::vector<Uint8> expected_tag = { 0x1a, 0xe1, 0x0b, 0x59, 0x4f, 0x09,
                                         0xe2, 0x6a, 0x7e, 0x90, 0x2e, 0xcb,
                                         0xd0, 0x60, 0x06, 0x91 };
-    ASSERT_EQ(err, ALC_ERROR_NONE);
-    EXPECT_EQ(tag, expected_tag);
+
+    std::vector<Uint8> tag;
+    std::vector<Uint8> plaintext;
+    std::vector<Uint8> ciphertext;
+
+    ChaCha20Poly1305<CpuCipherFeatures::eDynamic>* chacha_poly;
+
+    static constexpr unsigned short chacha20_poly1305_tag_size = 16;
+    void                            SetUp() override
+    {
+        tag.resize(chacha20_poly1305_tag_size);
+        plaintext.resize(expected_plaintext.size());
+        ciphertext.resize(expected_ciphertext.size());
+        static_assert(
+            chacha20_poly1305_tag_size
+            == 16); // Tag size should always be 16. The test expects
+                    // it to be so. If for some reason it has to be
+                    // modified this validation will fail acting as an alert
+        ASSERT_EQ(
+            plaintext.size(),
+            ciphertext.size()); // If for some reason someone modifies the
+                                // plaintext or ciphertext input data to
+                                // different lengths these validation will fail
+    }
+
+    void createChachaPolyObject()
+    {
+        chacha_poly = new ChaCha20Poly1305<CpuCipherFeatures::eDynamic>();
+    }
+    void destroyChachaPolyObject() { delete chacha_poly; }
+
+    void setInputValues()
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+
+        // setNonce has to be called before setKey.
+        err = chacha_poly->setNonce(&nonce[0], nonce.size());
+        ASSERT_EQ(err, ALC_ERROR_NONE);
+
+        err = chacha_poly->setKey(&key[0], key.size());
+        ASSERT_EQ(err, ALC_ERROR_NONE);
+        err = chacha_poly->setAad(&AAD[0], AAD.size());
+        ASSERT_EQ(err, ALC_ERROR_NONE);
+    }
+
+    void encryptDecryptTest(bool                is_encrypt_test,
+                            std::vector<Uint8>& plaintext,
+                            std::vector<Uint8>& ciphertext,
+                            Uint64              size)
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+
+        if (is_encrypt_test) {
+            err = chacha_poly->encryptupdate(&expected_plaintext[0],
+                                             expected_plaintext.size(),
+                                             &ciphertext[0]);
+            ASSERT_EQ(err, ALC_ERROR_NONE);
+            EXPECT_EQ(ciphertext, expected_ciphertext)
+                << "Failed Encryption: Input Size" << size << std::endl;
+        } else {
+            err = chacha_poly->decryptupdate(&expected_ciphertext[0],
+                                             expected_ciphertext.size(),
+                                             &plaintext[0]);
+            ASSERT_EQ(err, ALC_ERROR_NONE);
+            EXPECT_EQ(plaintext, expected_plaintext)
+                << "Failed Encryption: Input Size" << size << std::endl;
+            ;
+        }
+
+        err = chacha_poly->getTag(&tag[0], 16);
+#ifdef DEBUG
+        std::cout << "Tag is " << std::endl;
+        BIO_dump_fp(stdout, &tag[0], tag.size());
+#endif
+
+        ASSERT_EQ(err, ALC_ERROR_NONE);
+        EXPECT_EQ(tag, expected_tag);
+    }
+    void testChacha20Poly1305(Uint64 size)
+    {
+        createChachaPolyObject();
+        setInputValues();
+        encryptDecryptTest(is_encrypt_test, plaintext, ciphertext, size);
+        destroyChachaPolyObject();
+    }
+
+    void testChacha20Poly1305MultiBytes()
+    {
+        for (Uint64 i = 0; i < plaintext.size(); i++) {
+            testChacha20Poly1305(i);
+        }
+    }
+};
+TEST_F(ChaCha20Poly1305Test, EncryptTest)
+{
+    is_encrypt_test = true;
+    testChacha20Poly1305(plaintext.size());
+}
+
+TEST_F(ChaCha20Poly1305Test, DecryptTest)
+{
+    is_encrypt_test = false;
+    testChacha20Poly1305(ciphertext.size());
+}
+
+TEST_F(ChaCha20Poly1305Test, MultiBytesEncryptTest)
+{
+    is_encrypt_test = true;
+    testChacha20Poly1305MultiBytes();
+}
+
+TEST_F(ChaCha20Poly1305Test, MultiBytesDecryptTest)
+{
+    is_encrypt_test = false;
+    testChacha20Poly1305MultiBytes();
 }
 
 TEST(Chacha20Poly1305, PerformanceTest)

@@ -32,29 +32,7 @@
 #include "gtest/gtest.h"
 #include <openssl/bio.h>
 
-#ifdef WIN32
-#include "alcp/utils/time.hh"
-#else
-#include <sys/time.h>
-#endif
-#define ALCP_CRYPT_TIMER_INIT struct timeval begin, end;
-long   seconds;
-long   microseconds;
-double elapsed;
-double totalTimeElapsed;
-
-#define ALCP_CRYPT_TIMER_START gettimeofday(&begin, 0);
-
-#define ALCP_CRYPT_GET_TIME(X, Y)                                              \
-    gettimeofday(&end, 0);                                                     \
-    seconds      = end.tv_sec - begin.tv_sec;                                  \
-    microseconds = end.tv_usec - begin.tv_usec;                                \
-    elapsed      = seconds + microseconds * 1e-6;                              \
-    totalTimeElapsed += elapsed;                                               \
-    if (X) {                                                                   \
-        printf("\t" Y);                                                        \
-        printf(" %2.2f ms ", elapsed * 1000);                                  \
-    }
+#include "alcp/utils/benchmark.hh"
 
 using namespace alcp::cipher::chacha20;
 TEST(Chacha20, QuarterRoundTest)
