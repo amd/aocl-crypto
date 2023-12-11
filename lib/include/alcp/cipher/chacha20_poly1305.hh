@@ -30,6 +30,8 @@
 #include "alcp/mac/poly1305.hh"
 
 using namespace alcp::cipher::chacha20;
+namespace alcp::cipher::chacha20 {
+
 union len_ciphertext_processed
 {
     Uint64 u64 = 0;
@@ -61,9 +63,19 @@ class ChaCha20Poly1305
     alc_error_t setNonce(const Uint8* nonce, Uint64 nonce_length);
     alc_error_t setKey(const Uint8 key[], Uint64 keylen);
     alc_error_t setAad(const Uint8* pInput, Uint64 len);
+    template<bool is_encrypt>
     alc_error_t processInput(const Uint8 plaintext[],
                              Uint64      plaintext_length,
                              Uint8       ciphertext[]);
+    alc_error_t encryptupdate(const Uint8 plaintext[],
+                              Uint64      plaintext_length,
+                              Uint8       ciphertext[]);
+    alc_error_t decryptupdate(const Uint8 ciphertext[],
+                              Uint64      ciphertext_length,
+                              Uint8       plaintext[]);
+    alc_error_t setTagLength(Uint64 tag_length);
 
     alc_error_t getTag(Uint8* pOutput, Uint64 len);
 };
+
+} // namespace alcp::cipher::chacha20

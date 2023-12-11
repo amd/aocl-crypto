@@ -29,6 +29,9 @@
 #include "alcp/cipher/chacha20_poly1305.hh"
 #include "alcp/base.hh"
 #include <openssl/bio.h>
+
+// #define DEBUG
+
 template<CpuCipherFeatures cpu_cipher_feature>
 alc_error_t
 ChaCha20Poly1305<cpu_cipher_feature>::setNonce(const Uint8* nonce,
@@ -45,6 +48,27 @@ ChaCha20Poly1305<cpu_cipher_feature>::setNonce(const Uint8* nonce,
 }
 
 template<CpuCipherFeatures cpu_cipher_feature>
+alc_error_t
+ChaCha20Poly1305<cpu_cipher_feature>::encryptupdate(const Uint8 plaintext[],
+                                                    Uint64      plaintextLength,
+                                                    Uint8       ciphertext[])
+{
+    return ChaCha20Poly1305::processInput<true>(
+        plaintext, plaintextLength, ciphertext);
+}
+
+template<CpuCipherFeatures cpu_cipher_feature>
+alc_error_t
+ChaCha20Poly1305<cpu_cipher_feature>::decryptupdate(const Uint8 ciphertext[],
+                                                    Uint64 ciphertextLength,
+                                                    Uint8  plaintext[])
+{
+    return ChaCha20Poly1305::processInput<false>(
+        ciphertext, ciphertextLength, plaintext);
+}
+// TODO: Rename the arguments to input,output and not plaintext,ciphertext
+template<CpuCipherFeatures cpu_cipher_feature>
+template<bool is_encrypt>
 alc_error_t
 ChaCha20Poly1305<cpu_cipher_feature>::processInput(const Uint8 plaintext[],
                                                    Uint64      plaintextLength,
@@ -73,7 +97,14 @@ ChaCha20Poly1305<cpu_cipher_feature>::processInput(const Uint8 plaintext[],
             return ALC_ERROR_EXISTS;
         }
     }
-    s = Poly1305::update(ciphertext, plaintextLength);
+    if constexpr (is_encrypt) {
+
+        s = Poly1305::update(ciphertext, plaintextLength);
+    } else {
+        //  In case of decryption one should change the order of updation i.e
+        //  input (which is the ciphertext) should be updated
+        s = Poly1305::update(plaintext, plaintextLength);
+    }
     if (!s.ok()) {
         return ALC_ERROR_EXISTS;
     }
@@ -122,6 +153,16 @@ ChaCha20Poly1305<cpu_cipher_feature>::getTag(Uint8* pOutput, Uint64 len)
     s = Poly1305::copy(pOutput, len);
     if (!s.ok()) {
         return ALC_ERROR_EXISTS;
+    }
+    return ALC_ERROR_NONE;
+}
+
+template<CpuCipherFeatures cpu_cipher_feature>
+alc_error_t
+ChaCha20Poly1305<cpu_cipher_feature>::setTagLength(Uint64 tag_length)
+{
+    if (tag_length != 16) {
+        return ALC_ERROR_INVALID_SIZE;
     }
     return ALC_ERROR_NONE;
 }

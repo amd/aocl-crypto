@@ -106,7 +106,7 @@ TEST(ChaCha20Poly1305Test, BasicTest)
     err = chacha_poly.setAad(AAD, sizeof(AAD));
     ASSERT_EQ(err, ALC_ERROR_NONE);
 
-    err = chacha_poly.processInput(
+    err = chacha_poly.encryptupdate(
         &plaintext[0], plaintext.size(), &ciphertext[0]);
     ASSERT_EQ(err, ALC_ERROR_NONE);
     EXPECT_EQ(ciphertext, expected_ciphertext);
@@ -150,7 +150,7 @@ TEST(Chacha20Poly1305, PerformanceTest)
     totalTimeElapsed = 0.0;
     for (int k = 0; k < 1000000000; k++) {
         ALCP_CRYPT_TIMER_START
-        chacha_poly.processInput(
+        chacha_poly.encryptupdate(
             &plaintext[0], plaintext.size(), &ciphertext[0]);
         ALCP_CRYPT_GET_TIME(0, "Encrypt")
         if (totalTimeElapsed > 1) {
