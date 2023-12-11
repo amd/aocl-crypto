@@ -40,7 +40,7 @@ LFLAGS := -L $(LIB_DIR) -lalcp -laoclutils
 
 # if linking to static lib
 ifeq ($(LIB_TYPE), static)
-    LFLAGS = -L$(LIB_DIR) -L$(OPENSSL_INSTALL_DIR) -l:libcrypto.a -l:libalcp.a -lstdc++ -lcrypto -l:libaoclutils.a
+    LFLAGS = -no-pie -L$(LIB_DIR) -L$(OPENSSL_INSTALL_DIR) -Wl,-Bstatic -l:libalcp.a -l:libaoclutils.a -Wl,-Bdynamic -lcrypto -lstdc++
 endif
 
 # Add more targets as they come.
