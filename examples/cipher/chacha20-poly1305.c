@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -134,7 +134,8 @@ alcp_chacha20_poly1305_encrypt_demo(
         return -1;
     }
 
-    // get tag
+    // get tag. Once Tag is obtained encrypt_update cannot be called again and
+    // will return an error.
     err = alcp_cipher_aead_get_tag(&handle, tag, tagLen);
     if (alcp_is_error(err)) {
         printf("Error: unable getting tag \n");
@@ -211,47 +212,40 @@ alcp_chacha20_poly1305_decrypt_demo(
         memset(plaintxt, 0, len);
         return -1;
     } else {
-        printf("\n Encrypt and Decrypt Tag is matched.");
+        printf("\n Encrypt and Decrypt Tag is matched.\n");
     }
 
     return 0;
 }
 
-static Uint8 sample_plaintxt[] = {
-    0x4c, 0x61, 0x64, 0x69, 0x65, 0x73, 0x20, 0x61, 0x6e, 0x64, 0x20, 0x47,
-    0x65, 0x6e, 0x74, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x20, 0x6f, 0x66, 0x20,
-    0x74, 0x68, 0x65, 0x20, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x20, 0x6f, 0x66,
-    0x20, 0x27, 0x39, 0x39, 0x3a, 0x20, 0x49, 0x66, 0x20, 0x49, 0x20, 0x63,
-    0x6f, 0x75, 0x6c, 0x64, 0x20, 0x6f, 0x66, 0x66, 0x65, 0x72, 0x20, 0x79,
-    0x6f, 0x75, 0x20, 0x6f, 0x6e, 0x6c, 0x79, 0x20, 0x6f, 0x6e, 0x65, 0x20,
-    0x74, 0x69, 0x70, 0x20, 0x66, 0x6f, 0x72, 0x20, 0x74, 0x68, 0x65, 0x20,
-    0x66, 0x75, 0x74, 0x75, 0x72, 0x65, 0x2c, 0x20, 0x73, 0x75, 0x6e, 0x73,
-    0x63, 0x72, 0x65, 0x65, 0x6e, 0x20, 0x77, 0x6f, 0x75, 0x6c, 0x64, 0x20,
-    0x62, 0x65, 0x20, 0x69, 0x74, 0x2e
-};
+static Uint8 sample_plaintxt[] =
+    "Happy and Fantastic Diwali from AOCL Crypto !!";
 
 static Uint8 sample_ciphertxt[sizeof(sample_plaintxt)] = {
     0,
 };
 
+// Key Size has to be 256 bits
 static const Uint8 sample_key[] = { 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86,
                                     0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d,
                                     0x8e, 0x8f, 0x90, 0x91, 0x92, 0x93, 0x94,
                                     0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0x9b,
                                     0x9c, 0x9d, 0x9e, 0x9f };
 
+// IV Size has to be 96 bits
 static const Uint8 sample_iv[] = { 0x07, 0x00, 0x00, 0x00, 0x40, 0x41,
                                    0x42, 0x43, 0x44, 0x45, 0x46, 0x47 };
 
-static const Uint8 sample_ad[] = { 0x50, 0x51, 0x52, 0x53, 0xc0, 0xc1,
-                                   0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7 };
+// Additional data
+static const Uint8 sample_ad[] = "Hello World, this is a sample AAD, "
+                                 "there can be a large value for AAD";
 
 int
 main(int argc, char const* argv[])
 {
     int   retval                = 0;
     Uint8 sample_tag_output[16] = {};
-
+    Uint8 decrypted_plaintext[sizeof(sample_plaintxt)];
     retval = create_demo_session(
         sample_key, sample_iv, sizeof(sample_iv) * 8, sizeof(sample_key) * 8);
     if (retval != 0)
@@ -266,7 +260,8 @@ main(int argc, char const* argv[])
                                                  sizeof(sample_ad),
                                                  sample_tag_output,
                                                  sizeof(sample_tag_output));
-
+    if (retval != 0)
+        goto out;
     char* plaintext_hex_string =
         bytesToHexString(sample_plaintxt, sizeof(sample_plaintxt));
 
@@ -287,19 +282,26 @@ main(int argc, char const* argv[])
     free(tag_hex_string);
 
     alcp_cipher_aead_finish(&handle);
+    free(handle.ch_context);
 
     retval = create_demo_session(
         sample_key, sample_iv, sizeof(sample_iv) * 8, sizeof(sample_key) * 8);
-
+    if (retval != 0)
+        goto out;
     retval = alcp_chacha20_poly1305_decrypt_demo(sample_ciphertxt,
                                                  sizeof(sample_ciphertxt),
-                                                 sample_plaintxt,
+                                                 decrypted_plaintext,
                                                  sample_iv,
                                                  sizeof(sample_iv),
                                                  sample_ad,
                                                  sizeof(sample_ad),
                                                  sample_tag_output,
                                                  sizeof(sample_tag_output));
+
+    if (retval != 0)
+        goto out;
+
+    printf("sample_output: %s\n", decrypted_plaintext);
     alcp_cipher_aead_finish(&handle);
 
     free(handle.ch_context);
