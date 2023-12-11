@@ -58,6 +58,9 @@ PROJECT (ALCP
 # check for compiler version
 alcp_check_compiler_version()
 
+# check build environment
+alcp_get_build_environment()
+
 # SPECIFY THE C STANDARD
 SET(CMAKE_C_STANDARD 11)
 SET(CMAKE_CXX_STANDARD 17)

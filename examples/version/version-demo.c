@@ -34,5 +34,6 @@ main()
 {
     // Call alcp_get_version function which returns a string
     printf("ALCP_VERSION_IS: %s\n", alcp_get_version());
+    printf("ALCP_Build_environment: %s\n", alcp_get_build_env());
     return 0;
 }

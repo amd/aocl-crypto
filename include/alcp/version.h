@@ -32,6 +32,8 @@
 EXTERN_C_BEGIN
 ALCP_API_EXPORT const char*
 alcp_get_version(void);
+ALCP_API_EXPORT const char*
+alcp_get_build_env(void);
 EXTERN_C_END
 
 #endif

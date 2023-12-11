@@ -35,3 +35,9 @@ alcp_get_version()
 {
     return ALCP_RELEASE_VERSION_STRING;
 }
+
+const char*
+alcp_get_build_env()
+{
+    return ALCP_BUILD_ENV;
+}
