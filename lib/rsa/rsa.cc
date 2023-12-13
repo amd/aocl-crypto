@@ -178,6 +178,9 @@ Rsa<T>::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
     static bool zen3_available = CpuId::cpuIsZen3();
     static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
 
+    static bool zen_available_flags =
+        CpuId::cpuHasAdx() && CpuId::cpuHasAvx2() && CpuId::cpuHasBmi2();
+
     if (zen4_available) {
         zen4::archEncryptPublic<T>(
             pEncText, ptext_bignum, m_pub_key, m_context_pub);
@@ -186,7 +189,7 @@ Rsa<T>::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
         zen3::archEncryptPublic<T>(
             pEncText, ptext_bignum, m_pub_key, m_context_pub);
         return StatusOk();
-    } else if (zen_available) {
+    } else if (zen_available || zen_available_flags) {
         zen::archEncryptPublic<T>(
             pEncText, ptext_bignum, m_pub_key, m_context_pub);
         return StatusOk();
