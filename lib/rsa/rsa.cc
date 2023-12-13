@@ -174,6 +174,8 @@ Rsa<T>::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
             "text absolute value should be less than modulus");
     }
 
+    // FIXME: We should probably use flag base dispatching than ZENVER dispatch
+    //        as this kind of dispatch will pick reference in non AMD machines.
     static bool zen4_available = CpuId::cpuIsZen4();
     static bool zen3_available = CpuId::cpuIsZen3();
     static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
@@ -223,9 +225,14 @@ Rsa<T>::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
             "text absolute value should be less than modulus");
     }
 
+    // FIXME: We should probably use flag base dispatching than ZENVER dispatch
+    //        as this kind of dispatch will pick reference in non AMD machines.
     static bool zen4_available = CpuId::cpuIsZen4();
     static bool zen3_available = CpuId::cpuIsZen3();
     static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
+
+    static bool zen_available_flags =
+        CpuId::cpuHasAdx() && CpuId::cpuHasAvx2() && CpuId::cpuHasBmi2();
 
     if (zen4_available) {
         zen4::archDecryptPrivate<T>(
@@ -235,7 +242,7 @@ Rsa<T>::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
         zen3::archDecryptPrivate<T>(
             pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
         return StatusOk();
-    } else if (zen_available) {
+    } else if (zen_available || zen_available_flags) {
         zen::archDecryptPrivate<T>(
             pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
         return StatusOk();
