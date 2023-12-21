@@ -90,6 +90,11 @@ ADD_LIBRARY(alcp_static STATIC
 	${ALCP_VRS_SRC}
 	)
 
+# Some linux distros will prefer RPATH not RUNPATH, enforce RUNPATH use
+# RUNPATH will give priority to LD_LIBRARY_PATH, at last RUNPATH will use
+# original path which was used in linking
+TARGET_LINK_OPTIONS(alcp PUBLIC -Wl,--enable-new-dtags)
+
 IF(UNIX)
 	SET_TARGET_PROPERTIES(alcp_static PROPERTIES OUTPUT_NAME alcp)
 ENDIF(UNIX)
