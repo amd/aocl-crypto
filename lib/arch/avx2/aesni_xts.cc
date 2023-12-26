@@ -71,6 +71,8 @@ namespace alcp::cipher { namespace aesni {
         // Encrypting 4 source text blocks at a time
         while (blocks >= 4) {
 
+            __m128i src128[4];
+
             // Calulating Aplha for the next 4 blocks
             __m128i current_alpha_1 = current_alpha;
             aes::MultiplyAlphaByTwo(current_alpha);
@@ -81,11 +83,16 @@ namespace alcp::cipher { namespace aesni {
             __m128i current_alpha_4 = current_alpha;
             aes::MultiplyAlphaByTwo(current_alpha);
 
+            src128[0] = _mm_loadu_si128(p_src128 + 0);
+            src128[1] = _mm_loadu_si128(p_src128 + 1);
+            src128[2] = _mm_loadu_si128(p_src128 + 2);
+            src128[3] = _mm_loadu_si128(p_src128 + 3);
+
             // getting Tweaked Text after xor of message and Alpha ^ j
-            __m128i tweaked_src_text_1 = (current_alpha_1 ^ p_src128[0]);
-            __m128i tweaked_src_text_2 = (current_alpha_2 ^ p_src128[1]);
-            __m128i tweaked_src_text_3 = (current_alpha_3 ^ p_src128[2]);
-            __m128i tweaked_src_text_4 = (current_alpha_4 ^ p_src128[3]);
+            __m128i tweaked_src_text_1 = (current_alpha_1 ^ src128[0]);
+            __m128i tweaked_src_text_2 = (current_alpha_2 ^ src128[1]);
+            __m128i tweaked_src_text_3 = (current_alpha_3 ^ src128[2]);
+            __m128i tweaked_src_text_4 = (current_alpha_4 ^ src128[3]);
 
             AesEnc_4x128(&tweaked_src_text_1,
                          &tweaked_src_text_2,
@@ -114,15 +121,20 @@ namespace alcp::cipher { namespace aesni {
         // Encrypting 2 source text blocks at a time
         if (blocks >= 2) {
 
+            __m128i src128[2];
+
             // Calulating Aplha for the next 4 blocks
             __m128i current_alpha_1 = current_alpha;
             aes::MultiplyAlphaByTwo(current_alpha);
             __m128i current_alpha_2 = current_alpha;
             aes::MultiplyAlphaByTwo(current_alpha);
 
+            src128[0] = _mm_loadu_si128(p_src128 + 0);
+            src128[1] = _mm_loadu_si128(p_src128 + 1);
+
             // getting Tweaked Text after xor of message and Alpha ^ j
-            __m128i tweaked_src_text_1 = current_alpha_1 ^ p_src128[0];
-            __m128i tweaked_src_text_2 = current_alpha_2 ^ p_src128[1];
+            __m128i tweaked_src_text_1 = current_alpha_1 ^ src128[0];
+            __m128i tweaked_src_text_2 = current_alpha_2 ^ src128[1];
 
             AesEnc_2x128(
                 &tweaked_src_text_1, &tweaked_src_text_2, p_key128, nRounds);
@@ -147,7 +159,8 @@ namespace alcp::cipher { namespace aesni {
 
             // Encrypting Text using EncKey
             // PP = ( Tweak xor P )
-            __m128i tweaked_src_text = current_alpha ^ p_src128[0];
+            __m128i src128           = _mm_loadu_si128(p_src128);
+            __m128i tweaked_src_text = current_alpha ^ src128;
             // CC = ( aesEnc(PP) )
             AesEnc_1x128(&tweaked_src_text, p_key128, nRounds);
             // C  = ( Tweak xor CC )
@@ -236,6 +249,8 @@ namespace alcp::cipher { namespace aesni {
         // Decrypting 4 cipher text blocks at a time
         while (blocks >= 4) {
 
+            __m128i src128[4];
+
             // Calulating Aplha for the next 4 blocks
             __m128i current_alpha_1 = current_alpha;
             aes::MultiplyAlphaByTwo(current_alpha);
@@ -249,11 +264,17 @@ namespace alcp::cipher { namespace aesni {
                 last_tweak      = current_alpha_4;
                 current_alpha_4 = current_alpha;
             }
+
+            src128[0] = _mm_loadu_si128(p_src128 + 0);
+            src128[1] = _mm_loadu_si128(p_src128 + 1);
+            src128[2] = _mm_loadu_si128(p_src128 + 2);
+            src128[3] = _mm_loadu_si128(p_src128 + 3);
+
             // getting Tweaked Text after xor of message and Alpha ^ j
-            __m128i tweaked_src_text_1 = current_alpha_1 ^ p_src128[0];
-            __m128i tweaked_src_text_2 = current_alpha_2 ^ p_src128[1];
-            __m128i tweaked_src_text_3 = current_alpha_3 ^ p_src128[2];
-            __m128i tweaked_src_text_4 = current_alpha_4 ^ p_src128[3];
+            __m128i tweaked_src_text_1 = current_alpha_1 ^ src128[0];
+            __m128i tweaked_src_text_2 = current_alpha_2 ^ src128[1];
+            __m128i tweaked_src_text_3 = current_alpha_3 ^ src128[2];
+            __m128i tweaked_src_text_4 = current_alpha_4 ^ src128[3];
 
             AesDec_4x128(&tweaked_src_text_1,
                          &tweaked_src_text_2,
@@ -282,6 +303,8 @@ namespace alcp::cipher { namespace aesni {
         // Decrypting 2 cipher text blocks at a time
         if (blocks >= 2) {
 
+            __m128i src128[2];
+
             // Calulating Aplha for the next 2 blocks
             __m128i current_alpha_1 = current_alpha;
             aes::MultiplyAlphaByTwo(current_alpha);
@@ -293,9 +316,12 @@ namespace alcp::cipher { namespace aesni {
                 current_alpha_2 = current_alpha;
             }
 
+            src128[0] = _mm_loadu_si128(p_src128 + 0);
+            src128[1] = _mm_loadu_si128(p_src128 + 1);
+
             // getting Tweaked Text after xor of message and Alpha ^ j
-            __m128i tweaked_src_text_1 = current_alpha_1 ^ p_src128[0];
-            __m128i tweaked_src_text_2 = current_alpha_2 ^ p_src128[1];
+            __m128i tweaked_src_text_1 = current_alpha_1 ^ src128[0];
+            __m128i tweaked_src_text_2 = current_alpha_2 ^ src128[1];
 
             AesDec_2x128(
                 &tweaked_src_text_1, &tweaked_src_text_2, p_key128, nRounds);
@@ -325,7 +351,8 @@ namespace alcp::cipher { namespace aesni {
             }
 
             // Decrypting Text using DecKey
-            __m128i tweaked_src_text = current_alpha ^ p_src128[0];
+            __m128i src128           = _mm_loadu_si128(p_src128);
+            __m128i tweaked_src_text = current_alpha ^ src128;
             AesDec_1x128(&tweaked_src_text, p_key128, nRounds);
             tweaked_src_text = tweaked_src_text ^ current_alpha;
 
