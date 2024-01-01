@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -44,7 +44,7 @@ TEST(RSA_No_Padding_1024, Cross)
 }
 TEST(RSA_No_Padding_2048, Cross)
 {
-    Rsa_KAT(ALCP_TEST_RSA_NO_PADDING, 2048, dinfo_256, mgfinfo_256);
+    Rsa_Cross(ALCP_TEST_RSA_NO_PADDING, 2048, dinfo_256, mgfinfo_256);
 }
 /* padded mode */
 TEST(RSA_Padding_1024, Cross_SHA2_256_MGF_256)
