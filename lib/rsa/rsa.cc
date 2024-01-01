@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -458,6 +458,8 @@ Rsa<T>::setPublicKey(const Uint64 exponent, const Uint8* mod, const Uint64 size)
     static bool zen4_available = CpuId::cpuIsZen4();
     static bool zen3_available = CpuId::cpuIsZen3();
     static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
+    static bool zen_available_flags =
+        CpuId::cpuHasAdx() && CpuId::cpuHasAvx2() && CpuId::cpuHasBmi2();
 
     if (zen4_available) {
         zen4::archCreateContext<T>(
@@ -467,7 +469,7 @@ Rsa<T>::setPublicKey(const Uint64 exponent, const Uint8* mod, const Uint64 size)
         zen3::archCreateContext<T>(
             m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
 
-    } else if (zen_available) {
+    } else if (zen_available || zen_available_flags) {
         zen::archCreateContext<T>(
             m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
 
@@ -510,6 +512,8 @@ Rsa<T>::setPrivateKey(const Uint8* dp,
     static bool zen4_available = CpuId::cpuIsZen4();
     static bool zen3_available = CpuId::cpuIsZen3();
     static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
+    static bool zen_available_flags =
+        CpuId::cpuHasAdx() && CpuId::cpuHasAvx2() && CpuId::cpuHasBmi2();
 
     if (zen4_available) {
         zen4::archCreateContext<T>(
@@ -521,7 +525,7 @@ Rsa<T>::setPrivateKey(const Uint8* dp,
             m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
         zen3::archCreateContext<T>(
             m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
-    } else if (zen_available) {
+    } else if (zen_available || zen_available_flags) {
         zen::archCreateContext<T>(
             m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
         zen::archCreateContext<T>(
