@@ -551,9 +551,9 @@ Rsa<T>::reset()
     Reset(m_priv_key.m_q.get(), T / (2 * 64));
     Reset(m_priv_key.m_qinv.get(), T / (2 * 64));
     Reset(m_pub_key.m_mod.get(), T / (64));
-    Reset(m_context_pub.m_mod_radix_52_bit.get(), T / 52 + 1);
-    Reset(m_context_p.m_mod_radix_52_bit.get(), T / (2 * 52) + 1);
-    Reset(m_context_q.m_mod_radix_52_bit.get(), T / (2 * 52) + 1);
+    Reset(m_context_pub.m_mod_radix_52_bit, T / 52 + 1);
+    Reset(m_context_p.m_mod_radix_52_bit, T / (2 * 52) + 1);
+    Reset(m_context_q.m_mod_radix_52_bit, T / (2 * 52) + 1);
 }
 
 template<alc_rsa_key_size T>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,22 +31,22 @@
 namespace alcp::rsa { namespace zen3 {
 
     template<alc_rsa_key_size T>
-    void archEncryptPublic(Uint8*              pEncText,
-                           const Uint64*       pTextBigNum,
-                           RsaPublicKeyBignum& pubKey,
-                           MontContextBignum&  context);
+    void archEncryptPublic(Uint8*                pEncText,
+                           const Uint64*         pTextBigNum,
+                           RsaPublicKeyBignum&   pubKey,
+                           MontContextBignum<T>& context);
 
     template<alc_rsa_key_size T>
-    void archDecryptPrivate(Uint8*               pText,
-                            const Uint64*        pEncTextBigNum,
-                            RsaPrivateKeyBignum& privKey,
-                            MontContextBignum&   contextP,
-                            MontContextBignum&   contextQ);
+    void archDecryptPrivate(Uint8*                pText,
+                            const Uint64*         pEncTextBigNum,
+                            RsaPrivateKeyBignum&  privKey,
+                            MontContextBignum<T>& contextP,
+                            MontContextBignum<T>& contextQ);
 
     // todo remove the size param.
     template<alc_rsa_key_size T>
-    void archCreateContext(MontContextBignum& context,
-                           Uint64*            mod,
-                           Uint64             size);
+    void archCreateContext(MontContextBignum<T>& context,
+                           Uint64*               mod,
+                           Uint64                size);
 
 }} // namespace alcp::rsa::zen3

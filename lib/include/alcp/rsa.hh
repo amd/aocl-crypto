@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -186,16 +186,16 @@ class ALCP_API_EXPORT Rsa
                       const Uint8* input,
                       Uint64       inputLen);
 
-    Uint64              m_key_size;
-    Uint64              m_hash_len;
-    Uint64              m_mgf_hash_len;
-    RsaPrivateKeyBignum m_priv_key;
-    RsaPublicKeyBignum  m_pub_key;
-    MontContextBignum   m_context_pub;
-    MontContextBignum   m_context_p;
-    MontContextBignum   m_context_q;
-    digest::IDigest*    m_digest = nullptr;
-    digest::IDigest*    m_mgf    = nullptr;
+    Uint64               m_key_size;
+    Uint64               m_hash_len;
+    Uint64               m_mgf_hash_len;
+    RsaPrivateKeyBignum  m_priv_key;
+    RsaPublicKeyBignum   m_pub_key;
+    MontContextBignum<T> m_context_pub;
+    MontContextBignum<T> m_context_p;
+    MontContextBignum<T> m_context_q;
+    digest::IDigest*     m_digest = nullptr;
+    digest::IDigest*     m_mgf    = nullptr;
 };
 
 } // namespace alcp::rsa

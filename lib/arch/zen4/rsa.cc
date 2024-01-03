@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -1595,19 +1595,14 @@ namespace alcp::rsa { namespace zen4 {
 
     template<>
     inline void mont::MontCompute<KEY_SIZE_2048>::CreateContext(
-        MontContextBignum& context, Uint64* mod, Uint64 size)
+        MontContextBignum<KEY_SIZE_2048>& context, Uint64* mod, Uint64 size)
     {
-        Uint64* r1               = new Uint64[size]{};
-        Uint64* r2               = new Uint64[size]{};
-        Uint64* r3               = new Uint64[size]{};
-        Uint64* r2_radix_52_bit  = new Uint64[40]{};
-        Uint64* mod_radix_52_bit = new Uint64[40]{};
+        Uint64* r1               = context.m_r1;
+        Uint64* r2               = context.m_r2; // new Uint64[size]{};
+        Uint64* r3               = context.m_r3; // new Uint64[size]{};
+        Uint64* r2_radix_52_bit  = context.m_r2_radix_52_bit; // Uint64[40]{};
+        Uint64* mod_radix_52_bit = context.m_mod_radix_52_bit;
 
-        context.m_r1.reset(r1);
-        context.m_r2.reset(r2);
-        context.m_r3.reset(r3);
-        context.m_r2_radix_52_bit.reset(r2_radix_52_bit);
-        context.m_mod_radix_52_bit.reset(mod_radix_52_bit);
         context.m_size = size;
         context.m_k0   = computeMontFactor(mod[0]);
 
@@ -1671,19 +1666,14 @@ namespace alcp::rsa { namespace zen4 {
 
     template<>
     inline void mont::MontCompute<KEY_SIZE_1024>::CreateContext(
-        MontContextBignum& context, Uint64* mod, Uint64 size)
+        MontContextBignum<KEY_SIZE_1024>& context, Uint64* mod, Uint64 size)
     {
-        Uint64* r1               = new Uint64[size]{};
-        Uint64* r2               = new Uint64[size]{};
-        Uint64* r3               = new Uint64[size]{};
-        Uint64* r2_radix_52_bit  = new Uint64[20]{};
-        Uint64* mod_radix_52_bit = new Uint64[20]{};
+        Uint64* r1               = context.m_r1; // new Uint64[size]{};
+        Uint64* r2               = context.m_r2; // new Uint64[size]{};
+        Uint64* r3               = context.m_r3; // new Uint64[size]{};
+        Uint64* r2_radix_52_bit  = context.m_r2_radix_52_bit;
+        Uint64* mod_radix_52_bit = context.m_mod_radix_52_bit;
 
-        context.m_r1.reset(r1);
-        context.m_r2.reset(r2);
-        context.m_r3.reset(r3);
-        context.m_r2_radix_52_bit.reset(r2_radix_52_bit);
-        context.m_mod_radix_52_bit.reset(mod_radix_52_bit);
         context.m_size = size;
         context.m_k0   = computeMontFactor(mod[0]);
 
@@ -1840,13 +1830,14 @@ namespace alcp::rsa { namespace zen4 {
     }
 
     template<>
-    void archEncryptPublic<KEY_SIZE_1024>(Uint8*              pEncText,
-                                          const Uint64*       pTextBignum,
-                                          RsaPublicKeyBignum& pubKey,
-                                          MontContextBignum&  context)
+    void archEncryptPublic<KEY_SIZE_1024>(
+        Uint8*                            pEncText,
+        const Uint64*                     pTextBignum,
+        RsaPublicKeyBignum&               pubKey,
+        MontContextBignum<KEY_SIZE_1024>& context)
     {
-        auto mod = context.m_mod_radix_52_bit.get(); //.m_mod.get();
-        auto r2  = context.m_r2_radix_52_bit.get();  // context.m_r2.get();
+        auto mod = context.m_mod_radix_52_bit; //.m_mod.get();
+        auto r2  = context.m_r2_radix_52_bit;  // context.m_r2.get();
         auto k0  = context.m_k0;
         auto exp = &pubKey.m_public_exponent;
 
@@ -1861,13 +1852,14 @@ namespace alcp::rsa { namespace zen4 {
     }
 
     template<>
-    void archEncryptPublic<KEY_SIZE_2048>(Uint8*              pEncText,
-                                          const Uint64*       pTextBignum,
-                                          RsaPublicKeyBignum& pubKey,
-                                          MontContextBignum&  context)
+    void archEncryptPublic<KEY_SIZE_2048>(
+        Uint8*                            pEncText,
+        const Uint64*                     pTextBignum,
+        RsaPublicKeyBignum&               pubKey,
+        MontContextBignum<KEY_SIZE_2048>& context)
     {
-        auto mod = context.m_mod_radix_52_bit.get(); //.m_mod.get();
-        auto r2  = context.m_r2_radix_52_bit.get();  // context.m_r2.get();
+        auto mod = context.m_mod_radix_52_bit; //.m_mod.get();
+        auto r2  = context.m_r2_radix_52_bit;  // context.m_r2.get();
         auto k0  = context.m_k0;
         auto exp = &pubKey.m_public_exponent;
 
@@ -1917,14 +1909,14 @@ namespace alcp::rsa { namespace zen4 {
         Uint64* r1_radix_52_bit_p[2] = { r1_radix_52_bit_contig,
                                          r1_radix_52_bit_contig + 20 };
         Uint64* input_radix_52[2]    = { input_radix_52_contig,
-                                         input_radix_52_contig + 20 };
+                                      input_radix_52_contig + 20 };
         Uint64* res_radix_52[2]      = { res_radix_52_contig,
-                                         res_radix_52_contig + 20 };
+                                    res_radix_52_contig + 20 };
 
         Uint64* mult_radix_52[2] = { mult_radix_52_contig,
                                      mult_radix_52_contig + 20 };
         Uint64* sq_radix_52[2]   = { sq_radix_52_contig,
-                                     sq_radix_52_contig + 20 };
+                                   sq_radix_52_contig + 20 };
 
         __m256i mod_reg[10];
         LoadReg256(mod_reg, modRadix52Bit[0]);
@@ -2097,11 +2089,11 @@ namespace alcp::rsa { namespace zen4 {
 
     template<>
     inline void mont::MontCompute<KEY_SIZE_2048>::decryptUsingCRT(
-        Uint64*              res,
-        const Uint64*        inp,
-        RsaPrivateKeyBignum& privKey,
-        MontContextBignum&   contextP,
-        MontContextBignum&   contextQ)
+        Uint64*                           res,
+        const Uint64*                     inp,
+        RsaPrivateKeyBignum&              privKey,
+        MontContextBignum<KEY_SIZE_2048>& contextP,
+        MontContextBignum<KEY_SIZE_2048>& contextQ)
     {
         auto size = contextP.m_size;
 
@@ -2112,16 +2104,16 @@ namespace alcp::rsa { namespace zen4 {
         Uint64 buff_0_p[16 + 1];
         Uint64 buff_1_p[16 + 1];
 
-        auto p_mod_radix_52_bit = contextP.m_mod_radix_52_bit.get();
+        auto p_mod_radix_52_bit = contextP.m_mod_radix_52_bit;
         auto p_mod              = privKey.m_p.get();
         auto q_mod              = privKey.m_q.get();
         auto p_exp              = privKey.m_dp.get();
-        auto q_mod_radix_52_bit = contextQ.m_mod_radix_52_bit.get();
+        auto q_mod_radix_52_bit = contextQ.m_mod_radix_52_bit;
         auto q_exp              = privKey.m_dq.get();
-        auto r2_p               = contextP.m_r2.get();
-        auto r2_q               = contextQ.m_r2.get();
-        auto r2_radix_52_bit_p  = contextP.m_r2_radix_52_bit.get();
-        auto r2_radix_52_bit_q  = contextQ.m_r2_radix_52_bit.get();
+        auto r2_p               = contextP.m_r2;
+        auto r2_q               = contextQ.m_r2;
+        auto r2_radix_52_bit_p  = contextP.m_r2_radix_52_bit;
+        auto r2_radix_52_bit_q  = contextQ.m_r2_radix_52_bit;
         auto qinv               = privKey.m_qinv.get();
         auto p_k0               = contextP.m_k0;
         auto q_k0               = contextQ.m_k0;
@@ -2174,24 +2166,22 @@ namespace alcp::rsa { namespace zen4 {
     }
 
     template void archDecryptPrivate<KEY_SIZE_1024>(
-        Uint8*               pText,
-        const Uint64*        pEncTextBigNum,
-        RsaPrivateKeyBignum& privKey,
-        MontContextBignum&   contextP,
-        MontContextBignum&   contextQ);
+        Uint8*                            pText,
+        const Uint64*                     pEncTextBigNum,
+        RsaPrivateKeyBignum&              privKey,
+        MontContextBignum<KEY_SIZE_1024>& contextP,
+        MontContextBignum<KEY_SIZE_1024>& contextQ);
 
     template void archDecryptPrivate<KEY_SIZE_2048>(
-        Uint8*               pText,
-        const Uint64*        pEncTextBigNum,
-        RsaPrivateKeyBignum& privKey,
-        MontContextBignum&   contextP,
-        MontContextBignum&   contextQ);
+        Uint8*                            pText,
+        const Uint64*                     pEncTextBigNum,
+        RsaPrivateKeyBignum&              privKey,
+        MontContextBignum<KEY_SIZE_2048>& contextP,
+        MontContextBignum<KEY_SIZE_2048>& contextQ);
 
-    template void archCreateContext<KEY_SIZE_1024>(MontContextBignum& context,
-                                                   Uint64*            mod,
-                                                   Uint64             size);
+    template void archCreateContext<KEY_SIZE_1024>(
+        MontContextBignum<KEY_SIZE_1024>& context, Uint64* mod, Uint64 size);
 
-    template void archCreateContext<KEY_SIZE_2048>(MontContextBignum& context,
-                                                   Uint64*            mod,
-                                                   Uint64             size);
+    template void archCreateContext<KEY_SIZE_2048>(
+        MontContextBignum<KEY_SIZE_2048>& context, Uint64* mod, Uint64 size);
 }} // namespace alcp::rsa::zen4

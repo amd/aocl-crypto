@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include "alcp/rsa.h"
 #include "alcp/types.hh"
 #include <memory>
 
@@ -50,16 +51,16 @@ struct RsaPrivateKeyBignum
     Uint64                    m_size = 0;
 };
 
+template<alc_rsa_key_size T>
 struct MontContextBignum
 {
-    Uint64                    m_k0; // Montgomery parameter
-    std::unique_ptr<Uint64[]> m_r1; // Montgomery identity
-    std::unique_ptr<Uint64[]> m_r2; // Montgomery converter
-    std::unique_ptr<Uint64[]>
-        m_r2_radix_52_bit; // Montgomery converter in radix 52 bit.
-    std::unique_ptr<Uint64[]> m_mod_radix_52_bit; // Modulus in radix 52.
-    std::unique_ptr<Uint64[]> m_r3;               // Montgomery optimizer
-    Uint64                    m_size = 0;
+    Uint64 m_r1[T / 64];
+    Uint64 m_r2[T / 64];
+    Uint64 m_r3[T / 64];
+    Uint64 m_r2_radix_52_bit[T / 52 + 1];
+    Uint64 m_mod_radix_52_bit[T / 52 + 1];
+    Uint64 m_k0; // Montgomery parameter
+    Uint64 m_size = 0;
 };
 
 static inline Uint64*
