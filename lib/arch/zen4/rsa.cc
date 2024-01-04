@@ -1836,8 +1836,8 @@ namespace alcp::rsa { namespace zen4 {
         RsaPublicKeyBignum<KEY_SIZE_1024>& pubKey,
         MontContextBignum<KEY_SIZE_1024>&  context)
     {
-        auto mod = context.m_mod_radix_52_bit; //.m_mod;
-        auto r2  = context.m_r2_radix_52_bit;  // context.m_r2.get();
+        auto mod = context.m_mod_radix_52_bit;
+        auto r2  = context.m_r2_radix_52_bit;
         auto k0  = context.m_k0;
         auto exp = &pubKey.m_public_exponent;
 
@@ -1858,8 +1858,8 @@ namespace alcp::rsa { namespace zen4 {
         RsaPublicKeyBignum<KEY_SIZE_2048>& pubKey,
         MontContextBignum<KEY_SIZE_2048>&  context)
     {
-        auto mod = context.m_mod_radix_52_bit; //.m_mod;
-        auto r2  = context.m_r2_radix_52_bit;  // context.m_r2.get();
+        auto mod = context.m_mod_radix_52_bit;
+        auto r2  = context.m_r2_radix_52_bit;
         auto k0  = context.m_k0;
         auto exp = &pubKey.m_public_exponent;
 
