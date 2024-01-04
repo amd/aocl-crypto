@@ -33,15 +33,15 @@
 namespace alcp::rsa { namespace zen3 {
 #include "../../rsa/rsa.cc.inc"
     template void archEncryptPublic<KEY_SIZE_1024>(
-        Uint8*                            pEncText,
-        const Uint64*                     pTextBignum,
-        RsaPublicKeyBignum&               pubKey,
-        MontContextBignum<KEY_SIZE_1024>& context);
+        Uint8*                             pEncText,
+        const Uint64*                      pTextBignum,
+        RsaPublicKeyBignum<KEY_SIZE_1024>& pubKey,
+        MontContextBignum<KEY_SIZE_1024>&  context);
     template void archEncryptPublic<KEY_SIZE_2048>(
-        Uint8*                            pEncText,
-        const Uint64*                     pTextBignum,
-        RsaPublicKeyBignum&               pubKey,
-        MontContextBignum<KEY_SIZE_2048>& context);
+        Uint8*                             pEncText,
+        const Uint64*                      pTextBignum,
+        RsaPublicKeyBignum<KEY_SIZE_2048>& pubKey,
+        MontContextBignum<KEY_SIZE_2048>&  context);
 
     template void archDecryptPrivate<KEY_SIZE_1024>(
         Uint8*                            pText,

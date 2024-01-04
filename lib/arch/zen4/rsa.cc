@@ -1831,10 +1831,10 @@ namespace alcp::rsa { namespace zen4 {
 
     template<>
     void archEncryptPublic<KEY_SIZE_1024>(
-        Uint8*                            pEncText,
-        const Uint64*                     pTextBignum,
-        RsaPublicKeyBignum&               pubKey,
-        MontContextBignum<KEY_SIZE_1024>& context)
+        Uint8*                             pEncText,
+        const Uint64*                      pTextBignum,
+        RsaPublicKeyBignum<KEY_SIZE_1024>& pubKey,
+        MontContextBignum<KEY_SIZE_1024>&  context)
     {
         auto mod = context.m_mod_radix_52_bit; //.m_mod.get();
         auto r2  = context.m_r2_radix_52_bit;  // context.m_r2.get();
@@ -1853,10 +1853,10 @@ namespace alcp::rsa { namespace zen4 {
 
     template<>
     void archEncryptPublic<KEY_SIZE_2048>(
-        Uint8*                            pEncText,
-        const Uint64*                     pTextBignum,
-        RsaPublicKeyBignum&               pubKey,
-        MontContextBignum<KEY_SIZE_2048>& context)
+        Uint8*                             pEncText,
+        const Uint64*                      pTextBignum,
+        RsaPublicKeyBignum<KEY_SIZE_2048>& pubKey,
+        MontContextBignum<KEY_SIZE_2048>&  context)
     {
         auto mod = context.m_mod_radix_52_bit; //.m_mod.get();
         auto r2  = context.m_r2_radix_52_bit;  // context.m_r2.get();

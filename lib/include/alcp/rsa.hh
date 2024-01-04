@@ -190,7 +190,7 @@ class ALCP_API_EXPORT Rsa
     Uint64              m_hash_len;
     Uint64              m_mgf_hash_len;
     RsaPrivateKeyBignum m_priv_key;
-    RsaPublicKeyBignum  m_pub_key;
+    alignas(64) RsaPublicKeyBignum<T> m_pub_key;
     alignas(64) MontContextBignum<T> m_context_pub;
     alignas(64) MontContextBignum<T> m_context_p;
     alignas(64) MontContextBignum<T> m_context_q;

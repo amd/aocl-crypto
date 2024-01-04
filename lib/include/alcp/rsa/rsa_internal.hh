@@ -33,11 +33,12 @@
 
 namespace alcp::rsa {
 
+template<alc_rsa_key_size T>
 struct RsaPublicKeyBignum
 {
-    Uint64                    m_public_exponent = 0;
-    std::unique_ptr<Uint64[]> m_mod;
-    Uint64                    m_size = 0;
+    Uint64 m_mod[T / 64];
+    Uint64 m_public_exponent = 0;
+    Uint64 m_size            = 0;
 };
 
 struct RsaPrivateKeyBignum
@@ -85,6 +86,17 @@ CreateBigNum(const Uint8* bytes, Uint64 size)
     }
 
     return res_buffer_bignum;
+}
+
+static inline void
+ConvertToBigNum(const Uint8* bytes, Uint64* bigNum, Uint64 size)
+{
+    Uint8* p_res = reinterpret_cast<Uint8*>(bigNum);
+
+    // check if it can be optimized using vector instruction
+    for (Int64 i = size - 1, j = 0; i >= 0; --i, ++j) {
+        p_res[j] = bytes[i];
+    }
 }
 
 static inline bool

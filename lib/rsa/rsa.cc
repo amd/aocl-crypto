@@ -165,7 +165,7 @@ Rsa<T>::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
 
     std::unique_ptr<Uint64[]> bignum_text;
     auto                      ptext_bignum = CreateBigNum(pText, m_key_size);
-    auto                      mod_bignum   = m_pub_key.m_mod.get();
+    auto                      mod_bignum   = m_pub_key.m_mod;
 
     bignum_text.reset(ptext_bignum);
 
@@ -424,7 +424,7 @@ Rsa<T>::getPublickey(RsaPublicKey& pPublicKey)
     if (pPublicKey.size != m_key_size) {
         return status::NotPermitted("keyize should match");
     }
-    Uint8* mod_text = reinterpret_cast<Uint8*>(m_pub_key.m_mod.get());
+    Uint8* mod_text = reinterpret_cast<Uint8*>(m_pub_key.m_mod);
 
     if (pPublicKey.modulus == nullptr || mod_text == nullptr) {
         return status::NotPermitted("Modulus cannot be empty");
@@ -452,7 +452,7 @@ Rsa<T>::setPublicKey(const Uint64 exponent, const Uint8* mod, const Uint64 size)
     }
 
     m_pub_key.m_public_exponent = exponent;
-    m_pub_key.m_mod.reset(CreateBigNum(mod, size));
+    ConvertToBigNum(mod, m_pub_key.m_mod, size);
     m_pub_key.m_size           = size / 8;
     m_key_size                 = size;
     static bool zen4_available = CpuId::cpuIsZen4();
@@ -463,20 +463,19 @@ Rsa<T>::setPublicKey(const Uint64 exponent, const Uint8* mod, const Uint64 size)
 
     if (zen4_available) {
         zen4::archCreateContext<T>(
-            m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
+            m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
 
     } else if (zen3_available) {
         zen3::archCreateContext<T>(
-            m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
+            m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
 
     } else if (zen_available || zen_available_flags) {
         zen::archCreateContext<T>(
-            m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
+            m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
 
     } else {
 
-        archCreateContext<T>(
-            m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
+        archCreateContext<T>(m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
     }
     return StatusOk();
 }
@@ -550,7 +549,7 @@ Rsa<T>::reset()
     Reset(m_priv_key.m_p.get(), T / (2 * 64));
     Reset(m_priv_key.m_q.get(), T / (2 * 64));
     Reset(m_priv_key.m_qinv.get(), T / (2 * 64));
-    Reset(m_pub_key.m_mod.get(), T / (64));
+    Reset(m_pub_key.m_mod, T / (64));
     Reset(m_context_pub.m_mod_radix_52_bit, T / 52 + 1);
     Reset(m_context_p.m_mod_radix_52_bit, T / (2 * 52) + 1);
     Reset(m_context_q.m_mod_radix_52_bit, T / (2 * 52) + 1);

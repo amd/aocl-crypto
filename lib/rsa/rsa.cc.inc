@@ -1265,13 +1265,13 @@ MontCompute<KEY_SIZE_2048>::MontMultHalf(Uint64*       res,
 
 template<alc_rsa_key_size T>
 void
-archEncryptPublic(Uint8*                pEncText,
-                  const Uint64*         pTextBignum,
-                  RsaPublicKeyBignum&   pubKey,
-                  MontContextBignum<T>& context)
+archEncryptPublic(Uint8*                 pEncText,
+                  const Uint64*          pTextBignum,
+                  RsaPublicKeyBignum<T>& pubKey,
+                  MontContextBignum<T>&  context)
 {
 
-    auto mod = pubKey.m_mod.get();
+    auto mod = pubKey.m_mod;
     auto r2  = context.m_r2;
     auto k0  = context.m_k0;
     auto exp = &pubKey.m_public_exponent;
