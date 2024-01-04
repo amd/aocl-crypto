@@ -1598,9 +1598,9 @@ namespace alcp::rsa { namespace zen4 {
         MontContextBignum<KEY_SIZE_2048>& context, Uint64* mod, Uint64 size)
     {
         Uint64* r1               = context.m_r1;
-        Uint64* r2               = context.m_r2; // new Uint64[size]{};
-        Uint64* r3               = context.m_r3; // new Uint64[size]{};
-        Uint64* r2_radix_52_bit  = context.m_r2_radix_52_bit; // Uint64[40]{};
+        Uint64* r2               = context.m_r2;
+        Uint64* r3               = context.m_r3;
+        Uint64* r2_radix_52_bit  = context.m_r2_radix_52_bit;
         Uint64* mod_radix_52_bit = context.m_mod_radix_52_bit;
 
         context.m_size = size;
@@ -1668,9 +1668,9 @@ namespace alcp::rsa { namespace zen4 {
     inline void mont::MontCompute<KEY_SIZE_1024>::CreateContext(
         MontContextBignum<KEY_SIZE_1024>& context, Uint64* mod, Uint64 size)
     {
-        Uint64* r1               = context.m_r1; // new Uint64[size]{};
-        Uint64* r2               = context.m_r2; // new Uint64[size]{};
-        Uint64* r3               = context.m_r3; // new Uint64[size]{};
+        Uint64* r1               = context.m_r1;
+        Uint64* r2               = context.m_r2;
+        Uint64* r3               = context.m_r3;
         Uint64* r2_radix_52_bit  = context.m_r2_radix_52_bit;
         Uint64* mod_radix_52_bit = context.m_mod_radix_52_bit;
 

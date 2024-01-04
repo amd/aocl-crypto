@@ -163,13 +163,12 @@ Rsa<T>::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
         return status::NotPermitted("Buffer should be non null");
     }
 
-    std::unique_ptr<Uint64[]> bignum_text;
-    auto                      ptext_bignum = CreateBigNum(pText, m_key_size);
-    auto                      mod_bignum   = m_pub_key.m_mod;
+    alignas(64) Uint64 bignum_text[T / 64];
+    ConvertToBigNum(pText, bignum_text, m_key_size);
 
-    bignum_text.reset(ptext_bignum);
+    auto mod_bignum = m_pub_key.m_mod;
 
-    if (!IsLess(ptext_bignum, mod_bignum, m_pub_key.m_size)) {
+    if (!IsLess(bignum_text, mod_bignum, m_pub_key.m_size)) {
         return status::NotPermitted(
             "text absolute value should be less than modulus");
     }
@@ -185,19 +184,19 @@ Rsa<T>::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
 
     if (zen4_available) {
         zen4::archEncryptPublic<T>(
-            pEncText, ptext_bignum, m_pub_key, m_context_pub);
+            pEncText, bignum_text, m_pub_key, m_context_pub);
         return StatusOk();
     } else if (zen3_available) {
         zen3::archEncryptPublic<T>(
-            pEncText, ptext_bignum, m_pub_key, m_context_pub);
+            pEncText, bignum_text, m_pub_key, m_context_pub);
         return StatusOk();
     } else if (zen_available || zen_available_flags) {
         zen::archEncryptPublic<T>(
-            pEncText, ptext_bignum, m_pub_key, m_context_pub);
+            pEncText, bignum_text, m_pub_key, m_context_pub);
         return StatusOk();
     }
 
-    archEncryptPublic<T>(pEncText, ptext_bignum, m_pub_key, m_context_pub);
+    archEncryptPublic<T>(pEncText, bignum_text, m_pub_key, m_context_pub);
 
     return StatusOk();
 }
@@ -215,12 +214,12 @@ Rsa<T>::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
         return status::NotPermitted("Buffer should be non null");
     }
 
-    std::unique_ptr<Uint64[]> bignum_text;
-    auto ptext_bignum = CreateBigNum(pEncText, m_priv_key.m_size * 2 * 8);
-    bignum_text.reset(ptext_bignum);
+    Uint64 bignum_text[T / 64];
+    ConvertToBigNum(pEncText, bignum_text, m_priv_key.m_size * 2 * 8);
+
     auto mod_bignum = m_priv_key.m_mod;
 
-    if (!IsLess(ptext_bignum, mod_bignum, m_priv_key.m_size * 2)) {
+    if (!IsLess(bignum_text, mod_bignum, m_priv_key.m_size * 2)) {
         return status::NotPermitted(
             "text absolute value should be less than modulus");
     }
@@ -236,20 +235,20 @@ Rsa<T>::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
 
     if (zen4_available) {
         zen4::archDecryptPrivate<T>(
-            pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
+            pText, bignum_text, m_priv_key, m_context_p, m_context_q);
         return StatusOk();
     } else if (zen3_available) {
         zen3::archDecryptPrivate<T>(
-            pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
+            pText, bignum_text, m_priv_key, m_context_p, m_context_q);
         return StatusOk();
     } else if (zen_available || zen_available_flags) {
         zen::archDecryptPrivate<T>(
-            pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
+            pText, bignum_text, m_priv_key, m_context_p, m_context_q);
         return StatusOk();
     }
 
     archDecryptPrivate<T>(
-        pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
+        pText, bignum_text, m_priv_key, m_context_p, m_context_q);
 
     return StatusOk();
 }
