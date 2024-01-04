@@ -41,15 +41,16 @@ struct RsaPublicKeyBignum
     Uint64 m_size            = 0;
 };
 
+template<alc_rsa_key_size T>
 struct RsaPrivateKeyBignum
 {
-    std::unique_ptr<Uint64[]> m_dp;
-    std::unique_ptr<Uint64[]> m_dq;
-    std::unique_ptr<Uint64[]> m_p;
-    std::unique_ptr<Uint64[]> m_q;
-    std::unique_ptr<Uint64[]> m_qinv;
-    std::unique_ptr<Uint64[]> m_mod;
-    Uint64                    m_size = 0;
+    Uint64 m_dp[T / (2 * 64)];
+    Uint64 m_dq[T / (2 * 64)];
+    Uint64 m_p[T / (2 * 64)];
+    Uint64 m_q[T / (2 * 64)];
+    Uint64 m_qinv[T / (2 * 64)];
+    Uint64 m_mod[T / 64];
+    Uint64 m_size = 0;
 };
 
 template<alc_rsa_key_size T>

@@ -44,18 +44,18 @@ namespace alcp::rsa { namespace zen {
         MontContextBignum<KEY_SIZE_2048>&  context);
 
     template void archDecryptPrivate<KEY_SIZE_1024>(
-        Uint8*                            pText,
-        const Uint64*                     pEncTextBigNum,
-        RsaPrivateKeyBignum&              privKey,
-        MontContextBignum<KEY_SIZE_1024>& contextP,
-        MontContextBignum<KEY_SIZE_1024>& contextQ);
+        Uint8*                              pText,
+        const Uint64*                       pEncTextBigNum,
+        RsaPrivateKeyBignum<KEY_SIZE_1024>& privKey,
+        MontContextBignum<KEY_SIZE_1024>&   contextP,
+        MontContextBignum<KEY_SIZE_1024>&   contextQ);
 
     template void archDecryptPrivate<KEY_SIZE_2048>(
-        Uint8*                            pText,
-        const Uint64*                     pEncTextBigNum,
-        RsaPrivateKeyBignum&              privKey,
-        MontContextBignum<KEY_SIZE_2048>& contextP,
-        MontContextBignum<KEY_SIZE_2048>& contextQ);
+        Uint8*                              pText,
+        const Uint64*                       pEncTextBigNum,
+        RsaPrivateKeyBignum<KEY_SIZE_2048>& privKey,
+        MontContextBignum<KEY_SIZE_2048>&   contextP,
+        MontContextBignum<KEY_SIZE_2048>&   contextQ);
 
     template void archCreateContext<KEY_SIZE_1024>(
         MontContextBignum<KEY_SIZE_1024>& context, Uint64* mod, Uint64 size);

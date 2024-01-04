@@ -218,7 +218,7 @@ Rsa<T>::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
     std::unique_ptr<Uint64[]> bignum_text;
     auto ptext_bignum = CreateBigNum(pEncText, m_priv_key.m_size * 2 * 8);
     bignum_text.reset(ptext_bignum);
-    auto mod_bignum = m_priv_key.m_mod.get();
+    auto mod_bignum = m_priv_key.m_mod;
 
     if (!IsLess(ptext_bignum, mod_bignum, m_priv_key.m_size * 2)) {
         return status::NotPermitted(
@@ -500,12 +500,12 @@ Rsa<T>::setPrivateKey(const Uint8* dp,
 
     m_key_size = size * 2; // keysize is twice the sizeof(p)
 
-    m_priv_key.m_dp.reset(CreateBigNum(dp, size));
-    m_priv_key.m_dq.reset(CreateBigNum(dq, size));
-    m_priv_key.m_p.reset(CreateBigNum(p, size));
-    m_priv_key.m_q.reset(CreateBigNum(q, size));
-    m_priv_key.m_qinv.reset(CreateBigNum(qinv, size));
-    m_priv_key.m_mod.reset(CreateBigNum(mod, size * 2));
+    ConvertToBigNum(dp, m_priv_key.m_dp, size);
+    ConvertToBigNum(dq, m_priv_key.m_dq, size);
+    ConvertToBigNum(p, m_priv_key.m_p, size);
+    ConvertToBigNum(q, m_priv_key.m_q, size);
+    ConvertToBigNum(qinv, m_priv_key.m_qinv, size);
+    ConvertToBigNum(mod, m_priv_key.m_mod, size * 2);
     m_priv_key.m_size = size / 8;
 
     static bool zen4_available = CpuId::cpuIsZen4();
@@ -516,25 +516,23 @@ Rsa<T>::setPrivateKey(const Uint8* dp,
 
     if (zen4_available) {
         zen4::archCreateContext<T>(
-            m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
+            m_context_p, m_priv_key.m_p, m_priv_key.m_size);
         zen4::archCreateContext<T>(
-            m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
+            m_context_q, m_priv_key.m_q, m_priv_key.m_size);
     } else if (zen3_available) {
         zen3::archCreateContext<T>(
-            m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
+            m_context_p, m_priv_key.m_p, m_priv_key.m_size);
         zen3::archCreateContext<T>(
-            m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
+            m_context_q, m_priv_key.m_q, m_priv_key.m_size);
     } else if (zen_available || zen_available_flags) {
         zen::archCreateContext<T>(
-            m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
+            m_context_p, m_priv_key.m_p, m_priv_key.m_size);
         zen::archCreateContext<T>(
-            m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
+            m_context_q, m_priv_key.m_q, m_priv_key.m_size);
     } else {
 
-        archCreateContext<T>(
-            m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
-        archCreateContext<T>(
-            m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
+        archCreateContext<T>(m_context_p, m_priv_key.m_p, m_priv_key.m_size);
+        archCreateContext<T>(m_context_q, m_priv_key.m_q, m_priv_key.m_size);
     }
     return StatusOk();
 }
@@ -543,12 +541,12 @@ template<alc_rsa_key_size T>
 void
 Rsa<T>::reset()
 {
-    Reset(m_priv_key.m_dp.get(), T / (2 * 64));
-    Reset(m_priv_key.m_dq.get(), T / (2 * 64));
-    Reset(m_priv_key.m_mod.get(), T / (64));
-    Reset(m_priv_key.m_p.get(), T / (2 * 64));
-    Reset(m_priv_key.m_q.get(), T / (2 * 64));
-    Reset(m_priv_key.m_qinv.get(), T / (2 * 64));
+    Reset(m_priv_key.m_dp, T / (2 * 64));
+    Reset(m_priv_key.m_dq, T / (2 * 64));
+    Reset(m_priv_key.m_mod, T / (64));
+    Reset(m_priv_key.m_p, T / (2 * 64));
+    Reset(m_priv_key.m_q, T / (2 * 64));
+    Reset(m_priv_key.m_qinv, T / (2 * 64));
     Reset(m_pub_key.m_mod, T / (64));
     Reset(m_context_pub.m_mod_radix_52_bit, T / 52 + 1);
     Reset(m_context_p.m_mod_radix_52_bit, T / (2 * 52) + 1);

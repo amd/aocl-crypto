@@ -37,11 +37,11 @@ namespace alcp::rsa { namespace zen {
                            MontContextBignum<T>&  context);
 
     template<alc_rsa_key_size T>
-    void archDecryptPrivate(Uint8*                pText,
-                            const Uint64*         pEncTextBigNum,
-                            RsaPrivateKeyBignum&  privKey,
-                            MontContextBignum<T>& contextP,
-                            MontContextBignum<T>& contextQ);
+    void archDecryptPrivate(Uint8*                  pText,
+                            const Uint64*           pEncTextBigNum,
+                            RsaPrivateKeyBignum<T>& privKey,
+                            MontContextBignum<T>&   contextP,
+                            MontContextBignum<T>&   contextQ);
 
     // todo remove the size param.
     template<alc_rsa_key_size T>

@@ -1060,11 +1060,11 @@ struct MontCompute
     // currently it supports equal sizes of P and Q this is faster than the
     // unequal sizes preliminary investigation suggest no benefis on using
     // different sizes for P and Q
-    static inline void decryptUsingCRT(Uint64*               res,
-                                       const Uint64*         inp,
-                                       RsaPrivateKeyBignum&  privKey,
-                                       MontContextBignum<T>& contextP,
-                                       MontContextBignum<T>& contextQ)
+    static inline void decryptUsingCRT(Uint64*                 res,
+                                       const Uint64*           inp,
+                                       RsaPrivateKeyBignum<T>& privKey,
+                                       MontContextBignum<T>&   contextP,
+                                       MontContextBignum<T>&   contextQ)
     {
         auto size = contextP.m_size;
 
@@ -1073,16 +1073,16 @@ struct MontCompute
         Uint64* buff_p   = temp_buff;
         Uint64* buff_0_p = temp_buff + T / 64;
         Uint64* buff_1_p = buff_0_p + T / 128;
-        auto    p_mod    = privKey.m_p.get();
-        auto    p_exp    = privKey.m_dp.get();
-        auto    q_mod    = privKey.m_q.get();
-        auto    q_exp    = privKey.m_dq.get();
+        auto    p_mod    = privKey.m_p;
+        auto    p_exp    = privKey.m_dp;
+        auto    q_mod    = privKey.m_q;
+        auto    q_exp    = privKey.m_dq;
         auto    r1_p     = contextP.m_r1;
         auto    r2_p     = contextP.m_r2;
         auto    r3_p     = contextP.m_r3;
         auto    r1_q     = contextQ.m_r1;
         auto    r3_q     = contextQ.m_r3;
-        auto    qinv     = privKey.m_qinv.get();
+        auto    qinv     = privKey.m_qinv;
         auto    p_k0     = contextP.m_k0;
         auto    q_k0     = contextQ.m_k0;
 
@@ -1288,11 +1288,11 @@ archEncryptPublic(Uint8*                 pEncText,
 
 template<alc_rsa_key_size T>
 void
-archDecryptPrivate(Uint8*                pText,
-                   const Uint64*         pEncTextBigNum,
-                   RsaPrivateKeyBignum&  privKey,
-                   MontContextBignum<T>& contextP,
-                   MontContextBignum<T>& contextQ)
+archDecryptPrivate(Uint8*                  pText,
+                   const Uint64*           pEncTextBigNum,
+                   RsaPrivateKeyBignum<T>& privKey,
+                   MontContextBignum<T>&   contextP,
+                   MontContextBignum<T>&   contextQ)
 {
     alignas(64) Uint64 res_buffer_bignum[T / 64];
     mont::MontCompute<T>::decryptUsingCRT(

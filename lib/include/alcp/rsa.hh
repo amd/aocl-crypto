@@ -186,10 +186,10 @@ class ALCP_API_EXPORT Rsa
                       const Uint8* input,
                       Uint64       inputLen);
 
-    Uint64              m_key_size;
-    Uint64              m_hash_len;
-    Uint64              m_mgf_hash_len;
-    RsaPrivateKeyBignum m_priv_key;
+    Uint64 m_key_size;
+    Uint64 m_hash_len;
+    Uint64 m_mgf_hash_len;
+    alignas(64) RsaPrivateKeyBignum<T> m_priv_key;
     alignas(64) RsaPublicKeyBignum<T> m_pub_key;
     alignas(64) MontContextBignum<T> m_context_pub;
     alignas(64) MontContextBignum<T> m_context_p;
