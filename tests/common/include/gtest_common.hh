@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -155,6 +155,13 @@ ShuffleVector(std::vector<Uint8> InputVec, std::default_random_engine rng)
 {
     std::shuffle(std::begin(InputVec), std::end(InputVec), rng);
     return InputVec;
+}
+
+/* check if pointer is aligned */
+static inline bool
+is_aligned(const Uint8* ptr)
+{
+    return (unsigned long)ptr % 2 == 0;
 }
 
 void

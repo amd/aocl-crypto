@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -213,12 +213,6 @@ Digest_KAT(alc_digest_info_t info)
                             + std::to_string(info.dt_len) + "_KAT")));
         }
     }
-}
-
-static inline bool
-is_aligned(const Uint8* ptr)
-{
-    return (unsigned long)ptr % 2 == 0;
 }
 
 /* Digest Cross tests */
