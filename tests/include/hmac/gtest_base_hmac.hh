@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -199,23 +199,39 @@ Hmac_Cross(int HmacSize, std::string HmacType, alc_mac_info_t info)
 
             /* generate msg data from msg_full */
             msg_full = ShuffleVector(msg_full, rng);
-            pos1     = msg_full.end() - i;
+            pos1     = msg_full.end() - i - 1;
             pos2     = msg_full.end();
             std::vector<Uint8> msg(pos1, pos2);
 
             /* generate random key value*/
             key_full = ShuffleVector(key_full, rng);
-            pos1     = key_full.end() - j;
+            pos1     = key_full.end() - j - 1;
             pos2     = key_full.end();
             std::vector<Uint8> key(pos1, pos2);
 
+            /* misalign if buffers are aligned */
+            if (is_aligned(&(msg[0]))) {
+                data_alc.in.m_msg = &(msg[1]);
+                data_ext.in.m_msg = &(msg[1]);
+            } else {
+                data_alc.in.m_msg = &(msg[0]);
+                data_ext.in.m_msg = &(msg[0]);
+            }
+            /* misalign if buffers are aligned */
+            if (is_aligned(&(key[0]))) {
+                data_alc.in.m_key = &(key[1]);
+                data_ext.in.m_key = &(key[1]);
+            } else {
+                data_alc.in.m_key = &(key[0]);
+                data_ext.in.m_key = &(key[0]);
+            }
+
+            data_alc.in.m_msg_len = data_ext.in.m_msg_len = msg.size() - 1;
+            data_alc.in.m_key_len = data_ext.in.m_key_len = key.size() - 1;
+
             /* load test data */
-            data_alc.in.m_msg       = &(msg[0]);
-            data_alc.in.m_msg_len   = msg.size();
             data_alc.out.m_hmac     = &(HmacAlcp[0]);
             data_alc.out.m_hmac_len = HmacAlcp.size();
-            data_alc.in.m_key       = &(key[0]);
-            data_alc.in.m_key_len   = key.size();
 
             /* load ext test data */
             data_ext.out.m_hmac     = &(HmacExt[0]);
