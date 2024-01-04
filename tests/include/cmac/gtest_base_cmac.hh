@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -146,7 +146,6 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
     }
 }
 
-
 /* Cmac Cross tests */
 void
 Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
@@ -204,7 +203,7 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
 
         /* generate msg data from msg_full */
         msg_full = ShuffleVector(msg_full, rng);
-        pos1     = msg_full.end() - i;
+        pos1     = msg_full.end() - i - 1;
         pos2     = msg_full.end();
         std::vector<Uint8> msg(pos1, pos2);
 
@@ -214,21 +213,33 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
         pos2     = key_full.begin() + (KeySize / 8);
         std::vector<Uint8> key(pos1, pos2);
 
+        /* misalign if buffers are aligned */
+        if (is_aligned(&(msg[0]))) {
+            data_alc.m_msg = &(msg[1]);
+            data_ext.m_msg = &(msg[1]);
+        } else {
+            data_alc.m_msg = &(msg[0]);
+            data_ext.m_msg = &(msg[0]);
+        }
+        if (is_aligned(&(key[0]))) {
+            data_alc.m_key = &(key[1]);
+            data_ext.m_key = &(key[1]);
+        } else {
+            data_alc.m_key = &(key[0]);
+            data_ext.m_key = &(key[0]);
+        }
+        data_alc.m_msg_len = data_ext.m_msg_len = msg.size() - 1;
+        data_alc.m_key_len = data_ext.m_key_len = key.size();
+
         /* load test data */
-        data_alc.m_msg      = &(msg[0]);
-        data_alc.m_msg_len  = msg.size();
         data_alc.m_cmac     = &(CmacAlcp[0]);
         data_alc.m_cmac_len = CmacAlcp.size();
         data_alc.m_key      = &(key[0]);
-        data_alc.m_key_len  = key.size();
 
         /* load ext test data */
-        data_ext.m_msg      = &(msg[0]);
-        data_ext.m_msg_len  = msg.size();
         data_ext.m_cmac     = &(CmacExt[0]);
         data_ext.m_cmac_len = CmacExt.size();
         data_ext.m_key      = &(key[0]);
-        data_ext.m_key_len  = key.size();
 
         /* run test with main lib */
         if (verbose > 1)
