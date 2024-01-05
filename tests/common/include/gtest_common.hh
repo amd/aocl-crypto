@@ -161,7 +161,7 @@ ShuffleVector(std::vector<Uint8> InputVec, std::default_random_engine rng)
 static inline bool
 is_aligned(const Uint8* ptr)
 {
-    return (unsigned long)ptr % 2 == 0;
+    return reinterpret_cast<uintptr_t>(ptr) % 2 == 0;
 }
 
 void
