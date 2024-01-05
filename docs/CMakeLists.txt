@@ -23,23 +23,45 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
  
-find_program(PANDOC pandoc)
-find_program(PDFLATEX pdflatex)
+# Inspired from Sphinx in CMake section of MSFT blog post
+# https://devblogs.microsoft.com/cppblog/clear-functional-c-documentation-with-sphinx-breathe-doxygen-cmake/
 
-IF( (NOT PDFLATEX) OR (NOT PANDOC) )
-    IF(NOT PDFLATEX)
-        MESSAGE(STATUS "PDFLATEX NOT FOUND")
-    ELSE()
-        MESSAGE(STATUS "PDFLATEX IS FOUND")
-    ENDIF()
-    IF(NOT PANDOC)
-        MESSAGE(STATUS "PANDOC NOT FOUND")
-    ELSE()
-        MESSAGE(STATUS "PANDOC IS FOUND")
-    ENDIF()
-    MESSAGE(FATAL_ERROR "PANDOC OR PDFLATEX is missing, documentation cannot be built!")
-ELSE()
-    add_subdirectory(internal)
-    add_subdirectory(compat)
-    add_subdirectory(integration-guide)
-ENDIF()
+set(DOXYGEN_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/doxygen)
+
+find_package(Sphinx REQUIRED)
+
+## Configuration
+set(SPHINX_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/sphinx)
+file(MAKE_DIRECTORY ${SPHINX_BUILD_DIR}/html) #Sphinx won't create this for us
+set(SPHINX_HTML_INDEX ${SPHINX_BUILD_DIR}/html/indexpage.html)
+
+# Copy contents of below folders to Sphinx_Build Dir
+file(COPY ${PROJECT_SOURCE_DIR}/docs/sphinx/ DESTINATION ${SPHINX_BUILD_DIR}/)
+
+# Function to create Symbolic Links for the dependent files
+FUNCTION(FILE_SYMLINK MYFILE OUTFILE)
+    FILE(CREATE_LINK ${MYFILE} ${SPHINX_BUILD_DIR}/${OUTFILE} SYMBOLIC)
+ENDFUNCTION(FILE_SYMLINK MYFILE OUTFILE)
+
+FILE_SYMLINK(${PROJECT_SOURCE_DIR}/docs/resources/Quick_Start.md Quick_Start.md)
+FILE_SYMLINK(${PROJECT_SOURCE_DIR}/tests/README.md tests_README.md)
+FILE_SYMLINK(${PROJECT_SOURCE_DIR}/bench/README.md bench_README.md)
+FILE_SYMLINK(${PROJECT_SOURCE_DIR}/lib/compat/ipp/README.md ipp_README.md)
+FILE_SYMLINK(${PROJECT_SOURCE_DIR}/lib/compat/openssl/README.md openssl_README.md)
+
+# Only regenerate Sphinx when:
+# - Doxygen has rerun
+# - Our doc files have been updated
+# - The Sphinx config has been updated
+add_custom_command(OUTPUT ${SPHINX_HTML_INDEX}
+                   COMMAND 
+                   ${SPHINX_EXECUTABLE} -b html
+                   # Tell Breathe where to find the Doxygen output
+                   -Dbreathe_projects.aocl-crypto=${DOXYGEN_OUT_DIR}/xml
+                   ${SPHINX_BUILD_DIR} ${SPHINX_BUILD_DIR}/html
+                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                   DEPENDS ${SPHINX_BUILD_DIR}
+                   COMMENT "Generating HTML with Sphinx")
+
+# Nice named target so we can run the job easily
+add_custom_target(SphinxDoc ALL DEPENDS ${SPHINX_HTML_INDEX})
