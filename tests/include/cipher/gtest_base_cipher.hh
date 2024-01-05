@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -674,7 +674,7 @@ AesCrosstest(int               keySize,
 
             auto tagBuff = std::make_unique<Uint8[]>(tagLength);
 
-            pos1 = msg_full.end() - i * size;
+            pos1 = msg_full.end() - (i * size) - 1;
             pos2 = msg_full.end();
             std::vector<Uint8> pt(pos1, pos2);
 
@@ -692,9 +692,17 @@ AesCrosstest(int               keySize,
             pos2      = tkey_full.begin() + (key_size / 8);
             std::vector<Uint8> tkey(pos1, pos2);
 
+            /* misalign if buffers are aligned */
+            if (is_aligned(&(pt[0]))) {
+                data_alc.m_in = &(pt[1]);
+                data_ext.m_in = &(pt[1]);
+            } else {
+                data_alc.m_in = &(pt[0]);
+                data_ext.m_in = &(pt[0]);
+            }
+            data_alc.m_inl = data_ext.m_inl = pt.size() - 1;
+
             // ALC/Main Lib Data
-            data_alc.m_in   = &(pt[0]);
-            data_alc.m_inl  = pt.size();
             data_alc.m_iv   = &(iv[0]);
             data_alc.m_ivl  = iv.size();
             data_alc.m_out  = &(out_ct_alc[0]);
@@ -705,8 +713,6 @@ AesCrosstest(int               keySize,
             }
 
             // External Lib Data
-            data_ext.m_in   = &(pt[0]);
-            data_ext.m_inl  = pt.size();
             data_ext.m_iv   = &(iv[0]);
             data_ext.m_ivl  = iv.size();
             data_ext.m_out  = &(out_ct_ext[0]);
