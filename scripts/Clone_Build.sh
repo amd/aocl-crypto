@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -80,19 +80,19 @@ ensure_packages(){
         echo "Running \"sudo install git\""
         sudo apt install git                 # To clone github repositories
         quit_if_status_not_zero $?
-        echo "Running \"sudo install libssl-dev\""
+        echo "Running \"sudo apt install libssl-dev\""
         sudo apt install libssl-dev          # For openssl
         quit_if_status_not_zero $?
-        echo "Running \"sudo install make\""
+        echo "Running \"sudo apt install make\""
         sudo apt install make                # Build system
         quit_if_status_not_zero $?
-        echo "Running \"sudo install cmake\""
+        echo "Running \"sudo apt install cmake\""
         sudo apt install cmake               # Build system generator
         quit_if_status_not_zero $?
-        echo "Running \"sudo install p7zip-full\""
+        echo "Running \"sudo apt install p7zip-full\""
         sudo apt install p7zip-full          # Re-archive static libs
         quit_if_status_not_zero $?
-        echo "Running \"sudo install gcc-12 g++-12\""
+        echo "Running \"sudo apt install gcc-12 g++-12\""
         sudo apt install gcc-12 g++-12       # Compiler
         quit_if_status_not_zero $?
         return 0
