@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,35 +32,35 @@
 
 namespace alcp::rsa { namespace zen3 {
 #include "../../rsa/rsa.cc.inc"
-    template void archEncryptPublic<KEY_SIZE_1024>(Uint8*        pEncText,
-                                                   const Uint64* pTextBignum,
-                                                   RsaPublicKeyBignum& pubKey,
-                                                   MontContextBignum&  context);
-    template void archEncryptPublic<KEY_SIZE_2048>(Uint8*        pEncText,
-                                                   const Uint64* pTextBignum,
-                                                   RsaPublicKeyBignum& pubKey,
-                                                   MontContextBignum&  context);
+    template void archEncryptPublic<KEY_SIZE_1024>(
+        Uint8*                             pEncText,
+        const Uint64*                      pTextBignum,
+        RsaPublicKeyBignum<KEY_SIZE_1024>& pubKey,
+        MontContextBignum<KEY_SIZE_1024>&  context);
+    template void archEncryptPublic<KEY_SIZE_2048>(
+        Uint8*                             pEncText,
+        const Uint64*                      pTextBignum,
+        RsaPublicKeyBignum<KEY_SIZE_2048>& pubKey,
+        MontContextBignum<KEY_SIZE_2048>&  context);
 
     template void archDecryptPrivate<KEY_SIZE_1024>(
-        Uint8*               pText,
-        const Uint64*        pEncTextBigNum,
-        RsaPrivateKeyBignum& privKey,
-        MontContextBignum&   contextP,
-        MontContextBignum&   contextQ);
+        Uint8*                              pText,
+        const Uint64*                       pEncTextBigNum,
+        RsaPrivateKeyBignum<KEY_SIZE_1024>& privKey,
+        MontContextBignum<KEY_SIZE_1024>&   contextP,
+        MontContextBignum<KEY_SIZE_1024>&   contextQ);
 
     template void archDecryptPrivate<KEY_SIZE_2048>(
-        Uint8*               pText,
-        const Uint64*        pEncTextBigNum,
-        RsaPrivateKeyBignum& privKey,
-        MontContextBignum&   contextP,
-        MontContextBignum&   contextQ);
+        Uint8*                              pText,
+        const Uint64*                       pEncTextBigNum,
+        RsaPrivateKeyBignum<KEY_SIZE_2048>& privKey,
+        MontContextBignum<KEY_SIZE_2048>&   contextP,
+        MontContextBignum<KEY_SIZE_2048>&   contextQ);
 
-    template void archCreateContext<KEY_SIZE_1024>(MontContextBignum& context,
-                                                   Uint64*            mod,
-                                                   Uint64             size);
+    template void archCreateContext<KEY_SIZE_1024>(
+        MontContextBignum<KEY_SIZE_1024>& context, Uint64* mod, Uint64 size);
 
-    template void archCreateContext<KEY_SIZE_2048>(MontContextBignum& context,
-                                                   Uint64*            mod,
-                                                   Uint64             size);
+    template void archCreateContext<KEY_SIZE_2048>(
+        MontContextBignum<KEY_SIZE_2048>& context, Uint64* mod, Uint64 size);
 
 }} // namespace alcp::rsa::zen3

@@ -163,13 +163,12 @@ Rsa<T>::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
         return status::NotPermitted("Buffer should be non null");
     }
 
-    std::unique_ptr<Uint64[]> bignum_text;
-    auto                      ptext_bignum = CreateBigNum(pText, m_key_size);
-    auto                      mod_bignum   = m_pub_key.m_mod.get();
+    alignas(64) Uint64 bignum_text[T / 64];
+    ConvertToBigNum(pText, bignum_text, m_key_size);
 
-    bignum_text.reset(ptext_bignum);
+    auto mod_bignum = m_pub_key.m_mod;
 
-    if (!IsLess(ptext_bignum, mod_bignum, m_pub_key.m_size)) {
+    if (!IsLess(bignum_text, mod_bignum, m_pub_key.m_size)) {
         return status::NotPermitted(
             "text absolute value should be less than modulus");
     }
@@ -185,19 +184,19 @@ Rsa<T>::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
 
     if (zen4_available) {
         zen4::archEncryptPublic<T>(
-            pEncText, ptext_bignum, m_pub_key, m_context_pub);
+            pEncText, bignum_text, m_pub_key, m_context_pub);
         return StatusOk();
     } else if (zen3_available) {
         zen3::archEncryptPublic<T>(
-            pEncText, ptext_bignum, m_pub_key, m_context_pub);
+            pEncText, bignum_text, m_pub_key, m_context_pub);
         return StatusOk();
     } else if (zen_available || zen_available_flags) {
         zen::archEncryptPublic<T>(
-            pEncText, ptext_bignum, m_pub_key, m_context_pub);
+            pEncText, bignum_text, m_pub_key, m_context_pub);
         return StatusOk();
     }
 
-    archEncryptPublic<T>(pEncText, ptext_bignum, m_pub_key, m_context_pub);
+    archEncryptPublic<T>(pEncText, bignum_text, m_pub_key, m_context_pub);
 
     return StatusOk();
 }
@@ -215,12 +214,12 @@ Rsa<T>::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
         return status::NotPermitted("Buffer should be non null");
     }
 
-    std::unique_ptr<Uint64[]> bignum_text;
-    auto ptext_bignum = CreateBigNum(pEncText, m_priv_key.m_size * 2 * 8);
-    bignum_text.reset(ptext_bignum);
-    auto mod_bignum = m_priv_key.m_mod.get();
+    Uint64 bignum_text[T / 64];
+    ConvertToBigNum(pEncText, bignum_text, m_priv_key.m_size * 2 * 8);
 
-    if (!IsLess(ptext_bignum, mod_bignum, m_priv_key.m_size * 2)) {
+    auto mod_bignum = m_priv_key.m_mod;
+
+    if (!IsLess(bignum_text, mod_bignum, m_priv_key.m_size * 2)) {
         return status::NotPermitted(
             "text absolute value should be less than modulus");
     }
@@ -236,20 +235,20 @@ Rsa<T>::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
 
     if (zen4_available) {
         zen4::archDecryptPrivate<T>(
-            pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
+            pText, bignum_text, m_priv_key, m_context_p, m_context_q);
         return StatusOk();
     } else if (zen3_available) {
         zen3::archDecryptPrivate<T>(
-            pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
+            pText, bignum_text, m_priv_key, m_context_p, m_context_q);
         return StatusOk();
     } else if (zen_available || zen_available_flags) {
         zen::archDecryptPrivate<T>(
-            pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
+            pText, bignum_text, m_priv_key, m_context_p, m_context_q);
         return StatusOk();
     }
 
     archDecryptPrivate<T>(
-        pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
+        pText, bignum_text, m_priv_key, m_context_p, m_context_q);
 
     return StatusOk();
 }
@@ -424,7 +423,7 @@ Rsa<T>::getPublickey(RsaPublicKey& pPublicKey)
     if (pPublicKey.size != m_key_size) {
         return status::NotPermitted("keyize should match");
     }
-    Uint8* mod_text = reinterpret_cast<Uint8*>(m_pub_key.m_mod.get());
+    Uint8* mod_text = reinterpret_cast<Uint8*>(m_pub_key.m_mod);
 
     if (pPublicKey.modulus == nullptr || mod_text == nullptr) {
         return status::NotPermitted("Modulus cannot be empty");
@@ -452,7 +451,7 @@ Rsa<T>::setPublicKey(const Uint64 exponent, const Uint8* mod, const Uint64 size)
     }
 
     m_pub_key.m_public_exponent = exponent;
-    m_pub_key.m_mod.reset(CreateBigNum(mod, size));
+    ConvertToBigNum(mod, m_pub_key.m_mod, size);
     m_pub_key.m_size           = size / 8;
     m_key_size                 = size;
     static bool zen4_available = CpuId::cpuIsZen4();
@@ -463,20 +462,19 @@ Rsa<T>::setPublicKey(const Uint64 exponent, const Uint8* mod, const Uint64 size)
 
     if (zen4_available) {
         zen4::archCreateContext<T>(
-            m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
+            m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
 
     } else if (zen3_available) {
         zen3::archCreateContext<T>(
-            m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
+            m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
 
     } else if (zen_available || zen_available_flags) {
         zen::archCreateContext<T>(
-            m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
+            m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
 
     } else {
 
-        archCreateContext<T>(
-            m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
+        archCreateContext<T>(m_context_pub, m_pub_key.m_mod, m_pub_key.m_size);
     }
     return StatusOk();
 }
@@ -501,12 +499,12 @@ Rsa<T>::setPrivateKey(const Uint8* dp,
 
     m_key_size = size * 2; // keysize is twice the sizeof(p)
 
-    m_priv_key.m_dp.reset(CreateBigNum(dp, size));
-    m_priv_key.m_dq.reset(CreateBigNum(dq, size));
-    m_priv_key.m_p.reset(CreateBigNum(p, size));
-    m_priv_key.m_q.reset(CreateBigNum(q, size));
-    m_priv_key.m_qinv.reset(CreateBigNum(qinv, size));
-    m_priv_key.m_mod.reset(CreateBigNum(mod, size * 2));
+    ConvertToBigNum(dp, m_priv_key.m_dp, size);
+    ConvertToBigNum(dq, m_priv_key.m_dq, size);
+    ConvertToBigNum(p, m_priv_key.m_p, size);
+    ConvertToBigNum(q, m_priv_key.m_q, size);
+    ConvertToBigNum(qinv, m_priv_key.m_qinv, size);
+    ConvertToBigNum(mod, m_priv_key.m_mod, size * 2);
     m_priv_key.m_size = size / 8;
 
     static bool zen4_available = CpuId::cpuIsZen4();
@@ -517,25 +515,23 @@ Rsa<T>::setPrivateKey(const Uint8* dp,
 
     if (zen4_available) {
         zen4::archCreateContext<T>(
-            m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
+            m_context_p, m_priv_key.m_p, m_priv_key.m_size);
         zen4::archCreateContext<T>(
-            m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
+            m_context_q, m_priv_key.m_q, m_priv_key.m_size);
     } else if (zen3_available) {
         zen3::archCreateContext<T>(
-            m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
+            m_context_p, m_priv_key.m_p, m_priv_key.m_size);
         zen3::archCreateContext<T>(
-            m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
+            m_context_q, m_priv_key.m_q, m_priv_key.m_size);
     } else if (zen_available || zen_available_flags) {
         zen::archCreateContext<T>(
-            m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
+            m_context_p, m_priv_key.m_p, m_priv_key.m_size);
         zen::archCreateContext<T>(
-            m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
+            m_context_q, m_priv_key.m_q, m_priv_key.m_size);
     } else {
 
-        archCreateContext<T>(
-            m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
-        archCreateContext<T>(
-            m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
+        archCreateContext<T>(m_context_p, m_priv_key.m_p, m_priv_key.m_size);
+        archCreateContext<T>(m_context_q, m_priv_key.m_q, m_priv_key.m_size);
     }
     return StatusOk();
 }
@@ -544,16 +540,16 @@ template<alc_rsa_key_size T>
 void
 Rsa<T>::reset()
 {
-    Reset(m_priv_key.m_dp.get(), T / (2 * 64));
-    Reset(m_priv_key.m_dq.get(), T / (2 * 64));
-    Reset(m_priv_key.m_mod.get(), T / (64));
-    Reset(m_priv_key.m_p.get(), T / (2 * 64));
-    Reset(m_priv_key.m_q.get(), T / (2 * 64));
-    Reset(m_priv_key.m_qinv.get(), T / (2 * 64));
-    Reset(m_pub_key.m_mod.get(), T / (64));
-    Reset(m_context_pub.m_mod_radix_52_bit.get(), T / 52 + 1);
-    Reset(m_context_p.m_mod_radix_52_bit.get(), T / (2 * 52) + 1);
-    Reset(m_context_q.m_mod_radix_52_bit.get(), T / (2 * 52) + 1);
+    Reset(m_priv_key.m_dp, T / (2 * 64));
+    Reset(m_priv_key.m_dq, T / (2 * 64));
+    Reset(m_priv_key.m_mod, T / (64));
+    Reset(m_priv_key.m_p, T / (2 * 64));
+    Reset(m_priv_key.m_q, T / (2 * 64));
+    Reset(m_priv_key.m_qinv, T / (2 * 64));
+    Reset(m_pub_key.m_mod, T / (64));
+    Reset(m_context_pub.m_mod_radix_52_bit, T / 52 + 1);
+    Reset(m_context_p.m_mod_radix_52_bit, T / (2 * 52) + 1);
+    Reset(m_context_q.m_mod_radix_52_bit, T / (2 * 52) + 1);
 }
 
 template<alc_rsa_key_size T>
