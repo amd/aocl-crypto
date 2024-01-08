@@ -36,7 +36,7 @@ namespace alcp::rsa {
 template<alc_rsa_key_size T>
 struct RsaPublicKeyBignum
 {
-    Uint64 m_mod[T / 64];
+    Uint64 m_mod[T / 64]{};
     Uint64 m_public_exponent = 0;
     Uint64 m_size            = 0;
 };
@@ -44,25 +44,25 @@ struct RsaPublicKeyBignum
 template<alc_rsa_key_size T>
 struct RsaPrivateKeyBignum
 {
-    Uint64 m_dp[T / (2 * 64)];
-    Uint64 m_dq[T / (2 * 64)];
-    Uint64 m_p[T / (2 * 64)];
-    Uint64 m_q[T / (2 * 64)];
-    Uint64 m_qinv[T / (2 * 64)];
-    Uint64 m_mod[T / 64];
+    Uint64 m_dp[T / (2 * 64)]{};
+    Uint64 m_dq[T / (2 * 64)]{};
+    Uint64 m_p[T / (2 * 64)]{};
+    Uint64 m_q[T / (2 * 64)]{};
+    Uint64 m_qinv[T / (2 * 64)]{};
+    Uint64 m_mod[T / 64]{};
     Uint64 m_size = 0;
 };
 
 template<alc_rsa_key_size T>
 struct MontContextBignum
 {
-    Uint64 m_r1[T / 64]; // Montgomery identity
-    Uint64 m_r2[T / 64]; // Montgomery converter
-    Uint64 m_r3[T / 64]; // Montgomery optimizer
-    Uint64
-        m_r2_radix_52_bit[T / 52 + 1]; // Montgomery converter in radix 52 bit.
-    Uint64 m_mod_radix_52_bit[T / 52 + 1]; // Modulus in radix 52.
-    Uint64 m_k0;                           // Montgomery parameter
+    Uint64 m_r1[T / 64]{}; // Montgomery identity
+    Uint64 m_r2[T / 64]{}; // Montgomery converter
+    Uint64 m_r3[T / 64]{}; // Montgomery optimizer
+    Uint64 m_r2_radix_52_bit[T / 52
+                             + 1]{}; // Montgomery converter in radix 52 bit.
+    Uint64 m_mod_radix_52_bit[T / 52 + 1]{}; // Modulus in radix 52.
+    Uint64 m_k0;                             // Montgomery parameter
     Uint64 m_size = 0;
 };
 

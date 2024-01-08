@@ -186,16 +186,16 @@ class ALCP_API_EXPORT Rsa
                       const Uint8* input,
                       Uint64       inputLen);
 
-    Uint64 m_key_size;
-    Uint64 m_hash_len;
-    Uint64 m_mgf_hash_len;
-    alignas(64) RsaPrivateKeyBignum<T> m_priv_key;
-    alignas(64) RsaPublicKeyBignum<T> m_pub_key;
-    alignas(64) MontContextBignum<T> m_context_pub;
-    alignas(64) MontContextBignum<T> m_context_p;
-    alignas(64) MontContextBignum<T> m_context_q;
-    digest::IDigest* m_digest = nullptr;
-    digest::IDigest* m_mgf    = nullptr;
+    RsaPrivateKeyBignum<T> m_priv_key;
+    RsaPublicKeyBignum<T>  m_pub_key;
+    MontContextBignum<T>   m_context_pub;
+    MontContextBignum<T>   m_context_p;
+    MontContextBignum<T>   m_context_q;
+    Uint64                 m_key_size;
+    Uint64                 m_hash_len;
+    Uint64                 m_mgf_hash_len;
+    digest::IDigest*       m_digest = nullptr;
+    digest::IDigest*       m_mgf    = nullptr;
 };
 
 } // namespace alcp::rsa
