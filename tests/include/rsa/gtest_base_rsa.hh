@@ -342,10 +342,11 @@ Rsa_Cross(int                     padding_mode,
     int InputSize = 0;
     for (int i = loop_start; i < InputSize_Max; i++) {
         /* For non-padded mode, input len will always be KeySize */
+        /* over-allocating this to test the misaligned pointers */
         if (padding_mode == 1)
-            InputSize = i;
+            InputSize = i + 1;
         else
-            InputSize = InputSize_Max;
+            InputSize = InputSize_Max + 1;
 
         std::vector<Uint8> input_data(InputSize);
         /* shuffle input vector after each iterations */
@@ -369,19 +370,27 @@ Rsa_Cross(int                     padding_mode,
         std::vector<Uint8> decrypted_data_ext(KeySize);
         std::vector<Uint8> PubKeyKeyMod_ext(KeySize);
 
-        data_main.m_msg            = &(input_data[0]);
+        /* misalign if buffers are aligned */
+        bool force_misaligned = false;
+        if (is_aligned(&(input_data[0]))) {
+            data_main.m_msg  = &(input_data[1]);
+            data_ext.m_msg   = &(input_data[1]);
+            force_misaligned = true;
+        } else {
+            data_main.m_msg = &(input_data[0]);
+            data_ext.m_msg  = &(input_data[0]);
+        }
+
         data_main.m_pub_key_mod    = &(PubKeyKeyMod_main[0]);
         data_main.m_encrypted_data = &(encrypted_data_main[0]);
         data_main.m_decrypted_data = &(decrypted_data_main[0]);
-        data_main.m_msg_len        = input_data.size();
-        data_main.m_key_len        = KeySize;
 
-        data_ext.m_msg            = &(input_data[0]);
         data_ext.m_pub_key_mod    = &(PubKeyKeyMod_ext[0]);
         data_ext.m_encrypted_data = &(encrypted_data_ext[0]);
         data_ext.m_decrypted_data = &(decrypted_data_ext[0]);
-        data_ext.m_msg_len        = input_data.size();
-        data_ext.m_key_len        = KeySize;
+
+        data_main.m_key_len = data_ext.m_key_len = KeySize;
+        data_main.m_msg_len = data_ext.m_msg_len = input_data.size() - 1;
 
         /* set seed and label for padding mode */
         std::vector<Uint8> seed(rb_main->m_hash_len);
@@ -477,6 +486,11 @@ Rsa_Cross(int                     padding_mode,
             FAIL();
         }
 
+        /* if we are misaligning the input buffer, resize */
+        if (force_misaligned) {
+            input_data =
+                std::vector<Uint8>(input_data.begin() + 1, input_data.end());
+        }
         /* Now check outputs from both libs */
         if (padding_mode == 1) {
             input_data.resize(KeySize, 0);
@@ -485,7 +499,8 @@ Rsa_Cross(int                     padding_mode,
             EXPECT_TRUE(ArraysMatch(decrypted_data_ext, input_data, i));
             EXPECT_TRUE(
                 ArraysMatch(decrypted_data_ext, decrypted_data_main, i));
-            /* now revert input data to original length after verification */
+            /* now revert input data to original length after verification
+             */
             input_data.resize(i);
         } else {
             /* For non-padded mode, input len will always be KeySize */
