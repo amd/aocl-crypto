@@ -124,6 +124,39 @@ class ALCP_API_EXPORT Rsa
                               Uint64       labelSize,
                               Uint8*       pText,
                               Uint64&      textSize);
+
+    /**
+     * @brief Function signs the buffer with pss padding
+     *
+     * @param [in]  check       - signed message verification for fault attack
+     * @param [in]  pText       - pointer to input text
+     * @param [in]  textSize    - size of input text
+     * @param [in]  salt        - pointer to salt
+     * @param [in]  saltSize    - size of salt
+     * @param [out] pSignedBuff - pointer to signed text
+     *
+     * @return Status Error code
+     */
+    Status signPrivatePss(bool         check,
+                          const Uint8* pText,
+                          Uint64       textSize,
+                          const Uint8* salt,
+                          Uint64       saltSize,
+                          Uint8*       pSignedBuff);
+
+    /**
+     * @brief Function verifies the buffer with pss padding
+     *
+     * @param [in] pText       - pointer to input text
+     * @param [in] textSize    - size of input text
+     * @param [in] pSignedBuff - pointer to signed text
+     *
+     * @return Status Error code
+     */
+    Status verifyPublicPss(const Uint8* pText,
+                           Uint64       textSize,
+                           const Uint8* pSignedBuff);
+
     /**
      * @brief Function fetches the public key
      *

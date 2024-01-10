@@ -343,10 +343,12 @@ Rsa<T>::decryptPrivateOaep(const Uint8* pEncText,
                            Uint64&      textSize)
 {
 
-    auto mod_text   = std::make_unique<Uint8[]>(encSize);
-    auto p_mod_text = mod_text.get();
+    // todo move to aligned buffer
+    alignas(64) Uint8 mod_text[T / 8];
+    // auto mod_text   = std::make_unique<Uint8[]>(encSize);
+    auto p_mod_text = mod_text;
 
-    Status status = decryptPrivate(pEncText, encSize, p_mod_text);
+    Status status = decryptPrivate(pEncText, encSize, mod_text);
 
     if (!status.ok()) {
         return status;
@@ -414,6 +416,39 @@ Rsa<T>::decryptPrivateOaep(const Uint8* pEncText,
     memset(p_db, 0, db_len * 2);
     Uint8 error_code = Select(success, eOk, eInternal);
     return (error_code == eOk) ? StatusOk() : status::Generic("Generic error");
+}
+
+template<alc_rsa_key_size T>
+Status
+Rsa<T>::signPrivatePss(bool         check,
+                       const Uint8* pText,
+                       Uint64       textSize,
+                       const Uint8* salt,
+                       Uint64       saltSize,
+                       Uint8*       pSignedBuff)
+{
+
+    // add pss padding
+
+    return decryptPrivate(pText, textSize, pSignedBuff);
+}
+
+template<alc_rsa_key_size T>
+Status
+Rsa<T>::verifyPublicPss(const Uint8* pText,
+                        Uint64       textSize,
+                        const Uint8* pSignedBuff)
+{
+    alignas(64) Uint8 mod_text[T / 8];
+
+    Status status = encryptPublic(pText, textSize, mod_text);
+
+    if (!status.ok()) {
+        return status;
+    }
+    // remove padding
+
+    return status;
 }
 
 template<alc_rsa_key_size T>

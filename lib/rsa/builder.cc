@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -89,6 +89,36 @@ __rsa_oaepDecrBufWithPriv_wrapper(void*        pRsaHandle,
     auto ap = static_cast<Rsa<KEYSIZE>*>(pRsaHandle);
     return ap->decryptPrivateOaep(
         pEncText, encSize, label, labelSize, pText, textSize);
+}
+
+template<alc_rsa_key_size KEYSIZE>
+static Status
+__rsa_pssSignBufWithPriv_wrapper(void*        pRsaHandle,
+                                 bool         check,
+                                 const Uint8* pText,
+                                 Uint64       textSize,
+                                 const Uint8* salt,
+                                 Uint64       saltSize,
+                                 Uint8*       pSignedBuff)
+
+{
+
+    auto ap = static_cast<Rsa<KEYSIZE>*>(pRsaHandle);
+    return ap->signPrivatePss(
+        check, pText, textSize, salt, saltSize, pSignedBuff);
+}
+
+template<alc_rsa_key_size KEYSIZE>
+static Status
+__rsa_pssVerifyBufWithPub_wrapper(void*        pRsaHandle,
+                                  const Uint8* pText,
+                                  Uint64       textSize,
+                                  const Uint8* pSignedBuff)
+
+{
+
+    auto ap = static_cast<Rsa<KEYSIZE>*>(pRsaHandle);
+    return ap->verifyPublicPss(pText, textSize, pSignedBuff);
 }
 
 template<alc_rsa_key_size KEYSIZE>
@@ -188,6 +218,8 @@ __build_rsa(Context& ctx)
     ctx.decryptPrivateFn     = __rsa_decrBufWithPriv_wrapper<KEYSIZE>;
     ctx.encryptPublicOaepFn  = __rsa_oaepEncrBufWithPub_wrapper<KEYSIZE>;
     ctx.decryptPrivateOaepFn = __rsa_oaepDecrBufWithPriv_wrapper<KEYSIZE>;
+    ctx.signPrivatePssFn     = __rsa_pssSignBufWithPriv_wrapper<KEYSIZE>;
+    ctx.verifyPublicPssFn    = __rsa_pssVerifyBufWithPub_wrapper<KEYSIZE>;
     ctx.getKeySize           = __rsa_getKeySize_wrapper<KEYSIZE>;
     ctx.getPublickey         = __rsa_getPublicKey_wrapper<KEYSIZE>;
     ctx.setPublicKey         = __rsa_setPublicKey_wrapper<KEYSIZE>;
