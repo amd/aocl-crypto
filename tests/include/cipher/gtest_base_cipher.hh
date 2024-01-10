@@ -494,7 +494,7 @@ Chacha20CrossTest(int              keySize,
             std::vector<Uint8> ct(i * size, 0), out_ct_alc(i * size, 0),
                 out_ct_ext(i * size, 0), out_pt(i * size, 0);
 
-            pos1 = msg_full.end() - i * size;
+            pos1 = msg_full.end() - (i * size) - 1;
             pos2 = msg_full.end();
             std::vector<Uint8> pt(pos1, pos2);
 
@@ -507,21 +507,25 @@ Chacha20CrossTest(int              keySize,
             pos2 = iv_full.begin() + (ivl);
             std::vector<Uint8> iv(pos1, pos2);
 
+            /* misalign if buffers are aligned */
+            if (is_aligned(&(pt[0]))) {
+                data_alc.m_in = &(pt[1]);
+                data_ext.m_in = &(pt[1]);
+            } else {
+                data_alc.m_in = &(pt[0]);
+                data_ext.m_in = &(pt[0]);
+            }
+            data_alc.m_inl = data_ext.m_inl = pt.size() - 1;
+            data_alc.m_ivl = data_ext.m_ivl = iv.size();
+            data_alc.m_outl = data_ext.m_outl = data_alc.m_inl;
+
             // ALC/Main Lib Data
-            data_alc.m_in   = &(pt[0]);
-            data_alc.m_inl  = pt.size();
-            data_alc.m_iv   = &(iv[0]);
-            data_alc.m_ivl  = iv.size();
-            data_alc.m_out  = &(out_ct_alc[0]);
-            data_alc.m_outl = data_alc.m_inl;
+            data_alc.m_iv  = &(iv[0]);
+            data_alc.m_out = &(out_ct_alc[0]);
 
             // External Lib Data
-            data_ext.m_in   = &(pt[0]);
-            data_ext.m_inl  = pt.size();
-            data_ext.m_iv   = &(iv[0]);
-            data_ext.m_ivl  = iv.size();
-            data_ext.m_out  = &(out_ct_ext[0]);
-            data_ext.m_outl = data_alc.m_inl;
+            data_ext.m_iv  = &(iv[0]);
+            data_ext.m_out = &(out_ct_ext[0]);
 
             if (encDec == ENCRYPT) {
                 ret = alcpTC->getCipherHandler()->testingEncrypt(data_alc, key);
