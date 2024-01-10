@@ -453,6 +453,37 @@ Rsa<T>::verifyPublicPss(const Uint8* pText,
 
 template<alc_rsa_key_size T>
 Status
+Rsa<T>::signPrivatePkcsv15(bool         check,
+                           const Uint8* pText,
+                           Uint64       textSize,
+                           Uint8*       pSignedBuff)
+{
+
+    // add pkcs padding
+
+    return decryptPrivate(pText, textSize, pSignedBuff);
+}
+
+template<alc_rsa_key_size T>
+Status
+Rsa<T>::verifyPublicPkcsv15(const Uint8* pText,
+                            Uint64       textSize,
+                            const Uint8* pSignedBuff)
+{
+    alignas(64) Uint8 mod_text[T / 8];
+
+    Status status = encryptPublic(pText, textSize, mod_text);
+
+    if (!status.ok()) {
+        return status;
+    }
+    // remove padding
+
+    return status;
+}
+
+template<alc_rsa_key_size T>
+Status
 Rsa<T>::getPublickey(RsaPublicKey& pPublicKey)
 {
     if (pPublicKey.size != m_key_size) {

@@ -324,6 +324,52 @@ alcp_rsa_publickey_verify_pss(const alc_rsa_handle_p pRsaHandle,
                               const Uint8*           pSignedBuff);
 
 /**
+ * @brief Function signs text using private key and PKCS1-v1_5 padding
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request and the
+ * before the session call @ref alcp_rsa_finish</b>
+ * @endparblock
+ *
+ *
+ * @param [in]  pRsaHandle  - Handler of the Context for the session
+ * @param [in]  check       - Verify the signed message to prevent fault attack
+ * @param [in]  pText       - pointer to input text
+ * @param [in]  textSize    - size of input text
+ * @param [out] pSignedBuff - pointer to signed text
+ *
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_privatekey_sign_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
+                                  bool                   check,
+                                  const Uint8*           pText,
+                                  Uint64                 textSize,
+                                  Uint8*                 pSignedBuff);
+
+/**
+ * @brief Function verifies text using public key and PKCS1-v1_5 padding
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request and the
+ * before the session call @ref alcp_rsa_finish</b>
+ * @endparblock
+ *
+ *
+ * @param [in] pRsaHandle  - Handler of the Context for the session
+ * @param [in] pText       - pointer to input text
+ * @param [in] textSize    - size of input text
+ * @param [in] pSignedBuff - pointer to signed text
+ *
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_publickey_verify_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
+                                   const Uint8*           pText,
+                                   Uint64                 textSize,
+                                   const Uint8*           pSignedBuff);
+
+/**
  * @brief Function fetches public key from handle
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_rsa_request</b>

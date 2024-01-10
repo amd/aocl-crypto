@@ -78,6 +78,17 @@ class Context
                                 Uint64       textSize,
                                 const Uint8* pSignedBuff);
 
+    Status (*signPrivatePkcsv15Fn)(void*        pRsaHandle,
+                                   bool         check,
+                                   const Uint8* pText,
+                                   Uint64       textSize,
+                                   Uint8*       pSignedBuff);
+
+    Status (*verifyPublicPkcsv15Fn)(void*        pRsaHandle,
+                                    const Uint8* pText,
+                                    Uint64       textSize,
+                                    const Uint8* pSignedBuff);
+
     Uint64 (*getKeySize)(void* pRsaHandle);
 
     Status (*getPublickey)(void* pRsaHandle, RsaPublicKey& publicKey);

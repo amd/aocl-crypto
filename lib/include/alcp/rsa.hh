@@ -158,6 +158,34 @@ class ALCP_API_EXPORT Rsa
                            const Uint8* pSignedBuff);
 
     /**
+     * @brief Function signs the buffer with pkcsv15 padding
+     *
+     * @param [in]  check       - signed message verification for fault attack
+     * @param [in]  pText       - pointer to input text
+     * @param [in]  textSize    - size of input text
+     * @param [out] pSignedBuff - pointer to signed text
+     *
+     * @return Status Error code
+     */
+    Status signPrivatePkcsv15(bool         check,
+                              const Uint8* pText,
+                              Uint64       textSize,
+                              Uint8*       pSignedBuff);
+
+    /**
+     * @brief Function verifies the buffer with pkcsv15 padding
+     *
+     * @param [in] pText       - pointer to input text
+     * @param [in] textSize    - size of input text
+     * @param [in] pSignedBuff - pointer to signed text
+     *
+     * @return Status Error code
+     */
+    Status verifyPublicPkcsv15(const Uint8* pText,
+                               Uint64       textSize,
+                               const Uint8* pSignedBuff);
+
+    /**
      * @brief Function fetches the public key
      *
      * @param [out] pPublicKey      Refrence to public key structure

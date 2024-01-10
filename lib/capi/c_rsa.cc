@@ -372,6 +372,63 @@ alcp_rsa_publickey_verify_pss(const alc_rsa_handle_p pRsaHandle,
     }
 }
 
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_privatekey_sign_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
+                                  bool                   check,
+                                  const Uint8*           pText,
+                                  Uint64                 textSize,
+                                  Uint8*                 pSignedBuff)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
+    ALCP_BAD_PTR_ERR_RET(pText, err);
+    ALCP_BAD_PTR_ERR_RET(pSignedBuff, err);
+
+    auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
+
+    ctx->status = ctx->signPrivatePkcsv15Fn(
+        ctx->m_rsa, check, pText, textSize, pSignedBuff);
+
+    if (ctx->status.ok()) {
+        return err;
+    } else {
+        // fetching the module error
+        Uint16 module_error = (ctx->status.code() >> 16) & 0xff;
+        return (alcp::rsa::ErrorCode::eNotPermitted == module_error)
+                   ? ALC_ERROR_NOT_PERMITTED
+                   : ALC_ERROR_GENERIC;
+    }
+}
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_publickey_verify_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
+                                   const Uint8*           pText,
+                                   Uint64                 textSize,
+                                   const Uint8*           pSignedBuff)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
+    ALCP_BAD_PTR_ERR_RET(pText, err);
+    ALCP_BAD_PTR_ERR_RET(pSignedBuff, err);
+
+    auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
+
+    ctx->status =
+        ctx->verifyPublicPkcsv15Fn(ctx->m_rsa, pText, textSize, pSignedBuff);
+
+    if (ctx->status.ok()) {
+        return err;
+    } else {
+        // fetching the module error
+        Uint16 module_error = (ctx->status.code() >> 16) & 0xff;
+        return (alcp::rsa::ErrorCode::eNotPermitted == module_error)
+                   ? ALC_ERROR_NOT_PERMITTED
+                   : ALC_ERROR_GENERIC;
+    }
+}
+
 Uint64
 alcp_rsa_get_key_size(const alc_rsa_handle_p pRsaHandle)
 {

@@ -236,7 +236,6 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
         printf("\n setting of mgf for oaep failed");
         return err;
     }
-    Uint64 hash_len = ALC_DIGEST_LEN_256 / 8;
     // text size should be in the range 2 * hash_len + 2
     // to sizeof(Modulus) - 2* hash_len - 2
     Uint64 text_size = 47; // size - 2 * hash_len - 2;
@@ -251,22 +250,22 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
 
     bool check = true;
 
-    err = alcp_rsa_privatekey_sign_pss(
-        ps_rsa_handle, check, text, text_size, Salt, sizeof(Salt), pSignedBuff);
+    err = alcp_rsa_privatekey_sign_pkcs1v15(
+        ps_rsa_handle, check, text, text_size, pSignedBuff);
 
     if (err != ALC_ERROR_NONE) {
-        printf("\nSignature process failed");
+        printf("\n signature process failed");
         goto free_buff;
     }
 
-    ALCP_PRINT_TEXT(pSignedBuff, size, "signed_text")
+    ALCP_PRINT_TEXT(pSignedBuff, size, "pSignedBuff")
 
     // verify signature
-    err = alcp_rsa_publickey_verify_pss(
+    err = alcp_rsa_publickey_verify_pkcs1v15(
         ps_rsa_handle, text, text_size, pSignedBuff);
 
     if (err != ALC_ERROR_NONE) {
-        printf("\n Verification process failed");
+        printf("\n verification process failed");
         goto free_buff;
     }
 
