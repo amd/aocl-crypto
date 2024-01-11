@@ -30,16 +30,11 @@ find_program (SPHINX_EXECUTABLE
               NAMES sphinx-build sphinx-build.exe
               DOC "Sphinx Documentation Generator"
 )
+mark_as_advanced(SPHINX_EXECUTABLE)
 
-if (SPHINX_FOUND)
-    message(STATUS "Building Sphinx")
+# Handle standard arguments to find_package like REQUIRED and QUIET
+find_package_handle_standard_args(Sphinx
+                        "Failed to find sphinx-build executable"
+                        SPHINX_EXECUTABLE)
 
-    mark_as_advanced (SPHINX_EXECUTABLE)
-
-    # Handle standard arguments to find_package like REQUIRED and QUIET
-    find_package_handle_standard_args (Sphinx
-                            "Failed to find sphinx-build executable"
-                            SPHINX_EXECUTABLE)
-else (SPHINX_FOUND)
-    message (FATAL "Sphinx is not found; try 'pip install sphinx'")
-endif (SPHINX_FOUND)
+message(STATUS "Building Sphinx..")
