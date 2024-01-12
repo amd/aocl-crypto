@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -493,8 +493,18 @@ ALCP_prov_cipher_encrypt_init(void*                vctx,
 #endif
     if (!cctx->is_aead && cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
         if (cctx->pc_cipher_info.ci_algo_info.ai_iv != NULL) {
-            cctx->ivlen = ivlen;
+#ifdef DEBUG
+            printf("Provider: Setting iv length as %ld from %ld\n",
+                   ivlen,
+                   cctx->ivlen);
+#endif
+            if (ivlen == 0) {
+                cctx->ivlen = 16;
+            } else {
+                cctx->ivlen = ivlen;
+            }
         }
+
         err = alcp_cipher_set_iv(&(cctx->handle),
                                  cctx->ivlen,
                                  cctx->pc_cipher_info.ci_algo_info.ai_iv);
@@ -751,7 +761,16 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
 #endif
     if (!cctx->is_aead && cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
         if (cctx->pc_cipher_info.ci_algo_info.ai_iv != NULL) {
-            cctx->ivlen = ivlen;
+#ifdef DEBUG
+            printf("Provider: Setting iv length as %ld from %ld\n",
+                   ivlen,
+                   cctx->ivlen);
+#endif
+            if (ivlen == 0) {
+                cctx->ivlen = 16;
+            } else {
+                cctx->ivlen = ivlen;
+            }
         }
         err = alcp_cipher_set_iv(&(cctx->handle),
                                  cctx->ivlen,
