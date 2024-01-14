@@ -445,7 +445,7 @@ Rsa<T>::signPrivatePss(bool         check,
         m_mgf_hash_len = m_hash_len;
     }
 
-    alignas(64) Uint8 message[T / 8], hash[64]{};
+    alignas(64) Uint8 message[T / 8], message_check[T / 8], hash[64]{};
 
     m_digest->reset();
     m_digest->finalize(pText, textSize);
@@ -485,6 +485,15 @@ Rsa<T>::signPrivatePss(bool         check,
 
     // verify signature for mitigating the fault tolerance attack
     if (check) {
+        status = encryptPublic(pSignedBuff, T / 8, message_check);
+
+        Uint64* num1 = reinterpret_cast<Uint64*>(message);
+        Uint64* num2 = reinterpret_cast<Uint64*>(message_check);
+        Uint64  res  = 0;
+        for (Uint64 i = 0; i < T / 64; i++) {
+            res += (*num1 ^ *num2);
+        }
+        status = (res != 0) ? status::Generic("Generic error") : StatusOk();
     }
 
     return status;
