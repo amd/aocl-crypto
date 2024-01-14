@@ -174,7 +174,8 @@ alcp_rsa_publickey_encrypt_oaep(const alc_rsa_handle_p pRsaHandle,
                                 Uint8*                 pEncText);
 
 /**
- * @brief Function adds the digest algorithm to be used in oaep padding
+ * @brief Function adds the digest algorithm to be used in oaep / pss / pkcsv15
+ * padding
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_rsa_request</b>
  * @endparblock
@@ -186,11 +187,12 @@ alcp_rsa_publickey_encrypt_oaep(const alc_rsa_handle_p pRsaHandle,
  * alcp_error_str needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_add_digest_oaep(const alc_rsa_handle_p  pRsaHandle,
-                         const alc_digest_info_p digestInfo);
+alcp_rsa_add_digest(const alc_rsa_handle_p  pRsaHandle,
+                    const alc_digest_info_p digestInfo);
 
 /**
- * @brief Function adds the digest algorithm for mask generation in oaep padding
+ * @brief Function adds the digest algorithm for mask generation in oaep /
+ * pkcsv15 padding
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_rsa_request</b>
  * @endparblock
@@ -202,8 +204,8 @@ alcp_rsa_add_digest_oaep(const alc_rsa_handle_p  pRsaHandle,
  * alcp_error_str needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_add_mgf_oaep(const alc_rsa_handle_p  pRsaHandle,
-                      const alc_digest_info_p digestInfo);
+alcp_rsa_add_mgf(const alc_rsa_handle_p  pRsaHandle,
+                 const alc_digest_info_p digestInfo);
 
 /**
  * @brief Function decrypts encrypted text using private key.

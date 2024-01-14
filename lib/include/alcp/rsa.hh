@@ -62,18 +62,19 @@ class ALCP_API_EXPORT Rsa
     Status encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText);
 
     /**
-     * @brief set the Digest to be used by OAEP encrytion
-     * @param [in] digest         Digest class to be used by OAEP encrytion.
-     * Should be called before calling encryptPublicOaep
+     * @brief set the Digest to be used by OAEP / PSS / PKCSV15 padding
+     * @param [in] digest         Digest class to be used by OAEP / PSS /
+     * PKCSV15 padding.
      */
-    void setDigestOaep(digest::IDigest* digest);
+    void setDigest(digest::IDigest* digest);
 
     /**
-     * @brief set the MGF to be used by OAEP encrytion
-     * @param [in]  mgf           Digest class to be used by OAEP encrytion.
-     * Should be called before calling encryptPublicOaep
+     * @brief set the MGF to be used by OAEP/ PKCSV15 padding
+     * @param [in]  mgf           Digest class to be used by OAEP/ PKCSV15
+     * padding.
+     *
      */
-    void setMgfOaep(digest::IDigest* mgf);
+    void setMgf(digest::IDigest* mgf);
 
     /**
      * @brief Function encrypt the buffer using oaep padding

@@ -201,7 +201,7 @@ __rsa_setDigest_wrapper(void* pRsaHandle, digest::IDigest* digest)
 {
     auto ap = static_cast<Rsa<KEYSIZE>*>(pRsaHandle);
 
-    ap->setDigestOaep(digest);
+    ap->setDigest(digest);
 }
 
 template<alc_rsa_key_size KEYSIZE>
@@ -210,7 +210,7 @@ __rsa_setMgf_wrapper(void* pRsaHandle, digest::IDigest* digest)
 {
     auto ap = static_cast<Rsa<KEYSIZE>*>(pRsaHandle);
 
-    ap->setMgfOaep(digest);
+    ap->setMgf(digest);
 }
 
 template<alc_rsa_key_size KEYSIZE>

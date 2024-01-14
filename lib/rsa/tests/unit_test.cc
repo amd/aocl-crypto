@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -662,8 +662,8 @@ TEST(RsaTest, EncryptOaepPadding)
     digest_ptr.reset(digest);
 
     Rsa<KEY_SIZE_1024> rsa_obj;
-    rsa_obj.setDigestOaep(digest);
-    rsa_obj.setMgfOaep(digest);
+    rsa_obj.setDigest(digest);
+    rsa_obj.setMgf(digest);
 
     Status status =
         rsa_obj.setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
@@ -681,8 +681,8 @@ TEST(RsaTest, EncryptOaepPadding)
     ASSERT_EQ(status.code(), ErrorCode::eOk);
 
     Rsa<KEY_SIZE_2048> rsa_obj_2048;
-    rsa_obj_2048.setDigestOaep(static_cast<digest::IDigest*>(digest));
-    rsa_obj_2048.setMgfOaep(static_cast<digest::IDigest*>(digest));
+    rsa_obj_2048.setDigest(static_cast<digest::IDigest*>(digest));
+    rsa_obj_2048.setMgf(static_cast<digest::IDigest*>(digest));
 
     status = rsa_obj_2048.setPublicKey(
         PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));
@@ -709,8 +709,8 @@ TEST(RsaTest, DecryptOaepPadding)
     digest_ptr.reset(reinterpret_cast<digest::IDigest*>(digest));
 
     Rsa<KEY_SIZE_1024> rsa_obj;
-    rsa_obj.setDigestOaep(digest);
-    rsa_obj.setMgfOaep(digest);
+    rsa_obj.setDigest(digest);
+    rsa_obj.setMgf(digest);
 
     Status status =
         rsa_obj.setPublicKey(PublicKeyExponent, Modulus, sizeof(Modulus));
@@ -742,9 +742,9 @@ TEST(RsaTest, DecryptOaepPadding)
     ASSERT_EQ(status.code(), ErrorCode::eOk);
 
     Rsa<KEY_SIZE_2048> rsa_obj_2048;
-    rsa_obj_2048.setDigestOaep(static_cast<digest::IDigest*>(digest));
+    rsa_obj_2048.setDigest(static_cast<digest::IDigest*>(digest));
 
-    rsa_obj_2048.setMgfOaep(static_cast<digest::IDigest*>(digest));
+    rsa_obj_2048.setMgf(static_cast<digest::IDigest*>(digest));
 
     status = rsa_obj_2048.setPublicKey(
         PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));

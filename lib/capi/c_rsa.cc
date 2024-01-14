@@ -179,8 +179,8 @@ fetch_digest(const alc_digest_info_t& digestInfo)
 }
 
 alc_error_t
-alcp_rsa_add_digest_oaep(const alc_rsa_handle_p  pRsaHandle,
-                         const alc_digest_info_p digestInfo)
+alcp_rsa_add_digest(const alc_rsa_handle_p  pRsaHandle,
+                    const alc_digest_info_p digestInfo)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
@@ -201,8 +201,8 @@ alcp_rsa_add_digest_oaep(const alc_rsa_handle_p  pRsaHandle,
 }
 
 alc_error_t
-alcp_rsa_add_mgf_oaep(const alc_rsa_handle_p  pRsaHandle,
-                      const alc_digest_info_p digestInfo)
+alcp_rsa_add_mgf(const alc_rsa_handle_p  pRsaHandle,
+                 const alc_digest_info_p digestInfo)
 {
     using alcp::digest::IDigest;
     alc_error_t err = ALC_ERROR_NONE;

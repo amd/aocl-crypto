@@ -218,28 +218,13 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
     };
 
     // Adding the digest function for generating the hash in oaep padding
-    err = alcp_rsa_add_digest_oaep(ps_rsa_handle, &dinfo);
+    err = alcp_rsa_add_digest(ps_rsa_handle, &dinfo);
     if (err != ALC_ERROR_NONE) {
         printf("\n setting of digest for oaep failed");
         return err;
     }
 
-    alc_digest_info_t mgf_info = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len = ALC_DIGEST_LEN_256,
-        .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
-    };
-    // Adding the mask generation function for generating the seed and data
-    // block mask
-    err = alcp_rsa_add_mgf_oaep(ps_rsa_handle, &mgf_info);
-    if (err != ALC_ERROR_NONE) {
-        printf("\n setting of mgf for oaep failed");
-        return err;
-    }
-    Uint64 hash_len = ALC_DIGEST_LEN_256 / 8;
-    // text size should be in the range 2 * hash_len + 2
-    // to sizeof(Modulus) - 2* hash_len - 2
-    Uint64 text_size = 47; // size - 2 * hash_len - 2;
+    Uint64 text_size = 47; // the maximum size is (2^64-1)/8 bytes
 
     pSignedBuff = malloc(size);
     text        = malloc(text_size);

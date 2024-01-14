@@ -88,7 +88,7 @@ Rsa<T>::Rsa()
 
 template<alc_rsa_key_size T>
 void
-Rsa<T>::setDigestOaep(digest::IDigest* digest)
+Rsa<T>::setDigest(digest::IDigest* digest)
 {
     if (digest) {
         m_digest   = digest;
@@ -98,7 +98,7 @@ Rsa<T>::setDigestOaep(digest::IDigest* digest)
 
 template<alc_rsa_key_size T>
 void
-Rsa<T>::setMgfOaep(digest::IDigest* mgf)
+Rsa<T>::setMgf(digest::IDigest* mgf)
 {
     if (mgf) {
         m_mgf          = mgf;
@@ -305,6 +305,7 @@ Rsa<T>::encryptPublicOaep(const Uint8* pText,
     p_masked_db       = p_masked_seed + m_hash_len; // seed size equals hashsize
 
     // generates masked db
+    m_digest->reset();
     m_digest->finalize(pLabel, labelSize);
     m_digest->copyHash(p_masked_db, m_hash_len);
 
@@ -428,9 +429,65 @@ Rsa<T>::signPrivatePss(bool         check,
                        Uint8*       pSignedBuff)
 {
 
-    // add pss padding
+    // Add Pss encoding
+    if (!pText || (saltSize > 0 && !salt) || !pSignedBuff
+        || (T / 8 < m_hash_len + saltSize + 2)) {
+        return status::NotPermitted(
+            "Input parameters are incorrect for signing");
+    }
 
-    return decryptPrivate(pText, textSize, pSignedBuff);
+    if (!m_digest) {
+        return status::NotPermitted("hash function is not assigned");
+    }
+
+    if (!m_mgf) {
+        m_mgf          = m_digest;
+        m_mgf_hash_len = m_hash_len;
+    }
+
+    alignas(64) Uint8 message[T / 8], hash[64]{};
+
+    m_digest->reset();
+    m_digest->finalize(pText, textSize);
+    m_digest->copyHash(hash, m_hash_len);
+
+    auto message_tmp = std::make_unique<Uint8[]>(m_hash_len + saltSize + 8);
+    auto p_message   = message_tmp.get();
+    utils::CopyBytes(p_message + 8, hash, m_hash_len);
+    utils::CopyBytes(p_message + 8 + m_hash_len, salt, saltSize);
+
+    m_digest->reset();
+    m_digest->finalize(p_message, m_hash_len + saltSize + 8);
+    m_digest->copyHash(hash, m_hash_len);
+
+    Uint64 p_db_size = T / 8 - m_hash_len - 1;
+    auto   db        = std::make_unique<Uint8[]>(p_db_size);
+    auto   p_db      = db.get();
+
+    Uint64 pos = T / 8 - saltSize - m_hash_len - 2;
+    p_db[pos]  = 0x01;
+    utils::CopyBytes(p_db + pos + 1, salt, saltSize);
+
+    auto db_mask   = std::make_unique<Uint8[]>(p_db_size);
+    auto p_db_mask = db_mask.get();
+
+    maskGenFunct(p_db_mask, p_db_size, hash, m_hash_len);
+
+    for (Uint16 i = 0; i < p_db_size; i++) {
+        p_db[i] ^= p_db_mask[i];
+    }
+
+    utils::CopyBytes(message, p_db, p_db_size);
+    utils::CopyBytes(message + p_db_size, hash, m_hash_len);
+    message[T / 8 - 1] = 0xbc;
+
+    Status status = decryptPrivate(message, T / 8, pSignedBuff);
+
+    // verify signature for mitigating the fault tolerance attack
+    if (check) {
+    }
+
+    return status;
 }
 
 template<alc_rsa_key_size T>
@@ -439,16 +496,73 @@ Rsa<T>::verifyPublicPss(const Uint8* pText,
                         Uint64       textSize,
                         const Uint8* pSignedBuff)
 {
+    if (!pText || !pSignedBuff) {
+        return status::NotPermitted(
+            "Input parameters are incorrect for signing");
+    }
+
+    if (!m_digest) {
+        return status::NotPermitted("hash function is not assigned");
+    }
+
+    if (!m_mgf) {
+        m_mgf          = m_digest;
+        m_mgf_hash_len = m_hash_len;
+    }
+
     alignas(64) Uint8 mod_text[T / 8];
 
-    Status status = encryptPublic(pText, textSize, mod_text);
-
+    Status status = encryptPublic(pSignedBuff, T / 8, mod_text);
     if (!status.ok()) {
         return status;
     }
-    // remove padding
 
-    return status;
+    Uint8 success = IsZero(0xbc ^ mod_text[T / 8 - 1]);
+
+    alignas(64) Uint8 hash[64]{};
+
+    m_digest->reset();
+    m_digest->finalize(pText, textSize);
+    m_digest->copyHash(hash, m_hash_len);
+
+    Uint64 db_len      = T / 8 - m_hash_len - 1;
+    auto   masked_db   = std::make_unique<Uint8[]>(db_len);
+    auto   p_masked_db = masked_db.get();
+    auto   db_mask     = std::make_unique<Uint8[]>(db_len);
+    auto   p_db_mask   = db_mask.get();
+
+    alignas(64) Uint8 h[64]{};
+
+    utils::CopyBytes(p_masked_db, mod_text, db_len);
+
+    utils::CopyBytes(h, mod_text + db_len, m_hash_len);
+
+    maskGenFunct(p_db_mask, db_len, h, m_hash_len);
+
+    for (Uint16 i = 0; i < db_len; i++) {
+        p_masked_db[i] ^= p_db_mask[i];
+        p_db_mask[i] = 0;
+    }
+
+    Uint16 i = 0;
+    for (; p_masked_db[i] == 0 && i < (db_len - 1); i++)
+        ;
+
+    success &= IsZero(p_masked_db[i++] ^ 0x1);
+
+    Uint16 saltLen = db_len - i;
+
+    // M' = (0x)00 00 00 00 00 00 00 00 || mHash || salt
+    utils::CopyBytes(p_db_mask + 8, hash, m_hash_len);
+    utils::CopyBlock(p_db_mask + 8 + m_hash_len, p_masked_db + i, saltLen);
+
+    m_digest->reset();
+    m_digest->finalize(p_db_mask, 8 + m_hash_len + saltLen);
+    m_digest->copyHash(h, m_hash_len);
+
+    success &= IsEqual(h, hash, m_hash_len);
+    Uint8 error_code = Select(success, eOk, eInternal);
+    return (error_code == eOk) ? StatusOk() : status::Generic("Generic error");
 }
 
 template<alc_rsa_key_size T>
