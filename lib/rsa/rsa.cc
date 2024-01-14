@@ -493,7 +493,10 @@ Rsa<T>::signPrivatePss(bool         check,
         for (Uint64 i = 0; i < T / 64; i++) {
             res += (*num1 ^ *num2);
         }
-        status = (res != 0) ? status::Generic("Generic error") : StatusOk();
+        if (res != 0) {
+            status = status::Generic("Generic error");
+            utils::PadBytes(pSignedBuff, 0, T / 8);
+        }
     }
 
     return status;
@@ -567,7 +570,7 @@ Rsa<T>::verifyPublicPss(const Uint8* pText,
 
     m_digest->reset();
     m_digest->finalize(p_db_mask, 8 + m_hash_len + saltLen);
-    m_digest->copyHash(h, m_hash_len);
+    m_digest->copyHash(hash, m_hash_len);
 
     success &= IsEqual(h, hash, m_hash_len);
     Uint8 error_code = Select(success, eOk, eInternal);

@@ -224,7 +224,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
         return err;
     }
 
-    Uint64 text_size = 47; // the maximum size is (2^64-1)/8 bytes
+    Uint64 text_size = 48; // the maximum size is (2^64-1)/8 bytes
 
     pSignedBuff = malloc(size);
     text        = malloc(text_size);
