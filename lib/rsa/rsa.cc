@@ -481,6 +481,9 @@ Rsa<T>::signPrivatePss(bool         check,
     utils::CopyBytes(message + p_db_size, hash, m_hash_len);
     message[T / 8 - 1] = 0xbc;
 
+    // emLen = 256  and emBits is 2047.Set the leftmost 8emLen - emBits bits of
+    // the leftmost octet in maskedDB to zero as per rfc8017
+    message[0] &= 0x7f;
     Status status = decryptPrivate(message, T / 8, pSignedBuff);
 
     // verify signature for mitigating the fault tolerance attack
@@ -555,7 +558,9 @@ Rsa<T>::verifyPublicPss(const Uint8* pText,
         p_masked_db[i] ^= p_db_mask[i];
         p_db_mask[i] = 0;
     }
-
+    // Set the leftmost 8emLen - emBits bits of the leftmost octet
+    // in DB to zero as per rfc8017
+    p_masked_db[0] &= 0x7f;
     Uint16 i = 0;
     for (; p_masked_db[i] == 0 && i < (db_len - 1); i++)
         ;
