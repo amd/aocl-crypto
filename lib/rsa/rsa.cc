@@ -41,8 +41,27 @@
 using alcp::utils::CpuId;
 
 namespace alcp::rsa {
+
 #include "rsa.cc.inc"
 
+// clang-format off
+// As per rfc8017 appendix-A.2.4
+static const Uint8 DigestInfo[SHA_UNKNOWN][19] = 
+                    {{0x30, 0x2d, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x04,
+                      0x05, 0x00, 0x04, 0x1c},
+                     {0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01,
+                      0x05, 0x00, 0x04, 0x20},
+                     {0x30, 0x41, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x02,
+                      0x05, 0x00, 0x04, 0x30},
+                     {0x30, 0x51, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x03,
+                      0x05, 0x00, 0x04, 0x40},
+                     {0x30, 0x2d, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x05,
+                      0x05, 0x00, 0x04, 0x1c},
+                     {0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x06,
+                      0x05, 0x00, 0x04, 0x20}
+                    };
+
+// clang-format on
 static const Uint64 Sha512Size = 64;
 
 static inline Uint8
@@ -82,9 +101,9 @@ Reset(void* buff, Uint64 size)
 
 template<alc_rsa_key_size T>
 Rsa<T>::Rsa()
-{
-    m_key_size = T / 8;
-}
+    : m_key_size{ T / 8 }
+    , m_digest_info_index{ SHA_UNKNOWN }
+{}
 
 template<alc_rsa_key_size T>
 void
@@ -93,6 +112,26 @@ Rsa<T>::setDigest(digest::IDigest* digest)
     if (digest) {
         m_digest   = digest;
         m_hash_len = digest->getHashSize();
+        switch (m_hash_len * 8) {
+            case ALC_DIGEST_LEN_224:
+                m_digest_info_index =
+                    digest->getInputBlockSize() == 64
+                        ? SHA_224
+                        : SHA_512_224; // SHA_512_224 chunk size is 128 bytes
+                break;
+            case ALC_DIGEST_LEN_256:
+                m_digest_info_index =
+                    digest->getInputBlockSize() == 64
+                        ? SHA_256
+                        : SHA_512_256; // SHA_512_256 chunk size is 128 bytes
+                break;
+            case ALC_DIGEST_LEN_384:
+                m_digest_info_index = SHA_384;
+                break;
+            case ALC_DIGEST_LEN_512:
+                m_digest_info_index = SHA_512;
+                break;
+        }
     }
 }
 
@@ -589,10 +628,52 @@ Rsa<T>::signPrivatePkcsv15(bool         check,
                            Uint64       textSize,
                            Uint8*       pSignedBuff)
 {
+    if (!pText || !pSignedBuff) {
+        return status::NotPermitted(
+            "Input parameters are incorrect for signing");
+    }
 
-    // ToDO: add pkcs padding
-    return StatusOk();
-    // return decryptPrivate(pText, textSize, pSignedBuff);
+    if (!m_digest || m_digest_info_index >= SHA_UNKNOWN) {
+        return status::NotPermitted("hash function is not assigned");
+    }
+
+    if (!m_mgf) {
+        m_mgf          = m_digest;
+        m_mgf_hash_len = m_hash_len;
+    }
+
+    alignas(64) Uint8 message[T / 8]{}, message_check[T / 8]{}, hash[64]{};
+
+    m_digest->reset();
+    m_digest->finalize(pText, textSize);
+    m_digest->copyHash(hash, m_hash_len);
+
+    // Encoded message :- 0x00 || 0x01 || PS || 0x00 || (DigestInfo || hash)
+    message[1]     = 0x01;
+    Uint64 pad_len = T / 8 - 3 - 19 - m_hash_len;
+    utils::PadBytes(message + 2, 0xf, pad_len);
+    utils::CopyBytes(
+        message + 3 + pad_len, DigestInfo[m_digest_info_index], 19);
+    utils::CopyBytes(message + 3 + pad_len + 19, hash, m_hash_len);
+
+    Status status = decryptPrivate(message, T / 8, pSignedBuff);
+
+    // verify signature for mitigating the fault tolerance attack
+    if (check) {
+        status = encryptPublic(pSignedBuff, T / 8, message_check);
+
+        Uint64* num1 = reinterpret_cast<Uint64*>(message);
+        Uint64* num2 = reinterpret_cast<Uint64*>(message_check);
+        Uint64  res  = 0;
+        for (Uint64 i = 0; i < T / 64; i++) {
+            res += (*num1 ^ *num2);
+        }
+        if (res != 0) {
+            status = status::Generic("Generic error");
+            utils::PadBytes(pSignedBuff, 0, T / 8);
+        }
+    }
+    return status;
 }
 
 template<alc_rsa_key_size T>
