@@ -179,8 +179,8 @@ fetch_digest(const alc_digest_info_t& digestInfo)
 }
 
 alc_error_t
-alcp_rsa_add_digest_oaep(const alc_rsa_handle_p  pRsaHandle,
-                         const alc_digest_info_p digestInfo)
+alcp_rsa_add_digest(const alc_rsa_handle_p  pRsaHandle,
+                    const alc_digest_info_p digestInfo)
 {
     alc_error_t err = ALC_ERROR_NONE;
     ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
@@ -201,8 +201,8 @@ alcp_rsa_add_digest_oaep(const alc_rsa_handle_p  pRsaHandle,
 }
 
 alc_error_t
-alcp_rsa_add_mgf_oaep(const alc_rsa_handle_p  pRsaHandle,
-                      const alc_digest_info_p digestInfo)
+alcp_rsa_add_mgf(const alc_rsa_handle_p  pRsaHandle,
+                 const alc_digest_info_p digestInfo)
 {
     using alcp::digest::IDigest;
     alc_error_t err = ALC_ERROR_NONE;
@@ -297,6 +297,126 @@ alcp_rsa_privatekey_decrypt_oaep(const alc_rsa_handle_p pRsaHandle,
 
     ctx->status = ctx->decryptPrivateOaepFn(
         ctx->m_rsa, pEncText, encSize, label, labelSize, pText, *textSize);
+
+    if (ctx->status.ok()) {
+        return err;
+    } else {
+        // fetching the module error
+        Uint16 module_error = (ctx->status.code() >> 16) & 0xff;
+        return (alcp::rsa::ErrorCode::eNotPermitted == module_error)
+                   ? ALC_ERROR_NOT_PERMITTED
+                   : ALC_ERROR_GENERIC;
+    }
+}
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_privatekey_sign_pss(const alc_rsa_handle_p pRsaHandle,
+                             bool                   check,
+                             const Uint8*           pText,
+                             Uint64                 textSize,
+                             const Uint8*           salt,
+                             Uint64                 saltSize,
+                             Uint8*                 pSignedBuff)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
+    ALCP_BAD_PTR_ERR_RET(pText, err);
+    ALCP_BAD_PTR_ERR_RET(pSignedBuff, err);
+
+    if (salt == nullptr && saltSize > 0) {
+        return ALC_ERROR_NOT_PERMITTED;
+    }
+
+    auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
+
+    ctx->status = ctx->signPrivatePssFn(
+        ctx->m_rsa, check, pText, textSize, salt, saltSize, pSignedBuff);
+
+    if (ctx->status.ok()) {
+        return err;
+    } else {
+        // fetching the module error
+        Uint16 module_error = (ctx->status.code() >> 16) & 0xff;
+        return (alcp::rsa::ErrorCode::eNotPermitted == module_error)
+                   ? ALC_ERROR_NOT_PERMITTED
+                   : ALC_ERROR_GENERIC;
+    }
+}
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_publickey_verify_pss(const alc_rsa_handle_p pRsaHandle,
+                              const Uint8*           pText,
+                              Uint64                 textSize,
+                              const Uint8*           pSignedBuff)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
+    ALCP_BAD_PTR_ERR_RET(pText, err);
+    ALCP_BAD_PTR_ERR_RET(pSignedBuff, err);
+
+    auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
+
+    ctx->status =
+        ctx->verifyPublicPssFn(ctx->m_rsa, pText, textSize, pSignedBuff);
+
+    if (ctx->status.ok()) {
+        return err;
+    } else {
+        // fetching the module error
+        Uint16 module_error = (ctx->status.code() >> 16) & 0xff;
+        return (alcp::rsa::ErrorCode::eNotPermitted == module_error)
+                   ? ALC_ERROR_NOT_PERMITTED
+                   : ALC_ERROR_GENERIC;
+    }
+}
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_privatekey_sign_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
+                                  bool                   check,
+                                  const Uint8*           pText,
+                                  Uint64                 textSize,
+                                  Uint8*                 pSignedBuff)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
+    ALCP_BAD_PTR_ERR_RET(pText, err);
+    ALCP_BAD_PTR_ERR_RET(pSignedBuff, err);
+
+    auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
+
+    ctx->status = ctx->signPrivatePkcsv15Fn(
+        ctx->m_rsa, check, pText, textSize, pSignedBuff);
+
+    if (ctx->status.ok()) {
+        return err;
+    } else {
+        // fetching the module error
+        Uint16 module_error = (ctx->status.code() >> 16) & 0xff;
+        return (alcp::rsa::ErrorCode::eNotPermitted == module_error)
+                   ? ALC_ERROR_NOT_PERMITTED
+                   : ALC_ERROR_GENERIC;
+    }
+}
+
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_publickey_verify_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
+                                   const Uint8*           pText,
+                                   Uint64                 textSize,
+                                   const Uint8*           pSignedBuff)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pRsaHandle->context, err);
+    ALCP_BAD_PTR_ERR_RET(pText, err);
+    ALCP_BAD_PTR_ERR_RET(pSignedBuff, err);
+
+    auto ctx = static_cast<rsa::Context*>(pRsaHandle->context);
+
+    ctx->status =
+        ctx->verifyPublicPkcsv15Fn(ctx->m_rsa, pText, textSize, pSignedBuff);
 
     if (ctx->status.ok()) {
         return err;

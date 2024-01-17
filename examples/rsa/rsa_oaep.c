@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -161,7 +161,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
     };
 
     // Adding the digest function for generating the hash in oaep padding
-    err = alcp_rsa_add_digest_oaep(ps_rsa_handle, &dinfo);
+    err = alcp_rsa_add_digest(ps_rsa_handle, &dinfo);
     if (err != ALC_ERROR_NONE) {
         printf("\n setting of digest for oaep failed");
         return err;
@@ -174,7 +174,7 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
     };
     // Adding the mask generation function for generating the seed and data
     // block mask
-    err = alcp_rsa_add_mgf_oaep(ps_rsa_handle, &mgf_info);
+    err = alcp_rsa_add_mgf(ps_rsa_handle, &mgf_info);
     if (err != ALC_ERROR_NONE) {
         printf("\n setting of mgf for oaep failed");
         return err;

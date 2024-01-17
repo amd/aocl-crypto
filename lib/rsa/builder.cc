@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -92,6 +92,63 @@ __rsa_oaepDecrBufWithPriv_wrapper(void*        pRsaHandle,
 }
 
 template<alc_rsa_key_size KEYSIZE>
+static Status
+__rsa_pssSignBufWithPriv_wrapper(void*        pRsaHandle,
+                                 bool         check,
+                                 const Uint8* pText,
+                                 Uint64       textSize,
+                                 const Uint8* salt,
+                                 Uint64       saltSize,
+                                 Uint8*       pSignedBuff)
+
+{
+
+    auto ap = static_cast<Rsa<KEYSIZE>*>(pRsaHandle);
+    return ap->signPrivatePss(
+        check, pText, textSize, salt, saltSize, pSignedBuff);
+}
+
+template<alc_rsa_key_size KEYSIZE>
+static Status
+__rsa_pssVerifyBufWithPub_wrapper(void*        pRsaHandle,
+                                  const Uint8* pText,
+                                  Uint64       textSize,
+                                  const Uint8* pSignedBuff)
+
+{
+
+    auto ap = static_cast<Rsa<KEYSIZE>*>(pRsaHandle);
+    return ap->verifyPublicPss(pText, textSize, pSignedBuff);
+}
+
+template<alc_rsa_key_size KEYSIZE>
+static Status
+__rsa_pkcsv15SignBufWithPriv_wrapper(void*        pRsaHandle,
+                                     bool         check,
+                                     const Uint8* pText,
+                                     Uint64       textSize,
+                                     Uint8*       pSignedBuff)
+
+{
+
+    auto ap = static_cast<Rsa<KEYSIZE>*>(pRsaHandle);
+    return ap->signPrivatePkcsv15(check, pText, textSize, pSignedBuff);
+}
+
+template<alc_rsa_key_size KEYSIZE>
+static Status
+__rsa_pkcsv15VerifyBufWithPub_wrapper(void*        pRsaHandle,
+                                      const Uint8* pText,
+                                      Uint64       textSize,
+                                      const Uint8* pSignedBuff)
+
+{
+
+    auto ap = static_cast<Rsa<KEYSIZE>*>(pRsaHandle);
+    return ap->verifyPublicPkcsv15(pText, textSize, pSignedBuff);
+}
+
+template<alc_rsa_key_size KEYSIZE>
 static Uint64
 __rsa_getKeySize_wrapper(void* pRsaHandle)
 {
@@ -144,7 +201,7 @@ __rsa_setDigest_wrapper(void* pRsaHandle, digest::IDigest* digest)
 {
     auto ap = static_cast<Rsa<KEYSIZE>*>(pRsaHandle);
 
-    ap->setDigestOaep(digest);
+    ap->setDigest(digest);
 }
 
 template<alc_rsa_key_size KEYSIZE>
@@ -153,7 +210,7 @@ __rsa_setMgf_wrapper(void* pRsaHandle, digest::IDigest* digest)
 {
     auto ap = static_cast<Rsa<KEYSIZE>*>(pRsaHandle);
 
-    ap->setMgfOaep(digest);
+    ap->setMgf(digest);
 }
 
 template<alc_rsa_key_size KEYSIZE>
@@ -183,19 +240,23 @@ __build_rsa(Context& ctx)
     auto addr = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
     auto algo = new (addr) Rsa<KEYSIZE>;
 
-    ctx.m_rsa                = static_cast<void*>(algo);
-    ctx.encryptPublicFn      = __rsa_encrBufWithPub_wrapper<KEYSIZE>;
-    ctx.decryptPrivateFn     = __rsa_decrBufWithPriv_wrapper<KEYSIZE>;
-    ctx.encryptPublicOaepFn  = __rsa_oaepEncrBufWithPub_wrapper<KEYSIZE>;
-    ctx.decryptPrivateOaepFn = __rsa_oaepDecrBufWithPriv_wrapper<KEYSIZE>;
-    ctx.getKeySize           = __rsa_getKeySize_wrapper<KEYSIZE>;
-    ctx.getPublickey         = __rsa_getPublicKey_wrapper<KEYSIZE>;
-    ctx.setPublicKey         = __rsa_setPublicKey_wrapper<KEYSIZE>;
-    ctx.setPrivateKey        = __rsa_setPrivateKey_wrapper<KEYSIZE>;
-    ctx.setDigest            = __rsa_setDigest_wrapper<KEYSIZE>;
-    ctx.setMgf               = __rsa_setMgf_wrapper<KEYSIZE>;
-    ctx.finish               = __rsa_dtor<KEYSIZE>;
-    ctx.reset                = __rsa_reset_wrapper<KEYSIZE>;
+    ctx.m_rsa                 = static_cast<void*>(algo);
+    ctx.encryptPublicFn       = __rsa_encrBufWithPub_wrapper<KEYSIZE>;
+    ctx.decryptPrivateFn      = __rsa_decrBufWithPriv_wrapper<KEYSIZE>;
+    ctx.encryptPublicOaepFn   = __rsa_oaepEncrBufWithPub_wrapper<KEYSIZE>;
+    ctx.decryptPrivateOaepFn  = __rsa_oaepDecrBufWithPriv_wrapper<KEYSIZE>;
+    ctx.signPrivatePssFn      = __rsa_pssSignBufWithPriv_wrapper<KEYSIZE>;
+    ctx.verifyPublicPssFn     = __rsa_pssVerifyBufWithPub_wrapper<KEYSIZE>;
+    ctx.signPrivatePkcsv15Fn  = __rsa_pkcsv15SignBufWithPriv_wrapper<KEYSIZE>;
+    ctx.verifyPublicPkcsv15Fn = __rsa_pkcsv15VerifyBufWithPub_wrapper<KEYSIZE>;
+    ctx.getKeySize            = __rsa_getKeySize_wrapper<KEYSIZE>;
+    ctx.getPublickey          = __rsa_getPublicKey_wrapper<KEYSIZE>;
+    ctx.setPublicKey          = __rsa_setPublicKey_wrapper<KEYSIZE>;
+    ctx.setPrivateKey         = __rsa_setPrivateKey_wrapper<KEYSIZE>;
+    ctx.setDigest             = __rsa_setDigest_wrapper<KEYSIZE>;
+    ctx.setMgf                = __rsa_setMgf_wrapper<KEYSIZE>;
+    ctx.finish                = __rsa_dtor<KEYSIZE>;
+    ctx.reset                 = __rsa_reset_wrapper<KEYSIZE>;
 
     return StatusOk();
 }

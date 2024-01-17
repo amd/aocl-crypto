@@ -62,18 +62,19 @@ class ALCP_API_EXPORT Rsa
     Status encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText);
 
     /**
-     * @brief set the Digest to be used by OAEP encrytion
-     * @param [in] digest         Digest class to be used by OAEP encrytion.
-     * Should be called before calling encryptPublicOaep
+     * @brief set the Digest to be used by OAEP / PSS / PKCSV15 padding
+     * @param [in] digest         Digest class to be used by OAEP / PSS /
+     * PKCSV15 padding.
      */
-    void setDigestOaep(digest::IDigest* digest);
+    void setDigest(digest::IDigest* digest);
 
     /**
-     * @brief set the MGF to be used by OAEP encrytion
-     * @param [in]  mgf           Digest class to be used by OAEP encrytion.
-     * Should be called before calling encryptPublicOaep
+     * @brief set the MGF to be used by OAEP/ PKCSV15 padding
+     * @param [in]  mgf           Digest class to be used by OAEP/ PKCSV15
+     * padding.
+     *
      */
-    void setMgfOaep(digest::IDigest* mgf);
+    void setMgf(digest::IDigest* mgf);
 
     /**
      * @brief Function encrypt the buffer using oaep padding
@@ -124,6 +125,67 @@ class ALCP_API_EXPORT Rsa
                               Uint64       labelSize,
                               Uint8*       pText,
                               Uint64&      textSize);
+
+    /**
+     * @brief Function signs the buffer with pss padding
+     *
+     * @param [in]  check       - signed message verification for fault attack
+     * @param [in]  pText       - pointer to input text
+     * @param [in]  textSize    - size of input text
+     * @param [in]  salt        - pointer to salt
+     * @param [in]  saltSize    - size of salt
+     * @param [out] pSignedBuff - pointer to signed text
+     *
+     * @return Status Error code
+     */
+    Status signPrivatePss(bool         check,
+                          const Uint8* pText,
+                          Uint64       textSize,
+                          const Uint8* salt,
+                          Uint64       saltSize,
+                          Uint8*       pSignedBuff);
+
+    /**
+     * @brief Function verifies the buffer with pss padding
+     *
+     * @param [in] pText       - pointer to input text
+     * @param [in] textSize    - size of input text
+     * @param [in] pSignedBuff - pointer to signed text
+     *
+     * @return Status Error code
+     */
+    Status verifyPublicPss(const Uint8* pText,
+                           Uint64       textSize,
+                           const Uint8* pSignedBuff);
+
+    /**
+     * @brief Function signs the buffer with pkcsv15 padding
+     *
+     * @param [in]  check       - signed message verification for fault attack
+     * @param [in]  pText       - pointer to input text
+     * @param [in]  textSize    - size of input text
+     * @param [out] pSignedBuff - pointer to signed text
+     *
+     * @return Status Error code
+     */
+    Status signPrivatePkcsv15(bool         check,
+                              const Uint8* pText,
+                              Uint64       textSize,
+                              Uint8*       pSignedBuff);
+
+    /**
+     * @brief Function verifies the buffer with pkcsv15 padding
+     *
+     * @param [in] pText       - pointer to input text
+     * @param [in] textSize    - size of input text
+     * @param [in] pSignedBuff - pointer to signed text
+     *
+     * @return Status Error code
+     */
+    Status verifyPublicPkcsv15(const Uint8* pText,
+                               Uint64       textSize,
+                               const Uint8* pSignedBuff);
+
     /**
      * @brief Function fetches the public key
      *
@@ -194,6 +256,7 @@ class ALCP_API_EXPORT Rsa
     Uint64                 m_key_size;
     Uint64                 m_hash_len;
     Uint64                 m_mgf_hash_len;
+    DigestIndex            m_digest_info_index;
     digest::IDigest*       m_digest = nullptr;
     digest::IDigest*       m_mgf    = nullptr;
 };

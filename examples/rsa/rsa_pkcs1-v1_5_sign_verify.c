@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,6 +36,7 @@
 #include "alcp/rng.h"
 #include "alcp/rsa.h"
 
+// Modulus in Private key
 static const Uint8 Modulus[] = {
     0xae, 0xdd, 0x0e, 0x10, 0xa5, 0xcc, 0xc0, 0x86, 0xfd, 0xdb, 0xef, 0x26,
     0xaa, 0x5b, 0x60, 0xa2, 0x67, 0xc7, 0x0e, 0x50, 0x5c, 0x91, 0x32, 0xc1,
@@ -61,6 +62,7 @@ static const Uint8 Modulus[] = {
     0x2e, 0x0a, 0xef, 0x67
 };
 
+// Exponent in Private key
 static const Uint8 PrivateKeyExponent[] = {
     0x44, 0x01, 0x3d, 0x58, 0x95, 0x1a, 0x89, 0x9f, 0x96, 0x37, 0xc4, 0x0c,
     0xbe, 0x01, 0x16, 0x96, 0x62, 0x94, 0xc4, 0x08, 0xd5, 0xcf, 0x34, 0x35,
@@ -86,6 +88,7 @@ static const Uint8 PrivateKeyExponent[] = {
     0x78, 0x37, 0xc1, 0x59
 };
 
+// private key in CRT(Chinese remainder form)
 static const Uint8 P_Modulus[] = {
     0xb8, 0xc7, 0x80, 0xd1, 0xa9, 0xf2, 0x33, 0x7a, 0x1e, 0xbb, 0x57, 0xcc,
     0x0e, 0x4e, 0x97, 0xfb, 0x92, 0xde, 0xa1, 0x7c, 0xee, 0xf5, 0xaa, 0x63,
@@ -156,8 +159,7 @@ static const Uint8 Q_ModulusINV[] = {
     0x49, 0x41, 0x2e, 0xd9, 0xc0, 0xe6, 0xd2, 0xc8
 };
 
-static const Uint8 Label[] = { 'h', 'e', 'l', 'l', 'o' };
-
+// Exponent in public key
 static const Uint64 PublicKeyExponent = 0x10001;
 
 #define ALCP_PRINT_TEXT(I, L, S)                                               \
@@ -184,10 +186,8 @@ static alc_error_t
 Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
 {
     alc_error_t err;
-    Uint8*      text     = NULL;
-    Uint8*      enc_text = NULL;
-    Uint8*      dec_text = NULL;
-    Uint8*      p_seed   = NULL;
+    Uint8*      text        = NULL;
+    Uint8*      pSignedBuff = NULL;
 
     Uint64 size = sizeof(Modulus);
 
@@ -197,6 +197,20 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
     if (err != ALC_ERROR_NONE) {
         printf("\n setting of publc key failed");
         return err;
+    }
+
+    // setting the private key for decryption
+    err = alcp_rsa_set_privatekey(ps_rsa_handle,
+                                  DP_EXP,
+                                  DQ_EXP,
+                                  P_Modulus,
+                                  Q_Modulus,
+                                  Q_ModulusINV,
+                                  Modulus,
+                                  sizeof(P_Modulus));
+    if (err != ALC_ERROR_NONE) {
+        printf("\n setting of private key failed");
+        goto free_buff;
     }
 
     alc_digest_info_t dinfo = {
@@ -224,78 +238,44 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
         printf("\n setting of mgf for oaep failed");
         return err;
     }
-    Uint64 hash_len = ALC_DIGEST_LEN_256 / 8;
     // text size should be in the range 2 * hash_len + 2
     // to sizeof(Modulus) - 2* hash_len - 2
     Uint64 text_size = 47; // size - 2 * hash_len - 2;
 
-    p_seed   = malloc(hash_len);
-    enc_text = malloc(size);
-    dec_text = malloc(size);
-    text     = malloc(text_size);
+    pSignedBuff = malloc(size);
+    text        = malloc(text_size);
 
-    memset(p_seed, 0x01, hash_len);
-    memset(enc_text, 0, size);
-    memset(dec_text, 0, size);
+    memset(pSignedBuff, 0, size);
     memset(text, 0x31, text_size);
 
     ALCP_PRINT_TEXT(text, text_size, "text")
 
-    // todo call hmac drbg / ctr drbg to generate seed
-    // for now the seed is random at buffer allocation
+    bool check = true;
 
-    // Encrypt text
-    err = alcp_rsa_publickey_encrypt_oaep(
-        ps_rsa_handle, text, text_size, Label, sizeof(Label), p_seed, enc_text);
+    err = alcp_rsa_privatekey_sign_pkcs1v15(
+        ps_rsa_handle, check, text, text_size, pSignedBuff);
 
     if (err != ALC_ERROR_NONE) {
-        printf("\n publc key encrypt failed");
+        printf("\n signature process failed");
         goto free_buff;
     }
 
-    ALCP_PRINT_TEXT(enc_text, size, "enc_text")
+    ALCP_PRINT_TEXT(pSignedBuff, size, "pSignedBuff")
 
-    // setting the private key for decryption
-    err = alcp_rsa_set_privatekey(ps_rsa_handle,
-                                  DP_EXP,
-                                  DQ_EXP,
-                                  P_Modulus,
-                                  Q_Modulus,
-                                  Q_ModulusINV,
-                                  Modulus,
-                                  sizeof(P_Modulus));
-    if (err != ALC_ERROR_NONE) {
-        printf("\n setting of publc key failed");
-        goto free_buff;
-    }
-
-    // decrypt text
-    err = alcp_rsa_privatekey_decrypt_oaep(ps_rsa_handle,
-                                           enc_text,
-                                           size,
-                                           Label,
-                                           sizeof(Label),
-                                           dec_text,
-                                           &text_size);
+    // verify signature
+    err = alcp_rsa_publickey_verify_pkcs1v15(
+        ps_rsa_handle, text, text_size, pSignedBuff);
 
     if (err != ALC_ERROR_NONE) {
-        printf("\n private key decryption failed");
+        printf("\n verification process failed");
         goto free_buff;
-    }
-
-    if (memcmp(dec_text, text, text_size) == 0) {
-        err = ALC_ERROR_NONE;
-        ALCP_PRINT_TEXT(dec_text, text_size, "dec_text")
     } else {
-        printf("\n decrypted text not matching the original text");
-        err = ALC_ERROR_GENERIC;
+        printf("\n Signature / Verification successful\n");
     }
 
 free_buff:
-    free(dec_text);
-    free(enc_text);
+    free(pSignedBuff);
     free(text);
-    free(p_seed);
 
     return err;
 }

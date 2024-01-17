@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -174,7 +174,8 @@ alcp_rsa_publickey_encrypt_oaep(const alc_rsa_handle_p pRsaHandle,
                                 Uint8*                 pEncText);
 
 /**
- * @brief Function adds the digest algorithm to be used in oaep padding
+ * @brief Function adds the digest algorithm to be used in oaep / pss / pkcsv15
+ * padding
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_rsa_request</b>
  * @endparblock
@@ -186,11 +187,12 @@ alcp_rsa_publickey_encrypt_oaep(const alc_rsa_handle_p pRsaHandle,
  * alcp_error_str needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_add_digest_oaep(const alc_rsa_handle_p  pRsaHandle,
-                         const alc_digest_info_p digestInfo);
+alcp_rsa_add_digest(const alc_rsa_handle_p  pRsaHandle,
+                    const alc_digest_info_p digestInfo);
 
 /**
- * @brief Function adds the digest algorithm for mask generation in oaep padding
+ * @brief Function adds the digest algorithm for mask generation in oaep /
+ * pkcsv15 padding
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_rsa_request</b>
  * @endparblock
@@ -202,8 +204,8 @@ alcp_rsa_add_digest_oaep(const alc_rsa_handle_p  pRsaHandle,
  * alcp_error_str needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_rsa_add_mgf_oaep(const alc_rsa_handle_p  pRsaHandle,
-                      const alc_digest_info_p digestInfo);
+alcp_rsa_add_mgf(const alc_rsa_handle_p  pRsaHandle,
+                 const alc_digest_info_p digestInfo);
 
 /**
  * @brief Function decrypts encrypted text using private key.
@@ -242,7 +244,7 @@ alcp_rsa_privatekey_decrypt(const alc_rsa_handle_p pRsaHandle,
  *
  * @param [in]  pRsaHandle - Handler of the Context for the session
  * @param [in]  pEncText   - pointer to encrypted bytes
- * @param [in]  encSize    - pointer to encrypted bytes
+ * @param [in]  encSize    - size of encrypted bytes
  * @param [in]  label      - pointer to label
  * @param [in]  labelSize  - sizeof label
  * @param [out] pText      - pointer to decrypted text
@@ -258,6 +260,116 @@ alcp_rsa_privatekey_decrypt_oaep(const alc_rsa_handle_p pRsaHandle,
                                  Uint64                 labelSize,
                                  Uint8*                 pText,
                                  Uint64*                textSize);
+
+/**
+ * @brief Function fetches public key from handle
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request</b>
+ * @endparblock
+ * @param [in]    pRsaHandle - Handler of the Context for the session
+ * @param [out]   pPublicKey - pointer to public exponent
+ * @param [out]   pModulus   - pointer to modulus
+ * @param [out]   keySize    - size of modulus
+
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
+
+/**
+ * @brief Function signs text using private key and PSS padding
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request and the
+ * before the session call @ref alcp_rsa_finish</b>
+ * @endparblock
+ *
+ *
+ * @param [in]  pRsaHandle  - Handler of the Context for the session
+ * @param [in]  check       - Verify the signed message to prevent fault attack
+ * @param [in]  pText       - pointer to input text
+ * @param [in]  textSize    - size of input text
+ * @param [in]  salt        - pointer to salt
+ * @param [in]  saltSize    - size of salt
+ * @param [out] pSignedBuff - pointer to signed text
+ *
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_privatekey_sign_pss(const alc_rsa_handle_p pRsaHandle,
+                             bool                   check,
+                             const Uint8*           pText,
+                             Uint64                 textSize,
+                             const Uint8*           salt,
+                             Uint64                 saltSize,
+                             Uint8*                 pSignedBuff);
+
+/**
+ * @brief Function verifies text using public key and PSS padding
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request and the
+ * before the session call @ref alcp_rsa_finish</b>
+ * @endparblock
+ *
+ *
+ * @param [in] pRsaHandle  - Handler of the Context for the session
+ * @param [in] pText       - pointer to input text
+ * @param [in] textSize    - size of input text
+ * @param [in] pSignedBuff - pointer to signed text
+ *
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_publickey_verify_pss(const alc_rsa_handle_p pRsaHandle,
+                              const Uint8*           pText,
+                              Uint64                 textSize,
+                              const Uint8*           pSignedBuff);
+
+/**
+ * @brief Function signs text using private key and PKCS1-v1_5 padding
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request and the
+ * before the session call @ref alcp_rsa_finish</b>
+ * @endparblock
+ *
+ *
+ * @param [in]  pRsaHandle  - Handler of the Context for the session
+ * @param [in]  check       - Verify the signed message to prevent fault attack
+ * @param [in]  pText       - pointer to input text
+ * @param [in]  textSize    - size of input text
+ * @param [out] pSignedBuff - pointer to signed text
+ *
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_privatekey_sign_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
+                                  bool                   check,
+                                  const Uint8*           pText,
+                                  Uint64                 textSize,
+                                  Uint8*                 pSignedBuff);
+
+/**
+ * @brief Function verifies text using public key and PKCS1-v1_5 padding
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_rsa_request and the
+ * before the session call @ref alcp_rsa_finish</b>
+ * @endparblock
+ *
+ *
+ * @param [in] pRsaHandle  - Handler of the Context for the session
+ * @param [in] pText       - pointer to input text
+ * @param [in] textSize    - size of input text
+ * @param [in] pSignedBuff - pointer to signed text
+ *
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_rsa_publickey_verify_pkcs1v15(const alc_rsa_handle_p pRsaHandle,
+                                   const Uint8*           pText,
+                                   Uint64                 textSize,
+                                   const Uint8*           pSignedBuff);
 
 /**
  * @brief Function fetches public key from handle

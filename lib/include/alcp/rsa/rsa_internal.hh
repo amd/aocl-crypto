@@ -32,7 +32,16 @@
 #include <memory>
 
 namespace alcp::rsa {
-
+enum DigestIndex
+{
+    SHA_224,
+    SHA_256,
+    SHA_384,
+    SHA_512,
+    SHA_512_224,
+    SHA_512_256,
+    SHA_UNKNOWN
+};
 template<alc_rsa_key_size T>
 struct RsaPublicKeyBignum
 {

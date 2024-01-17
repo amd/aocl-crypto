@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -64,6 +64,30 @@ class Context
                                    Uint64       labelSize,
                                    Uint8*       pText,
                                    Uint64&      textSize);
+
+    Status (*signPrivatePssFn)(void*        pRsaHandle,
+                               bool         check,
+                               const Uint8* pText,
+                               Uint64       textSize,
+                               const Uint8* salt,
+                               Uint64       saltSize,
+                               Uint8*       pSignedBuff);
+
+    Status (*verifyPublicPssFn)(void*        pRsaHandle,
+                                const Uint8* pText,
+                                Uint64       textSize,
+                                const Uint8* pSignedBuff);
+
+    Status (*signPrivatePkcsv15Fn)(void*        pRsaHandle,
+                                   bool         check,
+                                   const Uint8* pText,
+                                   Uint64       textSize,
+                                   Uint8*       pSignedBuff);
+
+    Status (*verifyPublicPkcsv15Fn)(void*        pRsaHandle,
+                                    const Uint8* pText,
+                                    Uint64       textSize,
+                                    const Uint8* pSignedBuff);
 
     Uint64 (*getKeySize)(void* pRsaHandle);
 

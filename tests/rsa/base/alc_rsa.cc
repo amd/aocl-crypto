@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -404,15 +404,14 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
         }
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING) {
         // Adding the digest function for generating the hash in oaep padding
-        err = alcp_rsa_add_digest_oaep(m_rsa_handle, &m_digest_info);
+        err = alcp_rsa_add_digest(m_rsa_handle, &m_digest_info);
         if (alcp_is_error(err)) {
-            std::cout << "Error in alcp_rsa_add_digest_oaep " << err
-                      << std::endl;
+            std::cout << "Error in alcp_rsa_add_digest " << err << std::endl;
             return err;
         }
-        err = alcp_rsa_add_mgf_oaep(m_rsa_handle, &m_mgf_info);
+        err = alcp_rsa_add_mgf(m_rsa_handle, &m_mgf_info);
         if (alcp_is_error(err)) {
-            std::cout << "Error in alcp_rsa_add_mgf_oaep " << err << std::endl;
+            std::cout << "Error in alcp_rsa_add_mgf " << err << std::endl;
             return err;
         }
 
@@ -448,15 +447,14 @@ AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                                           data.m_decrypted_data);
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING) {
         // Adding the digest function for generating the hash in oaep padding
-        err = alcp_rsa_add_digest_oaep(m_rsa_handle, &m_digest_info);
+        err = alcp_rsa_add_digest(m_rsa_handle, &m_digest_info);
         if (alcp_is_error(err)) {
-            std::cout << "Error in alcp_rsa_add_digest_oaep " << err
-                      << std::endl;
+            std::cout << "Error in alcp_rsa_add_digest " << err << std::endl;
             return err;
         }
-        err = alcp_rsa_add_mgf_oaep(m_rsa_handle, &m_mgf_info);
+        err = alcp_rsa_add_mgf(m_rsa_handle, &m_mgf_info);
         if (alcp_is_error(err)) {
-            std::cout << "Error in alcp_rsa_add_mgf_oaep " << err << std::endl;
+            std::cout << "Error in alcp_rsa_add_mgf " << err << std::endl;
             return err;
         }
         err = alcp_rsa_privatekey_decrypt_oaep(m_rsa_handle,
