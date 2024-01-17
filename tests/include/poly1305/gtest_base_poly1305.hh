@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -109,28 +109,34 @@ Poly_Cross(alc_mac_info_t info)
 
         /* generate msg data from msg_full */
         msg_full = ShuffleVector(msg_full, rng);
-        pos1     = msg_full.end() - i;
+        pos1     = msg_full.end() - i - 1;
         pos2     = msg_full.end();
         std::vector<Uint8> msg(pos1, pos2);
 
         /* generate random key value*/
         key_full = ShuffleVector(key_full, rng);
 
+        /* misalign if buffers are aligned */
+        if (is_aligned(&(msg[0]))) {
+            data_main.m_msg = &(msg[1]);
+            data_ext.m_msg  = &(msg[1]);
+        } else {
+            data_main.m_msg = &(msg[0]);
+            data_ext.m_msg  = &(msg[0]);
+        }
+
         /* load test data */
-        data_main.m_msg     = &(msg[0]);
-        data_main.m_msg_len = msg.size();
         data_main.m_mac     = &(MacMainLib[0]);
         data_main.m_mac_len = MacMainLib.size();
         data_main.m_key     = &(key_full[0]);
-        data_main.m_key_len = key_full.size();
 
         /* load ext test data */
-        data_ext.m_msg     = &(msg[0]);
-        data_ext.m_msg_len = msg.size();
         data_ext.m_mac     = &(MacExtLib[0]);
         data_ext.m_mac_len = MacExtLib.size();
         data_ext.m_key     = &(key_full[0]);
-        data_ext.m_key_len = key_full.size();
+
+        data_main.m_key_len = data_ext.m_key_len = key_full.size();
+        data_main.m_msg_len = data_ext.m_msg_len = msg.size() - 1;
 
         /* run test with main lib */
         if (!pb_main->init(info, key_full)) {
