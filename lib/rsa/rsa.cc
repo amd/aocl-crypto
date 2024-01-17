@@ -682,17 +682,47 @@ Rsa<T>::verifyPublicPkcsv15(const Uint8* pText,
                             Uint64       textSize,
                             const Uint8* pSignedBuff)
 {
-    alignas(64) Uint8 mod_text[T / 8];
-    return StatusOk();
-    // ToDO - Add padding support
-    Status status = encryptPublic(pText, textSize, mod_text);
+    alignas(64) Uint8 mod_text[T / 8], hash[64], message[T / 8]{};
 
+    if (!pText || !pSignedBuff) {
+        return status::NotPermitted(
+            "Input parameters are incorrect for signing");
+    }
+
+    if (!m_digest || m_digest_info_index >= SHA_UNKNOWN) {
+        return status::NotPermitted("hash function is not assigned");
+    }
+
+    if (!m_mgf) {
+        m_mgf          = m_digest;
+        m_mgf_hash_len = m_hash_len;
+    }
+
+    Status status = encryptPublic(pSignedBuff, T / 8, mod_text);
     if (!status.ok()) {
         return status;
     }
-    // remove padding
 
-    return status;
+    m_digest->reset();
+    m_digest->finalize(pText, textSize);
+    m_digest->copyHash(hash, m_hash_len);
+
+    // Encoded message :- 0x00 || 0x01 || PS || 0x00 || (DigestInfo || hash)
+    message[1]     = 0x01;
+    Uint64 pad_len = T / 8 - 3 - 19 - m_hash_len;
+    utils::PadBytes(message + 2, 0xf, pad_len);
+    utils::CopyBytes(
+        message + 3 + pad_len, DigestInfo[m_digest_info_index], 19);
+    utils::CopyBytes(message + 3 + pad_len + 19, hash, m_hash_len);
+
+    Uint64* num1 = reinterpret_cast<Uint64*>(message);
+    Uint64* num2 = reinterpret_cast<Uint64*>(mod_text);
+    Uint64  res  = 0;
+    for (Uint64 i = 0; i < T / 64; i++) {
+        res += (*num1 ^ *num2);
+    }
+
+    return !res ? status : status::Generic("Generic error");
 }
 
 template<alc_rsa_key_size T>

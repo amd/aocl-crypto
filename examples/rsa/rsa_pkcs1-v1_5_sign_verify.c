@@ -267,6 +267,8 @@ Rsa_demo(alc_rsa_handle_t* ps_rsa_handle)
     if (err != ALC_ERROR_NONE) {
         printf("\n verification process failed");
         goto free_buff;
+    } else {
+        printf("\n Signature / Verification successful\n");
     }
 
 free_buff:
