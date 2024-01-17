@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -386,8 +386,8 @@ ecdh_Cross(alc_ec_info_t info)
     }
 
     /* generate random bytes, use it in the loop */
-    std::vector<Uint8> peer1_pvtkey_full = rb.genRandomBytes(KeySize);
-    std::vector<Uint8> peer2_pvtkey_full = rb.genRandomBytes(KeySize);
+    std::vector<Uint8> peer1_pvtkey_full = rb.genRandomBytes(KeySize + 1);
+    std::vector<Uint8> peer2_pvtkey_full = rb.genRandomBytes(KeySize + 1);
 
     std::vector<Uint8>::const_iterator pos1, pos2;
     auto                               rng = std::default_random_engine{};
@@ -397,39 +397,48 @@ ecdh_Cross(alc_ec_info_t info)
         peer1_pvtkey_full = ShuffleVector(peer1_pvtkey_full, rng);
         pos1              = peer1_pvtkey_full.begin();
         pos2              = peer1_pvtkey_full.begin() + KeySize;
-        std::vector<Uint8> Peer1PvtKey(pos1, pos2);
+        std::vector<Uint8> Peer1PvtKey(pos1, pos2 + 1);
 
         peer2_pvtkey_full = ShuffleVector(peer2_pvtkey_full, rng);
         pos1              = peer2_pvtkey_full.begin();
         pos2              = peer2_pvtkey_full.begin() + KeySize;
-        std::vector<Uint8> Peer2PvtKey(pos1, pos2);
+        std::vector<Uint8> Peer2PvtKey(pos1, pos2 + 1);
+
+        /* misalign if buffers are aligned */
+        if (is_aligned(&(Peer1PvtKey[0]))) {
+            data_alc_peer1.m_Peer_PvtKey = &(Peer1PvtKey[1]);
+            data_alc_peer2.m_Peer_PvtKey = &(Peer2PvtKey[1]);
+            data_ext_peer1.m_Peer_PvtKey = &(Peer1PvtKey[1]);
+            data_ext_peer2.m_Peer_PvtKey = &(Peer2PvtKey[1]);
+        } else {
+            data_alc_peer1.m_Peer_PvtKey = &(Peer1PvtKey[0]);
+            data_alc_peer2.m_Peer_PvtKey = &(Peer2PvtKey[0]);
+            data_ext_peer1.m_Peer_PvtKey = &(Peer1PvtKey[0]);
+            data_ext_peer2.m_Peer_PvtKey = &(Peer2PvtKey[0]);
+        }
 
         /* now load this pvtkey pair into both alc, ext data */
-        data_alc_peer1.m_Peer_PvtKey       = &(Peer1PvtKey[0]);
-        data_alc_peer2.m_Peer_PvtKey       = &(Peer2PvtKey[0]);
-        data_alc_peer1.m_Peer_PvtKeyLen    = KeySize;
-        data_alc_peer2.m_Peer_PvtKeyLen    = KeySize;
-        data_alc_peer1.m_Peer_PubKey       = &(AlcpPeer1PubKey[0]);
-        data_alc_peer2.m_Peer_PubKey       = &(AlcpPeer2PubKey[0]);
-        data_alc_peer1.m_Peer_PubKeyLen    = KeySize;
-        data_alc_peer2.m_Peer_PubKeyLen    = KeySize;
-        data_alc_peer1.m_Peer_SecretKey    = &(AlcpPeer1SharedSecretKey[0]);
-        data_alc_peer2.m_Peer_SecretKey    = &(AlcpPeer2SharedSecretKey[0]);
-        data_alc_peer1.m_Peer_SecretKeyLen = KeySize;
-        data_alc_peer2.m_Peer_SecretKeyLen = KeySize;
+        data_alc_peer1.m_Peer_PvtKeyLen = data_alc_peer2.m_Peer_PvtKeyLen =
+            KeySize;
+        data_alc_peer1.m_Peer_PubKey    = &(AlcpPeer1PubKey[0]);
+        data_alc_peer2.m_Peer_PubKey    = &(AlcpPeer2PubKey[0]);
+        data_alc_peer1.m_Peer_PubKeyLen = data_alc_peer2.m_Peer_PubKeyLen =
+            KeySize;
+        data_alc_peer1.m_Peer_SecretKey = &(AlcpPeer1SharedSecretKey[0]);
+        data_alc_peer2.m_Peer_SecretKey = &(AlcpPeer2SharedSecretKey[0]);
+        data_alc_peer1.m_Peer_SecretKeyLen =
+            data_alc_peer2.m_Peer_SecretKeyLen = KeySize;
 
-        data_ext_peer1.m_Peer_PvtKey       = &(Peer1PvtKey[0]);
-        data_ext_peer2.m_Peer_PvtKey       = &(Peer2PvtKey[0]);
-        data_ext_peer1.m_Peer_PvtKeyLen    = KeySize;
-        data_ext_peer2.m_Peer_PvtKeyLen    = KeySize;
-        data_ext_peer1.m_Peer_PubKey       = &(ExtPeer1PubKey[0]);
-        data_ext_peer2.m_Peer_PubKey       = &(ExtPeer2PubKey[0]);
-        data_ext_peer1.m_Peer_PubKeyLen    = KeySize;
-        data_ext_peer2.m_Peer_PubKeyLen    = KeySize;
-        data_ext_peer1.m_Peer_SecretKey    = &(ExtPeer1SharedSecretKey[0]);
-        data_ext_peer2.m_Peer_SecretKey    = &(ExtPeer2SharedSecretKey[0]);
-        data_ext_peer1.m_Peer_SecretKeyLen = KeySize;
-        data_ext_peer2.m_Peer_SecretKeyLen = KeySize;
+        data_ext_peer1.m_Peer_PvtKeyLen = data_ext_peer2.m_Peer_PvtKeyLen =
+            KeySize;
+        data_ext_peer1.m_Peer_PubKey    = &(ExtPeer1PubKey[0]);
+        data_ext_peer2.m_Peer_PubKey    = &(ExtPeer2PubKey[0]);
+        data_ext_peer1.m_Peer_PubKeyLen = data_ext_peer2.m_Peer_PubKeyLen =
+            KeySize;
+        data_ext_peer1.m_Peer_SecretKey = &(ExtPeer1SharedSecretKey[0]);
+        data_ext_peer2.m_Peer_SecretKey = &(ExtPeer2SharedSecretKey[0]);
+        data_ext_peer1.m_Peer_SecretKeyLen =
+            data_ext_peer2.m_Peer_SecretKeyLen = KeySize;
 
         /* for main lib */
         if (!Eb_peer1->init(info)) {
