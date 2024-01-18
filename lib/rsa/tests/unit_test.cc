@@ -775,4 +775,241 @@ TEST(RsaTest, DecryptOaepPadding)
     ASSERT_EQ(status.code(), ErrorCode::eOk);
 }
 
+TEST(RsaTest, PssSanity)
+{
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+    Uint8              text[2048 / 8];
+    Uint64             text_size = 2048 / 8;
+    Uint8              salt[20];
+    Uint64             salt_size = 20;
+    Uint8              signed_buff[2048];
+
+    // null text should fail
+    Status status = rsa_obj_2048.signPrivatePss(
+        true, nullptr, text_size, salt, salt_size, signed_buff);
+    ASSERT_NE(ErrorCode::eOk, status.code());
+    status = rsa_obj_2048.verifyPublicPss(nullptr, 0, signed_buff);
+    ASSERT_NE(ErrorCode::eOk, status.code());
+
+    // null signed buff should fail
+    status =
+        rsa_obj_2048.signPrivatePss(true, text, text_size, salt, 20, nullptr);
+    ASSERT_NE(ErrorCode::eOk, status.code());
+    status = rsa_obj_2048.verifyPublicPss(text, text_size, nullptr);
+    ASSERT_NE(ErrorCode::eOk, status.code());
+
+    // not setting the hash should fail
+    status = rsa_obj_2048.signPrivatePss(
+        true, text, 2048 / 8, salt, 20, signed_buff);
+    ASSERT_NE(ErrorCode::eOk, status.code());
+    status = rsa_obj_2048.verifyPublicPss(text, text_size, signed_buff);
+    ASSERT_NE(ErrorCode::eOk, status.code());
+
+    alc_digest_info_t dinfo{};
+    dinfo.dt_type           = ALC_DIGEST_TYPE_SHA2;
+    dinfo.dt_len            = ALC_DIGEST_LEN_256;
+    dinfo.dt_mode.dm_sha2   = ALC_SHA2_256;
+    digest::IDigest* digest = fetch_digest(dinfo);
+
+    std::unique_ptr<digest::IDigest> digest_ptr;
+    digest_ptr.reset(reinterpret_cast<digest::IDigest*>(digest));
+    rsa_obj_2048.setDigest(static_cast<digest::IDigest*>(digest));
+
+    // not setting the public key / private key should fail
+    status = rsa_obj_2048.signPrivatePss(
+        true, text, 2048 / 8, salt, 20, signed_buff);
+    ASSERT_NE(ErrorCode::eOk, status.code());
+    status = rsa_obj_2048.verifyPublicPss(text, text_size, signed_buff);
+    ASSERT_NE(ErrorCode::eOk, status.code());
+
+    status = rsa_obj_2048.setPrivateKey(DP_EXP_2048,
+                                        DQ_EXP_2048,
+                                        P_Modulus_2048,
+                                        Q_Modulus_2048,
+                                        Q_ModulusINV_2048,
+                                        Modulus_2048,
+                                        sizeof(P_Modulus_2048));
+
+    status = rsa_obj_2048.signPrivatePss(
+        false, text, 2048 / 8, salt, 20, signed_buff);
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    // not setting the public key will fail for fault tolerance
+    status = rsa_obj_2048.signPrivatePss(
+        true, text, 2048 / 8, salt, 20, signed_buff);
+    ASSERT_NE(status.code(), ErrorCode::eOk);
+
+    status = rsa_obj_2048.setPublicKey(
+        PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    status = rsa_obj_2048.signPrivatePss(
+        true, text, 2048 / 8, salt, 20, signed_buff);
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+    status = rsa_obj_2048.verifyPublicPss(text, text_size, signed_buff);
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    // null salt should fail if the size says otherwise
+    status = rsa_obj_2048.signPrivatePss(
+        true, text, 2048 / 8, nullptr, 20, signed_buff);
+    ASSERT_NE(status.code(), ErrorCode::eOk);
+
+    // null salt should not fail if the size is 0
+    status = rsa_obj_2048.signPrivatePss(
+        true, text, 2048 / 8, nullptr, 0, signed_buff);
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+}
+
+TEST(RsaTest, PssSignatureVerification)
+{
+    alc_digest_info_t dinfo{};
+    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    dinfo.dt_len          = ALC_DIGEST_LEN_256;
+    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
+
+    std::unique_ptr<digest::IDigest> digest_ptr;
+
+    digest::IDigest* digest = fetch_digest(dinfo);
+    digest_ptr.reset(reinterpret_cast<digest::IDigest*>(digest));
+
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+    rsa_obj_2048.setDigest(static_cast<digest::IDigest*>(digest));
+
+    Status status = rsa_obj_2048.setPublicKey(
+        PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    status = rsa_obj_2048.setPrivateKey(DP_EXP_2048,
+                                        DQ_EXP_2048,
+                                        P_Modulus_2048,
+                                        Q_Modulus_2048,
+                                        Q_ModulusINV_2048,
+                                        Modulus_2048,
+                                        sizeof(P_Modulus_2048));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    Uint64 text_size_2048 = 190;
+    Uint8  signed_text_2048[2048 / 8];
+    Uint8  text_2048[190];
+    Uint8  salt[20];
+    Uint64 salt_size = 20;
+
+    status = rsa_obj_2048.signPrivatePss(
+        true, text_2048, text_size_2048, salt, salt_size, signed_text_2048);
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    status = rsa_obj_2048.verifyPublicPss(
+        text_2048, text_size_2048, signed_text_2048);
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+}
+
+TEST(RsaTest, Pkcsv15Sanity)
+{
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+    Uint8              text[2048 / 8];
+    Uint64             text_size = 2048 / 8;
+    Uint8              signed_buff[2048];
+
+    // null text should fail
+    Status status =
+        rsa_obj_2048.signPrivatePkcsv15(true, nullptr, text_size, signed_buff);
+    ASSERT_NE(ErrorCode::eOk, status.code());
+    status = rsa_obj_2048.verifyPublicPkcsv15(nullptr, 0, signed_buff);
+    ASSERT_NE(ErrorCode::eOk, status.code());
+
+    // null signed buff should fail
+    status = rsa_obj_2048.signPrivatePkcsv15(true, text, text_size, nullptr);
+    ASSERT_NE(ErrorCode::eOk, status.code());
+    status = rsa_obj_2048.verifyPublicPkcsv15(text, text_size, nullptr);
+    ASSERT_NE(ErrorCode::eOk, status.code());
+
+    // not setting the hash should fail
+    status = rsa_obj_2048.signPrivatePkcsv15(true, text, 2048 / 8, signed_buff);
+    ASSERT_NE(ErrorCode::eOk, status.code());
+    status = rsa_obj_2048.verifyPublicPkcsv15(text, text_size, signed_buff);
+    ASSERT_NE(ErrorCode::eOk, status.code());
+
+    alc_digest_info_t dinfo{};
+    dinfo.dt_type           = ALC_DIGEST_TYPE_SHA2;
+    dinfo.dt_len            = ALC_DIGEST_LEN_256;
+    dinfo.dt_mode.dm_sha2   = ALC_SHA2_256;
+    digest::IDigest* digest = fetch_digest(dinfo);
+
+    std::unique_ptr<digest::IDigest> digest_ptr;
+    digest_ptr.reset(reinterpret_cast<digest::IDigest*>(digest));
+    rsa_obj_2048.setDigest(static_cast<digest::IDigest*>(digest));
+
+    // not setting the public key / private key should fail
+    status = rsa_obj_2048.signPrivatePkcsv15(true, text, 2048 / 8, signed_buff);
+    ASSERT_NE(ErrorCode::eOk, status.code());
+    status = rsa_obj_2048.verifyPublicPkcsv15(text, text_size, signed_buff);
+    ASSERT_NE(ErrorCode::eOk, status.code());
+
+    status = rsa_obj_2048.setPrivateKey(DP_EXP_2048,
+                                        DQ_EXP_2048,
+                                        P_Modulus_2048,
+                                        Q_Modulus_2048,
+                                        Q_ModulusINV_2048,
+                                        Modulus_2048,
+                                        sizeof(P_Modulus_2048));
+
+    status =
+        rsa_obj_2048.signPrivatePkcsv15(false, text, 2048 / 8, signed_buff);
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    // not setting the public key will fail for fault tolerance
+    status = rsa_obj_2048.signPrivatePkcsv15(true, text, 2048 / 8, signed_buff);
+    ASSERT_NE(status.code(), ErrorCode::eOk);
+
+    status = rsa_obj_2048.setPublicKey(
+        PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    status = rsa_obj_2048.signPrivatePkcsv15(true, text, 2048 / 8, signed_buff);
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+    status = rsa_obj_2048.verifyPublicPkcsv15(text, text_size, signed_buff);
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+}
+
+TEST(RsaTest, Pkcsv15SignatureVerification)
+{
+    alc_digest_info_t dinfo{};
+    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    dinfo.dt_len          = ALC_DIGEST_LEN_256;
+    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
+
+    std::unique_ptr<digest::IDigest> digest_ptr;
+
+    digest::IDigest* digest = fetch_digest(dinfo);
+    digest_ptr.reset(reinterpret_cast<digest::IDigest*>(digest));
+
+    Rsa<KEY_SIZE_2048> rsa_obj_2048;
+    rsa_obj_2048.setDigest(static_cast<digest::IDigest*>(digest));
+
+    Status status = rsa_obj_2048.setPublicKey(
+        PublicKeyExponent, Modulus_2048, sizeof(Modulus_2048));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    status = rsa_obj_2048.setPrivateKey(DP_EXP_2048,
+                                        DQ_EXP_2048,
+                                        P_Modulus_2048,
+                                        Q_Modulus_2048,
+                                        Q_ModulusINV_2048,
+                                        Modulus_2048,
+                                        sizeof(P_Modulus_2048));
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    Uint64 text_size_2048 = 190;
+    Uint8  signed_text_2048[2048 / 8];
+    Uint8  text_2048[190];
+
+    status = rsa_obj_2048.signPrivatePkcsv15(
+        true, text_2048, text_size_2048, signed_text_2048);
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+
+    status = rsa_obj_2048.verifyPublicPkcsv15(
+        text_2048, text_size_2048, signed_text_2048);
+    ASSERT_EQ(status.code(), ErrorCode::eOk);
+}
+
 } // namespace
