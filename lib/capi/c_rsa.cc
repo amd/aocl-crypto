@@ -136,19 +136,19 @@ fetch_digest(const alc_digest_info_t& digestInfo)
         case ALC_DIGEST_TYPE_SHA2: {
             switch (digestInfo.dt_mode.dm_sha2) {
                 case ALC_SHA2_256: {
-                    digest = new Sha256;
+                    digest = new Sha256(digestInfo);
                     break;
                 }
                 case ALC_SHA2_224: {
-                    digest = new Sha224;
+                    digest = new Sha224(digestInfo);
                     break;
                 }
                 case ALC_SHA2_384: {
-                    digest = new Sha384;
+                    digest = new Sha384(digestInfo);
                     break;
                 }
                 case ALC_SHA2_512: {
-                    digest = new Sha512;
+                    digest = new Sha512(digestInfo);
                     break;
                 }
                 default: {
