@@ -194,7 +194,7 @@ Status
 Rsa<T>::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
 {
     // For non padded output
-    if (textSize != m_key_size) {
+    if (textSize != m_pub_key.m_size * 8) {
         return status::NotPermitted("Text size should be equal to modulus");
     }
 
