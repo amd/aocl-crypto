@@ -832,33 +832,33 @@ AesAeadCrosstest(int               keySize,
     else
         big_small_str.assign("SMALL");
     /* Request from others to validate openssl with ipp */
-    // std::unique_ptr<CipherAeadTestingCore> alcpTC;
-    CipherAeadTestingCore* alcpTC = nullptr;
+    std::unique_ptr<CipherAeadTestingCore> alcpTC;
     if (oa_override) {
-        alcpTC = new CipherAeadTestingCore(OPENSSL, cipher_type, mode);
-        // alcpTC =
-        //  std::make_unique<CipherAeadTestingCore>(OPENSSL, cipher_type, mode);
+        alcpTC =
+            std::make_unique<CipherAeadTestingCore>(OPENSSL, cipher_type, mode);
         printErrors("ALCP is overriden!... OpenSSL is now main lib");
         printErrors("ALCP is overriden!... Forcing IPP as extlib");
         useipp  = true;
         useossl = false;
     } else {
-        alcpTC = new CipherAeadTestingCore(ALCP, cipher_type, mode);
-        // alcpTC =
-        //  std::make_unique<CipherAeadTestingCore>(ALCP, cipher_type, mode);
+        alcpTC =
+            std::make_unique<CipherAeadTestingCore>(ALCP, cipher_type, mode);
     }
-    CipherAeadTestingCore* extTC = nullptr;
-    RngBase                rb;
+    std::unique_ptr<CipherAeadTestingCore> extTC = nullptr;
+    RngBase                                rb;
 
     /* Set extTC based on which external testing core user asks*/
     try {
         if (useossl)
-            extTC = new CipherAeadTestingCore(OPENSSL, cipher_type, mode);
+            extTC = std::make_unique<CipherAeadTestingCore>(
+                OPENSSL, cipher_type, mode);
         else if (useipp)
-            extTC = new CipherAeadTestingCore(IPP, cipher_type, mode);
+            extTC =
+                std::make_unique<CipherAeadTestingCore>(IPP, cipher_type, mode);
         else {
             printErrors("No Lib Specified!.. but trying OpenSSL");
-            extTC = new CipherAeadTestingCore(OPENSSL, cipher_type, mode);
+            extTC = std::make_unique<CipherAeadTestingCore>(
+                OPENSSL, cipher_type, mode);
         }
     } catch (const char* exc) {
         std::cerr << exc << std::endl;
@@ -1062,8 +1062,6 @@ AesAeadCrosstest(int               keySize,
                 }
             }
         }
-        delete extTC;
-        delete alcpTC;
     }
 }
 
