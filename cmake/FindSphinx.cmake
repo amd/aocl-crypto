@@ -36,5 +36,3 @@ mark_as_advanced(SPHINX_EXECUTABLE)
 find_package_handle_standard_args(Sphinx
                         "Failed to find sphinx-build executable"
                         SPHINX_EXECUTABLE)
-
-message(STATUS "Building Sphinx..")

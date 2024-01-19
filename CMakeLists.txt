@@ -172,7 +172,7 @@ ENDIF()
 
 IF(ALCP_ENABLE_HTML)
 	include(${CMAKE_SOURCE_DIR}/cmake/doxygen.cmake)
-	include(${CMAKE_SOURCE_DIR}/docs/CMakeLists.txt)
+	include(${CMAKE_SOURCE_DIR}/sphinx/CMakeLists.txt)
 ENDIF(ALCP_ENABLE_HTML)
 
 # building examples
