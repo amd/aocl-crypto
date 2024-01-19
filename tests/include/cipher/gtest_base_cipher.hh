@@ -832,15 +832,20 @@ AesAeadCrosstest(int               keySize,
     else
         big_small_str.assign("SMALL");
     /* Request from others to validate openssl with ipp */
+    // std::unique_ptr<CipherAeadTestingCore> alcpTC;
     CipherAeadTestingCore* alcpTC = nullptr;
     if (oa_override) {
         alcpTC = new CipherAeadTestingCore(OPENSSL, cipher_type, mode);
+        // alcpTC =
+        //  std::make_unique<CipherAeadTestingCore>(OPENSSL, cipher_type, mode);
         printErrors("ALCP is overriden!... OpenSSL is now main lib");
         printErrors("ALCP is overriden!... Forcing IPP as extlib");
         useipp  = true;
         useossl = false;
     } else {
         alcpTC = new CipherAeadTestingCore(ALCP, cipher_type, mode);
+        // alcpTC =
+        //  std::make_unique<CipherAeadTestingCore>(ALCP, cipher_type, mode);
     }
     CipherAeadTestingCore* extTC = nullptr;
     RngBase                rb;
@@ -1003,8 +1008,11 @@ AesAeadCrosstest(int               keySize,
                         std::cout << "ERROR: enc: main lib" << std::endl;
                         FAIL();
                     }
-                    data_alc.m_in  = &(out_ct_alc[0]);
-                    data_alc.m_out = &(pt[0]);
+                    /* To accomodate the misaligned pointer checks */
+                    const Uint8* Temp;
+                    Temp           = data_alc.m_in;
+                    data_alc.m_in  = data_alc.m_out;
+                    data_alc.m_out = const_cast<Uint8*>(Temp);
                 }
                 ret = alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
                 if (!ret) {
