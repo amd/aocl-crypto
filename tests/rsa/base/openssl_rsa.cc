@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -599,6 +599,18 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
         std::cout << ret_val << std::endl;
         return ret_val;
     }
+    return 0;
+}
+
+/* sign verify */
+int
+OpenSSLRsaBase::Sign(const alcp_rsa_data_t& data)
+{
+    return 0;
+}
+int
+OpenSSLRsaBase::Verify(const alcp_rsa_data_t& data)
+{
     return 0;
 }
 

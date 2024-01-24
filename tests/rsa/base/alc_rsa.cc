@@ -26,8 +26,8 @@
  *
  */
 
-#include "rsa/alc_rsa.hh"
 #include "alcp/rsa.h"
+#include "rsa/alc_rsa.hh"
 #include "rsa/rsa.hh"
 #include <cstring>
 
@@ -473,6 +473,22 @@ AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                   << std::endl;
         return err;
     }
+    return 0;
+}
+
+/* sign verify */
+int
+AlcpRsaBase::Sign(const alcp_rsa_data_t& data)
+{
+    alc_error_t err;
+
+    return 0;
+}
+int
+AlcpRsaBase::Verify(const alcp_rsa_data_t& data)
+{
+    alc_error_t err;
+
     return 0;
 }
 

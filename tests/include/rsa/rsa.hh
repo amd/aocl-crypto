@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -55,6 +55,10 @@ typedef struct _alcp_rsa_data
     Uint8* m_pseed      = nullptr;
     Uint8* m_label      = nullptr;
     Uint64 m_label_size = 0;
+
+    /* for signing and verification*/
+    Uint8* m_signature = nullptr;
+    Uint8* m_salt      = nullptr;
 } alcp_rsa_data_t;
 
 class RsaBase
@@ -72,5 +76,7 @@ class RsaBase
     virtual int       EncryptPubKey(const alcp_rsa_data_t& data) = 0;
     virtual int       DecryptPvtKey(const alcp_rsa_data_t& data) = 0;
     virtual bool      ValidateKeys()                             = 0;
+    virtual int       Sign(const alcp_rsa_data_t& data)          = 0;
+    virtual int       Verify(const alcp_rsa_data_t& data)        = 0;
 };
 } // namespace alcp::testing
