@@ -38,8 +38,11 @@
 
 namespace alcp::testing {
 
-#define ALCP_TEST_RSA_PADDING    1
-#define ALCP_TEST_RSA_NO_PADDING 0
+/*FIXME: change this to OAEP*/
+#define ALCP_TEST_RSA_PADDING      1
+#define ALCP_TEST_RSA_PADDING_PKCS 2
+#define ALCP_TEST_RSA_PADDING_PSS  3
+#define ALCP_TEST_RSA_NO_PADDING   0
 
 typedef struct _alcp_rsa_data
 {
