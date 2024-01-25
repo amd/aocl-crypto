@@ -63,8 +63,6 @@ typedef struct _alcp_rsa_data
     Uint8* m_signature = nullptr;
     Uint8* m_salt      = nullptr;
     Uint64 m_salt_len  = 0;
-    Uint8* m_text      = nullptr;
-    Uint64 m_text_len  = 0;
     bool   m_check     = false;
 } alcp_rsa_data_t;
 

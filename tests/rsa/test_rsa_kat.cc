@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,6 +36,17 @@
 alc_digest_info_t dinfo_256{}, dinfo_384{}, dinfo_512{}, mgfinfo_256{},
     mgfinfo_512{};
 
+/* padding mode */
+/*FIXME: change other padding mode test names to OAEP*/
+TEST(RSA_SignVerify_PKCS_1024, KAT_SHA2_256_MGF_256)
+{
+    dinfo_256.dt_mode.dm_sha2 = ALC_SHA2_256;
+    dinfo_256.dt_len          = ALC_DIGEST_LEN_256;
+    dinfo_256.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo_256               = dinfo_256;
+    Rsa_SignVerify(ALCP_TEST_RSA_PADDING_PSS, 1024, dinfo_256, mgfinfo_256);
+}
+
 /* All tests to be added here */
 /* non padded mode */
 TEST(RSA_No_Padding_1024, KAT)
@@ -46,6 +57,7 @@ TEST(RSA_No_Padding_2048, KAT)
 {
     Rsa_KAT(ALCP_TEST_RSA_NO_PADDING, 2048, dinfo_256, mgfinfo_256);
 }
+
 /* padding mode */
 TEST(RSA_Padding_1024, KAT_SHA2_256_MGF_256)
 {

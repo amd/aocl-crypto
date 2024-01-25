@@ -482,21 +482,8 @@ AlcpRsaBase::Sign(const alcp_rsa_data_t& data)
 {
     alc_error_t err;
 
-    /* FIXME: parameterize this*/
-    alc_digest_info_t dinfo = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len = ALC_DIGEST_LEN_256,
-        .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
-    };
-    alc_digest_info_t mgf_info = {
-        .dt_type = ALC_DIGEST_TYPE_SHA2,
-        .dt_len = ALC_DIGEST_LEN_256,
-        .dt_mode = {.dm_sha2 = ALC_SHA2_256,},
-    };
-
     // Adding the digest function for generating the hash in oaep padding
-    /* FIXME: this should go inside init function?*/
-    err = alcp_rsa_add_digest(m_rsa_handle, &dinfo);
+    err = alcp_rsa_add_digest(m_rsa_handle, &m_digest_info);
     if (alcp_is_error(err)) {
         std::cout << "Error in alcp_rsa_add_digest " << err << std::endl;
         return err;
@@ -506,16 +493,16 @@ AlcpRsaBase::Sign(const alcp_rsa_data_t& data)
     if (m_padding_mode = ALCP_TEST_RSA_PADDING_PSS) {
         err = alcp_rsa_privatekey_sign_pss(m_rsa_handle,
                                            true,
-                                           data.m_text,
-                                           data.m_text_len,
+                                           data.m_msg,
+                                           data.m_msg_len,
                                            data.m_salt,
                                            data.m_salt_len,
                                            data.m_signature);
     } else if (m_padding_mode = ALCP_TEST_RSA_PADDING_PKCS) {
         // Adding the mask generation function for generating the seed and data
-        err = alcp_rsa_add_mgf(m_rsa_handle, &mgf_info);
+        err = alcp_rsa_add_mgf(m_rsa_handle, &m_mgf_info);
     } else {
-        std::cout << "INvalid padding mode!" << std::endl;
+        std::cout << "Invalid padding mode!" << std::endl;
         return 1;
     }
     if (alcp_is_error(err)) {

@@ -102,6 +102,110 @@ SkipTest(int ret_val, std::string LibStr)
     return false;
 }
 
+/*FIXME: unify these two KAT functions at some point*/
+/* sign and verify tests */
+/* will accept only PSS/PKCS Padding modes*/
+void
+Rsa_SignVerify(int                     padding_mode,
+               int                     KeySize,
+               const alc_digest_info_t dinfo,
+               const alc_digest_info_t mgfinfo)
+{
+    alcp_rsa_data_t data;
+
+    AlcpRsaBase arb;
+    std::string LibStr = "ALCP";
+    RsaBase*    rb;
+    RngBase     rngb;
+
+    rb = &arb;
+
+#ifdef USE_OSSL
+    OpenSSLRsaBase orb;
+    if (useossl == true) {
+        rb     = &orb;
+        LibStr = "OpenSSL";
+    }
+#endif
+
+#ifdef USE_IPP
+    IPPRsaBase irb;
+    if (useipp == true) {
+        rb     = &irb;
+        LibStr = "IPP";
+    }
+#endif
+
+    std::string TestDataFile = "";
+
+    /* FIXME: different test data for diff padding modes? */
+    if (padding_mode > 0) {
+        rb->m_padding_mode = padding_mode;
+        TestDataFile =
+            std::string("dataset_RSA_SignVerify" + std::to_string(KeySize)
+                        + "_padding" + ".csv");
+    } else {
+        std::cout << "Invalid mode" << std::endl;
+        FAIL();
+    }
+    Csv csv = Csv(TestDataFile);
+
+    /* Keysize is in bits (1024/2048) */
+    KeySize = KeySize / 8;
+
+    while (csv.readNext()) {
+        /* input text to be loaded */
+        /*FIXME: Signature also should come from KAT csv file */
+        std::vector<Uint8> input_data = csv.getVect("INPUT");
+        std::vector<Uint8> PubKeyKeyMod(KeySize, 0);
+
+        data.m_msg         = &(input_data[0]);
+        data.m_pub_key_mod = &(PubKeyKeyMod[0]);
+        data.m_msg_len     = input_data.size();
+        data.m_key_len     = KeySize;
+
+        rb->m_key_len     = KeySize;
+        rb->m_digest_info = dinfo;
+        rb->m_mgf_info    = mgfinfo;
+        rb->m_hash_len    = dinfo.dt_len / 8;
+
+        /* seed and label for padding mode */
+        std::vector<Uint8> seed(rb->m_hash_len);
+        data.m_pseed = &(seed[0]);
+        std::vector<Uint8> label(5);
+        data.m_label      = &(label[0]);
+        data.m_label_size = label.size();
+
+        /* for signature and verification */
+        std::vector<Uint8> signature(KeySize, 0);
+        std::vector<Uint8> salt(5);
+        data.m_signature = &(signature[0]);
+        data.m_salt      = &(salt[0]);
+        data.m_salt_len  = salt.size();
+
+        if (!rb->init()) {
+            std::cout << "Error in RSA init" << std::endl;
+            FAIL();
+        }
+        if (!rb->SetPublicKey(data)) {
+            std::cout << "Error in RSA set pubkey" << std::endl;
+            FAIL();
+        }
+        if (!rb->SetPrivateKey(data)) {
+            std::cout << "Error in RSA set pvt key" << std::endl;
+            FAIL();
+        }
+        if (rb->Sign(data) != 0) {
+            std::cout << "Error in RSA sign" << std::endl;
+            FAIL();
+        }
+
+        /* FIXME: here, call verify function and then check */
+    }
+    return;
+}
+
+/* encrypt decrypt tests */
 void
 Rsa_KAT(int                     padding_mode,
         int                     KeySize,
