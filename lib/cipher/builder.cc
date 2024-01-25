@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -355,6 +355,16 @@ __build_GcmAead(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
             _build_aead<vaes512::GcmAEAD192>(pKey, keyLen, ctx);
         } else if (keyLen == ALC_KEY_LEN_256) {
             _build_aead<vaes512::GcmAEAD256>(pKey, keyLen, ctx);
+        }
+    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
+        /* FIXME: cipher request should fail invalid key length. At this
+         * level only valid key length is passed.*/
+        if (keyLen == ALC_KEY_LEN_128) {
+            _build_aead<vaes::GcmAEAD128>(pKey, keyLen, ctx);
+        } else if (keyLen == ALC_KEY_LEN_192) {
+            _build_aead<vaes::GcmAEAD192>(pKey, keyLen, ctx);
+        } else if (keyLen == ALC_KEY_LEN_256) {
+            _build_aead<vaes::GcmAEAD256>(pKey, keyLen, ctx);
         }
     } else {
 

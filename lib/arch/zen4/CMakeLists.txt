@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -23,6 +23,7 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
+ ADD_SUBDIRECTORY(gcm) # gcm ZEN4 specific
 
 FILE(GLOB ZEN4_SRCS "*.cc")
 
@@ -31,11 +32,10 @@ alcp_get_arch_cflags_zen4()
 #CMAKE_POLICY(SET CMP0079 NEW)
 
 MESSAGE(STATUS "COMPILE_FLAGS:ZEN4:${ARCH_COMPILE_FLAGS}")
-ADD_COMPILE_OPTIONS( ${ARCH_COMPILE_FLAGS})
 
 
 #Adding -funroll-loops only to sha2_512_avx512.cc file in this arch since it improves performance for digest.
-# This flag may improve or decrease performance. But for current implementation in file, it improves performance. 
+# This flag may improve or decrease performance. But for current implementation in file, it improves performance.
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 	set_source_files_properties(sha2_512_avx512.cc PROPERTIES COMPILE_FLAGS "-funroll-loops")
 endif()
@@ -45,6 +45,8 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib/include)
 ADD_LIBRARY(arch_zen4
 	OBJECT
 	${ZEN4_SRCS})
+
+TARGET_COMPILE_OPTIONS(arch_zen4 PRIVATE ${ARCH_COMPILE_FLAGS})
 
 # BUG in GCC-12
 if(CMAKE_COMPILER_IS_GCC)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -42,6 +42,13 @@ namespace alcp::cipher { namespace vaes512 {
     static inline __m512i alcp_loadu(const __m512i* ad)
     {
         return _mm512_loadu_si512(ad);
+    }
+    static inline void alcp_loadu_2values(const __m512i* ad,
+                                          __m512i&       a1,
+                                          __m512i&       a2)
+    {
+        a1 = _mm512_loadu_si512(ad);
+        a2 = _mm512_loadu_si512(ad + 1);
     }
     static inline void alcp_loadu_4values(
         const __m512i* ad, __m512i& a1, __m512i& a2, __m512i& a3, __m512i& a4)
@@ -113,6 +120,17 @@ namespace alcp::cipher { namespace vaes512 {
         b4 = _mm512_xor_si512(a4, b4);
     }
 
+    static inline void alcp_xor_2values(
+        __m512i a1, // inputs A
+        __m512i a2,
+
+        __m512i& b1, // inputs B and output A xor B
+        __m512i& b2)
+    {
+        b1 = _mm512_xor_si512(a1, b1);
+        b2 = _mm512_xor_si512(a2, b2);
+    }
+
     // add functions.
     // clang-format off
     static inline __m512i alcp_set_epi32(
@@ -157,6 +175,17 @@ namespace alcp::cipher { namespace vaes512 {
         out4 = _mm512_shuffle_epi8(in4, swap_ctr);
     }
 
+    static inline void alcp_shuffle_epi8(
+        const __m512i& in1, // inputs
+        const __m512i& in2,
+        const __m512i& swap_ctr, // swap control
+        __m512i&       out1,     // outputs
+        __m512i&       out2)
+    {
+        out1 = _mm512_shuffle_epi8(in1, swap_ctr);
+        out2 = _mm512_shuffle_epi8(in2, swap_ctr);
+    }
+
     // store functions
     static inline void alcp_storeu(__m512i* ad, __m512i x)
     {
@@ -170,6 +199,12 @@ namespace alcp::cipher { namespace vaes512 {
         _mm512_storeu_si512(ad + 1, a2);
         _mm512_storeu_si512(ad + 2, a3);
         _mm512_storeu_si512(ad + 3, a4);
+    }
+
+    static inline void alcp_storeu_2values(__m512i* ad, __m512i a1, __m512i a2)
+    {
+        _mm512_storeu_si512(ad, a1);
+        _mm512_storeu_si512(ad + 1, a2);
     }
 
     static inline void alcp_storeu_128(__m512i* ad, __m512i x)

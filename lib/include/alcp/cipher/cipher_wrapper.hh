@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -49,6 +49,7 @@ struct ALCP_API_EXPORT GcmAuthData
     __m128i m_gHash_128       = _mm_setzero_si128(); // Uint8 m_gHash[16];
     __m128i m_iv_128          = _mm_setzero_si128(); // Persistent Counter
     int     m_num_512blks_precomputed = 0;
+    int     m_num_256blks_precomputed = 0;
 };
 
 namespace aesni {
@@ -217,14 +218,14 @@ namespace aesni {
                         int          nRounds,
                         const Uint8* pIv,
                         Uint64       ivBytes,
-                        __m128i*     pHsubKey_128,
-                        __m128i*     ptag_128,
-                        __m128i*     piv_128,
+                        __m128i&     HsubKey_128,
+                        __m128i&     tag_128,
+                        __m128i&     iv_128,
                         __m128i      reverse_mask_128);
 
     alc_error_t processAdditionalDataGcm(const Uint8* pAdditionalData,
                                          Uint64       additionalDataLen,
-                                         __m128i*     pgHash_128,
+                                         __m128i&     gHash_128,
                                          __m128i      hash_subKey_128,
                                          __m128i      reverse_mask_128);
 
@@ -236,13 +237,13 @@ namespace aesni {
                          alcp::cipher::GcmAuthData* gcm,
                          __m128i                    reverse_mask_128,
                          bool                       isEncrypt,
-                         Uint64*                    pHashSubkeyTable);
+                         Uint64*                    pGcmCtxHashSubkeyTable);
 
     alc_error_t GetTagGcm(Uint64   tagLen,
                           Uint64   plaintextLen,
                           Uint64   adLength,
-                          __m128i* pgHash_128,
-                          __m128i* ptag128,
+                          __m128i& gHash_128,
+                          __m128i& tag128,
                           __m128i  Hsubkey_128,
                           __m128i  reverse_mask_128,
                           Uint8*   tag);
@@ -381,7 +382,7 @@ namespace vaes512 {
                               const Uint8*               pIv,
                               alcp::cipher::GcmAuthData* gcm,
                               __m128i                    reverse_mask_128,
-                              Uint64*                    pHashSubkeyTable);
+                              Uint64* pGcmCtxHashSubkeyTable);
 
     alc_error_t encryptGcm192(const Uint8*               pPlainText,
                               Uint8*                     pCipherText,
@@ -392,7 +393,7 @@ namespace vaes512 {
                               const Uint8*               pIv,
                               alcp::cipher::GcmAuthData* gcm,
                               __m128i                    reverse_mask_128,
-                              Uint64*                    pHashSubkeyTable);
+                              Uint64* pGcmCtxHashSubkeyTable);
 
     alc_error_t encryptGcm256(const Uint8*               pPlainText,
                               Uint8*                     pCipherText,
@@ -403,7 +404,7 @@ namespace vaes512 {
                               const Uint8*               pIv,
                               alcp::cipher::GcmAuthData* gcm,
                               __m128i                    reverse_mask_128,
-                              Uint64*                    pHashSubkeyTable);
+                              Uint64* pGcmCtxHashSubkeyTable);
 
     alc_error_t decryptGcm128(const Uint8*               pPlainText,
                               Uint8*                     pCipherText,
@@ -414,7 +415,7 @@ namespace vaes512 {
                               const Uint8*               pIv,
                               alcp::cipher::GcmAuthData* gcm,
                               __m128i                    reverse_mask_128,
-                              Uint64*                    pHashSubkeyTable);
+                              Uint64* pGcmCtxHashSubkeyTable);
 
     alc_error_t decryptGcm192(const Uint8*               pPlainText,
                               Uint8*                     pCipherText,
@@ -425,7 +426,7 @@ namespace vaes512 {
                               const Uint8*               pIv,
                               alcp::cipher::GcmAuthData* gcm,
                               __m128i                    reverse_mask_128,
-                              Uint64*                    pHashSubkeyTable);
+                              Uint64* pGcmCtxHashSubkeyTable);
 
     alc_error_t decryptGcm256(const Uint8*               pPlainText,
                               Uint8*                     pCipherText,
@@ -436,31 +437,7 @@ namespace vaes512 {
                               const Uint8*               pIv,
                               alcp::cipher::GcmAuthData* gcm,
                               __m128i                    reverse_mask_128,
-                              Uint64*                    pHashSubkeyTable);
-
-    alc_error_t processAdditionalDataGcm(const Uint8* pAdditionalData,
-                                         Uint64       additionalDataLen,
-                                         __m128i&     gHash_128,
-                                         __m128i      hash_subKey_128,
-                                         __m128i      reverse_mask_128);
-
-    alc_error_t GetTagGcm(Uint64   tagLen,
-                          Uint64   plaintextLen,
-                          Uint64   adLength,
-                          __m128i& gHash_128,
-                          __m128i& tag128,
-                          __m128i  Hsubkey_128,
-                          __m128i  reverse_mask_128,
-                          Uint8*   tag);
-
-    alc_error_t InitGcm(const Uint8* pKey,
-                        int          nRounds,
-                        const Uint8* pIv,
-                        Uint64       ivBytes,
-                        __m128i&     HsubKey_128,
-                        __m128i&     tag_128,
-                        __m128i&     iv_128,
-                        __m128i      reverse_mask_128);
+                              Uint64* pGcmCtxHashSubkeyTable);
 
 } // namespace vaes512
 
@@ -544,6 +521,72 @@ namespace vaes {
                               const Uint8* pTweakKey,
                               int          nRounds,
                               Uint8*       pIv);
+
+    alc_error_t encryptGcm128(const Uint8*               pPlainText,
+                              Uint8*                     pCipherText,
+                              Uint64                     len,
+                              Uint64                     acclen,
+                              const Uint8*               pKey,
+                              int                        nRounds,
+                              const Uint8*               pIv,
+                              alcp::cipher::GcmAuthData* gcm,
+                              __m128i                    reverse_mask_128,
+                              Uint64* pGcmCtxHashSubkeyTable);
+
+    alc_error_t encryptGcm192(const Uint8*               pPlainText,
+                              Uint8*                     pCipherText,
+                              Uint64                     len,
+                              Uint64                     acclen,
+                              const Uint8*               pKey,
+                              int                        nRounds,
+                              const Uint8*               pIv,
+                              alcp::cipher::GcmAuthData* gcm,
+                              __m128i                    reverse_mask_128,
+                              Uint64* pGcmCtxHashSubkeyTable);
+
+    alc_error_t encryptGcm256(const Uint8*               pPlainText,
+                              Uint8*                     pCipherText,
+                              Uint64                     len,
+                              Uint64                     acclen,
+                              const Uint8*               pKey,
+                              int                        nRounds,
+                              const Uint8*               pIv,
+                              alcp::cipher::GcmAuthData* gcm,
+                              __m128i                    reverse_mask_128,
+                              Uint64* pGcmCtxHashSubkeyTable);
+
+    alc_error_t decryptGcm128(const Uint8*               pPlainText,
+                              Uint8*                     pCipherText,
+                              Uint64                     len,
+                              Uint64                     acclen,
+                              const Uint8*               pKey,
+                              int                        nRounds,
+                              const Uint8*               pIv,
+                              alcp::cipher::GcmAuthData* gcm,
+                              __m128i                    reverse_mask_128,
+                              Uint64* pGcmCtxHashSubkeyTable);
+
+    alc_error_t decryptGcm192(const Uint8*               pPlainText,
+                              Uint8*                     pCipherText,
+                              Uint64                     len,
+                              Uint64                     acclen,
+                              const Uint8*               pKey,
+                              int                        nRounds,
+                              const Uint8*               pIv,
+                              alcp::cipher::GcmAuthData* gcm,
+                              __m128i                    reverse_mask_128,
+                              Uint64* pGcmCtxHashSubkeyTable);
+
+    alc_error_t decryptGcm256(const Uint8*               pPlainText,
+                              Uint8*                     pCipherText,
+                              Uint64                     len,
+                              Uint64                     acclen,
+                              const Uint8*               pKey,
+                              int                        nRounds,
+                              const Uint8*               pIv,
+                              alcp::cipher::GcmAuthData* gcm,
+                              __m128i                    reverse_mask_128,
+                              Uint64* pGcmCtxHashSubkeyTable);
 
     // ctr APIs for vaes
     void ctrInit(__m256i*     c1,

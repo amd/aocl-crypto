@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -118,6 +118,17 @@ function(alcp_get_arch_cflags_zen4)
         )
     set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
 endfunction(alcp_get_arch_cflags_zen4)
+
+# lib/arch/zen4 Compile Flags
+function(alcp_get_arch_cflags_zen4_clang)
+    set(ARCH_COMPILE_FLAGS
+        /Ox -mavx -mavx2 -maes -mvaes -mpclmul -mvpclmulqdq -mavx512ifma -DUSE_AVX512 /arch:AVX512
+        CACHE INTERNAL ""
+        )
+    set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
+endfunction(alcp_get_arch_cflags_zen4_clang)
+
+
 
 # if address sanitizer used
 function(alcp_add_sanitize_flags)
