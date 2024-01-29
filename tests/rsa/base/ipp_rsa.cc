@@ -592,19 +592,30 @@ IPPRsaBase::Sign(const alcp_rsa_data_t& data)
 {
     IppStatus             status        = ippStsNoErr;
     const IppsHashMethod* p_hash_method = getIppHashMethod(m_digest_info);
-    status                              = ippsRSASign_PSS_rmf(data.m_msg,
-                                 data.m_msg_len,
-                                 data.m_salt,
-                                 data.m_salt_len,
-                                 data.m_signature,
-                                 m_pPrv,
-                                 m_pPub,
-                                 p_hash_method,
-                                 m_scratchBuffer_Pvt);
-
+    if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
+        status = ippsRSASign_PSS_rmf(data.m_msg,
+                                     data.m_msg_len,
+                                     data.m_salt,
+                                     data.m_salt_len,
+                                     data.m_signature,
+                                     m_pPrv,
+                                     m_pPub,
+                                     p_hash_method,
+                                     m_scratchBuffer_Pvt);
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+        status = ippsRSASign_PKCS1v15_rmf(data.m_msg,
+                                          data.m_msg_len,
+                                          data.m_signature,
+                                          m_pPrv,
+                                          m_pPub,
+                                          p_hash_method,
+                                          m_scratchBuffer_Pvt);
+    } else {
+        std::cout << "Unsupported padding mode!" << std::endl;
+        return 1;
+    }
     if (status != ippStsNoErr) {
-        std::cout << "ippsRSASign_PSS_rmf failed with err code" << status
-                  << std::endl;
+        std::cout << "IPP RSA Sign failed with err code" << status << std::endl;
         return status;
     }
     return 0;
@@ -615,15 +626,29 @@ IPPRsaBase::Verify(const alcp_rsa_data_t& data)
     IppStatus             status        = ippStsNoErr;
     const IppsHashMethod* p_hash_method = getIppHashMethod(m_digest_info);
     int                   isValid       = 0;
-    status                              = ippsRSAVerify_PSS_rmf(data.m_msg,
-                                   data.m_msg_len,
-                                   data.m_signature,
-                                   &isValid,
-                                   m_pPub,
-                                   p_hash_method,
-                                   m_scratchBuffer_Pub);
+
+    if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
+        status = ippsRSAVerify_PSS_rmf(data.m_msg,
+                                       data.m_msg_len,
+                                       data.m_signature,
+                                       &isValid,
+                                       m_pPub,
+                                       p_hash_method,
+                                       m_scratchBuffer_Pub);
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+        status = ippsRSAVerify_PKCS1v15_rmf(data.m_msg,
+                                            data.m_msg_len,
+                                            data.m_signature,
+                                            &isValid,
+                                            m_pPub,
+                                            p_hash_method,
+                                            m_scratchBuffer_Pub);
+    } else {
+        std::cout << "Unsupported padding mode!" << std::endl;
+        return 1;
+    }
     if (status != ippStsNoErr) {
-        std::cout << "ippsRSAVerify_PSS_rmf failed with err code" << status
+        std::cout << "IPP RSA Verify failed with err code" << status
                   << std::endl;
         return status;
     }

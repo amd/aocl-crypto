@@ -490,7 +490,7 @@ AlcpRsaBase::Sign(const alcp_rsa_data_t& data)
         return err;
     }
 
-    if (m_padding_mode = ALCP_TEST_RSA_PADDING_PSS) {
+    if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
         err = alcp_rsa_privatekey_sign_pss(m_rsa_handle,
                                            true,
                                            data.m_msg,
@@ -498,7 +498,7 @@ AlcpRsaBase::Sign(const alcp_rsa_data_t& data)
                                            data.m_salt,
                                            data.m_salt_len,
                                            data.m_signature);
-    } else if (m_padding_mode = ALCP_TEST_RSA_PADDING_PKCS) {
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
         /*call mask gen function */
         err = alcp_rsa_add_mgf(m_rsa_handle, &m_mgf_info);
         if (alcp_is_error(err)) {
@@ -528,10 +528,10 @@ int
 AlcpRsaBase::Verify(const alcp_rsa_data_t& data)
 {
     alc_error_t err;
-    if (m_padding_mode = ALCP_TEST_RSA_PADDING_PSS) {
+    if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
         err = alcp_rsa_publickey_verify_pss(
             m_rsa_handle, data.m_msg, data.m_msg_len, data.m_signature);
-    } else if (m_padding_mode = ALCP_TEST_RSA_PADDING_PKCS) {
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
         err = alcp_rsa_publickey_verify_pkcs1v15(
             m_rsa_handle, data.m_msg, data.m_msg_len, data.m_signature);
     } else {
