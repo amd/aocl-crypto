@@ -201,6 +201,10 @@ Rsa_SignVerify(int                     padding_mode,
         }
 
         /* FIXME: here, call verify function and then check */
+        if (rb->Verify(data) != 0) {
+            std::cout << "Error in RSA verify" << std::endl;
+            FAIL();
+        }
     }
     return;
 }

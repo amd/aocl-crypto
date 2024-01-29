@@ -510,14 +510,23 @@ AlcpRsaBase::Sign(const alcp_rsa_data_t& data)
                   << std::endl;
         return err;
     }
-
     return 0;
 }
 int
 AlcpRsaBase::Verify(const alcp_rsa_data_t& data)
 {
     alc_error_t err;
-
+    if (m_padding_mode = ALCP_TEST_RSA_PADDING_PSS) {
+        err = alcp_rsa_publickey_verify_pss(
+            m_rsa_handle, data.m_msg, data.m_msg_len, data.m_signature);
+    } else if (m_padding_mode = ALCP_TEST_RSA_PADDING_PKCS) {
+        err = alcp_rsa_publickey_verify_pkcs1v15(
+            m_rsa_handle, data.m_msg, data.m_msg_len, data.m_signature);
+    }
+    if (alcp_is_error(err)) {
+        std::cout << "Error in alcp_rsa_publickey_verify" << err << std::endl;
+        return err;
+    }
     return 0;
 }
 
