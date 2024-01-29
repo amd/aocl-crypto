@@ -31,8 +31,6 @@
 #include "alcp/base.hh"
 #include "alcp/mac/mac.hh"
 
-#define USE_OLD_IMPL 0
-
 namespace alcp::mac::poly1305 {
 class ALCP_API_EXPORT IPoly1305
 {
@@ -47,25 +45,9 @@ class ALCP_API_EXPORT IPoly1305
 class ALCP_API_EXPORT Poly1305 : public Mac
 {
   private:
-#if USE_OLD_IMPL
-    Uint8   m_accumulator[18] = {};
-    Uint8   m_key[32];
-    BIGNUM *m_key_bn = nullptr, *m_a_bn = nullptr, *m_r_bn = nullptr,
-           *m_s_bn = nullptr, *m_p_bn = nullptr;
-    Uint8   m_msg_buffer[16];
-    Uint64  m_msg_buffer_len = {};
-    BN_CTX* m_bn_temp_ctx    = nullptr;
-    bool    m_finalized      = false;
-#else
     std::unique_ptr<IPoly1305> poly1305_impl;
-#endif
-
-    Uint8 m_p[17] = { 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfb };
-    void  clamp(Uint8 in[16]);
 
   public:
-    Status blk(const Uint8 pMsg[], Uint64 msgLen);
     Status update(const Uint8 pMsg[], Uint64 msgLen) override;
     /**
      * @brief Sets the Key and Initializes the state of Poly1305
@@ -81,6 +63,6 @@ class ALCP_API_EXPORT Poly1305 : public Mac
     // Uint8* macUpdate(const Uint8 msg[], const Uint8 key[], Uint64
     // msgLen);
     Poly1305();
-    virtual ~Poly1305();
+    virtual ~Poly1305() = default;
 };
 } // namespace alcp::mac::poly1305
