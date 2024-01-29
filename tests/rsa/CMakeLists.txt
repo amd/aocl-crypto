@@ -75,6 +75,8 @@ ENDFUNCTION(TEST_DATA_LINK RSA_ALG)
 
 TEST_DATA_LINK(RSA_1024)
 TEST_DATA_LINK(RSA_2048)
+TEST_DATA_LINK(RSA_SignVerify_1024)
+TEST_DATA_LINK(RSA_SignVerify_2048)
 
 alcp_add_integration_tests("test_rsa_kat" test_rsa_kat)
 alcp_add_integration_tests("test_rsa_cross" test_rsa_cross)

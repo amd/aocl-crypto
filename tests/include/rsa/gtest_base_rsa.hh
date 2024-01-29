@@ -142,7 +142,7 @@ Rsa_SignVerify(int                     padding_mode,
     if (padding_mode > 0) {
         rb->m_padding_mode = padding_mode;
         TestDataFile =
-            std::string("dataset_RSA_SignVerify" + std::to_string(KeySize)
+            std::string("dataset_RSA_SignVerify_" + std::to_string(KeySize)
                         + "_padding" + ".csv");
     } else {
         std::cout << "Invalid mode" << std::endl;
