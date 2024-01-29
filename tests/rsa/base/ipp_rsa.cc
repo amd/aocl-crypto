@@ -590,11 +590,43 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 int
 IPPRsaBase::Sign(const alcp_rsa_data_t& data)
 {
+    IppStatus             status        = ippStsNoErr;
+    const IppsHashMethod* p_hash_method = getIppHashMethod(m_digest_info);
+    status                              = ippsRSASign_PSS_rmf(data.m_msg,
+                                 data.m_msg_len,
+                                 data.m_salt,
+                                 data.m_salt_len,
+                                 data.m_signature,
+                                 m_pPrv,
+                                 m_pPub,
+                                 p_hash_method,
+                                 m_scratchBuffer_Pvt);
+
+    if (status != ippStsNoErr) {
+        std::cout << "ippsRSASign_PSS_rmf failed with err code" << status
+                  << std::endl;
+        return status;
+    }
     return 0;
 }
 int
 IPPRsaBase::Verify(const alcp_rsa_data_t& data)
 {
+    IppStatus             status        = ippStsNoErr;
+    const IppsHashMethod* p_hash_method = getIppHashMethod(m_digest_info);
+    int                   isValid       = 0;
+    status                              = ippsRSAVerify_PSS_rmf(data.m_msg,
+                                   data.m_msg_len,
+                                   data.m_signature,
+                                   &isValid,
+                                   m_pPub,
+                                   p_hash_method,
+                                   m_scratchBuffer_Pub);
+    if (status != ippStsNoErr) {
+        std::cout << "ippsRSAVerify_PSS_rmf failed with err code" << status
+                  << std::endl;
+        return status;
+    }
     return 0;
 }
 
