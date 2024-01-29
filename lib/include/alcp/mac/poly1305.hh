@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,10 +31,23 @@
 #include "alcp/base.hh"
 #include "alcp/mac/mac.hh"
 
+#define USE_OLD_IMPL 0
+
 namespace alcp::mac::poly1305 {
+class ALCP_API_EXPORT IPoly1305
+{
+  public:
+    virtual Status init(const Uint8 key[], Uint64 keyLen)    = 0;
+    virtual Status update(const Uint8 pMsg[], Uint64 msgLen) = 0;
+    virtual Status finish(const Uint8 pMsg[], Uint64 msgLen) = 0;
+    virtual Status copy(Uint8 digest[], Uint64 len)          = 0;
+    virtual Status reset()                                   = 0;
+};
+
 class ALCP_API_EXPORT Poly1305 : public Mac
 {
   private:
+#if USE_OLD_IMPL
     Uint8   m_accumulator[18] = {};
     Uint8   m_key[32];
     BIGNUM *m_key_bn = nullptr, *m_a_bn = nullptr, *m_r_bn = nullptr,
@@ -43,6 +56,9 @@ class ALCP_API_EXPORT Poly1305 : public Mac
     Uint64  m_msg_buffer_len = {};
     BN_CTX* m_bn_temp_ctx    = nullptr;
     bool    m_finalized      = false;
+#else
+    std::unique_ptr<IPoly1305> poly1305_impl;
+#endif
 
     Uint8 m_p[17] = { 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                       0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfb };
@@ -64,7 +80,7 @@ class ALCP_API_EXPORT Poly1305 : public Mac
     void   finish() override;
     // Uint8* macUpdate(const Uint8 msg[], const Uint8 key[], Uint64
     // msgLen);
-    Poly1305() = default;
+    Poly1305();
     virtual ~Poly1305();
 };
 } // namespace alcp::mac::poly1305
