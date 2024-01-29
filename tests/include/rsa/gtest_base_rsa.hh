@@ -156,7 +156,8 @@ Rsa_SignVerify(int                     padding_mode,
     while (csv.readNext()) {
         /* input text to be loaded */
         /*FIXME: Signature also should come from KAT csv file */
-        std::vector<Uint8> input_data = csv.getVect("INPUT");
+        std::vector<Uint8> input_data     = csv.getVect("INPUT");
+        std::vector<Uint8> signature_data = csv.getVect("SIGNATURE");
         std::vector<Uint8> PubKeyKeyMod(KeySize, 0);
 
         data.m_msg         = &(input_data[0]);
@@ -205,6 +206,7 @@ Rsa_SignVerify(int                     padding_mode,
             std::cout << "Error in RSA verify" << std::endl;
             FAIL();
         }
+        EXPECT_TRUE(ArraysMatch(signature_data, signature));
     }
     return;
 }
