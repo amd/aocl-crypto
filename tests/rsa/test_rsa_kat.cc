@@ -38,13 +38,13 @@ alc_digest_info_t dinfo_256{}, dinfo_384{}, dinfo_512{}, mgfinfo_256{},
 
 /* padding mode */
 /*FIXME: change other padding mode test names to OAEP*/
-TEST(RSA_SignVerify_PSS_1024, KAT_SHA2_256_MGF_256)
+TEST(RSA_SignVerify_PSS_2048, KAT_SHA2_256_MGF_256)
 {
     dinfo_256.dt_mode.dm_sha2 = ALC_SHA2_256;
     dinfo_256.dt_len          = ALC_DIGEST_LEN_256;
     dinfo_256.dt_type         = ALC_DIGEST_TYPE_SHA2;
     mgfinfo_256               = dinfo_256;
-    Rsa_SignVerify(ALCP_TEST_RSA_PADDING_PSS, 1024, dinfo_256, mgfinfo_256);
+    Rsa_SignVerify(ALCP_TEST_RSA_PADDING_PSS, 2048, dinfo_256, mgfinfo_256);
 }
 
 /* All tests to be added here */

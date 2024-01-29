@@ -206,7 +206,7 @@ Rsa_SignVerify(int                     padding_mode,
             std::cout << "Error in RSA verify" << std::endl;
             FAIL();
         }
-        EXPECT_TRUE(ArraysMatch(signature_data, signature));
+        EXPECT_TRUE(ArraysMatch(signature_data, signature, KeySize));
     }
     return;
 }
