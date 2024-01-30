@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -92,6 +92,12 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
     if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
         auto tweak_key =
             pCipherInfo->ci_key_info.key + pCipherInfo->ci_key_info.len / 8;
+
+        /* Additional checks for XTS, bug found by libfuzzer*/
+        ALCP_BAD_PTR_ERR_RET(tweak_key, err);
+        ALCP_BAD_PTR_ERR_RET(pCipherInfo->ci_key_info.key, err);
+        ALCP_ZERO_LEN_ERR_RET(pCipherInfo->ci_key_info.len, err);
+
         if (tweak_key == nullptr
             || (pCipherInfo->ci_key_info.len != 128
                 && pCipherInfo->ci_key_info.len != 256)) {
