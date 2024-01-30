@@ -59,11 +59,6 @@ namespace alcp::cipher { namespace vaes {
      * 2013. https://crypto.stanford.edu/RealWorldCrypto/slides/gueron.pdf.
      */
 
-    static const Uint64 const_factor[] = { 0x1, 0xC200000000000000,
-                                           0x1, 0xC200000000000000,
-                                           0x1, 0xC200000000000000,
-                                           0x1, 0xC200000000000000 };
-
     /* Intermediate Ghash computation done stored in 256 bit */
     static inline void montgomeryReduction(__m256i       input,
                                            __m256i&      result,

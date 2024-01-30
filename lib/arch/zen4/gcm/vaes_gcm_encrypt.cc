@@ -60,7 +60,6 @@
 
 namespace alcp::cipher::vaes512 {
 
-// FIXME: Encrypt and Decrypt can be fused with a constexpr template argument
 template<void AesEncNoLoad_4x512(
              __m512i& a, __m512i& b, __m512i& c, __m512i& d, const sKeys& keys),
          void AesEncNoLoad_2x512(__m512i& a, __m512i& b, const sKeys& keys),
@@ -155,8 +154,8 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
     constexpr Uint64 blockCount_1x512          = numBlksIn512bit;
     constexpr Uint64 blockCount_2x512          = 2 * numBlksIn512bit;
     constexpr Uint64 blockCount_4x512          = 4 * numBlksIn512bit;
-    constexpr Uint64 blockCount_4x512_2_unroll = 8 * numBlksIn512bit;
-    constexpr Uint64 blockCount_4x512_4_unroll = 16 * numBlksIn512bit;
+    constexpr Uint64 blockCount_8x512          = 8 * numBlksIn512bit;
+    constexpr Uint64 blockCount_8x512_unroll_2 = 16 * numBlksIn512bit;
 
     __m512i a1, b1;
 
@@ -171,9 +170,21 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
     __m512i Hsubkey_512_0, Hsubkey_512_1, Hsubkey_512_2, Hsubkey_512_3;
     __m512i gHash_512 = _mm512_zextsi128_si512(gcm->m_gHash_128);
 
+    /*
+     * CORE BLOCK: (8x512)=32 blks aesenc, 32 blks gmul and 1 reduction.
+     *
+     * Unrolling:
+     * Unrolling is done two times and code is re-ordered to reduce latency
+     * impact of dependency between aesenc output and gmul input.
+     *
+     * This unrolling is not needed in gcm decrypt since gmul doesn't depend on
+     * aesenc output.
+     *
+     */
+
     UNROLL_2
-    for (; blocks >= blockCount_4x512_4_unroll;
-         blocks -= blockCount_4x512_4_unroll) {
+    for (; blocks >= blockCount_8x512_unroll_2;
+         blocks -= blockCount_8x512_unroll_2) {
 
         __m512i z0_512, z1_512, z2_512;
 
@@ -355,7 +366,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
         getGhash(z0_512, z1_512, z2_512, gHash_512, const_factor_256);
     }
 
-    if (blocks >= blockCount_4x512_2_unroll) {
+    if (blocks >= blockCount_8x512) {
 
         __m512i z0_512, z1_512, z2_512;
 
@@ -444,7 +455,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
 
         // compute Ghash
         getGhash(z0_512, z1_512, z2_512, gHash_512, const_factor_256);
-        blocks -= blockCount_4x512_2_unroll;
+        blocks -= blockCount_8x512;
     }
 
     Hsubkey_512_0 = _mm512_loadu_si512(p512GcmCtxHashSubkeyTable);
@@ -479,6 +490,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
               const_factor_256);
         c1 = alcp_add_epi32(c1, four_x);
         c2 = alcp_add_epi32(c2, four_x);
+        // increment of c3 and c4 are not needed for remaining residue blocks.
 
         p_out_x += 4;
         blocks -= blockCount_4x512;
@@ -506,6 +518,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
               const_factor_256);
 
         c1 = alcp_add_epi32(c1, two_x);
+        // increment of c2 is not needed for remaining residue blocks.
 
         alcp_storeu_2values(p_out_x, a1, a2);
         p_out_x += 2;

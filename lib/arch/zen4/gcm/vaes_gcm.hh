@@ -72,8 +72,16 @@ void inline computeHashSubKeys(int           num_512_blks,
 {
     __m128i* pHashSubkeyTableLocal_128;
 
-    const __m512i const_factor_512 = _mm512_loadu_epi64(const_factor);
-    pHashSubkeyTableLocal_128      = (__m128i*)pHashSubkeyTableLocal;
+    const __m512i const_factor_512 = _mm512_set_epi64(0xC200000000000000,
+                                                      0x1,
+                                                      0xC200000000000000,
+                                                      0x1,
+                                                      0xC200000000000000,
+                                                      0x1,
+                                                      0xC200000000000000,
+                                                      0x1);
+
+    pHashSubkeyTableLocal_128 = (__m128i*)pHashSubkeyTableLocal;
 
     __m128i h_128_0, h_128_1, h_128_2;
     aesni::gMul(Hsubkey_128, Hsubkey_128, h_128_2, const_factor_128); // 2

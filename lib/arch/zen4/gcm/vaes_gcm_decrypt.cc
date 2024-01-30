@@ -138,7 +138,7 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
     __m512i* p512GcmCtxHashSubkeyTable = (__m512i*)pGcmCtxHashSubkeyTable;
     __m512i  hashSubkeyTableStack[MAX_NUM_512_BLKS];
     __m512i* pHashSubkeyTableLocal = hashSubkeyTableStack;
-    if (num_512_blks && isFirstUpdate) {
+    if (num_512_blks) {
         getPrecomputedTable(isFirstUpdate,
                             p512GcmCtxHashSubkeyTable,
                             pHashSubkeyTableLocal,
@@ -149,11 +149,11 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
 
     __m512i a1, b1;
 
-    constexpr Uint8  numBlksIn512bit           = 4;
-    constexpr Uint64 blockCount_1x512          = numBlksIn512bit;
-    constexpr Uint64 blockCount_2x512          = 2 * numBlksIn512bit;
-    constexpr Uint64 blockCount_4x512          = 4 * numBlksIn512bit;
-    constexpr Uint64 blockCount_4x512_2_unroll = 8 * numBlksIn512bit;
+    constexpr Uint8  numBlksIn512bit  = 4;
+    constexpr Uint64 blockCount_1x512 = numBlksIn512bit;
+    constexpr Uint64 blockCount_2x512 = 2 * numBlksIn512bit;
+    constexpr Uint64 blockCount_4x512 = 4 * numBlksIn512bit;
+    constexpr Uint64 blockCount_8x512 = 8 * numBlksIn512bit;
 
     __m512i a2, a3, a4;
     __m512i b2, b3, b4;
@@ -168,11 +168,11 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
 
     // (8x512)=32 blks aesenc, 32 blks gmul and 1 reduction
     UNROLL_8
-    for (; blocks >= blockCount_4x512_2_unroll;
-         blocks -= blockCount_4x512_2_unroll) {
+    for (; blocks >= blockCount_8x512; blocks -= blockCount_8x512) {
 
         __m512i z0_512, z1_512, z2_512;
 
+        // 1st 4x512
         __m512i* pHsubkey_512 = pHashSubkeyTableLocal + 4;
         _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
         _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
@@ -200,7 +200,7 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
         p_in_x += NUM_PARALLEL_ZMMS;
         p_out_x += NUM_PARALLEL_ZMMS;
 
-        // 2nd
+        // 2nd 4x512
         pHsubkey_512 = pHashSubkeyTableLocal;
         _mm_prefetch(cast_to(pHsubkey_512), _MM_HINT_T0);
         _mm_prefetch(cast_to(p_in_x), _MM_HINT_T0);
@@ -263,7 +263,6 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
     Hsubkey_512_0 = _mm512_loadu_si512(p512GcmCtxHashSubkeyTable);
 
     // (4x512) 16 blks aesenc, 16 blks gmul and 1 reductions
-
     if (blocks >= blockCount_4x512) {
 
         Hsubkey_512_1 = _mm512_loadu_si512(p512GcmCtxHashSubkeyTable + 1);
