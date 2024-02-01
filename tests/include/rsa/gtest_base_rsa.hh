@@ -105,6 +105,203 @@ SkipTest(int ret_val, std::string LibStr)
 /*FIXME: unify these two KAT functions at some point*/
 /* sign and verify tests */
 /* will accept only PSS/PKCS Padding modes*/
+
+void
+Rsa_SignVerifyCross(int                     padding_mode,
+                    int                     KeySize,
+                    const alc_digest_info_t dinfo,
+                    const alc_digest_info_t mgfinfo)
+{
+    alcp_rsa_data_t   data_main{}, data_ext{};
+    int               ret_val_main = 0, ret_val_ext = 0;
+    AlcpRsaBase       arb;
+    alc_drbg_handle_t handle{};
+    alc_drbg_info_t   drbg_info{};
+    alc_error_t       err = ALC_ERROR_NONE;
+
+    // FIXME: Better use unique pointer here
+    RsaBase *rb_main = {}, *rb_ext = {};
+    RngBase  rngb;
+
+    rb_main                = &arb;
+    std::string LibStrMain = "ALCP", LibStrExt = "";
+
+    /* Keysize is in bits */
+    KeySize = KeySize / 8;
+    int InputSize_Max;
+
+// #ifdef USE_OSSL
+//     OpenSSLRsaBase orb;
+//     if (useipp == false && useossl == false) {
+//         printErrors("Defaulting to OpenSSL");
+//         useossl = true;
+//     }
+//     if (useossl) {
+//         rb_ext    = &orb;
+//         LibStrExt = "OpenSSL";
+//     }
+// #else
+//     if ((useipp == false && useossl == false) || useossl == true) {
+//         printErrors("No Lib Selected. OpenSSL also not available");
+//         FAIL() << "OpenSSL not available, cannot proceed with defaults!";
+//     }
+// #endif
+#ifdef USE_IPP
+    IPPRsaBase irb;
+    if (useipp == true) {
+        rb_ext    = &irb;
+        LibStrExt = "IPP";
+    }
+#else
+    if (useipp == true) {
+        printErrors("IPP selected, but not available.");
+        FAIL() << "IPP Missing at compile time!";
+    }
+#endif
+
+    if (rb_ext == nullptr) {
+        printErrors("No external lib selected!");
+        exit(-1);
+    }
+
+    rb_main->m_padding_mode = rb_ext->m_padding_mode = padding_mode;
+    rb_main->m_digest_info = rb_ext->m_digest_info = dinfo;
+    rb_main->m_mgf_info = rb_ext->m_mgf_info = mgfinfo;
+    rb_main->m_hash_len = rb_ext->m_hash_len = dinfo.dt_len / 8;
+
+    /* use ctr-drbg to randomize the input buffer */
+    /* TO DO: maybe parameterize the DRBG type, and params in future? */
+    drbg_info.di_algoinfo.ctr_drbg.di_keysize              = 128;
+    drbg_info.di_algoinfo.ctr_drbg.use_derivation_function = true;
+    drbg_info.di_type                                      = ALC_DRBG_CTR;
+    drbg_info.max_entropy_len = drbg_info.max_nonce_len = 16;
+    drbg_info.di_rng_sourceinfo.custom_rng              = false;
+    drbg_info.di_rng_sourceinfo.di_sourceinfo.rng_info.ri_distrib =
+        ALC_RNG_DISTRIB_UNIFORM;
+    drbg_info.di_rng_sourceinfo.di_sourceinfo.rng_info.ri_source =
+        ALC_RNG_SOURCE_ARCH;
+    drbg_info.di_rng_sourceinfo.di_sourceinfo.rng_info.ri_type =
+        ALC_RNG_TYPE_DISCRETE;
+
+    err = alcp_drbg_supported(&drbg_info);
+    if (alcp_is_error(err)) {
+        std::cout << "Error: alcp_drbg_supported: " << err << std::endl;
+        FAIL();
+    }
+    handle.ch_context = malloc(alcp_drbg_context_size(&drbg_info));
+    if (handle.ch_context == nullptr) {
+        std::cout << "Error: alcp_drbg_supported: " << std::endl;
+        FAIL();
+    }
+    err = alcp_drbg_request(&handle, &drbg_info);
+    if (alcp_is_error(err)) {
+        std::cout << "Error: alcp_drbg_request: " << err << std::endl;
+        FAIL();
+    }
+    const int cSecurityStrength = 100;
+    err = alcp_drbg_initialize(&handle, cSecurityStrength, NULL, 0);
+    if (alcp_is_error(err)) {
+        std::cout << "Error: alcp_drbg_initialize: " << err << std::endl;
+        FAIL();
+    }
+
+    /*FIXME: change this*/
+    int loop_start = 1;
+    InputSize_Max  = 28;
+    for (int i = loop_start; i < InputSize_Max; i++) {
+        std::vector<Uint8> input_data(i);
+        /* shuffle input vector after each iterations */
+        err = alcp_drbg_randomize(&handle,
+                                  &(input_data[0]),
+                                  input_data.size(),
+                                  cSecurityStrength,
+                                  NULL,
+                                  0);
+        if (alcp_is_error(err)) {
+            std::cout << "Error: alcp_drbg_randomize on input data: " << err
+                      << std::endl;
+            FAIL();
+        }
+
+        std::vector<Uint8> signature_data_main(KeySize, 0);
+        std::vector<Uint8> signature_data_ext(KeySize);
+        std::vector<Uint8> PubKeyKeyMod_main(KeySize);
+        std::vector<Uint8> PubKeyKeyMod_ext(KeySize);
+
+        data_main.m_msg = data_ext.m_msg = &(input_data[0]);
+        data_main.m_pub_key_mod          = &(PubKeyKeyMod_main[0]);
+        data_ext.m_pub_key_mod           = &(PubKeyKeyMod_ext[0]);
+        data_main.m_msg_len = data_ext.m_msg_len = input_data.size();
+        data_main.m_key_len = data_ext.m_key_len = KeySize;
+
+        rb_main->m_key_len = rb_ext->m_key_len = KeySize;
+        rb_main->m_digest_info = rb_ext->m_digest_info = dinfo;
+        rb_main->m_mgf_info = rb_ext->m_mgf_info = mgfinfo;
+        rb_main->m_hash_len = rb_ext->m_hash_len = dinfo.dt_len / 8;
+
+        /* seed and label for padding mode */
+        std::vector<Uint8> salt(5);
+
+        data_main.m_signature = &(signature_data_main[0]);
+        data_ext.m_signature  = &(signature_data_ext[0]);
+        data_main.m_salt = data_ext.m_salt = &(salt[0]);
+        data_main.m_salt_len = data_ext.m_salt_len = salt.size();
+
+        /* now generate keys, call sign and verify */
+        if (!rb_main->init()) {
+            std::cout << "Error in RSA init for " << LibStrMain << std::endl;
+            FAIL();
+        }
+        if (!rb_ext->init()) {
+            std::cout << "Error in RSA init for " << LibStrExt << std::endl;
+            FAIL();
+        }
+        /* set pub key*/
+        if (!rb_main->SetPublicKey(data_main)) {
+            std::cout << "Error in RSA set pubkey for " << LibStrMain
+                      << std::endl;
+            FAIL();
+        }
+        if (!rb_ext->SetPublicKey(data_ext)) {
+            std::cout << "Error in RSA set pubkey for " << LibStrExt
+                      << std::endl;
+            FAIL();
+        }
+        /* set pvt key */
+        if (!rb_main->SetPrivateKey(data_main)) {
+            std::cout << "Error in RSA set pvt key for " << LibStrMain
+                      << std::endl;
+            FAIL();
+        }
+        if (!rb_ext->SetPrivateKey(data_ext)) {
+            std::cout << "Error in RSA set pvt key for " << LibStrExt
+                      << std::endl;
+            FAIL();
+        }
+        /* sign and verify */
+        if (rb_main->Sign(data_main) != 0) {
+            std::cout << "Error in RSA sign for " << LibStrMain << std::endl;
+            FAIL();
+        }
+        if (rb_ext->Sign(data_ext) != 0) {
+            std::cout << "Error in RSA sign for " << LibStrExt << std::endl;
+            FAIL();
+        }
+        if (rb_main->Verify(data_main) != 0) {
+            std::cout << "Error in RSA verify for " << LibStrMain << std::endl;
+            FAIL();
+        }
+        if (rb_ext->Verify(data_ext) != 0) {
+            std::cout << "Error in RSA verify for " << LibStrExt << std::endl;
+            FAIL();
+        }
+        EXPECT_TRUE(
+            ArraysMatch(signature_data_main, signature_data_ext, KeySize));
+    }
+
+    return;
+}
+
 void
 Rsa_SignVerify(int                     padding_mode,
                int                     KeySize,
