@@ -48,7 +48,8 @@ class OpenSSLRsaBase : public RsaBase
     EVP_PKEY* m_pkey_pub = nullptr;
     EVP_PKEY* m_pkey_pvt = nullptr;
 
-    OSSL_PARAM* m_params = NULL;
+    OSSL_PARAM*   m_params = NULL;
+    OSSL_LIB_CTX* m_libctx = NULL;
 
   public:
     OpenSSLRsaBase();
