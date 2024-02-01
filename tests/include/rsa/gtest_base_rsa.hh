@@ -207,7 +207,7 @@ Rsa_SignVerifyCross(int                     padding_mode,
 
     /*FIXME: change this*/
     int loop_start = 1;
-    InputSize_Max  = 28;
+    InputSize_Max  = 2048;
     for (int i = loop_start; i < InputSize_Max; i++) {
         std::vector<Uint8> input_data(i);
         /* shuffle input vector after each iterations */
@@ -297,8 +297,16 @@ Rsa_SignVerifyCross(int                     padding_mode,
         }
         EXPECT_TRUE(
             ArraysMatch(signature_data_main, signature_data_ext, KeySize));
+        // if (verbose > 1) {
+        //     PrintRsaTestData(data_main);
+        //     PrintRsaTestData(data_ext);
+        // }
     }
-
+    alcp_drbg_finish(&handle);
+    if (handle.ch_context) {
+        free(handle.ch_context);
+        handle.ch_context = nullptr;
+    }
     return;
 }
 
