@@ -29,7 +29,11 @@
 #include "alcp/cipher/chacha20.hh"
 #include <cstring>
 #include <immintrin.h>
+
 namespace alcp::cipher::chacha20::zen4 {
+
+// Reference: Vectorization on ChaCha Stream Cipher
+// https://ieeexplore.ieee.org/document/6822267
 
 inline void
 RoundFunction(__m512i& regA, __m512i& regB, __m512i& regC, __m512i& regD)
@@ -79,14 +83,14 @@ XorMessageKeyStreamStore(__m512i&        stateRegister,
 }
 
 void
-ProcessParallelBlocks(const Uint8 key[],
-                      Uint64      keylen,
-                      const Uint8 iv[],
-                      Uint64      ivlen,
-                      const Uint8 plaintext[],
-                      Uint64      plaintextLength,
-                      Uint8       ciphertext[],
-                      Uint64      chacha20ParallelBlocks)
+ProcessParallelBlocks4(const Uint8 key[],
+                       Uint64      keylen,
+                       const Uint8 iv[],
+                       Uint64      ivlen,
+                       const Uint8 plaintext[],
+                       Uint64      plaintextLength,
+                       Uint8       ciphertext[],
+                       Uint64      chacha20ParallelBlocks)
 {
     // -- Setup Registers for First Row Round Function
     // a
@@ -273,30 +277,139 @@ ProcessParallelBlocks(const Uint8 key[],
     }
 }
 
-void
-processParallelBlocks2(const Uint8 key[],
-                       Uint64      keylen,
-                       const Uint8 iv[],
-                       Uint64      ivlen,
-                       const Uint8 plaintext[],
-                       Uint64      plaintextLength,
-                       Uint8       ciphertext[],
-                       Uint64      chacha20_parallel_blocks)
+inline void
+PermuteRegisters1(__m512i& reg0,
+                  __m512i& reg1,
+                  __m512i& reg2,
+                  __m512i& reg3,
+                  __m512i& reg4,
+                  __m512i& reg5)
 {
 
-    Uint32  Chacha20Constants1[4] = { 0x61707865 };
-    Uint32  Chacha20Constants2[4] = { 0x3320646e };
-    Uint32  Chacha20Constants3[4] = { 0x79622d32 };
-    Uint32  Chacha20Constants4[4] = { 0x6b206574 };
-    __m512i reg_state_save[16];
+    // reg0 and reg1 are the input registers where in every 32 bit packed value
+    // is a part of the keystreambelonging to seperate blocks
 
-    __m512i reg_state[16], counter_reg;
+    // Using Unpack Instruction lower 32 bits of keystream into 64 bits
+    reg4 = _mm512_unpacklo_epi32(reg0,
+                                 reg1); // combine 32 bits from reg0 and 32 bits
+                                        // reg1 for the first 8 32 bit values
+    reg5 = _mm512_unpacklo_epi32(reg2,
+                                 reg3); // combine 32 bits from reg2 and 32 bits
+                                        // reg3 for the first 8 32 bit values
+
+    // Using Unpack Instruction high 32 bits of keystream into 64 bits
+    reg0 = _mm512_unpackhi_epi32(reg0,
+                                 reg1); // combine 32 bits from reg0 and 32 bits
+                                        // reg1 for the last 8 32 bit values
+    reg2 = _mm512_unpackhi_epi32(reg2,
+                                 reg3); // combine 32 bits from reg0 and 32 bits
+                                        // reg1 for the last 8 32 bit values
+
+    // At this point we have all the values we need as combined 64 bits in reg4,
+    // reg5, reg0 and reg1. Hence reg1 can be reused.
+
+    // Using 64bit unpacking combine low 64 bits of keystream into 128 bits
+    reg1 = _mm512_unpacklo_epi64(
+        reg4,
+        reg5); // Take alternate low 64 bit from reg4 and 64 bit from reg5 into
+               // reg1.
+               // {reg4[0]reg4[1]reg5[0]reg5[1]},{[reg4[4]reg4[5]reg5[4]reg5[5]}....{reg4[12]reg4[13]reg5[12]reg5[13]}
+    reg4 = _mm512_unpackhi_epi64(
+        reg4,
+        reg5); // Take alternate high 64 bit from reg4 and 64 bit from reg5 into
+               // reg1.
+               //{reg4[1]reg4[2]reg5[1]reg5[2]},{[reg4[5]reg4[6]reg5[5]reg5[6]}....{reg4[14]reg4[15]reg5[14]reg5[15]}
+
+    // Using 64bit unpacking combine high 64 bits of keystream into 128 bits
+    reg3 = _mm512_unpacklo_epi64(
+        reg0,
+        reg2); // Take alternate low 64 bit from reg0 and 64 bit from reg2 into
+               // reg3.
+               // {reg0[0]reg0[1]reg2[0]reg2[1]},{[reg0[4]reg0[5]reg2[4]reg2[5]}....{reg0[12]reg0[13]reg2[12]reg2[13]}5]}
+
+    reg0 = _mm512_unpackhi_epi64(
+        reg0,
+        reg2); // Take alternate high 64 bit from reg0 and 64 bit from reg2 into
+               // reg0.
+               //{reg0[1]reg0[2]reg2[1]reg2[2]},{[reg0[5]reg0[6]reg2[5]reg2[6]}....{reg0[14]reg0[15]reg2[14]reg2[15]}
+}
+
+inline void
+shuffleRegisters(__m512i& z1, __m512i& z2, __m512i& z3)
+{
+    // Lets consider values z1 and z2 into blocks of 128 bits for ease of 128
+    // bit shuffling.
+    // z1 = a0a1a2a3 and z2 = b0b1b2b3
+    z3 = _mm512_shuffle_i32x4(
+        z1, z2, 0x44); // mask= 0x44,= 0b 01 00 01 00, z3 = a1a0b1b0
+    z1 = _mm512_shuffle_i32x4(
+        z1, z2, 0xee); // mask= 0xee,= 0b 11 10 11 10, z1 = a3a2b3b2
+}
+
+inline void
+shuffleRegisters2(__m512i& z1, __m512i& z2, __m512i& z3)
+{
+    // Consider z1 = a0a1a2a3, z1 = b0b1b2b3, divided into 4 128 bit blocks
+    z3 = _mm512_shuffle_i32x4(
+        z2, z1, 0x22); // mask = 0x22 => 0b 00 10 00 10, z3 = a0a2b0b2
+    z2 = _mm512_shuffle_i32x4(
+        z2, z1, 0x77); // mask = 0x77 => 0b 01 11 01 11, z2 = a1a3b1b3
+}
+inline void
+PermuteRegistersByShuffling2(__m512i& reg_state_0,
+                             __m512i& reg_state_1,
+                             __m512i& reg_state_2,
+                             __m512i& reg_state_3,
+                             __m512i& reg_state_4,
+                             __m512i& reg_state_5,
+                             __m512i& reg_state_6,
+                             __m512i& reg_state_7,
+                             __m512i& temp_state0,
+                             __m512i& temp_state1)
+{
+    shuffleRegisters(reg_state_5, reg_state_1, temp_state1);
+    shuffleRegisters(reg_state_2, temp_state0, reg_state_1);
+    shuffleRegisters(reg_state_7, reg_state_3, temp_state0);
+    shuffleRegisters(reg_state_4, reg_state_0, reg_state_3);
+}
+inline void
+XorKeyStoreNew(__m512i&        plaintext_reg,
+               const __m512i*& p_plaintext_512,
+               __m512i&        key_reg,
+               __m512i*&       p_ciphertext_512)
+{
+
+    plaintext_reg = _mm512_loadu_si512(p_plaintext_512);
+    key_reg       = _mm512_xor_si512(key_reg, plaintext_reg);
+    _mm512_storeu_si512(p_ciphertext_512, key_reg);
+    p_plaintext_512++;
+    p_ciphertext_512++;
+}
+
+void
+ProcessParallelBlocks16(const Uint8 key[],
+                        Uint64      keylen,
+                        const Uint8 iv[],
+                        Uint64      ivlen,
+                        const Uint8 plaintext[],
+                        Uint64      plaintextLength,
+                        Uint8       ciphertext[],
+                        Uint64      chacha20_parallel_blocks)
+{
+
+    constexpr Uint32 chacha20_constants1 = 0x61707865;
+    constexpr Uint32 chacha20_constants2 = 0x3320646e;
+    constexpr Uint32 chacha20_constants3 = 0x79622d32;
+    constexpr Uint32 chacha20_constants4 = 0x6b206574;
+    __m512i          reg_state_save[16];
+
+    __m512i reg_state[16];
     // -- Setup Registers for First Row Round Function
     // a
-    reg_state_save[0] = _mm512_set1_epi32(*Chacha20Constants1);
-    reg_state_save[1] = _mm512_set1_epi32(*Chacha20Constants2);
-    reg_state_save[2] = _mm512_set1_epi32(*Chacha20Constants3);
-    reg_state_save[3] = _mm512_set1_epi32(*Chacha20Constants4);
+    reg_state_save[0] = _mm512_set1_epi32(chacha20_constants1);
+    reg_state_save[1] = _mm512_set1_epi32(chacha20_constants2);
+    reg_state_save[2] = _mm512_set1_epi32(chacha20_constants3);
+    reg_state_save[3] = _mm512_set1_epi32(chacha20_constants4);
 
     // b
     reg_state_save[4] =
@@ -327,24 +440,24 @@ processParallelBlocks2(const Uint8 key[],
     reg_state_save[15] =
         _mm512_set1_epi32(*reinterpret_cast<const Uint32*>(iv + 12));
 
-    counter_reg =
-        _mm512_setr_epi32(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-
     const __m512i inc_reg = _mm512_setr_epi32(
         16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16);
+    reg_state_save[12] = _mm512_add_epi32(
+        reg_state_save[12],
+        _mm512_setr_epi32(
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15));
 
+    // reg_state_save[16] values will never change inside the loop except for
+    // reg_state_save[12] which is used to save the counter value
     // clang-format on
 
     for (Uint64 k = 0; k < chacha20_parallel_blocks; k++) {
 
         // Restoring the registers to last Round State
+
         for (int i = 0; i < 16; i++) {
             reg_state[i] = reg_state_save[i];
         }
-
-        reg_state[12]      = _mm512_add_epi32(reg_state[12], counter_reg);
-        reg_state_save[12] = reg_state[12];
-
         for (int i = 0; i < 10; i++) {
 
             // -- Row Round Register Setup Complete.
@@ -369,21 +482,197 @@ processParallelBlocks2(const Uint8 key[],
             RoundFunction(
                 reg_state[3], reg_state[4], reg_state[9], reg_state[14]);
         }
-        for (int i = 0; i < 15; i++) {
+
+        for (int i = 0; i < 16; i++) {
             reg_state[i] = _mm512_add_epi32(reg_state[i], reg_state_save[i]);
         }
 
-        // TODO: Optimize the Extraction of the keystream with permutation
-        // instructions
-        for (int i = 0; i < 16; i++) {
-            for (int k = 0; k < 16; k++) {
-                memcpy(ciphertext + 64 * i + k * 4,
-                       &(reinterpret_cast<Uint32*>(&reg_state[k])[i]),
-                       sizeof(Uint32));
-            }
-        }
-        counter_reg = _mm512_add_epi32(counter_reg, inc_reg);
+        __m512i temp[2];
+
+        // Once call is complete, only registers
+        // reg_state[0],reg_state[1],reg_state[3],temp[0] are required.
+        // Registers reg_state[2] and temp[1] can be reused
+        PermuteRegisters1(reg_state[0],
+                          reg_state[1],
+                          reg_state[2],
+                          reg_state[3],
+                          temp[0],
+                          temp[1]);
+
+        // Registers reg_state[6] and reg_state[2] can be reused
+        PermuteRegisters1(reg_state[4],
+                          reg_state[5],
+                          reg_state[6],
+                          reg_state[7],
+                          reg_state[2], // Reusing reg_state[2] and temp[1]
+                          temp[1]);
+
+        // Registers reg_state[0],reg_state[6] can be reused
+        PermuteRegistersByShuffling2(reg_state[0],
+                                     reg_state[1],
+                                     reg_state[2],
+                                     reg_state[3],
+                                     reg_state[4],
+                                     reg_state[5],
+                                     reg_state[6],
+                                     reg_state[7],
+                                     temp[0],
+                                     temp[1]);
+        // // Registers reg_state[10] and reg_state[0] can be reused
+        PermuteRegisters1(reg_state[8],
+                          reg_state[9],
+                          reg_state[10],
+                          reg_state[11],
+                          reg_state[6],
+                          reg_state[0]);
+
+        // // // Registers reg_state[14] and reg_state[0] can be reused
+        PermuteRegisters1(reg_state[12],
+                          reg_state[13],
+                          reg_state[14],
+                          reg_state[15],
+                          reg_state[10],
+                          reg_state[0]);
+        // reg_state[8] and reg_state[14] can be reused
+        PermuteRegistersByShuffling2(reg_state[8],
+                                     reg_state[9],
+                                     reg_state[10],
+                                     reg_state[11],
+                                     reg_state[12],
+                                     reg_state[13],
+                                     reg_state[14],
+                                     reg_state[15],
+                                     reg_state[6],
+                                     reg_state[0]);
+
+        __m512i output_reg[2];
+        // temp[1]=block 4 and output_reg[0] = Block 0
+        shuffleRegisters2(reg_state[0], temp[1], output_reg[0]);
+
+        // reg_state[5]=Block 12 and reg_state[0]= Block 8
+        shuffleRegisters2(reg_state[13], reg_state[5], reg_state[0]);
+
+        // output_reg[1] = Block 1 and reg_state[1] = Block 5
+        shuffleRegisters2(reg_state[9], reg_state[1], output_reg[1]);
+
+        // reg_state[2] = Block 13 and reg_state[9] = Block 9
+        shuffleRegisters2(reg_state[10], reg_state[2], reg_state[9]);
+
+        // temp[0] = Block 6 and reg_state[14] = Block 2
+        shuffleRegisters2(reg_state[6], temp[0], reg_state[14]);
+
+        // reg_state[7]= Block 14 and reg_state[6] = Block 10
+        shuffleRegisters2(reg_state[15], reg_state[7], reg_state[6]);
+
+        //  reg_state[3] = Block 7 and  reg_state[8] = Block 3
+        shuffleRegisters2(reg_state[11], reg_state[3], reg_state[8]);
+
+        // reg_state[4] = Block 15 and  reg_state[11] = Block 11
+        shuffleRegisters2(reg_state[12], reg_state[4], reg_state[11]);
+
+        auto p_plaintext_512  = reinterpret_cast<const __m512i*>(plaintext);
+        auto p_ciphertext_512 = reinterpret_cast<__m512i*>(ciphertext);
+
+        __m512i plaintext_reg;
+        XorKeyStoreNew(
+            plaintext_reg, p_plaintext_512, output_reg[0], p_ciphertext_512);
+        XorKeyStoreNew(
+            plaintext_reg, p_plaintext_512, output_reg[1], p_ciphertext_512);
+        XorKeyStoreNew(
+            plaintext_reg, p_plaintext_512, reg_state[14], p_ciphertext_512);
+        XorKeyStoreNew(
+            plaintext_reg, p_plaintext_512, reg_state[8], p_ciphertext_512);
+        XorKeyStoreNew(
+            plaintext_reg, p_plaintext_512, temp[1], p_ciphertext_512);
+        XorKeyStoreNew(
+            plaintext_reg, p_plaintext_512, reg_state[1], p_ciphertext_512);
+        XorKeyStoreNew(
+            plaintext_reg, p_plaintext_512, temp[0], p_ciphertext_512);
+        XorKeyStoreNew(
+            plaintext_reg, p_plaintext_512, reg_state[3], p_ciphertext_512);
+        XorKeyStoreNew(
+            plaintext_reg, p_plaintext_512, reg_state[0], p_ciphertext_512);
+        XorKeyStoreNew(
+            plaintext_reg, p_plaintext_512, reg_state[9], p_ciphertext_512);
+        XorKeyStoreNew(
+            plaintext_reg, p_plaintext_512, reg_state[6], p_ciphertext_512);
+        XorKeyStoreNew(
+            plaintext_reg, p_plaintext_512, reg_state[11], p_ciphertext_512);
+        XorKeyStoreNew(
+            plaintext_reg, p_plaintext_512, reg_state[5], p_ciphertext_512);
+        XorKeyStoreNew(
+            plaintext_reg, p_plaintext_512, reg_state[2], p_ciphertext_512);
+        XorKeyStoreNew(
+            plaintext_reg, p_plaintext_512, reg_state[7], p_ciphertext_512);
+        XorKeyStoreNew(
+            plaintext_reg, p_plaintext_512, reg_state[4], p_ciphertext_512);
+        plaintext += 1024;
+        ciphertext += 1024;
+        reg_state_save[12] = _mm512_add_epi32(reg_state_save[12], inc_reg);
     }
+}
+
+template<int  block_size,
+         void F(const Uint8[],
+                Uint64,
+                const Uint8[],
+                Uint64,
+                const Uint8[],
+                Uint64,
+                Uint8[],
+                Uint64)>
+
+alc_error_t
+dispatchBasedOnBlockSize(const Uint8*& key,
+                         Uint64&       keylen,
+                         const Uint8*& iv,
+                         Uint64&       ivlen,
+                         const Uint8*& plaintext,
+                         Uint64&       plaintextLength,
+                         Uint8*&       ciphertext)
+{
+    Uint64 chacha20_parallel_blocks = plaintextLength / block_size;
+    Uint64 chacha20_non_parallel_bytes =
+        plaintextLength - (chacha20_parallel_blocks * block_size);
+
+    if (chacha20_parallel_blocks > 0) {
+        F(key,
+          keylen,
+          iv,
+          ivlen,
+          plaintext,
+          plaintextLength,
+          ciphertext,
+          chacha20_parallel_blocks);
+
+        plaintext += chacha20_parallel_blocks * block_size;
+        ciphertext += chacha20_parallel_blocks * block_size;
+    }
+
+    if (chacha20_non_parallel_bytes > 0) {
+        Uint8 chacha20_key_stream[block_size] = {};
+        Uint8 iv_copy[16];
+        memcpy(iv_copy, iv, 16);
+        if (chacha20_parallel_blocks > 0) {
+            (*(reinterpret_cast<Uint32*>(iv_copy))) +=
+                (block_size / 64) * chacha20_parallel_blocks;
+        }
+        F(key,
+          keylen,
+          iv_copy,
+          ivlen,
+          chacha20_key_stream,
+          block_size,
+          chacha20_key_stream,
+          1);
+        for (Uint64 i = 0; i < chacha20_non_parallel_bytes; i++) {
+            *(ciphertext) = chacha20_key_stream[i] ^ *(plaintext);
+            plaintext++;
+            ciphertext++;
+        }
+    }
+
+    return ALC_ERROR_NONE;
 }
 
 alc_error_t
@@ -395,52 +684,14 @@ ProcessInput(const Uint8 key[],
              Uint64      plaintextLength,
              Uint8       ciphertext[])
 {
-    Uint64 chacha20_parallel_blocks = plaintextLength / 1024;
-    Uint64 chacha20_non_parallel_bytes =
-        plaintextLength - (chacha20_parallel_blocks * 1024);
-    if (chacha20_parallel_blocks > 0) {
-        processParallelBlocks2(key,
-                               keylen,
-                               iv,
-                               ivlen,
-                               plaintext,
-                               plaintextLength,
-                               ciphertext,
-                               chacha20_parallel_blocks);
 
-        for (Uint64 i = 0; i < (chacha20_parallel_blocks * 1024); i++) {
-            *(ciphertext) = *ciphertext ^ *(plaintext);
-            plaintext++;
-            ciphertext++;
-        }
-        // plaintext += chacha20_parallel_blocks * 1024;
-        // ciphertext += chacha20_parallel_blocks * 1024;
-    }
-
-    if (chacha20_non_parallel_bytes > 0) {
-        Uint8 chacha20_key_stream[1024] = {};
-        Uint8 iv_copy[24];
-        memcpy(iv_copy, iv, 24);
-        if (chacha20_parallel_blocks > 0) {
-            (*(reinterpret_cast<Uint32*>(iv_copy))) +=
-                4 * chacha20_parallel_blocks;
-        }
-        processParallelBlocks2(key,
-                               keylen,
-                               iv_copy,
-                               ivlen,
-                               chacha20_key_stream,
-                               1024,
-                               chacha20_key_stream,
-                               1);
-        for (Uint64 i = 0; i < chacha20_non_parallel_bytes; i++) {
-            *(ciphertext) = chacha20_key_stream[i] ^ *(plaintext);
-            plaintext++;
-            ciphertext++;
-        }
-    }
-
-    return ALC_ERROR_NONE;
+    if (plaintextLength < 1024) {
+        return dispatchBasedOnBlockSize<256, ProcessParallelBlocks4>(
+            key, keylen, iv, ivlen, plaintext, plaintextLength, ciphertext);
+    } else {
+        return dispatchBasedOnBlockSize<1024, ProcessParallelBlocks16>(
+            key, keylen, iv, ivlen, plaintext, plaintextLength, ciphertext);
+    };
 }
 
 alc_error_t
