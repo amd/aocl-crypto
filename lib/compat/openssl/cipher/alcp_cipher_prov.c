@@ -960,16 +960,9 @@ ALCP_prov_cipher_cbc_update(void*                vctx,
                             const unsigned char* in,
                             size_t               inl)
 {
-    alc_prov_cipher_ctx_p cctx     = vctx;
-    alc_error_t           err      = ALC_ERROR_NONE;
-    const int             err_size = 256;
-    Uint8                 err_buf[err_size];
+    alc_prov_cipher_ctx_p cctx = vctx;
+    alc_error_t           err  = ALC_ERROR_NONE;
     ENTER();
-
-    if (inl == 0) {
-        *outl = inl;
-        return 1;
-    }
 
     if (cctx->enc_flag) {
         err = alcp_cipher_encrypt(&(cctx->handle),
@@ -985,7 +978,9 @@ ALCP_prov_cipher_cbc_update(void*                vctx,
                                   cctx->pc_cipher_info.ci_algo_info.ai_iv);
     }
 
-    if (alcp_is_error(err)) {
+    if (err != ALC_ERROR_NONE) {
+        const int err_size = 256;
+        Uint8     err_buf[err_size];
         alcp_error_str(err, err_buf, err_size);
         printf("Provider: Encyption/Decryption Failure! ALCP:%s\n", err_buf);
         printf("%p,%10" PRId64 "%p\n", (void*)in, inl, (void*)out);
