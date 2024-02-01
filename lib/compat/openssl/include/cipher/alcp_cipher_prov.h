@@ -108,8 +108,12 @@ OSSL_FUNC_cipher_get_ctx_params_fn ALCP_prov_cipher_get_ctx_params;
 OSSL_FUNC_cipher_set_ctx_params_fn ALCP_prov_cipher_set_ctx_params;
 OSSL_FUNC_cipher_encrypt_init_fn   ALCP_prov_cipher_encrypt_init;
 OSSL_FUNC_cipher_decrypt_init_fn   ALCP_prov_cipher_decrypt_init;
-OSSL_FUNC_cipher_update_fn         ALCP_prov_cipher_update;
-OSSL_FUNC_cipher_final_fn          ALCP_prov_cipher_final;
+OSSL_FUNC_cipher_update_fn         ALCP_prov_cipher_cfb_update,
+    ALCP_prov_cipher_cbc_update, ALCP_prov_cipher_ofb_update,
+    ALCP_prov_cipher_ecb_update, ALCP_prov_cipher_ctr_update,
+    ALCP_prov_cipher_xts_update, ALCP_prov_cipher_gcm_update,
+    ALCP_prov_cipher_ccm_update, ALCP_prov_cipher_siv_update;
+OSSL_FUNC_cipher_final_fn ALCP_prov_cipher_final;
 
 // Macro for Context Creation
 #define CIPHER_CONTEXT(mode, alcp_mode)                                        \
@@ -207,7 +211,7 @@ OSSL_FUNC_cipher_final_fn          ALCP_prov_cipher_final;
           (fptr_t)ALCP_prov_##name##_encrypt_init_##key_size },                \
         { OSSL_FUNC_CIPHER_DECRYPT_INIT,                                       \
           (fptr_t)ALCP_prov_##name##_decrypt_init_##key_size },                \
-        { OSSL_FUNC_CIPHER_UPDATE, (fptr_t)ALCP_prov_cipher_update },          \
+        { OSSL_FUNC_CIPHER_UPDATE, (fptr_t)ALCP_prov_cipher_##name##_update }, \
         { OSSL_FUNC_CIPHER_FINAL, (fptr_t)ALCP_prov_cipher_final },            \
     }
 

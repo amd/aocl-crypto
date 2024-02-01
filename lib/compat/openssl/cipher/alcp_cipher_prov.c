@@ -793,12 +793,1292 @@ ALCP_prov_cipher_decrypt_init(void*                vctx,
 }
 
 int
-ALCP_prov_cipher_update(void*                vctx,
-                        unsigned char*       out,
-                        size_t*              outl,
-                        size_t               outsize,
-                        const unsigned char* in,
-                        size_t               inl)
+ALCP_prov_cipher_cfb_update(void*                vctx,
+                            unsigned char*       out,
+                            size_t*              outl,
+                            size_t               outsize,
+                            const unsigned char* in,
+                            size_t               inl)
+{
+    alc_prov_cipher_ctx_p cctx = vctx;
+    alc_error_t           err  = ALC_ERROR_NONE;
+    // alc_cipher_info_p      cinfo      = &cctx->pc_cipher_info;
+    alc_cipher_aead_info_p c_aeadinfo = &cctx->pc_cipher_aead_info;
+    const int              err_size   = 256;
+    Uint8                  err_buf[err_size];
+    ENTER();
+
+    if (inl == 0) {
+        *outl = inl;
+        return 1;
+    }
+
+    if (cctx->enc_flag) {
+        if (cctx->is_aead
+            && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_CCM) {
+            if (out == NULL && outl != NULL && in != NULL) { // AAD call
+                cctx->aadlen = inl;
+                cctx->aad    = in;
+            } else if (out != NULL && outl != NULL
+                       && in != NULL) { // Encrypt Call
+                err = alcp_cipher_aead_set_tag_length(&(cctx->handle),
+                                                      cctx->taglen);
+                if (alcp_is_error(err))
+                    goto out;
+                err = alcp_cipher_aead_set_iv(
+                    &(cctx->handle),
+                    cctx->ivlen,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err))
+                    goto out;
+                if (cctx->aadlen != 0) {
+                    err = alcp_cipher_aead_set_aad(
+                        &(cctx->handle), cctx->aad, cctx->aadlen);
+                    if (alcp_is_error(err))
+                        goto out;
+                }
+                cctx->add_inititalized = true;
+                err                    = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                err = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                Uint8 fake_iv[100] = { 0 };
+                err                = alcp_cipher_aead_encrypt(
+                    &(cctx->handle), in, out, inl, fake_iv);
+            }
+        } else {
+            err = alcp_cipher_encrypt(&(cctx->handle),
+                                      in,
+                                      out,
+                                      inl,
+                                      cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
+    } else {
+        if (cctx->is_aead
+            && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_CCM) {
+            if (out == NULL && outl != NULL && in != NULL) { // AAD call
+                cctx->aadlen = inl;
+                cctx->aad    = in;
+            } else if (out != NULL && outl != NULL
+                       && in != NULL) { // Encrypt Call
+                err = alcp_cipher_aead_set_tag_length(&(cctx->handle),
+                                                      cctx->taglen);
+                if (alcp_is_error(err))
+                    goto out;
+                err = alcp_cipher_aead_set_iv(
+                    &(cctx->handle),
+                    cctx->ivlen,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err))
+                    goto out;
+                if (cctx->aadlen != 0) {
+                    err = alcp_cipher_aead_set_aad(
+                        &(cctx->handle), cctx->aad, cctx->aadlen);
+                    if (alcp_is_error(err))
+                        goto out;
+                }
+                cctx->add_inititalized = true;
+                err                    = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                err = alcp_cipher_aead_decrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                // IV must be copied to cctx->tagbuff when application calls
+                // EVP_CIPHER_CTX_ctrl call with EVP_CTRL_AEAD_SET_TAG. This
+                // is done in ALCP_prov_cipher_set_ctx_params call.
+                err = alcp_cipher_decrypt(
+                    &(cctx->handle), in, out, inl, cctx->tagbuff);
+            }
+        } else {
+            err = alcp_cipher_decrypt(&(cctx->handle),
+                                      in,
+                                      out,
+                                      inl,
+                                      cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
+    }
+
+out:
+    if (alcp_is_error(err)) {
+        alcp_error_str(err, err_buf, err_size);
+        printf("Provider: Encyption/Decryption Failure! ALCP:%s\n", err_buf);
+        printf("%p,%10" PRId64 "%p\n", (void*)in, inl, (void*)out);
+        printf("%d\n",
+               cctx->pc_cipher_info.ci_algo_info.ai_mode == ALC_AES_MODE_CFB);
+        printf("%p\n", (void*)cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        alcp_error_str(err, err_buf, err_size);
+        return 0;
+    }
+    *outl = inl;
+    return 1;
+}
+
+int
+ALCP_prov_cipher_cbc_update(void*                vctx,
+                            unsigned char*       out,
+                            size_t*              outl,
+                            size_t               outsize,
+                            const unsigned char* in,
+                            size_t               inl)
+{
+    alc_prov_cipher_ctx_p cctx = vctx;
+    alc_error_t           err  = ALC_ERROR_NONE;
+    // alc_cipher_info_p      cinfo      = &cctx->pc_cipher_info;
+    alc_cipher_aead_info_p c_aeadinfo = &cctx->pc_cipher_aead_info;
+    const int              err_size   = 256;
+    Uint8                  err_buf[err_size];
+    ENTER();
+
+    if (inl == 0) {
+        *outl = inl;
+        return 1;
+    }
+
+    if (cctx->enc_flag) {
+        if (cctx->is_aead
+            && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_CCM) {
+            if (out == NULL && outl != NULL && in != NULL) { // AAD call
+                cctx->aadlen = inl;
+                cctx->aad    = in;
+            } else if (out != NULL && outl != NULL
+                       && in != NULL) { // Encrypt Call
+                err = alcp_cipher_aead_set_tag_length(&(cctx->handle),
+                                                      cctx->taglen);
+                if (alcp_is_error(err))
+                    goto out;
+                err = alcp_cipher_aead_set_iv(
+                    &(cctx->handle),
+                    cctx->ivlen,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err))
+                    goto out;
+                if (cctx->aadlen != 0) {
+                    err = alcp_cipher_aead_set_aad(
+                        &(cctx->handle), cctx->aad, cctx->aadlen);
+                    if (alcp_is_error(err))
+                        goto out;
+                }
+                cctx->add_inititalized = true;
+                err                    = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                err = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                Uint8 fake_iv[100] = { 0 };
+                err                = alcp_cipher_aead_encrypt(
+                    &(cctx->handle), in, out, inl, fake_iv);
+            }
+        } else {
+            err = alcp_cipher_encrypt(&(cctx->handle),
+                                      in,
+                                      out,
+                                      inl,
+                                      cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
+    } else {
+        if (cctx->is_aead
+            && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_CCM) {
+            if (out == NULL && outl != NULL && in != NULL) { // AAD call
+                cctx->aadlen = inl;
+                cctx->aad    = in;
+            } else if (out != NULL && outl != NULL
+                       && in != NULL) { // Encrypt Call
+                err = alcp_cipher_aead_set_tag_length(&(cctx->handle),
+                                                      cctx->taglen);
+                if (alcp_is_error(err))
+                    goto out;
+                err = alcp_cipher_aead_set_iv(
+                    &(cctx->handle),
+                    cctx->ivlen,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err))
+                    goto out;
+                if (cctx->aadlen != 0) {
+                    err = alcp_cipher_aead_set_aad(
+                        &(cctx->handle), cctx->aad, cctx->aadlen);
+                    if (alcp_is_error(err))
+                        goto out;
+                }
+                cctx->add_inititalized = true;
+                err                    = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                err = alcp_cipher_aead_decrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                // IV must be copied to cctx->tagbuff when application calls
+                // EVP_CIPHER_CTX_ctrl call with EVP_CTRL_AEAD_SET_TAG. This
+                // is done in ALCP_prov_cipher_set_ctx_params call.
+                err = alcp_cipher_decrypt(
+                    &(cctx->handle), in, out, inl, cctx->tagbuff);
+            }
+        } else {
+            err = alcp_cipher_decrypt(&(cctx->handle),
+                                      in,
+                                      out,
+                                      inl,
+                                      cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
+    }
+
+out:
+    if (alcp_is_error(err)) {
+        alcp_error_str(err, err_buf, err_size);
+        printf("Provider: Encyption/Decryption Failure! ALCP:%s\n", err_buf);
+        printf("%p,%10" PRId64 "%p\n", (void*)in, inl, (void*)out);
+        printf("%d\n",
+               cctx->pc_cipher_info.ci_algo_info.ai_mode == ALC_AES_MODE_CFB);
+        printf("%p\n", (void*)cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        alcp_error_str(err, err_buf, err_size);
+        return 0;
+    }
+    *outl = inl;
+    return 1;
+}
+
+int
+ALCP_prov_cipher_ofb_update(void*                vctx,
+                            unsigned char*       out,
+                            size_t*              outl,
+                            size_t               outsize,
+                            const unsigned char* in,
+                            size_t               inl)
+{
+    alc_prov_cipher_ctx_p cctx = vctx;
+    alc_error_t           err  = ALC_ERROR_NONE;
+    // alc_cipher_info_p      cinfo      = &cctx->pc_cipher_info;
+    alc_cipher_aead_info_p c_aeadinfo = &cctx->pc_cipher_aead_info;
+    const int              err_size   = 256;
+    Uint8                  err_buf[err_size];
+    ENTER();
+
+    if (inl == 0) {
+        *outl = inl;
+        return 1;
+    }
+
+    if (cctx->enc_flag) {
+        if (cctx->is_aead
+            && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_CCM) {
+            if (out == NULL && outl != NULL && in != NULL) { // AAD call
+                cctx->aadlen = inl;
+                cctx->aad    = in;
+            } else if (out != NULL && outl != NULL
+                       && in != NULL) { // Encrypt Call
+                err = alcp_cipher_aead_set_tag_length(&(cctx->handle),
+                                                      cctx->taglen);
+                if (alcp_is_error(err))
+                    goto out;
+                err = alcp_cipher_aead_set_iv(
+                    &(cctx->handle),
+                    cctx->ivlen,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err))
+                    goto out;
+                if (cctx->aadlen != 0) {
+                    err = alcp_cipher_aead_set_aad(
+                        &(cctx->handle), cctx->aad, cctx->aadlen);
+                    if (alcp_is_error(err))
+                        goto out;
+                }
+                cctx->add_inititalized = true;
+                err                    = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                err = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                Uint8 fake_iv[100] = { 0 };
+                err                = alcp_cipher_aead_encrypt(
+                    &(cctx->handle), in, out, inl, fake_iv);
+            }
+        } else {
+            err = alcp_cipher_encrypt(&(cctx->handle),
+                                      in,
+                                      out,
+                                      inl,
+                                      cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
+    } else {
+        if (cctx->is_aead
+            && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_CCM) {
+            if (out == NULL && outl != NULL && in != NULL) { // AAD call
+                cctx->aadlen = inl;
+                cctx->aad    = in;
+            } else if (out != NULL && outl != NULL
+                       && in != NULL) { // Encrypt Call
+                err = alcp_cipher_aead_set_tag_length(&(cctx->handle),
+                                                      cctx->taglen);
+                if (alcp_is_error(err))
+                    goto out;
+                err = alcp_cipher_aead_set_iv(
+                    &(cctx->handle),
+                    cctx->ivlen,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err))
+                    goto out;
+                if (cctx->aadlen != 0) {
+                    err = alcp_cipher_aead_set_aad(
+                        &(cctx->handle), cctx->aad, cctx->aadlen);
+                    if (alcp_is_error(err))
+                        goto out;
+                }
+                cctx->add_inititalized = true;
+                err                    = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                err = alcp_cipher_aead_decrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                // IV must be copied to cctx->tagbuff when application calls
+                // EVP_CIPHER_CTX_ctrl call with EVP_CTRL_AEAD_SET_TAG. This
+                // is done in ALCP_prov_cipher_set_ctx_params call.
+                err = alcp_cipher_decrypt(
+                    &(cctx->handle), in, out, inl, cctx->tagbuff);
+            }
+        } else {
+            err = alcp_cipher_decrypt(&(cctx->handle),
+                                      in,
+                                      out,
+                                      inl,
+                                      cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
+    }
+
+out:
+    if (alcp_is_error(err)) {
+        alcp_error_str(err, err_buf, err_size);
+        printf("Provider: Encyption/Decryption Failure! ALCP:%s\n", err_buf);
+        printf("%p,%10" PRId64 "%p\n", (void*)in, inl, (void*)out);
+        printf("%d\n",
+               cctx->pc_cipher_info.ci_algo_info.ai_mode == ALC_AES_MODE_CFB);
+        printf("%p\n", (void*)cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        alcp_error_str(err, err_buf, err_size);
+        return 0;
+    }
+    *outl = inl;
+    return 1;
+}
+
+int
+ALCP_prov_cipher_ecb_update(void*                vctx,
+                            unsigned char*       out,
+                            size_t*              outl,
+                            size_t               outsize,
+                            const unsigned char* in,
+                            size_t               inl)
+{
+    alc_prov_cipher_ctx_p cctx = vctx;
+    alc_error_t           err  = ALC_ERROR_NONE;
+    // alc_cipher_info_p      cinfo      = &cctx->pc_cipher_info;
+    alc_cipher_aead_info_p c_aeadinfo = &cctx->pc_cipher_aead_info;
+    const int              err_size   = 256;
+    Uint8                  err_buf[err_size];
+    ENTER();
+
+    if (inl == 0) {
+        *outl = inl;
+        return 1;
+    }
+
+    if (cctx->enc_flag) {
+        if (cctx->is_aead
+            && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_CCM) {
+            if (out == NULL && outl != NULL && in != NULL) { // AAD call
+                cctx->aadlen = inl;
+                cctx->aad    = in;
+            } else if (out != NULL && outl != NULL
+                       && in != NULL) { // Encrypt Call
+                err = alcp_cipher_aead_set_tag_length(&(cctx->handle),
+                                                      cctx->taglen);
+                if (alcp_is_error(err))
+                    goto out;
+                err = alcp_cipher_aead_set_iv(
+                    &(cctx->handle),
+                    cctx->ivlen,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err))
+                    goto out;
+                if (cctx->aadlen != 0) {
+                    err = alcp_cipher_aead_set_aad(
+                        &(cctx->handle), cctx->aad, cctx->aadlen);
+                    if (alcp_is_error(err))
+                        goto out;
+                }
+                cctx->add_inititalized = true;
+                err                    = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                err = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                Uint8 fake_iv[100] = { 0 };
+                err                = alcp_cipher_aead_encrypt(
+                    &(cctx->handle), in, out, inl, fake_iv);
+            }
+        } else {
+            err = alcp_cipher_encrypt(&(cctx->handle),
+                                      in,
+                                      out,
+                                      inl,
+                                      cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
+    } else {
+        if (cctx->is_aead
+            && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_CCM) {
+            if (out == NULL && outl != NULL && in != NULL) { // AAD call
+                cctx->aadlen = inl;
+                cctx->aad    = in;
+            } else if (out != NULL && outl != NULL
+                       && in != NULL) { // Encrypt Call
+                err = alcp_cipher_aead_set_tag_length(&(cctx->handle),
+                                                      cctx->taglen);
+                if (alcp_is_error(err))
+                    goto out;
+                err = alcp_cipher_aead_set_iv(
+                    &(cctx->handle),
+                    cctx->ivlen,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err))
+                    goto out;
+                if (cctx->aadlen != 0) {
+                    err = alcp_cipher_aead_set_aad(
+                        &(cctx->handle), cctx->aad, cctx->aadlen);
+                    if (alcp_is_error(err))
+                        goto out;
+                }
+                cctx->add_inititalized = true;
+                err                    = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                err = alcp_cipher_aead_decrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                // IV must be copied to cctx->tagbuff when application calls
+                // EVP_CIPHER_CTX_ctrl call with EVP_CTRL_AEAD_SET_TAG. This
+                // is done in ALCP_prov_cipher_set_ctx_params call.
+                err = alcp_cipher_decrypt(
+                    &(cctx->handle), in, out, inl, cctx->tagbuff);
+            }
+        } else {
+            err = alcp_cipher_decrypt(&(cctx->handle),
+                                      in,
+                                      out,
+                                      inl,
+                                      cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
+    }
+
+out:
+    if (alcp_is_error(err)) {
+        alcp_error_str(err, err_buf, err_size);
+        printf("Provider: Encyption/Decryption Failure! ALCP:%s\n", err_buf);
+        printf("%p,%10" PRId64 "%p\n", (void*)in, inl, (void*)out);
+        printf("%d\n",
+               cctx->pc_cipher_info.ci_algo_info.ai_mode == ALC_AES_MODE_CFB);
+        printf("%p\n", (void*)cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        alcp_error_str(err, err_buf, err_size);
+        return 0;
+    }
+    *outl = inl;
+    return 1;
+}
+
+int
+ALCP_prov_cipher_ctr_update(void*                vctx,
+                            unsigned char*       out,
+                            size_t*              outl,
+                            size_t               outsize,
+                            const unsigned char* in,
+                            size_t               inl)
+{
+    alc_prov_cipher_ctx_p cctx = vctx;
+    alc_error_t           err  = ALC_ERROR_NONE;
+    // alc_cipher_info_p      cinfo      = &cctx->pc_cipher_info;
+    alc_cipher_aead_info_p c_aeadinfo = &cctx->pc_cipher_aead_info;
+    const int              err_size   = 256;
+    Uint8                  err_buf[err_size];
+    ENTER();
+
+    if (inl == 0) {
+        *outl = inl;
+        return 1;
+    }
+
+    if (cctx->enc_flag) {
+        if (cctx->is_aead
+            && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_CCM) {
+            if (out == NULL && outl != NULL && in != NULL) { // AAD call
+                cctx->aadlen = inl;
+                cctx->aad    = in;
+            } else if (out != NULL && outl != NULL
+                       && in != NULL) { // Encrypt Call
+                err = alcp_cipher_aead_set_tag_length(&(cctx->handle),
+                                                      cctx->taglen);
+                if (alcp_is_error(err))
+                    goto out;
+                err = alcp_cipher_aead_set_iv(
+                    &(cctx->handle),
+                    cctx->ivlen,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err))
+                    goto out;
+                if (cctx->aadlen != 0) {
+                    err = alcp_cipher_aead_set_aad(
+                        &(cctx->handle), cctx->aad, cctx->aadlen);
+                    if (alcp_is_error(err))
+                        goto out;
+                }
+                cctx->add_inititalized = true;
+                err                    = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                err = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                Uint8 fake_iv[100] = { 0 };
+                err                = alcp_cipher_aead_encrypt(
+                    &(cctx->handle), in, out, inl, fake_iv);
+            }
+        } else {
+            err = alcp_cipher_encrypt(&(cctx->handle),
+                                      in,
+                                      out,
+                                      inl,
+                                      cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
+    } else {
+        if (cctx->is_aead
+            && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_CCM) {
+            if (out == NULL && outl != NULL && in != NULL) { // AAD call
+                cctx->aadlen = inl;
+                cctx->aad    = in;
+            } else if (out != NULL && outl != NULL
+                       && in != NULL) { // Encrypt Call
+                err = alcp_cipher_aead_set_tag_length(&(cctx->handle),
+                                                      cctx->taglen);
+                if (alcp_is_error(err))
+                    goto out;
+                err = alcp_cipher_aead_set_iv(
+                    &(cctx->handle),
+                    cctx->ivlen,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err))
+                    goto out;
+                if (cctx->aadlen != 0) {
+                    err = alcp_cipher_aead_set_aad(
+                        &(cctx->handle), cctx->aad, cctx->aadlen);
+                    if (alcp_is_error(err))
+                        goto out;
+                }
+                cctx->add_inititalized = true;
+                err                    = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                err = alcp_cipher_aead_decrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                // IV must be copied to cctx->tagbuff when application calls
+                // EVP_CIPHER_CTX_ctrl call with EVP_CTRL_AEAD_SET_TAG. This
+                // is done in ALCP_prov_cipher_set_ctx_params call.
+                err = alcp_cipher_decrypt(
+                    &(cctx->handle), in, out, inl, cctx->tagbuff);
+            }
+        } else {
+            err = alcp_cipher_decrypt(&(cctx->handle),
+                                      in,
+                                      out,
+                                      inl,
+                                      cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
+    }
+
+out:
+    if (alcp_is_error(err)) {
+        alcp_error_str(err, err_buf, err_size);
+        printf("Provider: Encyption/Decryption Failure! ALCP:%s\n", err_buf);
+        printf("%p,%10" PRId64 "%p\n", (void*)in, inl, (void*)out);
+        printf("%d\n",
+               cctx->pc_cipher_info.ci_algo_info.ai_mode == ALC_AES_MODE_CFB);
+        printf("%p\n", (void*)cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        alcp_error_str(err, err_buf, err_size);
+        return 0;
+    }
+    *outl = inl;
+    return 1;
+}
+
+int
+ALCP_prov_cipher_xts_update(void*                vctx,
+                            unsigned char*       out,
+                            size_t*              outl,
+                            size_t               outsize,
+                            const unsigned char* in,
+                            size_t               inl)
+{
+    alc_prov_cipher_ctx_p cctx = vctx;
+    alc_error_t           err  = ALC_ERROR_NONE;
+    // alc_cipher_info_p      cinfo      = &cctx->pc_cipher_info;
+    alc_cipher_aead_info_p c_aeadinfo = &cctx->pc_cipher_aead_info;
+    const int              err_size   = 256;
+    Uint8                  err_buf[err_size];
+    ENTER();
+
+    if (inl == 0) {
+        *outl = inl;
+        return 1;
+    }
+
+    if (cctx->enc_flag) {
+        if (cctx->is_aead
+            && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_CCM) {
+            if (out == NULL && outl != NULL && in != NULL) { // AAD call
+                cctx->aadlen = inl;
+                cctx->aad    = in;
+            } else if (out != NULL && outl != NULL
+                       && in != NULL) { // Encrypt Call
+                err = alcp_cipher_aead_set_tag_length(&(cctx->handle),
+                                                      cctx->taglen);
+                if (alcp_is_error(err))
+                    goto out;
+                err = alcp_cipher_aead_set_iv(
+                    &(cctx->handle),
+                    cctx->ivlen,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err))
+                    goto out;
+                if (cctx->aadlen != 0) {
+                    err = alcp_cipher_aead_set_aad(
+                        &(cctx->handle), cctx->aad, cctx->aadlen);
+                    if (alcp_is_error(err))
+                        goto out;
+                }
+                cctx->add_inititalized = true;
+                err                    = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                err = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                Uint8 fake_iv[100] = { 0 };
+                err                = alcp_cipher_aead_encrypt(
+                    &(cctx->handle), in, out, inl, fake_iv);
+            }
+        } else {
+            err = alcp_cipher_encrypt(&(cctx->handle),
+                                      in,
+                                      out,
+                                      inl,
+                                      cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
+    } else {
+        if (cctx->is_aead
+            && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_CCM) {
+            if (out == NULL && outl != NULL && in != NULL) { // AAD call
+                cctx->aadlen = inl;
+                cctx->aad    = in;
+            } else if (out != NULL && outl != NULL
+                       && in != NULL) { // Encrypt Call
+                err = alcp_cipher_aead_set_tag_length(&(cctx->handle),
+                                                      cctx->taglen);
+                if (alcp_is_error(err))
+                    goto out;
+                err = alcp_cipher_aead_set_iv(
+                    &(cctx->handle),
+                    cctx->ivlen,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err))
+                    goto out;
+                if (cctx->aadlen != 0) {
+                    err = alcp_cipher_aead_set_aad(
+                        &(cctx->handle), cctx->aad, cctx->aadlen);
+                    if (alcp_is_error(err))
+                        goto out;
+                }
+                cctx->add_inititalized = true;
+                err                    = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                err = alcp_cipher_aead_decrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                // IV must be copied to cctx->tagbuff when application calls
+                // EVP_CIPHER_CTX_ctrl call with EVP_CTRL_AEAD_SET_TAG. This
+                // is done in ALCP_prov_cipher_set_ctx_params call.
+                err = alcp_cipher_decrypt(
+                    &(cctx->handle), in, out, inl, cctx->tagbuff);
+            }
+        } else {
+            err = alcp_cipher_decrypt(&(cctx->handle),
+                                      in,
+                                      out,
+                                      inl,
+                                      cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
+    }
+
+out:
+    if (alcp_is_error(err)) {
+        alcp_error_str(err, err_buf, err_size);
+        printf("Provider: Encyption/Decryption Failure! ALCP:%s\n", err_buf);
+        printf("%p,%10" PRId64 "%p\n", (void*)in, inl, (void*)out);
+        printf("%d\n",
+               cctx->pc_cipher_info.ci_algo_info.ai_mode == ALC_AES_MODE_CFB);
+        printf("%p\n", (void*)cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        alcp_error_str(err, err_buf, err_size);
+        return 0;
+    }
+    *outl = inl;
+    return 1;
+}
+
+int
+ALCP_prov_cipher_gcm_update(void*                vctx,
+                            unsigned char*       out,
+                            size_t*              outl,
+                            size_t               outsize,
+                            const unsigned char* in,
+                            size_t               inl)
+{
+    alc_prov_cipher_ctx_p cctx = vctx;
+    alc_error_t           err  = ALC_ERROR_NONE;
+    // alc_cipher_info_p      cinfo      = &cctx->pc_cipher_info;
+    alc_cipher_aead_info_p c_aeadinfo = &cctx->pc_cipher_aead_info;
+    const int              err_size   = 256;
+    Uint8                  err_buf[err_size];
+    ENTER();
+
+    if (inl == 0) {
+        *outl = inl;
+        return 1;
+    }
+
+    if (cctx->enc_flag) {
+        if (cctx->is_aead
+            && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_CCM) {
+            if (out == NULL && outl != NULL && in != NULL) { // AAD call
+                cctx->aadlen = inl;
+                cctx->aad    = in;
+            } else if (out != NULL && outl != NULL
+                       && in != NULL) { // Encrypt Call
+                err = alcp_cipher_aead_set_tag_length(&(cctx->handle),
+                                                      cctx->taglen);
+                if (alcp_is_error(err))
+                    goto out;
+                err = alcp_cipher_aead_set_iv(
+                    &(cctx->handle),
+                    cctx->ivlen,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err))
+                    goto out;
+                if (cctx->aadlen != 0) {
+                    err = alcp_cipher_aead_set_aad(
+                        &(cctx->handle), cctx->aad, cctx->aadlen);
+                    if (alcp_is_error(err))
+                        goto out;
+                }
+                cctx->add_inititalized = true;
+                err                    = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                err = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                Uint8 fake_iv[100] = { 0 };
+                err                = alcp_cipher_aead_encrypt(
+                    &(cctx->handle), in, out, inl, fake_iv);
+            }
+        } else {
+            err = alcp_cipher_encrypt(&(cctx->handle),
+                                      in,
+                                      out,
+                                      inl,
+                                      cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
+    } else {
+        if (cctx->is_aead
+            && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_CCM) {
+            if (out == NULL && outl != NULL && in != NULL) { // AAD call
+                cctx->aadlen = inl;
+                cctx->aad    = in;
+            } else if (out != NULL && outl != NULL
+                       && in != NULL) { // Encrypt Call
+                err = alcp_cipher_aead_set_tag_length(&(cctx->handle),
+                                                      cctx->taglen);
+                if (alcp_is_error(err))
+                    goto out;
+                err = alcp_cipher_aead_set_iv(
+                    &(cctx->handle),
+                    cctx->ivlen,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err))
+                    goto out;
+                if (cctx->aadlen != 0) {
+                    err = alcp_cipher_aead_set_aad(
+                        &(cctx->handle), cctx->aad, cctx->aadlen);
+                    if (alcp_is_error(err))
+                        goto out;
+                }
+                cctx->add_inititalized = true;
+                err                    = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                err = alcp_cipher_aead_decrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                // IV must be copied to cctx->tagbuff when application calls
+                // EVP_CIPHER_CTX_ctrl call with EVP_CTRL_AEAD_SET_TAG. This
+                // is done in ALCP_prov_cipher_set_ctx_params call.
+                err = alcp_cipher_decrypt(
+                    &(cctx->handle), in, out, inl, cctx->tagbuff);
+            }
+        } else {
+            err = alcp_cipher_decrypt(&(cctx->handle),
+                                      in,
+                                      out,
+                                      inl,
+                                      cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
+    }
+
+out:
+    if (alcp_is_error(err)) {
+        alcp_error_str(err, err_buf, err_size);
+        printf("Provider: Encyption/Decryption Failure! ALCP:%s\n", err_buf);
+        printf("%p,%10" PRId64 "%p\n", (void*)in, inl, (void*)out);
+        printf("%d\n",
+               cctx->pc_cipher_info.ci_algo_info.ai_mode == ALC_AES_MODE_CFB);
+        printf("%p\n", (void*)cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        alcp_error_str(err, err_buf, err_size);
+        return 0;
+    }
+    *outl = inl;
+    return 1;
+}
+
+int
+ALCP_prov_cipher_ccm_update(void*                vctx,
+                            unsigned char*       out,
+                            size_t*              outl,
+                            size_t               outsize,
+                            const unsigned char* in,
+                            size_t               inl)
+{
+    alc_prov_cipher_ctx_p cctx = vctx;
+    alc_error_t           err  = ALC_ERROR_NONE;
+    // alc_cipher_info_p      cinfo      = &cctx->pc_cipher_info;
+    alc_cipher_aead_info_p c_aeadinfo = &cctx->pc_cipher_aead_info;
+    const int              err_size   = 256;
+    Uint8                  err_buf[err_size];
+    ENTER();
+
+    if (inl == 0) {
+        *outl = inl;
+        return 1;
+    }
+
+    if (cctx->enc_flag) {
+        if (cctx->is_aead
+            && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_CCM) {
+            if (out == NULL && outl != NULL && in != NULL) { // AAD call
+                cctx->aadlen = inl;
+                cctx->aad    = in;
+            } else if (out != NULL && outl != NULL
+                       && in != NULL) { // Encrypt Call
+                err = alcp_cipher_aead_set_tag_length(&(cctx->handle),
+                                                      cctx->taglen);
+                if (alcp_is_error(err))
+                    goto out;
+                err = alcp_cipher_aead_set_iv(
+                    &(cctx->handle),
+                    cctx->ivlen,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err))
+                    goto out;
+                if (cctx->aadlen != 0) {
+                    err = alcp_cipher_aead_set_aad(
+                        &(cctx->handle), cctx->aad, cctx->aadlen);
+                    if (alcp_is_error(err))
+                        goto out;
+                }
+                cctx->add_inititalized = true;
+                err                    = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                err = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                Uint8 fake_iv[100] = { 0 };
+                err                = alcp_cipher_aead_encrypt(
+                    &(cctx->handle), in, out, inl, fake_iv);
+            }
+        } else {
+            err = alcp_cipher_encrypt(&(cctx->handle),
+                                      in,
+                                      out,
+                                      inl,
+                                      cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
+    } else {
+        if (cctx->is_aead
+            && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_CCM) {
+            if (out == NULL && outl != NULL && in != NULL) { // AAD call
+                cctx->aadlen = inl;
+                cctx->aad    = in;
+            } else if (out != NULL && outl != NULL
+                       && in != NULL) { // Encrypt Call
+                err = alcp_cipher_aead_set_tag_length(&(cctx->handle),
+                                                      cctx->taglen);
+                if (alcp_is_error(err))
+                    goto out;
+                err = alcp_cipher_aead_set_iv(
+                    &(cctx->handle),
+                    cctx->ivlen,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                if (alcp_is_error(err))
+                    goto out;
+                if (cctx->aadlen != 0) {
+                    err = alcp_cipher_aead_set_aad(
+                        &(cctx->handle), cctx->aad, cctx->aadlen);
+                    if (alcp_is_error(err))
+                        goto out;
+                }
+                cctx->add_inititalized = true;
+                err                    = alcp_cipher_aead_encrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_GCM) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                err = alcp_cipher_aead_decrypt_update(
+                    &(cctx->handle),
+                    in,
+                    out,
+                    inl,
+                    cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+            }
+        } else if (cctx->is_aead
+                   && c_aeadinfo->ci_algo_info.ai_mode == ALC_AES_MODE_SIV) {
+            if (out == NULL) {
+                err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+            } else {
+                // IV must be copied to cctx->tagbuff when application calls
+                // EVP_CIPHER_CTX_ctrl call with EVP_CTRL_AEAD_SET_TAG. This
+                // is done in ALCP_prov_cipher_set_ctx_params call.
+                err = alcp_cipher_decrypt(
+                    &(cctx->handle), in, out, inl, cctx->tagbuff);
+            }
+        } else {
+            err = alcp_cipher_decrypt(&(cctx->handle),
+                                      in,
+                                      out,
+                                      inl,
+                                      cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        }
+    }
+
+out:
+    if (alcp_is_error(err)) {
+        alcp_error_str(err, err_buf, err_size);
+        printf("Provider: Encyption/Decryption Failure! ALCP:%s\n", err_buf);
+        printf("%p,%10" PRId64 "%p\n", (void*)in, inl, (void*)out);
+        printf("%d\n",
+               cctx->pc_cipher_info.ci_algo_info.ai_mode == ALC_AES_MODE_CFB);
+        printf("%p\n", (void*)cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        alcp_error_str(err, err_buf, err_size);
+        return 0;
+    }
+    *outl = inl;
+    return 1;
+}
+
+int
+ALCP_prov_cipher_siv_update(void*                vctx,
+                            unsigned char*       out,
+                            size_t*              outl,
+                            size_t               outsize,
+                            const unsigned char* in,
+                            size_t               inl)
 {
     alc_prov_cipher_ctx_p cctx = vctx;
     alc_error_t           err  = ALC_ERROR_NONE;
