@@ -39,6 +39,10 @@ alc_digest_info_t dinfo_256{}, dinfo_384{}, dinfo_512{}, mgfinfo_256{},
 /* All tests to be added here */
 TEST(RSA_SignVerify_PSS_2048, Cross_SHA2_256_MGF_256)
 {
+    /*FIXME, only alcp and ipp are implemented for this variant as of now*/
+    if (useossl)
+        GTEST_SKIP() << "only alcp and ipp are implemented for this variant as "
+                        "of now, skipping this test";
     dinfo_256.dt_mode.dm_sha2 = ALC_SHA2_256;
     dinfo_256.dt_len          = ALC_DIGEST_LEN_256;
     dinfo_256.dt_type         = ALC_DIGEST_TYPE_SHA2;

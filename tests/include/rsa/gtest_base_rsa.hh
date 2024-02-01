@@ -139,22 +139,22 @@ Rsa_SignVerifyCross(int                     padding_mode,
     KeySize           = KeySize / 8;
     int InputSize_Max = 2048;
 
-// #ifdef USE_OSSL
-//     OpenSSLRsaBase orb;
-//     if (useipp == false && useossl == false) {
-//         printErrors("Defaulting to OpenSSL");
-//         useossl = true;
-//     }
-//     if (useossl) {
-//         rb_ext    = &orb;
-//         LibStrExt = "OpenSSL";
-//     }
-// #else
-//     if ((useipp == false && useossl == false) || useossl == true) {
-//         printErrors("No Lib Selected. OpenSSL also not available");
-//         FAIL() << "OpenSSL not available, cannot proceed with defaults!";
-//     }
-// #endif
+#ifdef USE_OSSL
+    OpenSSLRsaBase orb;
+    if (useipp == false && useossl == false) {
+        printErrors("Defaulting to OpenSSL");
+        useossl = true;
+    }
+    if (useossl) {
+        rb_ext    = &orb;
+        LibStrExt = "OpenSSL";
+    }
+#else
+    if ((useipp == false && useossl == false) || useossl == true) {
+        printErrors("No Lib Selected. OpenSSL also not available");
+        FAIL() << "OpenSSL not available, cannot proceed with defaults!";
+    }
+#endif
 #ifdef USE_IPP
     IPPRsaBase irb;
     if (useipp == true) {
