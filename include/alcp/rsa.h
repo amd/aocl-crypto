@@ -262,20 +262,6 @@ alcp_rsa_privatekey_decrypt_oaep(const alc_rsa_handle_p pRsaHandle,
                                  Uint64*                textSize);
 
 /**
- * @brief Function fetches public key from handle
- * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_rsa_request</b>
- * @endparblock
- * @param [in]    pRsaHandle - Handler of the Context for the session
- * @param [out]   pPublicKey - pointer to public exponent
- * @param [out]   pModulus   - pointer to modulus
- * @param [out]   keySize    - size of modulus
-
- * @return Error Code for the API called . if alc_error_t is not zero then
- * alcp_error_str needs to be called to know about error occurred
- */
-
-/**
  * @brief Function signs text using private key and PSS padding
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_rsa_request and the
