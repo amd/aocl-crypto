@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -62,11 +62,6 @@ class ALCP_API_EXPORT Cbc final
     , public Aes
 {
   public:
-    explicit Cbc(const alc_cipher_algo_info_t& aesInfo,
-                 const alc_key_info_t&         keyInfo)
-        : Aes(aesInfo, keyInfo)
-    {}
-
     explicit Cbc(const Uint8* pKey, const Uint32 keyLen)
         : Aes(pKey, keyLen)
     {}
@@ -74,21 +69,6 @@ class ALCP_API_EXPORT Cbc final
     Cbc() {}
 
     ~Cbc() {}
-
-    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                            const alc_key_info_t&         keyInfo)
-    {
-        return true;
-    }
-
-    static bool isSupported(const Uint32 keyLen)
-    {
-        if ((keyLen == ALC_KEY_LEN_128) || (keyLen == ALC_KEY_LEN_192)
-            || (keyLen == ALC_KEY_LEN_256)) {
-            return true;
-        }
-        return false;
-    }
 
     /**
      * @brief   CBC Encrypt Operation
@@ -137,29 +117,7 @@ Cbc<FEnc, FDec>::decrypt(const Uint8* pCipherText,
                          Uint64       len,
                          const Uint8* pIv) const
 {
-#if 0
-    alc_error_t err = ALC_ERROR_NONE;
-    if (CpuId::cpuHasAvx512(utils::AVX512_F)
-        && CpuId::cpuHasAvx512(utils::AVX512_DQ)
-        && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
-        err = vaes512::DecryptCbcAvx512(
-            pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
 
-        return err;
-    }
-    if (CpuId::cpuHasVaes()) {
-        err = vaes::DecryptCbc(
-            pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
-
-        return err;
-    }
-    if (CpuId::cpuHasAesni()) {
-        err = aesni::DecryptCbc(
-            pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
-        return err;
-    }
-    return err;
-#endif
     return FDec(
         pCipherText, pPlainText, len, getDecryptKeys(), getRounds(), pIv);
     // dispatch to REF
@@ -183,18 +141,7 @@ Cbc<FEnc, FDec>::encrypt(const Uint8* pPlainText,
                          Uint64       len,
                          const Uint8* pIv) const
 {
-#if 0
-    alc_error_t err = ALC_ERROR_NONE;
-// Only AESNI possible as CBC Encrypt is a strictly serial algorithm
-    if (CpuId::cpuHasAesni()) {
-        err = aesni::EncryptCbc(
-            pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
 
-        return err;
-    }
-    // dispatch to REF
-    return err;
-#endif
     return FEnc(
         pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -62,7 +62,7 @@ typedef std::tuple<std::vector<Uint8>, // key
 typedef std::map<const std::string, param_tuple> known_answer_map_t;
 
 /* Example Encodings
-P_K128b_TW128b_IV16B_P16B_C16B 
+P_K128b_TW128b_IV16B_P16B_C16B
 P     -> Pass, F -> Fail
 K128b -> Key 128 bit
 TW128b -> Tweak Key 128 bit
@@ -172,21 +172,13 @@ known_answer_map_t KATDataset{
 TEST(XTS, initiantiation_with_valid_input)
 {
     // clang-format off
-    Uint8 iv[]       = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0xff,
-                         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x04, 0x05 };
     Uint8 key[]      = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                          0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
                          0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                          0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
 
-    const alc_cipher_algo_info_t aesInfo = { ALC_MODE, iv };
-
-    const alc_key_info_t keyInfo = {
-        ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 128, key
-    };
-
     std::unique_ptr<Xts<EncryptXts128, DecryptXts128>> xts_obj =
-        std::make_unique<Xts<EncryptXts128, DecryptXts128>>(aesInfo, keyInfo);
+        std::make_unique<Xts<EncryptXts128, DecryptXts128>>(key, 128);
 
     EXPECT_EQ(xts_obj->getRounds(), 10U);
     EXPECT_EQ(xts_obj->getKeySize(), 16U);
@@ -243,16 +235,10 @@ TEST(XTS, valid_all_sizes_encrypt_decrypt_test)
                          0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
                          0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00 };
     // clang-format on
-    const alc_cipher_algo_info_t aesInfo = { ALC_MODE, iv };
-
-    const alc_key_info_t keyInfo = {
-        ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 256, key
-    };
 
     for (int i = 16; i < 512 * 20; i++) {
         std::unique_ptr<Xts<EncryptXts128, DecryptXts128>> xts_obj =
-            std::make_unique<Xts<EncryptXts128, DecryptXts128>>(aesInfo,
-                                                                keyInfo);
+            std::make_unique<Xts<EncryptXts128, DecryptXts128>>(key, 256);
 
         RngBase rb;
 
@@ -288,14 +274,9 @@ TEST(XTS, invalid_len_encrypt_decrypt_test)
                          0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00 };
 
     // clang-format on
-    const alc_cipher_algo_info_t aesInfo = { ALC_MODE, iv };
-
-    const alc_key_info_t keyInfo = {
-        ALC_KEY_TYPE_SYMMETRIC, ALC_KEY_FMT_RAW, {}, {}, 256, key
-    };
 
     std::unique_ptr<Xts<EncryptXts128, DecryptXts128>> xts_obj =
-        std::make_unique<Xts<EncryptXts128, DecryptXts128>>(aesInfo, keyInfo);
+        std::make_unique<Xts<EncryptXts128, DecryptXts128>>(key, 256);
     std::vector<Uint8> plainText(4, 0);
     Uint64             ct_size = 4;
     auto               dest    = std::make_unique<Uint8[]>(4);

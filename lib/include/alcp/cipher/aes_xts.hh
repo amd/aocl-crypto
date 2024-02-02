@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -62,18 +62,10 @@ class ALCP_API_EXPORT Xts final : public Aes
 {
 
   public:
-    // FIXME: Depriciated Constructor, to be removed
-    explicit Xts(const alc_cipher_algo_info_t& aesInfo,
-                 const alc_key_info_t&         keyInfo)
-        : Aes(aesInfo, keyInfo)
-    {
-        p_tweak_key = &m_tweak_round_key[0];
-    }
-
     explicit Xts(const Uint8* pKey, const Uint32 keyLen)
         : Aes(pKey, keyLen)
     {
-        p_tweak_key = &m_tweak_round_key[0];
+        m_pTweak_key = &m_tweak_round_key[0];
         expandTweakKeys(pKey + keyLen / 8, keyLen);
     }
 
@@ -92,20 +84,6 @@ class ALCP_API_EXPORT Xts final : public Aes
 
   public:
     virtual alc_error_t setIv(Uint64 len, const Uint8* pIv);
-
-    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                            const alc_key_info_t&         keyInfo)
-    {
-        return true;
-    }
-
-    static bool isSupported(const Uint32 keyLen)
-    {
-        if ((keyLen == ALC_KEY_LEN_128) || (keyLen == ALC_KEY_LEN_256)) {
-            return true;
-        }
-        return false;
-    }
 
     /**
      * @brief   XTS Encrypt Operation
@@ -138,14 +116,14 @@ class ALCP_API_EXPORT Xts final : public Aes
     virtual void expandTweakKeys(const Uint8* pUserKey, int len);
 
   private:
-    Xts() { p_tweak_key = &m_tweak_round_key[0]; };
+    Xts() { m_pTweak_key = &m_tweak_round_key[0]; };
     void tweakBlockSet(Uint64 aesBlockId);
 
   private:
     alignas(64) Uint8 m_iv[16]                              = {};
     alignas(64) mutable Uint8 m_tweak_block[16]             = {};
     Uint8  m_tweak_round_key[(RIJ_SIZE_ALIGNED(32) * (16))] = {};
-    Uint8* p_tweak_key = nullptr; /* Tweak key(for aes-xts mode): points to
+    Uint8* m_pTweak_key = nullptr; /* Tweak key(for aes-xts mode): points to
                            offset in 'm_tweak_key' */
     mutable Uint64 m_aes_block_id = static_cast<Uint64>(-1);
 };
@@ -193,7 +171,7 @@ Xts<FEnc, FDec>::setIv(Uint64 len, const Uint8* pIv)
     utils::CopyBytes(m_iv, pIv, len); // Keep a copy of iv
 
     // FIXME: In future we need to dispatch it correctly
-    aesni::InitializeTweakBlock(m_iv, m_tweak_block, p_tweak_key, getRounds());
+    aesni::InitializeTweakBlock(m_iv, m_tweak_block, m_pTweak_key, getRounds());
 
     m_aes_block_id = 0; // Initialized BlockId to 0
 
@@ -222,7 +200,7 @@ Xts<FEnc, FDec>::expandTweakKeys(const Uint8* pUserKey, int len)
 
     const Uint8* key = pUserKey ? pUserKey : &dummy_key[0];
     if (CpuId::cpuHasAesni()) {
-        aesni::ExpandTweakKeys(key, p_tweak_key, getRounds());
+        aesni::ExpandTweakKeys(key, m_pTweak_key, getRounds());
         return;
     }
 
@@ -234,7 +212,7 @@ Xts<FEnc, FDec>::expandTweakKeys(const Uint8* pUserKey, int len)
     const Uint32* rtbl = utils::s_round_constants;
     Uint32*       p_tweak_key32;
 
-    p_tweak_key32 = reinterpret_cast<Uint32*>(p_tweak_key);
+    p_tweak_key32 = reinterpret_cast<Uint32*>(m_pTweak_key);
 
     for (i = 0; i < nk; i++) {
         p_tweak_key32[i] = MakeWord(
@@ -343,7 +321,7 @@ Xts<FEnc, FDec>::tweakBlockSet(Uint64 aesBlockId)
         aesni::TweakBlockCalculate(m_tweak_block, aesBlockId - m_aes_block_id);
     } else if (aesBlockId < m_aes_block_id) {
         aesni::InitializeTweakBlock(
-            m_iv, m_tweak_block, p_tweak_key, getRounds());
+            m_iv, m_tweak_block, m_pTweak_key, getRounds());
         aesni::TweakBlockCalculate(m_tweak_block, aesBlockId);
     }
     m_aes_block_id = aesBlockId;
@@ -383,7 +361,7 @@ Xts<FEnc, FDec>::encrypt(const Uint8* pPlainText,
                pCipherText,
                len,
                getEncryptKeys(),
-               p_tweak_key,
+               m_pTweak_key,
                getRounds(),
                m_tweak_block);
 
@@ -393,7 +371,7 @@ Xts<FEnc, FDec>::encrypt(const Uint8* pPlainText,
 
 
     auto p_key128       = reinterpret_cast<const Uint8*>(getEncryptKeys());
-    auto p_tweak_key128 = reinterpret_cast<const Uint8*>(p_tweak_key);
+    auto p_tweak_key128 = reinterpret_cast<const Uint8*>(m_pTweak_key);
     auto p_src128       = reinterpret_cast<const Uint32*>(pPlainText);
     auto p_dest128      = reinterpret_cast<Uint32*>(pCipherText);
     auto p_iv128        = reinterpret_cast<const Uint32*>(pIv);
@@ -495,7 +473,7 @@ Xts<FEnc, FDec>::decrypt(const Uint8* pCipherText,
                pPlainText,
                len,
                getDecryptKeys(),
-               p_tweak_key,
+               m_pTweak_key,
                getRounds(),
                m_tweak_block);
 
@@ -511,7 +489,7 @@ Xts<FEnc, FDec>::decrypt(const Uint8* pCipherText,
                                         pPlainText,
                                         len,
                                         getDecryptKeys(),
-                                        p_tweak_key,
+                                        m_pTweak_key,
                                         getRounds(),
                                         pIv);
         return err;
@@ -523,7 +501,7 @@ Xts<FEnc, FDec>::decrypt(const Uint8* pCipherText,
                                pPlainText,
                                len,
                                getDecryptKeys(),
-                               p_tweak_key,
+                               m_pTweak_key,
                                getRounds(),
                                pIv);
 
@@ -536,7 +514,7 @@ Xts<FEnc, FDec>::decrypt(const Uint8* pCipherText,
                                 pPlainText,
                                 len,
                                 getDecryptKeys(),
-                                p_tweak_key,
+                                m_pTweak_key,
                                 getRounds(),
                                 pIv);
 
@@ -544,7 +522,7 @@ Xts<FEnc, FDec>::decrypt(const Uint8* pCipherText,
     }
 
     auto p_key128       = reinterpret_cast<const Uint8*>(getDecryptKeys());
-    auto p_tweak_key128 = reinterpret_cast<const Uint8*>(p_tweak_key);
+    auto p_tweak_key128 = reinterpret_cast<const Uint8*>(m_pTweak_key);
     auto p_src128       = reinterpret_cast<const Uint32*>(pCipherText);
     auto p_dest128      = reinterpret_cast<Uint32*>(pPlainText);
     auto p_iv128        = reinterpret_cast<const Uint32*>(pIv);

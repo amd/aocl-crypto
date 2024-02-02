@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -59,16 +59,6 @@ class ALCP_API_EXPORT Ctr : public Aes
     }
 
     ~Ctr() {}
-
-  public:
-    static bool isSupported(const Uint32 keyLen)
-    {
-        if ((keyLen == ALC_KEY_LEN_128) || (keyLen == ALC_KEY_LEN_192)
-            || (keyLen == ALC_KEY_LEN_256)) {
-            return true;
-        }
-        return false;
-    }
 };
 
 namespace vaes512 {

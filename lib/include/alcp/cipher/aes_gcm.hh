@@ -76,16 +76,6 @@ class ALCP_API_EXPORT Gcm
     }
 
     ~Gcm() {}
-
-  public:
-    static bool isSupported(const Uint32 keyLen)
-    {
-        if ((keyLen == ALC_KEY_LEN_128) || (keyLen == ALC_KEY_LEN_192)
-            || (keyLen == ALC_KEY_LEN_256)) {
-            return true;
-        }
-        return false;
-    }
 };
 
 class ALCP_API_EXPORT GcmAuth : public GcmAuthData

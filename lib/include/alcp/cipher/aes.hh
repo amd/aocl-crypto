@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -59,15 +59,15 @@ using Status = alcp::base::Status;
 class Aes : public Rijndael
 {
   public:
-    explicit Aes(const alc_cipher_algo_info_t& aesInfo,
-                 const alc_key_info_t&         keyInfo)
-        : Rijndael{ keyInfo }
-        , m_mode{ aesInfo.ai_mode }
-    {}
-
     explicit Aes(const Uint8* pKey, const Uint32 keyLen)
         : Rijndael(pKey, keyLen)
     {}
+
+    explicit Aes(const Uint8* pKey, const Uint32 keyLen, alc_cipher_mode_t mode)
+        : Rijndael(pKey, keyLen)
+    {
+        setMode(mode);
+    }
 
   protected:
     virtual ~Aes() {}
@@ -80,6 +80,15 @@ class Aes : public Rijndael
 
     ALCP_API_EXPORT virtual Status setKey(const Uint8* pUserKey,
                                           Uint64       len) override;
+
+    static bool isSupported(const Uint32 keyLen)
+    {
+        if ((keyLen == ALC_KEY_LEN_128) || (keyLen == ALC_KEY_LEN_192)
+            || (keyLen == ALC_KEY_LEN_256)) {
+            return true;
+        }
+        return false;
+    }
 
   protected:
     ALCP_API_EXPORT virtual Status setMode(alc_cipher_mode_t mode);
@@ -105,20 +114,6 @@ class ALCP_API_EXPORT Ofb final
     ~Ofb() {}
 
   public:
-    static bool isSupported(const Uint32 keyLen)
-    {
-        // FIXME: To be implemented
-        switch (keyLen) {
-            case 128:
-            case 192:
-            case 256:
-                return true;
-                break;
-            default:
-                return false;
-        }
-    }
-
     /**
      * @brief   OFB Encrypt Operation
      * @note
