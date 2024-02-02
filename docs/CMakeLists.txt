@@ -1,4 +1,4 @@
- # Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -23,23 +23,22 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
  
-find_program(PANDOC pandoc)
-find_program(PDFLATEX pdflatex)
-
-IF( (NOT PDFLATEX) OR (NOT PANDOC) )
-    IF(NOT PDFLATEX)
-        MESSAGE(STATUS "PDFLATEX NOT FOUND")
-    ELSE()
-        MESSAGE(STATUS "PDFLATEX IS FOUND")
-    ENDIF()
-    IF(NOT PANDOC)
-        MESSAGE(STATUS "PANDOC NOT FOUND")
-    ELSE()
-        MESSAGE(STATUS "PANDOC IS FOUND")
-    ENDIF()
-    MESSAGE(FATAL_ERROR "PANDOC OR PDFLATEX is missing, documentation cannot be built!")
-ELSE()
-    add_subdirectory(internal)
-    add_subdirectory(compat)
-    add_subdirectory(integration-guide)
-ENDIF()
+ find_program(PANDOC pandoc)
+ find_program(PDFLATEX pdflatex)
+ 
+ IF( (NOT PDFLATEX) OR (NOT PANDOC) )
+     IF(NOT PDFLATEX)
+         MESSAGE(STATUS "PDFLATEX NOT FOUND")
+     ELSE()
+         MESSAGE(STATUS "PDFLATEX IS FOUND")
+     ENDIF()
+     IF(NOT PANDOC)
+         MESSAGE(STATUS "PANDOC NOT FOUND")
+     ELSE()
+         MESSAGE(STATUS "PANDOC IS FOUND")
+     ENDIF()
+     MESSAGE(FATAL_ERROR "PANDOC OR PDFLATEX is missing, documentation cannot be built!")
+ ELSE()
+     add_subdirectory(internal)
+     add_subdirectory(compat)
+ ENDIF()
