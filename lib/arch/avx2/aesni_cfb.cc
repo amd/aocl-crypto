@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,17 +38,17 @@ namespace alcp::cipher { namespace aesni {
         void AesEnc_2x128(
             __m128i* pBlk0, __m128i* pBlk1, const __m128i* pKey, int nRounds),
         void AesEnc_4x128(__m128i*       pBlk0,
-                         __m128i*       pBlk1,
-                         __m128i*       pBlk2,
-                         __m128i*       pBlk3,
-                         const __m128i* pKey,
-                         int            nRounds)>
+                          __m128i*       pBlk1,
+                          __m128i*       pBlk2,
+                          __m128i*       pBlk3,
+                          const __m128i* pKey,
+                          int            nRounds)>
     alc_error_t inline DecryptCfb(const Uint8* pSrc,
-                           Uint8*       pDest,
-                           Uint64       len,
-                           const Uint8* pKey,
-                           int          nRounds,
-                           const Uint8* pIv)
+                                  Uint8*       pDest,
+                                  Uint64       len,
+                                  const Uint8* pKey,
+                                  int          nRounds,
+                                  const Uint8* pIv)
     {
         alc_error_t err       = ALC_ERROR_NONE;
         auto        p_key128  = reinterpret_cast<const __m128i*>(pKey);
@@ -67,12 +67,12 @@ namespace alcp::cipher { namespace aesni {
 
             AesEnc_4x128(&blk0, &blk1, &blk2, &blk3, p_key128, nRounds);
 
-            blk0 = _mm_xor_si128(blk0, p_src128[0]);
-            blk1 = _mm_xor_si128(blk1, p_src128[1]);
-            blk2 = _mm_xor_si128(blk2, p_src128[2]);
-            blk3 = _mm_xor_si128(blk3, p_src128[3]);
+            blk0 = _mm_xor_si128(blk0, _mm_loadu_si128(p_src128 + 0));
+            blk1 = _mm_xor_si128(blk1, _mm_loadu_si128(p_src128 + 1));
+            blk2 = _mm_xor_si128(blk2, _mm_loadu_si128(p_src128 + 2));
+            blk3 = _mm_xor_si128(blk3, _mm_loadu_si128(p_src128 + 3));
 
-            iv128 = p_src128[3];
+            iv128 = _mm_loadu_si128(p_src128 + 3);
 
             _mm_storeu_si128(&p_dest128[0], blk0);
             _mm_storeu_si128(&p_dest128[1], blk1);
@@ -89,10 +89,10 @@ namespace alcp::cipher { namespace aesni {
 
             AesEnc_2x128(&blk0, &blk1, p_key128, nRounds);
 
-            blk0 = _mm_xor_si128(blk0, p_src128[0]);
-            blk1 = _mm_xor_si128(blk1, p_src128[1]);
+            blk0 = _mm_xor_si128(blk0, _mm_loadu_si128(p_src128));
+            blk1 = _mm_xor_si128(blk1, _mm_loadu_si128(p_src128 + 1));
 
-            iv128 = p_src128[1];
+            iv128 = _mm_loadu_si128(p_src128 + 1);
 
             _mm_storeu_si128(&p_dest128[0], blk0);
             _mm_storeu_si128(&p_dest128[1], blk1);
@@ -108,7 +108,7 @@ namespace alcp::cipher { namespace aesni {
 
             AesEnc_1x128(&blk, p_key128, nRounds);
 
-            blk = _mm_xor_si128(blk, p_src128[0]);
+            blk = _mm_xor_si128(blk, _mm_loadu_si128(p_src128));
 
             _mm_storeu_si128(p_dest128, blk);
 
@@ -120,7 +120,8 @@ namespace alcp::cipher { namespace aesni {
         return err;
     }
 
-    template<void AesEnc_1x128(__m128i* pBlk0, const __m128i* pKey, int nRounds)>
+    template<
+        void AesEnc_1x128(__m128i* pBlk0, const __m128i* pKey, int nRounds)>
     alc_error_t inline EncryptCfb(const Uint8* pSrc,
                                   Uint8*       pDest,
                                   Uint64       len,
