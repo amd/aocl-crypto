@@ -1092,13 +1092,13 @@ RunCipherKatTest(CipherTestingCore& testingCore,
     // FIXME: isxts and isgcm unused
     bool                 ret = false;
     alcp_dc_ex_t         data;
-    std::shared_ptr<Csv> csv = testingCore.getCsv();
-    std::vector<Uint8>   pt  = csv->getVect("PLAINTEXT");
-    std::vector<Uint8>   ct  = csv->getVect("CIPHERTEXT");
-    std::vector<Uint8>   outpt(pt.size(), 0);
-    std::vector<Uint8>   outct(ct.size(), 0);
-    std::vector<Uint8>   iv   = csv->getVect("INITVECT");
-    std::vector<Uint8>   tkey = csv->getVect("TWEAK_KEY");
+    std::shared_ptr<Csv> csv             = testingCore.getCsv();
+    std::vector<Uint8>   pt              = csv->getVect("PLAINTEXT");
+    std::vector<Uint8>   ct              = csv->getVect("CIPHERTEXT");
+    std::vector<Uint8>   iv              = csv->getVect("INITVECT");
+    std::vector<Uint8>   tkey            = csv->getVect("TWEAK_KEY");
+    std::vector<Uint8>   actual_output   = {};
+    std::vector<Uint8>   expected_output = {};
 
     /* check if unsupported (NULL) test vectors */
     if (pt.empty() || ct.empty()) {
@@ -1106,20 +1106,28 @@ RunCipherKatTest(CipherTestingCore& testingCore,
         return false;
     }
 
+    data.m_iv  = &(iv[0]);
+    data.m_ivl = iv.size();
+
+    // XTS Specific
+    if (tkey.size()) {
+        data.m_tkey  = &(tkey[0]);
+        data.m_tkeyl = tkey.size();
+    }
+
     if (encDec == ENCRYPT) {
         if (pt.size()) {
             data.m_in  = &(pt[0]);
             data.m_inl = pt.size();
         }
-        data.m_iv  = &(iv[0]);
-        data.m_ivl = iv.size();
-        // XTS Specific
-        data.m_tkey       = &(tkey[0]);
-        data.m_tkeyl      = tkey.size();
-        data.m_block_size = pt.size();
-        if (outct.size())
-            data.m_out = &(outct[0]);
-        data.m_outl = data.m_inl;
+
+        expected_output   = ct;
+        actual_output     = std::vector<Uint8>(expected_output.size());
+        data.m_block_size = actual_output.size();
+
+        if (actual_output.size())
+            data.m_out = &(actual_output[0]);
+        data.m_outl = expected_output.size();
 
         ret = testingCore.getCipherHandler()->testingEncrypt(
             data, csv->getVect("KEY"));
@@ -1127,25 +1135,18 @@ RunCipherKatTest(CipherTestingCore& testingCore,
             std::cout << "ERROR: Enc" << std::endl;
             EXPECT_TRUE(ret);
         }
-        EXPECT_TRUE(
-            ArraysMatch(outct,
-                        csv->getVect("CIPHERTEXT"),
-                        *(csv.get()),
-                        std::string("AES_" + modeStr + "_"
-                                    + std::to_string(keySize) + encDecStr)));
     } else {
         if (ct.size()) {
             data.m_in  = &(ct[0]);
             data.m_inl = ct.size();
         }
-        data.m_iv  = &(iv[0]);
-        data.m_ivl = iv.size();
-        // XTS Specific
-        data.m_tkey       = &(tkey[0]);
-        data.m_tkeyl      = tkey.size();
-        data.m_block_size = pt.size();
-        if (outpt.size())
-            data.m_out = &(outpt[0]);
+
+        expected_output   = pt;
+        actual_output     = std::vector<Uint8>(expected_output.size());
+        data.m_block_size = actual_output.size();
+
+        if (actual_output.size())
+            data.m_out = &(actual_output[0]);
         data.m_outl = data.m_inl;
 
         ret = testingCore.getCipherHandler()->testingDecrypt(
@@ -1154,13 +1155,15 @@ RunCipherKatTest(CipherTestingCore& testingCore,
             std::cout << "ERROR: Dec" << std::endl;
             EXPECT_TRUE(ret);
         }
-        EXPECT_TRUE(
-            ArraysMatch(outpt,
-                        csv->getVect("PLAINTEXT"),
-                        *(testingCore.getCsv()),
-                        std::string("AES_" + modeStr + "_"
-                                    + std::to_string(keySize) + encDecStr)));
     }
+
+    EXPECT_TRUE(
+        ArraysMatch(actual_output,
+                    expected_output,
+                    *(testingCore.getCsv()),
+                    std::string("AES_" + modeStr + "_" + std::to_string(keySize)
+                                + encDecStr)));
+
     return ret;
 }
 
