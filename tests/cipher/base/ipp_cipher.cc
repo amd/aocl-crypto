@@ -60,44 +60,6 @@ IPPCipherBase::IPPCipherBase(const _alc_cipher_type  cIpherType,
     init(key, cKeyLen);
 }
 
-IPPCipherBase::IPPCipherBase(const _alc_cipher_type  cIpherType,
-                             const alc_cipher_mode_t cMode,
-                             const Uint8*            iv,
-                             const Uint8*            key,
-                             const Uint32            cKeyLen)
-    : m_mode{ cMode }
-    , m_iv{ iv }
-    , m_key{ key }
-    , m_key_len{ cKeyLen }
-{
-    IppStatus status = ippStsNoErr;
-    switch (m_mode) {
-        case ALC_AES_MODE_XTS:
-            status = ippsAES_XTSGetSize(&m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-            }
-            m_ctx_xts = (IppsAES_XTSSpec*)(new Ipp8u[m_ctxSize]);
-            status    = ippsAES_XTSInit(
-                key, cKeyLen, m_block_size * 8, m_ctx_xts, m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-            }
-            break;
-        default:
-            status = ippsAESGetSize(&m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-            }
-            m_ctx  = (IppsAESSpec*)(new Ipp8u[m_ctxSize]);
-            status = ippsAESInit(key, cKeyLen / 8, m_ctx, m_ctxSize);
-            if (status != 0) {
-                PrintErrors(status);
-            }
-            break;
-    }
-}
-
 IPPCipherBase::~IPPCipherBase()
 {
     if (m_ctx != nullptr) {

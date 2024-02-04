@@ -82,11 +82,6 @@ class OpenSSLCipherBase : public CipherBase
                       const alc_cipher_mode_t mode,
                       const Uint8*            iv);
     OpenSSLCipherBase(const _alc_cipher_type  cipher_type,
-                      const alc_cipher_mode_t cMode,
-                      const Uint8*            iv,
-                      const Uint8*            key,
-                      const Uint32            key_len);
-    OpenSSLCipherBase(const _alc_cipher_type  cipher_type,
                       const alc_cipher_mode_t mode,
                       const Uint8*            iv,
                       const Uint32            iv_len,
@@ -94,12 +89,7 @@ class OpenSSLCipherBase : public CipherBase
                       const Uint32            key_len,
                       const Uint8*            tkey,
                       const Uint64            block_size);
-    OpenSSLCipherBase(const _alc_cipher_type  cipher_type,
-                      const alc_cipher_mode_t mode,
-                      const Uint8*            iv,
-                      const Uint32            iv_len,
-                      const Uint8*            key,
-                      const Uint32            key_len);
+
     ~OpenSSLCipherBase();
     bool init(const Uint8* iv,
               const Uint32 iv_len,

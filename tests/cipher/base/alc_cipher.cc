@@ -30,20 +30,6 @@
 
 namespace alcp::testing {
 
-// AlcpCipherBase class functions
-/* for chacha20 */
-AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cIpherType,
-                               const alc_cipher_mode_t cMode,
-                               const Uint8*            iv,
-                               const Uint8*            key,
-                               const Uint32            cKeyLen,
-                               const Uint32            cIvLen)
-    : m_iv{ iv }
-{
-    if (cKeyLen != 0)
-        init(key, cKeyLen);
-}
-
 AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cIpherType,
                                const alc_cipher_mode_t cMode,
                                const Uint8*            iv)
@@ -51,17 +37,6 @@ AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cIpherType,
     , m_cipher_type{ cIpherType }
     , m_iv{ iv }
 {
-}
-
-AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cIpherType,
-                               const alc_cipher_mode_t cMode,
-                               const Uint8*            iv,
-                               const Uint8*            key,
-                               const Uint32            cKeyLen)
-    : m_mode{ cMode }
-    , m_iv{ iv }
-{
-    init(key, cKeyLen);
 }
 
 /* xts */
@@ -76,6 +51,7 @@ AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cIpherType,
     : m_mode{ cMode }
     , m_cipher_type{ cIpherType }
     , m_iv{ iv }
+    , m_tkey{ tkey }
 {
     init(iv, cIvLen, key, cKeyLen, tkey, cBlockSize);
 }

@@ -49,13 +49,16 @@ class AlcpCipherBase : public CipherBase
   public:
     AlcpCipherBase() {}
 
-    /* for chacha20 */
+    /**
+     * @brief Construct a new Alcp Base object - Manual initilization needed,
+     * run alcpInit
+     *
+     * @param mode
+     * @param iv
+     */
     AlcpCipherBase(const _alc_cipher_type  cipher_type,
-                   const alc_cipher_mode_t cMode,
-                   const Uint8*            iv,
-                   const Uint8*            key,
-                   const Uint32            key_len,
-                   const Uint32            iv_len);
+                   const alc_cipher_mode_t mode,
+                   const Uint8*            iv);
 
     /**
      * @brief Construct a new Alcp Cipher Base object
@@ -74,30 +77,6 @@ class AlcpCipherBase : public CipherBase
                    const Uint32            key_len,
                    const Uint8*            tkey,
                    const Uint64            block_size);
-    /**
-     * @brief Construct a new Alcp Base object - Manual initilization needed,
-     * run alcpInit
-     *
-     * @param mode
-     * @param iv
-     */
-    AlcpCipherBase(const _alc_cipher_type  cipher_type,
-                   const alc_cipher_mode_t mode,
-                   const Uint8*            iv);
-
-    /**
-     * @brief Construct a new Alcp Base object - Initlized and ready to go
-     *
-     * @param mode
-     * @param iv
-     * @param key
-     * @param key_len
-     */
-    AlcpCipherBase(const _alc_cipher_type  cipher_type,
-                   const alc_cipher_mode_t mode,
-                   const Uint8*            iv,
-                   const Uint8*            key,
-                   const Uint32            key_len);
 
     /**
      * @brief         Initialization/Reinitialization function, created handle

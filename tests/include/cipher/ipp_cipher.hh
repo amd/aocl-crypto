@@ -77,19 +77,7 @@ class IPPCipherBase : public CipherBase
     IPPCipherBase(const _alc_cipher_type  cipher_type,
                   const alc_cipher_mode_t mode,
                   const Uint8*            iv);
-    /**
-     * @brief Construct a new Alcp Base object - Initlized and ready to go
-     *
-     * @param mode
-     * @param iv
-     * @param key
-     * @param key_len
-     */
-    IPPCipherBase(const _alc_cipher_type  cipher_type,
-                  const alc_cipher_mode_t mode,
-                  const Uint8*            iv,
-                  const Uint8*            key,
-                  const Uint32            key_len);
+
     /**
      * @brief         Initialization/Reinitialization function, created handle
      *
