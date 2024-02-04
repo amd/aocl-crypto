@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -50,11 +50,12 @@ class AlcpCipherBase : public CipherBase
     AlcpCipherBase() {}
 
     /* for chacha20 */
-    AlcpCipherBase(const _alc_cipher_type cipher_type,
-                   const Uint8*           iv,
-                   const Uint8*           key,
-                   const Uint32           key_len,
-                   const Uint32           iv_len);
+    AlcpCipherBase(const _alc_cipher_type  cipher_type,
+                   const alc_cipher_mode_t cMode,
+                   const Uint8*            iv,
+                   const Uint8*            key,
+                   const Uint32            key_len,
+                   const Uint32            iv_len);
 
     /**
      * @brief Construct a new Alcp Cipher Base object
@@ -115,11 +116,6 @@ class AlcpCipherBase : public CipherBase
               const Uint32 key_len,
               const Uint8* tkey,
               const Uint64 block_size);
-    bool init(const Uint8* iv,
-              Uint32       iv_len,
-              const Uint8* key,
-              const Uint32 key_len);
-    bool init(const Uint8* iv, const Uint8* key, const Uint32 key_len);
     bool init(const Uint8* key, const Uint32 key_len);
     bool encrypt(alcp_dc_ex_t& data);
     bool decrypt(alcp_dc_ex_t& data);

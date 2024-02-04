@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -94,58 +94,59 @@ OpenSSLCipherBase::alcpModeKeyLenToCipher(_alc_cipher_type  cipher_type,
             return nullptr;
     }
 }
-OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cipher_type,
-                                     const alc_cipher_mode_t mode,
+OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cIpherType,
+                                     const alc_cipher_mode_t cMode,
                                      const Uint8*            iv)
-    : m_mode{ mode }
-    , m_cipher_type{ cipher_type }
+    : m_mode{ cMode }
+    , m_cipher_type{ cIpherType }
     , m_iv{ iv }
-{}
-OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cipher_type,
-                                     const alc_cipher_mode_t mode,
+{
+}
+OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cIpherType,
+                                     const alc_cipher_mode_t cMode,
                                      const Uint8*            iv,
-                                     const Uint32            iv_len,
+                                     const Uint32            cIvLen,
                                      const Uint8*            key,
-                                     const Uint32            key_len,
+                                     const Uint32            cKeyLen,
                                      const Uint8*            tkey,
-                                     const Uint64            block_size)
-    : m_mode{ mode }
-    , m_cipher_type{ cipher_type }
+                                     const Uint64            cBlockSize)
+    : m_mode{ cMode }
+    , m_cipher_type{ cIpherType }
     , m_iv{ iv }
-    , m_iv_len{ iv_len }
+    , m_iv_len{ cIvLen }
     , m_key{ key }
-    , m_key_len{ key_len }
+    , m_key_len{ cKeyLen }
     , m_tkey{ tkey }
 {
-    init(iv, iv_len, key, key_len, tkey, block_size);
+    init(iv, cIvLen, key, cKeyLen, tkey, cBlockSize);
 }
 
-OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cipher_type,
-                                     const alc_cipher_mode_t mode,
+OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cIpherType,
+                                     const alc_cipher_mode_t cMode,
                                      const Uint8*            iv,
                                      const Uint8*            key,
-                                     const Uint32            key_len)
-    : m_mode{ mode }
+                                     const Uint32            cKeyLen)
+    : m_mode{ cMode }
     , m_iv{ iv }
     , m_key{ key }
-    , m_key_len{ key_len }
+    , m_key_len{ cKeyLen }
 {
-    init(key, key_len);
+    init(key, cKeyLen);
 }
 
-OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cipher_type,
-                                     const alc_cipher_mode_t mode,
+OpenSSLCipherBase::OpenSSLCipherBase(const _alc_cipher_type  cIpherType,
+                                     const alc_cipher_mode_t cMode,
                                      const Uint8*            iv,
-                                     const Uint32            iv_len,
+                                     const Uint32            cIvLen,
                                      const Uint8*            key,
-                                     const Uint32            key_len)
-    : m_mode{ mode }
+                                     const Uint32            cKeyLen)
+    : m_mode{ cMode }
     , m_iv{ iv }
-    , m_iv_len{ iv_len }
+    , m_iv_len{ cIvLen }
     , m_key{ key }
-    , m_key_len{ key_len }
+    , m_key_len{ cKeyLen }
 {
-    init(key, key_len);
+    init(key, cKeyLen);
 }
 
 OpenSSLCipherBase::~OpenSSLCipherBase()
@@ -164,38 +165,23 @@ OpenSSLCipherBase::~OpenSSLCipherBase()
 
 bool
 OpenSSLCipherBase::init(const Uint8* iv,
-                        const Uint32 iv_len,
+                        const Uint32 cIvLen,
                         const Uint8* key,
-                        const Uint32 key_len,
+                        const Uint32 cKeyLen,
                         const Uint8* tkey,
-                        const Uint64 block_size)
+                        const Uint64 cBlockSize)
 {
     m_tkey   = tkey;
     m_iv     = iv;
-    m_iv_len = iv_len;
-    return init(key, key_len);
+    m_iv_len = cIvLen;
+    return init(key, cKeyLen);
 }
 
 bool
-OpenSSLCipherBase::init(const Uint8* iv,
-                        const Uint32 iv_len,
-                        const Uint8* key,
-                        const Uint32 key_len)
-{
-    m_iv_len = iv_len;
-    return init(iv, key, key_len);
-}
-bool
-OpenSSLCipherBase::init(const Uint8* iv, const Uint8* key, const Uint32 key_len)
-{
-    m_iv = iv;
-    return init(key, key_len);
-}
-bool
-OpenSSLCipherBase::init(const Uint8* key, const Uint32 key_len)
+OpenSSLCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
 {
     m_key     = key;
-    m_key_len = key_len;
+    m_key_len = cKeyLen;
 
 #ifdef USE_PROVIDER
     if (m_alcp_provider == nullptr) {
@@ -212,8 +198,8 @@ OpenSSLCipherBase::init(const Uint8* key, const Uint32 key_len)
     // FOR XTS OpenSSL needs the tweak key combined with the encryption key
     // Key
     if (m_mode == ALC_AES_MODE_XTS) {
-        CopyBytes(m_key_final, m_key, key_len / 8);
-        CopyBytes(m_key_final + key_len / 8, m_tkey, key_len / 8);
+        CopyBytes(m_key_final, m_key, cKeyLen / 8);
+        CopyBytes(m_key_final + cKeyLen / 8, m_tkey, cKeyLen / 8);
         m_key = m_key_final;
     }
 

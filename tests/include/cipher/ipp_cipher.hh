@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -110,10 +110,6 @@ class IPPCipherBase : public CipherBase
                   const Uint64            block_size);
 
     ~IPPCipherBase();
-    bool init(const Uint8* iv,
-              const Uint32 iv_len,
-              const Uint8* key,
-              const Uint32 key_len);
     /* xts */
     bool init(const Uint8* iv,
               const Uint32 iv_len,
@@ -121,7 +117,6 @@ class IPPCipherBase : public CipherBase
               const Uint32 key_len,
               const Uint8* tkey,
               const Uint64 block_size);
-    bool init(const Uint8* iv, const Uint8* key, const Uint32 key_len);
     bool init(const Uint8* key, const Uint32 key_len);
     // FIXME: Legacy functions needs to be removed like the one below
     bool encrypt(const Uint8* plaintxt, size_t len, Uint8* ciphertxt);

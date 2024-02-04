@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -50,24 +50,24 @@ Chacha20Cipher(benchmark::State& state,
     std::vector<Uint8>         vec_out(blockSize, 0x21);
     Uint8                      key[keylen / 8];
     Uint8                      iv[16];
-    alcp::testing::CipherBase* cb;
+    alcp::testing::CipherBase* p_cb;
 
     alcp::testing::AlcpCipherBase acb = alcp::testing::AlcpCipherBase(
         cipher_type, alcpMode, iv, 12, key, keylen, nullptr, blockSize);
 
-    cb = &acb;
+    p_cb = &acb;
 #ifdef USE_IPP
     alcp::testing::IPPCipherBase icb = alcp::testing::IPPCipherBase(
         cipher_type, alcpMode, iv, 12, key, keylen, nullptr, blockSize);
     if (useipp) {
-        cb = &icb;
+        p_cb = &icb;
     }
 #endif
 #ifdef USE_OSSL
     alcp::testing::OpenSSLCipherBase ocb = alcp::testing::OpenSSLCipherBase(
         cipher_type, alcpMode, iv, 12, key, keylen, nullptr, blockSize);
     if (useossl) {
-        cb = &ocb;
+        p_cb = &ocb;
     }
 #endif
     alcp::testing::alcp_dc_ex_t data;
@@ -79,12 +79,12 @@ Chacha20Cipher(benchmark::State& state,
     data.m_ivl  = 16;
     for (auto _ : state) {
         if (enc) {
-            if (!cb->encrypt(data)) {
+            if (!p_cb->encrypt(data)) {
                 state.SkipWithError("BENCH_ENC_FAILURE");
             }
 
         } else {
-            if (!cb->decrypt(data)) {
+            if (!p_cb->decrypt(data)) {
                 state.SkipWithError("BENCH_DEC_FAILURE");
             }
         }
@@ -98,7 +98,7 @@ Chacha20Cipher(benchmark::State& state,
 
 int
 AesAeadCipher(benchmark::State& state,
-              const Uint64      blockSize,
+              const Uint64      cBlockSize,
               encrypt_t         enc,
               _alc_cipher_type  cipher_type,
               alc_cipher_mode_t alcpMode,
@@ -107,18 +107,18 @@ AesAeadCipher(benchmark::State& state,
     // Allocate with 512 bit alignment
     alignas(64) Uint8              vec_in_arr[MAX_BLOCK_SIZE]  = {};
     alignas(64) Uint8              vec_out_arr[MAX_BLOCK_SIZE] = {};
-    alignas(16) Uint8              tagBuffer[16]               = {};
+    alignas(16) Uint8              tag_buffer[16]              = {};
     alignas(16) Uint8              key[MAX_KEY_SIZE / 8]       = {};
     alignas(16) Uint8              iv[16]                      = {};
     alignas(16) Uint8              ad[16]                      = {};
     alignas(16) Uint8              tag[16]                     = {};
     alignas(16) Uint8              tkey[MAX_KEY_SIZE / 8]      = {};
-    alcp::testing::CipherAeadBase* cb                          = nullptr;
+    alcp::testing::CipherAeadBase* p_cb                        = nullptr;
 
     alcp::testing::AlcpCipherAeadBase acb = alcp::testing::AlcpCipherAeadBase(
-        cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
+        cipher_type, alcpMode, iv, 12, key, keylen, tkey, cBlockSize);
 
-    cb = &acb;
+    p_cb = &acb;
 #ifdef USE_IPP
     std::unique_ptr<alcp::testing::IPPCipherAeadBase> icb;
     if (useipp) {
@@ -130,8 +130,8 @@ AesAeadCipher(benchmark::State& state,
             reinterpret_cast<Uint8*>(key),
             keylen,
             reinterpret_cast<Uint8*>(tkey),
-            blockSize);
-        cb = icb.get();
+            cBlockSize);
+        p_cb = icb.get();
     }
 #endif
 #ifdef USE_OSSL
@@ -145,29 +145,29 @@ AesAeadCipher(benchmark::State& state,
             reinterpret_cast<Uint8*>(key),
             keylen,
             reinterpret_cast<Uint8*>(tkey),
-            blockSize);
-        cb = ocb.get();
+            cBlockSize);
+        p_cb = ocb.get();
     }
 #endif
     alcp::testing::alcp_dca_ex_t data;
     data.m_in      = vec_in_arr;
-    data.m_inl     = blockSize;
+    data.m_inl     = cBlockSize;
     data.m_out     = vec_out_arr;
-    data.m_outl    = blockSize;
+    data.m_outl    = cBlockSize;
     data.m_iv      = iv;
     data.m_ivl     = 12;
     data.m_ad      = ad;
     data.m_adl     = 16;
     data.m_tag     = tag;
     data.m_tagl    = 16;
-    data.m_tagBuff = tagBuffer;
+    data.m_tagBuff = tag_buffer;
     data.m_tkey    = tkey;
     data.m_tkeyl   = 16;
 
     if (!enc
         && (alcpMode == ALC_AES_MODE_GCM || alcpMode == ALC_AES_MODE_CCM
             || alcpMode == ALC_AES_MODE_SIV)) {
-        if (!cb->encrypt(data)) {
+        if (!p_cb->encrypt(data)) {
             state.SkipWithError("GCM / CCM : BENCH_ENC_FAILURE");
         }
         data.m_in  = vec_out_arr;
@@ -184,23 +184,23 @@ AesAeadCipher(benchmark::State& state,
         if ((useossl
              && (alcpMode == ALC_AES_MODE_GCM
                  || alcpMode == ALC_AES_MODE_SIV))) {
-            if (!cb->init(key, keylen)) {
+            if (!p_cb->init(key, keylen)) {
                 state.SkipWithError("GCM: BENCH_RESET_FAILURE");
             }
         }
         if (enc) {
-            if (!cb->encrypt(data)) {
+            if (!p_cb->encrypt(data)) {
                 state.SkipWithError("BENCH_ENC_FAILURE");
             }
         } else {
-            if (!cb->decrypt(data)) {
+            if (!p_cb->decrypt(data)) {
                 state.SkipWithError("BENCH_DEC_FAILURE");
             }
         }
     }
     state.counters["Speed(Bytes/s)"] = benchmark::Counter(
-        state.iterations() * blockSize, benchmark::Counter::kIsRate);
-    state.counters["BlockSize(Bytes)"] = blockSize;
+        state.iterations() * cBlockSize, benchmark::Counter::kIsRate);
+    state.counters["BlockSize(Bytes)"] = cBlockSize;
 
     return 0;
 }
@@ -216,30 +216,30 @@ AesCipher(benchmark::State& state,
     // Dynamic allocation better for larger sizes
     std::vector<Uint8>         vec_in(blockSize, 0x01);
     std::vector<Uint8>         vec_out(blockSize, 0x21);
-    std::unique_ptr<Uint8[]>   tagBuffer = std::make_unique<Uint8[]>(16);
+    std::unique_ptr<Uint8[]>   tag_buffer = std::make_unique<Uint8[]>(16);
     Uint8                      key[keylen / 8];
     Uint8                      iv[16];
     Uint8                      ad[16] = {};
     Uint8                      tag[16];
     Uint8                      tkey[keylen / 8];
-    alcp::testing::CipherBase* cb;
+    alcp::testing::CipherBase* p_cb;
 
     alcp::testing::AlcpCipherBase acb = alcp::testing::AlcpCipherBase(
         cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
 
-    cb = &acb;
+    p_cb = &acb;
 #ifdef USE_IPP
     alcp::testing::IPPCipherBase icb = alcp::testing::IPPCipherBase(
         cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
     if (useipp) {
-        cb = &icb;
+        p_cb = &icb;
     }
 #endif
 #ifdef USE_OSSL
     alcp::testing::OpenSSLCipherBase ocb = alcp::testing::OpenSSLCipherBase(
         cipher_type, alcpMode, iv, 12, key, keylen, tkey, blockSize);
     if (useossl) {
-        cb = &ocb;
+        p_cb = &ocb;
     }
 #endif
     alcp::testing::alcp_dc_ex_t data;
@@ -253,11 +253,11 @@ AesCipher(benchmark::State& state,
     data.m_tkeyl = 16;
     for (auto _ : state) {
         if (enc) {
-            if (!cb->encrypt(data)) {
+            if (!p_cb->encrypt(data)) {
                 state.SkipWithError("BENCH_ENC_FAILURE");
             }
         } else {
-            if (!cb->decrypt(data)) {
+            if (!p_cb->decrypt(data)) {
                 state.SkipWithError("BENCH_DEC_FAILURE");
             }
         }

@@ -142,12 +142,12 @@ ArraysMatch(std::vector<Uint8> actual, std::vector<Uint8> expected)
     return ::testing::AssertionSuccess();
 }
 
-typedef enum
+enum class LIB_TYPE
 {
     OPENSSL = 0,
     IPP,
     ALCP,
-} lib_t;
+};
 
 /* shuffle vector */
 inline std::vector<Uint8>
