@@ -60,6 +60,7 @@ namespace alcp::cipher { namespace aesni {
         Uint64 blocks = len / Rijndael::cBlockSize;
 
         for (; blocks >= 4; blocks -= 4) {
+            __m128i temp = {};
             __m128i blk0 = iv128;
             __m128i blk1 = _mm_loadu_si128(&p_src128[0]);
             __m128i blk2 = _mm_loadu_si128(&p_src128[1]);
@@ -67,12 +68,13 @@ namespace alcp::cipher { namespace aesni {
 
             AesEnc_4x128(&blk0, &blk1, &blk2, &blk3, p_key128, nRounds);
 
+            temp = _mm_loadu_si128(p_src128 + 3);
             blk0 = _mm_xor_si128(blk0, _mm_loadu_si128(p_src128 + 0));
             blk1 = _mm_xor_si128(blk1, _mm_loadu_si128(p_src128 + 1));
             blk2 = _mm_xor_si128(blk2, _mm_loadu_si128(p_src128 + 2));
-            blk3 = _mm_xor_si128(blk3, _mm_loadu_si128(p_src128 + 3));
+            blk3 = _mm_xor_si128(blk3, temp);
 
-            iv128 = _mm_loadu_si128(p_src128 + 3);
+            iv128 = temp;
 
             _mm_storeu_si128(&p_dest128[0], blk0);
             _mm_storeu_si128(&p_dest128[1], blk1);
@@ -84,15 +86,17 @@ namespace alcp::cipher { namespace aesni {
         }
 
         if (blocks >= 2) {
+            __m128i temp = {};
             __m128i blk0 = iv128;
             __m128i blk1 = _mm_loadu_si128(&p_src128[0]);
 
             AesEnc_2x128(&blk0, &blk1, p_key128, nRounds);
 
+            temp = _mm_loadu_si128(p_src128 + 1);
             blk0 = _mm_xor_si128(blk0, _mm_loadu_si128(p_src128));
-            blk1 = _mm_xor_si128(blk1, _mm_loadu_si128(p_src128 + 1));
+            blk1 = _mm_xor_si128(blk1, temp);
 
-            iv128 = _mm_loadu_si128(p_src128 + 1);
+            iv128 = temp;
 
             _mm_storeu_si128(&p_dest128[0], blk0);
             _mm_storeu_si128(&p_dest128[1], blk1);
