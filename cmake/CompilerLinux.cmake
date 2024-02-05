@@ -34,15 +34,20 @@ function(alcp_get_build_environment)
 
     # uses lsb_release utility on linux, as cmake doesnt have a variable which has the Linux flavor information
     find_program(LSB_RELEASE_EXEC lsb_release)
-    execute_process(COMMAND ${LSB_RELEASE_EXEC} -d
+    if(LSB_RELEASE_EXEC-NOTFOUND)
+        MESSAGE(FATAL_ERROR "LSB Release is missing from the machine, please install lsb_release!")
+    endif()
+    execute_process(COMMAND ${LSB_RELEASE_EXEC} -r -s
         OUTPUT_VARIABLE OS_VERSION
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    string(REPLACE Description: "" OS_VERSION_FINAL ${OS_VERSION})
-    string(STRIP ${OS_VERSION_FINAL} OS_VERSION_FINAL)
-
+    execute_process(COMMAND ${LSB_RELEASE_EXEC} -i -s
+        OUTPUT_VARIABLE OS_VENDOR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    
     # final build env string will contain compiler and system environment details where the binary was created
-    set (ALCP_BUILD_ENV ${ALCP_BUILD_COMPILER}_${OS_VERSION_FINAL} PARENT_SCOPE)
+    set (ALCP_BUILD_ENV ${ALCP_BUILD_COMPILER}_${OS_VENDOR}_${OS_VERSION} PARENT_SCOPE)
 endfunction(alcp_get_build_environment)
 
 
