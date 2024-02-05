@@ -76,6 +76,8 @@ PrintRsaTestData(alcp_rsa_data_t data)
     return;
 }
 
+/* get padding mode name */
+
 /* to bypass some invalid input cases */
 bool
 SkipTest(int ret_val, std::string LibStr)
@@ -354,18 +356,27 @@ Rsa_SignVerify(int                     padding_mode,
     }
 #endif
 
-    std::string TestDataFile = "";
+    std::string TestDataFile   = "";
+    std::string PaddingModeStr = "";
 
     /* FIXME: different test data for diff padding modes? */
-    if (padding_mode > 0) {
-        rb->m_padding_mode = padding_mode;
-        TestDataFile =
-            std::string("dataset_RSA_SignVerify_" + std::to_string(KeySize)
-                        + "_padding" + ".csv");
-    } else {
-        std::cout << "Invalid mode" << std::endl;
+    if (padding_mode <= 0) {
+        /* no padding mode is unsupported for this Algorithm as of now */
+        std::cout << "No padding mode is unsupported for RSA Sign/Verify!"
+                  << std::endl;
         FAIL();
     }
+
+    rb->m_padding_mode = padding_mode;
+    if (padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
+        PaddingModeStr = "PSS";
+    } else if (padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+        PaddingModeStr = "PKCS";
+    }
+    TestDataFile =
+        std::string("dataset_RSA_SignVerify_" + std::to_string(KeySize)
+                    + "_padding_" + PaddingModeStr + ".csv");
+
     Csv csv = Csv(TestDataFile);
 
     /* Keysize is in bits (1024/2048) */

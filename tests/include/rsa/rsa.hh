@@ -38,7 +38,7 @@
 
 namespace alcp::testing {
 
-/*FIXME: change this to OAEP*/
+/*FIXME: change this first param to OAEP*/
 #define ALCP_TEST_RSA_PADDING      1
 #define ALCP_TEST_RSA_PADDING_PKCS 2
 #define ALCP_TEST_RSA_PADDING_PSS  3

@@ -71,11 +71,23 @@ FUNCTION(TEST_DATA_LINK RSA_ALG)
 
     # Link dataset to the actual place of test binary
     FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_padding.csv SYMBOLIC)
+
+
+    # Link dataset to the root dir
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_PSS.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_padding_PSS.csv SYMBOLIC)
+
+    # Link dataset to the actual place of test binary
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_PSS.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_padding_PSS.csv SYMBOLIC)
+
+    # Link dataset to the root dir
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_PKCS.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_padding_PKCS.csv SYMBOLIC)
+
+    # Link dataset to the actual place of test binary
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_PKCS.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_padding_PKCS.csv SYMBOLIC)
 ENDFUNCTION(TEST_DATA_LINK RSA_ALG)
 
 TEST_DATA_LINK(RSA_1024)
 TEST_DATA_LINK(RSA_2048)
-TEST_DATA_LINK(RSA_SignVerify_1024)
 TEST_DATA_LINK(RSA_SignVerify_2048)
 
 alcp_add_integration_tests("test_rsa_kat" test_rsa_kat)
