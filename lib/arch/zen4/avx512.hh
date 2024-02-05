@@ -68,15 +68,11 @@ namespace alcp::cipher { namespace vaes512 {
     }
     static inline __m512i alcp_loadu_128(__m512i* ad)
     {
-        __m512i ret = _mm512_setr_epi64(
-            ((Uint64*)ad)[0], ((Uint64*)ad)[1], 0, 0, 0, 0, 0, 0);
-        return ret;
+        return _mm512_maskz_loadu_epi64(0x03, ad);
     }
     static inline __m512i alcp_loadu_128(const __m512i* ad)
     {
-        __m512i ret = _mm512_setr_epi64(
-            ((Uint64*)ad)[0], ((Uint64*)ad)[1], 0, 0, 0, 0, 0, 0);
-        return ret;
+        return _mm512_maskz_loadu_epi64(0x03, ad);
     }
 
     // xor functions.
