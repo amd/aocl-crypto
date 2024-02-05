@@ -83,13 +83,22 @@ function(alcp_get_cflags_arch)
     set(ALCP_CFLAGS_ARCH ${ALCP_CFLAGS_ARCH} PARENT_SCOPE)
 endfunction(alcp_get_cflags_arch)
 
+# Reference Architecture Compile Flags
+function(alcp_get_arch_cflags_reference)
+    set(ARCH_COMPILE_FLAGS
+        /Ox -msse2
+        CACHE INTERNAL ""
+        )
+    set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
+endfunction(alcp_get_arch_cflags_reference)
+
 # lib/arch/avx2 Compile Flags
 function(alcp_get_arch_cflags_avx2)
-set(ARCH_COMPILE_FLAGS
--msse2 -maes -mavx2 -msha -mno-vaes -mpclmul -madx
-CACHE INTERNAL ""
-)
-set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
+    set(ARCH_COMPILE_FLAGS
+        -msse2 -maes -mavx2 -msha -mno-vaes -mpclmul -madx
+        CACHE INTERNAL ""
+    )
+    set(ARCH_COMPILE_FLAGS ${ARCH_COMPILE_FLAGS} PARENT_SCOPE)
 endfunction(alcp_get_arch_cflags_avx2)
 
 # lib/arch/zen Compile Flags

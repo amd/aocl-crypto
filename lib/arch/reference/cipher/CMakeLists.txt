@@ -1,4 +1,4 @@
- # Copyright (C) 2021-2024, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -22,40 +22,6 @@
  # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
- 
 
-SET_DIRECTORY_PROPERTIES(PROPERTIES COMPILE_DEFINITIONS SHOW_MESSAGE=1)
-
-INCLUDE_DIRECTORIES(include)
-
-ADD_SUBDIRECTORY(reference) # Basic Algorithm works on every arch
-ADD_SUBDIRECTORY(avx2) # Basic Algorithm works on every arch
-ADD_SUBDIRECTORY(zen)  # ZEN1/ZEN2 specific, code needs to be optimized for basic ZEN
-ADD_SUBDIRECTORY(zen3) # ZEN3 specific, code needs to be optimized for ZEN3 arch
-ADD_SUBDIRECTORY(zen4) # ZEN4 specific, code needs to be optimized for ZEN4 arch
-
-#CMAKE_POLICY(SET CMP0079 NEW)
-
-#SET(ARCH_COMMON_SRCS 
-#	arch.cc)
-
-SET(ARCH_SRCS ${ARCH_COMMON_SRCS} ${ZEN3_SRCS})
-
-IF ("${ARCH_SRCS}")
-TARGET_SOURCES(alcp
-	PRIVATE
-		${ARCH_SRCS}
-	)
-TARGET_SOURCES(alcp_static
-	PRIVATE
-		${ARCH_SRCS}
-	)
-ENDIF()
-
-#SET(ARCH_SRCS ${ARCH_SRCS} PARENT_SCOPE)
-#TARGET_LINK_LIBRARIES(alcp
-#	PRIVATE
-#	arch_zen3)
-
-MESSAGE(STATUS "Arch common srcs" ${ARCH_SRCS})
-
+FILE(GLOB REFERENCE_CIPHER_SRCS "*.cc")
+SET(REFERENCE_SRCS ${REFERENCE_SRCS} ${REFERENCE_CIPHER_SRCS} PARENT_SCOPE)
