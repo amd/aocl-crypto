@@ -389,6 +389,8 @@ Rsa_SignVerify(int                     padding_mode,
         std::vector<Uint8> signature_data = csv.getVect("SIGNATURE");
         std::vector<Uint8> PubKeyKeyMod(KeySize, 0);
 
+        /*FIXME: testing with diff salt value. Move this to test data or
+         * randomize this?*/
         data.m_msg         = &(input_data[0]);
         data.m_pub_key_mod = &(PubKeyKeyMod[0]);
         data.m_msg_len     = input_data.size();
@@ -434,6 +436,9 @@ Rsa_SignVerify(int                     padding_mode,
         if (rb->Verify(data) != 0) {
             std::cout << "Error in RSA verify" << std::endl;
             FAIL();
+        }
+        if (verbose > 1) {
+            PrintRsaTestData(data);
         }
         EXPECT_TRUE(ArraysMatch(signature_data, signature, KeySize));
     }
