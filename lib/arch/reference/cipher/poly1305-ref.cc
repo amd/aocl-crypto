@@ -493,7 +493,7 @@ Poly1305Ref::finish(const Uint8 pMsg[], Uint64 msgLen)
     }
 
     if (msgLen) {
-        update(pMsg, msgLen);
+       s.update( update(pMsg, msgLen));
     }
 
     if (m_msg_buffer_len) {
