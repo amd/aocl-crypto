@@ -426,6 +426,12 @@ Poly1305Ref::blk(const Uint8 pMsg[], Uint64 msgLen)
         acc[0] = acc[0] & 0x3ffffff;
         acc[1] += carry;
 
+        /* Padding is enabled only if message is bigger than 16 bytes, otherwise
+         *   padding is expected from outside.
+         * If messageLength is less than 16 bytes then a 16byte redable buffer
+         * is expected. 16 bytes is taken inside with padding if msg len is less
+         * than 16 bytes.
+         */
         msgLen = msgLen >= 16 ? msgLen - 16 : 0;
         p_msg_8 += 1;
     }
@@ -468,13 +474,7 @@ Poly1305Ref::update(const Uint8 pMsg[], Uint64 msgLen)
 
     Uint64 overflow = msgLen % 16;
 
-#if 1
     blk(pMsg, msgLen - overflow);
-#else
-    for (Uint64 i = 0; i < msgLen / 16; i++)
-        blk(pMsg + i * 16, 16);
-#endif
-
     if (overflow) {
         std::copy(pMsg + msgLen - overflow, pMsg + msgLen, m_msg_buffer);
         m_msg_buffer_len = overflow;
@@ -493,7 +493,7 @@ Poly1305Ref::finish(const Uint8 pMsg[], Uint64 msgLen)
     }
 
     if (msgLen) {
-       s.update( update(pMsg, msgLen));
+        s.update(update(pMsg, msgLen));
     }
 
     if (m_msg_buffer_len) {
