@@ -57,7 +57,7 @@ namespace mont {
  *
  * https://ieeexplore.ieee.org/document/6209072
  * "Speeding Up Big-Numbers Squaring"
- *
+ * Authors - Shay Gueron & Vlad Krasnov
  */
 
 /*
@@ -65,7 +65,7 @@ namespace mont {
  *
  * https://ieeexplore.ieee.org/document/502403
  * Analyzing and comparing Montgomery multiplication algorithms
- *
+ * Authors - C. Kaya Koc, T. Acar, B.S. Kaliski
  */
 
 constexpr Uint64 one_msb = 0x8000000000000000LLU;
