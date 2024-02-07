@@ -606,107 +606,94 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 int
 OpenSSLRsaBase::Sign(const alcp_rsa_data_t& data)
 {
-    int    ret_val = 0;
+    int ret_val = 0;
+    /*signature length move it to class? data.*/
+    /*signature length move it to class? data.*/
     size_t sig_len = 0;
     /*FIXME: move these two digest variables to class ?*/
     const EVP_MD* digest     = nullptr;
+    EVP_MD_CTX*   mctx       = NULL;
     const char*   digest_str = "";
-
-    /* Move this to a function */
-    switch (m_digest_info.dt_len) {
-        /* FIXME: add more cases here */
-        case ALC_DIGEST_LEN_256:
-            digest_str = "sha256";
-            break;
-        case ALC_DIGEST_LEN_512:
-            digest_str = "sha512";
-            break;
-        default:
-            std::cout << "Invalid digest length" << std::endl;
-            return 1;
-    }
-    digest = EVP_get_digestbyname((const char*)digest_str);
-    if (digest == nullptr) {
-        std::cout << "Digest type is invalid" << std::endl;
+    OSSL_PARAM    params[2], *p = params;
+    /* TEST*/
+    mctx = EVP_MD_CTX_new();
+    /* Initialize MD context for signing. */
+    *p++ = OSSL_PARAM_construct_utf8_string(
+        OSSL_SIGNATURE_PARAM_PAD_MODE, OSSL_PKEY_RSA_PAD_MODE_PSS, 0);
+    *p = OSSL_PARAM_construct_end();
+    if (1
+        != EVP_DigestSignInit_ex(
+            mctx, NULL, "SHA256", m_libctx, NULL, m_pkey_pvt, params)) {
+        std::cout << "EVP_DigestSignInit_ex returned null: Error:"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return 1;
     }
-
-    /* Create signing context. */
-    // m_rsa_handle_keyctx_pvt =
-    //     EVP_PKEY_CTX_new_from_pkey(m_libctx, m_pkey_pvt, NULL);
-    m_rsa_handle_keyctx_pvt = EVP_PKEY_CTX_new(m_pkey_pvt, NULL);
-    if (m_rsa_handle_keyctx_pvt == NULL) {
-        std::cout << "EVP_PKEY_CTX_new_from_pkey returned null: Error:"
+    /*
+     * Feed data to be signed into the algorithm. This may
+     * be called multiple times.
+     */
+    if (1 != EVP_DigestSignUpdate(mctx, data.m_msg, data.m_msg_len)) {
+        std::cout << "EVP_DigestSignUpdate returned null: Error:"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
+        return 1;
+    }
+    /* Determine signature length. */
+    if (1 != EVP_DigestSignFinal(mctx, NULL, &sig_len)) {
+        std::cout << "EVP_DigestSignFinal returned null: Error:"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
+        return 1;
+    }
+    /* Generate signature. */
+    if (EVP_DigestSignFinal(mctx, data.m_signature, &sig_len) == 0) {
+        std::cout << "EVP_DigestSignFinal returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return 1;
     }
 
-    /* Initialize context for signing and set options. */
-    if (1 != EVP_PKEY_sign_init(m_rsa_handle_keyctx_pvt)) {
-        std::cout << "EVP_PKEY_sign_init failed: Error:" << std::endl;
-        ret_val = ERR_GET_REASON(ERR_get_error());
-        return ret_val;
-    }
-
-    /*FIXME: change this padding scheme as per m_padding scheme */
-    if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
-        if (1
-            != EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle_keyctx_pvt,
-                                            RSA_PKCS1_PSS_PADDING)) {
-            std::cout << "EVP_PKEY_CTX_set_rsa_padding failed: Error:"
-                      << std::endl;
-            ret_val = ERR_GET_REASON(ERR_get_error());
-            return ret_val;
-        }
-    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
-        if (1
-            != EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle_keyctx_pvt,
-                                            RSA_PKCS1_PADDING)) {
-            std::cout << "EVP_PKEY_CTX_set_rsa_padding failed: Error:"
-                      << std::endl;
-            ret_val = ERR_GET_REASON(ERR_get_error());
-            return ret_val;
-        }
-    } else {
-        std::cout << "Unsupported padding mode!" << std::endl;
-        return 1;
-    }
-
-    if (1 != EVP_PKEY_CTX_set_signature_md(m_rsa_handle_keyctx_pvt, digest)) {
-        std::cout << "EVP_PKEY_CTX_set_signature_md failed: Error:"
-                  << std::endl;
-        ret_val = ERR_GET_REASON(ERR_get_error());
-        return ret_val;
-    }
-
-    /* Determine length of signature. */
-    if (1
-        != EVP_PKEY_sign(m_rsa_handle_keyctx_pvt,
-                         NULL,
-                         &sig_len,
-                         data.m_msg,
-                         data.m_msg_len)) {
-        std::cout << "EVP_PKEY_sign failed: Error:" << std::endl;
-        ret_val = ERR_GET_REASON(ERR_get_error());
-        return ret_val;
-    }
-    /* Generate signature. */
-    if (1
-        != EVP_PKEY_sign(m_rsa_handle_keyctx_pvt,
-                         data.m_signature,
-                         &sig_len,
-                         data.m_msg,
-                         data.m_msg_len)) {
-        std::cout << "EVP_PKEY_sign 2 failed: Error:" << std::endl;
-        ret_val = ERR_GET_REASON(ERR_get_error());
-        return ret_val;
-    }
+    /*TEST*/
 
     return 0;
 }
 int
 OpenSSLRsaBase::Verify(const alcp_rsa_data_t& data)
 {
+    int ret_val = 0;
+    /*signature length move it to class? data.*/
+    size_t sig_len = 256;
+    /*FIXME: move these two digest variables to class ?*/
+    const EVP_MD* digest     = nullptr;
+    EVP_MD_CTX*   mctx       = NULL;
+    const char*   digest_str = "";
+    OSSL_PARAM    params[2], *p = params;
+
+    mctx = EVP_MD_CTX_new();
+    /* Initialize MD context for signing. */
+    *p++ = OSSL_PARAM_construct_utf8_string(
+        OSSL_SIGNATURE_PARAM_PAD_MODE, OSSL_PKEY_RSA_PAD_MODE_PSS, 0);
+    *p = OSSL_PARAM_construct_end();
+    if (1
+        != EVP_DigestVerifyInit_ex(
+            mctx, NULL, "SHA256", m_libctx, NULL, m_pkey_pub, params)) {
+        std::cout << "EVP_DigestVerifyInit_ex returned null: Error:"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
+        return 1;
+    }
+    /*
+     * Feed data to be signed into the algorithm. This may
+     * be called multiple times.
+     */
+    if (1 != EVP_DigestVerifyUpdate(mctx, data.m_msg, data.m_msg_len)) {
+        std::cout << "EVP_DigestVerifyUpdate returned null: Error:"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
+        return 1;
+    }
+    /* Verify signature. */
+    if (1 != EVP_DigestVerifyFinal(mctx, data.m_signature, sig_len)) {
+        std::cout << "EVP_DigestVerifyFinal returned null: Error:"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
+        return 1;
+    }
+
     return 0;
 }
 
