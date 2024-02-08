@@ -71,7 +71,8 @@ namespace vaes512 {
 
         explicit Ctr128(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {}
+        {
+        }
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -116,7 +117,8 @@ namespace vaes512 {
 
         explicit Ctr192(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {}
+        {
+        }
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -161,7 +163,8 @@ namespace vaes512 {
 
         explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {}
+        {
+        }
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -210,7 +213,8 @@ namespace vaes {
 
         explicit Ctr128(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {}
+        {
+        }
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -255,7 +259,8 @@ namespace vaes {
 
         explicit Ctr192(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {}
+        {
+        }
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -300,7 +305,8 @@ namespace vaes {
 
         explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {}
+        {
+        }
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -349,7 +355,8 @@ namespace aesni {
 
         explicit Ctr128(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {}
+        {
+        }
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -394,7 +401,8 @@ namespace aesni {
 
         explicit Ctr192(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {}
+        {
+        }
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -439,7 +447,8 @@ namespace aesni {
 
         explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
             : Ctr(pKey, keyLen)
-        {}
+        {
+        }
 
         Status setKey(const Uint8* pUserKey, Uint64 len) override;
 
@@ -505,9 +514,9 @@ namespace aes {
 
         for (; blocks >= blockCount4; blocks -= blockCount4) {
 
-            c2 = alcp_add_epi32(c1, one_x);
-            c3 = alcp_add_epi32(c1, two_x);
-            c4 = alcp_add_epi32(c1, three_x);
+            c2 = alcp_add_epi64(c1, one_x);
+            c3 = alcp_add_epi64(c1, two_x);
+            c4 = alcp_add_epi64(c1, three_x);
 
             a1 = alcp_loadu(p_in_x);
             a2 = alcp_loadu(p_in_x + 1);
@@ -528,7 +537,7 @@ namespace aes {
             a4 = alcp_xor(b4, a4);
 
             // increment counter
-            c1 = alcp_add_epi32(c1, four_x);
+            c1 = alcp_add_epi64(c1, four_x);
 
             alcp_storeu(p_out_x, a1);
             alcp_storeu(p_out_x + 1, a2);
@@ -540,7 +549,7 @@ namespace aes {
         }
 
         for (; blocks >= blockCount2; blocks -= blockCount2) {
-            c2 = alcp_add_epi32(c1, one_x);
+            c2 = alcp_add_epi64(c1, one_x);
 
             a1 = alcp_loadu(p_in_x);
             a2 = alcp_loadu(p_in_x + 1);
@@ -555,7 +564,7 @@ namespace aes {
             a2 = alcp_xor(b2, a2);
 
             // increment counter
-            c1 = alcp_add_epi32(c1, two_x);
+            c1 = alcp_add_epi64(c1, two_x);
             alcp_storeu(p_out_x, a1);
             alcp_storeu(p_out_x + 1, a2);
 
@@ -572,7 +581,7 @@ namespace aes {
             a1 = alcp_xor(b1, a1);
 
             // increment counter
-            c1 = alcp_add_epi32(c1, one_x);
+            c1 = alcp_add_epi64(c1, one_x);
 
             alcp_storeu(p_out_x, a1);
 
@@ -591,7 +600,7 @@ namespace aes {
             a1 = alcp_xor(b1, a1);
 
             // increment counter
-            c1 = alcp_add_epi32(c1, one_lo);
+            c1 = alcp_add_epi64(c1, one_lo);
 
             alcp_storeu_128(p_out_x, a1);
             p_in_x  = (T*)(((__uint128_t*)p_in_x) + 1);
