@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -50,12 +50,12 @@ ctrInitx(__m512i&     c1,
          __m512i&     swap_ctr)
 {
 
-    one_lo = alcp_set_epi32(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
-    one_x  = alcp_set_epi32(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0);
-    two_x  = alcp_set_epi32(8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0);
+    one_lo = alcp_set_epi32(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0);
+    one_x  = alcp_set_epi32(0, 4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0);
+    two_x  = alcp_set_epi32(0, 8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0);
     three_x =
-        alcp_set_epi32(12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0);
-    four_x = alcp_set_epi32(16, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0);
+        alcp_set_epi32(0, 12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0);
+    four_x = alcp_set_epi32(0, 16, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0);
 
     //
     // counterblock :: counter 4 bytes: IV 8 bytes : Nonce 4 bytes
@@ -64,20 +64,20 @@ ctrInitx(__m512i&     c1,
 
     // counter 4 bytes are arranged in reverse order
     // for counter increment
-    swap_ctr = _mm512_set_epi32(0x0c0d0e0f,
-                                0x0b0a0908,
+    swap_ctr = _mm512_set_epi32(0x08090a0b,
+                                0x0c0d0e0f,
                                 0x07060504,
                                 0x03020100,
-                                0x0c0d0e0f, // Repeats here
-                                0x0b0a0908,
+                                0x08090a0b, // Repeats here
+                                0x0c0d0e0f,
                                 0x07060504,
                                 0x03020100,
-                                0x0c0d0e0f, // Repeats here
-                                0x0b0a0908,
+                                0x08090a0b, // Repeats here
+                                0x0c0d0e0f,
                                 0x07060504,
                                 0x03020100,
-                                0x0c0d0e0f, // Repeats here
-                                0x0b0a0908,
+                                0x08090a0b, // Repeats here
+                                0x0c0d0e0f,
                                 0x07060504,
                                 0x03020100);
     // nonce counter
@@ -85,7 +85,7 @@ ctrInitx(__m512i&     c1,
     c1 = alcp_shuffle_epi8(c1, swap_ctr);
 
     __m512i onehi =
-        _mm512_setr_epi32(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3);
+        _mm512_setr_epi32(0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0);
     c1 = alcp_add_epi32(c1, onehi);
 }
 
@@ -114,9 +114,9 @@ ctrBlk128(const __m512i* p_in_x,
 
     for (; blocks >= blockCount4; blocks -= blockCount4) {
 
-        c2 = alcp_add_epi32(c1, one_x);
-        c3 = alcp_add_epi32(c1, two_x);
-        c4 = alcp_add_epi32(c1, three_x);
+        c2 = alcp_add_epi64(c1, one_x);
+        c3 = alcp_add_epi64(c1, two_x);
+        c4 = alcp_add_epi64(c1, three_x);
 
         a1 = alcp_loadu(p_in_x);
         a2 = alcp_loadu(p_in_x + 1);
@@ -137,7 +137,7 @@ ctrBlk128(const __m512i* p_in_x,
         a4 = alcp_xor(b4, a4);
 
         // increment counter
-        c1 = alcp_add_epi32(c1, four_x);
+        c1 = alcp_add_epi64(c1, four_x);
 
         alcp_storeu(p_out_x, a1);
         alcp_storeu(p_out_x + 1, a2);
@@ -149,7 +149,7 @@ ctrBlk128(const __m512i* p_in_x,
     }
 
     for (; blocks >= blockCount2; blocks -= blockCount2) {
-        c2 = alcp_add_epi32(c1, one_x);
+        c2 = alcp_add_epi64(c1, one_x);
 
         a1 = alcp_loadu(p_in_x);
         a2 = alcp_loadu(p_in_x + 1);
@@ -164,7 +164,7 @@ ctrBlk128(const __m512i* p_in_x,
         a2 = alcp_xor(b2, a2);
 
         // increment counter
-        c1 = alcp_add_epi32(c1, two_x);
+        c1 = alcp_add_epi64(c1, two_x);
         alcp_storeu(p_out_x, a1);
         alcp_storeu(p_out_x + 1, a2);
 
@@ -183,7 +183,7 @@ ctrBlk128(const __m512i* p_in_x,
         a1 = alcp_xor(b1, a1);
 
         // increment counter
-        c1 = alcp_add_epi32(c1, one_x);
+        c1 = alcp_add_epi64(c1, one_x);
 
         alcp_storeu(p_out_x, a1);
 
@@ -203,7 +203,7 @@ ctrBlk128(const __m512i* p_in_x,
         a1 = alcp_xor(b1, a1);
 
         // increment counter
-        c1 = alcp_add_epi32(c1, one_lo);
+        c1 = alcp_add_epi64(c1, one_lo);
 
         alcp_storeu_128(p_out_x, a1);
         p_in_x  = (__m512i*)(((__uint128_t*)p_in_x) + 1);
@@ -241,9 +241,9 @@ ctrBlk192(const __m512i* p_in_x,
 
     for (; blocks >= blockCount4; blocks -= blockCount4) {
 
-        c2 = alcp_add_epi32(c1, one_x);
-        c3 = alcp_add_epi32(c1, two_x);
-        c4 = alcp_add_epi32(c1, three_x);
+        c2 = alcp_add_epi64(c1, one_x);
+        c3 = alcp_add_epi64(c1, two_x);
+        c4 = alcp_add_epi64(c1, three_x);
 
         a1 = alcp_loadu(p_in_x);
         a2 = alcp_loadu(p_in_x + 1);
@@ -264,7 +264,7 @@ ctrBlk192(const __m512i* p_in_x,
         a4 = alcp_xor(b4, a4);
 
         // increment counter
-        c1 = alcp_add_epi32(c1, four_x);
+        c1 = alcp_add_epi64(c1, four_x);
 
         alcp_storeu(p_out_x, a1);
         alcp_storeu(p_out_x + 1, a2);
@@ -276,7 +276,7 @@ ctrBlk192(const __m512i* p_in_x,
     }
 
     for (; blocks >= blockCount2; blocks -= blockCount2) {
-        c2 = alcp_add_epi32(c1, one_x);
+        c2 = alcp_add_epi64(c1, one_x);
 
         a1 = alcp_loadu(p_in_x);
         a2 = alcp_loadu(p_in_x + 1);
@@ -291,7 +291,7 @@ ctrBlk192(const __m512i* p_in_x,
         a2 = alcp_xor(b2, a2);
 
         // increment counter
-        c1 = alcp_add_epi32(c1, two_x);
+        c1 = alcp_add_epi64(c1, two_x);
         alcp_storeu(p_out_x, a1);
         alcp_storeu(p_out_x + 1, a2);
 
@@ -310,7 +310,7 @@ ctrBlk192(const __m512i* p_in_x,
         a1 = alcp_xor(b1, a1);
 
         // increment counter
-        c1 = alcp_add_epi32(c1, one_x);
+        c1 = alcp_add_epi64(c1, one_x);
 
         alcp_storeu(p_out_x, a1);
 
@@ -330,7 +330,7 @@ ctrBlk192(const __m512i* p_in_x,
         a1 = alcp_xor(b1, a1);
 
         // increment counter
-        c1 = alcp_add_epi32(c1, one_lo);
+        c1 = alcp_add_epi64(c1, one_lo);
 
         alcp_storeu_128(p_out_x, a1);
         p_in_x  = (__m512i*)(((__uint128_t*)p_in_x) + 1);
@@ -368,9 +368,9 @@ ctrBlk256(const __m512i* p_in_x,
 
     for (; blocks >= blockCount4; blocks -= blockCount4) {
 
-        c2 = alcp_add_epi32(c1, one_x);
-        c3 = alcp_add_epi32(c1, two_x);
-        c4 = alcp_add_epi32(c1, three_x);
+        c2 = alcp_add_epi64(c1, one_x);
+        c3 = alcp_add_epi64(c1, two_x);
+        c4 = alcp_add_epi64(c1, three_x);
 
         a1 = alcp_loadu(p_in_x);
         a2 = alcp_loadu(p_in_x + 1);
@@ -391,7 +391,7 @@ ctrBlk256(const __m512i* p_in_x,
         a4 = alcp_xor(b4, a4);
 
         // increment counter
-        c1 = alcp_add_epi32(c1, four_x);
+        c1 = alcp_add_epi64(c1, four_x);
 
         alcp_storeu(p_out_x, a1);
         alcp_storeu(p_out_x + 1, a2);
@@ -403,7 +403,7 @@ ctrBlk256(const __m512i* p_in_x,
     }
 
     for (; blocks >= blockCount2; blocks -= blockCount2) {
-        c2 = alcp_add_epi32(c1, one_x);
+        c2 = alcp_add_epi64(c1, one_x);
 
         a1 = alcp_loadu(p_in_x);
         a2 = alcp_loadu(p_in_x + 1);
@@ -418,7 +418,7 @@ ctrBlk256(const __m512i* p_in_x,
         a2 = alcp_xor(b2, a2);
 
         // increment counter
-        c1 = alcp_add_epi32(c1, two_x);
+        c1 = alcp_add_epi64(c1, two_x);
         alcp_storeu(p_out_x, a1);
         alcp_storeu(p_out_x + 1, a2);
 
@@ -437,7 +437,7 @@ ctrBlk256(const __m512i* p_in_x,
         a1 = alcp_xor(b1, a1);
 
         // increment counter
-        c1 = alcp_add_epi32(c1, one_x);
+        c1 = alcp_add_epi64(c1, one_x);
 
         alcp_storeu(p_out_x, a1);
 
@@ -457,7 +457,7 @@ ctrBlk256(const __m512i* p_in_x,
         a1 = alcp_xor(b1, a1);
 
         // increment counter
-        c1 = alcp_add_epi32(c1, one_lo);
+        c1 = alcp_add_epi64(c1, one_lo);
 
         alcp_storeu_128(p_out_x, a1);
         p_in_x  = (__m512i*)(((__uint128_t*)p_in_x) + 1);
