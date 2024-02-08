@@ -135,6 +135,11 @@ namespace alcp::cipher { namespace vaes {
         return _mm256_add_epi32(a, b);
     }
 
+    static inline __m256i alcp_add_epi64(__m256i a, __m256i b)
+    {
+        return _mm256_add_epi64(a, b);
+    }
+
     // shuffle functions.
     static inline __m256i alcp_shuffle_epi8(__m256i a, __m256i b)
     {

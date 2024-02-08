@@ -148,6 +148,11 @@ namespace alcp::cipher { namespace vaes512 {
         return _mm512_add_epi32(a, b);
     }
 
+    static inline __m512i alcp_add_epi64(__m512i a, __m512i b)
+    {
+        return _mm512_add_epi64(a, b);
+    }
+
     // shuffle functions.
     static inline __m512i alcp_shuffle_epi8(__m512i a, __m512i b)
     {
