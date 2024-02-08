@@ -31,15 +31,16 @@
 #include <immintrin.h>
 
 /*
- * AMS1024 is bases on Fast modular squaring with AVX512IFMA
- * reference as mentioned on below link
+ * AMS1024 is based on Fast modular squaring with AVX512IFMA
+ * referenced as mentioned on below link
  * https://eprint.iacr.org/2018/335
+ * Authors - Nir Drucker & Shay Gueron
  *
  * AMM1024  and RSA2048MontgomeryExpConstantTimeParallel is based on Fast
  * modular multplication and exponentiation with AVX512IFMA referenced as
  * mentioned on below link
  * https://link.springer.com/chapter/10.1007/978-3-642-31662-3_9
- *
+ * Authors - Shay Gueron & Vlad Krasnov
  */
 
 namespace alcp::rsa { namespace zen4 {
