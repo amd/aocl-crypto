@@ -41,11 +41,6 @@ ALCP_prov_cipher_freectx(void* vctx)
         OPENSSL_free(pcctx->handle.ch_context);
         pcctx->handle.ch_context = NULL;
     }
-    /*
-     * pcctx->pc_evp_cipher will be  freed in provider teardown,
-     */
-    EVP_CIPHER_CTX_free(pcctx->pc_evp_cipher_ctx);
-    pcctx->pc_evp_cipher_ctx = NULL;
 
     OPENSSL_free(vctx);
     vctx = NULL;
@@ -63,8 +58,7 @@ ALCP_prov_cipher_newctx(void* vprovctx, const void* cinfo, bool is_aead)
 
     if (ciph_ctx != NULL) {
         ciph_ctx->pc_prov_ctx = pctx;
-        // ciph_ctx->pc_params         = pparams;
-        ciph_ctx->pc_libctx = pctx->ap_libctx;
+        ciph_ctx->pc_libctx   = pctx->ap_libctx;
         if (is_aead) {
             ciph_ctx->is_aead             = true;
             ciph_ctx->pc_cipher_aead_info = *((alc_cipher_aead_info_t*)cinfo);
@@ -73,12 +67,7 @@ ALCP_prov_cipher_newctx(void* vprovctx, const void* cinfo, bool is_aead)
             ciph_ctx->is_aead        = false;
             ciph_ctx->pc_cipher_info = *((alc_cipher_info_t*)cinfo);
         }
-        ciph_ctx->ivlen             = -1;
-        ciph_ctx->pc_evp_cipher_ctx = EVP_CIPHER_CTX_new();
-        if (!ciph_ctx->pc_evp_cipher_ctx || !ciph_ctx->pc_prov_ctx) {
-            ALCP_prov_cipher_freectx(ciph_ctx);
-            ciph_ctx = NULL;
-        }
+        ciph_ctx->ivlen = -1;
     }
 
     return ciph_ctx;
@@ -1004,10 +993,14 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_256_CTR, CIPHER_DEF_PROP, ctr_functions_256 },
     { ALCP_PROV_NAMES_AES_192_CTR, CIPHER_DEF_PROP, ctr_functions_192 },
     { ALCP_PROV_NAMES_AES_128_CTR, CIPHER_DEF_PROP, ctr_functions_128 },
-    // ECB
-    { ALCP_PROV_NAMES_AES_256_ECB, CIPHER_DEF_PROP, ecb_functions_256 },
+
+/* ECB is disabled since ALCP does not support it. So all ECB calls will       \
+fall back to OpenSSL default provider */                                       \
+#if 0   
+ { ALCP_PROV_NAMES_AES_256_ECB, CIPHER_DEF_PROP, ecb_functions_256 },
     { ALCP_PROV_NAMES_AES_192_ECB, CIPHER_DEF_PROP, ecb_functions_192 },
     { ALCP_PROV_NAMES_AES_128_ECB, CIPHER_DEF_PROP, ecb_functions_128 },
+#endif
     // XTS
     { ALCP_PROV_NAMES_AES_256_XTS, CIPHER_DEF_PROP, xts_functions_256 },
     { ALCP_PROV_NAMES_AES_128_XTS, CIPHER_DEF_PROP, xts_functions_128 },
@@ -1035,8 +1028,6 @@ ALCP_prov_cipher_init(alc_prov_ctx_p cc)
     alc_prov_cipher_ctx_p c = (alc_prov_cipher_ctx_p)cc;
 
     ENTER();
-    if (c->pc_evp_cipher)
-        return c->pc_evp_cipher;
 
     /* Some sanity checking. */
     int flags = c->pc_flags;
