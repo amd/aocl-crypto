@@ -34,11 +34,6 @@ ALCP_prov_digest_freectx(void* vctx)
 {
     alc_prov_digest_ctx_p pdctx = vctx;
     ENTER();
-    /*
-     * pdctx->pc_evp_digest will be  freed in provider teardown,
-     */
-
-    EVP_MD_CTX_free(pdctx->pc_evp_digest_ctx);
 
     OPENSSL_clear_free(vctx, sizeof(*pdctx));
 }

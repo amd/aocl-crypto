@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -45,7 +45,6 @@ ALCP_prov_mac_freectx(void* vctx)
     }
     OPENSSL_free(mctx->handle.ch_context);
     mctx->handle.ch_context = NULL;
-    EVP_MAC_CTX_free(mctx->pc_evp_mac_ctx);
     OPENSSL_free(vctx);
     vctx = NULL;
     EXIT();

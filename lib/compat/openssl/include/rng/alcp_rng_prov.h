@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -49,14 +49,7 @@ struct _alc_prov_rng_ctx
     alc_rng_handle_t handle;
     int              init_flag;
 
-    int               pc_nid;
-    EVP_RAND*         pc_evp_rng;
-    EVP_RAND_CTX*     pc_evp_rng_ctx;
-    const OSSL_PARAM* pc_params;
-
     alc_rng_info_t pc_rng_info;
-    int            pc_ctx_size;
-    int            pc_flags;
 
     OSSL_LIB_CTX* pc_libctx;
 };

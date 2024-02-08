@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -49,16 +49,8 @@ struct _alc_prov_mac_ctx
     /* Must be first */
     alc_prov_ctx_t*  pc_prov_ctx;
     alc_mac_handle_t handle;
-    int              enc_flag;
-
-    int               pc_nid;
-    EVP_MAC*          pc_evp_mac;
-    EVP_MAC_CTX*      pc_evp_mac_ctx;
-    const OSSL_PARAM* pc_params;
 
     alc_mac_info_t pc_mac_info;
-    int            pc_ctx_size;
-    int            pc_flags;
 
     OSSL_LIB_CTX* pc_libctx;
 };

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -55,23 +55,18 @@ struct _alc_prov_cipher_ctx
     alc_key_info_t kinfo_siv_ctr_key;
     int            enc_flag;
 
-    int               pc_nid;
-    EVP_CIPHER*       pc_evp_cipher;
-    EVP_CIPHER_CTX*   pc_evp_cipher_ctx;
-    const OSSL_PARAM* pc_params;
-    Uint64            ivlen;
-    int               taglen;
-    Uint8*            tagbuff;
-    const Uint8*      aad;
-    int               aadlen;
-    bool              add_inititalized;
+    Uint64       ivlen;
+    int          taglen;
+    Uint8*       tagbuff;
+    const Uint8* aad;
+    int          aadlen;
+    bool         add_inititalized;
 
     bool is_aead;
 
     alc_cipher_info_t      pc_cipher_info;
     alc_cipher_aead_info_t pc_cipher_aead_info;
 
-    int pc_ctx_size;
     int pc_flags;
 
     OSSL_LIB_CTX* pc_libctx;
