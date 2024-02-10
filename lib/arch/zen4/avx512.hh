@@ -210,8 +210,7 @@ namespace alcp::cipher { namespace vaes512 {
 
     static inline void alcp_storeu_128(__m512i* ad, __m512i x)
     {
-        ((Uint64*)ad)[0] = x[0];
-        ((Uint64*)ad)[1] = x[1];
+        _mm512_mask_storeu_epi64(ad, 0x03, x);
     }
 
 }} // namespace alcp::cipher::vaes512
