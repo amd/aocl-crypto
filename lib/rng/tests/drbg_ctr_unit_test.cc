@@ -427,7 +427,18 @@ class CtrDrbgFuncionalityTest
 
 TEST_P(CtrDrbgFuncionalityTest, KAT)
 {
-
+    if (PersonalizationString.size() == 0) {
+        PersonalizationString.reserve(1);
+    }
+    if (AdditionalInput1.size() == 0) {
+        AdditionalInput1.reserve(1);
+    }
+    if (AdditionalInput2.size() == 0) {
+        AdditionalInput2.reserve(1);
+    }
+    if (nonce.size() == 0) {
+        nonce.reserve(1);
+    }
     m_ctrDrbg->testingInstantiate(EntropyInput, nonce, PersonalizationString);
 
     std::vector<Uint8> actual_key1   = m_ctrDrbg->testingGetKCopy();

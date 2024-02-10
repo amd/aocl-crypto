@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -66,7 +66,8 @@ DebugPrintPretty(std::vector<Uint8>& output)
 #else
 void
 DebugPrintPretty(std::vector<Uint8>& output)
-{}
+{
+}
 #endif
 
 class NullGenerator : public IRng
@@ -145,6 +146,7 @@ TEST(DRBG_HMAC, Generate)
     std::vector<Uint8> output(200, 0);
     std::vector<Uint8> untouched_output(200, 0);
     std::vector<Uint8> personalization_string(0);
+    personalization_string.reserve(1);
 
     hmac_drbg.initialize(128, personalization_string);
     hmac_drbg.randomize(&output[0], output.size());
@@ -184,6 +186,7 @@ TEST(DRBG_HMAC, GenerateNull)
         0xec, 0xbc, 0x18, 0x2b, 0x91, 0x84, 0x3a, 0x7a
     };
     std::vector<Uint8> personalization_string(0);
+    personalization_string.reserve(1);
 
     hmac_drbg.initialize(128, personalization_string);
     hmac_drbg.randomize(&output[0], output.size());
@@ -205,6 +208,7 @@ TEST(DRBG_HMAC, MutiGenerate)
     std::vector<Uint8> output_1(10, 0);
     std::vector<Uint8> output_2(10, 0);
     std::vector<Uint8> personalization_string(0);
+    personalization_string.reserve(1);
 
     hmac_drbg.initialize(128, personalization_string);
     hmac_drbg.randomize(&output_1[0], output_1.size());
@@ -258,6 +262,7 @@ TEST(DRBG_HMAC, GenerateMock)
     };
 
     std::vector<Uint8> personalization_string(0);
+    personalization_string.reserve(1);
     // const auto         s = testing::Action<Status>(StatusOk());
     EXPECT_CALL(*(sys_rng.get()), randomize(::testing::_, ::testing::_))
         .Times(2)
@@ -284,7 +289,12 @@ class CustomRng : public IRng
     Uint64 m_call_count;
 
   public:
-    CustomRng() = default;
+    CustomRng()
+        : m_call_count{ 0 }
+    {
+        m_entropy.reserve(1);
+        m_nonce.reserve(1);
+    };
 
     Status readRandom(Uint8* pBuf, Uint64 size) override { return StatusOk(); }
 
@@ -295,7 +305,8 @@ class CustomRng : public IRng
             utils::CopyBytes(output, &m_entropy[0], length);
             m_call_count++;
         } else if (m_call_count == 1) {
-            utils::CopyBytes(output, &m_nonce[0], length);
+            if (length != 0)
+                utils::CopyBytes(output, &m_nonce[0], length);
             m_call_count++;
         } else {
             printf("Not Allowed\n");
@@ -347,6 +358,7 @@ TEST(DRBG_Ctr, Generate)
     };
 
     std::vector<Uint8> nonceInput = {};
+    nonceInput.reserve(1);
     custom_rng->setEntropy(entropyInput);
     custom_rng->setNonce(nonceInput);
 
@@ -359,8 +371,10 @@ TEST(DRBG_Ctr, Generate)
     drbg->setEntropyLen(entropyInput.size());
 
     std::vector<Uint8> personalizationString;
+    personalizationString.reserve(1);
     drbg->initialize(100, personalizationString);
     std::vector<Uint8> additional_input;
+    additional_input.reserve(1);
     std::vector<Uint8> generated_bytes(expected_generated_bytes.size());
     drbg->randomize(&generated_bytes[0],
                     generated_bytes.size(),

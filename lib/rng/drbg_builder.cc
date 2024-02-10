@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -96,6 +96,7 @@ __drbg_wrapperinitialize(void*        m_drbg,
                          Uint64       size)
 {
     std::vector<Uint8> temp_personalization_string;
+    temp_personalization_string.reserve(1);
     if (buff != nullptr && size != 0) {
         temp_personalization_string = std::vector<Uint8>(buff, buff + size);
     }
@@ -149,7 +150,8 @@ DrbgBuilder::build(const alc_drbg_info_t& drbgInfo, Context& ctx)
             status.update(InvalidArgument("Unknown MAC Type"));
             break;
     }
-    const alc_rng_source_info_t* rng_source_info = &(drbgInfo.di_rng_sourceinfo);
+    const alc_rng_source_info_t* rng_source_info =
+        &(drbgInfo.di_rng_sourceinfo);
     alcp::rng::IDrbg* p_drbg = static_cast<alcp::rng::Drbg*>(ctx.m_drbg);
     if (rng_source_info->custom_rng == false) {
         std::shared_ptr<IRng> irng;
@@ -230,10 +232,12 @@ Status
 DrbgBuilder::isSupported(const alc_drbg_info_t& drbgInfo)
 {
     Status s{ StatusOk() };
-    s = alcp::rng::RngBuilder::isSupported(
-        drbgInfo.di_rng_sourceinfo.di_sourceinfo.rng_info);
-    if (!s.ok()) {
-        return s;
+    if (drbgInfo.di_rng_sourceinfo.custom_rng == false) {
+        s = alcp::rng::RngBuilder::isSupported(
+            drbgInfo.di_rng_sourceinfo.di_sourceinfo.rng_info);
+        if (!s.ok()) {
+            return s;
+        }
     }
     switch (drbgInfo.di_type) {
         case ALC_DRBG_CTR:

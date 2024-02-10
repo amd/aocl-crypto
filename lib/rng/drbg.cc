@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -56,15 +56,21 @@ Drbg::initialize(int                 cSecurityStrength,
 #endif
     std::vector<Uint8> entropy_input(m_entropy_len);
     std::vector<Uint8> nonce(m_nonce_len);
+    entropy_input.reserve(1);
+    nonce.reserve(1);
 
-    s = m_entropy_in->randomize(&entropy_input[0], entropy_input.size());
-    if (!s.ok()) {
-        return s;
+    if (entropy_input.size()) {
+        s = m_entropy_in->randomize(&entropy_input[0], entropy_input.size());
+        if (!s.ok()) {
+            return s;
+        }
     }
 
-    s = m_entropy_in->randomize(&nonce[0], nonce.size());
-    if (!s.ok()) {
-        return s;
+    if (nonce.size()) {
+        s = m_entropy_in->randomize(&nonce[0], nonce.size());
+        if (!s.ok()) {
+            return s;
+        }
     }
 
     instantiate(entropy_input, nonce, personalization_string);
@@ -150,6 +156,7 @@ Status
 Drbg::randomize(Uint8 output[], size_t length)
 {
     std::vector<Uint8> add = std::vector<Uint8>(0);
+    add.reserve(1);
     return randomize(output, length, 512, add);
 }
 
