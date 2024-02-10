@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,15 +38,15 @@
 #include "dispatcher.hh"
 #include "randomize.hh"
 
-constexpr CpuCipherFeatures c_CpuFeatureSelect = CpuCipherFeatures::eDynamic;
+constexpr CpuCipherFeatures cCpuFeatureSelect = CpuCipherFeatures::eDynamic;
 
 using alcp::cipher::Cbc;
 using alcp::cipher::ICipher;
 namespace alcp::cipher::unittest::cbc {
 std::vector<Uint8> key       = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                           0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+                                 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
 std::vector<Uint8> iv        = { 0x01, 0x00, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                          0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+                                 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
 std::vector<Uint8> plainText = {
     0x02, 0x01, 0x00, 0x03, 0x04, 0x05, 0x06, 0x07,
     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
@@ -128,12 +128,12 @@ CbcFactory(const Uint8 key[])
         }
     } else if constexpr (features == utils::CpuCipherFeatures::eDynamic) {
         CpuId                           cpu;
-        static utils::CpuCipherFeatures maxFeature = getMaxFeature();
-        if (maxFeature == utils::CpuCipherFeatures::eVaes512) {
+        static utils::CpuCipherFeatures max_feature = getMaxFeature();
+        if (max_feature == utils::CpuCipherFeatures::eVaes512) {
             cbc = CbcFactory<utils::CpuCipherFeatures::eVaes512, keylen>(key);
-        } else if (maxFeature == utils::CpuCipherFeatures::eVaes256) {
+        } else if (max_feature == utils::CpuCipherFeatures::eVaes256) {
             cbc = CbcFactory<utils::CpuCipherFeatures::eVaes256, keylen>(key);
-        } else if (maxFeature == utils::CpuCipherFeatures::eAesni) {
+        } else if (max_feature == utils::CpuCipherFeatures::eAesni) {
             cbc = CbcFactory<utils::CpuCipherFeatures::eAesni, keylen>(key);
         }
     }
@@ -198,8 +198,8 @@ using namespace alcp::cipher::unittest;
 using namespace alcp::cipher::unittest::cbc;
 TEST(CBC, creation)
 {
-    std::vector<CpuCipherFeatures> cpuFeatures = getSupportedFeatures();
-    for (CpuCipherFeatures feature : cpuFeatures) {
+    std::vector<CpuCipherFeatures> cpu_features = getSupportedFeatures();
+    for (CpuCipherFeatures feature : cpu_features) {
 #ifdef DEBUG
         std::cout
             << "Cpu Feature:"
@@ -216,7 +216,7 @@ TEST(CBC, creation)
 
 TEST(CBC, BasicEncryption)
 {
-    std::unique_ptr<ICipher> cbc = CbcFactory<c_CpuFeatureSelect, 128>(&key[0]);
+    std::unique_ptr<ICipher> cbc = CbcFactory<cCpuFeatureSelect, 128>(&key[0]);
 
     EXPECT_TRUE(cbc.get() != nullptr);
 
@@ -229,7 +229,7 @@ TEST(CBC, BasicEncryption)
 
 TEST(CBC, BasicDecryption)
 {
-    std::unique_ptr<ICipher> cbc = CbcFactory<c_CpuFeatureSelect, 128>(&key[0]);
+    std::unique_ptr<ICipher> cbc = CbcFactory<cCpuFeatureSelect, 128>(&key[0]);
 
     EXPECT_TRUE(cbc.get() != nullptr);
 
@@ -242,25 +242,26 @@ TEST(CBC, BasicDecryption)
 
 TEST(CBC, RandomEncryptDecryptTest)
 {
-    Uint8 key_256[32] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe };
-    std::vector<Uint8> plainText_vect(100000);
-    std::vector<Uint8> cipherText_vect(100000);
+    Uint8        key_256[32] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe };
+    const Uint64 cTextSize   = 100000;
+    std::vector<Uint8> plain_text_vect(cTextSize);
+    std::vector<Uint8> cipher_text_vect(cTextSize);
     Uint8              iv[16] = {};
 
     // Fill buffer with random data
     std::unique_ptr<IRandomize> random = std::make_unique<Randomize>(12);
-    random->getRandomBytes(plainText_vect);
-    random->getRandomBytes(cipherText_vect);
+    random->getRandomBytes(plain_text_vect);
+    random->getRandomBytes(cipher_text_vect);
     random->getRandomBytes(key_256, 32);
     random->getRandomBytes(iv, 16);
 
-    std::vector<CpuCipherFeatures> cpuFeatures = getSupportedFeatures();
+    std::vector<CpuCipherFeatures> cpu_features = getSupportedFeatures();
 
-    for (int i = 100000; i > 16; i -= 16)
-        for (CpuCipherFeatures feature : cpuFeatures) {
+    for (int i = (cTextSize - 16); i > 16; i -= 16)
+        for (CpuCipherFeatures feature : cpu_features) {
 #ifdef DEBUG
             std::cout
                 << "Cpu Feature:"
@@ -269,8 +270,8 @@ TEST(CBC, RandomEncryptDecryptTest)
                        feature)
                 << std::endl;
 #endif
-            const std::vector<Uint8> plainTextVect(plainText_vect.begin() + i,
-                                                   plainText_vect.end());
+            const std::vector<Uint8> plainTextVect(plain_text_vect.begin() + i,
+                                                   plain_text_vect.end());
             std::vector<Uint8>       plainTextOut(plainTextVect.size());
             std::unique_ptr<ICipher> cbc =
                 CbcFactoryIndirect(feature, key_256, sizeof(key_256) * 8);
@@ -278,11 +279,11 @@ TEST(CBC, RandomEncryptDecryptTest)
             EXPECT_TRUE(cbc.get() != nullptr);
 
             cbc->encrypt(&plainTextVect[0],
-                         &cipherText_vect[0],
+                         &cipher_text_vect[0],
                          plainTextVect.size(),
                          iv);
 
-            cbc->decrypt(&cipherText_vect[0],
+            cbc->decrypt(&cipher_text_vect[0],
                          &plainTextOut[0],
                          plainTextVect.size(),
                          iv);
