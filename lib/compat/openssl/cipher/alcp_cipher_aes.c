@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,7 +31,6 @@
 CIPHER_CONTEXT(cfb, ALC_AES_MODE_CFB);
 CIPHER_CONTEXT(cbc, ALC_AES_MODE_CBC);
 CIPHER_CONTEXT(ofb, ALC_AES_MODE_OFB);
-CIPHER_CONTEXT(ecb, ALC_AES_MODE_ECB);
 CIPHER_CONTEXT(ctr, ALC_AES_MODE_CTR);
 CIPHER_CONTEXT(xts, ALC_AES_MODE_XTS);
 CIPHER_AEAD_CONTEXT(gcm, ALC_AES_MODE_GCM);
@@ -86,9 +85,6 @@ CREATE_CIPHER_DISPATCHERS(cbc, aes, EVP_CIPH_CBC_MODE, 256, false);
 CREATE_CIPHER_DISPATCHERS(ofb, aes, EVP_CIPH_OFB_MODE, 128, false);
 CREATE_CIPHER_DISPATCHERS(ofb, aes, EVP_CIPH_OFB_MODE, 192, false);
 CREATE_CIPHER_DISPATCHERS(ofb, aes, EVP_CIPH_OFB_MODE, 256, false);
-CREATE_CIPHER_DISPATCHERS(ecb, aes, EVP_CIPH_ECB_MODE, 128, false);
-CREATE_CIPHER_DISPATCHERS(ecb, aes, EVP_CIPH_ECB_MODE, 192, false);
-CREATE_CIPHER_DISPATCHERS(ecb, aes, EVP_CIPH_ECB_MODE, 256, false);
 CREATE_CIPHER_DISPATCHERS(ctr, aes, EVP_CIPH_CTR_MODE, 128, false);
 CREATE_CIPHER_DISPATCHERS(ctr, aes, EVP_CIPH_CTR_MODE, 192, false);
 CREATE_CIPHER_DISPATCHERS(ctr, aes, EVP_CIPH_CTR_MODE, 256, false);

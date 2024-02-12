@@ -110,9 +110,9 @@ OSSL_FUNC_cipher_encrypt_init_fn   ALCP_prov_cipher_encrypt_init;
 OSSL_FUNC_cipher_decrypt_init_fn   ALCP_prov_cipher_decrypt_init;
 OSSL_FUNC_cipher_update_fn         ALCP_prov_cipher_cfb_update,
     ALCP_prov_cipher_cbc_update, ALCP_prov_cipher_ofb_update,
-    ALCP_prov_cipher_ecb_update, ALCP_prov_cipher_ctr_update,
-    ALCP_prov_cipher_xts_update, ALCP_prov_cipher_gcm_update,
-    ALCP_prov_cipher_ccm_update, ALCP_prov_cipher_siv_update;
+    ALCP_prov_cipher_ctr_update, ALCP_prov_cipher_xts_update,
+    ALCP_prov_cipher_gcm_update, ALCP_prov_cipher_ccm_update,
+    ALCP_prov_cipher_siv_update;
 OSSL_FUNC_cipher_final_fn ALCP_prov_cipher_final;
 
 // Macro for Context Creation

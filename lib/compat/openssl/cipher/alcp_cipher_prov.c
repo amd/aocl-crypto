@@ -802,7 +802,11 @@ ALCP_prov_cipher_update(void*                vctx,
 {
     alc_prov_cipher_ctx_p cctx = vctx;
     alc_error_t           err  = ALC_ERROR_NONE;
-    ENTER();
+
+    if (inl == 0) {
+        *outl = inl;
+        return 1;
+    }
 
     if (cctx->enc_flag) {
         err = alcp_cipher_encrypt(&(cctx->handle),
@@ -841,7 +845,10 @@ ALCP_prov_cipher_cfb_update(void*                vctx,
                             const unsigned char* in,
                             size_t               inl)
 {
-    return ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
+    ENTER();
+    int ret = ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
+    EXIT();
+    return ret;
 }
 
 int
@@ -852,7 +859,10 @@ ALCP_prov_cipher_cbc_update(void*                vctx,
                             const unsigned char* in,
                             size_t               inl)
 {
-    return ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
+    ENTER();
+    int ret = ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
+    EXIT();
+    return ret;
 }
 
 int
@@ -863,18 +873,10 @@ ALCP_prov_cipher_ofb_update(void*                vctx,
                             const unsigned char* in,
                             size_t               inl)
 {
-    return ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
-}
-
-int
-ALCP_prov_cipher_ecb_update(void*                vctx,
-                            unsigned char*       out,
-                            size_t*              outl,
-                            size_t               outsize,
-                            const unsigned char* in,
-                            size_t               inl)
-{
-    return ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
+    ENTER();
+    int ret = ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
+    EXIT();
+    return ret;
 }
 
 int
@@ -885,7 +887,10 @@ ALCP_prov_cipher_ctr_update(void*                vctx,
                             const unsigned char* in,
                             size_t               inl)
 {
-    return ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
+    ENTER();
+    int ret = ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
+    EXIT();
+    return ret;
 }
 
 int
@@ -896,7 +901,10 @@ ALCP_prov_cipher_xts_update(void*                vctx,
                             const unsigned char* in,
                             size_t               inl)
 {
-    return ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
+    ENTER();
+    int ret = ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
+    EXIT();
+    return ret;
 }
 
 int
@@ -911,21 +919,21 @@ ALCP_prov_cipher_gcm_update(void*                vctx,
     alc_error_t           err  = ALC_ERROR_NONE;
 
     ENTER();
+    if (inl == 0) {
+        *outl = inl;
+        return 1;
+    }
 
-    if (cctx->enc_flag) {
-        if (out == NULL) {
-            err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
-        } else {
+    if (out == NULL) {
+        err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+    } else {
+        if (cctx->enc_flag) {
             err = alcp_cipher_aead_encrypt_update(
                 &(cctx->handle),
                 in,
                 out,
                 inl,
                 cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
-        }
-    } else {
-        if (out == NULL) {
-            err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
         } else {
             err = alcp_cipher_aead_decrypt_update(
                 &(cctx->handle),
@@ -948,6 +956,7 @@ ALCP_prov_cipher_gcm_update(void*                vctx,
         alcp_error_str(err, err_buf, err_size);
         return 0;
     }
+    EXIT();
     *outl = inl;
     return 1;
 }
@@ -962,7 +971,7 @@ ALCP_prov_cipher_ccm_update(void*                vctx,
 {
     alc_prov_cipher_ctx_p cctx = vctx;
     alc_error_t           err  = ALC_ERROR_NONE;
-    // alc_cipher_info_p      cinfo      = &cctx->pc_cipher_info;
+
     ENTER();
 
     if (inl == 0) {
@@ -970,58 +979,36 @@ ALCP_prov_cipher_ccm_update(void*                vctx,
         return 1;
     }
 
-    if (cctx->enc_flag) {
-        if (out == NULL && outl != NULL && in != NULL) { // AAD call
-            cctx->aadlen = inl;
-            cctx->aad    = in;
-        } else if (out != NULL && outl != NULL && in != NULL) { // Encrypt Call
-            err =
-                alcp_cipher_aead_set_tag_length(&(cctx->handle), cctx->taglen);
+    if (out == NULL && outl != NULL && in != NULL) { // AAD call
+        cctx->aadlen = inl;
+        cctx->aad    = in;
+    } else if (out != NULL && outl != NULL && in != NULL) {
+        err = alcp_cipher_aead_set_tag_length(&(cctx->handle), cctx->taglen);
+        if (err != ALC_ERROR_NONE)
+            goto out;
+        err = alcp_cipher_aead_set_iv(
+            &(cctx->handle),
+            cctx->ivlen,
+            cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+        if (err != ALC_ERROR_NONE)
+            goto out;
+        if (cctx->aadlen != 0) {
+            err = alcp_cipher_aead_set_aad(
+                &(cctx->handle), cctx->aad, cctx->aadlen);
             if (err != ALC_ERROR_NONE)
                 goto out;
-            err = alcp_cipher_aead_set_iv(
-                &(cctx->handle),
-                cctx->ivlen,
-                cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
-            if (err != ALC_ERROR_NONE)
-                goto out;
-            if (cctx->aadlen != 0) {
-                err = alcp_cipher_aead_set_aad(
-                    &(cctx->handle), cctx->aad, cctx->aadlen);
-                if (err != ALC_ERROR_NONE)
-                    goto out;
-            }
-            cctx->add_inititalized = true;
-            err                    = alcp_cipher_aead_encrypt_update(
+        }
+        cctx->add_inititalized = true;
+
+        if (cctx->enc_flag) {
+            err = alcp_cipher_aead_encrypt_update(
                 &(cctx->handle),
                 in,
                 out,
                 inl,
                 cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
-        }
-    } else {
-        if (out == NULL && outl != NULL && in != NULL) { // AAD call
-            cctx->aadlen = inl;
-            cctx->aad    = in;
-        } else if (out != NULL && outl != NULL && in != NULL) { // Decrypt Call
-            err =
-                alcp_cipher_aead_set_tag_length(&(cctx->handle), cctx->taglen);
-            if (err != ALC_ERROR_NONE)
-                goto out;
-            err = alcp_cipher_aead_set_iv(
-                &(cctx->handle),
-                cctx->ivlen,
-                cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
-            if (err != ALC_ERROR_NONE)
-                goto out;
-            if (cctx->aadlen != 0) {
-                err = alcp_cipher_aead_set_aad(
-                    &(cctx->handle), cctx->aad, cctx->aadlen);
-                if (err != ALC_ERROR_NONE)
-                    goto out;
-            }
-            cctx->add_inititalized = true;
-            err                    = alcp_cipher_aead_decrypt_update(
+        } else {
+            err = alcp_cipher_aead_decrypt_update(
                 &(cctx->handle),
                 in,
                 out,
@@ -1040,6 +1027,7 @@ out:
         alcp_error_str(err, err_buf, err_size);
         return 0;
     }
+    EXIT();
     *outl = inl;
     return 1;
 }
@@ -1056,6 +1044,7 @@ ALCP_prov_cipher_siv_update(void*                vctx,
     alc_error_t           err      = ALC_ERROR_NONE;
     const int             err_size = 256;
     Uint8                 err_buf[err_size];
+
     ENTER();
 
     if (inl == 0) {
@@ -1063,18 +1052,13 @@ ALCP_prov_cipher_siv_update(void*                vctx,
         return 1;
     }
 
-    if (cctx->enc_flag) {
-        if (out == NULL) {
-            err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
-        } else {
+    if (out == NULL) {
+        err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
+    } else {
+        if (cctx->enc_flag) {
             Uint8 fake_iv[100] = { 0 };
             err                = alcp_cipher_aead_encrypt(
                 &(cctx->handle), in, out, inl, fake_iv);
-        }
-
-    } else {
-        if (out == NULL) {
-            err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
         } else {
             // IV must be copied to cctx->tagbuff when application calls
             // EVP_CIPHER_CTX_ctrl call with EVP_CTRL_AEAD_SET_TAG. This
@@ -1094,6 +1078,7 @@ ALCP_prov_cipher_siv_update(void*                vctx,
         alcp_error_str(err, err_buf, err_size);
         return 0;
     }
+    EXIT();
     *outl = inl;
     return 1;
 }
