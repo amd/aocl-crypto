@@ -908,7 +908,8 @@ AesAeadCrosstest(int               keySize,
 
             std::vector<Uint8> ct(i * size, 0), tag_alc(tagLength, 0),
                 tag_ext(tagLength, 0), out_ct_alc(i * size, 0),
-                out_ct_ext(i * size, 0), out_pt(i * size, 0);
+                out_ct_ext(i * size, 0), out_pt_alc(i * size, 0),
+                out_pt_ext(i * size, 0);
 
             auto tagBuff = std::make_unique<Uint8[]>(tagLength);
 
@@ -1012,10 +1013,8 @@ AesAeadCrosstest(int               keySize,
                         FAIL();
                     }
                     /* To accomodate the misaligned pointer checks */
-                    const Uint8* Temp;
-                    Temp           = data_alc.m_in;
                     data_alc.m_in  = data_alc.m_out;
-                    data_alc.m_out = const_cast<Uint8*>(Temp);
+                    data_alc.m_out = &out_pt_alc[0];
                 }
                 ret = alcpTC->getCipherHandler()->testingDecrypt(data_alc, key);
                 if (!ret) {
@@ -1035,8 +1034,8 @@ AesAeadCrosstest(int               keySize,
                         std::cout << "ERROR: enc: ext lib" << std::endl;
                         FAIL();
                     }
-                    data_ext.m_in  = &(out_ct_ext[0]);
-                    data_ext.m_out = &(pt[0]);
+                    data_ext.m_in  = data_ext.m_out;
+                    data_ext.m_out = &out_pt_ext[0];
                 }
                 ret = extTC->getCipherHandler()->testingDecrypt(data_ext, key);
                 if (!ret) {
@@ -1053,7 +1052,7 @@ AesAeadCrosstest(int               keySize,
                 if (isgcm || isccm) {
                     /* Verify only if tag contains valid data */
                     if (!data_alc.m_isTagValid || !data_ext.m_isTagValid) {
-                        ASSERT_TRUE(ArraysMatch(out_ct_alc, out_ct_ext));
+                        ASSERT_TRUE(ArraysMatch(out_pt_alc, out_pt_ext));
                         EXPECT_TRUE(ArraysMatch(tag_alc, tag_ext));
                     }
                 } else if (!(isgcm || isccm)) {
