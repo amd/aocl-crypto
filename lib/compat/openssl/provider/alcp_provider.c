@@ -32,39 +32,14 @@
 #include "provider/alcp_provider.h"
 
 static void
-ALCP_prov_freectx(alc_prov_ctx_t* ctx)
+ALCP_prov_freectx(alc_prov_ctx_t* alcpctx)
 {
-    if (ctx != NULL) {
-        // ENGINE_free(ctx->e);
-        // proverr_free_handle(ctx->proverr_handle);
-        /* Below line commented because of segmentation fault*/
-        // OSSL_LIB_CTX_free(ctx->ap_libctx);
+    if (alcpctx != NULL) {
+        if (alcpctx->ap_libctx != NULL) {
+            OSSL_LIB_CTX_free(alcpctx->ap_libctx);
+        }
+        OPENSSL_free(alcpctx);
     }
-
-    // OPENSSL_free(ctx);
-}
-
-static alc_prov_ctx_t*
-ALCP_prov_newctx(const OSSL_CORE_HANDLE* core, const OSSL_DISPATCH* in)
-{
-    alc_prov_ctx_t* ctx;
-
-    ctx = OPENSSL_zalloc(sizeof(*ctx));
-
-    if (ctx) {
-        // ctx->proverr_handle = proverr_new_handle(core, in));
-
-        ctx->ap_libctx = OSSL_LIB_CTX_new_child(core, in);
-
-        ctx->ap_core_handle = core;
-    } else {
-        ctx = NULL;
-        goto out;
-    }
-
-out:
-    ALCP_prov_freectx(ctx);
-    return ctx;
 }
 
 static const OSSL_ALGORITHM*
@@ -172,20 +147,32 @@ static const OSSL_DISPATCH ALC_dispatch_table[] = {
 
 OPENSSL_EXPORT
 int
-OSSL_provider_init(const OSSL_CORE_HANDLE* core,
+OSSL_provider_init(const OSSL_CORE_HANDLE* handle,
                    const OSSL_DISPATCH*    in,
                    const OSSL_DISPATCH**   out,
                    void**                  vprovctx)
 {
-    alc_prov_ctx_p ctx;
-    ENTER();
-    ctx = ALCP_prov_newctx(core, in);
+    alc_prov_ctx_t* alcpctx = NULL;
+    *vprovctx               = NULL;
 
-    if (!ctx)
+    ENTER();
+
+    alcpctx = OPENSSL_zalloc(sizeof(alc_prov_ctx_t));
+
+    if (alcpctx == NULL) {
+        printf("\n alcp provider init failed");
         return 0;
+    } else {
+        alcpctx->ap_libctx = OSSL_LIB_CTX_new_child(handle, in);
+        if (alcpctx->ap_libctx == NULL) {
+            ALCP_teardown((void*)alcpctx);
+            return 0;
+        }
+        alcpctx->ap_core_handle = handle;
+    }
 
     *out      = ALC_dispatch_table;
-    *vprovctx = ctx;
+    *vprovctx = (void*)alcpctx;
 
     return 1;
 }

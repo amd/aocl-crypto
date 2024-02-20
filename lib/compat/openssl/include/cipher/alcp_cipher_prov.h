@@ -106,9 +106,11 @@ OSSL_FUNC_cipher_dupctx_fn         ALCP_prov_cipher_dupctx;
 OSSL_FUNC_cipher_freectx_fn        ALCP_prov_cipher_freectx;
 OSSL_FUNC_cipher_get_ctx_params_fn ALCP_prov_cipher_get_ctx_params;
 OSSL_FUNC_cipher_set_ctx_params_fn ALCP_prov_cipher_set_ctx_params;
-OSSL_FUNC_cipher_encrypt_init_fn   ALCP_prov_cipher_encrypt_init;
-OSSL_FUNC_cipher_decrypt_init_fn   ALCP_prov_cipher_decrypt_init;
-OSSL_FUNC_cipher_update_fn         ALCP_prov_cipher_cfb_update,
+OSSL_FUNC_cipher_encrypt_init_fn   ALCP_prov_cipher_encrypt_init,
+    ALCP_prov_cipher_aead_encrypt_init, ALCP_prov_cipher_aes_encrypt_init;
+OSSL_FUNC_cipher_decrypt_init_fn ALCP_prov_cipher_decrypt_init,
+    ALCP_prov_cipher_aead_decrypt_init, ALCP_prov_cipher_aes_decrypt_init;
+OSSL_FUNC_cipher_update_fn ALCP_prov_cipher_cfb_update,
     ALCP_prov_cipher_cbc_update, ALCP_prov_cipher_ofb_update,
     ALCP_prov_cipher_ctr_update, ALCP_prov_cipher_xts_update,
     ALCP_prov_cipher_gcm_update, ALCP_prov_cipher_ccm_update,
