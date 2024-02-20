@@ -283,26 +283,7 @@ ALCP_prov_cipher_set_ctx_params(void* vctx, const OSSL_PARAM params[])
     return 1;
 }
 
-int
-ALCP_prov_cipher_encrypt_init(void*                vctx,
-                              const unsigned char* key,
-                              size_t               keylen,
-                              const unsigned char* iv,
-                              size_t               ivlen,
-                              const OSSL_PARAM     params[])
-{
-    ENTER();
-    alc_prov_cipher_ctx_p cctx = vctx;
-    if (cctx->is_aead) {
-        return ALCP_prov_cipher_aead_encrypt_init(
-            vctx, key, keylen, iv, ivlen, params);
-    } else {
-        return ALCP_prov_cipher_aes_encrypt_init(
-            vctx, key, keylen, iv, ivlen, params);
-    }
-}
-
-int
+static inline int
 ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
                                   const unsigned char* key,
                                   size_t               keylen,
@@ -310,7 +291,6 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
                                   size_t               ivlen,
                                   const OSSL_PARAM     params[])
 {
-    ENTER();
     const OSSL_PARAM*      p;
     alc_prov_cipher_ctx_p  cctx       = vctx;
     alc_cipher_info_p      cinfo      = &cctx->pc_cipher_info;
@@ -471,32 +451,105 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
     printf("Provider: cctx->taglen: %d\n", cctx->taglen);
 #endif
     cctx->add_inititalized = false;
-    EXIT();
-
     return 1;
 }
 
 int
-ALCP_prov_cipher_decrypt_init(void*                vctx,
-                              const unsigned char* key,
-                              size_t               keylen,
-                              const unsigned char* iv,
-                              size_t               ivlen,
-                              const OSSL_PARAM     params[])
-
+ALCP_prov_cipher_cfb_encrypt_init(void*                vctx,
+                                   const unsigned char* key,
+                                   size_t               keylen,
+                                   const unsigned char* iv,
+                                   size_t               ivlen,
+                                   const OSSL_PARAM     params[])
 {
     ENTER();
-    alc_prov_cipher_ctx_p cctx = vctx;
-    if (cctx->is_aead) {
-        return ALCP_prov_cipher_aead_decrypt_init(
-            vctx, key, keylen, iv, ivlen, params);
-    } else {
-        return ALCP_prov_cipher_aes_decrypt_init(
-            vctx, key, keylen, iv, ivlen, params);
-    }
+    int ret = ALCP_prov_cipher_aes_encrypt_init(vctx,
+                                   key,
+                                   keylen,
+                                   iv,
+                                   ivlen,
+                                   params);
+    EXIT();
+    return ret;
 }
 
 int
+ALCP_prov_cipher_cbc_encrypt_init(void*                vctx,
+                                   const unsigned char* key,
+                                   size_t               keylen,
+                                   const unsigned char* iv,
+                                   size_t               ivlen,
+                                   const OSSL_PARAM     params[])
+{
+    ENTER();
+    int ret = ALCP_prov_cipher_aes_encrypt_init(vctx,
+                                   key,
+                                   keylen,
+                                   iv,
+                                   ivlen,
+                                   params);
+    EXIT();
+    return ret;
+}
+
+int
+ALCP_prov_cipher_ofb_encrypt_init(void*                vctx,
+                                   const unsigned char* key,
+                                   size_t               keylen,
+                                   const unsigned char* iv,
+                                   size_t               ivlen,
+                                   const OSSL_PARAM     params[])
+{
+    ENTER();
+    int ret = ALCP_prov_cipher_aes_encrypt_init(vctx,
+                                   key,
+                                   keylen,
+                                   iv,
+                                   ivlen,
+                                   params);
+    EXIT();
+    return ret;
+}
+
+int
+ALCP_prov_cipher_ctr_encrypt_init(void*                vctx,
+                                   const unsigned char* key,
+                                   size_t               keylen,
+                                   const unsigned char* iv,
+                                   size_t               ivlen,
+                                   const OSSL_PARAM     params[])
+{
+    ENTER();
+    int ret = ALCP_prov_cipher_aes_encrypt_init(vctx,
+                                   key,
+                                   keylen,
+                                   iv,
+                                   ivlen,
+                                   params);
+    EXIT();
+    return ret;
+}
+
+int
+ALCP_prov_cipher_xts_encrypt_init(void*                vctx,
+                                   const unsigned char* key,
+                                   size_t               keylen,
+                                   const unsigned char* iv,
+                                   size_t               ivlen,
+                                   const OSSL_PARAM     params[])
+{
+    ENTER();
+    int ret = ALCP_prov_cipher_aes_encrypt_init(vctx,
+                                   key,
+                                   keylen,
+                                   iv,
+                                   ivlen,
+                                   params);
+    EXIT();
+    return ret;
+}
+
+static inline int
 ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
                                   const unsigned char* key,
                                   size_t               keylen,
@@ -672,6 +725,101 @@ ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
     cctx->add_inititalized = false;
     EXIT();
     return 1;
+}
+
+int
+ALCP_prov_cipher_cfb_decrypt_init(void*                vctx,
+                                   const unsigned char* key,
+                                   size_t               keylen,
+                                   const unsigned char* iv,
+                                   size_t               ivlen,
+                                   const OSSL_PARAM     params[])
+{
+    ENTER();
+    int ret = ALCP_prov_cipher_aes_decrypt_init(vctx,
+                                   key,
+                                   keylen,
+                                   iv,
+                                   ivlen,
+                                   params);
+    EXIT();
+    return ret;
+}
+
+int
+ALCP_prov_cipher_ofb_decrypt_init(void*                vctx,
+                                   const unsigned char* key,
+                                   size_t               keylen,
+                                   const unsigned char* iv,
+                                   size_t               ivlen,
+                                   const OSSL_PARAM     params[])
+{
+    ENTER();
+    int ret = ALCP_prov_cipher_aes_decrypt_init(vctx,
+                                   key,
+                                   keylen,
+                                   iv,
+                                   ivlen,
+                                   params);
+    EXIT();
+    return ret;
+}
+
+int
+ALCP_prov_cipher_cbc_decrypt_init(void*                vctx,
+                                   const unsigned char* key,
+                                   size_t               keylen,
+                                   const unsigned char* iv,
+                                   size_t               ivlen,
+                                   const OSSL_PARAM     params[])
+{
+    ENTER();
+    int ret = ALCP_prov_cipher_aes_decrypt_init(vctx,
+                                   key,
+                                   keylen,
+                                   iv,
+                                   ivlen,
+                                   params);
+    EXIT();
+    return ret;
+}
+
+int
+ALCP_prov_cipher_ctr_decrypt_init(void*                vctx,
+                                   const unsigned char* key,
+                                   size_t               keylen,
+                                   const unsigned char* iv,
+                                   size_t               ivlen,
+                                   const OSSL_PARAM     params[])
+{
+    ENTER();
+    int ret = ALCP_prov_cipher_aes_decrypt_init(vctx,
+                                   key,
+                                   keylen,
+                                   iv,
+                                   ivlen,
+                                   params);
+    EXIT();
+    return ret;
+}
+
+int
+ALCP_prov_cipher_xts_decrypt_init(void*                vctx,
+                                   const unsigned char* key,
+                                   size_t               keylen,
+                                   const unsigned char* iv,
+                                   size_t               ivlen,
+                                   const OSSL_PARAM     params[])
+{
+    ENTER();
+    int ret = ALCP_prov_cipher_aes_decrypt_init(vctx,
+                                   key,
+                                   keylen,
+                                   iv,
+                                   ivlen,
+                                   params);
+    EXIT();
+    return ret;
 }
 
 static inline int
