@@ -342,11 +342,6 @@ ALCP_prov_cipher_ccm_decrypt_init(void*                vctx,
                                   const unsigned char* iv,
                                   size_t               ivlen,
                                   const OSSL_PARAM     params[])
-                                  const unsigned char* key,
-                                  size_t               keylen,
-                                  const unsigned char* iv,
-                                  size_t               ivlen,
-                                  const OSSL_PARAM     params[])
 {
     ENTER();
     PRINT("Provider: CCM\n");
@@ -358,11 +353,6 @@ ALCP_prov_cipher_ccm_decrypt_init(void*                vctx,
 
 int
 ALCP_prov_cipher_gcm_decrypt_init(void*                vctx,
-                                  const unsigned char* key,
-                                  size_t               keylen,
-                                  const unsigned char* iv,
-                                  size_t               ivlen,
-                                  const OSSL_PARAM     params[])
                                   const unsigned char* key,
                                   size_t               keylen,
                                   const unsigned char* iv,
@@ -397,11 +387,6 @@ ALCP_prov_cipher_gcm_decrypt_init(void*                vctx,
 
 int
 ALCP_prov_cipher_siv_decrypt_init(void*                vctx,
-                                  const unsigned char* key,
-                                  size_t               keylen,
-                                  const unsigned char* iv,
-                                  size_t               ivlen,
-                                  const OSSL_PARAM     params[])
                                   const unsigned char* key,
                                   size_t               keylen,
                                   const unsigned char* iv,
