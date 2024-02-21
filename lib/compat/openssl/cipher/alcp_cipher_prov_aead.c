@@ -415,52 +415,6 @@ ALCP_prov_cipher_siv_decrypt_init(void*                vctx,
     return ret;
 }
 
-static inline int
-ALCP_prov_cipher_update(void*                vctx,
-                        unsigned char*       out,
-                        size_t*              outl,
-                        size_t               outsize,
-                        const unsigned char* in,
-                        size_t               inl)
-{
-    alc_prov_cipher_ctx_p cctx = vctx;
-    alc_error_t           err  = ALC_ERROR_NONE;
-
-    if (inl == 0) {
-        *outl = inl;
-        return 1;
-    }
-
-    if (cctx->enc_flag) {
-        err = alcp_cipher_encrypt(&(cctx->handle),
-                                  in,
-                                  out,
-                                  inl,
-                                  cctx->pc_cipher_info.ci_algo_info.ai_iv);
-    } else {
-        err = alcp_cipher_decrypt(&(cctx->handle),
-                                  in,
-                                  out,
-                                  inl,
-                                  cctx->pc_cipher_info.ci_algo_info.ai_iv);
-    }
-
-    if (err != ALC_ERROR_NONE) {
-        const int err_size = 256;
-        Uint8     err_buf[err_size];
-        alcp_error_str(err, err_buf, err_size);
-        printf("Provider: Encyption/Decryption Failure! ALCP:%s\n", err_buf);
-        printf("%p,%10" PRId64 "%p\n", (void*)in, inl, (void*)out);
-        printf("%d\n",
-               cctx->pc_cipher_info.ci_algo_info.ai_mode == ALC_AES_MODE_CFB);
-        printf("%p\n", (void*)cctx->pc_cipher_info.ci_algo_info.ai_iv);
-        alcp_error_str(err, err_buf, err_size);
-        return 0;
-    }
-    *outl = inl;
-    return 1;
-}
-
 int
 ALCP_prov_cipher_gcm_update(void*                vctx,
                             unsigned char*       out,
