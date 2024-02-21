@@ -75,18 +75,53 @@ ALCP_prov_cipher_aead_encrypt_init(void*                vctx,
         return 1;
     }
 
-    // Mode Already set
+    if (keylen != 0) {
+        cctx->keylen = keylen;
+    }
+    if (ivlen != 0) {
+        cctx->ivlen = ivlen;
+    }
+    if (key != NULL) {
+        memcpy(cctx->key, key, 2 * (cctx->keylen / 8));
+    }
     if (iv != NULL) {
-        cctx->pc_cipher_aead_info.ci_algo_info.ai_iv = iv;
+        cctx->iv = iv;
     }
 
-    cctx->pc_cipher_aead_info.ci_key_info.key  = key;
+    // If iv is null and mode is SIV : Should not return
+    // If iv is null and mode is not siv: Should Return
+    // If iv is not null and mode is SIV: Should not return
+    // is iv is not null and mode is not siv: Should not return
+
+    if ((cctx->iv == NULL)
+        && c_aeadinfo->ci_algo_info.ai_mode != ALC_AES_MODE_SIV) {
+#ifdef DEBUG
+        printf("IV is NULL or Mode is not SIV Hence returning from init\n");
+#endif
+        return 1;
+    }
+
+    if ((cctx->key == NULL || cctx->keylen == 0 || cctx->ivlen == 0)) {
+
+#ifdef DEBUG
+        printf("Returning because all of key, iv, ivlen and keylen not "
+               "available\n");
+#endif
+        return 1;
+    }
+
+    // Mode Already set
+    if (cctx->iv != NULL) {
+        cctx->pc_cipher_aead_info.ci_algo_info.ai_iv = cctx->iv;
+    }
+
+    cctx->pc_cipher_aead_info.ci_key_info.key  = cctx->key;
     cctx->pc_cipher_aead_info.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
     cctx->pc_cipher_aead_info.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
 
     // OpenSSL Speed likes to keep keylen 0
-    if (keylen != 0) {
-        cctx->pc_cipher_aead_info.ci_key_info.len = keylen;
+    if (cctx->keylen != 0) {
+        cctx->pc_cipher_aead_info.ci_key_info.len = cctx->keylen;
     } else {
         cctx->pc_cipher_aead_info.ci_key_info.len = 128;
         cctx->pc_cipher_aead_info.ci_key_info.key = OPENSSL_malloc(128);
@@ -154,26 +189,6 @@ ALCP_prov_cipher_gcm_encrypt_init(void*                vctx,
     PRINT("Provider: GCM\n");
     int ret = ALCP_prov_cipher_aead_encrypt_init(
         vctx, key, keylen, iv, ivlen, params);
-
-    alc_prov_cipher_ctx_p cctx = vctx;
-#ifdef DEBUG
-    printf("Provider: cctx->ivlen : %lu\n", cctx->ivlen);
-#endif
-    if (key != NULL && iv != NULL) {
-        if (cctx->ivlen != 0) {
-            alc_error_t err = alcp_cipher_aead_set_iv(
-                &(cctx->handle),
-                cctx->ivlen,
-                cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
-            if (err != ALC_ERROR_NONE) {
-                printf("Provider: Error While Setting the IVLength\n");
-                return 0;
-            }
-        } else {
-            printf("Provider: Error IV Len is not initialized!\n");
-            return 0;
-        }
-    }
 
     EXIT();
     return ret;
@@ -268,25 +283,40 @@ ALCP_prov_cipher_aead_decrypt_init(void*                vctx,
         return 1;
     }
 
-    cctx->pc_cipher_info.ci_type      = ALC_CIPHER_TYPE_AES;
+    if (keylen != 0) {
+        cctx->keylen = keylen;
+    }
+    if (ivlen != 0) {
+        cctx->ivlen = ivlen;
+    }
+    if (key != NULL) {
+        memcpy(cctx->key, key, 2 * (cctx->keylen / 8));
+    }
+    if (iv != NULL) {
+        cctx->iv = iv;
+    }
+    if ((cctx->key == NULL || cctx->keylen == 0 || cctx->ivlen == 0)) {
+        return 1;
+    }
+
     cctx->pc_cipher_aead_info.ci_type = ALC_CIPHER_TYPE_AES;
 
     // Mode Already set
-    if (iv != NULL) {
-        cctx->pc_cipher_aead_info.ci_algo_info.ai_iv = iv;
+    if (cctx->iv != NULL) {
+        cctx->pc_cipher_aead_info.ci_algo_info.ai_iv = cctx->iv;
     } else {
         // iv = OPENSSL_malloc(128); // Don't make sense
     }
 
     // update aead info
-    cctx->pc_cipher_aead_info.ci_key_info.key  = key;
+    cctx->pc_cipher_aead_info.ci_key_info.key  = cctx->key;
     cctx->pc_cipher_aead_info.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
     cctx->pc_cipher_aead_info.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
 
     // Special handling for XTS Keylen is required if the below code is
     // ever commented out OpenSSL Speed likes to keep keylen 0
     if (keylen != 0) {
-        cctx->pc_cipher_aead_info.ci_key_info.len = keylen;
+        cctx->pc_cipher_aead_info.ci_key_info.len = cctx->keylen;
     } else {
         cctx->pc_cipher_aead_info.ci_key_info.len = 128;
         cctx->pc_cipher_aead_info.ci_key_info.key = OPENSSL_malloc(128);
@@ -433,23 +463,28 @@ ALCP_prov_cipher_gcm_update(void*                vctx,
         return 1;
     }
 
-    if (out == NULL) {
+#ifdef DEBUG
+    printf("ALCP Provider: GCM Mode Encrypt Update Call\n");
+#endif
+    if ((cctx->add_inititalized == false)
+        && (cctx->iv != NULL && cctx->ivlen != 0)) {
+
+        err = alcp_cipher_aead_set_iv(&(cctx->handle), cctx->ivlen, cctx->iv);
+    }
+    if ((out == NULL) && (in != NULL && inl != 0)) {
+
         err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
-    } else {
+        cctx->add_inititalized = true;
+    }
+    if (out != NULL && outl != 0 && in != NULL && inl != 0) {
+
         if (cctx->enc_flag) {
+
             err = alcp_cipher_aead_encrypt_update(
-                &(cctx->handle),
-                in,
-                out,
-                inl,
-                cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                &(cctx->handle), in, out, inl, cctx->iv);
         } else {
             err = alcp_cipher_aead_decrypt_update(
-                &(cctx->handle),
-                in,
-                out,
-                inl,
-                cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                &(cctx->handle), in, out, inl, cctx->iv);
         }
     }
 

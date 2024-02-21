@@ -62,12 +62,13 @@ ALCP_prov_cipher_newctx(void* vprovctx, const void* cinfo, bool is_aead)
         if (is_aead) {
             ciph_ctx->is_aead             = true;
             ciph_ctx->pc_cipher_aead_info = *((alc_cipher_aead_info_t*)cinfo);
+            ciph_ctx->finalized           = false;
 
         } else {
             ciph_ctx->is_aead        = false;
             ciph_ctx->pc_cipher_info = *((alc_cipher_info_t*)cinfo);
         }
-        ciph_ctx->ivlen = -1;
+        ciph_ctx->ivlen = 16;
     }
 
     return ciph_ctx;
@@ -102,12 +103,15 @@ ALCP_prov_cipher_gettable_params(void* provctx)
 }
 
 int
-ALCP_prov_cipher_get_params(OSSL_PARAM params[], int mode, int key_size)
+ALCP_prov_cipher_get_params(OSSL_PARAM params[],
+                            int        mode,
+                            int        key_size,
+                            bool       is_aead)
 {
     OSSL_PARAM* p;
     int         kbits   = key_size;
     int         blkbits = 128;
-    int         ivbits  = 128;
+    int         ivbits  = is_aead ? 96 : 128;
 
     ENTER();
 
@@ -136,6 +140,12 @@ ALCP_prov_cipher_get_params(OSSL_PARAM params[], int mode, int key_size)
     if (p != NULL && !OSSL_PARAM_set_size_t(p, ivbits / 8)) {
         ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
         EXIT();
+        return 0;
+    }
+
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_AEAD);
+    if (p != NULL && !OSSL_PARAM_set_int(p, is_aead ? 1 : 0)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
         return 0;
     }
 
@@ -183,6 +193,12 @@ ALCP_prov_cipher_get_ctx_params(void* vctx, OSSL_PARAM params[])
 
     ENTER();
 
+    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_IVLEN);
+    if (p != NULL && !OSSL_PARAM_set_size_t(p, cctx->ivlen)) {
+        ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
+        return 0;
+    }
+
     if (keylen > 0
         && (p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_KEYLEN)) != NULL
         && !OSSL_PARAM_set_size_t(p, keylen))
@@ -219,7 +235,12 @@ ALCP_prov_cipher_get_ctx_params(void* vctx, OSSL_PARAM params[])
                 0,
                 cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
         }
-        alcp_cipher_aead_get_tag(&(cctx->handle), (Uint8*)tag, used_length);
+        alc_error_t err =
+            alcp_cipher_aead_get_tag(&(cctx->handle), (Uint8*)tag, used_length);
+        if (alcp_is_error(err)) {
+            printf("ALCP Provider: Error while getting GCM Tag\n");
+            return 1;
+        }
     }
 
     EXIT();
@@ -295,18 +316,36 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
     alc_cipher_info_p     cinfo = &cctx->pc_cipher_info;
     alc_error_t           err;
 
-    // Mode Already set
+    if (keylen != 0) {
+        cctx->keylen = keylen;
+    }
+    if (ivlen != 0) {
+        cctx->ivlen = ivlen;
+    }
+    if (key != NULL) {
+        memcpy(cctx->key, key, 2 * (cctx->keylen / 8));
+    }
     if (iv != NULL) {
-        cctx->pc_cipher_info.ci_algo_info.ai_iv = iv;
+        cctx->iv = iv;
     }
 
-    cctx->pc_cipher_info.ci_key_info.key  = key;
-    cctx->pc_cipher_info.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
-    cctx->pc_cipher_info.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
+    if ((cctx->key == NULL || cctx->keylen == 0 || cctx->ivlen == 0)) {
+
+#ifdef DEBUG
+        printf("Returning because all of key, iv, ivlen and keylen not "
+               "available\n");
+#endif
+        return 1;
+    }
+
+    cctx->pc_cipher_info.ci_algo_info.ai_iv = cctx->iv;
+    cctx->pc_cipher_info.ci_key_info.key    = cctx->key;
+    cctx->pc_cipher_info.ci_key_info.fmt    = ALC_KEY_FMT_RAW;
+    cctx->pc_cipher_info.ci_key_info.type   = ALC_KEY_TYPE_SYMMETRIC;
 
     // OpenSSL Speed likes to keep keylen 0
-    if (keylen != 0) {
-        cctx->pc_cipher_info.ci_key_info.len = keylen;
+    if (cctx->keylen != 0) {
+        cctx->pc_cipher_info.ci_key_info.len = cctx->keylen;
     } else {
         cctx->pc_cipher_info.ci_key_info.len = 128;
         cctx->pc_cipher_info.ci_key_info.key = OPENSSL_malloc(128);
@@ -807,8 +846,20 @@ ALCP_prov_cipher_final(void*          vctx,
     // handle the corresponding memory issues.
     // alcp_cipher_finish(&cctx->handle);
     // Nothing to do!
-    *outl = 0;
-    return 1;
+    *outl                      = 0;
+    int                   ret  = 1;
+    alc_prov_cipher_ctx_p cctx = vctx;
+    if (cctx->tagbuff != NULL && cctx->taglen != 0) {
+        Uint8       tag[16];
+        alc_error_t err = alcp_cipher_aead_get_tag(&(cctx->handle), tag, 16);
+        if (alcp_is_error(err)) {
+            printf("Provider: Error occurred in finalize while getting  GCM "
+                   "Tag\n");
+            ret = 0;
+        }
+    }
+    cctx->finalized = true;
+    return ret;
 }
 
 static const char    CIPHER_DEF_PROP[]  = "provider=alcp,fips=no";
@@ -823,18 +874,25 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
     { ALCP_PROV_NAMES_AES_256_CFB8, CIPHER_DEF_PROP, cfb_functions_256 },
     { ALCP_PROV_NAMES_AES_192_CFB8, CIPHER_DEF_PROP, cfb_functions_192 },
     { ALCP_PROV_NAMES_AES_128_CFB8, CIPHER_DEF_PROP, cfb_functions_128 },
-    // CBC
-    { ALCP_PROV_NAMES_AES_256_CBC, CIPHER_DEF_PROP, cbc_functions_256 },
-    { ALCP_PROV_NAMES_AES_192_CBC, CIPHER_DEF_PROP, cbc_functions_192 },
-    { ALCP_PROV_NAMES_AES_128_CBC, CIPHER_DEF_PROP, cbc_functions_128 },
+
+// FIXME: Enable CBC and CTR after adding multi update APIs as enabling them
+// is causing TLS Handshake failure in OpenSSL
+#if 0
+// CTR
+    // Enabling CTR does not cause any failures but since OpenSSL is calling ALCP
+    // CTR for CTR-DRBG its not proper to enable CTR without multi update API 
+    {ALCP_PROV_NAMES_AES_256_CTR, CIPHER_DEF_PROP, ctr_functions_256 }, 
+    {ALCP_PROV_NAMES_AES_192_CTR, CIPHER_DEF_PROP, ctr_functions_192 }, 
+    {ALCP_PROV_NAMES_AES_128_CTR, CIPHER_DEF_PROP, ctr_functions_128 },
+// CBC
+    // { ALCP_PROV_NAMES_AES_256_CBC, CIPHER_DEF_PROP, cbc_functions_256 },
+    // { ALCP_PROV_NAMES_AES_192_CBC, CIPHER_DEF_PROP, cbc_functions_192 },
+    // { ALCP_PROV_NAMES_AES_128_CBC, CIPHER_DEF_PROP, cbc_functions_128 },
+#endif
     // OFB
     { ALCP_PROV_NAMES_AES_256_OFB, CIPHER_DEF_PROP, ofb_functions_256 },
     { ALCP_PROV_NAMES_AES_192_OFB, CIPHER_DEF_PROP, ofb_functions_192 },
     { ALCP_PROV_NAMES_AES_128_OFB, CIPHER_DEF_PROP, ofb_functions_128 },
-    // CTR
-    { ALCP_PROV_NAMES_AES_256_CTR, CIPHER_DEF_PROP, ctr_functions_256 },
-    { ALCP_PROV_NAMES_AES_192_CTR, CIPHER_DEF_PROP, ctr_functions_192 },
-    { ALCP_PROV_NAMES_AES_128_CTR, CIPHER_DEF_PROP, ctr_functions_128 },
 
 /* ECB is disabled since ALCP does not support it. So all ECB calls will \
 fall back to OpenSSL default provider */

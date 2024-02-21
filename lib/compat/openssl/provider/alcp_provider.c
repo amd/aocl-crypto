@@ -99,7 +99,8 @@ ALCP_get_reason_strings(void* vctx)
 static int
 ALCP_get_params(void* provctx, OSSL_PARAM* params)
 {
-    OSSL_PARAM*        p;
+    OSSL_PARAM* p;
+    // FIXME: Version and buildinfo are hardcoded.
     const static char* VERSION = "1.0";
     char static BUILDTYPE[100];
 

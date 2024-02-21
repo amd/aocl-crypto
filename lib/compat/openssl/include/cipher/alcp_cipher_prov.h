@@ -62,7 +62,12 @@ struct _alc_prov_cipher_ctx
     int          aadlen;
     bool         add_inititalized;
 
-    bool is_aead;
+    bool  finalized;
+    Uint8 key[2 * 48]; //  Maximum Key Size is 256 bits. Allocating double since
+                       //  XTS key contains both encryption and tweak key
+    const Uint8* iv;
+    Uint64       keylen;
+    bool         is_aead;
 
     alc_cipher_info_t      pc_cipher_info;
     alc_cipher_aead_info_t pc_cipher_aead_info;
@@ -98,7 +103,10 @@ ALCP_prov_cipher_settable_ctx_params(void* cctx, void* provctx);
 const OSSL_PARAM*
 ALCP_prov_cipher_gettable_params(void* provctx);
 int
-ALCP_prov_cipher_get_params(OSSL_PARAM params[], int mode, int key_size);
+ALCP_prov_cipher_get_params(OSSL_PARAM params[],
+                            int        mode,
+                            int        key_size,
+                            bool       is_aead);
 int
 ALCP_prov_cipher_set_params(const OSSL_PARAM params[]);
 
@@ -162,7 +170,7 @@ OSSL_FUNC_cipher_final_fn ALCP_prov_cipher_final;
     static int ALCP_prov_##name##_get_params_##key_size(OSSL_PARAM* params)    \
     {                                                                          \
         ENTER();                                                               \
-        return ALCP_prov_cipher_get_params(params, mode, key_size);            \
+        return ALCP_prov_cipher_get_params(params, mode, key_size, is_aead);   \
     }                                                                          \
                                                                                \
     static OSSL_FUNC_cipher_newctx_fn ALCP_prov_##name##_newctx_##key_size;    \
