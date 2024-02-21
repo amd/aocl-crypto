@@ -473,6 +473,7 @@ ALCP_prov_cipher_gcm_update(void*                vctx,
     alc_error_t           err  = ALC_ERROR_NONE;
 
     ENTER();
+    PRINT("Provider: GCM\n");
     if (inl == 0) {
         *outl = inl;
         return 1;
@@ -527,7 +528,7 @@ ALCP_prov_cipher_ccm_update(void*                vctx,
     alc_error_t           err  = ALC_ERROR_NONE;
 
     ENTER();
-
+    PRINT("Provider: CCM\n");
     if (inl == 0) {
         *outl = inl;
         return 1;
@@ -600,7 +601,7 @@ ALCP_prov_cipher_siv_update(void*                vctx,
     Uint8                 err_buf[err_size];
 
     ENTER();
-
+    PRINT("Provider: SIV\n");
     if (inl == 0) {
         *outl = inl;
         return 1;

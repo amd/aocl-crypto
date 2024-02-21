@@ -356,6 +356,7 @@ ALCP_prov_cipher_cfb_encrypt_init(void*                vctx,
                                   const OSSL_PARAM     params[])
 {
     ENTER();
+    PRINT("Provider: CFB\n");
     int err =
         ALCP_prov_cipher_aes_encrypt_init(vctx, key, keylen, iv, ivlen, params);
     EXIT();
@@ -372,7 +373,7 @@ ALCP_prov_cipher_cbc_encrypt_init(void*                vctx,
                                   const OSSL_PARAM     params[])
 {
     ENTER();
-    PRINT("Provider: CFB\n");
+    PRINT("Provider: CBC\n");
     int ret =
         ALCP_prov_cipher_aes_encrypt_init(vctx, key, keylen, iv, ivlen, params);
     EXIT();
@@ -549,6 +550,7 @@ ALCP_prov_cipher_cfb_decrypt_init(void*                vctx,
                                   const OSSL_PARAM     params[])
 {
     ENTER();
+    PRINT("Provider: CFB\n");
     int ret =
         ALCP_prov_cipher_aes_decrypt_init(vctx, key, keylen, iv, ivlen, params);
     EXIT();
@@ -564,6 +566,7 @@ ALCP_prov_cipher_ofb_decrypt_init(void*                vctx,
                                   const OSSL_PARAM     params[])
 {
     ENTER();
+    PRINT("Provider: OFB\n");
     int ret =
         ALCP_prov_cipher_aes_decrypt_init(vctx, key, keylen, iv, ivlen, params);
     EXIT();
@@ -595,6 +598,7 @@ ALCP_prov_cipher_ctr_decrypt_init(void*                vctx,
                                   const OSSL_PARAM     params[])
 {
     ENTER();
+    PRINT("Provider: CTR\n");
     int ret =
         ALCP_prov_cipher_aes_decrypt_init(vctx, key, keylen, iv, ivlen, params);
     EXIT();
@@ -610,6 +614,7 @@ ALCP_prov_cipher_xts_decrypt_init(void*                vctx,
                                   const OSSL_PARAM     params[])
 {
     ENTER();
+    PRINT("Provider: XTS \n");
     // Special handling for XTS Keylen is required if the below code is
     // ever commented out OpenSSL Speed likes to keep keylen 0
     alc_prov_cipher_ctx_p cctx = vctx;
@@ -715,6 +720,7 @@ ALCP_prov_cipher_cfb_update(void*                vctx,
                             size_t               inl)
 {
     ENTER();
+    PRINT("Provider: CFB\n");
     int ret = ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
     EXIT();
     return ret;
@@ -729,6 +735,7 @@ ALCP_prov_cipher_cbc_update(void*                vctx,
                             size_t               inl)
 {
     ENTER();
+    PRINT("Provider: CBC\n");
     int ret = ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
     EXIT();
     return ret;
@@ -743,6 +750,7 @@ ALCP_prov_cipher_ofb_update(void*                vctx,
                             size_t               inl)
 {
     ENTER();
+    PRINT("Provider: OFB\n");
     int ret = ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
     EXIT();
     return ret;
@@ -757,6 +765,7 @@ ALCP_prov_cipher_ctr_update(void*                vctx,
                             size_t               inl)
 {
     ENTER();
+    PRINT("Provider: CTR\n");
     int ret = ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
     EXIT();
     return ret;
@@ -771,6 +780,7 @@ ALCP_prov_cipher_xts_update(void*                vctx,
                             size_t               inl)
 {
     ENTER();
+    PRINT("Provider: XTS\n");
     int ret = ALCP_prov_cipher_update(vctx, out, outl, outsize, in, inl);
     EXIT();
     return ret;
