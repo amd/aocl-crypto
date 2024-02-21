@@ -20,19 +20,10 @@ implementations of different cryptographic algorithms which is given below:
 
 Highlights of AOCL Crypto version 4.2.1
 ---------------------------------------------------------------------------
-AOCL-Jan2024
+AOCL-Feb2024
 ---------------------------------------------------------------------------
--- Chacha20Poly1305 Algorithm (Tests and benchmarking modules are WIP)
--- RSA Sign/Verify API Algorithm (Tests and benchmarking modules are WIP)
--- GCM Improvements in Zen4, Zen2
--- GCM Support added for Zen3
--- CMAC: Bug fix in ref algorithm
--- Bug fixes in Compat library for AES-XTS
--- Digest: Performance regression using AOCC fixed
--- CPUID: Various updates and bug fixes in dynamic dispatcher
--- Bug fixes in RSA encrypt/Decrypt algorithms
--- Memory leaks and other memory errors fixed in various modules
--- Various fixes in examples (Compile time and run time errors)
--- Bug fixes and enhancements in the Test and benchmarking modules
--- Misaligned pointer tests added for all the modules
--- Build system updates
+-- AES-CTR: Bug fixes for vaes kernels
+-- AES-CBC: Bug fixes in unit tests
+-- RNG, DRBG: Crash fixes
+-- Poly1305: C++ reference implementation
+-- Utils: Changes for accomodating latest AOCL-Utils updates.
