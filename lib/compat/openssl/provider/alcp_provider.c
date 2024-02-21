@@ -28,6 +28,8 @@
 
 #include <openssl/core_dispatch.h>
 #include <openssl/core_names.h>
+#include <openssl/params.h>
+#include <openssl/provider.h>
 
 #include "provider/alcp_provider.h"
 
@@ -42,10 +44,27 @@ ALCP_prov_freectx(alc_prov_ctx_t* alcpctx)
     }
 }
 
+#define LOAD_DEFAULT_PROV 0 // to be explored.
+
+#if LOAD_DEFAULT_PROV
+OSSL_PROVIDER* prov_openssl_default;
+#endif
+
 static const OSSL_ALGORITHM*
-ALCP_query_operation(void* vctx, int operation_id, const int* no_cache)
+ALCP_query_operation(void* vctx, int operation_id, int* no_cache)
 {
     ENTER();
+    *no_cache = 0;
+
+#if LOAD_DEFAULT_PROV
+    static bool is_alcp_prov_init_done = false;
+    prov_openssl_default               = OSSL_PROVIDER_load(NULL, "default");
+
+    if (is_alcp_prov_init_done == false) {
+        EVP_set_default_properties(NULL, "provider=alcp,fips=no");
+        is_alcp_prov_init_done = true;
+    }
+#endif
     switch (operation_id) {
             /*FIXME: When Cipher Provider is enabled and MAC provider is
              * disabled, CMAC will fail with OpenSSL Provider as OpenSSL
@@ -75,7 +94,12 @@ ALCP_query_operation(void* vctx, int operation_id, const int* no_cache)
             break;
     }
 
+#if LOAD_DEFAULT_PROV
+    return OSSL_PROVIDER_query_operation(
+        prov_openssl_default, operation_id, no_cache);
+#else
     return NULL;
+#endif
 }
 
 /* The error reasons used here */
@@ -162,7 +186,11 @@ OSSL_provider_init(const OSSL_CORE_HANDLE* handle,
         printf("\n alcp provider init failed");
         return 0;
     } else {
+#if LOAD_DEFAULT_PROV
+        alcpctx->ap_libctx = OSSL_LIB_CTX_new_from_dispatch(handle, in);
+#else
         alcpctx->ap_libctx = OSSL_LIB_CTX_new();
+#endif
         if (alcpctx->ap_libctx == NULL) {
             ALCP_teardown((void*)alcpctx);
             return 0;
