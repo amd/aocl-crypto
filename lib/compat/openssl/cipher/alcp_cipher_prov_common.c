@@ -500,6 +500,13 @@ ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
     cctx->pc_cipher_info.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
     cctx->pc_cipher_info.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
 
+    if (keylen != 0) {
+        cctx->pc_cipher_info.ci_key_info.len = keylen;
+    } else {
+        cctx->pc_cipher_info.ci_key_info.len = 128;
+        cctx->pc_cipher_info.ci_key_info.key = OPENSSL_malloc(128);
+    }
+
 #ifdef DEBUG
     printf("Provider: %d keylen:%ld, key:%p\n",
            cinfo->ci_key_info.len,
@@ -615,15 +622,8 @@ ALCP_prov_cipher_xts_decrypt_init(void*                vctx,
 {
     ENTER();
     PRINT("Provider: XTS \n");
-    // Special handling for XTS Keylen is required if the below code is
-    // ever commented out OpenSSL Speed likes to keep keylen 0
+
     alc_prov_cipher_ctx_p cctx = vctx;
-    if (keylen != 0) {
-        cctx->pc_cipher_info.ci_key_info.len = keylen;
-    } else {
-        cctx->pc_cipher_info.ci_key_info.len = 128;
-        cctx->pc_cipher_info.ci_key_info.key = OPENSSL_malloc(128);
-    }
 
     // For AES XTS Mode, get the tweak key
     if (!key) {

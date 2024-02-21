@@ -155,11 +155,11 @@ ALCP_prov_cipher_gcm_encrypt_init(void*                vctx,
     int ret = ALCP_prov_cipher_aead_encrypt_init(
         vctx, key, keylen, iv, ivlen, params);
 
+    alc_prov_cipher_ctx_p cctx = vctx;
 #ifdef DEBUG
     printf("Provider: cctx->ivlen : %lu\n", cctx->ivlen);
 #endif
     if (key != NULL && iv != NULL) {
-        alc_prov_cipher_ctx_p cctx = vctx;
         if (cctx->ivlen != 0) {
             alc_error_t err = alcp_cipher_aead_set_iv(
                 &(cctx->handle),
