@@ -518,6 +518,24 @@ ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
            iv);
 #endif
 
+    // For AES XTS Mode, get the tweak key
+    if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
+        if (!key) {
+            // For handling when openssl speed probes the code with null key
+            return 1;
+        }
+        if (!((keylen == 128) || (keylen == 256))) {
+
+#ifdef DEBUG
+            printf("Provider: Unsupported Key Length %ld in AES XTS Mode of "
+                   "Operation\n",
+                   keylen);
+#endif
+            // Return with error
+            return 0;
+        }
+    }
+
     // Check for support
     err = alcp_cipher_supported(cinfo);
     if (err != ALC_ERROR_NONE) {
@@ -544,6 +562,28 @@ ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
         printf("Provider: Request success!\n");
     }
 #endif
+
+    if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
+        if (cctx->pc_cipher_info.ci_algo_info.ai_iv != NULL) {
+#ifdef DEBUG
+            printf("Provider: Setting iv length as %ld from %ld\n",
+                   ivlen,
+                   cctx->ivlen);
+#endif
+            if (ivlen == 0) {
+                cctx->ivlen = 16;
+            } else {
+                cctx->ivlen = ivlen;
+            }
+        }
+        err = alcp_cipher_set_iv(&(cctx->handle),
+                                 cctx->ivlen,
+                                 cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        if (alcp_is_error(err)) {
+            printf("Provider Error Setting IV\n");
+            return 0;
+        }
+    }
     // Enable Decryption Mode
     cctx->enc_flag = false;
 
@@ -627,44 +667,8 @@ ALCP_prov_cipher_xts_decrypt_init(void*                vctx,
     ENTER();
     PRINT("Provider: XTS \n");
 
-    alc_prov_cipher_ctx_p cctx = vctx;
-
-    // For AES XTS Mode, get the tweak key
-    if (!key) {
-        // For handling when openssl speed probes the code with null key
-        return 1;
-    }
-    if (!((keylen == 128) || (keylen == 256))) {
-
-#ifdef DEBUG
-        printf("Provider: Unsupported Key Length %ld in AES XTS Mode of "
-               "Operation\n",
-               keylen);
-#endif
-        // Return with error
-        return 0;
-    }
-
     int ret =
         ALCP_prov_cipher_aes_decrypt_init(vctx, key, keylen, iv, ivlen, params);
-    if (cctx->pc_cipher_info.ci_algo_info.ai_iv != NULL) {
-#ifdef DEBUG
-        printf("Provider: Setting iv length as %ld from %ld\n",
-               ivlen,
-               cctx->ivlen);
-#endif
-        if (ivlen == 0) {
-            cctx->ivlen = 16;
-        } else {
-            cctx->ivlen = ivlen;
-        }
-    }
-    alc_error_t err = alcp_cipher_set_iv(
-        &(cctx->handle), cctx->ivlen, cctx->pc_cipher_info.ci_algo_info.ai_iv);
-    if (err != ALC_ERROR_NONE) {
-        printf("Provider Error Setting IV\n");
-        return 0;
-    }
 
     EXIT();
     return ret;
