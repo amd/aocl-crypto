@@ -335,8 +335,8 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
         cctx->iv = iv;
     }
 
-    if (((cctx->is_key_assigned == false) || cctx->keylen == 0
-         || cctx->ivlen == 0)) {
+    if (((cctx->is_key_assigned == false) || (cctx->iv == NULL)
+         || (cctx->keylen == 0) || (cctx->ivlen == 0))) {
 
 #ifdef DEBUG
         printf("Returning because all of key, iv, ivlen and keylen not "
@@ -551,8 +551,8 @@ ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
     if (iv != NULL) {
         cctx->iv = iv;
     }
-    if (((cctx->is_key_assigned == false) || cctx->keylen == 0
-         || cctx->ivlen == 0)) {
+    if (((cctx->is_key_assigned == false) || (cctx->iv == NULL)
+         || (cctx->keylen == 0) || (cctx->ivlen == 0))) {
 #ifdef DEBUG
         printf("Returning because all of key, iv, ivlen and keylen not "
                "available\n");
@@ -562,18 +562,18 @@ ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
     cctx->pc_cipher_info.ci_type = ALC_CIPHER_TYPE_AES;
 
     // Mode Already set
-    if (iv != NULL) {
-        cctx->pc_cipher_info.ci_algo_info.ai_iv = iv;
+    if (cctx->iv != NULL) {
+        cctx->pc_cipher_info.ci_algo_info.ai_iv = cctx->iv;
     } else {
         // FIXME:return error!
     }
 
-    cctx->pc_cipher_info.ci_key_info.key  = key;
+    cctx->pc_cipher_info.ci_key_info.key  = cctx->key;
     cctx->pc_cipher_info.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
     cctx->pc_cipher_info.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
 
-    if (keylen != 0) {
-        cctx->pc_cipher_info.ci_key_info.len = keylen;
+    if (cctx->keylen != 0) {
+        cctx->pc_cipher_info.ci_key_info.len = cctx->keylen;
     } else {
         cctx->pc_cipher_info.ci_key_info.len = 128;
         cctx->pc_cipher_info.ci_key_info.key = OPENSSL_malloc(128);
