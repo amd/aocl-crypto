@@ -62,9 +62,13 @@ struct _alc_prov_cipher_ctx
     int          aadlen;
     bool         add_inititalized;
 
-    bool  finalized;
-    Uint8 key[2 * 48]; //  Maximum Key Size is 256 bits. Allocating double since
-                       //  XTS key contains both encryption and tweak key
+    bool finalized;
+    // FIXME: It should not become necessary to copy the key or validate whether
+    // the key is assigned if a set key API is available in ALCP
+    Uint8 key[2 * 32]; //  Maximum Key Size is 256 bits. Allocating double since
+    //  XTS key contains both encryption and tweak key
+    bool is_key_assigned;
+
     const Uint8* iv;
     Uint64       keylen;
     bool         is_aead;

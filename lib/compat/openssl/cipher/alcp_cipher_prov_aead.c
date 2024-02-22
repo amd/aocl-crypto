@@ -83,6 +83,7 @@ ALCP_prov_cipher_aead_encrypt_init(void*                vctx,
     }
     if (key != NULL) {
         memcpy(cctx->key, key, (cctx->keylen / 8));
+        cctx->is_key_assigned = true;
     }
     if (iv != NULL) {
         cctx->iv = iv;
@@ -97,7 +98,8 @@ ALCP_prov_cipher_aead_encrypt_init(void*                vctx,
         return 1;
     }
 
-    if ((cctx->key == NULL || cctx->keylen == 0 || cctx->ivlen == 0)) {
+    if (((cctx->is_key_assigned == false) || cctx->keylen == 0
+         || cctx->ivlen == 0)) {
 
 #ifdef DEBUG
         printf("Returning because all of key, iv, ivlen and keylen not "
@@ -287,6 +289,7 @@ ALCP_prov_cipher_aead_decrypt_init(void*                vctx,
     }
     if (key != NULL) {
         memcpy(cctx->key, key, (cctx->keylen / 8));
+        cctx->is_key_assigned = true;
     }
     if (iv != NULL) {
         cctx->iv = iv;
@@ -301,7 +304,8 @@ ALCP_prov_cipher_aead_decrypt_init(void*                vctx,
         return 1;
     }
 
-    if ((cctx->key == NULL || cctx->keylen == 0 || cctx->ivlen == 0)) {
+    if (((cctx->is_key_assigned == false) || cctx->keylen == 0
+         || cctx->ivlen == 0)) {
 
 #ifdef DEBUG
         printf("Returning because all of key, iv, ivlen and keylen not "

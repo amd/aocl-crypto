@@ -68,7 +68,8 @@ ALCP_prov_cipher_newctx(void* vprovctx, const void* cinfo, bool is_aead)
             ciph_ctx->is_aead        = false;
             ciph_ctx->pc_cipher_info = *((alc_cipher_info_t*)cinfo);
         }
-        ciph_ctx->ivlen = 16;
+        ciph_ctx->is_key_assigned = false;
+        ciph_ctx->ivlen           = 16;
     }
 
     return ciph_ctx;
@@ -328,13 +329,14 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
                key,
                (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS ? 2 : 1)
                    * (cctx->keylen / 8));
+        cctx->is_key_assigned = true;
     }
     if (iv != NULL) {
         cctx->iv = iv;
     }
 
-    if ((cctx->key == NULL || cctx->keylen == 0 || cctx->ivlen == 0
-         || cctx->iv == NULL)) {
+    if (((cctx->is_key_assigned == false) || cctx->keylen == 0
+         || cctx->ivlen == 0)) {
 
 #ifdef DEBUG
         printf("Returning because all of key, iv, ivlen and keylen not "
@@ -544,14 +546,13 @@ ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
                key,
                (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS ? 2 : 1)
                    * (cctx->keylen / 8));
+        cctx->is_key_assigned = true;
     }
     if (iv != NULL) {
         cctx->iv = iv;
     }
-
-    if ((cctx->key == NULL || cctx->keylen == 0 || cctx->ivlen == 0
-         || cctx->iv == NULL)) {
-
+    if (((cctx->is_key_assigned == false) || cctx->keylen == 0
+         || cctx->ivlen == 0)) {
 #ifdef DEBUG
         printf("Returning because all of key, iv, ivlen and keylen not "
                "available\n");
