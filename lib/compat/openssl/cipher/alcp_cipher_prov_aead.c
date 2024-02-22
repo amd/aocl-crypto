@@ -82,17 +82,13 @@ ALCP_prov_cipher_aead_encrypt_init(void*                vctx,
         cctx->ivlen = ivlen;
     }
     if (key != NULL) {
-        memcpy(cctx->key, key, 2 * (cctx->keylen / 8));
+        memcpy(cctx->key, key, (cctx->keylen / 8));
     }
     if (iv != NULL) {
         cctx->iv = iv;
     }
 
-    // If iv is null and mode is SIV : Should not return
-    // If iv is null and mode is not siv: Should Return
-    // If iv is not null and mode is SIV: Should not return
-    // is iv is not null and mode is not siv: Should not return
-
+    // Only for SIV allow IV to be NULL
     if ((cctx->iv == NULL)
         && c_aeadinfo->ci_algo_info.ai_mode != ALC_AES_MODE_SIV) {
 #ifdef DEBUG
@@ -290,12 +286,27 @@ ALCP_prov_cipher_aead_decrypt_init(void*                vctx,
         cctx->ivlen = ivlen;
     }
     if (key != NULL) {
-        memcpy(cctx->key, key, 2 * (cctx->keylen / 8));
+        memcpy(cctx->key, key, (cctx->keylen / 8));
     }
     if (iv != NULL) {
         cctx->iv = iv;
     }
+
+    // Only for SIV allow IV to be NULL
+    if ((cctx->iv == NULL)
+        && c_aeadinfo->ci_algo_info.ai_mode != ALC_AES_MODE_SIV) {
+#ifdef DEBUG
+        printf("IV is NULL or Mode is not SIV Hence returning from init\n");
+#endif
+        return 1;
+    }
+
     if ((cctx->key == NULL || cctx->keylen == 0 || cctx->ivlen == 0)) {
+
+#ifdef DEBUG
+        printf("Returning because all of key, iv, ivlen and keylen not "
+               "available\n");
+#endif
         return 1;
     }
 

@@ -312,6 +312,7 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
                                   size_t               ivlen,
                                   const OSSL_PARAM     params[])
 {
+    ENTER();
     alc_prov_cipher_ctx_p cctx  = vctx;
     alc_cipher_info_p     cinfo = &cctx->pc_cipher_info;
     alc_error_t           err;
@@ -323,13 +324,17 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
         cctx->ivlen = ivlen;
     }
     if (key != NULL) {
-        memcpy(cctx->key, key, 2 * (cctx->keylen / 8));
+        memcpy(cctx->key,
+               key,
+               (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS ? 2 : 1)
+                   * (cctx->keylen / 8));
     }
     if (iv != NULL) {
         cctx->iv = iv;
     }
 
-    if ((cctx->key == NULL || cctx->keylen == 0 || cctx->ivlen == 0)) {
+    if ((cctx->key == NULL || cctx->keylen == 0 || cctx->ivlen == 0
+         || cctx->iv == NULL)) {
 
 #ifdef DEBUG
         printf("Returning because all of key, iv, ivlen and keylen not "
@@ -355,7 +360,7 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
     printf("Provider: %d keylen:%ld, key:%p\n",
            cinfo->ci_key_info.len,
            keylen,
-           key);
+           cctx->key);
 #endif
 
     // For AES XTS Mode, get the tweak key
@@ -522,15 +527,38 @@ ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
                                   size_t               ivlen,
                                   const OSSL_PARAM     params[])
 {
+    ENTER();
     alc_prov_cipher_ctx_p cctx  = vctx;
     alc_cipher_info_p     cinfo = &cctx->pc_cipher_info;
 
     alc_error_t err;
 
-    ENTER();
+    if (keylen != 0) {
+        cctx->keylen = keylen;
+    }
+    if (ivlen != 0) {
+        cctx->ivlen = ivlen;
+    }
+    if (key != NULL) {
+        memcpy(cctx->key,
+               key,
+               (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS ? 2 : 1)
+                   * (cctx->keylen / 8));
+    }
+    if (iv != NULL) {
+        cctx->iv = iv;
+    }
 
-    cctx->pc_cipher_info.ci_type      = ALC_CIPHER_TYPE_AES;
-    cctx->pc_cipher_aead_info.ci_type = ALC_CIPHER_TYPE_AES;
+    if ((cctx->key == NULL || cctx->keylen == 0 || cctx->ivlen == 0
+         || cctx->iv == NULL)) {
+
+#ifdef DEBUG
+        printf("Returning because all of key, iv, ivlen and keylen not "
+               "available\n");
+#endif
+        return 1;
+    }
+    cctx->pc_cipher_info.ci_type = ALC_CIPHER_TYPE_AES;
 
     // Mode Already set
     if (iv != NULL) {
