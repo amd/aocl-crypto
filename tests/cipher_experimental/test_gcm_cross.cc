@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -367,8 +367,11 @@ main(int argc, char** argv)
     assert(argsMap["USE_OSSL"].paramType == ParamType::TYPE_BOOL);
     assert(argsMap["USE_IPP"].paramType == ParamType::TYPE_BOOL);
     assert(argsMap["OVERRIDE_ALCP"].paramType == ParamType::TYPE_BOOL);
-    // ::testing::RegisterTest("KnownAnswerTest",
-    // "GCM_Encrypt_experimental", )
+
+    if (std::get<bool>(argsMap["USE_OSSL"].value) == false
+        && (std::get<bool>(argsMap["USE_OSSL"].value) == false)) {
+        argsMap["USE_OSSL"].value = true;
+    }
 
 #ifdef USE_OSSL
     if (std::get<bool>(argsMap["USE_OSSL"].value)) {
