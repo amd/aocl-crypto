@@ -877,12 +877,16 @@ ALCP_prov_cipher_final(void*          vctx,
     *outl                      = 0;
     int                   ret  = 1;
     alc_prov_cipher_ctx_p cctx = vctx;
-    if (cctx->tagbuff != NULL && cctx->taglen != 0) {
+    if ((cctx->is_aead) && (cctx->tagbuff != NULL) && (cctx->taglen != 0)) {
         Uint8       tag[16];
         alc_error_t err = alcp_cipher_aead_get_tag(&(cctx->handle), tag, 16);
         if (alcp_is_error(err)) {
-            printf("Provider: Error occurred in finalize while getting  GCM "
+            printf("Provider: Error occurred in finalize while getting AEAD "
                    "Tag\n");
+            ret = 0;
+        }
+        if (memcmp(cctx->tagbuff, tag, 16)) {
+            // Tag mismatch, hence finalize should return failure
             ret = 0;
         }
     }
