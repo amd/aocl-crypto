@@ -361,8 +361,9 @@ main(int argc, char** argv)
     assert(argsMap["USE_IPP"].paramType == ParamType::TYPE_BOOL);
     assert(argsMap["OVERRIDE_ALCP"].paramType == ParamType::TYPE_BOOL);
 
+    /* if no ext lib provided, openssl selected by default */
     if (std::get<bool>(argsMap["USE_OSSL"].value) == false
-        && (std::get<bool>(argsMap["USE_OSSL"].value) == false)) {
+        && (std::get<bool>(argsMap["USE_IPP"].value) == false)) {
         argsMap["USE_OSSL"].value = true;
     }
 
