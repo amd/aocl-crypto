@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,23 +38,6 @@ using namespace alcp;
 
 EXTERN_C_BEGIN
 
-alc_error_t
-alcp_cipher_aead_supported(const alc_cipher_aead_info_p pCipherInfo)
-{
-    ALCP_BAD_PTR_ERR_RET(pCipherInfo, err);
-    alc_error_t err = ALC_ERROR_NONE;
-
-    /* TODO: Check for pointer validity */
-
-    // err = cipher::FindCipher(*pCipherInfo).isSupported();
-
-    // if (Error::isError(err))
-    //    goto outa;
-
-    // outa:
-    return err;
-}
-
 Uint64
 alcp_cipher_aead_context_size(const alc_cipher_aead_info_p pCipherInfo)
 {
@@ -64,20 +47,21 @@ alcp_cipher_aead_context_size(const alc_cipher_aead_info_p pCipherInfo)
 }
 
 alc_error_t
-alcp_cipher_aead_request(const alc_cipher_aead_info_p pCipherInfo,
-                         alc_cipher_handle_p          pCipherHandle)
+alcp_cipher_aead_request(const alc_cipher_mode_t cipherMode,
+                         const Uint64            keyLen,
+                         alc_cipher_handle_p     pCipherHandle)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pCipherInfo, err);
+    ALCP_ZERO_LEN_ERR_RET(keyLen, err);
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     new (ctx) cipher::Context;
 
-    err = cipher::CipherAeadBuilder::Build(*pCipherInfo, *ctx);
+    err = cipher::CipherAeadBuilder::Build(cipherMode, keyLen, *ctx);
 
     return err;
 }
@@ -178,6 +162,28 @@ alcp_cipher_aead_decrypt_update(const alc_cipher_handle_p pCipherHandle,
     // FIXME: Modify decryptUpdate to return Status and assign to context
     // status
     err = ctx->decryptUpdate(ctx->m_cipher, pInput, pOutput, len, pIv);
+
+    return err;
+}
+
+alc_error_t
+alcp_cipher_aead_set_key(const alc_cipher_handle_p pCipherHandle,
+                         Uint64                    len,
+                         const Uint8*              pKey)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
+
+    ALCP_BAD_PTR_ERR_RET(pKey, err);
+
+    // FIXME: error check for invalid key length to be added.
+    ALCP_ZERO_LEN_ERR_RET(len, err);
+
+    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
+
+    err = ctx->initKey(ctx->m_cipher, len, pKey);
 
     return err;
 }

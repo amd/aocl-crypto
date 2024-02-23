@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -46,36 +46,12 @@ create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    alc_cipher_aead_info_t cinfo = {
-        .ci_type = ALC_CIPHER_TYPE_AES,
-        .ci_algo_info   = {
-           .ai_mode = ALC_AES_MODE_CCM,
-           .ai_iv   = iv,
-        },
-        /* No padding, Not Implemented yet*/
-        //.pad     = ALC_CIPHER_PADDING_NONE, 
-        .ci_key_info     = {
-            .type    = ALC_KEY_TYPE_SYMMETRIC,
-            .fmt     = ALC_KEY_FMT_RAW,
-            .key     = key,
-            .len     = key_len,
-        },
-    };
+    alc_cipher_aead_info_t cinfo = { .ci_type   = ALC_CIPHER_TYPE_AES,
+                                     .ci_iv     = iv,
+                                     .ci_keyLen = key_len,
+                                     .ci_key    = key,
+                                     .ci_mode   = ALC_AES_MODE_CCM };
 
-    /*
-     * Check if the current cipher is supported,
-     * optional call, alcp_cipher_request() will anyway return
-     * ALC_ERR_NOSUPPORT error.
-     *
-     * This query call is provided to support fallback mode for applications
-     */
-    err = alcp_cipher_aead_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
-        return -1;
-    }
-    printf("supported succeeded\n");
     /*
      * Application is expected to allocate for context
      */
@@ -83,9 +59,10 @@ create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
     if (!handle.ch_context)
         return -1;
 
-    /* Request a context with cinfo */
-    err = alcp_cipher_aead_request(&cinfo, &handle);
+    /* Request a context with cipher mode and keyLen */
+    err = alcp_cipher_aead_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
     if (alcp_is_error(err)) {
+        free(handle.ch_context);
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);
         return -1;

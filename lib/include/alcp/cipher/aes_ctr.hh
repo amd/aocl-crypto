@@ -49,16 +49,26 @@ class ALCP_API_EXPORT Ctr : public Aes
     Uint32       m_nrounds = 0;
 
     Ctr() { Aes::setMode(ALC_AES_MODE_CTR); };
+    ~Ctr() {}
 
-    explicit Ctr(const Uint8* pKey, const Uint32 keyLen)
-        : Aes(pKey, keyLen)
+    // FIXME: keep getKey and remove SetKey
+    void getKey()
     {
         m_enc_key = getEncryptKeys();
         m_dec_key = getDecryptKeys();
         m_nrounds = getRounds();
     }
 
-    ~Ctr() {}
+    Status setKey(const Uint8* pUserKey, Uint64 len)
+    {
+        Status s = Aes::setKey(pUserKey, len);
+        if (s.ok()) {
+            m_enc_key = getEncryptKeys();
+            m_dec_key = getDecryptKeys();
+            m_nrounds = getRounds();
+        }
+        return s;
+    }
 };
 
 namespace vaes512 {
@@ -68,14 +78,6 @@ namespace vaes512 {
     {
       public:
         Ctr128(){};
-
-        explicit Ctr128(const Uint8* pKey, const Uint32 keyLen)
-            : Ctr(pKey, keyLen)
-        {
-        }
-
-        Status setKey(const Uint8* pUserKey, Uint64 len) override;
-
         ~Ctr128(){};
 
       public:
@@ -114,14 +116,6 @@ namespace vaes512 {
     {
       public:
         Ctr192(){};
-
-        explicit Ctr192(const Uint8* pKey, const Uint32 keyLen)
-            : Ctr(pKey, keyLen)
-        {
-        }
-
-        Status setKey(const Uint8* pUserKey, Uint64 len) override;
-
         ~Ctr192(){};
 
       public:
@@ -160,14 +154,6 @@ namespace vaes512 {
     {
       public:
         Ctr256(){};
-
-        explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
-            : Ctr(pKey, keyLen)
-        {
-        }
-
-        Status setKey(const Uint8* pUserKey, Uint64 len) override;
-
         ~Ctr256(){};
 
       public:
@@ -210,14 +196,6 @@ namespace vaes {
     {
       public:
         Ctr128(){};
-
-        explicit Ctr128(const Uint8* pKey, const Uint32 keyLen)
-            : Ctr(pKey, keyLen)
-        {
-        }
-
-        Status setKey(const Uint8* pUserKey, Uint64 len) override;
-
         ~Ctr128(){};
 
       public:
@@ -256,14 +234,6 @@ namespace vaes {
     {
       public:
         Ctr192(){};
-
-        explicit Ctr192(const Uint8* pKey, const Uint32 keyLen)
-            : Ctr(pKey, keyLen)
-        {
-        }
-
-        Status setKey(const Uint8* pUserKey, Uint64 len) override;
-
         ~Ctr192(){};
 
       public:
@@ -302,14 +272,6 @@ namespace vaes {
     {
       public:
         Ctr256(){};
-
-        explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
-            : Ctr(pKey, keyLen)
-        {
-        }
-
-        Status setKey(const Uint8* pUserKey, Uint64 len) override;
-
         ~Ctr256(){};
 
       public:
@@ -352,14 +314,6 @@ namespace aesni {
     {
       public:
         Ctr128(){};
-
-        explicit Ctr128(const Uint8* pKey, const Uint32 keyLen)
-            : Ctr(pKey, keyLen)
-        {
-        }
-
-        Status setKey(const Uint8* pUserKey, Uint64 len) override;
-
         ~Ctr128(){};
 
       public:
@@ -398,14 +352,6 @@ namespace aesni {
     {
       public:
         Ctr192(){};
-
-        explicit Ctr192(const Uint8* pKey, const Uint32 keyLen)
-            : Ctr(pKey, keyLen)
-        {
-        }
-
-        Status setKey(const Uint8* pUserKey, Uint64 len) override;
-
         ~Ctr192(){};
 
       public:
@@ -444,14 +390,6 @@ namespace aesni {
     {
       public:
         Ctr256(){};
-
-        explicit Ctr256(const Uint8* pKey, const Uint32 keyLen)
-            : Ctr(pKey, keyLen)
-        {
-        }
-
-        Status setKey(const Uint8* pUserKey, Uint64 len) override;
-
         ~Ctr256(){};
 
       public:

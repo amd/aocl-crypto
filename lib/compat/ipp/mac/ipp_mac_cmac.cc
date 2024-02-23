@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,8 +35,7 @@ ippsAES_CMACGetSize(int* pSize)
     alc_mac_info_t macinfo;
     macinfo.mi_type                              = ALC_MAC_CMAC;
     macinfo.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
-    macinfo.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode =
-        ALC_AES_MODE_NONE;
+    macinfo.mi_algoinfo.cmac.cmac_cipher.ci_mode = ALC_AES_MODE_NONE;
     Uint64 context_size = alcp_mac_context_size(&macinfo);
     *pSize = sizeof(ipp_wrp_mac_ctx) + static_cast<int>(context_size);
     printMsg("ippsAES_CMACGetSize:  EXIT");
@@ -63,9 +62,8 @@ ippsAES_CMACInit(const Ipp8u*       pKey,
     alc_mac_info_t       macinfo;
     macinfo.mi_type                              = ALC_MAC_CMAC;
     macinfo.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
-    macinfo.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode =
-        ALC_AES_MODE_NONE;
-    macinfo.mi_keyinfo = cKinfo;
+    macinfo.mi_algoinfo.cmac.cmac_cipher.ci_mode = ALC_AES_MODE_NONE;
+    macinfo.mi_keyinfo                           = cKinfo;
 
     auto status = alcp_MacInit(&macinfo, p_mac_ctx);
     printMsg("ippsAES_CMACInit: EXIT ");

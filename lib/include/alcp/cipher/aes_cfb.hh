@@ -63,10 +63,7 @@ class ALCP_API_EXPORT Cfb final
     , public ICipher
 {
   public:
-    explicit Cfb(const Uint8* pKey, const Uint32 keyLen)
-        : Aes(pKey, keyLen)
-    {}
-
+    Cfb() {}
     ~Cfb() {}
 
   public:
@@ -97,9 +94,6 @@ class ALCP_API_EXPORT Cfb final
                                 Uint8*       pPlainText,
                                 Uint64       len,
                                 const Uint8* pIv) const final;
-
-  private:
-    Cfb(){};
 
   private:
 };

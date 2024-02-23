@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -44,8 +44,6 @@ alc_mac_info_t                                      \
                 {                                   \
                     .ci_type = ALC_CIPHER_TYPE_AES, \
                     .ci_algo_info = {               \
-                    .ai_mode = ALC_AES_MODE_NONE,   \
-                    .ai_iv   = NULL                 \
                         } } } } };
 
 // clang-format on

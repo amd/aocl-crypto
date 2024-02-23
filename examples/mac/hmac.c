@@ -167,9 +167,7 @@ demo_Hmac_Sha256()
                             0xd1, 0x74, 0xd5, 0x9e, 0x13, 0xdc, 0x4d, 0x01,
                             0x69, 0xc9, 0x05, 0x7b, 0x13, 0x3e, 0x1d, 0x62 };
 
-    const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt  = ALC_KEY_FMT_RAW,
-                                   .algo = ALC_KEY_ALG_MAC,
+    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
                                    .len  = sizeof(key) * 8,
                                    .key  = key };
 
@@ -240,9 +238,7 @@ demo_Hmac_Sha224()
                             0x52, 0x92, 0x72, 0xa0, 0x17, 0xc2, 0x90,
                             0x03, 0x9a, 0x9d, 0xfe, 0xa4, 0x34, 0x9b };
 
-    const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt  = ALC_KEY_FMT_RAW,
-                                   .algo = ALC_KEY_ALG_MAC,
+    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
                                    .len  = sizeof(key) * 8,
                                    .key  = key };
 
@@ -321,9 +317,7 @@ demo_Hmac_Sha512()
                             0x6e, 0x6b, 0x10, 0x48, 0x16, 0xb7, 0x2d, 0xe6,
                             0x26, 0x9e, 0x04, 0x5a, 0x1f, 0x44, 0x29, 0xd4 };
 
-    const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt  = ALC_KEY_FMT_RAW,
-                                   .algo = ALC_KEY_ALG_MAC,
+    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
                                    .len  = sizeof(key) * 8,
                                    .key  = key };
 
@@ -380,9 +374,7 @@ demo_Hmac_Sha3_224()
                             0xab, 0xa2, 0xd6, 0xdc, 0x53, 0x11, 0x7b,
                             0x3b, 0xfb, 0x52, 0xc6, 0xd1, 0x8c, 0x04 };
 
-    const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt  = ALC_KEY_FMT_RAW,
-                                   .algo = ALC_KEY_ALG_MAC,
+    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
                                    .len  = sizeof(key) * 8,
                                    .key  = key };
 
@@ -440,9 +432,7 @@ demo_Hmac_Sha3_256()
                             0x43, 0xe2, 0x35, 0x55, 0xe2, 0x4f, 0xc2, 0xf0,
                             0x25, 0xd5, 0x98, 0xf5, 0x58, 0xf6, 0x72, 0x05 };
 
-    const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt  = ALC_KEY_FMT_RAW,
-                                   .algo = ALC_KEY_ALG_MAC,
+    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
                                    .len  = sizeof(key) * 8,
                                    .key  = key };
 
@@ -507,9 +497,7 @@ demo_Hmac_Sha3_512()
                             0x3f, 0x65, 0x7a, 0x89, 0x96, 0xc8, 0x6a, 0x2f,
                             0x65, 0x27, 0xe3, 0x07, 0xf0, 0x21, 0x31, 0x96 };
 
-    const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt  = ALC_KEY_FMT_RAW,
-                                   .algo = ALC_KEY_ALG_MAC,
+    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
                                    .len  = sizeof(key) * 8,
                                    .key  = key };
 
@@ -582,9 +570,7 @@ demo_Hmac_Sha384()
                             0xa4, 0x19, 0xb0, 0x7d, 0xea, 0xb3, 0xb5, 0xf8,
                             0xea, 0x23, 0x1c, 0x5b, 0x03, 0x6f, 0x88, 0x75 };
 
-    const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt  = ALC_KEY_FMT_RAW,
-                                   .algo = ALC_KEY_ALG_MAC,
+    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
                                    .len  = sizeof(key) * 8,
                                    .key  = key };
 
@@ -646,9 +632,7 @@ demo_Hmac_Sha3_384()
                             0xbc, 0x99, 0x98, 0x7f, 0x79, 0xb2, 0x2a, 0x55,
                             0x7b, 0x65, 0x20, 0xdb, 0x71, 0x0b, 0x7f, 0x42 };
 
-    const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt  = ALC_KEY_FMT_RAW,
-                                   .algo = ALC_KEY_ALG_MAC,
+    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
                                    .len  = sizeof(key) * 8,
                                    .key  = key };
 
@@ -710,9 +694,7 @@ demo_Hmac_Sha3_384_Reset()
                             0xbc, 0x99, 0x98, 0x7f, 0x79, 0xb2, 0x2a, 0x55,
                             0x7b, 0x65, 0x20, 0xdb, 0x71, 0x0b, 0x7f, 0x42 };
 
-    const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt  = ALC_KEY_FMT_RAW,
-                                   .algo = ALC_KEY_ALG_MAC,
+    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
                                    .len  = sizeof(key) * 8,
                                    .key  = key };
 

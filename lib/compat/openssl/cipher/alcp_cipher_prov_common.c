@@ -187,10 +187,10 @@ ALCP_prov_cipher_get_ctx_params(void* vctx, OSSL_PARAM params[])
     alc_prov_cipher_ctx_p cctx   = (alc_prov_cipher_ctx_p)vctx;
     size_t                keylen = 0;
     if (cctx->is_aead) {
-        keylen = cctx->pc_cipher_aead_info.ci_key_info.len;
+        keylen = cctx->pc_cipher_aead_info.ci_keyLen;
 
     } else {
-        keylen = cctx->pc_cipher_info.ci_key_info.len;
+        keylen = cctx->pc_cipher_info.ci_keyLen;
     }
 
     ENTER();
@@ -226,24 +226,17 @@ ALCP_prov_cipher_get_ctx_params(void* vctx, OSSL_PARAM params[])
         cctx->taglen = used_length;
         if (!cctx->add_inititalized
             && (cctx->is_aead
-                && (cctx->pc_cipher_aead_info.ci_algo_info.ai_mode
-                    == ALC_AES_MODE_CCM))) {
+                && (cctx->pc_cipher_aead_info.ci_mode == ALC_AES_MODE_CCM))) {
             Uint8 a;
             alcp_cipher_aead_set_tag_length(&(cctx->handle), cctx->taglen);
             alcp_cipher_aead_set_iv(
-                &(cctx->handle),
-                cctx->ivlen,
-                cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                &(cctx->handle), cctx->ivlen, cctx->pc_cipher_aead_info.ci_iv);
             if (cctx->aadlen != 0)
                 alcp_cipher_aead_set_aad(
                     &(cctx->handle), cctx->aad, cctx->aadlen);
             cctx->add_inititalized = true;
             alcp_cipher_aead_encrypt_update(
-                &(cctx->handle),
-                &a,
-                &a,
-                0,
-                cctx->pc_cipher_aead_info.ci_algo_info.ai_iv);
+                &(cctx->handle), &a, &a, 0, cctx->pc_cipher_aead_info.ci_iv);
         }
         alc_error_t err =
             alcp_cipher_aead_get_tag(&(cctx->handle), (Uint8*)tag, used_length);
@@ -273,11 +266,11 @@ ALCP_prov_cipher_set_ctx_params(void* vctx, const OSSL_PARAM params[])
             return 0;
         }
         if (cctx->is_aead) {
-            cctx->pc_cipher_aead_info.ci_key_info.len = keylen;
+            cctx->pc_cipher_aead_info.ci_keyLen = keylen;
 
         } else {
 
-            cctx->pc_cipher_info.ci_key_info.len = keylen;
+            cctx->pc_cipher_info.ci_keyLen = keylen;
         }
     }
 
@@ -345,7 +338,7 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
     if (key != NULL) {
         memcpy(cctx->key,
                key,
-               (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS ? 2 : 1)
+               (cinfo->ci_mode == ALC_AES_MODE_XTS ? 2 : 1)
                    * (cctx->keylen / 8));
         cctx->is_key_assigned = true;
     }
@@ -363,28 +356,26 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
         return 1;
     }
 
-    cctx->pc_cipher_info.ci_algo_info.ai_iv = cctx->iv;
-    cctx->pc_cipher_info.ci_key_info.key    = cctx->key;
-    cctx->pc_cipher_info.ci_key_info.fmt    = ALC_KEY_FMT_RAW;
-    cctx->pc_cipher_info.ci_key_info.type   = ALC_KEY_TYPE_SYMMETRIC;
+    cctx->pc_cipher_info.ci_iv  = cctx->iv;
+    cctx->pc_cipher_info.ci_key = cctx->key;
 
     // OpenSSL Speed likes to keep keylen 0
     if (cctx->keylen != 0) {
-        cctx->pc_cipher_info.ci_key_info.len = cctx->keylen;
+        cctx->pc_cipher_info.ci_keyLen = cctx->keylen;
     } else {
-        cctx->pc_cipher_info.ci_key_info.len = 128;
-        cctx->pc_cipher_info.ci_key_info.key = OPENSSL_malloc(128);
+        cctx->pc_cipher_info.ci_keyLen = 128;
+        cctx->pc_cipher_info.ci_key    = OPENSSL_malloc(128);
     }
 
 #ifdef DEBUG
     printf("Provider: %d keylen:%ld, key:%p\n",
-           cinfo->ci_key_info.len,
+           cinfo->ci_keyLen,
            keylen,
            cctx->key);
 #endif
 
     // For AES XTS Mode, get the tweak key
-    if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
+    if (cinfo->ci_mode == ALC_AES_MODE_XTS) {
         if (!key) {
             // For handling when openssl speed probes the code with null key
             return 1;
@@ -401,25 +392,15 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
         }
     }
 
-    err = alcp_cipher_supported(cinfo);
-    // Check for support
-    if (err != ALC_ERROR_NONE) {
-        printf("Provider: Not supported algorithm!\n");
-        return 0;
-    }
-#ifdef DEBUG
-    else {
-        printf("Provider: Support success!\n");
-    }
-#endif
-
     // Manually allocate context
     (cctx->handle).ch_context = OPENSSL_malloc(alcp_cipher_context_size(cinfo));
 
     // Request handle for the cipher
-    err = alcp_cipher_request(cinfo, &(cctx->handle));
+    err =
+        alcp_cipher_request(cinfo->ci_mode, cinfo->ci_keyLen, &(cctx->handle));
 
     if (err != ALC_ERROR_NONE) {
+        free((cctx->handle).ch_context);
         printf("Provider: Request somehow failed!\n");
         return 0;
     }
@@ -429,8 +410,14 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
     }
 #endif
 
-    if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
-        if (cctx->pc_cipher_info.ci_algo_info.ai_iv != NULL) {
+    err = alcp_cipher_set_key(&(cctx->handle), cinfo->ci_keyLen, cinfo->ci_key);
+    if (alcp_is_error(err)) {
+        printf("Error in Setting the key\n");
+        return 0;
+    }
+
+    if (cinfo->ci_mode == ALC_AES_MODE_XTS) {
+        if (cctx->pc_cipher_info.ci_iv != NULL) {
 #ifdef DEBUG
             printf("Provider: Setting iv length as %ld from %d\n",
                    ivlen,
@@ -443,9 +430,8 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
             }
         }
 
-        err = alcp_cipher_set_iv(&(cctx->handle),
-                                 cctx->ivlen,
-                                 cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        err = alcp_cipher_set_iv(
+            &(cctx->handle), cctx->ivlen, cctx->pc_cipher_info.ci_iv);
         if (alcp_is_error(err)) {
             printf("Provider Error Setting IV\n");
             return 0;
@@ -562,7 +548,7 @@ ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
     if (key != NULL) {
         memcpy(cctx->key,
                key,
-               (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS ? 2 : 1)
+               (cinfo->ci_mode == ALC_AES_MODE_XTS ? 2 : 1)
                    * (cctx->keylen / 8));
         cctx->is_key_assigned = true;
     }
@@ -581,31 +567,26 @@ ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
 
     // Mode Already set
     if (cctx->iv != NULL) {
-        cctx->pc_cipher_info.ci_algo_info.ai_iv = cctx->iv;
+        cctx->pc_cipher_info.ci_iv = cctx->iv;
     } else {
         // FIXME:return error!
     }
 
-    cctx->pc_cipher_info.ci_key_info.key  = cctx->key;
-    cctx->pc_cipher_info.ci_key_info.fmt  = ALC_KEY_FMT_RAW;
-    cctx->pc_cipher_info.ci_key_info.type = ALC_KEY_TYPE_SYMMETRIC;
+    cctx->pc_cipher_info.ci_key = cctx->key;
 
     if (cctx->keylen != 0) {
-        cctx->pc_cipher_info.ci_key_info.len = cctx->keylen;
+        cctx->pc_cipher_info.ci_keyLen = cctx->keylen;
     } else {
-        cctx->pc_cipher_info.ci_key_info.len = 128;
-        cctx->pc_cipher_info.ci_key_info.key = OPENSSL_malloc(128);
+        cctx->pc_cipher_info.ci_keyLen = 128;
+        cctx->pc_cipher_info.ci_key    = OPENSSL_malloc(128);
     }
 
 #ifdef DEBUG
-    printf("Provider: %d keylen:%ld, key:%p\n",
-           cinfo->ci_key_info.len,
-           keylen,
-           iv);
+    printf("Provider: %d keylen:%ld, key:%p\n", cinfo->ci_keyLen, keylen, iv);
 #endif
 
     // For AES XTS Mode, get the tweak key
-    if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
+    if (cinfo->ci_mode == ALC_AES_MODE_XTS) {
         if (!key) {
             // For handling when openssl speed probes the code with null key
             return 1;
@@ -622,24 +603,14 @@ ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
         }
     }
 
-    // Check for support
-    err = alcp_cipher_supported(cinfo);
-    if (err != ALC_ERROR_NONE) {
-        printf("Provider: Not supported algorithm!\n");
-        return 0;
-    }
-#ifdef DEBUG
-    else {
-        printf("Provider: Support success!\n");
-    }
-#endif
-
     // Manually allocate context
     (cctx->handle).ch_context = OPENSSL_malloc(alcp_cipher_context_size(cinfo));
 
     // Request handle for the cipher
-    err = alcp_cipher_request(cinfo, &(cctx->handle));
+    err =
+        alcp_cipher_request(cinfo->ci_mode, cinfo->ci_keyLen, &(cctx->handle));
     if (err != ALC_ERROR_NONE) {
+        free((cctx->handle).ch_context);
         printf("Provider: Request somehow failed!\n");
         return 0;
     }
@@ -649,8 +620,14 @@ ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
     }
 #endif
 
-    if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
-        if (cctx->pc_cipher_info.ci_algo_info.ai_iv != NULL) {
+    err = alcp_cipher_set_key(&(cctx->handle), cinfo->ci_keyLen, cinfo->ci_key);
+    if (alcp_is_error(err)) {
+        printf("Error in Setting the key\n");
+        return 0;
+    }
+
+    if (cinfo->ci_mode == ALC_AES_MODE_XTS) {
+        if (cctx->pc_cipher_info.ci_iv != NULL) {
 #ifdef DEBUG
             printf("Provider: Setting iv length as %ld from %d\n",
                    ivlen,
@@ -662,9 +639,8 @@ ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
                 cctx->ivlen = ivlen;
             }
         }
-        err = alcp_cipher_set_iv(&(cctx->handle),
-                                 cctx->ivlen,
-                                 cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        err = alcp_cipher_set_iv(
+            &(cctx->handle), cctx->ivlen, cctx->pc_cipher_info.ci_iv);
         if (alcp_is_error(err)) {
             printf("Provider Error Setting IV\n");
             return 0;
@@ -777,17 +753,11 @@ ALCP_prov_cipher_update(void*                vctx,
     }
 
     if (cctx->enc_flag) {
-        err = alcp_cipher_encrypt(&(cctx->handle),
-                                  in,
-                                  out,
-                                  inl,
-                                  cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        err = alcp_cipher_encrypt(
+            &(cctx->handle), in, out, inl, cctx->pc_cipher_info.ci_iv);
     } else {
-        err = alcp_cipher_decrypt(&(cctx->handle),
-                                  in,
-                                  out,
-                                  inl,
-                                  cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        err = alcp_cipher_decrypt(
+            &(cctx->handle), in, out, inl, cctx->pc_cipher_info.ci_iv);
     }
 
     if (err != ALC_ERROR_NONE) {
@@ -796,9 +766,8 @@ ALCP_prov_cipher_update(void*                vctx,
         alcp_error_str(err, err_buf, err_size);
         printf("Provider: Encyption/Decryption Failure! ALCP:%s\n", err_buf);
         printf("%p,%10" PRId64 "%p\n", (void*)in, inl, (void*)out);
-        printf("%d\n",
-               cctx->pc_cipher_info.ci_algo_info.ai_mode == ALC_AES_MODE_CFB);
-        printf("%p\n", (void*)cctx->pc_cipher_info.ci_algo_info.ai_iv);
+        printf("%d\n", cctx->pc_cipher_info.ci_mode == ALC_AES_MODE_CFB);
+        printf("%p\n", (void*)cctx->pc_cipher_info.ci_iv);
         alcp_error_str(err, err_buf, err_size);
         return 0;
     }
@@ -932,9 +901,9 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
 #if 0
 // CTR
     // Enabling CTR does not cause any failures but since OpenSSL is calling ALCP
-    // CTR for CTR-DRBG its not proper to enable CTR without multi update API 
-    {ALCP_PROV_NAMES_AES_256_CTR, CIPHER_DEF_PROP, ctr_functions_256 }, 
-    {ALCP_PROV_NAMES_AES_192_CTR, CIPHER_DEF_PROP, ctr_functions_192 }, 
+    // CTR for CTR-DRBG its not proper to enable CTR without multi update API
+    {ALCP_PROV_NAMES_AES_256_CTR, CIPHER_DEF_PROP, ctr_functions_256 },
+    {ALCP_PROV_NAMES_AES_192_CTR, CIPHER_DEF_PROP, ctr_functions_192 },
     {ALCP_PROV_NAMES_AES_128_CTR, CIPHER_DEF_PROP, ctr_functions_128 },
 // CBC
     // { ALCP_PROV_NAMES_AES_256_CBC, CIPHER_DEF_PROP, cbc_functions_256 },
@@ -949,18 +918,21 @@ const OSSL_ALGORITHM ALC_prov_ciphers[] = {
 /* ECB is disabled since ALCP does not support it. So all ECB calls will \
 fall back to OpenSSL default provider */
 
-#if 0 
+#if 0
     { ALCP_PROV_NAMES_AES_256_ECB, CIPHER_DEF_PROP, ecb_functions_256 },
     { ALCP_PROV_NAMES_AES_192_ECB, CIPHER_DEF_PROP, ecb_functions_192 },
     { ALCP_PROV_NAMES_AES_128_ECB, CIPHER_DEF_PROP, ecb_functions_128 },
-#endif
+
     // XTS
     { ALCP_PROV_NAMES_AES_256_XTS, CIPHER_DEF_PROP, xts_functions_256 },
     { ALCP_PROV_NAMES_AES_128_XTS, CIPHER_DEF_PROP, xts_functions_128 },
+#endif
     // GCM
     { ALCP_PROV_NAMES_AES_128_GCM, CIPHER_DEF_PROP, gcm_functions_128 },
     { ALCP_PROV_NAMES_AES_192_GCM, CIPHER_DEF_PROP, gcm_functions_192 },
     { ALCP_PROV_NAMES_AES_256_GCM, CIPHER_DEF_PROP, gcm_functions_256 },
+
+#if 0
     // CCM
     { ALCP_PROV_NAMES_AES_128_CCM, CIPHER_DEF_PROP, ccm_functions_128 },
     { ALCP_PROV_NAMES_AES_192_CCM, CIPHER_DEF_PROP, ccm_functions_192 },
@@ -969,6 +941,7 @@ fall back to OpenSSL default provider */
     { ALCP_PROV_NAMES_AES_128_SIV, CIPHER_DEF_PROP, siv_functions_128 },
     { ALCP_PROV_NAMES_AES_192_SIV, CIPHER_DEF_PROP, siv_functions_192 },
     { ALCP_PROV_NAMES_AES_256_SIV, CIPHER_DEF_PROP, siv_functions_256 },
+#endif
     // Terminate OpenSSL Algorithm list with Null Pointer.
     { NULL, NULL, NULL },
 };

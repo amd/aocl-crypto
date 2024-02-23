@@ -36,8 +36,7 @@ AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cIpherType,
                                        const Uint8*            iv)
     : m_mode{ cMode }
     , m_iv{ iv }
-{
-}
+{}
 
 AlcpCipherAeadBase::AlcpCipherAeadBase(const _alc_cipher_type  cIpherType,
                                        const alc_cipher_mode_t cMode,
@@ -82,7 +81,8 @@ AlcpCipherAeadBase::init(const Uint8* iv,
                          const Uint8* key,
                          const Uint32 cKeyLen)
 {
-    this->m_iv = iv;
+    this->m_iv  = iv;
+    this->m_key = key;
     return init(key, cKeyLen);
 }
 
@@ -95,8 +95,10 @@ AlcpCipherAeadBase::init(const Uint8* iv,
                          const Uint8* tkey,
                          const Uint64 cBlockSize)
 {
-    this->m_iv   = iv;
-    this->m_tkey = tkey;
+    this->m_iv     = iv;
+    this->m_tkey   = tkey;
+    this->m_key    = key;
+    this->m_keyLen = cKeyLen;
     return init(key, cKeyLen);
 }
 
@@ -136,41 +138,26 @@ AlcpCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
         goto out;
     }
 
-    /* Initialize keyinfo */
-
-    m_keyinfo.algo = ALC_KEY_ALG_SYMMETRIC;
-    m_keyinfo.type = ALC_KEY_TYPE_SYMMETRIC;
-    m_keyinfo.fmt  = ALC_KEY_FMT_RAW;
-    m_keyinfo.len  = cKeyLen;
-    m_keyinfo.key  = key;
-
-    /* Initialize cinfo */
-    m_cinfo.ci_algo_info.ai_mode = m_mode;
-    m_cinfo.ci_algo_info.ai_iv   = m_iv;
-
+    // request params
     m_cinfo.ci_type = ALC_CIPHER_TYPE_AES;
+    m_cinfo.ci_mode = m_mode;
+
+    // init params
+    m_cinfo.ci_iv  = m_iv;
+    m_cinfo.ci_key = key;
 
 #if 1
     if (m_mode == ALC_AES_MODE_SIV) {
-        key_info.key  = m_tkey; // Using tkey as CTR key for SIV
-        key_info.len  = cKeyLen;
-        key_info.algo = ALC_KEY_ALG_SYMMETRIC;
-        key_info.fmt  = ALC_KEY_FMT_RAW;
-        m_cinfo.ci_algo_info.ai_siv.xi_ctr_key = &key_info;
+        m_cinfo.ci_key    = m_tkey; // Using tkey as CTR key for SIV
+        m_cinfo.ci_keyLen = cKeyLen;
     }
 #endif
-    m_cinfo.ci_key_info = m_keyinfo;
 
-    /* Check support */
-    err = alcp_cipher_aead_supported(&m_cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, cErrSize);
-        goto out;
-    }
+    // algo params
+    m_cinfo.ci_algo_info.ai_siv.xi_ctr_key = &key_info;
 
     /* Request Handle */
-    err = alcp_cipher_aead_request(&m_cinfo, m_handle);
+    err = alcp_cipher_aead_request(m_cinfo.ci_mode, cKeyLen, m_handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, cErrSize);
@@ -230,6 +217,14 @@ AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data)
     alc_error_t err;
     const int   cErrSize = 256;
     Uint8       err_buff[cErrSize];
+
+    err = alcp_cipher_aead_set_key(m_handle, m_keyLen, m_key);
+    if (alcp_is_error(err)) {
+        printf("Err:Setting key\n");
+        alcp_error_str(err, err_buff, cErrSize);
+        std::cout << "Error:" << err_buff << std::endl;
+        return false;
+    }
 
     err = alcp_cipher_aead_set_iv(m_handle, aead_data.m_ivl, m_iv);
     if (alcp_is_error(err)) {

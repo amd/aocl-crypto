@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -74,10 +74,9 @@ namespace aesni::ccm {
                       size_t      len);
 } // namespace aesni::ccm
 
-class ALCP_API_EXPORT Ccm final
-    : public Aes
-    , cipher::IDecryptUpdater
-    , cipher::IEncryptUpdater
+class ALCP_API_EXPORT Ccm final : public Aes
+//, cipher::IDecryptUpdater
+//, cipher::IEncryptUpdater
 {
 
   public:
@@ -139,7 +138,7 @@ class ALCP_API_EXPORT Ccm final
     virtual alc_error_t encryptUpdate(const Uint8* pInput,
                                       Uint8*       pOutput,
                                       Uint64       len,
-                                      const Uint8* pIv) override;
+                                      const Uint8* pIv);
 
     /**
      * @brief   CCM Decrypt Operation
@@ -158,7 +157,7 @@ class ALCP_API_EXPORT Ccm final
     virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
                                       Uint8*       pPlainText,
                                       Uint64       len,
-                                      const Uint8* pIv) override;
+                                      const Uint8* pIv);
 
   private:
     class Impl;

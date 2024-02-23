@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -64,8 +64,8 @@ void inline Cmac_Bench(benchmark::State& state,
     std::vector<Uint8> Key(KeySize / 8, 0);
 
     /* Initialize info params based on cmac type */
-    info.mi_type                                         = ALC_MAC_CMAC;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_iv = NULL;
+    info.mi_type                            = ALC_MAC_CMAC;
+    info.mi_algoinfo.cmac.cmac_cipher.ci_iv = NULL;
 
     AlcpCmacBase     acb(info);
     CmacBase*        cb = &acb;
@@ -112,7 +112,7 @@ BENCH_CMAC_AES_128(benchmark::State& state)
 {
     alc_mac_info_t info;
     info.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode = ALC_AES_MODE_NONE;
+    info.mi_algoinfo.cmac.cmac_cipher.ci_mode = ALC_AES_MODE_NONE;
     Cmac_Bench(state, info, state.range(0), 128);
 }
 
@@ -121,7 +121,7 @@ BENCH_CMAC_AES_192(benchmark::State& state)
 {
     alc_mac_info_t info;
     info.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode = ALC_AES_MODE_NONE;
+    info.mi_algoinfo.cmac.cmac_cipher.ci_mode = ALC_AES_MODE_NONE;
     Cmac_Bench(state, info, state.range(0), 192);
 }
 
@@ -130,7 +130,7 @@ BENCH_CMAC_AES_256(benchmark::State& state)
 {
     alc_mac_info_t info;
     info.mi_algoinfo.cmac.cmac_cipher.ci_type = ALC_CIPHER_TYPE_AES;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode = ALC_AES_MODE_NONE;
+    info.mi_algoinfo.cmac.cmac_cipher.ci_mode = ALC_AES_MODE_NONE;
     Cmac_Bench(state, info, state.range(0), 256);
 }
 

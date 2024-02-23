@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -74,19 +74,6 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
     cinfo.ci_algo_info.ai_siv = siv_info;
 
     /*
-     * Check if the current cipher is supported,
-     * optional call, alcp_cipher_request() will anyway return
-     * ALC_ERR_NOSUPPORT error.
-     *
-     * This query call is provided to support fallback mode for applications
-     */
-    err = alcp_cipher_aead_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
-    }
-    /*
      * Application is expected to allocate for context
      */
     handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
@@ -94,7 +81,7 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
     //    return;
 
     /* Request a context with cinfo */
-    err = alcp_cipher_aead_request(&cinfo, &handle);
+    err = alcp_cipher_aead_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);
@@ -180,19 +167,6 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
     cinfo.ci_algo_info.ai_siv = siv_info;
 
     /*
-     * Check if the current cipher is supported,
-     * optional call, alcp_cipher_request() will anyway return
-     * ALC_ERR_NOSUPPORT error.
-     *
-     * This query call is provided to support fallback mode for applications
-     */
-    err = alcp_cipher_aead_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
-    }
-    /*
      * Application is expected to allocate for context
      */
     handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
@@ -200,7 +174,7 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
     //    return;
 
     /* Request a context with cinfo */
-    err = alcp_cipher_aead_request(&cinfo, &handle);
+    err = alcp_cipher_aead_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);
@@ -277,19 +251,6 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
     cinfo.ci_algo_info.ai_siv = siv_info;
 
     /*
-     * Check if the current cipher is supported,
-     * optional call, alcp_cipher_request() will anyway return
-     * ALC_ERR_NOSUPPORT error.
-     *
-     * This query call is provided to support fallback mode for applications
-     */
-    err = alcp_cipher_aead_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
-    }
-    /*
      * Application is expected to allocate for context
      */
     handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
@@ -297,7 +258,7 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
     //    return;
 
     /* Request a context with cinfo */
-    err = alcp_cipher_aead_request(&cinfo, &handle);
+    err = alcp_cipher_aead_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);

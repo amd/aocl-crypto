@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -72,17 +72,10 @@ alcp_encdecAES(const Ipp8u*       pSrc,
        already initialized. */
 
     if (context->handle.ch_context == nullptr) {
-        context->cinfo.ci_type              = ALC_CIPHER_TYPE_AES;
-        context->cinfo.ci_algo_info.ai_mode = mode;
-        context->cinfo.ci_algo_info.ai_iv   = (Uint8*)pCtrValue;
+        context->cinfo.ci_type = ALC_CIPHER_TYPE_AES;
+        context->cinfo.ci_mode = mode;
+        context->cinfo.ci_iv   = (Uint8*)pCtrValue;
 
-        // context->cinfo = cinfo;
-        err = alcp_cipher_supported(&(context->cinfo));
-        if (alcp_is_error(err)) {
-            printErr("not supported");
-            alcp_error_str(err, err_buf, err_size);
-            return ippStsNotSupportedModeErr;
-        }
         auto size = alcp_cipher_context_size(&(context->cinfo));
         context->handle.ch_context = (alc_cipher_context_p)(malloc(size));
 
@@ -92,23 +85,18 @@ alcp_encdecAES(const Ipp8u*       pSrc,
         if (mode == ALC_AES_MODE_XTS) {
             std::cout << "MODE:XTS" << std::endl;
             std::cout << "KEY:"
-                      << parseBytesToHexStr(context->cinfo.ci_key_info.key,
-                                            (context->cinfo.ci_key_info.len)
-                                                / 8)
+                      << parseBytesToHexStr(context->cinfo.ci_key,
+                                            (context->cinfo.ci_keyLen) / 8)
                       << std::endl;
-            std::cout << "KEYLen:" << context->cinfo.ci_key_info.len / 8
-                      << std::endl;
+            std::cout << "KEYLen:" << context->cinfo.ci_keyLen / 8 << std::endl;
             std::cout << "TKEY:"
                       << parseBytesToHexStr(
-                             context->cinfo.ci_key_info.key
-                                 + ((context->cinfo.ci_key_info.len) / 8),
-                             ((context->cinfo.ci_key_info.len) / 8))
+                             context->cinfo.ci_key
+                                 + ((context->cinfo.ci_keyLen) / 8),
+                             ((context->cinfo.ci_keyLen) / 8))
                       << std::endl;
-            std::cout << "KEYLen:" << context->cinfo.ci_key_info.len / 8
-                      << std::endl;
-            std::cout << "IV:"
-                      << parseBytesToHexStr(context->cinfo.ci_algo_info.ai_iv,
-                                            16)
+            std::cout << "KEYLen:" << context->cinfo.ci_keyLen / 8 << std::endl;
+            std::cout << "IV:" << parseBytesToHexStr(context->cinfo.ci_iv, 16)
                       << std::endl;
             std::cout << "INLEN:" << len << std::endl;
             std::cout << "IN:"
@@ -127,9 +115,15 @@ alcp_encdecAES(const Ipp8u*       pSrc,
         }
     }
 
+    // set key
+    err = alcp_cipher_set_key(
+        &(context->handle), context->cinfo.ci_keyLen, context->cinfo.ci_key);
+    if (alcp_is_error(err)) {
+        printErr("Error in Setting the key\n");
+    }
+
     if (mode == ALC_AES_MODE_XTS) {
-        err = alcp_cipher_set_iv(
-            &(context->handle), 16, context->cinfo.ci_algo_info.ai_iv);
+        err = alcp_cipher_set_iv(&(context->handle), 16, context->cinfo.ci_iv);
         if (alcp_is_error(err)) {
             printErr("Error in Setting the IV\n");
         }

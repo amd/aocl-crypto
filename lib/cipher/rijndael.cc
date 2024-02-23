@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -726,8 +726,17 @@ Rijndael::Rijndael(const alc_key_info_t& rKeyInfo)
     pImpl()->setUp();
 }
 
+// FIXME: to be removed:
 Rijndael::Rijndael(const Uint8* pKey, const Uint32 keyLen)
     : Rijndael{}
+{
+    pImpl()->setKeyLen(keyLen);
+    pImpl()->setKey(pKey);
+    pImpl()->setUp();
+}
+
+void
+Rijndael::initRijndael(const Uint64 keyLen, const Uint8* pKey)
 {
     pImpl()->setKeyLen(keyLen);
     pImpl()->setKey(pKey);

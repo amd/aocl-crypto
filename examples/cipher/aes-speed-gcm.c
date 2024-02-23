@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -124,35 +124,14 @@ create_aes_session(Uint8*                  key,
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    alc_cipher_aead_info_t cinfo = {
-        .ci_type = ALC_CIPHER_TYPE_AES,
-        .ci_algo_info   = {
-            .ai_mode = mode,
-            .ai_iv   = iv,
-        },
-       /* No padding, Not Implemented yet*/
-        //.pad     = ALC_CIPHER_PADDING_NONE,
-        .ci_key_info     = {
-            .type    = ALC_KEY_TYPE_SYMMETRIC,
-            .fmt     = ALC_KEY_FMT_RAW,
-            .key     = key,
-            .len     = key_len,
-        },
+    alc_cipher_aead_info_t cinfo = { // request params
+                                     .ci_type   = ALC_CIPHER_TYPE_AES,
+                                     .ci_mode   = mode,
+                                     .ci_keyLen = key_len,
+                                     // init params
+                                     .ci_key = key,
+                                     .ci_iv  = iv
     };
-
-    /*
-     * Check if the current cipher is supported,
-     * optional call, alcp_cipher_request() will anyway return
-     * ALC_ERR_NOSUPPORT error.
-     *
-     * This query call is provided to support fallback mode for applications
-     */
-    err = alcp_cipher_aead_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
-        return;
-    }
 
     /*
      * Application is expected to allocate for context
@@ -161,9 +140,10 @@ create_aes_session(Uint8*                  key,
     // if (!ctx)
     //    return;
 
-    /* Request a context with cinfo */
-    err = alcp_cipher_aead_request(&cinfo, &handle);
+    /* Request a context with cipher mode and keyLen */
+    err = alcp_cipher_aead_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
     if (alcp_is_error(err)) {
+        free(handle.ch_context);
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);
         return;
@@ -181,13 +161,23 @@ aclp_aes_gcm_encrypt_demo(
     Uint8*       ad,
     const Uint32 adLen,
     Uint8*       tag,
-    const Uint32 tagLen)
+    const Uint32 tagLen,
+    const Uint8* pKey,
+    const Uint32 keyLen)
 {
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    // GCM init
+    // GCM init key
+    err = alcp_cipher_aead_set_key(&handle, keyLen, pKey);
+    if (alcp_is_error(err)) {
+        printf("Error: unable gcm encrypt init \n");
+        alcp_error_str(err, err_buf, err_size);
+        return;
+    }
+
+    // GCM init iv
     err = alcp_cipher_aead_set_iv(&handle, ivLen, iv);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm encrypt init \n");
@@ -377,8 +367,17 @@ encrypt_decrypt_demo(Uint8*            inputText,  // plaintext
     // same inputText, cipherText and outputText buffer is used multiple times
     // to measure speed, so inputText and outputText after decrypt will not
     // match.
-    aclp_aes_gcm_encrypt_demo(
-        inputText, inputLen, cipherText, iv, ivLen, ad, adLen, tag, tagLen);
+    aclp_aes_gcm_encrypt_demo(inputText,
+                              inputLen,
+                              cipherText,
+                              iv,
+                              ivLen,
+                              ad,
+                              adLen,
+                              tag,
+                              tagLen,
+                              key,
+                              keybits);
 
     aclp_aes_gcm_decrypt_demo(
         cipherText, inputLen, outputText, iv, ivLen, ad, adLen, tag, tagLen);

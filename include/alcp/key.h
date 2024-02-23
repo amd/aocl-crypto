@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,25 +37,6 @@
  *
  * @{
  */
-
-/**
- * @brief Stores Type of Key being used for Cipher
- *
- * @typedef enum alc_key_type_t
- */
-typedef enum
-{
-    ALC_KEY_TYPE_UNKNOWN = 0,
-
-    ALC_KEY_TYPE_SYMMETRIC = 0x10, /* Will cover all AES,DES,CHACHA20 etc */
-    ALC_KEY_TYPE_PRIVATE   = 0x20,
-    ALC_KEY_TYPE_PUBLIC    = 0x40,
-    ALC_KEY_TYPE_DER       = 0x80,
-    ALC_KEY_TYPE_PEM       = 0x100,
-    ALC_KEY_TYPE_CUSTOM    = 0x200,
-
-    ALC_KEY_TYPE_MAX,
-} alc_key_type_t;
 
 /**
  * @brief Stores Algorithm for key
@@ -115,36 +96,11 @@ typedef enum
  */
 typedef struct _alc_key_info
 {
-    alc_key_type_t type;
-    alc_key_fmt_t  fmt;
-    alc_key_alg_t  algo;
-    alc_key_len_t  len_type;
-    Uint32         len; /* Key length in bits */
-    const Uint8*   key; /* Key follows the rest of the structure */
+    alc_key_alg_t algo;
+    Uint64        len; /* Key length in bits */
+    const Uint8*  key; /* Key follows the rest of the structure */
 
 } alc_key_info_t, *alc_key_info_p;
-
-// FIXME: All functions below are not backed by any function definition, needs
-// to be removed
-/**
- * @brief    Allows caller to get Algorithm used in key
- * @note    Currently not in use.
- * @param [in]   kinfo Stores info regarding key
- *
- * @return  alc_key_alg_t Enum which stores algorithm used for key
- */
-alc_key_alg_t
-alcp_key_get_algo(alc_key_info_t* kinfo);
-
-/**
- * @brief    Allows caller to get Algorithm used in key
- * @note    Currently not in use.
- * @param [in]   kinfo Stores info regarding key
- *
- * @return  alc_key_type_t Enum which stores type of key used
- */
-alc_key_type_t
-alcp_key_get_type(alc_key_info_t* kinfo);
 
 #endif /* _ALCP_KEY_H_ */
        /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -40,33 +40,30 @@ AlcpXtsCipher<encryptor>::init(alc_test_init_data_p data)
     Uint8       err_buf[err_size];
 
     alc_cipher_info_t cinfo = {
-        .ci_type = ALC_CIPHER_TYPE_AES,
-        .ci_key_info     = {
-            .type    = ALC_KEY_TYPE_SYMMETRIC,
-            .fmt     = ALC_KEY_FMT_RAW,
-            .len     = (data_xts->m_key_len)*8,
-            .key     = data_xts->m_key,
-        },
-        .ci_algo_info   = {
-           .ai_mode = ALC_AES_MODE_XTS,
-           .ai_iv   = data_xts->m_iv,
-        },
-    };
+        .ci_type   = ALC_CIPHER_TYPE_AES,
+        .ci_mode   = ALC_AES_MODE_XTS,
+        .ci_keyLen = (data_xts->m_key_len) * 8,
 
-    err = alcp_cipher_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
-    }
+        .ci_key = data_xts->m_key,
+        .ci_iv  = data_xts->m_iv,
+    };
 
     m_handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
     if (!m_handle.ch_context)
         return false;
 
-    err = alcp_cipher_request(&cinfo, &m_handle);
+    err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, &m_handle);
     if (alcp_is_error(err)) {
+        free(m_handle.ch_context);
         printf("Error: unable to request \n");
+        alcp_error_str(err, err_buf, err_size);
+        return false;
+    }
+
+    // encrypt init: set key
+    err = alcp_cipher_set_key(&m_handle, cinfo.ci_keyLen, cinfo.ci_key);
+    if (alcp_is_error(err)) {
+        printf("Error in Setting the key\n");
         alcp_error_str(err, err_buf, err_size);
         return false;
     }

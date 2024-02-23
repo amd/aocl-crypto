@@ -50,9 +50,9 @@ namespace alcp::cipher {
  * @note        TODO: Move this to a aes_Gcm.hh or other
  */
 class ALCP_API_EXPORT Gcm
-    : public Aes
-    , cipher::IDecryptUpdater
-    , cipher::IEncryptUpdater
+    : public Aes // IDecryptUpdater & other one should move to Aes or icipher
+//, cipher::IDecryptUpdater
+//, cipher::IEncryptUpdater
 {
 
   public:
@@ -67,8 +67,11 @@ class ALCP_API_EXPORT Gcm
     Uint64       m_ivLen = 12; // default 12 bytes or 96bits
 
   public:
-    explicit Gcm(const Uint8* pKey, const Uint32 keyLen)
-        : Aes(pKey, keyLen)
+    explicit Gcm()
+        : Aes()
+    {}
+
+    void getKey()
     {
         m_enc_key = getEncryptKeys();
         m_dec_key = getDecryptKeys();
@@ -131,10 +134,7 @@ namespace vaes512 {
         , public GcmAuth
     {
       public:
-        explicit GcmGhash(const Uint8* pKey, const Uint32 keyLen)
-            : Gcm(pKey, keyLen)
-        {}
-
+        GcmGhash(){};
         ~GcmGhash() {}
 
         /**
@@ -168,8 +168,8 @@ namespace vaes512 {
     class ALCP_API_EXPORT GcmAEAD128 : public GcmGhash
     {
       public:
-        explicit GcmAEAD128(const Uint8* pKey, const Uint32 keyLen)
-            : GcmGhash(pKey, keyLen)
+        GcmAEAD128()
+            : GcmGhash()
         {}
 
         ~GcmAEAD128() {}
@@ -190,7 +190,7 @@ namespace vaes512 {
         virtual alc_error_t encryptUpdate(const Uint8* pInput,
                                           Uint8*       pOutput,
                                           Uint64       len,
-                                          const Uint8* pIv) override;
+                                          const Uint8* pIv);
 
         /**
          * @brief   GCM Decrypt Operation
@@ -204,15 +204,15 @@ namespace vaes512 {
         virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
                                           Uint8*       pPlainText,
                                           Uint64       len,
-                                          const Uint8* pIv) override;
+                                          const Uint8* pIv);
     };
 
     class ALCP_API_EXPORT GcmAEAD192 : public GcmGhash
     {
 
       public:
-        explicit GcmAEAD192(const Uint8* pKey, const Uint32 keyLen)
-            : GcmGhash(pKey, keyLen)
+        explicit GcmAEAD192()
+            : GcmGhash()
         {}
 
         ~GcmAEAD192() {}
@@ -233,7 +233,7 @@ namespace vaes512 {
         virtual alc_error_t encryptUpdate(const Uint8* pInput,
                                           Uint8*       pOutput,
                                           Uint64       len,
-                                          const Uint8* pIv) override;
+                                          const Uint8* pIv);
 
         /**
          * @brief   GCM Decrypt Operation
@@ -247,15 +247,15 @@ namespace vaes512 {
         virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
                                           Uint8*       pPlainText,
                                           Uint64       len,
-                                          const Uint8* pIv) override;
+                                          const Uint8* pIv);
     };
 
     class ALCP_API_EXPORT GcmAEAD256 : public GcmGhash
     {
 
       public:
-        explicit GcmAEAD256(const Uint8* pKey, const Uint32 keyLen)
-            : GcmGhash(pKey, keyLen)
+        explicit GcmAEAD256()
+            : GcmGhash()
         {}
 
         ~GcmAEAD256() {}
@@ -276,7 +276,7 @@ namespace vaes512 {
         virtual alc_error_t encryptUpdate(const Uint8* pInput,
                                           Uint8*       pOutput,
                                           Uint64       len,
-                                          const Uint8* pIv) override;
+                                          const Uint8* pIv);
 
         /**
          * @brief   GCM Decrypt Operation
@@ -290,7 +290,7 @@ namespace vaes512 {
         virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
                                           Uint8*       pPlainText,
                                           Uint64       len,
-                                          const Uint8* pIv) override;
+                                          const Uint8* pIv);
     };
 
 } // namespace vaes512
@@ -302,8 +302,8 @@ namespace vaes {
         , public GcmAuth
     {
       public:
-        explicit GcmGhash(const Uint8* pKey, const Uint32 keyLen)
-            : Gcm(pKey, keyLen)
+        GcmGhash()
+            : Gcm()
         {}
 
         ~GcmGhash() {}
@@ -339,8 +339,8 @@ namespace vaes {
     class ALCP_API_EXPORT GcmAEAD128 : public GcmGhash
     {
       public:
-        explicit GcmAEAD128(const Uint8* pKey, const Uint32 keyLen)
-            : GcmGhash(pKey, keyLen)
+        explicit GcmAEAD128()
+            : GcmGhash()
         {}
 
         ~GcmAEAD128() {}
@@ -361,7 +361,7 @@ namespace vaes {
         virtual alc_error_t encryptUpdate(const Uint8* pInput,
                                           Uint8*       pOutput,
                                           Uint64       len,
-                                          const Uint8* pIv) override;
+                                          const Uint8* pIv);
 
         /**
          * @brief   GCM Decrypt Operation
@@ -375,15 +375,15 @@ namespace vaes {
         virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
                                           Uint8*       pPlainText,
                                           Uint64       len,
-                                          const Uint8* pIv) override;
+                                          const Uint8* pIv);
     };
 
     class ALCP_API_EXPORT GcmAEAD192 : public GcmGhash
     {
 
       public:
-        explicit GcmAEAD192(const Uint8* pKey, const Uint32 keyLen)
-            : GcmGhash(pKey, keyLen)
+        explicit GcmAEAD192()
+            : GcmGhash()
         {}
 
         ~GcmAEAD192() {}
@@ -404,7 +404,7 @@ namespace vaes {
         virtual alc_error_t encryptUpdate(const Uint8* pInput,
                                           Uint8*       pOutput,
                                           Uint64       len,
-                                          const Uint8* pIv) override;
+                                          const Uint8* pIv);
 
         /**
          * @brief   GCM Decrypt Operation
@@ -418,15 +418,15 @@ namespace vaes {
         virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
                                           Uint8*       pPlainText,
                                           Uint64       len,
-                                          const Uint8* pIv) override;
+                                          const Uint8* pIv);
     };
 
     class ALCP_API_EXPORT GcmAEAD256 : public GcmGhash
     {
 
       public:
-        explicit GcmAEAD256(const Uint8* pKey, const Uint32 keyLen)
-            : GcmGhash(pKey, keyLen)
+        explicit GcmAEAD256()
+            : GcmGhash()
         {}
 
         ~GcmAEAD256() {}
@@ -447,7 +447,7 @@ namespace vaes {
         virtual alc_error_t encryptUpdate(const Uint8* pInput,
                                           Uint8*       pOutput,
                                           Uint64       len,
-                                          const Uint8* pIv) override;
+                                          const Uint8* pIv);
 
         /**
          * @brief   GCM Decrypt Operation
@@ -461,7 +461,7 @@ namespace vaes {
         virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
                                           Uint8*       pPlainText,
                                           Uint64       len,
-                                          const Uint8* pIv) override;
+                                          const Uint8* pIv);
     };
 
 } // namespace vaes
@@ -473,9 +473,7 @@ namespace aesni {
         , public GcmAuth
     {
       public:
-        explicit GcmGhash(const Uint8* pKey, const Uint32 keyLen)
-            : Gcm(pKey, keyLen)
-        {}
+        GcmGhash() {}
 
         ~GcmGhash() {}
 
@@ -510,8 +508,8 @@ namespace aesni {
     class ALCP_API_EXPORT GcmAEAD128 : public GcmGhash
     {
       public:
-        explicit GcmAEAD128(const Uint8* pKey, const Uint32 keyLen)
-            : GcmGhash(pKey, keyLen)
+        explicit GcmAEAD128()
+            : GcmGhash()
         {}
 
         ~GcmAEAD128() {}
@@ -532,7 +530,7 @@ namespace aesni {
         virtual alc_error_t encryptUpdate(const Uint8* pInput,
                                           Uint8*       pOutput,
                                           Uint64       len,
-                                          const Uint8* pIv) override;
+                                          const Uint8* pIv);
 
         /**
          * @brief   GCM Decrypt Operation
@@ -546,15 +544,15 @@ namespace aesni {
         virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
                                           Uint8*       pPlainText,
                                           Uint64       len,
-                                          const Uint8* pIv) override;
+                                          const Uint8* pIv);
     };
 
     class ALCP_API_EXPORT GcmAEAD192 : public GcmGhash
     {
 
       public:
-        explicit GcmAEAD192(const Uint8* pKey, const Uint32 keyLen)
-            : GcmGhash(pKey, keyLen)
+        explicit GcmAEAD192()
+            : GcmGhash()
         {}
 
         ~GcmAEAD192() {}
@@ -575,7 +573,7 @@ namespace aesni {
         virtual alc_error_t encryptUpdate(const Uint8* pInput,
                                           Uint8*       pOutput,
                                           Uint64       len,
-                                          const Uint8* pIv) override;
+                                          const Uint8* pIv);
 
         /**
          * @brief   GCM Decrypt Operation
@@ -589,15 +587,15 @@ namespace aesni {
         virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
                                           Uint8*       pPlainText,
                                           Uint64       len,
-                                          const Uint8* pIv) override;
+                                          const Uint8* pIv);
     };
 
     class ALCP_API_EXPORT GcmAEAD256 : public GcmGhash
     {
 
       public:
-        explicit GcmAEAD256(const Uint8* pKey, const Uint32 keyLen)
-            : GcmGhash(pKey, keyLen)
+        explicit GcmAEAD256()
+            : GcmGhash()
         {}
 
         ~GcmAEAD256() {}
@@ -618,7 +616,7 @@ namespace aesni {
         virtual alc_error_t encryptUpdate(const Uint8* pInput,
                                           Uint8*       pOutput,
                                           Uint64       len,
-                                          const Uint8* pIv) override;
+                                          const Uint8* pIv);
 
         /**
          * @brief   GCM Decrypt Operation
@@ -632,7 +630,7 @@ namespace aesni {
         virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
                                           Uint8*       pPlainText,
                                           Uint64       len,
-                                          const Uint8* pIv) override;
+                                          const Uint8* pIv);
     };
 
 } // namespace aesni

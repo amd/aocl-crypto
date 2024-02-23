@@ -22,7 +22,7 @@ colorlinks: true
 
 # Introduction
 
-  AOCL-Cryptograpy is an alternative to many cryptographic libraries like openssl, intel's IPP-CP, wolfssl etc. Integrating a new library into an already exisiting application can be difficult. Understanding this difficulty for the developers to switch from already existing libraries, we developed wrappers and providers which will help you integrate your application with AOCL-Cryptograpy in a matter of minutes. If your application is already using ether one of (OpenSSL, IPP-CP), you can use our provider or wrapper to test out the performance delivered by AOCL-Cryptography or even integrate it permanently. 
+  AOCL-Cryptograpy is an alternative to many cryptographic libraries like openssl, intel's IPP-CP, wolfssl etc. Integrating a new library into an already exisiting application can be difficult. Understanding this difficulty for the developers to switch from already existing libraries, we developed wrappers and providers which will help you integrate your application with AOCL-Cryptograpy in a matter of minutes. If your application is already using ether one of (OpenSSL, IPP-CP), you can use our provider or wrapper to test out the performance delivered by AOCL-Cryptography or even integrate it permanently.
 
   Using AOCL-Crypto's Native API is better than using Providers or Wrappers as there are some performance overheads associated with them. Our suggested workflow is to get stated with the Providers or Wrapper interfaces, once convinced with the performance, dedicate effort to move to native API.
 
@@ -45,13 +45,13 @@ colorlinks: true
 #### IPP-CP based Application
   Application based on IPP-CP can easily use AOCL-Crypto by configuring it to use the wrapper, IPP-CP provider documentation can be found [here](https://github.com/amd/aocl-crypto/blob/main/docs/compat/ipp.pdf). Taking each module, removing IPP-CP code, and replacing with AOCL-Crypto API will allow you to slowly migrate to AOCL-Cryptography without too much effort.
 
-**Note**  
-    *Additional overhead due to no direct one on one mapping of api's for few algorithms.*  
-    *Example: AESEncryptXTS_Direct, where additional init and de-init performed causes additional overhead.*  
+**Note**
+    *Additional overhead due to no direct one on one mapping of api's for few algorithms.*
+    *Example: AESEncryptXTS_Direct, where additional init and de-init performed causes additional overhead.*
     *In such cases, using OpenSSL provider based approach or direct AOCL-cryptography API is recommended.*
 
 #### Other library based Application
-  Other Libraries can be a fork of OpenSSL or IPP-CP, in that case the provider or wrapper interface may still work, its not recommended to use provider or wrapper interface in the perticular situation as it may result in undefined behaviour in the cryptographic application and this can cause security vulnerabilities. Some other libraries like libsodium, libsalt, WolfSSL, MbedTLS etc does not have any provider or wrapper implementation. 
+  Other Libraries can be a fork of OpenSSL or IPP-CP, in that case the provider or wrapper interface may still work, its not recommended to use provider or wrapper interface in the perticular situation as it may result in undefined behaviour in the cryptographic application and this can cause security vulnerabilities. Some other libraries like libsodium, libsalt, WolfSSL, MbedTLS etc does not have any provider or wrapper implementation.
 
   To migrate from Other Library to AOCL-Cryptography, you can slowly phase out the code which which calls the Other Library and replace it with AOCL-Cryptography, one disadvantage of this approach is that only the part you have replaced with AOCL-Crypto API will be using AOCL-Crypto hence there is still a dependency to the depreciated crypto library.
 
@@ -63,11 +63,11 @@ All the examples shown here are available under examples section, if you have re
 
 For a binary tarball you should be able to run `make` command on the root directory to compile the examples.
 
-For more info go to doxygen 
+For more info go to doxygen
 
 ## Flow of AOCL-Crypto
 
-Life cycle of any algorithm of AOCL-Crypto is divided into 4 steps. 
+Life cycle of any algorithm of AOCL-Crypto is divided into 4 steps.
 
 1. Support Check - After creating the necessary data-strutures (alc_<algo>_info_t), one has to check if it's supported. Calling `alc_error_t err = alcp_<algo>_supported(info)` will return `alc_error_t` which will indicate if support succeded. You can check if the support did indeed succeed by calling `alcp_is_error(err)`, this will return true if support is successful.
 
@@ -79,7 +79,7 @@ Life cycle of any algorithm of AOCL-Crypto is divided into 4 steps.
 
 5. Finish/Finalize - Some algorithms require `finish` and `finalize` but most of them only require `finish`. To `finish` the operation, you can involk `alcp_<algo>_finish(&handle)`, once finished the handle is no longer valid and must be destroyed by deallocating context. Optionally you can also write zeros to the context memory.
 
-Every API mentioned above will return an `alc_error_t` which will let you know if any error occured. 
+Every API mentioned above will return an `alc_error_t` which will let you know if any error occured.
 
 ### Cipher
 #### An example C code for encryption using a Cipher AES algorithm
@@ -92,15 +92,11 @@ int main(){
   alc_cipher_info_t cinfo = {
     .ci_type = ALC_CIPHER_TYPE_AES,
     .ci_key_info     = {
-        .type    = ALC_KEY_TYPE_SYMMETRIC,
-        .fmt     = ALC_KEY_FMT_RAW,
         .key     = key,
         .len     = cKeyLen,
     },
-    .ci_algo_info   = {
-        .ai_mode = ALC_AES_MODE_CFB,
-        .ai_iv   = iv,
-    },
+    .ci_iv   = iv,
+    .ci_mode = ALC_AES_MODE_CFB
   };
 
   /* Step 1 Support Phase */
@@ -122,7 +118,7 @@ int main(){
   }
 
   /* Step 3 Request a conext */
-  // Request a context with cinfo 
+  // Request a context with cinfo
   err = alcp_cipher_request(&cinfo, handle);
   if (alcp_is_error(err)) {
       printf("Error: Unable to Request \n");
@@ -161,7 +157,7 @@ There are different ciphers which are supported by ALCP, these ciphers can be gr
 
     i. AEAD -
     Authenticated Encrypt Authenticated Decrypt
-        
+
         a. GCM
         b. CCM
         c. SIV
@@ -172,7 +168,7 @@ There are different ciphers which are supported by ALCP, these ciphers can be gr
         a. CFB - Cipher Feedback.
         b. CBC - Cipher Block Chaining.
         c. CTR - Counter.
-        d. XTS - XEX-based tweaked-codebook mode with ciphertext stealing 
+        d. XTS - XEX-based tweaked-codebook mode with ciphertext stealing
         e. OFB - Output Feedback.
 
 2. ChaCha
@@ -215,18 +211,17 @@ Example Code for AES-SIV,
 alc_cipher_aead_info_t cinfo = {
     .ci_type = ALC_CIPHER_TYPE_AES,
     .ci_algo_info   = {
-        .ai_mode = ALC_AES_MODE_SIV,
-        .ai_iv   = NULL,
         .ai_siv.xi_ctr_key = &kinfo,
     },
+    .ci_iv   = NULL,
     /* No padding, Not Implemented yet*/
-    //.pad     = ALC_CIPHER_PADDING_NONE, 
+    //.pad     = ALC_CIPHER_PADDING_NONE,
     .ci_key_info     = {
-        .type    = ALC_KEY_TYPE_SYMMETRIC,
         .fmt     = ALC_KEY_FMT_RAW,
         .key     = key_cmac,
         .len     = key_len,
     },
+    .ci_mode = ALC_AES_MODE_SIV,
 };
 
 // Support Check
@@ -293,18 +288,15 @@ Example Code for AES-CCM,
 // Info about the cipher operation
 alc_cipher_aead_info_t cinfo = {
     .ci_type = ALC_CIPHER_TYPE_AES,
-    .ci_algo_info   = {
-        .ai_mode = ALC_AES_MODE_CCM,
-        .ai_iv   = iv,
-    },
+    .ci_iv   = iv,
     /* No padding, Not Implemented yet*/
-    //.pad     = ALC_CIPHER_PADDING_NONE, 
+    //.pad     = ALC_CIPHER_PADDING_NONE,
     .ci_key_info     = {
-        .type    = ALC_KEY_TYPE_SYMMETRIC,
         .fmt     = ALC_KEY_FMT_RAW,
         .key     = key,
         .len     = key_len,
     },
+    .ci_mode = ALC_AES_MODE_CCM,
 };
 
 // Support Check
@@ -389,18 +381,15 @@ Example Code for AES-GCM,
 // Info about the cipher operation
 alc_cipher_aead_info_t cinfo = {
     .ci_type = ALC_CIPHER_TYPE_AES,
-    .ci_algo_info   = {
-        .ai_mode = ALC_AES_MODE_GCM,
-        .ai_iv   = iv,
-    },
+    .ci_iv   = iv,
     /* No padding, Not Implemented yet*/
     //.pad     = ALC_CIPHER_PADDING_NONE,
     .ci_key_info     = {
-        .type    = ALC_KEY_TYPE_SYMMETRIC,
         .fmt     = ALC_KEY_FMT_RAW,
         .key     = key,
         .len     = key_len,
     },
+    .ci_mode = ALC_AES_MODE_GCM
 };
 
 // Support Check
@@ -466,7 +455,7 @@ free(handle.context)
 ```
 # [ Work in Progress ]
 
-#### Asymmetric Cipher Algorithms 
+#### Asymmetric Cipher Algorithms
 
 ### Digest
 

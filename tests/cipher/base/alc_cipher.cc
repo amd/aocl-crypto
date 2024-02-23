@@ -36,8 +36,7 @@ AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cIpherType,
     : m_mode{ cMode }
     , m_cipher_type{ cIpherType }
     , m_iv{ iv }
-{
-}
+{}
 
 /* xts */
 AlcpCipherBase::AlcpCipherBase(const _alc_cipher_type  cIpherType,
@@ -109,34 +108,30 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
 
     m_cinfo.ci_type = m_cipher_type;
     if (m_cinfo.ci_type == ALC_CIPHER_TYPE_CHACHA20) {
-        m_cinfo.ci_key_info.type   = ALC_KEY_TYPE_SYMMETRIC;
-        m_cinfo.ci_key_info.fmt    = ALC_KEY_FMT_RAW;
-        m_cinfo.ci_key_info.key    = key;
-        m_cinfo.ci_key_info.len    = cKeyLen;
-        m_cinfo.ci_algo_info.ai_iv = m_iv;
+        m_cinfo.ci_mode   = ALC_AES_MODE_NONE;
+        m_cinfo.ci_keyLen = cKeyLen;
+
+        m_cinfo.ci_key = key;
+        m_cinfo.ci_iv  = m_iv;
         m_cinfo.ci_algo_info.iv_length =
             16 * 8; /* FIXME is it always 16 bytes ?*/
-        m_cinfo.ci_algo_info.ai_mode = ALC_AES_MODE_NONE;
-    } else {
-        /* FOR AES */
-        /* Initialize keyinfo */
-        m_keyinfo.algo = ALC_KEY_ALG_SYMMETRIC;
-        m_keyinfo.type = ALC_KEY_TYPE_SYMMETRIC;
-        m_keyinfo.fmt  = ALC_KEY_FMT_RAW;
-        m_keyinfo.len  = cKeyLen;
-        m_keyinfo.key  = key;
 
-        /* Initialize cinfo */
-        m_cinfo.ci_algo_info.ai_mode = m_mode;
-        m_cinfo.ci_algo_info.ai_iv   = m_iv;
+    } else {
+
+        // request params
+        m_cinfo.ci_mode   = m_mode;
+        m_cinfo.ci_keyLen = cKeyLen;
+
+        // init params
+        m_cinfo.ci_key = key;
+        m_cinfo.ci_iv  = m_iv;
 
         /* set these only for XTS */
         if (m_mode == ALC_AES_MODE_XTS) {
             memcpy(m_key, key, cKeyLen / 8);
             memcpy(m_key + (cKeyLen / 8), m_tkey, cKeyLen / 8);
-            m_keyinfo.key = m_key;
+            m_cinfo.ci_key = m_key;
         }
-        m_cinfo.ci_key_info = m_keyinfo;
     }
 #if 0
     else if (m_mode == ALC_AES_MODE_SIV) {
@@ -150,18 +145,18 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
     }
 #endif
 
-    /* Check support */
-    err = alcp_cipher_supported(&m_cinfo);
+    /* Request Handle */
+    err = alcp_cipher_request(m_cinfo.ci_mode, m_cinfo.ci_keyLen, m_handle);
     if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
+        printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, cErrSize);
         goto out;
     }
 
-    /* Request Handle */
-    err = alcp_cipher_request(&m_cinfo, m_handle);
+    // encrypt init: set key
+    err = alcp_cipher_set_key(m_handle, m_cinfo.ci_keyLen, m_cinfo.ci_key);
     if (alcp_is_error(err)) {
-        printf("Error: unable to request \n");
+        printf("Error in Setting the key\n");
         alcp_error_str(err, err_buf, cErrSize);
         goto out;
     }

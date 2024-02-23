@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -59,36 +59,15 @@ create_demo_session(alc_cipher_handle_p handle,
     const int   cErrSize = 256;
     Uint8       err_buf[cErrSize];
 
-    alc_cipher_info_t cinfo = {
-      .ci_type = ALC_CIPHER_TYPE_CHACHA20, // Using Chacha20 Stream Cipher
-      .ci_key_info =
-          {
-              .type = ALC_KEY_TYPE_SYMMETRIC,
-              .fmt = ALC_KEY_FMT_RAW,
-              .key = key,
-              .len = cKeyLen,
-          },
-      .ci_algo_info = {
-          .ai_iv = iv, // For Chacha20, IV has to be a combination of counter 32
-                       // bits in little endian) followed by nonce(96 bits).
-                       // Counter will get incremented internally for each 64
-                       // bytes of input message
-          .iv_length = ivlength // For Chacha20, IV length must be 128 bits
-      }};
-
-    /*
-     * Check if the current cipher is supported,
-     * optional call, alcp_cipher_request() will anyway return
-     * ALC_ERROR_NOT_SUPPORTED error.
-     *
-     * This query call is provided to support fallback mode for applications
-     */
-    err = alcp_cipher_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: Not Supported \n");
-        goto out;
-    }
-    printf("Support succeeded\n");
+    alc_cipher_info_t cinfo = { // request params
+                                .ci_type   = ALC_CIPHER_TYPE_CHACHA20,
+                                .ci_keyLen = cKeyLen,
+                                // init params
+                                .ci_key = key,
+                                .ci_iv  = iv,
+                                // algo params
+                                .ci_algo_info.iv_length = ivlength
+    };
 
     /*
      * Application is expected to allocate for context
@@ -101,9 +80,10 @@ create_demo_session(alc_cipher_handle_p handle,
         goto out;
     }
 
-    /* Request a context with cinfo */
-    err = alcp_cipher_request(&cinfo, handle);
+    /* Request a context with mode and key length */
+    err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, handle);
     if (alcp_is_error(err)) {
+        free(handle->ch_context);
         printf("Error: Unable to Request \n");
         goto out;
     }

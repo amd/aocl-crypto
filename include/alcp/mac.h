@@ -119,7 +119,8 @@ typedef struct _alc_mac_info_t
     } mi_algoinfo;
 
     // any other common fields that are needed
-    alc_key_info_t mi_keyinfo;
+    alc_key_info_t    mi_keyinfo;
+    alc_cipher_mode_t ci_mode; // to be removed
 } alc_mac_info_t, *alc_mac_info_p;
 
 typedef void               alc_mac_context_t;

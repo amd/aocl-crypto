@@ -59,15 +59,9 @@ using Status = alcp::base::Status;
 class Aes : public Rijndael
 {
   public:
-    explicit Aes(const Uint8* pKey, const Uint32 keyLen)
-        : Rijndael(pKey, keyLen)
+    Aes()
+        : Rijndael()
     {}
-
-    explicit Aes(const Uint8* pKey, const Uint32 keyLen, alc_cipher_mode_t mode)
-        : Rijndael(pKey, keyLen)
-    {
-        setMode(mode);
-    }
 
   protected:
     virtual ~Aes() {}
@@ -76,7 +70,9 @@ class Aes : public Rijndael
     // Without CMAC-SIV extending AES, we cannot access it with protected,
     // Please change to protected if needed in future
   public:
-    Aes() { m_this = this; }
+    // Aes() { m_this = this; }
+
+    alc_error_t initKey(const Uint64 len, const Uint8* pUserKey);
 
     ALCP_API_EXPORT virtual Status setKey(const Uint8* pUserKey,
                                           Uint64       len) override;
@@ -107,10 +103,7 @@ class ALCP_API_EXPORT Ofb final
     , public ICipher
 {
   public:
-    explicit Ofb(const Uint8* pKey, const Uint32 keyLen)
-        : Aes(pKey, keyLen)
-    {}
-
+    Ofb() {}
     ~Ofb() {}
 
   public:
@@ -141,9 +134,6 @@ class ALCP_API_EXPORT Ofb final
                                 Uint8*       pPlainText,
                                 Uint64       len,
                                 const Uint8* pIv) const final;
-
-  private:
-    Ofb(){};
 
   private:
 };

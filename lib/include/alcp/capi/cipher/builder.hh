@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,8 +38,9 @@ class CipherBuilder
 {
   public:
     // FIXME: to be removed after cleanup in other AES modes
-    static alc_error_t Build(const alc_cipher_info_t& cipherInfo,
-                             alcp::cipher::Context&   ctx);
+    static alc_error_t Build(const alc_cipher_mode_t cipherMode,
+                             const Uint64            keyLen,
+                             alcp::cipher::Context&  ctx);
 
     static alc_error_t Build(const alc_cipher_algo_info_t algoInfo,
                              const alc_cipher_type_t      cipherType,
@@ -47,14 +48,17 @@ class CipherBuilder
                              const Uint8*                 pKey,
                              const Uint32                 keyLen,
                              alcp::cipher::Context&       ctx);
-    static bool        Supported(alc_cipher_info_t& cinfo);
+
+    static bool Supported(const alc_cipher_mode_t cipherMode,
+                          const Uint64            keyLen);
 };
 
 class CipherAeadBuilder
 {
   public:
-    static alc_error_t Build(const alc_cipher_aead_info_t& cipherInfo,
-                             alcp::cipher::Context&        ctx);
+    static alc_error_t Build(const alc_cipher_mode_t cipherMode,
+                             const Uint64            keyLen,
+                             alcp::cipher::Context&  ctx);
 };
 
 } // namespace alcp::cipher

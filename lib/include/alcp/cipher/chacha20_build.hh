@@ -35,21 +35,23 @@ namespace alcp::cipher::chacha20 {
 class Chacha20Builder
 {
   public:
-    static alc_error_t Build(const alc_cipher_info_t& cCipherAlgoInfo,
-                             Context&                 ctx);
+    static alc_error_t Build(const alc_cipher_mode_t cipherMode,
+                             const Uint64            keyLen,
+                             Context&                ctx);
 
-    static bool Supported(const alc_cipher_algo_info_t ci_algo_info,
-                          const alc_key_info_t         ci_key_info);
+    static bool Supported(const alc_cipher_mode_t cipherMode,
+                          const Uint64            keyLen);
 };
 
 class Chacha20Poly1305Builder
 {
   public:
-    static alc_error_t Build(const alc_cipher_aead_info_t& cCipherAlgoInfo,
-                             Context&                      ctx);
+    static alc_error_t Build(const alc_cipher_mode_t cipherMode,
+                             const Uint64            keyLen,
+                             Context&                ctx);
 
-    static bool Supported(const alc_cipher_aead_algo_info_t ci_algo_info,
-                          const alc_key_info_t              ci_key_info);
+    static bool Supported(const alc_cipher_mode_t cipherMode,
+                          const Uint64            keyLen);
 };
 
 } // namespace alcp::cipher::chacha20

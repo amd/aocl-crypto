@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,17 +38,6 @@ using alcp::utils::CpuId;
 namespace alcp::cipher {
 
 namespace vaes512 {
-    Status Ctr128::setKey(const Uint8* pUserKey, Uint64 len)
-    {
-        Status s = Aes::setKey(pUserKey, len);
-        if (s.ok()) {
-            m_enc_key = getEncryptKeys();
-            m_dec_key = getDecryptKeys();
-            m_nrounds = getRounds();
-        }
-        return s;
-    }
-
     alc_error_t Ctr128::encrypt(const Uint8* pPlainText,
                                 Uint8*       pCipherText,
                                 Uint64       len,
@@ -77,17 +66,6 @@ namespace vaes512 {
         return err;
     }
 
-    Status Ctr192::setKey(const Uint8* pUserKey, Uint64 len)
-    {
-        Status s = Aes::setKey(pUserKey, len);
-        if (s.ok()) {
-            m_enc_key = getEncryptKeys();
-            m_dec_key = getDecryptKeys();
-            m_nrounds = getRounds();
-        }
-        return s;
-    }
-
     alc_error_t Ctr192::encrypt(const Uint8* pPlainText,
                                 Uint8*       pCipherText,
                                 Uint64       len,
@@ -114,17 +92,6 @@ namespace vaes512 {
         blocks = ctrProcessAvx512_192(
             pCipherText, pPlainText, blocks, pkey128, pIv, m_nrounds);
         return err;
-    }
-
-    Status Ctr256::setKey(const Uint8* pUserKey, Uint64 len)
-    {
-        Status s = Aes::setKey(pUserKey, len);
-        if (s.ok()) {
-            m_enc_key = getEncryptKeys();
-            m_dec_key = getDecryptKeys();
-            m_nrounds = getRounds();
-        }
-        return s;
     }
 
     alc_error_t Ctr256::encrypt(const Uint8* pPlainText,
@@ -288,17 +255,6 @@ namespace aesni {
 } // namespace aesni
 
 namespace vaes {
-    Status Ctr128::setKey(const Uint8* pUserKey, Uint64 len)
-    {
-        Status s = Aes::setKey(pUserKey, len);
-        if (s.ok()) {
-            m_enc_key = getEncryptKeys();
-            m_dec_key = getDecryptKeys();
-            m_nrounds = getRounds();
-        }
-        return s;
-    }
-
     alc_error_t Ctr128::decrypt(const Uint8* pCipherText,
                                 Uint8*       pPlainText,
                                 Uint64       len,
@@ -323,17 +279,6 @@ namespace vaes {
         return err;
     }
 
-    Status Ctr192::setKey(const Uint8* pUserKey, Uint64 len)
-    {
-        Status s = Aes::setKey(pUserKey, len);
-        if (s.ok()) {
-            m_enc_key = getEncryptKeys();
-            m_dec_key = getDecryptKeys();
-            m_nrounds = getRounds();
-        }
-        return s;
-    }
-
     alc_error_t Ctr192::decrypt(const Uint8* pCipherText,
                                 Uint8*       pPlainText,
                                 Uint64       len,
@@ -356,17 +301,6 @@ namespace vaes {
             pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
 
         return err;
-    }
-
-    Status Ctr256::setKey(const Uint8* pUserKey, Uint64 len)
-    {
-        Status s = Aes::setKey(pUserKey, len);
-        if (s.ok()) {
-            m_enc_key = getEncryptKeys();
-            m_dec_key = getDecryptKeys();
-            m_nrounds = getRounds();
-        }
-        return s;
     }
 
     alc_error_t Ctr256::decrypt(const Uint8* pCipherText,
@@ -396,17 +330,6 @@ namespace vaes {
 } // namespace vaes
 
 namespace aesni {
-    Status Ctr128::setKey(const Uint8* pUserKey, Uint64 len)
-    {
-        Status s = Aes::setKey(pUserKey, len);
-        if (s.ok()) {
-            m_enc_key = getEncryptKeys();
-            m_dec_key = getDecryptKeys();
-            m_nrounds = getRounds();
-        }
-        return s;
-    }
-
     alc_error_t Ctr128::decrypt(const Uint8* pCipherText,
                                 Uint8*       pPlainText,
                                 Uint64       len,
@@ -431,17 +354,6 @@ namespace aesni {
         return err;
     }
 
-    Status Ctr192::setKey(const Uint8* pUserKey, Uint64 len)
-    {
-        Status s = Aes::setKey(pUserKey, len);
-        if (s.ok()) {
-            m_enc_key = getEncryptKeys();
-            m_dec_key = getDecryptKeys();
-            m_nrounds = getRounds();
-        }
-        return s;
-    }
-
     alc_error_t Ctr192::decrypt(const Uint8* pCipherText,
                                 Uint8*       pPlainText,
                                 Uint64       len,
@@ -464,17 +376,6 @@ namespace aesni {
             pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
 
         return err;
-    }
-
-    Status Ctr256::setKey(const Uint8* pUserKey, Uint64 len)
-    {
-        Status s = Aes::setKey(pUserKey, len);
-        if (s.ok()) {
-            m_enc_key = getEncryptKeys();
-            m_dec_key = getDecryptKeys();
-            m_nrounds = getRounds();
-        }
-        return s;
     }
 
     alc_error_t Ctr256::decrypt(const Uint8* pCipherText,

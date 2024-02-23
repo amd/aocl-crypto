@@ -3,13 +3,13 @@
 ## Key Management (TODO: WIP)
 Key management is decoupled from algorithms, allowing any algorithm to use any
 key. However each algorithm checker will ensure that only supported keys are
-passed down to the actual implementation. 
+passed down to the actual implementation.
 
 The Key types enumeration `alc_key_type_t` suggest what keys are in possession,
 and `alc_key_alg_t` determines the algorithm to be used for key derivation (if
 any). The `alc_key_fmt_t` suggests if the keys are encoded in some format, and
 needed to be converted in order to use. The `alc_key_attr_t` suggest type of key
-in each of `alc_key_type_t`. For ex: 
+in each of `alc_key_type_t`. For ex:
 
 ### Key Types
 ```c
@@ -44,7 +44,7 @@ typedef enum {
     ALC_KEY_ALG_AEAD,
     ALC_KEY_ALG_MAC,
     ALC_KEY_ALG_HASH,
-    
+
     ALC_KEY_ALG_MAX,
 } alc_key_alg_t;
 ```
@@ -60,28 +60,11 @@ typedef enum {
 } alc_key_fmt_t ;
 ```
 
-### The `alc_key_info_t` structure
-The structure `alc_key_info_t` holds the metadata for the key, it is used by
-other parts of the library. APIs needed to manage the key is may not directly be
-part of this module.
-
-```c
-alc_key_algo_t
-alcp_key_get_algo(alc_key_info_t *kinfo);
-```
-
-```c
-alc_key_type_t
-alcp_key_get_type(alc_key_info_t *kinfo);
-```
-
 ```c
 \#define ALC_KEY_LEN_DEFAULT  128
 \#define BITS_TO_BYTES(x) (x >> 8)
 
 typedef struct {
-    alc_key_type_t    k_type;
-    alc_key_algo_t    k_algo;
     uint32_t          k_len;    /* Key length in bits */
     uint8_t           k_key[0]; /* Key follows the rest of the structure */
 } alc_key_info_t;
@@ -315,7 +298,7 @@ typedef struct {
 #### The `alc_cipher_ops_t` structure ####
 
 This is a structure intended to be handled by the "Module Manager". Each cipher
-algorithm will present following functions to the module manager. 
+algorithm will present following functions to the module manager.
 
 ```c
 
@@ -338,12 +321,12 @@ typedef struct {
 #### The `alc_cipher_algo_t` type ####
 
 Any new algo needs to be added towards the end of the enumeration but before the
-`ALC_CIPHER_ALGO_MAX`. 
+`ALC_CIPHER_ALGO_MAX`.
 
 ```c
 typedef enum {
     ALC_CIPHER_ALGO_NONE = 0, /* INVALID: Catch the default case */
-    
+
     ALC_CIPHER_ALGO_DES,
     ALC_CIPHER_ALGO_3DES,
     ALC_CIPHER_ALGO_BLOWFISH,
@@ -364,7 +347,7 @@ Cipher modes are expressed in one of the following enumerations
 ```c
 typedef enum {
     ALC_CIPHER_MODE_NONE = 0, /* INVALID: Catch the default case */
-    
+
     ALC_CIPHER_MODE_ECB,
     ALC_CIPHER_MODE_CBC,
     ALC_CIPHER_MODE_CFB,
@@ -398,7 +381,7 @@ Cipher module.
 ##### CFB (Cipher FeedBack) #####
 
 CFB Mode is cipher feedback, a stream-based mode. Encryption occurs by XOR'ing
-the key-stream bytes with plaintext bytes. 
+the key-stream bytes with plaintext bytes.
 The key-stream is generated one block at a time, and it is dependent on the
 previous key-stream block. CFB does this by using a buffered block, which
 initially was supplied as IV (Initialization Vector).
@@ -447,25 +430,25 @@ randomness, as they are known to never produce data more than 160-bits (many
 have 128-bit ceiling).
 
 However there are cryptographically secure PRNGs (or in other words CRNG) which
-output high-entropy data. 
+output high-entropy data.
 
 On Unix like modern operating systems provide blocking `/dev/random` and a
 non-blocking `/dev/urandom` which returns immediately, providing
 cryptographical randomness. In theory `/dev/random` should produce
-data that is statistically close to pure entropy, 
+data that is statistically close to pure entropy,
 
 Also the traditional `rand()` and `random()` standard library calls does not
 output high-entropy data.
 
 RNG module will support two modes 'accurate' and 'fast', along with multiple
 distribution formats. The library also supports 'Descrete' and 'Continuous'
-distribution formats. 
+distribution formats.
 RNG type specified
   - i : Integer based
   - s : Single Precision
   - d : Double Precision
 
-Continuous Distribution formats: 
+Continuous Distribution formats:
 
 | Distribution | Datatype             | RNG  | Description                                           |
 | :--          | :--:                 | :--: | :--                                                   |
@@ -516,7 +499,7 @@ As usual with other modules, all the RNG api's return `alc_error_t` and use of
 for the application.
 
 All available RNG algorithms will register with Module Manager with type
-`ALC_MODULE_TYPE_RNG`, Types of Generator are described by 
+`ALC_MODULE_TYPE_RNG`, Types of Generator are described by
 
 An RNG generator can be requested using `alcp_rng_request()`, which accepts an
 `alc_rng_info_t` structure, which has following layout.
@@ -543,7 +526,7 @@ typedef enum {
 ```
 
 Random Number source can be selected using following enumeration. The request
-function 
+function
 ```c
 typedef enum {
     ALC_RNG_SOURCE_ALGO = 0,  /* Default: select software CRNG/PRNG */
@@ -658,7 +641,7 @@ static char base64_table = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                            "0123456789+/";
 ```
 
-APIs include `alcp_base64_encode()` and `alcp_base64_decode()` 
+APIs include `alcp_base64_encode()` and `alcp_base64_decode()`
 
 ```c
 alc_error_t

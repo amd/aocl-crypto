@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,6 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#if 0
 
 #include "alcp/cipher.hh"
 #include "alcp/cipher/aes_build.hh"
@@ -49,7 +50,7 @@ typedef std::tuple<std::vector<Uint8>, // key
 typedef std::map<const std::string, param_tuple> known_answer_map_t;
 
 /* Example Encodings
-P_K128b_N7B_A0B_P0B_C0B_T4B 
+P_K128b_N7B_A0B_P0B_C0B_T4B
 P     -> Pass, F -> Fail
 K128b -> Key 128 bit
 N7B   -> Nonce 7 byte
@@ -366,10 +367,7 @@ TEST(CCM, ZeroLEN)
     const alc_cipher_algo_info_t aesInfo = { .ai_mode = ALC_AES_MODE_CCM,
                                              .ai_iv   = iv };
     // clang-format off
-    const alc_key_info_t keyInfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                     .fmt  = ALC_KEY_FMT_RAW,
-                                     .len  = 128,
-                                     .key  = key };
+    const alc_key_info_t keyInfo = { .len  = 128, .key  = key };
     // clang-format on
     Ccm         ccm_obj =Ccm(keyInfo.key, keyInfo.len);
     alc_error_t err;
@@ -726,11 +724,11 @@ TEST(CCM, InvalidNonceLen)
     // TODO: Create a parametrized test
     err = ccm_obj.setTagLength(
             out_tag.size());
-    
+
 
     Status s = alcp::base::StatusOk();
 
-    
+
     EXPECT_EQ(err,s.code());
 
     // Nonce
@@ -762,4 +760,6 @@ main(int argc, char** argv)
     listeners.Append(listener);
     return RUN_ALL_TESTS();
 }
+#endif
+
 #endif

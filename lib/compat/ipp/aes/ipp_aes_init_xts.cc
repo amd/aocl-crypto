@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -52,13 +52,11 @@ ippsAES_XTSInit(const Ipp8u*     pKey,
         &((reinterpret_cast<ipp_wrp_aes_xts_ctx*>(pCtx))->cipher_ctx);
     if (pKey != nullptr) {
 
-        context_cipher->cinfo.ci_type              = ALC_CIPHER_TYPE_AES;
-        context_cipher->cinfo.ci_key_info.type     = ALC_KEY_TYPE_SYMMETRIC;
-        context_cipher->cinfo.ci_key_info.fmt      = ALC_KEY_FMT_RAW;
-        context_cipher->cinfo.ci_key_info.key      = pKey;
-        context_cipher->cinfo.ci_key_info.len      = keyLen / 2;
-        context_cipher->cinfo.ci_algo_info.ai_mode = ALC_AES_MODE_XTS;
-        context_cipher->handle.ch_context          = nullptr;
+        context_cipher->cinfo.ci_type     = ALC_CIPHER_TYPE_AES;
+        context_cipher->cinfo.ci_key      = pKey;
+        context_cipher->cinfo.ci_keyLen   = keyLen / 2;
+        context_cipher->cinfo.ci_mode     = ALC_AES_MODE_XTS;
+        context_cipher->handle.ch_context = nullptr;
     } else {
         if (context_cipher->handle.ch_context != nullptr) {
             alcp_cipher_finish(&(context_cipher->handle));

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -40,31 +40,18 @@ AlcpGcmCipher<encryptor>::init(alc_test_init_data_p data)
     Uint8       err_buf[err_size];
 
     alc_cipher_aead_info_t cinfo = {
-        .ci_type = ALC_CIPHER_TYPE_AES,
-        .ci_key_info     = {
-            .type    = ALC_KEY_TYPE_SYMMETRIC,
-            .fmt     = ALC_KEY_FMT_RAW,
-            .len     = (data_gcm->m_key_len)*8,
-            .key     = data_gcm->m_key,
-        },
-        .ci_algo_info   = {
-           .ai_mode = ALC_AES_MODE_GCM,
-           .ai_iv   = data_gcm->m_iv,
-        },
+        .ci_type   = ALC_CIPHER_TYPE_AES,
+        .ci_mode   = ALC_AES_MODE_GCM,
+        .ci_keyLen = (data_gcm->m_key_len) * 8,
+        .ci_key    = data_gcm->m_key,
+        .ci_iv     = data_gcm->m_iv,
     };
-
-    err = alcp_cipher_aead_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
-    }
 
     m_handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
     if (!m_handle.ch_context)
         return false;
 
-    err = alcp_cipher_aead_request(&cinfo, &m_handle);
+    err = alcp_cipher_aead_request(cinfo.ci_mode, cinfo.ci_keyLen, &m_handle);
     if (alcp_is_error(err)) {
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);
@@ -72,6 +59,15 @@ AlcpGcmCipher<encryptor>::init(alc_test_init_data_p data)
     }
 
     // GCM init
+    err = alcp_cipher_aead_set_key(
+        &m_handle, data_gcm->m_key_len * 8, data_gcm->m_key);
+    if (alcp_is_error(err)) {
+        free(m_handle.ch_context);
+        printf("Error: unable to set key\n");
+        alcp_error_str(err, err_buf, err_size);
+        return false;
+    }
+
     err =
         alcp_cipher_aead_set_iv(&m_handle, data_gcm->m_iv_len, data_gcm->m_iv);
     if (alcp_is_error(err)) {

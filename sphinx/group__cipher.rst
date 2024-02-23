@@ -16,7 +16,6 @@ Data Structures
 
 Functions
 ---------
-.. doxygenfunction:: alcp_cipher_supported
 .. doxygenfunction:: alcp_cipher_context_size
 .. doxygenfunction:: alcp_cipher_request
 .. doxygenfunction:: alcp_cipher_encrypt
@@ -26,7 +25,6 @@ Functions
 .. doxygenfunction:: alcp_cipher_set_iv
 .. doxygenfunction:: alcp_cipher_finish
 .. doxygenfunction:: alcp_cipher_error
-.. doxygenfunction:: alcp_cipher_aead_supported
 .. doxygenfunction:: alcp_cipher_aead_context_size
 .. doxygenfunction:: alcp_cipher_aead_request
 .. doxygenfunction:: alcp_cipher_aead_encrypt
@@ -39,8 +37,6 @@ Functions
 .. doxygenfunction:: alcp_cipher_aead_set_tag_length
 .. doxygenfunction:: alcp_cipher_aead_finish
 .. doxygenfunction:: alcp_cipher_aead_error
-.. doxygenfunction:: alcp_key_get_algo
-.. doxygenfunction:: alcp_key_get_type     
 
 ----
 

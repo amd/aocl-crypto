@@ -121,17 +121,20 @@ typedef enum _alc_aes_ctrl
  */
 typedef struct _alc_cipher_algo_info
 {
-    alc_cipher_mode_t ai_mode; /* Mode: ALC_AES_MODE_CFB etc */
-    const Uint8*      ai_iv;   /* Initialization Vector */
-    Uint64            iv_length;
+    // alc_cipher_mode_t ai_mode; /* Mode: ALC_AES_MODE_CFB etc */
+    // const Uint8* ai_iv; /* Initialization Vector */
+    Uint64 iv_length;
 } alc_cipher_algo_info_t, *alc_cpher_algo_info_p;
 
 /**
  *
  * @brief  Opaque cipher context, populated from the library.
  *
- * @param ci_type   Specify which cipher type to be used for encrypt and decrypt
- * @param ci_key_info  store the info related to key
+ * @param ci_type Specify which cipher type (request param)
+ * @param ci_mode Specify which cipher mode (request param)
+ * @param ci_keyLen Specify key length in bits (request param)
+ * @param ci_key key data (init param)
+ * @param ci_iv  Initialization Vector (init param)
  * @param ci_algo_info Algorithm specific info is stored
  *
  * @struct  alc_cipher_info_t
@@ -139,9 +142,18 @@ typedef struct _alc_cipher_algo_info
  */
 typedef struct _alc_cipher_info
 {
-    alc_cipher_type_t      ci_type; /*! Type: ALC_CIPHER_AES etc */
-    alc_key_info_t         ci_key_info;
+    // request params
+    alc_cipher_type_t ci_type;   /*! Type: ALC_CIPHER_AES etc */
+    alc_cipher_mode_t ci_mode;   /*! Mode: ALC_AES_MODE_CTR etc */
+    Uint64            ci_keyLen; /*! Key length in bits */
+
+    // init params
+    const Uint8* ci_key; /*! key data */
+    const Uint8* ci_iv;  /*! Initialization Vector */
+
+    // algo params
     alc_cipher_algo_info_t ci_algo_info; /*! mode specific data */
+
 } alc_cipher_info_t, *alc_cipher_info_p;
 
 /**
@@ -168,32 +180,12 @@ typedef struct _alc_cipher_handle
 } alc_cipher_handle_t, *alc_cipher_handle_p, AlcCipherHandle;
 
 /**
- *
- * @brief  Check if a given algorithm is supported.
- *
- * @parblock <br> &nbsp;
- * <b>This API needs to be called before any other API is called to
- * know if cipher that is being requested is supported or not </b>
- * @endparblock
- *
- * @note       This API is provided to allow application to make decision on
- *              fallback mechanism
- * @param [in] pCipherInfo  The information about the cipher algorithm and modes
- *                     as described by alc_cipher_info_t
- * @return              ALC_ERROR_NONE
- */
-ALCP_API_EXPORT alc_error_t
-alcp_cipher_supported(const alc_cipher_info_p pCipherInfo);
-
-/**
  * @brief       Gets the size of the context for a session described by
  *              pCipherInfo
  * @parblock <br> &nbsp;
  * <b>This API should be called before @ref alcp_cipher_request to identify the
  * memory to be allocated for context </b>
  * @endparblock
- * @note       alcp_cipher_supported() should be called first to
- *              know if the given cipher/key length configuration is valid.
  *
  * @param [in] pCipherInfo Description of the requested cipher session
  * @return      Size of Context
@@ -203,15 +195,16 @@ alcp_cipher_context_size(const alc_cipher_info_p pCipherInfo);
 
 /**
  * @brief    Request for populating handle with algorithm specified by
- * pCipherInfo.
+ * cipher mode and key Length.
  *
  * @parblock <br> &nbsp;
- * <b>This API can be called after @ref alcp_cipher_supported is called </b>
+ * <b>This API can be called after @ref alcp_cipher_context_size is called </b>
  * @endparblock
  * @note     Error needs to be checked for each call,
  *           valid only if @ref alcp_is_error (ret) is false, ctx
  * to be considered valid.
- * @param [in]   pCipherInfo    Description of the cipher session
+ * @param [in]    cipherMode       cipher mode to be set
+ * @param [in]    keyLen           key length in bits
  * @param [out]   pCipherHandle    Library populated session handle for future
  * cipher operations.
  * @return   &nbsp; Error Code for the API called. If alc_error_t
@@ -219,8 +212,53 @@ alcp_cipher_context_size(const alc_cipher_info_p pCipherInfo);
  * needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
+alcp_cipher_request(const alc_cipher_mode_t cipherMode,
+                    const Uint64            keyLen,
                     alc_cipher_handle_p     pCipherHandle);
+
+/**
+ * @brief  Cipher encrypt init.
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_cipher_request is
+ * called.</b>
+ * @endparblock
+ * @param [in] pCipherHandle Session handle for encrypt operation
+ * @param[in] pKey  Key
+ * @param[in] keyLen  key Length in bits
+ * @param[in] pIv  IV/Nonce
+ * @param[in] ivLen  iv Length in bits
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_cipher_aead_error or @ref alcp_error_str
+ * needs to be called to know about error occurred
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_cipher_encrypt_init(const alc_cipher_handle_p pCipherHandle,
+                         const Uint8*              pKey,
+                         Uint64                    keyLen,
+                         const Uint8*              pIv,
+                         Uint64                    ivLen);
+
+/**
+ * @brief  Cipher decrypt init.
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_cipher_request is
+ * called.</b>
+ * @endparblock
+ * @param [in] pCipherHandle Session handle for decrypt operation
+ * @param[in] pKey  Key
+ * @param[in] keyLen  key Length in bits
+ * @param[in] pIv  IV/Nonce
+ * @param[in] ivLen  iv Length in bits
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_cipher_aead_error or @ref alcp_error_str
+ * needs to be called to know about error occurred
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_cipher_decrypt_init(const alc_cipher_handle_p pCipherHandle,
+                         const Uint8*              pKey,
+                         Uint64                    keyLen,
+                         const Uint8*              pIv,
+                         Uint64                    ivLen);
 
 /**
  * @brief    Encrypt plain text and write it to cipher text with provided
@@ -339,6 +377,23 @@ alcp_cipher_blocks_decrypt(const alc_cipher_handle_p pCipherHandle,
                            Uint8*                    pPlainText,
                            Uint64                    currCipherTextLen,
                            Uint64                    startBlockNum);
+
+/**
+ * @brief Set the key.
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_cipher_request is called.</b>
+ * @endparblock
+ * @param [in] pCipherHandle Session handle for encrypt/decrypt operation
+ * @param[in] len  Length in bytes of key
+ * @param[in] pKey  key
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_cipher_error or @ref alcp_error_str
+ * needs to be called to know about error occurred
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_cipher_set_key(const alc_cipher_handle_p pCipherHandle,
+                    Uint64                    len,
+                    const Uint8*              pKey);
 
 /**
  * @brief Set the IV/Nonce.

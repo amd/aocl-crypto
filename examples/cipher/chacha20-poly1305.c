@@ -43,38 +43,19 @@ CreateDemoSession(const Uint8* key,
     const int   cErrSize = 256;
     Uint8       err_buf[cErrSize];
 
-    alc_cipher_aead_info_t cinfo = {
-        .ci_type = ALC_CIPHER_TYPE_CHACHA20_POLY1305,
-        .ci_algo_info   = {
-           .ai_mode = ALC_AES_MODE_NONE,
-           .ai_iv   = iv,
-           .iv_length =ivLength
-           
-        },
-        /* No padding, Not Implemented yet*/
-        //.pad     = ALC_CIPHER_PADDING_NONE, 
-        .ci_key_info     = {
-            .type    = ALC_KEY_TYPE_SYMMETRIC,
-            .fmt     = ALC_KEY_FMT_RAW,
-            .key     = key,
-            .len     = cKeyLen,
-        },
+    alc_cipher_aead_info_t cinfo = { // request params
+                                     .ci_type =
+                                         ALC_CIPHER_TYPE_CHACHA20_POLY1305,
+                                     .ci_mode   = ALC_AES_MODE_NONE,
+                                     .ci_keyLen = cKeyLen,
+                                     // init params
+                                     .ci_key = key,
+                                     .ci_iv  = iv,
+
+                                     .ci_algo_info.iv_length = ivLength
+
     };
 
-    /*
-     * Check if the current cipher is supported,
-     * optional call, alcp_cipher_request() will anyway return
-     * ALC_ERR_NOSUPPORT error.
-     *
-     * This query call is provided to support fallback mode for applications
-     */
-    err = alcp_cipher_aead_supported(&cinfo);
-    if (alcp_is_error(err)) {
-        printf("Error: not supported \n");
-        alcp_error_str(err, err_buf, cErrSize);
-        return -1;
-    }
-    printf("supported succeeded\n");
     /*
      * Application is expected to allocate for context
      */
@@ -82,9 +63,10 @@ CreateDemoSession(const Uint8* key,
     if (!handle.ch_context)
         return -1;
 
-    /* Request a context with cinfo */
-    err = alcp_cipher_aead_request(&cinfo, &handle);
+    /* Request a context with cipher mode and keyLen */
+    err = alcp_cipher_aead_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
     if (alcp_is_error(err)) {
+        free(handle.ch_context);
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, cErrSize);
         return -1;

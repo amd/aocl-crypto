@@ -62,8 +62,9 @@ class ALCP_API_EXPORT Xts final : public Aes
 {
 
   public:
+    // this should be moved to encrypt/decryptInit()
     explicit Xts(const Uint8* pKey, const Uint32 keyLen)
-        : Aes(pKey, keyLen)
+    //: Aes(pKey, keyLen)
     {
         m_pTweak_key = &m_tweak_round_key[0];
         expandTweakKeys(pKey + keyLen / 8, keyLen);
@@ -80,6 +81,7 @@ class ALCP_API_EXPORT Xts final : public Aes
                          Uint64       currSrcLen,
                          Uint64       startBlockNum);
 
+    Xts() {}
     ~Xts() {}
 
   public:
@@ -116,7 +118,7 @@ class ALCP_API_EXPORT Xts final : public Aes
     virtual void expandTweakKeys(const Uint8* pUserKey, int len);
 
   private:
-    Xts() { m_pTweak_key = &m_tweak_round_key[0]; };
+    // Xts() { m_pTweak_key = &m_tweak_round_key[0]; };
     void tweakBlockSet(Uint64 aesBlockId);
 
   private:

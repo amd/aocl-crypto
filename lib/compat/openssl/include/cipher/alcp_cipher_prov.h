@@ -142,33 +142,19 @@ OSSL_FUNC_cipher_final_fn ALCP_prov_cipher_final;
 // Macro for Context Creation
 #define CIPHER_CONTEXT(mode, alcp_mode)                                        \
     static alc_cipher_info_t s_cipher_##mode##_info = {                        \
-        .ci_type = ALC_CIPHER_TYPE_AES,                                        \
-        .ci_key_info = {                                                       \
-            ALC_KEY_TYPE_SYMMETRIC,                                            \
-            ALC_KEY_FMT_RAW,                                                   \
-            ALC_KEY_ALG_SYMMETRIC,                                             \
-            ALC_KEY_LEN_128,                                                   \
-            128,                                                               \
-        },                                                                     \
-        .ci_algo_info = {                                       \
-                .ai_mode =      alcp_mode,                                     \
-            },                                                             \
+        .ci_type      = ALC_CIPHER_TYPE_AES,                                   \
+        .ci_mode      = alcp_mode,                                             \
+        .ci_keyLen    = 128,                                                   \
+        .ci_algo_info = {},                                                    \
     }
 
 // Macro for Context Creation
 #define CIPHER_AEAD_CONTEXT(mode, alcp_mode)                                   \
-    static alc_cipher_aead_info_t s_cipher_##mode##_info = {                    \
-        .ci_type = ALC_CIPHER_TYPE_AES,                                        \
-        .ci_key_info = {                                                       \
-            ALC_KEY_TYPE_SYMMETRIC,                                            \
-            ALC_KEY_FMT_RAW,                                                   \
-            ALC_KEY_ALG_SYMMETRIC,                                             \
-            ALC_KEY_LEN_128,                                                   \
-            128,                                                               \
-        },                                                                     \
-        .ci_algo_info = {                                       \
-                .ai_mode =      alcp_mode,                                     \
-            },                                                             \
+    static alc_cipher_aead_info_t s_cipher_##mode##_info = {                   \
+        .ci_type      = ALC_CIPHER_TYPE_AES,                                   \
+        .ci_mode      = alcp_mode,                                             \
+        .ci_keyLen    = 128,                                                   \
+        .ci_algo_info = {},                                                    \
     }
 
 // Macro for OpenSSL Dispatcher Creation
@@ -240,7 +226,8 @@ OSSL_FUNC_cipher_final_fn ALCP_prov_cipher_final;
     }
 
 /*
- * Dispatchers are created by alcp_cipher_aes.c using macro defined above
+ * Dispatchers are created by alcp_cipher_aes.c using macro
+ * defined above
  */
 extern const OSSL_DISPATCH cfb_functions_128[];
 extern const OSSL_DISPATCH cfb_functions_192[];
@@ -254,19 +241,19 @@ extern const OSSL_DISPATCH ofb_functions_256[];
 extern const OSSL_DISPATCH ctr_functions_128[];
 extern const OSSL_DISPATCH ctr_functions_192[];
 extern const OSSL_DISPATCH ctr_functions_256[];
-extern const OSSL_DISPATCH ecb_functions_128[];
-extern const OSSL_DISPATCH ecb_functions_192[];
-extern const OSSL_DISPATCH ecb_functions_256[];
-extern const OSSL_DISPATCH xts_functions_128[];
-extern const OSSL_DISPATCH xts_functions_256[];
+// extern const OSSL_DISPATCH ecb_functions_128[];
+// extern const OSSL_DISPATCH ecb_functions_192[];
+// extern const OSSL_DISPATCH ecb_functions_256[];
+// extern const OSSL_DISPATCH xts_functions_128[];
+// extern const OSSL_DISPATCH xts_functions_256[];
 extern const OSSL_DISPATCH gcm_functions_128[];
 extern const OSSL_DISPATCH gcm_functions_192[];
 extern const OSSL_DISPATCH gcm_functions_256[];
-extern const OSSL_DISPATCH ccm_functions_128[];
-extern const OSSL_DISPATCH ccm_functions_192[];
-extern const OSSL_DISPATCH ccm_functions_256[];
-extern const OSSL_DISPATCH siv_functions_128[];
-extern const OSSL_DISPATCH siv_functions_192[];
-extern const OSSL_DISPATCH siv_functions_256[];
+// extern const OSSL_DISPATCH ccm_functions_128[];
+// extern const OSSL_DISPATCH ccm_functions_192[];
+// extern const OSSL_DISPATCH ccm_functions_256[];
+// extern const OSSL_DISPATCH siv_functions_128[];
+// extern const OSSL_DISPATCH siv_functions_192[];
+// extern const OSSL_DISPATCH siv_functions_256[];
 
 #endif /* _OPENSSL_ALCP_prov_CIPHER_PROV_H */

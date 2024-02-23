@@ -182,6 +182,7 @@ namespace vaes512 {
         m_ivLen             = 12; // default 12 bytes or 96bits
 
         m_ivLen = len;
+        getKey();
 
         err = aesni::InitGcm(m_enc_key,
                              m_nrounds,

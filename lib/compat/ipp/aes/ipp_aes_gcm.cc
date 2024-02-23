@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -50,18 +50,12 @@ ippsAES_GCMStart(const Ipp8u*      pIV,
 
     // Continue Enc
     if (context_aead->handle.ch_context == nullptr) {
-        context_aead->c_aeadinfo.ci_type            = ALC_CIPHER_TYPE_AES;
-        context_aead->c_aeadinfo.ci_algo_info.ai_iv = (Uint8*)pIV;
+        context_aead->c_aeadinfo.ci_type = ALC_CIPHER_TYPE_AES;
+        context_aead->c_aeadinfo.ci_iv   = (Uint8*)pIV;
 
-        // context->c_aeadinfo = c_aeadinfo;
-        err = alcp_cipher_aead_supported(&(context_aead->c_aeadinfo));
-        if (alcp_is_error(err)) {
-            printErr("not supported");
-            alcp_error_str(err, err_buf, err_size);
-            return ippStsNotSupportedModeErr;
-        }
         context_aead->handle.ch_context =
             malloc(alcp_cipher_aead_context_size(&(context_aead->c_aeadinfo)));
+
         err = alcp_cipher_aead_request(&(context_aead->c_aeadinfo),
                                        &(context_aead->handle));
         if (alcp_is_error(err)) {
@@ -72,16 +66,26 @@ ippsAES_GCMStart(const Ipp8u*      pIV,
             return ippStsErr;
         }
     }
-    // GCM Init
-    // Additional Data
+    /*GCM Encrypt Init */
+    // set key
+    err = alcp_cipher_aead_set_key(&(context_aead->handle),
+                                   context_aead->c_aeadinfo.ci_keyLen,
+                                   (Uint8*)context_aead->c_aeadinfo.ci_key);
+    if (alcp_is_error(err)) {
+        printf("Error: GCM encrypt init failure! code:11\n");
+        alcp_error_str(err, err_buf, err_size);
+        return ippStsErr;
+    }
 
-    /* Encrypt Init */
+    // set iv
     err = alcp_cipher_aead_set_iv(&(context_aead->handle), ivLen, (Uint8*)pIV);
     if (alcp_is_error(err)) {
         printf("Error: GCM encrypt init failure! code:11\n");
         alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }
+
+    // Additional Data
     if (aadLen != 0 && pAAD != nullptr) {
         err = alcp_cipher_aead_set_aad(&(context_aead->handle), pAAD, aadLen);
         if (alcp_is_error(err)) {
@@ -109,12 +113,11 @@ ippsAES_GCMEncrypt(const Ipp8u*      pSrc,
     (reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->is_encrypt = true;
 
     // GCM Encrypt
-    err = alcp_cipher_aead_encrypt_update(
-        &(context_aead->handle),
-        (Uint8*)pSrc,
-        (Uint8*)pDst,
-        len,
-        context_aead->c_aeadinfo.ci_algo_info.ai_iv);
+    err = alcp_cipher_aead_encrypt_update(&(context_aead->handle),
+                                          (Uint8*)pSrc,
+                                          (Uint8*)pDst,
+                                          len,
+                                          context_aead->c_aeadinfo.ci_iv);
     if (alcp_is_error(err)) {
         return ippStsErr;
     }
@@ -135,12 +138,11 @@ ippsAES_GCMDecrypt(const Ipp8u*      pSrc,
         &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->aead_ctx);
     (reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->is_encrypt = false;
     // GCM Encrypt
-    err = alcp_cipher_aead_decrypt_update(
-        &(context_aead->handle),
-        (Uint8*)pSrc,
-        (Uint8*)pDst,
-        len,
-        context_aead->c_aeadinfo.ci_algo_info.ai_iv);
+    err = alcp_cipher_aead_decrypt_update(&(context_aead->handle),
+                                          (Uint8*)pSrc,
+                                          (Uint8*)pDst,
+                                          len,
+                                          context_aead->c_aeadinfo.ci_iv);
     if (alcp_is_error(err)) {
         return ippStsErr;
     }

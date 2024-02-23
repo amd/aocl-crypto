@@ -72,7 +72,6 @@ typedef struct _alc_cipher_aead_mode_siv_info
 /**
  *
  * @brief  Stores algorithm specific info for cipher.
- * @param ai_mode Specific which Mode of AES to be used @ref alcp_cipher_mode_t
  * @param ai_iv Initialization Vector
  * @param ai_gcm, ai_siv, optional param for Some Specific Mode of AES only one
  * param can be present at a time
@@ -80,9 +79,8 @@ typedef struct _alc_cipher_aead_mode_siv_info
  */
 typedef struct _alc_cipher_aead_algo_info
 {
-    alc_cipher_mode_t ai_mode; /* Mode: ALC_AES_MODE_CFB etc */
-    const Uint8*      ai_iv;   /* Initialization Vector */
-    Uint64            iv_length;
+
+    Uint64 iv_length;
     union
     {
         alc_cipher_aead_mode_gcm_info_t ai_gcm;
@@ -94,8 +92,11 @@ typedef struct _alc_cipher_aead_algo_info
  *
  * @brief  Opaque cipher context, populated from the library.
  *
- * @param ci_type   Specify which cipher type to be used for encrypt and decrypt
- * @param ci_key_info  store the info related to key
+ * @param ci_type Specify which cipher type (request param)
+ * @param ci_mode Specify which cipher mode (request param)
+ * @param ci_keyLen Specify key length in bits (request param)
+ * @param ci_key key data (init param)
+ * @param ci_iv  Initialization Vector (init param)
  * @param ci_algo_info Algorithm specific info is stored
  *
  * @struct  alc_cipher_info_t
@@ -103,9 +104,18 @@ typedef struct _alc_cipher_aead_algo_info
  */
 typedef struct _alc_cipher_aead_info
 {
-    alc_cipher_type_t           ci_type; /*! Type: ALC_CIPHER_AES etc */
-    alc_key_info_t              ci_key_info;
+    // request params
+    alc_cipher_type_t ci_type;   /*! Type: ALC_CIPHER_AES etc */
+    alc_cipher_mode_t ci_mode;   /*! Mode: ALC_AES_MODE_GCM etc */
+    Uint64            ci_keyLen; /*! Key length in bits */
+
+    // init params
+    const Uint8* ci_key; /*! key data */
+    const Uint8* ci_iv;  /*! Initialization Vector */
+
+    // algo params
     alc_cipher_aead_algo_info_t ci_algo_info; /*! mode specific data */
+
 } alc_cipher_aead_info_t, *alc_cipher_aead_info_p;
 
 /**
@@ -132,32 +142,12 @@ typedef struct _alc_cipher_aead_handle
 } alc_cipher_aead_handle_t, *alc_cipher_aead_handle_p;
 
 /**
- *
- * @brief  Check if a given algorithm is supported.
- *
- * @parblock <br> &nbsp;
- * <b>This AEAD API needs to be called before any other AEAD API is called to
- * know if AEAD cipher that is being request is supported or not </b>
- * @endparblock
- *
- * @note       This AEAD API is provided to allow application to make decision
- * on fallback mechanism
- * @param [in] pCipherInfo  The information about the cipher algorithm and modes
- *                     as described by alc_cipher_info_t
- * @return              ALC_ERROR_NONE
- */
-ALCP_API_EXPORT alc_error_t
-alcp_cipher_aead_supported(const alc_cipher_aead_info_p pCipherInfo);
-
-/**
  * @brief       Gets the size of the context for a session described by
  *              pCipherInfo
  * @parblock <br> &nbsp;
  * <b>This AEAD API should be called before @ref alcp_cipher_aead_request to
  * identify the memory to be allocated for context </b>
  * @endparblock
- * @note       alcp_cipher_aead_supported should be called first to
- *              know if the given cipher/key length configuration is valid.
  *
  * @param [in] pCipherInfo Description of the requested cipher session
  * @return      Size of Context
@@ -167,17 +157,18 @@ alcp_cipher_aead_context_size(const alc_cipher_aead_info_p pCipherInfo);
 
 /**
  * @brief    Request for populating handle with algorithm specified by
- * pCipherInfo.
+ * cipher mode and key length info.
  *
  * @parblock <br> &nbsp;
- * <b>This AEAD API can be called after @ref alcp_cipher_aead_supported is
+ * <b>This AEAD API can be called after @ref alcp_cipher_aead_context_size is
  * called
  * </b>
  * @endparblock
  * @note     Error needs to be checked for each call,
  *           valid only if @ref alcp_is_error (ret) is false, ctx
  * to be considered valid.
- * @param [in]   pCipherInfo    Description of the cipher session
+ * @param [in]    cipherMode       cipher mode to be set
+ * @param [in]    keyLen           key length in bits
  * @param [out]   pCipherHandle    Library populated session handle for future
  * cipher operations.
  * @return   &nbsp; Error Code for the API called. If alc_error_t
@@ -185,8 +176,9 @@ alcp_cipher_aead_context_size(const alc_cipher_aead_info_p pCipherInfo);
  * needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_cipher_aead_request(const alc_cipher_aead_info_p pCipherInfo,
-                         alc_cipher_handle_p          pCipherHandle);
+alcp_cipher_aead_request(const alc_cipher_mode_t cipherMode,
+                         const Uint64            keyLen,
+                         alc_cipher_handle_p     pCipherHandle);
 
 /**
  * @brief    Encrypt plain text and write it to cipher text with provided
@@ -311,11 +303,28 @@ alcp_cipher_aead_decrypt(const alc_cipher_handle_p pCipherHandle,
                          const Uint8*              pIv);
 
 /**
+ * @brief AEAD set the key.
+ * @parblock <br> &nbsp;
+ * <b>This AEAD API can be called after @ref alcp_cipher_aead_request is
+ * called.</b>
+ * @endparblock
+ * @param [in] pCipherHandle Session handle for encrypt/decrypt operation
+ * @param[in] len  key Length in bits
+ * @param[in] pKey  Key
+ * @return   &nbsp; Error Code for the API called. If alc_error_t
+ * is not ALC_ERROR_NONE then @ref alcp_cipher_aead_error or @ref alcp_error_str
+ * needs to be called to know about error occurred
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_cipher_aead_set_key(const alc_cipher_handle_p pCipherHandle,
+                         Uint64                    len,
+                         const Uint8*              pKey);
+
+/**
  * @brief AEAD set the IV/Nonce.
  * @parblock <br> &nbsp;
- * <b>This AEAD API can be called after @ref alcp_cipher_aead_request is called.
- * It should be called after @ref alcp_cipher_aead_set_tag_length for CCM mode.
- * For GCM mode should be called before @ref alcp_cipher_aead_set_aad</b>
+ * <b>This AEAD API can be called after @ref alcp_cipher_aead_request is
+ * called.</b>
  * @endparblock
  * @param [in] pCipherHandle Session handle for encrypt/decrypt operation
  * @param[in] len  Length in bytes of IV/Nonce

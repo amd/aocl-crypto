@@ -62,10 +62,6 @@ class ALCP_API_EXPORT Cbc final
     , public Aes
 {
   public:
-    explicit Cbc(const Uint8* pKey, const Uint32 keyLen)
-        : Aes(pKey, keyLen)
-    {}
-
     Cbc() {}
 
     ~Cbc() {}

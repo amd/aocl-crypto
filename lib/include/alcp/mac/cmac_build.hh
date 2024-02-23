@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -128,8 +128,7 @@ CmacBuilder::isSupported(const alc_mac_info_t& macInfo)
 {
     Status status{ StatusOk() };
     if (macInfo.mi_algoinfo.cmac.cmac_cipher.ci_type == ALC_CIPHER_TYPE_AES) {
-        if (macInfo.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_mode
-            != ALC_AES_MODE_NONE) {
+        if (macInfo.mi_algoinfo.cmac.cmac_cipher.ci_mode != ALC_AES_MODE_NONE) {
             return InvalidArgument("CMAC: Unsupported AES Cipher Mode");
         }
     } else {

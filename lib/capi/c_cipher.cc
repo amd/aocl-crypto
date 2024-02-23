@@ -38,27 +38,6 @@ using namespace alcp;
 
 EXTERN_C_BEGIN
 
-alc_error_t
-alcp_cipher_supported(const alc_cipher_info_p pCipherInfo)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    // FIXME: Replace with Prem's idea below in future.
-    if (!alcp::cipher::CipherBuilder::Supported(*pCipherInfo)) {
-        err = ALC_ERROR_NOT_SUPPORTED;
-    }
-
-    /* TODO: Check for pointer validity */
-
-    // err = cipher::FindCipher(*pCipherInfo).isSupported();
-
-    // if (Error::isError(err))
-    //    goto outa;
-
-    // outa:
-    return err;
-}
-
 Uint64
 alcp_cipher_context_size(const alc_cipher_info_p pCipherInfo)
 {
@@ -79,42 +58,67 @@ validateKeys(const Uint8* tweakKey, const Uint8* encKey, Uint32 len)
 }
 
 alc_error_t
-alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
+alcp_cipher_request(const alc_cipher_mode_t cipherMode,
+                    const Uint64            keyLen,
                     alc_cipher_handle_p     pCipherHandle)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pCipherInfo, err);
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
+    ALCP_ZERO_LEN_ERR_RET(keyLen, err);
 
+#if 0 // FIXME: XTS
     // Tweak key is appended after encryption key.
-    if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
-        auto tweak_key =
-            pCipherInfo->ci_key_info.key + pCipherInfo->ci_key_info.len / 8;
+    if (cipherMode == ALC_AES_MODE_XTS) {
+        auto tweak_key = pCipherInfo->ci_key + keyLen / 8;
 
         /* Additional checks for XTS, bug found by libfuzzer*/
         ALCP_BAD_PTR_ERR_RET(tweak_key, err);
-        ALCP_BAD_PTR_ERR_RET(pCipherInfo->ci_key_info.key, err);
-        ALCP_ZERO_LEN_ERR_RET(pCipherInfo->ci_key_info.len, err);
+        ALCP_BAD_PTR_ERR_RET(pCipherInfo->ci_key, err);
 
         if (tweak_key == nullptr
-            || (pCipherInfo->ci_key_info.len != 128
-                && pCipherInfo->ci_key_info.len != 256)) {
+            || (keyLen != 128
+                && keyLen != 256)) {
             return ALC_ERROR_INVALID_ARG;
         }
-        if (validateKeys(tweak_key,
-                         pCipherInfo->ci_key_info.key,
-                         pCipherInfo->ci_key_info.len)) {
+        if (validateKeys(
+                tweak_key, pCipherInfo->ci_key, keyLen)) {
             return ALC_ERROR_DUPLICATE_KEY;
         }
     }
+#endif
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     new (ctx) cipher::Context;
 
-    err = cipher::CipherBuilder::Build(*pCipherInfo, *ctx);
+    err = cipher::CipherBuilder::Build(cipherMode, keyLen, *ctx);
+
+    return err;
+}
+
+// is separate encrypt and encrypt init required?
+alc_error_t
+alcp_cipher_encrypt_init(const alc_cipher_handle_p pCipherHandle,
+                         const Uint8*              pKey,
+                         Uint64                    keyLen,
+                         const Uint8*              pIv,
+                         Uint64                    ivLen)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    return err;
+}
+
+alc_error_t
+alcp_cipher_decrypt_init(const alc_cipher_handle_p pCipherHandle,
+                         const Uint8*              pKey,
+                         Uint64                    keyLen,
+                         const Uint8*              pIv,
+                         Uint64                    ivLen)
+{
+    alc_error_t err = ALC_ERROR_NONE;
 
     return err;
 }
@@ -219,6 +223,28 @@ alcp_cipher_blocks_decrypt(const alc_cipher_handle_p pCipherHandle,
                              pPlainText,
                              currCipherTextLen,
                              startBlockNum);
+
+    return err;
+}
+
+alc_error_t
+alcp_cipher_set_key(const alc_cipher_handle_p pCipherHandle,
+                    Uint64                    len,
+                    const Uint8*              pKey)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
+
+    ALCP_BAD_PTR_ERR_RET(pKey, err);
+
+    // FIXME: error check for invalid key length to be added.
+    ALCP_ZERO_LEN_ERR_RET(len, err);
+
+    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
+
+    err = ctx->initKey(ctx->m_cipher, len, pKey);
 
     return err;
 }

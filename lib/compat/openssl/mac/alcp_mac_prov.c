@@ -214,9 +214,7 @@ ALCP_prov_mac_init(void*                vctx,
 {
     ENTER();
 
-    alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                             .fmt  = ALC_KEY_FMT_RAW,
-                             .algo = ALC_KEY_ALG_MAC,
+    alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
                              .len  = keylen * 8,
                              .key  = key };
     // Handling OpenSSL Speed Initial Init Request

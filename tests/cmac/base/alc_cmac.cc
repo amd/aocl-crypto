@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -48,9 +48,9 @@ AlcpCmacBase::init()
     alc_error_t    err;
     alc_mac_info_t dinfo = m_info;
 
-    const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt  = ALC_KEY_FMT_RAW,
-                                   .algo = ALC_KEY_ALG_MAC,
+#if 0 // to be fixed
+
+    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
                                    .len  = m_key_len * 8,
                                    .key  = m_key };
 
@@ -65,6 +65,8 @@ AlcpCmacBase::init()
     } else {
         alcp_mac_finish(m_handle);
     }
+
+#endif
 
     err = alcp_mac_request(m_handle, &dinfo);
     if (alcp_is_error(err)) {

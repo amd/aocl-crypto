@@ -154,9 +154,7 @@ demo_cmac()
     Uint8 expectedMac[] = { 0x07, 0x0A, 0x16, 0xB4, 0x6B, 0x4D, 0x41, 0x44,
                             0xF7, 0x9B, 0xDD, 0x9D, 0xD0, 0x4A, 0x28, 0x7C };
 
-    const alc_key_info_t kinfo = { .type = ALC_KEY_TYPE_SYMMETRIC,
-                                   .fmt  = ALC_KEY_FMT_RAW,
-                                   .algo = ALC_KEY_ALG_MAC,
+    const alc_key_info_t kinfo = { .algo = ALC_KEY_ALG_MAC,
                                    .len  = sizeof(key) * 8,
                                    .key  = key };
 
@@ -164,8 +162,9 @@ demo_cmac()
         .mi_type     = ALC_MAC_CMAC,
         .mi_algoinfo = { .cmac = { .cmac_cipher = { .ci_type =
                                                         ALC_CIPHER_TYPE_AES,
-                                                    .ci_algo_info = { .ai_mode =
-                                                                          ALC_AES_MODE_NONE, } } } },
+                                                    .ci_mode =
+                                                        ALC_AES_MODE_NONE,
+                                                    .ci_algo_info = {} } } },
         .mi_keyinfo  = kinfo
     };
 

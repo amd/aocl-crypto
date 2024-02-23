@@ -33,6 +33,19 @@
 
 namespace alcp::cipher {
 
+// FIXME: need to choose a better name for initKey and setKey
+alc_error_t
+Aes::initKey(const Uint64 len, const Uint8* pUserKey)
+{
+    alc_error_t e = ALC_ERROR_NONE;
+    // Already Expanded in Rijndael class, we just need to transpose
+    // Rijndael::setKey(pUserKey, len);
+
+    Rijndael::initRijndael(len, pUserKey);
+
+    return e;
+}
+
 Status
 Aes::setKey(const Uint8* pUserKey, Uint64 len)
 {
@@ -41,6 +54,7 @@ Aes::setKey(const Uint8* pUserKey, Uint64 len)
 
     return StatusOk();
 }
+
 Status
 Aes::setMode(alc_cipher_mode_t mode)
 {

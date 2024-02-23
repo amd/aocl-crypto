@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,11 +37,14 @@ namespace alcp::testing {
 class AlcpCipherAeadBase : public CipherAeadBase
 {
   private:
-    alc_cipher_handle_p    m_handle = nullptr;
+    alc_cipher_handle_p m_handle = nullptr;
+    alc_cipher_mode_t   m_mode;
+    Uint64              m_keyLen;
+
+    const Uint8* m_key;
+    const Uint8* m_iv;
+
     alc_cipher_aead_info_t m_cinfo;
-    alc_key_info_t         m_keyinfo;
-    alc_cipher_mode_t      m_mode;
-    const Uint8*           m_iv;
     const Uint8*           m_tkey = nullptr;
 
   public:

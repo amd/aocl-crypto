@@ -75,8 +75,8 @@ Cmac_KAT(int KeySize, std::string CmacType, alc_mac_info_t info)
     alcp_cmac_data_t data     = {};
     const int        CmacSize = 16;
 
-    info.mi_type                                         = ALC_MAC_CMAC;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_iv = NULL;
+    info.mi_type                            = ALC_MAC_CMAC;
+    info.mi_algoinfo.cmac.cmac_cipher.ci_iv = NULL;
 
     AlcpCmacBase acb(info);
     CmacBase*    cb;
@@ -157,8 +157,8 @@ Cmac_Cross(int KeySize, std::string CmacType, alc_mac_info_t info)
     std::vector<Uint8> CmacExt(CmacSize / 8, 0);
 
     /* Initialize info params based on test type */
-    info.mi_type                                         = ALC_MAC_CMAC;
-    info.mi_algoinfo.cmac.cmac_cipher.ci_algo_info.ai_iv = NULL;
+    info.mi_type                            = ALC_MAC_CMAC;
+    info.mi_algoinfo.cmac.cmac_cipher.ci_iv = NULL;
 
     AlcpCmacBase acb(info);
     RngBase      rb;
