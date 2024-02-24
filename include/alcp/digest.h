@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -105,6 +105,23 @@ typedef enum _alc_digest_len
 
     ALC_DIGEST_LEN_CUSTOM = 17, /* anything not covered by above */
 } alc_digest_len_t;
+
+/**
+ * @brief Stores info about block size used for digest
+ *
+ * @typedef enum alc_digest_block_size_t
+ */
+typedef enum alc_digest_block_size
+{
+    ALC_DIGEST_BLOCK_SIZE_SHA2_256  = 512,
+    ALC_DIGEST_BLOCK_SIZE_SHA2_512  = 1024,
+    ALC_DIGEST_BLOCK_SIZE_SHA3_224  = 1152,
+    ALC_DIGEST_BLOCK_SIZE_SHA3_256  = 1088,
+    ALC_DIGEST_BLOCK_SIZE_SHA3_384  = 832,
+    ALC_DIGEST_BLOCK_SIZE_SHA3_512  = 576,
+    ALC_DIGEST_BLOCK_SIZE_SHAKE_128 = 1344,
+    ALC_DIGEST_BLOCK_SIZE_SHAKE_256 = 1088
+} alc_digest_block_size_t;
 
 /**
  * @brief Stores info about digest mode to be used

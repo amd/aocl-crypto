@@ -30,7 +30,7 @@
 #include "provider/alcp_names.h"
 
 void
-ALCP_prov_digest_freectx(void* vctx)
+alcp_prov_digest_freectx(void* vctx)
 {
     alc_prov_digest_ctx_p pdctx = vctx;
     ENTER();
@@ -39,42 +39,49 @@ ALCP_prov_digest_freectx(void* vctx)
 }
 
 void*
-ALCP_prov_digest_newctx(void* vprovctx, const alc_digest_info_p dinfo)
+alcp_prov_digest_newctx(void* vprovctx, const alc_digest_info_p dinfo)
 {
     alc_prov_digest_ctx_p dig_ctx;
     alc_prov_ctx_p        pctx = (alc_prov_ctx_p)vprovctx;
 
     ENTER();
-
-    dig_ctx = OPENSSL_zalloc(sizeof(*dig_ctx));
+    Uint64 size = alcp_digest_context_size(dinfo);
+    dig_ctx     = OPENSSL_zalloc(sizeof(*dig_ctx) + size);
     if (dig_ctx != NULL) {
         dig_ctx->pc_prov_ctx    = pctx;
         dig_ctx->pc_libctx      = pctx->ap_libctx;
         dig_ctx->pc_digest_info = *dinfo;
+        dig_ctx->handle.context = (Uint8*)dig_ctx + sizeof(*dig_ctx);
     }
 
     return dig_ctx;
 }
 
 void*
-ALCP_prov_digest_dupctx(void* vctx)
+alcp_prov_digest_dupctx(void* vctx)
 {
     ENTER();
     // FIXME: Implementation Pending for context copy
-    alc_prov_digest_ctx_p csrc = vctx;
+    // This would need the deep copy implementation at the internal classes
+    // It would need copy constructors in class and a copy C API
+    // alc_prov_digest_ctx_p csrc = vctx;
     EXIT();
-    return csrc;
+    return NULL;
 }
 
 /*-
  * Generic digest functions for OSSL_PARAM gettables and settables
  */
 static const OSSL_PARAM digest_known_gettable_params[] = {
-    OSSL_PARAM_size_t(OSSL_DIGEST_PARAM_BLOCK_SIZE, NULL), OSSL_PARAM_END
+    OSSL_PARAM_size_t(OSSL_DIGEST_PARAM_BLOCK_SIZE, NULL),
+    OSSL_PARAM_size_t(OSSL_DIGEST_PARAM_SIZE, NULL),
+    OSSL_PARAM_int(OSSL_DIGEST_PARAM_XOF, NULL),
+    OSSL_PARAM_int(OSSL_DIGEST_PARAM_ALGID_ABSENT, NULL),
+    OSSL_PARAM_END
 };
 
 const OSSL_PARAM*
-ALCP_prov_digest_gettable_params(void* provctx)
+alcp_prov_digest_gettable_params(void* provctx)
 {
     ENTER();
     EXIT();
@@ -82,99 +89,29 @@ ALCP_prov_digest_gettable_params(void* provctx)
 }
 
 int
-ALCP_prov_digest_get_params(OSSL_PARAM params[])
+alcp_prov_digest_get_params(OSSL_PARAM    params[],
+                            size_t        blockSize,
+                            size_t        digestSize,
+                            unsigned long flags)
 {
     ENTER();
-    EXIT();
-    return 1;
-}
-
-const OSSL_PARAM*
-ALCP_prov_digest_gettable_ctx_params(void* cctx, void* provctx)
-{
-    ENTER();
-    EXIT();
-    return digest_known_gettable_params;
-}
-
-/* Parameters that libcrypto can send to this implementation */
-const OSSL_PARAM*
-ALCP_prov_digest_settable_ctx_params(void* cctx, void* provctx)
-{
-    ENTER();
-    static const OSSL_PARAM table[] = {
-        // OSSL_PARAM_size_t(OSSL_DIGEST_PARAM_KEYLEN, NULL),
-        OSSL_PARAM_END,
-    };
-    EXIT();
-    return table;
-}
-
-int
-ALCP_prov_digest_set_params(const OSSL_PARAM params[])
-{
-    ENTER();
+    OSSL_PARAM* param = NULL;
+    OSSL_PARAM_LOCATE_SET_SIZE(
+        params, OSSL_DIGEST_PARAM_BLOCK_SIZE, param, blockSize);
+    OSSL_PARAM_LOCATE_SET_SIZE(
+        params, OSSL_DIGEST_PARAM_SIZE, param, digestSize);
+    OSSL_PARAM_LOCATE_SET_INT(
+        params, OSSL_DIGEST_PARAM_XOF, param, ((flags & ALCP_FLAG_XOF) != 0));
+    OSSL_PARAM_LOCATE_SET_INT(params,
+                              OSSL_DIGEST_PARAM_ALGID_ABSENT,
+                              param,
+                              ((flags & ALCP_FLAG_ALGID_ABSENT) != 0));
     EXIT();
     return 1;
 }
 
 int
-ALCP_prov_digest_get_ctx_params(void* vctx, OSSL_PARAM params[])
-{
-    ENTER();
-    EXIT();
-    return 1;
-}
-
-int
-ALCP_prov_digest_set_ctx_params(void* vctx, const OSSL_PARAM params[])
-{
-    ENTER();
-    const OSSL_PARAM*     p;
-    alc_prov_digest_ctx_p pctx = (alc_prov_digest_ctx_p)vctx;
-
-    // SHAKE DIGEST SIZE PARAM
-    p = OSSL_PARAM_locate_const(params, OSSL_DIGEST_PARAM_XOFLEN);
-    if (p != NULL) {
-        if (OSSL_PARAM_get_size_t(p, &pctx->shake_digest_size)) {
-            alc_error_t err = alcp_digest_set_shake_length(
-                &pctx->handle, pctx->shake_digest_size);
-            if (alcp_is_error(err)) {
-                printf("Provider: Failed to set SHAKE Digest Size\n");
-                ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
-                return 0;
-            }
-        } else {
-            ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
-            return 0;
-        }
-    }
-
-    EXIT();
-    return 1;
-}
-
-int
-ALCP_prov_digest_init(void* vctx, const OSSL_PARAM params[])
-{
-    ENTER();
-    alc_prov_digest_ctx_p cctx = vctx;
-    alc_error_t           err;
-
-    alc_digest_info_p dinfo = &cctx->pc_digest_info;
-    Uint64            size  = alcp_digest_context_size(dinfo);
-    cctx->handle.context    = OPENSSL_malloc(size);
-    err                     = alcp_digest_request(dinfo, &(cctx->handle));
-    if (alcp_is_error(err)) {
-        printf("Provider: Somehow request failed\n");
-        return 0;
-    }
-    EXIT();
-    return 1;
-}
-
-int
-ALCP_prov_digest_update(void* vctx, const unsigned char* in, size_t inl)
+alcp_prov_digest_update(void* vctx, const unsigned char* in, size_t inl)
 {
     ENTER();
     alc_error_t           err;
@@ -190,7 +127,7 @@ ALCP_prov_digest_update(void* vctx, const unsigned char* in, size_t inl)
 }
 
 int
-ALCP_prov_digest_final(void*          vctx,
+alcp_prov_digest_final(void*          vctx,
                        unsigned char* out,
                        size_t*        outl,
                        size_t         outsize)
@@ -201,12 +138,16 @@ ALCP_prov_digest_final(void*          vctx,
 
     /**
      * FIXME: EVP_MD_get_size provider need to implemented. Currently it is
-     * returning zero in OpenSSL which caused outsize passed as argument to this
-     * function to be zero
+     * returning zero in OpenSSL which caused outsize passed as argument to
+     * this function to be zero
      * */
 
     // FIXME: Once EVP_MD_get_size provider is implemented calculate *outl
     // directly from outsize. Below is a temporary fix to get digest size
+    // Fix : outsize is getting set as 17(should be 16) in default len mode with
+    // openssl
+    // below code may not be required. Its required only in default len mode
+    // which can be handled from inside the core library
     if (dctx->pc_digest_info.dt_mode.dm_sha3 == ALC_SHAKE_128
         || dctx->pc_digest_info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
         *outl = outsize;
@@ -218,6 +159,7 @@ ALCP_prov_digest_final(void*          vctx,
     } else {
         *outl = dctx->pc_digest_info.dt_len / 8;
     }
+    // ToDO : Merge the finalize and copy call
     err = alcp_digest_finalize(&(dctx->handle), NULL, 0);
     if (alcp_is_error(err)) {
         printf("Provider: Failed to Finalize\n");
@@ -228,7 +170,6 @@ ALCP_prov_digest_final(void*          vctx,
         printf("Provider: Failed to copy Hash\n");
         return 0;
     }
-    OPENSSL_free(dctx->handle.context);
     EXIT();
     return 1;
 }
