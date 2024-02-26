@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -81,28 +81,22 @@ class ALCP_API_EXPORT Ccm final
 {
 
   public:
-    explicit Ccm(const alc_cipher_algo_info_t& aesInfo,
-                 const alc_key_info_t&         keyInfo);
+    explicit Ccm(const Uint8* pKey, const Uint32 keyLen);
 
     Ccm();
     ~Ccm();
 
-    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                            const alc_key_info_t&         keyInfo)
+    static bool isSupported(const Uint32 keyLen)
     {
-        return true;
-    }
-
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
-    {
-        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_algo_info;
-            if (aip->ai_mode == ALC_AES_MODE_CCM) {
+        // FIXME: To be implemented
+        switch (keyLen) {
+            case 128:
+            case 192:
+            case 256:
                 return true;
-            }
+            default:
+                return false;
         }
-
-        return false;
     }
 
     virtual alc_error_t getTag(Uint8* pOutput, Uint64 len);

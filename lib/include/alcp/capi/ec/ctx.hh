@@ -35,6 +35,8 @@ class Context
   public:
     void* m_ec;
 
+    Status (*setPrivateKey)(void* pEc, const Uint8* pPrivKey);
+
     Status (*getPublicKey)(void* pEc, Uint8* pPublicKey, const Uint8* pPrivKey);
 
     Status (*getSecretKey)(void*        pEc,

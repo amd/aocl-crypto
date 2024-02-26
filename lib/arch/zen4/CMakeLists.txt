@@ -33,10 +33,17 @@ alcp_get_arch_cflags_zen4()
 MESSAGE(STATUS "COMPILE_FLAGS:ZEN4:${ARCH_COMPILE_FLAGS}")
 ADD_COMPILE_OPTIONS( ${ARCH_COMPILE_FLAGS})
 
+
+#Adding -funroll-loops only to sha2_512_avx512.cc file in this arch since it improves performance for digest.
+# This flag may improve or decrease performance. But for current implementation in file, it improves performance. 
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+	set_source_files_properties(sha2_512_avx512.cc PROPERTIES COMPILE_FLAGS "-funroll-loops")
+endif()
+
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib/include)
 
 ADD_LIBRARY(arch_zen4
-	STATIC
+	OBJECT
 	${ZEN4_SRCS})
 
 # BUG in GCC-12

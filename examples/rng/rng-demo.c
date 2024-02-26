@@ -66,7 +66,7 @@ main(int argc, char const* argv[])
         rng_info.ri_distrib =
             ALC_RNG_DISTRIB_UNIFORM; // Output should be uniform probablilty
         rng_info.ri_source = source;
-        rng_info.ri_type   = ALC_RNG_TYPE_DESCRETE; // Discrete output (uint8)
+        rng_info.ri_type   = ALC_RNG_TYPE_DISCRETE; // Discrete output (uint8)
 
         /* Erase buffer and prove its empty */
         memset(buffer, 0, RANDOM_SIZE); // Erase buffer
@@ -77,7 +77,7 @@ main(int argc, char const* argv[])
         /* Check if RNG mode is supported with RNG info */
         if (alcp_rng_supported(&rng_info) != ALC_ERROR_NONE) {
             printf("Support Failed!\n");
-            exit(-1);
+            return -1;
         }
         printf("Support Success\n");
 
@@ -86,7 +86,7 @@ main(int argc, char const* argv[])
         /* Request context for RNG with RNG info */
         if (alcp_rng_request(&rng_info, &handle) != ALC_ERROR_NONE) {
             printf("Request Failed!\n");
-            exit(-1);
+            return -1;
         }
         printf("Request Success\n");
         // Life of rng_info ends here and it lives inside context
@@ -95,12 +95,12 @@ main(int argc, char const* argv[])
     /* Generate RANDOM_SIZE bytes of random values */
     if (alcp_rng_gen_random(&handle, buffer, RANDOM_SIZE) != ALC_ERROR_NONE) {
         printf("Random number generation Failed!\n");
-        exit(-1);
+        return -1;
     }
 
     if (alcp_rng_finish(&handle) != ALC_ERROR_NONE) {
         printf("Finish Failed!\n");
-        exit(-1);
+        return -1;
     }
 
     /* Show the buffer randomnumber buffer */

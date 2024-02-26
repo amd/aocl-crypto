@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -43,5 +43,8 @@ class MacBuilder
     static alcp::base::Status build(const alc_mac_info_t& cipherInfo,
                                     alcp::mac::Context&   ctx);
 };
+
+Status
+isDigestSupported(const alc_digest_info_t& digestInfo);
 
 } // namespace alcp::mac

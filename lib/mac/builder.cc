@@ -29,8 +29,11 @@
 #include "alcp/capi/mac/builder.hh"
 #include "alcp/mac/cmac_build.hh"
 #include "alcp/mac/hmac_build.hh"
+#include "alcp/mac/poly1305_build.hh"
 
 namespace alcp::mac {
+
+using poly1305::Poly1305Builder;
 
 Status
 MacBuilder::build(const alc_mac_info_t& macInfo, Context& ctx)
@@ -43,6 +46,9 @@ MacBuilder::build(const alc_mac_info_t& macInfo, Context& ctx)
             break;
         case ALC_MAC_CMAC:
             status = CmacBuilder::build(macInfo, macInfo.mi_keyinfo, ctx);
+            break;
+        case ALC_MAC_POLY1305:
+            status = Poly1305Builder::build(macInfo, macInfo.mi_keyinfo, ctx);
             break;
         default:
             status.update(InvalidArgument("Unknown MAC Type"));
@@ -62,6 +68,8 @@ MacBuilder::getSize(const alc_mac_info_t& macInfo)
         case ALC_MAC_HMAC:
             size = HmacBuilder::getSize(macInfo);
             break;
+        case ALC_MAC_POLY1305:
+            size = Poly1305Builder::getSize(macInfo);
         default:
             size = 0;
     }
@@ -79,6 +87,9 @@ MacBuilder::isSupported(const alc_mac_info_t& macInfo)
             break;
         case ALC_MAC_HMAC:
             s = HmacBuilder::isSupported(macInfo);
+            break;
+        case ALC_MAC_POLY1305:
+            s = Poly1305Builder::isSupported(macInfo);
             break;
         default:
             return InvalidArgument("Invalid MAC Algorithm");

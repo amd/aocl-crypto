@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -42,6 +42,7 @@ class RngBuilder
   public:
     static alc_error_t build(const alc_rng_info_t& rRngInfo, Context& ctx);
     static Uint64      getSize(const alc_rng_info_t& rRngInfo);
+    static Status      isSupported(const alc_rng_info_t& rRngInfo);
 };
 
 } // namespace alcp::rng

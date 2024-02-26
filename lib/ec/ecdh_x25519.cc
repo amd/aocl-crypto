@@ -47,6 +47,14 @@ X25519::~X25519()
 }
 
 Status
+X25519::setPrivateKey(const Uint8* pPrivKey)
+{
+    // store private key for secret key generation
+    alcp::utils::CopyBytes(m_PrivKey, pPrivKey, KeySize);
+    return StatusOk();
+}
+
+Status
 X25519::generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
 {
 
@@ -54,17 +62,11 @@ X25519::generatePublicKey(Uint8* pPublicKey, const Uint8* pPrivKey)
     static bool has_bmi2 = CpuId::cpuHasBmi2();
 
     if (!has_adx) {
-        // Todo : cerr will be removed when error module is properly implemented
-        std::cerr << "Not supported due to missing instruction set"
-                  << std::endl;
         return status::NotAvailable(
             "Not supported due to missing instruction set");
     }
 
     if (!has_bmi2) {
-        // Todo : cerr will be removed when error module is properly implemented
-        std::cerr << "Not supported due to missing instruction set"
-                  << std::endl;
         return status::NotAvailable(
             "Not supported due to missing instruction set");
     }
@@ -133,16 +135,10 @@ X25519::computeSecretKey(Uint8*       pSecretKey,
     static bool has_bmi2 = CpuId::cpuHasBmi2();
 
     if (!has_adx) {
-        // Todo : cerr will be removed when error module is properly implemented
-        std::cerr << "Not supported due to missing instruction set"
-                  << std::endl;
         return status::NotAvailable("ADX instruction set not supported");
     }
 
     if (!has_bmi2) {
-        // Todo : cerr will be removed when error module is properly implemented
-        std::cerr << "Not supported due to missing instruction set"
-                  << std::endl;
         return status::NotAvailable("MULX instruction set not supported");
     }
     Status status = validatePublicKey(pPublicKey, KeySize);
@@ -168,8 +164,6 @@ X25519::computeSecretKey(Uint8*       pSecretKey,
 Status
 X25519::validatePublicKey(const Uint8* pPublicKey, Uint64 pKeyLength)
 {
-    // FIXME: validation should be done to check if public key is a valid point
-    // the curve.
     if (pKeyLength != KeySize) {
         return Status(GenericError(ErrorCode::eInvalidArgument),
                       "Key validation failed");

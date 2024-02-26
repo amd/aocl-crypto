@@ -42,4 +42,11 @@ Unavailable(StringView msg)
     auto e = RsaError(alcp::base::eNotAvailable, ErrorCode::eUnavailable);
     return Status(e, msg);
 }
+
+Status
+Generic(StringView msg)
+{
+    auto e = RsaError(alcp::base::eInternal, ErrorCode::eInternal);
+    return Status(e, msg);
+}
 } // namespace alcp::rsa::status

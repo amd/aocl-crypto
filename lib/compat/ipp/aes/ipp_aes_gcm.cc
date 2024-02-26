@@ -37,10 +37,8 @@ ippsAES_GCMStart(const Ipp8u*      pIV,
 {
     printMsg("GCM Start");
     // Should replace below with something better as it does discard const
-    ipp_wrp_aes_ctx* context_dec =
-        &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->decrypt_ctx);
-    ipp_wrp_aes_ctx* context_enc =
-        &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->encrypt_ctx);
+    ipp_wrp_aes_ctx* context_aead =
+        &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->aead_ctx);
 
     alc_error_t err;
     const int   err_size = 256;
@@ -50,86 +48,47 @@ ippsAES_GCMStart(const Ipp8u*      pIV,
        if we already have context then it's already good, we can take it as
        already initialized. */
 
-    // Continue Dec
-    if (context_dec->handle.ch_context == nullptr) {
-        context_dec->cinfo.ci_type            = ALC_CIPHER_TYPE_AES;
-        context_dec->cinfo.ci_algo_info.ai_iv = (Uint8*)pIV;
-
-        // context->cinfo = cinfo;
-        err = alcp_cipher_supported(&(context_dec->cinfo));
-        if (alcp_is_error(err)) {
-            printErr("not supported");
-            alcp_error_str(err, err_buf, err_size);
-            return ippStsNotSupportedModeErr;
-        }
-        context_dec->handle.ch_context =
-            malloc(alcp_cipher_context_size(&(context_dec->cinfo)));
-        err =
-            alcp_cipher_request(&(context_dec->cinfo), &(context_dec->handle));
-        if (alcp_is_error(err)) {
-            printErr("unable to request");
-            alcp_error_str(err, err_buf, err_size);
-            free(context_dec->handle.ch_context);
-            context_dec->handle.ch_context = nullptr;
-            return ippStsErr;
-        }
-    }
     // Continue Enc
-    if (context_enc->handle.ch_context == nullptr) {
-        context_enc->cinfo.ci_type            = ALC_CIPHER_TYPE_AES;
-        context_enc->cinfo.ci_algo_info.ai_iv = (Uint8*)pIV;
+    if (context_aead->handle.ch_context == nullptr) {
+        context_aead->c_aeadinfo.ci_type            = ALC_CIPHER_TYPE_AES;
+        context_aead->c_aeadinfo.ci_algo_info.ai_iv = (Uint8*)pIV;
 
-        // context->cinfo = cinfo;
-        err = alcp_cipher_supported(&(context_enc->cinfo));
+        // context->c_aeadinfo = c_aeadinfo;
+        err = alcp_cipher_aead_supported(&(context_aead->c_aeadinfo));
         if (alcp_is_error(err)) {
             printErr("not supported");
             alcp_error_str(err, err_buf, err_size);
             return ippStsNotSupportedModeErr;
         }
-        context_enc->handle.ch_context =
-            malloc(alcp_cipher_context_size(&(context_enc->cinfo)));
-        err =
-            alcp_cipher_request(&(context_enc->cinfo), &(context_enc->handle));
+        context_aead->handle.ch_context =
+            malloc(alcp_cipher_aead_context_size(&(context_aead->c_aeadinfo)));
+        err = alcp_cipher_aead_request(&(context_aead->c_aeadinfo),
+                                       &(context_aead->handle));
         if (alcp_is_error(err)) {
             printErr("unable to request");
             alcp_error_str(err, err_buf, err_size);
-            free(context_enc->handle.ch_context);
-            context_enc->handle.ch_context = nullptr;
+            free(context_aead->handle.ch_context);
+            context_aead->handle.ch_context = nullptr;
             return ippStsErr;
         }
     }
     // GCM Init
-    /* Decrypt Init */
-    err = alcp_cipher_decrypt_update(
-        &(context_dec->handle), nullptr, nullptr, ivLen, (Uint8*)pIV);
-    if (alcp_is_error(err)) {
-        printErr("GCM decrypt init failure! code:11\n");
-        alcp_error_str(err, err_buf, err_size);
-        return ippStsErr;
-    }
     // Additional Data
-    Uint8* aad = (Uint8*)pAAD;
-    if (aadLen == 0 && aad == nullptr) {
-        // FIXME: Hack to prevent ad from being null
-        Uint8 a;
-        aad = &a; // Some random value other than NULL
-    }
-    err = alcp_cipher_decrypt_update(
-        &(context_dec->handle), aad, nullptr, aadLen, (Uint8*)pIV);
 
     /* Encrypt Init */
-    err = alcp_cipher_encrypt_update(
-        &(context_enc->handle), nullptr, nullptr, ivLen, (Uint8*)pIV);
+    err = alcp_cipher_aead_set_iv(&(context_aead->handle), ivLen, (Uint8*)pIV);
     if (alcp_is_error(err)) {
         printf("Error: GCM encrypt init failure! code:11\n");
         alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }
-    err = alcp_cipher_encrypt_update(
-        &(context_enc->handle), aad, nullptr, aadLen, (Uint8*)pIV);
-    if (alcp_is_error(err)) {
-        return ippStsErr;
+    if (aadLen != 0 && pAAD != nullptr) {
+        err = alcp_cipher_aead_set_aad(&(context_aead->handle), pAAD, aadLen);
+        if (alcp_is_error(err)) {
+            return ippStsErr;
+        }
     }
+
     printMsg("GCM Start End");
     return ippStsNoErr;
 }
@@ -145,16 +104,17 @@ ippsAES_GCMEncrypt(const Ipp8u*      pSrc,
     // const int   err_size = 256;
     // Uint8     err_buf[err_size];
 
-    ipp_wrp_aes_ctx* context_enc =
-        &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->encrypt_ctx);
+    ipp_wrp_aes_ctx* context_aead =
+        &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->aead_ctx);
     (reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->is_encrypt = true;
 
     // GCM Encrypt
-    err = alcp_cipher_encrypt_update(&(context_enc->handle),
-                                     (Uint8*)pSrc,
-                                     (Uint8*)pDst,
-                                     len,
-                                     context_enc->cinfo.ci_algo_info.ai_iv);
+    err = alcp_cipher_aead_encrypt_update(
+        &(context_aead->handle),
+        (Uint8*)pSrc,
+        (Uint8*)pDst,
+        len,
+        context_aead->c_aeadinfo.ci_algo_info.ai_iv);
     if (alcp_is_error(err)) {
         return ippStsErr;
     }
@@ -170,18 +130,17 @@ ippsAES_GCMDecrypt(const Ipp8u*      pSrc,
 {
     printMsg("GCMDecrypt Start");
     alc_error_t err;
-    // const int   err_size = 256;
-    // Uint8     err_buf[err_size];
 
-    ipp_wrp_aes_ctx* context_dec =
-        &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->decrypt_ctx);
+    ipp_wrp_aes_ctx* context_aead =
+        &((reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->aead_ctx);
     (reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->is_encrypt = false;
     // GCM Encrypt
-    err = alcp_cipher_decrypt_update(&(context_dec->handle),
-                                     (Uint8*)pSrc,
-                                     (Uint8*)pDst,
-                                     len,
-                                     context_dec->cinfo.ci_algo_info.ai_iv);
+    err = alcp_cipher_aead_decrypt_update(
+        &(context_aead->handle),
+        (Uint8*)pSrc,
+        (Uint8*)pDst,
+        len,
+        context_aead->c_aeadinfo.ci_algo_info.ai_iv);
     if (alcp_is_error(err)) {
         return ippStsErr;
     }
@@ -193,26 +152,20 @@ IppStatus
 ippsAES_GCMGetTag(Ipp8u* pDstTag, int tagLen, const IppsAES_GCMState* pState)
 {
     printMsg("GCMGetTag Start");
-    alc_error_t      err;
-    const int        err_size = 256;
-    Uint8            err_buf[err_size];
-    ipp_wrp_aes_ctx* context_dec =
-        &(((ipp_wrp_aes_aead_ctx*)(pState))->decrypt_ctx);
-    ipp_wrp_aes_ctx* context_enc =
-        &(((ipp_wrp_aes_aead_ctx*)(pState))->encrypt_ctx);
-    if (((ipp_wrp_aes_aead_ctx*)(pState))->is_encrypt == true) {
-        err = alcp_cipher_encrypt_update(&(context_enc->handle),
-                                         nullptr,
-                                         (Uint8*)pDstTag,
-                                         tagLen,
-                                         context_dec->cinfo.ci_algo_info.ai_iv);
-    } else {
-        err = alcp_cipher_decrypt_update(&(context_dec->handle),
-                                         nullptr,
-                                         (Uint8*)pDstTag,
-                                         tagLen,
-                                         context_dec->cinfo.ci_algo_info.ai_iv);
+    alc_error_t err;
+    const int   err_size = 256;
+    Uint8       err_buf[err_size];
+
+    ipp_wrp_aes_ctx* context_aead =
+        &(((ipp_wrp_aes_aead_ctx*)(pState))->aead_ctx);
+    err = alcp_cipher_aead_get_tag(
+        &(context_aead->handle), (Uint8*)pDstTag, tagLen);
+    alcp_cipher_aead_finish(&(context_aead->handle));
+    if (context_aead->handle.ch_context) {
+        free(context_aead->handle.ch_context);
+        context_aead->handle.ch_context = nullptr;
     }
+
     if (alcp_is_error(err)) {
         printf("GCM tag fetch failure! code:4\n");
         alcp_error_str(err, err_buf, err_size);
@@ -225,12 +178,12 @@ ippsAES_GCMGetTag(Ipp8u* pDstTag, int tagLen, const IppsAES_GCMState* pState)
 IppStatus
 ippsAES_GCMReset(IppsAES_GCMState* pState)
 {
-    ipp_wrp_aes_ctx* context_dec =
-        &(((ipp_wrp_aes_aead_ctx*)(pState))->decrypt_ctx);
-    ipp_wrp_aes_ctx* context_enc =
-        &(((ipp_wrp_aes_aead_ctx*)(pState))->encrypt_ctx);
+    ipp_wrp_aes_ctx* context_aead =
+        &(((ipp_wrp_aes_aead_ctx*)(pState))->aead_ctx);
     ((ipp_wrp_aes_aead_ctx*)(pState))->is_encrypt = false;
-    free(context_dec->handle.ch_context);
-    free(context_enc->handle.ch_context);
+    if (context_aead->handle.ch_context) {
+        free(context_aead->handle.ch_context);
+        context_aead->handle.ch_context = nullptr;
+    }
     return ippStsNoErr;
 }

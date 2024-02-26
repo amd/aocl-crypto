@@ -40,7 +40,7 @@
 
 // ALCP lib path
 #define ALCP_LIB_OUTPUT_FILE_NAME_STRING                                  \
-    "/projects/crypto/1/pjayaraj/OpenSourceCrypto/OSE/aocl-crypto/build/libalcp.so"
+    "/projects/crypto/1/pjayaraj/OpenSourceCrypto/aocl-crypto/build/libalcp.so"
 
 // Compiler Detection
 /* #undef COMPILER_IS_CLANG */

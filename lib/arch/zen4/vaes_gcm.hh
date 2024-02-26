@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,11 +33,11 @@
 #include "alcp/types.hh"
 
 #define PARALLEL_512_BLKS_4 4
-#define MAX_NUM_512_BLKS    16 // 24
+#define MAX_NUM_512_BLKS    8 // 16 // 24
 
 /*_mm_prefetch accepts const void*` arguments for GCC / ICC
 whereas MSVC still expects `const char* ` */
-#ifdef WIN32
+#ifdef _WIN32
 #define cast_to(ptr) ((const char*)ptr)
 #else
 #define cast_to(ptr) ((void*)ptr)
@@ -45,169 +45,17 @@ whereas MSVC still expects `const char* ` */
 
 namespace alcp::cipher::vaes512 {
 
-void inline gcmCryptInit(__m512i* c1,
-                         __m128i  iv_128,
-                         __m512i* one_lo,
-                         __m512i* one_x,
-                         __m512i* two_x,
-                         __m512i* three_x,
-                         __m512i* four_x,
-                         __m512i* swap_ctr)
+static inline void
+printText(Uint32* I, Uint64 len, char* s)
 {
-
-    *one_lo = alcp_set_epi32(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
-    *one_x  = alcp_set_epi32(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0);
-    *two_x  = alcp_set_epi32(8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0);
-    *three_x =
-        alcp_set_epi32(12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0);
-    *four_x =
-        alcp_set_epi32(16, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0);
-
-    //
-    // counterblock :: counter 4 bytes: IV 8 bytes : Nonce 4 bytes
-    // as per spec: http://www.faqs.org/rfcs/rfc3686.html
-    //
-
-    // counter 4 bytes are arranged in reverse order
-    // for counter increment
-    *swap_ctr = _mm512_set_epi32(0x0c0d0e0f,
-                                 0x0b0a0908,
-                                 0x07060504,
-                                 0x03020100,
-                                 0x0c0d0e0f, // Repeats here
-                                 0x0b0a0908,
-                                 0x07060504,
-                                 0x03020100,
-                                 0x0c0d0e0f, // Repeats here
-                                 0x0b0a0908,
-                                 0x07060504,
-                                 0x03020100,
-                                 0x0c0d0e0f, // Repeats here
-                                 0x0b0a0908,
-                                 0x07060504,
-                                 0x03020100);
-    // nonce counter
-    *c1 = _mm512_broadcast_i64x2(iv_128);
-
-    __m512i onehi =
-        _mm512_setr_epi32(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3);
-    *c1 = alcp_add_epi32(*c1, onehi);
+    printf("\n %s ", s);
+    for (int x = len - 1; x >= 0; x--) {
+        printf(" %8x", *(I + x));
+    }
 }
 
-Uint64
-gcmBlk_512_decRounds10(const __m512i* p_in_x,
-                       __m512i*       p_out_x,
-                       Uint64         blocks,
-                       const __m128i* pkey128,
-                       const Uint8*   pIv,
-                       int            nRounds,
-                       Uint8          factor,
-                       // gcm specific params
-                       __m128i* pgHash_128,
-                       __m128i  Hsubkey_128,
-                       __m128i  iv_128,
-                       __m128i  reverse_mask_128,
-                       int      remBytes,
-                       Uint64*  pHashSubkeyTable);
-
-Uint64
-gcmBlk_512_decRounds12(const __m512i* p_in_x,
-                       __m512i*       p_out_x,
-                       Uint64         blocks,
-                       const __m128i* pkey128,
-                       const Uint8*   pIv,
-                       int            nRounds,
-                       Uint8          factor,
-                       // gcm specific params
-                       __m128i* pgHash_128,
-                       __m128i  Hsubkey_128,
-                       __m128i  iv_128,
-                       __m128i  reverse_mask_128,
-                       int      remBytes,
-                       Uint64*  pHashSubkeyTable);
-
-Uint64
-gcmBlk_512_decRounds14(const __m512i* p_in_x,
-                       __m512i*       p_out_x,
-                       Uint64         blocks,
-                       const __m128i* pkey128,
-                       const Uint8*   pIv,
-                       int            nRounds,
-                       Uint8          factor,
-                       // gcm specific params
-                       __m128i* pgHash_128,
-                       __m128i  Hsubkey_128,
-                       __m128i  iv_128,
-                       __m128i  reverse_mask_128,
-                       int      remBytes,
-                       Uint64*  pHashSubkeyTable);
-
-Uint64
-gcmBlk_512_encRounds10(const __m512i* p_in_x,
-                       __m512i*       p_out_x,
-                       Uint64         blocks,
-                       const __m128i* pkey128,
-                       const Uint8*   pIv,
-                       int            nRounds,
-                       Uint8          factor,
-                       // gcm specific params
-                       __m128i* pgHash_128,
-                       __m128i  Hsubkey_128,
-                       __m128i  iv_128,
-                       __m128i  reverse_mask_128,
-                       int      remBytes,
-                       Uint64*  pHashSubkeyTable);
-
-Uint64
-gcmBlk_512_encRounds12(const __m512i* p_in_x,
-                       __m512i*       p_out_x,
-                       Uint64         blocks,
-                       const __m128i* pkey128,
-                       const Uint8*   pIv,
-                       int            nRounds,
-                       Uint8          factor,
-                       // gcm specific params
-                       __m128i* pgHash_128,
-                       __m128i  Hsubkey_128,
-                       __m128i  iv_128,
-                       __m128i  reverse_mask_128,
-                       int      remBytes,
-                       Uint64*  pHashSubkeyTable);
-
-Uint64
-gcmBlk_512_encRounds14(const __m512i* p_in_x,
-                       __m512i*       p_out_x,
-                       Uint64         blocks,
-                       const __m128i* pkey128,
-                       const Uint8*   pIv,
-                       int            nRounds,
-                       Uint8          factor,
-                       // gcm specific params
-                       __m128i* pgHash_128,
-                       __m128i  Hsubkey_128,
-                       __m128i  iv_128,
-                       __m128i  reverse_mask_128,
-                       int      remBytes,
-                       Uint64*  pHashSubkeyTable);
-
-Uint64
-gcmBlk_512_enc(const __m512i* p_in_x,
-               __m512i*       p_out_x,
-               Uint64         blocks,
-               const __m128i* pkey128,
-               const Uint8*   pIv,
-               int            nRounds,
-               Uint8          factor,
-               // gcm specific params
-               __m128i* pgHash_128,
-               __m128i  Hsubkey_128,
-               __m128i  iv_128,
-               __m128i  reverse_mask_128,
-               int      remBytes,
-               Uint64*  pHashSubkeyTable);
-
 // dynamic Unrolling
-int inline dynamicUnroll(Uint64 blocks, bool& do_4_unroll, bool& do_2_unroll)
+int inline dynamicUnroll(Uint64 blocks)
 {
     /* 64 (16*4) blocks per loop. Minimum 20 loops required to get
      * benefit of precomputing hash^x table.
@@ -216,26 +64,38 @@ int inline dynamicUnroll(Uint64 blocks, bool& do_4_unroll, bool& do_2_unroll)
      */
 
     // 16*num_unroll*MinloopCount
-    auto constexpr threshold_4x512_4unroll = 16 * 4 * 20;
+
     auto constexpr threshold_4x512_2unroll = 16 * 2 * 2;
+
+#if 0
     int num_512_blks                       = 0;
+    auto constexpr threshold_4x512_4unroll = 16 * 4 * 20;
     if (blocks >= threshold_4x512_4unroll) {
-        num_512_blks = 4 * 4;
-        do_4_unroll  = true;
+        num_512_blks = 16; // 16x4 = 64 blks
     } else if (blocks >= threshold_4x512_2unroll) {
-        num_512_blks = 4 * 2;
-        do_2_unroll  = true;
-    } else if (blocks >= 16) {
-        num_512_blks = 4; // uses 4x512bit loop
-    } else if (blocks >= 8) {
-        num_512_blks = 2; // uses 2x512bit loop
+        num_512_blks = 8; // 8x4 = 32 blks
     } else if (blocks >= 4) {
-        num_512_blks = 1; // uses 1x512bit loop
+        num_512_blks = 1; // 1x4 = 4 blks
     }
 
     if (num_512_blks > MAX_NUM_512_BLKS) {
         num_512_blks = MAX_NUM_512_BLKS;
     }
+
+#else // disable 64 blks kernel
+
+    /*
+     * Limited branches in choosing kernels improves overall performance for
+     * different input blocksizes. This brings down overall backend stalls. This
+     * effect needs to be verified when applications uses prodominantly single
+     * block size for encrypt/decrypt.
+     */
+    int num_512_blks = 1;
+    if (blocks >= threshold_4x512_2unroll) {
+        num_512_blks = 8; // 8x4 = 32 blks
+    }
+
+#endif
     return num_512_blks;
 };
 
@@ -259,9 +119,9 @@ void inline computeHashSubKeys(int           num_512_blks,
                                       0,        // 0
                                       0);       // 0
 
-    gMul(Hsubkey_128, Hsubkey_128, &pH_512_128[0][2], const_factor_256);
-    gMul(pH_512_128[0][2], Hsubkey_128, &pH_512_128[0][1], const_factor_256);
-    gMul(pH_512_128[0][1], Hsubkey_128, &pH_512_128[0][0], const_factor_256);
+    gMul(Hsubkey_128, Hsubkey_128, pH_512_128[0][2], const_factor_256);
+    gMul(pH_512_128[0][2], Hsubkey_128, pH_512_128[0][1], const_factor_256);
+    gMul(pH_512_128[0][1], Hsubkey_128, pH_512_128[0][0], const_factor_256);
 
     const Uint64* H4_64 = (const Uint64*)&pH_512_128[0][0];
 
@@ -276,7 +136,90 @@ void inline computeHashSubKeys(int           num_512_blks,
 
     for (int i = 1; i < num_512_blks; i++) {
         gMulParallel4(
-            &Hsubkey_512[i], Hsubkey_512[i - 1], Hsubkey_4, const_factor_512);
+            Hsubkey_512[i], Hsubkey_512[i - 1], Hsubkey_4, const_factor_512);
+    }
+}
+
+void inline computeHashSubKeys(int           num_512_blks,
+                               __m128i       Hsubkey_128,
+                               __m512i*      Hsubkey_512,
+                               const __m128i const_factor_128)
+{
+    __m128i*      pH_512_128;
+    const Uint64* H1_64 = (const Uint64*)&Hsubkey_128;
+
+    const __m512i const_factor_512 = _mm512_loadu_epi64(const_factor);
+    pH_512_128                     = (__m128i*)Hsubkey_512;
+
+    Hsubkey_512[0] = _mm512_set_epi64(H1_64[1], // 3
+                                      H1_64[0], // 3
+                                      0,        // 2
+                                      0,        // 2
+                                      0,        // 1
+                                      0,        // 1
+                                      0,        // 0
+                                      0);       // 0
+    // FIXME: load & store can be avoided!
+    __m128i h_128_2 = _mm_loadu_si128(pH_512_128 + 2);
+    __m128i h_128_1 = _mm_loadu_si128(pH_512_128 + 1);
+    __m128i h_128_0 = _mm_loadu_si128(pH_512_128);
+
+    gMul(Hsubkey_128, Hsubkey_128, h_128_2, const_factor_128);
+    gMul(h_128_2, Hsubkey_128, h_128_1, const_factor_128);
+    gMul(h_128_1, Hsubkey_128, h_128_0, const_factor_128);
+
+    _mm_storeu_si128((pH_512_128 + 2), h_128_2);
+    _mm_storeu_si128((pH_512_128 + 1), h_128_1);
+    _mm_storeu_si128((pH_512_128), h_128_0);
+
+    const Uint64* H4_64 = (const Uint64*)pH_512_128;
+
+    __m512i Hsubkey_4 = _mm512_set_epi64(H4_64[1],
+                                         H4_64[0],
+                                         H4_64[1],
+                                         H4_64[0],
+                                         H4_64[1],
+                                         H4_64[0],
+                                         H4_64[1],
+                                         H4_64[0]);
+
+    for (int i = 1; i < num_512_blks; i++) {
+        gMulParallel4(
+            Hsubkey_512[i], Hsubkey_512[i - 1], Hsubkey_4, const_factor_512);
+    }
+}
+
+void inline getPrecomputedTable(bool     isFirstUpdate,
+                                __m512i* Hsubkey_512_precomputed,
+                                __m512i* Hsubkey_512,
+                                int      num_512_blks,
+                                alcp::cipher::GcmAuthData* gcm,
+                                __m128i                    const_factor_128)
+{
+
+    if (isFirstUpdate || (num_512_blks > gcm->m_num_512blks_precomputed)) {
+        computeHashSubKeys(num_512_blks,
+                           gcm->m_hash_subKey_128,
+                           Hsubkey_512,
+                           const_factor_128);
+
+        gcm->m_num_512blks_precomputed = num_512_blks;
+
+        for (int i = 0; i < num_512_blks; i++) {
+            __m512i temp = _mm512_loadu_si512(Hsubkey_512);
+            _mm512_storeu_si512(Hsubkey_512_precomputed, temp);
+
+            Hsubkey_512++;
+            Hsubkey_512_precomputed++;
+        }
+    } else {
+        for (int i = 0; i < num_512_blks; i++) {
+            __m512i temp = _mm512_loadu_si512(Hsubkey_512_precomputed);
+            _mm512_storeu_si512(Hsubkey_512, temp);
+
+            Hsubkey_512++;
+            Hsubkey_512_precomputed++;
+        }
     }
 }
 

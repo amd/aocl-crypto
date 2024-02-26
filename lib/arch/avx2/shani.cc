@@ -61,8 +61,8 @@ namespace alcp::digest { namespace shani {
                                   __m128i* pState1)
     {
         /* Load initial values */
-        __m128i tmp = _mm_loadu_si128((const __m128i*)&pHash[0]);
-        *pState1    = _mm_loadu_si128((const __m128i*)&pHash[4]);
+        __m128i tmp = _mm_load_si128((const __m128i*)&pHash[0]);
+        *pState1    = _mm_load_si128((const __m128i*)&pHash[4]);
 
         tmp      = _mm_shuffle_epi32(tmp, 0xB1);
         *pState1 = _mm_shuffle_epi32(*pState1, 0x1B);
@@ -136,8 +136,8 @@ namespace alcp::digest { namespace shani {
         state1 = _mm_alignr_epi8(state1, tmp, 8);
 
         // Save state
-        _mm_storeu_si128((__m128i*)&pHash[0], state0);
-        _mm_storeu_si128((__m128i*)&pHash[4], state1);
+        _mm_store_si128((__m128i*)&pHash[0], state0);
+        _mm_store_si128((__m128i*)&pHash[4], state1);
         return ALC_ERROR_NONE;
     }
 

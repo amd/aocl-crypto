@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,6 +34,40 @@
 #include <type_traits>
 
 namespace alcp::utils {
+
+static inline Uint32
+RotateRight(Uint32 value, Uint32 count)
+{
+#if 0
+    __asm__("rorl %%cl, %0" : "+r"(value) : "c"(count));
+    return value;
+#else
+    return value >> count | value << (32 - count);
+#endif
+}
+
+static inline Uint64
+RotateRight(Uint64 value, Uint64 count)
+{
+#if 0
+    __asm__("rorq %%cl, %0" : "+r"(value) : "c"(count));
+    return value;
+#else
+    return value >> count | value << (64 - count);
+#endif
+}
+
+static inline Uint32
+RotateLeft(Uint32 value, Uint32 count)
+{
+    return value << count | value >> (32 - count);
+}
+
+static inline Uint64
+RotateLeft(Uint64 value, Uint64 count)
+{
+    return value << count | value >> (64 - count);
+}
 
 constexpr Uint32 BitsPerByte   = 8;
 constexpr Uint32 BytesPerWord  = 4;
@@ -92,8 +126,7 @@ class Bits
   public:
     explicit Bits(T t)
         : m_val{ t }
-    {
-    }
+    {}
 
     T extract(int start, int end) const
     {

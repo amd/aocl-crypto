@@ -27,6 +27,8 @@
  */
 
 #include "alcp/cipher/aes.hh"
+//
+#include "alcp/cipher/aes_ctr.hh"
 #include "alcp/cipher/cipher_wrapper.hh"
 
 #include "alcp/utils/cpuid.hh"
@@ -35,95 +37,470 @@ using alcp::utils::CpuId;
 
 namespace alcp::cipher {
 
-alc_error_t
-cryptCtr(const Uint8* pInputText, // ptr to plaintext for encrypt
-                                  // and ciphertext for decrypt
-         Uint8* pOutputText,      // ptr to ciphertext for encrypt and
-                                  // plaintext for decrypt
-         Uint64       len,        // message length in bytes
-         const Uint8* pKey,       // ptr to Key
-         int          nRounds,    // No. of rounds
-         const Uint8* pIv,        // ptr to Initialization Vector
-         bool         isVaes,
-         bool         isAvx512Cap)
-{
-    alc_error_t err     = ALC_ERROR_NONE;
-    Uint64      blocks  = len / Rijndael::cBlockSize;
-    auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
-
-    if (isVaes && isAvx512Cap) {
-        blocks = vaes512::ctrProcessAvx512(
-            pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
-    } else if (isVaes) {
-
-        blocks = vaes::ctrProcessAvx256(
-            pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
-
-    } else {
-        blocks = aesni::ctrProcessAvx2(
-            pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
-    }
-
-    return err;
-}
-
-alc_error_t
-Ctr::decrypt(const Uint8* pCipherText,
-             Uint8*       pPlainText,
-             Uint64       len,
-             const Uint8* pIv) const
-{
-    alc_error_t err         = ALC_ERROR_NONE;
-    bool        isVaes      = false;
-    bool        isAvx512Cap = false;
-    if (CpuId::cpuHasVaes()) {
-        isVaes = true;
-        if (CpuId::cpuHasAvx512(utils::AVX512_F)
-            && CpuId::cpuHasAvx512(utils::AVX512_DQ)
-            && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
-            isAvx512Cap = true;
+namespace vaes512 {
+    Status Ctr128::setKey(const Uint8* pUserKey, Uint64 len)
+    {
+        Status s = Aes::setKey(pUserKey, len);
+        if (s.ok()) {
+            m_enc_key = getEncryptKeys();
+            m_dec_key = getDecryptKeys();
+            m_nrounds = getRounds();
         }
+        return s;
     }
 
-    err = cryptCtr(pCipherText,
-                   pPlainText,
-                   len,
-                   getEncryptKeys(),
-                   getRounds(),
-                   pIv,
-                   isVaes,
-                   isAvx512Cap);
+    alc_error_t Ctr128::encrypt(const Uint8* pPlainText,
+                                Uint8*       pCipherText,
+                                Uint64       len,
+                                const Uint8* pIv) const
+    {
+        alc_error_t err     = ALC_ERROR_NONE;
+        Uint64      blocks  = len / Rijndael::cBlockSize;
+        auto        pkey128 = reinterpret_cast<const __m128i*>(m_enc_key);
 
-    return err;
-}
+        blocks = ctrProcessAvx512_128(
+            pPlainText, pCipherText, blocks, pkey128, pIv, m_nrounds);
+        return err;
+    }
 
-alc_error_t
-Ctr::encrypt(const Uint8* pPlainText,
-             Uint8*       pCipherText,
-             Uint64       len,
-             const Uint8* pIv) const
-{
-    alc_error_t err         = ALC_ERROR_NONE;
-    bool        isVaes      = false;
-    bool        isAvx512Cap = false;
-    if (CpuId::cpuHasVaes()) {
-        isVaes = true;
-        if (CpuId::cpuHasAvx512(utils::AVX512_F)
-            && CpuId::cpuHasAvx512(utils::AVX512_DQ)
-            && CpuId::cpuHasAvx512(utils::AVX512_BW)) {
-            isAvx512Cap = true;
+    alc_error_t Ctr128::decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const
+    {
+        alc_error_t err     = ALC_ERROR_NONE;
+        Uint64      blocks  = len / Rijndael::cBlockSize;
+        auto        pkey128 = reinterpret_cast<const __m128i*>(m_enc_key);
+
+        blocks = ctrProcessAvx512_128(
+            pCipherText, pPlainText, blocks, pkey128, pIv, m_nrounds);
+        return err;
+    }
+
+    Status Ctr192::setKey(const Uint8* pUserKey, Uint64 len)
+    {
+        Status s = Aes::setKey(pUserKey, len);
+        if (s.ok()) {
+            m_enc_key = getEncryptKeys();
+            m_dec_key = getDecryptKeys();
+            m_nrounds = getRounds();
         }
+        return s;
     }
-    err = cryptCtr(pPlainText,
-                   pCipherText,
-                   len,
-                   getEncryptKeys(),
-                   getRounds(),
-                   pIv,
-                   isVaes,
-                   isAvx512Cap);
 
-    return err;
-}
+    alc_error_t Ctr192::encrypt(const Uint8* pPlainText,
+                                Uint8*       pCipherText,
+                                Uint64       len,
+                                const Uint8* pIv) const
+    {
+        alc_error_t err     = ALC_ERROR_NONE;
+        Uint64      blocks  = len / Rijndael::cBlockSize;
+        auto        pkey128 = reinterpret_cast<const __m128i*>(m_enc_key);
+
+        blocks = ctrProcessAvx512_192(
+            pPlainText, pCipherText, blocks, pkey128, pIv, m_nrounds);
+        return err;
+    }
+
+    alc_error_t Ctr192::decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const
+    {
+        alc_error_t err     = ALC_ERROR_NONE;
+        Uint64      blocks  = len / Rijndael::cBlockSize;
+        auto        pkey128 = reinterpret_cast<const __m128i*>(m_enc_key);
+
+        blocks = ctrProcessAvx512_192(
+            pCipherText, pPlainText, blocks, pkey128, pIv, m_nrounds);
+        return err;
+    }
+
+    Status Ctr256::setKey(const Uint8* pUserKey, Uint64 len)
+    {
+        Status s = Aes::setKey(pUserKey, len);
+        if (s.ok()) {
+            m_enc_key = getEncryptKeys();
+            m_dec_key = getDecryptKeys();
+            m_nrounds = getRounds();
+        }
+        return s;
+    }
+
+    alc_error_t Ctr256::encrypt(const Uint8* pPlainText,
+                                Uint8*       pCipherText,
+                                Uint64       len,
+                                const Uint8* pIv) const
+    {
+        alc_error_t err     = ALC_ERROR_NONE;
+        Uint64      blocks  = len / Rijndael::cBlockSize;
+        auto        pkey128 = reinterpret_cast<const __m128i*>(m_enc_key);
+
+        blocks = ctrProcessAvx512_256(
+            pPlainText, pCipherText, blocks, pkey128, pIv, m_nrounds);
+        return err;
+    }
+
+    alc_error_t Ctr256::decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const
+    {
+        alc_error_t err     = ALC_ERROR_NONE;
+        Uint64      blocks  = len / Rijndael::cBlockSize;
+        auto        pkey128 = reinterpret_cast<const __m128i*>(m_enc_key);
+
+        blocks = ctrProcessAvx512_256(
+            pCipherText, pPlainText, blocks, pkey128, pIv, m_nrounds);
+        return err;
+    }
+
+} // namespace vaes512
+
+// FIXME: separate ctr implementation (ctrProcessAvx256) needs to be done
+// for different key size
+namespace vaes {
+    alc_error_t cryptCtr128(
+        const Uint8* pInputText, // ptr to plaintext for encrypt
+                                 // and ciphertext for decrypt
+        Uint8* pOutputText,      // ptr to ciphertext for encrypt and
+                                 // plaintext for decrypt
+        Uint64       len,        // message length in bytes
+        const Uint8* pKey,       // ptr to Key
+        int          nRounds,    // No. of rounds
+        const Uint8* pIv)
+    {
+        alc_error_t err     = ALC_ERROR_NONE;
+        Uint64      blocks  = len >> 4; // / Rijndael::cBlockSize;
+        auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
+
+        blocks = ctrProcessAvx256(
+            pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
+        return err;
+    }
+
+    alc_error_t cryptCtr192(
+        const Uint8* pInputText, // ptr to plaintext for encrypt
+                                 // and ciphertext for decrypt
+        Uint8* pOutputText,      // ptr to ciphertext for encrypt and
+                                 // plaintext for decrypt
+        Uint64       len,        // message length in bytes
+        const Uint8* pKey,       // ptr to Key
+        int          nRounds,    // No. of rounds
+        const Uint8* pIv         // ptr to Initialization Vector
+    )
+    {
+        alc_error_t err     = ALC_ERROR_NONE;
+        Uint64      blocks  = len >> 4; // / Rijndael::cBlockSize;
+        auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
+
+        blocks = ctrProcessAvx256(
+            pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
+
+        return err;
+    }
+
+    alc_error_t cryptCtr256(
+        const Uint8* pInputText, // ptr to plaintext for encrypt
+                                 // and ciphertext for decrypt
+        Uint8* pOutputText,      // ptr to ciphertext for encrypt and
+                                 // plaintext for decrypt
+        Uint64       len,        // message length in bytes
+        const Uint8* pKey,       // ptr to Key
+        int          nRounds,    // No. of rounds
+        const Uint8* pIv         // ptr to Initialization Vector
+    )
+    {
+        alc_error_t err     = ALC_ERROR_NONE;
+        Uint64      blocks  = len >> 4; // / Rijndael::cBlockSize;
+        auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
+
+        blocks = ctrProcessAvx256(
+            pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
+
+        return err;
+    }
+} // namespace vaes
+
+// FIXME: separate ctr implementation (ctrProcessAvx2) needs to be done
+// for different key size
+namespace aesni {
+    alc_error_t cryptCtr128(
+        const Uint8* pInputText, // ptr to plaintext for encrypt
+                                 // and ciphertext for decrypt
+        Uint8* pOutputText,      // ptr to ciphertext for encrypt and
+                                 // plaintext for decrypt
+        Uint64       len,        // message length in bytes
+        const Uint8* pKey,       // ptr to Key
+        int          nRounds,    // No. of rounds
+        const Uint8* pIv)
+    {
+        alc_error_t err     = ALC_ERROR_NONE;
+        Uint64      blocks  = len >> 4; // / Rijndael::cBlockSize;
+        auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
+
+        blocks = ctrProcessAvx2(
+            pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
+        return err;
+    }
+
+    alc_error_t cryptCtr192(
+        const Uint8* pInputText, // ptr to plaintext for encrypt
+                                 // and ciphertext for decrypt
+        Uint8* pOutputText,      // ptr to ciphertext for encrypt and
+                                 // plaintext for decrypt
+        Uint64       len,        // message length in bytes
+        const Uint8* pKey,       // ptr to Key
+        int          nRounds,    // No. of rounds
+        const Uint8* pIv         // ptr to Initialization Vector
+    )
+    {
+        alc_error_t err     = ALC_ERROR_NONE;
+        Uint64      blocks  = len >> 4; // / Rijndael::cBlockSize;
+        auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
+
+        blocks = ctrProcessAvx2(
+            pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
+
+        return err;
+    }
+
+    alc_error_t cryptCtr256(
+        const Uint8* pInputText, // ptr to plaintext for encrypt
+                                 // and ciphertext for decrypt
+        Uint8* pOutputText,      // ptr to ciphertext for encrypt and
+                                 // plaintext for decrypt
+        Uint64       len,        // message length in bytes
+        const Uint8* pKey,       // ptr to Key
+        int          nRounds,    // No. of rounds
+        const Uint8* pIv         // ptr to Initialization Vector
+    )
+    {
+        alc_error_t err     = ALC_ERROR_NONE;
+        Uint64      blocks  = len >> 4; // / Rijndael::cBlockSize;
+        auto        pkey128 = reinterpret_cast<const __m128i*>(pKey);
+
+        blocks = ctrProcessAvx2(
+            pInputText, pOutputText, blocks, pkey128, pIv, nRounds);
+
+        return err;
+    }
+} // namespace aesni
+
+namespace vaes {
+    Status Ctr128::setKey(const Uint8* pUserKey, Uint64 len)
+    {
+        Status s = Aes::setKey(pUserKey, len);
+        if (s.ok()) {
+            m_enc_key = getEncryptKeys();
+            m_dec_key = getDecryptKeys();
+            m_nrounds = getRounds();
+        }
+        return s;
+    }
+
+    alc_error_t Ctr128::decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        err             = cryptCtr128(
+            pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
+
+        return err;
+    }
+
+    alc_error_t Ctr128::encrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        err             = cryptCtr128(
+            pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
+
+        return err;
+    }
+
+    Status Ctr192::setKey(const Uint8* pUserKey, Uint64 len)
+    {
+        Status s = Aes::setKey(pUserKey, len);
+        if (s.ok()) {
+            m_enc_key = getEncryptKeys();
+            m_dec_key = getDecryptKeys();
+            m_nrounds = getRounds();
+        }
+        return s;
+    }
+
+    alc_error_t Ctr192::decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        err             = cryptCtr192(
+            pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
+
+        return err;
+    }
+
+    alc_error_t Ctr192::encrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        err             = cryptCtr192(
+            pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
+
+        return err;
+    }
+
+    Status Ctr256::setKey(const Uint8* pUserKey, Uint64 len)
+    {
+        Status s = Aes::setKey(pUserKey, len);
+        if (s.ok()) {
+            m_enc_key = getEncryptKeys();
+            m_dec_key = getDecryptKeys();
+            m_nrounds = getRounds();
+        }
+        return s;
+    }
+
+    alc_error_t Ctr256::decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        err             = cryptCtr256(
+            pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
+
+        return err;
+    }
+
+    alc_error_t Ctr256::encrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        err             = cryptCtr256(
+            pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
+
+        return err;
+    }
+
+} // namespace vaes
+
+namespace aesni {
+    Status Ctr128::setKey(const Uint8* pUserKey, Uint64 len)
+    {
+        Status s = Aes::setKey(pUserKey, len);
+        if (s.ok()) {
+            m_enc_key = getEncryptKeys();
+            m_dec_key = getDecryptKeys();
+            m_nrounds = getRounds();
+        }
+        return s;
+    }
+
+    alc_error_t Ctr128::decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        err             = cryptCtr128(
+            pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
+
+        return err;
+    }
+
+    alc_error_t Ctr128::encrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        err             = cryptCtr128(
+            pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
+
+        return err;
+    }
+
+    Status Ctr192::setKey(const Uint8* pUserKey, Uint64 len)
+    {
+        Status s = Aes::setKey(pUserKey, len);
+        if (s.ok()) {
+            m_enc_key = getEncryptKeys();
+            m_dec_key = getDecryptKeys();
+            m_nrounds = getRounds();
+        }
+        return s;
+    }
+
+    alc_error_t Ctr192::decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        err             = cryptCtr192(
+            pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
+
+        return err;
+    }
+
+    alc_error_t Ctr192::encrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        err             = cryptCtr192(
+            pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
+
+        return err;
+    }
+
+    Status Ctr256::setKey(const Uint8* pUserKey, Uint64 len)
+    {
+        Status s = Aes::setKey(pUserKey, len);
+        if (s.ok()) {
+            m_enc_key = getEncryptKeys();
+            m_dec_key = getDecryptKeys();
+            m_nrounds = getRounds();
+        }
+        return s;
+    }
+
+    alc_error_t Ctr256::decrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        err             = cryptCtr256(
+            pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
+
+        return err;
+    }
+
+    alc_error_t Ctr256::encrypt(const Uint8* pCipherText,
+                                Uint8*       pPlainText,
+                                Uint64       len,
+                                const Uint8* pIv) const
+    {
+        alc_error_t err = ALC_ERROR_NONE;
+        err             = cryptCtr256(
+            pCipherText, pPlainText, len, m_enc_key, m_nrounds, pIv);
+
+        return err;
+    }
+
+} // namespace aesni
 
 } // namespace alcp::cipher

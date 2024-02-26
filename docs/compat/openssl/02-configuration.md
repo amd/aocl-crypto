@@ -11,16 +11,24 @@ openssl_conf = openssl_init
 providers = provider_sect
 
 [provider_sect]
-default = default_sect
 alcp  = alcp_sect
+default = default_sect
+base = base_sect
 
 [default_sect]
+activate = 1
 
 [alcp_sect]
 module = /path/to/libopenssl-compat.so
 activate = 1
+
+[base_sect]
+activate = 1
 ```
 
+List of currently loaded OpenSSL provider can viewed using `openssl list -providers`.  
+
+Above configuration will allow you to offload functionalities if supported by AOCL-Cryptography. OpenSSL will still dispatch to it's own implementation for ones we have not implemented yet.
 To find out where openssl looks for `openssl.cnf`, type the command ```openssl info -configdir```.
 
 ### Code taking advantage of configuration

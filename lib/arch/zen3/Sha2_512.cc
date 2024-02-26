@@ -119,8 +119,8 @@ namespace alcp::digest { namespace zen3 {
                                           __m256i&       hash_256_0,
                                           __m256i&       hash_256_1)
     {
-        hash_256_0 = _mm256_loadu_si256(phash);
-        hash_256_1 = _mm256_loadu_si256(phash + 1);
+        hash_256_0 = _mm256_load_si256(phash);
+        hash_256_1 = _mm256_load_si256(phash + 1);
     }
 
     static inline void load_data(__m256i      x[SHA512_CHUNK_NUM_VECT_AVX2 * 2],

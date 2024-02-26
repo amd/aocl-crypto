@@ -53,7 +53,8 @@ EXTERN_C_BEGIN
 typedef enum _alc_mac_type
 {
     ALC_MAC_HMAC,
-    ALC_MAC_CMAC
+    ALC_MAC_CMAC,
+    ALC_MAC_POLY1305,
 } alc_mac_type_t;
 
 /**
@@ -87,6 +88,16 @@ typedef struct _alc_cmac_info
 } alc_cmac_info_t, *alc_cmac_info_p;
 
 /**
+ * @brief Stores details for Poly1305
+ *
+ * @struct alc_poly1305_info_t
+ */
+typedef struct _alc_poly1305_info
+{
+    char dummy;
+} alc_poly1305_info_t, *alc_poly1305_info_p;
+
+/**
  * @brief Stores details of CMAC
  *
  * @param  mi_type      Store Type of MAC to be used
@@ -94,14 +105,17 @@ typedef struct _alc_cmac_info
  * @param  mi_keyinfo   Store key info
  * @struct alc_mac_info_t
  *
+ * @note Supported MAC algorithms HMAC, CMAC, POLY1305
+ *
  */
 typedef struct _alc_mac_info_t
 {
     alc_mac_type_t mi_type;
     union
     {
-        alc_hmac_info_t hmac;
-        alc_cmac_info_t cmac;
+        alc_hmac_info_t     hmac;
+        alc_cmac_info_t     cmac;
+        alc_poly1305_info_t poly1305;
     } mi_algoinfo;
 
     // any other common fields that are needed
@@ -180,6 +194,7 @@ alcp_mac_request(alc_mac_handle_p pMacHandle, const alc_mac_info_p pMacInfo);
 
 /**
  * @brief    Allows caller to update MAC with chunk of data to be authenticated
+ * @parblock <br> &nbsp;
  * <b>This API is called to update data to be authenticated. So should be called
  * after @ref alcp_mac_request  and before the end of session call, @ref
  * alcp_mac_finish</b>
@@ -200,6 +215,7 @@ alcp_mac_update(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size);
 /**
  * @brief               Allows caller to finalize MAC with final chunk of data
  *                      to be authenticated
+ * @parblock <br> &nbsp;
  * <b>This API is called to finalize mac so should be called after @ref
  * alcp_mac_request and before @ref alcp_mac_finish</b>
  * @endparblock
@@ -223,6 +239,7 @@ alcp_mac_finalize(alc_mac_handle_p pMacHandle, const Uint8* buff, Uint64 size);
 
 /**
  * @brief               Allows caller to copy MAC to the buffer
+ * @parblock <br> &nbsp;
  * <b>This API is called to copy mac, so should be called after @ref
  * alcp_mac_request and before @ref alcp_mac_finish </b>
  * @endparblock
@@ -280,6 +297,7 @@ alcp_mac_reset(alc_mac_handle_p pMacHandle);
  * @parblock <br> &nbsp;
  * <b> This API is called to get the error string. It should be called after
  * @ref alcp_mac_request and before @ref alcp_mac_finish </b>
+ * @endparblock
  * @param [in] pMacHandle Session handle for MAC operation
  * @param [out] pBuff  Destination Buffer to which Error String will be copied
  * @param [in] size    Length of the Buffer.

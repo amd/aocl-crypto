@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,7 +33,6 @@
 
 #include "alcp/capi/cipher/builder.hh"
 #include "alcp/capi/defs.hh"
-#include "alcp/cipher.hh"
 
 using namespace alcp;
 
@@ -43,6 +42,11 @@ alc_error_t
 alcp_cipher_supported(const alc_cipher_info_p pCipherInfo)
 {
     alc_error_t err = ALC_ERROR_NONE;
+
+    // FIXME: Replace with Prem's idea below in future.
+    if (!alcp::cipher::CipherBuilder::Supported(*pCipherInfo)) {
+        err = ALC_ERROR_NOT_SUPPORTED;
+    }
 
     /* TODO: Check for pointer validity */
 
@@ -84,14 +88,16 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
     ALCP_BAD_PTR_ERR_RET(pCipherInfo, err);
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
 
+    // Tweak key is appended after encryption key.
     if (pCipherInfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
-        auto tweak_key = pCipherInfo->ci_algo_info.ai_xts.xi_tweak_key;
+        auto tweak_key =
+            pCipherInfo->ci_key_info.key + pCipherInfo->ci_key_info.len / 8;
         if (tweak_key == nullptr
-            || (tweak_key->len != 128 && tweak_key->len != 256)
-            || (tweak_key->len != pCipherInfo->ci_key_info.len)) {
+            || (pCipherInfo->ci_key_info.len != 128
+                && pCipherInfo->ci_key_info.len != 256)) {
             return ALC_ERROR_INVALID_ARG;
         }
-        if (validateKeys(tweak_key->key,
+        if (validateKeys(tweak_key,
                          pCipherInfo->ci_key_info.key,
                          pCipherInfo->ci_key_info.len)) {
             return ALC_ERROR_DUPLICATE_KEY;
@@ -102,7 +108,6 @@ alcp_cipher_request(const alc_cipher_info_p pCipherInfo,
 
     new (ctx) cipher::Context;
 
-    // FIXME: Modify Builder to return Status and assign to context status
     err = cipher::CipherBuilder::Build(*pCipherInfo, *ctx);
 
     return err;
@@ -118,6 +123,7 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
     ALCP_BAD_PTR_ERR_RET(pPlainText, err);
     ALCP_BAD_PTR_ERR_RET(pCipherText, err);
     ALCP_BAD_PTR_ERR_RET(pIv, err);
@@ -133,26 +139,28 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
 }
 
 alc_error_t
-alcp_cipher_encrypt_update(const alc_cipher_handle_p pCipherHandle,
-                           const Uint8*              pInput,
-                           Uint8*                    pOutput,
-                           Uint64                    len,
-                           const Uint8*              pIv)
+alcp_cipher_blocks_encrypt(const alc_cipher_handle_p pCipherHandle,
+                           const Uint8*              pPlainText,
+                           Uint8*                    pCipherText,
+                           Uint64                    currPlainTextLen,
+                           Uint64                    startBlockNum)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pInput, err);
-    ALCP_BAD_PTR_ERR_RET(pOutput, err);
-    ALCP_BAD_PTR_ERR_RET(pIv, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
+    ALCP_BAD_PTR_ERR_RET(pPlainText, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherText, err);
 
-    // Sometimes Encrypt needs to be called with 0 length
-    // ALCP_ZERO_LEN_ERR_RET(len, err);
+    ALCP_ZERO_LEN_ERR_RET(currPlainTextLen, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    // FIXME: Modify encryptUpdate to return Status and assign to context status
-    err = ctx->encryptUpdate(ctx->m_cipher, pInput, pOutput, len, pIv);
+    err = ctx->encryptBlocks(ctx->m_cipher,
+                             pPlainText,
+                             pCipherText,
+                             currPlainTextLen,
+                             startBlockNum);
 
     return err;
 }
@@ -167,6 +175,7 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
     ALCP_BAD_PTR_ERR_RET(pPlainText, err);
     ALCP_BAD_PTR_ERR_RET(pCipherText, err);
     ALCP_BAD_PTR_ERR_RET(pIv, err);
@@ -182,26 +191,28 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
 }
 
 alc_error_t
-alcp_cipher_decrypt_update(const alc_cipher_handle_p pCipherHandle,
-                           const Uint8*              pInput,
-                           Uint8*                    pOutput,
-                           Uint64                    len,
-                           const Uint8*              pIv)
+alcp_cipher_blocks_decrypt(const alc_cipher_handle_p pCipherHandle,
+                           const Uint8*              pCipherText,
+                           Uint8*                    pPlainText,
+                           Uint64                    currCipherTextLen,
+                           Uint64                    startBlockNum)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pInput, err);
-    ALCP_BAD_PTR_ERR_RET(pOutput, err);
-    ALCP_BAD_PTR_ERR_RET(pIv, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
+    ALCP_BAD_PTR_ERR_RET(pPlainText, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherText, err);
 
-    // Sometimes Encrypt needs to be called with 0 length
-    // ALCP_ZERO_LEN_ERR_RET(len, err);
+    ALCP_ZERO_LEN_ERR_RET(currCipherTextLen, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    // FIXME: Modify decryptUpdate to return Status and assign to context status
-    err = ctx->decryptUpdate(ctx->m_cipher, pInput, pOutput, len, pIv);
+    err = ctx->decryptBlocks(ctx->m_cipher,
+                             pCipherText,
+                             pPlainText,
+                             currCipherTextLen,
+                             startBlockNum);
 
     return err;
 }
@@ -214,6 +225,7 @@ alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
     ALCP_BAD_PTR_ERR_RET(pIv, err);
 
     ALCP_ZERO_LEN_ERR_RET(len, err);
@@ -222,63 +234,6 @@ alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
 
     // FIXME: Modify setIv to return Status and assign to context status
     err = ctx->setIv(ctx->m_cipher, len, pIv);
-
-    return err;
-}
-
-alc_error_t
-alcp_cipher_set_aad(const alc_cipher_handle_p pCipherHandle,
-                    const Uint8*              pInput,
-                    Uint64                    len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pInput, err);
-
-    // ALCP_ZERO_LEN_ERR_RET(len, err);
-
-    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
-
-    // FIXME: Modify setAad to return Status and assign to context status
-    err = ctx->setAad(ctx->m_cipher, pInput, len);
-
-    return err;
-}
-
-alc_error_t
-alcp_cipher_get_tag(const alc_cipher_handle_p pCipherHandle,
-                    Uint8*                    pOutput,
-                    Uint64                    len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pOutput, err);
-
-    ALCP_ZERO_LEN_ERR_RET(len, err);
-
-    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
-
-    // FIXME: Modify getTag to return Status and assign to context status
-    err = ctx->getTag(ctx->m_cipher, pOutput, len);
-
-    return err;
-}
-
-alc_error_t
-alcp_cipher_set_tag_length(const alc_cipher_handle_p pCipherHandle, Uint64 len)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
-
-    ALCP_ZERO_LEN_ERR_RET(len, err);
-
-    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
-
-    // FIXME: Modify setTagLength to return Status and assign to context status
-    err = ctx->setTagLength(ctx->m_cipher, len);
 
     return err;
 }

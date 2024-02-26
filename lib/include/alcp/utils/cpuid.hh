@@ -35,6 +35,14 @@
 
 namespace alcp::utils {
 
+enum class CpuCipherFeatures
+{
+    eReference = 0,
+    eAesni     = 1,
+    eVaes256   = 2,
+    eVaes512   = 3,
+    eDynamic   = 4
+};
 typedef enum
 {
     AVX512_DQ = 1,

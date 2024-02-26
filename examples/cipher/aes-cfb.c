@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -48,7 +48,7 @@ dump_hex(Uint8* value, size_t size)
     printf("\n");
 }
 
-void
+int
 create_demo_session(alc_cipher_handle_p handle,
                     const Uint8*        key,
                     const Uint8*        iv,
@@ -94,7 +94,7 @@ create_demo_session(alc_cipher_handle_p handle,
     // Memory allocation failure checking
     if (handle->ch_context == NULL) {
         printf("Error: Memory Allocation Failed!\n");
-        exit(-1);
+        goto out;
     }
 
     /* Request a context with cinfo */
@@ -104,16 +104,16 @@ create_demo_session(alc_cipher_handle_p handle,
         goto out;
     }
     printf("Request Succeeded\n");
-    return;
+    return 0;
 
     // Incase of error, program execution will come here
 out:
     alcp_error_str(err, err_buf, cErrSize);
     printf("%s\n", err_buf);
-    return;
+    return -1;
 }
 
-void
+int
 encrypt_demo(alc_cipher_handle_p handle,
              const Uint8*        plaintxt,
              const Uint32        len, /*  for both 'plaintxt' and 'ciphertxt' */
@@ -129,13 +129,14 @@ encrypt_demo(alc_cipher_handle_p handle,
         printf("Error: Unable to Encrypt \n");
         alcp_error_str(err, err_buf, err_size);
         printf("%s\n", err_buf);
-        return;
+        return -1;
     }
 
     printf("Encrypt succeeded\n");
+    return 0;
 }
 
-void
+int
 decrypt_demo(alc_cipher_handle_p handle,
              const Uint8*        ciphertxt,
              const Uint32        len, /* for both 'plaintxt' and 'ciphertxt' */
@@ -151,10 +152,11 @@ decrypt_demo(alc_cipher_handle_p handle,
         printf("Error: Unable to Decrypt \n");
         alcp_error_str(err, err_buf, err_size);
         printf("%s\n", err_buf);
-        return;
+        return -1;
     }
 
     printf("Decrypt Succeeded\n");
+    return 0;
 }
 
 // Plain text to encrypt, it should be 128bits (16bytes) multiple.
@@ -183,6 +185,7 @@ static Uint8 sample_ciphertxt[512] = {
 int
 main(void)
 {
+    int retval = 0;
     // Buffer to write plain text into.
     // It should have size greater than or equal to the plaintext.
     Uint8     sample_output[512] = { 0 };
@@ -194,21 +197,28 @@ main(void)
     // Create the handle, this handle will be used for encrypt and decrypt
     // operations
     alc_cipher_handle_t handle;
-    create_demo_session(&handle, sample_key, sample_iv, ALC_KEY_LEN_128);
+    retval =
+        create_demo_session(&handle, sample_key, sample_iv, ALC_KEY_LEN_128);
+    if (retval != 0)
+        goto out;
 
     // Encrypt the plaintext into the ciphertext
-    encrypt_demo(&handle,
-                 sample_plaintxt,
-                 cPlaintextSize, /* len of 'plaintxt' and 'ciphertxt' */
-                 sample_ciphertxt,
-                 sample_iv);
-
+    retval =
+        encrypt_demo(&handle,
+                     sample_plaintxt,
+                     cPlaintextSize, /* len of 'plaintxt' and 'ciphertxt' */
+                     sample_ciphertxt,
+                     sample_iv);
+    if (retval != 0)
+        goto out;
     printf("CipherText:");
     dump_hex(sample_ciphertxt, cCiphertextSize);
 
     // Decrypt the ciphertext into the plaintext.
-    decrypt_demo(
+    retval = decrypt_demo(
         &handle, sample_ciphertxt, cCiphertextSize, sample_output, sample_iv);
+    if (retval != 0)
+        goto out;
     printf("Decrypted Text: %s\n", sample_output);
 
     /*
@@ -220,6 +230,8 @@ main(void)
     free(handle.ch_context);
 
     return 0;
+out:
+    return -1;
 }
 
 /*  LocalWords:  decrypt Crypto AOCL

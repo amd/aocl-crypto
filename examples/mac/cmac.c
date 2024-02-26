@@ -133,10 +133,9 @@ displayResults(char*  hmac_string,
     printf("\n");
 }
 
-void
+int
 demo_cmac()
 {
-
     alc_error_t err;
 
     Uint8 key[] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
@@ -170,6 +169,7 @@ demo_cmac()
     err = run_cmac(&macinfo, cipherText, sizeof(cipherText), mac, mac_size);
     if (err != ALC_ERROR_NONE) {
         printf("Error in CMAC\n");
+        return -1;
     } else {
 
         displayResults("CMAC",
@@ -182,12 +182,16 @@ demo_cmac()
                        expectedMac,
                        sizeof(expectedMac));
     }
+    return 0;
 }
 
 int
 main(int argc, char const* argv[])
 {
-    demo_cmac();
+    if (demo_cmac() != 0)
+        goto out;
 
     return 0;
+out:
+    return -1;
 }

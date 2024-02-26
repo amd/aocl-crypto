@@ -33,7 +33,6 @@
 
 #include "alcp_mac_prov.h"
 #include "provider/alcp_names.h"
-#include <string.h>
 
 void
 ALCP_prov_mac_freectx(void* vctx)

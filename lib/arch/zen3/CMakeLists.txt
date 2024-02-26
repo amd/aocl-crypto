@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -33,10 +33,17 @@ alcp_get_arch_cflags_zen3()
 MESSAGE(STATUS "COMPILE_FLAGS:ZEN3:${ARCH_COMPILE_FLAGS}")
 ADD_COMPILE_OPTIONS(${ARCH_COMPILE_FLAGS})
 
+#Adding -funroll-loops only to Sha2_512.cc file in this arch since it improves performance for digest.
+# This flag may improve or decrease performance. But for current implementation in file, it improves performance. 
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+	set_source_files_properties(Sha2_512.cc PROPERTIES COMPILE_FLAGS "-funroll-loops")
+	set_source_files_properties(x25519.cc PROPERTIES COMPILE_FLAGS "-O2")
+endif()
+
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib/include)
 
 ADD_LIBRARY(arch_zen3
-	STATIC
+	OBJECT
 	${ZEN3_SRCS})
 
 

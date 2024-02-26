@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -151,8 +151,8 @@ typedef Uint64 alc_error_t;
  *
  * @param [in] err    Actual Error
  * @param [out] buf    Buffer to write the Error message to
- * @param [in] size   Size of the buffer @ref buf. Size of buf should be at least
- * 1024
+ * @param [in] size   Size of the buffer buf. Size of buf should be at
+ * least 1024
  */
 ALCP_API_EXPORT void
 alcp_error_str(alc_error_t err, Uint8* buf, Uint64 size);
@@ -187,3 +187,7 @@ alcp_error_clear(alc_error_t err);
 EXTERN_C_END
 
 #endif /* _ALCP_ERROR_H_ */
+
+/**
+ * @}
+ */

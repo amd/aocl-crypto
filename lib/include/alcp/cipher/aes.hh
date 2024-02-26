@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -65,6 +65,10 @@ class Aes : public Rijndael
         , m_mode{ aesInfo.ai_mode }
     {}
 
+    explicit Aes(const Uint8* pKey, const Uint32 keyLen)
+        : Rijndael(pKey, keyLen)
+    {}
+
   protected:
     virtual ~Aes() {}
 
@@ -86,103 +90,33 @@ class Aes : public Rijndael
 };
 
 /*
- * @brief        AES Encryption in CBC(Cipher block chaining)
- * @note        TODO: Move this to a aes_cbc.hh or other
- */
-class ALCP_API_EXPORT Cbc final : public Aes
-{
-  public:
-    explicit Cbc(const alc_cipher_algo_info_t& aesInfo,
-                 const alc_key_info_t&         keyInfo)
-        : Aes(aesInfo, keyInfo)
-    {}
-
-    ~Cbc() {}
-
-  public:
-    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                            const alc_key_info_t&         keyInfo)
-    {
-        return true;
-    }
-
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
-    {
-        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_algo_info;
-            if (aip->ai_mode == ALC_AES_MODE_CBC) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @brief   CBC Encrypt Operation
-     * @note
-     * @param   pPlainText      Pointer to output buffer
-     * @param   pCipherText     Pointer to encrypted buffer
-     * @param   len             Len of plain and encrypted text
-     * @param   pIv             Pointer to Initialization Vector
-     * @return  alc_error_t     Error code
-     */
-    virtual alc_error_t encrypt(const Uint8* pPlainText,
-                                Uint8*       pCipherText,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
-
-    /**
-     * @brief   CBC Decrypt Operation
-     * @note
-     * @param   pCipherText     Pointer to encrypted buffer
-     * @param   pPlainText      Pointer to output buffer
-     * @param   len             Len of plain and encrypted text
-     * @param   pIv             Pointer to Initialization Vector
-     * @return  alc_error_t     Error code
-     */
-    virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                Uint8*       pPlainText,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
-
-  private:
-    Cbc(){};
-
-  private:
-};
-
-/*
  * @brief        AES Encryption in OFB(Output Feedback)
  * @note        TODO: Move this to a aes_ofb.hh or other
  */
-class ALCP_API_EXPORT Ofb final : public Aes
+class ALCP_API_EXPORT Ofb final
+    : public Aes
+    , public ICipher
 {
   public:
-    explicit Ofb(const alc_cipher_algo_info_t& aesInfo,
-                 const alc_key_info_t&         keyInfo)
-        : Aes(aesInfo, keyInfo)
+    explicit Ofb(const Uint8* pKey, const Uint32 keyLen)
+        : Aes(pKey, keyLen)
     {}
 
     ~Ofb() {}
 
   public:
-    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                            const alc_key_info_t&         keyInfo)
+    static bool isSupported(const Uint32 keyLen)
     {
-        return true;
-    }
-
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
-    {
-        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_algo_info;
-            if (aip->ai_mode == ALC_AES_MODE_OFB) {
+        // FIXME: To be implemented
+        switch (keyLen) {
+            case 128:
+            case 192:
+            case 256:
                 return true;
-            }
+                break;
+            default:
+                return false;
         }
-
-        return false;
     }
 
     /**
@@ -217,336 +151,6 @@ class ALCP_API_EXPORT Ofb final : public Aes
     Ofb(){};
 
   private:
-};
-
-/*
- * @brief        AES Encryption in Ctr(Counter mode)
- * @note        TODO: Move this to a aes_Ctr.hh or other
- */
-class ALCP_API_EXPORT Ctr final : public Aes
-{
-  public:
-    Ctr() { Aes::setMode(ALC_AES_MODE_CTR); };
-    explicit Ctr(const alc_cipher_algo_info_t& aesInfo,
-                 const alc_key_info_t&         keyInfo)
-        : Aes(aesInfo, keyInfo)
-    {}
-
-    ~Ctr() {}
-
-  public:
-    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                            const alc_key_info_t&         keyInfo)
-    {
-        return true;
-    }
-
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo)
-    {
-        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_algo_info;
-            if (aip->ai_mode == ALC_AES_MODE_CTR) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @brief   CTR Encrypt Operation
-     * @note
-     * @param   pPlainText      Pointer to output buffer
-     * @param   pCipherText     Pointer to encrypted buffer
-     * @param   len             Len of plain and encrypted text
-     * @param   pIv             Pointer to Initialization Vector
-     * @return  alc_error_t     Error code
-     */
-    virtual alc_error_t encrypt(const Uint8* pPlainText,
-                                Uint8*       pCipherText,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
-
-    /**
-     * @brief   CTR Decrypt Operation
-     * @note
-     * @param   pCipherText     Pointer to encrypted buffer
-     * @param   pPlainText      Pointer to output buffer
-     * @param   len             Len of plain and encrypted text
-     * @param   pIv             Pointer to Initialization Vector
-     * @return  alc_error_t     Error code
-     */
-    virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                Uint8*       pPlainText,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
-
-  private:
-};
-
-#define MAX_NUM_512_BLKS 16
-#define LOCAL_TABLE      1
-/*
- * @brief        AES Encryption in GCM(Galois Counter mode)
- * @note        TODO: Move this to a aes_Gcm.hh or other
- */
-class ALCP_API_EXPORT Gcm final
-    : public Aes
-    , cipher::IDecryptUpdater
-    , cipher::IEncryptUpdater
-{
-
-  public:
-    // union to be used here: tbd
-    // Uint8 m_hash_subKey[16];
-    __m128i m_hash_subKey_128;
-
-    // Uint8 m_gHash[16];
-    __m128i m_gHash_128;
-
-    // Uint8 m_tag[16];
-    __m128i m_tag_128;
-
-    __m128i m_reverse_mask_128;
-
-    __m128i m_iv_128;
-
-#if LOCAL_TABLE
-    /* precomputed hash table memory when located locally in encrypt or decrypt
-    modules gives better performance for larger block sizes (>8192 bytes )*/
-    __attribute__((aligned(64))) Uint64 m_hashSubkeyTable[8];
-#else
-    __attribute__((aligned(64))) Uint64 m_hashSubkeyTable[MAX_NUM_512_BLKS * 8];
-#endif
-    const Uint8* m_iv = nullptr;
-
-    Uint64 m_len;
-    Uint64 m_additionalDataLen;
-    Uint64 m_ivLen;
-    Uint64 m_tagLen;
-    Uint64 m_isHashSubKeyGenerated = false;
-
-  public:
-    explicit Gcm(const alc_cipher_algo_info_t& aesInfo,
-                 const alc_key_info_t&         keyInfo)
-        : Aes(aesInfo, keyInfo)
-    {
-        m_reverse_mask_128 =
-            _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-        m_gHash_128         = _mm_setzero_si128();
-        m_hash_subKey_128   = _mm_setzero_si128();
-        m_len               = 0;
-        m_additionalDataLen = 0;
-        m_tagLen            = 0;
-        m_ivLen             = 12; // default 12 bytes or 96bits
-    }
-
-    ~Gcm() {}
-
-  public:
-    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                            const alc_key_info_t&         keyInfo)
-    {
-        return true;
-    }
-
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
-    {
-        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_algo_info;
-            if (aip->ai_mode == ALC_AES_MODE_GCM) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @brief Get a copy of the Tag
-     *
-     * @param pOutput Memory to write tag into
-     * @param len     Length of the tag in bytes
-     * @return alc_error_t Error code
-     */
-    virtual alc_error_t getTag(Uint8* pOutput, Uint64 len);
-
-    /**
-     * @brief Set the Iv in bytes
-     *
-     * @param len Length of IV in bytes
-     * @param pIv Address to read the IV from
-     * @return alc_error_t Error code
-     */
-    virtual alc_error_t setIv(Uint64 len, const Uint8* pIv);
-
-    /**
-     * @brief Set the Additional Data in bytes
-     *
-     * @param pInput Address to Read Additional Data from
-     * @param len Length of Additional Data in Bytes
-     * @return alc_error_t
-     */
-    virtual alc_error_t setAad(const Uint8* pInput, Uint64 len);
-
-    /**
-     * @brief  GCM Invalid Encrypt Operartion
-     * @note  Use encryptUpdate instead
-     * @param   pInput      Pointer to input buffer
-     *                          (plainText or Additional data)
-     * @param   pOuput          Pointer to encrypted buffer
-     *                          when pointer NULL, input is additional data
-     * @param   len             Len of input buffer
-     *                          (plainText or Additional data)
-     * @param   pIv             Pointer to Initialization Vector @return
-     * alc_error_t     Error code
-     */
-    virtual alc_error_t encrypt(const Uint8* pInput,
-                                Uint8*       pOutput,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
-
-    /**
-     * @brief   GCM Encrypt Operation
-     *
-     * @param   pInput      Pointer to input buffer
-     *                          (plainText or Additional data)
-     * @param   pOuput          Pointer to encrypted buffer
-     *                          when pointer NULL, input is additional data
-     * @param   len             Len of input buffer
-     *                          (plainText or Additional data)
-     * @param   pIv             Pointer to Initialization Vector @return
-     * @return alc_error_t
-     */
-    virtual alc_error_t encryptUpdate(const Uint8* pInput,
-                                      Uint8*       pOutput,
-                                      Uint64       len,
-                                      const Uint8* pIv) override;
-
-    /**
-     * @brief   GCM Invalid Decrypt Operation
-     * @note   Use decryptUpdate instead
-     * @param   pCipherText     Pointer to encrypted buffer
-     * @param   pPlainText      Pointer to output buffer
-     * @param   len             Len of plain and encrypted text
-     * @param   pIv             Pointer to Initialization Vector
-     * @return  alc_error_t     Error code
-     */
-    virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                Uint8*       pPlainText,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
-
-    /**
-     * @brief   GCM Decrypt Operation
-     *
-     * @param   pCipherText     Pointer to encrypted buffer
-     * @param   pPlainText      Pointer to output buffer
-     * @param   len             Len of plain and encrypted text
-     * @param   pIv             Pointer to Initialization Vector
-     * @return  alc_error_t     Error code
-     */
-    virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
-                                      Uint8*       pPlainText,
-                                      Uint64       len,
-                                      const Uint8* pIv) override;
-
-  private:
-    /**
-     * @brief   GCM Encrypt/Decrypt Operation
-     *
-     * @param   pCipherText     Pointer to input buffer
-     * @param   pPlainText      Pointer to output buffer
-     * @param   len             Len of plain and encrypted text
-     * @param   pIv             Pointer to Initialization Vector
-     * @return  alc_error_t     Error code
-     */
-    virtual alc_error_t cryptUpdate(const Uint8* pInput,
-                                    Uint8*       pOutput,
-                                    Uint64       len,
-                                    const Uint8* pIv,
-                                    bool         isEncrypt);
-    Gcm(){};
-
-  private:
-};
-
-/*
- * @brief        AES Encryption in XTS(XEX Tweakable Block Ciphertext
- * Stealing Mode)
- */
-class ALCP_API_EXPORT Xts final : public Aes
-{
-
-  public:
-    explicit Xts(const alc_cipher_algo_info_t& aesInfo,
-                 const alc_key_info_t&         keyInfo)
-        : Aes(aesInfo, keyInfo)
-    {
-        p_tweak_key = &m_tweak_round_key[0];
-        expandTweakKeys(aesInfo.ai_xts.xi_tweak_key->key,
-                        aesInfo.ai_xts.xi_tweak_key->len);
-    }
-
-    ~Xts() {}
-
-  public:
-    virtual alc_error_t setIv(Uint64 len, const Uint8* pIv);
-
-    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                            const alc_key_info_t&         keyInfo)
-    {
-        return true;
-    }
-
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) override
-    {
-        if (cipherInfo.ci_type == ALC_CIPHER_TYPE_AES) {
-            auto aip = &cipherInfo.ci_algo_info;
-            if (aip->ai_mode == ALC_AES_MODE_XTS)
-                return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * @brief   XTS Encrypt Operation
-     * @note
-     * @param   pPlainText      Pointer to output buffer
-     * @param   pCipherText     Pointer to encrypted buffer
-     * @param   len             Len of plain and encrypted text
-     * @param   pIv             Pointer to Initialization Vector
-     * @return  alc_error_t     Error code
-     */
-    virtual alc_error_t encrypt(const Uint8* pPlainText,
-                                Uint8*       pCipherText,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
-
-    /**
-     * @brief   XTS Decrypt Operation
-     * @note
-     * @param   pCipherText     Pointer to encrypted buffer
-     * @param   pPlainText      Pointer to output buffer
-     * @param   len             Len of plain and encrypted text
-     * @param   pIv             Pointer to Initialization Vector
-     * @return  alc_error_t     Error code
-     */
-    virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                Uint8*       pPlainText,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
-
-    virtual void expandTweakKeys(const Uint8* pUserKey, int len);
-
-  private:
-    Xts() { p_tweak_key = &m_tweak_round_key[0]; };
-
-  private:
-    Uint8  m_tweak_round_key[(RIJ_SIZE_ALIGNED(32) * (16))];
-    Uint8* p_tweak_key; /* Tweak key(for aes-xts mode): points to offset in
-                           'm_tweak_key' */
 };
 
 } // namespace alcp::cipher

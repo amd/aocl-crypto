@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,165 +26,542 @@
  *
  */
 #include "alcp/rsa.hh"
+#include "alcp/digest.hh"
+#include "alcp/rng/drbg.hh"
+#include "alcp/rsa/rsa_internal.hh"
+#include "alcp/rsa/rsa_reference.hh"
+#include "alcp/rsa/rsa_zen.hh"
+#include "alcp/rsa/rsa_zen3.hh"
+#include "alcp/rsa/rsa_zen4.hh"
 #include "alcp/rsa/rsaerror.hh"
 #include "alcp/utils/copy.hh"
+#include "alcp/utils/cpuid.hh"
 #include "config.h"
-#include <string.h>
+
+using alcp::utils::CpuId;
 
 namespace alcp::rsa {
+#include "rsa.cc.inc"
 
-static const Uint8 Modulus[] = {
-    0xdb, 0xa4, 0x2f, 0x17, 0xde, 0x7d, 0x1e, 0xc9, 0x06, 0x8c, 0xbd, 0x49,
-    0x64, 0xdb, 0xf4, 0xd3, 0x48, 0x0d, 0x50, 0xaf, 0x95, 0xeb, 0x30, 0x9c,
-    0x71, 0x21, 0xc5, 0xbf, 0xf4, 0x1a, 0xca, 0xdf, 0x30, 0xa2, 0x04, 0x62,
-    0xd5, 0xd5, 0x9c, 0xbd, 0x59, 0xeb, 0x8e, 0x1c, 0x96, 0xe3, 0x77, 0x09,
-    0x18, 0x30, 0xe0, 0xac, 0xd3, 0xa1, 0x06, 0xfe, 0xda, 0xf7, 0x7d, 0xaa,
-    0xd3, 0x01, 0xcd, 0xa7, 0x45, 0xbd, 0x1c, 0xac, 0x80, 0x8c, 0xb7, 0x2e,
-    0x52, 0xfc, 0x93, 0x88, 0x02, 0x87, 0xeb, 0xb3, 0xdc, 0x61, 0x27, 0xc5,
-    0xea, 0x89, 0xa7, 0x2d, 0x82, 0xc2, 0xed, 0xf5, 0x23, 0xe2, 0xd6, 0xc0,
-    0x9c, 0x1a, 0x3f, 0xc6, 0x64, 0xda, 0xe0, 0x49, 0x08, 0xdd, 0x7e, 0x3e,
-    0xd9, 0x0e, 0x42, 0xee, 0x49, 0x49, 0xf7, 0x8c, 0xe0, 0xcc, 0xaf, 0x4d,
-    0x8d, 0x6c, 0xb0, 0x52, 0xb3, 0x50, 0xec, 0x8f
-};
+static const Uint64 Sha512Size = 64;
 
-static const Uint8 PrivateKeyExponent[] = {
-    0x7c, 0xb4, 0xb9, 0xb0, 0x59, 0xb8, 0xbc, 0xb3, 0xf2, 0xae, 0x12, 0x03,
-    0x0b, 0xea, 0xff, 0x14, 0xbf, 0x02, 0x20, 0x5f, 0xb1, 0x45, 0x39, 0xf2,
-    0x79, 0x21, 0x6d, 0xbf, 0xd0, 0xff, 0x2d, 0x54, 0x8f, 0xae, 0x4d, 0xc3,
-    0x38, 0x19, 0xf2, 0xc6, 0x67, 0xb9, 0xa0, 0x94, 0x86, 0xef, 0x5b, 0x74,
-    0xa4, 0x71, 0x8b, 0xff, 0x54, 0xa1, 0x46, 0xf1, 0x88, 0xad, 0xa0, 0x82,
-    0x4f, 0x0f, 0xe5, 0x0d, 0x18, 0xcc, 0xf8, 0xae, 0x81, 0x81, 0xb6, 0x41,
-    0x51, 0xb9, 0x01, 0xc5, 0x7b, 0x8b, 0xfa, 0x04, 0xd5, 0x60, 0xca, 0xc6,
-    0xb5, 0x65, 0x08, 0x92, 0x02, 0xf4, 0xde, 0xff, 0x3f, 0xd6, 0x05, 0x1c,
-    0xdd, 0x3d, 0x0b, 0x8a, 0xef, 0x72, 0xb1, 0x62, 0xd2, 0xd0, 0x35, 0x27,
-    0x63, 0x9c, 0x99, 0x07, 0xe8, 0x3b, 0x66, 0x19, 0x0e, 0x81, 0xc5, 0xa4,
-    0x80, 0xf0, 0x00, 0xfc, 0x67, 0x77, 0x46, 0xa1
-};
-
-static const Uint64 PublicKeyExponent = 65537;
-
-Rsa::Rsa()
+static inline Uint8
+IsZero(Uint8 num)
 {
-    m_pub_key.fromUint64(PublicKeyExponent);
-    m_mod.fromBinary(Modulus, sizeof(Modulus));
-    m_priv_key.fromBinary(PrivateKeyExponent, sizeof(PrivateKeyExponent));
-    m_key_size = sizeof(PrivateKeyExponent);
+    return (0 - (static_cast<Uint8>(~num & (num - 1)) >> 7));
 }
 
-Rsa::~Rsa()
+static inline Uint8
+IsEqual(const Uint8* first, const Uint8* second, Uint16 len)
+{
+    Uint8 num = 0;
+    for (Uint16 i = 0; i < len; i++)
+        num |= (first[i] ^ second[i]);
+    return IsZero(num);
+}
+
+static inline Uint8
+IsLess(Uint8 first, Uint8 second)
+{
+    return 0 - (static_cast<Uint8>(first - second) >> 7);
+}
+
+static inline Uint8
+Select(Uint8 mask, Uint8 first, Uint8 second)
+{
+    return (mask & first) | (~mask & second);
+}
+
+static inline void
+Reset(void* buff, Uint64 size)
+{
+    if (buff) {
+        alcp::utils::PadCompleteBlock<Uint64, 1ULL>(buff, 0LL, size);
+    }
+}
+
+template<alc_rsa_key_size T>
+Rsa<T>::Rsa()
+{
+    m_key_size = T / 8;
+}
+
+template<alc_rsa_key_size T>
+void
+Rsa<T>::setDigestOaep(digest::IDigest* digest)
+{
+    if (digest) {
+        m_digest   = digest;
+        m_hash_len = digest->getHashSize();
+    }
+}
+
+template<alc_rsa_key_size T>
+void
+Rsa<T>::setMgfOaep(digest::IDigest* mgf)
+{
+    if (mgf) {
+        m_mgf          = mgf;
+        m_mgf_hash_len = mgf->getHashSize();
+    }
+}
+
+template<alc_rsa_key_size T>
+void
+Rsa<T>::maskGenFunct(Uint8*       mask,
+                     Uint64       maskSize,
+                     const Uint8* input,
+                     Uint64       inputLen)
+{
+    Uint64 out_len = 0;
+    Uint32 count   = 0;
+    Uint8  count_array[4];
+    Uint8  hash[Sha512Size];
+
+    while (out_len < maskSize) {
+
+        m_mgf->reset();
+
+        m_mgf->update(input, inputLen);
+        count_array[0] = (count >> 24) & 0xff;
+        count_array[1] = (count >> 16) & 0xff;
+        count_array[2] = (count >> 8) & 0xff;
+        count_array[3] = count & 0xff;
+
+        m_mgf->finalize(count_array, 4);
+
+        Uint64 copy_size = m_mgf_hash_len;
+        if (out_len + m_mgf_hash_len <= maskSize) {
+            m_mgf->copyHash(mask + out_len, m_mgf_hash_len);
+        } else {
+            m_mgf->copyHash(hash, m_mgf_hash_len);
+            utils::CopyBytes(mask + out_len, hash, maskSize - out_len);
+            break;
+        }
+
+        ++count;
+        out_len += copy_size;
+    }
+}
+
+template<alc_rsa_key_size T>
+Rsa<T>::~Rsa()
 {
     reset();
 }
 
+template<alc_rsa_key_size T>
 Status
-Rsa::encryptPublic(alc_rsa_padding     pad,
-                   const RsaPublicKey& pubKey,
-                   const Uint8*        pText,
-                   Uint64              textSize,
-                   Uint8*              pEncText)
+Rsa<T>::encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText)
 {
     // For non padded output
-    if (textSize != pubKey.size) {
+    if (textSize != m_key_size) {
         return status::NotPermitted("Text size should be equal to modulus");
     }
 
-    // Todo : Remove this check when padding modes are supported
-    if (pad != ALCP_RSA_PADDING_NONE) {
-        return status::Unavailable("Padding is not supported currently");
-    }
-
-    if (pubKey.modulus == nullptr || pText == nullptr || pEncText == nullptr) {
+    if (pText == nullptr || pEncText == nullptr) {
         return status::NotPermitted("Buffer should be non null");
     }
 
-    BigNum raw_buff;
-    raw_buff.fromBinary(pText, textSize);
+    std::unique_ptr<Uint64[]> bignum_text;
+    auto                      ptext_bignum = CreateBigNum(pText, m_key_size);
+    auto                      mod_bignum   = m_pub_key.m_mod.get();
 
-    BigNum pub_key_exponent;
-    pub_key_exponent.fromUint64(pubKey.public_exponent);
+    bignum_text.reset(ptext_bignum);
 
-    BigNum pub_key_modulus;
-    pub_key_modulus.fromBinary(pubKey.modulus, pubKey.size);
-
-    if (!(raw_buff < pub_key_modulus)) {
+    if (!IsLess(ptext_bignum, mod_bignum, m_pub_key.m_size)) {
         return status::NotPermitted(
             "text absolute value should be less than modulus");
     }
 
-    BigNum res;
-    res.exp_mod(raw_buff, pub_key_exponent, pub_key_modulus);
+    // FIXME: We should probably use flag base dispatching than ZENVER dispatch
+    //        as this kind of dispatch will pick reference in non AMD machines.
+    static bool zen4_available = CpuId::cpuIsZen4();
+    static bool zen3_available = CpuId::cpuIsZen3();
+    static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
 
-    res.toBinary(pEncText, textSize);
+    static bool zen_available_flags =
+        CpuId::cpuHasAdx() && CpuId::cpuHasAvx2() && CpuId::cpuHasBmi2();
+
+    if (zen4_available) {
+        zen4::archEncryptPublic<T>(
+            pEncText, ptext_bignum, m_pub_key, m_context_pub);
+        return StatusOk();
+    } else if (zen3_available) {
+        zen3::archEncryptPublic<T>(
+            pEncText, ptext_bignum, m_pub_key, m_context_pub);
+        return StatusOk();
+    } else if (zen_available || zen_available_flags) {
+        zen::archEncryptPublic<T>(
+            pEncText, ptext_bignum, m_pub_key, m_context_pub);
+        return StatusOk();
+    }
+
+    archEncryptPublic<T>(pEncText, ptext_bignum, m_pub_key, m_context_pub);
 
     return StatusOk();
 }
 
+template<alc_rsa_key_size T>
 Status
-Rsa::decryptPrivate(alc_rsa_padding pad,
-                    const Uint8*    pEncText,
-                    Uint64          encSize,
-                    Uint8*          pText)
+Rsa<T>::decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText)
 {
-
     // For non padded output
-    if (encSize != m_mod.size()) {
+    if (encSize != m_priv_key.m_size * 2 * 8) {
         return status::NotPermitted("Text size should be equal modulous");
-    }
-
-    // Todo : Remove this check when padding modes are supported
-    if (pad != ALCP_RSA_PADDING_NONE) {
-        return status::Unavailable("Padding is not supported currently");
     }
 
     if (pEncText == nullptr || pText == nullptr) {
         return status::NotPermitted("Buffer should be non null");
     }
 
-    BigNum raw_buff;
-    raw_buff.fromBinary(pEncText, encSize);
+    std::unique_ptr<Uint64[]> bignum_text;
+    auto ptext_bignum = CreateBigNum(pEncText, m_priv_key.m_size * 2 * 8);
+    bignum_text.reset(ptext_bignum);
+    auto mod_bignum = m_priv_key.m_mod.get();
 
-    if (!(raw_buff < m_mod)) {
+    if (!IsLess(ptext_bignum, mod_bignum, m_priv_key.m_size * 2)) {
         return status::NotPermitted(
             "text absolute value should be less than modulus");
     }
 
-    BigNum res;
-    res.exp_mod(raw_buff, m_priv_key, m_mod);
+    // FIXME: We should probably use flag base dispatching than ZENVER dispatch
+    //        as this kind of dispatch will pick reference in non AMD machines.
+    static bool zen4_available = CpuId::cpuIsZen4();
+    static bool zen3_available = CpuId::cpuIsZen3();
+    static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
 
-    res.toBinary(pText, encSize);
+    static bool zen_available_flags =
+        CpuId::cpuHasAdx() && CpuId::cpuHasAvx2() && CpuId::cpuHasBmi2();
+
+    if (zen4_available) {
+        zen4::archDecryptPrivate<T>(
+            pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
+        return StatusOk();
+    } else if (zen3_available) {
+        zen3::archDecryptPrivate<T>(
+            pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
+        return StatusOk();
+    } else if (zen_available || zen_available_flags) {
+        zen::archDecryptPrivate<T>(
+            pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
+        return StatusOk();
+    }
+
+    archDecryptPrivate<T>(
+        pText, ptext_bignum, m_priv_key, m_context_p, m_context_q);
 
     return StatusOk();
 }
 
+template<alc_rsa_key_size T>
 Status
-Rsa::getPublickey(RsaPublicKey& pPublicKey)
+Rsa<T>::encryptPublicOaep(const Uint8* pText,
+                          Uint64       textSize,
+                          const Uint8* pLabel,
+                          Uint64       labelSize,
+                          const Uint8* pSeed,
+                          Uint8*       pEncText)
+{
+    // clang-format off
+            //                     +----------+------+--+-------+
+            //                DB = |  lHash   |  PS  |01|   M   |
+            //                     +----------+------+--+-------+
+            //                                    |
+            //          +----------+              |
+            //          |   seed   |              |
+            //          +----------+              |
+            //                |                   |
+            //                |-------> MGF ---> xor
+            //                |                   |
+            //       +--+     V                   |
+            //       |00|    xor <----- MGF <-----|
+            //       +--+     |                   |
+            //         |      |                   |
+            //         V      V                   V
+            //       +--+----------+----------------------------+
+            // EM =  |00|maskedSeed|          maskedDB          |
+            //       +--+----------+----------------------------+
+    // clang-format on
+
+    Uint8 *p_masked_db, *p_masked_seed;
+
+    if (textSize > m_key_size - 2 * m_hash_len - 2) {
+        return status::NotPermitted("input text size is larger than supported");
+    }
+
+    if (m_key_size < 2 * m_hash_len + 2) {
+        return status::NotPermitted("key size is smaller than supported");
+    }
+
+    if (!m_mgf || !m_digest) {
+        return status::NotPermitted(
+            "digest and mask generation function should be non null");
+    }
+
+    auto   mod_text   = std::make_unique<Uint8[]>(m_key_size);
+    Uint8* p_mod_text = mod_text.get();
+    p_mod_text[0]     = 0;
+    p_masked_seed     = p_mod_text + 1;
+    p_masked_db       = p_masked_seed + m_hash_len; // seed size equals hashsize
+
+    // generates masked db
+    m_digest->finalize(pLabel, labelSize);
+    m_digest->copyHash(p_masked_db, m_hash_len);
+
+    Uint64 p_db_size                      = m_key_size - 1 - m_hash_len;
+    p_masked_db[p_db_size - 1 - textSize] = 1;
+    memcpy(&p_masked_db[p_db_size - textSize], pText, textSize);
+
+    auto db_mask   = std::make_unique<Uint8[]>(p_db_size);
+    auto p_db_mask = db_mask.get();
+
+    maskGenFunct(p_db_mask, p_db_size, pSeed, m_hash_len);
+
+    for (Uint16 i = 0; i < p_db_size; i++) {
+        p_masked_db[i] ^= p_db_mask[i];
+    }
+
+    auto seed_mask   = std::make_unique<Uint8[]>(m_hash_len);
+    auto p_seed_mask = seed_mask.get();
+
+    maskGenFunct(p_seed_mask, m_hash_len, p_masked_db, p_db_size);
+
+    for (Uint16 i = 0; i < m_hash_len; i++) {
+        p_masked_seed[i] = pSeed[i] ^ p_seed_mask[i];
+    }
+
+    return encryptPublic(p_mod_text, m_key_size, pEncText);
+}
+
+template<alc_rsa_key_size T>
+Status
+Rsa<T>::decryptPrivateOaep(const Uint8* pEncText,
+                           Uint64       encSize,
+                           const Uint8* pLabel,
+                           Uint64       labelSize,
+                           Uint8*       pText,
+                           Uint64&      textSize)
 {
 
+    auto mod_text   = std::make_unique<Uint8[]>(encSize);
+    auto p_mod_text = mod_text.get();
+
+    Status status = decryptPrivate(pEncText, encSize, p_mod_text);
+
+    if (!status.ok()) {
+        return status;
+    }
+
+    if (m_key_size < 2 * m_hash_len + 2) {
+        return status::NotPermitted(
+            "decrypted size less than the expected size");
+    }
+
+    // decode oaep padding
+    Uint8  seed[Sha512Size];       // max seed size is hashlen of sha512
+    Uint8  hash_label[Sha512Size]; // max hashlen is of sha512
+    Uint64 db_len = encSize - 1 - m_hash_len;
+
+    auto db   = std::make_unique<Uint8[]>(db_len * 2);
+    auto p_db = db.get();
+
+    Uint8 success = IsZero(p_mod_text[0]);
+
+    Uint8* p_masked_seed = p_mod_text + 1;
+    Uint8* p_masked_db   = p_masked_seed + m_hash_len;
+
+    maskGenFunct(seed, m_hash_len, p_masked_db, db_len);
+
+    for (Uint16 i = 0; i < m_hash_len; i++) {
+        seed[i] ^= p_masked_seed[i];
+    }
+
+    maskGenFunct(p_db, db_len, seed, m_hash_len);
+
+    for (Uint32 i = 0; i < db_len; i++) {
+        p_db[i] ^= p_masked_db[i];
+    }
+
+    // create db
+    m_digest->reset();
+    m_digest->finalize(pLabel, labelSize);
+    m_digest->copyHash(hash_label, m_hash_len);
+
+    success &= IsEqual(hash_label, p_db, m_hash_len);
+
+    Uint32 one_index = 0;
+    Uint8  found_one = 0;
+    for (Uint32 i = m_hash_len; i < db_len; i++) {
+        Uint8 is_one  = IsZero(p_db[i] ^ 1);
+        Uint8 is_zero = IsZero(p_db[i]);
+        one_index     = Select(~found_one & is_one, i, one_index);
+        found_one |= is_one;
+        success &= (found_one | is_zero);
+    }
+    success &= found_one;
+
+    Uint32 text_index = one_index + 1;
+    Uint32 text_len   = db_len - text_index;
+
+    Uint64 max_msg_len = db_len - m_hash_len - 1;
+    for (Uint32 i = 0; i < max_msg_len; i++) {
+        Uint8 mask = success & IsLess(i, text_len);
+        pText[i]   = Select(mask, p_db[text_index + i], pText[i]);
+    }
+
+    textSize = Select(success, text_len, -1);
+    memset(p_mod_text, 0, encSize);
+    memset(p_db, 0, db_len * 2);
+    Uint8 error_code = Select(success, eOk, eInternal);
+    return (error_code == eOk) ? StatusOk() : status::Generic("Generic error");
+}
+
+template<alc_rsa_key_size T>
+Status
+Rsa<T>::getPublickey(RsaPublicKey& pPublicKey)
+{
     if (pPublicKey.size != m_key_size) {
         return status::NotPermitted("keyize should match");
     }
+    Uint8* mod_text = reinterpret_cast<Uint8*>(m_pub_key.m_mod.get());
 
-    if (pPublicKey.modulus == nullptr) {
+    if (pPublicKey.modulus == nullptr || mod_text == nullptr) {
         return status::NotPermitted("Modulus cannot be empty");
     }
 
-    pPublicKey.public_exponent = PublicKeyExponent;
+    pPublicKey.public_exponent = m_pub_key.m_public_exponent;
 
-    m_mod.toBinary(pPublicKey.modulus, pPublicKey.size);
+    for (Int64 i = m_key_size - 1, j = 0; i >= 0; --i, ++j) {
+        pPublicKey.modulus[j] = mod_text[i];
+    }
 
     return StatusOk();
 }
 
-void
-Rsa::reset()
+template<alc_rsa_key_size T>
+Status
+Rsa<T>::setPublicKey(const Uint64 exponent, const Uint8* mod, const Uint64 size)
 {
-    // Todo rest the big num here
+    if (!mod || exponent == 0) {
+        return status::NotPermitted("Invalid public key");
+    }
+
+    if (!(size == 128 || size == 256)) {
+        return status::NotPermitted("Key sizes not supported currently");
+    }
+
+    m_pub_key.m_public_exponent = exponent;
+    m_pub_key.m_mod.reset(CreateBigNum(mod, size));
+    m_pub_key.m_size           = size / 8;
+    m_key_size                 = size;
+    static bool zen4_available = CpuId::cpuIsZen4();
+    static bool zen3_available = CpuId::cpuIsZen3();
+    static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
+    static bool zen_available_flags =
+        CpuId::cpuHasAdx() && CpuId::cpuHasAvx2() && CpuId::cpuHasBmi2();
+
+    if (zen4_available) {
+        zen4::archCreateContext<T>(
+            m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
+
+    } else if (zen3_available) {
+        zen3::archCreateContext<T>(
+            m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
+
+    } else if (zen_available || zen_available_flags) {
+        zen::archCreateContext<T>(
+            m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
+
+    } else {
+
+        archCreateContext<T>(
+            m_context_pub, m_pub_key.m_mod.get(), m_pub_key.m_size);
+    }
+    return StatusOk();
 }
 
+template<alc_rsa_key_size T>
+Status
+Rsa<T>::setPrivateKey(const Uint8* dp,
+                      const Uint8* dq,
+                      const Uint8* p,
+                      const Uint8* q,
+                      const Uint8* qinv,
+                      const Uint8* mod,
+                      const Uint64 size)
+{
+    if (!dp || !dq || !p || !q || !mod) {
+        return status::NotPermitted("Invalid private key");
+    }
+
+    if (!(size == 128 || size == 64)) {
+        return status::NotPermitted("Key sizes not supported currently");
+    }
+
+    m_key_size = size * 2; // keysize is twice the sizeof(p)
+
+    m_priv_key.m_dp.reset(CreateBigNum(dp, size));
+    m_priv_key.m_dq.reset(CreateBigNum(dq, size));
+    m_priv_key.m_p.reset(CreateBigNum(p, size));
+    m_priv_key.m_q.reset(CreateBigNum(q, size));
+    m_priv_key.m_qinv.reset(CreateBigNum(qinv, size));
+    m_priv_key.m_mod.reset(CreateBigNum(mod, size * 2));
+    m_priv_key.m_size = size / 8;
+
+    static bool zen4_available = CpuId::cpuIsZen4();
+    static bool zen3_available = CpuId::cpuIsZen3();
+    static bool zen_available  = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
+    static bool zen_available_flags =
+        CpuId::cpuHasAdx() && CpuId::cpuHasAvx2() && CpuId::cpuHasBmi2();
+
+    if (zen4_available) {
+        zen4::archCreateContext<T>(
+            m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
+        zen4::archCreateContext<T>(
+            m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
+    } else if (zen3_available) {
+        zen3::archCreateContext<T>(
+            m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
+        zen3::archCreateContext<T>(
+            m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
+    } else if (zen_available || zen_available_flags) {
+        zen::archCreateContext<T>(
+            m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
+        zen::archCreateContext<T>(
+            m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
+    } else {
+
+        archCreateContext<T>(
+            m_context_p, m_priv_key.m_p.get(), m_priv_key.m_size);
+        archCreateContext<T>(
+            m_context_q, m_priv_key.m_q.get(), m_priv_key.m_size);
+    }
+    return StatusOk();
+}
+
+template<alc_rsa_key_size T>
+void
+Rsa<T>::reset()
+{
+    Reset(m_priv_key.m_dp.get(), T / (2 * 64));
+    Reset(m_priv_key.m_dq.get(), T / (2 * 64));
+    Reset(m_priv_key.m_mod.get(), T / (64));
+    Reset(m_priv_key.m_p.get(), T / (2 * 64));
+    Reset(m_priv_key.m_q.get(), T / (2 * 64));
+    Reset(m_priv_key.m_qinv.get(), T / (2 * 64));
+    Reset(m_pub_key.m_mod.get(), T / (64));
+    Reset(m_context_pub.m_mod_radix_52_bit.get(), T / 52 + 1);
+    Reset(m_context_p.m_mod_radix_52_bit.get(), T / (2 * 52) + 1);
+    Reset(m_context_q.m_mod_radix_52_bit.get(), T / (2 * 52) + 1);
+}
+
+template<alc_rsa_key_size T>
 Uint64
-Rsa::getKeySize()
+Rsa<T>::getKeySize()
 {
     return m_key_size;
 }
-
+template class Rsa<KEY_SIZE_1024>;
+template class Rsa<KEY_SIZE_2048>;
 } // namespace alcp::rsa

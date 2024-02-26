@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,6 +35,12 @@
 #include <functional>
 
 #include "alcp/types.hh"
+#include <cstring>
+
+// FIXME: Temporarily memcpy and memset are used for CopyBytes, CopyBlock,
+// CopyBlock, PadBlock and PadBytes as the addresses may not be aligned for the
+// CopyType and can cause misaligned load or misaligned store undefined
+// behaviours.
 
 namespace alcp::utils {
 
@@ -71,13 +77,18 @@ CopyWord(Uint16* pDst, const Uint16* pSrc, int len)
 static inline void
 CopyBytes(void* pDst, const void* pSrc, int len)
 {
+#if 0
     CopyChunk<Uint8>(pDst, pSrc, len);
+#else
+    memcpy(pDst, pSrc, len);
+#endif
 }
 
 template<typename copytype = Uint64, Uint64 stride = sizeof(copytype)>
 void
 CopyBlock(void* pDst, const void* pSrc, Uint64 len)
 {
+#if 0
     auto p_src = reinterpret_cast<const copytype*>(pSrc);
     auto p_dst = reinterpret_cast<copytype*>(pDst);
 
@@ -93,11 +104,15 @@ CopyBlock(void* pDst, const void* pSrc, Uint64 len)
     if (remaining) {
         CopyBytes(&p_dst[i], &p_src[i], remaining);
     }
+#else
+    memcpy(pDst, pSrc, len);
+#endif
 }
 
-template<typename cptype   = Uint64,
-         Uint64 stride     = sizeof(cptype),
-         typename trn_func = std::function<cptype(cptype)>>
+template<typename cptype    = Uint64,
+         bool   copyasbytes = false,
+         Uint64 stride      = sizeof(cptype),
+         typename trn_func  = std::function<cptype(cptype)>>
 void
 CopyBlockWith(void* pDst, const void* pSrc, Uint64 len, trn_func func)
 {
@@ -107,7 +122,14 @@ CopyBlockWith(void* pDst, const void* pSrc, Uint64 len, trn_func func)
     Uint64 i = 0;
 
     for (; i < len / stride; i++) {
-        p_dst[i] = func(p_src[i]);
+        auto output = func(p_src[i]);
+        if constexpr (copyasbytes) {
+            CopyBytes(reinterpret_cast<Uint8*>(p_dst + i),
+                      reinterpret_cast<Uint8*>(&output),
+                      sizeof(output));
+        } else {
+            p_dst[i] = output;
+        }
     }
 
     Uint64 offset    = i * stride;
@@ -121,18 +143,55 @@ CopyBlockWith(void* pDst, const void* pSrc, Uint64 len, trn_func func)
 static inline void
 PadBytes(Uint8* pDst, Uint32 val, Uint64 len)
 {
+// Memset is providing less performance than the below code
+#if 1
     for (Uint64 i = 0; i < len; i++) {
         pDst[i] = (Uint8)(val & 0xff);
     }
+#else
+    memset(pDst, (Uint8)(val & 0xff), len);
+#endif
 }
 
 template<typename copytype = Uint64, Uint64 stride = sizeof(copytype)>
 static inline void
 PadBlock(void* pDst, copytype val, Uint64 len)
 {
-    auto p_dst = reinterpret_cast<copytype*>(pDst);
+// Memset is providing less performance than the below code
+#if 1
+    auto   p_dst_64                 = reinterpret_cast<Uint64>(pDst);
+    auto   last_aligned_dst_address = (p_dst_64 / (stride)) * stride;
+    auto   next_aligned_dst_address = (last_aligned_dst_address == p_dst_64)
+                                          ? last_aligned_dst_address
+                                          : last_aligned_dst_address + stride;
+    Uint64 bytes_to_copy            = next_aligned_dst_address - p_dst_64;
+    if (bytes_to_copy) {
+        PadBytes(static_cast<Uint8*>(pDst), val, bytes_to_copy);
+    }
 
-    for (Uint64 i = 0; i < len / stride; i++) {
+    auto   p_dst    = reinterpret_cast<copytype*>(next_aligned_dst_address);
+    Uint64 i        = 0;
+    auto   n_blocks = (len - bytes_to_copy) / stride;
+    for (i = 0; i < n_blocks; i++) {
+        p_dst[i] = val;
+    }
+    auto remaining = len - bytes_to_copy - n_blocks * stride;
+    if (remaining) {
+        PadBytes(
+            static_cast<Uint8*>(pDst) + (len - remaining), val, bytes_to_copy);
+    }
+#else
+    memset(pDst, val, len);
+#endif
+}
+
+template<typename copytype = Uint64, Uint64 stride = sizeof(copytype)>
+static inline void
+PadCompleteBlock(void* pDst, copytype val, Uint64 len)
+{
+    auto   p_dst = reinterpret_cast<copytype*>(pDst);
+    Uint64 i     = 0;
+    for (i = 0; i < len / stride; i++) {
         p_dst[i] = val;
     }
 }

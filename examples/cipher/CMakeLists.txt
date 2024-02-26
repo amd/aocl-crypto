@@ -23,11 +23,6 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
-#INCLUDE_DIRECTORIES(
-#	${CMAKE_SOURCE_DIR}/include
-#	${CMAKE_SOURCE_DIR}/lib/include
-#	)
-
 ADD_EXAMPLE(aes-cfb aes-cfb.c)
 
 ADD_EXAMPLE(aes-gcm aes-gcm.c)
@@ -38,8 +33,11 @@ ADD_EXAMPLE(aes-ccm aes-ccm.c)
 
 ADD_EXAMPLE(aes-siv aes-siv.c)
 
+ADD_EXAMPLE(chacha20 chacha20.c)
+
 ADD_EXAMPLE(aes-speed-cipher aes-speed-cipher.c)
 
 ADD_EXAMPLE(aes-speed-gcm aes-speed-gcm.c)
+
 
 

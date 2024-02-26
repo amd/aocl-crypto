@@ -26,6 +26,8 @@
  *
  */
 
+#pragma once
+
 #include "alcp/base.hh"
 #include "alcp/rng.hh"
 #include "alcp/utils/copy.hh"
@@ -45,6 +47,10 @@ class IDrbg : public IRng
                              std::vector<Uint8>& p_cAdditionalInput)        = 0;
 
     virtual Status randomize(Uint8 p_Output[], size_t length) = 0;
+
+    virtual Status setRng(std::shared_ptr<IRng> entropyIn) = 0;
+    virtual void   setNonceLen(Uint64 nonceLen)            = 0;
+    virtual void   setEntropyLen(Uint64 entropyLen)        = 0;
 };
 
 class ALCP_API_EXPORT Drbg : public IDrbg
@@ -52,8 +58,12 @@ class ALCP_API_EXPORT Drbg : public IDrbg
   private:
     std::shared_ptr<IRng> m_entropy_in            = {};
     bool                  m_prediction_resistance = false;
+    Uint64                m_entropy_len           = 0;
+    Uint64                m_nonce_len             = 0;
 
   public:
+    void setEntropyLen(Uint64 entropyLen) { m_entropy_len = entropyLen; }
+    void setNonceLen(Uint64 nonceLen) { m_nonce_len = nonceLen; }
     Drbg() {}
 
     Status setRng(std::shared_ptr<IRng> entropyIn);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,10 +26,11 @@
  *
  */
 #include "cipher/aes.hh"
-#include "cipher/aes_xts.hh"
 #include "cipher/avx512.hh"
 #include "cipher/vaes_avx512.hh"
 #include "cipher/vaes_avx512_core.hh"
+#include "cipher/zen4/aes_xts_zen4.hh"
+
 #include <cstdint>
 #include <cstring>
 #include <immintrin.h>

@@ -54,8 +54,8 @@ Drbg::initialize(int                 cSecurityStrength,
             return s;
         }
 #endif
-    std::vector<Uint8> entropy_input(128);
-    std::vector<Uint8> nonce(128);
+    std::vector<Uint8> entropy_input(m_entropy_len);
+    std::vector<Uint8> nonce(m_nonce_len);
 
     s = m_entropy_in->randomize(&entropy_input[0], entropy_input.size());
     if (!s.ok()) {

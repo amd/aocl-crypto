@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include <openssl/evp.h>
+
 #include "alcp/alcp.hh"
 #include "alcp/ec.hh"
 
@@ -81,6 +83,15 @@ class X25519 : public Ec
     ~X25519();
 
     /**
+     * @brief Function sets the privateKey
+     *
+     * @param  pPrivKey    pointer to Input privateKey
+     *
+     * @return Status Error code
+     */
+    ALCP_API_EXPORT Status setPrivateKey(const Uint8* pPrivKey) override;
+
+    /**
      * @brief Function generates x25519 public key using input privateKey
      * generated public key is shared with the peer.
      *
@@ -131,10 +142,80 @@ class X25519 : public Ec
   private:
     Uint8 m_PrivKey[32] = {};
 };
-
-} // namespace alcp::ec
-
 // x2519 apis
 
 // NIST curves
+class ALCP_API_EXPORT P256 : public Ec
+{
+  public:
+     P256() = default;
+    ~P256();
+
+    /**
+     * @brief Function sets the privateKey
+     *
+     * @param  pPrivKey    pointer to Input privateKey
+     *
+     * @return Status Error code
+     */
+    Status setPrivateKey(const Uint8* pPrivKey) override;
+
+    /**
+     * @brief Function generates p256 public key using input privateKey
+     * generated public key is shared with the peer.
+     *
+     * @param  pPublicKey  pointer to Output Publickey generated
+     * @param  pPrivKey    pointer to Input privateKey used for generating
+     * publicKey
+     * @return Status Error code
+     */
+    Status generatePublicKey(Uint8*       pPublicKey,
+                                             const Uint8* pPrivKey) override;
+
+    /**
+     * @brief Function computes p256 secret key with publicKey from remotePeer
+     * and local privatekey.
+     *
+     * @param  pSecretKey  pointer to output secretKey
+     * @param  pPublicKey  pointer to Input privateKey used for generating
+     * publicKey
+     * @param  pKeyLength  pointer to keyLength
+     * @return Status Error code
+     */
+    Status computeSecretKey(Uint8*       pSecretKey,
+                                            const Uint8* pPublicKey,
+                                            Uint64*      pKeyLength) override;
+
+    /**
+     * @brief Function validates public key from remote peer
+     *
+     * @param  pPublicKey  pointer to public key publicKey
+     * @param  pKeyLength  pointer to keyLength
+     * @return Status Error code
+     */
+    virtual Status validatePublicKey(const Uint8* pPublicKey,
+                                     Uint64       pKeyLength) override;
+    /**
+     * @brief Function resets the internal state
+     *
+     * @return nothing
+     */
+    void reset() override;
+
+    /**
+     * @brief  Returns the key size in bytes
+     * @return key size
+     */
+    Uint64 getKeySize() override;
+
+  private:
+    Uint8 m_PrivKey[32] = {};
+    /**
+     *  m_pSelfKey is a keypair, which represents Peer1 (US)
+     *  m_pPeerKey is pKey for storing public key of Peer 2
+     */
+    EVP_PKEY *m_pSelfKey = nullptr, *m_pPeerKey = nullptr;
+};
 // p-256 api
+
+} // namespace alcp::ec

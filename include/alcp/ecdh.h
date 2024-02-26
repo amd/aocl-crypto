@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,6 +28,7 @@
 #ifndef _ALCP_ECDH_H_
 #define _ALCP_ECDH_H_ 2
 
+#include "alcp/ec.h"
 #include "alcp/error.h"
 #include "alcp/macros.h"
 
@@ -37,6 +38,20 @@ EXTERN_C_BEGIN
  * @addtogroup ec
  * @{
  */
+
+/**
+ * @brief Function sets input privateKey
+ * @parblock <br> &nbsp;
+ * <b>This API can be called after @ref alcp_ec_request and at the
+ * end of session call @ref alcp_ec_finish</b>
+ * @endparblock
+ * @param [in] pEcHandle - Handler of the Context for the session
+ * @param [in] pPrivKey - pointer to Input privateKey
+ * @return Error Code for the API called . if alc_error_t is not zero then
+ * alcp_error_str needs to be called to know about error occurred
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_ec_set_privatekey(const alc_ec_handle_p pEcHandle, const Uint8* pPrivKey);
 
 /**
  * @brief Function generates public key using input privateKey generated

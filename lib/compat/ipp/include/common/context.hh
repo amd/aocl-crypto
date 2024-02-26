@@ -28,38 +28,37 @@
 
 #include "alcp/alcp.h"
 #include "ippcp.h"
+#include <cstddef>
 #include <vector>
 #pragma once
-typedef struct
+typedef struct _ipp_wrp_aes_ctx
 {
-    alc_cipher_handle_t handle;
-    alc_cipher_info_t   cinfo;
+    alc_cipher_handle_t    handle;
+    alc_cipher_info_t      cinfo;
+    alc_cipher_aead_info_t c_aeadinfo;
 
 } ipp_wrp_aes_ctx;
-typedef struct
+typedef struct _ipp_wrp_aes_aead_ctx
 {
     bool            is_encrypt;
-    ipp_wrp_aes_ctx encrypt_ctx;
-    ipp_wrp_aes_ctx decrypt_ctx;
+    size_t          msg_len;
+    size_t          tag_len;
+    ipp_wrp_aes_ctx aead_ctx;
 } ipp_wrp_aes_aead_ctx;
 
-typedef struct
+typedef struct _ipp_wrp_aes_xts_ctx
 {
     bool            is_encrypt;
-    ipp_wrp_aes_ctx encrypt_ctx;
-    ipp_wrp_aes_ctx decrypt_ctx;
-    alc_key_info_t  tweak_key;
-    Uint8         tkey[32];
-    Uint8         key[32];
+    ipp_wrp_aes_ctx cipher_ctx;
 } ipp_wrp_aes_xts_ctx;
 
-typedef struct
+typedef struct _ipp_wrp_sha2_ctx
 {
     alc_digest_handle_t handle;
     alc_digest_info_t   dinfo;
 } ipp_wrp_sha2_ctx;
 
-typedef struct
+typedef struct _ipp_sha2_rmf_algo_ctx
 {
     IppHashAlgId algId;      // ID of the current algorithm
     int          len;        // Length of hash output in bytes
@@ -67,3 +66,9 @@ typedef struct
     int          lenRepSize; // Length of processed message
     // There are more, for now they are useless.
 } ipp_sha2_rmf_algo_ctx;
+
+typedef struct _ipp_wrp_mac_ctx
+{
+    alc_mac_handle handle   = {};
+    alc_mac_info_t mac_info = {};
+} ipp_wrp_mac_ctx;

@@ -33,6 +33,9 @@ alcp_module("Cipher")
 
 #message(STATUS "Cipher Unit Tests Imported ${TEST_FILES}")
 
+file(GLOB UNIT_TEST_COMMON_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/common/*.cc")
+
+
 foreach(testFile IN LISTS TEST_FILES)
     get_filename_component(currentTestName ${testFile} NAME_WLE)
     get_filename_component(currentTestFile ${testFile} NAME)

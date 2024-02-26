@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,8 +27,6 @@
  */
 #pragma once
 
-#include "alcp/cipher.h"
-
 #include "alcp/base.hh"
 #include "alcp/capi/cipher/builder.hh"
 #include "alcp/cipher.hh"
@@ -38,9 +36,20 @@ namespace alcp::cipher {
 class AesBuilder
 {
   public:
+    // FIXME: to be removed after cleanup in other AES modes
     static alc_error_t Build(const alc_cipher_algo_info_t& aesInfo,
                              const alc_key_info_t&         keyInfo,
                              Context&                      ctx);
+    static bool        Supported(const alc_cipher_algo_info_t ci_algo_info,
+                                 const alc_key_info_t         ci_key_info);
+};
+
+class AesAeadBuilder
+{
+  public:
+    static alc_error_t Build(const alc_cipher_aead_algo_info_t& cCipherAlgoInfo,
+                             const alc_key_info_t&              keyInfo,
+                             Context&                           ctx);
 };
 
 } // namespace alcp::cipher

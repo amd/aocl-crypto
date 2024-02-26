@@ -31,7 +31,8 @@
 /* C++ headers */
 #include "alcp/base.hh"
 #include "alcp/rsa.h"
-#include "alcp/utils/bignum.hh"
+#include "alcp/rsa/rsa_internal.hh"
+#include "digest.hh"
 
 namespace alcp::rsa {
 
@@ -42,52 +43,130 @@ struct RsaPublicKey
     Uint64 size            = 0;
 };
 
+template<alc_rsa_key_size T>
 class ALCP_API_EXPORT Rsa
 {
   public:
+    static_assert(T == KEY_SIZE_1024 || T == KEY_SIZE_2048);
     Rsa();
     ~Rsa();
     /**
      * @brief Function encrypt the buffer
      *
-     * @param [in]  pad            padding scheme used in RSA
-     * @param [in]  pubKey         Reference to public key structure
      * @param [in]  pText          pointer to Input text
      * @param [in]  textSize       Input text size
      * @param [out] pEncText       pointer to encrypted text
-     * publicKey
+     *
      * @return Status Error code
      */
-    Status encryptPublic(alc_rsa_padding     pad,
-                         const RsaPublicKey& pubKey,
-                         const Uint8*        pText,
-                         Uint64              textSize,
-                         Uint8*              pEncText);
+    Status encryptPublic(const Uint8* pText, Uint64 textSize, Uint8* pEncText);
+
+    /**
+     * @brief set the Digest to be used by OAEP encrytion
+     * @param [in] digest         Digest class to be used by OAEP encrytion.
+     * Should be called before calling encryptPublicOaep
+     */
+    void setDigestOaep(digest::IDigest* digest);
+
+    /**
+     * @brief set the MGF to be used by OAEP encrytion
+     * @param [in]  mgf           Digest class to be used by OAEP encrytion.
+     * Should be called before calling encryptPublicOaep
+     */
+    void setMgfOaep(digest::IDigest* mgf);
+
+    /**
+     * @brief Function encrypt the buffer using oaep padding
+     *
+     * @param [in]  pText          pointer to Input text
+     * @param [in]  textSize       Input text size
+     * @param [in]  plabel         pointer to initial label
+     * @param [in]  labelSize      label size
+     * @param [in]  pSeed          pointer to seed with hashlen
+     * @param [out] pEncText       pointer to encrypted text
+     *
+     * @return Status Error code
+     */
+    Status encryptPublicOaep(const Uint8* pText,
+                             Uint64       textSize,
+                             const Uint8* plabel,
+                             Uint64       labelSize,
+                             const Uint8* pSeed,
+                             Uint8*       pEncText);
 
     /**
      * @brief Function decrypt the buffer
      *
-     * @param [in]  pad         padding scheme used in RSA
      * @param [in]  pEncText    pointer to encrypted text
      * @param [in]  encSize     encrypted data size
      * @param [out] pText       pointer to decrypted text
-     * publicKey
+     *
      * @return Status Error code
      */
-    Status decryptPrivate(alc_rsa_padding pad,
-                          const Uint8*    pEncText,
-                          Uint64          encSize,
-                          Uint8*          pText);
+    Status decryptPrivate(const Uint8* pEncText, Uint64 encSize, Uint8* pText);
 
+    /**
+     * @brief Function decrypt the buffer with oaep padding
+     *
+     * @param [in]  pEncText    pointer to encrypted text
+     * @param [in]  encSize     encrypted data size
+     * @param [in]  label       pointer to initial label
+     * @param [in]  labelSize   pointer to label size
+     * @param [out] pText       pointer to decrypted text
+     * @param [out] textSize    size of decrypted text
+     *
+     * @return Status Error code
+     */
+
+    Status decryptPrivateOaep(const Uint8* pEncText,
+                              Uint64       encSize,
+                              const Uint8* label,
+                              Uint64       labelSize,
+                              Uint8*       pText,
+                              Uint64&      textSize);
     /**
      * @brief Function fetches the public key
      *
      * @param [out] pPublicKey      Refrence to public key structure
-     * publicKey
+     *
      * @return Status Error code
      */
 
     Status getPublickey(RsaPublicKey& pPublicKey);
+
+    /**
+     * @brief Function sets the public key
+     *
+     * @param [in]  exponent    public exponent
+     * @param [in]  mod         pointer to the modulus
+     * @param [in]  size        size of modulus
+     *
+     * @return Status Error code
+     */
+    Status setPublicKey(const Uint64 exponent,
+                        const Uint8* mod,
+                        const Uint64 size);
+
+    /**
+     * @brief Function sets the public key
+     *
+     * @param [in]   dp         - pointer to first exponent
+     * @param [in]   dq         - pointer to second exponent
+     * @param [in]   p          - pointer to first modulus
+     * @param [in]   q          - pointer to second modulus
+     * @param [in]   qinv       - pointer to inverse of second modulus
+     * @param [in]   mod        - pointer to mult of first and second modulus
+     * @param [in]   size       - size of modulus
+     *
+     * @return Status Error code
+     */
+    Status setPrivateKey(const Uint8* dp,
+                         const Uint8* dq,
+                         const Uint8* p,
+                         const Uint8* q,
+                         const Uint8* qinv,
+                         const Uint8* mod,
+                         const Uint64 size);
 
     /**
      * @brief Function returns the private key size
@@ -102,10 +181,21 @@ class ALCP_API_EXPORT Rsa
     void reset();
 
   private:
-    Uint64 m_key_size;
-    BigNum m_pub_key;
-    BigNum m_priv_key;
-    BigNum m_mod;
+    void maskGenFunct(Uint8*       mask,
+                      Uint64       maskSize,
+                      const Uint8* input,
+                      Uint64       inputLen);
+
+    Uint64              m_key_size;
+    Uint64              m_hash_len;
+    Uint64              m_mgf_hash_len;
+    RsaPrivateKeyBignum m_priv_key;
+    RsaPublicKeyBignum  m_pub_key;
+    MontContextBignum   m_context_pub;
+    MontContextBignum   m_context_p;
+    MontContextBignum   m_context_q;
+    digest::IDigest*    m_digest = nullptr;
+    digest::IDigest*    m_mgf    = nullptr;
 };
 
 } // namespace alcp::rsa

@@ -1,7 +1,6 @@
 ---
 title: AOCL Crypto IPP Plugin Documentation
 subtitle: IPP Plugin Documentation
-author: Abhiram S <abhiram.s@amd.com>
 subject: "markdown"
 keywords: [books,programming]
 language: en-US
@@ -62,7 +61,7 @@ Key algorithms supported by IPP-CP are as follows.
 
 To read more about IPP-CP click [here](https://github.com/intel/ipp-crypto/blob/develop/README.md)
 
-Currently used version of IPP-CP is `ipp-crypto_2021_6` when this document was written.
+Currently used version of IPP-CP is `ipp-crypto_2021_8` when this document was written.
 
 ## Usage of IPP-Plugin - Brief
 
@@ -72,12 +71,12 @@ To build examples, simply invoke ```make -j``` from the root of the package dire
 Set LD_LIBRARY_PATH properly to lib directory in the package to avoid loader issues while executing. 
 Executables for examples should be found in bin directory after make is successful.  
 
-For more information please read [BUILD_Examples.md](BUILD_Examples.md) 
+For more information please read [BUILD_Examples.md](../../examples/BUILD_Examples.md) 
 
 ### Preloading IPP-Compat Lib 
 
 ``` bash
-export LD_LIBRARY_PATH=/path/where/libalcp/is:$LD_LIBRARY_PATH 
+export LD_LIBRARY_PATH=/path/to/libalcp.so:$LD_LIBRARY_PATH 
 LD_PRELOAD=/path/to/libipp-compat.so ./program_to_run 
 ```
 
@@ -85,5 +84,5 @@ LD_PRELOAD=/path/to/libipp-compat.so ./program_to_run
 * Preload Path should be the .so file itself.
 * Any command can follow LD_PRELOAD.
 
-It is explained better in [Preloading_IPP] (Preloading IPP-CP wrapper plugin)
+For more details, please refer to [Preloading_IPP] (Preloading IPP-CP wrapper plugin)
 

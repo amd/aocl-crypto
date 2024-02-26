@@ -32,6 +32,7 @@
 #include "alcp/digest.hh"
 #include "alcp/digest/sha2.hh"
 #include "alcp/interface/Irng.hh"
+#include "alcp/rng/drbg_ctr.hh"
 #include "alcp/rng/drbg_hmac.hh"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -65,8 +66,7 @@ DebugPrintPretty(std::vector<Uint8>& output)
 #else
 void
 DebugPrintPretty(std::vector<Uint8>& output)
-{
-}
+{}
 #endif
 
 class NullGenerator : public IRng
@@ -127,6 +127,8 @@ TEST(DRBG_HMAC, Instantiation)
     auto     sha_obj = std::make_shared<alcp::digest::Sha224>();
     auto     sys_rng = std::make_shared<alcp::rng::SystemRng>();
     HmacDrbg hmac_drbg;
+    hmac_drbg.setNonceLen(128);
+    hmac_drbg.setEntropyLen(128);
     hmac_drbg.setRng(sys_rng);
     hmac_drbg.setDigest(sha_obj);
 }
@@ -138,6 +140,8 @@ TEST(DRBG_HMAC, Generate)
     HmacDrbg hmac_drbg;
     hmac_drbg.setRng(sys_rng);
     hmac_drbg.setDigest(sha_obj);
+    hmac_drbg.setNonceLen(128);
+    hmac_drbg.setEntropyLen(128);
     std::vector<Uint8> output(200, 0);
     std::vector<Uint8> untouched_output(200, 0);
     std::vector<Uint8> personalization_string(0);
@@ -157,6 +161,8 @@ TEST(DRBG_HMAC, GenerateNull)
     HmacDrbg hmac_drbg;
     hmac_drbg.setRng(sys_rng);
     hmac_drbg.setDigest(sha_obj);
+    hmac_drbg.setNonceLen(128);
+    hmac_drbg.setEntropyLen(128);
     std::vector<Uint8> output(200, 0);
     std::vector<Uint8> untouched_output = {
         0x3a, 0x01, 0x46, 0xa7, 0xa8, 0x99, 0x3b, 0x7e, 0xd6, 0xb2, 0x87, 0x77,
@@ -194,6 +200,8 @@ TEST(DRBG_HMAC, MutiGenerate)
     HmacDrbg hmac_drbg;
     hmac_drbg.setRng(sys_rng);
     hmac_drbg.setDigest(sha_obj);
+    hmac_drbg.setNonceLen(128);
+    hmac_drbg.setEntropyLen(128);
     std::vector<Uint8> output_1(10, 0);
     std::vector<Uint8> output_2(10, 0);
     std::vector<Uint8> personalization_string(0);
@@ -225,6 +233,9 @@ TEST(DRBG_HMAC, GenerateMock)
     HmacDrbg hmac_drbg;
     hmac_drbg.setRng(sys_rng);
     hmac_drbg.setDigest(sha_obj);
+    hmac_drbg.setNonceLen(128);
+    hmac_drbg.setEntropyLen(128);
+
     std::vector<Uint8> output(200, 0);
     std::vector<Uint8> untouched_output = {
         0x3a, 0x01, 0x46, 0xa7, 0xa8, 0x99, 0x3b, 0x7e, 0xd6, 0xb2, 0x87, 0x77,
@@ -261,4 +272,107 @@ TEST(DRBG_HMAC, GenerateMock)
     DebugPrintPretty(output);
 
     EXPECT_EQ(output, untouched_output);
+}
+
+class CustomRng : public IRng
+{
+
+  private:
+    std::vector<Uint8> m_entropy;
+    std::vector<Uint8> m_nonce;
+
+    Uint64 m_call_count;
+
+  public:
+    CustomRng() = default;
+
+    Status readRandom(Uint8* pBuf, Uint64 size) override { return StatusOk(); }
+
+    Status randomize(Uint8 output[], size_t length) override
+    {
+        Status s = StatusOk();
+        if (m_call_count == 0) {
+            utils::CopyBytes(output, &m_entropy[0], length);
+            m_call_count++;
+        } else if (m_call_count == 1) {
+            utils::CopyBytes(output, &m_nonce[0], length);
+            m_call_count++;
+        } else {
+            printf("Not Allowed\n");
+        }
+
+        return s;
+    }
+
+    std::string name() const override { return "Dummy DRBG"; }
+
+    bool isSeeded() const override { return true; }
+
+    size_t reseed() override { return 0; }
+
+    Status setPredictionResistance(bool value) override
+    {
+        Status s = StatusOk();
+        return s;
+    }
+
+    void setEntropy(std::vector<Uint8> entropy) { m_entropy = entropy; }
+    void setNonce(std::vector<Uint8> nonce) { m_nonce = nonce; }
+
+    void reset()
+    {
+        m_call_count = 0;
+        m_entropy.clear();
+        m_nonce.clear();
+    }
+};
+
+TEST(DRBG_Ctr, Generate)
+{
+    auto custom_rng = std::make_shared<CustomRng>();
+
+    std::vector<Uint8> entropyInput = {
+        0xce, 0x50, 0xf3, 0x3d, 0xa5, 0xd4, 0xc1, 0xd3, 0xd4, 0x00, 0x4e,
+        0xb3, 0x52, 0x44, 0xb7, 0xf2, 0xcd, 0x7f, 0x2e, 0x50, 0x76, 0xfb,
+        0xf6, 0x78, 0x0a, 0x7f, 0xf6, 0x34, 0xb2, 0x49, 0xa5, 0xfc
+    };
+
+    std::vector<Uint8> expected_generated_bytes = {
+        0x65, 0x45, 0xc0, 0x52, 0x9d, 0x37, 0x24, 0x43, 0xb3, 0x92, 0xce,
+        0xb3, 0xae, 0x3a, 0x99, 0xa3, 0x0f, 0x96, 0x3e, 0xaf, 0x31, 0x32,
+        0x80, 0xf1, 0xd1, 0xa1, 0xe8, 0x7f, 0x9d, 0xb3, 0x73, 0xd3, 0x61,
+        0xe7, 0x5d, 0x18, 0x01, 0x82, 0x66, 0x49, 0x9c, 0xcc, 0xd6, 0x4d,
+        0x9b, 0xbb, 0x8d, 0xe0, 0x18, 0x5f, 0x21, 0x33, 0x83, 0x08, 0x0f,
+        0xad, 0xde, 0xc4, 0x6b, 0xae, 0x1f, 0x78, 0x4e, 0x5a
+    };
+
+    std::vector<Uint8> nonceInput = {};
+    custom_rng->setEntropy(entropyInput);
+    custom_rng->setNonce(nonceInput);
+
+    alcp::rng::drbg::CtrDrbg ctrdrbg;
+    ctrdrbg.setKeySize(16);
+
+    alcp::rng::Drbg* drbg = &ctrdrbg;
+    drbg->setRng(custom_rng);
+    drbg->setNonceLen(nonceInput.size());
+    drbg->setEntropyLen(entropyInput.size());
+
+    std::vector<Uint8> personalizationString;
+    drbg->initialize(100, personalizationString);
+    std::vector<Uint8> additional_input;
+    std::vector<Uint8> generated_bytes(expected_generated_bytes.size());
+    drbg->randomize(&generated_bytes[0],
+                    generated_bytes.size(),
+                    100,
+                    &additional_input[0],
+                    additional_input.size());
+
+    drbg->randomize(&generated_bytes[0],
+                    generated_bytes.size(),
+                    100,
+                    &additional_input[0],
+                    additional_input.size());
+
+    ASSERT_EQ(expected_generated_bytes, generated_bytes);
 }

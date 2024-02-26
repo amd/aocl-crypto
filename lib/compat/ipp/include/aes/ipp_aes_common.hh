@@ -83,8 +83,8 @@ alcp_encdecAES(const Ipp8u*       pSrc,
             alcp_error_str(err, err_buf, err_size);
             return ippStsNotSupportedModeErr;
         }
-        context->handle.ch_context =
-            malloc(alcp_cipher_context_size(&(context->cinfo)));
+        auto size = alcp_cipher_context_size(&(context->cinfo));
+        context->handle.ch_context = (alc_cipher_context_p)(malloc(size));
 
 // TODO: Debug statements, remove once done.
 // Leaving debug statements here as XTS testing framework needs to be debugged.
@@ -98,16 +98,13 @@ alcp_encdecAES(const Ipp8u*       pSrc,
                       << std::endl;
             std::cout << "KEYLen:" << context->cinfo.ci_key_info.len / 8
                       << std::endl;
-            std::cout
-                << "TKEY:"
-                << parseBytesToHexStr(
-                       context->cinfo.ci_algo_info.ai_xts.xi_tweak_key->key,
-                       (context->cinfo.ci_algo_info.ai_xts.xi_tweak_key->len)
-                           / 8)
-                << std::endl;
-            std::cout << "KEYLen:"
-                      << context->cinfo.ci_algo_info.ai_xts.xi_tweak_key->len
-                             / 8
+            std::cout << "TKEY:"
+                      << parseBytesToHexStr(
+                             context->cinfo.ci_key_info.key
+                                 + ((context->cinfo.ci_key_info.len) / 8),
+                             ((context->cinfo.ci_key_info.len) / 8))
+                      << std::endl;
+            std::cout << "KEYLen:" << context->cinfo.ci_key_info.len / 8
                       << std::endl;
             std::cout << "IV:"
                       << parseBytesToHexStr(context->cinfo.ci_algo_info.ai_iv,
@@ -127,6 +124,14 @@ alcp_encdecAES(const Ipp8u*       pSrc,
             free(context->handle.ch_context);
             context->handle.ch_context = nullptr;
             return ippStsErr;
+        }
+    }
+
+    if (mode == ALC_AES_MODE_XTS) {
+        err = alcp_cipher_set_iv(
+            &(context->handle), 16, context->cinfo.ci_algo_info.ai_iv);
+        if (alcp_is_error(err)) {
+            printErr("Error in Setting the IV\n");
         }
     }
 
@@ -167,6 +172,11 @@ alcp_encdecAES(const Ipp8u*       pSrc,
         std::cout << std::endl;
     }
 #endif
+    alcp_cipher_finish(&context->handle);
+    if (context->handle.ch_context) {
+        free(context->handle.ch_context);
+        context->handle.ch_context = nullptr;
+    }
     /*At this point it should be supported and alcp context should exist*/
     return ippStsNoErr;
 }

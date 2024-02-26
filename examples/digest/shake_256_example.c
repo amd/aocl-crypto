@@ -280,13 +280,16 @@ main(void)
         sample_output    = malloc(hash_size);
         output_string    = malloc(hash_size * 2 + 1);
         alc_error_t err  = create_demo_session(hash_size);
-
-        if (!alcp_is_error(err)) {
-            err = hash_demo(sample_input,
+        if (alcp_is_error(err)) {
+            return -1;
+        }
+        err = hash_demo(sample_input,
                             strlen((const char*)sample_input),
                             sample_output,
                             hash_size,
                             num_chunks);
+        if (alcp_is_error(err)) {
+            return -1;
         }
 
         // check if the outputs are matching
@@ -298,6 +301,7 @@ main(void)
         if (strcmp(expected_output, output_string)) {
             printf("=== FAILED ==== \n");
             printf("Expected output : %s\n", expected_output);
+            return -1;
         } else {
             printf("=== Passed ===\n");
         }

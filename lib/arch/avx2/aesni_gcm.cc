@@ -113,72 +113,48 @@ InitGcm(const Uint8* pKey,
     return err;
 }
 
-void
-gcmCryptInit(__m128i* c1,
-             __m128i  iv_128,
-             __m128i* one_lo,
-             __m128i* one_x,
-             __m128i* two_x,
-             __m128i* three_x,
-             __m128i* four_x,
-             __m128i* swap_ctr)
-{
-
-    *one_x   = alcp_set_epi32(1, 0, 0, 0);
-    *two_x   = alcp_set_epi32(2, 0, 0, 0);
-    *three_x = alcp_set_epi32(3, 0, 0, 0);
-    *four_x  = alcp_set_epi32(4, 0, 0, 0);
-    *one_lo  = *one_x;
-
-    //
-    // counterblock :: counter 4 bytes: IV 8 bytes : Nonce 4 bytes
-    // as per spec: http://www.faqs.org/rfcs/rfc3686.html
-    //
-
-    // counter 4 bytes are arranged in reverse order
-    // for counter increment
-    *swap_ctr =
-        _mm_setr_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 14, 13, 12);
-
-    // nonce counter
-    *c1 = iv_128;
-}
-
+template<Uint8 factor>
 static Uint64
 gcmBlk(const __m128i* p_in_x,
        __m128i*       p_out_x,
        Uint64         blocks,
        const __m128i* pkey128,
-       const Uint8*   pIv,
        int            nRounds,
-       Uint8          factor,
-       // gcm specific params
-       __m128i* pgHash_128,
-       __m128i  Hsubkey_128,
-       __m128i  iv_128,
-       __m128i  reverse_mask_128,
-       bool     isEncrypt,
-       int      remBytes)
+       GcmAuthData*   gcm,
+       __m128i        reverse_mask_128,
+       bool           isEncrypt,
+       int            remBytes)
 {
-    __m128i a1, a2, a3, a4;
-    __m128i b1, b2, b3, b4;
-    __m128i c1, c2, c3, c4, swap_ctr;
-    __m128i one_lo, one_x, two_x, three_x, four_x;
+    __m128i a1, a2, a3, a4; // Block Registers
+    __m128i b1, b2, b3, b4; // Scratch Registers
+    __m128i c1, c2, c3, c4; // Counter Registers
+    __m128i m_hash_subKey_128_2, m_hash_subKey_128_3,
+        m_hash_subKey_128_4; // Key Registers
 
-    /* gcm init + Hash subkey init */
-    gcmCryptInit(
-        &c1, iv_128, &one_lo, &one_x, &two_x, &three_x, &four_x, &swap_ctr);
+    /* Initialization */
 
-    __m128i Hsubkey_128_2, Hsubkey_128_3, Hsubkey_128_4;
+    // Static Constants, persistant over function calls
+    static const __m128i
+        swap_ctr =
+            _mm_setr_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 14, 13, 12),
+        one_x = alcp_set_epi32(1, 0, 0, 0), two_x = alcp_set_epi32(2, 0, 0, 0),
+        three_x = alcp_set_epi32(3, 0, 0, 0),
+        four_x  = alcp_set_epi32(4, 0, 0, 0);
+
+    c1 = gcm->m_iv_128;
+
+    // Propagate Key properly for parrallel gmulr
     if (blocks >= 4) {
-        gMul(Hsubkey_128, Hsubkey_128, &Hsubkey_128_2);
-        gMul(Hsubkey_128_2, Hsubkey_128, &Hsubkey_128_3);
-        gMul(Hsubkey_128_3, Hsubkey_128, &Hsubkey_128_4);
+        gMul(gcm->m_hash_subKey_128,
+             gcm->m_hash_subKey_128,
+             &m_hash_subKey_128_2);
+        gMul(m_hash_subKey_128_2, gcm->m_hash_subKey_128, &m_hash_subKey_128_3);
+        gMul(m_hash_subKey_128_3, gcm->m_hash_subKey_128, &m_hash_subKey_128_4);
     }
 
-    Uint64 blockCount4 = 4 * factor;
-    Uint64 blockCount2 = 2 * factor;
-    Uint64 blockCount1 = factor;
+    constexpr Uint64 blockCount4 = 4 * factor;
+    constexpr Uint64 blockCount2 = 2 * factor;
+    constexpr Uint64 blockCount1 = factor;
 
     for (; blocks >= blockCount4; blocks -= blockCount4) {
 
@@ -192,16 +168,16 @@ gcmBlk(const __m128i* p_in_x,
         a4 = alcp_loadu(p_in_x + 3);
 
         if (isEncrypt == false) {
-            gMulR(Hsubkey_128,
-                  Hsubkey_128_2,
-                  Hsubkey_128_3,
-                  Hsubkey_128_4,
+            gMulR(gcm->m_hash_subKey_128,
+                  m_hash_subKey_128_2,
+                  m_hash_subKey_128_3,
+                  m_hash_subKey_128_4,
                   a4,
                   a3,
                   a2,
                   a1,
                   reverse_mask_128,
-                  pgHash_128);
+                  &(gcm->m_gHash_128));
         }
 
         // re-arrange as per spec
@@ -221,16 +197,16 @@ gcmBlk(const __m128i* p_in_x,
         c1 = alcp_add_epi32(c1, four_x);
 
         if (isEncrypt == true) {
-            gMulR(Hsubkey_128,
-                  Hsubkey_128_2,
-                  Hsubkey_128_3,
-                  Hsubkey_128_4,
+            gMulR(gcm->m_hash_subKey_128,
+                  m_hash_subKey_128_2,
+                  m_hash_subKey_128_3,
+                  m_hash_subKey_128_4,
                   a4,
                   a3,
                   a2,
                   a1,
                   reverse_mask_128,
-                  pgHash_128);
+                  &(gcm->m_gHash_128));
         }
 
         alcp_storeu(p_out_x, a1);
@@ -250,8 +226,14 @@ gcmBlk(const __m128i* p_in_x,
         a2 = alcp_loadu(p_in_x + 1);
 
         if (isEncrypt == false) {
-            gMulR(a1, Hsubkey_128, reverse_mask_128, pgHash_128);
-            gMulR(a2, Hsubkey_128, reverse_mask_128, pgHash_128);
+            gMulR(a1,
+                  gcm->m_hash_subKey_128,
+                  reverse_mask_128,
+                  &(gcm->m_gHash_128));
+            gMulR(a2,
+                  gcm->m_hash_subKey_128,
+                  reverse_mask_128,
+                  &(gcm->m_gHash_128));
         }
 
         // re-arrange as per spec
@@ -267,8 +249,14 @@ gcmBlk(const __m128i* p_in_x,
         c1 = alcp_add_epi32(c1, two_x);
 
         if (isEncrypt == true) {
-            gMulR(a1, Hsubkey_128, reverse_mask_128, pgHash_128);
-            gMulR(a2, Hsubkey_128, reverse_mask_128, pgHash_128);
+            gMulR(a1,
+                  gcm->m_hash_subKey_128,
+                  reverse_mask_128,
+                  &(gcm->m_gHash_128));
+            gMulR(a2,
+                  gcm->m_hash_subKey_128,
+                  reverse_mask_128,
+                  &(gcm->m_gHash_128));
         }
 
         alcp_storeu(p_out_x, a1);
@@ -282,7 +270,10 @@ gcmBlk(const __m128i* p_in_x,
         a1 = alcp_loadu(p_in_x);
 
         if (isEncrypt == false) {
-            gMulR(a1, Hsubkey_128, reverse_mask_128, pgHash_128);
+            gMulR(a1,
+                  gcm->m_hash_subKey_128,
+                  reverse_mask_128,
+                  &(gcm->m_gHash_128));
         }
 
         // re-arrange as per spec
@@ -294,7 +285,10 @@ gcmBlk(const __m128i* p_in_x,
         c1 = alcp_add_epi32(c1, one_x);
 
         if (isEncrypt == true) {
-            gMulR(a1, Hsubkey_128, reverse_mask_128, pgHash_128);
+            gMulR(a1,
+                  gcm->m_hash_subKey_128,
+                  reverse_mask_128,
+                  &(gcm->m_gHash_128));
         }
 
         alcp_storeu(p_out_x, a1);
@@ -308,7 +302,10 @@ gcmBlk(const __m128i* p_in_x,
         a1 = alcp_loadu_128(p_in_x);
 
         if (isEncrypt == false) {
-            gMulR(a1, Hsubkey_128, reverse_mask_128, pgHash_128);
+            gMulR(a1,
+                  gcm->m_hash_subKey_128,
+                  reverse_mask_128,
+                  &(gcm->m_gHash_128));
         }
 
         // re-arrange as per spec
@@ -317,10 +314,13 @@ gcmBlk(const __m128i* p_in_x,
         a1 = alcp_xor(b1, a1);
 
         // increment counter
-        c1 = alcp_add_epi32(c1, one_lo);
+        c1 = alcp_add_epi32(c1, one_x);
 
         if (isEncrypt == true) {
-            gMulR(a1, Hsubkey_128, reverse_mask_128, pgHash_128);
+            gMulR(a1,
+                  gcm->m_hash_subKey_128,
+                  reverse_mask_128,
+                  &(gcm->m_gHash_128));
         }
 
         alcp_storeu_128(p_out_x, a1);
@@ -348,7 +348,10 @@ gcmBlk(const __m128i* p_in_x,
         }
 
         if (isEncrypt == false) {
-            gMulR(a1, Hsubkey_128, reverse_mask_128, pgHash_128);
+            gMulR(a1,
+                  gcm->m_hash_subKey_128,
+                  reverse_mask_128,
+                  &(gcm->m_gHash_128));
         }
 
         a1 = alcp_xor(b1, a1);
@@ -362,9 +365,13 @@ gcmBlk(const __m128i* p_in_x,
         }
 
         if (isEncrypt == true) {
-            gMulR(a1, Hsubkey_128, reverse_mask_128, pgHash_128);
+            gMulR(a1,
+                  gcm->m_hash_subKey_128,
+                  reverse_mask_128,
+                  &(gcm->m_gHash_128));
         }
     }
+    gcm->m_iv_128 = c1;
     return blocks;
 }
 
@@ -374,10 +381,7 @@ CryptGcm(const Uint8* pInputText,  // ptr to inputText
          Uint64       len,         // message length in bytes
          const Uint8* pKey,        // ptr to Key
          int          nRounds,     // No. of rounds
-         const Uint8* pIv,         // ptr to Initialization Vector
-         __m128i*     pgHash_128,
-         __m128i      Hsubkey_128,
-         __m128i      iv_128,
+         GcmAuthData* gcm,
          __m128i      reverse_mask_128,
          bool         isEncrypt,
          Uint64*      pHashSubkeyTable)
@@ -390,20 +394,18 @@ CryptGcm(const Uint8* pInputText,  // ptr to inputText
     auto p_out_128 = reinterpret_cast<__m128i*>(pOutputText);
     auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
 
-    gcmBlk(p_in_128,
-           p_out_128,
-           blocks,
-           pkey128,
-           pIv,
-           nRounds,
-           1, // factor*128
-           // gcm specific params
-           pgHash_128,
-           Hsubkey_128,
-           iv_128,
-           reverse_mask_128,
-           isEncrypt,
-           remBytes);
+    static constexpr Uint64 factor = 1; // factor*128
+
+    gcmBlk<factor>(p_in_128,
+                   p_out_128,
+                   blocks,
+                   pkey128,
+                   nRounds,
+                   // gcm specific params
+                   gcm,
+                   reverse_mask_128,
+                   isEncrypt,
+                   remBytes);
 
     return err;
 }

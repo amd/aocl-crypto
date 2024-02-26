@@ -26,9 +26,6 @@
 # Output directory
 OBJ := bin
 
-# Default compiler
-CC := gcc
-
 # link to static or shared lib
 LIB_TYPE = dynamic #default value
 
@@ -43,7 +40,7 @@ LFLAGS := -L $(LIB_DIR) -lalcp -laoclutils
 
 # if linking to static lib
 ifeq ($(LIB_TYPE), static)
-    LFLAGS = -L$(LIB_DIR) -l:libalcp.a -lstdc++ -lcrypto
+    LFLAGS = -no-pie -L$(LIB_DIR) -L$(OPENSSL_INSTALL_DIR) -Wl,-Bstatic -l:libalcp.a -l:libaoclutils.a -lcrypto -Wl,-Bdynamic -lcrypto -lstdc++ -lpthread -ldl
 endif
 
 # Add more targets as they come.
@@ -55,7 +52,7 @@ TARGETS := cipher/aes-cfb cipher/aes-speed-cipher cipher/aes-speed-gcm cipher/ae
 			rng/rng-demo \
 			mac/hmac mac/cmac \
 			ecdh/x25519_example \
-			rsa/rsa_peer rsa/rsa_encrypt rsa/rsa_decrypt \
+			rsa/rsa_peer rsa/rsa_encrypt rsa/rsa_decrypt rsa/rsa_2048 rsa/rsa_oaep rsa/rsa_oaep_2048 \
 			version/version-demo
 
 .PHONY: all
@@ -63,7 +60,7 @@ TARGETS := cipher/aes-cfb cipher/aes-speed-cipher cipher/aes-speed-gcm cipher/ae
 all: banner create build
 
 banner:
-	@echo "Building examples for AOCL-Crypto"
+	@echo "Building examples for AOCL Cryptography"
 
 create:
 	@mkdir -p  $(OBJ)/cipher

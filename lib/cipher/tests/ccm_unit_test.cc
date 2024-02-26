@@ -33,7 +33,7 @@
 #include "alcp/cipher/cipher_error.hh"
 
 // FIXME: Remove all the includes from gtest_base related to capi
-#include "cipher/gtest_base.hh"
+#include "cipher/gtest_base_cipher.hh"
 #include "gtest/gtest.h"
 
 // KAT Data
@@ -319,8 +319,6 @@ class CCM_KAT
         m_test_name  = test_name;
 
         /* Initialization */
-        const alc_cipher_algo_info_t aesInfo = { ALC_AES_MODE_CCM,
-                                                 &(nonce.at(0)) };
 
         // clang-format off
         const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
@@ -332,17 +330,15 @@ class CCM_KAT
         // clang-format on
 
         // Setup CCM Object
-        pCcmObj = new Ccm(aesInfo, keyInfo);
+        pCcmObj = new Ccm(keyInfo.key, keyInfo.len);
     }
     void TearDown() override { delete pCcmObj; }
 };
 
 TEST(CCM, Initiantiation)
 {
-    Uint8 iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
     Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-    const alc_cipher_algo_info_t aesInfo = { ALC_AES_MODE_CCM, iv };
     // clang-format off
     const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
                                      ALC_KEY_FMT_RAW,
@@ -350,7 +346,7 @@ TEST(CCM, Initiantiation)
                                      {},
                                      128,
                                      key };
-    Ccm                  ccm_obj = Ccm(aesInfo, keyInfo);
+    Ccm                  ccm_obj =Ccm(keyInfo.key, keyInfo.len);
     // clang-format on
     EXPECT_EQ(ccm_obj.getRounds(), 10U);
     EXPECT_EQ(ccm_obj.getNr(), 10U);
@@ -375,7 +371,7 @@ TEST(CCM, ZeroLEN)
                                      .len  = 128,
                                      .key  = key };
     // clang-format on
-    Ccm         ccm_obj = Ccm(aesInfo, keyInfo);
+    Ccm         ccm_obj =Ccm(keyInfo.key, keyInfo.len);
     alc_error_t err;
     err = ccm_obj.setIv(0, iv);
     EXPECT_EQ(err, ALC_ERROR_INVALID_SIZE);
@@ -687,10 +683,8 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST(CCM, InvalidTagLen)
 {
-    Uint8 iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
     Uint8 key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-    const alc_cipher_algo_info_t aesInfo = { ALC_AES_MODE_CCM, iv };
     // clang-format off
     const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
                                      ALC_KEY_FMT_RAW,
@@ -698,7 +692,7 @@ TEST(CCM, InvalidTagLen)
                                      {},
                                      128,
                                      key };
-    Ccm                  ccm_obj = Ccm(aesInfo, keyInfo);
+    Ccm                  ccm_obj = Ccm(keyInfo.key, keyInfo.len);
     alc_error_t err;
 
     // TODO: Create a parametrized test
@@ -714,14 +708,11 @@ TEST(CCM, InvalidTagLen)
 
 TEST(CCM, InvalidNonceLen)
 {
-    Uint8              iv[]  = { 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
     Uint8              key[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
     Uint8              tagbuff[16];
     std::vector<Uint8> out_tag(sizeof(tagbuff), 0);
     std::vector<Uint8> nonce(14,0);
-    const alc_cipher_algo_info_t aesInfo = { ALC_AES_MODE_CCM,
-                                             iv };
     // clang-format off
     const alc_key_info_t keyInfo = { ALC_KEY_TYPE_SYMMETRIC,
                                      ALC_KEY_FMT_RAW,
@@ -729,7 +720,7 @@ TEST(CCM, InvalidNonceLen)
                                      {},
                                      128,
                                      key };
-    Ccm                  ccm_obj = Ccm(aesInfo, keyInfo);
+    Ccm                  ccm_obj = Ccm(keyInfo.key, keyInfo.len);
     alc_error_t err;
 
     // TODO: Create a parametrized test

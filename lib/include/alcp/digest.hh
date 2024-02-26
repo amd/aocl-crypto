@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,6 +33,7 @@
 
 #include "alcp/digest.h"
 #include "alcp/types.h"
+#include "alcp/utils/bits.hh"
 
 /* System headers */
 /* FIXME: Disabling temporarily to fix a compilation error while using AOCC */
@@ -42,6 +43,8 @@
 #include <string>
 
 namespace alcp::digest {
+using alcp::utils::RotateLeft;
+using alcp::utils::RotateRight;
 
 /* FIXME: Disabling temporarily to fix a compilation error while using AOCC */
 #if 0
@@ -50,40 +53,6 @@ typedef std::pmr::synchronized_pool_resource DigestPool;
 std::pmr::synchronized_pool_resource&
 GetDefaultDigestPool();
 #endif
-
-static inline Uint32
-RotateRight(Uint32 value, Uint32 count)
-{
-#if 0
-    __asm__("rorl %%cl, %0" : "+r"(value) : "c"(count));
-    return value;
-#else
-    return value >> count | value << (32 - count);
-#endif
-}
-
-static inline Uint64
-RotateRight(Uint64 value, Uint64 count)
-{
-#if 0
-    __asm__("rorq %%cl, %0" : "+r"(value) : "c"(count));
-    return value;
-#else
-    return value >> count | value << (64 - count);
-#endif
-}
-
-static inline Uint32
-RotateLeft(Uint32 value, Uint32 count)
-{
-    return value << count | value >> (32 - count);
-}
-
-static inline Uint64
-RotateLeft(Uint64 value, Uint64 count)
-{
-    return value << count | value >> (64 - count);
-}
 
 class IDigest
 {
@@ -108,7 +77,6 @@ class IDigest
      */
     virtual Uint64 getHashSize() = 0;
 
-  protected:
     virtual ~IDigest() {}
 };
 

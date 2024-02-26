@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,7 +31,7 @@
 #include "config.h"
 
 #include "alcp/base.hh"
-#include "alcp/cipher.h"
+#include "alcp/cipher_aead.h"
 
 #include <array>
 #include <cstdint>
@@ -52,12 +52,6 @@ namespace cipher {
                                     Uint8*       pDst,
                                     Uint64       len,
                                     const Uint8* pIv) const = 0;
-
-        /*
-        virtual alc_error_t encryptUpdate(const Uint8* pInput,
-        Uint64       inputLen,
-        Uint8*       pOutput,
-        Uint64*      pOutputLen) = 0;*/
 
       protected:
         virtual ~IEncrypter() {}
@@ -135,6 +129,40 @@ namespace cipher {
             m_decryptUpdate_fn;
     };
 
+    class ALCP_API_EXPORT ICipher
+    {
+      public:
+        /**
+         * @brief   CBC Encrypt Operation
+         * @note
+         * @param   pPlainText      Pointer to output buffer
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t encrypt(const Uint8* pPlainText,
+                                    Uint8*       pCipherText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const = 0;
+
+        /**
+         * @brief   CBC Decrypt Operation
+         * @note
+         * @param   pCipherText     Pointer to encrypted buffer
+         * @param   pPlainText      Pointer to output buffer
+         * @param   len             Len of plain and encrypted text
+         * @param   pIv             Pointer to Initialization Vector
+         * @return  alc_error_t     Error code
+         */
+        virtual alc_error_t decrypt(const Uint8* pCipherText,
+                                    Uint8*       pPlainText,
+                                    Uint64       len,
+                                    const Uint8* pIv) const = 0;
+
+        virtual ~ICipher(){};
+    };
+
 } // namespace cipher
 
 class Cipher
@@ -142,16 +170,6 @@ class Cipher
 
   public:
     virtual ~Cipher() {}
-
-    /**
-     * @brief           Checks if a given algorithm is supported
-     * @note           Function  checks for algorithm and its
-     *                  configuration for supported options
-     * @param   pCipherInfo  Pointer to Cipher information
-     * @return          'true' if the given configuration/cipher is
-     * supported 'false' otherwise
-     */
-    virtual bool isSupported(const alc_cipher_info_t& cipherInfo) = 0;
 
   protected:
     Cipher() {}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -138,7 +138,7 @@ alcp_ec_context_size(const alc_ec_info_p p_ec_info);
  *
  * @parblock <br> &nbsp;
  * <b>This API needs to be called before any other API is called to
- * know if EC that is being request is supported or not </b>
+ * know if EC that is being requested is supported or not </b>
  * @endparblock
  *
  * @note        alcp_ec_supported() should be called
@@ -183,6 +183,7 @@ alcp_ec_request(const alc_ec_info_p pEcInfo, alc_ec_handle_p pEcHandle);
  * @parblock <br> &nbsp;
  * <b> This API is called to get the error string. It should be called after
  * @ref alcp_ec_request and before @ref alcp_ec_finish </b>
+ * @endparblock
  * @param [in] pEcHandle Session handle for EC operation
  * @param [out] pBuff  Destination Buffer to which Error String will be copied
  * @param [in] size    Length of the Buffer.

@@ -15,3 +15,11 @@
 * [AES Encryption Demo Example](md_docs_examples_aes_cfb_nopadding.html)
 
 
+##### Tests
+
+* [ALCP Micro Tests](md_tests_README.html)
+
+##### BenchMarks
+
+* [ALCP Micro Benchmarks](md_bench_README.html)
+

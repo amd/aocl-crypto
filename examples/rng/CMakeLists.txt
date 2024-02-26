@@ -24,3 +24,8 @@
  # POSSIBILITY OF SUCH DAMAGE.
  
 ADD_EXAMPLE(rng-demo rng-demo.c)
+ADD_EXAMPLE(ctr_drbg-demo ctr_drbg-demo.c)
+ADD_EXAMPLE(hmac_drbg-demo hmac_drbg-demo.c)
+ADD_EXAMPLE(drbg-test drbg-test.c)
+
+

@@ -109,8 +109,8 @@ class Sha256::Impl
   private:
     Uint64 m_msg_len;
     /* Any unprocessed bytes from last call to update() */
-    Uint8  m_buffer[cChunkSize];
-    Uint32 m_hash[cHashSizeWords];
+    alignas(64) Uint8 m_buffer[2 * cChunkSize];
+    alignas(64) Uint32 m_hash[cHashSizeWords];
     /* index to m_buffer of previously unprocessed bytes */
     Uint32 m_idx;
     bool   m_finished;
@@ -129,7 +129,7 @@ Sha256::Impl::Impl()
 alc_error_t
 Sha256::Impl::setIv(const void* pIv, Uint64 size)
 {
-    utils::CopyBytes(m_hash, pIv, size);
+    utils::CopyBlock(m_hash, pIv, size);
 
     return ALC_ERROR_NONE;
 }
@@ -148,7 +148,7 @@ Sha256::Impl::~Impl() = default;
 alc_error_t
 Sha256::Impl::copyHash(Uint8* pHash, Uint64 size) const
 {
-    utils::CopyBlockWith<Uint32>(
+    utils::CopyBlockWith<Uint32, true>(
         pHash, m_hash, cHashSize, utils::ToBigEndian<Uint32>);
 
     return ALC_ERROR_NONE;
@@ -238,7 +238,7 @@ Sha256::Impl::update(const Uint8* pSrc, Uint64 input_size)
     Uint64 to_process = std::min((input_size + m_idx), cChunkSize);
     if (to_process < cChunkSize) {
         /* copy them to internal buffer and return */
-        utils::CopyBytes(&m_buffer[m_idx], pSrc, input_size);
+        utils::CopyBlock(&m_buffer[m_idx], pSrc, input_size);
         m_idx += input_size;
         return err;
     }
@@ -252,7 +252,7 @@ Sha256::Impl::update(const Uint8* pSrc, Uint64 input_size)
          * remaining bytes of a chunk.
          */
         to_process = std::min(input_size, cChunkSize - idx);
-        utils::CopyBytes(&m_buffer[idx], pSrc, to_process);
+        utils::CopyBlock(&m_buffer[idx], pSrc, to_process);
 
         pSrc += to_process;
         input_size -= to_process;
@@ -280,7 +280,7 @@ Sha256::Impl::update(const Uint8* pSrc, Uint64 input_size)
      * We still have some leftover bytes, copy them to internal buffer
      */
     if (input_size) {
-        utils::CopyBytes(&m_buffer[idx], pSrc, input_size);
+        utils::CopyBlock(&m_buffer[idx], pSrc, input_size);
         idx += input_size;
     }
 
@@ -309,29 +309,20 @@ Sha256::Impl::finalize(const Uint8* pBuf, Uint64 size)
      * Default padding is 'length encoding'
      */
 
-    /*
-     * When the bytes left in the current chunk are less than 8,
-     * current chunk can NOT accomodate the message length.
-     * The curent chunk is processed and the message length is
-     * placed in a new chunk and will be processed.
-     */
-    Uint8 local_buf[cChunkSize * 2];
-    utils::CopyBlock(local_buf, m_buffer, m_idx);
+    m_buffer[m_idx++] = 0x80;
 
-    local_buf[m_idx++] = 0x80;
-
-    Uint64 buf_len = m_idx <= (cChunkSize - 8) ? cChunkSize : sizeof(local_buf);
+    Uint64 buf_len = m_idx <= (cChunkSize - 8) ? cChunkSize : sizeof(m_buffer);
     Uint64 bytes_left = buf_len - m_idx - utils::BytesPerDWord;
 
-    utils::PadBlock<Uint8>(&local_buf[m_idx], 0x0, bytes_left);
+    utils::PadBlock<Uint8>(&m_buffer[m_idx], 0x0, bytes_left);
 
     /* Store total length in the last 64-bit (8-bytes) */
     Uint64  len_in_bits = m_msg_len * 8;
     Uint64* msg_len_ptr =
-        reinterpret_cast<Uint64*>(&local_buf[buf_len] - sizeof(Uint64));
+        reinterpret_cast<Uint64*>(&m_buffer[buf_len] - sizeof(Uint64));
     msg_len_ptr[0] = utils::ToBigEndian(len_in_bits);
 
-    err = processChunk(local_buf, buf_len);
+    err = processChunk(m_buffer, buf_len);
 
     m_idx = 0;
 
@@ -352,8 +343,7 @@ Sha256::Sha256()
 
 Sha256::Sha256(const alc_digest_info_t& rDigestInfo)
     : Sha256()
-{
-}
+{}
 
 Sha256::~Sha256() = default;
 

@@ -25,18 +25,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "alcp/base/error.hh"
 #include "alcp/base/status.hh"
+#include "alcp/base/error.hh"
 
-namespace alcp::base {
-
-Status
-StatusOk()
-{
-    return Status(ErrorCode::eOk);
-}
-
-namespace status {
+namespace alcp::base { namespace status {
     Status AlreadyExists(const StringView msg)
     {
         auto e = GenericError{ ErrorCode::eExists };
@@ -78,6 +70,4 @@ namespace status {
         auto e = GenericError{ ErrorCode::eInternal };
         return Status(e, sv);
     }
-} // namespace status
-
-} // namespace alcp::base
+}} // namespace alcp::base::status

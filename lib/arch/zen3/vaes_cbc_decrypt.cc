@@ -35,6 +35,15 @@
 
 namespace alcp::cipher::vaes {
 
+template<void AesDec_1x128(__m256i* pBlk0, const __m128i* pKey, int nRounds),
+         void AesDec_2x128(
+             __m256i* pBlk0, __m256i* pBlk1, const __m128i* pKey, int nRounds),
+         void AesDec_4x128(__m256i*       pBlk0,
+                           __m256i*       pBlk1,
+                           __m256i*       pBlk2,
+                           __m256i*       pBlk3,
+                           const __m128i* pKey,
+                           int            nRounds)>
 alc_error_t
 DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
            Uint8*       pPlainText,  // ptr to plaintext
@@ -92,7 +101,7 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         b3 = input_128_a1 = _mm256_loadu_si256(((__m256i*)(p_in_128 - 1)) + 2);
         b4 = input_128_a1 = _mm256_loadu_si256(((__m256i*)(p_in_128 - 1)) + 3);
 
-        vaes::AesDecrypt(&a1, &a2, &a3, &a4, pkey128, nRounds);
+        AesDec_4x128(&a1, &a2, &a3, &a4, pkey128, nRounds);
 
         // Do xor with previous cipher text to complete decryption.
         a1 = _mm256_xor_si256(a1, b1);
@@ -120,7 +129,7 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         b1 = input_128_a1 = _mm256_loadu_si256((__m256i*)(p_in_128 - 1) + 0);
         b2 = input_128_a1 = _mm256_loadu_si256(((__m256i*)(p_in_128 - 1)) + 1);
 
-        vaes::AesDecrypt(&a1, &a2, pkey128, nRounds);
+        AesDec_2x128(&a1, &a2, pkey128, nRounds);
 
         // Do xor with previous cipher text to complete decryption.
         a1 = _mm256_xor_si256(a1, b1);
@@ -142,7 +151,7 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         // Load in the format b1 = c0,c1. Counting on cache to have data
         b1 = input_128_a1 = _mm256_loadu_si256((__m256i*)(p_in_128 - 1));
 
-        vaes::AesDecrypt(&a1, pkey128, nRounds);
+        AesDec_1x128(&a1, pkey128, nRounds);
 
         // Do xor with previous cipher text to complete decryption.
         a1 = _mm256_xor_si256(a1, b1);
@@ -163,7 +172,7 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
         a1 = input_128_a1 =
             _mm256_maskload_epi64((long long*)p_in_128, mask_lo);
 
-        vaes::AesDecrypt(&a1, pkey128, nRounds);
+        AesDec_1x128(&a1, pkey128, nRounds);
 
         // Do xor with previous cipher text to complete decryption.
         a1 = _mm256_xor_si256(a1, b1);
@@ -177,6 +186,45 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
     }
 
     return err;
+}
+
+ALCP_API_EXPORT alc_error_t
+DecryptCbc128(const Uint8* pSrc,    // ptr to ciphertext
+              Uint8*       pDest,   // ptr to plaintext
+              Uint64       len,     // message length in bytes
+              const Uint8* pKey,    // ptr to Key
+              int          nRounds, // No. of rounds
+              const Uint8* pIv      // ptr to Initialization Vector
+)
+{
+    return DecryptCbc<vaes::AesDecrypt, vaes::AesDecrypt, vaes::AesDecrypt>(
+        pSrc, pDest, len, pKey, nRounds, pIv);
+}
+
+ALCP_API_EXPORT alc_error_t
+DecryptCbc192(const Uint8* pSrc,    // ptr to ciphertext
+              Uint8*       pDest,   // ptr to plaintext
+              Uint64       len,     // message length in bytes
+              const Uint8* pKey,    // ptr to Key
+              int          nRounds, // No. of rounds
+              const Uint8* pIv      // ptr to Initialization Vector
+)
+{
+    return DecryptCbc<vaes::AesDecrypt, vaes::AesDecrypt, vaes::AesDecrypt>(
+        pSrc, pDest, len, pKey, nRounds, pIv);
+}
+
+ALCP_API_EXPORT alc_error_t
+DecryptCbc256(const Uint8* pSrc,    // ptr to ciphertext
+              Uint8*       pDest,   // ptr to plaintext
+              Uint64       len,     // message length in bytes
+              const Uint8* pKey,    // ptr to Key
+              int          nRounds, // No. of rounds
+              const Uint8* pIv      // ptr to Initialization Vector
+)
+{
+    return DecryptCbc<vaes::AesDecrypt, vaes::AesDecrypt, vaes::AesDecrypt>(
+        pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
 } // namespace alcp::cipher::vaes

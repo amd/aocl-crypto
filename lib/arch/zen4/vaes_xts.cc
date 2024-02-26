@@ -29,29 +29,42 @@
 #include "vaes_avx512.hh"
 
 #include "alcp/cipher/aes.hh"
-#include "alcp/cipher/aes_xts.hh"
 #include "alcp/types.hh"
 #include "alcp/utils/copy.hh"
+#include "cipher/avx2/aes_xts_avx2.hh"
+#include "cipher/zen4/aes_xts_zen4.hh"
 
 #include <immintrin.h>
 
 namespace alcp::cipher::vaes512 {
 
-alc_error_t
+template<
+    void AesEnc_1x512(__m512i* a, const __m128i* pKey, int nRounds),
+    void AesEnc_2x512(__m512i* a, __m512i* b, const __m128i* pKey, int nRounds),
+    void AesEnc_3x512(
+        __m512i* a, __m512i* b, __m512i* c, const __m128i* pKey, int nRounds),
+    void AesEnc_4x512(__m512i*       a,
+                      __m512i*       b,
+                      __m512i*       c,
+                      __m512i*       d,
+                      const __m128i* pKey,
+                      int            nRounds)>
+inline alc_error_t
 EncryptXtsAvx512(const Uint8* pSrc,
                  Uint8*       pDest,
                  Uint64       len,
                  const Uint8* pKey,
                  const Uint8* pTweakKey,
                  int          nRounds,
-                 const Uint8* pIv)
+                 Uint8*       pIv)
 {
 
-    auto p_key128       = reinterpret_cast<const __m128i*>(pKey);
-    auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
-    auto p_src512       = reinterpret_cast<const __m512i*>(pSrc);
-    auto p_dest512      = reinterpret_cast<__m512i*>(pDest);
-    auto p_iv64         = reinterpret_cast<const Uint64*>(pIv);
+    auto p_key128 = reinterpret_cast<const __m128i*>(pKey);
+    // auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
+    auto p_src512   = reinterpret_cast<const __m512i*>(pSrc);
+    auto p_dest512  = reinterpret_cast<__m512i*>(pDest);
+    auto p_iv128_in = reinterpret_cast<__m128i*>(pIv);
+    auto p_iv64     = reinterpret_cast<const Uint64*>(pIv);
 
     Uint64 blocks                       = len / Rijndael::cBlockSize;
     Uint64 extra_bytes_in_message_block = len % Rijndael::cBlockSize;
@@ -61,12 +74,13 @@ EncryptXtsAvx512(const Uint8* pSrc,
     __m512i extendedIV =
         _mm512_setr_epi64(p_iv64[0], p_iv64[1], 0, 0, 0, 0, 0, 0);
 
-    AesEncrypt(&extendedIV, p_tweak_key128, nRounds);
+    // AesEnc_1x512(&extendedIV, p_tweak_key128, nRounds);
 
     __m512i tweakx8[8]; // 8*4 Tweak values stored inside this
+    __m512i nextTweakBlock;
 
-    __m128i* p_iv128     = reinterpret_cast<__m128i*>(&extendedIV);
-    __m128i* p_tweaks128 = reinterpret_cast<__m128i*>(tweakx8);
+    auto* p_iv128     = reinterpret_cast<__m128i*>(&extendedIV);
+    auto* p_tweaks128 = reinterpret_cast<__m128i*>(tweakx8);
 
     aes::init_alphax8(p_iv128[0], p_tweaks128);
 
@@ -95,12 +109,12 @@ EncryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_3 = tweakx8[2] ^ src_text_3;
         __m512i tweaked_src_text_4 = tweakx8[3] ^ src_text_4;
 
-        AesEncrypt(&tweaked_src_text_1,
-                   &tweaked_src_text_2,
-                   &tweaked_src_text_3,
-                   &tweaked_src_text_4,
-                   p_key128,
-                   nRounds);
+        AesEnc_4x512(&tweaked_src_text_1,
+                     &tweaked_src_text_2,
+                     &tweaked_src_text_3,
+                     &tweaked_src_text_4,
+                     p_key128,
+                     nRounds);
 
         // getting Cipher Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweakx8[0] ^ tweaked_src_text_1;
@@ -125,12 +139,12 @@ EncryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_7 = tweakx8[6] ^ src_text_7;
         __m512i tweaked_src_text_8 = tweakx8[7] ^ src_text_8;
 
-        AesEncrypt(&tweaked_src_text_5,
-                   &tweaked_src_text_6,
-                   &tweaked_src_text_7,
-                   &tweaked_src_text_8,
-                   p_key128,
-                   nRounds);
+        AesEnc_4x512(&tweaked_src_text_5,
+                     &tweaked_src_text_6,
+                     &tweaked_src_text_7,
+                     &tweaked_src_text_8,
+                     p_key128,
+                     nRounds);
 
         // getting Cipher Text after xor of message and Alpha ^ j
         tweaked_src_text_5 = tweakx8[4] ^ tweaked_src_text_5;
@@ -167,23 +181,23 @@ EncryptXtsAvx512(const Uint8* pSrc,
         __m512i src_text_4 = _mm512_loadu_si512(p_src512 + 3);
 
         // getting Tweaked Text after xor of message and Alpha ^ j
-        __m512i tweaked_src_text_1 = tweakx8[0] ^ src_text_1;
-        __m512i tweaked_src_text_2 = tweakx8[1] ^ src_text_2;
-        __m512i tweaked_src_text_3 = tweakx8[2] ^ src_text_3;
-        __m512i tweaked_src_text_4 = tweakx8[3] ^ src_text_4;
+        __m512i tweaked_src_text_1 = tweakx8[tweak_idx + 0] ^ src_text_1;
+        __m512i tweaked_src_text_2 = tweakx8[tweak_idx + 1] ^ src_text_2;
+        __m512i tweaked_src_text_3 = tweakx8[tweak_idx + 2] ^ src_text_3;
+        __m512i tweaked_src_text_4 = tweakx8[tweak_idx + 3] ^ src_text_4;
 
-        AesEncrypt(&tweaked_src_text_1,
-                   &tweaked_src_text_2,
-                   &tweaked_src_text_3,
-                   &tweaked_src_text_4,
-                   p_key128,
-                   nRounds);
+        AesEnc_4x512(&tweaked_src_text_1,
+                     &tweaked_src_text_2,
+                     &tweaked_src_text_3,
+                     &tweaked_src_text_4,
+                     p_key128,
+                     nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
-        tweaked_src_text_1 = tweakx8[0] ^ tweaked_src_text_1;
-        tweaked_src_text_2 = tweakx8[1] ^ tweaked_src_text_2;
-        tweaked_src_text_3 = tweakx8[2] ^ tweaked_src_text_3;
-        tweaked_src_text_4 = tweakx8[3] ^ tweaked_src_text_4;
+        tweaked_src_text_1 = tweakx8[tweak_idx + 0] ^ tweaked_src_text_1;
+        tweaked_src_text_2 = tweakx8[tweak_idx + 1] ^ tweaked_src_text_2;
+        tweaked_src_text_3 = tweakx8[tweak_idx + 2] ^ tweaked_src_text_3;
+        tweaked_src_text_4 = tweakx8[tweak_idx + 3] ^ tweaked_src_text_4;
 
         // storing the results in destination
         _mm512_storeu_si512(p_dest512, tweaked_src_text_1);
@@ -196,7 +210,9 @@ EncryptXtsAvx512(const Uint8* pSrc,
         tweak_idx += 4;
         blocks -= chunk;
     }
-    chunk = 4 * 3;
+
+    nextTweakBlock = tweakx8[tweak_idx];
+    chunk          = 4 * 3;
 
     // Encrypting 4*3 source text blocks at a time
     if (blocks >= chunk) {
@@ -214,11 +230,11 @@ EncryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_2 = tweak_2 ^ src_text_2;
         __m512i tweaked_src_text_3 = tweak_3 ^ src_text_3;
 
-        AesEncrypt(&tweaked_src_text_1,
-                   &tweaked_src_text_2,
-                   &tweaked_src_text_3,
-                   p_key128,
-                   nRounds);
+        AesEnc_3x512(&tweaked_src_text_1,
+                     &tweaked_src_text_2,
+                     &tweaked_src_text_3,
+                     p_key128,
+                     nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweak_1 ^ tweaked_src_text_1;
@@ -236,7 +252,8 @@ EncryptXtsAvx512(const Uint8* pSrc,
         blocks -= chunk;
     }
 
-    chunk = 4 * 2;
+    nextTweakBlock = tweakx8[tweak_idx];
+    chunk          = 4 * 2;
 
     // Encrypting 4*2 source text blocks at a time
     if (blocks >= chunk) {
@@ -251,7 +268,8 @@ EncryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_1 = tweak_1 ^ src_text_1;
         __m512i tweaked_src_text_2 = tweak_2 ^ src_text_2;
 
-        AesEncrypt(&tweaked_src_text_1, &tweaked_src_text_2, p_key128, nRounds);
+        AesEnc_2x512(
+            &tweaked_src_text_1, &tweaked_src_text_2, p_key128, nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweak_1 ^ tweaked_src_text_1;
@@ -267,7 +285,8 @@ EncryptXtsAvx512(const Uint8* pSrc,
         blocks -= chunk;
     }
 
-    chunk = 4;
+    nextTweakBlock = tweakx8[tweak_idx];
+    chunk          = 4;
 
     // Encrypting 4*1 source text blocks at a time
     if (blocks >= chunk) {
@@ -279,7 +298,7 @@ EncryptXtsAvx512(const Uint8* pSrc,
         // getting Tweaked Text after xor of message and Alpha ^ j
         __m512i tweaked_src_text_1 = tweak_1 ^ src_text_1;
 
-        AesEncrypt(&tweaked_src_text_1, p_key128, nRounds);
+        AesEnc_1x512(&tweaked_src_text_1, p_key128, nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweak_1 ^ tweaked_src_text_1;
@@ -293,38 +312,60 @@ EncryptXtsAvx512(const Uint8* pSrc,
         blocks -= chunk;
     }
 
-    __m512i lastTweak    = tweakx8[tweak_idx];
-    Uint8*  p_lastTweak8 = reinterpret_cast<Uint8*>(&lastTweak);
-    Uint8*  p_dest8      = reinterpret_cast<Uint8*>(p_dest512);
-    auto    p_src8       = reinterpret_cast<const Uint8*>(p_src512);
+    nextTweakBlock    = tweakx8[tweak_idx];
+    __m512i lastTweak = tweakx8[tweak_idx];
 
-    if (blocks) {
-        Uint8   k           = ((1 << (blocks + blocks)) - 1);
-        __m512i src_text_1  = _mm512_maskz_loadu_epi64(k, p_src512);
-        Uint8*  p_src_text8 = reinterpret_cast<Uint8*>(&src_text_1);
+    while (blocks) {
+        constexpr Uint8 k          = 3;
+        __m512i         src_text_1 = _mm512_maskz_loadu_epi64(k, p_src512);
 
         src_text_1 = (lastTweak ^ src_text_1);
 
-        AesEncrypt(&src_text_1, p_key128, nRounds);
+        AesEnc_1x512(&src_text_1, p_key128, nRounds);
 
         src_text_1 = (lastTweak ^ src_text_1);
 
-        utils::CopyBytes(p_dest8, p_src_text8, (unsigned long)(blocks * 16));
+        _mm512_mask_storeu_epi64(p_dest512, k, src_text_1);
 
-        utils::CopyBytes((p_dest8 + (16 * blocks)),
-                         p_src_text8 + (16 * (blocks - 1)),
-                         extra_bytes_in_message_block);
-
-    } else {
-        utils::CopyBytes(p_dest8, p_dest8 - 16, extra_bytes_in_message_block);
+#if 1
+        // Use Exisint TweakBlock Method
+        // Rotate to get next tweak block
+        nextTweakBlock = _mm512_alignr_epi64(lastTweak, lastTweak, 0x2);
+        lastTweak      = nextTweakBlock;
+        p_dest512      = reinterpret_cast<__m512i*>(
+            reinterpret_cast<Uint8*>(p_dest512) + 16);
+        p_src512 = reinterpret_cast<const __m512i*>(
+            reinterpret_cast<const Uint8*>(p_src512) + 16);
+        blocks--;
+#else
+        // Generate TweakBlock Method
+        __m128i last_tweak_block = _mm512_extracti64x2_epi64(lastTweak, 0);
+        aes::MultiplyAlphaByTwo(last_tweak_block);
+        lastTweak = _mm512_inserti64x2(lastTweak, last_tweak_block, 0);
+        p_dest512 = reinterpret_cast<__m512i*>(
+            reinterpret_cast<Uint8*>(p_dest512) + 16);
+        p_src512 = reinterpret_cast<const __m512i*>(
+            reinterpret_cast<const Uint8*>(p_src512) + 16);
+        blocks--;
+#endif
     }
+    nextTweakBlock = lastTweak;
 
+    Uint8* p_lastTweak8 = reinterpret_cast<Uint8*>(&lastTweak);
+    Uint8* p_dest8      = reinterpret_cast<Uint8*>(p_dest512);
+    auto   p_src8       = reinterpret_cast<const Uint8*>(p_src512);
+
+    utils::CopyBytes(
+        reinterpret_cast<Uint8*>(p_dest512),
+        reinterpret_cast<__m512i*>(reinterpret_cast<Uint8*>(p_dest512) - 16),
+        extra_bytes_in_message_block);
+#if 1
     if (extra_bytes_in_message_block) {
         __m512i stealed_text, temp_tweak;
         Uint8*  p_stealed_text = reinterpret_cast<Uint8*>(&stealed_text);
         Uint8*  p_temp_tweak   = reinterpret_cast<Uint8*>(&temp_tweak);
 
-        utils::CopyBytes(p_temp_tweak, p_lastTweak8 + ((16 * (blocks))), (16));
+        utils::CopyBytes(p_temp_tweak, p_lastTweak8, (16));
 
         utils::CopyBytes(
             p_stealed_text + extra_bytes_in_message_block,
@@ -336,28 +377,47 @@ EncryptXtsAvx512(const Uint8* pSrc,
                          (extra_bytes_in_message_block));
 
         stealed_text = _mm512_xor_epi64(temp_tweak, stealed_text);
-        AesEncrypt(&stealed_text, p_key128, nRounds);
+        AesEnc_1x512(&stealed_text, p_key128, nRounds);
         stealed_text = _mm512_xor_epi64(temp_tweak, stealed_text);
 
         utils::CopyBytes(p_dest8 + (16 * (blocks - 1)), p_stealed_text, 16);
+
+        // Rotate to get next tweak block
+        nextTweakBlock = _mm512_alignr_epi64(lastTweak, lastTweak, 0x2);
     }
+#endif
+
+    _mm_store_si128(p_iv128_in, *(__m128i*)(&nextTweakBlock));
     return ALC_ERROR_NONE;
 }
 
-alc_error_t
+template<
+    void AesEnc_1x512(__m512i* a, const __m128i* pKey, int nRounds),
+    void AesDec_1x512(__m512i* a, const __m128i* pKey, int nRounds),
+    void AesDec_2x512(__m512i* a, __m512i* b, const __m128i* pKey, int nRounds),
+    void AesDec_3x512(
+        __m512i* a, __m512i* b, __m512i* c, const __m128i* pKey, int nRounds),
+    void AesDec_4x512(__m512i*       a,
+                      __m512i*       b,
+                      __m512i*       c,
+                      __m512i*       d,
+                      const __m128i* pKey,
+                      int            nRounds)>
+inline alc_error_t
 DecryptXtsAvx512(const Uint8* pSrc,
                  Uint8*       pDest,
                  Uint64       len,
                  const Uint8* pKey,
                  const Uint8* pTweakKey,
                  int          nRounds,
-                 const Uint8* pIv)
+                 Uint8*       pIv)
 {
-    auto p_key128       = reinterpret_cast<const __m128i*>(pKey);
-    auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
-    auto p_src512       = reinterpret_cast<const __m512i*>(pSrc);
-    auto p_dest512      = reinterpret_cast<__m512i*>(pDest);
-    auto p_iv64         = reinterpret_cast<const Uint64*>(pIv);
+    auto p_key128 = reinterpret_cast<const __m128i*>(pKey);
+    // auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
+    auto p_src512   = reinterpret_cast<const __m512i*>(pSrc);
+    auto p_dest512  = reinterpret_cast<__m512i*>(pDest);
+    auto p_iv128_in = reinterpret_cast<__m128i*>(pIv);
+    auto p_iv64     = reinterpret_cast<const Uint64*>(pIv);
 
     Uint64 blocks                       = len / Rijndael::cBlockSize;
     Uint64 extra_bytes_in_message_block = len % Rijndael::cBlockSize;
@@ -367,12 +427,13 @@ DecryptXtsAvx512(const Uint8* pSrc,
     __m512i extendedIV =
         _mm512_setr_epi64(p_iv64[0], p_iv64[1], 0, 0, 0, 0, 0, 0);
 
-    AesEncrypt(&extendedIV, p_tweak_key128, nRounds);
+    // AesEnc_1x512(&extendedIV, p_tweak_key128, nRounds);
 
     __m512i tweakx8[8]; // 8*4 Tweak values stored inside this
+    __m512i nextTweakBlock;
 
-    __m128i* p_iv128     = reinterpret_cast<__m128i*>(&extendedIV);
-    __m128i* p_tweaks128 = reinterpret_cast<__m128i*>(tweakx8);
+    auto p_iv128     = reinterpret_cast<__m128i*>(&extendedIV);
+    auto p_tweaks128 = reinterpret_cast<__m128i*>(tweakx8);
 
     aes::init_alphax8(p_iv128[0], p_tweaks128);
 
@@ -400,12 +461,12 @@ DecryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_3 = tweakx8[2] ^ src_text_3;
         __m512i tweaked_src_text_4 = tweakx8[3] ^ src_text_4;
 
-        AesDecrypt(&tweaked_src_text_1,
-                   &tweaked_src_text_2,
-                   &tweaked_src_text_3,
-                   &tweaked_src_text_4,
-                   p_key128,
-                   nRounds);
+        AesDec_4x512(&tweaked_src_text_1,
+                     &tweaked_src_text_2,
+                     &tweaked_src_text_3,
+                     &tweaked_src_text_4,
+                     p_key128,
+                     nRounds);
 
         // getting Cipher Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweakx8[0] ^ tweaked_src_text_1;
@@ -436,12 +497,12 @@ DecryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_7 = tweakx8[6] ^ src_text_7;
         __m512i tweaked_src_text_8 = tweakx8[7] ^ src_text_8;
 
-        AesDecrypt(&tweaked_src_text_5,
-                   &tweaked_src_text_6,
-                   &tweaked_src_text_7,
-                   &tweaked_src_text_8,
-                   p_key128,
-                   nRounds);
+        AesDec_4x512(&tweaked_src_text_5,
+                     &tweaked_src_text_6,
+                     &tweaked_src_text_7,
+                     &tweaked_src_text_8,
+                     p_key128,
+                     nRounds);
 
         // getting Cipher Text after xor of message and Alpha ^ j
         tweaked_src_text_5 = tweakx8[4] ^ tweaked_src_text_5;
@@ -489,12 +550,12 @@ DecryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_3 = tweakx8[2] ^ src_text_3;
         __m512i tweaked_src_text_4 = tweakx8[3] ^ src_text_4;
 
-        AesDecrypt(&tweaked_src_text_1,
-                   &tweaked_src_text_2,
-                   &tweaked_src_text_3,
-                   &tweaked_src_text_4,
-                   p_key128,
-                   nRounds);
+        AesDec_4x512(&tweaked_src_text_1,
+                     &tweaked_src_text_2,
+                     &tweaked_src_text_3,
+                     &tweaked_src_text_4,
+                     p_key128,
+                     nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweakx8[0] ^ tweaked_src_text_1;
@@ -513,7 +574,9 @@ DecryptXtsAvx512(const Uint8* pSrc,
         tweak_idx += 4;
         blocks -= chunk;
     }
-    chunk = 4 * 3;
+
+    nextTweakBlock = tweakx8[tweak_idx];
+    chunk          = 4 * 3;
 
     // Encrypting 4*3 source text blocks at a time
     if (blocks >= chunk) {
@@ -537,11 +600,11 @@ DecryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_2 = tweak_2 ^ src_text_2;
         __m512i tweaked_src_text_3 = tweak_3 ^ src_text_3;
 
-        AesDecrypt(&tweaked_src_text_1,
-                   &tweaked_src_text_2,
-                   &tweaked_src_text_3,
-                   p_key128,
-                   nRounds);
+        AesDec_3x512(&tweaked_src_text_1,
+                     &tweaked_src_text_2,
+                     &tweaked_src_text_3,
+                     p_key128,
+                     nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweak_1 ^ tweaked_src_text_1;
@@ -558,7 +621,8 @@ DecryptXtsAvx512(const Uint8* pSrc,
         blocks -= chunk;
     }
 
-    chunk = 4 * 2;
+    nextTweakBlock = tweakx8[tweak_idx];
+    chunk          = 4 * 2;
 
     // Encrypting 4*2 source text blocks at a time
     if (blocks >= chunk) {
@@ -578,7 +642,8 @@ DecryptXtsAvx512(const Uint8* pSrc,
         __m512i tweaked_src_text_1 = tweak_1 ^ src_text_1;
         __m512i tweaked_src_text_2 = tweak_2 ^ src_text_2;
 
-        AesDecrypt(&tweaked_src_text_1, &tweaked_src_text_2, p_key128, nRounds);
+        AesDec_2x512(
+            &tweaked_src_text_1, &tweaked_src_text_2, p_key128, nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweak_1 ^ tweaked_src_text_1;
@@ -594,7 +659,8 @@ DecryptXtsAvx512(const Uint8* pSrc,
         blocks -= chunk;
     }
 
-    chunk = 4;
+    nextTweakBlock = tweakx8[tweak_idx];
+    chunk          = 4;
 
     // Encrypting 4*1 source text blocks at a time
     if (blocks >= chunk) {
@@ -611,7 +677,7 @@ DecryptXtsAvx512(const Uint8* pSrc,
         // getting Tweaked Text after xor of message and Alpha ^ j
         __m512i tweaked_src_text_1 = tweak_1 ^ src_text_1;
 
-        AesDecrypt(&tweaked_src_text_1, p_key128, nRounds);
+        AesDec_1x512(&tweaked_src_text_1, p_key128, nRounds);
 
         // getting Chiper Text after xor of message and Alpha ^ j
         tweaked_src_text_1 = tweak_1 ^ tweaked_src_text_1;
@@ -625,6 +691,7 @@ DecryptXtsAvx512(const Uint8* pSrc,
         p_src512 += 1;
     }
 
+    nextTweakBlock        = tweakx8[tweak_idx];
     __m512i  lastTweak    = tweakx8[tweak_idx];
     __m128i* p_lastTweak  = reinterpret_cast<__m128i*>(&lastTweak);
     Uint8*   p_lastTweak8 = reinterpret_cast<Uint8*>(&lastTweak);
@@ -644,11 +711,14 @@ DecryptXtsAvx512(const Uint8* pSrc,
         }
         src_text_1 = _mm512_xor_epi64(lastTweak, src_text_1);
 
-        AesDecrypt(&src_text_1, p_key128, nRounds);
+        AesDec_1x512(&src_text_1, p_key128, nRounds);
 
         src_text_1 = _mm512_xor_epi64(lastTweak, src_text_1);
 
         utils::CopyBytes(p_dest8, p_src_text8, (unsigned long)(blocks * 16));
+
+        // Rotate to get next tweak block
+        nextTweakBlock = _mm512_alignr_epi64(lastTweak, lastTweak, 0x2);
     }
 
     if (extra_bytes_in_message_block) {
@@ -673,13 +743,79 @@ DecryptXtsAvx512(const Uint8* pSrc,
                          (extra_bytes_in_message_block));
 
         stealed_text = _mm512_xor_epi64(tweak_1, stealed_text);
-        AesDecrypt(&stealed_text, p_key128, nRounds);
+        AesDec_1x512(&stealed_text, p_key128, nRounds);
         stealed_text = _mm512_xor_epi64(tweak_1, stealed_text);
 
         utils::CopyBytes(p_dest8 + (16 * (blocks - 1)), p_stealed_text, 16);
+
+        // Rotate to get next tweak block
+        nextTweakBlock = _mm512_alignr_epi64(lastTweak, lastTweak, 0x2);
     }
 
+    _mm_store_si128(p_iv128_in, *(__m128i*)(&nextTweakBlock));
     return ALC_ERROR_NONE;
+}
+
+alc_error_t
+EncryptXts128(const Uint8* pSrc,
+              Uint8*       pDest,
+              Uint64       len,
+              const Uint8* pKey,
+              const Uint8* pTweakKey,
+              int          nRounds,
+              Uint8*       pIv)
+{
+    // AesEncrypt 1Block, 2Block, 3Block, 4Block
+    return EncryptXtsAvx512<AesEncrypt, AesEncrypt, AesEncrypt, AesEncrypt>(
+        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+}
+
+alc_error_t
+EncryptXts256(const Uint8* pSrc,
+              Uint8*       pDest,
+              Uint64       len,
+              const Uint8* pKey,
+              const Uint8* pTweakKey,
+              int          nRounds,
+              Uint8*       pIv)
+{
+    // AesEncrypt 1Block, 2Block, 3Block, 4Block
+    return EncryptXtsAvx512<AesEncrypt, AesEncrypt, AesEncrypt, AesEncrypt>(
+        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+}
+
+alc_error_t
+DecryptXts128(const Uint8* pSrc,
+              Uint8*       pDest,
+              Uint64       len,
+              const Uint8* pKey,
+              const Uint8* pTweakKey,
+              int          nRounds,
+              Uint8*       pIv)
+{
+    return DecryptXtsAvx512<AesEncrypt,
+                            AesDecrypt,
+                            AesDecrypt,
+                            AesDecrypt,
+                            AesDecrypt>(
+        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+}
+
+alc_error_t
+DecryptXts256(const Uint8* pSrc,
+              Uint8*       pDest,
+              Uint64       len,
+              const Uint8* pKey,
+              const Uint8* pTweakKey,
+              int          nRounds,
+              Uint8*       pIv)
+{
+    return DecryptXtsAvx512<AesEncrypt,
+                            AesDecrypt,
+                            AesDecrypt,
+                            AesDecrypt,
+                            AesDecrypt>(
+        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
 }
 
 } // namespace alcp::cipher::vaes512

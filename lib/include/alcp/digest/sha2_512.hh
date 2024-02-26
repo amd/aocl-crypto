@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -82,10 +82,10 @@ ShaRound(Uint64  a,
          Uint64  x)
 {
     Uint64 s0 = 0, s1 = 0, maj = 0, ch = 0;
+    maj      = (a & ((b ^ c))) + (b & c);
+    ch       = (e & f) + (~e & g);
     s0       = RotateRight(a, 28) ^ RotateRight(a, 34) ^ RotateRight(a, 39);
     s1       = RotateRight(e, 14) ^ RotateRight(e, 18) ^ RotateRight(e, 41);
-    maj      = (a & b) ^ (a & c) ^ (b & c);
-    ch       = (e & f) ^ (~e & g);
     Uint64 t = x + h + s1 + ch;
     h        = t + s0 + maj;
     d += t;
@@ -100,7 +100,7 @@ class ALCP_API_EXPORT Sha512 final : public Sha2
     static constexpr Uint64
         cWordSizeBits                     = 64,                             /* define word size */
         cNumRounds                        = 80,                             /* num rounds in sha512 */
-        cChunkSizeBits                    = 1024,                           /* chunk size in bits */
+        cChunkSizeBits                    = 1024,                           /* chunk size in bits for sha384,sha512,sha512/224,sha512/256*/
         cChunkSize                        = cChunkSizeBits / 8,             /* chunks to proces */
         cChunkSizeMask                    = cChunkSize - 1,                 /*  */
         cChunkSizeWords                   = cChunkSizeBits / cWordSizeBits, /* same in words */
@@ -198,18 +198,10 @@ class ALCP_API_EXPORT Sha512 final : public Sha2
     Uint64 getHashSize() override;
 
   private:
-    void        compressMsg(Uint64 w[]);
-    alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
-
-  private:
-    Uint64 m_msg_len;
-    /* Any unprocessed bytes from last call to update() */
-    Uint8  m_buffer[2 * cChunkSize];
-    Uint64 m_hash[cHashSizeWords];
-    /* index to m_buffer of previously unprocessed bytes */
-    Uint32        m_idx;
-    bool          m_finished;
-    const Uint64* m_Iv = nullptr;
+    class Impl;
+    std::unique_ptr<Impl> m_pImpl;
+    const Impl*           pImpl() const { return m_pImpl.get(); }
+    Impl*                 pImpl() { return m_pImpl.get(); }
 };
 
 } // namespace alcp::digest

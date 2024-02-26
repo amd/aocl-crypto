@@ -24,7 +24,7 @@
  # POSSIBILITY OF SUCH DAMAGE.
  
 # Added aocl-compat as a seperate liberary
-FILE(GLOB IPP_SRCS "*.cc" "aes/*.cc" "sha2/*.cc" "common/*.cc" )
+FILE(GLOB IPP_SRCS "*.cc" "aes/*.cc" "sha2/*.cc" "common/*.cc" "ec/*.cc" "mac/*.cc")
 ADD_LIBRARY(ipp-compat 
 	${IPP_SRCS}
 	)
@@ -36,3 +36,12 @@ TARGET_INCLUDE_DIRECTORIES(ipp-compat PRIVATE include)
 
 # Include ALCP header files
 TARGET_INCLUDE_DIRECTORIES(ipp-compat PRIVATE ${PROJECT_SOURCE_DIR}/include)
+
+# Include IPPCP files
+IF(IPP_INSTALL_DIR)
+	TARGET_INCLUDE_DIRECTORIES(ipp-compat PRIVATE ${IPP_INSTALL_DIR}/include)
+ENDIF(IPP_INSTALL_DIR)
+
+IF(WIN32)
+	TARGET_COMPILE_OPTIONS(ipp-compat PRIVATE -Wno-language-extension-token -Wno-missing-field-initializers)
+ENDIF(WIN32)

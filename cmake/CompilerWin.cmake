@@ -1,4 +1,4 @@
- # Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -111,9 +111,20 @@ function(alcp_add_sanitize_flags)
     set(ALCP_OPTIONS_SANITIZE
             -fsanitize=address
             -fsanitize=undefined
+            -fsanitize=nullability
             CACHE INTERNAL ""
         )
-    add_compile_options(${ALCP_OPTIONS_SANITIZE} -fno-sanitize=address)
-    link_libraries(clang_rt.asan_dynamic-x86_64 clang_rt.asan_dynamic_runtime_thunk-x86_64)
-    add_link_options(/wholearchive:clang_rt.asan_dynamic_runtime_thunk-x86_64.lib)
+    link_libraries(clang_rt.asan_dynamic-x86_64)
+    add_compile_options(${ALCP_OPTIONS_SANITIZE} -fno-sanitize=address /Zi /Od)
 endfunction(alcp_add_sanitize_flags)
+
+#coverage
+function(alcp_add_coverage_flags)
+    set(ALCP_CFLAGS_COV
+            --coverage
+            CACHE INTERNAL ""
+        )
+    link_libraries(clang_rt.profile-x86_64.lib)
+    set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE ON)
+    add_compile_options(${ALCP_CFLAGS_COV} /Od)
+endfunction(alcp_add_coverage_flags)

@@ -50,3 +50,4 @@ endfunction()
 
 UnitTest(hmac)
 UnitTest(cmac)
+UnitTest(poly1305)

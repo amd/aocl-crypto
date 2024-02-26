@@ -54,7 +54,7 @@ typedef enum
     ALC_RNG_TYPE_INVALID = 0,
     ALC_RNG_TYPE_SIMPLE,
     ALC_RNG_TYPE_CONTINUOUS,
-    ALC_RNG_TYPE_DESCRETE,
+    ALC_RNG_TYPE_DISCRETE,
 
     ALC_RNG_TYPE_MAX,
 } alc_rng_type_t;
@@ -250,10 +250,9 @@ alcp_rng_init(alc_rng_handle_p pRngHandle);
  *
  * @parblock <br> &nbsp;
  * <b>This API can be called after @ref alcp_rng_request and @ref alcp_rng_init
- * if hardware RNG requires it  * <b>This API is called to reset data so should
+ * if hardware RNG requires it. This API is called to reset data so should
  * be called after @ref alcp_rng_request and at the end of session call @ref
  * alcp_rng_finish</b>
- * @endparblock</b>
  * @endparblock
  *
  * @param [in]  pRngHandle     Pointer to user allocated handle
@@ -263,19 +262,18 @@ alcp_rng_init(alc_rng_handle_p pRngHandle);
  * @return   &nbsp; Error Code for the API called. If alc_error_t
  * is not ALC_ERROR_NONE then @ref alcp_rng_error or @ref alcp_error_str needs
  * to be called to know about error occurred
- */
+ **/
 ALCP_API_EXPORT alc_error_t
 alcp_rng_seed(alc_rng_handle_p pRngHandle, const Uint8* seed, Uint64 size);
 
 /**
  * @brief   Complete a session
  * @parblock <br> &nbsp;
- * @parblock <br> &nbsp;
  * <b>This API is called to free resources so should be called to free the
  * session</b>
  * @endparblock
  * @note   Completes the session which was previously requested using
- *              alcp_rng_request()
+ *              @ref alcp_rng_request
  *
  * @param [in]  pRngHandle      Pointer to handle
  * @return   &nbsp; Error Code for the API called. If alc_error_t
@@ -290,6 +288,7 @@ alcp_rng_finish(alc_rng_handle_p pRngHandle);
  *                     operations
  * @parblock <br> &nbsp;
  * <b> This API is called to get the error string. It should be called after
+ * @endparblock
  * @ref alcp_rng_request and before @ref alcp_rng_finish </b>
  * @param [in] pRngHandle Session handle for RNG operation
  * @param [out] pBuff  Destination Buffer to which Error String will be copied

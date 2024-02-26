@@ -41,21 +41,12 @@ Ofb::decrypt(const Uint8* pCipherText,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    if (CpuId::cpuHasVaes()) {
+    if (CpuId::cpuHasVaes() || CpuId::cpuHasAesni()) {
         err = aesni::DecryptOfb(
             pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
 
         return err;
     }
-    if (CpuId::cpuHasAesni()) {
-        err = aesni::DecryptOfb(
-            pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
-
-        return err;
-    }
-
-    // dispatch to REF
-
     return err;
 }
 
@@ -67,21 +58,12 @@ Ofb::encrypt(const Uint8* pPlainText,
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    if (CpuId::cpuHasVaes()) {
-        // err = vaes::EncryptOfb(
+    if (CpuId::cpuHasVaes() || CpuId::cpuHasAesni()) {
         err = aesni::EncryptOfb(
             pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
 
         return err;
     }
-    if (CpuId::cpuHasAesni()) {
-        err = aesni::EncryptOfb(
-            pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
-
-        return err;
-    }
-
-    // dispatch to REF
 
     return err;
 }

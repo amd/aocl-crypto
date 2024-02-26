@@ -128,7 +128,7 @@ typedef struct _alc_key_info
 // to be removed
 /**
  * @brief    Allows caller to get Algorithm used in key
- * @note    currently not in use.
+ * @note    Currently not in use.
  * @param [in]   kinfo Stores info regarding key
  *
  * @return  alc_key_alg_t Enum which stores algorithm used for key
@@ -138,7 +138,7 @@ alcp_key_get_algo(alc_key_info_t* kinfo);
 
 /**
  * @brief    Allows caller to get Algorithm used in key
- * @note    currently not in use.
+ * @note    Currently not in use.
  * @param [in]   kinfo Stores info regarding key
  *
  * @return  alc_key_type_t Enum which stores type of key used
