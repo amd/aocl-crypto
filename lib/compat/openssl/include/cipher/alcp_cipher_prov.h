@@ -55,7 +55,8 @@ struct _alc_prov_cipher_ctx
     alc_key_info_t kinfo_siv_ctr_key;
     int            enc_flag;
 
-    Uint64       ivlen;
+    int ivlen; // Keeping data type for ivlen as int since  OpenSSL context
+               // ivlen is an int not unsigned int.
     int          taglen;
     Uint8*       tagbuff;
     const Uint8* aad;
@@ -72,6 +73,9 @@ struct _alc_prov_cipher_ctx
     const Uint8* iv;
     Uint64       keylen;
     bool         is_aead;
+
+    bool is_openssl_speed_siv; // Boolean variable for special handling of
+                               // AES-SIV for openssl speed.
 
     alc_cipher_info_t      pc_cipher_info;
     alc_cipher_aead_info_t pc_cipher_aead_info;

@@ -69,7 +69,7 @@ ALCP_prov_cipher_aead_encrypt_init(void*                vctx,
             }
             cctx->ivlen = *((int*)(p->data));
 #ifdef DEBUG
-            printf("Provider: Got IVLen as :%ld bytes\n", cctx->ivlen);
+            printf("Provider: Got IVLen as :%d bytes\n", cctx->ivlen);
 #endif
         }
         return 1;
@@ -275,7 +275,7 @@ ALCP_prov_cipher_aead_decrypt_init(void*                vctx,
             }
             cctx->ivlen = *((int*)(p->data));
 #ifdef DEBUG
-            printf("Provider: Got IVLen as :%ld bytes\n", cctx->ivlen);
+            printf("Provider: Got IVLen as :%d bytes\n", cctx->ivlen);
 #endif
         }
         return 1;
@@ -543,7 +543,6 @@ ALCP_prov_cipher_ccm_update(void*                vctx,
         cctx->aad    = in;
     } else if (out != NULL && outl != NULL && in != NULL) {
         if (cctx->taglen != 0) {
-            // cctx->taglen = 16; // Provide maximum possible size
             err =
                 alcp_cipher_aead_set_tag_length(&(cctx->handle), cctx->taglen);
             if (err != ALC_ERROR_NONE)
@@ -626,8 +625,16 @@ ALCP_prov_cipher_siv_update(void*                vctx,
             // IV must be copied to cctx->tagbuff when application calls
             // EVP_CIPHER_CTX_ctrl call with EVP_CTRL_AEAD_SET_TAG. This
             // is done in ALCP_prov_cipher_set_ctx_params call.
-            err = alcp_cipher_decrypt(
-                &(cctx->handle), in, out, inl, cctx->tagbuff);
+            if (cctx->is_openssl_speed_siv && cctx->tagbuff == NULL) {
+                Uint8 tag[16] = { 0 };
+                alcp_cipher_decrypt(&(cctx->handle), in, out, inl, tag);
+                // Ignoring the error code returned here as tag wont match for
+                // openssl speed SIV since tagbuff is empty.
+            } else {
+
+                err = alcp_cipher_decrypt(
+                    &(cctx->handle), in, out, inl, cctx->tagbuff);
+            }
         }
     }
 

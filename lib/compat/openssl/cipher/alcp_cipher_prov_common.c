@@ -68,8 +68,9 @@ ALCP_prov_cipher_newctx(void* vprovctx, const void* cinfo, bool is_aead)
             ciph_ctx->is_aead        = false;
             ciph_ctx->pc_cipher_info = *((alc_cipher_info_t*)cinfo);
         }
-        ciph_ctx->is_key_assigned = false;
-        ciph_ctx->ivlen           = -1;
+        ciph_ctx->is_key_assigned      = false;
+        ciph_ctx->ivlen                = -1;
+        ciph_ctx->is_openssl_speed_siv = false;
     }
 
     return ciph_ctx;
@@ -305,6 +306,15 @@ ALCP_prov_cipher_set_ctx_params(void* vctx, const OSSL_PARAM params[])
         cctx->taglen  = p->data_size;
     }
 
+    p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_SPEED);
+    if (p != NULL) {
+        if (!OSSL_PARAM_get_int(p, (int*)&cctx->is_openssl_speed_siv)) {
+            ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_GET_PARAMETER);
+            HERE();
+            return 0;
+        }
+    }
+
 #ifdef DEBUG
     printf("Provider: Got tag with size:%d\n", cctx->taglen);
 #endif
@@ -422,7 +432,7 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
     if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
         if (cctx->pc_cipher_info.ci_algo_info.ai_iv != NULL) {
 #ifdef DEBUG
-            printf("Provider: Setting iv length as %ld from %ld\n",
+            printf("Provider: Setting iv length as %ld from %d\n",
                    ivlen,
                    cctx->ivlen);
 #endif
@@ -642,7 +652,7 @@ ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
     if (cinfo->ci_algo_info.ai_mode == ALC_AES_MODE_XTS) {
         if (cctx->pc_cipher_info.ci_algo_info.ai_iv != NULL) {
 #ifdef DEBUG
-            printf("Provider: Setting iv length as %ld from %ld\n",
+            printf("Provider: Setting iv length as %ld from %d\n",
                    ivlen,
                    cctx->ivlen);
 #endif
