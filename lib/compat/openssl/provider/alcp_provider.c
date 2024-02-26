@@ -162,7 +162,7 @@ OSSL_provider_init(const OSSL_CORE_HANDLE* handle,
         printf("\n alcp provider init failed");
         return 0;
     } else {
-        alcpctx->ap_libctx = OSSL_LIB_CTX_new_child(handle, in);
+        alcpctx->ap_libctx = OSSL_LIB_CTX_new();
         if (alcpctx->ap_libctx == NULL) {
             ALCP_teardown((void*)alcpctx);
             return 0;
