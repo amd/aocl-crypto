@@ -879,14 +879,15 @@ ALCP_prov_cipher_final(void*          vctx,
     int                   ret  = 1;
     alc_prov_cipher_ctx_p cctx = vctx;
     if ((cctx->is_aead) && (cctx->tagbuff != NULL) && (cctx->taglen != 0)) {
-        Uint8       tag[16];
-        alc_error_t err = alcp_cipher_aead_get_tag(&(cctx->handle), tag, 16);
-        if (alcp_is_error(err)) {
+        Uint8       tag[16]; // 16 is maximum tag length
+        alc_error_t err =
+            alcp_cipher_aead_get_tag(&(cctx->handle), tag, cctx->taglen);
+        if (err != ALC_ERROR_NONE) {
             printf("Provider: Error occurred in finalize while getting AEAD "
                    "Tag\n");
             ret = 0;
         }
-        if (memcmp(cctx->tagbuff, tag, 16)) {
+        if (memcmp(cctx->tagbuff, tag, cctx->taglen)) {
             // Tag mismatch, hence finalize should return failure
             ret = 0;
         }
