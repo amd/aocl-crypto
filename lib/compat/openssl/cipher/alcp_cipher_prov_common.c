@@ -69,7 +69,7 @@ ALCP_prov_cipher_newctx(void* vprovctx, const void* cinfo, bool is_aead)
             ciph_ctx->pc_cipher_info = *((alc_cipher_info_t*)cinfo);
         }
         ciph_ctx->is_key_assigned = false;
-        ciph_ctx->ivlen           = 16;
+        ciph_ctx->ivlen           = -1;
     }
 
     return ciph_ctx;
@@ -193,9 +193,17 @@ ALCP_prov_cipher_get_ctx_params(void* vctx, OSSL_PARAM params[])
     }
 
     ENTER();
+    int ivlen = (cctx->ivlen < 0)
+                    ? 16
+                    : cctx->ivlen; // cctx->ivlen < 0 means ivlen was never set.
+                                   // For non-AEAD modes default iv length is 16
+                                   // and for AEAD modes default iv length is 12
+    if ((cctx->ivlen < 0) && cctx->is_aead) {
+        ivlen = 12;
+    }
 
     p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_IVLEN);
-    if (p != NULL && !OSSL_PARAM_set_size_t(p, cctx->ivlen)) {
+    if (p != NULL && !OSSL_PARAM_set_size_t(p, ivlen)) {
         ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
         return 0;
     }

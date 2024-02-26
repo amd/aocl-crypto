@@ -542,9 +542,13 @@ ALCP_prov_cipher_ccm_update(void*                vctx,
         cctx->aadlen = inl;
         cctx->aad    = in;
     } else if (out != NULL && outl != NULL && in != NULL) {
-        err = alcp_cipher_aead_set_tag_length(&(cctx->handle), cctx->taglen);
-        if (err != ALC_ERROR_NONE)
-            goto out;
+        if (cctx->taglen != 0) {
+            // cctx->taglen = 16; // Provide maximum possible size
+            err =
+                alcp_cipher_aead_set_tag_length(&(cctx->handle), cctx->taglen);
+            if (err != ALC_ERROR_NONE)
+                goto out;
+        }
         err = alcp_cipher_aead_set_iv(
             &(cctx->handle),
             cctx->ivlen,
