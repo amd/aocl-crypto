@@ -81,7 +81,7 @@ class ChaCha20Poly1305Test : public testing::Test
     std::vector<Uint8> plaintext;
     std::vector<Uint8> ciphertext;
 
-    ChaCha20Poly1305<CpuCipherFeatures::eDynamic>* chacha_poly;
+    ChaCha20Poly1305<CpuArchFeature::eReference>* chacha_poly;
 
     static constexpr unsigned short chacha20_poly1305_tag_size = 16;
     void                            SetUp() override
@@ -103,7 +103,7 @@ class ChaCha20Poly1305Test : public testing::Test
 
     void createChachaPolyObject()
     {
-        chacha_poly = new ChaCha20Poly1305<CpuCipherFeatures::eDynamic>();
+        chacha_poly = new ChaCha20Poly1305<CpuArchFeature::eReference>();
     }
     void destroyChachaPolyObject() { delete chacha_poly; }
 
@@ -152,7 +152,8 @@ class ChaCha20Poly1305Test : public testing::Test
 #endif
 
         ASSERT_EQ(err, ALC_ERROR_NONE);
-        EXPECT_EQ(tag, expected_tag);
+        EXPECT_EQ(tag, expected_tag)
+            << "FAILED for input size " << size << std::endl;
     }
     void testChacha20Poly1305(Uint64 size)
     {

@@ -38,7 +38,8 @@
 #include "alcp/cipher/chacha20_build.hh"
 #include "alcp/utils/cpuid.hh"
 
-using alcp::utils::CpuCipherFeatures;
+using alcp::utils::CpuArchFeature;
+using alcp::utils::CpuCipherAesFeatures;
 using alcp::utils::CpuId;
 
 #include <type_traits> /* for is_same_v<> */
@@ -183,24 +184,44 @@ __aes_dtor(const void* rCipher)
     return e;
 }
 
-CpuCipherFeatures
+CpuCipherAesFeatures
 getCpuCipherfeature()
 {
-    CpuCipherFeatures cpu_feature =
-        CpuCipherFeatures::eReference; // If no arch features present,means no
-                                       // acceleration, Fall back to reference
+    CpuCipherAesFeatures cpu_feature =
+        CpuCipherAesFeatures::eReference; // If no arch features present,means
+                                          // no acceleration, Fall back to
+                                          // reference
 
     if (CpuId::cpuHasAesni()) {
-        cpu_feature = CpuCipherFeatures::eAesni;
+        cpu_feature = CpuCipherAesFeatures::eAesni;
 
         if (CpuId::cpuHasVaes()) {
-            cpu_feature = CpuCipherFeatures::eVaes256;
+            cpu_feature = CpuCipherAesFeatures::eVaes256;
 
             if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
                 && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
                 && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
-                cpu_feature = CpuCipherFeatures::eVaes512;
+                cpu_feature = CpuCipherAesFeatures::eVaes512;
             }
+        }
+    }
+    return cpu_feature;
+}
+
+CpuArchFeature
+getCpuArchFeature()
+{
+    CpuArchFeature cpu_feature =
+        CpuArchFeature::eReference; // If no arch features present,means
+                                    // no acceleration, Fall back to
+                                    // reference
+    if (CpuId::cpuHasAvx2()) {
+        cpu_feature = CpuArchFeature::eAvx2;
+
+        if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+            && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+            && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
+            cpu_feature = CpuArchFeature::eAvx512;
         }
     }
     return cpu_feature;
@@ -344,9 +365,9 @@ __build_GcmAead(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
     Status sts = StatusOk();
 
-    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
+    CpuCipherAesFeatures cpu_feature = getCpuCipherfeature();
 
-    if (cpu_feature == CpuCipherFeatures::eVaes512) {
+    if (cpu_feature == CpuCipherAesFeatures::eVaes512) {
         /* FIXME: cipher request should fail invalid key length. At this
          * level only valid key length is passed.*/
         if (keyLen == ALC_KEY_LEN_128) {
@@ -356,7 +377,7 @@ __build_GcmAead(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
         } else if (keyLen == ALC_KEY_LEN_256) {
             _build_aead<vaes512::GcmAEAD256>(pKey, keyLen, ctx);
         }
-    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
+    } else if (cpu_feature == CpuCipherAesFeatures::eVaes256) {
         /* FIXME: cipher request should fail invalid key length. At this
          * level only valid key length is passed.*/
         if (keyLen == ALC_KEY_LEN_128) {
@@ -394,14 +415,14 @@ __build_aesCtr(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
     Status sts = StatusOk();
 
-    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
-    if (cpu_feature == CpuCipherFeatures::eVaes512) {
+    CpuCipherAesFeatures cpu_feature = getCpuCipherfeature();
+    if (cpu_feature == CpuCipherAesFeatures::eVaes512) {
         using namespace vaes512;
         __build_aes_cipher<Ctr128, Ctr192, Ctr256>(pKey, keyLen, ctx);
-    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
+    } else if (cpu_feature == CpuCipherAesFeatures::eVaes256) {
         using namespace vaes;
         __build_aes_cipher<Ctr128, Ctr192, Ctr256>(pKey, keyLen, ctx);
-    } else if (cpu_feature == CpuCipherFeatures::eAesni) {
+    } else if (cpu_feature == CpuCipherAesFeatures::eAesni) {
         using namespace aesni;
         __build_aes_cipher<Ctr128, Ctr192, Ctr256>(pKey, keyLen, ctx);
     }
@@ -423,21 +444,21 @@ __build_aesCfb(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
     Status sts = StatusOk();
 
-    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
-    // cpu_feature                   = CpuCipherFeatures::eVaes256;
-    if (cpu_feature == CpuCipherFeatures::eVaes512) {
+    CpuCipherAesFeatures cpu_feature = getCpuCipherfeature();
+    // cpu_feature                   = CpuCipherAesFeatures::eVaes256;
+    if (cpu_feature == CpuCipherAesFeatures::eVaes512) {
         using namespace vaes512;
         __build_aes_cipher<Cfb<aesni::EncryptCfb128, DecryptCfb128>,
                            Cfb<aesni::EncryptCfb192, DecryptCfb192>,
                            Cfb<aesni::EncryptCfb256, DecryptCfb256>>(
             pKey, keyLen, ctx);
-    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
+    } else if (cpu_feature == CpuCipherAesFeatures::eVaes256) {
         using namespace vaes;
         __build_aes_cipher<Cfb<aesni::EncryptCfb128, DecryptCfb128>,
                            Cfb<aesni::EncryptCfb192, DecryptCfb192>,
                            Cfb<aesni::EncryptCfb256, DecryptCfb256>>(
             pKey, keyLen, ctx);
-    } else if (cpu_feature == CpuCipherFeatures::eAesni) {
+    } else if (cpu_feature == CpuCipherAesFeatures::eAesni) {
         using namespace aesni;
         __build_aes_cipher<Cfb<EncryptCfb128, DecryptCfb128>,
                            Cfb<EncryptCfb192, DecryptCfb192>,
@@ -462,21 +483,21 @@ __build_aesCbc(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
     Status sts = StatusOk();
 
-    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
-    // cpu_feature                   = CpuCipherFeatures::eVaes256;
-    if (cpu_feature == CpuCipherFeatures::eVaes512) {
+    CpuCipherAesFeatures cpu_feature = getCpuCipherfeature();
+    // cpu_feature                   = CpuCipherFeaturesAes::eVaes256;
+    if (cpu_feature == CpuCipherAesFeatures::eVaes512) {
         using namespace vaes512;
         __build_aes_cipher<Cbc<aesni::EncryptCbc128, DecryptCbc128>,
                            Cbc<aesni::EncryptCbc192, DecryptCbc192>,
                            Cbc<aesni::EncryptCbc256, DecryptCbc256>>(
             pKey, keyLen, ctx);
-    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
+    } else if (cpu_feature == CpuCipherAesFeatures::eVaes256) {
         using namespace vaes;
         __build_aes_cipher<Cbc<aesni::EncryptCbc128, DecryptCbc128>,
                            Cbc<aesni::EncryptCbc192, DecryptCbc192>,
                            Cbc<aesni::EncryptCbc256, DecryptCbc256>>(
             pKey, keyLen, ctx);
-    } else if (cpu_feature == CpuCipherFeatures::eAesni) {
+    } else if (cpu_feature == CpuCipherAesFeatures::eAesni) {
         using namespace aesni;
         __build_aes_cipher<Cbc<EncryptCbc128, DecryptCbc128>,
                            Cbc<EncryptCbc192, DecryptCbc192>,
@@ -501,19 +522,19 @@ __build_aesXts(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
     Status sts = StatusOk();
 
-    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
+    CpuCipherAesFeatures cpu_feature = getCpuCipherfeature();
 
-    if (cpu_feature == CpuCipherFeatures::eVaes512) {
+    if (cpu_feature == CpuCipherAesFeatures::eVaes512) {
         using namespace vaes512;
         __build_aes_cipher_xts<Xts<EncryptXts128, DecryptXts128>,
                                Xts<EncryptXts256, DecryptXts256>>(
             pKey, keyLen, ctx);
-    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
+    } else if (cpu_feature == CpuCipherAesFeatures::eVaes256) {
         using namespace vaes;
         __build_aes_cipher_xts<Xts<EncryptXts128, DecryptXts128>,
                                Xts<EncryptXts256, DecryptXts256>>(
             pKey, keyLen, ctx);
-    } else if (cpu_feature == CpuCipherFeatures::eAesni) {
+    } else if (cpu_feature == CpuCipherAesFeatures::eAesni) {
         using namespace aesni;
         __build_aes_cipher_xts<Xts<EncryptXts128, DecryptXts128>,
                                Xts<EncryptXts256, DecryptXts256>>(
@@ -562,16 +583,16 @@ __build_aesSiv(const alc_cipher_aead_algo_info_t& aesInfo,
 {
     Status sts = StatusOk();
 
-    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
-    if (cpu_feature == CpuCipherFeatures::eVaes512) {
+    CpuCipherAesFeatures cpu_feature = getCpuCipherfeature();
+    if (cpu_feature == CpuCipherAesFeatures::eVaes512) {
         using namespace vaes512;
         __build_aes_siv<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
             *aesInfo.ai_siv.xi_ctr_key, keyInfo, ctx);
-    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
+    } else if (cpu_feature == CpuCipherAesFeatures::eVaes256) {
         using namespace vaes;
         __build_aes_siv<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
             *aesInfo.ai_siv.xi_ctr_key, keyInfo, ctx);
-    } else if (cpu_feature == CpuCipherFeatures::eAesni) {
+    } else if (cpu_feature == CpuCipherAesFeatures::eAesni) {
         using namespace aesni;
         __build_aes_siv<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
             *aesInfo.ai_siv.xi_ctr_key, keyInfo, ctx);
@@ -600,7 +621,7 @@ CipherBuilder::Build(const alc_cipher_info_t& cipherInfo, Context& ctx)
 
     return err;
 }
-template<CpuCipherFeatures cpu_cipher_feature>
+template<CpuArchFeature cpu_cipher_feature>
 static alc_error_t
 __chacha20_processInputWrapper(const void*  rCipher,
                                const Uint8* pSrc,
@@ -617,7 +638,7 @@ __chacha20_processInputWrapper(const void*  rCipher,
 
     return e;
 }
-template<CpuCipherFeatures cpu_cipher_feature>
+template<CpuArchFeature cpu_cipher_feature>
 static alc_error_t
 __chacha20_FinishWrapper(const void* rCipher)
 {
@@ -630,7 +651,7 @@ __chacha20_FinishWrapper(const void* rCipher)
     return e;
 }
 
-template<CpuCipherFeatures cpu_cipher_feature, bool is_encrypt>
+template<CpuArchFeature cpu_cipher_feature, bool is_encrypt>
 static alc_error_t
 __chacha20_Poly1305processInputWrapper(void*        rCipher,
                                        const Uint8* pSrc,
@@ -652,7 +673,7 @@ __chacha20_Poly1305processInputWrapper(void*        rCipher,
     return e;
 }
 
-template<CpuCipherFeatures cpu_cipher_feature>
+template<CpuArchFeature cpu_cipher_feature>
 static alc_error_t
 __chacha20_Poly1305setIvWrapper(void*        rCipher,
                                 Uint64       iv_length,
@@ -668,7 +689,7 @@ __chacha20_Poly1305setIvWrapper(void*        rCipher,
     return e;
 }
 
-template<CpuCipherFeatures cpu_cipher_feature>
+template<CpuArchFeature cpu_cipher_feature>
 static alc_error_t
 __chacha20_Poly1305setTagLengthWrapper(void* rCipher, Uint64 tag_length)
 {
@@ -682,7 +703,7 @@ __chacha20_Poly1305setTagLengthWrapper(void* rCipher, Uint64 tag_length)
     return e;
 }
 
-template<CpuCipherFeatures cpu_cipher_feature>
+template<CpuArchFeature cpu_cipher_feature>
 static alc_error_t
 __chacha20_Poly1305setAADWrapper(void* rCipher, const Uint8* pAad, Uint64 len)
 {
@@ -696,7 +717,7 @@ __chacha20_Poly1305setAADWrapper(void* rCipher, const Uint8* pAad, Uint64 len)
     return e;
 }
 
-template<CpuCipherFeatures cpu_cipher_feature>
+template<CpuArchFeature cpu_cipher_feature>
 static alc_error_t
 __chacha20_Poly1305getTagWrapper(void* rCipher, Uint8* pTag, Uint64 len)
 {
@@ -709,7 +730,7 @@ __chacha20_Poly1305getTagWrapper(void* rCipher, Uint8* pTag, Uint64 len)
 
     return e;
 }
-template<CpuCipherFeatures cpu_cipher_feature>
+template<CpuArchFeature cpu_cipher_feature>
 static alc_error_t
 __chacha20_Poly1305FinishWrapper(const void* rCipher)
 {
@@ -724,7 +745,7 @@ __chacha20_Poly1305FinishWrapper(const void* rCipher)
     return e;
 }
 
-template<CpuCipherFeatures cpu_cipher_feature>
+template<CpuArchFeature cpu_cipher_feature>
 alc_error_t
 __build_chacha20(const alc_cipher_info_t& cCipherAlgoInfo, Context& ctx)
 {
@@ -747,7 +768,7 @@ __build_chacha20(const alc_cipher_info_t& cCipherAlgoInfo, Context& ctx)
     return ALC_ERROR_NONE;
 }
 
-template<CpuCipherFeatures cpu_cipher_feature>
+template<CpuArchFeature cpu_cipher_feature>
 alc_error_t
 __build_chacha20poly1305(const alc_cipher_aead_info_t& cCipherAlgoInfo,
                          Context&                      ctx)
@@ -783,11 +804,11 @@ chacha20::Chacha20Builder::Build(const alc_cipher_info_t& cCipherAlgoInfo,
                                  Context&                 ctx)
 {
 
-    CpuCipherFeatures cpu_cipher_feature = getCpuCipherfeature();
-    if (cpu_cipher_feature == CpuCipherFeatures::eVaes512) {
-        __build_chacha20<CpuCipherFeatures::eVaes512>(cCipherAlgoInfo, ctx);
+    CpuArchFeature cpu_cipher_feature = getCpuArchFeature();
+    if (cpu_cipher_feature == CpuArchFeature::eAvx512) {
+        __build_chacha20<CpuArchFeature::eAvx512>(cCipherAlgoInfo, ctx);
     } else {
-        __build_chacha20<CpuCipherFeatures::eReference>(cCipherAlgoInfo, ctx);
+        __build_chacha20<CpuArchFeature::eReference>(cCipherAlgoInfo, ctx);
     }
 
     return ALC_ERROR_NONE;
@@ -798,12 +819,12 @@ chacha20::Chacha20Poly1305Builder::Build(
     const alc_cipher_aead_info_t& cCipherAlgoInfo, Context& ctx)
 {
 
-    CpuCipherFeatures cpu_cipher_feature = getCpuCipherfeature();
-    if (cpu_cipher_feature == CpuCipherFeatures::eVaes512) {
-        return __build_chacha20poly1305<CpuCipherFeatures::eVaes512>(
+    CpuArchFeature cpu_cipher_feature = getCpuArchFeature();
+    if (cpu_cipher_feature == CpuArchFeature::eAvx512) {
+        return __build_chacha20poly1305<CpuArchFeature::eAvx512>(
             cCipherAlgoInfo, ctx);
     } else {
-        return __build_chacha20poly1305<CpuCipherFeatures::eReference>(
+        return __build_chacha20poly1305<CpuArchFeature::eReference>(
             cCipherAlgoInfo, ctx);
     }
 
@@ -814,10 +835,10 @@ bool
 chacha20::Chacha20Builder::Supported(const alc_cipher_algo_info_t ci_algo_info,
                                      const alc_key_info_t         ci_key_info)
 {
-    if (chacha20::ChaCha20<CpuCipherFeatures::eReference>::validateKey(
+    if (chacha20::ChaCha20<CpuArchFeature::eReference>::validateKey(
             ci_key_info.key, ci_key_info.len / 8)) {
         return false;
-    } else if (chacha20::ChaCha20<CpuCipherFeatures::eReference>::validateIv(
+    } else if (chacha20::ChaCha20<CpuArchFeature::eReference>::validateIv(
                    ci_algo_info.ai_iv, ci_algo_info.iv_length / 8)) {
         return false;
     }

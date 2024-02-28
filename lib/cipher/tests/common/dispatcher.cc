@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,38 +31,38 @@
 using namespace alcp::utils;
 namespace alcp::cipher::unittest {
 
-CpuCipherFeatures
+CpuCipherAesFeatures
 getMaxFeature()
 {
-    CpuId             cpu;
-    CpuCipherFeatures maxFeature = {};
+    CpuId                cpu;
+    CpuCipherAesFeatures maxFeature = {};
     if (cpu.cpuHasVaes() && cpu.cpuHasAvx512f()) {
-        maxFeature = utils::CpuCipherFeatures::eVaes512;
+        maxFeature = utils::CpuCipherAesFeatures::eVaes512;
     } else if (cpu.cpuHasVaes()) {
-        maxFeature = utils::CpuCipherFeatures::eVaes256;
+        maxFeature = utils::CpuCipherAesFeatures::eVaes256;
     } else if (cpu.cpuHasAesni()) {
-        maxFeature = utils::CpuCipherFeatures::eAesni;
+        maxFeature = utils::CpuCipherAesFeatures::eAesni;
     } else {
-        maxFeature = utils::CpuCipherFeatures::eReference;
+        maxFeature = utils::CpuCipherAesFeatures::eReference;
     }
     return maxFeature;
 }
 
-std::vector<CpuCipherFeatures>
+std::vector<CpuCipherAesFeatures>
 getSupportedFeatures()
 {
-    std::vector<CpuCipherFeatures> ret        = {};
-    CpuCipherFeatures              maxFeature = getMaxFeature();
+    std::vector<CpuCipherAesFeatures> ret        = {};
+    CpuCipherAesFeatures              maxFeature = getMaxFeature();
     switch (maxFeature) {
-        case CpuCipherFeatures::eVaes512:
-            ret.insert(ret.begin(), CpuCipherFeatures::eVaes512);
-        case CpuCipherFeatures::eVaes256:
-            ret.insert(ret.begin(), CpuCipherFeatures::eVaes256);
-        case CpuCipherFeatures::eAesni:
-            ret.insert(ret.begin(), CpuCipherFeatures::eAesni);
+        case CpuCipherAesFeatures::eVaes512:
+            ret.insert(ret.begin(), CpuCipherAesFeatures::eVaes512);
+        case CpuCipherAesFeatures::eVaes256:
+            ret.insert(ret.begin(), CpuCipherAesFeatures::eVaes256);
+        case CpuCipherAesFeatures::eAesni:
+            ret.insert(ret.begin(), CpuCipherAesFeatures::eAesni);
             break;
         default:
-            ret.insert(ret.begin(), CpuCipherFeatures::eReference);
+            ret.insert(ret.begin(), CpuCipherAesFeatures::eReference);
             break;
     }
     return ret;

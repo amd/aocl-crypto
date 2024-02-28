@@ -33,15 +33,14 @@
 #include "alcp/utils/cpuid.hh"
 
 namespace alcp::cipher::chacha20 {
-using utils::CpuCipherFeatures;
+using utils::CpuArchFeature;
 using utils::CpuId;
 
 static constexpr Uint32 Chacha20Constants[4] = {
     0x61707865, 0x3320646e, 0x79622d32, 0x6b206574
 };
 #define CHACHA20_BLOCK_SIZE 64
-
-template<CpuCipherFeatures cpu_cipher_feature = CpuCipherFeatures::eDynamic>
+template<CpuArchFeature cpu_cipher_feature = CpuArchFeature::eDynamic>
 class ALCP_API_EXPORT ChaCha20
 {
     // Key Length of Chacha20 is fixed as 256 bits

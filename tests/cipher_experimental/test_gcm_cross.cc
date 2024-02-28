@@ -374,6 +374,12 @@ main(int argc, char** argv)
         argsMap["USE_OSSL"].value = true;
     }
 
+    // Use openssl for cross test by default
+    if (std::get<bool>(argsMap["USE_OSSL"].value) == false
+        && (std::get<bool>(argsMap["USE_OSSL"].value) == false)) {
+        argsMap["USE_OSSL"].value = true;
+    }
+
 #ifdef USE_OSSL
     if (std::get<bool>(argsMap["USE_OSSL"].value)) {
         RegisterMyTests("KnownAnswerTest",

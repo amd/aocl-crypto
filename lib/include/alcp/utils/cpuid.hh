@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,7 +35,7 @@
 
 namespace alcp::utils {
 
-enum class CpuCipherFeatures
+enum class CpuCipherAesFeatures
 {
     eReference = 0,
     eAesni     = 1,
@@ -43,6 +43,15 @@ enum class CpuCipherFeatures
     eVaes512   = 3,
     eDynamic   = 4
 };
+
+enum class CpuArchFeature
+{
+    eReference = 0,
+    eAvx2      = 2,
+    eAvx512    = 3,
+    eDynamic   = 4
+};
+
 enum class Avx512Flags
 {
     AVX512_DQ = 1,

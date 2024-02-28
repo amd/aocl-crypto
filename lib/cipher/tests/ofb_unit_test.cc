@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,15 +38,16 @@
 #include "dispatcher.hh"
 #include "randomize.hh"
 
-constexpr CpuCipherFeatures c_CpuFeatureSelect = CpuCipherFeatures::eDynamic;
+constexpr CpuCipherAesFeatures c_CpuFeatureSelect =
+    CpuCipherAesFeatures::eDynamic;
 
 using alcp::cipher::ICipher;
 using alcp::cipher::Ofb;
 namespace alcp::cipher::unittest::ofb {
 std::vector<Uint8> key       = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                           0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+                                 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
 std::vector<Uint8> iv        = { 0x01, 0x00, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                          0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+                                 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
 std::vector<Uint8> plainText = {
     0x02, 0x01, 0x00, 0x03, 0x04, 0x05, 0x06, 0x07,
     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
@@ -60,7 +61,7 @@ std::vector<Uint8> cipherText = { 0x5a, 0xa2, 0xf9, 0xdb, 0xe4, 0x4a,
  * @return Instance of Ofb depending on provided architecure
  * @note Only use this with compile time resolvable expression
  */
-template<utils::CpuCipherFeatures features, Uint32 keylen>
+template<utils::CpuCipherAesFeatures features, Uint32 keylen>
 std::unique_ptr<ICipher>
 OfbFactory(const Uint8 key[])
 {
@@ -85,46 +86,46 @@ OfbFactory(const Uint8 key[])
  * @note Use this when you are going to give a runtime variable
  */
 std::unique_ptr<ICipher>
-OfbFactoryIndirect(utils::CpuCipherFeatures features,
-                   const Uint8              key[],
-                   Uint32                   keylen)
+OfbFactoryIndirect(utils::CpuCipherAesFeatures features,
+                   const Uint8                 key[],
+                   Uint32                      keylen)
 {
     switch (keylen) {
         default:
             std::cout << "Unknown Key Length" << std::endl;
         case 128:
-            if (features == CpuCipherFeatures::eVaes512) {
-                return OfbFactory<CpuCipherFeatures::eVaes512, 128>(key);
-            } else if (features == CpuCipherFeatures::eVaes256) {
-                return OfbFactory<CpuCipherFeatures::eVaes256, 128>(key);
-            } else if (features == CpuCipherFeatures::eAesni) {
-                return OfbFactory<CpuCipherFeatures::eAesni, 128>(key);
+            if (features == CpuCipherAesFeatures::eVaes512) {
+                return OfbFactory<CpuCipherAesFeatures::eVaes512, 128>(key);
+            } else if (features == CpuCipherAesFeatures::eVaes256) {
+                return OfbFactory<CpuCipherAesFeatures::eVaes256, 128>(key);
+            } else if (features == CpuCipherAesFeatures::eAesni) {
+                return OfbFactory<CpuCipherAesFeatures::eAesni, 128>(key);
             } else {
-                return OfbFactory<CpuCipherFeatures::eReference, 128>(key);
+                return OfbFactory<CpuCipherAesFeatures::eReference, 128>(key);
             }
             break;
 
         case 192:
-            if (features == CpuCipherFeatures::eVaes512) {
-                return OfbFactory<CpuCipherFeatures::eVaes512, 192>(key);
-            } else if (features == CpuCipherFeatures::eVaes256) {
-                return OfbFactory<CpuCipherFeatures::eVaes256, 192>(key);
-            } else if (features == CpuCipherFeatures::eAesni) {
-                return OfbFactory<CpuCipherFeatures::eAesni, 192>(key);
+            if (features == CpuCipherAesFeatures::eVaes512) {
+                return OfbFactory<CpuCipherAesFeatures::eVaes512, 192>(key);
+            } else if (features == CpuCipherAesFeatures::eVaes256) {
+                return OfbFactory<CpuCipherAesFeatures::eVaes256, 192>(key);
+            } else if (features == CpuCipherAesFeatures::eAesni) {
+                return OfbFactory<CpuCipherAesFeatures::eAesni, 192>(key);
             } else {
-                return OfbFactory<CpuCipherFeatures::eReference, 192>(key);
+                return OfbFactory<CpuCipherAesFeatures::eReference, 192>(key);
             }
             break;
 
         case 256:
-            if (features == CpuCipherFeatures::eVaes512) {
-                return OfbFactory<CpuCipherFeatures::eVaes512, 256>(key);
-            } else if (features == CpuCipherFeatures::eVaes256) {
-                return OfbFactory<CpuCipherFeatures::eVaes256, 256>(key);
-            } else if (features == CpuCipherFeatures::eAesni) {
-                return OfbFactory<CpuCipherFeatures::eAesni, 256>(key);
+            if (features == CpuCipherAesFeatures::eVaes512) {
+                return OfbFactory<CpuCipherAesFeatures::eVaes512, 256>(key);
+            } else if (features == CpuCipherAesFeatures::eVaes256) {
+                return OfbFactory<CpuCipherAesFeatures::eVaes256, 256>(key);
+            } else if (features == CpuCipherAesFeatures::eAesni) {
+                return OfbFactory<CpuCipherAesFeatures::eAesni, 256>(key);
             } else {
-                return OfbFactory<CpuCipherFeatures::eReference, 256>(key);
+                return OfbFactory<CpuCipherAesFeatures::eReference, 256>(key);
             }
             break;
     }
@@ -136,13 +137,13 @@ using namespace alcp::cipher::unittest;
 using namespace alcp::cipher::unittest::ofb;
 TEST(OFB, creation)
 {
-    CpuCipherFeatures feature = c_CpuFeatureSelect;
+    CpuCipherAesFeatures feature = c_CpuFeatureSelect;
 #ifdef DEBUG
-    std::cout
-        << "Cpu Feature:"
-        << static_cast<typename std::underlying_type<CpuCipherFeatures>::type>(
-               feature)
-        << std::endl;
+    std::cout << "Cpu Feature:"
+              << static_cast<
+                     typename std::underlying_type<CpuCipherAesFeatures>::type>(
+                     feature)
+              << std::endl;
 #endif
     std::unique_ptr<ICipher> ofb;
     ofb = OfbFactoryIndirect(feature, &key[0], key.size() * 8);
@@ -192,7 +193,7 @@ TEST(OFB, RandomEncryptDecryptTest)
     random->getRandomBytes(key_256, 32);
     random->getRandomBytes(iv, 16);
 
-    CpuCipherFeatures feature = c_CpuFeatureSelect;
+    CpuCipherAesFeatures feature = c_CpuFeatureSelect;
 
     for (int i = 100000; i > 16; i -= 16) {
         const std::vector<Uint8> plainTextVect(plainText_vect.begin() + i,

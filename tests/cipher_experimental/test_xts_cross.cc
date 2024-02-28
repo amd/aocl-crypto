@@ -367,6 +367,11 @@ main(int argc, char** argv)
         argsMap["USE_OSSL"].value = true;
     }
 
+    if (std::get<bool>(argsMap["USE_OSSL"].value) == false
+        && (std::get<bool>(argsMap["USE_OSSL"].value) == false)) {
+        argsMap["USE_OSSL"].value = true;
+    }
+
     if (std::get<bool>(argsMap["OVERRIDE_ALCP"].value)) {
 #ifdef USE_OSSL
 #ifdef USE_IPP
