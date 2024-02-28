@@ -30,7 +30,7 @@
 #include <array>
 #include <tuple>
 
-#include "cipher/poly1305-ref.hh"
+#include "mac/poly1305-ref.hh"
 
 namespace alcp::mac::poly1305::reference {
 
@@ -168,7 +168,8 @@ Poly1305BNRef::blk(const Uint8 pMsg[], Uint64 msgLen)
 
         // Find if we are in the last block, if we are, then only do left
         // bytes
-        Uint64 curr_blocklen = msgLen < ((i + 1) * 16) ? msgLen - ((i)*16) : 16;
+        Uint64 curr_blocklen = msgLen < ((i + 1) * 16) ? msgLen - ((i) * 16)
+                                                       : 16;
 #ifdef DEBUG
         std::cout << "Current Block Length:" << curr_blocklen << std::endl;
 #endif
@@ -340,43 +341,39 @@ Poly1305Ref::init(const Uint8 key[], Uint64 keyLen)
 
     // P is already loaded
 
-    return s;
-}
-
-Uint64
-Poly1305Ref::blk(const Uint8 pMsg[], Uint64 msgLen)
-{
-    Uint64       r[5]        = {};
-    Uint64       s[4]        = {};
-    Uint64       acc[5]      = {};
-    Uint32       msg_temp[5] = {};
-    const Uint8* p_msg_8     = pMsg;
-    Uint64       d[5]        = {};
-    Uint64       carry       = 0;
-    const Uint64 cPadding    = (msgLen >= 16) << 24;
-
     // Copy key into 5 limbs
     {
         const Uint8* p_key_8 = reinterpret_cast<const Uint8*>(m_key);
         // FIXME: Optimize more
         for (int i = 0; i < 5; i++) {
-            Uint8* p_r_8 = reinterpret_cast<Uint8*>(&r[i]);
+            Uint8* p_r_8 = reinterpret_cast<Uint8*>(&m_r[i]);
             std::copy(p_key_8, p_key_8 + 4, p_r_8);
-            r[i] = r[i] >> (2 * i);
-            r[i] &= 0x3ffffff;
+            m_r[i] = m_r[i] >> (2 * i);
+            m_r[i] &= 0x3ffffff;
             p_key_8 += 3;
         }
     }
 
     // Precompute the r*5 value
     for (int i = 0; i < 4; i++) {
-        s[i] = r[i + 1] * 5;
+        m_s[i] = m_r[i + 1] * 5;
     }
 
-    // Copy Accumulator into local variable
-    for (int i = 0; i < 5; i++) {
-        acc[i] = m_accumulator[i];
-    }
+    return s;
+}
+
+inline Uint64
+poly1305_block(const Uint8 pMsg[],
+               Uint64      msgLen,
+               Uint64      accumulator[],
+               Uint64      r[10],
+               Uint64      s[8])
+{
+    Uint32       msg_temp[5] = {};
+    const Uint8* p_msg_8     = pMsg;
+    Uint64       d[5]        = {};
+    Uint64       carry       = 0;
+    const Uint64 cPadding    = (msgLen >= 16) << 24;
 
     // As long as there is poly block size amount of text to process
     while (msgLen > 0) {
@@ -391,40 +388,40 @@ Poly1305Ref::blk(const Uint8 pMsg[], Uint64 msgLen)
             }
             p_msg_8 += 3;
         }
-        acc[0] += msg_temp[0];
-        acc[1] += msg_temp[1];
-        acc[2] += msg_temp[2];
-        acc[3] += msg_temp[3];
-        acc[4] += msg_temp[4];
+        accumulator[0] += msg_temp[0];
+        accumulator[1] += msg_temp[1];
+        accumulator[2] += msg_temp[2];
+        accumulator[3] += msg_temp[3];
+        accumulator[4] += msg_temp[4];
 
         // a = a * r
         // clang-format off
-            d[0] = (acc[0] * r[0]) + (acc[1] * s[3]) + (acc[2] * s[2]) + (acc[3] * s[1]) + (acc[4] * s[0]);
-            d[1] = (acc[0] * r[1]) + (acc[1] * r[0]) + (acc[2] * s[3]) + (acc[3] * s[2]) + (acc[4] * s[1]);
-            d[2] = (acc[0] * r[2]) + (acc[1] * r[1]) + (acc[2] * r[0]) + (acc[3] * s[3]) + (acc[4] * s[2]);
-            d[3] = (acc[0] * r[3]) + (acc[1] * r[2]) + (acc[2] * r[1]) + (acc[3] * r[0]) + (acc[4] * s[3]);
-            d[4] = (acc[0] * r[4]) + (acc[1] * r[3]) + (acc[2] * r[2]) + (acc[3] * r[1]) + (acc[4] * r[0]);
+            d[0] = (accumulator[0] * r[0]) + (accumulator[1] * s[3]) + (accumulator[2] * s[2]) + (accumulator[3] * s[1]) + (accumulator[4] * s[0]);
+            d[1] = (accumulator[0] * r[1]) + (accumulator[1] * r[0]) + (accumulator[2] * s[3]) + (accumulator[3] * s[2]) + (accumulator[4] * s[1]);
+            d[2] = (accumulator[0] * r[2]) + (accumulator[1] * r[1]) + (accumulator[2] * r[0]) + (accumulator[3] * s[3]) + (accumulator[4] * s[2]);
+            d[3] = (accumulator[0] * r[3]) + (accumulator[1] * r[2]) + (accumulator[2] * r[1]) + (accumulator[3] * r[0]) + (accumulator[4] * s[3]);
+            d[4] = (accumulator[0] * r[4]) + (accumulator[1] * r[3]) + (accumulator[2] * r[2]) + (accumulator[3] * r[1]) + (accumulator[4] * r[0]);
         // clang-format on
 
         // Carry Propagation
-        carry  = (unsigned long)(d[0] >> 26);
-        acc[0] = (unsigned long)d[0] & 0x3ffffff;
+        carry          = (unsigned long)(d[0] >> 26);
+        accumulator[0] = (unsigned long)d[0] & 0x3ffffff;
         d[1] += carry;
-        carry  = (unsigned long)(d[1] >> 26);
-        acc[1] = (unsigned long)d[1] & 0x3ffffff;
+        carry          = (unsigned long)(d[1] >> 26);
+        accumulator[1] = (unsigned long)d[1] & 0x3ffffff;
         d[2] += carry;
-        carry  = (unsigned long)(d[2] >> 26);
-        acc[2] = (unsigned long)d[2] & 0x3ffffff;
+        carry          = (unsigned long)(d[2] >> 26);
+        accumulator[2] = (unsigned long)d[2] & 0x3ffffff;
         d[3] += carry;
-        carry  = (unsigned long)(d[3] >> 26);
-        acc[3] = (unsigned long)d[3] & 0x3ffffff;
+        carry          = (unsigned long)(d[3] >> 26);
+        accumulator[3] = (unsigned long)d[3] & 0x3ffffff;
         d[4] += carry;
-        carry  = (unsigned long)(d[4] >> 26);
-        acc[4] = (unsigned long)d[4] & 0x3ffffff;
-        acc[0] += carry * 5;
-        carry  = (acc[0] >> 26);
-        acc[0] = acc[0] & 0x3ffffff;
-        acc[1] += carry;
+        carry          = (unsigned long)(d[4] >> 26);
+        accumulator[4] = (unsigned long)d[4] & 0x3ffffff;
+        accumulator[0] += carry * 5;
+        carry          = (accumulator[0] >> 26);
+        accumulator[0] = accumulator[0] & 0x3ffffff;
+        accumulator[1] += carry;
 
         /* Padding is enabled only if message is bigger than 16 bytes, otherwise
          *   padding is expected from outside.
@@ -434,10 +431,6 @@ Poly1305Ref::blk(const Uint8 pMsg[], Uint64 msgLen)
          */
         msgLen = msgLen >= 16 ? msgLen - 16 : 0;
         p_msg_8 += 1;
-    }
-
-    for (int i = 0; i < 5; i++) {
-        m_accumulator[i] = acc[i];
     }
 
     return msgLen;
@@ -469,12 +462,12 @@ Poly1305Ref::update(const Uint8 pMsg[], Uint64 msgLen)
         msgLen -= msg_buffer_left;
 
         m_msg_buffer_len = 0;
-        blk(m_msg_buffer, 16);
+        poly1305_block(m_msg_buffer, 16, m_accumulator, m_r, m_s);
     }
 
     Uint64 overflow = msgLen % 16;
 
-    blk(pMsg, msgLen - overflow);
+    poly1305_block(pMsg, msgLen - overflow, m_accumulator, m_r, m_s);
     if (overflow) {
         std::copy(pMsg + msgLen - overflow, pMsg + msgLen, m_msg_buffer);
         m_msg_buffer_len = overflow;
@@ -499,7 +492,7 @@ Poly1305Ref::finish(const Uint8 pMsg[], Uint64 msgLen)
     if (m_msg_buffer_len) {
         m_msg_buffer[m_msg_buffer_len] = 0x01;
         std::fill(m_msg_buffer + m_msg_buffer_len + 1, m_msg_buffer + 16, 0);
-        blk(m_msg_buffer, m_msg_buffer_len);
+        poly1305_block(m_msg_buffer, m_msg_buffer_len, m_accumulator, m_r, m_s);
         // update(m_msg_buffer, m_msg_buffer_len);
     }
 

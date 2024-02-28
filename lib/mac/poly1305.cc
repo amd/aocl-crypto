@@ -35,7 +35,7 @@
 #include <openssl/bn.h>
 
 #include "alcp/base.hh"
-#include "cipher/poly1305-ref.hh"
+#include "mac/poly1305-ref.hh"
 
 // #define DEBUG
 

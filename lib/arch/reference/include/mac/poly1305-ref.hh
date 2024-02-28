@@ -100,27 +100,42 @@ class Poly1305RefState
     static const Uint32 m_cAccSize_bytes = 40;
     static const Uint32 m_cKeySize_bytes = 32;
     static const Uint32 m_cMsgSize_bytes = 16;
+    static const Uint32 m_limbs          = 5;
 
   protected:
+    alignas(64) Uint8 m_msg_buffer[m_cMsgSize_bytes]                    = {};
     alignas(64) Uint64 m_accumulator[m_cAccSize_bytes / sizeof(Uint64)] = {};
     alignas(64) Uint64 m_key[m_cKeySize_bytes / sizeof(Uint64)]         = {};
-    alignas(64) Uint8 m_msg_buffer[m_cMsgSize_bytes]                    = {};
+    alignas(64) Uint64 m_r[m_limbs]                                     = {};
+    alignas(64) Uint64 m_s[m_limbs - 1]                                 = {};
     Uint64 m_msg_buffer_len                                             = {};
     bool   m_finalized                                                  = false;
 
   public:
     Poly1305RefState() = default;
+
+    /**
+     * @brief Erase Update buffers, reverting state to init stage.
+     */
     void resetState()
     {
-        std::fill(m_accumulator,
-                  m_accumulator + m_cAccSize_bytes / sizeof(Uint64),
-                  0);
+        // Erase all the internal update buffers
         std::fill(m_msg_buffer, m_msg_buffer + m_cMsgSize_bytes, 0);
+        std::fill(m_accumulator,
+                  m_accumulator + (m_cAccSize_bytes / sizeof(Uint64)),
+                  0);
         m_msg_buffer_len = 0;
         m_finalized      = false;
     }
+    /**
+     * @brief Secure erase all the memory so that we do not end up with
+     * memory disclosure attacks
+     */
     ~Poly1305RefState()
     {
+        // Erase all sensitive buffers
+        std::fill(m_r, m_r + m_limbs, 0);
+        std::fill(m_s, m_s + m_limbs - 1, 0);
         std::fill(m_key, m_key + m_cKeySize_bytes / sizeof(Uint64), 0);
         resetState();
     }
@@ -200,13 +215,6 @@ class Poly1305Ref
      * @return Status/Result of the operation
      */
     Status init(const Uint8 key[], Uint64 keyLen);
-    /**
-     * @brief Do the actual Poly1305 operation.
-     * @param pMsg Byte addressible message
-     * @param msgLen Length of message in bytes
-     * @return Status/Result of the operation
-     */
-    Uint64 blk(const Uint8 pMsg[], Uint64 msgLen);
     /**
      * @brief Given message, updates internal state processing the message
      * @param pMsg  Byte addressible message
