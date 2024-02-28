@@ -30,8 +30,10 @@
 #include "alcp/mac.h"
 
 #include "alcp/capi/mac/ctx.hh"
+#include "alcp/utils/cpuid.hh"
 
 namespace alcp::mac {
+using utils::CpuArchFeature;
 
 class MacBuilder
 {
@@ -46,5 +48,8 @@ class MacBuilder
 
 Status
 isDigestSupported(alc_digest_mode_t mode);
+
+CpuArchFeature
+getCpuArchFeature();
 
 } // namespace alcp::mac

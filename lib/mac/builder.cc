@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,10 +30,33 @@
 #include "alcp/mac/cmac_build.hh"
 #include "alcp/mac/hmac_build.hh"
 #include "alcp/mac/poly1305_build.hh"
+#include "alcp/utils/cpuid.hh"
 
 namespace alcp::mac {
 
 using poly1305::Poly1305Builder;
+using utils::CpuArchFeature;
+using utils::CpuId;
+
+// Adopted from lib/cipher/builder.cc
+CpuArchFeature
+getCpuArchFeature()
+{
+    CpuArchFeature cpu_feature =
+        CpuArchFeature::eReference; // If no arch features present,means
+                                    // no acceleration, Fall back to
+                                    // reference
+    if (CpuId::cpuHasAvx2()) {
+        cpu_feature = CpuArchFeature::eAvx2;
+
+        if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+            && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+            && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
+            cpu_feature = CpuArchFeature::eAvx512;
+        }
+    }
+    return cpu_feature;
+}
 
 Status
 MacBuilder::build(const alc_mac_info_t& macInfo, Context& ctx)
