@@ -47,13 +47,8 @@ TEST(RSA_SignVerify_PSS_2048, Cross_SHA2_256_MGF_256)
         ALCP_TEST_RSA_PADDING_PSS, 2048, dinfo_256, mgfinfo_256);
 }
 
-#if 0
 TEST(RSA_SignVerify_PKCS_2048, Cross_SHA2_256_MGF_256)
 {
-    /*FIXME, only alcp and ipp are implemented for this variant as of now*/
-    if (useossl)
-        GTEST_SKIP() << "only alcp and ipp are implemented for this variant as "
-                        "of now, skipping this test";
     dinfo_256.dt_mode.dm_sha2 = ALC_SHA2_256;
     dinfo_256.dt_len          = ALC_DIGEST_LEN_256;
     dinfo_256.dt_type         = ALC_DIGEST_TYPE_SHA2;
@@ -61,7 +56,6 @@ TEST(RSA_SignVerify_PKCS_2048, Cross_SHA2_256_MGF_256)
     Rsa_SignVerifyCross(
         ALCP_TEST_RSA_PADDING_PKCS, 2048, dinfo_256, mgfinfo_256);
 }
-#endif
 
 /* non padded mode */
 TEST(RSA_No_Padding_1024, Cross)

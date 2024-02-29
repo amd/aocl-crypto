@@ -52,7 +52,7 @@ createSetBigNUM(Uint8* buff, int size_buff) // size in bytes
         p_res[j] = buff[i];
     }
     ippsSet_BN(IppsBigNumPOS, size_buff * 2 / 8, N, m_pBN_N);
-    delete[](Ipp32u*) N;
+    delete[] (Ipp32u*)N;
 
     return m_pBN_N;
 }
@@ -79,16 +79,16 @@ IPPRsaBase::IPPRsaBase() {}
 IPPRsaBase::~IPPRsaBase()
 {
     if (m_pPub) {
-        delete[](Ipp8u*) m_pPub;
+        delete[] (Ipp8u*)m_pPub;
     }
     if (m_pPrv) {
-        delete[](Ipp8u*) m_pPrv;
+        delete[] (Ipp8u*)m_pPrv;
     }
     if (m_scratchBuffer_Pub) {
-        delete[](Ipp8u*) m_scratchBuffer_Pub;
+        delete[] (Ipp8u*)m_scratchBuffer_Pub;
     }
     if (m_scratchBuffer_Pvt) {
-        delete[](Ipp8u*) m_scratchBuffer_Pvt;
+        delete[] (Ipp8u*)m_scratchBuffer_Pvt;
     }
 }
 
@@ -103,13 +103,13 @@ IPPRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
 {
     IppStatus status   = ippStsNoErr;
     Uint8     P_1024[] = { 0xfd, 0xf9, 0xc7, 0x69, 0x6c, 0x3b, 0x60, 0x8f,
-                       0xec, 0x27, 0xc7, 0x50, 0x42, 0x29, 0xf0, 0x81,
-                       0x9b, 0xa9, 0xeb, 0x7b, 0xe7, 0xc1, 0x58, 0x04,
-                       0x52, 0xc0, 0x07, 0x84, 0x32, 0xd3, 0xf2, 0x72,
-                       0x41, 0x9c, 0x96, 0x5c, 0x84, 0x14, 0x9e, 0x63,
-                       0xba, 0x0a, 0x98, 0xcd, 0x56, 0xab, 0x47, 0x0b,
-                       0xd5, 0xa7, 0x43, 0x30, 0x0c, 0xf5, 0x62, 0xd1,
-                       0x3b, 0xa2, 0x0d, 0x7e, 0xdf, 0x38, 0x9a, 0x4b };
+                           0xec, 0x27, 0xc7, 0x50, 0x42, 0x29, 0xf0, 0x81,
+                           0x9b, 0xa9, 0xeb, 0x7b, 0xe7, 0xc1, 0x58, 0x04,
+                           0x52, 0xc0, 0x07, 0x84, 0x32, 0xd3, 0xf2, 0x72,
+                           0x41, 0x9c, 0x96, 0x5c, 0x84, 0x14, 0x9e, 0x63,
+                           0xba, 0x0a, 0x98, 0xcd, 0x56, 0xab, 0x47, 0x0b,
+                           0xd5, 0xa7, 0x43, 0x30, 0x0c, 0xf5, 0x62, 0xd1,
+                           0x3b, 0xa2, 0x0d, 0x7e, 0xdf, 0x38, 0x9a, 0x4b };
     Uint8     P_2048[] = {
         0xd5, 0x39, 0x40, 0x4f, 0xf5, 0x22, 0xe1, 0x30, 0x5d, 0x80, 0x69, 0xa6,
         0xd1, 0x19, 0x63, 0xec, 0x92, 0x89, 0x10, 0xd9, 0xe9, 0x0c, 0xa2, 0x05,
@@ -232,7 +232,7 @@ IPPRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
         return false;
     }
     if (m_pPrv) {
-        delete[](Ipp8u*) m_pPrv;
+        delete[] (Ipp8u*)m_pPrv;
     }
     m_pPrv = (IppsRSAPrivateKeyState*)(new Ipp8u[keyCtxSize]);
 
@@ -273,19 +273,19 @@ IPPRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
     }
     /* clean up these after setting pub key */
     if (m_pBN_P) {
-        delete[](Ipp8u*) m_pBN_P;
+        delete[] (Ipp8u*)m_pBN_P;
     }
     if (m_pBN_Q) {
-        delete[](Ipp8u*) m_pBN_Q;
+        delete[] (Ipp8u*)m_pBN_Q;
     }
     if (m_pBN_DP) {
-        delete[](Ipp8u*) m_pBN_DP;
+        delete[] (Ipp8u*)m_pBN_DP;
     }
     if (m_pBN_DQ) {
-        delete[](Ipp8u*) m_pBN_DQ;
+        delete[] (Ipp8u*)m_pBN_DQ;
     }
     if (m_pBN_invQ) {
-        delete[](Ipp8u*) m_pBN_invQ;
+        delete[] (Ipp8u*)m_pBN_invQ;
     }
     status = ippsRSA_GetBufferSizePrivateKey(&m_buffSizePrivate, m_pPrv);
     if (status != ippStsNoErr) {
@@ -296,7 +296,7 @@ IPPRsaBase::SetPrivateKey(const alcp_rsa_data_t& data)
     m_buffSize = m_buffSizePrivate;
 
     if (m_scratchBuffer_Pvt) {
-        delete[](Ipp8u*) m_scratchBuffer_Pvt;
+        delete[] (Ipp8u*)m_scratchBuffer_Pvt;
     }
     m_scratchBuffer_Pvt = new Ipp8u[m_buffSize];
 
@@ -373,7 +373,7 @@ IPPRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
     }
 
     if (m_pPub) {
-        delete[](Ipp8u*) m_pPub;
+        delete[] (Ipp8u*)m_pPub;
     }
     m_pPub = (IppsRSAPublicKeyState*)(new Ipp8u[keyCtxSize]);
     status = ippsRSA_InitPublicKey(bitsN, bitsE, m_pPub, keyCtxSize);
@@ -403,10 +403,10 @@ IPPRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
 
     /* clean up these after setting pub key */
     if (m_pBN_E) {
-        delete[](Ipp8u*) m_pBN_E;
+        delete[] (Ipp8u*)m_pBN_E;
     }
     if (m_pBN_N) {
-        delete[](Ipp8u*) m_pBN_N;
+        delete[] (Ipp8u*)m_pBN_N;
     }
     if (status != ippStsNoErr) {
         std::cout << "ippsRSA_SetPublicKey failed with err code" << status
@@ -422,7 +422,7 @@ IPPRsaBase::SetPublicKey(const alcp_rsa_data_t& data)
     }
 
     if (m_scratchBuffer_Pub) {
-        delete[](Ipp8u*) m_scratchBuffer_Pub;
+        delete[] (Ipp8u*)m_scratchBuffer_Pub;
     }
     m_scratchBuffer_Pub = new Ipp8u[m_buffSizePublic];
 
@@ -473,10 +473,10 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
             // std::cout << "ippsRSA_Encrypt failed with err code" << status
             //           << std::endl;
             if (m_pBN_kat_PT) {
-                delete[](Ipp8u*) m_pBN_kat_PT;
+                delete[] (Ipp8u*)m_pBN_kat_PT;
             }
             if (m_pBN_kat_CT) {
-                delete[](Ipp8u*) m_pBN_kat_CT;
+                delete[] (Ipp8u*)m_pBN_kat_CT;
             }
             return status;
         }
@@ -495,10 +495,10 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                           data.m_encrypted_data);
         /* clean up these after encrypt */
         if (m_pBN_kat_PT) {
-            delete[](Ipp8u*) m_pBN_kat_PT;
+            delete[] (Ipp8u*)m_pBN_kat_PT;
         }
         if (m_pBN_kat_CT) {
-            delete[](Ipp8u*) m_pBN_kat_CT;
+            delete[] (Ipp8u*)m_pBN_kat_CT;
         }
     }
     return 0;
@@ -528,7 +528,7 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
             std::cout << "ippsRSADecrypt_OAEP_rmf failed with err code"
                       << status << std::endl;
             if (pPlainText) {
-                delete[](Ipp8u*) pPlainText;
+                delete[] (Ipp8u*)pPlainText;
             }
             return status;
         }
@@ -536,7 +536,7 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
         std::memcpy(data.m_decrypted_data, pPlainText, plainTextLen);
 
         if (pPlainText) {
-            delete[](Ipp8u*) pPlainText;
+            delete[] (Ipp8u*)pPlainText;
         }
     } else {
         /* for non padded mode */
@@ -549,10 +549,10 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
             std::cout << "ippsRSA_Decrypt failed with err code" << status
                       << std::endl;
             if (m_pBN_kat_PT) {
-                delete[](Ipp8u*) m_pBN_kat_PT;
+                delete[] (Ipp8u*)m_pBN_kat_PT;
             }
             if (m_pBN_kat_CT) {
-                delete[](Ipp8u*) m_pBN_kat_CT;
+                delete[] (Ipp8u*)m_pBN_kat_CT;
             }
             return status;
         }
@@ -565,10 +565,10 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
             std::cout << "ippsRef_BN failed with err code" << status
                       << std::endl;
             if (m_pBN_kat_PT) {
-                delete[](Ipp8u*) m_pBN_kat_PT;
+                delete[] (Ipp8u*)m_pBN_kat_PT;
             }
             if (m_pBN_kat_CT) {
-                delete[](Ipp8u*) m_pBN_kat_CT;
+                delete[] (Ipp8u*)m_pBN_kat_CT;
             }
             return status;
         }
@@ -577,10 +577,10 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                           data.m_decrypted_data);
         /* clean up these after decrypt */
         if (m_pBN_kat_PT) {
-            delete[](Ipp8u*) m_pBN_kat_PT;
+            delete[] (Ipp8u*)m_pBN_kat_PT;
         }
         if (m_pBN_kat_CT) {
-            delete[](Ipp8u*) m_pBN_kat_CT;
+            delete[] (Ipp8u*)m_pBN_kat_CT;
         }
     }
     return 0;

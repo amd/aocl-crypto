@@ -615,11 +615,19 @@ OpenSSLRsaBase::Sign(const alcp_rsa_data_t& data)
     EVP_MD_CTX*   mctx       = NULL;
     const char*   digest_str = "";
     OSSL_PARAM    params[2], *p = params;
-    /* TEST*/
+
     mctx = EVP_MD_CTX_new();
     /* Initialize MD context for signing. */
-    *p++ = OSSL_PARAM_construct_utf8_string(
-        OSSL_SIGNATURE_PARAM_PAD_MODE, OSSL_PKEY_RSA_PAD_MODE_PSS, 0);
+    if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
+        *p++ = OSSL_PARAM_construct_utf8_string(
+            OSSL_SIGNATURE_PARAM_PAD_MODE, OSSL_PKEY_RSA_PAD_MODE_PSS, 0);
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+        *p++ = OSSL_PARAM_construct_utf8_string(
+            OSSL_SIGNATURE_PARAM_PAD_MODE, OSSL_PKEY_RSA_PAD_MODE_PKCSV15, 0);
+    } else {
+        std::cout << "Unsupported padding mode!" << std::endl;
+        return 1;
+    }
     *p = OSSL_PARAM_construct_end();
     if (1
         != EVP_DigestSignInit_ex(
@@ -650,8 +658,6 @@ OpenSSLRsaBase::Sign(const alcp_rsa_data_t& data)
         return 1;
     }
 
-    /*TEST*/
-
     return 0;
 }
 int
@@ -667,10 +673,22 @@ OpenSSLRsaBase::Verify(const alcp_rsa_data_t& data)
     OSSL_PARAM    params[2], *p = params;
 
     mctx = EVP_MD_CTX_new();
+
     /* Initialize MD context for signing. */
-    *p++ = OSSL_PARAM_construct_utf8_string(
-        OSSL_SIGNATURE_PARAM_PAD_MODE, OSSL_PKEY_RSA_PAD_MODE_PSS, 0);
+    if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
+        *p++ = OSSL_PARAM_construct_utf8_string(
+            OSSL_SIGNATURE_PARAM_PAD_MODE, OSSL_PKEY_RSA_PAD_MODE_PSS, 0);
+        /* add salt len*/
+
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
+        *p++ = OSSL_PARAM_construct_utf8_string(
+            OSSL_SIGNATURE_PARAM_PAD_MODE, OSSL_PKEY_RSA_PAD_MODE_PKCSV15, 0);
+    } else {
+        std::cout << "Unsupported padding mode!" << std::endl;
+        return 1;
+    }
     *p = OSSL_PARAM_construct_end();
+
     if (1
         != EVP_DigestVerifyInit_ex(
             mctx, NULL, "SHA256", m_libctx, NULL, m_pkey_pub, params)) {
