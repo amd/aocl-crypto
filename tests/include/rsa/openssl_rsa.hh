@@ -34,6 +34,7 @@
 #include "openssl/rsa.h"
 #include "openssl/rsaerr.h"
 #include "rsa/rsa.hh"
+#include "rsa/rsa_keys.hh"
 #include <iostream>
 #include <malloc.h>
 #include <openssl/param_build.h>

@@ -30,6 +30,7 @@
 #include "alcp/alcp.h"
 #include "alcp/rsa.h"
 #include "rsa/rsa.hh"
+#include "rsa/rsa_keys.hh"
 #include <crypto_mb/x25519.h>
 #include <iostream>
 #include <ippcp.h>

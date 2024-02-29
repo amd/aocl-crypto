@@ -28,6 +28,7 @@
 #include "alcp/alcp.h"
 #include "alcp/rsa.h"
 #include "rsa/rsa.hh"
+#include "rsa/rsa_keys.hh"
 #include <iostream>
 #include <malloc.h>
 #include <vector>
