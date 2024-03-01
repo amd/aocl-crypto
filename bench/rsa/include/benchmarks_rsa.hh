@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -50,10 +50,13 @@ using namespace alcp::testing;
 typedef enum
 {
     RSA_BENCH_ENC_PUB_KEY = 0,
-    RSA_BENCH_DEC_PVT_KEY = 1
+    RSA_BENCH_DEC_PVT_KEY = 1,
+    RSA_BENCH_SIGN        = 2,
+    RSA_BENCH_VERIFY      = 3
 } rsa_bench_opt;
 
-std::vector<Int64> rsa_key_sizes = { 1024, 2048 };
+std::vector<Int64> rsa_key_sizes      = { 1024, 2048 };
+std::vector<Int64> rsa_key_sizes_sign = { 2048 };
 
 /* bench function */
 inline int
@@ -92,16 +95,21 @@ Rsa_Bench(benchmark::State&       state,
     }
 #endif
 
-    if (padding_mode == 1) {
-        rb->m_padding_mode = ALCP_TEST_RSA_PADDING;
+    rb->m_padding_mode = padding_mode;
+
+    /* for encrypt/ decrypt */
+    if (padding_mode == ALCP_TEST_RSA_PADDING) {
         /* input size should be 0 to m_key_size - 2 * m_hash_len - 2*/
         if (KeySize == 128) {
             InputSize = 62;
         } else
             InputSize = 47;
-    } else {
-        rb->m_padding_mode = ALCP_TEST_RSA_NO_PADDING;
-        InputSize          = KeySize;
+    } else if (padding_mode == ALCP_TEST_RSA_NO_PADDING) {
+        InputSize = KeySize;
+    }
+    /* this is for sign / verify :which uses either PSS or PKCS */
+    else {
+        InputSize = 48;
     }
     /*FIXME: keeping input const for now, a valid data for now */
     std::vector<Uint8> input_data(InputSize, 30);
@@ -109,12 +117,21 @@ Rsa_Bench(benchmark::State&       state,
     std::vector<Uint8> decrypted_data(KeySize);
     std::vector<Uint8> PubKeyKeyMod(KeySize);
 
+    /* signature */
+    std::vector<Uint8> signature(KeySize, 0);
+    std::vector<Uint8> salt(5);
+
     data.m_msg            = &(input_data[0]);
     data.m_pub_key_mod    = &(PubKeyKeyMod[0]);
     data.m_encrypted_data = &(encrypted_data[0]);
     data.m_decrypted_data = &(decrypted_data[0]);
     data.m_msg_len        = input_data.size();
     data.m_key_len        = KeySize;
+
+    /* for sign verify */
+    data.m_salt      = &(salt[0]);
+    data.m_salt_len  = salt.size();
+    data.m_signature = &(signature[0]);
 
     rb->m_key_len     = KeySize;
     rb->m_digest_info = dinfo;
@@ -157,10 +174,33 @@ Rsa_Bench(benchmark::State&       state,
         }
     }
 
-    std::string sResultUnit = (opt == RSA_BENCH_ENC_PUB_KEY) ? "Encryptions/Sec"
-                              : (opt == RSA_BENCH_DEC_PVT_KEY)
-                                  ? "Decryptions/Sec"
-                                  : "";
+    /* benchmark sign verify */
+    else if (opt == RSA_BENCH_SIGN) {
+        for (auto _ : state) {
+            if (rb->Sign(data) != 0) {
+                state.SkipWithError("Error in RSA Sign");
+            }
+        }
+    } else if (opt == RSA_BENCH_VERIFY) {
+        if (rb->Sign(data) != 0) {
+            state.SkipWithError("Error in RSA Sign");
+        }
+        for (auto _ : state) {
+            if (rb->Verify(data) != 0) {
+                state.SkipWithError("Error in RSA verify");
+            }
+        }
+    } else {
+        std::cout << "Invalid option for benchmark" << std::endl;
+    }
+
+    std::string sResultUnit = "";
+
+    sResultUnit = (opt == RSA_BENCH_ENC_PUB_KEY)   ? "Encryptions/Sec"
+                  : (opt == RSA_BENCH_DEC_PVT_KEY) ? "Decryptions/Sec"
+                  : (opt == RSA_BENCH_SIGN)        ? "Signings/Sec"
+                  : (opt == RSA_BENCH_VERIFY)      ? "Verifications/Sec"
+                                                   : "";
     state.counters[sResultUnit] =
         benchmark::Counter(state.iterations(), benchmark::Counter::kIsRate);
     return 0;
@@ -230,10 +270,75 @@ BENCH_RSA_EncryptPubKey_NoPadding(benchmark::State& state)
                                        mgfinfo));
 }
 
+static void
+BENCH_RSA_Sign_PSS(benchmark::State& state)
+{
+    alc_digest_info_t dinfo, mgfinfo;
+    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
+    dinfo.dt_len          = ALC_DIGEST_LEN_256;
+    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo               = dinfo;
+    benchmark::DoNotOptimize(Rsa_Bench(state,
+                                       RSA_BENCH_SIGN,
+                                       ALCP_TEST_RSA_PADDING_PSS,
+                                       state.range(0),
+                                       dinfo,
+                                       mgfinfo));
+}
+static void
+BENCH_RSA_Sign_PKCS(benchmark::State& state)
+{
+    alc_digest_info_t dinfo, mgfinfo;
+    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
+    dinfo.dt_len          = ALC_DIGEST_LEN_256;
+    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo               = dinfo;
+    benchmark::DoNotOptimize(Rsa_Bench(state,
+                                       RSA_BENCH_SIGN,
+                                       ALCP_TEST_RSA_PADDING_PKCS,
+                                       state.range(0),
+                                       dinfo,
+                                       mgfinfo));
+}
+static void
+BENCH_RSA_Verify_PSS(benchmark::State& state)
+{
+    alc_digest_info_t dinfo, mgfinfo;
+    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
+    dinfo.dt_len          = ALC_DIGEST_LEN_256;
+    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo               = dinfo;
+    benchmark::DoNotOptimize(Rsa_Bench(state,
+                                       RSA_BENCH_VERIFY,
+                                       ALCP_TEST_RSA_PADDING_PSS,
+                                       state.range(0),
+                                       dinfo,
+                                       mgfinfo));
+}
+static void
+BENCH_RSA_Verify_PKCS(benchmark::State& state)
+{
+    alc_digest_info_t dinfo, mgfinfo;
+    dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
+    dinfo.dt_len          = ALC_DIGEST_LEN_256;
+    dinfo.dt_type         = ALC_DIGEST_TYPE_SHA2;
+    mgfinfo               = dinfo;
+    benchmark::DoNotOptimize(Rsa_Bench(state,
+                                       RSA_BENCH_VERIFY,
+                                       ALCP_TEST_RSA_PADDING_PKCS,
+                                       state.range(0),
+                                       dinfo,
+                                       mgfinfo));
+}
+
 /* add new benchmarks here */
 int
 AddBenchmarks_rsa()
 {
+    BENCHMARK(BENCH_RSA_Sign_PSS)->ArgsProduct({ rsa_key_sizes_sign });
+    BENCHMARK(BENCH_RSA_Sign_PKCS)->ArgsProduct({ rsa_key_sizes_sign });
+    BENCHMARK(BENCH_RSA_Verify_PSS)->ArgsProduct({ rsa_key_sizes_sign });
+    BENCHMARK(BENCH_RSA_Verify_PKCS)->ArgsProduct({ rsa_key_sizes_sign });
     BENCHMARK(BENCH_RSA_EncryptPubKey_NoPadding)
         ->ArgsProduct({ rsa_key_sizes });
     BENCHMARK(BENCH_RSA_DecryptPvtKey_NoPadding)
