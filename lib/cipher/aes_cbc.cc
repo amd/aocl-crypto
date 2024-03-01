@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,58 +26,45 @@
  *
  */
 
-#include "alcp/base.hh"
-#include "alcp/cipher.h"
-#include "alcp/cipher.hh"
 #include "alcp/cipher/aes.hh"
+//
+#include "alcp/cipher/aes_cbc.hh"
 #include "alcp/cipher/cipher_wrapper.hh"
-#include "alcp/cipher/rijndael.hh"
-#include "alcp/utils/bits.hh"
-#include "alcp/utils/cpuid.hh"
 
-#include <immintrin.h>
-#include <wmmintrin.h>
+#include "alcp/utils/cpuid.hh"
 
 using alcp::utils::CpuId;
 
 namespace alcp::cipher {
 
-/*
- * @brief        AES Encryption in CBC(Cipher block chaining)
- */
-class ALCP_API_EXPORT Cbc : public Aes
-{
-  public:
-    const Uint8* m_enc_key = {};
-    const Uint8* m_dec_key = {};
-    Uint32       m_nrounds = 0;
-
-    Cbc() { Aes::setMode(ALC_AES_MODE_CTR); };
-    ~Cbc() {}
-
-    void getKey()
-    {
-        m_enc_key = getEncryptKeys();
-        m_dec_key = getDecryptKeys();
-        m_nrounds = getRounds();
-    }
-};
-
 namespace vaes512 {
-    AES_CLASS_GEN(Cbc128, public Cbc, public ICipher)
-    AES_CLASS_GEN(Cbc192, public Cbc, public ICipher)
-    AES_CLASS_GEN(Cbc256, public Cbc, public ICipher)
+    CRYPT_WRAPPER_FUNC(Cbc128, encrypt, aesni::EncryptCbc128, m_enc_key, 10)
+    CRYPT_WRAPPER_FUNC(Cbc192, encrypt, aesni::EncryptCbc128, m_enc_key, 12)
+    CRYPT_WRAPPER_FUNC(Cbc256, encrypt, aesni::EncryptCbc128, m_enc_key, 14)
+
+    CRYPT_WRAPPER_FUNC(Cbc128, decrypt, DecryptCbc128, m_dec_key, 10)
+    CRYPT_WRAPPER_FUNC(Cbc192, decrypt, DecryptCbc128, m_dec_key, 12)
+    CRYPT_WRAPPER_FUNC(Cbc256, decrypt, DecryptCbc128, m_dec_key, 14)
 } // namespace vaes512
 
 namespace vaes {
-    AES_CLASS_GEN(Cbc128, public Cbc, public ICipher)
-    AES_CLASS_GEN(Cbc192, public Cbc, public ICipher)
-    AES_CLASS_GEN(Cbc256, public Cbc, public ICipher)
+    CRYPT_WRAPPER_FUNC(Cbc128, encrypt, aesni::EncryptCbc128, m_enc_key, 10)
+    CRYPT_WRAPPER_FUNC(Cbc192, encrypt, aesni::EncryptCbc128, m_enc_key, 12)
+    CRYPT_WRAPPER_FUNC(Cbc256, encrypt, aesni::EncryptCbc128, m_enc_key, 14)
+
+    CRYPT_WRAPPER_FUNC(Cbc128, decrypt, DecryptCbc128, m_dec_key, 10)
+    CRYPT_WRAPPER_FUNC(Cbc192, decrypt, DecryptCbc128, m_dec_key, 12)
+    CRYPT_WRAPPER_FUNC(Cbc256, decrypt, DecryptCbc128, m_dec_key, 14)
 } // namespace vaes
 
 namespace aesni {
-    AES_CLASS_GEN(Cbc128, public Cbc, public ICipher)
-    AES_CLASS_GEN(Cbc192, public Cbc, public ICipher)
-    AES_CLASS_GEN(Cbc256, public Cbc, public ICipher)
+    CRYPT_WRAPPER_FUNC(Cbc128, encrypt, EncryptCbc128, m_enc_key, 10)
+    CRYPT_WRAPPER_FUNC(Cbc192, encrypt, EncryptCbc128, m_enc_key, 12)
+    CRYPT_WRAPPER_FUNC(Cbc256, encrypt, EncryptCbc128, m_enc_key, 14)
+
+    CRYPT_WRAPPER_FUNC(Cbc128, decrypt, DecryptCbc128, m_dec_key, 10)
+    CRYPT_WRAPPER_FUNC(Cbc192, decrypt, DecryptCbc128, m_dec_key, 12)
+    CRYPT_WRAPPER_FUNC(Cbc256, decrypt, DecryptCbc128, m_dec_key, 14)
 } // namespace aesni
+
 } // namespace alcp::cipher

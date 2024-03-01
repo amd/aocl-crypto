@@ -42,113 +42,41 @@
 using alcp::utils::CpuId;
 namespace alcp::cipher {
 
-/*
- * \brief        AES Encryption in CFB(Cipher Feedback mode)
- * \notes        TODO: Move this to a aes_cbc.hh or other
- */
-template<alc_error_t FEnc(const Uint8* pSrc,
-                          Uint8*       pDest,
-                          Uint64       len,
-                          const Uint8* pKey,
-                          int          nRounds,
-                          const Uint8* pIv),
-         alc_error_t FDec(const Uint8* pSrc,
-                          Uint8*       pDest,
-                          Uint64       len,
-                          const Uint8* pKey,
-                          int          nRounds,
-                          const Uint8* pIv)>
-class ALCP_API_EXPORT Cfb final
-    : public Aes
-    , public ICipher
+class ALCP_API_EXPORT Cfb : public Aes
 {
   public:
-    Cfb() {}
+    const Uint8* m_enc_key = {};
+    const Uint8* m_dec_key = {};
+    Uint32       m_nrounds = 0;
+
+    Cfb() { Aes::setMode(ALC_AES_MODE_CTR); };
     ~Cfb() {}
 
-  public:
-    /**
-     * \brief   CFB Encrypt Operation
-     * \notes
-     * \param   pPlainText      Pointer to output buffer
-     * \param   pCipherText     Pointer to encrypted buffer
-     * \param   len             Len of plain and encrypted text
-     * \param   pIv             Pointer to Initialization Vector
-     * \return  alc_error_t     Error code
-     */
-    virtual alc_error_t encrypt(const Uint8* pPlainText,
-                                Uint8*       pCipherText,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
-
-    /**
-     * \brief   CFB Decrypt Operation
-     * \notes
-     * \param   pCipherText     Pointer to encrypted buffer
-     * \param   pPlainText      Pointer to output buffer
-     * \param   len             Len of plain and encrypted text
-     * \param   pIv             Pointer to Initialization Vector
-     * \return  alc_error_t     Error code
-     */
-    virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                Uint8*       pPlainText,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
-
-  private:
+    void getKey()
+    {
+        m_enc_key = getEncryptKeys();
+        m_dec_key = getDecryptKeys();
+        m_nrounds = getRounds();
+    }
 };
 
-template<alc_error_t FEnc(const Uint8* pSrc,
-                          Uint8*       pDest,
-                          Uint64       len,
-                          const Uint8* pKey,
-                          int          nRounds,
-                          const Uint8* pIv),
-         alc_error_t FDec(const Uint8* pSrc,
-                          Uint8*       pDest,
-                          Uint64       len,
-                          const Uint8* pKey,
-                          int          nRounds,
-                          const Uint8* pIv)>
-alc_error_t
-Cfb<FEnc, FDec>::decrypt(const Uint8* pCipherText,
-                         Uint8*       pPlainText,
-                         Uint64       len,
-                         const Uint8* pIv) const
-{
-    alc_error_t err = ALC_ERROR_NONE;
+namespace vaes512 {
+    AES_CLASS_GEN(Cfb128, public Cfb, public ICipher)
+    AES_CLASS_GEN(Cfb192, public Cfb, public ICipher)
+    AES_CLASS_GEN(Cfb256, public Cfb, public ICipher)
+} // namespace vaes512
 
-    return FDec(
-        pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
+namespace vaes {
+    AES_CLASS_GEN(Cfb128, public Cfb, public ICipher)
+    AES_CLASS_GEN(Cfb192, public Cfb, public ICipher)
+    AES_CLASS_GEN(Cfb256, public Cfb, public ICipher)
+} // namespace vaes
 
-    return err;
-}
-
-template<alc_error_t FEnc(const Uint8* pSrc,
-                          Uint8*       pDest,
-                          Uint64       len,
-                          const Uint8* pKey,
-                          int          nRounds,
-                          const Uint8* pIv),
-         alc_error_t FDec(const Uint8* pSrc,
-                          Uint8*       pDest,
-                          Uint64       len,
-                          const Uint8* pKey,
-                          int          nRounds,
-                          const Uint8* pIv)>
-alc_error_t
-Cfb<FEnc, FDec>::encrypt(const Uint8* pPlainText,
-                         Uint8*       pCipherText,
-                         Uint64       len,
-                         const Uint8* pIv) const
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    err =
-        FEnc(pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
-
-    return err;
-}
+namespace aesni {
+    AES_CLASS_GEN(Cfb128, public Cfb, public ICipher)
+    AES_CLASS_GEN(Cfb192, public Cfb, public ICipher)
+    AES_CLASS_GEN(Cfb256, public Cfb, public ICipher)
+} // namespace aesni
 
 } // namespace alcp::cipher
 

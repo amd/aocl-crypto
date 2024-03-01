@@ -52,6 +52,17 @@ struct ALCP_API_EXPORT GcmAuthData
     int     m_num_256blks_precomputed = 0;
 };
 
+#define CRYPT_WRAPPER_FUNC(                                                    \
+    CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS)                     \
+    alc_error_t CLASS_NAME::WRAPPER_FUNC(                                      \
+        const Uint8* pinput, Uint8* pOutput, Uint64 len, const Uint8* pIv)     \
+        const                                                                  \
+    {                                                                          \
+        alc_error_t err = ALC_ERROR_NONE;                                      \
+        err = FUNC_NAME(pinput, pOutput, len, PKEY, NUM_ROUNDS, pIv);          \
+        return err;                                                            \
+    }
+
 namespace aesni {
 
     alc_error_t ExpandKeys(const Uint8* pUserKey,
@@ -275,26 +286,26 @@ namespace aesni {
 
 namespace vaes512 {
 
-    Uint64 ctrProcessAvx512_128(const Uint8*   p_in_x,
-                                Uint8*         p_out_x,
-                                Uint64         blocks,
-                                const __m128i* pkey128,
-                                const Uint8*   pIv,
-                                int            nRounds);
+    alc_error_t CryptCtr128(const Uint8* p_in_x,
+                            Uint8*       p_out_x,
+                            Uint64       len,
+                            const Uint8* pKey,
+                            int          nRounds,
+                            const Uint8* pIv);
 
-    Uint64 ctrProcessAvx512_192(const Uint8*   p_in_x,
-                                Uint8*         p_out_x,
-                                Uint64         blocks,
-                                const __m128i* pkey128,
-                                const Uint8*   pIv,
-                                int            nRounds);
+    alc_error_t CryptCtr192(const Uint8* p_in_x,
+                            Uint8*       p_out_x,
+                            Uint64       len,
+                            const Uint8* pKey,
+                            int          nRounds,
+                            const Uint8* pIv);
 
-    Uint64 ctrProcessAvx512_256(const Uint8*   p_in_x,
-                                Uint8*         p_out_x,
-                                Uint64         blocks,
-                                const __m128i* pkey128,
-                                const Uint8*   pIv,
-                                int            nRounds);
+    alc_error_t CryptCtr256(const Uint8* p_in_x,
+                            Uint8*       p_out_x,
+                            Uint64       len,
+                            const Uint8* pKey,
+                            int          nRounds,
+                            const Uint8* pIv);
 
     alc_error_t DecryptCbc128(const Uint8* pSrc,    // ptr to ciphertext
                               Uint8*       pDest,   // ptr to plaintext

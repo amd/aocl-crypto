@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -188,7 +188,7 @@ DecryptCbc(const Uint8* pCipherText, // ptr to ciphertext
     return err;
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 DecryptCbc128(const Uint8* pSrc,    // ptr to ciphertext
               Uint8*       pDest,   // ptr to plaintext
               Uint64       len,     // message length in bytes
@@ -201,7 +201,7 @@ DecryptCbc128(const Uint8* pSrc,    // ptr to ciphertext
         pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 DecryptCbc192(const Uint8* pSrc,    // ptr to ciphertext
               Uint8*       pDest,   // ptr to plaintext
               Uint64       len,     // message length in bytes
@@ -214,7 +214,7 @@ DecryptCbc192(const Uint8* pSrc,    // ptr to ciphertext
         pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 DecryptCbc256(const Uint8* pSrc,    // ptr to ciphertext
               Uint8*       pDest,   // ptr to plaintext
               Uint64       len,     // message length in bytes

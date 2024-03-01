@@ -94,49 +94,48 @@ class Aes : public Rijndael
     void*             m_this;
 };
 
-/*
- * @brief        AES Encryption in OFB(Output Feedback)
- * @note        TODO: Move this to a aes_ofb.hh or other
- */
-class ALCP_API_EXPORT Ofb final
-    : public Aes
-    , public ICipher
-{
-  public:
-    Ofb() {}
-    ~Ofb() {}
+// class  for all AES cipher modes
+#define AES_CLASS_GEN(CHILD_NEW, PARENT1, PARENT2)                             \
+    class ALCP_API_EXPORT CHILD_NEW                                            \
+        : PARENT1                                                              \
+        , PARENT2                                                              \
+    {                                                                          \
+      public:                                                                  \
+        CHILD_NEW(){};                                                         \
+        ~CHILD_NEW(){};                                                        \
+                                                                               \
+      public:                                                                  \
+        virtual alc_error_t encrypt(const Uint8* pPlainText,                   \
+                                    Uint8*       pCipherText,                  \
+                                    Uint64       len,                          \
+                                    const Uint8* pIv) const final;             \
+                                                                               \
+        virtual alc_error_t decrypt(const Uint8* pCipherText,                  \
+                                    Uint8*       pPlainText,                   \
+                                    Uint64       len,                          \
+                                    const Uint8* pIv) const final;             \
+    };
 
-  public:
-    /**
-     * @brief   OFB Encrypt Operation
-     * @note
-     * @param   pPlainText      Pointer to output buffer
-     * @param   pCipherText     Pointer to encrypted buffer
-     * @param   len             Len of plain and encrypted text
-     * @param   pIv             Pointer to Initialization Vector
-     * @return  alc_error_t     Error code
-     */
-    virtual alc_error_t encrypt(const Uint8* pPlainText,
-                                Uint8*       pCipherText,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
+AES_CLASS_GEN(Ofb, public Aes, public ICipher)
 
-    /**
-     * @brief   OFB Decrypt Operation
-     * @note
-     * @param   pCipherText     Pointer to encrypted buffer
-     * @param   pPlainText      Pointer to output buffer
-     * @param   len             Len of plain and encrypted text
-     * @param   pIv             Pointer to Initialization Vector
-     * @return  alc_error_t     Error code
-     */
-    virtual alc_error_t decrypt(const Uint8* pCipherText,
-                                Uint8*       pPlainText,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
-
-  private:
-};
+// class  for all AEAD cipher modes
+#define AEAD_CLASS_GEN(CHILD_NEW, PARENT1)                                     \
+    class ALCP_API_EXPORT CHILD_NEW : PARENT1                                  \
+    {                                                                          \
+      public:                                                                  \
+        CHILD_NEW() {}                                                         \
+        ~CHILD_NEW() {}                                                        \
+                                                                               \
+      public:                                                                  \
+        virtual alc_error_t encryptUpdate(const Uint8* pInput,                 \
+                                          Uint8*       pOutput,                \
+                                          Uint64       len,                    \
+                                          const Uint8* pIv);                   \
+        virtual alc_error_t decryptUpdate(const Uint8* pCipherText,            \
+                                          Uint8*       pPlainText,             \
+                                          Uint64       len,                    \
+                                          const Uint8* pIv);                   \
+    };
 
 } // namespace alcp::cipher
 

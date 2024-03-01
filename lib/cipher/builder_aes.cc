@@ -237,24 +237,15 @@ __build_aesCfb(const Uint64 keyLen, Context& ctx)
     Status sts = StatusOk();
 
     CpuCipherFeatures cpu_feature = getCpuCipherfeature();
-    // cpu_feature                   = CpuCipherFeatures::eVaes256;
     if (cpu_feature == CpuCipherFeatures::eVaes512) {
         using namespace vaes512;
-        __build_aes_cipher<Cfb<aesni::EncryptCfb128, DecryptCfb128>,
-                           Cfb<aesni::EncryptCfb192, DecryptCfb192>,
-                           Cfb<aesni::EncryptCfb256, DecryptCfb256>>(keyLen,
-                                                                     ctx);
+        __build_aes_cipher<Cfb128, Cfb192, Cfb256>(keyLen, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
         using namespace vaes;
-        __build_aes_cipher<Cfb<aesni::EncryptCfb128, DecryptCfb128>,
-                           Cfb<aesni::EncryptCfb192, DecryptCfb192>,
-                           Cfb<aesni::EncryptCfb256, DecryptCfb256>>(keyLen,
-                                                                     ctx);
+        __build_aes_cipher<Cfb128, Cfb192, Cfb256>(keyLen, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eAesni) {
         using namespace aesni;
-        __build_aes_cipher<Cfb<EncryptCfb128, DecryptCfb128>,
-                           Cfb<EncryptCfb192, DecryptCfb192>,
-                           Cfb<EncryptCfb256, DecryptCfb256>>(keyLen, ctx);
+        __build_aes_cipher<Cfb128, Cfb192, Cfb256>(keyLen, ctx);
     }
 
     return sts;
@@ -278,21 +269,13 @@ __build_aesCbc(const Uint64 keyLen, Context& ctx)
     // cpu_feature                   = CpuCipherFeatures::eVaes256;
     if (cpu_feature == CpuCipherFeatures::eVaes512) {
         using namespace vaes512;
-        __build_aes_cipher<Cbc<aesni::EncryptCbc128, DecryptCbc128>,
-                           Cbc<aesni::EncryptCbc192, DecryptCbc192>,
-                           Cbc<aesni::EncryptCbc256, DecryptCbc256>>(keyLen,
-                                                                     ctx);
+        __build_aes_cipher<Cbc128, Cbc192, Cbc256>(keyLen, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
         using namespace vaes;
-        __build_aes_cipher<Cbc<aesni::EncryptCbc128, DecryptCbc128>,
-                           Cbc<aesni::EncryptCbc192, DecryptCbc192>,
-                           Cbc<aesni::EncryptCbc256, DecryptCbc256>>(keyLen,
-                                                                     ctx);
+        __build_aes_cipher<Cbc128, Cbc192, Cbc256>(keyLen, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eAesni) {
         using namespace aesni;
-        __build_aes_cipher<Cbc<EncryptCbc128, DecryptCbc128>,
-                           Cbc<EncryptCbc192, DecryptCbc192>,
-                           Cbc<EncryptCbc256, DecryptCbc256>>(keyLen, ctx);
+        __build_aes_cipher<Cbc128, Cbc192, Cbc256>(keyLen, ctx);
     }
 
     return sts;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -39,18 +39,17 @@ template<void AesEnc_1x256(__m256i* pBlk0, const __m128i* pKey, int nRounds),
          void AesEnc_2x256(
              __m256i* pBlk0, __m256i* pBlk1, const __m128i* pKey, int nRounds),
          void AesEnc_4x256(__m256i*       pBlk0,
-                          __m256i*       pBlk1,
-                          __m256i*       pBlk2,
-                          __m256i*       pBlk3,
-                          const __m128i* pKey,
-                          int            nRounds)>
-alc_error_t
-inline DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
-           Uint8*       pPlainText,  // ptr to plaintext
-           Uint64       len,         // message length in bytes
-           const Uint8* pKey,        // ptr to Key
-           int          nRounds,     // No. of rounds
-           const Uint8* pIv          // ptr to Initialization Vector
+                           __m256i*       pBlk1,
+                           __m256i*       pBlk2,
+                           __m256i*       pBlk3,
+                           const __m128i* pKey,
+                           int            nRounds)>
+alc_error_t inline DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
+                              Uint8*       pPlainText,  // ptr to plaintext
+                              Uint64       len,     // message length in bytes
+                              const Uint8* pKey,    // ptr to Key
+                              int          nRounds, // No. of rounds
+                              const Uint8* pIv // ptr to Initialization Vector
 )
 {
     alc_error_t err = ALC_ERROR_NONE;
@@ -176,7 +175,7 @@ inline DecryptCfb(const Uint8* pCipherText, // ptr to ciphertext
     return err;
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 DecryptCfb128(const Uint8* pSrc,
               Uint8*       pDest,
               Uint64       len,
@@ -188,7 +187,7 @@ DecryptCfb128(const Uint8* pSrc,
         pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 DecryptCfb192(const Uint8* pSrc,
               Uint8*       pDest,
               Uint64       len,
@@ -200,7 +199,7 @@ DecryptCfb192(const Uint8* pSrc,
         pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
-ALCP_API_EXPORT alc_error_t
+alc_error_t
 DecryptCfb256(const Uint8* pSrc,
               Uint8*       pDest,
               Uint64       len,

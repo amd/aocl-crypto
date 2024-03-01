@@ -89,19 +89,21 @@ ctrInitx(__m512i&     c1,
     c1 = alcp_add_epi32(c1, onehi);
 }
 
-static inline Uint64
+static inline void
 ctrBlk128(const __m512i* p_in_x,
           __m512i*       p_out_x,
-          Uint64         blocks,
+          Uint64         len,
           const __m128i* pkey128,
           const Uint8*   pIv,
-          int            nRounds,
-          Uint8          factor)
+          int            nRounds)
 {
     __m512i a1, a2, a3, a4;
     __m512i b1, b2, b3, b4;
     __m512i c1, c2, c3, c4, swap_ctr;
     __m512i one_lo, one_x, two_x, three_x, four_x;
+
+    Uint8  factor = 4;
+    Uint64 blocks = len / Rijndael::cBlockSize;
 
     ctrInitx(c1, pIv, one_lo, one_x, two_x, three_x, four_x, swap_ctr);
 
@@ -212,23 +214,23 @@ ctrBlk128(const __m512i* p_in_x,
 
     // clear all keys in registers.
     alcp_clear_keys_zmm_10rounds(keys);
-
-    return blocks;
 }
 
-static inline Uint64
+static inline void
 ctrBlk192(const __m512i* p_in_x,
           __m512i*       p_out_x,
-          Uint64         blocks,
+          Uint64         len,
           const __m128i* pkey128,
           const Uint8*   pIv,
-          int            nRounds,
-          Uint8          factor)
+          int            nRounds)
 {
     __m512i a1, a2, a3, a4;
     __m512i b1, b2, b3, b4;
     __m512i c1, c2, c3, c4, swap_ctr;
     __m512i one_lo, one_x, two_x, three_x, four_x;
+
+    Uint8  factor = 4;
+    Uint64 blocks = len / Rijndael::cBlockSize;
 
     ctrInitx(c1, pIv, one_lo, one_x, two_x, three_x, four_x, swap_ctr);
 
@@ -339,23 +341,23 @@ ctrBlk192(const __m512i* p_in_x,
 
     // clear all keys in registers.
     alcp_clear_keys_zmm_12rounds(keys);
-
-    return blocks;
 }
 
-static inline Uint64
+static inline void
 ctrBlk256(const __m512i* p_in_x,
           __m512i*       p_out_x,
-          Uint64         blocks,
+          Uint64         len,
           const __m128i* pkey128,
           const Uint8*   pIv,
-          int            nRounds,
-          Uint8          factor)
+          int            nRounds)
 {
     __m512i a1, a2, a3, a4;
     __m512i b1, b2, b3, b4;
     __m512i c1, c2, c3, c4, swap_ctr;
     __m512i one_lo, one_x, two_x, three_x, four_x;
+
+    Uint8  factor = 4;
+    Uint64 blocks = len / Rijndael::cBlockSize;
 
     ctrInitx(c1, pIv, one_lo, one_x, two_x, three_x, four_x, swap_ctr);
 
@@ -466,53 +468,56 @@ ctrBlk256(const __m512i* p_in_x,
 
     // clear all keys in registers.
     alcp_clear_keys_zmm_14rounds(keys);
-
-    return blocks;
 }
 
-Uint64
-ctrProcessAvx512_128(const Uint8*   p_in_x,
-                     Uint8*         p_out_x,
-                     Uint64         blocks,
-                     const __m128i* pkey128,
-                     const Uint8*   pIv,
-                     int            nRounds)
+alc_error_t
+CryptCtr128(const Uint8* p_in_x,
+            Uint8*       p_out_x,
+            Uint64       len,
+            const Uint8* pKey,
+            int          nRounds,
+            const Uint8* pIv)
 {
 
-    auto p_in_512  = reinterpret_cast<const __m512i*>(p_in_x);
-    auto p_out_512 = reinterpret_cast<__m512i*>(p_out_x);
-
-    return ctrBlk128(p_in_512, p_out_512, blocks, pkey128, pIv, nRounds, 4);
+    auto           p_in_512  = reinterpret_cast<const __m512i*>(p_in_x);
+    auto           p_out_512 = reinterpret_cast<__m512i*>(p_out_x);
+    const __m128i* pkey128   = reinterpret_cast<const __m128i*>(pKey);
+    ctrBlk128(p_in_512, p_out_512, len, pkey128, pIv, nRounds);
+    return ALC_ERROR_NONE;
 }
 
-Uint64
-ctrProcessAvx512_192(const Uint8*   p_in_x,
-                     Uint8*         p_out_x,
-                     Uint64         blocks,
-                     const __m128i* pkey128,
-                     const Uint8*   pIv,
-                     int            nRounds)
+alc_error_t
+CryptCtr192(const Uint8* p_in_x,
+            Uint8*       p_out_x,
+            Uint64       len,
+            const Uint8* pKey,
+            int          nRounds,
+            const Uint8* pIv)
 {
 
-    auto p_in_512  = reinterpret_cast<const __m512i*>(p_in_x);
-    auto p_out_512 = reinterpret_cast<__m512i*>(p_out_x);
+    auto           p_in_512  = reinterpret_cast<const __m512i*>(p_in_x);
+    auto           p_out_512 = reinterpret_cast<__m512i*>(p_out_x);
+    const __m128i* pkey128   = reinterpret_cast<const __m128i*>(pKey);
 
-    return ctrBlk192(p_in_512, p_out_512, blocks, pkey128, pIv, nRounds, 4);
+    ctrBlk192(p_in_512, p_out_512, len, pkey128, pIv, nRounds);
+    return ALC_ERROR_NONE;
 }
 
-Uint64
-ctrProcessAvx512_256(const Uint8*   p_in_x,
-                     Uint8*         p_out_x,
-                     Uint64         blocks,
-                     const __m128i* pkey128,
-                     const Uint8*   pIv,
-                     int            nRounds)
+alc_error_t
+CryptCtr256(const Uint8* p_in_x,
+            Uint8*       p_out_x,
+            Uint64       len,
+            const Uint8* pKey,
+            int          nRounds,
+            const Uint8* pIv)
 {
 
-    auto p_in_512  = reinterpret_cast<const __m512i*>(p_in_x);
-    auto p_out_512 = reinterpret_cast<__m512i*>(p_out_x);
+    auto           p_in_512  = reinterpret_cast<const __m512i*>(p_in_x);
+    auto           p_out_512 = reinterpret_cast<__m512i*>(p_out_x);
+    const __m128i* pkey128   = reinterpret_cast<const __m128i*>(pKey);
 
-    return ctrBlk256(p_in_512, p_out_512, blocks, pkey128, pIv, nRounds, 4);
+    ctrBlk256(p_in_512, p_out_512, len, pkey128, pIv, nRounds);
+    return ALC_ERROR_NONE;
 }
 
 } // namespace alcp::cipher::vaes512
