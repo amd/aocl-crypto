@@ -384,11 +384,10 @@ Rsa_SignVerify(int                     padding_mode,
 
     while (csv.readNext()) {
         /* input text to be loaded */
-        /*FIXME: Signature also should come from KAT csv file */
+        /*FIXME: Signature, Salt, Label also should come from KAT csv file */
         std::vector<Uint8> input_data     = csv.getVect("INPUT");
         std::vector<Uint8> signature_data = csv.getVect("SIGNATURE");
         std::vector<Uint8> PubKeyKeyMod(KeySize, 0);
-
         /*FIXME: testing with diff salt value. Move this to test data or
          * randomize this?*/
         data.m_msg         = &(input_data[0]);
@@ -410,10 +409,10 @@ Rsa_SignVerify(int                     padding_mode,
 
         /* for signature and verification */
         std::vector<Uint8> signature(KeySize, 0);
-        std::vector<Uint8> salt(5);
-        data.m_signature = &(signature[0]);
-        data.m_salt      = &(salt[0]);
-        data.m_salt_len  = salt.size();
+        Uint8              salt[] = { 'h', 'e', 'l', 'l', 'o' };
+        data.m_signature          = &(signature[0]);
+        data.m_salt               = &(salt[0]);
+        data.m_salt_len           = 5;
 
         if (!rb->init()) {
             std::cout << "Error in RSA init" << std::endl;
@@ -431,8 +430,6 @@ Rsa_SignVerify(int                     padding_mode,
             std::cout << "Error in RSA sign" << std::endl;
             FAIL();
         }
-
-        /* FIXME: here, call verify function and then check */
         if (rb->Verify(data) != 0) {
             std::cout << "Error in RSA verify" << std::endl;
             FAIL();
@@ -446,6 +443,7 @@ Rsa_SignVerify(int                     padding_mode,
 }
 
 /* encrypt decrypt tests */
+/* FIXME, change this name to Enc/Dec*/
 void
 Rsa_KAT(int                     padding_mode,
         int                     KeySize,
