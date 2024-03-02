@@ -57,23 +57,6 @@ createSetBigNUM(const Uint8* buff, int size_buff) // size in bytes
     return m_pBN_N;
 }
 
-/* get sha2 method from digest info */
-const IppsHashMethod*
-getIppHashMethod(alc_digest_info_t pDigestInfo)
-{
-    switch (pDigestInfo.dt_len) {
-        case ALC_DIGEST_LEN_256:
-            return ippsHashMethod_SHA256_TT();
-            break;
-        case ALC_DIGEST_LEN_512:
-            return ippsHashMethod_SHA512();
-            break;
-        default:
-            return nullptr;
-    }
-    return nullptr;
-}
-
 IPPRsaBase::IPPRsaBase() {}
 
 IPPRsaBase::~IPPRsaBase()
@@ -95,6 +78,19 @@ IPPRsaBase::~IPPRsaBase()
 bool
 IPPRsaBase::init()
 {
+    switch (m_digest_info.dt_len) {
+        case ALC_DIGEST_LEN_256:
+            m_md_type = ippsHashMethod_SHA256_TT();
+            break;
+        case ALC_DIGEST_LEN_512:
+            m_md_type = ippsHashMethod_SHA512();
+            break;
+        default:
+            m_md_type = nullptr;
+    }
+    if (m_md_type == nullptr) {
+        std::cout << "Error, Hash type is null!" << std::endl;
+    }
     return true;
 }
 
@@ -308,9 +304,6 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
     IppStatus status = ippStsNoErr;
 
     if (m_padding_mode == 1) {
-        /* get hash type based on digest len */
-        const IppsHashMethod* p_hash_method = getIppHashMethod(m_digest_info);
-
         /* Encrypt message */
         status = ippsRSAEncrypt_OAEP_rmf(data.m_msg,
                                          data.m_msg_len,
@@ -319,7 +312,7 @@ IPPRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
                                          data.m_pseed,
                                          data.m_encrypted_data,
                                          m_pPub,
-                                         p_hash_method,
+                                         m_md_type,
                                          m_scratchBuffer_Pub);
 
         if (status != ippStsNoErr) {
@@ -379,8 +372,6 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
     if (m_padding_mode == 1) {
         int    plainTextLen = data.m_msg_len;
         Ipp8u* pPlainText   = new Ipp8u[data.m_key_len]();
-        /* get hash type based on digest len */
-        const IppsHashMethod* p_hash_method = getIppHashMethod(m_digest_info);
         /* Decrypt message */
         status = ippsRSADecrypt_OAEP_rmf(data.m_encrypted_data,
                                          0,
@@ -388,7 +379,7 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                                          pPlainText,
                                          &plainTextLen,
                                          m_pPrv,
-                                         p_hash_method,
+                                         m_md_type,
                                          m_scratchBuffer_Pvt);
 
         if (status != ippStsNoErr) {
@@ -457,8 +448,7 @@ IPPRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 int
 IPPRsaBase::Sign(const alcp_rsa_data_t& data)
 {
-    IppStatus             status        = ippStsNoErr;
-    const IppsHashMethod* p_hash_method = getIppHashMethod(m_digest_info);
+    IppStatus status = ippStsNoErr;
     if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
         status = ippsRSASign_PSS_rmf(data.m_msg,
                                      data.m_msg_len,
@@ -467,7 +457,7 @@ IPPRsaBase::Sign(const alcp_rsa_data_t& data)
                                      data.m_signature,
                                      m_pPrv,
                                      m_pPub,
-                                     p_hash_method,
+                                     m_md_type,
                                      m_scratchBuffer_Pvt);
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
         status = ippsRSASign_PKCS1v15_rmf(data.m_msg,
@@ -475,7 +465,7 @@ IPPRsaBase::Sign(const alcp_rsa_data_t& data)
                                           data.m_signature,
                                           m_pPrv,
                                           m_pPub,
-                                          p_hash_method,
+                                          m_md_type,
                                           m_scratchBuffer_Pvt);
     } else {
         std::cout << "Unsupported padding mode!" << std::endl;
@@ -490,9 +480,8 @@ IPPRsaBase::Sign(const alcp_rsa_data_t& data)
 int
 IPPRsaBase::Verify(const alcp_rsa_data_t& data)
 {
-    IppStatus             status        = ippStsNoErr;
-    const IppsHashMethod* p_hash_method = getIppHashMethod(m_digest_info);
-    int                   isValid       = 0;
+    IppStatus status  = ippStsNoErr;
+    int       isValid = 0;
 
     if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
         status = ippsRSAVerify_PSS_rmf(data.m_msg,
@@ -500,7 +489,7 @@ IPPRsaBase::Verify(const alcp_rsa_data_t& data)
                                        data.m_signature,
                                        &isValid,
                                        m_pPub,
-                                       p_hash_method,
+                                       m_md_type,
                                        m_scratchBuffer_Pub);
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
         status = ippsRSAVerify_PKCS1v15_rmf(data.m_msg,
@@ -508,7 +497,7 @@ IPPRsaBase::Verify(const alcp_rsa_data_t& data)
                                             data.m_signature,
                                             &isValid,
                                             m_pPub,
-                                            p_hash_method,
+                                            m_md_type,
                                             m_scratchBuffer_Pub);
     } else {
         std::cout << "Unsupported padding mode!" << std::endl;

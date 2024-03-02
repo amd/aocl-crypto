@@ -44,10 +44,11 @@ class IPPRsaBase : public RsaBase
     IppsRSAPrivateKeyState* m_pPrv              = nullptr;
     int                     m_buffSizePublic    = 0;
     int                     m_buffSizePrivate   = 0;
-    Ipp8u*                  m_scratchBuffer_Pub = NULL;
-    Ipp8u*                  m_scratchBuffer_Pvt = NULL;
+    Ipp8u*                  m_scratchBuffer_Pub = nullptr;
+    Ipp8u*                  m_scratchBuffer_Pvt = nullptr;
     int                     m_buffSize          = 0;
     int                     m_modulus_size      = 0;
+    const IppsHashMethod*   m_md_type           = nullptr;
 
   public:
     IPPRsaBase();
