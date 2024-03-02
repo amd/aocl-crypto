@@ -53,6 +53,8 @@ class OpenSSLRsaBase : public RsaBase
     OSSL_PARAM*   m_params = NULL;
     OSSL_LIB_CTX* m_libctx = NULL;
 
+    EVP_MD_CTX* m_mdctx = nullptr;
+
   public:
     OpenSSLRsaBase();
     ~OpenSSLRsaBase();
