@@ -77,6 +77,24 @@ OpenSSLRsaBase::init()
         EVP_PKEY_CTX_free(m_rsa_handle_keyctx_pvt);
         m_rsa_handle_keyctx_pvt = nullptr;
     }
+    char* digest_str;
+    switch (m_digest_info.dt_len) {
+        /* FIXME: add more cases here */
+        case ALC_DIGEST_LEN_256:
+            digest_str = "sha256";
+            break;
+        case ALC_DIGEST_LEN_512:
+            digest_str = "sha512";
+            break;
+        default:
+            std::cout << "Invalid digest length" << std::endl;
+            return 1;
+    }
+    m_md_type = EVP_get_digestbyname(digest_str);
+    if (m_md_type == nullptr) {
+        std::cout << "Digest type is invalid" << std::endl;
+        return 1;
+    }
     return true;
 }
 
@@ -229,10 +247,8 @@ OpenSSLRsaBase::ValidateKeys()
 int
 OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 {
-    int           ret_val = 0;
-    size_t        outlen;
-    const EVP_MD* digest     = nullptr;
-    const char*   digest_str = "";
+    int    ret_val = 0;
+    size_t outlen;
 
     m_rsa_handle_keyctx_pub = EVP_PKEY_CTX_new(m_pkey_pub, NULL);
     if (m_rsa_handle_keyctx_pub == nullptr) {
@@ -254,23 +270,6 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
             return ret_val;
         }
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING) {
-        switch (m_digest_info.dt_len) {
-            /* FIXME: add more cases here */
-            case ALC_DIGEST_LEN_256:
-                digest_str = "sha256";
-                break;
-            case ALC_DIGEST_LEN_512:
-                digest_str = "sha512";
-                break;
-            default:
-                std::cout << "Invalid digest length" << std::endl;
-                return 1;
-        }
-        digest = EVP_get_digestbyname((const char*)digest_str);
-        if (digest == nullptr) {
-            std::cout << "Digest type is invalid" << std::endl;
-            return 1;
-        }
         /* set padding mode parameters */
         if (1
             != EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle_keyctx_pub,
@@ -280,13 +279,15 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
             return ret_val;
         }
         if (1
-            != EVP_PKEY_CTX_set_rsa_oaep_md(m_rsa_handle_keyctx_pub, digest)) {
+            != EVP_PKEY_CTX_set_rsa_oaep_md(m_rsa_handle_keyctx_pub,
+                                            m_md_type)) {
             std::cout << "EVP_PKEY_CTX_set_rsa_oaep_md failed:" << std::endl;
             ret_val = ERR_GET_REASON(ERR_get_error());
             return ret_val;
         }
         if (1
-            != EVP_PKEY_CTX_set_rsa_mgf1_md(m_rsa_handle_keyctx_pub, digest)) {
+            != EVP_PKEY_CTX_set_rsa_mgf1_md(m_rsa_handle_keyctx_pub,
+                                            m_md_type)) {
             std::cout << "EVP_PKEY_CTX_set_rsa_mgf1_md failed:" << std::endl;
             ret_val = ERR_GET_REASON(ERR_get_error());
             return ret_val;
@@ -322,10 +323,8 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
 int
 OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 {
-    int           ret_val = 0;
-    size_t        outlen;
-    const EVP_MD* digest     = nullptr;
-    const char*   digest_str = "";
+    int    ret_val = 0;
+    size_t outlen;
 
     m_rsa_handle_keyctx_pvt = EVP_PKEY_CTX_new(m_pkey_pvt, NULL);
     if (1 != EVP_PKEY_decrypt_init(m_rsa_handle_keyctx_pvt)) {
@@ -346,23 +345,7 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
             return ret_val;
         }
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING) {
-        switch (m_digest_info.dt_len) {
-            /* FIXME: add more cases here */
-            case ALC_DIGEST_LEN_256:
-                digest_str = "sha256";
-                break;
-            case ALC_DIGEST_LEN_512:
-                digest_str = "sha512";
-                break;
-            default:
-                std::cout << "Invalid digest length" << std::endl;
-                return 1;
-        }
-        digest = EVP_get_digestbyname(digest_str);
-        if (digest == nullptr) {
-            std::cout << "Digest type is invalid" << std::endl;
-            return 1;
-        }
+
         if (1
             != EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle_keyctx_pvt,
                                             RSA_PKCS1_OAEP_PADDING)) {
@@ -373,7 +356,8 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
             return ret_val;
         }
         if (1
-            != EVP_PKEY_CTX_set_rsa_oaep_md(m_rsa_handle_keyctx_pvt, digest)) {
+            != EVP_PKEY_CTX_set_rsa_oaep_md(m_rsa_handle_keyctx_pvt,
+                                            m_md_type)) {
             std::cout << "EVP_PKEY_CTX_set_rsa_oaep_md failed: Error:"
                       << std::endl;
             ret_val = ERR_GET_REASON(ERR_get_error());
@@ -381,7 +365,8 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
             return ret_val;
         }
         if (1
-            != EVP_PKEY_CTX_set_rsa_mgf1_md(m_rsa_handle_keyctx_pvt, digest)) {
+            != EVP_PKEY_CTX_set_rsa_mgf1_md(m_rsa_handle_keyctx_pvt,
+                                            m_md_type)) {
             std::cout << "EVP_PKEY_CTX_set_rsa_mgf1_md failed: Error:"
                       << std::endl;
             ret_val = ERR_GET_REASON(ERR_get_error());
@@ -422,11 +407,7 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
 int
 OpenSSLRsaBase::Sign(const alcp_rsa_data_t& data)
 {
-    int ret_val = 0;
-    /*signature length move it to class? data.*/
     size_t sig_len = 0;
-    /*FIXME: move these two digest variables to class ?*/
-    const EVP_MD* digest = EVP_sha256();
 
     m_mdctx = EVP_MD_CTX_new();
     if (m_mdctx == NULL) {
@@ -434,7 +415,7 @@ OpenSSLRsaBase::Sign(const alcp_rsa_data_t& data)
         return 1;
     }
     /* Initialize MD context for signing. */
-    if (1 != EVP_DigestSignInit(m_mdctx, NULL, digest, NULL, m_pkey_pvt)) {
+    if (1 != EVP_DigestSignInit(m_mdctx, NULL, m_md_type, NULL, m_pkey_pvt)) {
         std::cout << "EVP_DigestSignInit returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return 1;
@@ -444,7 +425,7 @@ OpenSSLRsaBase::Sign(const alcp_rsa_data_t& data)
     m_rsa_handle_keyctx_pvt = EVP_PKEY_CTX_new(m_pkey_pvt, NULL);
     if (1
         != EVP_DigestSignInit(
-            m_mdctx, &m_rsa_handle_keyctx_pvt, digest, NULL, m_pkey_pvt)) {
+            m_mdctx, &m_rsa_handle_keyctx_pvt, m_md_type, NULL, m_pkey_pvt)) {
         std::cout << "EVP_DigestSignInit returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return 1;
@@ -510,11 +491,7 @@ OpenSSLRsaBase::Sign(const alcp_rsa_data_t& data)
 int
 OpenSSLRsaBase::Verify(const alcp_rsa_data_t& data)
 {
-    int ret_val = 0;
-    /*signature length move it to class? data.*/
-    size_t sig_len = 256;
-    /*FIXME: move these two digest variables to class ?*/
-    const EVP_MD* digest = EVP_sha256();
+    size_t sig_len = m_hash_len * 8;
 
     m_mdctx = EVP_MD_CTX_new();
     if (m_mdctx == NULL) {
@@ -522,7 +499,7 @@ OpenSSLRsaBase::Verify(const alcp_rsa_data_t& data)
         return 1;
     }
     /* Initialize MD context for signing. */
-    if (1 != EVP_DigestVerifyInit(m_mdctx, NULL, digest, NULL, m_pkey_pub)) {
+    if (1 != EVP_DigestVerifyInit(m_mdctx, NULL, m_md_type, NULL, m_pkey_pub)) {
         std::cout << "EVP_DigestVerifyInit_ex returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return 1;
@@ -531,7 +508,7 @@ OpenSSLRsaBase::Verify(const alcp_rsa_data_t& data)
     m_rsa_handle_keyctx_pub = EVP_PKEY_CTX_new(m_pkey_pub, NULL);
     if (1
         != EVP_DigestVerifyInit(
-            m_mdctx, &m_rsa_handle_keyctx_pub, digest, NULL, m_pkey_pub)) {
+            m_mdctx, &m_rsa_handle_keyctx_pub, m_md_type, NULL, m_pkey_pub)) {
         std::cout << "EVP_DigestVerifyInit_ex returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return 1;
