@@ -32,6 +32,23 @@
 
 #include "alcp/mac/poly1305_zen4.hh"
 
+// #define DEBUG_PRINT
+
+#ifdef DEBUG_PRINT
+#include <iostream>
+#include <string>
+void
+debug_print(std::string in)
+{
+    std::cout << in;
+    std::cout << std::endl;
+}
+#else
+void
+debug_print(std::string in)
+{
+}
+#endif
 // #define POLY_AVX512
 
 namespace alcp::mac::poly1305::zen4 {
@@ -49,6 +66,154 @@ clamp(Uint8 in[16])
     for (const auto& i : cIndex) {
         in[std::get<0>(i)] &= std::get<1>(i);
     }
+}
+
+inline void
+calculate_multiplication_matrix(const Uint64 r[5],
+                                const Uint64 s[4],
+                                __m512i&     reg0,
+                                __m512i&     reg1,
+                                __m512i&     reg2,
+                                __m512i&     reg3,
+                                __m512i&     reg4)
+{
+    __m512i idx, r_reg, s_reg;
+
+    // Load r
+    r_reg = _mm512_maskz_loadu_epi64(0x1f, r);
+
+    // Load s
+    s_reg = _mm512_maskz_loadu_epi64(0x0f, s);
+    reg0  = r_reg;
+
+    // Create multiplication matrix with modulo trick
+    idx  = _mm512_setr_epi64(1 << 3 | 3, 0, 1, 2, 3, 6, 6, 6);
+    reg1 = _mm512_mask_permutex2var_epi64(r_reg, 0xFF, idx, s_reg);
+    idx  = _mm512_setr_epi64(1 << 3 | 2, 1 << 3 | 3, 0, 1, 2, 6, 6, 6);
+    reg2 = _mm512_mask_permutex2var_epi64(r_reg, 0xFF, idx, s_reg);
+    idx  = _mm512_setr_epi64(1 << 3 | 1, 1 << 3 | 2, 1 << 3 | 3, 0, 1, 6, 6, 6);
+    reg3 = _mm512_mask_permutex2var_epi64(r_reg, 0xFF, idx, s_reg);
+    idx  = _mm512_setr_epi64(
+        1 << 3 | 0, 1 << 3 | 1, 1 << 3 | 2, 1 << 3 | 3, 0, 6, 6, 6);
+    reg4 = _mm512_mask_permutex2var_epi64(r_reg, 0xFF, idx, s_reg);
+}
+
+inline void
+multiply_avx512(Uint64  a[5], // Input and output
+                __m512i reg0, // Used also as temp reg
+                __m512i reg1, // Used also as temp reg
+                __m512i reg2, // Used also as temp reg
+                __m512i reg3, // Used also as temp reg
+                __m512i reg4) // Used also as temp reg
+{
+    __m512i            regtemp = {}, regtemp1 = {};
+    alignas(64) Uint64 temp[8] = {};
+
+    // a*r
+    regtemp  = _mm512_set1_epi64(a[0]);
+    reg0     = _mm512_mullox_epi64(reg0, regtemp);
+    regtemp1 = _mm512_set1_epi64(a[1]);
+    reg1     = _mm512_mullox_epi64(reg1, regtemp1);
+    regtemp  = _mm512_set1_epi64(a[2]);
+    reg2     = _mm512_mullox_epi64(reg2, regtemp);
+    regtemp1 = _mm512_set1_epi64(a[3]);
+    reg3     = _mm512_mullox_epi64(reg3, regtemp1);
+    regtemp  = _mm512_set1_epi64(a[4]);
+    reg4     = _mm512_mullox_epi64(reg4, regtemp);
+    // compute d[0],d[1],d[2],d[3],d[4]
+    regtemp  = reg0;
+    regtemp1 = reg3;
+    regtemp  = _mm512_add_epi64(regtemp, reg1);
+    regtemp  = _mm512_add_epi64(regtemp, reg2);
+    regtemp1 = _mm512_add_epi64(regtemp1, reg4);
+    regtemp  = _mm512_add_epi64(regtemp, regtemp1);
+
+    // Carry propagate and write it to a
+    _mm512_store_epi64(temp, regtemp);
+    Uint64 carry = (unsigned long)(temp[0] >> 26);
+    a[0]         = (unsigned long)temp[0] & 0x3ffffff;
+    temp[1] += carry;
+    carry = (unsigned long)(temp[1] >> 26);
+    a[1]  = (unsigned long)temp[1] & 0x3ffffff;
+    temp[2] += carry;
+    carry = (unsigned long)(temp[2] >> 26);
+    a[2]  = (unsigned long)temp[2] & 0x3ffffff;
+    temp[3] += carry;
+    carry = (unsigned long)(temp[3] >> 26);
+    a[3]  = (unsigned long)temp[3] & 0x3ffffff;
+    temp[4] += carry;
+    carry = (unsigned long)(temp[4] >> 26);
+    a[4]  = (unsigned long)temp[4] & 0x3ffffff;
+    a[0] += carry * 5;
+    carry = (a[0] >> 26);
+    a[0]  = a[0] & 0x3ffffff;
+    a[1] += carry;
+}
+
+inline void
+multiply_avx512(Uint64 a[5], const Uint64 r[5], const Uint64 s[4])
+{
+    __m512i            reg0, reg1, reg2, reg3, reg4, idx, r_reg, s_reg;
+    __m512i            regtemp = {}, regtemp1 = {};
+    alignas(64) Uint64 temp[8] = {};
+
+    // Load r
+    r_reg = _mm512_maskz_loadu_epi64(0x1f, r);
+
+    // Load s
+    s_reg = _mm512_maskz_loadu_epi64(0x0f, s);
+    reg0  = r_reg;
+
+    // Create multiplication matrix with modulo trick
+    idx  = _mm512_setr_epi64(1 << 3 | 3, 0, 1, 2, 3, 6, 6, 6);
+    reg1 = _mm512_mask_permutex2var_epi64(r_reg, 0xFF, idx, s_reg);
+    idx  = _mm512_setr_epi64(1 << 3 | 2, 1 << 3 | 3, 0, 1, 2, 6, 6, 6);
+    reg2 = _mm512_mask_permutex2var_epi64(r_reg, 0xFF, idx, s_reg);
+    idx  = _mm512_setr_epi64(1 << 3 | 1, 1 << 3 | 2, 1 << 3 | 3, 0, 1, 6, 6, 6);
+    reg3 = _mm512_mask_permutex2var_epi64(r_reg, 0xFF, idx, s_reg);
+    idx  = _mm512_setr_epi64(
+        1 << 3 | 0, 1 << 3 | 1, 1 << 3 | 2, 1 << 3 | 3, 0, 6, 6, 6);
+    reg4 = _mm512_mask_permutex2var_epi64(r_reg, 0xFF, idx, s_reg);
+
+    // a*r
+    regtemp  = _mm512_set1_epi64(a[0]);
+    reg0     = _mm512_mullox_epi64(reg0, regtemp);
+    regtemp1 = _mm512_set1_epi64(a[1]);
+    reg1     = _mm512_mullox_epi64(reg1, regtemp1);
+    regtemp  = _mm512_set1_epi64(a[2]);
+    reg2     = _mm512_mullox_epi64(reg2, regtemp);
+    regtemp1 = _mm512_set1_epi64(a[3]);
+    reg3     = _mm512_mullox_epi64(reg3, regtemp1);
+    regtemp  = _mm512_set1_epi64(a[4]);
+    reg4     = _mm512_mullox_epi64(reg4, regtemp);
+    // compute d[0],d[1],d[2],d[3],d[4]
+    regtemp  = reg0;
+    regtemp1 = reg3;
+    regtemp  = _mm512_add_epi64(regtemp, reg1);
+    regtemp  = _mm512_add_epi64(regtemp, reg2);
+    regtemp1 = _mm512_add_epi64(regtemp1, reg4);
+    regtemp  = _mm512_add_epi64(regtemp, regtemp1);
+
+    // Carry propagate and write it to a
+    _mm512_store_epi64(temp, regtemp);
+    Uint64 carry = (unsigned long)(temp[0] >> 26);
+    a[0]         = (unsigned long)temp[0] & 0x3ffffff;
+    temp[1] += carry;
+    carry = (unsigned long)(temp[1] >> 26);
+    a[1]  = (unsigned long)temp[1] & 0x3ffffff;
+    temp[2] += carry;
+    carry = (unsigned long)(temp[2] >> 26);
+    a[2]  = (unsigned long)temp[2] & 0x3ffffff;
+    temp[3] += carry;
+    carry = (unsigned long)(temp[3] >> 26);
+    a[3]  = (unsigned long)temp[3] & 0x3ffffff;
+    temp[4] += carry;
+    carry = (unsigned long)(temp[4] >> 26);
+    a[4]  = (unsigned long)temp[4] & 0x3ffffff;
+    a[0] += carry * 5;
+    carry = (a[0] >> 26);
+    a[0]  = a[0] & 0x3ffffff;
+    a[1] += carry;
 }
 
 /**
@@ -169,38 +334,20 @@ blk(Uint64      key[],
     Uint64      r[5],
     Uint64      s[4])
 {
-#ifdef POLY_AVX512
-    __m512i acc      = {};
-    __m512i msg_temp = {};
-    __m512i d        = {};
-#else
-    Uint64 acc[5]      = {};
-    Uint32 msg_temp[5] = {};
-#endif
-    const Uint8* p_msg_8 = pMsg;
-#if 0
-    Uint64       carry    = 0;
-    Uint64 d[5]        = {};
-#endif
-    const Uint64 cPadding = (msgLen >= 16) << 24;
-
-#if 0
-#ifdef POLY_AVX512
-    s = _mm512_maskz_mullo_epi64(-1, r, _mm512_set1_epi64(5));
-    s = _mm512_permutexvar_epi64(_mm512_setr_epi64(1, 2, 3, 4, 5, 6, 7, 0), s);
-#else
-    // Precompute the r*5 value
-    for (int i = 0; i < 4; i++) {
-        s[i] = r[i + 1] * 5;
-    }
-#endif
-#endif
+    __m512i      reg0, reg1, reg2, reg3, reg4; // Multiplication matrix
+    Uint64       acc[5]      = {};
+    Uint32       msg_temp[5] = {};
+    const Uint8* p_msg_8     = pMsg;
+    const Uint64 cPadding    = (msgLen >= 16) << 24;
 
     // Copy Accumulator into local variable
     for (int i = 0; i < 5; i++) {
         acc[i] = accumulator[i];
     }
 
+#if 1
+    calculate_multiplication_matrix(r, s, reg0, reg1, reg2, reg3, reg4);
+#endif
     // As long as there is poly block size amount of text to process
     while (msgLen > 0) {
         for (int i = 0; i < 5; i += 1) {
@@ -220,38 +367,12 @@ blk(Uint64      key[],
         acc[3] += msg_temp[3];
         acc[4] += msg_temp[4];
 
+        // multiply(acc, r, s);
 #if 0
-        // a = a * r
-        // clang-format off
-        d[0] = (acc[0] * r[0]) + (acc[1] * s[3]) + (acc[2] * s[2]) + (acc[3] * s[1]) + (acc[4] * s[0]);
-        d[1] = (acc[0] * r[1]) + (acc[1] * r[0]) + (acc[2] * s[3]) + (acc[3] * s[2]) + (acc[4] * s[1]);
-        d[2] = (acc[0] * r[2]) + (acc[1] * r[1]) + (acc[2] * r[0]) + (acc[3] * s[3]) + (acc[4] * s[2]);
-        d[3] = (acc[0] * r[3]) + (acc[1] * r[2]) + (acc[2] * r[1]) + (acc[3] * r[0]) + (acc[4] * s[3]);
-        d[4] = (acc[0] * r[4]) + (acc[1] * r[3]) + (acc[2] * r[2]) + (acc[3] * r[1]) + (acc[4] * r[0]);
-        // clang-format on
-
-        // Carry Propagation
-        carry  = (unsigned long)(d[0] >> 26);
-        acc[0] = (unsigned long)d[0] & 0x3ffffff;
-        d[1] += carry;
-        carry  = (unsigned long)(d[1] >> 26);
-        acc[1] = (unsigned long)d[1] & 0x3ffffff;
-        d[2] += carry;
-        carry  = (unsigned long)(d[2] >> 26);
-        acc[2] = (unsigned long)d[2] & 0x3ffffff;
-        d[3] += carry;
-        carry  = (unsigned long)(d[3] >> 26);
-        acc[3] = (unsigned long)d[3] & 0x3ffffff;
-        d[4] += carry;
-        carry  = (unsigned long)(d[4] >> 26);
-        acc[4] = (unsigned long)d[4] & 0x3ffffff;
-        acc[0] += carry * 5;
-        carry  = (acc[0] >> 26);
-        acc[0] = acc[0] & 0x3ffffff;
-        acc[1] += carry;
+        multiply_avx512(acc,r,s);
+#else
+        multiply_avx512(acc, reg0, reg1, reg2, reg3, reg4);
 #endif
-        multiply(acc, r, s);
-
         /* Padding is enabled only if message is bigger than 16 bytes, otherwise
          *   padding is expected from outside.
          * If messageLength is less than 16 bytes then a 16byte redable buffer
@@ -277,15 +398,13 @@ blkx2(Uint64      key[],
       Uint64      r[10],
       Uint64      s[8])
 {
-#ifdef POLY_AVX512
-    __m512i acc      = {};
-    __m512i msg_temp = {};
-    __m512i d        = {};
-#else
+    __m512i reg0, reg1, reg2, reg3, reg4;
+    // __m512i reg10, reg11, reg12, reg13, reg14;
+
     Uint64 acc[5]        = {};
     Uint64 msg_temp_0[5] = {};
-    Uint64 msg_temp_1[5] = {};
-#endif
+    // Uint64 msg_temp_1[5] = {};
+
     const Uint8* p_msg_8  = pMsg;
     const Uint64 cPadding = (msgLen >= 16) << 24;
 
@@ -295,6 +414,12 @@ blkx2(Uint64      key[],
     }
 
 #if 1
+    calculate_multiplication_matrix(r, s, reg0, reg1, reg2, reg3, reg4);
+    // calculate_multiplication_matrix(
+    //     r + 5, s + 4, reg10, reg11,  reg12, reg13, reg14);
+#endif
+
+#if 0
     // Process 2 blocks at a time
     while (msgLen >= 32) {
         for (int i = 0; i < 5; i += 1) {
@@ -333,9 +458,13 @@ blkx2(Uint64      key[],
         // s[0:4] <= r[1:5]*5; s[4:8] <= r[6:10]*5
         // ((m0+a0) * r**2 + m1*r) % p
 
-        multiply(acc, r + 5, s + 4);
-
-        multiply(msg_temp_1, r, s);
+#if 0
+        multiply_avx512(acc, r + 5, s + 4);
+        multiply_avx512(msg_temp_1, r, s);
+#else
+        multiply_avx512(acc, reg10, reg11, reg12, reg13, reg14);
+        multiply_avx512(msg_temp_1, reg0, reg1, reg2, reg3, reg4);
+#endif
 
         acc[0] += msg_temp_1[0];
         acc[1] += msg_temp_1[1];
@@ -349,24 +478,35 @@ blkx2(Uint64      key[],
 
     // Process 1 Block at a time
     while (msgLen > 0) {
-        for (int i = 0; i < 5; i += 1) {
-            Uint8* p_msg_temp_8 = reinterpret_cast<Uint8*>(&msg_temp_0[i]);
-            std::copy(p_msg_8, p_msg_8 + 4, p_msg_temp_8);
-            msg_temp_0[i] = (msg_temp_0[i] >> (2 * i));
-            if (i != 4)
+
+        // Message Extraction block
+        {
+            for (int i = 0; i < 4; i += 1) {
+                Uint8* p_msg_temp_8 = reinterpret_cast<Uint8*>(&msg_temp_0[i]);
+                std::copy(p_msg_8, p_msg_8 + 4, p_msg_temp_8);
+                msg_temp_0[i] = (msg_temp_0[i] >> (2 * i));
+
                 msg_temp_0[i] &= 0x3ffffff;
-            else {
-                msg_temp_0[i] |= cPadding;
+
+                p_msg_8 += 3;
             }
+            Uint8* p_msg_temp_8 = reinterpret_cast<Uint8*>(&msg_temp_0[4]);
+            std::copy(p_msg_8, p_msg_8 + 4, p_msg_temp_8);
+            msg_temp_0[4] = (msg_temp_0[4] >> (2 * 4));
+
+            msg_temp_0[4] |= cPadding;
+
             p_msg_8 += 3;
         }
+
         acc[0] += msg_temp_0[0];
         acc[1] += msg_temp_0[1];
         acc[2] += msg_temp_0[2];
         acc[3] += msg_temp_0[3];
         acc[4] += msg_temp_0[4];
 
-        multiply(acc, r, s);
+        // multiply(acc, r, s);
+        multiply_avx512(acc, reg0, reg1, reg2, reg3, reg4);
 
         /* Padding is enabled only if message is bigger than 16 bytes, otherwise
          *   padding is expected from outside.
@@ -396,6 +536,7 @@ update(Uint64      key[],
        Uint64      s[8],
        bool        finalized)
 {
+    debug_print("Here");
     Status status = StatusOk();
 
     if (finalized) {
@@ -418,14 +559,15 @@ update(Uint64      key[],
         msgLen -= msg_buffer_left;
 
         msg_buffer_len = 0;
-        // blk(msg_buffer, 16);
-        blk(key, pMsg, 16, accumulator, r, s);
+        // blk(key, pMsg, 16, accumulator, r, s);
+        blkx2(key, pMsg, 16, accumulator, r, s);
     }
 
     Uint64 overflow = msgLen % 16;
 
     // blk(pMsg, msgLen - overflow);
-    blk(key, pMsg, msgLen - overflow, accumulator, r, s);
+    // blk(key, pMsg, msgLen - overflow, accumulator, r, s);
+    blkx2(key, pMsg, msgLen - overflow, accumulator, r, s);
     if (overflow) {
         std::copy(pMsg + msgLen - overflow, pMsg + msgLen, msg_buffer);
         msg_buffer_len = overflow;
