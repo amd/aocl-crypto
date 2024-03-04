@@ -35,7 +35,7 @@
 
 namespace alcp::utils {
 
-enum class CpuCipherAesFeatures
+enum class CpuCipherFeatures
 {
     eReference = 0,
     eAesni     = 1,

@@ -39,7 +39,7 @@
 #include "alcp/utils/cpuid.hh"
 
 using alcp::utils::CpuArchFeature;
-using alcp::utils::CpuCipherAesFeatures;
+using alcp::utils::CpuCipherFeatures;
 using alcp::utils::CpuId;
 
 #include <type_traits> /* for is_same_v<> */
@@ -184,24 +184,24 @@ __aes_dtor(const void* rCipher)
     return e;
 }
 
-CpuCipherAesFeatures
+CpuCipherFeatures
 getCpuCipherfeature()
 {
-    CpuCipherAesFeatures cpu_feature =
-        CpuCipherAesFeatures::eReference; // If no arch features present,means
-                                          // no acceleration, Fall back to
-                                          // reference
+    CpuCipherFeatures cpu_feature =
+        CpuCipherFeatures::eReference; // If no arch features present,means
+                                       // no acceleration, Fall back to
+                                       // reference
 
     if (CpuId::cpuHasAesni()) {
-        cpu_feature = CpuCipherAesFeatures::eAesni;
+        cpu_feature = CpuCipherFeatures::eAesni;
 
         if (CpuId::cpuHasVaes()) {
-            cpu_feature = CpuCipherAesFeatures::eVaes256;
+            cpu_feature = CpuCipherFeatures::eVaes256;
 
             if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
                 && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
                 && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
-                cpu_feature = CpuCipherAesFeatures::eVaes512;
+                cpu_feature = CpuCipherFeatures::eVaes512;
             }
         }
     }
@@ -365,9 +365,9 @@ __build_GcmAead(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
     Status sts = StatusOk();
 
-    CpuCipherAesFeatures cpu_feature = getCpuCipherfeature();
+    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
 
-    if (cpu_feature == CpuCipherAesFeatures::eVaes512) {
+    if (cpu_feature == CpuCipherFeatures::eVaes512) {
         /* FIXME: cipher request should fail invalid key length. At this
          * level only valid key length is passed.*/
         if (keyLen == ALC_KEY_LEN_128) {
@@ -377,7 +377,7 @@ __build_GcmAead(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
         } else if (keyLen == ALC_KEY_LEN_256) {
             _build_aead<vaes512::GcmAEAD256>(pKey, keyLen, ctx);
         }
-    } else if (cpu_feature == CpuCipherAesFeatures::eVaes256) {
+    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
         /* FIXME: cipher request should fail invalid key length. At this
          * level only valid key length is passed.*/
         if (keyLen == ALC_KEY_LEN_128) {
@@ -415,14 +415,14 @@ __build_aesCtr(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
     Status sts = StatusOk();
 
-    CpuCipherAesFeatures cpu_feature = getCpuCipherfeature();
-    if (cpu_feature == CpuCipherAesFeatures::eVaes512) {
+    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
+    if (cpu_feature == CpuCipherFeatures::eVaes512) {
         using namespace vaes512;
         __build_aes_cipher<Ctr128, Ctr192, Ctr256>(pKey, keyLen, ctx);
-    } else if (cpu_feature == CpuCipherAesFeatures::eVaes256) {
+    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
         using namespace vaes;
         __build_aes_cipher<Ctr128, Ctr192, Ctr256>(pKey, keyLen, ctx);
-    } else if (cpu_feature == CpuCipherAesFeatures::eAesni) {
+    } else if (cpu_feature == CpuCipherFeatures::eAesni) {
         using namespace aesni;
         __build_aes_cipher<Ctr128, Ctr192, Ctr256>(pKey, keyLen, ctx);
     }
@@ -444,21 +444,21 @@ __build_aesCfb(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
     Status sts = StatusOk();
 
-    CpuCipherAesFeatures cpu_feature = getCpuCipherfeature();
-    // cpu_feature                   = CpuCipherAesFeatures::eVaes256;
-    if (cpu_feature == CpuCipherAesFeatures::eVaes512) {
+    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
+    // cpu_feature                   = CpuCipherFeatures::eVaes256;
+    if (cpu_feature == CpuCipherFeatures::eVaes512) {
         using namespace vaes512;
         __build_aes_cipher<Cfb<aesni::EncryptCfb128, DecryptCfb128>,
                            Cfb<aesni::EncryptCfb192, DecryptCfb192>,
                            Cfb<aesni::EncryptCfb256, DecryptCfb256>>(
             pKey, keyLen, ctx);
-    } else if (cpu_feature == CpuCipherAesFeatures::eVaes256) {
+    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
         using namespace vaes;
         __build_aes_cipher<Cfb<aesni::EncryptCfb128, DecryptCfb128>,
                            Cfb<aesni::EncryptCfb192, DecryptCfb192>,
                            Cfb<aesni::EncryptCfb256, DecryptCfb256>>(
             pKey, keyLen, ctx);
-    } else if (cpu_feature == CpuCipherAesFeatures::eAesni) {
+    } else if (cpu_feature == CpuCipherFeatures::eAesni) {
         using namespace aesni;
         __build_aes_cipher<Cfb<EncryptCfb128, DecryptCfb128>,
                            Cfb<EncryptCfb192, DecryptCfb192>,
@@ -483,21 +483,21 @@ __build_aesCbc(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
     Status sts = StatusOk();
 
-    CpuCipherAesFeatures cpu_feature = getCpuCipherfeature();
+    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
     // cpu_feature                   = CpuCipherFeaturesAes::eVaes256;
-    if (cpu_feature == CpuCipherAesFeatures::eVaes512) {
+    if (cpu_feature == CpuCipherFeatures::eVaes512) {
         using namespace vaes512;
         __build_aes_cipher<Cbc<aesni::EncryptCbc128, DecryptCbc128>,
                            Cbc<aesni::EncryptCbc192, DecryptCbc192>,
                            Cbc<aesni::EncryptCbc256, DecryptCbc256>>(
             pKey, keyLen, ctx);
-    } else if (cpu_feature == CpuCipherAesFeatures::eVaes256) {
+    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
         using namespace vaes;
         __build_aes_cipher<Cbc<aesni::EncryptCbc128, DecryptCbc128>,
                            Cbc<aesni::EncryptCbc192, DecryptCbc192>,
                            Cbc<aesni::EncryptCbc256, DecryptCbc256>>(
             pKey, keyLen, ctx);
-    } else if (cpu_feature == CpuCipherAesFeatures::eAesni) {
+    } else if (cpu_feature == CpuCipherFeatures::eAesni) {
         using namespace aesni;
         __build_aes_cipher<Cbc<EncryptCbc128, DecryptCbc128>,
                            Cbc<EncryptCbc192, DecryptCbc192>,
@@ -522,19 +522,19 @@ __build_aesXts(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
     Status sts = StatusOk();
 
-    CpuCipherAesFeatures cpu_feature = getCpuCipherfeature();
+    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
 
-    if (cpu_feature == CpuCipherAesFeatures::eVaes512) {
+    if (cpu_feature == CpuCipherFeatures::eVaes512) {
         using namespace vaes512;
         __build_aes_cipher_xts<Xts<EncryptXts128, DecryptXts128>,
                                Xts<EncryptXts256, DecryptXts256>>(
             pKey, keyLen, ctx);
-    } else if (cpu_feature == CpuCipherAesFeatures::eVaes256) {
+    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
         using namespace vaes;
         __build_aes_cipher_xts<Xts<EncryptXts128, DecryptXts128>,
                                Xts<EncryptXts256, DecryptXts256>>(
             pKey, keyLen, ctx);
-    } else if (cpu_feature == CpuCipherAesFeatures::eAesni) {
+    } else if (cpu_feature == CpuCipherFeatures::eAesni) {
         using namespace aesni;
         __build_aes_cipher_xts<Xts<EncryptXts128, DecryptXts128>,
                                Xts<EncryptXts256, DecryptXts256>>(
@@ -583,16 +583,16 @@ __build_aesSiv(const alc_cipher_aead_algo_info_t& aesInfo,
 {
     Status sts = StatusOk();
 
-    CpuCipherAesFeatures cpu_feature = getCpuCipherfeature();
-    if (cpu_feature == CpuCipherAesFeatures::eVaes512) {
+    CpuCipherFeatures cpu_feature = getCpuCipherfeature();
+    if (cpu_feature == CpuCipherFeatures::eVaes512) {
         using namespace vaes512;
         __build_aes_siv<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
             *aesInfo.ai_siv.xi_ctr_key, keyInfo, ctx);
-    } else if (cpu_feature == CpuCipherAesFeatures::eVaes256) {
+    } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
         using namespace vaes;
         __build_aes_siv<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
             *aesInfo.ai_siv.xi_ctr_key, keyInfo, ctx);
-    } else if (cpu_feature == CpuCipherAesFeatures::eAesni) {
+    } else if (cpu_feature == CpuCipherFeatures::eAesni) {
         using namespace aesni;
         __build_aes_siv<CmacSiv<Ctr128>, CmacSiv<Ctr192>, CmacSiv<Ctr256>>(
             *aesInfo.ai_siv.xi_ctr_key, keyInfo, ctx);

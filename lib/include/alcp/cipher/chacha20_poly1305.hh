@@ -46,7 +46,7 @@ union len_aad_processed
 template<CpuArchFeature cpu_cipher_feature = CpuArchFeature::eDynamic>
 class ALCP_API_EXPORT ChaCha20Poly1305
     : public ChaCha20<cpu_cipher_feature>
-    , public alcp::mac::poly1305::Poly1305
+    , public alcp::mac::poly1305::Poly1305<CpuArchFeature::eDynamic>
 {
   private:
     Uint8               m_poly1305_key[32]{};

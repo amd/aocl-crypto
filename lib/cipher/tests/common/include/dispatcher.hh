@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,13 +32,13 @@
 
 #include "alcp/utils/cpuid.hh"
 
-using alcp::utils::CpuCipherAesFeatures;
+using alcp::utils::CpuCipherFeatures;
 namespace alcp::cipher::unittest {
 
-CpuCipherAesFeatures
+CpuCipherFeatures
 getMaxFeature();
 
-std::vector<CpuCipherAesFeatures>
+std::vector<CpuCipherFeatures>
 getSupportedFeatures();
 
 } // namespace alcp::cipher::unittest
