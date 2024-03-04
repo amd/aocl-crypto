@@ -395,7 +395,7 @@ TEST_P(CCM_KAT, Encrypt)
     }
 
     // Nonce
-    err = pCcmObj->setIv(m_nonce.size(), &(m_nonce.at(0)));
+     err = pCcmObj->setIv(&(m_nonce.at(0)),m_nonce.size());
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
     // Additional Data
@@ -444,7 +444,7 @@ TEST_P(CCM_KAT, Encrypt_Double)
         }
 
         // Nonce
-        err = pCcmObj->setIv(m_nonce.size(), &(m_nonce.at(0)));
+         err = pCcmObj->setIv(&(m_nonce.at(0)),m_nonce.size());
         EXPECT_EQ(err, ALC_ERROR_NONE);
 
         // Additional Data
@@ -490,7 +490,7 @@ TEST_P(CCM_KAT, Encrypt_Double)
         }
 
         // Nonce
-        err = pCcmObj->setIv(m_nonce.size(), &(m_nonce.at(0)));
+         err = pCcmObj->setIv(&(m_nonce.at(0)),m_nonce.size());
         EXPECT_EQ(err, ALC_ERROR_NONE);
 
         // Additional Data
@@ -540,7 +540,7 @@ TEST_P(CCM_KAT, Decrypt)
     }
 
     // Nonce
-    err = pCcmObj->setIv(m_nonce.size(), &(m_nonce.at(0)));
+     err = pCcmObj->setIv(&(m_nonce.at(0)),m_nonce.size());
     EXPECT_EQ(err, ALC_ERROR_NONE);
 
     // Additional Data
@@ -589,7 +589,7 @@ TEST_P(CCM_KAT, Decrypt_Double)
         }
 
         // Nonce
-        err = pCcmObj->setIv(m_nonce.size(), &(m_nonce.at(0)));
+         err = pCcmObj->setIv(&(m_nonce.at(0)),m_nonce.size());
         EXPECT_EQ(err, ALC_ERROR_NONE);
 
         // Additional Data
@@ -636,7 +636,7 @@ TEST_P(CCM_KAT, Decrypt_Double)
         }
 
         // Nonce
-        err = pCcmObj->setIv(m_nonce.size(), &(m_nonce.at(0)));
+         err = pCcmObj->setIv(&(m_nonce.at(0)),m_nonce.size());
         EXPECT_EQ(err, ALC_ERROR_NONE);
 
         // Additional Data

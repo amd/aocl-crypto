@@ -107,9 +107,10 @@ alcp_initXTSDirect(alc_cipher_handle_t& handle,
     }
 
     // xts init
-    err = alcp_cipher_set_iv(&handle, iv_len, pTweakPT);
+    err = alcp_cipher_init(
+        &handle, cinfo.ci_key, cinfo.ci_keyLen, pTweakPT, iv_len);
     if (alcp_is_error(err)) {
-        printf("Error: unable to set iv\n");
+        printf("Error: unable to init\n");
         alcp_error_str(err, err_buf, err_size);
         return ippStsErr;
     }

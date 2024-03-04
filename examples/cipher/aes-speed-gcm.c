@@ -152,7 +152,7 @@ create_aes_session(Uint8*                  key,
 
 /* GCM: Authenticated Encryption demo */
 void
-aclp_aes_gcm_encrypt_demo(
+alcp_aes_gcm_encrypt_demo(
     const Uint8* plaintxt,
     const Uint32 len, /* Describes both 'plaintxt' and 'ciphertxt' */
     Uint8*       ciphertxt,
@@ -170,19 +170,11 @@ aclp_aes_gcm_encrypt_demo(
     Uint8       err_buf[err_size];
 
     // GCM init key
-    err = alcp_cipher_aead_set_key(&handle, keyLen, pKey);
+    err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm encrypt init \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
-    }
-
-    // GCM init iv
-    err = alcp_cipher_aead_set_iv(&handle, ivLen, iv);
-    if (alcp_is_error(err)) {
-        printf("Error: unable gcm encrypt init \n");
-        alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     // Additional Data
@@ -232,7 +224,7 @@ aclp_aes_gcm_encrypt_demo(
 
 /* GCM: Authenticated Decryption demo */
 void
-aclp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
+alcp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
                           const Uint32 len,
                           Uint8*       plaintxt,
                           Uint8*       iv,
@@ -240,7 +232,9 @@ aclp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
                           Uint8*       ad,
                           const Uint32 adLen,
                           Uint8*       tag,
-                          const Uint32 tagLen)
+                          const Uint32 tagLen,
+                          const Uint8* pKey,
+                          const Uint32 keyLen)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -248,11 +242,11 @@ aclp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
     Uint8       tagDecrypt[16];
 
     // GCM init
-    err = alcp_cipher_aead_set_iv(&handle, ivLen, iv);
+    err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm encrypt init \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        return -1;
     }
 
     // Additional Data
@@ -367,7 +361,7 @@ encrypt_decrypt_demo(Uint8*            inputText,  // plaintext
     // same inputText, cipherText and outputText buffer is used multiple times
     // to measure speed, so inputText and outputText after decrypt will not
     // match.
-    aclp_aes_gcm_encrypt_demo(inputText,
+    alcp_aes_gcm_encrypt_demo(inputText,
                               inputLen,
                               cipherText,
                               iv,
@@ -379,8 +373,17 @@ encrypt_decrypt_demo(Uint8*            inputText,  // plaintext
                               key,
                               keybits);
 
-    aclp_aes_gcm_decrypt_demo(
-        cipherText, inputLen, outputText, iv, ivLen, ad, adLen, tag, tagLen);
+    alcp_aes_gcm_decrypt_demo(cipherText,
+                              inputLen,
+                              outputText,
+                              iv,
+                              ivLen,
+                              ad,
+                              adLen,
+                              tag,
+                              tagLen,
+                              key,
+                              keybits);
 
     /*
      * Complete the transaction

@@ -116,7 +116,7 @@ getinput(Uint8* output, int inputLen, int seed)
     }
 }
 
-void
+int
 create_aes_session(Uint8*             key,
                    Uint8*             iv,
                    const Uint32       key_len,
@@ -153,8 +153,24 @@ create_aes_session(Uint8*             key,
         free(handle.ch_context);
         printf("Error: unable to request \n");
         alcp_error_str(err, err_buf, err_size);
-        return;
+        goto out;
     }
+
+
+    err = alcp_cipher_init(
+        &handle, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, 16);
+    if (alcp_is_error(err)) {
+        free(handle.ch_context);
+        printf("Error: Unable to init \n");
+        goto out;
+    }
+    return 0;
+
+    // Incase of error, program execution will come here
+out:
+    alcp_error_str(err, err_buf, err_size);
+    printf("%s\n", err_buf);
+    return -1;
 }
 
 /* AES modes: Encryption Demo */
@@ -250,7 +266,10 @@ encrypt_decrypt_demo(Uint8*       inputText,  // plaintext
         printText(inputText, inputLen, "inputText");
 
 
-        create_aes_session(key, iv, keybits, m);
+        int retval = create_aes_session(key, iv, keybits, m);
+        if (retval != 0)
+            goto out;
+
 
         //Encrypt speed test
         totalTimeElapsed = 0.0;
@@ -309,6 +328,7 @@ encrypt_decrypt_demo(Uint8*       inputText,  // plaintext
         free(handle.ch_context);
     }
 
+    out:
     if (outputText) {
         free(outputText);
     }

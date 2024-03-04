@@ -100,7 +100,7 @@ class ALCP_API_EXPORT Ccm final : public Aes
 
     virtual alc_error_t getTag(Uint8* pOutput, Uint64 len);
 
-    virtual alc_error_t setIv(Uint64 len, const Uint8* pIv);
+    virtual alc_error_t setIv(const Uint8* pIv, Uint64 len);
 
     virtual alc_error_t setAad(const Uint8* pInput, Uint64 len);
 

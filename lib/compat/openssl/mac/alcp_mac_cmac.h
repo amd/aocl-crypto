@@ -43,8 +43,7 @@ alc_mac_info_t                                      \
                 .cmac_cipher =                      \
                 {                                   \
                     .ci_type = ALC_CIPHER_TYPE_AES, \
-                    .ci_algo_info = {               \
-                        } } } } };
+                 } } } };
 
 // clang-format on
 

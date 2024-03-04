@@ -229,8 +229,17 @@ ALCP_prov_cipher_get_ctx_params(void* vctx, OSSL_PARAM params[])
                 && (cctx->pc_cipher_aead_info.ci_mode == ALC_AES_MODE_CCM))) {
             Uint8 a;
             alcp_cipher_aead_set_tag_length(&(cctx->handle), cctx->taglen);
-            alcp_cipher_aead_set_iv(
-                &(cctx->handle), cctx->ivlen, cctx->pc_cipher_aead_info.ci_iv);
+
+            alc_error_t err = alcp_cipher_aead_init(&(cctx->handle),
+                                                    cctx->pc_cipher_info.ci_key,
+                                                    keylen,
+                                                    cctx->iv,
+                                                    cctx->ivlen);
+            if (err != ALC_ERROR_NONE) {
+                printf("Provider: Error in aead init\n");
+                return 0;
+            }
+
             if (cctx->aadlen != 0)
                 alcp_cipher_aead_set_aad(
                     &(cctx->handle), cctx->aad, cctx->aadlen);
@@ -410,12 +419,6 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
     }
 #endif
 
-    err = alcp_cipher_set_key(&(cctx->handle), cinfo->ci_keyLen, cinfo->ci_key);
-    if (alcp_is_error(err)) {
-        printf("Error in Setting the key\n");
-        return 0;
-    }
-
     if (cinfo->ci_mode == ALC_AES_MODE_XTS) {
         if (cctx->pc_cipher_info.ci_iv != NULL) {
 #ifdef DEBUG
@@ -429,13 +432,16 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
                 cctx->ivlen = ivlen;
             }
         }
+    }
 
-        err = alcp_cipher_set_iv(
-            &(cctx->handle), cctx->ivlen, cctx->pc_cipher_info.ci_iv);
-        if (alcp_is_error(err)) {
-            printf("Provider Error Setting IV\n");
-            return 0;
-        }
+    err = alcp_cipher_init(&(cctx->handle),
+                           cinfo->ci_key,
+                           cinfo->ci_keyLen,
+                           cinfo->ci_iv,
+                           cctx->ivlen);
+    if (alcp_is_error(err)) {
+        printf("Error in cipher init\n");
+        return 0;
     }
 
     // Enable Encryption Mode
@@ -620,12 +626,6 @@ ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
     }
 #endif
 
-    err = alcp_cipher_set_key(&(cctx->handle), cinfo->ci_keyLen, cinfo->ci_key);
-    if (alcp_is_error(err)) {
-        printf("Error in Setting the key\n");
-        return 0;
-    }
-
     if (cinfo->ci_mode == ALC_AES_MODE_XTS) {
         if (cctx->pc_cipher_info.ci_iv != NULL) {
 #ifdef DEBUG
@@ -639,13 +639,18 @@ ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
                 cctx->ivlen = ivlen;
             }
         }
-        err = alcp_cipher_set_iv(
-            &(cctx->handle), cctx->ivlen, cctx->pc_cipher_info.ci_iv);
-        if (alcp_is_error(err)) {
-            printf("Provider Error Setting IV\n");
-            return 0;
-        }
     }
+
+    err = alcp_cipher_init(&(cctx->handle),
+                           cinfo->ci_key,
+                           cinfo->ci_keyLen,
+                           cinfo->ci_iv,
+                           cctx->ivlen);
+    if (alcp_is_error(err)) {
+        printf("Error in cipher init\n");
+        return 0;
+    }
+
     // Enable Decryption Mode
     cctx->enc_flag = false;
 

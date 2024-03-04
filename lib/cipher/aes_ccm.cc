@@ -119,11 +119,11 @@ class Ccm::Impl
 
     /**
      * @brief Set Nonce (IV)
-     * @param len Length of the IV
      * @param pIv Pointer to the IV
+     * @param ivLen Length of the IV
      * @return
      */
-    Status setIv(Uint64 len, const Uint8 pIv[]);
+    Status setIv(const Uint8 pIv[], Uint64 ivLen);
 
     /**
      * @brief Set additional data to be processed
@@ -255,16 +255,16 @@ Ccm::Impl::cryptUpdate(const Uint8 pInput[],
 }
 
 Status
-Ccm::Impl::setIv(Uint64 len, const Uint8 pIv[])
+Ccm::Impl::setIv(const Uint8 pIv[], Uint64 ivLen)
 {
     Status s = StatusOk();
-    if (len < 7 || len > 13) {
+    if (ivLen < 7 || ivLen > 13) {
         s = status::InvalidValue(
             "IV length needs to be between 7 and 13 both not included!");
         return s;
     }
 
-    m_ivLen = len;
+    m_ivLen = ivLen;
 
     // Initialize ccm_data
     m_ccm_data.blocks = 0;
@@ -276,7 +276,7 @@ Ccm::Impl::setIv(Uint64 len, const Uint8 pIv[])
     // size in bytes of size in bytes of plaintext. Basically size of the
     // variable which can store size of plaintext. This size can be fixed to a
     // max of q = 15 - n.
-    init(&m_ccm_data, m_tagLen, 15 - len);
+    init(&m_ccm_data, m_tagLen, 15 - ivLen);
     return s;
 }
 
@@ -806,10 +806,10 @@ Ccm::getTag(Uint8 pOutput[], Uint64 len)
 }
 
 alc_error_t
-Ccm::setIv(Uint64 len, const Uint8 pIv[])
+Ccm::setIv(const Uint8 pIv[], Uint64 ivLen)
 {
     Status s = StatusOk();
-    s        = pImpl->setIv(len, pIv);
+    s        = pImpl->setIv(pIv, ivLen);
     return s.code();
 }
 

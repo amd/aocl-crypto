@@ -228,45 +228,25 @@ alcp_cipher_blocks_decrypt(const alc_cipher_handle_p pCipherHandle,
 }
 
 alc_error_t
-alcp_cipher_set_key(const alc_cipher_handle_p pCipherHandle,
-                    Uint64                    len,
-                    const Uint8*              pKey)
+alcp_cipher_init(const alc_cipher_handle_p pCipherHandle,
+                 const Uint8*              pKey,
+                 Uint64                    keyLen,
+                 const Uint8*              pIv,
+                 Uint64                    ivLen)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
 
-    ALCP_BAD_PTR_ERR_RET(pKey, err);
-
-    // FIXME: error check for invalid key length to be added.
-    ALCP_ZERO_LEN_ERR_RET(len, err);
-
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    err = ctx->initKey(ctx->m_cipher, len, pKey);
-
-    return err;
-}
-
-alc_error_t
-alcp_cipher_set_iv(const alc_cipher_handle_p pCipherHandle,
-                   Uint64                    len,
-                   const Uint8*              pIv)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
-    ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
-    ALCP_BAD_PTR_ERR_RET(pIv, err);
-
-    ALCP_ZERO_LEN_ERR_RET(len, err);
-
-    auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
-
-    // FIXME: Modify setIv to return Status and assign to context status
-    err = ctx->setIv(ctx->m_cipher, len, pIv);
-
+    // init can be called to setKey or setIv or both
+    if ((pKey != NULL && keyLen != 0) || (pIv != NULL && ivLen != 0)) {
+        err = ctx->init(ctx->m_cipher, pKey, keyLen, pIv, ivLen);
+    } else {
+        err = ALC_ERROR_INVALID_ARG;
+    }
     return err;
 }
 

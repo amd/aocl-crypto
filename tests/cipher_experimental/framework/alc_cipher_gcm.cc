@@ -59,19 +59,13 @@ AlcpGcmCipher<encryptor>::init(alc_test_init_data_p data)
     }
 
     // GCM init
-    err = alcp_cipher_aead_set_key(
-        &m_handle, data_gcm->m_key_len * 8, data_gcm->m_key);
+    err = alcp_cipher_aead_init(&m_handle,
+                                data_gcm->m_key,
+                                data_gcm->m_key_len * 8,
+                                data_gcm->m_iv,
+                                data_gcm->m_iv_len);
     if (alcp_is_error(err)) {
-        free(m_handle.ch_context);
-        printf("Error: unable to set key\n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
-    }
-
-    err =
-        alcp_cipher_aead_set_iv(&m_handle, data_gcm->m_iv_len, data_gcm->m_iv);
-    if (alcp_is_error(err)) {
-        printf("Error: unable to set iv\n");
+        printf("Error: GCM encrypt init failure!\n");
         alcp_error_str(err, err_buf, err_size);
         return false;
     }

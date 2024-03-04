@@ -382,16 +382,8 @@ alcp_aes_gcm_encrypt_demo(
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    // GCM init key
-    err = alcp_cipher_aead_set_key(&handle, keyLen, pKey);
-    if (alcp_is_error(err)) {
-        printf("Error: unable gcm encrypt init \n");
-        alcp_error_str(err, err_buf, err_size);
-        return -1;
-    }
-
-    // GCM init iv
-    err = alcp_cipher_aead_set_iv(&handle, ivLen, iv);
+    // gcm init key
+    err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm encrypt init \n");
         alcp_error_str(err, err_buf, err_size);
@@ -435,7 +427,9 @@ alcp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
                           Uint8*       ad,
                           const Uint32 adLen,
                           Uint8*       tag,
-                          const Uint32 tagLen)
+                          const Uint32 tagLen,
+                          const Uint8* pKey,
+                          const Uint32 keyLen)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -443,7 +437,7 @@ alcp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
     Uint8       tagDecrypt[16];
 
     // GCM init
-    err = alcp_cipher_aead_set_iv(&handle, ivLen, iv);
+    err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm encrypt init \n");
         alcp_error_str(err, err_buf, err_size);
@@ -584,8 +578,17 @@ gcm_selftest(Uint8*            inputText,  // plaintext
     }
 
     // Decrypt
-    retval = alcp_aes_gcm_decrypt_demo(
-        cipherText, inputLen, outputText, iv, ivLen, ad, adLen, tag, tagLen);
+    retval = alcp_aes_gcm_decrypt_demo(cipherText,
+                                       inputLen,
+                                       outputText,
+                                       iv,
+                                       ivLen,
+                                       ad,
+                                       adLen,
+                                       tag,
+                                       tagLen,
+                                       key,
+                                       keybits);
     if (retval != 0)
         goto out;
 

@@ -218,17 +218,10 @@ AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data)
     const int   cErrSize = 256;
     Uint8       err_buff[cErrSize];
 
-    err = alcp_cipher_aead_set_key(m_handle, m_keyLen, m_key);
+    err =
+        alcp_cipher_aead_init(m_handle, m_key, m_keyLen, m_iv, aead_data.m_ivl);
     if (alcp_is_error(err)) {
-        printf("Err:Setting key\n");
-        alcp_error_str(err, err_buff, cErrSize);
-        std::cout << "Error:" << err_buff << std::endl;
-        return false;
-    }
-
-    err = alcp_cipher_aead_set_iv(m_handle, aead_data.m_ivl, m_iv);
-    if (alcp_is_error(err)) {
-        printf("Err:Setting iv\n");
+        printf("Err:aead init\n");
         alcp_error_str(err, err_buff, cErrSize);
         std::cout << "Error:" << err_buff << std::endl;
         return false;
@@ -304,13 +297,14 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
         return false;
     }
 
-    err = alcp_cipher_aead_set_iv(m_handle, aead_data.m_ivl, m_iv);
+    err =
+        alcp_cipher_aead_init(m_handle, m_key, m_keyLen, m_iv, aead_data.m_ivl);
     if (alcp_is_error(err)) {
-        printf("Err:Setting iv\n");
+        printf("Error: init failure! code\n");
         alcp_error_str(err, err_buff, cErrSize);
-        std::cout << "Error:" << err_buff << std::endl;
         return false;
     }
+
     if (aead_data.m_adl > 0) {
         err =
             alcp_cipher_aead_set_aad(m_handle, aead_data.m_ad, aead_data.m_adl);

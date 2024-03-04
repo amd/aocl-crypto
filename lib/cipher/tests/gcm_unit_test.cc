@@ -224,10 +224,10 @@ class GCM_KAT
 
         // Setup GCM Object
         pGcmObj = new GcmAEAD128();
-        pGcmObj->initKey(keyInfo.len, keyInfo.key);
+        pGcmObj->setKey(keyInfo.key, keyInfo.len);
 
         // Nonce
-        m_err = pGcmObj->setIv(m_nonce.size(), &(m_nonce.at(0)));
+        m_err = pGcmObj->setIv(&(m_nonce.at(0)), m_nonce.size());
         EXPECT_EQ(m_err, ALC_ERROR_NONE);
 
         // Additional Data
@@ -254,21 +254,21 @@ TEST(GCM, Instantiation)
     keyInfo.len = 128;
     {
         GcmAEAD128 pGcmObj = GcmAEAD128();
-        pGcmObj.initKey(keyInfo.len, keyInfo.key);
+        pGcmObj.setKey(keyInfo.key, keyInfo.len);
         EXPECT_EQ(pGcmObj.getRounds(), 10U);
         EXPECT_EQ(pGcmObj.getNr(), 10U);
     }
     keyInfo.len = 192;
     {
         GcmAEAD192 pGcmObj = GcmAEAD192();
-        pGcmObj.initKey(keyInfo.len, keyInfo.key);
+        pGcmObj.setKey(keyInfo.key, keyInfo.len);
         EXPECT_EQ(pGcmObj.getRounds(), 12U);
         EXPECT_EQ(pGcmObj.getNr(), 12U);
     }
     keyInfo.len = 256;
     {
         GcmAEAD256 pGcmObj = GcmAEAD256();
-        pGcmObj.initKey(keyInfo.len, keyInfo.key);
+        pGcmObj.setKey(keyInfo.key, keyInfo.len);
         EXPECT_EQ(pGcmObj.getRounds(), 14U);
         EXPECT_EQ(pGcmObj.getNr(), 14U);
     }
@@ -296,7 +296,7 @@ TEST(GCM, InputOverload)
     auto pwrite =
         mmap(0, pow(2, 39), PROT_WRITE, MAP_FILE | MAP_SHARED, zero2_fd, 0);
     alc_error_t err = ALC_ERROR_NONE;
-    err             = pGcmObj.setIv(sizeof(iv), iv);
+    err             = pGcmObj.setIv(iv, sizeof(iv));
     EXPECT_EQ(err, ALC_ERROR_NONE);
     printf("%p %p\n", pwrite, pread);
     err = pGcmObj.encryptUpdate(
@@ -389,8 +389,8 @@ TEST(GCM, InvalidTagLen)
 
     GcmAEAD128  pGcmObj = GcmAEAD128(); //(key, 128);
     alc_error_t err;
-    pGcmObj.initKey(128, key);
-    pGcmObj.setIv(7, iv);
+    pGcmObj.setKey(key, 128);
+    pGcmObj.setIv(iv, 7);
 
     // Skipping Aad as its not mandatory
 
@@ -431,8 +431,8 @@ TEST(GCM, EncryptUpdateSingle)
     std::vector<Uint8> tag_out(16);
 
     GcmAEAD128 pGcmObj = GcmAEAD128();
-    pGcmObj.initKey(128, &key[0]);
-    pGcmObj.setIv(nonce.size(), &nonce[0]);
+    pGcmObj.setKey(&key[0], 128);
+    pGcmObj.setIv(&nonce[0], nonce.size());
 
     pGcmObj.setAad(&aad[0], aad.size());
 
@@ -475,8 +475,8 @@ TEST(GCM, EncryptUpdateMultiple)
     std::vector<Uint8> tag_out(16);
 
     GcmAEAD128 pGcmObj = GcmAEAD128(); //(&key[0], 128);
-    pGcmObj.initKey(128, &key[0]);
-    pGcmObj.setIv(nonce.size(), &nonce[0]);
+    pGcmObj.setKey(&key[0], 128);
+    pGcmObj.setIv(&nonce[0], nonce.size());
 
     pGcmObj.setAad(&aad[0], aad.size());
 
@@ -524,8 +524,8 @@ TEST(GCM, DecryptUpdateSingle)
     std::vector<Uint8> tag_out(16);
 
     GcmAEAD128 pGcmObj = GcmAEAD128();
-    pGcmObj.initKey(128, &key[0]);
-    pGcmObj.setIv(nonce.size(), &nonce[0]);
+    pGcmObj.setKey(&key[0], 128);
+    pGcmObj.setIv(&nonce[0], nonce.size());
 
     pGcmObj.setAad(&aad[0], aad.size());
 
@@ -568,8 +568,8 @@ TEST(GCM, DecryptUpdateMultiple)
     std::vector<Uint8> tag_out(16);
 
     GcmAEAD128 pGcmObj = GcmAEAD128();
-    pGcmObj.initKey(128, &key[0]);
-    pGcmObj.setIv(nonce.size(), &nonce[0]);
+    pGcmObj.setKey(&key[0], 128);
+    pGcmObj.setIv(&nonce[0], nonce.size());
 
     pGcmObj.setAad(&aad[0], aad.size());
 

@@ -86,6 +86,15 @@ create_demo_session(alc_cipher_handle_p handle,
         goto out;
     }
     printf("Request Succeeded\n");
+
+    err = alcp_cipher_init(
+        handle, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, 16);
+    if (alcp_is_error(err)) {
+        free(handle->ch_context);
+        printf("Error: Unable to init \n");
+        goto out;
+    }
+
     return 0;
 
     // Incase of error, program execution will come here

@@ -202,7 +202,7 @@ TEST(CTR, BasicEncryption)
 
     // api to be added to icipher
     // ctr->setKey(128, &key[0]);  or
-    // ctr->initKey(128, &key[0]);
+    // ctr->setKey(128, &key[0]);
 
     ctr->encrypt(&plainText[0], &output[0], plainText.size(), &iv[0]);
 

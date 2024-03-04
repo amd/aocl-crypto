@@ -33,19 +33,58 @@
 
 namespace alcp::cipher {
 
-// FIXME: need to choose a better name for initKey and setKey
+// FIXME: need to choose a better name for setKey and setKey
 alc_error_t
-Aes::initKey(const Uint64 len, const Uint8* pUserKey)
+Aes::setKey(const Uint8* pKey, const Uint64 keyLen)
 {
     alc_error_t e = ALC_ERROR_NONE;
-    // Already Expanded in Rijndael class, we just need to transpose
-    // Rijndael::setKey(pUserKey, len);
+    Rijndael::initRijndael(keyLen, pKey);
+    getKey();
+    m_isKeyset = true;
+    return e;
+}
 
-    Rijndael::initRijndael(len, pUserKey);
+alc_error_t
+Aes::setIv(const Uint8* pIv, const Uint64 ivLen)
+{
+    alc_error_t e = ALC_ERROR_NONE;
+    if (ivLen <= 0) {
+        return ALC_ERROR_INVALID_SIZE;
+    }
+
+    if (pIv == nullptr) {
+        return ALC_ERROR_INVALID_ARG;
+    }
+
+    // set IV and IvLen
+    m_iv      = pIv;
+    m_ivLen   = ivLen;
+    m_isIvset = true;
 
     return e;
 }
 
+alc_error_t
+Aes::init(const Uint8* pKey,
+          const Uint64 keyLen,
+          const Uint8* pIv,
+          const Uint64 ivLen)
+{
+
+    alc_error_t err = ALC_ERROR_NONE;
+
+    if (pKey != NULL && keyLen != 0) {
+        err = setKey(pKey, keyLen);
+    }
+
+    if (pIv != NULL && ivLen != 0) {
+        err = setIv(pIv, ivLen);
+    }
+
+    return err;
+}
+
+#if 0
 Status
 Aes::setKey(const Uint8* pUserKey, Uint64 len)
 {
@@ -54,6 +93,7 @@ Aes::setKey(const Uint8* pUserKey, Uint64 len)
 
     return StatusOk();
 }
+#endif
 
 Status
 Aes::setMode(alc_cipher_mode_t mode)

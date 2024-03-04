@@ -59,6 +59,17 @@ using Status = alcp::base::Status;
 class Aes : public Rijndael
 {
   public:
+    // iv info for all modes
+    const Uint8* m_iv    = NULL;
+    Uint64       m_ivLen = 0;
+    // rounds based on keysize
+    Uint32 m_nrounds = 0;
+    // expanded keys
+    const Uint8* m_enc_key  = {};
+    const Uint8* m_dec_key  = {};
+    bool         m_isIvset  = false;
+    bool         m_isKeyset = false;
+
     Aes()
         : Rijndael()
     {}
@@ -70,12 +81,10 @@ class Aes : public Rijndael
     // Without CMAC-SIV extending AES, we cannot access it with protected,
     // Please change to protected if needed in future
   public:
-    // Aes() { m_this = this; }
-
-    alc_error_t initKey(const Uint64 len, const Uint8* pUserKey);
-
-    ALCP_API_EXPORT virtual Status setKey(const Uint8* pUserKey,
-                                          Uint64       len) override;
+    alc_error_t init(const Uint8* pKey,
+                     const Uint64 keyLen,
+                     const Uint8* pIv,
+                     const Uint64 ivLen);
 
     static bool isSupported(const Uint32 keyLen)
     {
@@ -84,6 +93,16 @@ class Aes : public Rijndael
             return true;
         }
         return false;
+    }
+
+    // private: This should be made private after changing drbg_ctr
+    alc_error_t setKey(const Uint8* pUserKey, const Uint64 keyLen);
+    alc_error_t setIv(const Uint8* pUserIv, const Uint64 ivLen);
+    void        getKey()
+    {
+        m_enc_key = getEncryptKeys();
+        m_dec_key = getDecryptKeys();
+        m_nrounds = getRounds();
     }
 
   protected:

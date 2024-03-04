@@ -142,19 +142,17 @@ OSSL_FUNC_cipher_final_fn ALCP_prov_cipher_final;
 // Macro for Context Creation
 #define CIPHER_CONTEXT(mode, alcp_mode)                                        \
     static alc_cipher_info_t s_cipher_##mode##_info = {                        \
-        .ci_type      = ALC_CIPHER_TYPE_AES,                                   \
-        .ci_mode      = alcp_mode,                                             \
-        .ci_keyLen    = 128,                                                   \
-        .ci_algo_info = {},                                                    \
+        .ci_type   = ALC_CIPHER_TYPE_AES,                                      \
+        .ci_mode   = alcp_mode,                                                \
+        .ci_keyLen = 128,                                                      \
     }
 
 // Macro for Context Creation
 #define CIPHER_AEAD_CONTEXT(mode, alcp_mode)                                   \
     static alc_cipher_aead_info_t s_cipher_##mode##_info = {                   \
-        .ci_type      = ALC_CIPHER_TYPE_AES,                                   \
-        .ci_mode      = alcp_mode,                                             \
-        .ci_keyLen    = 128,                                                   \
-        .ci_algo_info = {},                                                    \
+        .ci_type   = ALC_CIPHER_TYPE_AES,                                      \
+        .ci_mode   = alcp_mode,                                                \
+        .ci_keyLen = 128,                                                      \
     }
 
 // Macro for OpenSSL Dispatcher Creation

@@ -65,7 +65,7 @@ _build_aes_cipher(const Uint64 keyLen, Context& ctx)
 
     ctx.decrypt = __aes_wrapper<CIPHERMODE, false>;
     ctx.encrypt = __aes_wrapper<CIPHERMODE, true>;
-    ctx.initKey = __aes_wrapperInitKey<CIPHERMODE>;
+    ctx.init    = __aes_wrapperInit<CIPHERMODE>;
 
     ctx.finish = __aes_dtor<CIPHERMODE>;
 }
@@ -86,12 +86,14 @@ _build_aead(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
 {
     auto algo = new AEADMODE(pKey, keyLen);
 
-    ctx.m_cipher      = static_cast<void*>(algo);
+    ctx.m_cipher = static_cast<void*>(algo);
+
+    ctx.init   = __aes_wrapperInit<AEADMODE>;
+    ctx.setAad = __aes_wrapperSetAad<AEADMODE>;
+
     ctx.decryptUpdate = __aes_wrapperUpdate<AEADMODE, false>;
     ctx.encryptUpdate = __aes_wrapperUpdate<AEADMODE, true>;
 
-    ctx.setAad = __aes_wrapperSetAad<AEADMODE>;
-    ctx.setIv  = __aes_wrapperSetIv<AEADMODE>;
     ctx.getTag = __aes_wrapperGetTag<AEADMODE>;
 
     if constexpr (std::is_same_v<AEADMODE, Ccm>) {
@@ -105,16 +107,15 @@ template<typename AEADMODE>
 void
 _build_aead_wrapper(Context& ctx)
 {
-    auto algo = new AEADMODE(); //(pKey, keyLen);
+    auto algo = new AEADMODE();
 
     ctx.m_cipher      = static_cast<void*>(algo);
     ctx.decryptUpdate = __aes_wrapperUpdate<AEADMODE, false>;
     ctx.encryptUpdate = __aes_wrapperUpdate<AEADMODE, true>;
 
-    ctx.setAad  = __aes_wrapperSetAad<AEADMODE>;
-    ctx.setIv   = __aes_wrapperSetIv<AEADMODE>;
-    ctx.initKey = __aes_wrapperInitKey<AEADMODE>;
-    ctx.getTag  = __aes_wrapperGetTag<AEADMODE>;
+    ctx.setAad = __aes_wrapperSetAad<AEADMODE>;
+    ctx.init   = __aes_wrapperInit<AEADMODE>;
+    ctx.getTag = __aes_wrapperGetTag<AEADMODE>;
 
     if constexpr (std::is_same_v<AEADMODE, Ccm>) {
         ctx.setTagLength = __aes_wrapperSetTagLength<AEADMODE>;
@@ -142,33 +143,31 @@ __build_GcmAead(const Uint64 keyLen, Context& ctx)
     CpuCipherFeatures cpu_feature = getCpuCipherfeature();
 
     if (cpu_feature == CpuCipherFeatures::eVaes512) {
-        /* FIXME: cipher request should fail invalid key length. At this
-         * level only valid key length is passed.*/
+        using namespace vaes512;
         if (keyLen == ALC_KEY_LEN_128) {
-            _build_aead_wrapper<vaes512::GcmAEAD128>(ctx);
+            _build_aead_wrapper<GcmAEAD128>(ctx);
         } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aead_wrapper<vaes512::GcmAEAD192>(ctx);
+            _build_aead_wrapper<GcmAEAD192>(ctx);
         } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aead_wrapper<vaes512::GcmAEAD256>(ctx);
+            _build_aead_wrapper<GcmAEAD256>(ctx);
         }
     } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
-        /* FIXME: cipher request should fail invalid key length. At this
-         * level only valid key length is passed.*/
+        using namespace vaes;
         if (keyLen == ALC_KEY_LEN_128) {
-            _build_aead_wrapper<vaes::GcmAEAD128>(ctx);
+            _build_aead_wrapper<GcmAEAD128>(ctx);
         } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aead_wrapper<vaes::GcmAEAD192>(ctx);
+            _build_aead_wrapper<GcmAEAD192>(ctx);
         } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aead_wrapper<vaes::GcmAEAD256>(ctx);
+            _build_aead_wrapper<GcmAEAD256>(ctx);
         }
     } else {
-
+        using namespace aesni;
         if (keyLen == ALC_KEY_LEN_128) {
-            _build_aead_wrapper<aesni::GcmAEAD128>(ctx);
+            _build_aead_wrapper<GcmAEAD128>(ctx);
         } else if (keyLen == ALC_KEY_LEN_192) {
-            _build_aead_wrapper<aesni::GcmAEAD192>(ctx);
+            _build_aead_wrapper<GcmAEAD192>(ctx);
         } else if (keyLen == ALC_KEY_LEN_256) {
-            _build_aead_wrapper<aesni::GcmAEAD256>(ctx);
+            _build_aead_wrapper<GcmAEAD256>(ctx);
         }
     }
     return sts;
@@ -296,7 +295,7 @@ __chacha20_Poly1305setKeyWrapper(void*        rCipher,
     // auto ap =
     //  static_cast<chacha20::ChaCha20Poly1305<cpu_cipher_feature>*>(rCipher);
 
-    // e = ap->initKey(keyLen, pKey);
+    // e = ap->setKey(keyLen, pKey);
 
     return e;
 }
@@ -421,7 +420,7 @@ __build_chacha20poly1305(const alc_cipher_aead_info_t& cCipherAlgoInfo,
         return ALC_ERROR_INVALID_ARG;
     }
 #endif
-    ctx.initKey = __chacha20_Poly1305setKeyWrapper<cpu_cipher_feature>;
+    ctx.setKey = __chacha20_Poly1305setKeyWrapper<cpu_cipher_feature>;
 
     ctx.setIv = __chacha20_Poly1305setIvWrapper<cpu_cipher_feature>;
 

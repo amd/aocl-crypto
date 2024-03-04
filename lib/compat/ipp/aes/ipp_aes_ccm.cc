@@ -80,11 +80,16 @@ ippsAES_CCMStart(const Ipp8u*      pIV,
         return ippStsErr;
     }
 
-    err = alcp_cipher_aead_set_iv(&(context_aead->handle), ivLen, (Uint8*)pIV);
+    // ccm init
+    err = alcp_cipher_aead_init(&(context_aead->handle),
+                                context_aead->c_aeadinfo.ci_key,
+                                context_aead->c_aeadinfo.ci_keyLen,
+                                (Uint8*)pIV,
+                                ivLen);
     if (alcp_is_error(err)) {
         printf("Error: CCM encrypt init failure! code:11\n");
         alcp_error_str(err, err_buf, err_size);
-        return ippStsErr;
+        return -1;
     }
 
     // Additional Datas

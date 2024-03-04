@@ -74,10 +74,10 @@ class Cmac::Impl : public cipher::Aes
     Status setKey(const Uint8 key[], Uint64 len)
     {
         Status s{ StatusOk() };
-        s = Aes::setKey(key, len);
-        if (!s.ok()) {
-            return s;
-        }
+        Aes::setKey(key, len);
+        // no error checks needed at this stage, since key and keyLength are
+        // validated.
+
         m_encrypt_keys = getEncryptKeys();
         m_rounds       = getRounds();
         getSubkeys();
@@ -287,8 +287,7 @@ class Cmac::Impl : public cipher::Aes
 
 Cmac::Cmac()
     : m_pImpl{ std::make_unique<Cmac::Impl>() }
-{
-}
+{}
 
 Status
 Cmac::update(const Uint8 pMsgBuf[], Uint64 size)

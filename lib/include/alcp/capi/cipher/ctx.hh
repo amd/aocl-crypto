@@ -75,10 +75,11 @@ struct Context
                                  Uint64       len,
                                  const Uint8* pIv);
 
-    // FIXME: initKey to be modified to setKey
-    alc_error_t (*initKey)(void* rCipher, const Uint64 len, const Uint8* pKey);
-
-    alc_error_t (*setIv)(void* rCipher, Uint64 len, const Uint8* pIv);
+    alc_error_t (*init)(void*        rCipher,
+                        const Uint8* pKey,
+                        Uint64       keyLen,
+                        const Uint8* pIv,
+                        Uint64       ivLen);
 
     alc_error_t (*setAad)(void* rCipher, const Uint8* pAad, Uint64 len);
 

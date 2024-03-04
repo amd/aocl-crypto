@@ -88,7 +88,7 @@ class ALCP_API_EXPORT Rijndael //:  public alcp::ICipher
 
     void initRijndael(const Uint64 keyLen, const Uint8* pKey);
 
-    virtual Status setKey(const Uint8* pUserKey, Uint64 len);
+    // virtual Status setKey(const Uint8* pUserKey, Uint64 len);
 
     virtual void setEncryptKey(const Uint8* pEncKey, Uint64 len);
     virtual void setDecryptKey(const Uint8* pDecKey, Uint64 len);

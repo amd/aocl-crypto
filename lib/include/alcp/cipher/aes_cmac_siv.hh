@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -497,7 +497,7 @@ CmacSiv<T>::Impl::setKeys(const Uint8 key1[], const Uint8 key2[], Uint64 length)
         return s;
     }
 
-    s = m_ctr.setKey(m_key2, m_keyLength);
+    m_ctr.setKey(m_key2, m_keyLength);
     return s;
 }
 

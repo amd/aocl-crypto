@@ -54,27 +54,15 @@ class ALCP_API_EXPORT Gcm
 {
 
   public:
-    const Uint8* m_enc_key = {};
-    const Uint8* m_dec_key = {};
-    Uint32       m_nrounds = 0;
-
     __m128i m_reverse_mask_128 =
         _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-    const Uint8* m_iv    = nullptr;
-    Uint64       m_len   = 0;
-    Uint64       m_ivLen = 12; // default 12 bytes or 96bits
+    Uint64 m_len = 0;
+    // Uint64 m_ivLen = 12; // default 12 bytes or 96bits
 
   public:
     explicit Gcm()
         : Aes()
     {}
-
-    void getKey()
-    {
-        m_enc_key = getEncryptKeys();
-        m_dec_key = getDecryptKeys();
-        m_nrounds = getRounds();
-    }
 
     ~Gcm() {}
 };
@@ -97,37 +85,40 @@ class ALCP_API_EXPORT GcmAuth : public GcmAuthData
     }
 };
 
-// Macro to generate ghash class
-#define AEAD_GCM_GHASH_CLASS_GEN(CHILD_NEW, PARENT1, PARENT2)                  \
-    class ALCP_API_EXPORT GcmGhash                                             \
-        : public Gcm                                                           \
-        , public GcmAuth                                                       \
+// Macro to generate authentication class, first is used for gcm and to be
+// extended to other AEAD classes
+#define AEAD_AUTH_CLASS_GEN(CHILD_NEW, PARENT1, PARENT2)                       \
+    class ALCP_API_EXPORT CHILD_NEW                                            \
+        : public PARENT1                                                       \
+        , public PARENT2                                                       \
     {                                                                          \
       public:                                                                  \
-        GcmGhash(){};                                                          \
-        ~GcmGhash() {}                                                         \
+        CHILD_NEW(){};                                                         \
+        ~CHILD_NEW() {}                                                        \
                                                                                \
         alc_error_t getTag(Uint8* pOutput, Uint64 len);                        \
-        alc_error_t setIv(Uint64 len, const Uint8* pIv);                       \
+        alc_error_t init(const Uint8* pKey,                                    \
+                         Uint64       keyLen,                                  \
+                         const Uint8* pIv,                                     \
+                         Uint64       ivLen);                                        \
         alc_error_t setAad(const Uint8* pInput, Uint64 len);                   \
     };
 
+AEAD_AUTH_CLASS_GEN(GcmGhash, Gcm, GcmAuth)
+
 namespace vaes512 {
-    AEAD_GCM_GHASH_CLASS_GEN(GcmGhash, Gcm, GcmAuth)
     AEAD_CLASS_GEN(GcmAEAD128, public GcmGhash)
     AEAD_CLASS_GEN(GcmAEAD192, public GcmGhash)
     AEAD_CLASS_GEN(GcmAEAD256, public GcmGhash)
 } // namespace vaes512
 
 namespace vaes {
-    AEAD_GCM_GHASH_CLASS_GEN(GcmGhash, Gcm, GcmAuth)
     AEAD_CLASS_GEN(GcmAEAD128, public GcmGhash)
     AEAD_CLASS_GEN(GcmAEAD192, public GcmGhash)
     AEAD_CLASS_GEN(GcmAEAD256, public GcmGhash)
 } // namespace vaes
 
 namespace aesni {
-    AEAD_GCM_GHASH_CLASS_GEN(GcmGhash, Gcm, GcmAuth)
     AEAD_CLASS_GEN(GcmAEAD128, public GcmGhash)
     AEAD_CLASS_GEN(GcmAEAD192, public GcmGhash)
     AEAD_CLASS_GEN(GcmAEAD256, public GcmGhash)

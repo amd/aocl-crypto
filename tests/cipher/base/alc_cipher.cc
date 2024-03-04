@@ -153,22 +153,17 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
         goto out;
     }
 
-    // encrypt init: set key
-    err = alcp_cipher_set_key(m_handle, m_cinfo.ci_keyLen, m_cinfo.ci_key);
+    // encrypt init:
+    err = alcp_cipher_init(m_handle,
+                           m_cinfo.ci_key,
+                           m_cinfo.ci_keyLen,
+                           m_cinfo.ci_iv,
+                           16); // FIXME: set iv length
     if (alcp_is_error(err)) {
-        printf("Error in Setting the key\n");
-        alcp_error_str(err, err_buf, cErrSize);
-        goto out;
+        printf("Error in cipher init\n");
+        return 0;
     }
 
-    if (m_mode == ALC_AES_MODE_XTS) {
-        err = alcp_cipher_set_iv(m_handle, 16, m_iv);
-        if (alcp_is_error(err)) {
-            printf("Error: unable to set iv \n");
-            alcp_error_str(err, err_buf, cErrSize);
-            goto out;
-        }
-    }
     return true;
 
 out:

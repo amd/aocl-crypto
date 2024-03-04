@@ -85,7 +85,7 @@ class ALCP_API_EXPORT Xts final : public Aes
     ~Xts() {}
 
   public:
-    virtual alc_error_t setIv(Uint64 len, const Uint8* pIv);
+    virtual alc_error_t setIv(const Uint8* pIv, Uint64 ivLen);
 
     /**
      * @brief   XTS Encrypt Operation
@@ -166,11 +166,11 @@ template<alc_error_t FEnc(const Uint8* pSrc,
                           int          nRounds,
                           Uint8*       pIv)>
 alc_error_t
-Xts<FEnc, FDec>::setIv(Uint64 len, const Uint8* pIv)
+Xts<FEnc, FDec>::setIv(const Uint8* pIv, Uint64 ivLen)
 {
     Status s = StatusOk();
     // std::cout << "HERE!" << std::endl;
-    utils::CopyBytes(m_iv, pIv, len); // Keep a copy of iv
+    utils::CopyBytes(m_iv, pIv, ivLen); // Keep a copy of iv
 
     // FIXME: In future we need to dispatch it correctly
     aesni::InitializeTweakBlock(m_iv, m_tweak_block, m_pTweak_key, getRounds());

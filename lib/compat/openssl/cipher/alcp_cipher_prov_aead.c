@@ -377,19 +377,15 @@ ALCP_prov_cipher_gcm_decrypt_init(void*                vctx,
     int ret = ALCP_prov_cipher_aead_decrypt_init(
         vctx, key, keylen, iv, ivlen, params);
 
-    if (key != NULL && iv != NULL) {
-        if (ivlen != 0) {
-            alc_prov_cipher_ctx_p cctx = vctx;
-            alc_error_t           err  = alcp_cipher_aead_set_iv(
-                &(cctx->handle), cctx->ivlen, cctx->pc_cipher_aead_info.ci_iv);
-            if (err != ALC_ERROR_NONE) {
-                printf("Provider: Error While Setting the IVLength\n");
-                return 0;
-            }
-        } else {
-            printf("Provider: Error IV Len is not initialized!\n");
-            return 0;
-        }
+    alc_prov_cipher_ctx_p cctx = vctx;
+    alc_error_t           err  = alcp_cipher_aead_init(&(cctx->handle),
+                                            key,
+                                            keylen,
+                                            cctx->pc_cipher_aead_info.ci_iv,
+                                            cctx->ivlen);
+    if (err != ALC_ERROR_NONE) {
+        printf("Provider: Error in aead init\n");
+        return 0;
     }
 
     EXIT();
@@ -449,8 +445,13 @@ ALCP_prov_cipher_gcm_update(void*                vctx,
 #endif
     if ((cctx->add_inititalized == false)
         && (cctx->iv != NULL && cctx->ivlen != 0)) {
-
-        err = alcp_cipher_aead_set_iv(&(cctx->handle), cctx->ivlen, cctx->iv);
+        // set only iv
+        err = alcp_cipher_aead_init(
+            &(cctx->handle), NULL, 0, cctx->iv, cctx->ivlen);
+        if (err != ALC_ERROR_NONE) {
+            printf("Provider: Error in aead init\n");
+            return 0;
+        }
     }
     if ((out == NULL) && (in != NULL && inl != 0)) {
 
@@ -513,8 +514,14 @@ ALCP_prov_cipher_ccm_update(void*                vctx,
             if (err != ALC_ERROR_NONE)
                 goto out;
         }
-        err = alcp_cipher_aead_set_iv(
-            &(cctx->handle), cctx->ivlen, cctx->pc_cipher_aead_info.ci_iv);
+
+        err = alcp_cipher_aead_init(
+            &(cctx->handle), NULL, 0, cctx->iv, cctx->ivlen);
+        if (err != ALC_ERROR_NONE) {
+            printf("Provider: Error in aead init\n");
+            goto out;
+        }
+
         if (err != ALC_ERROR_NONE)
             goto out;
         if (cctx->aadlen != 0) {

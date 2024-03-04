@@ -132,7 +132,6 @@ InitGcm(const Uint8* pKey,
     return err;
 }
 
-template<Uint8 factor>
 static Uint64
 gcmBlk(const __m128i* p_in_x,
        __m128i*       p_out_x,
@@ -180,9 +179,9 @@ gcmBlk(const __m128i* p_in_x,
              const_factor_128);
     }
 
-    constexpr Uint64 blockCount4 = 4 * factor;
-    constexpr Uint64 blockCount2 = 2 * factor;
-    constexpr Uint64 blockCount1 = factor;
+    constexpr Uint64 blockCount4 = 4;
+    constexpr Uint64 blockCount2 = 2;
+    constexpr Uint64 blockCount1 = 1;
 
     for (; blocks >= blockCount4; blocks -= blockCount4) {
 
@@ -434,18 +433,16 @@ CryptGcm(const Uint8* pInputText,  // ptr to inputText
     auto p_out_128 = reinterpret_cast<__m128i*>(pOutputText);
     auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
 
-    static constexpr Uint64 factor = 1; // factor*128
-
-    gcmBlk<factor>(p_in_128,
-                   p_out_128,
-                   blocks,
-                   pkey128,
-                   nRounds,
-                   // gcm specific params
-                   gcm,
-                   reverse_mask_128,
-                   isEncrypt,
-                   remBytes);
+    gcmBlk(p_in_128,
+           p_out_128,
+           blocks,
+           pkey128,
+           nRounds,
+           // gcm specific params
+           gcm,
+           reverse_mask_128,
+           isEncrypt,
+           remBytes);
 
     return err;
 }

@@ -67,18 +67,11 @@ ippsAES_GCMStart(const Ipp8u*      pIV,
         }
     }
     /*GCM Encrypt Init */
-    // set key
-    err = alcp_cipher_aead_set_key(&(context_aead->handle),
-                                   context_aead->c_aeadinfo.ci_keyLen,
-                                   (Uint8*)context_aead->c_aeadinfo.ci_key);
-    if (alcp_is_error(err)) {
-        printf("Error: GCM encrypt init failure! code:11\n");
-        alcp_error_str(err, err_buf, err_size);
-        return ippStsErr;
-    }
-
-    // set iv
-    err = alcp_cipher_aead_set_iv(&(context_aead->handle), ivLen, (Uint8*)pIV);
+    err = alcp_cipher_aead_init(&(context_aead->handle),
+                                (Uint8*)context_aead->c_aeadinfo.ci_key,
+                                context_aead->c_aeadinfo.ci_keyLen,
+                                (Uint8*)pIV,
+                                ivLen);
     if (alcp_is_error(err)) {
         printf("Error: GCM encrypt init failure! code:11\n");
         alcp_error_str(err, err_buf, err_size);

@@ -60,18 +60,14 @@ AlcpXtsCipher<encryptor>::init(alc_test_init_data_p data)
         return false;
     }
 
-    // encrypt init: set key
-    err = alcp_cipher_set_key(&m_handle, cinfo.ci_keyLen, cinfo.ci_key);
+    // encrypt init:
+    err = alcp_cipher_init(&m_handle,
+                           cinfo.ci_key,
+                           cinfo.ci_keyLen,
+                           data_xts->m_iv,
+                           data_xts->m_iv_len);
     if (alcp_is_error(err)) {
-        printf("Error in Setting the key\n");
-        alcp_error_str(err, err_buf, err_size);
-        return false;
-    }
-
-    // xts init
-    err = alcp_cipher_set_iv(&m_handle, data_xts->m_iv_len, data_xts->m_iv);
-    if (alcp_is_error(err)) {
-        printf("Error: unable to set iv\n");
+        printf("Error: unable to init\n");
         alcp_error_str(err, err_buf, err_size);
         return false;
     }

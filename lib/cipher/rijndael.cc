@@ -759,6 +759,7 @@ Rijndael::getDecryptKeys() const
 
 #define BYTE0O_WORD(x) utils::BytesToWord<Uint8>((x), 0, 0, 0)
 
+#if 0
 Status
 Rijndael::setKey(const Uint8* pUserKey, Uint64 len)
 {
@@ -771,6 +772,7 @@ Rijndael::setKey(const Uint8* pUserKey, Uint64 len)
     pImpl()->setKey(pUserKey, len);
     return sts;
 }
+#endif
 
 void
 Rijndael::setDecryptKey(const Uint8*, Uint64)

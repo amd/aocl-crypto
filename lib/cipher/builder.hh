@@ -99,26 +99,30 @@ __aes_wrapperUpdate(void*        rCipher,
 
 template<typename CIPHERMODE>
 static alc_error_t
-__aes_wrapperSetIv(void* rCipher, Uint64 len, const Uint8* pIv)
+__aes_wrapperSetIv(void* rCipher, const Uint8* pIv, Uint64 ivLen)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
     auto ap = static_cast<CIPHERMODE*>(rCipher);
 
-    e = ap->setIv(len, pIv);
+    e = ap->setIv(pIv, ivLen);
 
     return e;
 }
 
 template<typename CIPHERMODE>
 static alc_error_t
-__aes_wrapperInitKey(void* rCipher, const Uint64 len, const Uint8* pKey)
+__aes_wrapperInit(void*        rCipher,
+                  const Uint8* pKey,
+                  const Uint64 keyLen,
+                  const Uint8* pIv,
+                  Uint64       ivLen)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
     auto ap = static_cast<CIPHERMODE*>(rCipher);
 
-    e = ap->initKey(len, pKey);
+    e = ap->init(pKey, keyLen, pIv, ivLen);
 
     return e;
 }

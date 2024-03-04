@@ -115,18 +115,14 @@ alcp_encdecAES(const Ipp8u*       pSrc,
         }
     }
 
-    // set key
-    err = alcp_cipher_set_key(
-        &(context->handle), context->cinfo.ci_keyLen, context->cinfo.ci_key);
+    // init
+    err = alcp_cipher_init(&handle,
+                           context->cinfo.ci_key,
+                           context->cinfo.ci_keyLen,
+                           context->cinfo.ci_iv,
+                           16); // FIXME: 16 should be variable
     if (alcp_is_error(err)) {
-        printErr("Error in Setting the key\n");
-    }
-
-    if (mode == ALC_AES_MODE_XTS) {
-        err = alcp_cipher_set_iv(&(context->handle), 16, context->cinfo.ci_iv);
-        if (alcp_is_error(err)) {
-            printErr("Error in Setting the IV\n");
-        }
+        printErr("Error in init\n");
     }
 
     // Do the actual decryption

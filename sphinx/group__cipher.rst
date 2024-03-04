@@ -22,7 +22,7 @@ Functions
 .. doxygenfunction:: alcp_cipher_decrypt
 .. doxygenfunction:: alcp_cipher_blocks_encrypt
 .. doxygenfunction:: alcp_cipher_blocks_decrypt
-.. doxygenfunction:: alcp_cipher_set_iv
+.. doxygenfunction:: alcp_cipher_init
 .. doxygenfunction:: alcp_cipher_finish
 .. doxygenfunction:: alcp_cipher_error
 .. doxygenfunction:: alcp_cipher_aead_context_size
@@ -31,7 +31,7 @@ Functions
 .. doxygenfunction:: alcp_cipher_aead_encrypt_update
 .. doxygenfunction:: alcp_cipher_aead_decrypt_update
 .. doxygenfunction:: alcp_cipher_aead_decrypt
-.. doxygenfunction:: alcp_cipher_aead_set_iv
+.. doxygenfunction:: alcp_cipher_aead_init
 .. doxygenfunction:: alcp_cipher_aead_set_aad
 .. doxygenfunction:: alcp_cipher_aead_get_tag
 .. doxygenfunction:: alcp_cipher_aead_set_tag_length

@@ -346,7 +346,7 @@ TEST(XTS, encrypt_huge)
     std::unique_ptr<Xts<EncryptXts128, DecryptXts128>> xts_obj =
         std::make_unique<Xts<EncryptXts128, DecryptXts128>>(key, 128);
 
-    xts_obj->setIv(16, iv);
+    xts_obj->setIv(iv, 16);
 
     alc_error_t error = xts_obj->encrypt(
         &(plainText[0]), &(output_buffer[0]), output_buffer.size(), iv);
@@ -410,7 +410,7 @@ TEST(XTS, decrypt_huge)
     std::unique_ptr<Xts<EncryptXts128, DecryptXts128>> xts_obj =
         std::make_unique<Xts<EncryptXts128, DecryptXts128>>(key, 128);
 
-    xts_obj->setIv(16, iv);
+    xts_obj->setIv(iv, 16);
 
     alc_error_t error = xts_obj->decrypt(
         &(cipherText[0]), &(output_buffer[0]), output_buffer.size(), iv);
@@ -474,7 +474,7 @@ TEST(XTS, encrypt_huge_multi_update)
     std::unique_ptr<Xts<EncryptXts128, DecryptXts128>> xts_obj =
         std::make_unique<Xts<EncryptXts128, DecryptXts128>>(key, 128);
 
-    xts_obj->setIv(16, iv);
+    xts_obj->setIv(iv, 16);
 
     Uint64 res = plainText.size() % 16;
     if (plainText.size() >= (16 + res)) {
@@ -570,7 +570,7 @@ TEST(XTS, encrypt_huge_multi_update_serial)
     std::unique_ptr<Xts<EncryptXts128, DecryptXts128>> xts_obj =
         std::make_unique<Xts<EncryptXts128, DecryptXts128>>(key, 128);
 
-    xts_obj->setIv(16, iv);
+    xts_obj->setIv(iv, 16);
 
     Status error = xts_obj->encryptBlocks(
         &(plainText[0]) + (5 * 16), &(output_buffer[0]) + (5 * 16), 16, 5);
@@ -698,7 +698,7 @@ TEST(XTS, encrypt_huge_multi_update_arbitrary)
     std::unique_ptr<Xts<EncryptXts128, DecryptXts128>> xts_obj =
         std::make_unique<Xts<EncryptXts128, DecryptXts128>>(key, 128);
 
-    xts_obj->setIv(16, iv);
+    xts_obj->setIv(iv, 16);
 
     Uint64 res = plainText.size() % 16;
     if (plainText.size() >= (16 + res)) {
@@ -801,7 +801,7 @@ TEST(XTS, decrypt_huge_multi_update)
     std::unique_ptr<Xts<EncryptXts128, DecryptXts128>> xts_obj =
         std::make_unique<Xts<EncryptXts128, DecryptXts128>>(key, 128);
 
-    xts_obj->setIv(16, iv);
+    xts_obj->setIv(iv, 16);
 
     Uint64 res = cipherText.size() % 16;
     if (cipherText.size() >= (16 + res)) {

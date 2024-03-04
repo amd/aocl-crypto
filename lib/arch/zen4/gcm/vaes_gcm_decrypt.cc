@@ -71,7 +71,6 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
                              Uint64         blocks,
                              bool           isFirstUpdate,
                              const __m128i* pkey128,
-                             const Uint8*   pIv,
                              int            nRounds,
                              // gcm specific params
                              alcp::cipher::GcmAuthData* gcm,
@@ -426,13 +425,12 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
 }
 
 alc_error_t
-decryptGcm128(const Uint8* pInputText,  // ptr to inputText
-              Uint8*       pOutputText, // ptr to outputtext
-              Uint64       len,         // message length in bytes
-              Uint64       acclen,      // accumulated message length in bytes
-              const Uint8* pKey,        // ptr to Key
-              const int    nRounds,     // No. of rounds
-              const Uint8* pIv,         // ptr to Initialization Vector
+decryptGcm128(const Uint8*               pInputText,  // ptr to inputText
+              Uint8*                     pOutputText, // ptr to outputtext
+              Uint64                     len,         // message length in bytes
+              bool                       isFirstUpdate,
+              const Uint8*               pKey,    // ptr to Key
+              const int                  nRounds, // No. of rounds
               alcp::cipher::GcmAuthData* gcm,
               __m128i                    reverse_mask_128,
               Uint64*                    pGcmCtxHashSubkeyTable)
@@ -445,11 +443,6 @@ decryptGcm128(const Uint8* pInputText,  // ptr to inputText
     auto p_in_512  = reinterpret_cast<const __m512i*>(pInputText);
     auto p_out_512 = reinterpret_cast<__m512i*>(pOutputText);
     auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
-
-    bool isFirstUpdate = false;
-    if (len == acclen) {
-        isFirstUpdate = true;
-    }
 
     gcmBlk_512_dec<AesEncryptNoLoad_4x512Rounds10,
                    AesEncryptNoLoad_2x512Rounds10,
@@ -460,7 +453,6 @@ decryptGcm128(const Uint8* pInputText,  // ptr to inputText
                                                  blocks,
                                                  isFirstUpdate,
                                                  pkey128,
-                                                 pIv,
                                                  nRounds,
                                                  // gcm specific params
                                                  gcm,
@@ -472,13 +464,12 @@ decryptGcm128(const Uint8* pInputText,  // ptr to inputText
 }
 
 alc_error_t
-decryptGcm192(const Uint8* pInputText,  // ptr to inputText
-              Uint8*       pOutputText, // ptr to outputtext
-              Uint64       len,         // message length in bytes
-              Uint64       acclen,      // accumulated message length in bytes
-              const Uint8* pKey,        // ptr to Key
-              const int    nRounds,     // No. of rounds
-              const Uint8* pIv,         // ptr to Initialization Vector
+decryptGcm192(const Uint8*               pInputText,  // ptr to inputText
+              Uint8*                     pOutputText, // ptr to outputtext
+              Uint64                     len,         // message length in bytes
+              bool                       isFirstUpdate,
+              const Uint8*               pKey,    // ptr to Key
+              const int                  nRounds, // No. of rounds
               alcp::cipher::GcmAuthData* gcm,
               __m128i                    reverse_mask_128,
               Uint64*                    pGcmCtxHashSubkeyTable)
@@ -491,11 +482,6 @@ decryptGcm192(const Uint8* pInputText,  // ptr to inputText
     auto p_in_512  = reinterpret_cast<const __m512i*>(pInputText);
     auto p_out_512 = reinterpret_cast<__m512i*>(pOutputText);
     auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
-
-    bool isFirstUpdate = false;
-    if (len == acclen) {
-        isFirstUpdate = true;
-    }
 
     gcmBlk_512_dec<AesEncryptNoLoad_4x512Rounds12,
                    AesEncryptNoLoad_2x512Rounds12,
@@ -506,7 +492,6 @@ decryptGcm192(const Uint8* pInputText,  // ptr to inputText
                                                  blocks,
                                                  isFirstUpdate,
                                                  pkey128,
-                                                 pIv,
                                                  nRounds,
                                                  // gcm specific params
                                                  gcm,
@@ -518,13 +503,12 @@ decryptGcm192(const Uint8* pInputText,  // ptr to inputText
 }
 
 alc_error_t
-decryptGcm256(const Uint8* pInputText,  // ptr to inputText
-              Uint8*       pOutputText, // ptr to outputtext
-              Uint64       len,         // message length in bytes
-              Uint64       acclen,      // accumulated message length in bytes
-              const Uint8* pKey,        // ptr to Key
-              const int    nRounds,     // No. of rounds
-              const Uint8* pIv,         // ptr to Initialization Vector
+decryptGcm256(const Uint8*               pInputText,  // ptr to inputText
+              Uint8*                     pOutputText, // ptr to outputtext
+              Uint64                     len,         // message length in bytes
+              bool                       isFirstUpdate,
+              const Uint8*               pKey,    // ptr to Key
+              const int                  nRounds, // No. of rounds
               alcp::cipher::GcmAuthData* gcm,
               __m128i                    reverse_mask_128,
               Uint64*                    pGcmCtxHashSubkeyTable)
@@ -538,11 +522,6 @@ decryptGcm256(const Uint8* pInputText,  // ptr to inputText
     auto p_out_512 = reinterpret_cast<__m512i*>(pOutputText);
     auto pkey128   = reinterpret_cast<const __m128i*>(pKey);
 
-    bool isFirstUpdate = false;
-    if (len == acclen) {
-        isFirstUpdate = true;
-    }
-
     gcmBlk_512_dec<AesEncryptNoLoad_4x512Rounds14,
                    AesEncryptNoLoad_2x512Rounds14,
                    AesEncryptNoLoad_1x512Rounds14,
@@ -552,7 +531,6 @@ decryptGcm256(const Uint8* pInputText,  // ptr to inputText
                                                  blocks,
                                                  isFirstUpdate,
                                                  pkey128,
-                                                 pIv,
                                                  nRounds,
                                                  // gcm specific params
                                                  gcm,

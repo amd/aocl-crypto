@@ -44,19 +44,8 @@ namespace alcp::cipher {
 class ALCP_API_EXPORT Ctr : public Aes
 {
   public:
-    const Uint8* m_enc_key = {};
-    const Uint8* m_dec_key = {};
-    Uint32       m_nrounds = 0;
-
     Ctr() { Aes::setMode(ALC_AES_MODE_CTR); };
     ~Ctr() {}
-
-    void getKey()
-    {
-        m_enc_key = getEncryptKeys();
-        m_dec_key = getDecryptKeys();
-        m_nrounds = getRounds();
-    }
 };
 
 namespace vaes512 {

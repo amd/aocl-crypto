@@ -144,7 +144,9 @@ aclp_aes_ccm_encrypt_demo(
     const Uint8* ad,
     const Uint32 adLen,
     Uint8*       tag,
-    const Uint32 tagLen)
+    const Uint32 tagLen,
+    const Uint8* pKey,
+    const Uint32 keyLen)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -159,7 +161,7 @@ aclp_aes_ccm_encrypt_demo(
     }
 
     // CCM init
-    err = alcp_cipher_aead_set_iv(&handle, ivLen, iv);
+    err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
     if (alcp_is_error(err)) {
         printf("Error: unable ccm encrypt init \n");
         alcp_error_str(err, err_buf, err_size);
@@ -203,7 +205,9 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
                           const Uint8* ad,
                           const Uint32 adLen,
                           Uint8*       tag,
-                          const Uint32 tagLen)
+                          const Uint32 tagLen,
+                          const Uint8* pKey,
+                          const Uint32 keyLen)
 {
     alc_error_t err;
     const int   err_size = 256;
@@ -218,10 +222,10 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
         return -1;
     }
 
-    // GCM init
-    err = alcp_cipher_aead_set_iv(&handle, ivLen, iv);
+    // ccm init
+    err = alcp_cipher_aead_init(&handle, pKey, keyLen, iv, ivLen);
     if (alcp_is_error(err)) {
-        printf("Error: unable gcm decrypt init \n");
+        printf("Error: unable ccm decrypt init \n");
         alcp_error_str(err, err_buf, err_size);
         return -1;
     }
@@ -291,7 +295,9 @@ main(void)
                                        sample_ad,
                                        strlen((const char*)sample_ad),
                                        sample_tag_output,
-                                       14);
+                                       14,
+                                       sample_key,
+                                       sizeof(sample_key) * 8);
     if (retval != 0)
         goto out;
 
@@ -319,7 +325,9 @@ main(void)
                                        sample_ad,
                                        strlen((const char*)sample_ad),
                                        sample_tag_output,
-                                       14);
+                                       14,
+                                       sample_key,
+                                       sizeof(sample_key) * 8);
     if (retval != 0)
         goto out;
     printf("sample_output: %s\n", sample_output);

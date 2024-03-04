@@ -81,30 +81,6 @@ getCpuCipherfeature()
  *
  * Takes a cipher class and binds its functions to the Context
  * @tparam CIPHERMODE
- * @param pKey      Key for initializing cipher class
- * @param keyLen    Length of the key
- * @param ctx       Context for the cipher
- */
-template<typename CIPHERMODE>
-void
-_build_aes_cipher(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
-{
-    CIPHERMODE* algo = new CIPHERMODE(pKey, keyLen);
-
-    ctx.m_cipher = static_cast<void*>(algo);
-
-    ctx.decrypt = __aes_wrapper<CIPHERMODE, false>;
-    ctx.encrypt = __aes_wrapper<CIPHERMODE, true>;
-
-    ctx.finish = __aes_dtor<CIPHERMODE>;
-}
-
-/* CIPHER CONTEXT INTERFACE BINDING */
-/**
- * @brief CAPI Context Interface Binding for Generic Ciphers.
- *
- * Takes a cipher class and binds its functions to the Context
- * @tparam CIPHERMODE
  * @param keyLen    Length of the key
  * @param ctx       Context for the cipher
  */
@@ -118,7 +94,7 @@ _build_aes_cipher(const Uint64 keyLen, Context& ctx)
 
     ctx.decrypt = __aes_wrapper<CIPHERMODE, false>;
     ctx.encrypt = __aes_wrapper<CIPHERMODE, true>;
-    ctx.initKey = __aes_wrapperInitKey<CIPHERMODE>;
+    ctx.init    = __aes_wrapperInit<CIPHERMODE>;
 
     ctx.finish = __aes_dtor<CIPHERMODE>;
 }
@@ -133,12 +109,12 @@ __build_aes_cipher_xts(const Uint32 keyLen, Context& ctx)
         _build_aes_cipher<T1>(keyLen, ctx);
         ctx.encryptBlocks = __aes_wrapper_crypt_block<T1, true>;
         ctx.decryptBlocks = __aes_wrapper_crypt_block<T1, false>;
-        ctx.setIv         = __aes_wrapperSetIv<T1>;
+        ctx.init          = __aes_wrapperInit<T1>;
     } else if (keyLen == ALC_KEY_LEN_256) {
         _build_aes_cipher<T2>(keyLen, ctx);
         ctx.encryptBlocks = __aes_wrapper_crypt_block<T2, true>;
         ctx.decryptBlocks = __aes_wrapper_crypt_block<T2, false>;
-        ctx.setIv         = __aes_wrapperSetIv<T2>;
+        ctx.init          = __aes_wrapperInit<T2>;
     }
 }
 
@@ -175,20 +151,8 @@ __build_aes(const Uint64 keyLen, Context& ctx)
     ctx.m_cipher = static_cast<void*>(algo);
     ctx.decrypt  = __aes_wrapper<CIPHERMODE, false>;
     ctx.encrypt  = __aes_wrapper<CIPHERMODE, true>;
-    ctx.initKey  = __aes_wrapperInitKey<CIPHERMODE>;
-#if 0
-    if constexpr (std::is_same_v<CIPHERMODE, Ccm>) {
-        ctx.decryptUpdate = __aes_wrapperUpdate<Ccm, false>;
-        ctx.encryptUpdate = __aes_wrapperUpdate<Ccm, true>;
-        ctx.setAad        = __aes_wrapperSetAad<Ccm>;
-        ctx.setIv         = __aes_wrapperSetIv<Ccm>;
-        ctx.getTag        = __aes_wrapperGetTag<Ccm>;
-        ctx.setTagLength  = __aes_wrapperSetTagLength<Ccm>;
-        // } else if constexpr (std::is_same_v<CIPHERMODE, Xts>) {
-        //     ctx.setIv = __aes_wrapperSetIv<Xts>;
-    }
-#endif
-    ctx.finish = __aes_dtor<CIPHERMODE>;
+    ctx.init     = __aes_wrapperInit<CIPHERMODE>;
+    ctx.finish   = __aes_dtor<CIPHERMODE>;
 
     return sts;
 }
