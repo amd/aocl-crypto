@@ -81,7 +81,7 @@ class ChaCha20Poly1305Test : public testing::Test
     std::vector<Uint8> plaintext;
     std::vector<Uint8> ciphertext;
 
-    ChaCha20Poly1305<CpuCipherFeatures::eReference>* chacha_poly;
+    ChaCha20Poly1305<CpuCipherFeatures::eDynamic>* chacha_poly;
 
     static constexpr unsigned short chacha20_poly1305_tag_size = 16;
     void                            SetUp() override
@@ -103,7 +103,7 @@ class ChaCha20Poly1305Test : public testing::Test
 
     void createChachaPolyObject()
     {
-        chacha_poly = new ChaCha20Poly1305<CpuCipherFeatures::eReference>();
+        chacha_poly = new ChaCha20Poly1305<CpuCipherFeatures::eDynamic>();
     }
     void destroyChachaPolyObject() { delete chacha_poly; }
 
