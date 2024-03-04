@@ -35,53 +35,188 @@
 #include <openssl/bn.h>
 
 #include "alcp/base.hh"
+#include "alcp/mac/poly1305_zen4.hh"
+#include "alcp/utils/cpuid.hh"
 #include "mac/poly1305-ref.hh"
 
 // #define DEBUG
-
 namespace alcp::mac::poly1305 {
+using utils::CpuId;
 
 using reference::Poly1305BNRef;
 using reference::Poly1305Ref;
 
-Poly1305::Poly1305()
+template<utils::CpuArchFeature feature>
+Poly1305<feature>::Poly1305()
 {
-    poly1305_impl = std::make_unique<Poly1305Ref>();
+    if constexpr (utils::CpuArchFeature::eReference == feature) {
+        poly1305_impl = std::make_unique<Poly1305Ref>();
+    }
 }
 
+template<utils::CpuArchFeature feature>
 Status
-Poly1305::setKey(const Uint8 key[], Uint64 len)
+Poly1305<feature>::setKey(const Uint8 key[], Uint64 len)
 {
-    return poly1305_impl->init(key, len);
+    if constexpr (utils::CpuArchFeature::eReference == feature) {
+        return poly1305_impl->init(key, len);
+    } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
+        // return poly1305_impl->init(key, len);
+        return zen4::init(key,
+                          len,
+                          state.a,
+                          state.key,
+                          &state.r[0][0],
+                          &state.s[0][0],
+                          state.finalized);
+    } else {
+        // Manual dispatch in case we don't know where to dispatch to.
+        if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+            && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+            && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
+            return zen4::init(key,
+                              len,
+                              state.a,
+                              state.key,
+                              &state.r[0][0],
+                              &state.s[0][0],
+                              state.finalized);
+        } else {
+            return poly1305_impl->init(key, len);
+        }
+    }
+    return status::InternalError("Dispatch Failure");
 }
 
+template<utils::CpuArchFeature feature>
 Status
-Poly1305::update(const Uint8 pMsg[], Uint64 msgLen)
+Poly1305<feature>::update(const Uint8 pMsg[], Uint64 msgLen)
 {
-    return poly1305_impl->update(pMsg, msgLen);
+    if constexpr (utils::CpuArchFeature::eReference == feature) {
+        return poly1305_impl->update(pMsg, msgLen);
+    } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
+        // return poly1305_impl->update(pMsg, msgLen);
+        return zen4::update(state.key,
+                            pMsg,
+                            msgLen,
+                            state.a,
+                            state.msg_buffer,
+                            state.msg_buffer_len,
+                            &state.r[0][0],
+                            &state.s[0][0],
+                            state.finalized);
+    } else {
+        // Manual dispatch in case we don't know where to dispatch to.
+        if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+            && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+            && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
+            return zen4::update(state.key,
+                                pMsg,
+                                msgLen,
+                                state.a,
+                                state.msg_buffer,
+                                state.msg_buffer_len,
+                                &state.r[0][0],
+                                &state.s[0][0],
+                                state.finalized);
+        } else {
+            return poly1305_impl->update(pMsg, msgLen);
+        }
+    }
+    return status::InternalError("Dispatch Failure");
 }
 
+template<utils::CpuArchFeature feature>
 Status
-Poly1305::reset()
+Poly1305<feature>::reset()
 {
-    return poly1305_impl->reset();
+    if constexpr (utils::CpuArchFeature::eReference == feature) {
+        return poly1305_impl->reset();
+    } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
+        state.reset();
+        return StatusOk();
+    } else {
+        // Manual dispatch in case we don't know where to dispatch to.
+        if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+            && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+            && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
+            state.reset();
+            return StatusOk();
+        } else {
+            return poly1305_impl->reset();
+        }
+    }
+    return status::InternalError("Dispatch Failure");
 }
 
+template<utils::CpuArchFeature feature>
 Status
-Poly1305::finalize(const Uint8 pMsg[], Uint64 msgLen)
+Poly1305<feature>::finalize(const Uint8 pMsg[], Uint64 msgLen)
 {
-    return poly1305_impl->finish(pMsg, msgLen);
+    if constexpr (utils::CpuArchFeature::eReference == feature) {
+        return poly1305_impl->finish(pMsg, msgLen);
+    } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
+        // return poly1305_impl->finish(pMsg, msgLen);
+        return zen4::finish(state.key,
+                            pMsg,
+                            msgLen,
+                            state.a,
+                            state.msg_buffer,
+                            state.msg_buffer_len,
+                            &state.r[0][0],
+                            &state.s[0][0],
+                            state.finalized);
+    } else {
+        // Manual dispatch in case we don't know where to dispatch to.
+        if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+            && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+            && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
+            return zen4::finish(state.key,
+                                pMsg,
+                                msgLen,
+                                state.a,
+                                state.msg_buffer,
+                                state.msg_buffer_len,
+                                &state.r[0][0],
+                                &state.s[0][0],
+                                state.finalized);
+        } else {
+            return poly1305_impl->finish(pMsg, msgLen);
+        }
+    }
+    return status::InternalError("Dispatch Failure");
 }
 
+template<utils::CpuArchFeature feature>
 void
-Poly1305::finish()
+Poly1305<feature>::finish()
 {
 }
 
+template<utils::CpuArchFeature feature>
 Status
-Poly1305::copy(Uint8 digest[], Uint64 length)
+Poly1305<feature>::copy(Uint8 digest[], Uint64 length)
 {
-    return poly1305_impl->copy(digest, length);
+    if constexpr (utils::CpuArchFeature::eReference == feature) {
+        return poly1305_impl->copy(digest, length);
+    } else if constexpr (utils::CpuArchFeature::eAvx512 == feature) {
+        // return poly1305_impl->copy(digest, length);
+        return zen4::copy(digest, length, state.a, state.finalized);
+    } else {
+        // Manual dispatch in case we don't know where to dispatch to.
+        if (CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_F)
+            && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_DQ)
+            && CpuId::cpuHasAvx512(utils::Avx512Flags::AVX512_BW)) {
+            return zen4::copy(digest, length, state.a, state.finalized);
+        } else {
+            return poly1305_impl->copy(digest, length);
+        }
+    }
+    return status::InternalError("Dispatch Failure");
 }
 
+template class Poly1305<utils::CpuArchFeature::eAvx512>;
+template class Poly1305<utils::CpuArchFeature::eAvx2>;
+template class Poly1305<utils::CpuArchFeature::eReference>;
+template class Poly1305<utils::CpuArchFeature::eDynamic>;
 } // namespace alcp::mac::poly1305

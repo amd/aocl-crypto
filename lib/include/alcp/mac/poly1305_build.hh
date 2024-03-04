@@ -27,6 +27,7 @@
  */
 #pragma once
 
+#include "alcp/capi/mac/builder.hh"
 #include "alcp/capi/mac/ctx.hh"
 #include "alcp/error.h"
 #include "alcp/mac.h"
@@ -47,32 +48,36 @@ class Poly1305Builder
     static Status isSupported(const alc_mac_info_t& macInfo);
 };
 
+template<CpuArchFeature feature>
 static Status
 __poly1305_wrapperUpdate(void* poly1305, const Uint8* buff, Uint64 size)
 {
 
-    auto p_poly1305 = static_cast<Poly1305*>(poly1305);
+    auto p_poly1305 = static_cast<Poly1305<feature>*>(poly1305);
     return p_poly1305->update(buff, size);
 }
 
+template<CpuArchFeature feature>
 static Status
 __poly1305_wrapperFinalize(void* poly1305, const Uint8* buff, Uint64 size)
 {
-    auto p_poly1305 = static_cast<Poly1305*>(poly1305);
+    auto p_poly1305 = static_cast<Poly1305<feature>*>(poly1305);
     return p_poly1305->finalize(buff, size);
 }
 
+template<CpuArchFeature feature>
 static Status
 __poly1305_wrapperCopy(void* poly1305, Uint8* buff, Uint64 size)
 {
-    auto p_poly1305 = static_cast<Poly1305*>(poly1305);
+    auto p_poly1305 = static_cast<Poly1305<feature>*>(poly1305);
     return p_poly1305->copy(buff, size);
 }
 
+template<CpuArchFeature feature>
 static void
 __poly1305_wrapperFinish(void* poly1305, void* digest)
 {
-    auto p_poly1305 = static_cast<Poly1305*>(poly1305);
+    auto p_poly1305 = static_cast<Poly1305<feature>*>(poly1305);
     p_poly1305->finish();
 #if 0
     p_poly1305->~Poly1305();
@@ -83,15 +88,17 @@ __poly1305_wrapperFinish(void* poly1305, void* digest)
     // Not deleting the memory because it is allocated by application
 }
 
+template<CpuArchFeature feature>
 static Status
 __poly1305_wrapperReset(void* poly1305, void* digest)
 {
-    auto p_poly1305 = static_cast<Poly1305*>(poly1305);
+    auto p_poly1305 = static_cast<Poly1305<feature>*>(poly1305);
     return p_poly1305->reset();
 }
 
+template<CpuArchFeature feature>
 static Status
-__build_poly1305(const alc_key_info_t& cKinfo, Context& ctx)
+__build_poly1305_arch(const alc_key_info_t& cKinfo, Context& ctx)
 {
     using namespace status;
     Status status = StatusOk();
@@ -99,7 +106,7 @@ __build_poly1305(const alc_key_info_t& cKinfo, Context& ctx)
     auto   addr   = reinterpret_cast<Uint8*>(&ctx) + sizeof(ctx);
     auto   p_algo = new (addr) Poly1305();
 #else
-    auto p_algo = new Poly1305();
+    auto p_algo = new Poly1305<feature>();
 #endif
 
     auto p_key = cKinfo.key;
@@ -110,14 +117,36 @@ __build_poly1305(const alc_key_info_t& cKinfo, Context& ctx)
     }
     ctx.m_mac = static_cast<void*>(p_algo);
 
-    ctx.update   = __poly1305_wrapperUpdate;
-    ctx.finalize = __poly1305_wrapperFinalize;
-    ctx.copy     = __poly1305_wrapperCopy;
-    ctx.finish   = __poly1305_wrapperFinish;
-    ctx.reset    = __poly1305_wrapperReset;
+    ctx.update   = __poly1305_wrapperUpdate<feature>;
+    ctx.finalize = __poly1305_wrapperFinalize<feature>;
+    ctx.copy     = __poly1305_wrapperCopy<feature>;
+    ctx.finish   = __poly1305_wrapperFinish<feature>;
+    ctx.reset    = __poly1305_wrapperReset<feature>;
 
     return status;
 }
+
+static Status
+__build_poly1305(const alc_key_info_t& cKinfo, Context& ctx)
+{
+    using namespace status;
+    CpuArchFeature feature = getCpuArchFeature();
+    /* In the interst of Preventing VTable overheads, Interface is not used. */
+    switch (feature) {
+        case CpuArchFeature::eAvx512:
+            return __build_poly1305_arch<CpuArchFeature::eAvx512>(cKinfo, ctx);
+        case CpuArchFeature::eAvx2:
+            return __build_poly1305_arch<CpuArchFeature::eAvx2>(cKinfo, ctx);
+        case CpuArchFeature::eReference:
+            return __build_poly1305_arch<CpuArchFeature::eReference>(cKinfo,
+                                                                     ctx);
+        case CpuArchFeature::eDynamic:
+            return __build_poly1305_arch<CpuArchFeature::eDynamic>(cKinfo, ctx);
+    }
+    // Should be in theory unreachable code
+    return status::InternalError("Dispatch Failure");
+}
+
 Status
 Poly1305Builder::build(const alc_mac_info_t& macInfo,
                        const alc_key_info_t& keyInfo,
@@ -129,7 +158,19 @@ Poly1305Builder::build(const alc_mac_info_t& macInfo,
 Uint64
 Poly1305Builder::getSize(const alc_mac_info_t& macInfo)
 {
-    return sizeof(Poly1305);
+    CpuArchFeature feature = getCpuArchFeature();
+    /* In the interst of Preventing VTable overheads, Interface is not used. */
+    switch (feature) {
+        case CpuArchFeature::eAvx512:
+            return sizeof(Poly1305<CpuArchFeature::eAvx512>);
+        case CpuArchFeature::eAvx2:
+            return sizeof(Poly1305<CpuArchFeature::eAvx2>);
+        case CpuArchFeature::eReference:
+            return sizeof(Poly1305<CpuArchFeature::eReference>);
+        case CpuArchFeature::eDynamic:
+            return sizeof(Poly1305<CpuArchFeature::eDynamic>);
+    }
+    return 0; // Should never reach here, ideally..
 }
 
 Status

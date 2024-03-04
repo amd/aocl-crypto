@@ -75,7 +75,8 @@ class ALCP_API_EXPORT IPoly1305
     virtual ~IPoly1305()   = default;
 };
 
-template<utils::CpuArchFeature feature>
+using utils::CpuArchFeature;
+template<utils::CpuArchFeature feature = CpuArchFeature::eDynamic>
 class ALCP_API_EXPORT Poly1305 : public Mac
 {
   private:
