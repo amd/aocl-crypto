@@ -399,11 +399,12 @@ blkx2(Uint64      key[],
       Uint64      s[8])
 {
     __m512i reg0, reg1, reg2, reg3, reg4;
-    // __m512i reg10, reg11, reg12, reg13, reg14;
+    __m512i reg10, reg11, reg12, reg13, reg14;
 
     Uint64 acc[5]        = {};
-    Uint64 msg_temp_0[5] = {};
-    // Uint64 msg_temp_1[5] = {};
+    Uint32 msg_temp_0[5] = {};
+    Uint32 msg_temp_1[5] = {};
+    Uint64 msg_temp_2[5] = {};
 
     const Uint8* p_msg_8  = pMsg;
     const Uint64 cPadding = (msgLen >= 16) << 24;
@@ -413,13 +414,13 @@ blkx2(Uint64      key[],
         acc[i] = accumulator[i];
     }
 
-#if 1
+    // r[0:5] <= r; r[5:10] <= r**2
+    // s[0:4] <= r[1:5]*5; s[4:8] <= r[6:10]*5
     calculate_multiplication_matrix(r, s, reg0, reg1, reg2, reg3, reg4);
-    // calculate_multiplication_matrix(
-    //     r + 5, s + 4, reg10, reg11,  reg12, reg13, reg14);
-#endif
+    calculate_multiplication_matrix(
+        r + 5, s + 4, reg10, reg11, reg12, reg13, reg14);
 
-#if 0
+#if 1
     // Process 2 blocks at a time
     while (msgLen >= 32) {
         for (int i = 0; i < 5; i += 1) {
@@ -448,29 +449,27 @@ blkx2(Uint64      key[],
         }
         p_msg_8 += 1;
 
+        // FIXME: Find better way without hurting performance
+        // Minor inconvienence copy
+        for (int i = 0; i < 5; i++) {
+            msg_temp_2[i] = msg_temp_1[i];
+        }
+
+        // ((m0+a0) * r**2 + m1*r) % p
         acc[0] += msg_temp_0[0];
         acc[1] += msg_temp_0[1];
         acc[2] += msg_temp_0[2];
         acc[3] += msg_temp_0[3];
         acc[4] += msg_temp_0[4];
 
-        // r[0:5] <= r; r[5:10] <= r**2
-        // s[0:4] <= r[1:5]*5; s[4:8] <= r[6:10]*5
-        // ((m0+a0) * r**2 + m1*r) % p
-
-#if 0
-        multiply_avx512(acc, r + 5, s + 4);
-        multiply_avx512(msg_temp_1, r, s);
-#else
         multiply_avx512(acc, reg10, reg11, reg12, reg13, reg14);
-        multiply_avx512(msg_temp_1, reg0, reg1, reg2, reg3, reg4);
-#endif
+        multiply_avx512(msg_temp_2, reg0, reg1, reg2, reg3, reg4);
 
-        acc[0] += msg_temp_1[0];
-        acc[1] += msg_temp_1[1];
-        acc[2] += msg_temp_1[2];
-        acc[3] += msg_temp_1[3];
-        acc[4] += msg_temp_1[4];
+        acc[0] += msg_temp_2[0];
+        acc[1] += msg_temp_2[1];
+        acc[2] += msg_temp_2[2];
+        acc[3] += msg_temp_2[3];
+        acc[4] += msg_temp_2[4];
 
         msgLen -= 32;
     }
@@ -481,16 +480,16 @@ blkx2(Uint64      key[],
 
         // Message Extraction block
         {
+            Uint8* p_msg_temp_8 = reinterpret_cast<Uint8*>(msg_temp_0);
             for (int i = 0; i < 4; i += 1) {
-                Uint8* p_msg_temp_8 = reinterpret_cast<Uint8*>(&msg_temp_0[i]);
                 std::copy(p_msg_8, p_msg_8 + 4, p_msg_temp_8);
                 msg_temp_0[i] = (msg_temp_0[i] >> (2 * i));
 
                 msg_temp_0[i] &= 0x3ffffff;
 
                 p_msg_8 += 3;
+                p_msg_temp_8 += sizeof(Uint32);
             }
-            Uint8* p_msg_temp_8 = reinterpret_cast<Uint8*>(&msg_temp_0[4]);
             std::copy(p_msg_8, p_msg_8 + 4, p_msg_temp_8);
             msg_temp_0[4] = (msg_temp_0[4] >> (2 * 4));
 
@@ -561,13 +560,14 @@ update(Uint64      key[],
         msg_buffer_len = 0;
         // blk(key, pMsg, 16, accumulator, r, s);
         blkx2(key, pMsg, 16, accumulator, r, s);
+        // blkx4(key, pMsg, 16, accumulator, r, s);
     }
 
     Uint64 overflow = msgLen % 16;
 
-    // blk(pMsg, msgLen - overflow);
     // blk(key, pMsg, msgLen - overflow, accumulator, r, s);
     blkx2(key, pMsg, msgLen - overflow, accumulator, r, s);
+    // blkx4(key, pMsg, msgLen - overflow, accumulator, r, s);
     if (overflow) {
         std::copy(pMsg + msgLen - overflow, pMsg + msgLen, msg_buffer);
         msg_buffer_len = overflow;
