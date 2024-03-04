@@ -36,7 +36,7 @@ namespace alcp::cipher::chacha20 {
 
 using mac::poly1305::Poly1305;
 
-template<CpuArchFeature cpu_cipher_feature>
+template<CpuCipherFeatures cpu_cipher_feature>
 alc_error_t
 ChaCha20Poly1305<cpu_cipher_feature>::setNonce(const Uint8* nonce,
                                                Uint64       noncelen)
@@ -51,7 +51,7 @@ ChaCha20Poly1305<cpu_cipher_feature>::setNonce(const Uint8* nonce,
     return ALC_ERROR_NONE;
 }
 
-template<CpuArchFeature cpu_cipher_feature>
+template<CpuCipherFeatures cpu_cipher_feature>
 alc_error_t
 ChaCha20Poly1305<cpu_cipher_feature>::encryptupdate(const Uint8 plaintext[],
                                                     Uint64      plaintextLength,
@@ -61,7 +61,7 @@ ChaCha20Poly1305<cpu_cipher_feature>::encryptupdate(const Uint8 plaintext[],
         plaintext, plaintextLength, ciphertext);
 }
 
-template<CpuArchFeature cpu_cipher_feature>
+template<CpuCipherFeatures cpu_cipher_feature>
 alc_error_t
 ChaCha20Poly1305<cpu_cipher_feature>::decryptupdate(const Uint8 ciphertext[],
                                                     Uint64 ciphertextLength,
@@ -71,7 +71,7 @@ ChaCha20Poly1305<cpu_cipher_feature>::decryptupdate(const Uint8 ciphertext[],
         ciphertext, ciphertextLength, plaintext);
 }
 
-template<CpuArchFeature cpu_cipher_feature>
+template<CpuCipherFeatures cpu_cipher_feature>
 template<bool is_encrypt>
 alc_error_t
 ChaCha20Poly1305<cpu_cipher_feature>::processInput(const Uint8 inputBuffer[],
@@ -133,7 +133,7 @@ ChaCha20Poly1305<cpu_cipher_feature>::processInput(const Uint8 inputBuffer[],
     return ALC_ERROR_NONE;
 }
 
-template<CpuArchFeature cpu_cipher_feature>
+template<CpuCipherFeatures cpu_cipher_feature>
 alc_error_t
 ChaCha20Poly1305<cpu_cipher_feature>::setAad(const Uint8* pInput, Uint64 len)
 {
@@ -145,7 +145,7 @@ ChaCha20Poly1305<cpu_cipher_feature>::setAad(const Uint8* pInput, Uint64 len)
     return ALC_ERROR_NONE;
 }
 
-template<CpuArchFeature cpu_cipher_feature>
+template<CpuCipherFeatures cpu_cipher_feature>
 alc_error_t
 ChaCha20Poly1305<cpu_cipher_feature>::getTag(Uint8* pOutput, Uint64 len)
 {
@@ -160,7 +160,7 @@ ChaCha20Poly1305<cpu_cipher_feature>::getTag(Uint8* pOutput, Uint64 len)
     return ALC_ERROR_NONE;
 }
 
-template<CpuArchFeature cpu_cipher_feature>
+template<CpuCipherFeatures cpu_cipher_feature>
 alc_error_t
 ChaCha20Poly1305<cpu_cipher_feature>::setTagLength(Uint64 tagLength)
 {
@@ -170,7 +170,7 @@ ChaCha20Poly1305<cpu_cipher_feature>::setTagLength(Uint64 tagLength)
     return ALC_ERROR_NONE;
 }
 
-template<CpuArchFeature cpu_cipher_feature>
+template<CpuCipherFeatures cpu_cipher_feature>
 alc_error_t
 ChaCha20Poly1305<cpu_cipher_feature>::setKey(const Uint8 key[], Uint64 keylen)
 {
@@ -197,8 +197,8 @@ ChaCha20Poly1305<cpu_cipher_feature>::setKey(const Uint8 key[], Uint64 keylen)
     return ALC_ERROR_NONE;
 }
 
-template class ChaCha20Poly1305<CpuArchFeature::eAvx512>;
-template class ChaCha20Poly1305<CpuArchFeature::eReference>;
-template class ChaCha20Poly1305<CpuArchFeature::eDynamic>;
+template class ChaCha20Poly1305<CpuCipherFeatures::eVaes512>;
+template class ChaCha20Poly1305<CpuCipherFeatures::eReference>;
+template class ChaCha20Poly1305<CpuCipherFeatures::eDynamic>;
 
 } // namespace alcp::cipher::chacha20

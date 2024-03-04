@@ -43,7 +43,8 @@ union len_aad_processed
     Uint64 u64 = 0;
     Uint8  u8[8];
 };
-template<CpuArchFeature cpu_cipher_feature = CpuArchFeature::eDynamic>
+using utils::CpuArchFeature;
+template<CpuCipherFeatures cpu_cipher_feature = CpuCipherFeatures::eDynamic>
 class ALCP_API_EXPORT ChaCha20Poly1305
     : public ChaCha20<cpu_cipher_feature>
     , public alcp::mac::poly1305::Poly1305<CpuArchFeature::eDynamic>
