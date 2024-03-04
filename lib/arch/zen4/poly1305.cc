@@ -558,9 +558,9 @@ update(Uint64      key[],
         msgLen -= msg_buffer_left;
 
         msg_buffer_len = 0;
-        // blk(key, pMsg, 16, accumulator, r, s);
-        blkx2(key, pMsg, 16, accumulator, r, s);
-        // blkx4(key, pMsg, 16, accumulator, r, s);
+        // blk(key, msg_buffer, 16, accumulator, r, s);
+        blkx2(key, msg_buffer, 16, accumulator, r, s);
+        // blkx4(key, msg_buffer, 16, accumulator, r, s);
     }
 
     Uint64 overflow = msgLen % 16;
