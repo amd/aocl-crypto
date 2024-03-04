@@ -31,6 +31,8 @@
 
 #include "alcp/base.hh"
 #include "alcp/mac/mac.hh"
+#include "alcp/mac/poly1305_state.hh"
+#include "alcp/utils/cpuid.hh"
 
 namespace alcp::mac::poly1305 {
 class ALCP_API_EXPORT IPoly1305
@@ -73,10 +75,12 @@ class ALCP_API_EXPORT IPoly1305
     virtual ~IPoly1305()   = default;
 };
 
+template<utils::CpuArchFeature feature>
 class ALCP_API_EXPORT Poly1305 : public Mac
 {
   private:
     std::unique_ptr<IPoly1305> poly1305_impl;
+    Poly1305State              state;
 
   public:
     /**
