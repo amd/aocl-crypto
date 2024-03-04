@@ -53,8 +53,6 @@ OpenSSLDigestBase::init(const alc_digest_info_t& info, Int64 digest_len)
 bool
 OpenSSLDigestBase::init()
 {
-    int retval = 0;
-
     if (m_handle != nullptr) {
         EVP_MD_CTX_free(m_handle);
         m_handle = nullptr;
@@ -113,7 +111,8 @@ OpenSSLDigestBase::init()
         }
     }
     if (1 != EVP_DigestInit(m_handle, m_md_type)) {
-        std::cout << "Error code in EVP_DigestInit: " << retval << std::endl;
+        std::cout << "Error code in EVP_DigestInit: "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     return true;
@@ -123,28 +122,26 @@ bool
 OpenSSLDigestBase::digest_function(const alcp_digest_data_t& data)
 {
     unsigned int outsize = 0;
-    int          retval  = 0;
 
-    retval = EVP_DigestUpdate(m_handle, data.m_msg, data.m_msg_len);
-    if (retval != 1) {
-        std::cout << "Error code in EVP_DigestUpdate: " << retval << std::endl;
+    if (1 != EVP_DigestUpdate(m_handle, data.m_msg, data.m_msg_len)) {
+        std::cout << "Error code in EVP_DigestUpdate: "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
 
     /* for extendable output functions */
     if (m_info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
-        retval = EVP_DigestFinalXOF(m_handle, data.m_digest, data.m_digest_len);
-        if (retval != 1) {
-            std::cout << "Error code in EVP_DigestFinalXOF: " << retval
-                      << std::endl;
+        if (1
+            != EVP_DigestFinalXOF(m_handle, data.m_digest, data.m_digest_len)) {
+            std::cout << "Error code in EVP_DigestFinalXOF: "
+                      << ERR_GET_REASON(ERR_get_error()) << std::endl;
             return false;
         }
 
     } else {
-        retval = EVP_DigestFinal_ex(m_handle, data.m_digest, &outsize);
-        if (retval != 1) {
-            std::cout << "Error code in EVP_DigestFinal_ex: " << retval
-                      << std::endl;
+        if (1 != EVP_DigestFinal_ex(m_handle, data.m_digest, &outsize)) {
+            std::cout << "Error code in EVP_DigestFinal_ex: "
+                      << ERR_GET_REASON(ERR_get_error()) << std::endl;
             return false;
         }
     }
@@ -157,7 +154,8 @@ OpenSSLDigestBase::reset()
 {
     EVP_MD_CTX_reset(m_handle);
     if (1 != EVP_DigestInit(m_handle, m_md_type)) {
-        std::cout << "Error code in EVP_DigestInit after reset" << std::endl;
+        std::cout << "Error code in EVP_DigestInit after reset: "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return;
     }
 }

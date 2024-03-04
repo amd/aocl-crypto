@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -55,7 +55,6 @@ OpenSSLCmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 bool
 OpenSSLCmacBase::init()
 {
-    int         ret_val   = 0;
     OSSL_PARAM  params[3] = {};
     size_t      params_n  = 0;
     const char* cipher    = NULL;
@@ -80,8 +79,8 @@ OpenSSLCmacBase::init()
     }
     m_mac = EVP_MAC_fetch(NULL, "CMAC", NULL);
     if (m_mac == NULL) {
-        std::cout << "EVP_MAC_fetch failed, error: " << ERR_get_error()
-                  << std::endl;
+        std::cout << "EVP_MAC_fetch failed, error: "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
 
@@ -96,15 +95,14 @@ OpenSSLCmacBase::init()
     }
     m_handle = EVP_MAC_CTX_new(m_mac);
     if (m_handle == NULL) {
-        std::cout << "EVP_MAC_CTX_new failed, error: " << ERR_get_error()
-                  << std::endl;
+        std::cout << "EVP_MAC_CTX_new failed, error: "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
 
-    ret_val = EVP_MAC_init(m_handle, m_key, m_key_len, params);
-    if (ret_val != 1) {
-        std::cout << "EVP_MAC_init failed, error : " << ERR_get_error()
-                  << std::endl;
+    if (1 != EVP_MAC_init(m_handle, m_key, m_key_len, params)) {
+        std::cout << "EVP_MAC_init failed, error : "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     return true;
@@ -114,18 +112,15 @@ bool
 OpenSSLCmacBase::cmacFunction(const alcp_cmac_data_t& data)
 {
     size_t outsize = data.m_cmac_len;
-    int    retval  = 0;
 
-    retval = EVP_MAC_update(m_handle, data.m_msg, data.m_msg_len);
-    if (retval != 1) {
-        std::cout << "EVP_MAC_update failed, error : " << ERR_get_error()
-                  << std::endl;
+    if (1 != EVP_MAC_update(m_handle, data.m_msg, data.m_msg_len)) {
+        std::cout << "EVP_MAC_update failed, error : "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
-    retval = EVP_MAC_final(m_handle, data.m_cmac, &outsize, data.m_cmac_len);
-    if (retval != 1) {
-        std::cout << "EVP_MAC_final failed, error : " << ERR_get_error()
-                  << std::endl;
+    if (1 != EVP_MAC_final(m_handle, data.m_cmac, &outsize, data.m_cmac_len)) {
+        std::cout << "EVP_MAC_final failed, error : "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     return true;

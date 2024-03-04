@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -50,8 +50,6 @@ OpenSSLPoly1305Base::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 bool
 OpenSSLPoly1305Base::init()
 {
-    int ret_val = 0;
-
     if (m_mac != nullptr)
         EVP_MAC_free(m_mac);
     m_mac = EVP_MAC_fetch(NULL, "POLY1305", "provider=default");

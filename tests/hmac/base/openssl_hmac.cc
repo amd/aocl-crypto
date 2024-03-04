@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -50,7 +50,6 @@ OpenSSLHmacBase::init(const alc_mac_info_t& info, std::vector<Uint8>& Key)
 bool
 OpenSSLHmacBase::init()
 {
-    int         ret_val  = 0;
     size_t      params_n = 0;
     const char* digest   = NULL;
 
@@ -95,9 +94,9 @@ OpenSSLHmacBase::init()
         EVP_MAC_free(m_mac);
     }
     m_mac = EVP_MAC_fetch(NULL, "HMAC", NULL);
-    if (m_mac == NULL) {
-        std::cout << "EVP_MAC_fetch failed, error: " << ERR_get_error()
-                  << std::endl;
+    if (m_mac == nullptr) {
+        std::cout << "EVP_MAC_fetch failed, error: "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
 
@@ -112,15 +111,14 @@ OpenSSLHmacBase::init()
     }
     m_handle = EVP_MAC_CTX_new(m_mac);
     if (m_handle == NULL) {
-        std::cout << "EVP_MAC_CTX_new failed, error: " << ERR_get_error()
-                  << std::endl;
+        std::cout << "EVP_MAC_CTX_new failed, error: "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
 
-    ret_val = EVP_MAC_init(m_handle, m_key, m_key_len, m_ossl_params);
-    if (ret_val != 1) {
-        std::cout << "EVP_MAC_init failed, error : " << ERR_get_error()
-                  << std::endl;
+    if (1 != EVP_MAC_init(m_handle, m_key, m_key_len, m_ossl_params)) {
+        std::cout << "EVP_MAC_init failed, error : "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     return true;
@@ -130,19 +128,17 @@ bool
 OpenSSLHmacBase::Hmac_function(const alcp_hmac_data_t& data)
 {
     size_t outsize = data.out.m_hmac_len;
-    int    retval  = 0;
 
-    retval = EVP_MAC_update(m_handle, data.in.m_msg, data.in.m_msg_len);
-    if (retval != 1) {
-        std::cout << "EVP_MAC_update failed, error : " << ERR_get_error()
-                  << std::endl;
+    if (1 != EVP_MAC_update(m_handle, data.in.m_msg, data.in.m_msg_len)) {
+        std::cout << "EVP_MAC_update failed, error : "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
-    retval =
-        EVP_MAC_final(m_handle, data.out.m_hmac, &outsize, data.out.m_hmac_len);
-    if (retval != 1) {
-        std::cout << "EVP_MAC_final failed, error : " << ERR_get_error()
-                  << std::endl;
+    if (1
+        != EVP_MAC_final(
+            m_handle, data.out.m_hmac, &outsize, data.out.m_hmac_len)) {
+        std::cout << "EVP_MAC_final failed, error : "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     return true;
@@ -151,10 +147,9 @@ OpenSSLHmacBase::Hmac_function(const alcp_hmac_data_t& data)
 bool
 OpenSSLHmacBase::reset()
 {
-    int ret_val = EVP_MAC_init(m_handle, m_key, m_key_len, m_ossl_params);
-    if (ret_val != 1) {
-        std::cout << "EVP_MAC_init failed, error : " << ERR_get_error()
-                  << std::endl;
+    if (1 != EVP_MAC_init(m_handle, m_key, m_key_len, m_ossl_params)) {
+        std::cout << "EVP_MAC_init failed, error : "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     return true;
