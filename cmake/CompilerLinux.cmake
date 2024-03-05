@@ -34,7 +34,7 @@ function(alcp_get_build_environment)
 
     # uses lsb_release utility on linux, as cmake doesnt have a variable which has the Linux flavor information
     find_program(LSB_RELEASE_EXEC lsb_release)
-    if(LSB_RELEASE_EXEC-NOTFOUND)
+    if(NOT LSB_RELEASE_EXEC)
         MESSAGE(FATAL_ERROR "LSB Release is missing from the machine, please install lsb_release!")
     endif()
     execute_process(COMMAND ${LSB_RELEASE_EXEC} -r -s
