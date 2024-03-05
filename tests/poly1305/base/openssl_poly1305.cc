@@ -66,9 +66,9 @@ OpenSSLPoly1305Base::init()
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
-    if (1 != EVP_MAC_init(m_handle, m_key, m_key_len, nullptr)) {
-        std::cout << "EVP_MAC_init failed, error : " << ERR_get_error()
-                  << std::endl;
+    if (EVP_MAC_init(m_handle, m_key, m_key_len, nullptr) != 1) {
+        std::cout << "EVP_MAC_init failed, error : "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     return true;
@@ -78,14 +78,14 @@ bool
 OpenSSLPoly1305Base::mac(const alcp_poly1305_data_t& data)
 {
     size_t outsize;
-    if (1 != EVP_MAC_update(m_handle, data.m_msg, data.m_msg_len)) {
-        std::cout << "EVP_MAC_update failed, error : " << ERR_get_error()
-                  << std::endl;
+    if (EVP_MAC_update(m_handle, data.m_msg, data.m_msg_len) != 1) {
+        std::cout << "EVP_MAC_update failed, error : "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
-    if (1 != EVP_MAC_final(m_handle, data.m_mac, &outsize, data.m_mac_len)) {
-        std::cout << "EVP_MAC_final failed, error : " << ERR_get_error()
-                  << std::endl;
+    if (EVP_MAC_final(m_handle, data.m_mac, &outsize, data.m_mac_len) != 1) {
+        std::cout << "EVP_MAC_final failed, error : "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     reset();
@@ -95,9 +95,9 @@ OpenSSLPoly1305Base::mac(const alcp_poly1305_data_t& data)
 bool
 OpenSSLPoly1305Base::reset()
 {
-    if (1 != EVP_MAC_init(m_handle, m_key, m_key_len, nullptr)) {
-        std::cout << "EVP_MAC_init failed, error : " << ERR_get_error()
-                  << std::endl;
+    if (EVP_MAC_init(m_handle, m_key, m_key_len, nullptr) != 1) {
+        std::cout << "EVP_MAC_init failed, error : "
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
     }
     return true;

@@ -110,7 +110,7 @@ OpenSSLDigestBase::init()
                 return false;
         }
     }
-    if (1 != EVP_DigestInit(m_handle, m_md_type)) {
+    if (EVP_DigestInit(m_handle, m_md_type) != 1) {
         std::cout << "Error code in EVP_DigestInit: "
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
@@ -123,7 +123,7 @@ OpenSSLDigestBase::digest_function(const alcp_digest_data_t& data)
 {
     unsigned int outsize = 0;
 
-    if (1 != EVP_DigestUpdate(m_handle, data.m_msg, data.m_msg_len)) {
+    if (EVP_DigestUpdate(m_handle, data.m_msg, data.m_msg_len) != 1) {
         std::cout << "Error code in EVP_DigestUpdate: "
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return false;
@@ -131,15 +131,15 @@ OpenSSLDigestBase::digest_function(const alcp_digest_data_t& data)
 
     /* for extendable output functions */
     if (m_info.dt_len == ALC_DIGEST_LEN_CUSTOM) {
-        if (1
-            != EVP_DigestFinalXOF(m_handle, data.m_digest, data.m_digest_len)) {
+        if (EVP_DigestFinalXOF(m_handle, data.m_digest, data.m_digest_len)
+            != 1) {
             std::cout << "Error code in EVP_DigestFinalXOF: "
                       << ERR_GET_REASON(ERR_get_error()) << std::endl;
             return false;
         }
 
     } else {
-        if (1 != EVP_DigestFinal_ex(m_handle, data.m_digest, &outsize)) {
+        if (EVP_DigestFinal_ex(m_handle, data.m_digest, &outsize) != 1) {
             std::cout << "Error code in EVP_DigestFinal_ex: "
                       << ERR_GET_REASON(ERR_get_error()) << std::endl;
             return false;
@@ -152,8 +152,12 @@ OpenSSLDigestBase::digest_function(const alcp_digest_data_t& data)
 void
 OpenSSLDigestBase::reset()
 {
-    EVP_MD_CTX_reset(m_handle);
-    if (1 != EVP_DigestInit(m_handle, m_md_type)) {
+    if (EVP_MD_CTX_reset(m_handle) != 1) {
+        std::cout << "Error code in EVP_MD_CTX_reset"
+                  << ERR_GET_REASON(ERR_get_error()) << std::endl;
+        return;
+    }
+    if (EVP_DigestInit(m_handle, m_md_type) != 1) {
         std::cout << "Error code in EVP_DigestInit after reset: "
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
         return;
