@@ -137,8 +137,10 @@ create_aes_session(Uint8*                  key,
      * Application is expected to allocate for context
      */
     handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
-    // if (!ctx)
-    //    return;
+    if (!handle.ch_context) {
+        printf("Error: context allocation failed \n");
+        return;
+    }
 
     /* Request a context with cipher mode and keyLen */
     err = alcp_cipher_aead_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
@@ -174,7 +176,7 @@ alcp_aes_gcm_encrypt_demo(
     if (alcp_is_error(err)) {
         printf("Error: unable gcm encrypt init \n");
         alcp_error_str(err, err_buf, err_size);
-        return -1;
+        return;
     }
 
     // Additional Data
@@ -246,7 +248,7 @@ alcp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
     if (alcp_is_error(err)) {
         printf("Error: unable gcm encrypt init \n");
         alcp_error_str(err, err_buf, err_size);
-        return -1;
+        return;
     }
 
     // Additional Data

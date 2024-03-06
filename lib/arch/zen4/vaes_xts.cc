@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -54,13 +54,11 @@ EncryptXtsAvx512(const Uint8* pSrc,
                  Uint8*       pDest,
                  Uint64       len,
                  const Uint8* pKey,
-                 const Uint8* pTweakKey,
                  int          nRounds,
                  Uint8*       pIv)
 {
 
-    auto p_key128 = reinterpret_cast<const __m128i*>(pKey);
-    // auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
+    auto p_key128   = reinterpret_cast<const __m128i*>(pKey);
     auto p_src512   = reinterpret_cast<const __m512i*>(pSrc);
     auto p_dest512  = reinterpret_cast<__m512i*>(pDest);
     auto p_iv128_in = reinterpret_cast<__m128i*>(pIv);
@@ -408,12 +406,10 @@ DecryptXtsAvx512(const Uint8* pSrc,
                  Uint8*       pDest,
                  Uint64       len,
                  const Uint8* pKey,
-                 const Uint8* pTweakKey,
                  int          nRounds,
                  Uint8*       pIv)
 {
-    auto p_key128 = reinterpret_cast<const __m128i*>(pKey);
-    // auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
+    auto p_key128   = reinterpret_cast<const __m128i*>(pKey);
     auto p_src512   = reinterpret_cast<const __m512i*>(pSrc);
     auto p_dest512  = reinterpret_cast<__m512i*>(pDest);
     auto p_iv128_in = reinterpret_cast<__m128i*>(pIv);
@@ -761,13 +757,12 @@ EncryptXts128(const Uint8* pSrc,
               Uint8*       pDest,
               Uint64       len,
               const Uint8* pKey,
-              const Uint8* pTweakKey,
               int          nRounds,
               Uint8*       pIv)
 {
     // AesEncrypt 1Block, 2Block, 3Block, 4Block
     return EncryptXtsAvx512<AesEncrypt, AesEncrypt, AesEncrypt, AesEncrypt>(
-        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+        pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
 alc_error_t
@@ -775,13 +770,12 @@ EncryptXts256(const Uint8* pSrc,
               Uint8*       pDest,
               Uint64       len,
               const Uint8* pKey,
-              const Uint8* pTweakKey,
               int          nRounds,
               Uint8*       pIv)
 {
     // AesEncrypt 1Block, 2Block, 3Block, 4Block
     return EncryptXtsAvx512<AesEncrypt, AesEncrypt, AesEncrypt, AesEncrypt>(
-        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+        pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
 alc_error_t
@@ -789,7 +783,6 @@ DecryptXts128(const Uint8* pSrc,
               Uint8*       pDest,
               Uint64       len,
               const Uint8* pKey,
-              const Uint8* pTweakKey,
               int          nRounds,
               Uint8*       pIv)
 {
@@ -797,8 +790,7 @@ DecryptXts128(const Uint8* pSrc,
                             AesDecrypt,
                             AesDecrypt,
                             AesDecrypt,
-                            AesDecrypt>(
-        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+                            AesDecrypt>(pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
 alc_error_t
@@ -806,7 +798,6 @@ DecryptXts256(const Uint8* pSrc,
               Uint8*       pDest,
               Uint64       len,
               const Uint8* pKey,
-              const Uint8* pTweakKey,
               int          nRounds,
               Uint8*       pIv)
 {
@@ -814,8 +805,7 @@ DecryptXts256(const Uint8* pSrc,
                             AesDecrypt,
                             AesDecrypt,
                             AesDecrypt,
-                            AesDecrypt>(
-        pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+                            AesDecrypt>(pSrc, pDest, len, pKey, nRounds, pIv);
 }
 
 } // namespace alcp::cipher::vaes512

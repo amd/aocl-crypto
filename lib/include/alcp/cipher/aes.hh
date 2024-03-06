@@ -95,9 +95,8 @@ class Aes : public Rijndael
         return false;
     }
 
-    // private: This should be made private after changing drbg_ctr
-    alc_error_t setKey(const Uint8* pUserKey, const Uint64 keyLen);
-    alc_error_t setIv(const Uint8* pUserIv, const Uint64 ivLen);
+    alc_error_t setKey(const Uint8* pKey, const Uint64 keyLen);
+    alc_error_t setIv(const Uint8* pIv, const Uint64 ivLen);
     void        getKey()
     {
         m_enc_key = getEncryptKeys();

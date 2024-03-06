@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -46,12 +46,10 @@ namespace alcp::cipher { namespace aesni {
                                   Uint8*       pDest,
                                   Uint64       len,
                                   const Uint8* pKey,
-                                  const Uint8* pTweakKey,
                                   int          nRounds,
                                   Uint8*       pIv)
     {
-        auto p_key128 = reinterpret_cast<const __m128i*>(pKey);
-        // auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
+        auto p_key128  = reinterpret_cast<const __m128i*>(pKey);
         auto p_src128  = reinterpret_cast<const __m128i*>(pSrc);
         auto p_dest128 = reinterpret_cast<__m128i*>(pDest);
         auto p_iv128   = reinterpret_cast<__m128i*>(pIv);
@@ -222,12 +220,10 @@ namespace alcp::cipher { namespace aesni {
                                   Uint8*       pDest,
                                   Uint64       len,
                                   const Uint8* pKey,
-                                  const Uint8* pTweakKey,
                                   int          nRounds,
                                   Uint8*       pIv)
     {
-        auto p_key128 = reinterpret_cast<const __m128i*>(pKey);
-        // auto p_tweak_key128 = reinterpret_cast<const __m128i*>(pTweakKey);
+        auto p_key128  = reinterpret_cast<const __m128i*>(pKey);
         auto p_src128  = reinterpret_cast<const __m128i*>(pSrc);
         auto p_dest128 = reinterpret_cast<__m128i*>(pDest);
         auto p_iv128   = reinterpret_cast<__m128i*>(pIv);
@@ -417,8 +413,8 @@ namespace alcp::cipher { namespace aesni {
     {
         Status s = StatusOk();
         // IV
-        __m128i init_vect =
-            _mm_load_si128(reinterpret_cast<const __m128i*>(pIv));
+        __m128i init_vect = _mm_loadu_si128(reinterpret_cast<const __m128i*>(
+            pIv)); // pIv from User can be unaligned
 
         AesEncrypt(
             &init_vect, reinterpret_cast<const __m128i*>(pTweakKey), nRounds);
@@ -428,69 +424,50 @@ namespace alcp::cipher { namespace aesni {
         return s;
     }
 
-    ALCP_API_EXPORT
     alc_error_t EncryptXts128(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
-                              const Uint8* pTweakKey,
                               int          nRounds,
                               Uint8*       pIv)
     {
         // AesEncrypt 1Block, 2Block, 3Block, 4Block
         return EncryptXts<AesEncrypt, AesEncrypt, AesEncrypt>(
-            pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
-    }
-
-    alc_error_t EncryptXts192(const Uint8* pSrc,
-                              Uint8*       pDest,
-                              Uint64       len,
-                              const Uint8* pKey,
-                              const Uint8* pTweakKey,
-                              int          nRounds,
-                              Uint8*       pIv)
-    {
-        // AesEncrypt 1Block, 2Block, 3Block, 4Block
-        return EncryptXts<AesEncrypt, AesEncrypt, AesEncrypt>(
-            pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+            pSrc, pDest, len, pKey, nRounds, pIv);
     }
 
     alc_error_t EncryptXts256(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
-                              const Uint8* pTweakKey,
                               int          nRounds,
                               Uint8*       pIv)
     {
         // AesEncrypt 1Block, 2Block, 3Block, 4Block
         return EncryptXts<AesEncrypt, AesEncrypt, AesEncrypt>(
-            pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+            pSrc, pDest, len, pKey, nRounds, pIv);
     }
 
-    ALCP_API_EXPORT
     alc_error_t DecryptXts128(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
-                              const Uint8* pTweakKey,
                               int          nRounds,
                               Uint8*       pIv)
     {
         return DecryptXts<AesEncrypt, AesDecrypt, AesDecrypt, AesDecrypt>(
-            pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+            pSrc, pDest, len, pKey, nRounds, pIv);
     }
 
     alc_error_t DecryptXts256(const Uint8* pSrc,
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
-                              const Uint8* pTweakKey,
                               int          nRounds,
                               Uint8*       pIv)
     {
         return DecryptXts<AesEncrypt, AesDecrypt, AesDecrypt, AesDecrypt>(
-            pSrc, pDest, len, pKey, pTweakKey, nRounds, pIv);
+            pSrc, pDest, len, pKey, nRounds, pIv);
     }
 
 }} // namespace alcp::cipher::aesni

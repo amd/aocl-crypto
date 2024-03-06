@@ -191,7 +191,6 @@ namespace aesni {
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
-                              const Uint8* pTweakKey,
                               int          nRounds,
                               Uint8*       pIv);
 
@@ -199,7 +198,6 @@ namespace aesni {
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
-                              const Uint8* pTweakKey,
                               int          nRounds,
                               Uint8*       pIv);
 
@@ -207,7 +205,6 @@ namespace aesni {
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
-                              const Uint8* pTweakKey,
                               int          nRounds,
                               Uint8*       pIv);
 
@@ -215,7 +212,6 @@ namespace aesni {
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
-                              const Uint8* pTweakKey,
                               int          nRounds,
                               Uint8*       pIv);
 
@@ -357,7 +353,6 @@ namespace vaes512 {
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
-                              const Uint8* pTweakKey,
                               int          nRounds,
                               Uint8*       pIv);
 
@@ -365,7 +360,6 @@ namespace vaes512 {
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
-                              const Uint8* pTweakKey,
                               int          nRounds,
                               Uint8*       pIv);
 
@@ -373,7 +367,6 @@ namespace vaes512 {
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
-                              const Uint8* pTweakKey,
                               int          nRounds,
                               Uint8*       pIv);
 
@@ -381,7 +374,6 @@ namespace vaes512 {
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
-                              const Uint8* pTweakKey,
                               int          nRounds,
                               Uint8*       pIv);
 
@@ -500,7 +492,6 @@ namespace vaes {
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
-                              const Uint8* pTweakKey,
                               int          nRounds,
                               Uint8*       pIv);
 
@@ -508,7 +499,6 @@ namespace vaes {
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
-                              const Uint8* pTweakKey,
                               int          nRounds,
                               Uint8*       pIv);
 
@@ -516,7 +506,6 @@ namespace vaes {
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
-                              const Uint8* pTweakKey,
                               int          nRounds,
                               Uint8*       pIv);
 
@@ -524,7 +513,6 @@ namespace vaes {
                               Uint8*       pDest,
                               Uint64       len,
                               const Uint8* pKey,
-                              const Uint8* pTweakKey,
                               int          nRounds,
                               Uint8*       pIv);
 

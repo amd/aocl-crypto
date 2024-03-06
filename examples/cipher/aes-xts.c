@@ -69,8 +69,10 @@ create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
      * Application is expected to allocate for context
      */
     handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
-    // if (!ctx)
-    //    return;
+    if (!handle.ch_context) {
+        printf("Error: context allocation failed \n");
+        return;
+    }
 
     /* Request a context with mode and keyLength */
     err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);
@@ -81,6 +83,14 @@ create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
         return;
     }
     printf("request succeeded\n");
+
+    err = alcp_cipher_init(
+        &handle, cinfo.ci_key, cinfo.ci_keyLen, cinfo.ci_iv, 16);
+    if (alcp_is_error(err)) {
+        free(handle.ch_context);
+        printf("Error: Unable to init \n");
+        return;
+    }
 }
 
 void

@@ -144,8 +144,10 @@ create_aes_session(Uint8*             key,
      * Application is expected to allocate for context
      */
     handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
-    // if (!ctx)
-    //    return;
+    if (!handle.ch_context) {
+        printf("Error: context allocation failed \n");
+        return;
+    }
 
     /* Request a context with mode and key length */
     err = alcp_cipher_request(cinfo.ci_mode, cinfo.ci_keyLen, &handle);

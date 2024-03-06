@@ -45,7 +45,7 @@ namespace alcp::cipher {
 class ALCP_API_EXPORT Cfb : public Aes
 {
   public:
-    Cfb() { Aes::setMode(ALC_AES_MODE_CTR); };
+    Cfb() { Aes::setMode(ALC_AES_MODE_CFB); };
     ~Cfb() {}
 };
 

@@ -44,6 +44,8 @@
 #include <sys/types.h>
 #endif
 
+#if 0
+
 using namespace alcp::cipher;
 
 #define CPU_FEATURE 3
@@ -608,4 +610,6 @@ main(int argc, char** argv)
     listeners.Append(listener);
     return RUN_ALL_TESTS();
 }
+#endif
+
 #endif

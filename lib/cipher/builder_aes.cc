@@ -263,16 +263,13 @@ __build_aesXts(const Uint32 keyLen, Context& ctx)
 
     if (cpu_feature == CpuCipherFeatures::eVaes512) {
         using namespace vaes512;
-        __build_aes_cipher_xts<Xts<EncryptXts128, DecryptXts128>,
-                               Xts<EncryptXts256, DecryptXts256>>(keyLen, ctx);
+        __build_aes_cipher_xts<Xts128, Xts256>(keyLen, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eVaes256) {
         using namespace vaes;
-        __build_aes_cipher_xts<Xts<EncryptXts128, DecryptXts128>,
-                               Xts<EncryptXts256, DecryptXts256>>(keyLen, ctx);
+        __build_aes_cipher_xts<Xts128, Xts256>(keyLen, ctx);
     } else if (cpu_feature == CpuCipherFeatures::eAesni) {
         using namespace aesni;
-        __build_aes_cipher_xts<Xts<EncryptXts128, DecryptXts128>,
-                               Xts<EncryptXts256, DecryptXts256>>(keyLen, ctx);
+        __build_aes_cipher_xts<Xts128, Xts256>(keyLen, ctx);
     }
 
     return sts;
@@ -358,8 +355,12 @@ AesBuilder::Supported(const alc_cipher_mode_t cipherMode, const Uint64 keyLen)
             return true;
         case ALC_AES_MODE_XTS: // check required for 192 key size, which is not
                                // supported in xts
+#if 0
             return Xts<aesni::EncryptXts128, aesni::DecryptXts128>::isSupported(
                 keyLen);
+#else
+            return true;
+#endif
         case ALC_AES_MODE_SIV:
             return true;
         default:

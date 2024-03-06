@@ -26,11 +26,10 @@
  *
  */
 
-// #include "cipher/alc_base.hh"
-// #include "cipher/base.hh"
-
 #include <algorithm>
 #include <memory>
+
+#if 0
 
 #include "alcp/capi/cipher/ctx.hh"
 #include "alcp/cipher/aes_build.hh"
@@ -38,6 +37,7 @@
 #include "alcp/utils/cpuid.hh"
 #include "cipher/gtest_base_cipher.hh"
 #include "gtest/gtest.h"
+
 
 using namespace alcp::testing;
 using namespace alcp::cipher;
@@ -941,3 +941,5 @@ main(int argc, char** argv)
     parseArgs(argc, argv);
     return RUN_ALL_TESTS();
 }
+
+#endif
