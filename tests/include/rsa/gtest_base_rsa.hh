@@ -151,9 +151,8 @@ Rsa_KAT(int                     padding_mode,
     rb->m_padding_mode         = padding_mode;
     if (padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
         PaddingModeStr = "OAEP";
-        /* FIXME: change this file name with _paddingmodestr */
-        TestDataFile = std::string("dataset_RSA_" + std::to_string(KeySize)
-                                   + "_padding" + ".csv");
+        TestDataFile   = std::string("dataset_RSA_" + std::to_string(KeySize)
+                                   + "_padding_" + PaddingModeStr + ".csv");
     } else if (padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
         PaddingModeStr = "PSS";
         TestDataFile =

@@ -67,10 +67,10 @@ FUNCTION(TEST_DATA_LINK RSA_ALG)
     FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_no_padding.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_no_padding.csv SYMBOLIC)
 
     # Link dataset to the root dir
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_padding.csv SYMBOLIC)
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_OAEP.csv ${CMAKE_BINARY_DIR}/dataset_${RSA_ALG}_padding_OAEP.csv SYMBOLIC)
 
     # Link dataset to the actual place of test binary
-    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_padding.csv SYMBOLIC)
+    FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${RSA_ALG}_padding_OAEP.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${RSA_ALG}_padding_OAEP.csv SYMBOLIC)
 
 
     # Link dataset to the root dir
