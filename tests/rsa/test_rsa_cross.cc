@@ -43,8 +43,7 @@ TEST(RSA_SignVerify_PSS_2048, Cross_SHA2_256_MGF_256)
     dinfo_256.dt_len          = ALC_DIGEST_LEN_256;
     dinfo_256.dt_type         = ALC_DIGEST_TYPE_SHA2;
     mgfinfo_256               = dinfo_256;
-    Rsa_SignVerifyCross(
-        ALCP_TEST_RSA_PADDING_PSS, 2048, dinfo_256, mgfinfo_256);
+    Rsa_Cross(ALCP_TEST_RSA_PADDING_PSS, 2048, dinfo_256, mgfinfo_256);
 }
 
 TEST(RSA_SignVerify_PKCS_2048, Cross_SHA2_256_MGF_256)
@@ -53,8 +52,7 @@ TEST(RSA_SignVerify_PKCS_2048, Cross_SHA2_256_MGF_256)
     dinfo_256.dt_len          = ALC_DIGEST_LEN_256;
     dinfo_256.dt_type         = ALC_DIGEST_TYPE_SHA2;
     mgfinfo_256               = dinfo_256;
-    Rsa_SignVerifyCross(
-        ALCP_TEST_RSA_PADDING_PKCS, 2048, dinfo_256, mgfinfo_256);
+    Rsa_Cross(ALCP_TEST_RSA_PADDING_PKCS, 2048, dinfo_256, mgfinfo_256);
 }
 
 /* non padded mode */
@@ -67,23 +65,23 @@ TEST(RSA_No_Padding_2048, Cross)
     Rsa_Cross(ALCP_TEST_RSA_NO_PADDING, 2048, dinfo_256, mgfinfo_256);
 }
 /* padded mode */
-TEST(RSA_Padding_1024, Cross_SHA2_256_MGF_256)
+TEST(RSA_OAEP_Padding_1024, Cross_SHA2_256_MGF_256)
 {
     dinfo_256.dt_mode.dm_sha2 = ALC_SHA2_256;
     dinfo_256.dt_len          = ALC_DIGEST_LEN_256;
     dinfo_256.dt_type         = ALC_DIGEST_TYPE_SHA2;
     mgfinfo_256               = dinfo_256;
-    Rsa_Cross(ALCP_TEST_RSA_PADDING, 1024, dinfo_256, mgfinfo_256);
+    Rsa_Cross(ALCP_TEST_RSA_PADDING_OAEP, 1024, dinfo_256, mgfinfo_256);
 }
-TEST(RSA_Padding_2048, Cross_SHA2_256_MGF_256)
+TEST(RSA_OAEP_Padding_2048, Cross_SHA2_256_MGF_256)
 {
     dinfo_256.dt_mode.dm_sha2 = ALC_SHA2_256;
     dinfo_256.dt_len          = ALC_DIGEST_LEN_256;
     dinfo_256.dt_type         = ALC_DIGEST_TYPE_SHA2;
     mgfinfo_256               = dinfo_256;
-    Rsa_Cross(ALCP_TEST_RSA_PADDING, 2048, dinfo_256, mgfinfo_256);
+    Rsa_Cross(ALCP_TEST_RSA_PADDING_OAEP, 2048, dinfo_256, mgfinfo_256);
 }
-TEST(RSA_Padding_2048, Cross_SHA2_512_MGF_256)
+TEST(RSA_OAEP_Padding_2048, Cross_SHA2_512_MGF_256)
 {
     if (useipp)
         GTEST_SKIP()
@@ -95,9 +93,9 @@ TEST(RSA_Padding_2048, Cross_SHA2_512_MGF_256)
     mgfinfo_256.dt_mode.dm_sha2 = ALC_SHA2_256;
     mgfinfo_256.dt_len          = ALC_DIGEST_LEN_256;
     mgfinfo_256.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    Rsa_Cross(ALCP_TEST_RSA_PADDING, 2048, dinfo_512, mgfinfo_256);
+    Rsa_Cross(ALCP_TEST_RSA_PADDING_OAEP, 2048, dinfo_512, mgfinfo_256);
 }
-TEST(RSA_Padding_2048, Cross_SHA2_256_MGF_512)
+TEST(RSA_OAEP_Padding_2048, Cross_SHA2_256_MGF_512)
 {
     if (useipp)
         GTEST_SKIP()
@@ -109,15 +107,15 @@ TEST(RSA_Padding_2048, Cross_SHA2_256_MGF_512)
     mgfinfo_512.dt_mode.dm_sha2 = ALC_SHA2_512;
     mgfinfo_512.dt_len          = ALC_DIGEST_LEN_512;
     mgfinfo_512.dt_type         = ALC_DIGEST_TYPE_SHA2;
-    Rsa_Cross(ALCP_TEST_RSA_PADDING, 2048, dinfo_256, mgfinfo_512);
+    Rsa_Cross(ALCP_TEST_RSA_PADDING_OAEP, 2048, dinfo_256, mgfinfo_512);
 }
-TEST(RSA_Padding_2048, Cross_SHA2_512_MGF_512)
+TEST(RSA_OAEP_Padding_2048, Cross_SHA2_512_MGF_512)
 {
     dinfo_512.dt_mode.dm_sha2 = ALC_SHA2_512;
     dinfo_512.dt_len          = ALC_DIGEST_LEN_512;
     dinfo_512.dt_type         = ALC_DIGEST_TYPE_SHA2;
     mgfinfo_512               = dinfo_512;
-    Rsa_Cross(ALCP_TEST_RSA_PADDING, 2048, dinfo_512, mgfinfo_512);
+    Rsa_Cross(ALCP_TEST_RSA_PADDING_OAEP, 2048, dinfo_512, mgfinfo_512);
 }
 
 int

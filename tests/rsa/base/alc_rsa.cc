@@ -165,7 +165,7 @@ AlcpRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
         if (alcp_is_error(err)) {
             return err;
         }
-    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING) {
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
         // Adding the digest function for generating the hash in oaep padding
         err = alcp_rsa_add_digest(m_rsa_handle, &m_digest_info);
         if (alcp_is_error(err)) {
@@ -208,7 +208,7 @@ AlcpRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
                                           data.m_encrypted_data,
                                           data.m_key_len,
                                           data.m_decrypted_data);
-    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING) {
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
         // Adding the digest function for generating the hash in oaep padding
         err = alcp_rsa_add_digest(m_rsa_handle, &m_digest_info);
         if (alcp_is_error(err)) {

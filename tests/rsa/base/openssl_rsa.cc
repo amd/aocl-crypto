@@ -267,7 +267,7 @@ OpenSSLRsaBase::EncryptPubKey(const alcp_rsa_data_t& data)
             ret_val = ERR_GET_REASON(ERR_get_error());
             return ret_val;
         }
-    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING) {
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
         /* set padding mode parameters */
         if (EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle_keyctx_pub,
                                          RSA_PKCS1_OAEP_PADDING)
@@ -337,7 +337,7 @@ OpenSSLRsaBase::DecryptPvtKey(const alcp_rsa_data_t& data)
             std::cout << ret_val << std::endl;
             return ret_val;
         }
-    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING) {
+    } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
 
         if (EVP_PKEY_CTX_set_rsa_padding(m_rsa_handle_keyctx_pvt,
                                          RSA_PKCS1_OAEP_PADDING)

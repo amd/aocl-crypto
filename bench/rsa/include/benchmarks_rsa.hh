@@ -98,7 +98,7 @@ Rsa_Bench(benchmark::State&       state,
     rb->m_padding_mode = padding_mode;
 
     /* for encrypt/ decrypt */
-    if (padding_mode == ALCP_TEST_RSA_PADDING) {
+    if (padding_mode == ALCP_TEST_RSA_PADDING_OAEP) {
         /* input size should be 0 to m_key_size - 2 * m_hash_len - 2*/
         if (KeySize == 128) {
             InputSize = 62;
@@ -207,7 +207,7 @@ Rsa_Bench(benchmark::State&       state,
 }
 
 static void
-BENCH_RSA_DecryptPvtKey_Padding(benchmark::State& state)
+BENCH_RSA_DecryptPvtKey_OAEP_Padding(benchmark::State& state)
 {
     alc_digest_info_t dinfo, mgfinfo;
     dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
@@ -216,7 +216,7 @@ BENCH_RSA_DecryptPvtKey_Padding(benchmark::State& state)
     mgfinfo               = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
                                        RSA_BENCH_DEC_PVT_KEY,
-                                       ALCP_TEST_RSA_PADDING,
+                                       ALCP_TEST_RSA_PADDING_OAEP,
                                        state.range(0),
                                        dinfo,
                                        mgfinfo));
@@ -239,7 +239,7 @@ BENCH_RSA_DecryptPvtKey_NoPadding(benchmark::State& state)
 }
 
 static void
-BENCH_RSA_EncryptPubKey_Padding(benchmark::State& state)
+BENCH_RSA_EncryptPubKey_OAEP_Padding(benchmark::State& state)
 {
     alc_digest_info_t dinfo, mgfinfo;
     dinfo.dt_mode.dm_sha2 = ALC_SHA2_256;
@@ -248,7 +248,7 @@ BENCH_RSA_EncryptPubKey_Padding(benchmark::State& state)
     mgfinfo               = dinfo;
     benchmark::DoNotOptimize(Rsa_Bench(state,
                                        RSA_BENCH_ENC_PUB_KEY,
-                                       ALCP_TEST_RSA_PADDING,
+                                       ALCP_TEST_RSA_PADDING_OAEP,
                                        state.range(0),
                                        dinfo,
                                        mgfinfo));
@@ -343,8 +343,10 @@ AddBenchmarks_rsa()
         ->ArgsProduct({ rsa_key_sizes });
     BENCHMARK(BENCH_RSA_DecryptPvtKey_NoPadding)
         ->ArgsProduct({ rsa_key_sizes });
-    BENCHMARK(BENCH_RSA_EncryptPubKey_Padding)->ArgsProduct({ rsa_key_sizes });
-    BENCHMARK(BENCH_RSA_DecryptPvtKey_Padding)->ArgsProduct({ rsa_key_sizes });
+    BENCHMARK(BENCH_RSA_EncryptPubKey_OAEP_Padding)
+        ->ArgsProduct({ rsa_key_sizes });
+    BENCHMARK(BENCH_RSA_DecryptPvtKey_OAEP_Padding)
+        ->ArgsProduct({ rsa_key_sizes });
 
     return 0;
 }
