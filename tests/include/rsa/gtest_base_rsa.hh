@@ -176,6 +176,10 @@ Rsa_KAT(int                     padding_mode,
     while (csv.readNext()) {
         /* input text to be loaded */
         std::vector<Uint8> input_data = csv.getVect("INPUT");
+        /*FIXME: reading expected encrypted data is currently only for
+         * non-padded modes */
+        std::vector<Uint8> encrypted_data_expected =
+            csv.getVect("ENCRYPTEDDATA");
         std::vector<Uint8> encrypted_data(KeySize, 0);
         std::vector<Uint8> decrypted_data(KeySize, 0); /* keysize for padded */
         std::vector<Uint8> PubKeyKeyMod(KeySize, 0);
@@ -259,9 +263,16 @@ Rsa_KAT(int                     padding_mode,
                 input_data.resize(KeySize, 0);
                 EXPECT_TRUE(
                     ArraysMatch(decrypted_data, input_data, input_data.size()));
-            } else
+            } else {
                 EXPECT_TRUE(ArraysMatch(
                     decrypted_data, input_data, csv, std::string("RSA")));
+                /*FIXME: reading expected encrypted data is currently only for
+                 * non-padded modes */
+                EXPECT_TRUE(ArraysMatch(encrypted_data,
+                                        encrypted_data_expected,
+                                        csv,
+                                        std::string("RSA")));
+            }
         }
         if (verbose > 1) {
             PrintRsaTestData(data);
