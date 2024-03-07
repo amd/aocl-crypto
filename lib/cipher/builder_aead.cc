@@ -46,63 +46,6 @@ namespace alcp::cipher {
 using Context = alcp::cipher::Context;
 using namespace alcp::base;
 
-/* CIPHER CONTEXT INTERFACE BINDING */
-/**
- * @brief CAPI Context Interface Binding for Generic Ciphers.
- *
- * Takes a cipher class and binds its functions to the Context
- * @tparam CIPHERMODE
- * @param keyLen    Length of the key
- * @param ctx       Context for the cipher
- */
-template<typename CIPHERMODE>
-void
-_build_aes_cipher(const Uint64 keyLen, Context& ctx)
-{
-    CIPHERMODE* algo = new CIPHERMODE();
-
-    ctx.m_cipher = static_cast<void*>(algo);
-
-    ctx.decrypt = __aes_wrapper<CIPHERMODE, false>;
-    ctx.encrypt = __aes_wrapper<CIPHERMODE, true>;
-    ctx.init    = __aes_wrapperInit<CIPHERMODE>;
-
-    ctx.finish = __aes_dtor<CIPHERMODE>;
-}
-
-/* MODE SPECIFIC BUILDER */
-/**
- * @brief CAPI Context Interface Binding for AEAD Ciphers.
- *
- * Takes a cipher class and binds its functions to the Context
- * @tparam CIPHERMODE
- * @param pKey      Key for initializing cipher class
- * @param keyLen    Length of the key
- * @param ctx       Context for the AEAD Cipher
- */
-template<typename AEADMODE>
-void
-_build_aead(const Uint8* pKey, const Uint32 keyLen, Context& ctx)
-{
-    auto algo = new AEADMODE(pKey, keyLen);
-
-    ctx.m_cipher = static_cast<void*>(algo);
-
-    ctx.init   = __aes_wrapperInit<AEADMODE>;
-    ctx.setAad = __aes_wrapperSetAad<AEADMODE>;
-
-    ctx.decryptUpdate = __aes_wrapperUpdate<AEADMODE, false>;
-    ctx.encryptUpdate = __aes_wrapperUpdate<AEADMODE, true>;
-
-    ctx.getTag = __aes_wrapperGetTag<AEADMODE>;
-
-    if constexpr (std::is_same_v<AEADMODE, Ccm>) {
-        ctx.setTagLength = __aes_wrapperSetTagLength<AEADMODE>;
-    }
-
-    ctx.finish = __aes_dtor<AEADMODE>;
-}
-
 template<typename AEADMODE>
 void
 _build_aead_wrapper(Context& ctx)

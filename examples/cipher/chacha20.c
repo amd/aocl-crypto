@@ -63,16 +63,15 @@ create_demo_session(alc_cipher_handle_p handle,
                                 .ci_type   = ALC_CIPHER_TYPE_CHACHA20,
                                 .ci_keyLen = cKeyLen,
                                 // init params
-                                .ci_key = key,
-                                .ci_iv  = iv,
-                                // algo params
-                                .ci_algo_info.iv_length = ivlength
+                                .ci_key   = key,
+                                .ci_iv    = iv,
+                                .ci_ivLen = ivlength
     };
 
     /*
      * Application is expected to allocate for context
      */
-    handle->ch_context = malloc(alcp_cipher_context_size(&cinfo));
+    handle->ch_context = malloc(alcp_cipher_context_size());
 
     // Memory allocation failure checking
     if (handle->ch_context == NULL) {
@@ -88,6 +87,9 @@ create_demo_session(alc_cipher_handle_p handle,
         goto out;
     }
     printf("Request Succeeded\n");
+
+    // FIXME: alcp_cipher_aead_int() to be added here
+
     return 0;
 
 // Incase of error, program execution will come here
@@ -99,7 +101,6 @@ out:
 
 int
 encrypt_demo(alc_cipher_handle_p handle,
-             const Uint8*        iv,
              const Uint8*        plaintxt,
              const Uint32        len, /*  for both 'plaintxt' and 'ciphertxt' */
              Uint8*              ciphertxt)
@@ -108,7 +109,7 @@ encrypt_demo(alc_cipher_handle_p handle,
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    err = alcp_cipher_encrypt(handle, plaintxt, ciphertxt, len, iv);
+    err = alcp_cipher_encrypt(handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: Unable to Encrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -122,7 +123,6 @@ encrypt_demo(alc_cipher_handle_p handle,
 
 int
 decrypt_demo(alc_cipher_handle_p handle,
-             const Uint8*        iv,
              const Uint8*        ciphertxt,
              const Uint32        len, /* for both 'plaintxt' and 'ciphertxt' */
              Uint8*              plaintxt)
@@ -131,7 +131,7 @@ decrypt_demo(alc_cipher_handle_p handle,
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    err = alcp_cipher_decrypt(handle, ciphertxt, plaintxt, len, iv);
+    err = alcp_cipher_decrypt(handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: Unable to Decrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -188,7 +188,6 @@ main(void)
     // Encrypt the plaintext into the ciphertext
     retval =
         encrypt_demo(&handle,
-                     iv,
                      sample_plaintxt,
                      cPlaintextSize, /* len of 'plaintxt' and 'ciphertxt' */
                      sample_ciphertxt);
@@ -198,8 +197,8 @@ main(void)
     dump_hex(sample_ciphertxt, cCiphertextSize);
 
     // Decrypt the ciphertext into the plaintext.
-    retval = decrypt_demo(
-        &handle, iv, sample_ciphertxt, cCiphertextSize, sample_output);
+    retval =
+        decrypt_demo(&handle, sample_ciphertxt, cCiphertextSize, sample_output);
     if (retval != 0)
         goto out;
     printf("Decrypted Text: %s\n", sample_output);

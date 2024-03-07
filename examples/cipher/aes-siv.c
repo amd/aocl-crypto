@@ -69,7 +69,7 @@ create_demo_session(const Uint8* key_cmac,
     /*
      * Application is expected to allocate for context
      */
-    handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
+    handle.ch_context = malloc(alcp_cipher_aead_context_size());
     // if (!ctx)
     //    return;
 
@@ -83,6 +83,9 @@ create_demo_session(const Uint8* key_cmac,
         return false;
     }
     printf("request succeeded\n");
+
+    // FIXME: alcp_cipher_aead_int() to be added here
+
     return true;
 }
 
@@ -90,7 +93,6 @@ bool
 encrypt_demo(const Uint8* plaintxt,
              const Uint32 len, /*  for both 'plaintxt' and 'ciphertxt' */
              Uint8*       ciphertxt,
-             Uint8*       iv,
              const Uint8* aad,
              Uint64       aad_len)
 {
@@ -106,14 +108,16 @@ encrypt_demo(const Uint8* plaintxt,
     }
 
     // IV is not needed for encrypt, but still should not be NullPtr
-    err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len, iv);
+    err = alcp_cipher_aead_encrypt(&handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
         return false;
     }
 
-    err = alcp_cipher_aead_get_tag(&handle, iv, 16);
+    Uint8 tag[16]; // FIXME: finall tag to be compared
+
+    err = alcp_cipher_aead_get_tag(&handle, tag, 16);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -133,7 +137,6 @@ bool
 decrypt_demo(const Uint8* ciphertxt,
              const Uint32 len, /* for both 'plaintxt' and 'ciphertxt' */
              Uint8*       plaintxt,
-             const Uint8* iv,
              const Uint8* aad,
              Uint64       aad_len)
 {
@@ -148,7 +151,7 @@ decrypt_demo(const Uint8* ciphertxt,
         return false;
     }
 
-    err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, len, iv);
+    err = alcp_cipher_aead_decrypt(&handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -195,17 +198,14 @@ main(void)
 
     assert(sizeof(sample_plaintxt) < sizeof(sample_output));
 
+    // FIXME should be sent in create call. iv_buff
     if (!create_demo_session(
             sample_key_cmac, sample_key2_ctr, sizeof(sample_key_cmac) * 8)) {
         return -1; // Error condtion
     }
 
-    if (!encrypt_demo(sample_plaintxt,
-                      size,
-                      sample_ciphertxt,
-                      iv_buff,
-                      aad,
-                      sizeof(aad))) {
+    if (!encrypt_demo(
+            sample_plaintxt, size, sample_ciphertxt, aad, sizeof(aad))) {
         return -1;
     }
 
@@ -215,7 +215,7 @@ main(void)
     }
 
     if (!decrypt_demo(
-            sample_ciphertxt, size, sample_output, iv_buff, aad, sizeof(aad))) {
+            sample_ciphertxt, size, sample_output, aad, sizeof(aad))) {
         return -1;
     }
 

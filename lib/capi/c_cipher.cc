@@ -39,7 +39,7 @@ using namespace alcp;
 EXTERN_C_BEGIN
 
 Uint64
-alcp_cipher_context_size(const alc_cipher_info_p pCipherInfo)
+alcp_cipher_context_size()
 {
     Uint64 size = sizeof(cipher::Context);
     return size;
@@ -127,8 +127,7 @@ alc_error_t
 alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
                     const Uint8*              pPlainText,
                     Uint8*                    pCipherText,
-                    Uint64                    len,
-                    const Uint8*              pIv)
+                    Uint64                    len)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -136,14 +135,13 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
     ALCP_BAD_PTR_ERR_RET(pPlainText, err);
     ALCP_BAD_PTR_ERR_RET(pCipherText, err);
-    ALCP_BAD_PTR_ERR_RET(pIv, err);
 
     ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify Encrypt to return Status and assign to context status
-    err = ctx->encrypt(ctx->m_cipher, pPlainText, pCipherText, len, pIv);
+    err = ctx->encrypt(ctx->m_cipher, pPlainText, pCipherText, len);
 
     return err;
 }
@@ -179,8 +177,7 @@ alc_error_t
 alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
                     const Uint8*              pCipherText,
                     Uint8*                    pPlainText,
-                    Uint64                    len,
-                    const Uint8*              pIv)
+                    Uint64                    len)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -188,14 +185,12 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
     ALCP_BAD_PTR_ERR_RET(pPlainText, err);
     ALCP_BAD_PTR_ERR_RET(pCipherText, err);
-    ALCP_BAD_PTR_ERR_RET(pIv, err);
-
     ALCP_ZERO_LEN_ERR_RET(len, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify decrypt to return Status and assign to context status
-    err = ctx->decrypt(ctx->m_cipher, pCipherText, pPlainText, len, pIv);
+    err = ctx->decrypt(ctx->m_cipher, pCipherText, pPlainText, len);
 
     return err;
 }

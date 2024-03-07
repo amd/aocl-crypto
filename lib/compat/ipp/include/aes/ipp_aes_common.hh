@@ -76,7 +76,7 @@ alcp_encdecAES(const Ipp8u*       pSrc,
         context->cinfo.ci_mode = mode;
         context->cinfo.ci_iv   = (Uint8*)pCtrValue;
 
-        auto size = alcp_cipher_context_size(&(context->cinfo));
+        auto size                  = alcp_cipher_context_size();
         context->handle.ch_context = (alc_cipher_context_p)(malloc(size));
 
 // TODO: Debug statements, remove once done.

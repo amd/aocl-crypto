@@ -48,7 +48,7 @@ AlcpXtsCipher<encryptor>::init(alc_test_init_data_p data)
         .ci_iv  = data_xts->m_iv,
     };
 
-    m_handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
+    m_handle.ch_context = malloc(alcp_cipher_context_size());
     if (!m_handle.ch_context)
         return false;
 

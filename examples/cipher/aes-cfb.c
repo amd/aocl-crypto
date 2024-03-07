@@ -70,7 +70,7 @@ create_demo_session(alc_cipher_handle_p handle,
     /*
      * Application is expected to allocate for context
      */
-    handle->ch_context = malloc(alcp_cipher_context_size(&cinfo));
+    handle->ch_context = malloc(alcp_cipher_context_size());
 
     // Memory allocation failure checking
     if (handle->ch_context == NULL) {
@@ -108,14 +108,13 @@ int
 encrypt_demo(alc_cipher_handle_p handle,
              const Uint8*        plaintxt,
              const Uint32        len, /*  for both 'plaintxt' and 'ciphertxt' */
-             Uint8*              ciphertxt,
-             const Uint8*        iv)
+             Uint8*              ciphertxt)
 {
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    err = alcp_cipher_encrypt(handle, plaintxt, ciphertxt, len, iv);
+    err = alcp_cipher_encrypt(handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: Unable to Encrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -131,14 +130,13 @@ int
 decrypt_demo(alc_cipher_handle_p handle,
              const Uint8*        ciphertxt,
              const Uint32        len, /* for both 'plaintxt' and 'ciphertxt' */
-             Uint8*              plaintxt,
-             const Uint8*        iv)
+             Uint8*              plaintxt)
 {
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    err = alcp_cipher_decrypt(handle, ciphertxt, plaintxt, len, iv);
+    err = alcp_cipher_decrypt(handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: Unable to Decrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -198,16 +196,15 @@ main(void)
         encrypt_demo(&handle,
                      sample_plaintxt,
                      cPlaintextSize, /* len of 'plaintxt' and 'ciphertxt' */
-                     sample_ciphertxt,
-                     sample_iv);
+                     sample_ciphertxt);
     if (retval != 0)
         goto out;
     printf("CipherText:");
     dump_hex(sample_ciphertxt, cCiphertextSize);
 
     // Decrypt the ciphertext into the plaintext.
-    retval = decrypt_demo(
-        &handle, sample_ciphertxt, cCiphertextSize, sample_output, sample_iv);
+    retval =
+        decrypt_demo(&handle, sample_ciphertxt, cCiphertextSize, sample_output);
     if (retval != 0)
         goto out;
     printf("Decrypted Text: %s\n", sample_output);

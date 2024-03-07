@@ -138,8 +138,6 @@ class ALCP_API_EXPORT CmacSiv : public Aes
 
     bool isSupported(const alc_cipher_info_t& cipherInfo);
 
-    static bool isSupported(const alc_cipher_algo_info_t& cipherInfo,
-                            const alc_key_info_t&         keyInfo);
     /**
      * @brief Depriciated, please use addAdditionalInput
      * @param memory Pointer which points to the additional data.
@@ -353,14 +351,16 @@ CmacSiv<T>::Impl::ctrWrapper(
     // FIXME: To be removed once we move everything to Status
     alc_error_t err = ALC_ERROR_NONE;
     if (enc) {
-        err = m_ctr.encrypt(in, out, size, mac);
+        // FIXME: mac should go in seperate ctr init call.
+        err = m_ctr.encrypt(in, out, size); //, mac);
         if (alcp_is_error(err)) {
             auto cer = status::EncryptFailed("Encryption Kernel Failed!");
             s.update(cer);
             return s;
         }
     } else {
-        err = m_ctr.decrypt(in, out, size, mac);
+        // FIXME: mac should go in seperate ctr init call.
+        err = m_ctr.decrypt(in, out, size); //, mac);
         if (alcp_is_error(err)) {
             auto cer = status::DecryptFailed("Decryption Kernel Failed!");
             s.update(cer);

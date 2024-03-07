@@ -154,7 +154,7 @@ Xts::expandTweakKeys(const Uint8* pKey, int len)
     {                                                                          \
         Status s = StatusOk();                                                 \
         alcp::cipher::Xts::tweakBlockSet(startBlockNum);                       \
-        alc_error_t err = FUNC_NAME(pinput, pOutput, len, nullptr);            \
+        alc_error_t err = FUNC_NAME(pinput, pOutput, len);                     \
                                                                                \
         if (alcp_is_error(err)) {                                              \
             s = alcp::base::status::InternalError("Encryption failed!");       \
@@ -187,11 +187,11 @@ namespace aesni {
 } // namespace aesni
 
 // pIv arg to be removed and this is made same as other ciper wrapper func
+// length check to be converted to generic function for all cipher modes
 #define CRYPT_XTS_WRAPPER_FUNC(                                                \
     CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS)                     \
     alc_error_t CLASS_NAME::WRAPPER_FUNC(                                      \
-        const Uint8* pinput, Uint8* pOutput, Uint64 len, const Uint8* pIv)     \
-        const                                                                  \
+        const Uint8* pinput, Uint8* pOutput, Uint64 len) const                 \
     {                                                                          \
         alc_error_t err = ALC_ERROR_NONE;                                      \
                                                                                \

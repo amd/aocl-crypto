@@ -121,9 +121,8 @@ typedef enum _alc_aes_ctrl
  */
 typedef struct _alc_cipher_algo_info
 {
-    // alc_cipher_mode_t ai_mode; /* Mode: ALC_AES_MODE_CFB etc */
-    // const Uint8* ai_iv; /* Initialization Vector */
-    Uint64 iv_length;
+
+    Uint64 dummy;
 } alc_cipher_algo_info_t, *alc_cpher_algo_info_p;
 
 /**
@@ -148,11 +147,12 @@ typedef struct _alc_cipher_info
     Uint64            ci_keyLen; /*! Key length in bits */
 
     // init params
-    const Uint8* ci_key; /*! key data */
-    const Uint8* ci_iv;  /*! Initialization Vector */
+    const Uint8* ci_key;   /*! key data */
+    const Uint8* ci_iv;    /*! Initialization Vector */
+    Uint64       ci_ivLen; /*! Initialization Vector length */
 
     // algo params
-    alc_cipher_algo_info_t ci_algo_info; /*! mode specific data */
+    // alc_cipher_algo_info_t ci_algo_info; /*! mode specific data */
 
 } alc_cipher_info_t, *alc_cipher_info_p;
 
@@ -187,11 +187,10 @@ typedef struct _alc_cipher_handle
  * memory to be allocated for context </b>
  * @endparblock
  *
- * @param [in] pCipherInfo Description of the requested cipher session
  * @return      Size of Context
  */
 ALCP_API_EXPORT Uint64
-alcp_cipher_context_size(const alc_cipher_info_p pCipherInfo);
+alcp_cipher_context_size(void);
 
 /**
  * @brief    Request for populating handle with algorithm specified by
@@ -252,7 +251,6 @@ alcp_cipher_init(const alc_cipher_handle_p pCipherHandle,
  *                         operation
  * @param[in]    pPlainText    Pointer to Plain Text
  * @param[out]   pCipherText   Pointer to Cipher Text
- * @param[in]    pIv           Pointer to Initialization Vector
  * @param[in]    len           Length of cipher/plain text
  * @return   &nbsp; Error Code for the API called. If alc_error_t
  * is not ALC_ERROR_NONE then @ref alcp_cipher_error or @ref alcp_error_str
@@ -262,8 +260,7 @@ ALCP_API_EXPORT alc_error_t
 alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
                     const Uint8*              pPlainText,
                     Uint8*                    pCipherText,
-                    Uint64                    len,
-                    const Uint8*              pIv);
+                    Uint64                    len);
 
 /**
  * @brief    Decryption of cipher text and write it to plain text with
@@ -279,7 +276,6 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
  *                         operation
  * @param[in]    pPlainText    Pointer to Plain Text
  * @param[out]   pCipherText   Pointer to Cipher Text
- * @param[in]    pIv           Pointer to Initialization Vector
  * @param[in]    len           Length of cipher/plain text
  * @return   &nbsp; Error Code for the API called. If alc_error_t
  * is not ALC_ERROR_NONE then @ref alcp_cipher_error or @ref alcp_error_str
@@ -289,8 +285,7 @@ ALCP_API_EXPORT alc_error_t
 alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
                     const Uint8*              pCipherText,
                     Uint8*                    pPlainText,
-                    Uint64                    len,
-                    const Uint8*              pIv);
+                    Uint64                    len);
 
 /**
  * @brief    Encrypt plain text and write it to cipher text with provided

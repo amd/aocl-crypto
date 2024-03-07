@@ -49,17 +49,16 @@ CreateDemoSession(const Uint8* key,
                                      .ci_mode   = ALC_AES_MODE_NONE,
                                      .ci_keyLen = cKeyLen,
                                      // init params
-                                     .ci_key = key,
-                                     .ci_iv  = iv,
-
-                                     .ci_algo_info.iv_length = ivLength
+                                     .ci_key   = key,
+                                     .ci_iv    = iv,
+                                     .ci_ivLen = ivLength
 
     };
 
     /*
      * Application is expected to allocate for context
      */
-    handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
+    handle.ch_context = malloc(alcp_cipher_aead_context_size());
     if (!handle.ch_context)
         return -1;
 
@@ -108,8 +107,7 @@ AlcpChacha20Poly1305EncryptDemo(
     }
 
     // Chacha20-Poly1305 encrypt
-    err =
-        alcp_cipher_aead_encrypt_update(&handle, plaintxt, ciphertxt, cLen, iv);
+    err = alcp_cipher_aead_encrypt_update(&handle, plaintxt, ciphertxt, cLen);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
         alcp_error_str(err, err_buf, cErrSize);
@@ -160,9 +158,10 @@ AlcpChacha20Poly1305DecryptDemo(
         return -1;
     }
 
+    // FIXME: init call needs to be added to set key and iv.
+
     // Chacha20-Poly1305 decrypt
-    err =
-        alcp_cipher_aead_decrypt_update(&handle, ciphertxt, plaintxt, cLen, iv);
+    err = alcp_cipher_aead_decrypt_update(&handle, ciphertxt, plaintxt, cLen);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, cErrSize);

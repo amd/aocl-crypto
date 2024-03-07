@@ -68,7 +68,7 @@ create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
     /*
      * Application is expected to allocate for context
      */
-    handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
+    handle.ch_context = malloc(alcp_cipher_context_size());
     if (!handle.ch_context) {
         printf("Error: context allocation failed \n");
         return;
@@ -96,14 +96,13 @@ create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
 void
 encrypt_demo(const Uint8* plaintxt,
              const Uint32 len, /*  for both 'plaintxt' and 'ciphertxt' */
-             Uint8*       ciphertxt,
-             const Uint8* iv)
+             Uint8*       ciphertxt)
 {
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len, iv);
+    err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable to encrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -116,14 +115,13 @@ encrypt_demo(const Uint8* plaintxt,
 void
 decrypt_demo(const Uint8* ciphertxt,
              const Uint32 len, /* for both 'plaintxt' and 'ciphertxt' */
-             Uint8*       plaintxt,
-             const Uint8* iv)
+             Uint8*       plaintxt)
 {
     alc_error_t err;
     const int   err_size = 256;
     Uint8       err_buf[err_size];
 
-    err = alcp_cipher_decrypt(&handle, ciphertxt, plaintxt, len, iv);
+    err = alcp_cipher_decrypt(&handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -232,13 +230,12 @@ main(void)
 #endif
     encrypt_demo(sample_plaintxt,
                  pt_size, /* len of 'plaintxt' and 'ciphertxt' */
-                 sample_ciphertxt,
-                 sample_iv);
+                 sample_ciphertxt);
 #ifdef DEBUG
     printf("cipher text with size: %d \n", pt_size);
     ALC_PRINT(((Uint8*)&sample_ciphertxt), pt_size);
 #endif
-    decrypt_demo(sample_ciphertxt, pt_size, sample_output, sample_iv);
+    decrypt_demo(sample_ciphertxt, pt_size, sample_output);
 #ifdef DEBUG
     printf("out text with size %d: \n", pt_size);
     ALC_PRINT(((Uint8*)&sample_output), pt_size);

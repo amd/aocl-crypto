@@ -47,7 +47,7 @@ AlcpGcmCipher<encryptor>::init(alc_test_init_data_p data)
         .ci_iv     = data_gcm->m_iv,
     };
 
-    m_handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
+    m_handle.ch_context = malloc(alcp_cipher_aead_context_size());
     if (!m_handle.ch_context)
         return false;
 
@@ -97,8 +97,7 @@ AlcpGcmCipher<encryptor>::update(alc_test_update_data_p data)
         err = alcp_cipher_aead_encrypt_update(&m_handle,
                                               p_gcm_update_data->m_input,
                                               p_gcm_update_data->m_output,
-                                              p_gcm_update_data->m_input_len,
-                                              p_gcm_update_data->m_iv);
+                                              p_gcm_update_data->m_input_len);
         if (alcp_is_error(err)) {
             printf("Error: unable encrypt \n");
             alcp_error_str(err, err_buf, err_size);
@@ -108,8 +107,7 @@ AlcpGcmCipher<encryptor>::update(alc_test_update_data_p data)
         err = alcp_cipher_aead_decrypt_update(&m_handle,
                                               p_gcm_update_data->m_input,
                                               p_gcm_update_data->m_output,
-                                              p_gcm_update_data->m_input_len,
-                                              p_gcm_update_data->m_iv);
+                                              p_gcm_update_data->m_input_len);
         if (alcp_is_error(err)) {
             printf("Error: unable decrypt \n");
             alcp_error_str(err, err_buf, err_size);

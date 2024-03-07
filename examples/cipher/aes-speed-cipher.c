@@ -143,10 +143,10 @@ create_aes_session(Uint8*             key,
     /*
      * Application is expected to allocate for context
      */
-    handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
+    handle.ch_context = malloc(alcp_cipher_context_size());
     if (!handle.ch_context) {
         printf("Error: context allocation failed \n");
-        return;
+        goto out;
     }
 
     /* Request a context with mode and key length */
@@ -180,14 +180,13 @@ void
 aclp_aes_encrypt_demo(
     const Uint8* plaintxt,
     const Uint32 len, /* Describes both 'plaintxt' and 'ciphertxt' */
-    Uint8*       ciphertxt,
-    Uint8*       iv)
+    Uint8*       ciphertxt)
 {
     alc_error_t err;
     const int   err_size = 256;
     Uint8     err_buf[err_size];
 
-    err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len, iv);
+    err = alcp_cipher_encrypt(&handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -200,14 +199,13 @@ void
 aclp_aes_decrypt_demo(
     const Uint8* ciphertxt,
     const Uint32 len, /* Describes both 'plaintxt' and 'ciphertxt' */
-    Uint8*       plaintxt,
-    Uint8*       iv)
+    Uint8*       plaintxt)
 {
     alc_error_t err;
     const int   err_size = 256;
     Uint8     err_buf[err_size];
 
-    err = alcp_cipher_decrypt(&handle, ciphertxt, plaintxt, len, iv);
+    err = alcp_cipher_decrypt(&handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -278,7 +276,7 @@ encrypt_decrypt_demo(Uint8*       inputText,  // plaintext
         for (int k = 0; k < 100000000; k++) {
 
             ALCP_CRYPT_TIMER_START
-            aclp_aes_encrypt_demo(inputText, inputLen, cipherText, iv);
+            aclp_aes_encrypt_demo(inputText, inputLen, cipherText);
 
             alcp_get_time(0, "Encrypt time");
             printText(cipherText, inputLen, "cipherTxt");
@@ -302,8 +300,8 @@ encrypt_decrypt_demo(Uint8*       inputText,  // plaintext
             aclp_aes_decrypt_demo(
                 cipherText, // pointer to the PLAINTEXT
                 inputLen,   // text length in bytes
-                outputText, // pointer to the CIPHERTEXT buffer
-                iv);
+                outputText); // pointer to the CIPHERTEXT buffer
+
 
             alcp_get_time(0, "Decrypt time");
             printText(outputText, inputLen, "outputTxt");

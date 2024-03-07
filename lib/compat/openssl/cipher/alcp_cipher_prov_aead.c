@@ -128,8 +128,7 @@ ALCP_prov_cipher_aead_encrypt_init(void*                vctx,
 #endif
 
     // Manually allocate context
-    (cctx->handle).ch_context =
-        OPENSSL_malloc(alcp_cipher_aead_context_size(c_aeadinfo));
+    (cctx->handle).ch_context = OPENSSL_malloc(alcp_cipher_aead_context_size());
 
     // Request handle for the cipher
     err = alcp_cipher_aead_request(
@@ -324,8 +323,7 @@ ALCP_prov_cipher_aead_decrypt_init(void*                vctx,
 #endif
 
     // Manually allocate context
-    (cctx->handle).ch_context =
-        OPENSSL_malloc(alcp_cipher_aead_context_size(c_aeadinfo));
+    (cctx->handle).ch_context = OPENSSL_malloc(alcp_cipher_aead_context_size());
 
     // Request handle for the aead
     err = alcp_cipher_aead_request(
@@ -462,11 +460,11 @@ ALCP_prov_cipher_gcm_update(void*                vctx,
 
         if (cctx->enc_flag) {
 
-            err = alcp_cipher_aead_encrypt_update(
-                &(cctx->handle), in, out, inl, cctx->iv);
+            err =
+                alcp_cipher_aead_encrypt_update(&(cctx->handle), in, out, inl);
         } else {
-            err = alcp_cipher_aead_decrypt_update(
-                &(cctx->handle), in, out, inl, cctx->iv);
+            err =
+                alcp_cipher_aead_decrypt_update(&(cctx->handle), in, out, inl);
         }
     }
 
@@ -533,11 +531,11 @@ ALCP_prov_cipher_ccm_update(void*                vctx,
         cctx->add_inititalized = true;
 
         if (cctx->enc_flag) {
-            err = alcp_cipher_aead_encrypt_update(
-                &(cctx->handle), in, out, inl, cctx->pc_cipher_aead_info.ci_iv);
+            err =
+                alcp_cipher_aead_encrypt_update(&(cctx->handle), in, out, inl);
         } else {
-            err = alcp_cipher_aead_decrypt_update(
-                &(cctx->handle), in, out, inl, cctx->pc_cipher_aead_info.ci_iv);
+            err =
+                alcp_cipher_aead_decrypt_update(&(cctx->handle), in, out, inl);
         }
     }
 out:
@@ -576,26 +574,28 @@ ALCP_prov_cipher_siv_update(void*                vctx,
         return 1;
     }
 
+    // FIXME: seperate init call to be added post request call.
+    //  to set iv and key. cctx->tagbuff used instead of iv to be verified.
+
     if (out == NULL) {
         err = alcp_cipher_aead_set_aad(&(cctx->handle), in, inl);
     } else {
         if (cctx->enc_flag) {
-            Uint8 fake_iv[100] = { 0 };
-            err                = alcp_cipher_aead_encrypt(
-                &(cctx->handle), in, out, inl, fake_iv);
+            // Uint8 fake_iv[100] = { 0 };
+            err = alcp_cipher_aead_encrypt(
+                &(cctx->handle), in, out, inl); //, fake_iv);
         } else {
             // IV must be copied to cctx->tagbuff when application calls
             // EVP_CIPHER_CTX_ctrl call with EVP_CTRL_AEAD_SET_TAG. This
             // is done in ALCP_prov_cipher_set_ctx_params call.
             if (cctx->is_openssl_speed_siv && cctx->tagbuff == NULL) {
-                Uint8 tag[16] = { 0 };
-                alcp_cipher_decrypt(&(cctx->handle), in, out, inl, tag);
+                // Uint8 tag[16] = { 0 };
+                alcp_cipher_decrypt(&(cctx->handle), in, out, inl); //, tag);
                 // Ignoring the error code returned here as tag wont match for
                 // openssl speed SIV since tagbuff is empty.
             } else {
 
-                err = alcp_cipher_decrypt(
-                    &(cctx->handle), in, out, inl, cctx->tagbuff);
+                err = alcp_cipher_decrypt(&(cctx->handle), in, out, inl);
             }
         }
     }

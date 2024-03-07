@@ -56,7 +56,7 @@ ippsAES_CCMStart(const Ipp8u*      pIV,
         context_aead->c_aeadinfo.ci_iv   = (Uint8*)pIV;
 
         context_aead->handle.ch_context =
-            malloc(alcp_cipher_aead_context_size(&(context_aead->c_aeadinfo)));
+            malloc(alcp_cipher_aead_context_size());
 
         err = alcp_cipher_aead_request(&(context_aead->c_aeadinfo),
                                        &(context_aead->handle));
@@ -120,11 +120,8 @@ ippsAES_CCMEncrypt(const Ipp8u*      pSrc,
     (reinterpret_cast<ipp_wrp_aes_aead_ctx*>(pState))->is_encrypt = true;
 
     // CCM Encrypt
-    err = alcp_cipher_aead_encrypt_update(&(context_aead->handle),
-                                          (Uint8*)pSrc,
-                                          (Uint8*)pDst,
-                                          len,
-                                          context_aead->c_aeadinfo.ci_iv);
+    err = alcp_cipher_aead_encrypt_update(
+        &(context_aead->handle), (Uint8*)pSrc, (Uint8*)pDst, len);
     if (alcp_is_error(err)) {
         return ippStsErr;
     }

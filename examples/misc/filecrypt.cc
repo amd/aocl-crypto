@@ -306,7 +306,7 @@ namespace crypto {
             /*
              * Application is expected to allocate for context
              */
-            handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
+            handle.ch_context = malloc(alcp_cipher_context_size());
 
             // Memory allocation failure checking
             if (handle.ch_context == NULL) {
@@ -323,8 +323,8 @@ namespace crypto {
             }
             printf("Request Succeeded\n");
 
-            err = alcp_cipher_encrypt(
-                &handle, &in.at(0), &out.at(0), in.size(), &iv.at(0));
+            err =
+                alcp_cipher_encrypt(&handle, &in.at(0), &out.at(0), in.size());
             if (alcp_is_error(err)) {
                 printf("Error: Unable to Encrypt \n");
                 alcp_error_str(err, err_buf, cErrSize);
@@ -364,7 +364,7 @@ namespace crypto {
             /*
              * Application is expected to allocate for context
              */
-            handle.ch_context = malloc(alcp_cipher_context_size(&cinfo));
+            handle.ch_context = malloc(alcp_cipher_context_size());
 
             // Memory allocation failure checking
             if (handle.ch_context == NULL) {
@@ -381,8 +381,8 @@ namespace crypto {
             }
             printf("Request Succeeded\n");
 
-            err = alcp_cipher_decrypt(
-                &handle, &in.at(0), &out.at(0), in.size(), &iv.at(0));
+            err =
+                alcp_cipher_decrypt(&handle, &in.at(0), &out.at(0), in.size());
             if (alcp_is_error(err)) {
                 printf("Error: Unable to Decrypt \n");
                 alcp_error_str(err, err_buf, cErrSize);

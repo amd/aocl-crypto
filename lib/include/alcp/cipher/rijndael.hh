@@ -88,22 +88,18 @@ class ALCP_API_EXPORT Rijndael //:  public alcp::ICipher
 
     void initRijndael(const Uint64 keyLen, const Uint8* pKey);
 
-    // virtual Status setKey(const Uint8* pUserKey, Uint64 len);
-
     virtual void setEncryptKey(const Uint8* pEncKey, Uint64 len);
     virtual void setDecryptKey(const Uint8* pDecKey, Uint64 len);
 
     // this should move to aes
     virtual alc_error_t encrypt(const Uint8* pSrc,
                                 Uint8*       pDst,
-                                Uint64       len,
-                                const Uint8* pIv) const;
+                                Uint64       len) const;
 
     // this should move to aes
     virtual alc_error_t decrypt(const Uint8* pSrc,
                                 Uint8*       pDst,
-                                Uint64       len,
-                                const Uint8* pIv) const;
+                                Uint64       len) const;
 
     void encryptBlock(Uint32 (&blk0)[4], const Uint8* pkey, int nr) const;
 

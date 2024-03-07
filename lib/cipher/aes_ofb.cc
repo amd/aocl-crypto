@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,16 +34,13 @@ using alcp::utils::CpuId;
 
 namespace alcp::cipher {
 alc_error_t
-Ofb::decrypt(const Uint8* pCipherText,
-             Uint8*       pPlainText,
-             Uint64       len,
-             const Uint8* pIv) const
+Ofb::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len) const
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     if (CpuId::cpuHasVaes() || CpuId::cpuHasAesni()) {
         err = aesni::DecryptOfb(
-            pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), pIv);
+            pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), m_iv);
 
         return err;
     }
@@ -51,16 +48,13 @@ Ofb::decrypt(const Uint8* pCipherText,
 }
 
 alc_error_t
-Ofb::encrypt(const Uint8* pPlainText,
-             Uint8*       pCipherText,
-             Uint64       len,
-             const Uint8* pIv) const
+Ofb::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len) const
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     if (CpuId::cpuHasVaes() || CpuId::cpuHasAesni()) {
         err = aesni::EncryptOfb(
-            pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), pIv);
+            pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), m_iv);
 
         return err;
     }

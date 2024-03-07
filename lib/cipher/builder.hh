@@ -39,20 +39,16 @@ using namespace alcp::base;
 
 template<typename CIPHERMODE, bool encrypt = true>
 static alc_error_t
-__aes_wrapper(const void*  rCipher,
-              const Uint8* pSrc,
-              Uint8*       pDest,
-              Uint64       len,
-              const Uint8* pIv)
+__aes_wrapper(const void* rCipher, const Uint8* pSrc, Uint8* pDest, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
     auto ap = static_cast<const CIPHERMODE*>(rCipher);
 
     if (encrypt)
-        e = ap->encrypt(pSrc, pDest, len, pIv);
+        e = ap->encrypt(pSrc, pDest, len);
     else
-        e = ap->decrypt(pSrc, pDest, len, pIv);
+        e = ap->decrypt(pSrc, pDest, len);
 
     return e;
 }
@@ -79,20 +75,16 @@ __aes_wrapper_crypt_block(const void*  rCipher,
 
 template<typename CIPHERMODE, bool encrypt = true>
 static alc_error_t
-__aes_wrapperUpdate(void*        rCipher,
-                    const Uint8* pSrc,
-                    Uint8*       pDest,
-                    Uint64       len,
-                    const Uint8* pIv)
+__aes_wrapperUpdate(void* rCipher, const Uint8* pSrc, Uint8* pDest, Uint64 len)
 {
     alc_error_t e = ALC_ERROR_NONE;
 
     auto ap = static_cast<CIPHERMODE*>(rCipher);
 
     if constexpr (encrypt)
-        e = ap->encryptUpdate(pSrc, pDest, len, pIv);
+        e = ap->encryptUpdate(pSrc, pDest, len);
     else
-        e = ap->decryptUpdate(pSrc, pDest, len, pIv);
+        e = ap->decryptUpdate(pSrc, pDest, len);
 
     return e;
 }

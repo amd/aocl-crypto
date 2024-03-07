@@ -754,46 +754,34 @@ Ccm::Ccm(const Uint8* pKey, const Uint32 keyLen)
 {}
 
 alc_error_t
-Ccm::decrypt(const Uint8 pInput[],
-             Uint8       pOutput[],
-             Uint64      len,
-             const Uint8 pIv[]) const
+Ccm::decrypt(const Uint8 pInput[], Uint8 pOutput[], Uint64 len) const
 {
     Status s = StatusOk();
-    s        = pImpl->cryptUpdate(pInput, pOutput, len, pIv, false);
+    s        = pImpl->cryptUpdate(pInput, pOutput, len, m_iv, false);
     return s.code();
 }
 
 alc_error_t
-Ccm::encrypt(const Uint8 pInput[],
-             Uint8       pOutput[],
-             Uint64      len,
-             const Uint8 pIv[]) const
+Ccm::encrypt(const Uint8 pInput[], Uint8 pOutput[], Uint64 len) const
 {
     Status s = StatusOk();
-    s        = pImpl->cryptUpdate(pInput, pOutput, len, pIv, true);
+    s        = pImpl->cryptUpdate(pInput, pOutput, len, m_iv, true);
     return s.code();
 }
 
 alc_error_t
-Ccm::decryptUpdate(const Uint8 pInput[],
-                   Uint8       pOutput[],
-                   Uint64      len,
-                   const Uint8 pIv[])
+Ccm::decryptUpdate(const Uint8 pInput[], Uint8 pOutput[], Uint64 len)
 {
     Status s = StatusOk();
-    s        = pImpl->cryptUpdate(pInput, pOutput, len, pIv, false);
+    s        = pImpl->cryptUpdate(pInput, pOutput, len, m_iv, false);
     return s.code();
 }
 
 alc_error_t
-Ccm::encryptUpdate(const Uint8 pInput[],
-                   Uint8       pOutput[],
-                   Uint64      len,
-                   const Uint8 pIv[])
+Ccm::encryptUpdate(const Uint8 pInput[], Uint8 pOutput[], Uint64 len)
 {
     Status s = StatusOk();
-    s        = pImpl->cryptUpdate(pInput, pOutput, len, pIv, true);
+    s        = pImpl->cryptUpdate(pInput, pOutput, len, m_iv, true);
     return s.code();
 }
 

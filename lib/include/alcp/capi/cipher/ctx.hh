@@ -42,14 +42,12 @@ struct Context
     alc_error_t (*decrypt)(const void*  rCipher,
                            const Uint8* pSrc,
                            Uint8*       pDst,
-                           Uint64       len,
-                           const Uint8* pIv);
+                           Uint64       len);
 
     alc_error_t (*encrypt)(const void*  rCipher,
                            const Uint8* pSrt,
                            Uint8*       pDrc,
-                           Uint64       len,
-                           const Uint8* pIv);
+                           Uint64       len);
 
     alc_error_t (*encryptBlocks)(const void*  rCipher,
                                  const Uint8* pSrt,
@@ -66,14 +64,12 @@ struct Context
     alc_error_t (*decryptUpdate)(void*        rCipher,
                                  const Uint8* pSrc,
                                  Uint8*       pDst,
-                                 Uint64       len,
-                                 const Uint8* pIv);
+                                 Uint64       len);
 
     alc_error_t (*encryptUpdate)(void*        rCipher,
                                  const Uint8* pSrc,
                                  Uint8*       pDst,
-                                 Uint64       len,
-                                 const Uint8* pIv);
+                                 Uint64       len);
 
     alc_error_t (*init)(void*        rCipher,
                         const Uint8* pKey,

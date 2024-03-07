@@ -244,8 +244,7 @@ ALCP_prov_cipher_get_ctx_params(void* vctx, OSSL_PARAM params[])
                 alcp_cipher_aead_set_aad(
                     &(cctx->handle), cctx->aad, cctx->aadlen);
             cctx->add_inititalized = true;
-            alcp_cipher_aead_encrypt_update(
-                &(cctx->handle), &a, &a, 0, cctx->pc_cipher_aead_info.ci_iv);
+            alcp_cipher_aead_encrypt_update(&(cctx->handle), &a, &a, 0);
         }
         alc_error_t err =
             alcp_cipher_aead_get_tag(&(cctx->handle), (Uint8*)tag, used_length);
@@ -402,7 +401,7 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
     }
 
     // Manually allocate context
-    (cctx->handle).ch_context = OPENSSL_malloc(alcp_cipher_context_size(cinfo));
+    (cctx->handle).ch_context = OPENSSL_malloc(alcp_cipher_context_size());
 
     // Request handle for the cipher
     err =
@@ -610,7 +609,7 @@ ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
     }
 
     // Manually allocate context
-    (cctx->handle).ch_context = OPENSSL_malloc(alcp_cipher_context_size(cinfo));
+    (cctx->handle).ch_context = OPENSSL_malloc(alcp_cipher_context_size());
 
     // Request handle for the cipher
     err =
@@ -758,11 +757,9 @@ ALCP_prov_cipher_update(void*                vctx,
     }
 
     if (cctx->enc_flag) {
-        err = alcp_cipher_encrypt(
-            &(cctx->handle), in, out, inl, cctx->pc_cipher_info.ci_iv);
+        err = alcp_cipher_encrypt(&(cctx->handle), in, out, inl);
     } else {
-        err = alcp_cipher_decrypt(
-            &(cctx->handle), in, out, inl, cctx->pc_cipher_info.ci_iv);
+        err = alcp_cipher_decrypt(&(cctx->handle), in, out, inl);
     }
 
     if (err != ALC_ERROR_NONE) {

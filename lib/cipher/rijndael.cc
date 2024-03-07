@@ -221,10 +221,7 @@ class alignas(16) Rijndael::Impl
                       const Uint8* pkey,
                       int          nr) const;
 
-    alc_error_t decrypt(const Uint8* pSrc,
-                        Uint8*       pDst,
-                        Uint64       len,
-                        const Uint8* pIv) const;
+    alc_error_t decrypt(const Uint8* pSrc, Uint8* pDst, Uint64 len) const;
 
     void AESEncrypt(Uint32* blk0, const Uint8* pkey, int nr) const;
 
@@ -603,10 +600,7 @@ Rijndael::Impl::AESDecrypt(Uint32* blk0, const Uint8* pkey, int nr) const
  *  end
  */
 alc_error_t
-Rijndael::Impl::decrypt(const Uint8* pSrc,
-                        Uint8*       pDst,
-                        Uint64       len,
-                        const Uint8* pIv) const
+Rijndael::Impl::decrypt(const Uint8* pSrc, Uint8* pDst, Uint64 len) const
 {
 #if 0
     Uint32 nb = cBlockSizeWord;
@@ -836,10 +830,7 @@ struct ArrayRef
 #endif
 
 alc_error_t
-Rijndael::encrypt(const Uint8* pPlaintxt,
-                  Uint8*       pCiphertxt,
-                  Uint64       len,
-                  const Uint8* pIv) const
+Rijndael::encrypt(const Uint8* pPlaintxt, Uint8* pCiphertxt, Uint64 len) const
 {
     auto n_words = len / Rijndael::cBlockSizeWord;
 
@@ -873,31 +864,26 @@ Rijndael::AesDecrypt(Uint32* blk0, const Uint8* pkey, int nr) const
 }
 
 alc_error_t
-Rijndael::decrypt(const Uint8* pCihpertxt,
-                  Uint8*       pPlaintxt,
-                  Uint64       len,
-                  const Uint8* pIv) const
+Rijndael::decrypt(const Uint8* pCihpertxt, Uint8* pPlaintxt, Uint64 len) const
 {
-    return pImpl()->decrypt(pCihpertxt, pPlaintxt, len, pIv);
+    return pImpl()->decrypt(pCihpertxt, pPlaintxt, len);
 }
 
 #if 0
 alc_error_t
 Rijndael::encryptUpdate(const Uint8* pPlaintxt,
                         Uint8*       pCihpertxt,
-                        Uint64       len,
-                        const Uint8* pIv)
+                        Uint64       len)
 {
-    return pImpl()->encryptUpdate(pPlaintxt, pCihpertxt, len, pIv);
+    return pImpl()->encryptUpdate(pPlaintxt, pCihpertxt, len);
 }
 
 alc_error_t
 Rijndael::decryptUpdate(const Uint8* pCihpertxt,
                         Uint8*       pPlaintxt,
-                        Uint64       len,
-                        const Uint8* pIv)
+                        Uint64       len)
 {
-    return pImpl()->decrypt(pCihpertxt, pPlaintxt, len, pIv);
+    return pImpl()->decrypt(pCihpertxt, pPlaintxt, len);
 }
 #endif
 

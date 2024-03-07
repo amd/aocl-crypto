@@ -76,7 +76,7 @@ ippsAES_SIVEncrypt(const Ipp8u* pSrc,
     /*
      * Application is expected to allocate for context
      */
-    handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
+    handle.ch_context = malloc(alcp_cipher_aead_context_size());
     // if (!ctx)
     //    return;
 
@@ -169,7 +169,7 @@ ippsAES_SIVDecrypt(const Ipp8u* pSrc,
     /*
      * Application is expected to allocate for context
      */
-    handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
+    handle.ch_context = malloc(alcp_cipher_aead_context_size());
     // if (!ctx)
     //    return;
 
@@ -253,7 +253,7 @@ ippsAES_S2V_CMAC(const Ipp8u* pKey,
     /*
      * Application is expected to allocate for context
      */
-    handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
+    handle.ch_context = malloc(alcp_cipher_aead_context_size());
     // if (!ctx)
     //    return;
 

@@ -132,13 +132,11 @@ class ALCP_API_EXPORT Ccm final : public Aes
      */
     virtual alc_error_t encrypt(const Uint8* pInput,
                                 Uint8*       pOutput,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
+                                Uint64       len) const final;
 
     virtual alc_error_t encryptUpdate(const Uint8* pInput,
                                       Uint8*       pOutput,
-                                      Uint64       len,
-                                      const Uint8* pIv);
+                                      Uint64       len);
 
     /**
      * @brief   CCM Decrypt Operation
@@ -151,13 +149,11 @@ class ALCP_API_EXPORT Ccm final : public Aes
      */
     virtual alc_error_t decrypt(const Uint8* pCipherText,
                                 Uint8*       pPlainText,
-                                Uint64       len,
-                                const Uint8* pIv) const final;
+                                Uint64       len) const final;
 
     virtual alc_error_t decryptUpdate(const Uint8* pCipherText,
                                       Uint8*       pPlainText,
-                                      Uint64       len,
-                                      const Uint8* pIv);
+                                      Uint64       len);
 
   private:
     class Impl;

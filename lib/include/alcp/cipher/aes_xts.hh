@@ -90,13 +90,11 @@ GetSbox(Uint8 offset, bool use_invsbox = false)
       public:                                                                  \
         virtual alc_error_t encrypt(const Uint8* pPlainText,                   \
                                     Uint8*       pCipherText,                  \
-                                    Uint64       len,                          \
-                                    const Uint8* pIv) const final;             \
+                                    Uint64       len) const final;                   \
                                                                                \
         virtual alc_error_t decrypt(const Uint8* pCipherText,                  \
                                     Uint8*       pPlainText,                   \
-                                    Uint64       len,                          \
-                                    const Uint8* pIv) const final;             \
+                                    Uint64       len) const final;                   \
                                                                                \
         Status encryptBlocks(const Uint8* pSrc,                                \
                              Uint8*       pDest,                               \

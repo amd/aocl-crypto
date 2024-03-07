@@ -49,13 +49,11 @@ namespace alcp { namespace cipher {
          * @param   pPlainText      Pointer to output buffer
          * @param   pCipherText     Pointer to encrypted buffer
          * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
          * @return  alc_error_t     Error code
          */
         virtual alc_error_t encrypt(const Uint8* pPlainText,
                                     Uint8*       pCipherText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const = 0;
+                                    Uint64       len) const = 0;
 
         /**
          * @brief   CBC Decrypt Operation
@@ -63,13 +61,11 @@ namespace alcp { namespace cipher {
          * @param   pCipherText     Pointer to encrypted buffer
          * @param   pPlainText      Pointer to output buffer
          * @param   len             Len of plain and encrypted text
-         * @param   pIv             Pointer to Initialization Vector
          * @return  alc_error_t     Error code
          */
         virtual alc_error_t decrypt(const Uint8* pCipherText,
                                     Uint8*       pPlainText,
-                                    Uint64       len,
-                                    const Uint8* pIv) const = 0;
+                                    Uint64       len) const = 0;
 
         virtual ~ICipher(){};
     };

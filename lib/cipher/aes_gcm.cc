@@ -138,7 +138,7 @@ GcmGhash::getTag(Uint8* pOutput, Uint64 len)
 #define CRYPT_AEAD_WRAPPER_FUNC(                                               \
     CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS)                     \
     alc_error_t CLASS_NAME::WRAPPER_FUNC(                                      \
-        const Uint8* pinput, Uint8* pOutput, Uint64 len, const Uint8* pIv)     \
+        const Uint8* pinput, Uint8* pOutput, Uint64 len)                       \
     {                                                                          \
         alc_error_t err = ALC_ERROR_NONE;                                      \
         m_len += len;                                                          \
@@ -205,8 +205,7 @@ namespace aesni {
 
     alc_error_t GcmAEAD128::decryptUpdate(const Uint8* pInput,
                                           Uint8*       pOutput,
-                                          Uint64       len,
-                                          const Uint8* pIv)
+                                          Uint64       len)
     {
         alc_error_t err = ALC_ERROR_NONE;
         m_len += len;
@@ -225,8 +224,7 @@ namespace aesni {
 
     alc_error_t GcmAEAD192::decryptUpdate(const Uint8* pInput,
                                           Uint8*       pOutput,
-                                          Uint64       len,
-                                          const Uint8* pIv)
+                                          Uint64       len)
     {
         alc_error_t err = ALC_ERROR_NONE;
         m_len += len;
@@ -245,8 +243,7 @@ namespace aesni {
 
     alc_error_t GcmAEAD256::decryptUpdate(const Uint8* pInput,
                                           Uint8*       pOutput,
-                                          Uint64       len,
-                                          const Uint8* pIv)
+                                          Uint64       len)
     {
         alc_error_t err = ALC_ERROR_NONE;
         m_len += len;
@@ -265,8 +262,7 @@ namespace aesni {
 
     alc_error_t GcmAEAD128::encryptUpdate(const Uint8* pInput,
                                           Uint8*       pOutput,
-                                          Uint64       len,
-                                          const Uint8* pIv)
+                                          Uint64       len)
     {
         alc_error_t err = ALC_ERROR_NONE;
         m_len += len;
@@ -285,8 +281,7 @@ namespace aesni {
 
     alc_error_t GcmAEAD192::encryptUpdate(const Uint8* pInput,
                                           Uint8*       pOutput,
-                                          Uint64       len,
-                                          const Uint8* pIv)
+                                          Uint64       len)
     {
         alc_error_t err = ALC_ERROR_NONE;
         m_len += len;
@@ -305,8 +300,7 @@ namespace aesni {
 
     alc_error_t GcmAEAD256::encryptUpdate(const Uint8* pInput,
                                           Uint8*       pOutput,
-                                          Uint64       len,
-                                          const Uint8* pIv)
+                                          Uint64       len)
     {
         alc_error_t err = ALC_ERROR_NONE;
         m_len += len;

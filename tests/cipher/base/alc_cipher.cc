@@ -99,7 +99,7 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
         goto out;
     }
     // TODO: Check support before allocating
-    m_handle->ch_context = malloc(alcp_cipher_context_size(&m_cinfo));
+    m_handle->ch_context = malloc(alcp_cipher_context_size());
     if (m_handle->ch_context == NULL) {
         std::cout << "alcp_base.c: Memory allocation for context failure!"
                   << std::endl;
@@ -111,10 +111,9 @@ AlcpCipherBase::init(const Uint8* key, const Uint32 cKeyLen)
         m_cinfo.ci_mode   = ALC_AES_MODE_NONE;
         m_cinfo.ci_keyLen = cKeyLen;
 
-        m_cinfo.ci_key = key;
-        m_cinfo.ci_iv  = m_iv;
-        m_cinfo.ci_algo_info.iv_length =
-            16 * 8; /* FIXME is it always 16 bytes ?*/
+        m_cinfo.ci_key   = key;
+        m_cinfo.ci_iv    = m_iv;
+        m_cinfo.ci_ivLen = 16 * 8; /* FIXME is it always 16 bytes ?*/
 
     } else {
 
@@ -184,8 +183,7 @@ AlcpCipherBase::encrypt(alcp_dc_ex_t& data)
     const int   cErrSize = 256;
     Uint8       err_buff[cErrSize];
 
-    err =
-        alcp_cipher_encrypt(m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
+    err = alcp_cipher_encrypt(m_handle, data.m_in, data.m_out, data.m_inl);
     if (alcp_is_error(err)) {
         goto enc_out;
     }
@@ -204,8 +202,7 @@ AlcpCipherBase::decrypt(alcp_dc_ex_t& data)
     const int   cErrSize = 256;
     Uint8       err_buff[cErrSize];
 
-    err =
-        alcp_cipher_decrypt(m_handle, data.m_in, data.m_out, data.m_inl, m_iv);
+    err = alcp_cipher_decrypt(m_handle, data.m_in, data.m_out, data.m_inl);
     if (alcp_is_error(err)) {
         goto dec_out;
     }

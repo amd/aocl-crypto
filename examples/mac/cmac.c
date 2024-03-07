@@ -163,8 +163,7 @@ demo_cmac()
         .mi_algoinfo = { .cmac = { .cmac_cipher = { .ci_type =
                                                         ALC_CIPHER_TYPE_AES,
                                                     .ci_mode =
-                                                        ALC_AES_MODE_NONE,
-                                                    .ci_algo_info = {} } } },
+                                                        ALC_AES_MODE_NONE } } },
         .mi_keyinfo  = kinfo
     };
 

@@ -56,8 +56,7 @@ struct ALCP_API_EXPORT GcmAuthData
 #define CRYPT_WRAPPER_FUNC(                                                    \
     CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS)                     \
     alc_error_t CLASS_NAME::WRAPPER_FUNC(                                      \
-        const Uint8* pinput, Uint8* pOutput, Uint64 len, const Uint8* pIv)     \
-        const                                                                  \
+        const Uint8* pinput, Uint8* pOutput, Uint64 len) const                 \
     {                                                                          \
         alc_error_t err = ALC_ERROR_NONE;                                      \
         err = FUNC_NAME(pinput, pOutput, len, PKEY, NUM_ROUNDS, m_iv);         \

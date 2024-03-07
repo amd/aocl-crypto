@@ -55,7 +55,7 @@ create_demo_session(const Uint8* key, const Uint8* iv, const Uint32 key_len)
     /*
      * Application is expected to allocate for context
      */
-    handle.ch_context = malloc(alcp_cipher_aead_context_size(&cinfo));
+    handle.ch_context = malloc(alcp_cipher_aead_context_size());
     if (!handle.ch_context)
         return -1;
 
@@ -177,8 +177,7 @@ aclp_aes_ccm_encrypt_demo(
     }
 
     // CCM encrypt
-    err =
-        alcp_cipher_aead_encrypt_update(&handle, plaintxt, ciphertxt, len, iv);
+    err = alcp_cipher_aead_encrypt_update(&handle, plaintxt, ciphertxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
         alcp_error_str(err, err_buf, err_size);
@@ -239,8 +238,7 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     }
 
     // GCM decrypt
-    err =
-        alcp_cipher_aead_decrypt_update(&handle, ciphertxt, plaintxt, len, iv);
+    err = alcp_cipher_aead_decrypt_update(&handle, ciphertxt, plaintxt, len);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");
         alcp_error_str(err, err_buf, err_size);

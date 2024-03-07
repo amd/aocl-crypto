@@ -131,7 +131,7 @@ AlcpCipherAeadBase::init(const Uint8* key, const Uint32 cKeyLen)
         goto out;
     }
     // TODO: Check support before allocating
-    m_handle->ch_context = malloc(alcp_cipher_aead_context_size(&m_cinfo));
+    m_handle->ch_context = malloc(alcp_cipher_aead_context_size());
     if (m_handle->ch_context == NULL) {
         std::cout << "alcp_base.c: Memory allocation for context failure!"
                   << std::endl;
@@ -240,7 +240,7 @@ AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data)
 
     if constexpr (enc) {
         err = alcp_cipher_aead_encrypt_update(
-            m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl, m_iv);
+            m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl);
         if (alcp_is_error(err)) {
             printf("Encrypt Error\n");
             alcp_error_str(err, err_buff, cErrSize);
@@ -257,7 +257,7 @@ AlcpCipherAeadBase::alcpGCMModeToFuncCall(alcp_dca_ex_t& aead_data)
         }
     } else {
         err = alcp_cipher_aead_decrypt_update(
-            m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl, m_iv);
+            m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl);
         if (alcp_is_error(err)) {
             printf("Decrypt Error\n");
             alcp_error_str(err, err_buff, cErrSize);
@@ -318,14 +318,11 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
 
     if constexpr (enc) {
         if (aead_data.m_inl) {
-            err = alcp_cipher_aead_encrypt_update(m_handle,
-                                                  aead_data.m_in,
-                                                  aead_data.m_out,
-                                                  aead_data.m_inl,
-                                                  m_iv);
+            err = alcp_cipher_aead_encrypt_update(
+                m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl);
         } else {
             Uint8 a;
-            err = alcp_cipher_aead_encrypt_update(m_handle, &a, &a, 0, m_iv);
+            err = alcp_cipher_aead_encrypt_update(m_handle, &a, &a, 0);
         }
         if (alcp_is_error(err)) {
             printf("Encrypt Error\n");
@@ -346,14 +343,11 @@ AlcpCipherAeadBase::alcpCCMModeToFuncCall(alcp_dca_ex_t& aead_data)
         }
     } else {
         if (aead_data.m_inl) {
-            err = alcp_cipher_aead_decrypt_update(m_handle,
-                                                  aead_data.m_in,
-                                                  aead_data.m_out,
-                                                  aead_data.m_inl,
-                                                  m_iv);
+            err = alcp_cipher_aead_decrypt_update(
+                m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl);
         } else {
             Uint8 a;
-            err = alcp_cipher_aead_decrypt_update(m_handle, &a, &a, 0, m_iv);
+            err = alcp_cipher_aead_decrypt_update(m_handle, &a, &a, 0);
         }
         if (alcp_is_error(err)) {
             printf("Decrypt Error\n");
@@ -398,7 +392,7 @@ AlcpCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t& aead_data)
 
     if constexpr (enc) {
         err = alcp_cipher_aead_encrypt(
-            m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl, m_iv);
+            m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl);
         if (alcp_is_error(err)) {
             printf("Encrypt Error\n");
             alcp_error_str(err, err_buff, cErrSize);
@@ -417,7 +411,7 @@ AlcpCipherAeadBase::alcpSIVModeToFuncCall(alcp_dca_ex_t& aead_data)
         }
     } else {
         err = alcp_cipher_aead_decrypt(
-            m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl, m_iv);
+            m_handle, aead_data.m_in, aead_data.m_out, aead_data.m_inl);
         if (alcp_is_error(err)) {
             printf("Decrypt Error\n");
             alcp_error_str(err, err_buff, cErrSize);
