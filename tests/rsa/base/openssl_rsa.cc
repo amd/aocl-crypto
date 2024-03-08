@@ -82,20 +82,19 @@ OpenSSLRsaBase::init()
         m_rsa_handle_keyctx_pvt = nullptr;
     }
 
-    char* digest_str;
     switch (m_digest_info.dt_len) {
         /* FIXME: add more cases here */
         case ALC_DIGEST_LEN_256:
-            digest_str = "sha256";
+            m_digest_str = "sha256";
             break;
         case ALC_DIGEST_LEN_512:
-            digest_str = "sha512";
+            m_digest_str = "sha512";
             break;
         default:
             std::cout << "Invalid digest length" << std::endl;
             return 1;
     }
-    m_md_type = EVP_get_digestbyname(digest_str);
+    m_md_type = EVP_get_digestbyname(m_digest_str);
     if (m_md_type == nullptr) {
         std::cout << "Digest type is invalid" << std::endl;
         return 1;
@@ -438,7 +437,7 @@ OpenSSLRsaBase::Sign(const alcp_rsa_data_t& data)
     *p = OSSL_PARAM_construct_end();
     /* Initialize MD context for signing. */
     if (EVP_DigestSignInit_ex(
-            m_mdctx, NULL, "sha256", m_libctx, NULL, m_pkey_pvt, params)
+            m_mdctx, NULL, m_digest_str, m_libctx, NULL, m_pkey_pvt, params)
         != 1) {
         std::cout << "EVP_DigestSignInit returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;
@@ -498,7 +497,7 @@ OpenSSLRsaBase::Verify(const alcp_rsa_data_t& data)
 
     /* Initialize MD context for signing. */
     if (EVP_DigestVerifyInit_ex(
-            m_mdctx, NULL, "sha256", m_libctx, NULL, m_pkey_pub, params)
+            m_mdctx, NULL, m_digest_str, m_libctx, NULL, m_pkey_pub, params)
         != 1) {
         std::cout << "EVP_DigestVerifyInit_ex returned null: Error:"
                   << ERR_GET_REASON(ERR_get_error()) << std::endl;

@@ -57,6 +57,8 @@ class OpenSSLRsaBase : public RsaBase
 
     const EVP_MD* m_md_type = nullptr;
 
+    const char* m_digest_str;
+
   public:
     OpenSSLRsaBase();
     ~OpenSSLRsaBase();
