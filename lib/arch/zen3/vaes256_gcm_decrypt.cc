@@ -75,7 +75,7 @@ Uint64 inline gcmBlk_256_dec(const __m256i* p_in_x,
                              int            nRounds,
                              Uint8          factor,
                              // gcm specific params
-                             alcp::cipher::GcmAuthData* gcm,
+                             alcp::cipher::GcmAuthData* gcmAuthData,
                              __m128i                    reverse_mask_128,
                              int                        remBytes,
                              Uint64*                    pGcmCtxHashSubkeyTable)
@@ -101,7 +101,7 @@ Uint64 inline gcmBlk_256_dec(const __m256i* p_in_x,
 
     const __m128i const_factor_128 = _mm_set_epi64x(0xC200000000000000, 0x1);
 
-    amd_mm256_broadcast_i64x2(&gcm->m_iv_128, &c1);
+    amd_mm256_broadcast_i64x2(&gcmAuthData->m_counter_128, &c1);
 
     _mm_prefetch(cast_to(pkey128), _MM_HINT_T0);
 
@@ -133,7 +133,7 @@ Uint64 inline gcmBlk_256_dec(const __m256i* p_in_x,
                             Hsubkey_256_precomputed,
                             Hsubkey_256,
                             num_256_blks,
-                            gcm,
+                            gcmAuthData,
                             const_factor_128);
     }
 
@@ -151,7 +151,7 @@ Uint64 inline gcmBlk_256_dec(const __m256i* p_in_x,
     c4 = alcp_add_epi32(c2, two_x);
 
     __m256i Hsubkey_256_0, Hsubkey_256_1, Hsubkey_256_2, Hsubkey_256_3;
-    __m256i gHash_256 = _mm256_zextsi128_si256(gcm->m_gHash_128);
+    __m256i gHash_256 = _mm256_zextsi128_si256(gcmAuthData->m_gHash_128);
 
     if (num_256_blks >= 8) {
         constexpr Uint64 blks_in_256bit = 2;
@@ -302,7 +302,7 @@ Uint64 inline gcmBlk_256_dec(const __m256i* p_in_x,
         p_out_x += 1;
     }
 
-    gcm->m_gHash_128 = _mm256_castsi256_si128(gHash_256);
+    gcmAuthData->m_gHash_128 = _mm256_castsi256_si128(gHash_256);
 
     /* residual block=1 when factor = 2, load and store only
      lower half. */
@@ -315,11 +315,11 @@ Uint64 inline gcmBlk_256_dec(const __m256i* p_in_x,
 
         a1 = _mm_loadu_si128((__m128i*)p_in_x);
 
-        __m128i ra1      = _mm_shuffle_epi8(a1, reverse_mask_128);
-        gcm->m_gHash_128 = _mm_xor_si128(ra1, gcm->m_gHash_128);
-        aesni::gMul(gcm->m_gHash_128,
-                    gcm->m_hash_subKey_128,
-                    gcm->m_gHash_128,
+        __m128i ra1              = _mm_shuffle_epi8(a1, reverse_mask_128);
+        gcmAuthData->m_gHash_128 = _mm_xor_si128(ra1, gcmAuthData->m_gHash_128);
+        aesni::gMul(gcmAuthData->m_gHash_128,
+                    gcmAuthData->m_hash_subKey_128,
+                    gcmAuthData->m_gHash_128,
                     const_factor_128);
 
         // re-arrange as per spec
@@ -355,11 +355,11 @@ Uint64 inline gcmBlk_256_dec(const __m256i* p_in_x,
             p_out[i] = 0;
         }
 
-        __m128i ra1      = _mm_shuffle_epi8(a1, reverse_mask_128);
-        gcm->m_gHash_128 = _mm_xor_si128(ra1, gcm->m_gHash_128);
-        aesni::gMul(gcm->m_gHash_128,
-                    gcm->m_hash_subKey_128,
-                    gcm->m_gHash_128,
+        __m128i ra1              = _mm_shuffle_epi8(a1, reverse_mask_128);
+        gcmAuthData->m_gHash_128 = _mm_xor_si128(ra1, gcmAuthData->m_gHash_128);
+        aesni::gMul(gcmAuthData->m_gHash_128,
+                    gcmAuthData->m_hash_subKey_128,
+                    gcmAuthData->m_gHash_128,
                     const_factor_128);
 
         a1 = _mm_xor_si128(b1, a1);
@@ -377,7 +377,7 @@ Uint64 inline gcmBlk_256_dec(const __m256i* p_in_x,
     alcp_clear_keys_zmm(keys);
 
     // Extract the first counter
-    gcm->m_iv_128 = c1_128;
+    gcmAuthData->m_counter_128 = c1_128;
 
     return blocks;
 }
@@ -389,7 +389,7 @@ decryptGcm128(const Uint8*               pInputText,  // ptr to inputText
               bool                       isFirstUpdate,
               const Uint8*               pKey,    // ptr to Key
               const int                  nRounds, // No. of rounds
-              alcp::cipher::GcmAuthData* gcm,
+              alcp::cipher::GcmAuthData* gcmAuthData,
               __m128i                    reverse_mask_128,
               Uint64*                    pGcmCtxHashSubkeyTable)
 {
@@ -415,7 +415,7 @@ decryptGcm128(const Uint8*               pInputText,  // ptr to inputText
                                                  nRounds,
                                                  numBlksIn256bit,
                                                  // gcm specific params
-                                                 gcm,
+                                                 gcmAuthData,
                                                  reverse_mask_128,
                                                  remBytes,
                                                  pGcmCtxHashSubkeyTable);
@@ -430,7 +430,7 @@ decryptGcm192(const Uint8*               pInputText,  // ptr to inputText
               bool                       isFirstUpdate,
               const Uint8*               pKey,    // ptr to Key
               const int                  nRounds, // No. of rounds
-              alcp::cipher::GcmAuthData* gcm,
+              alcp::cipher::GcmAuthData* gcmAuthData,
               __m128i                    reverse_mask_128,
               Uint64*                    pGcmCtxHashSubkeyTable)
 {
@@ -456,7 +456,7 @@ decryptGcm192(const Uint8*               pInputText,  // ptr to inputText
                                                  nRounds,
                                                  numBlksIn256bit,
                                                  // gcm specific params
-                                                 gcm,
+                                                 gcmAuthData,
                                                  reverse_mask_128,
                                                  remBytes,
                                                  pGcmCtxHashSubkeyTable);
@@ -471,7 +471,7 @@ decryptGcm256(const Uint8*               pInputText,  // ptr to inputText
               bool                       isFirstUpdate,
               const Uint8*               pKey,    // ptr to Key
               const int                  nRounds, // No. of rounds
-              alcp::cipher::GcmAuthData* gcm,
+              alcp::cipher::GcmAuthData* gcmAuthData,
               __m128i                    reverse_mask_128,
               Uint64*                    pGcmCtxHashSubkeyTable)
 {
@@ -497,7 +497,7 @@ decryptGcm256(const Uint8*               pInputText,  // ptr to inputText
                                                  nRounds,
                                                  numBlksIn256bit,
                                                  // gcm specific params
-                                                 gcm,
+                                                 gcmAuthData,
                                                  reverse_mask_128,
                                                  remBytes,
                                                  pGcmCtxHashSubkeyTable);

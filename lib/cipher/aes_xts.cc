@@ -163,27 +163,27 @@ Xts::expandTweakKeys(const Uint8* pKey, int len)
     }
 
 namespace vaes512 {
-    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts128, encryptBlocks, encrypt)
-    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts256, encryptBlocks, encrypt)
+    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts128, encryptBlocksXts, encrypt)
+    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts256, encryptBlocksXts, encrypt)
 
-    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts128, decryptBlocks, decrypt)
-    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts256, decryptBlocks, decrypt)
+    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts128, decryptBlocksXts, decrypt)
+    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts256, decryptBlocksXts, decrypt)
 } // namespace vaes512
 
 namespace vaes {
-    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts128, encryptBlocks, encrypt)
-    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts256, encryptBlocks, encrypt)
+    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts128, encryptBlocksXts, encrypt)
+    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts256, encryptBlocksXts, encrypt)
 
-    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts128, decryptBlocks, decrypt)
-    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts256, decryptBlocks, decrypt)
+    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts128, decryptBlocksXts, decrypt)
+    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts256, decryptBlocksXts, decrypt)
 } // namespace vaes
 
 namespace aesni {
-    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts128, encryptBlocks, encrypt)
-    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts256, encryptBlocks, encrypt)
+    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts128, encryptBlocksXts, encrypt)
+    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts256, encryptBlocksXts, encrypt)
 
-    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts128, decryptBlocks, decrypt)
-    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts256, decryptBlocks, decrypt)
+    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts128, decryptBlocksXts, decrypt)
+    CRYPT_BLOCKS_XTS_WRAPPER_FUNC(Xts256, decryptBlocksXts, decrypt)
 } // namespace aesni
 
 // pIv arg to be removed and this is made same as other ciper wrapper func

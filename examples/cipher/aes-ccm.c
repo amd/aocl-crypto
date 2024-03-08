@@ -142,7 +142,7 @@ aclp_aes_ccm_encrypt_demo(
     const Uint8* iv,
     const Uint32 ivLen,
     const Uint8* ad,
-    const Uint32 adLen,
+    const Uint32 aadLen,
     Uint8*       tag,
     const Uint32 tagLen,
     const Uint8* pKey,
@@ -169,7 +169,7 @@ aclp_aes_ccm_encrypt_demo(
     }
 
     // Additional Data
-    err = alcp_cipher_aead_set_aad(&handle, ad, adLen);
+    err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
         printf("Error: unable ccm add data processing \n");
         alcp_error_str(err, err_buf, err_size);
@@ -202,7 +202,7 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
                           const Uint8* iv,
                           const Uint32 ivLen,
                           const Uint8* ad,
-                          const Uint32 adLen,
+                          const Uint32 aadLen,
                           Uint8*       tag,
                           const Uint32 tagLen,
                           const Uint8* pKey,
@@ -230,7 +230,7 @@ aclp_aes_ccm_decrypt_demo(const Uint8* ciphertxt,
     }
 
     // Additional Data
-    err = alcp_cipher_aead_set_aad(&handle, ad, adLen);
+    err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm add data processing \n");
         alcp_error_str(err, err_buf, err_size);

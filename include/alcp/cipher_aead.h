@@ -342,7 +342,7 @@ alcp_cipher_aead_set_aad(const alc_cipher_handle_p pCipherHandle,
  * @endparblock
  * @param[in] pCipherHandle Session handle for encrypt/decrypt operation
  * @param[out] pOutput  Byte addressable memory to write tag into
- * @param[in] len       Length in bytes of Tag in bytes
+ * @param[in] tagLen       Length in bytes of Tag in bytes
  * @return   &nbsp; Error Code for the API called. If alc_error_t
  * is not ALC_ERROR_NONE then @ref alcp_cipher_aead_error or @ref alcp_error_str
  * needs to be called to know about error occurred
@@ -350,7 +350,7 @@ alcp_cipher_aead_set_aad(const alc_cipher_handle_p pCipherHandle,
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_aead_get_tag(const alc_cipher_handle_p pCipherHandle,
                          Uint8*                    pOutput,
-                         Uint64                    len);
+                         Uint64                    tagLen);
 
 /**
  * @brief AEAD set the tag length.
@@ -360,14 +360,14 @@ alcp_cipher_aead_get_tag(const alc_cipher_handle_p pCipherHandle,
  * alcp_cipher_aead_init.</b>
  * @endparblock
  * @param[in] pCipherHandle Session handle for encrypt/decrypt operation
- * @param[in] len       Length in bytes of Tag in bytes
+ * @param[in] tagLen       Length in bytes of Tag in bytes
  * @return   &nbsp; Error Code for the API called. If alc_error_t
  * is not ALC_ERROR_NONE then @ref alcp_cipher_aead_error or @ref alcp_error_str
  * needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
 alcp_cipher_aead_set_tag_length(const alc_cipher_handle_p pCipherHandle,
-                                Uint64                    len);
+                                Uint64                    tagLen);
 
 /**
  * FIXME: Need to fix return type of API

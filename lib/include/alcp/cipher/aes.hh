@@ -113,42 +113,41 @@ class Aes : public Rijndael
 };
 
 // class  for all AES cipher modes
-#define AES_CLASS_GEN(CHILD_NEW, PARENT1, PARENT2)                             \
-    class ALCP_API_EXPORT CHILD_NEW                                            \
-        : PARENT1                                                              \
-        , PARENT2                                                              \
+#define AES_CLASS_GEN(CHILD_NEW, PARENT)                                       \
+    class ALCP_API_EXPORT CHILD_NEW : PARENT                                   \
+                                                                               \
     {                                                                          \
       public:                                                                  \
         CHILD_NEW(){};                                                         \
         ~CHILD_NEW(){};                                                        \
                                                                                \
       public:                                                                  \
-        virtual alc_error_t encrypt(const Uint8* pPlainText,                   \
-                                    Uint8*       pCipherText,                  \
-                                    Uint64       len) const final;                   \
+        alc_error_t encrypt(const Uint8* pPlainText,                           \
+                            Uint8*       pCipherText,                          \
+                            Uint64       len) const;                                 \
                                                                                \
-        virtual alc_error_t decrypt(const Uint8* pCipherText,                  \
-                                    Uint8*       pPlainText,                   \
-                                    Uint64       len) const final;                   \
+        alc_error_t decrypt(const Uint8* pCipherText,                          \
+                            Uint8*       pPlainText,                           \
+                            Uint64       len) const;                                 \
     };
 
-AES_CLASS_GEN(Ofb, public Aes, public ICipher)
+AES_CLASS_GEN(Ofb, public Aes)
 
 // class  for all AEAD cipher modes
-#define AEAD_CLASS_GEN(CHILD_NEW, PARENT1)                                     \
-    class ALCP_API_EXPORT CHILD_NEW : PARENT1                                  \
+#define AEAD_CLASS_GEN(CHILD_NEW, PARENT)                                      \
+    class ALCP_API_EXPORT CHILD_NEW : PARENT                                   \
     {                                                                          \
       public:                                                                  \
         CHILD_NEW() {}                                                         \
         ~CHILD_NEW() {}                                                        \
                                                                                \
       public:                                                                  \
-        virtual alc_error_t encryptUpdate(const Uint8* pInput,                 \
-                                          Uint8*       pOutput,                \
-                                          Uint64       len);                         \
-        virtual alc_error_t decryptUpdate(const Uint8* pCipherText,            \
-                                          Uint8*       pPlainText,             \
-                                          Uint64       len);                         \
+        alc_error_t encryptUpdate(const Uint8* pInput,                         \
+                                  Uint8*       pOutput,                        \
+                                  Uint64       len);                                 \
+        alc_error_t decryptUpdate(const Uint8* pCipherText,                    \
+                                  Uint8*       pPlainText,                     \
+                                  Uint64       len);                                 \
     };
 
 } // namespace alcp::cipher

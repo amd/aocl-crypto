@@ -84,22 +84,22 @@ AlcpXtsCipher<encryptor>::update(alc_test_update_data_p data)
     const int   err_size = 256;
     Uint8       err_buf[err_size];
     if constexpr (encryptor == true) {
-        err = alcp_cipher_blocks_encrypt(&m_handle,
-                                         p_xts_update_data->m_input,
-                                         p_xts_update_data->m_output,
-                                         p_xts_update_data->m_input_len,
-                                         p_xts_update_data->m_aes_block_id);
+        err = alcp_cipher_blocks_encrypt_xts(&m_handle,
+                                             p_xts_update_data->m_input,
+                                             p_xts_update_data->m_output,
+                                             p_xts_update_data->m_input_len,
+                                             p_xts_update_data->m_aes_block_id);
         if (alcp_is_error(err)) {
             printf("Error: unable encrypt \n");
             alcp_error_str(err, err_buf, err_size);
             return false;
         }
     } else {
-        err = alcp_cipher_blocks_decrypt(&m_handle,
-                                         p_xts_update_data->m_input,
-                                         p_xts_update_data->m_output,
-                                         p_xts_update_data->m_input_len,
-                                         p_xts_update_data->m_aes_block_id);
+        err = alcp_cipher_blocks_decrypt_xts(&m_handle,
+                                             p_xts_update_data->m_input,
+                                             p_xts_update_data->m_output,
+                                             p_xts_update_data->m_input_len,
+                                             p_xts_update_data->m_aes_block_id);
         if (alcp_is_error(err)) {
             printf("Error: unable decrypt \n");
             alcp_error_str(err, err_buf, err_size);

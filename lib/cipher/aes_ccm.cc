@@ -41,7 +41,7 @@ namespace alcp::cipher {
 class Ccm::Impl
 {
   private:
-    Uint64       m_len               = 0;
+    Uint64       m_dataLen           = 0;
     Uint64       m_ivLen             = 0;
     Uint64       m_tagLen            = 0;
     Uint64       m_additionalDataLen = 0;
@@ -181,7 +181,7 @@ Ccm::Impl::cryptUpdate(const Uint8 pInput[],
     Status s = StatusOk();
     if ((pInput != NULL) && (pOutput != NULL)) {
 
-        m_len = len;
+        m_dataLen = len;
 
         const Uint8* p_keys  = m_ccm_obj->getEncryptKeys();
         const Uint32 cRounds = m_ccm_obj->getRounds();

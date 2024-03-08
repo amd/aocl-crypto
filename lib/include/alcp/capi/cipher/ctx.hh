@@ -49,13 +49,13 @@ struct Context
                            Uint8*       pDrc,
                            Uint64       len);
 
-    alc_error_t (*encryptBlocks)(const void*  rCipher,
-                                 const Uint8* pSrt,
-                                 Uint8*       pDrc,
-                                 Uint64       currPlainTextLen,
-                                 Uint64       startBlockNum);
+    alc_error_t (*encryptBlocksXts)(const void*  rCipher,
+                                    const Uint8* pSrt,
+                                    Uint8*       pDrc,
+                                    Uint64       currPlainTextLen,
+                                    Uint64       startBlockNum);
 
-    alc_error_t (*decryptBlocks)(const void*  rCipher,
+    alc_error_t (*decryptBlocksXts)(const void*  rCipher,
                                  const Uint8* pSrt,
                                  Uint8*       pDrc,
                                  Uint64       currCipherTextLen,
@@ -77,11 +77,11 @@ struct Context
                         const Uint8* pIv,
                         Uint64       ivLen);
 
-    alc_error_t (*setAad)(void* rCipher, const Uint8* pAad, Uint64 len);
+    alc_error_t (*setAad)(void* rCipher, const Uint8* pAad, Uint64 aadLen);
 
-    alc_error_t (*getTag)(void* rCipher, Uint8* pTag, Uint64 len);
+    alc_error_t (*getTag)(void* rCipher, Uint8* pTag, Uint64 tagLen);
 
-    alc_error_t (*setTagLength)(void* rCipher, Uint64 len);
+    alc_error_t (*setTagLength)(void* rCipher, Uint64 tagLen);
 
     alc_error_t (*finish)(const void*);
 

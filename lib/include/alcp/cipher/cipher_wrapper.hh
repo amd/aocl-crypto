@@ -45,11 +45,11 @@ namespace alcp::cipher {
 // GCM Authentication Data
 struct ALCP_API_EXPORT GcmAuthData
 {
-    __m128i m_hash_subKey_128 = _mm_setzero_si128(); // Uint8 m_hash_subKey[16];
-    __m128i m_gHash_128       = _mm_setzero_si128(); // Uint8 m_gHash[16];
-    __m128i m_iv_128          = _mm_setzero_si128(); // Persistent Counter
-    int     m_num_512blks_precomputed = 0;
-    int     m_num_256blks_precomputed = 0;
+    __m128i m_hash_subKey_128; // 16 bytes
+    __m128i m_gHash_128;       // 16 bytes
+    __m128i m_counter_128;     // Persistent Counter
+    int     m_num_512blks_precomputed;
+    int     m_num_256blks_precomputed;
 };
 
 // pIv arg to be removed
@@ -241,7 +241,7 @@ namespace aesni {
                          Uint64       len,         // message length in bytes
                          const Uint8* pKey,        // ptr to Key
                          int          nRounds,     // No. of rounds
-                         alcp::cipher::GcmAuthData* gcm,
+                         alcp::cipher::GcmAuthData* gcmAuthData,
                          __m128i                    reverse_mask_128,
                          bool                       isEncrypt,
                          Uint64*                    pGcmCtxHashSubkeyTable);
@@ -382,7 +382,7 @@ namespace vaes512 {
                               bool                       isFirstUpdate,
                               const Uint8*               pKey,
                               int                        nRounds,
-                              alcp::cipher::GcmAuthData* gcm,
+                              alcp::cipher::GcmAuthData* gcmAuthData,
                               __m128i                    reverse_mask_128,
                               Uint64* pGcmCtxHashSubkeyTable);
 
@@ -392,7 +392,7 @@ namespace vaes512 {
                               bool                       isFirstUpdate,
                               const Uint8*               pKey,
                               int                        nRounds,
-                              alcp::cipher::GcmAuthData* gcm,
+                              alcp::cipher::GcmAuthData* gcmAuthData,
                               __m128i                    reverse_mask_128,
                               Uint64* pGcmCtxHashSubkeyTable);
 
@@ -402,7 +402,7 @@ namespace vaes512 {
                               bool                       isFirstUpdate,
                               const Uint8*               pKey,
                               int                        nRounds,
-                              alcp::cipher::GcmAuthData* gcm,
+                              alcp::cipher::GcmAuthData* gcmAuthData,
                               __m128i                    reverse_mask_128,
                               Uint64* pGcmCtxHashSubkeyTable);
 
@@ -412,7 +412,7 @@ namespace vaes512 {
                               bool                       isFirstUpdate,
                               const Uint8*               pKey,
                               int                        nRounds,
-                              alcp::cipher::GcmAuthData* gcm,
+                              alcp::cipher::GcmAuthData* gcmAuthData,
                               __m128i                    reverse_mask_128,
                               Uint64* pGcmCtxHashSubkeyTable);
 
@@ -422,7 +422,7 @@ namespace vaes512 {
                               bool                       isFirstUpdate,
                               const Uint8*               pKey,
                               int                        nRounds,
-                              alcp::cipher::GcmAuthData* gcm,
+                              alcp::cipher::GcmAuthData* gcmAuthData,
                               __m128i                    reverse_mask_128,
                               Uint64* pGcmCtxHashSubkeyTable);
 
@@ -432,7 +432,7 @@ namespace vaes512 {
                               bool                       isFirstUpdate,
                               const Uint8*               pKey,
                               int                        nRounds,
-                              alcp::cipher::GcmAuthData* gcm,
+                              alcp::cipher::GcmAuthData* gcmAuthData,
                               __m128i                    reverse_mask_128,
                               Uint64* pGcmCtxHashSubkeyTable);
 
@@ -521,7 +521,7 @@ namespace vaes {
                               bool                       isFirstUpdate,
                               const Uint8*               pKey,
                               int                        nRounds,
-                              alcp::cipher::GcmAuthData* gcm,
+                              alcp::cipher::GcmAuthData* gcmAuthData,
                               __m128i                    reverse_mask_128,
                               Uint64* pGcmCtxHashSubkeyTable);
 
@@ -531,7 +531,7 @@ namespace vaes {
                               bool                       isFirstUpdate,
                               const Uint8*               pKey,
                               int                        nRounds,
-                              alcp::cipher::GcmAuthData* gcm,
+                              alcp::cipher::GcmAuthData* gcmAuthData,
                               __m128i                    reverse_mask_128,
                               Uint64* pGcmCtxHashSubkeyTable);
 
@@ -541,7 +541,7 @@ namespace vaes {
                               bool                       isFirstUpdate,
                               const Uint8*               pKey,
                               int                        nRounds,
-                              alcp::cipher::GcmAuthData* gcm,
+                              alcp::cipher::GcmAuthData* gcmAuthData,
                               __m128i                    reverse_mask_128,
                               Uint64* pGcmCtxHashSubkeyTable);
 
@@ -551,7 +551,7 @@ namespace vaes {
                               bool                       isFirstUpdate,
                               const Uint8*               pKey,
                               int                        nRounds,
-                              alcp::cipher::GcmAuthData* gcm,
+                              alcp::cipher::GcmAuthData* gcmAuthData,
                               __m128i                    reverse_mask_128,
                               Uint64* pGcmCtxHashSubkeyTable);
 
@@ -561,7 +561,7 @@ namespace vaes {
                               bool                       isFirstUpdate,
                               const Uint8*               pKey,
                               int                        nRounds,
-                              alcp::cipher::GcmAuthData* gcm,
+                              alcp::cipher::GcmAuthData* gcmAuthData,
                               __m128i                    reverse_mask_128,
                               Uint64* pGcmCtxHashSubkeyTable);
 
@@ -571,7 +571,7 @@ namespace vaes {
                               bool                       isFirstUpdate,
                               const Uint8*               pKey,
                               int                        nRounds,
-                              alcp::cipher::GcmAuthData* gcm,
+                              alcp::cipher::GcmAuthData* gcmAuthData,
                               __m128i                    reverse_mask_128,
                               Uint64* pGcmCtxHashSubkeyTable);
 

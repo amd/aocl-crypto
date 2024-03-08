@@ -53,20 +53,20 @@ class ALCP_API_EXPORT Cbc : public Aes
 };
 
 namespace vaes512 {
-    AES_CLASS_GEN(Cbc128, public Cbc, public ICipher)
-    AES_CLASS_GEN(Cbc192, public Cbc, public ICipher)
-    AES_CLASS_GEN(Cbc256, public Cbc, public ICipher)
+    AES_CLASS_GEN(Cbc128, public Cbc)
+    AES_CLASS_GEN(Cbc192, public Cbc)
+    AES_CLASS_GEN(Cbc256, public Cbc)
 } // namespace vaes512
 
 namespace vaes {
-    AES_CLASS_GEN(Cbc128, public Cbc, public ICipher)
-    AES_CLASS_GEN(Cbc192, public Cbc, public ICipher)
-    AES_CLASS_GEN(Cbc256, public Cbc, public ICipher)
+    AES_CLASS_GEN(Cbc128, public Cbc)
+    AES_CLASS_GEN(Cbc192, public Cbc)
+    AES_CLASS_GEN(Cbc256, public Cbc)
 } // namespace vaes
 
 namespace aesni {
-    AES_CLASS_GEN(Cbc128, public Cbc, public ICipher)
-    AES_CLASS_GEN(Cbc192, public Cbc, public ICipher)
-    AES_CLASS_GEN(Cbc256, public Cbc, public ICipher)
+    AES_CLASS_GEN(Cbc128, public Cbc)
+    AES_CLASS_GEN(Cbc192, public Cbc)
+    AES_CLASS_GEN(Cbc256, public Cbc)
 } // namespace aesni
 } // namespace alcp::cipher

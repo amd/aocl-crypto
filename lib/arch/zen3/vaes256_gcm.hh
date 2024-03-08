@@ -162,18 +162,19 @@ void inline getPrecomputedTable(bool     isFirstUpdate,
                                 __m256i* pHsubkey_256_precomputed,
                                 __m256i* pHsubkey_256,
                                 int      num_256_blks,
-                                alcp::cipher::GcmAuthData* gcm,
+                                alcp::cipher::GcmAuthData* gcmAuthData,
                                 __m128i                    const_factor_128)
 {
 
-    if (isFirstUpdate || (num_256_blks > gcm->m_num_256blks_precomputed)) {
+    if (isFirstUpdate
+        || (num_256_blks > gcmAuthData->m_num_256blks_precomputed)) {
 
         computeHashSubKeys(num_256_blks,
-                           gcm->m_hash_subKey_128,
+                           gcmAuthData->m_hash_subKey_128,
                            pHsubkey_256,
                            const_factor_128);
 
-        gcm->m_num_256blks_precomputed = num_256_blks;
+        gcmAuthData->m_num_256blks_precomputed = num_256_blks;
 
         for (int i = 0; i < num_256_blks; i++) {
             __m256i temp = _mm256_loadu_si256(pHsubkey_256);

@@ -78,48 +78,46 @@ GetSbox(Uint8 offset, bool use_invsbox = false)
     return utils::GetSbox(offset, use_invsbox);
 }
 
-#define AES_XTS_CLASS_GEN(CHILD_NEW, PARENT1, PARENT2)                         \
-    class ALCP_API_EXPORT CHILD_NEW                                            \
-        : PARENT1                                                              \
-        , PARENT2                                                              \
+#define AES_XTS_CLASS_GEN(CHILD_NEW, PARENT)                                   \
+    class ALCP_API_EXPORT CHILD_NEW : PARENT                                   \
     {                                                                          \
       public:                                                                  \
         CHILD_NEW(){};                                                         \
         ~CHILD_NEW(){};                                                        \
                                                                                \
       public:                                                                  \
-        virtual alc_error_t encrypt(const Uint8* pPlainText,                   \
-                                    Uint8*       pCipherText,                  \
-                                    Uint64       len) const final;                   \
+        alc_error_t encrypt(const Uint8* pPlainText,                           \
+                            Uint8*       pCipherText,                          \
+                            Uint64       len) const;                                 \
                                                                                \
-        virtual alc_error_t decrypt(const Uint8* pCipherText,                  \
-                                    Uint8*       pPlainText,                   \
-                                    Uint64       len) const final;                   \
+        alc_error_t decrypt(const Uint8* pCipherText,                          \
+                            Uint8*       pPlainText,                           \
+                            Uint64       len) const;                                 \
                                                                                \
-        Status encryptBlocks(const Uint8* pSrc,                                \
-                             Uint8*       pDest,                               \
-                             Uint64       currSrcLen,                          \
-                             Uint64       startBlockNum);                            \
+        Status encryptBlocksXts(const Uint8* pSrc,                             \
+                                Uint8*       pDest,                            \
+                                Uint64       currSrcLen,                       \
+                                Uint64       startBlockNum);                         \
                                                                                \
-        Status decryptBlocks(const Uint8* pSrc,                                \
-                             Uint8*       pDest,                               \
-                             Uint64       currSrcLen,                          \
-                             Uint64       startBlockNum);                            \
+        Status decryptBlocksXts(const Uint8* pSrc,                             \
+                                Uint8*       pDest,                            \
+                                Uint64       currSrcLen,                       \
+                                Uint64       startBlockNum);                         \
     };
 
 namespace vaes512 {
-    AES_XTS_CLASS_GEN(Xts128, public Xts, public ICipher)
-    AES_XTS_CLASS_GEN(Xts256, public Xts, public ICipher)
+    AES_XTS_CLASS_GEN(Xts128, public Xts)
+    AES_XTS_CLASS_GEN(Xts256, public Xts)
 } // namespace vaes512
 
 namespace vaes {
-    AES_XTS_CLASS_GEN(Xts128, public Xts, public ICipher)
-    AES_XTS_CLASS_GEN(Xts256, public Xts, public ICipher)
+    AES_XTS_CLASS_GEN(Xts128, public Xts)
+    AES_XTS_CLASS_GEN(Xts256, public Xts)
 } // namespace vaes
 
 namespace aesni {
-    AES_XTS_CLASS_GEN(Xts128, public Xts, public ICipher)
-    AES_XTS_CLASS_GEN(Xts256, public Xts, public ICipher)
+    AES_XTS_CLASS_GEN(Xts128, public Xts)
+    AES_XTS_CLASS_GEN(Xts256, public Xts)
 } // namespace aesni
 
 } // namespace alcp::cipher

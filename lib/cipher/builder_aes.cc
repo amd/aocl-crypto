@@ -107,14 +107,14 @@ __build_aes_cipher_xts(const Uint32 keyLen, Context& ctx)
     // FIXME In future every non AEAD Cipher should also use this
     if (keyLen == ALC_KEY_LEN_128) {
         _build_aes_cipher<T1>(keyLen, ctx);
-        ctx.encryptBlocks = __aes_wrapper_crypt_block<T1, true>;
-        ctx.decryptBlocks = __aes_wrapper_crypt_block<T1, false>;
-        ctx.init          = __aes_wrapperInit<T1>;
+        ctx.encryptBlocksXts = __aes_wrapper_crypt_block_xts<T1, true>;
+        ctx.decryptBlocksXts = __aes_wrapper_crypt_block_xts<T1, false>;
+        ctx.init             = __aes_wrapperInit<T1>;
     } else if (keyLen == ALC_KEY_LEN_256) {
         _build_aes_cipher<T2>(keyLen, ctx);
-        ctx.encryptBlocks = __aes_wrapper_crypt_block<T2, true>;
-        ctx.decryptBlocks = __aes_wrapper_crypt_block<T2, false>;
-        ctx.init          = __aes_wrapperInit<T2>;
+        ctx.encryptBlocksXts = __aes_wrapper_crypt_block_xts<T2, true>;
+        ctx.decryptBlocksXts = __aes_wrapper_crypt_block_xts<T2, false>;
+        ctx.init             = __aes_wrapperInit<T2>;
     }
 }
 

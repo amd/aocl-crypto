@@ -146,7 +146,7 @@ ippsAESEncryptXTS_Direct(const Ipp8u* pSrc,
     if (status != 0) {
         return status;
     }
-    err = alcp_cipher_blocks_encrypt(
+    err = alcp_cipher_blocks_encrypt_xts(
         &handle, pSrc, pDst, encBitSize / 8, aesBlkNo);
     if (alcp_is_error(err)) {
         printf("Error: unable encrypt \n");
@@ -178,7 +178,7 @@ ippsAESDecryptXTS_Direct(const Ipp8u* pSrc,
     if (status != 0) {
         return status;
     }
-    err = alcp_cipher_blocks_decrypt(
+    err = alcp_cipher_blocks_decrypt_xts(
         &handle, pSrc, pDst, encBitSize / 8, aesBlkNo);
     if (alcp_is_error(err)) {
         printf("Error: unable decrypt \n");

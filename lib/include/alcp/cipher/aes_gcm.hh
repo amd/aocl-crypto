@@ -47,37 +47,54 @@ namespace alcp::cipher {
 
 /*
  * @brief        AES Encryption in GCM(Galois Counter mode)
- * @note        TODO: Move this to a aes_Gcm.hh or other
+ * @note
  */
-class ALCP_API_EXPORT Gcm
-    : public Aes // IDecryptUpdater & other one should move to Aes or icipher
+
+class ALCP_API_EXPORT Gcm : public Aes
 {
   public:
-    __m128i m_reverse_mask_128 =
-        _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-    Uint64 m_len = 0;
-    // Uint64 m_ivLen = 12; // default 12 bytes or 96bits
+    __m128i m_reverse_mask_128; // local
+    Uint64  m_dataLen;          // g_ctx
 
   public:
-    explicit Gcm()
+    Gcm()
         : Aes()
-    {}
+    {
+        // default ivLength is 12 bytes or 96bits
+        m_ivLen   = 12;
+        m_dataLen = 0;
+        m_reverse_mask_128 =
+            _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+    }
 
     ~Gcm() {}
 };
 
-class ALCP_API_EXPORT GcmAuth : public GcmAuthData
+class ALCP_API_EXPORT GcmAuth
 {
   public:
-    Uint64  m_tagLen = 0;
-    __m128i m_tag_128;
-    Uint64  m_additionalDataLen     = 0;
-    Uint64  m_isHashSubKeyGenerated = false;
+    __m128i m_tag_128;           // g_ctx
+    Uint64  m_tagLen;            // g_ctx
+    Uint64  m_additionalDataLen; // g_ctx
+    __attribute__((aligned(64)))
+    Uint64 m_hashSubkeyTable[MAX_NUM_512_BLKS * 8]; // g_ctx
 
-    __attribute__((aligned(64))) Uint64 m_hashSubkeyTable[MAX_NUM_512_BLKS * 8];
+    GcmAuthData m_gcmAuthData;
 
   public:
-    GcmAuth() {}
+    GcmAuth()
+    {
+        m_tag_128           = _mm_setzero_si128();
+        m_tagLen            = 0;
+        m_additionalDataLen = 0;
+
+        // gcmAuthData
+        m_gcmAuthData.m_hash_subKey_128         = _mm_setzero_si128(); // local?
+        m_gcmAuthData.m_gHash_128               = _mm_setzero_si128(); // g_ctx
+        m_gcmAuthData.m_counter_128             = _mm_setzero_si128(); // g_ctx
+        m_gcmAuthData.m_num_512blks_precomputed = 0;                   // g_ctx
+        m_gcmAuthData.m_num_256blks_precomputed = 0;                   // g_ctx
+    }
     ~GcmAuth()
     {
         memset(m_hashSubkeyTable, 0, sizeof(Uint64) * MAX_NUM_512_BLKS * 8);
@@ -95,12 +112,12 @@ class ALCP_API_EXPORT GcmAuth : public GcmAuthData
         CHILD_NEW(){};                                                         \
         ~CHILD_NEW() {}                                                        \
                                                                                \
-        alc_error_t getTag(Uint8* pOutput, Uint64 len);                        \
+        alc_error_t getTag(Uint8* pOutput, Uint64 tagLen);                     \
         alc_error_t init(const Uint8* pKey,                                    \
                          Uint64       keyLen,                                  \
                          const Uint8* pIv,                                     \
                          Uint64       ivLen);                                        \
-        alc_error_t setAad(const Uint8* pInput, Uint64 len);                   \
+        alc_error_t setAad(const Uint8* pInput, Uint64 aadLen);                \
     };
 
 AEAD_AUTH_CLASS_GEN(GcmGhash, Gcm, GcmAuth)

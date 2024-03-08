@@ -138,7 +138,7 @@ gcmBlk(const __m128i* p_in_x,
        Uint64         blocks,
        const __m128i* pkey128,
        int            nRounds,
-       GcmAuthData*   gcm,
+       GcmAuthData*   gcmAuthData,
        __m128i        reverse_mask_128,
        bool           isEncrypt,
        int            remBytes)
@@ -161,20 +161,20 @@ gcmBlk(const __m128i* p_in_x,
         three_x = alcp_set_epi32(3, 0, 0, 0),
         four_x  = alcp_set_epi32(4, 0, 0, 0);
 
-    c1 = gcm->m_iv_128;
+    c1 = gcmAuthData->m_counter_128;
 
     // Propagate Key properly for parrallel gmulr
     if (blocks >= 4) {
-        gMul(gcm->m_hash_subKey_128,
-             gcm->m_hash_subKey_128,
+        gMul(gcmAuthData->m_hash_subKey_128,
+             gcmAuthData->m_hash_subKey_128,
              m_hash_subKey_128_2,
              const_factor_128);
         gMul(m_hash_subKey_128_2,
-             gcm->m_hash_subKey_128,
+             gcmAuthData->m_hash_subKey_128,
              m_hash_subKey_128_3,
              const_factor_128);
         gMul(m_hash_subKey_128_3,
-             gcm->m_hash_subKey_128,
+             gcmAuthData->m_hash_subKey_128,
              m_hash_subKey_128_4,
              const_factor_128);
     }
@@ -195,7 +195,7 @@ gcmBlk(const __m128i* p_in_x,
         a4 = alcp_loadu(p_in_x + 3);
 
         if (isEncrypt == false) {
-            gMulR(gcm->m_hash_subKey_128,
+            gMulR(gcmAuthData->m_hash_subKey_128,
                   m_hash_subKey_128_2,
                   m_hash_subKey_128_3,
                   m_hash_subKey_128_4,
@@ -204,7 +204,7 @@ gcmBlk(const __m128i* p_in_x,
                   a2,
                   a1,
                   reverse_mask_128,
-                  gcm->m_gHash_128,
+                  gcmAuthData->m_gHash_128,
                   const_factor_128);
         }
 
@@ -225,7 +225,7 @@ gcmBlk(const __m128i* p_in_x,
         c1 = alcp_add_epi32(c1, four_x);
 
         if (isEncrypt == true) {
-            gMulR(gcm->m_hash_subKey_128,
+            gMulR(gcmAuthData->m_hash_subKey_128,
                   m_hash_subKey_128_2,
                   m_hash_subKey_128_3,
                   m_hash_subKey_128_4,
@@ -234,7 +234,7 @@ gcmBlk(const __m128i* p_in_x,
                   a2,
                   a1,
                   reverse_mask_128,
-                  gcm->m_gHash_128,
+                  gcmAuthData->m_gHash_128,
                   const_factor_128);
         }
 
@@ -256,14 +256,14 @@ gcmBlk(const __m128i* p_in_x,
 
         if (isEncrypt == false) {
             gMulR(a1,
-                  gcm->m_hash_subKey_128,
+                  gcmAuthData->m_hash_subKey_128,
                   reverse_mask_128,
-                  gcm->m_gHash_128,
+                  gcmAuthData->m_gHash_128,
                   const_factor_128);
             gMulR(a2,
-                  gcm->m_hash_subKey_128,
+                  gcmAuthData->m_hash_subKey_128,
                   reverse_mask_128,
-                  gcm->m_gHash_128,
+                  gcmAuthData->m_gHash_128,
                   const_factor_128);
         }
 
@@ -281,14 +281,14 @@ gcmBlk(const __m128i* p_in_x,
 
         if (isEncrypt == true) {
             gMulR(a1,
-                  gcm->m_hash_subKey_128,
+                  gcmAuthData->m_hash_subKey_128,
                   reverse_mask_128,
-                  gcm->m_gHash_128,
+                  gcmAuthData->m_gHash_128,
                   const_factor_128);
             gMulR(a2,
-                  gcm->m_hash_subKey_128,
+                  gcmAuthData->m_hash_subKey_128,
                   reverse_mask_128,
-                  gcm->m_gHash_128,
+                  gcmAuthData->m_gHash_128,
                   const_factor_128);
         }
 
@@ -304,9 +304,9 @@ gcmBlk(const __m128i* p_in_x,
 
         if (isEncrypt == false) {
             gMulR(a1,
-                  gcm->m_hash_subKey_128,
+                  gcmAuthData->m_hash_subKey_128,
                   reverse_mask_128,
-                  gcm->m_gHash_128,
+                  gcmAuthData->m_gHash_128,
                   const_factor_128);
         }
 
@@ -320,9 +320,9 @@ gcmBlk(const __m128i* p_in_x,
 
         if (isEncrypt == true) {
             gMulR(a1,
-                  gcm->m_hash_subKey_128,
+                  gcmAuthData->m_hash_subKey_128,
                   reverse_mask_128,
-                  gcm->m_gHash_128,
+                  gcmAuthData->m_gHash_128,
                   const_factor_128);
         }
 
@@ -338,9 +338,9 @@ gcmBlk(const __m128i* p_in_x,
 
         if (isEncrypt == false) {
             gMulR(a1,
-                  gcm->m_hash_subKey_128,
+                  gcmAuthData->m_hash_subKey_128,
                   reverse_mask_128,
-                  gcm->m_gHash_128,
+                  gcmAuthData->m_gHash_128,
                   const_factor_128);
         }
 
@@ -354,9 +354,9 @@ gcmBlk(const __m128i* p_in_x,
 
         if (isEncrypt == true) {
             gMulR(a1,
-                  gcm->m_hash_subKey_128,
+                  gcmAuthData->m_hash_subKey_128,
                   reverse_mask_128,
-                  gcm->m_gHash_128,
+                  gcmAuthData->m_gHash_128,
                   const_factor_128);
         }
 
@@ -386,9 +386,9 @@ gcmBlk(const __m128i* p_in_x,
 
         if (isEncrypt == false) {
             gMulR(a1,
-                  gcm->m_hash_subKey_128,
+                  gcmAuthData->m_hash_subKey_128,
                   reverse_mask_128,
-                  gcm->m_gHash_128,
+                  gcmAuthData->m_gHash_128,
                   const_factor_128);
         }
 
@@ -404,13 +404,13 @@ gcmBlk(const __m128i* p_in_x,
 
         if (isEncrypt == true) {
             gMulR(a1,
-                  gcm->m_hash_subKey_128,
+                  gcmAuthData->m_hash_subKey_128,
                   reverse_mask_128,
-                  gcm->m_gHash_128,
+                  gcmAuthData->m_gHash_128,
                   const_factor_128);
         }
     }
-    gcm->m_iv_128 = c1;
+    gcmAuthData->m_counter_128 = c1;
     return blocks;
 }
 
@@ -420,7 +420,7 @@ CryptGcm(const Uint8* pInputText,  // ptr to inputText
          Uint64       len,         // message length in bytes
          const Uint8* pKey,        // ptr to Key
          int          nRounds,     // No. of rounds
-         GcmAuthData* gcm,
+         GcmAuthData* gcmAuthData,
          __m128i      reverse_mask_128,
          bool         isEncrypt,
          Uint64*      pGcmCtxHashSubkeyTable)
@@ -439,7 +439,7 @@ CryptGcm(const Uint8* pInputText,  // ptr to inputText
            pkey128,
            nRounds,
            // gcm specific params
-           gcm,
+           gcmAuthData,
            reverse_mask_128,
            isEncrypt,
            remBytes);

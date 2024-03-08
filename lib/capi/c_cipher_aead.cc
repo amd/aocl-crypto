@@ -181,7 +181,7 @@ alcp_cipher_aead_init(const alc_cipher_handle_p pCipherHandle,
 alc_error_t
 alcp_cipher_aead_set_aad(const alc_cipher_handle_p pCipherHandle,
                          const Uint8*              pInput,
-                         Uint64                    len)
+                         Uint64                    aadLen)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -194,7 +194,7 @@ alcp_cipher_aead_set_aad(const alc_cipher_handle_p pCipherHandle,
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify setAad to return Status and assign to context status
-    err = ctx->setAad(ctx->m_cipher, pInput, len);
+    err = ctx->setAad(ctx->m_cipher, pInput, aadLen);
 
     return err;
 }
@@ -202,7 +202,7 @@ alcp_cipher_aead_set_aad(const alc_cipher_handle_p pCipherHandle,
 alc_error_t
 alcp_cipher_aead_get_tag(const alc_cipher_handle_p pCipherHandle,
                          Uint8*                    pOutput,
-                         Uint64                    len)
+                         Uint64                    tagLen)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -211,32 +211,32 @@ alcp_cipher_aead_get_tag(const alc_cipher_handle_p pCipherHandle,
 
     ALCP_BAD_PTR_ERR_RET(pOutput, err);
 
-    ALCP_ZERO_LEN_ERR_RET(len, err);
+    ALCP_ZERO_LEN_ERR_RET(tagLen, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify getTag to return Status and assign to context status
-    err = ctx->getTag(ctx->m_cipher, pOutput, len);
+    err = ctx->getTag(ctx->m_cipher, pOutput, tagLen);
 
     return err;
 }
 
 alc_error_t
 alcp_cipher_aead_set_tag_length(const alc_cipher_handle_p pCipherHandle,
-                                Uint64                    len)
+                                Uint64                    tagLen)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
     ALCP_BAD_PTR_ERR_RET(pCipherHandle, err);
     ALCP_BAD_PTR_ERR_RET(pCipherHandle->ch_context, err);
 
-    ALCP_ZERO_LEN_ERR_RET(len, err);
+    ALCP_ZERO_LEN_ERR_RET(tagLen, err);
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
     // FIXME: Modify setTagLength to return Status and assign to context
     // status
-    err = ctx->setTagLength(ctx->m_cipher, len);
+    err = ctx->setTagLength(ctx->m_cipher, tagLen);
 
     return err;
 }

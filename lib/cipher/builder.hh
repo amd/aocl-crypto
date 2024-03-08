@@ -55,20 +55,20 @@ __aes_wrapper(const void* rCipher, const Uint8* pSrc, Uint8* pDest, Uint64 len)
 
 template<typename CIPHERMODE, bool encrypt = true>
 static alc_error_t
-__aes_wrapper_crypt_block(const void*  rCipher,
-                          const Uint8* pSrc,
-                          Uint8*       pDest,
-                          Uint64       currSrcLen,
-                          Uint64       startBlockNum)
+__aes_wrapper_crypt_block_xts(const void*  rCipher,
+                              const Uint8* pSrc,
+                              Uint8*       pDest,
+                              Uint64       currSrcLen,
+                              Uint64       startBlockNum)
 {
     Status e = StatusOk();
 
     auto ap = static_cast<CIPHERMODE*>(const_cast<void*>(rCipher));
 
     if constexpr (encrypt)
-        e.update(ap->encryptBlocks(pSrc, pDest, currSrcLen, startBlockNum));
+        e.update(ap->encryptBlocksXts(pSrc, pDest, currSrcLen, startBlockNum));
     else
-        e.update(ap->decryptBlocks(pSrc, pDest, currSrcLen, startBlockNum));
+        e.update(ap->decryptBlocksXts(pSrc, pDest, currSrcLen, startBlockNum));
 
     return !(e.ok() == 1);
 }

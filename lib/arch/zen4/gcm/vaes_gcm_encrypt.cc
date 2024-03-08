@@ -73,7 +73,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
                              const __m128i* pkey128,
                              int            nRounds,
                              // gcm specific params
-                             alcp::cipher::GcmAuthData* gcm,
+                             alcp::cipher::GcmAuthData* gcmAuthData,
                              __m128i                    reverse_mask_128,
                              int                        remBytes,
                              Uint64*                    pGcmCtxHashSubkeyTable)
@@ -111,7 +111,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
 
     const __m128i const_factor_128 = _mm_set_epi64x(0xC200000000000000, 0x1);
 
-    c1 = _mm512_broadcast_i64x2(gcm->m_iv_128);
+    c1 = _mm512_broadcast_i64x2(gcmAuthData->m_counter_128);
 
     _mm_prefetch(cast_to(pkey128), _MM_HINT_T0);
 
@@ -145,7 +145,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
                             p512GcmCtxHashSubkeyTable,
                             pHashSubkeyTableLocal,
                             num_512_blks,
-                            gcm,
+                            gcmAuthData,
                             const_factor_128);
     }
 
@@ -167,7 +167,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
     c4 = alcp_add_epi32(c2, two_x);
 
     __m512i Hsubkey_512_0, Hsubkey_512_1, Hsubkey_512_2, Hsubkey_512_3;
-    __m512i gHash_512 = _mm512_zextsi128_si512(gcm->m_gHash_128);
+    __m512i gHash_512 = _mm512_zextsi128_si512(gcmAuthData->m_gHash_128);
 
     /*
      * CORE BLOCK: (8x512)=32 blks aesenc, 32 blks gmul and 1 reduction.
@@ -543,7 +543,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
         blocks -= blockCount_1x512;
     }
 
-    gcm->m_gHash_128 = _mm512_castsi512_si128(gHash_512);
+    gcmAuthData->m_gHash_128 = _mm512_castsi512_si128(gHash_512);
 
     // residual block=1 when factor = 2, load and store only lower half.
     __m128i c1_128     = _mm512_castsi512_si128(c1);
@@ -565,11 +565,11 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
         // increment counter
         c1_128 = _mm_add_epi32(c1_128, one_lo_128);
 
-        __m128i ra1      = _mm_shuffle_epi8(a1, reverse_mask_128);
-        gcm->m_gHash_128 = _mm_xor_si128(ra1, gcm->m_gHash_128);
-        aesni::gMul(gcm->m_gHash_128,
-                    gcm->m_hash_subKey_128,
-                    gcm->m_gHash_128,
+        __m128i ra1              = _mm_shuffle_epi8(a1, reverse_mask_128);
+        gcmAuthData->m_gHash_128 = _mm_xor_si128(ra1, gcmAuthData->m_gHash_128);
+        aesni::gMul(gcmAuthData->m_gHash_128,
+                    gcmAuthData->m_hash_subKey_128,
+                    gcmAuthData->m_gHash_128,
                     const_factor_128);
 
         _mm_storeu_si128((__m128i*)p_out_x, a1);
@@ -606,11 +606,11 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
             p_store[i] = p_out[i];
         }
 
-        __m128i ra1      = _mm_shuffle_epi8(a1, reverse_mask_128);
-        gcm->m_gHash_128 = _mm_xor_si128(ra1, gcm->m_gHash_128);
-        aesni::gMul(gcm->m_gHash_128,
-                    gcm->m_hash_subKey_128,
-                    gcm->m_gHash_128,
+        __m128i ra1              = _mm_shuffle_epi8(a1, reverse_mask_128);
+        gcmAuthData->m_gHash_128 = _mm_xor_si128(ra1, gcmAuthData->m_gHash_128);
+        aesni::gMul(gcmAuthData->m_gHash_128,
+                    gcmAuthData->m_hash_subKey_128,
+                    gcmAuthData->m_gHash_128,
                     const_factor_128);
     }
 
@@ -618,7 +618,7 @@ Uint64 inline gcmBlk_512_enc(const __m512i* p_in_x,
     alcp_clear_keys_zmm(keys);
 
     // Extract the first counter
-    gcm->m_iv_128 = c1_128;
+    gcmAuthData->m_counter_128 = c1_128;
 
     return blocks;
 }
@@ -630,7 +630,7 @@ encryptGcm128(const Uint8*               pInputText,  // ptr to inputText
               bool                       isFirstUpdate,
               const Uint8*               pKey,    // ptr to Key
               const int                  nRounds, // No. of rounds
-              alcp::cipher::GcmAuthData* gcm,
+              alcp::cipher::GcmAuthData* gcmAuthData,
               __m128i                    reverse_mask_128,
               Uint64*                    pGcmCtxHashSubkeyTable)
 {
@@ -654,7 +654,7 @@ encryptGcm128(const Uint8*               pInputText,  // ptr to inputText
                                                  pkey128,
                                                  nRounds,
                                                  // gcm specific params
-                                                 gcm,
+                                                 gcmAuthData,
                                                  reverse_mask_128,
                                                  remBytes,
                                                  pGcmCtxHashSubkeyTable);
@@ -669,7 +669,7 @@ encryptGcm192(const Uint8*               pInputText,  // ptr to inputText
               bool                       isFirstUpdate,
               const Uint8*               pKey,    // ptr to Key
               const int                  nRounds, // No. of rounds
-              alcp::cipher::GcmAuthData* gcm,
+              alcp::cipher::GcmAuthData* gcmAuthData,
               __m128i                    reverse_mask_128,
               Uint64*                    pGcmCtxHashSubkeyTable)
 {
@@ -693,7 +693,7 @@ encryptGcm192(const Uint8*               pInputText,  // ptr to inputText
                                                  pkey128,
                                                  nRounds,
                                                  // gcm specific params
-                                                 gcm,
+                                                 gcmAuthData,
                                                  reverse_mask_128,
                                                  remBytes,
                                                  pGcmCtxHashSubkeyTable);
@@ -708,7 +708,7 @@ encryptGcm256(const Uint8*               pInputText,  // ptr to inputText
               bool                       isFirstUpdate,
               const Uint8*               pKey,    // ptr to Key
               const int                  nRounds, // No. of rounds
-              alcp::cipher::GcmAuthData* gcm,
+              alcp::cipher::GcmAuthData* gcmAuthData,
               __m128i                    reverse_mask_128,
               Uint64*                    pGcmCtxHashSubkeyTable)
 {
@@ -732,7 +732,7 @@ encryptGcm256(const Uint8*               pInputText,  // ptr to inputText
                                                  pkey128,
                                                  nRounds,
                                                  // gcm specific params
-                                                 gcm,
+                                                 gcmAuthData,
                                                  reverse_mask_128,
                                                  remBytes,
                                                  pGcmCtxHashSubkeyTable);

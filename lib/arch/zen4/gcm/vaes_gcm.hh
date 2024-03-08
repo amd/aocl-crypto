@@ -125,18 +125,19 @@ void inline getPrecomputedTable(bool     isFirstUpdate,
                                 __m512i* p512GcmCtxHashSubkeyTable,
                                 __m512i* pHashSubkeyTableLocal,
                                 int      num_512_blks,
-                                alcp::cipher::GcmAuthData* gcm,
+                                alcp::cipher::GcmAuthData* gcmAuthData,
                                 __m128i                    const_factor_128)
 {
 
-    if (isFirstUpdate || (num_512_blks > gcm->m_num_512blks_precomputed)) {
+    if (isFirstUpdate
+        || (num_512_blks > gcmAuthData->m_num_512blks_precomputed)) {
         computeHashSubKeys(num_512_blks,
-                           gcm->m_hash_subKey_128,
+                           gcmAuthData->m_hash_subKey_128,
                            p512GcmCtxHashSubkeyTable,
                            pHashSubkeyTableLocal,
                            const_factor_128);
 
-        gcm->m_num_512blks_precomputed = num_512_blks;
+        gcmAuthData->m_num_512blks_precomputed = num_512_blks;
     } else if (num_512_blks > 4) {
         for (int i = 0; i < num_512_blks; i += 4) {
             pHashSubkeyTableLocal[0] =

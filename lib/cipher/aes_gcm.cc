@@ -58,8 +58,8 @@ GcmGhash::setAad(const Uint8* pInput, Uint64 len)
 
     err = aesni::processAdditionalDataGcm(pAdditionalData,
                                           m_additionalDataLen,
-                                          m_gHash_128,
-                                          m_hash_subKey_128,
+                                          m_gcmAuthData.m_gHash_128,
+                                          m_gcmAuthData.m_hash_subKey_128,
                                           m_reverse_mask_128);
 
     return err;
@@ -84,19 +84,19 @@ GcmGhash::init(const Uint8* pKey, Uint64 keyLen, const Uint8* pIv, Uint64 ivLen)
     // In init call, we generate HashSubKey, partial
     // tag data.
     if (m_isIvset && m_isKeyset) {
-        m_gHash_128         = _mm_setzero_si128();
-        m_hash_subKey_128   = _mm_setzero_si128();
-        m_len               = 0;
-        m_additionalDataLen = 0;
-        m_tagLen            = 0;
+        m_gcmAuthData.m_gHash_128       = _mm_setzero_si128();
+        m_gcmAuthData.m_hash_subKey_128 = _mm_setzero_si128();
+        m_dataLen                       = 0;
+        m_additionalDataLen             = 0;
+        m_tagLen                        = 0;
 
         err = aesni::InitGcm(m_enc_key,
                              m_nrounds,
                              m_iv,
                              m_ivLen,
-                             m_hash_subKey_128,
+                             m_gcmAuthData.m_hash_subKey_128,
                              m_tag_128,
-                             m_iv_128,
+                             m_gcmAuthData.m_counter_128,
                              m_reverse_mask_128);
     } else {
         return ALC_ERROR_BAD_STATE; // FIXME: better error code?
@@ -106,25 +106,25 @@ GcmGhash::init(const Uint8* pKey, Uint64 keyLen, const Uint8* pIv, Uint64 ivLen)
 }
 
 alc_error_t
-GcmGhash::getTag(Uint8* pOutput, Uint64 len)
+GcmGhash::getTag(Uint8* pOutput, Uint64 tagLen)
 {
     alc_error_t err = ALC_ERROR_NONE;
     if (m_iv == nullptr) {
         err = ALC_ERROR_BAD_STATE;
         return err;
-    } else if (len > 16 || len == 0) {
+    } else if (tagLen > 16 || tagLen == 0) {
         err = ALC_ERROR_INVALID_SIZE;
         return err;
     }
 
     Uint8* ptag = pOutput;
 
-    err = aesni::GetTagGcm(len,
-                           m_len,
+    err = aesni::GetTagGcm(tagLen,
+                           m_dataLen,
                            m_additionalDataLen,
-                           m_gHash_128,
+                           m_gcmAuthData.m_gHash_128,
                            m_tag_128,
-                           m_hash_subKey_128,
+                           m_gcmAuthData.m_hash_subKey_128,
                            m_reverse_mask_128,
                            ptag);
     if (alcp_is_error(err)) {
@@ -141,9 +141,9 @@ GcmGhash::getTag(Uint8* pOutput, Uint64 len)
         const Uint8* pinput, Uint8* pOutput, Uint64 len)                       \
     {                                                                          \
         alc_error_t err = ALC_ERROR_NONE;                                      \
-        m_len += len;                                                          \
+        m_dataLen += len;                                                      \
         bool isFirstUpdate = false;                                            \
-        if (len == m_len) {                                                    \
+        if (len == m_dataLen) {                                                \
             isFirstUpdate = true;                                              \
         }                                                                      \
         err = FUNC_NAME(pinput,                                                \
@@ -152,7 +152,7 @@ GcmGhash::getTag(Uint8* pOutput, Uint64 len)
                         isFirstUpdate,                                         \
                         PKEY,                                                  \
                         NUM_ROUNDS,                                            \
-                        this,                                                  \
+                        &m_gcmAuthData,                                        \
                         m_reverse_mask_128,                                    \
                         m_hashSubkeyTable);                                    \
         return err;                                                            \
@@ -203,19 +203,22 @@ namespace vaes {
 
 namespace aesni {
 
+    // below code to be re-written to use CRYPT_AEAD_WRAPPER_FUNC wrapper
+    // itself.
+
     alc_error_t GcmAEAD128::decryptUpdate(const Uint8* pInput,
                                           Uint8*       pOutput,
                                           Uint64       len)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        m_len += len;
+        m_dataLen += len;
         // to be modified to decryptGcm128 function
         err = CryptGcm(pInput,
                        pOutput,
                        len,
                        m_enc_key,
                        m_nrounds,
-                       this,
+                       &m_gcmAuthData,
                        m_reverse_mask_128,
                        false,
                        m_hashSubkeyTable);
@@ -227,14 +230,14 @@ namespace aesni {
                                           Uint64       len)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        m_len += len;
+        m_dataLen += len;
         // to be modified to decryptGcm192 function
         err = CryptGcm(pInput,
                        pOutput,
                        len,
                        m_enc_key,
                        m_nrounds,
-                       this,
+                       &m_gcmAuthData,
                        m_reverse_mask_128,
                        false,
                        m_hashSubkeyTable);
@@ -246,14 +249,14 @@ namespace aesni {
                                           Uint64       len)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        m_len += len;
+        m_dataLen += len;
         // to be modified to decryptGcm256 function
         err = CryptGcm(pInput,
                        pOutput,
                        len,
                        m_enc_key,
                        m_nrounds,
-                       this,
+                       &m_gcmAuthData,
                        m_reverse_mask_128,
                        false,
                        m_hashSubkeyTable);
@@ -265,14 +268,14 @@ namespace aesni {
                                           Uint64       len)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        m_len += len;
+        m_dataLen += len;
         // to be modified to encryptGcm128 function
         err = CryptGcm(pInput,
                        pOutput,
                        len,
                        m_enc_key,
                        m_nrounds,
-                       this,
+                       &m_gcmAuthData,
                        m_reverse_mask_128,
                        true,
                        m_hashSubkeyTable);
@@ -284,14 +287,14 @@ namespace aesni {
                                           Uint64       len)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        m_len += len;
+        m_dataLen += len;
         // to be modified to encryptGcm192 function
         err = CryptGcm(pInput,
                        pOutput,
                        len,
                        m_enc_key,
                        m_nrounds,
-                       this,
+                       &m_gcmAuthData,
                        m_reverse_mask_128,
                        true,
                        m_hashSubkeyTable);
@@ -303,14 +306,14 @@ namespace aesni {
                                           Uint64       len)
     {
         alc_error_t err = ALC_ERROR_NONE;
-        m_len += len;
+        m_dataLen += len;
         // to be modified to encryptGcm192 function
         err = CryptGcm(pInput,
                        pOutput,
                        len,
                        m_enc_key,
                        m_nrounds,
-                       this,
+                       &m_gcmAuthData,
                        m_reverse_mask_128,
                        true,
                        m_hashSubkeyTable);

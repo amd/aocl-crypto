@@ -572,17 +572,17 @@ TEST(XTS, encrypt_huge_multi_update_serial)
 
     xts_obj->setIv(iv, 16);
 
-    Status error = xts_obj->encryptBlocks(
+    Status error = xts_obj->encryptBlocksXts(
         &(plainText[0]) + (5 * 16), &(output_buffer[0]) + (5 * 16), 16, 5);
 
     EXPECT_TRUE(error.ok());
 
-    error = xts_obj->encryptBlocks(
+    error = xts_obj->encryptBlocksXts(
         &(plainText[0]) + (10 * 16), &(output_buffer[0]) + (10 * 16), 16, 10);
 
     EXPECT_TRUE(error.ok());
 
-    error = xts_obj->encryptBlocks(
+    error = xts_obj->encryptBlocksXts(
         &(plainText[0]) + (0 * 16), &(output_buffer[0]) + (0 * 16), 16, 0);
 
     EXPECT_TRUE(error.ok());
@@ -607,7 +607,7 @@ TEST(XTS, encrypt_huge_multi_update_serial)
 
     EXPECT_FALSE(alcp_is_error(err));
 
-    error = xts_obj->encryptBlocks(
+    error = xts_obj->encryptBlocksXts(
         &(plainText[0]) + (6 * 16), &(output_buffer[0]) + (6 * 16), 16, 6);
 
     EXPECT_TRUE(error.ok());
@@ -627,7 +627,7 @@ TEST(XTS, encrypt_huge_multi_update_serial)
 
     EXPECT_FALSE(alcp_is_error(err));
 
-    error = xts_obj->encryptBlocks(&(plainText[0]) + (11 * 16),
+    error = xts_obj->encryptBlocksXts(&(plainText[0]) + (11 * 16),
                                    &(output_buffer[0]) + (11 * 16),
                                    203 - 176,
                                    11);
@@ -719,7 +719,7 @@ TEST(XTS, encrypt_huge_multi_update_arbitrary)
         int curr_block = blocks - 1;
         while (curr_block >= 0) {
             Status error =
-                xts_obj->encryptBlocks(curr_pt, curr_ot, 16, curr_block);
+                xts_obj->encryptBlocksXts(curr_pt, curr_ot, 16, curr_block);
 
             EXPECT_TRUE(error.ok());
             curr_ot -= 16;
@@ -730,7 +730,7 @@ TEST(XTS, encrypt_huge_multi_update_arbitrary)
         curr_ot = &(output_buffer[0]) + multi_update_size;
         // Last 2 blocks if available
         if (extra_update_size) {
-            Status error = xts_obj->encryptBlocks(
+            Status error = xts_obj->encryptBlocksXts(
                 curr_pt, curr_ot, extra_update_size, blocks);
 
             EXPECT_TRUE(error.ok());

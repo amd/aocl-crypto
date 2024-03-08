@@ -147,11 +147,11 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
 }
 
 alc_error_t
-alcp_cipher_blocks_encrypt(const alc_cipher_handle_p pCipherHandle,
-                           const Uint8*              pPlainText,
-                           Uint8*                    pCipherText,
-                           Uint64                    currPlainTextLen,
-                           Uint64                    startBlockNum)
+alcp_cipher_blocks_encrypt_xts(const alc_cipher_handle_p pCipherHandle,
+                               const Uint8*              pPlainText,
+                               Uint8*                    pCipherText,
+                               Uint64                    currPlainTextLen,
+                               Uint64                    startBlockNum)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -164,11 +164,11 @@ alcp_cipher_blocks_encrypt(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    err = ctx->encryptBlocks(ctx->m_cipher,
-                             pPlainText,
-                             pCipherText,
-                             currPlainTextLen,
-                             startBlockNum);
+    err = ctx->encryptBlocksXts(ctx->m_cipher,
+                                pPlainText,
+                                pCipherText,
+                                currPlainTextLen,
+                                startBlockNum);
 
     return err;
 }
@@ -196,11 +196,11 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
 }
 
 alc_error_t
-alcp_cipher_blocks_decrypt(const alc_cipher_handle_p pCipherHandle,
-                           const Uint8*              pCipherText,
-                           Uint8*                    pPlainText,
-                           Uint64                    currCipherTextLen,
-                           Uint64                    startBlockNum)
+alcp_cipher_blocks_decrypt_xts(const alc_cipher_handle_p pCipherHandle,
+                               const Uint8*              pCipherText,
+                               Uint8*                    pPlainText,
+                               Uint64                    currCipherTextLen,
+                               Uint64                    startBlockNum)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -213,11 +213,11 @@ alcp_cipher_blocks_decrypt(const alc_cipher_handle_p pCipherHandle,
 
     auto ctx = static_cast<cipher::Context*>(pCipherHandle->ch_context);
 
-    err = ctx->decryptBlocks(ctx->m_cipher,
-                             pCipherText,
-                             pPlainText,
-                             currCipherTextLen,
-                             startBlockNum);
+    err = ctx->decryptBlocksXts(ctx->m_cipher,
+                                pCipherText,
+                                pPlainText,
+                                currCipherTextLen,
+                                startBlockNum);
 
     return err;
 }

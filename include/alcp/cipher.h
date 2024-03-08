@@ -121,7 +121,6 @@ typedef enum _alc_aes_ctrl
  */
 typedef struct _alc_cipher_algo_info
 {
-
     Uint64 dummy;
 } alc_cipher_algo_info_t, *alc_cpher_algo_info_p;
 
@@ -312,11 +311,11 @@ alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
  * needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_cipher_blocks_encrypt(const alc_cipher_handle_p pCipherHandle,
-                           const Uint8*              pPlainText,
-                           Uint8*                    pCipherText,
-                           Uint64                    currPlainTextLen,
-                           Uint64                    startBlockNum);
+alcp_cipher_blocks_encrypt_xts(const alc_cipher_handle_p pCipherHandle,
+                               const Uint8*              pPlainText,
+                               Uint8*                    pCipherText,
+                               Uint64                    currPlainTextLen,
+                               Uint64                    startBlockNum);
 
 /**
  * @brief    Decryption of cipher text and write it to plain text with
@@ -343,11 +342,11 @@ alcp_cipher_blocks_encrypt(const alc_cipher_handle_p pCipherHandle,
  * needs to be called to know about error occurred
  */
 ALCP_API_EXPORT alc_error_t
-alcp_cipher_blocks_decrypt(const alc_cipher_handle_p pCipherHandle,
-                           const Uint8*              pCipherText,
-                           Uint8*                    pPlainText,
-                           Uint64                    currCipherTextLen,
-                           Uint64                    startBlockNum);
+alcp_cipher_blocks_decrypt_xts(const alc_cipher_handle_p pCipherHandle,
+                               const Uint8*              pCipherText,
+                               Uint8*                    pPlainText,
+                               Uint64                    currCipherTextLen,
+                               Uint64                    startBlockNum);
 
 /**
  * FIXME: Need to fix return type of API

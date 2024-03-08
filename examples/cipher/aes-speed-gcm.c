@@ -161,7 +161,7 @@ alcp_aes_gcm_encrypt_demo(
     Uint8*       iv,
     const Uint32 ivLen,
     Uint8*       ad,
-    const Uint32 adLen,
+    const Uint32 aadLen,
     Uint8*       tag,
     const Uint32 tagLen,
     const Uint8* pKey,
@@ -180,7 +180,7 @@ alcp_aes_gcm_encrypt_demo(
     }
 
     // Additional Data
-    err = alcp_cipher_aead_set_aad(&handle, ad, adLen);
+    err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm add data processing \n");
         alcp_error_str(err, err_buf, err_size);
@@ -232,7 +232,7 @@ alcp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
                           Uint8*       iv,
                           const Uint32 ivLen,
                           Uint8*       ad,
-                          const Uint32 adLen,
+                          const Uint32 aadLen,
                           Uint8*       tag,
                           const Uint32 tagLen,
                           const Uint8* pKey,
@@ -252,7 +252,7 @@ alcp_aes_gcm_decrypt_demo(const Uint8* ciphertxt,
     }
 
     // Additional Data
-    err = alcp_cipher_aead_set_aad(&handle, ad, adLen);
+    err = alcp_cipher_aead_set_aad(&handle, ad, aadLen);
     if (alcp_is_error(err)) {
         printf("Error: unable gcm add data processing \n");
         alcp_error_str(err, err_buf, err_size);
@@ -330,13 +330,13 @@ encrypt_decrypt_demo(Uint8*            inputText,  // plaintext
     Uint32 ivLen = 12;
 
     /* additional data, tag used in GCM */
-    Uint32 adLen  = 20;
+    Uint32 aadLen = 20;
     Uint32 tagLen = 16;
 
-    Uint8* ad = malloc(adLen);
+    Uint8* ad = malloc(aadLen);
     Uint8  tag[16];
-    if (adLen) {
-        memset(ad, 33, adLen);
+    if (aadLen) {
+        memset(ad, 33, aadLen);
     }
     memset(tag, 0, tagLen);
 
@@ -369,7 +369,7 @@ encrypt_decrypt_demo(Uint8*            inputText,  // plaintext
                               iv,
                               ivLen,
                               ad,
-                              adLen,
+                              aadLen,
                               tag,
                               tagLen,
                               key,
@@ -381,7 +381,7 @@ encrypt_decrypt_demo(Uint8*            inputText,  // plaintext
                               iv,
                               ivLen,
                               ad,
-                              adLen,
+                              aadLen,
                               tag,
                               tagLen,
                               key,
