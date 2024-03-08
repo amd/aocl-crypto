@@ -415,7 +415,7 @@ OpenSSLRsaBase::Sign(const alcp_rsa_data_t& data)
 
     if (m_mdctx != nullptr) {
         EVP_MD_CTX_free(m_mdctx);
-        m_mdctx == nullptr;
+        m_mdctx = nullptr;
     }
     m_mdctx = EVP_MD_CTX_new();
     if (m_mdctx == NULL) {
@@ -425,11 +425,15 @@ OpenSSLRsaBase::Sign(const alcp_rsa_data_t& data)
 
     /* update padding mode*/
     if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
-        *p++ = OSSL_PARAM_construct_utf8_string(
-            OSSL_SIGNATURE_PARAM_PAD_MODE, OSSL_PKEY_RSA_PAD_MODE_PSS, 0);
+        *p++ =
+            OSSL_PARAM_construct_utf8_string(OSSL_SIGNATURE_PARAM_PAD_MODE,
+                                             (char*)OSSL_PKEY_RSA_PAD_MODE_PSS,
+                                             0);
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
         *p++ = OSSL_PARAM_construct_utf8_string(
-            OSSL_SIGNATURE_PARAM_PAD_MODE, OSSL_PKEY_RSA_PAD_MODE_PKCSV15, 0);
+            OSSL_SIGNATURE_PARAM_PAD_MODE,
+            (char*)OSSL_PKEY_RSA_PAD_MODE_PKCSV15,
+            0);
     } else {
         std::cout << "Error: invalid padding mode" << std::endl;
         return 1;
@@ -474,7 +478,7 @@ OpenSSLRsaBase::Verify(const alcp_rsa_data_t& data)
 
     if (m_mdctx != nullptr) {
         EVP_MD_CTX_free(m_mdctx);
-        m_mdctx == nullptr;
+        m_mdctx = nullptr;
     }
     m_mdctx = EVP_MD_CTX_new();
     if (m_mdctx == NULL) {
@@ -484,11 +488,15 @@ OpenSSLRsaBase::Verify(const alcp_rsa_data_t& data)
 
     /* update padding mode*/
     if (m_padding_mode == ALCP_TEST_RSA_PADDING_PSS) {
-        *p++ = OSSL_PARAM_construct_utf8_string(
-            OSSL_SIGNATURE_PARAM_PAD_MODE, OSSL_PKEY_RSA_PAD_MODE_PSS, 0);
+        *p++ =
+            OSSL_PARAM_construct_utf8_string(OSSL_SIGNATURE_PARAM_PAD_MODE,
+                                             (char*)OSSL_PKEY_RSA_PAD_MODE_PSS,
+                                             0);
     } else if (m_padding_mode == ALCP_TEST_RSA_PADDING_PKCS) {
         *p++ = OSSL_PARAM_construct_utf8_string(
-            OSSL_SIGNATURE_PARAM_PAD_MODE, OSSL_PKEY_RSA_PAD_MODE_PKCSV15, 0);
+            OSSL_SIGNATURE_PARAM_PAD_MODE,
+            (char*)OSSL_PKEY_RSA_PAD_MODE_PKCSV15,
+            0);
     } else {
         std::cout << "Error: invalid padding mode" << std::endl;
         return 1;
