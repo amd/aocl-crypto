@@ -39,8 +39,12 @@ Ofb::decrypt(const Uint8* pCipherText, Uint8* pPlainText, Uint64 len) const
     alc_error_t err = ALC_ERROR_NONE;
 
     if (CpuId::cpuHasVaes() || CpuId::cpuHasAesni()) {
-        err = aesni::DecryptOfb(
-            pCipherText, pPlainText, len, getEncryptKeys(), getRounds(), m_iv);
+        err = aesni::DecryptOfb(pCipherText,
+                                pPlainText,
+                                len,
+                                getEncryptKeys(),
+                                getRounds(),
+                                m_cipherData.m_iv);
 
         return err;
     }
@@ -53,8 +57,12 @@ Ofb::encrypt(const Uint8* pPlainText, Uint8* pCipherText, Uint64 len) const
     alc_error_t err = ALC_ERROR_NONE;
 
     if (CpuId::cpuHasVaes() || CpuId::cpuHasAesni()) {
-        err = aesni::EncryptOfb(
-            pPlainText, pCipherText, len, getEncryptKeys(), getRounds(), m_iv);
+        err = aesni::EncryptOfb(pPlainText,
+                                pCipherText,
+                                len,
+                                getEncryptKeys(),
+                                getRounds(),
+                                m_cipherData.m_iv);
 
         return err;
     }

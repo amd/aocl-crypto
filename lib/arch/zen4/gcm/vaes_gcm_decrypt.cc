@@ -73,10 +73,10 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
                              const __m128i* pkey128,
                              int            nRounds,
                              // gcm specific params
-                             alcp::cipher::GcmAuthData* gcmAuthData,
-                             __m128i                    reverse_mask_128,
-                             int                        remBytes,
-                             Uint64*                    pGcmCtxHashSubkeyTable)
+                             alc_gcm_local_data_t* gcmLocalData,
+                             alc_cipher_data_t*    cipherData,
+                             int                   remBytes,
+                             Uint64*               pGcmCtxHashSubkeyTable)
 {
     __m512i c1;
 
@@ -109,7 +109,7 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
                                               0x07060504,
                                               0x03020100);
 
-    c1 = _mm512_broadcast_i64x2(gcmAuthData->m_counter_128);
+    c1 = _mm512_broadcast_i64x2(gcmLocalData->m_counter_128);
 
     {
         // Increment each counter to create proper parallel counter
@@ -142,7 +142,7 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
                             p512GcmCtxHashSubkeyTable,
                             pHashSubkeyTableLocal,
                             num_512_blks,
-                            gcmAuthData,
+                            gcmLocalData,
                             const_factor_128);
     }
 
@@ -163,7 +163,7 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
     c4 = alcp_add_epi32(c2, two_x);
 
     __m512i Hsubkey_512_0, Hsubkey_512_1, Hsubkey_512_2, Hsubkey_512_3;
-    __m512i gHash_512 = _mm512_zextsi128_si512(gcmAuthData->m_gHash_128);
+    __m512i gHash_512 = _mm512_zextsi128_si512(gcmLocalData->m_gHash_128);
 
     // (8x512)=32 blks aesenc, 32 blks gmul and 1 reduction
     UNROLL_8
@@ -343,8 +343,8 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
         blocks -= blockCount_1x512;
     }
 
-    gcmAuthData->m_gHash_128 = _mm512_castsi512_si128(gHash_512);
-    __m128i c1_128           = _mm512_castsi512_si128(c1);
+    gcmLocalData->m_gHash_128 = _mm512_castsi512_si128(gHash_512);
+    __m128i c1_128            = _mm512_castsi512_si128(c1);
 
     /* residual block=1 when factor = 2, load and store only
      lower half. */
@@ -357,11 +357,12 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
 
         a1 = _mm_loadu_si128((__m128i*)p_in_x);
 
-        __m128i ra1              = _mm_shuffle_epi8(a1, reverse_mask_128);
-        gcmAuthData->m_gHash_128 = _mm_xor_si128(ra1, gcmAuthData->m_gHash_128);
-        aesni::gMul(gcmAuthData->m_gHash_128,
-                    gcmAuthData->m_hash_subKey_128,
-                    gcmAuthData->m_gHash_128,
+        __m128i ra1 = _mm_shuffle_epi8(a1, gcmLocalData->m_reverse_mask_128);
+        gcmLocalData->m_gHash_128 =
+            _mm_xor_si128(ra1, gcmLocalData->m_gHash_128);
+        aesni::gMul(gcmLocalData->m_gHash_128,
+                    gcmLocalData->m_hash_subKey_128,
+                    gcmLocalData->m_gHash_128,
                     const_factor_128);
 
         // re-arrange as per spec
@@ -397,11 +398,12 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
             p_out[i] = 0;
         }
 
-        __m128i ra1              = _mm_shuffle_epi8(a1, reverse_mask_128);
-        gcmAuthData->m_gHash_128 = _mm_xor_si128(ra1, gcmAuthData->m_gHash_128);
-        aesni::gMul(gcmAuthData->m_gHash_128,
-                    gcmAuthData->m_hash_subKey_128,
-                    gcmAuthData->m_gHash_128,
+        __m128i ra1 = _mm_shuffle_epi8(a1, gcmLocalData->m_reverse_mask_128);
+        gcmLocalData->m_gHash_128 =
+            _mm_xor_si128(ra1, gcmLocalData->m_gHash_128);
+        aesni::gMul(gcmLocalData->m_gHash_128,
+                    gcmLocalData->m_hash_subKey_128,
+                    gcmLocalData->m_gHash_128,
                     const_factor_128);
 
         a1 = _mm_xor_si128(b1, a1);
@@ -419,21 +421,21 @@ Uint64 inline gcmBlk_512_dec(const __m512i* p_in_x,
     alcp_clear_keys_zmm(keys);
 
     // Extract the first counter
-    gcmAuthData->m_counter_128 = c1_128;
+    gcmLocalData->m_counter_128 = c1_128;
 
     return blocks;
 }
 
 alc_error_t
-decryptGcm128(const Uint8*               pInputText,  // ptr to inputText
-              Uint8*                     pOutputText, // ptr to outputtext
-              Uint64                     len,         // message length in bytes
-              bool                       isFirstUpdate,
-              const Uint8*               pKey,    // ptr to Key
-              const int                  nRounds, // No. of rounds
-              alcp::cipher::GcmAuthData* gcmAuthData,
-              __m128i                    reverse_mask_128,
-              Uint64*                    pGcmCtxHashSubkeyTable)
+decryptGcm128(const Uint8*          pInputText,  // ptr to inputText
+              Uint8*                pOutputText, // ptr to outputtext
+              Uint64                len,         // message length in bytes
+              bool                  isFirstUpdate,
+              const Uint8*          pKey,    // ptr to Key
+              const int             nRounds, // No. of rounds
+              alc_gcm_local_data_t* gcmLocalData,
+              alc_cipher_data_t*    cipherData,
+              Uint64*               pGcmCtxHashSubkeyTable)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -455,8 +457,8 @@ decryptGcm128(const Uint8*               pInputText,  // ptr to inputText
                                                  pkey128,
                                                  nRounds,
                                                  // gcm specific params
-                                                 gcmAuthData,
-                                                 reverse_mask_128,
+                                                 gcmLocalData,
+                                                 cipherData,
                                                  remBytes,
                                                  pGcmCtxHashSubkeyTable);
 
@@ -464,15 +466,15 @@ decryptGcm128(const Uint8*               pInputText,  // ptr to inputText
 }
 
 alc_error_t
-decryptGcm192(const Uint8*               pInputText,  // ptr to inputText
-              Uint8*                     pOutputText, // ptr to outputtext
-              Uint64                     len,         // message length in bytes
-              bool                       isFirstUpdate,
-              const Uint8*               pKey,    // ptr to Key
-              const int                  nRounds, // No. of rounds
-              alcp::cipher::GcmAuthData* gcmAuthData,
-              __m128i                    reverse_mask_128,
-              Uint64*                    pGcmCtxHashSubkeyTable)
+decryptGcm192(const Uint8*          pInputText,  // ptr to inputText
+              Uint8*                pOutputText, // ptr to outputtext
+              Uint64                len,         // message length in bytes
+              bool                  isFirstUpdate,
+              const Uint8*          pKey,    // ptr to Key
+              const int             nRounds, // No. of rounds
+              alc_gcm_local_data_t* gcmLocalData,
+              alc_cipher_data_t*    cipherData,
+              Uint64*               pGcmCtxHashSubkeyTable)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -494,8 +496,8 @@ decryptGcm192(const Uint8*               pInputText,  // ptr to inputText
                                                  pkey128,
                                                  nRounds,
                                                  // gcm specific params
-                                                 gcmAuthData,
-                                                 reverse_mask_128,
+                                                 gcmLocalData,
+                                                 cipherData,
                                                  remBytes,
                                                  pGcmCtxHashSubkeyTable);
 
@@ -503,15 +505,15 @@ decryptGcm192(const Uint8*               pInputText,  // ptr to inputText
 }
 
 alc_error_t
-decryptGcm256(const Uint8*               pInputText,  // ptr to inputText
-              Uint8*                     pOutputText, // ptr to outputtext
-              Uint64                     len,         // message length in bytes
-              bool                       isFirstUpdate,
-              const Uint8*               pKey,    // ptr to Key
-              const int                  nRounds, // No. of rounds
-              alcp::cipher::GcmAuthData* gcmAuthData,
-              __m128i                    reverse_mask_128,
-              Uint64*                    pGcmCtxHashSubkeyTable)
+decryptGcm256(const Uint8*          pInputText,  // ptr to inputText
+              Uint8*                pOutputText, // ptr to outputtext
+              Uint64                len,         // message length in bytes
+              bool                  isFirstUpdate,
+              const Uint8*          pKey,    // ptr to Key
+              const int             nRounds, // No. of rounds
+              alc_gcm_local_data_t* gcmLocalData,
+              alc_cipher_data_t*    cipherData,
+              Uint64*               pGcmCtxHashSubkeyTable)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
@@ -533,8 +535,8 @@ decryptGcm256(const Uint8*               pInputText,  // ptr to inputText
                                                  pkey128,
                                                  nRounds,
                                                  // gcm specific params
-                                                 gcmAuthData,
-                                                 reverse_mask_128,
+                                                 gcmLocalData,
+                                                 cipherData,
                                                  remBytes,
                                                  pGcmCtxHashSubkeyTable);
 

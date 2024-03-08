@@ -32,18 +32,28 @@
 
 #include "alcp/cipher/aes.hh"
 
-#include "alcp/cipher/cipher_wrapper.hh"
-
 #include <cstdint>
 #include <immintrin.h>
 
 namespace alcp::cipher {
 
-#define MAX_NUM_512_BLKS 8
-
 #define UNROLL_2 _Pragma("GCC unroll 2")
 #define UNROLL_8 _Pragma("GCC unroll 8")
 #define UNROLL_4 _Pragma("GCC unroll 4")
+
+typedef struct _alc_gcm_local_data
+{
+    // gcm specific params
+    Int32 m_num_512blks_precomputed;
+    Int32 m_num_256blks_precomputed;
+
+    __m128i m_hash_subKey_128;
+    __m128i m_gHash_128;
+    __m128i m_counter_128;
+
+    __m128i m_reverse_mask_128;
+
+} alc_gcm_local_data_t;
 
 /*
  * @brief        AES Encryption in GCM(Galois Counter mode)
@@ -53,74 +63,39 @@ namespace alcp::cipher {
 class ALCP_API_EXPORT Gcm : public Aes
 {
   public:
-    __m128i m_reverse_mask_128; // local
-    Uint64  m_dataLen;          // g_ctx
+    alc_gcm_local_data_t m_gcm_local_data;
 
   public:
     Gcm()
         : Aes()
     {
         // default ivLength is 12 bytes or 96bits
-        m_ivLen   = 12;
-        m_dataLen = 0;
-        m_reverse_mask_128 =
+        m_cipherData.m_ivLen = 12;
+
+        // cipher ctx
+        m_cipherData.m_tag_128 = _mm_setzero_si128();
+
+        // gcm local ctx
+        m_gcm_local_data.m_hash_subKey_128 = _mm_setzero_si128();
+        m_gcm_local_data.m_gHash_128       = _mm_setzero_si128();
+        m_gcm_local_data.m_counter_128     = _mm_setzero_si128();
+
+        m_gcm_local_data.m_num_512blks_precomputed = 0;
+        m_gcm_local_data.m_num_256blks_precomputed = 0;
+
+        m_gcm_local_data.m_reverse_mask_128 =
             _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
     }
 
-    ~Gcm() {}
-};
-
-class ALCP_API_EXPORT GcmAuth
-{
-  public:
-    __m128i m_tag_128;           // g_ctx
-    Uint64  m_tagLen;            // g_ctx
-    Uint64  m_additionalDataLen; // g_ctx
-    __attribute__((aligned(64)))
-    Uint64 m_hashSubkeyTable[MAX_NUM_512_BLKS * 8]; // g_ctx
-
-    GcmAuthData m_gcmAuthData;
-
-  public:
-    GcmAuth()
+    ~Gcm()
     {
-        m_tag_128           = _mm_setzero_si128();
-        m_tagLen            = 0;
-        m_additionalDataLen = 0;
-
-        // gcmAuthData
-        m_gcmAuthData.m_hash_subKey_128         = _mm_setzero_si128(); // local?
-        m_gcmAuthData.m_gHash_128               = _mm_setzero_si128(); // g_ctx
-        m_gcmAuthData.m_counter_128             = _mm_setzero_si128(); // g_ctx
-        m_gcmAuthData.m_num_512blks_precomputed = 0;                   // g_ctx
-        m_gcmAuthData.m_num_256blks_precomputed = 0;                   // g_ctx
-    }
-    ~GcmAuth()
-    {
-        memset(m_hashSubkeyTable, 0, sizeof(Uint64) * MAX_NUM_512_BLKS * 8);
+        memset(m_cipherData.m_gcm.m_hashSubkeyTable,
+               0,
+               sizeof(Uint64) * MAX_NUM_512_BLKS * 8);
     }
 };
 
-// Macro to generate authentication class, first is used for gcm and to be
-// extended to other AEAD classes
-#define AEAD_AUTH_CLASS_GEN(CHILD_NEW, PARENT1, PARENT2)                       \
-    class ALCP_API_EXPORT CHILD_NEW                                            \
-        : public PARENT1                                                       \
-        , public PARENT2                                                       \
-    {                                                                          \
-      public:                                                                  \
-        CHILD_NEW(){};                                                         \
-        ~CHILD_NEW() {}                                                        \
-                                                                               \
-        alc_error_t getTag(Uint8* pOutput, Uint64 tagLen);                     \
-        alc_error_t init(const Uint8* pKey,                                    \
-                         Uint64       keyLen,                                  \
-                         const Uint8* pIv,                                     \
-                         Uint64       ivLen);                                        \
-        alc_error_t setAad(const Uint8* pInput, Uint64 aadLen);                \
-    };
-
-AEAD_AUTH_CLASS_GEN(GcmGhash, Gcm, GcmAuth)
+AEAD_AUTH_CLASS_GEN(GcmGhash, Gcm)
 
 namespace vaes512 {
     AEAD_CLASS_GEN(GcmAEAD128, public GcmGhash)

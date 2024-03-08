@@ -40,7 +40,7 @@ namespace alcp::cipher {
 using Status = alcp::base::Status;
 
 // aes and Rijndael can be unified?
-class ALCP_API_EXPORT Rijndael //:  public alcp::ICipher
+class ALCP_API_EXPORT Rijndael
 {
 
   public:
@@ -86,7 +86,7 @@ class ALCP_API_EXPORT Rijndael //:  public alcp::ICipher
     const Uint8* getEncryptKeys() const;
     const Uint8* getDecryptKeys() const;
 
-    void initRijndael(const Uint64 keyLen, const Uint8* pKey);
+    void initRijndael(const Uint8* pKey, const Uint64 keyLen);
 
     virtual void setEncryptKey(const Uint8* pEncKey, Uint64 len);
     virtual void setDecryptKey(const Uint8* pDecKey, Uint64 len);
@@ -109,7 +109,6 @@ class ALCP_API_EXPORT Rijndael //:  public alcp::ICipher
 
   protected:
     Rijndael();
-    explicit Rijndael(const alc_key_info_t& rKeyInfo);
     explicit Rijndael(const Uint8* pKey, const Uint32 keyLen);
     virtual ~Rijndael();
 

@@ -49,15 +49,27 @@ namespace alcp::cipher {
 class ALCP_API_EXPORT Xts : public Aes
 {
   public:
-    alignas(64) mutable Uint8 m_iv[16]                              = {};
-    alignas(64) mutable Uint8 m_tweak_block[16]                     = {};
-    Uint8          m_tweak_round_key[(RIJ_SIZE_ALIGNED(32) * (16))] = {};
-    Uint8*         m_pTweak_key                                     = nullptr;
-    mutable Uint64 m_aes_block_id = static_cast<Uint64>(-1);
-
-  public:
-    Xts() { Aes::setMode(ALC_AES_MODE_XTS); };
-    ~Xts(){};
+    Xts()
+    {
+        Aes::setMode(ALC_AES_MODE_XTS);
+        m_cipherData.m_xts.m_aes_block_id = -1;
+        memset(m_cipherData.m_xts.m_iv_xts,
+               0,
+               sizeof(m_cipherData.m_xts.m_iv_xts));
+        memset(m_cipherData.m_xts.m_tweak_round_key,
+               0,
+               sizeof(m_cipherData.m_xts.m_tweak_round_key));
+    };
+    ~Xts()
+    {
+        // clear keys
+        memset(m_cipherData.m_xts.m_iv_xts,
+               0,
+               sizeof(m_cipherData.m_xts.m_iv_xts));
+        memset(m_cipherData.m_xts.m_tweak_round_key,
+               0,
+               sizeof(m_cipherData.m_xts.m_tweak_round_key));
+    };
 
     // functions unique to Xts class
     void expandTweakKeys(const Uint8* pUserKey, int len);

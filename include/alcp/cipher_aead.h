@@ -79,6 +79,7 @@ typedef struct _alc_cipher_aead_mode_siv_info
  */
 typedef struct _alc_cipher_aead_algo_info
 {
+
     union
     {
         alc_cipher_aead_mode_gcm_info_t ai_gcm;

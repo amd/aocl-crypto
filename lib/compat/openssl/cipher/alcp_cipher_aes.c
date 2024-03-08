@@ -52,7 +52,7 @@ ALCP_prov_aes_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 }
 
 void
-ALCP_prov_aes_ctxfree(alc_prov_cipher_ctx_p ciph_ctx)
+ALCP_prov_aes_ctxfree(alc_prov_cipher_ctx_t* ciph_ctx)
 {
     ALCP_prov_cipher_freectx(ciph_ctx);
 }
@@ -60,7 +60,7 @@ ALCP_prov_aes_ctxfree(alc_prov_cipher_ctx_p ciph_ctx)
 void*
 ALCP_prov_aes_newctx(void* vprovctx, const void* cinfo, bool is_aead)
 {
-    alc_prov_cipher_ctx_p ciph_ctx;
+    alc_prov_cipher_ctx_t* ciph_ctx;
 
     ENTER();
     ciph_ctx = ALCP_prov_cipher_newctx(vprovctx, (const void*)cinfo, is_aead);

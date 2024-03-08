@@ -42,7 +42,7 @@ ALCP_prov_cipher_aead_encrypt_init(void*                vctx,
 {
     ENTER();
     const OSSL_PARAM*      p;
-    alc_prov_cipher_ctx_p  cctx       = vctx;
+    alc_prov_cipher_ctx_t* cctx       = vctx;
     alc_cipher_aead_info_p c_aeadinfo = &cctx->pc_cipher_aead_info;
     alc_error_t            err;
 
@@ -123,7 +123,7 @@ ALCP_prov_cipher_aead_encrypt_init(void*                vctx,
     }
 
 #ifdef DEBUG
-    alc_cipher_info_p cinfo = &cctx->pc_cipher_info;
+    alc_cipher_info_t* cinfo = &cctx->pc_cipher_info;
     printf("Provider: %d keylen:%ld, key:%p\n", cinfo->ci_keyLen, keylen, key);
 #endif
 
@@ -208,7 +208,7 @@ ALCP_prov_cipher_siv_encrypt_init(void*                vctx,
     // For openSSL SIV encryption and authentication key needs to be in
     // continous memory location. Second part of the key is
     // authentication key
-    alc_prov_cipher_ctx_p  cctx                = vctx;
+    alc_prov_cipher_ctx_t* cctx                = vctx;
     alc_cipher_aead_info_p c_aeadinfo          = &cctx->pc_cipher_aead_info;
     alc_key_info_p         kinfo_siv_ctr_key   = &cctx->kinfo_siv_ctr_key;
     kinfo_siv_ctr_key->len                     = keylen;
@@ -230,7 +230,7 @@ ALCP_prov_cipher_aead_decrypt_init(void*                vctx,
                                    const OSSL_PARAM     params[])
 {
     const OSSL_PARAM*      p;
-    alc_prov_cipher_ctx_p  cctx       = vctx;
+    alc_prov_cipher_ctx_t* cctx       = vctx;
     alc_cipher_aead_info_p c_aeadinfo = &cctx->pc_cipher_aead_info;
 
     alc_error_t err;
@@ -318,7 +318,7 @@ ALCP_prov_cipher_aead_decrypt_init(void*                vctx,
     }
 
 #ifdef DEBUG
-    alc_cipher_info_p cinfo = &cctx->pc_cipher_info;
+    alc_cipher_info_t* cinfo = &cctx->pc_cipher_info;
     printf("Provider: %d keylen:%ld, key:%p\n", cinfo->ci_keyLen, keylen, iv);
 #endif
 
@@ -375,8 +375,8 @@ ALCP_prov_cipher_gcm_decrypt_init(void*                vctx,
     int ret = ALCP_prov_cipher_aead_decrypt_init(
         vctx, key, keylen, iv, ivlen, params);
 
-    alc_prov_cipher_ctx_p cctx = vctx;
-    alc_error_t           err  = alcp_cipher_aead_init(&(cctx->handle),
+    alc_prov_cipher_ctx_t* cctx = vctx;
+    alc_error_t            err  = alcp_cipher_aead_init(&(cctx->handle),
                                             key,
                                             keylen,
                                             cctx->pc_cipher_aead_info.ci_iv,
@@ -400,7 +400,7 @@ ALCP_prov_cipher_siv_decrypt_init(void*                vctx,
 {
     ENTER();
     PRINT("Provider: SIV\n");
-    alc_prov_cipher_ctx_p  cctx              = vctx;
+    alc_prov_cipher_ctx_t* cctx              = vctx;
     alc_key_info_p         kinfo_siv_ctr_key = &cctx->kinfo_siv_ctr_key;
     alc_cipher_aead_info_p c_aeadinfo        = &cctx->pc_cipher_aead_info;
 
@@ -428,8 +428,8 @@ ALCP_prov_cipher_gcm_update(void*                vctx,
                             const unsigned char* in,
                             size_t               inl)
 {
-    alc_prov_cipher_ctx_p cctx = vctx;
-    alc_error_t           err  = ALC_ERROR_NONE;
+    alc_prov_cipher_ctx_t* cctx = vctx;
+    alc_error_t            err  = ALC_ERROR_NONE;
 
     ENTER();
     PRINT("Provider: GCM\n");
@@ -492,8 +492,8 @@ ALCP_prov_cipher_ccm_update(void*                vctx,
                             const unsigned char* in,
                             size_t               inl)
 {
-    alc_prov_cipher_ctx_p cctx = vctx;
-    alc_error_t           err  = ALC_ERROR_NONE;
+    alc_prov_cipher_ctx_t* cctx = vctx;
+    alc_error_t            err  = ALC_ERROR_NONE;
 
     ENTER();
     PRINT("Provider: CCM\n");
@@ -562,10 +562,10 @@ ALCP_prov_cipher_siv_update(void*                vctx,
                             const unsigned char* in,
                             size_t               inl)
 {
-    alc_prov_cipher_ctx_p cctx     = vctx;
-    alc_error_t           err      = ALC_ERROR_NONE;
-    const int             err_size = 256;
-    Uint8                 err_buf[err_size];
+    alc_prov_cipher_ctx_t* cctx     = vctx;
+    alc_error_t            err      = ALC_ERROR_NONE;
+    const int              err_size = 256;
+    Uint8                  err_buf[err_size];
 
     ENTER();
     PRINT("Provider: SIV\n");

@@ -42,12 +42,16 @@ alc_error_t
 Xts::setIv(const Uint8* pIv, const Uint64 ivLen)
 {
     Status s = StatusOk();
-    utils::CopyBytes(m_iv, pIv, ivLen); // Keep a copy of iv
+    utils::CopyBytes(
+        m_cipherData.m_xts.m_iv_xts, pIv, ivLen); // Keep a copy of iv
 
     // FIXME: In future we need to dispatch it correctly
-    aesni::InitializeTweakBlock(pIv, m_tweak_block, m_pTweak_key, getRounds());
+    aesni::InitializeTweakBlock(pIv,
+                                m_cipherData.m_xts.m_tweak_block,
+                                m_cipherData.m_xts.m_pTweak_key,
+                                getRounds());
 
-    m_aes_block_id = 0; // Initialized BlockId to 0
+    m_cipherData.m_xts.m_aes_block_id = 0; // Initialized BlockId to 0
 
     return s.code();
 }
@@ -66,18 +70,19 @@ Xts::init(const Uint8* pKey,
             return err;
         }
 
-        m_pTweak_key = &m_tweak_round_key[0];
+        m_cipherData.m_xts.m_pTweak_key =
+            &(m_cipherData.m_xts.m_tweak_round_key[0]);
         expandTweakKeys(pKey + keyLen / 8, keyLen);
 
-        m_isKeyset = true;
+        m_cipherData.m_isKeyset = true;
     }
 
     if (pIv != NULL && ivLen != 0) {
-        err       = Xts::setIv(pIv, ivLen);
-        m_isIvset = true;
+        err                    = Xts::setIv(pIv, ivLen);
+        m_cipherData.m_isIvset = true;
     }
 
-    if (!(m_isIvset && m_isKeyset)) {
+    if (!(m_cipherData.m_isIvset && m_cipherData.m_isKeyset)) {
         return ALC_ERROR_BAD_STATE; // FIXME: better error code?
     }
 
@@ -88,16 +93,21 @@ void
 Xts::tweakBlockSet(Uint64 aesBlockId)
 {
     // FIXME: In future we need to dispatch it correctly
-    // m_aes_block_id is the previous block id and aesBlockId is the target
-    // block id.
-    if (aesBlockId > m_aes_block_id) {
-        aesni::TweakBlockCalculate(m_tweak_block, aesBlockId - m_aes_block_id);
-    } else if (aesBlockId < m_aes_block_id) {
-        aesni::InitializeTweakBlock(
-            m_iv, m_tweak_block, m_pTweak_key, getRounds());
-        aesni::TweakBlockCalculate(m_tweak_block, aesBlockId);
+    // m_cipherData.m_xts.m_aes_block_id is the previous block id and aesBlockId
+    // is the target block id.
+    if ((Int64)aesBlockId > m_cipherData.m_xts.m_aes_block_id) {
+        aesni::TweakBlockCalculate(m_cipherData.m_xts.m_tweak_block,
+                                   aesBlockId
+                                       - m_cipherData.m_xts.m_aes_block_id);
+    } else if ((Int64)aesBlockId < m_cipherData.m_xts.m_aes_block_id) {
+        aesni::InitializeTweakBlock(m_cipherData.m_xts.m_iv_xts,
+                                    m_cipherData.m_xts.m_tweak_block,
+                                    m_cipherData.m_xts.m_pTweak_key,
+                                    getRounds());
+        aesni::TweakBlockCalculate(m_cipherData.m_xts.m_tweak_block,
+                                   aesBlockId);
     }
-    m_aes_block_id = aesBlockId;
+    m_cipherData.m_xts.m_aes_block_id = aesBlockId;
 }
 
 void
@@ -108,7 +118,8 @@ Xts::expandTweakKeys(const Uint8* pKey, int len)
 
     const Uint8* key = pKey ? pKey : &dummy_key[0];
     if (CpuId::cpuHasAesni()) {
-        aesni::ExpandTweakKeys(key, m_pTweak_key, getRounds());
+        aesni::ExpandTweakKeys(
+            key, m_cipherData.m_xts.m_pTweak_key, getRounds());
         return;
     }
 
@@ -120,7 +131,7 @@ Xts::expandTweakKeys(const Uint8* pKey, int len)
     const Uint32* rtbl = utils::s_round_constants;
     Uint32*       p_tweak_key32;
 
-    p_tweak_key32 = reinterpret_cast<Uint32*>(m_pTweak_key);
+    p_tweak_key32 = reinterpret_cast<Uint32*>(m_cipherData.m_xts.m_pTweak_key);
 
     for (i = 0; i < nk; i++) {
         p_tweak_key32[i] = MakeWord(
@@ -200,34 +211,50 @@ namespace aesni {
             return err;                                                        \
         }                                                                      \
         Uint64 blocks_in = len / 16;                                           \
-        err =                                                                  \
-            FUNC_NAME(pinput, pOutput, len, PKEY, NUM_ROUNDS, m_tweak_block);  \
-        m_aes_block_id += blocks_in;                                           \
+        err              = FUNC_NAME(pinput,                                   \
+                        pOutput,                                  \
+                        len,                                      \
+                        PKEY,                                     \
+                        NUM_ROUNDS,                               \
+                        m_cipherData.m_xts.m_tweak_block);        \
+        m_cipherData.m_xts.m_aes_block_id += blocks_in;                        \
         return err;                                                            \
     }
 
 namespace vaes512 {
-    CRYPT_XTS_WRAPPER_FUNC(Xts128, encrypt, EncryptXts128, m_enc_key, 10)
-    CRYPT_XTS_WRAPPER_FUNC(Xts256, encrypt, EncryptXts256, m_enc_key, 14)
+    CRYPT_XTS_WRAPPER_FUNC(
+        Xts128, encrypt, EncryptXts128, m_cipherData.m_enc_key, 10)
+    CRYPT_XTS_WRAPPER_FUNC(
+        Xts256, encrypt, EncryptXts256, m_cipherData.m_enc_key, 14)
 
-    CRYPT_XTS_WRAPPER_FUNC(Xts128, decrypt, DecryptXts128, m_dec_key, 10)
-    CRYPT_XTS_WRAPPER_FUNC(Xts256, decrypt, DecryptXts256, m_dec_key, 14)
+    CRYPT_XTS_WRAPPER_FUNC(
+        Xts128, decrypt, DecryptXts128, m_cipherData.m_dec_key, 10)
+    CRYPT_XTS_WRAPPER_FUNC(
+        Xts256, decrypt, DecryptXts256, m_cipherData.m_dec_key, 14)
 } // namespace vaes512
 
 namespace vaes {
-    CRYPT_XTS_WRAPPER_FUNC(Xts128, encrypt, EncryptXts128, m_enc_key, 10)
-    CRYPT_XTS_WRAPPER_FUNC(Xts256, encrypt, EncryptXts256, m_enc_key, 14)
+    CRYPT_XTS_WRAPPER_FUNC(
+        Xts128, encrypt, EncryptXts128, m_cipherData.m_enc_key, 10)
+    CRYPT_XTS_WRAPPER_FUNC(
+        Xts256, encrypt, EncryptXts256, m_cipherData.m_enc_key, 14)
 
-    CRYPT_XTS_WRAPPER_FUNC(Xts128, decrypt, DecryptXts128, m_dec_key, 10)
-    CRYPT_XTS_WRAPPER_FUNC(Xts256, decrypt, DecryptXts256, m_dec_key, 14)
+    CRYPT_XTS_WRAPPER_FUNC(
+        Xts128, decrypt, DecryptXts128, m_cipherData.m_dec_key, 10)
+    CRYPT_XTS_WRAPPER_FUNC(
+        Xts256, decrypt, DecryptXts256, m_cipherData.m_dec_key, 14)
 } // namespace vaes
 
 namespace aesni {
-    CRYPT_XTS_WRAPPER_FUNC(Xts128, encrypt, EncryptXts128, m_enc_key, 10)
-    CRYPT_XTS_WRAPPER_FUNC(Xts256, encrypt, EncryptXts256, m_enc_key, 14)
+    CRYPT_XTS_WRAPPER_FUNC(
+        Xts128, encrypt, EncryptXts128, m_cipherData.m_enc_key, 10)
+    CRYPT_XTS_WRAPPER_FUNC(
+        Xts256, encrypt, EncryptXts256, m_cipherData.m_enc_key, 14)
 
-    CRYPT_XTS_WRAPPER_FUNC(Xts128, decrypt, DecryptXts128, m_dec_key, 10)
-    CRYPT_XTS_WRAPPER_FUNC(Xts256, decrypt, DecryptXts256, m_dec_key, 14)
+    CRYPT_XTS_WRAPPER_FUNC(
+        Xts128, decrypt, DecryptXts128, m_cipherData.m_dec_key, 10)
+    CRYPT_XTS_WRAPPER_FUNC(
+        Xts256, decrypt, DecryptXts256, m_cipherData.m_dec_key, 14)
 } // namespace aesni
 
 } // namespace alcp::cipher

@@ -44,7 +44,7 @@
 #include "debug.h"
 #include "provider/alcp_provider.h"
 
-struct _alc_prov_cipher_ctx
+typedef struct _alc_prov_cipher_ctx
 {
     /* Must be first */
     alc_prov_ctx_t*     pc_prov_ctx;
@@ -83,12 +83,10 @@ struct _alc_prov_cipher_ctx
     int pc_flags;
 
     OSSL_LIB_CTX* pc_libctx;
-};
-typedef struct _alc_prov_cipher_ctx alc_prov_cipher_ctx_t,
-    *alc_prov_cipher_ctx_p;
+} alc_prov_cipher_ctx_t;
 
 EVP_CIPHER*
-ALCP_prov_init_cipher(alc_prov_cipher_ctx_p c);
+ALCP_prov_init_cipher(alc_prov_cipher_ctx_t* c);
 
 extern const OSSL_ALGORITHM ALC_prov_ciphers[];
 

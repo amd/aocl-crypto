@@ -250,7 +250,7 @@ alcp_cipher_init(const alc_cipher_handle_p pCipherHandle,
  *                         operation
  * @param[in]    pPlainText    Pointer to Plain Text
  * @param[out]   pCipherText   Pointer to Cipher Text
- * @param[in]    len           Length of cipher/plain text
+ * @param[in]    datalen           Length of cipher/plain text
  * @return   &nbsp; Error Code for the API called. If alc_error_t
  * is not ALC_ERROR_NONE then @ref alcp_cipher_error or @ref alcp_error_str
  * needs to be called to know about error occurred
@@ -259,7 +259,7 @@ ALCP_API_EXPORT alc_error_t
 alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
                     const Uint8*              pPlainText,
                     Uint8*                    pCipherText,
-                    Uint64                    len);
+                    Uint64                    datalen);
 
 /**
  * @brief    Decryption of cipher text and write it to plain text with
@@ -275,7 +275,7 @@ alcp_cipher_encrypt(const alc_cipher_handle_p pCipherHandle,
  *                         operation
  * @param[in]    pPlainText    Pointer to Plain Text
  * @param[out]   pCipherText   Pointer to Cipher Text
- * @param[in]    len           Length of cipher/plain text
+ * @param[in]    datalen           Length of cipher/plain text
  * @return   &nbsp; Error Code for the API called. If alc_error_t
  * is not ALC_ERROR_NONE then @ref alcp_cipher_error or @ref alcp_error_str
  * needs to be called to know about error occurred
@@ -284,7 +284,7 @@ ALCP_API_EXPORT alc_error_t
 alcp_cipher_decrypt(const alc_cipher_handle_p pCipherHandle,
                     const Uint8*              pCipherText,
                     Uint8*                    pPlainText,
-                    Uint64                    len);
+                    Uint64                    datalen);
 
 /**
  * @brief    Encrypt plain text and write it to cipher text with provided

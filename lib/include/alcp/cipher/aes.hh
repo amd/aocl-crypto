@@ -44,6 +44,58 @@
 
 namespace alcp::cipher {
 
+#define MAX_NUM_512_BLKS 8
+
+// this structure needs to broken to generic cipher params and aead params
+// separately
+
+typedef struct ALCP_API_EXPORT _alc_cipher_gcm_data
+{
+    // gcm specific params
+    __attribute__((aligned(64))) Uint64 m_hashSubkeyTable[MAX_NUM_512_BLKS * 8];
+
+} _alc_cipher_gcm_data_t;
+
+typedef struct _alc_cipher_xts_data
+{
+    alignas(64) mutable Uint8 m_iv_xts[16];
+    __attribute__((aligned(64))) mutable Uint8 m_tweak_block[16];
+    Uint8         m_tweak_round_key[(RIJ_SIZE_ALIGNED(32) * (16))];
+    Uint8*        m_pTweak_key; // this pointer can be removed.
+    mutable Int64 m_aes_block_id;
+
+} _alc_cipher_xts_data_t;
+
+typedef struct ALCP_API_EXPORT _alc_cipher_data
+{
+    // iv info
+    const Uint8* m_iv;
+    Uint64       m_ivLen;
+
+    // key info
+    const Uint8* m_pKey   = NULL;
+    Uint32       m_keyLen = 0;
+
+    // key expanded
+    const Uint8* m_enc_key;
+    const Uint8* m_dec_key;
+
+    // state
+    bool m_isIvset;
+    bool m_isKeyset;
+
+    Uint64 m_dataLen;
+
+    // aead params
+    __m128i m_tag_128;
+    Uint64  m_tagLen;
+    Uint64  m_additionalDataLen;
+
+    _alc_cipher_gcm_data_t m_gcm;
+    _alc_cipher_xts_data_t m_xts;
+
+} alc_cipher_data_t;
+
 using Status = alcp::base::Status;
 
 /*
@@ -59,20 +111,37 @@ using Status = alcp::base::Status;
 class Aes : public Rijndael
 {
   public:
-    // iv info for all modes
-    const Uint8* m_iv    = NULL;
-    Uint64       m_ivLen = 0;
     // rounds based on keysize
     Uint32 m_nrounds = 0;
-    // expanded keys
-    const Uint8* m_enc_key  = {};
-    const Uint8* m_dec_key  = {};
-    bool         m_isIvset  = false;
-    bool         m_isKeyset = false;
+
+    // global ctx
+    alc_cipher_data_t m_cipherData; // global ctx
 
     Aes()
         : Rijndael()
-    {}
+    {
+        // key info for all modes
+        m_cipherData.m_pKey   = NULL;
+        m_cipherData.m_keyLen = 0;
+
+        // iv info for all modes
+        m_cipherData.m_iv    = NULL;
+        m_cipherData.m_ivLen = 16; // default size
+
+        // expanded keys
+        m_cipherData.m_enc_key = NULL;
+        m_cipherData.m_dec_key = NULL;
+
+        // state of iv and key
+        m_cipherData.m_isIvset  = false;
+        m_cipherData.m_isKeyset = false;
+
+        m_cipherData.m_dataLen = 0;
+
+        // aead secific params, to be moved to split as aead struct
+        m_cipherData.m_tagLen            = 0;
+        m_cipherData.m_additionalDataLen = 0;
+    }
 
   protected:
     virtual ~Aes() {}
@@ -99,9 +168,9 @@ class Aes : public Rijndael
     alc_error_t setIv(const Uint8* pIv, const Uint64 ivLen);
     void        getKey()
     {
-        m_enc_key = getEncryptKeys();
-        m_dec_key = getDecryptKeys();
-        m_nrounds = getRounds();
+        m_cipherData.m_enc_key = getEncryptKeys();
+        m_cipherData.m_dec_key = getDecryptKeys();
+        m_nrounds              = getRounds();
     }
 
   protected:
@@ -150,6 +219,34 @@ AES_CLASS_GEN(Ofb, public Aes)
                                   Uint64       len);                                 \
     };
 
+// Macro to generate authentication class, first is used for gcm and to be
+// extended to other AEAD classes
+#define AEAD_AUTH_CLASS_GEN(CHILD_NEW, PARENT)                                 \
+    class ALCP_API_EXPORT GcmGhash : public PARENT                             \
+    {                                                                          \
+      public:                                                                  \
+        CHILD_NEW(){};                                                         \
+        ~CHILD_NEW() {}                                                        \
+                                                                               \
+        alc_error_t getTag(Uint8* pOutput, Uint64 tagLen);                     \
+        alc_error_t init(const Uint8* pKey,                                    \
+                         Uint64       keyLen,                                  \
+                         const Uint8* pIv,                                     \
+                         Uint64       ivLen);                                        \
+        alc_error_t setAad(const Uint8* pInput, Uint64 aadLen);                \
+    };
+
 } // namespace alcp::cipher
+
+#define CRYPT_WRAPPER_FUNC(                                                         \
+    CLASS_NAME, WRAPPER_FUNC, FUNC_NAME, PKEY, NUM_ROUNDS)                          \
+    alc_error_t CLASS_NAME::WRAPPER_FUNC(                                           \
+        const Uint8* pinput, Uint8* pOutput, Uint64 len) const                      \
+    {                                                                               \
+        alc_error_t err = ALC_ERROR_NONE;                                           \
+        err             = FUNC_NAME(                                                \
+            pinput, pOutput, len, PKEY, NUM_ROUNDS, m_cipherData.m_iv); \
+        return err;                                                                 \
+    }
 
 #endif /* _CIPHER_AES_HH_ */

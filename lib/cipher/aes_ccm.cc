@@ -757,7 +757,7 @@ alc_error_t
 Ccm::decrypt(const Uint8 pInput[], Uint8 pOutput[], Uint64 len) const
 {
     Status s = StatusOk();
-    s        = pImpl->cryptUpdate(pInput, pOutput, len, m_iv, false);
+    s = pImpl->cryptUpdate(pInput, pOutput, len, m_cipherData.m_iv, false);
     return s.code();
 }
 
@@ -765,7 +765,7 @@ alc_error_t
 Ccm::encrypt(const Uint8 pInput[], Uint8 pOutput[], Uint64 len) const
 {
     Status s = StatusOk();
-    s        = pImpl->cryptUpdate(pInput, pOutput, len, m_iv, true);
+    s = pImpl->cryptUpdate(pInput, pOutput, len, m_cipherData.m_iv, true);
     return s.code();
 }
 
@@ -773,7 +773,7 @@ alc_error_t
 Ccm::decryptUpdate(const Uint8 pInput[], Uint8 pOutput[], Uint64 len)
 {
     Status s = StatusOk();
-    s        = pImpl->cryptUpdate(pInput, pOutput, len, m_iv, false);
+    s = pImpl->cryptUpdate(pInput, pOutput, len, m_cipherData.m_iv, false);
     return s.code();
 }
 
@@ -781,7 +781,7 @@ alc_error_t
 Ccm::encryptUpdate(const Uint8 pInput[], Uint8 pOutput[], Uint64 len)
 {
     Status s = StatusOk();
-    s        = pImpl->cryptUpdate(pInput, pOutput, len, m_iv, true);
+    s = pImpl->cryptUpdate(pInput, pOutput, len, m_cipherData.m_iv, true);
     return s.code();
 }
 

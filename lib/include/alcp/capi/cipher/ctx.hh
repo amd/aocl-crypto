@@ -56,10 +56,10 @@ struct Context
                                     Uint64       startBlockNum);
 
     alc_error_t (*decryptBlocksXts)(const void*  rCipher,
-                                 const Uint8* pSrt,
-                                 Uint8*       pDrc,
-                                 Uint64       currCipherTextLen,
-                                 Uint64       startBlockNum);
+                                    const Uint8* pSrt,
+                                    Uint8*       pDrc,
+                                    Uint64       currCipherTextLen,
+                                    Uint64       startBlockNum);
 
     alc_error_t (*decryptUpdate)(void*        rCipher,
                                  const Uint8* pSrc,

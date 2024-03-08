@@ -33,7 +33,6 @@
 #include "alcp/types.hh"
 
 #define NUM_PARALLEL_ZMMS 4
-#define MAX_NUM_512_BLKS  8
 
 /*_mm_prefetch accepts const void*` arguments for GCC / ICC
 whereas MSVC still expects `const char* ` */
@@ -121,23 +120,23 @@ void inline computeHashSubKeys(int           num_512_blks,
     }
 }
 
-void inline getPrecomputedTable(bool     isFirstUpdate,
-                                __m512i* p512GcmCtxHashSubkeyTable,
-                                __m512i* pHashSubkeyTableLocal,
-                                int      num_512_blks,
-                                alcp::cipher::GcmAuthData* gcmAuthData,
-                                __m128i                    const_factor_128)
+void inline getPrecomputedTable(bool                  isFirstUpdate,
+                                __m512i*              p512GcmCtxHashSubkeyTable,
+                                __m512i*              pHashSubkeyTableLocal,
+                                int                   num_512_blks,
+                                alc_gcm_local_data_t* gcmLocalData,
+                                __m128i               const_factor_128)
 {
 
     if (isFirstUpdate
-        || (num_512_blks > gcmAuthData->m_num_512blks_precomputed)) {
+        || (num_512_blks > gcmLocalData->m_num_512blks_precomputed)) {
         computeHashSubKeys(num_512_blks,
-                           gcmAuthData->m_hash_subKey_128,
+                           gcmLocalData->m_hash_subKey_128,
                            p512GcmCtxHashSubkeyTable,
                            pHashSubkeyTableLocal,
                            const_factor_128);
 
-        gcmAuthData->m_num_512blks_precomputed = num_512_blks;
+        gcmLocalData->m_num_512blks_precomputed = num_512_blks;
     } else if (num_512_blks > 4) {
         for (int i = 0; i < num_512_blks; i += 4) {
             pHashSubkeyTableLocal[0] =

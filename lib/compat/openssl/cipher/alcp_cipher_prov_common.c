@@ -34,7 +34,7 @@ void
 ALCP_prov_cipher_freectx(void* vctx)
 {
     ENTER();
-    alc_prov_cipher_ctx_p pcctx = vctx;
+    alc_prov_cipher_ctx_t* pcctx = vctx;
 
     if (pcctx->handle.ch_context != NULL) {
         alcp_cipher_finish(&pcctx->handle);
@@ -50,8 +50,8 @@ ALCP_prov_cipher_freectx(void* vctx)
 void*
 ALCP_prov_cipher_newctx(void* vprovctx, const void* cinfo, bool is_aead)
 {
-    alc_prov_cipher_ctx_p ciph_ctx;
-    alc_prov_ctx_p        pctx = (alc_prov_ctx_p)vprovctx;
+    alc_prov_cipher_ctx_t* ciph_ctx;
+    alc_prov_ctx_p         pctx = (alc_prov_ctx_p)vprovctx;
 
     ENTER();
     ciph_ctx = OPENSSL_zalloc(sizeof(*ciph_ctx));
@@ -81,7 +81,7 @@ ALCP_prov_cipher_dupctx(void* vctx)
 {
     ENTER();
     // FIXME: Implement
-    alc_prov_cipher_ctx_p csrc = vctx;
+    alc_prov_cipher_ctx_t* csrc = vctx;
     EXIT();
     return csrc;
 }
@@ -183,9 +183,9 @@ ALCP_prov_cipher_set_params(const OSSL_PARAM params[])
 int
 ALCP_prov_cipher_get_ctx_params(void* vctx, OSSL_PARAM params[])
 {
-    OSSL_PARAM*           p;
-    alc_prov_cipher_ctx_p cctx   = (alc_prov_cipher_ctx_p)vctx;
-    size_t                keylen = 0;
+    OSSL_PARAM*            p;
+    alc_prov_cipher_ctx_t* cctx   = (alc_prov_cipher_ctx_t*)vctx;
+    size_t                 keylen = 0;
     if (cctx->is_aead) {
         keylen = cctx->pc_cipher_aead_info.ci_keyLen;
 
@@ -261,8 +261,8 @@ ALCP_prov_cipher_get_ctx_params(void* vctx, OSSL_PARAM params[])
 int
 ALCP_prov_cipher_set_ctx_params(void* vctx, const OSSL_PARAM params[])
 {
-    const OSSL_PARAM*     p;
-    alc_prov_cipher_ctx_p cctx = (alc_prov_cipher_ctx_p)vctx;
+    const OSSL_PARAM*      p;
+    alc_prov_cipher_ctx_t* cctx = (alc_prov_cipher_ctx_t*)vctx;
     ENTER();
 
     p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_KEYLEN);
@@ -333,9 +333,9 @@ ALCP_prov_cipher_aes_encrypt_init(void*                vctx,
                                   const OSSL_PARAM     params[])
 {
     ENTER();
-    alc_prov_cipher_ctx_p cctx  = vctx;
-    alc_cipher_info_p     cinfo = &cctx->pc_cipher_info;
-    alc_error_t           err;
+    alc_prov_cipher_ctx_t* cctx  = vctx;
+    alc_cipher_info_t*     cinfo = &cctx->pc_cipher_info;
+    alc_error_t            err;
 
     if (keylen != 0) {
         cctx->keylen = keylen;
@@ -539,8 +539,8 @@ ALCP_prov_cipher_aes_decrypt_init(void*                vctx,
                                   const OSSL_PARAM     params[])
 {
     ENTER();
-    alc_prov_cipher_ctx_p cctx  = vctx;
-    alc_cipher_info_p     cinfo = &cctx->pc_cipher_info;
+    alc_prov_cipher_ctx_t* cctx  = vctx;
+    alc_cipher_info_t*     cinfo = &cctx->pc_cipher_info;
 
     alc_error_t err;
 
@@ -748,8 +748,8 @@ ALCP_prov_cipher_update(void*                vctx,
                         const unsigned char* in,
                         size_t               inl)
 {
-    alc_prov_cipher_ctx_p cctx = vctx;
-    alc_error_t           err  = ALC_ERROR_NONE;
+    alc_prov_cipher_ctx_t* cctx = vctx;
+    alc_error_t            err  = ALC_ERROR_NONE;
 
     if (inl == 0) {
         *outl = inl;
@@ -858,15 +858,15 @@ ALCP_prov_cipher_final(void*          vctx,
                        size_t         outsize)
 {
     ENTER();
-    // alc_prov_cipher_ctx_p cctx = vctx;
+    // alc_prov_cipher_ctx_t* cctx = vctx;
 
     // TODO: Introduce Finish here for finalising the context and
     // handle the corresponding memory issues.
     // alcp_cipher_finish(&cctx->handle);
     // Nothing to do!
-    *outl                      = 0;
-    int                   ret  = 1;
-    alc_prov_cipher_ctx_p cctx = vctx;
+    *outl                       = 0;
+    int                    ret  = 1;
+    alc_prov_cipher_ctx_t* cctx = vctx;
     if ((cctx->is_aead) && (cctx->tagbuff != NULL) && (cctx->taglen != 0)) {
         Uint8       tag[16]; // 16 is maximum tag length
         alc_error_t err =
@@ -953,7 +953,7 @@ EVP_CIPHER*
 ALCP_prov_cipher_init(alc_prov_ctx_p cc)
 {
     /* FIXME: this could be wrong */
-    alc_prov_cipher_ctx_p c = (alc_prov_cipher_ctx_p)cc;
+    alc_prov_cipher_ctx_t* c = (alc_prov_cipher_ctx_t*)cc;
 
     ENTER();
 

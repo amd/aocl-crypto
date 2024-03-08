@@ -37,10 +37,13 @@ namespace alcp::cipher {
 alc_error_t
 Aes::setKey(const Uint8* pKey, const Uint64 keyLen)
 {
-    alc_error_t e = ALC_ERROR_NONE;
-    Rijndael::initRijndael(keyLen, pKey);
+    alc_error_t e       = ALC_ERROR_NONE;
+    m_cipherData.m_pKey = pKey;
+    m_cipherData.m_keyLen = keyLen;
+
+    Rijndael::initRijndael(pKey, keyLen);
     getKey();
-    m_isKeyset = true;
+    m_cipherData.m_isKeyset = true;
     return e;
 }
 
@@ -57,9 +60,9 @@ Aes::setIv(const Uint8* pIv, const Uint64 ivLen)
     }
 
     // set IV and IvLen
-    m_iv      = pIv;
-    m_ivLen   = ivLen;
-    m_isIvset = true;
+    m_cipherData.m_iv      = pIv;
+    m_cipherData.m_ivLen   = ivLen;
+    m_cipherData.m_isIvset = true;
 
     return e;
 }
