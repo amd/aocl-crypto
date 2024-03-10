@@ -24,7 +24,9 @@
  # POSSIBILITY OF SUCH DAMAGE.
 
 
-# Basic sources and libs needed for ALCP
+Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
+
+ # Basic sources and libs needed for ALCP
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} base/alc_rsa.cc)
 SET(LIBS ${LIBS} gtest alcp)
@@ -78,10 +80,12 @@ gtest_add_tests(TARGET test_rsa_kat)
 
 IF(ENABLE_TESTS_OPENSSL_API)
     gtest_add_tests(TARGET test_rsa_cross)
-    add_test("test_rsa_kat_openssl" test_rsa_kat "-o")
 ENDIF(ENABLE_TESTS_OPENSSL_API)
 
-IF(ENABLE_TESTS_IPP_API)
-    add_test("test_rsa_kat_ipp" test_rsa_kat "-i")
-    add_test("test_rsa_cross_ipp" test_rsa_cross "-i")
-ENDIF(ENABLE_TESTS_IPP_API)
+alcp_add_integration_tests("test_rsa_kat" test_rsa_kat)
+alcp_add_integration_tests("test_rsa_cross" test_rsa_cross)
+
+IF(ALCP_MEMCHECK_VALGRIND)
+    alcp_add_valgrind_check_test("test_rsa_kat" test_rsa_kat)
+    alcp_add_valgrind_check_test("test_rsa_cross" test_rsa_cross)
+ENDIF(ALCP_MEMCHECK_VALGRIND)

@@ -23,19 +23,15 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
+Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
 
 # Basic sources and libs needed for ALCP
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 SET(ALC_BASE_FILES ${ALC_BASE_FILES} ${ALC_COMMON_SRC} ../../tests/cmac/base/alc_cmac.cc ../../tests/cmac/base/cmac.cc)
 
-
-
-
 IF(ENABLE_TESTS_IPP_API)
-
-# If there is IPP, add IPP source and add IPP liberary
-SET(EXTRA_SOURCES ${EXTRA_SOURCES} base/ipp_cmac.cc)
-
+    # If there is IPP, add IPP source and add IPP liberary
+    SET(EXTRA_SOURCES ${EXTRA_SOURCES} base/ipp_cmac.cc)
 ENDIF(ENABLE_TESTS_IPP_API)
 
 IF(ENABLE_TESTS_OPENSSL_API)
@@ -79,10 +75,13 @@ gtest_add_tests(TARGET test_cmac_kat)
 
 IF(ENABLE_TESTS_OPENSSL_API)
     gtest_add_tests(TARGET test_cmac_cross)
-    add_test("test_cmac_kat_openssl" test_cmac_kat "-o")
 ENDIF(ENABLE_TESTS_OPENSSL_API)
 
-IF(ENABLE_TESTS_IPP_API)
-    add_test("test_cmac_kat_ipp" test_cmac_kat "-i")
-    add_test("test_cmac_cross_ipp" test_cmac_cross "-i")
-ENDIF(ENABLE_TESTS_IPP_API)
+alcp_add_integration_tests("test_cmac_kat" test_cmac_kat)
+alcp_add_integration_tests("test_cmac_cross" test_cmac_cross)
+
+# vlagrind runs
+IF(ALCP_MEMCHECK_VALGRIND)
+    alcp_add_valgrind_check_test("test_cmac_kat" test_cmac_kat)
+    alcp_add_valgrind_check_test("test_cmac_cross" test_cmac_cross)
+ENDIF(ALCP_MEMCHECK_VALGRIND)

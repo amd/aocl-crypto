@@ -23,10 +23,7 @@
  # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  # POSSIBILITY OF SUCH DAMAGE.
 
-
-
-
-
+Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
 
 # Basic sources and libs needed for ALCP
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
@@ -100,11 +97,14 @@ gtest_add_tests(TARGET test_ecdh_kat)
 
 IF(ENABLE_TESTS_OPENSSL_API)
     gtest_add_tests(TARGET test_ecdh_cross)
-    add_test("test_ecdh_kat" test_ecdh_kat "-o")
 ENDIF(ENABLE_TESTS_OPENSSL_API)
 
-IF(ENABLE_TESTS_IPP_API)
-    add_test("test_ecdh_kat_ipp" test_ecdh_kat "-i")
-    add_test("test_ecdh_cross_ipp" test_ecdh_cross "-i")
-ENDIF(ENABLE_TESTS_IPP_API)
+alcp_add_integration_tests("test_ecdh_kat" test_ecdh_kat)
+alcp_add_integration_tests("test_ecdh_cross" test_ecdh_cross)
+
+# vlagrind runs
+IF(ALCP_MEMCHECK_VALGRIND)
+    alcp_add_valgrind_check_test("test_ecdh_kat" test_ecdh_kat)
+    alcp_add_valgrind_check_test("test_ecdh_cross" test_ecdh_cross)
+ENDIF(ALCP_MEMCHECK_VALGRIND)
 
