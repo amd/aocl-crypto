@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -84,4 +84,10 @@ gtest_add_tests(TARGET test_digest_kat)
 
 IF(ENABLE_TESTS_OPENSSL_API)
     gtest_add_tests(TARGET test_digest_cross)
+    add_test("test_digest_kat_openssl" test_digest_kat "-o")
 ENDIF(ENABLE_TESTS_OPENSSL_API)
+
+IF(ENABLE_TESTS_IPP_API)
+    add_test("test_digest_kat_ipp" test_digest_kat "-i")
+    add_test("test_digest_cross_ipp" test_digest_cross "-i")
+ENDIF(ENABLE_TESTS_IPP_API)
