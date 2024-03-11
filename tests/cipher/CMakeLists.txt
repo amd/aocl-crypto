@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -28,6 +28,8 @@ if (POLICY CMP0079) # Visibility
   cmake_policy(SET CMP0079 NEW)
 endif (POLICY CMP0079)
 
+Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
+
 # Basic sources and libs needed for ALCP
 FILE(GLOB ALC_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 SET(ALC_BASE_FILES ${ALC_BASE_FILES}
@@ -36,31 +38,23 @@ SET(ALC_BASE_FILES ${ALC_BASE_FILES}
                    ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher_aead.cc
                    ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher.cc)
 
-
 IF(WIN32)
 target_link_libraries(gmock PUBLIC gtest)
 target_link_libraries(gmock_main PUBLIC gtest_main)
 ENDIF()
 
-
 IF(ENABLE_TESTS_IPP_API)
-
     # If there is IPP, add IPP source and add IPP liberary
     SET(EXTRA_SOURCES ${EXTRA_SOURCES}
                       base/ipp_cipher.cc
                       base/ipp_cipher_aead.cc)
-
 ENDIF(ENABLE_TESTS_IPP_API)
 
-
-
 IF(ENABLE_TESTS_OPENSSL_API)
-
     # If there is OpenSSL, add OpenSSL source and add OpenSSL liberary
     SET(EXTRA_SOURCES ${EXTRA_SOURCES}
                       base/openssl_cipher.cc
                       base/openssl_cipher_aead.cc)
-
 ENDIF(ENABLE_TESTS_OPENSSL_API)
 
 
@@ -75,15 +69,13 @@ FUNCTION(KAT_AES MOD)
     # Link dataset to the actual place of test binary
     FILE(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_data/dataset_${MOD}.csv ${CMAKE_CURRENT_BINARY_DIR}/dataset_${MOD}.csv SYMBOLIC)
 
-
     TARGET_INCLUDE_DIRECTORIES(aes_${MOD}_kat PRIVATE
         ${ALCP_INCLUDES}
         ${EXTRA_INCLUDES})
 
     TARGET_COMPILE_OPTIONS(aes_${MOD}_kat PUBLIC -O2 ${ALCP_WARNINGS})
     TARGET_LINK_LIBRARIES(aes_${MOD}_kat ${LIBS})
-    gtest_add_tests(TARGET aes_${MOD}_kat
-        TEST_SUFFIX .${MOD})
+    gtest_add_tests(TARGET aes_${MOD}_kat TEST_SUFFIX .${MOD})
 ENDFUNCTION()
 
 # Function to dynamically generate compilation of each test cases for chacha20
@@ -100,8 +92,11 @@ FUNCTION(KAT_CHACHA20)
 
     TARGET_COMPILE_OPTIONS(chacha20_kat PUBLIC -O2 ${ALCP_WARNINGS})
     TARGET_LINK_LIBRARIES(chacha20_kat ${LIBS})
-    gtest_add_tests(TARGET chacha20_kat
-        TEST_SUFFIX .chacha20)
+    gtest_add_tests(TARGET chacha20_kat TEST_SUFFIX .chacha20)
+    alcp_add_integration_tests("chacha20_kat" chacha20_kat)
+    IF(ALCP_MEMCHECK_VALGRIND)
+        alcp_add_valgrind_check_test("chacha20_kat" chacha20_kat)
+    ENDIF(ALCP_MEMCHECK_VALGRIND)
 ENDFUNCTION()
 
 FUNCTION(CROSS_AES MOD)
@@ -113,8 +108,7 @@ FUNCTION(CROSS_AES MOD)
     TARGET_LINK_LIBRARIES(aes_${MOD}_cross ${LIBS})
 
     IF(ENABLE_TESTS_OPENSSL_API)
-        gtest_add_tests(TARGET aes_${MOD}_cross
-            TEST_SUFFIX .${MOD})
+        gtest_add_tests(TARGET aes_${MOD}_cross TEST_SUFFIX .${MOD})
     ENDIF(ENABLE_TESTS_OPENSSL_API)
 ENDFUNCTION()
 
@@ -126,9 +120,12 @@ FUNCTION(CROSS_CHACHA20)
     TARGET_COMPILE_OPTIONS(chacha20_cross PUBLIC -O2 ${ALCP_WARNINGS})
     TARGET_LINK_LIBRARIES(chacha20_cross ${LIBS})
     IF(ENABLE_TESTS_OPENSSL_API)
-        gtest_add_tests(TARGET chacha20_cross
-            TEST_SUFFIX .chacha20)
+        gtest_add_tests(TARGET chacha20_cross TEST_SUFFIX .chacha20)
     ENDIF(ENABLE_TESTS_OPENSSL_API)
+    alcp_add_integration_tests("chacha20_cross" chacha20_cross)
+    IF(ALCP_MEMCHECK_VALGRIND)
+        alcp_add_valgrind_check_test("chacha20_cross" chacha20_cross)
+    ENDIF(ALCP_MEMCHECK_VALGRIND)
 ENDFUNCTION()
 
 KAT_AES(cbc)
