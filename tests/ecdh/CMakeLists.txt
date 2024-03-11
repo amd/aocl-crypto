@@ -102,7 +102,6 @@ ENDIF(ENABLE_TESTS_OPENSSL_API)
 alcp_add_integration_tests("test_ecdh_kat" test_ecdh_kat)
 alcp_add_integration_tests("test_ecdh_cross" test_ecdh_cross)
 
-# vlagrind runs
 IF(ALCP_MEMCHECK_VALGRIND)
     alcp_add_valgrind_check_test("test_ecdh_kat" test_ecdh_kat)
     alcp_add_valgrind_check_test("test_ecdh_cross" test_ecdh_cross)
