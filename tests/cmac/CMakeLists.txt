@@ -80,8 +80,7 @@ ENDIF(ENABLE_TESTS_OPENSSL_API)
 alcp_add_integration_tests("test_cmac_kat" test_cmac_kat)
 alcp_add_integration_tests("test_cmac_cross" test_cmac_cross)
 
-# vlagrind runs
 IF(ALCP_MEMCHECK_VALGRIND)
-    alcp_add_valgrind_check_test("test_cmac_kat" test_cmac_kat)
-    alcp_add_valgrind_check_test("test_cmac_cross" test_cmac_cross)
+    alcp_add_valgrind_check_test("test_cmac_kat" ${CMAKE_BINARY_DIR}/tests/cmac/test_cmac_kat)
+    alcp_add_valgrind_check_test("test_cmac_cross" ${CMAKE_BINARY_DIR}/tests/cmac/test_cmac_cross)
 ENDIF(ALCP_MEMCHECK_VALGRIND)

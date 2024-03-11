@@ -90,6 +90,6 @@ alcp_add_integration_tests("test_digest_kat" test_digest_kat)
 alcp_add_integration_tests("test_digest_cross" test_digest_cross)
 
 IF(ALCP_MEMCHECK_VALGRIND)
-    alcp_add_valgrind_check_test("test_digest_kat" test_digest_kat)
-    alcp_add_valgrind_check_test("test_digest_cross" test_digest_cross)
+    alcp_add_valgrind_check_test("test_digest_kat" ${CMAKE_BINARY_DIR}/tests/digest/test_digest_kat)
+    alcp_add_valgrind_check_test("test_digest_cross" ${CMAKE_BINARY_DIR}/tests/digest/test_digest_cross)
 ENDIF(ALCP_MEMCHECK_VALGRIND)

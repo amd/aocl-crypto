@@ -85,7 +85,7 @@ alcp_add_integration_tests("test_hmac_kat" test_hmac_kat)
 alcp_add_integration_tests("test_hmac_cross" test_hmac_cross)
 
 IF(ALCP_MEMCHECK_VALGRIND)
-    alcp_add_valgrind_check_test("test_hmac_kat" test_hmac_kat)
-    alcp_add_valgrind_check_test("test_hmac_cross" test_hmac_cross)
+    alcp_add_valgrind_check_test("test_hmac_kat" ${CMAKE_BINARY_DIR}/tests/hmac/test_hmac_kat)
+    alcp_add_valgrind_check_test("test_hmac_cross" ${CMAKE_BINARY_DIR}/tests/hmac/test_hmac_cross)
 ENDIF(ALCP_MEMCHECK_VALGRIND)
 

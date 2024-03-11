@@ -86,6 +86,6 @@ alcp_add_integration_tests("test_rsa_kat" test_rsa_kat)
 alcp_add_integration_tests("test_rsa_cross" test_rsa_cross)
 
 IF(ALCP_MEMCHECK_VALGRIND)
-    alcp_add_valgrind_check_test("test_rsa_kat" test_rsa_kat)
-    alcp_add_valgrind_check_test("test_rsa_cross" test_rsa_cross)
+    alcp_add_valgrind_check_test("test_rsa_kat" ${CMAKE_BINARY_DIR}/tests/rsa/test_rsa_kat)
+    alcp_add_valgrind_check_test("test_rsa_cross" ${CMAKE_BINARY_DIR}/tests/rsa/test_rsa_cross)
 ENDIF(ALCP_MEMCHECK_VALGRIND)
