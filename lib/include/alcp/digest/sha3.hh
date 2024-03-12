@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -50,6 +50,8 @@ static constexpr Uint8 cRotationConstants[cDim][cDim] = {
     { 41, 45, 15, 21, 8 },
     { 18, 2, 61, 56, 14 }
 };
+// maximum size of message block in bits is used for shake128 digest
+static constexpr Uint32 MaxDigestBlockSizeBits = 1344;
 
 class ALCP_API_EXPORT Sha3 : public Digest
 {
@@ -141,9 +143,22 @@ class ALCP_API_EXPORT Sha3 : public Digest
     alc_error_t setShakeLength(Uint64 shakeLength);
 
   private:
-    class Impl;
-    std::unique_ptr<Impl> m_pimpl;
-    bool                  m_finished = false;
+    alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
+    void        squeezeChunk();
+    std::string m_name;
+    Uint64      m_chunk_size, m_chunk_size_u64, m_hash_size;
+    Uint32      m_idx = 0;
+
+    // buffer size to hold the chunk size to be processed
+    alignas(64) Uint8 m_buffer[MaxDigestBlockSizeBits / 8];
+    // state matrix to represent the keccak 1600 bits representation of
+    // intermediate hash
+    alignas(64) Uint64 m_state[cDim][cDim];
+    // flat representation of the state, used in absorbing the user message.
+    Uint64* m_state_flat = &m_state[0][0];
+    // buffer to copy intermediate hash value
+    std::vector<Uint8> m_hash;
+    bool               m_finished = false;
 };
 
 namespace zen3 {

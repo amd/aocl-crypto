@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -198,10 +198,17 @@ class ALCP_API_EXPORT Sha512 final : public Sha2
     Uint64 getHashSize() override;
 
   private:
-    class Impl;
-    std::unique_ptr<Impl> m_pImpl;
-    const Impl*           pImpl() const { return m_pImpl.get(); }
-    Impl*                 pImpl() { return m_pImpl.get(); }
+    alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
+    Uint64      m_msg_len;
+    /* Any unprocessed bytes from last call to update() */
+    alignas(64) Uint8 m_buffer[2 * cChunkSize];
+    alignas(64) Uint64 m_hash[cHashSizeWords];
+    /* index to m_buffer of previously unprocessed bytes */
+    Uint32        m_idx;
+    bool          m_finished;
+    const Uint64* m_Iv = nullptr;
+    Uint64        m_digest_len_bytes;
+    Uint64        m_digest_len;
 };
 
 } // namespace alcp::digest

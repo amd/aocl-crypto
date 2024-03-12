@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -50,77 +50,148 @@ namespace alcp::digest {
 
 #include "sha3_inplace.cc.inc"
 
-// maximum size of message block in bits is used for shake128 digest
-static constexpr Uint32 MaxDigestBlockSizeBits = 1344;
-
-class Sha3::Impl
+static inline void
+round(Uint64 roundConst, Uint64 state[cDim][cDim])
 {
-  public:
-    Impl(const alc_digest_info_t& rDigestInfo);
-    ~Impl() = default;
+    // theta stage
+    Uint64 c[cDim], d[cDim];
 
-    alc_error_t update(const Uint8* buf, Uint64 size);
-    alc_error_t finalize(const Uint8* buf, Uint64 size);
-    alc_error_t copyHash(Uint8* buf, Uint64 size) const;
+    for (int x = 0; x < cDim; ++x) {
+        c[x] = state[0][x];
+        for (int y = 1; y < cDim; ++y) {
+            c[x] ^= state[y][x];
+        }
+    }
 
-    Uint64 getInputBlockSize();
-    Uint64 getHashSize();
+    for (int x = 0; x < cDim; ++x) {
+        d[x] = c[(cDim + x - 1) % cDim]
+               ^ alcp::digest::RotateLeft(c[(x + 1) % cDim], 1);
+    }
 
-    alc_error_t setShakeLength(Uint64 size);
+    for (int x = 0; x < cDim; ++x) {
+        for (int y = 0; y < cDim; ++y) {
+            state[x][y] ^= d[y];
+        }
+    }
 
-    void reset();
+    // Rho stage
+    Uint64 temp[cDim][cDim];
+    for (int x = 0; x < cDim; x++) {
+        for (int y = 0; y < cDim; y++) {
+            temp[x][y] =
+                alcp::digest::RotateLeft(state[x][y], cRotationConstants[x][y]);
+        }
+    }
 
-  private:
-    void        absorbChunk(Uint64* p_msg_buf_64);
-    void        squeezeChunk();
-    alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
-    void        round(Uint64 round_const);
-    void        fFunction();
+    // pi stage
+    for (int x = 0; x < cDim; ++x) {
+        int x_indx = 2 * x;
+        for (int y = 0; y < cDim; ++y) {
+            state[(x_indx + 3 * y) % cDim][y] = temp[y][x];
+        }
+    }
 
-  private:
-    std::string  m_name;
-    Uint64       m_chunk_size, m_chunk_size_u64, m_hash_size;
-    const Uint64 m_num_rounds = 24;
-    Uint32       m_idx        = 0;
+    // xi stage
+    utils::CopyBlock(temp, state, sizeof(temp));
+    for (int x = 0; x < cDim; ++x) {
+        for (int y = 0; y < cDim; ++y) {
+            state[x][y] =
+                temp[x][y]
+                ^ (~temp[x][(y + 1) % cDim] & temp[x][(y + 2) % cDim]);
+        }
+    }
 
-    // buffer size to hold the chunk size to be processed
-    alignas(64) Uint8 m_buffer[MaxDigestBlockSizeBits / 8];
-    // state matrix to represent the keccak 1600 bits representation of
-    // intermediate hash
-    alignas(64) Uint64 m_state[cDim][cDim];
-    // flat representation of the state, used in absorbing the user message.
-    Uint64* m_state_flat = &m_state[0][0];
-    // buffer to copy intermediate hash value
-    std::vector<Uint8> m_hash;
-};
-
-Uint64
-Sha3::Impl::getInputBlockSize()
-{
-    return m_chunk_size;
+    // iota stage
+    state[0][0] ^= roundConst;
 }
 
-Uint64
-Sha3::Impl::getHashSize()
+static inline void
+fFunction(Uint64* stateFlat)
 {
-    return m_hash_size;
+    const Uint64 num_rounds = 24;
+    for (Uint64 i = 0; i < num_rounds; ++i) {
+        round(cRoundConstants[i], reinterpret_cast<Uint64(*)[5]>(stateFlat));
+    }
+}
+
+static inline void
+absorbChunk(Uint64* pMsgBuffer64, Uint64* stateFlat, Uint64 size)
+{
+    for (Uint64 i = 0; i < size; ++i) {
+        stateFlat[i] ^= pMsgBuffer64[i];
+    }
+    // keccak function
+    fFunction(stateFlat);
+}
+
+void
+Sha3::squeezeChunk()
+{
+    Uint64 hash_copied = 0;
+
+    static bool zen1_available = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
+    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
+
+    if (zen3_available) {
+        return zen3::Sha3Finalize(
+            (Uint8*)m_state_flat, &m_hash[0], m_hash_size, m_chunk_size);
+    }
+
+    if (zen1_available) {
+        return zen::Sha3Finalize(
+            (Uint8*)m_state_flat, &m_hash[0], m_hash_size, m_chunk_size);
+    }
+
+    while (m_chunk_size <= m_hash_size - hash_copied) {
+        Uint64 data_chunk_copied = std::min(m_hash_size, m_chunk_size);
+
+        utils::CopyBlock(
+            &m_hash[hash_copied], (Uint8*)m_state_flat, data_chunk_copied);
+        hash_copied += data_chunk_copied;
+
+        if (hash_copied < m_hash_size) {
+            fFunction(m_state_flat);
+        }
+    }
+
+    if (m_hash_size > hash_copied) {
+        utils::CopyBlock(&m_hash[hash_copied],
+                         (Uint8*)m_state_flat,
+                         m_hash_size - hash_copied);
+    }
 }
 
 alc_error_t
-Sha3::Impl::setShakeLength(Uint64 size)
+Sha3::processChunk(const Uint8* pSrc, Uint64 len)
 {
-    alc_error_t err = ALC_ERROR_NONE;
-    if (m_name == "SHA3-SHAKE-128" || m_name == "SHA3-SHAKE-256") {
-        m_hash_size = size;
-        m_hash.resize(m_hash_size);
-    } else {
-        err = ALC_ERROR_NOT_PERMITTED;
+    Uint64  msg_size       = len;
+    Uint64* p_msg_buffer64 = (Uint64*)pSrc;
+
+    static bool zen1_available = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
+    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
+
+    if (zen3_available) {
+        return zen3::Sha3Update(
+            m_state_flat, p_msg_buffer64, msg_size, m_chunk_size);
     }
-    return err;
+
+    if (zen1_available) {
+        return zen::Sha3Update(
+            m_state_flat, p_msg_buffer64, msg_size, m_chunk_size);
+    }
+
+    while (msg_size) {
+        // xor message chunk into m_state.
+        absorbChunk(p_msg_buffer64, m_state_flat, m_chunk_size_u64);
+        p_msg_buffer64 += m_chunk_size_u64;
+        msg_size -= m_chunk_size;
+    }
+
+    return ALC_ERROR_NONE;
 }
 
-Sha3::Impl::Impl(const alc_digest_info_t& rDigestInfo)
-    : m_idx{ 0 }
+Sha3::Sha3(const alc_digest_info_t& rDigestInfo)
+    : m_finished{ false }
 {
     Uint64 chunk_size_bits = 0;
     m_hash_size            = rDigestInfo.dt_len / 8;
@@ -164,171 +235,24 @@ Sha3::Impl::Impl(const alc_digest_info_t& rDigestInfo)
     m_hash.resize(m_hash_size);
 }
 
-void
-Sha3::Impl::absorbChunk(Uint64* pMsgBuffer64)
-{
-    for (Uint64 i = 0; i < m_chunk_size_u64; ++i) {
-        m_state_flat[i] ^= pMsgBuffer64[i];
-    }
-    // keccak function
-    fFunction();
-}
-
-void
-Sha3::Impl::squeezeChunk()
-{
-    Uint64 hash_copied = 0;
-
-    static bool zen1_available = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
-    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
-
-    if (zen3_available) {
-        return zen3::Sha3Finalize(
-            (Uint8*)m_state_flat, &m_hash[0], m_hash_size, m_chunk_size);
-    }
-
-    if (zen1_available) {
-        return zen::Sha3Finalize(
-            (Uint8*)m_state_flat, &m_hash[0], m_hash_size, m_chunk_size);
-    }
-
-    while (m_chunk_size <= m_hash_size - hash_copied) {
-        Uint64 data_chunk_copied = std::min(m_hash_size, m_chunk_size);
-
-        utils::CopyBlock(
-            &m_hash[hash_copied], (Uint8*)m_state_flat, data_chunk_copied);
-        hash_copied += data_chunk_copied;
-
-        if (hash_copied < m_hash_size) {
-            fFunction();
-        }
-    }
-
-    if (m_hash_size > hash_copied) {
-        utils::CopyBlock(&m_hash[hash_copied],
-                         (Uint8*)m_state_flat,
-                         m_hash_size - hash_copied);
-    }
-}
-
-inline void
-Sha3::Impl::round(Uint64 roundConst)
-{
-    // theta stage
-    Uint64 c[cDim], d[cDim];
-
-    for (int x = 0; x < cDim; ++x) {
-        c[x] = m_state[0][x];
-        for (int y = 1; y < cDim; ++y) {
-            c[x] ^= m_state[y][x];
-        }
-    }
-
-    for (int x = 0; x < cDim; ++x) {
-        d[x] = c[(cDim + x - 1) % cDim]
-               ^ alcp::digest::RotateLeft(c[(x + 1) % cDim], 1);
-    }
-
-    for (int x = 0; x < cDim; ++x) {
-        for (int y = 0; y < cDim; ++y) {
-            m_state[x][y] ^= d[y];
-        }
-    }
-
-    // Rho stage
-    Uint64 temp[cDim][cDim];
-    for (int x = 0; x < cDim; x++) {
-        for (int y = 0; y < cDim; y++) {
-            temp[x][y] = alcp::digest::RotateLeft(m_state[x][y],
-                                                  cRotationConstants[x][y]);
-        }
-    }
-
-    // pi stage
-    for (int x = 0; x < cDim; ++x) {
-        int x_indx = 2 * x;
-        for (int y = 0; y < cDim; ++y) {
-            m_state[(x_indx + 3 * y) % cDim][y] = temp[y][x];
-        }
-    }
-
-    // xi stage
-    utils::CopyBlock(temp, m_state, sizeof(temp));
-    for (int x = 0; x < cDim; ++x) {
-        for (int y = 0; y < cDim; ++y) {
-            m_state[x][y] =
-                temp[x][y]
-                ^ (~temp[x][(y + 1) % cDim] & temp[x][(y + 2) % cDim]);
-        }
-    }
-
-    // iota stage
-    m_state[0][0] ^= roundConst;
-}
-
-void
-Sha3::Impl::fFunction()
-{
-    for (Uint64 i = 0; i < m_num_rounds; ++i) {
-        round(cRoundConstants[i]);
-    }
-}
-
-void
-Sha3::Impl::reset()
-{
-    m_idx = 0;
-    memset(m_state, 0, sizeof(m_state));
-}
+Sha3::~Sha3() {}
 
 alc_error_t
-Sha3::Impl::copyHash(Uint8* pHash, Uint64 size) const
+Sha3::update(const Uint8* pSrc, Uint64 inputSize)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    if (size != m_hash_size) {
+    if (m_finished || pSrc == nullptr) {
         /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_SIZE;
+        err = ALC_ERROR_INVALID_ARG;
         return err;
     }
 
-    utils::CopyBlock(pHash, m_hash.data(), size);
-    return err;
-}
-
-alc_error_t
-Sha3::Impl::processChunk(const Uint8* pSrc, Uint64 len)
-{
-    Uint64  msg_size       = len;
-    Uint64* p_msg_buffer64 = (Uint64*)pSrc;
-
-    static bool zen1_available = CpuId::cpuIsZen1() || CpuId::cpuIsZen2();
-    static bool zen3_available = CpuId::cpuIsZen3() || CpuId::cpuIsZen4();
-
-    if (zen3_available) {
-        return zen3::Sha3Update(
-            m_state_flat, p_msg_buffer64, msg_size, m_chunk_size);
+    if (inputSize == 0) {
+        /* TODO: change to Status */
+        err = ALC_ERROR_NONE;
+        return err;
     }
-
-    if (zen1_available) {
-        return zen::Sha3Update(
-            m_state_flat, p_msg_buffer64, msg_size, m_chunk_size);
-    }
-
-    while (msg_size) {
-        // xor message chunk into m_state.
-        absorbChunk(p_msg_buffer64);
-        p_msg_buffer64 += m_chunk_size_u64;
-        msg_size -= m_chunk_size;
-    }
-
-    return ALC_ERROR_NONE;
-}
-
-alc_error_t
-Sha3::Impl::update(const Uint8* pSrc, Uint64 inputSize)
-{
-    alc_error_t err = ALC_ERROR_NONE;
 
     Uint64 to_process = std::min((inputSize + m_idx), m_chunk_size);
     if (to_process < m_chunk_size) {
@@ -382,12 +306,16 @@ Sha3::Impl::update(const Uint8* pSrc, Uint64 inputSize)
 }
 
 alc_error_t
-Sha3::Impl::finalize(const Uint8* pBuf, Uint64 size)
+Sha3::finalize(const Uint8* pSrc, Uint64 size)
 {
     alc_error_t err = ALC_ERROR_NONE;
 
-    if (pBuf && size) {
-        err = update(pBuf, size);
+    if (m_finished) {
+        return err;
+    }
+
+    if (pSrc && size) {
+        err = update(pSrc, size);
     }
 
     // sha3 padding
@@ -411,51 +339,6 @@ Sha3::Impl::finalize(const Uint8* pBuf, Uint64 size)
 
     m_idx = 0;
 
-    return err;
-}
-
-Sha3::Sha3(const alc_digest_info_t& rDigestInfo)
-    : m_pimpl{ std::make_unique<Sha3::Impl>(rDigestInfo) }
-    , m_finished{ false }
-{}
-
-Sha3::~Sha3() {}
-
-alc_error_t
-Sha3::update(const Uint8* pSrc, Uint64 size)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    if (m_finished || pSrc == nullptr) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_INVALID_ARG;
-        return err;
-    }
-
-    if (size == 0) {
-        /* TODO: change to Status */
-        err = ALC_ERROR_NONE;
-        return err;
-    }
-
-    if (!alcp_is_error(err) && m_pimpl)
-        err = m_pimpl->update(pSrc, size);
-
-    return err;
-}
-
-alc_error_t
-Sha3::finalize(const Uint8* pSrc, Uint64 size)
-{
-    alc_error_t err = ALC_ERROR_NONE;
-
-    if (m_finished) {
-        return err;
-    }
-
-    if (m_pimpl)
-        err = m_pimpl->finalize(pSrc, size);
-
     m_finished = true;
     return err;
 }
@@ -468,27 +351,28 @@ Sha3::copyHash(Uint8* pHash, Uint64 size) const
     if (pHash == nullptr) {
         /* TODO: change to Status */
         err = ALC_ERROR_INVALID_ARG;
+        return err;
     }
 
-    if (!err && m_pimpl) {
-        err = m_pimpl->copyHash(pHash, size);
+    if (size != m_hash_size) {
+        /* TODO: change to Status */
+        err = ALC_ERROR_INVALID_SIZE;
+        return err;
     }
 
+    utils::CopyBlock(pHash, m_hash.data(), size);
     return err;
 }
 
 void
 Sha3::finish()
-{
-    m_pimpl = nullptr;
-}
+{}
 
 void
 Sha3::reset()
 {
-    if (m_pimpl) {
-        m_pimpl->reset();
-    }
+    m_idx = 0;
+    memset(m_state, 0, sizeof(m_state));
 
     m_finished = false;
 }
@@ -496,12 +380,12 @@ Sha3::reset()
 Uint64
 Sha3::getInputBlockSize()
 {
-    return m_pimpl->getInputBlockSize();
+    return m_chunk_size;
 }
 Uint64
 Sha3::getHashSize()
 {
-    return m_pimpl->getHashSize();
+    return m_hash_size;
 }
 
 alc_error_t
@@ -510,6 +394,13 @@ Sha3::setShakeLength(Uint64 shakeLength)
     if (m_finished) {
         return ALC_ERROR_NOT_PERMITTED;
     }
-    return m_pimpl->setShakeLength(shakeLength);
+    alc_error_t err = ALC_ERROR_NONE;
+    if (m_name == "SHA3-SHAKE-128" || m_name == "SHA3-SHAKE-256") {
+        m_hash_size = shakeLength;
+        m_hash.resize(m_hash_size);
+    } else {
+        err = ALC_ERROR_NOT_PERMITTED;
+    }
+    return err;
 }
 } // namespace alcp::digest

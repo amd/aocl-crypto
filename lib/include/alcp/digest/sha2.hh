@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -176,10 +176,14 @@ class Sha256 final : public Sha2
     ALCP_API_EXPORT alc_error_t setIv(const void* pIv, Uint64 size);
 
   private:
-    class Impl;
-    const Impl*           pImpl() const { return m_pimpl.get(); }
-    Impl*                 pImpl() { return m_pimpl.get(); }
-    std::unique_ptr<Impl> m_pimpl;
+    alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
+    Uint64      m_msg_len;
+    /* Any unprocessed bytes from last call to update() */
+    alignas(64) Uint8 m_buffer[2 * cChunkSize];
+    alignas(64) Uint32 m_hash[cHashSizeWords];
+    /* index to m_buffer of previously unprocessed bytes */
+    Uint32 m_idx;
+    bool   m_finished;
 };
 
 class ALCP_API_EXPORT Sha224 final : public Sha2
@@ -246,6 +250,18 @@ CompressMsg(Uint32* pMsgSchArray, Uint32* pHash, const Uint32* pHashConstants)
     pHash[5] += f;
     pHash[6] += g;
     pHash[7] += h;
+}
+
+static inline void
+extendMsg(Uint32 w[], Uint32 start, Uint32 end)
+{
+    for (Uint32 i = start; i < end; i++) {
+        const Uint32 s0 = RotateRight(w[i - 15], 7) ^ RotateRight(w[i - 15], 18)
+                          ^ (w[i - 15] >> 3);
+        const Uint32 s1 = RotateRight(w[i - 2], 17) ^ RotateRight(w[i - 2], 19)
+                          ^ (w[i - 2] >> 10);
+        w[i] = w[i - 16] + s0 + w[i - 7] + s1;
+    }
 }
 
 } // namespace alcp::digest
