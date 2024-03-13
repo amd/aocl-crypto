@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -45,7 +45,7 @@ foreach(testFile IN LISTS TEST_FILES)
     get_filename_component(currentTestName ${testFile} NAME_WLE)
     get_filename_component(currentTestFile ${testFile} NAME)
     message("Test-> " ${currentTestName} " file " ${currentTestFile} )
-    alcp_cc_test(${currentTestName}
+    alcp_cc_test(${currentTestName} ${CMAKE_BINARY_DIR}/lib/utils/tests
              DIRECTORY tests/
              SOURCES   "${currentTestFile}"
              DEPENDS   ${_module_lib}

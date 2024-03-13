@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+# Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -66,7 +66,7 @@ endmacro()
 #         CONTENTS data/
 #   )
 
-function(alcp_cc_test testName)
+function(alcp_cc_test testName working_dir)
   if (NOT ALCP_ENABLE_TESTS)
     return()
   endif()
@@ -92,8 +92,6 @@ function(alcp_cc_test testName)
 
   set(_target_name "${_ESCAPED_ALCP_MODULE}_${testName}")
   
-  # message(STATUS "UNIT TEST TARGET ${_target_name}")
-
   if ( ${${testPrefix}_SKIP} OR ${${testPrefix}_BROKEN} )
     message("Test : " ${testName} "[SKIPPED]")
     return()
@@ -110,8 +108,6 @@ function(alcp_cc_test testName)
       return()
     endif()
   endif()
-
-  #message("DEPENDS " ${${testPrefix}_DEPENDS})
 
   file(GLOB TEST_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 
@@ -147,33 +143,6 @@ function(alcp_cc_test testName)
   target_include_directories(${_target_name} PRIVATE ${CMAKE_SOURCE_DIR}/lib/include)
   target_include_directories(${_target_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/common/include)
 
-  #set_property(TARGET ${_target_name}
-  #  PROPERTY FOLDER "${alcp_IDE_FOLDER}/Tests")
-
-  # FIXME: Disabled for now, forcing standard.
-  #   set_property(TARGET ${_target_name} PROPERTY CXX_STANDARD ${ALCP_CXX_STANDARD})
-  #   set_property(TARGET ${_target_name} PROPERTY CXX_STANDARD_REQUIRED true)
-
-  # message("Adding Test: " ${_target_name})
-  
-  if (HAVE_CMAKE_GTEST)
-    # If we have CMake's built-in gtest support use it to add each test
-    # function as a separate test.
-    gtest_add_tests(TARGET ${_target_name}
-                    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-                    AUTO)
-                  set_tests_properties(${test_cases} PROPERTIES TIMEOUT 120)
-  else()
-    # Otherwise add each test executable as a single test.
-    # Note: This was preferred over using gtest_discover_tests because of [1].
-    # [1] https://gitlab.kitware.com/cmake/cmake/-/issues/23039
-    add_test(NAME ${_target_name} 
-            COMMAND ${_target_name} 
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-          #set_tests_properties(
-          #ctest_run_test_code 
-          #PROPERTIES DEPENDS ${_target_name})
-  endif()
- 
-  # TODO: Set the CONTENTS directory and copy its contents to ${CMAKE_BINARY_DIR}
+  add_test(${_target_name}, ${working_dir}/${_target_name})
+  # Add valgrind test based on the cmake option
   endfunction(alcp_cc_test)

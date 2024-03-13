@@ -1,4 +1,4 @@
- # Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -31,16 +31,12 @@ file(GLOB TEST_FILES "*_unit_test.cc")
 
 alcp_module("Cipher")
 
-#message(STATUS "Cipher Unit Tests Imported ${TEST_FILES}")
-
 file(GLOB UNIT_TEST_COMMON_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/common/*.cc")
-
 
 foreach(testFile IN LISTS TEST_FILES)
     get_filename_component(currentTestName ${testFile} NAME_WLE)
     get_filename_component(currentTestFile ${testFile} NAME)
-    #message("Test-> " ${currentTestName} " file " ${currentTestFile} )
-    alcp_cc_test(${currentTestName}
+    alcp_cc_test(${currentTestName} ${CMAKE_BINARY_DIR}/lib/cipher/tests
              DIRECTORY tests/
              SOURCES   "${currentTestFile}"
              DEPENDS   ${_module_lib}

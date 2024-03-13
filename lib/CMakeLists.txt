@@ -1,4 +1,4 @@
- # Copyright (C) 2021-2023, Advanced Micro Devices. All rights reserved.
+ # Copyright (C) 2021-2024, Advanced Micro Devices. All rights reserved.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions are met:
@@ -118,6 +118,9 @@ TARGET_SOURCES(alcp_static
 	${ALCP_LIB_SOURCES}
 	)
 
+
+enable_testing()
+
 ADD_SUBDIRECTORY(arch)
 ADD_SUBDIRECTORY(capi)
 ADD_SUBDIRECTORY(compat)
@@ -129,7 +132,6 @@ ADD_SUBDIRECTORY(rng)
 ADD_SUBDIRECTORY(mac)
 ADD_SUBDIRECTORY(ec)
 ADD_SUBDIRECTORY(rsa)
-
 ADD_SUBDIRECTORY(tests)
 
 TARGET_INCLUDE_DIRECTORIES(alcp PRIVATE
