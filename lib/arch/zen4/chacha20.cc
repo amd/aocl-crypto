@@ -94,29 +94,28 @@ ProcessParallelBlocks4(const Uint8 key[],
 {
     // -- Setup Registers for First Row Round Function
     // a
-    __m512i reg_state_1_0_3_2_save = _mm512_broadcast_i32x4(
+    __m512i s_1_0_3_2_prev = _mm512_broadcast_i32x4(
         *reinterpret_cast<const __m128i*>(chacha20::Chacha20Constants));
     // b
-    __m512i reg_state_5_4_7_6_save =
+    __m512i s_5_4_7_6_prev =
         _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(key));
     // c
-    __m512i reg_state_9_8_11_10_save =
+    __m512i s_9_8_11_10_prev =
         _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(key + 16));
     // d
-    __m512i reg_state_13_12_15_14_save =
+    __m512i s_13_12_15_14_prev =
         _mm512_broadcast_i32x4(*reinterpret_cast<const __m128i*>(iv));
 
-    __m512i reg_state_1_0_3_2, reg_state_5_4_7_6, reg_state_9_8_11_10,
-        reg_state_13_12_15_14, counter_reg;
+    __m512i s_1_0_3_2, s_5_4_7_6, s_9_8_11_10, s_13_12_15_14, counter_512;
 
     __m128i reg_128_state;
     __m128i reg_128_msg;
     // clang-format off
-        counter_reg = _mm512_setr_epi32(0x0 ,0x0,0x0,0x0,
+        counter_512 = _mm512_setr_epi32(0x0 ,0x0,0x0,0x0,
                                         0x1 ,0x0,0x0,0x0,
                                         0x2 ,0x0,0x0,0x0,
                                         0x3 ,0x0,0x0,0x0);
-    const __m512i cIncReg = _mm512_setr_epi32(0x4 ,0x0,0x0,0x0,
+    const __m512i cInc512 = _mm512_setr_epi32(0x4 ,0x0,0x0,0x0,
                                         0x4 ,0x0,0x0,0x0,
                                         0x4 ,0x0,0x0,0x0,
                                         0x4 ,0x0,0x0,0x0);
@@ -125,146 +124,134 @@ ProcessParallelBlocks4(const Uint8 key[],
     const __m128i* p_plaintext_128 =
         reinterpret_cast<const __m128i*>(plaintext);
     __m128i* p_ciphertext_128 = reinterpret_cast<__m128i*>(ciphertext);
-    __m512i* state[4]         = { &reg_state_1_0_3_2,
-                                  &reg_state_5_4_7_6,
-                                  &reg_state_9_8_11_10,
-                                  &reg_state_13_12_15_14 };
+    __m512i* s_512[4]         = {
+        &s_1_0_3_2, &s_5_4_7_6, &s_9_8_11_10, &s_13_12_15_14
+    };
     for (Uint64 k = 0; k < chacha20ParallelBlocks; k++) {
 
         // Restoring the registers to last Round State
-        reg_state_1_0_3_2     = reg_state_1_0_3_2_save;
-        reg_state_5_4_7_6     = reg_state_5_4_7_6_save;
-        reg_state_9_8_11_10   = reg_state_9_8_11_10_save;
-        reg_state_13_12_15_14 = reg_state_13_12_15_14_save;
+        s_1_0_3_2     = s_1_0_3_2_prev;
+        s_5_4_7_6     = s_5_4_7_6_prev;
+        s_9_8_11_10   = s_9_8_11_10_prev;
+        s_13_12_15_14 = s_13_12_15_14_prev;
 
-        reg_state_13_12_15_14 =
-            _mm512_add_epi32(reg_state_13_12_15_14, counter_reg);
-        auto reg_state_13_12_15_14_save = reg_state_13_12_15_14;
+        s_13_12_15_14           = _mm512_add_epi32(s_13_12_15_14, counter_512);
+        auto s_13_12_15_14_prev = s_13_12_15_14;
         for (int i = 0; i < 10; i++) {
 
             // -- Row Round Register Setup Complete.
 
-            RoundFunction(reg_state_1_0_3_2,
-                          reg_state_5_4_7_6,
-                          reg_state_9_8_11_10,
-                          reg_state_13_12_15_14);
+            RoundFunction(s_1_0_3_2, s_5_4_7_6, s_9_8_11_10, s_13_12_15_14);
             // -- Row Round Function Complete
             // --- Setting up Register for Column Round Function
             // 6547
-            reg_state_5_4_7_6 = _mm512_shuffle_epi32(reg_state_5_4_7_6,
-                                                     (_MM_PERM_ENUM)0b00111001);
+            s_5_4_7_6 =
+                _mm512_shuffle_epi32(s_5_4_7_6, (_MM_PERM_ENUM)0b00111001);
             // 10,11,8,9 -> 11,10,9,8
-            reg_state_9_8_11_10 = _mm512_shuffle_epi32(
-                reg_state_9_8_11_10, (_MM_PERM_ENUM)0b01001110);
+            s_9_8_11_10 =
+                _mm512_shuffle_epi32(s_9_8_11_10, (_MM_PERM_ENUM)0b01001110);
             // 15,12,13,14 -> 12,15,14,13
-            reg_state_13_12_15_14 = _mm512_shuffle_epi32(
-                reg_state_13_12_15_14, (_MM_PERM_ENUM)0b10010011);
+            s_13_12_15_14 =
+                _mm512_shuffle_epi32(s_13_12_15_14, (_MM_PERM_ENUM)0b10010011);
 
             // Column Round Function
 
-            RoundFunction(reg_state_1_0_3_2,
-                          reg_state_5_4_7_6,
-                          reg_state_9_8_11_10,
-                          reg_state_13_12_15_14);
+            RoundFunction(s_1_0_3_2, s_5_4_7_6, s_9_8_11_10, s_13_12_15_14);
 
             //   Reshuffle it back for next Row operation
             // 6547 -> 5_4_7_6
-            reg_state_5_4_7_6 = _mm512_shuffle_epi32(reg_state_5_4_7_6,
-                                                     (_MM_PERM_ENUM)0b10010011);
+            s_5_4_7_6 =
+                _mm512_shuffle_epi32(s_5_4_7_6, (_MM_PERM_ENUM)0b10010011);
             // 11,10,9,8 -> 9_8_11_10
-            reg_state_9_8_11_10 = _mm512_shuffle_epi32(
-                reg_state_9_8_11_10, (_MM_PERM_ENUM)0b01001110);
+            s_9_8_11_10 =
+                _mm512_shuffle_epi32(s_9_8_11_10, (_MM_PERM_ENUM)0b01001110);
             // 12,15,14,13 -> 13_12_15_14
-            reg_state_13_12_15_14 = _mm512_shuffle_epi32(
-                reg_state_13_12_15_14, (_MM_PERM_ENUM)0b00111001);
+            s_13_12_15_14 =
+                _mm512_shuffle_epi32(s_13_12_15_14, (_MM_PERM_ENUM)0b00111001);
         }
 
-        reg_state_1_0_3_2 =
-            _mm512_add_epi32(reg_state_1_0_3_2, reg_state_1_0_3_2_save);
-        reg_state_5_4_7_6 =
-            _mm512_add_epi32(reg_state_5_4_7_6, reg_state_5_4_7_6_save);
-        reg_state_9_8_11_10 =
-            _mm512_add_epi32(reg_state_9_8_11_10, reg_state_9_8_11_10_save);
-        reg_state_13_12_15_14 =
-            _mm512_add_epi32(reg_state_13_12_15_14, reg_state_13_12_15_14_save);
+        s_1_0_3_2     = _mm512_add_epi32(s_1_0_3_2, s_1_0_3_2_prev);
+        s_5_4_7_6     = _mm512_add_epi32(s_5_4_7_6, s_5_4_7_6_prev);
+        s_9_8_11_10   = _mm512_add_epi32(s_9_8_11_10, s_9_8_11_10_prev);
+        s_13_12_15_14 = _mm512_add_epi32(s_13_12_15_14, s_13_12_15_14_prev);
 
-        XorMessageKeyStreamStore<0>(*state[0],
+        XorMessageKeyStreamStore<0>(*s_512[0],
                                     reg_128_state,
                                     reg_128_msg,
                                     p_plaintext_128,
                                     p_ciphertext_128);
 
-        XorMessageKeyStreamStore<0>(*state[1],
+        XorMessageKeyStreamStore<0>(*s_512[1],
                                     reg_128_state,
                                     reg_128_msg,
                                     p_plaintext_128,
                                     p_ciphertext_128);
-        XorMessageKeyStreamStore<0>(*state[2],
+        XorMessageKeyStreamStore<0>(*s_512[2],
                                     reg_128_state,
                                     reg_128_msg,
                                     p_plaintext_128,
                                     p_ciphertext_128);
-        XorMessageKeyStreamStore<0>(*state[3],
+        XorMessageKeyStreamStore<0>(*s_512[3],
                                     reg_128_state,
                                     reg_128_msg,
                                     p_plaintext_128,
                                     p_ciphertext_128);
-        XorMessageKeyStreamStore<1>(*state[0],
+        XorMessageKeyStreamStore<1>(*s_512[0],
                                     reg_128_state,
                                     reg_128_msg,
                                     p_plaintext_128,
                                     p_ciphertext_128);
-        XorMessageKeyStreamStore<1>(*state[1],
+        XorMessageKeyStreamStore<1>(*s_512[1],
                                     reg_128_state,
                                     reg_128_msg,
                                     p_plaintext_128,
                                     p_ciphertext_128);
-        XorMessageKeyStreamStore<1>(*state[2],
+        XorMessageKeyStreamStore<1>(*s_512[2],
                                     reg_128_state,
                                     reg_128_msg,
                                     p_plaintext_128,
                                     p_ciphertext_128);
-        XorMessageKeyStreamStore<1>(*state[3],
+        XorMessageKeyStreamStore<1>(*s_512[3],
                                     reg_128_state,
                                     reg_128_msg,
                                     p_plaintext_128,
                                     p_ciphertext_128);
-        XorMessageKeyStreamStore<2>(*state[0],
+        XorMessageKeyStreamStore<2>(*s_512[0],
                                     reg_128_state,
                                     reg_128_msg,
                                     p_plaintext_128,
                                     p_ciphertext_128);
-        XorMessageKeyStreamStore<2>(*state[1],
+        XorMessageKeyStreamStore<2>(*s_512[1],
                                     reg_128_state,
                                     reg_128_msg,
                                     p_plaintext_128,
                                     p_ciphertext_128);
-        XorMessageKeyStreamStore<2>(*state[2],
+        XorMessageKeyStreamStore<2>(*s_512[2],
                                     reg_128_state,
                                     reg_128_msg,
                                     p_plaintext_128,
                                     p_ciphertext_128);
-        XorMessageKeyStreamStore<2>(*state[3],
+        XorMessageKeyStreamStore<2>(*s_512[3],
                                     reg_128_state,
                                     reg_128_msg,
                                     p_plaintext_128,
                                     p_ciphertext_128);
-        XorMessageKeyStreamStore<3>(*state[0],
+        XorMessageKeyStreamStore<3>(*s_512[0],
                                     reg_128_state,
                                     reg_128_msg,
                                     p_plaintext_128,
                                     p_ciphertext_128);
-        XorMessageKeyStreamStore<3>(*state[1],
+        XorMessageKeyStreamStore<3>(*s_512[1],
                                     reg_128_state,
                                     reg_128_msg,
                                     p_plaintext_128,
                                     p_ciphertext_128);
-        XorMessageKeyStreamStore<3>(*state[2],
+        XorMessageKeyStreamStore<3>(*s_512[2],
                                     reg_128_state,
                                     reg_128_msg,
                                     p_plaintext_128,
                                     p_ciphertext_128);
-        XorMessageKeyStreamStore<3>(*state[3],
+        XorMessageKeyStreamStore<3>(*s_512[3],
                                     reg_128_state,
                                     reg_128_msg,
                                     p_plaintext_128,
@@ -273,7 +260,7 @@ ProcessParallelBlocks4(const Uint8 key[],
         plaintext += 256;
 
         ciphertext += 256;
-        counter_reg = _mm512_add_epi32(counter_reg, cIncReg);
+        counter_512 = _mm512_add_epi32(counter_512, cInc512);
     }
 }
 
@@ -356,31 +343,31 @@ shuffleRegisters2(__m512i& z1, __m512i& z2, __m512i& z3)
         z2, z1, 0x77); // mask = 0x77 => 0b 01 11 01 11, z2 = a1a3b1b3
 }
 inline void
-PermuteRegistersByShuffling2(__m512i& reg_state_0,
-                             __m512i& reg_state_1,
-                             __m512i& reg_state_2,
-                             __m512i& reg_state_3,
-                             __m512i& reg_state_4,
-                             __m512i& reg_state_5,
-                             __m512i& reg_state_6,
-                             __m512i& reg_state_7,
-                             __m512i& temp_state0,
-                             __m512i& temp_state1)
+PermuteRegistersByShuffling2(__m512i& s0,
+                             __m512i& s1,
+                             __m512i& s2,
+                             __m512i& s3,
+                             __m512i& s4,
+                             __m512i& s5,
+                             __m512i& s6,
+                             __m512i& s7,
+                             __m512i& t0,
+                             __m512i& t1)
 {
-    shuffleRegisters(reg_state_5, reg_state_1, temp_state1);
-    shuffleRegisters(reg_state_2, temp_state0, reg_state_1);
-    shuffleRegisters(reg_state_7, reg_state_3, temp_state0);
-    shuffleRegisters(reg_state_4, reg_state_0, reg_state_3);
+    shuffleRegisters(s5, s1, t1);
+    shuffleRegisters(s2, t0, s1);
+    shuffleRegisters(s7, s3, t0);
+    shuffleRegisters(s4, s0, s3);
 }
 inline void
-XorKeyStoreNew(__m512i&        plaintext_reg,
+XorKeyStoreNew(__m512i&        input_512,
                const __m512i*& p_plaintext_512,
                __m512i&        key_reg,
                __m512i*&       p_ciphertext_512)
 {
 
-    plaintext_reg = _mm512_loadu_si512(p_plaintext_512);
-    key_reg       = _mm512_xor_si512(key_reg, plaintext_reg);
+    input_512 = _mm512_loadu_si512(p_plaintext_512);
+    key_reg   = _mm512_xor_si512(key_reg, input_512);
     _mm512_storeu_si512(p_ciphertext_512, key_reg);
     p_plaintext_512++;
     p_ciphertext_512++;
@@ -401,54 +388,44 @@ ProcessParallelBlocks16(const Uint8 key[],
     constexpr Uint32 chacha20_constants2 = 0x3320646e;
     constexpr Uint32 chacha20_constants3 = 0x79622d32;
     constexpr Uint32 chacha20_constants4 = 0x6b206574;
-    __m512i          reg_state_save[16];
+    __m512i          s_prev[16], s[16];
 
-    __m512i reg_state[16];
     // -- Setup Registers for First Row Round Function
     // a
-    reg_state_save[0] = _mm512_set1_epi32(chacha20_constants1);
-    reg_state_save[1] = _mm512_set1_epi32(chacha20_constants2);
-    reg_state_save[2] = _mm512_set1_epi32(chacha20_constants3);
-    reg_state_save[3] = _mm512_set1_epi32(chacha20_constants4);
+    s_prev[0] = _mm512_set1_epi32(chacha20_constants1);
+    s_prev[1] = _mm512_set1_epi32(chacha20_constants2);
+    s_prev[2] = _mm512_set1_epi32(chacha20_constants3);
+    s_prev[3] = _mm512_set1_epi32(chacha20_constants4);
+
+    const Uint32* pKey = reinterpret_cast<const Uint32*>(key);
+    const Uint32* pIv  = reinterpret_cast<const Uint32*>(iv);
 
     // b
-    reg_state_save[4] =
-        _mm512_set1_epi32(*reinterpret_cast<const Uint32*>(key));
-    reg_state_save[5] =
-        _mm512_set1_epi32(*reinterpret_cast<const Uint32*>(key + 4));
-    reg_state_save[6] =
-        _mm512_set1_epi32(*reinterpret_cast<const Uint32*>(key + 8));
-    reg_state_save[7] =
-        _mm512_set1_epi32(*reinterpret_cast<const Uint32*>(key + 12));
+    s_prev[4] = _mm512_set1_epi32(*(pKey));
+    s_prev[5] = _mm512_set1_epi32(*(pKey + 1));
+    s_prev[6] = _mm512_set1_epi32(*(pKey + 2));
+    s_prev[7] = _mm512_set1_epi32(*(pKey + 3));
 
     // c
-    reg_state_save[8] =
-        _mm512_set1_epi32(*reinterpret_cast<const Uint32*>(key + 16));
-    reg_state_save[9] =
-        _mm512_set1_epi32(*reinterpret_cast<const Uint32*>(key + 20));
-    reg_state_save[10] =
-        _mm512_set1_epi32(*reinterpret_cast<const Uint32*>(key + 24));
-    reg_state_save[11] =
-        _mm512_set1_epi32(*reinterpret_cast<const Uint32*>(key + 28));
+    s_prev[8]  = _mm512_set1_epi32(*(pKey + 4));
+    s_prev[9]  = _mm512_set1_epi32(*(pKey + 5));
+    s_prev[10] = _mm512_set1_epi32(*(pKey + 6));
+    s_prev[11] = _mm512_set1_epi32(*(pKey + 7));
     // d
-    reg_state_save[12] =
-        _mm512_set1_epi32(*reinterpret_cast<const Uint32*>(iv));
-    reg_state_save[13] =
-        _mm512_set1_epi32(*reinterpret_cast<const Uint32*>(iv + 4));
-    reg_state_save[14] =
-        _mm512_set1_epi32(*reinterpret_cast<const Uint32*>(iv + 8));
-    reg_state_save[15] =
-        _mm512_set1_epi32(*reinterpret_cast<const Uint32*>(iv + 12));
+    s_prev[12] = _mm512_set1_epi32(*(pIv));
+    s_prev[13] = _mm512_set1_epi32(*(pIv + 1));
+    s_prev[14] = _mm512_set1_epi32(*(pIv + 2));
+    s_prev[15] = _mm512_set1_epi32(*(pIv + 3));
 
     const __m512i inc_reg = _mm512_setr_epi32(
         16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16);
-    reg_state_save[12] = _mm512_add_epi32(
-        reg_state_save[12],
+    s_prev[12] = _mm512_add_epi32(
+        s_prev[12],
         _mm512_setr_epi32(
             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15));
 
-    // reg_state_save[16] values will never change inside the loop except for
-    // reg_state_save[12] which is used to save the counter value
+    // s_prev[16] values will never change inside the loop except for
+    // s_prev[12] which is used to save the counter value
     // clang-format on
 
     for (Uint64 k = 0; k < chacha20_parallel_blocks; k++) {
@@ -456,35 +433,27 @@ ProcessParallelBlocks16(const Uint8 key[],
         // Restoring the registers to last Round State
 
         for (int i = 0; i < 16; i++) {
-            reg_state[i] = reg_state_save[i];
+            s[i] = s_prev[i];
         }
         for (int i = 0; i < 10; i++) {
 
             // -- Row Round Register Setup Complete.
 
-            RoundFunction(
-                reg_state[0], reg_state[4], reg_state[8], reg_state[12]);
-            RoundFunction(
-                reg_state[1], reg_state[5], reg_state[9], reg_state[13]);
-            RoundFunction(
-                reg_state[2], reg_state[6], reg_state[10], reg_state[14]);
-            RoundFunction(
-                reg_state[3], reg_state[7], reg_state[11], reg_state[15]);
+            RoundFunction(s[0], s[4], s[8], s[12]);
+            RoundFunction(s[1], s[5], s[9], s[13]);
+            RoundFunction(s[2], s[6], s[10], s[14]);
+            RoundFunction(s[3], s[7], s[11], s[15]);
 
             // Column Round Function
 
-            RoundFunction(
-                reg_state[0], reg_state[5], reg_state[10], reg_state[15]);
-            RoundFunction(
-                reg_state[1], reg_state[6], reg_state[11], reg_state[12]);
-            RoundFunction(
-                reg_state[2], reg_state[7], reg_state[8], reg_state[13]);
-            RoundFunction(
-                reg_state[3], reg_state[4], reg_state[9], reg_state[14]);
+            RoundFunction(s[0], s[5], s[10], s[15]);
+            RoundFunction(s[1], s[6], s[11], s[12]);
+            RoundFunction(s[2], s[7], s[8], s[13]);
+            RoundFunction(s[3], s[4], s[9], s[14]);
         }
 
         for (int i = 0; i < 16; i++) {
-            reg_state[i] = _mm512_add_epi32(reg_state[i], reg_state_save[i]);
+            s[i] = _mm512_add_epi32(s[i], s_prev[i]);
         }
 
         __m512i temp[2];
@@ -492,123 +461,78 @@ ProcessParallelBlocks16(const Uint8 key[],
         // Once call is complete, only registers
         // reg_state[0],reg_state[1],reg_state[3],temp[0] are required.
         // Registers reg_state[2] and temp[1] can be reused
-        PermuteRegisters1(reg_state[0],
-                          reg_state[1],
-                          reg_state[2],
-                          reg_state[3],
-                          temp[0],
-                          temp[1]);
+        PermuteRegisters1(s[0], s[1], s[2], s[3], temp[0], temp[1]);
 
         // Registers reg_state[6] and reg_state[2] can be reused
-        PermuteRegisters1(reg_state[4],
-                          reg_state[5],
-                          reg_state[6],
-                          reg_state[7],
-                          reg_state[2], // Reusing reg_state[2] and temp[1]
+        PermuteRegisters1(s[4],
+                          s[5],
+                          s[6],
+                          s[7],
+                          s[2], // Reusing reg_state[2] and temp[1]
                           temp[1]);
 
         // Registers reg_state[0],reg_state[6] can be reused
-        PermuteRegistersByShuffling2(reg_state[0],
-                                     reg_state[1],
-                                     reg_state[2],
-                                     reg_state[3],
-                                     reg_state[4],
-                                     reg_state[5],
-                                     reg_state[6],
-                                     reg_state[7],
-                                     temp[0],
-                                     temp[1]);
+        PermuteRegistersByShuffling2(
+            s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], temp[0], temp[1]);
         // // Registers reg_state[10] and reg_state[0] can be reused
-        PermuteRegisters1(reg_state[8],
-                          reg_state[9],
-                          reg_state[10],
-                          reg_state[11],
-                          reg_state[6],
-                          reg_state[0]);
+        PermuteRegisters1(s[8], s[9], s[10], s[11], s[6], s[0]);
 
         // // // Registers reg_state[14] and reg_state[0] can be reused
-        PermuteRegisters1(reg_state[12],
-                          reg_state[13],
-                          reg_state[14],
-                          reg_state[15],
-                          reg_state[10],
-                          reg_state[0]);
+        PermuteRegisters1(s[12], s[13], s[14], s[15], s[10], s[0]);
         // reg_state[8] and reg_state[14] can be reused
-        PermuteRegistersByShuffling2(reg_state[8],
-                                     reg_state[9],
-                                     reg_state[10],
-                                     reg_state[11],
-                                     reg_state[12],
-                                     reg_state[13],
-                                     reg_state[14],
-                                     reg_state[15],
-                                     reg_state[6],
-                                     reg_state[0]);
+        PermuteRegistersByShuffling2(
+            s[8], s[9], s[10], s[11], s[12], s[13], s[14], s[15], s[6], s[0]);
 
         __m512i output_reg[2];
         // temp[1]=block 4 and output_reg[0] = Block 0
-        shuffleRegisters2(reg_state[0], temp[1], output_reg[0]);
+        shuffleRegisters2(s[0], temp[1], output_reg[0]);
 
         // reg_state[5]=Block 12 and reg_state[0]= Block 8
-        shuffleRegisters2(reg_state[13], reg_state[5], reg_state[0]);
+        shuffleRegisters2(s[13], s[5], s[0]);
 
         // output_reg[1] = Block 1 and reg_state[1] = Block 5
-        shuffleRegisters2(reg_state[9], reg_state[1], output_reg[1]);
+        shuffleRegisters2(s[9], s[1], output_reg[1]);
 
         // reg_state[2] = Block 13 and reg_state[9] = Block 9
-        shuffleRegisters2(reg_state[10], reg_state[2], reg_state[9]);
+        shuffleRegisters2(s[10], s[2], s[9]);
 
         // temp[0] = Block 6 and reg_state[14] = Block 2
-        shuffleRegisters2(reg_state[6], temp[0], reg_state[14]);
+        shuffleRegisters2(s[6], temp[0], s[14]);
 
         // reg_state[7]= Block 14 and reg_state[6] = Block 10
-        shuffleRegisters2(reg_state[15], reg_state[7], reg_state[6]);
+        shuffleRegisters2(s[15], s[7], s[6]);
 
         //  reg_state[3] = Block 7 and  reg_state[8] = Block 3
-        shuffleRegisters2(reg_state[11], reg_state[3], reg_state[8]);
+        shuffleRegisters2(s[11], s[3], s[8]);
 
         // reg_state[4] = Block 15 and  reg_state[11] = Block 11
-        shuffleRegisters2(reg_state[12], reg_state[4], reg_state[11]);
+        shuffleRegisters2(s[12], s[4], s[11]);
 
         auto p_plaintext_512  = reinterpret_cast<const __m512i*>(plaintext);
         auto p_ciphertext_512 = reinterpret_cast<__m512i*>(ciphertext);
 
-        __m512i plaintext_reg;
+        __m512i input_512;
         XorKeyStoreNew(
-            plaintext_reg, p_plaintext_512, output_reg[0], p_ciphertext_512);
+            input_512, p_plaintext_512, output_reg[0], p_ciphertext_512);
         XorKeyStoreNew(
-            plaintext_reg, p_plaintext_512, output_reg[1], p_ciphertext_512);
-        XorKeyStoreNew(
-            plaintext_reg, p_plaintext_512, reg_state[14], p_ciphertext_512);
-        XorKeyStoreNew(
-            plaintext_reg, p_plaintext_512, reg_state[8], p_ciphertext_512);
-        XorKeyStoreNew(
-            plaintext_reg, p_plaintext_512, temp[1], p_ciphertext_512);
-        XorKeyStoreNew(
-            plaintext_reg, p_plaintext_512, reg_state[1], p_ciphertext_512);
-        XorKeyStoreNew(
-            plaintext_reg, p_plaintext_512, temp[0], p_ciphertext_512);
-        XorKeyStoreNew(
-            plaintext_reg, p_plaintext_512, reg_state[3], p_ciphertext_512);
-        XorKeyStoreNew(
-            plaintext_reg, p_plaintext_512, reg_state[0], p_ciphertext_512);
-        XorKeyStoreNew(
-            plaintext_reg, p_plaintext_512, reg_state[9], p_ciphertext_512);
-        XorKeyStoreNew(
-            plaintext_reg, p_plaintext_512, reg_state[6], p_ciphertext_512);
-        XorKeyStoreNew(
-            plaintext_reg, p_plaintext_512, reg_state[11], p_ciphertext_512);
-        XorKeyStoreNew(
-            plaintext_reg, p_plaintext_512, reg_state[5], p_ciphertext_512);
-        XorKeyStoreNew(
-            plaintext_reg, p_plaintext_512, reg_state[2], p_ciphertext_512);
-        XorKeyStoreNew(
-            plaintext_reg, p_plaintext_512, reg_state[7], p_ciphertext_512);
-        XorKeyStoreNew(
-            plaintext_reg, p_plaintext_512, reg_state[4], p_ciphertext_512);
+            input_512, p_plaintext_512, output_reg[1], p_ciphertext_512);
+        XorKeyStoreNew(input_512, p_plaintext_512, s[14], p_ciphertext_512);
+        XorKeyStoreNew(input_512, p_plaintext_512, s[8], p_ciphertext_512);
+        XorKeyStoreNew(input_512, p_plaintext_512, temp[1], p_ciphertext_512);
+        XorKeyStoreNew(input_512, p_plaintext_512, s[1], p_ciphertext_512);
+        XorKeyStoreNew(input_512, p_plaintext_512, temp[0], p_ciphertext_512);
+        XorKeyStoreNew(input_512, p_plaintext_512, s[3], p_ciphertext_512);
+        XorKeyStoreNew(input_512, p_plaintext_512, s[0], p_ciphertext_512);
+        XorKeyStoreNew(input_512, p_plaintext_512, s[9], p_ciphertext_512);
+        XorKeyStoreNew(input_512, p_plaintext_512, s[6], p_ciphertext_512);
+        XorKeyStoreNew(input_512, p_plaintext_512, s[11], p_ciphertext_512);
+        XorKeyStoreNew(input_512, p_plaintext_512, s[5], p_ciphertext_512);
+        XorKeyStoreNew(input_512, p_plaintext_512, s[2], p_ciphertext_512);
+        XorKeyStoreNew(input_512, p_plaintext_512, s[7], p_ciphertext_512);
+        XorKeyStoreNew(input_512, p_plaintext_512, s[4], p_ciphertext_512);
         plaintext += 1024;
         ciphertext += 1024;
-        reg_state_save[12] = _mm512_add_epi32(reg_state_save[12], inc_reg);
+        s_prev[12] = _mm512_add_epi32(s_prev[12], inc_reg);
     }
 }
 
