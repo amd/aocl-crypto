@@ -23,20 +23,11 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Declare the beginning of a new namespace.
-#
-# As a rule of thumb, every CMakeLists.txt should be a different module, named
-# after the directory that contains it, and this function should appear at the
-# top of each CMakeLists script.
-# Multiple directories can be part of the same module as long as target names
-# do not collide.
-#
-
 include(CMakeParseArguments)
 include(GoogleTest)
 
 macro(alcp_module NAME)
-  set(ALCP_MODULE ${NAME})
+    set(ALCP_MODULE ${NAME})
 endmacro()
 
 # Declare a test using googletest.
@@ -67,86 +58,86 @@ endmacro()
 #   )
 
 function(alcp_cc_test testName working_dir)
-  if (NOT ALCP_ENABLE_TESTS)
-    return()
-  endif()
+    if(NOT ALCP_ENABLE_TESTS)
+        return()
+    endif()
 
-  if (NOT DEFINED ALCP_MODULE)
-    message(FATAL_ERROR "alcp module name not defined")
-  endif()
+    if (NOT DEFINED ALCP_MODULE)
+        message(FATAL_ERROR "alcp module name not defined")
+    endif()
 
-  # We replace :: with __ in targets, because :: may not appear in target names.
-  # However, the module name should still span multiple name spaces.
-  STRING(REPLACE "::" "__" _ESCAPED_ALCP_MODULE ${ALCP_MODULE})
+    # We replace :: with __ in targets, because :: may not appear in target names.
+    # However, the module name should still span multiple name spaces.
+    STRING(REPLACE "::" "__" _ESCAPED_ALCP_MODULE ${ALCP_MODULE})
   
-  set(testPrefix test)
-  set(options BROKEN SKIP WINDOWS_DISABLED)
-  set(oneValueArgs CONTENTS DIRECTORY)
-  set(multiValueArgs SOURCES HEADERS DEPENDS)
-  cmake_parse_arguments(PARSE_ARGV 0 
-    ${testPrefix}
-    "${options}"
-    "${oneValueArgs}"
-    "${multiValueArgs}"
+    set(testPrefix test)
+    set(options BROKEN SKIP WINDOWS_DISABLED)
+    set(oneValueArgs CONTENTS DIRECTORY)
+    set(multiValueArgs SOURCES HEADERS DEPENDS)
+    cmake_parse_arguments(PARSE_ARGV 0 
+      ${testPrefix}
+      "${options}"
+      "${oneValueArgs}"
+      "${multiValueArgs}"
     )
 
-  set(_target_name "${_ESCAPED_ALCP_MODULE}_${testName}")
+    set(_target_name "${_ESCAPED_ALCP_MODULE}_${testName}")
   
-  if ( ${${testPrefix}_SKIP} OR ${${testPrefix}_BROKEN} )
-    message("Test : " ${testName} "[SKIPPED]")
-    return()
-  endif()
-  
-  if ( ${${testPrefix}_WINDOWS_DISABLED} AND WIN32)
-    message("Test : " ${testName} "[WIN32-DISABLED]")
-    return()
-  endif()
-
-  if ( ${${testPrefix}_SLOW} )
-    if (STREQUAL "${alcp_ENABLE_SLOW_TESTS}" "OFF" )
-      message("Test : " ${testName} "[SKIPPED] SLOW")
-      return()
+    if(${${testPrefix}_SKIP} OR ${${testPrefix}_BROKEN} )
+        message("Test : " ${testName} "[SKIPPED]")
+        return()
     endif()
-  endif()
+  
+    if(${${testPrefix}_WINDOWS_DISABLED} AND WIN32)
+        message("Test : " ${testName} "[WIN32-DISABLED]")
+        return()
+    endif()
 
-  file(GLOB TEST_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
+    if(${${testPrefix}_SLOW})
+        if(STREQUAL "${alcp_ENABLE_SLOW_TESTS}" "OFF" )
+            message("Test : " ${testName} "[SKIPPED] SLOW")
+            return()
+        endif()
+    endif()
 
-  if(${ALCP_MODULE} STREQUAL "Cipher")
-    SET(TEST_COMMON_SRC ${TEST_COMMON_SRC}
-                        ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher.cc
-                        ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher_aead.cc
-                        ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher.cc
-                        ${UNIT_TEST_COMMON_SRCS}
-       )
-  endif()
+    file(GLOB TEST_COMMON_SRC ${CMAKE_SOURCE_DIR}/tests/common/base/*.cc)
 
-  if(WIN32)
-  	add_compile_options(-Wno-missing-field-initializers)
-  endif()
+    if(${ALCP_MODULE} STREQUAL "Cipher")
+        SET(TEST_COMMON_SRC ${TEST_COMMON_SRC}
+                            ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher.cc
+                            ${CMAKE_SOURCE_DIR}/tests/cipher/base/alc_cipher_aead.cc
+                            ${CMAKE_SOURCE_DIR}/tests/cipher/base/cipher.cc
+                            ${UNIT_TEST_COMMON_SRCS}
+        )
+    endif()
 
-  include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-  add_executable(${_target_name}
-      ${${testPrefix}_SOURCES}
-      ${TEST_COMMON_SRC}
-  )
+    if(WIN32)
+  	    add_compile_options(-Wno-missing-field-initializers)
+    endif()
 
-  target_link_libraries(${_target_name}
-    gtest_main
-    gmock_main
-    alcp
-    ${${testPrefix}_DEPENDS}
-  )
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+    add_executable(${_target_name}
+        ${${testPrefix}_SOURCES}
+        ${TEST_COMMON_SRC}
+    )
 
-  # FIXME: Remove this and replace with equavalent files outside the integration testing area.
-  target_include_directories(${_target_name} PRIVATE ${CMAKE_SOURCE_DIR}/tests/include)
-  target_include_directories(${_target_name} PRIVATE ${CMAKE_SOURCE_DIR}/tests/common/include)
-  target_include_directories(${_target_name} PRIVATE ${CMAKE_SOURCE_DIR}/lib/include)
-  target_include_directories(${_target_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/common/include)
+    target_link_libraries(${_target_name}
+        gtest_main
+        gmock_main
+        alcp
+        ${${testPrefix}_DEPENDS}
+    )
 
-  add_test(${_target_name}, ${working_dir}/${_target_name})
-  # Add valgrind test based on the cmake option
-  IF(ALCP_MEMCHECK_VALGRIND)
-    Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
-    alcp_add_valgrind_check_test(${_target_name}_valgrind ${working_dir}/${_target_name})
-  ENDIF(ALCP_MEMCHECK_VALGRIND)
-  endfunction(alcp_cc_test)
+    # FIXME: Remove this and replace with equavalent files outside the integration testing area.
+    target_include_directories(${_target_name} PRIVATE ${CMAKE_SOURCE_DIR}/tests/include)
+    target_include_directories(${_target_name} PRIVATE ${CMAKE_SOURCE_DIR}/tests/common/include)
+    target_include_directories(${_target_name} PRIVATE ${CMAKE_SOURCE_DIR}/lib/include)
+    target_include_directories(${_target_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/common/include)
+
+    add_test(${_target_name}, ${working_dir}/${_target_name})
+    # Add valgrind test based on the cmake option
+    IF(ALCP_MEMCHECK_VALGRIND)
+        Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
+        alcp_add_valgrind_check_test(${_target_name}_valgrind ${working_dir}/${_target_name})
+    ENDIF(ALCP_MEMCHECK_VALGRIND)
+endfunction(alcp_cc_test)
