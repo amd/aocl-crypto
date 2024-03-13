@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -68,6 +68,12 @@ Sha224::Sha224()
 
     m_psha256 = std::make_shared<Sha256>(d_info);
     m_psha256->setIv(cIv, sizeof(cIv));
+}
+
+Sha224::Sha224(const Sha224& src)
+{
+    // Initializing the structure with default value
+    m_psha256 = std::make_shared<Sha256>(*src.m_psha256);
 }
 
 Sha224::~Sha224() = default;

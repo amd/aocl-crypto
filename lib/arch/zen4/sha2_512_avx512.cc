@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -121,8 +121,8 @@ namespace alcp::digest { namespace zen4 {
                                           __m256i&       hash_256_0,
                                           __m256i&       hash_256_1)
     {
-        hash_256_0 = _mm256_load_si256(phash);
-        hash_256_1 = _mm256_load_si256(phash + 1);
+        hash_256_0 = _mm256_lddqu_si256(phash);
+        hash_256_1 = _mm256_lddqu_si256(phash + 1);
     }
 
     static inline void load_data(__m256i      x[SHA512_CHUNK_NUM_VECT_AVX2 * 2],

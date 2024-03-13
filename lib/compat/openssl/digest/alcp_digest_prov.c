@@ -35,6 +35,7 @@ alcp_prov_digest_freectx(void* vctx)
     alc_prov_digest_ctx_p pdctx = vctx;
     ENTER();
 
+    OPENSSL_free(pdctx->handle.context);
     OPENSSL_clear_free(vctx, sizeof(*pdctx));
 }
 
@@ -45,13 +46,14 @@ alcp_prov_digest_newctx(void* vprovctx, const alc_digest_info_p dinfo)
     alc_prov_ctx_p        pctx = (alc_prov_ctx_p)vprovctx;
 
     ENTER();
-    Uint64 size = alcp_digest_context_size(dinfo);
-    dig_ctx     = OPENSSL_zalloc(sizeof(*dig_ctx) + size);
+
+    dig_ctx = OPENSSL_zalloc(sizeof(*dig_ctx));
     if (dig_ctx != NULL) {
         dig_ctx->pc_prov_ctx    = pctx;
         dig_ctx->pc_libctx      = pctx->ap_libctx;
         dig_ctx->pc_digest_info = *dinfo;
-        dig_ctx->handle.context = (Uint8*)dig_ctx + sizeof(*dig_ctx);
+        Uint64 size             = alcp_digest_context_size(dinfo);
+        dig_ctx->handle.context = OPENSSL_zalloc(size);
     }
 
     return dig_ctx;
@@ -65,8 +67,31 @@ alcp_prov_digest_dupctx(void* vctx)
     // This would need the deep copy implementation at the internal classes
     // It would need copy constructors in class and a copy C API
     // alc_prov_digest_ctx_p csrc = vctx;
+
+    alc_prov_digest_ctx_p src_ctx = vctx;
+
+    alc_prov_digest_ctx_p dest_ctx = OPENSSL_zalloc(sizeof(*src_ctx));
+
+    if (dest_ctx != NULL) {
+        dest_ctx->pc_prov_ctx    = src_ctx->pc_prov_ctx;
+        dest_ctx->pc_libctx      = src_ctx->pc_libctx;
+        dest_ctx->pc_digest_info = src_ctx->pc_digest_info;
+        Uint64 size = alcp_digest_context_size(&src_ctx->pc_digest_info);
+        dest_ctx->handle.context = OPENSSL_zalloc(size);
+    } else {
+        return NULL;
+    }
+
+    alc_error_t err = alcp_digest_context_copy(
+        src_ctx->pc_digest_info, &src_ctx->handle, &dest_ctx->handle);
+    if (err != ALC_ERROR_NONE) {
+        printf("Provider: copy failed in dupctx\n");
+        OPENSSL_clear_free(dest_ctx, sizeof(*dest_ctx));
+        return NULL;
+    }
+
     EXIT();
-    return NULL;
+    return dest_ctx;
 }
 
 /*-

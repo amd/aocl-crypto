@@ -57,6 +57,7 @@ class ALCP_API_EXPORT Sha3 : public Digest
 {
   public:
     Sha3(const alc_digest_info_t& rDigestInfo);
+    Sha3(const Sha3& src);
     ~Sha3();
 
   public:

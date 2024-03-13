@@ -415,6 +415,20 @@ ALCP_API_EXPORT alc_error_t
 alcp_digest_set_shake_length(const alc_digest_handle_p p_digest_handle,
                              Uint64                    size);
 
+/**
+ * @brief       copies the context from sorce to destination
+ *
+ * @param [in]   dInfo        digest info
+ * @param [in]   pSrcHandle   source digest handle
+ * @param [out]  pDestHandle   destination digest handle
+ *
+ * @return alc_error_t Error code to validate the operation
+ */
+ALCP_API_EXPORT alc_error_t
+alcp_digest_context_copy(const alc_digest_info_t   dInfo,
+                         const alc_digest_handle_p pSrcHandle,
+                         const alc_digest_handle_p pDestHandle);
+
 EXTERN_C_END
 
 #endif /* _ALCP_DIGEST_H */

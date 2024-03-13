@@ -88,6 +88,7 @@ class Sha256 final : public Sha2
   public:
     ALCP_API_EXPORT Sha256();
     ALCP_API_EXPORT Sha256(const alc_digest_info_t& rDigestInfo);
+    ALCP_API_EXPORT Sha256(const Sha256& src);
     virtual ALCP_API_EXPORT ~Sha256();
 
     /**
@@ -191,6 +192,7 @@ class ALCP_API_EXPORT Sha224 final : public Sha2
   public:
     Sha224();
     Sha224(const alc_digest_info_t& rDInfo);
+    Sha224(const Sha224& src);
     ~Sha224();
     alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
     void        finish() override;

@@ -157,6 +157,18 @@ Sha512::Sha512(const alc_digest_info_t& rDigestInfo)
     : Sha512(rDigestInfo.dt_len)
 {}
 
+Sha512::Sha512(const Sha512& src)
+{
+    m_msg_len = src.m_msg_len;
+    memcpy(m_buffer, src.m_buffer, sizeof(m_buffer));
+    memcpy(m_hash, src.m_hash, sizeof(m_hash));
+    m_idx              = src.m_idx;
+    m_finished         = src.m_finished;
+    m_digest_len_bytes = src.m_digest_len_bytes;
+    m_digest_len       = src.m_digest_len;
+    m_Iv               = src.m_Iv;
+}
+
 Sha512::~Sha512() = default;
 
 alc_error_t

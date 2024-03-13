@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -40,6 +40,7 @@ class ALCP_API_EXPORT Sha384 final : public Sha2
   public:
     Sha384();
     Sha384(const alc_digest_info_t& rDInfo);
+    Sha384(const Sha384& src);
     virtual ~Sha384();
     alc_error_t update(const Uint8* pMsgBuf, Uint64 size) override;
     void        finish() override;

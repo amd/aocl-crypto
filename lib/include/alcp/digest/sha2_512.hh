@@ -112,6 +112,7 @@ class ALCP_API_EXPORT Sha512 final : public Sha2
   public:
     Sha512(alc_digest_len_t digest_len = ALC_DIGEST_LEN_512);
     Sha512(const alc_digest_info_t& rDigestInfo);
+    Sha512(const Sha512& src);
     virtual ~Sha512();
 
   public:

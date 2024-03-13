@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2022-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -173,6 +173,25 @@ alcp_digest_set_shake_length(const alc_digest_handle_p pDigestHandle,
     }
 
     ctx->setShakeLength(ctx->m_digest, digestSize);
+
+    return err;
+}
+
+alc_error_t
+alcp_digest_context_copy(const alc_digest_info_t   dInfo,
+                         const alc_digest_handle_p pSrcHandle,
+                         const alc_digest_handle_p pDestHandle)
+{
+    alc_error_t err = ALC_ERROR_NONE;
+    ALCP_BAD_PTR_ERR_RET(pSrcHandle, err);
+    ALCP_BAD_PTR_ERR_RET(pDestHandle, err);
+
+    auto src_ctx  = static_cast<digest::Context*>(pSrcHandle->context);
+    auto dest_ctx = static_cast<digest::Context*>(pDestHandle->context);
+
+    new (dest_ctx) digest::Context;
+
+    err = digest::DigestBuilder::BuildWithCopy(dInfo, *src_ctx, *dest_ctx);
 
     return err;
 }

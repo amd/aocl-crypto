@@ -235,6 +235,19 @@ Sha3::Sha3(const alc_digest_info_t& rDigestInfo)
     m_hash.resize(m_hash_size);
 }
 
+Sha3::Sha3(const Sha3& src)
+{
+    m_name           = src.m_name;
+    m_chunk_size     = src.m_chunk_size;
+    m_chunk_size_u64 = src.m_chunk_size_u64;
+    m_hash_size      = src.m_hash_size;
+    m_idx            = src.m_idx;
+    memcpy(m_buffer, src.m_buffer, MaxDigestBlockSizeBits / 8);
+    memcpy(m_state, src.m_state, sizeof(m_state));
+    m_hash     = src.m_hash;
+    m_finished = src.m_finished;
+}
+
 Sha3::~Sha3() {}
 
 alc_error_t
