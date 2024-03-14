@@ -313,6 +313,8 @@ init(const Uint8 key[],           // Input key
         s[i] = r[i + 1] * 5;
     }
 
+    // Compute r * r
+
     std::copy(r, r + 5, r + 5);
 
     // Precompute r^2 value
@@ -321,6 +323,42 @@ init(const Uint8 key[],           // Input key
     // Precompute (r^2)*5 value
     for (int i = 0; i < 4; i++) {
         s[i + 4] = r[i + 1 + 5] * 5;
+    }
+
+    // Compute r^2 * r
+
+    std::copy(r, r + 5, r + 10);
+
+    // Precompute r^3 value
+    multiply(r + 10, r + 5, s + 4);
+
+    // Precompute (r^3)*5 value
+    for (int i = 0; i < 4; i++) {
+        s[i + 8] = r[i + 1 + 10] * 5;
+    }
+
+    // Compute r^3 * r
+
+    std::copy(r, r + 5, r + 15);
+
+    // Precompute r^4 value
+    multiply(r + 15, r + 10, s + 8);
+
+    // Precompute (r^4)*5 value
+    for (int i = 0; i < 4; i++) {
+        s[i + 12] = r[i + 1 + 15] * 5;
+    }
+
+    // Compute r^4 * r^4
+
+    std::copy(r + 15, r + 20, r + 20);
+
+    // Precompute r^8 value
+    multiply(r + 20, r + 15, s + 12);
+
+    // Precompute (r^8)*5 value
+    for (int i = 0; i < 4; i++) {
+        s[i + 16] = r[i + 1 + 20] * 5;
     }
 
     return status;
