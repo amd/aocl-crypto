@@ -427,6 +427,339 @@ blk(Uint64      key[],
 
     return msgLen;
 }
+// Horner factor 8
+Uint64
+blkx8(Uint64      key[],
+      const Uint8 pMsg[],
+      Uint64      msgLen,
+      Uint64      accumulator[],
+      Uint64      r[10],
+      Uint64      s[8])
+{
+    __m512i reg0, reg1, reg2, reg3, reg4;      // R
+    __m512i reg10, reg11, reg12, reg13, reg14; // R^2
+    __m512i reg20, reg21, reg22, reg23, reg24; // R^3
+    __m512i reg30, reg31, reg32, reg33, reg34; // R^4
+
+    Uint64 acc[5]         = {};
+    Uint32 msg_temp_0[5]  = {};
+    Uint32 msg_temp_1[35] = {};
+    Uint64 msg_temp_2[35] = {};
+
+    const Uint8* p_msg_8  = pMsg;
+    const Uint64 cPadding = (msgLen >= 16) << 24;
+
+    // Copy Accumulator into local variable
+    for (int i = 0; i < 5; i++) {
+        acc[i] = accumulator[i];
+    }
+
+#if 1
+
+    create_multiplication_matrix(r, s, reg0, reg1, reg2, reg3, reg4); // R
+    create_multiplication_matrix(
+        r + 5, s + 4, reg10, reg11, reg12, reg13, reg14); // R ^ 2
+    create_multiplication_matrix(
+        r + 10, s + 8, reg20, reg21, reg22, reg23, reg24); // R ^ 3
+    create_multiplication_matrix(
+        r + 15, s + 12, reg30, reg31, reg32, reg33, reg34); // R ^ 4
+
+#endif
+
+#if 17
+    // Process 2 blocks at a time
+    while (msgLen >= 128) {
+        // Message 1
+        for (int i = 0; i < 5; i += 1) {
+            Uint8* p_msg_temp_8 = reinterpret_cast<Uint8*>(&msg_temp_0[i]);
+            std::copy(p_msg_8, p_msg_8 + 4, p_msg_temp_8);
+            msg_temp_0[i] = (msg_temp_0[i] >> (2 * i));
+            if (i != 4)
+                msg_temp_0[i] &= 0x3ffffff;
+            else {
+                msg_temp_0[i] |= cPadding;
+            }
+            p_msg_8 += 3;
+        }
+        p_msg_8 += 1;
+
+        // Message 2
+        for (int i = 0; i < 5; i += 1) {
+            Uint8* p_msg_temp_8 = reinterpret_cast<Uint8*>(&msg_temp_1[i]);
+            std::copy(p_msg_8, p_msg_8 + 4, p_msg_temp_8);
+            msg_temp_1[i] = (msg_temp_1[i] >> (2 * i));
+            if (i != 4)
+                msg_temp_1[i] &= 0x3ffffff;
+            else {
+                msg_temp_1[i] |= cPadding;
+            }
+            p_msg_8 += 3;
+        }
+        p_msg_8 += 1;
+
+        // Message 3
+        for (int i = 0; i < 5; i += 1) {
+            Uint8* p_msg_temp_8 = reinterpret_cast<Uint8*>(&msg_temp_1[i + 5]);
+            std::copy(p_msg_8, p_msg_8 + 4, p_msg_temp_8);
+            msg_temp_1[i + 5] = (msg_temp_1[i + 5] >> (2 * i));
+            if (i != 4)
+                msg_temp_1[i + 5] &= 0x3ffffff;
+            else {
+                msg_temp_1[i + 5] |= cPadding;
+            }
+            p_msg_8 += 3;
+        }
+        p_msg_8 += 1;
+
+        // Message 4
+        for (int i = 0; i < 5; i += 1) {
+            Uint8* p_msg_temp_8 = reinterpret_cast<Uint8*>(&msg_temp_1[i + 10]);
+            std::copy(p_msg_8, p_msg_8 + 4, p_msg_temp_8);
+            msg_temp_1[i + 10] = (msg_temp_1[i + 10] >> (2 * i));
+            if (i != 4)
+                msg_temp_1[i + 10] &= 0x3ffffff;
+            else {
+                msg_temp_1[i + 10] |= cPadding;
+            }
+            p_msg_8 += 3;
+        }
+        p_msg_8 += 1;
+
+        // Message 5
+        for (int i = 0; i < 5; i += 1) {
+            Uint8* p_msg_temp_8 = reinterpret_cast<Uint8*>(&msg_temp_1[i + 15]);
+            std::copy(p_msg_8, p_msg_8 + 4, p_msg_temp_8);
+            msg_temp_1[i + 15] = (msg_temp_1[i + 15] >> (2 * i));
+            if (i != 4)
+                msg_temp_1[i + 15] &= 0x3ffffff;
+            else {
+                msg_temp_1[i + 15] |= cPadding;
+            }
+            p_msg_8 += 3;
+        }
+        p_msg_8 += 1;
+
+        // Message 6
+        for (int i = 0; i < 5; i += 1) {
+            Uint8* p_msg_temp_8 = reinterpret_cast<Uint8*>(&msg_temp_1[i + 20]);
+            std::copy(p_msg_8, p_msg_8 + 4, p_msg_temp_8);
+            msg_temp_1[i + 20] = (msg_temp_1[i + 20] >> (2 * i));
+            if (i != 4)
+                msg_temp_1[i + 20] &= 0x3ffffff;
+            else {
+                msg_temp_1[i + 20] |= cPadding;
+            }
+            p_msg_8 += 3;
+        }
+        p_msg_8 += 1;
+
+        // Message 7
+        for (int i = 0; i < 5; i += 1) {
+            Uint8* p_msg_temp_8 = reinterpret_cast<Uint8*>(&msg_temp_1[i + 25]);
+            std::copy(p_msg_8, p_msg_8 + 4, p_msg_temp_8);
+            msg_temp_1[i + 25] = (msg_temp_1[i + 25] >> (2 * i));
+            if (i != 4)
+                msg_temp_1[i + 25] &= 0x3ffffff;
+            else {
+                msg_temp_1[i + 25] |= cPadding;
+            }
+            p_msg_8 += 3;
+        }
+        p_msg_8 += 1;
+
+        // Message 8
+        for (int i = 0; i < 5; i += 1) {
+            Uint8* p_msg_temp_8 = reinterpret_cast<Uint8*>(&msg_temp_1[i + 30]);
+            std::copy(p_msg_8, p_msg_8 + 4, p_msg_temp_8);
+            msg_temp_1[i + 30] = (msg_temp_1[i + 30] >> (2 * i));
+            if (i != 4)
+                msg_temp_1[i + 30] &= 0x3ffffff;
+            else {
+                msg_temp_1[i + 30] |= cPadding;
+            }
+            p_msg_8 += 3;
+        }
+        p_msg_8 += 1;
+
+        // Minor inconvienence copy
+        for (int i = 0; i < 35; i++) {
+            msg_temp_2[i] = msg_temp_1[i];
+        }
+
+        acc[0] += msg_temp_0[0];
+        acc[1] += msg_temp_0[1];
+        acc[2] += msg_temp_0[2];
+        acc[3] += msg_temp_0[3];
+        acc[4] += msg_temp_0[4];
+
+        multiply_avx512(acc,
+                        reg30,
+                        reg31,
+                        reg32,
+                        reg33,
+                        reg34); // a = (a + m1)* r^4 -> eqn 1
+        multiply_avx512(msg_temp_2,
+                        reg30,
+                        reg31,
+                        reg32,
+                        reg33,
+                        reg34); // m2 = m2* r^4 -> eqn 2
+        multiply_avx512(msg_temp_2 + 5,
+                        reg30,
+                        reg31,
+                        reg32,
+                        reg33,
+                        reg34); // m3 = m3* r^4 -> eqn 3
+        multiply_avx512(msg_temp_2 + 10,
+                        reg30,
+                        reg31,
+                        reg32,
+                        reg33,
+                        reg34); // m4 = m4* r^4 -> eqn 4
+
+        // a = eqn1 + m5 -> eqn 5
+        acc[0] += msg_temp_2[15];
+        acc[1] += msg_temp_2[16];
+        acc[2] += msg_temp_2[17];
+        acc[3] += msg_temp_2[18];
+        acc[4] += msg_temp_2[19];
+
+        // m2 = eqn2 + m6 -> eqn 6
+        msg_temp_2[0] += msg_temp_2[20];
+        msg_temp_2[1] += msg_temp_2[21];
+        msg_temp_2[2] += msg_temp_2[22];
+        msg_temp_2[3] += msg_temp_2[23];
+        msg_temp_2[4] += msg_temp_2[24];
+
+        // m3 = eqn3 + m7 -> eqn 7
+        msg_temp_2[5] += msg_temp_2[25];
+        msg_temp_2[6] += msg_temp_2[26];
+        msg_temp_2[7] += msg_temp_2[27];
+        msg_temp_2[8] += msg_temp_2[28];
+        msg_temp_2[9] += msg_temp_2[29];
+
+        // m4 = eqn4 + m8 -> eqn 8
+        msg_temp_2[10] += msg_temp_2[30];
+        msg_temp_2[11] += msg_temp_2[31];
+        msg_temp_2[12] += msg_temp_2[32];
+        msg_temp_2[13] += msg_temp_2[33];
+        msg_temp_2[14] += msg_temp_2[34];
+
+        multiply_avx512(acc,
+                        reg30,
+                        reg31,
+                        reg32,
+                        reg33,
+                        reg34); // a = eqn5 * r^4 -> eqn 9
+
+        multiply_avx512(msg_temp_2,
+                        reg20,
+                        reg21,
+                        reg22,
+                        reg23,
+                        reg24); // m2 = eqn6 * r^3 -> eqn 10
+
+        multiply_avx512(msg_temp_2 + 5,
+                        reg10,
+                        reg11,
+                        reg12,
+                        reg13,
+                        reg14); // m2 = eqn7 * r^2 -> eqn 11
+
+        multiply_avx512(msg_temp_2 + 10,
+                        reg0,
+                        reg1,
+                        reg2,
+                        reg3,
+                        reg4); // m3 = eqn8 * r -> eqn 12
+
+        // a = eqn9 + eqn 10 -> eqn 13
+        acc[0] += msg_temp_2[0];
+        acc[1] += msg_temp_2[1];
+        acc[2] += msg_temp_2[2];
+        acc[3] += msg_temp_2[3];
+        acc[4] += msg_temp_2[4];
+
+        // m2 = eqn11 + eqn 12 -> eqn 14
+        msg_temp_2[5] += msg_temp_2[10];
+        msg_temp_2[6] += msg_temp_2[11];
+        msg_temp_2[7] += msg_temp_2[12];
+        msg_temp_2[8] += msg_temp_2[13];
+        msg_temp_2[9] += msg_temp_2[14];
+
+        // a = eqn13 + eqn 14 -> eqn 13
+        acc[0] += msg_temp_2[5];
+        acc[1] += msg_temp_2[6];
+        acc[2] += msg_temp_2[7];
+        acc[3] += msg_temp_2[8];
+        acc[4] += msg_temp_2[9];
+
+        msgLen -= 128;
+    }
+#endif
+
+    // Process 1 Block at a time
+    while (msgLen > 0) {
+
+        // Message Extraction block
+#if 0
+        {
+            Uint8* p_msg_temp_8 = reinterpret_cast<Uint8*>(msg_temp_0);
+            for (int i = 0; i < 4; i += 1) {
+                std::copy(p_msg_8, p_msg_8 + 4, p_msg_temp_8);
+                msg_temp_0[i] = (msg_temp_0[i] >> (2 * i));
+
+                msg_temp_0[i] &= 0x3ffffff;
+
+                p_msg_8 += 3;
+                p_msg_temp_8 += sizeof(Uint64);
+            }
+            std::copy(p_msg_8, p_msg_8 + 4, p_msg_temp_8);
+            msg_temp_0[4] = (msg_temp_0[4] >> (2 * 4));
+
+            msg_temp_0[4] |= cPadding;
+
+            p_msg_8 += 3;
+        }
+#else
+        for (int i = 0; i < 5; i += 1) {
+            Uint8* p_msg_temp_8 = reinterpret_cast<Uint8*>(&msg_temp_0[i]);
+            std::copy(p_msg_8, p_msg_8 + 4, p_msg_temp_8);
+            msg_temp_0[i] = (msg_temp_0[i] >> (2 * i));
+            if (i != 4)
+                msg_temp_0[i] &= 0x3ffffff;
+            else {
+                msg_temp_0[i] |= cPadding;
+            }
+            p_msg_8 += 3;
+        }
+#endif
+
+        acc[0] += msg_temp_0[0];
+        acc[1] += msg_temp_0[1];
+        acc[2] += msg_temp_0[2];
+        acc[3] += msg_temp_0[3];
+        acc[4] += msg_temp_0[4];
+
+        // multiply(acc, r, s);
+        multiply_avx512(acc, reg0, reg1, reg2, reg3, reg4);
+
+        /* Padding is enabled only if message is bigger than 16 bytes, otherwise
+         *   padding is expected from outside.
+         * If messageLength is less than 16 bytes then a 16byte redable buffer
+         * is expected. 16 bytes is taken inside with padding if msg len is less
+         * than 16 bytes.
+         */
+        msgLen = msgLen >= 16 ? msgLen - 16 : 0;
+        p_msg_8 += 1;
+    }
+
+    for (int i = 0; i < 5; i++) {
+        accumulator[i] = acc[i];
+    }
+
+    return msgLen;
+}
 // Horner factor 2
 Uint64
 blkx4(Uint64      key[],
@@ -788,7 +1121,9 @@ update(Uint64      key[],
         msg_buffer_len = 0;
         // blk(key, msg_buffer, 16, accumulator, r, s);
         // blkx2(key, msg_buffer, 16, accumulator, r, s);
-        blkx4(key, msg_buffer, 16, accumulator, r, s);
+        // blkx4(key, msg_buffer, 16, accumulator, r, s);
+        // blkx4_new(key, msg_buffer, 16, accumulator, r, s);
+        blkx8(key, msg_buffer, 16, accumulator, r, s);
     }
 
     Uint64 overflow = msgLen % 16;
@@ -796,7 +1131,8 @@ update(Uint64      key[],
     // blk(key, pMsg, msgLen - overflow, accumulator, r, s);
     // blkx2(key, pMsg, msgLen - overflow, accumulator, r, s);
     // blkx4(key, pMsg, msgLen - overflow, accumulator, r, s);
-    blkx4_new(key, pMsg, msgLen - overflow, accumulator, r, s);
+    // blkx4_new(key, pMsg, msgLen - overflow, accumulator, r, s);
+    blkx8(key, pMsg, msgLen - overflow, accumulator, r, s);
     if (overflow) {
         std::copy(pMsg + msgLen - overflow, pMsg + msgLen, msg_buffer);
         msg_buffer_len = overflow;
