@@ -63,11 +63,6 @@ void*
 alcp_prov_digest_dupctx(void* vctx)
 {
     ENTER();
-    // FIXME: Implementation Pending for context copy
-    // This would need the deep copy implementation at the internal classes
-    // It would need copy constructors in class and a copy C API
-    // alc_prov_digest_ctx_p csrc = vctx;
-
     alc_prov_digest_ctx_p src_ctx = vctx;
 
     alc_prov_digest_ctx_p dest_ctx = OPENSSL_zalloc(sizeof(*src_ctx));
@@ -161,40 +156,18 @@ alcp_prov_digest_final(void*          vctx,
     alc_error_t           err  = ALC_ERROR_NONE;
     alc_prov_digest_ctx_p dctx = vctx;
 
-    /**
-     * FIXME: EVP_MD_get_size provider need to implemented. Currently it is
-     * returning zero in OpenSSL which caused outsize passed as argument to
-     * this function to be zero
-     * */
-
-    // FIXME: Once EVP_MD_get_size provider is implemented calculate *outl
-    // directly from outsize. Below is a temporary fix to get digest size
-    // Fix : outsize is getting set as 17(should be 16) in default len mode with
-    // openssl
-    // below code may not be required. Its required only in default len mode
-    // which can be handled from inside the core library
-    if (dctx->pc_digest_info.dt_mode.dm_sha3 == ALC_SHAKE_128
-        || dctx->pc_digest_info.dt_mode.dm_sha3 == ALC_SHAKE_256) {
-        *outl = outsize;
-        err   = alcp_digest_set_shake_length(&(dctx->handle), *outl);
-        if (alcp_is_error(err)) {
-            printf("Provider: Failed to set SHAKE Digest Length");
-            return 0;
-        }
-    } else {
-        *outl = dctx->pc_digest_info.dt_len / 8;
-    }
     // ToDO : Merge the finalize and copy call
     err = alcp_digest_finalize(&(dctx->handle), NULL, 0);
     if (alcp_is_error(err)) {
         printf("Provider: Failed to Finalize\n");
         return 0;
     }
-    err = alcp_digest_copy(&(dctx->handle), out, (Uint64)*outl);
+    err = alcp_digest_copy(&(dctx->handle), out, outsize);
     if (alcp_is_error(err)) {
         printf("Provider: Failed to copy Hash\n");
         return 0;
     }
+    *outl = outsize;
     EXIT();
     return 1;
 }

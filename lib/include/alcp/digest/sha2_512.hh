@@ -93,7 +93,7 @@ ShaRound(Uint64  a,
 
 /* TODO: Add pImpl support as done in sha256 */
 
-class ALCP_API_EXPORT Sha512 final : public Sha2
+class ALCP_API_EXPORT Sha512 final : public IDigest
 {
   public:
     // clang-format off
@@ -188,28 +188,12 @@ class ALCP_API_EXPORT Sha512 final : public Sha2
 
     alc_error_t setIv(const void* pIv, Uint64 size);
 
-    /**
-     * @return The input block size to the hash function in bytes
-     */
-    Uint64 getInputBlockSize() override;
-
-    /**
-     * @return The digest size in bytes
-     */
-    Uint64 getHashSize() override;
-
   private:
     alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
-    Uint64      m_msg_len;
     /* Any unprocessed bytes from last call to update() */
-    alignas(64) Uint8 m_buffer[2 * cChunkSize];
-    alignas(64) Uint64 m_hash[cHashSizeWords];
-    /* index to m_buffer of previously unprocessed bytes */
-    Uint32        m_idx;
-    bool          m_finished;
+    alignas(64) Uint8 m_buffer[2 * cChunkSize]{};
+    alignas(64) Uint64 m_hash[cHashSizeWords]{};
     const Uint64* m_Iv = nullptr;
-    Uint64        m_digest_len_bytes;
-    Uint64        m_digest_len;
 };
 
 } // namespace alcp::digest

@@ -53,7 +53,7 @@ static constexpr Uint8 cRotationConstants[cDim][cDim] = {
 // maximum size of message block in bits is used for shake128 digest
 static constexpr Uint32 MaxDigestBlockSizeBits = 1344;
 
-class ALCP_API_EXPORT Sha3 : public Digest
+class ALCP_API_EXPORT Sha3 : public IDigest
 {
   public:
     Sha3(const alc_digest_info_t& rDigestInfo);
@@ -126,16 +126,6 @@ class ALCP_API_EXPORT Sha3 : public Digest
     alc_error_t copyHash(Uint8* pHash, Uint64 size) const;
 
     /**
-     * @return The input block size to the hash function in bytes
-     */
-    Uint64 getInputBlockSize();
-
-    /**
-     * @return The digest size in bytes
-     */
-    Uint64 getHashSize();
-
-    /**
      * @brief To set the Digest Size for SHAKE128 or SHAKE256. Should be set
      * before finalizing.
      * @param shakeLength Custom Output Size
@@ -146,9 +136,6 @@ class ALCP_API_EXPORT Sha3 : public Digest
   private:
     alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
     void        squeezeChunk();
-    std::string m_name;
-    Uint64      m_chunk_size, m_chunk_size_u64, m_hash_size;
-    Uint32      m_idx = 0;
 
     // buffer size to hold the chunk size to be processed
     alignas(64) Uint8 m_buffer[MaxDigestBlockSizeBits / 8];
@@ -159,7 +146,6 @@ class ALCP_API_EXPORT Sha3 : public Digest
     Uint64* m_state_flat = &m_state[0][0];
     // buffer to copy intermediate hash value
     std::vector<Uint8> m_hash;
-    bool               m_finished = false;
 };
 
 namespace zen3 {

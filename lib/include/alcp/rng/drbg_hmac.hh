@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use p_cIn source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -66,11 +66,9 @@ class ALCP_API_EXPORT HmacDrbg : public Drbg
      * @param digestObject - Object of Digest class.
      * @return Status
      */
-    Status setDigest(std::shared_ptr<alcp::digest::Digest> digestObject);
+    Status setDigest(std::shared_ptr<alcp::digest::IDigest> digestObject);
 
   protected:
-    // FIXME: Change alcp::digest::Digest to alcp::digest::IDigest
-
     /**
      * @brief Given Data and Length, updates key and value internally
      *

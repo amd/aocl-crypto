@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -78,7 +78,7 @@ AlcpDigestBase::init()
             dinfo.dt_mode.dm_sha2 = sha2_mode_len_map[m_info.dt_len];
     } else if (m_info.dt_type == ALC_DIGEST_TYPE_SHA3) {
         if (m_info.dt_len == ALC_DIGEST_LEN_CUSTOM)
-            dinfo.dt_custom_len = m_digest_len;
+            dinfo.dt_custom_len = m_digest_len * 8;
         else
             dinfo.dt_mode.dm_sha3 = sha3_mode_len_map[m_info.dt_len];
     }

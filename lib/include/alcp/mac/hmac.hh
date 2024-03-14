@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -41,7 +41,7 @@ class ALCP_API_EXPORT Hmac final : public Mac
 {
 
   public:
-    digest::Digest* m_pDigest;
+    digest::IDigest* m_pDigest;
 
   private:
     class Impl;
@@ -83,7 +83,7 @@ class ALCP_API_EXPORT Hmac final : public Mac
      * setting the Key
      * @returns Status
      */
-    Status setDigest(digest::Digest& digest);
+    Status setDigest(digest::IDigest& digest);
 
     /**
      * @brief set the Key to be used by HMAC. Should be called only after

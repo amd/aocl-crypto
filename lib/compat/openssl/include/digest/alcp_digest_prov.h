@@ -84,6 +84,7 @@ OSSL_FUNC_digest_final_fn   alcp_prov_digest_final;
     alc_digest_info_t s_digest_##name##_##grp##_##len##_info = {               \
         .dt_type = ALC_DIGEST_TYPE_##grp_upper_case,                           \
         .dt_len = len,                                                         \
+        .dt_custom_len = len,                                              \
         .dt_mode = {                                                           \
             .dm_##grp = alcp_mode,                                             \
         },                                                                     \

@@ -118,15 +118,10 @@ Sha256::processChunk(const Uint8* pSrc, Uint64 len)
 }
 
 Sha256::Sha256()
-    : Sha2{ "sha2-256" }
-    , m_msg_len{ 0 }
-    , m_hash{ 0, }
-    , m_idx{ 0 }
-    , m_finished{ false }
 {
-    m_mode             = ALC_SHA2_256;
-    m_digest_len       = ALC_DIGEST_LEN_256;
-    m_digest_len_bytes = 256 / 8;
+    m_mode.dm_sha2 = ALC_SHA2_256;
+    m_digest_len   = 256 / 8;
+    m_block_len    = cChunkSize;
     utils::CopyDWord(&m_hash[0], &cIv[0], cHashSize);
 }
 
@@ -136,7 +131,10 @@ Sha256::Sha256(const alc_digest_info_t& rDigestInfo)
 
 Sha256::Sha256(const Sha256& src)
 {
-    m_msg_len = src.m_msg_len;
+    m_msg_len    = src.m_msg_len;
+    m_digest_len = src.m_digest_len;
+    m_block_len  = src.m_block_len;
+    m_mode       = src.m_mode;
     memcpy(m_buffer, src.m_buffer, sizeof(m_buffer));
     memcpy(m_hash, src.m_hash, sizeof(m_hash));
     m_idx      = src.m_idx;
@@ -322,19 +320,6 @@ Sha256::reset()
     m_finished = false;
     m_idx      = 0;
     utils::CopyDWord(&m_hash[0], &cIv[0], cHashSize);
-}
-
-Sha2::~Sha2() {}
-
-Uint64
-Sha256::getInputBlockSize()
-{
-    return cChunkSize;
-}
-Uint64
-Sha256::getHashSize()
-{
-    return cHashSize;
 }
 
 } // namespace alcp::digest

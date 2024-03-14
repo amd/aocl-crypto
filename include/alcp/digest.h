@@ -71,6 +71,9 @@ typedef enum _alc_sha2_mode
     ALC_SHA2_256,
     ALC_SHA2_384,
     ALC_SHA2_512,
+    ALC_SHA2_512_224,
+    ALC_SHA2_512_256
+
 } alc_sha2_mode_t;
 
 /**
@@ -166,6 +169,7 @@ typedef struct _alc_digest_info
     alc_digest_type_t dt_type;
     alc_digest_len_t  dt_len;
     /* valid when dgst_len == ALC_DIGEST_LEN_CUSTOM */
+    /* length is bits */
     Uint32            dt_custom_len;
     alc_digest_mode_t dt_mode;
     alc_digest_data_t dt_data;

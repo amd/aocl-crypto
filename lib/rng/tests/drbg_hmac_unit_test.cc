@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -41,7 +41,7 @@ using namespace alcp::digest;
 using alcp::base::Status;
 
 typedef std::tuple<int,                // Number of generate Calls
-                   alc_digest_type_t,  // Digest Class
+                   alc_digest_type_t,  // IDigest Class
                    std::vector<Uint8>, // Entropy Input
                    std::vector<Uint8>, // Reseed Entropy
                    std::vector<Uint8>, // nonce
@@ -146,7 +146,7 @@ class TestingHmacDrbg : public HmacDrbg
         generate(cAdditionalInput, cOutput);
     }
 
-    Status testingSetDigest(std::shared_ptr<Digest> digestObj)
+    Status testingSetDigest(std::shared_ptr<IDigest> digestObj)
     {
         return setDigest(digestObj);
     }
@@ -413,7 +413,7 @@ TEST(Instantiate, SHA256)
 
     const std::vector<Uint8> AdditionalInput(0);
 
-    std::shared_ptr<alcp::digest::Digest> sha_obj =
+    std::shared_ptr<alcp::digest::IDigest> sha_obj =
         std::make_shared<alcp::digest::Sha256>();
 
     TestingHmacDrbg hmacDrbg;

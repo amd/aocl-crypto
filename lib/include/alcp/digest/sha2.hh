@@ -35,42 +35,7 @@
 using alcp::utils::RotateRight;
 namespace alcp::digest {
 
-class Sha2 : public Digest
-{
-  public:
-    Sha2(const std::string& name)
-        : m_name{ name }
-        , m_msg_len{ 0 }
-    {}
-
-    Sha2(const char* name)
-        : Sha2(std::string(name))
-    {}
-
-    // TODO : Removing Return here causes an error
-    /**
-     * @return  0 when function is not implemented
-     */
-
-    Uint64 getInputBlockSize() { return 0; };
-
-    /**
-     * @return 0 when the function is not implemented
-     */
-    Uint64 getHashSize() { return 0; };
-
-  protected:
-    Sha2() {}
-    virtual ~Sha2();
-
-  protected:
-    alc_sha2_mode_t m_mode;
-    std::string     m_name;
-    Uint64          m_msg_len;
-    // alc_sha2_param_t m_param;
-};
-
-class Sha256 final : public Sha2
+class Sha256 final : public IDigest
 {
   public:
     static constexpr Uint64 /* define word size */
@@ -90,16 +55,6 @@ class Sha256 final : public Sha2
     ALCP_API_EXPORT Sha256(const alc_digest_info_t& rDigestInfo);
     ALCP_API_EXPORT Sha256(const Sha256& src);
     virtual ALCP_API_EXPORT ~Sha256();
-
-    /**
-     * @return The input block size to the hash function in bytes
-     */
-    ALCP_API_EXPORT Uint64 getInputBlockSize() override;
-
-    /**
-     * @return The digest size in bytes
-     */
-    ALCP_API_EXPORT Uint64 getHashSize() override;
 
   public:
     /**
@@ -178,16 +133,12 @@ class Sha256 final : public Sha2
 
   private:
     alc_error_t processChunk(const Uint8* pSrc, Uint64 len);
-    Uint64      m_msg_len;
     /* Any unprocessed bytes from last call to update() */
-    alignas(64) Uint8 m_buffer[2 * cChunkSize];
-    alignas(64) Uint32 m_hash[cHashSizeWords];
-    /* index to m_buffer of previously unprocessed bytes */
-    Uint32 m_idx;
-    bool   m_finished;
+    alignas(64) Uint8 m_buffer[2 * cChunkSize]{};
+    alignas(64) Uint32 m_hash[cHashSizeWords]{};
 };
 
-class ALCP_API_EXPORT Sha224 final : public Sha2
+class ALCP_API_EXPORT Sha224 final : public IDigest
 {
   public:
     Sha224();
@@ -199,16 +150,6 @@ class ALCP_API_EXPORT Sha224 final : public Sha2
     void        reset() override;
     alc_error_t finalize(const Uint8* pMsgBuf, Uint64 size) override;
     alc_error_t copyHash(Uint8* pHashBuf, Uint64 size) const override;
-
-    /**
-     * @return The input block size to the hash function in bytes
-     */
-    Uint64 getInputBlockSize() override;
-
-    /**
-     * @return The digest size in bytes
-     */
-    Uint64 getHashSize() override;
 
   private:
     std::shared_ptr<Sha256> m_psha256;

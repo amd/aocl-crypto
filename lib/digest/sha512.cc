@@ -125,48 +125,46 @@ ExtendMsg(Uint64 w[], Uint32 start, Uint32 end)
 }
 
 Sha512::Sha512(alc_digest_len_t digest_len)
-    : m_msg_len{ 0 }
-    , m_hash{ 0,}
-    , m_idx{ 0 }
-    , m_finished{ false }
 {
-    m_digest_len = digest_len;
-    m_Iv         = cIv_512;
+    m_Iv = cIv_512;
     switch (digest_len) {
         case ALC_DIGEST_LEN_224:
-            m_digest_len_bytes = 224 / 8;
-            m_Iv               = cIv_224;
+            m_digest_len = 224 / 8;
+            m_Iv         = cIv_224;
             break;
         case ALC_DIGEST_LEN_256:
-            m_digest_len_bytes = 256 / 8;
-            m_Iv               = cIv_256;
+            m_digest_len = 256 / 8;
+            m_Iv         = cIv_256;
             break;
         case ALC_DIGEST_LEN_384:
-            m_digest_len_bytes = 384 / 8;
-            m_Iv               = cIv_384;
+            m_digest_len = 384 / 8;
+            m_Iv         = cIv_384;
             break;
         default:
-            m_digest_len_bytes = 512 / 8;
-            m_Iv               = cIv_512;
+            m_digest_len = 512 / 8;
+            m_Iv         = cIv_512;
     }
-
+    m_block_len = Sha512::cChunkSize;
     utils::CopyQWord(&m_hash[0], m_Iv, cIvSizeBytes);
 }
 
 Sha512::Sha512(const alc_digest_info_t& rDigestInfo)
     : Sha512(rDigestInfo.dt_len)
-{}
+{
+    m_mode = rDigestInfo.dt_mode;
+}
 
 Sha512::Sha512(const Sha512& src)
 {
     m_msg_len = src.m_msg_len;
+    m_mode    = src.m_mode;
     memcpy(m_buffer, src.m_buffer, sizeof(m_buffer));
     memcpy(m_hash, src.m_hash, sizeof(m_hash));
-    m_idx              = src.m_idx;
-    m_finished         = src.m_finished;
-    m_digest_len_bytes = src.m_digest_len_bytes;
-    m_digest_len       = src.m_digest_len;
-    m_Iv               = src.m_Iv;
+    m_idx        = src.m_idx;
+    m_finished   = src.m_finished;
+    m_digest_len = src.m_digest_len;
+    m_block_len  = src.m_block_len;
+    m_Iv         = src.m_Iv;
 }
 
 Sha512::~Sha512() = default;
@@ -215,15 +213,15 @@ Sha512::copyHash(Uint8* pHash, Uint64 size) const
         return err;
     }
 
-    if (size != m_digest_len_bytes) {
+    if (size != m_digest_len) {
         err = ALC_ERROR_INVALID_SIZE;
     }
 
     if (!err) {
         utils::CopyBlockWith<Uint64, true>(
-            pHash, m_hash, m_digest_len_bytes, utils::ToBigEndian<Uint64>);
+            pHash, m_hash, m_digest_len, utils::ToBigEndian<Uint64>);
 
-        if (m_digest_len == ALC_DIGEST_LEN_224) {
+        if (m_digest_len * 8 == ALC_DIGEST_LEN_224) {
             // last 4 bytes can be copied after reversing the 64 bit since it is
             // in little endian form
             Uint64 hash = utils::ToBigEndian<Uint64>(m_hash[3]);
@@ -434,18 +432,6 @@ Sha512::finish()
 {
     // delete pImpl();
     // pImpl() = nullptr;
-}
-
-Uint64
-Sha512::getHashSize()
-{
-    return m_digest_len_bytes;
-}
-
-Uint64
-Sha512::getInputBlockSize()
-{
-    return Sha512::cChunkSize;
 }
 
 } // namespace alcp::digest
