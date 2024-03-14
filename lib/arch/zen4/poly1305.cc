@@ -69,13 +69,13 @@ clamp(Uint8 in[16])
 }
 
 inline void
-calculate_multiplication_matrix(const Uint64 r[5],
-                                const Uint64 s[4],
-                                __m512i&     reg0,
-                                __m512i&     reg1,
-                                __m512i&     reg2,
-                                __m512i&     reg3,
-                                __m512i&     reg4)
+create_multiplication_matrix(const Uint64 r[5],
+                             const Uint64 s[4],
+                             __m512i&     reg0,
+                             __m512i&     reg1,
+                             __m512i&     reg2,
+                             __m512i&     reg3,
+                             __m512i&     reg4)
 {
     __m512i idx, r_reg, s_reg;
 
@@ -346,7 +346,7 @@ blk(Uint64      key[],
     }
 
 #if 1
-    calculate_multiplication_matrix(r, s, reg0, reg1, reg2, reg3, reg4);
+    create_multiplication_matrix(r, s, reg0, reg1, reg2, reg3, reg4);
 #endif
     // As long as there is poly block size amount of text to process
     while (msgLen > 0) {
@@ -416,8 +416,8 @@ blkx2(Uint64      key[],
 
     // r[0:5] <= r; r[5:10] <= r**2
     // s[0:4] <= r[1:5]*5; s[4:8] <= r[6:10]*5
-    calculate_multiplication_matrix(r, s, reg0, reg1, reg2, reg3, reg4);
-    calculate_multiplication_matrix(
+    create_multiplication_matrix(r, s, reg0, reg1, reg2, reg3, reg4);
+    create_multiplication_matrix(
         r + 5, s + 4, reg10, reg11, reg12, reg13, reg14);
 
 #if 1
@@ -535,7 +535,7 @@ update(Uint64      key[],
        Uint64      s[8],
        bool        finalized)
 {
-    debug_print("Here");
+    // debug_print("Here");
     Status status = StatusOk();
 
     if (finalized) {
