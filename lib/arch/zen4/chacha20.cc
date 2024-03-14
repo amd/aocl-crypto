@@ -1358,7 +1358,7 @@ ProcessParallelBlocks(const Uint8   key[],
 alc_error_t
 ProcessInput(const Uint8  key[],
              Uint64       keylen,
-             const Uint8  iv[],
+             Uint8        iv[],
              Uint64       ivlen,
              const Uint8* plaintext,
              Uint64       plaintextLength,
@@ -1366,15 +1366,8 @@ ProcessInput(const Uint8  key[],
 {
 
     Uint64 temp_plaintextLength = plaintextLength;
-    Uint8  iv_copy[16];
-    memcpy(iv_copy, iv, 16);
-    ProcessParallelBlocks(key,
-                          keylen,
-                          iv_copy,
-                          ivlen,
-                          plaintext,
-                          temp_plaintextLength,
-                          ciphertext);
+    ProcessParallelBlocks(
+        key, keylen, iv, ivlen, plaintext, temp_plaintextLength, ciphertext);
 
     return ALC_ERROR_NONE;
 }
@@ -1382,7 +1375,7 @@ ProcessInput(const Uint8  key[],
 alc_error_t
 getKeyStream(const Uint8 key[],
              Uint64      keylen,
-             const Uint8 iv[],
+             Uint8       iv[],
              Uint64      ivlen,
              Uint8       outputKeyStream[],
              Uint64      keyStreamLength)

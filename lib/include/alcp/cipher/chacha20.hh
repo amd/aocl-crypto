@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Advanced Micro Devices. All rights reserved.
+ * Copyright (C) 2023-2024, Advanced Micro Devices. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,7 +36,7 @@ namespace alcp::cipher::chacha20::zen4 {
 alc_error_t
 ProcessInput(const Uint8 key[],
              Uint64      keylen,
-             const Uint8 iv[],
+             Uint8       iv[],
              Uint64      ivlen,
              const Uint8 plaintext[],
              Uint64      plaintextLength,
@@ -44,7 +44,7 @@ ProcessInput(const Uint8 key[],
 alc_error_t
 getKeyStream(const Uint8 key[],
              Uint64      keylen,
-             const Uint8 iv[],
+             Uint8       iv[],
              Uint64      ivlen,
              Uint8       output_key_stream[],
              Uint64      key_stream_length);
@@ -75,7 +75,7 @@ class ALCP_API_EXPORT ChaCha20
 
     alc_error_t processInput(const Uint8 plaintext[],
                              Uint64      plaintext_length,
-                             Uint8       ciphertext[]) const;
+                             Uint8       ciphertext[]);
 
     static alc_error_t validateKey(const Uint8* key, Uint64 keylen);
     static alc_error_t validateIv(const Uint8 iv[], Uint64 iVlen);

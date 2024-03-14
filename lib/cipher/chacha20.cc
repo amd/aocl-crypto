@@ -73,7 +73,7 @@ template<CpuCipherFeatures cpu_cipher_feature>
 alc_error_t
 ChaCha20<cpu_cipher_feature>::processInput(const Uint8 plaintext[],
                                            Uint64      plaintextLength,
-                                           Uint8       ciphertext[]) const
+                                           Uint8       ciphertext[])
 {
     if constexpr (cpu_cipher_feature == CpuCipherFeatures::eVaes512) {
 

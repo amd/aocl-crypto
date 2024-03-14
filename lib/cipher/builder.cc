@@ -610,8 +610,8 @@ __chacha20_processInputWrapper(const void*  rCipher,
 {
     alc_error_t e = ALC_ERROR_NONE;
 
-    auto ap =
-        static_cast<const chacha20::ChaCha20<cpu_cipher_feature>*>(rCipher);
+    auto ap = static_cast<chacha20::ChaCha20<cpu_cipher_feature>*>(
+        const_cast<void*>(rCipher));
 
     e = ap->processInput(pSrc, len, pDest);
 
