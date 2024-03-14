@@ -296,6 +296,8 @@ PermuteRegisters1(__m512i& reg0,
                   __m512i& reg5)
 {
 
+    // reg2 and reg4 can be reused after this function call.
+
     // reg0 and reg1 are the input registers where in every 32 bit packed value
     // is a part of the keystreambelonging to seperate blocks
 
@@ -359,7 +361,7 @@ shuffleRegisters(__m512i& z1, __m512i& z2, __m512i& z3)
 inline void
 shuffleRegisters2(__m512i& z1, __m512i& z2, __m512i& z3)
 {
-    // Consider z1 = a0a1a2a3, z1 = b0b1b2b3, divided into 4 128 bit blocks
+    // Consider z1 = a0a1a2a3, z2 = b0b1b2b3, divided into 4 128 bit blocks
     z3 = _mm512_shuffle_i32x4(
         z2, z1, 0x22); // mask = 0x22 => 0b 00 10 00 10, z3 = a0a2b0b2
     z2 = _mm512_shuffle_i32x4(
@@ -377,6 +379,8 @@ PermuteRegistersByShuffling2(__m512i& s0,
                              __m512i& t0,
                              __m512i& t1)
 {
+
+    // s0 and s6 can be reused after this function call
     shuffleRegisters(s5, s1, t1);
     shuffleRegisters(s2, t0, s1);
     shuffleRegisters(s7, s3, t0);
@@ -482,27 +486,27 @@ ProcessParallelBlocks16(const Uint8 key[],
         __m512i temp[2];
 
         // Once call is complete, only registers
-        // reg_state[0],reg_state[1],reg_state[3],temp[0] are required.
-        // Registers reg_state[2] and temp[1] can be reused
+        // s[0],s[1],s[3],temp[0] are required.
+        // Registers s[2] and temp[1] can be reused
         PermuteRegisters1(s[0], s[1], s[2], s[3], temp[0], temp[1]);
 
-        // Registers reg_state[6] and reg_state[2] can be reused
+        // Registers s[6] and s[2] can be reused
         PermuteRegisters1(s[4],
                           s[5],
                           s[6],
                           s[7],
-                          s[2], // Reusing reg_state[2] and temp[1]
+                          s[2], // Reusing s[2] and temp[1]
                           temp[1]);
 
-        // Registers reg_state[0],reg_state[6] can be reused
+        // Registers s[0],s[6] can be reused
         PermuteRegistersByShuffling2(
             s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], temp[0], temp[1]);
-        // // Registers reg_state[10] and reg_state[0] can be reused
+        // Registers s[10] and s[0] can be reused
         PermuteRegisters1(s[8], s[9], s[10], s[11], s[6], s[0]);
 
-        // // // Registers reg_state[14] and reg_state[0] can be reused
+        // Registers s[14] and s[0] can be reused
         PermuteRegisters1(s[12], s[13], s[14], s[15], s[10], s[0]);
-        // reg_state[8] and reg_state[14] can be reused
+        // s[8] and s[14] can be reused
         PermuteRegistersByShuffling2(
             s[8], s[9], s[10], s[11], s[12], s[13], s[14], s[15], s[6], s[0]);
 
@@ -510,25 +514,25 @@ ProcessParallelBlocks16(const Uint8 key[],
         // temp[1]=block 4 and output_reg[0] = Block 0
         shuffleRegisters2(s[0], temp[1], output_reg[0]);
 
-        // reg_state[5]=Block 12 and reg_state[0]= Block 8
+        // s[5]=Block 12 and s[0]= Block 8
         shuffleRegisters2(s[13], s[5], s[0]);
 
-        // output_reg[1] = Block 1 and reg_state[1] = Block 5
+        // output_reg[1] = Block 1 and s[1] = Block 5
         shuffleRegisters2(s[9], s[1], output_reg[1]);
 
-        // reg_state[2] = Block 13 and reg_state[9] = Block 9
+        // s[2] = Block 13 and s[9] = Block 9
         shuffleRegisters2(s[10], s[2], s[9]);
 
-        // temp[0] = Block 6 and reg_state[14] = Block 2
+        // temp[0] = Block 6 and s[14] = Block 2
         shuffleRegisters2(s[6], temp[0], s[14]);
 
-        // reg_state[7]= Block 14 and reg_state[6] = Block 10
+        // s[7]= Block 14 and s[6] = Block 10
         shuffleRegisters2(s[15], s[7], s[6]);
 
-        //  reg_state[3] = Block 7 and  reg_state[8] = Block 3
+        //  s[3] = Block 7 and  s[8] = Block 3
         shuffleRegisters2(s[11], s[3], s[8]);
 
-        // reg_state[4] = Block 15 and  reg_state[11] = Block 11
+        // s[4] = Block 15 and  s[11] = Block 11
         shuffleRegisters2(s[12], s[4], s[11]);
 
         auto p_plaintext_512  = reinterpret_cast<const __m512i*>(plaintext);
@@ -559,77 +563,61 @@ ProcessParallelBlocks16(const Uint8 key[],
     }
 }
 
-template<int  block_size,
-         void F(const Uint8[],
-                Uint64,
-                const Uint8[],
-                Uint64,
-                const Uint8[],
-                Uint64,
-                Uint8[],
-                Uint64)>
-
-alc_error_t
-dispatchBasedOnBlockSize(const Uint8*& key,
-                         Uint64&       keylen,
-                         const Uint8*& iv,
-                         Uint64&       ivlen,
-                         const Uint8*& plaintext,
-                         Uint64&       plaintextLength,
-                         Uint8*&       ciphertext)
+inline void
+Chacha20ParallelBlocks4(__m512i&       s_1_0_3_2,
+                        __m512i&       s_5_4_7_6,
+                        __m512i&       s_9_8_11_10,
+                        __m512i&       s_13_12_15_14,
+                        const __m512i& s_1_0_3_2_prev,
+                        const __m512i& s_5_4_7_6_prev,
+                        const __m512i& s_9_8_11_10_prev,
+                        const __m512i& s_13_12_15_14_prev)
 {
-    Uint64 chacha20_parallel_blocks = plaintextLength / block_size;
-    Uint64 chacha20_non_parallel_bytes =
-        plaintextLength - (chacha20_parallel_blocks * block_size);
+    for (int i = 0; i < 10; i++) {
 
-    if (chacha20_parallel_blocks > 0) {
-        F(key,
-          keylen,
-          iv,
-          ivlen,
-          plaintext,
-          plaintextLength,
-          ciphertext,
-          chacha20_parallel_blocks);
+        // -- Row Round Register Setup Complete.
 
-        plaintext += chacha20_parallel_blocks * block_size;
-        ciphertext += chacha20_parallel_blocks * block_size;
+        RoundFunction(s_1_0_3_2, s_5_4_7_6, s_9_8_11_10, s_13_12_15_14);
+        // -- Row Round Function Complete
+        // --- Setting up Register for Column Round Function
+        // 6547
+        s_5_4_7_6 = _mm512_shuffle_epi32(s_5_4_7_6, (_MM_PERM_ENUM)0b00111001);
+        // 10,11,8,9 -> 11,10,9,8
+        s_9_8_11_10 =
+            _mm512_shuffle_epi32(s_9_8_11_10, (_MM_PERM_ENUM)0b01001110);
+        // 15,12,13,14 -> 12,15,14,13
+        s_13_12_15_14 =
+            _mm512_shuffle_epi32(s_13_12_15_14, (_MM_PERM_ENUM)0b10010011);
+
+        // Column Round Function
+
+        RoundFunction(s_1_0_3_2, s_5_4_7_6, s_9_8_11_10, s_13_12_15_14);
+
+        //   Reshuffle it back for next Row operation
+        // 6547 -> 5_4_7_6
+        s_5_4_7_6 = _mm512_shuffle_epi32(s_5_4_7_6, (_MM_PERM_ENUM)0b10010011);
+        // 11,10,9,8 -> 9_8_11_10
+        s_9_8_11_10 =
+            _mm512_shuffle_epi32(s_9_8_11_10, (_MM_PERM_ENUM)0b01001110);
+        // 12,15,14,13 -> 13_12_15_14
+        s_13_12_15_14 =
+            _mm512_shuffle_epi32(s_13_12_15_14, (_MM_PERM_ENUM)0b00111001);
     }
 
-    if (chacha20_non_parallel_bytes > 0) {
-        Uint8 chacha20_key_stream[block_size] = {};
-        Uint8 iv_copy[16];
-        memcpy(iv_copy, iv, 16);
-        if (chacha20_parallel_blocks > 0) {
-            (*(reinterpret_cast<Uint32*>(iv_copy))) +=
-                (block_size / 64) * chacha20_parallel_blocks;
-        }
-        F(key,
-          keylen,
-          iv_copy,
-          ivlen,
-          chacha20_key_stream,
-          block_size,
-          chacha20_key_stream,
-          1);
-        for (Uint64 i = 0; i < chacha20_non_parallel_bytes; i++) {
-            *(ciphertext) = chacha20_key_stream[i] ^ *(plaintext);
-            plaintext++;
-            ciphertext++;
-        }
-    }
-
-    return ALC_ERROR_NONE;
+    s_1_0_3_2     = _mm512_add_epi32(s_1_0_3_2, s_1_0_3_2_prev);
+    s_5_4_7_6     = _mm512_add_epi32(s_5_4_7_6, s_5_4_7_6_prev);
+    s_9_8_11_10   = _mm512_add_epi32(s_9_8_11_10, s_9_8_11_10_prev);
+    s_13_12_15_14 = _mm512_add_epi32(s_13_12_15_14, s_13_12_15_14_prev);
 }
 
-void
-ProcessParallelBlocks(const Uint8   key[],
-                      Uint64        keylen,
-                      Uint8         iv[],
-                      Uint64        ivlen,
-                      const Uint8*& plaintext,
-                      Uint64&       plaintextLength,
-                      Uint8*&       ciphertext)
+alc_error_t
+ProcessInput(const Uint8  key[],
+             Uint64       keylen,
+             Uint8        iv[],
+             Uint64       ivlen,
+             const Uint8* plaintext,
+             Uint64       plaintextLength,
+             Uint8*       ciphertext)
 {
 
     Uint64 temp_plaintextlength = plaintextLength;
@@ -706,19 +694,19 @@ ProcessParallelBlocks(const Uint8   key[],
             __m512i temp[2];
 
             // Once call is complete, only registers
-            // reg_state[0],reg_state[1],reg_state[3],temp[0] are required.
-            // Registers reg_state[2] and temp[1] can be reused
+            // s[0],s[1],s[3],temp[0] are required.
+            // Registers s[2] and temp[1] can be reused
             PermuteRegisters1(s[0], s[1], s[2], s[3], temp[0], temp[1]);
 
-            // Registers reg_state[6] and reg_state[2] can be reused
+            // Registers s[6] and s[2] can be reused
             PermuteRegisters1(s[4],
                               s[5],
                               s[6],
                               s[7],
-                              s[2], // Reusing reg_state[2] and temp[1]
+                              s[2], // Reusing s[2] and temp[1]
                               temp[1]);
 
-            // Registers reg_state[0],reg_state[6] can be reused
+            // Registers s[0],s[6] can be reused
             PermuteRegistersByShuffling2(s[0],
                                          s[1],
                                          s[2],
@@ -729,12 +717,12 @@ ProcessParallelBlocks(const Uint8   key[],
                                          s[7],
                                          temp[0],
                                          temp[1]);
-            // // Registers reg_state[10] and reg_state[0] can be reused
+            // Registers s[10] and s[0] can be reused
             PermuteRegisters1(s[8], s[9], s[10], s[11], s[6], s[0]);
 
-            // // // Registers reg_state[14] and reg_state[0] can be reused
+            // Registers s[14] and s[0] can be reused
             PermuteRegisters1(s[12], s[13], s[14], s[15], s[10], s[0]);
-            // reg_state[8] and reg_state[14] can be reused
+            // s[8] and s[14] can be reused
             PermuteRegistersByShuffling2(s[8],
                                          s[9],
                                          s[10],
@@ -750,25 +738,25 @@ ProcessParallelBlocks(const Uint8   key[],
             // temp[1]=block 4 and output_reg[0] = Block 0
             shuffleRegisters2(s[0], temp[1], output_reg[0]);
 
-            // reg_state[5]=Block 12 and reg_state[0]= Block 8
+            // s[5]=Block 12 and s[0]= Block 8
             shuffleRegisters2(s[13], s[5], s[0]);
 
-            // output_reg[1] = Block 1 and reg_state[1] = Block 5
+            // output_reg[1] = Block 1 and s[1] = Block 5
             shuffleRegisters2(s[9], s[1], output_reg[1]);
 
-            // reg_state[2] = Block 13 and reg_state[9] = Block 9
+            // s[2] = Block 13 and s[9] = Block 9
             shuffleRegisters2(s[10], s[2], s[9]);
 
-            // temp[0] = Block 6 and reg_state[14] = Block 2
+            // temp[0] = Block 6 and s[14] = Block 2
             shuffleRegisters2(s[6], temp[0], s[14]);
 
-            // reg_state[7]= Block 14 and reg_state[6] = Block 10
+            // s[7]= Block 14 and s[6] = Block 10
             shuffleRegisters2(s[15], s[7], s[6]);
 
-            //  reg_state[3] = Block 7 and  reg_state[8] = Block 3
+            //  s[3] = Block 7 and  s[8] = Block 3
             shuffleRegisters2(s[11], s[3], s[8]);
 
-            // reg_state[4] = Block 15 and  reg_state[11] = Block 11
+            // s[4] = Block 15 and  s[11] = Block 11
             shuffleRegisters2(s[12], s[4], s[11]);
 
             auto p_plaintext_512  = reinterpret_cast<const __m512i*>(plaintext);
@@ -854,43 +842,14 @@ ProcessParallelBlocks(const Uint8   key[],
 
             s_13_12_15_14 = _mm512_add_epi32(s_13_12_15_14, counter_512);
             auto s_13_12_15_14_prev = s_13_12_15_14;
-            for (int i = 0; i < 10; i++) {
-
-                // -- Row Round Register Setup Complete.
-
-                RoundFunction(s_1_0_3_2, s_5_4_7_6, s_9_8_11_10, s_13_12_15_14);
-                // -- Row Round Function Complete
-                // --- Setting up Register for Column Round Function
-                // 6547
-                s_5_4_7_6 =
-                    _mm512_shuffle_epi32(s_5_4_7_6, (_MM_PERM_ENUM)0b00111001);
-                // 10,11,8,9 -> 11,10,9,8
-                s_9_8_11_10 = _mm512_shuffle_epi32(s_9_8_11_10,
-                                                   (_MM_PERM_ENUM)0b01001110);
-                // 15,12,13,14 -> 12,15,14,13
-                s_13_12_15_14 = _mm512_shuffle_epi32(s_13_12_15_14,
-                                                     (_MM_PERM_ENUM)0b10010011);
-
-                // Column Round Function
-
-                RoundFunction(s_1_0_3_2, s_5_4_7_6, s_9_8_11_10, s_13_12_15_14);
-
-                //   Reshuffle it back for next Row operation
-                // 6547 -> 5_4_7_6
-                s_5_4_7_6 =
-                    _mm512_shuffle_epi32(s_5_4_7_6, (_MM_PERM_ENUM)0b10010011);
-                // 11,10,9,8 -> 9_8_11_10
-                s_9_8_11_10 = _mm512_shuffle_epi32(s_9_8_11_10,
-                                                   (_MM_PERM_ENUM)0b01001110);
-                // 12,15,14,13 -> 13_12_15_14
-                s_13_12_15_14 = _mm512_shuffle_epi32(s_13_12_15_14,
-                                                     (_MM_PERM_ENUM)0b00111001);
-            }
-
-            s_1_0_3_2     = _mm512_add_epi32(s_1_0_3_2, s_1_0_3_2_prev);
-            s_5_4_7_6     = _mm512_add_epi32(s_5_4_7_6, s_5_4_7_6_prev);
-            s_9_8_11_10   = _mm512_add_epi32(s_9_8_11_10, s_9_8_11_10_prev);
-            s_13_12_15_14 = _mm512_add_epi32(s_13_12_15_14, s_13_12_15_14_prev);
+            Chacha20ParallelBlocks4(s_1_0_3_2,
+                                    s_5_4_7_6,
+                                    s_9_8_11_10,
+                                    s_13_12_15_14,
+                                    s_1_0_3_2_prev,
+                                    s_5_4_7_6_prev,
+                                    s_9_8_11_10_prev,
+                                    s_13_12_15_14_prev);
 
             XorMessageKeyStreamStore<0>(*s_512[0],
                                         reg_128_state,
@@ -989,43 +948,14 @@ ProcessParallelBlocks(const Uint8   key[],
 
             s_13_12_15_14 = _mm512_add_epi32(s_13_12_15_14, counter_512);
             auto s_13_12_15_14_prev = s_13_12_15_14;
-            for (int i = 0; i < 10; i++) {
-
-                // -- Row Round Register Setup Complete.
-
-                RoundFunction(s_1_0_3_2, s_5_4_7_6, s_9_8_11_10, s_13_12_15_14);
-                // -- Row Round Function Complete
-                // --- Setting up Register for Column Round Function
-                // 6547
-                s_5_4_7_6 =
-                    _mm512_shuffle_epi32(s_5_4_7_6, (_MM_PERM_ENUM)0b00111001);
-                // 10,11,8,9 -> 11,10,9,8
-                s_9_8_11_10 = _mm512_shuffle_epi32(s_9_8_11_10,
-                                                   (_MM_PERM_ENUM)0b01001110);
-                // 15,12,13,14 -> 12,15,14,13
-                s_13_12_15_14 = _mm512_shuffle_epi32(s_13_12_15_14,
-                                                     (_MM_PERM_ENUM)0b10010011);
-
-                // Column Round Function
-
-                RoundFunction(s_1_0_3_2, s_5_4_7_6, s_9_8_11_10, s_13_12_15_14);
-
-                //   Reshuffle it back for next Row operation
-                // 6547 -> 5_4_7_6
-                s_5_4_7_6 =
-                    _mm512_shuffle_epi32(s_5_4_7_6, (_MM_PERM_ENUM)0b10010011);
-                // 11,10,9,8 -> 9_8_11_10
-                s_9_8_11_10 = _mm512_shuffle_epi32(s_9_8_11_10,
-                                                   (_MM_PERM_ENUM)0b01001110);
-                // 12,15,14,13 -> 13_12_15_14
-                s_13_12_15_14 = _mm512_shuffle_epi32(s_13_12_15_14,
-                                                     (_MM_PERM_ENUM)0b00111001);
-            }
-
-            s_1_0_3_2     = _mm512_add_epi32(s_1_0_3_2, s_1_0_3_2_prev);
-            s_5_4_7_6     = _mm512_add_epi32(s_5_4_7_6, s_5_4_7_6_prev);
-            s_9_8_11_10   = _mm512_add_epi32(s_9_8_11_10, s_9_8_11_10_prev);
-            s_13_12_15_14 = _mm512_add_epi32(s_13_12_15_14, s_13_12_15_14_prev);
+            Chacha20ParallelBlocks4(s_1_0_3_2,
+                                    s_5_4_7_6,
+                                    s_9_8_11_10,
+                                    s_13_12_15_14,
+                                    s_1_0_3_2_prev,
+                                    s_5_4_7_6_prev,
+                                    s_9_8_11_10_prev,
+                                    s_13_12_15_14_prev);
             if (plaintextLength < 16) {
                 XorMessageKeyStreamStorePartial<0>(*s_512[0],
                                                    reg_128_state,
@@ -1037,7 +967,7 @@ ProcessParallelBlocks(const Uint8   key[],
                                                    ciphertext);
             } else {
                 Uint64 blocks_16 = plaintextLength / 16;
-                for (Uint64 m = 0; m < blocks_16; m++) {
+                for (Uint64 i = 0; i < blocks_16; i++) {
                     XorMessageKeyStreamStore<0>(*s_512[0],
                                                 reg_128_state,
                                                 reg_128_msg,
@@ -1046,8 +976,8 @@ ProcessParallelBlocks(const Uint8   key[],
                     plaintextLength -= 16;
                     plaintext += 16;
                     ciphertext += 16;
-                    m++;
-                    if (m == blocks_16) {
+                    i++;
+                    if (i == blocks_16) {
                         XorMessageKeyStreamStorePartial<0>(*s_512[1],
                                                            reg_128_state,
                                                            reg_128_msg,
@@ -1066,8 +996,8 @@ ProcessParallelBlocks(const Uint8   key[],
                     plaintextLength -= 16;
                     plaintext += 16;
                     ciphertext += 16;
-                    m++;
-                    if (m == blocks_16) {
+                    i++;
+                    if (i == blocks_16) {
                         XorMessageKeyStreamStorePartial<0>(*s_512[2],
                                                            reg_128_state,
                                                            reg_128_msg,
@@ -1086,8 +1016,8 @@ ProcessParallelBlocks(const Uint8   key[],
                     plaintextLength -= 16;
                     plaintext += 16;
                     ciphertext += 16;
-                    m++;
-                    if (m == blocks_16) {
+                    i++;
+                    if (i == blocks_16) {
                         XorMessageKeyStreamStorePartial<0>(*s_512[3],
                                                            reg_128_state,
                                                            reg_128_msg,
@@ -1106,8 +1036,8 @@ ProcessParallelBlocks(const Uint8   key[],
                     plaintextLength -= 16;
                     plaintext += 16;
                     ciphertext += 16;
-                    m++;
-                    if (m == blocks_16) {
+                    i++;
+                    if (i == blocks_16) {
                         XorMessageKeyStreamStorePartial<1>(*s_512[0],
                                                            reg_128_state,
                                                            reg_128_msg,
@@ -1126,8 +1056,8 @@ ProcessParallelBlocks(const Uint8   key[],
                     plaintextLength -= 16;
                     plaintext += 16;
                     ciphertext += 16;
-                    m++;
-                    if (m == blocks_16) {
+                    i++;
+                    if (i == blocks_16) {
                         XorMessageKeyStreamStorePartial<1>(*s_512[1],
                                                            reg_128_state,
                                                            reg_128_msg,
@@ -1146,8 +1076,8 @@ ProcessParallelBlocks(const Uint8   key[],
                     plaintextLength -= 16;
                     plaintext += 16;
                     ciphertext += 16;
-                    m++;
-                    if (m == blocks_16) {
+                    i++;
+                    if (i == blocks_16) {
                         XorMessageKeyStreamStorePartial<1>(*s_512[2],
                                                            reg_128_state,
                                                            reg_128_msg,
@@ -1166,8 +1096,8 @@ ProcessParallelBlocks(const Uint8   key[],
                     plaintextLength -= 16;
                     plaintext += 16;
                     ciphertext += 16;
-                    m++;
-                    if (m == blocks_16) {
+                    i++;
+                    if (i == blocks_16) {
                         XorMessageKeyStreamStorePartial<1>(*s_512[3],
                                                            reg_128_state,
                                                            reg_128_msg,
@@ -1186,8 +1116,8 @@ ProcessParallelBlocks(const Uint8   key[],
                     plaintextLength -= 16;
                     plaintext += 16;
                     ciphertext += 16;
-                    m++;
-                    if (m == blocks_16) {
+                    i++;
+                    if (i == blocks_16) {
                         XorMessageKeyStreamStorePartial<2>(*s_512[0],
                                                            reg_128_state,
                                                            reg_128_msg,
@@ -1206,8 +1136,8 @@ ProcessParallelBlocks(const Uint8   key[],
                     plaintextLength -= 16;
                     plaintext += 16;
                     ciphertext += 16;
-                    m++;
-                    if (m == blocks_16) {
+                    i++;
+                    if (i == blocks_16) {
                         XorMessageKeyStreamStorePartial<2>(*s_512[1],
                                                            reg_128_state,
                                                            reg_128_msg,
@@ -1226,8 +1156,8 @@ ProcessParallelBlocks(const Uint8   key[],
                     plaintextLength -= 16;
                     plaintext += 16;
                     ciphertext += 16;
-                    m++;
-                    if (m == blocks_16) {
+                    i++;
+                    if (i == blocks_16) {
                         XorMessageKeyStreamStorePartial<2>(*s_512[2],
                                                            reg_128_state,
                                                            reg_128_msg,
@@ -1246,8 +1176,8 @@ ProcessParallelBlocks(const Uint8   key[],
                     plaintextLength -= 16;
                     plaintext += 16;
                     ciphertext += 16;
-                    m++;
-                    if (m == blocks_16) {
+                    i++;
+                    if (i == blocks_16) {
                         XorMessageKeyStreamStorePartial<2>(*s_512[3],
                                                            reg_128_state,
                                                            reg_128_msg,
@@ -1266,8 +1196,8 @@ ProcessParallelBlocks(const Uint8   key[],
                     plaintextLength -= 16;
                     plaintext += 16;
                     ciphertext += 16;
-                    m++;
-                    if (m == blocks_16) {
+                    i++;
+                    if (i == blocks_16) {
                         XorMessageKeyStreamStorePartial<3>(*s_512[0],
                                                            reg_128_state,
                                                            reg_128_msg,
@@ -1286,8 +1216,8 @@ ProcessParallelBlocks(const Uint8   key[],
                     plaintextLength -= 16;
                     plaintext += 16;
                     ciphertext += 16;
-                    m++;
-                    if (m == blocks_16) {
+                    i++;
+                    if (i == blocks_16) {
                         XorMessageKeyStreamStorePartial<3>(*s_512[1],
                                                            reg_128_state,
                                                            reg_128_msg,
@@ -1306,8 +1236,8 @@ ProcessParallelBlocks(const Uint8   key[],
                     plaintextLength -= 16;
                     plaintext += 16;
                     ciphertext += 16;
-                    m++;
-                    if (m == blocks_16) {
+                    i++;
+                    if (i == blocks_16) {
                         XorMessageKeyStreamStorePartial<3>(*s_512[2],
                                                            reg_128_state,
                                                            reg_128_msg,
@@ -1326,8 +1256,8 @@ ProcessParallelBlocks(const Uint8   key[],
                     plaintextLength -= 16;
                     plaintext += 16;
                     ciphertext += 16;
-                    m++;
-                    if (m == blocks_16) {
+                    i++;
+                    if (i == blocks_16) {
                         XorMessageKeyStreamStorePartial<3>(*s_512[3],
                                                            reg_128_state,
                                                            reg_128_msg,
@@ -1346,28 +1276,14 @@ ProcessParallelBlocks(const Uint8   key[],
                     plaintextLength -= 16;
                     plaintext += 16;
                     ciphertext += 16;
-                    m++;
-                    if (m == blocks_16) {
+                    i++;
+                    if (i == blocks_16) {
                         break;
                     }
                 }
             }
         }
     }
-}
-alc_error_t
-ProcessInput(const Uint8  key[],
-             Uint64       keylen,
-             Uint8        iv[],
-             Uint64       ivlen,
-             const Uint8* plaintext,
-             Uint64       plaintextLength,
-             Uint8*       ciphertext)
-{
-
-    Uint64 temp_plaintextLength = plaintextLength;
-    ProcessParallelBlocks(
-        key, keylen, iv, ivlen, plaintext, temp_plaintextLength, ciphertext);
 
     return ALC_ERROR_NONE;
 }
