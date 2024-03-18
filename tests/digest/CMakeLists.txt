@@ -80,12 +80,6 @@ TEST_DATA_LINK(SHA3_SHAKE_256)
 TEST_DATA_LINK(SHA_512_224)
 TEST_DATA_LINK(SHA_512_256)
 
-gtest_add_tests(TARGET test_digest_kat)
-
-IF(ENABLE_TESTS_OPENSSL_API)
-    gtest_add_tests(TARGET test_digest_cross)
-ENDIF(ENABLE_TESTS_OPENSSL_API)
-
 alcp_add_integration_tests("test_digest_kat" test_digest_kat)
 alcp_add_integration_tests("test_digest_cross" test_digest_cross)
 

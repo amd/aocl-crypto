@@ -93,12 +93,6 @@ ENDFUNCTION(TEST_DATA_LINK ALG)
 TEST_DATA_LINK(ECDH)
 TEST_DATA_LINK(ECDH_p256)
 
-gtest_add_tests(TARGET test_ecdh_kat)
-
-IF(ENABLE_TESTS_OPENSSL_API)
-    gtest_add_tests(TARGET test_ecdh_cross)
-ENDIF(ENABLE_TESTS_OPENSSL_API)
-
 alcp_add_integration_tests("test_ecdh_kat" test_ecdh_kat)
 alcp_add_integration_tests("test_ecdh_cross" test_ecdh_cross)
 

@@ -76,12 +76,6 @@ ENDFUNCTION(TEST_DATA_LINK RSA_ALG)
 TEST_DATA_LINK(RSA_1024)
 TEST_DATA_LINK(RSA_2048)
 
-gtest_add_tests(TARGET test_rsa_kat)
-
-IF(ENABLE_TESTS_OPENSSL_API)
-    gtest_add_tests(TARGET test_rsa_cross)
-ENDIF(ENABLE_TESTS_OPENSSL_API)
-
 alcp_add_integration_tests("test_rsa_kat" test_rsa_kat)
 alcp_add_integration_tests("test_rsa_cross" test_rsa_cross)
 

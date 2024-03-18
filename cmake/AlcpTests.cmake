@@ -138,6 +138,6 @@ function(alcp_cc_test testName working_dir)
     # Add valgrind test based on the cmake option
     IF(ALCP_MEMCHECK_VALGRIND)
         Include(${CMAKE_SOURCE_DIR}/cmake/AlcpTestUtils.cmake)
-        alcp_add_valgrind_check_test(${_target_name}_valgrind ${working_dir}/${_target_name})
+        alcp_add_valgrind_check_test(${_target_name} ${working_dir}/${_target_name})
     ENDIF(ALCP_MEMCHECK_VALGRIND)
 endfunction(alcp_cc_test)

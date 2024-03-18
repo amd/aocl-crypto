@@ -75,12 +75,6 @@ TEST_DATA_LINK(HMAC_SHA3_256)
 TEST_DATA_LINK(HMAC_SHA3_384)
 TEST_DATA_LINK(HMAC_SHA3_512)
 
-gtest_add_tests(TARGET test_hmac_kat)
-
-IF(ENABLE_TESTS_OPENSSL_API)
-    gtest_add_tests(TARGET test_hmac_cross)
-ENDIF(ENABLE_TESTS_OPENSSL_API)
-
 alcp_add_integration_tests("test_hmac_kat" test_hmac_kat)
 alcp_add_integration_tests("test_hmac_cross" test_hmac_cross)
 

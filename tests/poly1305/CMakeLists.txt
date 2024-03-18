@@ -63,8 +63,10 @@ ENDFUNCTION(TEST_DATA_LINK)
 
 TEST_DATA_LINK()
 
-gtest_add_tests(TARGET test_poly1305_kat)
+alcp_add_integration_tests("test_poly1305_kat" test_poly1305_kat)
+alcp_add_integration_tests("test_poly1305_cross" test_poly1305_cross)
 
-IF(ENABLE_TESTS_OPENSSL_API)
-    gtest_add_tests(TARGET test_poly1305_cross)
-ENDIF(ENABLE_TESTS_OPENSSL_API)
+IF(ALCP_MEMCHECK_VALGRIND)
+    alcp_add_valgrind_check_test("test_poly1305_kat" ${CMAKE_BINARY_DIR}/tests/poly1305/test_poly1305_kat)
+    alcp_add_valgrind_check_test("test_poly1305_cross" ${CMAKE_BINARY_DIR}/tests/poly1305/test_poly1305_cross)
+ENDIF(ALCP_MEMCHECK_VALGRIND)
